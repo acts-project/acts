@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <numbers>
 #include <vector>
 
 #include <MMG/CUDA_graph_creator>
@@ -18,6 +19,8 @@
 #define USE_LAUNCH_BOUNDS
 
 namespace ActsPlugins::detail {
+
+constexpr float g_pi = std::numbers::pi_v<float>;
 
 template <class T>
 __global__ void rescaleFeature(std::size_t nbHits, T *data, T scale) {
@@ -29,8 +32,6 @@ __global__ void rescaleFeature(std::size_t nbHits, T *data, T scale) {
 
   data[i] *= scale;
 }
-
-constexpr float g_pi = std::numbers::pi_v<float>;
 
 template <typename T>
 __device__ T resetAngle(T angle) {
@@ -134,7 +135,6 @@ inline void __global__ mapModuleIdsToNbHits(int *nbHitsOnModule,
   while (left <= right) {
     int mid = left + (right - left) / 2;
     if (moduleMapKey[mid] == mId) {
-      // atomic add 1 to hitIndice[moduleMapVal[mid]]
       atomicAdd(&nbHitsOnModule[moduleMapVal[mid]], 1);
       return;
     }
@@ -146,23 +146,9 @@ inline void __global__ mapModuleIdsToNbHits(int *nbHitsOnModule,
   }
 }
 
-__device__ void findFirstWithBisect(int left, int right, int query, int &result,
-                                    const int *array) {
-  while (left <= right) {
-    int mid = left + (right - left) / 2;
-    // only terminate search if we found the first index of the hit
-    // guard against array[mid-1] to be outside of the array
-    if (array[mid] == query && (mid == left || array[mid - 1] != query)) {
-      result = mid;
-      break;
-    }
-    if (array[mid] < query) {
-      left = mid + 1;
-    } else {
-      right = mid - 1;
-    }
-  }
-}
+// ================================
+// Triplet cuts (uses sorted_M2_SP)
+// ================================
 
 template <typename T>
 __device__ void triplet_cuts_inner_loop_body(
@@ -225,171 +211,6 @@ __device__ void triplet_cuts_inner_loop_body(
   }
 }
 
-// ============================
-// Utiles for new doublet edges
-// ============================
-
-__global__ void count_src_hits_per_doublet(int nb_doublets, const int *modules1,
-                                           const int *indices,
-                                           int *nb_src_hits_per_doublet) {
-  int i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i >= nb_doublets) {
-    return;
-  }
-
-  int module1 = modules1[i];
-  nb_src_hits_per_doublet[i] = indices[module1 + 1] - indices[module1];
-}
-
-/// Assume we have an query value i in the range (left, right),
-/// and a prefix sum, also in this range.
-/// This function finds the lower bound idx of the step in the prefix sum that
-/// contains i
-__device__ void locateInPrefixSumBisect(int left, int right, int i, int &result,
-                                        const int *prefix_sum) {
-  while (left <= right) {
-    int mid = left + (right - left) / 2;
-    if (i >= prefix_sum[mid] && i < prefix_sum[mid + 1]) {
-      result = mid;
-      break;
-    }
-    if (i < prefix_sum[mid]) {
-      right = mid - 1;
-    } else {
-      left = mid + 1;
-    }
-  }
-}
-
-template <typename T, typename F>
-__device__ void doublet_cut_kernel(
-    int i, int sum_nb_src_hits_per_doublet, int nb_doublets,
-    const int *doublet_offsets, const int *modules1, const int *modules2,
-    const T *R, const T *z, const T *eta, const T *phi, T *z0_min, T *z0_max,
-    T *deta_min, T *deta_max, T *phi_slope_min, T *phi_slope_max, T *dphi_min,
-    T *dphi_max, const int *indices, T epsilon, F &&function) {
-  // Since doublet_offsets should be the prefix sum of the
-  // number of space points per doublet, we can construct the doublet index
-  int doublet_idx = 0;
-  locateInPrefixSumBisect(0, nb_doublets, i, doublet_idx, doublet_offsets);
-
-  const int module1 = modules1[doublet_idx];
-  const int module2 = modules2[doublet_idx];
-
-  // we can reconstruct the SP1 index from start-index of SPs for module1,
-  // and the difference between the current i and the start of the doublet
-  // Note that several doublets can have the same module1
-  const int k = indices[module1] + (i - doublet_offsets[doublet_idx]);
-
-  T phi_SP1 = phi[k];
-  T eta_SP1 = eta[k];
-  T R_SP1 = R[k];
-  T z_SP1 = z[k];
-
-  for (int l = indices[module2]; l < indices[module2 + 1]; l++) {
-    T z0, phi_slope, deta, dphi;
-    hits_geometric_cuts<T>(z0, phi_slope, deta, dphi, R_SP1, z_SP1, eta_SP1,
-                           phi_SP1, R[l], z[l], eta[l], phi[l], detail::g_pi,
-                           epsilon);
-
-    if (apply_geometric_cuts(doublet_idx, z0, phi_slope, deta, dphi, z0_min,
-                             phi_slope_min, deta_min, dphi_min, z0_max,
-                             phi_slope_max, deta_max, dphi_max)) {
-      function(k, l);
-    }
-  }
-}
-
-template <class T>
-__global__ void count_doublet_edges(
-    int sum_nb_src_hits_per_doublet, int nb_doublets,
-    const int *doublet_offsets, const int *modules1, const int *modules2,
-    const T *R, const T *z, const T *eta, const T *phi, T *z0_min, T *z0_max,
-    T *deta_min, T *deta_max, T *phi_slope_min, T *phi_slope_max, T *dphi_min,
-    T *dphi_max, const int *indices, int *nb_edges_per_src_hit, T epsilon) {
-  int i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i >= sum_nb_src_hits_per_doublet) {
-    return;
-  }
-
-  int edges = 0;
-  doublet_cut_kernel<T>(i, sum_nb_src_hits_per_doublet, nb_doublets,
-                        doublet_offsets, modules1, modules2, R, z, eta, phi,
-                        z0_min, z0_max, deta_min, deta_max, phi_slope_min,
-                        phi_slope_max, dphi_min, dphi_max, indices, epsilon,
-                        [&] __device__(int, int) { edges++; });
-  nb_edges_per_src_hit[i] = edges;
-}
-
-template <class T>
-__global__ void build_doublet_edges(
-    int sum_nb_src_hits_per_doublet, int nb_doublets,
-    const int *doublet_offsets, const int *modules1, const int *modules2,
-    const T *R, const T *z, const T *eta, const T *phi, T *z0_min, T *z0_max,
-    T *deta_min, T *deta_max, T *phi_slope_min, T *phi_slope_max, T *dphi_min,
-    T *dphi_max, const int *indices, int *reduced_M1_hits, int *reduced_M2_hits,
-    int *edge_sum, T epsilon) {
-  int i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i >= sum_nb_src_hits_per_doublet) {
-    return;
-  }
-
-  int edges = 0;
-  doublet_cut_kernel<T>(i, sum_nb_src_hits_per_doublet, nb_doublets,
-                        doublet_offsets, modules1, modules2, R, z, eta, phi,
-                        z0_min, z0_max, deta_min, deta_max, phi_slope_min,
-                        phi_slope_max, dphi_min, dphi_max, indices, epsilon,
-                        [&] __device__(int k, int l) {
-                          reduced_M1_hits[edge_sum[i] + edges] = k;
-                          reduced_M2_hits[edge_sum[i] + edges] = l;
-                          edges++;
-                        });
-}
-
-__global__ void computeDoubletEdgeSum(int nb_doublets,
-                                      const int *doublet_offsets,
-                                      const int *nb_edges_per_src_hit,
-                                      int *edge_sum) {
-  int i = blockIdx.x * blockDim.x + threadIdx.x;
-  // Note that we want to get the maximum element es well
-  if (i >= nb_doublets + 1) {
-    return;
-  }
-
-  // Since nb_edges_per_src_hit is already a prefix sum, we can just copy the
-  // elements on the boundary positions
-  edge_sum[i] = nb_edges_per_src_hit[doublet_offsets[i]];
-}
-
-// ================================
-// New kernels for the triplet cuts
-// ================================
-
-__global__ void count_triplet_hits(int nb_triplets, const int *modules12_map,
-                                   const int *modules23_map,
-                                   const int *edge_indices,
-                                   int *src_hits_per_triplet) {
-  int i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i >= nb_triplets) {
-    return;
-  }
-  int module12 = modules12_map[i];
-  int module23 = modules23_map[i];
-
-  int nb_hits_M12 = edge_indices[module12 + 1] - edge_indices[module12];
-  int nb_hits_M23 = edge_indices[module23 + 1] - edge_indices[module23];
-
-  if (nb_hits_M12 == 0 || nb_hits_M23 == 0) {
-    src_hits_per_triplet[i] = 0;
-    return;
-  }
-
-  int shift12 = edge_indices[module12];
-  int last12 = shift12 + nb_hits_M12 - 1;
-
-  src_hits_per_triplet[i] = last12 - shift12 + 1;
-}
-
 template <typename T>
 __global__ void
 #ifdef USE_LAUNCH_BOUNDS
@@ -432,11 +253,8 @@ __launch_bounds__(512, 2)
   int last12 = shift12 + nb_hits_M12 - 1;
   int ind23 = shift23 + nb_hits_M23;
 
-  // TODO does this work???
   const int k = shift12 + (ii - triplet_offsets[triplet_index]);
 
-  // From here on starts the original kernel, with the loop over k pulled out of
-  // the kernel
   triplet_cuts_inner_loop_body(
       triplet_index, k, last12, shift23, ind23, x, y, z, R, z0, phi_slope, deta,
       dphi, MD12_z0_min, MD12_z0_max, MD12_deta_min, MD12_deta_max,
@@ -445,46 +263,6 @@ __launch_bounds__(512, 2)
       MD23_phi_slope_min, MD23_phi_slope_max, MD23_dphi_min, MD23_dphi_max,
       diff_dydx_min, diff_dydx_max, diff_dzdr_min, diff_dzdr_max, pi, M1_SP,
       M2_SP, sorted_M2_SP, edge_indices, vertices, edge_tag, epsilon);
-}
-
-// =======================
-// New kernels for sorting
-// =======================
-
-__global__ void __launch_bounds__(512, 4)
-    block_odd_even_sort(const int *M2_hits, const int *cuda_edge_sum,
-                        int *M2_idxs) {
-  bool sorted{};
-  auto comparison = thrust::less<int>{};
-
-  const int begin = cuda_edge_sum[blockIdx.x];
-  const int end = cuda_edge_sum[blockIdx.x + 1];
-  if (end - begin == 0) {
-    return;
-  }
-
-  do {
-    sorted = true;
-
-    for (std::uint32_t j =
-             begin + 2 * static_cast<std::uint32_t>(threadIdx.x) + 1;
-         j < end - 1; j += 2 * blockDim.x) {
-      if (comparison(M2_hits[M2_idxs[j + 1]], M2_hits[M2_idxs[j]])) {
-        swap(M2_idxs[j + 1], M2_idxs[j]);
-        sorted = false;
-      }
-    }
-
-    __syncthreads();
-
-    for (std::uint32_t j = begin + 2 * static_cast<std::uint32_t>(threadIdx.x);
-         j < end - 1; j += 2 * blockDim.x) {
-      if (comparison(M2_hits[M2_idxs[j + 1]], M2_hits[M2_idxs[j]])) {
-        swap(M2_idxs[j + 1], M2_idxs[j]);
-        sorted = false;
-      }
-    }
-  } while (__syncthreads_or(!sorted));
 }
 
 }  // namespace ActsPlugins::detail
