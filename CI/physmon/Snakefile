@@ -64,13 +64,14 @@ GENERATOR_SLUGS = [
     "trackfitting_gx2f_vs_kf",
 ]
 
-# Variant -> display label for trackfinding_1muon. The variant set is also the
-# source of truth for the variant wildcard regex and witness enumeration.
+# Variant -> display label for trackfinding_1muon. Variant keys are the
+# `SeedingAlgorithm` enum member names so the script can resolve them via
+# `getattr(SeedingAlgorithm, name)`. Display labels stay human-readable.
 TRACKFINDING_1MUON_VARIANTS = {
-    "truth_smeared":   "truth smeared seeding",
-    "truth_estimated": "truth estimated seeding",
-    "seeded":          "default seeding",
-    "orthogonal":      "orthogonal seeding",
+    "TruthSmeared":      "truth smeared seeding",
+    "TruthEstimated":    "truth estimated seeding",
+    "GridTriplet":       "default seeding",
+    "OrthogonalTriplet": "orthogonal seeding",
 }
 
 # Generators that have a per-variant output subdir layout. Drives witness paths
@@ -96,7 +97,7 @@ GENERATOR_UPSTREAM = {
 
 # Base pack: 4 rows present for every trackfinding workflow.
 TRACKFINDING_BASE = [
-    {"kind_fmt": "Seeding {label}",                   "file": "performance_seeding.root",     "config": "default.yml", "skip_variants": ["truth_smeared"]},
+    {"kind_fmt": "Seeding {label}",                   "file": "performance_seeding.root",     "config": "default.yml", "skip_variants": ["TruthSmeared"]},
     {"kind_fmt": "CKF finding performance | {label}", "file": "performance_finding_ckf.root", "config": "default.yml"},
     {"kind_fmt": "CKF fitting performance | {label}", "file": "performance_fitting_ckf.root", "config": "default.yml"},
     {"kind_fmt": "CKF track summary | {label}",       "file": "tracksummary_ckf_hist.root",
@@ -475,7 +476,7 @@ rule generate_trackrefitting_gsf:
 
 
 # trackfinding_1muon: split into two rules so the output set correctly
-# reflects that truth_smeared does NOT produce performance_seeding.root.
+# reflects that TruthSmeared does NOT produce performance_seeding.root.
 
 rule generate_trackfinding_1muon_with_seeding:
     output:
@@ -485,7 +486,7 @@ rule generate_trackfinding_1muon_with_seeding:
         summary = temp(f"{OUTDIR}/data/trackfinding_1muon/{{variant}}/tracksummary_ckf.root"),
         witness = f"{OUTDIR}/witnesses/generator/trackfinding_1muon/{{variant}}.json",
     wildcard_constraints:
-        variant = "|".join(v for v in TRACKFINDING_1MUON_VARIANTS if v != "truth_smeared"),
+        variant = "|".join(v for v in TRACKFINDING_1MUON_VARIANTS if v != "TruthSmeared"),
     log: f"{OUTDIR}/logs/trackfinding_1muon_{{variant}}.log"
     threads: HEAVY_THREADS
     shell:
@@ -496,20 +497,20 @@ rule generate_trackfinding_1muon_with_seeding:
         "--variant {wildcards.variant} --threads {threads}"
 
 
-rule generate_trackfinding_1muon_truth_smeared:
+rule generate_trackfinding_1muon_TruthSmeared:
     output:
-        finding = f"{OUTDIR}/data/trackfinding_1muon/truth_smeared/performance_finding_ckf.root",
-        fitting = f"{OUTDIR}/data/trackfinding_1muon/truth_smeared/performance_fitting_ckf.root",
-        summary = temp(f"{OUTDIR}/data/trackfinding_1muon/truth_smeared/tracksummary_ckf.root"),
-        witness = witness_for_generator("trackfinding_1muon", "truth_smeared"),
-    log: f"{OUTDIR}/logs/trackfinding_1muon_truth_smeared.log"
+        finding = f"{OUTDIR}/data/trackfinding_1muon/TruthSmeared/performance_finding_ckf.root",
+        fitting = f"{OUTDIR}/data/trackfinding_1muon/TruthSmeared/performance_fitting_ckf.root",
+        summary = temp(f"{OUTDIR}/data/trackfinding_1muon/TruthSmeared/tracksummary_ckf.root"),
+        witness = witness_for_generator("trackfinding_1muon", "TruthSmeared"),
+    log: f"{OUTDIR}/logs/trackfinding_1muon_TruthSmeared.log"
     threads: HEAVY_THREADS
     shell:
         WRAP + " --witness {output.witness} --step generator --log {log} "
         "--touches '{output}' -- "
         "python3 " + WORKFLOWS_DIR + "/physmon_trackfinding_1muon.py "
-        + OUTDIR + "/data/trackfinding_1muon/truth_smeared "
-        "--variant truth_smeared --threads {threads}"
+        + OUTDIR + "/data/trackfinding_1muon/TruthSmeared "
+        "--variant TruthSmeared --threads {threads}"
 
 
 rule generate_trackfinding_4muon_50vertices:
