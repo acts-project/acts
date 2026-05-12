@@ -1,7 +1,6 @@
 add_library(
     ActsExamplesIoArrow_obj
     OBJECT
-    src/ArrowCaloHitOutputConverter.cpp
     src/ArrowParticleOutputConverter.cpp
     src/ArrowSimHitOutputConverter.cpp
     src/ArrowTrackOutputConverter.cpp

@@ -238,7 +238,4 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsArrow, m) {
   m.def(
       "simHitSchema", [wrap]() { return wrap(ArrowUtil::simHitSchema()); },
       "Schema produced by ArrowSimHitOutputConverter.");
-  m.def(
-      "caloHitSchema", [wrap]() { return wrap(ArrowUtil::caloHitSchema()); },
-      "Schema produced by ArrowCaloHitOutputConverter.");
 }
