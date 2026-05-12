@@ -15,6 +15,7 @@ PhysmonSetup = collections.namedtuple(
         "digiConfig",
         "geoSel",
         "outdir",
+        "threads",
     ],
 )
 
@@ -26,6 +27,9 @@ def makeSetup() -> PhysmonSetup:
 
     parser = argparse.ArgumentParser()
     parser.add_argument("outdir")
+    # -1 keeps the legacy "use all hardware threads" behavior for manual runs;
+    # the Snakefile passes a concrete value matching the rule's thread budget.
+    parser.add_argument("--threads", type=int, default=-1)
 
     # parse_known_args so callers can layer their own argparse on top
     # (e.g. physmon_trackfinding_1muon.py adds a seeding-variant argument)
@@ -46,6 +50,7 @@ def makeSetup() -> PhysmonSetup:
         geoSel=srcdir / "Examples/Configs/odd-seeding-config.json",
         field=acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T)),
         outdir=Path(args.outdir),
+        threads=args.threads,
     )
 
     setup.outdir.mkdir(exist_ok=True)

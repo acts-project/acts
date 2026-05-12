@@ -38,6 +38,12 @@ WRAP               = "bash CI/physmon/scripts/wrap.sh"
 GENERATORS  = config["generators"]
 COMPARISONS = config["comparisons"]
 
+# Thread budget for compute-heavy generator scripts. Setting this equal to the
+# whole snakemake budget means at most one heavy rule runs at a time but it
+# uses every available core; cheap rules (plot/histcmp/summary) and the three
+# Geant4/Pythia8-bound generators (threads: 1) can fill the gaps in parallel.
+HEAVY_THREADS = workflow.cores
+
 
 # ---------------------------------------------------------------------------
 # Catalog indexes
@@ -251,11 +257,12 @@ rule generate_trackfitting_kf:
         perf    = f"{OUTDIR}/data/trackfitting_kf/performance_trackfitting.root",
         witness = witness_for_generator("trackfitting_kf"),
     log: f"{OUTDIR}/logs/trackfitting_kf.log"
+    threads: HEAVY_THREADS
     shell:
         WRAP + " --witness {output.witness} --step generator --log {log} "
         "--touches '{output}' -- "
         "python3 " + WORKFLOWS_DIR + "/physmon_trackfitting_kf.py "
-        + OUTDIR + "/data/trackfitting_kf"
+        + OUTDIR + "/data/trackfitting_kf --threads {threads}"
 
 
 rule generate_trackfitting_gsf:
@@ -265,11 +272,12 @@ rule generate_trackfitting_gsf:
         perf    = f"{OUTDIR}/data/trackfitting_gsf/performance_trackfitting.root",
         witness = witness_for_generator("trackfitting_gsf"),
     log: f"{OUTDIR}/logs/trackfitting_gsf.log"
+    threads: HEAVY_THREADS
     shell:
         WRAP + " --witness {output.witness} --step generator --log {log} "
         "--touches '{output}' -- "
         "python3 " + WORKFLOWS_DIR + "/physmon_trackfitting_gsf.py "
-        + OUTDIR + "/data/trackfitting_gsf"
+        + OUTDIR + "/data/trackfitting_gsf --threads {threads}"
 
 
 rule generate_trackfitting_gx2f:
@@ -277,11 +285,12 @@ rule generate_trackfitting_gx2f:
         perf    = f"{OUTDIR}/data/trackfitting_gx2f/performance_trackfitting.root",
         witness = witness_for_generator("trackfitting_gx2f"),
     log: f"{OUTDIR}/logs/trackfitting_gx2f.log"
+    threads: HEAVY_THREADS
     shell:
         WRAP + " --witness {output.witness} --step generator --log {log} "
         "--touches '{output}' -- "
         "python3 " + WORKFLOWS_DIR + "/physmon_trackfitting_gx2f.py "
-        + OUTDIR + "/data/trackfitting_gx2f"
+        + OUTDIR + "/data/trackfitting_gx2f --threads {threads}"
 
 
 rule generate_trackrefitting_kf:
@@ -289,11 +298,12 @@ rule generate_trackrefitting_kf:
         perf    = f"{OUTDIR}/data/trackrefitting_kf/performance_trackrefitting.root",
         witness = witness_for_generator("trackrefitting_kf"),
     log: f"{OUTDIR}/logs/trackrefitting_kf.log"
+    threads: HEAVY_THREADS
     shell:
         WRAP + " --witness {output.witness} --step generator --log {log} "
         "--touches '{output}' -- "
         "python3 " + WORKFLOWS_DIR + "/physmon_trackrefitting_kf.py "
-        + OUTDIR + "/data/trackrefitting_kf"
+        + OUTDIR + "/data/trackrefitting_kf --threads {threads}"
 
 
 rule generate_trackrefitting_gsf:
@@ -303,11 +313,12 @@ rule generate_trackrefitting_gsf:
         perf    = f"{OUTDIR}/data/trackrefitting_gsf/performance_trackrefitting.root",
         witness = witness_for_generator("trackrefitting_gsf"),
     log: f"{OUTDIR}/logs/trackrefitting_gsf.log"
+    threads: HEAVY_THREADS
     shell:
         WRAP + " --witness {output.witness} --step generator --log {log} "
         "--touches '{output}' -- "
         "python3 " + WORKFLOWS_DIR + "/physmon_trackrefitting_gsf.py "
-        + OUTDIR + "/data/trackrefitting_gsf"
+        + OUTDIR + "/data/trackrefitting_gsf --threads {threads}"
 
 
 # trackfinding_1muon: split into two rules so the output set correctly
@@ -323,12 +334,13 @@ rule generate_trackfinding_1muon_with_seeding:
     wildcard_constraints:
         variant = "truth_estimated|seeded|orthogonal",
     log: f"{OUTDIR}/logs/trackfinding_1muon_{{variant}}.log"
+    threads: HEAVY_THREADS
     shell:
         WRAP + " --witness {output.witness} --step generator --log {log} "
         "--touches '{output}' -- "
         "python3 " + WORKFLOWS_DIR + "/physmon_trackfinding_1muon.py "
         + OUTDIR + "/data/trackfinding_1muon/{wildcards.variant} "
-        "--variant {wildcards.variant}"
+        "--variant {wildcards.variant} --threads {threads}"
 
 
 rule generate_trackfinding_1muon_truth_smeared:
@@ -338,12 +350,13 @@ rule generate_trackfinding_1muon_truth_smeared:
         summary = temp(f"{OUTDIR}/data/trackfinding_1muon/truth_smeared/tracksummary_ckf.root"),
         witness = witness_for_generator("trackfinding_1muon", "truth_smeared"),
     log: f"{OUTDIR}/logs/trackfinding_1muon_truth_smeared.log"
+    threads: HEAVY_THREADS
     shell:
         WRAP + " --witness {output.witness} --step generator --log {log} "
         "--touches '{output}' -- "
         "python3 " + WORKFLOWS_DIR + "/physmon_trackfinding_1muon.py "
         + OUTDIR + "/data/trackfinding_1muon/truth_smeared "
-        "--variant truth_smeared"
+        "--variant truth_smeared --threads {threads}"
 
 
 rule generate_trackfinding_4muon_50vertices:
@@ -359,11 +372,12 @@ rule generate_trackfinding_4muon_50vertices:
         vtx_amvf_grid   = temp(f"{OUTDIR}/data/trackfinding_4muon_50vertices/performance_vertexing_amvf_grid_time.root"),
         witness         = witness_for_generator("trackfinding_4muon_50vertices"),
     log: f"{OUTDIR}/logs/trackfinding_4muon_50vertices.log"
+    threads: HEAVY_THREADS
     shell:
         WRAP + " --witness {output.witness} --step generator --log {log} "
         "--touches '{output}' -- "
         "python3 " + WORKFLOWS_DIR + "/physmon_trackfinding_4muon_50vertices.py "
-        + OUTDIR + "/data/trackfinding_4muon_50vertices"
+        + OUTDIR + "/data/trackfinding_4muon_50vertices --threads {threads}"
 
 
 rule generate_trackfinding_ttbar_pu200:
@@ -393,11 +407,12 @@ rule generate_trackfitting_gx2f_vs_kf:
         kf      = f"{OUTDIR}/data/trackfitting_gx2f_vs_kf/performance_trackfitting_kf.root",
         witness = witness_for_generator("trackfitting_gx2f_vs_kf"),
     log: f"{OUTDIR}/logs/trackfitting_gx2f_vs_kf.log"
+    threads: HEAVY_THREADS
     shell:
         WRAP + " --witness {output.witness} --step generator --log {log} "
         "--touches '{output}' -- "
         "python3 " + WORKFLOWS_DIR + "/physmon_trackfitting_gx2f_vs_kf.py "
-        + OUTDIR + "/data/trackfitting_gx2f_vs_kf"
+        + OUTDIR + "/data/trackfitting_gx2f_vs_kf --threads {threads}"
 
 
 # ---------------------------------------------------------------------------

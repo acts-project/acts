@@ -23,7 +23,7 @@ assert simhitsPath.exists(), f"SimHits not found: {simhitsPath}"
 with tempfile.TemporaryDirectory() as temp:
     s = acts.examples.Sequencer(
         events=10000,
-        numThreads=-1,
+        numThreads=setup.threads,
         logLevel=acts.logging.INFO,
     )
 
