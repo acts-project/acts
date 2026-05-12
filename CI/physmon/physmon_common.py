@@ -27,7 +27,9 @@ def makeSetup() -> PhysmonSetup:
     parser = argparse.ArgumentParser()
     parser.add_argument("outdir")
 
-    args = parser.parse_args()
+    # parse_known_args so callers can layer their own argparse on top
+    # (e.g. physmon_trackfinding_1muon.py adds a seeding-variant argument)
+    args, _ = parser.parse_known_args()
 
     matDeco = acts.IMaterialDecorator.fromFile(
         odd_dir / "data/odd-material-maps.root", level=acts.logging.INFO
