@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/StripSpacePointCalibrationDetails.hpp"
 
+#include <cmath>
 #include <span>
 
 namespace Acts::detail {
