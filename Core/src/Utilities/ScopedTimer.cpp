@@ -67,8 +67,7 @@ AveragingScopedTimer::Sample::~Sample() {
 
 AveragingScopedTimer::~AveragingScopedTimer() {
   if (m_logger->doPrint(m_lvl)) {
-    const double sumDuration =
-        m_sumDuration.load(std::memory_order_relaxed);
+    const double sumDuration = m_sumDuration.load(std::memory_order_relaxed);
     const double sumDurationSquared =
         m_sumDurationSquared.load(std::memory_order_relaxed);
     const std::size_t nSamples = m_nSamples.load(std::memory_order_relaxed);
