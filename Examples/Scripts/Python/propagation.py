@@ -153,5 +153,5 @@ if "__main__" == __name__:
         outputDir=os.getcwd() + "/propagation",
         s=None,
         decorators=contextDecorators,
-        sterileLogger=False,
+        sterileLogger=True,
     ).run()
