@@ -498,6 +498,7 @@ if args.output_parquet:
             particleSchema,
             simHitSchema,
             trackSchema,
+            caloHitSchema,
         )
         from acts.examples.arrow import (
             ArrowParticleOutputConverter,
@@ -584,6 +585,7 @@ if args.output_parquet:
             expectedSchemas={
                 arrSimHitConv.config.outputTable: simHitSchema(),
                 arrTrackConv.config.outputTable: trackSchema(),
+                arrHitConv.config.outputTable: caloHitSchema(),
                 arrParticleConv.config.outputTable: particleSchema(),
             },
         )

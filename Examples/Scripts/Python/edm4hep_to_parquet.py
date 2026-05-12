@@ -91,6 +91,7 @@ def main():
         )
 
     try:
+        from acts.arrow import particleSchema, caloHitSchema
         from acts.examples.arrow import (
             ArrowParticleOutputConverter,
             ArrowCaloHitOutputConverter,
