@@ -53,7 +53,8 @@ add_library(ActsDatasetLinkage INTERFACE)
 add_library(Acts::DatasetLinkage ALIAS ActsDatasetLinkage)
 target_link_libraries(ActsDatasetLinkage INTERFACE ${_acts_dataset_impl})
 target_include_directories(
-    ActsDatasetLinkage SYSTEM
+    ActsDatasetLinkage
+    SYSTEM
     INTERFACE
         $<TARGET_PROPERTY:${_acts_dataset_impl},INTERFACE_INCLUDE_DIRECTORIES>
 )

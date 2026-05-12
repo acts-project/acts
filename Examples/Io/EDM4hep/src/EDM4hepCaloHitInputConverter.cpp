@@ -273,7 +273,7 @@ ProcessCode EDM4hepCaloHitInputConverter::convert(
           auto pIt = byParticleIdx.find(particleRow);
           if (pIt == byParticleIdx.end()) {
             // Store sums so we can compute the energy-weighted time at the
-            // end. We re-use CaloHitContribution::time as a running Σ(e·t)
+            // end. We reuse CaloHitContribution::time as a running Σ(e·t)
             // here and divide by Σe in the final pass.
             CaloHitContribution acc{};
             acc.particleRow = particleRow;

@@ -46,8 +46,9 @@ class ParquetReader::Impl {
       std::filesystem::path resolved =
           rawPath.is_absolute() ? rawPath : m_cfg.inputDir / rawPath;
       if (!seenDirs.insert(resolved.lexically_normal().string()).second) {
-        throw std::invalid_argument(std::format(
-            "ParquetReader: duplicate input directory '{}'", resolved.string()));
+        throw std::invalid_argument(
+            std::format("ParquetReader: duplicate input directory '{}'",
+                        resolved.string()));
       }
     }
 

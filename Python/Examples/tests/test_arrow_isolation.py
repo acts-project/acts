@@ -30,7 +30,6 @@ import pytest
 
 from helpers import arrowEnabled
 
-
 pytestmark = pytest.mark.skipif(
     not arrowEnabled, reason="Arrow/Parquet bindings not built"
 )
@@ -143,8 +142,7 @@ def test_no_exported_arrow_symbols():
     leaks = [s for s in demangled if _FORBIDDEN_NS_RE.match(s)]
     assert not leaks, (
         f"{lib.name} leaks {len(leaks)} arrow/parquet symbol(s) "
-        f"out of {len(demangled)} exported. First few:\n  "
-        + "\n  ".join(leaks[:10])
+        f"out of {len(demangled)} exported. First few:\n  " + "\n  ".join(leaks[:10])
     )
 
 

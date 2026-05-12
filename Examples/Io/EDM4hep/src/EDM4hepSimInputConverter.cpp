@@ -84,20 +84,22 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(
 
   m_timerFindPrimaryVertices.emplace("Finding primary vertices", this->logger(),
                                      Acts::Logging::INFO);
-  m_timerFindGeneratorStableParticles.emplace("Finding generator-stable particles",
-                                              this->logger(), Acts::Logging::INFO);
+  m_timerFindGeneratorStableParticles.emplace(
+      "Finding generator-stable particles", this->logger(),
+      Acts::Logging::INFO);
   m_timerWalkParticleTree.emplace("Walking particle tree", this->logger(),
                                   Acts::Logging::INFO);
   m_timerConvertParticles.emplace("Converting particles", this->logger(),
                                   Acts::Logging::INFO);
-  m_timerReadSimHits.emplace("Reading sim hits", this->logger(), Acts::Logging::INFO);
+  m_timerReadSimHits.emplace("Reading sim hits", this->logger(),
+                             Acts::Logging::INFO);
   if (m_cfg.outputSimHitAssociation.has_value()) {
     m_timerBuildSimHitAssoc.emplace("Building sim hit association",
                                     this->logger(), Acts::Logging::INFO);
   }
   if (m_cfg.sortSimHitsInTime) {
-    m_timerSortSimHitsInTime.emplace("Sorting sim hits in time",
-                                     this->logger(), Acts::Logging::INFO);
+    m_timerSortSimHitsInTime.emplace("Sorting sim hits in time", this->logger(),
+                                     Acts::Logging::INFO);
   }
   m_timerFindSourceVertices.emplace("Finding source vertices for particles",
                                     this->logger(), Acts::Logging::INFO);
@@ -893,9 +895,8 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
       const SimBarcode bc = unorderedParticlesInitial.at(info.particleIndex);
       auto it = particlesSimulated.find(bc);
       if (it != particlesSimulated.end()) {
-        mcParticleMap.emplace(
-            mcpIdx, static_cast<std::size_t>(
-                        std::distance(particlesSimulated.begin(), it)));
+        mcParticleMap.emplace(mcpIdx, static_cast<std::size_t>(std::distance(
+                                          particlesSimulated.begin(), it)));
       }
     }
     m_outputMCParticleMap(ctx, std::move(mcParticleMap));

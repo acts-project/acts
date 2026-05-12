@@ -36,14 +36,14 @@ struct CaloHitContribution {
 /// still drop cells based on energy thresholds.
 struct CaloHit {
   /// Sensor cell identifier (the EDM4hep @c cellID).
-  std::uint64_t cellId;
+  std::uint64_t cellId{};
   /// Subdetector enum chosen by the input converter (e.g. ECal/HCal × side).
   /// 255 is reserved for "unknown".
-  std::uint8_t detector;
+  std::uint8_t detector{};
   /// Cell position in mm.
-  Acts::Vector3 position;
+  Acts::Vector3 position{};
   /// Sum of all surviving contributions' energies.
-  float totalEnergy;
+  float totalEnergy{};
   /// Per-particle contributions, in stable insertion order.
   std::vector<CaloHitContribution> contributions;
 };

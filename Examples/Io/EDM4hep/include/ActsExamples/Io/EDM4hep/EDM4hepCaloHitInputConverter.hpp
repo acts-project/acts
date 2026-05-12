@@ -34,7 +34,8 @@ struct CaloCollectionDetectorCodes {
   std::uint8_t endcapPosCode = 255;
 
   static CaloCollectionDetectorCodes barrel(std::uint8_t code);
-  static CaloCollectionDetectorCodes endcap(std::uint8_t negZ, std::uint8_t posZ);
+  static CaloCollectionDetectorCodes endcap(std::uint8_t negZ,
+                                            std::uint8_t posZ);
 
   /// Resolve the encoded detector code given a hit's z coordinate.
   /// For barrel collections, the code is independent of z.

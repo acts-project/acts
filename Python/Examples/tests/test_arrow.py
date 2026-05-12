@@ -10,7 +10,6 @@ from acts.examples import Sequencer
 
 from helpers import AssertCollectionExistsAlg, arrowEnabled, isCI, pythia8Enabled
 
-
 pytestmark = pytest.mark.skipif(
     not arrowEnabled, reason="Arrow/Parquet bindings not built"
 )
@@ -103,8 +102,7 @@ def _assert_particles_parquet(directory: Path, expected_events: int) -> None:
             union_event_ids.extend(t.column("event_id").to_pylist())
 
         assert total_rows == expected_events, (
-            f"{directory.name}: expected {expected_events} events, "
-            f"got {total_rows}"
+            f"{directory.name}: expected {expected_events} events, " f"got {total_rows}"
         )
 
         # Each event id should appear exactly once across the dataset
@@ -183,8 +181,7 @@ def _add_arrow_writer(
             level=acts.logging.INFO,
             outputDir=str(outputDir),
             collections={
-                table_key: table_key
-                for table_key in inputs_to_tables.values()
+                table_key: table_key for table_key in inputs_to_tables.values()
             },
             eventsPerShard=eventsPerShard,
         )

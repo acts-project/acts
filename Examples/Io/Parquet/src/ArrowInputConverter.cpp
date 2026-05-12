@@ -63,9 +63,8 @@ ProcessCode ArrowInputConverter::execute(const AlgorithmContext& ctx) const {
         if (!ok) {
           missing << ", ";
         }
-        missing << field->name() << " (type "
-                << actualField->type()->ToString() << " != "
-                << field->type()->ToString() << ")";
+        missing << field->name() << " (type " << actualField->type()->ToString()
+                << " != " << field->type()->ToString() << ")";
         ok = false;
       }
     }
