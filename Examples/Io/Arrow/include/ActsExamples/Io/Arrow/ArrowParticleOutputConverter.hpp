@@ -13,13 +13,12 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Io/Parquet/ArrowOutputConverter.hpp"
+#include "ActsPlugins/Arrow/ArrowUtil.hpp"
 #include "ActsPlugins/Arrow/Export.hpp"
 
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <arrow/api.h>
 
 namespace ActsExamples {
 
@@ -70,8 +69,8 @@ class ACTS_ARROW_EXPORT ArrowParticleOutputConverter final
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
 
-  WriteDataHandle<std::shared_ptr<arrow::Table>> m_outputTable{this,
-                                                               "OutputTable"};
+  WriteDataHandle<ActsPlugins::ArrowUtil::ArrowTable> m_outputTable{
+      this, "OutputTable"};
 
   /// Holds the perigee surface, propagator, and cumulative job-lifetime
   /// timer; constructed in the ctor only when @c writeHelixParameters is

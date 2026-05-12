@@ -28,7 +28,7 @@ namespace ActsExamples {
 
 class ParquetWriter::Impl {
  public:
-  using TableHandle = ConsumeDataHandle<std::shared_ptr<arrow::Table>>;
+  using TableHandle = ConsumeDataHandle<ActsPlugins::ArrowUtil::ArrowTable>;
 
   struct ShardState {
     std::filesystem::path path;
@@ -165,13 +165,13 @@ ProcessCode ParquetWriter::write(const AlgorithmContext& ctx) {
   const std::uint64_t shardId = ctx.eventNumber / m_impl->m_cfg.eventsPerShard;
 
   for (const auto& state : m_impl->m_states) {
-    auto table = (*state->handle)(ctx);
-    if (!table) {
+    auto handle = (*state->handle)(ctx);
+    if (!handle) {
       ACTS_ERROR("ParquetWriter: null table for collection " << state->name);
       return ProcessCode::ABORT;
     }
     auto stamped = ActsPlugins::ArrowUtil::withEventId(
-        table, static_cast<std::uint64_t>(ctx.eventNumber));
+        handle.table(), static_cast<std::uint64_t>(ctx.eventNumber));
 
     ShardState* shard = nullptr;
     {

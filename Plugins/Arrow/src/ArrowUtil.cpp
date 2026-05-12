@@ -13,6 +13,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include <arrow/c/abi.h>
+#include <arrow/c/bridge.h>
 #include <arrow/compute/api.h>
 #include <arrow/dataset/dataset.h>
 #include <arrow/dataset/discovery.h>
@@ -75,6 +77,56 @@ std::vector<std::string> ArrowSchemaHandle::fieldNames() const {
 
 int ArrowSchemaHandle::numFields() const {
   return m_schema ? m_schema->num_fields() : 0;
+}
+
+void ArrowSchemaHandle::exportToC(::ArrowSchema* out) const {
+  if (out == nullptr) {
+    throw std::invalid_argument("ArrowSchemaHandle::exportToC: null out");
+  }
+  if (!m_schema) {
+    throw std::runtime_error(
+        "ArrowSchemaHandle::exportToC: handle holds a null schema");
+  }
+  auto status = arrow::ExportSchema(*m_schema, out);
+  if (!status.ok()) {
+    throwArrow("ExportSchema", status);
+  }
+}
+
+std::int64_t ArrowTable::numRows() const {
+  return m_table ? m_table->num_rows() : 0;
+}
+
+int ArrowTable::numColumns() const {
+  return m_table ? m_table->num_columns() : 0;
+}
+
+ArrowSchemaHandle ArrowTable::schema() const {
+  return ArrowSchemaHandle{m_table ? m_table->schema() : nullptr};
+}
+
+std::string ArrowTable::toString() const {
+  return m_table ? m_table->ToString() : std::string{"<null table>"};
+}
+
+void ArrowTable::exportToC(::ArrowSchema* out_schema,
+                           ::ArrowArray* out_array) const {
+  if (out_schema == nullptr || out_array == nullptr) {
+    throw std::invalid_argument("ArrowTable::exportToC: null out");
+  }
+  if (!m_table) {
+    throw std::runtime_error("ArrowTable::exportToC: handle holds a null table");
+  }
+  // Combine to a single record batch — required by ExportRecordBatch and
+  // matches what consumers receive through the `__arrow_c_array__`
+  // protocol. For the canonical 1-row 1-chunk case this is essentially a
+  // pointer copy.
+  auto batch =
+      unwrap(m_table->CombineChunksToBatch(), "table CombineChunksToBatch");
+  auto status = arrow::ExportRecordBatch(*batch, out_array, out_schema);
+  if (!status.ok()) {
+    throwArrow("ExportRecordBatch", status);
+  }
 }
 
 std::shared_ptr<arrow::Field> eventIdField() {

@@ -10,7 +10,6 @@
 #include "ActsExamples/Io/Arrow/ArrowCaloHitOutputConverter.hpp"
 #include "ActsExamples/Io/Arrow/ArrowParticleOutputConverter.hpp"
 #include "ActsExamples/Io/Arrow/ArrowSimHitOutputConverter.hpp"
-#include "ActsExamples/Io/Arrow/ArrowTableCheckAlg.hpp"
 #include "ActsExamples/Io/Arrow/ArrowTrackOutputConverter.hpp"
 #include "ActsExamples/Io/Parquet/ArrowOutputConverter.hpp"
 #include "ActsExamples/Io/Parquet/ParquetReader.hpp"
@@ -90,11 +89,5 @@ a C++ lambda once at configuration time.
             m, "ArrowCaloHitOutputConverter");
     ACTS_PYTHON_STRUCT(c, inputCaloHits, outputTable, ecalEnergyThreshold,
                        hcalEnergyThreshold, cellThreshold);
-  }
-
-  {
-    auto [alg, c] = declareAlgorithm<ArrowTableCheckAlg, IAlgorithm>(
-        m, "ArrowTableCheckAlg");
-    ACTS_PYTHON_STRUCT(c, inputTable, requiredColumns, allNullColumns);
   }
 }

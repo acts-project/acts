@@ -379,8 +379,9 @@ def test_reader_schema_evolution_added_optional_column(tmp_path):
     pa = pytest.importorskip("pyarrow")
     pq = pytest.importorskip("pyarrow.parquet")
 
-    from acts.arrow import trackSchema
-    from acts.examples.arrow import ArrowTableCheckAlg, ParquetReader
+    from acts.arrow import ArrowTable, trackSchema
+    from acts.examples import ReadDataHandle
+    from acts.examples.arrow import ParquetReader
 
     full_schema_str = str(trackSchema())
     assert "t: " in full_schema_str, (
@@ -467,14 +468,43 @@ def test_reader_schema_evolution_added_optional_column(tmp_path):
     )
     assert reader.availableEvents() == (0, nevents)
 
+    # Pure-Python checker: pulls the ArrowTable off the WhiteBoard via the
+    # typed registry, crosses into pyarrow zero-copy via __arrow_c_array__,
+    # and inspects the result with pyarrow's full API.
+    class TrackTableCheck(acts.examples.IAlgorithm):
+        events_seen = 0
+
+        def __init__(self, name="TrackTableCheck"):
+            super().__init__(name=name, level=acts.logging.INFO)
+            self._handle = ReadDataHandle(self, ArrowTable, "tracks_arrow")
+            self._handle.initialize("tracks_arrow")
+
+        def execute(self, ctx):
+            handle = self._handle(ctx.eventStore)
+            t = handle.as_table()
+            assert "t" in t.column_names, (
+                f"event {ctx.eventNumber}: 't' column missing from "
+                f"projected table; schema: {t.schema}"
+            )
+            t_col = t.column("t")
+            assert t_col.null_count == t_col.length(), (
+                f"event {ctx.eventNumber}: 't' expected all-null, got "
+                f"{t_col.length() - t_col.null_count} non-null of "
+                f"{t_col.length()} values"
+            )
+            for required in ("d0", "z0", "phi", "theta", "qop"):
+                assert required in t.column_names, (
+                    f"event {ctx.eventNumber}: required column "
+                    f"'{required}' missing"
+                )
+            type(self).events_seen += 1
+            return acts.examples.ProcessCode.SUCCESS
+
     s = Sequencer(numThreads=1)
     s.addReader(reader)
-    s.addAlgorithm(
-        ArrowTableCheckAlg(
-            level=acts.logging.INFO,
-            inputTable="tracks_arrow",
-            requiredColumns=["d0", "z0", "phi", "theta", "qop", "t"],
-            allNullColumns=["t"],
-        )
-    )
+    s.addAlgorithm(TrackTableCheck())
     s.run()
+
+    assert TrackTableCheck.events_seen == nevents, (
+        f"checker saw {TrackTableCheck.events_seen} events, expected {nevents}"
+    )

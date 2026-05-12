@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsPlugins/Arrow/ArrowUtil.hpp"
 
 #include <sstream>
 #include <stdexcept>
@@ -25,7 +26,7 @@ class ArrowInputConverter::Impl {
     m_inputTable.initialize(inputTable);
   }
 
-  ReadDataHandle<std::shared_ptr<arrow::Table>> m_inputTable;
+  ReadDataHandle<ActsPlugins::ArrowUtil::ArrowTable> m_inputTable;
 };
 
 ArrowInputConverter::ArrowInputConverter(
@@ -37,11 +38,12 @@ ArrowInputConverter::ArrowInputConverter(
 ArrowInputConverter::~ArrowInputConverter() = default;
 
 ProcessCode ArrowInputConverter::execute(const AlgorithmContext& ctx) const {
-  const auto& table = m_impl->m_inputTable(ctx);
-  if (table == nullptr) {
+  const auto& handle = m_impl->m_inputTable(ctx);
+  if (!handle) {
     ACTS_ERROR("ArrowInputConverter '" << name() << "' received null table");
     return ProcessCode::ABORT;
   }
+  const auto& table = handle.table();
 
   // Subset check, not equality: dataset reads may surface a unified schema
   // that includes fields from newer fragments which older converters don't

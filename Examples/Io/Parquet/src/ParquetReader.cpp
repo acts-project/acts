@@ -26,7 +26,7 @@ class ParquetReader::Impl {
   struct CollectionState {
     std::string name;
     std::unique_ptr<ActsPlugins::ArrowUtil::ParquetDatasetReader> reader;
-    std::unique_ptr<WriteDataHandle<std::shared_ptr<arrow::Table>>> handle;
+    std::unique_ptr<WriteDataHandle<ActsPlugins::ArrowUtil::ArrowTable>> handle;
   };
 
   explicit Impl(ParquetReader::Config cfg, ParquetReader& parent)
@@ -98,9 +98,8 @@ class ParquetReader::Impl {
             referenceName, referenceEvents, name, events));
       }
 
-      state->handle =
-          std::make_unique<WriteDataHandle<std::shared_ptr<arrow::Table>>>(
-              &parent, name);
+      state->handle = std::make_unique<
+          WriteDataHandle<ActsPlugins::ArrowUtil::ArrowTable>>(&parent, name);
       state->handle->initialize(name);
       m_states.push_back(std::move(state));
     }
@@ -145,7 +144,8 @@ ProcessCode ParquetReader::read(const AlgorithmContext& context) {
                  << "'");
       return ProcessCode::ABORT;
     }
-    (*state->handle)(context, std::move(table));
+    (*state->handle)(context,
+                     ActsPlugins::ArrowUtil::ArrowTable{std::move(table)});
   }
 
   return ProcessCode::SUCCESS;
