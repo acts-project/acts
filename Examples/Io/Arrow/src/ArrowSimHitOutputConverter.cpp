@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "ActsPlugins/Arrow/ArrowUtil.hpp"
 
 #include <array>
 #include <cmath>
@@ -25,23 +26,6 @@
 namespace ActsExamples {
 
 namespace {
-
-std::shared_ptr<arrow::Schema> simHitSchema() {
-  return arrow::schema({
-      arrow::field("x", arrow::list(arrow::float32()), false),
-      arrow::field("y", arrow::list(arrow::float32()), false),
-      arrow::field("z", arrow::list(arrow::float32()), false),
-      arrow::field("true_x", arrow::list(arrow::float32()), false),
-      arrow::field("true_y", arrow::list(arrow::float32()), false),
-      arrow::field("true_z", arrow::list(arrow::float32()), false),
-      arrow::field("time", arrow::list(arrow::float32()), false),
-      arrow::field("particle_id", arrow::list(arrow::uint64()), false),
-      arrow::field("detector", arrow::list(arrow::uint8()), false),
-      arrow::field("volume_id", arrow::list(arrow::uint8()), false),
-      arrow::field("layer_id", arrow::list(arrow::uint16()), false),
-      arrow::field("surface_id", arrow::list(arrow::uint32()), false),
-  });
-}
 
 void check(const arrow::Status& s, const char* what) {
   if (!s.ok()) {
@@ -281,7 +265,7 @@ ProcessCode ArrowSimHitOutputConverter::execute(
       finish(detList), finish(volList), finish(layList),  finish(surfList),
   };
 
-  auto table = arrow::Table::Make(simHitSchema(), arrays);
+  auto table = arrow::Table::Make(ActsPlugins::ArrowUtil::simHitSchema(), arrays);
   m_outputTable(ctx, std::move(table));
 
   return ProcessCode::SUCCESS;

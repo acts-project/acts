@@ -50,6 +50,23 @@ class ParquetReader::Impl {
             std::format("ParquetReader: duplicate input directory '{}'",
                         resolved.string()));
       }
+      auto schemaIt = m_cfg.expectedSchemas.find(name);
+      if (schemaIt == m_cfg.expectedSchemas.end() || !schemaIt->second) {
+        throw std::invalid_argument(std::format(
+            "ParquetReader: collection '{}' has no expected schema. Every "
+            "configured collection must declare an expected schema; the "
+            "scanner uses it as the dataset's target so missing columns "
+            "become nulls and extras are dropped.",
+            name));
+      }
+    }
+    for (const auto& [name, _] : m_cfg.expectedSchemas) {
+      if (!m_cfg.collections.contains(name)) {
+        throw std::invalid_argument(std::format(
+            "ParquetReader: expectedSchemas has entry for '{}' but no matching "
+            "collection",
+            name));
+      }
     }
 
     std::int64_t referenceEvents = -1;
@@ -67,7 +84,7 @@ class ParquetReader::Impl {
       state->name = name;
       state->reader =
           std::make_unique<ActsPlugins::ArrowUtil::ParquetDatasetReader>(
-              directory);
+              directory, m_cfg.expectedSchemas.at(name).schema());
 
       const auto events = state->reader->numEvents();
       if (referenceEvents < 0) {

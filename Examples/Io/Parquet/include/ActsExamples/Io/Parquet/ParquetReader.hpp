@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
+#include "ActsPlugins/Arrow/ArrowUtil.hpp"
 #include "ActsPlugins/Arrow/Export.hpp"
 
 #include <filesystem>
@@ -32,6 +33,14 @@ namespace ActsExamples {
 ///
 /// The total event count is the sum of per-fragment row counts (footer
 /// reads only). All collections must agree on their total row count.
+///
+/// Every configured collection must declare an expected schema. The
+/// scanner projects each fragment to that schema: columns the fragment
+/// lacks are materialized as nulls (added-column schema evolution), and
+/// columns the fragment has but the schema doesn't are dropped. This
+/// makes the reader's output deterministic — independent of which
+/// optional columns happened to be written into the on-disk shards —
+/// and gives downstream input converters a contract they can rely on.
 class ACTS_ARROW_EXPORT ParquetReader : public IReader {
  public:
   struct Config {
@@ -45,6 +54,19 @@ class ACTS_ARROW_EXPORT ParquetReader : public IReader {
     /// an absolute path is used directly. No two collections may
     /// resolve to the same input directory.
     std::unordered_map<std::string, std::filesystem::path> collections;
+
+    /// Expected schema per collection — same keys as @c collections,
+    /// must cover every key. The scanner uses this as the dataset's
+    /// target schema (sans @c event_id, which the reader manages
+    /// internally), so missing columns become nulls and extra columns
+    /// are dropped. The handles should wrap the schemas that the
+    /// corresponding output converter / @c ArrowSchemas helper
+    /// produces. Wrapped in @c ArrowSchemaHandle so the same map type
+    /// is usable from Python (where exposing @c arrow::Schema directly
+    /// would re-introduce the symbol-collision risk the arrow-plugin
+    /// isolation is built to prevent).
+    std::unordered_map<std::string, ActsPlugins::ArrowUtil::ArrowSchemaHandle>
+        expectedSchemas;
   };
 
   /// Construct the reader.

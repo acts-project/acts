@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Io/Arrow/ArrowParticleOutputConverter.hpp"
 
+#include "ActsPlugins/Arrow/ArrowUtil.hpp"
+
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -32,40 +34,6 @@
 namespace ActsExamples {
 
 namespace {
-
-/// Nested layout: one row per event, each field a @c list<T> whose single
-/// list element at row @c N holds all particles of event @c N.
-std::shared_ptr<arrow::Schema> particleSchema() {
-  return arrow::schema({
-      arrow::field("particle_id", arrow::list(arrow::uint64()), false),
-      arrow::field("pdg_id", arrow::list(arrow::int64()), false),
-      arrow::field("mass", arrow::list(arrow::float32()), false),
-      arrow::field("energy", arrow::list(arrow::float32()), false),
-      arrow::field("charge", arrow::list(arrow::float32()), false),
-      arrow::field("vx", arrow::list(arrow::float32()), false),
-      arrow::field("vy", arrow::list(arrow::float32()), false),
-      arrow::field("vz", arrow::list(arrow::float32()), false),
-      arrow::field("time", arrow::list(arrow::float32()), false),
-      arrow::field("px", arrow::list(arrow::float32()), false),
-      arrow::field("py", arrow::list(arrow::float32()), false),
-      arrow::field("pz", arrow::list(arrow::float32()), false),
-      // Perigee parameters are nullable per element so a particle whose
-      // d0/z0 cannot be computed (no propagator configured, neutral with a
-      // failed local transform, or failed helix propagation) emits a real
-      // null instead of a NaN sentinel.
-      arrow::field("perigee_d0",
-                   arrow::list(arrow::field("item", arrow::float32(),
-                                            /*nullable=*/true)),
-                   false),
-      arrow::field("perigee_z0",
-                   arrow::list(arrow::field("item", arrow::float32(),
-                                            /*nullable=*/true)),
-                   false),
-      arrow::field("vertex_primary", arrow::list(arrow::uint16()), false),
-      arrow::field("parent_id", arrow::list(arrow::int64()), false),
-      arrow::field("primary", arrow::list(arrow::boolean()), false),
-  });
-}
 
 void check(const arrow::Status& s, const char* what) {
   if (!s.ok()) {
@@ -447,7 +415,7 @@ ProcessCode ArrowParticleOutputConverter::execute(
       finish(parentList), finish(primaryList),
   };
 
-  auto table = arrow::Table::Make(particleSchema(), arrays);
+  auto table = arrow::Table::Make(ActsPlugins::ArrowUtil::particleSchema(), arrays);
   m_outputTable(ctx, std::move(table));
 
   return ProcessCode::SUCCESS;

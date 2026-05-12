@@ -57,9 +57,110 @@ void ensureComputeInitialized() {
 
 }  // namespace
 
+std::string ArrowSchemaHandle::toString() const {
+  return m_schema ? m_schema->ToString() : std::string{"<null schema>"};
+}
+
+std::vector<std::string> ArrowSchemaHandle::fieldNames() const {
+  std::vector<std::string> names;
+  if (!m_schema) {
+    return names;
+  }
+  names.reserve(m_schema->num_fields());
+  for (int i = 0; i < m_schema->num_fields(); ++i) {
+    names.push_back(m_schema->field(i)->name());
+  }
+  return names;
+}
+
+int ArrowSchemaHandle::numFields() const {
+  return m_schema ? m_schema->num_fields() : 0;
+}
+
 std::shared_ptr<arrow::Field> eventIdField() {
   return arrow::field(std::string{kEventIdColumn}, arrow::uint32(),
                       /*nullable=*/false);
+}
+
+namespace {
+
+// `list<T>` whose inner elements are nullable. Used for perigee parameters
+// and track parameters so a per-element failure (no reference surface,
+// failed local transform, failed propagation) emits a real null instead
+// of a NaN sentinel.
+std::shared_ptr<arrow::DataType> nullableFloatList() {
+  return arrow::list(arrow::field("item", arrow::float32(), true));
+}
+
+}  // namespace
+
+std::shared_ptr<arrow::Schema> particleSchema() {
+  return arrow::schema({
+      arrow::field("particle_id", arrow::list(arrow::uint64()), false),
+      arrow::field("pdg_id", arrow::list(arrow::int64()), false),
+      arrow::field("mass", arrow::list(arrow::float32()), false),
+      arrow::field("energy", arrow::list(arrow::float32()), false),
+      arrow::field("charge", arrow::list(arrow::float32()), false),
+      arrow::field("vx", arrow::list(arrow::float32()), false),
+      arrow::field("vy", arrow::list(arrow::float32()), false),
+      arrow::field("vz", arrow::list(arrow::float32()), false),
+      arrow::field("time", arrow::list(arrow::float32()), false),
+      arrow::field("px", arrow::list(arrow::float32()), false),
+      arrow::field("py", arrow::list(arrow::float32()), false),
+      arrow::field("pz", arrow::list(arrow::float32()), false),
+      arrow::field("perigee_d0", nullableFloatList(), false),
+      arrow::field("perigee_z0", nullableFloatList(), false),
+      arrow::field("vertex_primary", arrow::list(arrow::uint16()), false),
+      arrow::field("parent_id", arrow::list(arrow::int64()), false),
+      arrow::field("primary", arrow::list(arrow::boolean()), false),
+  });
+}
+
+std::shared_ptr<arrow::Schema> trackSchema() {
+  return arrow::schema({
+      arrow::field("d0", nullableFloatList(), false),
+      arrow::field("z0", nullableFloatList(), false),
+      arrow::field("phi", nullableFloatList(), false),
+      arrow::field("theta", nullableFloatList(), false),
+      arrow::field("qop", nullableFloatList(), false),
+      arrow::field("majority_particle_id", arrow::list(arrow::uint64()), false),
+      arrow::field("hit_ids", arrow::list(arrow::list(arrow::uint32())), false),
+      arrow::field("track_id", arrow::list(arrow::uint16()), false),
+      arrow::field("t", nullableFloatList(), true),
+  });
+}
+
+std::shared_ptr<arrow::Schema> simHitSchema() {
+  return arrow::schema({
+      arrow::field("x", arrow::list(arrow::float32()), false),
+      arrow::field("y", arrow::list(arrow::float32()), false),
+      arrow::field("z", arrow::list(arrow::float32()), false),
+      arrow::field("true_x", arrow::list(arrow::float32()), false),
+      arrow::field("true_y", arrow::list(arrow::float32()), false),
+      arrow::field("true_z", arrow::list(arrow::float32()), false),
+      arrow::field("time", arrow::list(arrow::float32()), false),
+      arrow::field("particle_id", arrow::list(arrow::uint64()), false),
+      arrow::field("detector", arrow::list(arrow::uint8()), false),
+      arrow::field("volume_id", arrow::list(arrow::uint8()), false),
+      arrow::field("layer_id", arrow::list(arrow::uint16()), false),
+      arrow::field("surface_id", arrow::list(arrow::uint32()), false),
+  });
+}
+
+std::shared_ptr<arrow::Schema> caloHitSchema() {
+  return arrow::schema({
+      arrow::field("detector", arrow::list(arrow::uint8()), false),
+      arrow::field("total_energy", arrow::list(arrow::float32()), false),
+      arrow::field("x", arrow::list(arrow::float32()), false),
+      arrow::field("y", arrow::list(arrow::float32()), false),
+      arrow::field("z", arrow::list(arrow::float32()), false),
+      arrow::field("contrib_particle_ids",
+                   arrow::list(arrow::list(arrow::uint64())), false),
+      arrow::field("contrib_energies",
+                   arrow::list(arrow::list(arrow::float32())), false),
+      arrow::field("contrib_times", arrow::list(arrow::list(arrow::float32())),
+                   false),
+  });
 }
 
 std::shared_ptr<arrow::Table> withEventId(
@@ -147,7 +248,8 @@ void ParquetFileWriter::close() {
 
 class ParquetDatasetReader::Impl {
  public:
-  explicit Impl(std::filesystem::path directory)
+  Impl(std::filesystem::path directory,
+       std::shared_ptr<arrow::Schema> targetSchema)
       : m_directory(std::move(directory)) {
     ensureComputeInitialized();
 
@@ -155,6 +257,13 @@ class ParquetDatasetReader::Impl {
         !std::filesystem::is_directory(m_directory)) {
       throw std::invalid_argument("ParquetDatasetReader: not a directory: " +
                                   m_directory.string());
+    }
+
+    if (targetSchema != nullptr &&
+        targetSchema->GetFieldIndex(std::string{kEventIdColumn}) != -1) {
+      throw std::invalid_argument(
+          "ParquetDatasetReader: target schema must not contain event_id; "
+          "the reader prepends it internally");
     }
 
     std::vector<std::string> files;
@@ -188,11 +297,20 @@ class ParquetDatasetReader::Impl {
                               std::move(fs), files, std::move(format), options),
                           "make dataset factory");
 
-    arrow::dataset::InspectOptions inspectOpts;
-    inspectOpts.fragments =
-        arrow::dataset::InspectOptions::kInspectAllFragments;
     arrow::dataset::FinishOptions finishOpts;
-    finishOpts.inspect_options = inspectOpts;
+    if (targetSchema != nullptr) {
+      // Prepend event_id; the dataset must carry it for the per-event
+      // filter, but callers see it as an internal column and the
+      // public schema below strips it again.
+      auto withEventId = unwrap(
+          targetSchema->AddField(0, eventIdField()), "prepend event_id");
+      finishOpts.schema = std::move(withEventId);
+    } else {
+      arrow::dataset::InspectOptions inspectOpts;
+      inspectOpts.fragments =
+          arrow::dataset::InspectOptions::kInspectAllFragments;
+      finishOpts.inspect_options = inspectOpts;
+    }
     m_dataset = unwrap(factory->Finish(finishOpts), "finish dataset");
 
     auto fullSchema = m_dataset->schema();
@@ -239,8 +357,11 @@ class ParquetDatasetReader::Impl {
   std::shared_ptr<arrow::Schema> m_publicSchema;
 };
 
-ParquetDatasetReader::ParquetDatasetReader(std::filesystem::path directory)
-    : m_impl(std::make_unique<Impl>(std::move(directory))) {}
+ParquetDatasetReader::ParquetDatasetReader(
+    std::filesystem::path directory,
+    std::shared_ptr<arrow::Schema> targetSchema)
+    : m_impl(std::make_unique<Impl>(std::move(directory),
+                                    std::move(targetSchema))) {}
 
 ParquetDatasetReader::~ParquetDatasetReader() = default;
 

@@ -10,6 +10,7 @@
 #include "ActsExamples/Io/Arrow/ArrowCaloHitOutputConverter.hpp"
 #include "ActsExamples/Io/Arrow/ArrowParticleOutputConverter.hpp"
 #include "ActsExamples/Io/Arrow/ArrowSimHitOutputConverter.hpp"
+#include "ActsExamples/Io/Arrow/ArrowTableCheckAlg.hpp"
 #include "ActsExamples/Io/Arrow/ArrowTrackOutputConverter.hpp"
 #include "ActsExamples/Io/Parquet/ArrowOutputConverter.hpp"
 #include "ActsExamples/Io/Parquet/ParquetReader.hpp"
@@ -30,8 +31,13 @@ using namespace ActsPython;
 using namespace ActsExamples;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
+  // ArrowSchemaHandle (Python: `acts.arrow.ArrowSchema`) is registered by
+  // the plugin-level binding `ActsPluginsPythonBindingsArrow`. The
+  // generated `acts/examples/arrow.py` does `from acts import arrow`
+  // before importing this module so that the type is in pybind's
+  // registry by the time `expectedSchemas` is bound below.
   ACTS_PYTHON_DECLARE_READER(ParquetReader, m, "ParquetReader", inputDir,
-                             collections);
+                             collections, expectedSchemas);
 
   ACTS_PYTHON_DECLARE_WRITER(ParquetWriter, m, "ParquetWriter", outputDir,
                              collections, eventsPerShard, eventsPerRowGroup,
@@ -84,5 +90,11 @@ a C++ lambda once at configuration time.
             m, "ArrowCaloHitOutputConverter");
     ACTS_PYTHON_STRUCT(c, inputCaloHits, outputTable, ecalEnergyThreshold,
                        hcalEnergyThreshold, cellThreshold);
+  }
+
+  {
+    auto [alg, c] = declareAlgorithm<ArrowTableCheckAlg, IAlgorithm>(
+        m, "ArrowTableCheckAlg");
+    ACTS_PYTHON_STRUCT(c, inputTable, requiredColumns, allNullColumns);
   }
 }
