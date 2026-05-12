@@ -190,6 +190,10 @@ if [ -n "${CI:-}" ]; then
       --oci-password-variable GITHUB_TOKEN \
       "${mirror_name}"
   fi
+  # Verify the mirror config (password-variable stores only the env var name,
+  # not the secret value, so this is safe to print).
+  spack mirror list
+  spack config get mirrors
   end_section
 
   start_section "Add ACTS package repository"
