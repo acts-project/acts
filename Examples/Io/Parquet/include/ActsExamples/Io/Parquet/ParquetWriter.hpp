@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
+#include "ActsPlugins/Arrow/ArrowUtil.hpp"
 #include "ActsPlugins/Arrow/Export.hpp"
 
 #include <filesystem>
@@ -58,6 +59,17 @@ class ACTS_ARROW_EXPORT ParquetWriter final : public IWriter {
     /// absolute path is used directly. No two collections may resolve to
     /// the same output directory.
     std::unordered_map<std::string, std::filesystem::path> collections;
+
+    /// Expected schema per collection — same keys as @c collections, must
+    /// cover every key. Each per-event @c arrow::Table read off the
+    /// whiteboard is checked for exact equality against the declared
+    /// schema before stamping @c event_id and serialising. The schemas
+    /// here MUST NOT include the @c event_id column — the writer
+    /// prepends it. Symmetric with
+    /// @c ParquetReader::Config::expectedSchemas: any pair of writer +
+    /// reader for a collection should reference the same handle.
+    std::unordered_map<std::string, ActsPlugins::ArrowUtil::ArrowSchemaHandle>
+        expectedSchemas;
 
     /// Number of events per shard file. Drives file-level granularity
     /// (the read-side pruning unit).

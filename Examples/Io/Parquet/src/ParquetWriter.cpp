@@ -44,6 +44,7 @@ class ParquetWriter::Impl {
   struct CollectionState {
     std::string name;
     std::filesystem::path directory;
+    std::shared_ptr<arrow::Schema> expectedSchema;
     std::unique_ptr<TableHandle> handle;
     std::mutex shardsMutex;
     std::map<std::uint64_t, std::unique_ptr<ShardState>> shards;
@@ -89,14 +90,41 @@ class ParquetWriter::Impl {
                         resolved.string()));
       }
 
+      auto schemaIt = m_cfg.expectedSchemas.find(name);
+      if (schemaIt == m_cfg.expectedSchemas.end() || !schemaIt->second) {
+        throw std::invalid_argument(std::format(
+            "ParquetWriter: collection '{}' has no expected schema. Every "
+            "configured collection must declare an expected schema; the "
+            "writer validates each per-event table against it before "
+            "stamping event_id and serialising.",
+            name));
+      }
+      auto expected = schemaIt->second.schema();
+      if (expected->GetFieldIndex(std::string{
+              ActsPlugins::ArrowUtil::kEventIdColumn}) >= 0) {
+        throw std::invalid_argument(std::format(
+            "ParquetWriter: expected schema for '{}' must not contain "
+            "event_id; the writer prepends it.",
+            name));
+      }
+
       std::filesystem::create_directories(resolved);
 
       auto state = std::make_unique<CollectionState>();
       state->name = name;
       state->directory = std::move(resolved);
+      state->expectedSchema = std::move(expected);
       state->handle = std::make_unique<TableHandle>(&parent, name);
       state->handle->initialize(name);
       m_states.push_back(std::move(state));
+    }
+    for (const auto& [name, _] : m_cfg.expectedSchemas) {
+      if (!m_cfg.collections.contains(name)) {
+        throw std::invalid_argument(std::format(
+            "ParquetWriter: expectedSchemas has entry for '{}' but no "
+            "matching collection",
+            name));
+      }
     }
   }
 
@@ -168,6 +196,14 @@ ProcessCode ParquetWriter::write(const AlgorithmContext& ctx) {
     auto handle = (*state->handle)(ctx);
     if (!handle) {
       ACTS_ERROR("ParquetWriter: null table for collection " << state->name);
+      return ProcessCode::ABORT;
+    }
+    const auto& tableSchema = *handle.table()->schema();
+    if (!tableSchema.Equals(*state->expectedSchema, /*check_metadata=*/false)) {
+      ACTS_ERROR("ParquetWriter: schema mismatch for collection '"
+                 << state->name << "' at event " << ctx.eventNumber
+                 << ".\n  expected: " << state->expectedSchema->ToString()
+                 << "\n  actual:   " << tableSchema.ToString());
       return ProcessCode::ABORT;
     }
     auto stamped = ActsPlugins::ArrowUtil::withEventId(

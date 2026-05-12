@@ -39,8 +39,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
                              collections, expectedSchemas);
 
   ACTS_PYTHON_DECLARE_WRITER(ParquetWriter, m, "ParquetWriter", outputDir,
-                             collections, eventsPerShard, eventsPerRowGroup,
-                             maxOpenShards);
+                             collections, expectedSchemas, eventsPerShard,
+                             eventsPerRowGroup, maxOpenShards);
 
   py::class_<ArrowOutputConverter, IAlgorithm,
              std::shared_ptr<ArrowOutputConverter>>(m, "ArrowOutputConverter")

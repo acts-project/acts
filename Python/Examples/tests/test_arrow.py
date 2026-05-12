@@ -164,6 +164,7 @@ def _add_arrow_writer(
         These must differ — the same key can't hold both an ACTS container
         and an arrow::Table.
     """
+    from acts.arrow import particleSchema
     from acts.examples.arrow import ArrowParticleOutputConverter, ParquetWriter
 
     field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
@@ -186,6 +187,10 @@ def _add_arrow_writer(
             outputDir=str(outputDir),
             collections={
                 table_key: table_key for table_key in inputs_to_tables.values()
+            },
+            expectedSchemas={
+                table_key: particleSchema()
+                for table_key in inputs_to_tables.values()
             },
             eventsPerShard=eventsPerShard,
         )
@@ -592,4 +597,61 @@ def test_python_alg_writes_arrow_table(tmp_path):
     assert TrackConsumer.events_seen == nevents, (
         f"consumer saw {TrackConsumer.events_seen} events, expected {nevents}"
     )
+
+
+def test_writer_rejects_missing_schema(tmp_path):
+    """ParquetWriter requires an expected schema for every collection.
+    Constructing one without one must fail at config time, not at run time.
+    """
+    from acts.examples.arrow import ParquetWriter
+
+    with pytest.raises(ValueError, match="no expected schema"):
+        ParquetWriter(
+            level=acts.logging.INFO,
+            outputDir=str(tmp_path),
+            collections={"some_collection": "some_collection"},
+            expectedSchemas={},  # missing entry for "some_collection"
+        )
+
+
+def test_writer_aborts_on_per_event_schema_mismatch(tmp_path):
+    """A pure-Python algorithm produces a table whose schema doesn't match
+    the writer's declared expectedSchemas. The writer must abort the
+    sequencer with a clear message rather than silently writing garbage.
+    """
+    pa = pytest.importorskip("pyarrow")
+
+    from acts.arrow import ArrowTable, particleSchema
+    from acts.examples import WriteDataHandle
+    from acts.examples.arrow import ParquetWriter
+
+    # Producer writes a 1-row table with a single int column. Whatever the
+    # schema, it isn't particleSchema(), which is what the writer is told
+    # to expect below — so the per-event check must fire on event 0.
+    class WrongShapeProducer(acts.examples.IAlgorithm):
+        def __init__(self, key, name="WrongShapeProducer"):
+            super().__init__(name=name, level=acts.logging.INFO)
+            self._out = WriteDataHandle(self, ArrowTable, key)
+            self._out.initialize(key)
+
+        def execute(self, ctx):
+            wrong = pa.table({"unexpected": pa.array([1], type=pa.int32())})
+            self._out(ctx, ArrowTable.from_arrow(wrong))
+            return acts.examples.ProcessCode.SUCCESS
+
+    s = Sequencer(numThreads=1, events=1)
+    s.addAlgorithm(WrongShapeProducer(key="bogus_arrow"))
+    s.addWriter(
+        ParquetWriter(
+            level=acts.logging.INFO,
+            outputDir=str(tmp_path),
+            collections={"bogus_arrow": "bogus_arrow"},
+            expectedSchemas={"bogus_arrow": particleSchema()},
+        )
+    )
+
+    # The writer ABORTs, which the Sequencer turns into a runtime error.
+    with pytest.raises(RuntimeError):
+        s.run()
+
 

@@ -156,6 +156,7 @@ def main():
     )
 
     parquet_collections = {"particles_arrow": "particles"}
+    parquet_schemas = {"particles_arrow": particleSchema()}
 
     if args.calo:
         s.addAlgorithm(
@@ -184,6 +185,7 @@ def main():
             level=acts.logging.INFO,
             outputDir=str(args.output),
             collections=parquet_collections,
+            expectedSchemas=parquet_schemas,
         )
     )
 
