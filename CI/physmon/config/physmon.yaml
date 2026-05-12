@@ -1,137 +1,22 @@
 # Job catalog for the Snakemake-based physmon workflow.
 #
-# Two top-level sections:
-#   - generators: each entry is a script that produces ROOT files.
+# Three top-level sections:
 #   - comparisons: each entry is one histcmp call. Optionally carries a `plot`
-#     sub-config describing how to derive a `_hist.root` input from a raw
-#     ntuple via Examples/Scripts/generic_plotter.py.
+#     sub-config describing how to derive a `_hist.root` input from a raw ntuple
+#     via Examples/Scripts/generic_plotter.py.
+#   - trackfinding: short per-generator config for trackfinding workflows; the
+#     Snakefile expands each entry into the standard pack of comparisons (see
+#     TRACKFINDING_BASE / TRACKFINDING_EXTRAS in the Snakefile).
 #
-# All paths are relative:
+# Generator metadata (variants, upstream deps) lives directly in the Snakefile
+# next to the rule definitions, not here.
+#
+# Paths are relative:
 #   - current files     -> {OUTDIR}/data/<path>
 #   - reference files   -> CI/physmon/reference/<path>   (unless reference_in: outdir)
 #   - html/plots output -> {OUTDIR}/html/<path>          (.root replaced with .html)
 #
 # `mode` groups comparisons for the Snakefile's per-mode meta-targets.
-
-generators:
-  simulation:
-    script: physmon_simulation.py
-    title: "Simulation"
-    mode: simulation
-    outputs:
-      - particles_fatras.root
-      - particles_geant4.root
-      - particles_ttbar.root
-      - vertices_ttbar.root
-      - particles_gun.root  # produced but not compared; kept to match shell behavior
-
-  simulation_gsf:
-    script: physmon_simulation_gsf.py
-    title: "Geant4 Sim for GSF"
-    mode: gsf  # also triggered by refit_gsf via the `needs` graph
-    outputs:
-      - simulation/particles_simulation.root
-      - simulation/hits.root
-
-  trackfitting_kf:
-    script: physmon_trackfitting_kf.py
-    title: "Truth Tracking KF"
-    mode: kf
-    outputs:
-      - performance_trackfitting.root
-
-  trackfitting_gsf:
-    script: physmon_trackfitting_gsf.py
-    title: "Truth Tracking GSF"
-    mode: gsf
-    needs: [simulation_gsf]
-    outputs:
-      - performance_trackfitting.root
-
-  trackfitting_gx2f:
-    script: physmon_trackfitting_gx2f.py
-    title: "Truth Tracking GX2F"
-    mode: gx2f
-    outputs:
-      - performance_trackfitting.root
-
-  trackrefitting_kf:
-    script: physmon_trackrefitting_kf.py
-    title: "Truth Tracking KF refit"
-    mode: refit_kf
-    outputs:
-      - performance_trackrefitting.root
-
-  trackrefitting_gsf:
-    script: physmon_trackrefitting_gsf.py
-    title: "Truth Tracking GSF refit"
-    mode: refit_gsf
-    needs: [simulation_gsf]
-    outputs:
-      - performance_trackrefitting.root
-
-  # trackfinding_1muon runs once per seeding variant (--variant arg).
-  # Each invocation writes outputs flat under data/trackfinding_1muon/<variant>/.
-  trackfinding_1muon:
-    script: physmon_trackfinding_1muon.py
-    title_fmt: "CKF single muon ({variant})"
-    mode: fullchains
-    variants:
-      - truth_smeared
-      - truth_estimated
-      - seeded
-      - orthogonal
-    outputs_per_variant:
-      - performance_finding_ckf.root
-      - performance_fitting_ckf.root
-      - tracksummary_ckf.root
-    # truth_smeared does not produce performance_seeding.root; the rule handles this.
-    outputs_per_variant_except:
-      truth_smeared:
-        - performance_seeding.root
-    # other variants get the seeding file
-    outputs_per_other_variant:
-      - performance_seeding.root
-
-  trackfinding_4muon_50vertices:
-    script: physmon_trackfinding_4muon_50vertices.py
-    title: "CKF muon 50"
-    mode: fullchains
-    outputs:
-      - performance_seeding.root
-      - tracksummary_ckf.root
-      - performance_finding_ckf.root
-      - performance_fitting_ckf.root
-      - performance_finding_ckf_ambi.root
-      - performance_fitting_ckf_ambi.root
-      - performance_vertexing_ivf_notime.root
-      - performance_vertexing_amvf_gauss_notime.root
-      - performance_vertexing_amvf_grid_time.root
-
-  trackfinding_ttbar_pu200:
-    script: physmon_trackfinding_ttbar_pu200.py
-    title: "CKF ttbar 200"
-    mode: fullchains
-    outputs:
-      - performance_seeding.root
-      - tracksummary_ckf.root
-      - performance_finding_ckf.root
-      - performance_fitting_ckf.root
-      - performance_finding_ckf_ambi.root
-      - performance_fitting_ckf_ambi.root
-      - performance_finding_ckf_ml_solver.root
-      - performance_fitting_ckf_ml_solver.root
-      - performance_vertexing_amvf_gauss_notime.root
-      - performance_vertexing_amvf_grid_time.root
-
-  trackfitting_gx2f_vs_kf:
-    script: physmon_trackfitting_gx2f_vs_kf.py
-    title: "Comparison - Truth Tracking GX2F vs KF"
-    mode: gx2f_vs_kf
-    outputs:
-      - performance_trackfitting_gx2f.root
-      - performance_trackfitting_kf.root
-
 
 comparisons:
   # ---- simulation ---------------------------------------------------------
@@ -193,173 +78,6 @@ comparisons:
     config: trackfitting_gsf.yml
     mode: refit_gsf
 
-  # ---- trackfinding 1muon × 4 variants -----------------------------------
-  # truth_smeared: no seeding comparison
-  - title: "CKF finding performance | trackfinding | single muon | truth smeared seeding"
-    current: trackfinding_1muon/truth_smeared/performance_finding_ckf.root
-    config: default.yml
-    mode: fullchains
-  - title: "CKF fitting performance | trackfinding | single muon | truth smeared seeding"
-    current: trackfinding_1muon/truth_smeared/performance_fitting_ckf.root
-    config: default.yml
-    mode: fullchains
-  - title: "CKF track summary | trackfinding | single muon | truth smeared seeding"
-    current: trackfinding_1muon/truth_smeared/tracksummary_ckf_hist.root
-    mode: fullchains
-    plot:
-      from: trackfinding_1muon/truth_smeared/tracksummary_ckf.root
-      tree: tracksummary
-      config: tracksummary_ckf.yml
-
-  # truth_estimated
-  - title: "Seeding trackfinding | single muon | truth estimated seeding"
-    current: trackfinding_1muon/truth_estimated/performance_seeding.root
-    config: default.yml
-    mode: fullchains
-  - title: "CKF finding performance | trackfinding | single muon | truth estimated seeding"
-    current: trackfinding_1muon/truth_estimated/performance_finding_ckf.root
-    config: default.yml
-    mode: fullchains
-  - title: "CKF fitting performance | trackfinding | single muon | truth estimated seeding"
-    current: trackfinding_1muon/truth_estimated/performance_fitting_ckf.root
-    config: default.yml
-    mode: fullchains
-  - title: "CKF track summary | trackfinding | single muon | truth estimated seeding"
-    current: trackfinding_1muon/truth_estimated/tracksummary_ckf_hist.root
-    mode: fullchains
-    plot:
-      from: trackfinding_1muon/truth_estimated/tracksummary_ckf.root
-      tree: tracksummary
-      config: tracksummary_ckf.yml
-
-  # seeded
-  - title: "Seeding trackfinding | single muon | default seeding"
-    current: trackfinding_1muon/seeded/performance_seeding.root
-    config: default.yml
-    mode: fullchains
-  - title: "CKF finding performance | trackfinding | single muon | default seeding"
-    current: trackfinding_1muon/seeded/performance_finding_ckf.root
-    config: default.yml
-    mode: fullchains
-  - title: "CKF fitting performance | trackfinding | single muon | default seeding"
-    current: trackfinding_1muon/seeded/performance_fitting_ckf.root
-    config: default.yml
-    mode: fullchains
-  - title: "CKF track summary | trackfinding | single muon | default seeding"
-    current: trackfinding_1muon/seeded/tracksummary_ckf_hist.root
-    mode: fullchains
-    plot:
-      from: trackfinding_1muon/seeded/tracksummary_ckf.root
-      tree: tracksummary
-      config: tracksummary_ckf.yml
-
-  # orthogonal
-  - title: "Seeding trackfinding | single muon | orthogonal seeding"
-    current: trackfinding_1muon/orthogonal/performance_seeding.root
-    config: default.yml
-    mode: fullchains
-  - title: "CKF finding performance | trackfinding | single muon | orthogonal seeding"
-    current: trackfinding_1muon/orthogonal/performance_finding_ckf.root
-    config: default.yml
-    mode: fullchains
-  - title: "CKF fitting performance | trackfinding | single muon | orthogonal seeding"
-    current: trackfinding_1muon/orthogonal/performance_fitting_ckf.root
-    config: default.yml
-    mode: fullchains
-  - title: "CKF track summary | trackfinding | single muon | orthogonal seeding"
-    current: trackfinding_1muon/orthogonal/tracksummary_ckf_hist.root
-    mode: fullchains
-    plot:
-      from: trackfinding_1muon/orthogonal/tracksummary_ckf.root
-      tree: tracksummary
-      config: tracksummary_ckf.yml
-
-  # ---- trackfinding 4muon × 50 vertices ----------------------------------
-  - title: "Seeding trackfinding | 4 muon x 50 vertices | default seeding"
-    current: trackfinding_4muon_50vertices/performance_seeding.root
-    config: default.yml
-    mode: fullchains
-  - title: "CKF finding performance | trackfinding | 4 muon x 50 vertices | default seeding"
-    current: trackfinding_4muon_50vertices/performance_finding_ckf.root
-    config: default.yml
-    mode: fullchains
-  - title: "CKF fitting performance | trackfinding | 4 muon x 50 vertices | default seeding"
-    current: trackfinding_4muon_50vertices/performance_fitting_ckf.root
-    config: default.yml
-    mode: fullchains
-  - title: "CKF track summary | trackfinding | 4 muon x 50 vertices | default seeding"
-    current: trackfinding_4muon_50vertices/tracksummary_ckf_hist.root
-    mode: fullchains
-    plot:
-      from: trackfinding_4muon_50vertices/tracksummary_ckf.root
-      tree: tracksummary
-      config: tracksummary_ckf.yml
-  - title: "Ambisolver finding performance | trackfinding | 4 muon x 50 vertices | default seeding"
-    current: trackfinding_4muon_50vertices/performance_finding_ckf_ambi.root
-    mode: fullchains
-  - title: "IVF notime | trackfinding | 4 muon x 50 vertices | default seeding"
-    current: trackfinding_4muon_50vertices/performance_vertexing_ivf_notime_hist.root
-    mode: fullchains
-    plot:
-      from: trackfinding_4muon_50vertices/performance_vertexing_ivf_notime.root
-      tree: vertexing
-      config: vertexing_4muon_50vertices.yml
-  - title: "AMVF gauss notime | trackfinding | 4 muon x 50 vertices | default seeding"
-    current: trackfinding_4muon_50vertices/performance_vertexing_amvf_gauss_notime_hist.root
-    mode: fullchains
-    plot:
-      from: trackfinding_4muon_50vertices/performance_vertexing_amvf_gauss_notime.root
-      tree: vertexing
-      config: vertexing_4muon_50vertices.yml
-  - title: "AMVF grid time | trackfinding | 4 muon x 50 vertices | default seeding"
-    current: trackfinding_4muon_50vertices/performance_vertexing_amvf_grid_time_hist.root
-    mode: fullchains
-    plot:
-      from: trackfinding_4muon_50vertices/performance_vertexing_amvf_grid_time.root
-      tree: vertexing
-      config: vertexing_4muon_50vertices.yml
-
-  # ---- trackfinding ttbar PU200 ------------------------------------------
-  - title: "Seeding trackfinding | ttbar with 200 pileup | default seeding"
-    current: trackfinding_ttbar_pu200/performance_seeding.root
-    config: default.yml
-    mode: fullchains
-  - title: "CKF finding performance | trackfinding | ttbar with 200 pileup | default seeding"
-    current: trackfinding_ttbar_pu200/performance_finding_ckf.root
-    config: default.yml
-    mode: fullchains
-  - title: "CKF fitting performance | trackfinding | ttbar with 200 pileup | default seeding"
-    current: trackfinding_ttbar_pu200/performance_fitting_ckf.root
-    config: default.yml
-    mode: fullchains
-  - title: "CKF track summary | trackfinding | ttbar with 200 pileup | default seeding"
-    current: trackfinding_ttbar_pu200/tracksummary_ckf_hist.root
-    mode: fullchains
-    plot:
-      from: trackfinding_ttbar_pu200/tracksummary_ckf.root
-      tree: tracksummary
-      config: tracksummary_ckf.yml
-  - title: "Ambisolver finding performance | trackfinding | ttbar with 200 pileup | default seeding"
-    current: trackfinding_ttbar_pu200/performance_finding_ckf_ambi.root
-    mode: fullchains
-  - title: "ML Ambisolver | trackfinding | ttbar with 200 pileup | default seeding"
-    current: trackfinding_ttbar_pu200/performance_finding_ckf_ml_solver.root
-    mode: fullchains
-  - title: "AMVF gauss notime | trackfinding | ttbar with 200 pileup | default seeding"
-    current: trackfinding_ttbar_pu200/performance_vertexing_amvf_gauss_notime_hist.root
-    mode: fullchains
-    plot:
-      from: trackfinding_ttbar_pu200/performance_vertexing_amvf_gauss_notime.root
-      tree: vertexing
-      config: vertexing_ttbar_pu200.yml
-  - title: "AMVF grid time | trackfinding | ttbar with 200 pileup | default seeding"
-    current: trackfinding_ttbar_pu200/performance_vertexing_amvf_grid_time_hist.root
-    mode: fullchains
-    plot:
-      from: trackfinding_ttbar_pu200/performance_vertexing_amvf_grid_time.root
-      tree: vertexing
-      config: vertexing_ttbar_pu200.yml
-
   # ---- gx2f vs kf (special: reference is generated, not in reference/) ---
   - title: "Comparison - Truth tracking (GX2F vs KF)"
     current: trackfitting_gx2f_vs_kf/performance_trackfitting_gx2f.root
@@ -369,3 +87,26 @@ comparisons:
     label_reference: KF
     label_monitored: GX2F
     mode: gx2f_vs_kf
+
+
+# Trackfinding workflows. Each entry is expanded by the Snakefile into the
+# standard {seeding, finding, fitting, tracksummary} pack of comparisons, plus
+# the listed `extras`. See TRACKFINDING_BASE / TRACKFINDING_EXTRAS in the
+# Snakefile for the exact pack and what each extras key adds.
+#
+# Variant-aware generators (currently just trackfinding_1muon) use `label_fmt`
+# with a `{variant_label}` placeholder; the variant set and labels are defined
+# in TRACKFINDING_1MUON_VARIANTS in the Snakefile.
+trackfinding:
+  trackfinding_1muon:
+    label_fmt: "trackfinding | single muon | {variant_label}"
+
+  trackfinding_4muon_50vertices:
+    label: "trackfinding | 4 muon x 50 vertices | default seeding"
+    extras: [ambisolver, vertexing_ivf, vertexing_amvf]
+    vertexing_config: vertexing_4muon_50vertices.yml
+
+  trackfinding_ttbar_pu200:
+    label: "trackfinding | ttbar with 200 pileup | default seeding"
+    extras: [ambisolver, ml_solver, vertexing_amvf]
+    vertexing_config: vertexing_ttbar_pu200.yml
