@@ -158,7 +158,7 @@ void addDefinitions(py::module_& m) {
       .def_static("Identity",
                   []() -> BoundMatrix { return BoundMatrix::Identity(); })
       .def("__getitem__",
-           [](const BoundMatrix& self, py::object idx) {
+           [](const BoundMatrix& self, const py::object& idx) {
              py::tuple t = idx.cast<py::tuple>();
              if (py::len(t) != 2) {
                throw py::index_error("BoundMatrix index must be (i, j)");
@@ -166,6 +166,51 @@ void addDefinitions(py::module_& m) {
              return self(t[0].cast<Eigen::Index>(), t[1].cast<Eigen::Index>());
            })
       .def("__str__", [](const BoundMatrix& self) {
+        std::stringstream ss;
+        ss << self;
+        return ss.str();
+      });
+
+  py::class_<FreeVector>(m, "FreeVector", py::buffer_protocol())
+      .def(py::init<double, double, double, double, double, double, double,
+                    double>())
+      .def(py::init([](std::array<double, 8> a) {
+        FreeVector v;
+        v << a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7];
+        return v;
+      }))
+      .def_static("Zero", []() -> FreeVector { return FreeVector::Zero(); })
+      .def_buffer([](const FreeVector& self) {
+        return py::buffer_info(const_cast<double*>(self.data()), sizeof(double),
+                               py::format_descriptor<double>::format(), 1,
+                               {self.size()}, {sizeof(double)});
+      })
+      .def("__getitem__",
+           [](const FreeVector& self, Eigen::Index i) { return self[i]; })
+      .def("__iter__",
+           [](const FreeVector& self) {
+             return py::make_iterator(self.data(), self.data() + self.size());
+           })
+      .def("__str__", [](const FreeVector& self) {
+        return std::format("({}, {}, {}, {}, {}, {}, {}, {})", self[0], self[1],
+                           self[2], self[3], self[4], self[5], self[6],
+                           self[7]);
+      });
+
+  py::class_<FreeMatrix>(m, "FreeMatrix")
+      .def(py::init([]() { return FreeMatrix::Zero(); }))
+      .def_static("Zero", []() -> FreeMatrix { return FreeMatrix::Zero(); })
+      .def_static("Identity",
+                  []() -> FreeMatrix { return FreeMatrix::Identity(); })
+      .def("__getitem__",
+           [](const FreeMatrix& self, const py::object& idx) {
+             py::tuple t = idx.cast<py::tuple>();
+             if (py::len(t) != 2) {
+               throw py::index_error("FreeMatrix index must be (i, j)");
+             }
+             return self(t[0].cast<Eigen::Index>(), t[1].cast<Eigen::Index>());
+           })
+      .def("__str__", [](const FreeMatrix& self) {
         std::stringstream ss;
         ss << self;
         return ss.str();

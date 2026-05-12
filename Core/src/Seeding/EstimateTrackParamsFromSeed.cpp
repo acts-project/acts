@@ -93,6 +93,17 @@ ConformalMappingResult performConformalMapping(const Vector3& local1,
   return r;
 }
 
+Vector3 computeLocalTangent(const ConformalMappingResult& cm,
+                            const Vector2& local) {
+  // Scaled radius vector from circle center
+  const Vector2 r = 2 * cm.B * local - Vector2(-cm.A, 1);
+
+  // Tangent perpendicular to radius
+  const Vector3 t(-r.y(), r.x(), r.norm() * cm.dzds);
+
+  return t.normalized();
+}
+
 }  // namespace
 }  // namespace Acts
 
@@ -194,4 +205,24 @@ Acts::BoundMatrix Acts::estimateTrackParamCovariance(
   }
 
   return result;
+}
+
+void Acts::estimateTrackTangentsFromSeed(const Vector3& sp0, const Vector3& sp1,
+                                         const Vector3& sp2,
+                                         const Vector3& bField,
+                                         Vector3& tangent0, Vector3& tangent1,
+                                         Vector3& tangent2) {
+  const Transform3 transform = estimationFrameLocalToGlobal(sp0, sp1, bField);
+
+  // Local coordinates
+  const Vector3 local0 = Vector3::Zero();
+  const Vector3 local1 = transform.inverse() * sp1;
+  const Vector3 local2 = transform.inverse() * sp2;
+
+  // Conformal mapping
+  const ConformalMappingResult cm = performConformalMapping(local1, local2);
+
+  tangent0 = transform.linear() * computeLocalTangent(cm, local0.head<2>());
+  tangent1 = transform.linear() * computeLocalTangent(cm, local1.head<2>());
+  tangent2 = transform.linear() * computeLocalTangent(cm, local2.head<2>());
 }

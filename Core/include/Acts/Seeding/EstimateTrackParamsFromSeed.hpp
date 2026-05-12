@@ -181,6 +181,24 @@ BoundMatrix estimateTrackParamCovariance(
     const EstimateTrackParamCovarianceConfig& config, const BoundVector& params,
     bool hasTime);
 
+/// Fits a helix to the input space points and estimates the tangents at the
+/// three space points from helix fit.
+///
+/// This can be used as an input for the strip space point calibration, which
+/// requires the track tangents at each space point as input.
+///
+/// @param sp0 is the bottom space point
+/// @param sp1 is the middle space point
+/// @param sp2 is the top space point
+/// @param bField is the magnetic field vector
+/// @param tangent0 is the output tangent at the bottom space point
+/// @param tangent1 is the output tangent at the middle space point
+/// @param tangent2 is the output tangent at the top space point
+void estimateTrackTangentsFromSeed(const Vector3& sp0, const Vector3& sp1,
+                                   const Vector3& sp2, const Vector3& bField,
+                                   Vector3& tangent0, Vector3& tangent1,
+                                   Vector3& tangent2);
+
 /// @}
 
 }  // namespace Acts
