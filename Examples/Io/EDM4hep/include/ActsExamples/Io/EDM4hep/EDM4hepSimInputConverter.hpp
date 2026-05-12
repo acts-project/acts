@@ -39,9 +39,9 @@ using EDM4hepSimHitAssociation = std::vector<edm4hep::SimTrackerHit>;
 /// Maps an @c edm4hep::MCParticle podio index (i.e. the index of the particle
 /// inside the input @c MCParticleCollection) to its row index in the output
 /// simulated @c SimParticleContainer. Particles that were filtered out have
-/// no entry. Lets downstream converters (e.g. calorimeter hits read directly
-/// from EDM4hep) emit @c particle_id values that match what
-/// @c ArrowParticleOutputConverter writes for the same simulated container.
+/// no entry. Lets downstream converters reading directly from EDM4hep emit
+/// @c particle_id values that match what @c ArrowParticleOutputConverter
+/// writes for the same simulated container.
 using EDM4hepMCParticleIndexMap = std::unordered_map<int, std::size_t>;
 
 /// Read particles from EDM4hep.
