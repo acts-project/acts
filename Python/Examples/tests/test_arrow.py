@@ -383,32 +383,18 @@ def test_reader_schema_evolution_added_optional_column(tmp_path):
     from acts.examples import ReadDataHandle
     from acts.examples.arrow import ParquetReader
 
-    full_schema_str = str(trackSchema())
-    assert "t: " in full_schema_str, (
+    # Take the production track schema as the consumer's view.
+    full_track_schema_pa = pa.schema(trackSchema())
+    assert "t" in full_track_schema_pa.names, (
         f"trackSchema() unexpectedly lacks the 't' field; this test relies "
-        f"on it being present. Schema:\n{full_schema_str}"
+        f"on it being present. Schema:\n{full_track_schema_pa}"
     )
 
-    # Build the "old" schema = production track schema MINUS `t`. We can't
-    # read pyarrow types out of our opaque ArrowSchema handle (intentional —
-    # see the binding comment), so spell out the schema directly here. Keep
-    # in sync with ActsPlugins::ArrowUtil::trackSchema() if either changes.
-    nullable_float_list = pa.list_(pa.field("item", pa.float32(), nullable=True))
-    old_track_schema = pa.schema(
-        [
-            pa.field("d0", nullable_float_list, nullable=False),
-            pa.field("z0", nullable_float_list, nullable=False),
-            pa.field("phi", nullable_float_list, nullable=False),
-            pa.field("theta", nullable_float_list, nullable=False),
-            pa.field("qop", nullable_float_list, nullable=False),
-            pa.field(
-                "majority_particle_id", pa.list_(pa.uint64()), nullable=False
-            ),
-            pa.field(
-                "hit_ids", pa.list_(pa.list_(pa.uint32())), nullable=False
-            ),
-            pa.field("track_id", pa.list_(pa.uint16()), nullable=False),
-        ]
+    # "Old" producer schema = production schema MINUS `t`, derived from the
+    # full schema rather than rebuilt by hand so the two stay in sync if
+    # the underlying definition evolves.
+    old_track_schema = full_track_schema_pa.remove(
+        full_track_schema_pa.get_field_index("t")
     )
 
     nevents = 4
@@ -422,22 +408,25 @@ def test_reader_schema_evolution_added_optional_column(tmp_path):
     event_id_field = pa.field("event_id", pa.uint32(), nullable=False)
     on_disk_schema = pa.schema([event_id_field, *list(old_track_schema)])
 
+    def field_type(name: str) -> "pa.DataType":
+        return old_track_schema.field(name).type
+
     def make_event_table(event_id: int) -> "pa.Table":
         return pa.table(
             {
                 "event_id": pa.array([event_id], type=pa.uint32()),
-                "d0": pa.array([[0.1]], type=nullable_float_list),
-                "z0": pa.array([[0.2]], type=nullable_float_list),
-                "phi": pa.array([[0.3]], type=nullable_float_list),
-                "theta": pa.array([[0.4]], type=nullable_float_list),
-                "qop": pa.array([[0.5]], type=nullable_float_list),
+                "d0": pa.array([[0.1]], type=field_type("d0")),
+                "z0": pa.array([[0.2]], type=field_type("z0")),
+                "phi": pa.array([[0.3]], type=field_type("phi")),
+                "theta": pa.array([[0.4]], type=field_type("theta")),
+                "qop": pa.array([[0.5]], type=field_type("qop")),
                 "majority_particle_id": pa.array(
-                    [[1]], type=pa.list_(pa.uint64())
+                    [[1]], type=field_type("majority_particle_id")
                 ),
                 "hit_ids": pa.array(
-                    [[[1, 2, 3]]], type=pa.list_(pa.list_(pa.uint32()))
+                    [[[1, 2, 3]]], type=field_type("hit_ids")
                 ),
-                "track_id": pa.array([[7]], type=pa.list_(pa.uint16())),
+                "track_id": pa.array([[7]], type=field_type("track_id")),
             },
             schema=on_disk_schema,
         )
@@ -508,3 +497,99 @@ def test_reader_schema_evolution_added_optional_column(tmp_path):
     assert TrackTableCheck.events_seen == nevents, (
         f"checker saw {TrackTableCheck.events_seen} events, expected {nevents}"
     )
+
+
+def test_python_alg_writes_arrow_table(tmp_path):
+    """Smoke test for the write direction.
+
+    A pure-Python algorithm constructs a per-event pyarrow table, wraps it
+    via `ArrowTable.from_arrow`, and writes it onto the WhiteBoard through
+    a typed `WriteDataHandle`. A second pure-Python algorithm reads it back
+    via `ReadDataHandle`, slurps it into pyarrow via `as_table()`, and
+    asserts the values survived the round-trip.
+
+    Exercises: C-Data import (pyarrow → ArrowTable), `WhiteBoardRegistry`
+    fromPython (ArrowTable → WhiteBoard storage), C-Data export (ArrowTable
+    → pyarrow). End-to-end zero-copy across two libarrow instances.
+    """
+    pa = pytest.importorskip("pyarrow")
+
+    from acts.arrow import ArrowTable, trackSchema
+    from acts.examples import ReadDataHandle, WriteDataHandle
+
+    # Use the production track schema as the inter-algorithm contract.
+    track_schema_pa = pa.schema(trackSchema())
+
+    def field_type(name):
+        return track_schema_pa.field(name).type
+
+    class TrackProducer(acts.examples.IAlgorithm):
+        """Builds one row per event in the production track schema and
+        writes it onto the whiteboard as an ArrowTable."""
+
+        def __init__(self, key, name="TrackProducer"):
+            super().__init__(name=name, level=acts.logging.INFO)
+            self._out = WriteDataHandle(self, ArrowTable, key)
+            self._out.initialize(key)
+
+        def execute(self, ctx):
+            evt = float(ctx.eventNumber)
+            pa_table = pa.table(
+                {
+                    "d0": pa.array([[0.1 + evt]], type=field_type("d0")),
+                    "z0": pa.array([[0.2 + evt]], type=field_type("z0")),
+                    "phi": pa.array([[0.3]], type=field_type("phi")),
+                    "theta": pa.array([[0.4]], type=field_type("theta")),
+                    "qop": pa.array([[0.5]], type=field_type("qop")),
+                    "majority_particle_id": pa.array(
+                        [[1]], type=field_type("majority_particle_id")
+                    ),
+                    "hit_ids": pa.array(
+                        [[[1, 2, 3]]], type=field_type("hit_ids")
+                    ),
+                    "track_id": pa.array(
+                        [[7]], type=field_type("track_id")
+                    ),
+                    "t": pa.array([None], type=field_type("t")),
+                },
+                schema=track_schema_pa,
+            )
+            self._out(ctx, ArrowTable.from_arrow(pa_table))
+            return acts.examples.ProcessCode.SUCCESS
+
+    class TrackConsumer(acts.examples.IAlgorithm):
+        """Reads the table back, exports through C-Data into pyarrow, and
+        asserts the per-event values match what TrackProducer wrote."""
+
+        events_seen = 0
+
+        def __init__(self, key, name="TrackConsumer"):
+            super().__init__(name=name, level=acts.logging.INFO)
+            self._in = ReadDataHandle(self, ArrowTable, key)
+            self._in.initialize(key)
+
+        def execute(self, ctx):
+            evt = float(ctx.eventNumber)
+            t = self._in(ctx.eventStore).as_table()
+            assert t.num_rows == 1
+            d0 = t.column("d0").to_pylist()[0]
+            z0 = t.column("z0").to_pylist()[0]
+            assert d0 == [pytest.approx(0.1 + evt)], (
+                f"event {ctx.eventNumber}: d0 round-trip mismatch: {d0}"
+            )
+            assert z0 == [pytest.approx(0.2 + evt)], (
+                f"event {ctx.eventNumber}: z0 round-trip mismatch: {z0}"
+            )
+            type(self).events_seen += 1
+            return acts.examples.ProcessCode.SUCCESS
+
+    nevents = 3
+    s = Sequencer(numThreads=1, events=nevents)
+    s.addAlgorithm(TrackProducer(key="produced_tracks_arrow"))
+    s.addAlgorithm(TrackConsumer(key="produced_tracks_arrow"))
+    s.run()
+
+    assert TrackConsumer.events_seen == nevents, (
+        f"consumer saw {TrackConsumer.events_seen} events, expected {nevents}"
+    )
+

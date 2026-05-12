@@ -98,6 +98,16 @@ class ACTS_ARROW_EXPORT ArrowTable {
   /// via each struct's release callback.
   void exportToC(::ArrowSchema* out_schema, ::ArrowArray* out_array) const;
 
+  /// Build an @c ArrowTable from C Data Interface structs produced by
+  /// another arrow implementation (typically pyarrow's
+  /// @c __arrow_c_array__). Consumes @p in_schema and @p in_array per
+  /// the C-Data spec — after this call their @c release callbacks are
+  /// nulled out and the callers must not free them again.
+  ///
+  /// Throws if either struct is null or if the import fails.
+  static ArrowTable importFromC(::ArrowSchema* in_schema,
+                                ::ArrowArray* in_array);
+
  private:
   std::shared_ptr<arrow::Table> m_table;
 };

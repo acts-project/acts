@@ -129,6 +129,22 @@ void ArrowTable::exportToC(::ArrowSchema* out_schema,
   }
 }
 
+ArrowTable ArrowTable::importFromC(::ArrowSchema* in_schema,
+                                   ::ArrowArray* in_array) {
+  if (in_schema == nullptr || in_array == nullptr) {
+    throw std::invalid_argument("ArrowTable::importFromC: null input");
+  }
+  // ImportRecordBatch consumes the C-Data structs (their release
+  // callbacks are nulled out on success). Buffers are referenced via the
+  // batch's internal release wiring, so the producer's memory stays
+  // alive until our arrow::RecordBatch is destroyed.
+  auto batch = unwrap(arrow::ImportRecordBatch(in_array, in_schema),
+                      "ImportRecordBatch");
+  auto table = unwrap(arrow::Table::FromRecordBatches({std::move(batch)}),
+                      "Table::FromRecordBatches");
+  return ArrowTable{std::move(table)};
+}
+
 std::shared_ptr<arrow::Field> eventIdField() {
   return arrow::field(std::string{kEventIdColumn}, arrow::uint32(),
                       /*nullable=*/false);
