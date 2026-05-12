@@ -15,6 +15,10 @@
 namespace Acts {
 namespace {
 
+double sinc(double x) {
+  return (std::abs(x) > 1e-10) ? std::sin(x) / x : 1.0;
+}
+
 Transform3 estimationFrameLocalToGlobal(const Vector3& sp0, const Vector3& sp1,
                                         const Vector3& bField) {
   // Define a new coordinate frame with its origin at the bottom space point, z
@@ -36,10 +40,65 @@ Transform3 estimationFrameLocalToGlobal(const Vector3& sp0, const Vector3& sp1,
   return translation * rotation;
 }
 
+double computeDzDs(double A, double B, const Vector3& local0,
+                   const Vector3& local2) {
+  const auto computeLocalPhi = [&](const Vector2& local) -> double {
+    // Scaled radius vector from circle center
+    const Vector2 r = 2 * B * local - Vector2(-A, 1);
+
+    return std::atan2(r.y(), r.x());
+  };
+
+  // Estimate dz/ds from the seed
+  const double localPhi0 = computeLocalPhi(local0.head<2>());
+  const double localPhi2 = computeLocalPhi(local2.head<2>());
+  const double dZ = local2.z() - local0.z();
+  const double dPhi = localPhi2 - localPhi0;
+
+  // sinc-like correction for the arc length estimation in the case of small
+  // dPhi, which can happen when the track is nearly straight in the transverse
+  // plane
+  const double sincCorrection = sinc(dPhi / 2);
+
+  const double dzds =
+      sincCorrection * dZ / (local2.head<2>() - local0.head<2>()).norm();
+
+  return dzds;
+}
+
 struct ConformalMappingResult {
+  Vector2 uv1;
+  Vector2 uv2;
+  Vector2 duv;
   double A;
   double B;
+  double bOverS;
+  double dzds;
 };
+
+ConformalMappingResult performConformalMapping(const Vector3& local1,
+                                               const Vector3& local2) {
+  ConformalMappingResult r{};
+  r.uv1 = local1.head<2>() / local1.head<2>().squaredNorm();
+  r.uv2 = local2.head<2>() / local2.head<2>().squaredNorm();
+  r.duv = r.uv2 - r.uv1;
+  r.A = r.duv.y() / r.duv.x();
+  r.B = r.uv1.y() - r.A * r.uv1.x();
+  r.bOverS = (r.uv1.y() * r.uv2.x() - r.uv2.y() * r.uv1.x()) / r.duv.norm();
+  r.dzds = computeDzDs(r.A, r.B, local1, local2);
+  return r;
+}
+
+Vector3 computeLocalTangent(const ConformalMappingResult& cm,
+                            const Vector2& local) {
+  // Scaled radius vector from circle center
+  const Vector2 r = 2 * cm.B * local - Vector2(-cm.A, 1);
+
+  // Tangent perpendicular to radius
+  const Vector3 t(-r.y(), r.x(), r.norm() * cm.dzds);
+
+  return t.normalized();
+}
 
 }  // namespace
 }  // namespace Acts
@@ -59,18 +118,15 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
   const Transform3 transform = estimationFrameLocalToGlobal(sp0, sp1, bField);
 
   // Local coordinates
+  const Vector3 local0 = Vector3::Zero();
   const Vector3 local1 = transform.inverse() * sp1;
   const Vector3 local2 = transform.inverse() * sp2;
 
   // Conformal mapping
-  const Vector2 uv1 = local1.head<2>() / local1.head<2>().squaredNorm();
-  const Vector2 uv2 = local2.head<2>() / local2.head<2>().squaredNorm();
-  const Vector2 duv = uv2 - uv1;
-  const double A = duv.y() / duv.x();
-  const double bOverS = (uv1.y() * uv2.x() - uv2.y() * uv1.x()) / duv.norm();
+  const ConformalMappingResult cm = performConformalMapping(local1, local2);
 
-  const double invTanTheta = local2.z() / local2.head<2>().norm();
-  const Vector3 localDirection(1, A, fastHypot(1, A) * invTanTheta);
+  // The tangent vector in the local frame at the bottom space point
+  const Vector3 localDirection(1, cm.A, fastHypot(1, cm.A) * cm.dzds);
 
   // Transform it back to the original frame
   const Vector3 direction = transform.linear() * localDirection.normalized();
@@ -86,9 +142,9 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
 
   // The estimated q/pt in [GeV/c]^-1 (note that the pt is the projection of
   // momentum on the transverse plane of the new frame)
-  const double qOverPt = 2 * bOverS / bField.norm();
+  const double qOverPt = 2 * cm.bOverS / bField.norm();
   // The estimated q/p in [GeV/c]^-1
-  params[eFreeQOverP] = qOverPt / fastHypot(1, invTanTheta);
+  params[eFreeQOverP] = qOverPt / fastHypot(1, cm.dzds);
 
   // The time parameter is set to the time of the bottom space point
   params[eFreeTime] = t0;
@@ -161,29 +217,9 @@ void Acts::estimateTrackTangentsFromSeed(const Vector3& sp0, const Vector3& sp1,
   const Vector3 local2 = transform.inverse() * sp2;
 
   // Conformal mapping
-  const Vector2 uv1 = local1.head<2>() / local1.head<2>().squaredNorm();
-  const Vector2 uv2 = local2.head<2>() / local2.head<2>().squaredNorm();
-  const Vector2 duv = uv2 - uv1;
-  const double A = duv.y() / duv.x();
-  const double B = uv1.y() - A * uv1.x();
+  const ConformalMappingResult cm = performConformalMapping(local1, local2);
 
-  // Estimate dz/ds from the seed
-  const double invTanTheta = local2.z() / local2.head<2>().norm();
-
-  const auto makeLocalTangent = [&](const Vector3& p) -> Vector3 {
-    // Scaled radius vector from circle center
-    const Vector2 r = B * p.head<2>() - Vector2(-A, 1);
-
-    // Tangent perpendicular to radius
-    const Vector3 t(-r.y(), r.x(), fastHypot(-r.y(), r.x()) * invTanTheta);
-
-    // Keep consistent orientation
-    const double sign = (t.x() < 0) ? -1 : 1;
-
-    return (sign * t).normalized();
-  };
-
-  tangent0 = transform.linear() * makeLocalTangent(local0);
-  tangent1 = transform.linear() * makeLocalTangent(local1);
-  tangent2 = transform.linear() * makeLocalTangent(local2);
+  tangent0 = transform.linear() * computeLocalTangent(cm, local0.head<2>());
+  tangent1 = transform.linear() * computeLocalTangent(cm, local1.head<2>());
+  tangent2 = transform.linear() * computeLocalTangent(cm, local2.head<2>());
 }
