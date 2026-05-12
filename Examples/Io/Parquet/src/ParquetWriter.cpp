@@ -55,12 +55,10 @@ class ParquetWriter::Impl {
       throw std::invalid_argument("ParquetWriter: no collections configured");
     }
     if (m_cfg.eventsPerShard == 0) {
-      throw std::invalid_argument(
-          "ParquetWriter: eventsPerShard must be > 0");
+      throw std::invalid_argument("ParquetWriter: eventsPerShard must be > 0");
     }
     if (m_cfg.maxOpenShards == 0) {
-      throw std::invalid_argument(
-          "ParquetWriter: maxOpenShards must be > 0");
+      throw std::invalid_argument("ParquetWriter: maxOpenShards must be > 0");
     }
     // Sentinel: 0 means "one row group per shard".
     if (m_cfg.eventsPerRowGroup == 0) {
@@ -80,8 +78,7 @@ class ParquetWriter::Impl {
       }
       if (rawPath.empty()) {
         throw std::invalid_argument(std::format(
-            "ParquetWriter: empty output directory for collection '{}'",
-            name));
+            "ParquetWriter: empty output directory for collection '{}'", name));
       }
 
       std::filesystem::path resolved =
@@ -113,8 +110,7 @@ class ParquetWriter::Impl {
     if (!result.ok()) {
       throw std::runtime_error(
           std::format("ParquetWriter concat for shard '{}': {}",
-                      shard.path.string(),
-                      result.status().ToString()));
+                      shard.path.string(), result.status().ToString()));
     }
     shard.writer.write(*result.ValueOrDie());
     shard.buffer.clear();
@@ -166,8 +162,7 @@ const ParquetWriter::Config& ParquetWriter::config() const {
 ProcessCode ParquetWriter::write(const AlgorithmContext& ctx) {
   using ShardState = Impl::ShardState;
 
-  const std::uint64_t shardId =
-      ctx.eventNumber / m_impl->m_cfg.eventsPerShard;
+  const std::uint64_t shardId = ctx.eventNumber / m_impl->m_cfg.eventsPerShard;
 
   for (const auto& state : m_impl->m_states) {
     auto table = (*state->handle)(ctx);

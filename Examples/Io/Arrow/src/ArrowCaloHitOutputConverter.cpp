@@ -31,8 +31,8 @@ std::shared_ptr<arrow::Schema> caloHitSchema() {
                    arrow::list(arrow::list(arrow::uint64())), false),
       arrow::field("contrib_energies",
                    arrow::list(arrow::list(arrow::float32())), false),
-      arrow::field("contrib_times",
-                   arrow::list(arrow::list(arrow::float32())), false),
+      arrow::field("contrib_times", arrow::list(arrow::list(arrow::float32())),
+                   false),
   });
 }
 
@@ -47,16 +47,16 @@ void check(const arrow::Status& s, const char* what) {
 ArrowCaloHitOutputConverter::CellThresholdFn
 ArrowCaloHitOutputConverter::defaultCellThreshold(double ecalEnergyThreshold,
                                                   double hcalEnergyThreshold) {
-  return [ecalEnergyThreshold, hcalEnergyThreshold](
-             std::uint8_t det) -> double {
-    if (det >= 9 && det <= 11) {
-      return ecalEnergyThreshold;
-    }
-    if (det >= 12 && det <= 14) {
-      return hcalEnergyThreshold;
-    }
-    return 0.0;
-  };
+  return
+      [ecalEnergyThreshold, hcalEnergyThreshold](std::uint8_t det) -> double {
+        if (det >= 9 && det <= 11) {
+          return ecalEnergyThreshold;
+        }
+        if (det >= 12 && det <= 14) {
+          return hcalEnergyThreshold;
+        }
+        return 0.0;
+      };
 }
 
 ArrowCaloHitOutputConverter::ArrowCaloHitOutputConverter(
@@ -119,8 +119,7 @@ ProcessCode ArrowCaloHitOutputConverter::execute(
   check(tList.Append(), "open contrib_times list");
 
   auto* detV = static_cast<arrow::UInt8Builder*>(detList.value_builder());
-  auto* energyV =
-      static_cast<arrow::FloatBuilder*>(energyList.value_builder());
+  auto* energyV = static_cast<arrow::FloatBuilder*>(energyList.value_builder());
   auto* xV = static_cast<arrow::FloatBuilder*>(xList.value_builder());
   auto* yV = static_cast<arrow::FloatBuilder*>(yList.value_builder());
   auto* zV = static_cast<arrow::FloatBuilder*>(zList.value_builder());
@@ -174,8 +173,8 @@ ProcessCode ArrowCaloHitOutputConverter::execute(
   };
 
   std::vector<std::shared_ptr<arrow::Array>> arrays = {
-      finish(detList), finish(energyList), finish(xList),    finish(yList),
-      finish(zList),   finish(pidList),    finish(eList),    finish(tList),
+      finish(detList), finish(energyList), finish(xList), finish(yList),
+      finish(zList),   finish(pidList),    finish(eList), finish(tList),
   };
 
   auto table = arrow::Table::Make(caloHitSchema(), arrays);

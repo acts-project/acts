@@ -9,7 +9,8 @@
 # arrow is statically or dynamically linked. Only the visibility settings on
 # the OBJECT compile and the linkage of arrow itself change with the toggle.
 add_library(
-    ActsExamplesIoParquet_obj OBJECT
+    ActsExamplesIoParquet_obj
+    OBJECT
     src/ParquetReader.cpp
     src/ParquetWriter.cpp
     src/ArrowInputConverter.cpp
