@@ -44,6 +44,7 @@ class ParquetWriter::Impl {
   struct CollectionState {
     std::string name;
     std::filesystem::path directory;
+    std::string filePrefix;
     std::shared_ptr<arrow::Schema> expectedSchema;
     std::unique_ptr<TableHandle> handle;
     std::mutex shardsMutex;
@@ -90,6 +91,22 @@ class ParquetWriter::Impl {
                         resolved.string()));
       }
 
+      // Derive a file-name prefix from the configured per-collection
+      // directory: e.g. `<outputDir>/particles.parquet/` → `particles`,
+      // `<outputDir>/particles/` → `particles`. Walk past empty trailing
+      // components so paths with trailing separators still decompose.
+      auto trimmed = resolved;
+      while (!trimmed.empty() && trimmed.filename().empty()) {
+        trimmed = trimmed.parent_path();
+      }
+      std::string filePrefix = trimmed.filename().stem().string();
+      if (filePrefix.empty()) {
+        throw std::invalid_argument(std::format(
+            "ParquetWriter: output directory '{}' for collection '{}' has "
+            "no usable filename stem to derive a shard prefix from",
+            resolved.string(), name));
+      }
+
       auto schemaIt = m_cfg.expectedSchemas.find(name);
       if (schemaIt == m_cfg.expectedSchemas.end() || !schemaIt->second) {
         throw std::invalid_argument(std::format(
@@ -100,8 +117,8 @@ class ParquetWriter::Impl {
             name));
       }
       auto expected = schemaIt->second.schema();
-      if (expected->GetFieldIndex(std::string{
-              ActsPlugins::ArrowUtil::kEventIdColumn}) >= 0) {
+      if (expected->GetFieldIndex(
+              std::string{ActsPlugins::ArrowUtil::kEventIdColumn}) >= 0) {
         throw std::invalid_argument(std::format(
             "ParquetWriter: expected schema for '{}' must not contain "
             "event_id; the writer prepends it.",
@@ -113,10 +130,11 @@ class ParquetWriter::Impl {
       auto state = std::make_unique<CollectionState>();
       state->name = name;
       state->directory = std::move(resolved);
+      state->filePrefix = std::move(filePrefix);
       state->expectedSchema = std::move(expected);
       state->handle = std::make_unique<TableHandle>(&parent, name);
       state->handle->initialize(name);
-      m_states.push_back(std::move(state));
+      m_collectionStates.push_back(std::move(state));
     }
     for (const auto& [name, _] : m_cfg.expectedSchemas) {
       if (!m_cfg.collections.contains(name)) {
@@ -144,16 +162,8 @@ class ParquetWriter::Impl {
     shard.buffer.clear();
   }
 
-  std::filesystem::path shardPath(const std::filesystem::path& directory,
+  std::filesystem::path shardPath(const CollectionState& state,
                                   std::uint64_t shardId) const {
-    // Derive a file-name prefix from the configured per-collection
-    // directory: e.g. `<outputDir>/particles.parquet/` → `particles`,
-    // `<outputDir>/particles/` → `particles`. Falls back to `shard` if the
-    // directory has no usable stem (root dir, trailing slash, etc.).
-    std::string prefix = directory.filename().stem().string();
-    if (prefix.empty()) {
-      prefix = "shard";
-    }
     // Encode the *planned* event window covered by this shard: shardId is
     // assigned by `eventNumber / eventsPerShard`, so this shard owns
     // events [startEvent, endEvent). The final shard of a job may contain
@@ -161,12 +171,13 @@ class ParquetWriter::Impl {
     // and trust its row count, not the filename.
     const std::uint64_t startEvent = shardId * m_cfg.eventsPerShard;
     const std::uint64_t endEvent = startEvent + m_cfg.eventsPerShard;
-    return directory /
-           std::format("{}_{:06}-{:06}.parquet", prefix, startEvent, endEvent);
+    return state.directory / std::format("{}_{:06}-{:06}.parquet",
+                                         state.filePrefix, startEvent,
+                                         endEvent);
   }
 
   ParquetWriter::Config m_cfg;
-  std::vector<std::unique_ptr<CollectionState>> m_states;
+  std::vector<std::unique_ptr<CollectionState>> m_collectionStates;
 };
 
 ParquetWriter::ParquetWriter(const Config& config,
@@ -192,7 +203,7 @@ ProcessCode ParquetWriter::write(const AlgorithmContext& ctx) {
 
   const std::uint64_t shardId = ctx.eventNumber / m_impl->m_cfg.eventsPerShard;
 
-  for (const auto& state : m_impl->m_states) {
+  for (const auto& state : m_impl->m_collectionStates) {
     auto handle = (*state->handle)(ctx);
     if (!handle) {
       ACTS_ERROR("ParquetWriter: null table for collection " << state->name);
@@ -228,8 +239,8 @@ ProcessCode ParquetWriter::write(const AlgorithmContext& ctx) {
               "means a worker thread is far behind the event-id frontier.",
               state->name, m_impl->m_cfg.maxOpenShards, openIds, shardId));
         }
-        auto created = std::make_unique<ShardState>(
-            m_impl->shardPath(state->directory, shardId));
+        auto created =
+            std::make_unique<ShardState>(m_impl->shardPath(*state, shardId));
         shard = created.get();
         state->shards.emplace(shardId, std::move(created));
       } else {
@@ -261,7 +272,7 @@ ProcessCode ParquetWriter::write(const AlgorithmContext& ctx) {
 }
 
 ProcessCode ParquetWriter::finalize() {
-  for (const auto& state : m_impl->m_states) {
+  for (const auto& state : m_impl->m_collectionStates) {
     std::lock_guard<std::mutex> guard(state->shardsMutex);
     for (auto& [shardId, shard] : state->shards) {
       std::lock_guard<std::mutex> sguard(shard->mutex);
