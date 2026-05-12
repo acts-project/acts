@@ -231,6 +231,13 @@ class SpacePointContainer2 {
            "Column 'varianceR' does not exist");
     return m_varianceRColumn->proxy(*this);
   }
+  /// Returns a mutable proxy to the variance in T direction column.
+  /// @return A mutable proxy to the variance in T direction column.
+  MutableColumnProxy<float> varianceTColumn() noexcept {
+    assert(m_varianceTColumn.has_value() &&
+           "Column 'varianceT' does not exist");
+    return m_varianceTColumn->proxy(*this);
+  }
   /// Returns a mutable proxy to the `top strip vector` column.
   /// @return A mutable proxy to the `top strip vector` column.
   MutableColumnProxy<std::array<float, 3>> topStripVectorColumn() noexcept {
@@ -348,6 +355,13 @@ class SpacePointContainer2 {
     assert(m_varianceRColumn.has_value() &&
            "Column 'varianceR' does not exist");
     return m_varianceRColumn->proxy(*this);
+  }
+  /// Returns a const proxy to the variance in T direction column.
+  /// @return A const proxy to the variance in T direction column.
+  ConstColumnProxy<float> varianceTColumn() const noexcept {
+    assert(m_varianceTColumn.has_value() &&
+           "Column 'varianceT' does not exist");
+    return m_varianceTColumn->proxy(*this);
   }
   /// Returns a const proxy to the `top strip vector` column.
   /// @return A const proxy to the `top strip vector` column.
@@ -641,6 +655,7 @@ class SpacePointContainer2 {
   // covariance information
   std::optional<ColumnHolder<float>> m_varianceZColumn;
   std::optional<ColumnHolder<float>> m_varianceRColumn;
+  std::optional<ColumnHolder<float>> m_varianceTColumn;
   // strip information
   std::optional<ColumnHolder<std::array<float, 3>>> m_topStripVectorColumn;
   std::optional<ColumnHolder<std::array<float, 3>>> m_bottomStripVectorColumn;
@@ -658,7 +673,7 @@ class SpacePointContainer2 {
   static auto knownColumnMasks() noexcept {
     using enum SpacePointColumns;
     return std::tuple(SourceLinks, SourceLinks, X, Y, Z, R, Phi, Time,
-                      VarianceZ, VarianceR, TopStripVector, BottomStripVector,
+                      VarianceZ, VarianceR, VarianceT, TopStripVector, BottomStripVector,
                       StripCenterDistance, TopStripCenter, CopyFromIndex,
                       PackedXY, PackedZR, PackedXYZ, PackedXYZR,
                       PackedVarianceZR);
@@ -666,7 +681,7 @@ class SpacePointContainer2 {
 
   static auto knownColumnNames() noexcept {
     return std::tuple("sourceLinkOffset", "sourceLinkCount", "x", "y", "z", "r",
-                      "phi", "time", "varianceZ", "varianceR", "topStripVector",
+                      "phi", "time", "varianceZ", "varianceR", "varianceT", "topStripVector",
                       "bottomStripVector", "stripCenterDistance",
                       "topStripCenter", "copyFromIndex", "xy", "zr", "xyz",
                       "xyzr", "varianceZR");
@@ -675,7 +690,7 @@ class SpacePointContainer2 {
   static auto knownColumnDefaults() noexcept {
     return std::tuple(
         std::uint32_t{0}, std::uint8_t{0}, float{0}, float{0}, float{0},
-        float{0}, float{0}, float{NoTime}, float{0}, float{0},
+        float{0}, float{0}, float{NoTime}, float{0}, float{0}, float{NoTime},
         std::array<float, 3>{0, 0, 0}, std::array<float, 3>{0, 0, 0},
         std::array<float, 3>{0, 0, 0}, std::array<float, 3>{0, 0, 0},
         std::uint32_t{0}, std::array<float, 2>{0, 0},
@@ -688,7 +703,7 @@ class SpacePointContainer2 {
     return std::tie(self.m_sourceLinkOffsetColumn, self.m_sourceLinkCountColumn,
                     self.m_xColumn, self.m_yColumn, self.m_zColumn,
                     self.m_rColumn, self.m_phiColumn, self.m_timeColumn,
-                    self.m_varianceZColumn, self.m_varianceRColumn,
+                    self.m_varianceZColumn, self.m_varianceRColumn, self.m_varianceTColumn,
                     self.m_topStripVectorColumn, self.m_bottomStripVectorColumn,
                     self.m_stripCenterDistanceColumn,
                     self.m_topStripCenterColumn, self.m_copyFromIndexColumn,
