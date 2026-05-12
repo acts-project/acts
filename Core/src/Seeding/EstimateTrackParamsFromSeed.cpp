@@ -16,7 +16,11 @@ namespace Acts {
 namespace {
 
 double sinc(double x) {
-  return (std::abs(x) > 1e-10) ? std::sin(x) / x : 1.0;
+  if (std::abs(x) < 1e-10) {
+    // Use the Taylor expansion for small x to avoid numerical instability
+    return 1 - x * x / 6;
+  }
+  return std::sin(x) / x;
 }
 
 Transform3 estimationFrameLocalToGlobal(const Vector3& sp0, const Vector3& sp1,
@@ -49,15 +53,15 @@ double computeDzDs(double A, double B, const Vector3& local0,
     return std::atan2(r.y(), r.x());
   };
 
-  // Estimate dz/ds from the seed
   const double localPhi0 = computeLocalPhi(local0.head<2>());
   const double localPhi2 = computeLocalPhi(local2.head<2>());
+
   const double dZ = local2.z() - local0.z();
   const double dPhi = localPhi2 - localPhi0;
 
-  // sinc-like correction for the arc length estimation in the case of small
-  // dPhi, which can happen when the track is nearly straight in the transverse
-  // plane
+  // Apply the sinc correction to account for the fact that the particle do not
+  // follow a straight line in the R-Z plane. This is especially important for
+  // high delta phi and/or strongly bent tracks.
   const double sincCorrection = sinc(dPhi / 2);
 
   const double dzds =
