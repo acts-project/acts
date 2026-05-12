@@ -19,6 +19,13 @@
 // @TODO: Forward decl enough?
 #include <arrow/api.h>
 
+// Forward declarations of the Arrow C Data Interface POD structs used by
+// the export helpers below. The actual definitions live in
+// `arrow/c/abi.h`; using a forward decl here keeps that header out of
+// every public consumer's translation unit.
+struct ArrowArray;
+struct ArrowSchema;
+
 namespace ActsPlugins::ArrowUtil {
 
 /// Opaque, pybind-friendly wrapper around @c std::shared_ptr<arrow::Schema>.
@@ -45,8 +52,54 @@ class ACTS_ARROW_EXPORT ArrowSchemaHandle {
   std::vector<std::string> fieldNames() const;
   int numFields() const;
 
+  /// Export the wrapped @c arrow::Schema through the Arrow C Data
+  /// Interface. The caller-supplied @p out struct is populated; the
+  /// arrow-side resources transfer to @p out and are released by its
+  /// release callback per the C-Data spec.
+  void exportToC(::ArrowSchema* out) const;
+
  private:
   std::shared_ptr<arrow::Schema> m_schema;
+};
+
+/// Opaque, pybind-friendly wrapper around @c std::shared_ptr<arrow::Table>.
+///
+/// Same rationale as @c ArrowSchemaHandle: arrow's typeinfo is hidden
+/// inside @c libActsPluginArrow, so this wrapper is the visibility-exported
+/// type that pybind can register and that downstream code (including
+/// @c WhiteBoardRegistry-mediated Python algorithms) can resolve across the
+/// @c .so boundary.
+///
+/// Used as the canonical whiteboard storage type for arrow tables: every
+/// @c WriteDataHandle / @c ReadDataHandle / @c ConsumeDataHandle for a
+/// table holds an @c ArrowTable rather than a bare
+/// @c std::shared_ptr<arrow::Table>. This gives Python algorithms a typed
+/// entry point via the registry, with the underlying buffers exposed
+/// through the Arrow C Data Interface.
+class ACTS_ARROW_EXPORT ArrowTable {
+ public:
+  ArrowTable() = default;
+  explicit ArrowTable(std::shared_ptr<arrow::Table> table)
+      : m_table(std::move(table)) {}
+
+  const std::shared_ptr<arrow::Table>& table() const { return m_table; }
+  explicit operator bool() const { return m_table != nullptr; }
+
+  std::int64_t numRows() const;
+  int numColumns() const;
+  ArrowSchemaHandle schema() const;
+  std::string toString() const;
+
+  /// Export the wrapped @c arrow::Table through the Arrow C Data
+  /// Interface. Multi-chunk tables are combined into a single record
+  /// batch first; for the canonical 1-row-per-event layout this is a
+  /// no-op. The caller-supplied @p out_schema and @p out_array structs
+  /// are populated and ownership of the arrow-side resources transfers
+  /// via each struct's release callback.
+  void exportToC(::ArrowSchema* out_schema, ::ArrowArray* out_array) const;
+
+ private:
+  std::shared_ptr<arrow::Table> m_table;
 };
 
 /// Canonical column name used by the Parquet reader/writer to stamp and

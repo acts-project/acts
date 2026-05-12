@@ -7,15 +7,54 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsPlugins/Arrow/ArrowUtil.hpp"
+#include "ActsPython/Utilities/WhiteBoardRegistry.hpp"
 
 #include <memory>
+#include <stdexcept>
 
+#include <arrow/c/abi.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
 namespace py = pybind11;
 using ActsPlugins::ArrowUtil::ArrowSchemaHandle;
+using ActsPlugins::ArrowUtil::ArrowTable;
+using ActsPython::WhiteBoardRegistry;
 namespace ArrowUtil = ActsPlugins::ArrowUtil;
+
+namespace {
+
+// PyCapsule destructor for an ArrowSchema struct exported via the Arrow
+// C Data Interface. The capsule owns the heap allocation; if the consumer
+// (pyarrow et al.) hasn't already released the struct, we do it now to
+// release the producer-side resources.
+void releaseArrowSchemaCapsule(PyObject* capsule) {
+  auto* c = static_cast<ArrowSchema*>(
+      PyCapsule_GetPointer(capsule, "arrow_schema"));
+  if (c == nullptr) {
+    PyErr_Clear();
+    return;
+  }
+  if (c->release != nullptr) {
+    c->release(c);
+  }
+  delete c;
+}
+
+void releaseArrowArrayCapsule(PyObject* capsule) {
+  auto* c = static_cast<ArrowArray*>(
+      PyCapsule_GetPointer(capsule, "arrow_array"));
+  if (c == nullptr) {
+    PyErr_Clear();
+    return;
+  }
+  if (c->release != nullptr) {
+    c->release(c);
+  }
+  delete c;
+}
+
+}  // namespace
 
 PYBIND11_MODULE(ActsPluginsPythonBindingsArrow, m) {
   // Opaque handle around arrow::Schema. The arrow library is built with
@@ -37,6 +76,69 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsArrow, m) {
       .def("__str__", &ArrowSchemaHandle::toString)
       .def("field_names", &ArrowSchemaHandle::fieldNames)
       .def("__len__", &ArrowSchemaHandle::numFields);
+
+  // ArrowTable: opaque handle around shared_ptr<arrow::Table> that's also
+  // the canonical WhiteBoard storage type for arrow tables. Bound with
+  // smart_holder so WhiteBoardRegistry can register it for typed access
+  // from Python algorithms; downstream `acts.examples.arrow.ParquetReader`
+  // / `ParquetWriter` then talk in terms of this same type.
+  //
+  // Python users primarily get an ArrowTable off the WhiteBoard via a
+  // typed `ReadDataHandle`. From there, `pa.record_batch(handle)` /
+  // `handle.as_table()` cross into pyarrow via the Arrow C Data
+  // Interface (PyCapsule protocol), zero-copy.
+  auto arrowTableClass =
+      py::class_<ArrowTable, py::smart_holder>(m, "ArrowTable")
+          .def(py::init<>())
+          .def("__repr__",
+               [](const ArrowTable& t) {
+                 return "<ArrowTable " + std::to_string(t.numRows()) +
+                        " rows x " + std::to_string(t.numColumns()) +
+                        " cols>";
+               })
+          .def("__str__", &ArrowTable::toString)
+          .def_property_readonly("num_rows", &ArrowTable::numRows)
+          .def_property_readonly("num_columns", &ArrowTable::numColumns)
+          .def_property_readonly("schema", &ArrowTable::schema)
+          // PyCapsule protocol for the Arrow C Data Interface. The
+          // signature matches what pyarrow / polars / duckdb expect:
+          // returns (schema_capsule, array_capsule). The
+          // requested_schema arg is ignored — we always export our
+          // native schema.
+          .def(
+              "__arrow_c_array__",
+              [](const ArrowTable& self,
+                 [[maybe_unused]] const py::object& requested_schema) {
+                auto* c_schema = new ArrowSchema{};
+                auto* c_array = new ArrowArray{};
+                try {
+                  self.exportToC(c_schema, c_array);
+                } catch (...) {
+                  delete c_schema;
+                  delete c_array;
+                  throw;
+                }
+                py::object schemaCap =
+                    py::reinterpret_steal<py::object>(PyCapsule_New(
+                        c_schema, "arrow_schema", releaseArrowSchemaCapsule));
+                py::object arrayCap =
+                    py::reinterpret_steal<py::object>(PyCapsule_New(
+                        c_array, "arrow_array", releaseArrowArrayCapsule));
+                return py::make_tuple(std::move(schemaCap),
+                                      std::move(arrayCap));
+              },
+              py::arg("requested_schema") = py::none())
+          // Convenience: import pyarrow lazily and wrap the single
+          // exported batch in a pa.Table. Fails with ImportError if
+          // pyarrow isn't installed.
+          .def("as_table", [](py::object self) {
+            auto pa = py::module_::import("pyarrow");
+            auto batch = pa.attr("record_batch")(self);
+            return pa.attr("Table").attr("from_batches")(
+                py::make_tuple(batch));
+          });
+
+  WhiteBoardRegistry::registerClass(arrowTableClass);
 
   auto wrap = [](std::shared_ptr<arrow::Schema> s) {
     return ArrowSchemaHandle{std::move(s)};
