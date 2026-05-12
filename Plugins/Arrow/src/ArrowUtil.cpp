@@ -115,7 +115,8 @@ void ArrowTable::exportToC(::ArrowSchema* out_schema,
     throw std::invalid_argument("ArrowTable::exportToC: null out");
   }
   if (!m_table) {
-    throw std::runtime_error("ArrowTable::exportToC: handle holds a null table");
+    throw std::runtime_error(
+        "ArrowTable::exportToC: handle holds a null table");
   }
   // Combine to a single record batch — required by ExportRecordBatch and
   // matches what consumers receive through the `__arrow_c_array__`
@@ -251,7 +252,7 @@ class ParquetFileWriter::Impl {
                             "open parquet");
       auto properties = parquet::WriterProperties::Builder()
                             .compression(parquet::Compression::ZSTD)
-                            // ->enable_write_page_index()
+                            ->enable_write_page_index()
                             ->build();
       auto arrowProperties =
           parquet::ArrowWriterProperties::Builder().store_schema()->build();
@@ -354,8 +355,8 @@ class ParquetDatasetReader::Impl {
       // Prepend event_id; the dataset must carry it for the per-event
       // filter, but callers see it as an internal column and the
       // public schema below strips it again.
-      auto withEventId = unwrap(
-          targetSchema->AddField(0, eventIdField()), "prepend event_id");
+      auto withEventId =
+          unwrap(targetSchema->AddField(0, eventIdField()), "prepend event_id");
       finishOpts.schema = std::move(withEventId);
     } else {
       arrow::dataset::InspectOptions inspectOpts;
