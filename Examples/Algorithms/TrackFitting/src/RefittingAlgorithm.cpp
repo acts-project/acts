@@ -58,8 +58,6 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
   auto perigeeSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
 
-  const Acts::Vector3 beamSpotCenter{0., 0., 0.};
-
   // The following code is only necessary if a beamspot constraint is in use but
   // unguarded for lifetime and simplicity reasons. The Core KF does not support
   // a beamspot constraint by itself but it can be achieved by injecting a fake
@@ -99,8 +97,6 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
   auto beamSpotConstTrackState =
       beamSpotConstVectorTrackStateContainer->getTrackState(
           beamSpotTrackState.index());
-  Acts::SourceLink uncalibSLconst =
-      beamSpotConstTrackState.getUncalibratedSourceLink();
 
   // Perform the fit for each input track
   std::vector<Acts::SourceLink> trackSourceLinks;
