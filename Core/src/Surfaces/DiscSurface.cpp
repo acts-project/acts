@@ -562,8 +562,7 @@ void DiscSurface::assignSurfaceMaterial(
   }
   // check that only {}, {r}, {phi} or {r,phi} are allowed for disc surfaces
   auto mad = material->materialAxisDirections();
-  if (mad != std::vector<AxisDirection>{} &&
-      mad != std::vector<AxisDirection>{AxisDirection::AxisR} &&
+  if (!mad.empty() && mad != std::vector<AxisDirection>{AxisDirection::AxisR} &&
       mad != std::vector<AxisDirection>{AxisDirection::AxisPhi} &&
       mad != std::vector<AxisDirection>{AxisDirection::AxisR,
                                         AxisDirection::AxisPhi}) {

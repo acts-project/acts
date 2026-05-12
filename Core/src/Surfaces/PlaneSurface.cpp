@@ -326,8 +326,7 @@ void PlaneSurface::assignSurfaceMaterial(
 
   auto mad = material->materialAxisDirections();
   // check that only {}, {x}, {y}, or {x,y} are allowed for plane surfaces
-  if (mad != std::vector<AxisDirection>{} &&
-      mad != std::vector<AxisDirection>{AxisDirection::AxisX} &&
+  if (!mad.empty() && mad != std::vector<AxisDirection>{AxisDirection::AxisX} &&
       mad != std::vector<AxisDirection>{AxisDirection::AxisY} &&
       mad != std::vector<AxisDirection>{AxisDirection::AxisX,
                                         AxisDirection::AxisY}) {

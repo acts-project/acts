@@ -313,8 +313,7 @@ void LineSurface::assignSurfaceMaterial(
   }
   // check that only {}, {r}, {z} or {r,z} are allowed for line surfaces
   auto mad = material->materialAxisDirections();
-  if (mad != std::vector<AxisDirection>{} &&
-      mad != std::vector<AxisDirection>{AxisDirection::AxisR} &&
+  if (!mad.empty() && mad != std::vector<AxisDirection>{AxisDirection::AxisR} &&
       mad != std::vector<AxisDirection>{AxisDirection::AxisZ} &&
       mad != std::vector<AxisDirection>{AxisDirection::AxisR,
                                         AxisDirection::AxisZ}) {

@@ -573,8 +573,7 @@ void CylinderSurface::assignSurfaceMaterial(
   auto mad = material->materialAxisDirections();
   // check that only {}, {rphi}, {z} or {rphi,z} are allowed for cylinder
   // surfaces
-  if (mad != std::vector<AxisDirection>{} &&
-      mad != std::vector<AxisDirection>{AxisDirection::AxisZ} &&
+  if (!mad.empty() && mad != std::vector<AxisDirection>{AxisDirection::AxisZ} &&
       mad != std::vector<AxisDirection>{AxisDirection::AxisRPhi} &&
       mad != std::vector<AxisDirection>{AxisDirection::AxisRPhi,
                                         AxisDirection::AxisZ}) {
