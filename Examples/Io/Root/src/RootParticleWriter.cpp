@@ -111,27 +111,6 @@ ProcessCode RootParticleWriter::finalize() {
   ACTS_INFO("Wrote particles to tree '" << m_cfg.treeName << "' in '"
                                         << m_cfg.filePath << "'");
 
-  if (m_nNonFinite > 0) {
-    ACTS_WARNING(m_nNonFinite << " / " << m_nTotal
-                              << " particle(s) had non-finite mass or charge");
-  }
-  if (m_nZeroCharge > 0) {
-    ACTS_WARNING(m_nZeroCharge
-                 << " / " << m_nTotal
-                 << " zero-charge particle(s) linearly extrapolated to "
-                    "perigee");
-  }
-  if (m_nGlobalToLocalFailed > 0) {
-    ACTS_ERROR(m_nGlobalToLocalFailed
-               << " / " << m_nZeroCharge
-               << " global-to-local transformation(s) failed");
-  }
-  if (m_nPropagationFailed > 0) {
-    ACTS_ERROR(m_nPropagationFailed
-               << " / " << m_nCharged
-               << " propagation(s) to perigee surface failed");
-  }
-
   return ProcessCode::SUCCESS;
 }
 
@@ -142,7 +121,6 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
 
   m_eventId = ctx.eventNumber;
   for (const auto& particle : particles) {
-    ++m_nTotal;
     m_particleHash.push_back(particle.particleId().hash());
     m_particleType.push_back(particle.pdg());
     m_process.push_back(static_cast<std::uint32_t>(particle.process()));
@@ -158,7 +136,7 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
 
     // particle constants
     if (!std::isfinite(particle.mass()) || !std::isfinite(particle.charge())) {
-      ++m_nNonFinite;
+      ACTS_WARNING("Particle mass or charge is not finite, can't write it");
     }
 
     m_m.push_back(
@@ -219,7 +197,8 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
 
     // Neutral particles have no helix -> linearly extrapolate to perigee
     if (particle.charge() == 0) {
-      ++m_nZeroCharge;
+      ACTS_WARNING(
+          "Particle has zero charge, linearly extrapolating to perigee");
       // Initialize the truth particle info
       auto perigeeD0 = NaNfloat;
       auto perigeeZ0 = NaNfloat;
@@ -233,7 +212,7 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
         perigeeD0 = lpResult.value()[Acts::BoundIndices::eBoundLoc0];
         perigeeZ0 = lpResult.value()[Acts::BoundIndices::eBoundLoc1];
       } else {
-        ++m_nGlobalToLocalFailed;
+        ACTS_ERROR("Global to local transformation did not succeed.");
       }
       // truth parameters at perigee are the same as at production vertex
       m_perigeePhi.push_back(Acts::clampValue<float>(particle.phi()));
@@ -258,7 +237,6 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
       continue;
     }
 
-    ++m_nCharged;
     // Charged particles: propagate helix to perigee
     // Build a propagator and propagate the *truth parameters* to the
     // perigee Stepper + propagator
@@ -283,7 +261,7 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
     // Do the propagation to the perigee surface
     auto propRes = propagator->propagate(startParams, *pSurface, pOptions);
     if (!propRes.ok() || !propRes->endParameters.has_value()) {
-      ++m_nPropagationFailed;
+      ACTS_ERROR("Propagation to perigee surface failed.");
       m_perigeePhi.push_back(NaNfloat);
       m_perigeeTheta.push_back(NaNfloat);
       m_perigeeQop.push_back(NaNfloat);
