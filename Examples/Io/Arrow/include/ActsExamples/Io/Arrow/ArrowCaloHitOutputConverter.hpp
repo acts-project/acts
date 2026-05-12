@@ -12,6 +12,7 @@
 #include "ActsExamples/EventData/CaloHit.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Io/Parquet/ArrowOutputConverter.hpp"
+#include "ActsPlugins/Arrow/ArrowUtil.hpp"
 #include "ActsPlugins/Arrow/Export.hpp"
 
 #include <cstdint>
@@ -19,8 +20,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <arrow/api.h>
 
 namespace ActsExamples {
 
@@ -86,8 +85,8 @@ class ACTS_ARROW_EXPORT ArrowCaloHitOutputConverter final
   CellThresholdFn m_cellThreshold;
 
   ReadDataHandle<CaloHitContainer> m_inputCaloHits{this, "InputCaloHits"};
-  WriteDataHandle<std::shared_ptr<arrow::Table>> m_outputTable{this,
-                                                               "OutputTable"};
+  WriteDataHandle<ActsPlugins::ArrowUtil::ArrowTable> m_outputTable{
+      this, "OutputTable"};
 };
 
 }  // namespace ActsExamples
