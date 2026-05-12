@@ -313,7 +313,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       Acts::Vector3{0., 0., 0.});
 
   PassThroughCalibrator pcalibrator;
-  MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
+  MeasurementCalibratorAdapter calibrator(pcalibrator,
+                                          measurements.container());
   Acts::GainMatrixUpdater kfUpdater(m_cfg.useJosephFormulation);
 
   using Extensions = Acts::CombinatorialKalmanFilterExtensions<TrackContainer>;
@@ -722,15 +723,15 @@ ProcessCode TrackFindingAlgorithm::finalize() {
 // TODO this is somewhat duplicated in AmbiguityResolutionAlgorithm.cpp
 // TODO we should make a common implementation in the core at some point
 void TrackFindingAlgorithm::computeSharedHits(
-    TrackContainer& tracks, const MeasurementContainer& measurements) const {
+    TrackContainer& tracks, const MeasurementSubset& measurements) const {
   // Compute shared hits from all the reconstructed tracks
   // Compute nSharedhits and Update ckf results
   // hit index -> list of multi traj indexes [traj, meas]
 
   std::vector<std::size_t> firstTrackOnTheHit(
-      measurements.size(), std::numeric_limits<std::size_t>::max());
+      measurements.container().size(), std::numeric_limits<std::size_t>::max());
   std::vector<std::size_t> firstStateOnTheHit(
-      measurements.size(), std::numeric_limits<std::size_t>::max());
+      measurements.container().size(), std::numeric_limits<std::size_t>::max());
 
   for (auto track : tracks) {
     for (auto state : track.trackStatesReversed()) {

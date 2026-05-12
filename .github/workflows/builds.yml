@@ -543,7 +543,7 @@ jobs:
 
       - name: Build Key4hep dependents
         id: build
-        uses: aidasoft/run-lcg-view@v5
+        uses: aidasoft/run-lcg-view@v6
         continue-on-error: true
         with:
           container: ubuntu2404

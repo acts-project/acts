@@ -48,7 +48,9 @@ void addGenerators(py::module& mex) {
 
     py::class_<PrimaryVertexPositionGenerator,
                std::shared_ptr<PrimaryVertexPositionGenerator>>(
-        gen, "VertexGenerator");
+        gen, "VertexGenerator")
+        .def("__call__", &PrimaryVertexPositionGenerator::operator(),
+             py::arg("rng"), py::arg("eventNumber"));
     py::class_<ParticlesGenerator, std::shared_ptr<ParticlesGenerator>>(
         gen, "ParticlesGenerator");
     py::class_<MultiplicityGenerator, std::shared_ptr<MultiplicityGenerator>>(
@@ -141,6 +143,60 @@ void addGenerators(py::module& mex) {
            }),
            py::arg("fixed"))
       .def_readwrite("fixed", &FixedPrimaryVertexPositionGenerator::fixed);
+
+  py::class_<AdditiveVertexPositionGenerator, PrimaryVertexPositionGenerator,
+             std::shared_ptr<AdditiveVertexPositionGenerator>>(
+      mex, "AdditiveVertexGenerator")
+      .def(py::init<>())
+      .def(
+          py::init([](const std::vector<
+                       std::shared_ptr<PrimaryVertexPositionGenerator>>& gens) {
+            AdditiveVertexPositionGenerator g;
+            g.generators = gens;
+            return g;
+          }),
+          py::arg("generators"))
+      .def_readwrite("generators",
+                     &AdditiveVertexPositionGenerator::generators);
+
+  py::class_<LumiBlockVertexPositionGenerator, PrimaryVertexPositionGenerator,
+             std::shared_ptr<LumiBlockVertexPositionGenerator>>(
+      mex, "LumiBlockVertexGenerator")
+      .def(py::init<>())
+      .def(py::init([](std::size_t blockSize, const Vector4& stddev) {
+             LumiBlockVertexPositionGenerator g;
+             g.blockSize = blockSize;
+             g.stddev = stddev;
+             return g;
+           }),
+           py::arg("blockSize"), py::arg("stddev"))
+      .def_readwrite("blockSize", &LumiBlockVertexPositionGenerator::blockSize)
+      .def_readwrite("stddev", &LumiBlockVertexPositionGenerator::stddev);
+
+  py::class_<LumiBlockRotationVertexPositionGenerator,
+             PrimaryVertexPositionGenerator,
+             std::shared_ptr<LumiBlockRotationVertexPositionGenerator>>(
+      mex, "LumiBlockRotationVertexGenerator")
+      .def(py::init<>())
+      .def(py::init([](std::shared_ptr<PrimaryVertexPositionGenerator> base,
+                       std::size_t blockSize, double xAngleStddev,
+                       double yAngleStddev) {
+             LumiBlockRotationVertexPositionGenerator g;
+             g.base = std::move(base);
+             g.blockSize = blockSize;
+             g.xAngleStddev = xAngleStddev;
+             g.yAngleStddev = yAngleStddev;
+             return g;
+           }),
+           py::arg("base"), py::arg("blockSize"), py::arg("xAngleStddev"),
+           py::arg("yAngleStddev"))
+      .def_readwrite("base", &LumiBlockRotationVertexPositionGenerator::base)
+      .def_readwrite("blockSize",
+                     &LumiBlockRotationVertexPositionGenerator::blockSize)
+      .def_readwrite("xAngleStddev",
+                     &LumiBlockRotationVertexPositionGenerator::xAngleStddev)
+      .def_readwrite("yAngleStddev",
+                     &LumiBlockRotationVertexPositionGenerator::yAngleStddev);
 
   // Aliases for Fatras types mirroring C++
   auto fatras = py::module_::import("acts.fatras");

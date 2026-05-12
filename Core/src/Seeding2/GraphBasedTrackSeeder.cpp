@@ -47,15 +47,26 @@ void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer2& spacePoints,
                                         const GbtsTrackingFilter& filter,
                                         const Options& options,
                                         SeedContainer2& outputSeeds) const {
+  const std::vector<std::vector<GbtsNode>> nodesPerLayer =
+      createNodes(spacePoints, maxLayers);
+
+  createSeeds(nodesPerLayer, roi, filter, options, outputSeeds);
+}
+
+void GraphBasedTrackSeeder::createSeeds(
+    const std::vector<std::vector<GbtsNode>>& nodesPerLayer,
+    const GbtsRoiDescriptor& roi, const GbtsTrackingFilter& filter,
+    const Options& options, SeedContainer2& outputSeeds) const {
   GbtsNodeStorage nodeStorage(m_geometry, m_mlLut);
 
-  std::vector<std::vector<GbtsNode>> nodesPerLayer =
-      createNodes(spacePoints, maxLayers);
   std::uint32_t nPixelLoaded = 0;
   std::uint32_t nStripLoaded = 0;
 
+  std::uint32_t nHits = 0;
+
   for (std::uint16_t l = 0; l < nodesPerLayer.size(); l++) {
     const std::vector<GbtsNode>& nodes = nodesPerLayer[l];
+    nHits += nodes.size();
 
     if (nodes.empty()) {
       continue;
@@ -96,8 +107,8 @@ void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer2& spacePoints,
   ACTS_DEBUG("Reached Level " << maxLevel << " after GNN iterations");
 
   std::vector<OutputSeedProperties> vOutputSeeds;
-  extractSeedsFromTheGraph(maxLevel, graphStats.first, spacePoints.size(),
-                           edgeStorage, vOutputSeeds, filter);
+  extractSeedsFromTheGraph(maxLevel, graphStats.first, nHits, edgeStorage,
+                           vOutputSeeds, filter);
 
   ACTS_DEBUG("GBTS created " << vOutputSeeds.size() << " seeds");
   if (vOutputSeeds.empty()) {
@@ -665,11 +676,11 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     std::vector<GbtsEdge>& edgeStorage,
     std::vector<OutputSeedProperties>& vOutputSeeds,
     const GbtsTrackingFilter& filter) const {
-  // a triplet + 2 confirmation
-  std::uint32_t minLevel = 3;
+  // a triplet + 1 confirmation
+  std::uint8_t minLevel = 3;
 
   if (m_cfg.lrtMode) {
-    // a triplet + 1 confirmation
+    // a triplet + no confirmation
     minLevel = 2;
   }
 
@@ -677,42 +688,56 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     return;
   }
 
-  std::vector<GbtsEdge*> vSeeds;
+  std::vector<GbtsEdge*> vChainHeads;
 
-  vSeeds.reserve(nEdges / 2);
+  vChainHeads.reserve(nEdges / 2);
 
   for (std::uint32_t edgeIndex = 0; edgeIndex < nEdges; ++edgeIndex) {
     GbtsEdge* pS = &(edgeStorage.at(edgeIndex));
 
-    if (pS->level < static_cast<std::int32_t>(minLevel)) {
-      continue;
+    if (m_cfg.lrtMode || !m_cfg.addTriplets) {
+      if (pS->level < minLevel) {
+        continue;
+      }
+    } else {  // eta-dependent cut
+      const float edgeAbsEta = std::abs(-std::log(pS->p[0]));
+
+      if (edgeAbsEta > m_cfg.maxAbsEtaAddTripelts) {
+        if (pS->level < minLevel) {
+          continue;
+        }
+      } else {
+        if (pS->level < minLevel - 1) {
+          continue;
+        }
+      }
     }
 
-    vSeeds.push_back(pS);
+    vChainHeads.push_back(pS);
   }
 
-  if (vSeeds.empty()) {
+  if (vChainHeads.empty()) {
     return;
   }
 
-  std::ranges::sort(vSeeds, std::ranges::greater{},
+  std::ranges::sort(vChainHeads, std::ranges::greater{},
                     [](const GbtsEdge* e) { return e->level; });
 
   // backtracking
 
   std::vector<SeedCandidateProperties> vSeedCandidates;
 
-  vSeedCandidates.reserve(vSeeds.size());
+  vSeedCandidates.reserve(vChainHeads.size());
 
   std::vector<std::pair<float, std::uint32_t>> vArgSort;
 
-  vArgSort.reserve(vSeeds.size());
+  vArgSort.reserve(vChainHeads.size());
 
   std::uint32_t seedCounter = 0;
 
   GbtsTrackingFilter::State filterState{};
 
-  for (GbtsEdge* pS : vSeeds) {
+  for (GbtsEdge* pS : vChainHeads) {
     if (pS->level == -1) {
       continue;
     }
@@ -723,16 +748,30 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
       continue;
     }
 
-    if (minLevel > static_cast<std::uint32_t>(rs.vs.size())) {
-      continue;
-    }
+    const float seedAbsEta = std::abs(-std::log(pS->p[0]));
 
-    const float seedEta = std::abs(-std::log(pS->p[0]));
+    const std::uint32_t chainLength = static_cast<std::uint32_t>(rs.vs.size());
+
+    if (m_cfg.lrtMode || !m_cfg.addTriplets) {
+      if (chainLength < minLevel) {
+        continue;
+      }
+    } else {
+      if (seedAbsEta > m_cfg.maxAbsEtaAddTripelts) {
+        if (chainLength < minLevel) {
+          continue;
+        }
+      } else {
+        if (chainLength < static_cast<std::uint32_t>(minLevel) - 1u) {
+          continue;
+        }
+      }
+    }
 
     std::vector<const GbtsNode*> vN;
 
     for (auto sIt = rs.vs.rbegin(); sIt != rs.vs.rend(); ++sIt) {
-      if (seedEta > m_cfg.edgeMaskMinEta) {
+      if (seedAbsEta > m_cfg.edgeMaskMinEta) {
         // mark as collected
         (*sIt)->level = -1;
       }
@@ -744,6 +783,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
       vN.push_back((*sIt)->n2);
     }
 
+    // a triplet is accepted if it makes it up to this point
     if (vN.size() < 3) {
       continue;
     }
@@ -752,7 +792,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     const float origSeedQuality = -rs.j / origSeedSize;
 
-    std::uint32_t seedSplitFlag = (seedEta < m_cfg.maxSeedSplitEta) &&
+    std::uint32_t seedSplitFlag = (seedAbsEta < m_cfg.maxSeedSplitEta) &&
                                           (origSeedSize > 3) &&
                                           (origSeedSize <= 5)
                                       ? 1

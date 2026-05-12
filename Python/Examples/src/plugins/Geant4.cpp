@@ -170,7 +170,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
     auto c = py::class_<Algorithm::Config, Geant4SimulationBase::Config,
                         std::shared_ptr<Algorithm::Config>>(alg, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, outputMaterialTracks, excludeMaterials);
+    ACTS_PYTHON_STRUCT(c, outputMaterialTracks, excludeMaterials,
+                       recordElementFractions);
   }
 
   {

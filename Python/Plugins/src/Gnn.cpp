@@ -68,11 +68,11 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGnn, gnn) {
 #ifdef ACTS_GNN_TORCH_BACKEND
   ACTS_PYTHON_DECLARE_GNN_STAGE(TorchMetricLearning, GraphConstructionBase, gnn,
                                 modelPath, selectedFeatures, embeddingDim, rVal,
-                                knnVal, deviceID);
+                                knnVal, device);
 
   ACTS_PYTHON_DECLARE_GNN_STAGE(TorchEdgeClassifier, EdgeClassificationBase,
                                 gnn, modelPath, selectedFeatures, cut, nChunks,
-                                undirected, deviceID, useEdgeFeatures);
+                                undirected, device, useEdgeFeatures);
 #endif
 
 #ifdef ACTS_GNN_WITH_TENSORRT
@@ -89,7 +89,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGnn, gnn) {
 
 #ifdef ACTS_GNN_ONNX_BACKEND
   ACTS_PYTHON_DECLARE_GNN_STAGE(OnnxEdgeClassifier, EdgeClassificationBase, gnn,
-                                modelPath, cut);
+                                modelPath, cut, device);
 #endif
 
 #ifdef ACTS_GNN_WITH_MODULEMAP

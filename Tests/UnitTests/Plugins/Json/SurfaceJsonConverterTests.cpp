@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiamondBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -205,6 +206,34 @@ BOOST_AUTO_TEST_CASE(PerigeeRoundTripTests) {
   BOOST_CHECK(perigeeTest->localToGlobalTransform(gctx).isApprox(
       perigeeRef->localToGlobalTransform(gctx)));
   BOOST_CHECK_EQUAL(perigeeTest->geometryId(), perigeeRef->geometryId());
+}
+
+BOOST_AUTO_TEST_CASE(DiamondPlaneSurfaceRoundTripTests) {
+  Transform3 trf(Transform3::Identity() * Translation3(0., 0., -7.));
+  auto diamond = std::make_shared<DiamondBounds>(1., 3., 2., 4., 5.);
+  auto diamondPlaneRef = Surface::makeShared<PlaneSurface>(trf, diamond);
+  diamondPlaneRef->assignGeometryId(GeometryIdentifier(14u));
+
+  nlohmann::json planeOut =
+      SurfaceJsonConverter::toJson(gctx, *diamondPlaneRef);
+  out.open("DiamondPlaneSurface.json");
+  out << planeOut.dump(2);
+  out.close();
+
+  auto in = std::ifstream("DiamondPlaneSurface.json",
+                          std::ifstream::in | std::ifstream::binary);
+  BOOST_CHECK(in.good());
+  nlohmann::json planeIn;
+  in >> planeIn;
+  in.close();
+
+  auto diamondPlaneTest = SurfaceJsonConverter::fromJson(planeIn);
+
+  BOOST_CHECK(diamondPlaneTest->localToGlobalTransform(gctx).isApprox(
+      diamondPlaneRef->localToGlobalTransform(gctx)));
+  BOOST_CHECK_EQUAL(diamondPlaneTest->geometryId(),
+                    diamondPlaneRef->geometryId());
+  BOOST_CHECK_EQUAL(diamondPlaneTest->bounds(), diamondPlaneRef->bounds());
 }
 
 BOOST_AUTO_TEST_CASE(SurfacesDetrayTests) {
