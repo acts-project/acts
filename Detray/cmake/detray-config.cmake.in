@@ -1,0 +1,97 @@
+# This file is part of the ACTS project.
+#
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+# Set up the helper functions/macros.
+@PACKAGE_INIT@
+
+# Set up variables describing which components were enabled during the
+# Detray build.
+set(DETRAY_FASTOR_PLUGIN @DETRAY_FASTOR_PLUGIN@)
+set(DETRAY_EIGEN_PLUGIN @DETRAY_EIGEN_PLUGIN@)
+set(DETRAY_SMATRIX_PLUGIN @DETRAY_SMATRIX_PLUGIN@)
+set(DETRAY_VC_AOS_PLUGIN @DETRAY_VC_AOS_PLUGIN@)
+set(DETRAY_VC_SOA_PLUGIN @DETRAY_VC_SOA_PLUGIN@)
+
+set(DETRAY_DISPLAY @DETRAY_DISPLAY@)
+set(DETRAY_BUILD_TESTING @DETRAY_BUILD_TESTING@)
+set(DETRAY_BUILD_TEST_UTILS @DETRAY_BUILD_TEST_UTILS@)
+set(DETRAY_BUILD_VALIDATION_TOOLS @DETRAY_BUILD_VALIDATION_TOOLS@)
+set(DETRAY_BUILD_BENCHMARKS @DETRAY_BUILD_BENCHMARKS@)
+set(DETRAY_BUILD_CLI_TOOLS @DETRAY_BUILD_CLI_TOOLS@)
+
+# Set up some simple variables for using the package.
+set(detray_VERSION "@PROJECT_VERSION@")
+set_and_check(detray_INCLUDE_DIR "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@")
+set_and_check(detray_CMAKE_DIR "@PACKAGE_CMAKE_INSTALL_CMAKEDIR@")
+
+# Find all packages that Detray needs to function.
+include(CMakeFindDependencyMacro)
+
+set(DETRAY_VECMEM_VERSION @DETRAY_VECMEM_VERSION@)
+set(DETRAY_NLOHMANN_VERSION @DETRAY_NLOHMANN_VERSION@)
+
+find_dependency(vecmem ${DETRAY_VECMEM_VERSION})
+find_dependency(nlohmann_json ${DETRAY_NLOHMANN_VERSION})
+
+if(
+    DETRAY_BUILD_TESTING
+    OR DETRAY_BUILD_TEST_UTILS
+    OR DETRAY_BUILD_VALIDATION_TOOLS
+    OR DETRAY_BUILD_BENCHMARKS
+    OR DETRAY_BUILD_CLI_TOOLS
+)
+    set(DETRAY_COVFIE_VERSION @DETRAY_COVFIE_VERSION@)
+    set(DETRAY_GOOGLETEST_VERSION @DETRAY_GOOGLETEST_VERSION@)
+    set(DETRAY_BENCHMARK_VERSION @DETRAY_BENCHMARK_VERSION@)
+
+    find_dependency(covfie ${DETRAY_COVFIE_VERSION})
+    find_dependency(GTest ${DETRAY_GOOGLETEST_VERSION})
+    find_dependency(benchmark ${DETRAY_BENCHMARK_VERSION})
+endif()
+
+if(DETRAY_DISPLAY)
+    set(DETRAY_ACTSVG_VERSION @DETRAY_ACTSVG_VERSION@)
+    find_dependency(
+        actsvg
+        ${DETRAY_ACTSVG_VERSION}
+        REQUIRED
+        COMPONENTS
+        core
+        meta
+    )
+endif()
+
+if(DETRAY_EIGEN_PLUGIN)
+    set(DETRAY_EIGEN_VERSION @DETRAY_EIGEN_VERSION@)
+    find_dependency(Eigen3 ${DETRAY_EIGEN_VERSION})
+endif()
+
+if(DETRAY_FASTOR_PLUGIN)
+    set(DETRAY_FASTOR_VERSION @DETRAY_FASTOR_VERSION@)
+    find_dependency(Fastor ${DETRAY_FASTOR_VERSION})
+endif()
+
+if(DETRAY_SMATRIX_PLUGIN)
+    find_dependency(ROOT COMPONENTS Smatrix)
+endif()
+
+if(DETRAY_VC_AOS_PLUGIN OR DETRAY_VC_SOA_PLUGIN)
+    set(DETRAY_VC_VERSION @DETRAY_VC_VERSION@)
+    find_dependency(Vc ${DETRAY_VC_VERSION})
+endif()
+
+# Print a standard information message about the package being found.
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(
+    detray
+    REQUIRED_VARS CMAKE_CURRENT_LIST_FILE
+    VERSION_VAR detray_VERSION
+)
+
+# Include the file listing all the imported targets and options.
+include("${detray_CMAKE_DIR}/detray-config-targets.cmake")
