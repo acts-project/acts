@@ -111,7 +111,6 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
   const Transform3 transform = estimationFrameLocalToGlobal(sp0, sp1, bField);
 
   // Local coordinates
-  const Vector3 local0 = Vector3::Zero();
   const Vector3 local1 = transform.inverse() * sp1;
   const Vector3 local2 = transform.inverse() * sp2;
 
