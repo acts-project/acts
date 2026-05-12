@@ -163,7 +163,8 @@ ProcessCode ArrowCaloHitOutputConverter::execute(
       finish(zList),   finish(pidList),    finish(eList), finish(tList),
   };
 
-  auto table = arrow::Table::Make(ActsPlugins::ArrowUtil::caloHitSchema(), arrays);
+  auto table =
+      arrow::Table::Make(ActsPlugins::ArrowUtil::caloHitSchema(), arrays);
   m_outputTable(ctx, ActsPlugins::ArrowUtil::ArrowTable{std::move(table)});
 
   return ProcessCode::SUCCESS;
