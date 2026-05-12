@@ -34,23 +34,19 @@ from physmon_common import makeSetup
 
 u = acts.UnitConstants
 
-# All variants supported by this script. When `--variant` is given on the
-# command line, exactly that one is run and outputs land flat under outdir
-# (Snakemake's preferred shape — one variant per job, one outdir per variant).
-# When `--variant` is omitted, all variants run sequentially under outdir/<label>/,
-# which is useful for manual invocation outside snakemake.
-ALL_VARIANTS = [
-    ("truth_smeared", SeedingAlgorithm.TruthSmeared),
-    ("truth_estimated", SeedingAlgorithm.TruthEstimated),
-    ("seeded", SeedingAlgorithm.GridTriplet),
-    ("orthogonal", SeedingAlgorithm.OrthogonalTriplet),
-]
+# All variants supported by this script. Names are `SeedingAlgorithm` enum
+# member names so we can resolve them via `getattr(SeedingAlgorithm, name)`.
+# When `--variant` is given, exactly that one runs with outputs flat under
+# outdir (Snakemake's preferred shape — one variant per job, one outdir per
+# variant). When `--variant` is omitted, all variants run sequentially under
+# outdir/<name>/, useful for manual invocation outside snakemake.
+ALL_VARIANTS = ["TruthSmeared", "TruthEstimated", "GridTriplet", "OrthogonalTriplet"]
 
 _variant_parser = argparse.ArgumentParser(add_help=False)
 _variant_parser.add_argument("outdir")
 _variant_parser.add_argument(
     "--variant",
-    choices=[v[0] for v in ALL_VARIANTS],
+    choices=ALL_VARIANTS,
     default=None,
     help="If set, run only this seeding variant and write files directly under outdir.",
 )
@@ -204,8 +200,7 @@ def run_ckf_tracking(seeding, label=None):
 
 
 if _variant_args.variant is not None:
-    selected = dict(ALL_VARIANTS)[_variant_args.variant]
-    run_ckf_tracking(selected, label=None)
+    run_ckf_tracking(getattr(SeedingAlgorithm, _variant_args.variant), label=None)
 else:
-    for label, seeding in ALL_VARIANTS:
-        run_ckf_tracking(seeding, label=label)
+    for name in ALL_VARIANTS:
+        run_ckf_tracking(getattr(SeedingAlgorithm, name), label=name)
