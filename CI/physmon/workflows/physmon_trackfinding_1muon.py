@@ -63,7 +63,7 @@ def run_ckf_tracking(seeding, label=None):
     with tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(
             events=10000,
-            numThreads=-1,
+            numThreads=setup.threads,
             logLevel=acts.logging.INFO,
         )
 
