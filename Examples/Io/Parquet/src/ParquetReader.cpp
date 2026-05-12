@@ -98,8 +98,9 @@ class ParquetReader::Impl {
             referenceName, referenceEvents, name, events));
       }
 
-      state->handle = std::make_unique<
-          WriteDataHandle<ActsPlugins::ArrowUtil::ArrowTable>>(&parent, name);
+      state->handle =
+          std::make_unique<WriteDataHandle<ActsPlugins::ArrowUtil::ArrowTable>>(
+              &parent, name);
       state->handle->initialize(name);
       m_states.push_back(std::move(state));
     }

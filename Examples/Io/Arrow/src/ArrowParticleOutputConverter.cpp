@@ -8,8 +8,6 @@
 
 #include "ActsExamples/Io/Arrow/ArrowParticleOutputConverter.hpp"
 
-#include "ActsPlugins/Arrow/ArrowUtil.hpp"
-
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -19,6 +17,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "Acts/Utilities/Table.hpp"
+#include "ActsPlugins/Arrow/ArrowUtil.hpp"
 
 #include <atomic>
 #include <cmath>
@@ -415,7 +414,8 @@ ProcessCode ArrowParticleOutputConverter::execute(
       finish(parentList), finish(primaryList),
   };
 
-  auto table = arrow::Table::Make(ActsPlugins::ArrowUtil::particleSchema(), arrays);
+  auto table =
+      arrow::Table::Make(ActsPlugins::ArrowUtil::particleSchema(), arrays);
   m_outputTable(ctx, ActsPlugins::ArrowUtil::ArrowTable{std::move(table)});
 
   return ProcessCode::SUCCESS;

@@ -218,7 +218,8 @@ ProcessCode ArrowTrackOutputConverter::execute(
       finish(hitIdsList), finish(trackIdList), finish(tList),
   };
 
-  auto table = arrow::Table::Make(ActsPlugins::ArrowUtil::trackSchema(), arrays);
+  auto table =
+      arrow::Table::Make(ActsPlugins::ArrowUtil::trackSchema(), arrays);
   m_outputTable(ctx, ActsPlugins::ArrowUtil::ArrowTable{std::move(table)});
 
   return ProcessCode::SUCCESS;

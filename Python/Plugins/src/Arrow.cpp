@@ -29,8 +29,8 @@ namespace {
 // (pyarrow et al.) hasn't already released the struct, we do it now to
 // release the producer-side resources.
 void releaseArrowSchemaCapsule(PyObject* capsule) {
-  auto* c = static_cast<ArrowSchema*>(
-      PyCapsule_GetPointer(capsule, "arrow_schema"));
+  auto* c =
+      static_cast<ArrowSchema*>(PyCapsule_GetPointer(capsule, "arrow_schema"));
   if (c == nullptr) {
     PyErr_Clear();
     return;
@@ -42,8 +42,8 @@ void releaseArrowSchemaCapsule(PyObject* capsule) {
 }
 
 void releaseArrowArrayCapsule(PyObject* capsule) {
-  auto* c = static_cast<ArrowArray*>(
-      PyCapsule_GetPointer(capsule, "arrow_array"));
+  auto* c =
+      static_cast<ArrowArray*>(PyCapsule_GetPointer(capsule, "arrow_array"));
   if (c == nullptr) {
     PyErr_Clear();
     return;
@@ -86,8 +86,8 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsArrow, m) {
           delete c_schema;
           throw;
         }
-        return py::reinterpret_steal<py::object>(PyCapsule_New(
-            c_schema, "arrow_schema", releaseArrowSchemaCapsule));
+        return py::reinterpret_steal<py::object>(
+            PyCapsule_New(c_schema, "arrow_schema", releaseArrowSchemaCapsule));
       });
 
   // ArrowTable: opaque handle around shared_ptr<arrow::Table> that's also
@@ -106,8 +106,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsArrow, m) {
           .def("__repr__",
                [](const ArrowTable& t) {
                  return "<ArrowTable " + std::to_string(t.numRows()) +
-                        " rows x " + std::to_string(t.numColumns()) +
-                        " cols>";
+                        " rows x " + std::to_string(t.numColumns()) + " cols>";
                })
           .def("__str__", &ArrowTable::toString)
           .def_property_readonly("num_rows", &ArrowTable::numRows)
@@ -168,10 +167,10 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsArrow, m) {
                         "__arrow_c_array__ returned a tuple of size " +
                         std::to_string(capsules.size()) + ", expected 2");
                   }
-                  auto* sc = static_cast<ArrowSchema*>(PyCapsule_GetPointer(
-                      capsules[0].ptr(), "arrow_schema"));
-                  auto* ar = static_cast<ArrowArray*>(PyCapsule_GetPointer(
-                      capsules[1].ptr(), "arrow_array"));
+                  auto* sc = static_cast<ArrowSchema*>(
+                      PyCapsule_GetPointer(capsules[0].ptr(), "arrow_schema"));
+                  auto* ar = static_cast<ArrowArray*>(
+                      PyCapsule_GetPointer(capsules[1].ptr(), "arrow_array"));
                   if (sc == nullptr || ar == nullptr) {
                     throw py::value_error(
                         "__arrow_c_array__ returned invalid PyCapsules");
@@ -199,12 +198,11 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsArrow, m) {
                         "expected 1 batch after combine_chunks, got " +
                         std::to_string(batches.size()));
                   }
-                  py::tuple capsules =
-                      batches[0].attr("__arrow_c_array__")();
-                  auto* sc = static_cast<ArrowSchema*>(PyCapsule_GetPointer(
-                      capsules[0].ptr(), "arrow_schema"));
-                  auto* ar = static_cast<ArrowArray*>(PyCapsule_GetPointer(
-                      capsules[1].ptr(), "arrow_array"));
+                  py::tuple capsules = batches[0].attr("__arrow_c_array__")();
+                  auto* sc = static_cast<ArrowSchema*>(
+                      PyCapsule_GetPointer(capsules[0].ptr(), "arrow_schema"));
+                  auto* ar = static_cast<ArrowArray*>(
+                      PyCapsule_GetPointer(capsules[1].ptr(), "arrow_array"));
                   if (sc == nullptr || ar == nullptr) {
                     throw py::value_error(
                         "__arrow_c_array__ returned invalid PyCapsules");
@@ -229,8 +227,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsArrow, m) {
     return ArrowSchemaHandle{std::move(s)};
   };
   m.def(
-      "particleSchema",
-      [wrap]() { return wrap(ArrowUtil::particleSchema()); },
+      "particleSchema", [wrap]() { return wrap(ArrowUtil::particleSchema()); },
       "Schema produced by ArrowParticleOutputConverter.");
   m.def(
       "trackSchema", [wrap]() { return wrap(ArrowUtil::trackSchema()); },

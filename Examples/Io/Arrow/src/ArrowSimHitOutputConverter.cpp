@@ -265,7 +265,8 @@ ProcessCode ArrowSimHitOutputConverter::execute(
       finish(detList), finish(volList), finish(layList),  finish(surfList),
   };
 
-  auto table = arrow::Table::Make(ActsPlugins::ArrowUtil::simHitSchema(), arrays);
+  auto table =
+      arrow::Table::Make(ActsPlugins::ArrowUtil::simHitSchema(), arrays);
   m_outputTable(ctx, ActsPlugins::ArrowUtil::ArrowTable{std::move(table)});
 
   return ProcessCode::SUCCESS;
