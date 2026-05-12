@@ -14,11 +14,40 @@
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <vector>
 
 // @TODO: Forward decl enough?
 #include <arrow/api.h>
 
 namespace ActsPlugins::ArrowUtil {
+
+/// Opaque, pybind-friendly wrapper around @c std::shared_ptr<arrow::Schema>.
+///
+/// We can't use @c py::class_<arrow::Schema, ...> directly: arrow is built
+/// with hidden visibility inside @c libActsPluginArrow, so its typeinfo
+/// isn't visible to other .so files (including the python module). Wrapping
+/// it in this @c ACTS_ARROW_EXPORT type gives pybind a class it can resolve
+/// across the .so boundary while keeping every arrow symbol private.
+///
+/// Also serves as the value type in @c ParquetReader::Config::expectedSchemas
+/// so the same handle can be both produced by Python (from
+/// @c acts.examples.arrow.particleSchema() etc.) and consumed by C++.
+class ACTS_ARROW_EXPORT ArrowSchemaHandle {
+ public:
+  ArrowSchemaHandle() = default;
+  explicit ArrowSchemaHandle(std::shared_ptr<arrow::Schema> schema)
+      : m_schema(std::move(schema)) {}
+
+  const std::shared_ptr<arrow::Schema>& schema() const { return m_schema; }
+  explicit operator bool() const { return m_schema != nullptr; }
+
+  std::string toString() const;
+  std::vector<std::string> fieldNames() const;
+  int numFields() const;
+
+ private:
+  std::shared_ptr<arrow::Schema> m_schema;
+};
 
 /// Canonical column name used by the Parquet reader/writer to stamp and
 /// filter rows per event. Every @c arrow::Table handed to @c ParquetWriter
@@ -40,6 +69,26 @@ ACTS_ARROW_EXPORT std::shared_ptr<arrow::Field> eventIdField();
 /// @return A new table with the event id column prepended.
 ACTS_ARROW_EXPORT std::shared_ptr<arrow::Table> withEventId(
     const std::shared_ptr<arrow::Table>& table, std::uint64_t eventId);
+
+/// Schema for the per-event particle table emitted by
+/// @c ArrowParticleOutputConverter. Nested layout: one row per event, each
+/// field a @c list<T> whose single list element holds all particles of that
+/// event.
+ACTS_ARROW_EXPORT std::shared_ptr<arrow::Schema> particleSchema();
+
+/// Schema for the per-event track table emitted by
+/// @c ArrowTrackOutputConverter. The @c t column is nullable at the outer
+/// level so writers running with @c writeTime=false can emit a single null
+/// per event row instead of an opened list of N inner nulls.
+ACTS_ARROW_EXPORT std::shared_ptr<arrow::Schema> trackSchema();
+
+/// Schema for the per-event simulated-hit table emitted by
+/// @c ArrowSimHitOutputConverter.
+ACTS_ARROW_EXPORT std::shared_ptr<arrow::Schema> simHitSchema();
+
+/// Schema for the per-event calorimeter-hit table emitted by
+/// @c ArrowCaloHitOutputConverter.
+ACTS_ARROW_EXPORT std::shared_ptr<arrow::Schema> caloHitSchema();
 
 /// Thin RAII wrapper around @c parquet::arrow::FileWriter that opens lazily
 /// on first write so the schema can be taken from the first event's table.
@@ -75,9 +124,19 @@ class ACTS_ARROW_EXPORT ParquetFileWriter {
 /// File-level pruning via Parquet footer min/max statistics reduces a
 /// per-event lookup to opening exactly one fragment when shards own
 /// disjoint event-id ranges (the layout produced by @c ParquetWriter).
+///
+/// Optionally accepts a target schema: when supplied, the dataset is
+/// built with that schema instead of the inspected union, so fragments
+/// missing one of its columns get the column materialized as nulls
+/// (added-column schema evolution) and fragments carrying extra columns
+/// have them dropped. The supplied schema must NOT include the
+/// @c event_id column — the reader prepends it internally. When
+/// omitted, the dataset schema is inferred from the fragments.
 class ACTS_ARROW_EXPORT ParquetDatasetReader {
  public:
-  explicit ParquetDatasetReader(std::filesystem::path directory);
+  explicit ParquetDatasetReader(std::filesystem::path directory,
+                                std::shared_ptr<arrow::Schema> targetSchema =
+                                    nullptr);
   ~ParquetDatasetReader();
 
   ParquetDatasetReader(const ParquetDatasetReader&) = delete;

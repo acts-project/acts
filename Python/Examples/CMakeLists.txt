@@ -199,7 +199,7 @@ add_examples_binding_if(
     NAME Arrow
     LINK_LIBRARIES Acts::ExamplesIoParquet Acts::ExamplesIoArrow
     FLAG ACTS_BUILD_EXAMPLES_PARQUET
-    PLUGIN_IMPORT FALSE
+    PLUGIN_IMPORT TRUE
 )
 add_examples_binding_if(
     NAME DD4hep

@@ -133,7 +133,10 @@ def _assert_particles_parquet(directory: Path, expected_events: int) -> None:
 
 
 def _assert_parquet_reader_config(
-    inputDir: Path, collections: dict[str, str], expected_events: int
+    inputDir: Path,
+    collections: dict[str, str],
+    expectedSchemas: dict[str, "acts.arrow.ArrowSchema"],
+    expected_events: int,
 ) -> None:
     from acts.examples.arrow import ParquetReader
 
@@ -141,6 +144,7 @@ def _assert_parquet_reader_config(
         level=acts.logging.INFO,
         inputDir=str(inputDir),
         collections=collections,
+        expectedSchemas=expectedSchemas,
     )
 
     assert reader.availableEvents() == (0, expected_events)
@@ -190,6 +194,8 @@ def _add_arrow_writer(
 
 def test_particle_gun_generated(tmp_path, ptcl_gun):
     """Particle gun → generated particles → Parquet."""
+    from acts.arrow import particleSchema
+
     nevents = 5
     s = Sequencer(numThreads=1, events=nevents)
     ptcl_gun(s)
@@ -200,6 +206,7 @@ def test_particle_gun_generated(tmp_path, ptcl_gun):
     _assert_parquet_reader_config(
         tmp_path,
         {"particles_generated_arrow": "particles_generated_arrow"},
+        {"particles_generated_arrow": particleSchema()},
         nevents,
     )
 
@@ -208,6 +215,7 @@ def test_particle_gun_roundtrip(tmp_path, ptcl_gun):
     """Write sharded Parquet, then drive a second Sequencer off ParquetReader
     and check the reader exposes — and processes — the same number of events
     that were written."""
+    from acts.arrow import particleSchema
     from acts.examples.arrow import ParquetReader
 
     # nevents/eventsPerShard chosen so the write phase produces multiple
@@ -241,6 +249,7 @@ def test_particle_gun_roundtrip(tmp_path, ptcl_gun):
         level=acts.logging.INFO,
         inputDir=str(tmp_path),
         collections={"particles_generated_arrow": "particles_generated_arrow"},
+        expectedSchemas={"particles_generated_arrow": particleSchema()},
     )
     assert reader.availableEvents() == (0, nevents)
 
@@ -352,3 +361,120 @@ def test_pythia8_fatras(tmp_path, rng, trk_geo):
 
     _assert_particles_parquet(tmp_path / "particles_generated_arrow", nevents)
     _assert_particles_parquet(tmp_path / "particles_simulated_arrow", nevents)
+
+
+def test_reader_schema_evolution_added_optional_column(tmp_path):
+    """Read shards written without an optional column and verify the reader
+    materializes it as null.
+
+    Concretely: hand-write track shards using the production track schema
+    *minus* the optional `t` field, then drive a sequencer with
+    `ParquetReader` configured with the *full* track schema (which has `t`
+    as a nullable column). The dataset scanner should project missing
+    columns to null per fragment, so the table on the whiteboard must
+    carry `t` and it must be all-null.
+
+    This is the canonical added-optional-column schema-evolution case.
+    """
+    pa = pytest.importorskip("pyarrow")
+    pq = pytest.importorskip("pyarrow.parquet")
+
+    from acts.arrow import trackSchema
+    from acts.examples.arrow import ArrowTableCheckAlg, ParquetReader
+
+    full_schema_str = str(trackSchema())
+    assert "t: " in full_schema_str, (
+        f"trackSchema() unexpectedly lacks the 't' field; this test relies "
+        f"on it being present. Schema:\n{full_schema_str}"
+    )
+
+    # Build the "old" schema = production track schema MINUS `t`. We can't
+    # read pyarrow types out of our opaque ArrowSchema handle (intentional —
+    # see the binding comment), so spell out the schema directly here. Keep
+    # in sync with ActsPlugins::ArrowUtil::trackSchema() if either changes.
+    nullable_float_list = pa.list_(pa.field("item", pa.float32(), nullable=True))
+    old_track_schema = pa.schema(
+        [
+            pa.field("d0", nullable_float_list, nullable=False),
+            pa.field("z0", nullable_float_list, nullable=False),
+            pa.field("phi", nullable_float_list, nullable=False),
+            pa.field("theta", nullable_float_list, nullable=False),
+            pa.field("qop", nullable_float_list, nullable=False),
+            pa.field(
+                "majority_particle_id", pa.list_(pa.uint64()), nullable=False
+            ),
+            pa.field(
+                "hit_ids", pa.list_(pa.list_(pa.uint32())), nullable=False
+            ),
+            pa.field("track_id", pa.list_(pa.uint16()), nullable=False),
+        ]
+    )
+
+    nevents = 4
+    events_per_shard = 2
+    collection_dir = tmp_path / "tracks_arrow"
+    collection_dir.mkdir()
+
+    # Build one row per event, with a single track per event for simplicity.
+    # The on-disk schema additionally needs `event_id` prepended (the reader
+    # uses it for filter pushdown).
+    event_id_field = pa.field("event_id", pa.uint32(), nullable=False)
+    on_disk_schema = pa.schema([event_id_field, *list(old_track_schema)])
+
+    def make_event_table(event_id: int) -> "pa.Table":
+        return pa.table(
+            {
+                "event_id": pa.array([event_id], type=pa.uint32()),
+                "d0": pa.array([[0.1]], type=nullable_float_list),
+                "z0": pa.array([[0.2]], type=nullable_float_list),
+                "phi": pa.array([[0.3]], type=nullable_float_list),
+                "theta": pa.array([[0.4]], type=nullable_float_list),
+                "qop": pa.array([[0.5]], type=nullable_float_list),
+                "majority_particle_id": pa.array(
+                    [[1]], type=pa.list_(pa.uint64())
+                ),
+                "hit_ids": pa.array(
+                    [[[1, 2, 3]]], type=pa.list_(pa.list_(pa.uint32()))
+                ),
+                "track_id": pa.array([[7]], type=pa.list_(pa.uint16())),
+            },
+            schema=on_disk_schema,
+        )
+
+    # Write two shards, [0,2) and [2,4), each with one row group per event.
+    for shard_start in range(0, nevents, events_per_shard):
+        shard_end = shard_start + events_per_shard
+        shard_path = (
+            collection_dir / f"tracks_{shard_start:06d}-{shard_end:06d}.parquet"
+        )
+        with pq.ParquetWriter(str(shard_path), on_disk_schema) as writer:
+            for event_id in range(shard_start, shard_end):
+                writer.write_table(make_event_table(event_id))
+
+    # Sanity check: the on-disk shards genuinely lack `t`.
+    for shard_path in sorted(collection_dir.glob("*.parquet")):
+        on_disk = pq.ParquetFile(str(shard_path)).schema_arrow
+        assert "t" not in on_disk.names, (
+            f"{shard_path.name}: precondition broken, on-disk shard "
+            f"unexpectedly contains 't'. Schema: {on_disk}"
+        )
+
+    reader = ParquetReader(
+        level=acts.logging.INFO,
+        inputDir=str(tmp_path),
+        collections={"tracks_arrow": "tracks_arrow"},
+        expectedSchemas={"tracks_arrow": trackSchema()},
+    )
+    assert reader.availableEvents() == (0, nevents)
+
+    s = Sequencer(numThreads=1)
+    s.addReader(reader)
+    s.addAlgorithm(
+        ArrowTableCheckAlg(
+            level=acts.logging.INFO,
+            inputTable="tracks_arrow",
+            requiredColumns=["d0", "z0", "phi", "theta", "qop", "t"],
+            allNullColumns=["t"],
+        )
+    )
+    s.run()

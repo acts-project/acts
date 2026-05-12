@@ -4,6 +4,7 @@ add_library(
     src/ArrowCaloHitOutputConverter.cpp
     src/ArrowParticleOutputConverter.cpp
     src/ArrowSimHitOutputConverter.cpp
+    src/ArrowTableCheckAlg.cpp
     src/ArrowTrackOutputConverter.cpp
 )
 

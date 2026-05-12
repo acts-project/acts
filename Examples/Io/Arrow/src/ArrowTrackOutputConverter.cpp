@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsPlugins/Arrow/ArrowUtil.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -23,34 +24,6 @@
 namespace ActsExamples {
 
 namespace {
-
-/// Nested layout: one row per event, each field a @c list<T> whose single
-/// list element at row @c N holds all tracks of event @c N. The @c hit_ids
-/// column is a list-of-list so each track keeps its own vector of
-/// measurement indices.
-/// Helper: a `list<T>` column whose inner elements are nullable. We use this
-/// for the perigee parameters so individual tracks without a reference
-/// surface emit a real null instead of a NaN sentinel.
-std::shared_ptr<arrow::DataType> nullableFloatList() {
-  return arrow::list(arrow::field("item", arrow::float32(), true));
-}
-
-std::shared_ptr<arrow::Schema> trackSchema() {
-  return arrow::schema({
-      arrow::field("d0", nullableFloatList(), false),
-      arrow::field("z0", nullableFloatList(), false),
-      arrow::field("phi", nullableFloatList(), false),
-      arrow::field("theta", nullableFloatList(), false),
-      arrow::field("qop", nullableFloatList(), false),
-      arrow::field("majority_particle_id", arrow::list(arrow::uint64()), false),
-      arrow::field("hit_ids", arrow::list(arrow::list(arrow::uint32())), false),
-      arrow::field("track_id", arrow::list(arrow::uint16()), false),
-      // `t` is also nullable at the outer level so `writeTime=false` can
-      // emit a single null per event row (most compact representation of
-      // "no time data") instead of an opened list of N inner nulls.
-      arrow::field("t", nullableFloatList(), true),
-  });
-}
 
 void check(const arrow::Status& s, const char* what) {
   if (!s.ok()) {
@@ -245,7 +218,7 @@ ProcessCode ArrowTrackOutputConverter::execute(
       finish(hitIdsList), finish(trackIdList), finish(tList),
   };
 
-  auto table = arrow::Table::Make(trackSchema(), arrays);
+  auto table = arrow::Table::Make(ActsPlugins::ArrowUtil::trackSchema(), arrays);
   m_outputTable(ctx, std::move(table));
 
   return ProcessCode::SUCCESS;

@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Io/Arrow/ArrowCaloHitOutputConverter.hpp"
 
+#include "ActsPlugins/Arrow/ArrowUtil.hpp"
+
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
@@ -19,22 +21,6 @@
 namespace ActsExamples {
 
 namespace {
-
-std::shared_ptr<arrow::Schema> caloHitSchema() {
-  return arrow::schema({
-      arrow::field("detector", arrow::list(arrow::uint8()), false),
-      arrow::field("total_energy", arrow::list(arrow::float32()), false),
-      arrow::field("x", arrow::list(arrow::float32()), false),
-      arrow::field("y", arrow::list(arrow::float32()), false),
-      arrow::field("z", arrow::list(arrow::float32()), false),
-      arrow::field("contrib_particle_ids",
-                   arrow::list(arrow::list(arrow::uint64())), false),
-      arrow::field("contrib_energies",
-                   arrow::list(arrow::list(arrow::float32())), false),
-      arrow::field("contrib_times", arrow::list(arrow::list(arrow::float32())),
-                   false),
-  });
-}
 
 void check(const arrow::Status& s, const char* what) {
   if (!s.ok()) {
@@ -177,7 +163,7 @@ ProcessCode ArrowCaloHitOutputConverter::execute(
       finish(zList),   finish(pidList),    finish(eList), finish(tList),
   };
 
-  auto table = arrow::Table::Make(caloHitSchema(), arrays);
+  auto table = arrow::Table::Make(ActsPlugins::ArrowUtil::caloHitSchema(), arrays);
   m_outputTable(ctx, std::move(table));
 
   return ProcessCode::SUCCESS;
