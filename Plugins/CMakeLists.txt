@@ -9,8 +9,8 @@ add_component_if(Json PluginJson ACTS_BUILD_PLUGIN_JSON)
 add_component_if(Mille PluginMille ACTS_BUILD_PLUGIN_MILLE)
 add_component_if(Onnx PluginOnnx ACTS_BUILD_PLUGIN_ONNX)
 add_component_if(Gnn PluginGnn ACTS_BUILD_PLUGIN_GNN)
-add_component_if(Detray PluginDetray ACTS_BUILD_PLUGIN_TRACCC)
-add_component_if(Covfie PluginCovfie ACTS_BUILD_PLUGIN_TRACCC)
+add_component_if(Detray PluginDetray ACTS_BUILD_PLUGIN_DETRAY)
+add_component_if(Covfie PluginCovfie ACTS_BUILD_PLUGIN_DETRAY)
 
 # dependent plugins. depend either on a independent plugins or on one another
 add_component_if(Root PluginRoot ACTS_BUILD_PLUGIN_ROOT)

@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Detray/DetrayPropagator.hpp"
+#include "ActsExamples/Detray/ActsToDetrayDetectorAlg.hpp"
 #include "ActsExamples/Detray/DetrayStore.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
 #include "ActsPlugins/Covfie/FieldConversion.hpp"
@@ -83,5 +84,26 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsDetray, detray) {
               std::make_shared<DP>(cfg));
         },
         "store"_a, "field"_a, "sterile"_a = false);
+  }
+
+  /// Detector conversion
+  {
+    using Alg = ActsExamples::ActsToDetrayDetectorAlg;
+    using Cfg = Alg::Config;
+
+    auto cls = py::class_<Alg, ActsExamples::IAlgorithm,
+                          std::shared_ptr<Alg>>(detray, "ActsToDetrayDetectorAlg")
+      .def(py::init([](const Cfg& cfg, Acts::Logging::Level level) {
+        return std::make_shared<Alg>(
+            cfg, Acts::getDefaultLogger("ActsToDetrayDetectorAlg", level));
+      }));
+
+    py::class_<Cfg>(cls, "Config")
+      .def(py::init<>())
+      .def_readwrite("trackingGeometry",      &Cfg::trackingGeometry)
+      .def_readwrite("beampipeVolumeName",     &Cfg::beampipeVolumeName)
+      .def_readwrite("outputDetrayToActsMap",  &Cfg::outputDetrayToActsMap)
+      .def_readwrite("outputDetrayDetector",   &Cfg::outputDetrayDetector)
+      .def_readwrite("outputJsonDir",          &Cfg::outputJsonDir);
   }
 }

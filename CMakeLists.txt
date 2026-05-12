@@ -66,6 +66,7 @@ option(ACTS_USE_SYSTEM_COVFIE "Use a system-provided covfie installation" ${ACTS
 option(ACTS_SETUP_COVFIE "If we want to set up covfie" ON)
 option(ACTS_USE_SYSTEM_DETRAY "Use a system-provided detray installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_SETUP_DETRAY "If we want to set up detray" ON)
+option(ACTS_BUILD_PLUGIN_DETRAY "Build Detray plugin" OFF)
 option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_SETUP_VECMEM "If we want to set up vecmem" ON)
 option(ACTS_USE_SYSTEM_TRACCC "Use a system-provided traccc installation" ${ACTS_USE_SYSTEM_LIBS})
@@ -183,6 +184,7 @@ set_option_if(
     OR
     ACTS_BUILD_EXAMPLES_EDM4HEP
 )
+set_option_if(ACTS_BUILD_PLUGIN_DETRAY ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_BUILD_PLUGIN_EDM4HEP ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_EXAMPLES_PODIO ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_PLUGIN_GEANT4 ACTS_BUILD_EXAMPLES_GEANT4)
@@ -549,7 +551,7 @@ if(ACTS_BUILD_PLUGIN_GEANT4)
     find_package(Geant4 ${_acts_geant4_version} REQUIRED CONFIG COMPONENTS gdml)
 endif()
 
-if(ACTS_BUILD_PLUGIN_TRACCC)
+if(ACTS_BUILD_PLUGIN_TRACCC OR ACTS_BUILD_PLUGIN_DETRAY)
     if(ACTS_SETUP_VECMEM)
         if(ACTS_USE_SYSTEM_VECMEM)
             find_package(vecmem ${_acts_vecmem_version} REQUIRED)
@@ -560,14 +562,6 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
         endif()
     endif()
 
-    if(ACTS_SETUP_DETRAY)
-        if(ACTS_USE_SYSTEM_DETRAY)
-            find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
-        else()
-            add_subdirectory(thirdparty/detray)
-        endif()
-    endif()
-
     if(ACTS_SETUP_COVFIE)
         if(ACTS_USE_SYSTEM_COVFIE)
             find_package(covfie ${_acts_covfie_version} REQUIRED CONFIG)
@@ -575,6 +569,17 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
             add_subdirectory(thirdparty/covfie)
         endif()
     endif()
+
+    if(ACTS_SETUP_DETRAY)
+        if(ACTS_USE_SYSTEM_DETRAY)
+            find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
+        else()
+            add_subdirectory(thirdparty/detray)
+        endif()
+    endif()
+endif()
+
+if(ACTS_BUILD_PLUGIN_TRACCC)
 
     # traccc also depends on vecmem and covfie, but those plugins should always
     # be enabled if traccc is.
