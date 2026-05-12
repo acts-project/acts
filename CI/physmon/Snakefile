@@ -1,0 +1,555 @@
+# Snakemake workflow for physmon.
+#
+# Produces the physmon validation artifacts as an explicit DAG so:
+#   - Generation and comparison both run in parallel (--cores N).
+#   - Editing one generator only re-runs that branch.
+#   - The catalog of jobs lives in config/physmon.yaml, not in shell ifs.
+#
+# Every rule is run through scripts/wrap.sh so it always exits 0 and writes a
+# small JSON witness {"step","rc","log"}. The summary step joins those witnesses
+# against the catalog to produce a multi-column results table and is the single
+# place that decides overall pass/fail. This means even when an upstream step
+# fails, the rest of the DAG still runs (on touched-empty stand-in files) and
+# the summary shows the full failure chain.
+#
+# Usage (from repo root):
+#   snakemake -s CI/physmon/Snakefile --cores N [target]
+#
+# Targets:
+#   all              everything + summary  (default; fails non-zero if any comparison failed)
+#   simulation, kf, gsf, gx2f, refit_kf, refit_gsf, fullchains, gx2f_vs_kf
+#                    per-mode meta-targets. Each builds only its slice of
+#                    artifacts and fails non-zero if any in-scope comparison failed.
+#
+# Override the output directory:
+#   snakemake ... --config outdir=/tmp/physmon
+
+import json
+from pathlib import Path
+
+configfile: "CI/physmon/config/physmon.yaml"
+
+OUTDIR             = config.get("outdir", "physmon")
+REFDIR             = "CI/physmon/reference"
+WORKFLOWS_DIR      = "CI/physmon/workflows"
+HISTCMP_CONFIG_DIR = "CI/physmon/config"
+WRAP               = "bash CI/physmon/scripts/wrap.sh"
+
+GENERATORS  = config["generators"]
+COMPARISONS = config["comparisons"]
+
+
+# ---------------------------------------------------------------------------
+# Catalog indexes
+# ---------------------------------------------------------------------------
+
+PLOTS = {c["current"]: c["plot"] for c in COMPARISONS if "plot" in c}
+COMP_BY_CURRENT = {c["current"]: c for c in COMPARISONS}
+
+
+# ---------------------------------------------------------------------------
+# Path helpers
+# ---------------------------------------------------------------------------
+
+def _rel_no_root(rel):
+    """Strip a trailing '.root' from a path-like string."""
+    assert rel.endswith(".root"), rel
+    return rel[:-len(".root")]
+
+
+def html_for(comp):
+    """{OUTDIR}/html/<current-with-.root-replaced-by-.html>."""
+    return f"{OUTDIR}/html/" + _rel_no_root(comp["current"]) + ".html"
+
+
+def witness_for_generator(slug, variant=None):
+    if variant:
+        return f"{OUTDIR}/witnesses/generator/{slug}/{variant}.json"
+    return f"{OUTDIR}/witnesses/generator/{slug}.json"
+
+
+def witness_for_plot(rel_no_root):
+    return f"{OUTDIR}/witnesses/plot/{rel_no_root}.json"
+
+
+def witness_for_histcmp(rel_no_root):
+    return f"{OUTDIR}/witnesses/histcmp/{rel_no_root}.json"
+
+
+def generator_info_for_comp(comp):
+    """Return (slug, variant) — which generator owns this comparison's `current` file.
+
+    Variant is None unless the generator has a `variants` field in the catalog
+    (currently only trackfinding_1muon).
+    """
+    parts = comp["current"].split("/")
+    slug = parts[0]
+    gen = GENERATORS.get(slug, {})
+    if "variants" in gen and len(parts) >= 2 and parts[1] in gen["variants"]:
+        return slug, parts[1]
+    return slug, None
+
+
+def upstream_slug_for(slug):
+    """Return the upstream generator slug if `slug` has a single `needs:` entry, else None."""
+    needs = GENERATORS.get(slug, {}).get("needs") or []
+    return needs[0] if needs else None
+
+
+def comps_for_mode(mode):
+    if mode == "all":
+        return COMPARISONS
+    return [c for c in COMPARISONS if c["mode"] == mode]
+
+
+def _check_histcmp_witnesses(comps):
+    """Read histcmp witnesses for `comps`; SystemExit(rc|...) if any non-zero.
+
+    Used by per-mode meta-targets so e.g. `snakemake kf` fails when the KF
+    comparison failed. The richer multi-column summary still requires `all`.
+    """
+    import sys
+    rc = 0
+    failed = []
+    for c in comps:
+        wpath = witness_for_histcmp(_rel_no_root(c["current"]))
+        try:
+            w = json.loads(Path(wpath).read_text())
+        except (OSError, ValueError) as e:
+            print(f"physmon: cannot read witness {wpath}: {e}", file=sys.stderr)
+            rc |= 1
+            continue
+        if w["rc"] != 0:
+            rc |= w["rc"]
+            failed.append((c["title"], w))
+    for title, w in failed:
+        log = w.get("log") or "(no log)"
+        print(f"physmon: comparison failed: {title} (rc={w['rc']}, log={log})", file=sys.stderr)
+    if rc != 0:
+        raise SystemExit(rc)
+
+
+def _all_witnesses():
+    """Every witness path the workflow should produce. Used by build_results' input."""
+    paths = []
+    for slug, gen in GENERATORS.items():
+        if "variants" in gen:
+            for v in gen["variants"]:
+                paths.append(witness_for_generator(slug, v))
+        else:
+            paths.append(witness_for_generator(slug))
+    for c in COMPARISONS:
+        if "plot" in c:
+            paths.append(witness_for_plot(_rel_no_root(c["current"])))
+        paths.append(witness_for_histcmp(_rel_no_root(c["current"])))
+    return paths
+
+
+# ---------------------------------------------------------------------------
+# Default target — `all`. Triggers full DAG + summary.
+# ---------------------------------------------------------------------------
+
+rule all:
+    input:
+        f"{OUTDIR}/summary.md",
+        f"{OUTDIR}/summary.html",
+    default_target: True
+
+
+# ---------------------------------------------------------------------------
+# Per-mode meta-targets. Pull only their slice of comparisons; check their
+# histcmp witnesses via a small run: gate so partial runs fail correctly.
+# ---------------------------------------------------------------------------
+
+rule simulation:
+    input:
+        [html_for(c) for c in comps_for_mode("simulation")],
+        [witness_for_histcmp(_rel_no_root(c["current"])) for c in comps_for_mode("simulation")],
+    run: _check_histcmp_witnesses(comps_for_mode("simulation"))
+
+rule kf:
+    input:
+        [html_for(c) for c in comps_for_mode("kf")],
+        [witness_for_histcmp(_rel_no_root(c["current"])) for c in comps_for_mode("kf")],
+    run: _check_histcmp_witnesses(comps_for_mode("kf"))
+
+rule gsf:
+    input:
+        [html_for(c) for c in comps_for_mode("gsf")],
+        [witness_for_histcmp(_rel_no_root(c["current"])) for c in comps_for_mode("gsf")],
+    run: _check_histcmp_witnesses(comps_for_mode("gsf"))
+
+rule gx2f:
+    input:
+        [html_for(c) for c in comps_for_mode("gx2f")],
+        [witness_for_histcmp(_rel_no_root(c["current"])) for c in comps_for_mode("gx2f")],
+    run: _check_histcmp_witnesses(comps_for_mode("gx2f"))
+
+rule refit_kf:
+    input:
+        [html_for(c) for c in comps_for_mode("refit_kf")],
+        [witness_for_histcmp(_rel_no_root(c["current"])) for c in comps_for_mode("refit_kf")],
+    run: _check_histcmp_witnesses(comps_for_mode("refit_kf"))
+
+rule refit_gsf:
+    input:
+        [html_for(c) for c in comps_for_mode("refit_gsf")],
+        [witness_for_histcmp(_rel_no_root(c["current"])) for c in comps_for_mode("refit_gsf")],
+    run: _check_histcmp_witnesses(comps_for_mode("refit_gsf"))
+
+rule fullchains:
+    input:
+        [html_for(c) for c in comps_for_mode("fullchains")],
+        [witness_for_histcmp(_rel_no_root(c["current"])) for c in comps_for_mode("fullchains")],
+    run: _check_histcmp_witnesses(comps_for_mode("fullchains"))
+
+rule gx2f_vs_kf:
+    input:
+        [html_for(c) for c in comps_for_mode("gx2f_vs_kf")],
+        [witness_for_histcmp(_rel_no_root(c["current"])) for c in comps_for_mode("gx2f_vs_kf")],
+    run: _check_histcmp_witnesses(comps_for_mode("gx2f_vs_kf"))
+
+
+# ---------------------------------------------------------------------------
+# Generator rules. One per script. Wrapped so they never fail the DAG; outputs
+# that feed plot_hist are wrapped in temp() so snakemake auto-cleans the large
+# ntuples after they've been consumed (matching the original `rm` in the
+# legacy shell script).
+# ---------------------------------------------------------------------------
+
+rule generate_simulation:
+    output:
+        particles_fatras = temp(f"{OUTDIR}/data/simulation/particles_fatras.root"),
+        particles_geant4 = temp(f"{OUTDIR}/data/simulation/particles_geant4.root"),
+        particles_ttbar  = temp(f"{OUTDIR}/data/simulation/particles_ttbar.root"),
+        vertices_ttbar   = temp(f"{OUTDIR}/data/simulation/vertices_ttbar.root"),
+        particles_gun    = f"{OUTDIR}/data/simulation/particles_gun.root",
+        witness          = witness_for_generator("simulation"),
+    log: f"{OUTDIR}/logs/simulation.log"
+    shell:
+        WRAP + " --witness {output.witness} --step generator --log {log} "
+        "--touches '{output}' -- "
+        "python3 " + WORKFLOWS_DIR + "/physmon_simulation.py "
+        + OUTDIR + "/data/simulation"
+
+
+rule generate_simulation_gsf:
+    output:
+        particles = f"{OUTDIR}/data/simulation_gsf/simulation/particles_simulation.root",
+        hits      = f"{OUTDIR}/data/simulation_gsf/simulation/hits.root",
+        witness   = witness_for_generator("simulation_gsf"),
+    log: f"{OUTDIR}/logs/simulation_gsf.log"
+    shell:
+        WRAP + " --witness {output.witness} --step generator --log {log} "
+        "--touches '{output}' -- "
+        "python3 " + WORKFLOWS_DIR + "/physmon_simulation_gsf.py "
+        + OUTDIR + "/data/simulation_gsf"
+
+
+rule generate_trackfitting_kf:
+    output:
+        perf    = f"{OUTDIR}/data/trackfitting_kf/performance_trackfitting.root",
+        witness = witness_for_generator("trackfitting_kf"),
+    log: f"{OUTDIR}/logs/trackfitting_kf.log"
+    shell:
+        WRAP + " --witness {output.witness} --step generator --log {log} "
+        "--touches '{output}' -- "
+        "python3 " + WORKFLOWS_DIR + "/physmon_trackfitting_kf.py "
+        + OUTDIR + "/data/trackfitting_kf"
+
+
+rule generate_trackfitting_gsf:
+    input:
+        f"{OUTDIR}/data/simulation_gsf/simulation/particles_simulation.root",
+    output:
+        perf    = f"{OUTDIR}/data/trackfitting_gsf/performance_trackfitting.root",
+        witness = witness_for_generator("trackfitting_gsf"),
+    log: f"{OUTDIR}/logs/trackfitting_gsf.log"
+    shell:
+        WRAP + " --witness {output.witness} --step generator --log {log} "
+        "--touches '{output}' -- "
+        "python3 " + WORKFLOWS_DIR + "/physmon_trackfitting_gsf.py "
+        + OUTDIR + "/data/trackfitting_gsf"
+
+
+rule generate_trackfitting_gx2f:
+    output:
+        perf    = f"{OUTDIR}/data/trackfitting_gx2f/performance_trackfitting.root",
+        witness = witness_for_generator("trackfitting_gx2f"),
+    log: f"{OUTDIR}/logs/trackfitting_gx2f.log"
+    shell:
+        WRAP + " --witness {output.witness} --step generator --log {log} "
+        "--touches '{output}' -- "
+        "python3 " + WORKFLOWS_DIR + "/physmon_trackfitting_gx2f.py "
+        + OUTDIR + "/data/trackfitting_gx2f"
+
+
+rule generate_trackrefitting_kf:
+    output:
+        perf    = f"{OUTDIR}/data/trackrefitting_kf/performance_trackrefitting.root",
+        witness = witness_for_generator("trackrefitting_kf"),
+    log: f"{OUTDIR}/logs/trackrefitting_kf.log"
+    shell:
+        WRAP + " --witness {output.witness} --step generator --log {log} "
+        "--touches '{output}' -- "
+        "python3 " + WORKFLOWS_DIR + "/physmon_trackrefitting_kf.py "
+        + OUTDIR + "/data/trackrefitting_kf"
+
+
+rule generate_trackrefitting_gsf:
+    input:
+        f"{OUTDIR}/data/simulation_gsf/simulation/particles_simulation.root",
+    output:
+        perf    = f"{OUTDIR}/data/trackrefitting_gsf/performance_trackrefitting.root",
+        witness = witness_for_generator("trackrefitting_gsf"),
+    log: f"{OUTDIR}/logs/trackrefitting_gsf.log"
+    shell:
+        WRAP + " --witness {output.witness} --step generator --log {log} "
+        "--touches '{output}' -- "
+        "python3 " + WORKFLOWS_DIR + "/physmon_trackrefitting_gsf.py "
+        + OUTDIR + "/data/trackrefitting_gsf"
+
+
+# trackfinding_1muon: split into two rules so the output set correctly
+# reflects that truth_smeared does NOT produce performance_seeding.root.
+
+rule generate_trackfinding_1muon_with_seeding:
+    output:
+        seeding = f"{OUTDIR}/data/trackfinding_1muon/{{variant}}/performance_seeding.root",
+        finding = f"{OUTDIR}/data/trackfinding_1muon/{{variant}}/performance_finding_ckf.root",
+        fitting = f"{OUTDIR}/data/trackfinding_1muon/{{variant}}/performance_fitting_ckf.root",
+        summary = temp(f"{OUTDIR}/data/trackfinding_1muon/{{variant}}/tracksummary_ckf.root"),
+        witness = f"{OUTDIR}/witnesses/generator/trackfinding_1muon/{{variant}}.json",
+    wildcard_constraints:
+        variant = "truth_estimated|seeded|orthogonal",
+    log: f"{OUTDIR}/logs/trackfinding_1muon_{{variant}}.log"
+    shell:
+        WRAP + " --witness {output.witness} --step generator --log {log} "
+        "--touches '{output}' -- "
+        "python3 " + WORKFLOWS_DIR + "/physmon_trackfinding_1muon.py "
+        + OUTDIR + "/data/trackfinding_1muon/{wildcards.variant} "
+        "--variant {wildcards.variant}"
+
+
+rule generate_trackfinding_1muon_truth_smeared:
+    output:
+        finding = f"{OUTDIR}/data/trackfinding_1muon/truth_smeared/performance_finding_ckf.root",
+        fitting = f"{OUTDIR}/data/trackfinding_1muon/truth_smeared/performance_fitting_ckf.root",
+        summary = temp(f"{OUTDIR}/data/trackfinding_1muon/truth_smeared/tracksummary_ckf.root"),
+        witness = witness_for_generator("trackfinding_1muon", "truth_smeared"),
+    log: f"{OUTDIR}/logs/trackfinding_1muon_truth_smeared.log"
+    shell:
+        WRAP + " --witness {output.witness} --step generator --log {log} "
+        "--touches '{output}' -- "
+        "python3 " + WORKFLOWS_DIR + "/physmon_trackfinding_1muon.py "
+        + OUTDIR + "/data/trackfinding_1muon/truth_smeared "
+        "--variant truth_smeared"
+
+
+rule generate_trackfinding_4muon_50vertices:
+    output:
+        seeding         = f"{OUTDIR}/data/trackfinding_4muon_50vertices/performance_seeding.root",
+        summary         = temp(f"{OUTDIR}/data/trackfinding_4muon_50vertices/tracksummary_ckf.root"),
+        finding         = f"{OUTDIR}/data/trackfinding_4muon_50vertices/performance_finding_ckf.root",
+        fitting         = f"{OUTDIR}/data/trackfinding_4muon_50vertices/performance_fitting_ckf.root",
+        finding_ambi    = f"{OUTDIR}/data/trackfinding_4muon_50vertices/performance_finding_ckf_ambi.root",
+        fitting_ambi    = f"{OUTDIR}/data/trackfinding_4muon_50vertices/performance_fitting_ckf_ambi.root",
+        vtx_ivf         = temp(f"{OUTDIR}/data/trackfinding_4muon_50vertices/performance_vertexing_ivf_notime.root"),
+        vtx_amvf_gauss  = temp(f"{OUTDIR}/data/trackfinding_4muon_50vertices/performance_vertexing_amvf_gauss_notime.root"),
+        vtx_amvf_grid   = temp(f"{OUTDIR}/data/trackfinding_4muon_50vertices/performance_vertexing_amvf_grid_time.root"),
+        witness         = witness_for_generator("trackfinding_4muon_50vertices"),
+    log: f"{OUTDIR}/logs/trackfinding_4muon_50vertices.log"
+    shell:
+        WRAP + " --witness {output.witness} --step generator --log {log} "
+        "--touches '{output}' -- "
+        "python3 " + WORKFLOWS_DIR + "/physmon_trackfinding_4muon_50vertices.py "
+        + OUTDIR + "/data/trackfinding_4muon_50vertices"
+
+
+rule generate_trackfinding_ttbar_pu200:
+    output:
+        seeding             = f"{OUTDIR}/data/trackfinding_ttbar_pu200/performance_seeding.root",
+        summary             = temp(f"{OUTDIR}/data/trackfinding_ttbar_pu200/tracksummary_ckf.root"),
+        finding             = f"{OUTDIR}/data/trackfinding_ttbar_pu200/performance_finding_ckf.root",
+        fitting             = f"{OUTDIR}/data/trackfinding_ttbar_pu200/performance_fitting_ckf.root",
+        finding_ambi        = f"{OUTDIR}/data/trackfinding_ttbar_pu200/performance_finding_ckf_ambi.root",
+        fitting_ambi        = f"{OUTDIR}/data/trackfinding_ttbar_pu200/performance_fitting_ckf_ambi.root",
+        finding_ml_solver   = f"{OUTDIR}/data/trackfinding_ttbar_pu200/performance_finding_ckf_ml_solver.root",
+        fitting_ml_solver   = f"{OUTDIR}/data/trackfinding_ttbar_pu200/performance_fitting_ckf_ml_solver.root",
+        vtx_amvf_gauss      = temp(f"{OUTDIR}/data/trackfinding_ttbar_pu200/performance_vertexing_amvf_gauss_notime.root"),
+        vtx_amvf_grid       = temp(f"{OUTDIR}/data/trackfinding_ttbar_pu200/performance_vertexing_amvf_grid_time.root"),
+        witness             = witness_for_generator("trackfinding_ttbar_pu200"),
+    log: f"{OUTDIR}/logs/trackfinding_ttbar_pu200.log"
+    shell:
+        WRAP + " --witness {output.witness} --step generator --log {log} "
+        "--touches '{output}' -- "
+        "python3 " + WORKFLOWS_DIR + "/physmon_trackfinding_ttbar_pu200.py "
+        + OUTDIR + "/data/trackfinding_ttbar_pu200"
+
+
+rule generate_trackfitting_gx2f_vs_kf:
+    output:
+        gx2f    = f"{OUTDIR}/data/trackfitting_gx2f_vs_kf/performance_trackfitting_gx2f.root",
+        kf      = f"{OUTDIR}/data/trackfitting_gx2f_vs_kf/performance_trackfitting_kf.root",
+        witness = witness_for_generator("trackfitting_gx2f_vs_kf"),
+    log: f"{OUTDIR}/logs/trackfitting_gx2f_vs_kf.log"
+    shell:
+        WRAP + " --witness {output.witness} --step generator --log {log} "
+        "--touches '{output}' -- "
+        "python3 " + WORKFLOWS_DIR + "/physmon_trackfitting_gx2f_vs_kf.py "
+        + OUTDIR + "/data/trackfitting_gx2f_vs_kf"
+
+
+# ---------------------------------------------------------------------------
+# Plot rule: ntuple ROOT -> histogrammed ROOT via Examples/Scripts/generic_plotter.py.
+# ---------------------------------------------------------------------------
+
+def _plot_input(wildcards):
+    return f"{OUTDIR}/data/" + PLOTS[wildcards.rel + "_hist.root"]["from"]
+
+def _plot_tree(wildcards):
+    return PLOTS[wildcards.rel + "_hist.root"]["tree"]
+
+def _plot_config(wildcards):
+    return f"{HISTCMP_CONFIG_DIR}/" + PLOTS[wildcards.rel + "_hist.root"]["config"]
+
+
+rule plot_hist:
+    input:
+        ntuple = _plot_input,
+    output:
+        hist    = f"{OUTDIR}/data/{{rel}}_hist.root",
+        witness = f"{OUTDIR}/witnesses/plot/{{rel}}_hist.json",
+    params:
+        tree   = _plot_tree,
+        config = _plot_config,
+    log:
+        f"{OUTDIR}/logs/plot_{{rel}}_hist.log",
+    shell:
+        WRAP + " --witness {output.witness} --step plot --log {log} "
+        "--touches '{output}' -- "
+        "python3 Examples/Scripts/generic_plotter.py "
+        "{input.ntuple} {params.tree} {output.hist} "
+        "--silent --config {params.config}"
+
+
+# ---------------------------------------------------------------------------
+# histcmp rule.
+# ---------------------------------------------------------------------------
+
+def _histcmp_current(wildcards):
+    return f"{OUTDIR}/data/" + wildcards.rel + ".root"
+
+def _histcmp_reference(wildcards):
+    rel = wildcards.rel + ".root"
+    comp = COMP_BY_CURRENT[rel]
+    ref_rel = comp.get("reference", rel)
+    if comp.get("reference_in") == "outdir":
+        return f"{OUTDIR}/data/{ref_rel}"
+    return f"{REFDIR}/{ref_rel}"
+
+def _histcmp_params(wildcards):
+    rel = wildcards.rel + ".root"
+    comp = COMP_BY_CURRENT[rel]
+    cfg = comp.get("config")
+    config_flag = f"--config {HISTCMP_CONFIG_DIR}/{cfg}" if cfg else ""
+    return {
+        "title":       comp["title"],
+        "config_flag": config_flag,
+        "label_ref":   comp.get("label_reference", "reference"),
+        "label_mon":   comp.get("label_monitored", "monitored"),
+    }
+
+
+rule histcmp:
+    input:
+        current   = _histcmp_current,
+        reference = _histcmp_reference,
+    output:
+        html    = f"{OUTDIR}/html/{{rel}}.html",
+        witness = f"{OUTDIR}/witnesses/histcmp/{{rel}}.json",
+    params:
+        p = _histcmp_params,
+    log:
+        f"{OUTDIR}/logs/histcmp_{{rel}}.log",
+    shell:
+        WRAP + " --witness {output.witness} --step histcmp --log {log} "
+        "--touches '{output}' -- "
+        "histcmp {input.current} {input.reference} "
+        "--label-reference={params.p[label_ref]} "
+        "--label-monitored={params.p[label_mon]} "
+        "--title={params.p[title]:q} "
+        "-o {output.html} "
+        "-p {output.html}_plots "
+        "{params.p[config_flag]}"
+
+
+# ---------------------------------------------------------------------------
+# build_results: join all witnesses against the catalog into a single rich
+# results JSON. The summary rule renders this to md/html.
+# ---------------------------------------------------------------------------
+
+def _read_witness(path):
+    try:
+        return json.loads(Path(path).read_text())
+    except (OSError, ValueError):
+        return {"step": "?", "rc": -1, "log": None}
+
+
+def _comparison_row(comp):
+    slug, variant = generator_info_for_comp(comp)
+    steps = []
+    upstream = upstream_slug_for(slug)
+    if upstream:
+        w = _read_witness(witness_for_generator(upstream))
+        steps.append({"kind": "upstream", "name": upstream, "rc": w["rc"], "log": w.get("log")})
+    gw = _read_witness(witness_for_generator(slug, variant))
+    gen_label = slug + (f"/{variant}" if variant else "")
+    steps.append({"kind": "generator", "name": gen_label, "rc": gw["rc"], "log": gw.get("log")})
+    if "plot" in comp:
+        pw = _read_witness(witness_for_plot(_rel_no_root(comp["current"])))
+        steps.append({"kind": "plot", "name": "plot", "rc": pw["rc"], "log": pw.get("log")})
+    hw = _read_witness(witness_for_histcmp(_rel_no_root(comp["current"])))
+    steps.append({"kind": "histcmp", "name": "histcmp", "rc": hw["rc"], "log": hw.get("log")})
+    # Mark cascade: any step after the first failure inherits the failure.
+    first_failed = False
+    for s in steps:
+        if first_failed and s["rc"] != 0:
+            s["cascade"] = True
+        else:
+            s["cascade"] = False
+        if s["rc"] != 0:
+            first_failed = True
+    return {
+        "title":     comp["title"],
+        "mode":      comp["mode"],
+        "report":    "html/" + _rel_no_root(comp["current"]) + ".html",
+        "info_only": comp["title"].startswith("Comparison"),
+        "steps":     steps,
+    }
+
+
+rule build_results:
+    input:
+        _all_witnesses(),
+    output:
+        results = f"{OUTDIR}/physmon_results.json",
+    run:
+        rows = [_comparison_row(c) for c in COMPARISONS]
+        Path(output.results).write_text(json.dumps(rows, indent=2) + "\n")
+
+
+# ---------------------------------------------------------------------------
+# Summary: JSON -> markdown + html. Exits non-zero if any non-info row failed,
+# which is what fails snakemake and surfaces failure to CI.
+# ---------------------------------------------------------------------------
+
+rule summary:
+    input:
+        results = f"{OUTDIR}/physmon_results.json",
+    output:
+        md      = f"{OUTDIR}/summary.md",
+        html    = f"{OUTDIR}/summary.html",
+    shell:
+        "python3 CI/physmon/summary.py {input.results} "
+        "--md {output.md} --html {output.html}"
