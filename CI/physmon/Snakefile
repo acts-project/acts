@@ -35,14 +35,168 @@ WORKFLOWS_DIR      = "CI/physmon/workflows"
 HISTCMP_CONFIG_DIR = "CI/physmon/config"
 WRAP               = "bash CI/physmon/scripts/wrap.sh"
 
-GENERATORS  = config["generators"]
-COMPARISONS = config["comparisons"]
-
 # Thread budget for compute-heavy generator scripts. Setting this equal to the
 # whole snakemake budget means at most one heavy rule runs at a time but it
 # uses every available core; cheap rules (plot/histcmp/summary) and the three
 # Geant4/Pythia8-bound generators (threads: 1) can fill the gaps in parallel.
 HEAVY_THREADS = workflow.cores
+
+
+# ---------------------------------------------------------------------------
+# Generator catalog. Lives in Python (next to the rules that define each
+# generator) rather than in YAML — the rule bodies are the source of truth
+# for what each generator produces; this just declares the relations that
+# the catalog needs (variants for output layout, upstream deps for the DAG).
+# ---------------------------------------------------------------------------
+
+# All generator slugs the workflow knows about. Used to enumerate witnesses.
+GENERATOR_SLUGS = [
+    "simulation",
+    "simulation_gsf",
+    "trackfitting_kf",
+    "trackfitting_gsf",
+    "trackfitting_gx2f",
+    "trackrefitting_kf",
+    "trackrefitting_gsf",
+    "trackfinding_1muon",
+    "trackfinding_4muon_50vertices",
+    "trackfinding_ttbar_pu200",
+    "trackfitting_gx2f_vs_kf",
+]
+
+# Variant -> display label for trackfinding_1muon. The variant set is also the
+# source of truth for the variant wildcard regex and witness enumeration.
+TRACKFINDING_1MUON_VARIANTS = {
+    "truth_smeared":   "truth smeared seeding",
+    "truth_estimated": "truth estimated seeding",
+    "seeded":          "default seeding",
+    "orthogonal":      "orthogonal seeding",
+}
+
+# Generators that have a per-variant output subdir layout. Drives witness paths
+# and the comparison -> generator mapping for cascade reporting.
+GENERATOR_VARIANTS = {
+    "trackfinding_1muon": list(TRACKFINDING_1MUON_VARIANTS),
+}
+
+# Generators that depend on another generator's output. Used by build_results
+# to attach an "upstream" step to each comparison's row.
+GENERATOR_UPSTREAM = {
+    "trackfitting_gsf":   "simulation_gsf",
+    "trackrefitting_gsf": "simulation_gsf",
+}
+
+
+# ---------------------------------------------------------------------------
+# Trackfinding comparison template. The trackfinding workflows produce a
+# common pack of comparison files (seeding/finding/fitting/tracksummary), with
+# optional ambisolver / ML-solver / vertexing add-ons. Rather than enumerate
+# all 31 entries in YAML we expand them here from a short config block.
+# ---------------------------------------------------------------------------
+
+# Base pack: 4 rows present for every trackfinding workflow.
+TRACKFINDING_BASE = [
+    {"kind_fmt": "Seeding {label}",                   "file": "performance_seeding.root",     "config": "default.yml", "skip_variants": ["truth_smeared"]},
+    {"kind_fmt": "CKF finding performance | {label}", "file": "performance_finding_ckf.root", "config": "default.yml"},
+    {"kind_fmt": "CKF fitting performance | {label}", "file": "performance_fitting_ckf.root", "config": "default.yml"},
+    {"kind_fmt": "CKF track summary | {label}",       "file": "tracksummary_ckf_hist.root",
+     "plot": {"from": "tracksummary_ckf.root", "tree": "tracksummary", "config": "tracksummary_ckf.yml"}},
+]
+
+# Optional add-on packs, keyed on names the YAML refers to via `extras:`.
+TRACKFINDING_EXTRAS = {
+    "ambisolver": [
+        {"kind_fmt": "Ambisolver finding performance | {label}",
+         "file": "performance_finding_ckf_ambi.root"},
+    ],
+    "ml_solver": [
+        {"kind_fmt": "ML Ambisolver | {label}",
+         "file": "performance_finding_ckf_ml_solver.root"},
+    ],
+    "vertexing_ivf": [
+        {"kind_fmt": "IVF notime | {label}",
+         "file": "performance_vertexing_ivf_notime_hist.root",
+         "plot": {"from": "performance_vertexing_ivf_notime.root", "tree": "vertexing",
+                  "config": "{vertexing_config}"}},
+    ],
+    "vertexing_amvf": [
+        {"kind_fmt": "AMVF gauss notime | {label}",
+         "file": "performance_vertexing_amvf_gauss_notime_hist.root",
+         "plot": {"from": "performance_vertexing_amvf_gauss_notime.root", "tree": "vertexing",
+                  "config": "{vertexing_config}"}},
+        {"kind_fmt": "AMVF grid time | {label}",
+         "file": "performance_vertexing_amvf_grid_time_hist.root",
+         "plot": {"from": "performance_vertexing_amvf_grid_time.root", "tree": "vertexing",
+                  "config": "{vertexing_config}"}},
+    ],
+}
+
+
+def _expand_row(slug, variant, label, row, vertexing_config):
+    """Expand a single template row into a comparison dict (or None to skip)."""
+    if variant is not None and variant in row.get("skip_variants", []):
+        return None
+    prefix = f"{slug}/{variant}/" if variant is not None else f"{slug}/"
+    entry = {
+        "title":   row["kind_fmt"].format(label=label),
+        "current": prefix + row["file"],
+        "mode":    "fullchains",
+    }
+    if "config" in row:
+        entry["config"] = row["config"]
+    if "plot" in row:
+        plot_cfg = row["plot"]["config"]
+        if plot_cfg == "{vertexing_config}":
+            assert vertexing_config, f"trackfinding row needs vertexing_config: {row}"
+            plot_cfg = vertexing_config
+        entry["plot"] = {
+            "from":   prefix + row["plot"]["from"],
+            "tree":   row["plot"]["tree"],
+            "config": plot_cfg,
+        }
+    return entry
+
+
+def expand_trackfinding(spec):
+    """Expand the YAML `trackfinding:` block into a flat list of comparisons.
+
+    `spec` is config["trackfinding"]: a dict {slug -> per-slug options}.
+    Per-slug options:
+      - For generators with variants (trackfinding_1muon): `label_fmt` with
+        a `{variant_label}` placeholder; variants come from the catalog.
+      - Otherwise: a plain `label`.
+      - `extras`: optional list of keys from TRACKFINDING_EXTRAS.
+      - `vertexing_config`: required if any vertexing extra is used.
+    """
+    comparisons = []
+    for slug, opts in spec.items():
+        rows = list(TRACKFINDING_BASE)
+        for e in opts.get("extras") or []:
+            rows += TRACKFINDING_EXTRAS[e]
+        vcfg = opts.get("vertexing_config")
+        if slug in GENERATOR_VARIANTS:
+            assert "label_fmt" in opts, f"{slug} has variants, needs label_fmt"
+            variant_labels = TRACKFINDING_1MUON_VARIANTS  # only generator with variants
+            for variant, var_label in variant_labels.items():
+                label = opts["label_fmt"].format(variant_label=var_label)
+                for row in rows:
+                    out = _expand_row(slug, variant, label, row, vcfg)
+                    if out is not None:
+                        comparisons.append(out)
+        else:
+            label = opts["label"]
+            for row in rows:
+                out = _expand_row(slug, None, label, row, vcfg)
+                if out is not None:
+                    comparisons.append(out)
+    return comparisons
+
+
+# ---------------------------------------------------------------------------
+# Catalog: the explicit comparisons from YAML plus trackfinding expansions.
+# ---------------------------------------------------------------------------
+
+COMPARISONS = list(config["comparisons"]) + expand_trackfinding(config.get("trackfinding", {}))
 
 
 # ---------------------------------------------------------------------------
@@ -85,21 +239,19 @@ def witness_for_histcmp(rel_no_root):
 def generator_info_for_comp(comp):
     """Return (slug, variant) — which generator owns this comparison's `current` file.
 
-    Variant is None unless the generator has a `variants` field in the catalog
-    (currently only trackfinding_1muon).
+    Variant is None unless the generator has variants (currently only trackfinding_1muon).
     """
     parts = comp["current"].split("/")
     slug = parts[0]
-    gen = GENERATORS.get(slug, {})
-    if "variants" in gen and len(parts) >= 2 and parts[1] in gen["variants"]:
+    variants = GENERATOR_VARIANTS.get(slug)
+    if variants and len(parts) >= 2 and parts[1] in variants:
         return slug, parts[1]
     return slug, None
 
 
 def upstream_slug_for(slug):
-    """Return the upstream generator slug if `slug` has a single `needs:` entry, else None."""
-    needs = GENERATORS.get(slug, {}).get("needs") or []
-    return needs[0] if needs else None
+    """Return the upstream generator slug if this generator has one, else None."""
+    return GENERATOR_UPSTREAM.get(slug)
 
 
 def comps_for_mode(mode):
@@ -138,9 +290,10 @@ def _check_histcmp_witnesses(comps):
 def _all_witnesses():
     """Every witness path the workflow should produce. Used by build_results' input."""
     paths = []
-    for slug, gen in GENERATORS.items():
-        if "variants" in gen:
-            for v in gen["variants"]:
+    for slug in GENERATOR_SLUGS:
+        variants = GENERATOR_VARIANTS.get(slug)
+        if variants:
+            for v in variants:
                 paths.append(witness_for_generator(slug, v))
         else:
             paths.append(witness_for_generator(slug))
@@ -332,7 +485,7 @@ rule generate_trackfinding_1muon_with_seeding:
         summary = temp(f"{OUTDIR}/data/trackfinding_1muon/{{variant}}/tracksummary_ckf.root"),
         witness = f"{OUTDIR}/witnesses/generator/trackfinding_1muon/{{variant}}.json",
     wildcard_constraints:
-        variant = "truth_estimated|seeded|orthogonal",
+        variant = "|".join(v for v in TRACKFINDING_1MUON_VARIANTS if v != "truth_smeared"),
     log: f"{OUTDIR}/logs/trackfinding_1muon_{{variant}}.log"
     threads: HEAVY_THREADS
     shell:
