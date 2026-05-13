@@ -12,7 +12,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
-#include <cstdlib>
+#include <cmath>
 
 namespace Acts {
 namespace {
@@ -20,7 +20,8 @@ namespace {
 double sinc(double x) {
   // Numerical limit for double to get a different number than 1 from the first
   // order Taylor expansion of sin(x)/x ~ 1-x*x/6 around x=0.
-  constexpr double eps = 8.940697e-8;
+  static const double eps =
+      std::sqrt(std::numeric_limits<double>::epsilon()) * 6;
   if (std::abs(x) < eps) {
     return 1.0;
   }
