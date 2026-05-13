@@ -268,19 +268,19 @@ class Impl final : public TripletSeedFinder {
       }
 
       // sqrt only computed on the less-common path where middle check passed
-      const float zPositionMiddle = cosTheta * std::sqrt(1 + A0 * A0);
+      const float zDirectionMiddle = cosTheta * std::sqrt(1 + A0 * A0);
 
       // coordinate transformation and checks for bottom space point
       const float B0 = 2 * (Vb - A0 * Ub);
       const float Cb = 1 - B0 * bottomDoublet.y();
       const float Sb = A0 + B0 * bottomDoublet.x();
-      const std::array<float, 3> positionBottom = {
+      const std::array<float, 3> directionBottom = {
           rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
           rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
-          zPositionMiddle};
+          zDirectionMiddle};
 
       std::array<float, 3> rBTransf{};
-      if (!detail::calibrateStripSpacePoint(calB, positionBottom, rBTransf,
+      if (!detail::calibrateStripSpacePoint(calB, directionBottom, rBTransf,
                                             m_cfg.toleranceParam)) {
         continue;
       }
@@ -288,10 +288,10 @@ class Impl final : public TripletSeedFinder {
       // coordinate transformation and checks for top space point
       const float Ct = 1 - B0 * topDoublet.y();
       const float St = A0 + B0 * topDoublet.x();
-      const std::array<float, 3> positionTop = {
+      const std::array<float, 3> directionTop = {
           rotationTermsUVtoXY[0] * Ct - rotationTermsUVtoXY[1] * St,
           rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
-          zPositionMiddle};
+          zDirectionMiddle};
 
       const ConstSpacePointProxy2 spT =
           spacePoints[topDoublet.spacePointIndex()];
@@ -300,7 +300,7 @@ class Impl final : public TripletSeedFinder {
               spT.stripCenterDistance(), spT.bottomStripVector(),
               spT.topStripVector(), spT.topStripCenter());
       std::array<float, 3> rTTransf{};
-      if (!detail::calibrateStripSpacePoint(calT, positionTop, rTTransf,
+      if (!detail::calibrateStripSpacePoint(calT, directionTop, rTTransf,
                                             m_cfg.toleranceParam)) {
         continue;
       }
