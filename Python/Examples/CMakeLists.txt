@@ -267,12 +267,12 @@ add_examples_binding_if(
     FLAG ACTS_BUILD_EXAMPLES_ROOT
     PLUGIN_IMPORT TRUE
 )
-#add_examples_binding_if(
-#    NAME Detray
-#    LINK_LIBRARIES Acts::PluginCovfie Acts::ExamplesDetray
-#    FLAG ACTS_BUILD_PLUGIN_TRACCC
-#    PLUGIN_IMPORT FALSE
-#)
+add_examples_binding_if(
+    NAME Detray
+    LINK_LIBRARIES Acts::PluginCovfie Acts::ExamplesDetray
+    FLAG ACTS_BUILD_PLUGIN_TRACCC
+    PLUGIN_IMPORT FALSE
+)
 add_examples_binding_if(
     NAME TruthJet
     LINK_LIBRARIES Acts::ExamplesJets

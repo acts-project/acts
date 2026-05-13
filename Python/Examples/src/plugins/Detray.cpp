@@ -14,6 +14,7 @@
 
 // detray includes
 #include <detray/core/detector.hpp>
+#include <detray/detectors/odd_metadata.hpp>
 #include <detray/io/frontend/detector_reader.hpp>
 #include <detray/navigation/volume_graph.hpp>
 #include <detray/propagator/line_stepper.hpp>
@@ -32,45 +33,30 @@ using namespace ActsPlugins;
 using namespace ActsPython;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsDetray, detray) {
-  /// Propagators
+  /// Propagators for ODD
   {
-    /*
+    using DetrayMetaDataODD = detray::odd_metadata<detray::array<float>>;
+
+    using DetrayDetectorODD = detray::detector<DetrayMetaDataODD>;
+
     detray.def(
         "StraightLinePropagatorODD",
-        [](const DetrayDetectorODD& detrayDetector, bool sterile,
+        [](std::shared_ptr<DetrayDetectorODD> detrayDetector, bool sterile,
            Acts::Logging::Level logLevel = Acts::Logging::INFO) {
           std::shared_ptr<PropagatorInterface> detrayProagator = nullptr;
 
-          using DetrayLineStepper =
-              detray::line_stepper<typename DetrayDetectorODD::algebra_type>;
+          if (sterile) {
+            using DetrayLineStepper =
+                detray::line_stepper<typename DetrayDetectorODD::algebra_type>;
 
-          using DetrayPropagator =
-              DetrayPropagator<DetrayLineStepper, DetrayDetectorODD>;
+            using DetrayPropagator =
+                DetraySterilePropagator<DetrayLineStepper, DetrayDetectorODD>;
 
-          detrayProagator = std::make_shared<DetrayPropagator>(
-              detrayDetector, sterile,
-              Acts::getDefaultLogger("DetrayPropagator", logLevel));
+            detrayProagator = std::make_shared<DetrayPropagator>(
+                detrayDetector,
+                Acts::getDefaultLogger("DetrayPropagator", logLevel));
+          }
           return detrayProagator;
         });
-        */
   }
-
-  /**
-  {
-    detray.def(
-        "createConstBFieldPropagatorHost",
-        [](const std::shared_ptr<const DetrayHostStore>& detrayStore,
-           Covfie::ConstantField cfield, bool sterile) {
-          using Stepper =
-              detray::rk_stepper<Covfie::ConstantField::view_t,
-                                 typename DetrayHostDetector::algebra_type>;
-          using DP = DetrayPropagator<Stepper, DetrayHostStore,
-                                      Covfie::ConstantField::view_t>;
-          DP::Config cfg{detrayStore, sterile, cfield};
-          return std::shared_ptr<PropagatorInterface>(
-              std::make_shared<DP>(cfg));
-        },
-        "store"_a, "field"_a, "sterile"_a = false);
-  }
-        */
 }

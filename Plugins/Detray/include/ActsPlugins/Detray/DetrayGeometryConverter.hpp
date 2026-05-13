@@ -55,7 +55,7 @@ namespace ActsPlugins::DetrayGeometryConverter {
 ///
 /// @return A tuple containing the built detray detector and the detray→ACTS mapping.
 template <typename metadata_t>
-detray::detector<metadata_t> toDetray(
+std::shared_ptr<detray::detector<metadata_t>> toDetray(
     vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
     const Acts::TrackingGeometry& trackingGeometry,
     const std::string& beampipeVolumeName,
@@ -108,7 +108,7 @@ detray::detector<metadata_t> toDetray(
       template from_payload<detector_t>(detectorBuilder,
                                         *payloads.surfaceGrids);
 
-  return detector_t(detectorBuilder.build(mr));
+  return std::make_shared<detector_t>(detectorBuilder.build(mr));
 }
 
 /// Build a mapping from detray surface identifiers to ACTS
