@@ -29,6 +29,7 @@ target_link_libraries(
         detray::io
         detray::detectors
         detray::svgtools
+        detray::test_utils
         vecmem::core
 )
 
