@@ -13,9 +13,7 @@
 
 #include <memory>
 
-namespace dd4hep {
-class OverlayedField;
-}
+#include <DD4hep/Fields.h>
 
 namespace ActsPlugins {
 /// @addtogroup dd4hep_plugin
