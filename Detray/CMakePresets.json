@@ -1,0 +1,211 @@
+{
+    "version": 4,
+    "configurePresets": [
+        {
+            "name": "detray-base",
+            "displayName": "Base Developer Configuration",
+            "warnings": {
+                "deprecated": true
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
+        {
+            "name": "detray-default-fp64",
+            "displayName": "FP64 Base Developer Configuration",
+            "inherits": [
+                "detray-base"
+            ],
+            "cacheVariables": {
+                "DETRAY_CUSTOM_SCALARTYPE": "double"
+            }
+        },
+        {
+            "name": "detray-default-fp32",
+            "displayName": "FP32 Base Developer Configuration",
+            "inherits": [
+                "detray-base"
+            ],
+            "cacheVariables": {
+                "DETRAY_CUSTOM_SCALARTYPE": "float"
+            }
+        },
+        {
+            "name": "detray-prefetch-fp32",
+            "displayName": "FP32 Developer Configuration: Pretech/Configure all Dependencies",
+            "inherits": [
+                "detray-default-fp32"
+            ],
+            "cacheVariables": {
+                "DETRAY_BUILD_TESTING": "TRUE",
+                "DETRAY_SETUP_EIGEN3": "TRUE",
+                "DETRAY_SETUP_FASTOR": "TRUE",
+                "DETRAY_SETUP_VC": "TRUE",
+                "DETRAY_SETUP_ACTSVG": "TRUE",
+                "DETRAY_SETUP_BENCHMARK": "TRUE",
+                "DETRAY_SETUP_COVFIE": "TRUE",
+                "DETRAY_SETUP_NLOHMANN": "TRUE"
+            }
+        },
+        {
+            "name": "detray-prefetch-fp64",
+            "displayName": "FP64 Developer Configuration: Pretech/Configure all Dependencies",
+            "inherits": [
+                "detray-prefetch-fp32"
+            ],
+            "cacheVariables": {
+                "DETRAY_CUSTOM_SCALARTYPE": "double"
+            }
+        },
+        {
+            "name": "detray-dev-fp32",
+            "displayName": "FP32 Developer Configuration: Build main Components",
+            "inherits": [
+                "detray-default-fp32"
+            ],
+            "cacheVariables": {
+                "DETRAY_BUILD_TESTING": "TRUE",
+                "DETRAY_ARRAY_PLUGIN": "TRUE",
+                "DETRAY_BUILD_UNITTESTS": "TRUE",
+                "DETRAY_BUILD_INTEGRATIONTESTS": "TRUE",
+                "DETRAY_BUILD_TUTORIALS": "TRUE",
+                "DETRAY_BUILD_BENCHMARKS": "TRUE",
+                "DETRAY_BUILD_CLI_TOOLS": "TRUE"
+            }
+        },
+        {
+            "name": "detray-dev-fp64",
+            "displayName": "FP64 Developer Configuration: Build main Components",
+            "inherits": [
+                "detray-dev-fp32"
+            ],
+            "cacheVariables": {
+                "DETRAY_CUSTOM_SCALARTYPE": "double"
+            }
+        },
+        {
+            "name": "detray-full-fp32",
+            "displayName": "FP32 Developer Configuration: Full Build",
+            "inherits": [
+                "detray-default-fp32"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "DETRAY_ARRAY_PLUGIN": "TRUE",
+                "DETRAY_EIGEN_PLUGIN": "TRUE",
+                "DETRAY_FASTOR_PLUGIN": "TRUE",
+                "DETRAY_VC_AOS_PLUGIN": "TRUE",
+                "DETRAY_VC_SOA_PLUGIN": "TRUE",
+                "DETRAY_SMATRIX_PLUGIN": "TRUE",
+                "DETRAY_BUILD_UNITTESTS": "TRUE",
+                "DETRAY_BUILD_INTEGRATIONTESTS": "TRUE",
+                "DETRAY_BUILD_TUTORIALS": "TRUE",
+                "DETRAY_BUILD_BENCHMARKS": "TRUE",
+                "DETRAY_BUILD_CLI_TOOLS": "TRUE"
+            }
+        },
+        {
+            "name": "detray-full-fp64",
+            "displayName": "FP64 Developer Configuration: Full Build",
+            "inherits": [
+                "detray-full-fp32"
+            ],
+            "cacheVariables": {
+                "DETRAY_CUSTOM_SCALARTYPE": "double"
+            }
+        },
+        {
+            "name": "detray-cuda",
+            "displayName": "CUDA Developer Configuration",
+            "inherits": [
+                "detray-dev-fp32"
+            ],
+            "cacheVariables": {
+                "DETRAY_BUILD_CUDA": "TRUE",
+                "DETRAY_FASTOR_PLUGIN": "FALSE",
+                "DETRAY_VC_AOS_PLUGIN": "FALSE",
+                "DETRAY_VC_SOA_PLUGIN": "FALSE",
+                "DETRAY_SMATRIX_PLUGIN": "FALSE"
+            }
+        },
+        {
+            "name": "detray-sycl",
+            "displayName": "SYCL Developer Configuration",
+            "inherits": [
+                "detray-dev-fp32"
+            ],
+            "cacheVariables": {
+                "DETRAY_BUILD_SYCL": "TRUE",
+                "DETRAY_FASTOR_PLUGIN": "FALSE",
+                "DETRAY_VC_AOS_PLUGIN": "FALSE",
+                "DETRAY_VC_SOA_PLUGIN": "FALSE",
+                "DETRAY_SMATRIX_PLUGIN": "FALSE"
+            }
+        },
+        {
+            "name": "detray-hip",
+            "displayName": "HIP Developer Configuration",
+            "inherits": [
+                "detray-dev-fp32"
+            ],
+            "cacheVariables": {
+                "DETRAY_BUILD_HIP": "TRUE",
+                "DETRAY_FASTOR_PLUGIN": "FALSE",
+                "DETRAY_VC_AOS_PLUGIN": "FALSE",
+                "DETRAY_VC_SOA_PLUGIN": "FALSE",
+                "DETRAY_SMATRIX_PLUGIN": "FALSE"
+            }
+        },
+        {
+            "name": "detray-smatrix",
+            "displayName": "SMatrix Developer Configuration",
+            "inherits": [
+                "detray-default-fp64"
+            ],
+            "cacheVariables": {
+                "DETRAY_SMATRIX_PLUGIN": "TRUE"
+            }
+        },
+        {
+            "name": "detray-gitlab-cuda-ci",
+            "displayName": "Gitlab CUDA CI Configuration",
+            "inherits": [
+                "detray-default-fp32",
+                "detray-cuda"
+            ],
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+                "BUILD_TESTING": "TRUE",
+                "DETRAY_BUILD_HOST": "FALSE",
+                "DETRAY_BUILD_UNITTESTS": "TRUE",
+                "DETRAY_BUILD_INTEGRATIONTESTS": "TRUE",
+                "DETRAY_BUILD_CLI_TOOLS": "FALSE",
+                "DETRAY_BUILD_BENCHMARKS": "FALSE",
+                "DETRAY_BUILD_TUTORIALS": "FALSE",
+                "DETRAY_FAIL_ON_WARNINGS": "TRUE",
+                "DETRAY_EIGEN_PLUGIN": "TRUE"
+            }
+        },
+        {
+            "name": "detray-gitlab-sycl-ci",
+            "displayName": "Gitlab SYCL CI Configuration",
+            "inherits": [
+                "detray-default-fp32",
+                "detray-sycl"
+            ],
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+                "BUILD_TESTING": "TRUE",
+                "DETRAY_BUILD_HOST": "FALSE",
+                "DETRAY_BUILD_UNITTESTS": "TRUE",
+                "DETRAY_BUILD_INTEGRATIONTESTS": "TRUE",
+                "DETRAY_BUILD_CLI_TOOLS": "FALSE",
+                "DETRAY_BUILD_BENCHMARKS": "FALSE",
+                "DETRAY_BUILD_TUTORIALS": "FALSE",
+                "DETRAY_FAIL_ON_WARNINGS": "TRUE",
+                "DETRAY_EIGEN_PLUGIN": "TRUE"
+            }
+        }
+    ]
+}

@@ -18,15 +18,15 @@ babel==2.18.0
     # via sphinx
 breathe==4.36.0
     # via -r docs/old/requirements.in
-certifi==2026.2.25
+certifi==2026.4.22
     # via requests
 cffi==2.0.0
     # via cryptography
 charset-normalizer==3.4.7
     # via requests
-click==8.3.2
+click==8.3.3
     # via typer
-cryptography==46.0.7
+cryptography==48.0.0
     # via pyjwt
 docutils==0.21.2
     # via
@@ -38,11 +38,11 @@ frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
-fsspec==2026.3.0
+fsspec==2026.4.0
     # via -r docs/old/requirements.in
 gidgethub==5.4.0
     # via -r docs/old/requirements.in
-idna==3.11
+idna==3.13
     # via
     #   requests
     #   yarl
@@ -60,7 +60,7 @@ markdown-it-py==3.0.0
     #   rich
 markupsafe==3.0.3
     # via jinja2
-mdit-py-plugins==0.5.0
+mdit-py-plugins==0.6.0
     # via myst-parser
 mdurl==0.1.2
     # via markdown-it-py
@@ -70,17 +70,17 @@ multidict==6.7.1
     #   yarl
 myst-parser==4.0.1
     # via -r docs/old/requirements.in
-packaging==26.0
+packaging==26.2
     # via sphinx
-propcache==0.4.1
+propcache==0.5.2
     # via
     #   aiohttp
     #   yarl
 pycparser==3.0
     # via cffi
-pydantic==2.12.5
+pydantic==2.13.4
     # via -r docs/old/requirements.in
-pydantic-core==2.41.5
+pydantic-core==2.46.4
     # via pydantic
 pygments==2.20.0
     # via
@@ -94,7 +94,7 @@ pyyaml==6.0.3
     # via myst-parser
 requests==2.33.1
     # via sphinx
-rich==14.3.4
+rich==15.0.0
     # via
     #   -r docs/old/requirements.in
     #   typer
@@ -127,7 +127,7 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 toml==0.10.2
     # via -r docs/old/requirements.in
-typer==0.24.1
+typer==0.25.1
     # via -r docs/old/requirements.in
 typing-extensions==4.15.0
     # via
@@ -138,7 +138,7 @@ typing-inspection==0.4.2
     # via pydantic
 uritemplate==4.2.0
     # via gidgethub
-urllib3==2.6.3
+urllib3==2.7.0
     # via requests
 yarl==1.23.0
     # via aiohttp

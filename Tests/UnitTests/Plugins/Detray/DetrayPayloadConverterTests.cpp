@@ -52,7 +52,7 @@
 #include <detray/plugins/svgtools/illustrator.hpp>
 #include <detray/plugins/svgtools/writer.hpp>
 #include <detray/utils/consistency_checker.hpp>
-#include <detray/utils/grid/detail/concepts.hpp>
+#include <detray/utils/grid/concepts.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
 #include <vecmem/memory/memory_resource.hpp>
@@ -637,7 +637,7 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
     auto& hMat = *it;
 
     // Currently, we expect exactly one slab per surface!
-    BOOST_CHECK_EQUAL(volume.surfaces.size(), hMat.mat_slabs.size());
+    BOOST_CHECK_EQUAL(volume.surfaces.size(), hMat.surface_mat.size());
   }
 
   BOOST_CHECK_EQUAL(materialGrids.grids.size(), 2);
@@ -701,10 +701,10 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
     header_data.sub_header->n_slabs = 0;
 
     for (const auto& hVol : homogeneousMaterial.volumes) {
-      if (hVol.mat_rods.has_value()) {
-        header_data.sub_header->n_rods += hVol.mat_rods->size();
+      if (!hVol.surface_mat.empty()) {
+        header_data.sub_header->n_rods += hVol.surface_mat.size();
       }
-      header_data.sub_header->n_slabs += hVol.mat_slabs.size();
+      header_data.sub_header->n_slabs += hVol.surface_mat.size();
     }
 
     nlohmann::ordered_json out_json;
@@ -742,7 +742,18 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   // Checks and print
   detray::detail::check_consistency(detrayDetector);
 
-  detray::svgtools::illustrator illustrator(detrayDetector, payloads.names);
+  // Helper to convert std::map<unsigned int, std::string> to detray::name_map
+  auto toDetrayNameMap = [](const std::map<unsigned int, std::string>& src) {
+    detray::name_map result;
+    for (const auto& [idx, name] : src) {
+      result.emplace(static_cast<detray::dindex>(idx), name);
+    }
+    return result;
+  };
+
+  auto detrayNames = toDetrayNameMap(payloads.names);
+
+  detray::svgtools::illustrator illustrator(detrayDetector, detrayNames);
   illustrator.hide_eta_lines(true);
   illustrator.show_info(true);
 
@@ -750,10 +761,9 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   actsvg::style::stroke stroke_black = actsvg::style::stroke();
   auto zr_axis = actsvg::draw::x_y_axes("axes", {-250, 250}, {-250, 250},
                                         stroke_black, "z", "r");
-  detray::svgtools::write_svg("test_svgtools_detector_zr", {
-                                                               zr_axis,
-                                                               svg_zr,
-                                                           });
+  detray::svgtools::write_svg(
+      "test_svgtools_detector_zr",
+      std::initializer_list<actsvg::svg::object>{zr_axis, svg_zr});
 
   const auto svg_xy = illustrator.draw_detector(actsvg::views::x_y{});
   auto xy_axis = actsvg::draw::x_y_axes("axes", {-250, 250}, {-250, 250},
@@ -770,7 +780,7 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   // std::cout << detray::utils::print_detector(detrayDetector, payloads.names)
   //           << std::endl;
 
-  detray::io::write_detector(detrayDetector, payloads.names, writer_cfg);
+  detray::io::write_detector(detrayDetector, detrayNames, writer_cfg);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -70,4 +70,8 @@ void TryAllNavigationPolicy::connect(NavigationDelegate& delegate) const {
   connectDefault<TryAllNavigationPolicy>(delegate);
 }
 
+const TryAllNavigationPolicy::Config& TryAllNavigationPolicy::config() const {
+  return m_cfg;
+}
+
 }  // namespace Acts
