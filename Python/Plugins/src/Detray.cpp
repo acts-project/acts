@@ -44,11 +44,8 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
            const Acts::TrackingGeometry& trackingGeometry,
            const std::string& beampipeVolumeName,
            Acts::Logging::Level logLevel = Acts::Logging::INFO) {
-          ActsPlugins::DetrayGeometryConverter detrayConverter(
-              Acts::getDefaultLogger("DetrayGeometryConverter", logLevel));
-
-          return detrayConverter.toDetray<DetrayMetaDataODD>(
-              mr, gctx, trackingGeometry, beampipeVolumeName);
+          return DetrayGeometryConverter::toDetray<DetrayMetaDataODD>(
+              mr, gctx, trackingGeometry, beampipeVolumeName, logLevel);
         },
         "mr"_a, "gctx"_a, "trackingGeometry"_a, "beampipeVolumeName"_a,
         "logLevel"_a = Acts::Logging::INFO);

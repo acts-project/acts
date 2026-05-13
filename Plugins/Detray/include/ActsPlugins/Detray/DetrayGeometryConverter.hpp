@@ -29,130 +29,118 @@
 #include <detray/utils/consistency_checker.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
 
-namespace ActsPlugins {
+namespace ActsPlugins::DetrayGeometryConverter {
 
-class DetrayGeometryConverter {
- public:
-  /// Constructor with logger initialization
-  /// @param logger Optional logger instance for logging messages during conversion
-  DetrayGeometryConverter(std::unique_ptr<const Acts::Logger> logger =
-                              Acts::getDefaultLogger("DetrayGeometryConverter",
-                                                     Acts::Logging::INFO))
-      : m_logger(std::move(logger)) {}
+/// @brief conversion method from ACTS TrackingGeometry to detray detector
+/// @tparam metadata_t the detector metadata type
+/// @param gctx the geometry context
+/// @param trackingGeometry the ACTS tracking geometry to convert
+/// @param beampipeVolumeName the beampipe volume name
+/// @param logLevel the logging level to use for the conversion process
+///
+/// This method performs the following steps:
+/// 1. It searches for the beampipe volume in the ACTS tracking geometry using
+///    the provided beampipeVolumeName. If found, it sets this volume in the
+///    DetrayPayloadConverter configuration. If not found, it logs a warning.
+/// 2. It creates a DetrayPayloadConverter instance with the configuration and
+///    converts the ACTS tracking geometry into Detray payloads.
+/// 3. It builds a detray detector from the converted payloads using the
+/// detray::detector_builder.
+/// 4. It checks the consistency of the built detray detector using
+/// detray::detail::check_consistency.
+/// 5. It constructs a mapping from detray surface identifiers to ACTS
+/// GeometryIdentifiers for all sensitive surfaces in the detray detector.
+/// 6. It returns a tuple containing the built detray detector and the
+/// detray→ACTS mapping.
+///
+/// @return A tuple containing the built detray detector and the detray→ACTS mapping.
+template <typename metadata_t>
+detray::detector<metadata_t> toDetray(
+    vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
+    const Acts::TrackingGeometry& trackingGeometry,
+    const std::string& beampipeVolumeName,
+    Acts::Logging::Level logLevel = Acts::Logging::INFO) {
+  auto localLogger =
+      Acts::getDefaultLogger("DetrayGeometryConverter", logLevel);
+  auto payloadLogger = localLogger->clone("DetrayPayloadConverter");
+  ACTS_LOCAL_LOGGER(std::move(localLogger));
 
-  /// @brief conversion method from ACTS TrackingGeometry to detray detector
-  /// @tparam metadata_t the detector metadata type
-  /// @param gctx the geometry context
-  /// @param trackingGeometry the ACTS tracking geometry to convert
-  /// @param beampipeVolumeName the beampipe volume name
-  ///
-  /// This method performs the following steps:
-  /// 1. It searches for the beampipe volume in the ACTS tracking geometry using
-  ///    the provided beampipeVolumeName. If found, it sets this volume in the
-  ///    DetrayPayloadConverter configuration. If not found, it logs a warning.
-  /// 2. It creates a DetrayPayloadConverter instance with the configuration and
-  ///    converts the ACTS tracking geometry into Detray payloads.
-  /// 3. It builds a detray detector from the converted payloads using the
-  /// detray::detector_builder.
-  /// 4. It checks the consistency of the built detray detector using
-  /// detray::detail::check_consistency.
-  /// 5. It constructs a mapping from detray surface identifiers to ACTS
-  /// GeometryIdentifiers for all sensitive surfaces in the detray detector.
-  /// 6. It returns a tuple containing the built detray detector and the
-  /// detray→ACTS mapping.
-  ///
-  /// @return A tuple containing the built detray detector and the detray→ACTS mapping.
-  template <typename metadata_t>
-  detray::detector<metadata_t> toDetray(
-      vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
-      const Acts::TrackingGeometry& trackingGeometry,
-      const std::string& beampipeVolumeName) {
-    // ── Convert TrackingGeometry → detray payloads ──────────────────────────
-    DetrayPayloadConverter::Config convCfg;
+  // ── Convert TrackingGeometry → detray payloads ──────────────────────────
+  DetrayPayloadConverter::Config convCfg;
 
-    ACTS_INFO("Looking for beampipe volume: " << beampipeVolumeName);
+  ACTS_INFO("Looking for beampipe volume: " << beampipeVolumeName);
 
-    trackingGeometry.apply([&beampipeVolumeName, &convCfg,
-                            this](const Acts::TrackingVolume& volume) {
-      ACTS_DEBUG("Found volume: " << volume.volumeName());
-      if (volume.volumeName() == beampipeVolumeName) {
-        convCfg.beampipeVolume = &volume;
-        ACTS_INFO("Found beampipe volume: " << volume.volumeName());
-      }
-    });
+  // Find beampipe volume
+  trackingGeometry.apply(
+      [&beampipeVolumeName, &convCfg](const Acts::TrackingVolume& volume) {
+        if (volume.volumeName() == beampipeVolumeName) {
+          convCfg.beampipeVolume = &volume;
+        }
+      });
 
-    // Find beampipe volume
-    trackingGeometry.apply(
-        [&beampipeVolumeName, &convCfg](const Acts::TrackingVolume& volume) {
-          if (volume.volumeName() == beampipeVolumeName) {
-            convCfg.beampipeVolume = &volume;
-          }
-        });
-
-    if (convCfg.beampipeVolume == nullptr) {
-      ACTS_WARNING("DetrayGeometryProvider: beampipe volume '"
-                   << beampipeVolumeName << "' not found");
-    }
-
-    DetrayPayloadConverter converter(convCfg,
-                                     logger().clone("DetrayPayloadConverter"));
-
-    auto payloads = converter.convertTrackingGeometry(gctx, trackingGeometry);
-
-    // ── Build detray detector from payloads ──────────────────────────────────
-    using detector_t = detray::detector<metadata_t>;
-
-    detray::detector_builder<metadata_t> detectorBuilder{};
-
-    detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
-                                                          *payloads.detector);
-
-    detray::io::homogeneous_material_reader::from_payload<detector_t>(
-        detectorBuilder, *payloads.homogeneousMaterial);
-
-    detray::io::material_map_reader<std::integral_constant<std::size_t, 2>>::
-        from_payload<detector_t>(detectorBuilder,
-                                 std::move(*payloads.materialGrids));
-
-    detray::io::surface_grid_reader<typename detector_t::surface_type,
-                                    std::integral_constant<std::size_t, 0>,
-                                    std::integral_constant<std::size_t, 2>>::
-        template from_payload<detector_t>(detectorBuilder,
-                                          *payloads.surfaceGrids);
-
-    return detector_t(detectorBuilder.build(mr));
+  if (convCfg.beampipeVolume == nullptr) {
+    ACTS_WARNING("DetrayGeometryProvider: beampipe volume '"
+                 << beampipeVolumeName << "' not found");
   }
 
-  /// Build a mapping from detray surface identifiers to ACTS
-  /// GeometryIdentifiers for all sensitive surfaces in the detray detector.
-  /// @tparam detector_t the type of the detray detector
-  /// @param detrayDetector the detray detector to build the mapping for
-  /// @return an unordered map mapping detray surface identifiers to ACTS GeometryIdentifiers
-  template <typename detector_t>
-  std::unordered_map<std::uint64_t, Acts::GeometryIdentifier>
-  buildDetrayToActsMap(const detector_t& detrayDetector) {
-    // ── Build detray→Acts geometry ID map
-    // ───────────────────────────────────
-    std::unordered_map<std::uint64_t, Acts::GeometryIdentifier> detrayToActsMap;
+  DetrayPayloadConverter converter(convCfg, std::move(payloadLogger));
 
-    for (const auto& surface : detrayDetector.surfaces()) {
-      // surface.source is the Acts GeometryIdentifier encoded as uint64
-      const Acts::GeometryIdentifier actsId(surface.source);
-      if (actsId.sensitive() == 0) {
-        continue;  // skip portals and passives
-      }
-      detrayToActsMap[surface.identifier().value()] = actsId;
+  auto payloads = converter.convertTrackingGeometry(gctx, trackingGeometry);
+
+  // ── Build detray detector from payloads ──────────────────────────────────
+  using detector_t = detray::detector<metadata_t>;
+
+  detray::detector_builder<metadata_t> detectorBuilder{};
+
+  detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
+                                                        *payloads.detector);
+
+  detray::io::homogeneous_material_reader::from_payload<detector_t>(
+      detectorBuilder, *payloads.homogeneousMaterial);
+
+  detray::io::material_map_reader<std::integral_constant<std::size_t, 2>>::
+      from_payload<detector_t>(detectorBuilder,
+                               std::move(*payloads.materialGrids));
+
+  detray::io::surface_grid_reader<typename detector_t::surface_type,
+                                  std::integral_constant<std::size_t, 0>,
+                                  std::integral_constant<std::size_t, 2>>::
+      template from_payload<detector_t>(detectorBuilder,
+                                        *payloads.surfaceGrids);
+
+  return detector_t(detectorBuilder.build(mr));
+}
+
+/// Build a mapping from detray surface identifiers to ACTS
+/// GeometryIdentifiers for all sensitive surfaces in the detray detector.
+/// @tparam detector_t the type of the detray detector
+/// @param detrayDetector the detray detector to build the mapping for
+/// @param logLevel the logging level to use for the mapping process
+///
+/// @return an unordered map mapping detray surface identifiers to ACTS GeometryIdentifiers
+template <typename detector_t>
+std::unordered_map<std::uint64_t, Acts::GeometryIdentifier>
+buildDetrayToActsMap(const detector_t& detrayDetector,
+                     Acts::Logging::Level logLevel = Acts::Logging::INFO) {
+  auto localLogger =
+      Acts::getDefaultLogger("DetrayGeometryConverter", logLevel);
+  ACTS_LOCAL_LOGGER(std::move(localLogger));
+  // ── Build detray→Acts geometry ID map
+  // ───────────────────────────────────
+  std::unordered_map<std::uint64_t, Acts::GeometryIdentifier> detrayToActsMap;
+
+  for (const auto& surface : detrayDetector.surfaces()) {
+    // surface.source is the Acts GeometryIdentifier encoded as uint64
+    const Acts::GeometryIdentifier actsId(surface.source);
+    if (actsId.sensitive() == 0) {
+      continue;  // skip portals and passives
     }
-
-    ACTS_INFO("DetrayGeometryProvider: built detray→Acts map with "
-              << detrayToActsMap.size() << " sensitive surfaces");
-    return detrayToActsMap;
+    detrayToActsMap[surface.identifier().value()] = actsId;
   }
 
- private:
-  std::unique_ptr<const Acts::Logger> m_logger;
+  ACTS_INFO("DetrayGeometryProvider: built detray→Acts map with "
+            << detrayToActsMap.size() << " sensitive surfaces");
+  return detrayToActsMap;
+}
 
-  const Acts::Logger& logger() const { return *m_logger; }
-};
-
-}  // namespace ActsPlugins
+}  // namespace ActsPlugins::DetrayGeometryConverter

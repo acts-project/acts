@@ -14,7 +14,6 @@ from acts.examples.simulation import (
 )
 
 
-
 from acts.examples.root import RootPropagationSummaryWriter, RootPropagationStepsWriter
 
 u = acts.UnitConstants
