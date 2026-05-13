@@ -88,8 +88,6 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
   Acts::SourceLink testSL{42};
   beamSpotTrackState.setUncalibratedSourceLink(std::move(testSL));
 
-  Acts::SourceLink uncalibSL = beamSpotTrackState.getUncalibratedSourceLink();
-
   auto beamSpotConstVectorTrackStateContainer =
       std::make_shared<Acts::ConstVectorMultiTrajectory>(
           std::move(*beamSpotVectorTrackStateContainer));
