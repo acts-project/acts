@@ -19,6 +19,7 @@
 #include "ActsExamples/EventData/SpacePoint.hpp"
 
 #include <algorithm>
+#include <numeric>
 
 #include <TChain.h>
 #include <boost/container/static_vector.hpp>
@@ -69,6 +70,7 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
   if (!m_cfg.onlySpacePoints) {
     m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+    m_outputMeasurementSubset.initialize(m_cfg.outputMeasurementSubset);
     m_outputClusters.initialize(m_cfg.outputClusters);
     if (!m_cfg.noTruth) {
       m_outputParticles.initialize(m_cfg.outputParticles);
@@ -754,7 +756,14 @@ ProcessCode RootAthenaDumpReader::read(const AlgorithmContext& ctx) {
     optImIdxMap.emplace(std::move(imIdxMap));
 
     m_outputClusters(ctx, std::move(clusters));
-    m_outputMeasurements(ctx, std::move(measurements));
+    const auto& storedMeasurements =
+        m_outputMeasurements(ctx, std::move(measurements));
+    std::vector<MeasurementContainer::Index> allIndices(
+        storedMeasurements.size());
+    std::iota(allIndices.begin(), allIndices.end(),
+              MeasurementContainer::Index{0});
+    m_outputMeasurementSubset(
+        ctx, MeasurementSubset(storedMeasurements, std::move(allIndices)));
 
     if (!m_cfg.noTruth) {
       auto [particles, measPartMap] =
