@@ -85,18 +85,6 @@ __global__ void makeEdgeFeatures(std::size_t nEdges, const int *srcEdges,
   efPtr[5] = rphislope;
 }
 
-__global__ void remapEdges(std::size_t nEdges, int *srcNodes, int *tgtNodes,
-                           const std::uint64_t *hit_ids, std::size_t nAllNodes,
-                           std::size_t nCompressedNodes) {
-  std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i >= nEdges) {
-    return;
-  }
-
-  srcNodes[i] = hit_ids[srcNodes[i]];
-  tgtNodes[i] = hit_ids[tgtNodes[i]];
-}
-
 template <class T>
 __global__ void computeXandY(std::size_t nbHits, T *cuda_x, T *cuda_y,
                              const T *cuda_R, const T *cuda_phi) {
