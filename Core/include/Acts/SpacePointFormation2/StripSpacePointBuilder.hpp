@@ -38,18 +38,33 @@ struct CosmicOptions final {
 };
 
 /// @brief Collection of constrained space point options
+///
+/// The constrained space-point algorithm parametrises the hit position on
+/// each strip by a scalar:
+///   strip 1: 2 * x_1 = (1 + m) * top_1 + (1 - m) * bottom_1
+///   strip 2: 2 * x_2 = (1 + n) * top_2 + (1 - n) * bottom_2
+/// `m = n = 0` is the strip midpoint; `|m| = 1` (resp. `|n| = 1`) is the
+/// strip end. A valid hit requires `|m|, |n| <= limit`.
 struct ConstrainedOptions final {
   /// Position of the vertex
   Vector3 vertex = Vector3::Zero();
-  /// Tolerance scaling factor on the strip detector element length
+  /// Additive slack on the `|m|, |n| <= 1` acceptance: limit = 1 + tol.
   double stripLengthTolerance = 0.01;
-  /// Tolerance scaling factor of the gap between strip detector elements
+  /// Additional slack used inside the recovery branch when `|m|` or `|n|`
+  /// is just past the limit.
   double stripLengthGapTolerance = 0.01;
-  /// ATLAS-SCTGapParameter analogue: scales an extra |m|, |n| allowance
-  /// from the wafer-thickness gap between the two stereo surfaces.
-  /// Extra term added to the limit:
-  ///   stripGapParameter * |gapVec| / sin(stereoAngle) / stripHalfLength
-  /// 0 = legacy ACTS behaviour (no geometric gap correction).
+  /// Additional acceptance allowance that scales with the geometric gap
+  /// between the two stereo wafer faces. When > 0, the limit becomes
+  ///   1 + stripLengthTolerance
+  ///     + stripGapParameter * |gapVec| / sin(stereo) / stripHalfLength,
+  /// where `gapVec` is the vector connecting the two strip midpoints,
+  /// `stereo` is the angle between the two strip directions, and
+  /// `stripHalfLength` is half of `|top_1 - bottom_1|`. This is the
+  /// geometric-allowance piece of the ATLAS Athena strip pair algorithm
+  /// (see `SiSpacePointMakerTool::makeSCT_SpacePoint`'s `m_SCTgapParameter`
+  /// usage); it lets high-`|eta|` tracks that physically cross the
+  /// wafer-thickness gap survive the acceptance gate. 0 disables it
+  /// (the strict `|m|, |n| <= 1 + stripLengthTolerance` cut applies).
   double stripGapParameter = 0.0;
 };
 

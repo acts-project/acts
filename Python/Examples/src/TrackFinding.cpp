@@ -34,6 +34,11 @@ using namespace ActsExamples;
 namespace ActsPython {
 
 void addTrackFinding(py::module& mex) {
+  py::enum_<StripPairingMode>(mex, "StripPairingMode")
+      .value("topOne", StripPairingMode::TopOne)
+      .value("topK", StripPairingMode::TopK)
+      .value("allPairs", StripPairingMode::AllPairs);
+
   ACTS_PYTHON_DECLARE_ALGORITHM(SpacePointMaker, mex, "SpacePointMaker",
                                 inputMeasurements, outputSpacePoints,
                                 trackingGeometry, geometrySelection,
