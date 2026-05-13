@@ -38,7 +38,9 @@
 #include "traccc/geometry/detector_conditions_description.hpp"
 #include "traccc/geometry/detector_design_description.hpp"
 #include "traccc/geometry/host_detector.hpp"
-#include "traccc/io/read_cells.hpp"
+// #include "traccc/io/read_cells.hpp"
+#include "traccc/io/read_measurements.hpp"
+#include "traccc/io/read_spacepoints.hpp"
 #include "traccc/io/read_detector.hpp"
 #include "traccc/io/read_detector_description.hpp"
 #include "traccc/io/read_magnetic_field.hpp"
@@ -80,9 +82,9 @@ struct TracccChain {
   traccc::host::greedy_ambiguity_resolution_algorithm::config_type
       resolution_cfg;
 
-  traccc::cuda::clusterization_algorithm ca_cuda;
-  traccc::cuda::measurement_sorting_algorithm ms_cuda;
-  traccc::cuda::silicon_pixel_spacepoint_formation_algorithm sf_cuda;
+  // traccc::cuda::clusterization_algorithm ca_cuda;
+  // traccc::cuda::measurement_sorting_algorithm ms_cuda;
+  // traccc::cuda::silicon_pixel_spacepoint_formation_algorithm sf_cuda;
   traccc::cuda::triplet_seeding_algorithm sa_cuda;
   traccc::cuda::seed_parameter_estimation_algorithm tp_cuda;
   traccc::cuda::combinatorial_kalman_filter_algorithm finding_cuda;

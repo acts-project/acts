@@ -32,15 +32,15 @@ TracccChain::TracccChain(const std::string& detector_file,
       finding_cfg{},
       fitting_cfg{},
       resolution_cfg{},
-      ca_cuda{
-          mr, copy, stream, traccc::clustering_config{},
-          traccc::getDefaultLogger("CudaClusteringAlg", traccc::Logging::INFO)},
-      ms_cuda{mr, copy, stream,
-              traccc::getDefaultLogger("CudaMeasSortingAlg",
-                                       traccc::Logging::INFO)},
-      sf_cuda{mr, copy, stream,
-              traccc::getDefaultLogger("CudaSpFormationAlg",
-                                       traccc::Logging::INFO)},
+    //   ca_cuda{
+    //       mr, copy, stream, traccc::clustering_config{},
+    //       traccc::getDefaultLogger("CudaClusteringAlg", traccc::Logging::INFO)},
+    //   ms_cuda{mr, copy, stream,
+    //           traccc::getDefaultLogger("CudaMeasSortingAlg",
+    //                                    traccc::Logging::INFO)},
+    //   sf_cuda{mr, copy, stream,
+    //           traccc::getDefaultLogger("CudaSpFormationAlg",
+    //                                    traccc::Logging::INFO)},
       sa_cuda{
           seedfinder_cfg,
           spacepoint_grid_cfg,
@@ -104,36 +104,67 @@ EventResult processEvent(std::shared_ptr<TracccChain> chain,
                          std::size_t event_id) {
   EventResult result;
 
-  traccc::edm::silicon_cell_collection::host cells{chain->host_mr};
-  static constexpr bool DEDUPLICATE = true;
-  traccc::io::read_cells(
-      cells, event_id, data_directory,
-      traccc::getDefaultLogger("ReadCells", traccc::Logging::INFO),
-      &chain->host_det_cond, traccc::data_format::csv, DEDUPLICATE, false);
-  result.n_cells = cells.size();
+//   traccc::edm::silicon_cell_collection::host cells{chain->host_mr};
+//   static constexpr bool DEDUPLICATE = true;
+//   traccc::io::read_cells(
+//       cells, event_id, data_directory,
+//       traccc::getDefaultLogger("ReadCells", traccc::Logging::INFO),
+//       &chain->host_det_cond, traccc::data_format::csv, DEDUPLICATE, false);
+//   result.n_cells = cells.size();
 
-  traccc::edm::silicon_cell_collection::buffer cells_buf(
-      static_cast<unsigned int>(cells.size()), chain->mr.main);
-  chain->copy.setup(cells_buf)->wait();
-  chain->copy(vecmem::get_data(cells), cells_buf)->wait();
+    traccc::edm::spacepoint_collection::host sp_host{chain->host_mr};
+    traccc::edm::measurement_collection::host meas_host{
+            chain->host_mr};
 
-  auto unsorted_meas = chain->ca_cuda(cells_buf, chain->device_det_descr,
-                                      chain->device_det_cond);
-  traccc::edm::measurement_collection::buffer meas_buf =
-      chain->ms_cuda(unsorted_meas);
-  chain->stream.synchronize();
+    // Read the hits and measurements from the relevant event files
+    traccc::io::read_spacepoints(
+        sp_host, meas_host, event_id, data_directory,
+        &chain->host_detector,
+        &chain->host_det_descr, &chain->host_det_cond, traccc::data_format::csv);
 
-  traccc::edm::measurement_collection::host meas_host{chain->host_mr};
-  chain->copy(meas_buf, meas_host)->wait();
-  result.n_measurements = meas_host.size();
+    result.n_spacepoints = sp_host.size();
+    result.n_measurements = meas_host.size();
 
-  traccc::edm::spacepoint_collection::buffer sp_buf =
-      chain->sf_cuda(chain->device_detector, meas_buf);
-  chain->stream.synchronize();
+//   traccc::edm::silicon_cell_collection::buffer cells_buf(
+//       static_cast<unsigned int>(cells.size()), chain->mr.main);
+//   chain->copy.setup(cells_buf)->wait();
+//   chain->copy(vecmem::get_data(cells), cells_buf)->wait();
 
-  traccc::edm::spacepoint_collection::host sp_host{chain->host_mr};
-  chain->copy(sp_buf, sp_host)->wait();
-  result.n_spacepoints = sp_host.size();
+//   auto unsorted_meas = chain->ca_cuda(cells_buf, chain->device_det_descr,
+//                                       chain->device_det_cond);
+//   traccc::edm::measurement_collection::buffer meas_buf =
+//       chain->ms_cuda(unsorted_meas);
+//   chain->stream.synchronize();
+
+//   traccc::edm::measurement_collection::host meas_host{chain->host_mr};
+//   chain->copy(meas_buf, meas_host)->wait();
+//   result.n_measurements = meas_host.size();
+
+//   traccc::edm::spacepoint_collection::buffer sp_buf =
+//       chain->sf_cuda(chain->device_detector, meas_buf);
+//   chain->stream.synchronize();
+
+//   traccc::edm::spacepoint_collection::host sp_host{chain->host_mr};
+//   chain->copy(sp_buf, sp_host)->wait();
+//   result.n_spacepoints = sp_host.size();
+
+    // Copy the spacepoint and module data to the device.
+    traccc::edm::spacepoint_collection::buffer sp_buf(
+        static_cast<unsigned int>(sp_host.size()),
+        chain->mr.main);
+    chain->copy.setup(sp_buf)->wait();
+    chain->copy(vecmem::get_data(sp_host),
+                sp_buf)
+        ->wait();
+
+    traccc::edm::measurement_collection::buffer
+        meas_buf(
+            static_cast<unsigned int>(meas_host.size()),
+            chain->mr.main);
+    chain->copy.setup(meas_buf)->wait();
+    chain->copy(vecmem::get_data(meas_host),
+                meas_buf)
+        ->wait();
 
   traccc::edm::seed_collection::buffer seeds_buf = chain->sa_cuda(sp_buf);
   chain->stream.synchronize();
