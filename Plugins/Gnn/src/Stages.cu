@@ -87,7 +87,7 @@ PipelineTensors cudaRemoveUnusedNodes(PipelineTensors &&tensors,
   ACTS_CUDA_CHECK(cudaGetLastError());
 
   // Shrink nodeFeatures to surviving rows using the mask
-  auto newNodeFeatures = cudaSelectRows(tensors.nodeFeatures, mask, execCtx);
+  auto newNodeFeatures = selectRows(tensors.nodeFeatures, mask, execCtx);
 
   // Remap edge endpoint indices in-place using the old→new map
   const dim3 gridEdges = (2 * nEdges + blockDim.x - 1) / blockDim.x;
