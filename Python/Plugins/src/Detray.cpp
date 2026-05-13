@@ -27,7 +27,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
   using namespace ActsPlugins;
 
   {
-    using DetrayMetaDataODD = detray::odd_metadata<detray::array<double>>;
+    using DetrayMetaDataODD = detray::odd_metadata<detray::array<float>>;
 
     using DetrayDetectorODD = detray::detector<DetrayMetaDataODD>;
 
