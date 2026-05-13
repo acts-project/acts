@@ -14,7 +14,7 @@
     - any-glob-to-any-file:
       - Detray/**
       - Plugins/Detray/**
-      - .github/detray.yml
+      - .github/workflows/detray*
 'Component - Examples':
   - changed-files:
     - any-glob-to-any-file:
