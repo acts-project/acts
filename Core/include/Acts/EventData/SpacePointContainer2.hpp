@@ -673,18 +673,18 @@ class SpacePointContainer2 {
   static auto knownColumnMasks() noexcept {
     using enum SpacePointColumns;
     return std::tuple(SourceLinks, SourceLinks, X, Y, Z, R, Phi, Time,
-                      VarianceZ, VarianceR, VarianceT, TopStripVector, BottomStripVector,
-                      StripCenterDistance, TopStripCenter, CopyFromIndex,
-                      PackedXY, PackedZR, PackedXYZ, PackedXYZR,
+                      VarianceZ, VarianceR, VarianceT, TopStripVector,
+                      BottomStripVector, StripCenterDistance, TopStripCenter,
+                      CopyFromIndex, PackedXY, PackedZR, PackedXYZ, PackedXYZR,
                       PackedVarianceZR);
   }
 
   static auto knownColumnNames() noexcept {
     return std::tuple("sourceLinkOffset", "sourceLinkCount", "x", "y", "z", "r",
-                      "phi", "time", "varianceZ", "varianceR", "varianceT", "topStripVector",
-                      "bottomStripVector", "stripCenterDistance",
-                      "topStripCenter", "copyFromIndex", "xy", "zr", "xyz",
-                      "xyzr", "varianceZR");
+                      "phi", "time", "varianceZ", "varianceR", "varianceT",
+                      "topStripVector", "bottomStripVector",
+                      "stripCenterDistance", "topStripCenter", "copyFromIndex",
+                      "xy", "zr", "xyz", "xyzr", "varianceZR");
   }
 
   static auto knownColumnDefaults() noexcept {
@@ -700,15 +700,15 @@ class SpacePointContainer2 {
 
   template <typename Self>
   static auto knownColumns(Self &&self) noexcept {
-    return std::tie(self.m_sourceLinkOffsetColumn, self.m_sourceLinkCountColumn,
-                    self.m_xColumn, self.m_yColumn, self.m_zColumn,
-                    self.m_rColumn, self.m_phiColumn, self.m_timeColumn,
-                    self.m_varianceZColumn, self.m_varianceRColumn, self.m_varianceTColumn,
-                    self.m_topStripVectorColumn, self.m_bottomStripVectorColumn,
-                    self.m_stripCenterDistanceColumn,
-                    self.m_topStripCenterColumn, self.m_copyFromIndexColumn,
-                    self.m_xyColumn, self.m_zrColumn, self.m_xyzColumn,
-                    self.m_xyzrColumn, self.m_varianceZRColumn);
+    return std::tie(
+        self.m_sourceLinkOffsetColumn, self.m_sourceLinkCountColumn,
+        self.m_xColumn, self.m_yColumn, self.m_zColumn, self.m_rColumn,
+        self.m_phiColumn, self.m_timeColumn, self.m_varianceZColumn,
+        self.m_varianceRColumn, self.m_varianceTColumn,
+        self.m_topStripVectorColumn, self.m_bottomStripVectorColumn,
+        self.m_stripCenterDistanceColumn, self.m_topStripCenterColumn,
+        self.m_copyFromIndexColumn, self.m_xyColumn, self.m_zrColumn,
+        self.m_xyzColumn, self.m_xyzrColumn, self.m_varianceZRColumn);
   }
   auto knownColumns() & noexcept { return knownColumns(*this); }
   auto knownColumns() const & noexcept { return knownColumns(*this); }

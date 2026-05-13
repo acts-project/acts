@@ -28,7 +28,7 @@ enum class SpacePointColumns : std::uint32_t {
   VarianceZ = 1 << 7,             ///< Variance in Z direction
   VarianceR = 1 << 8,             ///< Variance in radial direction
   VarianceT = 1 << 9,             ///< Variance in T direction
-  TopStripVector = 1 << 10,        ///< Vector for the top strip
+  TopStripVector = 1 << 10,       ///< Vector for the top strip
   BottomStripVector = 1 << 11,    ///< Vector for the bottom strip
   StripCenterDistance = 1 << 12,  ///< Distance to the strip center
   TopStripCenter = 1 << 13,       ///< Center of the top strip
