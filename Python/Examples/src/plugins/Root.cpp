@@ -79,12 +79,13 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
     ACTS_PYTHON_DECLARE_READER(
         RootAthenaDumpReader, root, "RootAthenaDumpReader", treename,
-        inputfiles, outputMeasurements, outputPixelSpacePoints,
-        outputStripSpacePoints, outputSpacePoints, outputClusters,
-        outputMeasurementParticlesMap, outputParticleMeasurementsMap,
-        outputParticles, onlySpacePoints, onlyPassedParticles,
-        skipOverlapSPsPhi, skipOverlapSPsEta, geometryIdMap, trackingGeometry,
-        absBoundaryTolerance, noTruth, readCellData);
+        inputfiles, outputMeasurements, outputMeasurementSubset,
+        outputPixelSpacePoints, outputStripSpacePoints, outputSpacePoints,
+        outputClusters, outputMeasurementParticlesMap,
+        outputParticleMeasurementsMap, outputParticles, onlySpacePoints,
+        onlyPassedParticles, skipOverlapSPsPhi, skipOverlapSPsEta,
+        geometryIdMap, trackingGeometry, absBoundaryTolerance, noTruth,
+        readCellData);
 
 #ifdef WITH_GEOMODEL_PLUGIN
     ACTS_PYTHON_DECLARE_READER(RootAthenaDumpGeoIdCollector, root,
