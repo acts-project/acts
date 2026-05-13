@@ -12,14 +12,19 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
+#include <cstdlib>
+
 namespace Acts {
 namespace {
 
 double sinc(double x) {
-  if (std::abs(x) < 1e-10) {
-    // Use the Taylor expansion for small x to avoid numerical instability
-    return 1 - x * x / 6;
+  // Numerical limit for double to get a different number than 1 from the first
+  // order Taylor expansion of sin(x)/x ~ 1-x*x/6 around x=0.
+  constexpr double eps = 8.940697e-8;
+  if (std::abs(x) < eps) {
+    return 1.0;
   }
+  // Otherwise std::sin(x) ~ x is stable for small x
   return std::sin(x) / x;
 }
 
