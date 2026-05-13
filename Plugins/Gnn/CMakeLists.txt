@@ -1,6 +1,7 @@
 acts_add_library(
     PluginGnn
     src/GnnPipeline.cpp
+    src/Stages.cpp
     src/Tensor.cpp
     src/BoostTrackBuilding.cpp
     src/TruthGraphMetricsHook.cpp
@@ -14,7 +15,11 @@ if(ACTS_GNN_ENABLE_CUDA)
     target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_WITH_CUDA)
     target_sources(
         ActsPluginGnn
-        PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu src/Tensor.cu
+        PRIVATE
+            src/CudaTrackBuilding.cu
+            src/JunctionRemoval.cu
+            src/Tensor.cu
+            src/Stages.cu
     )
     target_link_libraries(ActsPluginGnn PUBLIC CUDA::nvtx3)
     target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_NVTX)

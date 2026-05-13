@@ -55,7 +55,7 @@ class GnnPipeline {
       std::shared_ptr<GraphConstructionBase> graphConstructor,
       std::vector<std::shared_ptr<EdgeClassificationBase>> edgeClassifiers,
       std::shared_ptr<TrackBuildingBase> trackBuilder,
-      std::unique_ptr<const Acts::Logger> logger);
+      std::unique_ptr<const Acts::Logger> logger, bool shrinkNodes = false);
 
   /// @brief Run the GNN pipeline
   /// @param features Input feature vector
@@ -77,6 +77,7 @@ class GnnPipeline {
   std::shared_ptr<GraphConstructionBase> m_graphConstructor;
   std::vector<std::shared_ptr<EdgeClassificationBase>> m_edgeClassifiers;
   std::shared_ptr<TrackBuildingBase> m_trackBuilder;
+  bool m_shrinkNodes = false;
 
   const Acts::Logger &logger() const { return *m_logger; }
 };
