@@ -180,6 +180,20 @@ if [ -n "${CI:-}" ]; then
     echo "Adding buildcache ${mirror_name}"
     spack mirror add ${mirror_name} ${mirror_url} --unsigned
   fi
+  # Authenticate GHCR reads to avoid anonymous rate limits (which spack
+  # misclassifies as "no binary available"). Idempotent on cached spack installs.
+  # GITHUB_TOKEN must be in env when `spack install` later fetches from the mirror.
+  if [ -n "${GITHUB_TOKEN:-}" ] && [[ "${mirror_url}" == oci://ghcr.io/* ]]; then
+    echo "Setting GHCR credentials on ${mirror_name}"
+    spack mirror set \
+      --oci-username "${GITHUB_ACTOR:-x-access-token}" \
+      --oci-password-variable GITHUB_TOKEN \
+      "${mirror_name}"
+  fi
+  # Verify the mirror config (password-variable stores only the env var name,
+  # not the secret value, so this is safe to print).
+  spack mirror list
+  spack config get mirrors
   end_section
 
   start_section "Add ACTS package repository"
@@ -236,7 +250,26 @@ checkpoint "Spack find complete"
 end_section
 
 start_section "Install spack packages"
-spack -e "${env_dir}" install --fail-fast --use-buildcache only --concurrent-packages 10
+# Retry to absorb transient GHCR fetch failures (which spack reports as
+# "no binary available"). Install is idempotent: already-installed specs
+# are skipped on subsequent attempts, so this is cheap.
+max_attempts=4
+attempt=1
+delay=10
+while true; do
+  echo "spack install attempt ${attempt}/${max_attempts}"
+  if spack -e "${env_dir}" install --fail-fast --use-buildcache only --concurrent-packages 10; then
+    break
+  fi
+  if [ "${attempt}" -ge "${max_attempts}" ]; then
+    echo "spack install failed after ${max_attempts} attempts"
+    exit 1
+  fi
+  echo "spack install failed; retrying in ${delay}s"
+  sleep "${delay}"
+  attempt=$((attempt + 1))
+  delay=$((delay * 2))
+done
 checkpoint "Spack install complete"
 end_section
 

@@ -210,7 +210,40 @@ void addDefinitions(py::module_& m) {
              }
              return self(t[0].cast<Eigen::Index>(), t[1].cast<Eigen::Index>());
            })
-      .def("__str__", [](const FreeMatrix& self) {
+      .def("__str__", [](const SquareMatrix2& self) {
+        std::stringstream ss;
+        ss << self;
+        return ss.str();
+      });
+
+  py::class_<SquareMatrix2>(m, "SquareMatrix2")
+      .def(py::init([]() { return SquareMatrix2::Zero(); }))
+      .def(py::init([](std::array<std::array<double, 2>, 2> a) {
+        SquareMatrix2 matrix;
+        matrix << a[0][0], a[0][1], a[1][0], a[1][1];
+        return matrix;
+      }))
+      .def_static("Zero",
+                  []() -> SquareMatrix2 { return SquareMatrix2::Zero(); })
+      .def_static("Identity",
+                  []() -> SquareMatrix2 { return SquareMatrix2::Identity(); })
+      .def("__getitem__",
+           [](const SquareMatrix2& self, const py::object& idx) {
+             py::tuple t = idx.cast<py::tuple>();
+             if (py::len(t) != 2) {
+               throw py::index_error("SquareMatrix2 index must be (i, j)");
+             }
+             return self(t[0].cast<Eigen::Index>(), t[1].cast<Eigen::Index>());
+           })
+      .def("__setitem__",
+           [](SquareMatrix2& self, const py::object& idx, double value) {
+             py::tuple t = idx.cast<py::tuple>();
+             if (py::len(t) != 2) {
+               throw py::index_error("SquareMatrix2 index must be (i, j)");
+             }
+             self(t[0].cast<Eigen::Index>(), t[1].cast<Eigen::Index>()) = value;
+           })
+      .def("__str__", [](const SquareMatrix2& self) {
         std::stringstream ss;
         ss << self;
         return ss.str();

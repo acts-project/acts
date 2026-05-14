@@ -32,15 +32,15 @@ std::unique_ptr<Acts::IAxis> Acts::AxisJsonConverter::fromJson(
     const nlohmann::json& jAxis) {
   Acts::AxisType axisType = jAxis.at("type");
   Acts::AxisBoundaryType boundaryType = jAxis.at("boundary_type");
-  std::array<double, 2u> range = jAxis.at("range");
 
   if (axisType == Acts::AxisType::Equidistant) {
+    std::array<double, 2u> range = jAxis.at("range");
     return Acts::IAxis::createEquidistant(boundaryType, range.at(0),
                                           range.at(1), jAxis.at("bins"));
   }
 
   return Acts::IAxis::createVariable(
-      boundaryType, jAxis.at("edges").get<std::vector<double>>());
+      boundaryType, jAxis.at("boundaries").get<std::vector<double>>());
 }
 
 nlohmann::json Acts::AxisJsonConverter::toJsonDetray(const IAxis& ia) {
