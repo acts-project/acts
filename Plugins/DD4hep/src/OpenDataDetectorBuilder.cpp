@@ -52,6 +52,7 @@ auto makeLayerCustomizer(const BlueprintBuilder& builder, std::string det,
     using enum SrfArrayNavPol::LayerType;
 
     SrfArrayNavPol::Config navCfg;
+    navCfg.envelope = detail::kLayerEnvelope;
 
     if (layer.layerType() ==
         Acts::Experimental::LayerBlueprintNode::LayerType::Cylinder) {

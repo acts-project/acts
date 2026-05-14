@@ -25,6 +25,7 @@
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
@@ -37,6 +38,7 @@
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Json/AlgebraJsonConverter.hpp"
+#include "ActsPlugins/Json/ExtentJsonConverter.hpp"
 #include "ActsPlugins/Json/GeometryIdentifierJsonConverter.hpp"
 #include "ActsPlugins/Json/GridJsonConverter.hpp"
 #include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
@@ -221,6 +223,8 @@ std::string getNavigationPolicyKind() {
   } else if (std::is_same_v<bounds_t,
                             Acts::Experimental::MultiLayerNavigationPolicy>) {
     return "MultiLayerNavigation";
+  } else if (std::is_same_v<bounds_t, Acts::CylinderNavigationPolicy>) {
+    return "Cylinder";
   } else {
     throw std::invalid_argument("Unknown portal link kind");
   }
@@ -287,6 +291,9 @@ std::unique_ptr<Acts::INavigationPolicy> decodeSurfaceArrayNavigationPolicy(
                       .get<Acts::SurfaceArrayNavigationPolicy::LayerType>();
   cfg.bins = {encoded.at("bins0").get<std::size_t>(),
               encoded.at("bins1").get<std::size_t>()};
+  if (encoded.contains("envelope")) {
+    cfg.envelope = encoded.at("envelope").get<Acts::ExtentEnvelope>();
+  }
 
   return std::make_unique<Acts::SurfaceArrayNavigationPolicy>(gctx, volume,
                                                               logger, cfg);
@@ -329,6 +336,7 @@ nlohmann::json encodeSurfaceArrayNavigationPolicy(
   jPolicy["layerType"] = cfg.layerType;
   jPolicy["bins0"] = cfg.bins.first;
   jPolicy["bins1"] = cfg.bins.second;
+  jPolicy["envelope"] = cfg.envelope;
   return jPolicy;
 }
 
@@ -384,6 +392,21 @@ std::unique_ptr<Acts::INavigationPolicy> decodeMultiLayerNavigationPolicy(
 
   return std::make_unique<Acts::Experimental::MultiLayerNavigationPolicy>(
       gctx, volume, logger, config, std::move(indexedGrid));
+}
+
+nlohmann::json encodeCylinderNavigationPolicy(
+    const Acts::CylinderNavigationPolicy& /*policy*/,
+    const Acts::TrackingGeometryJsonConverter& /*converter*/) {
+  nlohmann::json jPolicy;
+  jPolicy[kKindKey] = getNavigationPolicyKind<Acts::CylinderNavigationPolicy>();
+  return jPolicy;
+}
+
+std::unique_ptr<Acts::INavigationPolicy> decodeCylinderNavigationPolicy(
+    const nlohmann::json& /*encoded*/, const Acts::GeometryContext& gctx,
+    const Acts::TrackingGeometryJsonConverter& /*converter*/,
+    const Acts::TrackingVolume& volume, const Acts::Logger& logger) {
+  return std::make_unique<Acts::CylinderNavigationPolicy>(gctx, volume, logger);
 }
 
 // -------------------------------------------------------------------
@@ -779,7 +802,8 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
   cfg.encodeNavigationPolicy.registerFunction(encodeTryAllNavigationPolicy)
       .registerFunction(encodeSurfaceArrayNavigationPolicy)
       .registerFunction(encodeMultiNavigationPolicy)
-      .registerFunction(encodeMultiLayerNavigationPolicy);
+      .registerFunction(encodeMultiLayerNavigationPolicy)
+      .registerFunction(encodeCylinderNavigationPolicy);
 
   cfg.encodePortalLink.registerFunction(encodeTrivialPortalLink)
       .registerFunction(encodeCompositePortalLink)
@@ -817,7 +841,9 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
                     decodeMultiNavigationPolicy)
       .registerKind(
           getNavigationPolicyKind<Experimental::MultiLayerNavigationPolicy>(),
-          decodeMultiLayerNavigationPolicy);
+          decodeMultiLayerNavigationPolicy)
+      .registerKind(getNavigationPolicyKind<CylinderNavigationPolicy>(),
+                    decodeCylinderNavigationPolicy);
 
   return cfg;
 }
