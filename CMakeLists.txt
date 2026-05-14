@@ -64,8 +64,6 @@ option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
 option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_COVFIE "Use a system-provided covfie installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_SETUP_COVFIE "If we want to set up covfie" ON)
-option(ACTS_USE_SYSTEM_DETRAY "Use a system-provided detray installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_DETRAY "If we want to set up detray" ON)
 option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_SETUP_VECMEM "If we want to set up vecmem" ON)
 option(ACTS_USE_SYSTEM_TRACCC "Use a system-provided traccc installation" ${ACTS_USE_SYSTEM_LIBS})
@@ -303,7 +301,6 @@ set(_acts_root_version 6.28.04) # first version with C++20 support
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 3.0.1)
-set(_acts_detray_version 1.0.1)
 set(_acts_traccc_version 1.2.0)
 set(_acts_covfie_version 0.15.2)
 set(_acts_vecmem_version 1.24.0)
@@ -560,13 +557,23 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
         endif()
     endif()
 
-    if(ACTS_SETUP_DETRAY)
-        if(ACTS_USE_SYSTEM_DETRAY)
-            find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
-        else()
-            add_subdirectory(thirdparty/detray)
-        endif()
-    endif()
+    # Detray is always used from the current repository.
+    option(DETRAY_SETUP_VECMEM "Set up the VecMem target(s) explicitly" FALSE)
+    option(
+        DETRAY_SETUP_NLOHMANN
+        "Set up the nlohmann::json target(s) explicitly"
+        FALSE
+    )
+    option(DETRAY_SETUP_EIGEN3 "Set up the Eigen3 target(s) explicitly" FALSE)
+    option(DETRAY_SETUP_ACTSVG "Set up the actsvg target(s) explicitly" FALSE)
+    option(DETRAY_SETUP_COVFIE "Set up the covfie target(s) explicitly" FALSE)
+    option(DETRAY_SVG_DISPLAY "Build ActSVG display module" ON)
+    set(DETRAY_GENERATE_METADATA
+        "itk_metadata"
+        CACHE STRING
+        "Semicolon-separated list of metadata generator scripts to run in this build"
+    )
+    add_subdirectory(Detray)
 
     if(ACTS_SETUP_COVFIE)
         if(ACTS_USE_SYSTEM_COVFIE)
