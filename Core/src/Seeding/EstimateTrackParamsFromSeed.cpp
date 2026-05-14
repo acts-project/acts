@@ -8,21 +8,29 @@
 
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
-Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
-                                                   const Vector3& sp1,
-                                                   const Vector3& sp2,
-                                                   const Vector3& bField) {
-  return estimateTrackParamsFromSeed(sp0, 0, sp1, sp2, bField);
+#include <cmath>
+
+namespace Acts {
+namespace {
+
+double sinc(double x) {
+  // Numerical limit for double to get a different number than 1 from the first
+  // order Taylor expansion of sin(x)/x ~ 1-x*x/6 around x=0.
+  static const double eps =
+      std::sqrt(std::numeric_limits<double>::epsilon()) * 6;
+  if (std::abs(x) < eps) {
+    return 1.0;
+  }
+  // Otherwise std::sin(x) ~ x is stable for small x
+  return std::sin(x) / x;
 }
 
-Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
-                                                   const double t0,
-                                                   const Vector3& sp1,
-                                                   const Vector3& sp2,
-                                                   const Vector3& bField) {
+Transform3 estimationFrameLocalToGlobal(const Vector3& sp0, const Vector3& sp1,
+                                        const Vector3& bField) {
   // Define a new coordinate frame with its origin at the bottom space point, z
   // axis long the magnetic field direction and y axis perpendicular to vector
   // from the bottom to middle space point. Hence, the projection of the middle
@@ -37,27 +45,89 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
   rotation.col(1) = newYAxis;
   rotation.col(2) = newZAxis;
   // The center of the new frame is at the bottom space point
-  const Translation3 trans(sp0);
+  const Translation3 translation(sp0);
   // The transform which constructs the new frame
-  const Transform3 transform(trans * rotation);
+  return translation * rotation;
+}
 
-  // The coordinate of the middle and top space point in the new frame
+double computeDzDs(double A, double B, const Vector3& local0,
+                   const Vector3& local2) {
+  const auto computeLocalPhi = [&](const Vector2& local) -> double {
+    // Scaled radius vector from circle center
+    const Vector2 r = 2 * B * local - Vector2(-A, 1);
+
+    return std::atan2(r.y(), r.x());
+  };
+
+  const double localPhi0 = computeLocalPhi(local0.head<2>());
+  const double localPhi2 = computeLocalPhi(local2.head<2>());
+
+  const double dZ = local2.z() - local0.z();
+  const double dPhi = localPhi2 - localPhi0;
+
+  // Apply the sinc correction to account for the fact that the particle do not
+  // follow a straight line in the R-Z plane. This is especially important for
+  // high delta phi and/or strongly bent tracks.
+  const double sincCorrection = sinc(dPhi / 2);
+
+  const double dzds =
+      sincCorrection * dZ / (local2.head<2>() - local0.head<2>()).norm();
+
+  return dzds;
+}
+
+struct ConformalMappingResult {
+  Vector2 uv1;
+  Vector2 uv2;
+  Vector2 duv;
+  double A;
+  double B;
+  double bOverS;
+  double dzds;
+};
+
+ConformalMappingResult performConformalMapping(const Vector3& local1,
+                                               const Vector3& local2) {
+  ConformalMappingResult r{};
+  r.uv1 = local1.head<2>() / local1.head<2>().squaredNorm();
+  r.uv2 = local2.head<2>() / local2.head<2>().squaredNorm();
+  r.duv = r.uv2 - r.uv1;
+  r.A = r.duv.y() / r.duv.x();
+  r.B = r.uv1.y() - r.A * r.uv1.x();
+  r.bOverS = (r.uv1.y() * r.uv2.x() - r.uv2.y() * r.uv1.x()) / r.duv.norm();
+  r.dzds = computeDzDs(r.A, r.B, local1, local2);
+  return r;
+}
+
+}  // namespace
+}  // namespace Acts
+
+Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
+                                                   const Vector3& sp1,
+                                                   const Vector3& sp2,
+                                                   const Vector3& bField) {
+  return estimateTrackParamsFromSeed(sp0, 0, sp1, sp2, bField);
+}
+
+Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
+                                                   const double t0,
+                                                   const Vector3& sp1,
+                                                   const Vector3& sp2,
+                                                   const Vector3& bField) {
+  const Transform3 transform = estimationFrameLocalToGlobal(sp0, sp1, bField);
+
+  // Local coordinates
   const Vector3 local1 = transform.inverse() * sp1;
   const Vector3 local2 = transform.inverse() * sp2;
 
-  // Use the uv-plane to estimate the circle parameters
-  const Vector2 uv1 = local1.head<2>() / local1.head<2>().squaredNorm();
-  const Vector2 uv2 = local2.head<2>() / local2.head<2>().squaredNorm();
-  const Vector2 deltaUV2 = uv2 - uv1;
-  const double A = deltaUV2.y() / deltaUV2.x();
-  const double bOverS =
-      (uv1.y() * uv2.x() - uv2.y() * uv1.x()) / deltaUV2.norm();
+  // Conformal mapping
+  const ConformalMappingResult cm = performConformalMapping(local1, local2);
 
-  const double invTanTheta = local2.z() / local2.head<2>().norm();
-  const Vector3 transDirection(1, A, fastHypot(1, A) * invTanTheta);
+  // The tangent vector in the local frame at the bottom space point
+  const Vector3 localDirection(1, cm.A, fastHypot(1, cm.A) * cm.dzds);
 
   // Transform it back to the original frame
-  const Vector3 direction = rotation * transDirection.normalized();
+  const Vector3 direction = transform.linear() * localDirection.normalized();
 
   // Initialize the free parameters vector
   FreeVector params = FreeVector::Zero();
@@ -70,9 +140,9 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
 
   // The estimated q/pt in [GeV/c]^-1 (note that the pt is the projection of
   // momentum on the transverse plane of the new frame)
-  const double qOverPt = 2 * bOverS / bField.norm();
+  const double qOverPt = 2 * cm.bOverS / bField.norm();
   // The estimated q/p in [GeV/c]^-1
-  params[eFreeQOverP] = qOverPt / fastHypot(1, invTanTheta);
+  params[eFreeQOverP] = qOverPt / fastHypot(1, cm.dzds);
 
   // The time parameter is set to the time of the bottom space point
   params[eFreeTime] = t0;
