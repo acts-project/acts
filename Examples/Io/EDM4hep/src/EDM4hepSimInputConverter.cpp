@@ -390,6 +390,14 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
                                     .withVertexPrimary(nPrimaryVertices);
         SimParticle particle =
             EDM4hepUtil::readParticle(genParticle).withParticleId(particleId);
+        for (const auto& parent : genParticle.getParents()) {
+          auto parentIt = edm4hepParticleMap.find(parent.getObjectID().index);
+          if (parentIt != edm4hepParticleMap.end()) {
+            particle.setParentParticleId(
+                unorderedParticlesInitial.at(parentIt->second.particleIndex));
+            break;
+          }
+        }
         particlesGeneratorUnordered->push_back(particle);
         ACTS_VERBOSE("+ add GEN particle " << particle);
         ACTS_VERBOSE("  - at " << particle.position().transpose());
@@ -466,6 +474,18 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
       // make modified version for the "final" state (i.e. after simulation)
       SimParticle particleSimulated = EDM4hepUtil::readParticle(inParticle);
       particleSimulated.setParticleId(pid);
+
+      // Resolve parent barcode via the edm4hep parent link, if any. We use
+      // the first parent that we kept; particles whose parents were filtered
+      // out keep the default "unknown" parent barcode.
+      for (const auto& parent : inParticle.getParents()) {
+        auto parentIt = edm4hepParticleMap.find(parent.getObjectID().index);
+        if (parentIt != edm4hepParticleMap.end()) {
+          particleSimulated.setParentParticleId(
+              unorderedParticlesInitial.at(parentIt->second.particleIndex));
+          break;
+        }
+      }
       ACTS_VERBOSE("Have converted particle: " << particleSimulated);
 
       // Find the decay time of the particle, by looking for the first

@@ -21,7 +21,7 @@ inputs:
   DEPENDENCY_TAG:
     description: 'Dependency tag to pull from'
     required: false
-    default: 'v22.1.0'
+    default: 'v23.0.0'
   full_install:
     description: 'Whether to do a full dependency installation including Geant4 datasets and Python packages'
     required: false
@@ -39,12 +39,12 @@ runs:
   using: 'composite'
   steps:
     - name: Setup Python version
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: "3.12"
 
     - name: Install the latest version of uv
-      uses: astral-sh/setup-uv@v6
+      uses: astral-sh/setup-uv@v7
 
     - name: Prerequisites
       if: startsWith(runner.os, 'macos')
@@ -54,7 +54,7 @@ runs:
 
     - name: Restore cache
       id: cache-restore
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         path: spack_cache
         key: spack-r4-${{ inputs.spack_version }}-${{ inputs.spack_repo_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
