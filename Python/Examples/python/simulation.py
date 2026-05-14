@@ -497,6 +497,7 @@ def addFatras(
     inputParticles: str = "particles_generated_selected",
     outputParticles: str = "particles_simulated",
     outputSimHits: str = "simhits",
+    writeHelixParameters: bool = False,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirObj: Optional[Union[Path, str]] = None,
@@ -552,6 +553,7 @@ def addFatras(
         simHits=alg.config.outputSimHits,
         particlesSimulated=outputParticles,
         field=field,
+        writeHelixParameters=writeHelixParameters,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         outputDirObj=outputDirObj,
@@ -650,6 +652,7 @@ def addGeant4(
     outputSimHits: str = "simhits",
     recordHitsOfSecondaries=True,
     keepParticlesWithoutHits=True,
+    writeHelixParameters: bool = False,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirObj: Optional[Union[Path, str]] = None,
@@ -658,7 +661,7 @@ def addGeant4(
     killAfterTime: float = float("inf"),
     killSecondaries: bool = False,
     physicsList: str = "FTFP_BERT",
-    regionList: List[Any] = [],
+    detectorConstructionOptions=None,
 ) -> None:
     """This function steers the detector simulation using Geant4
 
@@ -684,7 +687,13 @@ def addGeant4(
         if given, secondary particles are removed from simulation
     """
 
-    from acts.examples.geant4 import Geant4Simulation, SensitiveSurfaceMapper
+    import acts.examples.geant4
+
+    from acts.examples.geant4 import (
+        Geant4Simulation,
+        Geant4ConstructionOptions,
+        SensitiveSurfaceMapper,
+    )
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -697,11 +706,15 @@ def addGeant4(
         smmConfig, customLogLevel(), trackingGeometry
     )
 
+    if detectorConstructionOptions is None:
+        detectorConstructionOptions = acts.examples.geant4.Geant4ConstructionOptions()
+
     alg = Geant4Simulation(
         level=customLogLevel(),
         geant4Handle=__geant4Handle,
         detector=detector,
         randomNumbers=rnd,
+        constructionOptions=detectorConstructionOptions,
         inputParticles=inputParticles,
         outputParticles=outputParticles,
         outputSimHits=outputSimHits,
@@ -730,6 +743,7 @@ def addGeant4(
         simHits=alg.config.outputSimHits,
         particlesSimulated=outputParticles,
         field=field,
+        writeHelixParameters=writeHelixParameters,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         outputDirObj=outputDirObj,

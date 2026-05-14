@@ -27,16 +27,22 @@ BOOST_AUTO_TEST_SUITE(PhysicsSuite)
 BOOST_DATA_TEST_CASE(FatrasBetheBloch, Dataset::parameters, pdg, phi, theta, p,
                      seed) {
   Generator gen(seed);
-  ActsFatras::Particle before = Dataset::makeParticle(pdg, phi, theta, p);
+  const ActsFatras::Particle before = Dataset::makeParticle(pdg, phi, theta, p);
   ActsFatras::Particle after = before;
 
   ActsFatras::BetheBloch process;
   const auto outgoing = process(gen, makeUnitSlab(), after);
-  // energy loss changes momentum and energy
-  BOOST_CHECK_LT(after.absoluteMomentum(), before.absoluteMomentum());
-  BOOST_CHECK_LT(after.energy(), before.energy());
+
   // energy loss creates no new particles
   BOOST_CHECK(outgoing.empty());
+  // energy loss changes momentum and energy
+  if (after.isAlive()) {
+    BOOST_CHECK_LT(after.absoluteMomentum(), before.absoluteMomentum());
+    BOOST_CHECK_LT(after.energy(), before.energy());
+  } else {
+    BOOST_CHECK_EQUAL(after.outcome(),
+                      ActsFatras::SimulationOutcome::KilledInteraction);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

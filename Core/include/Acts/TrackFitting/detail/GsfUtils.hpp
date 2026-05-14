@@ -22,6 +22,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cmath>
@@ -43,8 +44,8 @@ bool weightsAreNormalized(const component_range_t &cmps,
                           double tol = s_normalizationTolerance) {
   double sumOfWeights = 0.0;
 
-  for (auto it = cmps.begin(); it != cmps.end(); ++it) {
-    sumOfWeights += proj(*it);
+  for (auto &&cmp : cmps) {
+    sumOfWeights += proj(cmp);
   }
 
   return std::abs(sumOfWeights - 1.0) < tol;
@@ -56,16 +57,14 @@ void normalizeWeights(component_range_t &cmps, const projector_t &proj) {
 
   // we need decltype(auto) here to support proxy-types with reference
   // semantics, otherwise there is a `cannot bind ... to ...` error
-  for (auto it = cmps.begin(); it != cmps.end(); ++it) {
-    decltype(auto) cmp = *it;
+  for (auto &&cmp : cmps) {
     assert(std::isfinite(proj(cmp)) && "weight not finite in normalization");
     sumOfWeights += proj(cmp);
   }
 
   assert(sumOfWeights > 0 && "sum of weights is not > 0");
 
-  for (auto it = cmps.begin(); it != cmps.end(); ++it) {
-    decltype(auto) cmp = *it;
+  for (auto &&cmp : cmps) {
     proj(cmp) /= sumOfWeights;
   }
 }
@@ -172,11 +171,12 @@ void computePosteriorWeights(const traj_t &mt,
   // Find minChi2, this can be used to factor some things later in the
   // exponentiation
   const auto minChi2 =
-      mt.getTrackState(*std::min_element(tips.begin(), tips.end(),
-                                         [&](const auto &a, const auto &b) {
-                                           return mt.getTrackState(a).chi2() <
-                                                  mt.getTrackState(b).chi2();
-                                         }))
+      mt.getTrackState(
+            *std::ranges::min_element(tips,
+                                      [&](const auto &a, const auto &b) {
+                                        return mt.getTrackState(a).chi2() <
+                                               mt.getTrackState(b).chi2();
+                                      }))
           .chi2();
 
   // Loop over the tips and compute new weights

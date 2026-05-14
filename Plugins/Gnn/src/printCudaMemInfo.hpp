@@ -9,18 +9,18 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#ifndef ACTS_GNN_CPUONLY
+#ifdef ACTS_GNN_WITH_CUDA
 #include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
 #endif
 
-#ifndef ACTS_GNN_CPUONLY
+#ifdef ACTS_GNN_WITH_CUDA
 #include <cuda_runtime_api.h>
 #endif
 
 namespace {
 
 inline void printCudaMemInfo(const Acts::Logger& logger) {
-#ifndef ACTS_GNN_CPUONLY
+#ifdef ACTS_GNN_WITH_CUDA
   if (logger.level() == Acts::Logging::VERBOSE) {
     constexpr float kb = 1024;
     constexpr float mb = kb * kb;

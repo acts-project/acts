@@ -15,12 +15,11 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <cstddef>
-#include <tuple>
 
 namespace Acts {
 
 template <std::size_t N>
-std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
+Result<void> GainMatrixUpdater::visitMeasurementImpl(
     AnyMutableTrackStateProxy trackState, const Logger& logger) const {
   constexpr std::size_t kMeasurementSize = N;
   using ProjectedVector = Vector<kMeasurementSize>;
@@ -60,13 +59,21 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
 
   if (K.hasNaN()) {
     // set to error abort execution
-    return {0, KalmanFitterError::UpdateFailed};
+    return Result<void>::failure(KalmanFitterError::UpdateFailed);
   }
 
   filtered = predicted + K * (calibrated - H * predicted);
   // Normalize phi and theta
   filtered = normalizeBoundParameters(filtered);
-  filteredCovariance = (BoundMatrix::Identity() - K * H) * predictedCovariance;
+
+  const auto tmp = (BoundMatrix::Identity() - K * H).eval();
+  if (!m_useJosephFormulation) {
+    filteredCovariance = tmp * predictedCovariance;
+  } else {
+    filteredCovariance = tmp * predictedCovariance * tmp.transpose() +
+                         K * calibratedCovariance * K.transpose();
+  }
+
   ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
   ACTS_VERBOSE("Filtered covariance:\n" << filteredCovariance);
 
@@ -78,14 +85,15 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
   const double chi2 = (residual.transpose() * m.inverse() * residual).value();
   ACTS_VERBOSE("Chi2: " << chi2);
 
-  return {chi2, {}};
+  trackState.chi2() = chi2;
+
+  return Result<void>::success();
 }
 
 // Ensure that the compiler does not implicitly instantiate the template
 
-#define _EXTERN(N)                                    \
-  extern template std::tuple<double, std::error_code> \
-  GainMatrixUpdater::visitMeasurementImpl<N>(         \
+#define _EXTERN(N)                                                         \
+  extern template Result<void> GainMatrixUpdater::visitMeasurementImpl<N>( \
       AnyMutableTrackStateProxy trackState, const Logger& logger) const
 
 _EXTERN(1);

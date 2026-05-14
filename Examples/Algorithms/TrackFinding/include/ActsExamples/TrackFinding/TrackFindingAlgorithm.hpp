@@ -121,6 +121,10 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// Whether to trim the tracks
     bool trimTracks = true;
 
+    /// Whether to use the Joseph formulation for the Kalman filter update. This
+    /// is typically more stable but also more computationally expensive.
+    bool useJosephFormulation = false;
+
     // Pixel and strip volume ids to be used for maxPixel/StripHoles cuts
     std::vector<std::uint32_t> pixelVolumeIds;
     std::vector<std::uint32_t> stripVolumeIds;
@@ -153,7 +157,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
  private:
   void computeSharedHits(TrackContainer& tracks,
-                         const MeasurementContainer& measurements) const;
+                         const MeasurementSubset& measurements) const;
 
   ProcessCode finalize() override;
 
@@ -161,8 +165,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   Config m_cfg;
   std::optional<Acts::TrackSelector> m_trackSelector;
 
-  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
-                                                           "InputMeasurements"};
+  ReadDataHandle<MeasurementSubset> m_inputMeasurements{this,
+                                                        "InputMeasurements"};
   ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
       this, "InputInitialTrackParameters"};
   ReadDataHandle<SeedContainer> m_inputSeeds{this, "InputSeeds"};

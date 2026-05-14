@@ -91,7 +91,8 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
     auto [meanHist, widthHist, fitFailureFraction] =
         ActsPlugins::extractMeanWidthProfiles(
             hist, meanPrefix + suffix, widthPrefix + suffix,
-            m_cfg.minEntriesForFit, m_cfg.fitOption, logger());
+            m_cfg.fitMinEntries, m_cfg.fitSigmaRange, m_cfg.fitIterations,
+            logger());
     if (fitFailureFraction >= m_cfg.warningThresholdFitFailureFraction) {
       ACTS_WARNING("Fit failures for " << baseName << ": "
                                        << fitFailureFraction * 100 << "%");

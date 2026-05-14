@@ -24,6 +24,7 @@ def runRefittingKf(
     energyLoss: bool = True,
     reverseFilteringMomThreshold=float("inf"),
     reverseFilteringCovarianceScaling=100.0,
+    useJosephFormulation: bool = False,
     s: acts.examples.Sequencer = None,
 ):
     s = runTruthTrackingKalman(
@@ -33,6 +34,7 @@ def runRefittingKf(
         outputDir=outputDir,
         reverseFilteringMomThreshold=0 * u.GeV,  # use direct smoothing
         reverseFilteringCovarianceScaling=reverseFilteringCovarianceScaling,
+        useJosephFormulation=useJosephFormulation,
         s=s,
     )
 
@@ -44,6 +46,7 @@ def runRefittingKf(
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
         "level": acts.logging.INFO,
         "chi2Cut": float("inf"),
+        "useJosephFormulation": useJosephFormulation,
     }
 
     s.addAlgorithm(

@@ -28,6 +28,21 @@ nlohmann::json Acts::AxisJsonConverter::toJson(const IAxis& ia) {
   return jAxis;
 }
 
+std::unique_ptr<Acts::IAxis> Acts::AxisJsonConverter::fromJson(
+    const nlohmann::json& jAxis) {
+  Acts::AxisType axisType = jAxis.at("type");
+  Acts::AxisBoundaryType boundaryType = jAxis.at("boundary_type");
+
+  if (axisType == Acts::AxisType::Equidistant) {
+    std::array<double, 2u> range = jAxis.at("range");
+    return Acts::IAxis::createEquidistant(boundaryType, range.at(0),
+                                          range.at(1), jAxis.at("bins"));
+  }
+
+  return Acts::IAxis::createVariable(
+      boundaryType, jAxis.at("boundaries").get<std::vector<double>>());
+}
+
 nlohmann::json Acts::AxisJsonConverter::toJsonDetray(const IAxis& ia) {
   nlohmann::json jAxis;
   jAxis["bounds"] =

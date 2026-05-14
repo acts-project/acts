@@ -202,9 +202,9 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
   sa.toStream(tgContext, std::cout);
 
   for (const auto& srf : brl) {
-    Vector3 ctr = srf->referencePosition(tgContext, AxisDirection::AxisR);
-    Vector3 normal = srf->normal(tgContext, ctr, Vector3::UnitZ());
-    std::vector<const Surface*> binContent = sa.at(ctr, normal);
+    const Vector3 ctr = srf->referencePosition(tgContext, AxisDirection::AxisR);
+    const Vector3 normal = srf->normal(tgContext, ctr, Vector3::UnitZ());
+    const auto binContent = sa.at(tgContext, ctr, normal);
 
     BOOST_CHECK(binContent.size() <= 2u);
   }
@@ -217,14 +217,15 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
 BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {
   const double w = 3;
   const double h = 4;
-  auto bounds = std::make_shared<const RectangleBounds>(w, h);
+  const auto bounds = std::make_shared<const RectangleBounds>(w, h);
   auto srf = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
 
   SurfaceArray sa(srf);
 
-  auto binContent = sa.at(Vector3(42, 42, 42), Vector3::UnitX());
+  const auto binContent =
+      sa.at(tgContext, Vector3(42, 42, 42), Vector3::UnitX());
   BOOST_CHECK_EQUAL(binContent.size(), 1u);
-  BOOST_CHECK_EQUAL(binContent.at(0), srf.get());
+  BOOST_CHECK_EQUAL(binContent[0], srf.get());
   BOOST_CHECK_EQUAL(sa.surfaces().size(), 1u);
   BOOST_CHECK_EQUAL(sa.surfaces().at(0), srf.get());
 }
