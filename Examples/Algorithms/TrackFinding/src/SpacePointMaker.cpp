@@ -42,6 +42,34 @@ namespace {
 
 static constexpr float nanf = std::numeric_limits<float>::quiet_NaN();
 
+/// @brief Build the geometry range used by the strip-spacepoint logic.
+///
+/// Combines `selectLowestNonZeroGeometryObject` (which honours `volume` and
+/// `layer` from the selector) with an explicit filter on `extra`. The
+/// `extra` component of a strip surface's GeometryIdentifier indexes
+/// concentric rings within a layer (e.g. in ODD each LS endcap layer is
+/// split into rings 1, 2). Stereo partners always live in the *same* ring,
+/// so the partner search and the per-event source-link grouping both run
+/// per-ring.
+///
+/// Selector semantics:
+///   selector.extra() == 0 : wildcard, accept every ring on this layer.
+///   selector.extra() != 0 : accept only surfaces with matching `extra`.
+template <typename Container>
+auto selectStripRange(const Container& container,
+                      Acts::GeometryIdentifier selector) {
+  // The underlying (vol, layer) range must be passed to the pipe as an
+  // xvalue: that way `std::views::filter` wraps it in
+  // `std::ranges::owning_view` and the returned `filter_view` keeps it
+  // alive. Storing it in a local would leave the returned view holding a
+  // dangling `ref_view` to a destroyed Range.
+  return selectLowestNonZeroGeometryObject(container, selector) |
+         std::views::filter([selector](const auto& elem) {
+           const auto extra = detail::GeometryIdGetter{}(elem).extra();
+           return selector.extra() == 0u || extra == selector.extra();
+         });
+}
+
 void createPixelSpacePoint(
     const Acts::GeometryContext& gctx, const Acts::Surface& surface,
     const ConstVariableBoundMeasurementProxy& measurement,
@@ -172,8 +200,9 @@ Acts::Result<void> createStripSpacePoint(
 }  // namespace
 
 SpacePointMaker::SpacePointMaker(Config cfg,
-                                 std::unique_ptr<const Acts::Logger> logger)
-    : IAlgorithm("SpacePointMaker", std::move(logger)), m_cfg(std::move(cfg)) {
+                                 std::unique_ptr<const Acts::Logger> logger_)
+    : IAlgorithm("SpacePointMaker", std::move(logger_)),
+      m_cfg(std::move(cfg)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurement input collection");
   }
@@ -233,13 +262,8 @@ SpacePointMaker::SpacePointMaker(Config cfg,
     std::ranges::sort(*sel, std::less<Acts::GeometryIdentifier>{});
     const auto last = std::ranges::unique(*sel, isDuplicate);
     if (last.begin() != last.end()) {
-      // ACTS_WARNING(...) cannot be used here: the constructor parameter
-      // `logger` (a unique_ptr) shadows the inherited `logger()` member
-      // function the macro expands to. Use the explicit form.
-      ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::WARNING,
-                           "Removed " << std::distance(last.begin(),
-                                                       last.end())
-                                      << " geometry selection duplicates");
+      ACTS_WARNING("Removed " << std::distance(last.begin(), last.end())
+                              << " geometry selection duplicates");
       sel->erase(last.begin(), last.end());
     }
   }
@@ -281,20 +305,11 @@ void SpacePointMaker::initializeStripPartners() {
       allSensitivesVector.begin(), allSensitivesVector.end());
 
   for (auto selector : m_cfg.stripGeometrySelection) {
-    // Apply (volume, layer) selection first, then filter by `extra` when
-    // the selector specifies a specific ring. `extra` distinguishes
-    // concentric rings within a layer (see GeometryIdentifier docs and
-    // e.g. the ODD geometry config which assigns `extra` from radial
-    // cuts). Stereo partners live in the *same* ring (same `extra`); we
-    // run the partner search per-ring so the closest-distance heuristic
-    // never has to disambiguate across rings.
-    auto rangeLayer =
-        selectLowestNonZeroGeometryObject(allSensitives, selector);
-    auto range = rangeLayer | std::views::filter([&](auto srf) {
-                   return selector.extra() == 0u
-                              ? true
-                              : srf->geometryId().extra() == selector.extra();
-                 });
+    // See selectStripRange: the per-(vol, lay, extra) range builder
+    // shared with execute(). Stereo partners live in the same ring;
+    // running the partner search per-ring keeps the closest-distance
+    // heuristic from ever having to disambiguate across rings.
+    auto range = selectStripRange(allSensitives, selector);
 
     const auto sizeBefore = m_stripPartner.size();
     const std::size_t nSurfaces = std::distance(range.begin(), range.end());
@@ -415,16 +430,10 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
     stripSourceLinkPairs.clear();
     ACTS_VERBOSE("Process strip selection " << sel);
 
-    // Apply the same (vol, layer, extra) selection as in
-    // initializeStripPartners so the per-ring partner map is consistent
-    // with the per-ring source-link grouping below.
-    const auto layerRange =
-        selectLowestNonZeroGeometryObject(measurements.orderedIndices(), sel);
-    auto range = layerRange | std::views::filter([&](auto sl) {
-                   return sel.extra() == 0u
-                              ? true
-                              : sl.geometryId().extra() == sel.extra();
-                 });
+    // Same range builder as initializeStripPartners, applied here to the
+    // per-event source-link container so the partner map and the
+    // source-link grouping see the same per-ring scope.
+    auto range = selectStripRange(measurements.orderedIndices(), sel);
 
     // groupByModule only works with geometry containers, not with an
     // arbitrary range. do the equivalent grouping manually
