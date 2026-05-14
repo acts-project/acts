@@ -207,14 +207,14 @@ class Impl final : public TripletSeedFinder {
     // Pre-cache strip data for the loop-invariant middle and bottom SPs
     const StripSpacePointCalibrationDetailsDerived calM =
         detail::deriveStripSpacePointCalibrationDetails(
-            spM.stripCenterDistance(), spM.bottomStripVector(),
-            spM.topStripVector(), spM.topStripCenter());
+            spM.bottomStripVector(), spM.topStripVector(),
+            spM.stripCenterDistance(), spM.topStripCenter());
     const ConstSpacePointProxy2 spB =
         spacePoints[bottomDoublet.spacePointIndex()];
     const StripSpacePointCalibrationDetailsDerived calB =
         detail::deriveStripSpacePointCalibrationDetails(
-            spB.stripCenterDistance(), spB.bottomStripVector(),
-            spB.topStripVector(), spB.topStripCenter());
+            spB.bottomStripVector(), spB.topStripVector(),
+            spB.stripCenterDistance(), spB.topStripCenter());
 
     std::size_t topDoubletOffset = 0;
     for (auto [topDoublet, topDoubletIndex] :
@@ -262,7 +262,7 @@ class Impl final : public TripletSeedFinder {
           rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1], cosTheta};
 
       std::array<float, 3> rMTransf{};
-      if (!detail::calibrateStripSpacePoint(calM, directionMiddle, rMTransf,
+      if (!detail::calibrateStripSpacePoint(directionMiddle, calM, rMTransf,
                                             m_cfg.toleranceParam)) {
         continue;
       }
@@ -280,7 +280,7 @@ class Impl final : public TripletSeedFinder {
           zDirectionMiddle};
 
       std::array<float, 3> rBTransf{};
-      if (!detail::calibrateStripSpacePoint(calB, directionBottom, rBTransf,
+      if (!detail::calibrateStripSpacePoint(directionBottom, calB, rBTransf,
                                             m_cfg.toleranceParam)) {
         continue;
       }
@@ -297,10 +297,10 @@ class Impl final : public TripletSeedFinder {
           spacePoints[topDoublet.spacePointIndex()];
       const StripSpacePointCalibrationDetailsDerived calT =
           detail::deriveStripSpacePointCalibrationDetails(
-              spT.stripCenterDistance(), spT.bottomStripVector(),
-              spT.topStripVector(), spT.topStripCenter());
+              spT.bottomStripVector(), spT.topStripVector(),
+              spT.stripCenterDistance(), spT.topStripCenter());
       std::array<float, 3> rTTransf{};
-      if (!detail::calibrateStripSpacePoint(calT, directionTop, rTTransf,
+      if (!detail::calibrateStripSpacePoint(directionTop, calT, rTTransf,
                                             m_cfg.toleranceParam)) {
         continue;
       }

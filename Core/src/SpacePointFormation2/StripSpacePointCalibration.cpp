@@ -21,7 +21,7 @@ std::optional<Eigen::Vector3f> Acts::calibrateStripSpacePoint(
     const Eigen::Vector3f& direction, float tolerance) {
   Eigen::Vector3f calibrated;
   if (!detail::calibrateStripSpacePoint(
-          sp, std::span<const float, 3>(direction.data(), direction.size()),
+          std::span<const float, 3>(direction.data(), direction.size()), sp,
           std::span<float, 3>(calibrated.data(), calibrated.size()),
           tolerance)) {
     return std::nullopt;

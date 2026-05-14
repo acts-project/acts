@@ -16,9 +16,9 @@
 namespace Acts::detail {
 
 inline StripSpacePointCalibrationDetailsDerived
-deriveStripSpacePointCalibrationDetails(std::span<const float, 3> oiv,
-                                        std::span<const float, 3> ihv,
+deriveStripSpacePointCalibrationDetails(std::span<const float, 3> ihv,
                                         std::span<const float, 3> ohv,
+                                        std::span<const float, 3> oiv,
                                         std::span<const float, 3> oc) {
   StripSpacePointCalibrationDetailsDerived result{};
   result.innerCrossOuterHalfVector = {ihv[1] * ohv[2] - ihv[2] * ohv[1],
@@ -39,16 +39,16 @@ inline StripSpacePointCalibrationDetailsDerived
 deriveStripSpacePointCalibrationDetails(
     const StripSpacePointCalibrationDetails& sp) {
   return deriveStripSpacePointCalibrationDetails(
-      sp.outerToInnerGapVector, sp.innerHalfVector, sp.outerHalfVector,
+      sp.innerHalfVector, sp.outerHalfVector, sp.outerToInnerGapVector,
       sp.outerCenter);
 }
 
-inline bool calibrateStripSpacePoint(std::span<const float, 3> ihvCrossOhv,
+inline bool calibrateStripSpacePoint(std::span<const float, 3> direction,
+                                     std::span<const float, 3> ihvCrossOhv,
                                      std::span<const float, 3> oivCrossOhv,
                                      std::span<const float, 3> oivCrossIhv,
                                      std::span<const float, 3> oc,
                                      std::span<const float, 3> ohv,
-                                     std::span<const float, 3> direction,
                                      std::span<float, 3> calibrated,
                                      float tolerance) {
   // scale = innerStripHalfVector dot (outerStripHalfVector cross direction)
@@ -83,13 +83,14 @@ inline bool calibrateStripSpacePoint(std::span<const float, 3> ihvCrossOhv,
 }
 
 inline bool calibrateStripSpacePoint(
+    std::span<const float, 3> direction,
     const StripSpacePointCalibrationDetailsDerived& sp,
-    std::span<const float, 3> direction, std::span<float, 3> calibrated,
-    float tolerance) {
+    std::span<float, 3> calibrated, float tolerance) {
   return detail::calibrateStripSpacePoint(
-      sp.innerCrossOuterHalfVector, sp.outerToInnerGapCrossOuterHalfVector,
+      direction, sp.innerCrossOuterHalfVector,
+      sp.outerToInnerGapCrossOuterHalfVector,
       sp.outerToInnerGapCrossInnerHalfVector, sp.outerCenter,
-      sp.outerHalfVector, direction, calibrated, tolerance);
+      sp.outerHalfVector, calibrated, tolerance);
 }
 
 }  // namespace Acts::detail
