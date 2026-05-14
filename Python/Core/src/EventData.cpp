@@ -100,6 +100,7 @@ void addEventData(py::module_& m) {
       .value("Time", SpacePointColumns::Time)
       .value("VarianceZ", SpacePointColumns::VarianceZ)
       .value("VarianceR", SpacePointColumns::VarianceR)
+      .value("VarianceT", SpacePointColumns::VarianceT)
       .value("TopStripVector", SpacePointColumns::TopStripVector)
       .value("BottomStripVector", SpacePointColumns::BottomStripVector)
       .value("StripCenterDistance", SpacePointColumns::StripCenterDistance)
@@ -168,6 +169,8 @@ void addEventData(py::module_& m) {
           .def_property_readonly(
               "varianceR", floatColumn(&SpacePointContainer2::varianceRColumn))
           .def_property_readonly(
+              "varianceT", floatColumn(&SpacePointContainer2::varianceTColumn))
+          .def_property_readonly(
               "xyColumn", arrayColumn<2>(&SpacePointContainer2::xyColumn,
                                          SpacePointColumns::PackedXY, "xy"))
           .def_property_readonly(
@@ -223,6 +226,9 @@ void addEventData(py::module_& m) {
       .def_property_readonly(
           "varianceR",
           static_cast<FloatGetter>(&ConstSpacePointProxy2::varianceR))
+      .def_property_readonly(
+          "varianceT",
+          static_cast<FloatGetter>(&ConstSpacePointProxy2::varianceT))
       .def_property_readonly(
           "sourceLinks", py::cpp_function(
                              [](const ConstSpacePointProxy2& self) {
