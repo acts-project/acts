@@ -189,55 +189,62 @@ class SpacePointContainer2 {
            "Column 'copiedFromIndex' does not exist");
     return m_copiedFromIndexColumn->proxy(*this);
   }
-  /// Returns a mutable proxy to the x coordinate column.
-  /// @return A mutable proxy to the x coordinate column.
+  /// Returns a mutable proxy to the `x` column.
+  /// @return A mutable proxy to the `x` column.
   MutableColumnProxy<float> xColumn() noexcept {
     assert(m_xColumn.has_value() && "Column 'x' does not exist");
     return m_xColumn->proxy(*this);
   }
-  /// Returns a mutable proxy to the y coordinate column.
-  /// @return A mutable proxy to the y coordinate column.
+  /// Returns a mutable proxy to the `y` column.
+  /// @return A mutable proxy to the `y` column.
   MutableColumnProxy<float> yColumn() noexcept {
     assert(m_yColumn.has_value() && "Column 'y' does not exist");
     return m_yColumn->proxy(*this);
   }
-  /// Returns a mutable proxy to the z coordinate column.
-  /// @return A mutable proxy to the z coordinate column.
+  /// Returns a mutable proxy to the `z` column.
+  /// @return A mutable proxy to the `z` column.
   MutableColumnProxy<float> zColumn() noexcept {
     assert(m_zColumn.has_value() && "Column 'z' does not exist");
     return m_zColumn->proxy(*this);
   }
-  /// Returns a mutable proxy to the r coordinate column.
-  /// @return A mutable proxy to the r coordinate column.
+  /// Returns a mutable proxy to the `r` column.
+  /// @return A mutable proxy to the `r` column.
   MutableColumnProxy<float> rColumn() noexcept {
     assert(m_rColumn.has_value() && "Column 'r' does not exist");
     return m_rColumn->proxy(*this);
   }
-  /// Returns a mutable proxy to the phi coordinate column.
-  /// @return A mutable proxy to the phi coordinate column.
+  /// Returns a mutable proxy to the `phi` column.
+  /// @return A mutable proxy to the `phi` column.
   MutableColumnProxy<float> phiColumn() noexcept {
     assert(m_phiColumn.has_value() && "Column 'phi' does not exist");
     return m_phiColumn->proxy(*this);
   }
-  /// Returns a mutable proxy to the time column.
-  /// @return A mutable proxy to the time column.
+  /// Returns a mutable proxy to the `time` column.
+  /// @return A mutable proxy to the `time` column.
   MutableColumnProxy<float> timeColumn() noexcept {
     assert(m_timeColumn.has_value() && "Column 'time' does not exist");
     return m_timeColumn->proxy(*this);
   }
-  /// Returns a mutable proxy to the variance in Z direction column.
-  /// @return A mutable proxy to the variance in Z direction column.
+  /// Returns a mutable proxy to the `variance z` column.
+  /// @return A mutable proxy to the `variance z` column.
   MutableColumnProxy<float> varianceZColumn() noexcept {
     assert(m_varianceZColumn.has_value() &&
            "Column 'varianceZ' does not exist");
     return m_varianceZColumn->proxy(*this);
   }
-  /// Returns a mutable proxy to the variance in R direction column.
-  /// @return A mutable proxy to the variance in R direction column.
+  /// Returns a mutable proxy to the `variance r` column.
+  /// @return A mutable proxy to the `variance r` column.
   MutableColumnProxy<float> varianceRColumn() noexcept {
     assert(m_varianceRColumn.has_value() &&
            "Column 'varianceR' does not exist");
     return m_varianceRColumn->proxy(*this);
+  }
+  /// Returns a mutable proxy to the `variance t` column.
+  /// @return A mutable proxy to the `variance t` column.
+  MutableColumnProxy<float> varianceTColumn() noexcept {
+    assert(m_varianceTColumn.has_value() &&
+           "Column 'varianceT' does not exist");
+    return m_varianceTColumn->proxy(*this);
   }
   /// Returns a mutable proxy to the `strip calibration details` column.
   /// @return A mutable proxy to the `strip calibration details` column.
@@ -286,55 +293,62 @@ class SpacePointContainer2 {
            "Column 'copiedFromIndex' does not exist");
     return m_copiedFromIndexColumn->proxy(*this);
   }
-  /// Returns a const proxy to the x coordinate column.
-  /// @return A const proxy to the x coordinate column.
+  /// Returns a const proxy to the `x` column.
+  /// @return A const proxy to the `x` column.
   ConstColumnProxy<float> xColumn() const noexcept {
     assert(m_xColumn.has_value() && "Column 'x' does not exist");
     return m_xColumn->proxy(*this);
   }
-  /// Returns a const proxy to the y coordinate column.
-  /// @return A const proxy to the y coordinate column.
+  /// Returns a const proxy to the `y` column.
+  /// @return A const proxy to the `y` column.
   ConstColumnProxy<float> yColumn() const noexcept {
     assert(m_yColumn.has_value() && "Column 'y' does not exist");
     return m_yColumn->proxy(*this);
   }
-  /// Returns a const proxy to the z coordinate column.
-  /// @return A const proxy to the z coordinate column.
+  /// Returns a const proxy to the `z` column.
+  /// @return A const proxy to the `z` column.
   ConstColumnProxy<float> zColumn() const noexcept {
     assert(m_zColumn.has_value() && "Column 'z' does not exist");
     return m_zColumn->proxy(*this);
   }
-  /// Returns a const proxy to the r coordinate column.
-  /// @return A const proxy to the r coordinate column.
+  /// Returns a const proxy to the `r` column.
+  /// @return A const proxy to the `r` column.
   ConstColumnProxy<float> rColumn() const noexcept {
     assert(m_rColumn.has_value() && "Column 'r' does not exist");
     return m_rColumn->proxy(*this);
   }
-  /// Returns a const proxy to the phi coordinate column.
-  /// @return A const proxy to the phi coordinate column.
+  /// Returns a const proxy to the `phi` column.
+  /// @return A const proxy to the `phi` column.
   ConstColumnProxy<float> phiColumn() const noexcept {
     assert(m_phiColumn.has_value() && "Column 'phi' does not exist");
     return m_phiColumn->proxy(*this);
   }
-  /// Returns a const proxy to the time column.
-  /// @return A const proxy to the time column.
+  /// Returns a const proxy to the `time` column.
+  /// @return A const proxy to the `time` column.
   ConstColumnProxy<float> timeColumn() const noexcept {
     assert(m_timeColumn.has_value() && "Column 'time' does not exist");
     return m_timeColumn->proxy(*this);
   }
-  /// Returns a const proxy to the variance in Z direction column.
-  /// @return A const proxy to the variance in Z direction column.
+  /// Returns a const proxy to the `variance z` column.
+  /// @return A const proxy to the `variance z` column.
   ConstColumnProxy<float> varianceZColumn() const noexcept {
     assert(m_varianceZColumn.has_value() &&
            "Column 'varianceZ' does not exist");
     return m_varianceZColumn->proxy(*this);
   }
-  /// Returns a const proxy to the variance in R direction column.
-  /// @return A const proxy to the variance in R direction column.
+  /// Returns a const proxy to the `variance r` column.
+  /// @return A const proxy to the `variance r` column.
   ConstColumnProxy<float> varianceRColumn() const noexcept {
     assert(m_varianceRColumn.has_value() &&
            "Column 'varianceR' does not exist");
     return m_varianceRColumn->proxy(*this);
+  }
+  /// Returns a const proxy to the `variance t` column.
+  /// @return A const proxy to the `variance t` column.
+  ConstColumnProxy<float> varianceTColumn() const noexcept {
+    assert(m_varianceTColumn.has_value() &&
+           "Column 'varianceT' does not exist");
+    return m_varianceTColumn->proxy(*this);
   }
   /// Returns a const proxy to the `strip calibration details` column.
   /// @return A const proxy to the `strip calibration details` column.
@@ -602,6 +616,7 @@ class SpacePointContainer2 {
   // covariance information
   std::optional<ColumnHolder<float>> m_varianceZColumn;
   std::optional<ColumnHolder<float>> m_varianceRColumn;
+  std::optional<ColumnHolder<float>> m_varianceTColumn;
 
   // strip information
   std::optional<ColumnHolder<StripSpacePointCalibrationDetails>>
@@ -617,25 +632,26 @@ class SpacePointContainer2 {
   static auto knownColumnMasks() noexcept {
     using enum SpacePointColumns;
     return std::tuple(SourceLinks, SourceLinks, CopiedFromIndex, X, Y, Z, R,
-                      Phi, Time, VarianceZ, VarianceR, StripCalibrationDetails,
-                      PackedXY, PackedZR, PackedXYZ, PackedXYZR,
-                      PackedVarianceZR);
+                      Phi, Time, VarianceZ, VarianceR, VarianceT,
+                      StripCalibrationDetails, PackedXY, PackedZR, PackedXYZ,
+                      PackedXYZR, PackedVarianceZR);
   }
 
   static auto knownColumnNames() noexcept {
     return std::tuple("sourceLinkOffset", "sourceLinkCount", "copiedFromIndex",
                       "x", "y", "z", "r", "phi", "time", "varianceZ",
-                      "varianceR", "stripCalibrationDetails", "xy", "zr", "xyz",
-                      "xyzr", "varianceZR");
+                      "varianceR", "varianceT", "stripCalibrationDetails", "xy",
+                      "zr", "xyz", "xyzr", "varianceZR");
   }
 
   static auto knownColumnDefaults() noexcept {
     return std::tuple(
         std::uint32_t{0}, std::uint8_t{0}, std::uint32_t{0}, float{0}, float{0},
         float{0}, float{0}, float{0}, float{NoTime}, float{0}, float{0},
-        StripSpacePointCalibrationDetails{}, std::array<float, 2>{0, 0},
-        std::array<float, 2>{0, 0}, std::array<float, 3>{0, 0, 0},
-        std::array<float, 4>{0, 0, 0, 0}, std::array<float, 2>{0, 0});
+        float{NoTime}, StripSpacePointCalibrationDetails{},
+        std::array<float, 2>{0, 0}, std::array<float, 2>{0, 0},
+        std::array<float, 3>{0, 0, 0}, std::array<float, 4>{0, 0, 0, 0},
+        std::array<float, 2>{0, 0});
   }
 
   template <typename Self>
@@ -644,7 +660,7 @@ class SpacePointContainer2 {
         self.m_sourceLinkOffsetColumn, self.m_sourceLinkCountColumn,
         self.m_copiedFromIndexColumn, self.m_xColumn, self.m_yColumn,
         self.m_zColumn, self.m_rColumn, self.m_phiColumn, self.m_timeColumn,
-        self.m_varianceZColumn, self.m_varianceRColumn,
+        self.m_varianceZColumn, self.m_varianceRColumn, self.m_varianceTColumn,
         self.m_stripCalibrationDetailsColumn, self.m_xyColumn, self.m_zrColumn,
         self.m_xyzColumn, self.m_xyzrColumn, self.m_varianceZRColumn);
   }

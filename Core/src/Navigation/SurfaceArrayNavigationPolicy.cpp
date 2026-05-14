@@ -51,6 +51,7 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
 
   ProtoLayer protoLayer(
       gctx, surfaces, Transform3{volume.localToGlobalTransform(gctx).linear()});
+  protoLayer.envelope = config.envelope;
 
   if (config.layerType == LayerType::Disc) {
     auto [binsR, binsPhi] = config.bins;

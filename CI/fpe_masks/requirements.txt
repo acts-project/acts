@@ -14,7 +14,7 @@ cffi==2.0.0
     # via cryptography
 click==8.3.3
     # via typer
-cryptography==47.0.0
+cryptography==48.0.0
     # via pyjwt
 frozenlist==1.8.0
     # via
@@ -24,7 +24,7 @@ gidgethub==5.4.0
     # via -r CI/fpe_masks/requirements.in
 idna==3.13
     # via yarl
-markdown-it-py==4.0.0
+markdown-it-py==4.2.0
     # via rich
 mdurl==0.1.2
     # via markdown-it-py
@@ -32,7 +32,7 @@ multidict==6.7.1
     # via
     #   aiohttp
     #   yarl
-propcache==0.4.1
+propcache==0.5.2
     # via
     #   aiohttp
     #   yarl

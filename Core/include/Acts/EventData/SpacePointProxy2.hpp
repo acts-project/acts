@@ -201,19 +201,26 @@ class SpacePointProxy2 {
   {
     return accessImpl(m_container->m_timeColumn);
   }
-  /// Mutable access to the variance in `Z` direction of the space point.
-  /// @return A mutable reference to the variance in `Z` direction of the space point.
+  /// Mutable access to the `variance z` of the space point.
+  /// @return A mutable reference to the `variance z` of the space point.
   float &varianceZ() const noexcept
     requires(!ReadOnly)
   {
     return accessImpl(m_container->m_varianceZColumn);
   }
-  /// Mutable access to the variance in `R` direction of the space point.
-  /// @return A mutable reference to the variance in `R` direction of the space point.
+  /// Mutable access to the `variance r` of the space point.
+  /// @return A mutable reference to the `variance r` of the space point.
   float &varianceR() const noexcept
     requires(!ReadOnly)
   {
     return accessImpl(m_container->m_varianceRColumn);
+  }
+  /// Mutable access to the `variance t` of the space point.
+  /// @return A mutable reference to the `variance t` of the space point.
+  float &varianceT() const noexcept
+    requires(!ReadOnly)
+  {
+    return accessImpl(m_container->m_varianceTColumn);
   }
   /// Mutable access to the `strip calibration details` of the space point.
   /// @return A mutable reference to the `strip calibration details` of the space point.
@@ -298,15 +305,20 @@ class SpacePointProxy2 {
   /// Const access to the `time` information of the space point.
   /// @return An optional containing the `time` information of the space point, or
   float time() const noexcept { return accessImpl(m_container->m_timeColumn); }
-  /// Const access to the variance in `Z` direction of the space point.
-  /// @return The variance in `Z` direction of the space point.
+  /// Const access to the `variance z` of the space point.
+  /// @return Value of the `variance z` of the space point.
   float varianceZ() const noexcept {
     return accessImpl(m_container->m_varianceZColumn);
   }
-  /// Const access to the variance in `R` direction of the space point.
-  /// @return The variance in `R` direction of the space point.
+  /// Const access to the `variance r` of the space point.
+  /// @return Value of the `variance r` of the space point.
   float varianceR() const noexcept {
     return accessImpl(m_container->m_varianceRColumn);
+  }
+  /// Const access to the `variance t` of the space point.
+  /// @return Value of the `variance t` of the space point.
+  float varianceT() const noexcept {
+    return accessImpl(m_container->m_varianceTColumn);
   }
   /// Const access to the `strip calibration details` of the space point.
   /// @return A const reference to the `strip calibration details` of the space point.
