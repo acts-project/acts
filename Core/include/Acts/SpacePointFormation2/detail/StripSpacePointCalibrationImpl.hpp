@@ -29,8 +29,8 @@ deriveOuterStripSpacePointCalibrationDetails(const std::array<float, 3> ihv,
   result.innerToOuterSeparationCrossInnerHalfVector = {
       iosv[1] * ihv[2] - iosv[2] * ihv[1], iosv[2] * ihv[0] - iosv[0] * ihv[2],
       iosv[0] * ihv[1] - iosv[1] * ihv[0]};
-  result.outerCenter = oc;
-  result.outerHalfVector = ohv;
+  result.outerCenter = {oc[0], oc[1], oc[2]};
+  result.outerHalfVector = {ohv[0], ohv[1], ohv[2]};
   return result;
 }
 
