@@ -197,7 +197,7 @@ class surface {
     return visit_mask<typename kernels::get_mask_value>(index);
   }
 
-  /// @returns the centroid of the surface mask in local cartesian coordinates
+  /// @returns the centroid of the surface mask in local cartesian coordinates.
   DETRAY_HOST_DEVICE
   constexpr auto centroid() const -> point3_type {
     return visit_mask<typename kernels::centroid>();
