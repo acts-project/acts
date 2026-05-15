@@ -308,7 +308,7 @@ void LineSurface::assignSurfaceBounds(
 void LineSurface::assignSurfaceMaterial(
     std::shared_ptr<const ISurfaceMaterial> material) {
   if (material == nullptr) {
-    Surface::m_surfaceMaterial = nullptr;
+    Surface::assignSurfaceMaterial(nullptr);
     return;
   }
   // check that only {}, {r}, {z} or {r,z} are allowed for line surfaces
@@ -334,7 +334,7 @@ void LineSurface::assignSurfaceMaterial(
         "are " +
         providedAxes);
   }
-  Surface::m_surfaceMaterial = std::move(material);
+  Surface::assignSurfaceMaterial(std::move(material));
 }
 
 }  // namespace Acts

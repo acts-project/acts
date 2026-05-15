@@ -403,7 +403,7 @@ void ConeSurface::assignSurfaceBounds(
 void ConeSurface::assignSurfaceMaterial(
     std::shared_ptr<const ISurfaceMaterial> material) {
   if (material == nullptr) {
-    Surface::m_surfaceMaterial = nullptr;
+    Surface::assignSurfaceMaterial(nullptr);
     return;
   }
 
@@ -427,7 +427,7 @@ void ConeSurface::assignSurfaceMaterial(
         "Allowed are {}, {AxisZ}, but provided are " +
         providedAxes);
   }
-  Surface::m_surfaceMaterial = std::move(material);
+  Surface::assignSurfaceMaterial(std::move(material));
 }
 
 }  // namespace Acts

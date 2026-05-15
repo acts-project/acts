@@ -317,6 +317,11 @@ void Surface::assignThickness(double thick) {
   m_thickness = thick;
 }
 
+void Surface::assignSurfaceMaterial(
+    std::shared_ptr<const ISurfaceMaterial> material) {
+  m_surfaceMaterial = std::move(material);
+}
+
 const Layer* Surface::associatedLayer() const {
   return m_associatedLayer;
 }

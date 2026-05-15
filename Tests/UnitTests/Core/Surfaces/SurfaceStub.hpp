@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Surfaces/InfiniteBounds.hpp"  //to get s_noBounds
+#include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -18,6 +18,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 
 namespace ActsTests {
+
 /// Surface derived class stub
 class SurfaceStub : public Acts::RegularSurface {
  public:
@@ -29,8 +30,6 @@ class SurfaceStub : public Acts::RegularSurface {
       : Acts::GeometryObject(), Acts::RegularSurface(gctx, sf, transf) {}
   explicit SurfaceStub(const Acts::SurfacePlacementBase& detelement)
       : Acts::GeometryObject(), Acts::RegularSurface(detelement) {}
-
-  ~SurfaceStub() override = default;
 
   /// Return method for the Surface type to avoid dynamic casts
   Acts::Surface::SurfaceType type() const final { return Acts::Surface::Other; }
@@ -118,12 +117,6 @@ class SurfaceStub : public Acts::RegularSurface {
       const Acts::GeometryContext& /*gctx*/,
       const Acts::Vector3& /*position*/) const final {
     return Acts::Matrix<2, 3>::Identity();
-  };
-
-  /// @copydoc Surface::assignSurfaceMaterial
-  void assignSurfaceMaterial(
-      std::shared_ptr<const Acts::ISurfaceMaterial> material) final {
-    Surface::m_surfaceMaterial = std::move(material);
   }
 
  private:

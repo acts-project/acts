@@ -557,7 +557,7 @@ void DiscSurface::assignSurfaceBounds(
 void DiscSurface::assignSurfaceMaterial(
     std::shared_ptr<const ISurfaceMaterial> material) {
   if (material == nullptr) {
-    Surface::m_surfaceMaterial = nullptr;
+    Surface::assignSurfaceMaterial(nullptr);
     return;
   }
   // check that only {}, {r}, {phi} or {r,phi} are allowed for disc surfaces
@@ -583,7 +583,7 @@ void DiscSurface::assignSurfaceMaterial(
         " but provided are " +
         providedAxes);
   }
-  Surface::m_surfaceMaterial = std::move(material);
+  Surface::assignSurfaceMaterial(std::move(material));
 }
 
 }  // namespace Acts

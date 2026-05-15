@@ -566,7 +566,7 @@ void CylinderSurface::assignSurfaceBounds(
 void CylinderSurface::assignSurfaceMaterial(
     std::shared_ptr<const ISurfaceMaterial> material) {
   if (material == nullptr) {
-    Surface::m_surfaceMaterial = nullptr;
+    Surface::assignSurfaceMaterial(nullptr);
     return;
   }
 
@@ -594,7 +594,7 @@ void CylinderSurface::assignSurfaceMaterial(
         "AxisZ}, but provided are " +
         providedAxes);
   }
-  Surface::m_surfaceMaterial = std::move(material);
+  Surface::assignSurfaceMaterial(std::move(material));
 }
 
 }  // namespace Acts

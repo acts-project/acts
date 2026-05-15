@@ -125,7 +125,7 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   MaterialSlabMatrix m_fullMaterial;
 
   /// Indicate that the local axes are swapped (only relevant for 1D case)
-  bool m_swapped{false};
+  bool m_axesSwapped{false};
 };
 
 inline const BinUtility& BinnedSurfaceMaterial::binUtility() const {
