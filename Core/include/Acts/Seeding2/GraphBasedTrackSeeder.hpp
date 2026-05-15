@@ -89,27 +89,30 @@ class GraphBasedTrackSeeder {
     float minDeltaRadius = 2.0 * Acts::UnitConstants::mm;
     /// Maximum d0 impact parameter when validating edge connection triplet
     float d0Max = 3.0 * UnitConstants::mm;
-    ///
+    /// Maximum difference in allowed tangent between candidate edge connection
     float cutDPhiMax = 0.012f;
-    ///
+    /// Maximum difference in allowed tangent between candidate edge connection
+    /// in LRT mode
     float cutDPhiMaxLrt = 0.07f;
-    ///
+    /// Maximum allowed curvature tolerance for candidate edge connections
     float cutDCurvMax = 0.001f;
-    ///
+    /// Maximum allowed curvature tolerance for candidate edge connections in
+    /// LRT mode
     float cutDCurvMaxLrt = 0.015f;
-    ///
+    /// /// Tau ratio cut threshold in LRT mode
     float tauRatioCutLrt = 0.015f;
-    ///
+    /// Minimum z0 value in LRT mode
     float minZ0Lrt = -600.0f;
-    ///
+    /// Maximum z0 value in LRT mode
     float maxZ0Lrt = 600.0f;
-    ///
+    /// When old tunings are used, this defines the minimum phi window used
     float minDeltaPhi = 0.001f;
-    ///
+    /// When old tunings are used, this defines the minimum phi window used in
+    /// LRT mode
     float minDeltaPhiLrt = 0.01f;
-    ///
+    /// Maximum radius of pixel detector
     float maxOuterRadius = 550.0f;
-    ///
+    /// Maximum radius of detector including strip modules
     float maxOuterRadiusLrt = 1050.0f;
 
     // Seed extraction options
@@ -225,6 +228,7 @@ class GraphBasedTrackSeeder {
   /// Create seeds from space points in a region of interest.
   /// @param spacePoints Space point container
   /// @param roi Region of interest descriptor
+  /// @param isPixelLayer Information on if a layer is pixel or strip
   /// @param maxLayers Maximum number of layers
   /// @param filter Tracking filter to be applied
   /// @param options Event based options such as magnetic field strength
@@ -244,6 +248,7 @@ class GraphBasedTrackSeeder {
 
   /// Create seeds from space points in a region of interest.
   /// @param nodesPerLayer Vector of node vectors organized by layer
+  /// @param isPixelLayer Information on if a layer is pixel or strip
   /// @param roi Region of interest descriptor
   /// @param filter Tracking filter to be applied
   /// @param options Event based options such as magnetic field strength
