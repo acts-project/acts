@@ -49,6 +49,9 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   const auto layerGeometry =
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
 
+  // as all layers in examples are pixel, we set entire vector to true
+  m_isPixelLayer.resize(layerGeometry.size(), true);
+
   // option that allows for adding custom eta binning (default is at 0.2)
   if (m_cfg.seedFinderConfig.etaBinWidthOverride != 0.0f) {
     layerConnectionMap.etaBinWidth = m_cfg.seedFinderConfig.etaBinWidthOverride;
@@ -97,8 +100,9 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   seeds.assignSpacePointContainer(spacePoints);
 
   // create the seeds
-  m_finder->createSeeds(coreSpacePoints, internalRoi, maxLayers, *m_filter,
-                        options, seeds);
+
+  m_finder->createSeeds(coreSpacePoints, internalRoi, m_isPixelLayer, maxLayers,
+                        *m_filter, options, seeds);
 
   seeds.assignSpacePointContainer(spacePoints);
 

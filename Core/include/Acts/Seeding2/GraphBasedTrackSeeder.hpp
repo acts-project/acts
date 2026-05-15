@@ -202,10 +202,12 @@ class GraphBasedTrackSeeder {
   };
 
   /// spacepoint information to allow nodes to be loaded in
-  struct NodeInformation{
-
-    NodeInformation(std::vector<std::vector<GbtsNode>> nodeStorage_, std::vector<bool> isPixelLayer_) : nodeStorage(std::move(nodeStorage_)), isPixelLayer(std::move(isPixelLayer_)){}
-    ///node storage
+  struct NodeInformation {
+    NodeInformation(std::vector<std::vector<GbtsNode>> nodeStorage_,
+                    std::vector<bool> isPixelLayer_)
+        : nodeStorage(std::move(nodeStorage_)),
+          isPixelLayer(std::move(isPixelLayer_)) {}
+    /// node storage
     std::vector<std::vector<GbtsNode>> nodeStorage{};
     /// information on which layers are strip or pixel
     std::vector<bool> isPixelLayer{};
@@ -228,11 +230,10 @@ class GraphBasedTrackSeeder {
   /// @param options Event based options such as magnetic field strength
   /// @param outputSeeds Container with generated seeds
   void createSeeds(const SpacePointContainer2& spacePoints,
-                   const GbtsRoiDescriptor& roi, 
+                   const GbtsRoiDescriptor& roi,
                    const std::vector<bool>& isPixelLayer,
-                   std::uint32_t maxLayers,
-                   const GbtsTrackingFilter& filter, const Options& options,
-                   SeedContainer2& outputSeeds) const;
+                   std::uint32_t maxLayers, const GbtsTrackingFilter& filter,
+                   const Options& options, SeedContainer2& outputSeeds) const;
 
   /// Create graph nodes from space points.
   /// @param spacePoints Space point container
