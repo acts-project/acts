@@ -1016,6 +1016,35 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
     assert_root_hash("ntuple_finding_gnn.root", output_file)
 
 
+@pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
+def test_gnn4itk_example(tmp_path, assert_root_hash):
+    from gnn4itk_example import runGNN4ITk
+   
+    # get required files from MODEL_STORAGE environment variable
+    model_storage = os.environ.get("MODEL_STORAGE")
+    assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
+    ci_models = Path(model_storage)
+
+    # only ODD onnx and module map
+    model = ci_models / "gnn_odd_module_map.onnx"
+    module_map = str(ci_models / "module_map_odd_2k_events.1e-03.float.v1_3_PATCH")
+
+    assert model.exists()
+    assert Path(module_map + ".doublets.root").exists()
+    assert Path(module_map + ".triplets.root").exists()
+
+    # Only check if this runs
+    runGNN4ITk(
+        inputRootDump="/shared/actsdev/fix-gnn4itk-example/athena_dump_0.root",
+        moduleMapPath=module_map,
+        gnnModel=model,
+        outputDir=tmp_path,
+        events=1,
+        logLevel=acts.logging.INFO,
+    )
+
+    
+
 @pytest.mark.odd
 def test_strip_space_points(detector_config, field, tmp_path, assert_root_hash):
     if detector_config.name == "generic":
