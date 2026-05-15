@@ -75,6 +75,9 @@ FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, double t0,
 ///
 /// @return the free parameters
 template <std::ranges::range space_point_range_t>
+[[deprecated(
+    "The broadly templated versions of estimateTrackParamsFromSeed will be "
+    "removed in the future.")]]
 FreeVector estimateTrackParamsFromSeed(space_point_range_t spRange,
                                        const Vector3& bField) {
   // Check the number of provided space points
@@ -131,6 +134,9 @@ Result<BoundVector> estimateTrackParamsFromSeed(
 ///
 /// @return bound parameters
 template <std::ranges::range space_point_range_t>
+[[deprecated(
+    "The broadly templated versions of estimateTrackParamsFromSeed will be "
+    "removed in the future.")]]
 Result<BoundVector> estimateTrackParamsFromSeed(const GeometryContext& gctx,
                                                 space_point_range_t spRange,
                                                 const Surface& surface,
