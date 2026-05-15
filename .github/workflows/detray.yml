@@ -236,7 +236,7 @@ jobs:
           ccache -z &&
           CI/dependencies/run.sh .env
           cmake -B build -S .
-          --preset=common
+          --preset=dev
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DCMAKE_BUILD_TYPE="Release"
           -DCMAKE_COMPILE_WARNING_AS_ERROR=ON
