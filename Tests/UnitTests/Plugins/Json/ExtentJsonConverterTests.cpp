@@ -44,6 +44,29 @@ BOOST_AUTO_TEST_CASE(ExtentRoundtripTests) {
                   10e-5);
 }
 
+BOOST_AUTO_TEST_CASE(ExtentEnvelopeRoundtripTests) {
+  ExtentEnvelope env;
+  env[AxisDirection::AxisR] = {1., 2.};
+  env[AxisDirection::AxisZ] = {3., 4.};
+
+  nlohmann::json j;
+  j["envelope"] = env;
+
+  ExtentEnvelope envIn = j["envelope"];
+
+  BOOST_CHECK_EQUAL(envIn[AxisDirection::AxisR][0],
+                    env[AxisDirection::AxisR][0]);
+  BOOST_CHECK_EQUAL(envIn[AxisDirection::AxisR][1],
+                    env[AxisDirection::AxisR][1]);
+  BOOST_CHECK_EQUAL(envIn[AxisDirection::AxisZ][0],
+                    env[AxisDirection::AxisZ][0]);
+  BOOST_CHECK_EQUAL(envIn[AxisDirection::AxisZ][1],
+                    env[AxisDirection::AxisZ][1]);
+  // Axes not set should remain zero
+  BOOST_CHECK_EQUAL(envIn[AxisDirection::AxisX][0], 0.);
+  BOOST_CHECK_EQUAL(envIn[AxisDirection::AxisX][1], 0.);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

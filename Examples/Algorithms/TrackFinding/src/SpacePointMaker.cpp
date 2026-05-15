@@ -131,21 +131,21 @@ Acts::Result<void> createStripSpacePoint(
   const double var2 =
       measurement2.fullCovariance()(Acts::eBoundLoc0, Acts::eBoundLoc0);
 
-  const Acts::Vector3 btmToTop1 = stripEnds1.top - stripEnds1.bottom;
-  const Acts::Vector3 btmToTop2 = stripEnds2.top - stripEnds2.bottom;
-  const double theta = std::acos(btmToTop1.dot(btmToTop2) /
-                                 (btmToTop1.norm() * btmToTop2.norm()));
+  const Acts::Vector3 innerStripCenter =
+      0.5 * (stripEnds1.top + stripEnds1.bottom);
+  const Acts::Vector3 innerStripHalfVector =
+      0.5 * (stripEnds1.top - stripEnds1.bottom);
+  const Acts::Vector3 outerStripCenter =
+      0.5 * (stripEnds2.top + stripEnds2.bottom);
+  const Acts::Vector3 outerStripHalfVector =
+      0.5 * (stripEnds2.top - stripEnds2.bottom);
+  const Acts::Vector3 stripSeparation = outerStripCenter - innerStripCenter;
+
+  const double theta = std::acos(
+      innerStripHalfVector.normalized().dot(outerStripHalfVector.normalized()));
 
   const Acts::Vector2 varZR = Acts::StripSpacePointBuilder::computeVarianceZR(
       gctx, surface1, *spacePoint, var1, var2, theta);
-
-  const Acts::Vector3 topStripVector = stripEnds1.top - stripEnds1.bottom;
-  const Acts::Vector3 bottomStripVector = stripEnds2.top - stripEnds2.bottom;
-  const Acts::Vector3 stripCenterDistance =
-      (0.5 * (stripEnds1.top + stripEnds1.bottom) -
-       0.5 * (stripEnds2.top + stripEnds2.bottom));
-  const Acts::Vector3 topStripCenter =
-      0.5 * (stripEnds1.top + stripEnds1.bottom);
 
   auto sp = spacePoints.createSpacePoint();
   sp.assignSourceLinks(
@@ -154,17 +154,17 @@ Acts::Result<void> createStripSpacePoint(
   sp.y() = spacePoint->y();
   sp.z() = spacePoint->z();
   sp.r() = Acts::fastHypot(spacePoint->x(), spacePoint->y());
-  sp.time() = nanf;
+  sp.time() = Acts::NoTime;
   sp.varianceZ() = varZR[0];
   sp.varianceR() = varZR[1];
   Eigen::Map<Eigen::Vector3f>(sp.topStripVector().data()) =
-      topStripVector.cast<float>();
+      outerStripHalfVector.cast<float>();
   Eigen::Map<Eigen::Vector3f>(sp.bottomStripVector().data()) =
-      bottomStripVector.cast<float>();
+      innerStripHalfVector.cast<float>();
   Eigen::Map<Eigen::Vector3f>(sp.stripCenterDistance().data()) =
-      stripCenterDistance.cast<float>();
+      stripSeparation.cast<float>();
   Eigen::Map<Eigen::Vector3f>(sp.topStripCenter().data()) =
-      topStripCenter.cast<float>();
+      outerStripCenter.cast<float>();
 
   return Acts::Result<void>::success();
 }
