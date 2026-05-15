@@ -48,13 +48,6 @@ nlohmann::json toJson(const IAxis& ia);
 /// @return axis object pointer
 std::unique_ptr<Acts::IAxis> fromJson(const nlohmann::json& jAxis);
 
-/// Convert an axis to json - detray style
-///
-/// @param ia the axis
-///
-/// @return a json object to represent the axis in detray json
-nlohmann::json toJsonDetray(const IAxis& ia);
-
 }  // namespace AxisJsonConverter
 
 namespace GridAccessJsonConverter {
@@ -180,74 +173,6 @@ nlohmann::json toJson(const grid_type& grid) {
     }
   }
   jGrid["data"] = jData;
-
-  return jGrid;
-}
-
-/// @brief Templated grid conversion to json
-///
-/// @tparam grid_type the type of the grid
-/// @param grid the grid object
-/// @param swapAxis - this is needed for detray
-///
-/// @note detray has a different offset for the
-/// local indices, it starts at 0
-///
-/// @return a json object to represent the grid
-template <typename grid_type>
-nlohmann::json toJsonDetray(const grid_type& grid, bool swapAxis = false) {
-  nlohmann::json jGrid;
-  // Get the grid axes & potentially swap them
-  auto axes = grid.axes();
-  if (swapAxis && grid_type::DIM == 2u) {
-    std::swap(axes[0u], axes[1u]);
-  }
-
-  nlohmann::json jAxes;
-
-  // Fill the axes in the order they are
-  for (unsigned int ia = 0u; ia < grid_type::DIM; ++ia) {
-    auto jAxis = AxisJsonConverter::toJsonDetray(*axes[ia]);
-    jAxis["label"] = ia;
-    jAxes.push_back(jAxis);
-  }
-  jGrid["axes"] = jAxes;
-
-  nlohmann::json jData;
-  // 1D connections
-  if constexpr (grid_type::DIM == 1u) {
-    for (unsigned int ib0 = 1u; ib0 <= axes[0u]->getNBins(); ++ib0) {
-      // Lookup bin
-      typename grid_type::index_t lbin;
-      lbin[0u] = ib0;
-      nlohmann::json jBin;
-      jBin["content"] = grid.atLocalBins(lbin);
-      // Corrected bin for detray
-      lbin[0u] = ib0 - 1u;
-      jBin["loc_index"] = lbin;
-      jData.push_back(jBin);
-    }
-  }
-
-  // 2D connections
-  if constexpr (grid_type::DIM == 2u) {
-    for (unsigned int ib0 = 1u; ib0 <= axes[0u]->getNBins(); ++ib0) {
-      for (unsigned int ib1 = 1u; ib1 <= axes[1u]->getNBins(); ++ib1) {
-        typename grid_type::index_t lbin;
-        // Lookup bin - respect swap (if it happened) for the lookup
-        lbin[0u] = swapAxis ? ib1 : ib0;
-        lbin[1u] = swapAxis ? ib0 : ib1;
-        nlohmann::json jBin;
-        jBin["content"] = grid.atLocalBins(lbin);
-        // Corrected bin for detray
-        lbin[0u] = ib0 - 1u;
-        lbin[1u] = ib1 - 1u;
-        jBin["loc_index"] = lbin;
-        jData.push_back(jBin);
-      }
-    }
-  }
-  jGrid["bins"] = jData;
 
   return jGrid;
 }
