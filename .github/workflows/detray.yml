@@ -38,7 +38,7 @@ jobs:
     # The build/test steps to execute.
     steps:
     # Use a standard checkout of the code.
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     # Run the CMake configuration. Test that the metadata generation runs
     - name: Configure
       run: cmake --preset detray-full-fp64
@@ -88,7 +88,7 @@ jobs:
     # The build/test steps to execute.
     steps:
     # Use a standard checkout of the code.
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     # Get the data files for the tests
     - name: Download data files
       run: Detray/data/detray_data_get_files.sh
@@ -162,7 +162,7 @@ jobs:
     # The build/test steps to execute.
     steps:
     # Use a standard checkout of the code.
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     # Run the CMake configuration.
     - name: Configure
       run: |
