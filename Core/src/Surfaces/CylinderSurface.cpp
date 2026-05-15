@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
@@ -563,38 +562,14 @@ void CylinderSurface::assignSurfaceBounds(
   m_bounds = std::move(newBounds);
 }
 
-void CylinderSurface::assignSurfaceMaterial(
-    std::shared_ptr<const ISurfaceMaterial> material) {
-  if (material == nullptr) {
-    Surface::assignSurfaceMaterial(nullptr);
-    return;
-  }
-
-  auto mad = material->materialAxisDirections();
-  // check that only {}, {rphi}, {z} or {rphi,z} are allowed for cylinder
-  // surfaces
-  if (!mad.empty() && mad != std::vector<AxisDirection>{AxisDirection::AxisZ} &&
-      mad != std::vector<AxisDirection>{AxisDirection::AxisRPhi} &&
-      mad != std::vector<AxisDirection>{AxisDirection::AxisRPhi,
-                                        AxisDirection::AxisZ}) {
-    // Create a string that lists the provided axis directions for the error
-    // message
-    std::string providedAxes = "{";
-    for (const auto& axis : mad) {
-      providedAxes += axisDirectionName(axis);
-      if (&axis != &mad.back()) {
-        providedAxes += ", ";
-      }
-    }
-    providedAxes += "}";
-
-    throw std::invalid_argument(
-        "CylinderSurface::assignSurfaceMaterial: invalid material axis "
-        "directions. Allowed are {}, {AxisZ}, {AxisRPhi} or {AxisRPhi, "
-        "AxisZ}, but provided are " +
-        providedAxes);
-  }
-  Surface::assignSurfaceMaterial(std::move(material));
+const std::vector<std::vector<AxisDirection>>&
+CylinderSurface::supportedMaterialAxesList() const {
+  static const std::vector<std::vector<AxisDirection>> supportedAxes{
+      {},
+      {AxisDirection::AxisZ},
+      {AxisDirection::AxisRPhi},
+      {AxisDirection::AxisRPhi, AxisDirection::AxisZ}};
+  return supportedAxes;
 }
 
 }  // namespace Acts

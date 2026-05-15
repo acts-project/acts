@@ -9,7 +9,6 @@
 #include "Acts/Surfaces/ConeSurface.hpp"
 
 #include "Acts/Geometry/GeometryObject.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
@@ -400,34 +399,11 @@ void ConeSurface::assignSurfaceBounds(
   m_bounds = std::move(newBounds);
 }
 
-void ConeSurface::assignSurfaceMaterial(
-    std::shared_ptr<const ISurfaceMaterial> material) {
-  if (material == nullptr) {
-    Surface::assignSurfaceMaterial(nullptr);
-    return;
-  }
-
-  auto mad = material->materialAxisDirections();
-  // check that only {}, {z} are allowed for cone surfaces
-  if (!mad.empty() && mad != std::vector<AxisDirection>{AxisDirection::AxisZ}) {
-    // Create a string that lists the provided axis directions for the error
-    // message
-    std::string providedAxes = "{";
-    for (const auto& axis : mad) {
-      providedAxes += axisDirectionName(axis);
-      if (&axis != &mad.back()) {
-        providedAxes += ", ";
-      }
-    }
-    providedAxes += "}";
-
-    throw std::invalid_argument(
-        "ConeSurface::assignSurfaceMaterial: invalid material axis "
-        "directions. "
-        "Allowed are {}, {AxisZ}, but provided are " +
-        providedAxes);
-  }
-  Surface::assignSurfaceMaterial(std::move(material));
+const std::vector<std::vector<AxisDirection>>&
+ConeSurface::supportedMaterialAxesList() const {
+  static const std::vector<std::vector<AxisDirection>> supportedAxes{
+      {}, {AxisDirection::AxisZ}};
+  return supportedAxes;
 }
 
 }  // namespace Acts

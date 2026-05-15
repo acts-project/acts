@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/EllipseBounds.hpp"
@@ -317,37 +316,14 @@ void PlaneSurface::assignSurfaceBounds(
   m_bounds = std::move(newBounds);
 }
 
-void PlaneSurface::assignSurfaceMaterial(
-    std::shared_ptr<const ISurfaceMaterial> material) {
-  if (material == nullptr) {
-    Surface::assignSurfaceMaterial(nullptr);
-    return;
-  }
-
-  auto mad = material->materialAxisDirections();
-  // check that only {}, {x}, {y}, or {x,y} are allowed for plane surfaces
-  if (!mad.empty() && mad != std::vector<AxisDirection>{AxisDirection::AxisX} &&
-      mad != std::vector<AxisDirection>{AxisDirection::AxisY} &&
-      mad != std::vector<AxisDirection>{AxisDirection::AxisX,
-                                        AxisDirection::AxisY}) {
-    // Create a string that lists the provided axis directions for the error
-    // message
-    std::string providedAxes = "{";
-    for (const auto& axis : mad) {
-      providedAxes += axisDirectionName(axis);
-      if (&axis != &mad.back()) {
-        providedAxes += ", ";
-      }
-    }
-    providedAxes += "}";
-
-    throw std::invalid_argument(
-        "PlaneSurface::assignSurfaceMaterial: invalid material axis "
-        "directions. Allowed are {}, {AxisX}, {AxisY} or {AxisX, AxisY}, but "
-        "provided are " +
-        providedAxes);
-  }
-  Surface::assignSurfaceMaterial(std::move(material));
+const std::vector<std::vector<AxisDirection>>&
+PlaneSurface::supportedMaterialAxesList() const {
+  static const std::vector<std::vector<AxisDirection>> supportedAxes{
+      {},
+      {AxisDirection::AxisX},
+      {AxisDirection::AxisY},
+      {AxisDirection::AxisX, AxisDirection::AxisY}};
+  return supportedAxes;
 }
 
 }  // namespace Acts

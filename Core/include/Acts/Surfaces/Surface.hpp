@@ -243,8 +243,7 @@ class Surface : public virtual GeometryObject,
   /// this is provided by a shared pointer
   ///
   /// @param material Material description associated to this surface
-  virtual void assignSurfaceMaterial(
-      std::shared_ptr<const ISurfaceMaterial> material);
+  void assignSurfaceMaterial(std::shared_ptr<const ISurfaceMaterial> material);
 
   /// Assign whether the surface is sensitive
   /// @param isSensitive Boolean flag to set sensitivity
@@ -535,9 +534,13 @@ class Surface : public virtual GeometryObject,
   virtual std::ostream& toStreamImpl(const GeometryContext& gctx,
                                      std::ostream& sl) const;
 
+  /// Supported material axes for this surface
+  virtual const std::vector<std::vector<AxisDirection>>&
+  supportedMaterialAxesList() const;
+
   /// Transform3 definition that positions
   /// (translation, rotation) the surface in global space
-  CloneablePtr<const Transform3> m_transform{};
+  CloneablePtr<const Transform3> m_transform;
 
  private:
   /// Pointer to the a SurfacePlacement
@@ -555,6 +558,7 @@ class Surface : public virtual GeometryObject,
 
   /// Thickness of the surface in the normal direction
   double m_thickness{0.};
+
   /// Calculate the derivative of bound track parameters w.r.t.
   /// alignment parameters of its reference surface (i.e. origin in global 3D
   /// Cartesian coordinates and its rotation represented with extrinsic Euler

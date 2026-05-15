@@ -169,10 +169,6 @@ class CylinderSurface : public RegularSurface {
   /// @param newBounds: Pointer to the new bounds
   void assignSurfaceBounds(std::shared_ptr<const CylinderBounds> newBounds);
 
-  /// @copydoc Surface::assignSurfaceMaterial
-  void assignSurfaceMaterial(
-      std::shared_ptr<const ISurfaceMaterial> material) final;
-
   /// Local to global transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -323,6 +319,9 @@ class CylinderSurface : public RegularSurface {
   detail::RealQuadraticEquation intersectionSolver(
       const Transform3& transform, const Vector3& position,
       const Vector3& direction) const;
+
+  const std::vector<std::vector<AxisDirection>>& supportedMaterialAxesList()
+      const final;
 };
 
 static_assert(RegularSurfaceConcept<CylinderSurface>,

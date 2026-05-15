@@ -9,6 +9,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
@@ -206,6 +207,12 @@ std::ostream& Surface::toStreamImpl(const GeometryContext& gctx,
   return sl;
 }
 
+const std::vector<std::vector<AxisDirection>>&
+Surface::supportedMaterialAxesList() const {
+  static const std::vector<std::vector<AxisDirection>> supportedAxes{{}};
+  return supportedAxes;
+}
+
 std::string Surface::toString(const GeometryContext& gctx) const {
   std::stringstream ss;
   ss << toStream(gctx);
@@ -319,6 +326,36 @@ void Surface::assignThickness(double thick) {
 
 void Surface::assignSurfaceMaterial(
     std::shared_ptr<const ISurfaceMaterial> material) {
+  const auto toString = [](const std::vector<AxisDirection>& axes) {
+    std::string providedAxes = "{";
+    for (const auto& axis : axes) {
+      providedAxes += axisDirectionName(axis);
+      if (&axis != &axes.back()) {
+        providedAxes += ", ";
+      }
+    }
+    providedAxes += "}";
+    return providedAxes;
+  };
+
+  if (material != nullptr) {
+    const std::vector<AxisDirection>& materialAxes =
+        material->materialAxisDirections();
+    const auto& supportedAxesList = supportedMaterialAxesList();
+    if (!materialAxes.empty() &&
+        std::ranges::find(supportedAxesList, materialAxes) ==
+            supportedAxesList.end()) {
+      std::string errorMsg =
+          "Surface::assignSurfaceMaterial: material axis directions " +
+          toString(materialAxes) +
+          " are not supported by this surface. Supported axes are: ";
+      for (const auto& supportedAxes : supportedAxesList) {
+        errorMsg += toString(supportedAxes) + " ";
+      }
+      throw std::invalid_argument(errorMsg);
+    }
+  }
+
   m_surfaceMaterial = std::move(material);
 }
 

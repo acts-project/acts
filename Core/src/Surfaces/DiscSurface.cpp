@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
@@ -554,36 +553,14 @@ void DiscSurface::assignSurfaceBounds(
   m_bounds = std::move(newBounds);
 }
 
-void DiscSurface::assignSurfaceMaterial(
-    std::shared_ptr<const ISurfaceMaterial> material) {
-  if (material == nullptr) {
-    Surface::assignSurfaceMaterial(nullptr);
-    return;
-  }
-  // check that only {}, {r}, {phi} or {r,phi} are allowed for disc surfaces
-  auto mad = material->materialAxisDirections();
-  if (!mad.empty() && mad != std::vector<AxisDirection>{AxisDirection::AxisR} &&
-      mad != std::vector<AxisDirection>{AxisDirection::AxisPhi} &&
-      mad != std::vector<AxisDirection>{AxisDirection::AxisR,
-                                        AxisDirection::AxisPhi}) {
-    // Create a string that lists the provided axis directions for the error
-    // message
-    std::string providedAxes = "{";
-    for (const auto& axis : mad) {
-      providedAxes += axisDirectionName(axis);
-      if (&axis != &mad.back()) {
-        providedAxes += ", ";
-      }
-    }
-    providedAxes += "}";
-
-    throw std::invalid_argument(
-        "DiscSurface::assignSurfaceMaterial: invalid material axis "
-        "directions. Allowed are {}, {AxisR}, {AxisPhi} or {AxisR, AxisPhi},"
-        " but provided are " +
-        providedAxes);
-  }
-  Surface::assignSurfaceMaterial(std::move(material));
+const std::vector<std::vector<AxisDirection>>&
+DiscSurface::supportedMaterialAxesList() const {
+  static const std::vector<std::vector<AxisDirection>> supportedAxes{
+      {},
+      {AxisDirection::AxisR},
+      {AxisDirection::AxisPhi},
+      {AxisDirection::AxisR, AxisDirection::AxisPhi}};
+  return supportedAxes;
 }
 
 }  // namespace Acts
