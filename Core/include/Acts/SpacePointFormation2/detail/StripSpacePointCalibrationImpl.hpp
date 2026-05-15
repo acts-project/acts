@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/StripSpacePointCalibrationDetails.hpp"
-#include "Acts/Utilities/detail/CmathLinalg.hpp"
+#include "Acts/Utilities/detail/StdSpanLinalg.hpp"
 
 #include <cmath>
 #include <span>
@@ -24,11 +24,11 @@ deriveOuterStripSpacePointCalibrationDetails(
     const std::span<const float, 3> ihv, const std::span<const float, 3> ohv,
     const std::span<const float, 3> iosv, const std::span<const float, 3> oc) {
   OuterStripSpacePointCalibrationDetailsDerived result{};
-  result.innerCrossOuterHalfVector = cmathCross(ihv, ohv);
-  result.innerToOuterSeparationCrossOuterHalfVector = cmathCross(iosv, ohv);
-  result.innerToOuterSeparationCrossInnerHalfVector = cmathCross(iosv, ihv);
-  result.outerCenter = cmathCopy(oc);
-  result.outerHalfVector = cmathCopy(ohv);
+  result.innerCrossOuterHalfVector = stdSpanCross(ihv, ohv);
+  result.innerToOuterSeparationCrossOuterHalfVector = stdSpanCross(iosv, ohv);
+  result.innerToOuterSeparationCrossInnerHalfVector = stdSpanCross(iosv, ihv);
+  result.outerCenter = stdSpanCopy(oc);
+  result.outerHalfVector = stdSpanCopy(ohv);
   return result;
 }
 
@@ -48,25 +48,25 @@ inline bool calibrateOuterStripSpacePoint(
     const std::span<const float, 3> oc, const std::span<const float, 3> ohv,
     const std::span<float, 3> calibrated, const float tolerance) {
   // scale = innerStripHalfVector dot (outerStripHalfVector cross direction)
-  const float scale = cmathDot(direction, ihvCrossOhv);
+  const float scale = stdSpanDot(direction, ihvCrossOhv);
 
   // sInner = innerToOuterSeparationVector dot (outerStripHalfVector cross
   // direction) Check if direction is inside the inner detector element
-  const float sInner = cmathDot(direction, iosvCrossOhv);
+  const float sInner = stdSpanDot(direction, iosvCrossOhv);
   if (std::abs(sInner) > std::abs(scale) * tolerance) {
     return false;
   }
 
   // sOuter = innerToOuterSeparationVector dot (innerStripHalfVector cross
   // direction) Check if direction is inside the outer detector element
-  const float sOuter = cmathDot(direction, iosvCrossIhv);
+  const float sOuter = stdSpanDot(direction, iosvCrossIhv);
   if (std::abs(sOuter) > std::abs(scale) * tolerance) {
     return false;
   }
 
   // Corrected position using the outer strip center and direction
   const float sOuterNorm = sOuter / scale;
-  cmathAddScaled(oc, ohv, sOuterNorm, calibrated);
+  stdSpanAddScaled(oc, ohv, sOuterNorm, calibrated);
   return true;
 }
 
