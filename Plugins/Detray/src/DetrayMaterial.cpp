@@ -44,7 +44,7 @@ DetrayPayloadConverter::convertBinnedSurfaceMaterial(
   detray::io::material_id gridIndexType = detray::io::material_id::unknown;
   if (bVal0 == AxisR && bVal1 == AxisPhi) {
     gridIndexType = detray::io::material_id::ring2_map;
-  } else if (bVal0 == AxisRPhi && bVal1 == AxisZ) {
+  } else if (bVal0 == AxisPhi && bVal1 == AxisZ) {
     gridIndexType = detray::io::material_id::concentric_cylinder2_map;
   } else if (bVal0 == AxisX && bVal1 == AxisY) {
     gridIndexType = detray::io::material_id::rectangle2_map;

@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZPhi) {
                               Acts::AxisDirection::AxisZ);
   binUtility += Acts::BinUtility(2u, -std::numbers::pi, std::numbers::pi,
                                  Acts::BinningOption::closed,
-                                 Acts::AxisDirection::AxisRPhi);
+                                 Acts::AxisDirection::AxisPhi);
 
   std::vector<Acts::MaterialSlab> materialSlabs0 = {materialSlab12345,
                                                     materialSlab678910};
