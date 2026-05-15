@@ -204,18 +204,6 @@ class GraphBasedTrackSeeder {
     const GbtsEtaBin* bin{};
   };
 
-  /// spacepoint information to allow nodes to be loaded in
-  struct NodeInformation {
-    NodeInformation(std::vector<std::vector<GbtsNode>> nodeStorage_,
-                    std::vector<bool> isPixelLayer_)
-        : nodeStorage(std::move(nodeStorage_)),
-          isPixelLayer(std::move(isPixelLayer_)) {}
-    /// node storage
-    std::vector<std::vector<GbtsNode>> nodeStorage{};
-    /// information on which layers are strip or pixel
-    std::vector<bool> isPixelLayer{};
-  };
-
   /// @param config Configuration for the seed finder
   /// @param geometry GBTS geometry
   /// @param logger Logging instance
