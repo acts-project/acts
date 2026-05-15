@@ -24,7 +24,7 @@ std::span<const T, N> cmathMap(const std::array<T, N>& arr) {
 }
 
 template <typename T, std::size_t N>
-void cmathCopy(const std::span<const T, N>& input,
+void cmathCopy(const std::span<const T, N> input,
                const std::span<T, N> result) {
   for (std::size_t i = 0; i < N; ++i) {
     result[i] = input[i];
