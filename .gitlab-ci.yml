@@ -394,14 +394,12 @@ linux_ubuntu_2404_clang22:
     - cvmfs
 
   variables:
+    LCG_VERSION:
     ACTS_LOG_FAILURE_THRESHOLD: WARNING
     ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
     INSTALL_DIR: ${CI_PROJECT_DIR}/install
     # force off even if it is CI mode
     ROOT_HASH_CHECKS: off
-
-
-    SETUP:
 
   cache:
     - !reference [.ccache_base, cache]
@@ -437,19 +435,6 @@ linux_ubuntu_2404_clang22:
     - ccache -z
     - cmake --build build -- -j8
     - ccache -s
-
-    - ctest --test-dir build -j$(nproc)
-
-    # Install main project for Python tests
-    - cmake --install build > install.log
-
-    # Install Python dependencies
-    - source build/this_acts_withdeps.sh
-    - python3 -m pip install -r src//Python/Examples/tests/requirements.txt
-    - cd src
-    # plotting tests with mplhep fail because an ancient mplhep version in LCG
-    # overrides the mplhep version in our venv
-    - pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
 
 lcg_107:
   extends: .lcg_base_job
@@ -500,6 +485,20 @@ lcg_109:
         COMPILER:
           - gcc15
           - clang19
+
+  after_script:
+    - ctest --test-dir build -j$(nproc)
+
+    # Install main project for Python tests
+    - cmake --install build > install.log
+
+    # Install Python dependencies
+    - source build/this_acts_withdeps.sh
+    - python3 -m pip install -r src//Python/Examples/tests/requirements.txt
+    - cd src
+    # plotting tests with mplhep fail because an ancient mplhep version in LCG
+    # overrides the mplhep version in our venv
+    - pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
 
 # Detray gitlab CI workflows
 detray_build_cuda:
