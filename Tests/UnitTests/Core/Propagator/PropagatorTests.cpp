@@ -84,6 +84,12 @@ struct SurfaceObserver {
   // the tolerance for intersection
   double tolerance = 1e-5;
 
+  // TODO https://github.com/acts-project/acts/issues/2738
+  /// Distance limit to discard intersections "behind us"
+  /// @note this is only necessary because some surfaces have more than one
+  ///       intersection
+  double nearLimit = -100 * UnitConstants::um;
+
   /// Simple result struct to be returned
   struct this_result {
     std::size_t surfaces_passed = 0;
@@ -96,33 +102,49 @@ struct SurfaceObserver {
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
                    const navigator_t& /*navigator*/, result_type& result,
-                   const Logger& /*logger*/) const {
+                   const Logger& logger) const {
     if (surface == nullptr || result.surfaces_passed != 0) {
       return Result<void>::success();
     }
 
-    // calculate the distance to the surface
-    const double distance =
-        surface
-            ->intersect(state.geoContext, stepper.position(state.stepping),
-                        stepper.direction(state.stepping),
-                        BoundaryTolerance::None())
-            .closest()
-            .pathLength();
+    // calculate the intersections with the surface
+    const auto multiIntersection = surface->intersect(
+        state.geoContext, stepper.position(state.stepping),
+        state.options.direction * stepper.direction(state.stepping),
+        BoundaryTolerance::None());
 
-    // Adjust the step size so that we cannot cross the target surface
-    state.stepping.stepSize.release(ConstrainedStep::Type::Actor);
-    state.stepping.stepSize.update(distance * state.options.direction,
-                                   ConstrainedStep::Type::Actor);
+    const double farLimit = std::numeric_limits<double>::max();
 
-    // return true if you fall below tolerance
-    if (std::abs(distance) <= tolerance) {
-      ++result.surfaces_passed;
-      result.surface_passed_r = perp(stepper.position(state.stepping));
+    if (const auto intersectionIt = std::ranges::find_if(
+            multiIntersection,
+            [&](const auto& intersection) {
+              return intersection.isValid() &&
+                     detail::checkPathLength(intersection.pathLength(),
+                                             nearLimit, farLimit, logger);
+            });
+        intersectionIt != multiIntersection.end()) {
+      // Adjust the step size so that we cannot cross the target surface
       state.stepping.stepSize.release(ConstrainedStep::Type::Actor);
+      state.stepping.stepSize.update(intersectionIt->pathLength(),
+                                     ConstrainedStep::Type::Actor);
+
+      // return true if we fall below tolerance
+      if (std::abs(intersectionIt->pathLength()) <= tolerance) {
+        ++result.surfaces_passed;
+        result.surface_passed_r = perp(stepper.position(state.stepping));
+        state.stepping.stepSize.release(ConstrainedStep::Type::Actor);
+      }
     }
 
     return Result<void>::success();
+  }
+
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+                  const navigator_t& /*navigator*/, result_type& result,
+                  const Logger& /*logger*/) const {
+    return result.surfaces_passed != 0;
   }
 };
 
@@ -134,8 +156,7 @@ using EigenPropagatorType = Propagator<EigenStepperType>;
 const double Bz = 2_T;
 auto bField = std::make_shared<BFieldType>(Vector3{0, 0, Bz});
 EigenStepperType estepper(bField);
-EigenPropagatorType epropagator(std::move(estepper), VoidNavigator(),
-                                getDefaultLogger("prop", Logging::VERBOSE));
+EigenPropagatorType epropagator(std::move(estepper), VoidNavigator());
 
 auto mCylinder = std::make_shared<CylinderBounds>(10_mm, 1000_mm);
 auto mSurface =
@@ -211,7 +232,7 @@ BOOST_DATA_TEST_CASE(
       makeVector4(pos, time), mom.normalized(), q / mom.norm(), std::nullopt,
       ParticleHypothesis::pion());
   // propagate to the cylinder surface
-  const auto& result = epropagator.propagate(start, *cSurface, options).value();
+  const auto& result = epropagator.propagate(start, options).value();
   auto& sor = result.get<so_result>();
 
   BOOST_CHECK_EQUAL(sor.surfaces_passed, 1u);

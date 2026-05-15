@@ -27,3 +27,11 @@ rules:
      - "docs/*"
     required_checks:
      - Docs / docs
+
+  - branch_filter:
+     - "main"
+     - "develop/*"
+    paths:
+     - "Detray/*"
+    required_checks:
+     - "Detray / *"

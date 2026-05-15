@@ -13,17 +13,46 @@ set(py_files
 )
 
 # Macro to add example bindings conditionally
-macro(add_examples_binding_if _name _link_libraries _flag _plugin_import)
-    # Create a lower case name version
-    string(TOLOWER ${_name} _name_lower)
+macro(add_examples_binding_if)
+    set(_options)
+    set(_one_value_args NAME FLAG PLUGIN_IMPORT)
+    set(_multi_value_args LINK_LIBRARIES)
+    cmake_parse_arguments(
+        AEBI
+        "${_options}"
+        "${_one_value_args}"
+        "${_multi_value_args}"
+        ${ARGN}
+    )
 
-    if(${_flag})
+    if(AEBI_UNPARSED_ARGUMENTS)
+        message(
+            FATAL_ERROR
+            "add_examples_binding_if got unexpected arguments: ${AEBI_UNPARSED_ARGUMENTS}"
+        )
+    endif()
+
+    if(
+        NOT DEFINED AEBI_NAME
+        OR NOT DEFINED AEBI_FLAG
+        OR NOT DEFINED AEBI_PLUGIN_IMPORT
+    )
+        message(
+            FATAL_ERROR
+            "add_examples_binding_if requires NAME, FLAG, and PLUGIN_IMPORT arguments."
+        )
+    endif()
+
+    # Create a lower case name version
+    string(TOLOWER ${AEBI_NAME} _name_lower)
+
+    if(${AEBI_FLAG})
         # automatically populate the init file with actually built modules
         #list(APPEND _plugins_built "'${_name_lower}'")
         # automatically prefix the target name
-        set(_target "ActsExamplesPythonBindings${_name}")
+        set(_target "ActsExamplesPythonBindings${AEBI_NAME}")
 
-        pybind11_add_module(${_target} src/plugins/${_name}.cpp)
+        pybind11_add_module(${_target} src/plugins/${AEBI_NAME}.cpp)
 
         install(TARGETS ${_target} DESTINATION ${_examples_python_install_dir})
 
@@ -40,16 +69,16 @@ macro(add_examples_binding_if _name _link_libraries _flag _plugin_import)
 
         target_link_libraries(
             ${_target}
-            PUBLIC Acts::Core Acts::PythonUtilities ${_link_libraries}
+            PUBLIC Acts::Core Acts::PythonUtilities ${AEBI_LINK_LIBRARIES}
         )
         # Add the dependencies
         add_dependencies(ActsPythonBindings ${_target})
     endif()
 
-    set(EXAMPLE_NAME "${_name}")
-    set(EXAMPLE_BUILD_FLAG "${_flag}")
+    set(EXAMPLE_NAME "${AEBI_NAME}")
+    set(EXAMPLE_BUILD_FLAG "${AEBI_FLAG}")
     set(PLUGIN_IMPORT "")
-    if(${_plugin_import})
+    if(${AEBI_PLUGIN_IMPORT})
         set(PLUGIN_IMPORT "from acts import ${_name_lower}")
     endif()
 
@@ -111,6 +140,8 @@ install(
     DESTINATION ${_examples_python_install_dir}
 )
 
+acts_pybind_generate_stubs(acts.examples ActsExamplesPythonBindings ActsPythonBindings)
+
 set_target_properties(
     ActsExamplesPythonBindings
     PROPERTIES
@@ -148,29 +179,106 @@ target_link_libraries(
 )
 
 # Add all plugin related examples bindings conditionally to their build flag
-add_examples_binding_if(Alignment "Acts::ExamplesAlignment;Acts::ExamplesDetectorsCommon" ACTS_BUILD_ALIGNMENT FALSE)
-add_examples_binding_if(AlignmentMillePede Acts::ExamplesAlignmentMillePede ACTS_BUILD_PLUGIN_MILLE FALSE)
-add_examples_binding_if(DD4hep Acts::ExamplesDetectorDD4hep ACTS_BUILD_EXAMPLES_DD4HEP TRUE)
-add_examples_binding_if(EDM4hep Acts::ExamplesIoEDM4hep ACTS_BUILD_EXAMPLES_EDM4HEP FALSE)
-add_examples_binding_if(Geant4
-    "Acts::ExamplesGeant4;Acts::ExamplesDetectorGeant4"
-    ACTS_BUILD_EXAMPLES_GEANT4
-    TRUE
+add_examples_binding_if(
+    NAME Alignment
+    LINK_LIBRARIES Acts::ExamplesAlignment Acts::ExamplesDetectorsCommon
+    FLAG ACTS_BUILD_ALIGNMENT
+    PLUGIN_IMPORT FALSE
 )
-add_examples_binding_if(GeoModel
-    "Acts::PluginGeoModel;Acts::ExamplesITkModuleSplitting;Acts::ExamplesDetectorGeoModel;Acts::ExamplesMuonSpectrometerMockupDetector"
-    ACTS_BUILD_PLUGIN_GEOMODEL TRUE
+add_examples_binding_if(
+    NAME AlignmentMillePede
+    LINK_LIBRARIES Acts::ExamplesAlignmentMillePede
+    FLAG ACTS_BUILD_PLUGIN_MILLE
+    PLUGIN_IMPORT FALSE
 )
-add_examples_binding_if(Gnn Acts::ExamplesTrackFindingGnn ACTS_BUILD_EXAMPLES_GNN TRUE)
-add_examples_binding_if(Hashing Acts::ExamplesTrackFinding ACTS_BUILD_EXAMPLES_HASHING FALSE)
-add_examples_binding_if(Json Acts::ExamplesIoJson ACTS_BUILD_PLUGIN_JSON TRUE)
-add_examples_binding_if(Onnx Acts::ExamplesTrackFindingML ACTS_BUILD_PLUGIN_ONNX FALSE)
-add_examples_binding_if(Pythia8 Acts::ExamplesGeneratorsPythia8 ACTS_BUILD_EXAMPLES_PYTHIA8 FALSE)
-add_examples_binding_if(Root Acts::ExamplesIoRoot ACTS_BUILD_EXAMPLES_ROOT TRUE)
-add_examples_binding_if(Svg Acts::ExamplesIoSvg ACTS_BUILD_PLUGIN_ACTSVG TRUE)
-add_examples_binding_if(TGeo Acts::ExamplesDetectorTGeo ACTS_BUILD_EXAMPLES_ROOT TRUE)
-add_examples_binding_if(Detray "Acts::PluginCovfie;Acts::ExamplesDetray" ACTS_BUILD_PLUGIN_DETRAY FALSE)
-add_examples_binding_if(TruthJet Acts::ExamplesJets ACTS_BUILD_EXAMPLES_FASTJET FALSE)
+add_examples_binding_if(
+    NAME DD4hep
+    LINK_LIBRARIES Acts::ExamplesDetectorDD4hep
+    FLAG ACTS_BUILD_EXAMPLES_DD4HEP
+    PLUGIN_IMPORT TRUE
+)
+add_examples_binding_if(
+    NAME EDM4hep
+    LINK_LIBRARIES Acts::ExamplesIoEDM4hep
+    FLAG ACTS_BUILD_EXAMPLES_EDM4HEP
+    PLUGIN_IMPORT FALSE
+)
+add_examples_binding_if(
+    NAME Geant4
+    LINK_LIBRARIES Acts::ExamplesGeant4 Acts::ExamplesDetectorGeant4
+    FLAG ACTS_BUILD_EXAMPLES_GEANT4
+    PLUGIN_IMPORT TRUE
+)
+add_examples_binding_if(
+    NAME GeoModel
+    LINK_LIBRARIES
+        Acts::PluginGeoModel
+        Acts::ExamplesITkModuleSplitting
+        Acts::ExamplesDetectorGeoModel
+        Acts::ExamplesMuonSpectrometerMockupDetector
+    FLAG ACTS_BUILD_PLUGIN_GEOMODEL
+    PLUGIN_IMPORT TRUE
+)
+add_examples_binding_if(
+    NAME Gnn
+    LINK_LIBRARIES Acts::ExamplesTrackFindingGnn
+    FLAG ACTS_BUILD_EXAMPLES_GNN
+    PLUGIN_IMPORT TRUE
+)
+add_examples_binding_if(
+    NAME Hashing
+    LINK_LIBRARIES Acts::ExamplesTrackFinding
+    FLAG ACTS_BUILD_EXAMPLES_HASHING
+    PLUGIN_IMPORT FALSE
+)
+add_examples_binding_if(
+    NAME Json
+    LINK_LIBRARIES Acts::ExamplesIoJson
+    FLAG ACTS_BUILD_PLUGIN_JSON
+    PLUGIN_IMPORT TRUE
+)
+add_examples_binding_if(
+    NAME Onnx
+    LINK_LIBRARIES Acts::ExamplesTrackFindingML
+    FLAG ACTS_BUILD_PLUGIN_ONNX
+    PLUGIN_IMPORT FALSE
+)
+add_examples_binding_if(
+    NAME Pythia8
+    LINK_LIBRARIES Acts::ExamplesGeneratorsPythia8
+    FLAG ACTS_BUILD_EXAMPLES_PYTHIA8
+    PLUGIN_IMPORT FALSE
+)
+add_examples_binding_if(
+    NAME Root
+    LINK_LIBRARIES Acts::ExamplesIoRoot
+    FLAG ACTS_BUILD_EXAMPLES_ROOT
+    PLUGIN_IMPORT TRUE
+)
+add_examples_binding_if(
+    NAME Svg
+    LINK_LIBRARIES Acts::ExamplesIoSvg
+    FLAG ACTS_BUILD_PLUGIN_ACTSVG
+    PLUGIN_IMPORT TRUE
+)
+add_examples_binding_if(
+    NAME TGeo
+    LINK_LIBRARIES Acts::ExamplesDetectorTGeo
+    FLAG ACTS_BUILD_EXAMPLES_ROOT
+    PLUGIN_IMPORT TRUE
+)
+add_examples_binding_if(
+    NAME Detray
+    LINK_LIBRARIES Acts::PluginCovfie Acts::ExamplesDetray
+    FLAG ACTS_BUILD_PLUGIN_DETRAY
+    PLUGIN_IMPORT FALSE
+)
+add_examples_binding_if(
+    NAME TruthJet
+    LINK_LIBRARIES Acts::ExamplesJets
+    FLAG ACTS_BUILD_EXAMPLES_FASTJET
+    PLUGIN_IMPORT FALSE
+)
 
 # Special case for HepMC3 as it a hard dependency
 pybind11_add_module(ActsExamplesPythonBindingsHepMC3 src/plugins/HepMC3.cpp)
