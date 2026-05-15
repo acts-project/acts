@@ -109,7 +109,7 @@ def runTrackFindingPythonOnly(
             self.prototracks(context, prototracks)
             return acts.examples.ProcessCode.SUCCESS
 
-    # s.addAlgorithm(PythonTrackFinder("PythonTrackFinder", acts.logging.INFO))
+    s.addAlgorithm(PythonTrackFinder("PythonTrackFinder", acts.logging.INFO))
 
     # ... or option 2: use truth values
     trkParamExtractor = acts.examples.ParticleTrackParamExtractor(
@@ -117,7 +117,7 @@ def runTrackFindingPythonOnly(
         inputParticles="particles_generated_selected",
         outputTrackParameters="true_parameters",
     )
-    s.addAlgorithm(trkParamExtractor)
+    # s.addAlgorithm(trkParamExtractor)
 
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
         level=acts.logging.INFO,
@@ -126,9 +126,9 @@ def runTrackFindingPythonOnly(
         inputParticleMeasurementsMap="particle_measurements_map",
         inputSimHits="simhits",
         inputMeasurementSimHitsMap="measurement_simhits_map",
-        outputProtoTracks="truth_particle_tracks",
+        outputProtoTracks="prototracks",
     )
-    s.addAlgorithm(truthTrkFndAlg)
+    # s.addAlgorithm(truthTrkFndAlg)
 
     class PythonTrackFitter(acts.examples.IAlgorithm):
         def __init__(self, name, level):
@@ -137,7 +137,7 @@ def runTrackFindingPythonOnly(
             self.prototracks = acts.examples.ReadDataHandle(
                 self, acts.examples.ProtoTrackContainer, "Prototracks"
             )
-            self.prototracks.initialize("truth_particle_tracks")
+            self.prototracks.initialize("prototracks")
 
             self.tracks = acts.examples.WriteDataHandle(
                 self, acts.examples.ConstTrackContainer, "Tracks"
@@ -176,9 +176,9 @@ def runTrackFindingPythonOnly(
                     sf = surface_map[isl.geometryId()]
 
                     trackState = track.appendTrackState()
-                    trackState.setIsMeasurement()
-                    trackState.setUncalibratedSourceLink(sl)
-                    trackState.setReferenceSurface(sf)
+                    trackState.typeFlags.isMeasurement = True
+                    trackState.uncalibratedSourceLink = sl
+                    trackState.referenceSurface = sf
 
             self.tracks(context, container.makeConst())
             return acts.examples.ProcessCode.SUCCESS
@@ -221,7 +221,9 @@ if __name__ == "__main__":
     field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
 
     digiConfigFile = srcdir / "Examples/Configs/generic-digi-smearing-config.json"
-    geoSelectionConfigFile = srcdir / "Examples/Configs/generic-pixel-sstrips-lstrips-spacepoints.json"
+    geoSelectionConfigFile = (
+        srcdir / "Examples/Configs/generic-pixel-sstrips-lstrips-spacepoints.json"
+    )
 
     outputDir = Path.cwd() / "output_track_finding_python_only"
     outputDir.mkdir(exist_ok=True)
