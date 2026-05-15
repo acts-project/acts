@@ -37,22 +37,17 @@ void addSeeding(py::module_& m) {
   m.def(
       "estimateTrackParamsFromSeed",
       [](const Vector3& sp0, double t0, const Vector3& sp1, const Vector3& sp2,
-         const Vector3& bField) {
-        return estimateTrackParamsFromSeed(sp0, t0, sp1, sp2, bField);
+         const Vector3& bField)
+          -> std::pair<FreeVector, std::array<Vector3, 3>> {
+        Vector3 tangent0 = Vector3::Zero();
+        Vector3 tangent1 = Vector3::Zero();
+        Vector3 tangent2 = Vector3::Zero();
+        const FreeVector params = estimateTrackParamsFromSeed(
+            sp0, t0, sp1, sp2, bField, &tangent0, &tangent1, &tangent2);
+        return {params, {tangent0, tangent1, tangent2}};
       },
       py::arg("sp0"), py::arg("t0"), py::arg("sp1"), py::arg("sp2"),
       py::arg("bField"));
-
-  m.def(
-      "estimateTrackTangentsFromSeed",
-      [](const Vector3& sp0, const Vector3& sp1, const Vector3& sp2,
-         const Vector3& bField) -> std::tuple<Vector3, Vector3, Vector3> {
-        Vector3 tangent0, tangent1, tangent2;
-        estimateTrackTangentsFromSeed(sp0, sp1, sp2, bField, tangent0, tangent1,
-                                      tangent2);
-        return {tangent0, tangent1, tangent2};
-      },
-      py::arg("sp0"), py::arg("sp1"), py::arg("sp2"), py::arg("bField"));
 }
 
 }  // namespace ActsPython
