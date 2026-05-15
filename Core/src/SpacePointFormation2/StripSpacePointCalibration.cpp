@@ -10,15 +10,15 @@
 
 #include "Acts/SpacePointFormation2/detail/StripSpacePointCalibrationImpl.hpp"
 
-Acts::StripSpacePointCalibrationDetailsDerived
-Acts::deriveStripSpacePointCalibrationDetails(
-    const StripSpacePointCalibrationDetails& sp) {
-  return detail::deriveStripSpacePointCalibrationDetails(sp);
+Acts::OuterStripSpacePointCalibrationDetailsDerived
+Acts::deriveOuterStripSpacePointCalibrationDetails(
+    const OuterStripSpacePointCalibrationDetails& sp) {
+  return detail::deriveOuterStripSpacePointCalibrationDetails(sp);
 }
 
 Eigen::Vector3f Acts::calibrateOuterStripSpacePoint(
     const Eigen::Vector3f& direction,
-    const StripSpacePointCalibrationDetailsDerived& sp) {
+    const OuterStripSpacePointCalibrationDetailsDerived& sp) {
   Eigen::Vector3f calibrated;
   detail::calibrateOuterStripSpacePoint(
       std::span<const float, 3>(direction.data(), direction.size()), sp,

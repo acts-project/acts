@@ -15,12 +15,12 @@
 
 namespace Acts::detail {
 
-inline StripSpacePointCalibrationDetailsDerived
-deriveStripSpacePointCalibrationDetails(std::span<const float, 3> ihv,
-                                        std::span<const float, 3> ohv,
-                                        std::span<const float, 3> iosv,
-                                        std::span<const float, 3> oc) {
-  StripSpacePointCalibrationDetailsDerived result{};
+inline OuterStripSpacePointCalibrationDetailsDerived
+deriveOuterStripSpacePointCalibrationDetails(std::span<const float, 3> ihv,
+                                             std::span<const float, 3> ohv,
+                                             std::span<const float, 3> iosv,
+                                             std::span<const float, 3> oc) {
+  OuterStripSpacePointCalibrationDetailsDerived result{};
   result.innerCrossOuterHalfVector = {ihv[1] * ohv[2] - ihv[2] * ohv[1],
                                       ihv[2] * ohv[0] - ihv[0] * ohv[2],
                                       ihv[0] * ohv[1] - ihv[1] * ohv[0]};
@@ -35,10 +35,10 @@ deriveStripSpacePointCalibrationDetails(std::span<const float, 3> ihv,
   return result;
 }
 
-inline StripSpacePointCalibrationDetailsDerived
-deriveStripSpacePointCalibrationDetails(
-    const StripSpacePointCalibrationDetails& sp) {
-  return deriveStripSpacePointCalibrationDetails(
+inline OuterStripSpacePointCalibrationDetailsDerived
+deriveOuterStripSpacePointCalibrationDetails(
+    const OuterStripSpacePointCalibrationDetails& sp) {
+  return deriveOuterStripSpacePointCalibrationDetails(
       sp.innerHalfVector, sp.outerHalfVector, sp.innerToOuterSeparation,
       sp.outerCenter);
 }
@@ -82,7 +82,7 @@ inline bool calibrateOuterStripSpacePoint(
 
 inline bool calibrateOuterStripSpacePoint(
     std::span<const float, 3> direction,
-    const StripSpacePointCalibrationDetailsDerived& sp,
+    const OuterStripSpacePointCalibrationDetailsDerived& sp,
     std::span<float, 3> calibrated, float tolerance) {
   return detail::calibrateOuterStripSpacePoint(
       direction, sp.innerCrossOuterHalfVector,

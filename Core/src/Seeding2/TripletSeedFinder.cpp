@@ -205,14 +205,14 @@ class Impl final : public TripletSeedFinder {
                                                       sinPhiM * sinTheta};
 
     // Pre-cache strip data for the loop-invariant middle and bottom SPs
-    const StripSpacePointCalibrationDetailsDerived calM =
-        detail::deriveStripSpacePointCalibrationDetails(
+    const OuterStripSpacePointCalibrationDetailsDerived calM =
+        detail::deriveOuterStripSpacePointCalibrationDetails(
             spM.bottomStripVector(), spM.topStripVector(),
             spM.stripCenterDistance(), spM.topStripCenter());
     const ConstSpacePointProxy2 spB =
         spacePoints[bottomDoublet.spacePointIndex()];
-    const StripSpacePointCalibrationDetailsDerived calB =
-        detail::deriveStripSpacePointCalibrationDetails(
+    const OuterStripSpacePointCalibrationDetailsDerived calB =
+        detail::deriveOuterStripSpacePointCalibrationDetails(
             spB.bottomStripVector(), spB.topStripVector(),
             spB.stripCenterDistance(), spB.topStripCenter());
 
@@ -295,8 +295,8 @@ class Impl final : public TripletSeedFinder {
 
       const ConstSpacePointProxy2 spT =
           spacePoints[topDoublet.spacePointIndex()];
-      const StripSpacePointCalibrationDetailsDerived calT =
-          detail::deriveStripSpacePointCalibrationDetails(
+      const OuterStripSpacePointCalibrationDetailsDerived calT =
+          detail::deriveOuterStripSpacePointCalibrationDetails(
               spT.bottomStripVector(), spT.topStripVector(),
               spT.stripCenterDistance(), spT.topStripCenter());
       std::array<float, 3> rTTransf{};

@@ -17,9 +17,9 @@ namespace Acts {
 /// Derives the strip space point calibration details.
 /// @param sp The strip space point calibration details
 /// @return The derived strip space point calibration details
-StripSpacePointCalibrationDetailsDerived
-deriveStripSpacePointCalibrationDetails(
-    const StripSpacePointCalibrationDetails& sp);
+OuterStripSpacePointCalibrationDetailsDerived
+deriveOuterStripSpacePointCalibrationDetails(
+    const OuterStripSpacePointCalibrationDetails& sp);
 
 /// Calibrates the strip space point using the assumed particle direction and
 /// the strip space point calibration details.
@@ -29,6 +29,6 @@ deriveStripSpacePointCalibrationDetails(
 /// @return The calibrated outer strip space point
 Eigen::Vector3f calibrateOuterStripSpacePoint(
     const Eigen::Vector3f& direction,
-    const StripSpacePointCalibrationDetailsDerived& sp);
+    const OuterStripSpacePointCalibrationDetailsDerived& sp);
 
 }  // namespace Acts

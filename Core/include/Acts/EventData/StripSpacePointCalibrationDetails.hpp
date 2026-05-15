@@ -12,8 +12,8 @@
 
 namespace Acts {
 
-/// Collection of strip space point details, used for the calibration.
-struct StripSpacePointCalibrationDetails final {
+/// Collection of outer strip space point details, used for the calibration.
+struct OuterStripSpacePointCalibrationDetails final {
   /// Center of the outer strip.
   std::array<float, 3> outerCenter;
   /// Separation vector from the inner strip center to the outer strip center.
@@ -26,8 +26,9 @@ struct StripSpacePointCalibrationDetails final {
   std::array<float, 3> innerHalfVector;
 };
 
-/// Derived collection of strip space point details, used for the calibration.
-struct StripSpacePointCalibrationDetailsDerived final {
+/// Derived collection of outer strip space point details, used for the
+/// calibration.
+struct OuterStripSpacePointCalibrationDetailsDerived final {
   /// Cross product of the separation vector from the inner strip center to the
   /// outer strip center with the inner half vector.
   std::array<float, 3> innerToOuterSeparationCrossInnerHalfVector;
