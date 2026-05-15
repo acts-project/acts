@@ -19,10 +19,10 @@ namespace Acts::detail {
 // (10-20%) penalty for small vector sizes.
 
 inline OuterStripSpacePointCalibrationDetailsDerived
-deriveOuterStripSpacePointCalibrationDetails(const std::array<float, 3> ihv,
-                                             const std::array<float, 3> ohv,
-                                             const std::array<float, 3> iosv,
-                                             const std::array<float, 3> oc) {
+deriveOuterStripSpacePointCalibrationDetails(const std::array<float, 3>& ihv,
+                                             const std::array<float, 3>& ohv,
+                                             const std::array<float, 3>& iosv,
+                                             const std::array<float, 3>& oc) {
   OuterStripSpacePointCalibrationDetailsDerived result{};
   result.innerCrossOuterHalfVector = stdArrayCross(ihv, ohv);
   result.innerToOuterSeparationCrossOuterHalfVector = stdArrayCross(iosv, ohv);
