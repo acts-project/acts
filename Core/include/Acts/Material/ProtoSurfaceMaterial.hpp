@@ -92,6 +92,7 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   }
 
   /// Return the axis directions for the material binning, if applicable
+  /// @return an empty vector, as ProtoSurfaceMaterial does not use axis directions
   std::vector<AxisDirection> materialAxisDirections() const final { return {}; }
 
   /// Return method for full material description of the Surface - from the

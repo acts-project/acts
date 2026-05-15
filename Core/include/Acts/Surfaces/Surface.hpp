@@ -535,6 +535,7 @@ class Surface : public virtual GeometryObject,
                                      std::ostream& sl) const;
 
   /// Supported material axes for this surface
+  /// @return A list of supported material axes
   virtual const std::vector<std::vector<AxisDirection>>&
   supportedMaterialAxesList() const;
 
