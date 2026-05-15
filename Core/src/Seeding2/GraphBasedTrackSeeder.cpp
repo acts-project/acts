@@ -43,6 +43,7 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
 
 void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer2& spacePoints,
                                         const GbtsRoiDescriptor& roi,
+                                        const std::vector<bool>& isPixelLayer,
                                         const std::uint32_t maxLayers,
                                         const GbtsTrackingFilter& filter,
                                         const Options& options,
@@ -50,11 +51,12 @@ void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer2& spacePoints,
   const std::vector<std::vector<GbtsNode>> nodesPerLayer =
       createNodes(spacePoints, maxLayers);
 
-  createSeeds(nodesPerLayer, roi, filter, options, outputSeeds);
+  createSeeds(nodesPerLayer, isPixelLayer, roi, filter, options, outputSeeds);
 }
 
 void GraphBasedTrackSeeder::createSeeds(
     const std::vector<std::vector<GbtsNode>>& nodesPerLayer,
+    const std::vector<bool>& isPixelLayer,
     const GbtsRoiDescriptor& roi, const GbtsTrackingFilter& filter,
     const Options& options, SeedContainer2& outputSeeds) const {
   GbtsNodeStorage nodeStorage(m_geometry, m_mlLut);
@@ -72,8 +74,9 @@ void GraphBasedTrackSeeder::createSeeds(
       continue;
     }
 
-    const bool isPixel = true;
-    // placeholder for now until strip hits are added in
+    // load nodes based on if they are in pixel or strip layers.
+    const bool isPixel = isPixelLayer[l];
+  
     if (isPixel) {
       nPixelLoaded += nodeStorage.loadPixelGraphNodes(
           l, nodes, m_cfg.useMl, m_cfg.maxEndcapClusterWidth);
@@ -83,7 +86,10 @@ void GraphBasedTrackSeeder::createSeeds(
   }
   ACTS_DEBUG("Loaded " << nPixelLoaded << " pixel space points and "
                        << nStripLoaded << " strip space points");
-
+  
+  std::cout<<"Loaded " << nPixelLoaded << " pixel space points and "
+                       << nStripLoaded << " strip space points"<<std::endl;
+                       
   nodeStorage.sortByPhi();
 
   nodeStorage.initializeNodes(m_cfg.useMl);
@@ -163,13 +169,17 @@ std::vector<std::vector<GbtsNode>> GraphBasedTrackSeeder::createNodes(
   auto layerColumn = spacePoints.column<std::uint32_t>("layerId");
   auto clusterWidthColumn = spacePoints.column<float>("clusterWidth");
   auto localPositionColumn = spacePoints.column<float>("localPositionY");
-
+  
   std::vector<std::vector<GbtsNode>> nodesPerLayer(maxLayers);
   // reserve for better efficiency
   for (auto& v : nodesPerLayer) {
     v.reserve(10000);
   }
 
+  // assumes worse case of all layers are pixel
+  std::vector<bool> pixelLayers{};
+  pixelLayers.reserve(maxLayers);
+  
   for (const auto& sp : spacePoints) {
     // for every sp in container,
     // add its variables to nodeStorage organised by layer
@@ -197,17 +207,17 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
     const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
     std::vector<GbtsEdge>& edgeStorage, const Options& options) const {
   // phi cut for triplets
-  const float cutDPhiMax = m_cfg.lrtMode ? 0.07f : 0.012f;
+  const float cutDPhiMax = m_cfg.lrtMode ? m_cfg.cutDPhiMaxLrt : m_cfg.cutDPhiMax;
   // curv cut for triplets
-  const float cutDCurvMax = m_cfg.lrtMode ? 0.015f : 0.001f;
+  const float cutDCurvMax = m_cfg.lrtMode ? m_cfg.cutDCurvMaxLrt : m_cfg.cutDCurvMax;
   // tau cut for doublets and triplets
-  const float cutTauRatioMax = m_cfg.lrtMode ? 0.015f : m_cfg.tauRatioCut;
-  const float minZ0 = m_cfg.lrtMode ? -600.0f : static_cast<float>(roi.zMin());
-  const float maxZ0 = m_cfg.lrtMode ? 600.0f : static_cast<float>(roi.zMax());
-  const float minDeltaPhi = m_cfg.lrtMode ? 0.01f : 0.001f;
+  const float cutTauRatioMax = m_cfg.lrtMode ? m_cfg.tauRatioCutLrt : m_cfg.tauRatioCut;
+  const float minZ0 = m_cfg.lrtMode ? m_cfg.minZ0Lrt : static_cast<float>(roi.zMin());
+  const float maxZ0 = m_cfg.lrtMode ? m_cfg.maxZ0Lrt : static_cast<float>(roi.zMax());
+  const float minDeltaPhi = m_cfg.lrtMode ? m_cfg.minDeltaPhiLrt : m_cfg.minDeltaPhi;
 
   // used to calculate Z cut on doublets
-  const float maxOuterRadius = m_cfg.lrtMode ? 1050.0f : 550.0f;
+  const float maxOuterRadius = m_cfg.lrtMode ? m_cfg.maxOuterRadiusLrt : m_cfg.maxOuterRadius;
 
   const float cutZMinU =
       minZ0 + maxOuterRadius * static_cast<float>(roi.dzdrMin());

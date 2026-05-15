@@ -89,6 +89,28 @@ class GraphBasedTrackSeeder {
     float minDeltaRadius = 2.0 * Acts::UnitConstants::mm;
     /// Maximum d0 impact parameter when validating edge connection triplet
     float d0Max = 3.0 * UnitConstants::mm;
+    ///
+    float cutDPhiMax = 0.012f;
+    ///
+    float cutDPhiMaxLrt = 0.07f;
+    ///
+    float cutDCurvMax = 0.001f;
+    ///
+    float cutDCurvMaxLrt = 0.015f;
+    ///
+    float tauRatioCutLrt = 0.015f;
+    ///
+    float minZ0Lrt = -600.0f;
+    ///
+    float maxZ0Lrt = 600.0f;
+    ///
+    float minDeltaPhi = 0.001f;
+    ///
+    float minDeltaPhiLrt = 0.01f;
+    ///
+    float maxOuterRadius = 550.0f;
+    ///
+    float maxOuterRadiusLrt = 1050.0f;
 
     // Seed extraction options
     /// Minimum eta for edge masking.
@@ -179,6 +201,16 @@ class GraphBasedTrackSeeder {
     const GbtsEtaBin* bin{};
   };
 
+  /// spacepoint information to allow nodes to be loaded in
+  struct NodeInformation{
+
+    NodeInformation(std::vector<std::vector<GbtsNode>> nodeStorage_, std::vector<bool> isPixelLayer_) : nodeStorage(std::move(nodeStorage_)), isPixelLayer(std::move(isPixelLayer_)){}
+    ///node storage
+    std::vector<std::vector<GbtsNode>> nodeStorage{};
+    /// information on which layers are strip or pixel
+    std::vector<bool> isPixelLayer{};
+  };
+
   /// @param config Configuration for the seed finder
   /// @param geometry GBTS geometry
   /// @param logger Logging instance
@@ -196,7 +228,9 @@ class GraphBasedTrackSeeder {
   /// @param options Event based options such as magnetic field strength
   /// @param outputSeeds Container with generated seeds
   void createSeeds(const SpacePointContainer2& spacePoints,
-                   const GbtsRoiDescriptor& roi, std::uint32_t maxLayers,
+                   const GbtsRoiDescriptor& roi, 
+                   const std::vector<bool>& isPixelLayer,
+                   std::uint32_t maxLayers,
                    const GbtsTrackingFilter& filter, const Options& options,
                    SeedContainer2& outputSeeds) const;
 
@@ -214,6 +248,7 @@ class GraphBasedTrackSeeder {
   /// @param options Event based options such as magnetic field strength
   /// @param outputSeeds Container with generated seeds
   void createSeeds(const std::vector<std::vector<GbtsNode>>& nodesPerLayer,
+                   const std::vector<bool>& isPixelLayer,
                    const GbtsRoiDescriptor& roi,
                    const GbtsTrackingFilter& filter, const Options& options,
                    SeedContainer2& outputSeeds) const;
