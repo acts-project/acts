@@ -263,7 +263,7 @@ class Impl final : public TripletSeedFinder {
 
       std::array<float, 3> rMTransf{};
       if (!detail::calibrateOuterStripSpacePoint(
-              directionMiddle, calM, rMTransf, m_cfg.toleranceParam)) {
+              directionMiddle, calM, m_cfg.toleranceParam, rMTransf)) {
         continue;
       }
 
@@ -281,7 +281,7 @@ class Impl final : public TripletSeedFinder {
 
       std::array<float, 3> rBTransf{};
       if (!detail::calibrateOuterStripSpacePoint(
-              directionBottom, calB, rBTransf, m_cfg.toleranceParam)) {
+              directionBottom, calB, m_cfg.toleranceParam, rBTransf)) {
         continue;
       }
 
@@ -295,13 +295,11 @@ class Impl final : public TripletSeedFinder {
 
       const ConstSpacePointProxy2 spT =
           spacePoints[topDoublet.spacePointIndex()];
-      const OuterStripSpacePointCalibrationDetailsDerived calT =
-          detail::deriveOuterStripSpacePointCalibrationDetails(
-              spT.bottomStripVector(), spT.topStripVector(),
-              spT.stripCenterDistance(), spT.topStripCenter());
       std::array<float, 3> rTTransf{};
-      if (!detail::calibrateOuterStripSpacePoint(directionTop, calT, rTTransf,
-                                                 m_cfg.toleranceParam)) {
+      if (!detail::calibrateOuterStripSpacePoint(
+              directionTop, spT.bottomStripVector(), spT.topStripVector(),
+              spT.stripCenterDistance(), spT.topStripCenter(),
+              m_cfg.toleranceParam, rTTransf)) {
         continue;
       }
 

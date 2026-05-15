@@ -22,7 +22,7 @@ Eigen::Vector3f Acts::calibrateOuterStripSpacePoint(
     const OuterStripSpacePointCalibrationDetailsDerived& sp) {
   std::array<float, 3> calibrated{};
   detail::calibrateOuterStripSpacePoint(detail::stdArrayCopy(direction), sp,
-                                        calibrated,
-                                        std::numeric_limits<float>::infinity());
+                                        std::numeric_limits<float>::infinity(),
+                                        calibrated);
   return detail::stdArrayToEigen(calibrated);
 }
