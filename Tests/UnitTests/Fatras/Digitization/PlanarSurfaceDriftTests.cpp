@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDriftEnhancedTests) {
   std::vector<Vector3> intersectionPositions = {};
 
   // A test context
-  GeometryContext tContext;
+  GeometryContext tContext = GeometryContext::dangerouslyDefaultConstruct();
 
   // Original 3D segment output
   std::ofstream fiout;
