@@ -9,7 +9,7 @@
 #include "Acts/SpacePointFormation2/StripSpacePointCalibration.hpp"
 
 #include "Acts/SpacePointFormation2/detail/StripSpacePointCalibrationImpl.hpp"
-#include "Acts/Utilities/detail/StdSpanLinalg.hpp"
+#include "Acts/Utilities/detail/StdArrayLinalg.hpp"
 
 Acts::OuterStripSpacePointCalibrationDetailsDerived
 Acts::deriveOuterStripSpacePointCalibrationDetails(
@@ -20,9 +20,9 @@ Acts::deriveOuterStripSpacePointCalibrationDetails(
 Eigen::Vector3f Acts::calibrateOuterStripSpacePoint(
     const Eigen::Vector3f& direction,
     const OuterStripSpacePointCalibrationDetailsDerived& sp) {
-  Eigen::Vector3f calibrated;
-  detail::calibrateOuterStripSpacePoint(detail::stdSpanMap(direction), sp,
-                                        detail::stdSpanMap(calibrated),
+  std::array<float, 3> calibrated{};
+  detail::calibrateOuterStripSpacePoint(detail::stdArrayCopy(direction), sp,
+                                        calibrated,
                                         std::numeric_limits<float>::infinity());
-  return calibrated;
+  return detail::stdArrayToEigen(calibrated);
 }
