@@ -33,7 +33,7 @@ void cmathCopy(const std::span<const T, N> input,
 
 template <typename T, std::size_t N>
 std::array<T, N> cmathCopy(const std::span<const T, N> input) {
-  std::array<T, N> result;
+  std::array<T, N> result{};
   cmathCopy(input, cmathMap(result));
   return result;
 }
@@ -50,7 +50,7 @@ void cmathAddScaled(const std::span<const T, N> a,
 template <typename T, std::size_t N>
 std::array<T, N> cmathAddScaled(const std::span<const T, N> a,
                                 const std::span<const T, N> b, const T scale) {
-  std::array<T, N> result;
+  std::array<T, N> result{};
   cmathAddScaled(a, b, scale, cmathMap(result));
   return result;
 }
@@ -75,7 +75,7 @@ void cmathCross(const std::span<const T, 3> a, const std::span<const T, 3> b,
 template <typename T>
 std::array<T, 3> cmathCross(const std::span<const T, 3> a,
                             const std::span<const T, 3> b) {
-  std::array<T, 3> result;
+  std::array<T, 3> result{};
   cmathCross(a, b, cmathMap(result));
   return result;
 }
