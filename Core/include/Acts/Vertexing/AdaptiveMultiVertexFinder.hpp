@@ -10,19 +10,13 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Vertexing/AMVFInfo.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 #include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
-#include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
-
-#include <functional>
-#include <type_traits>
 
 namespace Acts {
 
@@ -42,11 +36,15 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
     /// @param bIn Input magnetic field
     Config(VertexFitter fitter, std::shared_ptr<const IVertexFinder> sfinder,
            ImpactPointEstimator ipEst,
-           std::shared_ptr<const MagneticFieldProvider> bIn)
+           std::shared_ptr<const MagneticFieldProvider> bIn) noexcept
         : vertexFitter(std::move(fitter)),
           seedFinder(std::move(sfinder)),
           ipEstimator(std::move(ipEst)),
           bField{std::move(bIn)} {}
+
+    /// Move constructor
+    /// @param other is the other adaptive multi vertex finder
+    Config(Config&& other) noexcept = default;
 
     /// Vertex fitter
     VertexFitter vertexFitter;
@@ -57,6 +55,7 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
     /// ImpactPointEstimator
     ImpactPointEstimator ipEstimator;
 
+    /// Magnetic field provider for track propagation and vertex finding
     std::shared_ptr<const MagneticFieldProvider> bField;
 
     /// Max z interval used for adding tracks to fit:
@@ -159,8 +158,10 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
 
   /// State struct for fulfilling interface
   struct State {
+    /// Magnetic field context for field evaluations
     std::reference_wrapper<const MagneticFieldContext> magContext;
 
+    /// State object for the seed vertex finder
     IVertexFinder::State seedFinderState;
   };
 
@@ -186,8 +187,6 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
           "No vertex fitter provided.");
     }
   }
-
-  AdaptiveMultiVertexFinder(AdaptiveMultiVertexFinder&&) = default;
 
   /// @brief Function that performs the adaptive
   /// multi-vertex finding
@@ -235,7 +234,7 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   /// from seed track collection in last iteration
   ///
   /// @return The seed vertex
-  Result<std::optional<Vertex>> doSeeding(
+  Result<std::vector<Vertex>> doSeeding(
       const std::vector<InputTrack>& trackVector, Vertex& currentConstraint,
       const VertexingOptions& vertexingOptions,
       IVertexFinder::State& seedFinderState,
@@ -344,11 +343,11 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   /// @param[in] geoCtx The geometry context to access global positions
   ///
   /// @return Incompatible track was removed
-  bool removeTrackIfIncompatible(Vertex& vtx,
-                                 std::vector<InputTrack>& seedTracks,
-                                 VertexFitterState& fitterState,
-                                 std::vector<InputTrack>& removedSeedTracks,
-                                 const GeometryContext& geoCtx) const;
+  Result<void> removeTrackIfIncompatible(
+      Vertex& vtx, std::vector<InputTrack>& seedTracks,
+      VertexFitterState& fitterState,
+      std::vector<InputTrack>& removedSeedTracks,
+      const GeometryContext& geoCtx) const;
 
   /// @brief Method that evaluates if the new vertex candidate should
   /// be kept, i.e. saved, or not

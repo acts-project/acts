@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/GeoModel/GeoModelConversionError.hpp"
+#include "ActsPlugins/GeoModel/GeoModelConversionError.hpp"
 
 #include <string>
 
@@ -19,7 +19,7 @@ class GeoModelConversionErrorCategory : public std::error_category {
 
   // Return what each enum means in text.
   std::string message(int c) const final {
-    using Acts::GeoModelConversionError;
+    using ActsPlugins::GeoModelConversionError;
 
     switch (static_cast<GeoModelConversionError>(c)) {
       case GeoModelConversionError::WrongShapeForConverter:
@@ -39,7 +39,8 @@ class GeoModelConversionErrorCategory : public std::error_category {
 
 }  // namespace
 
-std::error_code Acts::make_error_code(Acts::GeoModelConversionError e) {
+std::error_code ActsPlugins::make_error_code(
+    ActsPlugins::GeoModelConversionError e) {
   static GeoModelConversionErrorCategory c;
   return {static_cast<int>(e), c};
 }

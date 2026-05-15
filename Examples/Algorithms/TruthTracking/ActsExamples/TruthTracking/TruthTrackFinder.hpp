@@ -9,8 +9,11 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -33,11 +36,19 @@ class TruthTrackFinder final : public IAlgorithm {
     std::string inputParticles;
     /// The input particle-measurements map collection.
     std::string inputParticleMeasurementsMap;
+    /// The input measurements collection that is used to sort the proto tracks.
+    std::string inputMeasurements;
+    /// The input sim hits collection that is used to create the proto tracks.
+    std::string inputSimHits;
+    /// The input measurement-sim hits map collection.
+    std::string inputMeasurementSimHitsMap;
     /// The output proto tracks collection.
     std::string outputProtoTracks;
   };
 
-  TruthTrackFinder(const Config& config, Acts::Logging::Level level);
+  explicit TruthTrackFinder(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 
@@ -49,11 +60,19 @@ class TruthTrackFinder final : public IAlgorithm {
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
 
-  ReadDataHandle<InverseMultimap<SimBarcode>> m_inputParticleMeasurementsMap{
+  ReadDataHandle<ParticleMeasurementsMap> m_inputParticleMeasurementsMap{
       this, "InputParticleMeasurementsMap"};
 
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};
+
+  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
+                                                           "InputMeasurements"};
+
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputHits"};
+
+  ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
+      this, "MeasurementSimHitsMap"};
 };
 
 }  // namespace ActsExamples

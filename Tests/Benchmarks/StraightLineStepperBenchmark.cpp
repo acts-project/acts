@@ -11,7 +11,7 @@
 #include "StepperBenchmarkCommons.hpp"
 
 using namespace Acts;
-using namespace Acts::Test;
+using namespace ActsTests;
 
 using Stepper = StraightLineStepper;
 

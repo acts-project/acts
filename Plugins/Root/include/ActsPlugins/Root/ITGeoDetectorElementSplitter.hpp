@@ -1,0 +1,46 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "Acts/Geometry/GeometryContext.hpp"
+
+#include <memory>
+#include <vector>
+
+class TGeoNode;
+
+namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
+
+class TGeoDetectorElement;
+
+/// @brief ITGeoElementSplitter
+///
+/// Interface class that allows to define splitting of TGeoElements into
+/// sub-elements
+class ITGeoDetectorElementSplitter {
+ public:
+  virtual ~ITGeoDetectorElementSplitter() = default;
+
+  /// Take a geometry context and TGeoElement and split it into sub elements
+  ///
+  /// @param gctx is a geometry context object
+  /// @param tgde is a TGeoDetectorElement that is eventually split
+  ///
+  /// @note If no split is performed the unsplit detector element is returned
+  ///
+  /// @return a vector of TGeoDetectorElement objects
+  virtual std::vector<std::shared_ptr<const ActsPlugins::TGeoDetectorElement>>
+  split(const Acts::GeometryContext& gctx,
+        std::shared_ptr<const ActsPlugins::TGeoDetectorElement> tgde) const = 0;
+};
+
+/// @}
+}  // namespace ActsPlugins

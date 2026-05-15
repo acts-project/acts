@@ -14,7 +14,6 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
-#include <ranges>
 
 #include <boost/algorithm/string/join.hpp>
 

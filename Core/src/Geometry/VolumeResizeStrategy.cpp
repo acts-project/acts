@@ -8,9 +8,8 @@
 
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
 
-namespace Acts {
-
-std::ostream& operator<<(std::ostream& os, VolumeResizeStrategy strategy) {
+std::ostream& Acts::operator<<(std::ostream& os,
+                               VolumeResizeStrategy strategy) {
   switch (strategy) {
     case VolumeResizeStrategy::Expand:
       os << "Expand";
@@ -24,5 +23,3 @@ std::ostream& operator<<(std::ostream& os, VolumeResizeStrategy strategy) {
   }
   return os;
 }
-
-}  // namespace Acts

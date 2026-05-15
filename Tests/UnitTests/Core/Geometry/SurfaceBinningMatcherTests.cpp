@@ -23,10 +23,14 @@
 
 #include <boost/format.hpp>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
+
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(PlaneSurfaceMatcher) {
   auto identity = Transform3::Identity();
@@ -80,4 +84,6 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceMatcher) {
                   similarPhiSurface.get()));
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

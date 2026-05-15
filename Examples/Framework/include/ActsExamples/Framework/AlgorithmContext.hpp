@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
-#include <Acts/Geometry/GeometryContext.hpp>
-#include <Acts/MagneticField/MagneticFieldContext.hpp>
-#include <Acts/Utilities/CalibrationContext.hpp>
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
+#include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
 
 namespace ActsExamples {
 
@@ -41,16 +41,18 @@ struct AlgorithmContext {
     return (*this);
   }
 
-  std::size_t algorithmNumber;       ///< Unique algorithm identifier
-  std::size_t eventNumber;           ///< Unique event identifier
-  WhiteBoard& eventStore;            ///< Per-event data store
-  Acts::GeometryContext geoContext;  ///< Per-event geometry context
+  std::size_t algorithmNumber;  ///< Unique algorithm identifier
+  std::size_t eventNumber;      ///< Unique event identifier
+  WhiteBoard& eventStore;       ///< Per-event data store
+  Acts::GeometryContext geoContext{
+      Acts::GeometryContext::
+          dangerouslyDefaultConstruct()};  ///< Per-event geometry context
   Acts::MagneticFieldContext
       magFieldContext;                    ///< Per-event magnetic Field context
   Acts::CalibrationContext calibContext;  ///< Per-event calibration context
   std::size_t threadId;                   ///< Thread ID
 
-  Acts::FpeMonitor* fpeMonitor = nullptr;
+  ActsPlugins::FpeMonitor* fpeMonitor = nullptr;
 };
 
 }  // namespace ActsExamples

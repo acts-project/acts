@@ -35,6 +35,8 @@ class CombinatorialKalmanFilterErrorCategory : public std::error_category {
       case CombinatorialKalmanFilterError::PropagationReachesMaxSteps:
         return "Propagation reaches max steps before track finding is "
                "finished";
+      case CombinatorialKalmanFilterError::NoMeasurementExpected:
+        return "No measurement expected on the current surface";
       default:
         return "unknown";
     }

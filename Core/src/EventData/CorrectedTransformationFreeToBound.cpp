@@ -10,33 +10,29 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
-#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/ThrowAssert.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <memory>
 #include <ostream>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
-Acts::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_, double alpha_,
-                                                   double beta_)
+namespace Acts {
+
+FreeToBoundCorrection::FreeToBoundCorrection(bool apply_, double alpha_,
+                                             double beta_)
     : apply(apply_), alpha(alpha_), beta(beta_) {}
 
-Acts::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_)
-    : apply(apply_) {}
+FreeToBoundCorrection::FreeToBoundCorrection(bool apply_) : apply(apply_) {}
 
-Acts::FreeToBoundCorrection::operator bool() const {
+FreeToBoundCorrection::operator bool() const {
   return apply;
 }
 
-Acts::detail::CorrectedFreeToBoundTransformer::CorrectedFreeToBoundTransformer(
+detail::CorrectedFreeToBoundTransformer::CorrectedFreeToBoundTransformer(
     double alpha, double beta, double cosIncidentAngleMinCutoff,
     double cosIncidentAngleMaxCutoff)
     : m_alpha(alpha),
@@ -44,7 +40,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::CorrectedFreeToBoundTransformer(
       m_cosIncidentAngleMinCutoff(cosIncidentAngleMinCutoff),
       m_cosIncidentAngleMaxCutoff(cosIncidentAngleMaxCutoff) {}
 
-Acts::detail::CorrectedFreeToBoundTransformer::CorrectedFreeToBoundTransformer(
+detail::CorrectedFreeToBoundTransformer::CorrectedFreeToBoundTransformer(
     const FreeToBoundCorrection& freeToBoundCorrection) {
   m_alpha = freeToBoundCorrection.alpha;
   m_beta = freeToBoundCorrection.beta;
@@ -52,11 +48,10 @@ Acts::detail::CorrectedFreeToBoundTransformer::CorrectedFreeToBoundTransformer(
   m_cosIncidentAngleMaxCutoff = freeToBoundCorrection.cosIncidentAngleMaxCutoff;
 }
 
-std::optional<std::tuple<Acts::BoundVector, Acts::BoundSquareMatrix>>
-Acts::detail::CorrectedFreeToBoundTransformer::operator()(
-    const Acts::FreeVector& freeParams,
-    const Acts::FreeSquareMatrix& freeCovariance, const Acts::Surface& surface,
-    const Acts::GeometryContext& geoContext, Direction navDir,
+std::optional<std::tuple<BoundVector, BoundMatrix>>
+detail::CorrectedFreeToBoundTransformer::operator()(
+    const FreeVector& freeParams, const FreeMatrix& freeCovariance,
+    const Surface& surface, const GeometryContext& geoContext, Direction navDir,
     const Logger& logger) const {
   // Get the incidence angle
   Vector3 dir = freeParams.segment<3>(eFreeDir0);
@@ -81,10 +76,10 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   sampledFreeParams.reserve(sampleSize);
 
   // Initialize the covariance sqrt root matrix
-  FreeSquareMatrix covSqrt = FreeSquareMatrix::Zero();
+  FreeMatrix covSqrt = FreeMatrix::Zero();
   // SVD decomposition: freeCovariance = U*S*U^T here
-  Eigen::JacobiSVD<FreeSquareMatrix> svd(
-      freeCovariance, Eigen::ComputeFullU | Eigen::ComputeFullV);
+  Eigen::JacobiSVD<FreeMatrix> svd(freeCovariance,
+                                   Eigen::ComputeFullU | Eigen::ComputeFullV);
   auto S = svd.singularValues();
   FreeMatrix U = svd.matrixU();
   // Get the sqrt root matrix of S
@@ -106,21 +101,21 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
 
   // Sample the free parameters
   // 1. the nominal parameter
-  sampledFreeParams.push_back(
-      {freeParams, lambda / kappa,
-       lambda / kappa + (1.0 - m_alpha * m_alpha + m_beta)});
+  sampledFreeParams.emplace_back(
+      freeParams, lambda / kappa,
+      lambda / kappa + (1.0 - m_alpha * m_alpha + m_beta));
   // 2. the shifted parameters
   for (unsigned i = 0; i < eFreeSize; ++i) {
-    sampledFreeParams.push_back(
-        {freeParams + covSqrt.col(i) * gamma, 0.5 / kappa, 0.5 / kappa});
-    sampledFreeParams.push_back(
-        {freeParams - covSqrt.col(i) * gamma, 0.5 / kappa, 0.5 / kappa});
+    sampledFreeParams.emplace_back(freeParams + covSqrt.col(i) * gamma,
+                                   0.5 / kappa, 0.5 / kappa);
+    sampledFreeParams.emplace_back(freeParams - covSqrt.col(i) * gamma,
+                                   0.5 / kappa, 0.5 / kappa);
   }
 
   // Initialize the mean of the bound parameters
   BoundVector bpMean = BoundVector::Zero();
   // Initialize the bound covariance
-  BoundSquareMatrix bv = BoundSquareMatrix::Zero();
+  BoundMatrix bv = BoundMatrix::Zero();
 
   // The transformed bound parameters and weight for each sampled free
   // parameters
@@ -140,7 +135,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     return std::nullopt;
   }
   auto nominalBound = nominalRes.value();
-  transformedBoundParams.push_back({nominalBound, cweightNom});
+  transformedBoundParams.emplace_back(nominalBound, cweightNom);
   bpMean = bpMean + mweightNom * nominalBound;
 
   // 2. Loop over the rest sample points of the free parameters to get the
@@ -150,7 +145,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     FreeVector correctedFreeParams = params;
 
     // Reintersect to get the corrected free params without boundary check
-    SurfaceIntersection intersection =
+    Intersection3D intersection =
         surface
             .intersect(geoContext, params.segment<3>(eFreePos0),
                        navDir * params.segment<3>(eFreeDir0),
@@ -170,7 +165,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     }
 
     auto bp = result.value();
-    transformedBoundParams.push_back({bp, cweight});
+    transformedBoundParams.emplace_back(bp, cweight);
     bpMean = bpMean + mweight * bp;
   }
 
@@ -184,3 +179,5 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
 
   return std::make_tuple(bpMean, bv);
 }
+
+}  // namespace Acts

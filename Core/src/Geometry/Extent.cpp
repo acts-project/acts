@@ -11,13 +11,14 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
-#include <cmath>
 #include <cstddef>
 #include <iomanip>
 #include <limits>
 #include <numbers>
 
-Acts::Extent::Extent(const ExtentEnvelope& envelope)
+namespace Acts {
+
+Extent::Extent(const ExtentEnvelope& envelope)
     : m_constrains(0), m_envelope(envelope) {
   m_range[toUnderlying(AxisDirection::AxisR)] =
       Range1D<double>(0., std::numeric_limits<double>::max());
@@ -29,9 +30,8 @@ Acts::Extent::Extent(const ExtentEnvelope& envelope)
       Range1D<double>(0., std::numeric_limits<double>::max());
 }
 
-void Acts::Extent::extend(const Vector3& vtx,
-                          const std::vector<AxisDirection>& aDirs,
-                          bool applyEnv, bool fillHistograms) {
+void Extent::extend(const Vector3& vtx, const std::vector<AxisDirection>& aDirs,
+                    bool applyEnv, bool fillHistograms) {
   for (auto aDir : aDirs) {
     // Get the casted value given the binning value description
     double cValue = VectorHelpers::cast(vtx, aDir);
@@ -55,9 +55,8 @@ void Acts::Extent::extend(const Vector3& vtx,
   }
 }
 
-void Acts::Extent::extend(const Extent& rhs,
-                          const std::vector<AxisDirection>& aDirs,
-                          bool applyEnv) {
+void Extent::extend(const Extent& rhs, const std::vector<AxisDirection>& aDirs,
+                    bool applyEnv) {
   for (auto aDir : aDirs) {
     // The value is constraint, envelope can be optional
     if (rhs.constrains(aDir)) {
@@ -83,8 +82,7 @@ void Acts::Extent::extend(const Extent& rhs,
   }
 }
 
-void Acts::Extent::addConstrain(const Acts::Extent& rhs,
-                                const ExtentEnvelope& envelope) {
+void Extent::addConstrain(const Extent& rhs, const ExtentEnvelope& envelope) {
   for (const auto& aDir : allAxisDirections()) {
     if (rhs.constrains(aDir) && !constrains(aDir)) {
       const auto& cRange = rhs.range(aDir);
@@ -95,7 +93,7 @@ void Acts::Extent::addConstrain(const Acts::Extent& rhs,
   }
 }
 
-void Acts::Extent::set(AxisDirection aDir, double min, double max) {
+void Extent::set(AxisDirection aDir, double min, double max) {
   double minval = min;
   if (aDir == AxisDirection::AxisR && minval < 0.) {
     minval = 0.;
@@ -104,7 +102,7 @@ void Acts::Extent::set(AxisDirection aDir, double min, double max) {
   m_constrains.set(toUnderlying(aDir));
 }
 
-void Acts::Extent::setMin(AxisDirection aDir, double min) {
+void Extent::setMin(AxisDirection aDir, double min) {
   double minval = min;
   if (aDir == AxisDirection::AxisR && minval < 0.) {
     minval = 0.;
@@ -113,16 +111,16 @@ void Acts::Extent::setMin(AxisDirection aDir, double min) {
   m_constrains.set(toUnderlying(aDir));
 }
 
-void Acts::Extent::setMax(AxisDirection aDir, double max) {
+void Extent::setMax(AxisDirection aDir, double max) {
   m_range[toUnderlying(aDir)].setMax(0u, max);
   m_constrains.set(toUnderlying(aDir));
 }
 
-void Acts::Extent::setEnvelope(const ExtentEnvelope& envelope) {
+void Extent::setEnvelope(const ExtentEnvelope& envelope) {
   m_envelope = envelope;
 }
 
-bool Acts::Extent::contains(const Vector3& vtx) const {
+bool Extent::contains(const Vector3& vtx) const {
   Extent checkExtent;
   for (const auto& bv : allAxisDirections()) {
     if (constrains(bv)) {
@@ -133,8 +131,8 @@ bool Acts::Extent::contains(const Vector3& vtx) const {
   return contains(checkExtent);
 }
 
-bool Acts::Extent::contains(const Extent& rhs,
-                            std::optional<AxisDirection> aDir) const {
+bool Extent::contains(const Extent& rhs,
+                      std::optional<AxisDirection> aDir) const {
   // Helper to check including a constraint bit set check
   auto checkContainment = [&](AxisDirection bvc) -> bool {
     if (!constrains(bvc)) {
@@ -151,8 +149,8 @@ bool Acts::Extent::contains(const Extent& rhs,
   return checkContainment(aDir.value());
 }
 
-bool Acts::Extent::intersects(const Extent& rhs,
-                              std::optional<AxisDirection> aDir) const {
+bool Extent::intersects(const Extent& rhs,
+                        std::optional<AxisDirection> aDir) const {
   // Helper to check including a constraint bit set check
   auto checkIntersect = [&](AxisDirection bvc) -> bool {
     if (!constrains(bvc) || !rhs.constrains(bvc)) {
@@ -169,15 +167,15 @@ bool Acts::Extent::intersects(const Extent& rhs,
   return checkIntersect(aDir.value());
 }
 
-bool Acts::Extent::constrains(AxisDirection aDir) const {
+bool Extent::constrains(AxisDirection aDir) const {
   return m_constrains.test(static_cast<std::size_t>(aDir));
 }
 
-bool Acts::Extent::constrains() const {
+bool Extent::constrains() const {
   return m_constrains.count() > 0;
 }
 
-bool Acts::Extent::operator==(const Extent& e) const {
+bool Extent::operator==(const Extent& e) const {
   if (m_constrains != e.m_constrains) {
     return false;
   }
@@ -193,7 +191,7 @@ bool Acts::Extent::operator==(const Extent& e) const {
   return true;
 }
 
-std::string Acts::Extent::toString(const std::string& indent) const {
+std::string Extent::toString(const std::string& indent) const {
   std::stringstream sl;
   sl << indent << "Extent in space :" << std::endl;
   for (const auto& bv : allAxisDirections()) {
@@ -207,7 +205,9 @@ std::string Acts::Extent::toString(const std::string& indent) const {
 }
 
 // Overload of << operator for std::ostream for debug output
-std::ostream& Acts::operator<<(std::ostream& sl, const Extent& rhs) {
+std::ostream& operator<<(std::ostream& sl, const Extent& rhs) {
   sl << rhs.toString();
   return sl;
 }
+
+}  // namespace Acts

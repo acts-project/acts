@@ -13,11 +13,17 @@
 
 namespace Acts {
 
+/// Error codes for surface operations
+/// @ingroup errors
 enum class SurfaceError {
   // ensure all values are non-zero
+  /// Global to local transformation failed: position not on surface.
   GlobalPositionNotOnSurface = 1,
 };
 
+/// Create error code from SurfaceError
+/// @param e The error code enum value
+/// @return Standard error code
 std::error_code make_error_code(Acts::SurfaceError e);
 
 }  // namespace Acts

@@ -28,6 +28,28 @@ BOOST_AUTO_TEST_CASE(Version) {
 }
 
 BOOST_AUTO_TEST_CASE(CommitHash) {
-  BOOST_CHECK(!std::string_view(Acts::CommitHash).empty());
-  BOOST_CHECK(!std::string_view(Acts::CommitHashShort).empty());
+  // CommitHash can be empty by default at build time
+  // This test just checks that the variables are accessible
+  auto hash = Acts::CommitHash;
+  auto hashShort = Acts::CommitHashShort;
+  static_cast<void>(hash);
+  static_cast<void>(hashShort);
+}
+
+BOOST_AUTO_TEST_CASE(VersionInfo) {
+  // Test VersionInfo creation from header
+  auto headerInfo = Acts::VersionInfo::fromHeader();
+  BOOST_CHECK_EQUAL(headerInfo.versionMajor, Acts::VersionMajor);
+  BOOST_CHECK_EQUAL(headerInfo.versionMinor, Acts::VersionMinor);
+  BOOST_CHECK_EQUAL(headerInfo.versionPatch, Acts::VersionPatch);
+
+  // Test VersionInfo creation from library (should have no hash)
+  auto libraryInfo = Acts::VersionInfo::fromLibrary();
+  BOOST_CHECK_EQUAL(libraryInfo.versionMajor, Acts::VersionMajor);
+  BOOST_CHECK_EQUAL(libraryInfo.versionMinor, Acts::VersionMinor);
+  BOOST_CHECK_EQUAL(libraryInfo.versionPatch, Acts::VersionPatch);
+  BOOST_CHECK(!libraryInfo.commitHash.has_value());
+
+  // Test equality comparison
+  BOOST_CHECK(libraryInfo == libraryInfo);
 }

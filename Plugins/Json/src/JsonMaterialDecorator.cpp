@@ -6,17 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Json/JsonMaterialDecorator.hpp"
+#include "ActsPlugins/Json/JsonMaterialDecorator.hpp"
 
 namespace Acts {
 
 JsonMaterialDecorator::JsonMaterialDecorator(
     const MaterialMapJsonConverter::Config& rConfig,
-    const std::string& jFileName, Acts::Logging::Level level,
-    bool clearSurfaceMaterial, bool clearVolumeMaterial)
+    const std::string& jFileName, Acts::Logging::Level level)
     : m_readerConfig(rConfig),
-      m_clearSurfaceMaterial(clearSurfaceMaterial),
-      m_clearVolumeMaterial(clearVolumeMaterial),
       m_logger{getDefaultLogger("JsonMaterialDecorator", level)} {
   // the material reader
   Acts::MaterialMapJsonConverter jmConverter(rConfig, level);
@@ -45,11 +42,6 @@ JsonMaterialDecorator::JsonMaterialDecorator(
 
 void JsonMaterialDecorator::decorate(Surface& surface) const {
   ACTS_VERBOSE("Processing surface: " << surface.geometryId());
-  // Clear the material if registered to do so
-  if (m_clearSurfaceMaterial) {
-    ACTS_VERBOSE("-> Clearing surface material");
-    surface.assignSurfaceMaterial(nullptr);
-  }
   // Try to find the surface in the map
   auto sMaterial = m_surfaceMaterialMap.find(surface.geometryId());
   if (sMaterial != m_surfaceMaterialMap.end()) {
@@ -64,10 +56,6 @@ void JsonMaterialDecorator::decorate(Surface& surface) const {
 void JsonMaterialDecorator::decorate(TrackingVolume& volume) const {
   ACTS_VERBOSE("Processing volume: " << volume.geometryId());
   // Clear the material if registered to do so
-  if (m_clearVolumeMaterial) {
-    ACTS_VERBOSE("-> Clearing volume material");
-    volume.assignVolumeMaterial(nullptr);
-  }
   // Try to find the volume in the map
   auto vMaterial = m_volumeMaterialMap.find(volume.geometryId());
   if (vMaterial != m_volumeMaterialMap.end()) {

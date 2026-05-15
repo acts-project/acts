@@ -50,6 +50,7 @@ class RegularSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param pos is the global position where the normal vector is constructed
   /// @param direction is the direction of the normal vector (ignored for @c RegularSurface)
+  /// @return Normal vector at the given position
   Vector3 normal(const GeometryContext& gctx, const Vector3& pos,
                  const Vector3& direction) const final;
 

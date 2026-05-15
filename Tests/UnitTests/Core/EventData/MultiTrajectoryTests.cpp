@@ -10,46 +10,33 @@
 #include <boost/test/tools/context.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/detail/MultiTrajectoryTestsCommon.hpp"
-#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/EventData/detail/TestTrackState.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-#include <algorithm>
-#include <array>
-#include <ostream>
 #include <random>
-#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
-#include <variant>
-#include <vector>
 
 namespace {
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-using namespace Acts::Test;
 using namespace Acts::detail::Test;
 using namespace Acts::HashedStringLiteral;
 namespace bd = boost::unit_test::data;
 
-using ParametersVector = BoundTrackParameters::ParametersVector;
-using CovarianceMatrix = BoundTrackParameters::CovarianceMatrix;
+using ParametersVector = BoundVector;
+using CovarianceMatrix = BoundMatrix;
 using Jacobian = BoundMatrix;
 
-const GeometryContext gctx;
+const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 // fixed seed for reproducible tests
 std::default_random_engine rng(31415);
 
@@ -65,7 +52,9 @@ using CommonTests = MultiTrajectoryTestsCommon<Factory>;
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(EventDataMultiTrajectory)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE(Build) {
   CommonTests ct;
@@ -304,3 +293,5 @@ BOOST_AUTO_TEST_CASE(ChangeSourceLinkType) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

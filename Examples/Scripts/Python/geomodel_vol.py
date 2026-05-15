@@ -3,9 +3,6 @@ import argparse
 from acts import (
     logging,
     GeometryContext,
-    CylindricalContainerBuilder,
-    DetectorBuilder,
-    GeometryIdGenerator,
 )
 from acts import geomodel as gm
 from acts import examples
@@ -126,7 +123,7 @@ def main():
 
     args = p.parse_args()
 
-    gContext = acts.GeometryContext()
+    gContext = acts.GeometryContext.dangerouslyDefaultConstruct()
     logLevel = logging.INFO
 
     materialDecorator = None

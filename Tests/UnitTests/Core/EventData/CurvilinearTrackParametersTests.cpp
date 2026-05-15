@@ -12,12 +12,12 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <limits>
@@ -31,8 +31,8 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 
 constexpr auto eps = 8 * std::numeric_limits<double>::epsilon();
-const GeometryContext geoCtx;
-const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+const BoundMatrix cov = BoundMatrix::Identity();
 
 void checkParameters(const BoundTrackParameters& params, double phi,
                      double theta, double p, double q, const Vector4& pos4,
@@ -81,12 +81,14 @@ void checkParameters(const BoundTrackParameters& params, double phi,
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(EventDataCurvilinearTrackParameters)
+namespace ActsTests {
 
-BOOST_DATA_TEST_CASE(
-    NeutralConstruct,
-    posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps, x, y, z,
-    time, phiInput, theta, p) {
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
+
+BOOST_DATA_TEST_CASE(NeutralConstruct,
+                     posSymmetric * posSymmetric * posSymmetric * ts * phis *
+                         thetas * ps,
+                     x, y, z, time, phiInput, theta, p) {
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
   const Vector4 pos4(x, y, z, time);
@@ -104,10 +106,10 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
 }
 
-BOOST_DATA_TEST_CASE(
-    ChargedConstruct,
-    posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
-    x, y, z, time, phiInput, theta, p, q) {
+BOOST_DATA_TEST_CASE(ChargedConstruct,
+                     posSymmetric * posSymmetric * posSymmetric * ts * phis *
+                         thetas * ps * qsNonZero,
+                     x, y, z, time, phiInput, theta, p, q) {
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
   const Vector4 pos4(x, y, z, time);
@@ -126,10 +128,10 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
 }
 
-BOOST_DATA_TEST_CASE(
-    AnyConstruct,
-    posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsAny, x, y,
-    z, time, phiInput, theta, p, q) {
+BOOST_DATA_TEST_CASE(AnyConstruct,
+                     posSymmetric * posSymmetric * posSymmetric * ts * phis *
+                         thetas * ps * qsAny,
+                     x, y, z, time, phiInput, theta, p, q) {
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
   const Vector4 pos4(x, y, z, time);
@@ -151,3 +153,5 @@ BOOST_DATA_TEST_CASE(
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

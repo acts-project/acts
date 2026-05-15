@@ -17,10 +17,10 @@ message(STATUS "Building Detray as part of the Acts project")
 set(DETRAY_VERSION "v${_acts_detray_version}")
 
 # Declare where to get Detray from.
-FetchContent_Declare(Detray SYSTEM ${ACTS_DETRAY_SOURCE})
+FetchContent_Declare(Detray)
 
 # Options used in the build of Detray.
-set(ACTS_DETRAY_SCALARTYPE "double")
+set(ACTS_DETRAY_SCALARTYPE "float")
 
 set(DETRAY_CUSTOM_SCALARTYPE
     "${ACTS_DETRAY_SCALARTYPE}"
@@ -29,11 +29,10 @@ set(DETRAY_CUSTOM_SCALARTYPE
 )
 
 set(DETRAY_BUILD_TEST_UTILS
-    ON
+    OFF
     CACHE BOOL
     "Turn on the build of the Detray test utilities"
 )
-
 set(DETRAY_BUILD_UNITTESTS
     OFF
     CACHE BOOL
@@ -54,49 +53,42 @@ set(DETRAY_BUILD_BENCHMARKS
     CACHE BOOL
     "Turn off the build of the Detray benchmarks"
 )
+set(DETRAY_ARRAY_PLUGIN
+    ON
+    CACHE BOOL
+    "Turn on the build of the Detray std::array algebra code"
+)
 set(DETRAY_EIGEN_PLUGIN
     ON
     CACHE BOOL
-    "Turn on the build of the Detray Eigen code"
+    "Turn on the build of the Detray Eigen algebra code"
 )
-set(DETRAY_VC_PLUGIN OFF CACHE BOOL "Turn off the build of the Detray Vc code")
 
 set(DETRAY_SETUP_VECMEM OFF CACHE BOOL "Do not set up VecMem as part of Detray")
-set(DETRAY_SETUP_ALGEBRA_PLUGINS
-    OFF
-    CACHE BOOL
-    "Do not set up Algebra Plugins as part of Detray"
-)
-set(DETRAY_SETUP_GOOGLETEST
-    OFF
-    CACHE BOOL
-    "Do not set up GoogleTest as part of Detray"
-)
 set(DETRAY_SETUP_BENCHMARK
     OFF
     CACHE BOOL
     "Do not set up Google Benchmark as part of Detray"
 )
-set(DETRAY_SETUP_THRUST ON CACHE BOOL "Set up Thrust as part of Detray")
-set(DETRAY_SETUP_COVFIE OFF CACHE BOOL "Do not set up covfie as part of Detray")
 set(DETRAY_SETUP_NLOHMANN
     OFF
     CACHE BOOL
     "Do not set up Nlohmann as part of Detray"
 )
+set(DETRAY_SETUP_COVFIE OFF CACHE BOOL "Do not set up covfie as part of Detray")
 set(DETRAY_SETUP_ACTSVG OFF CACHE BOOL "Do not set up Actsvg as part of Detray")
-set(DETRAY_SETUP_DFELIBS
-    ON
-    CACHE BOOL
-    "Do not set up Dfelibs as part of Detray"
-)
-set(DETRAY_SVG_DISPLAY OFF CACHE BOOL "No not build the ActSVG display module")
+set(DETRAY_SVG_DISPLAY ON CACHE BOOL "Build the ActSVG display module")
 
-set(DETRAY_SETUP_NLOHMANN
-    OFF
-    CACHE BOOL
-    "Do not set up nlohmann as part of Detray"
+set(DETRAY_GENERATE_METADATA
+    "itk_metadata"
+    CACHE STRING
+    "Turn on the build of the ITk metadata for Traccc"
 )
 
 #Now set up its build.
+set(FETCHCONTENT_SOURCE_DIR_DETRAY
+    "${CMAKE_SOURCE_DIR}/Detray/"
+    CACHE STRING
+    ""
+)
 FetchContent_MakeAvailable(Detray)

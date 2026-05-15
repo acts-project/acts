@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Propagator/detail/SteppingLogger.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -23,11 +22,10 @@ class TFile;
 class TTree;
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// @class RootPropagationStepsWriter
 ///
-/// Write out the steps of test propgations for stepping validation,
+/// Write out the steps of test propagations for stepping validation,
 /// each step sequence is one entry in the root file for optimised
 /// data writing speed.
 /// The event number is part of the written data.

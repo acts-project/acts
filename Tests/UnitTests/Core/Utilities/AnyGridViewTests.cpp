@@ -19,9 +19,11 @@
 #include <utility>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(AnyGridViewTests)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 // Helper function to create a 1D grid with int values
 auto createIntGrid1D() {
@@ -397,4 +399,4 @@ BOOST_AUTO_TEST_CASE(TypeDeduction) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

@@ -111,7 +111,7 @@ using PointLikeIndices = TupleFilter<PointLikeProcessTrait, processes_t>;
 /// Two different type of interaction processes are supported: continuous and
 /// point-like interactions.
 ///
-/// Continuous processes scale with the passed material. They tpyically
+/// Continuous processes scale with the passed material. They typically
 /// describe effective results of a large number of small interactions such as
 /// multiple scattering or ionisation. Continuous process types **must** provide
 /// a call operator with the following signature:
@@ -175,13 +175,18 @@ class InteractionList {
  public:
   /// Point-like interaction selection.
   struct Selection {
+    /// X0 (radiation length) limit for interaction selection
     double x0Limit = std::numeric_limits<double>::infinity();
+    /// L0 (absorption length) limit for interaction selection
     double l0Limit = std::numeric_limits<double>::infinity();
+    /// X0-based process index for point-like interactions
     std::size_t x0Process = std::numeric_limits<std::size_t>::max();
+    /// L0-based process index for point-like interactions
     std::size_t l0Process = std::numeric_limits<std::size_t>::max();
   };
 
   /// Disable a specific process identified by index.
+  /// @param process Index of the process to disable
   void disable(std::size_t process) { m_mask.set(process); }
   /// Disable a specific process identified by type.
   ///
@@ -193,6 +198,7 @@ class InteractionList {
   }
 
   /// Access a specific process identified by index.
+  /// @return Reference to the process at the specified index
   template <std::size_t kProcess>
   std::tuple_element_t<kProcess, Processes>& get() {
     return std::get<kProcess>(m_processes);
@@ -201,6 +207,7 @@ class InteractionList {
   ///
   /// @warning This function only works if all configured processes have
   ///   different types.
+  /// @return Reference to the process of the specified type
   template <typename process_t>
   process_t& get() {
     return std::get<process_t>(m_processes);

@@ -14,11 +14,15 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <utility>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_construction_test) {
@@ -85,27 +89,30 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test) {
   Direction fDir = Direction::Forward();
   Direction bDir = Direction::Backward();
 
-  MaterialUpdateStage pre = MaterialUpdateStage::PreUpdate;
-  MaterialUpdateStage full = MaterialUpdateStage::FullUpdate;
-  MaterialUpdateStage post = MaterialUpdateStage::PostUpdate;
+  const MaterialUpdateMode none = MaterialUpdateMode::NoUpdate;
+  const MaterialUpdateMode pre = MaterialUpdateMode::PreUpdate;
+  const MaterialUpdateMode post = MaterialUpdateMode::PostUpdate;
+  const MaterialUpdateMode full = MaterialUpdateMode::FullUpdate;
 
   // (a) Forward factor material test
-  BOOST_CHECK_EQUAL(hsmfwd.factor(fDir, full), 1.);
+  BOOST_CHECK_EQUAL(hsmfwd.factor(fDir, none), 0.);
   BOOST_CHECK_EQUAL(hsmfwd.factor(fDir, pre), 0.);
   BOOST_CHECK_EQUAL(hsmfwd.factor(fDir, post), 1.);
+  BOOST_CHECK_EQUAL(hsmfwd.factor(fDir, full), 1.);
 
-  BOOST_CHECK_EQUAL(hsmfwd.factor(bDir, full), 1.);
+  BOOST_CHECK_EQUAL(hsmfwd.factor(fDir, none), 0.);
   BOOST_CHECK_EQUAL(hsmfwd.factor(bDir, pre), 1.);
   BOOST_CHECK_EQUAL(hsmfwd.factor(bDir, post), 0.);
+  BOOST_CHECK_EQUAL(hsmfwd.factor(bDir, full), 1.);
 
-  auto matFwdFull = hsmfwd.materialSlab(Vector3{0., 0., 0.}, fDir, full);
-  auto matBwdFull = hsmfwd.materialSlab(Vector3{0., 0., 0.}, bDir, full);
+  auto matFwdPre = hsmfwd.materialSlab(Vector3{0., 0., 0.}, fDir, pre);
+  auto matBwdPre = hsmfwd.materialSlab(Vector3{0., 0., 0.}, bDir, pre);
 
   auto matFwdPost = hsmfwd.materialSlab(Vector3{0., 0., 0.}, fDir, post);
   auto matBwdPost = hsmfwd.materialSlab(Vector3{0., 0., 0.}, bDir, post);
 
-  auto matFwdPre = hsmfwd.materialSlab(Vector3{0., 0., 0.}, fDir, pre);
-  auto matBwdPre = hsmfwd.materialSlab(Vector3{0., 0., 0.}, bDir, pre);
+  auto matFwdFull = hsmfwd.materialSlab(Vector3{0., 0., 0.}, fDir, full);
+  auto matBwdFull = hsmfwd.materialSlab(Vector3{0., 0., 0.}, bDir, full);
 
   BOOST_CHECK_EQUAL(mat, matFwdFull);
   BOOST_CHECK_EQUAL(mat, matBwdFull);
@@ -117,57 +124,60 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test) {
   BOOST_CHECK_EQUAL(mat, matBwdPre);
 
   // (b) Split factor material test
-  BOOST_CHECK_EQUAL(hsmhalf.factor(fDir, full), 1.);
   CHECK_CLOSE_REL(hsmhalf.factor(fDir, pre), 0.5, 1e-6);
   CHECK_CLOSE_REL(hsmhalf.factor(fDir, post), 0.5, 1e-6);
+  BOOST_CHECK_EQUAL(hsmhalf.factor(fDir, full), 1.);
 
-  BOOST_CHECK_EQUAL(hsmhalf.factor(bDir, full), 1.);
   CHECK_CLOSE_REL(hsmhalf.factor(bDir, pre), 0.5, 1e-6);
   CHECK_CLOSE_REL(hsmhalf.factor(bDir, post), 0.5, 1e-6);
-
-  matFwdFull = hsmhalf.materialSlab(Vector3{0., 0., 0.}, fDir, full);
-  matBwdFull = hsmhalf.materialSlab(Vector3{0., 0., 0.}, bDir, full);
-
-  matFwdPost = hsmhalf.materialSlab(Vector3{0., 0., 0.}, fDir, post);
-  matBwdPost = hsmhalf.materialSlab(Vector3{0., 0., 0.}, bDir, post);
+  BOOST_CHECK_EQUAL(hsmhalf.factor(bDir, full), 1.);
 
   matFwdPre = hsmhalf.materialSlab(Vector3{0., 0., 0.}, fDir, pre);
   matBwdPre = hsmhalf.materialSlab(Vector3{0., 0., 0.}, bDir, pre);
 
-  BOOST_CHECK_EQUAL(mat, matFwdFull);
-  BOOST_CHECK_EQUAL(mat, matBwdFull);
+  matFwdPost = hsmhalf.materialSlab(Vector3{0., 0., 0.}, fDir, post);
+  matBwdPost = hsmhalf.materialSlab(Vector3{0., 0., 0.}, bDir, post);
 
-  BOOST_CHECK_EQUAL(matHalf, matFwdPost);
-  BOOST_CHECK_EQUAL(matHalf, matBwdPost);
+  matFwdFull = hsmhalf.materialSlab(Vector3{0., 0., 0.}, fDir, full);
+  matBwdFull = hsmhalf.materialSlab(Vector3{0., 0., 0.}, bDir, full);
 
   BOOST_CHECK_EQUAL(matHalf, matFwdPre);
   BOOST_CHECK_EQUAL(matHalf, matBwdPre);
 
-  // c) Forward factor material test
-  BOOST_CHECK_EQUAL(hsmbwd.factor(fDir, full), 1.);
-  BOOST_CHECK_EQUAL(hsmbwd.factor(fDir, pre), 1.);
-  BOOST_CHECK_EQUAL(hsmbwd.factor(fDir, post), 0.);
-
-  BOOST_CHECK_EQUAL(hsmbwd.factor(bDir, full), 1.);
-  BOOST_CHECK_EQUAL(hsmbwd.factor(bDir, pre), 0.);
-  BOOST_CHECK_EQUAL(hsmbwd.factor(bDir, post), 1.);
-
-  matFwdFull = hsmbwd.materialSlab(Vector3{0., 0., 0.}, fDir, full);
-  matBwdFull = hsmbwd.materialSlab(Vector3{0., 0., 0.}, bDir, full);
-
-  matFwdPost = hsmbwd.materialSlab(Vector3{0., 0., 0.}, fDir, post);
-  matBwdPost = hsmbwd.materialSlab(Vector3{0., 0., 0.}, bDir, post);
-
-  matFwdPre = hsmbwd.materialSlab(Vector3{0., 0., 0.}, fDir, pre);
-  matBwdPre = hsmbwd.materialSlab(Vector3{0., 0., 0.}, bDir, pre);
+  BOOST_CHECK_EQUAL(matHalf, matFwdPost);
+  BOOST_CHECK_EQUAL(matHalf, matBwdPost);
 
   BOOST_CHECK_EQUAL(mat, matFwdFull);
   BOOST_CHECK_EQUAL(mat, matBwdFull);
 
-  BOOST_CHECK_EQUAL(vacuum, matFwdPost);
-  BOOST_CHECK_EQUAL(mat, matBwdPost);
+  // c) Forward factor material test
+  BOOST_CHECK_EQUAL(hsmbwd.factor(fDir, pre), 1.);
+  BOOST_CHECK_EQUAL(hsmbwd.factor(fDir, post), 0.);
+  BOOST_CHECK_EQUAL(hsmbwd.factor(fDir, full), 1.);
+
+  BOOST_CHECK_EQUAL(hsmbwd.factor(bDir, pre), 0.);
+  BOOST_CHECK_EQUAL(hsmbwd.factor(bDir, post), 1.);
+  BOOST_CHECK_EQUAL(hsmbwd.factor(bDir, full), 1.);
+
+  matFwdPre = hsmbwd.materialSlab(Vector3{0., 0., 0.}, fDir, pre);
+  matBwdPre = hsmbwd.materialSlab(Vector3{0., 0., 0.}, bDir, pre);
+
+  matFwdPost = hsmbwd.materialSlab(Vector3{0., 0., 0.}, fDir, post);
+  matBwdPost = hsmbwd.materialSlab(Vector3{0., 0., 0.}, bDir, post);
+
+  matFwdFull = hsmbwd.materialSlab(Vector3{0., 0., 0.}, fDir, full);
+  matBwdFull = hsmbwd.materialSlab(Vector3{0., 0., 0.}, bDir, full);
 
   BOOST_CHECK_EQUAL(mat, matFwdPre);
   BOOST_CHECK_EQUAL(vacuum, matBwdPre);
+
+  BOOST_CHECK_EQUAL(vacuum, matFwdPost);
+  BOOST_CHECK_EQUAL(mat, matBwdPost);
+
+  BOOST_CHECK_EQUAL(mat, matFwdFull);
+  BOOST_CHECK_EQUAL(mat, matBwdFull);
 }
-}  // namespace Acts::Test
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

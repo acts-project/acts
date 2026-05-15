@@ -4,6 +4,11 @@ from pathlib import Path
 
 import acts
 import acts.examples
+from acts.examples.root import (
+    RootTrackStatesWriter,
+    RootTrackSummaryWriter,
+    RootTrackFitterPerformanceWriter,
+)
 
 from truth_tracking_kalman import runTruthTrackingKalman
 
@@ -17,7 +22,9 @@ def runRefittingKf(
     outputDir: Path,
     multipleScattering: bool = True,
     energyLoss: bool = True,
-    reverseFilteringMomThreshold=0 * u.GeV,
+    reverseFilteringMomThreshold=float("inf"),
+    reverseFilteringCovarianceScaling=100.0,
+    useJosephFormulation: bool = False,
     s: acts.examples.Sequencer = None,
 ):
     s = runTruthTrackingKalman(
@@ -25,6 +32,9 @@ def runRefittingKf(
         field,
         digiConfigFile=digiConfigFile,
         outputDir=outputDir,
+        reverseFilteringMomThreshold=0 * u.GeV,  # use direct smoothing
+        reverseFilteringCovarianceScaling=reverseFilteringCovarianceScaling,
+        useJosephFormulation=useJosephFormulation,
         s=s,
     )
 
@@ -32,9 +42,11 @@ def runRefittingKf(
         "multipleScattering": multipleScattering,
         "energyLoss": energyLoss,
         "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
+        "reverseFilteringCovarianceScaling": reverseFilteringCovarianceScaling,
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
         "level": acts.logging.INFO,
         "chi2Cut": float("inf"),
+        "useJosephFormulation": useJosephFormulation,
     }
 
     s.addAlgorithm(
@@ -42,6 +54,7 @@ def runRefittingKf(
             level=acts.logging.INFO,
             inputTracks="kf_tracks",
             outputTracks="kf_refit_tracks",
+            initialVarInflation=6 * [100.0],
             fit=acts.examples.makeKalmanFitterFunction(
                 trackingGeometry, field, **kalmanOptions
             ),
@@ -60,7 +73,7 @@ def runRefittingKf(
     )
 
     s.addWriter(
-        acts.examples.RootTrackStatesWriter(
+        RootTrackStatesWriter(
             level=acts.logging.INFO,
             inputTracks="kf_refit_tracks",
             inputParticles="particles_selected",
@@ -72,7 +85,7 @@ def runRefittingKf(
     )
 
     s.addWriter(
-        acts.examples.RootTrackSummaryWriter(
+        RootTrackSummaryWriter(
             level=acts.logging.INFO,
             inputTracks="kf_refit_tracks",
             inputParticles="particles_selected",
@@ -82,7 +95,7 @@ def runRefittingKf(
     )
 
     s.addWriter(
-        acts.examples.TrackFitterPerformanceWriter(
+        RootTrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="kf_refit_tracks",
             inputParticles="particles_selected",

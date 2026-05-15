@@ -10,15 +10,17 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/Extent.hpp"
-#include "Acts/Plugins/Json/ExtentJsonConverter.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "ActsPlugins/Json/ExtentJsonConverter.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <nlohmann/json.hpp>
 
 using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(ExtentJsonConverter)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(JsonSuite)
 
 BOOST_AUTO_TEST_CASE(ExtentRoundtripTests) {
   Extent e;
@@ -42,4 +44,29 @@ BOOST_AUTO_TEST_CASE(ExtentRoundtripTests) {
                   10e-5);
 }
 
+BOOST_AUTO_TEST_CASE(ExtentEnvelopeRoundtripTests) {
+  ExtentEnvelope env;
+  env[AxisDirection::AxisR] = {1., 2.};
+  env[AxisDirection::AxisZ] = {3., 4.};
+
+  nlohmann::json j;
+  j["envelope"] = env;
+
+  ExtentEnvelope envIn = j["envelope"];
+
+  BOOST_CHECK_EQUAL(envIn[AxisDirection::AxisR][0],
+                    env[AxisDirection::AxisR][0]);
+  BOOST_CHECK_EQUAL(envIn[AxisDirection::AxisR][1],
+                    env[AxisDirection::AxisR][1]);
+  BOOST_CHECK_EQUAL(envIn[AxisDirection::AxisZ][0],
+                    env[AxisDirection::AxisZ][0]);
+  BOOST_CHECK_EQUAL(envIn[AxisDirection::AxisZ][1],
+                    env[AxisDirection::AxisZ][1]);
+  // Axes not set should remain zero
+  BOOST_CHECK_EQUAL(envIn[AxisDirection::AxisX][0], 0.);
+  BOOST_CHECK_EQUAL(envIn[AxisDirection::AxisX][1], 0.);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

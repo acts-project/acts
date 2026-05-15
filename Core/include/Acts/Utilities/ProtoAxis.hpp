@@ -56,9 +56,13 @@ class ProtoAxis {
 
   /// Custom assignment operator
   /// @param other is the right hand side ProtoAxis
+  /// @return Reference to this ProtoAxis for assignment chaining
   ProtoAxis& operator=(const ProtoAxis& other);
 
+  /// Move constructor
   ProtoAxis(ProtoAxis&&) = default;
+  /// Move assignment operator
+  /// @return Reference to this ProtoAxis for assignment chaining
   ProtoAxis& operator=(ProtoAxis&&) = default;
 
   ~ProtoAxis() = default;
@@ -85,6 +89,7 @@ class ProtoAxis {
   void setRange(double minE, double maxE);
 
   /// @brief check if this is an auto-range binning
+  /// @return True if this axis uses auto-ranging
   bool isAutorange() const;
 
   /// Dump into a string
@@ -220,8 +225,16 @@ struct DirectedProtoAxis : public ProtoAxis {
   AxisDirection m_direction;
 };
 
+/// Stream operator for vector of ProtoAxis
+/// @param os Output stream
+/// @param a Vector of ProtoAxis to output
+/// @return Reference to output stream
 std::ostream& operator<<(std::ostream& os, const std::vector<ProtoAxis>& a);
 
+/// Stream operator for vector of DirectedProtoAxis
+/// @param os Output stream
+/// @param a Vector of DirectedProtoAxis to output
+/// @return Reference to output stream
 std::ostream& operator<<(std::ostream& os,
                          const std::vector<DirectedProtoAxis>& a);
 

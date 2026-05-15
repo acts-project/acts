@@ -11,14 +11,15 @@
 // unit test framework, placing it into the integration tests directory
 // is the least awkward place.
 
-#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
+#include "ActsTests/CommonHelpers/DataDirectory.hpp"
 
 #include <cstddef>
 #include <iostream>
 
+using namespace ActsTests;
+
 int main(void) {
-  std::cout << Acts::Test::getDataPath("") << std::endl;
-  std::cout << Acts::Test::getDataPath("missing-dir/does_not_exists.txt")
-            << std::endl;
+  std::cout << getDataPath("") << std::endl;
+  std::cout << getDataPath("missing-dir/does_not_exists.txt") << std::endl;
   return EXIT_SUCCESS;
 }

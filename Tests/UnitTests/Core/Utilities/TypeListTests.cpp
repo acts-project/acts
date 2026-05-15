@@ -13,20 +13,24 @@
 #include <type_traits>
 #include <typeinfo>
 
-BOOST_AUTO_TEST_SUITE(Utilities)
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(TypeListCreation) {
   struct A {};
 
-  using MyList = Acts::TypeList<float, int, double, A>;
+  using MyList = TypeList<float, int, double, A>;
 
-  bool frontIsFloat = std::is_same_v<Acts::Types::front<MyList>, float>;
+  bool frontIsFloat = std::is_same_v<Types::front<MyList>, float>;
   BOOST_CHECK(frontIsFloat);
 
-  bool backIsA = std::is_same_v<Acts::Types::back<MyList>, A>;
+  bool backIsA = std::is_same_v<Types::back<MyList>, A>;
   BOOST_CHECK(backIsA);
 
-  BOOST_CHECK_EQUAL(Acts::Types::size<MyList>, 4);
+  BOOST_CHECK_EQUAL(Types::size<MyList>, 4);
 }
 
 BOOST_AUTO_TEST_CASE(TypeListPushFront) {
@@ -34,9 +38,9 @@ BOOST_AUTO_TEST_CASE(TypeListPushFront) {
   class B {};
   class C {};
 
-  using BcList = Acts::TypeList<B, C>;
-  auto abc = Acts::Types::push_front<BcList, A>{};
-  bool frontIsA = std::is_same_v<Acts::Types::front<decltype(abc)>, A>;
+  using BcList = TypeList<B, C>;
+  auto abc = Types::push_front<BcList, A>{};
+  bool frontIsA = std::is_same_v<Types::front<decltype(abc)>, A>;
   BOOST_CHECK(frontIsA);
 }
 
@@ -45,17 +49,17 @@ BOOST_AUTO_TEST_CASE(TypeListPushBack) {
   class B {};
   class C {};
 
-  using AbList = Acts::TypeList<A, B>;
-  auto abc = Acts::Types::push_back<AbList, C>{};
-  bool backIsC = std::is_same_v<Acts::Types::back<decltype(abc)>, C>;
+  using AbList = TypeList<A, B>;
+  auto abc = Types::push_back<AbList, C>{};
+  bool backIsC = std::is_same_v<Types::back<decltype(abc)>, C>;
   BOOST_CHECK(backIsC);
 }
 
 template <typename Head, typename... Tail>
-void printTypes([[maybe_unused]] const Acts::TypeList<Head, Tail...>& t) {
+void printTypes([[maybe_unused]] const TypeList<Head, Tail...>& t) {
   std::cout << typeid(Head).name() << '\n';
   if constexpr (sizeof...(Tail) > 0) {
-    Acts::TypeList<Tail...> remainingTypes;
+    TypeList<Tail...> remainingTypes;
     printTypes(remainingTypes);
   }
 }
@@ -65,9 +69,11 @@ BOOST_AUTO_TEST_CASE(TypeListPrintType) {
   class B {};
   class C {};
 
-  using AbcList = Acts::TypeList<A, B, C>;
+  using AbcList = TypeList<A, B, C>;
   AbcList a{};
   printTypes(a);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

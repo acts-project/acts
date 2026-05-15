@@ -1,6 +1,5 @@
-add_library(
-    ActsExamplesDetectorTelescope
-    SHARED
+acts_add_library(
+    ExamplesDetectorTelescope
     src/TelescopeDetector.cpp
     src/TelescopeDetectorElement.cpp
     src/BuildTelescopeDetector.cpp
@@ -13,13 +12,13 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesDetectorTelescope
-    PUBLIC ActsCore ActsExamplesFramework ActsExamplesDetectorsCommon
+    PUBLIC Acts::ExamplesFramework Acts::ExamplesDetectorsCommon
 )
 
 if(ACTS_BUILD_EXAMPLES_GEANT4)
     target_link_libraries(
         ActsExamplesDetectorTelescope
-        PUBLIC ActsExamplesGeant4
+        PUBLIC Acts::ExamplesGeant4
     )
 
     target_sources(
@@ -34,8 +33,3 @@ else()
         PUBLIC src/TelescopeDetectorGeant4Stub.cpp
     )
 endif()
-
-install(
-    TARGETS ActsExamplesDetectorTelescope
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

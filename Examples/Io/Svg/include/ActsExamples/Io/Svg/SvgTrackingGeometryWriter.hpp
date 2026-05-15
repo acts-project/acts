@@ -8,20 +8,17 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/Svg/SvgDefaults.hpp"
-#include <Acts/Plugins/ActSVG/TrackingGeometrySvgConverter.hpp>
-#include <Acts/Utilities/Logger.hpp>
+#include "ActsPlugins/ActSVG/TrackingGeometrySvgConverter.hpp"
 
-#include <fstream>
-#include <iostream>
 #include <mutex>
 
 namespace Acts {
-class TrackingVolume;
 class TrackingGeometry;
-}  // namespace Acts
+}
 
 namespace ActsExamples {
 
@@ -36,7 +33,7 @@ class SvgTrackingGeometryWriter {
   /// The nested config class for this writer
   class Config {
    public:
-    Acts::Svg::TrackingGeometryConverter::Options converterOptions =
+    ActsPlugins::Svg::TrackingGeometryConverter::Options converterOptions =
         s_trackingGeometryOptions;
 
     std::string outputDir = "";
@@ -55,8 +52,8 @@ class SvgTrackingGeometryWriter {
   /// @param context the Algorithm/Event context of this call
   /// @param tGeometry is the geometry to be written out
   /// @return ProcessCode to indicate success/failure
-  ActsExamples::ProcessCode write(const AlgorithmContext& context,
-                                  const Acts::TrackingGeometry& tGeometry);
+  ProcessCode write(const AlgorithmContext& context,
+                    const Acts::TrackingGeometry& tGeometry);
 
  private:
   std::unique_ptr<const Acts::Logger> m_logger;  ///< the logger instance

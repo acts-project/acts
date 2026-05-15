@@ -9,10 +9,10 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Ray.hpp"
+#include "ActsTests/CommonHelpers/BenchmarkTools.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -24,9 +24,10 @@
 #include <vector>
 
 using namespace Acts;
+using namespace ActsTests;
 
 struct O {};
-using Box = Acts::AxisAlignedBoundingBox<O, float, 3>;
+using Box = AxisAlignedBoundingBox<O, float, 3>;
 using VertexType = Box::VertexType;
 using vertex_array_type = Box::vertex_array_type;
 using value_type = Box::value_type;
@@ -213,7 +214,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
   for (const auto& p : rayVariants) {
     // can't capture structured binding, so pair access it is.
     std::cout << "- Benchmarking variant: '" << p.first << "'" << std::endl;
-    auto bench_result = Acts::Test::microBenchmark(
+    auto bench_result = ActsTests::microBenchmark(
         [&](const auto& ray) { return p.second(testBox, ray); }, rays);
     std::cout << "  " << bench_result << std::endl;
   }
@@ -411,7 +412,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     for (const auto& p : frustumVariants) {
       // can't capture structured binding, so pair access it is.
       std::cout << "- Benchmarking variant: '" << p.first << "'" << std::endl;
-      auto bench_result = Acts::Test::microBenchmark(
+      auto bench_result = ActsTests::microBenchmark(
           [&]() { return p.second(testBox, fr_pair.second); }, iters_per_run);
       std::cout << "  " << bench_result << std::endl;
     }

@@ -13,15 +13,26 @@
 
 namespace Acts {
 
+/// Error codes for Kalman filter operations
+/// @ingroup errors
 enum class KalmanFitterError {
   // ensure all values are non-zero
+  /// Kalman update failed
   UpdateFailed = 1,
+  /// Kalman smooth failed
   SmoothFailed,
+  /// Kalman output conversion failed
   OutputConversionFailed,
+  /// No measurement detected during the propagation
   NoMeasurementFound,
+  /// Reverse propagation failed
   ReversePropagationFailed,
+  InconsistentTrackStates,
 };
 
+/// Create error code from @ref KalmanFitterError
+/// @param e The error code enum value
+/// @return Standard error code
 std::error_code make_error_code(Acts::KalmanFitterError e);
 
 }  // namespace Acts

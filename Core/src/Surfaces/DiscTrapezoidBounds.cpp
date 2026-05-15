@@ -9,8 +9,8 @@
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
+#include "Acts/Surfaces/detail/VerticesHelper.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
@@ -26,8 +26,7 @@ DiscTrapezoidBounds::DiscTrapezoidBounds(double halfXminR, double halfXmaxR,
                                          double stereo) noexcept(false)
     : m_values({halfXminR, halfXmaxR, minR, maxR, avgPhi, stereo}) {
   checkConsistency();
-  m_ymax = std::sqrt(get(eMaxR) * get(eMaxR) -
-                     get(eHalfLengthXmaxR) * get(eHalfLengthXmaxR));
+  m_ymax = fastCathetus(get(eMaxR), get(eHalfLengthXmaxR));
 }
 
 std::vector<double> DiscTrapezoidBounds::values() const {
@@ -52,39 +51,63 @@ Vector2 DiscTrapezoidBounds::toLocalCartesian(const Vector2& lposition) const {
           lposition[0] * std::cos(lposition[1] - get(eAveragePhi))};
 }
 
-SquareMatrix2 DiscTrapezoidBounds::jacobianToLocalCartesian(
+SquareMatrix2 DiscTrapezoidBounds::boundToCartesianJacobian(
     const Vector2& lposition) const {
-  SquareMatrix2 jacobian;
-  jacobian(0, 0) = std::sin(lposition[1] - get(eAveragePhi));
-  jacobian(1, 0) = std::cos(lposition[1] - get(eAveragePhi));
-  jacobian(0, 1) = lposition[0] * std::cos(lposition[1]);
-  jacobian(1, 1) = lposition[0] * -std::sin(lposition[1]);
-  return jacobian;
+  SquareMatrix2 j;
+  j(0, 0) = std::cos(lposition[1] - get(eAveragePhi));
+  j(0, 1) = -lposition[0] * std::sin(lposition[1] - get(eAveragePhi));
+  j(1, 0) = std::sin(lposition[1] - get(eAveragePhi));
+  j(1, 1) = lposition[0] * std::cos(lposition[1] - get(eAveragePhi));
+  return j;
 }
 
-bool DiscTrapezoidBounds::inside(
-    const Vector2& lposition,
-    const BoundaryTolerance& boundaryTolerance) const {
-  Vector2 vertices[] = {{get(eHalfLengthXminR), get(eMinR)},
-                        {get(eHalfLengthXmaxR), m_ymax},
-                        {-get(eHalfLengthXmaxR), m_ymax},
-                        {-get(eHalfLengthXminR), get(eMinR)}};
-  auto jacobian = jacobianToLocalCartesian(lposition);
-  return detail::insidePolygon(vertices, boundaryTolerance,
-                               toLocalCartesian(lposition), jacobian);
+SquareMatrix2 DiscTrapezoidBounds::boundToCartesianMetric(
+    const Vector2& lposition) const {
+  SquareMatrix2 m;
+  m(0, 0) = 1;
+  m(0, 1) = 0;
+  m(1, 0) = 0;
+  m(1, 1) = lposition[0] * lposition[0];
+  return m;
+}
+
+bool DiscTrapezoidBounds::inside(const Vector2& lposition) const {
+  const std::array<Vector2, 4> vertices{{{get(eHalfLengthXminR), get(eMinR)},
+                                         {get(eHalfLengthXmaxR), m_ymax},
+                                         {-get(eHalfLengthXmaxR), m_ymax},
+                                         {-get(eHalfLengthXminR), get(eMinR)}}};
+  return detail::VerticesHelper::isInsidePolygon(toLocalCartesian(lposition),
+                                                 vertices);
+}
+
+Vector2 DiscTrapezoidBounds::closestPoint(const Vector2& lposition,
+                                          const SquareMatrix2& metric) const {
+  const std::array<Vector2, 4> vertices{{{get(eHalfLengthXminR), get(eMinR)},
+                                         {get(eHalfLengthXmaxR), m_ymax},
+                                         {-get(eHalfLengthXmaxR), m_ymax},
+                                         {-get(eHalfLengthXminR), get(eMinR)}}};
+  return detail::VerticesHelper::computeClosestPointOnPolygon(
+      toLocalCartesian(lposition), vertices, metric);
 }
 
 std::vector<Vector2> DiscTrapezoidBounds::vertices(
     unsigned int /*ignoredSegments*/) const {
-  Vector2 cAxis(std::cos(get(eAveragePhi)), std::sin(get(eAveragePhi)));
-  Vector2 nAxis(cAxis.y(), -cAxis.x());
-  auto ymin = std::sqrt(get(eMinR) * get(eMinR) -
-                        get(eHalfLengthXminR) * get(eHalfLengthXminR));
-  auto halfY = (m_ymax - ymin) / 2;
+  const Vector2 cAxis(std::cos(get(eAveragePhi)), std::sin(get(eAveragePhi)));
+  const Vector2 nAxis(cAxis.y(), -cAxis.x());
+  const double ymin = fastCathetus(get(eMinR), get(eHalfLengthXminR));
+  const double halfY = (m_ymax - ymin) / 2;
   return {-halfY * cAxis - get(eHalfLengthXminR) * nAxis,
           -halfY * cAxis + get(eHalfLengthXminR) * nAxis,
           halfY * cAxis + get(eHalfLengthXmaxR) * nAxis,
           halfY * cAxis - get(eHalfLengthXmaxR) * nAxis};
+}
+
+Vector2 DiscTrapezoidBounds::center() const {
+  // For disc trapezoid bounds in polar coordinates (r, phi),
+  // centroid is at the middle radius and average phi
+  const double rCentroid = 0.5 * (get(eMinR) + get(eMaxR));
+  const double phiCentroid = get(eAveragePhi);
+  return Vector2(rCentroid, phiCentroid);
 }
 
 std::ostream& DiscTrapezoidBounds::toStream(std::ostream& sl) const {

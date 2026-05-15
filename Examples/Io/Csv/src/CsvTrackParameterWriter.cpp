@@ -9,8 +9,6 @@
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
@@ -20,61 +18,49 @@
 
 #include "CsvOutputData.hpp"
 
-ActsExamples::CsvTrackParameterWriter::CsvTrackParameterWriter(
-    const ActsExamples::CsvTrackParameterWriter::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+CsvTrackParameterWriter::CsvTrackParameterWriter(const Config& config,
+                                                 Acts::Logging::Level level)
     : m_cfg(config),
       m_logger(Acts::getDefaultLogger("CsvTrackParameterWriter", level)) {
-  if (m_cfg.inputTrackParameters.empty() == m_cfg.inputTracks.empty()) {
-    throw std::invalid_argument(
-        "You have to either provide track parameters or tracks");
+  if (m_cfg.inputTracks.empty()) {
+    throw std::invalid_argument("You have to provide tracks");
   }
 
-  m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
-  m_inputTracks.maybeInitialize(m_cfg.inputTracks);
+  m_inputTracks.initialize(m_cfg.inputTracks);
 }
 
-ActsExamples::CsvTrackParameterWriter::~CsvTrackParameterWriter() = default;
+CsvTrackParameterWriter::~CsvTrackParameterWriter() = default;
 
-std::string ActsExamples::CsvTrackParameterWriter::name() const {
+std::string CsvTrackParameterWriter::name() const {
   return "CsvTrackParameterWriter";
 }
 
-ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::finalize() {
+ProcessCode CsvTrackParameterWriter::finalize() {
   // Write the tree
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::write(
-    const AlgorithmContext& ctx) {
-  TrackParametersContainer inputTrackParameters;
+ProcessCode CsvTrackParameterWriter::write(const AlgorithmContext& ctx) {
+  const auto& inputTracks = m_inputTracks(ctx);
 
-  if (!m_cfg.inputTrackParameters.empty()) {
-    const auto& tmp = m_inputTrackParameters(ctx);
-    inputTrackParameters = tmp;
-  } else {
-    const auto& inputTracks = m_inputTracks(ctx);
+  std::string path = perEventFilepath(
+      m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
 
-    for (const auto& track : inputTracks) {
-      if (!track.hasReferenceSurface()) {
-        continue;
-      }
-      auto trackParam = track.createParametersAtReference();
-      inputTrackParameters.push_back(trackParam);
-    }
-  }
-
-  std::string path =
-      perEventFilepath(m_cfg.outputDir, m_cfg.outputStem, ctx.eventNumber);
-
-  ActsExamples::NamedTupleCsvWriter<TrackParameterData> writer(
-      path, m_cfg.outputPrecision);
+  BoostDescribeCsvWriter<TrackParameterData> writer(path,
+                                                    m_cfg.outputPrecision);
 
   TrackParameterData data{};
-  for (const auto& tp : inputTrackParameters) {
+  for (const auto& track : inputTracks) {
+    if (!track.hasReferenceSurface()) {
+      continue;
+    }
+    auto tp = track.createParametersAtReference();
     const auto& params = tp.parameters();
     const auto& cov = tp.covariance().value();
 
+    data.trackId = track.index();
     data.d0 = params[Acts::eBoundLoc0];
     data.z0 = params[Acts::eBoundLoc1];
     data.phi = params[Acts::eBoundPhi];
@@ -115,5 +101,7 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::write(
     writer.append(data);
   }
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

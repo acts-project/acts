@@ -8,13 +8,12 @@
 
 #include "Acts/Geometry/VolumeBounds.hpp"
 
-namespace Acts {
-
-std::ostream& operator<<(std::ostream& sl, const Acts::VolumeBounds& vb) {
+std::ostream& Acts::operator<<(std::ostream& sl, const VolumeBounds& vb) {
   return vb.toStream(sl);
 }
 
-std::ostream& operator<<(std::ostream& sl, const VolumeBounds::BoundsType& bt) {
+std::ostream& Acts::operator<<(std::ostream& sl,
+                               const VolumeBounds::BoundsType& bt) {
   switch (bt) {
     using enum VolumeBounds::BoundsType;
     case eCone:
@@ -35,11 +34,12 @@ std::ostream& operator<<(std::ostream& sl, const VolumeBounds::BoundsType& bt) {
     case eTrapezoid:
       sl << "Trapezoid";
       break;
+    case eDiamond:
+      sl << "Diamond";
+      break;
     case eOther:
       sl << "Other";
       break;
   }
   return sl;
 }
-
-}  // namespace Acts

@@ -13,14 +13,14 @@
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-#include <array>
 #include <ostream>
-#include <string>
 
-std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
+namespace Acts {
+
+std::vector<ProtoLayer> ProtoLayerHelper::protoLayers(
     const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
     const SortingConfig& sorting) const {
-  std::vector<Acts::ProtoLayer> protoLayers;
+  std::vector<ProtoLayer> protoLayers;
 
   using SurfaceCluster = std::pair<Extent, std::vector<const Surface*>>;
   std::vector<SurfaceCluster> clusteredSurfaces;
@@ -62,7 +62,7 @@ std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
   return protoLayers;
 }
 
-std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
+std::vector<ProtoLayer> ProtoLayerHelper::protoLayers(
     const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
     const std::vector<SortingConfig>& sortings) const {
   ACTS_DEBUG("Received " << surfaces.size() << " surfaces at input.");
@@ -85,7 +85,7 @@ std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
   }
   ACTS_DEBUG("Yielded " << sortSurfaces.size() << " at output.");
 
-  std::vector<Acts::ProtoLayer> finalProtoLayers;
+  std::vector<ProtoLayer> finalProtoLayers;
 
   for (const auto& ssurfaces : sortSurfaces) {
     finalProtoLayers.push_back(ProtoLayer(gctx, ssurfaces));
@@ -93,3 +93,5 @@ std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
 
   return finalProtoLayers;
 }
+
+}  // namespace Acts

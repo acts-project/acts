@@ -13,7 +13,7 @@
 #undef _GLIBCXX_ASSERTIONS
 #endif
 
-#include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
+#include "ActsPlugins/Json/DetrayJsonHelper.hpp"
 
 namespace Acts::DetrayJsonHelper {
 

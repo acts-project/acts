@@ -1,9 +1,6 @@
-include(FetchContent)
-
-add_library(
-    ActsPluginGeoModel
-    SHARED
-    src/GeoModelBlueprintCreater.cpp
+acts_add_library(
+    PluginGeoModel
+    src/GeoModelTree.cpp
     src/GeoModelConversionError.cpp
     src/GeoModelToDetectorVolume.cpp
     src/GeoModelReader.cpp
@@ -21,25 +18,23 @@ add_library(
     src/detail/GeoModelExtentHelper.cpp
     src/detail/GeoUnionDoubleTrdConverter.cpp
     src/GeoModelDetectorElementITk.cpp
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
+
 target_include_directories(
     ActsPluginGeoModel
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+
 target_link_libraries(
     ActsPluginGeoModel
     PUBLIC
-        ActsCore
+        Acts::Core
         GeoModelCore::GeoModelKernel
         GeoModelIO::GeoModelDBManager
         GeoModelIO::GeoModelRead
 )
 
-install(
-    TARGETS ActsPluginGeoModel
-    EXPORT ActsPluginGeoModelTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+acts_compile_headers(PluginGeoModel GLOB include/**/*.hpp)

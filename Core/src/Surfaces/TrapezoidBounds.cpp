@@ -8,9 +8,7 @@
 
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
-#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -39,12 +37,7 @@ std::vector<double> TrapezoidBounds::values() const {
   return {m_values.begin(), m_values.end()};
 }
 
-bool TrapezoidBounds::inside(const Vector2& lposition,
-                             const BoundaryTolerance& boundaryTolerance) const {
-  if (boundaryTolerance.isInfinite()) {
-    return true;
-  }
-
+bool TrapezoidBounds::inside(const Vector2& lposition) const {
   const double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
   const double hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
   const double hlY = get(TrapezoidBounds::eHalfLengthY);
@@ -54,33 +47,44 @@ bool TrapezoidBounds::inside(const Vector2& lposition,
   const double x = extPosition[0];
   const double y = extPosition[1];
 
-  if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt(true);
-      absoluteBound.has_value()) {
-    double tolX = absoluteBound->tolerance0;
-    double tolY = absoluteBound->tolerance1;
+  if (std::abs(y) - hlY > 0) {
+    // outside y range
+    return false;
+  }
 
-    if (std::abs(y) - hlY > tolY) {
-      // outside y range
-      return false;
-    }
+  if (std::abs(x) - std::max(hlXnY, hlXpY) > 0) {
+    // outside x range
+    return false;
+  }
 
-    if (std::abs(x) - std::max(hlXnY, hlXpY) > tolX) {
-      // outside x range
-      return false;
-    }
-
-    if (std::abs(x) - std::min(hlXnY, hlXpY) <= tolX) {
-      // inside x range
-      return true;
-    }
+  if (std::abs(x) - std::min(hlXnY, hlXpY) <= 0) {
+    // inside x range
+    return true;
   }
 
   // at this stage, the point can only be in the triangles
   // run slow-ish polygon check
-  Vector2 vertices[] = {
-      {-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}};
-  return detail::insidePolygon(vertices, boundaryTolerance, extPosition,
-                               std::nullopt);
+  std::array<Vector2, 4> vertices{
+      {{-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}}};
+  return detail::VerticesHelper::isInsidePolygon(extPosition, vertices);
+}
+
+Vector2 TrapezoidBounds::closestPoint(const Vector2& lposition,
+                                      const SquareMatrix2& metric) const {
+  const double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
+  const double hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
+  const double hlY = get(TrapezoidBounds::eHalfLengthY);
+  const double rotAngle = get(TrapezoidBounds::eRotationAngle);
+
+  const Vector2 extPosition = Eigen::Rotation2Dd(rotAngle) * lposition;
+
+  std::array<Vector2, 4> vertices{
+      {{-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}}};
+
+  Vector2 extClosest = detail::VerticesHelper::computeClosestPointOnPolygon(
+      extPosition, vertices, metric);
+
+  return Eigen::Rotation2Dd(-rotAngle) * extClosest;
 }
 
 std::vector<Vector2> TrapezoidBounds::vertices(
@@ -100,6 +104,10 @@ std::vector<Vector2> TrapezoidBounds::vertices(
 
 const RectangleBounds& TrapezoidBounds::boundingBox() const {
   return m_boundingBox;
+}
+
+Vector2 TrapezoidBounds::center() const {
+  return Vector2::Zero();
 }
 
 std::ostream& TrapezoidBounds::toStream(std::ostream& sl) const {

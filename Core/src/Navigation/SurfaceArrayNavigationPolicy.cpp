@@ -8,30 +8,35 @@
 
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
-
-#include <algorithm>
 
 namespace Acts {
 
 SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
     const GeometryContext& gctx, const TrackingVolume& volume,
     const Logger& logger, Config config)
-    : m_volume(volume) {
+    : m_cfg(config), m_volume(volume) {
   ACTS_VERBOSE("Constructing SurfaceArrayNavigationPolicy for volume "
                << volume.volumeName());
   ACTS_VERBOSE("~> Layer type is " << config.layerType);
   ACTS_VERBOSE("~> bins: " << config.bins.first << " x " << config.bins.second);
 
   SurfaceArrayCreator::Config sacConfig;
+  // This is important! detray does not support separate transforms for the
+  // grids (yet?), so we need to ensure that the volume and surface array
+  // transforms are at most translated relative to one another, so that the
+  // projection is correct.
+  sacConfig.doPhiBinningOptimization = false;
   SurfaceArrayCreator sac{sacConfig, logger.clone("SrfArrCrtr")};
 
   std::vector<std::shared_ptr<const Surface>> surfaces;
   surfaces.reserve(volume.surfaces().size());
   for (const auto& surface : volume.surfaces()) {
-    if (surface.associatedDetectorElement() == nullptr) {
+    if (!surface.isSensitive()) {
       continue;
     }
     surfaces.push_back(surface.getSharedPtr());
@@ -44,14 +49,65 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
     throw std::runtime_error("Cannot create surface array with zero surfaces");
   }
 
+  ProtoLayer protoLayer(
+      gctx, surfaces, Transform3{volume.localToGlobalTransform(gctx).linear()});
+  protoLayer.envelope = config.envelope;
+
   if (config.layerType == LayerType::Disc) {
     auto [binsR, binsPhi] = config.bins;
-    m_surfaceArray =
-        sac.surfaceArrayOnDisc(gctx, std::move(surfaces), binsPhi, binsR);
+
+    double layerZ = protoLayer.medium(AxisDirection::AxisZ);
+
+    ACTS_VERBOSE("Creating a disk Layer:");
+    ACTS_VERBOSE(" - at Z position    = " << layerZ);
+    ACTS_VERBOSE(" - from Z min/max   = "
+                 << protoLayer.min(AxisDirection::AxisZ, false) << " / "
+                 << protoLayer.max(AxisDirection::AxisZ, false));
+    ACTS_VERBOSE(" - with R min/max   = "
+                 << protoLayer.min(AxisDirection::AxisR, false) << " (-"
+                 << protoLayer.envelope[AxisDirection::AxisR][0u] << ") / "
+                 << protoLayer.max(AxisDirection::AxisR, false) << " (+"
+                 << protoLayer.envelope[AxisDirection::AxisR][1u] << ")");
+    ACTS_VERBOSE(" - with phi min/max = "
+                 << protoLayer.min(AxisDirection::AxisPhi, false) << " / "
+                 << protoLayer.max(AxisDirection::AxisPhi, false));
+    ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << " ordered in ( "
+                                         << binsR << " x " << binsPhi << ")");
+
+    Transform3 layerTransform{Translation3(0, 0, layerZ)};
+
+    m_surfaceArray = sac.surfaceArrayOnDisc(
+        gctx, std::move(surfaces), binsR, binsPhi, protoLayer, layerTransform);
   } else if (config.layerType == LayerType::Cylinder) {
     auto [binsPhi, binsZ] = config.bins;
-    m_surfaceArray =
-        sac.surfaceArrayOnCylinder(gctx, std::move(surfaces), binsPhi, binsZ);
+
+    double layerR = protoLayer.medium(AxisDirection::AxisR);
+    double layerZ = protoLayer.medium(AxisDirection::AxisZ);
+    double layerHalfZ = 0.5 * protoLayer.range(AxisDirection::AxisZ);
+    double layerThickness = protoLayer.range(AxisDirection::AxisR);
+
+    ACTS_VERBOSE("Creating a cylindrical Layer:");
+    ACTS_VERBOSE(" - with layer R     = " << layerR);
+    ACTS_VERBOSE(" - from R min/max   = "
+                 << protoLayer.min(AxisDirection::AxisR, false) << " / "
+                 << protoLayer.max(AxisDirection::AxisR, false));
+    ACTS_VERBOSE(" - with R thickness = " << layerThickness);
+    ACTS_VERBOSE("   - incl envelope  = "
+                 << protoLayer.envelope[AxisDirection::AxisR][0u] << " / "
+                 << protoLayer.envelope[AxisDirection::AxisR][1u]);
+    ACTS_VERBOSE(" - with z min/max   = "
+                 << protoLayer.min(AxisDirection::AxisZ, false) << " (-"
+                 << protoLayer.envelope[AxisDirection::AxisZ][0u] << ") / "
+                 << protoLayer.max(AxisDirection::AxisZ, false) << " (+"
+                 << protoLayer.envelope[AxisDirection::AxisZ][1u] << ")");
+    ACTS_VERBOSE(" - z center         = " << layerZ);
+    ACTS_VERBOSE(" - halflength z     = " << layerHalfZ);
+
+    Transform3 layerTransform{Translation3(0, 0, layerZ)};
+    ACTS_VERBOSE(" - layer z shift    = " << -layerZ);
+
+    m_surfaceArray = sac.surfaceArrayOnCylinder(
+        gctx, std::move(surfaces), binsPhi, binsZ, protoLayer, layerTransform);
   } else if (config.layerType == LayerType::Plane) {
     ACTS_ERROR("Plane layers are not yet supported");
     throw std::invalid_argument("Plane layers are not yet supported");
@@ -66,23 +122,35 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
 }
 
 void SurfaceArrayNavigationPolicy::initializeCandidates(
-    const NavigationArguments& args, AppendOnlyNavigationStream& stream,
-    const Logger& logger) const {
+    [[maybe_unused]] const GeometryContext& gctx,
+    const NavigationArguments& args, NavigationPolicyState& /*state*/,
+    AppendOnlyNavigationStream& stream, const Logger& logger) const {
   ACTS_VERBOSE("SrfArrNavPol (volume=" << m_volume.volumeName() << ")");
 
   ACTS_VERBOSE("Querying sensitive surfaces at " << args.position.transpose());
-  const std::vector<const Surface*>& sensitiveSurfaces =
-      m_surfaceArray->neighbors(args.position);
+  const auto sensitiveSurfaces =
+      m_surfaceArray->neighbors(gctx, args.position, args.direction);
   ACTS_VERBOSE("~> Surface array reports " << sensitiveSurfaces.size()
                                            << " sensitive surfaces");
 
-  for (const auto* surface : sensitiveSurfaces) {
+  for (const Surface* surface : sensitiveSurfaces) {
     stream.addSurfaceCandidate(*surface, args.tolerance);
   };
 }
 
+const Acts::SurfaceArray& SurfaceArrayNavigationPolicy::surfaceArray() const {
+  return *m_surfaceArray;
+}
+
 void SurfaceArrayNavigationPolicy::connect(NavigationDelegate& delegate) const {
   connectDefault<SurfaceArrayNavigationPolicy>(delegate);
+}
+
+SurfaceArrayNavigationPolicy::~SurfaceArrayNavigationPolicy() = default;
+
+const SurfaceArrayNavigationPolicy::Config&
+SurfaceArrayNavigationPolicy::config() const {
+  return m_cfg;
 }
 
 }  // namespace Acts

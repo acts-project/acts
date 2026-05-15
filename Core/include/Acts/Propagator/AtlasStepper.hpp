@@ -8,19 +8,17 @@
 
 #pragma once
 
-// Workaround for building on clang+libstdc++
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
@@ -39,18 +37,31 @@ class IVolumeMaterial;
 /// This is based original stepper code from the ATLAS RungeKuttaPropagator
 class AtlasStepper {
  public:
+  /// Type alias for bound track parameters
+  using BoundParameters = BoundTrackParameters;
+  /// Type alias for Jacobian matrix
   using Jacobian = BoundMatrix;
-  using Covariance = BoundSquareMatrix;
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  /// Type alias for covariance matrix
+  using Covariance = BoundMatrix;
+  /// Type alias for bound state (parameters, jacobian, path length)
+  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
 
+  /// Configuration for constructing an AtlasStepper.
   struct Config {
+    /// Magnetic field provider
     std::shared_ptr<const MagneticFieldProvider> bField;
   };
 
+  /// Stepper options extending plain stepper settings.
   struct Options : public StepperPlainOptions {
+    /// Constructor from context objects
+    /// @param gctx Geometry context
+    /// @param mctx Magnetic field context
     Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : StepperPlainOptions(gctx, mctx) {}
 
+    /// Set plain options
+    /// @param options Plain stepper options to set
     void setPlainOptions(const StepperPlainOptions& options) {
       static_cast<StepperPlainOptions&>(*this) = options;
     }
@@ -67,21 +78,32 @@ class AtlasStepper {
     State(const Options& optionsIn, MagneticFieldProvider::Cache fieldCacheIn)
         : options(optionsIn), fieldCache(std::move(fieldCacheIn)) {}
 
+    /// Stepper options for this propagation
     Options options;
 
+    /// Particle hypothesis used for energy loss calculations
     ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
 
     // optimisation that init is not called twice
+    /// Flag indicating whether the state is ready for stepping
     bool state_ready = false;
     // configuration
+    /// Flag indicating whether Jacobian calculation is enabled
     bool useJacobian = false;
+    /// Current step size
     double step = 0;
+    /// Maximum path length for this propagation
     double maxPathLength = 0;
+    /// Flag indicating magnetic field boundary conditions
     bool mcondition = false;
+    /// Flag indicating whether magnetic field gradients are needed
     bool needgradient = false;
+    /// Flag indicating new magnetic field evaluation needed
     bool newfield = true;
     // internal parameters to be used
+    /// Current magnetic field vector
     Vector3 field = Vector3::Zero();
+    /// Parameter vector for track state and derivatives
     std::array<double, 60> pVector{};
 
     /// Storage pattern of pVector
@@ -98,12 +120,17 @@ class AtlasStepper {
 
     // result
     double parameters[eBoundSize] = {0., 0., 0., 0., 0., 0.};
+    /// Pointer to external covariance matrix
     const Covariance* covariance = nullptr;
+    /// Local covariance matrix storage
     Covariance cov = Covariance::Zero();
+    /// Flag indicating whether covariance transport is enabled
     bool covTransport = false;
+    /// Jacobian matrix storage for parameter derivatives
     double jacobian[eBoundSize * eBoundSize] = {};
 
-    // accummulated path length cache
+    // accumulated path length cache
+    /// Accumulated path length during propagation
     double pathAccumulated = 0.;
 
     /// Total number of performed steps
@@ -113,9 +140,11 @@ class AtlasStepper {
     std::size_t nStepTrials = 0;
 
     // Adaptive step size of the runge-kutta integration
+    /// Constrained step size for adaptive integration
     ConstrainedStep stepSize;
 
     // Previous step size for overstep estimation
+    /// Previous step size for overstep estimation
     double previousStepSize = 0.;
 
     /// It caches the current magnetic field cell and stays (and interpolates)
@@ -125,30 +154,48 @@ class AtlasStepper {
     /// Debug output
     /// the string where debug messages are stored (optionally)
     bool debug = false;
+    /// String buffer for debug output messages
     std::string debugString = "";
     /// buffer & formatting for consistent output
     std::size_t debugPfxWidth = 30;
+    /// Width for debug message formatting
     std::size_t debugMsgWidth = 50;
 
     /// The statistics of the stepper
     StepperStatistics statistics;
   };
 
+  /// Construct AtlasStepper with magnetic field provider
+  /// @param bField Shared pointer to magnetic field provider
   explicit AtlasStepper(std::shared_ptr<const MagneticFieldProvider> bField)
       : m_bField(std::move(bField)) {}
 
+  /// Construct AtlasStepper with configuration
+  /// @param config Configuration containing magnetic field provider and other settings
   explicit AtlasStepper(const Config& config) : m_bField(config.bField) {}
 
+  /// Create stepper state with given options
+  /// @param options Stepper options including magnetic field context
+  /// @return Stepper state initialized with options and magnetic field cache
   State makeState(const Options& options) const {
     State state{options, m_bField->makeCache(options.magFieldContext)};
     return state;
   }
 
-  void initialize(State& state, const BoundTrackParameters& par) const {
+  /// Initialize stepper state from bound track parameters
+  /// @param state Stepper state to initialize
+  /// @param par Bound track parameters containing initial conditions
+  void initialize(State& state, const BoundParameters& par) const {
     initialize(state, par.parameters(), par.covariance(),
                par.particleHypothesis(), par.referenceSurface());
   }
 
+  /// Initialize stepper state from individual parameters
+  /// @param state Stepper state to initialize
+  /// @param boundParams Bound track parameter vector
+  /// @param cov Optional covariance matrix
+  /// @param particleHypothesis Particle hypothesis (mass, charge)
+  /// @param surface Reference surface for bound parameters
   void initialize(State& state, const BoundVector& boundParams,
                   const std::optional<BoundMatrix>& cov,
                   ParticleHypothesis particleHypothesis,
@@ -200,7 +247,7 @@ class AtlasStepper {
     state.covTransport = cov.has_value();
     if (state.covTransport) {
       // copy the covariance matrix
-      state.covariance = new BoundSquareMatrix(*cov);
+      state.covariance = new BoundMatrix(*cov);
       state.useJacobian = true;
       const auto transform =
           surface.referenceFrame(state.options.geoContext, pos, dir);
@@ -339,6 +386,7 @@ class AtlasStepper {
   /// @param [in,out] state is the stepper state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
+  /// @return Magnetic field vector at the given position or error
   Result<Vector3> getField(State& state, const Vector3& pos) const {
     // get the field from the cell
     auto res = m_bField->getField(pos, state.fieldCache);
@@ -348,23 +396,36 @@ class AtlasStepper {
     return res;
   }
 
+  /// Get particle position from stepper state
+  /// @param state Stepper state containing track information
+  /// @return 3D position vector
   Vector3 position(const State& state) const {
     return Vector3(state.pVector[0], state.pVector[1], state.pVector[2]);
   }
 
+  /// Get particle direction from stepper state
+  /// @param state Stepper state containing track information
+  /// @return 3D unit direction vector
   Vector3 direction(const State& state) const {
     return Vector3(state.pVector[4], state.pVector[5], state.pVector[6]);
   }
 
+  /// Get charge over momentum from stepper state
+  /// @param state Stepper state containing track information
+  /// @return Charge over momentum (q/p)
   double qOverP(const State& state) const { return state.pVector[7]; }
 
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Absolute momentum magnitude
   double absoluteMomentum(const State& state) const {
     return particleHypothesis(state).extractMomentum(qOverP(state));
   }
 
+  /// Get 3D momentum vector from stepper state
+  /// @param state Stepper state containing track information
+  /// @return 3D momentum vector
   Vector3 momentum(const State& state) const {
     return absoluteMomentum(state) * direction(state);
   }
@@ -372,6 +433,7 @@ class AtlasStepper {
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Electric charge of the particle
   double charge(const State& state) const {
     return particleHypothesis(state).extractCharge(qOverP(state));
   }
@@ -379,16 +441,20 @@ class AtlasStepper {
   /// Particle hypothesis
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Reference to the particle hypothesis used
   const ParticleHypothesis& particleHypothesis(const State& state) const {
     return state.particleHypothesis;
   }
 
   /// Overstep limit
+  /// @return Overstep limit for this stepper (negative value)
   double overstepLimit(const State& /*state*/) const {
     return -m_overstepLimit;
   }
 
   /// Time access
+  /// @param state The stepping state to get time from
+  /// @return Current time coordinate
   double time(const State& state) const { return state.pVector[3]; }
 
   /// Update surface status
@@ -406,6 +472,7 @@ class AtlasStepper {
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] stype The step size type to be set
   /// @param [in] logger Logger instance to use
+  /// @return IntersectionStatus indicating how the surface was encountered
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
@@ -422,14 +489,13 @@ class AtlasStepper {
   /// the step size accordingly
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
+  /// @param target [in] The NavigationTarget
   /// @param direction [in] The propagation direction
   /// @param stype [in] The step size type to be set
-  template <typename object_intersection_t>
-  void updateStepSize(State& state, const object_intersection_t& oIntersection,
+  void updateStepSize(State& state, const NavigationTarget& target,
                       Direction direction, ConstrainedStep::Type stype) const {
-    (void)direction;
-    double stepSize = oIntersection.pathLength();
+    static_cast<void>(direction);
+    double stepSize = target.pathLength();
     updateStepSize(state, stepSize, stype);
   }
 
@@ -456,6 +522,7 @@ class AtlasStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   /// @param stype [in] The step size type to be returned
+  /// @return Current step size for the specified constraint type
   double getStepSize(const State& state, ConstrainedStep::Type stype) const {
     return state.stepSize.value(stype);
   }
@@ -463,6 +530,7 @@ class AtlasStepper {
   /// Output the Step Size - single component
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
+  /// @return String representation of the current step size
   std::string outputStepSize(const State& state) const {
     return state.stepSize.toString();
   }
@@ -528,7 +596,7 @@ class AtlasStepper {
   /// @param [in, out] state The stepping state (thread-local cache)
   /// @return true if nothing is missing after this call, false otherwise.
   bool prepareCurvilinearState(State& state) const {
-    (void)state;
+    static_cast<void>(state);
     return true;
   }
 
@@ -737,7 +805,7 @@ class AtlasStepper {
       state.pVector[34] = Bz3 * boundParams[eBoundLoc0];  // dZ/
     }
 
-    state.covariance = new BoundSquareMatrix(covariance);
+    state.covariance = new BoundMatrix(covariance);
     state.covTransport = true;
     state.useJacobian = true;
 
@@ -1080,7 +1148,7 @@ class AtlasStepper {
       double R2 = RC * RC + RS * RS;
 
       // inverse radius
-      double Ri = 1. / sqrt(R2);
+      double Ri = 1. / std::sqrt(R2);
       MA[0] = (RC * Ax[0] + RS * Ay[0]) * Ri;
       MA[1] = (RC * Ax[1] + RS * Ay[1]) * Ri;
       MA[2] = (RC * Ax[2] + RS * Ay[2]) * Ri;
@@ -1158,7 +1226,7 @@ class AtlasStepper {
   ///       propagation.
   Result<double> step(State& state, Direction propDir,
                       const IVolumeMaterial* material) const {
-    (void)material;
+    static_cast<void>(material);
 
     // we use h for keeping the nominclature with the original atlas code
     auto h = state.stepSize.value() * propDir;
@@ -1453,54 +1521,6 @@ class AtlasStepper {
     }
 
     return h;
-  }
-
-  /// Method that reset the Jacobian to the Identity for when no bound state are
-  /// available
-  ///
-  /// @param [in,out] state State of the stepper
-  void setIdentityJacobian(State& state) const {
-    state.jacobian[0] = 1.;  // dL0/dL0
-    state.jacobian[1] = 0.;  // dL0/dL1
-    state.jacobian[2] = 0.;  // dL0/dPhi
-    state.jacobian[3] = 0.;  // dL0/dThe
-    state.jacobian[4] = 0.;  // dL0/dCM
-    state.jacobian[5] = 0.;  // dL0/dT
-
-    state.jacobian[6] = 0.;   // dL1/dL0
-    state.jacobian[7] = 1.;   // dL1/dL1
-    state.jacobian[8] = 0.;   // dL1/dPhi
-    state.jacobian[9] = 0.;   // dL1/dThe
-    state.jacobian[10] = 0.;  // dL1/dCM
-    state.jacobian[11] = 0.;  // dL1/dT
-
-    state.jacobian[12] = 0.;  // dPhi/dL0
-    state.jacobian[13] = 0.;  // dPhi/dL1
-    state.jacobian[14] = 1.;  // dPhi/dPhi
-    state.jacobian[15] = 0.;  // dPhi/dThe
-    state.jacobian[16] = 0.;  // dPhi/dCM
-    state.jacobian[17] = 0.;  // dPhi/dT
-
-    state.jacobian[18] = 0.;  // dThe/dL0
-    state.jacobian[19] = 0.;  // dThe/dL1
-    state.jacobian[20] = 0.;  // dThe/dPhi
-    state.jacobian[21] = 1.;  // dThe/dThe
-    state.jacobian[22] = 0.;  // dThe/dCM
-    state.jacobian[23] = 0.;  // dThe/dT
-
-    state.jacobian[24] = 0.;  // dCM /dL0
-    state.jacobian[25] = 0.;  // dCM /dL1
-    state.jacobian[26] = 0.;  // dCM /dPhi
-    state.jacobian[27] = 0.;  // dCM /dTheta
-    state.jacobian[28] = 1.;  // dCM /dCM
-    state.jacobian[29] = 0.;  // dCM/dT
-
-    state.jacobian[30] = 0.;  // dT/dL0
-    state.jacobian[31] = 0.;  // dT/dL1
-    state.jacobian[32] = 0.;  // dT/dPhi
-    state.jacobian[33] = 0.;  // dT/dThe
-    state.jacobian[34] = 0.;  // dT/dCM
-    state.jacobian[35] = 1.;  // dT/dT
   }
 
  private:

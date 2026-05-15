@@ -9,15 +9,15 @@
 #include <boost/test/unit_test.hpp>
 
 //clang-format off
-#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 //clang-format on
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsPlugins/GeoModel/GeoModelConverters.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
@@ -27,11 +27,16 @@
 #include <GeoModelKernel/GeoTrd.h>
 #include <GeoModelKernel/GeoVPhysVol.h>
 
-Acts::GeometryContext tContext;
-Acts::RotationMatrix3 idRotation = Acts::RotationMatrix3::Identity();
-Acts::Transform3 idTransform = Acts::Transform3::Identity();
+using namespace Acts;
+using namespace ActsPlugins;
 
-BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
+RotationMatrix3 idRotation = RotationMatrix3::Identity();
+Transform3 idTransform = Transform3::Identity();
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeoModelSuite)
 
 // GeoBox conversion test case
 BOOST_AUTO_TEST_CASE(GeoSubToSensitiveConversion) {
@@ -49,21 +54,24 @@ BOOST_AUTO_TEST_CASE(GeoSubToSensitiveConversion) {
   auto fphysSub = make_intrusive<GeoFullPhysVol>(logSub);
 
   // create pars for conversion
-  Acts::GeoModelDetectorObjectFactory::Config gmConfig;
-  Acts::GeometryContext gContext;
-  Acts::GeoModelDetectorObjectFactory::Cache subCache;
+  GeoModelDetectorObjectFactory::Config gmConfig;
+  auto gContext = GeometryContext::dangerouslyDefaultConstruct();
+  GeoModelDetectorObjectFactory::Cache subCache;
 
   // create factory instance
-  Acts::GeoModelDetectorObjectFactory factory(gmConfig);
+  GeoModelDetectorObjectFactory factory(gmConfig);
 
   // convert GeoFullPhysVol (to surfaces)
   factory.convertFpv("Sub", fphysSub, subCache, gContext);
 
-  Acts::GeoModelSensitiveSurface subSensSurface = subCache.sensitiveSurfaces[0];
-  std::shared_ptr<Acts::Surface> subSurface = std::get<1>(subSensSurface);
+  GeoModelSensitiveSurface subSensSurface = subCache.sensitiveSurfaces[0];
+  std::shared_ptr<Surface> subSurface = std::get<1>(subSensSurface);
   const auto* subBounds =
-      dynamic_cast<const Acts::RectangleBounds*>(&subSurface->bounds());
+      dynamic_cast<const RectangleBounds*>(&subSurface->bounds());
   BOOST_CHECK(subBounds->halfLengthX() == hlX);
   BOOST_CHECK(subBounds->halfLengthY() == hlY);
 }
+
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

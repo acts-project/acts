@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
+#include "ActsTests/CommonHelpers/DataDirectory.hpp"
 
 #include <filesystem>
 
-std::string Acts::Test::getDataPath(const std::string& relativePath) {
+std::string ActsTests::getDataPath(const std::string& relativePath) {
   using std::filesystem::path;
 
   path dataDir(ACTS_TEST_DATA_DIR);

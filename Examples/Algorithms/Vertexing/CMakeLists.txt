@@ -1,6 +1,5 @@
-add_library(
-    ActsExamplesVertexing
-    SHARED
+acts_add_library(
+    ExamplesVertexing
     src/AdaptiveMultiVertexFinderAlgorithm.cpp
     src/HoughVertexFinderAlgorithm.cpp
     src/IterativeVertexFinderAlgorithm.cpp
@@ -13,11 +12,8 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesVertexing
-    PUBLIC ActsCore ActsExamplesFramework
-    PRIVATE ActsExamplesTruthTracking
+    PUBLIC Acts::ExamplesFramework
+    PRIVATE Acts::ExamplesTruthTracking
 )
 
-install(
-    TARGETS ActsExamplesVertexing
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+acts_compile_headers(ExamplesVertexing GLOB "include/**/*.hpp")

@@ -12,12 +12,13 @@
 #include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
+#include "Acts/Utilities/CloneablePtr.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
@@ -26,26 +27,20 @@
 #include <memory>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace Acts {
 
-class DetectorElementBase;
 class SurfaceBounds;
 class ISurfaceMaterial;
 class Layer;
 class TrackingVolume;
 class IVisualization3D;
-class Surface;
-
-/// Typedef of the surface intersection
-using SurfaceIntersection = ObjectIntersection<Surface>;
-/// Typedef of the surface multi-intersection
-using SurfaceMultiIntersection = ObjectMultiIntersection<Surface>;
 
 /// @class Surface
 ///
-/// @brief Abstract Base Class for tracking surfaces
+/// Abstract Base Class for tracking surfaces
 ///
 /// The Surface class builds the core of the Acts Tracking Geometry.
 /// All other geometrical objects are either extending the surface or
@@ -75,7 +70,11 @@ class Surface : public virtual GeometryObject,
   };
 
   /// Helper strings for screen output
-  static std::array<std::string, SurfaceType::Other> s_surfaceTypeNames;
+  static constexpr std::array<std::string_view, Surface::SurfaceType::Other + 1>
+      s_surfaceTypeNames = {"Cone",  "Cylinder", "Disc",        "Perigee",
+                            "Plane", "Straw",    "Curvilinear", "Other"};
+
+  friend std::ostream& operator<<(std::ostream& os, SurfaceType type);
 
  protected:
   /// Constructor with Transform3 as a shared object
@@ -90,12 +89,17 @@ class Surface : public virtual GeometryObject,
   /// to detector element and layer
   ///
   /// @param other Source surface for copy.
-  Surface(const Surface& other);
+  Surface(const Surface& other) noexcept = default;
 
-  /// Constructor from DetectorElementBase: Element proxy
+  /// Constructor from SurfacePlacement: Element proxy
   ///
-  /// @param detelement Detector element which is represented by this surface
-  explicit Surface(const DetectorElementBase& detelement);
+  /// @param placement Reference to the surface placement
+  /// @note The Surface does not take any ownership over the
+  ///       `SurfacePlacementBase` it is expected that the user
+  ///        ensures the life-time of the `SurfacePlacementBase`
+  ///        and that the `Surface` is actually owned by
+  ///        the `SurfacePlacementBase` instance
+  explicit Surface(const SurfacePlacementBase& placement) noexcept;
 
   /// Copy constructor with optional shift
   ///
@@ -105,15 +109,17 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other Source surface for copy
   /// @param shift Additional transform applied as: shift * transform
-  Surface(const GeometryContext& gctx, const Surface& other,
-          const Transform3& shift);
+  explicit Surface(const GeometryContext& gctx, const Surface& other,
+                   const Transform3& shift) noexcept;
 
  public:
-  virtual ~Surface();
+  ~Surface() noexcept override;
 
   /// Factory for producing memory managed instances of Surface.
   /// Will forward all parameters and will attempt to find a suitable
   /// constructor.
+  /// @param args Constructor arguments to forward to surface creation
+  /// @return Shared pointer to the created surface instance
   template <class T, typename... Args>
   static std::shared_ptr<T> makeShared(Args&&... args) {
     return std::shared_ptr<T>(new T(std::forward<Args>(args)...));
@@ -146,7 +152,8 @@ class Surface : public virtual GeometryObject,
   /// to detector element and layer
   ///
   /// @param other Source surface for the assignment
-  Surface& operator=(const Surface& other);
+  /// @return Reference to this surface after assignment
+  Surface& operator=(const Surface& other) noexcept = default;
 
   /// Comparison (equality) operator
   /// The strategy for comparison is
@@ -156,10 +163,12 @@ class Surface : public virtual GeometryObject,
   /// (d) then transform comparison
   ///
   /// @param other source surface for the comparison
-  virtual bool operator==(const Surface& other) const;
+  /// @return True if surfaces are equal, false otherwise
+  bool operator==(const Surface& other) const;
 
  public:
   /// Return method for the Surface type to avoid dynamic casts
+  /// @return The surface type enumeration value
   virtual SurfaceType type() const = 0;
 
   /// Return method for the surface Transform3 by reference
@@ -170,9 +179,9 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @return the contextual transform
-  virtual const Transform3& transform(const GeometryContext& gctx) const;
+  const Transform3& localToGlobalTransform(const GeometryContext& gctx) const;
 
-  /// Return method for the surface center by reference
+  /// Return method for the surface center
   /// @note the center is always recalculated in order to not keep a cache
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -195,13 +204,17 @@ class Surface : public virtual GeometryObject,
   /// @return SurfaceBounds by reference
   virtual const SurfaceBounds& bounds() const = 0;
 
-  /// Return method for the associated Detector Element
-  /// @return plain pointer to the DetectorElement, can be nullptr
-  const DetectorElementBase* associatedDetectorElement() const;
+  /// Return the associated surface placement if there is any
+  /// @return Pointer to the surface placement, can be nullptr
+  const SurfacePlacementBase* surfacePlacement() const;
 
   /// Return method for the associated Layer in which the surface is embedded
   /// @return Layer by plain pointer, can be nullptr
   const Layer* associatedLayer() const;
+
+  /// Return the thickness of the surface in the normal direction
+  /// @return The surface thickness
+  double thickness() const;
 
   /// Set Associated Layer
   /// Many surfaces can be associated to a Layer, but it might not be known yet
@@ -219,10 +232,9 @@ class Surface : public virtual GeometryObject,
   const std::shared_ptr<const ISurfaceMaterial>& surfaceMaterialSharedPtr()
       const;
 
-  /// Assign a detector element
-  ///
-  /// @param detelement Detector element which is represented by this surface
-  void assignDetectorElement(const DetectorElementBase& detelement);
+  /// Assign a placement object which may dynamically align the surface in space
+  /// @param placement: Placement object defining the surface's position
+  void assignSurfacePlacement(const SurfacePlacementBase& placement);
 
   /// Assign the surface material description
   ///
@@ -232,6 +244,15 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param material Material description associated to this surface
   void assignSurfaceMaterial(std::shared_ptr<const ISurfaceMaterial> material);
+
+  /// Assign whether the surface is sensitive
+  /// @param isSensitive Boolean flag to set sensitivity
+  /// @throw logic_error if the surface is associated to a detector element
+  void assignIsSensitive(bool isSensitive);
+  /// Assign the thickness of the surface in the
+  ///        orthogonal dimension
+  /// @param thick: Thickness parameter to assign (>=0)
+  void assignThickness(double thick);
 
   /// The geometric onSurface method
   ///
@@ -249,6 +270,20 @@ class Surface : public virtual GeometryObject,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance = BoundaryTolerance::None(),
       double tolerance = s_onSurfaceTolerance) const;
+
+  /// Calculates the closest point on the boundary of the surface to a given
+  /// point in local coordinates.
+  /// @param lposition The local position to check
+  /// @param metric The metric to use for the calculation
+  /// @return The closest point on the boundary of the surface
+  virtual Vector2 closestPointOnBoundary(const Vector2& lposition,
+                                         const SquareMatrix2& metric) const;
+
+  /// Calculates the distance to the boundary of the surface from a given point
+  /// in local coordinates.
+  /// @param lposition The local position to check
+  /// @return The distance to the boundary of the surface
+  virtual double distanceToBoundary(const Vector2& lposition) const;
 
   /// The insideBounds method for local positions
   ///
@@ -302,9 +337,9 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return RotationMatrix3 which defines the three axes of the measurement
   /// frame
-  virtual Acts::RotationMatrix3 referenceFrame(const GeometryContext& gctx,
-                                               const Vector3& position,
-                                               const Vector3& direction) const;
+  virtual RotationMatrix3 referenceFrame(const GeometryContext& gctx,
+                                         const Vector3& position,
+                                         const Vector3& direction) const;
 
   /// Calculate the jacobian from local to global which the surface knows best,
   /// hence the calculation is done here.
@@ -365,7 +400,7 @@ class Surface : public virtual GeometryObject,
                                                 const Vector3& position,
                                                 const Vector3& direction) const;
 
-  /// Calucation of the path correction for incident
+  /// Calculation of the path correction for incident
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position
@@ -386,8 +421,8 @@ class Surface : public virtual GeometryObject,
   /// @param boundaryTolerance the BoundaryTolerance
   /// @param tolerance the tolerance used for the intersection
   ///
-  /// @return @c SurfaceMultiIntersection object (contains intersection & surface)
-  virtual SurfaceMultiIntersection intersect(
+  /// @return @c MultiIntersection3D intersection object
+  virtual MultiIntersection3D intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
@@ -406,10 +441,19 @@ class Surface : public virtual GeometryObject,
   /// Output into a std::string
   ///
   /// @param gctx The current geometry context object, e.g. alignment
+  /// @return String representation of the surface
   std::string toString(const GeometryContext& gctx) const;
 
   /// Return properly formatted class name
+  /// @return The surface class name as a string
   virtual std::string name() const = 0;
+
+  /// Returns whether the Surface is sensitive
+  /// @return True if the surface is sensitive
+  bool isSensitive() const;
+  /// Returns whether the Surface is alignable
+  /// @return True if the surface is alignable
+  bool isAlignable() const;
 
   /// Return a Polyhedron for surface objects
   ///
@@ -471,9 +515,13 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  virtual ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
+  virtual Matrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const = 0;
 
+  /// Visualize the surface for debugging and inspection
+  /// @param helper Visualization helper for 3D rendering
+  /// @param gctx Geometry context for coordinate transformations
+  /// @param viewConfig Visual configuration (color, style, etc.)
   void visualize(IVisualization3D& helper, const GeometryContext& gctx,
                  const ViewConfig& viewConfig = s_viewSurface) const;
 
@@ -482,28 +530,30 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param sl is the ostream to be dumped into
+  /// @return Reference to the output stream for chaining
   virtual std::ostream& toStreamImpl(const GeometryContext& gctx,
                                      std::ostream& sl) const;
 
   /// Transform3 definition that positions
   /// (translation, rotation) the surface in global space
-  std::unique_ptr<const Transform3> m_transform{};
+  CloneablePtr<const Transform3> m_transform{};
 
-  /// Pointer to the a DetectorElementBase
-  const DetectorElementBase* m_associatedDetElement{nullptr};
+ private:
+  /// Pointer to the a SurfacePlacement
+  const SurfacePlacementBase* m_placement{nullptr};
 
   /// The associated layer Layer - layer in which the Surface is be embedded,
   /// nullptr if not associated
   const Layer* m_associatedLayer{nullptr};
 
-  /// The associated TrackingVolume - tracking volume in case the surface is a
-  /// boundary surface, nullptr if not associated
-  const TrackingVolume* m_associatedTrackingVolume{nullptr};
-
   /// Possibility to attach a material description
   std::shared_ptr<const ISurfaceMaterial> m_surfaceMaterial;
 
- private:
+  /// Flag to indicate whether the surface is sensitive
+  bool m_isSensitive{false};
+
+  /// Thickness of the surface in the normal direction
+  double m_thickness{0.};
   /// Calculate the derivative of bound track parameters w.r.t.
   /// alignment parameters of its reference surface (i.e. origin in global 3D
   /// Cartesian coordinates and its rotation represented with extrinsic Euler

@@ -9,16 +9,15 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 
 #include <algorithm>
-#include <cmath>
 #include <limits>
 #include <numbers>
-#include <utility>
 
-void Acts::Polyhedron::merge(const Acts::Polyhedron& other) {
+namespace Acts {
+
+void Polyhedron::merge(const Polyhedron& other) {
   std::size_t cvert = vertices.size();
   vertices.insert(vertices.end(), other.vertices.begin(), other.vertices.end());
   /// Add the new faces with offsets
@@ -36,12 +35,12 @@ void Acts::Polyhedron::merge(const Acts::Polyhedron& other) {
   join(triangularMesh, other.triangularMesh);
 }
 
-void Acts::Polyhedron::move(const Transform3& transform) {
+void Polyhedron::move(const Transform3& transform) {
   for_each(vertices.begin(), vertices.end(),
            [&](auto& v) { v = transform * v; });
 }
 
-Acts::Extent Acts::Polyhedron::extent(const Transform3& transform) const {
+Extent Polyhedron::extent(const Transform3& transform) const {
   Extent extent;
   auto vtxs = vertices;
   std::transform(vtxs.begin(), vtxs.end(), vtxs.begin(), [&](auto& v) {
@@ -100,8 +99,8 @@ Acts::Extent Acts::Polyhedron::extent(const Transform3& transform) const {
   return extent;
 }
 
-void Acts::Polyhedron::visualize(IVisualization3D& helper,
-                                 const ViewConfig& viewConfig) const {
+void Polyhedron::visualize(IVisualization3D& helper,
+                           const ViewConfig& viewConfig) const {
   if (viewConfig.visible) {
     if (!viewConfig.triangulate) {
       helper.faces(vertices, faces, viewConfig.color);
@@ -110,3 +109,5 @@ void Acts::Polyhedron::visualize(IVisualization3D& helper,
     }
   }
 }
+
+}  // namespace Acts

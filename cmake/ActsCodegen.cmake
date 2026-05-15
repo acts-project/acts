@@ -1,82 +1,84 @@
 include_guard(GLOBAL)
 
-message(STATUS "Configuring codegen: preparing uv")
+if(NOT ACTS_USE_SYSTEM_LIBS)
+    message(STATUS "Configuring codegen")
 
-find_program(uv_exe uv)
+    if(NOT DEFINED ACTS_CODEGEN_TMPDIR OR ACTS_CODEGEN_TMPDIR STREQUAL "")
+        find_program(MKTEMP_EXE NAMES mktemp REQUIRED)
+        execute_process(
+            COMMAND ${MKTEMP_EXE} -d
+            OUTPUT_VARIABLE _acts_codegen_tmpdir
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
 
-set(_uv_version "0.6.1")
-set(_base_url
-    "https://github.com/astral-sh/uv/releases/download/${_uv_version}"
-)
-
-if(uv_exe STREQUAL "uv_exe-NOTFOUND")
-    message(STATUS "uv not found, installing it")
-
-    if(NOT APPLE AND NOT UNIX)
-        message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
-    endif()
-
-    if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
-        if(APPLE)
-            set(UV_NAME "${_base_url}/uv-x86_64-apple-darwin.tar.gz")
-            set(UV_HASH
-                "SHA256=d8609b53f280d5e784a7586bf7a3fd90c557656af109cee8572b24a0c1443191"
-            )
-        elseif(UNIX)
-            set(UV_URL "${_base_url}/uv-x86_64-unknown-linux-musl.tar.gz")
-            set(UV_HASH
-                "SHA256=143dba84867f72107048e1f95be8f894d59f456e018a34276d9d2d6bacdf8f99"
-            )
-        endif()
-    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "(arm)|(ARM)|(aarch64)")
-        if(APPLE)
-            set(UV_URL "${_base_url}/uv-aarch64-apple-darwin.tar.gz")
-            set(UV_HASH
-                "SHA256=90e10cc7f26cbaf3eaa867cf99344ffd550e942fd4b660e88f2f91c23022dc5a"
-            )
-        elseif(UNIX)
-            set(UV_URL "${_base_url}/uv-aarch64-unknown-linux-musl.tar.gz")
-            set(UV_HASH
-                "SHA256=6455886f9aef3392df0af630dee9df892787fdffda0f0800245f86a735bd810d"
-            )
-        endif()
-    else()
-        message(
-            FATAL_ERROR
-            "Unsupported architecture: ${CMAKE_SYSTEM_PROCESSOR}"
+        set(ACTS_CODEGEN_TMPDIR
+            "${_acts_codegen_tmpdir}"
+            CACHE PATH
+            "Codegen temporary directory for ACTS code generation"
         )
     endif()
 
-    message(STATUS "Downloading uv from ${UV_URL}")
-    set(UV_DIR "${CMAKE_BINARY_DIR}/uv")
-    file(DOWNLOAD ${UV_URL} ${UV_DIR}/uv.tar.gz EXPECTED_HASH ${UV_HASH})
+    set(_acts_codegen_tmpdir "${ACTS_CODEGEN_TMPDIR}")
+    file(MAKE_DIRECTORY "${_acts_codegen_tmpdir}")
+    message(STATUS "Codegen temporary directory: ${_acts_codegen_tmpdir}")
 
-    file(ARCHIVE_EXTRACT INPUT ${UV_DIR}/uv.tar.gz DESTINATION ${UV_DIR})
+    include(ActsEnsureUv)
+else()
+    message(
+        STATUS
+        "Configuring codegen in offline mode: preparing virtual environment"
+    )
 
-    file(REMOVE ${UV_DIR}/uv.tar.gz)
+    find_package(Python REQUIRED COMPONENTS Interpreter)
 
-    file(GLOB uv_extracted ${UV_DIR}/uv*)
-    message(STATUS "Extracted uv: ${uv_extracted}")
+    # The idea of the following code is to create a "nested" Python
+    # environment; we grab the source of the packages in the current env
+    # whether that is a virtual environment, a system environment, or a Spack
+    # environment, and copy that into a newly created virtual environment.
+    # This strategy comes from https://stackoverflow.com/a/75545634
+    # First, we grab the Python package directory for the outside environment.
+    execute_process(
+        COMMAND
+            ${Python_EXECUTABLE} -c
+            "import sysconfig; print(sysconfig.get_paths()['purelib'])"
+        OUTPUT_VARIABLE _python_package_dir
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
 
-    find_program(uv_exe uv PATHS ${uv_extracted} REQUIRED NO_DEFAULT_PATH)
+    # Then we create a new virtual env using the venv package which is built
+    # into Python these days.
+    execute_process(
+        COMMAND ${Python_EXECUTABLE} -m venv ${CMAKE_BINARY_DIR}/codegen_venv
+    )
+    # Now, we get the package directory for the newly created virtual
+    # environment.
+    execute_process(
+        COMMAND
+            ${CMAKE_BINARY_DIR}/codegen_venv/bin/python -c
+            "import sysconfig; print(sysconfig.get_paths()['purelib'])"
+        OUTPUT_VARIABLE _python_nested_package_dir
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    # Finally, we write the path found in the outside virtual env into the
+    # new virtual env as described in the StackOverflow answer.
+    file(
+        WRITE "${_python_nested_package_dir}/_base_packages.pth"
+        ${_python_package_dir}
+    )
+
+    message(
+        STATUS
+        "Virtual environment based on ${_python_package_dir} created in ${CMAKE_BINARY_DIR}/codegen_venv/"
+    )
 endif()
-
-message(STATUS "Found uv: ${uv_exe}")
-
-execute_process(
-    COMMAND ${uv_exe} --version
-    OUTPUT_VARIABLE uv_version
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-message(STATUS "uv version: ${uv_version}")
 
 function(acts_code_generation)
     set(options ISOLATED)
-    set(oneValueArgs TARGET PYTHON PYTHON_VERSION OUTPUT)
+    set(oneValueArgs ADD_TO_TARGET PYTHON PYTHON_VERSION OUTPUT)
     set(multiValueArgs DEPENDS WITH_REQUIREMENTS WITH)
     cmake_parse_arguments(
-        PARSE_ARGV
-        0
+        PARSE_ARGV 0
         ARGS
         "${options}"
         "${oneValueArgs}"
@@ -116,33 +118,88 @@ function(acts_code_generation)
     foreach(_requirement ${ARGS_WITH})
         list(APPEND _with_args "--with;${_requirement}")
         if(IS_DIRECTORY ${_requirement})
-            file(GLOB_RECURSE _depends_py ${_requirement}/*)
-            list(APPEND _depends ${_depends_py})
+            if(NOT ACTS_USE_SYSTEM_LIBS)
+                file(GLOB_RECURSE _depends_py ${_requirement}/*)
+                list(APPEND _depends ${_depends_py})
+            else()
+                # If we are not using uv, then we use pip to install the
+                # package into the virtual environment in the build directory.
+                # The --no-build-isolation flag ensures that we don't
+                # automatically download setuptools. The --no-index flag
+                # ensures that nothing can be downloaded ever, and the
+                # --no-deps is necessary to convince pip that the dependencies
+                # are already in the environment.
+                execute_process(
+                    COMMAND
+                        ${CMAKE_BINARY_DIR}/codegen_venv/bin/python -m pip
+                        install --no-build-isolation --no-index --no-deps
+                        ${_requirement}
+                    OUTPUT_QUIET
+                )
+            endif()
         endif()
     endforeach()
 
     get_filename_component(_output_name ${ARGS_OUTPUT} NAME)
 
-    set(_codegen_root ${CMAKE_CURRENT_BINARY_DIR}/codegen/${ARGS_TARGET})
+    string(SHA1 _output_hash ${_output_name})
+
+    set(_codegen_root ${CMAKE_CURRENT_BINARY_DIR}/codegen/${_output_hash})
     set(_output_file ${_codegen_root}/${ARGS_OUTPUT})
 
     get_filename_component(_output_dir ${_output_file} DIRECTORY)
     file(MAKE_DIRECTORY ${_output_dir})
 
-    add_custom_command(
-        OUTPUT ${_output_file}
-        COMMAND
-            env -i ${uv_exe} run --quiet --python ${ARGS_PYTHON_VERSION}
-            --no-project ${_arg_isolated} ${_with_args} ${ARGS_PYTHON}
-            ${_output_file}
-        DEPENDS ${_depends}
-        COMMENT "Generating ${ARGS_OUTPUT}"
-        VERBATIM
-    )
+    if(NOT ACTS_USE_SYSTEM_LIBS)
+        # If using uv, run it in a clean environment but include the variables
+        # that specify a proxy.
+        set(_propagate
+            HTTP_PROXY
+            HTTPS_PROXY
+            ALL_PROXY
+            NO_PROXY
+            SSL_CERT_FILE
+        )
+        foreach(_var IN LISTS _propagate)
+            if(DEFINED ENV{${_var}})
+                list(APPEND _uv_environment "${_var}=$ENV{${_var}}")
+            endif()
+        endforeach()
+        add_custom_command(
+            OUTPUT ${_output_file}
+            COMMAND
+                env -i UV_NO_CACHE=1
+                UV_PYTHON_INSTALL_DIR=${ACTS_CODEGEN_TMPDIR}/python_install_dir
+                ${_uv_environment} ${uv_exe} run --quiet --python
+                ${ARGS_PYTHON_VERSION} --no-project ${_arg_isolated}
+                ${_with_args} ${ARGS_PYTHON} ${_output_file}
+            DEPENDS ${_depends}
+            COMMENT "Generating ${ARGS_OUTPUT}"
+            VERBATIM
+        )
+    else()
+        # If not using uv, just run Python from the virtual environment that
+        # we created above.
+        add_custom_command(
+            OUTPUT ${_output_file}
+            COMMAND
+                ${CMAKE_BINARY_DIR}/codegen_venv/bin/python ${ARGS_PYTHON}
+                ${_output_file}
+            DEPENDS ${_depends}
+            COMMENT "Generating ${ARGS_OUTPUT}"
+            VERBATIM
+        )
+    endif()
 
-    add_custom_target(${ARGS_TARGET}_Internal DEPENDS ${_output_file})
-    add_library(${ARGS_TARGET} INTERFACE)
-    target_include_directories(${ARGS_TARGET} INTERFACE ${_codegen_root})
+    set(_internal_target codegen_${_output_hash}_Internal)
+    add_custom_target(${_internal_target} DEPENDS ${_output_file})
 
-    add_dependencies(${ARGS_TARGET} ${ARGS_TARGET}_Internal)
+    add_dependencies(${ARGS_ADD_TO_TARGET} ${_internal_target})
+    target_include_directories(${ARGS_ADD_TO_TARGET} PRIVATE ${_codegen_root})
+
+    # Add a central copde generation target that depends on all codegen targets, so that we can build only them in one go
+    if(NOT TARGET ActsCodegen)
+        add_custom_target(ActsCodegen)
+    endif()
+    add_dependencies(ActsCodegen ${_internal_target})
 endfunction()

@@ -12,6 +12,7 @@
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -19,7 +20,9 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsTests {
 
 ///  helper function to create a cylinder
 TrackingVolumePtr constructCylinderVolume(
@@ -47,25 +50,16 @@ TrackingVolumePtr constructCylinderVolume(
   ///  prepare the surfaces
 
   ///  make the binned array
-  double bUmin = sfnPosition.z() - surfaceHalfLengthZ;
   double bUmax = sfpPosition.z() + surfaceHalfLengthZ;
 
   std::vector<std::shared_ptr<const Surface>> surfaces_only = {{sfn, sfc, sfp}};
   std::vector<const Surface*> surfaces_only_raw = {
       {sfn.get(), sfc.get(), sfp.get()}};
 
-  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axis(
-      bUmin, bUmax, surfaces_only.size());
-  auto g2l = [](const Vector3& glob) {
-    return std::array<double, 1>({{glob.z()}});
-  };
-  auto l2g = [](const std::array<double, 1>& loc) {
-    return Vector3(0, 0, loc[0]);
-  };
-  auto sl = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(axis)>>(
-      g2l, l2g, std::make_tuple(axis));
-  sl->fill(gctx, surfaces_only_raw);
-  auto bArray = std::make_unique<SurfaceArray>(std::move(sl), surfaces_only);
+  SurfaceArrayCreator::Config sacConfig;
+  SurfaceArrayCreator sac{sacConfig};
+
+  auto bArray = sac.surfaceArrayOnCylinder(gctx, surfaces_only);
 
   ///  now create the Layer
   auto layer0bounds = std::make_shared<const CylinderBounds>(surfaceR, bUmax);
@@ -114,4 +108,5 @@ MutableTrackingVolumePtr constructContainerVolume(const GeometryContext& gctx,
   // return the container
   return hVolume;
 }
-}  // namespace Acts
+
+}  // namespace ActsTests

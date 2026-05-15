@@ -42,7 +42,7 @@ done
 #check input for DDhep input
 if [ "${detector}" == DD4hep ]; then
    if [ -z "${dd4hepInput}" ]; then
-      echo "Empty input for --dd4hep-input. A file like $<source/Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml must be provided. Have to exit"
+      echo "Empty input for --dd4hep-input. A file like $<source/Examples/Detectors/DD4hepGeometry/compact/OpenDataGeometry/OpenDataDetector.xml must be provided. Have to exit"
       exit 1
    fi
    if [ ! -f "${dd4hepInput}" ]; then

@@ -8,26 +8,26 @@
 
 #include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 
 #include <cmath>
 
-Acts::Result<std::tuple<ActsFatras::PlanarSurfaceDrift::Segment2D,
-                        ActsFatras::PlanarSurfaceDrift::Segment3D>>
-ActsFatras::PlanarSurfaceDrift::toReadout(const Acts::GeometryContext& gctx,
-                                          const Acts::Surface& surface,
-                                          double thickness,
-                                          const Acts::Vector3& pos,
-                                          const Acts::Vector3& dir,
-                                          const Acts::Vector3& driftDir) const {
+namespace ActsFatras {
+
+Acts::Result<
+    std::tuple<PlanarSurfaceDrift::Segment2D, PlanarSurfaceDrift::Segment3D>>
+PlanarSurfaceDrift::toReadout(const Acts::GeometryContext& gctx,
+                              const Acts::Surface& surface, double thickness,
+                              const Acts::Vector3& pos,
+                              const Acts::Vector3& dir,
+                              const Acts::Vector3& driftDir) const {
   // Transform the hit & direction into the local surface frame
-  const auto& invTransform = surface.transform(gctx).inverse();
+  const auto& invTransform = surface.localToGlobalTransform(gctx).inverse();
   Acts::Vector3 pos3Local(invTransform * pos);
   Acts::Vector3 seg3Local = invTransform.linear() * dir.normalized();
   if (std::abs(seg3Local.z()) < Acts::s_epsilon) {
     // The segment is parallel to the surface
-    return ActsFatras::DigitizationError::DriftError;
+    return DigitizationError::DriftError;
   }
   // Scale the unit vector to the thickness of the module
   double scale = thickness / seg3Local.z();
@@ -50,3 +50,5 @@ ActsFatras::PlanarSurfaceDrift::toReadout(const Acts::GeometryContext& gctx,
       Segment2D{driftedEntry.segment<2>(0), driftedExit.segment<2>(0)},
       Segment3D{entry, exit}};
 }
+
+}  // namespace ActsFatras

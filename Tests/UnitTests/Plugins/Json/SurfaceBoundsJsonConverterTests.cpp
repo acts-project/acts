@@ -9,8 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/Json/SurfaceBoundsJsonConverter.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "ActsPlugins/Json/SurfaceBoundsJsonConverter.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -22,7 +22,9 @@
 
 using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(SurfaceBoundsJsonConversion)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(JsonSuite)
 
 BOOST_AUTO_TEST_CASE(SurfaceBoundsRoundTripTests) {
   std::ofstream out;
@@ -62,3 +64,5 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsDetrayConversion) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

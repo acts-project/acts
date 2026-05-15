@@ -21,7 +21,7 @@ StraightLineStepper::State StraightLineStepper::makeState(
 }
 
 void StraightLineStepper::initialize(State& state,
-                                     const BoundTrackParameters& par) const {
+                                     const BoundParameters& par) const {
   initialize(state, par.parameters(), par.covariance(),
              par.particleHypothesis(), par.referenceSurface());
 }
@@ -60,22 +60,22 @@ void StraightLineStepper::initialize(State& state,
   }
 }
 
-Result<std::tuple<BoundTrackParameters, BoundMatrix, double>>
+Result<std::tuple<StraightLineStepper::BoundParameters, BoundMatrix, double>>
 StraightLineStepper::boundState(
     State& state, const Surface& surface, bool transportCov,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
   return detail::boundState(
       state.options.geoContext, surface, state.cov, state.jacobian,
-      state.jacTransport, state.derivative, state.jacToGlobal, state.pars,
-      state.particleHypothesis, state.covTransport && transportCov,
+      state.jacTransport, state.derivative, state.jacToGlobal, std::nullopt,
+      state.pars, state.particleHypothesis, state.covTransport && transportCov,
       state.pathAccumulated, freeToBoundCorrection);
 }
 
-std::tuple<BoundTrackParameters, BoundMatrix, double>
+std::tuple<StraightLineStepper::BoundParameters, BoundMatrix, double>
 StraightLineStepper::curvilinearState(State& state, bool transportCov) const {
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, state.pars, state.particleHypothesis,
+      state.jacToGlobal, std::nullopt, state.pars, state.particleHypothesis,
       state.covTransport && transportCov, state.pathAccumulated);
 }
 
@@ -102,7 +102,8 @@ void StraightLineStepper::update(State& state, const Vector3& uposition,
 void StraightLineStepper::transportCovarianceToCurvilinear(State& state) const {
   detail::transportCovarianceToCurvilinear(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, state.pars.template segment<3>(eFreeDir0));
+      state.jacToGlobal, std::nullopt,
+      state.pars.template segment<3>(eFreeDir0));
 }
 
 void StraightLineStepper::transportCovarianceToBound(
@@ -110,8 +111,8 @@ void StraightLineStepper::transportCovarianceToBound(
     const FreeToBoundCorrection& freeToBoundCorrection) const {
   detail::transportCovarianceToBound(
       state.options.geoContext, surface, state.cov, state.jacobian,
-      state.jacTransport, state.derivative, state.jacToGlobal, state.pars,
-      freeToBoundCorrection);
+      state.jacTransport, state.derivative, state.jacToGlobal, std::nullopt,
+      state.pars, freeToBoundCorrection);
 }
 
 }  // namespace Acts

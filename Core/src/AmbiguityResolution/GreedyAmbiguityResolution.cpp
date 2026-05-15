@@ -8,6 +8,8 @@
 
 #include "Acts/AmbiguityResolution/GreedyAmbiguityResolution.hpp"
 
+#include <algorithm>
+
 namespace Acts {
 
 namespace {
@@ -51,7 +53,19 @@ void GreedyAmbiguityResolution::resolve(State& state) const {
     if (relativeSharedMeasurements(a) != relativeSharedMeasurements(b)) {
       return relativeSharedMeasurements(a) < relativeSharedMeasurements(b);
     }
-    return state.trackChi2[a] < state.trackChi2[b];
+    if (state.measurementsPerTrack[a].size() ==
+        state.measurementsPerTrack[b].size()) {
+      // chi2 comparison only makes sense if the number of measurements is the
+      // same. Note that this is still not fully correct, as the measurement
+      // dimensions might differ i.e. pixel and strip measurements are treated
+      // the same here.
+      return state.trackChi2[a] < state.trackChi2[b];
+    }
+    // If the number of measurements is different, we compare the number of
+    // measurements. As mentioned above, this is not fully correct, but
+    // should be sufficient for now.
+    return state.measurementsPerTrack[a].size() >
+           state.measurementsPerTrack[b].size();
   };
 
   for (std::size_t i = 0; i < m_cfg.maximumIterations; ++i) {
@@ -63,9 +77,8 @@ void GreedyAmbiguityResolution::resolve(State& state) const {
 
     // Find the maximum amount of shared measurements per track to decide if we
     // are done or not.
-    auto maximumSharedMeasurements = *std::max_element(
-        state.selectedTracks.begin(), state.selectedTracks.end(),
-        sharedMeasurementsComperator);
+    auto maximumSharedMeasurements = *std::ranges::max_element(
+        state.selectedTracks, sharedMeasurementsComperator);
     ACTS_VERBOSE(
         "maximum shared measurements "
         << state.sharedMeasurementsPerTrack[maximumSharedMeasurements]);
@@ -76,8 +89,7 @@ void GreedyAmbiguityResolution::resolve(State& state) const {
 
     // Find the "worst" track by comparing them to each other
     auto badTrack =
-        *std::max_element(state.selectedTracks.begin(),
-                          state.selectedTracks.end(), trackComperator);
+        *std::ranges::max_element(state.selectedTracks, trackComperator);
     ACTS_VERBOSE("remove track "
                  << badTrack << " nMeas "
                  << state.measurementsPerTrack[badTrack].size() << " nShared "

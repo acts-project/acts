@@ -10,12 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -24,7 +21,6 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
@@ -35,11 +31,11 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "Acts/Vertexing/ZScanVertexFinder.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <functional>
 #include <iostream>
 #include <iterator>
 #include <memory>
@@ -48,23 +44,22 @@
 #include <random>
 #include <string>
 #include <system_error>
-#include <tuple>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "VertexingDataHelper.hpp"
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer;
 
 // Create a test context
-GeometryContext geoContext = GeometryContext();
+GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 const std::string toolString = "IVF";
@@ -110,6 +105,7 @@ struct InputTrackStub {
   BoundTrackParameters m_parameters;
 };
 
+BOOST_AUTO_TEST_SUITE(VertexingSuite)
 ///
 /// @brief Unit test for IterativeVertexFinder for BoundTrackParameters
 ///
@@ -213,7 +209,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
       // Vector to store track objects used for vertex fit
       for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
         // Construct positive or negative charge randomly
-        double q = qDist(gen) < 0 ? -1. : 1.;
+        double q = std::copysign(1., qDist(gen));
 
         // Construct random track parameters
         BoundVector paramVec;
@@ -433,7 +429,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
       // Vector to store track objects used for vertex fit
       for (std::uint32_t iTrack = 0; iTrack < nTracks; iTrack++) {
         // Construct positive or negative charge randomly
-        double q = qDist(gen) < 0 ? -1. : 1.;
+        double q = std::copysign(1., qDist(gen));
 
         // Construct random track parameters
         BoundVector paramVec;
@@ -645,4 +641,6 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   // }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

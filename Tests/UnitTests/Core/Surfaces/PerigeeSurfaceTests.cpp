@@ -17,12 +17,15 @@
 #include <memory>
 #include <string>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
-BOOST_AUTO_TEST_SUITE(PerigeeSurfaces)
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
+
 /// Unit test for creating compliant/non-compliant PerigeeSurface object
 BOOST_AUTO_TEST_CASE(PerigeeSurfaceConstruction) {
   /// Test default construction
@@ -92,4 +95,4 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Acts::Test
+}  // namespace ActsTests

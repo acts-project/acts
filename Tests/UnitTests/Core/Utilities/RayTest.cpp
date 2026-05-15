@@ -9,12 +9,15 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Ray.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Utilities)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
+
 BOOST_AUTO_TEST_CASE(ray_construction) {
   // 2D
 
@@ -54,4 +57,4 @@ BOOST_AUTO_TEST_CASE(ray_construction) {
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

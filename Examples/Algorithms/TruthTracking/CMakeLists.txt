@@ -1,6 +1,5 @@
-add_library(
-    ActsExamplesTruthTracking
-    SHARED
+acts_add_library(
+    ExamplesTruthTracking
     ActsExamples/TruthTracking/ParticleSelector.cpp
     ActsExamples/TruthTracking/ParticleTrackParamExtractor.cpp
     ActsExamples/TruthTracking/TrackParameterSmearing.cpp
@@ -11,17 +10,10 @@ add_library(
     ActsExamples/TruthTracking/TruthVertexFinder.cpp
     ActsExamples/TruthTracking/TruthSeedingAlgorithm.cpp
     ActsExamples/TruthTracking/HitSelector.cpp
+    ActsExamples/TruthTracking/VertexTruthMatcher.cpp
 )
 target_include_directories(
     ActsExamplesTruthTracking
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
-target_link_libraries(
-    ActsExamplesTruthTracking
-    PUBLIC ActsCore ActsExamplesFramework
-)
-
-install(
-    TARGETS ActsExamplesTruthTracking
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+target_link_libraries(ActsExamplesTruthTracking PUBLIC Acts::ExamplesFramework)

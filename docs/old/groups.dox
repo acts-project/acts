@@ -1,0 +1,7 @@
+/// @defgroup eventdata Event Data
+/// @defgroup eventdata_measurement Event Data: Measurement
+/// @defgroup eventdata_tracks Event Data: Tracks
+/// @defgroup context Context
+/// @defgroup material_mapping Material Mapping
+/// @defgroup errors errors
+/// @anchor logging_patterns

@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <span>
 
 std::vector<ActsFatras::Segmentizer::ChannelSegment>
 ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
@@ -56,9 +57,9 @@ ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
       double d = start.y() - k * start.x();
 
       const auto& xboundaries = segmentation.binningData()[0].boundaries();
-      std::vector<double> xbbounds = {
+      std::span<const float> xbbounds(
           xboundaries.begin() + std::min(bstart[0], bend[0]) + 1,
-          xboundaries.begin() + std::max(bstart[0], bend[0]) + 1};
+          xboundaries.begin() + std::max(bstart[0], bend[0]) + 1);
       for (const auto x : xbbounds) {
         cSteps.push_back(ChannelStep{
             {(bstart[0] < bend[0] ? 1 : -1), 0}, {x, k * x + d}, start});
@@ -69,9 +70,9 @@ ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
       double k = segment2d.x() / segment2d.y();
       double d = start.x() - k * start.y();
       const auto& yboundaries = segmentation.binningData()[1].boundaries();
-      std::vector<double> ybbounds = {
+      std::span<const float> ybbounds(
           yboundaries.begin() + std::min(bstart[1], bend[1]) + 1,
-          yboundaries.begin() + std::max(bstart[1], bend[1]) + 1};
+          yboundaries.begin() + std::max(bstart[1], bend[1]) + 1);
       for (const auto y : ybbounds) {
         cSteps.push_back(ChannelStep{
             {0, (bstart[1] < bend[1] ? 1 : -1)}, {k * y + d, y}, start});
@@ -101,10 +102,10 @@ ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
     // The radial boundaries
     if (bstart[0] != bend[0]) {
       const auto& rboundaries = segmentation.binningData()[0].boundaries();
-      std::vector<double> rbbounds = {
+      std::span<const float> rbbounds(
           rboundaries.begin() + std::min(bstart[0], bend[0]) + 1,
-          rboundaries.begin() + std::max(bstart[0], bend[0]) + 1};
-      for (const auto& r : rbbounds) {
+          rboundaries.begin() + std::max(bstart[0], bend[0]) + 1);
+      for (const auto r : rbbounds) {
         auto radIntersection =
             Acts::detail::IntersectionHelper2D::intersectCircleSegment(
                 r, std::min(phistart, phiend), std::max(phistart, phiend),
@@ -120,11 +121,11 @@ ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
           surface.referencePositionValue(geoCtx, Acts::AxisDirection::AxisR);
       Acts::Vector2 origin = {0., 0.};
       const auto& phiboundaries = segmentation.binningData()[1].boundaries();
-      std::vector<double> phibbounds = {
+      std::span<const float> phibbounds(
           phiboundaries.begin() + std::min(bstart[1], bend[1]) + 1,
-          phiboundaries.begin() + std::max(bstart[1], bend[1]) + 1};
+          phiboundaries.begin() + std::max(bstart[1], bend[1]) + 1);
 
-      for (const auto& phi : phibbounds) {
+      for (const auto phi : phibbounds) {
         Acts::Vector2 philine(referenceR * std::cos(phi),
                               referenceR * std::sin(phi));
         auto phiIntersection =

@@ -10,9 +10,9 @@
 
 #include "Acts/Geometry/ITrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
+#include "ActsPlugins/GeoModel/GeoModelTree.hpp"
 
 #include <memory>
 
@@ -23,7 +23,7 @@ namespace ActsExamples {
 struct GeoModelDetector : public Detector {
   struct Config {
     /// @brief Configured instance to the GeoModel loaded geoModel tree
-    Acts::GeoModelTree geoModelTree{};
+    ActsPlugins::GeoModelTree geoModelTree{};
     /// @brief Path to the GeoModel file. Used if the GeoModelTree remains unconfigured
     std::string path{};
     /// @brief Logging level of the child tools
@@ -41,7 +41,8 @@ struct GeoModelDetector : public Detector {
       const Geant4ConstructionOptions& options) const override;
 
   /// @brief Instantiate the building of the tracking geometry from an external builder
-  ///        The builder should
+  ///        The tracking geometry builder should contain the surfaces built
+  ///        from the same GeoModelTree as the GeoModelDetector itself.
   /// @param gctx: Geometry context to access the aligned transform of the volumes
   /// @param builder: Reference to the TrackingGeometry builder interpreting the GeoModelTree
   /// @return A constructed tracking geometry

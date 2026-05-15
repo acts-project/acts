@@ -1,16 +1,17 @@
-add_library(
-    ActsExamplesTrackFinding
-    SHARED
-    src/SeedingAlgorithm.cpp
-    src/SeedingOrthogonalAlgorithm.cpp
+acts_add_library(
+    ExamplesTrackFinding
+    src/MeasurementFilterAlgorithm.cpp
     src/SpacePointMaker.cpp
     src/TrackFindingAlgorithm.cpp
     src/TrackFindingAlgorithmFunction.cpp
     src/HoughTransformSeeder.cpp
+    src/AdaptiveHoughTransformSeeder.cpp
     src/TrackParamsEstimationAlgorithm.cpp
     src/MuonHoughSeeder.cpp
-    src/GbtsSeedingAlgorithm.cpp
+    src/GraphBasedSeedingAlgorithm.cpp
     src/TrackParamsLookupEstimation.cpp
+    src/GridTripletSeedingAlgorithm.cpp
+    src/OrthogonalTripletSeedingAlgorithm.cpp
 )
 
 target_include_directories(
@@ -20,23 +21,17 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesTrackFinding
-    PUBLIC ActsCore ActsExamplesFramework ActsExamplesMagneticField
-    PRIVATE ROOT::Core ROOT::Geom ROOT::Graf ROOT::Hist ROOT::Gpad
+    PUBLIC Acts::ExamplesMagneticField
 )
 
-acts_compile_headers(ActsExamplesTrackFinding GLOB "include/**/*.hpp")
+acts_compile_headers(ExamplesTrackFinding GLOB "include/**/*.hpp")
 
 # If Hashing examples are enabled, add them to the build
 if(ACTS_BUILD_EXAMPLES_HASHING)
     target_sources(
         ActsExamplesTrackFinding
-        PRIVATE src/SeedingAlgorithmHashing.cpp
+        PRIVATE src/HashingPrototypeSeedingAlgorithm.cpp
     )
 
-    target_link_libraries(ActsExamplesTrackFinding PUBLIC ActsPluginHashing)
+    target_link_libraries(ActsExamplesTrackFinding PUBLIC Annoy)
 endif()
-
-install(
-    TARGETS ActsExamplesTrackFinding
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

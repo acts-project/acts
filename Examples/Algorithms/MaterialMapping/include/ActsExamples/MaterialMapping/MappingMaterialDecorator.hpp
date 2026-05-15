@@ -14,17 +14,17 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Material/TrackingGeometryMaterial.hpp"
+#include "Acts/Surfaces/AnnulusBounds.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include <Acts/Surfaces/AnnulusBounds.hpp>
-#include <Acts/Surfaces/CylinderBounds.hpp>
-#include <Acts/Surfaces/RadialBounds.hpp>
-#include <Acts/Surfaces/SurfaceBounds.hpp>
-#include <Acts/Surfaces/TrapezoidBounds.hpp>
+#include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include <algorithm>
-#include <fstream>
 #include <map>
-#include <mutex>
 #include <numbers>
 
 // Convenience shorthand
@@ -41,16 +41,9 @@ class MappingMaterialDecorator : public IMaterialDecorator {
  public:
   using BinningMap = std::map<std::uint64_t, std::pair<int, int>>;
 
-  using VolumeMaterialMap =
-      std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
-
   MappingMaterialDecorator(const Acts::TrackingGeometry& tGeometry,
-                           Acts::Logging::Level level,
-                           bool clearSurfaceMaterial = true,
-                           bool clearVolumeMaterial = true)
-      : m_clearSurfaceMaterial(clearSurfaceMaterial),
-        m_clearVolumeMaterial(clearVolumeMaterial),
-        m_logger{getDefaultLogger("MappingMaterialDecorator", level)} {
+                           Acts::Logging::Level level)
+      : m_logger{getDefaultLogger("MappingMaterialDecorator", level)} {
     volumeLoop(tGeometry.highestTrackingVolume());
   }
 
@@ -60,10 +53,6 @@ class MappingMaterialDecorator : public IMaterialDecorator {
   void decorate(Surface& surface) const final {
     ACTS_VERBOSE("Processing surface: " << surface.geometryId());
     // Clear the material if registered to do so
-    if (m_clearSurfaceMaterial) {
-      ACTS_VERBOSE("-> Clearing surface material");
-      surface.assignSurfaceMaterial(nullptr);
-    }
     // Try to find the surface in the map
     auto bins = m_binningMap.find(surface.geometryId().value());
     if (bins != m_binningMap.end()) {
@@ -78,11 +67,6 @@ class MappingMaterialDecorator : public IMaterialDecorator {
   /// @param volume the non-cost volume that is decorated
   void decorate(TrackingVolume& volume) const final {
     ACTS_VERBOSE("Processing volume: " << volume.geometryId());
-    // Clear the material if registered to do so
-    if (m_clearVolumeMaterial) {
-      ACTS_VERBOSE("-> Clearing volume material");
-      volume.assignVolumeMaterial(nullptr);
-    }
     // Try to find the volume in the map
     auto vMaterial = m_volumeMaterialMap.find(volume.geometryId());
     if (vMaterial != m_volumeMaterialMap.end()) {
@@ -276,10 +260,7 @@ class MappingMaterialDecorator : public IMaterialDecorator {
  private:
   BinningMap m_binningMap;
 
-  VolumeMaterialMap m_volumeMaterialMap;
-
-  bool m_clearSurfaceMaterial{true};
-  bool m_clearVolumeMaterial{true};
+  VolumeMaterialMaps m_volumeMaterialMap;
 
   std::unique_ptr<const Logger> m_logger;
 

@@ -10,11 +10,13 @@
 
 #pragma once
 
+/// @ingroup errors
 enum class HoughError {
-  Failure = 1,
-  SomethingElse,
+  /// A layer ID could not be determined for the given radius
+  LayerIdNotFoundForRadius = 1,
 };
-std::error_code make_error_code(HoughError e) {
+
+inline std::error_code make_error_code(HoughError e) {
   return {static_cast<int>(e), std::generic_category()};
 }
 
@@ -59,8 +61,7 @@ ResultUnsigned findLayerIDDefault(double r) {
   } else if (r < 1100) {
     return ResultUnsigned::success(9);
   }
-  return ResultUnsigned::failure(
-      HoughError::Failure);  /// shouldn't be here, this won't be used
+  return ResultUnsigned::failure(HoughError::LayerIdNotFoundForRadius);
 }
 
 // default with two slices, one for negative and one for positive z, counting

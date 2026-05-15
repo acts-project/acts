@@ -12,7 +12,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <array>
@@ -31,9 +31,11 @@
 // averagePhi)
 // - Local coords are z, rphi
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 const double alpha = std::numbers::pi / 8.;
 const double zMin = 3.;
@@ -154,6 +156,23 @@ BOOST_AUTO_TEST_CASE(ConeBoundsAssignment) {
   BOOST_CHECK_EQUAL(assignedConeBounds, originalConeBounds);
 }
 
+BOOST_AUTO_TEST_CASE(ConeBoundsCenter) {
+  // Test cone bounds centroid
+  ConeBounds cone(alpha, zMin, zMax, halfPhi, averagePhi);
+  Vector2 center = cone.center();
+
+  double expectedZ = 0.5 * (zMin + zMax);
+  BOOST_CHECK_EQUAL(center.x(), averagePhi);
+  BOOST_CHECK_EQUAL(center.y(), expectedZ);
+
+  // Test with different averagePhi
+  const double avgPhiOffset = std::numbers::pi / 6.;
+  ConeBounds coneOffset(alpha, zMin, zMax, halfPhi, avgPhiOffset);
+  Vector2 centerOffset = coneOffset.center();
+  BOOST_CHECK_EQUAL(centerOffset.x(), avgPhiOffset);
+  BOOST_CHECK_EQUAL(centerOffset.y(), expectedZ);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

@@ -1,0 +1,21 @@
+# Each line should contain the regular expression of a known Sphinx warning
+# that should be filtered out
+.*Duplicate C\+\+ declaration.*
+.*Duplicate ID: .*
+.*Duplicate explicit target name: .*
+.*undefined label: .*class_acts_1_1_convex_polygon_bounds_3_01_polygon_dynamic_01_4.*
+.*undefined label: .*class_acts_1_1_grid_surface_material_t.*
+.*undefined label: .*class_acts_1_1_i_grid_surface_material.*
+.*undefined label: .*namespace_acts_.*
+# I think these are because we use specialization
+.*undefined label: .*bdt.*
+
+# ignore after decommissioning old docs setup
+.*doxygentypedef: Cannot find typedef.*
+.*doxygenfunction: Cannot find function.*
+.*doxygenenum: Cannot find enum.*
+.*undefined label:.*
+.*cpp:enum reference target not found:.*
+.*cpp:func reference target not found:.*
+.*cpp:enumerator reference target not found:.*
+.*cpp:func reference target not found:.*

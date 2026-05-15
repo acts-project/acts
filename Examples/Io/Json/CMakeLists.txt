@@ -1,6 +1,5 @@
-add_library(
-    ActsExamplesIoJson
-    SHARED
+acts_add_library(
+    ExamplesIoJson
     src/JsonGeometryList.cpp
     src/JsonMaterialWriter.cpp
     src/JsonSurfacesWriter.cpp
@@ -13,14 +12,11 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesIoJson
     PUBLIC
-        ActsCore
-        ActsPluginJson
-        ActsExamplesDigitization
-        ActsExamplesFramework
-        ActsExamplesMaterialMapping
-        ActsExamplesTrackFinding
+        Acts::PluginJson
+        Acts::ExamplesDigitization
+        Acts::ExamplesFramework
+        Acts::ExamplesMaterialMapping
+        Acts::ExamplesTrackFinding
 )
 
-acts_compile_headers(ActsExamplesIoJson GLOB "include/**/*.hpp")
-
-install(TARGETS ActsExamplesIoJson LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+acts_compile_headers(ExamplesIoJson GLOB "include/**/*.hpp")

@@ -17,7 +17,6 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -28,7 +27,9 @@
 #include <utility>
 #include <vector>
 
-std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
+namespace Acts {
+
+std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
     const GeometryContext& gctx, const LayerVector& layersInput, double min,
     double max, BinningType bType, AxisDirection aDir) const {
   ACTS_VERBOSE("Build LayerArray with " << layersInput.size()
@@ -58,8 +59,8 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
       for (auto& layIter : layers) {
         ACTS_VERBOSE("equidistant : registering a Layer at binning position : "
                      << (layIter->referencePosition(gctx, aDir)));
-        layerOrderVector.push_back(LayerOrderPosition(
-            layIter, layIter->referencePosition(gctx, aDir)));
+        layerOrderVector.emplace_back(layIter,
+                                      layIter->referencePosition(gctx, aDir));
       }
       // create the binUitlity
       binUtility = std::make_unique<const BinUtility>(layers.size(), min, max,
@@ -71,7 +72,7 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
     case arbitrary: {
       std::vector<float> boundaries;
       // initial step
-      boundaries.push_back(min);
+      boundaries.emplace_back(min);
       double layerValue = 0.;
       double layerThickness = 0.;
       std::shared_ptr<const Layer> navLayer = nullptr;
@@ -79,11 +80,11 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
       // loop over layers
       for (auto& layIter : layers) {
         // estimate the offset
-        layerThickness = layIter->thickness();
+        layerThickness = layIter->layerThickness();
         layerValue = layIter->referencePositionValue(gctx, aDir);
         // register the new boundaries in the step vector
-        boundaries.push_back(layerValue - 0.5 * layerThickness);
-        boundaries.push_back(layerValue + 0.5 * layerThickness);
+        boundaries.emplace_back(layerValue - 0.5 * layerThickness);
+        boundaries.emplace_back(layerValue + 0.5 * layerThickness);
         // calculate the layer value for the offset
         double navigationValue = 0.5 * ((layerValue - 0.5 * layerThickness) +
                                         boundaries.at(boundaries.size() - 3));
@@ -116,12 +117,12 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
             << (navLayerSurface->referencePosition(gctx, aDir)).z());
         navLayer = NavigationLayer::create(std::move(navLayerSurface));
         // push the navigation layer in
-        layerOrderVector.push_back(LayerOrderPosition(
-            navLayer, navLayer->referencePosition(gctx, aDir)));
+        layerOrderVector.emplace_back(navLayer,
+                                      navLayer->referencePosition(gctx, aDir));
 
         // push the original layer in
-        layerOrderVector.push_back(LayerOrderPosition(
-            layIter, layIter->referencePosition(gctx, aDir)));
+        layerOrderVector.emplace_back(layIter,
+                                      layIter->referencePosition(gctx, aDir));
         ACTS_VERBOSE("arbitrary : registering MaterialLayer at  "
                      << (layIter->referencePosition(gctx, aDir)).x() << ", "
                      << (layIter->referencePosition(gctx, aDir)).y() << ", "
@@ -146,11 +147,11 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
             << (navLayerSurface->referencePosition(gctx, aDir)).z());
         navLayer = NavigationLayer::create(std::move(navLayerSurface));
         // push the navigation layer in
-        layerOrderVector.push_back(LayerOrderPosition(
-            navLayer, navLayer->referencePosition(gctx, aDir)));
+        layerOrderVector.emplace_back(navLayer,
+                                      navLayer->referencePosition(gctx, aDir));
       }
       // now close the boundaries
-      boundaries.push_back(max);
+      boundaries.emplace_back(max);
       // some screen output
       ACTS_VERBOSE(layerOrderVector.size()
                    << " Layers (material + navigation) built. ");
@@ -169,7 +170,7 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
                                                          std::move(binUtility));
 }
 
-std::shared_ptr<Acts::Surface> Acts::LayerArrayCreator::createNavigationSurface(
+std::shared_ptr<Surface> LayerArrayCreator::createNavigationSurface(
     const GeometryContext& gctx, const Layer& layer, AxisDirection aDir,
     double offset) const {
   // surface reference
@@ -227,9 +228,11 @@ std::shared_ptr<Acts::Surface> Acts::LayerArrayCreator::createNavigationSurface(
     auto cylinderBounds =
         std::make_shared<CylinderBounds>(navigationR, halflengthZ);
     navigationSurface = Surface::makeShared<CylinderSurface>(
-        layerSurface.transform(gctx), cylinderBounds);
+        layerSurface.localToGlobalTransform(gctx), cylinderBounds);
   } else {
     ACTS_WARNING("Not implemented.");
   }
   return navigationSurface;
 }
+
+}  // namespace Acts

@@ -19,11 +19,14 @@ macro(add_integrationtest _name)
     target_link_libraries(
         ${_target}
         PRIVATE
-            ActsCore
-            ActsTestsCommonHelpers
+            Acts::Core
+            Acts::TestsCommonHelpers
             Boost::unit_test_framework
             ${integrationtest_extra_libraries}
     )
+    if(ACTS_TESTS_HAS_WNO_C2Y_EXTENSIONS)
+        target_compile_options(${_target} PRIVATE -Wno-c2y-extensions)
+    endif()
     # register as integration test executable
     set(_run "RunIntegrationTest${_name}")
     add_custom_target(${_run} COMMAND ${_target})
@@ -34,11 +37,13 @@ add_integrationtest(InterpolatedSolenoidBField InterpolatedSolenoidBFieldTest.cp
 add_integrationtest(NavigatorConsistency NavigatorConsistency.cpp)
 add_integrationtest(PrintDataDirectory PrintDataDirectory.cpp)
 add_integrationtest(PropagationAtlasConstant PropagationAtlasConstant.cpp)
-add_integrationtest(PropagationDenseConstant PropagationDenseConstant.cpp)
-add_integrationtest(PropagationEigenConstant PropagationEigenConstant.cpp)
-add_integrationtest(PropagationStraightLine PropagationStraightLine.cpp)
+add_integrationtest(PropagationBentTracks PropagationBentTracks.cpp)
 add_integrationtest(PropagationCompareAtlasEigenConstant PropagationCompareAtlasEigenConstant.cpp)
 add_integrationtest(PropagationCompareEigenStraightLine PropagationCompareEigenStraightLine.cpp)
-add_integrationtest(PropagationBentTracks PropagationBentTracks.cpp)
+add_integrationtest(PropagationEigenConstant PropagationEigenConstant.cpp)
+add_integrationtest(PropagationEigenDenseConstant PropagationEigenDenseConstant.cpp)
+add_integrationtest(PropagationStraightLine PropagationStraightLine.cpp)
+add_integrationtest(PropagationSympyConstant PropagationSympyConstant.cpp)
+add_integrationtest(PropagationSympyDenseConstant PropagationSympyDenseConstant.cpp)
 
 add_subdirectory_if(Fatras ACTS_BUILD_FATRAS)

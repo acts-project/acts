@@ -11,6 +11,7 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
+#include "ActsFatras/Utilities/detail/FpeSafeGammaDistribution.hpp"
 
 #include <array>
 #include <cmath>
@@ -28,7 +29,7 @@ struct BetheHeitler {
   /// A scaling factor to
   double scaleFactor = 1.;
 
-  // Simplified angle evaluation
+  /// Flag for simplified uniform Hertz dipole angle evaluation
   bool uniformHertzDipoleAngle = false;
 
   /// Simulate the photon emission
@@ -39,6 +40,7 @@ struct BetheHeitler {
   /// @param [in] rndTheta1 Random number for the polar angle
   /// @param [in] rndTheta2 Random number for the polar angle
   /// @param [in] rndTheta3 Random number for the polar angle
+  /// @return Particle representing the emitted photon
   Particle bremPhoton(const Particle &particle, double gammaE, double rndPsi,
                       double rndTheta1, double rndTheta2,
                       double rndTheta3) const;
@@ -56,12 +58,12 @@ struct BetheHeitler {
                                      const Acts::MaterialSlab &slab,
                                      Particle &particle) const {
     // Take a random gamma-distributed value - depending on t/X0
-    std::gamma_distribution<double> gDist(
+    detail::FpeSafeGammaDistribution gDist(
         slab.thicknessInX0() / std::numbers::ln2, 1.);
 
-    const auto u = gDist(generator);
-    const auto z = std::exp(-u);  // MARK: fpeMask(FLTUND, 1, #2346)
-    const auto sampledEnergyLoss =
+    const double u = gDist(generator);
+    const double z = std::exp(-u);
+    const double sampledEnergyLoss =
         std::abs(scaleFactor * particle.energy() * (z - 1.));
 
     std::uniform_real_distribution<double> uDist(0., 1.);
@@ -74,7 +76,8 @@ struct BetheHeitler {
                           photon.energy() * photon.direction());
 
     // apply the energy loss
-    particle.correctEnergy(-sampledEnergyLoss);
+    particle.loseEnergy(sampledEnergyLoss,
+                        SimulationOutcome::KilledInteraction);
 
     return {photon};
   }

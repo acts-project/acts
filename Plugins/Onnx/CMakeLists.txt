@@ -1,14 +1,9 @@
-add_library(
-    ActsPluginOnnx
-    SHARED
-    # header files
-    include/Acts/Plugins/Onnx/OnnxRuntimeBase.hpp
-    include/Acts/Plugins/Onnx/MLTrackClassifier.hpp
-    include/Acts/Plugins/Onnx/AmbiguityTrackClassifier.hpp
-    include/Acts/Plugins/Onnx/SeedClassifier.hpp
+acts_add_library(
+    PluginOnnx
     # source files
     src/OnnxRuntimeBase.cpp
     src/MLTrackClassifier.cpp
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
 target_include_directories(
@@ -18,12 +13,6 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_link_libraries(ActsPluginOnnx PUBLIC ActsCore onnxruntime::onnxruntime)
+target_link_libraries(ActsPluginOnnx PUBLIC Acts::Core onnxruntime::onnxruntime)
 
-install(
-    TARGETS ActsPluginOnnx
-    EXPORT ActsPluginOnnxTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+acts_compile_headers(PluginOnnx GLOB include/**/*.hpp)

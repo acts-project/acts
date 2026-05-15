@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <optional>
 #include <type_traits>
 
 namespace Acts::detail {
@@ -70,8 +71,8 @@ struct LoopComponentProxyBase {
         cmp.state, state.navigation, state.options, state.geoContext);
   }
 
-  const auto& singleStepper(const loop_stepper_t& stepper) const {
-    return static_cast<const SingleStepper&>(stepper);
+  const SingleStepper& singleStepper(const loop_stepper_t& stepper) const {
+    return stepper.singleStepper();
   }
 };
 
@@ -138,7 +139,7 @@ struct LoopComponentProxy
       const FreeToBoundCorrection& freeToBoundCorrection) {
     return detail::boundState(
         all_state.options.geoContext, surface, cov(), jacobian(),
-        jacTransport(), derivative(), jacToGlobal(), pars(),
+        jacTransport(), derivative(), jacToGlobal(), std::nullopt, pars(),
         all_state.particleHypothesis, all_state.covTransport && transportCov,
         cmp.state.pathAccumulated, freeToBoundCorrection);
   }

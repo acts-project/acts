@@ -15,34 +15,36 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-#include <array>
 #include <fstream>
 #include <memory>
 #include <string>
 
-namespace ActsFatras {
+using namespace ActsFatras;
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Digitization)
+namespace ActsTests {
 
-BOOST_AUTO_TEST_CASE(PlanarSurfaceDriftSimpleTests) {
-  Acts::GeometryContext geoCtx;
+BOOST_AUTO_TEST_SUITE(DigitizationSuite)
 
-  ActsFatras::PlanarSurfaceDrift psd;
+BOOST_AUTO_TEST_CASE(PlanarSurfaceDriftCase) {
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 
-  Acts::Vector3 cPosition = Acts::Vector3(10., 50., 12.);
-  Acts::Vector3 cNormal = Acts::Vector3(1., 1., 1.).normalized();
+  PlanarSurfaceDrift psd;
 
-  std::shared_ptr<Acts::PlaneSurface> planeSurface =
-      Acts::CurvilinearSurface(cPosition, cNormal).planeSurface();
+  Vector3 cPosition = Vector3(10., 50., 12.);
+  Vector3 cNormal = Vector3(1., 1., 1.).normalized();
+
+  std::shared_ptr<PlaneSurface> planeSurface =
+      CurvilinearSurface(cPosition, cNormal).planeSurface();
 
   double depletion = 0.250;
 
   // Nominal intersection
-  Acts::Vector3 noDrift(0., 0., 0.);
+  Vector3 noDrift(0., 0., 0.);
 
   // Intersect surface at normal direction and no drift
   //
@@ -52,12 +54,12 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDriftSimpleTests) {
                     noDrift)
           .value();
 
-  CHECK_CLOSE_ABS(noDriftSegment[0].x(), 0., Acts::s_epsilon);
-  CHECK_CLOSE_ABS(noDriftSegment[0].y(), 0., Acts::s_epsilon);
-  CHECK_CLOSE_ABS(noDriftSegment[1].x(), 0., Acts::s_epsilon);
-  CHECK_CLOSE_ABS(noDriftSegment[1].y(), 0., Acts::s_epsilon);
+  CHECK_CLOSE_ABS(noDriftSegment[0].x(), 0., s_epsilon);
+  CHECK_CLOSE_ABS(noDriftSegment[0].y(), 0., s_epsilon);
+  CHECK_CLOSE_ABS(noDriftSegment[1].x(), 0., s_epsilon);
+  CHECK_CLOSE_ABS(noDriftSegment[1].y(), 0., s_epsilon);
 
-  Acts::Vector3 particleDir = Acts::Vector3(2., 1., 1.).normalized();
+  Vector3 particleDir = Vector3(2., 1., 1.).normalized();
   // Intersect surface at particleDirection != normal and no drift
   //
   // -> local segment must be symmetric around (0,0)
@@ -66,64 +68,59 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDriftSimpleTests) {
                     noDrift)
           .value();
 
-  CHECK_CLOSE_ABS(noDriftSegment1[0].x(), -noDriftSegment1[1].x(),
-                  Acts::s_epsilon);
-  CHECK_CLOSE_ABS(noDriftSegment1[0].y(), -noDriftSegment1[1].y(),
-                  Acts::s_epsilon);
+  CHECK_CLOSE_ABS(noDriftSegment1[0].x(), -noDriftSegment1[1].x(), s_epsilon);
+  CHECK_CLOSE_ABS(noDriftSegment1[0].y(), -noDriftSegment1[1].y(), s_epsilon);
 }
 
 BOOST_AUTO_TEST_CASE(PlanarSurfaceDriftEnhancedTests) {
   // A really thick sensor :-)
   double thickness = 20.;
 
-  Acts::Vector3 cPosition = Acts::Vector3(50., 50., 0.);
+  Vector3 cPosition = Vector3(50., 50., 0.);
 
-  Acts::Vector3 localZ = Acts::Vector3(1., 1., 0.).normalized();
-  Acts::Vector3 localY = Acts::Vector3(0., 0., 1.);
-  Acts::Vector3 localX = -localZ.cross(localY).normalized();
+  Vector3 localZ = Vector3(1., 1., 0.).normalized();
+  Vector3 localY = Vector3(0., 0., 1.);
+  Vector3 localX = -localZ.cross(localY).normalized();
 
-  Acts::RotationMatrix3 rotationMatrix;
+  RotationMatrix3 rotationMatrix;
   rotationMatrix.col(0) = localX;
   rotationMatrix.col(1) = localY;
   rotationMatrix.col(2) = localZ;
 
-  auto entryTransform = Acts::Transform3(
-      Acts::Translation3(cPosition - 0.5 * thickness * localZ) *
-      rotationMatrix);
-  auto centralTransform =
-      Acts::Transform3(Acts::Translation3(cPosition) * rotationMatrix);
-  auto exitTransform = Acts::Transform3(
-      Acts::Translation3(cPosition + 0.5 * thickness * localZ) *
-      rotationMatrix);
+  auto entryTransform = Transform3(
+      Translation3(cPosition - 0.5 * thickness * localZ) * rotationMatrix);
+  auto centralTransform = Transform3(Translation3(cPosition) * rotationMatrix);
+  auto exitTransform = Transform3(
+      Translation3(cPosition + 0.5 * thickness * localZ) * rotationMatrix);
 
   // Create the entry and exit surface
-  auto entrySurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      entryTransform, std::make_shared<Acts::RectangleBounds>(100., 100.));
-  auto readoutSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      centralTransform, std::make_shared<Acts::RectangleBounds>(100., 100.));
-  auto exitSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      exitTransform, std::make_shared<Acts::RectangleBounds>(100., 100.));
+  auto entrySurface = Surface::makeShared<PlaneSurface>(
+      entryTransform, std::make_shared<RectangleBounds>(100., 100.));
+  auto readoutSurface = Surface::makeShared<PlaneSurface>(
+      centralTransform, std::make_shared<RectangleBounds>(100., 100.));
+  auto exitSurface = Surface::makeShared<PlaneSurface>(
+      exitTransform, std::make_shared<RectangleBounds>(100., 100.));
 
-  std::vector<std::shared_ptr<Acts::Surface>> surfaces = {
+  std::vector<std::shared_ptr<Surface>> surfaces = {
       entrySurface, readoutSurface, exitSurface};
 
   std::vector<std::string> surfaceNames = {"EntrySurface", "ReadoutSurface",
                                            "ExitSurface"};
 
-  Acts::Vector3 startingPoint = Acts::Vector3(0., 0., 0.);
-  Acts::Vector3 particleDirection = Acts::Vector3(1.5, 0.3, 1.25).normalized();
+  Vector3 startingPoint = Vector3(0., 0., 0.);
+  Vector3 particleDirection = Vector3(1.5, 0.3, 1.25).normalized();
 
   // Intersection positions
-  std::vector<Acts::Vector3> intersectionPositions = {};
+  std::vector<Vector3> intersectionPositions = {};
 
   // A test context
-  Acts::GeometryContext tContext;
+  GeometryContext tContext;
 
   // Original 3D segment output
   std::ofstream fiout;
   fiout.open("PlanarSurfaceDrift_segment_orig_3D.obj");
 
-  for (auto [isf, sf] : Acts::enumerate(surfaces)) {
+  for (auto [isf, sf] : enumerate(surfaces)) {
     // Intersect surface at particleDirection != normal and no drift
     auto sIntersection =
         sf->intersect(tContext, startingPoint, particleDirection).closest();
@@ -176,17 +173,17 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDriftEnhancedTests) {
   }
   gout.close();
 
-  std::vector<Acts::Vector3> driftScenarios = {
-      Acts::Vector3(0., 0., 1.),
-      Acts::Vector3(0.8, 0.1, 1.).normalized(),
-      Acts::Vector3(0.8, 0.1, -1.).normalized(),
+  std::vector<Vector3> driftScenarios = {
+      Vector3(0., 0., 1.),
+      Vector3(0.8, 0.1, 1.).normalized(),
+      Vector3(0.8, 0.1, -1.).normalized(),
   };
 
   // The drift module
   ActsFatras::PlanarSurfaceDrift psd;
 
-  auto writeSegment = [&](const std::string& tag, const Acts::Vector3& p0,
-                          const Acts::Vector3& p1) -> void {
+  auto writeSegment = [&](const std::string& tag, const Vector3& p0,
+                          const Vector3& p1) -> void {
     std::ofstream out;
     out.open(tag + ".obj");
     out << "v " << p0.x() << " " << p0.y() << " " << p0.z() << "\n";
@@ -196,7 +193,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDriftEnhancedTests) {
   };
 
   // Run through different drfit scenarios
-  for (auto [id, drift] : Acts::enumerate(driftScenarios)) {
+  for (auto [id, drift] : enumerate(driftScenarios)) {
     std::string scenario =
         "PlanarSurfaceDrift_scenario_" + std::to_string(id) + "_";
 
@@ -208,39 +205,39 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDriftEnhancedTests) {
 
     auto [dSegment, oSegment] = tr.value();
 
-    Acts::Vector3 oEntry = readoutSurface->transform(tContext) * oSegment[0];
-    Acts::Vector3 oExit = readoutSurface->transform(tContext) * oSegment[1];
+    Vector3 oEntry =
+        readoutSurface->localToGlobalTransform(tContext) * oSegment[0];
+    Vector3 oExit =
+        readoutSurface->localToGlobalTransform(tContext) * oSegment[1];
     writeSegment(scenario + "drifted_3D", oEntry, oExit);
 
     // Checking if entry and exit position are correct
-    BOOST_CHECK(oEntry.isApprox(intersectionPositions[0u], Acts::s_epsilon));
-    BOOST_CHECK(oExit.isApprox(intersectionPositions[2u], Acts::s_epsilon));
+    BOOST_CHECK(oEntry.isApprox(intersectionPositions[0u], s_epsilon));
+    BOOST_CHECK(oExit.isApprox(intersectionPositions[2u], s_epsilon));
 
-    Acts::Vector3 driftedEntry =
-        readoutSurface->transform(tContext) *
-        Acts::Vector3(dSegment[0].x(), dSegment[0].y(), 0.);
-    Acts::Vector3 driftedExit =
-        readoutSurface->transform(tContext) *
-        Acts::Vector3(dSegment[1].x(), dSegment[1].y(), 0.);
+    Vector3 driftedEntry = readoutSurface->localToGlobalTransform(tContext) *
+                           Vector3(dSegment[0].x(), dSegment[0].y(), 0.);
+    Vector3 driftedExit = readoutSurface->localToGlobalTransform(tContext) *
+                          Vector3(dSegment[1].x(), dSegment[1].y(), 0.);
 
     writeSegment(scenario + "_2D", driftedEntry, driftedExit);
 
     // Drift entry to readout
     double dts = 0.5 * thickness / drift.z();
 
-    Acts::Vector3 drift3D =
-        readoutSurface->transform(tContext).linear() * drift;
+    Vector3 drift3D =
+        readoutSurface->localToGlobalTransform(tContext).linear() * drift;
     writeSegment(scenario + "entry_to_readout_3D", intersectionPositions[0u],
                  intersectionPositions[0u] + dts * drift3D);
 
-    BOOST_CHECK(Acts::Vector3(intersectionPositions[0u] + dts * drift3D)
-                    .isApprox(driftedEntry, Acts::s_epsilon));
+    BOOST_CHECK(Vector3(intersectionPositions[0u] + dts * drift3D)
+                    .isApprox(driftedEntry, s_epsilon));
 
     writeSegment(scenario + "exit_to_readout_3D", intersectionPositions[2u],
                  intersectionPositions[2u] - dts * drift3D);
 
-    BOOST_CHECK(Acts::Vector3(intersectionPositions[2u] - dts * drift3D)
-                    .isApprox(driftedExit, Acts::s_epsilon));
+    BOOST_CHECK(Vector3(intersectionPositions[2u] - dts * drift3D)
+                    .isApprox(driftedExit, s_epsilon));
   }
 
   // Special casing: particle normal to the surface
@@ -248,9 +245,9 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDriftEnhancedTests) {
                            intersectionPositions[1u], localZ, localZ);
   BOOST_CHECK(trn.ok());
   auto [dSegmentN, oSegmentN] = trn.value();
-  BOOST_CHECK(dSegmentN[0].isApprox(dSegmentN[1], Acts::s_epsilon));
-  CHECK_CLOSE_ABS(Acts::Vector3(oSegmentN[1] - oSegmentN[0]).norm(), thickness,
-                  Acts::s_epsilon);
+  BOOST_CHECK(dSegmentN[0].isApprox(dSegmentN[1], s_epsilon));
+  CHECK_CLOSE_ABS(Vector3(oSegmentN[1] - oSegmentN[0]).norm(), thickness,
+                  s_epsilon);
 
   // Error checking, particle along the xy plane
   auto trnErr = psd.toReadout(tContext, *readoutSurface, thickness,
@@ -260,4 +257,4 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDriftEnhancedTests) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace ActsFatras
+}  // namespace ActsTests

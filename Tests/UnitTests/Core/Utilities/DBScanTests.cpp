@@ -74,10 +74,14 @@ std::vector<std::array<double, 2>> test_vector{
     {6.55276593, -7.81387909},  {-1.79854507, -2.10170986}};
 }  // namespace
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(ClusteringTest2D) {
-  using DBSCAN = Acts::DBScan<2, double, 4>;
+  using DBSCAN = DBScan<2, double, 4>;
   DBSCAN dbscan(0.3, 3, false);
 
   DBSCAN dbscan_onePoint(0, 3, true);
@@ -103,4 +107,6 @@ BOOST_AUTO_TEST_CASE(ClusteringTest2D) {
   clusteredPoints.clear();
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

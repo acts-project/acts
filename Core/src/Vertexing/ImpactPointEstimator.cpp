@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
@@ -39,21 +40,21 @@ Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
   if (!trkParams->covariance().has_value()) {
     return VertexingError::NoCovariance;
   }
-  ActsSquareMatrix<nDim - 1> subCovMat;
+  SquareMatrix<nDim - 1> subCovMat;
   if constexpr (nDim == 3) {
     subCovMat = trkParams->spatialImpactParameterCovariance().value();
   } else {
     subCovMat = trkParams->impactParameterCovariance().value();
   }
-  ActsSquareMatrix<nDim - 1> weight = subCovMat.inverse();
+  SquareMatrix<nDim - 1> weight = subCovMat.inverse();
 
   // Orientation of the surface (i.e., axes of the corresponding coordinate
   // system)
   RotationMatrix3 surfaceAxes =
-      trkParams->referenceSurface().transform(gctx).rotation();
+      trkParams->referenceSurface().localToGlobalTransform(gctx).rotation();
   // Origin of the surface coordinate system
   Vector3 surfaceOrigin =
-      trkParams->referenceSurface().transform(gctx).translation();
+      trkParams->referenceSurface().localToGlobalTransform(gctx).translation();
 
   // x- and y-axis of the surface coordinate system
   Vector3 xAxis = surfaceAxes.col(0);
@@ -68,11 +69,11 @@ Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
 
   // x-, y-, and possibly time-coordinate of the vertex and the track in the
   // surface coordinate system
-  ActsVector<nDim - 1> localVertexCoords;
+  Vector<nDim - 1> localVertexCoords;
   localVertexCoords.template head<2>() =
       Vector2(originToVertex.dot(xAxis), originToVertex.dot(yAxis));
 
-  ActsVector<nDim - 1> localTrackCoords;
+  Vector<nDim - 1> localTrackCoords;
   localTrackCoords.template head<2>() =
       Vector2(trkParams->parameters()[eX], trkParams->parameters()[eY]);
 
@@ -83,7 +84,7 @@ Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
   }
 
   // residual
-  ActsVector<nDim - 1> residual = localTrackCoords - localVertexCoords;
+  Vector<nDim - 1> residual = localTrackCoords - localVertexCoords;
 
   // return chi2
   return residual.dot(weight * residual);
@@ -197,7 +198,7 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
         (vtxPos.template head<3>() - positionOnTrack).dot(momDirStraightTrack);
 
     // 3D PCA
-    ActsVector<nDim> pcaStraightTrack;
+    Vector<nDim> pcaStraightTrack;
     pcaStraightTrack.template head<3>() =
         positionOnTrack + distanceToPca * momDirStraightTrack;
     if constexpr (nDim == 4) {
@@ -271,7 +272,7 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
   // 3D PCA (point P' in the reference). Note that the prefix "3D" does not
   // refer to the dimension of the pca variable. Rather, it indicates that we
   // minimized the 3D distance between the track and the reference point.
-  ActsVector<nDim> pca;
+  Vector<nDim> pca;
   pca.template head<3>() =
       helixCenter + rho * Vector3(-sinPhi, cosPhi, -cotTheta * phi);
 
@@ -361,7 +362,7 @@ Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
   std::shared_ptr<PlaneSurface> planeSurface =
       Surface::makeShared<PlaneSurface>(coordinateSystem);
 
-  auto intersection =
+  Intersection3D intersection =
       planeSurface
           ->intersect(gctx, trkParams.position(gctx), trkParams.direction(),
                       BoundaryTolerance::Infinite())
@@ -389,7 +390,7 @@ Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
 
 Result<double> ImpactPointEstimator::getVertexCompatibility(
     const GeometryContext& gctx, const BoundTrackParameters* trkParams,
-    Eigen::Map<const ActsDynamicVector> vertexPos) const {
+    Eigen::Map<const DynamicVector> vertexPos) const {
   if (vertexPos.size() == 3) {
     return getVertexCompatibilityImpl(gctx, trkParams,
                                       vertexPos.template head<3>());
@@ -404,7 +405,7 @@ Result<double> ImpactPointEstimator::getVertexCompatibility(
 Result<std::pair<Acts::Vector4, Acts::Vector3>>
 ImpactPointEstimator::getDistanceAndMomentum(
     const GeometryContext& gctx, const BoundTrackParameters& trkParams,
-    Eigen::Map<const ActsDynamicVector> vtxPos, State& state) const {
+    Eigen::Map<const DynamicVector> vtxPos, State& state) const {
   if (vtxPos.size() == 3) {
     return getDistanceAndMomentumImpl(
         gctx, trkParams, vtxPos.template head<3>(), m_cfg, state, *m_logger);
@@ -425,7 +426,7 @@ Result<ImpactParametersAndSigma> ImpactPointEstimator::getImpactParameters(
 
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
-  auto intersection =
+  Intersection3D intersection =
       perigeeSurface
           ->intersect(gctx, track.position(gctx), track.direction(),
                       BoundaryTolerance::Infinite())

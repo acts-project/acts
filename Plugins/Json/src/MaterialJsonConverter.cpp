@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
+#include "ActsPlugins/Json/MaterialJsonConverter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -21,14 +21,14 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
-#include "Acts/Plugins/Json/GeometryJsonKeys.hpp"
-#include "Acts/Plugins/Json/GridJsonConverter.hpp"
-#include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "Acts/Utilities/TypeList.hpp"
+#include "ActsPlugins/Json/GeometryJsonKeys.hpp"
+#include "ActsPlugins/Json/GridJsonConverter.hpp"
+#include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -492,9 +492,9 @@ void Acts::from_json(const nlohmann::json& j,
   if (mpMatrix.empty()) {
     material = new Acts::ProtoSurfaceMaterial(bUtility, mapType);
   } else if (bUtility.bins() == 1) {
-    material = new Acts::HomogeneousSurfaceMaterial(mpMatrix[0][0], mapType);
+    material = new Acts::HomogeneousSurfaceMaterial(mpMatrix[0][0], 1, mapType);
   } else {
-    material = new Acts::BinnedSurfaceMaterial(bUtility, mpMatrix, mapType);
+    material = new Acts::BinnedSurfaceMaterial(bUtility, mpMatrix, 1, mapType);
   }
 }
 
@@ -541,7 +541,7 @@ void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
   }
   // Only option remaining: material map
   auto bvMaterial2D = dynamic_cast<const Acts::InterpolatedMaterialMap<
-      Acts::MaterialMapper<Acts::MaterialGrid2D>>*>(material);
+      Acts::MaterialMapLookup<Acts::MaterialGrid2D>>*>(material);
   // Now check if we have a 2D map
   if (bvMaterial2D != nullptr) {
     // type is binned
@@ -564,7 +564,7 @@ void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
   }
   // Only option remaining: material map
   auto bvMaterial3D = dynamic_cast<const Acts::InterpolatedMaterialMap<
-      Acts::MaterialMapper<Acts::MaterialGrid3D>>*>(material);
+      Acts::MaterialMapLookup<Acts::MaterialGrid3D>>*>(material);
   // Now check if we have a 3D map
   if (bvMaterial3D != nullptr) {
     // type is binned
@@ -638,11 +638,11 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
     for (std::size_t bin = 0; bin < mmat.size(); bin++) {
       mGrid.at(bin) = mmat[bin].parameters();
     }
-    Acts::MaterialMapper<Acts::MaterialGrid2D> matMap(transfoGlobalToLocal,
-                                                      mGrid);
+    Acts::MaterialMapLookup<Acts::MaterialGrid2D> matMap(transfoGlobalToLocal,
+                                                         mGrid);
     material = new Acts::InterpolatedMaterialMap<
-        Acts::MaterialMapper<Acts::MaterialGrid2D>>(std::move(matMap),
-                                                    bUtility);
+        Acts::MaterialMapLookup<Acts::MaterialGrid2D>>(std::move(matMap),
+                                                       bUtility);
     return;
   }
   if (bUtility.dimensions() == 3) {
@@ -663,11 +663,11 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
     for (std::size_t bin = 0; bin < mmat.size(); bin++) {
       mGrid.at(bin) = mmat[bin].parameters();
     }
-    Acts::MaterialMapper<Acts::MaterialGrid3D> matMap(transfoGlobalToLocal,
-                                                      mGrid);
+    Acts::MaterialMapLookup<Acts::MaterialGrid3D> matMap(transfoGlobalToLocal,
+                                                         mGrid);
     material = new Acts::InterpolatedMaterialMap<
-        Acts::MaterialMapper<Acts::MaterialGrid3D>>(std::move(matMap),
-                                                    bUtility);
+        Acts::MaterialMapLookup<Acts::MaterialGrid3D>>(std::move(matMap),
+                                                       bUtility);
     return;
   }
 }
@@ -806,7 +806,9 @@ nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
     jAxis["bins"] = bData.bins();
     double offset = 0;
     if (bData.binvalue == AxisDirection::AxisZ) {
-      offset = surface.center(Acts::GeometryContext{}).z();
+      offset =
+          surface.center(Acts::GeometryContext::dangerouslyDefaultConstruct())
+              .z();
     }
     jAxis["edges"] =
         std::array<double, 2>{bData.min + offset, bData.max + offset};

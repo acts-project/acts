@@ -191,6 +191,7 @@ class TrackingGeometry {
   const Surface* findSurface(GeometryIdentifier id) const;
 
   /// Access to the GeometryIdentifier - Surface association map
+  /// @return Const reference to the geometry ID to surface map
   const std::unordered_map<GeometryIdentifier, const Surface*>&
   geoIdSurfaceMap() const;
 

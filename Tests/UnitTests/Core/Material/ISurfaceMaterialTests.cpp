@@ -16,7 +16,9 @@
 
 #include <ostream>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 class SurfaceMaterialStub : public ISurfaceMaterial {
   using ISurfaceMaterial::ISurfaceMaterial;
@@ -31,6 +33,8 @@ class SurfaceMaterialStub : public ISurfaceMaterial {
     return m_fullMaterial;
   }
 
+  using ISurfaceMaterial::materialSlab;
+
   std::ostream& toStream(std::ostream& sl) const override {
     sl << "SurfaceMaterialStub";
     return sl;
@@ -39,32 +43,42 @@ class SurfaceMaterialStub : public ISurfaceMaterial {
   MaterialSlab m_fullMaterial = MaterialSlab::Nothing();
 };
 
+BOOST_AUTO_TEST_SUITE(MaterialSuite)
+
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(ISurfaceMaterial_factor_test) {
   double splitFactor = 42.0;
   SurfaceMaterialStub stub{splitFactor};
 
   BOOST_CHECK_EQUAL(
-      stub.factor(Direction::Forward(), MaterialUpdateStage::FullUpdate), 1.0);
+      stub.factor(Direction::Backward(), MaterialUpdateMode::NoUpdate), 0);
 
   BOOST_CHECK_EQUAL(
-      stub.factor(Direction::Backward(), MaterialUpdateStage::FullUpdate), 1.0);
+      stub.factor(Direction::Forward(), MaterialUpdateMode::NoUpdate), 0);
 
   BOOST_CHECK_EQUAL(
-      stub.factor(Direction::Forward(), MaterialUpdateStage::PostUpdate),
+      stub.factor(Direction::Backward(), MaterialUpdateMode::PreUpdate),
       splitFactor);
 
   BOOST_CHECK_EQUAL(
-      stub.factor(Direction::Backward(), MaterialUpdateStage::PreUpdate),
+      stub.factor(Direction::Forward(), MaterialUpdateMode::PreUpdate),
+      1 - splitFactor);
+
+  BOOST_CHECK_EQUAL(
+      stub.factor(Direction::Forward(), MaterialUpdateMode::PostUpdate),
       splitFactor);
 
   BOOST_CHECK_EQUAL(
-      stub.factor(Direction::Forward(), MaterialUpdateStage::PreUpdate),
+      stub.factor(Direction::Backward(), MaterialUpdateMode::PostUpdate),
       1 - splitFactor);
 
   BOOST_CHECK_EQUAL(
-      stub.factor(Direction::Backward(), MaterialUpdateStage::PostUpdate),
-      1 - splitFactor);
+      stub.factor(Direction::Forward(), MaterialUpdateMode::FullUpdate), 1.0);
+
+  BOOST_CHECK_EQUAL(
+      stub.factor(Direction::Backward(), MaterialUpdateMode::FullUpdate), 1.0);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

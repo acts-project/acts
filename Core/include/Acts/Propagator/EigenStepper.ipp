@@ -29,7 +29,7 @@ auto Acts::EigenStepper<E>::makeState(const Options& options) const -> State {
 
 template <typename E>
 void Acts::EigenStepper<E>::initialize(State& state,
-                                       const BoundTrackParameters& par) const {
+                                       const BoundParameters& par) const {
   initialize(state, par.parameters(), par.covariance(),
              par.particleHypothesis(), par.referenceSurface());
 }
@@ -76,8 +76,8 @@ auto Acts::EigenStepper<E>::boundState(
     -> Result<BoundState> {
   return detail::boundState(
       state.options.geoContext, surface, state.cov, state.jacobian,
-      state.jacTransport, state.derivative, state.jacToGlobal, state.pars,
-      state.particleHypothesis, state.covTransport && transportCov,
+      state.jacTransport, state.derivative, state.jacToGlobal, std::nullopt,
+      state.pars, state.particleHypothesis, state.covTransport && transportCov,
       state.pathAccumulated, freeToBoundCorrection);
 }
 
@@ -116,11 +116,12 @@ bool Acts::EigenStepper<E>::prepareCurvilinearState(State& state) const {
 }
 
 template <typename E>
-auto Acts::EigenStepper<E>::curvilinearState(
-    State& state, bool transportCov) const -> BoundState {
+auto Acts::EigenStepper<E>::curvilinearState(State& state,
+                                             bool transportCov) const
+    -> BoundState {
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, state.pars, state.particleHypothesis,
+      state.jacToGlobal, std::nullopt, state.pars, state.particleHypothesis,
       state.covTransport && transportCov, state.pathAccumulated);
 }
 
@@ -149,9 +150,9 @@ void Acts::EigenStepper<E>::update(State& state, const Vector3& uposition,
 template <typename E>
 void Acts::EigenStepper<E>::transportCovarianceToCurvilinear(
     State& state) const {
-  detail::transportCovarianceToCurvilinear(state.cov, state.jacobian,
-                                           state.jacTransport, state.derivative,
-                                           state.jacToGlobal, direction(state));
+  detail::transportCovarianceToCurvilinear(
+      state.cov, state.jacobian, state.jacTransport, state.derivative,
+      state.jacToGlobal, std::nullopt, direction(state));
 }
 
 template <typename E>
@@ -160,8 +161,8 @@ void Acts::EigenStepper<E>::transportCovarianceToBound(
     const FreeToBoundCorrection& freeToBoundCorrection) const {
   detail::transportCovarianceToBound(
       state.options.geoContext, surface, state.cov, state.jacobian,
-      state.jacTransport, state.derivative, state.jacToGlobal, state.pars,
-      freeToBoundCorrection);
+      state.jacTransport, state.derivative, state.jacToGlobal, std::nullopt,
+      state.pars, freeToBoundCorrection);
 }
 
 template <typename E>
@@ -384,9 +385,4 @@ Acts::Result<double> Acts::EigenStepper<E>::step(
   }
 
   return h;
-}
-
-template <typename E>
-void Acts::EigenStepper<E>::setIdentityJacobian(State& state) const {
-  state.jacobian = BoundMatrix::Identity();
 }

@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
@@ -37,15 +36,7 @@ class GeometryObject {
   explicit GeometryObject(const GeometryIdentifier& geometryId)
       : m_geometryId(geometryId) {}
 
-  /// Assignment operator
-  ///
-  /// @param geometryId the source geometryId
-  GeometryObject& operator=(const GeometryObject& geometryId) {
-    if (&geometryId != this) {
-      m_geometryId = geometryId.m_geometryId;
-    }
-    return *this;
-  }
+  virtual ~GeometryObject() noexcept = default;
 
   /// @return the geometry id by reference
   GeometryIdentifier geometryId() const;
@@ -53,7 +44,7 @@ class GeometryObject {
   /// Force a binning position method
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param aDir is the value for which the reference position is requesed
+  /// @param aDir is the value for which the reference position is requested
   ///
   /// @return vector 3D used for the binning schema
   virtual Vector3 referencePosition(const GeometryContext& gctx,
@@ -74,6 +65,7 @@ class GeometryObject {
   void assignGeometryId(const GeometryIdentifier& geometryId);
 
  protected:
+  /// Unique geometry identifier for this object
   GeometryIdentifier m_geometryId;
 };
 

@@ -58,12 +58,15 @@ class PerigeeSurface : public LineSurface {
   /// Assignment operator
   ///
   /// @param other is the source surface to be assigned
+  /// @return Reference to this surface for assignment chaining
   PerigeeSurface& operator=(const PerigeeSurface& other);
 
   /// Return the surface type
+  /// @return Surface type identifier for perigee surfaces
   SurfaceType type() const final;
 
   /// Return properly formatted class name for screen output */
+  /// @return String representation of the surface type name
   std::string name() const final;
 
   /// Return a Polyhedron for the surfaces

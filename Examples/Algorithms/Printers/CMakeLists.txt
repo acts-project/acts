@@ -1,6 +1,5 @@
-add_library(
-    ActsExamplesPrinters
-    SHARED
+acts_add_library(
+    ExamplesPrinters
     ActsExamples/Printers/ParticlesPrinter.cpp
     ActsExamples/Printers/TrackParametersPrinter.cpp
 )
@@ -10,10 +9,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesPrinters
-    PUBLIC ActsCore ActsFatras ActsExamplesFramework
-)
-
-install(
-    TARGETS ActsExamplesPrinters
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    PUBLIC Acts::Fatras Acts::ExamplesFramework
 )

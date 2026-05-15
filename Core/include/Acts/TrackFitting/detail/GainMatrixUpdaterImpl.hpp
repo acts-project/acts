@@ -8,37 +8,35 @@
 
 #pragma once
 
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <cstddef>
-#include <tuple>
 
 namespace Acts {
 
 template <std::size_t N>
-std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
-    InternalTrackState trackState, const Logger& logger) const {
-  double chi2 = 0;
-
+Result<void> GainMatrixUpdater::visitMeasurementImpl(
+    AnyMutableTrackStateProxy trackState, const Logger& logger) const {
   constexpr std::size_t kMeasurementSize = N;
-  using ParametersVector = ActsVector<kMeasurementSize>;
-  using CovarianceMatrix = ActsSquareMatrix<kMeasurementSize>;
+  using ProjectedVector = Vector<kMeasurementSize>;
+  using ProjectedMatrix = SquareMatrix<kMeasurementSize>;
 
-  typename TrackStateTraits<kMeasurementSize, true>::Calibrated calibrated{
-      trackState.calibrated};
-  typename TrackStateTraits<kMeasurementSize, true>::CalibratedCovariance
-      calibratedCovariance{trackState.calibratedCovariance};
+  const auto calibrated = trackState.calibrated<kMeasurementSize>();
+  const auto calibratedCovariance =
+      trackState.calibratedCovariance<kMeasurementSize>();
 
   ACTS_VERBOSE("Measurement dimension: " << kMeasurementSize);
   ACTS_VERBOSE("Calibrated measurement: " << calibrated.transpose());
   ACTS_VERBOSE("Calibrated measurement covariance:\n" << calibratedCovariance);
 
-  std::span<const std::uint8_t, kMeasurementSize> validSubspaceIndices(
-      trackState.projector.begin(),
-      trackState.projector.begin() + kMeasurementSize);
-  FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
+  const auto validSubspaceIndices =
+      trackState.template projectorSubspaceIndices<kMeasurementSize>();
+
+  const FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
       validSubspaceIndices);
 
   // TODO use subspace helper for projection instead
@@ -46,48 +44,57 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
 
   ACTS_VERBOSE("Measurement projector H:\n" << H);
 
-  const auto K = (trackState.predictedCovariance * H.transpose() *
-                  (H * trackState.predictedCovariance * H.transpose() +
-                   calibratedCovariance)
-                      .inverse())
-                     .eval();
+  auto filtered = trackState.filtered();
+  auto filteredCovariance = trackState.filteredCovariance();
+  const auto predicted = trackState.predicted();
+  const auto predictedCovariance = trackState.predictedCovariance();
+
+  const auto K =
+      (predictedCovariance * H.transpose() *
+       (H * predictedCovariance * H.transpose() + calibratedCovariance)
+           .inverse())
+          .eval();
 
   ACTS_VERBOSE("Gain Matrix K:\n" << K);
 
   if (K.hasNaN()) {
     // set to error abort execution
-    return {0, KalmanFitterError::UpdateFailed};
+    return Result<void>::failure(KalmanFitterError::UpdateFailed);
   }
 
-  trackState.filtered =
-      trackState.predicted + K * (calibrated - H * trackState.predicted);
+  filtered = predicted + K * (calibrated - H * predicted);
   // Normalize phi and theta
-  trackState.filtered = normalizeBoundParameters(trackState.filtered);
-  trackState.filteredCovariance =
-      (BoundSquareMatrix::Identity() - K * H) * trackState.predictedCovariance;
-  ACTS_VERBOSE("Filtered parameters: " << trackState.filtered.transpose());
-  ACTS_VERBOSE("Filtered covariance:\n" << trackState.filteredCovariance);
+  filtered = normalizeBoundParameters(filtered);
 
-  ParametersVector residual;
-  residual = calibrated - H * trackState.filtered;
+  const auto tmp = (BoundMatrix::Identity() - K * H).eval();
+  if (!m_useJosephFormulation) {
+    filteredCovariance = tmp * predictedCovariance;
+  } else {
+    filteredCovariance = tmp * predictedCovariance * tmp.transpose() +
+                         K * calibratedCovariance * K.transpose();
+  }
+
+  ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
+  ACTS_VERBOSE("Filtered covariance:\n" << filteredCovariance);
+
+  const ProjectedVector residual = calibrated - H * filtered;
   ACTS_VERBOSE("Residual: " << residual.transpose());
 
-  CovarianceMatrix m =
-      ((CovarianceMatrix::Identity() - H * K) * calibratedCovariance).eval();
-
-  chi2 = (residual.transpose() * m.inverse() * residual).value();
-
+  const ProjectedMatrix m =
+      ((ProjectedMatrix::Identity() - H * K) * calibratedCovariance);
+  const double chi2 = (residual.transpose() * m.inverse() * residual).value();
   ACTS_VERBOSE("Chi2: " << chi2);
 
-  return {chi2, {}};
+  trackState.chi2() = chi2;
+
+  return Result<void>::success();
 }
 
-// Ensure thet the compiler does not implicitly instantiate the template
+// Ensure that the compiler does not implicitly instantiate the template
 
-#define _EXTERN(N)                                                          \
-  extern template std::tuple<double, std::error_code>                       \
-  GainMatrixUpdater::visitMeasurementImpl<N>(InternalTrackState trackState, \
-                                             const Logger& logger) const
+#define _EXTERN(N)                                                         \
+  extern template Result<void> GainMatrixUpdater::visitMeasurementImpl<N>( \
+      AnyMutableTrackStateProxy trackState, const Logger& logger) const
 
 _EXTERN(1);
 _EXTERN(2);

@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Clusterization/Clusterization.hpp"
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
@@ -30,14 +29,12 @@ struct ModuleValue {
   std::vector<double> paramValues = {};
   std::vector<double> paramVariances = {};
   std::variant<Cluster, Cluster::Cell> value;
-  std::set<SimHitContainer::size_type> sources = {};
+  std::set<SimHitIndex> sources = {};
   Acts::Ccl::Label label = {Acts::Ccl::NO_LABEL};
 };
 
 class ModuleClusters {
  public:
-  using simhit_t = SimHitContainer::size_type;
-
   ModuleClusters(Acts::BinUtility segmentation,
                  std::vector<Acts::BoundIndices> geoIndices, bool merge,
                  double nsigma, bool commonCorner)
@@ -47,8 +44,8 @@ class ModuleClusters {
         m_nsigma(nsigma),
         m_commonCorner(commonCorner) {}
 
-  void add(DigitizedParameters params, simhit_t simhit);
-  std::vector<std::pair<DigitizedParameters, std::set<simhit_t>>>
+  void add(DigitizedParameters params, SimHitIndex simhit);
+  std::vector<std::pair<DigitizedParameters, std::set<SimHitIndex>>>
   digitizedParameters();
 
  private:

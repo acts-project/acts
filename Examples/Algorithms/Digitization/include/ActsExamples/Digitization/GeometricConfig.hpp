@@ -45,8 +45,8 @@ struct GeometricConfig {
   double thickness = 0.;
 
   /// The charge smearer
-  ActsFatras::SingleParameterSmearFunction<ActsExamples::RandomEngine>
-      chargeSmearer = Digitization::Exact(0);
+  ActsFatras::SingleParameterSmearFunction<RandomEngine> chargeSmearer =
+      Digitization::Exact(0);
 
   /// The threshold below a cell activation is ignored
   double threshold = 0.;

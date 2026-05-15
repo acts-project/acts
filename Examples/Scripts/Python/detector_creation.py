@@ -10,7 +10,6 @@ from acts.examples.dd4hep import (
 )
 from acts.examples.odd import getOpenDataDetectorDirectory
 
-
 if "__main__" == __name__:
     odd_xml = getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
 
@@ -44,7 +43,7 @@ if "__main__" == __name__:
             )
 
     # Context and options
-    geoContext = acts.GeometryContext()
+    geoContext = acts.GeometryContext.dangerouslyDefaultConstruct()
     [detector, contextors, store] = dd4hepDetector.finalize(geoContext, cOptions)
 
     # OBJ style output

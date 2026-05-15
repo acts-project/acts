@@ -1,6 +1,5 @@
-add_library(
-    ActsExamplesDetectorGeant4
-    SHARED
+acts_add_library(
+    ExamplesDetectorGeant4
     src/Geant4Detector.cpp
     src/GdmlDetectorConstruction.cpp
     src/GdmlDetector.cpp
@@ -13,15 +12,5 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesDetectorGeant4
-    PUBLIC
-        ActsCore
-        ActsExamplesFramework
-        ActsExamplesGeant4
-        ActsPluginGeant4
-        ActsExamplesDetectorsCommon
-)
-
-install(
-    TARGETS ActsExamplesDetectorGeant4
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    PUBLIC Acts::ExamplesGeant4 Acts::PluginGeant4 Acts::ExamplesDetectorsCommon
 )

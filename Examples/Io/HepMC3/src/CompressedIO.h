@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 // This file was adapted from https://gitlab.cern.ch/hepmc/HepMC3/-/blob/0a6bd242747a53692ee66cb7332354cae8d25c4c/include/HepMC3/CompressedIO.h to work around an issue with HepMC3 version 3.2.7
 
 /////////

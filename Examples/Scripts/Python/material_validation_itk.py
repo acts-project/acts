@@ -3,8 +3,9 @@ import os
 import argparse
 from pathlib import Path
 
-from acts.examples import Sequencer, RootMaterialTrackWriter
+from acts.examples import Sequencer
 from acts.examples.simulation import addParticleGun, EtaConfig, ParticleConfig
+from acts.examples.root import RootMaterialTrackWriter, RootPropagationStepsWriter
 
 import acts
 
@@ -61,7 +62,7 @@ def runMaterialValidation(
         recordMaterialInteractions=True,
         inputTrackParameters="params_particles_generated",
         outputPropagationSteps="propagation_steps",
-        outputMaterialTracks="material-tracks",
+        outputMaterialTracks="material_tracks",
     )
     s.addAlgorithm(alg)
 
@@ -77,7 +78,7 @@ def runMaterialValidation(
 
     if dumpPropagationSteps:
         s.addWriter(
-            acts.examples.RootPropagationStepsWriter(
+            RootPropagationStepsWriter(
                 level=acts.logging.INFO,
                 collection=alg.config.outputSummaryCollection,
                 filePath=outputDir + "/propagation_steps.root",

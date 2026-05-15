@@ -8,17 +8,10 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryHierarchyMap.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
-#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -27,7 +20,6 @@
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// @class CsvMeasurementWriter
 ///
@@ -82,7 +74,7 @@ class CsvMeasurementWriter final : public WriterT<MeasurementContainer> {
  private:
   Config m_cfg;
 
-  ReadDataHandle<IndexMultimap<Index>> m_inputMeasurementSimHitsMap{
+  ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
       this, "InputMeasurementSimHitsMap"};
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 };

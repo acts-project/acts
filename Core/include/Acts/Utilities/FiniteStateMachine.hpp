@@ -111,8 +111,10 @@ class FiniteStateMachine {
   using StateVariant = std::variant<Terminated, States...>;
 
  protected:
+  /// Type alias for finite state machine base class
   using fsm_base = FiniteStateMachine<Derived, States...>;
 
+  /// Type alias for event return type (optional state variant)
   using event_return = std::optional<StateVariant>;
 
  public:

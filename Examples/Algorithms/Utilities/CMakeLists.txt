@@ -1,24 +1,19 @@
-add_library(
-    ActsExamplesUtilities
-    SHARED
-    src/PrototracksToSeeds.cpp
-    src/SeedsToPrototracks.cpp
-    src/TrajectoriesToPrototracks.cpp
+acts_add_library(
+    ExamplesUtilities
+    src/ProtoTracksToSeeds.cpp
+    src/SeedsToProtoTracks.cpp
+    src/TrajectoriesToProtoTracks.cpp
     src/TrackSelectorAlgorithm.cpp
     src/TracksToTrajectories.cpp
-    src/PrototracksToTracks.cpp
+    src/ProtoTracksToTracks.cpp
     src/TracksToParameters.cpp
+    src/ProtoTracksToParameters.cpp
 )
+
 target_include_directories(
     ActsExamplesUtilities
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
-target_link_libraries(
-    ActsExamplesUtilities
-    PUBLIC ActsCore ActsExamplesFramework
-)
+target_link_libraries(ActsExamplesUtilities PUBLIC Acts::ExamplesFramework)
 
-install(
-    TARGETS ActsExamplesUtilities
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+acts_compile_headers(ExamplesUtilities GLOB "include/**/*.hpp")

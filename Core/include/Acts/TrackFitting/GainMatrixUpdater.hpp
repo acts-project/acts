@@ -8,45 +8,33 @@
 
 #pragma once
 
-#include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/Types.hpp"
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cassert>
-#include <system_error>
-#include <tuple>
 
 namespace Acts {
 
 /// Kalman update step using the gain matrix formalism.
+/// @ingroup track_fitting
 class GainMatrixUpdater {
-  struct InternalTrackState {
-    unsigned int calibratedSize;
-    // This is used to build a covariance matrix view in the .cpp file
-    const double* calibrated;
-    const double* calibratedCovariance;
-    BoundSubspaceIndices projector;
-
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Parameters predicted;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Covariance predictedCovariance;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Parameters filtered;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Covariance filteredCovariance;
-  };
-
  public:
+  GainMatrixUpdater() = default;
+
+  /// @param useJosephFormulation Whether to use the Joseph formulation for the
+  /// covariance update, which is more numerically stable at the cost of
+  /// additional computations.
+  explicit GainMatrixUpdater(bool useJosephFormulation)
+      : m_useJosephFormulation(useJosephFormulation) {}
+
   /// Run the Kalman update step for a single trajectory state.
   ///
   /// @tparam kMeasurementSizeMax
   /// @param[in,out] trackState The track state
   /// @param[in] logger Where to write logging information to
+  /// @return Success or failure of the update procedure
   template <typename traj_t>
   Result<void> operator()(const GeometryContext& /*gctx*/,
                           typename traj_t::TrackStateProxy trackState,
@@ -73,33 +61,18 @@ class GainMatrixUpdater {
     // auto filtered = trackState.filtered();
     // auto filteredCovariance = trackState.filteredCovariance();
 
-    auto [chi2, error] = visitMeasurement(
-        InternalTrackState{
-            trackState.calibratedSize(),
-            // Note that we pass raw pointers here which are used in the correct
-            // shape later
-            trackState.effectiveCalibrated().data(),
-            trackState.effectiveCalibratedCovariance().data(),
-            trackState.projectorSubspaceIndices(),
-            trackState.predicted(),
-            trackState.predictedCovariance(),
-            trackState.filtered(),
-            trackState.filteredCovariance(),
-        },
-        logger);
-
-    trackState.chi2() = chi2;
-
-    return error ? Result<void>::failure(error) : Result<void>::success();
+    return visitMeasurement(AnyMutableTrackStateProxy{trackState}, logger);
   }
 
  private:
-  std::tuple<double, std::error_code> visitMeasurement(
-      InternalTrackState trackState, const Logger& logger) const;
+  bool m_useJosephFormulation = false;
+
+  Result<void> visitMeasurement(AnyMutableTrackStateProxy trackState,
+                                const Logger& logger) const;
 
   template <std::size_t N>
-  std::tuple<double, std::error_code> visitMeasurementImpl(
-      InternalTrackState trackState, const Logger& logger) const;
+  Result<void> visitMeasurementImpl(AnyMutableTrackStateProxy trackState,
+                                    const Logger& logger) const;
 };
 
 }  // namespace Acts

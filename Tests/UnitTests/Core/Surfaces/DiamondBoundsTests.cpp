@@ -19,9 +19,12 @@
 #include <stdexcept>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
+
 /// Unit test for creating compliant/non-compliant DiamondBounds object
 BOOST_AUTO_TEST_CASE(DiamondBoundsConstruction) {
   /// Test default construction
@@ -148,6 +151,21 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsAssignment) {
   BOOST_CHECK_EQUAL(assignedDiamondBoundsObject, diamondBoundsObject);
 }
 
+BOOST_AUTO_TEST_CASE(DiamondBoundsCenter) {
+  const double minHalfX = 10.;
+  const double midHalfX = 20.;
+  const double maxHalfX = 15.;
+  const double halfY1 = 5.;
+  const double halfY2 = 7.;
+
+  DiamondBounds diamond(minHalfX, midHalfX, maxHalfX, halfY1, halfY2);
+  Vector2 center = diamond.center();
+
+  // Diamond is symmetric about both axes, so centroid should be at origin
+  BOOST_CHECK_EQUAL(center.x(), 0.0);
+  BOOST_CHECK_EQUAL(center.y(), 0.0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

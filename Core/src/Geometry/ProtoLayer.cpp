@@ -11,12 +11,12 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-
-using Acts::VectorHelpers::perp;
-using Acts::VectorHelpers::phi;
 
 namespace Acts {
+
+using VectorHelpers::perp;
+using VectorHelpers::phi;
+
 namespace detail {
 
 void ProtoLayerBase::measureImpl(const GeometryContext& gctx,
@@ -27,11 +27,10 @@ void ProtoLayerBase::measureImpl(const GeometryContext& gctx,
     // one lseg
     int lseg = (sf->type() != Surface::Straw) ? 1 : 2;
     auto sfPolyhedron = sf->polyhedronRepresentation(gctx, lseg);
-    const DetectorElementBase* element = sf->associatedDetectorElement();
     const auto* regSurface = dynamic_cast<const RegularSurface*>(sf);
-    if (element != nullptr && regSurface != nullptr) {
+    if (sf->isSensitive() && regSurface != nullptr) {
       // Take the thickness in account if necessary
-      double thickness = element->thickness();
+      double thickness = sf->thickness();
       // We need a translation along and opposite half thickness
       Vector3 sfNormal = regSurface->normal(gctx, sf->center(gctx));
       for (const auto& dT : {-0.5 * thickness, 0.5 * thickness}) {

@@ -21,9 +21,7 @@ void BlueprintOptions::validate() const {
 
 std::unique_ptr<NavigationPolicyFactory>
 BlueprintOptions::makeDefaultNavigationPolicyFactory() {
-  return NavigationPolicyFactory::make()
-      .add<TryAllNavigationPolicy>()
-      .asUniquePtr();
+  return NavigationPolicyFactory{}.add<TryAllNavigationPolicy>().asUniquePtr();
 }
 
 }  // namespace Acts::Experimental

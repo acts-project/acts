@@ -8,8 +8,6 @@
 
 #include "Acts/Visualization/GeometryView3D.hpp"
 
-#include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Extent.hpp"
@@ -60,9 +58,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
   // Draw all the surfaces
   Extent arrayExtent;
   for (const auto& sf : surfaceArray.surfaces()) {
-    ViewConfig vConfig = sf->associatedDetectorElement() != nullptr
-                             ? sensitiveConfig
-                             : passiveConfig;
+    ViewConfig vConfig = sf->isSensitive() ? sensitiveConfig : passiveConfig;
     drawSurface(helper, *sf, gctx, transform, vConfig);
     auto sfExtent = sf->polyhedronRepresentation(gctx, 1).extent();
     arrayExtent.extend(sfExtent);
@@ -143,45 +139,6 @@ void Acts::GeometryView3D::drawVolume(IVisualization3D& helper,
                                       const Transform3& /*transform*/,
                                       const ViewConfig& viewConfig) {
   volume.visualize(helper, gctx, viewConfig);
-}
-
-void Acts::GeometryView3D::drawPortal(IVisualization3D& helper,
-                                      const Experimental::Portal& portal,
-                                      const GeometryContext& gctx,
-                                      const Transform3& transform,
-                                      const ViewConfig& connected,
-                                      const ViewConfig& disconnected) {
-  // color the portal based on if it contains two links(green)
-  // or one link(red)
-  auto surface = &(portal.surface());
-  auto links = &(portal.portalNavigation());
-  if (links->size() == 2) {
-    drawSurface(helper, *surface, gctx, transform, connected);
-  } else {
-    drawSurface(helper, *surface, gctx, transform, disconnected);
-  }
-}
-
-void Acts::GeometryView3D::drawDetectorVolume(
-    IVisualization3D& helper, const Experimental::DetectorVolume& volume,
-    const GeometryContext& gctx, const Transform3& transform,
-    const ViewConfig& connected, const ViewConfig& unconnected,
-    const ViewConfig& viewConfig) {
-  // draw the surfaces of the mother volume
-  for (auto surface : volume.surfaces()) {
-    drawSurface(helper, *surface, gctx, transform, viewConfig);
-  }
-
-  // draw the envelope first
-  for (auto portal : volume.portals()) {
-    drawPortal(helper, *portal, gctx, transform, connected, unconnected);
-  }
-
-  // recurse if there are subvolumes
-  for (auto subvolume : volume.volumes()) {
-    drawDetectorVolume(helper, *subvolume, gctx, transform, connected,
-                       unconnected, viewConfig);
-  }
 }
 
 void Acts::GeometryView3D::drawLayer(
@@ -336,8 +293,8 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
     auto lbounds = std::make_shared<CylinderBounds>(thickness, hlength);
     auto line = Surface::makeShared<CylinderSurface>(ltransform, lbounds);
 
-    drawSurface(helper, *line, GeometryContext(), Transform3::Identity(),
-                viewConfig);
+    drawSurface(helper, *line, GeometryContext::dangerouslyDefaultConstruct(),
+                Transform3::Identity(), viewConfig);
   } else {
     helper.line(start, end, viewConfig.color);
   }
@@ -345,7 +302,7 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
   // Arrowheads - if configured
   if (arrows != 0) {
     double awith = thickness * arrowWidth;
-    double alpha = atan2(thickness * arrowWidth, alength);
+    double alpha = std::atan2(thickness * arrowWidth, alength);
     auto plateBounds = std::make_shared<RadialBounds>(thickness, awith);
 
     if (arrows > 0) {
@@ -355,16 +312,17 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
       // Arrow cone
       auto coneBounds = std::make_shared<ConeBounds>(alpha, -alength, 0.);
       auto cone = Surface::makeShared<ConeSurface>(aetransform, coneBounds);
-      drawSurface(helper, *cone, GeometryContext(), Transform3::Identity(),
-                  viewConfig);
+      drawSurface(helper, *cone, GeometryContext::dangerouslyDefaultConstruct(),
+                  Transform3::Identity(), viewConfig);
       // Arrow end plate
       auto aptransform = Transform3::Identity();
       aptransform.prerotate(lrotation);
       aptransform.pretranslate(Vector3(end - alength * direction));
 
       auto plate = Surface::makeShared<DiscSurface>(aptransform, plateBounds);
-      drawSurface(helper, *plate, GeometryContext(), Transform3::Identity(),
-                  viewConfig);
+      drawSurface(helper, *plate,
+                  GeometryContext::dangerouslyDefaultConstruct(),
+                  Transform3::Identity(), viewConfig);
     }
     if (arrows < 0 || arrows == 2) {
       auto astransform = Transform3::Identity();
@@ -374,16 +332,17 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
       // Arrow cone
       auto coneBounds = std::make_shared<ConeBounds>(alpha, 0., alength);
       auto cone = Surface::makeShared<ConeSurface>(astransform, coneBounds);
-      drawSurface(helper, *cone, GeometryContext(), Transform3::Identity(),
-                  viewConfig);
+      drawSurface(helper, *cone, GeometryContext::dangerouslyDefaultConstruct(),
+                  Transform3::Identity(), viewConfig);
       // Arrow end plate
       auto aptransform = Transform3::Identity();
       aptransform.prerotate(lrotation);
       aptransform.pretranslate(Vector3(start + alength * direction));
 
       auto plate = Surface::makeShared<DiscSurface>(aptransform, plateBounds);
-      drawSurface(helper, *plate, GeometryContext(), Transform3::Identity(),
-                  viewConfig);
+      drawSurface(helper, *plate,
+                  GeometryContext::dangerouslyDefaultConstruct(),
+                  Transform3::Identity(), viewConfig);
     }
   }
 }

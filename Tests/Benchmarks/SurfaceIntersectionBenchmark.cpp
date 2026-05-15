@@ -18,16 +18,18 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
-#include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
+#include "ActsTests/CommonHelpers/BenchmarkTools.hpp"
 
 #include <cmath>
 #include <numbers>
 #include <random>
 
-namespace bdata = boost::unit_test::data;
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace bdata = boost::unit_test::data;
+
+namespace ActsTests {
 
 // Some randomness & number crunching
 unsigned int ntests = 10;
@@ -39,7 +41,7 @@ const bool testCylinder = true;
 const bool testStraw = true;
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 // Create a test plane in 10 m distance
 // Some random transform
@@ -78,7 +80,7 @@ MicroBenchmarkResult intersectionTest(const surface_t& surface, double phi,
 
   Vector3 direction(cosPhi * sinTheta, sinPhi * sinTheta, cosTheta);
 
-  return Acts::Test::microBenchmark(
+  return microBenchmark(
       [&] {
         return surface.intersect(tgContext, origin, direction,
                                  boundaryTolerance);
@@ -96,7 +98,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(-0.3, 0.3))) ^
         bdata::xrange(ntests),
     phi, theta, index) {
-  (void)index;
+  static_cast<void>(index);
 
   std::cout << std::endl
             << "Benchmarking theta=" << theta << ", phi=" << phi << "..."
@@ -123,4 +125,4 @@ BOOST_DATA_TEST_CASE(
   }
 }
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

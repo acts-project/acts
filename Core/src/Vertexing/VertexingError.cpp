@@ -42,6 +42,8 @@ class VertexingErrorCategory : public std::error_category {
         return "Encountered a matrix that is not positive definite.";
       case VertexingError::InvalidInput:
         return "Invalid input provided.";
+      case VertexingError::CouldNotRemoveTrack:
+        return "Could not remove track from collection.";
       default:
         return "unknown";
     }

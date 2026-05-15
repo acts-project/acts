@@ -1,0 +1,81 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "ActsExamples/EventData/Graph.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
+
+namespace ActsExamples {
+
+/// Algorithm to create a truth graph for computing truth metrics
+/// Requires space points and particles collection
+/// Either provide a measurements particles map, or a measurement simhit map +
+/// simhits
+class TruthGraphBuilder final : public IAlgorithm {
+ public:
+  struct Config {
+    /// Input space point collection
+    std::string inputSpacePoints;
+    /// Input particles collection
+    std::string inputParticles;
+    /// Input measurement particles map (Optional).
+    std::string inputMeasurementParticlesMap;
+    /// Input simhits (Optional).
+    std::string inputSimHits;
+    /// Input measurement simhit map (Optional).
+    std::string inputMeasurementSimHitsMap;
+    /// Output truth graph
+    std::string outputGraph;
+
+    double targetMinPT = 0.5;
+    std::size_t targetMinSize = 3;
+
+    /// Only allow one hit per track & module
+    bool uniqueModules = false;
+  };
+
+  explicit TruthGraphBuilder(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
+
+  ~TruthGraphBuilder() override = default;
+
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
+
+  const Config& config() const { return m_cfg; }
+
+ private:
+  Config m_cfg;
+
+  std::vector<std::int64_t> buildFromMeasurements(
+      const SpacePointContainer& spacePoints,
+      const SimParticleContainer& particles,
+      const MeasurementParticlesMap& measPartMap) const;
+
+  std::vector<std::int64_t> buildFromSimhits(
+      const SpacePointContainer& spacePoints,
+      const MeasurementSimHitsMap& measHitMap, const SimHitContainer& simhits,
+      const SimParticleContainer& particles) const;
+
+  ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
+                                                         "InputSpacePoints"};
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<MeasurementParticlesMap> m_inputMeasParticlesMap{
+      this, "InputMeasParticlesMap"};
+  ReadDataHandle<SimHitContainer> m_inputSimhits{this, "InputSimhits"};
+  ReadDataHandle<MeasurementSimHitsMap> m_inputMeasSimhitMap{
+      this, "InputMeasSimhitMap"};
+
+  WriteDataHandle<Graph> m_outputGraph{this, "OutputGraph"};
+};
+}  // namespace ActsExamples

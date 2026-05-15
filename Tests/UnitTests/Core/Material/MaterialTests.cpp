@@ -11,13 +11,14 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <limits>
 
 namespace bdata = boost::unit_test::data;
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
 static constexpr auto eps = 2 * std::numeric_limits<float>::epsilon();
@@ -25,22 +26,24 @@ static constexpr auto eps = 2 * std::numeric_limits<float>::epsilon();
 static constexpr float SiNe = 1.160954941_mol / 1_cm3;
 static constexpr float SiI = 172.042290036_eV;
 
-BOOST_AUTO_TEST_SUITE(Material)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 BOOST_AUTO_TEST_CASE(ConstructVacuum) {
   // default constructor builds invalid material a.k.a. vacuum
-  Acts::Material vacuum = Acts::Material::Vacuum();
+  Material vacuum = Material::Vacuum();
   BOOST_CHECK(vacuum.isVacuum());
 }
 
 BOOST_AUTO_TEST_CASE(ConstructSomething) {
   // anything with non-zero Ar is a valid material
-  auto notVacuum = Acts::Material::fromMolarDensity(1, 2, 3, 4, 5);
+  auto notVacuum = Material::fromMolarDensity(1, 2, 3, 4, 5);
   BOOST_CHECK(!notVacuum.isVacuum());
 }
 
 BOOST_AUTO_TEST_CASE(Units) {
-  Acts::Material silicon = Acts::Test::makeSilicon();
+  Material silicon = makeSilicon();
 
   // check values w/ different units if possible
   CHECK_CLOSE_REL(silicon.X0(), 93.70_mm, eps);
@@ -65,21 +68,23 @@ BOOST_AUTO_TEST_CASE(Units) {
 
 BOOST_DATA_TEST_CASE(EncodingDecodingRoundtrip,
                      bdata::make({
-                         Acts::Material::Vacuum(),
-                         Acts::Material::fromMolarDensity(1, 2, 3, 4, 5),
-                         Acts::Test::makeBeryllium(),
-                         Acts::Test::makeSilicon(),
+                         Material::Vacuum(),
+                         Material::fromMolarDensity(1, 2, 3, 4, 5),
+                         makeBeryllium(),
+                         makeSilicon(),
                      }),
                      material) {
   // encode material
-  Acts::Material::ParametersVector numbers0 = material.parameters();
+  Material::ParametersVector numbers0 = material.parameters();
   // construct from encoded numbers
-  Acts::Material fromNumbers(numbers0);
+  Material fromNumbers(numbers0);
   // encode material again
-  Acts::Material::ParametersVector numbers1 = fromNumbers.parameters();
+  Material::ParametersVector numbers1 = fromNumbers.parameters();
 
   BOOST_CHECK_EQUAL(material, fromNumbers);
   BOOST_CHECK_EQUAL(numbers0, numbers1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -1,6 +1,5 @@
-add_library(
-    ActsExamplesAlignment
-    SHARED
+acts_add_library(
+    ExamplesAlignment
     src/AlignmentAlgorithm.cpp
     src/AlignmentAlgorithmFunction.cpp
 )
@@ -10,14 +9,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesAlignment
-    PUBLIC
-        ActsCore
-        ActsAlignment
-        ActsExamplesFramework
-        ActsExamplesMagneticField
-)
-
-install(
-    TARGETS ActsExamplesAlignment
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    PUBLIC Acts::Alignment Acts::ExamplesFramework Acts::ExamplesMagneticField
 )

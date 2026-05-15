@@ -11,4 +11,6 @@ target_sources(
         GraphViz.cpp
         ProtoAxis.cpp
         ScopedTimer.cpp
+        TransformComparator.cpp
+        Histogram.cpp
 )

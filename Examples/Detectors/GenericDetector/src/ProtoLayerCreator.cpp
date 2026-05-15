@@ -77,38 +77,31 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::centralProtoLayers(
         // create the association transform
         double modulePhi = phi(moduleCenter);
         // the local z axis is the normal vector
-        Acts::Vector3 moduleLocalZ(cos(modulePhi + modulePhiTilt),
-                                   sin(modulePhi + modulePhiTilt), 0.);
+        Acts::Vector3 moduleLocalZ(std::cos(modulePhi + modulePhiTilt),
+                                   std::sin(modulePhi + modulePhiTilt), 0.);
         // the local y axis is the global z axis
         Acts::Vector3 moduleLocalY(0., 0., 1);
         // the local x axis the normal to local y,z
-        Acts::Vector3 moduleLocalX(-sin(modulePhi + modulePhiTilt),
-                                   cos(modulePhi + modulePhiTilt), 0.);
+        Acts::Vector3 moduleLocalX(-std::sin(modulePhi + modulePhiTilt),
+                                   std::cos(modulePhi + modulePhiTilt), 0.);
         // create the RotationMatrix
         Acts::RotationMatrix3 moduleRotation;
         moduleRotation.col(0) = moduleLocalX;
         moduleRotation.col(1) = moduleLocalY;
         moduleRotation.col(2) = moduleLocalZ;
         // get the moduleTransform
-        std::shared_ptr<Acts::Transform3> mutableModuleTransform =
-            std::make_shared<Acts::Transform3>(
-                Acts::Translation3(moduleCenter) * moduleRotation);
+        Acts::Transform3 moduleTransform(Acts::Translation3(moduleCenter) *
+                                         moduleRotation);
         // stereo angle if necessary
         if (!m_cfg.centralModuleFrontsideStereo.empty() &&
             m_cfg.centralModuleFrontsideStereo.at(icl) != 0.) {
           // twist by the stereo angle
           double stereo = m_cfg.centralModuleFrontsideStereo.at(icl);
-          (*mutableModuleTransform) *=
-              Acts::AngleAxis3(-stereo, Acts::Vector3::UnitZ());
+          moduleTransform *= Acts::AngleAxis3(-stereo, Acts::Vector3::UnitZ());
         }
-
-        // Finalize the transform
-        auto moduleTransform = std::const_pointer_cast<const Acts::Transform3>(
-            mutableModuleTransform);
         // create the module
         auto moduleElement = m_cfg.detectorElementFactory(
             moduleTransform, moduleBounds, moduleThickness, moduleMaterialPtr);
-
         // register the surface
         sVector.push_back(moduleElement->surface().getSharedPtr());
         // IF double modules exist
@@ -119,22 +112,21 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::centralProtoLayers(
           Acts::Vector3 bsModuleCenter =
               moduleCenter +
               m_cfg.centralModuleBacksideGap.at(icl) * moduleLocalZ;
-          mutableModuleTransform = std::make_shared<Acts::Transform3>(
+          Acts::Transform3 bsModuleTransform(
               Acts::Translation3(bsModuleCenter) * moduleRotation);
           // apply the stereo
           if (!m_cfg.centralModuleBacksideStereo.empty()) {
             // twist by the stereo angle
             double stereoBackSide = m_cfg.centralModuleBacksideStereo.at(icl);
-            (*mutableModuleTransform) *=
+            bsModuleTransform *=
                 Acts::AngleAxis3(-stereoBackSide, Acts::Vector3::UnitZ());
           }
-          // Finalize the transform
-          moduleTransform = std::const_pointer_cast<const Acts::Transform3>(
-              mutableModuleTransform);
           // create the backseide moulde
           auto bsModuleElement =
-              m_cfg.detectorElementFactory(moduleTransform, moduleBounds,
+              m_cfg.detectorElementFactory(bsModuleTransform, moduleBounds,
                                            moduleThickness, moduleMaterialPtr);
+          // register the backside surface
+          sVector.push_back(bsModuleElement->surface().getSharedPtr());
         }
       }
 
@@ -241,7 +233,8 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::createProtoLayers(
           Acts::Vector3 moduleCenter(ringModulePosition);
           moduleCenter.z() *= side;
           // the rotation matrix of the module
-          Acts::Vector3 moduleLocalY(cos(modulePhi), sin(modulePhi), 0.);
+          Acts::Vector3 moduleLocalY(std::cos(modulePhi), std::sin(modulePhi),
+                                     0.);
           // take different axis to have the same readout direction
           Acts::Vector3 moduleLocalZ(0., 0., side * 1.);
           Acts::Vector3 moduleLocalX = moduleLocalY.cross(moduleLocalZ);
@@ -251,43 +244,40 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::createProtoLayers(
           moduleRotation.col(0) = moduleLocalX;
           moduleRotation.col(1) = moduleLocalY;
           moduleRotation.col(2) = moduleLocalZ;
-          // the transforms for the two modules
-          std::shared_ptr<const Acts::Transform3> moduleTransform =
-              std::make_shared<const Acts::Transform3>(
-                  Acts::Translation3(moduleCenter) * moduleRotation);
+          // the transforms for the front module
+          const Acts::Transform3 moduleTransform(
+              Acts::Translation3(moduleCenter) * moduleRotation);
 
           // create the module
           auto moduleElement =
               m_cfg.detectorElementFactory(moduleTransform, moduleBounds,
                                            moduleThickness, moduleMaterialPtr);
-
+          // register the surface
+          esVector.push_back(moduleElement->surface().getSharedPtr());
           // now deal with the potential backside
           if (!m_cfg.posnegModuleBacksideGap.empty()) {
             // the new centers
             moduleCenter =
                 moduleCenter +
                 m_cfg.posnegModuleBacksideGap.at(ipnl).at(ipnR) * moduleLocalZ;
-            // the new transforms
-            auto mutableModuleTransform = std::make_shared<Acts::Transform3>(
+            // the backside transforms
+            Acts::Transform3 bsModuleTransform(
                 Acts::Translation3(moduleCenter) * moduleRotation);
             // apply the stereo
             if (!m_cfg.posnegModuleBacksideStereo.empty()) {
               // twist by the stereo angle
               double stereoBackSide =
                   m_cfg.posnegModuleBacksideStereo.at(ipnl).at(ipnR);
-              (*mutableModuleTransform) *=
+              bsModuleTransform *=
                   Acts::AngleAxis3(-stereoBackSide, Acts::Vector3::UnitZ());
             }
-            // Finalize the transform
-            moduleTransform = std::const_pointer_cast<const Acts::Transform3>(
-                mutableModuleTransform);
             // everything is set for the next module
             auto bsModuleElement = m_cfg.detectorElementFactory(
-                moduleTransform, moduleBounds, moduleThickness,
+                bsModuleTransform, moduleBounds, moduleThickness,
                 moduleMaterialPtr);
+            // register the backside surface
+            esVector.push_back(bsModuleElement->surface().getSharedPtr());
           }
-          // create the surface
-          esVector.push_back(moduleElement->surface().getSharedPtr());
         }
         // counter of rings
         ++ipnR;

@@ -82,6 +82,7 @@ class Frustum {
   /// @param far_distance The distance to the virtual "far line" at which point
   /// the side lines terminate visually.
   /// @param unit Multiplicative factor to apply to internal distances
+  /// @return Reference to the output stream for method chaining
   std::ostream& svg(std::ostream& os, value_type w, value_type h,
                     value_type far_distance = 1, value_type unit = 20.) const
     requires(DIM == 2);

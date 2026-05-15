@@ -14,8 +14,6 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
-#include <algorithm>
-
 Acts::FreeVector Acts::transformBoundToFreeParameters(
     const Acts::Surface& surface, const GeometryContext& geoCtx,
     const Acts::BoundVector& boundParams) {

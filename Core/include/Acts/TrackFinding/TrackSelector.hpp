@@ -9,11 +9,11 @@
 #pragma once
 
 #include "Acts/EventData/TrackProxyConcept.hpp"
-#include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <functional>
 #include <limits>
@@ -31,16 +31,24 @@ class TrackSelector {
   static constexpr double inf = std::numeric_limits<double>::infinity();
 
  public:
+  /// Measurement counting rules for geometry-specific requirements.
   struct MeasurementCounter {
-    // Combination of a geometry hierarchy map and a minimum hit count
+    /// Type combining a geometry hierarchy map and a minimum hit count
     using CounterElement =
         std::pair<GeometryHierarchyMap<unsigned int>, unsigned int>;
 
+    /// Collection of counter elements
     boost::container::small_vector<CounterElement, 4> counters;
 
+    /// Check if track satisfies all measurement requirements
+    /// @param track The track to check
+    /// @return True if track satisfies all counter thresholds
     template <TrackProxyConcept track_proxy_t>
     bool isValidTrack(const track_proxy_t& track) const;
 
+    /// Add a new counter with threshold for specified geometry
+    /// @param identifiers Geometry identifiers to count measurements in
+    /// @param threshold Minimum number of required measurements
     void addCounter(const std::vector<GeometryIdentifier>& identifiers,
                     unsigned int threshold) {
       std::vector<GeometryHierarchyMap<unsigned int>::InputElement> elements;
@@ -55,29 +63,49 @@ class TrackSelector {
   /// Default construction yields a set of cuts that accepts everything.
   struct Config {
     // Minimum/maximum local positions.
+    /// Minimum local position in first coordinate
     double loc0Min = -inf;
+    /// Maximum local position in first coordinate
     double loc0Max = inf;
+    /// Minimum local position in second coordinate
     double loc1Min = -inf;
+    /// Maximum local position in second coordinate
     double loc1Max = inf;
     // Minimum/maximum track time.
+    /// Minimum track time cut
     double timeMin = -inf;
+    /// Maximum track time cut
     double timeMax = inf;
     // Direction cuts.
+    /// Minimum phi cut for track selection
     double phiMin = -inf;
+    /// Maximum phi cut for track selection
     double phiMax = inf;
+    /// Minimum eta cut for track selection
     double etaMin = -inf;
+    /// Maximum eta cut for track selection
     double etaMax = inf;
+    /// Minimum absolute eta cut for track selection
     double absEtaMin = 0.0;
+    /// Maximum absolute eta cut for track selection
     double absEtaMax = inf;
     // Momentum cuts.
+    /// Minimum transverse momentum cut
     double ptMin = 0.0;
+    /// Maximum transverse momentum cut
     double ptMax = inf;
 
+    /// Minimum number of measurements required
     std::size_t minMeasurements = 0;
+    /// Maximum number of holes allowed
     std::size_t maxHoles = std::numeric_limits<std::size_t>::max();
+    /// Maximum number of outliers allowed
     std::size_t maxOutliers = std::numeric_limits<std::size_t>::max();
+    /// Maximum number of holes and outliers combined
     std::size_t maxHolesAndOutliers = std::numeric_limits<std::size_t>::max();
+    /// Maximum number of shared hits allowed
     std::size_t maxSharedHits = std::numeric_limits<std::size_t>::max();
+    /// Maximum chi-squared cut for track selection
     double maxChi2 = inf;
 
     /// Whether a reference surface is required for the track
@@ -85,6 +113,7 @@ class TrackSelector {
     bool requireReferenceSurface = true;
 
     // Defaults to: no cut
+    /// Counter for geometry-specific measurement requirements
     MeasurementCounter measurementCounter;
 
     // Helper factory functions to produce a populated config object more
@@ -172,6 +201,7 @@ class TrackSelector {
 
     /// Auto-converting constructor from a single cut configuration.
     /// Results in a single absolute eta bin from 0 to infinity.
+    /// @param cutSet Single cut configuration to use for all eta values
     explicit EtaBinnedConfig(Config cutSet) : cutSets{std::move(cutSet)} {}
 
     /// Add a new eta bin with the given upper bound.
@@ -375,9 +405,8 @@ inline std::size_t TrackSelector::EtaBinnedConfig::binIndex(double eta) const {
 
 inline std::size_t TrackSelector::EtaBinnedConfig::binIndexNoCheck(
     double eta) const {
-  auto binIt =
-      std::upper_bound(absEtaEdges.begin(), absEtaEdges.end(), std::abs(eta));
-  std::size_t index = std::distance(absEtaEdges.begin(), binIt);
+  auto binIt = std::ranges::upper_bound(absEtaEdges, std::abs(eta));
+  std::size_t index = std::ranges::distance(absEtaEdges.begin(), binIt);
   if (index == 0) {
     index = absEtaEdges.size() + 1;  // positive value to check for underflow
   }
@@ -409,8 +438,7 @@ void TrackSelector::selectTracks(const input_tracks_t& inputTracks,
       continue;
     }
     auto destProxy = outputTracks.makeTrack();
-    destProxy.copyFrom(track, false);
-    destProxy.tipIndex() = track.tipIndex();
+    destProxy.copyFromShallow(track);
   }
 }
 
@@ -520,7 +548,7 @@ bool TrackSelector::MeasurementCounter::isValidTrack(
   counterValues.resize(counters.size(), 0);
 
   for (const auto& ts : track.trackStatesReversed()) {
-    if (!ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (!ts.typeFlags().isMeasurement()) {
       continue;
     }
 

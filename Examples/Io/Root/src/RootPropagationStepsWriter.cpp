@@ -18,15 +18,15 @@
 
 #include <ios>
 #include <memory>
-#include <ostream>
 #include <stdexcept>
 
 #include <TFile.h>
 #include <TTree.h>
 
-ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
-    const ActsExamples::RootPropagationStepsWriter::Config& cfg,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+RootPropagationStepsWriter::RootPropagationStepsWriter(
+    const RootPropagationStepsWriter::Config& cfg, Acts::Logging::Level level)
     : WriterT(cfg.collection, "RootPropagationStepsWriter", level),
       m_cfg(cfg),
       m_outputFile(cfg.rootFile) {
@@ -86,13 +86,13 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
   m_outputTree->Branch("nStepTrials", &m_nStepTrials);
 }
 
-ActsExamples::RootPropagationStepsWriter::~RootPropagationStepsWriter() {
+RootPropagationStepsWriter::~RootPropagationStepsWriter() {
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::finalize() {
+ProcessCode RootPropagationStepsWriter::finalize() {
   // Write the tree
   m_outputFile->cd();
   m_outputTree->Write();
@@ -107,7 +107,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
+ProcessCode RootPropagationStepsWriter::writeT(
     const AlgorithmContext& context, const PropagationSummaries& summaries) {
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
@@ -223,5 +223,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
     m_outputTree->Fill();
   }
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

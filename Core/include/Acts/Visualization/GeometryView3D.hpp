@@ -26,11 +26,7 @@ class TrackingVolume;
 struct Polyhedron;
 class IVisualization3D;
 
-namespace Experimental {
-class DetectorVolume;
-class Portal;
-}  // namespace Experimental
-
+/// Helper utilities for drawing geometry in 3D views.
 struct GeometryView3D {
   /// Helper method to draw Polyhedron objects
   ///
@@ -83,40 +79,6 @@ struct GeometryView3D {
                          const GeometryContext& gctx,
                          const Transform3& transform = Transform3::Identity(),
                          const ViewConfig& viewConfig = s_viewVolume);
-
-  /// Helper method to draw portals objects
-  ///
-  /// @param [in,out] helper The visualization helper
-  /// @param portal The portal to be drawn
-  /// @param gctx The geometry context for which it is drawn
-  /// @param transform An option additional transform
-  /// @param connected The config for connected portals
-  /// @param disconnected The config for disconnected portals
-  static void drawPortal(IVisualization3D& helper,
-                         const Experimental::Portal& portal,
-                         const GeometryContext& gctx,
-                         const Transform3& transform = Transform3::Identity(),
-                         const ViewConfig& connected = {.color = {0, 255, 0}},
-                         const ViewConfig& disconnected = {
-                             .color = {255, 0, 0}});
-
-  /// Helper method to draw DetectorVolume objects
-  ///
-  /// @param [in,out] helper The visualization helper
-  /// @param volume The DetectorVolume to be drawn
-  /// @param gctx The geometry context for which it is drawn
-  /// @param transform An option additional transform
-  /// @param connected The config for connected portals
-  /// @param unconnected The config for unconnected portals
-  /// @param viewConfig The drawing configuration
-  static void drawDetectorVolume(
-      IVisualization3D& helper,
-      const Acts::Experimental::DetectorVolume& volume,
-      const GeometryContext& gctx,
-      const Transform3& transform = Transform3::Identity(),
-      const ViewConfig& connected = {.color = {0, 255, 0}},
-      const ViewConfig& unconnected = {.color = {255, 0, 0}},
-      const ViewConfig& viewConfig = s_viewSensitive);
 
   /// Helper method to draw Layer objects
   ///

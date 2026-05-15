@@ -11,13 +11,15 @@
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(accumulated_material)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 BOOST_AUTO_TEST_CASE(vacuum) {
   AccumulatedVolumeMaterial avm;
@@ -76,7 +78,8 @@ BOOST_AUTO_TEST_CASE(two_materials) {
   CHECK_CLOSE_REL(result.X0(), 2. / (1. / 1. + 1. / 6.), 1e-4);
   CHECK_CLOSE_REL(result.L0(), 2. / (1. / 2. + 1. / 7.), 1e-4);
   CHECK_CLOSE_REL(result.Ar(), (5 * 3. + 10 * 8.) / (5 + 10), 1e-4);
-  CHECK_CLOSE_REL(result.Z(), exp((1. / 2.) * log(4.) + (1. / 2.) * log(9.)),
+  CHECK_CLOSE_REL(result.Z(),
+                  std::exp((1. / 2.) * std::log(4.) + (1. / 2.) * std::log(9.)),
                   1e-4);
   CHECK_CLOSE_REL(result.molarDensity(), 0.5 * (5. + 10.), 1e-4);
 }
@@ -96,13 +99,14 @@ BOOST_AUTO_TEST_CASE(two_materials_different_lengh) {
   CHECK_CLOSE_REL(result.L0(), 2.5 / (0.5 / 2. + 2. / 7.), 1e-4);
   CHECK_CLOSE_REL(result.Ar(),
                   (0.5 * 5 * 3. + 2 * 10 * 8.) / (0.5 * 5 + 2 * 10), 1e-4);
-  CHECK_CLOSE_REL(
-      result.Z(),
-      exp((0.5 / (0.5 + 2.)) * log(4.) + (2. / (0.5 + 2.)) * log(9.)), 1e-4);
+  CHECK_CLOSE_REL(result.Z(),
+                  std::exp((0.5 / (0.5 + 2.)) * std::log(4.) +
+                           (2. / (0.5 + 2.)) * std::log(9.)),
+                  1e-4);
   CHECK_CLOSE_REL(result.molarDensity(), (0.5 * 5. + 2 * 10.) / (0.5 + 2),
                   1e-4);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

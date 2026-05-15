@@ -44,7 +44,7 @@ struct EigenStepperDefaultExtension {
          const double h = 0., const Vector3& kprev = Vector3::Zero())
     requires(i >= 0 && i <= 3)
   {
-    (void)volumeMaterial;
+    static_cast<void>(volumeMaterial);
 
     auto qop = stepper.qOverP(state);
     // First step does not rely on previous data
@@ -72,7 +72,7 @@ struct EigenStepperDefaultExtension {
   template <typename stepper_t>
   bool finalize(typename stepper_t::State& state, const stepper_t& stepper,
                 const IVolumeMaterial* volumeMaterial, const double h) const {
-    (void)volumeMaterial;
+    static_cast<void>(volumeMaterial);
 
     propagateTime(state, stepper, h);
     return true;
@@ -95,7 +95,7 @@ struct EigenStepperDefaultExtension {
   bool finalize(typename stepper_t::State& state, const stepper_t& stepper,
                 const IVolumeMaterial* volumeMaterial, const double h,
                 FreeMatrix& D) const {
-    (void)volumeMaterial;
+    static_cast<void>(volumeMaterial);
 
     propagateTime(state, stepper, h);
     return transportMatrix(state, stepper, h, D);
@@ -168,7 +168,7 @@ struct EigenStepperDefaultExtension {
 
     double half_h = h * 0.5;
     // This sets the reference to the sub matrices
-    // dFdx is already initialised as (3x3) idendity
+    // dFdx is already initialised as (3x3) identity
     auto dFdT = D.block<3, 3>(0, 4);
     auto dFdL = D.block<3, 1>(0, 7);
     // dGdx is already initialised as (3x3) zero

@@ -12,11 +12,12 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(MultiTrajectoryHelpers)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE(trajectoryState) {
   auto surface = Surface::makeShared<PerigeeSurface>(Vector3(0, 0, 0));
@@ -24,44 +25,45 @@ BOOST_AUTO_TEST_CASE(trajectoryState) {
   VectorMultiTrajectory traj;
 
   auto ts = traj.makeTrackState(TrackStatePropMask::None);
-  ts.typeFlags().set(MeasurementFlag);
+  ts.typeFlags().setIsMeasurement();
   ts.setReferenceSurface(surface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(OutlierFlag);
+  ts.typeFlags().setIsOutlier();
   ts.setReferenceSurface(surface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(MeasurementFlag);
-  ts.typeFlags().set(SharedHitFlag);
+  ts.typeFlags().setIsMeasurement();
+  ts.typeFlags().setIsSharedHit();
   ts.setReferenceSurface(surface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(HoleFlag);
+  ts.typeFlags().setIsHole();
   ts.setReferenceSurface(surface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(OutlierFlag);
+  ts.typeFlags().setIsOutlier();
   ts.setReferenceSurface(surface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(HoleFlag);
+  ts.typeFlags().setIsHole();
   ts.setReferenceSurface(surface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(MeasurementFlag);
-  ts.typeFlags().set(SharedHitFlag);
+  ts.typeFlags().setIsMeasurement();
+  ts.typeFlags().setIsSharedHit();
   ts.setReferenceSurface(surface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(OutlierFlag);
+  ts.typeFlags().setIsOutlier();
   ts.setReferenceSurface(surface);
 
-  auto state = Acts::MultiTrajectoryHelpers::trajectoryState(traj, ts.index());
+  auto state = MultiTrajectoryHelpers::trajectoryState(traj, ts.index());
   BOOST_CHECK_EQUAL(state.nHoles, 2);
   BOOST_CHECK_EQUAL(state.nMeasurements, 3);
   BOOST_CHECK_EQUAL(state.nOutliers, 3);
   BOOST_CHECK_EQUAL(state.nSharedHits, 2);
+  BOOST_CHECK_EQUAL(state.nStates, 8);
 }
 
 BOOST_AUTO_TEST_CASE(trajectoryStateVolume) {
@@ -78,41 +80,41 @@ BOOST_AUTO_TEST_CASE(trajectoryStateVolume) {
   VectorMultiTrajectory traj;
 
   auto ts = traj.makeTrackState(TrackStatePropMask::None);
-  ts.typeFlags().set(MeasurementFlag);
+  ts.typeFlags().setIsMeasurement();
   ts.setReferenceSurface(searchSurface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(OutlierFlag);
+  ts.typeFlags().setIsOutlier();
   ts.setReferenceSurface(searchSurface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(MeasurementFlag);
-  ts.typeFlags().set(SharedHitFlag);
+  ts.typeFlags().setIsMeasurement();
+  ts.typeFlags().setIsSharedHit();
   ts.setReferenceSurface(searchSurface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(HoleFlag);
+  ts.typeFlags().setIsHole();
   ts.setReferenceSurface(searchSurface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(OutlierFlag);
+  ts.typeFlags().setIsOutlier();
   ts.setReferenceSurface(searchSurface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(HoleFlag);
+  ts.typeFlags().setIsHole();
   ts.setReferenceSurface(searchSurface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(MeasurementFlag);
-  ts.typeFlags().set(SharedHitFlag);
+  ts.typeFlags().setIsMeasurement();
+  ts.typeFlags().setIsSharedHit();
   ts.setReferenceSurface(otherSurface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(OutlierFlag);
+  ts.typeFlags().setIsOutlier();
   ts.setReferenceSurface(otherSurface);
 
   auto state =
-      Acts::MultiTrajectoryHelpers::trajectoryState(traj, ts.index(), volumes);
+      MultiTrajectoryHelpers::trajectoryState(traj, ts.index(), volumes);
   BOOST_CHECK_EQUAL(state.at(searchVolume).nHoles, 2);
   BOOST_CHECK_EQUAL(state.at(searchVolume).nMeasurements, 2);
   BOOST_CHECK_EQUAL(state.at(searchVolume).nOutliers, 2);
@@ -121,4 +123,4 @@ BOOST_AUTO_TEST_CASE(trajectoryStateVolume) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

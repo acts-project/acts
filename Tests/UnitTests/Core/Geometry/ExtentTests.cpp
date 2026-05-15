@@ -11,19 +11,20 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <array>
 #include <cmath>
 #include <string>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-BOOST_AUTO_TEST_SUITE(Geometry)
+BOOST_AUTO_TEST_SUITE(GeometrSuite)
 
 /// Unit tests for Polyderon construction & operator +=
 BOOST_AUTO_TEST_CASE(ExtentTest) {
@@ -188,4 +189,4 @@ BOOST_AUTO_TEST_CASE(DesignatedInitializers) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

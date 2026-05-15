@@ -24,14 +24,14 @@ namespace Acts {
 class Surface;
 }  // namespace Acts
 
-namespace DD4hepTestsHelper {
+namespace ActsTests::DD4hepTestsHelper {
 
 /// @brief helper to ensure that an extension is set,
 /// copied from the ODD detector code
 ///
 /// @tparam T the type of the extension
 /// @param elt the detector element
-/// @return the extracted/created extennsion
+/// @return the extracted/created extension
 template <typename T>
 T& ensureExtension(dd4hep::DetElement& elt) {
   T* ext = elt.extension<T>(false);
@@ -48,7 +48,7 @@ T& ensureExtension(dd4hep::DetElement& elt) {
 ///
 /// This parses the dediced \< surface_binning \> tag
 /// - allowed/understood binnings are x,y,z,phi,r
-/// - allowed/unserstood types are equidistant/variable (those are
+/// - allowed/understood types are equidistant/variable (those are
 /// auto-detected)
 ///
 /// Example for e.g. bname = \"surface_binning\":
@@ -98,4 +98,4 @@ std::string surfaceToXML(const Acts::GeometryContext& gctx,
                          const Acts::Surface& surface,
                          const Acts::Transform3& ref);
 
-}  // namespace DD4hepTestsHelper
+}  // namespace ActsTests::DD4hepTestsHelper

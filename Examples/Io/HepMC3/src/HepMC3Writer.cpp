@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/HepMC3/HepMC3Writer.hpp"
 
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3Metadata.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <filesystem>
@@ -16,19 +17,6 @@
 
 #include <HepMC3/Version.h>
 #include <HepMC3/WriterAscii.h>
-
-#if HEPMC3_VERSION_CODE == 3002007
-#include "./CompressedIO.h"
-#endif
-
-#ifdef HEPMC3_USE_COMPRESSION
-#include <HepMC3/WriterGZ.h>
-#endif
-
-#ifdef ACTS_HEPMC3_ROOT_SUPPORT
-#include <HepMC3/WriterRootTree.h>
-#endif
-
 #include <boost/algorithm/string/join.hpp>
 
 namespace ActsExamples {
@@ -41,97 +29,87 @@ HepMC3Writer::HepMC3Writer(const Config& config, Acts::Logging::Level level)
     throw std::invalid_argument("Missing output file path");
   }
 
+  // Resolve compression from config and/or path
+  auto [compression, basePath] = resolveCompression(m_cfg.outputPath);
+  m_compression = compression;
+
+  // Validate the resolved compression is supported
   if (std::ranges::none_of(HepMC3Util::availableCompressionModes(),
                            [this](HepMC3Util::Compression c) {
-                             return c == this->m_cfg.compression;
+                             return c == this->m_compression;
                            })) {
     std::stringstream ss;
-    ss << "Unsupported compression mode: " << m_cfg.compression;
+    ss << "Unsupported compression mode: " << m_compression;
     throw std::invalid_argument(ss.str());
   }
 
-  if (!m_cfg.perEvent) {
-    auto absolute = std::filesystem::absolute(m_cfg.outputPath);
-    if (std::filesystem::exists(absolute) &&
-        std::filesystem::is_directory(absolute)) {
-      throw std::invalid_argument("Output path is a directory: " +
-                                  absolute.string());
-    }
-
-    if (!std::filesystem::exists(absolute.parent_path())) {
-      throw std::invalid_argument("Directory to write into does not exist: " +
-                                  absolute.parent_path().string());
-    }
-    // Create a single file writer
-    m_writer = createWriter(m_cfg.outputPath);
-  }
-
-  if (m_cfg.perEvent &&
-      HepMC3Util::formatFromFilename(m_cfg.outputPath.string()) ==
-          HepMC3Util::Format::root) {
-    ACTS_WARNING(
-        "Per-event output is enabled and the output format is ROOT. This is "
-        "likely not what you want");
-  }
-}
-
-std::unique_ptr<HepMC3::Writer> HepMC3Writer::createWriter(
-    const std::filesystem::path& target) {
-  ACTS_DEBUG("Creating writer for: " << target);
-
-  auto format = HepMC3Util::formatFromFilename(target.string());
-
+  // Compute the actual output path with compression extension
+  auto format = HepMC3Util::formatFromFilename(basePath);
   if (format == HepMC3Util::Format::root) {
-    ACTS_DEBUG("~> Root");
-    if (m_cfg.compression != HepMC3Util::Compression::none) {
-      ACTS_ERROR("~~> Compression not supported for Root");
-      throw std::invalid_argument("Compression not supported for Root");
-    }
-#ifdef ACTS_HEPMC3_ROOT_SUPPORT
-    return std::make_unique<HepMC3::WriterRootTree>(target);
-#else
-    ACTS_ERROR("~~> Root support not enabled in HepMC3");
-    throw std::runtime_error("Root support not enabled in HepMC3");
-#endif
+    m_actualOutputPath = basePath;
   } else {
-    std::filesystem::path path =
-        target.string() +
-        std::string{HepMC3Util::compressionExtension(m_cfg.compression)};
-    ACTS_DEBUG("~> Ascii (=> " << path << ")");
-
-    switch (m_cfg.compression) {
-      case HepMC3Util::Compression::none:
-        ACTS_DEBUG("~~> uncompressed");
-        return std::make_unique<HepMC3::WriterAscii>(path);
-#ifdef HEPMC3_USE_COMPRESSION
-      case HepMC3Util::Compression::zlib:
-        ACTS_DEBUG("~~> GZ");
-        return std::make_unique<
-            HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::z>>(
-            path);
-      case HepMC3Util::Compression::lzma:
-        ACTS_DEBUG("~~> LZMA");
-        return std::make_unique<
-            HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::lzma>>(
-            path);
-      case HepMC3Util::Compression::bzip2:
-        ACTS_DEBUG("~~> BZ2");
-        return std::make_unique<
-            HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::bz2>>(
-            path);
-      case HepMC3Util::Compression::zstd:
-        ACTS_DEBUG("~~> ZSTD");
-        return std::make_unique<
-            HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::zstd>>(
-            path);
-#endif
-      default:
-        throw std::invalid_argument{"Unknown compression value"};
-    }
+    m_actualOutputPath =
+        basePath.string() +
+        std::string{HepMC3Util::compressionExtension(m_compression)};
   }
+
+  // Validate output path
+  auto absolute = std::filesystem::absolute(m_actualOutputPath);
+  if (std::filesystem::exists(absolute) &&
+      std::filesystem::is_directory(absolute)) {
+    throw std::invalid_argument("Output path is a directory: " +
+                                absolute.string());
+  }
+
+  if (!std::filesystem::exists(absolute.parent_path())) {
+    throw std::invalid_argument("Directory to write into does not exist: " +
+                                absolute.parent_path().string());
+  }
+
+  // Create the writer
+  m_writer =
+      HepMC3Util::createWriter(m_actualOutputPath, format, m_compression);
 }
 
 HepMC3Writer::~HepMC3Writer() = default;
+
+std::pair<HepMC3Util::Compression, std::filesystem::path>
+HepMC3Writer::resolveCompression(const std::filesystem::path& path) const {
+  using Compression = HepMC3Util::Compression;
+
+  // Deduce compression from the path
+  Compression pathCompression = HepMC3Util::compressionFromFilename(path);
+
+  // Get the base path without compression extension
+  std::filesystem::path basePath = path;
+  std::string_view ext = HepMC3Util::compressionExtension(pathCompression);
+  if (!ext.empty() && path.string().ends_with(ext)) {
+    // Remove the compression extension
+    basePath = path.string().substr(0, path.string().size() - ext.size());
+  }
+
+  // Resolve the compression mode
+  Compression resolvedCompression = Compression::none;
+
+  if (m_cfg.compression.has_value()) {
+    // Compression explicitly set in config
+    resolvedCompression = m_cfg.compression.value();
+
+    // Check consistency if path also specifies compression
+    if (pathCompression != Compression::none &&
+        pathCompression != resolvedCompression) {
+      std::stringstream ss;
+      ss << "Compression mismatch: config specifies " << resolvedCompression
+         << ", but path '" << path << "' implies " << pathCompression;
+      throw std::invalid_argument(ss.str());
+    }
+  } else {
+    // Deduce compression from path
+    resolvedCompression = pathCompression;
+  }
+
+  return {resolvedCompression, basePath};
+}
 
 ProcessCode HepMC3Writer::beginEvent(std::size_t threadId) {
   ACTS_VERBOSE("Begin event, next_event=" << m_nextEvent);
@@ -163,24 +141,6 @@ ProcessCode HepMC3Writer::writeT(
   ACTS_VERBOSE("Write: event_nr=" << ctx.eventNumber
                                   << ", thread=" << ctx.threadId);
 
-  if (m_cfg.perEvent) {
-    std::filesystem::path perEventFile =
-        perEventFilepath(m_cfg.outputPath.parent_path(),
-                         m_cfg.outputPath.filename().string(), ctx.eventNumber);
-
-    ACTS_VERBOSE("Writing per-event file " << perEventFile);
-    auto writer = createWriter(perEventFile);
-
-    writer->write_event(*event);
-    auto result = ProcessCode::SUCCESS;
-    if (writer->failed()) {
-      ACTS_ERROR("Failed to write event number: " << ctx.eventNumber);
-      result = ProcessCode::ABORT;
-    }
-    writer->close();
-    return result;
-  }
-
   if (!m_cfg.writeEventsInOrder) {
     std::scoped_lock lock{m_mutex};
     // Unconditionally write events in whatever order they come in
@@ -189,6 +149,7 @@ ProcessCode HepMC3Writer::writeT(
       ACTS_ERROR("Failed to write event number: " << ctx.eventNumber);
       return ProcessCode::ABORT;
     }
+    m_eventsWritten++;
     return ProcessCode::SUCCESS;
   }
 
@@ -237,6 +198,8 @@ ProcessCode HepMC3Writer::writeT(
       nWritten++;
     }
 
+    m_eventsWritten += nWritten;
+
     ACTS_VERBOSE("Wrote " << nWritten << " events, next_event=" << m_nextEvent
                           << ", thread=" << ctx.threadId);
     m_queueSemaphore.release(nWritten);
@@ -275,6 +238,18 @@ ProcessCode HepMC3Writer::finalize() {
   }
   ACTS_DEBUG("max_queue_size=" << m_maxEventQueueSize
                                << " limit=" << m_cfg.maxEventsPending);
+
+  // Write sidecar metadata file with event count
+  ACTS_DEBUG("Writing sidecar metadata for " << m_actualOutputPath << " with "
+                                             << m_eventsWritten << " events");
+  if (!HepMC3Metadata::writeSidecar(
+          m_actualOutputPath,
+          HepMC3Metadata::HepMC3Metadata{.numEvents = m_eventsWritten},
+          logger())) {
+    ACTS_WARNING("Failed to write sidecar metadata file for "
+                 << m_actualOutputPath);
+  }
+
   return ProcessCode::SUCCESS;
 }
 

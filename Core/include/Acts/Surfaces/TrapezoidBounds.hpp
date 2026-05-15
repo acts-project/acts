@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -29,6 +28,8 @@ namespace Acts {
 /// @todo can be speed optimized by calculating kappa/delta and caching it
 class TrapezoidBounds : public PlanarBounds {
  public:
+  /// @enum BoundValues
+  /// Enumeration for the bound values
   enum BoundValues {
     eHalfLengthXnegY = 0,
     eHalfLengthXposY = 1,
@@ -52,10 +53,14 @@ class TrapezoidBounds : public PlanarBounds {
   explicit TrapezoidBounds(const std::array<double, eSize>& values) noexcept(
       false);
 
-  BoundsType type() const final { return SurfaceBounds::eTrapezoid; }
+  /// @copydoc SurfaceBounds::type
+  BoundsType type() const final { return eTrapezoid; }
 
+  /// @copydoc SurfaceBounds::values
   std::vector<double> values() const final;
 
+  /// @copydoc SurfaceBounds::inside
+  ///
   /// The orientation of the Trapezoid is according to the figure above,
   /// in words: the shorter of the two parallel sides of the trapezoid
   /// intersects
@@ -92,13 +97,17 @@ class TrapezoidBounds : public PlanarBounds {
   /// <br>
   /// and   @f$  \delta_{I} = \delta_{II} = - \frac{1}{2}\kappa_{I}(x_{max} +
   /// x_{min}) @f$
-  ///
-  /// @param lposition Local position (assumed to be in right surface frame)
-  /// @param boundaryTolerance boundary check directive
-  ///
-  /// @return boolean indicator for the success of this operation
-  bool inside(const Vector2& lposition,
-              const BoundaryTolerance& boundaryTolerance) const final;
+  bool inside(const Vector2& lposition) const final;
+
+  /// @copydoc SurfaceBounds::closestPoint
+  Vector2 closestPoint(const Vector2& lposition,
+                       const SquareMatrix2& metric) const final;
+
+  using SurfaceBounds::inside;
+
+  /// @copydoc SurfaceBounds::center
+  /// @note For TrapezoidBounds: returns center of symmetry (0,0), accounting for rotation
+  Vector2 center() const final;
 
   /// Return the vertices
   ///
@@ -116,10 +125,12 @@ class TrapezoidBounds : public PlanarBounds {
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream to be dumped into
+  /// @return Modified ostream for chaining
   std::ostream& toStream(std::ostream& sl) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return The bound value at the specified index
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:

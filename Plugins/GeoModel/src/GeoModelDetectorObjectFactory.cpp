@@ -6,18 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 
-#include "Acts/Detector/GeometryIdGenerator.hpp"
-#include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
-#include "Acts/Navigation/InternalNavigation.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
-#include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
+#include "ActsPlugins/GeoModel/GeoModelConverters.hpp"
+#include "ActsPlugins/GeoModel/IGeoShapeConverter.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -34,7 +31,9 @@
 #include <GeoModelKernel/GeoTube.h>
 #include <GeoModelKernel/GeoTubs.h>
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 GeoModelDetectorObjectFactory::GeoModelDetectorObjectFactory(
     const Config &cfg, std::unique_ptr<const Logger> mlogger)
@@ -44,19 +43,14 @@ void GeoModelDetectorObjectFactory::construct(Cache &cache,
                                               const GeometryContext &gctx,
                                               const GeoModelTree &geoModelTree,
                                               const Options &options) {
-  if (geoModelTree.geoReader == nullptr) {
-    throw std::invalid_argument("GeoModelTree has no GeoModelReader");
-  }
-  for (const auto &q : options.queries) {
+  for (const std::string &q : options.queries) {
     ACTS_VERBOSE("Constructing detector elements for query " << q);
     // load data from database according to querie (Muon)
-    auto qFPV = geoModelTree.geoReader
-                    ->getPublishedNodes<std::string, GeoFullPhysVol *>(q);
+    auto qFPV = geoModelTree.publisher->getPublishedVol(q);
 
     /** Full physical volumes represent  logical detector units.*/
-    for (const auto &[name, fpv] : qFPV) {
-      FPVConstLink physVol{fpv};
-      ACTS_INFO("Convert volume " << name);
+    for (const auto &[name, physVol] : qFPV) {
+      ACTS_DEBUG("Convert volume " << name);
       convertFpv(name, physVol, cache, gctx);
     }
   }
@@ -137,10 +131,9 @@ bool GeoModelDetectorObjectFactory::convertBox(const std::string &name) const {
   return convB;
 }
 
-void GeoModelDetectorObjectFactory::convertFpv(const std::string &name,
-                                               const FPVConstLink &fpv,
-                                               Cache &cache,
-                                               const GeometryContext &gctx) {
+void GeoModelDetectorObjectFactory::convertFpv(
+    const std::string &name, const FpvConstLink &fpv, Cache &cache,
+    const GeometryContext & /*gctx*/) {
   const std::size_t prevSize = cache.sensitiveSurfaces.size();
   {
     /** Search all subvolumes that may be converted to sensitive surfaces */
@@ -149,11 +142,11 @@ void GeoModelDetectorObjectFactory::convertFpv(const std::string &name,
     std::vector<GeoModelSensitiveSurface> sensitives;
     sensitives.reserve(subVolToTrf.size());
 
-    for (const auto &trfMe : subVolToTrf) {
+    for (const auto &convertMe : subVolToTrf) {
       /** Align the surface with the global position of the detector */
       const Transform3 transform =
-          fpv->getAbsoluteTransform() * trfMe.transform;
-      convertSensitive(trfMe.volume, transform, *cache.surfBoundFactory,
+          fpv->getAbsoluteTransform() * convertMe.transform;
+      convertSensitive(convertMe.volume, transform, *cache.surfBoundFactory,
                        sensitives);
     }
 
@@ -174,21 +167,18 @@ void GeoModelDetectorObjectFactory::convertFpv(const std::string &name,
   }
   // Extract the bounding box surrounding the surface
   if (convertBox(name)) {
-    auto volume = GeoModel::convertVolume(fpv->getAbsoluteTransform(),
-                                          fpv->getLogVol()->getShape(),
-                                          *cache.volumeBoundFactory);
-
-    std::vector<std::shared_ptr<Surface>> surfacesToPut{};
+    ConvertedGeoVol &convEnvelope = cache.volumeBoxFPVs.emplace_back();
+    convEnvelope.name = name;
+    convEnvelope.fullPhysVol = fpv;
+    convEnvelope.volume = GeoModel::convertVolume(fpv->getAbsoluteTransform(),
+                                                  fpv->getLogVol()->getShape(),
+                                                  *cache.volumeBoundFactory);
     std::transform(cache.sensitiveSurfaces.begin() + prevSize,
                    cache.sensitiveSurfaces.end(),
-                   std::back_inserter(surfacesToPut),
+                   std::back_inserter(convEnvelope.surfaces),
                    [](const GeoModelSensitiveSurface &sensitive) {
                      return std::get<1>(sensitive);
                    });
-    // convert bounding boxes with surfaces inside
-    auto volumeGen2 =
-        GeoModel::convertDetectorVolume(gctx, *volume, name, surfacesToPut);
-    cache.volumeBoxFPVs.emplace_back(std::make_tuple(volume, volumeGen2, fpv));
   }
 }
 // function to determine if object fits query
@@ -222,4 +212,4 @@ bool GeoModelDetectorObjectFactory::matches(const std::string &name,
   }
   return match;
 }
-}  // namespace Acts
+}  // namespace ActsPlugins

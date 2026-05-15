@@ -1,0 +1,171 @@
+/**
+ * ACTS Version Manager Styles
+ *
+ * Styling for PR build banner and version selector.
+ * Compatible with doxygen-awesome-css theme and dark mode.
+ */
+
+/* ========================================================================
+   PR Build Banner
+   ======================================================================== */
+
+#acts-pr-banner {
+  background: var(--primary-color, #3f51b5);
+  color: white;
+  padding: 12px 20px;
+  text-align: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+#acts-pr-banner strong {
+  font-weight: 600;
+}
+
+#acts-pr-banner code {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 13px;
+}
+
+#acts-pr-banner a {
+  color: white;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+#acts-pr-banner a:hover {
+  opacity: 0.8;
+}
+
+/* Dark mode compatibility for PR banner */
+html.dark-mode #acts-pr-banner {
+  background: #2c3e50;
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+html.dark-mode #acts-pr-banner code {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ========================================================================
+   Version Selector Container
+   ======================================================================== */
+
+#acts-version-selector {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--separator-color);
+  background: var(--side-nav-background);
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  /* Prevent layout shift during load */
+  min-height: 40px;
+}
+
+/* Version dropdown styling */
+#acts-version-selector select,
+#acts-version-selector .version-dropdown {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--separator-color);
+  border-radius: 4px;
+  background: var(--page-background-color);
+  color: var(--page-foreground-color);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+#acts-version-selector select:hover,
+#acts-version-selector .version-dropdown:hover {
+  border-color: var(--primary-color);
+}
+
+#acts-version-selector select:focus,
+#acts-version-selector .version-dropdown:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2);
+}
+
+/* Version selector label (if used by external JS) */
+#acts-version-selector label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--page-foreground-color);
+  opacity: 0.8;
+}
+
+/* ========================================================================
+   Minimal Fallback Selector
+   ======================================================================== */
+
+#acts-version-selector.minimal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+}
+
+#acts-version-selector.minimal a {
+  display: inline-block;
+  color: var(--primary-color);
+  text-decoration: none;
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+#acts-version-selector.minimal a:hover {
+  text-decoration: underline;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+html.dark-mode #acts-version-selector.minimal a:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ========================================================================
+   Responsive Design
+   ======================================================================== */
+
+@media screen and (max-width: 767px) {
+  #acts-pr-banner {
+    padding: 10px 15px;
+    font-size: 13px;
+  }
+
+  #acts-version-selector {
+    padding: 10px 12px;
+  }
+
+  #acts-version-selector select,
+  #acts-version-selector .version-dropdown {
+    font-size: 12px;
+  }
+}
+
+/* ========================================================================
+   Loading State (Optional - for future enhancement)
+   ======================================================================== */
+
+#acts-version-selector.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+#acts-version-selector.loading::after {
+  content: "Loading...";
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  color: var(--page-foreground-color);
+  opacity: 0.6;
+}

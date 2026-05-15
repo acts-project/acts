@@ -20,6 +20,7 @@ void sympy::boundToBoundTransportJacobian(
     const FreeVector& freeParameters,
     const BoundToFreeMatrix& boundToFreeJacobian,
     const FreeMatrix& freeTransportJacobian,
+    FreeToBoundMatrix& freeToBoundJacobian,
     const FreeVector& freeToPathDerivatives,
     BoundMatrix& fullTransportJacobian) {
   const Vector3 position = freeParameters.segment<3>(eFreePos0);
@@ -29,7 +30,7 @@ void sympy::boundToBoundTransportJacobian(
   const FreeToPathMatrix freeToPath =
       surface.freeToPathDerivative(geoContext, position, direction);
   // Calculate the jacobian from free to bound at the final surface
-  FreeToBoundMatrix freeToBoundJacobian =
+  freeToBoundJacobian =
       surface.freeToBoundJacobian(geoContext, position, direction);
   // https://acts.readthedocs.io/en/latest/white_papers/correction-for-transport-jacobian.html
   // Calculate the full jacobian from the local/bound parameters at the start
@@ -46,11 +47,11 @@ void sympy::boundToBoundTransportJacobian(
 void sympy::boundToCurvilinearTransportJacobian(
     const Vector3& direction, const BoundToFreeMatrix& boundToFreeJacobian,
     const FreeMatrix& freeTransportJacobian,
+    FreeToBoundMatrix& freeToBoundJacobian,
     const FreeVector& freeToPathDerivatives,
     BoundMatrix& fullTransportJacobian) {
   // Calculate the jacobian from global to local at the curvilinear surface
-  FreeToBoundMatrix freeToBoundJacobian =
-      CurvilinearSurface(direction).freeToBoundJacobian();
+  freeToBoundJacobian = CurvilinearSurface(direction).freeToBoundJacobian();
 
   // Calculate the full jocobian from the local parameters at the start surface
   // to curvilinear parameters

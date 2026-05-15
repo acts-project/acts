@@ -11,11 +11,11 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <bitset>
@@ -26,15 +26,17 @@
 #include <numbers>
 #include <string>
 #include <tuple>
+#include <unordered_set>
 #include <utility>
 #include <variant>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::VectorHelpers;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-BOOST_AUTO_TEST_SUITE(Utilities)
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(bitset_to_matrix_to_bitset) {
   Eigen::Matrix<int, 4, 3> mat;
@@ -111,7 +113,7 @@ BOOST_AUTO_TEST_CASE(shared_vector_helper_test) {
     vec = {std::make_shared<int>(5), std::make_shared<int>(9),
            std::make_shared<int>(26), std::make_shared<int>(18473)};
 
-    std::vector<int*> unpacked = unpack_shared_vector(vec);
+    std::vector<int*> unpacked = unpackSmartPointers(vec);
 
     std::vector<int*> exp = {
         vec[0].get(),
@@ -130,7 +132,7 @@ BOOST_AUTO_TEST_CASE(shared_vector_helper_test) {
     vec = {std::make_shared<const int>(5), std::make_shared<const int>(9),
            std::make_shared<const int>(26), std::make_shared<const int>(18473)};
 
-    std::vector<const int*> unpacked = unpack_shared_vector(vec);
+    std::vector<const int*> unpacked = unpackSmartPointers(vec);
 
     std::vector<const int*> exp = {
         vec[0].get(),
@@ -171,17 +173,16 @@ BOOST_AUTO_TEST_CASE(test_matrix_dimension_switch) {
   }
 }
 
-using MatrixProductTypes =
-    std::tuple<std::pair<SquareMatrix3, SquareMatrix3>,
-               std::pair<SquareMatrix4, SquareMatrix4>,
-               std::pair<ActsMatrix<8, 8>, ActsMatrix<8, 8>>,
-               std::pair<ActsMatrix<8, 7>, ActsMatrix<7, 4>>>;
+using MatrixProductTypes = std::tuple<std::pair<SquareMatrix3, SquareMatrix3>,
+                                      std::pair<SquareMatrix4, SquareMatrix4>,
+                                      std::pair<Matrix<8, 8>, Matrix<8, 8>>,
+                                      std::pair<Matrix<8, 7>, Matrix<7, 4>>>;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(BlockedMatrixMultiplication, Matrices,
                               MatrixProductTypes) {
   using A = typename Matrices::first_type;
   using B = typename Matrices::second_type;
-  using C = ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime>;
+  using C = Matrix<A::RowsAtCompileTime, B::ColsAtCompileTime>;
 
   for (std::size_t i = 0; i < 100; ++i) {
     A a = A::Random();
@@ -193,6 +194,21 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BlockedMatrixMultiplication, Matrices,
     BOOST_CHECK(ref.isApprox(res));
     BOOST_CHECK(res.isApprox(ref));
   }
+}
+
+BOOST_AUTO_TEST_CASE(ContainsValueTest) {
+  std::vector<int> v{};
+  std::unordered_set<int> s{};
+
+  BOOST_CHECK_EQUAL(Acts::rangeContainsValue(v, 1), false);
+  v.push_back(1);
+  BOOST_CHECK_EQUAL(Acts::rangeContainsValue(v, 1), true);
+  BOOST_CHECK_EQUAL(Acts::rangeContainsValue(v, 2), false);
+
+  BOOST_CHECK_EQUAL(Acts::rangeContainsValue(s, 1), false);
+  s.insert(1);
+  BOOST_CHECK_EQUAL(Acts::rangeContainsValue(s, 1), true);
+  BOOST_CHECK_EQUAL(Acts::rangeContainsValue(s, 2), false);
 }
 
 BOOST_AUTO_TEST_CASE(range_medium) {
@@ -327,4 +343,4 @@ BOOST_AUTO_TEST_CASE(Overloaded) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

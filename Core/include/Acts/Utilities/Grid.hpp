@@ -15,6 +15,7 @@
 #include "Acts/Utilities/detail/grid_helper.hpp"
 #include "Acts/Utilities/detail/interpolation_impl.hpp"
 
+#include <algorithm>
 #include <any>
 #include <array>
 #include <tuple>
@@ -29,8 +30,10 @@ namespace Acts {
 
 namespace detail {
 
-template <typename T, bool isConst>
-class AnyGridViewBase;
+template <typename>
+class AnyGridView;
+template <typename>
+class AnyGridConstView;
 
 }  // namespace detail
 
@@ -59,6 +62,7 @@ class IGrid {
   ///
   /// @{
   using AnyIndexType = boost::container::small_vector<std::size_t, 3>;
+  /// Type alias for dynamic point type (coordinates as vector of doubles)
   using AnyPointType = boost::container::small_vector<double, 3>;
 
   /// @brief Get the lower left edge of a bin for a given set of indices
@@ -100,6 +104,7 @@ class IGrid {
   }
 
  protected:
+  /// @param os Output stream to write grid representation to
   virtual void toStream(std::ostream& os) const = 0;
 
   /// @brief Get the value of a bin for a given set of indices
@@ -114,8 +119,10 @@ class IGrid {
   ///         value
   virtual std::any atLocalBinsAny(AnyIndexType indices) = 0;
 
-  template <typename T, bool isConst>
-  friend class detail::AnyGridViewBase;
+  template <typename>
+  friend class AnyGridView;
+  template <typename>
+  friend class AnyGridConstView;
 };
 
 /// @brief class for describing a regular multi-dimensional grid
@@ -261,8 +268,7 @@ class Grid final : public IGrid {
 
   /// @copydoc Acts::IGrid::atLocalBinsAny
   std::any atLocalBinsAny(AnyIndexType indices) const override {
-    const_reference cref = atLocalBins(toIndexType(indices));
-    return &cref;
+    return &atLocalBins(toIndexType(indices));
   }
 
   /// @brief access value stored in bin with given local bin numbers
@@ -279,8 +285,7 @@ class Grid final : public IGrid {
 
   /// @copydoc Acts::IGrid::atLocalBinsAny
   std::any atLocalBinsAny(AnyIndexType indices) override {
-    reference ref = atLocalBins(toIndexType(indices));
-    return &ref;
+    return &atLocalBins(toIndexType(indices));
   }
 
   /// @brief get global bin indices for closest points on grid
@@ -545,6 +550,7 @@ class Grid final : public IGrid {
 
   /// @brief check whether given point is inside grid limits
   ///
+  /// @param position Point to check for inclusion within grid boundaries
   /// @return @c true if \f$\text{xmin_i} \le x_i < \text{xmax}_i \forall i=0,
   ///         \dots, d-1\f$, otherwise @c false
   ///
@@ -604,6 +610,7 @@ class Grid final : public IGrid {
 
   /// @brief total number of bins
   ///
+  /// @param fullCounter Whether to include under-and overflow bins in the count
   /// @return total number of bins in the grid
   ///
   /// @note This number contains under-and overflow bins along all axes.
@@ -661,25 +668,30 @@ class Grid final : public IGrid {
   }
 
   /// @brief get the axes as a tuple
+  /// @return Reference to the tuple containing all grid axes
   const std::tuple<Axes...>& axesTuple() const { return m_axes; }
 
   /// @brief get the axes as an array of IAxis pointers
+  /// @return Vector containing pointers to all grid axes
   boost::container::small_vector<const IAxis*, 3> axes() const override {
     boost::container::small_vector<const IAxis*, 3> result;
     auto axes = detail::grid_helper::getAxes(m_axes);
-    std::copy(axes.begin(), axes.end(), std::back_inserter(result));
+    std::ranges::copy(axes, std::back_inserter(result));
     return result;
   }
 
   /// begin iterator for global bins
+  /// @return Iterator pointing to the first global bin
   global_iterator_t begin() const { return global_iterator_t(*this, 0); }
 
   /// end iterator for global bins
+  /// @return Iterator pointing one past the last global bin
   global_iterator_t end() const { return global_iterator_t(*this, size()); }
 
   /// @brief begin iterator for local bins
   ///
   /// @param navigator is local navigator for the grid
+  /// @return Iterator pointing to the first local bin
   local_iterator_t begin(
       const std::array<std::vector<std::size_t>, DIM>& navigator) const {
     std::array<std::size_t, DIM> localBin{};
@@ -689,6 +701,7 @@ class Grid final : public IGrid {
   /// @brief end iterator for local bins
   ///
   /// @param navigator is local navigator for the grid
+  /// @return Iterator pointing one past the last local bin
   local_iterator_t end(
       const std::array<std::vector<std::size_t>, DIM>& navigator) const {
     std::array<std::size_t, DIM> endline{};
@@ -753,9 +766,13 @@ class Grid final : public IGrid {
   }
 };
 
+/// Deduction guide for Grid with rvalue reference axes
+/// @param axes Variable number of axes (rvalue references)
 template <typename T, class... Axes>
 Grid(TypeTag<T> /*type*/, Axes&&... axes) -> Grid<T, Axes...>;
 
+/// Deduction guide for Grid with lvalue reference axes
+/// @param axes Variable number of axes (lvalue references)
 template <typename T, class... Axes>
 Grid(TypeTag<T> /*type*/, Axes&... axes) -> Grid<T, Axes...>;
 

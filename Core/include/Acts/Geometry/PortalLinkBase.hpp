@@ -24,7 +24,7 @@ class GeometryContext;
 
 /// PortalLinkBase is the abstract base class for all portal links.
 /// A portal link is a mapping between a surface and a point on the surface and
-/// a destination tracking volum.
+/// a destination tracking volume.
 /// The derived classes implement different ways to resolve a volume
 class PortalLinkBase {
  protected:
@@ -109,10 +109,14 @@ class PortalLinkBase {
  protected:
   /// Helper function to check a number of preconditions before merging is
   /// executed.
+  /// @param a The first portal link
+  /// @param b The second portal link
+  /// @param direction The axis direction for merging
   static void checkMergePreconditions(const PortalLinkBase& a,
                                       const PortalLinkBase& b,
                                       AxisDirection direction);
 
+  /// Surface associated with this portal link
   std::shared_ptr<RegularSurface> m_surface;
 };
 

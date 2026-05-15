@@ -38,6 +38,10 @@ enum struct TrackStatePropMask : std::uint8_t {
 
 ACTS_DEFINE_ENUM_BITWISE_OPERATORS(TrackStatePropMask)
 
+/// Stream operator for TrackStatePropMask
+/// @param os Output stream
+/// @param mask TrackStatePropMask to output
+/// @return Reference to output stream
 std::ostream& operator<<(std::ostream& os, TrackStatePropMask mask);
 
 }  // namespace Acts

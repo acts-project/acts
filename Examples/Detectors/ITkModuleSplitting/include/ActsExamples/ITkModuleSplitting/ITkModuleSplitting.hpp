@@ -41,7 +41,7 @@ inline std::vector<std::shared_ptr<const detector_element_t>> splitBarrelModule(
   detElements.reserve(nSegments);
 
   // Get the geometric information
-  const Acts::Transform3& transform = surface.transform(gctx);
+  const Acts::Transform3& transform = surface.localToGlobalTransform(gctx);
   // Determine the new bounds
   const std::vector<double> boundsValues = bounds.values();
 
@@ -107,7 +107,7 @@ inline std::vector<std::shared_ptr<detector_element_t>> splitDiscModule(
   detElements.reserve(nSegments);
 
   // Get the geometric information
-  const Acts::Transform3& transform = surface.transform(gctx);
+  const Acts::Transform3& transform = surface.localToGlobalTransform(gctx);
   const std::vector<double> boundsValues = bounds.values();
   std::array<double, Acts::AnnulusBounds::eSize> values{};
 

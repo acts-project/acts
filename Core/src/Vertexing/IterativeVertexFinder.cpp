@@ -336,9 +336,10 @@ Acts::Result<void> Acts::IterativeVertexFinder::removeUsedCompatibleTracks(
     } else {
       // Track not compatible with vertex
       // Remove track from current vertex
-      auto foundIter = std::ranges::find_if(
-          tracksAtVertex,
-          [&trk](auto trkAtVtx) { return trk == trkAtVtx.originalParams; });
+      auto foundIter =
+          std::ranges::find_if(tracksAtVertex, [&trk](const auto& trkAtVtx) {
+            return trk == trkAtVtx.originalParams;
+          });
       if (foundIter != tracksAtVertex.end()) {
         // Remove track from seed tracks
         tracksAtVertex.erase(foundIter);
@@ -399,8 +400,8 @@ Acts::Result<void> Acts::IterativeVertexFinder::fillTracksToFit(
 
       // sqrt(sigma(d0)^2+sigma(z0)^2), where sigma(d0)^2 is the variance of d0
       double hypotVariance =
-          sqrt((*(sTrackParams.covariance()))(eBoundLoc0, eBoundLoc0) +
-               (*(sTrackParams.covariance()))(eBoundLoc1, eBoundLoc1));
+          std::sqrt((*(sTrackParams.covariance()))(eBoundLoc0, eBoundLoc0) +
+                    (*(sTrackParams.covariance()))(eBoundLoc1, eBoundLoc1));
 
       if (hypotVariance == 0.) {
         ACTS_WARNING(

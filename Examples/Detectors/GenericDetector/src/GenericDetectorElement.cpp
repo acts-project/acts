@@ -16,40 +16,42 @@
 namespace ActsExamples {
 
 GenericDetectorElement::GenericDetectorElement(
-    const Identifier identifier,
-    std::shared_ptr<const Acts::Transform3> transform,
+    const Identifier identifier, const Acts::Transform3& transform,
     std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
     std::shared_ptr<const Acts::ISurfaceMaterial> material)
-    : Acts::DetectorElementBase(),
-      m_elementIdentifier(identifier),
-      m_elementTransform(std::move(transform)),
+    : m_elementIdentifier(identifier),
+      m_elementTransform(transform),
       m_elementSurface(
           Acts::Surface::makeShared<Acts::PlaneSurface>(pBounds, *this)),
       m_elementThickness(thickness),
       m_elementPlanarBounds(std::move(pBounds)),
       m_elementDiscBounds(nullptr) {
   m_elementSurface->assignSurfaceMaterial(std::move(material));
+  m_elementSurface->assignThickness(thickness);
 }
 
 GenericDetectorElement::GenericDetectorElement(
-    const Identifier identifier,
-    std::shared_ptr<const Acts::Transform3> transform,
+    const Identifier identifier, const Acts::Transform3& transform,
     std::shared_ptr<const Acts::DiscBounds> dBounds, double thickness,
     std::shared_ptr<const Acts::ISurfaceMaterial> material)
-    : Acts::DetectorElementBase(),
-      m_elementIdentifier(identifier),
-      m_elementTransform(std::move(transform)),
+    : m_elementIdentifier(identifier),
+      m_elementTransform(transform),
       m_elementSurface(
           Acts::Surface::makeShared<Acts::DiscSurface>(dBounds, *this)),
       m_elementThickness(thickness),
       m_elementPlanarBounds(nullptr),
       m_elementDiscBounds(std::move(dBounds)) {
   m_elementSurface->assignSurfaceMaterial(std::move(material));
+  m_elementSurface->assignThickness(thickness);
 }
 
-const Acts::Transform3& GenericDetectorElement::transform(
+const Acts::Transform3& GenericDetectorElement::localToGlobalTransform(
     const Acts::GeometryContext& /*gctx*/) const {
-  return *m_elementTransform;
+  return m_elementTransform;
+}
+
+const Acts::Transform3& GenericDetectorElement::nominalTransform() const {
+  return m_elementTransform;
 }
 
 const Acts::Surface& GenericDetectorElement::surface() const {

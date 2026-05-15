@@ -9,8 +9,11 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/ArrayHelpers.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <bitset>
+#include <cassert>
 #include <optional>
 
 #include "Eigen/Dense"
@@ -75,7 +78,7 @@ auto matrixToBitset(const Eigen::PlainObjectBase<Derived>& m) {
 ///
 /// @returns The product ab
 template <typename A, typename B>
-inline ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime> blockedMult(
+inline Matrix<A::RowsAtCompileTime, B::ColsAtCompileTime> blockedMult(
     const A& a, const B& b) {
   // Extract the sizes of the matrix types that we receive as template
   // parameters.
@@ -133,7 +136,7 @@ inline ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime> blockedMult(
 
     // Construct the end result in this matrix, which destroys a few of Eigen's
     // built-in optimization techniques, but sadly this is necessary.
-    ActsMatrix<M, P> r;
+    Matrix<M, P> r;
 
     // C₁₁ = A₁₁ * B₁₁ + A₁₂ * B₂₁
     r.template topLeftCorner<M1, P1>().noalias() =
@@ -218,12 +221,16 @@ std::optional<ResultType> safeInverse(const MatrixType& m) noexcept {
 /// See https://godbolt.org/z/z53Er6Mzf for reasoning for the concrete numbers.
 template <typename T>
 struct ExpSafeLimit {};
+/// Safe exponent limits for double precision.
 template <>
 struct ExpSafeLimit<double> {
+  /// Maximum safe exponent value for double precision
   constexpr static double value = 500.0;
 };
+/// Safe exponent limits for single precision.
 template <>
 struct ExpSafeLimit<float> {
+  /// Maximum safe exponent value for single precision
   constexpr static float value = 50.0;
 };
 
@@ -246,6 +253,43 @@ constexpr T safeExp(T val) noexcept {
   }
 
   return std::exp(val);
+}
+
+/// @brief Map the indices of the lower triangular part of a symmetric N x N matrix
+///        to an unrolled vector index.
+/// @param i The row index of the symmetric matrix
+/// @param k The column index of the symmetric matrix
+/// @return The corresponding vector index in the unrolled storage
+template <std::size_t N>
+constexpr std::size_t vecIdxFromSymMat(const std::size_t i, const std::size_t k)
+  requires(N > 0)
+{
+  assert(i < N);
+  assert(k < N);
+  if (k > i) {
+    return vecIdxFromSymMat<N>(k, i);
+  }
+  return sumUpToN(i) + k;
+}
+/// @brief Map an unrolled vector index to the indices of the lower triangular
+///        part of a symmetric N x N matrix. Inverse of `vecIdxFromSymMat`.
+/// @param k The unrolled vector index
+/// @return A pair of indices (i, j) such that the element at (i, j) in the
+///         symmetric matrix corresponds to the k-th element in the unrolled
+///         vector.
+template <std::size_t N>
+constexpr std::array<std::size_t, 2> symMatIndices(const std::size_t k)
+  requires(N > 1)
+{
+  assert(k < sumUpToN(N));
+  constexpr std::size_t bound = sumUpToN(N - 1);
+  if (k >= bound) {
+    return std::array<std::size_t, 2>{N - 1, k - bound};
+  }
+  if constexpr (N > 2) {
+    return symMatIndices<N - 1>(k);
+  }
+  return filledArray<std::size_t, 2>(0);
 }
 
 }  // namespace Acts

@@ -11,13 +11,13 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Geometry/Extent.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <iostream>
 
-namespace Acts {
+namespace ActsTests {
 
 /// Check whether the BinningData objects are equal
 ///
@@ -26,8 +26,8 @@ namespace Acts {
 /// @param tolerance a tolerance parameter
 ///
 /// @return a boolean
-inline static bool isEqual(const BinningData& ba, const BinningData& bb,
-                           float tolerance) {
+inline static bool isEqual(const Acts::BinningData& ba,
+                           const Acts::BinningData& bb, float tolerance) {
   bool equalBool = (ba.type == bb.type) && (ba.option == bb.option) &&
                    (ba.binvalue == bb.binvalue) && (ba.zdim == bb.zdim) &&
                    (ba.subBinningAdditive == bb.subBinningAdditive);
@@ -67,8 +67,8 @@ inline static bool isEqual(const BinningData& ba, const BinningData& bb,
 /// @param tolerance a tolerance parameter
 ///
 /// @return a bollean if equal
-inline static bool isEqual(const BinUtility& ba, const BinUtility& bb,
-                           float tolerance) {
+inline static bool isEqual(const Acts::BinUtility& ba,
+                           const Acts::BinUtility& bb, float tolerance) {
   bool equal = (ba.binningData().size() == bb.binningData().size());
   BOOST_CHECK(equal);
   if (equal) {
@@ -86,12 +86,12 @@ inline static bool isEqual(const BinUtility& ba, const BinUtility& bb,
 /// @param eb the second extent object
 /// @param tolerance the tolerance parameter
 ///
-/// @return bool for euqal
+/// @return bool for equal
 inline static bool isEqual(const Acts::Extent& ea, const Acts::Extent& eb,
                            double tolerance = 0.) {
   bool equalConstrains = true;
   bool equalRange = true;
-  for (auto& bVal : allAxisDirections()) {
+  for (auto& bVal : Acts::allAxisDirections()) {
     equalConstrains =
         equalConstrains && (ea.constrains(bVal) == eb.constrains(bVal));
     BOOST_CHECK(equalConstrains);
@@ -108,4 +108,4 @@ inline static bool isEqual(const Acts::Extent& ea, const Acts::Extent& eb,
   return equalRange && equalConstrains;
 }
 
-}  // namespace Acts
+}  // namespace ActsTests

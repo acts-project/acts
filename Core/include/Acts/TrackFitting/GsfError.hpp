@@ -13,13 +13,22 @@
 
 namespace Acts {
 
+/// Error codes for Gaussian Sum Filter operations
+/// @ingroup errors
 enum class GsfError {
+  /// Start parameters have no Covariance
   StartParametersHaveNoCovariance,
+  /// No measurement states found in the forward pass
   NoMeasurementStatesCreatedForward,
+  /// No measurement states found in the backward pass
   NoMeasurementStatesCreatedBackward,
+  /// No measurement states in the final trajectory
   NoMeasurementStatesCreatedFinal,
 };
 
+/// Create error code from @ref GsfError
+/// @param e The error code enum value
+/// @return Standard error code
 std::error_code make_error_code(GsfError e);
 
 }  // namespace Acts

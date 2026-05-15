@@ -20,8 +20,8 @@ namespace Acts {
 
 /// Concept to check the provided external space point type
 /// can be used to fill the space point grid
-template <typename external_spacepoint_t>
-concept CylindricalGridElement = requires(external_spacepoint_t sp) {
+template <typename external_space_point_t>
+concept CylindricalGridElement = requires(external_space_point_t sp) {
   { sp.phi() } -> std::same_as<float>;
   { sp.z() } -> std::same_as<float>;
   { sp.radius() } -> std::same_as<float>;
@@ -29,21 +29,21 @@ concept CylindricalGridElement = requires(external_spacepoint_t sp) {
 
 /// Cylindrical Space Point bin is a 2D grid with (phi, z) bins
 /// It stores a vector of internal space points to external space points
-template <CylindricalGridElement external_spacepoint_t>
+template <CylindricalGridElement external_space_point_t>
 using CylindricalSpacePointGrid =
-    Grid<std::vector<const external_spacepoint_t*>,
+    Grid<std::vector<const external_space_point_t*>,
          Axis<AxisType::Equidistant, AxisBoundaryType::Closed>,
          Axis<AxisType::Variable, AxisBoundaryType::Open>,
          Axis<AxisType::Variable, AxisBoundaryType::Open>>;
 
 /// Cylindrical Binned Group
-template <typename external_spacepoint_t>
+template <typename external_space_point_t>
 using CylindricalBinnedGroup =
-    BinnedGroup<CylindricalSpacePointGrid<external_spacepoint_t>>;
+    BinnedGroup<CylindricalSpacePointGrid<external_space_point_t>>;
 
-template <typename external_spacepoint_t>
+template <typename external_space_point_t>
 using CylindricalBinnedGroupIterator =
-    BinnedGroupIterator<CylindricalSpacePointGrid<external_spacepoint_t>>;
+    BinnedGroupIterator<CylindricalSpacePointGrid<external_space_point_t>>;
 
 struct CylindricalSpacePointGridConfig {
   // minimum pT to be found by seedFinder
@@ -60,7 +60,7 @@ struct CylindricalSpacePointGridConfig {
   // maximum extension of sensitive detector layer relevant for seeding in
   // negative direction in z
   float zMin = 0 * UnitConstants::mm;
-  // maximum distance in r from middle space point to bottom or top spacepoint
+  // maximum distance in r from middle space point to bottom or top space point
   float deltaRMax = 0 * UnitConstants::mm;
   // maximum forward direction expressed as cot(theta)
   float cotThetaMax = 0;
@@ -84,8 +84,6 @@ struct CylindricalSpacePointGridConfig {
   std::vector<float> rBinEdges{};
 
   bool isInInternalUnits = true;
-  //[[deprecated("CylindricalSpacePointGridConfig uses internal units")]]
-  CylindricalSpacePointGridConfig toInternalUnits() const { return *this; }
 
   void checkConfig() const {
     if (phiMin < -std::numbers::pi_v<float> ||
@@ -116,35 +114,33 @@ struct CylindricalSpacePointGridOptions {
   float bFieldInZ = 0 * UnitConstants::T;
 
   bool isInInternalUnits = true;
-  //[[deprecated("CylindricalSpacePointGridOptions uses internal units")]]
-  CylindricalSpacePointGridOptions toInternalUnits() const { return *this; }
 };
 
 /// Instructions on how to create and fill this grid specialization
 class CylindricalSpacePointGridCreator {
  public:
-  template <typename external_spacepoint_t>
-  static CylindricalSpacePointGrid<external_spacepoint_t> createGrid(
+  template <typename external_space_point_t>
+  static CylindricalSpacePointGrid<external_space_point_t> createGrid(
       const CylindricalSpacePointGridConfig& _config,
       const CylindricalSpacePointGridOptions& _options,
       const Logger& logger = getDummyLogger());
 
-  template <typename external_spacepoint_t,
-            typename external_spacepoint_iterator_t>
-  static void fillGrid(const SeedFinderConfig<external_spacepoint_t>& config,
+  template <typename external_space_point_t,
+            typename external_space_point_iterator_t>
+  static void fillGrid(const SeedFinderConfig<external_space_point_t>& config,
                        const SeedFinderOptions& options,
-                       CylindricalSpacePointGrid<external_spacepoint_t>& grid,
-                       external_spacepoint_iterator_t spBegin,
-                       external_spacepoint_iterator_t spEnd,
+                       CylindricalSpacePointGrid<external_space_point_t>& grid,
+                       external_space_point_iterator_t spBegin,
+                       external_space_point_iterator_t spEnd,
                        const Logger& logger = getDummyLogger());
 
-  template <typename external_spacepoint_t, typename external_collection_t>
+  template <typename external_space_point_t, typename external_collection_t>
     requires std::ranges::range<external_collection_t> &&
              std::same_as<typename external_collection_t::value_type,
-                          external_spacepoint_t>
-  static void fillGrid(const SeedFinderConfig<external_spacepoint_t>& config,
+                          external_space_point_t>
+  static void fillGrid(const SeedFinderConfig<external_space_point_t>& config,
                        const SeedFinderOptions& options,
-                       CylindricalSpacePointGrid<external_spacepoint_t>& grid,
+                       CylindricalSpacePointGrid<external_space_point_t>& grid,
                        const external_collection_t& collection,
                        const Logger& logger = getDummyLogger());
 };

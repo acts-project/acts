@@ -9,12 +9,12 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsPlugins/GeoModel/GeoModelConverters.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <GeoModelKernel/GeoBox.h>
 #include <GeoModelKernel/GeoFullPhysVol.h>
@@ -24,11 +24,16 @@
 #include <GeoModelKernel/GeoTrd.h>
 #include <GeoModelKernel/GeoVPhysVol.h>
 
-Acts::GeometryContext tContext;
-Acts::RotationMatrix3 idRotation = Acts::RotationMatrix3::Identity();
-Acts::Transform3 idTransform = Acts::Transform3::Identity();
+using namespace Acts;
+using namespace ActsPlugins;
 
-BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
+RotationMatrix3 idRotation = RotationMatrix3::Identity();
+Transform3 idTransform = Transform3::Identity();
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeoModelSuite)
 
 // GeoBox conversion test case
 BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
@@ -42,25 +47,25 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
 
   PVConstLink physXY{make_intrusive<GeoFullPhysVol>(logXY)};
 
-  Acts::SurfaceBoundFactory boundFactory{};
-  auto converted = Acts::GeoBoxConverter{}.toSensitiveSurface(
-      physXY, Acts::Transform3::Identity(), boundFactory);
+  SurfaceBoundFactory boundFactory{};
+  auto converted = GeoBoxConverter{}.toSensitiveSurface(
+      physXY, Transform3::Identity(), boundFactory);
 
   BOOST_CHECK(converted.ok());
 
   auto [elementXY, surfaceXY] = converted.value();
 
-  BOOST_CHECK(surfaceXY->type() == Acts::Surface::SurfaceType::Plane);
+  BOOST_CHECK(surfaceXY->type() == Surface::SurfaceType::Plane);
 
   // Check the bounds
-  const Acts::RectangleBounds* rBoundsXY =
-      dynamic_cast<const Acts::RectangleBounds*>(&(surfaceXY->bounds()));
+  const RectangleBounds* rBoundsXY =
+      dynamic_cast<const RectangleBounds*>(&(surfaceXY->bounds()));
   BOOST_CHECK(rBoundsXY != nullptr);
   CHECK_CLOSE_ABS(rBoundsXY->halfLengthX(), 100, 1e-6);
   CHECK_CLOSE_ABS(rBoundsXY->halfLengthY(), 200, 1e-6);
 
   // Check the transform -> should be identity transform
-  const Acts::Transform3& transformXY = surfaceXY->transform(tContext);
+  const Transform3& transformXY = surfaceXY->localToGlobalTransform(tContext);
   BOOST_CHECK(transformXY.isApprox(idTransform));
 
   // (BOX object) - YZ
@@ -68,24 +73,24 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   auto logYZ = make_intrusive<GeoLogVol>("LogVolumeYZ", boxYZ, material);
   auto fphysYZ = make_intrusive<GeoFullPhysVol>(logYZ);
 
-  converted = Acts::GeoBoxConverter{}.toSensitiveSurface(
-      fphysYZ, Acts::Transform3::Identity(), boundFactory);
+  converted = GeoBoxConverter{}.toSensitiveSurface(
+      fphysYZ, Transform3::Identity(), boundFactory);
 
   BOOST_CHECK(converted.ok());
 
   auto [elementYZ, surfaceYZ] = converted.value();
 
-  BOOST_CHECK(surfaceYZ->type() == Acts::Surface::SurfaceType::Plane);
-  const Acts::RectangleBounds* rBoundsYZ =
-      dynamic_cast<const Acts::RectangleBounds*>(&(surfaceYZ->bounds()));
+  BOOST_CHECK(surfaceYZ->type() == Surface::SurfaceType::Plane);
+  const RectangleBounds* rBoundsYZ =
+      dynamic_cast<const RectangleBounds*>(&(surfaceYZ->bounds()));
   BOOST_CHECK(rBoundsYZ != nullptr);
   CHECK_CLOSE_ABS(rBoundsYZ->halfLengthX(), 200, 1e-6);
   CHECK_CLOSE_ABS(rBoundsYZ->halfLengthY(), 300, 1e-6);
 
   // Check the transform -> should be cyclic permutation of the identity
-  const Acts::Transform3& transformYZ = surfaceYZ->transform(tContext);
+  const Transform3& transformYZ = surfaceYZ->localToGlobalTransform(tContext);
 
-  Acts::RotationMatrix3 rotationYZ = transformYZ.rotation();
+  RotationMatrix3 rotationYZ = transformYZ.rotation();
   BOOST_CHECK(rotationYZ.col(0).isApprox(idRotation.col(1)));
   BOOST_CHECK(rotationYZ.col(1).isApprox(idRotation.col(2)));
   BOOST_CHECK(rotationYZ.col(2).isApprox(idRotation.col(0)));
@@ -95,30 +100,32 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   auto logXZ = make_intrusive<GeoLogVol>("LogVolumeXZ", boxXZ, material);
   auto fphysXZ = make_intrusive<GeoFullPhysVol>(logXZ);
 
-  converted = Acts::GeoBoxConverter{}.toSensitiveSurface(
-      fphysXZ, Acts::Transform3::Identity(), boundFactory);
+  converted = GeoBoxConverter{}.toSensitiveSurface(
+      fphysXZ, Transform3::Identity(), boundFactory);
 
   BOOST_CHECK(converted.ok());
 
   auto [elementXZ, surfaceXZ] = converted.value();
 
-  BOOST_CHECK(surfaceXZ->type() == Acts::Surface::SurfaceType::Plane);
+  BOOST_CHECK(surfaceXZ->type() == Surface::SurfaceType::Plane);
 
   // Check the bounds
-  const Acts::RectangleBounds* rBoundsXZ =
-      dynamic_cast<const Acts::RectangleBounds*>(&(surfaceXZ->bounds()));
+  const RectangleBounds* rBoundsXZ =
+      dynamic_cast<const RectangleBounds*>(&(surfaceXZ->bounds()));
 
   BOOST_CHECK(rBoundsXZ != nullptr);
   CHECK_CLOSE_ABS(rBoundsXZ->halfLengthX(), 300, 1e-6);
   CHECK_CLOSE_ABS(rBoundsXZ->halfLengthY(), 400, 1e-6);
 
   // Check the transform -> should be cyclic permutation of the identity
-  const Acts::Transform3& transformXZ = surfaceXZ->transform(tContext);
+  const Transform3& transformXZ = surfaceXZ->localToGlobalTransform(tContext);
 
-  Acts::RotationMatrix3 rotationXZ = transformXZ.rotation();
+  RotationMatrix3 rotationXZ = transformXZ.rotation();
   BOOST_CHECK(rotationXZ.col(0).isApprox(idRotation.col(2)));
   BOOST_CHECK(rotationXZ.col(1).isApprox(idRotation.col(0)));
   BOOST_CHECK(rotationXZ.col(2).isApprox(idRotation.col(1)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

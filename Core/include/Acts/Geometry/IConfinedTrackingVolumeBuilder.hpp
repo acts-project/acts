@@ -14,7 +14,13 @@
 namespace Acts {
 
 class TrackingVolume;
+
+/// @typedef MutableTrackingVolumePtr
+/// Shared pointer to a mutable TrackingVolume.
 using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
+
+/// @typedef MutableTrackingVolumeVector
+/// Vector of shared pointers to mutable TrackingVolumes.
 using MutableTrackingVolumeVector = std::vector<MutableTrackingVolumePtr>;
 
 /// @brief This is an interface class for constructing TrackingVolumes whose are
@@ -25,9 +31,11 @@ class IConfinedTrackingVolumeBuilder {
   virtual ~IConfinedTrackingVolumeBuilder() = default;
 
   /// Interface for constructing a vector of confined TrackingVolumes
+  /// @return Vector of shared pointers to the constructed confined tracking volumes
   virtual MutableTrackingVolumeVector centralVolumes() const = 0;
 
   /// Interface for retrieving the identification string of the confined volumes
+  /// @return Const reference to the identification string
   virtual const std::string& identification() const = 0;
 };
 

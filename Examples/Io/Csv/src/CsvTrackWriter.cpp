@@ -8,24 +8,17 @@
 
 #include "ActsExamples/Io/Csv/CsvTrackWriter.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
-#include "Acts/EventData/VectorMultiTrajectory.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include <algorithm>
 #include <fstream>
 #include <iomanip>
 #include <map>
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -33,10 +26,9 @@
 #include <unordered_set>
 #include <utility>
 
-using namespace ActsExamples;
+namespace ActsExamples {
 
-CsvTrackWriter::CsvTrackWriter(const CsvTrackWriter::Config& config,
-                               Acts::Logging::Level level)
+CsvTrackWriter::CsvTrackWriter(const Config& config, Acts::Logging::Level level)
     : WriterT<ConstTrackContainer>(config.inputTracks, "CsvTrackWriter", level),
       m_cfg(config) {
   if (m_cfg.inputTracks.empty()) {
@@ -58,13 +50,12 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
 
   const auto& hitParticlesMap = m_inputMeasurementParticlesMap(context);
 
-  std::unordered_map<Acts::MultiTrajectoryTraits::IndexType, TrackInfo> infoMap;
+  std::unordered_map<Acts::TrackIndexType, TrackInfo> infoMap;
 
   // Counter of truth-matched reco tracks
   using RecoTrackInfo = std::pair<TrackInfo, std::size_t>;
-  std::map<ActsFatras::Barcode, std::vector<RecoTrackInfo>> matched;
+  std::map<SimBarcode, std::vector<RecoTrackInfo>> matched;
 
-  std::size_t trackId = 0;
   for (const auto& track : tracks) {
     // Reco track selection
     //@TODO: add interface for applying others cuts on reco tracks:
@@ -100,7 +91,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
       continue;
     }
     std::size_t nMajorityHits = 0;
-    ActsFatras::Barcode majorityParticleId;
+    SimBarcode majorityParticleId;
     if (!particleHitCount.empty()) {
       // Get the majority particle counts
       majorityParticleId = particleHitCount.front().particleId;
@@ -113,7 +104,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
 
     // track info
     TrackInfo toAdd;
-    toAdd.trackId = trackId;
+    toAdd.trackId = track.index();
     if (tracks.hasColumn(Acts::hashString("trackGroup"))) {
       toAdd.seedID = seedNumber(track);
     } else {
@@ -133,7 +124,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
     toAdd.trackType = "unknown";
 
     for (const auto& state : track.trackStatesReversed()) {
-      if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (state.typeFlags().hasMeasurement()) {
         auto sl =
             state.getUncalibratedSourceLink().template get<IndexSourceLink>();
         auto hitIndex = sl.index();
@@ -149,8 +140,6 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
     }
 
     infoMap[toAdd.trackId] = toAdd;
-
-    trackId++;
   }
 
   // Find duplicates
@@ -174,7 +163,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
       << "pT,eta,phi,"
       << "truthMatchProbability,"
       << "good/duplicate/fake,"
-      << "Hits_ID";
+      << "Measurements_ID";
 
   mos << '\n';
   mos << std::setprecision(m_cfg.outputPrecision);
@@ -218,3 +207,5 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

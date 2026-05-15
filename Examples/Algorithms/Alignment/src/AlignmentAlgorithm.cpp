@@ -17,9 +17,11 @@
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-ActsExamples::AlignmentAlgorithm::AlignmentAlgorithm(Config cfg,
-                                                     Acts::Logging::Level lvl)
-    : ActsExamples::IAlgorithm("AlignmentAlgorithm", lvl),
+namespace ActsExamples {
+
+AlignmentAlgorithm::AlignmentAlgorithm(
+    Config cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("AlignmentAlgorithm", std::move(logger)),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing input measurement collection");
@@ -42,8 +44,7 @@ ActsExamples::AlignmentAlgorithm::AlignmentAlgorithm(Config cfg,
   m_outputAlignmentParameters.initialize(m_cfg.outputAlignmentParameters);
 }
 
-ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode AlignmentAlgorithm::execute(const AlgorithmContext& ctx) const {
   // Read input data
   const auto& measurements = m_inputMeasurements(ctx);
   const auto& protoTracks = m_inputProtoTracks(ctx);
@@ -131,5 +132,7 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
 
   // add alignment parameters to event store
   m_outputAlignmentParameters(ctx, std::move(alignedParameters));
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

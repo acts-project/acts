@@ -15,15 +15,14 @@
 
 namespace Acts {
 
-template <typename external_spacepoint_t>
-CylindricalSpacePointGrid<external_spacepoint_t>
+template <typename external_space_point_t>
+CylindricalSpacePointGrid<external_space_point_t>
 CylindricalSpacePointGridCreator::createGrid(
     const CylindricalSpacePointGridConfig& config,
     const CylindricalSpacePointGridOptions& options, const Logger& logger) {
   config.checkConfig();
 
   using AxisScalar = Vector3::Scalar;
-  using namespace UnitLiterals;
 
   int phiBins = 0;
   // for no magnetic field, create 100 phi-bins
@@ -144,19 +143,19 @@ CylindricalSpacePointGridCreator::createGrid(
   ACTS_VERBOSE("- Z axis  : " << zAxis);
   ACTS_VERBOSE("- R axis  : " << rAxis);
 
-  return CylindricalSpacePointGrid<external_spacepoint_t>(
+  return CylindricalSpacePointGrid<external_space_point_t>(
       std::make_tuple(std::move(phiAxis), std::move(zAxis), std::move(rAxis)));
 }
 
-template <typename external_spacepoint_t,
-          typename external_spacepoint_iterator_t>
+template <typename external_space_point_t,
+          typename external_space_point_iterator_t>
 void CylindricalSpacePointGridCreator::fillGrid(
-    const SeedFinderConfig<external_spacepoint_t>& config,
+    const SeedFinderConfig<external_space_point_t>& config,
     const SeedFinderOptions& options,
-    CylindricalSpacePointGrid<external_spacepoint_t>& grid,
-    external_spacepoint_iterator_t spBegin,
-    external_spacepoint_iterator_t spEnd, const Logger& logger) {
-  (void)options;
+    CylindricalSpacePointGrid<external_space_point_t>& grid,
+    external_space_point_iterator_t spBegin,
+    external_space_point_iterator_t spEnd, const Logger& logger) {
+  static_cast<void>(options);
 
   if (config.seedFilter == nullptr) {
     throw std::runtime_error("SeedFinderConfig has a null SeedFilter object");
@@ -180,8 +179,8 @@ void CylindricalSpacePointGridCreator::fillGrid(
   ACTS_VERBOSE("Fetching " << std::distance(spBegin, spEnd)
                            << " space points to the grid");
   std::size_t counter = 0ul;
-  for (external_spacepoint_iterator_t it = spBegin; it != spEnd; ++it) {
-    const external_spacepoint_t& sp = *it;
+  for (external_space_point_iterator_t it = spBegin; it != spEnd; ++it) {
+    const external_space_point_t& sp = *it;
 
     // remove SPs according to experiment specific cuts
     if (!config.spacePointSelector(sp)) {
@@ -217,16 +216,16 @@ void CylindricalSpacePointGridCreator::fillGrid(
       "Number of space points inserted (within grid range): " << counter);
 }
 
-template <typename external_spacepoint_t, typename external_collection_t>
+template <typename external_space_point_t, typename external_collection_t>
   requires std::ranges::range<external_collection_t> &&
            std::same_as<typename external_collection_t::value_type,
-                        external_spacepoint_t>
+                        external_space_point_t>
 void CylindricalSpacePointGridCreator::fillGrid(
-    const SeedFinderConfig<external_spacepoint_t>& config,
+    const SeedFinderConfig<external_space_point_t>& config,
     const SeedFinderOptions& options,
-    CylindricalSpacePointGrid<external_spacepoint_t>& grid,
+    CylindricalSpacePointGrid<external_space_point_t>& grid,
     const external_collection_t& collection, const Logger& logger) {
-  CylindricalSpacePointGridCreator::fillGrid<external_spacepoint_t>(
+  CylindricalSpacePointGridCreator::fillGrid<external_space_point_t>(
       config, options, grid, std::ranges::begin(collection),
       std::ranges::end(collection), logger);
 }

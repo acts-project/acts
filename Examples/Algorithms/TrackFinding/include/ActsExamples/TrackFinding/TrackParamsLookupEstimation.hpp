@@ -49,7 +49,9 @@ class TrackParamsLookupEstimation : public IAlgorithm {
   };
 
   /// @brief Constructor
-  TrackParamsLookupEstimation(const Config& config, Acts::Logging::Level level);
+  explicit TrackParamsLookupEstimation(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// @brief The execute method
   ProcessCode execute(const AlgorithmContext& ctx) const override;

@@ -14,15 +14,16 @@
 
 namespace Acts {
 
-/// @ingroup MagneticField
+/// @ingroup magnetic_field
 ///
-/// This class implements a simple constant magnetic field. The
-/// magnetic field value has to be set at creation time, but can
-/// be updated later on.
+/// The simplest magnetic field implementation is a constant field, which
+/// returns the same field values at every queried location.
 class ConstantBField final : public MagneticFieldProvider {
  public:
+  /// Cache object for constant magnetic field
   struct Cache {
-    /// @brief constructor with context
+    /// Constructor with context
+    /// @note For the constant field, the cache is empty.
     explicit Cache(const MagneticFieldContext& /*mcfg*/) {}
   };
 
@@ -32,6 +33,7 @@ class ConstantBField final : public MagneticFieldProvider {
   explicit ConstantBField(Vector3 B) : m_BField(std::move(B)) {}
 
   /// @brief Get the B field at a position
+  /// @return The constant magnetic field vector
   Vector3 getField() const { return m_BField; }
 
   /// @copydoc MagneticFieldProvider::getField(const Vector3&,MagneticFieldProvider::Cache&) const
@@ -40,8 +42,8 @@ class ConstantBField final : public MagneticFieldProvider {
   ///       a consistent interface with other magnetic field services.
   Result<Vector3> getField(const Vector3& position,
                            MagneticFieldProvider::Cache& cache) const override {
-    (void)position;
-    (void)cache;
+    static_cast<void>(position);
+    static_cast<void>(cache);
     return Result<Vector3>::success(m_BField);
   }
 

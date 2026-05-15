@@ -1,0 +1,218 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+
+#include <array>
+#include <memory>
+#include <tuple>
+
+namespace CLHEP {
+class Hep3Vector;
+class HepRotation;
+}  // namespace CLHEP
+
+namespace HepGeom {
+class Transform3D;
+}  // namespace HepGeom
+
+namespace Acts {
+class AnnulusBounds;
+class CylinderBounds;
+class RadialBounds;
+class RectangleBounds;
+class TrapezoidBounds;
+class PlanarBounds;
+class LineBounds;
+class Material;
+class HomogeneousSurfaceMaterial;
+class HomogeneousVolumeMaterial;
+class CylinderVolumeBounds;
+
+}  // namespace Acts
+
+class G4Box;
+class G4Material;
+class G4Trd;
+class G4Trap;
+class G4Tubs;
+class G4VSolid;
+class G4VPhysicalVolume;
+using G4ThreeVector = CLHEP::Hep3Vector;
+using G4RotationMatrix = CLHEP::HepRotation;
+using G4Transform3D = HepGeom::Transform3D;
+
+namespace ActsPlugins {
+/// @addtogroup geant4_plugin
+/// @{
+
+/// @brief Converter for Geant4 algebra objects (transforms, vectors, rotations) to ACTS
+struct Geant4AlgebraConverter {
+  /// Scale factor between Geant4 and ACTS units
+  double scale = 1.;
+
+  /// @brief Translate a geometry transform: translation only
+  ///
+  /// @param g4Trans the translation of the Geant4 object
+  ///
+  /// @return a Acts transform
+  Acts::Transform3 transform(const G4ThreeVector& g4Trans);
+
+  /// @brief Translate a geometry transform
+  ///
+  /// @param g4Rot the rotation of the Geant4 object
+  /// @param g4Trans the translation of the Geant4 object
+  ///
+  /// @return a Acts transform
+  Acts::Transform3 transform(const G4RotationMatrix& g4Rot,
+                             const G4ThreeVector& g4Trans);
+
+  /// @brief Translate a geometry transform
+  ///
+  /// @param g4Trf the Geant4 transform object
+  ///
+  /// @return a Acts transform
+  Acts::Transform3 transform(const G4Transform3D& g4Trf);
+
+  /// @brief Translate a geometry transform from a G4 physical volume
+  ///
+  /// @param g4PhysVol the Geant4 physical volume
+  ///
+  /// @return a Acts transform
+  Acts::Transform3 transform(const G4VPhysicalVolume& g4PhysVol);
+};
+
+// The following set of converters convert a Geant4 volume shape
+// to an ACTS surface bounds object, this is for converting the volume
+// based geometry into a surfaced based one.
+//
+// The obviously smallest expansion/extrusion is condensed to the epsilon
+// thin surface.
+/// @brief Converter for Geant4 shapes to ACTS surface bounds
+struct Geant4ShapeConverter {
+  /// A scale between Geant4 and ACTS
+  double scale = 1.;
+  /// A description to keep the axis order, if it is set to false
+  /// cyclic re-ordering will happen, otherwise axis flip if needed in
+  /// order to keep the system right-handed
+  bool keepAxisOrder = false;
+
+  /// @brief Convert to cylinder bounds
+  ///
+  /// @param g4Tubs a Geant4 tube shape
+  ///
+  /// @return an Acts Cylinder bounds object, and thickness
+  std::tuple<std::shared_ptr<Acts::CylinderBounds>, double> cylinderBounds(
+      const G4Tubs& g4Tubs);
+
+  /// @brief Convert to radial bounds
+  ///
+  /// @param g4Tubs a Geant4 tube shape
+  ///
+  /// @return an Acts Radial bounds object and thickness
+  std::tuple<std::shared_ptr<Acts::RadialBounds>, double> radialBounds(
+      const G4Tubs& g4Tubs);
+
+  /// @brief Convert to line/straw bounds
+  ///
+  /// @param g4Tubs a Geant4 tube shape
+  ///
+  /// @return an Acts line bounds object and thickness
+  std::shared_ptr<Acts::LineBounds> lineBounds(const G4Tubs& g4Tubs);
+
+  /// @brief Convert to rectangle bounds
+  ///
+  /// @param g4Box a Geant4 box shape
+  ///
+  /// @return an ACTS Rectangle bounds shape,  axis orientation, and thickness
+  std::tuple<std::shared_ptr<Acts::RectangleBounds>, std::array<int, 2u>,
+             double>
+  rectangleBounds(const G4Box& g4Box);
+
+  /// @brief Convert to trapezoid bounds - from Trd
+  ///
+  /// @param g4Trd a Geant4 trapezoid shape
+  ///
+  /// @return an ACTS Trapezoid bounds object, axis orientation, and thickness
+  std::tuple<std::shared_ptr<Acts::TrapezoidBounds>, std::array<int, 2u>,
+             double>
+  trapezoidBounds(const G4Trd& g4Trd);
+
+  /// @brief Convert to trapezoid bounds - from Trap
+  ///
+  /// @param g4Trap a Geant4 trapezoid shape
+  ///
+  /// @return an ACTS Trapezoid bounds object, axis orientation, and thickness
+  std::tuple<std::shared_ptr<Acts::TrapezoidBounds>, std::array<int, 2u>,
+             double>
+  trapezoidBounds(const G4Trap& g4Trap);
+
+  /// @brief Convert to general solid into a planar shape
+  ///
+  /// @param g4Solid a Geant4 solid shape
+  ///
+  /// @return an ACTS Planar bounds object,
+  /// the axes, and the thickness of the compressed dimension
+  std::tuple<std::shared_ptr<Acts::PlanarBounds>, std::array<int, 2u>, double>
+  planarBounds(const G4VSolid& g4Solid);
+};
+
+/// @brief Converter for Geant4 physical volumes to ACTS surfaces
+struct Geant4PhysicalVolumeConverter {
+  /// Optionally allow to foce a type, throws exception if not possible
+  Acts::Surface::SurfaceType forcedType = Acts::Surface::SurfaceType::Other;
+
+  /// @brief Convert a Geant4 physical volume to a surface
+  ///
+  /// @param g4PhysVol the physical volume to be constructed
+  /// @param toGlobal the global transformation before the volume
+  /// @param convertMaterial a material conversion flag
+  /// @param compressed the compressed thickness of the converted material
+  ///
+  /// @return a shared surface object
+  std::shared_ptr<Acts::Surface> surface(const G4VPhysicalVolume& g4PhysVol,
+                                         const Acts::Transform3& toGlobal,
+                                         bool convertMaterial = false,
+                                         double compressed = 0.);
+};
+
+/// @brief Converter for Geant4 materials to ACTS material description
+struct Geant4MaterialConverter {
+  /// Convert Geant4 material to ACTS material
+  /// @param g4Material Geant4 material to convert
+  /// @param compression Material compression factor
+  /// @return ACTS material description
+  Acts::Material material(const G4Material& g4Material, double compression = 1);
+
+  /// @brief Convert a Geant4 material to a surface material description
+  ///
+  /// @param g4Material the geant4 material description
+  /// @param original the original thickness
+  /// @param compressed the compressed thickness
+  /// @return ACTS surface material description
+  std::shared_ptr<Acts::HomogeneousSurfaceMaterial> surfaceMaterial(
+      const G4Material& g4Material, double original, double compressed);
+};
+
+/// @brief Converter for Geant4 volumes to ACTS volume bounds
+struct Geant4VolumeConverter {
+  /// @brief Convert to cylinder bounds
+  ///
+  /// @param g4Tubs a Geant4 tube shape
+  ///
+  /// @return an Acts Cylinder bounds object
+  std::shared_ptr<Acts::CylinderVolumeBounds> cylinderBounds(
+      const G4Tubs& g4Tubs);
+};
+
+/// @}
+}  // namespace ActsPlugins

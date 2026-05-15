@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/MultiIndex.hpp"
@@ -22,6 +23,10 @@ using Index32 = Acts::MultiIndex<std::uint32_t, 16, 8, 8>;
 // 64bit split into a four level hierarchy
 using Index64 = Acts::MultiIndex<std::uint64_t, 13, 17, 21, 13>;
 using Indices = boost::mpl::list<Index32, Index64>;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(triviality, T, Indices) {
   // verify that the MultiIndex is a trivial type
@@ -55,11 +60,7 @@ BOOST_AUTO_TEST_CASE(index32_set) {
   BOOST_CHECK_EQUAL(idx.level(1), 0u);
   BOOST_CHECK_EQUAL(idx.level(2), 0u);
   // set a specific level outside the valid range, should be truncated
-  idx.set(2, 0xfff);
-  BOOST_CHECK_EQUAL(idx.value(), 0x001800ffu);
-  BOOST_CHECK_EQUAL(idx.level(0), 24u);
-  BOOST_CHECK_EQUAL(idx.level(1), 0u);
-  BOOST_CHECK_EQUAL(idx.level(2), 255u);
+  BOOST_CHECK_THROW(idx.set(2, 0xfff), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(index32_set_overflow) {
@@ -72,8 +73,8 @@ BOOST_AUTO_TEST_CASE(index32_set_overflow) {
   // check that values above max are truncated
   std::size_t lvl = 0;
   for (auto maxValue : maxValues) {
-    BOOST_CHECK_EQUAL(Index32::Zeros().set(lvl, maxValue + 1),
-                      Index32::Zeros().set(lvl, 0u));
+    BOOST_CHECK_THROW(Index32::Zeros().set(lvl, maxValue + 1),
+                      std::out_of_range);
     lvl += 1;
   }
 }
@@ -89,8 +90,8 @@ BOOST_AUTO_TEST_CASE(index64_set_overflow) {
   // check that values above max are truncated
   std::size_t lvl = 0;
   for (auto maxValue : maxValues) {
-    BOOST_CHECK_EQUAL(Index64::Zeros().set(lvl, maxValue + 1),
-                      Index64::Zeros().set(lvl, 0u));
+    BOOST_CHECK_THROW(Index64::Zeros().set(lvl, maxValue + 1),
+                      std::out_of_range);
     lvl += 1;
   }
 }
@@ -225,3 +226,7 @@ BOOST_AUTO_TEST_CASE(index64_as_key) {
   BOOST_CHECK(!set.count(Index64(std::numeric_limits<std::uint64_t>::max())));
   BOOST_CHECK_EQUAL(set.size(), 3);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

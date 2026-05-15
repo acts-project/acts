@@ -8,34 +8,26 @@
 
 #include "ActsExamples/Utilities/Options.hpp"
 
-#include <algorithm>
 #include <cstddef>
 #include <exception>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <vector>
 
 #include <TApplication.h>
 #include <boost/program_options.hpp>
-#include <boost/version.hpp>
+#include <boost/timer/progress_display.hpp>
 #include <nlohmann/json.hpp>
 
 #define BOOST_AVAILABLE 1
-#if BOOST_VERSION < 107200
-// Boost <=1.71 and lower do not have progress_display.hpp as a replacement yet
-#include <boost/progress.hpp>
-
-using progress_display = boost::progress_display;
-#else
 // Boost >=1.72 can use this as a replacement
 #include <boost/timer/progress_display.hpp>
 
 using progress_display = boost::timer::progress_display;
-#endif
 
+// this must be last
 #include "materialComposition.C"
 
 using namespace boost::program_options;
@@ -53,7 +45,7 @@ int main(int argc, char** argv) {
     ao("silent,s", bool_switch(), "Silent mode (without X-window/display).");
     ao("input,i", value<std::string>()->default_value(""),
        "Input ROOT file containing the input TTree.");
-    ao("tree,t", value<std::string>()->default_value("material-tracks"),
+    ao("tree,t", value<std::string>()->default_value("material_tracks"),
        "Input TTree name.");
     ao("output,o", value<std::string>()->default_value(""),
        "Output ROOT file with histograms");

@@ -12,10 +12,10 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/BetheHeitler.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <array>
 #include <random>
@@ -24,6 +24,10 @@
 #include "Dataset.hpp"
 
 using Generator = std::ranlux48;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(PhysicsSuite)
 
 BOOST_DATA_TEST_CASE(
     FatrasBetheHeitler,
@@ -36,7 +40,7 @@ BOOST_DATA_TEST_CASE(
   ActsFatras::Particle after = before;
 
   ActsFatras::BetheHeitler process;
-  const auto outgoing = process(gen, Acts::Test::makeUnitSlab(), after);
+  const auto outgoing = process(gen, makeUnitSlab(), after);
   // energy loss changes momentum and energy
   BOOST_CHECK_LT(after.absoluteMomentum(), before.absoluteMomentum());
   BOOST_CHECK_LT(after.energy(), before.energy());
@@ -61,3 +65,7 @@ BOOST_DATA_TEST_CASE(
                   p0.template segment<3>(Acts::eMom0).norm();
   CHECK_CLOSE_OR_SMALL(s, s0, 1e-2, 1e-2);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

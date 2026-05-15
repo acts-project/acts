@@ -20,18 +20,25 @@ macro(add_unittest _name _source)
     target_link_libraries(
         ${_target}
         PRIVATE
-            ActsCore
-            ActsTestsCommonHelpers
+            Acts::TestsCommonHelpers
             Boost::unit_test_framework
             ${unittest_extra_libraries}
     )
+    if(ACTS_TESTS_HAS_WNO_C2Y_EXTENSIONS)
+        target_compile_options(${_target} PRIVATE -Wno-c2y-extensions)
+    endif()
     # register as unittest executable
     add_test(NAME ${_name} COMMAND ${_target})
     add_dependencies(unit_tests ${_target})
 endmacro()
 
 add_subdirectory(Core)
-add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES AND ACTS_BUILD_EXAMPLES_UNITTESTS)
+add_subdirectory_if(
+    Examples
+    ACTS_BUILD_EXAMPLES
+    AND
+    ACTS_BUILD_EXAMPLES_UNITTESTS
+)
 add_subdirectory_if(Benchmarks ACTS_BUILD_BENCHMARKS)
 add_subdirectory_if(Fatras ACTS_BUILD_FATRAS)
 add_subdirectory(Plugins)

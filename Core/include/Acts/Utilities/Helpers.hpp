@@ -8,13 +8,15 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/PointerTraits.hpp"
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <ranges>
 #include <type_traits>
 #include <vector>
 
@@ -22,18 +24,36 @@
 
 namespace Acts {
 
+/// Helper function to unpack a vector of smart pointers (e.g. @c shared_ptr ) into a vector of raw
+/// const pointers
+/// @tparam T the stored type
+/// @param items The vector of smart pointers
+/// @return The unpacked vector
+
+template <SmartPointerConcept T>
+std::vector<std::add_pointer_t<std::add_const_t<typename T::element_type>>>
+unpackConstSmartPointers(const std::vector<T>& items) {
+  std::vector<std::add_pointer_t<std::add_const_t<typename T::element_type>>>
+      rawPtrs{};
+  rawPtrs.reserve(items.size());
+  for (const auto& ptr : items) {
+    rawPtrs.push_back(ptr.operator->());
+  }
+  return rawPtrs;
+}
+
 /// Helper function to unpack a vector of @c shared_ptr into a vector of raw
 /// pointers
 /// @tparam T the stored type
 /// @param items The vector of @c shared_ptr
 /// @return The unpacked vector
-template <typename T>
-std::vector<T*> unpack_shared_vector(
-    const std::vector<std::shared_ptr<T>>& items) {
-  std::vector<T*> rawPtrs;
+template <SmartPointerConcept T>
+std::vector<std::add_pointer_t<typename T::element_type>> unpackSmartPointers(
+    const std::vector<T>& items) {
+  std::vector<std::add_pointer_t<typename T::element_type>> rawPtrs{};
   rawPtrs.reserve(items.size());
-  for (const std::shared_ptr<T>& item : items) {
-    rawPtrs.push_back(item.get());
+  for (const auto& ptr : items) {
+    rawPtrs.push_back(&*ptr);
   }
   return rawPtrs;
 }
@@ -44,27 +64,11 @@ std::vector<T*> unpack_shared_vector(
 /// @param items The vector of @c shared_ptr
 /// @return The unpacked vector
 template <typename T>
-std::vector<const T*> unpack_shared_vector(
+std::vector<const T*> unpackSmartPointers(
     const std::vector<std::shared_ptr<const T>>& items) {
   std::vector<const T*> rawPtrs;
   rawPtrs.reserve(items.size());
   for (const std::shared_ptr<const T>& item : items) {
-    rawPtrs.push_back(item.get());
-  }
-  return rawPtrs;
-}
-
-/// Helper function to unpack a vector of @c shared_ptr into a vector of raw
-/// pointers
-/// @tparam T the stored type
-/// @param items The vector of @c shared_ptr
-/// @return The unpacked vector
-template <typename T>
-std::vector<const T*> unpack_shared_const_vector(
-    const std::vector<std::shared_ptr<T>>& items) {
-  std::vector<const T*> rawPtrs;
-  rawPtrs.reserve(items.size());
-  for (const std::shared_ptr<T>& item : items) {
     rawPtrs.push_back(item.get());
   }
   return rawPtrs;
@@ -105,6 +109,7 @@ std::array<value_t, kDIM> toArray(const std::vector<value_t>& vecvals) {
 /// @tparam NMAX Maximum value up to which to attempt a dispatch
 /// @param v The runtime value to dispatch on
 /// @param args Additional arguments passed to @c Callable::invoke().
+/// @return The result of calling the dispatched template instance
 /// @note @c Callable is expected to have a static member function @c invoke
 /// that is callable with @c Args
 template <template <std::size_t> class Callable, std::size_t N,
@@ -134,6 +139,7 @@ auto template_switch(std::size_t v, Args&&... args) {
 /// @param v The runtime value to dispatch on
 /// @param func The lambda to invoke
 /// @param args Additional arguments passed to @p func
+/// @return The result of calling the dispatched lambda function
 template <std::size_t N, std::size_t NMAX, typename Lambda, typename... Args>
 auto template_switch_lambda(std::size_t v, Lambda&& func, Args&&... args) {
   if (v == N) {
@@ -161,8 +167,24 @@ auto template_switch_lambda(std::size_t v, Lambda&& func, Args&&... args) {
 /// @return the clamped value
 template <typename T, typename U>
 T clampValue(U value) {
-  return std::clamp(value, static_cast<U>(std::numeric_limits<T>::lowest()),
-                    static_cast<U>(std::numeric_limits<T>::max()));
+  if (std::numeric_limits<U>::has_infinity && std::isinf(value)) {
+    if (!std::numeric_limits<T>::has_infinity) {
+      throw std::logic_error(
+          "Cannot convert infinite value to type without infinity support");
+    }
+    return (value > 0) ? std::numeric_limits<T>::infinity()
+                       : -std::numeric_limits<T>::infinity();
+  }
+  if (std::numeric_limits<U>::has_quiet_NaN && std::isnan(value)) {
+    if (!std::numeric_limits<T>::has_quiet_NaN) {
+      throw std::logic_error(
+          "Cannot convert NaN value to type without NaN support");
+    }
+    return std::numeric_limits<T>::quiet_NaN();
+  }
+  return static_cast<T>(
+      std::clamp(value, static_cast<U>(std::numeric_limits<T>::lowest()),
+                 static_cast<U>(std::numeric_limits<T>::max())));
 }
 
 /// Return range and medium of an unsorted numeric series
@@ -180,6 +202,9 @@ std::tuple<typename T::value_type, double> range_medium(const T& tseries) {
   return {range, medium};
 }
 
+/// Convert enum to its underlying type value
+/// @param value Enum value to convert
+/// @return Underlying type value
 template <typename enum_t>
 constexpr std::underlying_type_t<enum_t> toUnderlying(enum_t value) {
   return static_cast<std::underlying_type_t<enum_t>>(value);
@@ -202,6 +227,21 @@ bool rangeContainsValue(const R& range, const T& value) {
   return std::ranges::find(range, value) != std::ranges::end(range);
 }
 
+/// This function checks if at least one string from a given range is
+/// contained within a specified string (value).
+///
+/// @tparam R The type of the range (e.g., vector<string>, list<string>, array<string>).
+/// @param range The range to search within.
+/// @param value The string in which we search for substrings from the range
+///
+/// @return `true` if a such a string in range is found, `false` otherwise.
+template <typename R>
+bool rangeContainsSubstring(const R& range, std::string_view value) {
+  return std::ranges::any_of(range, [&](std::string_view s) {
+    return value.find(s) != std::string_view::npos;
+  });
+}
+
 /// Helper struct that can turn a set of lambdas into a single entity with
 /// overloaded call operator. This can be useful for example in a std::visit
 /// call.
@@ -216,6 +256,7 @@ struct overloaded : Ts... {
   using Ts::operator()...;
 };
 
+/// Deduction guide for overloaded visitor pattern
 template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
 
@@ -230,7 +271,9 @@ namespace detail {
 ///
 /// The computation is performed as follows:
 /// 1. Sorts the input vector using @c std::ranges::sort to prepare for uniqueness.
-/// 2. Determines the number of unique values using @c std::unique and calculates the bin count.
+/// 2. Determines the number of unique values using @c std::ranges::unique and
+///    calculates the bin count from the size of the unique prefix (not the tail
+///    subrange).
 /// 3. Calculates the minimum and maximum using @c std::ranges::minmax.
 /// 4. Adjusts the maximum to include an additional bin by adding the bin step
 /// size.
@@ -247,8 +290,11 @@ inline auto getMinMaxAndBinCount(std::vector<double>& xPos) {
   std::ranges::sort(xPos);
 
   // get the number of bins over unique values
-  auto it = std::unique(xPos.begin(), xPos.end());
-  const std::size_t xBinCount = std::distance(xPos.begin(), it);
+  // ranges::unique returns [ret, end): duplicate tail; unique elements are
+  // [begin, ret)
+  const auto uniqueTail = std::ranges::unique(xPos);
+  const std::size_t xBinCount = static_cast<std::size_t>(
+      std::ranges::distance(xPos.begin(), uniqueTail.begin()));
 
   // get the minimum and maximum
   auto [xMin, xMax] = std::ranges::minmax(xPos);

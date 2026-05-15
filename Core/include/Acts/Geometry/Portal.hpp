@@ -42,9 +42,9 @@ class PortalFusingException : public std::exception {
 /// portals that describes which volumes lie behind the portal in that
 /// direction. Portals use associated portal links to perform lookups of target
 /// volumes.
-/// Each portal has two links, and a corresponding surface. One link is
-/// associated with the direction along the surface's normal vector, and one
-/// with the opposite direction.
+/// Each portal has two links (at least one non-null), and a corresponding
+/// surface. One link is associated with the direction along the surface's
+/// normal vector, and one with the opposite direction.
 class Portal {
  public:
   /// Constructor for a portal from a single link
@@ -78,6 +78,8 @@ class Portal {
     struct Link {
       Link() = default;
       /// Constructor from a surface and a volume
+      /// @param surfaceIn Surface to associate with this link
+      /// @param volumeIn Volume to associate with this link
       Link(std::shared_ptr<RegularSurface> surfaceIn, TrackingVolume& volumeIn)
           : surface(std::move(surfaceIn)), volume(&volumeIn) {}
 
@@ -88,8 +90,8 @@ class Portal {
     };
 
     /// Entry for the link along normal
-    /// Entry for the link opposite normal
     Link alongNormal{};
+    /// Entry for the link opposite normal
     Link oppositeNormal{};
   };
 
@@ -130,6 +132,7 @@ class Portal {
   /// @param aPortal The first portal
   /// @param bPortal The second portal
   /// @param logger The logger to push output to
+  /// @return A new portal that combines both input portals
   static Portal fuse(const GeometryContext& gctx, Portal& aPortal,
                      Portal& bPortal, const Logger& logger = getDummyLogger());
 
@@ -162,6 +165,7 @@ class Portal {
   /// @param bPortal The second portal
   /// @param direction The direction of the merge (e.g. along z)
   /// @param logger The logger to push output to
+  /// @return A new merged portal that encompasses both input portals
   static Portal merge(const GeometryContext& gctx, Portal& aPortal,
                       Portal& bPortal, AxisDirection direction,
                       const Logger& logger = getDummyLogger());

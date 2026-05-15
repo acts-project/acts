@@ -21,6 +21,22 @@
 
 namespace Acts {
 
+/// @addtogroup magnetic_field
+/// @{
+
+/// @brief Base class for interpolated magnetic field providers
+///
+/// This class can be used for non-trivial magnetic field implementations.
+///
+/// The key idea here is to calculate an interpolated value of the magnetic
+/// field from a grid of known field values. In 3D, this means the
+/// interpolation is done from the 8 corner points of a *field cell*. The field
+/// cell can be retrieved for any given position. Since during typical access
+/// patterns, e.g. the propagation, subsequent steps are relatively likely to
+/// not cross the field cell boundary, the field cell can be cached.
+///
+/// @image html bfield/field_cell.svg "Illustration of the field cell concept. Subsequent steps are clustered in the same field cell. The field cell only needs to be refetched when the propagation crosses into the next grid region." width=60%
+///
 class InterpolatedMagneticField : public MagneticFieldProvider {
  public:
   /// @brief get the number of bins for all axes of the field map
@@ -53,13 +69,12 @@ class InterpolatedMagneticField : public MagneticFieldProvider {
   virtual Vector3 getFieldUnchecked(const Vector3& position) const = 0;
 };
 
-/// @ingroup MagneticField
-/// @brief interpolate magnetic field value from field values on a given grid
+/// Interpolates magnetic field value from field values on a given grid
 ///
 /// This class implements a magnetic field service which is initialized by a
 /// field map defined by:
-/// - a list of field values on a regular grid in some n-Dimensional space,
-/// - a transformation of global 3D coordinates onto this n-Dimensional
+/// - a list of field values on a regular grid in some n-dimensional space,
+/// - a transformation of global 3D coordinates onto this n-dimensional
 /// space.
 /// - a transformation of local n-Dimensional magnetic field coordinates into
 /// global (cartesian) 3D coordinates
@@ -69,19 +84,40 @@ class InterpolatedMagneticField : public MagneticFieldProvider {
 /// - looking up the magnetic field values on the closest grid points,
 /// - doing a linear interpolation of these magnetic field values.
 ///
+/// Internally, this class uses a *field interpolation cell* to speed up
+/// lookups. This cell contains the interpolation points so the grid does not
+/// have to be consulted for each lookup. Explicit methods to create such a
+/// field cell are provided, but field cell creation is automatically handled
+/// by @ref Acts::InterpolatedBFieldMap::makeCache, opaque to the client.
+///
+/// This class can leverage spatial symmetries in the magnetic field
+/// distribution. For cylindrically symmetric fields (e.g., solenoids, toroids),
+/// a 2D rz map can be used instead of a full 3D xyz map, significantly reducing
+/// memory
+/// requirements and improving performance. Helper functions @ref Acts::fieldMapRZ
+/// and @ref Acts::fieldMapXYZ are provided to construct field maps with the
+/// appropriate symmetries.
+///
 /// @tparam grid_t The Grid type which provides the field storage and
 /// interpolation
 template <typename grid_t>
 class InterpolatedBFieldMap : public InterpolatedMagneticField {
  public:
+  /// Type alias for magnetic field grid
   using Grid = grid_t;
+  /// Type alias for magnetic field vector type
   using FieldType = typename Grid::value_type;
+  /// Dimensionality of the position space for field interpolation
   static constexpr std::size_t DIM_POS = Grid::DIM;
 
   /// @brief struct representing smallest grid unit in magnetic field grid
   ///
-  /// This type encapsulate all required information to perform linear
-  /// interpolation of magnetic field values within a confined 3D volume.
+  /// This type encapsulates all required information to perform linear
+  /// interpolation of magnetic field values within a confined spatial region
+  /// (hyper-box). The cell stores field values at all corner points and
+  /// performs interpolation for any position within the cell boundaries.
+  /// This allows for efficient repeated lookups within the same grid cell
+  /// without consulting the full grid structure.
   struct FieldCell {
     /// number of corner points defining the confining hyper-box
     static constexpr unsigned int N = 1 << DIM_POS;
@@ -110,7 +146,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     /// @return magnetic field value at the given position
     ///
     /// @pre The given @c position must lie within the current field cell.
-    Vector3 getField(const ActsVector<DIM_POS>& position) const {
+    Vector3 getField(const Vector<DIM_POS>& position) const {
       // defined in Interpolation.hpp
       return interpolate(position, m_lowerLeft, m_upperRight, m_fieldValues);
     }
@@ -120,7 +156,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     /// @param [in] position global 3D position
     /// @return @c true if position is inside the current field cell,
     ///         otherwise @c false
-    bool isInside(const ActsVector<DIM_POS>& position) const {
+    bool isInside(const Vector<DIM_POS>& position) const {
       for (unsigned int i = 0; i < DIM_POS; ++i) {
         if (position[i] < m_lowerLeft[i] || position[i] >= m_upperRight[i]) {
           return false;
@@ -143,11 +179,20 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     std::array<Vector3, N> m_fieldValues;
   };
 
+  /// @brief Cache for field cell to improve performance of field lookups
+  ///
+  /// This cache stores the current field cell which contains the interpolation
+  /// data for a confined region of space. By caching the cell, subsequent
+  /// lookups at nearby positions (e.g., during track propagation) can avoid
+  /// expensive grid queries. The cache automatically updates when a position
+  /// outside the current cell is queried.
   struct Cache {
     /// @brief Constructor with magnetic field context
     explicit Cache(const MagneticFieldContext& /*mctx*/) {}
 
+    /// Stored field cell containing interpolation data
     std::optional<FieldCell> fieldCell;
+    /// Flag indicating if the cache has been initialized
     bool initialized = false;
   };
 
@@ -155,7 +200,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   struct Config {
     /// @brief mapping of global 3D coordinates (cartesian)
     /// onto grid space
-    std::function<ActsVector<DIM_POS>(const Vector3&)> transformPos;
+    std::function<Vector<DIM_POS>(const Vector3&)> transformPos;
 
     /// @brief calculating the global 3D coordinates
     /// (cartesian) of the magnetic field with the local n dimensional field and
@@ -174,6 +219,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
 
   /// @brief default constructor
   ///
+  /// @param cfg Configuration containing grid and scaling factor
   explicit InterpolatedBFieldMap(Config cfg) : m_cfg{std::move(cfg)} {
     typename Grid::index_t minBin{};
     minBin.fill(1);
@@ -196,7 +242,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
 
     // loop through all corner points
     constexpr std::size_t nCorners = 1 << DIM_POS;
-    std::array<Vector3, nCorners> neighbors;
+    std::array<Vector3, nCorners> neighbors{};
     const auto& cornerIndices = m_cfg.grid.closestPointsIndices(gridPosition);
 
     if (!isInsideLocal(gridPosition)) {
@@ -249,7 +295,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   /// @param [in] gridPosition local N-D position
   /// @return @c true if position is inside the defined look-up grid,
   ///         otherwise @c false
-  bool isInsideLocal(const ActsVector<DIM_POS>& gridPosition) const {
+  bool isInsideLocal(const Vector<DIM_POS>& gridPosition) const {
     for (unsigned int i = 0; i < DIM_POS; ++i) {
       if (gridPosition[i] < m_lowerLeft[i] ||
           gridPosition[i] >= m_upperRight[i]) {
@@ -287,6 +333,13 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
         m_cfg.transformBField(m_cfg.grid.interpolate(gridPosition), position));
   }
 
+  /// Get magnetic field value without bounds checking (faster).
+  ///
+  /// @param position Global 3D position for the lookup
+  /// @return Magnetic field value at the given position
+  ///
+  /// @warning No bounds checking is performed. The caller must ensure
+  ///          the position is within the valid range of the field map.
   Vector3 getFieldUnchecked(const Vector3& position) const final {
     const auto gridPosition = m_cfg.transformPos(position);
     return m_cfg.transformBField(m_cfg.grid.interpolate(gridPosition),
@@ -314,5 +367,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   typename Grid::point_t m_lowerLeft;
   typename Grid::point_t m_upperRight;
 };
+
+/// @}
 
 }  // namespace Acts

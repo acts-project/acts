@@ -7,26 +7,24 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
-#include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
+#include "Acts/Surfaces/ConvexPolygonBounds.hpp"
+#include "ActsTests/CommonHelpers/BenchmarkTools.hpp"
 
 #include <algorithm>
-#include <chrono>
-#include <functional>
 #include <iostream>
-#include <optional>
 #include <random>
 #include <vector>
 
 using namespace Acts;
+using namespace ActsTests;
 
 int main(int /*argc*/, char** /*argv[]*/) {
   // === PROBLEM DATA ===
 
   // Trapezoidal area of interest
-  const Vector2 poly[] = {{0.4, 0.25}, {0.6, 0.25}, {0.8, 0.75}, {0.2, 0.75}};
+  ConvexPolygonBounds<PolygonDynamic> poly(
+      {{0.4, 0.25}, {0.6, 0.25}, {0.8, 0.75}, {0.2, 0.75}});
 
   // Covariance matrix which specifies "soft" boundary check tolerance
   SquareMatrix2 cov;
@@ -69,19 +67,19 @@ int main(int /*argc*/, char** /*argv[]*/) {
     std::cout << check_name << ":" << std::endl;
   };
   auto print_bench_result = [](const std::string& bench_name,
-                               const Acts::Test::MicroBenchmarkResult& res) {
+                               const MicroBenchmarkResult& res) {
     std::cout << "- " << bench_name << ": " << res << std::endl;
   };
 
   // Benchmark runner
   auto run_bench = [&](auto&& iteration, int num_iters,
                        const std::string& bench_name) {
-    auto bench_result = Acts::Test::microBenchmark(iteration, num_iters);
+    auto bench_result = microBenchmark(iteration, num_iters);
     print_bench_result(bench_name, bench_result);
   };
   auto run_bench_with_inputs = [&](auto&& iterationWithArg, auto&& inputs,
                                    const std::string& bench_name) {
-    auto bench_result = Acts::Test::microBenchmark(iterationWithArg, inputs);
+    auto bench_result = microBenchmark(iterationWithArg, inputs);
     print_bench_result(bench_name, bench_result);
   };
   auto run_all_benches = [&](const BoundaryTolerance& check,
@@ -107,41 +105,27 @@ int main(int /*argc*/, char** /*argv[]*/) {
       default:  // do nothing
         break;
     };
-    run_bench(
-        [&] {
-          return detail::insidePolygon(poly, check, center, std::nullopt);
-        },
-        num_inside_points, "Center");
-    run_bench(
-        [&] {
-          return detail::insidePolygon(poly, check, edge_inside, std::nullopt);
-        },
-        num_inside_points, "Inside edge");
-    run_bench(
-        [&] {
-          return detail::insidePolygon(poly, check, edge_outside, std::nullopt);
-        },
-        num_outside_points, "Outside edge");
-    run_bench(
-        [&] {
-          return detail::insidePolygon(poly, check, far_away, std::nullopt);
-        },
-        num_outside_points, "Far away");
+    run_bench([&] { return poly.inside(center, check); }, num_inside_points,
+              "Center");
+    run_bench([&] { return poly.inside(edge_inside, check); },
+              num_inside_points, "Inside edge");
+    run_bench([&] { return poly.inside(edge_outside, check); },
+              num_outside_points, "Outside edge");
+    run_bench([&] { return poly.inside(far_away, check); }, num_outside_points,
+              "Far away");
 
     // Pre-rolled random points
     std::vector<Vector2> points(num_outside_points);
     std::generate(points.begin(), points.end(), random_point);
     run_bench_with_inputs(
-        [&](const auto& point) {
-          return detail::insidePolygon(poly, check, point, std::nullopt);
-        },
-        points, "Random");
+        [&](const auto& point) { return poly.inside(point, check); }, points,
+        "Random");
   };
 
   // Benchmark scenarios
   run_all_benches(BoundaryTolerance::Infinite(), "No check", Mode::None);
   run_all_benches(BoundaryTolerance::None(), "No tolerance", Mode::FastOutside);
-  run_all_benches(BoundaryTolerance::AbsoluteBound(0.6, 0.45), "Abs. tolerance",
+  run_all_benches(BoundaryTolerance::AbsoluteEuclidean(0.6), "Abs. tolerance",
                   Mode::SlowOutside);
   run_all_benches(BoundaryTolerance::Chi2Bound(cov, 3.0), "Cov. tolerance",
                   Mode::SlowOutside);

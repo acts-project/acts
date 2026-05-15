@@ -39,7 +39,7 @@ void Acts::EventDataView3D::drawCovarianceCartesian(
 
 void Acts::EventDataView3D::drawCovarianceAngular(
     IVisualization3D& helper, const Vector3& position, const Vector3& direction,
-    const ActsSquareMatrix<2>& covariance, double directionScale,
+    const SquareMatrix<2>& covariance, double directionScale,
     double angularErrorScale, const ViewConfig& viewConfig) {
   auto [lambda0, lambda1, theta] = decomposeCovariance(covariance);
 
@@ -54,10 +54,10 @@ void Acts::EventDataView3D::drawCovarianceAngular(
                     AngleAxis3(dtheta, Vector3(0., 1., 0.)));
 
   // Now generate the ellipse points
-  std::vector<Vector3> ellipse =
-      createEllipse(angularErrorScale * directionScale * lambda0 * sin(dtheta),
-                    angularErrorScale * directionScale * lambda1, theta,
-                    viewConfig.quarterSegments, 0., {0., 0.}, eplane);
+  std::vector<Vector3> ellipse = createEllipse(
+      angularErrorScale * directionScale * lambda0 * std::sin(dtheta),
+      angularErrorScale * directionScale * lambda1, theta,
+      viewConfig.quarterSegments, 0., {0., 0.}, eplane);
 
   std::vector<Vector3> coneTop = ellipse;
   coneTop.push_back(anker);

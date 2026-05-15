@@ -8,19 +8,77 @@
 
 #pragma once
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/ActorList.hpp"
-#include "Acts/Propagator/PropagatorResult.hpp"
+#include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
 
+/// Options for Ridders-based covariance propagation.
+template <typename propagator_t, typename actor_list_t = ActorList<>>
+struct [[deprecated("Use RiddersStepper instead")]] RiddersPropagatorOptions
+    : public propagator_t::template Options<actor_list_t> {
+  /// Base type
+  using base_type = propagator_t::template Options<actor_list_t>;
+
+  /// Stepper options type
+  using stepper_options_type = typename base_type::stepper_options_type;
+  /// Navigator options type
+  using navigator_options_type = typename base_type::navigator_options_type;
+  /// Actor list type
+  using actor_list_type = actor_list_t;
+
+  /// PropagatorOptions with context
+  /// @param gctx Geometry context
+  /// @param mctx Magnetic field context
+  RiddersPropagatorOptions(const GeometryContext& gctx,
+                           const MagneticFieldContext& mctx)
+      : base_type(gctx, mctx) {}
+
+  /// PropagatorOptions with context and plain options
+  /// @param pOptions Plain propagator options
+  explicit RiddersPropagatorOptions(const PropagatorPlainOptions& pOptions)
+      : base_type(pOptions) {}
+
+  using base_type::operator PropagatorPlainOptions;
+
+  /// @brief Expand the options with extended actors
+  ///
+  /// @tparam extended_actor_list_t Type of the new actor list
+  ///
+  /// @param extendedActorList The new actor list to be used (internally)
+  /// @return New options with extended actor list
+  template <typename extended_actor_list_t>
+  RiddersPropagatorOptions<propagator_t, extended_actor_list_t> extend(
+      extended_actor_list_t extendedActorList) const {
+    RiddersPropagatorOptions<propagator_t, extended_actor_list_t> eoptions(
+        base_type::geoContext, base_type::magFieldContext);
+
+    static_cast<decltype(eoptions)::base_type&>(eoptions) =
+        base_type::extend(std::move(extendedActorList));
+
+    return eoptions;
+  }
+
+  using base_type::setPlainOptions;
+
+  /// Initial scale for the deviation of the individual bound track parameters
+  BoundVector deviationScale = {1e-4, 1e-4, 1e-4, 1e-4, 1e-4, 1e-4};
+
+  /// Different factors applied to the initial scale to create the
+  /// deviations of the individual bound track parameters. The resulting
+  /// function value deviations are then fitted to a line to determine the
+  /// first order derivatives of the final parameters wrt. the initial
+  /// parameters.
+  std::vector<double> deviationFactors = {-2, -1, 1, 2};
+};
+
 /// @brief This class performs the Ridders algorithm to estimate the propagation
 /// of the covariance to a certain point in space.
 ///
 /// The algorithm is based on the small deviations of the start parameters based
-/// on their uncertainty at the beginning of the propgation. This deviation is
+/// on their uncertainty at the beginning of the propagation. This deviation is
 /// represented here by a vector of relative deviations of these parameters and
 /// fix for all parameters. So, a common choice has to be found that is able to
 /// actually fit into the order of magnitude of the uncertainty of each
@@ -34,80 +92,49 @@ namespace Acts {
 /// of the covariance, this class just serves to verify the results of the
 /// latter classes.
 template <typename propagator_t>
-class RiddersPropagator {
-  using Jacobian = BoundMatrix;
-  using Covariance = BoundSquareMatrix;
-
-  ///
-  /// @note The result_type_helper struct and the actor_list_t_result_t are
-  /// here to allow a look'n'feel of this class like the Propagator itself
-  ///
-
-  /// @brief Helper struct determining the result's type
-  ///
-  /// @tparam parameters_t Type of final track parameters
-  /// @tparam actor_list_t    List of propagation action types
-  ///
-  /// This helper struct provides type definitions to extract the correct
-  /// propagation result type from a given TrackParameter type and an
-  /// ActorList.
-  ///
-  template <typename parameters_t, typename actor_list_t>
-  struct result_type_helper {
-    /// @brief Propagation result type for an arbitrary list of additional
-    ///        propagation results
-    ///
-    /// @tparam args Parameter pack specifying additional propagation results
-    ///
-    template <typename... args>
-    using this_result_type = PropagatorResult<parameters_t, args...>;
-
-    /// @brief Propagation result type derived from a given action list
-    using type = typename actor_list_t::template result_type<this_result_type>;
-  };
-
-  /// @brief Short-hand type definition for propagation result derived from
-  ///        an action list
-  ///
-  /// @tparam parameters_t Type of the final track parameters
-  /// @tparam actor_list_t List of propagation action types
-  ///
-  template <typename parameters_t, typename actor_list_t>
-  using actor_list_t_result_t =
-      typename result_type_helper<parameters_t, actor_list_t>::type;
-
+class [[deprecated("Use RiddersStepper instead")]] RiddersPropagator {
  public:
-  struct Config {
-    /// Set of deltas which will be added to the nominal track parameters
-    std::vector<double> deviations = {-4e-4, -2e-4, 2e-4, 4e-4};
-    /// See `deviations` - these are applied for disc surfaces
-    std::vector<double> deviationsDisc = {-3e-5, -1e-5, 1e-5, 3e-5};
-  };
+  /// Type of the propagator used internally
+  using Propagator = propagator_t;
 
+  /// Type of the stepper in use
+  using Stepper = Propagator::Stepper;
+
+  /// Type of the navigator in use
+  using Navigator = Propagator::Navigator;
+
+  /// Type of the stepper options
+  using StepperOptions = Propagator::StepperOptions;
+
+  /// Type of the navigator options
+  using NavigatorOptions = Propagator::NavigatorOptions;
+
+  /// Type of the propagator options with actor list
   template <typename actor_list_t = ActorList<>>
-  using Options = typename propagator_t::template Options<actor_list_t>;
+  using Options = RiddersPropagatorOptions<propagator_t, actor_list_t>;
+
+  /// Type of the stepper state
+  using StepperState = Propagator::StepperState;
+
+  /// Type of the navigator state
+  using NavigatorState = Propagator::NavigatorState;
+
+  /// Type of the propagation state derived from the propagator options
+  /// @tparam propagator_options_t Type of the propagator options
+  template <typename propagator_options_t>
+  using State = Propagator::template State<propagator_options_t>;
+
+  /// Type of the propagation result derived from the propagator options
+  /// @tparam propagator_options_t Type of the propagator options
+  template <typename propagator_options_t>
+  using ResultType =
+      typename Propagator::template ResultType<propagator_options_t>;
 
   /// @brief Constructor using a propagator
   ///
-  /// @param [in] propagator Underlying propagator that will be used
-  /// @param [in] config Config for the Ridders propagation
-  explicit RiddersPropagator(propagator_t propagator, Config config = {})
-      : m_propagator(std::move(propagator)), m_config(std::move(config)) {}
-
-  /// @brief Constructor building a propagator
-  ///
-  /// @tparam stepper_t Type of the stepper
-  /// @tparam navigator_t Type of the navigator
-  ///
-  /// @param [in] stepper Stepper that will be used
-  /// @param [in] navigator Navigator that will be used
-  /// @param [in] config Config for the Ridders propagation
-  template <typename stepper_t, typename navigator_t = VoidNavigator>
-  explicit RiddersPropagator(stepper_t stepper,
-                             navigator_t navigator = navigator_t(),
-                             Config config = {})
-      : m_propagator(std::move(stepper), std::move(navigator)),
-        m_config(std::move(config)) {}
+  /// @param [in] propagator The propagator to use
+  explicit RiddersPropagator(propagator_t propagator)
+      : m_propagator(std::move(propagator)) {}
 
   /// @brief Propagation method targeting curvilinear parameters
   ///
@@ -119,10 +146,8 @@ class RiddersPropagator {
   ///
   /// @return Result of the propagation
   template <typename parameters_t, typename propagator_options_t>
-  Result<actor_list_t_result_t<BoundTrackParameters,
-                               typename propagator_options_t::actor_list_type>>
-  propagate(const parameters_t& start,
-            const propagator_options_t& options) const;
+  Result<ResultType<propagator_options_t>> propagate(
+      const parameters_t& start, const propagator_options_t& options) const;
 
   /// @brief Propagation method targeting bound parameters
   ///
@@ -137,36 +162,22 @@ class RiddersPropagator {
   /// @note If the target surface is a disc, the resulting covariance may be
   /// inconsistent. In this case a zero matrix is returned.
   template <typename parameters_t, typename propagator_options_t>
-  Result<actor_list_t_result_t<BoundTrackParameters,
-                               typename propagator_options_t::actor_list_type>>
-  propagate(const parameters_t& start, const Surface& target,
-            const propagator_options_t& options) const;
+  Result<ResultType<propagator_options_t>> propagate(
+      const parameters_t& start, const Surface& target,
+      const propagator_options_t& options) const;
 
  private:
   /// Does the actual ridders propagation by wiggling the parameters and
-  /// propagating again. This function is called from the different propagation
-  /// overloads in order to deduplicate code.
+  /// propagating again. This function is called from the different
+  /// propagation overloads in order to deduplicate code.
   ///
   /// @param [in] options Options of the propagations
   /// @param [in] start Start parameters
   /// @param [in] nominalResult The result of the nominal propagation
-  template <typename propagator_options_t, typename parameters_t,
-            typename result_t>
-  Jacobian wiggleAndCalculateJacobian(const propagator_options_t& options,
-                                      const parameters_t& start,
-                                      result_t& nominalResult) const;
-
-  /// @brief This function tests whether the variations on a disc as target
-  /// surface lead to results on different sides wrt the center of the disc.
-  /// This would lead to a flip of the phi value on the surface and therewith to
-  /// a huge variance in that parameter. It can only occur in this algorithm
-  /// since the ridders algorithm is unaware of the target surface.
-  ///
-  /// @param [in] derivatives Derivatives of a single parameter
-  ///
-  /// @return Boolean result whether a phi jump occurred
-  static bool inconsistentDerivativesOnDisc(
-      const std::vector<BoundVector>& derivatives);
+  template <typename parameters_t, typename propagator_options_t>
+  BoundMatrix wiggleAndCalculateJacobian(
+      const parameters_t& start, const propagator_options_t& options,
+      const ResultType<propagator_options_t>& nominalResult) const;
 
   /// @brief This function wiggles one dimension of the starting parameters,
   /// performs the propagation to a surface and collects for each change of the
@@ -189,28 +200,7 @@ class RiddersPropagator {
       unsigned int param, const Surface& target, const BoundVector& nominal,
       const std::vector<double>& deviations) const;
 
-  /// @brief This function fits the jacobian with the deviations and derivatives as input.
-  ///
-  /// @param [in] deviations Vector of deviations
-  /// @param [in] derivatives Slopes of each modification of the parameters
-  ///
-  /// @return Propagated jacobian matrix
-  static Jacobian calculateJacobian(
-      const std::vector<double>& deviations,
-      const std::array<std::vector<BoundVector>, eBoundSize>& derivatives);
-
-  /// @brief This function fits a linear function through the final state
-  /// parametrisations
-  ///
-  /// @param [in] deviations Vector of deviations
-  /// @param [in] derivatives Vector of resulting derivatives
-  ///
-  /// @return Vector containing the linear fit
-  static BoundVector fitLinear(const std::vector<double>& deviations,
-                               const std::vector<BoundVector>& derivatives);
-
   propagator_t m_propagator;
-  Config m_config;
 };
 
 }  // namespace Acts

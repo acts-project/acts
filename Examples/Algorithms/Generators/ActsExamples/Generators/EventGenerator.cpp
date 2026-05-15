@@ -92,7 +92,7 @@ ProcessCode EventGenerator::read(const AlgorithmContext& ctx) {
         nPrimaryVertices += 1;
 
         // generate primary vertex position
-        auto vertexPosition = (*generate.vertex)(rng);
+        auto vertexPosition = (*generate.vertex)(rng, ctx.eventNumber);
         ACTS_VERBOSE("Generate vertex at " << vertexPosition.transpose());
 
         // generate particles associated to this vertex
@@ -136,7 +136,10 @@ ProcessCode EventGenerator::read(const AlgorithmContext& ctx) {
     eventPtrs.push_back(evt.get());
   }
 
-  auto event = HepMC3Util::mergeEvents(eventPtrs, logger());
+  auto event = std::make_shared<HepMC3::GenEvent>();
+  event->set_units(HepMC3::Units::GEV, HepMC3::Units::MM);
+
+  HepMC3Util::mergeEvents(*event, eventPtrs, logger());
   event->set_event_number(static_cast<int>(ctx.eventNumber));
 
   ACTS_VERBOSE("Vertices size: " << event->vertices().size());

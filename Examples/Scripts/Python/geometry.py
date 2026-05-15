@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
 import os
+import json
 from pathlib import Path
 
 import acts
-from acts import MaterialMapJsonConverter
+import acts.examples
+from acts.json import MaterialMapJsonConverter, TrackingGeometryJsonConverter
 from acts.examples.odd import getOpenDataDetector
 from acts.examples import (
     WhiteBoard,
@@ -12,6 +14,9 @@ from acts.examples import (
     ProcessCode,
     CsvTrackingGeometryWriter,
     ObjTrackingGeometryWriter,
+)
+
+from acts.examples.json import (
     JsonSurfacesWriter,
     JsonMaterialWriter,
     JsonFormat,
@@ -25,7 +30,8 @@ def runGeometry(
     events=1,
     outputObj=True,
     outputCsv=True,
-    outputJson=True,
+    outputSurfacesJson=True,
+    serializeGeometryJson=False,
 ):
     for ievt in range(events):
         eventStore = WhiteBoard(name=f"EventStore#{ievt}", level=acts.logging.INFO)
@@ -40,8 +46,8 @@ def runGeometry(
                 raise RuntimeError("Failed to decorate event context")
 
         if outputCsv:
-            # if not os.path.isdir(outputDir + "/csv"):
-            #    os.makedirs(outputDir + "/csv")
+            # if not os.path.isdir(outputDir / "csv"):
+            #    os.makedirs(outputDir / "csv")
             writer = CsvTrackingGeometryWriter(
                 level=acts.logging.INFO,
                 trackingGeometry=trackingGeometry,
@@ -51,14 +57,19 @@ def runGeometry(
             writer.write(context)
 
         if outputObj:
-            writer = ObjTrackingGeometryWriter(
-                level=acts.logging.INFO, outputDir=outputDir / "obj"
+            vis = acts.ObjVisualization3D()
+            trackingGeometry.visualize(
+                vis,
+                context.geoContext,
+                portalViewConfig=acts.ViewConfig(visible=False),
+                sensitiveViewConfig=acts.ViewConfig(visible=True),
+                viewConfig=acts.ViewConfig(visible=False),
             )
-            writer.write(context, trackingGeometry)
+            vis.write(outputDir / "obj" / "geometry.obj")
 
-        if outputJson:
-            # if not os.path.isdir(outputDir + "/json"):
-            #    os.makedirs(outputDir + "/json")
+        if outputSurfacesJson:
+            # if not os.path.isdir(outputDir / "json"):
+            #    os.makedirs(outputDir / "json")
             writer = JsonSurfacesWriter(
                 level=acts.logging.INFO,
                 trackingGeometry=trackingGeometry,
@@ -87,10 +98,15 @@ def runGeometry(
 
             jmw.write(trackingGeometry)
 
+        if serializeGeometryJson:
+            converter = TrackingGeometryJsonConverter(level=acts.logging.INFO)
+            jsonStr = converter.toJson(context.geoContext, trackingGeometry)
+            outPath = outputDir / "json" / "tracking-geometry.json"
+            outPath.write_text(jsonStr)
+
 
 if "__main__" == __name__:
-    # detector = AlignedDetector()
-    # detector = GenericDetector()
+    # detector = acts.examples.GenericDetector()
     detector = getOpenDataDetector()
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
@@ -101,7 +117,7 @@ if "__main__" == __name__:
     # dd4hepIdGeoIdMap = acts.examples.dd4hep.createDD4hepIdGeoIdMap(trackingGeometry)
     # dd4hepIdGeoIdValueMap = {}
     # for key, value in dd4hepIdGeoIdMap.items():
-    #     dd4hepIdGeoIdValueMap[key] = value.value()
+    #     dd4hepIdGeoIdValueMap[key] = value.value
 
     # with open('odd-dd4hep-geoid-mapping.json', 'w') as outfile:
     #    json.dump(dd4hepIdGeoIdValueMap, outfile)

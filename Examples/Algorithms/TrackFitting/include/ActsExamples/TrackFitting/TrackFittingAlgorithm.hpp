@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -27,9 +26,6 @@ class TrackingGeometry;
 }
 
 namespace ActsExamples {
-class MeasurementCalibrator;
-class TrackFitterFunction;
-struct AlgorithmContext;
 
 class TrackFittingAlgorithm final : public IAlgorithm {
  public:
@@ -50,19 +46,23 @@ class TrackFittingAlgorithm final : public IAlgorithm {
     int pickTrack = -1;
     // Type erased calibrator for the measurements
     std::shared_ptr<MeasurementCalibrator> calibrator;
+    /// Forward-link all tracks after fitting, enabling inside-out track state
+    /// iteration via TrackProxy::trackStates(). Off by default.
+    bool linkForward = false;
   };
 
   /// Constructor of the fitting algorithm
   ///
   /// @param config is the config struct to configure the algorithm
   /// @param level is the logging level
-  TrackFittingAlgorithm(Config config, Acts::Logging::Level level);
+  explicit TrackFittingAlgorithm(
+      Config config, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Framework execute method of the fitting algorithm
   ///
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algporithm flow
-  ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }

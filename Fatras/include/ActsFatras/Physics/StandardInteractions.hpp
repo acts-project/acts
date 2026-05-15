@@ -11,8 +11,10 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "ActsFatras/Kernel/ContinuousProcess.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
+#include "ActsFatras/Kernel/PointLikeProcess.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/BetheBloch.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/BetheHeitler.hpp"
+#include "ActsFatras/Physics/ElectroMagnetic/PhotonConversion.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/Scattering.hpp"
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
 #include "ActsFatras/Selectors/ParticleSelectors.hpp"
@@ -27,6 +29,8 @@ namespace detail {
 
 /// Select electrons and positrons only.
 using SelectElectronLike = AbsPdgSelector<Acts::PdgParticle::eElectron>;
+/// Select photons only.
+using SelectPhotonLike = AbsPdgSelector<Acts::PdgParticle::eGamma>;
 /// Select particles above a minimum absolute momentum.
 using SelectPMin = Min<Casts::P>;
 
@@ -45,6 +49,10 @@ using StandardBetheBloch =
 using StandardBetheHeitler =
     ContinuousProcess<BetheHeitler, SelectElectronLike, SelectPMin, SelectPMin>;
 
+/// Handle photon conversions with a pair of an electron and a positron emitted.
+using StandardPhotonConversion =
+    PointLikeProcess<PhotonConversion, SelectPhotonLike, SelectPMin,
+                     SelectPMin>;
 }  // namespace detail
 
 /// Standard set of electro-magnetic interactions for charged particles.
@@ -66,7 +74,23 @@ using StandardChargedElectroMagneticInteractions =
 /// Construct the standard electro-magnetic interactions for charged particles.
 ///
 /// @param minimumAbsMomentum lower p cut on output particles
+/// @return Configured interaction list for charged particles
 StandardChargedElectroMagneticInteractions
 makeStandardChargedElectroMagneticInteractions(double minimumAbsMomentum);
+
+/// Standard set of electro-magnetic interactions for neutral particles.
+using StandardNeutralElectroMagneticInteractions =
+    InteractionList<detail::StandardPhotonConversion>;
+
+/// Construct the standard electro-magnetic interactions for neutral particles.
+///
+/// @warning The list has no cuts on input particle charge or kinematics, i.e.
+///          it relies on the simulator to preselect relevant charged particles
+///          before application.
+///
+/// @param minimumAbsMomentum lower p cut on output particles
+/// @return Configured interaction list for neutral particles
+StandardNeutralElectroMagneticInteractions
+makeStandardNeutralElectroMagneticInteractions(double minimumAbsMomentum);
 
 }  // namespace ActsFatras

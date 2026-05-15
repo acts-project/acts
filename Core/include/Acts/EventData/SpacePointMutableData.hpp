@@ -29,7 +29,11 @@ class SpacePointMutableData {
   SpacePointMutableData& operator=(const SpacePointMutableData& other) = delete;
 
   /// @brief Move operations
+  /// @param other Source object to move from
   SpacePointMutableData(SpacePointMutableData&& other) noexcept = default;
+  /// Move assignment operator
+  /// @param other Source object to move from
+  /// @return Reference to this object after move assignment
   SpacePointMutableData& operator=(SpacePointMutableData&& other) noexcept =
       default;
 
@@ -37,14 +41,25 @@ class SpacePointMutableData {
   ~SpacePointMutableData() = default;
 
   /// @brief Getters
+  /// @param idx Index of the space point
+  /// @return Quality value at the given index
   float quality(const std::size_t idx) const;
+  /// Get deltaR value for space point
+  /// @param idx Index of the space point
+  /// @return DeltaR value at the given index
   float deltaR(const std::size_t idx) const;
 
   /// @brief Setters
+  /// @param idx Index of the space point
+  /// @param value Quality value to set
   void setQuality(const std::size_t idx, const float value);
+  /// Set the delta R value for a specific space point.
+  /// @param idx Index of the space point
+  /// @param value Delta R value to set
   void setDeltaR(const std::size_t idx, const float value);
 
   /// @brief Resize vectors
+  /// @param n New size for the vectors
   void resize(const std::size_t n);
 
   /// @brief clear vectors

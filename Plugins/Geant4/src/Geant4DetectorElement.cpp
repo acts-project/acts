@@ -6,13 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
+#include "ActsPlugins/Geant4/Geant4DetectorElement.hpp"
 
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <utility>
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 Geant4DetectorElement::Geant4DetectorElement(std::shared_ptr<Surface> surface,
                                              const G4VPhysicalVolume& g4physVol,
@@ -21,9 +23,23 @@ Geant4DetectorElement::Geant4DetectorElement(std::shared_ptr<Surface> surface,
     : m_surface(std::move(surface)),
       m_g4physVol(&g4physVol),
       m_toGlobal(toGlobal),
-      m_thickness(thickness) {}
+      m_thickness(thickness) {
+  if (m_surface == nullptr) {
+    throw std::invalid_argument(
+        "Geant4DetectorElement: Surface cannot be nullptr");
+  }
+  if (m_surface->isSensitive()) {
+    throw std::logic_error(
+        "Geant4DetectorElement: Surface already has an associated detector "
+        "element");
+  }
+  if (thickness > 0.) {
+    m_surface->assignThickness(m_thickness);
+  }
+  m_surface->assignSurfacePlacement(*this);
+}
 
-const Transform3& Geant4DetectorElement::transform(
+const Transform3& Geant4DetectorElement::localToGlobalTransform(
     const GeometryContext& /*gctx*/) const {
   return m_toGlobal;
 }
@@ -44,4 +60,4 @@ const G4VPhysicalVolume& Geant4DetectorElement::g4PhysicalVolume() const {
   return *m_g4physVol;
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

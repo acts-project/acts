@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -19,7 +18,6 @@
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Write out a simhit collection before detector digitization in comma-
 /// separated-value format.

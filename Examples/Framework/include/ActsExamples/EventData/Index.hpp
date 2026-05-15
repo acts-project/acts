@@ -53,15 +53,10 @@ inline InverseMultimap<value_t> invertIndexMultimap(
 
   // adopting the unordered sequence will reestablish the correct order
   InverseMultimap<value_t> inverse;
-#if BOOST_VERSION < 107800
-  for (const auto& i : unordered) {
-    inverse.insert(i);
-  }
-#else
+
   std::ranges::sort(unordered);
   inverse.insert(boost::container::ordered_range_t{}, unordered.begin(),
                  unordered.end());
-#endif
 
   return inverse;
 }

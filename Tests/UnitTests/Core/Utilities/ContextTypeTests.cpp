@@ -13,6 +13,8 @@
 
 using namespace Acts;
 
+namespace ActsTests {
+
 BOOST_AUTO_TEST_SUITE(ContextTypeTests)
 
 BOOST_AUTO_TEST_CASE(PackUnpack) {
@@ -36,3 +38,5 @@ BOOST_AUTO_TEST_CASE(MaybeUnpack) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

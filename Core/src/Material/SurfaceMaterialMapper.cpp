@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -145,7 +144,7 @@ void SurfaceMaterialMapper::checkAndInsert(State& mState,
     // Second attempt: binned material
     auto bmp = dynamic_cast<const BinnedSurfaceMaterial*>(surfaceMaterial);
     bu = (bmp != nullptr) ? (&bmp->binUtility()) : nullptr;
-    // Creaete a binned type of material
+    // Create a binned type of material
     if (bu != nullptr) {
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - binning is " << *bu);
@@ -192,7 +191,7 @@ void SurfaceMaterialMapper::finalizeMaps(State& mState) const {
   }
 }
 
-void SurfaceMaterialMapper::mapMaterialTrack(
+Result<void> SurfaceMaterialMapper::mapMaterialTrack(
     State& mState, RecordedMaterialTrack& mTrack) const {
   // Retrieve the recorded material from the recorded material track
   auto& rMaterial = mTrack.second.materialInteractions;
@@ -206,27 +205,26 @@ void SurfaceMaterialMapper::mapMaterialTrack(
         "Material surfaces are associated with the material interaction. The "
         "association interaction/surfaces won't be performed again.");
     mapSurfaceInteraction(mState, rMaterial);
-    return;
+    return Result<void>::success();
   } else {
     ACTS_VERBOSE(
         "Material interactions need to be associated with surfaces. Collecting "
         "all surfaces on the trajectory.");
-    mapInteraction(mState, mTrack);
-    return;
+    return mapInteraction(mState, mTrack);
   }
 }
-void SurfaceMaterialMapper::mapInteraction(
+
+Result<void> SurfaceMaterialMapper::mapInteraction(
     State& mState, RecordedMaterialTrack& mTrack) const {
   // Retrieve the recorded material from the recorded material track
   auto& rMaterial = mTrack.second.materialInteractions;
   std::map<GeometryIdentifier, unsigned int> assignedMaterial;
   using VectorHelpers::makeVector4;
   // Neutral curvilinear parameters
-  NeutralBoundTrackParameters start =
-      NeutralBoundTrackParameters::createCurvilinear(
-          makeVector4(mTrack.first.first, 0), mTrack.first.second,
-          1 / mTrack.first.second.norm(), std::nullopt,
-          NeutralParticleHypothesis::geantino());
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      makeVector4(mTrack.first.first, 0), mTrack.first.second,
+      1 / mTrack.first.second.norm(), std::nullopt,
+      ParticleHypothesis::geantino());
 
   // Prepare Action list and abort list
   using MaterialSurfaceCollector = SurfaceCollector<MaterialSurface>;
@@ -238,9 +236,16 @@ void SurfaceMaterialMapper::mapInteraction(
                                                      mState.magFieldContext);
 
   // Now collect the material layers by using the straight line propagator
-  const auto& result = m_propagator.propagate(start, options).value();
-  auto mcResult = result.get<MaterialSurfaceCollector::result_type>();
-  auto mvcResult = result.get<MaterialVolumeCollector::result_type>();
+  const auto& result = m_propagator.propagate(start, options);
+  if (!result.ok()) {
+    ACTS_DEBUG("Encountered a propagator error for initial parameters:");
+    ACTS_DEBUG(" - Position: " << mTrack.first.first.transpose());
+    ACTS_DEBUG(" - Momentum: " << mTrack.first.second.transpose());
+    return result.error();
+  }
+
+  auto mcResult = result.value().get<MaterialSurfaceCollector::result_type>();
+  auto mvcResult = result.value().get<MaterialVolumeCollector::result_type>();
 
   auto mappingSurfaces = mcResult.collected;
   auto mappingVolumes = mvcResult.collected;
@@ -292,7 +297,7 @@ void SurfaceMaterialMapper::mapInteraction(
   while (rmIter != rMaterial.end() && sfIter != mappingSurfaces.end()) {
     // Material not inside current volume
     if (volIter != mappingVolumes.end() &&
-        !volIter->volume->inside(rmIter->position)) {
+        !volIter->volume->inside(mState.geoContext, rmIter->position)) {
       double distVol = (volIter->position - mTrack.first.first).norm();
       double distMat = (rmIter->position - mTrack.first.first).norm();
       // Material past the entry point to the current volume
@@ -304,14 +309,15 @@ void SurfaceMaterialMapper::mapInteraction(
     }
     /// check if we are inside a material volume
     if (volIter != mappingVolumes.end() &&
-        volIter->volume->inside(rmIter->position)) {
+        volIter->volume->inside(mState.geoContext, rmIter->position)) {
       ++rmIter;
       continue;
     }
     // Do we need to switch to next assignment surface ?
     if (sfIter != mappingSurfaces.end() - 1) {
-      int mappingType = sfIter->surface->surfaceMaterial()->mappingType();
-      int nextMappingType =
+      MappingType mappingType =
+          sfIter->surface->surfaceMaterial()->mappingType();
+      MappingType nextMappingType =
           (sfIter + 1)->surface->surfaceMaterial()->mappingType();
 
       if (mappingType == MappingType::PreMapping ||
@@ -453,6 +459,8 @@ void SurfaceMaterialMapper::mapInteraction(
       }
     }
   }
+
+  return Result<void>::success();
 }
 
 void SurfaceMaterialMapper::mapSurfaceInteraction(

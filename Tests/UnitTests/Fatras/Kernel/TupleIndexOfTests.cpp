@@ -19,7 +19,9 @@ struct TupleIndexOf;
 
 using ActsFatras::detail::TupleIndexOf;
 
-BOOST_AUTO_TEST_SUITE(FatrasTupleIndexOf)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(KernelSuite)
 
 BOOST_AUTO_TEST_CASE(Regular) {
   using T = std::tuple<int, double, float>;
@@ -38,3 +40,5 @@ BOOST_AUTO_TEST_CASE(Duplicates) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -8,9 +8,6 @@
 
 #pragma once
 
-// Workaround for building on clang+libstdc++
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -39,6 +36,9 @@ struct MaterialInteraction;
 
 /// @brief selector for finding surface
 struct MaterialSurface {
+  /// Selection function for surfaces with material
+  /// @param sf The surface to check
+  /// @return True if surface has material, false otherwise
   bool operator()(const Surface& sf) const {
     return (sf.surfaceMaterial() != nullptr);
   }
@@ -46,6 +46,9 @@ struct MaterialSurface {
 
 /// @brief selector for finding volume
 struct MaterialVolume {
+  /// Selection function for volumes with material
+  /// @param vf The tracking volume to check
+  /// @return True if volume has material, false otherwise
   bool operator()(const TrackingVolume& vf) const {
     return (vf.volumeMaterial() != nullptr);
   }
@@ -79,6 +82,7 @@ struct MaterialVolume {
 ///
 class SurfaceMaterialMapper {
  public:
+  /// Type alias for straight line propagator used in material mapping
   using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
   /// @struct Config
@@ -130,11 +134,15 @@ class SurfaceMaterialMapper {
   /// Delete the Default constructor
   SurfaceMaterialMapper() = delete;
 
+  // mark as deprecated
   /// Constructor with config object
   ///
   /// @param cfg Configuration struct
   /// @param propagator The straight line propagator
   /// @param slogger The logger
+  [[deprecated(
+      "Material mapping with propagation is deprecated. Use MaterialMapper "
+      "instead.")]]
   SurfaceMaterialMapper(const Config& cfg, StraightLinePropagator propagator,
                         std::unique_ptr<const Logger> slogger =
                             getDefaultLogger("SurfaceMaterialMapper",
@@ -149,6 +157,7 @@ class SurfaceMaterialMapper {
   /// This method takes a TrackingGeometry,
   /// finds all surfaces with material proxis
   /// and returns you a Cache object tO be used
+  /// @return State object configured for material mapping
   State createState(const GeometryContext& gctx,
                     const MagneticFieldContext& mctx,
                     const TrackingGeometry& tGeometry) const;
@@ -164,28 +173,31 @@ class SurfaceMaterialMapper {
 
   /// Process/map a single track
   ///
-  /// @param mState The current state map
-  /// @param mTrack The material track to be mapped
-  ///
   /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
-  void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
+  ///
+  /// @param mState The current state map
+  /// @param mTrack The material track to be mapped
+  /// @return Result of the mapping process
+  Result<void> mapMaterialTrack(State& mState,
+                                RecordedMaterialTrack& mTrack) const;
 
   /// Loop through all the material interactions and add them to the
   /// associated surface
   ///
   /// @param mState The current state map
   /// @param mTrack The material track to be mapped
-  ///
-  void mapInteraction(State& mState, RecordedMaterialTrack& mTrack) const;
+  /// @return Result of the mapping process
+  Result<void> mapInteraction(State& mState,
+                              RecordedMaterialTrack& mTrack) const;
 
   /// Loop through all the material interactions and add them to the
   /// associated surface
+  ///
+  /// @note The material interactions are assumed to have an associated surface ID
   ///
   /// @param mState The current state map
   /// @param rMaterial Vector of all the material interactions that will be mapped
-  ///
-  /// @note The material interactions are assumed to have an associated surface ID
   void mapSurfaceInteraction(State& mState,
                              std::vector<MaterialInteraction>& rMaterial) const;
 

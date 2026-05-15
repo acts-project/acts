@@ -29,9 +29,8 @@ struct LayerBlueprintNodeImpl;
 ///
 /// The layer volume is created to wrap around the surfaces registered with
 /// this node. The orientation of the resulting volume defaults to the identity
-/// matrix. If another orientation is desired, this can be set with the @ref
-/// Acts::Experimental::LayerBlueprintNode::setTransform. See @ref Acts::ProtoLayer for
-/// details on the auto-sizing from surfaces.
+/// matrix. If another orientation is desired, this can be set with the
+/// @ref setTransform method. See @ref Acts::ProtoLayer for details on the auto-sizing from surfaces.
 ///
 class LayerBlueprintNode final : public StaticBlueprintNode {
  public:
@@ -62,6 +61,10 @@ class LayerBlueprintNode final : public StaticBlueprintNode {
   /// -# Analyze the surfaces provided and produce a wrapping volume
   /// -# Register the surfaces with the volume
   /// -# Return the volume
+  /// @param options Blueprint options for construction
+  /// @param gctx Geometry context for construction
+  /// @param logger Logger for debug output
+  /// @return Reference to constructed Volume
   /// @note At least one surfaces needs to be registered via
   ///       @ref Acts::Experimental::LayerBlueprintNode::setSurfaces before
   ///       geometry construction.

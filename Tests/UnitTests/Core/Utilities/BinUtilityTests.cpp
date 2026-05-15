@@ -21,7 +21,11 @@
 #include <utility>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 // OPEN - equidistant binning tests
 BOOST_AUTO_TEST_CASE(BinUtility_equidistant_binning) {
@@ -72,7 +76,7 @@ BOOST_AUTO_TEST_CASE(BinUtility_equidistant_binning) {
 // OPEN - equidistant binning tests
 BOOST_AUTO_TEST_CASE(BinUtility_arbitrary_binning) {
   std::vector<float> bvalues = {-5., 0., 1., 1.1, 8.};
-  BinUtility xUtil(bvalues, Acts::open, Acts::AxisDirection::AxisX);
+  BinUtility xUtil(bvalues, open, AxisDirection::AxisX);
 
   // Underflow
   BOOST_CHECK_EQUAL(xUtil.bin(Vector3(-6., 0., 0.)), 0u);
@@ -147,4 +151,6 @@ BOOST_AUTO_TEST_CASE(BinUtility_from_ProtoAxis) {
   BOOST_CHECK_EQUAL(buXY.dimensions(), std::size_t{2});
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

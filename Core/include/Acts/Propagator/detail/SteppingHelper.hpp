@@ -47,9 +47,11 @@ IntersectionStatus updateSingleSurfaceStatus(
                << surface.geometryId() << " index " << static_cast<int>(index));
 
   auto sIntersection =
-      surface.intersect(state.options.geoContext, stepper.position(state),
-                        direction * stepper.direction(state), boundaryTolerance,
-                        surfaceTolerance)[index];
+      surface
+          .intersect(state.options.geoContext, stepper.position(state),
+                     direction * stepper.direction(state), boundaryTolerance,
+                     surfaceTolerance)
+          .at(index);
 
   // The intersection is on surface already
   if (sIntersection.status() == IntersectionStatus::onSurface) {

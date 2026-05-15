@@ -23,7 +23,7 @@ namespace ActsExamples {
 
 /// @class RootPropagationSummaryWriter
 ///
-/// Write out the steps of test propgations for stepping validation,
+/// Write out the steps of test propagations for stepping validation,
 /// each step sequence is one entry in the root file for optimised
 /// data writing speed.
 /// The event number is part of the written data.
@@ -101,7 +101,7 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
   float m_pt = 0;
   float m_p = 0;
 
-  /// Propagation summary statstics
+  /// Propagation summary statistics
   int m_nSensitives = 0;
   int m_nMaterials = 0;
   int m_nPortals = 0;

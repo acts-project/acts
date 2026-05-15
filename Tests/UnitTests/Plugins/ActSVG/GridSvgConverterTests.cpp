@@ -9,10 +9,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/ActSVG/GridSvgConverter.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "ActsPlugins/ActSVG/GridSvgConverter.hpp"
 #include "actsvg/display/grids.hpp"
 
 #include <fstream>
@@ -23,8 +23,9 @@
 
 using namespace Acts;
 using namespace Acts::detail;
+using namespace ActsPlugins;
 
-namespace {
+namespace ActsTests {
 /// Helper method to turn a local bin into a string
 ///
 /// @tparam local_bin_t the type for the local bin
@@ -43,9 +44,8 @@ std::string localToString(const local_bin_t& lBin) {
   lbString += std::string("]");
   return lbString;
 }
-}  // namespace
 
-BOOST_AUTO_TEST_SUITE(ActSvg)
+BOOST_AUTO_TEST_SUITE(ActSvgSuite)
 
 BOOST_AUTO_TEST_CASE(BoundGridXY) {
   using GlobalBin = std::size_t;
@@ -66,10 +66,10 @@ BOOST_AUTO_TEST_CASE(BoundGridXY) {
   auto edgesY = axisY.getBinEdges();
 
   std::vector<actsvg::svg::object> targets = {};
-  for (auto [ix, x] : Acts::enumerate(edgesX)) {
+  for (auto [ix, x] : enumerate(edgesX)) {
     if (ix > 0u) {
       double xp = 0.2 * edgesX[ix] + 0.8 * edgesX[ix - 1u];
-      for (auto [iy, y] : Acts::enumerate(edgesY)) {
+      for (auto [iy, y] : enumerate(edgesY)) {
         if (iy > 0u) {
           double yp = 0.8 * edgesY[iy] + 0.2 * edgesY[iy - 1u];
           decltype(gridXY)::point_t p = {xp, yp};
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(BoundGridXY) {
   oGrid.add_object(yLabel);
   oGrid.add_object(caption);
 
-  Acts::Svg::toFile({oGrid}, oGrid._id + ".svg");
+  Svg::toFile({oGrid}, oGrid._id + ".svg");
 }
 
 BOOST_AUTO_TEST_CASE(OpenGridXY) {
@@ -146,10 +146,10 @@ BOOST_AUTO_TEST_CASE(OpenGridXY) {
 
   std::vector<actsvg::svg::object> targets = {};
   std::size_t ig = 0;
-  for (auto [ix, x] : Acts::enumerate(edgesX)) {
+  for (auto [ix, x] : enumerate(edgesX)) {
     if (ix > 0u) {
       double xp = 0.2 * edgesX[ix] + 0.8 * edgesX[ix - 1u];
-      for (auto [iy, y] : Acts::enumerate(edgesY)) {
+      for (auto [iy, y] : enumerate(edgesY)) {
         if (iy > 0u) {
           double yp = 0.8 * edgesY[iy] + 0.2 * edgesY[iy - 1u];
           decltype(gridXY)::point_t p = {xp, yp};
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(OpenGridXY) {
   oGrid.add_object(yLabel);
   oGrid.add_object(caption);
 
-  Acts::Svg::toFile({oGrid}, oGrid._id + ".svg");
+  Svg::toFile({oGrid}, oGrid._id + ".svg");
 }
 
 BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
@@ -227,10 +227,10 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
 
   std::vector<actsvg::svg::object> targets = {};
   std::size_t ig = 0;
-  for (auto [iz, z] : Acts::enumerate(edgesZ)) {
+  for (auto [iz, z] : enumerate(edgesZ)) {
     if (iz > 0u) {
       double zp = 0.2 * edgesZ[iz] + 0.8 * edgesZ[iz - 1u];
-      for (auto [iphi, phi] : Acts::enumerate(edgesPhi)) {
+      for (auto [iphi, phi] : enumerate(edgesPhi)) {
         if (iphi > 0u) {
           double phip = 0.8 * edgesPhi[iphi] + 0.2 * edgesPhi[iphi - 1u];
           decltype(gridZPhi)::point_t p = {zp, phip};
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
   oGrid.add_object(yLabel);
   oGrid.add_object(caption);
 
-  Acts::Svg::toFile({oGrid}, oGrid._id + ".svg");
+  Svg::toFile({oGrid}, oGrid._id + ".svg");
 }
 
 BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
@@ -306,10 +306,10 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
 
   std::vector<actsvg::svg::object> targets = {};
   std::size_t ig = 0;
-  for (auto [ir, r] : Acts::enumerate(edgesR)) {
+  for (auto [ir, r] : enumerate(edgesR)) {
     if (ir > 0u) {
       double rp = 0.5 * (edgesR[ir] + edgesR[ir - 1u]);
-      for (auto [iphi, phi] : Acts::enumerate(edgesPhi)) {
+      for (auto [iphi, phi] : enumerate(edgesPhi)) {
         if (iphi > 0u) {
           double phip = 0.5 * (edgesPhi[iphi] + edgesPhi[iphi - 1u]);
           decltype(gridRPhi)::point_t p = {rp, phip};
@@ -322,11 +322,11 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
                                                   decltype(gridRPhi)::DIM>(l);
           std::vector<std::string> glBin = {gBin, lBin};
           std::string gBinID = "g_" + std::to_string(ig++);
-          targets.push_back(
-              actsvg::draw::text(gBinID,
-                                 {static_cast<actsvg::scalar>(rp * cos(phip)),
-                                  static_cast<actsvg::scalar>(rp * sin(phip))},
-                                 glBin));
+          targets.push_back(actsvg::draw::text(
+              gBinID,
+              {static_cast<actsvg::scalar>(rp * std::cos(phip)),
+               static_cast<actsvg::scalar>(rp * std::sin(phip))},
+              glBin));
         }
       }
     }
@@ -344,8 +344,8 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
 
   auto phiAxis = actsvg::draw::arc_measure(
       "phi_axis", 410., {410, 0.},
-      {static_cast<actsvg::scalar>(410. * cos(0.25)),
-       static_cast<actsvg::scalar>(410. * sin(0.25))},
+      {static_cast<actsvg::scalar>(410. * std::cos(0.25)),
+       static_cast<actsvg::scalar>(410. * std::sin(0.25))},
       axis_stroke, actsvg::style::marker(), axis_marker);
 
   auto phiLabel =
@@ -366,7 +366,9 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
   oGrid.add_object(phiLabel);
   oGrid.add_object(caption);
 
-  Acts::Svg::toFile({oGrid}, oGrid._id + ".svg");
+  Svg::toFile({oGrid}, oGrid._id + ".svg");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -1,7 +1,6 @@
 rules:
   - required_checks:
       - Lint PR / Validate PR title
-      - milestone-set
     required_pattern:
       - "policy-bot: *"
 
@@ -14,7 +13,7 @@ rules:
     required_checks:
      - Docs / docs
      - Analysis / build_debug
-     - SonarCloud Code Analysis
+     # - SonarCloud Code Analysis
 
     required_pattern:
      - "Builds / *"
@@ -28,3 +27,11 @@ rules:
      - "docs/*"
     required_checks:
      - Docs / docs
+
+  - branch_filter:
+     - "main"
+     - "develop/*"
+    paths:
+     - "Detray/*"
+    required_checks:
+     - "Detray / *"

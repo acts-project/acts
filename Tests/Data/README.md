@@ -8,8 +8,8 @@ kept as small as possible. Access should always occur via the `getDataPath`
 helper functions from the `CommonHelpers` package:
 
 ```cpp
-#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
+#include "ActsTests/CommonHelpers/DataDirectory.hpp"
 
 ...
-auto path = Acts::Test::getDataPath("some-data-file.csv");
+auto path = ActsTests::getDataPath("some-data-file.csv");
 ```

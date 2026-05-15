@@ -50,7 +50,7 @@ def runSeeding(
     field,
     outputDir,
     s=None,
-    seedingAlgorithm=SeedingAlgorithm.Default,
+    seedingAlgorithm=SeedingAlgorithm.GridTriplet,
 ):
     from acts.examples.simulation import (
         addParticleGun,
@@ -149,7 +149,7 @@ if "__main__" == __name__:
         "--algorithm",
         action=EnumAction,
         enum=SeedingAlgorithm,
-        default=SeedingAlgorithm.Default,
+        default=SeedingAlgorithm.GridTriplet,
         help="Select the seeding algorithm to use",
     )
 

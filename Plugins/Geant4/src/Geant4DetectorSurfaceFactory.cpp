@@ -6,13 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
+#include "ActsPlugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
 
-#include "Acts/Plugins/Geant4/Geant4Converters.hpp"
-#include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
-#include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+#include "ActsPlugins/Geant4/Geant4Converters.hpp"
+#include "ActsPlugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 
 #include <utility>
 
@@ -20,7 +19,9 @@
 #include "G4Transform3D.hh"
 #include "G4VPhysicalVolume.hh"
 
-void Acts::Geant4DetectorSurfaceFactory::construct(
+using namespace Acts;
+
+void ActsPlugins::Geant4DetectorSurfaceFactory::construct(
     Cache& cache, const G4Transform3D& g4ToGlobal,
     const G4VPhysicalVolume& g4PhysVol, const Options& option) {
   // Get Rotation and translation
@@ -38,6 +39,9 @@ void Acts::Geant4DetectorSurfaceFactory::construct(
   // Get the logical volume
   auto g4LogicalVolume = g4PhysVol.GetLogicalVolume();
   std::size_t nDaughters = g4LogicalVolume->GetNoDaughters();
+  ACTS_DEBUG("Processing Geant4 physical volume " << g4PhysVol.GetName()
+                                                  << " did yield " << nDaughters
+                                                  << " daughters.");
   for (std::size_t d = 0; d < nDaughters; ++d) {
     auto daughter = g4LogicalVolume->GetDaughter(d);
     construct(cache, newToGlobal, *daughter, option);
@@ -52,9 +56,12 @@ void Acts::Geant4DetectorSurfaceFactory::construct(
   if (sensitive || passive) {
     // Conversion and selection code
     ++cache.matchedG4Volumes;
-
+    ACTS_VERBOSE("Matched Geant4 physical volume "
+                 << g4PhysVol.GetName() << " with "
+                 << (sensitive ? "sensitive " : "")
+                 << (passive ? "passive " : "") << "surface selector.");
     // Attempt the conversion
-    auto surface = Acts::Geant4PhysicalVolumeConverter{}.surface(
+    auto surface = Geant4PhysicalVolumeConverter{}.surface(
         g4PhysVol, Geant4AlgebraConverter{}.transform(newToGlobal),
         option.convertMaterial, option.convertedMaterialThickness);
 
@@ -68,10 +75,9 @@ void Acts::Geant4DetectorSurfaceFactory::construct(
       if (sensitive) {
         // empty geometry context is fine as the transform was just passed down
         // without context before
-        auto detectorElement = std::make_shared<Acts::Geant4DetectorElement>(
-            surface, g4PhysVol, surface->transform({}), 0.1);
-        surface->assignDetectorElement(*detectorElement);
-
+        auto detectorElement = m_config.detectorElementFactory(
+            surface, g4PhysVol, Geant4AlgebraConverter{}.transform(newToGlobal),
+            option.convertedMaterialThickness);
         cache.sensitiveSurfaces.push_back(
             {std::move(detectorElement), std::move(surface)});
       } else {

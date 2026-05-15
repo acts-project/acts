@@ -15,7 +15,6 @@ function run() {
 
 export run
 
-run which python3
 shopt -s extglob
 
 
@@ -127,7 +126,7 @@ function run_physmon_gen() {
 
     mkdir -p $outdir/data/$slug
     mkdir -p $outdir/logs
-    measure "$title" "$slug" ${script} $outdir/data/$slug 2>&1 > $outdir/logs/${slug}.log
+    measure "$title" "$slug" python3 ${script} $outdir/data/$slug 2>&1 > $outdir/logs/${slug}.log
 
     this_ec=$?
     ec=$(($ec | $this_ec))
@@ -142,6 +141,9 @@ function run_physmon_gen() {
 echo "::group::Generate validation dataset"
 if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
     run_physmon_gen "Simulation" "simulation"
+fi
+if [[ "$mode" == "all" || "$mode" == "gsf" || "$mode" == "refit_gsf" ]]; then
+    run_physmon_gen "Geant4 Sim for GSF" "simulation_gsf"
 fi
 if [[ "$mode" == "all" || "$mode" == "kf" ]]; then
     run_physmon_gen "Truth Tracking KF" "trackfitting_kf"
@@ -241,8 +243,11 @@ function trackfinding() {
         $path/performance_fitting_ckf_plots \
         --config $default_config
 
-
-    run Examples/Scripts/generic_plotter.py \
+    # TODO remove
+    echo "which python3: $(which python3)"
+    echo "python3 version: $(python3 --version)"
+    echo "python3 -m pip list: $(python3 -m pip list)"
+    run python3 Examples/Scripts/generic_plotter.py \
         $outdir/data/$path/tracksummary_ckf.root \
         tracksummary \
         $outdir/data/$path/tracksummary_ckf_hist.root \
@@ -285,7 +290,7 @@ function vertexing() {
     config=$3
 
     if [ -f $refdir/$path/performance_vertexing_ivf_notime_hist.root ]; then
-        run Examples/Scripts/generic_plotter.py \
+        run python3 Examples/Scripts/generic_plotter.py \
             $outdir/data/$path/performance_vertexing_ivf_notime.root \
             vertexing \
             $outdir/data/$path/performance_vertexing_ivf_notime_hist.root \
@@ -304,7 +309,7 @@ function vertexing() {
             $path/performance_vertexing_ivf_notime_plots
     fi
 
-    run Examples/Scripts/generic_plotter.py \
+    run python3 Examples/Scripts/generic_plotter.py \
         $outdir/data/$path/performance_vertexing_amvf_gauss_notime.root \
         vertexing \
         $outdir/data/$path/performance_vertexing_amvf_gauss_notime_hist.root \
@@ -322,7 +327,7 @@ function vertexing() {
         $path/performance_vertexing_amvf_gauss_notime.html \
         $path/performance_vertexing_amvf_gauss_notime_plots
 
-    run Examples/Scripts/generic_plotter.py \
+    run python3 Examples/Scripts/generic_plotter.py \
         $outdir/data/$path/performance_vertexing_amvf_grid_time.root \
         vertexing \
         $outdir/data/$path/performance_vertexing_amvf_grid_time_hist.root \
@@ -346,7 +351,7 @@ function simulation() {
 
     config="CI/physmon/config/simulation.yml"
 
-    run Examples/Scripts/generic_plotter.py \
+    run python3 Examples/Scripts/generic_plotter.py \
         $outdir/data/simulation/particles_${suffix}.root \
         particles \
         $outdir/data/simulation/particles_${suffix}_hist.root \
@@ -366,7 +371,7 @@ function simulation() {
 }
 
 function generation() {
-    run Examples/Scripts/generic_plotter.py \
+    run python3 Examples/Scripts/generic_plotter.py \
         $outdir/data/simulation/particles_ttbar.root \
         particles \
         $outdir/data/simulation/particles_ttbar_hist.root \
@@ -383,7 +388,7 @@ function generation() {
         simulation/particles_ttbar.html \
         simulation/particles_ttbar_plots
 
-    run Examples/Scripts/generic_plotter.py \
+    run python3 Examples/Scripts/generic_plotter.py \
         $outdir/data/simulation/vertices_ttbar.root \
         vertices \
         $outdir/data/simulation/vertices_ttbar_hist.root \
@@ -483,7 +488,7 @@ if [[ "$mode" == "all" || "$mode" == "gx2f_vs_kf" ]]; then
         --label-monitored=GX2F
 fi
 
-run CI/physmon/summary.py $histcmp_results \
+run python3 CI/physmon/summary.py $histcmp_results \
   --md $outdir/summary.md \
   --html $outdir/summary.html
 ec=$(($ec | $?))

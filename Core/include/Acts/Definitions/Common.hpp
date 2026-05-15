@@ -8,27 +8,39 @@
 
 #pragma once
 
+#include "Acts/Utilities/EnumBitwiseOperators.hpp"
+
+#include <cstdint>
 #include <iosfwd>
 
 namespace Acts {
 
-///  This is a steering enum to tell which material update stage:
+///  This is a steering enum to tell which material update mode:
+/// - NoUpdate   : no update
 /// - PreUpdate  : update on approach of a surface
-/// - FullUpdate : update when passing a surface
 /// - PostUpdate : update when leaving a surface
-enum class MaterialUpdateStage : int {
-  PreUpdate = -1,
-  FullUpdate = 0,
-  PostUpdate = 1
+/// - FullUpdate : update when passing a surface
+enum class MaterialUpdateMode : std::uint8_t {
+  NoUpdate = 0,
+  PreUpdate = 1,
+  PostUpdate = 2,
+  FullUpdate = PreUpdate | PostUpdate,
 };
 
-std::ostream& operator<<(std::ostream& os, MaterialUpdateStage matUpdate);
+/// Enable bitwise operators for MaterialUpdateMode enum
+ACTS_DEFINE_ENUM_BITWISE_OPERATORS(MaterialUpdateMode);
+
+/// Stream operator for MaterialUpdateMode
+/// @param os Output stream
+/// @param mode MaterialUpdateMode to output
+/// @return Reference to output stream
+std::ostream& operator<<(std::ostream& os, MaterialUpdateMode mode);
 
 /// @enum NoiseUpdateMode to tell how to deal with noise term in covariance
 /// transport
 /// - removeNoise: subtract noise term
 /// - addNoise: add noise term
-enum NoiseUpdateMode : int { removeNoise = -1, addNoise = 1 };
+enum class NoiseUpdateMode : int { removeNoise = -1, addNoise = 1 };
 
 /// Components of coordinate vectors.
 ///
