@@ -292,13 +292,15 @@ class endcap_generator final : public surface_factory_interface<detector_t> {
 
       // Build the mask for this ring
       std::vector<scalar_t> mask_values{m_cfg.module_bounds().at(ir)};
+      assert(!mask_values.empty());
 
       // Precompute trapezoid divisor
       if constexpr (std::is_same_v<mask_shape_t, trapezoid2D>) {
         const scalar_t div{
             1.f / (2.f * mask_values.at(trapezoid2D::e_half_length_2))};
 
-        mask_values.insert(mask_values.begin() + trapezoid2D::e_divisor, div);
+        mask_values.resize(trapezoid2D::e_size);
+        mask_values.at(trapezoid2D::e_divisor) = div;
       }
 
       masks.template emplace_back<mask_id>(empty_context{}, mask_values,
