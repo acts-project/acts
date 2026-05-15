@@ -71,6 +71,7 @@ class ISurfaceMaterial {
   virtual const MaterialSlab& materialSlab(const Vector2& lp) const = 0;
 
   /// Return the axis directions for the material binning, if applicable
+  /// @return Vector of axis directions defining the material binning scheme
   virtual std::vector<AxisDirection> materialAxisDirections() const = 0;
 
   /// Return method for full material description of the Surface
