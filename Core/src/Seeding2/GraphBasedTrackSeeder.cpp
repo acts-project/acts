@@ -86,9 +86,6 @@ void GraphBasedTrackSeeder::createSeeds(
   }
   ACTS_DEBUG("Loaded " << nPixelLoaded << " pixel space points and "
                        << nStripLoaded << " strip space points");
-  
-  std::cout<<"Loaded " << nPixelLoaded << " pixel space points and "
-                       << nStripLoaded << " strip space points"<<std::endl;
                        
   nodeStorage.sortByPhi();
 
@@ -176,7 +173,7 @@ std::vector<std::vector<GbtsNode>> GraphBasedTrackSeeder::createNodes(
     v.reserve(10000);
   }
 
-  // assumes worse case of all layers are pixel
+  // assumes case where all layers are pixel
   std::vector<bool> pixelLayers{};
   pixelLayers.reserve(maxLayers);
   
