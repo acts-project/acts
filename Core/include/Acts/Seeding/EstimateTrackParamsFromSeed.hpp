@@ -35,7 +35,7 @@ namespace Acts {
 ///
 /// @{
 
-/// Estimate free track parameters from three space points
+/// Estimate free track parameters from three space points.
 ///
 /// This is a purely spatial estimation, i.e. the time parameter will be set to
 /// 0.
@@ -53,18 +53,28 @@ FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, const Vector3& sp1,
                                        const Vector3& sp2,
                                        const Vector3& bField);
 
-/// Estimate free track parameters from three space points
+/// Estimate free track parameters from three space points.
+///
+/// Optionally estimates the tangents at the three space points from helix fit.
+/// This can be used as an input for the strip space point calibration, which
+/// requires the track tangents at each space point as input.
 ///
 /// @param sp0 is the bottom space point
 /// @param t0 is the time of the bottom space point
 /// @param sp1 is the middle space point
 /// @param sp2 is the top space point
 /// @param bField is the magnetic field vector
+/// @param tangent0 is the output tangent at the bottom space point
+/// @param tangent1 is the output tangent at the middle space point
+/// @param tangent2 is the output tangent at the top space point
 ///
 /// @return the free parameters
 FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, double t0,
                                        const Vector3& sp1, const Vector3& sp2,
-                                       const Vector3& bField);
+                                       const Vector3& bField,
+                                       Vector3* tangent0 = nullptr,
+                                       Vector3* tangent1 = nullptr,
+                                       Vector3* tangent2 = nullptr);
 
 /// Estimate free track parameters from three space points
 ///
