@@ -16,15 +16,13 @@ Acts::deriveStripSpacePointCalibrationDetails(
   return detail::deriveStripSpacePointCalibrationDetails(sp);
 }
 
-std::optional<Eigen::Vector3f> Acts::calibrateStripSpacePoint(
-    const StripSpacePointCalibrationDetailsDerived& sp,
-    const Eigen::Vector3f& direction, float tolerance) {
+Eigen::Vector3f Acts::calibrateOuterStripSpacePoint(
+    const Eigen::Vector3f& direction,
+    const StripSpacePointCalibrationDetailsDerived& sp) {
   Eigen::Vector3f calibrated;
-  if (!detail::calibrateStripSpacePoint(
-          std::span<const float, 3>(direction.data(), direction.size()), sp,
-          std::span<float, 3>(calibrated.data(), calibrated.size()),
-          tolerance)) {
-    return std::nullopt;
-  }
+  detail::calibrateOuterStripSpacePoint(
+      std::span<const float, 3>(direction.data(), direction.size()), sp,
+      std::span<float, 3>(calibrated.data(), calibrated.size()),
+      std::numeric_limits<float>::infinity());
   return calibrated;
 }

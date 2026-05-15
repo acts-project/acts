@@ -12,18 +12,34 @@
 
 namespace Acts {
 
+/// Collection of strip space point details, used for the calibration.
 struct StripSpacePointCalibrationDetails final {
+  /// Center of the outer strip.
   std::array<float, 3> outerCenter;
-  std::array<float, 3> outerToInnerGapVector;
+  /// Separation vector from the inner strip center to the outer strip center.
+  std::array<float, 3> innerToOuterSeparation;
+  /// Half vector of the outer strip, pointing from the center to one end of the
+  /// strip.
   std::array<float, 3> outerHalfVector;
+  /// Half vector of the inner strip, pointing from the center to one end of the
+  /// strip.
   std::array<float, 3> innerHalfVector;
 };
 
+/// Derived collection of strip space point details, used for the calibration.
 struct StripSpacePointCalibrationDetailsDerived final {
-  std::array<float, 3> outerToInnerGapCrossInnerHalfVector;
-  std::array<float, 3> outerToInnerGapCrossOuterHalfVector;
+  /// Cross product of the separation vector from the inner strip center to the
+  /// outer strip center with the inner half vector.
+  std::array<float, 3> innerToOuterSeparationCrossInnerHalfVector;
+  /// Cross product of the separation vector from the inner strip center to the
+  /// outer strip center with the outer half vector.
+  std::array<float, 3> innerToOuterSeparationCrossOuterHalfVector;
+  /// Cross product of the inner half vector with the outer half vector.
   std::array<float, 3> innerCrossOuterHalfVector;
+  /// Center of the outer strip.
   std::array<float, 3> outerCenter;
+  /// Half vector of the outer strip, pointing from the center to one end of
+  /// the strip.
   std::array<float, 3> outerHalfVector;
 };
 
