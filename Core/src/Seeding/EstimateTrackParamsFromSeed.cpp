@@ -15,19 +15,8 @@
 #include <cmath>
 
 namespace Acts {
-namespace {
 
-double sinc(double x) {
-  // Numerical limit for double to get a different number than 1 from the first
-  // order Taylor expansion of sin(x)/x ~ 1-x*x/6 around x=0.
-  static const double eps =
-      std::sqrt(std::numeric_limits<double>::epsilon()) * 6;
-  if (std::abs(x) < eps) {
-    return 1.0;
-  }
-  // Otherwise std::sin(x) ~ x is stable for small x
-  return std::sin(x) / x;
-}
+namespace {
 
 Transform3 estimationFrameLocalToGlobal(const Vector3& sp0, const Vector3& sp1,
                                         const Vector3& bField) {
@@ -99,7 +88,19 @@ ConformalMappingResult performConformalMapping(const Vector3& local1,
   return r;
 }
 
+Vector3 computeLocalTangent(const ConformalMappingResult& cm,
+                            const Vector2& local) {
+  // Scaled radius vector from circle center
+  const Vector2 r = 2 * cm.B * local - Vector2(-cm.A, 1);
+
+  // Tangent perpendicular to radius
+  const Vector3 t(-r.y(), r.x(), r.norm() * cm.dzds);
+
+  return t.normalized();
+}
+
 }  // namespace
+
 }  // namespace Acts
 
 Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
@@ -109,25 +110,23 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
   return estimateTrackParamsFromSeed(sp0, 0, sp1, sp2, bField);
 }
 
-Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
-                                                   const double t0,
-                                                   const Vector3& sp1,
-                                                   const Vector3& sp2,
-                                                   const Vector3& bField) {
+Acts::FreeVector Acts::estimateTrackParamsFromSeed(
+    const Vector3& sp0, const double t0, const Vector3& sp1, const Vector3& sp2,
+    const Vector3& bField, Vector3* tangent0, Vector3* tangent1,
+    Vector3* tangent2) {
   const Transform3 transform = estimationFrameLocalToGlobal(sp0, sp1, bField);
 
   // Local coordinates
+  const Vector3 local0 = Vector3::Zero();
   const Vector3 local1 = transform.inverse() * sp1;
   const Vector3 local2 = transform.inverse() * sp2;
 
   // Conformal mapping
   const ConformalMappingResult cm = performConformalMapping(local1, local2);
 
-  // The tangent vector in the local frame at the bottom space point
-  const Vector3 localDirection(1, cm.A, fastHypot(1, cm.A) * cm.dzds);
-
-  // Transform it back to the original frame
-  const Vector3 direction = transform.linear() * localDirection.normalized();
+  // The tangent vector at the bottom space point
+  const Vector3 direction =
+      transform.linear() * computeLocalTangent(cm, local0.head<2>());
 
   // Initialize the free parameters vector
   FreeVector params = FreeVector::Zero();
@@ -146,6 +145,16 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
 
   // The time parameter is set to the time of the bottom space point
   params[eFreeTime] = t0;
+
+  if (tangent0 != nullptr) {
+    *tangent0 = direction;
+  }
+  if (tangent1 != nullptr) {
+    *tangent1 = transform.linear() * computeLocalTangent(cm, local1.head<2>());
+  }
+  if (tangent2 != nullptr) {
+    *tangent2 = transform.linear() * computeLocalTangent(cm, local2.head<2>());
+  }
 
   return params;
 }
