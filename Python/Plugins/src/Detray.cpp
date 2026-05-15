@@ -31,7 +31,8 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
 
     using DetrayDetectorODD = detray::detector<DetrayMetaDataODD>;
 
-    py::class_<DetrayDetectorODD>(detray, "DetrayDetectorODD")
+    py::class_<DetrayDetectorODD, std::shared_ptr<DetrayDetectorODD>>(
+        detray, "DetrayDetectorODD")
         .def("volumes", &DetrayDetectorODD::volumes)
         .def("surfaces", &DetrayDetectorODD::surfaces)
         .def("check_consistency", [](DetrayDetectorODD& self) {

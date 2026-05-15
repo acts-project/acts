@@ -41,19 +41,27 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsDetray, detray) {
 
     detray.def(
         "StraightLinePropagatorODD",
-        [](std::shared_ptr<DetrayDetectorODD> detrayDetector, bool sterile,
+        [](std::shared_ptr<DetrayDetectorODD> detrayDetector,
+           vecmem::memory_resource& memoryResource, bool sterile,
            Acts::Logging::Level logLevel = Acts::Logging::INFO) {
           std::shared_ptr<PropagatorInterface> detrayProagator = nullptr;
 
-          if (sterile) {
-            using DetrayLineStepper =
-                detray::line_stepper<typename DetrayDetectorODD::algebra_type>;
+          using DetrayLineStepper =
+              detray::line_stepper<typename DetrayDetectorODD::algebra_type>;
 
+          if (sterile) {
             using DetrayPropagator =
                 DetraySterilePropagator<DetrayLineStepper, DetrayDetectorODD>;
 
             detrayProagator = std::make_shared<DetrayPropagator>(
-                detrayDetector,
+                detrayDetector, memoryResource,
+                Acts::getDefaultLogger("DetrayPropagator", logLevel));
+          } else {
+            using DetrayPropagator =
+                DetrayPropagator<DetrayLineStepper, DetrayDetectorODD>;
+
+            detrayProagator = std::make_shared<DetrayPropagator>(
+                detrayDetector, memoryResource,
                 Acts::getDefaultLogger("DetrayPropagator", logLevel));
           }
           return detrayProagator;

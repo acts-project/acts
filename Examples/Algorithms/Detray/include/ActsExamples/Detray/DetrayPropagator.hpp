@@ -23,22 +23,27 @@
 #include <detray/test/common/bfield.hpp>
 #include <detray/test/utils/inspectors.hpp>
 #include <detray/test/validation/material_validation_utils.hpp>
+#include <vecmem/memory/memory_resource.hpp>
 
 namespace ActsExamples {
 
-template <typename stepper_t, typename detector_t, typename field_t = bool>
-class DetraySterilePropagator : public PropagatorInterface {
+template <typename stepper_t, typename detector_t, typename field_t,
+          bool kSTERILE>
+class DetrayConcretePropagator : public PropagatorInterface {
  public:
-  /// Create a DetrayPropagator
+  /// Create a DetrayConcretePropagator - this is for testing purposes only,
+  /// it runs without actor chain.
   ///
   /// @param dGeometry configuration struct
   /// @param logger The logger instance
-  explicit DetraySterilePropagator(
+  explicit DetrayConcretePropagator(
       std::shared_ptr<detector_t> dGeometry,
-      std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
-          "DetraySterilePropagator", Acts::Logging::INFO))
+      vecmem::memory_resource& memoryResource,
+      std::unique_ptr<const Acts::Logger> logger =
+          Acts::getDefaultLogger("DetrayPropagator", Acts::Logging::INFO))
       : PropagatorInterface(),
         m_detrayGeometry(std::move(dGeometry)),
+        m_memoryResource(&memoryResource),
         m_logger(std::move(logger)) {}
 
   ///@brief  Execute a propagation for charged particle parameters
@@ -64,9 +69,9 @@ class DetraySterilePropagator : public PropagatorInterface {
 
     // Now follow that ray with the same track and check, if we find
     // the same volumes and distances along the way
-    using DetrayAlgebraType = typename detector_t::algebra_type;
+    using DAlgebra = typename detector_t::algebra_type;
 
-    detray::free_track_parameters<DetrayAlgebraType> track(
+    detray::free_track_parameters<DAlgebra> track(
         {static_cast<float>(position.x()), static_cast<float>(position.y()),
          static_cast<float>(position.z())},
         0.f,
@@ -78,33 +83,122 @@ class DetraySterilePropagator : public PropagatorInterface {
     RecordedMaterial recordedMaterial;
     PropagationSummary summary(startParameters);
 
-    using navigator_t = detray::caching_navigator<detector_t>;
-    using propagator_t =
-        detray::propagator<stepper_t, navigator_t, detray::actor_chain<>>;
+    using DPropagationCfg = detray::propagation::config;
+    DPropagationCfg dCfg{};
 
-    using DetrayConfig = detray::propagation::config;
-    DetrayConfig dCfg{};
-    propagator_t propagator(dCfg);
+    // Sterile propagation without actor chain
+    if constexpr (kSTERILE) {
+      using DNavigator = detray::caching_navigator<detector_t>;
+      using DPropagator =
+          detray::propagator<stepper_t, DNavigator, detray::actor_chain<>>;
 
-    // With and without field dispatch at compile time
-    if constexpr (std::is_same<field_t, bool>::value == true) {
-      typename propagator_t::state propagation(track, *m_detrayGeometry,
-                                               dCfg.context);
-      // Run the detray propagation
-      propagator.propagate(propagation);
+      DPropagator propagator(dCfg);
+      // With and without field dispatch at compile time
+      if constexpr (std::is_same<field_t, bool>::value == true) {
+        typename DPropagator::state propagation(track, *m_detrayGeometry,
+                                                dCfg.context);
+        // Run the detray propagation
+        propagator.propagate(propagation);
+      } else {
+        typename DPropagator::state propagation(
+            track, m_field, *m_detrayGeometry, dCfg.context);
+        // Run the detray propagation
+        propagator.propagate(propagation);
+      }
     } else {
-      typename propagator_t::state propagation(track, m_field, m_detrayGeometry,
-                                               dCfg.context);
-      // Run the detray propagation
-      propagator.propagate(propagation);
+      /// Types for propagation tracing and inspection
+      using DIntersection =
+          detray::intersection2D<typename detector_t::surface_type, DAlgebra>;
+      using DMaterialTracer =
+          detray::material_validator::material_tracer<float, vecmem::vector>;
+      using DObjectTracer = detray::navigation::object_tracer<
+          DIntersection, detray::dvector,
+          detray::navigation::status::e_on_object,
+          detray::navigation::status::e_on_portal>;
+      using DInspector = detray::aggregate_inspector<DObjectTracer>;
+
+      // Navigation with inspection
+      using DNavigator =
+          detray::caching_navigator<detector_t,
+                                    detray::navigation::default_cache_size,
+                                    DInspector, DIntersection>;
+
+      // Propagator with empty actor chain (for the moment)
+      using DPropagator =
+          detray::propagator<stepper_t, DNavigator,
+                             detray::actor_chain<DMaterialTracer>>;
+
+      // With and without field dispatch at compile time
+      if constexpr (std::is_same<field_t, bool>::value == true) {
+        typename DPropagator::state propagation(track, *m_detrayGeometry,
+                                                dCfg.context);
+        DPropagator propagator(dCfg);
+
+        propagateAndRecord<DMaterialTracer, DObjectTracer>(
+            propagation, propagator, summary, recordedMaterial);
+      } else {
+        typename DPropagator::state propagation(
+            track, m_field, *m_detrayGeometry, dCfg.context);
+        DPropagator propagator(dCfg);
+        propagateAndRecord<DMaterialTracer, DObjectTracer>(
+            propagation, propagator, summary, recordedMaterial);
+      }
     }
+
     // Return empty results
     return std::pair{std::move(summary), std::move(recordedMaterial)};
   }
 
  private:
+  /// Propagate and record the steps and material
+  /// @tparam propagator_type The type of the propagator
+  /// @param propagation The propagation state
+  /// @param propagator The propagator to run
+  /// @param summary The propagation summary to fill
+  /// @param recordedMaterial The recorded material to fill
+  template <typename material_tracer_t, typename object_tracer_t,
+            typename propagator_t>
+  void propagateAndRecord(typename propagator_t::state& propagation,
+                          const propagator_t& propagator,
+                          PropagationSummary& summary,
+                          RecordedMaterial& recordedMaterial) const {
+    typename material_tracer_t::state materialTracerState{*m_memoryResource};
+
+    auto actorStates = detray::tie(materialTracerState);
+
+    // Run the detray propagation
+    propagator.propagate(propagation, actorStates);
+
+    // Retrieve navigation information
+    auto& inspector = propagation.navigation().inspector();
+    auto& objectTracer = inspector.template get<object_tracer_t>();
+
+    // Translate the objects into the steps
+    for (const auto& object : objectTracer.object_trace) {
+      // Get the position of the object
+      const auto& dposition = object.pos;
+      const auto& sfDesription = object.intersection.surface();
+      const auto sf = detray::tracking_surface{*m_detrayGeometry, sfDesription};
+      Acts::GeometryIdentifier geoID(sf.source());
+      // Create a step from the object
+      Acts::detail::Step step;
+      step.position = Acts::Vector3(dposition[0], dposition[1], dposition[2]);
+      step.geoID = geoID;
+      step.navDir = object.intersection.is_along()
+                        ? Acts::Direction::Forward()
+                        : Acts::Direction::Backward();
+      summary.steps.emplace_back(step);
+    }
+
+    // Retrieve the material information
+    const auto& detrayMaterial = materialTracerState.get_material_record();
+    recordedMaterial.materialInX0 = detrayMaterial.sX0;
+    recordedMaterial.materialInL0 = detrayMaterial.sL0;
+  }
+
   /// The detray detector store and memory resource
-  std::shared_ptr<detector_t> m_detrayGeometry;
+  std::shared_ptr<detector_t> m_detrayGeometry = nullptr;
+  vecmem::memory_resource* m_memoryResource = nullptr;
 
   field_t m_field = field_t();
 
@@ -113,5 +207,13 @@ class DetraySterilePropagator : public PropagatorInterface {
 
   const Acts::Logger& logger() const { return *m_logger; }
 };
+
+template <typename stepper_t, typename detector_t, typename field_t = bool>
+using DetraySterilePropagator =
+    DetrayConcretePropagator<stepper_t, detector_t, field_t, true>;
+
+template <typename stepper_t, typename detector_t, typename field_t = bool>
+using DetrayPropagator =
+    DetrayConcretePropagator<stepper_t, detector_t, field_t, false>;
 
 }  // namespace ActsExamples
