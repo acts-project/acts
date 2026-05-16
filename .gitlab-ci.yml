@@ -486,7 +486,8 @@ lcg_109:
           - gcc15
           - clang19
 
-  after_script:
+  script:
+    - !reference [.lcg_base_job, script]
     - ctest --test-dir build -j$(nproc)
 
     # Install main project for Python tests
