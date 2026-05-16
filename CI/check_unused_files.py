@@ -118,6 +118,7 @@ SUFFIX_OTHER = (
     ".gdml",
     ".hepmc3",
     ".lock",
+    ".ico",
     ".in",
     ".ipynb",
     ".json",
