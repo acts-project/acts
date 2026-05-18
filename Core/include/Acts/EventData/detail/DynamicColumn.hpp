@@ -15,9 +15,10 @@
 
 namespace Acts::detail {
 
-/// Interface of the dynamic vector column used in the track container backend. 
-/// The interface provides basic methods to retrieve the data in a type erase form.
-/// Further methods for memory pre-allocation and memory release are defined
+/// Interface of the dynamic vector column used in the track container backend.
+/// The interface provides basic methods to retrieve the data in a type erase
+/// form. Further methods for memory pre-allocation and memory release are
+/// defined
 struct DynamicColumnBase {
   virtual ~DynamicColumnBase() = default;
 
@@ -28,7 +29,7 @@ struct DynamicColumnBase {
 
   /// Retrieve the stored data for the i-th proxy object stored in the container
   /// @param i: The index of the object within the container
-  /// @return The stored data in a type-erased form for read access  
+  /// @return The stored data in a type-erased form for read access
   virtual std::any get(std::size_t i) const = 0;
 
   /// Allocate new memory for the proxy object held by the container
@@ -43,7 +44,7 @@ struct DynamicColumnBase {
 
   /// Allocate memory for a given number of proxy objects
   /// @param size: The number of elements to be allocated
-  virtual void resize(std::size_t size) = 0;  
+  virtual void resize(std::size_t size) = 0;
 
   /// Remove the memory associated with the i-th proxy object from the column
   /// @param i: The index of the object within the container
@@ -52,11 +53,11 @@ struct DynamicColumnBase {
   /// The number of the currently allocated elements
   /// @return The size of the underlying storage
   virtual std::size_t size() const = 0;
-  
+
   /// Copy the memory stored at the srcIdx of the passed DynamicColumn
   /// to the dstIdx of this instance
   /// @param dstIdx: Index of the memory slot of this instance
-  ///                the copied information will be stored 
+  ///                the copied information will be stored
   /// @param src: The source from where the memory can be copy
   /// @param srcIdx: Index at which element the memory to copy resides in src
   virtual void copyFrom(std::size_t dstIdx, const DynamicColumnBase& src,
@@ -77,8 +78,8 @@ struct DynamicColumnBase {
 };
 
 /// Actual implementation of the Column memory using a std::vector as backend.
-/// The template parameter can be anything which is default constrictible and 
-/// copy assignable. 
+/// The template parameter can be anything which is default constrictible and
+/// copy assignable.
 /// @tparam T: Data type of the data to be stored by the column
 template <typename T>
 struct DynamicColumn : public DynamicColumnBase {
@@ -98,11 +99,11 @@ struct DynamicColumn : public DynamicColumnBase {
   void clear() override { m_vector.clear(); }
   /// @copydoc DynamicColumnBase::resize
   void resize(std::size_t size) override { m_vector.resize(size); }
-   /// @copydoc DynamicColumnBase::reserve
+  /// @copydoc DynamicColumnBase::reserve
   void reserve(std::size_t size) override { m_vector.reserve(size); }
   /// @copydoc DynamicColumnBase::erase
   void erase(std::size_t i) override { m_vector.erase(m_vector.begin() + i); }
-    /// @copydoc DynamicColumnBase::size
+  /// @copydoc DynamicColumnBase::size
   std::size_t size() const override { return m_vector.size(); }
   /// @copydoc DynamicColumnBase::clone
   std::unique_ptr<DynamicColumnBase> clone(bool empty) const override {
@@ -126,12 +127,13 @@ struct DynamicColumn : public DynamicColumnBase {
            "Source column is not of same type as destination");
     m_vector.at(dstIdx) = *other;
   }
-private:
+
+ private:
   std::vector<T> m_vector;
 };
 
 /// Template specification to circumvent the flaws of the bool implementation
-/// of a std::vector. 
+/// of a std::vector.
 template <>
 struct DynamicColumn<bool> : public DynamicColumnBase {
   /// Auxiliary struct to wrap the boolean
@@ -178,6 +180,7 @@ struct DynamicColumn<bool> : public DynamicColumnBase {
     m_vector.at(dstIdx).value = *other;
   }
 
+ private:
   std::vector<Wrapper> m_vector;
 };
 
