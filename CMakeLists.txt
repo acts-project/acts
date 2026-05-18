@@ -102,6 +102,8 @@ option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
 # alignment related options
 option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
+# traccc related options
+option(ACTS_BUILD_TRACCC "Build traccc GPU tracking package" OFF)
 # examples related options
 option(ACTS_BUILD_EXAMPLES "Build basic examples components" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
@@ -210,6 +212,10 @@ set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_GNN_ENABLE_CUDA ACTS_GNN_ENABLE_MODULEMAP)
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_PLUGIN_MILLE)
+set_option_if(ACTS_BUILD_TRACCC ACTS_BUILD_PLUGIN_TRACCC)
+set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_TRACCC)
+set_option_if(ACTS_SETUP_DETRAY ACTS_BUILD_TRACCC)
+set_option_if(ACTS_SETUP_VECMEM ACTS_SETUP_DETRAY)
 
 # feature tests
 include(CheckCXXSourceCompiles)
@@ -549,23 +555,52 @@ if(ACTS_BUILD_PLUGIN_GEANT4)
     find_package(Geant4 ${_acts_geant4_version} REQUIRED CONFIG COMPONENTS gdml)
 endif()
 
-if(ACTS_BUILD_PLUGIN_TRACCC)
-    if(ACTS_SETUP_VECMEM)
-        if(ACTS_USE_SYSTEM_VECMEM)
-            find_package(vecmem ${_acts_vecmem_version} REQUIRED)
-        else()
-            add_subdirectory(thirdparty/vecmem)
-            # Make the "VecMem language code" available for the whole project.
-            include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
-        endif()
+if(ACTS_SETUP_VECMEM)
+    if(ACTS_USE_SYSTEM_VECMEM)
+        find_package(vecmem ${_acts_vecmem_version} REQUIRED)
+    else()
+        add_subdirectory(thirdparty/vecmem)
+        # Make the "VecMem language code" available for the whole project.
+        include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
+    endif()
+endif()
+
+if(ACTS_SETUP_DETRAY)
+    # HACK: Temporary logic (aka technical debt) to make the detray component
+    # work in traccc.
+    option(DETRAY_SETUP_VECMEM "" FALSE)
+    option(DETRAY_SETUP_NLOHMANN "" FALSE)
+    option(DETRAY_SETUP_EIGEN3 "" FALSE)
+    option(DETRAY_SETUP_ACTSVG "" FALSE)
+    option(DETRAY_SETUP_COVFIE "" FALSE)
+    option(DETRAY_SVG_DISPLAY "" TRUE)
+    if(ACTS_BUILD_TRACCC)
+        option(DETRAY_BUILD_TEST_UTILS "" TRUE)
+        set(DETRAY_GENERATE_METADATA
+            "itk_metadata"
+            CACHE STRING
+            "Semicolon-separated list of metadata generator scripts to run in this build"
+        )
     endif()
 
-    if(ACTS_SETUP_DETRAY)
-        if(ACTS_USE_SYSTEM_DETRAY)
-            find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
-        else()
-            add_subdirectory(thirdparty/detray)
-        endif()
+    if(ACTS_USE_SYSTEM_DETRAY)
+        find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
+    else()
+        add_subdirectory(thirdparty/detray)
+    endif()
+endif()
+
+if(ACTS_BUILD_TRACCC)
+    # HACK: Temporary logic (aka technical debt) to make the traccc
+    # component work. Remove this ASAP.
+    option(TRACCC_USE_ROOT "" FALSE)
+    option(TRACCC_SETUP_ACTS "" FALSE)
+    option(TRACCC_SETUP_VECMEM "" FALSE)
+    find_package(TBB ${_acts_tbb_version} CONFIG)
+    if(NOT TBB_FOUND)
+        set(TRACCC_SETUP_TBB TRUE CACHE BOOL "")
+    else()
+        set(TRACCC_SETUP_TBB FALSE CACHE BOOL "")
     endif()
 
     if(ACTS_SETUP_COVFIE)
