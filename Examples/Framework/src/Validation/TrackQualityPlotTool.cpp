@@ -16,12 +16,14 @@ using Acts::VectorHelpers::phi;
 
 using namespace Acts::Experimental;
 
+namespace ActsExamples {
+
 namespace {
 
-ProfileHistogram1 makeProfile(
-    const ActsExamples::TrackQualityPlotTool::Config& cfg,
-    const std::string& name, const std::string& title, const AxisVariant& ax,
-    const std::string& sampleTitle) {
+ProfileHistogram1 makeProfile(const TrackQualityPlotTool::Config& cfg,
+                              const std::string& name, const std::string& title,
+                              const AxisVariant& ax,
+                              const std::string& sampleTitle) {
   const auto& yAxis = cfg.varBinning.at("Num");
   Acts::Range1D<double> yRange{yAxis.bin(0).lower(),
                                yAxis.bin(yAxis.size() - 1).upper()};
@@ -29,8 +31,6 @@ ProfileHistogram1 makeProfile(
 }
 
 }  // namespace
-
-namespace ActsExamples {
 
 TrackQualityPlotTool::TrackQualityPlotTool(const Config& cfg,
                                            Acts::Logging::Level lvl)

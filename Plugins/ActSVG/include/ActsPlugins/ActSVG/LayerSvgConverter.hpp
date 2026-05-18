@@ -57,10 +57,13 @@ struct Options {
   std::array<double, 2> phiRange = noLimitPhi;
   /// Configuration of the views
   bool gridInfo = true;
+  /// Include module information
   bool moduleInfo = true;
+  /// Include projection information
   bool projectionInfo = true;
   /// Label checks
   bool labelProjection = false;
+  /// Label gauge for display
   double labelGauge = 0.;
 };
 

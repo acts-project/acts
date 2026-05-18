@@ -5,11 +5,10 @@ acts_add_library(
     src/Digitization/PlanarSurfaceMask.cpp
     src/Digitization/PlanarSurfaceDrift.cpp
     src/EventData/Particle.cpp
-    src/EventData/ParticleOutcome.cpp
-    src/EventData/ProcessType.cpp
+    src/EventData/SimulationOutcome.cpp
+    src/EventData/GenerationProcess.cpp
     src/Kernel/SimulationError.cpp
     src/Physics/BetheHeitler.cpp
-    src/Physics/PhotonConversion.cpp
     src/Physics/StandardInteractions.cpp
     src/Utilities/LandauDistribution.cpp
     ACTS_INCLUDE_FOLDER include/ActsFatras
@@ -21,5 +20,7 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_link_libraries(ActsFatras PUBLIC Acts::Core)
+
+acts_compile_headers(Fatras GLOB include/**/*.hpp)
 
 add_component_if(Geant4 FatrasGeant4 ACTS_BUILD_FATRAS_GEANT4)

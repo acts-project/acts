@@ -34,6 +34,7 @@ struct PipelineTensors {
   std::optional<Tensor<float>> edgeScores;
 };
 
+/// Base class for graph construction algorithms
 class GraphConstructionBase {
  public:
   /// Perform the graph construction
@@ -53,6 +54,7 @@ class GraphConstructionBase {
   virtual ~GraphConstructionBase() = default;
 };
 
+/// @brief Base class for edge classification stage in GNN pipeline
 class EdgeClassificationBase {
  public:
   /// Perform edge classification
@@ -67,17 +69,18 @@ class EdgeClassificationBase {
   virtual ~EdgeClassificationBase() = default;
 };
 
+/// Base class for track building implementations
 class TrackBuildingBase {
  public:
   /// Perform track building
   ///
   /// @param tensors Input pipeline tensors
-  /// @param spacepointIDs IDs of the nodes (must have size=n_nodes)
+  /// @param spacePointIDs IDs of the nodes (must have size=n_nodes)
   /// @param execContext Device & stream information
   ///
   /// @return tracks (as vectors of node-IDs)
   virtual std::vector<std::vector<int>> operator()(
-      PipelineTensors tensors, std::vector<int> &spacepointIDs,
+      PipelineTensors tensors, std::vector<int> &spacePointIDs,
       const ExecutionContext &execContext = {}) = 0;
 
   virtual ~TrackBuildingBase() = default;

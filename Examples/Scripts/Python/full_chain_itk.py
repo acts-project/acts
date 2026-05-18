@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import pathlib, acts, acts.examples, acts.examples.itk
+import pathlib, acts, acts.root, acts.examples, acts.examples.itk
 from acts.examples.simulation import (
     addParticleGun,
     MomentumConfig,
@@ -28,11 +28,11 @@ ttbar_pu200 = False
 u = acts.UnitConstants
 geo_dir = pathlib.Path("acts-itk")
 outputDir = pathlib.Path.cwd() / "itk_output"
-# acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
+# acts.examples.dump_args_calls()  # show acts.examples python binding calls
 
 detector = acts.examples.itk.buildITkGeometry(geo_dir)
 trackingGeometry = detector.trackingGeometry()
-field = acts.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
+field = acts.root.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
 s = acts.examples.Sequencer(events=100, numThreads=-1, outputDir=str(outputDir))

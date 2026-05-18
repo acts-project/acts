@@ -42,6 +42,8 @@ BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
 
   BOOST_CHECK_EQUAL(epab.getAxis().getNBins(), 10);
 
+  BOOST_CHECK_EQUAL(epab.getAxis().getBin(0.35), 4);
+
   CHECK_CLOSE_ABS(epab.getAxis().getMin(), 0.0, 1e-15);
 
   CHECK_CLOSE_ABS(epab.getAxis().getMax(), 1.0, 1e-15);
@@ -144,6 +146,7 @@ BOOST_AUTO_TEST_CASE(AutorangeProtoAxis) {
   // Set the range now
   epa.setRange(0.0, 20.0);
   BOOST_CHECK(!epa.isAutorange());
+  BOOST_CHECK_EQUAL(epa.getAxis().getBin(7.9), 4);
 
   // 1D Grid consstruction works now
   BOOST_CHECK_NO_THROW(Acts::makeGrid<double>(epa));
@@ -178,6 +181,9 @@ BOOST_AUTO_TEST_CASE(VariableProtoAxis) {
   BOOST_CHECK_EQUAL(vpab.getAxis().getBoundaryType(), Bound);
 
   BOOST_CHECK_EQUAL(vpab.getAxis().getNBins(), 2);
+
+  BOOST_CHECK_EQUAL(vpab.getAxis().getBin(0.2), 1);
+  BOOST_CHECK_EQUAL(vpab.getAxis().getBin(5.0), 2);
 
   CHECK_CLOSE_ABS(vpab.getAxis().getMin(), 0.0, 1e-15);
 

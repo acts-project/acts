@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional
 import acts
 import acts.examples
+import acts.tgeo
 from acts import root
 import warnings
 
@@ -23,6 +24,7 @@ def getOpenDataDetector(
     odd_dir: Optional[Path] = None,
     logLevel=acts.logging.INFO,
     gen3=False,
+    constructionMethod=None,
 ):
     """This function sets up the open data detector. Requires DD4hep.
     Parameters
@@ -30,6 +32,9 @@ def getOpenDataDetector(
     materialDecorator: Material Decorator, take RootMaterialDecorator if non is given
     odd_dir: if not given, try to get via ODD_PATH environment variable
     logLevel: logging level
+    constructionMethod: Gen3 conversion method enum value of
+      OpenDataDetector.Config.ConstructionMethod
+      use `ConstructionMethod.TGeo` for the TGeo-backed Gen3 path
     """
     import acts.examples.dd4hep
 
@@ -88,6 +93,8 @@ def getOpenDataDetector(
             logLevel=customLogLevel(),
             dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
         )
+        if constructionMethod is not None:
+            oddConfig.constructionMethod = constructionMethod
         # Use default constructed geometry context. This will have to change if DD4hep gains alignment awareness.
         gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
         with warnings.catch_warnings():

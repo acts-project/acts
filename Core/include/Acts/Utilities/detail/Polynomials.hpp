@@ -195,7 +195,7 @@ constexpr double evalSecondKind(const double x, const unsigned n,
 }
 }  // namespace Chebychev
 
-/// @brief Helper macros to setup the evaluation of the n-th orthogonal
+/// @brief Helper macros to set up the evaluation of the n-th orthogonal
 ///        polynomial and of its derivatives. The  coefficients of the
 ///        n-th polynomial and of the first two derivatives
 ///        are precalculated at compile time. For higher order derivatives

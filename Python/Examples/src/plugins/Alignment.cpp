@@ -7,6 +7,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/DetectorElementBase.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsAlignment/Kernel/AlignmentMask.hpp"
 #include "ActsExamples/Alignment/AlignmentAlgorithm.hpp"
 #include "ActsExamples/DetectorCommons/AlignedTransformUpdater.hpp"
@@ -199,8 +201,12 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
 
   py::class_<AA, ActsExamples::IAlgorithm, std::shared_ptr<AA>>(
       m, "AlignmentAlgorithm")
-      .def(py::init<AA::Config, Acts::Logging::Level>(), py::arg("config"),
-           py::arg("level") = Acts::Logging::INFO);
+      .def(
+          py::init([](AA::Config cfg, Acts::Logging::Level level) {
+            return std::make_shared<AA>(
+                std::move(cfg), getDefaultLogger("AlignmentAlgorithm", level));
+          }),
+          py::arg("config"), py::arg("level") = Acts::Logging::INFO);
 
   m.def(
       "surfacePlacement",

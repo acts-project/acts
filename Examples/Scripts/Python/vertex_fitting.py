@@ -33,7 +33,7 @@ def runVertexFitting(
 ):
     s = s or Sequencer(events=100, numThreads=-1)
 
-    logger = acts.logging.getLogger("VertexFittingExample")
+    logger = acts.getDefaultLogger("VertexFittingExample", acts.logging.INFO)
 
     rnd = acts.examples.RandomNumbers(seed=42)
 
@@ -42,7 +42,7 @@ def runVertexFitting(
         logger.info("Generating particles using Pythia8")
         addPythia8(s, rnd)
     else:
-        logger.info("Reading particles from %s", inputParticlePath.resolve())
+        logger.info("Reading particles from {}", inputParticlePath.resolve())
         assert inputParticlePath.exists()
         s.addReader(
             RootParticleReader(

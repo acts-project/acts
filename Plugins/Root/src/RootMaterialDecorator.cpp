@@ -61,7 +61,7 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
     throw std::invalid_argument("Missing file name");
   }
 
-  // Setup ROOT I/O
+  // Set up ROOT I/O
   m_inputFile = TFile::Open(m_cfg.fileName.c_str());
   if (m_inputFile == nullptr) {
     throw std::ios_base::failure("Could not open '" + m_cfg.fileName + "'");

@@ -41,7 +41,7 @@ struct DigitizedParameters {
 /// To be used also by the e I/O system
 ///
 /// @return the measurement proxy
-ActsExamples::VariableBoundMeasurementProxy createMeasurement(
+VariableBoundMeasurementProxy createMeasurement(
     MeasurementContainer& container, Acts::GeometryIdentifier geometryId,
     const DigitizedParameters& dParams) noexcept(false);
 
@@ -53,13 +53,12 @@ ActsExamples::VariableBoundMeasurementProxy createMeasurement(
 ///
 /// @return a tuple of constituents for a measurement
 template <std::size_t kMeasDIM>
-std::tuple<std::array<Acts::BoundIndices, kMeasDIM>, Acts::ActsVector<kMeasDIM>,
-           Acts::ActsSquareMatrix<kMeasDIM>>
+std::tuple<std::array<Acts::BoundIndices, kMeasDIM>, Acts::Vector<kMeasDIM>,
+           Acts::SquareMatrix<kMeasDIM>>
 measurementConstituents(const DigitizedParameters& dParams) {
   std::array<Acts::BoundIndices, kMeasDIM> indices{};
-  Acts::ActsVector<kMeasDIM> par;
-  Acts::ActsSquareMatrix<kMeasDIM> cov =
-      Acts::ActsSquareMatrix<kMeasDIM>::Identity();
+  Acts::Vector<kMeasDIM> par;
+  Acts::SquareMatrix<kMeasDIM> cov = Acts::SquareMatrix<kMeasDIM>::Identity();
   for (Eigen::Index ei = 0; ei < static_cast<Eigen::Index>(kMeasDIM); ++ei) {
     indices[ei] = dParams.indices[ei];
     par[ei] = dParams.values[ei];

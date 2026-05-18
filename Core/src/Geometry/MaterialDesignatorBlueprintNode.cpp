@@ -12,41 +12,27 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/DiamondPortalShell.hpp"
+#include "Acts/Geometry/DiamondVolumeBounds.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
+#include "Acts/Geometry/TrapezoidPortalShell.hpp"
+#include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
-#include "./detail/MaterialDesignator.hpp"
+#include "./MaterialDesignator.hpp"
 
 namespace Acts::Experimental {
 
 namespace detail {
 class MaterialDesignatorBlueprintNodeImpl {
  public:
-  using CylinderBinning = std::tuple<CylinderVolumeBounds::Face,
-                                     DirectedProtoAxis, DirectedProtoAxis>;
-  using CuboidBinning = std::tuple<CuboidVolumeBounds::Face, DirectedProtoAxis,
-                                   DirectedProtoAxis>;
-
-  using BinningConfig =
-      std::variant<std::vector<CylinderBinning>, std::vector<CuboidBinning>>;
-
-  void validateCylinderFaceConfig(CylinderVolumeBounds::Face face,
-                                  const DirectedProtoAxis& loc0,
-                                  const DirectedProtoAxis& loc1,
-                                  const std::string& prefix);
-
-  void validateCuboidFaceConfig(const DirectedProtoAxis& loc0,
-                                const DirectedProtoAxis& loc1,
-                                const std::string& prefix);
-
   std::string m_name{};
-
-  std::unique_ptr<DesignatorBase> m_designator{
-      std::make_unique<NullDesignator>()};
+  // Monostate is the null state, where no designator is configured.
+  Designator m_designator{std::monostate{}};
 };
 
 }  // namespace detail
@@ -76,11 +62,6 @@ Volume& MaterialDesignatorBlueprintNode::build(const BlueprintOptions& options,
         "MaterialDesignatorBlueprintNode must have exactly one child");
   }
 
-  if (!impl().m_designator) {
-    ACTS_ERROR(prefix() << "Designator is not set");
-    throw std::runtime_error("Designator is not set");
-  }
-
   return children().at(0).build(options, gctx, logger);
 }
 
@@ -96,17 +77,12 @@ PortalShellBase& MaterialDesignatorBlueprintNode::connect(
         "MaterialDesignatorBlueprintNode must have exactly one child");
   }
 
-  if (!impl().m_designator) {
-    ACTS_ERROR(prefix() << "Designator is not set");
-    throw std::runtime_error("Designator is not set");
-  }
-
   auto& shell = children().at(0).connect(options, gctx, logger);
 
   ACTS_DEBUG(prefix() << "Received shell from child "
                       << children().at(0).name());
 
-  impl().m_designator->apply(shell, logger, prefix());
+  detail::apply(impl().m_designator, shell, logger, prefix());
 
   return shell;
 }
@@ -126,15 +102,11 @@ void MaterialDesignatorBlueprintNode::finalize(const BlueprintOptions& options,
 }
 
 void MaterialDesignatorBlueprintNode::addToGraphviz(std::ostream& os) const {
-  if (!impl().m_designator) {
-    throw std::runtime_error("Binning is not set");
-  }
-
   std::stringstream ss;
   ss << "<b>" + name() + "</b>";
   ss << "<br/>MaterialDesignator";
 
-  impl().m_designator->graphvizLabel(ss);
+  detail::graphvizLabel(impl().m_designator, ss);
 
   os << GraphViz::Node{
       .id = name(), .label = ss.str(), .shape = GraphViz::Shape::Hexagon};
@@ -144,9 +116,9 @@ void MaterialDesignatorBlueprintNode::addToGraphviz(std::ostream& os) const {
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
     CylinderVolumeBounds::Face face, const DirectedProtoAxis& loc0,
     const DirectedProtoAxis& loc1) {
-  impl().m_designator = impl().m_designator->merged(
+  impl().m_designator = detail::merge(
+      impl().m_designator,
       detail::CylinderProtoDesignator(face, loc0, loc1, prefix()));
-
   return *this;
 }
 
@@ -156,21 +128,18 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
   if (material == nullptr) {
     throw std::invalid_argument(prefix() + "Material is nullptr");
   }
-
-  impl().m_designator = impl().m_designator->merged(
-      detail::ISurfaceMaterialDesignator<CylinderVolumeBounds::Face,
-                                         CylinderPortalShell>(
-          face, std::move(material)));
-
+  impl().m_designator = detail::merge(
+      impl().m_designator,
+      detail::CylinderHomogeneousMaterialDesignator(face, std::move(material)));
   return *this;
 }
 
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
     CuboidVolumeBounds::Face face, const DirectedProtoAxis& loc0,
     const DirectedProtoAxis& loc1) {
-  impl().m_designator = impl().m_designator->merged(
-      detail::CuboidProtoDesignator(face, loc0, loc1, prefix()));
-
+  impl().m_designator =
+      detail::merge(impl().m_designator,
+                    detail::CuboidProtoDesignator(face, loc0, loc1, prefix()));
   return *this;
 }
 
@@ -180,12 +149,33 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
   if (material == nullptr) {
     throw std::invalid_argument(prefix() + "Material is nullptr");
   }
+  impl().m_designator = detail::merge(
+      impl().m_designator,
+      detail::CuboidHomogeneousMaterialDesignator(face, std::move(material)));
+  return *this;
+}
 
-  impl().m_designator = impl().m_designator->merged(
-      detail::ISurfaceMaterialDesignator<CuboidVolumeBounds::Face,
-                                         CuboidPortalShell>(
-          face, std::move(material)));
+MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
+    TrapezoidVolumeBounds::Face face,
+    std::shared_ptr<const Acts::ISurfaceMaterial> material) {
+  if (material == nullptr) {
+    throw std::invalid_argument(prefix() + "Material is nullptr");
+  }
+  impl().m_designator = detail::merge(
+      impl().m_designator, detail::TrapezoidHomogeneousMaterialDesignator(
+                               face, std::move(material)));
+  return *this;
+}
 
+MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
+    DiamondVolumeBounds::Face face,
+    std::shared_ptr<const Acts::ISurfaceMaterial> material) {
+  if (material == nullptr) {
+    throw std::invalid_argument(prefix() + "Material is nullptr");
+  }
+  impl().m_designator = detail::merge(
+      impl().m_designator,
+      detail::DiamondHomogeneousMaterialDesignator(face, std::move(material)));
   return *this;
 }
 

@@ -36,10 +36,10 @@ namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
-BOOST_DATA_TEST_CASE(
-    Parameters,
-    surfaces* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
-    surface, l0, l1, time, phi, theta, p, q) {
+BOOST_DATA_TEST_CASE(Parameters,
+                     surfaces * posSymmetric * posSymmetric * ts * phis *
+                         thetas * ps * qsNonZero,
+                     surface, l0, l1, time, phi, theta, p, q) {
   auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 
   Vector2 loc(l0, l1);
@@ -72,10 +72,10 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(TransformFreeToBound)
 
-BOOST_DATA_TEST_CASE(
-    GlobalToBoundTrackParameters,
-    surfaces* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
-    surface, l0, l1, time, phiInput, theta, p, q) {
+BOOST_DATA_TEST_CASE(GlobalToBoundTrackParameters,
+                     surfaces * posSymmetric * posSymmetric * ts * phis *
+                         thetas * ps * qsNonZero,
+                     surface, l0, l1, time, phiInput, theta, p, q) {
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
   const auto qOverP = q / p;
@@ -158,8 +158,8 @@ BOOST_DATA_TEST_CASE(
 }
 
 BOOST_DATA_TEST_CASE(GlobalToCurvilinearParameters,
-                     ts* phis* thetas* ps* qsNonZero, time, phiInput, theta, p,
-                     q) {
+                     ts * phis * thetas * ps * qsNonZero, time, phiInput, theta,
+                     p, q) {
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
   const auto qOverP = q / p;

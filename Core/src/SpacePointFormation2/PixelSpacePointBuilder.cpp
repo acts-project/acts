@@ -31,7 +31,7 @@ Vector2 PixelSpacePointBuilder::computeVarianceZR(
   const double x = spacePoint.x();
   const double y = spacePoint.y();
   const double scale = 2 / fastHypot(x, y);
-  ActsMatrix<2, 3> jacXyzToZr = ActsMatrix<2, 3>::Zero();
+  Matrix<2, 3> jacXyzToZr = Matrix<2, 3>::Zero();
   jacXyzToZr(0, 2) = 1;
   jacXyzToZr(1, 0) = scale * x;
   jacXyzToZr(1, 1) = scale * y;

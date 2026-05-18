@@ -13,6 +13,7 @@
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -35,8 +36,7 @@ class TruthTrackFinder final : public IAlgorithm {
     std::string inputParticles;
     /// The input particle-measurements map collection.
     std::string inputParticleMeasurementsMap;
-    /// The input measurements collection that is used to sort the proto
-    /// tracks.
+    /// The input measurements collection that is used to sort the proto tracks.
     std::string inputMeasurements;
     /// The input sim hits collection that is used to create the proto tracks.
     std::string inputSimHits;
@@ -46,7 +46,9 @@ class TruthTrackFinder final : public IAlgorithm {
     std::string outputProtoTracks;
   };
 
-  TruthTrackFinder(const Config& config, Acts::Logging::Level level);
+  explicit TruthTrackFinder(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 
@@ -58,7 +60,7 @@ class TruthTrackFinder final : public IAlgorithm {
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
 
-  ReadDataHandle<InverseMultimap<SimBarcode>> m_inputParticleMeasurementsMap{
+  ReadDataHandle<ParticleMeasurementsMap> m_inputParticleMeasurementsMap{
       this, "InputParticleMeasurementsMap"};
 
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
@@ -69,7 +71,7 @@ class TruthTrackFinder final : public IAlgorithm {
 
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputHits"};
 
-  ReadDataHandle<InverseMultimap<Index>> m_inputMeasurementSimHitsMap{
+  ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
       this, "MeasurementSimHitsMap"};
 };
 

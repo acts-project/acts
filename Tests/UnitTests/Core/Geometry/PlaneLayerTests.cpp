@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(PlaneLayerConstruction) {
   auto pTransform = Transform3(translation);
   const double halfX(10.), halfY(5.);  // 20 x 10 rectangle
   auto pRectangle = std::make_shared<const RectangleBounds>(halfX, halfY);
-  auto pPlaneLayer = PlaneLayer::create(pTransform, pRectangle);
+  auto pPlaneLayer = PlaneLayer::create(pTransform, pRectangle, nullptr);
   BOOST_CHECK_EQUAL(pPlaneLayer->layerType(), LayerType::active);
   // next level: need an array of Surfaces;
   // bounds object, rectangle type
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(PlaneLayerProperties) {
   auto pTransform = Transform3(translation);
   const double halfX(10.), halfY(5.);  // 20 x 10 rectangle
   auto pRectangle = std::make_shared<const RectangleBounds>(halfX, halfY);
-  auto pPlaneLayer = PlaneLayer::create(pTransform, pRectangle);
+  auto pPlaneLayer = PlaneLayer::create(pTransform, pRectangle, nullptr);
   // auto planeSurface = pPlaneLayer->surfaceRepresentation();
   BOOST_CHECK_EQUAL(pPlaneLayer->surfaceRepresentation().name(),
                     std::string("Acts::PlaneSurface"));

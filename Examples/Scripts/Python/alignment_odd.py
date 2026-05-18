@@ -8,10 +8,66 @@ import os
 import argparse
 import sys
 
+
+def _preload_dd4hep_for_macos() -> None:
+    """Load DD4hep Gaudi plugin + core plugins with RTLD_GLOBAL before acts.
+
+    On macOS, Python-bundled .so and DD4hep's Gaudi plugin registry can get out
+    of sync (empty stub / bad any_cast for lccdd_XML_reader). Preloading the
+    plugin manager and libDDCorePlugins in the same process often fixes that.
+    """
+    if sys.platform != "darwin":
+        return
+    root = os.environ.get("DD4HEP_ROOT") or os.environ.get("DD4HEP_INSTALL")
+    libdir: Optional[Path] = Path(root) / "lib" if root else None
+    if libdir is None or not libdir.is_dir():
+        try:
+            candidate = Path(__file__).resolve().parents[5] / "DD4hep" / "install" / "lib"
+        except (IndexError, OSError):
+            candidate = None
+        if candidate is not None and candidate.is_dir():
+            libdir = candidate
+    if libdir is None or not libdir.is_dir():
+        return
+    path_bits = [str(libdir)]
+    odd = os.environ.get("ODD_PATH")
+    if odd:
+        fdir = Path(odd).resolve().parent / "odd-build" / "factory"
+        if fdir.is_dir():
+            path_bits.append(str(fdir))
+    for var in ("DYLD_LIBRARY_PATH", "DD4HEP_LIBRARY_PATH"):
+        cur = os.environ.get(var, "")
+        merged = []
+        for p in path_bits + [x for x in cur.split(":") if x]:
+            if p not in merged:
+                merged.append(p)
+        os.environ[var] = ":".join(merged)
+    mode = getattr(ctypes, "RTLD_GLOBAL", 8)
+    for names in (
+        ("libDD4hepGaudiPluginMgr.1.32.dylib", "libDD4hepGaudiPluginMgr.dylib"),
+        ("libDDCorePlugins.1.32.dylib", "libDDCorePlugins.dylib"),
+    ):
+        for n in names:
+            p = libdir / n
+            if p.is_file():
+                try:
+                    ctypes.CDLL(str(p), mode=mode)
+                except OSError:
+                    break
+                break
+
+
+_preload_dd4hep_for_macos()
+
 import acts
 import acts.examples
 import acts.examples.alignment
 from acts.examples.alignment import AlignmentDecorator
+
+# Sequencer may otherwise raise after Kalman+RootTrackStatesWriter (FLTINV in writeT).
+# ACTS CI uses ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE=0; set to 1 to fail on any unmasked FPE.
+if os.environ.get("ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE") is None:
+    os.environ["ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE"] = "0"
 
 u = acts.UnitConstants
 
@@ -260,7 +316,7 @@ def runSimulation(
     outputDir = Path(outputDir)
     outputDir.mkdir(exist_ok=True)
 
-    logger = acts.logging.getLogger("Simulation")
+    logger = acts.getDefaultLogger("Simulation", acts.logging.INFO)
 
     addParticleGun(
         s,
@@ -300,7 +356,7 @@ def runSimulation(
 
     # Note: particle_measurements_map will be generated after simulation
     # using the post-processing function below
-    logger.info("Simulation output will be saved to: %s", outputDir)
+    logger.info("Simulation output will be saved to: {}", str(outputDir))
     logger.info(
         "particle_measurements_map will be generated after simulation completes"
     )
@@ -313,8 +369,182 @@ def runSimulation(
 # ============================================================================
 
 
+def copy_transform3(trf: acts.Transform3) -> acts.Transform3:
+    """Return a mutable copy of an Acts Transform3."""
+    t = trf.translation
+    r = trf.rotation
+    return acts.Transform3(
+        acts.Vector3(float(t[0]), float(t[1]), float(t[2])),
+        acts.RotationMatrix3(
+            acts.Vector3(r[0, 0], r[1, 0], r[2, 0]),
+            acts.Vector3(r[0, 1], r[1, 1], r[2, 1]),
+            acts.Vector3(r[0, 2], r[1, 2], r[2, 2]),
+        ),
+    )
+
+
+def collect_matching_sensitive_surfaces(
+    trackingGeometry: acts.TrackingGeometry,
+    target_volume=-1,
+    target_layer=-1,
+    target_sensitive=-1,
+    target_extra: int = -1,
+) -> list:
+    """Collect (surface, placement) pairs matching the filter (single geometry visit)."""
+    matches = []
+
+    def visit(surface: acts.Surface) -> bool:
+        if not surface.isSensitive:
+            return True
+        placement = acts.examples.alignment.surfacePlacement(surface)
+        if placement is None:
+            return True
+        if match_surface_to_filter(
+            surface.geometryId,
+            target_volume,
+            target_layer,
+            target_sensitive,
+            target_extra,
+        ):
+            matches.append((surface, placement))
+        return True
+
+    trackingGeometry.visitSurfaces(visit)
+    return matches
+
+
+def _asymmetric_random(mag: float, enabled: bool) -> float:
+    if not enabled:
+        return 0.0
+    if random.random() < 0.5:
+        return random.uniform(-mag * 1.5, -mag * 0.5)
+    return random.uniform(mag * 0.5, mag * 1.5)
+
+
+def apply_random_misalignment_to_transform(
+    trf: acts.Transform3,
+    tx: int = 0,
+    ty: int = 0,
+    tz: int = 0,
+    rx: int = 0,
+    ry: int = 0,
+    rz: int = 0,
+    shift_mag_mm: float = 2.0,
+    rotation_mag_rad: float = 0.02,
+) -> acts.Transform3:
+    """Apply random local shifts/rotations to a transform (modified in place)."""
+    if tx != 0:
+        l_shift_x = acts.examples.alignment.AlignmentGeneratorLocalShift()
+        l_shift_x.axisDirection = acts.AxisDirection.AxisX
+        l_shift_x.shift = _asymmetric_random(shift_mag_mm, True)
+        l_shift_x(trf)
+
+    if ty != 0:
+        l_shift_y = acts.examples.alignment.AlignmentGeneratorLocalShift()
+        l_shift_y.axisDirection = acts.AxisDirection.AxisY
+        l_shift_y.shift = _asymmetric_random(shift_mag_mm, True)
+        l_shift_y(trf)
+
+    if tz != 0:
+        l_shift_z = acts.examples.alignment.AlignmentGeneratorLocalShift()
+        l_shift_z.axisDirection = acts.AxisDirection.AxisZ
+        l_shift_z.shift = _asymmetric_random(shift_mag_mm, True)
+        l_shift_z(trf)
+
+    current_rotation = trf.rotation
+
+    if rx != 0:
+        l_rot_x = acts.examples.alignment.AlignmentGeneratorLocalRotation()
+        local_x_axis = acts.Vector3(
+            current_rotation[0, 0], current_rotation[1, 0], current_rotation[2, 0]
+        )
+        l_rot_x.axis = local_x_axis
+        l_rot_x.angle = _asymmetric_random(rotation_mag_rad, True)
+        l_rot_x(trf)
+        current_rotation = trf.rotation
+
+    if ry != 0:
+        l_rot_y = acts.examples.alignment.AlignmentGeneratorLocalRotation()
+        local_y_axis = acts.Vector3(
+            current_rotation[0, 1], current_rotation[1, 1], current_rotation[2, 1]
+        )
+        l_rot_y.axis = local_y_axis
+        l_rot_y.angle = _asymmetric_random(rotation_mag_rad, True)
+        l_rot_y(trf)
+        current_rotation = trf.rotation
+
+    if rz != 0:
+        l_rot_z = acts.examples.alignment.AlignmentGeneratorLocalRotation()
+        local_z_axis = acts.Vector3(
+            current_rotation[0, 2], current_rotation[1, 2], current_rotation[2, 2]
+        )
+        l_rot_z.axis = local_z_axis
+        l_rot_z.angle = _asymmetric_random(rotation_mag_rad, True)
+        l_rot_z(trf)
+
+    return trf
+
+
+def transform_to_alignment_record(
+    gid: acts.GeometryIdentifier, trf: acts.Transform3
+) -> dict:
+    """Build a JSON-serializable transform record for misalignment/alignment I/O."""
+    rot = trf.rotation
+    trans = trf.translation
+    rotation_matrix = [
+        [float(rot[i, j]) for j in range(3)] for i in range(3)
+    ]
+    return {
+        "ID": geoid_to_id_string(gid),
+        "Translation": [float(trans[0]), float(trans[1]), float(trans[2])],
+        "RotationMatrix": rotation_matrix,
+    }
+
+
+def geo_id_map_from_transform_records(records: list) -> dict:
+    """Load GeometryIdentifier -> Transform3 map from alignment/misalignment records."""
+    geo_id_map = {}
+    for element in records:
+        geoid_parts = parse_geoid(element["ID"])
+        gid_kwargs = {
+            "volume": geoid_parts.get("vol", 0),
+            "layer": geoid_parts.get("lay", 0),
+            "sensitive": geoid_parts.get("sen", 0),
+        }
+        if "ext" in geoid_parts:
+            gid_kwargs["extra"] = geoid_parts["ext"]
+        gid = acts.GeometryIdentifier(**gid_kwargs)
+
+        trans_data = element["Translation"]
+        rot_matrix = element["RotationMatrix"]
+        trans = acts.Vector3(trans_data[0], trans_data[1], trans_data[2])
+        R = np.array(rot_matrix)
+        rotation = acts.RotationMatrix3(
+            acts.Vector3(R[0, 0], R[1, 0], R[2, 0]),
+            acts.Vector3(R[0, 1], R[1, 1], R[2, 1]),
+            acts.Vector3(R[0, 2], R[1, 2], R[2, 2]),
+        )
+        geo_id_map[gid] = acts.Transform3(trans, rotation)
+    return geo_id_map
+
+
+def _print_misalignment_filter_criteria(
+    target_volume,
+    target_layer,
+    target_sensitive,
+    target_extra,
+    num_selected: int,
+) -> None:
+    """Print a one-line misalignment filter summary."""
+    print(
+        f"Misalignment filter: volume={target_volume!r}, "
+        f"layer={target_layer}, sensitive={target_sensitive}, extra={target_extra} "
+        f"-> {num_selected} surfaces"
+    )
+
+
 def setupMisalignment(
-    detector_elements: list,
+    trackingGeometry: acts.TrackingGeometry,
     outputDir: Path,
     target_volume=-1,  # Can be int or list of ints
     target_layer=-1,  # Can be int or list of ints
@@ -330,264 +560,66 @@ def setupMisalignment(
     rotation_mag_rad: float = 0.02,
 ):
     """
-    Setup misalignment for detector elements
+    Setup misalignment for selected sensitive surfaces.
 
-    Parameters
-    ----------
-    detector_elements : list
-        List of all detector elements from odd_transforms.json
-    outputDir : Path
-        Directory to save misalignment record
-    target_volume : int or list of ints
-        Filter for volume IDs (-1 means no restriction, or list of specific IDs)
-    target_layer : int or list of ints
-        Filter for layer IDs (-1 means no restriction, or list of specific IDs)
-    target_sensitive : int or list of ints
-        Filter for sensitive IDs (-1 means no restriction, or list of specific IDs)
-    target_extra : int
-        Filter for extra ID (-1 means no restriction)
-    tx, ty, tz : int
-        Translation DOF flags (0 or 1)
-    rx, ry, rz : int
-        Rotation DOF flags (0 or 1)
-    shift_mag_mm : float
-        Random shift magnitude in mm
-    rotation_mag_rad : float
-        Random rotation magnitude in radians
+    Nominal transforms are read from ``surface.localToGlobalTransform`` on the
+    constructed ODD tracking geometry (no odd_transforms.json input).
 
     Returns
     -------
     tuple
-        (geoIdMap, selected_elements, misalignment_record)
+        (geoIdMap, alignment_placements, misalignment_record)
     """
-    print("\n" + "=" * 60)
-    print("Setting up misalignment in LOCAL coordinate system...")
-    print("=" * 60)
-
-    print(f"Misalignment DOF enabled (in local coordinates):")
-    print(f"  Translation: tx={tx} (local X), ty={ty} (local Y), tz={tz} (local Z)")
-    print(f"  Rotation:    rx={rx} (local X), ry={ry} (local Y), rz={rz} (local Z)")
-    print(
-        f"  Magnitudes:  ±{shift_mag_mm} mm (translation), ±{rotation_mag_rad} rad (rotation)"
+    gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
+    matches = collect_matching_sensitive_surfaces(
+        trackingGeometry,
+        target_volume,
+        target_layer,
+        target_sensitive,
+        target_extra,
     )
-    print(f"\nNote: Using AlignmentGenerator LocalShift and LocalRotation:")
-    print(f"  - LocalShift: Applies translation along specified local axis")
-    print(f"  - LocalRotation: Applies rotation around specified local axis")
-    print(f"  - Transformations are automatically handled in local coordinate system")
+    _print_misalignment_filter_criteria(
+        target_volume,
+        target_layer,
+        target_sensitive,
+        target_extra,
+        len(matches),
+    )
+    print(
+        f"Misalignment DOF: tx={tx} ty={ty} tz={tz} rx={rx} ry={ry} rz={rz}, "
+        f"shift=±{shift_mag_mm} mm, rotation=±{rotation_mag_rad} rad"
+    )
 
-    # Filter elements to misalign
-    selected_elements = []
-    for element in detector_elements:
-        geoid_parts = parse_geoid(element["ID"])
-        if match_filter(
-            geoid_parts, target_volume, target_layer, target_sensitive, target_extra
-        ):
-            selected_elements.append(element)
-
-    print(f"\nFilter criteria:")
-
-    # Format volume output (handle hierarchical dict, list, or single value)
-    if isinstance(target_volume, dict):
-        volume_str = "Hierarchical config:\n"
-        for vol_id, layer_config in sorted(target_volume.items()):
-            if layer_config == -1:
-                volume_str += f"    Volume {vol_id}: ALL layers, ALL sensors\n"
-            elif isinstance(layer_config, dict):
-                volume_str += f"    Volume {vol_id}:\n"
-                for lay_id, sensor_config in sorted(layer_config.items()):
-                    if sensor_config == -1:
-                        volume_str += f"      Layer {lay_id}: ALL sensors\n"
-                    elif isinstance(sensor_config, list):
-                        sensor_list = sensor_config[:10]
-                        sensor_str = (
-                            f"{sensor_list}{'...' if len(sensor_config) > 10 else ''}"
-                        )
-                        volume_str += f"      Layer {lay_id}: sensors {sensor_str}\n"
-                    else:
-                        volume_str += f"      Layer {lay_id}: sensor {sensor_config}\n"
-            elif isinstance(layer_config, list):
-                volume_str += (
-                    f"    Volume {vol_id}: layers {layer_config}, ALL sensors\n"
-                )
-            else:
-                volume_str += (
-                    f"    Volume {vol_id}: layer {layer_config}, ALL sensors\n"
-                )
-        volume_str = volume_str.rstrip()
-    elif target_volume == -1:
-        volume_str = "ALL"
-    elif isinstance(target_volume, list):
-        volume_str = (
-            f"{target_volume}"
-            if len(target_volume) <= 5
-            else f"{len(target_volume)} IDs: {target_volume[:5]}..."
-        )
-    else:
-        volume_str = str(target_volume)
-    print(f"  Volume:    {volume_str}")
-
-    # Format layer output (only used for backward compatibility)
-    if isinstance(target_volume, dict):
-        layer_str = "N/A (using hierarchical config)"
-    elif target_layer == -1:
-        layer_str = "ALL"
-    elif isinstance(target_layer, list):
-        layer_str = (
-            f"{target_layer}"
-            if len(target_layer) <= 5
-            else f"{len(target_layer)} IDs: {target_layer[:5]}..."
-        )
-    else:
-        layer_str = str(target_layer)
-    print(f"  Layer:     {layer_str}")
-
-    # Format sensitive output (only used for backward compatibility)
-    if isinstance(target_volume, dict):
-        sensitive_str = "N/A (using hierarchical config)"
-    elif target_sensitive == -1:
-        sensitive_str = "ALL"
-    elif isinstance(target_sensitive, list):
-        sensitive_str = f'{len(target_sensitive)} IDs: {target_sensitive[:10]}{"..." if len(target_sensitive) > 10 else ""}'
-    else:
-        sensitive_str = str(target_sensitive)
-    print(f"  Sensitive: {sensitive_str}")
-
-    print(f"  Extra:     {target_extra if target_extra != -1 else 'ALL'}")
-    print(f"Selected elements: {len(selected_elements)}")
-    print(f"Shift magnitude: ±{shift_mag_mm} mm")
-    print(f"Rotation magnitude: ±{rotation_mag_rad} rad")
-
-    # Construct geoIdMap, apply random misalignment in local coordinate system
-    # Also build misalignment record simultaneously
-    # Using AlignmentGenerator LocalShift and LocalRotation for proper local transformations
     geoIdMap = {}
     misalignment_record = []
+    alignment_placements = []
 
-    # Random shift with asymmetric distribution
-    # Each axis randomly chooses positive or negative side
-    def asymmetric_random(mag, enabled):
-        if not enabled:
-            return 0.0
-        if random.random() < 0.5:
-            return random.uniform(-mag * 1.5, -mag * 0.5)
-        else:
-            return random.uniform(mag * 0.5, mag * 1.5)
-
-    for element in selected_elements:
-        geoid_parts = parse_geoid(element["ID"])
-        nom_trans = element["Translation"]
-        nom_rot_matrix = element["RotationMatrix"]
-
-        # Create GeometryIdentifier
-        gid_kwargs = {
-            "volume": geoid_parts.get("vol", 0),
-            "layer": geoid_parts.get("lay", 0),
-            "sensitive": geoid_parts.get("sen", 0),
-        }
-        if "ext" in geoid_parts:
-            gid_kwargs["extra"] = geoid_parts["ext"]
-        gid = acts.GeometryIdentifier(**gid_kwargs)
-
-        # Read rotation matrix directly from JSON
-        R_nominal = np.array(nom_rot_matrix)
-
-        # Create nominal Transform3
-        nom_rotation = acts.RotationMatrix3(
-            acts.Vector3(R_nominal[0, 0], R_nominal[1, 0], R_nominal[2, 0]),
-            acts.Vector3(R_nominal[0, 1], R_nominal[1, 1], R_nominal[2, 1]),
-            acts.Vector3(R_nominal[0, 2], R_nominal[1, 2], R_nominal[2, 2]),
+    for surface, placement in matches:
+        gid = surface.geometryId
+        trf = copy_transform3(surface.localToGlobalTransform(gctx))
+        apply_random_misalignment_to_transform(
+            trf,
+            tx=tx,
+            ty=ty,
+            tz=tz,
+            rx=rx,
+            ry=ry,
+            rz=rz,
+            shift_mag_mm=shift_mag_mm,
+            rotation_mag_rad=rotation_mag_rad,
         )
-        trf = acts.Transform3(
-            acts.Vector3(nom_trans[0], nom_trans[1], nom_trans[2]), nom_rotation
-        )
-
-        # Store local shift and rotation values for recording
-        shift_local_x = asymmetric_random(shift_mag_mm, tx != 0)
-        shift_local_y = asymmetric_random(shift_mag_mm, ty != 0)
-        shift_local_z = 0
-        rot_local_z = asymmetric_random(rotation_mag_rad, rz != 0)
-        rot_local_y = 0
-        rot_local_x = 0
-
-        # ===== Apply LocalShift using AlignmentGenerator =====
-        # LocalShift applies translation in local coordinate system
-        if tx != 0:
-            lShiftX = acts.examples.alignment.AlignmentGeneratorLocalShift()
-            lShiftX.axisDirection = acts.AxisDirection.AxisX
-            lShiftX.shift = shift_local_x
-            lShiftX(trf)  # Apply local shift along X axis
-
-        if ty != 0:
-            lShiftY = acts.examples.alignment.AlignmentGeneratorLocalShift()
-            lShiftY.axisDirection = acts.AxisDirection.AxisY
-            lShiftY.shift = shift_local_y
-            lShiftY(trf)  # Apply local shift along Y axis
-
-        # ===== Apply LocalRotation using AlignmentGenerator =====
-        # LocalRotation applies rotation around local axes
-        # IMPORTANT: The axis parameter must be the local axis direction in GLOBAL coordinates
-        # We need to extract the local axes from the current transform's rotation matrix
-        current_rotation = trf.rotation
-
-        if rz != 0:
-            lRotZ = acts.examples.alignment.AlignmentGeneratorLocalRotation()
-            # Local Z axis in global coordinates = third column of rotation matrix
-            local_z_axis = acts.Vector3(
-                current_rotation[0, 2], current_rotation[1, 2], current_rotation[2, 2]
-            )
-            lRotZ.axis = local_z_axis
-            lRotZ.angle = rot_local_z
-            lRotZ(trf)  # Apply rotation around local Z axis
-            # Update rotation matrix after applying rotation
-            current_rotation = trf.rotation
-
-        # Store the misaligned transform
         geoIdMap[gid] = trf
+        alignment_placements.append(placement)
+        misalignment_record.append(transform_to_alignment_record(gid, trf))
 
-        # Extract misaligned transform components
-        misaligned_trans = trf.translation
-        misaligned_rot = trf.rotation
-
-        # Extract rotation matrix as nested list
-        rotation_matrix = [
-            [
-                float(misaligned_rot[0, 0]),
-                float(misaligned_rot[0, 1]),
-                float(misaligned_rot[0, 2]),
-            ],
-            [
-                float(misaligned_rot[1, 0]),
-                float(misaligned_rot[1, 1]),
-                float(misaligned_rot[1, 2]),
-            ],
-            [
-                float(misaligned_rot[2, 0]),
-                float(misaligned_rot[2, 1]),
-                float(misaligned_rot[2, 2]),
-            ],
-        ]
-
-        # Simplified record: only ID, Translation, and RotationMatrix
-        record = {
-            "ID": element["ID"],
-            "Translation": [
-                misaligned_trans[0],
-                misaligned_trans[1],
-                misaligned_trans[2],
-            ],
-            "RotationMatrix": rotation_matrix,
-        }
-        misalignment_record.append(record)
-
-    print(f"\nTotal misaligned detector elements: {len(geoIdMap)}")
-
-    # Save misalignment record
     misalignment_file = outputDir / "misalignment_applied.json"
     with open(misalignment_file, "w") as f:
         json.dump(misalignment_record, f, indent=2)
-    print(f"Misalignment record saved to: {misalignment_file}")
+    print(
+        f"Misaligned {len(geoIdMap)} elements; wrote {misalignment_file.name}"
+    )
 
-    return geoIdMap, selected_elements, misalignment_record
+    return geoIdMap, alignment_placements, misalignment_record
 
 
 def runAlignment(
@@ -622,17 +654,9 @@ def runAlignment(
     inputDir = Path(inputDir)
     outputDir = Path(outputDir)
 
-    logger = acts.logging.getLogger("Alignment")
+    logger = acts.getDefaultLogger("Alignment", acts.logging.INFO)
 
-    # Load odd_transforms.json
-    json_path = Path(__file__).resolve().parent / "Configs/odd_transforms.json"
-    print(f"Loading detector transforms from: {json_path}")
-
-    with open(json_path, "r") as f:
-        detector_elements = json.load(f)
-    print(f"Total detector elements in JSON: {len(detector_elements)}")
-
-    # Setup misalignment parameters
+    # Setup misalignment parameters (nominal transforms from tracking geometry)
     # Format 1: Hierarchical structure - specify volume -> layer -> sensors
     # Example: {16: {4: [1, 2, 3], 5: [1, 2]}, 17: {2: [1]}}
     #   - Volume 16, Layer 4: sensors [1, 2, 3]
@@ -641,7 +665,7 @@ def runAlignment(
     # Use -1 for layer value to match all sensors in that layer
     # Use -1 for sensor list to match all sensors: {16: {4: -1}} means all sensors in vol16/lay4
     # Format 1: Use hierarchical structure (dict) - specify volume -> layer -> sensors
-    target_volume = {24: {4: -1}}
+    target_volume = {17: {8: -1}, 24: {4: -1}}
     # Format 2: Use flat structure (backward compatible)
     # target_volume = -1      # -1 = all volumes, or dict for hierarchical: {vol: {lay: [sensors]}}
     # target_layer = -1        # -1 = all layers (used only if target_volume is not a dict)
@@ -660,8 +684,8 @@ def runAlignment(
     shift_mag_mm = 0.5  # Shift magnitude (mm)
     rotation_mag_rad = 0.02  # Rotation magnitude (rad)
 
-    geoIdMap, selected_elements, misalignment_record = setupMisalignment(
-        detector_elements=detector_elements,
+    geoIdMap, alignment_placements, _misalignment_record = setupMisalignment(
+        trackingGeometry=trackingGeometry,
         outputDir=outputDir,
         target_volume=target_volume,
         target_layer=target_layer,
@@ -685,7 +709,7 @@ def runAlignment(
     alignDeco = AlignmentDecorator(cfg, acts.logging.INFO)
     s.addContextDecorator(alignDeco)
 
-    logger.info("Reading simulation results from CSV files in %s", inputDir)
+    logger.info("Reading simulation results from CSV files in {}", str(inputDir))
     s.addReader(
         acts.examples.CsvSimHitReader(
             level=acts.logging.INFO,
@@ -743,14 +767,10 @@ def runAlignment(
         particleHypothesis=acts.ParticleHypothesis.muon,
     )
 
-    print("\n" + "=" * 60)
-    print("Setting up alignment algorithm...")
-    print("=" * 60)
-
-    # Alignment DOF masks (should match misalignment DOF)
-    Center0 = 1 << 0  # dx (translation X) - matches tx
-    Center1 = 1 << 1  # dy (translation Y) - matches ty
-    Center2 = 1 << 2  # dz (translation Z) - matches tz
+    # Alignment DOF masks (should match misalignment DOF; local x/y/z)
+    Center0 = 1 << 0  # local translation along module local x - matches tx
+    Center1 = 1 << 1  # local translation along module local y - matches ty
+    Center2 = 1 << 2  # local translation along module local z - matches tz
     Rotation0 = 1 << 3  # rx (rotation around X) - matches rx
     Rotation1 = 1 << 4  # ry (rotation around Y) - matches ry
     Rotation2 = 1 << 5  # rz (rotation around Z) - matches rz
@@ -770,54 +790,11 @@ def runAlignment(
     if rz:
         alignment_dof |= Rotation2
 
-    print(f"Alignment DOF enabled (matches misalignment):")
-    print(
-        f"  dx={bool(alignment_dof & Center0)}, dy={bool(alignment_dof & Center1)}, dz={bool(alignment_dof & Center2)}"
-    )
-    print(
-        f"  rx={bool(alignment_dof & Rotation0)}, ry={bool(alignment_dof & Rotation1)}, rz={bool(alignment_dof & Rotation2)}"
-    )
-    print(f"  Alignment mask value: {alignment_dof} (binary: {bin(alignment_dof)})")
-
-    # Collect detector elements to align (same as misaligned elements)
-    # Use the same filtering logic as misalignment section
-    print("\nCollecting detector elements for alignment...")
-    print(f"Using same filter as misalignment:")
-    if isinstance(target_volume, dict):
-        print(f"  Volume:    Hierarchical config (see misalignment section above)")
-    else:
-        print(f"  Volume:    {target_volume if target_volume != -1 else 'ALL'}")
-    if not isinstance(target_volume, dict):
-        print(f"  Layer:     {target_layer if target_layer != -1 else 'ALL'}")
-        print(f"  Sensitive: {target_sensitive if target_sensitive != -1 else 'ALL'}")
-    print(f"  Extra:     {target_extra if target_extra != -1 else 'ALL'}")
-
-    det_elements = []
-
-    def visit(surface: acts.Surface) -> bool:
-        # Use surfacePlacement instead of associatedDetectorElement
-        # because DetectorElementBase is not registered in Python bindings
-        placement = acts.examples.alignment.surfacePlacement(surface)
-        if placement is not None:
-            gid = surface.geometryId
-            # Use same filter as misalignment
-            if match_surface_to_filter(
-                gid, target_volume, target_layer, target_sensitive, target_extra
-            ):
-                det_elements.append(placement)
-        return True
-
-    trackingGeometry.visitSurfaces(visit)
-
-    print(f"Total detector elements selected for alignment: {len(det_elements)}")
-
-    # Verify the count matches misaligned elements
+    det_elements = alignment_placements
     if len(det_elements) != len(geoIdMap):
         print(
-            f"WARNING: Mismatch between misaligned ({len(geoIdMap)}) and alignment ({len(det_elements)}) element counts!"
+            f"WARNING: misaligned ({len(geoIdMap)}) vs alignment ({len(det_elements)}) count mismatch"
         )
-    else:
-        print(f"Alignment element count matches misaligned elements")
 
     # Configure AlignmentAlgorithm
     aal_cfg = acts.examples.alignment.AlignmentAlgorithmConfig()
@@ -840,7 +817,7 @@ def runAlignment(
     aal_cfg.align = acts.examples.alignment.makeAlignmentFunction(
         trackingGeometry, field, acts.logging.INFO
     )
-    aal_cfg.maxNumIterations = 1  # Reasonable number of iterations
+    aal_cfg.maxNumIterations = 100  # Reasonable number of iterations
     aal_cfg.maxNumTracks = 100000
     aal_cfg.iterationState = {
         i: int(alignment_dof) for i in range(aal_cfg.maxNumIterations)
@@ -852,95 +829,16 @@ def runAlignment(
     # Run the sequencer
     s.run()
 
-    print("\n" + "=" * 60)
-    print("Extracting aligned transforms...")
-    print("=" * 60)
-
-    # Extract aligned transforms from mutableStore after alignment
-    aligned_record = []
     transform_map = mutableStore.getTransformMap()
-    gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
+    aligned_record = [
+        transform_to_alignment_record(gid, trf)
+        for gid, trf in transform_map.items()
+    ]
 
-    # Collect surfaces that were aligned (same filter as misalignment)
-    aligned_surfaces = []
-
-    def visit(surface: acts.Surface) -> bool:
-        # Use surfacePlacement to check if surface has a placement
-        placement = acts.examples.alignment.surfacePlacement(surface)
-        if placement is not None:
-            gid = surface.geometryId
-            # Use same filter as misalignment
-            if match_surface_to_filter(
-                gid, target_volume, target_layer, target_sensitive, target_extra
-            ):
-                aligned_surfaces.append(surface)
-        return True
-
-    trackingGeometry.visitSurfaces(visit)
-
-    for surface in aligned_surfaces:
-        gid = surface.geometryId
-        element_id = geoid_to_id_string(gid)
-
-        # Find the matching GeometryIdentifier in transform_map
-        aligned_trf = None
-        for map_gid, trf in transform_map.items():
-            if str(map_gid) == str(gid):
-                aligned_trf = trf
-                break
-
-        if aligned_trf is not None:
-            aligned_trans = aligned_trf.translation
-            aligned_rot = aligned_trf.rotation
-
-            # Extract aligned rotation matrix as nested list
-            aligned_rotation_matrix = [
-                [
-                    float(aligned_rot[0, 0]),
-                    float(aligned_rot[0, 1]),
-                    float(aligned_rot[0, 2]),
-                ],
-                [
-                    float(aligned_rot[1, 0]),
-                    float(aligned_rot[1, 1]),
-                    float(aligned_rot[1, 2]),
-                ],
-                [
-                    float(aligned_rot[2, 0]),
-                    float(aligned_rot[2, 1]),
-                    float(aligned_rot[2, 2]),
-                ],
-            ]
-
-            # Simplified record: only ID, Translation, and RotationMatrix
-            record = {
-                "ID": element_id,
-                "Translation": [aligned_trans[0], aligned_trans[1], aligned_trans[2]],
-                "RotationMatrix": aligned_rotation_matrix,
-            }
-            aligned_record.append(record)
-        else:
-            print(f"Warning: Could not find aligned transform for {element_id}")
-
-    # Save aligned transforms record
     aligned_file = outputDir / "aligned_transforms.json"
     with open(aligned_file, "w") as f:
         json.dump(aligned_record, f, indent=2)
-    print(f"\nAligned transforms saved to: {aligned_file}")
-    print(f"Total aligned elements: {len(aligned_record)}")
-
-    # Summary information
-    print(f"\nTotal aligned elements: {len(aligned_record)}")
-
-    print("\n" + "=" * 60)
-    print("Alignment completed successfully!")
-    print("=" * 60)
-    print(f"\nOutput files saved to: {outputDir}")
-    print("\nGenerated files:")
-    print("  - misalignment_applied.json: Applied misalignment transforms")
-    print("    * Includes Translation and RotationMatrix")
-    print("  - aligned_transforms.json: Final aligned transforms")
-    print("    * Includes Translation and RotationMatrix")
+    print(f"Alignment done: {len(aligned_record)} elements -> {aligned_file.name}")
 
     return s
 
@@ -996,7 +894,7 @@ def runReconstruction(
     inputDir = Path(inputDir)
     outputDir = Path(outputDir)
 
-    logger = acts.logging.getLogger("Reconstruction")
+    logger = acts.getDefaultLogger("Reconstruction", acts.logging.INFO)
 
     # Determine alignment directory
     if alignmentDir is None:
@@ -1004,24 +902,13 @@ def runReconstruction(
 
     # Load transforms based on mode
     if mode == "nominal":
-        print("=" * 60)
-        print("Running reconstruction with NOMINAL geometry...")
-        print("=" * 60)
-        # No alignment decorator needed for nominal geometry
         use_alignment_decorator = False
+        json_path = None
     elif mode == "misaligned":
-        print("=" * 60)
-        print("Running reconstruction with MISALIGNED geometry...")
-        print("=" * 60)
         json_path = alignmentDir / "misalignment_applied.json"
-        print(f"Loading misaligned transforms from: {json_path}")
         use_alignment_decorator = True
     elif mode == "aligned":
-        print("=" * 60)
-        print("Running reconstruction with ALIGNED geometry...")
-        print("=" * 60)
         json_path = alignmentDir / "aligned_transforms.json"
-        print(f"Loading aligned transforms from: {json_path}")
         use_alignment_decorator = True
     else:
         raise ValueError(
@@ -1035,43 +922,10 @@ def runReconstruction(
             sys.exit(1)
 
         with open(json_path, "r") as f:
-            detector_elements = json.load(f)
+            transform_records = json.load(f)
 
-        print(f"Total detector elements in JSON: {len(detector_elements)}")
-        print(f"Using all elements: {len(detector_elements)}")
-        print(f"Loading transforms from JSON file...")
-        print()
-
-        geoIdMap = {}
-        for idx, element in enumerate(detector_elements):
-            geoid_parts = parse_geoid(element["ID"])
-
-            gid_kwargs = {
-                "volume": geoid_parts.get("vol", 0),
-                "layer": geoid_parts.get("lay", 0),
-                "sensitive": geoid_parts.get("sen", 0),
-            }
-            if "ext" in geoid_parts:
-                gid_kwargs["extra"] = geoid_parts["ext"]
-            gid = acts.GeometryIdentifier(**gid_kwargs)
-
-            # Use transform data directly from JSON (simplified structure)
-            trans_data = element["Translation"]
-            rot_matrix = element["RotationMatrix"]
-
-            trans = acts.Vector3(trans_data[0], trans_data[1], trans_data[2])
-
-            R = np.array(rot_matrix)
-            rotation = acts.RotationMatrix3(
-                acts.Vector3(R[0, 0], R[1, 0], R[2, 0]),
-                acts.Vector3(R[0, 1], R[1, 1], R[2, 1]),
-                acts.Vector3(R[0, 2], R[1, 2], R[2, 2]),
-            )
-
-            trf = acts.Transform3(trans, rotation)
-            geoIdMap[gid] = trf
-
-        print(f"\nTotal detector elements loaded: {len(geoIdMap)}")
+        geoIdMap = geo_id_map_from_transform_records(transform_records)
+        print(f"Reconstruction ({mode}): {len(geoIdMap)} aligned elements from {json_path.name}")
         mutableStore = acts.examples.alignment.MutableGeoIdAlignmentStore(geoIdMap)
 
         cfg = AlignmentDecorator.Config()
@@ -1080,10 +934,8 @@ def runReconstruction(
         alignDeco = AlignmentDecorator(cfg, acts.logging.INFO)
 
         s.addContextDecorator(alignDeco)
-    else:
-        print("Using nominal geometry (no alignment decorator)")
 
-    logger.info("Reading particles from %s", inputDir / "particles.root")
+    logger.info("Reading particles from {}", str(inputDir / "particles.root"))
 
     s.addReader(
         acts.examples.CsvSimHitReader(
@@ -1312,6 +1164,10 @@ if "__main__" == __name__:
     # OpenDataDetector
     from acts.examples.odd import getOpenDataDetector
 
+    def build_odd(misaligned: bool = False):
+        detector = getOpenDataDetector(misaligned=misaligned)
+        return detector, detector.trackingGeometry()
+
     # Setup common paths and detector
     digiConfigFile = srcdir / "Examples/Configs/odd-digi-smearing-config.json"
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
@@ -1345,8 +1201,7 @@ if "__main__" == __name__:
         print("\n" + "=" * 80)
         print("STEP 1: SIMULATION (using NOMINAL geometry)")
         print("=" * 80)
-        detector_nom = getOpenDataDetector(misaligned=False)
-        trackingGeometry_nom = detector_nom.trackingGeometry()
+        detector_nom, trackingGeometry_nom = build_odd(misaligned=False)
 
         runSimulation(
             trackingGeometry=trackingGeometry_nom,
@@ -1363,8 +1218,7 @@ if "__main__" == __name__:
         print("=" * 80)
         alignmentDir.mkdir(exist_ok=True)
 
-        detector_mis = getOpenDataDetector(misaligned=True)
-        trackingGeometry_mis = detector_mis.trackingGeometry()
+        detector_mis, trackingGeometry_mis = build_odd(misaligned=True)
 
         runAlignment(
             trackingGeometry=trackingGeometry_mis,
@@ -1452,8 +1306,7 @@ if "__main__" == __name__:
             if args.output_dir
             else Path.cwd() / "simulation_output"
         )
-        detector = getOpenDataDetector(misaligned=True)
-        trackingGeometry = detector.trackingGeometry()
+        detector, trackingGeometry = build_odd(misaligned=True)
 
         runSimulation(
             trackingGeometry=trackingGeometry,
@@ -1480,8 +1333,7 @@ if "__main__" == __name__:
             print("Please run simulation first to generate simulation data.")
             sys.exit(1)
 
-        detector = getOpenDataDetector(misaligned=True)
-        trackingGeometry = detector.trackingGeometry()
+        detector, trackingGeometry = build_odd(misaligned=True)
 
         runAlignment(
             trackingGeometry=trackingGeometry,
@@ -1510,12 +1362,8 @@ if "__main__" == __name__:
             sys.exit(1)
 
         # Choose detector based on mode
-        if args.mode == "nominal":
-            detector = getOpenDataDetector(misaligned=False)
-        else:
-            detector = getOpenDataDetector(misaligned=True)
-
-        trackingGeometry = detector.trackingGeometry()
+        misaligned = args.mode != "nominal"
+        detector, trackingGeometry = build_odd(misaligned=misaligned)
 
         runReconstruction(
             trackingGeometry=trackingGeometry,

@@ -47,7 +47,7 @@ auto weaklyConnectedComponents(vertex_t numNodes,
 namespace ActsPlugins {
 
 std::vector<std::vector<int>> BoostTrackBuilding::operator()(
-    PipelineTensors tensors, std::vector<int>& spacepointIDs,
+    PipelineTensors tensors, std::vector<int>& spacePointIds,
     const ExecutionContext& execContext) {
   ACTS_DEBUG("Start track building");
 
@@ -67,7 +67,7 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
   assert(edgeTensor.shape().at(0) == 2);
   assert(edgeTensor.shape().at(1) == scoreTensor.shape().at(0));
 
-  const auto numSpacepoints = spacepointIDs.size();
+  const auto numSpacePoints = spacePointIds.size();
   const auto numEdges = edgeTensor.shape().at(1);
 
   if (numEdges == 0) {
@@ -83,10 +83,10 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
                                                 numEdges);
   boost::beast::span<const weight_t> edgeWeights(scoreTensor.data(), numEdges);
 
-  std::vector<vertex_t> trackLabels(numSpacepoints);
+  std::vector<vertex_t> trackLabels(numSpacePoints);
 
   auto numberLabels = weaklyConnectedComponents<vertex_t, weight_t>(
-      numSpacepoints, rowIndices, colIndices, edgeWeights, trackLabels);
+      numSpacePoints, rowIndices, colIndices, edgeWeights, trackLabels);
 
   ACTS_VERBOSE("Number of track labels: " << trackLabels.size());
   ACTS_VERBOSE("Number of unique track labels: " << [&]() {
@@ -102,7 +102,7 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
 
   std::vector<std::vector<int>> trackCandidates(numberLabels);
 
-  for (const auto [label, id] : zip(trackLabels, spacepointIDs)) {
+  for (const auto [label, id] : zip(trackLabels, spacePointIds)) {
     trackCandidates[label].push_back(id);
   }
 

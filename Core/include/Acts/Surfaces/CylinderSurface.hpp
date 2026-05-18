@@ -163,6 +163,7 @@ class CylinderSurface : public RegularSurface {
   const CylinderBounds& bounds() const final;
 
   /// This method returns the shared_ptr to the CylinderBounds
+  /// @return Shared pointer to the cylinder bounds
   const std::shared_ptr<const CylinderBounds>& boundsPtr() const;
   /// Overwrite the existing surface bounds with new ones
   /// @param newBounds: Pointer to the new bounds
@@ -260,7 +261,7 @@ class CylinderSurface : public RegularSurface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
+  Matrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const final;
 
   /// Merge two cylinder surfaces into a single one.

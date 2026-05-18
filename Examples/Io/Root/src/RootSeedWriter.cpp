@@ -8,9 +8,6 @@
 
 #include "ActsExamples/Io/Root/RootSeedWriter.hpp"
 
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SourceLink.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
@@ -20,9 +17,10 @@
 #include <TFile.h>
 #include <TTree.h>
 
-ActsExamples::RootSeedWriter::RootSeedWriter(
-    const ActsExamples::RootSeedWriter::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+RootSeedWriter::RootSeedWriter(const RootSeedWriter::Config& config,
+                               Acts::Logging::Level level)
     : WriterT(config.inputSeeds, "RootSeedWriter", level), m_cfg(config) {
   // inputParticles is already checked by base constructor
   if (m_cfg.filePath.empty()) {
@@ -75,13 +73,13 @@ ActsExamples::RootSeedWriter::RootSeedWriter(
   }
 }
 
-ActsExamples::RootSeedWriter::~RootSeedWriter() {
+RootSeedWriter::~RootSeedWriter() {
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootSeedWriter::finalize() {
+ProcessCode RootSeedWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
@@ -91,59 +89,58 @@ ActsExamples::ProcessCode ActsExamples::RootSeedWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootSeedWriter::writeT(
-    const AlgorithmContext& ctx, const ActsExamples::SimSeedContainer& seeds) {
+ProcessCode RootSeedWriter::writeT(const AlgorithmContext& ctx,
+                                   const SeedContainer& seeds) {
   // ensure exclusive access to tree/file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
   // Get the event number
   m_eventId = ctx.eventNumber;
   for (const auto& seed : seeds) {
-    const auto& spacepoints = seed.sp();
+    const auto& spacePoints = seed.spacePoints();
 
-    const auto slink_1 =
-        spacepoints[0]->sourceLinks()[0].get<IndexSourceLink>();
-    const auto slink_2 =
-        spacepoints[1]->sourceLinks()[0].get<IndexSourceLink>();
-    const auto slink_3 =
-        spacepoints[2]->sourceLinks()[0].get<IndexSourceLink>();
+    const auto slink_1 = spacePoints[0].sourceLinks()[0].get<IndexSourceLink>();
+    const auto slink_2 = spacePoints[1].sourceLinks()[0].get<IndexSourceLink>();
+    const auto slink_3 = spacePoints[2].sourceLinks()[0].get<IndexSourceLink>();
 
     m_measurementId_1 = slink_1.index();
     if (m_cfg.writingMode != "small") {
       m_geometryId_1 = slink_1.geometryId().value();
-      m_x_1 = spacepoints[0]->x();
-      m_y_1 = spacepoints[0]->y();
-      m_z_1 = spacepoints[0]->z();
-      m_var_r_1 = spacepoints[0]->varianceR();
-      m_var_z_1 = spacepoints[0]->varianceZ();
+      m_x_1 = spacePoints[0].x();
+      m_y_1 = spacePoints[0].y();
+      m_z_1 = spacePoints[0].z();
+      m_var_r_1 = spacePoints[0].varianceR();
+      m_var_z_1 = spacePoints[0].varianceZ();
     }
 
     m_measurementId_2 = slink_2.index();
     if (m_cfg.writingMode != "small") {
       m_geometryId_2 = slink_2.geometryId().value();
-      m_x_2 = spacepoints[1]->x();
-      m_y_2 = spacepoints[1]->y();
-      m_z_2 = spacepoints[1]->z();
-      m_var_r_2 = spacepoints[1]->varianceR();
-      m_var_z_2 = spacepoints[1]->varianceZ();
+      m_x_2 = spacePoints[1].x();
+      m_y_2 = spacePoints[1].y();
+      m_z_2 = spacePoints[1].z();
+      m_var_r_2 = spacePoints[1].varianceR();
+      m_var_z_2 = spacePoints[1].varianceZ();
     }
 
     m_measurementId_3 = slink_3.index();
     if (m_cfg.writingMode != "small") {
       m_geometryId_3 = slink_3.geometryId().value();
-      m_x_3 = spacepoints[2]->x();
-      m_y_3 = spacepoints[2]->y();
-      m_z_3 = spacepoints[2]->z();
-      m_var_r_3 = spacepoints[2]->varianceR();
-      m_var_z_3 = spacepoints[2]->varianceZ();
+      m_x_3 = spacePoints[2].x();
+      m_y_3 = spacePoints[2].y();
+      m_z_3 = spacePoints[2].z();
+      m_var_r_3 = spacePoints[2].varianceR();
+      m_var_z_3 = spacePoints[2].varianceZ();
     }
 
     if (m_cfg.writingMode != "small") {
-      m_z_vertex = seed.z();
-      m_seed_quality = seed.seedQuality();
+      m_z_vertex = seed.vertexZ();
+      m_seed_quality = seed.quality();
     }
     // Fill the tree
     m_outputTree->Fill();
   }
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

@@ -9,7 +9,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
@@ -25,16 +24,6 @@ Surface::Surface(const Transform3& transform)
 
 Surface::Surface(const SurfacePlacementBase& placement) noexcept
     : GeometryObject(), m_placement(&placement) {}
-
-Surface::Surface(const Surface& other) noexcept
-    : GeometryObject(other),
-      std::enable_shared_from_this<Surface>(),
-      m_placement(other.m_placement),
-      m_surfaceMaterial(other.m_surfaceMaterial) {
-  if (other.m_transform) {
-    m_transform = std::make_unique<Transform3>(*other.m_transform);
-  }
-}
 
 Surface::Surface(const GeometryContext& gctx, const Surface& other,
                  const Transform3& shift) noexcept
@@ -94,21 +83,18 @@ AlignmentToBoundMatrix Surface::alignmentToBoundDerivativeWithoutCorrection(
   // The local frame rotation
   const auto& rotation = localToGlobalTransform(gctx).rotation();
   // The axes of local frame
-  // const auto& localXAxis = rotation.col(0);
-  // const auto& localYAxis = rotation.col(1);
-  // const auto& localZAxis = rotation.col(2);
+  const auto& localXAxis = rotation.col(0);
+  const auto& localYAxis = rotation.col(1);
+  const auto& localZAxis = rotation.col(2);
   // Calculate the derivative of local frame axes w.r.t its rotation
   const auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
       detail::rotationToLocalAxesDerivative(rotation);
-  // Calculate the derivative of local 3D Cartesian coordinates w.r.t.
-  // alignment parameters (without path correction)
+  // Derivative of local 3D Cartesian coordinates w.r.t. local translations
+  // along local x/y/z (diagonal: d(loc_i)/d(delta_local_i) = -1)
   AlignmentToPositionMatrix alignToLoc3D = AlignmentToPositionMatrix::Zero();
-  alignToLoc3D.block<1, 3>(eX, eAlignmentCenter0) =
-      -Vector3::UnitX().transpose();  // [-1, 0, 0]
-  alignToLoc3D.block<1, 3>(eY, eAlignmentCenter0) =
-      -Vector3::UnitY().transpose();  // [0, -1, 0]
-  alignToLoc3D.block<1, 3>(eZ, eAlignmentCenter0) =
-      -Vector3::UnitZ().transpose();  // [0, 0, 1]
+  alignToLoc3D(eX, eAlignmentCenter0) = -1;
+  alignToLoc3D(eY, eAlignmentCenter1) = -1;
+  alignToLoc3D(eZ, eAlignmentCenter2) = -1;
   alignToLoc3D.block<1, 3>(eX, eAlignmentRotation0) =
       pcRowVec * rotToLocalXAxis;
   alignToLoc3D.block<1, 3>(eY, eAlignmentRotation0) =
@@ -116,7 +102,7 @@ AlignmentToBoundMatrix Surface::alignmentToBoundDerivativeWithoutCorrection(
   alignToLoc3D.block<1, 3>(eZ, eAlignmentRotation0) =
       pcRowVec * rotToLocalZAxis;
   // The derivative of bound local w.r.t. local 3D Cartesian coordinates
-  ActsMatrix<2, 3> loc3DToBoundLoc =
+  Matrix<2, 3> loc3DToBoundLoc =
       localCartesianToBoundLocalDerivative(gctx, position);
   // Initialize the derivative of bound parameters w.r.t. alignment
   // parameters without path correction
@@ -143,10 +129,11 @@ AlignmentToPathMatrix Surface::alignmentToPathDerivative(
   // Calculate the derivative of local frame axes w.r.t its rotation
   const auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
       detail::rotationToLocalAxesDerivative(rotation);
-  // Initialize the derivative of propagation path w.r.t. local frame
-  // translation (origin) and rotation
+  // Initialize the derivative of propagation path w.r.t. local translations
+  // and rotations
   AlignmentToPathMatrix alignToPath = AlignmentToPathMatrix::Zero();
-  alignToPath.segment<3>(eAlignmentCenter0) = Vector3::UnitZ().transpose() / dz;
+  detail::setAlignToPathLocalCenterDerivative(alignToPath, localZAxis / dz,
+                                              rotation);
   alignToPath.segment<3>(eAlignmentRotation0) =
       -pcRowVec * rotToLocalZAxis / dz;
 
@@ -159,23 +146,6 @@ std::shared_ptr<Surface> Surface::getSharedPtr() {
 
 std::shared_ptr<const Surface> Surface::getSharedPtr() const {
   return shared_from_this();
-}
-
-Surface& Surface::operator=(const Surface& other) {
-  if (&other != this) {
-    GeometryObject::operator=(other);
-    // detector element, identifier & layer association are unique
-    if (other.m_transform) {
-      m_transform = std::make_unique<Transform3>(*other.m_transform);
-    } else {
-      m_transform.reset();
-    }
-    m_associatedLayer = other.m_associatedLayer;
-    m_surfaceMaterial = other.m_surfaceMaterial;
-    m_placement = other.m_placement;
-    m_isSensitive = other.m_isSensitive;
-  }
-  return *this;
 }
 
 bool Surface::operator==(const Surface& other) const {
@@ -244,13 +214,7 @@ std::string Surface::toString(const GeometryContext& gctx) const {
 }
 
 Vector3 Surface::center(const GeometryContext& gctx) const {
-  // fast access via transform matrix (and not translation())
-  auto tMatrix = localToGlobalTransform(gctx).matrix();
-  return Vector3(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
-}
-
-const Transform3& Surface::transform(const GeometryContext& gctx) const {
-  return localToGlobalTransform(gctx);
+  return localToGlobalTransform(gctx).translation();
 }
 
 const Transform3& Surface::localToGlobalTransform(
@@ -345,10 +309,6 @@ const SurfacePlacementBase* Surface::surfacePlacement() const {
   return m_placement;
 }
 
-const DetectorElementBase* Surface::associatedDetectorElement() const {
-  return dynamic_cast<const DetectorElementBase*>(m_placement);
-}
-
 double Surface::thickness() const {
   return m_thickness;
 }
@@ -369,10 +329,6 @@ const ISurfaceMaterial* Surface::surfaceMaterial() const {
 const std::shared_ptr<const ISurfaceMaterial>&
 Surface::surfaceMaterialSharedPtr() const {
   return m_surfaceMaterial;
-}
-
-void Surface::assignDetectorElement(const SurfacePlacementBase& detelement) {
-  assignSurfacePlacement(detelement);
 }
 
 void Surface::assignSurfacePlacement(const SurfacePlacementBase& placement) {

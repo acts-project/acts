@@ -12,11 +12,10 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -202,7 +201,7 @@ struct Fixture {
     stddev[eBoundPhi] = 2_degree;
     stddev[eBoundTheta] = 2_degree;
     stddev[eBoundQOverP] = 1 / 100_GeV;
-    BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+    BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
     // all tracks close to the transverse plane along the x axis w/ small
     // variations in position, direction.
     Vector4 mStartPos0(-3_m, 0.0, 0.0, 1_ns);

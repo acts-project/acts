@@ -21,9 +21,13 @@ class Logger;
 /// stream
 class TryAllNavigationPolicy final : public INavigationPolicy {
  public:
+  /// Configuration for the try-all navigation policy
   struct Config {
+    /// Whether to include portal surfaces
     bool portals = true;
+    /// Whether to include sensitive surfaces
     bool sensitives = true;
+    /// Whether to include passive surfaces
     bool passives = true;
   };
 
@@ -46,10 +50,12 @@ class TryAllNavigationPolicy final : public INavigationPolicy {
   /// Add all candidates to the stream
   /// @param gctx is the geometry context
   /// @param args are the navigation arguments
+  /// @param state is the navigation policy state
   /// @param stream is the navigation stream to update
   /// @param logger is the logger
   void initializeCandidates(const GeometryContext& gctx,
                             const NavigationArguments& args,
+                            NavigationPolicyState& state,
                             AppendOnlyNavigationStream& stream,
                             const Logger& logger) const;
 

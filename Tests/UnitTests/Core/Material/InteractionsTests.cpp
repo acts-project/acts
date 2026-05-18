@@ -46,8 +46,8 @@ static const auto momentum = momentum_low + momentum_med + momentum_high;
 BOOST_AUTO_TEST_SUITE(interactions)
 
 // consistency checks for the energy loss values
-BOOST_DATA_TEST_CASE(energy_loss_consistency, thickness* particle* momentum, x,
-                     i, m, q, p) {
+BOOST_DATA_TEST_CASE(energy_loss_consistency, thickness * particle * momentum,
+                     x, i, m, q, p) {
   const auto slab = MaterialSlab(material, x);
   const auto qOverP = q / p;
   const auto absQ = std::abs(q);
@@ -78,7 +78,7 @@ BOOST_DATA_TEST_CASE(energy_loss_consistency, thickness* particle* momentum, x,
 
 // consistency checks for multiple scattering
 BOOST_DATA_TEST_CASE(multiple_scattering_consistency,
-                     thickness* particle* momentum, x, i, m, q, p) {
+                     thickness * particle * momentum, x, i, m, q, p) {
   const auto slab = MaterialSlab(material, x);
   const auto slabDoubled = MaterialSlab(material, 2 * x);
   const auto qOverP = q / p;
@@ -104,7 +104,7 @@ BOOST_DATA_TEST_CASE(multiple_scattering_consistency,
 }
 
 // no material -> no interactions
-BOOST_DATA_TEST_CASE(vacuum, thickness* particle* momentum, x, i, m, q, p) {
+BOOST_DATA_TEST_CASE(vacuum, thickness * particle * momentum, x, i, m, q, p) {
   const auto vacuum = MaterialSlab::Vacuum(x);
   const auto qOverP = q / p;
   const auto absQ = std::abs(q);

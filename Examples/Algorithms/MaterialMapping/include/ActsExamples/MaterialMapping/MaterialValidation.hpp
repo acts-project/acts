@@ -8,16 +8,14 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
-#include "Acts/Material/MaterialValidater.hpp"
+#include "Acts/Material/MaterialValidator.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 
 #include <numbers>
 
@@ -30,34 +28,22 @@ class MaterialValidation : public IAlgorithm {
   /// @class nested Config class
   /// of the MaterialMapping algorithm
   struct Config {
-    /// Number of tracks per event
-    std::size_t ntracks = 1000;
-
-    /// Start position for the scan
-    Acts::Vector3 startPosition = Acts::Vector3(0., 0., 0.);
-
-    /// Start direction for the scan: phi
-    std::pair<double, double> phiRange = {-std::numbers::pi, std::numbers::pi};
-
-    /// Start direction for the scan: eta
-    std::pair<double, double> etaRange = {-4., 4.};
-
-    /// Random number service
-    std::shared_ptr<RandomNumbers> randomNumberSvc = nullptr;
-
-    // The validater
-    std::shared_ptr<Acts::MaterialValidater> materialValidater = nullptr;
+    /// Input track parameters
+    std::string inputTrackParameters = "InputTrackParameters";
 
     /// Output collection name
-    std::string outputMaterialTracks = "material_tracks";
+    std::string outputMaterialTracks = "ValidationMaterialTracks";
+
+    // The validator
+    std::shared_ptr<Acts::MaterialValidator> materialValidator = nullptr;
   };
 
   /// Constructor
   ///
   /// @param cfg The configuration struct carrying the used tools
   /// @param level The output logging level
-  explicit MaterialValidation(const Config& cfg,
-                              Acts::Logging::Level level = Acts::Logging::INFO);
+  explicit MaterialValidation(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Destructor
   /// - it also writes out the file
@@ -66,8 +52,7 @@ class MaterialValidation : public IAlgorithm {
   /// Framework execute method
   ///
   /// @param context The algorithm context for event consistency
-  ActsExamples::ProcessCode execute(
-      const AlgorithmContext& context) const override;
+  ProcessCode execute(const AlgorithmContext& context) const override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -75,8 +60,11 @@ class MaterialValidation : public IAlgorithm {
  private:
   Config m_cfg;  //!< internal config object
 
+  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
+      this, "InputTrackParameters"};
+
   WriteDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
-      m_outputMaterialTracks{this, "OutputMaterialTracks"};
+      m_outputMaterialTracks{this, "ValidationMaterialTracks"};
 };
 
 }  // namespace ActsExamples

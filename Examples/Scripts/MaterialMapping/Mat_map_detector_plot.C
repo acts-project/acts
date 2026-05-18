@@ -106,7 +106,7 @@ void Fill(std::vector<TH2F*>& detector_hist, const std::string& input_file, std:
 
   //Get file, tree and set top branch address
   TFile *tfile = new TFile(input_file.c_str());
-  TTree *tree = (TTree*)tfile->Get("material-tracks");
+  TTree *tree = (TTree*)tfile->Get("material_tracks");
 
   float v_phi  = 0;
   float v_eta  = 0;

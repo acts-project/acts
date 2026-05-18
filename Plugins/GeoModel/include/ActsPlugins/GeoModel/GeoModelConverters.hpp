@@ -43,10 +43,12 @@ namespace ActsPlugins {
 using GeoBoxConverter =
     detail::GenericGeoShapeConverter<GeoBox, detail::GeoBoxConverter>;
 
+/// Converter for GeoShapeSubtraction shapes
 using GeoSubtractionConverter =
     detail::GenericGeoShapeConverter<GeoShapeSubtraction,
                                      detail::GeoSubtractionConverter>;
 
+/// Converter for GeoSimplePolygonBrep shapes
 using GeoPolygonConverter =
     detail::GenericGeoShapeConverter<GeoSimplePolygonBrep,
                                      detail::GeoPolygonConverter>;
@@ -82,8 +84,9 @@ using GeoUnionDoubleTrdConverter =
     detail::GenericGeoShapeConverter<GeoShapeUnion,
                                      detail::GeoUnionDoubleTrdConverter>;
 
-/// @brief The map that maps the converters with the shapes
-
+/// Get the converter for a given GeoShape ID
+/// @param geoShapeId The GeoShape ID to look up
+/// @return Shared pointer to the converter, or nullptr if not found
 inline std::shared_ptr<const IGeoShapeConverter> geoShapesConverters(
     int geoShapeId) {
   static const std::unordered_map<int,

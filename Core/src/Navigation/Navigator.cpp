@@ -8,11 +8,14 @@
 
 #include "Acts/Propagator/Navigator.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Propagator/NavigatorError.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
 #include <algorithm>
@@ -20,6 +23,14 @@
 #include <sstream>
 
 namespace Acts {
+std::ostream& operator<<(
+    std::ostream& ostr,
+    const std::span<const Acts::NavigationTarget>& candidates) {
+  for (const auto& target : candidates) {
+    ostr << "\n  -- " << target;
+  }
+  return ostr;
+}
 
 Navigator::Navigator(Config cfg, std::shared_ptr<const Logger> _logger)
     : m_cfg{std::move(cfg)}, m_logger{std::move(_logger)} {
@@ -87,7 +98,7 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
   ACTS_VERBOSE(volInfo(state) << "Geometry version is: "
                               << printGeometryVersion(m_geometryVersion));
 
-  state.reset();
+  state.resetForRenavigation();
 
   if (m_geometryVersion == GeometryVersion::Gen3) {
     // Empirical pre-allocation of candidates for the next navigation
@@ -96,9 +107,11 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
     state.stream.candidates().reserve(50);
 
     state.freeCandidates.clear();
-    state.freeCandidates.reserve(state.options.freeSurfaces.size());
-    for (const Surface* candidate : state.options.freeSurfaces) {
-      state.freeCandidates.emplace_back(candidate, false);
+    state.freeCandidates.reserve(state.options.externalSurfaces.size());
+    for (const Surface* candidate : state.options.externalSurfaces) {
+      if (candidate->geometryId() == GeometryIdentifier{}) {
+        state.freeCandidates.emplace_back(candidate, false);
+      }
     }
   }
 
@@ -163,6 +176,15 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
 
       return Result<void>::failure(NavigatorError::NotInsideExpectedVolume);
     }
+
+    if (const auto* policy = state.currentVolume->navigationPolicy();
+        policy != nullptr) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Creating initial navigation policy state for volume.");
+      policy->createState(state.options.geoContext,
+                          {.position = position, .direction = direction},
+                          state.policyStateManager, logger());
+    }
   }
   if (state.currentLayer != nullptr) {
     ACTS_VERBOSE(volInfo(state) << "Start layer resolved "
@@ -204,7 +226,7 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
     return nextTarget;
   }
 
-  state.reset();
+  state.resetForRenavigation();
   ++state.statistics.nRenavigations;
 
   // We might have punched through a boundary and entered another volume
@@ -216,6 +238,23 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
     ACTS_VERBOSE(volInfo(state) << "No volume found, stop navigation.");
     state.navigationBreak = true;
     return NavigationTarget::None();
+  }
+
+  if (m_geometryVersion == GeometryVersion::Gen3) {
+    // If we re-navigated, we need to recreate the navigation policy state for
+    // the new volume if it exists
+    const auto* policy = state.currentVolume->navigationPolicy();
+    if (policy == nullptr) {
+      ACTS_ERROR(volInfo(state) << "No navigation policy for new volume, this "
+                                   "should not happen. Stop navigation.");
+      return NavigationTarget::None();
+    }
+
+    ACTS_VERBOSE(volInfo(state) << "Creating navigation policy state for new "
+                                   "volume after renavigation.");
+    policy->createState(state.options.geoContext,
+                        {.position = position, .direction = direction},
+                        state.policyStateManager, logger());
   }
 
   state.currentLayer =
@@ -236,12 +275,26 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
   return NavigationTarget::None();
 }
 
-bool Navigator::checkTargetValid(const State& state, const Vector3& position,
+bool Navigator::checkTargetValid(State& state, const Vector3& position,
                                  const Vector3& direction) const {
-  static_cast<void>(position);
-  static_cast<void>(direction);
+  ACTS_VERBOSE(volInfo(state) << "Entering Navigator::checkTargetValid.");
 
-  return state.navigationStage != Stage::initial;
+  if (state.navigationStage == Stage::initial) {
+    return false;
+  }
+
+  if (state.currentVolume != nullptr &&
+      state.currentVolume->navigationPolicy() != nullptr) {
+    ACTS_VERBOSE(volInfo(state) << "Checking policy validity for volume");
+
+    auto policyState = state.policyStateManager.currentState();
+    bool isValid = state.currentVolume->navigationPolicy()->isValid(
+        state.options.geoContext,
+        {.position = position, .direction = direction}, policyState, logger());
+    return isValid;
+  }
+
+  return true;
 }
 
 void Navigator::handleSurfaceReached(State& state, const Vector3& position,
@@ -274,6 +327,14 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
         return;
       }
 
+      if (state.currentVolume != nullptr &&
+          state.currentVolume->navigationPolicy() != nullptr) {
+        ACTS_VERBOSE(volInfo(state)
+                     << "Popping navigation policy state for volume on exit");
+        state.currentVolume->navigationPolicy()->popState(
+            state.policyStateManager, logger());
+      }
+
       state.currentVolume = res.value();
 
       // partial reset
@@ -281,6 +342,22 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
 
       if (state.currentVolume != nullptr) {
         ACTS_VERBOSE(volInfo(state) << "Volume updated.");
+
+        const auto* policy = state.currentVolume->navigationPolicy();
+
+        if (policy == nullptr) {
+          ACTS_ERROR(
+              volInfo(state)
+              << "No navigation policy for new volume, this should not happen");
+          return;
+        }
+
+        ACTS_VERBOSE(volInfo(state)
+                     << "Creating navigation policy state for new "
+                        "volume after portal transition.");
+        policy->createState(state.options.geoContext,
+                            {.position = position, .direction = direction},
+                            state.policyStateManager, logger());
 
         // this is set only for the check target validity since gen3 does not
         // care
@@ -368,7 +445,8 @@ NavigationTarget Navigator::getNextTargetGen1(State& state,
       ++state.navSurfaceIndex.value();
     }
     if (state.navSurfaceIndex.value() < state.navSurfaces.size()) {
-      ACTS_VERBOSE(volInfo(state) << "Target set to next surface.");
+      ACTS_VERBOSE(volInfo(state)
+                   << "Target set to next surface. " << state.navSurface());
       return state.navSurface();
     } else {
       // This was the last surface, switch to layers
@@ -386,7 +464,8 @@ NavigationTarget Navigator::getNextTargetGen1(State& state,
       ++state.navLayerIndex.value();
     }
     if (state.navLayerIndex.value() < state.navLayers.size()) {
-      ACTS_VERBOSE(volInfo(state) << "Target set to next layer.");
+      ACTS_VERBOSE(volInfo(state)
+                   << "Target set to next layer. " << state.navLayer());
       return state.navLayer();
     } else {
       // This was the last layer, switch to boundaries
@@ -404,7 +483,8 @@ NavigationTarget Navigator::getNextTargetGen1(State& state,
       ++state.navBoundaryIndex.value();
     }
     if (state.navBoundaryIndex.value() < state.navBoundaries.size()) {
-      ACTS_VERBOSE(volInfo(state) << "Target set to next boundary.");
+      ACTS_VERBOSE(volInfo(state)
+                   << "Target set to next boundary " << state.navBoundary());
       return state.navBoundary();
     } else {
       // This was the last boundary, we have to leave the volume somehow,
@@ -421,7 +501,26 @@ NavigationTarget Navigator::getNextTargetGen1(State& state,
 NavigationTarget Navigator::getNextTargetGen3(State& state,
                                               const Vector3& position,
                                               const Vector3& direction) const {
-  if (!state.navCandidateIndex.has_value()) {
+  if (state.currentVolume == nullptr) {
+    ACTS_VERBOSE(volInfo(state) << "No volume to get next target.");
+    return NavigationTarget::None();
+  }
+
+  auto policyState = state.policyStateManager.currentState();
+  bool isValid = state.currentVolume->navigationPolicy()->isValid(
+      state.options.geoContext, {.position = position, .direction = direction},
+      policyState, logger());
+
+  ACTS_VERBOSE(volInfo(state) << "Current policy says navigation sequence is "
+                              << (isValid ? "VALID" : "INVALID"));
+
+  ACTS_VERBOSE(volInfo(state)
+               << "Current candidate index is "
+               << (state.navCandidateIndex.has_value()
+                       ? std::to_string(state.navCandidateIndex.value())
+                       : "n/a"));
+
+  if (!isValid || !state.navCandidateIndex.has_value()) {
     // first time, resolve the candidates
     resolveCandidates(state, position, direction);
     state.navCandidateIndex = 0;
@@ -473,25 +572,31 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
   NavigationArguments args;
   args.position = position;
   args.direction = direction;
+
+  const INavigationPolicy* policy = state.currentVolume->navigationPolicy();
+  if (policy == nullptr) {
+    ACTS_ERROR(volInfo(state) << "No navigation policy found for volume. "
+                                 "Cannot resolve navigation candidates.");
+    throw std::runtime_error(
+        "Navigator: No navigation policy found for current volume.");
+  }
+
+  auto policyState = state.policyStateManager.currentState();
   state.currentVolume->initializeNavigationCandidates(
-      state.options.geoContext, args, appendOnly, logger());
+      state.options.geoContext, args, policyState, appendOnly, logger());
 
   ACTS_VERBOSE(volInfo(state) << "Found " << state.stream.candidates().size()
                               << " navigation candidates.");
-  if (!state.options.externalSurfaces.empty()) {
-    for (const GeometryIdentifier& geoId : state.options.externalSurfaces) {
-      // Don't add any surface which is not in the same volume (volume bits)
-      // or sub volume (extra bits)
-      if (geoId.volume() != state.currentVolume->geometryId().volume() ||
-          geoId.extra() != state.currentVolume->geometryId().extra()) {
-        continue;
-      }
-      const Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
-      assert(surface != nullptr);
-      ACTS_VERBOSE(volInfo(state) << "Try to navigate to " << surface->type()
-                                  << " surface " << geoId);
-      appendOnly.addSurfaceCandidate(*surface, BoundaryTolerance::Infinite());
-    };
+  for (const Surface* surface : state.options.externalSurfaces) {
+    const GeometryIdentifier geoId = surface->geometryId();
+    // Don't add any surface which is not in the same volume (volume bits)
+    // or sub volume (extra bits)
+    if (geoId.withSensitive(0) != state.currentVolume->geometryId()) {
+      continue;
+    }
+    ACTS_VERBOSE(volInfo(state) << "Try to navigate to " << surface->type()
+                                << " surface " << geoId);
+    appendOnly.addSurfaceCandidate(*surface, BoundaryTolerance::Infinite());
   }
   bool pruneFreeCand{false};
   if (!state.freeCandidates.empty()) {
@@ -516,8 +621,10 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
                           BoundaryTolerance::None(),
                           state.options.surfaceTolerance);
 
-  ACTS_VERBOSE(volInfo(state) << "Now " << state.stream.candidates().size()
-                              << " navigation candidates after initialization");
+  ACTS_VERBOSE(volInfo(state)
+               << "Now " << state.stream.candidates().size()
+               << " navigation candidates after initialization.\n"
+               << state.stream.candidates());
 
   state.navCandidates.clear();
 
@@ -550,16 +657,8 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
   });
 
   // Print the navigation candidates
-
-  if (logger().doPrint(Logging::VERBOSE)) {
-    std::ostringstream os;
-    os << "Navigation candidates: " << state.navCandidates.size() << "\n";
-    for (auto& candidate : state.navCandidates) {
-      os << " -- " << candidate << "\n";
-    }
-
-    logger().log(Logging::VERBOSE, os.str());
-  }
+  ACTS_VERBOSE("Navigation candidates: " << state.navCandidates.size() << "\n"
+                                         << state.navCandidates);
 }
 
 void Navigator::resolveSurfaces(State& state, const Vector3& position,
@@ -585,12 +684,11 @@ void Navigator::resolveSurfaces(State& state, const Vector3& position,
   navOpts.nearLimit = state.options.nearLimit;
   navOpts.farLimit = state.options.farLimit;
 
-  if (!state.options.externalSurfaces.empty()) {
-    const auto layerId = layerSurface->geometryId().layer();
-    for (const GeometryIdentifier& id : state.options.externalSurfaces) {
-      if (id.layer() == layerId) {
-        navOpts.externalSurfaces.push_back(id);
-      }
+  const auto layerId = layerSurface->geometryId().layer();
+  for (const Surface* surface : state.options.externalSurfaces) {
+    const GeometryIdentifier geoId = surface->geometryId();
+    if (geoId.layer() == layerId) {
+      navOpts.externalSurfaces.push_back(geoId);
     }
   }
 
@@ -633,20 +731,13 @@ void Navigator::resolveSurfaces(State& state, const Vector3& position,
     ACTS_VERBOSE(volInfo(state)
                  << "Removing "
                  << std::distance(toBeRemoved.begin(), toBeRemoved.end())
-                 << " overlapping surfaces.");
+                 << " overlapping surfaces. " << toBeRemoved);
   }
   state.navSurfaces.erase(toBeRemoved.begin(), toBeRemoved.end());
 
-  // Print surface information
-  if (logger().doPrint(Logging::VERBOSE)) {
-    std::ostringstream os;
-    os << state.navSurfaces.size();
-    os << " surface candidates found at path(s): ";
-    for (auto& sfc : state.navSurfaces) {
-      os << sfc.pathLength() << "  ";
-    }
-    logger().log(Logging::VERBOSE, os.str());
-  }
+  ACTS_VERBOSE(volInfo(state) << state.navSurfaces.size()
+                              << " surface candidates found at path(s): "
+                              << state.navSurfaces);
 
   if (state.navSurfaces.empty()) {
     ACTS_VERBOSE(volInfo(state) << "No surface candidates found.");
@@ -670,16 +761,8 @@ void Navigator::resolveLayers(State& state, const Vector3& position,
       state.options.geoContext, position, direction, navOpts);
   std::ranges::sort(state.navLayers, NavigationTarget::pathLengthOrder);
 
-  // Print layer information
-  if (logger().doPrint(Logging::VERBOSE)) {
-    std::ostringstream os;
-    os << state.navLayers.size();
-    os << " layer candidates found at path(s): ";
-    for (auto& lc : state.navLayers) {
-      os << lc.pathLength() << "  ";
-    }
-    logger().log(Logging::VERBOSE, os.str());
-  }
+  ACTS_VERBOSE(state.navLayers.size()
+               << " layer candidates found at path(s): " << state.navLayers);
 
   if (state.navLayers.empty()) {
     ACTS_VERBOSE(volInfo(state) << "No layer candidates found.");
@@ -705,15 +788,9 @@ void Navigator::resolveBoundaries(State& state, const Vector3& position,
   std::ranges::sort(state.navBoundaries, NavigationTarget::pathLengthOrder);
 
   // Print boundary information
-  if (logger().doPrint(Logging::VERBOSE)) {
-    std::ostringstream os;
-    os << state.navBoundaries.size();
-    os << " boundary candidates found at path(s): ";
-    for (const auto& bc : state.navBoundaries) {
-      os << bc.pathLength() << "  ";
-    }
-    logger().log(Logging::VERBOSE, os.str());
-  }
+  ACTS_VERBOSE(state.navBoundaries.size()
+               << " boundary candidates found at path(s): "
+               << state.navBoundaries);
 
   if (state.navBoundaries.empty()) {
     ACTS_VERBOSE(volInfo(state) << "No boundary candidates found.");

@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
   Vector3 reference{0., 1., 2.};
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
-  auto pLayer = PlaneLayer::create(pTransform, pPlanarBound);
+  auto pLayer = PlaneLayer::create(pTransform, pPlanarBound, nullptr);
   auto pMaterial =
       std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
   DetectorElementStub detElement{pTransform, pPlanarBound, 0.2, pMaterial};
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   // build a planeSurface to be compared
   auto planeSurface =
       Surface::makeShared<PlaneSurface>(pTransform1, pPlanarBound);
-  auto pLayer = PlaneLayer::create(pTransform1, pPlanarBound);
+  auto pLayer = PlaneLayer::create(pTransform1, pPlanarBound, nullptr);
   auto pMaterial =
       std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
   DetectorElementStub detElement1{pTransform1, pPlanarBound, 0.2, pMaterial};

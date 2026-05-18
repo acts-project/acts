@@ -12,8 +12,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -40,7 +39,7 @@ using Acts::VectorHelpers::makeVector4;
 
 namespace ActsTests {
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
@@ -136,7 +135,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
 
   // Create constraint for seed finding
   Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
-  SquareMatrix3 constrCov = ActsSquareMatrix<3>::Identity();
+  SquareMatrix3 constrCov = SquareMatrix<3>::Identity();
 
   Vertex constraint(constraintPos);
   constraint.setCovariance(constrCov);

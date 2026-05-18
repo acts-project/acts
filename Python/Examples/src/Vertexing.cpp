@@ -6,15 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/HoughVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/VertexFitterAlgorithm.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
-
-#include <memory>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -54,7 +50,7 @@ void addVertexing(py::module& mex) {
                                 doConstrainedFit, constraintPos, constraintCov);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(HoughVertexFinderAlgorithm, mex,
-                                "HoughVertexFinderAlgorithm", inputSpacepoints,
+                                "HoughVertexFinderAlgorithm", inputSpacePoints,
                                 outputVertices, targetSPs, minAbsEta, maxAbsEta,
                                 minHits, defVtxPosition);
 }

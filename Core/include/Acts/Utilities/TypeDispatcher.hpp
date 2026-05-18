@@ -31,16 +31,21 @@ namespace Acts {
 template <typename base_t, typename signature_t>
 class TypeDispatcher;
 
+/// Type dispatcher specialization for function signature
 template <typename base_t, typename return_t, typename... args_t>
 class TypeDispatcher<base_t, return_t(args_t...)> {
  public:
-  // Type aliases for frequently used template parameters
+  /// Base class type
   using base_type = base_t;
+  /// Function return type
   using return_type = return_t;
+  /// Self type
   using self_type = TypeDispatcher<base_type, return_type(args_t...)>;
-
+  /// Function signature type
   using function_signature = return_t(const base_t&, args_t...);
+  /// Function pointer type
   using function_pointer_type = return_t (*)(args_t...);
+  /// Function wrapper type
   using function_type = std::function<function_signature>;
 
   /// Default constructor
@@ -60,6 +65,7 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
   /// Register a free function with explicit derived type
   /// @tparam derived_t The derived type to associate the function with
   /// @param func The function pointer
+  /// @return Reference to this dispatcher for chaining
   template <typename derived_t>
     requires std::is_base_of_v<base_t, derived_t>
   self_type& registerFunction(return_t (*func)(const derived_t&, args_t...)) {
@@ -184,6 +190,7 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
   }
 
   /// Get the number of registered functions
+  /// @return Number of registered functions
   std::size_t size() const { return m_functions.size(); }
 
  private:

@@ -12,7 +12,7 @@ std::shared_ptr<ActsExamples::AlignedTGeoDetectorElement>
 ActsExamples::alignedTGeoDetectorElementFactory(
     const ActsPlugins::TGeoDetectorElement::Identifier& identifier,
     const TGeoNode& tGeoNode, const TGeoMatrix& tGeoMatrix,
-    const std::string& axes, double scalor,
+    ActsPlugins::TGeoAxes axes, double scalor,
     std::shared_ptr<const Acts::ISurfaceMaterial> material) {
   return std::make_shared<AlignedTGeoDetectorElement>(
       identifier, tGeoNode, tGeoMatrix, axes, scalor, std::move(material));

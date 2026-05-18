@@ -17,6 +17,7 @@ namespace ActsPlugins {
 /// @addtogroup root_plugin
 /// @{
 
+/// Helper struct for creating ACTS primitives from TGeo geometry
 struct TGeoPrimitivesHelper {
   /// Helper method to create a transform from
   /// Rotation matrix vectors:
@@ -25,6 +26,7 @@ struct TGeoPrimitivesHelper {
   /// @param rotationMatrixCol2
   /// And translation
   /// @param translation
+  /// @return The constructed 3D transformation
   static inline Acts::Transform3 makeTransform(
       const Eigen::Vector3d& rotationMatrixCol0,
       const Eigen::Vector3d& rotationMatrixCol1,
@@ -41,6 +43,7 @@ struct TGeoPrimitivesHelper {
   /// Private helper method : match string with wildcards
   /// @param first is the one with the potential wildcard
   /// @param second is the test string
+  /// @return True if strings match (accounting for wildcards)
   static bool match(const char* first, const char* second);
 
   /// Private helper method : match string with wildcards
@@ -48,6 +51,7 @@ struct TGeoPrimitivesHelper {
   /// performs it on an input list
   /// @param first is the one with the potential wildcard
   /// @param second is the test string
+  /// @return True if any pattern in the list matches the test string
   static bool match(const std::vector<std::string>& first, const char* second);
 };
 /// @}

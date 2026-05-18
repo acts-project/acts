@@ -20,8 +20,9 @@ namespace ActsExamples {
 
 EDM4hepMultiTrajectoryOutputConverter::EDM4hepMultiTrajectoryOutputConverter(
     const EDM4hepMultiTrajectoryOutputConverter::Config& config,
-    Acts::Logging::Level level)
-    : PodioOutputConverter("EDM4hepMultiTrajectoryOutputConverter", level),
+    std::unique_ptr<const Acts::Logger> logger)
+    : PodioOutputConverter("EDM4hepMultiTrajectoryOutputConverter",
+                           std::move(logger)),
       m_cfg(config) {
   if (m_cfg.inputTrajectories.empty()) {
     throw std::invalid_argument("Missing input trajectories collection");

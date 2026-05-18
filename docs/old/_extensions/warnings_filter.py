@@ -31,7 +31,6 @@ from typing import Dict, Any, List
 from sphinx.application import Sphinx
 from sphinx.util.logging import NAMESPACE
 
-
 __version__ = "0.1.0"
 
 

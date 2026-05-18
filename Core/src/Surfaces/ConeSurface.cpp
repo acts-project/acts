@@ -371,7 +371,7 @@ AlignmentToPathMatrix ConeSurface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-ActsMatrix<2, 3> ConeSurface::localCartesianToBoundLocalDerivative(
+Matrix<2, 3> ConeSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
@@ -385,7 +385,7 @@ ActsMatrix<2, 3> ConeSurface::localCartesianToBoundLocalDerivative(
   const double lsphi = std::sin(lphi);
   // Solve for radius R
   const double R = localPos.z() * bounds().tanAlpha();
-  ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Zero();
+  Matrix<2, 3> loc3DToLocBound = Matrix<2, 3>::Zero();
   loc3DToLocBound << -R * lsphi / lr, R * lcphi / lr,
       lphi * bounds().tanAlpha(), 0, 0, 1;
 

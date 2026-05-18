@@ -30,8 +30,12 @@ class MultiWireVolumeBuilder {
     /// The surfaces to be wrapped from the tracking volume
     std::vector<std::shared_ptr<Surface>> mlSurfaces = {};
 
-    /// The transform of the tracking volume
+    /// The local -> global transform of the tracking volume
     Transform3 transform = Transform3::Identity();
+
+    /// Connect the tracking geometry with an alignable volume placement
+    /// Used instead of the transform if set
+    VolumePlacementBase* alignablePlacement{};
 
     /// The bounds of the tracking volume
     std::shared_ptr<Acts::VolumeBounds> bounds = nullptr;

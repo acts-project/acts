@@ -31,7 +31,7 @@ ScoreBasedAmbiguityResolution::computeInitialState(
   trackFeaturesVectors.reserve(tracks.size());
 
   for (const auto& track : tracks) {
-    int numberOfDetectors = m_cfg.detectorConfigs.size();
+    std::size_t numberOfDetectors = m_cfg.detectorConfigs.size();
 
     std::vector<TrackFeatures> trackFeaturesVector(numberOfDetectors);
 
@@ -151,10 +151,14 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       const auto& detector = m_cfg.detectorConfigs.at(detectorId);
       const auto& trackFeatures = trackFeaturesVector[detectorId];
 
-      score += trackFeatures.nHits * detector.hitsScoreWeight;
-      score += trackFeatures.nHoles * detector.holesScoreWeight;
-      score += trackFeatures.nOutliers * detector.outliersScoreWeight;
-      score += trackFeatures.nSharedHits * detector.otherScoreWeight;
+      score +=
+          static_cast<double>(trackFeatures.nHits * detector.hitsScoreWeight);
+      score +=
+          static_cast<double>(trackFeatures.nHoles * detector.holesScoreWeight);
+      score += static_cast<double>(trackFeatures.nOutliers *
+                                   detector.outliersScoreWeight);
+      score += static_cast<double>(trackFeatures.nSharedHits *
+                                   detector.otherScoreWeight);
     }
 
     // Adding scores based on optional weights
@@ -272,7 +276,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
       // detector.
       std::size_t nHits = trackFeatures.nHits;
       if (nHits > detector.maxHits) {
-        score = score * (nHits - detector.maxHits + 1);  // hits are good !
+        score = score * static_cast<double>(nHits - detector.maxHits +
+                                            1);  // hits are good !
         nHits = detector.maxHits;
       }
       score = score * detector.factorHits[nHits];
@@ -284,7 +289,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
       // detector.
       std::size_t iHoles = trackFeatures.nHoles;
       if (iHoles > detector.maxHoles) {
-        score /= (iHoles - detector.maxHoles + 1);  // holes are bad !
+        // holes are bad !
+        score /= static_cast<double>(iHoles - detector.maxHoles + 1);
         iHoles = detector.maxHoles;
       }
       score = score * detector.factorHoles[iHoles];

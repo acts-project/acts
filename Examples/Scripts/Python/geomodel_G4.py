@@ -218,6 +218,19 @@ def main():
         )
     )
 
+    from acts.examples.root import RootMeasurementWriter
+
+    algSequence.addWriter(
+        RootMeasurementWriter(
+            level=logLevel,
+            inputMeasurements="measurements",
+            inputSimHits="simhits",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
+            filePath=str("measurements.root"),
+            surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
+        )
+    )
+
     if args.geoSvgDump:
         wb = WhiteBoard(acts.logging.INFO)
         context = AlgorithmContext(0, 0, wb, 10)

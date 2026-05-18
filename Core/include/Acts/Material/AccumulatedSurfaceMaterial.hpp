@@ -165,12 +165,12 @@ class AccumulatedSurfaceMaterial {
 };
 
 inline const BinUtility& AccumulatedSurfaceMaterial::binUtility() const {
-  return (m_binUtility);
+  return m_binUtility;
 }
 
 inline const AccumulatedSurfaceMaterial::AccumulatedMatrix&
 AccumulatedSurfaceMaterial::accumulatedMaterial() const {
-  return (m_accumulatedMaterial);
+  return m_accumulatedMaterial;
 }
 
 inline double AccumulatedSurfaceMaterial::splitFactor() const {

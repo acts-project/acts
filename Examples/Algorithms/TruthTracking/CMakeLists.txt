@@ -10,6 +10,7 @@ acts_add_library(
     ActsExamples/TruthTracking/TruthVertexFinder.cpp
     ActsExamples/TruthTracking/TruthSeedingAlgorithm.cpp
     ActsExamples/TruthTracking/HitSelector.cpp
+    ActsExamples/TruthTracking/VertexTruthMatcher.cpp
 )
 target_include_directories(
     ActsExamplesTruthTracking

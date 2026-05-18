@@ -20,7 +20,6 @@
 
 namespace ActsExamples {
 class TrackFitterFunction;
-struct AlgorithmContext;
 
 class RefittingAlgorithm final : public IAlgorithm {
  public:
@@ -41,13 +40,14 @@ class RefittingAlgorithm final : public IAlgorithm {
   ///
   /// @param config is the config struct to configure the algorithm
   /// @param level is the logging level
-  RefittingAlgorithm(Config config, Acts::Logging::Level level);
+  explicit RefittingAlgorithm(
+      Config config, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Framework execute method of the fitting algorithm
   ///
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algporithm flow
-  ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }

@@ -62,6 +62,15 @@ class IAxis {
   /// @return total number of bins (excluding under-/overflow bins)
   virtual std::size_t getNBins() const = 0;
 
+  /// @brief get corresponding bin index for given coordinate
+  ///
+  /// @param  [in] x input coordinate
+  /// @return index of bin containing the given value
+  ///
+  /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
+  ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
+  virtual std::size_t getBin(double x) const = 0;
+
   /// Centralized axis factory for equidistant binning
   ///
   /// @param aBoundaryType the axis boundary type

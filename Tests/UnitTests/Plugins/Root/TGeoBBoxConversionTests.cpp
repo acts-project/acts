@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
 
   // Upper case ---------------------------------
   auto [plane_XYZ, thickness_XYZ] = TGeoSurfaceConverter::toSurface(
-      *vol->GetShape(), *gGeoIdentity, "XY*", 1);
+      *vol->GetShape(), *gGeoIdentity, "XYZ", 1);
   BOOST_REQUIRE_NE(plane_XYZ, nullptr);
   BOOST_CHECK_EQUAL(plane_XYZ->type(), Surface::Plane);
   CHECK_CLOSE_ABS(thickness_XYZ, 2 * dZ, s_epsilon);
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
 
   // Lower case ---------------------------------
   auto [plane_xyz, thickness_xyz] = TGeoSurfaceConverter::toSurface(
-      *vol->GetShape(), *gGeoIdentity, "xy*", 1);
+      *vol->GetShape(), *gGeoIdentity, "xyZ", 1);
   BOOST_CHECK_NE(plane_xyz, nullptr);
   BOOST_CHECK_EQUAL(plane_xyz->type(), Surface::Plane);
   CHECK_CLOSE_ABS(thickness_xyz, 2 * dZ, s_epsilon);
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
 
   // Mixed case ---------------------------------
   auto [plane_xYz, thickness_xYz] = TGeoSurfaceConverter::toSurface(
-      *vol->GetShape(), *gGeoIdentity, "xY*", 1);
+      *vol->GetShape(), *gGeoIdentity, "xYZ", 1);
   BOOST_REQUIRE_NE(plane_xYz, nullptr);
   BOOST_CHECK_EQUAL(plane_xYz->type(), Surface::Plane);
   CHECK_CLOSE_ABS(thickness_xYz, 2 * dZ, s_epsilon);
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
 
   // Swap case --------------------------------- (x/y) here
   auto [plane_YXz, thickness_YXz] = TGeoSurfaceConverter::toSurface(
-      *vol->GetShape(), *gGeoIdentity, "YX*", 1);
+      *vol->GetShape(), *gGeoIdentity, "YXZ", 1);
   BOOST_REQUIRE_NE(plane_YXz, nullptr);
   BOOST_CHECK_EQUAL(plane_YXz->type(), Surface::Plane);
   CHECK_CLOSE_ABS(thickness_YXz, 2 * dZ, s_epsilon);
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
 
   // Scaling test ---------------------------------
   auto [plane_XYZ10, thickness_XYZ10] = TGeoSurfaceConverter::toSurface(
-      *vol->GetShape(), *gGeoIdentity, "xY*", 10);
+      *vol->GetShape(), *gGeoIdentity, "xYZ", 10);
   BOOST_CHECK_NE(plane_XYZ10, nullptr);
   CHECK_CLOSE_ABS(thickness_XYZ10, 20 * dZ, s_epsilon);
 

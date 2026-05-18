@@ -8,21 +8,13 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Io/Svg/SvgPointWriter.hpp"
 #include "ActsExamples/Io/Svg/SvgTrackingGeometryWriter.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
-#include <algorithm>
 #include <memory>
-#include <ranges>
-#include <sstream>
-#include <string>
-#include <tuple>
-#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -52,7 +44,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsSvg, svg) {
     ACTS_PYTHON_STRUCT(c, outputDir, converterOptions);
   }
   {
-    using Writer = SvgPointWriter<SimSpacePoint>;
+    using Writer = SvgPointWriter<ConstSpacePointProxy>;
     auto w =
         py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
             svg, "SvgSimSpacePointWriter")

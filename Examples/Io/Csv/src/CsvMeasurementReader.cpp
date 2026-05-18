@@ -14,7 +14,6 @@
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
@@ -105,7 +104,7 @@ inline std::vector<Data> readEverything(
     const std::string& inputDir, const std::string& filename,
     const std::vector<std::string>& optionalColumns, std::size_t event) {
   std::string path = perEventFilepath(inputDir, filename, event);
-  NamedTupleCsvReader<Data> reader(path, optionalColumns);
+  BoostDescribeCsvReader<Data> reader(path, optionalColumns);
 
   std::vector<Data> everything;
   Data one;
@@ -191,7 +190,7 @@ ProcessCode CsvMeasurementReader::read(const AlgorithmContext& ctx) {
   // Prepare containers for the hit data using the framework event data types
   MeasurementContainer tmpMeasurements;
   GeometryIdMultimap<ConstVariableBoundMeasurementProxy> orderedMeasurements;
-  IndexMultimap<Index> measurementSimHitsMap;
+  MeasurementSimHitsMap measurementSimHitsMap;
 
   tmpMeasurements.reserve(measurementData.size());
   orderedMeasurements.reserve(measurementData.size());
@@ -267,22 +266,18 @@ ProcessCode CsvMeasurementReader::read(const AlgorithmContext& ctx) {
       m_outputMeasurementParticlesMap.isInitialized()) {
     const auto hits = m_inputHits(ctx);
 
-    IndexMultimap<ActsFatras::Barcode> measurementParticlesMap;
+    MeasurementParticlesMap outputMap;
 
     for (const auto& [measIdx, hitIdx] : measurementSimHitsMap) {
       const auto& hit = hits.nth(hitIdx);
-      measurementParticlesMap.emplace(measIdx, hit->particleId());
+      outputMap.emplace(measIdx, hit->particleId());
     }
 
-    // Generate particle-measurements-map (inverted from
-    // measurement-particles-map)
     if (m_outputParticleMeasurementsMap.isInitialized()) {
-      InverseMultimap<ActsFatras::Barcode> particleMeasurementsMap =
-          invertIndexMultimap(measurementParticlesMap);
-      m_outputParticleMeasurementsMap(ctx, std::move(particleMeasurementsMap));
+      m_outputParticleMeasurementsMap(ctx, invertIndexMultimap(outputMap));
     }
 
-    m_outputMeasurementParticlesMap(ctx, std::move(measurementParticlesMap));
+    m_outputMeasurementParticlesMap(ctx, std::move(outputMap));
   }
 
   // Write the data to the EventStore

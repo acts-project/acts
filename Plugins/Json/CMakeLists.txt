@@ -39,3 +39,5 @@ target_compile_definitions(
     ActsPluginJson
     PRIVATE JSON_DISABLE_ENUM_SERIALIZATION=1
 )
+
+acts_compile_headers(PluginJson GLOB include/**/*.hpp)

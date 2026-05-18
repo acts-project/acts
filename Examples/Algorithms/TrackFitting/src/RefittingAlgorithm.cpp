@@ -9,10 +9,9 @@
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -32,9 +31,10 @@
 
 namespace ActsExamples {
 
-RefittingAlgorithm::RefittingAlgorithm(Config config,
-                                       Acts::Logging::Level level)
-    : IAlgorithm("RefittingAlgorithm", level), m_cfg(std::move(config)) {
+RefittingAlgorithm::RefittingAlgorithm(
+    Config config, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("RefittingAlgorithm", std::move(logger)),
+      m_cfg(std::move(config)) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing input tracks collection");
   }

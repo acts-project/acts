@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include <CUDA_graph_creator>
 #include <algorithm>
 #include <iostream>
 #include <vector>
 
+#include <MMG/CUDA_graph_creator>
 #include <cuda_runtime_api.h>
 
 #define USE_LAUNCH_BOUNDS

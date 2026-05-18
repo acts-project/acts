@@ -27,18 +27,30 @@ namespace ActsPlugins {
 /// @addtogroup gnn_plugin
 /// @{
 
+/// Edge classifier using PyTorch inference
 class TorchEdgeClassifier final : public EdgeClassificationBase {
  public:
+  /// Configuration struct for Torch edge classifier
   struct Config {
+    /// Path to the PyTorch model file
     std::string modelPath;
+    /// Selected feature indices for input
     std::vector<int> selectedFeatures = {};
+    /// Classification score threshold for edge filtering
     float cut = 0.5;
+    /// Number of chunks to process
     int nChunks = 1;  // NOTE for GNN use 1
+    /// Whether to treat graph as undirected
     bool undirected = false;
+    /// CUDA device ID to use for inference
     int deviceID = 0;
+    /// Whether to use edge features
     bool useEdgeFeatures = false;
   };
 
+  /// Constructor
+  /// @param cfg Configuration parameters
+  /// @param logger Logging instance
   TorchEdgeClassifier(const Config &cfg,
                       std::unique_ptr<const Acts::Logger> logger);
   ~TorchEdgeClassifier();
@@ -46,6 +58,8 @@ class TorchEdgeClassifier final : public EdgeClassificationBase {
   PipelineTensors operator()(PipelineTensors tensors,
                              const ExecutionContext &execContext = {}) override;
 
+  /// Get the configuration
+  /// @return Copy of the configuration struct
   Config config() const { return m_cfg; }
 
  private:

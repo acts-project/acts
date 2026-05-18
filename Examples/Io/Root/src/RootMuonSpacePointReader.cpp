@@ -55,8 +55,7 @@ std::pair<std::size_t, std::size_t> RootMuonSpacePointReader::availableEvents()
   return std::make_pair(0u, m_reader.GetEntries());
 }
 
-ProcessCode RootMuonSpacePointReader::read(
-    const ActsExamples::AlgorithmContext& context) {
+ProcessCode RootMuonSpacePointReader::read(const AlgorithmContext& context) {
   std::lock_guard guard{m_mutex};
 
   MuonSpacePointContainer outSpacePoints{};

@@ -18,28 +18,28 @@
 
 namespace Acts {
 
-template <typename external_spacepoint_t>
-SeedFilter<external_spacepoint_t>::SeedFilter(
+template <typename external_space_point_t>
+SeedFilter<external_space_point_t>::SeedFilter(
     const SeedFilterConfig& config,
-    IExperimentCuts<external_spacepoint_t>* expCuts /* = 0*/)
+    IExperimentCuts<external_space_point_t>* expCuts /* = 0*/)
     : m_cfg(config), m_experimentCuts(expCuts) {}
 
-template <typename external_spacepoint_t>
-SeedFilter<external_spacepoint_t>::SeedFilter(
+template <typename external_space_point_t>
+SeedFilter<external_space_point_t>::SeedFilter(
     const SeedFilterConfig& config, std::unique_ptr<const Logger> logger,
-    IExperimentCuts<external_spacepoint_t>* expCuts /* = 0*/)
+    IExperimentCuts<external_space_point_t>* expCuts /* = 0*/)
     : m_cfg(config), m_logger(std::move(logger)), m_experimentCuts(expCuts) {}
 
-template <typename external_spacepoint_t>
-void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
+template <typename external_space_point_t>
+void SeedFilter<external_space_point_t>::filterSeeds_2SpFixed(
     const SpacePointMutableData& mutableData,
-    const external_spacepoint_t& bottomSp,
-    const external_spacepoint_t& middleSp,
-    const std::vector<const external_spacepoint_t*>& topSpVec,
+    const external_space_point_t& bottomSp,
+    const external_space_point_t& middleSp,
+    const std::vector<const external_space_point_t*>& topSpVec,
     const std::vector<float>& invHelixDiameterVec,
     const std::vector<float>& impactParametersVec,
     SeedFilterState& seedFilterState,
-    CandidatesForMiddleSp<const external_spacepoint_t>& candidatesCollector)
+    CandidatesForMiddleSp<const external_space_point_t>& candidatesCollector)
     const {
   // seed confirmation
   SeedConfirmationRangeConfig seedConfRange;
@@ -234,11 +234,11 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
 // after creating all seeds with a common middle space point, filter again
 
-template <typename external_spacepoint_t>
+template <typename external_space_point_t>
 template <typename collection_t>
-void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
+void SeedFilter<external_space_point_t>::filterSeeds_1SpFixed(
     SpacePointMutableData& mutableData,
-    CandidatesForMiddleSp<const external_spacepoint_t>& candidatesCollector,
+    CandidatesForMiddleSp<const external_space_point_t>& candidatesCollector,
     collection_t& outputCollection) const {
   // retrieve all candidates
   // this collection is already sorted
@@ -249,12 +249,12 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
                        outputCollection);
 }
 
-template <typename external_spacepoint_t>
+template <typename external_space_point_t>
 template <typename collection_t>
-void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
+void SeedFilter<external_space_point_t>::filterSeeds_1SpFixed(
     SpacePointMutableData& mutableData,
     std::vector<typename CandidatesForMiddleSp<
-        const external_spacepoint_t>::value_type>& candidates,
+        const external_space_point_t>::value_type>& candidates,
     const std::size_t numQualitySeeds, collection_t& outputCollection) const {
   if (m_experimentCuts != nullptr) {
     candidates = m_experimentCuts->cutPerMiddleSP(std::move(candidates));
@@ -294,7 +294,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     mutableData.setQuality(medium->index(), bestSeedQuality);
     mutableData.setQuality(top->index(), bestSeedQuality);
 
-    Seed<external_spacepoint_t> seed{*bottom, *medium, *top};
+    Seed<external_space_point_t> seed{*bottom, *medium, *top};
     seed.setVertexZ(zOrigin);
     seed.setQuality(bestSeedQuality);
 

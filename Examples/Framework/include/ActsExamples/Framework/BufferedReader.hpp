@@ -65,7 +65,7 @@ class BufferedReader final : public IReader {
  private:
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
-  std::vector<std::unique_ptr<ActsExamples::WhiteBoard>> m_buffer;
+  std::vector<std::unique_ptr<WhiteBoard>> m_buffer;
 
   const Acts::Logger& logger() const { return *m_logger; }
 };

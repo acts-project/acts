@@ -32,3 +32,5 @@ target_link_libraries(
         detray::svgtools
         vecmem::core
 )
+
+acts_compile_headers(PluginDetray GLOB include/**/*.hpp)

@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsPodioEdm/MeasurementCollection.h"
 
 #include <podio/Frame.h>
@@ -17,9 +18,9 @@
 namespace ActsExamples {
 
 PodioMeasurementInputConverter::PodioMeasurementInputConverter(
-    const Config& config, Acts::Logging::Level level)
-    : PodioInputConverter{"PodioMeasurementInputConverter", level,
-                          config.inputFrame},
+    const Config& config, std::unique_ptr<const Acts::Logger> logger)
+    : PodioInputConverter{"PodioMeasurementInputConverter", config.inputFrame,
+                          std::move(logger)},
       m_cfg(config) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument(
@@ -53,9 +54,9 @@ ProcessCode PodioMeasurementInputConverter::convert(
   const auto& simHits = m_inputSimHits(ctx);
   const auto& simHitAssociations = m_inputSimHitAssociation(ctx);
 
-  IndexMultimap<SimBarcode> measurementToParticles;
+  MeasurementParticlesMap measurementToParticles;
   measurementToParticles.reserve(inputMeasurements.size());
-  IndexMultimap<Index> measurementToSimHits;
+  MeasurementSimHitsMap measurementToSimHits;
   measurementToParticles.reserve(inputMeasurements.size());
 
   for (const auto& inputMeas : inputMeasurements) {

@@ -315,9 +315,10 @@ void checkGlobalSubspaceTuple(const SubspactTuple& sstuple) {
   // Test with transform
   std::vector<nlohmann::json> jsspaceTransform;
   std::apply(
-      [&](auto... vals) {
+      [&](const auto&... vals) {
         (jsspaceTransform.push_back(GridAccessJsonConverter::toJson(
-             GridAccess::Affine3Transformed<decltype(vals)>(vals, tTransform))),
+             GridAccess::Affine3Transformed<std::decay_t<decltype(vals)>>(
+                 vals, tTransform))),
          ...);
       },
       sstuple);
@@ -345,11 +346,13 @@ void checkGlobalSubspaceTuple(const SubspactTuple& sstuple) {
   irn = 0;
   good = true;
   std::apply(
-      [&](auto... vals) {
+      [&](const auto&... vals) {
         ((good =
-              good && checkType(GridAccess::Affine3Transformed<decltype(vals)>(
-                                    vals, tTransform),
-                                sspaceTransformRead[irn++])),
+              good &&
+              checkType(
+                  GridAccess::Affine3Transformed<std::decay_t<decltype(vals)>>(
+                      vals, tTransform),
+                  sspaceTransformRead[irn++])),
          ...);
       },
       sstuple);

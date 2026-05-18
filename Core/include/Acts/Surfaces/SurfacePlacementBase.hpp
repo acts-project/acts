@@ -57,6 +57,7 @@ class SurfacePlacementBase {
   /// @brief Returns whether the placement corresponds to a surface on which
   ///        the measurements from the experiment are represented, i.e. it is
   //         a detector surface
+  /// @return True if this is a sensitive surface
   virtual bool isSensitive() const = 0;
 };
 }  // namespace Acts

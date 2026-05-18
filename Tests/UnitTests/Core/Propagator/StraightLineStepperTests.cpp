@@ -12,8 +12,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -37,7 +36,7 @@ using Acts::VectorHelpers::makeVector4;
 
 namespace ActsTests {
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 static constexpr auto eps = 2 * std::numeric_limits<double>::epsilon();
 
@@ -216,7 +215,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double time2 = 7.5;
   double absMom2 = 8.5;
   double charge2 = 1.;
-  BoundSquareMatrix cov2 = 8.5 * Covariance::Identity();
+  BoundMatrix cov2 = 8.5 * Covariance::Identity();
   BoundTrackParameters cp2 = BoundTrackParameters::createCurvilinear(
       makeVector4(pos2, time2), dir2, charge2 / absMom2, cov2,
       ParticleHypothesis::pion());

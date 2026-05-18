@@ -54,6 +54,7 @@ namespace Experimental {
 ///       in the tree.
 class Blueprint : public BlueprintNode {
  public:
+  /// Configuration for building a blueprint tracking geometry.
   struct Config {
     /// Determine how much envelope space to produce from the highest volume
     /// in the geometry hierarchy and the world volume.

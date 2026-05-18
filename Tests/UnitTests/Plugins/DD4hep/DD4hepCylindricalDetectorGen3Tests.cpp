@@ -499,10 +499,10 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
     int layerId{0};
     for (const auto& [nameLayer, layer] : pixelBarrelElement->children()) {
       for (const auto& [nameModule, module] : layer.children()) {
-        std::string detAxis =
-            getParamOr<std::string>("axis_definitions", module, "XYZ");
+        auto detAxis = TGeoAxes::parse(
+            getParamOr<std::string>("axis_definitions", module, "XYZ"));
         auto dd4hepDetEl = std::make_shared<DD4hepDetectorElement>(
-            module, detAxis, 1_cm, false, nullptr);
+            module, detAxis, 1_cm, nullptr);
         detectorElements.push_back(dd4hepDetEl);
         layers[layerId].push_back(dd4hepDetEl->surface().getSharedPtr());
       }
@@ -586,10 +586,10 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
       layerId = 0;
       for (const auto& [nameLayer, layer] : pixelEndcapElement->children()) {
         for (const auto& [nameModule, module] : layer.children()) {
-          std::string detAxis =
-              getParamOr<std::string>("axis_definitions", module, "XYZ");
+          auto detAxis = TGeoAxes::parse(
+              getParamOr<std::string>("axis_definitions", module, "XYZ"));
           auto dd4hepDetEl = std::make_shared<DD4hepDetectorElement>(
-              module, detAxis, 1_cm, false, nullptr);
+              module, detAxis, 1_cm, nullptr);
           detectorElements.push_back(dd4hepDetEl);
           initialLayers[layerId].push_back(
               dd4hepDetEl->surface().getSharedPtr());

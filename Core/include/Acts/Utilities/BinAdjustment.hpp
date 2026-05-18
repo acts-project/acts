@@ -47,7 +47,7 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
   for (auto& bd : bData) {
     // The binning value
     AxisDirection bval = bd.binvalue;
-    // Throw exceptions is stuff doesn't make sense:
+    // Throw exceptions if stuff doesn't make sense:
     // - not the right binning value
     // - not equidistant
     if (bd.type == arbitrary) {

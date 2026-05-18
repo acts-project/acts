@@ -17,9 +17,9 @@ template <class identifier_t>
 template <class PointType>
 void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fill(
     const PointType& measurement, const HoughAxisRanges& axisRanges,
-    LineParametrisation<PointType> linePar,
-    LineParametrisation<PointType> widthPar, const identifier_t& identifier,
-    unsigned layer, YieldType weight) {
+    const LineParametrisation<PointType>& linePar,
+    const LineParametrisation<PointType>& widthPar,
+    const identifier_t& identifier, unsigned layer, YieldType weight) {
   // loop over all bins in the first coordinate to populate the line
   for (std::size_t xBin = 0; xBin < m_cfg.nBinsX; xBin++) {
     // get the x-coordinate for the given bin

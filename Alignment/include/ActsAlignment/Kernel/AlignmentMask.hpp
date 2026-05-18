@@ -19,7 +19,7 @@ namespace ActsAlignment {
 /// should be float. should be initialized, and which should be left invalid.
 /// These mask values can be combined using binary operators, so
 /// (AlignmentMask::Center0 | AlignmentMask::Center1) will instruct
-/// alignment for geometry object center x and y
+/// alignment for local translations along local x and y
 /// The enum is used as a strong type wrapper around the bits to prevent
 /// autoconversion from integer
 enum struct AlignmentMask : std::uint8_t {

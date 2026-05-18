@@ -18,8 +18,6 @@
 
 #include <utility>
 
-#include <boost/algorithm/string.hpp>
-
 #include "RtypesCore.h"
 #include "TGeoBoolNode.h"
 
@@ -31,7 +29,7 @@ namespace ActsPlugins {
 
 TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
-    const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
+    const TGeoMatrix& tGeoMatrix, TGeoAxes axes, double scalor,
     std::shared_ptr<const ISurfaceMaterial> material)
     : m_detElement(&tGeoNode), m_identifier(identifier) {
   // Create temporary local non const surface (to allow setting the

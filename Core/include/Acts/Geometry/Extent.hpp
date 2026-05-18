@@ -56,6 +56,15 @@ struct ExtentEnvelope {
     }
   }
 
+  /// Setter that allows for method chaining
+  /// @param aDir the axis direction
+  /// @param envelope the envelope to be set
+  /// @return a reference to the envelope for chaining
+  ExtentEnvelope& set(AxisDirection aDir, const Envelope& envelope) {
+    m_values[toUnderlying(aDir)] = envelope;
+    return *this;
+  }
+
   /// Static factory for a zero envelope
   /// @return the zero envelope
   constexpr static ExtentEnvelope Zero() {

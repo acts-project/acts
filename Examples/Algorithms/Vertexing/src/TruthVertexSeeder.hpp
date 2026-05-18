@@ -11,9 +11,9 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
-#include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
+#include "ActsExamples/EventData/Vertex.hpp"
 
 namespace ActsExamples {
 
@@ -33,7 +33,7 @@ class TruthVertexSeeder final : public Acts::IVertexFinder {
 
   explicit TruthVertexSeeder(const Config& cfg);
 
-  Acts::Result<std::vector<Acts::Vertex>> find(
+  Acts::Result<VertexContainer> find(
       const std::vector<Acts::InputTrack>& trackVector,
       const Acts::VertexingOptions& vertexingOptions,
       IVertexFinder::State& state) const final;

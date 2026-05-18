@@ -8,16 +8,13 @@
 
 #include "ActsExamples/Utilities/Options.hpp"
 
-#include <algorithm>
 #include <array>
 #include <bitset>
-#include <cmath>
 #include <exception>
 #include <iostream>
 #include <limits>
 #include <numbers>
 #include <optional>
-#include <sstream>
 #include <string>
 #include <vector>
 

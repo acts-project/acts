@@ -21,10 +21,10 @@ namespace Acts::detail::LineHelper {
 /// @param linePosB: Arbitrary point on the second line
 /// @param lineDirB: Direction of the second line (Unit-length)
 template <int N>
-inline Intersection<N> lineIntersect(const ActsVector<N>& linePosA,
-                                     const ActsVector<N>& lineDirA,
-                                     const ActsVector<N>& linePosB,
-                                     const ActsVector<N>& lineDirB)
+inline Intersection<N> lineIntersect(const Vector<N>& linePosA,
+                                     const Vector<N>& lineDirA,
+                                     const Vector<N>& linePosB,
+                                     const Vector<N>& lineDirB)
   requires(N >= 2)
 {
   static_assert(N >= 2, "One dimensional intersect not sensible");
@@ -46,7 +46,7 @@ inline Intersection<N> lineIntersect(const ActsVector<N>& linePosA,
   if (std::abs(divisor) < std::numeric_limits<double>::epsilon()) {
     return Intersection<N>::Invalid();
   }
-  const ActsVector<N> aMinusB = linePosA - linePosB;
+  const Vector<N> aMinusB = linePosA - linePosB;
   const double pathLength =
       (aMinusB.dot(lineDirB) - aMinusB.dot(lineDirA) * dirDots) / divisor;
 

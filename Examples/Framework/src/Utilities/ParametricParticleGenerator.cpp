@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/ParticleData.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <limits>
 #include <memory>
@@ -57,7 +58,7 @@ ParametricParticleGenerator::ParametricParticleGenerator(const Config& cfg)
     // https://mathworld.wolfram.com/SpherePointPicking.html
     double cosThetaMin = std::cos(m_cfg.thetaMin);
     // ensure upper bound is included. see e.g.
-    // https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
+    // https://en.cppreference.com/cpp/numeric/random/uniform_real_distribution
     double cosThetaMax = std::nextafter(std::cos(m_cfg.thetaMax),
                                         std::numeric_limits<double>::max());
 
@@ -66,7 +67,8 @@ ParametricParticleGenerator::ParametricParticleGenerator(const Config& cfg)
     m_sinCosThetaDist =
         [=](RandomEngine& rng) mutable -> std::pair<double, double> {
       const double cosTheta = cosThetaDist(rng);
-      return {std::sqrt(1 - cosTheta * cosTheta), cosTheta};
+      const double sinTheta = Acts::fastCathetus(1, cosTheta);
+      return {sinTheta, cosTheta};
     };
   }
 

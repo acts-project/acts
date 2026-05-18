@@ -40,8 +40,11 @@ namespace Acts {
 ///   the future.
 class Material {
  public:
+  /// Opaque parameters vector for serialization
   using ParametersVector = Eigen::Matrix<float, 5, 1>;
 
+  /// Create a vacuum material
+  /// @return Vacuum material
   static constexpr Material Vacuum() { return Material(); }
 
   // Both mass and molar density are stored as a float and can thus not be
@@ -62,6 +65,7 @@ class Material {
   /// @param molarElectronRho is the molar electron density
   /// @param meanExcitationEnergy is the mean electron excitation energy.
   ///        If not provided it will be approximated.
+  /// @return Material instance constructed from the given parameters
   static Material fromMolarDensity(float x0, float l0, float ar, float z,
                                    float molarRho, float molarElectronRho,
                                    std::optional<float> meanExcitationEnergy);
@@ -73,6 +77,7 @@ class Material {
   /// @param ar is the relative atomic mass
   /// @param z is the nuclear charge number
   /// @param molarRho is the molar density
+  /// @return Material instance constructed from the given parameters
   static Material fromMolarDensity(float x0, float l0, float ar, float z,
                                    float molarRho);
 
@@ -83,6 +88,7 @@ class Material {
   /// @param ar is the relative atomic mass
   /// @param z is the nuclear charge number
   /// @param massRho is the mass density
+  /// @return Material instance constructed from the given parameters
   ///
   /// @warning Due to the choice of native mass units, using the mass density
   ///   can lead to numerical problems. Typical mass densities lead to
@@ -91,31 +97,42 @@ class Material {
                                   float massRho);
 
   /// Construct from an encoded parameters vector.
+  /// @param parameters Encoded material parameters
   explicit Material(const ParametersVector& parameters);
 
   /// Check if the material is vacuum.
+  /// @return True if the material is vacuum
   bool isVacuum() const { return m_ar <= 0.f; }
 
   /// Return the radiation length. Infinity in case of vacuum.
+  /// @return Radiation length
   constexpr float X0() const { return m_x0; }
   /// Return the nuclear interaction length. Infinity in case of vacuum.
+  /// @return Nuclear interaction length
   constexpr float L0() const { return m_l0; }
   /// Return the relative atomic mass.
+  /// @return Relative atomic mass
   constexpr float Ar() const { return m_ar; }
   /// Return the nuclear charge number.
+  /// @return Nuclear charge number
   constexpr float Z() const { return m_z; }
   /// Return the molar density.
+  /// @return Molar density
   constexpr float molarDensity() const { return m_molarRho; }
   /// Return the molar electron density.
+  /// @return Molar electron density
   constexpr float molarElectronDensity() const { return m_molarElectronRho; }
   /// Return the mass density.
+  /// @return Mass density
   float massDensity() const;
   /// Return the mean electron excitation energy.
+  /// @return Mean electron excitation energy
   constexpr float meanExcitationEnergy() const {
     return m_meanExcitationEnergy;
   }
 
   /// Encode the properties into an opaque parameters vector.
+  /// @return Encoded parameters vector
   ParametersVector parameters() const;
 
  private:

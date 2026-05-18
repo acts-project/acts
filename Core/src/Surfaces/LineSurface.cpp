@@ -281,13 +281,13 @@ AlignmentToPathMatrix LineSurface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-ActsMatrix<2, 3> LineSurface::localCartesianToBoundLocalDerivative(
+Matrix<2, 3> LineSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   // calculate the transformation to local coordinates
   Vector3 localPosition = localToGlobalTransform(gctx).inverse() * position;
   double localPhi = VectorHelpers::phi(localPosition);
 
-  ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Zero();
+  Matrix<2, 3> loc3DToLocBound = Matrix<2, 3>::Zero();
   loc3DToLocBound << std::cos(localPhi), std::sin(localPhi), 0, 0, 0, 1;
 
   return loc3DToLocBound;

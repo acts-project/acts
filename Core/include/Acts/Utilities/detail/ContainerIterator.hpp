@@ -16,12 +16,27 @@
 
 namespace Acts::detail {
 
-template <typename Container, typename Value, typename Index, bool ReadOnly>
+/// Helper class to implement iterators of containers that dereference to the
+/// values in the container corresponding to the indices in the index range. The
+/// iterator can be read-only or mutable, depending on the template parameter.
+///
+/// The user is expected to typedef this class as the iterator type in their
+/// container, and provide the appropriate template parameters. The iterator can
+/// then be used to access the values in the container through the provided
+/// iterator interface.
+///
+/// @tparam container_t The type of the underlying container.
+/// @tparam value_t The type of the values in the container.
+/// @tparam index_t The type of the indices that define the subset.
+/// @tparam read_only A boolean indicating whether the subset is read-only.
+template <typename container_t, typename value_t, std::integral index_t,
+          bool read_only>
 class ContainerIterator {
  public:
-  using container_type = const_if_t<ReadOnly, Container>;
-  using index_type = Index;
-  static constexpr bool read_only = ReadOnly;
+  using Container = const_if_t<read_only, container_t>;
+  using Value = value_t;
+  using Index = index_t;
+  static constexpr bool ReadOnly = read_only;
 
   using value_type = Value;
   using difference_type = std::ptrdiff_t;
@@ -32,8 +47,7 @@ class ContainerIterator {
   using iterator_concept = std::random_access_iterator_tag;
 
   constexpr ContainerIterator() noexcept = default;
-  constexpr ContainerIterator(container_type &container,
-                              index_type index) noexcept
+  constexpr ContainerIterator(Container &container, Index index) noexcept
       : m_container(&container), m_index(index) {}
   template <bool OtherReadOnly>
   explicit constexpr ContainerIterator(
@@ -49,10 +63,11 @@ class ContainerIterator {
     return {*m_container, m_index};
   }
 
-  constexpr container_type &container() const noexcept { return *m_container; }
-  constexpr index_type index() const noexcept { return m_index; }
+  constexpr Container &container() const noexcept { return *m_container; }
 
-  constexpr value_type operator*() const {
+  constexpr Index index() const noexcept { return m_index; }
+
+  constexpr Value operator*() const {
     static_assert(
         ContainerHasAt<Container> || ContainerHasArrayAccess<Container>,
         "Container must support at() or operator[] for indexing");
@@ -64,7 +79,8 @@ class ContainerIterator {
       return m_container->at(m_index);
     }
   }
-  constexpr value_type operator[](difference_type n) const {
+
+  constexpr Value operator[](difference_type n) const {
     static_assert(
         ContainerHasAt<Container> || ContainerHasArrayAccess<Container>,
         "Container must support at() or operator[] for indexing");
@@ -81,15 +97,18 @@ class ContainerIterator {
     ++m_index;
     return *this;
   }
+
   constexpr ContainerIterator operator++(int) noexcept {
     auto tmp = *this;
     ++(*this);
     return tmp;
   }
+
   constexpr ContainerIterator &operator--() noexcept {
     --m_index;
     return *this;
   }
+
   constexpr ContainerIterator operator--(int) noexcept {
     auto tmp = *this;
     --(*this);
@@ -100,14 +119,15 @@ class ContainerIterator {
     m_index += n;
     return *this;
   }
+
   constexpr ContainerIterator &operator-=(difference_type n) noexcept {
     m_index -= n;
     return *this;
   }
 
  private:
-  container_type *m_container{};
-  index_type m_index{};
+  Container *m_container{};
+  Index m_index{};
 
   friend constexpr ContainerIterator operator+(ContainerIterator it,
                                                difference_type n) noexcept {
@@ -133,6 +153,7 @@ class ContainerIterator {
                                     const ContainerIterator &b) noexcept {
     return a.m_index <=> b.m_index;
   }
+
   friend constexpr bool operator==(const ContainerIterator &a,
                                    const ContainerIterator &b) noexcept {
     return a.m_index == b.m_index;

@@ -66,7 +66,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsTraccc, traccc) {
   {
     traccc.def(
         "createSlPropagatorHost",
-        [](std::shared_ptr<const DetrayHostStore> detrayStore,
+        [](const std::shared_ptr<const DetrayHostStore>& detrayStore,
            bool sterile = false) {
           std::shared_ptr<PropagatorInterface> detrayPropagator = nullptr;
 
@@ -86,7 +86,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsTraccc, traccc) {
   {
     traccc.def(
         "createConstBFieldPropagatorHost",
-        [](std::shared_ptr<const DetrayHostStore> detrayStore,
+        [](const std::shared_ptr<const DetrayHostStore>& detrayStore,
            Covfie::ConstantField cfield, bool sterile = false) {
           std::shared_ptr<PropagatorInterface> detrayPropagator = nullptr;
 
@@ -109,7 +109,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsTraccc, traccc) {
   {
     traccc.def(
         "createInterpolatedBFieldPropagatorHost",
-        [](std::shared_ptr<const DetrayHostStore> detrayStore,
+        [](const std::shared_ptr<const DetrayHostStore>& detrayStore,
            Covfie::InterpolatedField ifield, bool sterile = false) {
           std::shared_ptr<PropagatorInterface> detrayPropagator = nullptr;
 
@@ -122,7 +122,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsTraccc, traccc) {
               DetrayPropagator<DetrayRknStepper, DetrayHostStore,
                                Covfie::InterpolatedField>;
 
-          DetrayPropagator::Config cfg{detrayStore, sterile, ifield};
+          DetrayPropagator::Config cfg{detrayStore, sterile, std::move(ifield)};
           detrayPropagator = std::make_shared<DetrayPropagator>(cfg);
 
           return detrayPropagator;

@@ -5,7 +5,6 @@ import os
 
 from sphinx.application import Sphinx
 
-
 __version__ = "0.1.0"
 
 
@@ -48,7 +47,7 @@ def run() -> None:
         "Acts::SquareMatrix3",
         "Acts::SquareMatrix4",
         "Acts::BoundMatrix",
-        "Acts::BoundSquareMatrix",
+        "Acts::BoundMatrix",
         "Acts::Vector2",
         "Acts::Vector3",
         "Acts::Vector4",
@@ -67,7 +66,7 @@ def run() -> None:
         "Acts::Intersection3D",
         "Acts::BoundToFreeMatrix",
         "Acts::FreeToBoundMatrix",
-        "Acts::FreeSquareMatrix",
+        "Acts::FreeMatrix",
         "Acts::FreeToPathMatrix",
         "Acts::HashedString",
     }
@@ -172,12 +171,10 @@ def run() -> None:
         for role, instances in sorted(role_instances.items(), key=lambda x: x[0]):
             fh.write(f"## {role_names[role]}\n")
             for instance in sorted(instances):
-                fh.write(
-                    f"""
+                fh.write(f"""
 :::{{{directives[role]}}} {instance}
 :::
-"""
-                )
+""")
             fh.write("\n")
 
 

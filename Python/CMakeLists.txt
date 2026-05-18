@@ -8,6 +8,7 @@ set(_plugins_built)
 
 # Add the bindings
 add_subdirectory(Core)
+add_subdirectory(Fatras)
 add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
 add_subdirectory(Plugins)
 add_subdirectory(Utilities)

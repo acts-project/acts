@@ -18,9 +18,11 @@
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-ActsExamples::AlignmentAlgorithm::AlignmentAlgorithm(Config cfg,
-                                                     Acts::Logging::Level lvl)
-    : ActsExamples::IAlgorithm("AlignmentAlgorithm", lvl),
+namespace ActsExamples {
+
+AlignmentAlgorithm::AlignmentAlgorithm(
+    Config cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("AlignmentAlgorithm", std::move(logger)),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing input measurement collection");
@@ -46,8 +48,7 @@ ActsExamples::AlignmentAlgorithm::AlignmentAlgorithm(Config cfg,
   m_outputAlignmentParameters.initialize(m_cfg.outputAlignmentParameters);
 }
 
-ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode AlignmentAlgorithm::execute(const AlgorithmContext& ctx) const {
   // Read input data
   const auto& measurements = m_inputMeasurements(ctx);
   const auto& protoTracks = m_inputProtoTracks(ctx);
@@ -130,10 +131,10 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
 
   ACTS_INFO("Total collected tracks so far: " << m_collectedSourceLinks.size());
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::finalize() {
+ProcessCode AlignmentAlgorithm::finalize() {
   ACTS_INFO("=============================================================");
   ACTS_INFO("Finalizing alignment with "
             << m_collectedSourceLinks.size()
@@ -216,9 +217,13 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::finalize() {
     return ProcessCode::ABORT;
   }
 
-  // TODO: Save alignment parameters to file
-  // For now, they are stored in the alignedDetElements via
-  // alignedTransformUpdater
+  // Finalize() has no AlgorithmContext / per-event WhiteBoard (each event's
+  // store is destroyed after that event). Single-event main writes
+  // m_outputAlignmentParameters from execute(); here transforms are already
+  // applied via alignedTransformUpdater. Extract from detector / e.g.
+  // MutableGeoIdAlignmentStore for downstream, as in alignment examples.
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

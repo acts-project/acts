@@ -32,7 +32,7 @@ class AmbiguityTrackClassifier {
   /// Construct the ambiguity scoring algorithm.
   ///
   /// @param modelPath path to the model file
-  AmbiguityTrackClassifier(const char* modelPath)
+  explicit AmbiguityTrackClassifier(const char* modelPath)
       : m_env(ORT_LOGGING_LEVEL_WARNING, "MLClassifier"),
         m_duplicateClassifier(m_env, modelPath) {}
 

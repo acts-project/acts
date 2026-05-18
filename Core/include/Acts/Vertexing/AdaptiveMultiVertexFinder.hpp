@@ -42,6 +42,10 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
           ipEstimator(std::move(ipEst)),
           bField{std::move(bIn)} {}
 
+    /// Move constructor
+    /// @param other is the other adaptive multi vertex finder
+    Config(Config&& other) noexcept = default;
+
     /// Vertex fitter
     VertexFitter vertexFitter;
 

@@ -23,6 +23,8 @@ target_link_libraries(
         podio::podioRootIO
 )
 
+acts_compile_headers(PluginEDM4hep GLOB include/**/*.hpp)
+
 find_file(
     _edm4hep_yaml
     NAME
@@ -48,6 +50,12 @@ podio_add_datamodel_core_lib(ActsPodioEdm "${headers}" "${sources}"
   OUTPUT_FOLDER ${_output_folder}
 )
 target_link_libraries(ActsPodioEdm PUBLIC EDM4HEP::edm4hep)
+target_include_directories(
+    ActsPodioEdm
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
 add_library(Acts::PodioEdm ALIAS ActsPodioEdm)
 
@@ -67,6 +75,11 @@ install(
 
 install(
     DIRECTORY ${_output_folder}/ActsPodioEdm
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ActsPodioEdm
+)
+
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ActsPodioEdm/detail
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ActsPodioEdm
 )
 

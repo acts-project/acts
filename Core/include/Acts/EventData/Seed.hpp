@@ -13,28 +13,48 @@
 
 namespace Acts {
 
-template <typename external_spacepoint_t, std::size_t N = 3ul>
-class Seed {
+/// Seed built from N external space points.
+/// @deprecated This EDM will be removed in one of the next major
+/// releases and is replaced by the new SeedContainer and proxies.
+/// See @ref SeedContainer2 and @ref SeedProxy2 for details.
+template <typename external_space_point_t, std::size_t N = 3ul>
+class [[deprecated(
+    "Will be dropped soon and is replaced by the new SeedContainer and "
+    "proxies")]] Seed {
   static_assert(N >= 3ul);
 
  public:
-  using value_type = external_spacepoint_t;
+  /// Type of the external space point
+  using value_type = external_space_point_t;
+  /// Number of space points in the seed
   static constexpr std::size_t DIM = N;
 
+  /// Constructor from N space points
+  /// @param points The space points to build the seed from
   template <typename... args_t>
     requires(sizeof...(args_t) == N) &&
-            (std::same_as<external_spacepoint_t, args_t> && ...)
+            (std::same_as<external_space_point_t, args_t> && ...)
   explicit Seed(const args_t&... points);
 
+  /// Set the z-coordinate of the vertex
+  /// @param vertex The vertex z-coordinate
   void setVertexZ(float vertex);
+  /// Set the quality of the seed
+  /// @param seedQuality The seed quality value
   void setQuality(float seedQuality);
 
-  const std::array<const external_spacepoint_t*, N>& sp() const;
+  /// Get the space points in the seed
+  /// @return Array of pointers to the space points
+  const std::array<const external_space_point_t*, N>& sp() const;
+  /// Get the z-coordinate of the vertex
+  /// @return The vertex z-coordinate
   float z() const;
+  /// Get the quality of the seed
+  /// @return The seed quality value
   float seedQuality() const;
 
  private:
-  std::array<const external_spacepoint_t*, N> m_spacepoints{};
+  std::array<const external_space_point_t*, N> m_spacePoints{};
   float m_vertexZ{0.f};
   float m_seedQuality{-std::numeric_limits<float>::infinity()};
 };
