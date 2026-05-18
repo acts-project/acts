@@ -39,7 +39,7 @@ void addTrackFitting(py::module& mex) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(RefittingAlgorithm, mex, "RefittingAlgorithm",
                                 inputTracks, outputTracks, fit, pickTrack,
-                                initialVarInflation);
+                                initialVarInflation, beamSpotConstraint);
 
   {
     py::class_<TrackFitterFunction, std::shared_ptr<TrackFitterFunction>>(

@@ -27,8 +27,7 @@ class UprootParticleReader(acts.examples.IReader):
     """Reads simulated particles from a ROOT file using uproot.
 
     Reads the file format produced by RootParticleWriter (one entry per event,
-    vector-valued branches). All data is loaded upfront for thread-safe
-    concurrent access from the sequencer.
+    vector-valued branches). Data is buffered for access.
     """
 
     def __init__(
@@ -36,24 +35,29 @@ class UprootParticleReader(acts.examples.IReader):
         filePath: Union[Path, str],
         outputParticles: str = "particles",
         level: acts.logging.Level = acts.logging.INFO,
+        bufferSize: int = 1,
     ):
         acts.examples.IReader.__init__(self, "UprootParticleReader", level)
 
         self._outputParticles = outputParticles
+        self._bufferSize = bufferSize
 
         self._particleHandle = acts.examples.WriteDataHandle(
             self, acts.examples.SimParticleContainer, "OutputParticles"
         )
         self._particleHandle.initialize(self._outputParticles)
 
-        with uproot.open(str(filePath)) as f:
-            tree = f["particles"]
-            self._data = tree.arrays(library="np")
-            event_ids = self._data["event_id"]
-            self._entry_map = {int(eid): i for i, eid in enumerate(event_ids)}
+        self._file = uproot.open(str(filePath))
+        self._tree = self._file["particles"]
+        event_ids = self._tree["event_id"].array(library="np")
+        self._entry_map = {int(eid): i for i, eid in enumerate(event_ids)}
 
         self._min_event = min(self._entry_map.keys())
         self._max_event = max(self._entry_map.keys())
+
+        self._buffer = None
+        self._buffer_start = -1
+        self._buffer_end = -1
 
     def availableEvents(self):
         return (self._min_event, self._max_event + 1)
@@ -64,39 +68,57 @@ class UprootParticleReader(acts.examples.IReader):
 
         if event_number in self._entry_map:
             idx = self._entry_map[event_number]
-            d = self._data
-            n = len(d["particle_type"][idx])
+
+            if not (self._buffer_start <= idx < self._buffer_end):
+                self._buffer_start = idx
+                self._buffer_end = min(idx + self._bufferSize, self._tree.num_entries)
+                self._buffer = self._tree.arrays(
+                    library="np",
+                    entry_start=self._buffer_start,
+                    entry_stop=self._buffer_end,
+                )
+
+            d = self._buffer
+            buffer_idx = idx - self._buffer_start
+            n = len(d["particle_type"][buffer_idx])
             u = acts.UnitConstants
             for i in range(n):
                 barcode = acts.examples.SimBarcode()
-                barcode.vertexPrimary = int(d["vertex_primary"][idx][i])
-                barcode.vertexSecondary = int(d["vertex_secondary"][idx][i])
-                barcode.particle = int(d["particle"][idx][i])
-                barcode.generation = int(d["generation"][idx][i])
-                barcode.subParticle = int(d["sub_particle"][idx][i])
+                barcode.vertexPrimary = int(d["vertex_primary"][buffer_idx][i])
+                barcode.vertexSecondary = int(d["vertex_secondary"][buffer_idx][i])
+                barcode.particle = int(d["particle"][buffer_idx][i])
+                barcode.generation = int(d["generation"][buffer_idx][i])
+                barcode.subParticle = int(d["sub_particle"][buffer_idx][i])
 
                 p = acts.examples.SimParticle(
                     barcode,
-                    acts.PdgParticle(int(d["particle_type"][idx][i])),
-                    float(d["q"][idx][i]) * u.e,
-                    float(d["m"][idx][i]) * u.GeV,
+                    acts.PdgParticle(int(d["particle_type"][buffer_idx][i])),
+                    float(d["q"][buffer_idx][i]) * u.e,
+                    float(d["m"][buffer_idx][i]) * u.GeV,
                 )
-                p.process = acts.examples.GenerationProcess(int(d["process"][idx][i]))
+                p.process = acts.examples.GenerationProcess(
+                    int(d["process"][buffer_idx][i])
+                )
 
                 p.fourPosition = acts.Vector4(
-                    *[float(d[k][idx][i]) * u.mm for k in ("vx", "vy", "vz", "vt")]
+                    *[
+                        float(d[k][buffer_idx][i]) * u.mm
+                        for k in ("vx", "vy", "vz", "vt")
+                    ]
                 )
                 p.direction = acts.Vector3(
-                    *[float(d[k][idx][i]) for k in ("px", "py", "pz")]
+                    *[float(d[k][buffer_idx][i]) for k in ("px", "py", "pz")]
                 )
-                p.absoluteMomentum = float(d["p"][idx][i]) * u.GeV
+                p.absoluteMomentum = float(d["p"][buffer_idx][i]) * u.GeV
 
                 p.setFinalMaterialPassed(
-                    float(d["total_x0"][idx][i]) * u.mm,
-                    float(d["total_l0"][idx][i]) * u.mm,
+                    float(d["total_x0"][buffer_idx][i]) * u.mm,
+                    float(d["total_l0"][buffer_idx][i]) * u.mm,
                 )
-                p.numberOfHits = int(d["number_of_hits"][idx][i])
-                p.outcome = acts.examples.SimulationOutcome(int(d["outcome"][idx][i]))
+                p.numberOfHits = int(d["number_of_hits"][buffer_idx][i])
+                p.outcome = acts.examples.SimulationOutcome(
+                    int(d["outcome"][buffer_idx][i])
+                )
 
                 particles.insert(p)
 
@@ -108,8 +130,7 @@ class UprootSimHitReader(acts.examples.IReader):
     """Reads simulated hits from a ROOT file using uproot.
 
     Reads the file format produced by RootSimHitWriter (one row per hit,
-    scalar branches grouped by event_id). All data is loaded upfront for
-    thread-safe concurrent access from the sequencer.
+    scalar branches grouped by event_id). Data is buffered for access.
     """
 
     def __init__(
@@ -117,24 +138,30 @@ class UprootSimHitReader(acts.examples.IReader):
         filePath: Union[Path, str],
         outputSimHits: str = "simhits",
         level: acts.logging.Level = acts.logging.INFO,
+        bufferSize: int = 1,
     ):
         acts.examples.IReader.__init__(self, "UprootSimHitReader", level)
 
         self._outputSimHits = outputSimHits
+        self._bufferSize = bufferSize
 
         self._hitHandle = acts.examples.WriteDataHandle(
             self, acts.examples.SimHitContainer, "OutputSimHits"
         )
         self._hitHandle.initialize(self._outputSimHits)
 
-        with uproot.open(str(filePath)) as f:
-            tree = f["hits"]
-            self._data = tree.arrays(library="np")
-            self._event_range_map = self._build_event_range_map(self._data["event_id"])
+        self._file = uproot.open(str(filePath))
+        self._tree = self._file["hits"]
+        event_ids = self._tree["event_id"].array(library="np")
+        self._event_range_map = self._build_event_range_map(event_ids)
 
         all_ids = set(self._event_range_map.keys())
         self._min_event = int(min(all_ids))
         self._max_event = int(max(all_ids))
+
+        self._buffer = None
+        self._buffer_start = -1
+        self._buffer_end = -1
 
     @staticmethod
     def _build_event_range_map(event_ids: np.ndarray) -> dict:
@@ -156,9 +183,21 @@ class UprootSimHitReader(acts.examples.IReader):
 
         if event_number in self._event_range_map:
             start, end = self._event_range_map[event_number]
-            d = self._data
+
+            if not (self._buffer_start <= start and end <= self._buffer_end):
+                self._buffer_start = start
+                self._buffer_end = min(
+                    max(start + self._bufferSize, end), self._tree.num_entries
+                )
+                self._buffer = self._tree.arrays(
+                    library="np",
+                    entry_start=self._buffer_start,
+                    entry_stop=self._buffer_end,
+                )
+
+            d = self._buffer
             u = acts.UnitConstants
-            for i in range(start, end):
+            for i in range(start - self._buffer_start, end - self._buffer_start):
                 geoid = acts.GeometryIdentifier(int(d["geometry_id"][i]))
 
                 barcode = acts.examples.SimBarcode()

@@ -152,7 +152,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
  private:
   void computeSharedHits(TrackContainer& tracks,
-                         const MeasurementContainer& measurements) const;
+                         const MeasurementSubset& measurements) const;
 
   ProcessCode finalize() override;
 
@@ -160,8 +160,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   Config m_cfg;
   std::optional<Acts::TrackSelector> m_trackSelector;
 
-  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
-                                                           "InputMeasurements"};
+  ReadDataHandle<MeasurementSubset> m_inputMeasurements{this,
+                                                        "InputMeasurements"};
   ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
       this, "InputInitialTrackParameters"};
   ReadDataHandle<SeedContainer> m_inputSeeds{this, "InputSeeds"};
