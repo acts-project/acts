@@ -7,13 +7,16 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
+#include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsPython/Utilities/WhiteBoardRegistry.hpp"
 
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
 // Prevent stl.h's list_caster-based type_caster<std::vector<T>> from matching
@@ -310,6 +313,76 @@ void addEventData(py::module& mex) {
             std::make_shared<Acts::ConstVectorMultiTrajectory>(
                 std::move(self.trackStateContainer()))};
       });
+
+  // bind measurements
+  py::class_<ConstVariableBoundMeasurementProxy>(
+      mex, "ConstVariableBoundMeasurementProxy")
+      .def_property_readonly("geometryId",
+                             &ConstVariableBoundMeasurementProxy::geometryId)
+      .def_property_readonly("size", &ConstVariableBoundMeasurementProxy::size)
+      .def_property_readonly("index",
+                             &ConstVariableBoundMeasurementProxy::index)
+      .def_property_readonly(
+          "fullParameters", &ConstVariableBoundMeasurementProxy::fullParameters)
+      .def_property_readonly(
+          "fullCovariance", &ConstVariableBoundMeasurementProxy::fullCovariance)
+      .def_property_readonly(
+          "subspaceIndices",
+          [](const ConstVariableBoundMeasurementProxy& self) {
+            auto indices = self.subspaceHelper().indices();
+            return std::vector<int>(indices.begin(), indices.end());
+          });
+
+  auto measurementContainer =
+      py::classh<MeasurementContainer>(mex, "MeasurementContainer")
+          .def(py::init([]() { return MeasurementContainer(); }))
+          .def("__len__", &MeasurementContainer::size)
+          .def("reserve", &MeasurementContainer::reserve)
+          .def(
+              "emplaceMeasurement",
+              [](MeasurementContainer& self,
+                 Acts::GeometryIdentifier geometryId,
+                 const std::vector<int>& indices,
+                 const std::vector<double>& par, const std::vector<double>& cov)
+                  -> ConstVariableBoundMeasurementProxy {
+                if (indices.size() != par.size() ||
+                    indices.size() != cov.size()) {
+                  throw std::invalid_argument(
+                      "Indices, parameters, and variances must have the same "
+                      "size");
+                }
+
+                std::vector<Acts::BoundIndices> boundIndices;
+                for (auto i : indices) {
+                  if (i < 0 || i >= static_cast<int>(Acts::eBoundSize)) {
+                    throw std::out_of_range("Subspace index out of range");
+                  }
+                  boundIndices.push_back(static_cast<Acts::BoundIndices>(i));
+                }
+
+                // Use existing helpers to convert the input to the measurement
+                DigitizedParameters dParams;
+                dParams.indices = boundIndices;
+                dParams.values = par;
+                dParams.variances = cov;
+                return ConstVariableBoundMeasurementProxy{
+                    createMeasurement(self, geometryId, dParams)};
+              },
+              py::arg("geometryId"), py::arg("indices"), py::arg("parameters"),
+              py::arg("covariance"))
+          .def("__getitem__",
+               [](MeasurementContainer& self, MeasurementContainer::Index idx) {
+                 return ConstVariableBoundMeasurementProxy{
+                     self.getMeasurement(idx)};
+               })
+          .def(
+              "__iter__",
+              [](const MeasurementContainer& self) {
+                return py::make_iterator(self.begin(), self.end());
+              },
+              py::keep_alive<0, 1>());
+
+  WhiteBoardRegistry::registerClass(measurementContainer);
 }
 
 }  // namespace ActsPython
