@@ -61,7 +61,15 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // the algorithm
   auto geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
       layerGeometry, layerConnectionMap);
-
+  
+  // ROI file:Defines what region in detector we are interested in, currently
+  // set to entire detector
+  // for pixel seeding, roi z bounds are used
+  
+  m_internalRoi.emplace(0, -4.5, 4.5, 0, -std::numbers::pi, std::numbers::pi, 0, -150., 150.);
+  m_cfg.seedFinderConfig.maxZ0 = m_internalRoi->zMax();
+  m_cfg.seedFinderConfig.minZ0 = m_internalRoi->zMin();
+  
   m_finder = Acts::Experimental::GraphBasedTrackSeeder(
       Acts::Experimental::GraphBasedTrackSeeder::DerivedConfig(
           m_cfg.seedFinderConfig),
@@ -87,12 +95,7 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
 
   // used to reserve size of nodes 2D vector in core
   const std::uint32_t maxLayers = m_layerIdMap.size();
-
-  // ROI file:Defines what region in detector we are interested in, currently
-  // set to entire detector
-  const Acts::Experimental::GbtsRoiDescriptor internalRoi(
-      0, -4.5, 4.5, 0, -std::numbers::pi, std::numbers::pi, 0, -150., 150.);
-
+  
   const Acts::Experimental::GraphBasedTrackSeeder::Options options(
       m_cfg.bFieldInZ);
 
@@ -101,7 +104,7 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
 
   // create the seeds
 
-  m_finder->createSeeds(coreSpacePoints, internalRoi, m_isPixelLayer, maxLayers,
+  m_finder->createSeeds(coreSpacePoints, m_internalRoi.value(), m_isPixelLayer, maxLayers,
                         *m_filter, options, seeds);
 
   seeds.assignSpacePointContainer(spacePoints);
