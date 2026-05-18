@@ -158,11 +158,12 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
                                inputTrackParticleMatching, filePath, fileMode,
                                treeNameTracks, treeNameParticles);
 
-    ACTS_PYTHON_DECLARE_WRITER(RootTrackFitterPerformanceWriter, root,
-                               "RootTrackFitterPerformanceWriter", inputTracks,
-                               inputParticles, inputTrackParticleMatching,
-                               filePath, resPlotToolConfig, effPlotToolConfig,
-                               trackSummaryPlotToolConfig);
+    ACTS_PYTHON_DECLARE_WRITER(
+        RootTrackFitterPerformanceWriter, root,
+        "RootTrackFitterPerformanceWriter", inputTracks, inputParticles,
+        inputTrackParticleMatching, filePath, resPlotToolConfig,
+        effPlotToolConfig, trackSummaryPlotToolConfig, fitMinEntries,
+        fitSigmaRange, fitIterations, warningThresholdFitFailureFraction);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackParameterWriter, root, "RootTrackParameterWriter",

@@ -133,6 +133,7 @@ auto makeTGeoLayerCustomizer(const BlueprintBuilder& builder,
     using enum SrfArrayNavPol::LayerType;
 
     SrfArrayNavPol::Config navCfg;
+    navCfg.envelope = detail::kLayerEnvelope;
     const bool isBarrelLayer =
         layer.layerType() ==
         Acts::Experimental::LayerBlueprintNode::LayerType::Cylinder;

@@ -207,6 +207,13 @@ class SpacePointProxy2 {
   {
     return accessImpl(m_container->m_varianceRColumn);
   }
+  /// Mutable access to the variance in `T` direction of the space point.
+  /// @return A mutable reference to the variance in `T` direction of the space point.
+  float &varianceT() const noexcept
+    requires(!ReadOnly)
+  {
+    return accessImpl(m_container->m_varianceTColumn);
+  }
   /// Mutable access to the `top strip vector` of the space point.
   /// @return A mutable reference to the `top strip vector` of the space point.
   std::array<float, 3> &topStripVector() const noexcept
@@ -322,6 +329,11 @@ class SpacePointProxy2 {
   /// @return The variance in `R` direction of the space point.
   float varianceR() const noexcept {
     return accessImpl(m_container->m_varianceRColumn);
+  }
+  /// Const access to the variance in `T` direction of the space point.
+  /// @return An optional containing the variance in `T` direction of the space point.
+  float varianceT() const noexcept {
+    return accessImpl(m_container->m_varianceTColumn);
   }
   /// Const access to the `top strip vector` of the space point.
   /// @return A const reference to the `top strip vector` of the space point.

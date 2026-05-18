@@ -11,20 +11,6 @@ acts_add_library(
 
 acts_compile_headers(PluginGnn GLOB include/**/*.hpp)
 
-if(ACTS_GNN_ENABLE_CUDA)
-    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_WITH_CUDA)
-    target_sources(
-        ActsPluginGnn
-        PRIVATE
-            src/CudaTrackBuilding.cu
-            src/JunctionRemoval.cu
-            src/Tensor.cu
-            src/Stages.cu
-    )
-    target_link_libraries(ActsPluginGnn PUBLIC CUDA::nvtx3)
-    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_NVTX)
-endif()
-
 if(ACTS_GNN_ENABLE_MODULEMAP)
     target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_WITH_MODULEMAP)
 
@@ -54,7 +40,10 @@ endif()
 if(ACTS_GNN_ENABLE_TENSORRT)
     find_package(TensorRT REQUIRED)
     message(STATUS "Found TensorRT ${TensorRT_VERSION}")
-    target_link_libraries(ActsPluginGnn PUBLIC trt::nvinfer trt::nvinfer_plugin)
+    target_link_libraries(
+        ActsPluginGnn
+        PRIVATE trt::nvinfer trt::nvinfer_plugin
+    )
     target_sources(ActsPluginGnn PRIVATE src/TensorRTEdgeClassifier.cpp)
     target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_WITH_TENSORRT)
 endif()
@@ -69,25 +58,30 @@ target_include_directories(
 target_link_libraries(ActsPluginGnn PUBLIC Acts::Core Boost::boost)
 
 if(ACTS_GNN_ENABLE_CUDA)
-    target_compile_features(ActsPluginGnn PUBLIC cuda_std_20)
-    set_target_properties(
-        ActsPluginGnn
-        PROPERTIES CUDA_STANDARD_REQUIRED ON CUDA_SEPARABLE_COMPILATION OFF
-    )
-    target_compile_options(
-        ActsPluginGnn
-        PRIVATE
-            $<$<COMPILE_LANGUAGE:CUDA>:
-            --dopt=on
-            --generate-line-info
-            --expt-relaxed-constexpr
-            --extended-lambda>
-    )
     target_compile_definitions(
         ActsPluginGnn
-        PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM
+        PUBLIC
+            ACTS_GNN_WITH_CUDA
+            ACTS_GNN_NVTX
+            # TODO: CUDA_API_PER_THREAD_DEFAULT_STREAM must be consistent across
+            # all TUs in a binary (both .cu and .cpp that include cuda_runtime_api.h).
+            # This should be moved to add_compile_definitions() in the top-level
+            # CMakeLists.txt to guarantee that, rather than relying on the link graph.
+            CUDA_API_PER_THREAD_DEFAULT_STREAM
     )
-    target_link_libraries(ActsPluginGnn PUBLIC CUDA::cudart)
+    set_target_properties(
+        ActsPluginGnn
+        PROPERTIES CUDA_SEPARABLE_COMPILATION OFF
+    )
+    target_link_libraries(ActsPluginGnn PRIVATE CUDA::cudart CUDA::nvtx3)
+    target_sources(
+        ActsPluginGnn
+        PRIVATE
+            src/CudaTrackBuilding.cu
+            src/JunctionRemoval.cu
+            src/Tensor.cu
+            src/Stages.cu
+    )
 else()
 endif()
 

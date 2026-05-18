@@ -1174,7 +1174,11 @@ HTML_EXTRA_FILES       = @AWESOME_CSS_DIR@/doxygen-awesome-darkmode-toggle.js \
                          @AWESOME_CSS_DIR@/doxygen-awesome-interactive-toc.js \
                          @CMAKE_CURRENT_SOURCE_DIR@/tex-mml-chtml.js \
                          @CMAKE_CURRENT_SOURCE_DIR@/acts-version-manager.js \
-                         @CMAKE_CURRENT_SOURCE_DIR@/acts-version-manager.css
+                         @CMAKE_CURRENT_SOURCE_DIR@/acts-version-manager.css \
+                         figures/favicon/favicon.ico \
+                         figures/favicon/favicon-32x32.png \
+                         figures/favicon/favicon-16x16.png \
+                         figures/favicon/apple-touch-icon.png
 
 
 HTML_COLORSTYLE        = LIGHT
