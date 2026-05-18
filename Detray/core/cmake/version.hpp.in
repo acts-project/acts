@@ -12,13 +12,13 @@
 /// @{
 
 /// Major version number of the detray project
-#define DETRAY_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define DETRAY_VERSION_MAJOR @DETRAY_VERSION_MAJOR@
 /// Minor version number of the detray project
-#define DETRAY_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define DETRAY_VERSION_MINOR @DETRAY_VERSION_MINOR@
 /// Patch version number of the detray project
-#define DETRAY_VERSION_PATCH @PROJECT_VERSION_PATCH@
+#define DETRAY_VERSION_PATCH @DETRAY_VERSION_PATCH@
 /// Version number of the detray project
-#define DETRAY_VERSION "@PROJECT_VERSION@"
+#define DETRAY_VERSION "@DETRAY_VERSION@"
 
 /// @}
 
@@ -28,13 +28,13 @@ namespace detray {
 /// @{
 
 /// Major version number of the detray project
-static constexpr int version_major = @PROJECT_VERSION_MAJOR@;
+static constexpr int version_major = @DETRAY_VERSION_MAJOR@;
 /// Minor version number of the detray project
-static constexpr int version_minor = @PROJECT_VERSION_MINOR@;
+static constexpr int version_minor = @DETRAY_VERSION_MINOR@;
 /// Patch version number of the detray project
-static constexpr int version_patch = @PROJECT_VERSION_PATCH@;
+static constexpr int version_patch = @DETRAY_VERSION_PATCH@;
 /// Version number of the detray project
-static constexpr char version[] = "@PROJECT_VERSION@";
+static constexpr char version[] = "@DETRAY_VERSION@";
 
 /// @}
 

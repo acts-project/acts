@@ -42,7 +42,7 @@ if(NOT "${DETRAY_GENERATE_METADATA}" STREQUAL "")
     foreach(GENERATOR ${DETRAY_GENERATE_METADATA})
         set(GENERATED_HEADER "${OUTPUT_DIR}/${GENERATOR}.hpp")
         set(GENERATOR_SCRIPT
-            "${PROJECT_SOURCE_DIR}/detectors/python/${GENERATOR}.py"
+            "${PROJECT_SOURCE_DIR}/Detray/detectors/python/${GENERATOR}.py"
         )
 
         add_custom_command(
@@ -52,7 +52,7 @@ if(NOT "${DETRAY_GENERATE_METADATA}" STREQUAL "")
                 ${GENERATOR_SCRIPT} -o ${OUTPUT_DIR} -p ${CMAKE_BINARY_DIR}
             DEPENDS
                 "${GENERATOR_SCRIPT}"
-                "${PROJECT_SOURCE_DIR}/detectors/generate_metadata.sh"
+                "${PROJECT_SOURCE_DIR}/Detray/detectors/generate_metadata.sh"
                 "${CMAKE_BINARY_DIR}/python/setup.sh"
         )
 

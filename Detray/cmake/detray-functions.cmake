@@ -43,13 +43,16 @@ function(detray_add_library fullname basename)
 
     # Make sure that the library is available as "detray::${basename}" in every
     # situation.
-    set_target_properties(${fullname} PROPERTIES EXPORT_NAME ${basename})
+    set_target_properties(
+        ${fullname}
+        PROPERTIES EXPORT_NAME detray::${basename}
+    )
     add_library(detray::${basename} ALIAS ${fullname})
 
     # Set up the installation of the library and its headers.
     install(
         TARGETS ${fullname}
-        EXPORT detray-exports
+        EXPORT ActsDetrayTargets
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"

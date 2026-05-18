@@ -9,6 +9,6 @@
 # Add all subdirectories.
 add_subdirectory(algebra)
 
-if(DETRAY_SVG_DISPLAY)
+if(DETRAY_SVG_DISPLAY OR ACTS_BUILD_PLUGIN_TRACCC)
     add_subdirectory(svgtools)
 endif()

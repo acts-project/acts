@@ -64,8 +64,6 @@ option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
 option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_COVFIE "Use a system-provided covfie installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_SETUP_COVFIE "If we want to set up covfie" ON)
-option(ACTS_USE_SYSTEM_DETRAY "Use a system-provided detray installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_DETRAY "If we want to set up detray" ON)
 option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_SETUP_VECMEM "If we want to set up vecmem" ON)
 option(ACTS_USE_SYSTEM_TRACCC "Use a system-provided traccc installation" ${ACTS_USE_SYSTEM_LIBS})
@@ -100,6 +98,8 @@ option(ACTS_GENERATE_PYTHON_STUBS "Generate Python stub files (.pyi) using pybin
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
+# detray related options
+option(ACTS_BUILD_DETRAY "Build Detray package" OFF)
 # alignment related options
 option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
 # examples related options
@@ -210,6 +210,12 @@ set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_GNN_ENABLE_CUDA ACTS_GNN_ENABLE_MODULEMAP)
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_PLUGIN_MILLE)
+set_option_if(
+    ACTS_BUILD_DETRAY
+    ACTS_BUILD_PLUGIN_DETRAY
+    OR
+    ACTS_BUILD_PLUGIN_TRACCC
+)
 
 # feature tests
 include(CheckCXXSourceCompiles)
@@ -303,7 +309,6 @@ set(_acts_root_version 6.28.04) # first version with C++20 support
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 3.0.1)
-set(_acts_detray_version 1.0.1)
 set(_acts_traccc_version 1.2.0)
 set(_acts_covfie_version 0.15.2)
 set(_acts_vecmem_version 1.24.0)
@@ -550,6 +555,12 @@ if(ACTS_BUILD_PLUGIN_GEANT4)
 endif()
 
 if(ACTS_BUILD_PLUGIN_TRACCC)
+    # HACK: Pending a more integrated Detray and Traccc component, add the ITk
+    # metadata to Detray if the Traccc plugin is to be built.
+    if(NOT ("itk_metadata" IN_LIST DETRAY_GENERATE_METADATA))
+        list(APPEND DETRAY_GENERATE_METADATA "itk_metadata")
+    endif()
+
     if(ACTS_SETUP_VECMEM)
         if(ACTS_USE_SYSTEM_VECMEM)
             find_package(vecmem ${_acts_vecmem_version} REQUIRED)
@@ -557,14 +568,6 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
             add_subdirectory(thirdparty/vecmem)
             # Make the "VecMem language code" available for the whole project.
             include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
-        endif()
-    endif()
-
-    if(ACTS_SETUP_DETRAY)
-        if(ACTS_USE_SYSTEM_DETRAY)
-            find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
-        else()
-            add_subdirectory(thirdparty/detray)
         endif()
     endif()
 
@@ -663,6 +666,7 @@ acts_enable_static_analysis() # enable static analysis for the main code, after 
 add_component(Core Core)
 add_component_if(Fatras Fatras ACTS_BUILD_FATRAS)
 add_component_if(Alignment Alignment ACTS_BUILD_ALIGNMENT)
+add_component_if(Detray Detray ACTS_BUILD_DETRAY)
 add_subdirectory(Plugins)
 
 add_subdirectory_if(thirdparty/OpenDataDetector ACTS_BUILD_ODD)
