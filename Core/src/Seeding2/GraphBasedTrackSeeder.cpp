@@ -203,30 +203,17 @@ std::vector<std::vector<GbtsNode>> GraphBasedTrackSeeder::createNodes(
 std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
     const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
     std::vector<GbtsEdge>& edgeStorage, const Options& options) const {
-  // phi cut for triplets
-  const float cutDPhiMax =
-      m_cfg.lrtMode ? m_cfg.cutDPhiMaxLrt : m_cfg.cutDPhiMax;
-  // curv cut for triplets
-  const float cutDCurvMax =
-      m_cfg.lrtMode ? m_cfg.cutDCurvMaxLrt : m_cfg.cutDCurvMax;
-  // tau cut for doublets and triplets
-  const float cutTauRatioMax =
-      m_cfg.lrtMode ? m_cfg.tauRatioCutLrt : m_cfg.tauRatioCut;
+
   const float minZ0 =
       m_cfg.lrtMode ? m_cfg.minZ0.value() : static_cast<float>(roi.zMin());
   const float maxZ0 =
       m_cfg.lrtMode ? m_cfg.maxZ0.value() : static_cast<float>(roi.zMax());
-  const float minDeltaPhi =
-      m_cfg.lrtMode ? m_cfg.minDeltaPhiLrt : m_cfg.minDeltaPhi;
 
   // used to calculate Z cut on doublets
-  const float maxOuterRadius =
-      m_cfg.lrtMode ? m_cfg.maxOuterRadiusLrt : m_cfg.maxOuterRadius;
-
   const float cutZMinU =
-      minZ0 + maxOuterRadius * static_cast<float>(roi.dzdrMin());
+      minZ0 + m_cfg.maxOuterRadius * static_cast<float>(roi.dzdrMin());
   const float cutZMaxU =
-      maxZ0 + maxOuterRadius * static_cast<float>(roi.dzdrMax());
+      maxZ0 + m_cfg.maxOuterRadius * static_cast<float>(roi.dzdrMax());
 
   // correction due to limited pT resolution
   const float tripletPtMin = 0.8f * m_cfg.minPt;
@@ -304,7 +291,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
       if (m_cfg.useEtaBinning) {
         const float absDr = std::fabs(rb2 - rb1);
         if (m_cfg.useOldTunings) {
-          deltaPhi = minDeltaPhi + dPhiCoeff * absDr;
+          deltaPhi = m_cfg.minDeltaPhi + dPhiCoeff * absDr;
         } else {
           if (absDr < 60.0) {
             deltaPhi = 0.002f + 4.33e-4f * ptScale * absDr;
@@ -431,7 +418,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
               continue;
             }
 
-            const float zOuter = z0 + maxOuterRadius * tau;
+            const float zOuter = z0 + m_cfg.maxOuterRadius * tau;
 
             if (zOuter < cutZMinU || zOuter > cutZMaxU) {
               continue;
@@ -529,7 +516,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
                 }
               }
               // bad match
-              if (absTauRatio > cutTauRatioMax + addTauRatioCorr) {
+              if (absTauRatio > m_cfg.tauRatioCut + addTauRatioCorr) {
                 continue;
               }
 
@@ -541,13 +528,13 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
                 dPhi -= 2 * std::numbers::pi_v<float>;
               }
 
-              if (std::abs(dPhi) > cutDPhiMax) {
+              if (std::abs(dPhi) > m_cfg.cutDPhiMax) {
                 continue;
               }
 
               const float dcurv = curv2 - pS->p[1];
 
-              if (dcurv < -cutDCurvMax || dcurv > cutDCurvMax) {
+              if (dcurv < -m_cfg.cutDCurvMax || dcurv > m_cfg.cutDCurvMax) {
                 continue;
               }
 
@@ -559,7 +546,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
                       B1.vn[n1Idx], B2.vn[n2Idx], pS->n2};
 
                   if (!validateTriplet(candidateTriplet, tripletPtMin,
-                                       absTauRatio, cutTauRatioMax, options)) {
+                                       absTauRatio, m_cfg.tauRatioCut, options)) {
                     continue;
                   }
                 }

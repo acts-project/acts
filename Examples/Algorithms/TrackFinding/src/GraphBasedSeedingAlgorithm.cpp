@@ -432,6 +432,20 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("edgeMaskMinEta: " << cfg1.edgeMaskMinEta);
   ACTS_DEBUG("hitShareThreshold: " << cfg1.hitShareThreshold);
   ACTS_DEBUG("maxEndcapClusterWidth: " << cfg1.maxEndcapClusterWidth);
+  ACTS_DEBUG("validateTriplets: " << cfg1.validateTriplets);
+  ACTS_DEBUG("useAdaptiveCuts: " << cfg1.useAdaptiveCuts);
+  ACTS_DEBUG("addTriplets: " << cfg1.addTriplets);
+  ACTS_DEBUG("tauRatioCorr: " << cfg1.tauRatioCorr);
+  ACTS_DEBUG("maxAbsEtaAddTripelts: " << cfg1.maxAbsEtaAddTripelts);
+  ACTS_DEBUG("d0Max: " << cfg1.d0Max);
+  ACTS_DEBUG("cutDPhiMax: " << cfg1.cutDPhiMax);
+  ACTS_DEBUG("cutDCurvMax: " << cfg1.cutDCurvMax);
+  ACTS_DEBUG("minZ0: " << (cfg1.minZ0 ? std::to_string(*cfg1.minZ0) : "ROI min z value"));
+  ACTS_DEBUG("maxZ0: " << (cfg1.maxZ0 ? std::to_string(*cfg1.minZ0) : "ROI max z value"));
+  ACTS_DEBUG("minDeltaPhi: " << cfg1.minDeltaPhi);
+  ACTS_DEBUG("maxOuterRadius: " << cfg1.maxOuterRadius);
+  ACTS_DEBUG("maxSeedSplitEta: " << cfg1.maxSeedSplitEta);
+  ACTS_DEBUG("maxInvRadDiff: " << cfg1.maxInvRadDiff);
   ACTS_DEBUG("===== GbtsTrackFilter =====");
   const auto &cfg2 = m_cfg.trackingFilterConfig;
   ACTS_DEBUG("sigmaMS: " << cfg2.sigmaMS);
@@ -444,7 +458,7 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("maxDChi2Y: " << cfg2.maxDChi2Y);
   ACTS_DEBUG("addHit: " << cfg2.addHit);
   ACTS_DEBUG("maxCurvature: " << cfg2.maxCurvature);
-  ACTS_DEBUG("maxZ0: " << cfg2.maxZ0);
+  ACTS_DEBUG("maxZ0: " << cfg2.filterMaxZ0);
   ACTS_DEBUG("================================");
 }
 

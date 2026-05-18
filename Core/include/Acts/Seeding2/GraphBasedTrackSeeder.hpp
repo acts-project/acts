@@ -91,16 +91,8 @@ class GraphBasedTrackSeeder {
     float d0Max = 3.0 * UnitConstants::mm;
     /// Maximum difference in allowed tangent between candidate edge connection
     float cutDPhiMax = 0.012f;
-    /// Maximum difference in allowed tangent between candidate edge connection
-    /// in LRT mode
-    float cutDPhiMaxLrt = 0.07f;
     /// Maximum allowed curvature tolerance for candidate edge connections
     float cutDCurvMax = 0.001f;
-    /// Maximum allowed curvature tolerance for candidate edge connections in
-    /// LRT mode
-    float cutDCurvMaxLrt = 0.015f;
-    /// /// Tau ratio cut threshold in LRT mode
-    float tauRatioCutLrt = 0.015f;
     /// Minimum z0 value, set as optionl as if in pixel mode,
     /// The value is picked from the ROI
     std::optional<float> minZ0;
@@ -109,14 +101,9 @@ class GraphBasedTrackSeeder {
     std::optional<float> maxZ0;
     /// When old tunings are used, this defines the minimum phi window used
     float minDeltaPhi = 0.001f;
-    /// When old tunings are used, this defines the minimum phi window used in
-    /// LRT mode
-    float minDeltaPhiLrt = 0.01f;
     /// Maximum radius of pixel detector
     float maxOuterRadius = 550.0f;
-    /// Maximum radius of detector including strip modules
-    float maxOuterRadiusLrt = 1050.0f;
-
+    
     // Seed extraction options
     /// Minimum eta for edge masking.
     float edgeMaskMinEta = 1.5;
