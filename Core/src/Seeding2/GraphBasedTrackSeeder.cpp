@@ -204,16 +204,13 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
     const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
     std::vector<GbtsEdge>& edgeStorage, const Options& options) const {
 
-  const float minZ0 =
-      m_cfg.lrtMode ? m_cfg.minZ0.value() : static_cast<float>(roi.zMin());
-  const float maxZ0 =
-      m_cfg.lrtMode ? m_cfg.maxZ0.value() : static_cast<float>(roi.zMax());
+  
 
   // used to calculate Z cut on doublets
   const float cutZMinU =
-      minZ0 + m_cfg.maxOuterRadius * static_cast<float>(roi.dzdrMin());
+      m_cfg.minZ0 + m_cfg.maxOuterRadius * static_cast<float>(roi.dzdrMin());
   const float cutZMaxU =
-      maxZ0 + m_cfg.maxOuterRadius * static_cast<float>(roi.dzdrMax());
+      m_cfg.maxZ0 + m_cfg.maxOuterRadius * static_cast<float>(roi.dzdrMax());
 
   // correction due to limited pT resolution
   const float tripletPtMin = 0.8f * m_cfg.minPt;
@@ -249,7 +246,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
   // assuming 16-bit z0 bitmask
 
   const std::uint32_t zBins = 16;
-  const float z0HistoCoeff = zBins / (maxZ0 - minZ0 + 1e-6);
+  const float z0HistoCoeff = zBins / (m_cfg.maxZ0 - m_cfg.minZ0 + 1e-6);
 
   // loop over bin groups
   for (const auto& bg : m_geometry->binGroups()) {
@@ -408,13 +405,13 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
           const float z0 = z1 - r1 * tau;
 
           if (layerId1 == 80000) {  // check against non-empty z0 histogram
-            if (!checkZ0BitMask(nodeInfo, z0, minZ0, z0HistoCoeff)) {
+            if (!checkZ0BitMask(nodeInfo, z0, m_cfg.minZ0, z0HistoCoeff)) {
               continue;
             }
           }
 
           if (m_cfg.doubletFilterRZ) {
-            if (z0 < minZ0 || z0 > maxZ0) {
+            if (z0 < m_cfg.minZ0 || z0 > m_cfg.maxZ0) {
               continue;
             }
 
@@ -560,7 +557,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
               // edge confirmed - update z0 histogram
 
               const std::uint32_t z0BinIndex =
-                  static_cast<std::uint32_t>(z0HistoCoeff * (z0 - minZ0));
+                  static_cast<std::uint32_t>(z0HistoCoeff * (z0 - m_cfg.minZ0));
 
               ++z0Histo[z0BinIndex];
 
