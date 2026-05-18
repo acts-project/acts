@@ -299,8 +299,14 @@ struct TracccChain::Impl {
     }
 
     ACTS_INFO("TracccChain initialised ("
-              << (cfg.backend == TracccChainConfig::Backend::CPU ? "CPU" : "CUDA")
-              << "), detector: " << cfg.detectorFile);
+              << (cfg.backend == TracccChainConfig::Backend::CPU ? "CPU" : "CUDA") << "\n"
+              << "), detector: " << cfg.detectorFile << "\n"
+              << ", digitization: " << cfg.digitizationFile << "\n"
+              << ", conditions: " << cfg.conditionsFile << "\n"
+              << ", material: " << cfg.materialFile << "\n"
+              << ", grid: " << cfg.gridFile << "\n"
+              << ", bfield: " << cfg.magneticFieldFile
+            );
   }
 
   // --------------------------------------------------------------

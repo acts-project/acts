@@ -60,9 +60,7 @@ def main():
     parser.add_argument("--digitization-file", type=pathlib.Path, required=True)
     parser.add_argument("--bfield-file", type=pathlib.Path, required=True)
     parser.add_argument("--conditions-file", type=pathlib.Path, default=True)
-    parser.add_argument("--detray-json-dir", type=pathlib.Path, default=None,
-                        help="Directory with pre-generated detray JSON files. "
-                             "If not set, they will be generated from the Acts geometry.")
+
     parser.add_argument("--output-root", default=True,
                         action=argparse.BooleanOptionalAction)
     parser.add_argument(
@@ -77,7 +75,7 @@ def main():
     parser.add_argument("--ttbar", action="store_true")
     parser.add_argument("--ttbar-pu", type=int, default=200)
     parser.add_argument("--geant4", action="store_true")
-    parser.add_argument("--do-cpu", dest="do-cpu", action="store_true")
+    parser.add_argument("--do-cpu", action="store_true")
     args = parser.parse_args()
 
     args.output.mkdir(parents=True, exist_ok=True)
@@ -288,7 +286,7 @@ def main():
     seqCfg.bfieldFile                = str(args.bfield_file)
     seqCfg.inputMeasurements     = "acts-traccc-measurements"
     seqCfg.inputSpacepoints      = "acts-traccc-spacepoints"
-    seqCfg.backend = TracccSeqAlgorithm.Backend.CUDA
+    seqCfg.backend = TracccSeqAlgorithm.Backend.CPU if args.do_cpu else TracccSeqAlgorithm.Backend.CUDA
     # seqCfg.outputTracks          = "traccc-tracks"
     # seqCfg.outputDetrayToActsMap = "detray-to-acts-map-traccc"
     s.addAlgorithm(TracccSeqAlgorithm(seqCfg, logLevel))

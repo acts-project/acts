@@ -19,10 +19,8 @@ set(TRACCC_VERSION "${_acts_traccc_version}")
 # Declare where to get traccc from.
 FetchContent_Declare(traccc SYSTEM ${ACTS_TRACCC_SOURCE})
 
-set(ACTS_TRACCC_SCALARTYPE "double")
-
 set(TRACCC_CUSTOM_SCALARTYPE
-    "${ACTS_TRACCC_SCALARTYPE}"
+    "float"
     CACHE STRING
     "Scalar type to use in the traccc code"
 )
