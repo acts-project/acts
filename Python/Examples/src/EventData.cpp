@@ -371,9 +371,9 @@ void addEventData(py::module& mex) {
               py::arg("geometryId"), py::arg("indices"), py::arg("parameters"),
               py::arg("covariance"))
           .def("__getitem__",
-               [](MeasurementContainer& self, MeasurementContainer::Index idx) {
-                 return ConstVariableBoundMeasurementProxy{
-                     self.getMeasurement(idx)};
+               [](const MeasurementContainer& self,
+                  MeasurementContainer::Index idx) {
+                 return self.getMeasurement(idx);
                })
           .def(
               "__iter__",
