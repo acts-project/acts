@@ -10,8 +10,7 @@
 
 namespace ActsExamples::Traccc {
 
-TracccSeqAlg::TracccSeqAlg(Config cfg,
-                                           Acts::Logging::Level logLevel)
+TracccSeqAlg::TracccSeqAlg(Config cfg, Acts::Logging::Level logLevel)
     : IAlgorithm("TracccSeqAlg", logLevel),
       m_cfg(std::move(cfg)),
       m_chain(m_cfg.chain, logLevel) {
@@ -23,12 +22,13 @@ ProcessCode TracccSeqAlg::execute(const AlgorithmContext& ctx) const {
   const auto& measurements = m_inputMeasurements(ctx);
   const auto& spacepoints = m_inputSpacepoints(ctx);
 
-  ACTS_DEBUG("Running traccc chain on event " << ctx.eventNumber
-             << " with " << measurements.size() << " measurements and " << spacepoints.size() << " spacepoints.");
+  ACTS_DEBUG("Running traccc chain on event "
+             << ctx.eventNumber << " with " << measurements.size()
+             << " measurements and " << spacepoints.size() << " spacepoints.");
 
   EventResult result = m_chain(
-          const_cast<traccc::edm::measurement_collection::host&>(measurements),
-          const_cast<traccc::edm::spacepoint_collection::host&>(spacepoints));
+      const_cast<traccc::edm::measurement_collection::host&>(measurements),
+      const_cast<traccc::edm::spacepoint_collection::host&>(spacepoints));
 
   ACTS_INFO("Event information:");
 
@@ -39,7 +39,6 @@ ProcessCode TracccSeqAlg::execute(const AlgorithmContext& ctx) const {
   ACTS_INFO("and fitted " << result.n_fitted_tracks << " tracks.");
 
   return ProcessCode::SUCCESS;
-
 }
 
 }  // namespace ActsExamples::Traccc

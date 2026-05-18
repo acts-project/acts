@@ -48,8 +48,8 @@ class TracccTracksToActsTracks final : public IAlgorithm {
   Config m_cfg;
 
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputActsTracks"};
-  ReadDataHandle<MeasurementSubset> m_inputMeasurements{this,
-                                                        "InputTracccMeasurements"};
+  ReadDataHandle<MeasurementSubset> m_inputMeasurements{
+      this, "InputTracccMeasurements"};
   ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
       this, "InputTracccTrackParameters"};
   ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,

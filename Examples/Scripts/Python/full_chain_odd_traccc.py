@@ -12,13 +12,19 @@ import acts.examples
 
 # from acts.examples.root import (RootTrackSummaryWriter, RootTrackFinderPerformanceWriter)
 from acts.examples.simulation import (
-    MomentumConfig, EtaConfig, PhiConfig, ParticleConfig,
-    addParticleGun, addFatras, addDigitization,
+    MomentumConfig,
+    EtaConfig,
+    PhiConfig,
+    ParticleConfig,
+    addParticleGun,
+    addFatras,
+    addDigitization,
 )
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 from acts.examples.traccc import (
-    TracccSeqAlgorithm, ActsSpToTracccAlg,
+    TracccSeqAlgorithm,
+    ActsSpToTracccAlg,
     ActsMeasToTracccAlg,
 )
 
@@ -40,38 +46,57 @@ from acts.examples.simulation import (
 
 u = acts.UnitConstants
 
+
 def main():
     parser = argparse.ArgumentParser(
-        description="ODD simulation + traccc GPU reconstruction")
-    parser.add_argument("--output", "-o", type=pathlib.Path,
-                        default=pathlib.Path.cwd() / "traccc_full_output")
+        description="ODD simulation + traccc GPU reconstruction"
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        type=pathlib.Path,
+        default=pathlib.Path.cwd() / "traccc_full_output",
+    )
     parser.add_argument("--events", "-n", type=int, default=10)
     parser.add_argument("--skip", type=int, default=0)
     parser.add_argument("--gun-particles", type=int, default=4)
     parser.add_argument("--gun-multiplicity", type=int, default=50)
-    parser.add_argument("--gun-pt-range", nargs=2, type=float,
-                        default=[1.0, 10.0], metavar=("PT_MIN", "PT_MAX"))
-    parser.add_argument("--gun-eta-range", nargs=2, type=float,
-                        default=[-3.0, 3.0], metavar=("ETA_MIN", "ETA_MAX"))
-    parser.add_argument("--detector-file",  type=pathlib.Path, required=True)
-    parser.add_argument("--material-file",  type=pathlib.Path, default=None)
-    parser.add_argument("--grid-file",      type=pathlib.Path, default=None)
+    parser.add_argument(
+        "--gun-pt-range",
+        nargs=2,
+        type=float,
+        default=[1.0, 10.0],
+        metavar=("PT_MIN", "PT_MAX"),
+    )
+    parser.add_argument(
+        "--gun-eta-range",
+        nargs=2,
+        type=float,
+        default=[-3.0, 3.0],
+        metavar=("ETA_MIN", "ETA_MAX"),
+    )
+    parser.add_argument("--detector-file", type=pathlib.Path, required=True)
+    parser.add_argument("--material-file", type=pathlib.Path, default=None)
+    parser.add_argument("--grid-file", type=pathlib.Path, default=None)
     parser.add_argument("--material-map", type=pathlib.Path, default=None)
     parser.add_argument("--digitization-file", type=pathlib.Path, required=True)
     parser.add_argument("--bfield-file", type=pathlib.Path, required=True)
     parser.add_argument("--conditions-file", type=pathlib.Path, default=True)
 
-    parser.add_argument("--output-root", default=True,
-                        action=argparse.BooleanOptionalAction)
+    parser.add_argument(
+        "--output-root", default=True, action=argparse.BooleanOptionalAction
+    )
     parser.add_argument(
         "--output-csv",
         help="Switch csv output on/off",
         default=True,
         action=argparse.BooleanOptionalAction,
     )
-    parser.add_argument("--log-level",
-                        choices=["VERBOSE","DEBUG","INFO","WARNING","ERROR"],
-                        default="INFO")
+    parser.add_argument(
+        "--log-level",
+        choices=["VERBOSE", "DEBUG", "INFO", "WARNING", "ERROR"],
+        default="INFO",
+    )
     parser.add_argument("--ttbar", action="store_true")
     parser.add_argument("--ttbar-pu", type=int, default=200)
     parser.add_argument("--geant4", action="store_true")
@@ -82,18 +107,17 @@ def main():
     logLevel = getattr(acts.logging, args.log_level)
 
     # ── Geometry ──────────────────────────────────────────────────────────────
-    geoDir  = getOpenDataDetectorDirectory()
+    geoDir = getOpenDataDetectorDirectory()
     actsDir = pathlib.Path(__file__).parent.parent.parent.parent
 
     oddMaterialMap = geoDir / "data/odd-material-maps.root"
     oddDigiConfig = actsDir / "Examples/Configs/odd-digi-smearing-config.json"
 
-    oddMaterialDeco  = acts.IMaterialDecorator.fromFile(oddMaterialMap)
-    detector         = getOpenDataDetector(odd_dir=geoDir,
-                                           materialDecorator=oddMaterialDeco)
+    oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
+    detector = getOpenDataDetector(odd_dir=geoDir, materialDecorator=oddMaterialDeco)
     trackingGeometry = detector.trackingGeometry()
     field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
-    rnd   = acts.examples.RandomNumbers(seed=42)
+    rnd = acts.examples.RandomNumbers(seed=42)
 
     # # ── Detray JSON directory ─────────────────────────────────────────────────
     # detrayJsonDir = args.detray_json_dir or (args.output / "detray_json")
@@ -127,7 +151,8 @@ def main():
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
                 stddev=acts.Vector4(
-                    0.0125*u.mm, 0.0125*u.mm, 55.5*u.mm, 5.0*u.ns),
+                    0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
+                ),
             ),
             rnd=rnd,
             outputDirRoot=args.output if args.output_root else None,
@@ -152,12 +177,14 @@ def main():
             ),
             EtaConfig(args.gun_eta_range[0], args.gun_eta_range[1]),
             PhiConfig(0.0, 360.0 * u.degree),
-            ParticleConfig(args.gun_particles, acts.PdgParticle.eMuon,
-                           randomizeCharge=True),
+            ParticleConfig(
+                args.gun_particles, acts.PdgParticle.eMuon, randomizeCharge=True
+            ),
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
                 stddev=acts.Vector4(
-                    0.0125*u.mm, 0.0125*u.mm, 55.5*u.mm, 1.0*u.ns),
+                    0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
+                ),
             ),
             multiplicity=args.gun_multiplicity,
             rnd=rnd,
@@ -198,7 +225,6 @@ def main():
         ),
     )
 
-
     # ── Step 3: Digitization to Acts measurements ────────────────
     addDigitization(
         s,
@@ -221,11 +247,11 @@ def main():
 
     # ── Step 4: Convert Acts measurements to traccc format ────────────────────
     a2tCfg = ActsMeasToTracccAlg.Config()
-    a2tCfg.inputActsMeasurements      = "measurements"
-    a2tCfg.detectorFile                = str(args.detector_file)
+    a2tCfg.inputActsMeasurements = "measurements"
+    a2tCfg.detectorFile = str(args.detector_file)
     a2tCfg.outputDetrayToActsMap = "detray-to-acts-map"
     a2tCfg.trackingGeometry = trackingGeometry
-    a2tCfg.outputTracccMeasurements   = "acts-traccc-measurements"
+    a2tCfg.outputTracccMeasurements = "acts-traccc-measurements"
     s.addAlgorithm(ActsMeasToTracccAlg(a2tCfg, logLevel))
 
     geoSelectionConfigFile = actsDir / "Examples/Configs/odd-seeding-config.json"
@@ -248,13 +274,11 @@ def main():
     )
     s.addAlgorithm(spAlg)
 
-
     sp2tCfg = acts.examples.traccc.ActsSpToTracccAlg.Config()
-    sp2tCfg.inputSpacePoints          = "spacepoints"
+    sp2tCfg.inputSpacePoints = "spacepoints"
     # sp2tCfg.inputActsMeasurements     = "measurements"
-    sp2tCfg.outputTracccSpacepoints   = "acts-traccc-spacepoints"
+    sp2tCfg.outputTracccSpacepoints = "acts-traccc-spacepoints"
     s.addAlgorithm(acts.examples.traccc.ActsSpToTracccAlg(sp2tCfg, logLevel))
-
 
     # # ── Step 4.5: Write CSV files for Traccc standalone comparison ────────────────
     # if args.output_csv:
@@ -275,18 +299,21 @@ def main():
     #         )
     #     )
 
-
     # ── Step 5: Run traccc GPU chain ──────────────────────────────────────────
     seqCfg = TracccSeqAlgorithm.Config()
-    seqCfg.detectorFile              = str(args.detector_file)
-    seqCfg.digitizationFile          = str(args.digitization_file)
-    seqCfg.conditionsFile            = str(args.conditions_file)
-    seqCfg.materialFile              = str(args.material_file   or pathlib.Path())
-    seqCfg.gridFile                  = str(args.grid_file       or pathlib.Path())
-    seqCfg.bfieldFile                = str(args.bfield_file)
-    seqCfg.inputMeasurements     = "acts-traccc-measurements"
-    seqCfg.inputSpacepoints      = "acts-traccc-spacepoints"
-    seqCfg.backend = TracccSeqAlgorithm.Backend.CPU if args.do_cpu else TracccSeqAlgorithm.Backend.CUDA
+    seqCfg.detectorFile = str(args.detector_file)
+    seqCfg.digitizationFile = str(args.digitization_file)
+    seqCfg.conditionsFile = str(args.conditions_file)
+    seqCfg.materialFile = str(args.material_file or pathlib.Path())
+    seqCfg.gridFile = str(args.grid_file or pathlib.Path())
+    seqCfg.bfieldFile = str(args.bfield_file)
+    seqCfg.inputMeasurements = "acts-traccc-measurements"
+    seqCfg.inputSpacepoints = "acts-traccc-spacepoints"
+    seqCfg.backend = (
+        TracccSeqAlgorithm.Backend.CPU
+        if args.do_cpu
+        else TracccSeqAlgorithm.Backend.CUDA
+    )
     # seqCfg.outputTracks          = "traccc-tracks"
     # seqCfg.outputDetrayToActsMap = "detray-to-acts-map-traccc"
     s.addAlgorithm(TracccSeqAlgorithm(seqCfg, logLevel))
@@ -435,7 +462,6 @@ def main():
     #                 filePath=str(args.output / "traccc_track_finder_performance.root"),
     #             )
     #         )
-
 
     s.run()
 

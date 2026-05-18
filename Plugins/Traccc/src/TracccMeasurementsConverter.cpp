@@ -6,11 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Utilities/TracccTracksToTracks.hpp"
-
 #include "Acts/EventData/SourceLink.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Utilities/TracccTracksToTracks.hpp"
 
 #include <algorithm>
 #include <limits>
@@ -27,7 +26,8 @@ TracccTracksToActsTracks::TracccTracksToActsTracks(
   m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
 }
 
-ProcessCode TracccTracksToActsTracks::execute(const AlgorithmContext& ctx) const {
+ProcessCode TracccTracksToActsTracks::execute(
+    const AlgorithmContext& ctx) const {
   const auto& measurements = m_inputMeasurements(ctx);
 
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();

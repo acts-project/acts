@@ -13,9 +13,9 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Traccc/TracccChain.hpp"
 
-#include "traccc/edm/silicon_cell_collection.hpp"
-
 #include <string>
+
+#include "traccc/edm/silicon_cell_collection.hpp"
 
 namespace ActsExamples::Traccc {
 
@@ -28,7 +28,6 @@ class TracccSeqAlg final : public IAlgorithm {
     /// WhiteBoard key for the input collections
     std::string inputMeasurements = "";
     std::string inputSpacepoints = "";
-
   };
 
   TracccSeqAlg(Config cfg, Acts::Logging::Level logLevel);
@@ -42,10 +41,10 @@ class TracccSeqAlg final : public IAlgorithm {
   Config m_cfg;
   TracccChain m_chain;
 
-  ReadDataHandle<traccc::edm::measurement_collection::host>
-    m_inputMeasurements{this, "inputMeasurements"};
-  ReadDataHandle<traccc::edm::spacepoint_collection::host>
-      m_inputSpacepoints{this, "inputSpacepoints"};
+  ReadDataHandle<traccc::edm::measurement_collection::host> m_inputMeasurements{
+      this, "inputMeasurements"};
+  ReadDataHandle<traccc::edm::spacepoint_collection::host> m_inputSpacepoints{
+      this, "inputSpacepoints"};
 };
 
 }  // namespace ActsExamples::Traccc

@@ -19,10 +19,8 @@ namespace ActsExamples {
 class TracccMeasurementsToActsMeasurements final : public IAlgorithm {
  public:
   struct Config {
-    
     /// Output measurements.
     std::string outputMeasurements;
-    
   };
 
   /// Construct the algorithm.
@@ -43,8 +41,8 @@ class TracccMeasurementsToActsMeasurements final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  WriteDataHandle<MeasurementSubset> m_outputMeasurements{this,
-                                                        "OutputActsMeasurements"};
+  WriteDataHandle<MeasurementSubset> m_outputMeasurements{
+      this, "OutputActsMeasurements"};
 };
 
 }  // namespace ActsExamples
