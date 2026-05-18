@@ -74,12 +74,23 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   std::vector<Vector2> generatePath(const Vector3& startPosition,
                                     const Vector3& direction) const;
 
+  /// @brief Give const access to the indexed grid
+  /// @return The indexed grid
+  const IndexedUpdatorType& indexedGrid() const { return m_indexedGrid; }
+
+  /// @brief Access the configuration
+  /// @return The configuration
+  const Config& config() const { return m_config; }
+
  private:
   // The tracking volume
   const TrackingVolume& m_volume;
 
   // The grid that holds the indexed surfaces
   IndexedUpdatorType m_indexedGrid;
+
+  // The navigation configuration
+  Config m_config;
 };
 
 static_assert(NavigationPolicyConcept<MultiLayerNavigationPolicy>);
