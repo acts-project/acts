@@ -100,7 +100,7 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
 
   /// used to define region of interest
   std::optional<Acts::Experimental::GbtsRoiDescriptor> m_internalRoi;
-  
+
   /// handle that points to the container of input space points
   ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
                                                          "InputSpacePoints"};

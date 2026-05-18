@@ -61,15 +61,16 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // the algorithm
   auto geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
       layerGeometry, layerConnectionMap);
-  
+
   // ROI file:Defines what region in detector we are interested in, currently
   // set to entire detector
   // for pixel seeding, roi z bounds are used
-  
-  m_internalRoi.emplace(0, -4.5, 4.5, 0, -std::numbers::pi, std::numbers::pi, 0, -150., 150.);
+
+  m_internalRoi.emplace(0, -4.5, 4.5, 0, -std::numbers::pi, std::numbers::pi, 0,
+                        -150., 150.);
   m_cfg.seedFinderConfig.maxZ0 = m_internalRoi->zMax();
   m_cfg.seedFinderConfig.minZ0 = m_internalRoi->zMin();
-  
+
   m_finder = Acts::Experimental::GraphBasedTrackSeeder(
       Acts::Experimental::GraphBasedTrackSeeder::DerivedConfig(
           m_cfg.seedFinderConfig),
@@ -95,7 +96,7 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
 
   // used to reserve size of nodes 2D vector in core
   const std::uint32_t maxLayers = m_layerIdMap.size();
-  
+
   const Acts::Experimental::GraphBasedTrackSeeder::Options options(
       m_cfg.bFieldInZ);
 
@@ -104,8 +105,8 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
 
   // create the seeds
 
-  m_finder->createSeeds(coreSpacePoints, m_internalRoi.value(), m_isPixelLayer, maxLayers,
-                        *m_filter, options, seeds);
+  m_finder->createSeeds(coreSpacePoints, m_internalRoi.value(), m_isPixelLayer,
+                        maxLayers, *m_filter, options, seeds);
 
   seeds.assignSpacePointContainer(spacePoints);
 
@@ -443,8 +444,8 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("d0Max: " << cfg1.d0Max);
   ACTS_DEBUG("cutDPhiMax: " << cfg1.cutDPhiMax);
   ACTS_DEBUG("cutDCurvMax: " << cfg1.cutDCurvMax);
-  ACTS_DEBUG("minZ0: " << (cfg1.minZ0 ? std::to_string(*cfg1.minZ0) : "ROI min z value"));
-  ACTS_DEBUG("maxZ0: " << (cfg1.maxZ0 ? std::to_string(*cfg1.minZ0) : "ROI max z value"));
+  ACTS_DEBUG("minZ0: " << cfg1.minZ0);
+  ACTS_DEBUG("maxZ0: " << cfg1.maxZ0);
   ACTS_DEBUG("minDeltaPhi: " << cfg1.minDeltaPhi);
   ACTS_DEBUG("maxOuterRadius: " << cfg1.maxOuterRadius);
   ACTS_DEBUG("maxSeedSplitEta: " << cfg1.maxSeedSplitEta);

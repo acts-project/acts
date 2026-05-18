@@ -203,9 +203,6 @@ std::vector<std::vector<GbtsNode>> GraphBasedTrackSeeder::createNodes(
 std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
     const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
     std::vector<GbtsEdge>& edgeStorage, const Options& options) const {
-
-  
-
   // used to calculate Z cut on doublets
   const float cutZMinU =
       m_cfg.minZ0 + m_cfg.maxOuterRadius * static_cast<float>(roi.dzdrMin());
@@ -543,7 +540,8 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
                       B1.vn[n1Idx], B2.vn[n2Idx], pS->n2};
 
                   if (!validateTriplet(candidateTriplet, tripletPtMin,
-                                       absTauRatio, m_cfg.tauRatioCut, options)) {
+                                       absTauRatio, m_cfg.tauRatioCut,
+                                       options)) {
                     continue;
                   }
                 }
