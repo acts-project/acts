@@ -9,7 +9,7 @@ variables:
 
   LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
 
-  DEPENDENCY_TAG: v21.0.0
+  DEPENDENCY_TAG: v23.0.0
 
   MODEL_STORAGE: ${CI_PROJECT_DIR}/ci_models
 
@@ -394,14 +394,12 @@ linux_ubuntu_2404_clang22:
     - cvmfs
 
   variables:
+    LCG_VERSION:
     ACTS_LOG_FAILURE_THRESHOLD: WARNING
     ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
     INSTALL_DIR: ${CI_PROJECT_DIR}/install
     # force off even if it is CI mode
     ROOT_HASH_CHECKS: off
-
-
-    SETUP:
 
   cache:
     - !reference [.ccache_base, cache]
@@ -437,19 +435,6 @@ linux_ubuntu_2404_clang22:
     - ccache -z
     - cmake --build build -- -j8
     - ccache -s
-
-    - ctest --test-dir build -j$(nproc)
-
-    # Install main project for Python tests
-    - cmake --install build > install.log
-
-    # Install Python dependencies
-    - source build/this_acts_withdeps.sh
-    - python3 -m pip install -r src//Python/Examples/tests/requirements.txt
-    - cd src
-    # plotting tests with mplhep fail because an ancient mplhep version in LCG
-    # overrides the mplhep version in our venv
-    - pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
 
 lcg_107:
   extends: .lcg_base_job
@@ -500,3 +485,94 @@ lcg_109:
         COMPILER:
           - gcc15
           - clang19
+
+  script:
+    - !reference [.lcg_base_job, script]
+    - ctest --test-dir build -j$(nproc)
+
+    # Install main project for Python tests
+    - cmake --install build > install.log
+
+    # Install Python dependencies
+    - source build/this_acts_withdeps.sh
+    - python3 -m pip install -r src//Python/Examples/tests/requirements.txt
+    - cd src
+    # plotting tests with mplhep fail because an ancient mplhep version in LCG
+    # overrides the mplhep version in our venv
+    - pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
+
+# Detray gitlab CI workflows
+detray_build_cuda:
+  tags: [docker]
+  stage: build
+  image: ghcr.io/acts-project/ubuntu2404_cuda:82
+  cache:
+   - !reference [.ccache_base, cache]
+  artifacts:
+    paths:
+      - build
+  script:
+      - git clone $CLONE_URL src
+      - git -C src checkout $HEAD_SHA
+      - >
+        cmake --preset detray-gitlab-cuda-ci -S src/Detray -B build
+        -DCMAKE_BUILD_TYPE=Release
+      - ccache -z
+      - cmake --build build -- -j 2
+      - ccache -s
+
+detray_test_cuda:
+  variables:
+    DETRAY_DATA_DIRECTORY: src/Detray/data/
+    DETRAY_BFIELD_FILE: $CI_PROJECT_DIR/src/Detray/data/odd-bfield_v0_9_0.cvf
+  stage: test
+  tags: [docker-gpu-nvidia]
+  image: ghcr.io/acts-project/ubuntu2404_cuda:82
+  needs:
+    - detray_build_cuda
+  script:
+    - git clone $CLONE_URL src
+    - git -C src checkout $HEAD_SHA
+    - src/Detray/data/detray_data_get_files.sh
+    - cd build
+    - nvidia-smi
+    - ctest --output-on-failure -R ".*cuda.*"
+    - find bin -type f -name "*cuda" -not -name "*text*" -exec {} \;
+
+detray_build_sycl:
+  tags: [docker-gpu-nvidia]
+  stage: build
+  image: "ghcr.io/acts-project/ubuntu2404_oneapi:81"
+  cache:
+   - !reference [.ccache_base, cache]
+  artifacts:
+    paths:
+      - build
+  script:
+      - git clone $CLONE_URL src
+      - git -C src checkout $HEAD_SHA
+      - source src/Detray/CI/ci_setup.sh SYCL
+      - >
+        cmake --preset detray-gitlab-sycl-ci -S src/Detray -B build
+        -DCMAKE_BUILD_TYPE=Release
+      - ccache -z
+      - cmake --build build -- -j 2
+      - ccache -s
+
+detray_test_sycl:
+  stage: test
+  tags: [docker-gpu-nvidia]
+  image: "ghcr.io/acts-project/ubuntu2404_oneapi:81"
+  needs:
+    - detray_build_sycl
+  variables:
+    ONEAPI_DEVICE_SELECTOR: "*:cpu"
+  script:
+    - git clone $CLONE_URL src
+    - git -C src checkout $HEAD_SHA
+    - source src/Detray/CI/ci_setup.sh SYCL
+    - cd build
+    - nvidia-smi
+    - sycl-ls
+    - ctest --output-on-failure -R ".*sycl.*"
+    - find bin -type f -name "*sycl" -not -name "*text*" -exec {} \;
