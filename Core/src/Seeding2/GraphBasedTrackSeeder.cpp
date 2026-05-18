@@ -213,9 +213,9 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
   const float cutTauRatioMax =
       m_cfg.lrtMode ? m_cfg.tauRatioCutLrt : m_cfg.tauRatioCut;
   const float minZ0 =
-      m_cfg.lrtMode ? m_cfg.minZ0Lrt : static_cast<float>(roi.zMin());
+      m_cfg.lrtMode ? m_cfg.minZ0.value() : static_cast<float>(roi.zMin());
   const float maxZ0 =
-      m_cfg.lrtMode ? m_cfg.maxZ0Lrt : static_cast<float>(roi.zMax());
+      m_cfg.lrtMode ? m_cfg.maxZ0.value() : static_cast<float>(roi.zMax());
   const float minDeltaPhi =
       m_cfg.lrtMode ? m_cfg.minDeltaPhiLrt : m_cfg.minDeltaPhi;
 

@@ -101,10 +101,12 @@ class GraphBasedTrackSeeder {
     float cutDCurvMaxLrt = 0.015f;
     /// /// Tau ratio cut threshold in LRT mode
     float tauRatioCutLrt = 0.015f;
-    /// Minimum z0 value in LRT mode
-    float minZ0Lrt = -600.0f;
-    /// Maximum z0 value in LRT mode
-    float maxZ0Lrt = 600.0f;
+    /// Minimum z0 value, set as optionl as if in pixel mode,
+    /// The value is picked from the ROI 
+    std::optional<float> minZ0;
+    /// Minimum z0 value, set as optionl as if in pixel mode,
+    /// The value is picked from the ROI 
+    std::optional<float> maxZ0;
     /// When old tunings are used, this defines the minimum phi window used
     float minDeltaPhi = 0.001f;
     /// When old tunings are used, this defines the minimum phi window used in
