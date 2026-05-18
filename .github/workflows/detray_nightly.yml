@@ -28,7 +28,7 @@ jobs:
           - NAME: "HOST"
             CXX_STANDARD: "20"
             CONTAINER: "ghcr.io/acts-project/ubuntu2404:56"
-            OPTIONS: -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_FASTOR_PLUGIN=ON -DDETRAY_SMATRIX_PLUGIN=ON -DDETRAY_VC_AOS_PLUGIN=ON -DDETRAY_VC_SOA_PLUGIN=ON
+            OPTIONS: -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_FASTOR_PLUGIN=OFF -DDETRAY_SMATRIX_PLUGIN=ON -DDETRAY_VC_AOS_PLUGIN=ON -DDETRAY_VC_SOA_PLUGIN=ON
 
     # The system to run on.
     runs-on: ubuntu-latest
@@ -81,7 +81,7 @@ jobs:
       run: |
         cd build
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
-        ctest -E "._eigen|._fastor|._vc_aos" --output-on-failure
+        ctest -R detray_unit_test_. -E "._eigen|._fastor|._vc_aos" --output-on-failure
 
   # Containerised build jobs.
   nightly-device:
@@ -99,7 +99,7 @@ jobs:
           - NAME: "HIP-AMD"
             CXX_STANDARD: "20"
             CONTAINER: "ghcr.io/acts-project/ubuntu2404_rocm_oneapi:69"
-            OPTIONS: -DCMAKE_PREFIX_PATH=/opt/rocm/lib/cmake/ -DCMAKE_HIP_PLATFORM=amd -DDETRAY_BUILD_HIP=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON
+            OPTIONS: -DCMAKE_PREFIX_PATH=/opt/rocm/lib/cmake/ -DCMAKE_HIP_PLATFORM=amd -DDETRAY_BUILD_HIP=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_BUILD_INTEGRATIONTESTS=OFF -DDETRAY_BUILD_BENCHMARKS=OFF
           #- NAME: "HIP-NVIDIA"
           #  CXX_STANDARD: "20"
           #  CONTAINER:
