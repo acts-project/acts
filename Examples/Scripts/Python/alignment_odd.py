@@ -22,7 +22,9 @@ def _preload_dd4hep_for_macos() -> None:
     libdir: Optional[Path] = Path(root) / "lib" if root else None
     if libdir is None or not libdir.is_dir():
         try:
-            candidate = Path(__file__).resolve().parents[5] / "DD4hep" / "install" / "lib"
+            candidate = (
+                Path(__file__).resolve().parents[5] / "DD4hep" / "install" / "lib"
+            )
         except (IndexError, OSError):
             candidate = None
         if candidate is not None and candidate.is_dir():
@@ -491,9 +493,7 @@ def transform_to_alignment_record(
     """Build a JSON-serializable transform record for misalignment/alignment I/O."""
     rot = trf.rotation
     trans = trf.translation
-    rotation_matrix = [
-        [float(rot[i, j]) for j in range(3)] for i in range(3)
-    ]
+    rotation_matrix = [[float(rot[i, j]) for j in range(3)] for i in range(3)]
     return {
         "ID": geoid_to_id_string(gid),
         "Translation": [float(trans[0]), float(trans[1]), float(trans[2])],
@@ -615,9 +615,7 @@ def setupMisalignment(
     misalignment_file = outputDir / "misalignment_applied.json"
     with open(misalignment_file, "w") as f:
         json.dump(misalignment_record, f, indent=2)
-    print(
-        f"Misaligned {len(geoIdMap)} elements; wrote {misalignment_file.name}"
-    )
+    print(f"Misaligned {len(geoIdMap)} elements; wrote {misalignment_file.name}")
 
     return geoIdMap, alignment_placements, misalignment_record
 
@@ -809,8 +807,8 @@ def runAlignment(
     aal_cfg.deltaChi2ONdfCutOff = (5, 0.0001)
 
     # Create AlignedTransformUpdater, it will update mutableStore after each iteration
-    aal_cfg.alignedTransformUpdater = acts.examples.alignment.makeAlignedTransformUpdater(
-        mutableStore
+    aal_cfg.alignedTransformUpdater = (
+        acts.examples.alignment.makeAlignedTransformUpdater(mutableStore)
     )
 
     aal_cfg.alignedDetElements = det_elements
@@ -823,7 +821,9 @@ def runAlignment(
         i: int(alignment_dof) for i in range(aal_cfg.maxNumIterations)
     }
 
-    alignment_algo = acts.examples.alignment.AlignmentAlgorithm(aal_cfg, acts.logging.INFO)
+    alignment_algo = acts.examples.alignment.AlignmentAlgorithm(
+        aal_cfg, acts.logging.INFO
+    )
     s.addAlgorithm(alignment_algo)
 
     # Run the sequencer
@@ -831,8 +831,7 @@ def runAlignment(
 
     transform_map = mutableStore.getTransformMap()
     aligned_record = [
-        transform_to_alignment_record(gid, trf)
-        for gid, trf in transform_map.items()
+        transform_to_alignment_record(gid, trf) for gid, trf in transform_map.items()
     ]
 
     aligned_file = outputDir / "aligned_transforms.json"
@@ -925,7 +924,9 @@ def runReconstruction(
             transform_records = json.load(f)
 
         geoIdMap = geo_id_map_from_transform_records(transform_records)
-        print(f"Reconstruction ({mode}): {len(geoIdMap)} aligned elements from {json_path.name}")
+        print(
+            f"Reconstruction ({mode}): {len(geoIdMap)} aligned elements from {json_path.name}"
+        )
         mutableStore = acts.examples.alignment.MutableGeoIdAlignmentStore(geoIdMap)
 
         cfg = AlignmentDecorator.Config()

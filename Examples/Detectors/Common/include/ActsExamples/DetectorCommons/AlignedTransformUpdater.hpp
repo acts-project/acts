@@ -140,5 +140,3 @@ inline ActsAlignment::AlignedTransformUpdater makeAlignedTransformUpdater(
       });
 }
 }  // namespace ActsExamples
-
-

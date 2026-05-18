@@ -35,8 +35,7 @@ using namespace ActsPython;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
   // Bind AlignmentMask enum
-  py::enum_<ActsAlignment::AlignmentMask>(m, "AlignmentMask",
-                                          py::arithmetic())
+  py::enum_<ActsAlignment::AlignmentMask>(m, "AlignmentMask", py::arithmetic())
       .value("None", ActsAlignment::AlignmentMask::None)
       .value("Center0", ActsAlignment::AlignmentMask::Center0)
       .value("Center1", ActsAlignment::AlignmentMask::Center1)
@@ -201,24 +200,25 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
 
   py::class_<AA, ActsExamples::IAlgorithm, std::shared_ptr<AA>>(
       m, "AlignmentAlgorithm")
-      .def(
-          py::init([](AA::Config cfg, Acts::Logging::Level level) {
-            return std::make_shared<AA>(
-                std::move(cfg), getDefaultLogger("AlignmentAlgorithm", level));
-          }),
-          py::arg("config"), py::arg("level") = Acts::Logging::INFO);
+      .def(py::init([](AA::Config cfg, Acts::Logging::Level level) {
+             return std::make_shared<AA>(
+                 std::move(cfg), getDefaultLogger("AlignmentAlgorithm", level));
+           }),
+           py::arg("config"), py::arg("level") = Acts::Logging::INFO);
 
   m.def(
       "surfacePlacement",
       [](const Acts::Surface& s) { return s.surfacePlacement(); },
       py::arg("surface"), py::return_value_policy::reference);
-  
+
   // Deprecated: kept for backward compatibility
   m.def(
       "associatedDetectorElement",
       [](const Acts::Surface& s) {
         const auto* placement = s.surfacePlacement();
-        return placement ? dynamic_cast<const Acts::DetectorElementBase*>(placement) : nullptr;
+        return placement
+                   ? dynamic_cast<const Acts::DetectorElementBase*>(placement)
+                   : nullptr;
       },
       py::arg("surface"), py::return_value_policy::reference);
 }

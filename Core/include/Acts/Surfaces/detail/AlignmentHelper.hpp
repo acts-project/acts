@@ -42,7 +42,8 @@ RotationToAxes rotationToLocalAxesDerivative(
 /// @param rotation Local-to-global rotation of the surface
 inline void setAlignToPathLocalCenterDerivative(
     AlignmentToPathMatrix& alignToPath,
-    const Vector3& alignToPathWrtGlobalCenter, const RotationMatrix3& rotation) {
+    const Vector3& alignToPathWrtGlobalCenter,
+    const RotationMatrix3& rotation) {
   alignToPath[eAlignmentCenter0] =
       alignToPathWrtGlobalCenter.dot(rotation.col(0));
   alignToPath[eAlignmentCenter1] =
