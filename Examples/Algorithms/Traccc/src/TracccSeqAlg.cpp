@@ -8,60 +8,38 @@
 
 #include "ActsExamples/Traccc/TracccSeqAlg.hpp"
 
-#include "ActsExamples/Framework/AlgorithmContext.hpp"
+namespace ActsExamples::Traccc {
 
-// This is a separate file that maintains all the cuda headers
-#include "ActsExamples/Traccc/TracccChain.hpp"
-
-#include <stdexcept>
-
-namespace ActsExamples {
-
-TracccSeqAlgorithm::TracccSeqAlgorithm(
-    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
-    : IAlgorithm("TracccSeqAlgorithm", std::move(logger)), m_cfg(cfg) {
-  if (m_cfg.detectorFile.empty()) {
-    throw std::invalid_argument("Detector geometry file is not configured");
-  }
-  if (m_cfg.conditionsFile.empty()) {
-    throw std::invalid_argument("Detector conditions file is not configured");
-  }
-  if (m_cfg.digitizationFile.empty()) {
-    throw std::invalid_argument("Detector digitization file is not configured");
-  }
-  if (m_cfg.bfieldFile.empty()) {
-    throw std::invalid_argument("Magnetic field file is not configured");
-  }
-  if (m_cfg.dataDirectory.empty()) {
-    throw std::invalid_argument("Data directory is not configured");
-  }
-
-  m_chain = std::make_shared<TracccChain>(
-      m_cfg.detectorFile, m_cfg.digitizationFile, m_cfg.conditionsFile,
-      m_cfg.materialFile, m_cfg.gridFile, m_cfg.bfieldFile);
+TracccSeqAlg::TracccSeqAlg(Config cfg,
+                                           Acts::Logging::Level logLevel)
+    : IAlgorithm("TracccSeqAlg", logLevel),
+      m_cfg(std::move(cfg)),
+      m_chain(m_cfg.chain, logLevel) {
+  m_inputMeasurements.initialize(m_cfg.inputMeasurements);
+  m_inputSpacepoints.initialize(m_cfg.inputSpacepoints);
 }
 
-ProcessCode TracccSeqAlgorithm::execute(const AlgorithmContext& ctx) const {
-  const std::size_t eventId = ctx.eventNumber;
+ProcessCode TracccSeqAlg::execute(const AlgorithmContext& ctx) const {
+  const auto& measurements = m_inputMeasurements(ctx);
+  const auto& spacepoints = m_inputSpacepoints(ctx);
 
-  ACTS_INFO("Processing event " << eventId);
+  ACTS_DEBUG("Running traccc chain on event " << ctx.eventNumber
+             << " with " << measurements.size() << " measurements and " << spacepoints.size() << " spacepoints.");
 
-  EventResult result = processEvent(m_chain, m_cfg.dataDirectory, eventId);
+  EventResult result = m_chain(
+          const_cast<traccc::edm::measurement_collection::host&>(measurements),
+          const_cast<traccc::edm::spacepoint_collection::host&>(spacepoints));
 
   ACTS_INFO("Event information:");
-  ACTS_INFO("read " << result.n_cells << " cells,");
-  ACTS_INFO("created " << result.n_measurements << " measurements,");
-  ACTS_INFO("created " << result.n_spacepoints << "spacepoints,");
+
+  ACTS_INFO("received " << result.n_measurements << " measurements,");
+  ACTS_INFO("received " << result.n_spacepoints << " spacepoints,");
   ACTS_INFO("reconstructed " << result.n_seeds << " seeds,");
-  ACTS_INFO("found " << result.n_found_tracks << " tracks,");
-  ACTS_INFO("resolved " << result.n_resolved_tracks << " tracks,");
+  ACTS_INFO("found " << result.n_track_candidates << " tracks,");
   ACTS_INFO("and fitted " << result.n_fitted_tracks << " tracks.");
 
   return ProcessCode::SUCCESS;
+
 }
 
-ProcessCode TracccSeqAlgorithm::finalize() {
-  ACTS_INFO("Finalizing traccc GPU sequence algorithm");
-  return ProcessCode::SUCCESS;
-}
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Traccc

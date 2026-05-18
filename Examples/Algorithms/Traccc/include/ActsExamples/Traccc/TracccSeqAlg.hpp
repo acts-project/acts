@@ -8,52 +8,44 @@
 
 #pragma once
 
-#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Traccc/TracccChain.hpp"
 
-#include <memory>
+#include "traccc/edm/silicon_cell_collection.hpp"
+
 #include <string>
 
-// Forward-declare to keep traccc cuda headers out of this header
-// You can imagine having a separate header with includes for a different
-// backend (e.g. CPU-only)
-namespace ActsExamples {
-struct TracccChain;
-}
+namespace ActsExamples::Traccc {
 
-namespace ActsExamples {
-
-class TracccSeqAlgorithm final : public IAlgorithm {
+class TracccSeqAlg final : public IAlgorithm {
  public:
   struct Config {
-    /// Path to the detector geometry file
-    std::string detectorFile;
-    /// Path to the digitization config file
-    std::string digitizationFile;
-    /// Path to the detector conditions file (optional)
-    std::string conditionsFile;
-    /// Path to the material file (optional)
-    std::string materialFile;
-    /// Path to the grid file (optional)
-    std::string gridFile;
-    /// Path to the magnetic field file
-    std::string bfieldFile;
-    /// Directory containing per-event cell CSV files
-    std::string dataDirectory;
+    /// Full traccc chain configuration (geometry, seeding params, etc.)
+    TracccChainConfig chain;
+
+    /// WhiteBoard key for the input collections
+    std::string inputMeasurements = "";
+    std::string inputSpacepoints = "";
+
   };
 
-  explicit TracccSeqAlgorithm(
-      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
+  TracccSeqAlg(Config cfg, Acts::Logging::Level logLevel);
+  ~TracccSeqAlg() override = default;
 
   ProcessCode execute(const AlgorithmContext& ctx) const override;
-  ProcessCode finalize() override;
 
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
-  std::shared_ptr<TracccChain> m_chain;
+  TracccChain m_chain;
+
+  ReadDataHandle<traccc::edm::measurement_collection::host>
+    m_inputMeasurements{this, "inputMeasurements"};
+  ReadDataHandle<traccc::edm::spacepoint_collection::host>
+      m_inputSpacepoints{this, "inputSpacepoints"};
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Traccc
