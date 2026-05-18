@@ -124,6 +124,9 @@ class TrackFindingAlgorithmGnn final : public IAlgorithm {
 
     /// Optionally remap the geometry Ids that are put into the chain
     std::shared_ptr<GeometryIdMapActsAthena> geometryIdMap;
+
+    /// Device to run the GNN pipeline on
+    ActsPlugins::Device device = ActsPlugins::Device::Cuda();
   };
 
   /// Constructor of the track finding algorithm

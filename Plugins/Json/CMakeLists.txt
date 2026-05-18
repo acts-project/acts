@@ -20,6 +20,7 @@ acts_add_library(
     src/JsonSurfacesReader.cpp
     src/DefinitionsJsonConverter.cpp
     src/Seeding2ConfigJsonConverter.cpp
+    src/TrackingGeometryJsonConverter.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 

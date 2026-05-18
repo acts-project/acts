@@ -93,7 +93,7 @@ detray::io::axis_payload convertAxis(const Acts::IAxis& axis);
 /// @param slab the material slab to be converted
 ///
 /// @return a detray material slab payload
-detray::io::material_slab_payload convertMaterialSlab(
+detray::io::surface_material_payload convertMaterialSlab(
     const Acts::MaterialSlab& slab);
 
 /// Convert a Transform3 to a detray transform payload
