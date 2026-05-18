@@ -164,9 +164,6 @@ class ReferenceTrajectoryBuilder {
     /// transformation
     FreeToBoundCorrection freeToBoundCorrection;
 
-    /// Input MultiTrajectory
-    std::shared_ptr<traj_t> outputStates;
-
     /// End of world aborter
     EndOfWorldReached endOfWorldReached;
 
