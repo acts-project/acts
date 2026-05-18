@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsAlignment/Kernel/AlignmentMask.hpp"
@@ -211,14 +210,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
       [](const Acts::Surface& s) { return s.surfacePlacement(); },
       py::arg("surface"), py::return_value_policy::reference);
 
-  // Deprecated: kept for backward compatibility
+  // Deprecated: kept for backward compatibility; returns SurfacePlacementBase
   m.def(
       "associatedDetectorElement",
-      [](const Acts::Surface& s) {
-        const auto* placement = s.surfacePlacement();
-        return placement
-                   ? dynamic_cast<const Acts::DetectorElementBase*>(placement)
-                   : nullptr;
-      },
+      [](const Acts::Surface& s) { return s.surfacePlacement(); },
       py::arg("surface"), py::return_value_policy::reference);
 }
