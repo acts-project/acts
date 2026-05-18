@@ -1,0 +1,117 @@
+name: Traccc
+
+# Run whenever detray or traccc are changed. ACTS changes have their own tests
+on:
+  push:
+    paths:
+      - "Detray/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "Detray/**"
+
+# Cancel existing jobs on new pushes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  CTEST_OUTPUT_ON_FAILURE: 1
+  HOMEBREW_NO_INSTALL_CLEANUP: 1
+  CCACHE_DIR: ${{ github.workspace }}/ccache
+  CCACHE_MAXSIZE: 500M
+  CCACHE_KEY_SUFFIX: r2
+  ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
+
+# All the different build/test jobs.
+jobs:
+
+  # Build and test the traccc plugin in ACTS
+  plugin:
+
+    runs-on: ubuntu-latest
+    container: ghcr.io/acts-project/ubuntu2404:85
+    env:
+      INSTALL_DIR: ${{ github.workspace }}/install
+      ACTS_LOG_FAILURE_THRESHOLD: WARNING
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Configure
+        run: >
+          ccache -z &&
+          CI/dependencies/run.sh .env
+          cmake -B build -S .
+          --preset=dev
+          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          -DCMAKE_BUILD_TYPE="Release"
+          -DCMAKE_COMPILE_WARNING_AS_ERROR=ON
+          -DCMAKE_CXX_SCAN_FOR_MODULES=OFF
+          -DCMAKE_FIND_FRAMEWORK="LAST"
+          -DACTS_FORCE_ASSERTIONS=ON
+          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
+          -DACTS_USE_SYSTEM_NLOHMANN_JSON=ON
+          -DACTS_USE_SYSTEM_PYBIND11=ON
+          -DACTS_BUILD_PLUGIN_DD4HEP=ON
+          -DACTS_BUILD_PLUGIN_JSON=ON
+          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+          -DACTS_BUILD_PLUGIN_TRACCC=ON
+          -DDETRAY_GENERATE_METADATA="odd_metadata;itk_metadata"
+          -DTRACCC_SUPPORTED_DETECTORS="odd_detector;itk_detector"
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Build docs examples
+        # these are excluded from the ALL target, but we want to test them here
+        run: cmake --build build --target docs-examples
+
+      - name: ccache stats
+        run: ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@v5
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+      - name: Unit tests
+        run: >
+          CI/dependencies/run.sh .env
+          ctest --test-dir build -j$(nproc)
+
+      - name: Integration tests
+        run: >
+          CI/dependencies/run.sh .env
+          cmake --build build --target integrationtests
+
+      - name: Install
+        run: cmake --build build --target install
+
+      - name: Python sanity check after install
+        shell: bash
+        run: >
+          source .env &&
+          source install/python/setup.sh &&
+          python -c "import acts; v = acts.Vector3(1,2,3)"
