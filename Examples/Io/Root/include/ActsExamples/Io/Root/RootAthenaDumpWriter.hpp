@@ -27,19 +27,11 @@ class TTree;
 
 namespace ActsExamples {
 
-/// @brief Writer for the Athena GNN tracking ntuple format.
-///
-/// Writes particles, clusters (from measurements), and space points to the
-/// TTree format consumed by ModuleMapGraph's TTree_dump. Only the branches
-/// activated by TTree_dump::Init() are written; other Athena-specific fields
-/// are omitted.
+/// Writer for the Athena GNN tracking ntuple format.
 ///
 /// Athena module geometry columns (CLbarrel_endcap, CLeta_module,
 /// CLphi_module) have no ACTS equivalent and are filled with
-/// std::numeric_limits<int>::max() as sentinel values. ModuleMapGraph only
-/// accesses these fields when SPisOverlap is non-zero; since ACTS simulation
-/// does not produce overlapping space points, SPisOverlap is always zero and
-/// the sentinel values are never used.
+/// std::numeric_limits<int>::max() as sentinel values.
 ///
 /// CLmoduleID is filled with the ACTS GeometryIdentifier value, which serves
 /// as a unique module identifier within the ACTS geometry.
