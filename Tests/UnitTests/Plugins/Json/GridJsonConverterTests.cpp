@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
+#include "Acts/Utilities/IAxis.hpp"
 #include "ActsPlugins/Json/GridJsonConverter.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
@@ -472,6 +473,45 @@ BOOST_AUTO_TEST_CASE(BoundCylinderToZPhiTest) {
   BOOST_REQUIRE(bct != nullptr);
   CHECK_CLOSE_ABS(bct->radius, 100., 1e-5);
   CHECK_CLOSE_ABS(bct->shift, 10., 1e-5);
+}
+
+BOOST_AUTO_TEST_CASE(AxisJsonConverterEquidistantBound) {
+  auto axis = IAxis::createEquidistant(AxisBoundaryType::Bound, -5., 5., 10);
+  nlohmann::json j = AxisJsonConverter::toJson(*axis);
+  auto read = AxisJsonConverter::fromJson(j);
+  BOOST_REQUIRE(read != nullptr);
+  BOOST_CHECK_EQUAL(read->getBoundaryType(), AxisBoundaryType::Bound);
+  BOOST_CHECK_EQUAL(read->getNBins(), 10u);
+  BOOST_CHECK_EQUAL(read->getMin(), -5.);
+  BOOST_CHECK_EQUAL(read->getMax(), 5.);
+  BOOST_CHECK(read->isEquidistant());
+}
+
+BOOST_AUTO_TEST_CASE(AxisJsonConverterEquidistantClosed) {
+  auto axis = IAxis::createEquidistant(AxisBoundaryType::Closed,
+                                       -std::numbers::pi, std::numbers::pi, 36);
+  nlohmann::json j = AxisJsonConverter::toJson(*axis);
+  auto read = AxisJsonConverter::fromJson(j);
+  BOOST_REQUIRE(read != nullptr);
+  BOOST_CHECK_EQUAL(read->getBoundaryType(), AxisBoundaryType::Closed);
+  BOOST_CHECK_EQUAL(read->getNBins(), 36u);
+  BOOST_CHECK(read->isEquidistant());
+}
+
+BOOST_AUTO_TEST_CASE(AxisJsonConverterVariableBound) {
+  // Exercises the "boundaries" key — the fix changed from reading "edges"
+  std::vector<double> edges = {0., 10., 25., 60., 130.};
+  auto axis = IAxis::createVariable(AxisBoundaryType::Bound, edges);
+  nlohmann::json j = AxisJsonConverter::toJson(*axis);
+  BOOST_CHECK_EQUAL(j.at("type").get<AxisType>(), AxisType::Variable);
+  BOOST_CHECK(j.contains("boundaries"));
+  BOOST_CHECK(!j.contains("edges"));
+  auto read = AxisJsonConverter::fromJson(j);
+  BOOST_REQUIRE(read != nullptr);
+  BOOST_CHECK_EQUAL(read->getBoundaryType(), AxisBoundaryType::Bound);
+  BOOST_CHECK_EQUAL(read->getNBins(), edges.size() - 1);
+  BOOST_CHECK(!read->isEquidistant());
+  BOOST_CHECK(read->getBinEdges() == edges);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
