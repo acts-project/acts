@@ -8,7 +8,6 @@
 
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CompositePortalLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"

@@ -161,9 +161,9 @@ ActsPlugins::DetrayConversionUtils::convertBinUtilityTo2D(
 
   // Return as-is if already 2D
   if (bUtility.dimensions() == 2u) {
-    // Check if we need to swap for phi-z -> z-phi
+    // Check if we need to swap for rphi-z -> z-rphi
     if (bUtility.binningData()[0u].binvalue == AxisZ &&
-        bUtility.binningData()[1u].binvalue == AxisPhi) {
+        bUtility.binningData()[1u].binvalue == AxisRPhi) {
       BinUtility nbUtility(bUtility.binningData()[1u]);
       nbUtility += BinUtility{bUtility.binningData()[0u]};
       return {std::move(nbUtility), true};
@@ -192,9 +192,9 @@ ActsPlugins::DetrayConversionUtils::convertBinUtilityTo2D(
       result +=
           BinUtility(1u, -std::numbers::pi, std::numbers::pi, closed, AxisPhi);
     } else if (bUtility.binningData()[0u].binvalue == AxisZ) {
-      // Turn to Phi-Z (swap needed)
+      // Turn to RPhi-Z (swap needed)
       BinUtility nbUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
-                           AxisPhi);
+                           AxisRPhi);
       nbUtility += bUtility;
       result = std::move(nbUtility);
       swapped = true;

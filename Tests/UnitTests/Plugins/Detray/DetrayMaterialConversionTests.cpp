@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZ) {
   BOOST_CHECK_EQUAL(payload.grid_link.type,
                     detray::io::material_id::concentric_cylinder2_map);
   // 1st-axis is dummy
-  BOOST_CHECK_EQUAL(payload.axes.at(0u).label, detray::axis::label::e_phi);
+  BOOST_CHECK_EQUAL(payload.axes.at(0u).label, detray::axis::label::e_rphi);
   BOOST_CHECK_EQUAL(payload.axes.at(0u).bounds,
                     detray::axis::bounds::e_circular);
   BOOST_CHECK_EQUAL(payload.axes.at(0u).bins, 1u);
@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZPhi) {
                               Acts::AxisDirection::AxisZ);
   binUtility += Acts::BinUtility(2u, -std::numbers::pi, std::numbers::pi,
                                  Acts::BinningOption::closed,
-                                 Acts::AxisDirection::AxisPhi);
+                                 Acts::AxisDirection::AxisRPhi);
 
   std::vector<Acts::MaterialSlab> materialSlabs0 = {materialSlab12345,
                                                     materialSlab678910};
@@ -481,7 +481,7 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZPhi) {
   BOOST_CHECK_EQUAL(payload.grid_link.type,
                     detray::io::material_id::concentric_cylinder2_map);
   //  The axis are real aphi-z
-  BOOST_CHECK_EQUAL(payload.axes.at(0u).label, detray::axis::label::e_phi);
+  BOOST_CHECK_EQUAL(payload.axes.at(0u).label, detray::axis::label::e_rphi);
   BOOST_CHECK_EQUAL(payload.axes.at(1u).label, detray::axis::label::e_z);
   BOOST_CHECK_EQUAL(payload.bins.size(), 4u);
 }
