@@ -1103,6 +1103,7 @@ def test_gnn4itk_example(tmp_path, assert_root_hash):
             RootAthenaDumpWriter(
                 level=acts.logging.WARNING,
                 inputParticles="particles_simulated",
+                inputClusters="clusters",
                 inputMeasurements="measurements",
                 inputMeasParticleMap="measurement_particles_map",
                 inputSpacePoints="spacepoints",

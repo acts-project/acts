@@ -254,10 +254,10 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
         RootSpacePointWriter, root, "RootSpacePointWriter", inputSpacePoints,
         inputMeasurementParticlesMap, filePath, fileMode, treeName);
 
-    ACTS_PYTHON_DECLARE_WRITER(RootAthenaDumpWriter, root,
-                               "RootAthenaDumpWriter", inputParticles,
-                               inputMeasurements, inputMeasParticleMap,
-                               inputSpacePoints, filePath, treeName);
+    ACTS_PYTHON_DECLARE_WRITER(
+        RootAthenaDumpWriter, root, "RootAthenaDumpWriter", inputParticles,
+        inputClusters, inputMeasurements, inputMeasParticleMap,
+        inputSpacePoints, filePath, treeName);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackStatesWriter, root, "RootTrackStatesWriter", inputTracks,

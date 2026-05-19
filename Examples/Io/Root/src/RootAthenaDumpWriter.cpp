@@ -9,10 +9,10 @@
 #include "ActsExamples/Io/Root/RootAthenaDumpWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
-#include <cmath>
 #include <ios>
 #include <limits>
 #include <stdexcept>
@@ -36,6 +36,7 @@ RootAthenaDumpWriter::RootAthenaDumpWriter(const Config& config,
   }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputClusters.initialize(m_cfg.inputClusters);
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_inputMeasParticleMap.initialize(m_cfg.inputMeasParticleMap);
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
@@ -145,6 +146,7 @@ ProcessCode RootAthenaDumpWriter::finalize() {
 
 ProcessCode RootAthenaDumpWriter::write(const AlgorithmContext& ctx) {
   const auto& particles = m_inputParticles(ctx);
+  const auto& clusters = m_inputClusters(ctx);
   const auto& measurements = m_inputMeasurements(ctx);
   const auto& measPartMap = m_inputMeasParticleMap(ctx);
   const auto& spacePoints = m_inputSpacePoints(ctx);
@@ -198,22 +200,10 @@ ProcessCode RootAthenaDumpWriter::write(const AlgorithmContext& ctx) {
   m_partVz.clear();
 
   for (const auto& particle : particles) {
-    const auto& mom = particle.momentum();
     const float pT = static_cast<float>(particle.transverseMomentum() /
                                         Acts::UnitConstants::MeV);
-    const float eta = [&] {
-      const float pz = static_cast<float>(mom.z() / Acts::UnitConstants::MeV);
-      const float p = static_cast<float>(mom.norm() / Acts::UnitConstants::MeV);
-      if (p == 0.f) {
-        return 0.f;
-      }
-      // eta = -ln(tan(theta/2)) = 0.5 * ln((p+pz)/(p-pz))
-      const float denom = p - pz;
-      if (denom <= 0.f) {
-        return std::numeric_limits<float>::infinity();
-      }
-      return 0.5f * std::log((p + pz) / denom);
-    }();
+    const float eta = static_cast<float>(
+        Acts::VectorHelpers::eta(particle.momentum().normalized()));
 
     m_partEventNumber.push_back(
         static_cast<int>(particle.particleId().vertexPrimary()));
@@ -229,21 +219,6 @@ ProcessCode RootAthenaDumpWriter::write(const AlgorithmContext& ctx) {
         static_cast<float>(particle.position().z() / Acts::UnitConstants::mm));
   }
   m_nPartEVT = static_cast<int>(m_partBarcode.size());
-
-  // Build cluster-index → space-point global position map so each cluster can
-  // be assigned the position of its associated space point.  For pixel SPs the
-  // cluster position equals the SP position; for strip SPs both clusters share
-  // the SP midpoint, which is a good-enough approximation for the GNN features.
-  std::unordered_map<int, Acts::Vector3> clusterGlobalPos;
-  clusterGlobalPos.reserve(measurements.size());
-  for (const auto& sp : spacePoints) {
-    const auto sLinks = sp.sourceLinks();
-    const Acts::Vector3 pos{sp.x(), sp.y(), sp.z()};
-    for (const auto& sl : sLinks) {
-      clusterGlobalPos.emplace(
-          static_cast<int>(sl.get<IndexSourceLink>().index()), pos);
-    }
-  }
 
   // --- Clusters ---
   m_clIndex.clear();
@@ -275,17 +250,10 @@ ProcessCode RootAthenaDumpWriter::write(const AlgorithmContext& ctx) {
     m_clEtaModule.push_back(std::numeric_limits<int>::max());
     m_clPhiModule.push_back(std::numeric_limits<int>::max());
 
-    // Global position from associated space point; zero if not found.
-    const auto posIt = clusterGlobalPos.find(static_cast<int>(im));
-    if (posIt != clusterGlobalPos.end()) {
-      m_clX.push_back(posIt->second.x());
-      m_clY.push_back(posIt->second.y());
-      m_clZ.push_back(posIt->second.z());
-    } else {
-      m_clX.push_back(0.0);
-      m_clY.push_back(0.0);
-      m_clZ.push_back(0.0);
-    }
+    const Acts::Vector3& pos = clusters.at(im).globalPosition;
+    m_clX.push_back(pos.x());
+    m_clY.push_back(pos.y());
+    m_clZ.push_back(pos.z());
 
     // Local covariance. The reader expects a 4-element vector for pixel
     // ({c00, c01, c10, c11}) and uses index i for strip where

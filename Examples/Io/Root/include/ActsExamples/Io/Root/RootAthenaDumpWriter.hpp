@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
@@ -45,6 +46,8 @@ class RootAthenaDumpWriter : public IWriter {
   struct Config {
     /// Input particles collection name
     std::string inputParticles;
+    /// Input clusters collection name (one-to-one with measurements)
+    std::string inputClusters;
     /// Input measurements collection name
     std::string inputMeasurements;
     /// Input measurement-to-particle map (measurement index -> barcode)
@@ -125,6 +128,7 @@ class RootAthenaDumpWriter : public IWriter {
   std::vector<int> m_spIsOverlap;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
   ReadDataHandle<IndexMultimap<ActsFatras::Barcode>> m_inputMeasParticleMap{
