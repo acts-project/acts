@@ -31,9 +31,17 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsTraccc, traccc) {
         py::class_<Alg, ActsExamples::IAlgorithm, std::shared_ptr<Alg>>(
             traccc, "TracccSeqAlgorithm")
             .def(py::init([](const Cfg& cfg, Acts::Logging::Level level) {
-                   return std::make_shared<Alg>(cfg, level);
-                 }),
-                 "cfg"_a, "level"_a = Acts::Logging::INFO);
+              return std::make_shared<Alg>(
+                  cfg, Acts::getDefaultLogger("ActsMeasToTracccAlg", level));
+            }));
+
+    // auto cls =
+    //     py::class_<Alg, ActsExamples::IAlgorithm, std::shared_ptr<Alg>>(
+    //         traccc, "TracccSeqAlgorithm")
+    //         .def(py::init([](const Cfg& cfg, Acts::Logging::Level level) {
+    //                return std::make_shared<Alg>(cfg, level);
+    //              }),
+    //              "cfg"_a, "level"_a = Acts::Logging::INFO);
 
     py::enum_<ChainCfg::Backend>(traccc, "TracccBackend")
         .value("CPU", ChainCfg::Backend::CPU)

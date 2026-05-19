@@ -30,11 +30,10 @@ class TracccSeqAlg final : public IAlgorithm {
     std::string inputSpacepoints = "";
   };
 
-  TracccSeqAlg(Config cfg, Acts::Logging::Level logLevel);
-  ~TracccSeqAlg() override = default;
+  explicit TracccSeqAlg(const Config& cfg,
+                        std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const override;
-
   const Config& config() const { return m_cfg; }
 
  private:

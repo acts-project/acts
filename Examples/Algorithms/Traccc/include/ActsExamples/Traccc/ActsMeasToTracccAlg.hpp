@@ -35,6 +35,7 @@ class ActsMeasToTracccAlg final : public IAlgorithm {
     std::string inputActsMeasurements = "measurements";
     std::string outputDetrayToActsMap = "detray-to-acts-map";
     std::string outputTracccMeasurements = "acts-to-traccc-measurements";
+    std::vector<int> pixelVolumes;
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
 

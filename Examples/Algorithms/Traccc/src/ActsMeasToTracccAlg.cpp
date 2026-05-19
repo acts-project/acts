@@ -29,11 +29,8 @@ ActsMeasToTracccAlg::ActsMeasToTracccAlg(
   m_outputTracccMeasurements.initialize(m_cfg.outputTracccMeasurements);
 
   if (m_detrayToActsMap.empty()) {
-    std::cout << "ActsMeasToTracccAlg: detrayToActsMap is empty" << std::endl;
     buildSurfaceMap(*m_cfg.trackingGeometry, m_cfg.detectorFile,
                     m_detrayToActsMap, m_actsToDetrayMap);
-    std::cout << "ActsMeasToTracccAlg: built surface map with "
-              << m_detrayToActsMap.size() << " entries" << std::endl;
   }
 }
 
@@ -65,9 +62,9 @@ void ActsExamples::ActsMeasToTracccAlg::buildSurfaceMap(
           double placement_y = sf.center(detrayContext)[1];
           double placement_z = sf.center(detrayContext)[2];
           if (nPrint < 10) {
-            std::cout << "detray=" << surface.identifier().value()
-                      << " pos: " << placement_x << ", " << placement_y << ", "
-                      << placement_z << std::endl;
+            ACTS_INFO("detray=" << surface.identifier().value() << " pos: "
+                                << placement_x << ", " << placement_y << ", "
+                                << placement_z << std::endl);
             nPrint++;
           }
           detrayCentres[surface.identifier().value()] =
@@ -75,8 +72,8 @@ void ActsExamples::ActsMeasToTracccAlg::buildSurfaceMap(
         }
       });
 
-  std::cout << "ActsMeasToTracccAlg: built detray map with "
-            << detrayCentres.size() << " entries" << std::endl;
+  ACTS_INFO("ActsMeasToTracccAlg: built detray map with "
+            << detrayCentres.size() << " entries" << std::endl);
 
   nPrint = 0;
   Acts::GeometryContext gctx =
@@ -85,9 +82,9 @@ void ActsExamples::ActsMeasToTracccAlg::buildSurfaceMap(
     if (surface != nullptr) {
       Acts::Vector3 geo_center = surface->center(gctx);
       if (nPrint < 10) {
-        std::cout << "acts=" << surface->geometryId()
-                  << " pos: " << geo_center[0] << ", " << geo_center[1] << ", "
-                  << geo_center[2] << std::endl;
+        ACTS_INFO("acts=" << surface->geometryId() << " pos: " << geo_center[0]
+                          << ", " << geo_center[1] << ", " << geo_center[2]
+                          << std::endl);
         nPrint++;
       }
       actsCentres[surface->geometryId()] =
@@ -95,8 +92,8 @@ void ActsExamples::ActsMeasToTracccAlg::buildSurfaceMap(
     }
   });
 
-  std::cout << "ActsMeasToTracccAlg: built acts map with " << actsCentres.size()
-            << " entries" << std::endl;
+  ACTS_INFO("ActsMeasToTracccAlg: built acts map with "
+            << actsCentres.size() << " entries" << std::endl);
 
   for (const auto& [detrayID, detrayCenter] : detrayCentres) {
     for (auto& [actsID, actsCenter] : actsCentres) {
@@ -111,8 +108,8 @@ void ActsExamples::ActsMeasToTracccAlg::buildSurfaceMap(
     }
   }
 
-  std::cout << "ActsMeasToTracccAlg: built detray to Acts map with "
-            << detrayToActsMap.size() << " entries" << std::endl;
+  ACTS_INFO("ActsMeasToTracccAlg: built detray to Acts map with "
+            << detrayToActsMap.size() << " entries" << std::endl);
 }
 
 ProcessCode ActsMeasToTracccAlg::execute(const AlgorithmContext& ctx) const {
@@ -150,8 +147,8 @@ ProcessCode ActsMeasToTracccAlg::execute(const AlgorithmContext& ctx) const {
     auto tm = tracccMeasurements.at(tracccMeasurements.size() - 1);
 
     const auto vol = geoId.volume();
-    // [16, 17, 18] for ODD Gen1
-    if (vol == 16 || vol == 17 || vol == 18) {
+    if (std::find(m_cfg.pixelVolumes.begin(), m_cfg.pixelVolumes.end(), vol) !=
+        m_cfg.pixelVolumes.end()) {
       nPix++;
       // Pixel (dims=2 or 3 with timing)
       tm.dimensions() = 2u;

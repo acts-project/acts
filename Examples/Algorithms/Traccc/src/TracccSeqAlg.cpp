@@ -10,10 +10,11 @@
 
 namespace ActsExamples::Traccc {
 
-TracccSeqAlg::TracccSeqAlg(Config cfg, Acts::Logging::Level logLevel)
-    : IAlgorithm("TracccSeqAlg", logLevel),
+TracccSeqAlg::TracccSeqAlg(const Config& cfg,
+                           std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TracccSeqAlg", std::move(logger)),
       m_cfg(std::move(cfg)),
-      m_chain(m_cfg.chain, logLevel) {
+      m_chain(m_cfg.chain, logger->level()) {
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_inputSpacepoints.initialize(m_cfg.inputSpacepoints);
 }
