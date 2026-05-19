@@ -20,6 +20,7 @@ namespace Acts::detail {
 /// form. Further methods for memory pre-allocation and memory release are
 /// defined
 class DynamicColumnBase {
+ public:
   virtual ~DynamicColumnBase() = default;
 
   /// Retrieve the stored data for the i-th proxy object stored in the container
@@ -83,7 +84,7 @@ class DynamicColumnBase {
 /// @tparam T: Data type of the data to be stored by the column
 template <typename T>
 class DynamicColumn : public DynamicColumnBase {
-public:
+ public:
   /// @copydoc DynamicColumnBase::get
   std::any get(std::size_t i) override {
     assert(i < m_vector.size() && "DynamicColumn out of bounds");
@@ -147,12 +148,7 @@ public:
 /// of a std::vector.
 template <>
 class DynamicColumn<bool> : public DynamicColumnBase {
-public:
-  /// Auxiliary struct to wrap the boolean
-  struct Wrapper {
-    bool value{false};
-  };
-
+ public:
   /// @copydoc DynamicColumnBase::get
   std::any get(std::size_t i) override {
     assert(i < m_vector.size() && "DynamicColumn out of bounds");
@@ -209,6 +205,10 @@ public:
   }
 
  private:
+  /// Auxiliary struct to wrap the boolean
+  struct Wrapper {
+    bool value{false};
+  };
   std::vector<Wrapper> m_vector;
 };
 
