@@ -280,14 +280,11 @@ add_examples_binding_if(
     PLUGIN_IMPORT FALSE
 )
 
-set(_traccc_cuda_enabled FALSE)
-if(ACTS_BUILD_PLUGIN_TRACCC AND ACTS_ENABLE_CUDA)
-    set(_traccc_cuda_enabled TRUE)
-endif()
-
-add_examples_binding_if(Traccc
-  "Acts::ExamplesTraccc"
-  _traccc_cuda_enabled FALSE
+add_examples_binding_if(
+    NAME Traccc
+    LINK_LIBRARIES Acts::ExamplesTraccc
+    FLAG ACTS_BUILD_PLUGIN_TRACCC
+    PLUGIN_IMPORT FALSE
 )
 
 # Special case for HepMC3 as it a hard dependency

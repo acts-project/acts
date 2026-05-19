@@ -41,21 +41,21 @@ void ActsExamples::ActsMeasToTracccAlg::buildSurfaceMap(
     const Acts::TrackingGeometry& trackingGeometry,
     const std::string& detectorFile,
     std::unordered_map<std::uint64_t, Acts::GeometryIdentifier>&
-        m_detrayToActsMap,
+        detrayToActsMap,
     std::unordered_map<Acts::GeometryIdentifier, std::uint64_t>&
-        m_actsToDetrayMap) {
+        actsToDetrayMap) {
   std::unordered_map<Acts::GeometryIdentifier, std::array<double, 3>>
       actsCentres;
   std::unordered_map<std::uint64_t, std::array<double, 3>> detrayCentres;
 
   //   Load detray detector and build Acts→detray map
-  traccc::io::read_detector(host_det, mr, detectorFile, "", "");
+  traccc::io::read_detector(m_host_det, m_mr, detectorFile, "", "");
 
   int nPrint = 0;
   typename traccc::default_detector::host::geometry_context detrayContext{};
   traccc::host_detector_visitor<traccc::detector_type_list>(
-      host_det, [&]<typename detector_traits_t>(
-                    const typename detector_traits_t::host& det) {
+      m_host_det, [&]<typename detector_traits_t>(
+                      const typename detector_traits_t::host& det) {
         for (const auto& surface : det.surfaces()) {
           if (!surface.is_sensitive())
             continue;
@@ -104,15 +104,15 @@ void ActsExamples::ActsMeasToTracccAlg::buildSurfaceMap(
                                   std::pow(detrayCenter[1] - actsCenter[1], 2) +
                                   std::pow(detrayCenter[2] - actsCenter[2], 2));
       if (distance < 0.1) {  // threshold for matching, may need tuning
-        m_detrayToActsMap[detrayID] = actsID;
-        m_actsToDetrayMap[actsID] = detrayID;
+        detrayToActsMap[detrayID] = actsID;
+        actsToDetrayMap[actsID] = detrayID;
         break;
       }
     }
   }
 
   std::cout << "ActsMeasToTracccAlg: built detray to Acts map with "
-            << m_detrayToActsMap.size() << " entries" << std::endl;
+            << detrayToActsMap.size() << " entries" << std::endl;
 }
 
 ProcessCode ActsMeasToTracccAlg::execute(const AlgorithmContext& ctx) const {
@@ -148,8 +148,6 @@ ProcessCode ActsMeasToTracccAlg::execute(const AlgorithmContext& ctx) const {
 
     tracccMeasurements.push_back({});
     auto tm = tracccMeasurements.at(tracccMeasurements.size() - 1);
-
-    const auto* surface = m_cfg.trackingGeometry->findSurface(geoId);
 
     const auto vol = geoId.volume();
     // [16, 17, 18] for ODD Gen1

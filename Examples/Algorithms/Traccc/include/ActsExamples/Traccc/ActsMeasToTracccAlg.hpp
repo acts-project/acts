@@ -39,8 +39,7 @@ class ActsMeasToTracccAlg final : public IAlgorithm {
   };
 
   mutable vecmem::host_memory_resource m_mr;
-  vecmem::host_memory_resource mr;
-  traccc::host_detector host_det;
+  traccc::host_detector m_host_det;
   std::unordered_map<Acts::GeometryIdentifier, std::uint64_t> m_actsToDetrayMap;
   std::unordered_map<std::uint64_t, Acts::GeometryIdentifier> m_detrayToActsMap;
 

@@ -38,10 +38,11 @@ set(TRACCC_SETUP_DFELIBS
 set(TRACCC_SETUP_DETRAY OFF CACHE BOOL "Set up Detray as part of Traccc")
 set(TRACCC_SETUP_ACTS OFF CACHE BOOL "Do not set up ACTS as part of Traccc")
 
-if(ACTS_ENABLE_CUDA)
-    message(STATUS "Enabling CUDA support for traccc")
-    set(TRACCC_BUILD_CUDA ON CACHE BOOL "Build Traccc with CUDA support")
-endif()
+set(TRACCC_BUILD_CUDA
+    ${ACTS_ENABLE_CUDA}
+    CACHE BOOL
+    "Build Traccc with CUDA support"
+)
 
 set(TRACCC_BUILD_IO
     ON
@@ -68,21 +69,13 @@ set(TRACCC_BUILD_TESTING
 )
 
 set(TRACCC_SETUP_TBB OFF CACHE BOOL "Do not set up TBB as part of Traccc")
+set(TRACCC_USE_SYSTEM_TBB ON CACHE BOOL "Use the system TBB for Traccc")
 
 set(TRACCC_BUILD_EXAMPLES
     OFF
     CACHE BOOL
     "Turn off the build of the Traccc examples"
 )
-
-if(TRACCC_BUILD_EXAMPLES)
-    set(TRACC_USE_SYSTEM_TBB
-        ON
-        CACHE BOOL
-        "Use the system TBB for the Traccc examples"
-    )
-    find_package(TBB REQUIRED)
-endif()
 
 set(TRACCC_BUILD_BENCHMARKS
     OFF

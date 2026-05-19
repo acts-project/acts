@@ -57,7 +57,6 @@ target_include_directories(
 target_link_libraries(ActsPluginGnn PUBLIC Acts::Core Boost::boost)
 
 if(ACTS_GNN_ENABLE_CUDA)
-
     target_compile_definitions(
         ActsPluginGnn
         PUBLIC

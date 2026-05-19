@@ -82,6 +82,17 @@ option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEOMODEL "Build GeoModel plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TRACCC "Build Traccc plugin" OFF)
 option(ACTS_ENABLE_CUDA "Enable CUDA for the gnn/Traccc plugins" OFF)
+option(ACTS_GNN_ENABLE_CUDA "[Deprecated] Enable CUDA for the gnn plugin" OFF)
+
+# Preserve previous behaviour of ACTS_GNN_ENABLE_CUDA but mark as deprecated
+if(ACTS_GNN_ENABLE_CUDA)
+    message(
+        DEPRECATION
+        "ACTS_GNN_ENABLE_CUDA is deprecated. Enable ACTS_ENABLE_CUDA to achieve the same effect."
+    )
+    set(ACTS_ENABLE_CUDA ON)
+endif()
+
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GNN "Build the GNN plugin" OFF)
 option(ACTS_GNN_ENABLE_ONNX "Build the Onnx backend for the gnn plugin" OFF)
@@ -582,9 +593,7 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
     endif()
 
     if(ACTS_ENABLE_CUDA)
-        find_package(CUDAToolkit REQUIRED)
-        enable_cuda()
-        message(STATUS "Build Traccc plugin with CUDA")
+        message(STATUS "Build Traccc plugin with CUDA support")
     else()
         message(STATUS "Build Traccc plugin for CPU only")
     endif()

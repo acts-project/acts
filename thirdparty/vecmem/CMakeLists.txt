@@ -31,7 +31,7 @@ set(VECMEM_BUILD_BENCHMARKING
     "Turn off the build of VecMem benchmarking"
 )
 
-set_option_if(VECMEM_BUILD_CUDA ACTS_ENABLE_CUDA)
+set_option_if(VECMEM_BUILD_CUDA_LIBRARY ACTS_ENABLE_CUDA)
 
 # Now set up its build.
 FetchContent_MakeAvailable(VecMem)
