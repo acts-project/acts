@@ -31,8 +31,8 @@ namespace ActsExamples {
 /// Writer for the Athena GNN tracking ntuple format.
 ///
 /// Athena module geometry columns (CLbarrel_endcap, CLeta_module,
-/// CLphi_module) have no ACTS equivalent and are filled with
-/// std::numeric_limits<int>::max() as sentinel values.
+/// CLphi_module) and CLparticleLink_eventIndex have no ACTS equivalent and
+/// are filled with @c s_sentinel.
 ///
 /// CLmoduleID is filled with the ACTS GeometryIdentifier value, which serves
 /// as a unique module identifier within the ACTS geometry.
@@ -83,6 +83,9 @@ class RootAthenaDumpWriter : public IWriter {
   /// Barcodes at or below this value are primaries in the Athena convention.
   /// https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerGeometry/InDetGNNTracking/src/DumpObjects.h?ref_type=heads#L101
   static constexpr int s_maxBarcodeForPrimary = 200000;
+
+  /// Sentinel for Athena columns that have no ACTS equivalent.
+  static constexpr int s_sentinel = 0;
 
   static constexpr unsigned int s_maxParticles = 1500000;
   static constexpr unsigned int s_maxClusters = 1500000;

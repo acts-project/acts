@@ -14,7 +14,6 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <ios>
-#include <limits>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -243,28 +242,22 @@ ProcessCode RootAthenaDumpWriter::write(const AlgorithmContext& ctx) {
     m_clHardware.push_back(isPixel ? "PIXEL" : "STRIP");
     m_clModuleId.push_back(meas.geometryId().value());
 
-    // No ACTS equivalent for Athena detector geometry columns; sentinel values
-    // are safe because ModuleMapGraph only reads them when SPisOverlap != 0,
-    // and we always write SPisOverlap = 0.
-    m_clBarrelEndcap.push_back(std::numeric_limits<int>::max());
-    m_clEtaModule.push_back(std::numeric_limits<int>::max());
-    m_clPhiModule.push_back(std::numeric_limits<int>::max());
+    m_clBarrelEndcap.push_back(s_sentinel);
+    m_clEtaModule.push_back(s_sentinel);
+    m_clPhiModule.push_back(s_sentinel);
 
     const Acts::Vector3& pos = clusters.at(im).globalPosition;
     m_clX.push_back(pos.x());
     m_clY.push_back(pos.y());
     m_clZ.push_back(pos.z());
 
-    // Local covariance. The reader expects a 4-element vector for pixel
-    // ({c00, c01, c10, c11}) and uses index i for strip where
-    // i = (CLbarrel_endcap == 0) ? 0 : 1. Our sentinel CLbarrel_endcap is
-    // INT_MAX (!=0), so i=1; write {0, c00} so locCov[1] = c00.
     if (isPixel) {
       m_clLocalCov.push_back({meas.covariance()(0, 0), meas.covariance()(0, 1),
                               meas.covariance()(1, 0),
                               meas.covariance()(1, 1)});
     } else {
-      m_clLocalCov.push_back({0.0, meas.covariance()(0, 0)});
+      const double var = meas.covariance()(0, 0);
+      m_clLocalCov.push_back({var, var});
     }
 
     std::vector<int> eventIndices;
@@ -272,7 +265,7 @@ ProcessCode RootAthenaDumpWriter::write(const AlgorithmContext& ctx) {
     const auto [begin, end] = measPartMap.equal_range(im);
     for (auto it = begin; it != end; ++it) {
       const auto& bc = it->second;
-      eventIndices.push_back(static_cast<int>(bc.vertexPrimary()));
+      eventIndices.push_back(s_sentinel);
       const auto bcIt = barcodeMap.find(bc);
       barcodes.push_back(bcIt != barcodeMap.end() ? bcIt->second : 0);
     }
@@ -309,11 +302,8 @@ ProcessCode RootAthenaDumpWriter::write(const AlgorithmContext& ctx) {
             ? static_cast<int>(sLinks[1].get<IndexSourceLink>().index())
             : -1);
 
-    // ACTS simulation does not produce overlapping space points.
-    // ModuleMapGraph uses SPisOverlap to decide whether to apply strip
-    // phi-overlap filtering; setting it to zero disables that filtering,
-    // which makes CLbarrel_endcap/CLeta_module/CLphi_module unreachable.
-    m_spIsOverlap.push_back(0);
+    m_spIsOverlap.push_back(
+        0);  // ACTS simulation does not produce overlapping SPs
   }
   m_nSP = static_cast<int>(m_spIndex.size());
 
