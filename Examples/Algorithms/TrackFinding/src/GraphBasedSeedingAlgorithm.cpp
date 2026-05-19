@@ -462,7 +462,7 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("maxDChi2Y: " << cfg2.maxDChi2Y);
   ACTS_DEBUG("addHit: " << cfg2.addHit);
   ACTS_DEBUG("maxCurvature: " << cfg2.maxCurvature);
-  ACTS_DEBUG("maxZ0: " << cfg2.filterMaxZ0);
+  ACTS_DEBUG("maxZ0: " << cfg2.maxZ0);
   ACTS_DEBUG("================================");
 }
 

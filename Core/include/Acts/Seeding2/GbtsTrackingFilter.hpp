@@ -12,7 +12,6 @@
 #include "Acts/Seeding2/GbtsDataStorage.hpp"
 #include "Acts/Seeding2/GbtsGeometry.hpp"
 
-#include <cstring>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -91,7 +90,7 @@ class GbtsTrackingFilter final {
     /// Maximum track curvature.
     float maxCurvature = 1e-3f / Acts::UnitConstants::mm;
     /// Maximum longitudinal impact parameter.
-    float filterMaxZ0 = 170.0 * Acts::UnitConstants::mm;
+    float maxZ0 = 170.0 * Acts::UnitConstants::mm;
   };
 
   /// State for the tracking filter, containing edge states and a global

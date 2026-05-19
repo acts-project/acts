@@ -12,7 +12,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <cstring>
 #include <iostream>
 
 namespace Acts::Experimental {
@@ -297,7 +296,7 @@ bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
 
   const float z0 = ts.y[0] - refY * ts.y[1];
 
-  if (std::abs(z0) > m_cfg.filterMaxZ0) {
+  if (std::abs(z0) > m_cfg.maxZ0) {
     return false;
   }
 
