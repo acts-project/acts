@@ -302,8 +302,8 @@ ProcessCode RootAthenaDumpWriter::write(const AlgorithmContext& ctx) {
             ? static_cast<int>(sLinks[1].get<IndexSourceLink>().index())
             : -1);
 
-    m_spIsOverlap.push_back(
-        0);  // ACTS simulation does not produce overlapping SPs
+    // ACTS simulation does not produce overlapping SPs
+    m_spIsOverlap.push_back(0);
   }
   m_nSP = static_cast<int>(m_spIndex.size());
 
