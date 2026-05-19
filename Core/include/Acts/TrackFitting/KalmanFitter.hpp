@@ -288,7 +288,7 @@ class KalmanFitter {
     /// Broadcast the result_type
     using result_type = KalmanFitterResult<traj_t>;
 
-    /// The target surface aboter
+    /// The target surface aborter
     SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
 
     /// Allows retrieving measurements for a surface

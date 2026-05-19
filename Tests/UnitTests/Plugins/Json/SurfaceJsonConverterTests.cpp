@@ -236,20 +236,6 @@ BOOST_AUTO_TEST_CASE(DiamondPlaneSurfaceRoundTripTests) {
   BOOST_CHECK_EQUAL(diamondPlaneTest->bounds(), diamondPlaneRef->bounds());
 }
 
-BOOST_AUTO_TEST_CASE(SurfacesDetrayTests) {
-  Transform3 trf(Transform3::Identity() * Translation3(0., 0., -7.));
-  auto trapezoid = std::make_shared<TrapezoidBounds>(2., 3., 4.);
-  auto trapezoidPlaneRef = Surface::makeShared<PlaneSurface>(trf, trapezoid);
-  trapezoidPlaneRef->assignGeometryId(GeometryIdentifier(9u));
-
-  // Test a rectangle
-  nlohmann::json trapOut =
-      SurfaceJsonConverter::toJsonDetray(gctx, *trapezoidPlaneRef);
-  out.open("Surfaces-detray.json");
-  out << trapOut.dump(2);
-  out.close();
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

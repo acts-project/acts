@@ -93,9 +93,9 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGnn, gnn) {
 #endif
 
 #ifdef ACTS_GNN_WITH_MODULEMAP
-  ACTS_PYTHON_DECLARE_GNN_STAGE(
-      ModuleMapCuda, GraphConstructionBase, gnn, moduleMapPath, rScale,
-      phiScale, zScale, etaScale, moreParallel, gpuDevice, gpuBlocks, epsilon);
+  ACTS_PYTHON_DECLARE_GNN_STAGE(ModuleMapCuda, GraphConstructionBase, gnn,
+                                moduleMapPath, rScale, phiScale, zScale,
+                                etaScale, gpuDevice, gpuBlocks, epsilon);
 #endif
 
   {

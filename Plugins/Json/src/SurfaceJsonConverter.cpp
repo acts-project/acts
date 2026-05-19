@@ -307,24 +307,3 @@ nlohmann::json Acts::SurfaceJsonConverter::toJson(const GeometryContext& gctx,
       jSurface["kind"].get<std::string>() + jBounds["kind"].get<std::string>();
   return jSurface;
 }
-
-nlohmann::json Acts::SurfaceJsonConverter::toJsonDetray(
-    const GeometryContext& gctx, const Surface& surface,
-    const Options& options) {
-  nlohmann::json jSurface;
-  const auto& sBounds = surface.bounds();
-  const auto sTransform = surface.localToGlobalTransform(gctx);
-
-  jSurface["transform"] =
-      Transform3JsonConverter::toJson(sTransform, options.transformOptions);
-
-  auto jMask =
-      SurfaceBoundsJsonConverter::toJsonDetray(sBounds, options.portal);
-  jSurface["mask"] = jMask;
-  jSurface["source"] = surface.geometryId().value();
-  jSurface["barcode"] = 0;
-  jSurface["type"] =
-      options.portal ? 0 : (surface.geometryId().sensitive() > 0 ? 1u : 2u);
-
-  return jSurface;
-}
