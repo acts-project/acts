@@ -499,7 +499,7 @@ class VectorMultiTrajectory final
     auto insertItr = m_dynamic.insert(
         {hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
     if (insertItr.second && size() > 0ul) {
-      insertItr.first->second->resize(size);
+      insertItr.first->second->resize(size());
     }
   }
 
