@@ -82,7 +82,8 @@ struct DynamicColumnBase {
 /// copy assignable.
 /// @tparam T: Data type of the data to be stored by the column
 template <typename T>
-struct DynamicColumn : public DynamicColumnBase {
+class DynamicColumn : public DynamicColumnBase {
+public:
   /// @copydoc DynamicColumnBase::get
   std::any get(std::size_t i) override {
     assert(i < m_vector.size() && "DynamicColumn out of bounds");
@@ -145,7 +146,8 @@ struct DynamicColumn : public DynamicColumnBase {
 /// Template specification to circumvent the flaws of the bool implementation
 /// of a std::vector.
 template <>
-struct DynamicColumn<bool> : public DynamicColumnBase {
+class DynamicColumn<bool> : public DynamicColumnBase {
+public:
   /// Auxiliary struct to wrap the boolean
   struct Wrapper {
     bool value{false};
