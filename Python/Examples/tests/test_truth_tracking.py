@@ -510,3 +510,101 @@ def test_refitting(tmp_path, detector_config, assert_root_hash):
         assert fp.stat().st_size > 1024
         if tn is not None:
             assert_root_hash(fn, fp)
+
+
+def test_measurement_access(tmp_path, generic_detector_config):
+    from truth_tracking_kalman import runTruthTrackingKalman
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    seq = Sequencer(
+        events=1,
+        numThreads=1,
+    )
+
+    with generic_detector_config.detector:
+        runTruthTrackingKalman(
+            trackingGeometry=generic_detector_config.trackingGeometry,
+            field=field,
+            digiConfigFile=generic_detector_config.digiConfigFile,
+            outputDir=tmp_path,
+            numParticles=10,
+            s=seq,
+        )
+
+        class MeasurementAccess(acts.examples.IAlgorithm):
+            def __init__(self):
+                super().__init__("MeasurementAccess", acts.logging.INFO)
+
+                self.measurements = acts.examples.ReadDataHandle(
+                    self, acts.examples.MeasurementContainer, "InputMeasurements"
+                )
+                self.measurements.initialize("measurements")
+
+            def execute(self, context):
+                measurements = self.measurements(context.eventStore)
+                self.logger.info(f"Measurement access, n={len(measurements)}")
+                for i, meas in enumerate(measurements):
+                    for attr in [
+                        "index",
+                        "geometryId",
+                        "fullParameters",
+                        "fullCovariance",
+                        "subspaceIndices",
+                    ]:
+                        self.logger.info(
+                            f"Measurement {i} {attr}: {getattr(meas, attr)}"
+                        )
+                return acts.examples.ProcessCode.SUCCESS
+
+        seq.addAlgorithm(MeasurementAccess())
+
+        with failure_threshold(acts.logging.ERROR):
+            seq.run()
+
+
+def test_measurement_creation():
+    meas_properties = [
+        {
+            "geometryId": acts.GeometryIdentifier(798),
+            "indices": [0],
+            "parameters": [1.0],
+            "covariance": [0.1],
+        },
+        {
+            "geometryId": acts.GeometryIdentifier(123),
+            "indices": [0, 1],
+            "parameters": [1.0, 2.0],
+            "covariance": [0.1, 0.1],
+        },
+        {
+            "geometryId": acts.GeometryIdentifier(456),
+            "indices": [0, 1, 4],
+            "parameters": [3.0, 4.0, 5.0],
+            "covariance": [0.2, 0.2, 0.2],
+        },
+    ]
+
+    container = acts.examples.MeasurementContainer()
+    container.reserve(3)
+    for meas_prop in meas_properties:
+        meas = container.emplaceMeasurement(**meas_prop)
+
+    for i in range(len(meas_properties)):
+        meas = container[i]
+        meas_prop = meas_properties[i]
+
+        dim = len(meas_prop["indices"])
+        assert meas.geometryId.value == meas_prop["geometryId"].value
+        assert [meas_prop["indices"][i] == meas.subspaceIndices[i] for i in range(dim)]
+        indices = meas_prop["indices"]
+        assert [
+            meas_prop["parameters"][i] == meas.fullParameters[indices[i]]
+            for i in range(dim)
+        ]
+        assert [
+            meas_prop["covariance"][i] == meas.fullCovariance[indices[i], indices[i]]
+            for i in range(dim)
+        ]
+
+    assert len(container) == 3
