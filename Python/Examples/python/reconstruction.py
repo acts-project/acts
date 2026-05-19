@@ -566,6 +566,7 @@ def addSeeding(
                 inputParticles,
                 parEstimateAlg.config.outputTrackParameters,
                 logLevel,
+                prefix=prefix,
             )
 
         if outputDirCsv is not None:
@@ -1334,6 +1335,7 @@ def addSeedPerformanceWriters(
     inputParticles: str,
     outputTrackParameters: str,
     logLevel: acts.logging.Level = None,
+    prefix: str = "",
 ):
     """Writes seeding related performance output"""
     customLogLevel = acts.examples.defaultLogging(sequence, logLevel)
@@ -1349,10 +1351,10 @@ def addSeedPerformanceWriters(
             level=customLogLevel(),
             inputTracks=tracks,
             inputParticles=selectedParticles,
-            inputTrackParticleMatching="seed_particle_matching",
-            inputParticleTrackMatching="particle_seed_matching",
+            inputTrackParticleMatching=f"{prefix}seed_particle_matching",
+            inputParticleTrackMatching=f"{prefix}particle_seed_matching",
             inputParticleMeasurementsMap="particle_measurements_map",
-            filePath=str(outputDirRoot / f"performance_seeding.root"),
+            filePath=str(outputDirRoot / f"performance_{prefix}seeding.root"),
         )
     )
 
@@ -1365,7 +1367,7 @@ def addSeedPerformanceWriters(
             inputSimHits="simhits",
             inputMeasurementParticlesMap="measurement_particles_map",
             inputMeasurementSimHitsMap="measurement_simhits_map",
-            filePath=str(outputDirRoot / "estimatedparams.root"),
+            filePath=str(outputDirRoot / f"{prefix}estimatedparams.root"),
             treeName="estimatedparams",
         )
     )
