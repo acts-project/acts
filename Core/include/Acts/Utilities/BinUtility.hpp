@@ -19,8 +19,6 @@
 #include <array>
 #include <cstddef>
 #include <iostream>
-#include <iterator>
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>

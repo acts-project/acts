@@ -14,7 +14,9 @@
 
 using namespace Acts;
 
-detray::axis::label ActsPlugins::DetrayConversionUtils::convertAxisDirection(
+namespace ActsPlugins {
+
+detray::axis::label DetrayConversionUtils::convertAxisDirection(
     AxisDirection bValue) {
   switch (bValue) {
     case AxisDirection::AxisX:
@@ -35,7 +37,7 @@ detray::axis::label ActsPlugins::DetrayConversionUtils::convertAxisDirection(
   }
 }
 
-detray::axis::bounds ActsPlugins::DetrayConversionUtils::convertBinningOption(
+detray::axis::bounds DetrayConversionUtils::convertBinningOption(
     BinningOption bOption) {
   // That's a bit of a mind bender, but the conversion is correct
   // closed -> axis are closed, i.e. circular
@@ -52,7 +54,7 @@ detray::axis::bounds ActsPlugins::DetrayConversionUtils::convertBinningOption(
   }
 }
 
-detray::axis::binning ActsPlugins::DetrayConversionUtils::convertBinningType(
+detray::axis::binning DetrayConversionUtils::convertBinningType(
     BinningType bType) {
   switch (bType) {
     case BinningType::equidistant:
@@ -65,7 +67,7 @@ detray::axis::binning ActsPlugins::DetrayConversionUtils::convertBinningType(
   }
 }
 
-detray::io::axis_payload ActsPlugins::DetrayConversionUtils::convertBinningData(
+detray::io::axis_payload DetrayConversionUtils::convertBinningData(
     const BinningData& bData) {
   detray::io::axis_payload axisPayload;
 
@@ -89,7 +91,7 @@ detray::io::axis_payload ActsPlugins::DetrayConversionUtils::convertBinningData(
   return axisPayload;
 }
 
-detray::io::axis_payload ActsPlugins::DetrayConversionUtils::convertAxis(
+detray::io::axis_payload DetrayConversionUtils::convertAxis(
     const Acts::IAxis& axis) {
   detray::io::axis_payload axisPayload;
 
@@ -123,8 +125,7 @@ detray::io::axis_payload ActsPlugins::DetrayConversionUtils::convertAxis(
   return axisPayload;
 }
 
-detray::io::surface_material_payload
-ActsPlugins::DetrayConversionUtils::convertMaterialSlab(
+detray::io::surface_material_payload DetrayConversionUtils::convertMaterialSlab(
     const Acts::MaterialSlab& slab) {
   detray::io::surface_material_payload matPayload;
 
@@ -139,8 +140,7 @@ ActsPlugins::DetrayConversionUtils::convertMaterialSlab(
   return matPayload;
 }
 
-detray::io::transform_payload
-ActsPlugins::DetrayConversionUtils::convertTransform(
+detray::io::transform_payload DetrayConversionUtils::convertTransform(
     const Acts::Transform3& transform) {
   detray::io::transform_payload trfPayload;
 
@@ -153,8 +153,7 @@ ActsPlugins::DetrayConversionUtils::convertTransform(
   return trfPayload;
 }
 
-std::tuple<Acts::BinUtility, bool>
-ActsPlugins::DetrayConversionUtils::convertBinUtilityTo2D(
+std::tuple<Acts::BinUtility, bool> DetrayConversionUtils::convertBinUtilityTo2D(
     const Acts::BinUtility& bUtility) {
   using enum Acts::AxisDirection;
   using enum Acts::BinningOption;
@@ -194,7 +193,7 @@ ActsPlugins::DetrayConversionUtils::convertBinUtilityTo2D(
     } else if (bUtility.binningData()[0u].binvalue == AxisZ) {
       // Turn to RPhi-Z (swap needed)
       BinUtility nbUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
-                           AxisRPhi);
+                           AxisPhi);
       nbUtility += bUtility;
       result = std::move(nbUtility);
       swapped = true;
@@ -208,3 +207,5 @@ ActsPlugins::DetrayConversionUtils::convertBinUtilityTo2D(
   throw std::invalid_argument(
       "DetrayConversionUtils: BinUtility must be 1D or 2D");
 }
+
+}  // namespace ActsPlugins

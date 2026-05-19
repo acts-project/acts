@@ -12,6 +12,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -29,6 +30,12 @@ using namespace ActsPlugins;
 namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(DetrayMaterialConversion)
+
+auto planeSurface = Surface::makeShared<PlaneSurface>(
+    Transform3::Identity(), std::make_shared<RectangleBounds>(5., 10.));
+
+auto cylinderSurface = Surface::makeShared<CylinderSurface>(
+    Transform3::Identity(), std::make_shared<CylinderBounds>(5., 10.));
 
 // These tests check the conversion to the payload objects, the full test
 auto materialSlab12345 =
@@ -51,7 +58,8 @@ BOOST_AUTO_TEST_CASE(MaterialSlabTest) {
 
   HomogeneousSurfaceMaterial slab(materialSlab12345);
   auto detrayMaterial =
-      DetrayPayloadConverter::convertHomogeneousSurfaceMaterial(slab);
+      DetrayPayloadConverter::convertHomogeneousSurfaceMaterial(slab,
+                                                                *planeSurface);
 
   // Convert the material slab
   detray::io::surface_material_payload payload =
@@ -111,7 +119,7 @@ BOOST_AUTO_TEST_CASE(HomogeneousMaterialTest) {
 
   auto detrayMaterial =
       *DetrayPayloadConverter::convertHomogeneousSurfaceMaterial(
-          *surfaceMaterial);
+          *surfaceMaterial, *surface);
 
   auto* slabPayload =
       std::get_if<detray::io::surface_material_payload>(&detrayMaterial);
@@ -164,7 +172,7 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionX) {
                            detray::io::material_id>
       payload =
           unpackGrid(*DetrayPayloadConverter::convertBinnedSurfaceMaterial(
-              binnedMaterial));
+              binnedMaterial, *planeSurface));
 
   // Check the payload
   // - we fake 2D always for detray to minimize the number of containers
@@ -226,7 +234,7 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionY) {
                            detray::io::material_id>
       payload =
           unpackGrid(*DetrayPayloadConverter::convertBinnedSurfaceMaterial(
-              binnedMaterial));
+              binnedMaterial, *planeSurface));
 
   // Check the payload
   // - we fake 2D always for detray to minimize the number of containers
@@ -292,7 +300,7 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionXY) {
                            detray::io::material_id>
       payload =
           unpackGrid(*DetrayPayloadConverter::convertBinnedSurfaceMaterial(
-              binnedMaterial));
+              binnedMaterial, *planeSurface));
 
   // Check the payload
   BOOST_CHECK_EQUAL(payload.axes.size(), 2u);
@@ -345,7 +353,7 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionR) {
                            detray::io::material_id>
       payload =
           unpackGrid(*DetrayPayloadConverter::convertBinnedSurfaceMaterial(
-              binnedMaterial));
+              binnedMaterial, *cylinderSurface));
 
   // Check the payload
   // - we fake 2D always for detray to minimize the number of containers
@@ -392,7 +400,7 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionRPhi) {
                            detray::io::material_id>
       payload =
           unpackGrid(*DetrayPayloadConverter::convertBinnedSurfaceMaterial(
-              binnedMaterial));
+              binnedMaterial, *cylinderSurface));
 
   // Check the payload
   BOOST_CHECK_EQUAL(payload.axes.size(), 2u);
@@ -428,7 +436,7 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZ) {
                            detray::io::material_id>
       payload =
           unpackGrid(*DetrayPayloadConverter::convertBinnedSurfaceMaterial(
-              binnedMaterial));
+              binnedMaterial, *cylinderSurface));
 
   // Check the payload
   BOOST_CHECK_EQUAL(payload.axes.size(), 2u);
@@ -436,7 +444,7 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZ) {
   BOOST_CHECK_EQUAL(payload.grid_link.type,
                     detray::io::material_id::concentric_cylinder2_map);
   // 1st-axis is dummy
-  BOOST_CHECK_EQUAL(payload.axes.at(0u).label, detray::axis::label::e_rphi);
+  BOOST_CHECK_EQUAL(payload.axes.at(0u).label, detray::axis::label::e_phi);
   BOOST_CHECK_EQUAL(payload.axes.at(0u).bounds,
                     detray::axis::bounds::e_circular);
   BOOST_CHECK_EQUAL(payload.axes.at(0u).bins, 1u);
@@ -474,7 +482,7 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZPhi) {
                            detray::io::material_id>
       payload =
           unpackGrid(*DetrayPayloadConverter::convertBinnedSurfaceMaterial(
-              binnedMaterial));
+              binnedMaterial, *cylinderSurface));
 
   // Check the payload
   BOOST_CHECK_EQUAL(payload.axes.size(), 2u);
@@ -502,9 +510,9 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionInvalid) {
       Acts::BinnedSurfaceMaterial(binUtility, {materialSlabs0, materialSlabs1},
                                   0., Acts::MappingType::Default);
 
-  BOOST_CHECK_THROW(
-      DetrayPayloadConverter::convertBinnedSurfaceMaterial(binnedMaterial),
-      std::invalid_argument);
+  BOOST_CHECK_THROW(DetrayPayloadConverter::convertBinnedSurfaceMaterial(
+                        binnedMaterial, *cylinderSurface),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

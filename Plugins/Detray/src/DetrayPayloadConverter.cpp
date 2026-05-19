@@ -567,7 +567,7 @@ DetrayPayloadConverter::convertMaterial(
     }
 
     std::optional detrayMaterial =
-        m_cfg.convertSurfaceMaterial(*surface.surfaceMaterial());
+        m_cfg.convertSurfaceMaterial(*surface.surfaceMaterial(), surface);
 
     if (!detrayMaterial.has_value()) {
       continue;
@@ -593,7 +593,7 @@ DetrayPayloadConverter::convertMaterial(
     }
 
     std::optional detrayMaterial =
-        m_cfg.convertSurfaceMaterial(*surfaceMaterial);
+        m_cfg.convertSurfaceMaterial(*surfaceMaterial, portal.surface());
 
     // Portal surface material reports it does not apply to detray, skip
     if (!detrayMaterial.has_value()) {
