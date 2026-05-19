@@ -460,12 +460,18 @@ class KalmanFitter {
                                            freeToBoundCorrection);
 
         // Update state and stepper with pre material effects
-        detail::performMaterialInteraction(
-            state, stepper, surface,
-            detail::determineMaterialUpdateMode(state, navigator,
-                                                MaterialUpdateMode::PreUpdate),
-            NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
-            logger());
+        const Result<detail::PointwiseMaterialEffects>
+            materialInteractionPreRes = detail::performMaterialInteraction(
+                state, stepper, surface,
+                detail::determineMaterialUpdateMode(
+                    state, navigator, MaterialUpdateMode::PreUpdate),
+                NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
+                logger());
+        if (!materialInteractionPreRes.ok()) {
+          ACTS_DEBUG("Material interaction failed during filter: "
+                     << materialInteractionPreRes.error().message());
+          return materialInteractionPreRes.error();
+        }
 
         // Create a track state with the desired components
         TrackStatePropMask mask =
@@ -554,12 +560,18 @@ class KalmanFitter {
         }
 
         // Update state and stepper with post material effects
-        detail::performMaterialInteraction(
-            state, stepper, surface,
-            detail::determineMaterialUpdateMode(state, navigator,
-                                                MaterialUpdateMode::PostUpdate),
-            NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
-            logger());
+        const Result<detail::PointwiseMaterialEffects>
+            materialInteractionPostRes = detail::performMaterialInteraction(
+                state, stepper, surface,
+                detail::determineMaterialUpdateMode(
+                    state, navigator, MaterialUpdateMode::PostUpdate),
+                NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
+                logger());
+        if (!materialInteractionPostRes.ok()) {
+          ACTS_DEBUG("Material interaction failed during filter: "
+                     << materialInteractionPostRes.error().message());
+          return materialInteractionPostRes.error();
+        }
         // We count the processed state
         ++result.processedStates;
         // Update the number of holes count only when encountering a
@@ -635,12 +647,18 @@ class KalmanFitter {
         ++result.processedStates;
 
         // Update state and stepper with (possible) material effects
-        detail::performMaterialInteraction(
-            state, stepper, surface,
-            detail::determineMaterialUpdateMode(state, navigator,
-                                                MaterialUpdateMode::FullUpdate),
-            NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
-            logger());
+        const Result<detail::PointwiseMaterialEffects> materialInteractionRes =
+            detail::performMaterialInteraction(
+                state, stepper, surface,
+                detail::determineMaterialUpdateMode(
+                    state, navigator, MaterialUpdateMode::FullUpdate),
+                NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
+                logger());
+        if (!materialInteractionRes.ok()) {
+          ACTS_DEBUG("Material interaction failed during filter: "
+                     << materialInteractionRes.error().message());
+          return materialInteractionRes.error();
+        }
       }
 
       return Result<void>::success();

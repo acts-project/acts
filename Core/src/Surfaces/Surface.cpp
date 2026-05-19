@@ -326,18 +326,6 @@ void Surface::assignThickness(double thick) {
 
 void Surface::assignSurfaceMaterial(
     std::shared_ptr<const ISurfaceMaterial> material) {
-  const auto toString = [](const std::vector<AxisDirection>& axes) {
-    std::string providedAxes = "{";
-    for (const auto& axis : axes) {
-      providedAxes += axisDirectionName(axis);
-      if (&axis != &axes.back()) {
-        providedAxes += ", ";
-      }
-    }
-    providedAxes += "}";
-    return providedAxes;
-  };
-
   if (material != nullptr) {
     const std::vector<AxisDirection>& materialAxes =
         material->materialAxisDirections();
@@ -347,10 +335,10 @@ void Surface::assignSurfaceMaterial(
             supportedAxesList.end()) {
       std::string errorMsg =
           "Surface::assignSurfaceMaterial: material axis directions " +
-          toString(materialAxes) +
+          axesDirectionName(materialAxes) +
           " are not supported by this surface. Supported axes are: ";
       for (const auto& supportedAxes : supportedAxesList) {
-        errorMsg += toString(supportedAxes) + " ";
+        errorMsg += axesDirectionName(supportedAxes) + " ";
       }
       throw std::invalid_argument(errorMsg);
     }

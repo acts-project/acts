@@ -855,10 +855,18 @@ class Gx2Fitter {
         if (scatteringMapId == scatteringMap->end()) {
           ACTS_DEBUG("    ... create entry in scattering map.");
 
-          const MaterialSlab slab = Acts::detail::evaluateMaterialSlab(
-              state, stepper, *surface,
-              Acts::detail::determineMaterialUpdateMode(
-                  state, navigator, MaterialUpdateMode::FullUpdate));
+          const Result<MaterialSlab> slabResult =
+              Acts::detail::evaluateMaterialSlab(
+                  state, stepper, *surface,
+                  Acts::detail::determineMaterialUpdateMode(
+                      state, navigator, MaterialUpdateMode::FullUpdate));
+          if (!slabResult.ok()) {
+            ACTS_ERROR("GlobalChiSquareFitter | "
+                       << "Failed to evaluate material slab: "
+                       << slabResult.error());
+            return Result<void>::failure(slabResult.error());
+          }
+          const MaterialSlab& slab = *slabResult;
           const bool slabIsValid = !slab.isVacuum();
 
           double invSigma2 = 0.;

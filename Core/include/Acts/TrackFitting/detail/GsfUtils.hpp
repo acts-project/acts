@@ -386,21 +386,30 @@ void convoluteComponents(
 
 /// Apply the multiple scattering to the state
 template <typename propagator_state_t, typename stepper_t>
-void applyMultipleScattering(propagator_state_t &state,
-                             const stepper_t &stepper, const Surface &surface,
-                             const MaterialUpdateMode &updateMode,
-                             const Logger &logger) {
+Result<void> applyMultipleScattering(propagator_state_t &state,
+                                     const stepper_t &stepper,
+                                     const Surface &surface,
+                                     const MaterialUpdateMode &updateMode,
+                                     const Logger &logger) {
   for (auto cmp : stepper.componentIterable(state.stepping)) {
     auto singleState = cmp.singleState(state);
     const auto &singleStepper = cmp.singleStepper(stepper);
 
-    detail::performMaterialInteraction(singleState, singleStepper, surface,
-                                       updateMode, NoiseUpdateMode::addNoise,
-                                       true, false, logger);
+    const Result<detail::PointwiseMaterialEffects> materialInteractionRes =
+        detail::performMaterialInteraction(
+            singleState, singleStepper, surface, updateMode,
+            NoiseUpdateMode::addNoise, true, false, logger);
+    if (!materialInteractionRes.ok()) {
+      ACTS_ERROR("Error performing material interaction: "
+                 << materialInteractionRes.error());
+      return materialInteractionRes.error();
+    }
 
     assert(singleState.stepping.cov.array().isFinite().all() &&
            "covariance not finite after multi scattering");
   }
+
+  return Result<void>::success();
 }
 
 }  // namespace Acts::detail::Gsf

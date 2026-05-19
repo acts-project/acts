@@ -28,12 +28,10 @@ MaterialUpdateMode detail::determineMaterialUpdateMode(
   return updateMode;
 }
 
-MaterialSlab detail::evaluateMaterialSlab(const GeometryContext& geoContext,
-                                          const Surface& surface,
-                                          Direction propagationDirection,
-                                          const Vector3& position,
-                                          const Vector3& direction,
-                                          MaterialUpdateMode updateMode) {
+Result<MaterialSlab> detail::evaluateMaterialSlab(
+    const GeometryContext& geoContext, const Surface& surface,
+    Direction propagationDirection, const Vector3& position,
+    const Vector3& direction, MaterialUpdateMode updateMode) {
   const ISurfaceMaterial* material = surface.surfaceMaterial();
   if (material == nullptr) {
     return MaterialSlab::Nothing();
@@ -43,7 +41,7 @@ MaterialSlab detail::evaluateMaterialSlab(const GeometryContext& geoContext,
       surface.pathCorrection(geoContext, position, direction);
   auto lposition = surface.globalToLocal(geoContext, position, direction);
   if (!lposition.ok()) {
-    return MaterialSlab::Nothing();
+    return lposition.error();
   }
 
   MaterialSlab slab = material->materialSlab(lposition.value(),
