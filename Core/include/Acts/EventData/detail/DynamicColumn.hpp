@@ -34,8 +34,8 @@ struct DynamicColumnBase {
 
   /// Allocate new memory for the proxy object held by the container
   virtual void add() = 0;
-  /// Release all store memory
 
+  /// Release all stored memory
   virtual void clear() = 0;
 
   /// Pre-reserve the memory for later allocation
@@ -88,23 +88,31 @@ struct DynamicColumn : public DynamicColumnBase {
     assert(i < m_vector.size() && "DynamicColumn out of bounds");
     return &m_vector[i];
   }
+
   /// @copydoc DynamicColumnBase::get
   std::any get(std::size_t i) const override {
     assert(i < m_vector.size() && "DynamicColumn out of bounds");
     return &m_vector[i];
   }
+
   /// @copydoc DynamicColumnBase::add
   void add() override { m_vector.emplace_back(); }
+
   /// @copydoc DynamicColumnBase::clear
   void clear() override { m_vector.clear(); }
+
   /// @copydoc DynamicColumnBase::resize
   void resize(std::size_t size) override { m_vector.resize(size); }
+
   /// @copydoc DynamicColumnBase::reserve
   void reserve(std::size_t size) override { m_vector.reserve(size); }
+
   /// @copydoc DynamicColumnBase::erase
   void erase(std::size_t i) override { m_vector.erase(m_vector.begin() + i); }
+
   /// @copydoc DynamicColumnBase::size
   std::size_t size() const override { return m_vector.size(); }
+
   /// @copydoc DynamicColumnBase::clone
   std::unique_ptr<DynamicColumnBase> clone(bool empty) const override {
     if (empty) {
@@ -112,6 +120,7 @@ struct DynamicColumn : public DynamicColumnBase {
     }
     return std::make_unique<DynamicColumn<T>>(*this);
   }
+
   /// @copydoc DynamicColumnBase::copyFrom
   void copyFrom(std::size_t dstIdx, const DynamicColumnBase& src,
                 std::size_t srcIdx) override {
@@ -120,6 +129,7 @@ struct DynamicColumn : public DynamicColumnBase {
            "Source column is not of same type as destination");
     m_vector.at(dstIdx) = other->m_vector.at(srcIdx);
   }
+
   /// @copydoc DynamicColumnBase::copyFrom
   void copyFrom(std::size_t dstIdx, const std::any& srcPtr) override {
     const auto* other = std::any_cast<const T*>(srcPtr);
@@ -141,23 +151,37 @@ struct DynamicColumn<bool> : public DynamicColumnBase {
     bool value{false};
   };
 
+  /// @copydoc DynamicColumnBase::get
   std::any get(std::size_t i) override {
     assert(i < m_vector.size() && "DynamicColumn out of bounds");
     return &m_vector[i].value;
   }
 
+  /// @copydoc DynamicColumnBase::get
   std::any get(std::size_t i) const override {
     assert(i < m_vector.size() && "DynamicColumn out of bounds");
     return &m_vector[i].value;
   }
 
+  /// @copydoc DynamicColumnBase::add
   void add() override { m_vector.emplace_back(); }
+
+  /// @copydoc DynamicColumnBase::reserve
   void reserve(std::size_t size) override { m_vector.reserve(size); }
+
+  /// @copydoc DynamicColumnBase::resize
   void resize(std::size_t size) override { m_vector.resize(size); }
+
+  /// @copydoc DynamicColumnBase::clear
   void clear() override { m_vector.clear(); }
+
+  /// @copydoc DynamicColumnBase::erase
   void erase(std::size_t i) override { m_vector.erase(m_vector.begin() + i); }
+
+  /// @copydoc DynamicColumnBase::size
   std::size_t size() const override { return m_vector.size(); }
 
+  /// @copydoc DynamicColumnBase::clone
   std::unique_ptr<DynamicColumnBase> clone(bool empty) const override {
     if (empty) {
       return std::make_unique<DynamicColumn<bool>>();
@@ -165,6 +189,7 @@ struct DynamicColumn<bool> : public DynamicColumnBase {
     return std::make_unique<DynamicColumn<bool>>(*this);
   }
 
+  /// @copydoc DynamicColumnBase::copyFrom
   void copyFrom(std::size_t dstIdx, const DynamicColumnBase& src,
                 std::size_t srcIdx) override {
     const auto* other = dynamic_cast<const DynamicColumn<bool>*>(&src);
@@ -173,6 +198,7 @@ struct DynamicColumn<bool> : public DynamicColumnBase {
     m_vector.at(dstIdx) = other->m_vector.at(srcIdx);
   }
 
+  /// @copydoc DynamicColumnBase::copyFrom
   void copyFrom(std::size_t dstIdx, const std::any& srcPtr) override {
     const auto* other = std::any_cast<const bool*>(srcPtr);
     assert(other != nullptr &&
