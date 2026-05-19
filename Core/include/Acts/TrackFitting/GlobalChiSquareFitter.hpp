@@ -861,7 +861,7 @@ class Gx2Fitter {
                   Acts::detail::determineMaterialUpdateMode(
                       state, navigator, MaterialUpdateMode::FullUpdate));
           if (!slabResult.ok()) {
-            ACTS_ERROR("GlobalChiSquareFitter | "
+            ACTS_DEBUG("GlobalChiSquareFitter | "
                        << "Failed to evaluate material slab: "
                        << slabResult.error());
             return Result<void>::failure(slabResult.error());

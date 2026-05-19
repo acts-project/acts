@@ -309,7 +309,7 @@ struct GsfActor {
 
       removeLowWeightComponents(componentCache, m_cfg.weightCutoff);
 
-      updateStepper(state, stepper, surface, componentCache, logger());
+      updateStepper(state, stepper, surface, componentCache);
     }
 
     // If we have only done preUpdate before, now do postUpdate

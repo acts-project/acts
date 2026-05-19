@@ -312,8 +312,7 @@ void updateStepper(propagator_state_t &state, const stepper_t &stepper,
 template <typename propagator_state_t, typename stepper_t>
 void updateStepper(propagator_state_t &state, const stepper_t &stepper,
                    const Surface &surface,
-                   const std::vector<GsfComponent> &componentCache,
-                   const Logger &logger) {
+                   const std::vector<GsfComponent> &componentCache) {
   // Clear components before adding new ones
   stepper.clearComponents(state.stepping);
 
@@ -323,14 +322,8 @@ void updateStepper(propagator_state_t &state, const stepper_t &stepper,
     BoundTrackParameters bound(surface.getSharedPtr(), pars, cov,
                                stepper.particleHypothesis(state.stepping));
 
-    auto res = stepper.addComponent(state.stepping, std::move(bound), weight);
+    auto cmp = stepper.addComponent(state.stepping, std::move(bound), weight);
 
-    if (!res.ok()) {
-      ACTS_ERROR("Error adding component to MultiStepper");
-      continue;
-    }
-
-    auto &cmp = *res;
     auto freeParams = cmp.pars();
     cmp.jacToGlobal() = surface.boundToFreeJacobian(
         state.geoContext, freeParams.template segment<3>(eFreePos0),
@@ -400,7 +393,7 @@ Result<void> applyMultipleScattering(propagator_state_t &state,
             singleState, singleStepper, surface, updateMode,
             NoiseUpdateMode::addNoise, true, false, logger);
     if (!materialInteractionRes.ok()) {
-      ACTS_ERROR("Error performing material interaction: "
+      ACTS_DEBUG("Error performing material interaction: "
                  << materialInteractionRes.error());
       return materialInteractionRes.error();
     }

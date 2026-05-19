@@ -84,7 +84,7 @@ struct MaterialInteractor {
           detail::determineMaterialUpdateMode(state, navigator,
                                               MaterialUpdateMode::FullUpdate));
       if (!slabResult.ok()) {
-        ACTS_ERROR("MaterialInteractor | "
+        ACTS_DEBUG("MaterialInteractor | "
                    << "Failed to evaluate material slab: "
                    << slabResult.error());
         return Result<void>::failure(slabResult.error());
