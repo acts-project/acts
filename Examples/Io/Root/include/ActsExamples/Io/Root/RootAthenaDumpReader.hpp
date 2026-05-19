@@ -187,6 +187,7 @@ class RootAthenaDumpReader : public IReader {
   std::shared_ptr<TChain> m_inputchain;
   std::size_t m_events;
   bool m_haveStripFeatures = true;
+  bool m_haveCellData = true;
 
   static constexpr unsigned int maxCL = 1500000;
   static constexpr unsigned int maxSP = 1500000;
