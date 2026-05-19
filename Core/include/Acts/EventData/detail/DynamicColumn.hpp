@@ -19,7 +19,7 @@ namespace Acts::detail {
 /// The interface provides basic methods to retrieve the data in a type erase
 /// form. Further methods for memory pre-allocation and memory release are
 /// defined
-struct DynamicColumnBase {
+class DynamicColumnBase {
   virtual ~DynamicColumnBase() = default;
 
   /// Retrieve the stored data for the i-th proxy object stored in the container
