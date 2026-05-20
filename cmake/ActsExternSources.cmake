@@ -20,7 +20,7 @@ set(ACTS_COVFIE_SOURCE
 mark_as_advanced(ACTS_COVFIE_SOURCE)
 
 set(ACTS_TRACCC_SOURCE
-    "GIT_REPOSITORY;https://github.com/acts-project/traccc.git;GIT_TAG;origin/main"
+    "URL;https://github.com/acts-project/traccc/archive/refs/tags/v${_acts_traccc_version}.tar.gz;URL_HASH;SHA256=c1e9af35151862496e10690aa36f9896bacf5c35ce7bac158f6c9dff7049a7eb"
     CACHE STRING
     "Source to take TRACCC from"
 )
