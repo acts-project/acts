@@ -510,3 +510,189 @@ def test_refitting(tmp_path, detector_config, assert_root_hash):
         assert fp.stat().st_size > 1024
         if tn is not None:
             assert_root_hash(fn, fp)
+
+
+def test_measurement_access(tmp_path, generic_detector_config):
+    from truth_tracking_kalman import runTruthTrackingKalman
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    seq = Sequencer(
+        events=1,
+        numThreads=1,
+    )
+
+    with generic_detector_config.detector:
+        runTruthTrackingKalman(
+            trackingGeometry=generic_detector_config.trackingGeometry,
+            field=field,
+            digiConfigFile=generic_detector_config.digiConfigFile,
+            outputDir=tmp_path,
+            numParticles=10,
+            s=seq,
+        )
+
+        class MeasurementAccess(acts.examples.IAlgorithm):
+            def __init__(self):
+                super().__init__("MeasurementAccess", acts.logging.INFO)
+
+                self.measurements = acts.examples.ReadDataHandle(
+                    self, acts.examples.MeasurementContainer, "InputMeasurements"
+                )
+                self.measurements.initialize("measurements")
+
+                self.simhits_map = acts.examples.ReadDataHandle(
+                    self,
+                    acts.examples.MeasurementSimHitsMap,
+                    "InputMeasurementSimHitsMap",
+                )
+                self.simhits_map.initialize("measurement_simhits_map")
+
+                self.particles_map = acts.examples.ReadDataHandle(
+                    self,
+                    acts.examples.MeasurementParticlesMap,
+                    "InputMeasurementParticlesMap",
+                )
+                self.particles_map.initialize("measurement_particles_map")
+
+            def execute(self, context):
+                measurements = self.measurements(context.eventStore)
+                self.logger.info(f"Measurement access, n={len(measurements)}")
+                for i, meas in enumerate(measurements):
+                    for attr in [
+                        "index",
+                        "geometryId",
+                        "fullParameters",
+                        "fullCovariance",
+                        "subspaceIndices",
+                    ]:
+                        self.logger.info(
+                            f"Measurement {i} {attr}: {getattr(meas, attr)}"
+                        )
+
+                sh_map = self.simhits_map(context.eventStore)
+                p_map = self.particles_map(context.eventStore)
+
+                assert len(sh_map) > 0
+                assert len(p_map) > 0
+
+                for meas_idx, simhit_idx in sh_map:
+                    assert isinstance(meas_idx, int)
+                    assert isinstance(simhit_idx, int)
+                    break
+
+                first_key = next(iter(sh_map))[0]
+                assert first_key in sh_map
+                vals = sh_map.values_for(first_key)
+                assert len(vals) > 0
+
+                inv = sh_map.invert()
+                assert isinstance(inv, acts.examples.SimHitMeasurementsMap)
+                assert len(inv) == len(sh_map)
+
+                return acts.examples.ProcessCode.SUCCESS
+
+        seq.addAlgorithm(MeasurementAccess())
+
+        with failure_threshold(acts.logging.ERROR):
+            seq.run()
+
+
+def test_measurement_creation():
+    meas_properties = [
+        {
+            "geometryId": acts.GeometryIdentifier(798),
+            "indices": [0],
+            "parameters": [1.0],
+            "covariance": [0.1],
+        },
+        {
+            "geometryId": acts.GeometryIdentifier(123),
+            "indices": [0, 1],
+            "parameters": [1.0, 2.0],
+            "covariance": [0.1, 0.1],
+        },
+        {
+            "geometryId": acts.GeometryIdentifier(456),
+            "indices": [0, 1, 4],
+            "parameters": [3.0, 4.0, 5.0],
+            "covariance": [0.2, 0.2, 0.2],
+        },
+    ]
+
+    container = acts.examples.MeasurementContainer()
+    container.reserve(3)
+    for meas_prop in meas_properties:
+        meas = container.emplaceMeasurement(**meas_prop)
+
+    for i in range(len(meas_properties)):
+        meas = container[i]
+        meas_prop = meas_properties[i]
+
+        dim = len(meas_prop["indices"])
+        assert meas.geometryId.value == meas_prop["geometryId"].value
+        assert [meas_prop["indices"][i] == meas.subspaceIndices[i] for i in range(dim)]
+        indices = meas_prop["indices"]
+        assert [
+            meas_prop["parameters"][i] == meas.fullParameters[indices[i]]
+            for i in range(dim)
+        ]
+        assert [
+            meas_prop["covariance"][i] == meas.fullCovariance[indices[i], indices[i]]
+            for i in range(dim)
+        ]
+
+    assert len(container) == 3
+
+
+def test_measurement_map_creation():
+    from acts.examples import (
+        MeasurementParticlesMap,
+        MeasurementSimHitsMap,
+        ParticleMeasurementsMap,
+        SimBarcode,
+        SimHitMeasurementsMap,
+    )
+
+    # MeasurementSimHitsMap: meas 0 → simhits {10, 11}, meas 1 → simhit {20}
+    m = MeasurementSimHitsMap()
+    m.insert(0, 10)
+    m.insert(0, 11)  # same key — multi-map
+    m.insert(1, 20)
+    assert len(m) == 3
+
+    assert 0 in m
+    assert 2 not in m
+
+    vals = m.values_for(0)
+    assert sorted(vals) == [10, 11]
+    assert m.values_for(1) == [20]
+    assert m.values_for(99) == []
+
+    pairs = list(m)
+    assert len(pairs) == 3
+    assert all(isinstance(k, int) and isinstance(v, int) for k, v in pairs)
+
+    inv = m.invert()
+    assert isinstance(inv, SimHitMeasurementsMap)
+    assert len(inv) == 3
+    assert inv.values_for(10) == [0]
+    assert inv.values_for(11) == [0]
+    assert inv.values_for(20) == [1]
+
+    # MeasurementParticlesMap: meas 0 came from two particles, meas 1 from one
+    bc0 = SimBarcode()
+    bc0.particle = 1
+    bc1 = SimBarcode()
+    bc1.particle = 2
+    mp = MeasurementParticlesMap()
+    mp.insert(0, bc0)
+    mp.insert(0, bc1)  # same measurement, two particles
+    mp.insert(1, bc0)
+    assert len(mp) == 3
+
+    assert mp.values_for(0) == [bc0, bc1]
+
+    inv_p = mp.invert()
+    assert isinstance(inv_p, ParticleMeasurementsMap)
+    assert len(inv_p) == 3

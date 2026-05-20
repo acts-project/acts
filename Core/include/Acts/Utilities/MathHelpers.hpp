@@ -249,4 +249,20 @@ constexpr T binomial(const T n, const T k) {
   return product<T>(n - k + 1, n) / factorial<T>(k);
 }
 
+/// Calculate the sinc function, defined as sin(x)/x, with a special handling
+/// for x=0 to avoid numerical instability.
+/// @param x The input value for which to calculate the sinc function
+/// @return The value of sinc(x)
+inline double sinc(double x) {
+  // Numerical limit for double to get a different number than 1 from the first
+  // order Taylor expansion of sin(x)/x ~ 1-x*x/6 around x=0.
+  static const double eps =
+      std::sqrt(std::numeric_limits<double>::epsilon()) * 6;
+  if (std::abs(x) < eps) {
+    return 1.0;
+  }
+  // Otherwise std::sin(x) ~ x is stable for small x
+  return std::sin(x) / x;
+}
+
 }  // namespace Acts
