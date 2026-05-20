@@ -541,6 +541,13 @@ def test_measurement_access(tmp_path, generic_detector_config):
                 )
                 self.measurements.initialize("measurements")
 
+                self.measurementSubset = acts.examples.ReadDataHandle(
+                    self,
+                    acts.examples.MeasurementSubset,
+                    "InputMeasurementSubset",
+                )
+                self.measurementSubset.initialize("measurement_subset")
+
             def execute(self, context):
                 measurements = self.measurements(context.eventStore)
                 self.logger.info(f"Measurement access, n={len(measurements)}")
@@ -555,6 +562,30 @@ def test_measurement_access(tmp_path, generic_detector_config):
                         self.logger.info(
                             f"Measurement {i} {attr}: {getattr(meas, attr)}"
                         )
+
+                subset = self.measurementSubset(context.eventStore)
+                assert isinstance(subset, acts.examples.MeasurementSubset)
+
+                # Subset from digitization covers all measurements
+                assert len(subset) == len(measurements)
+
+                # Iteration yields ConstVariableBoundMeasurementProxy
+                for meas in subset:
+                    assert isinstance(
+                        meas, acts.examples.ConstVariableBoundMeasurementProxy
+                    )
+
+                # __getitem__ by subset-position matches iteration order
+                for i, meas in enumerate(subset):
+                    by_pos = subset[i]
+                    assert by_pos.index == meas.index
+
+                # getMeasurement by original-container index round-trips correctly
+                for meas in subset:
+                    orig = subset.getMeasurement(meas.index)
+                    assert orig.index == meas.index
+                    assert orig.geometryId.value == meas.geometryId.value
+
                 return acts.examples.ProcessCode.SUCCESS
 
         seq.addAlgorithm(MeasurementAccess())
@@ -608,3 +639,40 @@ def test_measurement_creation():
         ]
 
     assert len(container) == 3
+
+    # Build a subset from indices 0 and 2 and verify it mirrors the container data
+    subset = acts.examples.MeasurementSubset(container, [0, 2])
+    assert len(subset) == 2
+
+    # Iteration covers exactly the selected measurements in order
+    subset_list = list(subset)
+    assert len(subset_list) == 2
+    assert subset_list[0].index == 0
+    assert subset_list[1].index == 2
+
+    # __getitem__ by subset position
+    assert subset[0].index == 0
+    assert subset[1].index == 2
+
+    # getMeasurement by original-container index
+    assert (
+        subset.getMeasurement(0).geometryId.value
+        == meas_properties[0]["geometryId"].value
+    )
+    assert (
+        subset.getMeasurement(2).geometryId.value
+        == meas_properties[2]["geometryId"].value
+    )
+
+    # Measurement data is consistent with the container entries
+    for pos, orig_idx in enumerate([0, 2]):
+        meas = subset[pos]
+        meas_prop = meas_properties[orig_idx]
+        dim = len(meas_prop["indices"])
+        assert meas.geometryId.value == meas_prop["geometryId"].value
+        indices = meas_prop["indices"]
+        assert [meas.subspaceIndices[i] == meas_prop["indices"][i] for i in range(dim)]
+        assert [
+            meas.fullParameters[indices[i]] == meas_prop["parameters"][i]
+            for i in range(dim)
+        ]
