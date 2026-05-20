@@ -709,6 +709,7 @@ def test_measurement_creation():
             for i in range(dim)
         ]
 
+
 def test_measurement_map_creation():
     from acts.examples import (
         MeasurementParticlesMap,
