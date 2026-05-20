@@ -46,6 +46,8 @@ class RootAthenaDumpReader : public IReader {
     std::vector<std::string> inputfiles;
     // name of the output measurements
     std::string outputMeasurements = "athena_measurements";
+    // name of the output measurement subset (covers all measurements)
+    std::string outputMeasurementSubset = "athena_measurement_subset";
     // name of the output pixel space points
     std::string outputPixelSpacePoints = "athena_pixel_spacepoints";
     // name of the output strip space points
@@ -170,6 +172,8 @@ class RootAthenaDumpReader : public IReader {
                                                           "OutputParticles"};
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};
+  WriteDataHandle<MeasurementSubset> m_outputMeasurementSubset{
+      this, "OutputMeasurementSubset"};
   WriteDataHandle<MeasurementParticlesMap> m_outputMeasParticleMap{
       this, "OutputMeasurementParticlesMap"};
   WriteDataHandle<ParticleMeasurementsMap> m_outputParticleMeasMap{
@@ -183,6 +187,7 @@ class RootAthenaDumpReader : public IReader {
   std::shared_ptr<TChain> m_inputchain;
   std::size_t m_events;
   bool m_haveStripFeatures = true;
+  bool m_haveCellData = true;
 
   static constexpr unsigned int maxCL = 1500000;
   static constexpr unsigned int maxSP = 1500000;
