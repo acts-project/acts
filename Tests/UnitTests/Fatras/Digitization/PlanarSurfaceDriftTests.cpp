@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDriftEnhancedTests) {
     out.close();
   };
 
-  // Run through different drfit scenarios
+  // Run through different drift scenarios
   for (auto [id, drift] : enumerate(driftScenarios)) {
     std::string scenario =
         "PlanarSurfaceDrift_scenario_" + std::to_string(id) + "_";
