@@ -66,7 +66,6 @@ def runGNN4ITk(
     )
 
     # Read ATLAS Athena ROOT dump
-
     reader = acts.examples.root.RootAthenaDumpReader(
         level=logLevel,
         treename="GNN4ITk",
@@ -81,6 +80,7 @@ def runGNN4ITk(
         skipOverlapSPsPhi=True,
         skipOverlapSPsEta=False,
         absBoundaryTolerance=0.01 * u.mm,
+
     )
 
     if bufferEvents is not None:

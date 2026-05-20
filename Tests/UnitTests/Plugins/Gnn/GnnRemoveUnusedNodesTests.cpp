@@ -31,13 +31,13 @@ PipelineTensors makeTensors(std::size_t nNodes, std::size_t nFeatures,
                             const ExecutionContext &ctx) {
   const auto nEdges = edges.size() / 2;
 
-  auto nodeFeaturesCpu = Tensor<float>::Create({nNodes, nFeatures}, execContextCpu);
+  auto nodeFeaturesCpu =
+      Tensor<float>::Create({nNodes, nFeatures}, execContextCpu);
   for (std::size_t i = 0; i < nNodes * nFeatures; ++i) {
     nodeFeaturesCpu.data()[i] = static_cast<float>(i);
   }
 
-  auto edgeIndexCpu =
-      Tensor<std::int64_t>::Create({2, nEdges}, execContextCpu);
+  auto edgeIndexCpu = Tensor<std::int64_t>::Create({2, nEdges}, execContextCpu);
   std::copy(edges.begin(), edges.end(), edgeIndexCpu.data());
 
   return {std::move(nodeFeaturesCpu).clone(ctx),
@@ -46,8 +46,7 @@ PipelineTensors makeTensors(std::size_t nNodes, std::size_t nFeatures,
 
 // Read tensor data back to a host vector regardless of device.
 template <typename T>
-std::vector<T> toHost(const Tensor<T> &tensor,
-                      const ExecutionContext &srcCtx) {
+std::vector<T> toHost(const Tensor<T> &tensor, const ExecutionContext &srcCtx) {
   auto host = tensor.clone({Device::Cpu(), srcCtx.stream});
   return {host.data(), host.data() + host.size()};
 }
@@ -71,7 +70,8 @@ void testAllNodesUsed(const ExecutionContext &ctx) {
 
   const auto nodeData = toHost(result.nodeFeatures, ctx);
   BOOST_CHECK_EQUAL_COLLECTIONS(nodeData.begin(), nodeData.end(),
-                                originalNodeData.begin(), originalNodeData.end());
+                                originalNodeData.begin(),
+                                originalNodeData.end());
 
   const auto edgeData = toHost(result.edgeIndex, ctx);
   BOOST_CHECK_EQUAL(edgeData[0], 0);
@@ -170,8 +170,9 @@ BOOST_AUTO_TEST_CASE(test_zero_edges_throws) {
   PipelineTensors tensors{std::move(nodeFeatures), std::move(edgeIndex),
                           std::nullopt, std::nullopt};
   std::vector<int> spIds = {0, 1, 2, 3};
-  BOOST_CHECK_THROW(removeUnusedNodes(std::move(tensors), spIds, execContextCpu),
-                    NoEdgesError);
+  BOOST_CHECK_THROW(
+      removeUnusedNodes(std::move(tensors), spIds, execContextCpu),
+      NoEdgesError);
 }
 
 BOOST_AUTO_TEST_CASE(test_edge_and_score_tensors_preserved_cpu) {
