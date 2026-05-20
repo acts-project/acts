@@ -87,7 +87,7 @@ set(DETRAY_GENERATE_METADATA
 
 #Now set up its build.
 set(FETCHCONTENT_SOURCE_DIR_DETRAY
-    "${CMAKE_SOURCE_DIR}/Detray/"
+    "${PROJECT_SOURCE_DIR}/Detray/"
     CACHE STRING
     ""
 )
