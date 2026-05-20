@@ -64,9 +64,8 @@ ActsFatras::CylindricalSurfaceDrift::toReadout(
   // direction. If the track is nearly tangent to the cylinder we clamp the
   // step length to the thickness itself to avoid blow-up.
   constexpr double kMinAbsRadial = 1e-12;
-  const double scale = (decomp.absDsR > kMinAbsRadial)
-                           ? (thickness / decomp.absDsR)
-                           : thickness;
+  const double scale =
+      (decomp.absDsR > kMinAbsRadial) ? (thickness / decomp.absDsR) : thickness;
   const Acts::Vector2 seg2D(decomp.dsRPhi * scale, decomp.dsZ * scale);
 
   // Entry/exit before applying any Lorentz drift.
@@ -78,9 +77,8 @@ ActsFatras::CylindricalSurfaceDrift::toReadout(
   // Same convention as the planar case: driftDir.z() picks the readout side.
   if (!driftDir.segment<2>(0).isApprox(Acts::Vector2(0., 0.))) {
     const double absDriftZ = std::abs(driftDir.z());
-    const double driftScale = (absDriftZ > kMinAbsRadial)
-                                  ? (thickness / absDriftZ)
-                                  : thickness;
+    const double driftScale =
+        (absDriftZ > kMinAbsRadial) ? (thickness / absDriftZ) : thickness;
     const Acts::Vector2 driftShift = driftDir.segment<2>(0) * driftScale;
 
     if (driftDir.z() > 0.) {
