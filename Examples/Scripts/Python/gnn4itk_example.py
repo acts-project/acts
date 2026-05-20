@@ -80,7 +80,6 @@ def runGNN4ITk(
         skipOverlapSPsPhi=True,
         skipOverlapSPsEta=False,
         absBoundaryTolerance=0.01 * u.mm,
-
     )
 
     if bufferEvents is not None:
