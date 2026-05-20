@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "ActsFatras/Digitization/CylindricalSurfaceDrift.hpp"
+#include "ActsFatras/Digitization/CylindricalSurfaceMask.hpp"
 #include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
 #include "ActsFatras/Digitization/PlanarSurfaceMask.hpp"
 #include "ActsFatras/Digitization/Segmentizer.hpp"
@@ -18,9 +20,18 @@
 namespace ActsFatras {
 
 /// @brief Class that ties the digitization modules together and produces the channels
+///
+/// Internally dispatches on the surface type:
+///   - Plane / Disc surfaces use PlanarSurfaceDrift + PlanarSurfaceMask
+///   - Cylinder surfaces use CylindricalSurfaceDrift + CylindricalSurfaceMask
+/// In both cases the resulting (already-clipped) 2-D segment is fed into the
+/// Segmentizer, which steps through the channel grid defined by the supplied
+/// BinUtility.
 class Channelizer {
   PlanarSurfaceDrift m_surfaceDrift;
   PlanarSurfaceMask m_surfaceMask;
+  CylindricalSurfaceDrift m_cylinderDrift;
+  CylindricalSurfaceMask m_cylinderMask;
   Segmentizer m_segmentizer;
 
  public:
@@ -38,10 +49,25 @@ class Channelizer {
       const Hit& hit, const Acts::Surface& surface,
       const Acts::GeometryContext& gctx, const Acts::Vector3& driftDir,
       const Acts::BinUtility& segmentation, double thickness) const {
-    auto driftedSegment = m_surfaceDrift.toReadout(
-        gctx, surface, thickness, hit.position(), hit.direction(), driftDir);
+    // Drift + masking dispatch on the surface type. Plane/Disc go through the
+    // planar pair (Disc is handled internally by the planar mask in polar
+    // coords); Cylinder goes through the cylindrical pair which works in the
+    // unrolled (rPhi, z) readout frame.
+    const bool isCylinder =
+        surface.type() == Acts::Surface::SurfaceType::Cylinder;
 
-    auto maskedSegmentRes = m_surfaceMask.apply(surface, driftedSegment);
+    auto driftedSegment =
+        isCylinder
+            ? m_cylinderDrift.toReadout(gctx, surface, thickness,
+                                        hit.position(), hit.direction(),
+                                        driftDir)
+            : m_surfaceDrift.toReadout(gctx, surface, thickness,
+                                       hit.position(), hit.direction(),
+                                       driftDir);
+
+    auto maskedSegmentRes = isCylinder
+                                ? m_cylinderMask.apply(surface, driftedSegment)
+                                : m_surfaceMask.apply(surface, driftedSegment);
 
     if (!maskedSegmentRes.ok()) {
       return maskedSegmentRes.error();
