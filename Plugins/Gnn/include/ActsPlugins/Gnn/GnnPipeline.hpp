@@ -51,6 +51,8 @@ class GnnPipeline {
   /// @param edgeClassifiers Edge classification stages
   /// @param trackBuilder Track building stage
   /// @param logger Logger instance
+  /// @param shrinkNodes If true, unused nodes are removed from the graph
+  /// before each edge classification stage
   GnnPipeline(
       std::shared_ptr<GraphConstructionBase> graphConstructor,
       std::vector<std::shared_ptr<EdgeClassificationBase>> edgeClassifiers,
