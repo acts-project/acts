@@ -43,9 +43,9 @@ struct PlanarSurfaceDrift {
   /// result in a segment with no lorentz drift or emulate a 3D pixel
   /// sensor.
   ///
-  /// @note The readout is alwayws emulated at the central surface,
+  /// @note The readout is always emulated at the central surface,
   /// as the mask will be deployed there, and the measurement is
-  /// presented there/
+  /// presented there.
   ///
   /// @return a tuple of the (drifted) Segment on the readout surface
   /// ( @note without masking ), and original 3D segment (in local 3D frame)
