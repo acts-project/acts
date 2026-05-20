@@ -1017,6 +1017,115 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
 
 
 @pytest.mark.odd
+@pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
+def test_gnn4itk_example(tmp_path, assert_root_hash):
+    from gnn4itk_example import runGNN4ITk
+    from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
+    from acts.examples.simulation import (
+        addParticleGun,
+        ParticleConfig,
+        EtaConfig,
+        PhiConfig,
+        MomentumConfig,
+        addFatras,
+        addDigitization,
+    )
+    from acts.examples.reconstruction import addSpacePointsMaking
+    from acts.examples.root import RootAthenaDumpWriter
+
+    # get required files from MODEL_STORAGE environment variable
+    model_storage = os.environ.get("MODEL_STORAGE")
+    assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
+    ci_models = Path(model_storage)
+
+    # only ODD onnx and module map
+    model = ci_models / "gnn_odd_module_map.onnx"
+    module_map = str(ci_models / "module_map_odd_2k_events.1e-03.float.v1_3_PATCH")
+
+    assert model.exists()
+    assert Path(module_map + ".doublets.root").exists(), (
+        module_map + ".doublets.root does not exist"
+    )
+    assert Path(module_map + ".triplets.root").exists()
+
+    repo_root = Path(__file__).parent.parent.parent.parent
+    odd_dir = getOpenDataDetectorDirectory()
+
+    digi_config = odd_dir / "config/odd-digi-smearing-config.json"
+    pixel_geo_selection = repo_root / "Examples/Configs/odd-seeding-config.json"
+    strip_geo_selection = (
+        repo_root / "Examples/Configs/odd-strip-spacepoint-selection.json"
+    )
+
+    dump_file = tmp_path / "athena_dump.root"
+
+    # Generate one event of Athena-format input using FATRAS simulation
+    detector = getOpenDataDetector()
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+    rnd = acts.examples.RandomNumbers(seed=42)
+
+    with detector:
+        s = Sequencer(events=1, numThreads=1, logLevel=acts.logging.WARNING)
+        addParticleGun(
+            s,
+            ParticleConfig(num=4, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
+            EtaConfig(-2.0, 2.0, uniform=True),
+            MomentumConfig(1.0 * u.GeV, 100.0 * u.GeV, transverse=True),
+            PhiConfig(0.0, 360.0 * u.degree),
+            vtxGen=acts.examples.GaussianVertexGenerator(
+                mean=acts.Vector4(0, 0, 0, 0),
+                stddev=acts.Vector4(0, 0, 0, 0),
+            ),
+            multiplicity=1,
+            rnd=rnd,
+        )
+        addFatras(
+            s,
+            detector.trackingGeometry(),
+            field,
+            rnd=rnd,
+            enableInteractions=True,
+        )
+        addDigitization(
+            s,
+            detector.trackingGeometry(),
+            field,
+            digiConfigFile=digi_config,
+            rnd=rnd,
+        )
+        addSpacePointsMaking(
+            s,
+            detector.trackingGeometry(),
+            geoSelectionConfigFile=pixel_geo_selection,
+            stripGeoSelectionConfigFile=strip_geo_selection,
+        )
+        s.addWriter(
+            RootAthenaDumpWriter(
+                level=acts.logging.WARNING,
+                inputParticles="particles_simulated",
+                inputClusters="clusters",
+                inputMeasurements="measurements",
+                inputMeasParticleMap="measurement_particles_map",
+                inputSpacePoints="spacepoints",
+                filePath=str(dump_file),
+            )
+        )
+        s.run()
+
+    assert dump_file.exists()
+
+    # Only check if this runs
+    runGNN4ITk(
+        inputRootDump=dump_file,
+        moduleMapPath=module_map,
+        gnnModel=model,
+        outputDir=tmp_path,
+        events=1,
+        logLevel=acts.logging.INFO,
+    )
+
+
+@pytest.mark.odd
 def test_strip_space_points(detector_config, field, tmp_path, assert_root_hash):
     if detector_config.name == "generic":
         pytest.skip("No strip space point formation for the generic detector currently")
