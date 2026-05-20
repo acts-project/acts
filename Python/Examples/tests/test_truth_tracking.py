@@ -547,6 +547,19 @@ def test_measurement_access(tmp_path, generic_detector_config):
                     "InputMeasurementSubset",
                 )
                 self.measurementSubset.initialize("measurement_subset")
+                self.simhits_map = acts.examples.ReadDataHandle(
+                    self,
+                    acts.examples.MeasurementSimHitsMap,
+                    "InputMeasurementSimHitsMap",
+                )
+                self.simhits_map.initialize("measurement_simhits_map")
+
+                self.particles_map = acts.examples.ReadDataHandle(
+                    self,
+                    acts.examples.MeasurementParticlesMap,
+                    "InputMeasurementParticlesMap",
+                )
+                self.particles_map.initialize("measurement_particles_map")
 
             def execute(self, context):
                 measurements = self.measurements(context.eventStore)
@@ -585,6 +598,25 @@ def test_measurement_access(tmp_path, generic_detector_config):
                     orig = subset.getMeasurement(meas.index)
                     assert orig.index == meas.index
                     assert orig.geometryId.value == meas.geometryId.value
+                sh_map = self.simhits_map(context.eventStore)
+                p_map = self.particles_map(context.eventStore)
+
+                assert len(sh_map) > 0
+                assert len(p_map) > 0
+
+                for meas_idx, simhit_idx in sh_map:
+                    assert isinstance(meas_idx, int)
+                    assert isinstance(simhit_idx, int)
+                    break
+
+                first_key = next(iter(sh_map))[0]
+                assert first_key in sh_map
+                vals = sh_map.values_for(first_key)
+                assert len(vals) > 0
+
+                inv = sh_map.invert()
+                assert isinstance(inv, acts.examples.SimHitMeasurementsMap)
+                assert len(inv) == len(sh_map)
 
                 return acts.examples.ProcessCode.SUCCESS
 
@@ -676,3 +708,55 @@ def test_measurement_creation():
             meas.fullParameters[indices[i]] == meas_prop["parameters"][i]
             for i in range(dim)
         ]
+
+def test_measurement_map_creation():
+    from acts.examples import (
+        MeasurementParticlesMap,
+        MeasurementSimHitsMap,
+        ParticleMeasurementsMap,
+        SimBarcode,
+        SimHitMeasurementsMap,
+    )
+
+    # MeasurementSimHitsMap: meas 0 → simhits {10, 11}, meas 1 → simhit {20}
+    m = MeasurementSimHitsMap()
+    m.insert(0, 10)
+    m.insert(0, 11)  # same key — multi-map
+    m.insert(1, 20)
+    assert len(m) == 3
+
+    assert 0 in m
+    assert 2 not in m
+
+    vals = m.values_for(0)
+    assert sorted(vals) == [10, 11]
+    assert m.values_for(1) == [20]
+    assert m.values_for(99) == []
+
+    pairs = list(m)
+    assert len(pairs) == 3
+    assert all(isinstance(k, int) and isinstance(v, int) for k, v in pairs)
+
+    inv = m.invert()
+    assert isinstance(inv, SimHitMeasurementsMap)
+    assert len(inv) == 3
+    assert inv.values_for(10) == [0]
+    assert inv.values_for(11) == [0]
+    assert inv.values_for(20) == [1]
+
+    # MeasurementParticlesMap: meas 0 came from two particles, meas 1 from one
+    bc0 = SimBarcode()
+    bc0.particle = 1
+    bc1 = SimBarcode()
+    bc1.particle = 2
+    mp = MeasurementParticlesMap()
+    mp.insert(0, bc0)
+    mp.insert(0, bc1)  # same measurement, two particles
+    mp.insert(1, bc0)
+    assert len(mp) == 3
+
+    assert mp.values_for(0) == [bc0, bc1]
+
+    inv_p = mp.invert()
+    assert isinstance(inv_p, ParticleMeasurementsMap)
+    assert len(inv_p) == 3
