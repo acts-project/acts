@@ -34,6 +34,7 @@ def createStripSpacePoints(
         RootParticleReader,
         RootSimHitReader,
         RootSpacePointWriter,
+        RootSpacePointPerformanceWriter,
     )
 
     s = s or acts.examples.Sequencer(
@@ -108,7 +109,7 @@ def createStripSpacePoints(
             level=acts.logging.INFO,
             trackingGeometry=trackingGeometry,
             inputMeasurements="measurement_subset",
-            outputSpacePoints="spacepoints",
+            outputSpacePoints="space_points",
             stripGeometrySelection=acts.examples.json.readJsonGeometryList(
                 str(geoSelection)
             ),
@@ -118,9 +119,25 @@ def createStripSpacePoints(
     s.addWriter(
         RootSpacePointWriter(
             level=acts.logging.INFO,
-            inputSpacePoints="spacepoints",
+            inputSpacePoints="space_points",
             inputMeasurementParticlesMap="measurement_particles_map",
-            filePath=str(outputDir / "strip_spacepoints.root"),
+            filePath=str(outputDir / "strip_space_points.root"),
+        )
+    )
+
+    s.addWriter(
+        RootSpacePointPerformanceWriter(
+            level=acts.logging.VERBOSE,
+            inputSpacePoints="space_points",
+            inputMeasurements="measurements",
+            inputSimHits="simhits",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
+            inputMeasurementParticlesMap="measurement_particles_map",
+            trackingGeometry=trackingGeometry,
+            stripGeometrySelection=acts.examples.json.readJsonGeometryList(
+                str(geoSelection)
+            ),
+            filePath=str(outputDir / "performance_strip_space_points.root"),
         )
     )
 

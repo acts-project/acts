@@ -26,6 +26,7 @@
 #include "ActsExamples/Io/Root/RootSeedWriter.hpp"
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
+#include "ActsExamples/Io/Root/RootSpacePointPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootSpacePointWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFinderNTupleWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFinderPerformanceWriter.hpp"
@@ -253,6 +254,13 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
     ACTS_PYTHON_DECLARE_WRITER(
         RootSpacePointWriter, root, "RootSpacePointWriter", inputSpacePoints,
         inputMeasurementParticlesMap, filePath, fileMode, treeName);
+
+    ACTS_PYTHON_DECLARE_WRITER(
+        RootSpacePointPerformanceWriter, root,
+        "RootSpacePointPerformanceWriter", inputSpacePoints, inputMeasurements,
+        inputSimHits, inputMeasurementSimHitsMap, inputMeasurementParticlesMap,
+        trackingGeometry, stripGeometrySelection, filePath, fileMode, treeName,
+        zAxis, rAxis, etaAxis, phiAxis);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootAthenaDumpWriter, root, "RootAthenaDumpWriter", inputParticles,

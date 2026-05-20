@@ -87,14 +87,14 @@ class RootSpacePointWriter final : public WriterT<SpacePointContainer> {
   std::uint64_t m_geometryId1 = 0;
   std::uint64_t m_geometryId2 = 0;
   /// Global space point position components in mm.
-  float m_x = std::numeric_limits<float>::infinity();
-  float m_y = std::numeric_limits<float>::infinity();
-  float m_z = std::numeric_limits<float>::infinity();
-  float m_r = std::numeric_limits<float>::infinity();
-  float m_t = std::numeric_limits<float>::infinity();
+  float m_x = std::numeric_limits<float>::quiet_NaN();
+  float m_y = std::numeric_limits<float>::quiet_NaN();
+  float m_z = std::numeric_limits<float>::quiet_NaN();
+  float m_r = std::numeric_limits<float>::quiet_NaN();
+  float m_t = std::numeric_limits<float>::quiet_NaN();
   // Global space point position uncertainties
-  float m_var_r = std::numeric_limits<float>::infinity();
-  float m_var_z = std::numeric_limits<float>::infinity();
+  float m_var_r = std::numeric_limits<float>::quiet_NaN();
+  float m_var_z = std::numeric_limits<float>::quiet_NaN();
   // Fake space point (only relevant for strip)
   bool m_fake{};
 };
