@@ -178,6 +178,7 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
   alignResult.deltaChi2 = 0.5 * alignResult.sumChi2Derivative.transpose() *
                           alignResult.deltaAlignmentParameters;
 }
+
 template <typename fitter_t>
 double ActsAlignment::Alignment<fitter_t>::decompositionAnalysis(
     const AlignmentResult& res, std::ostream& out) {

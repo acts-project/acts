@@ -201,7 +201,7 @@ struct Alignment {
   /// as input of fitting
   /// @param alignResult [in, out] The aligned result
   /// @param alignMask The alignment mask (same for all measurements now)
-  /// @param performDecomposition: Perform a decomposition of the
+  /// @param performDecomposition Perform a decomposition of the
   /// second derivative matrix and write eigenvectors/values to a file.
   void calculateAlignmentParameters(
       const std::vector<detail::TrackAlignmentState>& trackAlignmentStates,
@@ -242,9 +242,9 @@ struct Alignment {
   /// @brief perform decomposition analysis. Extracts eigenvectors and
   /// writes them, sorted by ascending eigenvalue, in a format consistent
   /// with the Millepede-II SVD solver for problem analysis.
-  /// @param res: Alignment result that has already been processed
+  /// @param res Alignment result that has already been processed
   /// by calculateAlignmentParameters
-  /// @param out: output stream to write to.
+  /// @param out output stream to write to.
   /// @return The condition number of the second derivative matrix or -1 in case of error
   double decompositionAnalysis(const AlignmentResult& res, std::ostream& out);
 

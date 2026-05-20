@@ -81,12 +81,12 @@ class MillePedeAlignmentSandbox final : public IAlgorithm {
     /// are not constrained in the input track
     bool discardUnconstrainedTrackPar = true;
 
-    // output file name to use when running the internal solver.
-    // Setting this to an empty string will skip the step.
+    /// output file name to use when running the internal solver.
+    /// Setting this to an empty string will skip the step.
     std::string outFileInternalSolving = "";
 
-    // output file name to use for performing decomposition analysis.
-    // Setting this to an empty string will skip the step.
+    /// output file name to use for performing decomposition analysis.
+    /// Setting this to an empty string will skip the step.
     std::string outFileDecomposition = "";
   };
 
@@ -97,6 +97,7 @@ class MillePedeAlignmentSandbox final : public IAlgorithm {
       Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode initialize() override;
+
   /// Framework execute method of the sandbox algorithm
   ///
   /// @param ctx is the algorithm context that holds event-wise information
@@ -111,7 +112,7 @@ class MillePedeAlignmentSandbox final : public IAlgorithm {
   /// configuration instance
   Config m_cfg;
 
-  // check if we need to run internal solving
+  /// check if we need to run internal solving
   bool needInternalSolving() const;
 
   /// solve using the baseline ACTS infrastructure

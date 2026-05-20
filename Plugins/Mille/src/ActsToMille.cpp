@@ -59,8 +59,8 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
     }
   }
 
-  /// Analyse the track fit, and potentially discard unconstrained
-  /// parameters to stabilise the system
+  // Analyse the track fit, and potentially discard unconstrained
+  // parameters to stabilise the system
   std::set<std::size_t> skippedTrackParams = {};
   if (removeUnconstrainedTrackPar) {
     // collect (sorted by covariance) the indices of all track parameters
@@ -69,7 +69,7 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
       trkParByCov.emplace(state.trackParametersCovariance(k, k), k);
     }
 
-    /// now, loop through the parameter list and look for huge jumps.
+    // now, loop through the parameter list and look for huge jumps.
     double prev = 0;
     for (auto& [sigmaSquared, index] : trkParByCov) {
       // a jump of 1e6 is indicative that we are not in Kansas anymore

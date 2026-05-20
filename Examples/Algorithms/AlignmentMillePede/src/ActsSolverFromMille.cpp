@@ -146,6 +146,7 @@ ProcessCode ActsSolverFromMille::finalize() {
                 << std::sqrt(alignResult.alignmentCovariance(row, row)));
     }
   }
+
   if (!m_cfg.outFile.empty()) {
     std::ofstream resFile;
     resFile.open(m_cfg.outFile);
@@ -154,6 +155,7 @@ ProcessCode ActsSolverFromMille::finalize() {
     ActsPlugins::ActsToMille::dumpAsMillepedeRes(alignResult, resFile);
     resFile.close();
   }
+
   return ProcessCode::SUCCESS;
 }
 

@@ -60,6 +60,7 @@ MillePedeAlignmentSandbox::MillePedeAlignmentSandbox(
 
   // Assign indices to the alignable surfaces
 }
+
 ProcessCode MillePedeAlignmentSandbox::initialize() {
   // We wish to have a relation between alignment parameter indices and real
   // geometry. The unordered_map does not give us this - so perform a manual
@@ -93,11 +94,11 @@ ProcessCode MillePedeAlignmentSandbox::initialize() {
     }
   }
 
-  /// spawn a Mille binary to record our alignment inputs.
-  /// You can specify root / csv / dat extensions for
-  /// ROOT NTuple / plain text (careful: large files) or C-binary
-  /// storage.
-  /// The file will be automatically closed upon deletion.
+  // spawn a Mille binary to record our alignment inputs.
+  // You can specify root / csv / dat extensions for
+  // ROOT NTuple / plain text (careful: large files) or C-binary
+  // storage.
+  // The file will be automatically closed upon deletion.
   m_milleOut = Mille::spawnMilleRecord(m_cfg.milleOutput);
   if (!m_milleOut) {
     ACTS_FATAL(
@@ -157,9 +158,9 @@ ProcessCode MillePedeAlignmentSandbox::execute(
     // existing CKF track
     Acts::BoundTrackParameters refPar = track.createParametersAtReference();
 
-    /// replace the covariance from the earlier track fit by a set of
-    /// large uncertainties to avoid constraining the re-fit to the
-    /// previous iteration.
+    // replace the covariance from the earlier track fit by a set of
+    // large uncertainties to avoid constraining the re-fit to the
+    // previous iteration.
     Acts::BoundMatrix& cov = refPar.covariance().value();
     cov = Acts::BoundMatrix::Identity();
     cov(0, 0) = 100000;
@@ -236,10 +237,10 @@ ProcessCode MillePedeAlignmentSandbox::solveInternal() {
   m_align->calculateAlignmentParameters(m_alignmentStates, alignResult);
 
   if (!m_cfg.outFileInternalSolving.empty()) {
-    /// in a real experiment, the results would be written out
-    /// and stored e.g. in a DB file for further use / validation.
-    /// For this initial demo, we just print them out and dump them to a text
-    /// file.
+    // in a real experiment, the results would be written out
+    // and stored e.g. in a DB file for further use / validation.
+    // For this initial demo, we just print them out and dump them to a text
+    // file.
     ACTS_INFO("Performed internal alignment without Mille");
     ACTS_INFO(std::setw(16) << "  Tracks used: " << m_alignmentStates.size());
     ACTS_INFO(std::setw(16)
@@ -267,6 +268,7 @@ ProcessCode MillePedeAlignmentSandbox::solveInternal() {
     ActsPlugins::ActsToMille::dumpAsMillepedeRes(alignResult, resFile);
     resFile.close();
   }
+
   if (!m_cfg.outFileDecomposition.empty()) {
     std::ofstream evFile;
     evFile.open(m_cfg.outFileDecomposition);
