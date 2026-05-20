@@ -26,8 +26,6 @@
 #include <memory>
 #include <mutex>
 
-std::mutex g_mx_addState;
-
 namespace ActsExamples {
 
 MillePedeAlignmentSandbox::MillePedeAlignmentSandbox(
@@ -193,7 +191,7 @@ ProcessCode MillePedeAlignmentSandbox::execute(
       ActsPlugins::ActsToMille::dumpToMille(state, *m_milleOut,
                                             m_cfg.discardUnconstrainedTrackPar);
       if (needInternalSolving()) {
-        std::lock_guard g(g_mx_addState);
+        std::lock_guard g(m_mx_addState);
         m_alignmentStates.push_back(state);
       }
     }

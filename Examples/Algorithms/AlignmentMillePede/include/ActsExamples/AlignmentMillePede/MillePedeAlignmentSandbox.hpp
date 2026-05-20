@@ -136,6 +136,8 @@ class MillePedeAlignmentSandbox final : public IAlgorithm {
 
   std::unordered_map<const Acts::Surface*, std::size_t> m_indexedAlignSurfaces;
   const Acts::Surface* m_firstSurf = nullptr;
+
+  std::mutex m_mx_addState;
 };
 
 }  // namespace ActsExamples
