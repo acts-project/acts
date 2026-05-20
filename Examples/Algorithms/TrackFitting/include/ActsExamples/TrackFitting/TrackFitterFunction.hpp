@@ -78,12 +78,25 @@ std::shared_ptr<TrackFitterFunction> makeKalmanFitterFunction(
     bool multipleScattering = true, bool energyLoss = true,
     double reverseFilteringMomThreshold = 0.0,
     double reverseFilteringCovarianceScaling = 100.0,
-    Acts::FreeToBoundCorrection freeToBoundCorrection =
+    const Acts::FreeToBoundCorrection& freeToBoundCorrection =
         Acts::FreeToBoundCorrection(),
     double chi2Cut = std::numeric_limits<double>::infinity(),
     bool useJosephFormulation = false,
     const Acts::Logger& logger = *Acts::getDefaultLogger("Kalman",
                                                          Acts::Logging::INFO));
+
+/// Makes a reference trajectory fitter function object using the Kalman Filter
+///
+std::shared_ptr<TrackFitterFunction>
+makeKalmanReferenceTrajectoryFitterFunction(
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+    bool multipleScattering = true, bool energyLoss = true,
+    const Acts::FreeToBoundCorrection& freeToBoundCorrection =
+        Acts::FreeToBoundCorrection(),
+    bool useJosephFormulation = false,
+    const Acts::Logger& logger = *Acts::getDefaultLogger(
+        "KalmanReferenceTrajectory", Acts::Logging::INFO));
 
 /// Available algorithms for the mixture reduction
 enum class MixtureReductionAlgorithm { weightCut, KLDistance, KLDistanceNaive };
@@ -117,7 +130,7 @@ std::shared_ptr<TrackFitterFunction> makeGsfFitterFunction(
 /// @param magneticField the magnetic field for the propagator
 /// @param multipleScattering bool
 /// @param energyLoss bool
-/// @param freeToBoundCorrection bool
+/// @param freeToBoundCorrection the correction for free to bound state transformations
 /// @param nUpdateMax max number of iterations during the fit
 /// @param relChi2changeCutOff Check for convergence (abort condition). Set to 0 to skip.
 /// @param logger a logger instance
@@ -125,7 +138,7 @@ std::shared_ptr<TrackFitterFunction> makeGlobalChiSquareFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering = true, bool energyLoss = true,
-    Acts::FreeToBoundCorrection freeToBoundCorrection =
+    const Acts::FreeToBoundCorrection& freeToBoundCorrection =
         Acts::FreeToBoundCorrection(),
     std::size_t nUpdateMax = 5, double relChi2changeCutOff = 1e-7,
     const Acts::Logger& logger = *Acts::getDefaultLogger("Gx2f",
