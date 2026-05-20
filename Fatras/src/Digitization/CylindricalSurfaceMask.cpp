@@ -94,8 +94,7 @@ ActsFatras::CylindricalSurfaceMask::apply(const Acts::Surface& surface,
   // we only need to clip in z. Otherwise unwrap by adding/subtracting 2π·R so
   // that the segment lies in the same branch as the sector midpoint.
   Segment2D seg = segment;
-  const bool isClosed =
-      std::abs(halfPhi - std::numbers::pi) < Acts::s_epsilon;
+  const bool isClosed = std::abs(halfPhi - std::numbers::pi) < Acts::s_epsilon;
 
   if (!isClosed) {
     const double midRPhi = R * avgPhi;
@@ -125,10 +124,10 @@ ActsFatras::CylindricalSurfaceMask::apply(const Acts::Surface& surface,
   // If the cylinder is closed in phi, the only clipping needed is in z.
   // Liang–Barsky with rPhi range = (-∞, +∞) reduces to the z-only case, but
   // implementing it explicitly avoids special-casing the rPhi parameter.
-  const double useRPhiMin = isClosed ? -std::numeric_limits<double>::infinity()
-                                     : rPhiMin;
-  const double useRPhiMax = isClosed ? std::numeric_limits<double>::infinity()
-                                     : rPhiMax;
+  const double useRPhiMin =
+      isClosed ? -std::numeric_limits<double>::infinity() : rPhiMin;
+  const double useRPhiMax =
+      isClosed ? std::numeric_limits<double>::infinity() : rPhiMax;
 
   const auto clip = clipLiangBarsky(seg[0][0], seg[0][1], seg[1][0], seg[1][1],
                                     useRPhiMin, useRPhiMax, zMin, zMax);
