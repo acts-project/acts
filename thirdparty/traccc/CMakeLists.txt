@@ -69,7 +69,6 @@ set(TRACCC_BUILD_TESTING
 )
 
 set(TRACCC_SETUP_TBB OFF CACHE BOOL "Do not set up TBB as part of Traccc")
-set(TRACCC_USE_SYSTEM_TBB ON CACHE BOOL "Use the system TBB for Traccc")
 
 set(TRACCC_BUILD_EXAMPLES
     OFF
