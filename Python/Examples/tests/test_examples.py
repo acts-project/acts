@@ -969,14 +969,8 @@ def test_gnn_shrink_nodes_same_output(tmp_path, trk_geo, field, hardware):
     assert gnn_model.exists()
 
     repo_root = Path(__file__).parent.parent.parent.parent
-    digi_config = (
-        repo_root
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-    )
-    geo_sel = (
-        repo_root
-        / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
-    )
+    digi_config = repo_root / "Examples/Configs/generic-digi-smearing-config.json"
+    geo_sel = repo_root / "Examples/Configs/generic-seeding-config.json"
 
     from acts.gnn import Device
 
