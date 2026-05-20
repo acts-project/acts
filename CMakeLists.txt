@@ -179,6 +179,7 @@ set_option_if(
     ACTS_BUILD_EXAMPLES_ROOT
 )
 # core plugins might be required by examples or depend on each other
+set_option_if(ACTS_BUILD_EXAMPLES_DD4HEP ACTS_BUILD_ODD)
 set_option_if(
     ACTS_BUILD_PLUGIN_DD4HEP
     ACTS_BUILD_EXAMPLES_DD4HEP
