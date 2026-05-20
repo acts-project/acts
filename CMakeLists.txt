@@ -81,11 +81,22 @@ option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEOMODEL "Build GeoModel plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TRACCC "Build Traccc plugin" OFF)
+option(ACTS_ENABLE_CUDA "Enable CUDA for the gnn/Traccc plugins" OFF)
+option(ACTS_GNN_ENABLE_CUDA "[Deprecated] Enable CUDA for the gnn plugin" OFF)
+
+# Preserve previous behaviour of ACTS_GNN_ENABLE_CUDA but mark as deprecated
+if(ACTS_GNN_ENABLE_CUDA)
+    message(
+        DEPRECATION
+        "ACTS_GNN_ENABLE_CUDA is deprecated. Enable ACTS_ENABLE_CUDA to achieve the same effect."
+    )
+    set(ACTS_ENABLE_CUDA ON)
+endif()
+
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GNN "Build the GNN plugin" OFF)
 option(ACTS_GNN_ENABLE_ONNX "Build the Onnx backend for the gnn plugin" OFF)
 option(ACTS_GNN_ENABLE_TORCH "Build the torchscript backend for the gnn plugin" ON)
-option(ACTS_GNN_ENABLE_CUDA "Enable CUDA for the gnn plugin" OFF)
 option(ACTS_GNN_ENABLE_MODULEMAP "Enable Module-Map-based graph construction" OFF)
 option(ACTS_GNN_ENABLE_TENSORRT "Enable the native TensorRT inference modules" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
@@ -208,7 +219,12 @@ set_option_if(ACTS_BUILD_PLUGIN_GNN ACTS_BUILD_EXAMPLES_GNN)
 set_option_if(ACTS_BUILD_PLUGIN_FPEMON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
-set_option_if(ACTS_GNN_ENABLE_CUDA ACTS_GNN_ENABLE_MODULEMAP)
+set_option_if(
+    ACTS_ENABLE_CUDA
+    ACTS_GNN_ENABLE_MODULEMAP
+    AND
+    ACTS_BUILD_PLUGIN_GNN
+)
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_PLUGIN_MILLE)
 
@@ -503,7 +519,7 @@ if(ACTS_BUILD_ANALYSIS_APPS)
     )
 endif()
 if(ACTS_BUILD_PLUGIN_GNN)
-    if(ACTS_GNN_ENABLE_CUDA)
+    if(ACTS_ENABLE_CUDA)
         find_package(CUDAToolkit REQUIRED)
         enable_cuda()
         message(STATUS "Build GNN plugin with CUDA")
@@ -512,7 +528,7 @@ if(ACTS_BUILD_PLUGIN_GNN)
     endif()
     if(ACTS_GNN_ENABLE_TORCH)
         find_package(Torch REQUIRED)
-        if(ACTS_GNN_ENABLE_CUDA)
+        if(ACTS_ENABLE_CUDA)
             add_subdirectory(thirdparty/FRNN)
         endif()
     endif()
@@ -575,6 +591,12 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
         else()
             add_subdirectory(thirdparty/covfie)
         endif()
+    endif()
+
+    if(ACTS_ENABLE_CUDA)
+        message(STATUS "Build Traccc plugin with CUDA support")
+    else()
+        message(STATUS "Build Traccc plugin for CPU only")
     endif()
 
     # traccc also depends on vecmem and covfie, but those plugins should always

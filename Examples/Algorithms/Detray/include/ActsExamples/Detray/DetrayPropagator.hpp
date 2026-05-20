@@ -138,7 +138,6 @@ class DetrayPropagator : public PropagatorInterface {
       // Propagator with empty actor chain (for the moment)
       using Propagator =
           detray::propagator<stepper_t, DetrayNavigator, detray::actor_chain<>>;
-
       detray::propagation::config prop_cfg{};
       auto dCtx = prop_cfg.context;
 

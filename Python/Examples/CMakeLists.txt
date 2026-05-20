@@ -280,6 +280,13 @@ add_examples_binding_if(
     PLUGIN_IMPORT FALSE
 )
 
+add_examples_binding_if(
+    NAME Traccc
+    LINK_LIBRARIES Acts::ExamplesTraccc
+    FLAG ACTS_BUILD_PLUGIN_TRACCC
+    PLUGIN_IMPORT FALSE
+)
+
 # Special case for HepMC3 as it a hard dependency
 pybind11_add_module(ActsExamplesPythonBindingsHepMC3 src/plugins/HepMC3.cpp)
 install(
