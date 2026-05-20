@@ -149,6 +149,9 @@ def runGnnMetricLearning(
         nodeFeatures=nodeFeatures,
         featureScales=featureScales,
         outputDirRoot=outputDir if outputRoot else None,
+        outputInitialParameters="gnn-initial-parameters",
+        trackingGeometry=trackingGeometry,
+        magneticField=field,
         device=device,
         logLevel=acts.logging.INFO,
     )

@@ -1986,6 +1986,9 @@ def addGnn(
     inputSpacePoints: str = "spacepoints",
     inputClusters: str = "",
     outputDirRoot: Optional[Union[Path, str]] = None,
+    outputInitialParameters: Optional[str] = None,
+    trackingGeometry=None,
+    magneticField=None,
     device=None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
@@ -2002,20 +2005,16 @@ def addGnn(
         trackBuilder: Track building stage (BoostTrackBuilding, CudaTrackBuilding, etc.)
         nodeFeatures: List of node features to extract from space points/clusters
         featureScales: Scaling factors for each feature
-        trackingGeometry: Optional tracking geometry for creating space points
-        geometrySelection: Optional geometry selection file for space point creation
         inputSpacePoints: Name of input space point collection (default: "spacepoints")
         inputClusters: Name of input cluster collection (default: "")
         outputDirRoot: Optional output directory for performance ROOT files
+        outputInitialParameters: If set, also runs ProtoTracksToSeeds + TrackParamsEstimationAlgorithm
+            and writes initial track parameters under this whiteboard key.
+            Requires trackingGeometry and magneticField.
+        trackingGeometry: Tracking geometry, required when outputInitialParameters is set
+        magneticField: Magnetic field, required when outputInitialParameters is set
         device: acts.gnn.Device to run the GNN pipeline on (default: acts.gnn.Device.Cuda())
         logLevel: Logging level
-
-    Note:
-        The trackingGeometry parameter serves two distinct purposes depending on the workflow:
-        1. Space point creation: When provided along with geometrySelection, creates space points
-           from measurements using SpacePointMaker (typical for simulation workflows)
-        2. Module map usage: Some graph constructors (e.g., ModuleMapCuda) require
-           trackingGeometry to map module IDs even when using pre-existing space points
     """
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -2046,6 +2045,28 @@ def addGnn(
     )
     s.addAlgorithm(findingAlg)
     s.addWhiteboardAlias("protoTracks", findingAlg.config.outputProtoTracks)
+
+    if outputInitialParameters is not None:
+        if trackingGeometry is None or magneticField is None:
+            raise ValueError(
+                "trackingGeometry and magneticField are required when outputInitialParameters is set"
+            )
+        protoTracksToSeeds = acts.examples.ProtoTracksToSeeds(
+            level=customLogLevel(),
+            inputProtoTracks=findingAlg.config.outputProtoTracks,
+            inputSpacePoints=inputSpacePoints,
+            outputSeeds="gnn-seeds",
+            outputProtoTracks="gnn-protoTracks-seeds-filtered",
+        )
+        s.addAlgorithm(protoTracksToSeeds)
+        parEstAlg = acts.examples.TrackParamsEstimationAlgorithm(
+            level=customLogLevel(),
+            inputSeeds=protoTracksToSeeds.config.outputSeeds,
+            outputTrackParameters=outputInitialParameters,
+            trackingGeometry=trackingGeometry,
+            magneticField=magneticField,
+        )
+        s.addAlgorithm(parEstAlg)
 
     # Convert proto tracks to tracks
     convAlg = acts.examples.ProtoTracksToTracks(
