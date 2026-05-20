@@ -23,25 +23,25 @@ PlanarSurfaceDrift::toReadout(const Acts::GeometryContext& gctx,
                               const Acts::Vector3& driftDir) const {
   // Transform the hit & direction into the local surface frame
   const auto& invTransform = surface.localToGlobalTransform(gctx).inverse();
-  Acts::Vector3 pos3Local(invTransform * pos);
+  const Acts::Vector3 pos3Local = invTransform * pos;
   Acts::Vector3 seg3Local = invTransform.linear() * dir.normalized();
   if (std::abs(seg3Local.z()) < Acts::s_epsilon) {
     // The segment is parallel to the surface
     return DigitizationError::DriftError;
   }
   // Scale the unit vector to the thickness of the module
-  double scale = thickness / seg3Local.z();
+  const double scale = thickness / seg3Local.z();
   seg3Local *= scale;
   // The drift direction is in the local frame, so we need to transform it
-  Acts::Vector3 entry = pos3Local - 0.5 * seg3Local;
-  Acts::Vector3 exit = pos3Local + 0.5 * seg3Local;
+  const Acts::Vector3 entry = pos3Local - 0.5 * seg3Local;
+  const Acts::Vector3 exit = pos3Local + 0.5 * seg3Local;
   Acts::Vector3 driftedEntry = entry;
   Acts::Vector3 driftedExit = exit;
   // Apply the drift if it is not zero
   if (Acts::VectorHelpers::perp(driftDir) > Acts::s_epsilon &&
       std::abs(driftDir.z()) > Acts::s_epsilon) {
     // Apply the drift to the entry and exit points
-    double driftScale = 0.5 * thickness / driftDir.z();
+    const double driftScale = 0.5 * thickness / driftDir.z();
     driftedEntry += driftScale * driftDir;
     driftedExit -= driftScale * driftDir;
   }
