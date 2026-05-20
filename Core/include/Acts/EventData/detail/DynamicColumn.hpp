@@ -205,7 +205,7 @@ class DynamicColumn<bool> : public DynamicColumnBase {
   }
 
  private:
-  /// Auxiliary struct to wrap the boolean
+  /// Auxiliary struct to wrap a boolean for use in a vector
   struct Wrapper {
     bool value{false};
   };
