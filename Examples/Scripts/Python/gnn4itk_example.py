@@ -32,6 +32,7 @@ def runGNN4ITk(
     gnnModel: Path,
     outputDir: Path = Path.cwd(),
     events: int = 1,
+    bufferEvents: int | None = None,
     logLevel=acts.logging.INFO,
 ):
     """
@@ -65,22 +66,33 @@ def runGNN4ITk(
     )
 
     # Read ATLAS Athena ROOT dump
-    s.addReader(
-        acts.examples.root.RootAthenaDumpReader(
-            level=logLevel,
-            treename="GNN4ITk",
-            inputfiles=[str(inputRootDump)],
-            outputSpacePoints="spacepoints",
-            outputClusters="clusters",
-            outputMeasurements="measurements",
-            outputMeasurementParticlesMap="measurement_particles_map",
-            outputParticleMeasurementsMap="particle_measurements_map",
-            outputParticles="particles",
-            skipOverlapSPsPhi=True,
-            skipOverlapSPsEta=False,
-            absBoundaryTolerance=0.01 * u.mm,
-        )
+
+    reader = acts.examples.root.RootAthenaDumpReader(
+        level=logLevel,
+        treename="GNN4ITk",
+        inputfiles=[str(inputRootDump)],
+        outputSpacePoints="spacepoints",
+        outputClusters="clusters",
+        outputMeasurements="measurements",
+        outputMeasurementSubset="measurement_subset",
+        outputMeasurementParticlesMap="measurement_particles_map",
+        outputParticleMeasurementsMap="particle_measurements_map",
+        outputParticles="particles",
+        skipOverlapSPsPhi=True,
+        skipOverlapSPsEta=False,
+        absBoundaryTolerance=0.01 * u.mm,
     )
+
+    if bufferEvents is not None:
+        s.addReader(
+            acts.examples.BufferedReader(
+                level=logLevel,
+                upstreamReader=reader,
+                bufferSize=min(bufferEvents, events),
+            )
+        )
+    else:
+        s.addReader(reader)
 
     # Select primary particles with minimum 7 hits and 1 GeV pT for efficiency evaluation
     s.addWhiteboardAlias("particles_simulated_selected", "particles")
@@ -104,7 +116,6 @@ def runGNN4ITk(
         "etaScale": 1.0,
         "gpuDevice": 0,
         "gpuBlocks": 512,
-        "moreParallel": True,
     }
     graphConstructor = ModuleMapCuda(**moduleMapConfig)
 
@@ -211,6 +222,13 @@ if __name__ == "__main__":
         default=1,
         help="Number of events to process",
     )
+    argparser.add_argument(
+        "--bufferEvents",
+        type=int,
+        default=None,
+        help="Number of events to buffer (improves I/O performance)",
+    )
+    argparser.add_argument("--debug", action="store_true")
 
     args = argparser.parse_args()
 
@@ -220,4 +238,6 @@ if __name__ == "__main__":
         gnnModel=args.gnnModel,
         outputDir=args.outputDir,
         events=args.events,
+        bufferEvents=args.bufferEvents,
+        logLevel=acts.logging.DEBUG if args.debug else acts.logging.INFO,
     )

@@ -10,18 +10,25 @@
 
 #include "Acts/EventData/StripSpacePointCalibrationDetails.hpp"
 
-#include <optional>
-
 #include <Eigen/Core>
 
 namespace Acts {
 
-StripSpacePointCalibrationDetailsDerived
-deriveStripSpacePointCalibrationDetails(
-    const StripSpacePointCalibrationDetails& sp);
+/// Derives the strip space point calibration details.
+/// @param sp The strip space point calibration details
+/// @return The derived strip space point calibration details
+OuterStripSpacePointCalibrationDetailsDerived
+deriveOuterStripSpacePointCalibrationDetails(
+    const OuterStripSpacePointCalibrationDetails& sp);
 
-std::optional<Eigen::Vector3f> calibrateStripSpacePoint(
-    const StripSpacePointCalibrationDetailsDerived& sp,
-    const Eigen::Vector3f& direction, float tolerance);
+/// Calibrates the strip space point using the assumed particle direction and
+/// the strip space point calibration details.
+/// @note This function does not check if the calibrated space point lies within the strip.
+/// @param sp The strip space point calibration details
+/// @param direction The assumed particle direction
+/// @return The calibrated outer strip space point
+Eigen::Vector3f calibrateOuterStripSpacePoint(
+    const Eigen::Vector3f& direction,
+    const OuterStripSpacePointCalibrationDetailsDerived& sp);
 
 }  // namespace Acts

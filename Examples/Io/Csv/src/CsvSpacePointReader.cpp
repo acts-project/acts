@@ -96,16 +96,16 @@ ProcessCode CsvSpacePointReader::read(const AlgorithmContext& ctx) {
                                           data.sp_stripCenterDistance_2);
 
       Eigen::Map<Eigen::Vector3f>(
-          sp.stripCalibrationDetails().outerCenter.data()) =
+          sp.outerStripCalibrationDetails().outerCenter.data()) =
           outerStripCenter.cast<float>();
       Eigen::Map<Eigen::Vector3f>(
-          sp.stripCalibrationDetails().outerToInnerGapVector.data()) =
+          sp.outerStripCalibrationDetails().innerToOuterSeparation.data()) =
           stripSeparation.cast<float>();
       Eigen::Map<Eigen::Vector3f>(
-          sp.stripCalibrationDetails().outerHalfVector.data()) =
+          sp.outerStripCalibrationDetails().outerHalfVector.data()) =
           outerStripHalfVector.cast<float>();
       Eigen::Map<Eigen::Vector3f>(
-          sp.stripCalibrationDetails().innerHalfVector.data()) =
+          sp.outerStripCalibrationDetails().innerHalfVector.data()) =
           innerStripHalfVector.cast<float>();
     }
   }

@@ -9,6 +9,7 @@
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/StripSpacePointCalibrationDetails.hpp"
 #include "Acts/SpacePointFormation2/detail/StripSpacePointCalibrationImpl.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
@@ -204,14 +205,14 @@ class Impl final : public TripletSeedFinder {
                                                       sinPhiM * sinTheta};
 
     // Pre-cache strip data for the loop-invariant middle and bottom SPs
-    const StripSpacePointCalibrationDetailsDerived calM =
-        detail::deriveStripSpacePointCalibrationDetails(
-            spM.stripCalibrationDetails());
+    const OuterStripSpacePointCalibrationDetailsDerived calM =
+        detail::deriveOuterStripSpacePointCalibrationDetails(
+            spM.outerStripCalibrationDetails());
     const ConstSpacePointProxy2 spB =
         spacePoints[bottomDoublet.spacePointIndex()];
-    const StripSpacePointCalibrationDetailsDerived calB =
-        detail::deriveStripSpacePointCalibrationDetails(
-            spB.stripCalibrationDetails());
+    const OuterStripSpacePointCalibrationDetailsDerived calB =
+        detail::deriveOuterStripSpacePointCalibrationDetails(
+            spB.outerStripCalibrationDetails());
 
     std::size_t topDoubletOffset = 0;
     for (auto [topDoublet, topDoubletIndex] :
@@ -260,8 +261,8 @@ class Impl final : public TripletSeedFinder {
           rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1], cosTheta};
 
       std::array<float, 3> rMTransf{};
-      if (!detail::calibrateStripSpacePoint(calM, directionMiddle, rMTransf,
-                                            m_cfg.toleranceParam)) {
+      if (!detail::calibrateOuterStripSpacePoint(
+              directionMiddle, calM, rMTransf, m_cfg.toleranceParam)) {
         continue;
       }
 
@@ -278,8 +279,8 @@ class Impl final : public TripletSeedFinder {
           zDirectionMiddle};
 
       std::array<float, 3> rBTransf{};
-      if (!detail::calibrateStripSpacePoint(calB, directionBottom, rBTransf,
-                                            m_cfg.toleranceParam)) {
+      if (!detail::calibrateOuterStripSpacePoint(
+              directionBottom, calB, rBTransf, m_cfg.toleranceParam)) {
         continue;
       }
 
@@ -293,12 +294,12 @@ class Impl final : public TripletSeedFinder {
 
       const ConstSpacePointProxy2 spT =
           spacePoints[topDoublet.spacePointIndex()];
-      const StripSpacePointCalibrationDetailsDerived calT =
-          detail::deriveStripSpacePointCalibrationDetails(
-              spT.stripCalibrationDetails());
+      const OuterStripSpacePointCalibrationDetailsDerived calT =
+          detail::deriveOuterStripSpacePointCalibrationDetails(
+              spT.outerStripCalibrationDetails());
       std::array<float, 3> rTTransf{};
-      if (!detail::calibrateStripSpacePoint(calT, directionTop, rTTransf,
-                                            m_cfg.toleranceParam)) {
+      if (!detail::calibrateOuterStripSpacePoint(directionTop, calT, rTTransf,
+                                                 m_cfg.toleranceParam)) {
         continue;
       }
 

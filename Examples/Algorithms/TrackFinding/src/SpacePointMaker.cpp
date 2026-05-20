@@ -153,19 +153,20 @@ Acts::Result<void> createStripSpacePoint(
   sp.y() = spacePoint->y();
   sp.z() = spacePoint->z();
   sp.r() = Acts::fastHypot(spacePoint->x(), spacePoint->y());
-  sp.time() = nanf;
+  sp.time() = Acts::NoTime;
   sp.varianceZ() = varZR[0];
   sp.varianceR() = varZR[1];
-  Eigen::Map<Eigen::Vector3f>(sp.stripCalibrationDetails().outerCenter.data()) =
+  Eigen::Map<Eigen::Vector3f>(
+      sp.outerStripCalibrationDetails().outerCenter.data()) =
       outerStripCenter.cast<float>();
   Eigen::Map<Eigen::Vector3f>(
-      sp.stripCalibrationDetails().outerToInnerGapVector.data()) =
+      sp.outerStripCalibrationDetails().innerToOuterSeparation.data()) =
       stripSeparation.cast<float>();
   Eigen::Map<Eigen::Vector3f>(
-      sp.stripCalibrationDetails().outerHalfVector.data()) =
+      sp.outerStripCalibrationDetails().outerHalfVector.data()) =
       outerStripHalfVector.cast<float>();
   Eigen::Map<Eigen::Vector3f>(
-      sp.stripCalibrationDetails().innerHalfVector.data()) =
+      sp.outerStripCalibrationDetails().innerHalfVector.data()) =
       innerStripHalfVector.cast<float>();
 
   return Acts::Result<void>::success();

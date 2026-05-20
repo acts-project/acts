@@ -9,76 +9,76 @@
 #pragma once
 
 #include "Acts/EventData/StripSpacePointCalibrationDetails.hpp"
+#include "Acts/Utilities/detail/StdArrayLinalg.hpp"
 
 #include <cmath>
-#include <span>
 
 namespace Acts::detail {
 
-inline StripSpacePointCalibrationDetailsDerived
-deriveStripSpacePointCalibrationDetails(
-    const StripSpacePointCalibrationDetails& sp) {
-  const auto& oiv = sp.outerToInnerGapVector;
-  const auto& ihv = sp.innerHalfVector;
-  const auto& ohv = sp.outerHalfVector;
+// Intentionally not using Eigen here as there is a noticeable performance
+// (10-20%) penalty for small vector sizes.
 
-  return StripSpacePointCalibrationDetailsDerived{
-      .outerToInnerGapCrossInnerHalfVector = {oiv[1] * ihv[2] - oiv[2] * ihv[1],
-                                              oiv[2] * ihv[0] - oiv[0] * ihv[2],
-                                              oiv[0] * ohv[1] -
-                                                  oiv[1] * ohv[0]},
-      .outerToInnerGapCrossOuterHalfVector = {oiv[1] * ohv[2] - oiv[2] * ohv[1],
-                                              oiv[2] * ohv[0] - oiv[0] * ohv[2],
-                                              oiv[0] * ohv[1] -
-                                                  oiv[1] * ohv[0]},
-      .innerCrossOuterHalfVector = {ihv[1] * ohv[2] - ihv[2] * ohv[1],
-                                    ihv[2] * ohv[0] - ihv[0] * ohv[2],
-                                    ihv[0] * ohv[1] - ihv[1] * ohv[0]},
-      .outerCenter = sp.outerCenter,
-      .outerHalfVector = ohv,
-  };
+inline OuterStripSpacePointCalibrationDetailsDerived
+deriveOuterStripSpacePointCalibrationDetails(const std::array<float, 3>& ihv,
+                                             const std::array<float, 3>& ohv,
+                                             const std::array<float, 3>& iosv,
+                                             const std::array<float, 3>& oc) {
+  OuterStripSpacePointCalibrationDetailsDerived result{};
+  result.innerCrossOuterHalfVector = stdArrayCross(ihv, ohv);
+  result.innerToOuterSeparationCrossOuterHalfVector = stdArrayCross(iosv, ohv);
+  result.innerToOuterSeparationCrossInnerHalfVector = stdArrayCross(iosv, ihv);
+  result.outerCenter = oc;
+  result.outerHalfVector = ohv;
+  return result;
 }
 
-inline bool calibrateStripSpacePoint(
-    const StripSpacePointCalibrationDetailsDerived& sp,
-    std::span<const float, 3> direction, std::span<float, 3> calibrated,
-    float tolerance) {
-  const auto& ihvCrossOhv = sp.innerCrossOuterHalfVector;
-  const auto& oivCrossOhv = sp.outerToInnerGapCrossOuterHalfVector;
-  const auto& oivCrossIhv = sp.outerToInnerGapCrossInnerHalfVector;
+inline OuterStripSpacePointCalibrationDetailsDerived
+deriveOuterStripSpacePointCalibrationDetails(
+    const OuterStripSpacePointCalibrationDetails& sp) {
+  return deriveOuterStripSpacePointCalibrationDetails(
+      sp.innerHalfVector, sp.outerHalfVector, sp.innerToOuterSeparation,
+      sp.outerCenter);
+}
 
+inline bool calibrateOuterStripSpacePoint(
+    const std::array<float, 3>& direction,
+    const std::array<float, 3>& ihvCrossOhv,
+    const std::array<float, 3>& iosvCrossOhv,
+    const std::array<float, 3>& iosvCrossIhv, const std::array<float, 3>& oc,
+    const std::array<float, 3>& ohv, std::array<float, 3>& calibrated,
+    const float tolerance) {
   // scale = innerStripHalfVector dot (outerStripHalfVector cross direction)
-  const float scale = direction[0] * ihvCrossOhv[0] +
-                      direction[1] * ihvCrossOhv[1] +
-                      direction[2] * ihvCrossOhv[2];
+  const float scale = stdArrayDot(direction, ihvCrossOhv);
 
-  // sInner = outerToInnerGapVector dot (outerStripHalfVector cross direction)
-  // Check if direction is inside the inner detector element
-  const float sInner = direction[0] * oivCrossOhv[0] +
-                       direction[1] * oivCrossOhv[1] +
-                       direction[2] * oivCrossOhv[2];
+  // sInner = innerToOuterSeparationVector dot (outerStripHalfVector cross
+  // direction) Check if direction is inside the inner detector element
+  const float sInner = stdArrayDot(direction, iosvCrossOhv);
   if (std::abs(sInner) > std::abs(scale) * tolerance) {
     return false;
   }
 
-  // sOuter = outerToInnerGapVector dot (innerStripHalfVector cross direction)
-  // Check if direction is inside the outer detector element
-  const float sOuter = direction[0] * oivCrossIhv[0] +
-                       direction[1] * oivCrossIhv[1] +
-                       direction[2] * oivCrossIhv[2];
+  // sOuter = innerToOuterSeparationVector dot (innerStripHalfVector cross
+  // direction) Check if direction is inside the outer detector element
+  const float sOuter = stdArrayDot(direction, iosvCrossIhv);
   if (std::abs(sOuter) > std::abs(scale) * tolerance) {
     return false;
   }
 
-  const auto& oc = sp.outerCenter;
-  const auto& ohv = sp.outerHalfVector;
-
   // Corrected position using the outer strip center and direction
   const float sOuterNorm = sOuter / scale;
-  calibrated[0] = oc[0] + ohv[0] * sOuterNorm;
-  calibrated[1] = oc[1] + ohv[1] * sOuterNorm;
-  calibrated[2] = oc[2] + ohv[2] * sOuterNorm;
+  calibrated = stdArrayAddScaled(oc, ohv, sOuterNorm);
   return true;
+}
+
+inline bool calibrateOuterStripSpacePoint(
+    const std::array<float, 3>& direction,
+    const OuterStripSpacePointCalibrationDetailsDerived& sp,
+    std::array<float, 3>& calibrated, const float tolerance) {
+  return detail::calibrateOuterStripSpacePoint(
+      direction, sp.innerCrossOuterHalfVector,
+      sp.innerToOuterSeparationCrossOuterHalfVector,
+      sp.innerToOuterSeparationCrossInnerHalfVector, sp.outerCenter,
+      sp.outerHalfVector, calibrated, tolerance);
 }
 
 }  // namespace Acts::detail

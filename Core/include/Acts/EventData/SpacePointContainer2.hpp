@@ -246,13 +246,13 @@ class SpacePointContainer2 {
            "Column 'varianceT' does not exist");
     return m_varianceTColumn->proxy(*this);
   }
-  /// Returns a mutable proxy to the `strip calibration details` column.
-  /// @return A mutable proxy to the `strip calibration details` column.
-  MutableColumnProxy<StripSpacePointCalibrationDetails>
-  stripCalibrationDetailsColumn() noexcept {
-    assert(m_stripCalibrationDetailsColumn.has_value() &&
-           "Column 'stripCalibrationDetails' does not exist");
-    return m_stripCalibrationDetailsColumn->proxy(*this);
+  /// Returns a mutable proxy to the `outer strip calibration details` column.
+  /// @return A mutable proxy to the `outer strip calibration details` column.
+  MutableColumnProxy<OuterStripSpacePointCalibrationDetails>
+  outerStripCalibrationDetailsColumn() noexcept {
+    assert(m_outerStripCalibrationDetailsColumn.has_value() &&
+           "Column 'outerStripCalibrationDetails' does not exist");
+    return m_outerStripCalibrationDetailsColumn->proxy(*this);
   }
   /// Returns a mutable proxy to the `xy` coordinates column.
   /// @return A mutable proxy to the `xy` coordinates column.
@@ -350,13 +350,13 @@ class SpacePointContainer2 {
            "Column 'varianceT' does not exist");
     return m_varianceTColumn->proxy(*this);
   }
-  /// Returns a const proxy to the `strip calibration details` column.
-  /// @return A const proxy to the `strip calibration details` column.
-  ConstColumnProxy<StripSpacePointCalibrationDetails>
-  stripCalibrationDetailsColumn() const noexcept {
-    assert(m_stripCalibrationDetailsColumn.has_value() &&
-           "Column 'stripCalibrationDetails' does not exist");
-    return m_stripCalibrationDetailsColumn->proxy(*this);
+  /// Returns a const proxy to the `outer strip calibration details` column.
+  /// @return A const proxy to the `outer strip calibration details` column.
+  ConstColumnProxy<OuterStripSpacePointCalibrationDetails>
+  outerStripCalibrationDetailsColumn() const noexcept {
+    assert(m_outerStripCalibrationDetailsColumn.has_value() &&
+           "Column 'outerStripCalibrationDetails' does not exist");
+    return m_outerStripCalibrationDetailsColumn->proxy(*this);
   }
   /// Returns a const proxy to the `xy` coordinates column.
   /// @return A const proxy to the `xy` coordinates column.
@@ -619,8 +619,8 @@ class SpacePointContainer2 {
   std::optional<ColumnHolder<float>> m_varianceTColumn;
 
   // strip information
-  std::optional<ColumnHolder<StripSpacePointCalibrationDetails>>
-      m_stripCalibrationDetailsColumn;
+  std::optional<ColumnHolder<OuterStripSpacePointCalibrationDetails>>
+      m_outerStripCalibrationDetailsColumn;
 
   // packed columns
   std::optional<ColumnHolder<std::array<float, 2>>> m_xyColumn;
@@ -648,7 +648,7 @@ class SpacePointContainer2 {
     return std::tuple(
         std::uint32_t{0}, std::uint8_t{0}, std::uint32_t{0}, float{0}, float{0},
         float{0}, float{0}, float{0}, float{NoTime}, float{0}, float{0},
-        float{NoTime}, StripSpacePointCalibrationDetails{},
+        float{NoTime}, OuterStripSpacePointCalibrationDetails{},
         std::array<float, 2>{0, 0}, std::array<float, 2>{0, 0},
         std::array<float, 3>{0, 0, 0}, std::array<float, 4>{0, 0, 0, 0},
         std::array<float, 2>{0, 0});
@@ -656,13 +656,14 @@ class SpacePointContainer2 {
 
   template <typename Self>
   static auto knownColumns(Self &&self) noexcept {
-    return std::tie(
-        self.m_sourceLinkOffsetColumn, self.m_sourceLinkCountColumn,
-        self.m_copiedFromIndexColumn, self.m_xColumn, self.m_yColumn,
-        self.m_zColumn, self.m_rColumn, self.m_phiColumn, self.m_timeColumn,
-        self.m_varianceZColumn, self.m_varianceRColumn, self.m_varianceTColumn,
-        self.m_stripCalibrationDetailsColumn, self.m_xyColumn, self.m_zrColumn,
-        self.m_xyzColumn, self.m_xyzrColumn, self.m_varianceZRColumn);
+    return std::tie(self.m_sourceLinkOffsetColumn, self.m_sourceLinkCountColumn,
+                    self.m_copiedFromIndexColumn, self.m_xColumn,
+                    self.m_yColumn, self.m_zColumn, self.m_rColumn,
+                    self.m_phiColumn, self.m_timeColumn, self.m_varianceZColumn,
+                    self.m_varianceRColumn, self.m_varianceTColumn,
+                    self.m_outerStripCalibrationDetailsColumn, self.m_xyColumn,
+                    self.m_zrColumn, self.m_xyzColumn, self.m_xyzrColumn,
+                    self.m_varianceZRColumn);
   }
   auto knownColumns() & noexcept { return knownColumns(*this); }
   auto knownColumns() const & noexcept { return knownColumns(*this); }

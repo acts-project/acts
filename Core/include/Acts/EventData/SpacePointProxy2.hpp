@@ -222,12 +222,14 @@ class SpacePointProxy2 {
   {
     return accessImpl(m_container->m_varianceTColumn);
   }
-  /// Mutable access to the `strip calibration details` of the space point.
-  /// @return A mutable reference to the `strip calibration details` of the space point.
-  StripSpacePointCalibrationDetails &stripCalibrationDetails() const noexcept
+  /// Mutable access to the `outer strip calibration details` of the space
+  /// point.
+  /// @return A mutable reference to the `outer strip calibration details` of the space point.
+  OuterStripSpacePointCalibrationDetails &outerStripCalibrationDetails()
+      const noexcept
     requires(!ReadOnly)
   {
-    return accessImpl(m_container->m_stripCalibrationDetailsColumn);
+    return accessImpl(m_container->m_outerStripCalibrationDetailsColumn);
   }
   /// Mutable access to the `XY` coordinates of the space point
   /// @return A mutable reference to array containing `[x, y]` coordinates
@@ -320,11 +322,11 @@ class SpacePointProxy2 {
   float varianceT() const noexcept {
     return accessImpl(m_container->m_varianceTColumn);
   }
-  /// Const access to the `strip calibration details` of the space point.
-  /// @return A const reference to the `strip calibration details` of the space point.
-  const StripSpacePointCalibrationDetails &stripCalibrationDetails()
+  /// Const access to the `outer strip calibration details` of the space point.
+  /// @return A const reference to the `outer strip calibration details` of the space point.
+  const OuterStripSpacePointCalibrationDetails &outerStripCalibrationDetails()
       const noexcept {
-    return accessImpl(m_container->m_stripCalibrationDetailsColumn);
+    return accessImpl(m_container->m_outerStripCalibrationDetailsColumn);
   }
   /// Const access to the `XY` coordinates of the space point
   /// @return A const reference to array containing `[x, y]` coordinates

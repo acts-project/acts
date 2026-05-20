@@ -9,22 +9,20 @@
 #include "Acts/SpacePointFormation2/StripSpacePointCalibration.hpp"
 
 #include "Acts/SpacePointFormation2/detail/StripSpacePointCalibrationImpl.hpp"
+#include "Acts/Utilities/detail/StdArrayLinalg.hpp"
 
-Acts::StripSpacePointCalibrationDetailsDerived
-Acts::deriveStripSpacePointCalibrationDetails(
-    const StripSpacePointCalibrationDetails& sp) {
-  return detail::deriveStripSpacePointCalibrationDetails(sp);
+Acts::OuterStripSpacePointCalibrationDetailsDerived
+Acts::deriveOuterStripSpacePointCalibrationDetails(
+    const OuterStripSpacePointCalibrationDetails& sp) {
+  return detail::deriveOuterStripSpacePointCalibrationDetails(sp);
 }
 
-std::optional<Eigen::Vector3f> Acts::calibrateStripSpacePoint(
-    const StripSpacePointCalibrationDetailsDerived& sp,
-    const Eigen::Vector3f& direction, float tolerance) {
-  Eigen::Vector3f calibrated;
-  if (!detail::calibrateStripSpacePoint(
-          sp, std::span<const float, 3>(direction.data(), direction.size()),
-          std::span<float, 3>(calibrated.data(), calibrated.size()),
-          tolerance)) {
-    return std::nullopt;
-  }
-  return calibrated;
+Eigen::Vector3f Acts::calibrateOuterStripSpacePoint(
+    const Eigen::Vector3f& direction,
+    const OuterStripSpacePointCalibrationDetailsDerived& sp) {
+  std::array<float, 3> calibrated{};
+  detail::calibrateOuterStripSpacePoint(detail::stdArrayCopy(direction), sp,
+                                        calibrated,
+                                        std::numeric_limits<float>::infinity());
+  return detail::stdArrayToEigen(calibrated);
 }
