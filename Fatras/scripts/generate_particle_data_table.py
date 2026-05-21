@@ -18,17 +18,6 @@ from pathlib import Path
 
 from particle import Particle
 
-import os
-ADDITIONAL_PARTICLE_CSV = "/tmp/newparticles.csv"
-if os.path.exists(ADDITIONAL_PARTICLE_CSV):
-    print(f"Loading additional particle data from: {ADDITIONAL_PARTICLE_CSV}")
-    particles_before = Particle.all()
-    Particle.load_table(ADDITIONAL_PARTICLE_CSV, append=True)
-    particles_after = Particle.all()
-    new_particles = set(particles_after) - set(particles_before)
-    print(f"Loaded {len(new_particles)} additional particles from {ADDITIONAL_PARTICLE_CSV}")
-    for p in new_particles:
-        print(f"  - {p.name} (PDG ID: {p.pdgid})")
 
 CODE_HEADER = """\
 // This file is part of the ACTS project.
@@ -150,8 +139,24 @@ if __name__ == "__main__":
     p.add_argument(
         "--format", action="store_true", help="Run clang-format on the output."
     )
+    p.add_argument("--additional-particles", type=Path, help="CSV file with additional particles.", default=None)
 
     args = p.parse_args()
+    if args.additional_particles is not None:
+        import os
+        ADDITIONAL_PARTICLE_CSV = args.additional_particles
+        if os.path.exists(ADDITIONAL_PARTICLE_CSV):
+            print(f"Loading additional particle data from: {ADDITIONAL_PARTICLE_CSV}")
+            particles_before = Particle.all()
+            Particle.load_table(ADDITIONAL_PARTICLE_CSV, append=True)
+            particles_after = Particle.all()
+            new_particles = set(particles_after) - set(particles_before)
+            print(f"Loaded {len(new_particles)} additional particles from {ADDITIONAL_PARTICLE_CSV}")
+            for p in new_particles:
+                print(f"  - {p.name} (PDG ID: {p.pdgid})")
+        else:
+            print(f"Warning: Additional particle CSV file not found: {ADDITIONAL_PARTICLE_CSV}")
+
     if args.output is None:
         output_file = sys.stdout
     else:
