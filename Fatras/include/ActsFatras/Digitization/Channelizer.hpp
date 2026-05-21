@@ -61,9 +61,8 @@ class Channelizer {
             ? m_cylinderDrift.toReadout(gctx, surface, thickness,
                                         hit.position(), hit.direction(),
                                         driftDir)
-            : m_surfaceDrift.toReadout(gctx, surface, thickness,
-                                       hit.position(), hit.direction(),
-                                       driftDir);
+            : m_surfaceDrift.toReadout(gctx, surface, thickness, hit.position(),
+                                       hit.direction(), driftDir);
 
     auto maskedSegmentRes = isCylinder
                                 ? m_cylinderMask.apply(surface, driftedSegment)
