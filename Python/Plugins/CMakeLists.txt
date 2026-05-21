@@ -56,5 +56,23 @@ add_plugin_binding_if(Svg Acts::PluginActSVG ACTS_BUILD_PLUGIN_ACTSVG)
 add_plugin_binding_if(TGeo Acts::PluginRoot ACTS_BUILD_PLUGIN_ROOT)
 add_plugin_binding_if(Root Acts::PluginRoot ACTS_BUILD_PLUGIN_ROOT)
 
+# ---- Vecmem: host always, device gated ----
+set(_vecmem_deps vecmem::core)
+
+if(ACTS_ENABLE_CUDA)
+  list(APPEND _vecmem_deps vecmem::cuda)
+endif()
+
+add_plugin_binding_if(Vecmem "${_vecmem_deps}" ACTS_BUILD_PLUGIN_TRACCC)
+
+# ---- Traccc: host always, device gated ----
+set(_traccc_deps "traccc::core;traccc::device_common;traccc::io")
+
+if(ACTS_ENABLE_CUDA)
+  list(APPEND _traccc_deps traccc::cuda)
+endif()
+
+add_plugin_binding_if(Traccc "${_traccc_deps}" ACTS_BUILD_PLUGIN_TRACCC)
+
 # Propagate the list of built plugins to the parent scope
 set(_plugins_built "${_plugins_built}" PARENT_SCOPE)
