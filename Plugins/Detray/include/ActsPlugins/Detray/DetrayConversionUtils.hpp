@@ -24,10 +24,7 @@
 #include <detray/detectors/default_metadata.hpp>
 #include <detray/io/frontend/payloads.hpp>
 
-namespace ActsPlugins {
-
-/// @ingroup detray_plugin
-namespace DetrayConversionUtils {
+namespace ActsPlugins::DetrayConversionUtils {
 
 /// @addtogroup detray_plugin
 /// @{
@@ -117,5 +114,4 @@ std::tuple<Acts::BinUtility, bool> convertBinUtilityTo2D(
 
 /// @}
 
-}  // namespace DetrayConversionUtils
-}  // namespace ActsPlugins
+}  // namespace ActsPlugins::DetrayConversionUtils
