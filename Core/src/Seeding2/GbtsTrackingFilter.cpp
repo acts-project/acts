@@ -12,7 +12,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <cstring>
 #include <iostream>
 
 namespace Acts::Experimental {
