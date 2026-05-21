@@ -66,7 +66,7 @@ build_gnn_cpu:
     - >
       cmake -B build -S src
       --preset=gitlab-ci-gnn
-      -DACTS_GNN_ENABLE_CUDA=OFF
+      -DACTS_ENABLE_CUDA=OFF
       -DACTS_GNN_ENABLE_MODULEMAP=OFF
 
     - ccache -z
@@ -511,6 +511,10 @@ detray_build_cuda:
   artifacts:
     paths:
       - build
+  only:
+    changes:
+      - Detray/*
+      - .gitlab-ci.yml
   script:
       - git clone $CLONE_URL src
       - git -C src checkout $HEAD_SHA
@@ -530,6 +534,10 @@ detray_test_cuda:
   image: ghcr.io/acts-project/ubuntu2404_cuda:82
   needs:
     - detray_build_cuda
+  only:
+    changes:
+      - Detray/*
+      - .gitlab-ci.yml
   script:
     - git clone $CLONE_URL src
     - git -C src checkout $HEAD_SHA
@@ -548,6 +556,10 @@ detray_build_sycl:
   artifacts:
     paths:
       - build
+  only:
+    changes:
+      - Detray/*
+      - .gitlab-ci.yml
   script:
       - git clone $CLONE_URL src
       - git -C src checkout $HEAD_SHA
@@ -567,6 +579,10 @@ detray_test_sycl:
     - detray_build_sycl
   variables:
     ONEAPI_DEVICE_SELECTOR: "*:cpu"
+  only:
+    changes:
+      - Detray/*
+      - .gitlab-ci.yml
   script:
     - git clone $CLONE_URL src
     - git -C src checkout $HEAD_SHA

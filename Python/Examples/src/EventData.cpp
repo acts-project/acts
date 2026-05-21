@@ -12,6 +12,7 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsPython/Utilities/WhiteBoardRegistry.hpp"
 
 #include <pybind11/numpy.h>
@@ -24,10 +25,69 @@
 // by WhiteBoardRegistry. The full specialization takes priority over stl.h's
 // partial specialization regardless of include order.
 PYBIND11_MAKE_OPAQUE(ActsExamples::ProtoTrackContainer)
+// MeasurementSimHitsMap == SimHitMeasurementsMap at the C++ level (both are
+// flat_multimap<std::uint32_t, std::uint32_t>), so only one MAKE_OPAQUE is
+// needed.
+PYBIND11_MAKE_OPAQUE(ActsExamples::MeasurementSimHitsMap)
+PYBIND11_MAKE_OPAQUE(ActsExamples::MeasurementParticlesMap)
+PYBIND11_MAKE_OPAQUE(ActsExamples::ParticleMeasurementsMap)
 
 namespace py = pybind11;
 
 using namespace ActsExamples;
+
+namespace {
+
+template <typename Map>
+auto bindFlatMultimap(py::module& m, const char* name) {
+  auto cls = py::classh<Map>(m, name)
+                 .def(py::init<>())
+                 .def("__len__", &Map::size)
+                 .def(
+                     "__iter__",
+                     [](const Map& self) {
+                       return py::make_iterator(self.begin(), self.end());
+                     },
+                     py::keep_alive<0, 1>())
+                 .def("__contains__",
+                      [](const Map& self, const typename Map::key_type& key) {
+                        return self.find(key) != self.end();
+                      })
+                 .def(
+                     "values_for",
+                     [](const Map& self, const typename Map::key_type& key) {
+                       auto [first, last] = self.equal_range(key);
+                       std::vector<typename Map::mapped_type> result;
+                       for (auto it = first; it != last; ++it) {
+                         result.push_back(it->second);
+                       }
+                       return result;
+                     },
+                     py::arg("key"))
+                 .def(
+                     "insert",
+                     [](Map& self, const typename Map::key_type& key,
+                        const typename Map::mapped_type& value) {
+                       self.emplace(key, value);
+                     },
+                     py::arg("key"), py::arg("value"));
+  ActsPython::WhiteBoardRegistry::registerClass(cls);
+  return cls;
+}
+
+template <typename T>
+void bindIndexMultimapPair(py::module& m, const char* forwardName,
+                           const char* inverseName) {
+  // Bind inverse first so its Python type is registered before being used as
+  // the return type of .invert() on the forward map.
+  bindFlatMultimap<ActsExamples::InverseMultimap<T>>(m, inverseName);
+  auto fwd = bindFlatMultimap<ActsExamples::IndexMultimap<T>>(m, forwardName);
+  fwd.def("invert", [](const ActsExamples::IndexMultimap<T>& self) {
+    return ActsExamples::invertIndexMultimap(self);
+  });
+}
+
+}  // namespace
 
 namespace ActsPython {
 
@@ -383,6 +443,52 @@ void addEventData(py::module& mex) {
               py::keep_alive<0, 1>());
 
   WhiteBoardRegistry::registerClass(measurementContainer);
+
+  // bind measurement subset
+  auto measurementSubset =
+      py::classh<MeasurementSubset>(mex, "MeasurementSubset")
+          .def(py::init(
+                   [](const MeasurementContainer& container,
+                      const std::vector<MeasurementContainer::Index>& indices) {
+                     return MeasurementSubset(container, indices);
+                   }),
+               py::keep_alive<0, 1>(), py::arg("container"), py::arg("indices"))
+          .def("__len__",
+               [](const MeasurementSubset& self) { return self.size(); })
+          .def("__getitem__",
+               [](const MeasurementSubset& self, std::size_t i) {
+                 if (i >= self.size()) {
+                   throw py::index_error("index out of range");
+                 }
+                 return self.at(i);
+               })
+          .def(
+              "__iter__",
+              [](const MeasurementSubset& self) {
+                return py::make_iterator(self.begin(), self.end());
+              },
+              py::keep_alive<0, 1>())
+          .def(
+              "getMeasurement",
+              [](const MeasurementSubset& self,
+                 MeasurementContainer::Index idx) {
+                return self.getMeasurement(idx);
+              },
+              py::arg("index"));
+
+  WhiteBoardRegistry::registerClass(measurementSubset);
+  // MeasurementSimHitsMap and SimHitMeasurementsMap are the same C++ type
+  // (flat_multimap<std::uint32_t, std::uint32_t>) because SimHitIndex == Index
+  // == std::uint32_t. Bind once and alias the second name.
+  auto simHitsMap =
+      bindFlatMultimap<MeasurementSimHitsMap>(mex, "MeasurementSimHitsMap");
+  simHitsMap.def("invert", [](const MeasurementSimHitsMap& self) {
+    return invertIndexMultimap(self);
+  });
+  mex.attr("SimHitMeasurementsMap") = mex.attr("MeasurementSimHitsMap");
+
+  bindIndexMultimapPair<SimBarcode>(mex, "MeasurementParticlesMap",
+                                    "ParticleMeasurementsMap");
 }
 
 }  // namespace ActsPython

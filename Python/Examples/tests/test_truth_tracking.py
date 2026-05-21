@@ -541,6 +541,26 @@ def test_measurement_access(tmp_path, generic_detector_config):
                 )
                 self.measurements.initialize("measurements")
 
+                self.measurementSubset = acts.examples.ReadDataHandle(
+                    self,
+                    acts.examples.MeasurementSubset,
+                    "InputMeasurementSubset",
+                )
+                self.measurementSubset.initialize("measurement_subset")
+                self.simhits_map = acts.examples.ReadDataHandle(
+                    self,
+                    acts.examples.MeasurementSimHitsMap,
+                    "InputMeasurementSimHitsMap",
+                )
+                self.simhits_map.initialize("measurement_simhits_map")
+
+                self.particles_map = acts.examples.ReadDataHandle(
+                    self,
+                    acts.examples.MeasurementParticlesMap,
+                    "InputMeasurementParticlesMap",
+                )
+                self.particles_map.initialize("measurement_particles_map")
+
             def execute(self, context):
                 measurements = self.measurements(context.eventStore)
                 self.logger.info(f"Measurement access, n={len(measurements)}")
@@ -555,6 +575,49 @@ def test_measurement_access(tmp_path, generic_detector_config):
                         self.logger.info(
                             f"Measurement {i} {attr}: {getattr(meas, attr)}"
                         )
+
+                subset = self.measurementSubset(context.eventStore)
+                assert isinstance(subset, acts.examples.MeasurementSubset)
+
+                # Subset from digitization covers all measurements
+                assert len(subset) == len(measurements)
+
+                # Iteration yields ConstVariableBoundMeasurementProxy
+                for meas in subset:
+                    assert isinstance(
+                        meas, acts.examples.ConstVariableBoundMeasurementProxy
+                    )
+
+                # __getitem__ by subset-position matches iteration order
+                for i, meas in enumerate(subset):
+                    by_pos = subset[i]
+                    assert by_pos.index == meas.index
+
+                # getMeasurement by original-container index round-trips correctly
+                for meas in subset:
+                    orig = subset.getMeasurement(meas.index)
+                    assert orig.index == meas.index
+                    assert orig.geometryId.value == meas.geometryId.value
+                sh_map = self.simhits_map(context.eventStore)
+                p_map = self.particles_map(context.eventStore)
+
+                assert len(sh_map) > 0
+                assert len(p_map) > 0
+
+                for meas_idx, simhit_idx in sh_map:
+                    assert isinstance(meas_idx, int)
+                    assert isinstance(simhit_idx, int)
+                    break
+
+                first_key = next(iter(sh_map))[0]
+                assert first_key in sh_map
+                vals = sh_map.values_for(first_key)
+                assert len(vals) > 0
+
+                inv = sh_map.invert()
+                assert isinstance(inv, acts.examples.SimHitMeasurementsMap)
+                assert len(inv) == len(sh_map)
+
                 return acts.examples.ProcessCode.SUCCESS
 
         seq.addAlgorithm(MeasurementAccess())
@@ -608,3 +671,93 @@ def test_measurement_creation():
         ]
 
     assert len(container) == 3
+
+    # Build a subset from indices 0 and 2 and verify it mirrors the container data
+    subset = acts.examples.MeasurementSubset(container, [0, 2])
+    assert len(subset) == 2
+
+    # Iteration covers exactly the selected measurements in order
+    subset_list = list(subset)
+    assert len(subset_list) == 2
+    assert subset_list[0].index == 0
+    assert subset_list[1].index == 2
+
+    # __getitem__ by subset position
+    assert subset[0].index == 0
+    assert subset[1].index == 2
+
+    # getMeasurement by original-container index
+    assert (
+        subset.getMeasurement(0).geometryId.value
+        == meas_properties[0]["geometryId"].value
+    )
+    assert (
+        subset.getMeasurement(2).geometryId.value
+        == meas_properties[2]["geometryId"].value
+    )
+
+    # Measurement data is consistent with the container entries
+    for pos, orig_idx in enumerate([0, 2]):
+        meas = subset[pos]
+        meas_prop = meas_properties[orig_idx]
+        dim = len(meas_prop["indices"])
+        assert meas.geometryId.value == meas_prop["geometryId"].value
+        indices = meas_prop["indices"]
+        assert [meas.subspaceIndices[i] == meas_prop["indices"][i] for i in range(dim)]
+        assert [
+            meas.fullParameters[indices[i]] == meas_prop["parameters"][i]
+            for i in range(dim)
+        ]
+
+
+def test_measurement_map_creation():
+    from acts.examples import (
+        MeasurementParticlesMap,
+        MeasurementSimHitsMap,
+        ParticleMeasurementsMap,
+        SimBarcode,
+        SimHitMeasurementsMap,
+    )
+
+    # MeasurementSimHitsMap: meas 0 → simhits {10, 11}, meas 1 → simhit {20}
+    m = MeasurementSimHitsMap()
+    m.insert(0, 10)
+    m.insert(0, 11)  # same key — multi-map
+    m.insert(1, 20)
+    assert len(m) == 3
+
+    assert 0 in m
+    assert 2 not in m
+
+    vals = m.values_for(0)
+    assert sorted(vals) == [10, 11]
+    assert m.values_for(1) == [20]
+    assert m.values_for(99) == []
+
+    pairs = list(m)
+    assert len(pairs) == 3
+    assert all(isinstance(k, int) and isinstance(v, int) for k, v in pairs)
+
+    inv = m.invert()
+    assert isinstance(inv, SimHitMeasurementsMap)
+    assert len(inv) == 3
+    assert inv.values_for(10) == [0]
+    assert inv.values_for(11) == [0]
+    assert inv.values_for(20) == [1]
+
+    # MeasurementParticlesMap: meas 0 came from two particles, meas 1 from one
+    bc0 = SimBarcode()
+    bc0.particle = 1
+    bc1 = SimBarcode()
+    bc1.particle = 2
+    mp = MeasurementParticlesMap()
+    mp.insert(0, bc0)
+    mp.insert(0, bc1)  # same measurement, two particles
+    mp.insert(1, bc0)
+    assert len(mp) == 3
+
+    assert mp.values_for(0) == [bc0, bc1]
+
+    inv_p = mp.invert()
+    assert isinstance(inv_p, ParticleMeasurementsMap)
+    assert len(inv_p) == 3
