@@ -144,18 +144,18 @@ if __name__ == "__main__":
     args = p.parse_args()
     if args.additional_particles is not None:
         import os
-        ADDITIONAL_PARTICLE_CSV = args.additional_particles
-        if os.path.exists(ADDITIONAL_PARTICLE_CSV):
-            print(f"Loading additional particle data from: {ADDITIONAL_PARTICLE_CSV}")
+        additional_particle_csv = args.additional_particles
+        if os.path.exists(additional_particle_csv):
+            print(f"Loading additional particle data from: {additional_particle_csv}")
             particles_before = Particle.all()
-            Particle.load_table(ADDITIONAL_PARTICLE_CSV, append=True)
+            Particle.load_table(additional_particle_csv, append=True)
             particles_after = Particle.all()
             new_particles = set(particles_after) - set(particles_before)
-            print(f"Loaded {len(new_particles)} additional particles from {ADDITIONAL_PARTICLE_CSV}")
+            print(f"Loaded {len(new_particles)} additional particles from {additional_particle_csv}")
             for p in new_particles:
                 print(f"  - {p.name} (PDG ID: {p.pdgid})")
         else:
-            print(f"Warning: Additional particle CSV file not found: {ADDITIONAL_PARTICLE_CSV}")
+            print(f"Warning: Additional particle CSV file not found: {additional_particle_csv}")
 
     if args.output is None:
         output_file = sys.stdout
