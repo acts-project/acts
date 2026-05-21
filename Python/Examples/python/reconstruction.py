@@ -1488,6 +1488,7 @@ def addKalmanTracks(
     calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
     linkForward: bool = False,
     useJosephFormulation: bool = False,
+    useReferenceTrajectory: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -1502,6 +1503,21 @@ def addKalmanTracks(
         "chi2Cut": float("inf"),
         "useJosephFormulation": useJosephFormulation,
     }
+    fitFunction = acts.examples.makeKalmanFitterFunction(
+        trackingGeometry, field, **kalmanOptions
+    )
+
+    if useReferenceTrajectory:
+        kalmanOptions = {
+            "multipleScattering": multipleScattering,
+            "energyLoss": energyLoss,
+            "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
+            "level": customLogLevel(),
+            "useJosephFormulation": useJosephFormulation,
+        }
+        fitFunction = acts.examples.makeKalmanReferenceTrajectoryFitterFunction(
+            trackingGeometry, field, **kalmanOptions
+        )
 
     fitAlg = acts.examples.TrackFittingAlgorithm(
         level=customLogLevel(),
@@ -1511,9 +1527,7 @@ def addKalmanTracks(
         inputClusters=clusters if clusters is not None else "",
         outputTracks="kf_tracks",
         pickTrack=-1,
-        fit=acts.examples.makeKalmanFitterFunction(
-            trackingGeometry, field, **kalmanOptions
-        ),
+        fit=fitFunction,
         calibrator=calibrator,
         linkForward=linkForward,
     )
@@ -1988,20 +2002,11 @@ def addGnn(
         trackBuilder: Track building stage (BoostTrackBuilding, CudaTrackBuilding, etc.)
         nodeFeatures: List of node features to extract from space points/clusters
         featureScales: Scaling factors for each feature
-        trackingGeometry: Optional tracking geometry for creating space points
-        geometrySelection: Optional geometry selection file for space point creation
         inputSpacePoints: Name of input space point collection (default: "spacepoints")
         inputClusters: Name of input cluster collection (default: "")
         outputDirRoot: Optional output directory for performance ROOT files
         device: acts.gnn.Device to run the GNN pipeline on (default: acts.gnn.Device.Cuda())
         logLevel: Logging level
-
-    Note:
-        The trackingGeometry parameter serves two distinct purposes depending on the workflow:
-        1. Space point creation: When provided along with geometrySelection, creates space points
-           from measurements using SpacePointMaker (typical for simulation workflows)
-        2. Module map usage: Some graph constructors (e.g., ModuleMapCuda) require
-           trackingGeometry to map module IDs even when using pre-existing space points
     """
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
