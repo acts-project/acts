@@ -25,6 +25,8 @@
 #include <cstddef>
 #include <numbers>
 
+namespace ActsFatras {
+
 namespace {
 
 /// Helper method to check if an intersection is good.
@@ -54,29 +56,27 @@ void checkIntersection(std::vector<Acts::Intersection2D>& intersections,
 /// @param firstInside Indicator if the first is inside or not
 ///
 /// @return a new Segment (clipped) wrapped in a result or error_code
-Acts::Result<ActsFatras::PlanarSurfaceMask::Segment2D> maskAndReturn(
+Acts::Result<PlanarSurfaceMask::Segment2D> maskAndReturn(
     std::vector<Acts::Intersection2D>& intersections,
-    const ActsFatras::PlanarSurfaceMask::Segment2D& segment, bool firstInside) {
+    const PlanarSurfaceMask::Segment2D& segment, bool firstInside) {
   std::ranges::sort(intersections, Acts::Intersection2D::pathLengthOrder);
   if (intersections.size() >= 2) {
-    return ActsFatras::PlanarSurfaceMask::Segment2D{
-        intersections[0].position(), intersections[1].position()};
+    return PlanarSurfaceMask::Segment2D{intersections[0].position(),
+                                        intersections[1].position()};
   } else if (intersections.size() == 1) {
     return (!firstInside
-                ? ActsFatras::PlanarSurfaceMask::Segment2D{intersections[0]
-                                                               .position(),
-                                                           segment[1]}
-                : ActsFatras::PlanarSurfaceMask::Segment2D{
-                      segment[0], intersections[0].position()});
+                ? PlanarSurfaceMask::Segment2D{intersections[0].position(),
+                                               segment[1]}
+                : PlanarSurfaceMask::Segment2D{segment[0],
+                                               intersections[0].position()});
   }
-  return ActsFatras::DigitizationError::MaskingError;
+  return DigitizationError::MaskingError;
 }
 
 }  // anonymous namespace
 
-Acts::Result<ActsFatras::PlanarSurfaceMask::Segment2D>
-ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
-                                     const Segment2D& segment) const {
+Acts::Result<PlanarSurfaceMask::Segment2D> PlanarSurfaceMask::apply(
+    const Acts::Surface& surface, const Segment2D& segment) const {
   auto surfaceType = surface.type();
 
   // Plane surface section -------------------
@@ -154,8 +154,7 @@ ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
   return DigitizationError::UndefinedSurface;
 }
 
-Acts::Result<ActsFatras::PlanarSurfaceMask::Segment2D>
-ActsFatras::PlanarSurfaceMask::polygonMask(
+Acts::Result<PlanarSurfaceMask::Segment2D> PlanarSurfaceMask::polygonMask(
     const std::vector<Acts::Vector2>& vertices, const Segment2D& segment,
     bool firstInside) const {
   std::vector<Acts::Intersection2D> intersections;
@@ -174,11 +173,9 @@ ActsFatras::PlanarSurfaceMask::polygonMask(
   return maskAndReturn(intersections, segment, firstInside);
 }
 
-Acts::Result<ActsFatras::PlanarSurfaceMask::Segment2D>
-ActsFatras::PlanarSurfaceMask::radialMask(const Acts::RadialBounds& rBounds,
-                                          const Segment2D& segment,
-                                          const Segment2D& polarSegment,
-                                          bool firstInside) const {
+Acts::Result<PlanarSurfaceMask::Segment2D> PlanarSurfaceMask::radialMask(
+    const Acts::RadialBounds& rBounds, const Segment2D& segment,
+    const Segment2D& polarSegment, bool firstInside) const {
   double rMin = rBounds.get(Acts::RadialBounds::eMinR);
   double rMax = rBounds.get(Acts::RadialBounds::eMaxR);
   double hPhi = rBounds.get(Acts::RadialBounds::eHalfPhiSector);
@@ -248,10 +245,9 @@ ActsFatras::PlanarSurfaceMask::radialMask(const Acts::RadialBounds& rBounds,
   return maskAndReturn(intersections, segment, firstInside);
 }
 
-Acts::Result<ActsFatras::PlanarSurfaceMask::Segment2D>
-ActsFatras::PlanarSurfaceMask::annulusMask(const Acts::AnnulusBounds& aBounds,
-                                           const Segment2D& segment,
-                                           bool firstInside) const {
+Acts::Result<PlanarSurfaceMask::Segment2D> PlanarSurfaceMask::annulusMask(
+    const Acts::AnnulusBounds& aBounds, const Segment2D& segment,
+    bool firstInside) const {
   auto vertices = aBounds.vertices(0);
   Acts::Vector2 moduleOrigin = aBounds.moduleOrigin();
 
@@ -289,3 +285,5 @@ ActsFatras::PlanarSurfaceMask::annulusMask(const Acts::AnnulusBounds& aBounds,
   }
   return maskAndReturn(intersections, segment, firstInside);
 }
+
+}  // namespace ActsFatras

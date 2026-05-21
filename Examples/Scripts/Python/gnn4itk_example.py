@@ -115,7 +115,6 @@ def runGNN4ITk(
         "etaScale": 1.0,
         "gpuDevice": 0,
         "gpuBlocks": 512,
-        "moreParallel": True,
     }
     graphConstructor = ModuleMapCuda(**moduleMapConfig)
 

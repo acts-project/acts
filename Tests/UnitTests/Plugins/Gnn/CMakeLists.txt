@@ -2,7 +2,7 @@ set(unittest_extra_libraries ActsPluginGnn)
 
 add_unittest(GnnBoostTrackBuilding GnnBoostTrackBuildingTests.cpp)
 add_unittest(GnnMetricHookTests GnnMetricHookTests.cpp)
-if(ACTS_GNN_ENABLE_CUDA)
+if(ACTS_ENABLE_CUDA)
     list(APPEND unittest_extra_libraries CUDA::cudart)
     add_unittest(ConnectedComponentsCuda ConnectedComponentCudaTests.cu)
     add_unittest(JunctionRemoval JunctionRemovalTests.cu)
