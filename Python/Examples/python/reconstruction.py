@@ -2002,20 +2002,11 @@ def addGnn(
         trackBuilder: Track building stage (BoostTrackBuilding, CudaTrackBuilding, etc.)
         nodeFeatures: List of node features to extract from space points/clusters
         featureScales: Scaling factors for each feature
-        trackingGeometry: Optional tracking geometry for creating space points
-        geometrySelection: Optional geometry selection file for space point creation
         inputSpacePoints: Name of input space point collection (default: "spacepoints")
         inputClusters: Name of input cluster collection (default: "")
         outputDirRoot: Optional output directory for performance ROOT files
         device: acts.gnn.Device to run the GNN pipeline on (default: acts.gnn.Device.Cuda())
         logLevel: Logging level
-
-    Note:
-        The trackingGeometry parameter serves two distinct purposes depending on the workflow:
-        1. Space point creation: When provided along with geometrySelection, creates space points
-           from measurements using SpacePointMaker (typical for simulation workflows)
-        2. Module map usage: Some graph constructors (e.g., ModuleMapCuda) require
-           trackingGeometry to map module IDs even when using pre-existing space points
     """
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
