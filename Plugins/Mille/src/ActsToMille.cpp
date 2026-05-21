@@ -181,14 +181,16 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
   // poorly constrained directions
   double regCondCutOff = 1e-10;
   double regHugeLeading = 100.;
+  double regOnDiag = 1.e-10;
   if (removeUnconstrainedTrackPar) {
     // if we trim the poorly constrained directions ahead of time,
     // we can be a bit less aggressive in the regularisation
     regCondCutOff = -1;
     regHugeLeading = -1.;
+    regOnDiag = 1.e-9;
   }
-  const Acts::DynamicMatrix regularisedCov =
-      regulariseCovariance(updatedCovariance, regCondCutOff, regHugeLeading);
+  const Acts::DynamicMatrix regularisedCov = regulariseCovariance(
+      updatedCovariance, regCondCutOff, regHugeLeading, regOnDiag);
 
   // now we can get the piece of the weight matrix not already covered by
   // the measurement uncertainties
@@ -362,11 +364,9 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
       // find out where to book it in the ACTS matrix
       unsigned int localIndex = measurement.localLabels[iLoc] - firstLocal;
       // if we are a surface measurement, fill the projection matrix
-      if (isMeasurementOnSurface)
-        targetState.projectionMatrix(iMeas, localIndex) =
       if (isMeasurementOnSurface) {
         targetState.projectionMatrix(iMeas, localIndex) =
-          measurement.localDerivatives[iLoc];
+            measurement.localDerivatives[iLoc];
       }
       // now fill the covariance matrix by looping over all products of (local)
       // derivatives
@@ -394,9 +394,9 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
     // increment the measurement-on-surface index every time we finish
     // processing one.
     if (isMeasurementOnSurface)
-    if (isMeasurementOnSurface) {
-      ++iMeas;
-    }
+      if (isMeasurementOnSurface) {
+        ++iMeas;
+      }
   }
 
   /// (carefully) invert the covariance - upstairs, we filled it as a weight
