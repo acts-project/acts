@@ -220,7 +220,7 @@ ProcessCode RootSpacePointWriter::writeT(
         m_fake = true;
         for (auto it1 = p1b; it1 != p1e; ++it1) {
           for (auto it2 = p2b; it2 != p2e; ++it2) {
-            if (*it1 == *it2) {
+            if (it1->second == it2->second) {
               m_fake = false;
             }
           }

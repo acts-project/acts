@@ -54,7 +54,7 @@ class RootSpacePointWriter final : public WriterT<SpacePointContainer> {
     /// Output file access mode.
     std::string fileMode = "RECREATE";
     /// Name of the tree within the output file.
-    std::string treeName = "spacepoints";
+    std::string treeName = "spacePoints";
   };
 
   /// Construct the particle writer.

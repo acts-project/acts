@@ -130,7 +130,7 @@ def createStripSpacePoints(
 
     s.addWriter(
         RootSpacePointPerformanceWriter(
-            level=acts.logging.VERBOSE,
+            level=acts.logging.INFO,
             inputSpacePoints="space_points",
             inputMeasurements="measurements",
             inputSimHits="simhits",
