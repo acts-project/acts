@@ -364,7 +364,10 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
       // if we are a surface measurement, fill the projection matrix
       if (isMeasurementOnSurface)
         targetState.projectionMatrix(iMeas, localIndex) =
-            measurement.localDerivatives[iLoc];
+      if (isMeasurementOnSurface) {
+        targetState.projectionMatrix(iMeas, localIndex) =
+          measurement.localDerivatives[iLoc];
+      }
       // now fill the covariance matrix by looping over all products of (local)
       // derivatives
       for (std::size_t jLoc = 0; jLoc < measurement.localLabels.size();
@@ -391,7 +394,9 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
     // increment the measurement-on-surface index every time we finish
     // processing one.
     if (isMeasurementOnSurface)
+    if (isMeasurementOnSurface) {
       ++iMeas;
+    }
   }
 
   /// (carefully) invert the covariance - upstairs, we filled it as a weight
