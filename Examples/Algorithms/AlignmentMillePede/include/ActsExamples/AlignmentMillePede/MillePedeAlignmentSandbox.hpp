@@ -76,6 +76,18 @@ class MillePedeAlignmentSandbox final : public IAlgorithm {
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
     // modules to fix in the alignment to suppress global movements
     std::set<Acts::GeometryIdentifier> fixModules;
+
+    /// If true, will modify the track fit to exclude track parameters that
+    /// are not constrained in the input track
+    bool discardUnconstrainedTrackPar = true;
+
+    /// output file name to use when running the internal solver.
+    /// Setting this to an empty string will skip the step.
+    std::string outFileInternalSolving = "";
+
+    /// output file name to use for performing decomposition analysis.
+    /// Setting this to an empty string will skip the step.
+    std::string outFileDecomposition = "";
   };
 
   /// Constructor of the sandbox algorithm
@@ -83,6 +95,8 @@ class MillePedeAlignmentSandbox final : public IAlgorithm {
   /// @param level is the logging level
   explicit MillePedeAlignmentSandbox(
       Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
+
+  ProcessCode initialize() override;
 
   /// Framework execute method of the sandbox algorithm
   ///
@@ -98,6 +112,12 @@ class MillePedeAlignmentSandbox final : public IAlgorithm {
   /// configuration instance
   Config m_cfg;
 
+  /// check if we need to run internal solving
+  bool needInternalSolving() const;
+
+  /// solve using the baseline ACTS infrastructure
+  ProcessCode solveInternal();
+
   /// measurement container containing the measurements on the input tracks
   /// below
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
@@ -111,6 +131,13 @@ class MillePedeAlignmentSandbox final : public IAlgorithm {
   std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeometry;
   /// the Mille record instance for writing our alignment info.
   std::unique_ptr<Mille::MilleRecord> m_milleOut = nullptr;
+  mutable std::vector<ActsAlignment::detail::TrackAlignmentState>
+      m_alignmentStates;
+
+  std::unordered_map<const Acts::Surface*, std::size_t> m_indexedAlignSurfaces;
+  const Acts::Surface* m_firstSurf = nullptr;
+
+  std::mutex m_mx_addState;
 };
 
 }  // namespace ActsExamples
