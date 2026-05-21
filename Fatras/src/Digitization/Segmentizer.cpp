@@ -11,20 +11,17 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
 #include <cmath>
-#include <memory>
 #include <span>
 
-std::vector<ActsFatras::Segmentizer::ChannelSegment>
-ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
-                                  const Acts::Surface& surface,
-                                  const Acts::BinUtility& segmentation,
-                                  const Segment2D& segment) const {
+namespace ActsFatras {
+
+std::vector<Segmentizer::ChannelSegment> Segmentizer::segments(
+    const Acts::GeometryContext& geoCtx, const Acts::Surface& surface,
+    const Acts::BinUtility& segmentation, const Segment2D& segment) const {
   // Return if the segmentation is not two-dimensional
   // (strips need to have one bin along the strip)
   if (segmentation.dimensions() != 2) {
@@ -168,3 +165,5 @@ ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
 
   return cSegments;
 }
+
+}  // namespace ActsFatras
