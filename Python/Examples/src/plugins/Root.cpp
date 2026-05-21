@@ -253,7 +253,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootSpacePointWriter, root, "RootSpacePointWriter", inputSpacePoints,
-        inputMeasurementParticlesMap, filePath, fileMode, treeName);
+        inputSimHits, inputMeasurementParticlesMap, inputMeasurementSimHitsMap,
+        trackingGeometry, filePath, fileMode, treeName);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootSpacePointPerformanceWriter, root,

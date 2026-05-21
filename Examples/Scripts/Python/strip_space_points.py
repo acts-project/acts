@@ -120,7 +120,10 @@ def createStripSpacePoints(
         RootSpacePointWriter(
             level=acts.logging.INFO,
             inputSpacePoints="space_points",
+            inputSimHits="simhits",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
             inputMeasurementParticlesMap="measurement_particles_map",
+            trackingGeometry=trackingGeometry,
             filePath=str(outputDir / "strip_space_points.root"),
         )
     )
