@@ -24,7 +24,7 @@ cffi==2.0.0
     # via cryptography
 charset-normalizer==3.4.7
     # via requests
-click==8.3.3
+click==8.4.0
     # via typer
 cryptography==48.0.0
     # via pyjwt
@@ -42,7 +42,7 @@ fsspec==2026.4.0
     # via -r docs/old/requirements.in
 gidgethub==5.4.0
     # via -r docs/old/requirements.in
-idna==3.13
+idna==3.15
     # via
     #   requests
     #   yarl
@@ -60,7 +60,7 @@ markdown-it-py==3.0.0
     #   rich
 markupsafe==3.0.3
     # via jinja2
-mdit-py-plugins==0.6.0
+mdit-py-plugins==0.6.1
     # via myst-parser
 mdurl==0.1.2
     # via markdown-it-py
@@ -92,7 +92,7 @@ python-dotenv==1.2.2
     # via -r docs/old/requirements.in
 pyyaml==6.0.3
     # via myst-parser
-requests==2.33.1
+requests==2.34.2
     # via sphinx
 rich==15.0.0
     # via

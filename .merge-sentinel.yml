@@ -33,5 +33,5 @@ rules:
      - "develop/*"
     paths:
      - "Detray/*"
-    required_checks:
+    required_pattern:
      - "Detray / *"
