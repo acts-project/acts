@@ -444,6 +444,39 @@ void addEventData(py::module& mex) {
 
   WhiteBoardRegistry::registerClass(measurementContainer);
 
+  // bind measurement subset
+  auto measurementSubset =
+      py::classh<MeasurementSubset>(mex, "MeasurementSubset")
+          .def(py::init(
+                   [](const MeasurementContainer& container,
+                      const std::vector<MeasurementContainer::Index>& indices) {
+                     return MeasurementSubset(container, indices);
+                   }),
+               py::keep_alive<0, 1>(), py::arg("container"), py::arg("indices"))
+          .def("__len__",
+               [](const MeasurementSubset& self) { return self.size(); })
+          .def("__getitem__",
+               [](const MeasurementSubset& self, std::size_t i) {
+                 if (i >= self.size()) {
+                   throw py::index_error("index out of range");
+                 }
+                 return self.at(i);
+               })
+          .def(
+              "__iter__",
+              [](const MeasurementSubset& self) {
+                return py::make_iterator(self.begin(), self.end());
+              },
+              py::keep_alive<0, 1>())
+          .def(
+              "getMeasurement",
+              [](const MeasurementSubset& self,
+                 MeasurementContainer::Index idx) {
+                return self.getMeasurement(idx);
+              },
+              py::arg("index"));
+
+  WhiteBoardRegistry::registerClass(measurementSubset);
   // MeasurementSimHitsMap and SimHitMeasurementsMap are the same C++ type
   // (flat_multimap<std::uint32_t, std::uint32_t>) because SimHitIndex == Index
   // == std::uint32_t. Bind once and alias the second name.
