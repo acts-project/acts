@@ -33,6 +33,8 @@ namespace ActsPlugins::DetrayGeometryConverter {
 
 /// @brief conversion method from ACTS TrackingGeometry to detray detector
 /// @tparam metadata_t the detector metadata type
+///
+/// @param mr the memory resource to use for the detray detector construction
 /// @param gctx the geometry context
 /// @param trackingGeometry the ACTS tracking geometry to convert
 /// @param beampipeVolumeName the beampipe volume name
