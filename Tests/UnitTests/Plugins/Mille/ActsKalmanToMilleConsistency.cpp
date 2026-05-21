@@ -101,7 +101,11 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanToMille) {
   auto milleRecord = Mille::spawnMilleRecord("myRecord.root", true);
 
   const auto& alignState = evaluateRes.value();
-  ActsPlugins::ActsToMille::dumpToMille(alignState, *milleRecord);
+
+  // here we test the case where the unconstrained track params are *not*
+  // removed, to achieve equality even when the time coordinate is not
+  // constrained.
+  ActsPlugins::ActsToMille::dumpToMille(alignState, *milleRecord, false);
 
   // trigger file close by destroying the Mille record
   milleRecord->flushOutputFile();
