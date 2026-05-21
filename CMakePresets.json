@@ -154,6 +154,8 @@
                 "ACTS_BUILD_PLUGIN_ARROW": "OFF",
                 "ACTS_BUILD_EXAMPLES_PARQUET": "OFF",
                 "ACTS_USE_SYSTEM_GBL": "OFF",
+                "ACTS_USE_SYSTEM_MILLE": "OFF",
+                "ACTS_USE_SYSTEM_MP2": "OFF",
                 "ACTS_USE_SYSTEM_PYBIND11": "OFF"
             }
         },
