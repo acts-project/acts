@@ -60,7 +60,7 @@ add_plugin_binding_if(Root Acts::PluginRoot ACTS_BUILD_PLUGIN_ROOT)
 set(_vecmem_deps vecmem::core)
 
 if(ACTS_ENABLE_CUDA)
-  list(APPEND _vecmem_deps vecmem::cuda)
+    list(APPEND _vecmem_deps vecmem::cuda)
 endif()
 
 add_plugin_binding_if(Vecmem "${_vecmem_deps}" ACTS_BUILD_PLUGIN_TRACCC)
@@ -69,7 +69,7 @@ add_plugin_binding_if(Vecmem "${_vecmem_deps}" ACTS_BUILD_PLUGIN_TRACCC)
 set(_traccc_deps traccc::core traccc::device_common traccc::io)
 
 if(ACTS_ENABLE_CUDA)
-  list(APPEND _traccc_deps traccc::cuda)
+    list(APPEND _traccc_deps traccc::cuda)
 endif()
 
 add_plugin_binding_if(Traccc "${_traccc_deps}" ACTS_BUILD_PLUGIN_TRACCC)
