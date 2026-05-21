@@ -3,8 +3,8 @@ acts_add_library(
     src/Digitization/Channelizer.cpp
     src/Digitization/Segmentizer.cpp
     src/Digitization/DigitizationError.cpp
-    src/Digitization/PlanarSurfaceMask.cpp
-    src/Digitization/PlanarSurfaceDrift.cpp
+    src/Digitization/SurfaceMask.cpp
+    src/Digitization/SurfaceDrift.cpp
     src/EventData/Particle.cpp
     src/EventData/SimulationOutcome.cpp
     src/EventData/GenerationProcess.cpp

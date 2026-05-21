@@ -21,7 +21,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "ActsFatras/Digitization/PlanarSurfaceMask.hpp"
+#include "ActsFatras/Digitization/SurfaceMask.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <array>
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(PlaneMaskRectangleBounds) {
   auto planeSurface = Surface::makeShared<PlaneSurface>(Transform3::Identity(),
                                                         rectangleBounds);
 
-  PlanarSurfaceMask psm;
+  SurfaceMask psm;
 
   /// Case one : one outside
   std::array<Vector2, 2> segment = {Vector2(2.5, -4.5), Vector2(-1., -1.)};
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(DiscMaskRadialBounds) {
   auto discSurface =
       Surface::makeShared<DiscSurface>(Transform3::Identity(), discRadial);
 
-  PlanarSurfaceMask psm;
+  SurfaceMask psm;
 
   /// Case one : one outside R min
   std::array<Vector2, 2> segment = {Vector2(0.5, 1.8), Vector2(0.9, 6.)};
@@ -147,7 +147,7 @@ BOOST_DATA_TEST_CASE(
     startR0, startR1, endR0, endR1, index) {
   auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 
-  PlanarSurfaceMask psm;
+  SurfaceMask psm;
 
   // Test beds with random numbers generated inside
   PlanarSurfaceTestBeds pstd;
