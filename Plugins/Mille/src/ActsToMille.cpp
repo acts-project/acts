@@ -393,10 +393,9 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
     }
     // increment the measurement-on-surface index every time we finish
     // processing one.
-    if (isMeasurementOnSurface)
-      if (isMeasurementOnSurface) {
-        ++iMeas;
-      }
+    if (isMeasurementOnSurface) {
+      ++iMeas;
+    }
   }
 
   /// (carefully) invert the covariance - upstairs, we filled it as a weight
