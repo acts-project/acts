@@ -179,8 +179,16 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
 
   // regularise the (full) Kalman covariance. This is needed to stabilise
   // poorly constrained directions
+  double regCondCutOff = 1e-10;
+  double regHugeLeading = 100.;
+  if (removeUnconstrainedTrackPar) {
+    // if we trim the poorly constrained directions ahead of time,
+    // we can be a bit less aggressive in the regularisation
+    regCondCutOff = -1;
+    regHugeLeading = -1.;
+  }
   const Acts::DynamicMatrix regularisedCov =
-      regulariseCovariance(updatedCovariance, -1, -1, 1.e-9);
+      regulariseCovariance(updatedCovariance, regCondCutOff, regHugeLeading);
 
   // now we can get the piece of the weight matrix not already covered by
   // the measurement uncertainties
