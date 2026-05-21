@@ -22,8 +22,5 @@ if(ACTS_BUILD_PLUGIN_ROOT)
         PRIVATE ROOT::Tree ROOT::RIO
     )
 
-    set_tests_properties(
-        ActsUnitTestStrawLineFitterTest
-        PROPERTIES LABELS "slow"
-    )
+    set_tests_properties(StrawLineFitterTest PROPERTIES LABELS "slow")
 endif()
