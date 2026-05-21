@@ -251,8 +251,6 @@ if(DETRAY_SETUP_VECMEM)
     endif()
 endif()
 
-include(vecmem-check-language)
-
 # Set up JSON for I/O
 option(
     DETRAY_SETUP_NLOHMANN

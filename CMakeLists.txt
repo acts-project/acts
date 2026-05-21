@@ -65,7 +65,7 @@ option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" ${ACTS_USE_SYSTEM_
 option(ACTS_USE_SYSTEM_COVFIE "Use a system-provided covfie installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_SETUP_COVFIE "If we want to set up covfie" ON)
 option(ACTS_USE_SYSTEM_DETRAY "Use a system-provided detray installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_DETRAY "If we want to set up detray" ON)
+option(ACTS_SETUP_DETRAY "If we want to set up detray" OFF)
 option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_SETUP_VECMEM "If we want to set up vecmem" ON)
 option(ACTS_USE_SYSTEM_TRACCC "Use a system-provided traccc installation" ${ACTS_USE_SYSTEM_LIBS})
