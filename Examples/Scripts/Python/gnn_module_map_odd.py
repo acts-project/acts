@@ -208,6 +208,24 @@ def runGnnModuleMap(
         logLevel=acts.logging.INFO,
     )
 
+    protoTracksToSeeds = acts.examples.ProtoTracksToSeeds(
+        level=acts.logging.INFO,
+        inputProtoTracks="gnn-protoTracks",
+        inputSpacePoints="spacepoints",
+        outputSeeds="gnn-seeds",
+        outputProtoTracks="gnn-protoTracks-seeds-filtered",
+    )
+    s.addAlgorithm(protoTracksToSeeds)
+
+    parEstAlg = acts.examples.TrackParamsEstimationAlgorithm(
+        level=acts.logging.INFO,
+        inputSeeds=protoTracksToSeeds.config.outputSeeds,
+        outputTrackParameters="gnn-initial-parameters",
+        trackingGeometry=trackingGeometry,
+        magneticField=field,
+    )
+    s.addAlgorithm(parEstAlg)
+
     s.run()
     return s
 
