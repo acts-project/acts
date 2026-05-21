@@ -12,7 +12,6 @@
 #include <memory>
 #include <string>
 
-#include <traccc/cuda/utils/stream.hpp>
 #include <traccc/utils/memory_resource.hpp>
 
 #if defined(ACTS_ENABLE_CUDA)

@@ -66,7 +66,7 @@ endif()
 add_plugin_binding_if(Vecmem "${_vecmem_deps}" ACTS_BUILD_PLUGIN_TRACCC)
 
 # ---- Traccc: host always, device gated ----
-set(_traccc_deps "traccc::core;traccc::device_common;traccc::io")
+set(_traccc_deps traccc::core traccc::device_common traccc::io)
 
 if(ACTS_ENABLE_CUDA)
   list(APPEND _traccc_deps traccc::cuda)
