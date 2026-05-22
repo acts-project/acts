@@ -30,7 +30,7 @@ namespace Acts::Experimental {
 				int depth=3;
 			};
 			struct State{
-				Frustum3 frustum=Frustum3(Vector3::Zero(),Vector3::Zero(),std::numbers::pi/4);
+				Frustum3 frustum=Frustum3(Vector3::Zero(),Vector3::Zero(),std::numbers::pi/2);
 			};
 
 			/// Main constructor, which takes the top-level volume and builds the octree
