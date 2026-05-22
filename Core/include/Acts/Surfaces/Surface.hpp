@@ -243,7 +243,8 @@ class Surface : public virtual GeometryObject,
   /// this is provided by a shared pointer
   ///
   /// @param material Material description associated to this surface
-  void assignSurfaceMaterial(std::shared_ptr<const ISurfaceMaterial> material);
+  virtual void assignSurfaceMaterial(
+      std::shared_ptr<const ISurfaceMaterial> material);
 
   /// Assign whether the surface is sensitive
   /// @param isSensitive Boolean flag to set sensitivity

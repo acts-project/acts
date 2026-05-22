@@ -281,7 +281,8 @@ class CylinderSurface : public RegularSurface {
       bool externalRotation, const Logger& logger = getDummyLogger()) const;
 
   /// @copydoc Surface::assignSurfaceMaterial
-  void assignSurfaceMaterial(std::shared_ptr<const ISurfaceMaterial> material);
+  void assignSurfaceMaterial(
+      std::shared_ptr<const ISurfaceMaterial> material) override;
 
  protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
