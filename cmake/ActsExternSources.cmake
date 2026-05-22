@@ -52,7 +52,7 @@ mark_as_advanced(ACTS_MILLE_SOURCE)
 # translate version string to the historical GBL release naming convention
 string(REPLACE "." "-" _acts_gbl_release_string ${_acts_gbl_version})
 set(ACTS_GBL_SOURCE
-    "URL;https://gitlab.desy.de/millepede/general-broken-lines/-/archive/V${_acts_gbl_release_string}/general-broken-lines-V${_acts_gbl_release_string}.tar.gz;URL_HASH;SHA256=e5361f8f3862f1567da43c965065f21b8ef7987568e65a50b91b300b40386af3"
+    "URL;https://gitlab.desy.de/millepede/general-broken-lines/-/archive/V${_acts_gbl_release_string}/general-broken-lines-V${_acts_gbl_release_string}.tar.gz;URL_HASH;SHA256=e40401a77a828c81a9217d8df3201e7712ac86b4fd5058d526ae1e1f6664304f"
     CACHE STRING
     "Source to take General Broken Lines (GBL) from"
 )
