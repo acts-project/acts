@@ -565,19 +565,6 @@ void CylinderSurface::assignSurfaceBounds(
   m_bounds = std::move(newBounds);
 }
 
-const std::vector<std::vector<AxisDirection>>&
-CylinderSurface::supportedMaterialAxesList() const {
-  static const std::vector<std::vector<AxisDirection>> supportedAxes{
-      {},
-      {AxisDirection::AxisZ},
-      {AxisDirection::AxisRPhi},
-      {AxisDirection::AxisRPhi, AxisDirection::AxisZ},
-      // support for legacy representation
-      {AxisDirection::AxisPhi},
-      {AxisDirection::AxisPhi, AxisDirection::AxisZ}};
-  return supportedAxes;
-}
-
 void CylinderSurface::assignSurfaceMaterial(
     std::shared_ptr<const ISurfaceMaterial> material) {
   // Convert legacy binned materials with phi or phi/z binning to the new rPhi
@@ -586,7 +573,7 @@ void CylinderSurface::assignSurfaceMaterial(
           dynamic_cast<const BinnedSurfaceMaterial*>(material.get());
       binnedMaterial != nullptr) {
     const std::vector<AxisDirection>& originalMaterialAxes =
-        binnedMaterial->materialAxisDirections();
+        binnedMaterial->localAxisDirections();
     const BinUtility& originalBinUtility = binnedMaterial->binUtility();
     const MaterialSlabMatrix& originalMaterialMatrix =
         binnedMaterial->fullMaterial();

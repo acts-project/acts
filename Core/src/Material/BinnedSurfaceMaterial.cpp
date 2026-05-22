@@ -22,16 +22,9 @@ BinnedSurfaceMaterial::BinnedSurfaceMaterial(const BinUtility& binUtility,
                                              double splitFactor,
                                              MappingType mappingType)
     : ISurfaceMaterial(splitFactor, mappingType), m_binUtility(binUtility) {
-  // Catch the cases where the bin Utility is only-1D and add either first or
-  // second dummy dimension
-  if (binUtility.dimensions() == 1u) {
-    auto aDir = binUtility.binningData()[0u].binvalue;
-    // Only act if the axis direction is not already the first one in an allowed
-    // local frame
-    if (aDir != AxisDirection::AxisX && aDir != AxisDirection::AxisR &&
-        aDir != AxisDirection::AxisRPhi) {
-      m_axesSwapped = true;
-    }
+  if (binUtility.dimensions() != 1) {
+    throw std::invalid_argument(
+        "BinnedSurfaceMaterial with material vector only supports 1D binning.");
   }
   m_fullMaterial.push_back(std::move(fullProperties));
 }
@@ -42,7 +35,12 @@ BinnedSurfaceMaterial::BinnedSurfaceMaterial(const BinUtility& binUtility,
                                              MappingType mappingType)
     : ISurfaceMaterial(splitFactor, mappingType),
       m_binUtility(binUtility),
-      m_fullMaterial(std::move(fullProperties)) {}
+      m_fullMaterial(std::move(fullProperties)) {
+  if (binUtility.dimensions() != 2) {
+    throw std::invalid_argument(
+        "BinnedSurfaceMaterial with material matrix only supports 2D binning.");
+  }
+}
 
 BinnedSurfaceMaterial& BinnedSurfaceMaterial::scale(double factor) {
   for (auto& materialVector : m_fullMaterial) {
@@ -55,17 +53,12 @@ BinnedSurfaceMaterial& BinnedSurfaceMaterial::scale(double factor) {
 
 const MaterialSlab& BinnedSurfaceMaterial::materialSlab(
     const Vector2& lp) const {
-  // the first bin
-  std::size_t b0lu = m_axesSwapped ? 1 : 0;
-  std::size_t b1lu = m_axesSwapped ? 0 : 1;
-  std::size_t ibin0 = m_binUtility.bin(lp, b0lu);
-  std::size_t ibin1 =
-      m_binUtility.max(1) != 0u ? m_binUtility.bin(lp, b1lu) : 0;
+  const std::size_t ibin0 = m_binUtility.bin(lp, 0);
+  const std::size_t ibin1 = m_binUtility.bin(lp, 1);
   return m_fullMaterial[ibin1][ibin0];
 }
 
-std::vector<AxisDirection> BinnedSurfaceMaterial::materialAxisDirections()
-    const {
+std::vector<AxisDirection> BinnedSurfaceMaterial::localAxisDirections() const {
   std::vector<AxisDirection> axisDirs;
   for (const auto& bd : m_binUtility.binningData()) {
     axisDirs.push_back(bd.binvalue);
@@ -75,9 +68,8 @@ std::vector<AxisDirection> BinnedSurfaceMaterial::materialAxisDirections()
 
 const MaterialSlab& BinnedSurfaceMaterial::materialSlab(
     const Vector3& gp) const {
-  // the first bin
-  std::size_t ibin0 = m_binUtility.bin(gp, 0);
-  std::size_t ibin1 = m_binUtility.max(1) != 0u ? m_binUtility.bin(gp, 1) : 0;
+  const std::size_t ibin0 = m_binUtility.bin(gp, 0);
+  const std::size_t ibin1 = m_binUtility.bin(gp, 1);
   return m_fullMaterial[ibin1][ibin0];
 }
 

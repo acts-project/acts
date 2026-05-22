@@ -247,6 +247,10 @@ class ConeSurface : public RegularSurface {
  protected:
   std::shared_ptr<const ConeBounds> m_bounds;  ///< bounds (shared)
 
+  std::array<AxisDirection, 2> localAxes() const override {
+    return {AxisDirection::AxisRPhi, AxisDirection::AxisZ};
+  }
+
  private:
   /// Implementation of the intersection solver
   ///
@@ -286,9 +290,6 @@ class ConeSurface : public RegularSurface {
   detail::RealQuadraticEquation intersectionSolver(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction) const;
-
-  const std::vector<std::vector<AxisDirection>>& supportedMaterialAxesList()
-      const final;
 };
 
 static_assert(RegularSurfaceConcept<ConeSurface>,

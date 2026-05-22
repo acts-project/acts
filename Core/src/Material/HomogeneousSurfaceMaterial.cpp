@@ -30,7 +30,7 @@ const MaterialSlab& HomogeneousSurfaceMaterial::materialSlab(
 }
 
 std::vector<Acts::AxisDirection>
-Acts::HomogeneousSurfaceMaterial::materialAxisDirections() const {
+Acts::HomogeneousSurfaceMaterial::localAxisDirections() const {
   return {};
 }
 

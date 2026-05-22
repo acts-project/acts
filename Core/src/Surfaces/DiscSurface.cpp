@@ -544,6 +544,7 @@ std::pair<std::shared_ptr<DiscSurface>, bool> DiscSurface::mergedWith(
                                       axisDirectionName(direction));
   }
 }
+
 const std::shared_ptr<const DiscBounds>& DiscSurface::boundsPtr() const {
   return m_bounds;
 }
@@ -551,16 +552,6 @@ const std::shared_ptr<const DiscBounds>& DiscSurface::boundsPtr() const {
 void DiscSurface::assignSurfaceBounds(
     std::shared_ptr<const DiscBounds> newBounds) {
   m_bounds = std::move(newBounds);
-}
-
-const std::vector<std::vector<AxisDirection>>&
-DiscSurface::supportedMaterialAxesList() const {
-  static const std::vector<std::vector<AxisDirection>> supportedAxes{
-      {},
-      {AxisDirection::AxisR},
-      {AxisDirection::AxisPhi},
-      {AxisDirection::AxisR, AxisDirection::AxisPhi}};
-  return supportedAxes;
 }
 
 }  // namespace Acts

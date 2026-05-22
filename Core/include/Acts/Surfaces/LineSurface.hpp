@@ -309,6 +309,10 @@ class LineSurface : public Surface {
  protected:
   std::shared_ptr<const LineBounds> m_bounds;  ///< bounds (shared)
 
+  std::array<AxisDirection, 2> localAxes() const override {
+    return {AxisDirection::AxisR, AxisDirection::AxisZ};
+  }
+
  private:
   /// helper function to apply the globalToLocal with out transform
   ///
@@ -318,9 +322,6 @@ class LineSurface : public Surface {
   /// @param lposition is the local position to be filled
   bool globalToLocalPlain(const GeometryContext& gctx, const Vector3& position,
                           const Vector3& direction, Vector2& lposition) const;
-
-  const std::vector<std::vector<AxisDirection>>& supportedMaterialAxesList()
-      const final;
 };
 
 }  // namespace Acts

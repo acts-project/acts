@@ -10,11 +10,13 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Alignment.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfacePlacementBase.hpp"
@@ -250,10 +252,30 @@ class Surface : public virtual GeometryObject,
   /// @param isSensitive Boolean flag to set sensitivity
   /// @throw logic_error if the surface is associated to a detector element
   void assignIsSensitive(bool isSensitive);
+
   /// Assign the thickness of the surface in the
   ///        orthogonal dimension
   /// @param thick: Thickness parameter to assign (>=0)
   void assignThickness(double thick);
+
+  /// Return method for full material description of the Surface
+  /// - from local coordinate on the surface
+  ///
+  /// @param lp is the local position used for the (eventual) lookup
+  ///
+  /// @return const MaterialSlab
+  virtual const MaterialSlab& materialSlab(const Vector2& lp) const;
+
+  /// Return method for fully scaled material description of the Surface
+  /// - from local coordinate on the surface
+  ///
+  /// @param lp is the local position used for the (eventual) lookup
+  /// @param pDir is the positive direction through the surface
+  /// @param mode is the material update directive
+  ///
+  /// @return MaterialSlab
+  virtual MaterialSlab materialSlab(const Vector2& lp, Direction pDir,
+                                    MaterialUpdateMode mode) const;
 
   /// The geometric onSurface method
   ///
@@ -535,10 +557,9 @@ class Surface : public virtual GeometryObject,
   virtual std::ostream& toStreamImpl(const GeometryContext& gctx,
                                      std::ostream& sl) const;
 
-  /// Supported material axes for this surface
-  /// @return A list of supported material axes
-  virtual const std::vector<std::vector<AxisDirection>>&
-  supportedMaterialAxesList() const;
+  /// Local axes of the surface
+  /// @return An array of local axes directions
+  virtual std::array<AxisDirection, 2> localAxes() const = 0;
 
   /// Transform3 definition that positions
   /// (translation, rotation) the surface in global space
@@ -554,6 +575,9 @@ class Surface : public virtual GeometryObject,
 
   /// Possibility to attach a material description
   std::shared_ptr<const ISurfaceMaterial> m_surfaceMaterial;
+
+  /// Whether to swap the local coordinates for material lookup
+  bool m_swapMaterialAxes{false};
 
   /// Flag to indicate whether the surface is sensitive
   bool m_isSensitive{false};

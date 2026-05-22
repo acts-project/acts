@@ -119,6 +119,11 @@ class SurfaceStub : public Acts::RegularSurface {
     return Acts::Matrix<2, 3>::Identity();
   }
 
+ protected:
+  std::array<Acts::AxisDirection, 2> localAxes() const override {
+    return {Acts::AxisDirection::AxisX, Acts::AxisDirection::AxisY};
+  }
+
  private:
   /// the bounds of this surface
   std::shared_ptr<const Acts::PlanarBounds> m_bounds;

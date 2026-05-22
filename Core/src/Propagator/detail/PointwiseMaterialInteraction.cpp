@@ -44,8 +44,8 @@ Result<MaterialSlab> detail::evaluateMaterialSlab(
     return lposition.error();
   }
 
-  MaterialSlab slab = material->materialSlab(lposition.value(),
-                                             propagationDirection, updateMode);
+  MaterialSlab slab =
+      surface.materialSlab(lposition.value(), propagationDirection, updateMode);
   slab.scaleThickness(pathCorrection);
   return slab;
 }

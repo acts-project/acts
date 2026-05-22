@@ -450,6 +450,7 @@ Result<void> SurfaceMaterialMapper::mapInteraction(
       if (assignedMaterial[mgID] == 0) {
         auto missedMaterial = mState.accumulatedMaterial.find(mgID);
         if (m_cfg.computeVariance) {
+          // TODO local material position vs local surface position
           missedMaterial->second.trackVariance(
               mSurface.position,
               mState.inputSurfaceMaterial[currentID]->materialSlab(

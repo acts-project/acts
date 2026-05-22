@@ -16,6 +16,7 @@
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <iomanip>
+#include <set>
 #include <utility>
 
 namespace Acts {
@@ -207,12 +208,6 @@ std::ostream& Surface::toStreamImpl(const GeometryContext& gctx,
   return sl;
 }
 
-const std::vector<std::vector<AxisDirection>>&
-Surface::supportedMaterialAxesList() const {
-  static const std::vector<std::vector<AxisDirection>> supportedAxes{{}};
-  return supportedAxes;
-}
-
 std::string Surface::toString(const GeometryContext& gctx) const {
   std::stringstream ss;
   ss << toStream(gctx);
@@ -324,24 +319,45 @@ void Surface::assignThickness(double thick) {
   m_thickness = thick;
 }
 
+const MaterialSlab& Surface::materialSlab(const Vector2& lp) const {
+  if (m_surfaceMaterial == nullptr) {
+    static const MaterialSlab emptyMaterialSlab;
+    return emptyMaterialSlab;
+  }
+  const Vector2 materialLp = m_swapMaterialAxes ? Vector2(lp.y(), lp.x()) : lp;
+  return m_surfaceMaterial->materialSlab(materialLp);
+}
+
+MaterialSlab Surface::materialSlab(const Vector2& lp, Direction pDir,
+                                   MaterialUpdateMode mode) const {
+  if (m_surfaceMaterial == nullptr) {
+    return MaterialSlab();
+  }
+  const Vector2 materialLp = m_swapMaterialAxes ? Vector2(lp.y(), lp.x()) : lp;
+  return m_surfaceMaterial->materialSlab(materialLp, pDir, mode);
+}
+
 void Surface::assignSurfaceMaterial(
     std::shared_ptr<const ISurfaceMaterial> material) {
   if (material != nullptr) {
-    const std::vector<AxisDirection>& materialAxes =
-        material->materialAxisDirections();
-    const auto& supportedAxesList = supportedMaterialAxesList();
-    if (!materialAxes.empty() &&
-        std::ranges::find(supportedAxesList, materialAxes) ==
-            supportedAxesList.end()) {
+    const std::array<AxisDirection, 2> localSurfaceAxes = localAxes();
+    const std::vector<AxisDirection>& localMaterialAxes =
+        material->localAxisDirections();
+
+    if (!std::ranges::includes(
+            std::set(localSurfaceAxes.begin(), localSurfaceAxes.end()),
+            std::set(localMaterialAxes.begin(), localMaterialAxes.end()))) {
       std::string errorMsg =
           "Surface::assignSurfaceMaterial: material axis directions " +
-          axesDirectionName(materialAxes) +
-          " are not supported by this surface. Supported axes are: ";
-      for (const auto& supportedAxes : supportedAxesList) {
-        errorMsg += axesDirectionName(supportedAxes) + " ";
-      }
+          axesDirectionName(localMaterialAxes) +
+          " are not supported by this surface. Supported axes are: " +
+          axesDirectionName(std::vector<AxisDirection>{localSurfaceAxes.begin(),
+                                                       localSurfaceAxes.end()});
       throw std::invalid_argument(errorMsg);
     }
+
+    m_swapMaterialAxes = !localMaterialAxes.empty() &&
+                         localSurfaceAxes[0] != localMaterialAxes[0];
   }
 
   m_surfaceMaterial = std::move(material);

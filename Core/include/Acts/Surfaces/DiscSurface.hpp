@@ -368,9 +368,9 @@ class DiscSurface : public RegularSurface {
  protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)
 
- private:
-  const std::vector<std::vector<AxisDirection>>& supportedMaterialAxesList()
-      const final;
+  std::array<AxisDirection, 2> localAxes() const override {
+    return {AxisDirection::AxisR, AxisDirection::AxisPhi};
+  }
 };
 
 static_assert(RegularSurfaceConcept<DiscSurface>,

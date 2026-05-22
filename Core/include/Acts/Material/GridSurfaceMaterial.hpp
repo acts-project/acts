@@ -15,7 +15,6 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <ostream>
 #include <stdexcept>
@@ -263,8 +262,8 @@ class GridSurfaceMaterialT
     return m_materialAccessor.slab(m_grid, m_boundToGridLocal(lp));
   }
 
-  /// @copydoc ISurfaceMaterial::materialAxisDirections() const
-  std::vector<AxisDirection> materialAxisDirections() const final { return {}; }
+  /// @copydoc ISurfaceMaterial::localAxisDirections() const
+  std::vector<AxisDirection> localAxisDirections() const final { return {}; }
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
   [[deprecated(

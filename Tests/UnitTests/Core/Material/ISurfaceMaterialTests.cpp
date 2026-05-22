@@ -41,9 +41,7 @@ class SurfaceMaterialStub : public ISurfaceMaterial {
     return sl;
   };
 
-  std::vector<AxisDirection> materialAxisDirections() const override {
-    return {};
-  }
+  std::vector<AxisDirection> localAxisDirections() const override { return {}; }
 
   MaterialSlab m_fullMaterial = MaterialSlab::Nothing();
 };

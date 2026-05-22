@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -297,22 +296,14 @@ Matrix<2, 3> LineSurface::localCartesianToBoundLocalDerivative(
 Vector3 LineSurface::lineDirection(const GeometryContext& gctx) const {
   return localToGlobalTransform(gctx).linear().col(2);
 }
+
 const std::shared_ptr<const LineBounds>& LineSurface::boundsPtr() const {
   return m_bounds;
 }
+
 void LineSurface::assignSurfaceBounds(
     std::shared_ptr<const LineBounds> newBounds) {
   m_bounds = std::move(newBounds);
-}
-
-const std::vector<std::vector<AxisDirection>>&
-LineSurface::supportedMaterialAxesList() const {
-  static const std::vector<std::vector<AxisDirection>> supportedAxes{
-      {},
-      {AxisDirection::AxisR},
-      {AxisDirection::AxisZ},
-      {AxisDirection::AxisR, AxisDirection::AxisZ}};
-  return supportedAxes;
 }
 
 }  // namespace Acts

@@ -287,6 +287,10 @@ class CylinderSurface : public RegularSurface {
  protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
 
+  std::array<AxisDirection, 2> localAxes() const override {
+    return {AxisDirection::AxisRPhi, AxisDirection::AxisZ};
+  }
+
  private:
   /// Implementation of the intersection solver
   ///
@@ -324,9 +328,6 @@ class CylinderSurface : public RegularSurface {
   detail::RealQuadraticEquation intersectionSolver(
       const Transform3& transform, const Vector3& position,
       const Vector3& direction) const;
-
-  const std::vector<std::vector<AxisDirection>>& supportedMaterialAxesList()
-      const final;
 };
 
 static_assert(RegularSurfaceConcept<CylinderSurface>,

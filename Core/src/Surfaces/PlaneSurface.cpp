@@ -316,14 +316,4 @@ void PlaneSurface::assignSurfaceBounds(
   m_bounds = std::move(newBounds);
 }
 
-const std::vector<std::vector<AxisDirection>>&
-PlaneSurface::supportedMaterialAxesList() const {
-  static const std::vector<std::vector<AxisDirection>> supportedAxes{
-      {},
-      {AxisDirection::AxisX},
-      {AxisDirection::AxisY},
-      {AxisDirection::AxisX, AxisDirection::AxisY}};
-  return supportedAxes;
-}
-
 }  // namespace Acts
