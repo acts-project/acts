@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Kalman Filter in ACTS — A Deep Dive</title>
+
+<!-- MathJax (CDN) for equation rendering. Requires network access. -->
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']],
+      processEscapes: true
+    },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+  :root {
+    --bg: #fbfbfd;
+    --panel: #ffffff;
+    --text: #1d1d22;
+    --muted: #5b6270;
+    --border: #e3e6ec;
+    --accent: #2d6cdf;
+    --accent-soft: #e8f0ff;
+    --code-bg: #f4f5f8;
+    --code-text: #283042;
+    --pred: #2d6cdf;   /* predicted  */
+    --meas: #e8893b;   /* measurement */
+    --filt: #2aa775;   /* filtered   */
+    --smooth: #9b59b6; /* smoothed   */
+    --shadow: 0 1px 3px rgba(20,25,40,.08), 0 6px 24px rgba(20,25,40,.05);
+  }
+  html[data-theme="dark"] {
+    --bg: #14161c;
+    --panel: #1c1f27;
+    --text: #e7e9ee;
+    --muted: #9aa3b2;
+    --border: #2b2f3a;
+    --accent: #6ea0ff;
+    --accent-soft: #20283a;
+    --code-bg: #161922;
+    --code-text: #cdd3df;
+    --pred: #6ea0ff;
+    --meas: #f0a868;
+    --filt: #4cd0a0;
+    --smooth: #c08adb;
+    --shadow: 0 1px 3px rgba(0,0,0,.4), 0 6px 24px rgba(0,0,0,.3);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header.top {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem;
+    padding: .8rem 1.4rem;
+    background: color-mix(in srgb, var(--panel) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  header.top h1 { font-size: 1.05rem; margin: 0; font-weight: 650; letter-spacing: .1px; }
+  header.top .sub { color: var(--muted); font-size: .8rem; font-weight: 400; }
+  .theme-btn {
+    border: 1px solid var(--border); background: var(--panel); color: var(--text);
+    border-radius: 999px; padding: .4rem .9rem; cursor: pointer; font-size: .85rem;
+    transition: background .15s, border-color .15s;
+  }
+  .theme-btn:hover { border-color: var(--accent); }
+
+  .layout { display: grid; grid-template-columns: 250px minmax(0,1fr); gap: 2rem; max-width: 1180px; margin: 0 auto; padding: 1.6rem 1.4rem 5rem; }
+  nav.toc { position: sticky; top: 72px; align-self: start; max-height: calc(100vh - 96px); overflow-y: auto; font-size: .88rem; padding-right: .4rem; }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; }
+  nav.toc li { margin: .12rem 0; }
+  nav.toc a { display: block; color: var(--muted); text-decoration: none; padding: .28rem .6rem; border-radius: 7px; border-left: 2px solid transparent; transition: background .12s, color .12s; }
+  nav.toc a:hover { background: var(--accent-soft); color: var(--text); }
+  nav.toc a.active { color: var(--accent); background: var(--accent-soft); border-left-color: var(--accent); font-weight: 600; }
+
+  main { min-width: 0; }
+  main h2 { font-size: 1.45rem; margin: 2.4rem 0 .8rem; padding-top: .4rem; scroll-margin-top: 80px; }
+  main h2:first-child { margin-top: 0; }
+  main h3 { font-size: 1.1rem; margin: 1.6rem 0 .5rem; color: var(--text); scroll-margin-top: 80px; }
+  main p { margin: .7rem 0; }
+  main a { color: var(--accent); }
+  .lead { font-size: 1.05rem; color: var(--muted); border-left: 3px solid var(--accent); padding: .4rem 0 .4rem 1rem; margin: 0 0 1.5rem; }
+
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .86em; background: var(--code-bg); color: var(--code-text); padding: .12em .4em; border-radius: 5px; }
+  pre { background: var(--code-bg); color: var(--code-text); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; overflow-x: auto; font-size: .82rem; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: .9rem; }
+  th, td { border: 1px solid var(--border); padding: .55rem .7rem; text-align: left; vertical-align: top; }
+  th { background: var(--accent-soft); font-weight: 600; }
+
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 1.2rem 1.3rem; margin: 1.3rem 0; box-shadow: var(--shadow); }
+  .card > h3 { margin-top: 0; }
+  .widget-label { display: inline-block; font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); font-weight: 700; margin-bottom: .3rem; }
+
+  .callout { border: 1px solid var(--border); border-left: 4px solid var(--accent); background: var(--accent-soft); border-radius: 8px; padding: .7rem 1rem; margin: 1rem 0; font-size: .92rem; }
+
+  /* pills / legend */
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; margin: .4rem 0 1rem; font-size: .85rem; }
+  .legend span { display: inline-flex; align-items: center; gap: .4rem; }
+  .swatch { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+
+  /* Kalman demo */
+  .demo-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+  @media (min-width: 720px) { .demo-grid { grid-template-columns: 1.4fr 1fr; } }
+  canvas { width: 100%; height: 260px; display: block; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; }
+  .controls label { display: block; font-size: .82rem; margin: .55rem 0 .15rem; color: var(--muted); }
+  .controls .val { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  .readout { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-top: .9rem; }
+  .readout div { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: .5rem .6rem; font-size: .82rem; }
+  .readout b { display: block; font-size: 1.15rem; font-variant-numeric: tabular-nums; margin-top: .1rem; }
+
+  /* tabs */
+  .tabs { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .8rem; }
+  .tab-btn { border: 1px solid var(--border); background: var(--panel); color: var(--muted); padding: .45rem .85rem; border-radius: 999px; cursor: pointer; font-size: .85rem; transition: all .12s; }
+  .tab-btn:hover { border-color: var(--accent); color: var(--text); }
+  .tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tab-panel { display: none; animation: fade .2s ease; }
+  .tab-panel.active { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px);} to { opacity: 1; transform: none; } }
+
+  /* pipeline step-through */
+  .steps { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .9rem; }
+  .step-chip { border: 1px solid var(--border); background: var(--panel); border-radius: 8px; padding: .4rem .7rem; cursor: pointer; font-size: .82rem; display: flex; align-items: center; gap: .45rem; transition: all .12s; }
+  .step-chip:hover { border-color: var(--accent); }
+  .step-chip.active { background: var(--accent-soft); border-color: var(--accent); color: var(--text); font-weight: 600; }
+  .step-chip .num { background: var(--accent); color: #fff; width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700; }
+  .step-detail { background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; min-height: 90px; font-size: .92rem; }
+  .step-detail .ref { display: inline-block; font-family: ui-monospace, monospace; font-size: .76rem; color: var(--muted); margin-top: .5rem; }
+
+  /* P/F/S timeline */
+  .pfs-btns { display: flex; gap: .5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .pfs-track { display: flex; gap: 6px; align-items: flex-end; height: 70px; margin: .6rem 0 .4rem; }
+  .surf { flex: 1; background: var(--border); border-radius: 5px 5px 0 0; height: 40%; position: relative; transition: background .25s, height .25s; min-width: 0; }
+  .surf.cur { height: 80%; }
+  .surf.use { background: var(--accent); }
+  .surf.use.past { background: color-mix(in srgb, var(--accent) 55%, var(--border)); }
+  .pfs-axis { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); }
+  .pfs-explain { margin-top: .8rem; font-size: .92rem; }
+
+  footer { max-width: 1180px; margin: 0 auto; padding: 2rem 1.4rem 4rem; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--border); }
+
+  .file-ref { font-family: ui-monospace, monospace; font-size: .82em; color: var(--muted); }
+  ul.tight { margin: .4rem 0; }
+  ul.tight li { margin: .3rem 0; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <h1>The Kalman Filter in ACTS <span class="sub">— a deep dive</span></h1>
+  </div>
+  <button class="theme-btn" id="themeToggle" aria-label="Toggle color theme">🌙 Dark</button>
+</header>
+
+<div class="layout">
+  <nav class="toc" aria-label="Table of contents">
+    <ol>
+      <li><a href="#s1">1. What "the Kalman filter" means here</a></li>
+      <li><a href="#s2">2. Big picture: the KF as an Actor</a></li>
+      <li><a href="#s3">3. Data structures</a></li>
+      <li><a href="#s4">4. The fit() entry point</a></li>
+      <li><a href="#s5">5. Forward filter pass</a></li>
+      <li><a href="#s6">6. The update math</a></li>
+      <li><a href="#s7">7. Smoothing (3 ways)</a></li>
+      <li><a href="#s8">8. Reference surface &amp; quantities</a></li>
+      <li><a href="#s9">9. Extension points</a></li>
+      <li><a href="#s10">10. Wiring in practice</a></li>
+      <li><a href="#s11">11. How it fits together</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <p class="lead">The Kalman filter in ACTS is not a standalone loop — it is a
+      <strong>plugin (an "Actor") that rides inside the track propagator</strong>.
+      The propagator transports a track surface-by-surface; at each surface it calls
+      back into the Kalman actor, which performs the measurement update. Keep that in
+      mind and everything else follows.</p>
+
+    <!-- ===================== 1 ===================== -->
+    <h2 id="s1">1. What ACTS calls "the Kalman filter"</h2>
+    <p>The Kalman filter appears in three related-but-distinct places:</p>
+    <table>
+      <thead><tr><th>Component</th><th>Purpose</th><th>Location</th></tr></thead>
+      <tbody>
+        <tr><td><code>KalmanFitter</code></td><td>Track <em>fitting</em>: hits already assigned, estimate parameters</td><td class="file-ref">Core/include/Acts/TrackFitting/KalmanFitter.hpp</td></tr>
+        <tr><td><code>CombinatorialKalmanFilter</code> (CKF)</td><td>Track <em>finding</em>: associate hits and fit, branching on ambiguities</td><td class="file-ref">Core/include/Acts/TrackFinding/CombinatorialKalmanFilter.hpp</td></tr>
+        <tr><td><code>GaussianSumFitter</code> (GSF)</td><td>Multi-component KF for non-Gaussian energy loss (electrons)</td><td class="file-ref">Core/include/Acts/TrackFitting/GaussianSumFitter.hpp</td></tr>
+      </tbody>
+    </table>
+    <p>This document focuses on the <code>KalmanFitter</code> and the shared math
+      kernels (<code>GainMatrixUpdater</code>, <code>GainMatrixSmoother</code>,
+      <code>MbfSmoother</code>) that the CKF and GSF reuse.</p>
+
+    <!-- ===================== 2 ===================== -->
+    <h2 id="s2">2. The big picture: the KF as a propagator Actor</h2>
+    <p>The <code>Propagator</code> walks a track through the geometry using a
+      <em>stepper</em> (B-field ODE integration, e.g. <code>SympyStepper</code>) and a
+      <em>navigator</em> (next surface). It supports a list of <strong>Actors</strong>
+      — callbacks invoked at each step. <code>KalmanFitter</code> defines a private
+      <code>Actor</code> (<span class="file-ref">KalmanFitter.hpp:286</span>) injected
+      into that list.</p>
+    <pre><code>Propagator.propagate()
+   └─ for each step:
+        stepper integrates ODE to next surface
+        navigator identifies currentSurface
+        Actor::act(state, stepper, navigator, result)   ← the Kalman logic
+        Actor::checkAbort(...)                           ← stop when done</code></pre>
+    <p>A "fit" is therefore <em>a propagation with a measurement-updating actor
+      attached</em>. The fitter object (<span class="file-ref">KalmanFitter.hpp:252</span>)
+      is thin: it owns a propagator + loggers, sets up options, runs the propagation,
+      then orchestrates smoothing. It is templated on <code>&lt;propagator_t, traj_t&gt;</code>;
+      a <code>static constexpr bool isDirectNavigator</code>
+      (<span class="file-ref">:258</span>) selects the standard <code>Navigator</code>
+      vs. the <code>DirectNavigator</code> (explicit surface sequence, used for refits).</p>
+
+    <!-- ===================== 3 ===================== -->
+    <h2 id="s3">3. The data structures that flow through a fit</h2>
+    <ul class="tight">
+      <li><strong><code>KalmanFitterOptions</code></strong> (<span class="file-ref">:108-186</span>) — the three contexts (geometry/field/calibration), the <code>extensions</code>, propagator options, target <code>referenceSurface</code> + strategy, physics toggles (<code>multipleScattering</code>, <code>energyLoss</code>, <code>freeToBoundCorrection</code>), and smoothing controls (<code>reverseFiltering</code>, <code>reverseFilteringCovarianceScaling</code> default 100).</li>
+      <li><strong><code>KalmanFitterExtensions</code></strong> (<span class="file-ref">:43-103</span>) — six <code>Acts::Delegate</code>s: <code>calibrator</code>, <code>updater</code>, <code>smoother</code>, <code>outlierFinder</code>, <code>reverseFilteringLogic</code>, <code>surfaceAccessor</code>. Defaults are void stubs.</li>
+      <li><strong><code>KalmanFitterResult</code></strong> (<span class="file-ref">:189-229</span>) — the scratchpad: <code>fittedStates</code>, tip indices, counters, <code>missedActiveSurfaces</code>, <code>fittedParameters</code>, <code>finished</code>.</li>
+    </ul>
+
+    <div class="card">
+      <span class="widget-label">Interactive · click a row</span>
+      <h3 style="margin-top:.3rem">The three estimates: predicted, filtered, smoothed</h3>
+      <p style="margin-top:.2rem">Each surface stores up to three parameter vectors. They differ only in
+        <em>which measurements they are allowed to use</em>. Pick one to see what information feeds it.</p>
+      <div class="pfs-btns">
+        <button class="tab-btn active" data-pfs="predicted">predicted</button>
+        <button class="tab-btn" data-pfs="filtered">filtered</button>
+        <button class="tab-btn" data-pfs="smoothed">smoothed</button>
+      </div>
+      <div class="pfs-track" id="pfsTrack" aria-hidden="true"></div>
+      <div class="pfs-axis"><span>track start</span><span>current surface ▲</span><span>track end</span></div>
+      <div class="pfs-explain" id="pfsExplain"></div>
+    </div>
+
+    <!-- ===================== 4 ===================== -->
+    <h2 id="s4">4. The <code>fit()</code> entry point and the two-pass structure</h2>
+    <p>Public <code>fit(...)</code> overloads (<span class="file-ref">:667</span>, <span class="file-ref">:695</span>)
+      forward to <code>fit_impl</code> (<span class="file-ref">:835</span>):</p>
+    <pre><code>fit_impl
+ ├─ make_propagator_options(... reverseDirection=false)   build forward options
+ ├─ filter_impl(...)                                       FORWARD FILTER PASS
+ │     └─ propagator.propagate()  →  Actor runs at every surface
+ ├─ seed last measurement: smoothed ← filtered
+ ├─ decide: reverse-filter or smooth?
+ │     ├─ reverse filtering:  filter_impl(... reverseDirection=true)
+ │     └─ direct smoothing:   extensions.smoother(...)
+ ├─ extrapolate to referenceSurface (if needed)
+ └─ calculateTrackQuantities(track)</code></pre>
+    <p>Two setup details in <code>make_propagator_options</code>
+      (<span class="file-ref">:710</span>): (1) measurements are copied into an
+      <code>unordered_map&lt;const Surface*, SourceLink&gt;</code>
+      (<span class="file-ref">:726-731</span>) — so <strong>measurements need not be
+      pre-sorted</strong>, ordering emerges from navigation; (2) each measurement surface
+      is registered with the navigator as an <em>external surface</em>
+      (<span class="file-ref">:744-755</span>). <code>filter_impl</code> fails the fit if
+      <strong>zero</strong> measurement states result
+      (<span class="file-ref">:801-804</span>, <code>NoMeasurementFound</code>).</p>
+
+    <!-- ===================== 5 ===================== -->
+    <h2 id="s5">5. The forward filter pass — <code>Actor::act</code> → <code>Actor::filter</code></h2>
+    <p><code>act</code> (<span class="file-ref">:339</span>) runs every step: arms loop
+      protection, calls <code>filter</code> if the navigator reports a current surface,
+      then checks termination (track complete, end-of-world, volume/path limit, target
+      reached → bind final parameters, set <code>finished</code>). <code>filter</code>
+      (<span class="file-ref">:445</span>) branches on what the surface <em>is</em>:
+      <strong>(A)</strong> carries a measurement, <strong>(B)</strong> a hole/material
+      surface, or <strong>(C)</strong> nothing to record.</p>
+
+    <div class="card">
+      <span class="widget-label">Interactive · step through Case A</span>
+      <h3 style="margin-top:.3rem">What happens on a measurement surface</h3>
+      <div class="steps" id="stepChips"></div>
+      <div class="step-detail" id="stepDetail">Select a step above.</div>
+    </div>
+
+    <p><strong>Case B</strong> (<span class="file-ref">:572</span>): a
+      <code>Predicted | Jacobian</code> state is made, <code>Filtered</code> aliases
+      <code>Predicted</code>, and the state is tagged a <em>hole</em> (sensitive surface
+      after the first measurement, no hit → recorded in <code>missedActiveSurfaces</code>)
+      or a <em>material</em> surface (scattering/energy-loss applied). Holes before the
+      first measurement are skipped silently.</p>
+
+    <!-- ===================== 6 ===================== -->
+    <h2 id="s6">6. The Kalman update math — <code>GainMatrixUpdater</code></h2>
+    <p>The default <code>updater</code> delegate (<span class="file-ref">GainMatrixUpdater.hpp</span>,
+      math in <span class="file-ref">detail/GainMatrixUpdaterImpl.hpp</span>). The
+      measurement dimension <code>N</code> (1–6) is only known at runtime, so
+      <code>visit_measurement</code> dispatches to a compile-time
+      <code>visitMeasurementImpl&lt;N&gt;</code> (explicitly instantiated for N = 1..6).</p>
+    <p>With $x^-,P^-$ = predicted state &amp; covariance, $m,R$ = calibrated measurement
+      &amp; covariance, and $H$ the projector from the 6-dim bound space to the N-dim
+      measurement space:</p>
+    <p>$$ K = P^- H^\top \left( H P^- H^\top + R \right)^{-1} \qquad\text{(gain, :52)} $$</p>
+    <p>$$ x^+ = x^- + K\left( m - H x^- \right) \qquad\text{(filtered params, :65)} $$</p>
+    <p>$$ P^+ = (I - KH)\,P^- \quad\text{or, Joseph form:}\quad (I-KH)P^-(I-KH)^\top + K R K^\top \quad\text{(:69-75)} $$</p>
+    <p>$$ r = m - H x^+,\qquad \chi^2 = r^\top \big[(I - HK)R\big]^{-1} r \qquad\text{(:80-88)} $$</p>
+    <p>The gain $K$ is the crux: it is the weight that blends the prediction with the
+      measurement. The widget below shows the idea in 1D (so $H=1$, all quantities
+      scalar): $K = \dfrac{\sigma_p^2}{\sigma_p^2 + \sigma_m^2}$. Drag the sliders.</p>
+
+    <div class="card">
+      <span class="widget-label">Interactive · 1D Kalman update</span>
+      <h3 style="margin-top:.3rem">Gain = how much you trust the measurement</h3>
+      <div class="legend">
+        <span><span class="swatch" style="background:var(--pred)"></span> predicted $\;N(x^-,\sigma_p^2)$</span>
+        <span><span class="swatch" style="background:var(--meas)"></span> measurement $\;N(m,\sigma_m^2)$</span>
+        <span><span class="swatch" style="background:var(--filt)"></span> filtered $\;N(x^+,\sigma_+^2)$</span>
+      </div>
+      <div class="demo-grid">
+        <canvas id="kfCanvas" width="600" height="260" role="img"
+                aria-label="Gaussian curves for predicted, measurement and filtered estimates"></canvas>
+        <div class="controls">
+          <label>predicted mean $x^-$ = <span class="val" id="vPm">-1.5</span></label>
+          <input type="range" id="pMean" min="-5" max="5" step="0.1" value="-1.5">
+          <label>predicted σ<sub>p</sub> = <span class="val" id="vPs">2.0</span></label>
+          <input type="range" id="pSig" min="0.4" max="4" step="0.1" value="2.0">
+          <label>measurement $m$ = <span class="val" id="vMm">1.8</span></label>
+          <input type="range" id="mMean" min="-5" max="5" step="0.1" value="1.8">
+          <label>measurement σ<sub>m</sub> = <span class="val" id="vMs">1.0</span></label>
+          <input type="range" id="mSig" min="0.4" max="4" step="0.1" value="1.0">
+          <div class="readout">
+            <div>gain $K$<b id="oK">0.00</b></div>
+            <div>filtered mean $x^+$<b id="oXp">0.00</b></div>
+            <div>filtered σ<sub>+</sub><b id="oSp">0.00</b></div>
+            <div>residual $m-x^+$<b id="oRes">0.00</b></div>
+          </div>
+        </div>
+      </div>
+      <p style="margin:.8rem 0 0; font-size:.88rem; color:var(--muted)">
+        Notice: the filtered curve is always <em>narrower</em> than either input — adding
+        a measurement always reduces uncertainty. When the measurement is very precise
+        ($\sigma_m \to 0$), $K \to 1$ and the filtered mean snaps onto it; when it is
+        very imprecise ($\sigma_m$ large), $K \to 0$ and the prediction is barely moved.</p>
+    </div>
+
+    <!-- ===================== 7 ===================== -->
+    <h2 id="s7">7. Smoothing — three ways to get the "best" estimate</h2>
+    <p>The forward filter's <code>filtered</code> uses only past+present hits. Smoothing
+      folds in <em>future</em> hits. The KF seeds the last measurement's
+      <code>smoothed ← filtered</code> (<span class="file-ref">:865-867</span>) and
+      propagates that backward. There are three strategies:</p>
+
+    <div class="card">
+      <span class="widget-label">Interactive · compare smoothers</span>
+      <div class="tabs" id="smTabs">
+        <button class="tab-btn active" data-tab="rts">Gain-matrix (RTS)</button>
+        <button class="tab-btn" data-tab="mbf">Modified Bryson–Frazier</button>
+        <button class="tab-btn" data-tab="rev">Reverse filtering</button>
+      </div>
+
+      <div class="tab-panel active" data-panel="rts">
+        <p><strong>Rauch–Tung–Striebel.</strong> <span class="file-ref">GainMatrixSmoother.cpp</span>.
+          Walks backward via <code>applyBackwards</code>; <code>ts</code> = state being
+          smoothed, <code>prev_ts</code> = already-smoothed neighbour toward the end.
+          <code>prev_ts.jacobian()</code> is the forward transport $F_k$ from $k$ to $k{+}1$.</p>
+        <p>$$ G = C^f_k\, F_k^\top \left(P^-_{k+1}\right)^{-1} $$</p>
+        <p>$$ x^s_k = x^f_k + G\left(x^s_{k+1} - x^p_{k+1}\right) $$</p>
+        <p>$$ C^s_k = C^f_k + G\left(C^s_{k+1} - P^-_{k+1}\right) G^\top $$</p>
+        <p style="color:var(--muted);font-size:.9rem">Cost: inverts the full $6\times6$ predicted
+          covariance at every step. Optional positive-definiteness check.</p>
+      </div>
+
+      <div class="tab-panel" data-panel="mbf">
+        <p><strong>Modified Bryson–Frazier — the default in the examples</strong>
+          (<span class="file-ref">KalmanFitterFunction.cpp:77</span>). Propagates two
+          adjoint accumulators $\hat\Lambda$ (6×6) and $\hat\lambda$ (6-vec), both
+          starting at zero — <em>no full-covariance inverse needed</em>, only the small
+          N×N residual covariance.</p>
+        <p>$$ x^s = x^f - C^f\,\hat\lambda, \qquad C^s = C^f - C^f\,\hat\Lambda\,C^f $$</p>
+        <p>On a measurement state, with $S=HP^-H^\top+R$, $K=P^-H^\top S^{-1}$, $\hat C = I-KH$:</p>
+        <p>$$ \tilde\Lambda = H^\top S^{-1} H + \hat C^\top \hat\Lambda \hat C,\qquad
+              \tilde\lambda = -H^\top S^{-1} y + \hat C^\top \hat\lambda $$</p>
+        <p>then transport: $\hat\Lambda = F^\top \tilde\Lambda F$, $\hat\lambda = F^\top\tilde\lambda$.
+          Non-measurement states only transport.</p>
+        <p style="color:var(--muted);font-size:.9rem">Cheaper and numerically nicer than RTS — hence the default.</p>
+      </div>
+
+      <div class="tab-panel" data-panel="rev">
+        <p><strong>Reverse filtering.</strong> Chosen when <code>reverseFiltering</code> is
+          set or <code>reverseFilteringLogic(...)</code> returns true
+          (<span class="file-ref">:871-874</span>) — typically for low-momentum tracks
+          where linearised smoothing is inaccurate. Instead of an analytic backward sweep,
+          it <strong>runs the whole filter again backward</strong>
+          (<span class="file-ref">:882-885</span>), seeded from the forward last
+          measurement with covariance inflated ×<code>reverseFilteringCovarianceScaling</code>
+          (default 100, <span class="file-ref">:880-881</span>) so forward information does
+          not dominate. Costs a second full propagation.</p>
+      </div>
+    </div>
+
+    <!-- ===================== 8 ===================== -->
+    <h2 id="s8">8. Finishing up — reference surface &amp; track quantities</h2>
+    <p>If parameters are not already on the requested <code>referenceSurface</code>, a
+      final <code>extrapolateTrackToReferenceSurface</code> is done
+      (<span class="file-ref">:933-946</span>). Then <code>calculateTrackQuantities</code>
+      (<span class="file-ref">TrackHelpers.hpp:388</span>) sweeps states in reverse:
+      counts holes/outliers/measurements/shared hits and sums <em>only measurement
+      states'</em> $\chi^2$ into <code>track.chi2()</code> and their sizes into
+      <code>track.nDoF()</code> (<span class="file-ref">:399-414</span>).</p>
+
+    <!-- ===================== 9 ===================== -->
+    <h2 id="s9">9. The extension points (and why they're delegates)</h2>
+    <p>Flexibility comes from the six <code>Acts::Delegate</code>s (type-erased,
+      allocation-free, connected at runtime). Default void stubs live in
+      <span class="file-ref">detail/VoidFitterComponents.hpp</span>:
+      <code>voidFitterUpdater</code> copies predicted→filtered;
+      <code>voidFitterSmoother</code> copies filtered→smoothed;
+      <code>voidOutlierFinder</code> never flags; <code>voidReverseFilteringLogic</code>
+      never reverses; <code>voidFitterCalibrator</code> / <code>voidSurfaceAccessor</code>
+      <strong>throw</strong> (you must supply real ones). This is what lets the same
+      <code>KalmanFitter</code> code drive a pixel detector, a straw-tube tracker, an
+      alignment refit, or a unit test — only the connected functions change.</p>
+
+    <!-- ===================== 10 ===================== -->
+    <h2 id="s10">10. How it's actually wired up (the Examples layer)</h2>
+    <p><span class="file-ref">Examples/Algorithms/TrackFitting/src/KalmanFitterFunction.cpp</span>
+      shows production wiring: stepper = <code>SympyStepper</code>; two fitters (standard
+      + direct navigator). <code>makeKfOptions</code> connects <code>GainMatrixUpdater</code>
+      as <code>updater</code>, <strong><code>MbfSmoother</code> as <code>smoother</code></strong>,
+      a momentum-gated <code>SimpleReverseFilteringLogic</code>, and a χ²-cut
+      <code>SimpleOutlierFinder</code>; <code>useJosephFormulation</code> flows into the
+      updater. So a user's "Kalman fitter" is: <code>SympyStepper</code> +
+      <code>Navigator</code> + <code>KalmanFitter</code> actor + <code>GainMatrixUpdater</code>
+      + <code>MbfSmoother</code>.</p>
+
+    <!-- ===================== 11 ===================== -->
+    <h2 id="s11">11. How the pieces fit together</h2>
+    <pre><code>                    KalmanFitter.fit()
+                          │
+        ┌─────────────────┴───────────────────┐
+        │  FORWARD PASS (propagation + actor)  │
+   Propagator ── Stepper (B-field ODE)         │
+        │   └── Navigator (next surface)       │
+   Actor::act ──► Actor::filter(surface):      │
+        │   1. transport cov to surface        │
+        │   2. material PRE-update  ───────────┼── PointwiseMaterialInteraction
+        │   3. predicted = boundState          │     (scattering noise, energy loss)
+        │   4. calibrate  ─────────────────────┼── extensions.calibrator
+        │   5. outlier?  ──────────────────────┼── extensions.outlierFinder
+        │   6. UPDATE: filtered ───────────────┼── extensions.updater = GainMatrixUpdater
+        │   7. stepper.update(filtered)        │       K, x⁺, P⁺, χ²
+        │   8. material POST-update            │
+        └──────────────────┬───────────────────┘
+                           │ seed: last meas. smoothed ← filtered
+        ┌──────────────────┴───────────────────┐
+        │  SMOOTHING (pick one)                 │
+        │   • MbfSmoother (default)             │
+        │   • GainMatrixSmoother (RTS)          │
+        │   • Reverse filtering (2nd propagation)│
+        └──────────────────┬───────────────────┘
+                           │
+              extrapolate to referenceSurface
+                           │
+              calculateTrackQuantities (χ², nDoF, holes…)
+                           │
+                       TrackProxy</code></pre>
+
+    <div class="callout">
+      <strong>Six things to remember.</strong>
+      <ol style="margin:.4rem 0 0">
+        <li>The KF is a <strong>propagator actor</strong>; navigation drives surface ordering, so measurements need not be sorted.</li>
+        <li>Every surface yields a <strong>track state</strong> with predicted/filtered/smoothed slots and type flags (measurement/outlier/hole/material).</li>
+        <li>The <strong>gain-matrix update</strong> is the recursive forward step; the stepper is re-seeded with the filtered state.</li>
+        <li><strong>Material</strong> is modelled inline via pre/post-update interactions.</li>
+        <li><strong>Smoothing</strong> runs future info backward — cheaply (MBF/RTS) or robustly (reverse filter).</li>
+        <li>Everything pluggable is a <strong>Delegate</strong> — the same code serves fitting, refitting, the CKF, and the GSF.</li>
+      </ol>
+    </div>
+  </main>
+</div>
+
+<footer>
+  Generated as a companion to <span class="file-ref">docs/kalman_filter_deep_dive.md</span>.
+  Equations rendered with MathJax (loaded from CDN; needs network access). All file/line
+  references point at the ACTS sources on the documented branch.
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- theme toggle ---------- */
+  var root = document.documentElement;
+  var btn = document.getElementById("themeToggle");
+  function setTheme(t) {
+    root.setAttribute("data-theme", t);
+    btn.textContent = t === "dark" ? "☀️ Light" : "🌙 Dark";
+    try { localStorage.setItem("kf-theme", t); } catch (e) {}
+    if (window.kfDraw) window.kfDraw();
+  }
+  btn.addEventListener("click", function () {
+    setTheme(root.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  });
+  try {
+    var saved = localStorage.getItem("kf-theme");
+    if (saved) setTheme(saved);
+    else if (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) setTheme("dark");
+  } catch (e) {}
+
+  /* ---------- scroll-spy TOC ---------- */
+  var links = Array.prototype.slice.call(document.querySelectorAll("nav.toc a"));
+  var map = {};
+  links.forEach(function (a) { map[a.getAttribute("href").slice(1)] = a; });
+  var spy = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) {
+        links.forEach(function (l) { l.classList.remove("active"); });
+        if (map[en.target.id]) map[en.target.id].classList.add("active");
+      }
+    });
+  }, { rootMargin: "-40% 0px -55% 0px" });
+  document.querySelectorAll("main h2[id]").forEach(function (h) { spy.observe(h); });
+
+  /* ---------- predicted / filtered / smoothed timeline ---------- */
+  var N = 9, CUR = 4;  // current surface index
+  var track = document.getElementById("pfsTrack");
+  var cells = [];
+  for (var i = 0; i < N; i++) {
+    var d = document.createElement("div");
+    d.className = "surf" + (i === CUR ? " cur" : "");
+    track.appendChild(d);
+    cells.push(d);
+  }
+  var pfsText = {
+    predicted: "Uses only <b>past</b> measurements (before the current surface). It is the pure extrapolation onto the current surface — no knowledge of the hit here yet.",
+    filtered:  "Uses past <b>plus the current</b> measurement. The prediction is updated with this surface's hit (a weighted mean) — the recursive forward estimate.",
+    smoothed:  "Uses <b>all</b> measurements, including <b>future</b> ones. Only available after a backward pass over the finished trajectory; the optimal estimate."
+  };
+  function setPFS(mode) {
+    cells.forEach(function (c, i) {
+      c.classList.remove("use", "past");
+      var use = false, past = false;
+      if (mode === "predicted") { use = i < CUR; past = true; }
+      else if (mode === "filtered") { use = i <= CUR; past = i < CUR; }
+      else { use = true; past = i !== CUR; }
+      if (use) c.classList.add("use");
+      if (use && past) c.classList.add("past");
+    });
+    document.getElementById("pfsExplain").innerHTML = pfsText[mode];
+  }
+  document.querySelectorAll("[data-pfs]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll("[data-pfs]").forEach(function (x) { x.classList.remove("active"); });
+      b.classList.add("active");
+      setPFS(b.getAttribute("data-pfs"));
+    });
+  });
+  setPFS("predicted");
+
+  /* ---------- forward-filter step-through ---------- */
+  var steps = [
+    ["Transport cov", "Transport the covariance onto the surface with <code>stepper.transportCovarianceToBound</code>.", "KalmanFitter.hpp:459"],
+    ["Material PRE", "Apply pre-update material effects: inflate covariance with multiple-scattering noise and shift q/p for energy loss, <em>before</em> the measurement update.", "KalmanFitter.hpp:463-468"],
+    ["Predicted", "Create the track state and bind the propagated state: fill <code>predicted()</code>, <code>predictedCovariance()</code>, <code>jacobian()</code> (transport from the previous surface to this one), <code>pathLength()</code>.", "KalmanFitter.hpp:471-498"],
+    ["Calibrate", "Turn the raw source link into a calibrated measurement now that predicted parameters exist: <code>extensions.calibrator(...)</code>.", "KalmanFitter.hpp:502"],
+    ["Outlier?", "Ask <code>extensions.outlierFinder(...)</code>. If an outlier: skip the update, tag <code>setIsOutlier</code>, alias filtered ← predicted.", "KalmanFitter.hpp:518-537"],
+    ["UPDATE", "If not an outlier: run <code>extensions.updater(...)</code> — the gain-matrix Kalman update computing K, filtered params, filtered covariance and χ². Tag <code>setIsMeasurement</code>.", "KalmanFitter.hpp:520-527"],
+    ["Re-seed stepper", "Update the stepper with the <em>filtered</em> state so the rest of the propagation continues from the improved estimate — this is what makes the filter recursive. Increment <code>measurementStates</code>.", "KalmanFitter.hpp:547-553"],
+    ["Material POST", "Apply post-update material effects. Splitting material pre/post the measurement is how ACTS models material on the same surface as the hit.", "KalmanFitter.hpp:557-562"]
+  ];
+  var chipBox = document.getElementById("stepChips");
+  var detail = document.getElementById("stepDetail");
+  steps.forEach(function (s, i) {
+    var c = document.createElement("button");
+    c.className = "step-chip" + (i === 0 ? " active" : "");
+    c.innerHTML = '<span class="num">' + (i + 1) + '</span>' + s[0];
+    c.addEventListener("click", function () {
+      chipBox.querySelectorAll(".step-chip").forEach(function (x) { x.classList.remove("active"); });
+      c.classList.add("active");
+      detail.innerHTML = s[1] + '<span class="ref">' + s[2] + '</span>';
+    });
+    chipBox.appendChild(c);
+  });
+  detail.innerHTML = steps[0][1] + '<span class="ref">' + steps[0][2] + '</span>';
+
+  /* ---------- smoother tabs ---------- */
+  document.querySelectorAll("#smTabs .tab-btn").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var t = b.getAttribute("data-tab");
+      document.querySelectorAll("#smTabs .tab-btn").forEach(function (x) { x.classList.remove("active"); });
+      b.classList.add("active");
+      document.querySelectorAll("[data-panel]").forEach(function (p) {
+        p.classList.toggle("active", p.getAttribute("data-panel") === t);
+      });
+    });
+  });
+
+  /* ---------- 1D Kalman update demo ---------- */
+  var cv = document.getElementById("kfCanvas");
+  var ctx = cv.getContext("2d");
+  var ids = ["pMean", "pSig", "mMean", "mSig"];
+  var inputs = {};
+  ids.forEach(function (id) { inputs[id] = document.getElementById(id); });
+
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+  function gauss(x, mu, sig) {
+    var z = (x - mu) / sig;
+    return Math.exp(-0.5 * z * z) / (sig * Math.sqrt(2 * Math.PI));
+  }
+
+  function draw() {
+    var xp = parseFloat(inputs.pMean.value), sp = parseFloat(inputs.pSig.value);
+    var z = parseFloat(inputs.mMean.value),  sm = parseFloat(inputs.mSig.value);
+    var sp2 = sp * sp, sm2 = sm * sm;
+    var K = sp2 / (sp2 + sm2);
+    var xf = xp + K * (z - xp);
+    var vf = (1 - K) * sp2;
+    var sf = Math.sqrt(vf);
+
+    document.getElementById("vPm").textContent = xp.toFixed(1);
+    document.getElementById("vPs").textContent = sp.toFixed(1);
+    document.getElementById("vMm").textContent = z.toFixed(1);
+    document.getElementById("vMs").textContent = sm.toFixed(1);
+    document.getElementById("oK").textContent = K.toFixed(2);
+    document.getElementById("oXp").textContent = xf.toFixed(2);
+    document.getElementById("oSp").textContent = sf.toFixed(2);
+    document.getElementById("oRes").textContent = (z - xf).toFixed(2);
+
+    // HiDPI setup
+    var rect = cv.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    cv.width = rect.width * dpr; cv.height = rect.height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var W = rect.width, H = rect.height, pad = 8;
+
+    ctx.clearRect(0, 0, W, H);
+
+    var xmin = -10, xmax = 10;
+    function px(x) { return pad + (x - xmin) / (xmax - xmin) * (W - 2 * pad); }
+
+    // y scale: include all three peaks
+    var peak = Math.max(gauss(xp, xp, sp), gauss(z, z, sm), gauss(xf, xf, sf));
+    var yscale = (H - 2 * pad - 14) / peak;
+    function py(d) { return H - pad - d * yscale; }
+
+    // baseline
+    ctx.strokeStyle = cssVar("--border"); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad, H - pad); ctx.lineTo(W - pad, H - pad); ctx.stroke();
+
+    function curve(mu, sig, color, fill) {
+      ctx.beginPath();
+      for (var i = 0; i <= 240; i++) {
+        var x = xmin + (xmax - xmin) * i / 240;
+        var d = gauss(x, mu, sig);
+        var X = px(x), Y = py(d);
+        if (i === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y);
+      }
+      if (fill) {
+        ctx.lineTo(px(xmax), H - pad); ctx.lineTo(px(xmin), H - pad); ctx.closePath();
+        ctx.globalAlpha = 0.12; ctx.fillStyle = color; ctx.fill(); ctx.globalAlpha = 1;
+        ctx.beginPath();
+        for (var j = 0; j <= 240; j++) {
+          var xx = xmin + (xmax - xmin) * j / 240;
+          var dd = gauss(xx, mu, sig);
+          var XX = px(xx), YY = py(dd);
+          if (j === 0) ctx.moveTo(XX, YY); else ctx.lineTo(XX, YY);
+        }
+      }
+      ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+    }
+
+    curve(xp, sp, cssVar("--pred"), false);
+    curve(z, sm, cssVar("--meas"), false);
+    curve(xf, sf, cssVar("--filt"), true);
+
+    // mean ticks
+    [[xp, "--pred"], [z, "--meas"], [xf, "--filt"]].forEach(function (p) {
+      ctx.fillStyle = cssVar(p[1]);
+      ctx.beginPath(); ctx.arc(px(p[0]), H - pad, 3.5, 0, 2 * Math.PI); ctx.fill();
+    });
+  }
+  window.kfDraw = draw;
+  ids.forEach(function (id) { inputs[id].addEventListener("input", draw); });
+  window.addEventListener("resize", draw);
+  draw();
+})();
+</script>
+</body>
+</html>
