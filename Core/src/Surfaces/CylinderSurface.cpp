@@ -12,12 +12,14 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/MergeHelper.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -557,6 +559,7 @@ const std::shared_ptr<const CylinderBounds>& CylinderSurface::boundsPtr()
     const {
   return m_bounds;
 }
+
 void CylinderSurface::assignSurfaceBounds(
     std::shared_ptr<const CylinderBounds> newBounds) {
   m_bounds = std::move(newBounds);
@@ -568,8 +571,47 @@ CylinderSurface::supportedMaterialAxesList() const {
       {},
       {AxisDirection::AxisZ},
       {AxisDirection::AxisRPhi},
-      {AxisDirection::AxisRPhi, AxisDirection::AxisZ}};
+      {AxisDirection::AxisRPhi, AxisDirection::AxisZ},
+      // support for legacy representation
+      {AxisDirection::AxisPhi},
+      {AxisDirection::AxisPhi, AxisDirection::AxisZ}};
   return supportedAxes;
+}
+
+void CylinderSurface::assignSurfaceMaterial(
+    std::shared_ptr<const ISurfaceMaterial> material) {
+  // Convert legacy binned materials with phi or phi/z binning to the new rPhi
+  // or rPhi/z binning, respectively
+  if (const BinnedSurfaceMaterial* binnedMaterial =
+          dynamic_cast<const BinnedSurfaceMaterial*>(material.get());
+      binnedMaterial != nullptr) {
+    const std::vector<AxisDirection>& originalMaterialAxes =
+        binnedMaterial->materialAxisDirections();
+    const BinUtility& originalBinUtility = binnedMaterial->binUtility();
+    const MaterialSlabMatrix& originalMaterialMatrix =
+        binnedMaterial->fullMaterial();
+    const double r = bounds().get(CylinderBounds::eR);
+
+    if (std::ranges::find(originalMaterialAxes, AxisDirection::AxisPhi) !=
+        originalMaterialAxes.end()) {
+      BinUtility newBinUtility;
+
+      for (const auto& binData : originalBinUtility.binningData()) {
+        if (binData.binvalue == AxisDirection::AxisPhi) {
+          BinningData newBinData = binData.scale(r);
+          newBinData.binvalue = AxisDirection::AxisRPhi;
+          newBinUtility += BinUtility(newBinData);
+        } else {
+          newBinUtility += BinUtility(binData);
+        }
+      }
+
+      material = std::make_shared<const BinnedSurfaceMaterial>(
+          newBinUtility, originalMaterialMatrix);
+    }
+  }
+
+  Surface::assignSurfaceMaterial(std::move(material));
 }
 
 }  // namespace Acts

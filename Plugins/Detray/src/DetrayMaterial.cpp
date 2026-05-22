@@ -37,23 +37,23 @@ DetrayPayloadConverter::convertBinnedSurfaceMaterial(
   auto [bUtility, swapped] =
       DetrayConversionUtils::convertBinUtilityTo2D(material.binUtility());
 
-  const AxisDirection bVal0 = bUtility.binningData()[0u].binvalue;
-  const AxisDirection bVal1 = bUtility.binningData()[1u].binvalue;
+  const AxisDirection bVal0 = bUtility.binningData().at(0).binvalue;
+  const AxisDirection bVal1 = bUtility.binningData().at(1).binvalue;
 
   // Translate into grid index type
   detray::io::material_id gridIndexType = detray::io::material_id::unknown;
   if (bVal0 == AxisR && bVal1 == AxisPhi) {
     gridIndexType = detray::io::material_id::ring2_map;
   } else if (bVal0 == AxisRPhi && bVal1 == AxisZ) {
-    const auto& rPhiAxis = bUtility.binningData()[0u];
-    const auto& zAxis = bUtility.binningData()[1u];
+    const auto& rPhiAxis = bUtility.binningData().at(0);
+    const auto& zAxis = bUtility.binningData().at(1);
     const double r = dynamic_cast<const CylinderSurface&>(surface).bounds().get(
         CylinderBounds::eR);
     BinUtility nbUtility;
-    nbUtility += BinUtility(rPhiAxis.bins(), rPhiAxis.min / r, rPhiAxis.max / r,
-                            closed, AxisPhi);
-    nbUtility += BinUtility(zAxis.bins(), zAxis.min, zAxis.max, zAxis.option,
-                            zAxis.binvalue);
+    BinningData newPhiAxis = rPhiAxis.scale(r);
+    newPhiAxis.binvalue = AxisRPhi;
+    nbUtility += BinUtility(newPhiAxis);
+    nbUtility += BinUtility(zAxis);
     gridIndexType = detray::io::material_id::concentric_cylinder2_map;
   } else if (bVal0 == AxisPhi && bVal1 == AxisZ) {
     gridIndexType = detray::io::material_id::concentric_cylinder2_map;

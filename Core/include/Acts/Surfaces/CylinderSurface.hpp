@@ -165,6 +165,7 @@ class CylinderSurface : public RegularSurface {
   /// This method returns the shared_ptr to the CylinderBounds
   /// @return Shared pointer to the cylinder bounds
   const std::shared_ptr<const CylinderBounds>& boundsPtr() const;
+
   /// Overwrite the existing surface bounds with new ones
   /// @param newBounds: Pointer to the new bounds
   void assignSurfaceBounds(std::shared_ptr<const CylinderBounds> newBounds);
@@ -278,6 +279,9 @@ class CylinderSurface : public RegularSurface {
   std::pair<std::shared_ptr<CylinderSurface>, bool> mergedWith(
       const CylinderSurface& other, AxisDirection direction,
       bool externalRotation, const Logger& logger = getDummyLogger()) const;
+
+  /// @copydoc Surface::assignSurfaceMaterial
+  void assignSurfaceMaterial(std::shared_ptr<const ISurfaceMaterial> material);
 
  protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
