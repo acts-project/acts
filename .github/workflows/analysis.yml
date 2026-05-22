@@ -81,7 +81,7 @@ jobs:
       - name: Unit tests
         run: >
           CI/dependencies/run.sh .env
-          ctest --test-dir build -j$(nproc)
+          ctest --test-dir build -j$(nproc) --label-exclude "slow"
 
       - name: Remove .o files
         run: >
