@@ -48,12 +48,6 @@ namespace ActsPlugins::DetrayGeometryConverter {
 ///    converts the ACTS tracking geometry into Detray payloads.
 /// 3. It builds a detray detector from the converted payloads using the
 /// detray::detector_builder.
-/// 4. It checks the consistency of the built detray detector using
-/// detray::detail::check_consistency.
-/// 5. It constructs a mapping from detray surface identifiers to ACTS
-/// GeometryIdentifiers for all sensitive surfaces in the detray detector.
-/// 6. It returns a tuple containing the built detray detector and the
-/// detray→ACTS mapping.
 ///
 /// @return A tuple containing the built detray detector and the detray→ACTS mapping.
 template <typename metadata_t>
@@ -121,7 +115,7 @@ std::shared_ptr<detray::detector<metadata_t>> toDetray(
 ///
 /// @return an unordered map mapping detray surface identifiers to ACTS GeometryIdentifiers
 template <typename detector_t>
-std::unordered_map<std::uint64_t, Acts::GeometryIdentifier>
+std::unordered_map<detray::geometry::identifier, Acts::GeometryIdentifier>
 buildDetrayToActsMap(const detector_t& detrayDetector,
                      Acts::Logging::Level logLevel = Acts::Logging::INFO) {
   auto localLogger =
@@ -129,7 +123,8 @@ buildDetrayToActsMap(const detector_t& detrayDetector,
   ACTS_LOCAL_LOGGER(std::move(localLogger));
   // ── Build detray→Acts geometry ID map
   // ───────────────────────────────────
-  std::unordered_map<std::uint64_t, Acts::GeometryIdentifier> detrayToActsMap;
+  std::unordered_map<detray::geometry::identifier, Acts::GeometryIdentifier>
+      detrayToActsMap;
 
   for (const auto& surface : detrayDetector.surfaces()) {
     // surface.source is the Acts GeometryIdentifier encoded as uint64
@@ -137,7 +132,7 @@ buildDetrayToActsMap(const detector_t& detrayDetector,
     if (actsId.sensitive() == 0) {
       continue;  // skip portals and passives
     }
-    detrayToActsMap[surface.identifier().value()] = actsId;
+    detrayToActsMap[surface.identifier()] = actsId;
   }
 
   ACTS_INFO("DetrayGeometryProvider: built detray→Acts map with "

@@ -34,7 +34,8 @@ class DetrayConcretePropagator : public PropagatorInterface {
   /// Create a DetrayConcretePropagator - this is for testing purposes only,
   /// it runs without actor chain.
   ///
-  /// @param dGeometry configuration struct
+  /// @param dGeometry the detray geometry
+  /// @param memoryResource the memory resource to use for the detray propagation
   /// @param logger The logger instance
   explicit DetrayConcretePropagator(
       std::shared_ptr<detector_t> dGeometry,
@@ -83,8 +84,7 @@ class DetrayConcretePropagator : public PropagatorInterface {
     RecordedMaterial recordedMaterial;
     PropagationSummary summary(startParameters);
 
-    using DPropagationCfg = detray::propagation::config;
-    DPropagationCfg dCfg{};
+    detray::propagation::config dCfg{};
 
     // Sterile propagation without actor chain
     if constexpr (kSTERILE) {
@@ -145,7 +145,6 @@ class DetrayConcretePropagator : public PropagatorInterface {
       }
     }
 
-    // Return empty results
     return std::pair{std::move(summary), std::move(recordedMaterial)};
   }
 
