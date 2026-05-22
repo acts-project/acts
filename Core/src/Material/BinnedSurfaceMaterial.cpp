@@ -36,9 +36,10 @@ BinnedSurfaceMaterial::BinnedSurfaceMaterial(const BinUtility& binUtility,
     : ISurfaceMaterial(splitFactor, mappingType),
       m_binUtility(binUtility),
       m_fullMaterial(std::move(fullProperties)) {
-  if (binUtility.dimensions() != 2) {
+  if (binUtility.dimensions() != 1 && binUtility.dimensions() != 2) {
     throw std::invalid_argument(
-        "BinnedSurfaceMaterial with material matrix only supports 2D binning.");
+        "BinnedSurfaceMaterial with material matrix only supports 1D and 2D "
+        "binning.");
   }
 }
 

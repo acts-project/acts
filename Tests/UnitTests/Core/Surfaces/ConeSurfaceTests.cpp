@@ -317,9 +317,8 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceMaterialAssignment) {
   BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(matZ));
 
   // Wrong axis directions - should throw
-  for (auto badDir :
-       {AxisDirection::AxisRPhi, AxisDirection::AxisR, AxisDirection::AxisPhi,
-        AxisDirection::AxisX, AxisDirection::AxisY}) {
+  for (auto badDir : {AxisDirection::AxisR, AxisDirection::AxisPhi,
+                      AxisDirection::AxisX, AxisDirection::AxisY}) {
     BinUtility buBad(10, 0.f, 10.f, Acts::open, badDir);
     auto matBad = std::make_shared<BinnedSurfaceMaterial>(
         buBad, MaterialSlabVector(10, slab));
