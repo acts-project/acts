@@ -22,6 +22,7 @@
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <limits>
@@ -63,45 +64,39 @@ Acts::Result<SurfaceMask::Segment2D> maskAndReturn(
   std::ranges::sort(intersections, Acts::Intersection2D::pathLengthOrder);
   if (intersections.size() >= 2) {
     return SurfaceMask::Segment2D{intersections[0].position(),
-                                              intersections[1].position()};
+                                  intersections[1].position()};
   } else if (intersections.size() == 1) {
     return (
         !firstInside
-            ? SurfaceMask::Segment2D{intersections[0].position(),
-                                                 segment[1]}
-            : SurfaceMask::Segment2D{segment[0],
-                                                 intersections[0].position()});
+            ? SurfaceMask::Segment2D{intersections[0].position(), segment[1]}
+            : SurfaceMask::Segment2D{segment[0], intersections[0].position()});
   }
   return DigitizationError::MaskingError;
 }
 
 /// Liang–Barsky clipping of a segment against an axis-aligned rectangle.
 ///
-/// On success returns a {tEnter, tExit} pair in [0, 1] describing the
-/// parameter range of the clipped segment along (end - start). If the segment
-/// lies completely outside the rectangle, valid is false.
-struct ClipResult {
-  double tEnter;
-  double tExit;
-  bool valid;
-};
-
-ClipResult clipLiangBarsky(double x0, double y0, double x1, double y1,
-                           double xmin, double xmax, double ymin, double ymax) {
+/// @return on success the {tEnter, tExit} parameter pair in [0, 1] describing
+/// the clipped segment along (end - start); a DigitizationError::MaskingError
+/// if the segment lies completely outside the rectangle.
+Acts::Result<std::array<double, 2>> clipLiangBarsky(double x0, double y0,
+                                                    double x1, double y1,
+                                                    double xmin, double xmax,
+                                                    double ymin, double ymax) {
   const double dx = x1 - x0;
   const double dy = y1 - y0;
 
   double tEnter = 0.0;
   double tExit = 1.0;
 
-  const double p[4] = {-dx, dx, -dy, dy};
-  const double q[4] = {x0 - xmin, xmax - x0, y0 - ymin, ymax - y0};
+  const std::array<double, 4> p = {-dx, dx, -dy, dy};
+  const std::array<double, 4> q = {x0 - xmin, xmax - x0, y0 - ymin, ymax - y0};
 
-  for (int i = 0; i < 4; ++i) {
+  for (std::size_t i = 0; i < p.size(); ++i) {
     if (p[i] == 0.0) {
       // Segment is parallel to this clipping edge.
       if (q[i] < 0.0) {
-        return {0.0, 0.0, false};
+        return DigitizationError::MaskingError;
       }
       continue;
     }
@@ -114,9 +109,9 @@ ClipResult clipLiangBarsky(double x0, double y0, double x1, double y1,
   }
 
   if (tEnter > tExit) {
-    return {tEnter, tExit, false};
+    return DigitizationError::MaskingError;
   }
-  return {tEnter, tExit, true};
+  return std::array<double, 2>{tEnter, tExit};
 }
 
 }  // anonymous namespace
@@ -208,10 +203,9 @@ Acts::Result<SurfaceMask::Segment2D> SurfaceMask::apply(
   return DigitizationError::UndefinedSurface;
 }
 
-Acts::Result<SurfaceMask::Segment2D>
-SurfaceMask::polygonMask(const std::vector<Acts::Vector2>& vertices,
-                                     const Segment2D& segment,
-                                     bool firstInside) const {
+Acts::Result<SurfaceMask::Segment2D> SurfaceMask::polygonMask(
+    const std::vector<Acts::Vector2>& vertices, const Segment2D& segment,
+    bool firstInside) const {
   std::vector<Acts::Intersection2D> intersections;
   Acts::Vector2 sVector(segment[1] - segment[0]);
   Acts::Vector2 sDir = sVector.normalized();
@@ -228,11 +222,9 @@ SurfaceMask::polygonMask(const std::vector<Acts::Vector2>& vertices,
   return maskAndReturn(intersections, segment, firstInside);
 }
 
-Acts::Result<SurfaceMask::Segment2D>
-SurfaceMask::radialMask(const Acts::RadialBounds& rBounds,
-                                    const Segment2D& segment,
-                                    const Segment2D& polarSegment,
-                                    bool firstInside) const {
+Acts::Result<SurfaceMask::Segment2D> SurfaceMask::radialMask(
+    const Acts::RadialBounds& rBounds, const Segment2D& segment,
+    const Segment2D& polarSegment, bool firstInside) const {
   double rMin = rBounds.get(Acts::RadialBounds::eMinR);
   double rMax = rBounds.get(Acts::RadialBounds::eMaxR);
   double hPhi = rBounds.get(Acts::RadialBounds::eHalfPhiSector);
@@ -302,10 +294,9 @@ SurfaceMask::radialMask(const Acts::RadialBounds& rBounds,
   return maskAndReturn(intersections, segment, firstInside);
 }
 
-Acts::Result<SurfaceMask::Segment2D>
-SurfaceMask::annulusMask(const Acts::AnnulusBounds& aBounds,
-                                     const Segment2D& segment,
-                                     bool firstInside) const {
+Acts::Result<SurfaceMask::Segment2D> SurfaceMask::annulusMask(
+    const Acts::AnnulusBounds& aBounds, const Segment2D& segment,
+    bool firstInside) const {
   auto vertices = aBounds.vertices(0);
   Acts::Vector2 moduleOrigin = aBounds.moduleOrigin();
 
@@ -344,9 +335,8 @@ SurfaceMask::annulusMask(const Acts::AnnulusBounds& aBounds,
   return maskAndReturn(intersections, segment, firstInside);
 }
 
-Acts::Result<SurfaceMask::Segment2D>
-SurfaceMask::cylinderMask(const Acts::CylinderBounds& cBounds,
-                                      const Segment2D& segment) const {
+Acts::Result<SurfaceMask::Segment2D> SurfaceMask::cylinderMask(
+    const Acts::CylinderBounds& cBounds, const Segment2D& segment) const {
   const double R = cBounds.get(Acts::CylinderBounds::eR);
   const double halfZ = cBounds.get(Acts::CylinderBounds::eHalfLengthZ);
   const double halfPhi = cBounds.get(Acts::CylinderBounds::eHalfPhiSector);
@@ -398,11 +388,12 @@ SurfaceMask::cylinderMask(const Acts::CylinderBounds& cBounds,
 
   const auto clip = clipLiangBarsky(seg[0][0], seg[0][1], seg[1][0], seg[1][1],
                                     useRPhiMin, useRPhiMax, zMin, zMax);
-  if (!clip.valid) {
-    return DigitizationError::MaskingError;
+  if (!clip.ok()) {
+    return clip.error();
   }
+  const auto& [tEnter, tExit] = *clip;
 
   const Acts::Vector2 d = seg[1] - seg[0];
-  return Segment2D{seg[0] + clip.tEnter * d, seg[0] + clip.tExit * d};
+  return Segment2D{seg[0] + tEnter * d, seg[0] + tExit * d};
 }
 }  // namespace ActsFatras
