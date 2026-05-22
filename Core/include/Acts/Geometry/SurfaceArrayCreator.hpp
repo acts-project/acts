@@ -20,7 +20,6 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <functional>

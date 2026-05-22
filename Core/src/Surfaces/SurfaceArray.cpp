@@ -24,43 +24,13 @@
 
 namespace Acts {
 
-SurfaceArray::SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
-                           std::vector<std::shared_ptr<const Surface>> surfaces,
-                           const Transform3& transform)
-    : m_gridLookup(std::move(gridLookup)),
-      m_surfaces(std::move(surfaces)),
-      m_surfacesRawPointers(unpackSmartPointers(m_surfaces)),
-      m_transform(transform) {}
-
-namespace {
-
-struct SingleElementLookupImpl final : SurfaceArray::ISurfaceGridLookup {
+struct SurfaceArray::SingleElementLookupImpl final
+    : SurfaceArray::ISurfaceGridLookup {
   explicit SingleElementLookupImpl(const Surface* element)
       : m_element({element}) {}
 
-  const std::vector<const Surface*>& lookup(
-      const Vector3& /*position*/,
-      const Vector3& /*direction*/) const override {
-    return m_element;
-  }
-
-  std::vector<const Surface*>& lookup(std::size_t /*bin*/) override {
-    return m_element;
-  }
-
-  const std::vector<const Surface*>& lookup(
-      std::size_t /*bin*/) const override {
-    return m_element;
-  }
-
   std::span<const Surface* const> lookup(
       const GeometryContext& /*gctx*/, const Vector3& /*position*/,
-      const Vector3& /*direction*/) const override {
-    return m_element;
-  }
-
-  const std::vector<const Surface*>& neighbors(
-      const Vector3& /*position*/,
       const Vector3& /*direction*/) const override {
     return m_element;
   }
@@ -84,7 +54,7 @@ struct SingleElementLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   void fill(const GeometryContext& /*gctx*/,
             std::span<const Surface* const> /*surfaces*/) override {}
 
-  bool isValidBin(std::size_t /*bin*/) const override { return true; }
+  bool isValidBin(std::size_t bin) const override { return bin == 0; }
 
   std::array<std::size_t, 2> numLocalBins() const override { return {1, 1}; }
 
@@ -102,61 +72,21 @@ struct SingleElementLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     return m_element;
   }
 
+  std::span<const Surface* const> at(std::size_t bin) const override {
+    if (bin != 0) {
+      throw std::out_of_range(
+          "SingleElementLookupImpl only contains one bin with index 0");
+    }
+    return m_element;
+  }
+
  private:
   std::vector<const Surface*> m_element;
 };
 
-}  // namespace
-
-SurfaceArray::SurfaceArray(std::shared_ptr<const Surface> srf)
-    : m_gridLookup(std::make_unique<SingleElementLookupImpl>(srf.get())),
-      m_surfaces({std::move(srf)}) {
-  m_surfacesRawPointers.push_back(m_surfaces.at(0).get());
-}
-
-std::ostream& SurfaceArray::toStream(const GeometryContext& /*gctx*/,
-                                     std::ostream& sl) const {
-  sl << std::fixed << std::setprecision(4);
-  sl << "SurfaceArray:" << std::endl;
-  sl << " - no surfaces: " << m_surfaces.size() << std::endl;
-
-  const std::vector<const IAxis*> axes = m_gridLookup->getAxes();
-
-  for (const auto [j, axis] : enumerate(axes)) {
-    const AxisBoundaryType bdt = axis->getBoundaryType();
-    sl << " - axis " << (j + 1) << std::endl;
-    sl << "   - boundary type: ";
-    if (bdt == AxisBoundaryType::Open) {
-      sl << "open";
-    }
-    if (bdt == AxisBoundaryType::Bound) {
-      sl << "bound";
-    }
-    if (bdt == AxisBoundaryType::Closed) {
-      sl << "closed";
-    }
-    sl << std::endl;
-    sl << "   - type: " << (axis->isEquidistant() ? "equidistant" : "variable")
-       << std::endl;
-    sl << "   - n bins: " << axis->getNBins() << std::endl;
-    sl << "   - bin edges: [ ";
-    const std::vector<double> binEdges = axis->getBinEdges();
-    for (const auto [i, binEdge] : enumerate(binEdges)) {
-      if (i > 0) {
-        sl << ", ";
-      }
-      // Do not display negative zeroes
-      sl << ((std::abs(binEdge) >= 5e-4) ? binEdge : 0.0);
-    }
-    sl << " ]" << std::endl;
-  }
-  return sl;
-}
-
-namespace {
-
 template <class Axis1, class Axis2>
-struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
+struct SurfaceArray::SurfaceGridLookupImpl final
+    : SurfaceArray::ISurfaceGridLookup {
   SurfaceGridLookupImpl(std::shared_ptr<RegularSurface> representative,
                         double tolerance, std::tuple<Axis1, Axis2> axes,
                         std::vector<AxisDirection> binValues = {},
@@ -193,28 +123,6 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     populateNeighborCache();
   }
 
-  const std::vector<const Surface*>& lookup(
-      const Vector3& position, const Vector3& direction) const override {
-    const GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
-    const std::optional<GridIndex> localBins = findLocalBin2D(
-        gctx, position, direction, std::numeric_limits<double>::infinity());
-    if (!localBins.has_value()) {
-      static std::vector<const Surface*> emptyVector;
-      return emptyVector;
-    }
-    const std::size_t globalBin = globalBinFromLocalBins2D(*localBins);
-    return m_fillingGrid.at(globalBin);
-  }
-
-  std::vector<const Surface*>& lookup(std::size_t globalBin) override {
-    return m_fillingGrid.at(globalBin);
-  }
-
-  const std::vector<const Surface*>& lookup(
-      std::size_t globalBin) const override {
-    return m_fillingGrid.at(globalBin);
-  }
-
   std::span<const Surface* const> lookup(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction) const override {
@@ -225,17 +133,6 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     }
     const std::size_t globalBin = globalBinFromLocalBins3D(*localBins, 0);
     return m_neighborSurfacePacks.at(globalBin);
-  }
-
-  const std::vector<const Surface*>& neighbors(
-      const Vector3& position, const Vector3& direction) const override {
-    // hacky temporary solution until removal due deprecation
-    static thread_local std::vector<const Surface*> neighborsVector;
-    const GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
-    const std::span<const Surface* const> neighborsSpan =
-        neighbors(gctx, position, direction);
-    neighborsVector.assign(neighborsSpan.begin(), neighborsSpan.end());
-    return neighborsVector;
   }
 
   std::span<const Surface* const> neighbors(
@@ -308,6 +205,10 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
       std::uint8_t neighborDistance) const override {
     return m_neighborSurfacePacks.at(
         globalBinFromLocalBins3D(gridIndices, neighborDistance));
+  }
+
+  std::span<const Surface* const> at(std::size_t globalBin) const override {
+    return m_neighborSurfacePacks.at(globalBin);
   }
 
  private:
@@ -570,7 +471,60 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   }
 };
 
-}  // namespace
+SurfaceArray::SurfaceArray(std::shared_ptr<const Surface> srf)
+    : m_gridLookup(std::make_unique<SingleElementLookupImpl>(srf.get())),
+      m_surfaces({std::move(srf)}) {
+  m_surfacesRawPointers.push_back(m_surfaces.at(0).get());
+}
+
+SurfaceArray::SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
+                           std::vector<std::shared_ptr<const Surface>> surfaces)
+    : m_gridLookup(std::move(gridLookup)), m_surfaces(std::move(surfaces)) {
+  m_surfacesRawPointers =
+      m_surfaces |
+      std::views::transform(
+          [](const std::shared_ptr<const Surface>& sp) { return sp.get(); }) |
+      Ranges::to<std::vector>;
+}
+
+std::ostream& SurfaceArray::toStream(const GeometryContext& /*gctx*/,
+                                     std::ostream& sl) const {
+  sl << std::fixed << std::setprecision(4);
+  sl << "SurfaceArray:" << std::endl;
+  sl << " - no surfaces: " << m_surfaces.size() << std::endl;
+
+  const std::vector<const IAxis*> axes = m_gridLookup->getAxes();
+
+  for (const auto [j, axis] : enumerate(axes)) {
+    const AxisBoundaryType bdt = axis->getBoundaryType();
+    sl << " - axis " << (j + 1) << std::endl;
+    sl << "   - boundary type: ";
+    if (bdt == AxisBoundaryType::Open) {
+      sl << "open";
+    }
+    if (bdt == AxisBoundaryType::Bound) {
+      sl << "bound";
+    }
+    if (bdt == AxisBoundaryType::Closed) {
+      sl << "closed";
+    }
+    sl << std::endl;
+    sl << "   - type: " << (axis->isEquidistant() ? "equidistant" : "variable")
+       << std::endl;
+    sl << "   - n bins: " << axis->getNBins() << std::endl;
+    sl << "   - bin edges: [ ";
+    const std::vector<double> binEdges = axis->getBinEdges();
+    for (const auto [i, binEdge] : enumerate(binEdges)) {
+      if (i > 0) {
+        sl << ", ";
+      }
+      // Do not display negative zeroes
+      sl << ((std::abs(binEdge) >= 5e-4) ? binEdge : 0.0);
+    }
+    sl << " ]" << std::endl;
+  }
+  return sl;
+}
 
 std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
 SurfaceArray::makeSurfaceGridLookup(
@@ -595,10 +549,10 @@ SurfaceArray::SurfaceArray(const GeometryContext& gctx,
                            std::vector<std::shared_ptr<const Surface>> surfaces,
                            std::shared_ptr<RegularSurface> representative,
                            double tolerance,
-                           std::tuple<const IAxis&, const IAxis&> axes) {
-  m_transform = representative->localToGlobalTransform(gctx);
-  m_gridLookup =
-      makeSurfaceGridLookup(std::move(representative), tolerance, axes);
+                           std::tuple<const IAxis&, const IAxis&> axes,
+                           std::uint8_t maxNeighborDistance) {
+  m_gridLookup = makeSurfaceGridLookup(std::move(representative), tolerance,
+                                       axes, maxNeighborDistance);
   m_surfaces = std::move(surfaces);
   m_surfacesRawPointers =
       m_surfaces |

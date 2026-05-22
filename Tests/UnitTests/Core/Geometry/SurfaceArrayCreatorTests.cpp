@@ -85,6 +85,14 @@ struct SurfaceArrayCreatorFixture {
         std::forward<Args>(args)...);
   }
 
+  SurfaceArray makeSurfaceArray(
+      std::vector<std::shared_ptr<const Surface>> surfaces,
+      std::unique_ptr<SurfaceArray::ISurfaceGridLookup> gridLookup) {
+    ACTS_PUSH_IGNORE_DEPRECATED()
+    return SurfaceArray(std::move(gridLookup), std::move(surfaces));
+    ACTS_POP_IGNORE_DEPRECATED()
+  }
+
   SrfVec fullPhiTestSurfacesEC(std::size_t n = 10, double shift = 0,
                                double zbase = 0, double r = 10, double w = 2,
                                double h = 1) {
@@ -575,13 +583,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
 
   auto cylinder =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 100);
-  ACTS_PUSH_IGNORE_DEPRECATED()
-  auto sl = std::make_unique<
-      SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)>>(
-      cylinder, 1., std::make_tuple(std::move(phiAxis), std::move(zAxis)));
-  sl->fill(tgContext, brlRaw);
-  SurfaceArray sa(std::move(sl), brl);
-  ACTS_POP_IGNORE_DEPRECATED()
+  SurfaceArray sa(tgContext, brl, cylinder, 1.,
+                  std::tuple(std::move(phiAxis), std::move(zAxis)));
 
   // Write the surrace array with grid
   ObjVisualization3D objVis;
@@ -653,9 +656,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
       cylinder, 1., pAxisPhi, pAxisZ, 1);
 
   sl->fill(tgContext, brlRaw);
-  ACTS_PUSH_IGNORE_DEPRECATED()
-  SurfaceArray sa(std::move(sl), brl);
-  ACTS_POP_IGNORE_DEPRECATED()
+  SurfaceArray sa = makeSurfaceArray(brl, std::move(sl));
   auto axes = sa.getAxes();
   BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30u);
   BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7u);
@@ -689,9 +690,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
         cylinder, 1., pAxisPhiVar, pAxisZVar, 1);
 
     sl2->fill(tgContext, brlRaw);
-    ACTS_PUSH_IGNORE_DEPRECATED()
-    SurfaceArray sa2(std::move(sl2), brl);
-    ACTS_POP_IGNORE_DEPRECATED()
+    SurfaceArray sa2 = makeSurfaceArray(brl, std::move(sl2));
     axes = sa2.getAxes();
     BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30u);
     BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7u);

@@ -68,7 +68,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
   sl->fill(gctx, surfacesRaw);
 
   ACTS_PUSH_IGNORE_DEPRECATED()
-  SurfaceArray sa(std::move(sl), std::move(surfaces), fullTransform);
+  SurfaceArray sa(std::move(sl), std::move(surfaces));
   return std::make_unique<SurfaceArray>(std::move(sa));
   ACTS_POP_IGNORE_DEPRECATED()
 }
@@ -128,7 +128,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
                                       << bins0 * bins1 << " bins.");
 
   ACTS_PUSH_IGNORE_DEPRECATED()
-  SurfaceArray sa(std::move(sl), std::move(surfaces), fullTransform);
+  SurfaceArray sa(std::move(sl), std::move(surfaces));
   return std::make_unique<SurfaceArray>(std::move(sa));
   ACTS_POP_IGNORE_DEPRECATED()
 }
@@ -188,7 +188,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   sl->fill(gctx, surfacesRaw);
 
   ACTS_PUSH_IGNORE_DEPRECATED()
-  SurfaceArray sa(std::move(sl), std::move(surfaces), fullTransform);
+  SurfaceArray sa(std::move(sl), std::move(surfaces));
   return std::make_unique<SurfaceArray>(std::move(sa));
   ACTS_POP_IGNORE_DEPRECATED()
 }
@@ -300,7 +300,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   sl->fill(gctx, surfacesRaw);
 
   ACTS_PUSH_IGNORE_DEPRECATED()
-  SurfaceArray sa(std::move(sl), std::move(surfaces), fullTransform);
+  SurfaceArray sa(std::move(sl), std::move(surfaces));
   return std::make_unique<SurfaceArray>(std::move(sa));
   ACTS_POP_IGNORE_DEPRECATED()
 }
@@ -397,7 +397,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
   sl->fill(gctx, surfacesRaw);
 
   ACTS_PUSH_IGNORE_DEPRECATED()
-  SurfaceArray sa(std::move(sl), std::move(surfaces), fullTransform);
+  SurfaceArray sa(std::move(sl), std::move(surfaces));
   return std::make_unique<SurfaceArray>(std::move(sa));
   ACTS_POP_IGNORE_DEPRECATED()
 }
