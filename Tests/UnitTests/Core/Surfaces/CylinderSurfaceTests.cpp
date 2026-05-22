@@ -773,6 +773,12 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceMaterialAssignment) {
       buRPhi, MaterialSlabVector(10, slab));
   BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(matRPhi));
 
+  // 1D AxisPhi - valid for cylinder
+  BinUtility buPhi(10, 0.f, 1.f, Acts::closed, AxisDirection::AxisPhi);
+  auto matPhi = std::make_shared<BinnedSurfaceMaterial>(
+      buPhi, MaterialSlabVector(10, slab));
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(matPhi));
+
   // 1D AxisZ - valid for cylinder
   BinUtility buZ(10, -100.f, 100.f, Acts::open, AxisDirection::AxisZ);
   auto matZ = std::make_shared<BinnedSurfaceMaterial>(
@@ -787,8 +793,8 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceMaterialAssignment) {
   BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(mat2D));
 
   // Wrong axis directions - should throw
-  for (auto badDir : {AxisDirection::AxisR, AxisDirection::AxisPhi,
-                      AxisDirection::AxisX, AxisDirection::AxisY}) {
+  for (auto badDir :
+       {AxisDirection::AxisR, AxisDirection::AxisX, AxisDirection::AxisY}) {
     BinUtility buBad(10, 0.f, 10.f, Acts::open, badDir);
     auto matBad = std::make_shared<BinnedSurfaceMaterial>(
         buBad, MaterialSlabVector(10, slab));
