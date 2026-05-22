@@ -9,7 +9,6 @@
 #include "ActsPlugins/Json/MaterialJsonConverter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/GridSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
@@ -33,8 +32,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <functional>
-#include <numbers>
-#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>

@@ -381,4 +381,5 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::operator()(
     return buildGen1(logger);
   }
 }
+
 }  // namespace ActsTests
