@@ -21,4 +21,6 @@ if(ACTS_BUILD_PLUGIN_ROOT)
         ActsUnitTestStrawLineSeederTest
         PRIVATE ROOT::Tree ROOT::RIO
     )
+
+    set_tests_properties(StrawLineFitterTest PROPERTIES LABELS "slow")
 endif()
