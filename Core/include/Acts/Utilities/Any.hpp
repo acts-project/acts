@@ -207,8 +207,14 @@ class AnyBase : public AnyBaseAll {
   T& emplace(Args&&... args) {
     using U = std::decay_t<T>;
     destroy();
+    // Construct the new value before installing the handler. constructValue
+    // does not depend on m_handler, so if the constructor throws this object is
+    // left empty (m_handler == nullptr) rather than claiming to hold a value
+    // whose storage was never set up, which would make the next destroy()
+    // operate on stale/freed memory.
+    U* ptr = constructValue<U>(std::forward<Args>(args)...);
     m_handler = makeHandler<U>();
-    return *constructValue<U>(std::forward<Args>(args)...);
+    return *ptr;
   }
 
   /// Get reference to stored value of specified type
@@ -325,6 +331,11 @@ class AnyBase : public AnyBaseAll {
     _ACTS_ANY_VERBOSE("Copy assign (this="
                       << this << ") at: " << static_cast<void*>(m_data.data()));
 
+    if (this == &other) {
+      // self-assignment, noop
+      return *this;
+    }
+
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
       return *this;
@@ -370,6 +381,11 @@ class AnyBase : public AnyBaseAll {
   AnyBase& operator=(AnyBase&& other) noexcept(detail::kAnyNoexcept) {
     _ACTS_ANY_VERBOSE("Move assign (this="
                       << this << ") at: " << static_cast<void*>(m_data.data()));
+    if (this == &other) {
+      // self-assignment, noop (avoids destroying our own value)
+      return *this;
+    }
+
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
       return *this;
