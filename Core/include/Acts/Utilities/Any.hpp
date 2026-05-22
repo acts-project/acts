@@ -197,7 +197,8 @@ class AnyBase : public AnyBaseAll {
   ///       constructor may throw.
   template <typename T>
   explicit AnyBase(T&& value)
-    requires(isStorable<std::decay_t<T>>())
+    requires(!std::is_base_of_v<AnyBaseAll, std::decay_t<T>> &&
+             isStorable<std::decay_t<T>>())
       : AnyBase{std::in_place_type<T>, std::forward<T>(value)} {}
 
   /// Construct a new value in place, destroying any existing value
