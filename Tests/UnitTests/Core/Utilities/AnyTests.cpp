@@ -847,14 +847,15 @@ BOOST_AUTO_TEST_CASE(AnySelfAssign) {
 // kAnyNoexcept is false.
 static_assert(!std::is_nothrow_copy_constructible_v<Any>);
 static_assert(!std::is_nothrow_copy_assignable_v<Any>);
-static_assert(std::is_nothrow_move_constructible_v<Any> == detail::kAnyNoexcept);
+static_assert(std::is_nothrow_move_constructible_v<Any> ==
+              detail::kAnyNoexcept);
 static_assert(std::is_nothrow_move_assignable_v<Any> == detail::kAnyNoexcept);
 
 struct HeapCopyThrows {
   // larger than the small-buffer size, so this type is heap-allocated
   std::array<int, 8> blob{};
   HeapCopyThrows() = default;
-  HeapCopyThrows(const HeapCopyThrows&) {
+  HeapCopyThrows(const HeapCopyThrows& /*unused*/) {
     throw std::runtime_error{"copy boom"};
   }
   HeapCopyThrows& operator=(const HeapCopyThrows&) = default;
