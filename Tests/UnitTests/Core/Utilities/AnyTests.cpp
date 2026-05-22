@@ -838,6 +838,42 @@ BOOST_AUTO_TEST_CASE(AnySelfAssign) {
   CHECK_ANY_ALLOCATIONS();
 }
 
+// Copying a heap-allocated value allocates and may run a throwing copy
+// constructor, so the copy operations must not be marked noexcept (otherwise
+// such a throw would call std::terminate). Moves only steal a pointer for
+// heap values, so they remain noexcept (which lets std::vector<Any> move
+// rather than copy on reallocation).
+static_assert(!std::is_nothrow_copy_constructible_v<Any>);
+static_assert(!std::is_nothrow_copy_assignable_v<Any>);
+static_assert(std::is_nothrow_move_constructible_v<Any>);
+static_assert(std::is_nothrow_move_assignable_v<Any>);
+
+struct HeapCopyThrows {
+  // larger than the small-buffer size, so this type is heap-allocated
+  std::array<int, 8> blob{};
+  HeapCopyThrows() = default;
+  HeapCopyThrows(const HeapCopyThrows&) {
+    throw std::runtime_error{"copy boom"};
+  }
+  HeapCopyThrows& operator=(const HeapCopyThrows&) = default;
+  HeapCopyThrows(HeapCopyThrows&&) = default;
+  HeapCopyThrows& operator=(HeapCopyThrows&&) = default;
+};
+
+BOOST_AUTO_TEST_CASE(AnyCopyExceptionPropagates) {
+  Any a{std::in_place_type<HeapCopyThrows>};
+
+  // copy construction propagates the stored type's throwing copy constructor
+  BOOST_CHECK_THROW(Any b{a}, std::runtime_error);
+
+  // copy assignment likewise propagates
+  Any c;
+  BOOST_CHECK_THROW(c = a, std::runtime_error);
+  BOOST_CHECK(!c);
+
+  CHECK_ANY_ALLOCATIONS();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests
