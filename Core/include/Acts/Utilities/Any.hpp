@@ -570,20 +570,25 @@ class AnyBase : public AnyBaseAll {
       return;
     }
 
-    void* to = dataPtr();
     const void* from = fromAny.dataPtr();
 
     if (m_handler->copyConstruct == nullptr) {
       _ACTS_ANY_VERBOSE("Trivially copy construct");
       // trivially copy constructible
       m_data = fromAny.m_data;
+    } else if (m_handler->heapAllocated) {
+      // heap-allocated: always allocate fresh storage. We must not read the
+      // current contents of m_data here: when copyConstruct runs as part of a
+      // copy assignment with a type change, the previous value has already been
+      // destroyed but m_data still holds its stale bytes (a freed pointer, or
+      // the previous local value's bytes). Passing those as the destination
+      // would placement-new into garbage. Allocate and store the new pointer.
+      void* copyAt = m_handler->copyConstruct(from, nullptr);
+      assert(copyAt != nullptr);
+      setDataPtr(copyAt);
     } else {
-      void* copyAt = m_handler->copyConstruct(from, to);
-      if (to == nullptr) {
-        assert(copyAt != nullptr);
-        // copy allocated, store pointer
-        setDataPtr(copyAt);
-      }
+      // local storage: construct into the internal buffer
+      m_handler->copyConstruct(from, dataPtr());
     }
   }
 

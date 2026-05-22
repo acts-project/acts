@@ -354,6 +354,39 @@ BOOST_AUTO_TEST_CASE(AnyCopyTypeChange) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(AnyCopyTypeChangeToHeap) {
+  // Copy-assigning a heap-allocated value over an Any that already holds a
+  // value of a different type. Before the fix this read the stale contents of
+  // the internal buffer as the copy destination (a freed pointer for the
+  // heap->heap case, or the previous local value's bytes for local->heap),
+  // resulting in a wild write / use-after-free.
+  using Large = std::array<unsigned long, 5>;
+
+  BOOST_TEST_CONTEXT("local -> heap") {
+    Any a{42};
+    Large v{1, 2, 3, 4, 5};
+    Any b{v};
+    a = b;
+    BOOST_CHECK_EQUAL_COLLECTIONS(a.as<Large>().begin(), a.as<Large>().end(),
+                                  v.begin(), v.end());
+    // source is left intact
+    BOOST_CHECK_EQUAL_COLLECTIONS(b.as<Large>().begin(), b.as<Large>().end(),
+                                  v.begin(), v.end());
+  }
+  CHECK_ANY_ALLOCATIONS();
+
+  BOOST_TEST_CONTEXT("heap -> heap (different type)") {
+    std::array<int, 4> v1{1, 2, 3, 4};
+    Large v2{6, 7, 8, 9, 10};
+    Any a{v1};
+    Any b{v2};
+    a = b;
+    BOOST_CHECK_EQUAL_COLLECTIONS(a.as<Large>().begin(), a.as<Large>().end(),
+                                  v2.begin(), v2.end());
+  }
+  CHECK_ANY_ALLOCATIONS();
+}
+
 BOOST_AUTO_TEST_CASE(AnyDestroy) {
   {  // small type
     bool destroyed = false;
