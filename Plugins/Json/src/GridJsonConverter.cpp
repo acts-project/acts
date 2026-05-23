@@ -32,32 +32,15 @@ std::unique_ptr<Acts::IAxis> Acts::AxisJsonConverter::fromJson(
     const nlohmann::json& jAxis) {
   Acts::AxisType axisType = jAxis.at("type");
   Acts::AxisBoundaryType boundaryType = jAxis.at("boundary_type");
-  std::array<double, 2u> range = jAxis.at("range");
 
   if (axisType == Acts::AxisType::Equidistant) {
+    std::array<double, 2u> range = jAxis.at("range");
     return Acts::IAxis::createEquidistant(boundaryType, range.at(0),
                                           range.at(1), jAxis.at("bins"));
   }
 
   return Acts::IAxis::createVariable(
-      boundaryType, jAxis.at("edges").get<std::vector<double>>());
-}
-
-nlohmann::json Acts::AxisJsonConverter::toJsonDetray(const IAxis& ia) {
-  nlohmann::json jAxis;
-  jAxis["bounds"] =
-      ia.getBoundaryType() == Acts::AxisBoundaryType::Bound ? 1 : 2;
-  jAxis["binning"] = ia.isEquidistant() ? 0 : 1;
-  jAxis["bins"] = ia.getNBins();
-  if (ia.isEquidistant()) {
-    std::array<double, 2u> range = {ia.getBinEdges().front(),
-                                    ia.getBinEdges().back()};
-    jAxis["edges"] = range;
-
-  } else {
-    jAxis["edges"] = ia.getBinEdges();
-  }
-  return jAxis;
+      boundaryType, jAxis.at("boundaries").get<std::vector<double>>());
 }
 
 namespace {

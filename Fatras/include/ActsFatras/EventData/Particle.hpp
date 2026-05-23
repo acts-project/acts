@@ -389,6 +389,23 @@ class Particle {
   /// @return The number of hits associated with this particle
   std::uint32_t numberOfHits() const { return m_numberOfHits; }
 
+  /// Set the parent particle id.
+  ///
+  /// A default-constructed @c Barcode means "unknown parent". Populated by
+  /// input converters that have access to parent relationships (e.g. EDM4hep);
+  /// left at the default by simulation engines that don't track it.
+  ///
+  /// @param parentId Barcode identifying the parent particle
+  /// @return Reference to this particle for method chaining
+  Particle &setParentParticleId(Barcode parentId) {
+    m_parentParticleId = parentId;
+    return *this;
+  }
+
+  /// Parent particle id, or default-constructed @c Barcode if unknown.
+  /// @return The parent particle barcode
+  Barcode parentParticleId() const { return m_parentParticleId; }
+
   /// Set the outcome of particle.
   ///
   /// @param outcome outcome code
@@ -424,6 +441,8 @@ class Particle {
   double m_pathInL0 = 0;
   /// number of hits
   std::uint32_t m_numberOfHits = 0;
+  /// parent particle id (default-constructed = unknown)
+  Barcode m_parentParticleId{};
   /// reference surface
   const Acts::Surface *m_referenceSurface{nullptr};
   /// outcome

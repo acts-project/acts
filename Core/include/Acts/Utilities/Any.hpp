@@ -192,9 +192,13 @@ class AnyBase : public AnyBaseAll {
   /// Construct from any value type
   /// @tparam T Type of the value to store
   /// @param value Value to store in the Any
+  /// @note Not noexcept: storing a type larger than the small buffer allocates
+  ///       on the heap (may throw std::bad_alloc) and the stored type's own
+  ///       constructor may throw.
   template <typename T>
-  explicit AnyBase(T&& value) noexcept(detail::kAnyNoexcept)
-    requires(isStorable<std::decay_t<T>>())
+  explicit AnyBase(T&& value)
+    requires(!std::is_base_of_v<AnyBaseAll, std::decay_t<T>> &&
+             isStorable<std::decay_t<T>>())
       : AnyBase{std::in_place_type<T>, std::forward<T>(value)} {}
 
   /// Construct a new value in place, destroying any existing value
@@ -207,8 +211,14 @@ class AnyBase : public AnyBaseAll {
   T& emplace(Args&&... args) {
     using U = std::decay_t<T>;
     destroy();
+    // Construct the new value before installing the handler. constructValue
+    // does not depend on m_handler, so if the constructor throws this object is
+    // left empty (m_handler == nullptr) rather than claiming to hold a value
+    // whose storage was never set up, which would make the next destroy()
+    // operate on stale/freed memory.
+    U* ptr = constructValue<U>(std::forward<Args>(args)...);
     m_handler = makeHandler<U>();
-    return *constructValue<U>(std::forward<Args>(args)...);
+    return *ptr;
   }
 
   /// Get reference to stored value of specified type
@@ -296,7 +306,9 @@ class AnyBase : public AnyBaseAll {
 
   /// Copy constructor (only when copyable is true)
   /// @param other The AnyBase to copy from
-  AnyBase(const AnyBase& other) noexcept(detail::kAnyNoexcept)
+  /// @note Not noexcept: copying a heap-allocated value allocates (may throw
+  ///       std::bad_alloc) and the stored type's copy constructor may throw.
+  AnyBase(const AnyBase& other)
     requires copyable
   {
     if (m_handler == nullptr && other.m_handler == nullptr) {
@@ -319,11 +331,18 @@ class AnyBase : public AnyBaseAll {
   /// Copy assignment operator (only when copyable is true)
   /// @param other The AnyBase to copy from
   /// @return Reference to this object
-  AnyBase& operator=(const AnyBase& other) noexcept(detail::kAnyNoexcept)
+  /// @note Not noexcept: copying a heap-allocated value allocates (may throw
+  ///       std::bad_alloc) and the stored type's copy operations may throw.
+  AnyBase& operator=(const AnyBase& other)
     requires copyable
   {
     _ACTS_ANY_VERBOSE("Copy assign (this="
                       << this << ") at: " << static_cast<void*>(m_data.data()));
+
+    if (this == &other) {
+      // self-assignment, noop
+      return *this;
+    }
 
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
@@ -340,7 +359,17 @@ class AnyBase : public AnyBaseAll {
       }
       assert(m_handler == nullptr);
       m_handler = other.m_handler;
-      copyConstruct(other);
+      try {
+        copyConstruct(other);
+      } catch (...) {
+        // copyConstruct allocates and/or runs the stored type's copy
+        // constructor, either of which may throw. If it does, no value was
+        // established, so leave *this empty rather than with a handler that
+        // claims a value that does not exist (which would make destruction
+        // operate on uninitialized storage).
+        m_handler = nullptr;
+        throw;
+      }
     }
     return *this;
   }
@@ -370,6 +399,11 @@ class AnyBase : public AnyBaseAll {
   AnyBase& operator=(AnyBase&& other) noexcept(detail::kAnyNoexcept) {
     _ACTS_ANY_VERBOSE("Move assign (this="
                       << this << ") at: " << static_cast<void*>(m_data.data()));
+    if (this == &other) {
+      // self-assignment, noop (avoids destroying our own value)
+      return *this;
+    }
+
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
       return *this;
@@ -570,20 +604,25 @@ class AnyBase : public AnyBaseAll {
       return;
     }
 
-    void* to = dataPtr();
     const void* from = fromAny.dataPtr();
 
     if (m_handler->copyConstruct == nullptr) {
       _ACTS_ANY_VERBOSE("Trivially copy construct");
       // trivially copy constructible
       m_data = fromAny.m_data;
+    } else if (m_handler->heapAllocated) {
+      // heap-allocated: always allocate fresh storage. We must not read the
+      // current contents of m_data here: when copyConstruct runs as part of a
+      // copy assignment with a type change, the previous value has already been
+      // destroyed but m_data still holds its stale bytes (a freed pointer, or
+      // the previous local value's bytes). Passing those as the destination
+      // would placement-new into garbage. Allocate and store the new pointer.
+      void* copyAt = m_handler->copyConstruct(from, nullptr);
+      assert(copyAt != nullptr);
+      setDataPtr(copyAt);
     } else {
-      void* copyAt = m_handler->copyConstruct(from, to);
-      if (to == nullptr) {
-        assert(copyAt != nullptr);
-        // copy allocated, store pointer
-        setDataPtr(copyAt);
-      }
+      // local storage: construct into the internal buffer
+      m_handler->copyConstruct(from, dataPtr());
     }
   }
 
