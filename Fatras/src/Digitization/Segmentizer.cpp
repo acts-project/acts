@@ -10,13 +10,16 @@
 
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <span>
 #include <vector>
 
-std::vector<ActsFatras::Segmentizer::ChannelSegment>
-ActsFatras::Segmentizer::segments(
+namespace ActsFatras {
+
+std::vector<Segmentizer::ChannelSegment> Segmentizer::segments(
     const Acts::GeometryContext& geoCtx, const Acts::Surface& surface,
     const std::vector<Acts::DirectedProtoAxis>& segmentation,
     const Segment2D& segment) const {
@@ -159,3 +162,5 @@ ActsFatras::Segmentizer::segments(
 
   return cSegments;
 }
+
+}  // namespace ActsFatras

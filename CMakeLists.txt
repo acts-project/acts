@@ -64,7 +64,6 @@ option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
 option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_COVFIE "Use a system-provided covfie installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_SETUP_COVFIE "If we want to set up covfie" ON)
-option(ACTS_USE_SYSTEM_DETRAY "Use a system-provided detray installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_SETUP_DETRAY "If we want to set up detray" ON)
 option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_SETUP_VECMEM "If we want to set up vecmem" ON)
@@ -81,11 +80,22 @@ option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEOMODEL "Build GeoModel plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TRACCC "Build Traccc plugin" OFF)
+option(ACTS_ENABLE_CUDA "Enable CUDA for the gnn/Traccc plugins" OFF)
+option(ACTS_GNN_ENABLE_CUDA "[Deprecated] Enable CUDA for the gnn plugin" OFF)
+
+# Preserve previous behaviour of ACTS_GNN_ENABLE_CUDA but mark as deprecated
+if(ACTS_GNN_ENABLE_CUDA)
+    message(
+        DEPRECATION
+        "ACTS_GNN_ENABLE_CUDA is deprecated. Enable ACTS_ENABLE_CUDA to achieve the same effect."
+    )
+    set(ACTS_ENABLE_CUDA ON)
+endif()
+
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GNN "Build the GNN plugin" OFF)
 option(ACTS_GNN_ENABLE_ONNX "Build the Onnx backend for the gnn plugin" OFF)
 option(ACTS_GNN_ENABLE_TORCH "Build the torchscript backend for the gnn plugin" ON)
-option(ACTS_GNN_ENABLE_CUDA "Enable CUDA for the gnn plugin" OFF)
 option(ACTS_GNN_ENABLE_MODULEMAP "Enable Module-Map-based graph construction" OFF)
 option(ACTS_GNN_ENABLE_TENSORRT "Enable the native TensorRT inference modules" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
@@ -102,6 +112,8 @@ option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
 # alignment related options
 option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
+# traccc related options
+option(ACTS_BUILD_TRACCC "Build traccc GPU tracking package" OFF)
 # examples related options
 option(ACTS_BUILD_EXAMPLES "Build basic examples components" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
@@ -177,6 +189,7 @@ set_option_if(
     ACTS_BUILD_EXAMPLES_ROOT
 )
 # core plugins might be required by examples or depend on each other
+set_option_if(ACTS_BUILD_EXAMPLES_DD4HEP ACTS_BUILD_ODD)
 set_option_if(
     ACTS_BUILD_PLUGIN_DD4HEP
     ACTS_BUILD_EXAMPLES_DD4HEP
@@ -207,9 +220,20 @@ set_option_if(ACTS_BUILD_PLUGIN_GNN ACTS_BUILD_EXAMPLES_GNN)
 set_option_if(ACTS_BUILD_PLUGIN_FPEMON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
-set_option_if(ACTS_GNN_ENABLE_CUDA ACTS_GNN_ENABLE_MODULEMAP)
+set_option_if(
+    ACTS_ENABLE_CUDA
+    ACTS_GNN_ENABLE_MODULEMAP
+    AND
+    ACTS_BUILD_PLUGIN_GNN
+)
+
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_PLUGIN_MILLE)
+set_option_if(ACTS_BUILD_TRACCC ACTS_BUILD_PLUGIN_TRACCC)
+set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_TRACCC)
+set_option_if(ACTS_SETUP_DETRAY ACTS_BUILD_TRACCC)
+set_option_if(ACTS_SETUP_VECMEM ACTS_SETUP_DETRAY)
+set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_SETUP_DETRAY)
 
 # feature tests
 include(CheckCXXSourceCompiles)
@@ -303,8 +327,7 @@ set(_acts_root_version 6.28.04) # first version with C++20 support
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 3.0.1)
-set(_acts_detray_version 1.0.1)
-set(_acts_traccc_version 1.2.0)
+set(_acts_traccc_version 1.3.0)
 set(_acts_covfie_version 0.15.2)
 set(_acts_vecmem_version 1.24.0)
 set(_acts_annoy_version 1.17.3)
@@ -478,7 +501,7 @@ endif()
 if(ACTS_BUILD_PLUGIN_ROOT)
     # In the ATLAS build, the ROOT find_package call does not find VDT unless these variables are set.
     # This should not affect other environments.
-    find_package(VDT)
+    find_package(VDT QUIET)
     if(VDT_FOUND)
         set(VDT_INCLUDE_DIR "${VDT_INCLUDE_DIR}" CACHE PATH "")
         set(VDT_LIBRARY "${VDT_vdt_LIBRARY}" CACHE FILEPATH "")
@@ -502,7 +525,7 @@ if(ACTS_BUILD_ANALYSIS_APPS)
     )
 endif()
 if(ACTS_BUILD_PLUGIN_GNN)
-    if(ACTS_GNN_ENABLE_CUDA)
+    if(ACTS_ENABLE_CUDA)
         find_package(CUDAToolkit REQUIRED)
         enable_cuda()
         message(STATUS "Build GNN plugin with CUDA")
@@ -511,7 +534,7 @@ if(ACTS_BUILD_PLUGIN_GNN)
     endif()
     if(ACTS_GNN_ENABLE_TORCH)
         find_package(Torch REQUIRED)
-        if(ACTS_GNN_ENABLE_CUDA)
+        if(ACTS_ENABLE_CUDA)
             add_subdirectory(thirdparty/FRNN)
         endif()
     endif()
@@ -549,23 +572,48 @@ if(ACTS_BUILD_PLUGIN_GEANT4)
     find_package(Geant4 ${_acts_geant4_version} REQUIRED CONFIG COMPONENTS gdml)
 endif()
 
-if(ACTS_BUILD_PLUGIN_TRACCC)
-    if(ACTS_SETUP_VECMEM)
-        if(ACTS_USE_SYSTEM_VECMEM)
-            find_package(vecmem ${_acts_vecmem_version} REQUIRED)
-        else()
-            add_subdirectory(thirdparty/vecmem)
-            # Make the "VecMem language code" available for the whole project.
-            include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
-        endif()
+if(ACTS_SETUP_VECMEM)
+    if(ACTS_USE_SYSTEM_VECMEM)
+        find_package(vecmem ${_acts_vecmem_version} REQUIRED)
+    else()
+        add_subdirectory(thirdparty/vecmem)
+        # Make the "VecMem language code" available for the whole project.
+        include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
+    endif()
+endif()
+
+if(ACTS_SETUP_DETRAY)
+    # HACK: Temporary logic (aka technical debt) to make the detray component
+    # work in traccc.
+    option(DETRAY_SETUP_VECMEM "" FALSE)
+    option(DETRAY_SETUP_NLOHMANN "" FALSE)
+    option(DETRAY_SETUP_EIGEN3 "" FALSE)
+    option(DETRAY_SETUP_ACTSVG "" FALSE)
+    option(DETRAY_SETUP_COVFIE "" FALSE)
+    option(DETRAY_SVG_DISPLAY "" TRUE)
+    if(ACTS_BUILD_TRACCC)
+        option(DETRAY_BUILD_TEST_UTILS "" TRUE)
+        set(DETRAY_GENERATE_METADATA
+            "itk_metadata"
+            CACHE STRING
+            "Semicolon-separated list of metadata generator scripts to run in this build"
+        )
     endif()
 
-    if(ACTS_SETUP_DETRAY)
-        if(ACTS_USE_SYSTEM_DETRAY)
-            find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
-        else()
-            add_subdirectory(thirdparty/detray)
-        endif()
+    add_subdirectory(Detray)
+endif()
+
+if(ACTS_BUILD_TRACCC)
+    # HACK: Temporary logic (aka technical debt) to make the traccc
+    # component work. Remove this ASAP.
+    option(TRACCC_USE_ROOT "" FALSE)
+    option(TRACCC_SETUP_ACTS "" FALSE)
+    option(TRACCC_SETUP_VECMEM "" FALSE)
+    find_package(TBB ${_acts_tbb_version} CONFIG)
+    if(NOT TBB_FOUND)
+        set(TRACCC_SETUP_TBB TRUE CACHE BOOL "")
+    else()
+        set(TRACCC_SETUP_TBB FALSE CACHE BOOL "")
     endif()
 
     if(ACTS_SETUP_COVFIE)

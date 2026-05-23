@@ -207,8 +207,14 @@ class AnyBase : public AnyBaseAll {
   T& emplace(Args&&... args) {
     using U = std::decay_t<T>;
     destroy();
+    // Construct the new value before installing the handler. constructValue
+    // does not depend on m_handler, so if the constructor throws this object is
+    // left empty (m_handler == nullptr) rather than claiming to hold a value
+    // whose storage was never set up, which would make the next destroy()
+    // operate on stale/freed memory.
+    U* ptr = constructValue<U>(std::forward<Args>(args)...);
     m_handler = makeHandler<U>();
-    return *constructValue<U>(std::forward<Args>(args)...);
+    return *ptr;
   }
 
   /// Get reference to stored value of specified type
@@ -325,6 +331,11 @@ class AnyBase : public AnyBaseAll {
     _ACTS_ANY_VERBOSE("Copy assign (this="
                       << this << ") at: " << static_cast<void*>(m_data.data()));
 
+    if (this == &other) {
+      // self-assignment, noop
+      return *this;
+    }
+
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
       return *this;
@@ -370,6 +381,11 @@ class AnyBase : public AnyBaseAll {
   AnyBase& operator=(AnyBase&& other) noexcept(detail::kAnyNoexcept) {
     _ACTS_ANY_VERBOSE("Move assign (this="
                       << this << ") at: " << static_cast<void*>(m_data.data()));
+    if (this == &other) {
+      // self-assignment, noop (avoids destroying our own value)
+      return *this;
+    }
+
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
       return *this;
@@ -570,20 +586,25 @@ class AnyBase : public AnyBaseAll {
       return;
     }
 
-    void* to = dataPtr();
     const void* from = fromAny.dataPtr();
 
     if (m_handler->copyConstruct == nullptr) {
       _ACTS_ANY_VERBOSE("Trivially copy construct");
       // trivially copy constructible
       m_data = fromAny.m_data;
+    } else if (m_handler->heapAllocated) {
+      // heap-allocated: always allocate fresh storage. We must not read the
+      // current contents of m_data here: when copyConstruct runs as part of a
+      // copy assignment with a type change, the previous value has already been
+      // destroyed but m_data still holds its stale bytes (a freed pointer, or
+      // the previous local value's bytes). Passing those as the destination
+      // would placement-new into garbage. Allocate and store the new pointer.
+      void* copyAt = m_handler->copyConstruct(from, nullptr);
+      assert(copyAt != nullptr);
+      setDataPtr(copyAt);
     } else {
-      void* copyAt = m_handler->copyConstruct(from, to);
-      if (to == nullptr) {
-        assert(copyAt != nullptr);
-        // copy allocated, store pointer
-        setDataPtr(copyAt);
-      }
+      // local storage: construct into the internal buffer
+      m_handler->copyConstruct(from, dataPtr());
     }
   }
 
