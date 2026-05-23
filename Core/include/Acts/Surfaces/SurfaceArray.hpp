@@ -278,7 +278,6 @@ class SurfaceArray {
   /// Default constructor which takes a @c SurfaceLookup and a vector of surfaces
   /// @param gridLookup The grid storage. @c SurfaceArray does not fill it on its own
   /// @param surfaces The input vector of surfaces. This is only for bookkeeping, so we can ask
-  /// @param transform Optional additional transform for this SurfaceArray
   [[deprecated("Use the constructor with axes instead")]]
   SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
                std::vector<std::shared_ptr<const Surface>> surfaces);
