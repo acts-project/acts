@@ -44,12 +44,26 @@ class SurfaceArray {
     virtual void fill(const GeometryContext& gctx,
                       std::span<const Surface* const> surfaces) = 0;
 
+    /// Get all surfaces in bin given by the global bin index
+    /// @param bin the global bin index
+    /// @return span of surface pointers of the bin at that position
+    virtual std::span<const Surface* const> at(std::size_t bin) const = 0;
+
+    /// Get all surfaces in bin given by local grid indices and neighbor
+    /// distance.
+    /// @param gridIndices the local grid indices
+    /// @param neighborDistance the neighbor distance to include in the lookup
+    /// @return span of surface pointers of the bin at that position and its neighbors
+    virtual std::span<const Surface* const> at(
+        std::array<std::size_t, 2> gridIndices,
+        std::uint8_t neighborDistance) const = 0;
+
     /// Performs lookup at @c pos and returns bin content as const reference
     /// @param gctx The current geometry context object, e.g. alignment
     /// @param position Lookup position
     /// @param direction Lookup direction
     /// @return A span of surface pointers
-    virtual std::span<const Surface* const> lookup(
+    virtual std::span<const Surface* const> at(
         const GeometryContext& gctx, const Vector3& position,
         const Vector3& direction) const = 0;
 
@@ -101,20 +115,6 @@ class SurfaceArray {
     /// is used to determine how many neighbors to include in neighbor lookups.
     /// @return Maximum neighbor distance
     virtual std::uint8_t maxNeighborDistance() const = 0;
-
-    /// Get all surfaces in bin given by local grid indices and neighbor
-    /// distance.
-    /// @param gridIndices the local grid indices
-    /// @param neighborDistance the neighbor distance to include in the lookup
-    /// @return span of surface pointers of the bin at that position and its neighbors
-    virtual std::span<const Surface* const> at(
-        std::array<std::size_t, 2> gridIndices,
-        std::uint8_t neighborDistance) const = 0;
-
-    /// Get all surfaces in bin given by the global bin index
-    /// @param bin the global bin index
-    /// @return span of surface pointers of the bin at that position
-    virtual std::span<const Surface* const> at(std::size_t bin) const = 0;
   };
 
  public:
@@ -137,6 +137,13 @@ class SurfaceArray {
                std::tuple<const IAxis&, const IAxis&> axes,
                std::uint8_t maxNeighborDistance = 1);
 
+  /// Get all surfaces in bin given by the global bin index
+  /// @param bin the global bin index
+  /// @return span of surface pointers of the bin at that position
+  std::span<const Surface* const> at(std::size_t bin) const {
+    return m_gridLookup->at(bin);
+  }
+
   /// Get all surfaces in bin given by position @p pos.
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position the lookup position
@@ -145,7 +152,17 @@ class SurfaceArray {
   std::span<const Surface* const> at(const GeometryContext& gctx,
                                      const Vector3& position,
                                      const Vector3& direction) const {
-    return m_gridLookup->lookup(gctx, position, direction);
+    return m_gridLookup->at(gctx, position, direction);
+  }
+
+  /// Get all surfaces in bin given by local grid indices and neighbor
+  /// distance.
+  /// @param gridIndices the local grid indices
+  /// @param neighborDistance the neighbor distance to include in the lookup
+  /// @return span of surface pointers of the bin at that position and its neighbors
+  std::span<const Surface* const> at(std::array<std::size_t, 2> gridIndices,
+                                     std::uint8_t neighborDistance) const {
+    return m_gridLookup->at(gridIndices, neighborDistance);
   }
 
   /// Get all surfaces in bin at @p pos and its neighbors
@@ -226,23 +243,6 @@ class SurfaceArray {
   /// @return Maximum neighbor distance
   std::uint8_t maxNeighborDistance() const {
     return m_gridLookup->maxNeighborDistance();
-  }
-
-  /// Get all surfaces in bin given by local grid indices and neighbor
-  /// distance.
-  /// @param gridIndices the local grid indices
-  /// @param neighborDistance the neighbor distance to include in the lookup
-  /// @return span of surface pointers of the bin at that position and its neighbors
-  std::span<const Surface* const> at(std::array<std::size_t, 2> gridIndices,
-                                     std::uint8_t neighborDistance) const {
-    return m_gridLookup->at(gridIndices, neighborDistance);
-  }
-
-  /// Get all surfaces in bin given by the global bin index
-  /// @param bin the global bin index
-  /// @return span of surface pointers of the bin at that position
-  std::span<const Surface* const> at(std::size_t bin) const {
-    return m_gridLookup->at(bin);
   }
 
  private:

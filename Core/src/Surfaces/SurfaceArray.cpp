@@ -29,7 +29,27 @@ struct SurfaceArray::SingleElementLookupImpl final
   explicit SingleElementLookupImpl(const Surface* element)
       : m_element({element}) {}
 
-  std::span<const Surface* const> lookup(
+  std::span<const Surface* const> at(std::size_t bin) const override {
+    if (bin != 0) {
+      throw std::out_of_range(
+          "SingleElementLookupImpl only contains one bin with index 0");
+    }
+    return m_element;
+  }
+
+  std::span<const Surface* const> at(
+      std::array<std::size_t, 2> gridIndices,
+      std::uint8_t neighborDistance) const override {
+    if (gridIndices != std::array<std::size_t, 2>{0, 0} ||
+        neighborDistance != 0) {
+      throw std::out_of_range(
+          "SingleElementLookupImpl only contains one bin with zero neighbor "
+          "distance");
+    }
+    return m_element;
+  }
+
+  std::span<const Surface* const> at(
       const GeometryContext& /*gctx*/, const Vector3& /*position*/,
       const Vector3& /*direction*/) const override {
     return m_element;
@@ -59,26 +79,6 @@ struct SurfaceArray::SingleElementLookupImpl final
   std::array<std::size_t, 2> numLocalBins() const override { return {1, 1}; }
 
   std::uint8_t maxNeighborDistance() const override { return 0; }
-
-  std::span<const Surface* const> at(
-      std::array<std::size_t, 2> gridIndices,
-      std::uint8_t neighborDistance) const override {
-    if (gridIndices != std::array<std::size_t, 2>{0, 0} ||
-        neighborDistance != 0) {
-      throw std::out_of_range(
-          "SingleElementLookupImpl only contains one bin with zero neighbor "
-          "distance");
-    }
-    return m_element;
-  }
-
-  std::span<const Surface* const> at(std::size_t bin) const override {
-    if (bin != 0) {
-      throw std::out_of_range(
-          "SingleElementLookupImpl only contains one bin with index 0");
-    }
-    return m_element;
-  }
 
  private:
   std::vector<const Surface*> m_element;
@@ -123,9 +123,20 @@ struct SurfaceArray::SurfaceGridLookupImpl final
     populateNeighborCache();
   }
 
-  std::span<const Surface* const> lookup(
-      const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction) const override {
+  std::span<const Surface* const> at(std::size_t globalBin) const override {
+    return m_neighborSurfacePacks.at(globalBin);
+  }
+
+  std::span<const Surface* const> at(
+      std::array<std::size_t, 2> gridIndices,
+      std::uint8_t neighborDistance) const override {
+    return m_neighborSurfacePacks.at(
+        globalBinFromLocalBins3D(gridIndices, neighborDistance));
+  }
+
+  std::span<const Surface* const> at(const GeometryContext& gctx,
+                                     const Vector3& position,
+                                     const Vector3& direction) const override {
     const std::optional<GridIndex> localBins = findLocalBin2D(
         gctx, position, direction, std::numeric_limits<double>::infinity());
     if (!localBins.has_value()) {
@@ -198,17 +209,6 @@ struct SurfaceArray::SurfaceGridLookupImpl final
 
   std::uint8_t maxNeighborDistance() const override {
     return m_maxNeighborDistance;
-  }
-
-  std::span<const Surface* const> at(
-      std::array<std::size_t, 2> gridIndices,
-      std::uint8_t neighborDistance) const override {
-    return m_neighborSurfacePacks.at(
-        globalBinFromLocalBins3D(gridIndices, neighborDistance));
-  }
-
-  std::span<const Surface* const> at(std::size_t globalBin) const override {
-    return m_neighborSurfacePacks.at(globalBin);
   }
 
  private:
