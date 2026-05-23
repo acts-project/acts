@@ -6,13 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Surfaces/CylinderBounds.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
 //
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 
@@ -61,8 +62,9 @@ DetrayPayloadConverter::convertBinnedSurfaceMaterial(
   } else if (bVal0 == AxisX && bVal1 == AxisY) {
     gridIndexType = detray::io::material_id::rectangle2_map;
   } else {
-    throw std::runtime_error(
-        "DetrayMaterialConverter: Unsupported binning for Detray");
+    throw std::invalid_argument(
+        "DetrayMaterialConverter: Unsupported binning for Detray " +
+        axisDirectionName(bVal0) + ", " + axisDirectionName(bVal1));
   }
 
   detray::io::grid_payload<detray::io::surface_material_payload,
