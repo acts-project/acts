@@ -11,6 +11,7 @@
 #
 
 import io
+import os
 import sys
 import subprocess
 import argparse
@@ -142,20 +143,19 @@ if __name__ == "__main__":
     p.add_argument("--additional-particles", type=Path, help="CSV file with additional particles.", default=None)
 
     args = p.parse_args()
-    if args.additional_particles is not None:
-        import os
-        additional_particle_csv = args.additional_particles
-        if os.path.exists(additional_particle_csv):
-            print(f"Loading additional particle data from: {additional_particle_csv}")
+    if args.additional_particles is not None
+        # Here we check if the CSV file provided via cmake options is available, if so, then we load it and we add the particles to the header file.
+        if os.path.exists(args.additional_particles):
+            print(f"Loading additional particle data from: {args.additional_particles}")
             particles_before = Particle.all()
-            Particle.load_table(additional_particle_csv, append=True)
+            Particle.load_table(args.additional_particles, append=True)
             particles_after = Particle.all()
             new_particles = set(particles_after) - set(particles_before)
-            print(f"Loaded {len(new_particles)} additional particles from {additional_particle_csv}")
+            print(f"Loaded {len(new_particles)} additional particles from {args.additional_particles}")
             for p in new_particles:
                 print(f"  - {p.name} (PDG ID: {p.pdgid})")
         else:
-            print(f"Warning: Additional particle CSV file not found: {additional_particle_csv}")
+            print(f"Warning: Additional particle CSV file not found: {args.additional_particles}")
 
     if args.output is None:
         output_file = sys.stdout
