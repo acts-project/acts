@@ -54,13 +54,14 @@ DetrayPayloadConverter::convertBinnedSurfaceMaterial(
     newPhiAxis.binvalue = AxisRPhi;
     nbUtility += BinUtility(newPhiAxis);
     nbUtility += BinUtility(zAxis);
+    bUtility = std::move(nbUtility);
     gridIndexType = detray::io::material_id::concentric_cylinder2_map;
   } else if (bVal0 == AxisPhi && bVal1 == AxisZ) {
     gridIndexType = detray::io::material_id::concentric_cylinder2_map;
   } else if (bVal0 == AxisX && bVal1 == AxisY) {
     gridIndexType = detray::io::material_id::rectangle2_map;
   } else {
-    std::runtime_error(
+    throw std::runtime_error(
         "DetrayMaterialConverter: Unsupported binning for Detray");
   }
 
