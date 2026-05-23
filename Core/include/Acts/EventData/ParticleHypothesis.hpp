@@ -177,10 +177,20 @@ class ParticleHypothesis final {
   }
 
   /// Create a new particle hypothesis with the same absolute PDG and mass but a
-  /// different momentum.
-  /// @param momentum The new momentum value
+  /// different momentum hypothesis.
+  /// @param momentum The new momentum hypothesis value
   /// @return A new ParticleHypothesis with the updated momentum
   ParticleHypothesis withMomentumHypothesis(double momentum) const {
+    return ParticleHypothesis(absolutePdg(), mass(), absoluteCharge(),
+                              momentum);
+  }
+
+  /// Create a new particle hypothesis with the same absolute PDG and mass but a
+  /// different momentum hypothesis.
+  /// @param momentum The new optional momentum hypothesis value
+  /// @return A new ParticleHypothesis with the updated momentum
+  ParticleHypothesis withMomentumHypothesis(
+      std::optional<double> momentum) const {
     return ParticleHypothesis(absolutePdg(), mass(), absoluteCharge(),
                               momentum);
   }
