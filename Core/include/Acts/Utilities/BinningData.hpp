@@ -461,7 +461,7 @@ class BinningData {
   /// Create a scaled version of this BinningData
   /// @param factor is the scaling factor to be applied to the binning parameters
   /// @return a new BinningData object with scaled parameters
-  BinningData scale(double factor) const {
+  BinningData scale(float factor) const {
     BinningData scaled = *this;
     scaled.min *= factor;
     scaled.max *= factor;
