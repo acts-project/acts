@@ -306,7 +306,7 @@ class ReferenceTrajectoryBuilder {
 
       auto typeFlags = trackStateProxy.typeFlags();
       typeFlags.setHasParameters();
-      if (surface.surfaceMaterial() != nullptr) {
+      if (surface.hasMaterial()) {
         typeFlags.setHasMaterial();
       }
 

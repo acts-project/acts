@@ -370,8 +370,13 @@ bool Surface::isSensitive() const {
   }
   return m_isSensitive;
 }
+
 bool Surface::isAlignable() const {
   return m_placement != nullptr;
+}
+
+bool Surface::hasMaterial() const {
+  return m_surfaceMaterial != nullptr;
 }
 
 }  // namespace Acts

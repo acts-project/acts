@@ -162,7 +162,7 @@ void SurfaceMaterialMapper::collectMaterialVolumes(
   ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
                                    << "' for material surfaces.");
   ACTS_VERBOSE("- Insert Volume ...");
-  if (tVolume.volumeMaterial() != nullptr) {
+  if (tVolume.hasMaterial()) {
     mState.volumeMaterial[tVolume.geometryId()] = tVolume.volumeMaterialPtr();
   }
 
