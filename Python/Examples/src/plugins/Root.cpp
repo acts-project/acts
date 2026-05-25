@@ -258,10 +258,10 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootSpacePointPerformanceWriter, root,
-        "RootSpacePointPerformanceWriter", inputSpacePoints, inputMeasurements,
-        inputSimHits, inputMeasurementSimHitsMap, inputMeasurementParticlesMap,
-        trackingGeometry, stripGeometrySelection, filePath, fileMode, treeName,
-        zAxis, rAxis, etaAxis, phiAxis);
+        "RootSpacePointPerformanceWriter", inputSpacePoints, inputParticles,
+        inputMeasurements, inputSimHits, inputMeasurementSimHitsMap,
+        inputMeasurementParticlesMap, trackingGeometry, stripGeometrySelection,
+        filePath, fileMode, treeName, zAxis, rAxis, etaAxis, phiAxis);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootAthenaDumpWriter, root, "RootAthenaDumpWriter", inputParticles,

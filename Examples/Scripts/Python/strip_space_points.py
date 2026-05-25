@@ -53,7 +53,7 @@ def createStripSpacePoints(
         # Note: We restrict the eta range to [-2,2] to get tracks with long-strip hits
         addParticleGun(
             s,
-            ParticleConfig(num=1, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
+            ParticleConfig(num=4, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
             EtaConfig(-2.0, 2.0, uniform=True),
             MomentumConfig(1.0 * u.GeV, 100.0 * u.GeV, transverse=True),
             PhiConfig(0.0, 360.0 * u.degree),
@@ -61,7 +61,7 @@ def createStripSpacePoints(
                 mean=acts.Vector4(0, 0, 0, 0),
                 stddev=acts.Vector4(0, 0, 0, 0),
             ),
-            multiplicity=1,
+            multiplicity=200,
             rnd=rnd,
         )
     else:
@@ -132,6 +132,7 @@ def createStripSpacePoints(
         RootSpacePointPerformanceWriter(
             level=acts.logging.INFO,
             inputSpacePoints="space_points",
+            inputParticles="particles",
             inputMeasurements="measurements",
             inputSimHits="simhits",
             inputMeasurementSimHitsMap="measurement_simhits_map",

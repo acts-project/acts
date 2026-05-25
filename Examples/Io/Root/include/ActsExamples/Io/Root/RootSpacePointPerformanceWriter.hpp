@@ -30,6 +30,8 @@ class RootSpacePointPerformanceWriter final
   struct Config {
     /// Which space point collection to write.
     std::string inputSpacePoints;
+    /// Input particle collection for truth matching.
+    std::string inputParticles;
     /// Which measurement collection to write.
     std::string inputMeasurements;
     /// Which simulated (truth) hits collection to use.
@@ -91,6 +93,7 @@ class RootSpacePointPerformanceWriter final
 
   StripModulePairMap m_stripModulePairMap;
 
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};

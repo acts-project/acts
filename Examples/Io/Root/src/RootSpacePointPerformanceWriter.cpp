@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/StripModulePairing.hpp"
@@ -35,7 +36,7 @@ auto toRange(const std::pair<Begin, End>& pair) {
 }
 
 template <typename Range1, typename Range2>
-bool hasCommon(const Range1& a, const Range2& b) {
+bool hasCommon(Range1&& a, Range2&& b) {
   for (const auto& elementA : a) {
     for (const auto& elementB : b) {
       if (elementA == elementB) {
@@ -54,6 +55,9 @@ RootSpacePointPerformanceWriter::RootSpacePointPerformanceWriter(
               level),
       m_cfg(config) {
   // Input container for space points is already checked by base constructor
+  if (m_cfg.inputParticles.empty()) {
+    throw std::invalid_argument("Missing particles input collection");
+  }
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
   }
@@ -68,7 +72,11 @@ RootSpacePointPerformanceWriter::RootSpacePointPerformanceWriter(
     throw std::invalid_argument(
         "Missing measurement-to-particles map input collection");
   }
+  if (m_cfg.trackingGeometry == nullptr) {
+    throw std::invalid_argument("Missing tracking geometry");
+  }
 
+  m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_inputSimHits.initialize(m_cfg.inputSimHits);
   m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
@@ -131,10 +139,16 @@ ProcessCode RootSpacePointPerformanceWriter::finalize() {
 
 ProcessCode RootSpacePointPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const SpacePointContainer& spacePoints) {
+  const auto& particles = m_inputParticles(ctx);
   const auto& measurements = m_inputMeasurements(ctx);
   const auto& simHits = m_inputSimHits(ctx);
   const auto& measurementSimHitsMap = m_inputMeasurementSimHitsMap(ctx);
   const auto& measurementParticlesMap = m_inputMeasurementParticlesMap(ctx);
+
+  const auto transformSecond =
+      std::views::transform([](auto& p) -> auto& { return p.second; });
+  const auto filterParticles = std::views::filter(
+      [&](const SimBarcode& particle) { return particles.contains(particle); });
 
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
@@ -158,12 +172,14 @@ ProcessCode RootSpacePointPerformanceWriter::writeT(
       const auto measurementIndex2 =
           sourceLinks[1].get<IndexSourceLink>().index();
 
-      const auto contributingParticles1 =
-          toRange(measurementParticlesMap.equal_range(measurementIndex1));
-      const auto contributingParticles2 =
-          toRange(measurementParticlesMap.equal_range(measurementIndex2));
+      auto contributingParticles1 =
+          toRange(measurementParticlesMap.equal_range(measurementIndex1)) |
+          transformSecond | filterParticles;
+      auto contributingParticles2 =
+          toRange(measurementParticlesMap.equal_range(measurementIndex2)) |
+          transformSecond | filterParticles;
 
-      isFake = hasCommon(contributingParticles1, contributingParticles2);
+      isFake = !hasCommon(contributingParticles1, contributingParticles2);
 
       if (!isFake) {
         trueSpacePoints.emplace(
@@ -195,20 +211,17 @@ ProcessCode RootSpacePointPerformanceWriter::writeT(
     const auto sourceLinks2 =
         measurements.orderedIndices().equal_range(module2);
 
-    const auto transformSecond =
-        std::views::transform([](auto& p) -> auto& { return p.second; });
-
     for (const auto& sourceLink1 : toRange(sourceLinks1)) {
       const auto measurementIndex1 = sourceLink1.index();
-      const auto contributingParticles1 =
+      auto contributingParticles1 =
           toRange(measurementParticlesMap.equal_range(measurementIndex1)) |
-          transformSecond;
+          transformSecond | filterParticles;
 
       for (const auto& sourceLink2 : toRange(sourceLinks2)) {
         const auto measurementIndex2 = sourceLink2.index();
-        const auto contributingParticles2 =
+        auto contributingParticles2 =
             toRange(measurementParticlesMap.equal_range(measurementIndex2)) |
-            transformSecond;
+            transformSecond | filterParticles;
 
         if (!hasCommon(contributingParticles1, contributingParticles2)) {
           continue;
