@@ -22,6 +22,12 @@ try:
 except ImportError:
     ACTS_EXAMPLES_ROOT_AVAILABLE = False
 
+from acts.examples.json import (
+    JsonTrackFinderPerformanceWriter,
+    JsonTrackFitterPerformanceWriter,
+    JsonTrackSummaryWriter,
+)
+
 u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
@@ -1328,35 +1334,55 @@ def addGbtsSeeding(
 
 def addSeedPerformanceWriters(
     sequence: acts.examples.Sequencer,
-    outputDirRoot: Union[Path, str],
-    tracks: str,
-    protoTracks: str,
-    selectedParticles: str,
-    inputParticles: str,
-    outputTrackParameters: str,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    tracks: str = "",
+    protoTracks: str = "",
+    selectedParticles: str = "",
+    inputParticles: str = "",
+    outputTrackParameters: str = "",
     logLevel: acts.logging.Level = None,
     prefix: str = "",
+    outputDirJson: Optional[Union[Path, str]] = None,
 ):
     """Writes seeding related performance output"""
     customLogLevel = acts.examples.defaultLogging(sequence, logLevel)
-    assert (
-        ACTS_EXAMPLES_ROOT_AVAILABLE
-    ), "ROOT output requested but ROOT is not available"
-    outputDirRoot = Path(outputDirRoot)
-    if not outputDirRoot.exists():
-        outputDirRoot.mkdir()
 
-    sequence.addWriter(
-        RootTrackFinderPerformanceWriter(
-            level=customLogLevel(),
-            inputTracks=tracks,
-            inputParticles=selectedParticles,
-            inputTrackParticleMatching=f"{prefix}seed_particle_matching",
-            inputParticleTrackMatching=f"{prefix}particle_seed_matching",
-            inputParticleMeasurementsMap="particle_measurements_map",
-            filePath=str(outputDirRoot / f"performance_{prefix}seeding.root"),
+    if outputDirRoot is not None:
+        assert (
+            ACTS_EXAMPLES_ROOT_AVAILABLE
+        ), "ROOT output requested but ROOT is not available"
+        outputDirRoot = Path(outputDirRoot)
+        if not outputDirRoot.exists():
+            outputDirRoot.mkdir()
+
+        sequence.addWriter(
+            RootTrackFinderPerformanceWriter(
+                level=customLogLevel(),
+                inputTracks=tracks,
+                inputParticles=selectedParticles,
+                inputTrackParticleMatching=f"{prefix}seed_particle_matching",
+                inputParticleTrackMatching=f"{prefix}particle_seed_matching",
+                inputParticleMeasurementsMap="particle_measurements_map",
+                filePath=str(outputDirRoot / f"performance_{prefix}seeding.root"),
+            )
         )
-    )
+
+    if outputDirJson is not None:
+        outputDirJson = Path(outputDirJson)
+        if not outputDirJson.exists():
+            outputDirJson.mkdir()
+
+        sequence.addWriter(
+            JsonTrackFinderPerformanceWriter(
+                level=customLogLevel(),
+                inputTracks=tracks,
+                inputParticles=selectedParticles,
+                inputTrackParticleMatching=f"{prefix}seed_particle_matching",
+                inputParticleTrackMatching=f"{prefix}particle_seed_matching",
+                inputParticleMeasurementsMap="particle_measurements_map",
+                filePath=str(outputDirJson / f"performance_{prefix}seeding.json"),
+            )
+        )
 
     sequence.addWriter(
         RootTrackParameterWriter(
@@ -1844,6 +1870,7 @@ def addTrackWriters(
     tracks: str = "tracks",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
+    outputDirJson: Optional[Union[Path, str]] = None,
     writeSummary: bool = True,
     writeStates: bool = False,
     writeFitterPerformance: bool = False,
@@ -1942,6 +1969,51 @@ def addTrackWriters(
                 outputStem=str(f"track_parameters_{name}"),
             )
             s.addWriter(trackParameterWriter)
+
+    if outputDirJson is not None:
+        outputDirJson = Path(outputDirJson)
+        if not outputDirJson.exists():
+            outputDirJson.mkdir()
+
+        if writeSummary:
+            s.addWriter(
+                JsonTrackSummaryWriter(
+                    level=customLogLevel(),
+                    inputTracks=tracks,
+                    inputParticles="particles_selected",
+                    inputTrackParticleMatching="track_particle_matching",
+                    filePath=str(outputDirJson / f"tracksummary_{name}.json"),
+                    writeCovMat=writeCovMat,
+                )
+            )
+
+        if writeFitterPerformance:
+            s.addWriter(
+                JsonTrackFitterPerformanceWriter(
+                    level=customLogLevel(),
+                    inputTracks=tracks,
+                    inputParticles="particles_selected",
+                    inputTrackParticleMatching="track_particle_matching",
+                    filePath=str(
+                        outputDirJson / f"performance_fitting_{name}.json"
+                    ),
+                )
+            )
+
+        if writeFinderPerformance:
+            s.addWriter(
+                JsonTrackFinderPerformanceWriter(
+                    level=customLogLevel(),
+                    inputTracks=tracks,
+                    inputParticles="particles_selected",
+                    inputTrackParticleMatching="track_particle_matching",
+                    inputParticleTrackMatching="particle_track_matching",
+                    inputParticleMeasurementsMap="particle_measurements_map",
+                    filePath=str(
+                        outputDirJson / f"performance_finding_{name}.json"
+                    ),
+                )
+            )
 
 
 @acts.examples.NamedTypeArgs(

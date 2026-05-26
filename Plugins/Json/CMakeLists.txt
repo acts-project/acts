@@ -1,5 +1,6 @@
 acts_add_library(
     PluginJson
+    src/HistogramJsonConverter.cpp
     src/AlgebraJsonConverter.cpp
     src/ExtentJsonConverter.cpp
     src/GridJsonConverter.cpp

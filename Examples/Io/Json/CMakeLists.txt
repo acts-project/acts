@@ -4,6 +4,9 @@ acts_add_library(
     src/JsonMaterialWriter.cpp
     src/JsonSurfacesWriter.cpp
     src/JsonDigitizationConfig.cpp
+    src/JsonTrackFinderPerformanceWriter.cpp
+    src/JsonTrackFitterPerformanceWriter.cpp
+    src/JsonTrackSummaryWriter.cpp
 )
 target_include_directories(
     ActsExamplesIoJson

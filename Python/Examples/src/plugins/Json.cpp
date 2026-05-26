@@ -13,8 +13,11 @@
 #include "ActsExamples/Io/Json/JsonGeometryList.hpp"
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
+#include "ActsExamples/Io/Json/JsonTrackFinderPerformanceWriter.hpp"
+#include "ActsExamples/Io/Json/JsonTrackFitterPerformanceWriter.hpp"
 #include "ActsExamples/Io/Json/JsonTrackParamsLookupReader.hpp"
 #include "ActsExamples/Io/Json/JsonTrackParamsLookupWriter.hpp"
+#include "ActsExamples/Io/Json/JsonTrackSummaryWriter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -135,5 +138,34 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsJson, json) {
   {
     json.def("readDigiConfigFromJson", readDigiConfigFromJson);
     json.def("writeDigiConfigToJson", writeDigiConfigToJson);
+  }
+
+  // Performance writers (ROOT-free alternatives)
+  {
+    ACTS_PYTHON_DECLARE_WRITER(
+        JsonTrackFinderPerformanceWriter, json,
+        "JsonTrackFinderPerformanceWriter", inputTracks, inputParticles,
+        inputTrackParticleMatching, inputParticleTrackMatching,
+        inputParticleMeasurementsMap, filePath, effPlotToolConfig,
+        fakePlotToolConfig, duplicationPlotToolConfig,
+        trackSummaryPlotToolConfig, trackQualityPlotToolConfig,
+        subDetectorTrackSummaryVolumes, writeMatchingDetails);
+  }
+
+  {
+    ACTS_PYTHON_DECLARE_WRITER(
+        JsonTrackFitterPerformanceWriter, json,
+        "JsonTrackFitterPerformanceWriter", inputTracks, inputParticles,
+        inputTrackParticleMatching, filePath, resPlotToolConfig,
+        effPlotToolConfig, trackSummaryPlotToolConfig, fitMinEntries,
+        fitSigmaRange, fitIterations, warningThresholdFitFailureFraction);
+  }
+
+  {
+    ACTS_PYTHON_DECLARE_WRITER(JsonTrackSummaryWriter, json,
+                               "JsonTrackSummaryWriter", inputTracks,
+                               inputParticles, inputTrackParticleMatching,
+                               filePath, writeCovMat, writeGsfSpecific,
+                               writeGx2fSpecific);
   }
 }
