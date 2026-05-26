@@ -6,6 +6,8 @@ include(FetchContent)
 # Tell the user what's happening.
 message(STATUS "Building Millepede-II as part of the Acts project")
 
+unset(CMAKE_COMPILE_WARNING_AS_ERROR CACHE)
+set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)
 # Declare where to get Millepede-II from.
 FetchContent_Declare(
     millepedeII
