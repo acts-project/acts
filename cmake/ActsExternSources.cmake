@@ -43,7 +43,7 @@ mark_as_advanced(ACTS_NLOHMANN_JSON_SOURCE)
 # translate version string to the historical Mille release naming convention
 string(REPLACE "." "-" _acts_mille_release_string ${_acts_mille_version})
 set(ACTS_MILLE_SOURCE
-    "URL;https://gitlab.desy.de/millepede/mille/-/archive/V${_acts_mille_release_string}/mille-V${_acts_mille_release_string}.tar.gz;URL_HASH;SHA256=ae4bf37de8d835aa8adc2960bb795a2080233a4c8af3d4b55adf395e20df0f3e"
+    "URL;https://gitlab.desy.de/millepede/mille/-/archive/V${_acts_mille_release_string}/mille-V${_acts_mille_release_string}.tar.gz;URL_HASH;SHA256=1953e2a341fed3a1c431c954d6e8f1c823926bc2886bdc209d859d2cb9dac6d8"
     CACHE STRING
     "Source to take Mille from"
 )
