@@ -245,7 +245,11 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   template <typename T>
   constexpr void addColumn_impl(const std::string_view& key) {
     HashedString hashedKey = hashStringDynamic(key);
-    m_dynamic.insert({hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
+    auto insertItr = m_dynamic.insert(
+        {hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
+    if (insertItr.second && size() > 0ul) {
+      insertItr.first->second->resize(size());
+    }
   }
 
   Parameters parameters(IndexType itrack) {

@@ -8,6 +8,7 @@
 
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/Io/Root/RootAthenaDumpReader.hpp"
+#include "ActsExamples/Io/Root/RootAthenaDumpWriter.hpp"
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
@@ -79,12 +80,13 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
     ACTS_PYTHON_DECLARE_READER(
         RootAthenaDumpReader, root, "RootAthenaDumpReader", treename,
-        inputfiles, outputMeasurements, outputPixelSpacePoints,
-        outputStripSpacePoints, outputSpacePoints, outputClusters,
-        outputMeasurementParticlesMap, outputParticleMeasurementsMap,
-        outputParticles, onlySpacePoints, onlyPassedParticles,
-        skipOverlapSPsPhi, skipOverlapSPsEta, geometryIdMap, trackingGeometry,
-        absBoundaryTolerance, noTruth, readCellData);
+        inputfiles, outputMeasurements, outputMeasurementSubset,
+        outputPixelSpacePoints, outputStripSpacePoints, outputSpacePoints,
+        outputClusters, outputMeasurementParticlesMap,
+        outputParticleMeasurementsMap, outputParticles, onlySpacePoints,
+        onlyPassedParticles, skipOverlapSPsPhi, skipOverlapSPsEta,
+        geometryIdMap, trackingGeometry, absBoundaryTolerance, noTruth,
+        readCellData);
 
 #ifdef WITH_GEOMODEL_PLUGIN
     ACTS_PYTHON_DECLARE_READER(RootAthenaDumpGeoIdCollector, root,
@@ -251,6 +253,11 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
     ACTS_PYTHON_DECLARE_WRITER(
         RootSpacePointWriter, root, "RootSpacePointWriter", inputSpacePoints,
         inputMeasurementParticlesMap, filePath, fileMode, treeName);
+
+    ACTS_PYTHON_DECLARE_WRITER(
+        RootAthenaDumpWriter, root, "RootAthenaDumpWriter", inputParticles,
+        inputClusters, inputMeasurements, inputMeasParticleMap,
+        inputSpacePoints, filePath, treeName);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackStatesWriter, root, "RootTrackStatesWriter", inputTracks,

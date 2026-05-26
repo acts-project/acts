@@ -12,7 +12,7 @@ awkward-cpp==52
     # via awkward
 boost-histogram==1.7.2
     # via hist
-click==8.4.0
+click==8.4.1
     # via
     #   histoprint
     #   typer
@@ -46,7 +46,7 @@ mplhep==1.2.0
     # via -r Examples/Scripts/requirements.in
 mplhep-data==0.0.5
     # via mplhep
-numpy==2.4.5
+numpy==2.4.6
     # via
     #   awkward
     #   awkward-cpp

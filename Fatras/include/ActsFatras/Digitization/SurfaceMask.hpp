@@ -20,12 +20,20 @@ namespace Acts {
 class Surface;
 class AnnulusBounds;
 class RadialBounds;
+class CylinderBounds;
 }  // namespace Acts
 
 namespace ActsFatras {
 
 /// A brief struct that allows to apply a surface bound mask.
-struct PlanarSurfaceMask {
+///
+/// A single implementation handles all supported surface types, dispatched
+/// internally on `surface.type()`:
+///   - Plane / Disc / DiscTrapezoid : polygon, radial or annulus masking in
+///     the Cartesian / polar local frame.
+///   - Cylinder : axis-aligned rectangle clipping in the unrolled (rPhi, z)
+///     readout frame.
+struct SurfaceMask {
   /// Shorthand for a 2-d segment;
   using Segment2D = std::array<Acts::Vector2, 2>;
 
@@ -33,7 +41,7 @@ struct PlanarSurfaceMask {
   /// - If the segment is fully inside the surface, return unchanged
   /// - Otherwise mask/clip the segment to fit into the bounds
   ///
-  /// @note Only PlaneSurface/DiscSurface are supported
+  /// @note PlaneSurface/DiscSurface/CylinderSurface are supported
   ///
   /// @note If both end points of the segment are inside, the segment
   /// is not clipped/masked, even if it would cross a surface boundary.
@@ -83,6 +91,15 @@ struct PlanarSurfaceMask {
   Acts::Result<Segment2D> annulusMask(const Acts::AnnulusBounds& aBounds,
                                       const Segment2D& segment,
                                       bool firstInside) const;
+
+  /// Apply the mask of a cylinder (axis-aligned rectangle in (rPhi, z))
+  ///
+  /// @param cBounds The cylinder bounds for the masking
+  /// @param segment The track segment in the unrolled (rPhi, z) frame
+  ///
+  /// @return a result wrapping a segment
+  Acts::Result<Segment2D> cylinderMask(const Acts::CylinderBounds& cBounds,
+                                       const Segment2D& segment) const;
 
   /// 2D intersection helper for geometric calculations
   Acts::detail::IntersectionHelper2D intersector{};
