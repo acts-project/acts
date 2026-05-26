@@ -17,7 +17,7 @@ inputs:
   spack_repo_version:
     description: 'Spack builtin packages repo commit (git SHA) to pin'
     required: false
-    default: '1356a203eba53c3401e2be4e92d93432fe780190'
+    default: '6a3dd42c514510c234f203b5fef392162da80049'
   DEPENDENCY_TAG:
     description: 'Dependency tag to pull from'
     required: false
