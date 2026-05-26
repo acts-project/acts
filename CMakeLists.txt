@@ -73,7 +73,7 @@ option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system 
 option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_USE_SYSTEM_LIBS} )
 option(ACTS_USE_SYSTEM_MODULEMAPGRAPH "Use a system installation of ModuleMapGraph" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
-option(ACTS_USE_SYSTEM_GBL "Use a system-provided GBL" OFF)
+option(ACTS_USE_SYSTEM_GBL "Use a system-provided General Broken Lines (GBL) from Mille" OFF)
 option(ACTS_USE_SYSTEM_MILLE "Use a system-provided Mille" ON)
 
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
@@ -101,7 +101,7 @@ option(ACTS_GNN_ENABLE_TORCH "Build the torchscript backend for the gnn plugin" 
 option(ACTS_GNN_ENABLE_MODULEMAP "Enable Module-Map-based graph construction" OFF)
 option(ACTS_GNN_ENABLE_TENSORRT "Enable the native TensorRT inference modules" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
-option(ACTS_BUILD_PLUGIN_GBL "Build GBL plugin" OFF)
+option(ACTS_BUILD_PLUGIN_GBL "Build General Broken Lines (GBL) plugin from Mille" OFF)
 option(ACTS_BUILD_PLUGIN_MILLE "Build Mille plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ROOT "Build ROOT plugin" OFF)
