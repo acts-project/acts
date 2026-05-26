@@ -223,6 +223,10 @@ class Surface : public virtual GeometryObject,
   /// @param lay the assignment Layer by reference
   void associateLayer(const Layer& lay);
 
+  /// Check if the surface has an associated material description
+  /// @return True if the surface has an associated material, false otherwise
+  bool hasMaterial() const;
+
   /// Return method for the associated Material to this surface
   /// @return SurfaceMaterial as plain pointer, can be nullptr
   const ISurfaceMaterial* surfaceMaterial() const;

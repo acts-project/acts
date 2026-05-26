@@ -8,10 +8,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
@@ -23,20 +21,14 @@
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/RangeXD.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
-#include "ActsPython/Utilities/Macros.hpp"
 
 #include <array>
 #include <memory>
 #include <numbers>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -48,7 +40,6 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 using namespace Acts;
-using namespace ActsExamples;
 
 namespace {
 struct GeometryIdentifierHookBinding : public GeometryIdentifierHook {
@@ -66,8 +57,7 @@ struct MaterialSurfaceSelector {
 
   /// @param surface is the test surface
   void operator()(const Surface* surface) {
-    if (surface->surfaceMaterial() != nullptr &&
-        !rangeContainsValue(surfaces, surface)) {
+    if (surface->hasMaterial() && !rangeContainsValue(surfaces, surface)) {
       surfaces.push_back(surface);
     }
   }

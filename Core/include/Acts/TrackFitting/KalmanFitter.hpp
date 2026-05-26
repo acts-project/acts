@@ -447,7 +447,7 @@ class KalmanFitter {
                         result_type& result) const {
       const bool precedingMeasurementExists = result.measurementStates > 0;
       const bool surfaceIsSensitive = surface.isSensitive();
-      const bool surfaceHasMaterial = surface.surfaceMaterial() != nullptr;
+      const bool surfaceHasMaterial = surface.hasMaterial();
 
       // Try to find the surface in the measurement surfaces
       const auto sourceLinkIt = inputMeasurements.find(&surface);
@@ -505,7 +505,7 @@ class KalmanFitter {
         // Get and set the type flags
         auto typeFlags = trackStateProxy.typeFlags();
         typeFlags.setHasParameters();
-        if (surface.surfaceMaterial() != nullptr) {
+        if (surface.hasMaterial()) {
           typeFlags.setHasMaterial();
         }
 
