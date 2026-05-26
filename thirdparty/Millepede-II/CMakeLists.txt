@@ -6,15 +6,8 @@ include(FetchContent)
 # Tell the user what's happening.
 message(STATUS "Building Millepede-II as part of the Acts project")
 
-unset(CMAKE_COMPILE_WARNING_AS_ERROR CACHE)
-set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)
 # Declare where to get Millepede-II from.
-FetchContent_Declare(
-    millepedeII
-    SYSTEM
-    ${ACTS_MP2_SOURCE}
-    PATCH_COMMAND git apply ${CMAKE_CURRENT_SOURCE_DIR}/mp2.patch
-)
+FetchContent_Declare(millepedeII SYSTEM ${ACTS_MP2_SOURCE})
 
 # Now set up its build.
 FetchContent_MakeAvailable(millepedeII)
