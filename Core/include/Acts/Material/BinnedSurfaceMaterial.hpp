@@ -75,6 +75,8 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
       "Surface::globalToLocal() call instead")]] const MaterialSlab&
   materialSlab(const Vector3& gp) const final;
 
+  using ISurfaceMaterial::materialSlab;
+
   /// @copydoc ISurfaceMaterial::localAxisDirections() const
   std::vector<AxisDirection> localAxisDirections() const final;
 
