@@ -32,11 +32,11 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// for one-dimensional binning.
   ///
   /// @param binUtility defines the binning structure on the surface (copied)
-  /// @param fullProperties is the vector of properties as recorded (moved)
+  /// @param materialVector is the vector of material slabs as recorded (moved)
   /// @param splitFactor is the pre/post splitting directive
   /// @param mappingType is the type of surface mapping associated to the surface
   BinnedSurfaceMaterial(const BinUtility& binUtility,
-                        MaterialSlabVector fullProperties,
+                        MaterialSlabVector materialVector,
                         double splitFactor = 0.,
                         MappingType mappingType = MappingType::Default);
 
@@ -44,11 +44,11 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// for two-dimensional binning.
   ///
   /// @param binUtility defines the binning structure on the surface (copied)
-  /// @param fullProperties is the vector of properties as recorded (moved)
+  /// @param materialMatrix is the matrix of material slabs as recorded (moved)
   /// @param splitFactor is the pre/post splitting directive
   /// @param mappingType is the type of surface mapping associated to the surface
   BinnedSurfaceMaterial(const BinUtility& binUtility,
-                        MaterialSlabMatrix fullProperties,
+                        MaterialSlabMatrix materialMatrix,
                         double splitFactor = 0.,
                         MappingType mappingType = MappingType::Default);
 
@@ -69,16 +69,14 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
   const MaterialSlab& materialSlab(const Vector2& lp) const final;
 
-  /// @copydoc ISurfaceMaterial::localAxisDirections() const
-  std::vector<AxisDirection> localAxisDirections() const final;
-
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
   [[deprecated(
       "Use materialSlab(const Vector2& lp) with a prior "
       "Surface::globalToLocal() call instead")]] const MaterialSlab&
   materialSlab(const Vector3& gp) const final;
 
-  using ISurfaceMaterial::materialSlab;
+  /// @copydoc ISurfaceMaterial::localAxisDirections() const
+  std::vector<AxisDirection> localAxisDirections() const final;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   /// @param sl The output stream to write to
