@@ -605,4 +605,5 @@ class BinningData {
     return sl.str();
   }
 };
+
 }  // namespace Acts

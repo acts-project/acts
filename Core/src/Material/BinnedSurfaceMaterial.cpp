@@ -54,8 +54,8 @@ BinnedSurfaceMaterial& BinnedSurfaceMaterial::scale(double factor) {
 
 const MaterialSlab& BinnedSurfaceMaterial::materialSlab(
     const Vector2& lp) const {
-  const std::size_t ibin0 = m_binUtility.bin(lp, 0);
-  const std::size_t ibin1 = m_binUtility.bin(lp, 1);
+  const std::size_t ibin0 = m_binUtility.bin(lp[0], 0);
+  const std::size_t ibin1 = m_binUtility.bin(lp[1], 1);
   return m_fullMaterial[ibin1][ibin0];
 }
 
