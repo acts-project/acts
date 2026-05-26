@@ -23,13 +23,24 @@ namespace ActsFatras {
 ///
 /// A Lorentz drift angle can be applied.
 ///
-struct PlanarSurfaceDrift {
-  /// Shorthand for a 2D segment - drifted segment in 2D
+/// A single implementation handles all supported surface types; the readout
+/// frame is selected internally from `surface.type()`:
+///   - Plane / Disc : the Cartesian local frame (x, y), surface normal = local
+///     z. (For discs the polar conversion is done downstream in SurfaceMask /
+///     Segmentizer, consistent with the historical behaviour.)
+///   - Cylinder     : the unrolled readout frame (rPhi, z), surface normal =
+///     radial direction. rPhi = R * phi is the tangential arc length at the
+///     cylinder radius.
+///
+/// In every case the in-plane "x"/"y" coordinates carry the same physical
+/// (length) units, so the downstream masking and segmentation are identical.
+struct SurfaceDrift {
+  /// Shorthand for a 2D segment - drifted segment in 2D readout coordinates
   using Segment2D = std::array<Acts::Vector2, 2>;
-  /// Shorthand for a 3D segment  - undrifted segment in 3D
+  /// Shorthand for a 3D segment - undrifted segment in the local 3D frame
   using Segment3D = std::array<Acts::Vector3, 2>;
 
-  /// Drift the full 3D segment onto a surface 2D readout plane.
+  /// Drift the full 3D segment onto the surface 2D readout frame.
   ///
   ///
   /// @param gctx The current Geometry context
@@ -37,22 +48,22 @@ struct PlanarSurfaceDrift {
   /// @param thickness The emulated module/depletion thickness
   /// @param pos The position in global coordinates
   /// @param dir The direction in global coordinates
-  /// @param driftdir The drift direction in local (surface) coordinates
-  ///
-  /// @note A drift direction with no perpendicular component will
-  /// result in a segment with no lorentz drift or emulate a 3D pixel
-  /// sensor.
+  /// @param driftDir The drift direction in the readout-local frame
+  ///                 (plane/disc: local x, y, normal; cylinder: tangential,
+  ///                 axial, radial). A direction with no perpendicular
+  ///                 component emulates a 3D pixel sensor / no Lorentz drift.
   ///
   /// @note The readout is always emulated at the central surface,
   /// as the mask will be deployed there, and the measurement is
   /// presented there.
   ///
-  /// @return a tuple of the (drifted) Segment on the readout surface
-  /// ( @note without masking ), and original 3D segment (in local 3D frame)
+  /// @return a tuple of the (drifted) Segment2D on the readout surface
+  /// ( @note without masking ) and the original undrifted 3D segment, or a
+  /// DigitizationError if the track is parallel to the surface.
   Acts::Result<std::tuple<Segment2D, Segment3D>> toReadout(
       const Acts::GeometryContext& gctx, const Acts::Surface& surface,
       double thickness, const Acts::Vector3& pos, const Acts::Vector3& dir,
-      const Acts::Vector3& driftdir = Acts::Vector3(0., 0., 0.)) const;
+      const Acts::Vector3& driftDir = Acts::Vector3(0., 0., 0.)) const;
 };
 
 }  // namespace ActsFatras
