@@ -319,7 +319,7 @@ set(_acts_hepmc3_version 3.2.4)
 set(_acts_nlohmanjson_version 3.11.3)
 set(_acts_gbl_version 04.00.04)
 set(_acts_mille_version 01.00.03)
-set(_acts_mp2_version 05.01.02)
+set(_acts_mp2_version 05.01.03)
 set(_acts_onnxruntime_version 1.12.0)
 set(_acts_geomodel_version 6.8.0)
 set(_acts_root_version 6.28.04) # first version with C++20 support
