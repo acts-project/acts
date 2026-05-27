@@ -1,0 +1,20 @@
+# SPDX-PackageName = "traccc, a part of the ACTS project"
+# SPDX-FileCopyrightText: CERN
+# SPDX-License-Identifier: MPL-2.0
+
+[project]
+name = "traccc-bench-tools"
+version = "0.0.1"
+requires-python = "~=3.9"
+dependencies = [
+    "gitpython>=3.1.44,<4",
+    "pandas>=2.2.3,<3",
+    "matplotlib~=3.9",
+]
+
+[dependency-groups]
+dev = ["black>=25.1.0,<26"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

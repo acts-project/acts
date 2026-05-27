@@ -1,0 +1,49 @@
+/** TRACCC library, part of the ACTS project (R&D line)
+ *
+ * (c) 2022-2025 CERN for the benefit of the ACTS project
+ *
+ * Mozilla Public License Version 2.0
+ */
+
+// SYCL include(s).
+#include <sycl/sycl.hpp>
+
+// Local include(s).
+#include "../utils/detector_types.hpp"
+#include "../utils/get_queue.hpp"
+#include "../utils/magnetic_field_types.hpp"
+#include "kalman_fitting.hpp"
+#include "traccc/sycl/fitting/kalman_fitting_algorithm.hpp"
+
+// Project include(s).
+#include "traccc/bfield/magnetic_field_types.hpp"
+#include "traccc/utils/detector_buffer_bfield_visitor.hpp"
+
+namespace traccc::sycl {
+namespace kernels {
+template <typename detector_tag_t, typename bfield_tag_t>
+struct fit_tracks;
+}  // namespace kernels
+
+kalman_fitting_algorithm::output_type kalman_fitting_algorithm::operator()(
+    const detector_buffer& detector, const magnetic_field& bfield,
+    const edm::track_container<default_algebra>::const_view& track_candidates)
+    const {
+
+    // Perform the track fitting using the templated implementation.
+    return detector_buffer_magnetic_field_visitor<
+        detector_type_list, sycl::bfield_type_list<scalar>>(
+        detector, bfield,
+        [&]<typename detector_t, typename bfield_view_t>(
+            const typename detector_t::view& det, const bfield_view_t& field) {
+            return details::kalman_fitting<
+                kernels::fit_tracks<
+                    detector_tag_selector_t<detector_t>,
+                    bfield_tag_selector_t<typename bfield_view_t::backend_t>>,
+                typename detector_t::device>(det, field, track_candidates,
+                                             m_config, m_mr, m_copy.get(),
+                                             details::get_queue(m_queue));
+        });
+}
+
+}  // namespace traccc::sycl

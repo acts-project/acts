@@ -1,0 +1,28 @@
+/** TRACCC library, part of the ACTS project (R&D line)
+ *
+ * (c) 2022 CERN for the benefit of the ACTS project
+ *
+ * Mozilla Public License Version 2.0
+ */
+
+// Local include(s).
+#include "get_queue.hpp"
+
+// System include(s).
+#include <cassert>
+
+namespace traccc::sycl::details {
+
+::sycl::queue& get_queue(traccc::sycl::queue_wrapper& queue) {
+
+    assert(queue.queue() != nullptr);
+    return *(reinterpret_cast<::sycl::queue*>(queue.queue()));
+}
+
+const ::sycl::queue& get_queue(const traccc::sycl::queue_wrapper& queue) {
+
+    assert(queue.queue() != nullptr);
+    return *(reinterpret_cast<const ::sycl::queue*>(queue.queue()));
+}
+
+}  // namespace traccc::sycl::details
