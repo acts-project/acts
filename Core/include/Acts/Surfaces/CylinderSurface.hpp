@@ -287,11 +287,21 @@ class CylinderSurface : public RegularSurface {
  protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
 
+  /// @copydoc Surface::localAxes
   std::array<AxisDirection, 2> localAxes() const override {
     return {AxisDirection::AxisRPhi, AxisDirection::AxisZ};
   }
 
+  /// @copydoc Surface::checkSurfaceMaterial
+  void checkSurfaceMaterial(const ISurfaceMaterial& material) const override;
+
+  /// @copydoc Surface::transformSurfaceLocalToMaterialLocal
+  Vector2 transformSurfaceLocalToMaterialLocal(
+      const Vector2& surfaceLocal) const override;
+
  private:
+  bool m_scaleMaterialAxis = false;
+
   /// Implementation of the intersection solver
   ///
   ///  <b>mathematical motivation:</b>

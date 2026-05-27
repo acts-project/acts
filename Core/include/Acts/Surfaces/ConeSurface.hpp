@@ -247,6 +247,7 @@ class ConeSurface : public RegularSurface {
  protected:
   std::shared_ptr<const ConeBounds> m_bounds;  ///< bounds (shared)
 
+  /// @copydoc Surface::localAxes
   std::array<AxisDirection, 2> localAxes() const override {
     return {AxisDirection::AxisRPhi, AxisDirection::AxisZ};
   }

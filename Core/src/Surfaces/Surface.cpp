@@ -324,8 +324,8 @@ const MaterialSlab& Surface::materialSlab(const Vector2& lp) const {
     static const MaterialSlab emptyMaterialSlab;
     return emptyMaterialSlab;
   }
-  const Vector2 materialLp = m_swapMaterialAxes ? Vector2(lp.y(), lp.x()) : lp;
-  return m_surfaceMaterial->materialSlab(materialLp);
+  const Vector2 materialLocal = transformSurfaceLocalToMaterialLocal(lp);
+  return m_surfaceMaterial->materialSlab(materialLocal);
 }
 
 MaterialSlab Surface::materialSlab(const Vector2& lp, Direction pDir,
@@ -333,34 +333,50 @@ MaterialSlab Surface::materialSlab(const Vector2& lp, Direction pDir,
   if (m_surfaceMaterial == nullptr) {
     return MaterialSlab();
   }
-  const Vector2 materialLp = m_swapMaterialAxes ? Vector2(lp.y(), lp.x()) : lp;
-  return m_surfaceMaterial->materialSlab(materialLp, pDir, mode);
+  const Vector2 materialLocal = transformSurfaceLocalToMaterialLocal(lp);
+  return m_surfaceMaterial->materialSlab(materialLocal, pDir, mode);
 }
 
 void Surface::assignSurfaceMaterial(
     std::shared_ptr<const ISurfaceMaterial> material) {
   if (material != nullptr) {
+    checkSurfaceMaterial(*material);
+
     const std::array<AxisDirection, 2> localSurfaceAxes = localAxes();
     const std::vector<AxisDirection>& localMaterialAxes =
         material->localAxisDirections();
-
-    if (!std::ranges::includes(
-            std::set(localSurfaceAxes.begin(), localSurfaceAxes.end()),
-            std::set(localMaterialAxes.begin(), localMaterialAxes.end()))) {
-      std::string errorMsg =
-          "Surface::assignSurfaceMaterial: material axis directions " +
-          axesDirectionName(localMaterialAxes) +
-          " are not supported by this surface. Supported axes are: " +
-          axesDirectionName(std::vector<AxisDirection>{localSurfaceAxes.begin(),
-                                                       localSurfaceAxes.end()});
-      throw std::invalid_argument(errorMsg);
-    }
 
     m_swapMaterialAxes = !localMaterialAxes.empty() &&
                          localSurfaceAxes[0] != localMaterialAxes[0];
   }
 
   m_surfaceMaterial = std::move(material);
+}
+
+void Surface::checkSurfaceMaterial(const ISurfaceMaterial& material) const {
+  const std::array<AxisDirection, 2> localSurfaceAxes = localAxes();
+  const std::vector<AxisDirection>& localMaterialAxes =
+      material.localAxisDirections();
+
+  if (!std::ranges::includes(
+          std::set(localSurfaceAxes.begin(), localSurfaceAxes.end()),
+          std::set(localMaterialAxes.begin(), localMaterialAxes.end()))) {
+    std::string errorMsg =
+        "Surface::assignSurfaceMaterial: material axis directions " +
+        axesDirectionName(localMaterialAxes) +
+        " are not supported by this surface. Supported axes are: " +
+        axesDirectionName(std::vector<AxisDirection>{localSurfaceAxes.begin(),
+                                                     localSurfaceAxes.end()});
+    throw std::invalid_argument(errorMsg);
+  }
+}
+
+Vector2 Surface::transformSurfaceLocalToMaterialLocal(
+    const Vector2& surfaceLocal) const {
+  if (m_swapMaterialAxes) {
+    return Vector2(surfaceLocal.y(), surfaceLocal.x());
+  }
+  return surfaceLocal;
 }
 
 const Layer* Surface::associatedLayer() const {

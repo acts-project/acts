@@ -12,14 +12,12 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
-#include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/MergeHelper.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -29,6 +27,7 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
+#include <set>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -567,38 +566,55 @@ void CylinderSurface::assignSurfaceBounds(
 
 void CylinderSurface::assignSurfaceMaterial(
     std::shared_ptr<const ISurfaceMaterial> material) {
-  // Convert legacy binned materials with phi or phi/z binning to the new rPhi
-  // or rPhi/z binning, respectively
-  if (const BinnedSurfaceMaterial* binnedMaterial =
-          dynamic_cast<const BinnedSurfaceMaterial*>(material.get());
-      binnedMaterial != nullptr) {
-    const std::vector<AxisDirection>& originalMaterialAxes =
-        binnedMaterial->localAxisDirections();
-    const BinUtility& originalBinUtility = binnedMaterial->binUtility();
-    const MaterialSlabMatrix& originalMaterialMatrix =
-        binnedMaterial->fullMaterial();
-    const double r = bounds().get(CylinderBounds::eR);
+  if (material != nullptr) {
+    checkSurfaceMaterial(*material);
 
-    if (std::ranges::find(originalMaterialAxes, AxisDirection::AxisPhi) !=
-        originalMaterialAxes.end()) {
-      BinUtility newBinUtility;
+    const std::vector<AxisDirection>& localMaterialAxes =
+        material->localAxisDirections();
 
-      for (const auto& binData : originalBinUtility.binningData()) {
-        if (binData.binvalue == AxisDirection::AxisPhi) {
-          BinningData newBinData = binData.scale(r);
-          newBinData.binvalue = AxisDirection::AxisRPhi;
-          newBinUtility += BinUtility(newBinData);
-        } else {
-          newBinUtility += BinUtility(binData);
-        }
-      }
-
-      material = std::make_shared<const BinnedSurfaceMaterial>(
-          newBinUtility, originalMaterialMatrix);
-    }
+    m_scaleMaterialAxis =
+        std::ranges::find(localMaterialAxes, AxisDirection::AxisPhi) !=
+        localMaterialAxes.end();
   }
 
   Surface::assignSurfaceMaterial(std::move(material));
+}
+
+void CylinderSurface::checkSurfaceMaterial(
+    const ISurfaceMaterial& material) const {
+  const std::array<AxisDirection, 2> localSurfaceAxes = localAxes();
+  const std::array<AxisDirection, 2> alternativeAxes = {AxisDirection::AxisPhi,
+                                                        AxisDirection::AxisZ};
+  const std::vector<AxisDirection>& localMaterialAxes =
+      material.localAxisDirections();
+
+  if (!std::ranges::includes(
+          std::set(localSurfaceAxes.begin(), localSurfaceAxes.end()),
+          std::set(localMaterialAxes.begin(), localMaterialAxes.end())) &&
+      !std::ranges::includes(
+          std::set(alternativeAxes.begin(), alternativeAxes.end()),
+          std::set(localMaterialAxes.begin(), localMaterialAxes.end()))) {
+    std::string errorMsg =
+        "CylinderSurface::checkSurfaceMaterial: material axis directions " +
+        axesDirectionName(localMaterialAxes) +
+        " are not supported by this surface. Supported axes are: " +
+        axesDirectionName(std::vector<AxisDirection>{localSurfaceAxes.begin(),
+                                                     localSurfaceAxes.end()}) +
+        " or " +
+        axesDirectionName(std::vector<AxisDirection>{alternativeAxes.begin(),
+                                                     alternativeAxes.end()});
+    throw std::invalid_argument(errorMsg);
+  }
+}
+
+Vector2 CylinderSurface::transformSurfaceLocalToMaterialLocal(
+    const Vector2& surfaceLocal) const {
+  if (m_scaleMaterialAxis) {
+    const double r = bounds().get(CylinderBounds::eR);
+    return Surface::transformSurfaceLocalToMaterialLocal(
+        Vector2(surfaceLocal.x() / r, surfaceLocal.y()));
+  }
+  return Surface::transformSurfaceLocalToMaterialLocal(surfaceLocal);
 }
 
 }  // namespace Acts

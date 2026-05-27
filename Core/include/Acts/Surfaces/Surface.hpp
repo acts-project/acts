@@ -479,6 +479,7 @@ class Surface : public virtual GeometryObject,
   /// Returns whether the Surface is sensitive
   /// @return True if the surface is sensitive
   bool isSensitive() const;
+
   /// Returns whether the Surface is alignable
   /// @return True if the surface is alignable
   bool isAlignable() const;
@@ -565,6 +566,16 @@ class Surface : public virtual GeometryObject,
   /// Local axes of the surface
   /// @return An array of local axes directions
   virtual std::array<AxisDirection, 2> localAxes() const = 0;
+
+  /// Check the compatibility of the surface material with the surface type
+  /// @param material The surface material to check
+  virtual void checkSurfaceMaterial(const ISurfaceMaterial& material) const;
+
+  /// Transform surface local coordinates to material local coordinates
+  /// @param surfaceLocal The local coordinates on the surface
+  /// @return The corresponding local coordinates for material lookup
+  virtual Vector2 transformSurfaceLocalToMaterialLocal(
+      const Vector2& surfaceLocal) const;
 
   /// Transform3 definition that positions
   /// (translation, rotation) the surface in global space
