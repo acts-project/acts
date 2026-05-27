@@ -583,6 +583,14 @@ if(ACTS_SETUP_VECMEM)
     endif()
 endif()
 
+if(ACTS_SETUP_COVFIE)
+    if(ACTS_USE_SYSTEM_COVFIE)
+        find_package(covfie ${_acts_covfie_version} REQUIRED CONFIG)
+    else()
+        add_subdirectory(thirdparty/covfie)
+    endif()
+endif()
+
 if(ACTS_SETUP_DETRAY)
     # HACK: Temporary logic (aka technical debt) to make the detray component
     # work in traccc.
@@ -615,14 +623,6 @@ if(ACTS_BUILD_TRACCC)
         set(TRACCC_SETUP_TBB TRUE CACHE BOOL "")
     else()
         set(TRACCC_SETUP_TBB FALSE CACHE BOOL "")
-    endif()
-
-    if(ACTS_SETUP_COVFIE)
-        if(ACTS_USE_SYSTEM_COVFIE)
-            find_package(covfie ${_acts_covfie_version} REQUIRED CONFIG)
-        else()
-            add_subdirectory(thirdparty/covfie)
-        endif()
     endif()
 
     # traccc also depends on vecmem and covfie, but those plugins should always
