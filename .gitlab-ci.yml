@@ -594,3 +594,98 @@ detray_test_sycl:
     - sycl-ls
     - ctest --output-on-failure -R ".*sycl.*"
     - find bin -type f -name "*sycl" -not -name "*text*" -exec {} \;
+
+# traccc GitLab CI workflows
+.traccc_base_template: &traccc_base_job
+  before_script:
+    - apt install -y zstd
+    - curl --retry 5 --retry-delay 10 --output deps.tar.zst https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.v6.tar.zst
+    - tar -xf deps.tar.zst -C /usr/local --strip-components=1
+    - rm deps.tar.zst
+    - git clone $CLONE_URL src
+    - git -C src checkout $HEAD_SHA
+    - source ./src/Traccc/.github/ci_setup.sh ${TRACCC_BUILD_TYPE}
+    - export CTEST_PARALLEL_LEVEL=2
+
+.traccc_build_template: &traccc_build_job
+  <<: *traccc_base_job
+  tags: [docker]
+  stage: build
+  artifacts:
+    paths:
+      - build
+  script:
+    - SYCLFLAGS="${TRACCC_SYCL_FLAGS}" CXXFLAGS="${TRACCC_CXX_FLAGS}"
+      cmake -G Ninja --preset ${TRACCC_BUILD_PRESET} -DFETCHCONTENT_SOURCE_DIR_ACTS=src/ -DTRACCC_SETUP_VECMEM=ON -DTRACCC_SETUP_COVFIE=ON -DACTS_SETUP_VECMEM=OFF -DACTS_SETUP_COVFIE=OFF -DDETRAY_SET_LOGGING=NONE -DCMAKE_BUILD_TYPE=Release -DTRACCC_BUILD_EXAMPLES=FALSE ${TRACCC_CMAKE_ARGS}
+      -S src/Traccc -B build
+    - cmake --build build --parallel 2
+
+.traccc_nvidia_test_template: &traccc_nvidia_test_job
+  <<: *traccc_base_job
+  tags: [docker-gpu-nvidia]
+  stage: test
+  script:
+    - nvidia-smi
+    - ./src/Traccc/data/traccc_data_get_files.sh
+    - ctest --output-on-failure --test-dir build/ -R "${TRACCC_BUILD_TYPE}"
+
+.traccc_intel_test_template: &traccc_intel_test_job
+  <<: *traccc_base_job
+  tags: [docker-gpu-nvidia]
+  stage: test
+  script:
+    - ./src/Traccc/data/traccc_data_get_files.sh
+    - ctest --output-on-failure --test-dir build/ -R "${TRACCC_BUILD_TYPE}"
+
+traccc_build_cuda:
+  <<: *traccc_build_job
+  image: ghcr.io/acts-project/ubuntu2404_cuda:69
+  variables:
+    TRACCC_BUILD_TYPE: CUDA
+    TRACCC_BUILD_PRESET: cuda-fp32
+
+traccc_test_cuda:
+  <<: *traccc_nvidia_test_job
+  image: ghcr.io/acts-project/ubuntu2404_cuda:69
+  variables:
+    TRACCC_BUILD_TYPE: CUDA
+    TRACCC_CMAKE_ARGS: -DACTS_ENABLE_CUDA=ON -DVECMEM_BUILD_CUDA_LIBRARY=ON
+  dependencies:
+    - traccc_build_cuda
+
+traccc_build_sycl_intel:
+  <<: *traccc_build_job
+  image: ghcr.io/acts-project/ubuntu2404_oneapi:69
+  variables:
+    TRACCC_BUILD_TYPE: SYCL
+    TRACCC_BUILD_PRESET: sycl-fp32
+    TRACCC_SYCL_FLAGS: -fsycl -fsycl-targets=spir64
+    TRACCC_CMAKE_ARGS: -DTRACCC_BUILD_CUDA=FALSE -DACTS_ENABLE_CUDA=OFF -DVECMEM_BUILD_SYCL_LIBRARY=ON
+
+traccc_test_sycl_intel:
+  <<: *traccc_intel_test_job
+  image: ghcr.io/acts-project/ubuntu2404_oneapi:69
+  variables:
+    TRACCC_BUILD_TYPE: SYCL
+    ONEAPI_DEVICE_SELECTOR: opencl:*
+  dependencies:
+    - traccc_build_sycl_intel
+
+traccc_build_sycl_nvidia:
+  <<: *traccc_build_job
+  image: ghcr.io/acts-project/ubuntu2404_cuda_oneapi:69
+  variables:
+    TRACCC_BUILD_TYPE: SYCL
+    TRACCC_BUILD_PRESET: sycl-fp32
+    TRACCC_SYCL_FLAGS: -fsycl -fsycl-targets=nvidia_gpu_sm_75 -Wno-unknown-cuda-version -Wno-deprecated-declarations
+    TRACCC_CXX_FLAGS: -Wno-deprecated-declarations
+    TRACCC_CMAKE_ARGS: -DTRACCC_BUILD_CUDA=FALSE -DACTS_ENABLE_CUDA=OFF -DVECMEM_BUILD_SYCL_LIBRARY=ON
+
+traccc_test_sycl_nvidia:
+  <<: *traccc_nvidia_test_job
+  image: ghcr.io/acts-project/ubuntu2404_cuda_oneapi:69
+  variables:
+    TRACCC_BUILD_TYPE: SYCL
+    ONEAPI_DEVICE_SELECTOR: cuda:*
+  dependencies:
+    - traccc_build_sycl_nvidia
