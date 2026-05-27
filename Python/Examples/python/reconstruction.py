@@ -1994,9 +1994,7 @@ def addTrackWriters(
                     inputTracks=tracks,
                     inputParticles="particles_selected",
                     inputTrackParticleMatching="track_particle_matching",
-                    filePath=str(
-                        outputDirJson / f"performance_fitting_{name}.json"
-                    ),
+                    filePath=str(outputDirJson / f"performance_fitting_{name}.json"),
                 )
             )
 
@@ -2009,9 +2007,7 @@ def addTrackWriters(
                     inputTrackParticleMatching="track_particle_matching",
                     inputParticleTrackMatching="particle_track_matching",
                     inputParticleMeasurementsMap="particle_measurements_map",
-                    filePath=str(
-                        outputDirJson / f"performance_finding_{name}.json"
-                    ),
+                    filePath=str(outputDirJson / f"performance_finding_{name}.json"),
                 )
             )
 

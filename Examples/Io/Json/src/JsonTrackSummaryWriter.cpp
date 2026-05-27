@@ -62,8 +62,8 @@ ProcessCode JsonTrackSummaryWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode JsonTrackSummaryWriter::writeT(
-    const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
+ProcessCode JsonTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
+                                           const ConstTrackContainer& tracks) {
   const static SimParticleContainer emptyParticles;
   const static TrackParticleMatching emptyTrackParticleMatching;
 
@@ -163,11 +163,11 @@ ProcessCode JsonTrackSummaryWriter::writeT(
           Acts::Intersection3D intersection =
               pSurface
                   ->intersect(ctx.geoContext, p.position(), p.direction(),
-                               Acts::BoundaryTolerance::Infinite())
+                              Acts::BoundaryTolerance::Infinite())
                   .closest();
           auto pos = intersection.position();
-          auto lpResult = pSurface->globalToLocal(ctx.geoContext, pos,
-                                                  p.direction());
+          auto lpResult =
+              pSurface->globalToLocal(ctx.geoContext, pos, p.direction());
           if (lpResult.ok()) {
             t_d0 = lpResult.value()[Acts::BoundIndices::eBoundLoc0];
             t_z0 = lpResult.value()[Acts::BoundIndices::eBoundLoc1];
@@ -273,8 +273,8 @@ ProcessCode JsonTrackSummaryWriter::writeT(
       nlohmann::json cov;
       for (int i = 0; i < static_cast<int>(Acts::eBoundSize); ++i) {
         for (int j = 0; j < static_cast<int>(Acts::eBoundSize); ++j) {
-          std::string key = "cov_" + std::to_string(i) + "_" +
-                            std::to_string(j);
+          std::string key =
+              "cov_" + std::to_string(i) + "_" + std::to_string(j);
           cov[key] = track.covariance()(i, j);
         }
       }

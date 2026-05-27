@@ -54,7 +54,8 @@ class JsonTrackFinderPerformanceWriter final
     /// Output filename.
     std::string filePath = "performance_ckf.json";
 
-    /// Plot tool configurations (identical to RootTrackFinderPerformanceWriter).
+    /// Plot tool configurations (identical to
+    /// RootTrackFinderPerformanceWriter).
     EffPlotTool::Config effPlotToolConfig;
     FakePlotTool::Config fakePlotToolConfig;
     DuplicationPlotTool::Config duplicationPlotToolConfig;

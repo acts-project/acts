@@ -162,10 +162,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsJson, json) {
   }
 
   {
-    ACTS_PYTHON_DECLARE_WRITER(JsonTrackSummaryWriter, json,
-                               "JsonTrackSummaryWriter", inputTracks,
-                               inputParticles, inputTrackParticleMatching,
-                               filePath, writeCovMat, writeGsfSpecific,
-                               writeGx2fSpecific);
+    ACTS_PYTHON_DECLARE_WRITER(
+        JsonTrackSummaryWriter, json, "JsonTrackSummaryWriter", inputTracks,
+        inputParticles, inputTrackParticleMatching, filePath, writeCovMat,
+        writeGsfSpecific, writeGx2fSpecific);
   }
 }

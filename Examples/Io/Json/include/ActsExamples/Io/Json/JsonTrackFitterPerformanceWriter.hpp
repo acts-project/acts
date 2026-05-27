@@ -46,7 +46,8 @@ class JsonTrackFitterPerformanceWriter final
     /// Output filename.
     std::string filePath = "performance_track_fitter.json";
 
-    /// Plot tool configurations (identical to RootTrackFitterPerformanceWriter).
+    /// Plot tool configurations (identical to
+    /// RootTrackFitterPerformanceWriter).
     ResPlotTool::Config resPlotToolConfig;
     EffPlotTool::Config effPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;

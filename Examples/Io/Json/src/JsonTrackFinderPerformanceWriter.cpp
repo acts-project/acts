@@ -74,12 +74,10 @@ ProcessCode JsonTrackFinderPerformanceWriter::finalize() {
   // Efficiency histograms
   {
     nlohmann::json arr = nlohmann::json::array();
-    for (const auto& [name, eff] :
-         m_collector.effPlotTool().efficiencies1D()) {
+    for (const auto& [name, eff] : m_collector.effPlotTool().efficiencies1D()) {
       arr.push_back(toJson(eff));
     }
-    for (const auto& [name, eff] :
-         m_collector.effPlotTool().efficiencies2D()) {
+    for (const auto& [name, eff] : m_collector.effPlotTool().efficiencies2D()) {
       arr.push_back(toJson(eff));
     }
     for (const auto& eff :

@@ -78,9 +78,8 @@ nlohmann::json ActsPlugins::toJson(const Histogram3& boostHist) {
   std::vector<double> values;
   values.resize(static_cast<std::size_t>(nx * ny * nz), 0.0);
   for (auto&& x : boost::histogram::indexed(bh)) {
-    values[static_cast<std::size_t>(x.index(0) * ny * nz +
-                                    x.index(1) * nz + x.index(2))] =
-        static_cast<double>(*x);
+    values[static_cast<std::size_t>(x.index(0) * ny * nz + x.index(1) * nz +
+                                    x.index(2))] = static_cast<double>(*x);
   }
 
   return nlohmann::json{{"name", boostHist.name()},
@@ -107,7 +106,7 @@ nlohmann::json ActsPlugins::toJson(const ProfileHistogram1& boostProfile) {
     counts.push_back(count);
     means.push_back(count > 0 ? acc.value() : 0.0);
     sumOfDeltasSquared.push_back(count > 1.0 ? acc.variance() * (count - 1.0)
-                                              : 0.0);
+                                             : 0.0);
   }
 
   return nlohmann::json{{"name", boostProfile.name()},
@@ -133,12 +132,9 @@ nlohmann::json ActsPlugins::toJson(const Efficiency1& boostEff) {
     totalVec.push_back(static_cast<double>(total.at(i)));
   }
 
-  return nlohmann::json{{"name", boostEff.name()},
-                        {"title", boostEff.title()},
-                        {"type", "efficiency"},
-                        {"axes", axesJson(accepted)},
-                        {"accepted", acceptedVec},
-                        {"total", totalVec}};
+  return nlohmann::json{{"name", boostEff.name()}, {"title", boostEff.title()},
+                        {"type", "efficiency"},    {"axes", axesJson(accepted)},
+                        {"accepted", acceptedVec}, {"total", totalVec}};
 }
 
 nlohmann::json ActsPlugins::toJson(const Efficiency2& boostEff) {
@@ -158,10 +154,7 @@ nlohmann::json ActsPlugins::toJson(const Efficiency2& boostEff) {
     }
   }
 
-  return nlohmann::json{{"name", boostEff.name()},
-                        {"title", boostEff.title()},
-                        {"type", "efficiency"},
-                        {"axes", axesJson(accepted)},
-                        {"accepted", acceptedVec},
-                        {"total", totalVec}};
+  return nlohmann::json{{"name", boostEff.name()}, {"title", boostEff.title()},
+                        {"type", "efficiency"},    {"axes", axesJson(accepted)},
+                        {"accepted", acceptedVec}, {"total", totalVec}};
 }

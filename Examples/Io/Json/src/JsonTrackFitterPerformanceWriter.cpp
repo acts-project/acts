@@ -223,8 +223,8 @@ ProcessCode JsonTrackFitterPerformanceWriter::writeT(
       double p_eta = eta(particle.direction());
       double c_phi = phi(closeParticle.direction());
       double c_eta = eta(closeParticle.direction());
-      double distance = std::sqrt(std::pow(p_phi - c_phi, 2) +
-                                  std::pow(p_eta - c_eta, 2));
+      double distance =
+          std::sqrt(std::pow(p_phi - c_phi, 2) + std::pow(p_eta - c_eta, 2));
       if (minDeltaR == -1 || distance < minDeltaR) {
         minDeltaR = distance;
       }
