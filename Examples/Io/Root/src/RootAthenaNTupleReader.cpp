@@ -128,7 +128,7 @@ ProcessCode RootAthenaNTupleReader::read(const AlgorithmContext& context) {
     return ProcessCode::ABORT;
   }
 
-  std::lock_guard<std::mutex> lock(m_read_mutex);
+  auto lock = std::scoped_lock(m_read_mutex);
 
   auto entry = context.eventNumber;
   m_inputChain->GetEntry(entry);

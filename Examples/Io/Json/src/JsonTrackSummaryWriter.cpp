@@ -92,18 +92,22 @@ ProcessCode JsonTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
 
     // Per-state chi2 and geometry IDs
     {
-      std::vector<double> mChi2, oChi2;
-      std::vector<std::uint32_t> mVol, mLay, oVol, oLay;
+      std::vector<double> mChi2;
+      std::vector<double> oChi2;
+      std::vector<std::uint32_t> mVol;
+      std::vector<std::uint32_t> mLay;
+      std::vector<std::uint32_t> oVol;
+      std::vector<std::uint32_t> oLay;
       for (const auto& state : track.trackStatesReversed()) {
         const auto& geoID = state.referenceSurface().geometryId();
         if (state.typeFlags().isOutlier()) {
           oChi2.push_back(state.chi2());
-          oVol.push_back(geoID.volume());
-          oLay.push_back(geoID.layer());
+          oVol.push_back(static_cast<std::uint32_t>(geoID.volume()));
+          oLay.push_back(static_cast<std::uint32_t>(geoID.layer()));
         } else if (state.typeFlags().isMeasurement()) {
           mChi2.push_back(state.chi2());
-          mVol.push_back(geoID.volume());
-          mLay.push_back(geoID.layer());
+          mVol.push_back(static_cast<std::uint32_t>(geoID.volume()));
+          mLay.push_back(static_cast<std::uint32_t>(geoID.layer()));
         }
       }
       t["measurementChi2"] = std::move(mChi2);
@@ -121,42 +125,52 @@ ProcessCode JsonTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     unsigned int nMajorityHits = std::numeric_limits<unsigned int>::max();
     int t_charge = std::numeric_limits<int>::max();
     float t_time = NaNfloat;
-    float t_vx = NaNfloat, t_vy = NaNfloat, t_vz = NaNfloat;
-    float t_px = NaNfloat, t_py = NaNfloat, t_pz = NaNfloat;
-    float t_theta_v = NaNfloat, t_phi_v = NaNfloat, t_eta_v = NaNfloat;
-    float t_p = NaNfloat, t_pT = NaNfloat;
-    float t_d0 = NaNfloat, t_z0 = NaNfloat, t_prodR = NaNfloat;
+    float t_vx = NaNfloat;
+    float t_vy = NaNfloat;
+    float t_vz = NaNfloat;
+    float t_px = NaNfloat;
+    float t_py = NaNfloat;
+    float t_pz = NaNfloat;
+    float t_theta_v = NaNfloat;
+    float t_phi_v = NaNfloat;
+    float t_eta_v = NaNfloat;
+    float t_p = NaNfloat;
+    float t_pT = NaNfloat;
+    float t_d0 = NaNfloat;
+    float t_z0 = NaNfloat;
+    float t_prodR = NaNfloat;
     float t_qop = NaNfloat;
 
     const Acts::Surface* pSurface =
         track.hasReferenceSurface() ? &track.referenceSurface() : nullptr;
 
     bool foundMajorityParticle = false;
-    auto match = trackParticleMatching.find(track.index());
-    if (match != trackParticleMatching.end() &&
+    if (auto match = trackParticleMatching.find(track.index());
+        match != trackParticleMatching.end() &&
         match->second.particle.has_value()) {
       majorityParticleId = match->second.particle.value();
       trackClassification = match->second.classification;
-      nMajorityHits = match->second.contributingParticles.front().hitCount;
+      nMajorityHits = static_cast<unsigned int>(
+          match->second.contributingParticles.front().hitCount);
 
       auto ip = particles.find(majorityParticleId);
       if (ip != particles.end()) {
         foundMajorityParticle = true;
         const auto& p = *ip;
-        t_p = p.absoluteMomentum();
+        t_p = static_cast<float>(p.absoluteMomentum());
         t_charge = static_cast<int>(p.charge());
-        t_time = p.time();
-        t_vx = p.position().x();
-        t_vy = p.position().y();
-        t_vz = p.position().z();
-        t_px = t_p * p.direction().x();
-        t_py = t_p * p.direction().y();
-        t_pz = t_p * p.direction().z();
-        t_theta_v = theta(p.direction());
-        t_phi_v = phi(p.direction());
-        t_eta_v = eta(p.direction());
-        t_pT = t_p * perp(p.direction());
-        t_qop = p.qOverP();
+        t_time = static_cast<float>(p.time());
+        t_vx = static_cast<float>(p.position().x());
+        t_vy = static_cast<float>(p.position().y());
+        t_vz = static_cast<float>(p.position().z());
+        t_px = t_p * static_cast<float>(p.direction().x());
+        t_py = t_p * static_cast<float>(p.direction().y());
+        t_pz = t_p * static_cast<float>(p.direction().z());
+        t_theta_v = static_cast<float>(theta(p.direction()));
+        t_phi_v = static_cast<float>(phi(p.direction()));
+        t_eta_v = static_cast<float>(eta(p.direction()));
+        t_pT = t_p * static_cast<float>(perp(p.direction()));
+        t_qop = static_cast<float>(p.qOverP());
         t_prodR = std::sqrt(t_vx * t_vx + t_vy * t_vy);
 
         if (pSurface != nullptr) {
@@ -169,8 +183,10 @@ ProcessCode JsonTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
           auto lpResult =
               pSurface->globalToLocal(ctx.geoContext, pos, p.direction());
           if (lpResult.ok()) {
-            t_d0 = lpResult.value()[Acts::BoundIndices::eBoundLoc0];
-            t_z0 = lpResult.value()[Acts::BoundIndices::eBoundLoc1];
+            t_d0 = static_cast<float>(
+                lpResult.value()[Acts::BoundIndices::eBoundLoc0]);
+            t_z0 = static_cast<float>(
+                lpResult.value()[Acts::BoundIndices::eBoundLoc1]);
           } else {
             ACTS_ERROR("Global to local transformation did not succeed.");
           }
@@ -213,11 +229,12 @@ ProcessCode JsonTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     if (hasFittedParams) {
       const auto& parameter = track.parameters();
       for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
-        param[i] = parameter[i];
+        param[i] = static_cast<float>(parameter[i]);
       }
       for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
         double variance = track.covariance()(i, i);
-        error[i] = variance >= 0 ? std::sqrt(variance) : NaNfloat;
+        error[i] =
+            variance >= 0 ? static_cast<float>(std::sqrt(variance)) : NaNfloat;
       }
     }
 
@@ -284,7 +301,8 @@ ProcessCode JsonTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     // Optional GSF material statistics
     if (m_cfg.writeGsfSpecific) {
       using namespace Acts::GsfConstants;
-      float maxMat = NaNfloat, sumMat = NaNfloat;
+      float maxMat = NaNfloat;
+      float sumMat = NaNfloat;
       if (tracks.hasColumn(Acts::hashString(kFwdMaxMaterialXOverX0))) {
         maxMat = static_cast<float>(
             track.template component<double>(kFwdMaxMaterialXOverX0));
@@ -315,7 +333,7 @@ ProcessCode JsonTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
   eventJson["event_nr"] = ctx.eventNumber;
   eventJson["tracks"] = std::move(tracksJson);
 
-  std::lock_guard<std::mutex> lock(m_writeMutex);
+  auto lock = std::scoped_lock(m_writeMutex);
   m_events.push_back(std::move(eventJson));
 
   return ProcessCode::SUCCESS;

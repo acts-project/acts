@@ -67,7 +67,8 @@ class RootTrackFinderPerformanceWriter final
 
     /// Additional tracksummary plot tool configs for detector regions
     /// Allows e.g. to do pixel/strip only plots based on a list of volumes
-    std::map<std::string, std::set<int>> subDetectorTrackSummaryVolumes;
+    std::map<std::string, std::set<int>, std::less<>>
+        subDetectorTrackSummaryVolumes;
 
     /// Write additional matching details to a TTree
     bool writeMatchingDetails = false;

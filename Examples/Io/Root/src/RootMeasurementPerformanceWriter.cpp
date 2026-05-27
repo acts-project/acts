@@ -129,7 +129,7 @@ ProcessCode RootMeasurementPerformanceWriter::writeT(
   const auto& measurementParticlesMap = m_inputMeasurementParticlesMap(ctx);
   const auto& simHitMeasurementsMap = m_inputSimHitMeasurementsMap(ctx);
 
-  std::lock_guard<std::mutex> lock(m_writeMutex);
+  auto lock = std::scoped_lock(m_writeMutex);
 
   for (const auto& measurement : measurements) {
     const auto contributingSimHits =

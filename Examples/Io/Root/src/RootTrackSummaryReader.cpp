@@ -143,7 +143,7 @@ ProcessCode RootTrackSummaryReader::read(const AlgorithmContext& context) {
   // read in the fitted track parameters and particles
   if (m_inputChain != nullptr && context.eventNumber < m_events) {
     // lock the mutex
-    std::lock_guard<std::mutex> lock(m_read_mutex);
+    auto lock = std::scoped_lock(m_read_mutex);
     // now read
 
     std::shared_ptr<Acts::PerigeeSurface> perigeeSurface =

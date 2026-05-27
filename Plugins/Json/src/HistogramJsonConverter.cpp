@@ -95,7 +95,9 @@ nlohmann::json ActsPlugins::toJson(const ProfileHistogram1& boostProfile) {
 
   using Accumulator = boost::histogram::accumulators::mean<double>;
 
-  std::vector<double> counts, means, sumOfDeltasSquared;
+  std::vector<double> counts;
+  std::vector<double> means;
+  std::vector<double> sumOfDeltasSquared;
   counts.reserve(static_cast<std::size_t>(n));
   means.reserve(static_cast<std::size_t>(n));
   sumOfDeltasSquared.reserve(static_cast<std::size_t>(n));
@@ -124,7 +126,8 @@ nlohmann::json ActsPlugins::toJson(const Efficiency1& boostEff) {
   const auto& total = boostEff.totalHistogram();
   const int n = accepted.axis(0).size();
 
-  std::vector<double> acceptedVec, totalVec;
+  std::vector<double> acceptedVec;
+  std::vector<double> totalVec;
   acceptedVec.reserve(static_cast<std::size_t>(n));
   totalVec.reserve(static_cast<std::size_t>(n));
   for (int i = 0; i < n; ++i) {
@@ -143,7 +146,8 @@ nlohmann::json ActsPlugins::toJson(const Efficiency2& boostEff) {
   const int nx = accepted.axis(0).size();
   const int ny = accepted.axis(1).size();
 
-  std::vector<double> acceptedVec, totalVec;
+  std::vector<double> acceptedVec;
+  std::vector<double> totalVec;
   acceptedVec.resize(static_cast<std::size_t>(nx * ny), 0.0);
   totalVec.resize(static_cast<std::size_t>(nx * ny), 0.0);
   for (int i = 0; i < nx; ++i) {

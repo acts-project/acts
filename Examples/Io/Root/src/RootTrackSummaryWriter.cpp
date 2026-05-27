@@ -247,7 +247,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
   std::vector<ParticleHitCount> particleHitCounts;
 
   // Exclusive access to the tree while writing
-  std::lock_guard<std::mutex> lock(m_writeMutex);
+  auto lock = std::scoped_lock(m_writeMutex);
 
   // Get the event number
   m_eventNr = ctx.eventNumber;

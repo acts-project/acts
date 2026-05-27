@@ -197,7 +197,7 @@ ProcessCode RootTrackFinderPerformanceWriter::writeT(
   const auto& particleMeasurementsMap = m_inputParticleMeasurementsMap(ctx);
 
   // Exclusive access to the histograms while filling
-  std::lock_guard<std::mutex> lock(m_writeMutex);
+  auto lock = std::scoped_lock(m_writeMutex);
 
   m_collector.fill(ctx.geoContext, tracks, particles, trackParticleMatching,
                    particleTrackMatching, particleMeasurementsMap);

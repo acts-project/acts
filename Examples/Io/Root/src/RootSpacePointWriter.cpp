@@ -85,7 +85,7 @@ ProcessCode RootSpacePointWriter::finalize() {
 ProcessCode RootSpacePointWriter::writeT(
     const AlgorithmContext& ctx, const SpacePointContainer& spacePoints) {
   // ensure exclusive access to tree/file while writing
-  std::lock_guard<std::mutex> lock(m_writeMutex);
+  auto lock = std::scoped_lock(m_writeMutex);
 
   MeasurementParticlesMap emptyMeasPartMap{};
   const auto& measPartMap = m_inputMeasurementParticlesMap.isInitialized()

@@ -63,7 +63,8 @@ class JsonTrackFinderPerformanceWriter final
     TrackQualityPlotTool::Config trackQualityPlotToolConfig;
 
     /// Per-subdetector track summary plots, keyed by name.
-    std::map<std::string, std::set<int>> subDetectorTrackSummaryVolumes;
+    std::map<std::string, std::set<int>, std::less<>>
+        subDetectorTrackSummaryVolumes;
 
     /// Write per-particle matching details as a JSON array.
     bool writeMatchingDetails = false;

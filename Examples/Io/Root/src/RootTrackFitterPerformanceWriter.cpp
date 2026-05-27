@@ -177,7 +177,7 @@ ProcessCode RootTrackFitterPerformanceWriter::writeT(
   std::vector<ParticleHitCount> particleHitCounts;
 
   // Exclusive access to the tree while writing
-  std::lock_guard<std::mutex> lock(m_writeMutex);
+  auto lock = std::scoped_lock(m_writeMutex);
 
   // Loop over all tracks
   for (const auto& track : tracks) {

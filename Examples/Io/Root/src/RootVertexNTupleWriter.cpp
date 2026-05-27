@@ -290,7 +290,7 @@ ProcessCode RootVertexNTupleWriter::writeT(const AlgorithmContext& ctx,
   }
 
   // Exclusive access to the tree while writing
-  std::lock_guard<std::mutex> lock(m_writeMutex);
+  auto lock = std::scoped_lock(m_writeMutex);
 
   m_nRecoVtx = vertices.size();
   m_nCleanVtx = 0;

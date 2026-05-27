@@ -364,7 +364,7 @@ ProcessCode RootNuclearInteractionParametersWriter::finalize() {
   }
 
   // Exclusive access to the file while writing
-  std::lock_guard<std::mutex> lock(m_writeMutex);
+  auto lock = std::scoped_lock(m_writeMutex);
 
   // The file
   TFile* tf = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());

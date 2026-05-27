@@ -43,7 +43,8 @@ class TrackFinderPerformanceCollector {
 
     /// Optional per-subdetector track summary plots, keyed by name.
     /// The value is the set of geometry volume IDs to include.
-    std::map<std::string, std::set<int>> subDetectorTrackSummaryVolumes;
+    std::map<std::string, std::set<int>, std::less<>>
+        subDetectorTrackSummaryVolumes;
   };
 
   TrackFinderPerformanceCollector(Config cfg,

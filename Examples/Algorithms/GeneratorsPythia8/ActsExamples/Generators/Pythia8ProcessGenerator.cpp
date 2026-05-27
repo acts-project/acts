@@ -115,7 +115,7 @@ std::shared_ptr<HepMC3::GenEvent> Pythia8Generator::operator()(
   using namespace Acts::UnitLiterals;
 
   // pythia8 is not thread safe and generation needs to be protected
-  std::lock_guard<std::mutex> lock(m_pythia8Mutex);
+  auto lock = std::scoped_lock(m_pythia8Mutex);
   // use per-thread random engine also in pythia
 
   m_impl->m_pythia8RndmEngine->setRandomEngine(rng);

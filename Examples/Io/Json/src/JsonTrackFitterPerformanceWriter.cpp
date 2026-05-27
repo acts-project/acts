@@ -174,7 +174,7 @@ ProcessCode JsonTrackFitterPerformanceWriter::writeT(
   std::vector<SimBarcode> reconParticleIds;
   reconParticleIds.reserve(particles.size());
 
-  std::lock_guard<std::mutex> lock(m_writeMutex);
+  auto lock = std::scoped_lock(m_writeMutex);
 
   for (const auto& track : tracks) {
     if (!track.hasReferenceSurface()) {

@@ -134,7 +134,7 @@ ProcessCode SvgPointWriter<T, Acc>::writeT(
     const AlgorithmContext& context,
     const GeometryIdMultiset<T>& pointCollection) {
   // Ensure exclusive access to file writing
-  std::lock_guard<std::mutex> lock(m_writeMutex);
+  auto lock = std::scoped_lock(m_writeMutex);
 
   Acc xyz;
 

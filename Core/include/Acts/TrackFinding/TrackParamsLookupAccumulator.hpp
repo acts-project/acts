@@ -51,7 +51,7 @@ class TrackParamsLookupAccumulator {
   void addTrack(const TrackParameters& ipTrackParameters,
                 const TrackParameters& refTrackParameters,
                 const Vector2& position) {
-    std::lock_guard<std::mutex> lock(m_gridMutex);
+    auto lock = std::scoped_lock(m_gridMutex);
 
     auto bin = m_grid.localBinsFromPosition(position);
 

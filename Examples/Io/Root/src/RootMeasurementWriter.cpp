@@ -123,7 +123,7 @@ ProcessCode RootMeasurementWriter::writeT(
   }
 
   // Exclusive access to the tree while writing
-  std::lock_guard<std::mutex> lock(m_writeMutex);
+  auto lock = std::scoped_lock(m_writeMutex);
 
   for (Index hitIdx = 0u; hitIdx < measurements.size(); ++hitIdx) {
     const ConstVariableBoundMeasurementProxy meas =

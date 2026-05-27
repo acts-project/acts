@@ -56,7 +56,8 @@ class PythonTrackFinderPerformanceWriter final
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
     TrackQualityPlotTool::Config trackQualityPlotToolConfig;
     /// Optional per-subdetector track summary plots.
-    std::map<std::string, std::set<int>> subDetectorTrackSummaryVolumes;
+    std::map<std::string, std::set<int>, std::less<>>
+        subDetectorTrackSummaryVolumes;
   };
 
   PythonTrackFinderPerformanceWriter(Config cfg, Acts::Logging::Level lvl)
@@ -153,7 +154,7 @@ class PythonTrackFinderPerformanceWriter final
     const auto& particleTrackMatching = m_inputParticleTrackMatching(ctx);
     const auto& particleMeasurementsMap = m_inputParticleMeasurementsMap(ctx);
 
-    std::lock_guard<std::mutex> lock(m_writeMutex);
+    auto lock = std::scoped_lock(m_writeMutex);
     return m_collector.fill(ctx.geoContext, tracks, particles,
                             trackParticleMatching, particleTrackMatching,
                             particleMeasurementsMap);

@@ -747,7 +747,7 @@ ProcessCode RootAthenaDumpReader::read(const AlgorithmContext& ctx) {
     return ProcessCode::ABORT;
   }
 
-  std::lock_guard<std::mutex> lock(m_read_mutex);
+  auto lock = std::scoped_lock(m_read_mutex);
 
   m_inputchain->GetEntry(entry);
 

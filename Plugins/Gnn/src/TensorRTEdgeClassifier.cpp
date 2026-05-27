@@ -177,7 +177,7 @@ PipelineTensors TensorRTEdgeClassifier::operator()(
 
   // Protect access to the context by a mutex
   {
-    std::lock_guard<std::mutex> lock(m_contextMutex);
+    auto lock = std::scoped_lock(m_contextMutex);
     context = std::move(m_contexts.back());
     m_contexts.pop_back();
   }
@@ -217,7 +217,7 @@ PipelineTensors TensorRTEdgeClassifier::operator()(
   t3 = std::chrono::high_resolution_clock::now();
 
   {
-    std::lock_guard<std::mutex> lock(m_contextMutex);
+    auto lock = std::scoped_lock(m_contextMutex);
     m_contexts.push_back(std::move(context));
   }
 

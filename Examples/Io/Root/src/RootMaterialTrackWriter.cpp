@@ -82,7 +82,7 @@ ProcessCode RootMaterialTrackWriter::writeT(
     const std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>&
         materialTracks) {
   // Exclusive access to the tree while writing
-  std::lock_guard<std::mutex> lock(m_writeMutex);
+  auto lock = std::scoped_lock(m_writeMutex);
   // Loop over the material tracks and write them out
   for (auto& [idTrack, mtrack] : materialTracks) {
     // write & fill

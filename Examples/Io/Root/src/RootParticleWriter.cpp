@@ -117,7 +117,7 @@ ProcessCode RootParticleWriter::finalize() {
 ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
                                        const SimParticleContainer& particles) {
   // ensure exclusive access to tree/file while writing
-  std::lock_guard<std::mutex> lock(m_writeMutex);
+  auto lock = std::scoped_lock(m_writeMutex);
 
   m_eventId = ctx.eventNumber;
   for (const auto& particle : particles) {

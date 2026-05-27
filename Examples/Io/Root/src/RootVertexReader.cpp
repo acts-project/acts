@@ -131,7 +131,7 @@ ProcessCode RootVertexReader::read(const AlgorithmContext& context) {
   }
 
   // lock the mutex
-  std::lock_guard<std::mutex> lock(m_read_mutex);
+  auto lock = std::scoped_lock(m_read_mutex);
   // now read
 
   // The vertex collection to be filled

@@ -97,7 +97,7 @@ ProcessCode RootVertexWriter::finalize() {
 ProcessCode RootVertexWriter::writeT(const AlgorithmContext& ctx,
                                      const SimVertexContainer& vertices) {
   // ensure exclusive access to tree/file while writing
-  std::lock_guard<std::mutex> lock(m_writeMutex);
+  auto lock = std::scoped_lock(m_writeMutex);
 
   m_eventId = ctx.eventNumber;
   for (const auto& vertex : vertices) {

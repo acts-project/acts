@@ -150,7 +150,7 @@ ProcessCode RootAthenaDumpWriter::write(const AlgorithmContext& ctx) {
   const auto& measPartMap = m_inputMeasParticleMap(ctx);
   const auto& spacePoints = m_inputSpacePoints(ctx);
 
-  std::lock_guard<std::mutex> lock(m_writeMutex);
+  auto lock = std::scoped_lock(m_writeMutex);
 
   if (particles.size() > s_maxParticles) {
     throw std::runtime_error(

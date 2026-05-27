@@ -142,7 +142,7 @@ ProcessCode RootSimHitReader::read(const AlgorithmContext& context) {
   }
 
   // lock the mutex
-  std::lock_guard<std::mutex> lock(m_read_mutex);
+  auto lock = std::scoped_lock(m_read_mutex);
 
   ACTS_DEBUG("Reading event: " << std::get<0>(*it)
                                << " stored in entries: " << std::get<1>(*it)

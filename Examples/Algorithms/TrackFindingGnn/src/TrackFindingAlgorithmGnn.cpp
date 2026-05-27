@@ -252,7 +252,7 @@ ProcessCode TrackFindingAlgorithmGnn::execute(
   auto t3 = Clock::now();
 
   {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    auto lock = std::scoped_lock(m_mutex);
 
     m_timing.preprocessingTime(Duration(t1 - t0).count());
     m_timing.graphBuildingTime(timing.graphBuildingTime.count());

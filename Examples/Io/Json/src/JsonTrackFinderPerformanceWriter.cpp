@@ -141,7 +141,7 @@ ProcessCode JsonTrackFinderPerformanceWriter::finalize() {
   // Summary scalars
   {
     const auto& s = m_collector.stats();
-    auto safeRatio = [](std::size_t num, std::size_t den) -> double {
+    auto safeRatio = [](std::size_t num, std::size_t den) {
       return den > 0 ? static_cast<double>(num) / static_cast<double>(den)
                      : 0.0;
     };
@@ -199,7 +199,7 @@ ProcessCode JsonTrackFinderPerformanceWriter::writeT(
   const auto& particleTrackMatching = m_inputParticleTrackMatching(ctx);
   const auto& particleMeasurementsMap = m_inputParticleMeasurementsMap(ctx);
 
-  std::lock_guard<std::mutex> lock(m_writeMutex);
+  auto lock = std::scoped_lock(m_writeMutex);
 
   m_collector.fill(ctx.geoContext, tracks, particles, trackParticleMatching,
                    particleTrackMatching, particleMeasurementsMap);
