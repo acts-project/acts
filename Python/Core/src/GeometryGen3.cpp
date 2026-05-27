@@ -21,7 +21,6 @@
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <fstream>
@@ -109,7 +108,7 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
       csv << "," << surface.geometryId().volume();
       csv << "," << surface.geometryId().boundary();
       csv << "," << surface.geometryId().sensitive();
-      csv << "," << (surface.surfaceMaterial() != nullptr ? 1 : 0);
+      csv << "," << (surface.hasMaterial() ? 1 : 0);
       csv << std::endl;
     };
 

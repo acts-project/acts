@@ -103,8 +103,7 @@ void Portal::setLink(const GeometryContext& gctx, Direction direction,
 
   // check if they both have material but are not the same surface
   if (m_surface != nullptr && (m_surface.get() != &link->surface()) &&
-      link->surface().surfaceMaterial() != nullptr &&
-      m_surface->surfaceMaterial() != nullptr) {
+      link->surface().hasMaterial() && m_surface->hasMaterial()) {
     throw PortalFusingException();
   }
 
@@ -116,7 +115,7 @@ void Portal::setLink(const GeometryContext& gctx, Direction direction,
     return;
   }
 
-  if (target->surface().surfaceMaterial() != nullptr) {
+  if (target->surface().hasMaterial()) {
     // new link has material: assign that to existing link
     m_surface = target->surfacePtr();
     other->setSurface(m_surface);
@@ -190,8 +189,7 @@ Portal Portal::merge(const GeometryContext& gctx, Portal& aPortal,
     throw PortalMergingException{};
   }
 
-  if (aPortal.m_surface->surfaceMaterial() != nullptr ||
-      bPortal.m_surface->surfaceMaterial() != nullptr) {
+  if (aPortal.m_surface->hasMaterial() || bPortal.m_surface->hasMaterial()) {
     ACTS_ERROR("Cannot merge portals with material");
     throw PortalMergingException{};
   }
@@ -278,8 +276,7 @@ Portal Portal::fuse(const GeometryContext& gctx, Portal& aPortal,
     throw PortalFusingException();
   }
 
-  if (aPortal.m_surface->surfaceMaterial() != nullptr &&
-      bPortal.m_surface->surfaceMaterial() != nullptr) {
+  if (aPortal.m_surface->hasMaterial() && bPortal.m_surface->hasMaterial()) {
     ACTS_ERROR("Cannot fuse portals if both have material");
     throw PortalFusingException();
   }
