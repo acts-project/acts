@@ -497,6 +497,10 @@ void TrackingVolume::setVolumeName(std::string_view volumeName) {
   m_name = volumeName;
 }
 
+bool TrackingVolume::hasMaterial() const {
+  return m_volumeMaterial != nullptr;
+}
+
 const IVolumeMaterial* TrackingVolume::volumeMaterial() const {
   return m_volumeMaterial.get();
 }

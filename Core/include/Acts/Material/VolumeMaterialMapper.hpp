@@ -180,9 +180,7 @@ class VolumeMaterialMapper {
 
   /// selector for finding
   struct MaterialVolumeSelector {
-    bool operator()(const TrackingVolume& vf) const {
-      return (vf.volumeMaterial() != nullptr);
-    }
+    bool operator()(const TrackingVolume& vf) const { return vf.hasMaterial(); }
   };
 
   /// @brief finds all surfaces with ProtoVolumeMaterial of a volume
