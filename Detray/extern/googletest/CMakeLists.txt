@@ -34,7 +34,7 @@ else()
 endif()
 mark_as_advanced(DETRAY_GOOGLETEST_SOURCE_FULL)
 
-FetchContent_Declare(GoogleTest ${DETRAY_GOOGLETEST_SOURCE_FULL})
+FetchContent_Declare(GoogleTest SYSTEM ${DETRAY_GOOGLETEST_SOURCE_FULL})
 
 # Options used in the build of GoogleTest.
 set(BUILD_GMOCK TRUE CACHE BOOL "Turn off the build of GMock")
