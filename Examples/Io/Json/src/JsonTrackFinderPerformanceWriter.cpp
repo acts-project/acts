@@ -209,11 +209,11 @@ ProcessCode JsonTrackFinderPerformanceWriter::writeT(
       auto particleId = particle.particleId();
       bool isMatched = particleTrackMatching.contains(particleId) &&
                        particleTrackMatching.at(particleId).track.has_value();
-      m_matchingDetails.push_back(
-          {static_cast<std::uint32_t>(ctx.eventNumber),
-           particleId.vertexPrimary(), particleId.vertexSecondary(),
-           particleId.particle(), particleId.generation(),
-           particleId.subParticle(), isMatched});
+      m_matchingDetails.emplace_back(
+          static_cast<std::uint32_t>(ctx.eventNumber),
+          particleId.vertexPrimary(), particleId.vertexSecondary(),
+          particleId.particle(), particleId.generation(),
+          particleId.subParticle(), isMatched);
     }
   }
 

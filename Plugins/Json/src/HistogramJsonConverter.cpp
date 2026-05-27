@@ -152,7 +152,7 @@ nlohmann::json ActsPlugins::toJson(const Efficiency2& boostEff) {
   totalVec.resize(static_cast<std::size_t>(nx * ny), 0.0);
   for (int i = 0; i < nx; ++i) {
     for (int j = 0; j < ny; ++j) {
-      std::size_t idx = static_cast<std::size_t>(i * ny + j);
+      auto idx = static_cast<std::size_t>(i * ny + j);
       acceptedVec[idx] = static_cast<double>(accepted.at(i, j));
       totalVec[idx] = static_cast<double>(total.at(i, j));
     }
