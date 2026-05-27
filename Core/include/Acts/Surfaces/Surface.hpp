@@ -567,10 +567,6 @@ class Surface : public virtual GeometryObject,
   /// @return An array of local axes directions
   virtual std::array<AxisDirection, 2> localAxes() const = 0;
 
-  /// Check the compatibility of the surface material with the surface type
-  /// @param material The surface material to check
-  virtual void checkSurfaceMaterial(const ISurfaceMaterial& material) const;
-
   /// Transform surface local coordinates to material local coordinates
   /// @param surfaceLocal The local coordinates on the surface
   /// @return The corresponding local coordinates for material lookup
@@ -581,6 +577,12 @@ class Surface : public virtual GeometryObject,
   /// (translation, rotation) the surface in global space
   CloneablePtr<const Transform3> m_transform;
 
+  /// Possibility to attach a material description
+  std::shared_ptr<const ISurfaceMaterial> m_surfaceMaterial;
+
+  /// Whether to swap the local coordinates for material lookup
+  bool m_swapMaterialAxes{false};
+
  private:
   /// Pointer to the a SurfacePlacement
   const SurfacePlacementBase* m_placement{nullptr};
@@ -588,12 +590,6 @@ class Surface : public virtual GeometryObject,
   /// The associated layer Layer - layer in which the Surface is be embedded,
   /// nullptr if not associated
   const Layer* m_associatedLayer{nullptr};
-
-  /// Possibility to attach a material description
-  std::shared_ptr<const ISurfaceMaterial> m_surfaceMaterial;
-
-  /// Whether to swap the local coordinates for material lookup
-  bool m_swapMaterialAxes{false};
 
   /// Flag to indicate whether the surface is sensitive
   bool m_isSensitive{false};

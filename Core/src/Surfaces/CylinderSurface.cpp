@@ -567,54 +567,52 @@ void CylinderSurface::assignSurfaceBounds(
 void CylinderSurface::assignSurfaceMaterial(
     std::shared_ptr<const ISurfaceMaterial> material) {
   if (material != nullptr) {
-    checkSurfaceMaterial(*material);
-
+    const std::array<AxisDirection, 2> localSurfaceAxes = localAxes();
+    const std::array<AxisDirection, 2> alternativeAxes = {
+        AxisDirection::AxisPhi, AxisDirection::AxisZ};
     const std::vector<AxisDirection>& localMaterialAxes =
         material->localAxisDirections();
 
+    if (!std::ranges::includes(
+            std::set(localSurfaceAxes.begin(), localSurfaceAxes.end()),
+            std::set(localMaterialAxes.begin(), localMaterialAxes.end())) &&
+        !std::ranges::includes(
+            std::set(alternativeAxes.begin(), alternativeAxes.end()),
+            std::set(localMaterialAxes.begin(), localMaterialAxes.end()))) {
+      std::string errorMsg =
+          "CylinderSurface::checkSurfaceMaterial: material axis directions " +
+          axesDirectionName(localMaterialAxes) +
+          " are not supported by this surface. Supported axes are: " +
+          axesDirectionName(std::vector<AxisDirection>{
+              localSurfaceAxes.begin(), localSurfaceAxes.end()}) +
+          " or " +
+          axesDirectionName(std::vector<AxisDirection>{alternativeAxes.begin(),
+                                                       alternativeAxes.end()});
+      throw std::invalid_argument(errorMsg);
+    }
+
+    m_swapMaterialAxes = !localMaterialAxes.empty() &&
+                         localMaterialAxes[0] != localSurfaceAxes[0] &&
+                         localMaterialAxes[0] != alternativeAxes[0];
     m_scaleMaterialAxis =
         std::ranges::find(localMaterialAxes, AxisDirection::AxisPhi) !=
         localMaterialAxes.end();
   }
 
-  Surface::assignSurfaceMaterial(std::move(material));
-}
-
-void CylinderSurface::checkSurfaceMaterial(
-    const ISurfaceMaterial& material) const {
-  const std::array<AxisDirection, 2> localSurfaceAxes = localAxes();
-  const std::array<AxisDirection, 2> alternativeAxes = {AxisDirection::AxisPhi,
-                                                        AxisDirection::AxisZ};
-  const std::vector<AxisDirection>& localMaterialAxes =
-      material.localAxisDirections();
-
-  if (!std::ranges::includes(
-          std::set(localSurfaceAxes.begin(), localSurfaceAxes.end()),
-          std::set(localMaterialAxes.begin(), localMaterialAxes.end())) &&
-      !std::ranges::includes(
-          std::set(alternativeAxes.begin(), alternativeAxes.end()),
-          std::set(localMaterialAxes.begin(), localMaterialAxes.end()))) {
-    std::string errorMsg =
-        "CylinderSurface::checkSurfaceMaterial: material axis directions " +
-        axesDirectionName(localMaterialAxes) +
-        " are not supported by this surface. Supported axes are: " +
-        axesDirectionName(std::vector<AxisDirection>{localSurfaceAxes.begin(),
-                                                     localSurfaceAxes.end()}) +
-        " or " +
-        axesDirectionName(std::vector<AxisDirection>{alternativeAxes.begin(),
-                                                     alternativeAxes.end()});
-    throw std::invalid_argument(errorMsg);
-  }
+  m_surfaceMaterial = std::move(material);
 }
 
 Vector2 CylinderSurface::transformSurfaceLocalToMaterialLocal(
     const Vector2& surfaceLocal) const {
+  Vector2 materialLocal = surfaceLocal;
   if (m_scaleMaterialAxis) {
     const double r = bounds().get(CylinderBounds::eR);
-    return Surface::transformSurfaceLocalToMaterialLocal(
-        Vector2(surfaceLocal.x() / r, surfaceLocal.y()));
+    materialLocal[0] = surfaceLocal[0] / r;
   }
-  return Surface::transformSurfaceLocalToMaterialLocal(surfaceLocal);
+  if (m_swapMaterialAxes) {
+    std::swap(materialLocal[0], materialLocal[1]);
+  }
+  return materialLocal;
 }
 
 }  // namespace Acts

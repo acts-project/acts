@@ -292,9 +292,6 @@ class CylinderSurface : public RegularSurface {
     return {AxisDirection::AxisRPhi, AxisDirection::AxisZ};
   }
 
-  /// @copydoc Surface::checkSurfaceMaterial
-  void checkSurfaceMaterial(const ISurfaceMaterial& material) const override;
-
   /// @copydoc Surface::transformSurfaceLocalToMaterialLocal
   Vector2 transformSurfaceLocalToMaterialLocal(
       const Vector2& surfaceLocal) const override;
