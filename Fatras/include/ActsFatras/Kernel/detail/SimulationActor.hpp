@@ -147,7 +147,7 @@ struct SimulationActor {
     const Particle before = result.particle;
 
     // interactions only make sense if there is material to interact with.
-    if (surface.surfaceMaterial() != nullptr) {
+    if (surface.hasMaterial()) {
       // TODO is this the right thing to do when globalToLocal fails?
       //   it should in principle never happen, so probably it would be best
       //   to change to a model using transform() directly

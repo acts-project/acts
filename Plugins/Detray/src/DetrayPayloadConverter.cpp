@@ -562,7 +562,7 @@ DetrayPayloadConverter::convertMaterial(
 
     std::size_t srfIdx = srfIt->second;
 
-    if (surface.surfaceMaterial() == nullptr) {
+    if (surface.hasMaterial()) {
       continue;
     }
 

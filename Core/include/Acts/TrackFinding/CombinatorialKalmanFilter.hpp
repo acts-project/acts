@@ -461,7 +461,7 @@ class CombinatorialKalmanFilter {
       using PM = TrackStatePropMask;
 
       bool isSensitive = surface.isSensitive();
-      bool hasMaterial = surface.surfaceMaterial() != nullptr;
+      bool hasMaterial = surface.hasMaterial();
       bool isMaterialOnly = hasMaterial && !isSensitive;
       bool expectMeasurements = isSensitive;
 
@@ -772,7 +772,7 @@ class CombinatorialKalmanFilter {
 
       // Set the track state flags
       auto typeFlags = trackStateProxy.typeFlags();
-      if (trackStateProxy.referenceSurface().surfaceMaterial() != nullptr) {
+      if (trackStateProxy.referenceSurface().hasMaterial()) {
         typeFlags.setHasMaterial();
       }
       typeFlags.setHasParameters();
