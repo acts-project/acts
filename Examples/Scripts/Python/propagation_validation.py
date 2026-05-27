@@ -116,7 +116,7 @@ def main():
     # Common (to all modes): Evoke the sequence
     rnd = acts.examples.RandomNumbers(seed=args.seed)
 
-    # Commom: Build the sequencer
+    # Common: Build the sequencer
     s = acts.examples.Sequencer(events=args.events, numThreads=args.threads)
 
     # Common: Add the particle gun from ACTS
@@ -148,10 +148,7 @@ def main():
     trackingGeometry = None
     detectorStore = {}
 
-    buildGen3 = (
-        args.geo_mode == "gen3"
-        or args.geo_mode == "detray"
-    )
+    buildGen3 = args.geo_mode == "gen3" or args.geo_mode == "detray"
 
     with getOpenDataDetector(gen3=buildGen3) as detector:
         trackingGeometry = detector.trackingGeometry()
@@ -250,9 +247,9 @@ def main():
             rnd=rnd,
             killVolume=trackingGeometry.highestTrackingVolume,
             killAfterTime=25 * u.ns,
-            killSecondaries=True,  
+            killSecondaries=True,
             recordHitsOfSecondaries=False,
-            recordPropagationSummaries=True
+            recordPropagationSummaries=True,
         )
 
         s.addWhiteboardAlias("propagation_summary", "propagation_summaries")
