@@ -109,7 +109,7 @@ def runTrackFindingPythonOnly(
             self.prototracks(context, prototracks)
             return acts.examples.ProcessCode.SUCCESS
 
-    # s.addAlgorithm(PythonTrackFinder("PythonTrackFinder", acts.logging.INFO))
+    s.addAlgorithm(PythonTrackFinder("PythonTrackFinder", acts.logging.INFO))
 
     # ... or option 2: use truth values
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
@@ -121,7 +121,7 @@ def runTrackFindingPythonOnly(
         inputMeasurementSimHitsMap="measurement_simhits_map",
         outputProtoTracks="prototracks",
     )
-    s.addAlgorithm(truthTrkFndAlg)
+    # s.addAlgorithm(truthTrkFndAlg)
 
     class PythonTrackFitter(acts.examples.IAlgorithm):
         def __init__(self, name, level):
