@@ -384,8 +384,9 @@ class grid_reader {
 #if DETRAY_LOG_LVL > 2
     using single_axes_t =
         types::list<axis::single_axis<bounds_ts, binning_ts>...>;
-#endif
+    static_assert(sizeof(single_axes_t) > 0u);
     DETRAY_DEBUG_HOST("--> axes=" << DETRAY_TYPENAME(single_axes_t));
+#endif
 
     using grid_t = grid<algebra_t, axes_t, bin_t, serializer_t>;
 
