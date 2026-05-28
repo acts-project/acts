@@ -39,17 +39,19 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_construction_test) {
 
   // Test:
   // BinsSurfaceMaterial accumulation - 1D
-  BinUtility binUtility1D(10, -5., 5., open, AxisDirection::AxisX);
-  AccumulatedSurfaceMaterial material1D{binUtility1D};
-  auto accMat1D = material1D.accumulatedMaterial();
-  BOOST_CHECK_EQUAL(accMat1D.size(), 1u);
-  BOOST_CHECK_EQUAL(accMat1D[0].size(), 10u);
+  DirectedProtoAxis axis00(AxisDirection::AxisX, AxisBoundaryType::Open, -5.,
+                           5., 10);
+  std::vector<DirectedProtoAxis> axes0 = {axis00};
+  AccumulatedSurfaceMaterial material1D{axes0};
 
   // Test:
   // BinsSurfaceMaterial accumulation - 2D
-  BinUtility binUtility2D(10, -5., 5., open, AxisDirection::AxisX);
-  binUtility2D += BinUtility(20, -10., 10., open, AxisDirection::AxisY);
-  AccumulatedSurfaceMaterial material2D{binUtility2D};
+  DirectedProtoAxis axis10(AxisDirection::AxisX, AxisBoundaryType::Open, -5.,
+                           5., 10);
+  DirectedProtoAxis axis11(AxisDirection::AxisY, AxisBoundaryType::Open, -10.,
+                           10., 20);
+  std::vector<DirectedProtoAxis> axes1 = {axis10, axis11};
+  AccumulatedSurfaceMaterial material2D{axes1};
   auto accMat2D = material2D.accumulatedMaterial();
   BOOST_CHECK_EQUAL(accMat2D.size(), 20u);
   for (std::size_t ib = 0; ib < accMat2D.size(); ++ib) {
@@ -95,9 +97,12 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_fill_convert_1D) {
   MaterialSlab four(mat, 4.);
 
   // BinsSurfaceMaterial accumulation - 2D
-  BinUtility binUtility2D(2, -1., 1., open, AxisDirection::AxisX);
-  binUtility2D += BinUtility(2, -1., 1., open, AxisDirection::AxisY);
-  AccumulatedSurfaceMaterial material2D{binUtility2D};
+  DirectedProtoAxis axis0{AxisDirection::AxisX, AxisBoundaryType::Open, -1., 1.,
+                          2};
+  DirectedProtoAxis axis1{AxisDirection::AxisY, AxisBoundaryType::Open, -1., 1.,
+                          2};
+  std::vector<DirectedProtoAxis> axes = {axis0, axis1};
+  AccumulatedSurfaceMaterial material2D{axes};
   const std::vector<std::array<std::size_t, 3>> bin;
 
   // assign in the different bins
