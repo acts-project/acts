@@ -148,7 +148,7 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
     }
 
     if (surfSequence.empty()) {
-      ACTS_WARNING("Empty track " << itrack << " found.");
+      ACTS_DEBUG("Empty track " << itrack << " found.");
       continue;
     }
 
@@ -181,9 +181,9 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
         ACTS_DEBUG("No refitted parameters for track " << itrack);
       }
     } else {
-      ACTS_WARNING("Fit failed for event "
-                   << ctx.eventNumber << " track " << itrack << " with error: "
-                   << result.error() << ", " << result.error().message());
+      ACTS_DEBUG("Fit failed for event "
+                 << ctx.eventNumber << " track " << itrack << " with error: "
+                 << result.error() << ", " << result.error().message());
     }
     ++itrack;
   }
