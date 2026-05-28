@@ -10,4 +10,9 @@ message(STATUS "Building Mille as part of the Acts project")
 FetchContent_Declare(Mille SYSTEM ${ACTS_MILLE_SOURCE})
 
 # Now set up its build.
+
+# this prevents a target clash when Mille is built
+# as child of another package
+set(MILLE_AS_SUBDIR True)
+
 FetchContent_MakeAvailable(Mille)
