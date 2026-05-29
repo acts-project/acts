@@ -109,24 +109,12 @@ class DetrayPayloadConverter {
       const Acts::BinnedSurfaceMaterial& material,
       const Acts::Surface& surface);
 
-  /// Convert proto surface material with bin utility
+  /// Convert proto surface material
   /// @param material Proto surface material
   /// @param surface Surface associated with the material
   /// @return Detray surface material payload
-  static std::optional<DetraySurfaceMaterial>
-  convertProtoSurfaceMaterialBinUtility(
-      const Acts::ProtoSurfaceMaterialT<Acts::BinUtility>& material,
-      const Acts::Surface& surface);
-
-  /// Convert proto surface material with proto axes
-  /// @param material Proto surface material
-  /// @param surface Surface associated with the material
-  /// @return Detray surface material payload
-  static std::optional<DetraySurfaceMaterial>
-  convertProtoSurfaceMaterialProtoAxes(
-      const Acts::ProtoSurfaceMaterialT<std::vector<Acts::DirectedProtoAxis>>&
-          material,
-      const Acts::Surface& surface);
+  static std::optional<DetraySurfaceMaterial> convertProtoSurfaceMaterial(
+      const Acts::ProtoSurfaceMaterial& material, const Acts::Surface& surface);
 
   /// Convert surface array navigation policy
   /// @param policy Surface array navigation policy
@@ -230,8 +218,7 @@ class DetrayPayloadConverter {
                              const Acts::Surface& surface)>
         convertSurfaceMaterial{
             convertHomogeneousSurfaceMaterial, convertBinnedSurfaceMaterial,
-            convertGridSurfaceMaterial, convertProtoSurfaceMaterialProtoAxes,
-            convertProtoSurfaceMaterialBinUtility};
+            convertGridSurfaceMaterial, convertProtoSurfaceMaterial};
   };
 
   /// Convert surface bounds to detray mask payload

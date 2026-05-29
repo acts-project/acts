@@ -74,9 +74,17 @@ void RootMaterialMapIo::write(TFile& rFile, const GeometryIdentifier& geoID,
     rFile.mkdir(tdName.c_str());
     rFile.cd(tdName.c_str());
 
-    // Boundary condistions
-    // Get the binning data
-    auto& binningData = bsMaterial->binUtility().binningData();
+    // Boundary conditions
+    // Build a BinUtility from significant axes (skip single-bin dummies)
+    const auto& matAxes = bsMaterial->axes();
+    std::vector<Acts::DirectedProtoAxis> sigAxes;
+    for (const auto& ax : matAxes) {
+      if (ax.getAxis().getNBins() > 1) {
+        sigAxes.push_back(ax);
+      }
+    }
+    Acts::BinUtility bU(sigAxes);
+    const auto& binningData = bU.binningData();
     // 1-D or 2-D maps
     auto bins = static_cast<int>(binningData.size());
     auto fBins = static_cast<float>(bins);
@@ -191,8 +199,8 @@ void RootMaterialMapIo::fillMaterialSlab(MaterialTreePayload& payload,
 
 void RootMaterialMapIo::fillBinnedSurfaceMaterial(
     const BinnedSurfaceMaterial& bsMaterial) {
-  auto bins0 = static_cast<int>(bsMaterial.binUtility().bins(0));
-  auto bins1 = static_cast<int>(bsMaterial.binUtility().bins(1));
+  auto bins0 = static_cast<int>(bsMaterial.axes()[0].getAxis().getNBins());
+  auto bins1 = static_cast<int>(bsMaterial.axes()[1].getAxis().getNBins());
   auto fBins0 = static_cast<float>(bins0);
   auto fBins1 = static_cast<float>(bins1);
 
@@ -237,8 +245,8 @@ void RootMaterialMapIo::fillBinnedSurfaceMaterial(
 
 void RootMaterialMapIo::fillBinnedSurfaceMaterial(
     MaterialTreePayload& payload, const BinnedSurfaceMaterial& bsMaterial) {
-  std::size_t bins0 = bsMaterial.binUtility().bins(0);
-  std::size_t bins1 = bsMaterial.binUtility().bins(1);
+  std::size_t bins0 = bsMaterial.axes()[0].getAxis().getNBins();
+  std::size_t bins1 = bsMaterial.axes()[1].getAxis().getNBins();
 
   TH2I idx(m_cfg.indexHistName.c_str(), "indices; bin0; bin1",
            static_cast<int>(bins0), -0.5, static_cast<float>(bins0) - 0.5,

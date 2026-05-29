@@ -35,12 +35,15 @@ Acts::BinnedSurfaceMaterialAccumulator::createState(
           "Surface material is not set, inconsistent configuration.");
     }
 
-    // First attempt from ProtoSurfaceMaterial
+    // First attempt from ProtoSurfaceMaterial (covers former
+    // ProtoGridSurfaceMaterial too)
     auto psm = dynamic_cast<const ProtoSurfaceMaterial*>(surfaceMaterial);
     if (psm != nullptr) {
-      auto binUtility = psm->binning();
+      const auto& protoAxes = psm->axes();
+      BinUtility binUtility(
+          std::vector<DirectedProtoAxis>(protoAxes.begin(), protoAxes.end()));
       // Screen output for Binned Surface material
-      ACTS_DEBUG("       - (proto) binning from ProtoSurfaceMateria is "
+      ACTS_DEBUG("       - (proto) binning from ProtoSurfaceMaterial is "
                  << binUtility);
       // Now adjust to surface type
       binUtility = adjustBinUtility(binUtility, *surface, gctx);
@@ -48,34 +51,19 @@ Acts::BinnedSurfaceMaterialAccumulator::createState(
       ACTS_DEBUG("       - adjusted binning is " << binUtility);
       state->accumulatedMaterial[geoID] =
           AccumulatedSurfaceMaterial(binUtility);
-      // Material accumulation  is created for this
       continue;
     }
-    // Second attempt from ProtoGridSurfaceMaterial
-    auto psgm = dynamic_cast<const ProtoGridSurfaceMaterial*>(surfaceMaterial);
-    if (psgm != nullptr) {
-      BinUtility binUtility(psgm->binning());
-      // Screen output for Binned Surface material
-      ACTS_DEBUG("       - (proto) binning from ProtoGridSurfaceMaterial is "
-                 << binUtility);
-      // Now adjust to surface type
-      binUtility = adjustBinUtility(binUtility, *surface, gctx);
-      // Screen output for Binned Surface material
-      ACTS_DEBUG("       - adjusted binning is " << binUtility);
-      state->accumulatedMaterial[geoID] =
-          AccumulatedSurfaceMaterial(binUtility);
-      // Material accumulation  is created for this
-      continue;
-    }
-    // Third attempt: binned material
+    // Second attempt: binned material
     auto bmp = dynamic_cast<const BinnedSurfaceMaterial*>(surfaceMaterial);
     if (bmp != nullptr) {
+      const auto& bmpAxes = bmp->axes();
+      BinUtility binUtility(
+          std::vector<DirectedProtoAxis>(bmpAxes.begin(), bmpAxes.end()));
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - binning from BinnedSurfaceMaterial is "
-                 << bmp->binUtility());
+                 << binUtility);
       state->accumulatedMaterial[geoID] =
-          AccumulatedSurfaceMaterial(bmp->binUtility());
-      // Material accumulation  is created for this
+          AccumulatedSurfaceMaterial(binUtility);
       continue;
     }
     // Create a homogeneous type of material

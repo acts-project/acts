@@ -11,9 +11,10 @@
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
+#include <array>
 #include <utility>
 #include <vector>
 
@@ -25,8 +26,11 @@ BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(BinnedSurfaceMaterial_construction_test) {
-  BinUtility xyBinning(2, -1., 1., open, AxisDirection::AxisX);
-  xyBinning += BinUtility(3, -3., 3., open, AxisDirection::AxisY);
+  std::array<DirectedProtoAxis, 2> axes{
+      DirectedProtoAxis(AxisDirection::AxisX, AxisBoundaryType::Bound, -1., 1.,
+                        2),
+      DirectedProtoAxis(AxisDirection::AxisY, AxisBoundaryType::Bound, -3., 3.,
+                        3)};
 
   // Constructor a few material properties
   MaterialSlab a00(Material::fromMolarDensity(1., 2., 3., 4., 5.), 6.);
@@ -36,7 +40,7 @@ BOOST_AUTO_TEST_CASE(BinnedSurfaceMaterial_construction_test) {
   MaterialSlab a11(Material::fromMolarDensity(5., 6., 7., 8., 9.), 10.);
   MaterialSlab a12(Material::fromMolarDensity(6., 7., 8., 9., 10.), 11.);
 
-  // Prepare the matrix
+  // Prepare the matrix (3 rows × 2 columns: axis-1 has 3 bins, axis-0 has 2)
   std::vector<MaterialSlab> l0 = {a00, a10};
   std::vector<MaterialSlab> l1 = {a01, a11};
   std::vector<MaterialSlab> l2 = {a02, a12};
@@ -46,7 +50,7 @@ BOOST_AUTO_TEST_CASE(BinnedSurfaceMaterial_construction_test) {
                                               std::move(l2)};
 
   // Create the material
-  BinnedSurfaceMaterial bsm(xyBinning, std::move(m));
+  BinnedSurfaceMaterial bsm(axes, std::move(m));
 
   // Copy the material
   BinnedSurfaceMaterial bsmCopy(bsm);

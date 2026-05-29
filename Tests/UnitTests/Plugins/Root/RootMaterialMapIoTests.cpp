@@ -170,10 +170,10 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIoBinnedReadWrite) {
     BOOST_REQUIRE(binnedMaterial != nullptr);
 
     // Check the binning
-    BOOST_CHECK_EQUAL(binnedMaterial->binUtility().bins(0),
-                      binnedReferenceMaterial->binUtility().bins(0));
-    BOOST_CHECK_EQUAL(binnedMaterial->binUtility().bins(1),
-                      binnedReferenceMaterial->binUtility().bins(1));
+    BOOST_CHECK_EQUAL(binnedMaterial->axes()[0].getAxis().getNBins(),
+                      binnedReferenceMaterial->axes()[0].getAxis().getNBins());
+    BOOST_CHECK_EQUAL(binnedMaterial->axes()[1].getAxis().getNBins(),
+                      binnedReferenceMaterial->axes()[1].getAxis().getNBins());
 
     // Compare the material matrix
     const auto& materialMatrix = binnedMaterial->fullMaterial();
@@ -235,10 +235,10 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIoBinnedReadWrite) {
         dynamic_cast<const BinnedSurfaceMaterial*>(readMaterial.get());
     BOOST_REQUIRE(binnedMaterial != nullptr);
     // Check the binning
-    BOOST_CHECK_EQUAL(binnedMaterial->binUtility().bins(0),
-                      binnedReferenceMaterial->binUtility().bins(0));
-    BOOST_CHECK_EQUAL(binnedMaterial->binUtility().bins(1),
-                      binnedReferenceMaterial->binUtility().bins(1));
+    BOOST_CHECK_EQUAL(binnedMaterial->axes()[0].getAxis().getNBins(),
+                      binnedReferenceMaterial->axes()[0].getAxis().getNBins());
+    BOOST_CHECK_EQUAL(binnedMaterial->axes()[1].getAxis().getNBins(),
+                      binnedReferenceMaterial->axes()[1].getAxis().getNBins());
     // Compare the material matrix
     const auto& materialMatrix = binnedMaterial->fullMaterial();
     const auto& referenceMaterialMatrix =

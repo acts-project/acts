@@ -44,13 +44,11 @@ void addMaterial(py::module_& m) {
         m, "ISurfaceMaterial")
         .def("toString", &ISurfaceMaterial::toString);
 
-    py::class_<ProtoGridSurfaceMaterial, ISurfaceMaterial,
-               std::shared_ptr<ProtoGridSurfaceMaterial>>(
-        m, "ProtoGridSurfaceMaterial");
-
-    py::class_<ProtoSurfaceMaterial, ISurfaceMaterial,
-               std::shared_ptr<ProtoSurfaceMaterial>>(m,
-                                                      "ProtoSurfaceMaterial");
+    auto psmClass = py::class_<ProtoSurfaceMaterial, ISurfaceMaterial,
+                               std::shared_ptr<ProtoSurfaceMaterial>>(
+        m, "ProtoSurfaceMaterial");
+    // ProtoGridSurfaceMaterial is now an alias for ProtoSurfaceMaterial
+    m.attr("ProtoGridSurfaceMaterial") = psmClass;
 
     py::class_<HomogeneousSurfaceMaterial, ISurfaceMaterial,
                std::shared_ptr<HomogeneousSurfaceMaterial>>(
