@@ -123,6 +123,8 @@ GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
   m_filterConfig.maxQualitySeedsPerSpMConf = m_cfg.maxQualitySeedsPerSpMConf;
   m_filterConfig.useDeltaRinsteadOfTopRadius =
       m_cfg.useDeltaRinsteadOfTopRadius;
+  m_filterConfig.applyTripletTimeFilter = m_cfg.useTimeCutTripletFilter;
+  m_filterConfig.tripletTimeFilterChi2 = m_cfg.timeCoffTripletFilter;
 
   m_filterLogger = this->logger().cloneWithSuffix("Filter");
 
@@ -157,7 +159,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
   Acts::SpacePointContainer2 coreSpacePoints(
       Acts::SpacePointColumns::PackedXY | Acts::SpacePointColumns::PackedZR |
-      Acts::SpacePointColumns::VarianceZ | Acts::SpacePointColumns::VarianceR |
+      Acts::SpacePointColumns::Time | Acts::SpacePointColumns::VarianceZ |
+      Acts::SpacePointColumns::VarianceR | Acts::SpacePointColumns::VarianceT |
       Acts::SpacePointColumns::CopyFromIndex);
   coreSpacePoints.reserve(grid.numberOfSpacePoints());
   std::vector<Acts::SpacePointIndexRange2> gridSpacePointRanges;
@@ -174,6 +177,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
                                         static_cast<float>(sp.r())};
       newSp.varianceZ() = static_cast<float>(sp.varianceZ());
       newSp.varianceR() = static_cast<float>(sp.varianceR());
+      newSp.time() = static_cast<float>(sp.time());
+      newSp.varianceT() = static_cast<float>(sp.varianceT());
       newSp.copyFromIndex() = sp.index();
     }
     std::uint32_t end = coreSpacePoints.size();
@@ -215,6 +220,10 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   bottomDoubletFinderConfig.cotThetaMax = m_cfg.cotThetaMax;
   bottomDoubletFinderConfig.minPt = m_cfg.minPt;
   bottomDoubletFinderConfig.helixCutTolerance = m_cfg.helixCutTolerance;
+  bottomDoubletFinderConfig.applyTimeCut =
+      m_cfg.useTimeCutMiddleBottomDoubletFinder;
+  bottomDoubletFinderConfig.timeCutCoff =
+      m_cfg.timeCoffMiddleBottomDoubletFinder;
   if (m_cfg.useExtraCuts) {
     bottomDoubletFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
@@ -229,6 +238,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMin : m_cfg.deltaRMinTop;
   topDoubletFinderConfig.deltaRMax =
       std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMax : m_cfg.deltaRMaxTop;
+  topDoubletFinderConfig.applyTimeCut = m_cfg.useTimeCutMiddleTopDoubletFinder;
+  topDoubletFinderConfig.timeCutCoff = m_cfg.timeCoffMiddleTopDoubletFinder;
   auto topDoubletFinder =
       Acts::DoubletSeedFinder::create(Acts::DoubletSeedFinder::DerivedConfig(
           topDoubletFinderConfig, m_cfg.bFieldInZ));

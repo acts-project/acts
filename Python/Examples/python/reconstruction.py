@@ -9,6 +9,7 @@ import acts.examples
 # ROOT might not be available
 try:
     from acts.examples.root import (
+        RootSeedEventAnaWriter,
         RootTrackFinderNTupleWriter,
         RootTrackFinderPerformanceWriter,
         RootTrackFitterPerformanceWriter,
@@ -69,6 +70,10 @@ SeedFinderConfigArg = namedtuple(
         "forwardSeedConfirmationRange",
         "rMinMiddle",
         "rMaxMiddle",
+        "useTimeCutMiddleBottomDoubletFinder",
+        "timeCoffMiddleBottomDoubletFinder",
+        "useTimeCutMiddleTopDoubletFinder",
+        "timeCoffMiddleTopDoubletFinder",
         "deltaR",  # (min,max)
         "deltaRBottomSP",  # (min,max)
         "deltaRTopSP",  # (min,max)
@@ -77,7 +82,7 @@ SeedFinderConfigArg = namedtuple(
         "r",  # (min,max)
         "z",  # (min,max)
     ],
-    defaults=[None] * 20 + [(None, None)] * 7,
+    defaults=[None] * 24 + [(None, None)] * 7,
 )
 SeedFinderOptionsArg = namedtuple(
     "SeedFinderOptions", ["beamPos", "bFieldInZ"], defaults=[(None, None), None]
@@ -97,8 +102,10 @@ SeedFilterConfigArg = namedtuple(
         "maxQualitySeedsPerSpMConf",
         "useDeltaRorTopRadius",
         "deltaRMin",
+        "useTimeCutTripletFilter",
+        "timeCoffTripletFilter",
     ],
-    defaults=[None] * 11,
+    defaults=[None] * 13,
 )
 
 SpacePointGridConfigArg = namedtuple(
@@ -568,6 +575,18 @@ def addSeeding(
                 logLevel,
                 prefix=prefix,
             )
+            s.addWriter(
+                RootSeedEventAnaWriter(
+                    level=logLevel,
+                    inputTrackParameters=parEstimateAlg.config.outputTrackParameters,
+                    inputSimSeeds=seeds,
+                    inputSimHits="simhits",
+                    inputMeasurementParticlesMap="measurement_particles_map",
+                    inputMeasurementSimHitsMap="measurement_simhits_map",
+                    outputDir=str(outputDirRoot),
+                    ROOTFileName=str(f"seeds_ana.root"),
+                )
+            )
 
         if outputDirCsv is not None:
             outputDirCsv = Path(outputDirCsv)
@@ -960,6 +979,12 @@ def addGridTripletSeeding(
             maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
             maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
             useDeltaRinsteadOfTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
+            useTimeCutMiddleBottomDoubletFinder=seedFinderConfigArg.useTimeCutMiddleBottomDoubletFinder,
+            timeCoffMiddleBottomDoubletFinder=seedFinderConfigArg.timeCoffMiddleBottomDoubletFinder,
+            useTimeCutMiddleTopDoubletFinder=seedFinderConfigArg.useTimeCutMiddleTopDoubletFinder,
+            timeCoffMiddleTopDoubletFinder=seedFinderConfigArg.timeCoffMiddleTopDoubletFinder,
+            useTimeCutTripletFilter=seedFilterConfigArg.useTimeCutTripletFilter,
+            timeCoffTripletFilter=seedFilterConfigArg.timeCoffTripletFilter,
             useExtraCuts=seedingAlgorithmConfigArg.useExtraCuts,
         ),
     )
