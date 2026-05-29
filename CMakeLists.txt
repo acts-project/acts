@@ -588,9 +588,9 @@ if(ACTS_SETUP_VECMEM)
         find_package(vecmem ${_acts_vecmem_version} REQUIRED)
     else()
         add_subdirectory(thirdparty/vecmem)
-        # Make the "VecMem language code" available for the whole project.
-        include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
     endif()
+    # Make the "VecMem language code" available for the whole project.
+    list(APPEND CMAKE_MODULE_PATH "${VECMEM_LANGUAGE_DIR}")
 endif()
 
 if(ACTS_SETUP_COVFIE)
