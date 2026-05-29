@@ -156,7 +156,6 @@ def main():
         detectorStore["Volume"] = trackingGeometry.highestTrackingVolume
         detectorStore["SurfaceByIdentifier"] = trackingGeometry.geoIdSurfaceMap()
 
-    # Check the mode
     print(">>> Test mode is :", args.geo_mode)
     # check if the mode does not contain geant4
     if args.geo_mode != "geant4":
@@ -164,9 +163,9 @@ def main():
         propagatorImpl = None
         stepper = acts.StraightLineStepper()
 
-        # Build the detector for Gen1
+        # Build the detector for Gen1/Gen3
         if args.geo_mode != "detray":
-            # Set up the navigator - Gen1
+            # Set up the navigator - Gen1/Gen3
             navigator = acts.Navigator(trackingGeometry=trackingGeometry)
             propagator = acts.Propagator(stepper, navigator)
             propagatorImpl = acts.examples.ConcretePropagator(propagator)
