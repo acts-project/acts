@@ -223,17 +223,23 @@ struct GsfActor {
 
     if (m_cfg.multipleScattering && haveMaterial) {
       if (haveMeasurement) {
-        applyMultipleScattering(
+        const Result<void> materialInteractionRes = applyMultipleScattering(
             state, stepper, surface,
             determineMaterialUpdateMode(state, navigator,
                                         MaterialUpdateMode::PreUpdate),
             logger());
+        if (!materialInteractionRes.ok()) {
+          return materialInteractionRes.error();
+        }
       } else {
-        applyMultipleScattering(
+        const Result<void> materialInteractionRes = applyMultipleScattering(
             state, stepper, surface,
             determineMaterialUpdateMode(state, navigator,
                                         MaterialUpdateMode::FullUpdate),
             logger());
+        if (!materialInteractionRes.ok()) {
+          return materialInteractionRes.error();
+        }
       }
     }
 
@@ -303,16 +309,19 @@ struct GsfActor {
 
       removeLowWeightComponents(componentCache, m_cfg.weightCutoff);
 
-      updateStepper(state, stepper, surface, componentCache, logger());
+      updateStepper(state, stepper, surface, componentCache);
     }
 
     // If we have only done preUpdate before, now do postUpdate
     if (m_cfg.multipleScattering && haveMaterial && haveMeasurement) {
-      applyMultipleScattering(
+      const Result<void> materialInteractionRes = applyMultipleScattering(
           state, stepper, surface,
           determineMaterialUpdateMode(state, navigator,
                                       MaterialUpdateMode::PostUpdate),
           logger());
+      if (!materialInteractionRes.ok()) {
+        return materialInteractionRes.error();
+      }
     }
 
     return Result<void>::success();
