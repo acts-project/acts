@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/BinnedSurfaceMaterialAccumulator.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
@@ -15,20 +14,13 @@
 #include "Acts/Material/IntersectionMaterialAssigner.hpp"
 #include "Acts/Material/MaterialMapper.hpp"
 #include "Acts/Material/MaterialValidator.hpp"
-#include "Acts/Material/PropagatorMaterialAssigner.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
-#include <array>
-#include <map>
 #include <memory>
-#include <tuple>
-#include <utility>
-#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
