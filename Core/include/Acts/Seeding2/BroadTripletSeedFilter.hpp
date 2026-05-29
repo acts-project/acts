@@ -141,6 +141,10 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
     /// compatible SPs
     bool useDeltaRinsteadOfTopRadius = false;
 
+    /// time-ralated configurations
+    bool applyTripletTimeFilter = false;
+    float tripletTimeFilterChi2 = 15.f;
+
     /// Custom cuts interface for experiments
     std::shared_ptr<ITripletSeedCuts> experimentCuts;
   };

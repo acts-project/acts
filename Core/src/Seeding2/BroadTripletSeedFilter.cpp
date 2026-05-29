@@ -348,6 +348,49 @@ void BroadTripletSeedFilter::filterTripletsMiddleFixed(
   std::size_t numTotalSeeds = 0;
   for (const auto& [bottom, middle, top, bestSeedQuality, zOrigin,
                     qualitySeed] : sortedCandidates) {
+    // calculate chi2 of the triplet time compatibility
+    if (config().applyTripletTimeFilter) {
+      const auto& spM = spacePoints[middle];
+      const auto& spB = spacePoints[bottom];
+      const auto& spT = spacePoints[top];
+
+      const float tM = spM.time();
+      const float tB = spB.time();
+      const float tT = spT.time();
+
+      if (!std::isnan(tB) && !std::isnan(tM) && !std::isnan(tT)) {
+        const float varianceTM = spM.varianceT();
+        const float t0M = tM - std::sqrt(spM.zr()[0] * spM.zr()[0] +
+                                         spM.zr()[1] * spM.zr()[1]) /
+                                   Acts::PhysicalConstants::c;
+        const float varianceTB = spB.varianceT();
+        const float t0B = tB - std::sqrt(spB.zr()[0] * spB.zr()[0] +
+                                         spB.zr()[1] * spB.zr()[1]) /
+                                   Acts::PhysicalConstants::c;
+        const float varianceTT = spT.varianceT();
+        const float t0T = tT - std::sqrt(spT.zr()[0] * spT.zr()[0] +
+                                         spT.zr()[1] * spT.zr()[1]) /
+                                   Acts::PhysicalConstants::c;
+
+        const float t0Mean = (t0B + t0M + t0T) / 3.f;
+        const float chi2_t0 = ((t0B - t0Mean) * (t0B - t0Mean)) / varianceTB +
+                              ((t0M - t0Mean) * (t0M - t0Mean)) / varianceTM +
+                              ((t0T - t0Mean) * (t0T - t0Mean)) / varianceTT;
+        if (chi2_t0 > config().tripletTimeFilterChi2) {
+          ACTS_VERBOSE("Triplet time compatibility chi2 is "
+                       << chi2_t0 << ", which is larger than the cut value "
+                       << config().tripletTimeFilterChi2
+                       << ", discarding the seed");
+          continue;
+        } else {
+          ACTS_VERBOSE("Triplet time compatibility chi2 is "
+                       << chi2_t0 << ", which is smaller than the cut value "
+                       << config().tripletTimeFilterChi2
+                       << ", keeping the seed");
+        }
+      }
+    }
+
     // stop if we reach the maximum number of seeds
     if (numTotalSeeds >= maxSeeds) {
       break;
