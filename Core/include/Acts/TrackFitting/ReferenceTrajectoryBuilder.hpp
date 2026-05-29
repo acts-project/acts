@@ -276,11 +276,18 @@ class ReferenceTrajectoryBuilder {
       stepper.transportCovarianceToBound(state.stepping, surface,
                                          freeToBoundCorrection);
 
-      detail::performMaterialInteraction(
-          state, stepper, surface,
-          detail::determineMaterialUpdateMode(state, navigator,
-                                              MaterialUpdateMode::PreUpdate),
-          NoiseUpdateMode::addNoise, multipleScattering, energyLoss, logger());
+      const Result<detail::PointwiseMaterialEffects> materialInteractionPreRes =
+          detail::performMaterialInteraction(
+              state, stepper, surface,
+              detail::determineMaterialUpdateMode(
+                  state, navigator, MaterialUpdateMode::PreUpdate),
+              NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
+              logger());
+      if (!materialInteractionPreRes.ok()) {
+        ACTS_DEBUG("Error during pre-update material interaction: "
+                   << materialInteractionPreRes.error());
+        return materialInteractionPreRes.error();
+      }
 
       TrackStatePropMask mask =
           TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian;
@@ -312,11 +319,18 @@ class ReferenceTrajectoryBuilder {
 
       result.lastTrackStateIndex = trackStateProxy.index();
 
-      detail::performMaterialInteraction(
-          state, stepper, surface,
-          detail::determineMaterialUpdateMode(state, navigator,
-                                              MaterialUpdateMode::PostUpdate),
-          NoiseUpdateMode::addNoise, multipleScattering, energyLoss, logger());
+      const Result<detail::PointwiseMaterialEffects>
+          materialInteractionPostRes = detail::performMaterialInteraction(
+              state, stepper, surface,
+              detail::determineMaterialUpdateMode(
+                  state, navigator, MaterialUpdateMode::PostUpdate),
+              NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
+              logger());
+      if (!materialInteractionPostRes.ok()) {
+        ACTS_DEBUG("Error during post-update material interaction: "
+                   << materialInteractionPostRes.error());
+        return materialInteractionPostRes.error();
+      }
 
       return Result<void>::success();
     }
@@ -469,10 +483,18 @@ class ReferenceTrajectoryBuilder {
               trackState.referenceSurface(), geoContext,
               trackState.predicted());
 
-          const MaterialSlab materialSlab = detail::evaluateMaterialSlab(
-              geoContext, trackState.referenceSurface(), Direction::Forward(),
-              freeParams.segment<3>(eFreePos0),
-              freeParams.segment<3>(eFreeDir0), MaterialUpdateMode::PreUpdate);
+          const Result<MaterialSlab> materialSlabRes =
+              detail::evaluateMaterialSlab(
+                  geoContext, trackState.referenceSurface(),
+                  Direction::Forward(), freeParams.segment<3>(eFreePos0),
+                  freeParams.segment<3>(eFreeDir0),
+                  MaterialUpdateMode::PreUpdate);
+          if (!materialSlabRes.ok()) {
+            ACTS_DEBUG(
+                "Error evaluating material slab: " << materialSlabRes.error());
+            return materialSlabRes.error();
+          }
+          const MaterialSlab materialSlab = materialSlabRes.value();
 
           const detail::PointwiseMaterialEffects materialEffects =
               detail::computeMaterialEffects(
@@ -513,10 +535,18 @@ class ReferenceTrajectoryBuilder {
         const FreeVector freeParams = transformBoundToFreeParameters(
             trackState.referenceSurface(), geoContext, trackState.filtered());
 
-        const MaterialSlab materialSlab = detail::evaluateMaterialSlab(
-            geoContext, trackState.referenceSurface(), Direction::Forward(),
-            freeParams.segment<3>(eFreePos0), freeParams.segment<3>(eFreeDir0),
-            MaterialUpdateMode::PostUpdate);
+        const Result<MaterialSlab> materialSlabRes =
+            detail::evaluateMaterialSlab(
+                geoContext, trackState.referenceSurface(), Direction::Forward(),
+                freeParams.segment<3>(eFreePos0),
+                freeParams.segment<3>(eFreeDir0),
+                MaterialUpdateMode::PostUpdate);
+        if (!materialSlabRes.ok()) {
+          ACTS_DEBUG(
+              "Error evaluating material slab: " << materialSlabRes.error());
+          return materialSlabRes.error();
+        }
+        const MaterialSlab materialSlab = materialSlabRes.value();
 
         const detail::PointwiseMaterialEffects materialEffects =
             detail::computeMaterialEffects(

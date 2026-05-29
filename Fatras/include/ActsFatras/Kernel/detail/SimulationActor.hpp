@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/PropagatorState.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -155,9 +154,8 @@ struct SimulationActor {
       auto lpResult = surface.globalToLocal(state.geoContext, before.position(),
                                             before.direction());
       if (lpResult.ok()) {
-        Acts::Vector2 local = lpResult.value();
-        Acts::MaterialSlab slab =
-            surface.surfaceMaterial()->materialSlab(local);
+        const Acts::Vector2 local = lpResult.value();
+        Acts::MaterialSlab slab = surface.materialSlab(local);
         // again: interact only if there is valid material to interact with
         if (!slab.isVacuum()) {
           // adapt material for non-zero incidence
