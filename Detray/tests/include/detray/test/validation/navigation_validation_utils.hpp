@@ -174,6 +174,8 @@ inline auto record_propagation(
   using pathlimit_aborter_t = actor::pathlimit_aborter<scalar_t>;
   using material_tracer_t =
       material_validator::material_tracer<scalar_t, dvector>;
+
+  using state_ref_tuple_t = typename actor_chain<actor_ts...>::state_ref_tuple;
   using actor_chain_t = actor_chain<pathlimit_aborter_t, actor_ts...,
                                     step_tracer_t, material_tracer_t>;
   using propagator_t = propagator<stepper_t, navigator_t, actor_chain_t>;
@@ -192,17 +194,16 @@ inline auto record_propagation(
   typename material_tracer_t::state mat_tracer_state{*host_mr};
 
   // Combine all actor states
-  auto setup_actor_states =
-      []<std::size_t... indices>(
-          typename pathlimit_aborter_t::state &s1,
-          typename step_tracer_t::state &s2,
-          typename material_tracer_t::state &s3,
-          typename actor_chain<actor_ts...>::state_ref_tuple &t,
-          std::index_sequence<indices...> /*ids*/) {
-        return detray::tie(s1, detail::get<indices>(t)..., s2, s3);
-      };
-  constexpr auto idx_seq{std::make_index_sequence<detail::tuple_size_v<
-      typename actor_chain<actor_ts...>::state_ref_tuple>>{}};
+  auto setup_actor_states = []<std::size_t... indices>(
+                                typename pathlimit_aborter_t::state &s1,
+                                typename step_tracer_t::state &s2,
+                                typename material_tracer_t::state &s3,
+                                state_ref_tuple_t &t,
+                                std::index_sequence<indices...> /*ids*/) {
+    return detray::tie(s1, detail::get<indices>(t)..., s2, s3);
+  };
+  constexpr auto idx_seq{
+      std::make_index_sequence<detail::tuple_size_v<state_ref_tuple_t>>{}};
 
   auto actor_states =
       setup_actor_states(pathlimit_aborter_state, step_tracer_state,
@@ -223,7 +224,7 @@ inline auto record_propagation(
   if constexpr (has_param_transport) {
     if (!stddevs.empty() &&
         !std::ranges::all_of(stddevs, [](scalar_t s) { return s == 0.f; })) {
-      auto &updater_state = detail::get<updater_state_t>(actor_states);
+      auto &updater_state = detail::get<updater_state_t &>(actor_states);
       updater_state.init(track);
 
       // Copy of the curvilinear params
@@ -263,9 +264,10 @@ inline auto record_propagation(
   // Find the end point and direction of the track (approximately) for
   // backward propagation
   if (nav_dir == navigation::direction::e_backward) {
+    using fw_actor_chain_t = actor_chain<actor_ts..., pathlimit_aborter_t>;
     using fw_propagator_t =
-        propagator<stepper_t, navigator_t,
-                   actor_chain<pathlimit_aborter_t, actor_ts...>>;
+        propagator<stepper_t, navigator_t, fw_actor_chain_t>;
+
     std::unique_ptr<typename fw_propagator_t::state> fw_propagation{nullptr};
     if constexpr (std::is_same_v<bfield_t, empty_bfield>) {
       fw_propagation =
@@ -279,25 +281,23 @@ inline auto record_propagation(
 
     // Make a deep copy of states for forward propagation, but omit the
     // expensive tracers for the forward pass
-    auto copy_actor_states =
-        []<std::size_t... indices>(
-            typename pathlimit_aborter_t::state &s1,
-            typename actor_chain<actor_ts...>::state_ref_tuple &t,
-            std::index_sequence<indices...> /*ids*/) {
-          using fw_state_tuple_t =
-              typename actor_chain<pathlimit_aborter_t,
-                                   actor_ts...>::state_tuple;
-          return fw_state_tuple_t{s1, detail::get<indices>(t)...};
-        };
+    auto copy_actor_states = []<std::size_t... indices>(
+                                 typename pathlimit_aborter_t::state &s1,
+                                 state_ref_tuple_t &t,
+                                 std::index_sequence<indices...> /*ids*/) {
+      using fw_state_tuple_t = typename fw_actor_chain_t::state_tuple;
+      return fw_state_tuple_t{
+          s1,
+          detail::get<
+              detail::tuple_element_t<indices + 1u, fw_state_tuple_t> &>(t)...};
+    };
 
     // Setup forward actor states
-    auto setup_fw_actor_states =
-        []<std::size_t... indices>(
-            typename actor_chain<pathlimit_aborter_t, actor_ts...>::state_tuple
-                &t,
-            std::index_sequence<indices...> /*ids*/) {
-          return detray::tie(detail::get<indices>(t)...);
-        };
+    auto setup_fw_actor_states = []<std::size_t... indices>(
+                                     typename fw_actor_chain_t::state_tuple &t,
+                                     std::index_sequence<indices...> /*ids*/) {
+      return detray::tie(detail::get<indices>(t)...);
+    };
 
     auto fw_state_tuple =
         copy_actor_states(pathlimit_aborter_state, state_tuple, idx_seq);
@@ -311,7 +311,7 @@ inline auto record_propagation(
     // Make sure parameters are transported, even if there is no actor to
     // update them and enforce the write back to the updater state
     if constexpr (has_param_transport) {
-      detail::get<updater_state_t>(fw_actor_states).always_update(true);
+      detail::get<updater_state_t &>(fw_actor_states).always_update(true);
     }
 
     const bool fw_success =
@@ -330,8 +330,8 @@ inline auto record_propagation(
     // If parameter transport is part of the propagation, copy the final
     // bound parameters to the backward propagation
     if constexpr (has_param_transport) {
-      auto &updater_state = detail::get<updater_state_t>(actor_states);
-      updater_state = detail::get<updater_state_t>(fw_actor_states);
+      auto &updater_state = detail::get<updater_state_t &>(actor_states);
+      updater_state = detail::get<updater_state_t &>(fw_actor_states);
     }
   }
 
