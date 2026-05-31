@@ -24,8 +24,6 @@ cffi==2.0.0
     # via cryptography
 charset-normalizer==3.4.7
     # via requests
-click==8.4.1
-    # via typer
 cryptography==48.0.0
     # via pyjwt
 docutils==0.21.2
@@ -42,7 +40,7 @@ fsspec==2026.4.0
     # via -r docs/old/requirements.in
 gidgethub==5.4.0
     # via -r docs/old/requirements.in
-idna==3.16
+idna==3.17
     # via
     #   requests
     #   yarl
@@ -100,7 +98,7 @@ rich==15.0.0
     #   typer
 shellingham==1.5.4
     # via typer
-snowballstemmer==3.0.1
+snowballstemmer==3.1.0
     # via sphinx
 sphinx==7.3.7
     # via
@@ -127,7 +125,7 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 toml==0.10.2
     # via -r docs/old/requirements.in
-typer==0.25.1
+typer==0.26.4
     # via -r docs/old/requirements.in
 typing-extensions==4.15.0
     # via
