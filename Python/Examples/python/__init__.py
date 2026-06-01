@@ -300,6 +300,25 @@ def defaultLogging(
     return customLogLevel
 
 
+# translate an integer log level to an acts logging level, with a default of INFO
+def getLogLevel(logLevel: Optional[int]) -> acts.logging.Level:
+    if logLevel is None:
+        return acts.logging.INFO
+    elif logLevel == 0:
+        return acts.logging.VERBOSE
+    elif logLevel == 1:
+        return acts.logging.DEBUG
+    elif logLevel == 2:
+        return acts.logging.INFO
+    elif logLevel == 3:
+        return acts.logging.WARNING
+    elif logLevel == 4:
+        return acts.logging.ERROR
+    elif logLevel >= 5:
+        # raise an error
+        raise ValueError(f"Invalid log level {logLevel}, must be between 0 and 4")
+
+
 class Sequencer(ActsExamplesPythonBindings._Sequencer):
     _autoFpeMasks: Optional[List["FpeMask"]] = None
 
