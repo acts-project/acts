@@ -6,14 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
 //
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 
 #include <stdexcept>
@@ -29,7 +30,7 @@ using DetraySurfaceGrid = DetrayPayloadConverter::DetraySurfaceGrid;
 
 std::optional<DetraySurfaceMaterial>
 DetrayPayloadConverter::convertBinnedSurfaceMaterial(
-    const BinnedSurfaceMaterial& material) {
+    const BinnedSurfaceMaterial& material, const Surface& surface) {
   using enum AxisDirection;
   // Get the bin utility and convert to 2D if needed
   // Detray expects 2-dimensional grid, currently supported are
@@ -37,20 +38,33 @@ DetrayPayloadConverter::convertBinnedSurfaceMaterial(
   auto [bUtility, swapped] =
       DetrayConversionUtils::convertBinUtilityTo2D(material.binUtility());
 
-  AxisDirection bVal0 = bUtility.binningData()[0u].binvalue;
-  AxisDirection bVal1 = bUtility.binningData()[1u].binvalue;
+  const AxisDirection bVal0 = bUtility.binningData().at(0).binvalue;
+  const AxisDirection bVal1 = bUtility.binningData().at(1).binvalue;
 
   // Translate into grid index type
   detray::io::material_id gridIndexType = detray::io::material_id::unknown;
   if (bVal0 == AxisR && bVal1 == AxisPhi) {
     gridIndexType = detray::io::material_id::ring2_map;
+  } else if (bVal0 == AxisRPhi && bVal1 == AxisZ) {
+    const auto& rPhiAxis = bUtility.binningData().at(0);
+    const auto& zAxis = bUtility.binningData().at(1);
+    const double r = dynamic_cast<const CylinderSurface&>(surface).bounds().get(
+        CylinderBounds::eR);
+    BinUtility nbUtility;
+    BinningData newPhiAxis = rPhiAxis.scale(r);
+    newPhiAxis.binvalue = AxisRPhi;
+    nbUtility += BinUtility(newPhiAxis);
+    nbUtility += BinUtility(zAxis);
+    bUtility = std::move(nbUtility);
+    gridIndexType = detray::io::material_id::concentric_cylinder2_map;
   } else if (bVal0 == AxisPhi && bVal1 == AxisZ) {
     gridIndexType = detray::io::material_id::concentric_cylinder2_map;
   } else if (bVal0 == AxisX && bVal1 == AxisY) {
     gridIndexType = detray::io::material_id::rectangle2_map;
   } else {
-    std::runtime_error(
-        "DetrayMaterialConverter: Unsupported binning for Detray");
+    throw std::invalid_argument(
+        "DetrayMaterialConverter: Unsupported binning for Detray " +
+        axisDirectionName(bVal0) + ", " + axisDirectionName(bVal1));
   }
 
   detray::io::grid_payload<detray::io::surface_material_payload,
@@ -89,25 +103,27 @@ DetrayPayloadConverter::convertBinnedSurfaceMaterial(
 
 std::optional<DetraySurfaceMaterial>
 DetrayPayloadConverter::convertGridSurfaceMaterial(
-    const IGridSurfaceMaterialBase& /*material*/) {
+    const IGridSurfaceMaterialBase& /*material*/, const Surface& /*surface*/) {
   throw DetrayUnsupportedMaterialException("detail::IGridSurfaceMaterialBase");
 }
 
 std::optional<DetraySurfaceMaterial>
 DetrayPayloadConverter::convertHomogeneousSurfaceMaterial(
-    const HomogeneousSurfaceMaterial& material) {
+    const HomogeneousSurfaceMaterial& material, const Surface& /*surface*/) {
   return DetrayConversionUtils::convertMaterialSlab(material.materialSlab());
 }
 
 std::optional<DetraySurfaceMaterial>
 DetrayPayloadConverter::convertProtoSurfaceMaterialBinUtility(
-    const ProtoSurfaceMaterialT<Acts::BinUtility>& /*material*/) {
+    const ProtoSurfaceMaterialT<Acts::BinUtility>& /*material*/,
+    const Surface& /*surface*/) {
   return std::nullopt;
 }
 
 std::optional<DetraySurfaceMaterial>
 DetrayPayloadConverter::convertProtoSurfaceMaterialProtoAxes(
-    const ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>& /*material*/) {
+    const ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>& /*material*/,
+    const Surface& /*surface*/) {
   return std::nullopt;
 }
 

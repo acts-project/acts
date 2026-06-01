@@ -9,7 +9,6 @@
 #include "ActsPlugins/Json/MaterialJsonConverter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/GridSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
@@ -33,8 +32,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <functional>
-#include <numbers>
-#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -373,7 +370,7 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
     jMaterial[Acts::jsonKey().maptype] = mapType;
     // Material has been mapped
     jMaterial[Acts::jsonKey().mapkey] = true;
-    nlohmann::json jmat(hsMaterial->materialSlab(Acts::Vector3(0., 0., 0.)));
+    nlohmann::json jmat(hsMaterial->materialSlab());
     jMaterial[Acts::jsonKey().datakey] = nlohmann::json::array({
         nlohmann::json::array({
             jmat,

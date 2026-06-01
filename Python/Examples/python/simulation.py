@@ -651,6 +651,7 @@ def addGeant4(
     outputParticles: str = "particles_simulated",
     outputSimHits: str = "simhits",
     recordHitsOfSecondaries=True,
+    recordPropagationSummaries=False,
     keepParticlesWithoutHits=True,
     writeHelixParameters: bool = False,
     outputDirCsv: Optional[Union[Path, str]] = None,
@@ -728,7 +729,7 @@ def addGeant4(
         recordHitsOfNeutrals=False,
         recordHitsOfPrimaries=True,
         recordHitsOfSecondaries=recordHitsOfSecondaries,
-        recordPropagationSummaries=False,
+        recordPropagationSummaries=recordPropagationSummaries,
         keepParticlesWithoutHits=keepParticlesWithoutHits,
     )
     __geant4Handle = alg.geant4Handle

@@ -416,11 +416,18 @@ class CombinatorialKalmanFilter {
 
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
-      detail::performMaterialInteraction(
-          state, stepper, currentState.referenceSurface(),
-          detail::determineMaterialUpdateMode(state, navigator,
-                                              MaterialUpdateMode::PostUpdate),
-          NoiseUpdateMode::addNoise, multipleScattering, energyLoss, logger());
+      const Result<detail::PointwiseMaterialEffects> materialInteractionRes =
+          detail::performMaterialInteraction(
+              state, stepper, currentState.referenceSurface(),
+              detail::determineMaterialUpdateMode(
+                  state, navigator, MaterialUpdateMode::PostUpdate),
+              NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
+              logger());
+      if (!materialInteractionRes.ok()) {
+        ACTS_DEBUG("Material interaction failed during reset: "
+                   << materialInteractionRes.error().message());
+        return materialInteractionRes.error();
+      }
 
       // Set path limit based on loop protection
       detail::setupLoopProtection(state, stepper, result.pathLimitReached, true,
@@ -454,7 +461,7 @@ class CombinatorialKalmanFilter {
       using PM = TrackStatePropMask;
 
       bool isSensitive = surface.isSensitive();
-      bool hasMaterial = surface.surfaceMaterial() != nullptr;
+      bool hasMaterial = surface.hasMaterial();
       bool isMaterialOnly = hasMaterial && !isSensitive;
       bool expectMeasurements = isSensitive;
 
@@ -478,11 +485,18 @@ class CombinatorialKalmanFilter {
       }
 
       // Update state and stepper with pre material effects
-      detail::performMaterialInteraction(
-          state, stepper, surface,
-          detail::determineMaterialUpdateMode(state, navigator,
-                                              MaterialUpdateMode::PreUpdate),
-          NoiseUpdateMode::addNoise, multipleScattering, energyLoss, logger());
+      const Result<detail::PointwiseMaterialEffects> materialInteractionPreRes =
+          detail::performMaterialInteraction(
+              state, stepper, surface,
+              detail::determineMaterialUpdateMode(
+                  state, navigator, MaterialUpdateMode::PreUpdate),
+              NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
+              logger());
+      if (!materialInteractionPreRes.ok()) {
+        ACTS_DEBUG("Material interaction failed during filter: "
+                   << materialInteractionPreRes.error().message());
+        return materialInteractionPreRes.error();
+      }
 
       // Bind the transported state to the current surface
       auto boundStateRes = stepper.boundState(state.stepping, surface, false);
@@ -609,11 +623,18 @@ class CombinatorialKalmanFilter {
       }
 
       // Update state and stepper with post material effects
-      detail::performMaterialInteraction(
-          state, stepper, surface,
-          detail::determineMaterialUpdateMode(state, navigator,
-                                              MaterialUpdateMode::PostUpdate),
-          NoiseUpdateMode::addNoise, multipleScattering, energyLoss, logger());
+      const Result<detail::PointwiseMaterialEffects>
+          materialInteractionPostRes = detail::performMaterialInteraction(
+              state, stepper, surface,
+              detail::determineMaterialUpdateMode(
+                  state, navigator, MaterialUpdateMode::PostUpdate),
+              NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
+              logger());
+      if (!materialInteractionPostRes.ok()) {
+        ACTS_DEBUG("Material interaction failed during filter: "
+                   << materialInteractionPostRes.error().message());
+        return materialInteractionPostRes.error();
+      }
 
       return Result<void>::success();
     }
@@ -751,7 +772,7 @@ class CombinatorialKalmanFilter {
 
       // Set the track state flags
       auto typeFlags = trackStateProxy.typeFlags();
-      if (trackStateProxy.referenceSurface().surfaceMaterial() != nullptr) {
+      if (trackStateProxy.referenceSurface().hasMaterial()) {
         typeFlags.setHasMaterial();
       }
       typeFlags.setHasParameters();

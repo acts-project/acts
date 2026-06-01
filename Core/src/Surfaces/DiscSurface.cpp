@@ -544,6 +544,7 @@ std::pair<std::shared_ptr<DiscSurface>, bool> DiscSurface::mergedWith(
                                       axisDirectionName(direction));
   }
 }
+
 const std::shared_ptr<const DiscBounds>& DiscSurface::boundsPtr() const {
   return m_bounds;
 }

@@ -10,13 +10,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Material/BinnedSurfaceMaterial.hpp"
-#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialGridHelper.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
