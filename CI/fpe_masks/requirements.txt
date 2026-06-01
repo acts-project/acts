@@ -12,8 +12,6 @@ attrs==26.1.0
     # via aiohttp
 cffi==2.0.0
     # via cryptography
-click==8.4.1
-    # via typer
 cryptography==48.0.0
     # via pyjwt
 frozenlist==1.8.0
@@ -22,7 +20,7 @@ frozenlist==1.8.0
     #   aiosignal
 gidgethub==5.4.0
     # via -r CI/fpe_masks/requirements.in
-idna==3.16
+idna==3.17
     # via yarl
 markdown-it-py==4.2.0
     # via rich
@@ -48,7 +46,7 @@ rich==15.0.0
     #   typer
 shellingham==1.5.4
     # via typer
-typer==0.25.1
+typer==0.26.4
     # via -r CI/fpe_masks/requirements.in
 uritemplate==4.2.0
     # via gidgethub
