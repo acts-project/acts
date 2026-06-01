@@ -51,11 +51,10 @@ namespace {
 ///    energy. Ties broken by first occurrence.
 /// Returns 0 if the range is empty.
 template <typename Range>
-std::uint64_t pickParticleId(
-    const Range& simHitIndices,
-    const ActsExamples::SimHitContainer& simHits,
-    const ActsExamples::SimBarcode& majorityParticleId,
-    bool haveMajorityParticleId) {
+std::uint64_t pickParticleId(const Range& simHitIndices,
+                             const ActsExamples::SimHitContainer& simHits,
+                             const ActsExamples::SimBarcode& majorityParticleId,
+                             bool haveMajorityParticleId) {
   // Rule 1: prefer the majority particle if any contributor matches.
   if (haveMajorityParticleId) {
     for (const auto& [measIdx, simHitIdx] : simHitIndices) {
@@ -98,7 +97,8 @@ RootTrackSummaryWriter::RootTrackSummaryWriter(
   m_inputTrackParticleMatching.maybeInitialize(
       m_cfg.inputTrackParticleMatching);
   m_inputSimHits.maybeInitialize(m_cfg.inputSimHits);
-  m_inputMeasurementSimHitsMap.maybeInitialize(m_cfg.inputMeasurementSimHitsMap);
+  m_inputMeasurementSimHitsMap.maybeInitialize(
+      m_cfg.inputMeasurementSimHitsMap);
   if (m_cfg.writeJets) {
     m_inputJets.maybeInitialize(m_cfg.inputJets);
   }
