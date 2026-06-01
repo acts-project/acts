@@ -1,7 +1,9 @@
 name: Backport
 
 on:
-  pull_request_target:
+  # pull_request_target is required to backport merged PRs from forks; the job
+  # only runs on merged PRs and does not check out or execute untrusted PR code.
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
     types:
       - closed
       - labeled
@@ -9,6 +11,9 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   backport:
@@ -26,7 +31,7 @@ jobs:
         )
       )
     steps:
-      - uses: tibdex/backport@v2
+      - uses: tibdex/backport@9565281eda0731b1d20c4025c43339fb0a23812e # v2.0.4
         with:
           github_token: ${{ secrets.BACKPORT_TOKEN }}
           title_template: "<%= title %> [backport #<%= number %> to <%= base %>]"
