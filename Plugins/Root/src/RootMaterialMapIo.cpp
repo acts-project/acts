@@ -83,22 +83,21 @@ void RootMaterialMapIo::write(TFile& rFile, const GeometryIdentifier& geoID,
         sigAxes.push_back(ax);
       }
     }
-    Acts::BinUtility bU(sigAxes);
-    const auto& binningData = bU.binningData();
     // 1-D or 2-D maps
-    auto bins = static_cast<int>(binningData.size());
+    auto bins = static_cast<int>(sigAxes.size());
     auto fBins = static_cast<float>(bins);
 
     // The bin number information
-    TH1F n(m_cfg.nBinsHistName.c_str(), "bins; bin", bins, -0.5, fBins - 0.5);
+    TH1F nbins(m_cfg.nBinsHistName.c_str(), "bins; bin", bins, -0.5,
+               fBins - 0.5);
 
     // The binning value information
-    TH1F v(m_cfg.axisDirHistName.c_str(), "binning values; bin", bins, -0.5,
-           fBins - 0.5);
+    TH1F axdir(m_cfg.axisDirHistName.c_str(), "axis direction; bin", bins, -0.5,
+               fBins - 0.5);
 
     // The binning option information
-    TH1F o(m_cfg.axisBoundaryTypeHistName.c_str(), "binning options; bin", bins,
-           -0.5, fBins - 0.5);
+    TH1F axbtype(m_cfg.axisBoundaryTypeHistName.c_str(),
+                 "axis boundary type; bin", bins, -0.5, fBins - 0.5);
 
     // The binning option information - range min
     TH1F rmin(m_cfg.minRangeHistName.c_str(), "min; bin", bins, -0.5,
@@ -109,18 +108,20 @@ void RootMaterialMapIo::write(TFile& rFile, const GeometryIdentifier& geoID,
               fBins - 0.5);
 
     // Now fill the histogram content
-    for (auto [b, bData] : enumerate(binningData)) {
+    for (auto [b, dpa] : enumerate(sigAxes)) {
       // Fill: nbins, value, option, min, max
-      n.SetBinContent(static_cast<int>(b) + 1, static_cast<int>(bData.bins()));
-      v.SetBinContent(static_cast<int>(b) + 1,
-                      static_cast<int>(bData.binvalue));
-      o.SetBinContent(static_cast<int>(b) + 1, static_cast<int>(bData.option));
-      rmin.SetBinContent(static_cast<int>(b) + 1, bData.min);
-      rmax.SetBinContent(static_cast<int>(b) + 1, bData.max);
+      nbins.SetBinContent(static_cast<int>(b) + 1,
+                          static_cast<int>(dpa.getAxis().getNBins()));
+      axdir.SetBinContent(static_cast<int>(b) + 1,
+                          static_cast<int>(dpa.getAxisDirection()));
+      axbtype.SetBinContent(static_cast<int>(b) + 1,
+                            static_cast<int>(dpa.getAxis().getBoundaryType()));
+      rmin.SetBinContent(static_cast<int>(b) + 1, dpa.getAxis().getMin());
+      rmax.SetBinContent(static_cast<int>(b) + 1, dpa.getAxis().getMax());
     }
-    n.Write();
-    v.Write();
-    o.Write();
+    nbins.Write();
+    axdir.Write();
+    axbtype.Write();
     rmin.Write();
     rmax.Write();
 
@@ -369,18 +370,36 @@ RootMaterialMapIo::readTextureSurfaceMaterial(TFile& rFile,
 
   // Construct the common names & get the common histograms
   std::string nName = tdName + "/" + m_cfg.nBinsHistName;
-  std::string vName = tdName + "/" + m_cfg.axisDirHistName;
-  std::string oName = tdName + "/" + m_cfg.axisBoundaryTypeHistName;
+  std::string axdirName = tdName + "/" + m_cfg.axisDirHistName;
+  std::string axbtypeName = tdName + "/" + m_cfg.axisBoundaryTypeHistName;
   std::string minName = tdName + "/" + m_cfg.minRangeHistName;
   std::string maxName = tdName + "/" + m_cfg.maxRangeHistName;
   // Get the histograms
   auto n = dynamic_cast<TH1F*>(rFile.Get(nName.c_str()));
-  auto v = dynamic_cast<TH1F*>(rFile.Get(vName.c_str()));
-  auto o = dynamic_cast<TH1F*>(rFile.Get(oName.c_str()));
+  auto axdir = dynamic_cast<TH1F*>(rFile.Get(axdirName.c_str()));
+  auto axbtype = dynamic_cast<TH1F*>(rFile.Get(axbtypeName.c_str()));
   auto minh = dynamic_cast<TH1F*>(rFile.Get(minName.c_str()));
   auto maxh = dynamic_cast<TH1F*>(rFile.Get(maxName.c_str()));
 
-  std::vector<const TH1*> hists{n, v, o, minh, maxh};
+  bool legacyNamesDetected = false;
+  if (axdir == nullptr || axbtype == nullptr) {
+    // Try to read legacy histograms, if the new ones are not found
+    std::string legacyAxdirName = tdName + "/" + m_cfg.legacyBinningValue;
+    std::string legacyAxbtypeName = tdName + "/" + m_cfg.legacyBinningOption;
+    axdir = dynamic_cast<TH1F*>(rFile.Get(legacyAxdirName.c_str()));
+    axbtype = dynamic_cast<TH1F*>(rFile.Get(legacyAxbtypeName.c_str()));
+    if (axdir != nullptr && axbtype != nullptr) {
+      legacyNamesDetected = true;
+      ACTS_WARNING(
+          "The histograms for axis direction and boundary type were found with "
+          "legacy names. Please update the file to use the new histogram "
+          "names: "
+          << m_cfg.axisDirHistName << " and "
+          << m_cfg.axisBoundaryTypeHistName);
+    }
+  }
+
+  std::vector<const TH1*> hists{n, axdir, axbtype, minh, maxh};
   if (std::ranges::any_of(hists,
                           [](const auto* hist) { return hist == nullptr; })) {
     ACTS_ERROR(
@@ -391,16 +410,26 @@ RootMaterialMapIo::readTextureSurfaceMaterial(TFile& rFile,
   }
 
   // Now reconstruct the bin utilities
-  BinUtility bUtility;
+  std::array<DirectedProtoAxis, 2> dProtoAxis = {
+      DirectedProtoAxis(AxisDirection::AxisX, AxisBoundaryType::Closed,
+                        -std::numeric_limits<float>::max(),
+                        std::numeric_limits<float>::max(), 1),
+      DirectedProtoAxis(AxisDirection::AxisX, AxisBoundaryType::Closed,
+                        -std::numeric_limits<float>::max(),
+                        std::numeric_limits<float>::max(), 1)};
+
   for (int ib = 1; ib < n->GetNbinsX() + 1; ++ib) {
-    auto nbins = static_cast<std::size_t>(n->GetBinContent(ib));
-    auto val = static_cast<AxisDirection>(v->GetBinContent(ib));
-    auto opt = static_cast<BinningOption>(o->GetBinContent(ib));
+    auto nBins = static_cast<std::size_t>(n->GetBinContent(ib));
+    auto aDir = static_cast<AxisDirection>(axdir->GetBinContent(ib));
+    auto boundaryTypeValue = axbtype->GetBinContent(ib);
+    AxisBoundaryType abType =
+        legacyNamesDetected
+            ? static_cast<AxisBoundaryType>(boundaryTypeValue)
+            : static_cast<AxisBoundaryType>(boundaryTypeValue + 1);
     auto rmin = static_cast<float>(minh->GetBinContent(ib));
     auto rmax = static_cast<float>(maxh->GetBinContent(ib));
-    bUtility += BinUtility(nbins, rmin, rmax, opt, val);
+    dProtoAxis[ib - 1] = DirectedProtoAxis(aDir, abType, rmin, rmax, nBins);
   }
-  ACTS_VERBOSE("Created " << bUtility);
 
   /// Draw from histogram only source
   if (indexedMaterialTree == nullptr) {
@@ -449,7 +478,7 @@ RootMaterialMapIo::readTextureSurfaceMaterial(TFile& rFile,
         }
       }  // Construct the binned material with the right bin utility
       texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
-          bUtility, std::move(materialMatrix));
+          dProtoAxis, std::move(materialMatrix));
     }
   } else {
     // Construct the names for histogram type storage
@@ -478,7 +507,7 @@ RootMaterialMapIo::readTextureSurfaceMaterial(TFile& rFile,
         }
       }  // Construct the binned material with the right bin utility
       texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
-          bUtility, std::move(materialMatrix));
+          dProtoAxis, std::move(materialMatrix));
     }
   }
 

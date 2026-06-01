@@ -27,11 +27,10 @@ DirectedProtoAxis makeDummyAxis(AxisDirection dir) {
 
 /// Convert a single BinningData entry to a DirectedProtoAxis.
 DirectedProtoAxis binningDataToProtoAxis(const BinningData& bd) {
-  AxisBoundaryType bType =
-      (bd.option == closed) ? AxisBoundaryType::Closed : AxisBoundaryType::Bound;
+  AxisBoundaryType bType = (bd.option == closed) ? AxisBoundaryType::Closed
+                                                 : AxisBoundaryType::Bound;
   if (bd.type == equidistant) {
-    return DirectedProtoAxis(bd.binvalue, bType,
-                             static_cast<double>(bd.min),
+    return DirectedProtoAxis(bd.binvalue, bType, static_cast<double>(bd.min),
                              static_cast<double>(bd.max), bd.bins());
   }
   const auto& fbounds = bd.boundaries();
@@ -60,9 +59,10 @@ std::array<DirectedProtoAxis, 2> vectorToAxes(
             makeDummyAxis(AxisDirection::AxisY)};
   }
   if (axes.size() == 1) {
-    AxisDirection dummyDir = (axes[0].getAxisDirection() == AxisDirection::AxisX)
-                                 ? AxisDirection::AxisY
-                                 : AxisDirection::AxisX;
+    AxisDirection dummyDir =
+        (axes[0].getAxisDirection() == AxisDirection::AxisX)
+            ? AxisDirection::AxisY
+            : AxisDirection::AxisX;
     return {axes[0], makeDummyAxis(dummyDir)};
   }
   return {axes[0], axes[1]};
@@ -86,8 +86,8 @@ ProtoSurfaceMaterial::ProtoSurfaceMaterial()
     : m_axes{makeDummyAxis(AxisDirection::AxisX),
              makeDummyAxis(AxisDirection::AxisY)} {}
 
-ProtoSurfaceMaterial::ProtoSurfaceMaterial(std::array<DirectedProtoAxis, 2> axes,
-                                           MappingType mappingType)
+ProtoSurfaceMaterial::ProtoSurfaceMaterial(
+    std::array<DirectedProtoAxis, 2> axes, MappingType mappingType)
     : ISurfaceMaterial(1., mappingType), m_axes(std::move(axes)) {}
 
 #pragma GCC diagnostic push
