@@ -114,6 +114,9 @@ class PythonTrackFinderPerformanceWriter final
     for (const auto& eff : coll.effPlotTool().trackEffVsPtInAbsEtaRanges()) {
       d[py::str(eff.name())] = py::cast(eff, py::return_value_policy::copy);
     }
+    for (const auto& eff : coll.effPlotTool().trackEffVsLogPtInAbsEtaRanges()) {
+      d[py::str(eff.name())] = py::cast(eff, py::return_value_policy::copy);
+    }
 
     for (const auto& [name, hist] : coll.fakePlotTool().histograms()) {
       d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);

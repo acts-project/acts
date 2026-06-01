@@ -36,6 +36,7 @@ from acts.examples.reconstruction import (
     VertexFinder,
     addSeedFilterML,
     SeedFilterMLDBScanConfig,
+    EffPlotToolConfig,
 )
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
@@ -174,6 +175,20 @@ trackingGeometry = detector.trackingGeometry()
 decorators = detector.contextDecorators()
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
 rnd = acts.examples.RandomNumbers(seed=42)
+
+# Configuration of efficiency plots
+# (example of how to modify the binning; the values here are the default ones as in EffPlotTool.hpp)
+binning = EffPlotToolConfig.varBinning
+binning["Eta"] = acts.Axis.regular(40, -3.0, 3.0, "#eta")
+binning["Pt"] = acts.Axis.regular(40, 0, 100, "pT [GeV/c]")
+EffPlotToolConfig.varBinning = binning
+
+EffPlotToolConfig.truthAbsEtaRangesForPt = [
+    (0.0, 0.2),
+    (0.0, 0.8),
+    (1.0, 2.0),
+    (2.0, 3.0),
+]
 
 s = acts.examples.Sequencer(
     events=args.events,

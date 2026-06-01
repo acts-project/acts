@@ -24,6 +24,19 @@ except ImportError:
 
 u = acts.UnitConstants
 
+# Resolution Plots
+ResPlotToolConfig = acts.examples.root.ResPlotToolConfig()
+# Duplication Plots
+DuplicationPlotToolConfig = acts.examples.root.DuplicationPlotToolConfig()
+# Efficiency Plots
+EffPlotToolConfig = acts.examples.root.EffPlotToolConfig()
+# Fake rate Plots
+FakePlotToolConfig = acts.examples.root.FakePlotToolConfig()
+# TrackQuality Plots
+TrackQualityPlotToolConfig = acts.examples.root.TrackQualityPlotToolConfig()
+# Track Summary Plots
+TrackSummaryPlotToolConfig = acts.examples.root.TrackSummaryPlotToolConfig()
+
 SeedingAlgorithm = Enum(
     "SeedingAlgorithm",
     "TruthSmeared TruthEstimated HoughTransform AdaptiveHoughTransform Gbts Hashing GridTriplet OrthogonalTriplet HashingPrototype",
@@ -1354,6 +1367,11 @@ def addSeedPerformanceWriters(
             inputTrackParticleMatching=f"{prefix}seed_particle_matching",
             inputParticleTrackMatching=f"{prefix}particle_seed_matching",
             inputParticleMeasurementsMap="particle_measurements_map",
+            effPlotToolConfig=EffPlotToolConfig,
+            fakePlotToolConfig=FakePlotToolConfig,
+            duplicationPlotToolConfig=DuplicationPlotToolConfig,
+            trackQualityPlotToolConfig=TrackQualityPlotToolConfig,
+            trackSummaryPlotToolConfig=TrackSummaryPlotToolConfig,
             filePath=str(outputDirRoot / f"performance_{prefix}seeding.root"),
         )
     )
@@ -1868,6 +1886,8 @@ def addTrackWriters(
                 inputTracks=tracks,
                 inputParticles="particles_selected",
                 inputTrackParticleMatching="track_particle_matching",
+                inputSimHits="simhits",
+                inputMeasurementSimHitsMap="measurement_simhits_map",
                 filePath=str(outputDirRoot / f"tracksummary_{name}.root"),
                 treeName="tracksummary",
                 writeCovMat=writeCovMat,
@@ -1893,6 +1913,8 @@ def addTrackWriters(
                 inputTracks=tracks,
                 inputParticles="particles_selected",
                 inputTrackParticleMatching="track_particle_matching",
+                resPlotToolConfig=ResPlotToolConfig,
+                effPlotToolConfig=EffPlotToolConfig,
                 filePath=str(outputDirRoot / f"performance_fitting_{name}.root"),
             )
             s.addWriter(trackFitterPerformanceWriter)
@@ -1905,6 +1927,11 @@ def addTrackWriters(
                 inputTrackParticleMatching="track_particle_matching",
                 inputParticleTrackMatching="particle_track_matching",
                 inputParticleMeasurementsMap="particle_measurements_map",
+                effPlotToolConfig=EffPlotToolConfig,
+                fakePlotToolConfig=FakePlotToolConfig,
+                duplicationPlotToolConfig=DuplicationPlotToolConfig,
+                trackQualityPlotToolConfig=TrackQualityPlotToolConfig,
+                trackSummaryPlotToolConfig=TrackSummaryPlotToolConfig,
                 filePath=str(outputDirRoot / f"performance_finding_{name}.root"),
             )
             s.addWriter(trackFinderPerfWriter)

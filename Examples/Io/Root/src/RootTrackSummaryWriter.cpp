@@ -16,9 +16,11 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
@@ -41,6 +43,43 @@ using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 
+namespace {
+/// Tiebreaker for assigning a single particleId to a measurement.
+/// 1) Prefer the track's majority particle if any contributing sim hit
+///    matches it.
+/// 2) Otherwise fall back to the sim hit with the largest deposited
+///    energy. Ties broken by first occurrence.
+/// Returns 0 if the range is empty.
+template <typename Range>
+std::uint64_t pickParticleId(
+    const Range& simHitIndices,
+    const ActsExamples::SimHitContainer& simHits,
+    const ActsExamples::SimBarcode& majorityParticleId,
+    bool haveMajorityParticleId) {
+  // Rule 1: prefer the majority particle if any contributor matches.
+  if (haveMajorityParticleId) {
+    for (const auto& [measIdx, simHitIdx] : simHitIndices) {
+      const auto& simHit = *simHits.nth(simHitIdx);
+      if (simHit.particleId() == majorityParticleId) {
+        return static_cast<std::uint64_t>(majorityParticleId.hash());
+      }
+    }
+  }
+  // Rule 2: fall back to the highest-deposit hit.
+  std::uint64_t bestId = 0;
+  double bestDeposit = -std::numeric_limits<double>::infinity();
+  for (const auto& [measIdx, simHitIdx] : simHitIndices) {
+    const auto& simHit = *simHits.nth(simHitIdx);
+    const double dep = simHit.depositedEnergy();
+    if (dep > bestDeposit) {
+      bestDeposit = dep;
+      bestId = static_cast<std::uint64_t>(simHit.particleId().hash());
+    }
+  }
+  return bestId;
+}
+}  // namespace
+
 namespace ActsExamples {
 
 RootTrackSummaryWriter::RootTrackSummaryWriter(
@@ -58,6 +97,8 @@ RootTrackSummaryWriter::RootTrackSummaryWriter(
   m_inputParticles.maybeInitialize(m_cfg.inputParticles);
   m_inputTrackParticleMatching.maybeInitialize(
       m_cfg.inputTrackParticleMatching);
+  m_inputSimHits.maybeInitialize(m_cfg.inputSimHits);
+  m_inputMeasurementSimHitsMap.maybeInitialize(m_cfg.inputMeasurementSimHitsMap);
   if (m_cfg.writeJets) {
     m_inputJets.maybeInitialize(m_cfg.inputJets);
   }
@@ -89,6 +130,7 @@ RootTrackSummaryWriter::RootTrackSummaryWriter(
   m_outputTree->Branch("outlierChi2", &m_outlierChi2);
   m_outputTree->Branch("measurementVolume", &m_measurementVolume);
   m_outputTree->Branch("measurementLayer", &m_measurementLayer);
+  m_outputTree->Branch("measurementParticleId", &m_measurementParticleId);
   m_outputTree->Branch("outlierVolume", &m_outlierVolume);
   m_outputTree->Branch("outlierLayer", &m_outlierLayer);
 
@@ -235,6 +277,8 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
   // In case we do not have truth info, we bind to a empty collection
   const static SimParticleContainer emptyParticles;
   const static TrackParticleMatching emptyTrackParticleMatching;
+  const static SimHitContainer emptySimHits;
+  const static MeasurementSimHitsMap emptyMeasurementSimHitsMap;
 
   const auto& particles =
       m_inputParticles.isInitialized() ? m_inputParticles(ctx) : emptyParticles;
@@ -242,6 +286,13 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
       m_inputTrackParticleMatching.isInitialized()
           ? m_inputTrackParticleMatching(ctx)
           : emptyTrackParticleMatching;
+
+  const auto& simHits =
+      m_inputSimHits.isInitialized() ? m_inputSimHits(ctx) : emptySimHits;
+  const auto& measurementSimHitsMap =
+      m_inputMeasurementSimHitsMap.isInitialized()
+          ? m_inputMeasurementSimHitsMap(ctx)
+          : emptyMeasurementSimHitsMap;
 
   // For each particle within a track, how many hits did it contribute
   std::vector<ParticleHitCount> particleHitCounts;
@@ -289,10 +340,22 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     m_chi2Sum.push_back(track.chi2());
     m_NDF.push_back(track.nDoF());
 
+    // Resolve the majority truth particle early so the per-measurement
+    // loop below can prefer it when assigning particle ids.
+    SimBarcode majorityParticleId{};
+    bool haveMajorityParticleId = false;
+    auto match = trackParticleMatching.find(track.index());
+    if (match != trackParticleMatching.end() &&
+        match->second.particle.has_value()) {
+      majorityParticleId = match->second.particle.value();
+      haveMajorityParticleId = true;
+    }
+
     {
       std::vector<double> measurementChi2;
       std::vector<std::uint32_t> measurementVolume;
       std::vector<std::uint32_t> measurementLayer;
+      std::vector<std::uint64_t> measurementParticleId;
       std::vector<double> outlierChi2;
       std::vector<std::uint32_t> outlierVolume;
       std::vector<std::uint32_t> outlierLayer;
@@ -308,18 +371,31 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
           measurementChi2.push_back(state.chi2());
           measurementVolume.push_back(volume);
           measurementLayer.push_back(layer);
+          // Resolve truth particle id for this measurement.
+          std::uint64_t particleId = 0;
+          if (state.hasUncalibratedSourceLink() &&
+              m_inputSimHits.isInitialized() &&
+              m_inputMeasurementSimHitsMap.isInitialized()) {
+            const auto sl = state.getUncalibratedSourceLink()
+                                .template get<IndexSourceLink>();
+            const auto indices =
+                makeRange(measurementSimHitsMap.equal_range(sl.index()));
+            particleId = pickParticleId(indices, simHits, majorityParticleId,
+                                        haveMajorityParticleId);
+          }
+          measurementParticleId.push_back(particleId);
         }
       }
       m_measurementChi2.push_back(std::move(measurementChi2));
       m_measurementVolume.push_back(std::move(measurementVolume));
       m_measurementLayer.push_back(std::move(measurementLayer));
+      m_measurementParticleId.push_back(std::move(measurementParticleId));
       m_outlierChi2.push_back(std::move(outlierChi2));
       m_outlierVolume.push_back(std::move(outlierVolume));
       m_outlierLayer.push_back(std::move(outlierLayer));
     }
 
     // Initialize the truth particle info
-    SimBarcode majorityParticleId{};
     TrackMatchClassification trackClassification =
         TrackMatchClassification::Unknown;
     unsigned int nMajorityHits = std::numeric_limits<unsigned int>::max();
@@ -346,13 +422,13 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
         track.hasReferenceSurface() ? &track.referenceSurface() : nullptr;
 
     // Get the majority truth particle to this track
-    auto match = trackParticleMatching.find(track.index());
     bool foundMajorityParticle = false;
     // Get the truth particle info
     if (match != trackParticleMatching.end() &&
         match->second.particle.has_value()) {
       // Get the barcode of the majority truth particle
-      majorityParticleId = match->second.particle.value();
+      // (majorityParticleId was already resolved above for the
+      // per-measurement particle-id assignment)
       trackClassification = match->second.classification;
       nMajorityHits = match->second.contributingParticles.front().hitCount;
 
@@ -604,6 +680,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
   m_measurementLayer.clear();
   m_outlierVolume.clear();
   m_outlierLayer.clear();
+  m_measurementParticleId.clear();
 
   m_nMajorityHits.clear();
   m_majorityParticleVertexPrimary.clear();

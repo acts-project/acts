@@ -90,6 +90,9 @@ class EffPlotTool {
   const std::vector<Efficiency1>& trackEffVsPtInAbsEtaRanges() const {
     return m_trackEffVsPtInAbsEtaRanges;
   }
+  const std::vector<Efficiency1>& trackEffVsLogPtInAbsEtaRanges() const {
+    return m_trackEffVsLogPtInAbsEtaRanges;
+  }
 
  private:
   const Acts::Logger& logger() const { return *m_logger; }
@@ -101,6 +104,7 @@ class EffPlotTool {
   std::map<std::string, Efficiency2> m_efficiencies2D;
   std::vector<Efficiency1> m_trackEffVsEtaInPtRanges;
   std::vector<Efficiency1> m_trackEffVsPtInAbsEtaRanges;
+  std::vector<Efficiency1> m_trackEffVsLogPtInAbsEtaRanges;
 };
 
 }  // namespace ActsExamples

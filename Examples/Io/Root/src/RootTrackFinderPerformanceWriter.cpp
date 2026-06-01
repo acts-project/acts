@@ -126,6 +126,10 @@ ProcessCode RootTrackFinderPerformanceWriter::finalize() {
          m_collector.effPlotTool().trackEffVsPtInAbsEtaRanges()) {
       toRoot(eff)->Write();
     }
+    for (const auto& eff :
+         m_collector.effPlotTool().trackEffVsLogPtInAbsEtaRanges()) {
+      toRoot(eff)->Write();
+    }
 
     // Write fake ratio histograms
     for (const auto& [name, hist] : m_collector.fakePlotTool().histograms()) {

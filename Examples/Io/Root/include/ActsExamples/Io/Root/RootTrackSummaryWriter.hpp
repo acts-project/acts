@@ -56,6 +56,12 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
     std::string inputTrackParticleMatching;
     /// Input jet collection (optional).
     std::string inputJets;
+    /// Input collection of simulated hits (optional, only for truth-linked
+    /// per-measurement particle id branch).
+    std::string inputSimHits;
+    /// Input map from measurement index to sim-hit indices (optional, only
+    /// for truth-linked per-measurement particle id branch).
+    std::string inputMeasurementSimHitsMap;
     /// Output filename.
     std::string filePath = "tracksummary.root";
     /// Name of the output tree.
@@ -102,6 +108,9 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
       this, "InputTrackParticleMatching"};
   ReadDataHandle<TruthJetContainer> m_inputJets{this, "InputJets"};
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
+  ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
+      this, "InputMeasurementSimHitsMap"};
 
   /// Mutex used to protect multi-threaded writes
   std::mutex m_writeMutex;
@@ -136,6 +145,12 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   std::vector<std::vector<std::uint32_t>> m_measurementVolume;
   /// The layer id of the measurements
   std::vector<std::vector<std::uint32_t>> m_measurementLayer;
+  /// The particle id of the truth particle that left each measurement.
+  /// Outer: one entry per track. Inner: one entry per measurement on
+  /// that track, ordered identically to m_measurementVolume /
+  /// m_measurementLayer (reverse state order). Sentinel value 0 means
+  /// no truth link or no truth inputs configured.
+  std::vector<std::vector<std::uint64_t>> m_measurementParticleId;
   /// The volume id of the outliers
   std::vector<std::vector<std::uint32_t>> m_outlierVolume;
   /// The layer id of the outliers

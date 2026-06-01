@@ -104,7 +104,11 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
       py::class_<EffPlotTool::Config>(root, "EffPlotToolConfig")
           .def(py::init<>())
           .def_readwrite("varBinning", &EffPlotTool::Config::varBinning)
-          .def_readwrite("minTruthPt", &EffPlotTool::Config::minTruthPt);
+          .def_readwrite("minTruthPt", &EffPlotTool::Config::minTruthPt)
+          .def_readwrite("truthPtRangesForEta",
+                         &EffPlotTool::Config::truthPtRangesForEta)
+          .def_readwrite("truthAbsEtaRangesForPt",
+                         &EffPlotTool::Config::truthAbsEtaRangesForPt);
 
       py::class_<FakePlotTool::Config>(root, "FakePlotToolConfig")
           .def(py::init<>())
@@ -266,9 +270,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackSummaryWriter, root, "RootTrackSummaryWriter", inputTracks,
-        inputParticles, inputTrackParticleMatching, inputJets, filePath,
-        treeName, fileMode, writeCovMat, writeGsfSpecific, writeGx2fSpecific,
-        writeJets);
+        inputParticles, inputTrackParticleMatching, inputSimHits,
+        inputMeasurementSimHitsMap, inputJets, filePath, treeName, fileMode,
+        writeCovMat, writeGsfSpecific, writeGx2fSpecific, writeJets);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootVertexNTupleWriter, root, "RootVertexNTupleWriter", inputVertices,

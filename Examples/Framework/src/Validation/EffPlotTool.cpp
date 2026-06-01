@@ -91,6 +91,7 @@ EffPlotTool::EffPlotTool(const EffPlotTool::Config& cfg,
 
   const auto& etaAxis = m_cfg.varBinning.at("Eta");
   const auto& ptAxis = m_cfg.varBinning.at("Pt");
+  const auto& logPtAxis = m_cfg.varBinning.at("LogPt");
 
   // efficiency vs eta in different pT ranges
   for (const auto& [i, ptRange] : Acts::enumerate(m_cfg.truthPtRangesForEta)) {
@@ -110,6 +111,13 @@ EffPlotTool::EffPlotTool(const EffPlotTool::Config& cfg,
         std::format("Tracking efficiency with |#eta| in [{}, {}]",
                     absEtaRange.first, absEtaRange.second);
     m_trackEffVsPtInAbsEtaRanges.emplace_back(name, title, std::array{ptAxis});
+
+    // log pT version of the efficiency vs pT in different abs(eta) ranges
+    const std::string nameLogPt = std::format("trackeff_vs_log_pT_absEtaRange_{}", i);
+    const std::string titleLogPt =
+        std::format("Tracking efficiency with |#eta| in [{}, {}]",
+                    absEtaRange.first, absEtaRange.second);
+    m_trackEffVsLogPtInAbsEtaRanges.emplace_back(nameLogPt, titleLogPt, std::array{logPtAxis});
   }
 }
 
@@ -169,6 +177,14 @@ void EffPlotTool::fill(const Acts::GeometryContext& gctx,
   // fill the efficiency vs pT in different eta ranges
   for (auto&& [absEtaRange, eff] :
        Acts::zip(m_cfg.truthAbsEtaRangesForPt, m_trackEffVsPtInAbsEtaRanges)) {
+    if (t_absEta >= absEtaRange.first && t_absEta < absEtaRange.second) {
+      eff.fill({t_pT}, status);
+    }
+  }
+
+  // fill the log pT version of the efficiency vs pT in different eta ranges
+  for (auto&& [absEtaRange, eff] :
+       Acts::zip(m_cfg.truthAbsEtaRangesForPt, m_trackEffVsLogPtInAbsEtaRanges)) {
     if (t_absEta >= absEtaRange.first && t_absEta < absEtaRange.second) {
       eff.fill({t_pT}, status);
     }

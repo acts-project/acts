@@ -150,6 +150,9 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
   for (const auto& eff : m_effPlotTool.trackEffVsPtInAbsEtaRanges()) {
     toRoot(eff)->Write();
   }
+  for (const auto& eff : m_effPlotTool.trackEffVsLogPtInAbsEtaRanges()) {
+    toRoot(eff)->Write();
+  }
 
   // Write track summary histograms
   for (const auto& [name, prof] : m_trackSummaryPlotTool.profiles()) {
