@@ -1,9 +1,7 @@
-name: Build
+name: PyPI
 
-# Build and deploy on push and every night at 3:05 UTC
-# Tagged releases are triggered manually via workflow_dispatch
+# Nightly builds on schedule; release builds triggered manually via workflow_dispatch
 on:
-  push:
   schedule:
     - cron: '5 3 * * *'
   workflow_dispatch:
@@ -36,7 +34,6 @@ jobs:
 
       - uses: actions/checkout@v5
         with:
-          repository: acts-project/acts
           ref: ${{ github.event.inputs.acts_ref || 'main' }}
           path: acts
 
