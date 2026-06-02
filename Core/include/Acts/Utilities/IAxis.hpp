@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <iosfwd>
@@ -17,7 +16,7 @@
 
 namespace Acts {
 
-/// Common base class for all Axis instance. This allows generice handling
+/// Common base class for all Axis instances. This allows generice handling
 /// such as for inspection.
 class IAxis {
  public:
@@ -70,6 +69,16 @@ class IAxis {
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
   virtual std::size_t getBin(double x) const = 0;
+
+  virtual bool isInside(double x) const = 0;
+
+  virtual double getBinWidth(std::size_t bin) const = 0;
+
+  virtual double getBinLowerBound(std::size_t bin) const = 0;
+
+  virtual double getBinUpperBound(std::size_t bin) const = 0;
+
+  virtual double getBinCenter(std::size_t bin) const = 0;
 
   /// Centralized axis factory for equidistant binning
   ///
