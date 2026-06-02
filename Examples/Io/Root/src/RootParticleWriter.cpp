@@ -18,9 +18,11 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Utilities/PerigeeParameters.hpp"
 
 #include <cstdint>
 #include <ios>
+#include <optional>
 #include <stdexcept>
 
 #include <TFile.h>
@@ -120,6 +122,17 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
   m_eventId = ctx.eventNumber;
+
+  // Build the perigee surface and propagator once per event; they are reused
+  // for every particle below. Only needed when helix parameters are written.
+  std::shared_ptr<Acts::PerigeeSurface> pSurface;
+  std::optional<Acts::Propagator<Acts::SympyStepper>> propagator;
+  if (m_cfg.writeHelixParameters) {
+    pSurface =
+        Acts::Surface::makeShared<Acts::PerigeeSurface>(m_cfg.referencePoint);
+    propagator.emplace(Acts::SympyStepper(m_cfg.bField));
+  }
+
   for (const auto& particle : particles) {
     m_particleHash.push_back(particle.particleId().hash());
     m_particleType.push_back(particle.pdg());
@@ -182,86 +195,23 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
       continue;
     }
 
-    // Perigee surface at configured reference point
-    auto pSurface =
-        Acts::Surface::makeShared<Acts::PerigeeSurface>(m_cfg.referencePoint);
-
-    // Start from truth curvilinear parameters (direction, q/p)
-    const Acts::Vector3 startDir = particle.direction();  // unit vector
-    const auto qOverP = particle.qOverP();                // ACTS units
-    auto intersection =
-        pSurface
-            ->intersect(ctx.geoContext, particle.position(), startDir,
-                        Acts::BoundaryTolerance::Infinite())
-            .closest();
-
-    // Neutral particles have no helix -> linearly extrapolate to perigee
+    // Neutral particles have no helix and are linearly extrapolated to the
+    // perigee; charged particles are propagated along their truth helix.
     if (particle.charge() == 0) {
       ACTS_WARNING(
           "Particle has zero charge, linearly extrapolating to perigee");
-      // Initialize the truth particle info
-      auto perigeeD0 = NaNfloat;
-      auto perigeeZ0 = NaNfloat;
-
-      const auto position = intersection.position();
-
-      // get the truth perigee parameter
-      auto lpResult =
-          pSurface->globalToLocal(ctx.geoContext, position, startDir);
-      if (lpResult.ok()) {
-        perigeeD0 = lpResult.value()[Acts::BoundIndices::eBoundLoc0];
-        perigeeZ0 = lpResult.value()[Acts::BoundIndices::eBoundLoc1];
-      } else {
-        ACTS_ERROR("Global to local transformation did not succeed.");
-      }
-      // truth parameters at perigee are the same as at production vertex
-      m_perigeePhi.push_back(Acts::clampValue<float>(particle.phi()));
-      m_perigeeTheta.push_back(Acts::clampValue<float>(particle.theta()));
-      m_perigeeQop.push_back(Acts::clampValue<float>(
-          qOverP * Acts::UnitConstants::GeV / Acts::UnitConstants::e));
-      m_perigeeP.push_back(Acts::clampValue<float>(particle.absoluteMomentum() /
-                                                   Acts::UnitConstants::GeV));
-      m_perigeePx.push_back(Acts::clampValue<float>(m_p.back() * startDir.x()));
-      m_perigeePy.push_back(Acts::clampValue<float>(m_p.back() * startDir.y()));
-      m_perigeePz.push_back(Acts::clampValue<float>(m_p.back() * startDir.z()));
-      m_perigeeEta.push_back(Acts::clampValue<float>(
-          Acts::VectorHelpers::eta(particle.direction())));
-      m_perigeePt.push_back(Acts::clampValue<float>(
-          m_p.back() * Acts::VectorHelpers::perp(particle.direction())));
-
-      // Push the extrapolated parameters
-      m_perigeeD0.push_back(
-          Acts::clampValue<float>(perigeeD0 / Acts::UnitConstants::mm));
-      m_perigeeZ0.push_back(
-          Acts::clampValue<float>(perigeeZ0 / Acts::UnitConstants::mm));
-      continue;
     }
 
-    // Charged particles: propagate helix to perigee
-    // Build a propagator and propagate the *truth parameters* to the
-    // perigee Stepper + propagator
-    using Stepper = Acts::SympyStepper;
-    Stepper stepper(m_cfg.bField);
-    using PropagatorT = Acts::Propagator<Stepper>;
-    auto propagator = std::make_shared<PropagatorT>(stepper);
+    auto perigee = propagateToPerigee(
+        ctx.geoContext, ctx.magFieldContext, *propagator, pSurface,
+        particle.initialState().curvilinearParameters());
 
-    Acts::BoundTrackParameters startParams =
-        Acts::BoundTrackParameters::createCurvilinear(
-            particle.fourPosition(), startDir, qOverP, std::nullopt,
-            Acts::ParticleHypothesis::pion());
-
-    // Propagation options (need event contexts)
-    using PropOptions = PropagatorT::Options<>;
-    PropOptions pOptions(ctx.geoContext, ctx.magFieldContext);
-
-    // Choose propagation direction based on the closest intersection
-    pOptions.direction =
-        Acts::Direction::fromScalarZeroAsPositive(intersection.pathLength());
-
-    // Do the propagation to the perigee surface
-    auto propRes = propagator->propagate(startParams, *pSurface, pOptions);
-    if (!propRes.ok() || !propRes->endParameters.has_value()) {
-      ACTS_ERROR("Propagation to perigee surface failed.");
+    if (!perigee.has_value()) {
+      if (particle.charge() == 0) {
+        ACTS_ERROR("Global to local transformation did not succeed.");
+      } else {
+        ACTS_ERROR("Propagation to perigee surface failed.");
+      }
       m_perigeePhi.push_back(NaNfloat);
       m_perigeeTheta.push_back(NaNfloat);
       m_perigeeQop.push_back(NaNfloat);
@@ -275,42 +225,38 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
       m_perigeePt.push_back(NaNfloat);
       continue;
     }
-    const Acts::BoundTrackParameters& atPerigee = *propRes->endParameters;
 
-    // By construction, atPerigee is *bound on the perigee surface*.
-    // Its parameter vector is [loc0, loc1, phi, theta, q/p, t]
-    const auto& perigee_pars = atPerigee.parameters();
+    // For charged particles these are the truth parameters *at the perigee*;
+    // for neutral particles they are the (unchanged) truth parameters. The
+    // parameter vector is [loc0, loc1, phi, theta, q/p, t].
+    const Acts::BoundTrackParameters& atPerigee = *perigee;
+    const auto& pars = atPerigee.parameters();
 
-    const auto perigeeD0 = perigee_pars[Acts::BoundIndices::eBoundLoc0];
-    const auto perigeeZ0 = perigee_pars[Acts::BoundIndices::eBoundLoc1];
-
-    // truth phi;theta;q/p *at the perigee*,
-    const auto perigeePhi = perigee_pars[Acts::BoundIndices::eBoundPhi];
-    const auto perigeeTheta = perigee_pars[Acts::BoundIndices::eBoundTheta];
-    const auto perigeeQop = perigee_pars[Acts::BoundIndices::eBoundQOverP];
-
-    m_perigeePhi.push_back(Acts::clampValue<float>(perigeePhi));
-    m_perigeeTheta.push_back(Acts::clampValue<float>(perigeeTheta));
-    m_perigeeQop.push_back(Acts::clampValue<float>(
-        perigeeQop * Acts::UnitConstants::GeV / Acts::UnitConstants::e));
-    // update p, px, py, pz, eta, pt
+    const Acts::Vector3 perigeeDir = atPerigee.direction();
     const auto perigeeP =
         atPerigee.absoluteMomentum() / Acts::UnitConstants::GeV;
+
+    m_perigeePhi.push_back(
+        Acts::clampValue<float>(pars[Acts::BoundIndices::eBoundPhi]));
+    m_perigeeTheta.push_back(
+        Acts::clampValue<float>(pars[Acts::BoundIndices::eBoundTheta]));
+    m_perigeeQop.push_back(Acts::clampValue<float>(
+        pars[Acts::BoundIndices::eBoundQOverP] * Acts::UnitConstants::GeV /
+        Acts::UnitConstants::e));
     m_perigeeP.push_back(Acts::clampValue<float>(perigeeP));
-    const auto dir = atPerigee.direction();
-    m_perigeePx.push_back(Acts::clampValue<float>(perigeeP * dir.x()));
-    m_perigeePy.push_back(Acts::clampValue<float>(perigeeP * dir.y()));
-    m_perigeePz.push_back(Acts::clampValue<float>(perigeeP * dir.z()));
-    m_perigeeEta.push_back(Acts::clampValue<float>(
-        Acts::VectorHelpers::eta(atPerigee.direction())));
+    m_perigeePx.push_back(Acts::clampValue<float>(perigeeP * perigeeDir.x()));
+    m_perigeePy.push_back(Acts::clampValue<float>(perigeeP * perigeeDir.y()));
+    m_perigeePz.push_back(Acts::clampValue<float>(perigeeP * perigeeDir.z()));
+    m_perigeeEta.push_back(
+        Acts::clampValue<float>(Acts::VectorHelpers::eta(perigeeDir)));
     m_perigeePt.push_back(Acts::clampValue<float>(
-        perigeeP * Acts::VectorHelpers::perp(atPerigee.direction())));
+        perigeeP * Acts::VectorHelpers::perp(perigeeDir)));
 
     // Push the perigee parameters
-    m_perigeeD0.push_back(
-        Acts::clampValue<float>(perigeeD0 / Acts::UnitConstants::mm));
-    m_perigeeZ0.push_back(
-        Acts::clampValue<float>(perigeeZ0 / Acts::UnitConstants::mm));
+    m_perigeeD0.push_back(Acts::clampValue<float>(
+        pars[Acts::BoundIndices::eBoundLoc0] / Acts::UnitConstants::mm));
+    m_perigeeZ0.push_back(Acts::clampValue<float>(
+        pars[Acts::BoundIndices::eBoundLoc1] / Acts::UnitConstants::mm));
   }
 
   m_outputTree->Fill();

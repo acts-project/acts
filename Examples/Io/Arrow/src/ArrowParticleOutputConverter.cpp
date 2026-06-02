@@ -10,13 +10,14 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "Acts/Utilities/Table.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsExamples/Utilities/PerigeeParameters.hpp"
 #include "ActsPlugins/Arrow/ArrowUtil.hpp"
 
 #include <atomic>
@@ -306,67 +307,39 @@ ProcessCode ArrowParticleOutputConverter::execute(
     std::optional<float> z0;
     if (m_perigee->propagator.has_value()) {
       auto perigeeSample = m_perigee->perigeeTimer->sample();
-      const auto& surface = *m_perigee->surface;
       const Acts::Vector3 dir = s.direction();
-      auto intersection = surface
-                              .intersect(ctx.geoContext, s.position(), dir,
-                                         Acts::BoundaryTolerance::Infinite())
-                              .closest();
 
+      // Per-charge bookkeeping and kinematic cuts. Neutral particles are
+      // always extrapolated; charged particles are skipped below the
+      // configured momentum / above the configured eta.
+      bool computePerigee = true;
       if (s.charge() == 0) {
-        // Neutral: linearly extrapolate to the perigee surface.
         m_perigee->nZeroCharge.fetch_add(1, std::memory_order_relaxed);
-        auto lp =
-            surface.globalToLocal(ctx.geoContext, intersection.position(), dir);
-        if (lp.ok()) {
-          d0 = static_cast<float>(lp.value()[Acts::BoundIndices::eBoundLoc0]);
-          z0 = static_cast<float>(lp.value()[Acts::BoundIndices::eBoundLoc1]);
-        } else {
-          m_perigee->nGlobalToLocalFailed.fetch_add(1,
-                                                    std::memory_order_relaxed);
-        }
       } else {
-        // Charged: propagate the truth helix to the perigee surface.
         m_perigee->nCharged.fetch_add(1, std::memory_order_relaxed);
         if (s.transverseMomentum() < m_cfg.minHelixTransverseMomentum) {
           m_perigee->nLowMomentum.fetch_add(1, std::memory_order_relaxed);
+          computePerigee = false;
         } else if (std::abs(Acts::VectorHelpers::eta(dir)) >
                    m_cfg.maxHelixEta) {
           m_perigee->nHighEta.fetch_add(1, std::memory_order_relaxed);
-        } else {
-          auto startParams = Acts::BoundTrackParameters::createCurvilinear(
-              s.fourPosition(), dir, s.qOverP(), std::nullopt,
-              Acts::ParticleHypothesis::pion());
-          ACTS_VERBOSE("Start params: " << startParams);
-          ACTS_VERBOSE("Surface: " << surface.toString(ctx.geoContext));
-          using PropOptions = Impl::Propagator::Options<>;
-          PropOptions pOptions(ctx.geoContext, ctx.magFieldContext);
-          // pOptions.stepping.maxStepSize = 100 * Acts::UnitConstants::um;
-          pOptions.direction = Acts::Direction::fromScalarZeroAsPositive(
-              intersection.pathLength());
-          ACTS_VERBOSE("Direction: " << pOptions.direction
-                                     << " from path length "
-                                     << intersection.pathLength()
-                                     << " "
-                                        "eta: "
-                                     << Acts::VectorHelpers::eta(dir));
+          computePerigee = false;
+        }
+      }
 
-          auto propRes =
-              m_perigee->propagator
-                  ->propagate<decltype(pOptions), Acts::ForcedSurfaceReached,
-                              Acts::PathLimitReached>(startParams, surface,
-                                                      pOptions);
-          if (propRes.ok() && propRes->endParameters.has_value()) {
-            const auto& pars = propRes->endParameters->parameters();
-            d0 = static_cast<float>(pars[Acts::BoundIndices::eBoundLoc0]);
-            z0 = static_cast<float>(pars[Acts::BoundIndices::eBoundLoc1]);
-          } else {
-            // ACTS_ERROR("Propagation failed for particle "
-            //            << propRes.error().message());
-            // throw std::runtime_error(propRes.error().message());
-            m_perigee->nPropagationFailed.fetch_add(1,
+      if (computePerigee) {
+        auto perigee = propagateToPerigee(
+            ctx.geoContext, ctx.magFieldContext, *m_perigee->propagator,
+            m_perigee->surface, s.curvilinearParameters());
+        if (perigee.has_value()) {
+          const auto& pars = perigee->parameters();
+          d0 = static_cast<float>(pars[Acts::BoundIndices::eBoundLoc0]);
+          z0 = static_cast<float>(pars[Acts::BoundIndices::eBoundLoc1]);
+        } else if (s.charge() == 0) {
+          m_perigee->nGlobalToLocalFailed.fetch_add(1,
                                                     std::memory_order_relaxed);
-          }
+        } else {
+          m_perigee->nPropagationFailed.fetch_add(1, std::memory_order_relaxed);
         }
       }
     }
