@@ -4,4 +4,5 @@ target_sources(
         PixelSpacePointBuilder.cpp
         SpacePointFormationError.cpp
         StripSpacePointBuilder.cpp
+        StripSpacePointCalibration.cpp
 )

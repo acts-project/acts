@@ -367,6 +367,11 @@ class DiscSurface : public RegularSurface {
 
  protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)
+
+  /// @copydoc Surface::localAxes
+  std::array<AxisDirection, 2> localAxes() const override {
+    return {AxisDirection::AxisR, AxisDirection::AxisPhi};
+  }
 };
 
 static_assert(RegularSurfaceConcept<DiscSurface>,

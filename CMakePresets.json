@@ -68,6 +68,7 @@
                 "ACTS_BUILD_PLUGIN_JSON": "ON",
                 "ACTS_BUILD_PLUGIN_ONNX": "OFF",
                 "ACTS_BUILD_PLUGIN_ROOT": "ON",
+                "ACTS_BUILD_PLUGIN_GBL": "OFF",
                 "ACTS_BUILD_EXAMPLES_EDM4HEP": "ON",
                 "ACTS_BUILD_EXAMPLES_PODIO": "ON",
                 "ACTS_BUILD_EXAMPLES_GNN": "OFF",
@@ -76,7 +77,8 @@
                 "ACTS_BUILD_EXAMPLES_HASHING": "ON",
                 "ACTS_BUILD_EXAMPLES_FASTJET": "ON",
                 "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
-                "ACTS_USE_SYSTEM_PYBIND11": "ON"
+                "ACTS_USE_SYSTEM_PYBIND11": "ON",
+                "ACTS_USE_SYSTEM_GBL": "OFF"
             }
         },
         {
@@ -132,6 +134,7 @@
             "inherits": "ci-common",
             "cacheVariables": {
                 "ACTS_BUILD_PLUGIN_GEOMODEL": "OFF",
+                "ACTS_USE_SYSTEM_GBL": "OFF",
                 "ACTS_USE_SYSTEM_PYBIND11": "OFF"
             }
         },
@@ -155,7 +158,7 @@
                 "ACTS_BUILD_EXAMPLES_GNN": "ON",
                 "ACTS_GNN_ENABLE_TORCH": "ON",
                 "ACTS_GNN_ENABLE_ONNX": "ON",
-                "ACTS_GNN_ENABLE_CUDA": "ON",
+                "ACTS_ENABLE_CUDA": "ON",
                 "ACTS_GNN_ENABLE_MODULEMAP": "ON",
                 "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
                 "ACTS_USE_SYSTEM_PYBIND11": "ON"
@@ -173,7 +176,7 @@
                 "ACTS_BUILD_PLUGIN_FPEMON": "ON",
                 "ACTS_BUILD_PLUGIN_GNN": "ON",
                 "ACTS_GNN_ENABLE_TORCH": "OFF",
-                "ACTS_GNN_ENABLE_CUDA": "ON",
+                "ACTS_ENABLE_CUDA": "ON",
                 "ACTS_GNN_ENABLE_TENSORRT": "ON",
                 "ACTS_GNN_ENABLE_MODULEMAP": "OFF",
                 "ACTS_BUILD_EXAMPLES": "ON",
