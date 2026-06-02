@@ -6,7 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Io/EDM4hep/DD4hepPodioConversionHelper.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementOutputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMultiTrajectoryOutputConverter.hpp"
@@ -19,12 +21,12 @@
 #include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 #include "ActsExamples/Io/Podio/PodioReader.hpp"
 #include "ActsExamples/Io/Podio/PodioWriter.hpp"
+#include "ActsPlugins/EDM4hep/PodioUtil.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <podio/CollectionBase.h>
 #include <podio/Frame.h>
-#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
@@ -58,9 +60,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
     ACTS_PYTHON_STRUCT(
         config, inputFrame, inputParticles, inputSimHits,
         outputParticlesGenerator, outputParticlesSimulation, outputSimHits,
-        outputSimHitAssociation, outputSimVertices, outputMCParticleMap,
-        dd4hepDetector, trackingGeometry, sortSimHitsInTime, particleRMin,
-        particleRMax, particleZMin, particleZMax, particlePtMin, particlePtMax);
+        outputSimHitAssociation, outputSimVertices, dd4hepDetector,
+        trackingGeometry, sortSimHitsInTime, particleRMin, particleRMax,
+        particleZMin, particleZMax, particlePtMin, particlePtMax);
 
     using Config = EDM4hepSimInputConverter::Config;
     pythonRangeProperty(config, "particleR", &Config::particleRMin,
