@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 #include <vector>
 
 namespace Acts {
@@ -136,11 +137,14 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   /// @param [in] xmin lower boundary of axis range
   /// @param [in] xmax upper boundary of axis range
   /// @param [in] nBins number of bins to divide the axis range into
+  /// @param direction direction of the axis
   ///
   /// Divide the range \f$[\text{xmin},\text{xmax})\f$ into \f$\text{nBins}\f$
   /// equidistant bins.
-  Axis(double xmin, double xmax, std::size_t nBins)
-      : m_min(xmin),
+  Axis(double xmin, double xmax, std::size_t nBins,
+       AxisDirection direction = AxisDirection::AxisUnknown)
+      : IAxis(direction),
+        m_min(xmin),
         m_max(xmax),
         m_width((xmax - xmin) / nBins),
         m_bins(nBins) {}
@@ -151,12 +155,13 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   /// @param [in] xmin lower boundary of axis range
   /// @param [in] xmax upper boundary of axis range
   /// @param [in] nBins number of bins to divide the axis range into
+  /// @param direction direction of the axis
   ///
   /// Divide the range \f$[\text{xmin},\text{xmax})\f$ into \f$\text{nBins}\f$
   /// equidistant bins.
   Axis(AxisBoundaryTypeTag<bdt> typeTag, double xmin, double xmax,
-       std::size_t nBins)
-      : Axis(xmin, xmax, nBins) {
+       std::size_t nBins, AxisDirection direction = AxisDirection::AxisUnknown)
+      : Axis(xmin, xmax, nBins, direction) {
     static_cast<void>(typeTag);
   }
 
@@ -454,25 +459,29 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   static constexpr AxisType type = AxisType::Variable;
 
   /// @param [in] binEdges vector of bin edges
+  /// @param direction direction of the axis
   /// @pre @c binEdges must be strictly sorted in ascending order.
   /// @pre @c binEdges must contain at least two entries.
   ///
   /// Create a binning structure with @c nBins variable-sized bins from the
   /// given bin boundaries. @c nBins is given by the number of bin edges
   /// reduced by one.
-  explicit Axis(std::vector<double> binEdges)
-      : m_binEdges(std::move(binEdges)) {}
+  explicit Axis(std::vector<double> binEdges,
+                AxisDirection direction = AxisDirection::AxisUnknown)
+      : IAxis(direction), m_binEdges(std::move(binEdges)) {}
 
   /// @param [in] typeTag boundary type tag
   /// @param [in] binEdges vector of bin edges
+  /// @param direction direction of the axis
   /// @pre @c binEdges must be strictly sorted in ascending order.
   /// @pre @c binEdges must contain at least two entries.
   ///
   /// Create a binning structure with @c nBins variable-sized bins from the
   /// given bin boundaries. @c nBins is given by the number of bin edges
   /// reduced by one.
-  Axis(AxisBoundaryTypeTag<bdt> typeTag, std::vector<double> binEdges)
-      : Axis(std::move(binEdges)) {
+  Axis(AxisBoundaryTypeTag<bdt> typeTag, std::vector<double> binEdges,
+       AxisDirection direction = AxisDirection::AxisUnknown)
+      : Axis(std::move(binEdges), direction) {
     static_cast<void>(typeTag);
   }
 
@@ -752,4 +761,5 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   /// vector of bin edges (sorted in ascending order)
   std::vector<double> m_binEdges;
 };
+
 }  // namespace Acts

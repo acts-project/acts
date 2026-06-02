@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <iosfwd>
@@ -21,7 +20,10 @@ namespace Acts {
 /// such as for inspection.
 class IAxis {
  public:
-  /// Virtual destructor
+  IAxis() = default;
+
+  explicit IAxis(AxisDirection direction) : m_direction(direction) {}
+
   virtual ~IAxis() = default;
 
   /// @brief returns whether the axis is equidistant
@@ -42,6 +44,10 @@ class IAxis {
   ///
   /// @return @c AxisBoundaryType of this axis
   virtual AxisBoundaryType getBoundaryType() const = 0;
+
+  /// returns the direction of the axis
+  /// @return @c AxisDirection of this axis
+  AxisDirection getDirection() const { return m_direction; }
 
   /// @brief Return a vector of bin edges
   /// @return Vector which contains the bin edges
@@ -157,6 +163,9 @@ class IAxis {
   /// Dispatch to the correct stream operator
   /// @param os output stream
   virtual void toStream(std::ostream& os) const = 0;
+
+ private:
+  AxisDirection m_direction{AxisDirection::AxisUnknown};
 };
 
 template <typename T>
