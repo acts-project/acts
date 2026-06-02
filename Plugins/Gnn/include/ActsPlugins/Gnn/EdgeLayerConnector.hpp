@@ -17,15 +17,24 @@ namespace ActsPlugins {
 /// @addtogroup gnn_plugin
 /// @{
 
+/// Track building stage based on the EdgeLayerConnector algorithm from
+/// the ModuleMapGraph library (CUDA based)
 class EdgeLayerConnector final : public TrackBuildingBase {
  public:
+  /// Configuration for the EdgeLayerConnector
   struct Config {
+    /// Number of thread blocks for parallel edge processing
     std::size_t nBlocks = 512;
+    /// Maximum number of hits allowed per track candidate
     std::size_t maxHitsPerTrack = 30;
+    /// Minimum number of hits required to keep a track candidate
     std::size_t minHits = 3;
+    /// Edge weight threshold below which edges are discarded
     float weightsCut = 0.01;
   };
 
+  /// @param cfg Configuration struct
+  /// @param logger Logger instance
   EdgeLayerConnector(const Config &cfg,
                      std::unique_ptr<const Acts::Logger> logger)
       : m_cfg(cfg), m_logger(std::move(logger)) {}
@@ -33,6 +42,8 @@ class EdgeLayerConnector final : public TrackBuildingBase {
   std::vector<std::vector<int>> operator()(
       PipelineTensors tensors, std::vector<int> &spacepointIDs,
       const ExecutionContext &execContext = {}) override;
+
+  /// @return Read-only reference to the configuration
   const Config &config() const { return m_cfg; }
 
  private:
