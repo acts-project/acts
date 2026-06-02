@@ -39,10 +39,6 @@ class IAxis {
   /// @return @c AxisBoundaryType of this axis
   virtual AxisBoundaryType getBoundaryType() const = 0;
 
-  /// Returns the direction of the axis
-  /// @return @c AxisDirection of this axis
-  virtual AxisDirection getDirection() const = 0;
-
   /// Returns a vector of bin edges
   /// @return Vector which contains the bin edges
   virtual std::vector<double> getBinEdges() const = 0;
