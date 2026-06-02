@@ -201,8 +201,8 @@ ProcessCode RootSpacePointPerformanceWriter::writeT(
         m_cfg.trackingGeometry->findSurface(module2);
 
     if (surface1 == nullptr || surface2 == nullptr) {
-      ACTS_DEBUG("Could not find surfaces for modules " << module1 << " and "
-                                                        << module2);
+      ACTS_WARNING("Could not find surfaces for modules " << module1 << " and "
+                                                          << module2);
       continue;
     }
 
