@@ -9,8 +9,7 @@
 #include "ActsPlugins/Gnn/EdgeLayerConnector.hpp"
 #include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
 
-#include <CUDA_edge_layer_connector>
-
+#include <MMG/CUDA_edge_layer_connector>
 #include <thrust/copy.h>
 #include <thrust/execution_policy.h>
 
