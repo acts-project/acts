@@ -222,7 +222,6 @@ if args.edm4hep:
         outputParticlesSimulation="particles_simulated",
         outputSimHits="simhits",
         outputSimVertices="vertices_truth",
-        outputMCParticleMap=("mcparticle_index_map" if args.output_parquet else None),
         dd4hepDetector=detector,
         trackingGeometry=trackingGeometry,
         sortSimHitsInTime=False,
