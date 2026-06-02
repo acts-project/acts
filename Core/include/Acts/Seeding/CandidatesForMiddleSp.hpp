@@ -13,7 +13,7 @@
 namespace Acts {
 
 /// @brief A description of a triplet candidate.
-/// @tparam external_space_point_t  The external spacepoint type.
+/// @tparam external_space_point_t  The external space point type.
 template <typename external_space_point_t>
 struct TripletCandidate {
   /// @brief Default Constructor
@@ -46,10 +46,10 @@ struct TripletCandidate {
 
 /// @class CandidatesForMiddleSp
 /// The CandidatesForMiddleSp collects the triplet candidates given a
-/// fixed middle spacepoint. It internally stores the triplet candidates
+/// fixed middle space point. It internally stores the triplet candidates
 /// keeping only those with the higher quality.
 ///
-/// @tparam external_space_point_t The external spacepoint type.
+/// @tparam external_space_point_t The external space point type.
 
 template <typename external_space_point_t>
 concept SatisfyCandidateConcept = requires(external_space_point_t spacePoint) {

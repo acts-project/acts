@@ -9,6 +9,8 @@
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/StripSpacePointCalibrationDetails.hpp"
+#include "Acts/SpacePointFormation2/detail/StripSpacePointCalibrationImpl.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
@@ -21,68 +23,6 @@
 namespace Acts {
 
 namespace {
-
-/// Check the compatibility of strip space point coordinates in xyz assuming
-/// the Bottom-Middle direction with the strip measurement details
-bool stripCoordinateCheck(float tolerance, const ConstSpacePointProxy2& sp,
-                          const std::array<float, 3>& spacePointPosition,
-                          std::array<float, 3>& outputCoordinates) {
-  const std::array<float, 3>& topStripVector = sp.topStripVector();
-  const std::array<float, 3>& bottomStripVector = sp.bottomStripVector();
-  const std::array<float, 3>& stripCenterDistance = sp.stripCenterDistance();
-
-  // cross product between top strip vector and spacePointPosition
-  const std::array<float, 3> d1 = {
-      topStripVector[1] * spacePointPosition[2] -
-          topStripVector[2] * spacePointPosition[1],
-      topStripVector[2] * spacePointPosition[0] -
-          topStripVector[0] * spacePointPosition[2],
-      topStripVector[0] * spacePointPosition[1] -
-          topStripVector[1] * spacePointPosition[0]};
-
-  // scalar product between bottom strip vector and d1
-  const float bd1 = bottomStripVector[0] * d1[0] +
-                    bottomStripVector[1] * d1[1] + bottomStripVector[2] * d1[2];
-
-  // compatibility check using distance between strips to evaluate if
-  // spacepointPosition is inside the bottom detector element
-  const float s1 = stripCenterDistance[0] * d1[0] +
-                   stripCenterDistance[1] * d1[1] +
-                   stripCenterDistance[2] * d1[2];
-  if (std::abs(s1) > std::abs(bd1) * tolerance) {
-    return false;
-  }
-
-  // cross product between bottom strip vector and spacePointPosition
-  const std::array<float, 3> d0 = {
-      bottomStripVector[1] * spacePointPosition[2] -
-          bottomStripVector[2] * spacePointPosition[1],
-      bottomStripVector[2] * spacePointPosition[0] -
-          bottomStripVector[0] * spacePointPosition[2],
-      bottomStripVector[0] * spacePointPosition[1] -
-          bottomStripVector[1] * spacePointPosition[0]};
-
-  // compatibility check using distance between strips to evaluate if
-  // spacePointPosition is inside the top detector element
-  float s0 = stripCenterDistance[0] * d0[0] + stripCenterDistance[1] * d0[1] +
-             stripCenterDistance[2] * d0[2];
-  if (std::abs(s0) > std::abs(bd1) * tolerance) {
-    return false;
-  }
-
-  // if arrive here spacePointPosition is compatible with strip directions and
-  // detector elements
-
-  const std::array<float, 3>& topStripCenter = sp.topStripCenter();
-
-  // spacePointPosition corrected with respect to the top strip position and
-  // direction and the distance between the strips
-  s0 = s0 / bd1;
-  outputCoordinates[0] = topStripCenter[0] + topStripVector[0] * s0;
-  outputCoordinates[1] = topStripCenter[1] + topStripVector[1] * s0;
-  outputCoordinates[2] = topStripCenter[2] + topStripVector[2] * s0;
-  return true;
-}
 
 template <bool useStripInfo, bool sortedByCotTheta>
 class Impl final : public TripletSeedFinder {
@@ -224,8 +164,7 @@ class Impl final : public TripletSeedFinder {
   template <typename TopDoublets>
   void createStripTripletTopCandidates(
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
-      const DoubletsForMiddleSp::Proxy& bottomDoublet,
-      const TopDoublets& topDoublets,
+      const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
     const float rM = spM.zr()[1];
     const float cosPhiM = spM.xy()[0] / rM;
@@ -260,12 +199,52 @@ class Impl final : public TripletSeedFinder {
     const float sinTheta = 1 / std::sqrt(iSinTheta2);
     const float cosTheta = cotThetaB * sinTheta;
 
-    // coordinate transformation and checks for middle spacepoint
+    // coordinate transformation and checks for middle space point
     // x and y terms for the rotation from UV to XY plane
     const std::array<float, 2> rotationTermsUVtoXY = {cosPhiM * sinTheta,
                                                       sinPhiM * sinTheta};
 
-    for (auto topDoublet : topDoublets) {
+    // Pre-cache strip data for the loop-invariant middle and bottom SPs
+    const OuterStripSpacePointCalibrationDetailsDerived calM =
+        detail::deriveOuterStripSpacePointCalibrationDetails(
+            spM.bottomStripVector(), spM.topStripVector(),
+            spM.stripCenterDistance(), spM.topStripCenter());
+    const ConstSpacePointProxy2 spB =
+        spacePoints[bottomDoublet.spacePointIndex()];
+    const OuterStripSpacePointCalibrationDetailsDerived calB =
+        detail::deriveOuterStripSpacePointCalibrationDetails(
+            spB.bottomStripVector(), spB.topStripVector(),
+            spB.stripCenterDistance(), spB.topStripCenter());
+
+    std::size_t topDoubletOffset = 0;
+    for (auto [topDoublet, topDoubletIndex] :
+         zip(topDoublets, std::ranges::iota_view<std::size_t, std::size_t>(
+                              0, topDoublets.size()))) {
+      // Pre-filter on the doublet stage cot(theta) difference before the
+      // expensive strip coordinate transformation. The doublet cot(theta)
+      // values are computed from SP centers and are approximate, so the
+      // cut is very loose.
+      //
+      // this pre-filter is only applied when `sortedByCotTheta` is enabled,
+      // mirroring the pixel path. Top doublets are sorted in ascending
+      // approximate cotTheta, which lets us kill looping over doublets once
+      // cotThetaT exceeds cotThetaB by more than the tolerance, and advance
+      // `topDoubletOffset` to discard tops that can never satisfy the cut
+      // for any subsequent (larger) bottom cotTheta.
+      if constexpr (sortedByCotTheta) {
+        const float cotThetaT = topDoublet.cotTheta();
+        const float deltaCotTheta = cotThetaB - cotThetaT;
+        const float cotThetaDiffMax2 =
+            m_cfg.cotThetaDiffMax * m_cfg.cotThetaDiffMax;
+        if (deltaCotTheta * deltaCotTheta > cotThetaDiffMax2) {
+          if (cotThetaB < cotThetaT) {
+            break;
+          }
+          topDoubletOffset = topDoubletIndex + 1;
+          continue;
+        }
+      }
+
       // protects against division by 0
       float dU = topDoublet.u() - Ub;
       if (dU == 0) {
@@ -275,51 +254,54 @@ class Impl final : public TripletSeedFinder {
       // x_0 and y_0
       const float A0 = (topDoublet.v() - Vb) / dU;
 
-      const float zPositionMiddle = cosTheta * std::sqrt(1 + A0 * A0);
-
-      // position of Middle SP converted from UV to XY assuming cotTheta
-      // evaluated from the Bottom and Middle SPs double
-      const std::array<float, 3> positionMiddle = {
+      // The middle strip check is scale-invariant (ratios s1/bd1 and s0/bd1
+      // are unaffected by uniform scaling of pm), so we use cosTheta as the
+      // z-component instead of cosTheta * sqrt(1 + A0^2), deferring the sqrt.
+      const std::array<float, 3> directionMiddle = {
           rotationTermsUVtoXY[0] - rotationTermsUVtoXY[1] * A0,
-          rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1],
-          zPositionMiddle};
+          rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1], cosTheta};
 
       std::array<float, 3> rMTransf{};
-      if (!stripCoordinateCheck(m_cfg.toleranceParam, spM, positionMiddle,
-                                rMTransf)) {
+      if (!detail::calibrateOuterStripSpacePoint(
+              directionMiddle, calM, rMTransf, m_cfg.toleranceParam)) {
         continue;
       }
 
-      // coordinate transformation and checks for bottom spacepoint
+      // sqrt only computed on the less-common path where middle check passed
+      const float zDirectionMiddle = cosTheta * std::sqrt(1 + A0 * A0);
+
+      // coordinate transformation and checks for bottom space point
       const float B0 = 2 * (Vb - A0 * Ub);
       const float Cb = 1 - B0 * bottomDoublet.y();
       const float Sb = A0 + B0 * bottomDoublet.x();
-      const std::array<float, 3> positionBottom = {
+      const std::array<float, 3> directionBottom = {
           rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
           rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
-          zPositionMiddle};
+          zDirectionMiddle};
 
-      const ConstSpacePointProxy2 spB =
-          spacePoints[bottomDoublet.spacePointIndex()];
       std::array<float, 3> rBTransf{};
-      if (!stripCoordinateCheck(m_cfg.toleranceParam, spB, positionBottom,
-                                rBTransf)) {
+      if (!detail::calibrateOuterStripSpacePoint(
+              directionBottom, calB, rBTransf, m_cfg.toleranceParam)) {
         continue;
       }
 
-      // coordinate transformation and checks for top spacepoint
+      // coordinate transformation and checks for top space point
       const float Ct = 1 - B0 * topDoublet.y();
       const float St = A0 + B0 * topDoublet.x();
-      const std::array<float, 3> positionTop = {
+      const std::array<float, 3> directionTop = {
           rotationTermsUVtoXY[0] * Ct - rotationTermsUVtoXY[1] * St,
           rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
-          zPositionMiddle};
+          zDirectionMiddle};
 
       const ConstSpacePointProxy2 spT =
           spacePoints[topDoublet.spacePointIndex()];
+      const OuterStripSpacePointCalibrationDetailsDerived calT =
+          detail::deriveOuterStripSpacePointCalibrationDetails(
+              spT.bottomStripVector(), spT.topStripVector(),
+              spT.stripCenterDistance(), spT.topStripCenter());
       std::array<float, 3> rTTransf{};
-      if (!stripCoordinateCheck(m_cfg.toleranceParam, spT, positionTop,
-                                rTTransf)) {
+      if (!detail::calibrateOuterStripSpacePoint(directionTop, calT, rTTransf,
+                                                 m_cfg.toleranceParam)) {
         continue;
       }
 
@@ -414,8 +396,15 @@ class Impl final : public TripletSeedFinder {
 
       // inverse diameter is signed depending on if the curvature is
       // positive/negative in phi
-      tripletTopCandidates.emplace_back(spT.index(), B / std::sqrt(S2), im);
+      tripletTopCandidates.emplace_back(topDoublet.spacePointIndex(),
+                                        B / std::sqrt(S2), im);
     }  // loop on tops
+
+    if constexpr (sortedByCotTheta) {
+      // remove the top doublets that can no longer be compatible with any
+      // subsequent bottom doublet (which has a larger approximate cotTheta)
+      topDoublets = topDoublets.subrange(topDoubletOffset);
+    }
   }
 
   void createTripletTopCandidates(
@@ -469,10 +458,9 @@ class Impl final : public TripletSeedFinder {
 TripletSeedFinder::DerivedConfig::DerivedConfig(const Config& config,
                                                 float bFieldInZ_)
     : Config(config), bFieldInZ(bFieldInZ_) {
-  using namespace Acts::UnitLiterals;
-
   // similar to `theta0Highland` in `Core/src/Material/Interactions.cpp`
   {
+    using namespace Acts::UnitLiterals;
     const double xOverX0 = radLengthPerSeed;
     const double q2OverBeta2 = 1;  // q^2=1, beta^2~1
     // RPP2018 eq. 33.15 (treats beta and q² consistently)

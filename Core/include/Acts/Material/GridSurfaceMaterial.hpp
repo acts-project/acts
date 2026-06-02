@@ -15,7 +15,6 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <ostream>
 #include <stdexcept>
@@ -86,8 +85,10 @@ struct IndexedMaterialAccessor : public IGridMaterialAccessor {
   /// @return the material slab from the grid bin associated to the lookup point
   template <typename grid_type>
   inline const MaterialSlab& slab(
-      const grid_type& grid, const typename grid_type::point_t& point) const {
-    auto index = grid.atPosition(point);
+      const grid_type& grid, const typename grid_type::point_t& point) const
+    requires(std::is_same_v<typename grid_type::value_type, grid_value_type>)
+  {
+    std::size_t index = grid.atPosition(point);
     return material[index];
   }
 
@@ -261,10 +262,18 @@ class GridSurfaceMaterialT
     return m_materialAccessor.slab(m_grid, m_boundToGridLocal(lp));
   }
 
+  /// @copydoc ISurfaceMaterial::localAxisDirections() const
+  std::vector<AxisDirection> localAxisDirections() const final { return {}; }
+
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
-  const MaterialSlab& materialSlab(const Vector3& gp) const final {
+  [[deprecated(
+      "Use materialSlab(const Vector2& lp) with a prior "
+      "Surface::globalToLocal() call instead")]] const MaterialSlab&
+  materialSlab(const Vector3& gp) const final {
     return m_materialAccessor.slab(m_grid, m_globalToGridLocal(gp));
   }
+
+  using ISurfaceMaterial::materialSlab;
 
   /// Scale operator
   ///

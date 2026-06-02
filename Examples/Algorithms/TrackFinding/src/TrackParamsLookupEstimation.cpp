@@ -11,9 +11,12 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
-ActsExamples::TrackParamsLookupEstimation::TrackParamsLookupEstimation(
-    const Config& config, Acts::Logging::Level level)
-    : IAlgorithm("TrackParamsLookupEstimation", level), m_cfg(config) {
+namespace ActsExamples {
+
+TrackParamsLookupEstimation::TrackParamsLookupEstimation(
+    const Config& config, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TrackParamsLookupEstimation", std::move(logger)),
+      m_cfg(config) {
   // Iterate over the reference layers and create
   // track parameter accumulators
   for (const auto& [geoId, refSurface] : m_cfg.refLayers) {
@@ -44,10 +47,9 @@ ActsExamples::TrackParamsLookupEstimation::TrackParamsLookupEstimation(
   m_inputSimHits.initialize(m_cfg.inputHits);
 }
 
-ActsExamples::ProcessCode
-ActsExamples::TrackParamsLookupEstimation::finalize() {
+ProcessCode TrackParamsLookupEstimation::finalize() {
   // Finiliaze the lookup tables and write them
-  ActsExamples::TrackParamsLookup lookup;
+  TrackParamsLookup lookup;
   for (auto& [id, acc] : m_accumulators) {
     lookup.insert({id, acc->finalizeLookup()});
   }
@@ -55,11 +57,11 @@ ActsExamples::TrackParamsLookupEstimation::finalize() {
     writer->writeLookup(lookup);
   }
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 };
 
-ActsExamples::ProcessCode ActsExamples::TrackParamsLookupEstimation::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TrackParamsLookupEstimation::execute(
+    const AlgorithmContext& ctx) const {
   // Get the particles and hits
   const auto& particles = m_inputParticles(ctx);
   const auto& hits = m_inputSimHits(ctx);
@@ -100,5 +102,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsLookupEstimation::execute(
     }
   }
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

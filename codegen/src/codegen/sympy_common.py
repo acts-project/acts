@@ -8,7 +8,6 @@ from sympy.utilities.iterables import numbered_symbols
 from sympy.codegen.ast import Assignment
 from sympy.printing.cxx import CXX17CodePrinter
 
-
 NamedExpr = namedtuple("NamedExpr", ["name", "expr"])
 
 

@@ -12,18 +12,86 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
-#include "Acts/TrackFitting/detail/SymmetricKlDistanceMatrix.hpp"
+#include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
+#include "Acts/Utilities/Zip.hpp"
 
 #include <algorithm>
 #include <cstddef>
 #include <memory>
+#include <numbers>
 #include <numeric>
+#include <random>
 #include <tuple>
 #include <vector>
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
+
+namespace {
+
+std::tuple<BoundVector, double> computeMeanAndSumOfWeights(
+    const std::vector<GsfComponent> &cmps, const Surface &surface) {
+  if (cmps.empty()) {
+    return {BoundVector::Zero(), 0.0};
+  }
+
+  const double sumOfWeights = std::accumulate(
+      cmps.begin(), cmps.end(), 0.0,
+      [](auto sum, const auto &cmp) { return sum + cmp.weight; });
+
+  BoundVector mean;
+  detail::Gsf::angleDescriptionSwitch(surface, [&](const auto &desc) {
+    auto [meanTmp, cov] = detail::Gsf::mergeGaussianMixtureMeanCov(
+        cmps,
+        [](const auto &c) {
+          return std::tie(c.weight, c.boundPars, c.boundCov);
+        },
+        desc);
+    mean = meanTmp;
+  });
+
+  return std::make_tuple(mean, sumOfWeights);
+}
+
+GsfComponent makeDefaultComponent(double weight) {
+  GsfComponent cmp;
+  cmp.boundPars = BoundVector::Zero();
+  cmp.boundCov = BoundMatrix::Identity();
+  cmp.weight = weight;
+  return cmp;
+}
+
+void testReductionEquivalence(std::vector<GsfComponent> &cmpsRef,
+                              std::vector<GsfComponent> &cmpsTest) {
+  BOOST_REQUIRE(cmpsRef.size() == cmpsTest.size());
+
+  // sort by weight since the order of components is not guaranteed to be the
+  // same after reduction
+  std::ranges::sort(cmpsRef, {}, [](const auto &c) { return c.weight; });
+  std::ranges::sort(cmpsTest, {}, [](const auto &c) { return c.weight; });
+
+  constexpr static double tol = 1.e-8;
+
+  // Compare components
+  for (const auto &[ref, test] : Acts::zip(cmpsRef, cmpsTest)) {
+    BOOST_CHECK_CLOSE(ref.weight, test.weight, tol);
+    BOOST_CHECK_CLOSE(ref.boundPars[eBoundLoc0], test.boundPars[eBoundLoc0],
+                      tol);
+    BOOST_CHECK_CLOSE(ref.boundPars[eBoundLoc1], test.boundPars[eBoundLoc1],
+                      tol);
+    BOOST_CHECK_CLOSE(ref.boundPars[eBoundPhi], test.boundPars[eBoundPhi], tol);
+    BOOST_CHECK_CLOSE(ref.boundPars[eBoundTheta], test.boundPars[eBoundTheta],
+                      tol);
+    BOOST_CHECK_CLOSE(ref.boundPars[eBoundQOverP], test.boundPars[eBoundQOverP],
+                      tol);
+    BOOST_CHECK_CLOSE(ref.boundPars[eBoundTime], test.boundPars[eBoundTime],
+                      tol);
+  }
+}
+
+}  // namespace
 
 namespace ActsTests {
 
@@ -31,13 +99,12 @@ BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
   std::vector<GsfComponent> cmps = {
-      {1. / 3., BoundVector::Constant(-2.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+0.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+1.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
+      {1. / 3., BoundVector::Constant(-2.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+0.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+1.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+4.), BoundMatrix::Identity()}};
 
-  const auto proj = [](auto &a) -> decltype(auto) { return a; };
-  detail::SymmetricKLDistanceMatrix mat(cmps, proj);
+  detail::Gsf::SymmetricKLDistanceMatrix mat(cmps);
 
   const auto [i, j] = mat.minDistancePair();
   BOOST_CHECK_EQUAL(std::min(i, j), 1);
@@ -46,19 +113,18 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_masking) {
   std::vector<GsfComponent> cmps = {
-      {1. / 3., BoundVector::Constant(-2.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+0.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+1.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
+      {1. / 3., BoundVector::Constant(-2.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+0.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+1.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+4.), BoundMatrix::Identity()}};
 
-  const auto proj = [](auto &a) -> decltype(auto) { return a; };
   const std::size_t cmp_to_mask = 2;
 
-  detail::SymmetricKLDistanceMatrix mat_full(cmps, proj);
+  detail::Gsf::SymmetricKLDistanceMatrix mat_full(cmps);
   mat_full.maskAssociatedDistances(cmp_to_mask);
 
   cmps.erase(cmps.begin() + cmp_to_mask);
-  detail::SymmetricKLDistanceMatrix mat_small(cmps, proj);
+  detail::Gsf::SymmetricKLDistanceMatrix mat_small(cmps);
 
   const auto [full_i, full_j] = mat_full.minDistancePair();
   const auto [small_i, small_j] = mat_small.minDistancePair();
@@ -71,13 +137,12 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_masking) {
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
   std::vector<GsfComponent> cmps = {
-      {1. / 3., BoundVector::Constant(-2.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+0.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+1.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
+      {1. / 3., BoundVector::Constant(-2.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+0.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+1.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+4.), BoundMatrix::Identity()}};
 
-  const auto proj = [](auto &a) -> decltype(auto) { return a; };
-  detail::SymmetricKLDistanceMatrix mat(cmps, proj);
+  detail::Gsf::SymmetricKLDistanceMatrix mat(cmps);
 
   {
     const auto [i, j] = mat.minDistancePair();
@@ -86,7 +151,7 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
   }
 
   cmps[3].boundPars = BoundVector::Constant(0.1);
-  mat.recomputeAssociatedDistances(3, cmps, proj);
+  mat.recomputeAssociatedDistances(3, cmps);
 
   {
     const auto [i, j] = mat.minDistancePair();
@@ -95,7 +160,7 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
   }
 
   cmps[0].boundPars = BoundVector::Constant(1.01);
-  mat.recomputeAssociatedDistances(0, cmps, proj);
+  mat.recomputeAssociatedDistances(0, cmps);
 
   {
     const auto [i, j] = mat.minDistancePair();
@@ -105,20 +170,6 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
 }
 
 BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
-  auto meanAndSumOfWeights = [](const auto &cmps) {
-    const auto mean =
-        std::accumulate(cmps.begin(), cmps.end(), BoundVector::Zero().eval(),
-                        [](const auto &sum, const auto &cmp) -> BoundVector {
-                          return sum + cmp.weight * cmp.boundPars;
-                        });
-
-    const double sumOfWeights = std::accumulate(
-        cmps.begin(), cmps.end(), 0.0,
-        [](auto sum, const auto &cmp) { return sum + cmp.weight; });
-
-    return std::make_tuple(mean, sumOfWeights);
-  };
-
   // Assume that the components are on a generic plane surface
   std::shared_ptr<PlaneSurface> surface =
       CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
@@ -128,7 +179,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   for (auto i = 0ul; i < NComps; ++i) {
     GsfComponent a;
     a.boundPars = BoundVector::Zero();
-    a.boundCov = BoundSquareMatrix::Identity();
+    a.boundCov = BoundMatrix::Identity();
     a.weight = 1.0 / NComps;
     cmps.push_back(a);
   }
@@ -139,7 +190,8 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   cmps[3].boundPars[eBoundQOverP] = 4.5_GeV;
 
   // Check start properties
-  const auto [mean0, sumOfWeights0] = meanAndSumOfWeights(cmps);
+  const auto [mean0, sumOfWeights0] =
+      computeMeanAndSumOfWeights(cmps, *surface);
 
   BOOST_CHECK_CLOSE(mean0[eBoundQOverP], 2.5_GeV, 1.e-8);
   BOOST_CHECK_CLOSE(sumOfWeights0, 1.0, 1.e-8);
@@ -154,7 +206,8 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   BOOST_CHECK_CLOSE(cmps[0].boundPars[eBoundQOverP], 1.0_GeV, 1.e-8);
   BOOST_CHECK_CLOSE(cmps[1].boundPars[eBoundQOverP], 4.0_GeV, 1.e-8);
 
-  const auto [mean1, sumOfWeights1] = meanAndSumOfWeights(cmps);
+  const auto [mean1, sumOfWeights1] =
+      computeMeanAndSumOfWeights(cmps, *surface);
 
   BOOST_CHECK_CLOSE(mean1[eBoundQOverP], 2.5_GeV, 1.e-8);
   BOOST_CHECK_CLOSE(sumOfWeights1, 1.0, 1.e-8);
@@ -176,7 +229,7 @@ BOOST_AUTO_TEST_CASE(test_weight_cut_reduction) {
   for (auto w : {1.0, 2.0, 3.0, 4.0}) {
     GsfComponent a;
     a.boundPars = BoundVector::Zero();
-    a.boundCov = BoundSquareMatrix::Identity();
+    a.boundCov = BoundMatrix::Identity();
     a.weight = w;
     cmps.push_back(a);
   }
@@ -188,6 +241,51 @@ BOOST_AUTO_TEST_CASE(test_weight_cut_reduction) {
 
   BOOST_CHECK_EQUAL(cmps[0].weight, 3.0);
   BOOST_CHECK_EQUAL(cmps[1].weight, 4.0);
+}
+
+BOOST_AUTO_TEST_CASE(test_naive_vs_optimized) {
+  std::shared_ptr<PlaneSurface> surface =
+      CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
+  const std::size_t NComps = 10;
+
+  std::mt19937 rng(42);
+  std::uniform_real_distribution<double> weightDist(0.5, 1.5);
+  std::uniform_real_distribution<double> loc0Dist(-10.0, 10.0);
+  std::uniform_real_distribution<double> loc1Dist(-10.0, 10.0);
+  std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
+                                                 std::numbers::pi);
+  std::uniform_real_distribution<double> thetaDist(0.0, std::numbers::pi);
+  std::uniform_real_distribution<double> qopDist(0.1, 5.0);
+
+  std::vector<GsfComponent> cmps;
+  double weightSum = 0.0;
+
+  for (auto i = 0ul; i < NComps; ++i) {
+    GsfComponent cmp = makeDefaultComponent(weightDist(rng));
+    cmp.boundPars[eBoundLoc0] = loc0Dist(rng);
+    cmp.boundPars[eBoundLoc1] = loc1Dist(rng);
+    cmp.boundPars[eBoundPhi] = phiDist(rng);
+    cmp.boundPars[eBoundTheta] = thetaDist(rng);
+    cmp.boundPars[eBoundQOverP] = qopDist(rng);
+    cmp.boundPars[eBoundTime] = 0.0;
+    weightSum += cmp.weight;
+    cmps.push_back(cmp);
+  }
+
+  for (auto &cmp : cmps) {
+    cmp.weight /= weightSum;
+  }
+
+  for (std::size_t targetSize = 9; targetSize > 0; --targetSize) {
+    std::vector<GsfComponent> cmpsOptimized = cmps;
+    std::vector<GsfComponent> cmpsNaive = cmps;
+
+    reduceMixtureWithKLDistance(cmpsOptimized, targetSize, *surface);
+    reduceMixtureWithKLDistanceNaive(cmpsNaive, targetSize, *surface);
+    BOOST_CHECK_EQUAL(cmpsNaive.size(), targetSize);
+
+    testReductionEquivalence(cmpsNaive, cmpsOptimized);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

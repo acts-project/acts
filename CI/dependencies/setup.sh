@@ -23,7 +23,7 @@ function end_section() {
 }
 
 # Parse command line arguments
-while getopts "c:t:d:e:fh" opt; do
+while getopts "c:t:d:e:s:fh" opt; do
   case ${opt} in
     c )
       compiler=$OPTARG
@@ -37,16 +37,20 @@ while getopts "c:t:d:e:fh" opt; do
     e )
       env_file=$OPTARG
       ;;
+    s )
+      cxx_std=$OPTARG
+      ;;
     f )
       full_install=true
       ;;
     h )
-      echo "Usage: $0 [-c compiler] [-t tag] [-d destination] [-e env_file] [-h]"
+      echo "Usage: $0 [-c compiler] [-t tag] [-d destination] -e env_file [-h]"
       echo "Options:"
       echo "  -c <compiler>    Specify compiler (defaults to CXX env var)"
       echo "  -t <tag>         Specify dependency tag (defaults to DEPENDENCY_TAG env var)"
       echo "  -d <destination> Specify install destination (defaults based on CI environment)"
       echo "  -e <env_file>    Specify environment file to output environments to"
+      echo "  -s <cxx_std>     C++ standard for lockfile selection (e.g. 20, 23). Defaults to CXXSTD env var or 20."
       echo "  -f               Full dependency installation. Includes Geant4 datasets and Python packages."
       echo "  -h               Show this help message"
       exit 0
@@ -100,14 +104,16 @@ if [ -z "${destination:-}" ]; then
 fi
 
 if [ -z "${env_file:-}" ]; then
-  if [ -n "${GITHUB_ACTIONS:-}" ]; then
-    env_file="${GITHUB_ENV}"
-  else
-    echo "No environment file specified via -e and not running in GitHub Actions"
-    exit 1
-  fi
+  echo "No environment file specified via -e"
+  exit 1
 fi
 
+if [ -z "${cxx_std:-}" ]; then
+  cxx_std="${CXXSTD:-20}"
+fi
+
+checkpoint "Create environment file $(realpath "$env_file")"
+echo "" > "$env_file"
 export env_file
 
 function set_env {
@@ -116,11 +122,7 @@ function set_env {
 
   echo "=> ${key}=${value}"
 
-  if [ -n "${GITHUB_ACTIONS:-}" ]; then
-    echo "${key}=${value}" >> "$env_file"
-  else
-    echo "export ${key}=${value}" >> "$env_file"
-  fi
+  echo "export ${key}=${value}" >> "$env_file"
 }
 
 
@@ -148,10 +150,10 @@ checkpoint "Spack install complete"
 _spack_repo_version=${SPACK_REPO_VERSION:-develop}
 _spack_repo_directory="$(realpath "$(spack location --repo builtin)/../../../")"
 
-echo "Ensure repo is synced with version ${_spack_repo_version}"
+echo "Ensure builtin repo is synced to commit ${_spack_repo_version}"
 
 git config --global --add safe.directory "${_spack_repo_directory}"
-spack repo update builtin --tag "${_spack_repo_version}"
+spack repo update builtin --commit "${_spack_repo_version}"
 checkpoint "Spack repository updated"
 
 end_section
@@ -178,6 +180,29 @@ if [ -n "${CI:-}" ]; then
     echo "Adding buildcache ${mirror_name}"
     spack mirror add ${mirror_name} ${mirror_url} --unsigned
   fi
+  # Authenticate GHCR reads to avoid anonymous rate limits (which spack
+  # misclassifies as "no binary available"). Idempotent on cached spack installs.
+  # GITHUB_TOKEN must be in env when `spack install` later fetches from the mirror.
+  if [ -n "${GITHUB_TOKEN:-}" ] && [[ "${mirror_url}" == oci://ghcr.io/* ]]; then
+    echo "Setting GHCR credentials on ${mirror_name}"
+    spack mirror set \
+      --oci-username "${GITHUB_ACTOR:-x-access-token}" \
+      --oci-password-variable GITHUB_TOKEN \
+      "${mirror_name}"
+  fi
+  # Verify the mirror config (password-variable stores only the env var name,
+  # not the secret value, so this is safe to print).
+  spack mirror list
+  spack config get mirrors
+  end_section
+
+  start_section "Add ACTS package repository"
+  if ! spack repo list | grep -q "acts"; then
+    echo "Adding ACTS package repository from ci-dependencies"
+    spack repo add https://github.com/acts-project/ci-dependencies.git --path spack_repo/acts
+  fi
+  echo "Updating ACTS package repository to tag ${tag}"
+  spack repo update acts --tag "${tag}"
   end_section
 
   start_section "Locate OpenGL"
@@ -199,6 +224,7 @@ cmd=(
     "${SCRIPT_DIR}/select_lockfile.py"
     "--tag" "${tag}"
     "--arch" "${arch}"
+    "--cxx" "${cxx_std}"
     "--output" "${lock_file_path}"
 )
 
@@ -224,7 +250,26 @@ checkpoint "Spack find complete"
 end_section
 
 start_section "Install spack packages"
-spack -e "${env_dir}" install --fail-fast --use-buildcache only --concurrent-packages 10
+# Retry to absorb transient GHCR fetch failures (which spack reports as
+# "no binary available"). Install is idempotent: already-installed specs
+# are skipped on subsequent attempts, so this is cheap.
+max_attempts=4
+attempt=1
+delay=10
+while true; do
+  echo "spack install attempt ${attempt}/${max_attempts}"
+  if spack -e "${env_dir}" install --fail-fast --use-buildcache only --concurrent-packages 10; then
+    break
+  fi
+  if [ "${attempt}" -ge "${max_attempts}" ]; then
+    echo "spack install failed after ${max_attempts} attempts"
+    exit 1
+  fi
+  echo "spack install failed; retrying in ${delay}s"
+  sleep "${delay}"
+  attempt=$((attempt + 1))
+  delay=$((delay * 2))
+done
 checkpoint "Spack install complete"
 end_section
 
@@ -252,17 +297,13 @@ start_section "Prepare python environment"
 "${venv_dir}/bin/python3" -m pip install pyyaml jinja2
 if [ "${full_install:-false}" == "true" ]; then
   "${venv_dir}/bin/python3" -m pip install -r "${SCRIPT_DIR}/../../Python/Examples/tests/requirements.txt"
-  "${venv_dir}/bin/python3" -m pip install histcmp==0.8.1 matplotlib
+  "${venv_dir}/bin/python3" -m pip install histcmp==0.9.1 matplotlib
   "${venv_dir}/bin/python3" -m pip install pytest-md-report
 fi
 checkpoint "Python environment prepared"
 end_section
 
 start_section "Set environment variables"
-if [ -n "${GITHUB_ACTIONS:-}" ]; then
-  echo "${view_dir}/bin" >> "$GITHUB_PATH"
-  echo "${venv_dir}/bin" >> "$GITHUB_PATH"
-fi
 set_env PATH "${venv_dir}/bin:${view_dir}/bin/:${PATH}"
 set_env LD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib/root"
 set_env DYLD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib/root"

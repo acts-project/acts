@@ -130,4 +130,26 @@ inline std::string toString(const std::vector<double>& pVector,
   return sout.str();
 }
 
+template <int n>
+/// @brief Print the eigen decomposition of a symmetric matrix in terms
+///        of eigen values and eigen vectors
+/// @param mat: Matrix which is to be decomposed
+/// @return: The string containing the eigen decomposition
+inline std::string printEigenDecomposition(const SquareMatrix<n>& mat) {
+  Eigen::EigenSolver<Acts::SquareMatrix<n>> eigenDecomp{mat};
+
+  SquareMatrix<n> basisTrf{SquareMatrix<n>::Identity()};
+  Vector<n> eigenDiag{Vector<n>::Zero()};
+  for (int i = 0; i < n; ++i) {
+    for (int j = 0; j < n; ++j) {
+      basisTrf(i, j) = eigenDecomp.eigenvectors()(i, j).real();
+    }
+    eigenDiag[i] = eigenDecomp.eigenvalues()(i).real();
+  }
+  std::stringstream sstr{};
+  sstr << "eigen values: " << eigenDiag.transpose();
+  sstr << ", eigen vectors:\n" << basisTrf;
+  return sstr.str();
+}
+
 }  // namespace Acts

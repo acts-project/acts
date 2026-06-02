@@ -57,7 +57,7 @@ class RootMuonSpacePointReader : public IReader {
   /// Read out data from the input stream
   ///
   /// @param context The algorithm context
-  ProcessCode read(const ActsExamples::AlgorithmContext& context) override;
+  ProcessCode read(const AlgorithmContext& context) override;
 
  protected:
   const Acts::Logger& logger() const { return *m_logger; }

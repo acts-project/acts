@@ -251,8 +251,7 @@ if(TBB_BUILD_PREFIX AND ENV_TBB_ROOT)
 
     # include directory under ${ENV_TBB_ROOT}/include
     list(
-        APPEND
-        TBB_LIB_SEARCH_PATH
+        APPEND TBB_LIB_SEARCH_PATH
         ${ENV_TBB_BUILD_DIR}/${TBB_BUILD_PREFIX}_release
         ${ENV_TBB_BUILD_DIR}/${TBB_BUILD_PREFIX}_debug
     )
@@ -290,13 +289,11 @@ if(WIN32 AND MSVC)
             list(APPEND TBB_LIB_SEARCH_PATH ${dir}/ia64/${COMPILER_PREFIX}/lib)
             list(APPEND TBB_LIB_SEARCH_PATH ${dir}/lib/ia64/${COMPILER_PREFIX})
             list(
-                APPEND
-                TBB_LIB_SEARCH_PATH
+                APPEND TBB_LIB_SEARCH_PATH
                 ${dir}/intel64/${COMPILER_PREFIX}/lib
             )
             list(
-                APPEND
-                TBB_LIB_SEARCH_PATH
+                APPEND TBB_LIB_SEARCH_PATH
                 ${dir}/lib/intel64/${COMPILER_PREFIX}
             )
         else()
@@ -386,16 +383,14 @@ endforeach()
 # add general search paths
 foreach(dir IN LISTS TBB_PREFIX_PATH)
     list(
-        APPEND
-        TBB_LIB_SEARCH_PATH
+        APPEND TBB_LIB_SEARCH_PATH
         ${dir}/lib
         ${dir}/Lib
         ${dir}/lib/tbb
         ${dir}/Libs
     )
     list(
-        APPEND
-        TBB_INC_SEARCH_PATH
+        APPEND TBB_INC_SEARCH_PATH
         ${dir}/include
         ${dir}/Include
         ${dir}/include/tbb
@@ -477,48 +472,42 @@ findpkg_finish(TBB_MALLOC_PROXY tbbmalloc_proxy)
 if(NOT TBB_VERSION)
     if(EXISTS "${TBB_INCLUDE_DIR}/oneapi/tbb/version.h")
         file(
-            STRINGS
-            "${TBB_INCLUDE_DIR}/oneapi/tbb/version.h"
+            STRINGS "${TBB_INCLUDE_DIR}/oneapi/tbb/version.h"
             TBB_VERSION_CONTENTS
             REGEX "VERSION"
         )
     else()
         #only read the start of the file
         file(
-            STRINGS
-            "${TBB_INCLUDE_DIR}/tbb/tbb_stddef.h"
+            STRINGS "${TBB_INCLUDE_DIR}/tbb/tbb_stddef.h"
             TBB_VERSION_CONTENTS
             REGEX "VERSION"
         )
     endif()
 
     string(
-        REGEX REPLACE
-        ".*#define TBB_VERSION_MAJOR ([0-9]+).*"
+        REGEX REPLACE ".*#define TBB_VERSION_MAJOR ([0-9]+).*"
         "\\1"
         TBB_VERSION_MAJOR
         "${TBB_VERSION_CONTENTS}"
     )
 
     string(
-        REGEX REPLACE
-        ".*#define TBB_VERSION_MINOR ([0-9]+).*"
+        REGEX REPLACE ".*#define TBB_VERSION_MINOR ([0-9]+).*"
         "\\1"
         TBB_VERSION_MINOR
         "${TBB_VERSION_CONTENTS}"
     )
 
     string(
-        REGEX REPLACE
-        ".*#define TBB_INTERFACE_VERSION ([0-9]+).*"
+        REGEX REPLACE ".*#define TBB_INTERFACE_VERSION ([0-9]+).*"
         "\\1"
         TBB_INTERFACE_VERSION
         "${TBB_VERSION_CONTENTS}"
     )
 
     string(
-        REGEX REPLACE
-        ".*#define TBB_COMPATIBLE_INTERFACE_VERSION ([0-9]+).*"
+        REGEX REPLACE ".*#define TBB_COMPATIBLE_INTERFACE_VERSION ([0-9]+).*"
         "\\1"
         TBB_COMPATIBLE_INTERFACE_VERSION
         "${TBB_VERSION_CONTENTS}"

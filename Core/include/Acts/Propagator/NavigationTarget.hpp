@@ -111,10 +111,12 @@ class NavigationTarget {
   constexpr NavigationTarget(NavigationTarget&&) noexcept = default;
 
   /// Copy assignment operator
+  /// @return Reference to this object
   constexpr NavigationTarget& operator=(const NavigationTarget&) noexcept =
       default;
 
   /// Move assignment operator
+  /// @return Reference to this object
   constexpr NavigationTarget& operator=(NavigationTarget&&) noexcept = default;
 
   /// Returns the intersection
@@ -221,6 +223,8 @@ class NavigationTarget {
   }
 
   /// Comparison operator by path length
+  /// @param aIntersection First navigation target
+  /// @param bIntersection Second navigation target
   /// @return true if aIntersection is before bIntersection
   constexpr static bool pathLengthOrder(
       const NavigationTarget& aIntersection,
@@ -230,6 +234,8 @@ class NavigationTarget {
   }
 
   /// Comparison operator by closest distance to the reference point
+  /// @param aIntersection First navigation target
+  /// @param bIntersection Second navigation target
   /// @return true if aIntersection is closer than bIntersection
   constexpr static bool closestOrder(
       const NavigationTarget& aIntersection,
@@ -239,6 +245,8 @@ class NavigationTarget {
   }
 
   /// Comparison operator by closest distance to the reference point in the
+  /// @param aIntersection First navigation target
+  /// @param bIntersection Second navigation target
   /// @return true if aIntersection is closer than bIntersection
   constexpr static bool closestForwardOrder(
       const NavigationTarget& aIntersection,

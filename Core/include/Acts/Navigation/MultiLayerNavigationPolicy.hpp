@@ -12,7 +12,6 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
-#include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Utilities/Grid.hpp"
 
 namespace Acts::Experimental {
@@ -30,8 +29,9 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   /// Type alias for indexed surfaces navigation updater
   using IndexedUpdatorType = IndexGrid<GridType>;
 
+  /// Configuration for multilayer navigation behavior.
   struct Config {
-    // The binning expansion for grid neighbor lookups
+    /// The binning expansion for grid neighbor lookups
     std::vector<std::size_t> binExpansion = {0u, 0u};
   };
 
@@ -52,10 +52,12 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   /// Update the navigation state from the surface array
   /// @param gctx The geometry context
   /// @param args The navigation arguments
+  /// @param state The navigation policy state
   /// @param stream The navigation stream to update
   /// @param logger The logger
   void initializeCandidates(const GeometryContext& gctx,
                             const NavigationArguments& args,
+                            NavigationPolicyState& state,
                             AppendOnlyNavigationStream& stream,
                             const Logger& logger) const;
 
@@ -72,12 +74,23 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   std::vector<Vector2> generatePath(const Vector3& startPosition,
                                     const Vector3& direction) const;
 
+  /// @brief Give const access to the indexed grid
+  /// @return The indexed grid
+  const IndexedUpdatorType& indexedGrid() const { return m_indexedGrid; }
+
+  /// @brief Access the configuration
+  /// @return The configuration
+  const Config& config() const { return m_config; }
+
  private:
   // The tracking volume
   const TrackingVolume& m_volume;
 
   // The grid that holds the indexed surfaces
   IndexedUpdatorType m_indexedGrid;
+
+  // The navigation configuration
+  Config m_config;
 };
 
 static_assert(NavigationPolicyConcept<MultiLayerNavigationPolicy>);

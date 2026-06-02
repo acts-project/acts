@@ -114,7 +114,7 @@ class Layer : public virtual GeometryObject {
   /// Return the Thickness of the Layer
   /// this is by definition along the normal vector of the surfaceRepresentation
   /// @return The layer thickness value
-  double thickness() const;
+  double layerThickness() const;
 
   /// geometrical isOnLayer() method
   ///

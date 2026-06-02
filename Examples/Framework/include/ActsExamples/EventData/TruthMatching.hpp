@@ -8,9 +8,11 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include <cstdint>
 #include <map>
@@ -18,6 +20,12 @@
 #include <vector>
 
 namespace ActsExamples {
+
+using MeasurementSimHitsMap = IndexMultimap<SimHitIndex>;
+using MeasurementParticlesMap = IndexMultimap<SimBarcode>;
+
+using SimHitMeasurementsMap = InverseMultimap<SimHitIndex>;
+using ParticleMeasurementsMap = InverseMultimap<SimBarcode>;
 
 enum class TrackMatchClassification {
   Unknown = 0,
@@ -27,6 +35,12 @@ enum class TrackMatchClassification {
   Duplicate,
   /// The track cannot be uniquely associated to a truth particle
   Fake,
+};
+
+/// Associate a particle to its hit count within a proto track.
+struct ParticleHitCount {
+  SimBarcode particleId{};
+  std::size_t hitCount{};
 };
 
 struct TrackMatchEntry {
@@ -47,5 +61,30 @@ struct ParticleMatchEntry {
 
 using TrackParticleMatching = std::map<TrackIndexType, TrackMatchEntry>;
 using ParticleTrackMatching = std::map<SimBarcode, ParticleMatchEntry>;
+
+enum class RecoVertexClassification {
+  Unknown = 0,
+  Clean,
+  Merged,
+  Split,
+};
+
+struct VertexToTruthMatching {
+  std::optional<SimVertexBarcode> vertexId;
+  double totalTrackWeight{};
+  double truthMajorityTrackWeights{};
+  double matchFraction{};
+
+  RecoVertexClassification classification{RecoVertexClassification::Unknown};
+};
+
+struct VertexToRecoMatching {
+  std::size_t recoIndex{};
+
+  double recoSumPt2{};
+};
+
+using VertexTruthMatching = std::vector<VertexToTruthMatching>;
+using TruthVertexMatching = std::map<SimVertexBarcode, VertexToRecoMatching>;
 
 }  // namespace ActsExamples

@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
@@ -45,7 +44,7 @@ using Acts::VectorHelpers::makeVector4;
 
 namespace Acts::EventDataView3DTest {
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 std::normal_distribution<double> gauss(0., 1.);
 std::default_random_engine generator(42);
@@ -181,8 +180,7 @@ static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
   std::array<double, 6> pars_array = {
       {-0.1234, 4.8765, 0.45, 0.128, 0.001, 21.}};
 
-  BoundTrackParameters::ParametersVector pars =
-      BoundTrackParameters::ParametersVector::Zero();
+  BoundVector pars = BoundVector::Zero();
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
 

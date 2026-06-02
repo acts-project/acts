@@ -791,10 +791,8 @@ if args.plot:
         os.mkdir(args.output_folder)
 
 if args.dump_steering and args.edit:
-    print(
-        "Error: Wrong job configuration. --dump_steering and --edit can't be \
-        both true at the same time."
-    )
+    print("Error: Wrong job configuration. --dump_steering and --edit can't be \
+        both true at the same time.")
     print(
         "\t Decide if you want to dump the steering file OR to read an existing file for editing the geometry file."
     )

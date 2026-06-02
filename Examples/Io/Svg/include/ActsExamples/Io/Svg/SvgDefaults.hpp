@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "ActsPlugins/ActSVG/LayerSvgConverter.hpp"
 #include "ActsPlugins/ActSVG/SvgUtils.hpp"
-#include <ActsPlugins/ActSVG/LayerSvgConverter.hpp>
-#include <ActsPlugins/ActSVG/TrackingGeometrySvgConverter.hpp>
+#include "ActsPlugins/ActSVG/TrackingGeometrySvgConverter.hpp"
 
 namespace {
 

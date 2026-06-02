@@ -454,8 +454,8 @@ bool CylinderVolumeHelper::estimateAndCheckDimension(
       double currentR = cylBounds->get(CylinderBounds::eR);
       double centerZ = (layerIter->surfaceRepresentation()).center(gctx).z();
       // check for min/max in the cylinder bounds case
-      currentRmin = currentR - (0.5 * (layerIter)->thickness());
-      currentRmax = currentR + (0.5 * (layerIter)->thickness());
+      currentRmin = currentR - (0.5 * (layerIter)->layerThickness());
+      currentRmax = currentR + (0.5 * (layerIter)->layerThickness());
       currentZmin = centerZ - cylBounds->get(CylinderBounds::eHalfLengthZ);
       currentZmax = centerZ + cylBounds->get(CylinderBounds::eHalfLengthZ);
     }
@@ -467,8 +467,8 @@ bool CylinderVolumeHelper::estimateAndCheckDimension(
       double centerZ = (layerIter->surfaceRepresentation()).center(gctx).z();
       currentRmin = discBounds->rMin();
       currentRmax = discBounds->rMax();
-      currentZmin = centerZ - (0.5 * (layerIter)->thickness());
-      currentZmax = centerZ + (0.5 * (layerIter)->thickness());
+      currentZmin = centerZ - (0.5 * (layerIter)->layerThickness());
+      currentZmax = centerZ + (0.5 * (layerIter)->layerThickness());
     }
     // the raw data
     rMinClean = std::min(rMinClean, currentRmin);

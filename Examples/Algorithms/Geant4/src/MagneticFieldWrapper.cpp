@@ -9,10 +9,9 @@
 #include "ActsExamples/Geant4/MagneticFieldWrapper.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "ActsExamples/Geant4/AlgebraConverters.hpp"
+#include "ActsExamples/Geant4/UnitConversion.hpp"
 
 #include <utility>
 
@@ -25,16 +24,15 @@ MagneticFieldWrapper::MagneticFieldWrapper(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : G4MagneticField(), m_cfg(cfg), m_logger(std::move(logger)) {}
 
-void MagneticFieldWrapper::GetFieldValue(const G4double Point[4],
-                                         G4double* Bfield) const {
-  constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
-  constexpr double convertField = CLHEP::tesla / Acts::UnitConstants::T;
+void MagneticFieldWrapper::GetFieldValue(const G4double point[4],
+                                         G4double* bField) const {
+  assert(bField != nullptr);
 
   auto bCache = m_cfg.magneticField->makeCache(Acts::MagneticFieldContext());
 
   auto fieldRes = m_cfg.magneticField->getField(
-      {convertLength * Point[0], convertLength * Point[1],
-       convertLength * Point[2]},
+      {convertLengthToActs * point[0], convertLengthToActs * point[1],
+       convertLengthToActs * point[2]},
       bCache);
   if (!fieldRes.ok()) {
     ACTS_ERROR("Field lookup error: " << fieldRes.error());
@@ -43,9 +41,9 @@ void MagneticFieldWrapper::GetFieldValue(const G4double Point[4],
   // Get the field now
   const Acts::Vector3& field = *fieldRes;
 
-  Bfield[0] = convertField * field[0];
-  Bfield[1] = convertField * field[1];
-  Bfield[2] = convertField * field[2];
+  bField[0] = convertFieldToGeant4 * field[0];
+  bField[1] = convertFieldToGeant4 * field[1];
+  bField[2] = convertFieldToGeant4 * field[2];
 }
 
 }  // namespace ActsExamples::Geant4

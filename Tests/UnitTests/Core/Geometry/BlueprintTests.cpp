@@ -16,7 +16,6 @@
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
@@ -24,18 +23,15 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
-#include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 
-#include <fstream>
 #include <memory>
 #include <stdexcept>
 #include <vector>
@@ -439,7 +435,7 @@ BOOST_AUTO_TEST_CASE(DiscLayer) {
   Transform3 base = Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
 
   std::vector<std::shared_ptr<Surface>> surfaces;
-  std::vector<std::unique_ptr<DetectorElementBase>> elements;
+  std::vector<std::unique_ptr<SurfacePlacementBase>> elements;
   double r = 300_mm;
   std::size_t nSensors = 8;
   double thickness = 2.5_mm;
@@ -459,7 +455,7 @@ BOOST_AUTO_TEST_CASE(DiscLayer) {
     auto& element = elements.emplace_back(
         std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
 
-    element->surface().assignDetectorElement(*element);
+    element->surface().assignSurfacePlacement(*element);
 
     surfaces.push_back(element->surface().getSharedPtr());
   }
@@ -526,7 +522,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayer) {
   Transform3 base = Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
 
   std::vector<std::shared_ptr<Surface>> surfaces;
-  std::vector<std::unique_ptr<DetectorElementBase>> elements;
+  std::vector<std::unique_ptr<SurfacePlacementBase>> elements;
 
   double r = 300_mm;
   std::size_t nStaves = 10;
@@ -551,7 +547,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayer) {
                        AngleAxis3{90_degree, Vector3::UnitZ()};
       auto& element = elements.emplace_back(
           std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
-      element->surface().assignDetectorElement(*element);
+      element->surface().assignSurfacePlacement(*element);
       surfaces.push_back(element->surface().getSharedPtr());
     }
   }
@@ -1069,7 +1065,7 @@ BOOST_AUTO_TEST_CASE(LayerCenterOfGravity) {
         Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
 
     std::vector<std::shared_ptr<Surface>> surfaces;
-    std::vector<std::unique_ptr<DetectorElementBase>> elements;
+    std::vector<std::unique_ptr<SurfacePlacementBase>> elements;
     double r = 300_mm;
     std::size_t nSensors = 8;
     double thickness = 2.5_mm;
@@ -1087,7 +1083,7 @@ BOOST_AUTO_TEST_CASE(LayerCenterOfGravity) {
       auto& element = elements.emplace_back(
           std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
 
-      element->surface().assignDetectorElement(*element);
+      element->surface().assignSurfacePlacement(*element);
       surfaces.push_back(element->surface().getSharedPtr());
     }
 
@@ -1132,7 +1128,7 @@ BOOST_AUTO_TEST_CASE(LayerCenterOfGravity) {
         Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
 
     std::vector<std::shared_ptr<Surface>> surfaces;
-    std::vector<std::unique_ptr<DetectorElementBase>> elements;
+    std::vector<std::unique_ptr<SurfacePlacementBase>> elements;
 
     double r = 300_mm;
     std::size_t nStaves = 10;
@@ -1157,7 +1153,7 @@ BOOST_AUTO_TEST_CASE(LayerCenterOfGravity) {
                          AngleAxis3{90_degree, Vector3::UnitZ()};
         auto& element = elements.emplace_back(
             std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
-        element->surface().assignDetectorElement(*element);
+        element->surface().assignSurfacePlacement(*element);
         surfaces.push_back(element->surface().getSharedPtr());
       }
     }

@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -30,18 +29,14 @@
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsTests/CommonHelpers/MeasurementsCreator.hpp"
 
-#include <algorithm>
 #include <array>
 #include <cmath>
-#include <iterator>
 #include <map>
 #include <memory>
 #include <optional>
 #include <random>
 #include <utility>
 #include <vector>
-
-#include "SpacePoint.hpp"
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
@@ -74,7 +69,7 @@ BoundTrackParameters makeParameters(double phi, double theta, double p,
   stddev[eBoundPhi] = 2_degree;
   stddev[eBoundTheta] = 2_degree;
   stddev[eBoundQOverP] = 1 / 100_GeV;
-  BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // Let the particle starts from the origin
   Vector4 mPos4(0., 0., 0., 0.);
   return BoundTrackParameters::createCurvilinear(
@@ -119,30 +114,24 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
                                                  start, resolutions, rng);
 
           // Create space points from different detector layers
-          std::map<GeometryIdentifier::Value, SpacePoint> spacePoints;
+          std::vector<Vector3> spacePoints;
+          std::set<GeometryIdentifier::Value> usedLayers;
           const Surface* bottomSurface = nullptr;
           for (const auto& sl : measurements.sourceLinks) {
             const auto geoId = sl.m_geometryId;
             const auto& layer = geoId.layer();
-            auto it = spacePoints.find(layer);
             // Avoid to use space point from the same layers
-            if (it != spacePoints.end()) {
+            if (const auto it = usedLayers.find(layer);
+                it != usedLayers.end()) {
               continue;
             }
             const auto surface = geometry->findSurface(geoId);
             const auto& localPos = sl.parameters;
-            Vector3 globalFakeMom(1, 1, 1);
-            Vector3 globalPos =
+            const Vector3 globalFakeMom(1, 1, 1);
+            const Vector3 globalPos =
                 surface->localToGlobal(geoCtx, localPos, globalFakeMom);
-            // Create a space point (varianceR and varianceZ are lazily set to
-            // zero since they are not important for the test)
-            float r = std::hypot(globalPos.x(), globalPos.y());
-            spacePoints.emplace(
-                layer, SpacePoint{static_cast<float>(globalPos.x()),
-                                  static_cast<float>(globalPos.y()),
-                                  static_cast<float>(globalPos.z()), r,
-                                  static_cast<int>(geoId.layer()), 0., 0.,
-                                  std::nullopt, std::nullopt});
+            spacePoints.push_back(globalPos);
+            usedLayers.insert(layer);
             if (spacePoints.size() == 1) {
               bottomSurface = surface;
             }
@@ -155,44 +144,40 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
           }
 
           // The truth track parameters at the bottom space point
-          const auto& expParams = measurements.truthParameters[0];
+          const auto& expBoundParams = measurements.truthParameters[0];
           BOOST_TEST_INFO(
               "The truth track parameters at the bottom space point: \n"
-              << expParams.transpose());
-
-          // The space point pointers
-          std::array<const SpacePoint*, 3> spacePointPtrs{};
-          std::transform(spacePoints.begin(), std::next(spacePoints.begin(), 3),
-                         spacePointPtrs.begin(),
-                         [](const auto& sp) { return &sp.second; });
+              << expBoundParams.transpose());
 
           // Test the free track parameters estimator
-          FreeVector estFreeParams =
-              estimateTrackParamsFromSeed(spacePointPtrs, bField);
+          FreeVector estFreeParams = estimateTrackParamsFromSeed(
+              spacePoints[0], 0, spacePoints[1], spacePoints[2], bField);
           BOOST_CHECK(!estFreeParams.hasNaN());
 
           // Test the bound track parameters estimator
-          auto estFullParamsResult = estimateTrackParamsFromSeed(
-              geoCtx, spacePointPtrs, *bottomSurface, bField);
-          BOOST_CHECK(estFullParamsResult.ok());
-          const auto& estFullParams = estFullParamsResult.value();
+          auto estBoundParamsResult = estimateTrackParamsFromSeed(
+              geoCtx, *bottomSurface, spacePoints[0], 0, spacePoints[1],
+              spacePoints[2], bField);
+          BOOST_CHECK(estBoundParamsResult.ok());
+          const auto& estBoundParams = estBoundParamsResult.value();
           BOOST_TEST_INFO(
               "The estimated full track parameters at the bottom space point: "
               "\n"
-              << estFullParams.transpose());
+              << estBoundParams.transpose());
 
-          CHECK_CLOSE_ABS(estFullParams[eBoundLoc0], expParams[eBoundLoc0],
-                          1e-5);
-          CHECK_CLOSE_ABS(estFullParams[eBoundLoc1], expParams[eBoundLoc1],
-                          1e-5);
+          CHECK_CLOSE_ABS(estBoundParams[eBoundLoc0],
+                          expBoundParams[eBoundLoc0], 1e-5);
+          CHECK_CLOSE_ABS(estBoundParams[eBoundLoc1],
+                          expBoundParams[eBoundLoc1], 1e-5);
           // @todo Understand why the estimated phi has a limited precision
-          CHECK_CLOSE_ABS(estFullParams[eBoundPhi], expParams[eBoundPhi], 1e-1);
-          CHECK_CLOSE_ABS(estFullParams[eBoundTheta], expParams[eBoundTheta],
-                          1e-2);
-          CHECK_CLOSE_ABS(estFullParams[eBoundQOverP], expParams[eBoundQOverP],
-                          1e-2);
+          CHECK_CLOSE_ABS(estBoundParams[eBoundPhi], expBoundParams[eBoundPhi],
+                          1e-1);
+          CHECK_CLOSE_ABS(estBoundParams[eBoundTheta],
+                          expBoundParams[eBoundTheta], 1e-2);
+          CHECK_CLOSE_ABS(estBoundParams[eBoundQOverP],
+                          expBoundParams[eBoundQOverP], 1e-2);
           // time is not estimated so we check if it is default zero
-          CHECK_CLOSE_ABS(estFullParams[eBoundTime], 0, 1e-6);
+          CHECK_CLOSE_ABS(estBoundParams[eBoundTime], 0, 1e-6);
         }
       }
     }
@@ -205,7 +190,7 @@ BOOST_AUTO_TEST_CASE(trackparm_estimate_aligined) {
   Vector3 sp2{-98.175, -0.325, -835.6};
   Vector3 bField{0, 0, 0.000899377};
 
-  FreeVector params = estimateTrackParamsFromSeed(sp0, sp1, sp2, bField);
+  FreeVector params = estimateTrackParamsFromSeed(sp0, 0, sp1, sp2, bField);
   BOOST_CHECK_EQUAL(params[eFreeQOverP], 0);
 }
 

@@ -69,7 +69,7 @@ void Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
   rSurface->assignGeometryId(layerID);
 
   // also find out how the sub structure is defined
-  if (surfaceRepresentation().surfaceMaterial() != nullptr) {
+  if (surfaceRepresentation().hasMaterial()) {
     m_ssRepresentingSurface = 2;
   }
   // loop over the approach surfaces
@@ -86,7 +86,7 @@ void Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
         materialDecorator->decorate(*mutableASurface);
       }
       // if any of the approach surfaces has material
-      if (aSurface->surfaceMaterial() != nullptr) {
+      if (aSurface->hasMaterial()) {
         m_ssApproachSurfaces = 2;
       }
     }
@@ -106,7 +106,7 @@ void Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
         materialDecorator->decorate(*mutableSSurface);
       }
       // if any of the sensitive surfaces has material
-      if (sSurface->surfaceMaterial() != nullptr) {
+      if (sSurface->hasMaterial()) {
         m_ssSensitiveSurfaces = 2;
       }
     }
@@ -143,7 +143,7 @@ boost::container::small_vector<NavigationTarget, 10> Layer::compatibleSurfaces(
       return true;
     }
     // next option: it's a material surface, and you want to have it
-    if (options.resolveMaterial && sf.surfaceMaterial() != nullptr) {
+    if (options.resolveMaterial && sf.hasMaterial()) {
       return true;
     }
     // last option: resolve all
@@ -191,7 +191,7 @@ boost::container::small_vector<NavigationTarget, 10> Layer::compatibleSurfaces(
     // we loop through and veto
     // - if the approach surface is the parameter surface
     // - if the surface is not compatible with the collect
-    for (auto& aSurface : approachSurfaces) {
+    for (const Surface* aSurface : approachSurfaces) {
       processSurface(*aSurface);
     }
   }
@@ -202,12 +202,12 @@ boost::container::small_vector<NavigationTarget, 10> Layer::compatibleSurfaces(
   if (m_surfaceArray && (options.resolveMaterial || options.resolvePassive ||
                          options.resolveSensitive)) {
     // get the candidates
-    const std::vector<const Surface*>& sensitiveSurfaces =
-        m_surfaceArray->neighbors(position, direction);
+    const auto sensitiveSurfaces =
+        m_surfaceArray->neighbors(gctx, position, direction);
     // loop through and veto
     // - if the approach surface is the parameter surface
     // - if the surface is not compatible with the type(s) that are collected
-    for (auto& sSurface : sensitiveSurfaces) {
+    for (const Surface* sSurface : sensitiveSurfaces) {
       processSurface(*sSurface, true);
     }
   }
@@ -233,7 +233,7 @@ NavigationTarget Layer::surfaceOnApproach(
   const bool resolveMS =
       options.resolveMaterial &&
       (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1 ||
-       (surfaceRepresentation().surfaceMaterial() != nullptr));
+       surfaceRepresentation().hasMaterial());
 
   // The Limits
   const double nearLimit = options.nearLimit;

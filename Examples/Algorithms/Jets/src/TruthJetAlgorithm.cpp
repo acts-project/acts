@@ -14,7 +14,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsFatras/EventData/ProcessType.hpp"
 
 #include <algorithm>
 #include <ranges>
@@ -28,45 +27,45 @@
 namespace ActsExamples {
 
 TruthJetAlgorithm::TruthJetAlgorithm(const Config& cfg,
-                                     Acts::Logging::Level lvl)
-    : IAlgorithm("TruthJetAlgorithm", lvl), m_cfg(cfg) {
+                                     std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TruthJetAlgorithm", std::move(logger)), m_cfg(cfg) {
   if (m_cfg.inputTruthParticles.empty()) {
     throw std::invalid_argument("Input particles collection is not configured");
   }
   m_inputTruthParticles.initialize(m_cfg.inputTruthParticles);
+  if (m_cfg.doTrackJetMatching) {
+    m_inputTracks.initialize(m_cfg.inputTracks);
+  }
   m_outputJets.initialize(m_cfg.outputJets);
 }
 
 namespace {
-ActsPlugins::FastJet::JetLabel jetLabelFromHadronType(
-    Acts::HadronType hadronType) {
+ActsExamples::JetLabel jetLabelFromHadronType(Acts::HadronType hadronType) {
   using enum Acts::HadronType;
   switch (hadronType) {
     case BBbarMeson:
     case BottomMeson:
     case BottomBaryon:
-      return ActsPlugins::FastJet::JetLabel::BJet;
+      return ActsExamples::JetLabel::BJet;
     case CCbarMeson:
     case CharmedMeson:
     case CharmedBaryon:
-      return ActsPlugins::FastJet::JetLabel::CJet;
+      return ActsExamples::JetLabel::CJet;
     case StrangeMeson:
     case StrangeBaryon:
     case LightMeson:
     case LightBaryon:
-      return ActsPlugins::FastJet::JetLabel::LightJet;
+      return ActsExamples::JetLabel::LightJet;
     default:
-      return ActsPlugins::FastJet::JetLabel::Unknown;
+      return ActsExamples::JetLabel::Unknown;
   }
 }
 
 }  // namespace
 
-ProcessCode ActsExamples::TruthJetAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
   // Initialize the output container
-  std::vector<ActsPlugins::FastJet::TruthJet<TrackContainer>>
-      outputJetContainer{};
+  std::vector<ActsExamples::TruthJet> outputJetContainer{};
 
   Acts::ScopedTimer globalTimer("TruthJetAlgorithm", logger(),
                                 Acts::Logging::DEBUG);
@@ -135,8 +134,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
   }
 
   // Find hadrons for jet labeling with sim particles
-  std::vector<std::pair<ActsPlugins::FastJet::JetLabel, const SimParticle*>>
-      hadrons;
+  std::vector<std::pair<ActsExamples::JetLabel, const SimParticle*>> hadrons;
 
   if (m_cfg.doJetLabeling) {
     Acts::ScopedTimer timer("hadron finding", logger(), Acts::Logging::DEBUG);
@@ -160,7 +158,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
           // Apply a pt cut on B or C hadrons
           auto label =
               jetLabelFromHadronType(Acts::ParticleIdHelper::hadronType(pdgId));
-          using enum ActsPlugins::FastJet::JetLabel;
+          using enum ActsExamples::JetLabel;
 
           if (label == BJet || label == CJet) {
             if (particle->transverseMomentum() < m_cfg.jetLabelingHadronPtMin) {
@@ -176,7 +174,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
           return std::make_pair(label, particle);
         }) |
         std::views::filter([](const auto& hadron) {
-          return hadron.first > ActsPlugins::FastJet::JetLabel::Unknown;
+          return hadron.first > ActsExamples::JetLabel::Unknown;
         });
 
     std::ranges::copy(hadronView, std::back_inserter(hadrons));
@@ -208,7 +206,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
                   Acts::PdgParticle{hadron.second->pdg()}))};
         });
 
-    std::vector<std::pair<const SimParticle*, ActsPlugins::FastJet::JetLabel>>
+    std::vector<std::pair<const SimParticle*, ActsExamples::JetLabel>>
         hadronsInJet;
     std::ranges::copy(hadronsInJetView, std::back_inserter(hadronsInJet));
 
@@ -230,7 +228,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
 
     if (maxHadronIt == hadronsInJet.end()) {
       // Now hadronic "jet"
-      return ActsPlugins::FastJet::JetLabel::Unknown;
+      return ActsExamples::JetLabel::Unknown;
     }
 
     const auto& [maxHadron, maxHadronLabel] = *maxHadronIt;
@@ -243,7 +241,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     return maxHadronLabel;
   };  // jet classification
 
-  boost::container::flat_map<ActsPlugins::FastJet::JetLabel, std::size_t>
+  boost::container::flat_map<ActsExamples::JetLabel, std::size_t>
       jetLabelCounts;
 
   {
@@ -255,8 +253,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
 
       // If jet labeling is enabled, classify the jet based on its hadronic
       // content
-      ActsPlugins::FastJet::JetLabel jetLabel =
-          ActsPlugins::FastJet::JetLabel::Unknown;
+      ActsExamples::JetLabel jetLabel = ActsExamples::JetLabel::Unknown;
       if (m_cfg.doJetLabeling) {
         ACTS_DEBUG("Classifying jet " << i);
         auto sample = timer.sample();
@@ -265,8 +262,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
 
       // Initialize truth jet for storing in the output container
       Acts::Vector4 jetFourMom{jet.px(), jet.py(), jet.pz(), jet.e()};
-      ActsPlugins::FastJet::TruthJet<TrackContainer> truthJet(jetFourMom,
-                                                              jetLabel);
+      ActsExamples::TruthJet truthJet(jetFourMom, jetLabel);
 
       std::vector<fastjet::PseudoJet> jetConstituents = jet.constituents();
       std::vector<int> constituentIndices;
@@ -298,14 +294,68 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     ACTS_DEBUG("  - " << label << ": " << count);
   }
 
+  if (m_cfg.doTrackJetMatching) {
+    const ConstTrackContainer& tracks = m_inputTracks(ctx);
+    trackJetMatching(tracks, outputJetContainer);
+  }
+
   m_outputJets(ctx, std::move(outputJetContainer));
 
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode ActsExamples::TruthJetAlgorithm::finalize() {
+ProcessCode TruthJetAlgorithm::finalize() {
   ACTS_INFO("Finalizing truth jet clustering");
   return ProcessCode::SUCCESS;
+}
+
+void TruthJetAlgorithm::trackJetMatching(const ConstTrackContainer& tracks,
+                                         TruthJetContainer& jets) const {
+  std::unordered_map<std::size_t, std::vector<std::int32_t>>
+      jetToTrackIndicesMap;
+
+  for (auto track : tracks) {
+    // Find the closest jet to this track and associate if within minDeltaR
+    double minDeltaR = 0.4;
+    std::int32_t closestJetIndex = -1;
+
+    for (std::size_t ijet = 0; ijet < jets.size(); ++ijet) {
+      Acts::Vector4 jet_4mom = jets[ijet].fourMomentum();
+      Acts::Vector3 jet_3mom{jet_4mom[0], jet_4mom[1], jet_4mom[2]};
+
+      Acts::Vector4 track_4mom = track.fourMomentum();
+      Acts::Vector3 track_3mom{track_4mom[0], track_4mom[1], track_4mom[2]};
+
+      // Calculate deltaR between track and jet
+      auto drTrackJet = Acts::VectorHelpers::deltaR(jet_3mom, track_3mom);
+
+      if (drTrackJet < minDeltaR) {
+        minDeltaR = drTrackJet;
+        closestJetIndex = ijet;
+      }
+    }
+    if (closestJetIndex != -1) {
+      jetToTrackIndicesMap[closestJetIndex].push_back(track.index());
+    }
+  }
+
+  for (std::size_t ijet = 0; ijet < jets.size(); ++ijet) {
+    std::size_t nTracksAssociated = 0;
+    std::vector<Acts::AnyConstTrackProxy> associatedTracks = {};
+    auto search = jetToTrackIndicesMap.find(ijet);
+    if (search != jetToTrackIndicesMap.end()) {
+      nTracksAssociated = search->second.size();
+      ACTS_VERBOSE("Jet " << ijet << " has " << nTracksAssociated
+                          << " associated tracks with indices:");
+      for (auto trackIdx : search->second) {
+        ACTS_VERBOSE("  Track index: " << trackIdx);
+        auto constTrack = tracks.getTrack(trackIdx);
+        Acts::AnyConstTrackProxy trackProxy(constTrack);
+        associatedTracks.push_back(trackProxy);
+      }
+    }
+    jets[ijet].setAssociatedTracks(associatedTracks);
+  }
 }
 
 }  // namespace ActsExamples

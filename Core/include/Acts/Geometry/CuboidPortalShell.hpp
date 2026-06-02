@@ -44,6 +44,7 @@ class CuboidPortalShell : public PortalShellBase {
   void fill(TrackingVolume& volume) override;
 
   /// @brief Get the transformation matrix for this cuboid portal shell
+  /// @param gctx The geometry context
   /// @return Reference to the transformation matrix
   virtual const Transform3& localToGlobalTransform(
       const GeometryContext& gctx) const = 0;
@@ -60,8 +61,10 @@ std::ostream& operator<<(std::ostream& os, CuboidPortalShell::Face face);
 class SingleCuboidPortalShell : public CuboidPortalShell {
  public:
   /// Construct a single cuboid portal shell for the given volume
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volume The volume to create the shell for
-  explicit SingleCuboidPortalShell(TrackingVolume& volume);
+  explicit SingleCuboidPortalShell(const GeometryContext& gctx,
+                                   TrackingVolume& volume);
 
   /// @copydoc PortalShellBase::size
   std::size_t size() const final;
@@ -127,6 +130,7 @@ class CuboidStackPortalShell final : public CuboidPortalShell {
   std::string label() const override;
 
   /// Return the stack's group transform
+  /// @param gctx The geometry context
   /// @return Reference to the transform of the cuboid stack
   const Transform3& localToGlobalTransform(
       const GeometryContext& gctx) const override;

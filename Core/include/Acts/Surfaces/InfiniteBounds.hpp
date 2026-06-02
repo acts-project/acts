@@ -78,6 +78,7 @@ class InfiniteBounds : public SurfaceBounds {
   }
 };
 
+/// Static instance of InfiniteBounds for convenience
 static const InfiniteBounds s_noBounds{};
 
 }  // namespace Acts

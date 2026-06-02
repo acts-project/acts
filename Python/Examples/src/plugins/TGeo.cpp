@@ -57,8 +57,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsTGeo, tgeo) {
         splitPatterns, layers, subVolumeName, sensitiveNames, sensitiveAxes,
         rRange, zRange, splitTolR, splitTolZ, binning0, binning1);
 
-    auto regTriplet = [&c](const std::string& name, auto v) {
-      using type = decltype(v);
+    auto regTriplet = [&c](const std::string& name, const auto& v) {
+      using type = std::decay_t<decltype(v)>;
       py::class_<TGeoDetector::Config::LayerTriplet<type>>(c, name.c_str())
           .def(py::init<>())
           .def(py::init<type>())

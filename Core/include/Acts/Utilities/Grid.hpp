@@ -15,6 +15,7 @@
 #include "Acts/Utilities/detail/grid_helper.hpp"
 #include "Acts/Utilities/detail/interpolation_impl.hpp"
 
+#include <algorithm>
 #include <any>
 #include <array>
 #include <tuple>
@@ -267,8 +268,7 @@ class Grid final : public IGrid {
 
   /// @copydoc Acts::IGrid::atLocalBinsAny
   std::any atLocalBinsAny(AnyIndexType indices) const override {
-    const_reference cref = atLocalBins(toIndexType(indices));
-    return &cref;
+    return &atLocalBins(toIndexType(indices));
   }
 
   /// @brief access value stored in bin with given local bin numbers
@@ -285,8 +285,7 @@ class Grid final : public IGrid {
 
   /// @copydoc Acts::IGrid::atLocalBinsAny
   std::any atLocalBinsAny(AnyIndexType indices) override {
-    reference ref = atLocalBins(toIndexType(indices));
-    return &ref;
+    return &atLocalBins(toIndexType(indices));
   }
 
   /// @brief get global bin indices for closest points on grid
@@ -677,7 +676,7 @@ class Grid final : public IGrid {
   boost::container::small_vector<const IAxis*, 3> axes() const override {
     boost::container::small_vector<const IAxis*, 3> result;
     auto axes = detail::grid_helper::getAxes(m_axes);
-    std::copy(axes.begin(), axes.end(), std::back_inserter(result));
+    std::ranges::copy(axes, std::back_inserter(result));
     return result;
   }
 

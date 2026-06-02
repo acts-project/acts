@@ -122,6 +122,7 @@ struct ActorList {
   /// @param [in] stepper The stepper in use
   /// @param [in] navigator The navigator in use
   /// @param [in] args The arguments to be passed to the actions
+  /// @return A Result<void> indicating success or failure
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename... Args>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,

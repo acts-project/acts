@@ -12,20 +12,22 @@
 #include <cstdlib>
 #include <ostream>
 
-std::ostream& Acts::operator<<(std::ostream& os,
-                               MaterialUpdateStage matUpdate) {
-  switch (matUpdate) {
-    case MaterialUpdateStage::PreUpdate:
-      os << "PreUpdate (-1)";
+std::ostream& Acts::operator<<(std::ostream& os, MaterialUpdateMode mode) {
+  switch (mode) {
+    case MaterialUpdateMode::NoUpdate:
+      os << "None (0)";
       break;
-    case MaterialUpdateStage::PostUpdate:
-      os << "PostUpdate (1)";
+    case MaterialUpdateMode::PreUpdate:
+      os << "PreUpdate (1)";
       break;
-    case MaterialUpdateStage::FullUpdate:
-      os << "FullUpdate (0)";
+    case MaterialUpdateMode::PostUpdate:
+      os << "PostUpdate (2)";
+      break;
+    case MaterialUpdateMode::FullUpdate:
+      os << "FullUpdate (3)";
       break;
     default:
-      assert(false && "Invalid material update stage (shouldn't happen)");
+      assert(false && "Invalid material update mode (shouldn't happen)");
       std::abort();
   }
   return os;

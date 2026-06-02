@@ -69,7 +69,8 @@ ActsPlugins::detail::GeoTubeConverter::operator()(
 
     // Create the element and the surface
     auto detectorElement =
-        GeoModelDetectorElement::createDetectorElement<DiscSurface>(
+        GeoModelDetectorElement::createDetectorElement<DiscSurface,
+                                                       RadialBounds>(
             geoPV, radialBounds, transform, 2 * halfZ);
     auto surface = detectorElement->surface().getSharedPtr();
     return std::make_tuple(detectorElement, surface);
@@ -84,7 +85,8 @@ ActsPlugins::detail::GeoTubeConverter::operator()(
   // Create the element and the surface
 
   auto detectorElement =
-      GeoModelDetectorElement::createDetectorElement<CylinderSurface>(
+      GeoModelDetectorElement::createDetectorElement<CylinderSurface,
+                                                     CylinderBounds>(
           geoPV, cylinderBounds, transform, outerRadius - innerRadius);
   auto surface = detectorElement->surface().getSharedPtr();
   return std::make_tuple(detectorElement, surface);

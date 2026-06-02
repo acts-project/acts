@@ -163,7 +163,7 @@ cleanedData = []
 
 t1 = time.time()
 
-# Cluster togather tracks belonging to the same particle
+# Cluster together tracks belonging to the same particle
 for event in data:
     clustered = clusterTracks(event)
     clusteredData.append(clustered)

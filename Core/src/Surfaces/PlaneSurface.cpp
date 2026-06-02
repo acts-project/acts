@@ -34,18 +34,16 @@
 namespace Acts {
 
 PlaneSurface::PlaneSurface(const PlaneSurface& other)
-    : GeometryObject(), RegularSurface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject{}, RegularSurface(other), m_bounds(other.m_bounds) {}
 
 PlaneSurface::PlaneSurface(const GeometryContext& gctx,
                            const PlaneSurface& other,
                            const Transform3& transform)
-    : GeometryObject(),
-      RegularSurface(gctx, other, transform),
-      m_bounds(other.m_bounds) {}
+    : RegularSurface(gctx, other, transform), m_bounds(other.m_bounds) {}
 
 PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
-                           const DetectorElementBase& detelement)
-    : RegularSurface(detelement), m_bounds(std::move(pbounds)) {
+                           const SurfacePlacementBase& placement)
+    : RegularSurface{placement}, m_bounds(std::move(pbounds)) {
   // surfaces representing a detector element must have bounds
   throw_assert(m_bounds, "PlaneBounds must not be nullptr");
 }
@@ -60,6 +58,11 @@ PlaneSurface& PlaneSurface::operator=(const PlaneSurface& other) {
     m_bounds = other.m_bounds;
   }
   return *this;
+}
+
+RotationMatrix3 PlaneSurface::referenceFrame(
+    const GeometryContext& gctx) const {
+  return localToGlobalTransform(gctx).matrix().block<3, 3>(0, 0);
 }
 
 Surface::SurfaceType PlaneSurface::type() const {
@@ -187,9 +190,9 @@ MultiIntersection3D PlaneSurface::intersect(
                                             intersection.pathLength(), status));
 }
 
-ActsMatrix<2, 3> PlaneSurface::localCartesianToBoundLocalDerivative(
+Matrix<2, 3> PlaneSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& /*gctx*/, const Vector3& /*position*/) const {
-  const ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Identity();
+  const Matrix<2, 3> loc3DToLocBound = Matrix<2, 3>::Identity();
   return loc3DToLocBound;
 }
 
@@ -199,8 +202,7 @@ std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(
   ACTS_VERBOSE("Merging plane surfaces in " << axisDirectionName(direction)
                                             << " direction");
 
-  if (m_associatedDetElement != nullptr ||
-      other.m_associatedDetElement != nullptr) {
+  if (isAlignable() || other.isAlignable()) {
     throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
                                   "PlaneSurface::merge: surfaces are "
                                   "associated with a detector element");

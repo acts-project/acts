@@ -54,19 +54,20 @@ find_package_handle_standard_args(
     REQUIRED_VARS onnxruntime_LIBRARY onnxruntime_INCLUDE_DIR
 )
 
-add_library(onnxruntime SHARED IMPORTED)
-set_property(
-    TARGET onnxruntime
-    PROPERTY IMPORTED_LOCATION ${onnxruntime_LIBRARY}
-)
-set_property(
-    TARGET onnxruntime
-    PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${onnxruntime_INCLUDE_DIR}
-)
-set_property(
-    TARGET onnxruntime
-    PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES ${onnxruntime_INCLUDE_DIR}
-)
+if(NOT TARGET onnxruntime::onnxruntime)
+    add_library(onnxruntime SHARED IMPORTED)
+    set_property(
+        TARGET onnxruntime
+        PROPERTY IMPORTED_LOCATION ${onnxruntime_LIBRARY}
+    )
+    set_property(
+        TARGET onnxruntime
+        PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${onnxruntime_INCLUDE_DIR}
+    )
+    set_property(
+        TARGET onnxruntime
+        PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES ${onnxruntime_INCLUDE_DIR}
+    )
+    add_library(onnxruntime::onnxruntime ALIAS onnxruntime)
+endif()
 mark_as_advanced(onnxruntime_FOUND onnxruntime_INCLUDE_DIR onnxruntime_LIBRARY)
-
-add_library(onnxruntime::onnxruntime ALIAS onnxruntime)

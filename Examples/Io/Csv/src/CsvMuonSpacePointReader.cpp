@@ -48,7 +48,7 @@ ProcessCode CsvMuonSpacePointReader::read(const AlgorithmContext& ctx) {
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
 
-  NamedTupleCsvReader<MuonSpacePointData> reader(path);
+  BoostDescribeCsvReader<MuonSpacePointData> reader(path);
 
   MuonSpacePointData data{};
 
@@ -88,7 +88,7 @@ ProcessCode CsvMuonSpacePointReader::read(const AlgorithmContext& ctx) {
     newSpacePoint.setRadius(data.driftR);
 
     newSpacePoint.setCovariance(data.covX, data.covY, data.covT);
-    ACTS_VERBOSE("New spacepoint loaded: " << newSpacePoint);
+    ACTS_VERBOSE("New space point loaded: " << newSpacePoint);
   }
 
   // write the ordered data to the EventStore (according to geometry_id).

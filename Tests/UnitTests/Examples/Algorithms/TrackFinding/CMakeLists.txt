@@ -1,0 +1,1 @@
+add_subdirectory_if(Hashing ACTS_BUILD_EXAMPLES_HASHING)

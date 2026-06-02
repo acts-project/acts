@@ -11,6 +11,7 @@
 #include "Acts/Utilities/JoinStrings.hpp"
 
 #include <algorithm>
+#include <exception>
 #include <iterator>
 #include <ranges>
 #include <string>

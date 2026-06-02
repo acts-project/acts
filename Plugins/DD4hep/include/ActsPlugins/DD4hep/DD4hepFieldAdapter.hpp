@@ -13,15 +13,14 @@
 
 #include <memory>
 
-namespace dd4hep {
-class OverlayedField;
-}
+#include <DD4hep/Fields.h>
 
 namespace ActsPlugins {
 /// @addtogroup dd4hep_plugin
 /// @{
 
 /// @ingroup magnetic_field dd4hep_plugin
+/// @brief Adapter for DD4hep magnetic field to Acts magnetic field provider
 class DD4hepFieldAdapter : public Acts::MagneticFieldProvider {
   /// Cache object for DD4hep field adapter
   /// @note As DD4hep does not implement a caching mechanism, this struct is
@@ -29,6 +28,8 @@ class DD4hepFieldAdapter : public Acts::MagneticFieldProvider {
   struct Cache {};
 
  public:
+  /// Constructor
+  /// @param field DD4hep overlaid field
   explicit DD4hepFieldAdapter(dd4hep::OverlayedField field);
 
   Acts::MagneticFieldProvider::Cache makeCache(
@@ -37,6 +38,9 @@ class DD4hepFieldAdapter : public Acts::MagneticFieldProvider {
   Acts::Result<Acts::Vector3> getField(
       const Acts::Vector3& position,
       Acts::MagneticFieldProvider::Cache& cache) const override;
+
+  /// Destructor
+  ~DD4hepFieldAdapter() override;
 
  private:
   double m_fieldConversionFactor;

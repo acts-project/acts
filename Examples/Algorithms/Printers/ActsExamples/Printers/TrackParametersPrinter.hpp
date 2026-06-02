@@ -18,7 +18,6 @@
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Print track parameters.
 class TrackParametersPrinter : public IAlgorithm {
@@ -28,7 +27,8 @@ class TrackParametersPrinter : public IAlgorithm {
     std::string inputTrackParameters;
   };
 
-  TrackParametersPrinter(const Config& cfg, Acts::Logging::Level level);
+  explicit TrackParametersPrinter(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 

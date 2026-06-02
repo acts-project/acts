@@ -102,7 +102,7 @@ std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
 }
 
 /// Helper method for positioning
-/// @param z is the nominal z posiiton of the dis
+/// @param z is the nominal z position of the dis
 /// @param ringStagger is the staggering of the different rings
 /// @param phiStagger is the staggering on a ring in phi : it is even/odd
 /// @param phiSubStagger is the sub staggering on a ring in phi : it affects

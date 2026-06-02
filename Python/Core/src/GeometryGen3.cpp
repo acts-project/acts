@@ -17,10 +17,10 @@
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
+#include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <fstream>
@@ -108,7 +108,7 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
       csv << "," << surface.geometryId().volume();
       csv << "," << surface.geometryId().boundary();
       csv << "," << surface.geometryId().sensitive();
-      csv << "," << (surface.surfaceMaterial() != nullptr ? 1 : 0);
+      csv << "," << (surface.hasMaterial() ? 1 : 0);
       csv << std::endl;
     };
 
@@ -117,9 +117,10 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
       main = NavigationStream{};
 
       AppendOnlyNavigationStream navStream{main};
+      NavigationPolicyState policyState;
       currentVolume->initializeNavigationCandidates(
-          gctx, {.position = position, .direction = direction}, navStream,
-          logger());
+          gctx, {.position = position, .direction = direction}, policyState,
+          navStream, logger());
 
       ACTS_VERBOSE(main.candidates().size() << " candidates");
 

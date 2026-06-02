@@ -37,7 +37,7 @@ struct MockTrack {
 
   MockTrack()
       : m_parameterBuffer(BoundVector::Zero()),
-        m_covarianceBuffer(BoundSquareMatrix::Identity()) {}
+        m_covarianceBuffer(BoundMatrix::Identity()) {}
 
   TrackIndexType index() const { return m_index; }
   TrackIndexType tipIndex() const { return m_tipIndex; }
@@ -119,9 +119,9 @@ struct MockTrack {
       return *srf;
     }
 
-    ConstTrackStateType typeFlags() const {
-      static const ConstTrackStateType::raw_type raw{0};
-      return ConstTrackStateType{raw};
+    ConstTrackStateTypeMap typeFlags() const {
+      static const ConstTrackStateTypeMap::raw_type raw{0};
+      return ConstTrackStateTypeMap{raw};
     }
   };
 
@@ -165,7 +165,7 @@ struct MockTrack {
   double m_absMomentum = 1.;
 
   mutable BoundVector m_parameterBuffer;
-  mutable BoundSquareMatrix m_covarianceBuffer;
+  mutable BoundMatrix m_covarianceBuffer;
 };
 
 static_assert(TrackProxyConcept<MockTrack>);
@@ -709,16 +709,16 @@ BOOST_AUTO_TEST_CASE(SubsetHitCountCut) {
                           TrackStateFlag flag) {
     auto ts = track.appendTrackState();
     ts.setReferenceSurface(surface);
-    ts.typeFlags().set(flag);
+    ts.typeFlags().setUnchecked(flag);
     return ts;
   };
 
   auto addMeasurement = [&](auto& track, const auto& surface) {
-    return addTrackState(track, surface, TrackStateFlag::MeasurementFlag);
+    return addTrackState(track, surface, TrackStateFlag::HasMeasurement);
   };
 
   auto addMaterial = [&](auto& track, const auto& surface) {
-    return addTrackState(track, surface, TrackStateFlag::MaterialFlag);
+    return addTrackState(track, surface, TrackStateFlag::HasMaterial);
   };
 
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};

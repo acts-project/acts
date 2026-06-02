@@ -19,9 +19,31 @@
 #include <ranges>
 #include <vector>
 
+namespace Acts::Experimental::detail {
+
+/// Helper function that splits the layers' spacepoints between the 2D and two
+/// 1D ones when three layer combinatorics are available
+/// @tparam Point_t the space point type
+/// @param layerTriplet the space points of the combinatorics
+/// @return The tuple with the two 1D space points and one 2D spacepoint
+
+template <Experimental::CompositeSpacePointPtr Point_t>
+std::array<std::size_t, 3> separateLayers(
+    const std::array<Point_t, 3>& layerTriplet);
+
+}  // namespace Acts::Experimental::detail
+
 namespace Acts::Experimental::CombinatorialSeedSolver {
 
-/// @brief A Combinatorial Seed Solver for seed estimation from combinatoric hits from four layers (e.g Muon NSW seeding)
+/// A Combinatorial Seed Solver for seed estimation from combinatoric hits from
+/// four or three layers
+/// (e.g Muon NSW seeding for ATLAS) with overloaded functions to implement the
+/// mathematics
+/// The combinatoric layers are expected to be sorted in z in chamber's frame
+
+/// ===============================
+/// The 4-layer combinatorics functions
+/// ===============================
 
 ///***The layers equations for the four layers (Si,Di) can be */
 /// S1 + lambda*D1 = M
@@ -35,116 +57,24 @@ namespace Acts::Experimental::CombinatorialSeedSolver {
 /// Bx1*kappa + Bx2*gamma = Y2x
 /// By1*kappa + By2*gamma = Y2y
 
-/// @brief defines the betaMatrix calculated from the combinatoric hits
-/// @tparam spacePointContainer the space point container
+/// Defines the betaMatrix calculated from the combinatoric hits
+/// @tparam Point_t the space point type
 /// @param layerQuartett the space points of the combinatorics
 /// @return the 2x2 beta matrix
 template <Experimental::CompositeSpacePointPtr Point_t>
-SquareMatrix2 betaMatrix(const std::array<Point_t, 4>& layerQuartett) {
-  SquareMatrix2 bMatrix{SquareMatrix2::Identity()};
+SquareMatrix2 betaMatrix(const std::array<Point_t, 4>& layerQuartett);
 
-  Vector3 b1Aterm = (layerQuartett[3]->sensorDirection().dot(
-                        layerQuartett[1]->sensorDirection())) *
-                        layerQuartett[1]->sensorDirection() -
-                    layerQuartett[3]->sensorDirection();
-  Vector3 b1Gterm = (layerQuartett[3]->sensorDirection().dot(
-                        layerQuartett[0]->sensorDirection())) *
-                        layerQuartett[0]->sensorDirection() -
-                    (layerQuartett[3]->sensorDirection().dot(
-                        layerQuartett[1]->sensorDirection())) *
-                        layerQuartett[1]->sensorDirection();
-
-  Vector3 b2Aterm = layerQuartett[2]->sensorDirection() -
-                    (layerQuartett[2]->sensorDirection().dot(
-                        layerQuartett[1]->sensorDirection())) *
-                        layerQuartett[1]->sensorDirection();
-  Vector3 b2Kterm = (layerQuartett[2]->sensorDirection().dot(
-                        layerQuartett[1]->sensorDirection())) *
-                        layerQuartett[1]->sensorDirection() -
-                    (layerQuartett[2]->sensorDirection().dot(
-                        layerQuartett[0]->sensorDirection())) *
-                        layerQuartett[0]->sensorDirection();
-
-  // get the distances of the layers along z direction
-  double A = (layerQuartett[0]->localPosition().z() -
-              layerQuartett[1]->localPosition().z());
-  double G = (layerQuartett[0]->localPosition().z() -
-              layerQuartett[2]->localPosition().z());
-  double K = (layerQuartett[0]->localPosition().z() -
-              layerQuartett[3]->localPosition().z());
-
-  // define B matrix
-  Vector3 b1 = A * b1Aterm + G * b1Gterm;
-  Vector3 b2 = K * b2Kterm + A * b2Aterm;
-
-  bMatrix.col(0) = Vector2(b1.x(), b1.y());
-  bMatrix.col(1) = Vector2(b2.x(), b2.y());
-
-  return bMatrix;
-}
-
-/// @brief calculates the parameters lambda,alpha,gamma,kappa of the system
-/// @tparam spacePointContainer the space point container
+/// Calculates the parameters lambda,alpha,gamma,kappa of the system
+/// @tparam Point_t the space point type
 /// @param betaMatrix the betaMatrix for the system
 /// @param layerQuartett the space points of the combinatorics
 /// @return an array of the calculated parameters
 template <Experimental::CompositeSpacePointPtr Point_t>
 std::array<double, 4> defineParameters(
     const SquareMatrix2& betaMatrix,
-    const std::array<Point_t, 4>& layerQuartett) {
-  double A = (layerQuartett[0]->localPosition().z() -
-              layerQuartett[1]->localPosition().z());
-  double G = (layerQuartett[0]->localPosition().z() -
-              layerQuartett[2]->localPosition().z());
-  double K = (layerQuartett[0]->localPosition().z() -
-              layerQuartett[3]->localPosition().z());
+    const std::array<Point_t, 4>& layerQuartett);
 
-  // Define y2 for the linear system
-  Vector3 y0 = K * (layerQuartett[2]->localPosition() -
-                    layerQuartett[0]->localPosition()) +
-               G * (layerQuartett[0]->localPosition() -
-                    layerQuartett[3]->localPosition());
-  Vector3 y1 = A * (layerQuartett[3]->localPosition() -
-                    layerQuartett[2]->localPosition()) +
-               G * (layerQuartett[1]->localPosition() -
-                    layerQuartett[3]->localPosition()) +
-               K * (layerQuartett[2]->localPosition() -
-                    layerQuartett[1]->localPosition());
-  Vector3 y2 = (K - G) * (layerQuartett[0]->localPosition() -
-                          layerQuartett[1]->localPosition()) -
-               (y1.dot(layerQuartett[1]->sensorDirection())) *
-                   layerQuartett[1]->sensorDirection() +
-               (y0.dot(layerQuartett[0]->sensorDirection())) *
-                   layerQuartett[0]->sensorDirection() +
-               A * (layerQuartett[3]->localPosition() -
-                    layerQuartett[2]->localPosition());
-
-  Vector2 solution = betaMatrix.inverse() * y2.block<2, 1>(0, 0);
-  double kappa = solution.x();
-  double gamma = solution.y();
-
-  double lambda = (y0.dot(layerQuartett[0]->sensorDirection()) +
-                   K * gamma *
-                       (layerQuartett[0]->sensorDirection().dot(
-                           layerQuartett[2]->sensorDirection())) -
-                   G * kappa *
-                       (layerQuartett[0]->sensorDirection().dot(
-                           layerQuartett[3]->sensorDirection()))) /
-                  (K - G);
-  double alpha = (y1.dot(layerQuartett[1]->sensorDirection()) +
-                  (A - G) * kappa *
-                      layerQuartett[3]->sensorDirection().dot(
-                          layerQuartett[1]->sensorDirection()) +
-                  (K - A) * gamma *
-                      layerQuartett[2]->sensorDirection().dot(
-                          layerQuartett[1]->sensorDirection())) /
-                 (K - G);
-
-  return std::array<double, 4>({lambda, alpha, gamma, kappa});
-}
-
-// Solve the equations for the seed position and direction (M,DM)
-/// @brief solves the equation system to calculate the seed
+/// Solves the equation system to calculate the seed position and direction
 /// @tparam spacePointContainr the space point container
 /// @param layerQuartett the space points of the combinatorics
 /// @param parameters the lambda,alpha,gamma,kappa parameters of the four layers
@@ -152,26 +82,53 @@ std::array<double, 4> defineParameters(
 template <Experimental::CompositeSpacePointPtr Point_t>
 std::pair<Vector3, Vector3> seedSolution(
     const std::array<Point_t, 4>& layerQuartett,
-    const std::array<double, 4>& parameters) {
-  // estimate the seed positionInChamber from the 1st equation of the system of
-  // the layer equations
-  Vector3 seedPosition = layerQuartett[0]->localPosition() +
-                         parameters[0] * layerQuartett[0]->sensorDirection();
+    const std::array<double, 4>& parameters);
 
-  // estimate the seed direction from the 2nd equation of the system of the
-  // layer equations
-  Vector3 seedDirection =
-      ((layerQuartett[1]->localPosition() +
-        parameters[1] * layerQuartett[1]->sensorDirection() - seedPosition))
-          .normalized();
+/// ===============================
+/// The 3-layer combinatorics functions
+/// ===============================
 
-  // calculate the position at z=0
-  Intersection3D intersectionZ0 = PlanarHelper::intersectPlane(
-      seedPosition, seedDirection, Vector3::UnitZ(), 0.0);
-  Vector3 seedPositionZ0 = intersectionZ0.position();
+/// A combinatorial seed solver from three available layers where one 2D
+/// measurement and two 1D measurement are available(e.g STgc from NSW)
+/// ***The layers equations for the three layers (Si,Di) can be */
+/// P = M //from the 2D measurement
+/// S1 + beta*D1 = M + R*Dm //1st layer of the 1D measurement
+/// S2 + delta*D2 = M + L*Dm //2nd layer of the 1D measurement
+/// where {Si,Di}  are the position and direction of the strip
+/// {M,Dm} the position and direction of the muon's trajectory on the 1st plane
+/// solving the system we can reduce it to a 2x2 system for beta and delta --->
+/// https://gitlab.cern.ch/atlas-nextgen/work-package-2.5/analyticalsegment
+/// Bx1*beta + Bx2*delta = Yx
+/// By1*beta + By2*delta = Yy
 
-  return std::make_pair(seedPositionZ0,
-                        copySign(seedDirection, seedDirection.z()));
-};
+/// Defines the components of the beta matrix for a triplet of combinatorics
+/// @tparam Point_t the space point type
+/// @param layerTriplet the space points from the combinatorics
+/// @return The 2x2 beta matrix
+template <Experimental::CompositeSpacePointPtr Point_t>
+SquareMatrix2 betaMatrix(const std::array<Point_t, 3>& layerTriplet);
+
+/// Calculates the parameters beta, delta of the system of the three layers
+/// combinatorics
+/// @tparam Point_t the space point type
+/// @param betaMatrix the betaMatrix for the system
+/// @param layerTriplet the space points of the combinatorics
+/// @return an array of the calculated parameters
+template <Experimental::CompositeSpacePointPtr Point_t>
+std::array<double, 2> defineParameters(
+    const SquareMatrix2& betaMatrix,
+    const std::array<Point_t, 3>& layerTriplet);
+
+/// Solve the equations for the seed position and direction (M,DM) for the three
+/// layers case
+/// @tparam Point_t the spacepoint type
+/// @param layerTriplet the spacepoints of the combinatorics
+/// @param parameters the beta,delta parameters of the system
+template <Experimental::CompositeSpacePointPtr Point_t>
+std::pair<Vector3, Vector3> seedSolution(
+    const std::array<Point_t, 3>& layerTriplet,
+    const std::array<double, 2>& parameters);
 
 }  // namespace Acts::Experimental::CombinatorialSeedSolver
+
+#include "Acts/Seeding/CombinatorialSeedSolver.ipp"

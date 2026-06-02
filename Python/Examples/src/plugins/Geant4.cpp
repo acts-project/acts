@@ -8,7 +8,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Geant4/Geant4ConstructionOptions.hpp"
@@ -19,15 +18,12 @@
 #include "ActsExamples/Geant4Detector/GdmlDetector.hpp"
 #include "ActsExamples/Geant4Detector/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <algorithm>
 #include <memory>
-#include <ranges>
 #include <string>
 #include <tuple>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -41,8 +37,8 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-using namespace ActsExamples;
 using namespace Acts;
+using namespace ActsExamples;
 using namespace ActsPlugins;
 using namespace ActsPython;
 
@@ -62,7 +58,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
         mod, "Geant4ConstructionOptions")
         .def(py::init<>())
         .def_readwrite("regionCreators",
-                       &Geant4ConstructionOptions::regionCreators);
+                       &Geant4ConstructionOptions::regionCreators)
+        .def_readwrite("enableGdmlValidation",
+                       &Geant4ConstructionOptions::enableGdmlValidation);
   }
 
   {
@@ -75,8 +73,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
 
     auto c1 = py::class_<Config, std::shared_ptr<Config>>(alg, "Config")
                   .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c1, inputParticles, randomNumbers, detector,
-                       geant4Handle);
+    ACTS_PYTHON_STRUCT(c1, inputParticles, randomNumbers, constructionOptions,
+                       detector, geant4Handle);
   }
 
   {
@@ -123,19 +121,28 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
 
   {
     using Algorithm = Geant4Simulation;
-    using Config = Algorithm::Config;
+
     auto alg =
         py::class_<Algorithm, Geant4SimulationBase, std::shared_ptr<Algorithm>>(
             mod, "Geant4Simulation")
-            .def(py::init<const Config&, Logging::Level>(), py::arg("config"),
-                 py::arg("level"))
+            .def(py::init(
+                     [](const Algorithm::Config& cfg, Logging::Level level) {
+                       return std::make_shared<Algorithm>(
+                           cfg, getDefaultLogger("Geant4Simulation", level));
+                     }),
+                 py::arg("config"), py::arg("level"))
+            .def(py::init([](const Algorithm::Config& cfg,
+                             std::unique_ptr<const Logger> logger) {
+                   return std::make_shared<Algorithm>(cfg, std::move(logger));
+                 }),
+                 py::arg("config"), py::arg("logger"))
             .def_property_readonly("config", &Algorithm::config);
 
-    auto c1 = py::class_<Config, Geant4SimulationBase::Config,
-                         std::shared_ptr<Config>>(alg, "Config")
-                  .def(py::init<>());
+    auto c = py::class_<Algorithm::Config, Geant4SimulationBase::Config,
+                        std::shared_ptr<Algorithm::Config>>(alg, "Config")
+                 .def(py::init<>());
     ACTS_PYTHON_STRUCT(
-        c1, outputSimHits, outputParticles, outputPropagationSummaries,
+        c, outputSimHits, outputParticles, outputPropagationSummaries,
         sensitiveSurfaceMapper, magneticField, physicsList, killVolume,
         killAfterTime, killSecondaries, recordHitsOfCharged,
         recordHitsOfNeutrals, recordHitsOfPrimaries, recordHitsOfSecondaries,
@@ -144,18 +151,27 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
 
   {
     using Algorithm = Geant4MaterialRecording;
-    using Config = Algorithm::Config;
     auto alg =
         py::class_<Algorithm, Geant4SimulationBase, std::shared_ptr<Algorithm>>(
             mod, "Geant4MaterialRecording")
-            .def(py::init<const Config&, Logging::Level>(), py::arg("config"),
-                 py::arg("level"))
+            .def(py::init([](const Algorithm::Config& cfg,
+                             Logging::Level level) {
+                   return std::make_shared<Algorithm>(
+                       cfg, getDefaultLogger("Geant4MaterialRecording", level));
+                 }),
+                 py::arg("config"), py::arg("level"))
+            .def(py::init([](const Algorithm::Config& cfg,
+                             std::unique_ptr<const Logger> logger) {
+                   return std::make_shared<Algorithm>(cfg, std::move(logger));
+                 }),
+                 py::arg("config"), py::arg("logger"))
             .def_property_readonly("config", &Algorithm::config);
 
-    auto c = py::class_<Config, Geant4SimulationBase::Config,
-                        std::shared_ptr<Config>>(alg, "Config")
+    auto c = py::class_<Algorithm::Config, Geant4SimulationBase::Config,
+                        std::shared_ptr<Algorithm::Config>>(alg, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, outputMaterialTracks, excludeMaterials);
+    ACTS_PYTHON_STRUCT(c, outputMaterialTracks, excludeMaterials,
+                       recordElementFractions);
   }
 
   {
@@ -189,8 +205,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
                               const std::vector<std::string>& passiveMatches,
                               bool convertMaterial) {
           // Initiate the detector construction & retrieve world
-          ActsExamples::GdmlDetectorConstruction gdmlContruction(gdmlFileName,
-                                                                 {});
+          GdmlDetectorConstruction gdmlContruction(gdmlFileName, {});
           const auto* world = gdmlContruction.Construct();
 
           // Create the selectors

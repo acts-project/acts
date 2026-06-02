@@ -152,7 +152,7 @@ ambi_config = args.ambi_config
 seedFilter_ML = args.MLSeedFilter
 geoDir = getOpenDataDetectorDirectory()
 actsDir = pathlib.Path(__file__).parent.parent.parent.parent
-# acts.examples.dump_args_calls(locals())  # show python binding calls
+# acts.examples.dump_args_calls()  # show python binding calls
 
 oddMaterialMap = (
     args.material_config
@@ -350,7 +350,6 @@ if args.reco:
         geoSelectionConfigFile=oddSeedingSel,
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
-        logLevel=acts.logging.DEBUG,
     )
 
     if seedFilter_ML:
@@ -408,7 +407,6 @@ if args.reco:
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
         writeCovMat=True,
-        logLevel=acts.logging.DEBUG,
     )
 
     if ambi_ML:

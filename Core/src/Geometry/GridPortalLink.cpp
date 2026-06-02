@@ -101,7 +101,9 @@ std::unique_ptr<GridPortalLink> GridPortalLink::make(
   return grid;
 }
 
-void GridPortalLink::checkConsistency(const CylinderSurface& cyl) const {
+void GridPortalLink::checkConsistency(const IGrid& grid,
+                                      AxisDirection direction,
+                                      const CylinderSurface& cyl) {
   if (cyl.bounds().get(CylinderBounds::eAveragePhi) != 0) {
     throw std::invalid_argument(
         "GridPortalLink: CylinderBounds: only average phi == 0 is "
@@ -147,22 +149,24 @@ void GridPortalLink::checkConsistency(const CylinderSurface& cyl) const {
     }
   };
 
-  if (dim() == 1) {
-    const IAxis& axisLoc0 = *grid().axes().front();
-    if (direction() == AxisDirection::AxisRPhi) {
+  if (grid.axes().size() == 1) {
+    const IAxis& axisLoc0 = *grid.axes().front();
+    if (direction == AxisDirection::AxisRPhi) {
       checkRPhi(axisLoc0);
     } else {
       checkZ(axisLoc0);
     }
   } else {  // DIM == 2
-    const auto& axisLoc0 = *grid().axes().front();
-    const auto& axisLoc1 = *grid().axes().back();
+    const auto& axisLoc0 = *grid.axes().front();
+    const auto& axisLoc1 = *grid.axes().back();
     checkRPhi(axisLoc0);
     checkZ(axisLoc1);
   }
 }
 
-void GridPortalLink::checkConsistency(const DiscSurface& disc) const {
+void GridPortalLink::checkConsistency(const IGrid& grid,
+                                      AxisDirection direction,
+                                      const DiscSurface& disc) {
   constexpr auto tolerance = s_onSurfaceTolerance;
   auto same = [](auto a, auto b) { return std::abs(a - b) < tolerance; };
 
@@ -209,22 +213,24 @@ void GridPortalLink::checkConsistency(const DiscSurface& disc) const {
     }
   };
 
-  if (dim() == 1) {
-    const IAxis& axisLoc0 = *grid().axes().front();
-    if (direction() == AxisDirection::AxisR) {
+  if (grid.axes().size() == 1) {
+    const IAxis& axisLoc0 = *grid.axes().front();
+    if (direction == AxisDirection::AxisR) {
       checkR(axisLoc0);
     } else {
       checkPhi(axisLoc0);
     }
   } else {  // DIM == 2
-    const auto& axisLoc0 = *grid().axes().front();
-    const auto& axisLoc1 = *grid().axes().back();
+    const auto& axisLoc0 = *grid.axes().front();
+    const auto& axisLoc1 = *grid.axes().back();
     checkR(axisLoc0);
     checkPhi(axisLoc1);
   }
 }
 
-void GridPortalLink::checkConsistency(const PlaneSurface& plane) const {
+void GridPortalLink::checkConsistency(const IGrid& grid,
+                                      AxisDirection direction,
+                                      const PlaneSurface& plane) {
   constexpr auto tolerance = s_onSurfaceTolerance;
   auto same = [](auto a, auto b) { return std::abs(a - b) < tolerance; };
 
@@ -246,12 +252,12 @@ void GridPortalLink::checkConsistency(const PlaneSurface& plane) const {
     }
   };
 
-  if (dim() == 1) {
-    const IAxis& axisLoc0 = *grid().axes().front();
-    check(axisLoc0, direction());
+  if (grid.axes().size() == 1) {
+    const IAxis& axisLoc0 = *grid.axes().front();
+    check(axisLoc0, direction);
   } else {  // DIM == 2
-    const auto& axisLoc0 = *grid().axes().front();
-    const auto& axisLoc1 = *grid().axes().back();
+    const auto& axisLoc0 = *grid.axes().front();
+    const auto& axisLoc1 = *grid.axes().back();
     check(axisLoc0, AxisDirection::AxisX);
     check(axisLoc1, AxisDirection::AxisY);
   }

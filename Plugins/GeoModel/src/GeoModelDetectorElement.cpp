@@ -22,7 +22,11 @@ ActsPlugins::GeoModelDetectorElement::GeoModelDetectorElement(
     : m_geoPhysVol(std::move(geoPhysVol)),
       m_surface(std::move(surface)),
       m_surfaceTransform(sfTransform),
-      m_thickness(thickness) {}
+      m_thickness(thickness) {
+  if (m_surface) {
+    attachSurface(std::move(m_surface));
+  }
+}
 
 const Transform3& ActsPlugins::GeoModelDetectorElement::localToGlobalTransform(
     const GeometryContext& /*gctx*/) const {

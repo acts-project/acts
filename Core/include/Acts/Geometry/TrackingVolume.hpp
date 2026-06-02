@@ -105,12 +105,27 @@ class TrackingVolume : public Volume {
   ~TrackingVolume() override;
   TrackingVolume(const TrackingVolume&) = delete;
   TrackingVolume& operator=(const TrackingVolume&) = delete;
+
+  // The move constructors are declared here and defined in the .cpp file to
+  // enable forward declarations.
+
   /// Move constructor for transferring ownership of tracking volume resources.
   TrackingVolume(TrackingVolume&&) noexcept;
   /// Move assignment operator for transferring ownership of tracking volume
   /// resources.
   /// @return Reference to this TrackingVolume after move assignment
   TrackingVolume& operator=(TrackingVolume&&) noexcept;
+
+  /// Constructor for an aligned container volume container Volume
+  /// - vacuum filled volume either as a for other tracking volumes
+  ///
+  /// @param placement is the volume placement object dynamically positioning
+  ///                  the volume in space
+  /// @param volbounds is the description of the volume boundaries
+  /// @param volumeName is a string identifier
+  TrackingVolume(VolumePlacementBase& placement,
+                 std::shared_ptr<VolumeBounds> volbounds,
+                 const std::string& volumeName = "undefined");
 
   /// Constructor for a container Volume
   /// - vacuum filled volume either as a for other tracking volumes
@@ -145,7 +160,7 @@ class TrackingVolume : public Volume {
   /// Constructor from a regular volume
   /// @param volume is the volume to be converted
   /// @param volumeName is a string identifier
-  explicit TrackingVolume(Volume& volume,
+  explicit TrackingVolume(const Volume& volume,
                           const std::string& volumeName = "undefined");
 
   /// Return the associated sub Volume, returns THIS if no subVolume exists
@@ -170,18 +185,17 @@ class TrackingVolume : public Volume {
   /// this, e.g. as a private member
   template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
-    auto sensitive = [&visitor](const Surface& surface) {
-      if (surface.geometryId().sensitive() == 0) {
-        return;
-      }
-      visitor(&surface);
-    };
-
     if (restrictToSensitives) {
-      apply(sensitive);
+      apply([&visitor](const Surface& surface) {
+        if (surface.geometryId().sensitive() == 0) {
+          return;
+        }
+        visitor(&surface);
+      });
+
     } else {
       apply(overloaded{
-          sensitive,
+          [&visitor](const Surface& surface) { visitor(&surface); },
           [&visitor](const Portal& portal) { visitor(&portal.surface()); },
           [&visitor](const BoundarySurface& bs) {
             visitor(&bs.surfaceRepresentation());
@@ -266,7 +280,11 @@ class TrackingVolume : public Volume {
 
   /// Set the volume name to @p volumeName
   /// @param volumeName is the new name of
-  void setVolumeName(const std::string& volumeName);
+  void setVolumeName(std::string_view volumeName);
+
+  /// Check if the volume has an associated material description
+  /// @return True if the volume has an associated material, false otherwise
+  bool hasMaterial() const;
 
   /// Return the material of the volume
   /// @return Pointer to volume material or nullptr if no material assigned
@@ -421,7 +439,7 @@ class TrackingVolume : public Volume {
 
   /// Return the confined dense volumes
   /// @return Vector of pointers to dense tracking volumes
-  const MutableTrackingVolumeVector denseVolumes() const;
+  MutableTrackingVolumeVector denseVolumes() const;
 
   /// Method to return the BoundarySurfaces
   /// @return Reference to vector of boundary surface pointers
@@ -444,7 +462,7 @@ class TrackingVolume : public Volume {
   /// to the last navigation volume
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bsfMine is the boundary face indicater where to glue
+  /// @param bsfMine is the boundary face indicator where to glue
   /// @param neighbor is the TrackingVolume to be glued
   /// @param bsfNeighbor is the boundary surface of the neighbor
   void glueTrackingVolume(const GeometryContext& gctx,
@@ -456,7 +474,7 @@ class TrackingVolume : public Volume {
   /// to the last navigation volume
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bsfMine is the boundary face indicater where to glue
+  /// @param bsfMine is the boundary face indicator where to glue
   /// @param neighbors are the TrackingVolumes to be glued
   /// @param bsfNeighbor are the boundary surface of the neighbors
   void glueTrackingVolumes(
@@ -466,7 +484,7 @@ class TrackingVolume : public Volume {
 
   /// Provide a new BoundarySurface from the glueing
   ///
-  /// @param bsf is the boundary face indicater where to glue
+  /// @param bsf is the boundary face indicator where to glue
   /// @param bs is the new boundary surface
   /// @param checkmaterial is a flag how to deal with material, if true:
   /// - if the old boundary surface had a material description
@@ -508,6 +526,10 @@ class TrackingVolume : public Volume {
                  const ViewConfig& portalViewConfig,
                  const ViewConfig& sensitiveViewConfig) const;
 
+  /// @cond
+  using Volume::visualize;
+  /// @endcond
+
   /// Access the navigation policy if any that is registered on this volume
   /// @return a pointer to the navigation policy, or nullptr if none is set
   const INavigationPolicy* navigationPolicy() const;
@@ -526,10 +548,12 @@ class TrackingVolume : public Volume {
   /// the default is a noop.
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param args are the navigation arguments
+  /// @param state is the navigation policy state
   /// @param stream is the navigation stream to be updated
   /// @param logger is the logger
   void initializeNavigationCandidates(const GeometryContext& gctx,
                                       const NavigationArguments& args,
+                                      NavigationPolicyState& state,
                                       AppendOnlyNavigationStream& stream,
                                       const Logger& logger) const;
 
@@ -567,7 +591,6 @@ class TrackingVolume : public Volume {
 
   /// @}
 
- private:
   /// The volume based material the TrackingVolume consists of
   std::shared_ptr<const IVolumeMaterial> m_volumeMaterial{nullptr};
 

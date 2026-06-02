@@ -8,10 +8,8 @@
 
 #pragma once
 
-#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-
-#include <sstream>
 
 namespace Acts {
 
@@ -43,7 +41,7 @@ struct SurfaceSelector {
     if (selectSensitive && surface.isSensitive()) {
       return true;
     }
-    if (selectMaterial && surface.surfaceMaterial() != nullptr) {
+    if (selectMaterial && surface.hasMaterial()) {
       return true;
     }
     if (selectPassive) {
@@ -99,6 +97,7 @@ struct SurfaceCollector {
   /// @param [in] navigator The navigator in use
   /// @param [in,out] result is the mutable result object
   /// @param logger a logger instance
+  /// @return Result indicating success or failure
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,

@@ -21,8 +21,8 @@ namespace Acts {
 namespace detail_tpc {
 using ParametersMap = Eigen::Map<BoundVector>;
 using ConstParametersMap = Eigen::Map<const BoundVector>;
-using CovarianceMap = Eigen::Map<BoundSquareMatrix>;
-using ConstCovarianceMap = Eigen::Map<const BoundSquareMatrix>;
+using CovarianceMap = Eigen::Map<BoundMatrix>;
+using ConstCovarianceMap = Eigen::Map<const BoundMatrix>;
 
 constexpr HashedString kConceptKey = hashString("TrackProxyConceptKey");
 }  // namespace detail_tpc

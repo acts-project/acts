@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Alignment.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -23,8 +23,16 @@
 namespace ActsAlignment {
 
 using AlignedTransformUpdater =
-    std::function<bool(Acts::DetectorElementBase*, const Acts::GeometryContext&,
-                       const Acts::Transform3&)>;
+    std::function<bool(Acts::SurfacePlacementBase*,
+                       const Acts::GeometryContext&, const Acts::Transform3&)>;
+
+template <typename Updater>
+concept AlignedTransformUpdaterConcept =
+    requires(Updater updater, Acts::SurfacePlacementBase* detElem,
+             const Acts::GeometryContext& ctx, const Acts::Transform3& trf) {
+      { updater(detElem, ctx, trf) } -> std::same_as<bool>;
+    };
+
 ///
 /// @brief Options for align() call
 ///
@@ -46,7 +54,7 @@ struct AlignmentOptions {
   AlignmentOptions(
       const fit_options_t& fOptions,
       const AlignedTransformUpdater& aTransformUpdater,
-      const std::vector<Acts::DetectorElementBase*>& aDetElements = {},
+      const std::vector<Acts::SurfacePlacementBase*>& aDetElements = {},
       double chi2CutOff = 0.5,
       const std::pair<std::size_t, double>& deltaChi2CutOff = {5, 0.01},
       std::size_t maxIters = 5,
@@ -66,7 +74,7 @@ struct AlignmentOptions {
   AlignedTransformUpdater alignedTransformUpdater = nullptr;
 
   // The detector elements to be aligned
-  std::vector<Acts::DetectorElementBase*> alignedDetElements;
+  std::vector<Acts::SurfacePlacementBase*> alignedDetElements;
 
   // The alignment tolerance to determine if the alignment is covered
   double averageChi2ONdfCutOff = 0.5;
@@ -86,14 +94,18 @@ struct AlignmentOptions {
 ///
 struct AlignmentResult {
   // The change of alignment parameters
-  Acts::ActsDynamicVector deltaAlignmentParameters;
+  Acts::DynamicVector deltaAlignmentParameters;
 
   // The aligned parameters for detector elements
-  std::unordered_map<Acts::DetectorElementBase*, Acts::Transform3>
+  std::unordered_map<Acts::SurfacePlacementBase*, Acts::Transform3>
       alignedParameters;
 
   // The covariance of alignment parameters
-  Acts::ActsDynamicMatrix alignmentCovariance;
+  Acts::DynamicMatrix alignmentCovariance;
+
+  // The matrix and vector defining the normal equations
+  Acts::DynamicVector sumChi2Derivative;
+  Acts::DynamicMatrix sumChi2SecondDerivative;
 
   // The average chi2/ndf (ndf is the measurement dim)
   double averageChi2ONdf = std::numeric_limits<double>::max();
@@ -182,6 +194,19 @@ struct Alignment {
       const fit_options_t& fitOptions, AlignmentResult& alignResult,
       const AlignmentMask& alignMask = AlignmentMask::All) const;
 
+  /// @brief calculate the alignment parameters delta from a set of
+  /// TrackAlignmentStates
+  ///
+  /// @param TrackStateCollection The collection of TrackAlignmentStates
+  /// as input of fitting
+  /// @param alignResult [in, out] The aligned result
+  /// @param alignMask The alignment mask (same for all measurements now)
+  /// @param performDecomposition Perform a decomposition of the
+  /// second derivative matrix and write eigenvectors/values to a file.
+  void calculateAlignmentParameters(
+      const std::vector<detail::TrackAlignmentState>& trackAlignmentStates,
+      AlignmentResult& alignResult) const;
+
   /// @brief update the detector element alignment parameters
   ///
   /// @param gctx The geometry context
@@ -190,8 +215,8 @@ struct Alignment {
   /// @param alignResult [in, out] The aligned result
   Acts::Result<void> updateAlignmentParameters(
       const Acts::GeometryContext& gctx,
-      const std::vector<Acts::DetectorElementBase*>& alignedDetElements,
-      const AlignedTransformUpdater& alignedTransformUpdater,
+      const std::vector<Acts::SurfacePlacementBase*>& alignedDetElements,
+      const AlignedTransformUpdaterConcept auto& alignedTransformUpdater,
       AlignmentResult& alignResult) const;
 
   /// @brief Alignment implementation
@@ -213,6 +238,15 @@ struct Alignment {
       const trajectory_container_t& trajectoryCollection,
       const start_parameters_container_t& startParametersCollection,
       const AlignmentOptions<fit_options_t>& alignOptions) const;
+
+  /// @brief perform decomposition analysis. Extracts eigenvectors and
+  /// writes them, sorted by ascending eigenvalue, in a format consistent
+  /// with the Millepede-II SVD solver for problem analysis.
+  /// @param res Alignment result that has already been processed
+  /// by calculateAlignmentParameters
+  /// @param out output stream to write to.
+  /// @return The condition number of the second derivative matrix or -1 in case of error
+  double decompositionAnalysis(const AlignmentResult& res, std::ostream& out);
 
  private:
   // The fitter

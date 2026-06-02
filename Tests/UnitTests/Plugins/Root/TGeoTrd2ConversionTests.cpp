@@ -24,7 +24,6 @@
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -70,7 +69,7 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_xz_to_PlaneSurface) {
   gGeoManager->CloseGeometry();
 
   // Check the 4 possible ways
-  std::vector<std::string> axesTypes = {"XZ*", "xZ*", "xz*", "Xz*"};
+  std::vector<TGeoAxes> axesTypes = {"XZY", "xZY", "xzY", "XzY"};
 
   std::size_t itrd = 0;
   for (const auto &axes : axesTypes) {
@@ -108,7 +107,7 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_xz_to_PlaneSurface) {
   objVis.write("TGeoConversion_TGeoTrd2_xz_PlaneSurface");
 
   // Check exceptions for not allowed axis definition
-  std::vector<std::string> notAllowed = {"XY*", "xy*", "Xy*", "xY*"};
+  std::vector<TGeoAxes> notAllowed = {"XYZ", "xyZ", "XyZ", "xYZ"};
   for (const auto &naxis : notAllowed) {
     BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(*vol->GetShape(),
                                                       *gGeoIdentity, naxis, 1),
@@ -137,7 +136,7 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_yz_to_PlaneSurface) {
   gGeoManager->CloseGeometry();
 
   // Check the 4 possible ways
-  std::vector<std::string> axesTypes = {"YZ*", "yZ*", "yz*", "Yz*"};
+  std::vector<TGeoAxes> axesTypes = {"YZX", "yZX", "yzX", "YzX"};
 
   std::size_t itrd = 0;
   for (const auto &axes : axesTypes) {
@@ -175,7 +174,7 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_yz_to_PlaneSurface) {
   objVis.write("TGeoConversion_TGeoTrd2_yz_PlaneSurface");
 
   // Check exceptions for not allowed axis definition
-  std::vector<std::string> notAllowed = {"YX*", "yx*", "yX*", "Yx*"};
+  std::vector<TGeoAxes> notAllowed = {"YXZ", "yxZ", "yXZ", "YxZ"};
   for (const auto &naxis : notAllowed) {
     BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(*vol->GetShape(),
                                                       *gGeoIdentity, naxis, 1),

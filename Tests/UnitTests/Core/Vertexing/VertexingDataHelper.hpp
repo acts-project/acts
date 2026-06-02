@@ -22,7 +22,7 @@ namespace ActsTests {
 using namespace Acts;
 
 using namespace Acts::UnitLiterals;
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 enum VertexCsvData { BeamSpotData, VerticesData, TracksData };
 

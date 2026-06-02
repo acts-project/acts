@@ -20,6 +20,7 @@ acts_add_library(
     src/JsonSurfacesReader.cpp
     src/DefinitionsJsonConverter.cpp
     src/Seeding2ConfigJsonConverter.cpp
+    src/TrackingGeometryJsonConverter.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
@@ -39,3 +40,5 @@ target_compile_definitions(
     ActsPluginJson
     PRIVATE JSON_DISABLE_ENUM_SERIALIZATION=1
 )
+
+acts_compile_headers(PluginJson GLOB include/**/*.hpp)

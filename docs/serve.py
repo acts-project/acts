@@ -21,7 +21,6 @@ import typer
 from rich.console import Console
 from rich.logging import RichHandler
 
-
 logger = logging.getLogger("docs.serve")
 
 app = typer.Typer()

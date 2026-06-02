@@ -9,7 +9,7 @@
 #pragma once
 
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <string>
@@ -21,10 +21,10 @@ namespace ActsExamples {
 class CsvProtoTrackWriter final : public WriterT<ProtoTrackContainer> {
  public:
   struct Config {
-    /// Which prototracks to write
-    std::string inputPrototracks;
-    /// Spacepoint collection
-    std::string inputSpacepoints;
+    /// Which proto tracks to write
+    std::string inputProtoTracks;
+    /// Space point collection
+    std::string inputSpacePoints;
     /// Output directory
     std::string outputDir;
     /// Number of decimal digits for floating point precision in output.
@@ -57,8 +57,8 @@ class CsvProtoTrackWriter final : public WriterT<ProtoTrackContainer> {
  private:
   Config m_cfg;
 
-  ReadDataHandle<SimSpacePointContainer> m_inputSpacepoints{this,
-                                                            "inputSpacepoints"};
+  ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
+                                                         "inputSpacePoints"};
 };
 
 }  // namespace ActsExamples

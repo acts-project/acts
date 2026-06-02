@@ -47,7 +47,7 @@ bool CylinderBounds::inside(const Vector2& lposition) const {
   }
 
   double radius = get(eR);
-  // Beleved sides will unwrap to a trapezoid
+  // Bevelled sides will unwrap to a trapezoid
   ///////////////////////////////////
   //  ________
   // /| .  . |\ r/phi

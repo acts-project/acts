@@ -9,11 +9,12 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStateProxyConcept.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
@@ -67,11 +68,7 @@ Result<typename track_proxy_t::ConstTrackStateProxy> findFirstMeasurementState(
   std::optional<TrackStateProxy> firstMeasurementOpt;
 
   for (const auto &trackState : track.trackStatesReversed()) {
-    bool isMeasurement =
-        trackState.typeFlags().test(TrackStateFlag::MeasurementFlag);
-    bool isOutlier = trackState.typeFlags().test(TrackStateFlag::OutlierFlag);
-
-    if (isMeasurement && !isOutlier) {
+    if (trackState.typeFlags().isMeasurement()) {
       firstMeasurementOpt = trackState;
     }
   }
@@ -93,11 +90,7 @@ Result<typename track_proxy_t::ConstTrackStateProxy> findLastMeasurementState(
   using TrackStateProxy = typename track_proxy_t::ConstTrackStateProxy;
 
   for (const auto &trackState : track.trackStatesReversed()) {
-    bool isMeasurement =
-        trackState.typeFlags().test(TrackStateFlag::MeasurementFlag);
-    bool isOutlier = trackState.typeFlags().test(TrackStateFlag::OutlierFlag);
-
-    if (isMeasurement && !isOutlier) {
+    if (trackState.typeFlags().isMeasurement()) {
       return TrackStateProxy{trackState};
     }
   }
@@ -334,8 +327,7 @@ Result<void> extrapolateTrackToReferenceSurface(
                << " with starting parameters " << parameters);
 
   auto propagateResult =
-      propagator.template propagate<BoundTrackParameters, propagator_options_t,
-                                    ForcedSurfaceReached>(
+      propagator.template propagate<propagator_options_t, ForcedSurfaceReached>(
           parameters, referenceSurface, options);
 
   if (!propagateResult.ok()) {
@@ -405,14 +397,14 @@ void calculateTrackQuantities(track_proxy_t track)
   track.nOutliers() = 0;
 
   for (const auto &trackState : track.trackStatesReversed()) {
-    ConstTrackStateType typeFlags = trackState.typeFlags();
+    ConstTrackStateTypeMap typeFlags = trackState.typeFlags();
 
-    if (typeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
+    if (typeFlags.isHole()) {
       track.nHoles()++;
-    } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
+    } else if (typeFlags.isOutlier()) {
       track.nOutliers()++;
-    } else if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
-      if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
+    } else if (typeFlags.isMeasurement()) {
+      if (typeFlags.isSharedHit()) {
         track.nSharedHits()++;
       }
       track.nMeasurements()++;
@@ -441,14 +433,12 @@ void trimTrackFront(track_proxy_t track, bool trimHoles, bool trimOutliers,
   std::optional<TrackStateProxy> front;
 
   for (TrackStateProxy trackState : track.trackStatesReversed()) {
-    TrackStateType typeFlags = trackState.typeFlags();
-    bool isHole = typeFlags.test(TrackStateFlag::HoleFlag);
-    bool isOutlier = typeFlags.test(TrackStateFlag::OutlierFlag);
-    bool isMaterial = typeFlags.test(TrackStateFlag::MaterialFlag) &&
-                      !typeFlags.test(TrackStateFlag::MeasurementFlag);
+    TrackStateTypeMap typeFlags = trackState.typeFlags();
+    bool isHole = typeFlags.isHole();
+    bool isOutlier = typeFlags.isOutlier();
+    bool isMaterial = typeFlags.isMaterial();
     bool isOtherNoneMeasurement =
-        !typeFlags.test(TrackStateFlag::MeasurementFlag) && !isHole &&
-        !isOutlier && !isMaterial;
+        !typeFlags.hasMeasurement() && !isHole && !isOutlier && !isMaterial;
     if (trimHoles && isHole) {
       continue;
     }
@@ -489,14 +479,12 @@ void trimTrackBack(track_proxy_t track, bool trimHoles, bool trimOutliers,
   for (TrackStateProxy trackState : track.trackStatesReversed()) {
     back = trackState;
 
-    TrackStateType typeFlags = trackState.typeFlags();
-    bool isHole = typeFlags.test(TrackStateFlag::HoleFlag);
-    bool isOutlier = typeFlags.test(TrackStateFlag::OutlierFlag);
-    bool isMaterial = typeFlags.test(TrackStateFlag::MaterialFlag) &&
-                      !typeFlags.test(TrackStateFlag::MeasurementFlag);
+    TrackStateTypeMap typeFlags = trackState.typeFlags();
+    bool isHole = typeFlags.isHole();
+    bool isOutlier = typeFlags.isOutlier();
+    bool isMaterial = typeFlags.isMaterial();
     bool isOtherNoneMeasurement =
-        !typeFlags.test(TrackStateFlag::MeasurementFlag) && !isHole &&
-        !isOutlier && !isMaterial;
+        !typeFlags.hasMeasurement() && !isHole && !isOutlier && !isMaterial;
     if (trimHoles && isHole) {
       continue;
     }
@@ -543,10 +531,10 @@ void trimTrack(track_proxy_t track, bool trimHoles, bool trimOutliers,
 /// @return a pair of the residual and its covariance
 template <std::size_t nMeasurementDim,
           TrackStateProxyConcept track_state_proxy_t>
-std::pair<ActsVector<nMeasurementDim>, ActsSquareMatrix<nMeasurementDim>>
+std::pair<Vector<nMeasurementDim>, SquareMatrix<nMeasurementDim>>
 calculatePredictedResidual(track_state_proxy_t trackState) {
-  using MeasurementVector = ActsVector<nMeasurementDim>;
-  using MeasurementMatrix = ActsSquareMatrix<nMeasurementDim>;
+  using MeasurementVector = Vector<nMeasurementDim>;
+  using MeasurementMatrix = SquareMatrix<nMeasurementDim>;
 
   if (!trackState.hasPredicted()) {
     throw std::invalid_argument("track state has no predicted parameters");
@@ -580,10 +568,10 @@ calculatePredictedResidual(track_state_proxy_t trackState) {
 /// @return a pair of the residual and its covariance
 template <std::size_t nMeasurementDim,
           TrackStateProxyConcept track_state_proxy_t>
-std::pair<ActsVector<nMeasurementDim>, ActsSquareMatrix<nMeasurementDim>>
+std::pair<Vector<nMeasurementDim>, SquareMatrix<nMeasurementDim>>
 calculateFilteredResidual(track_state_proxy_t trackState) {
-  using MeasurementVector = ActsVector<nMeasurementDim>;
-  using MeasurementMatrix = ActsSquareMatrix<nMeasurementDim>;
+  using MeasurementVector = Vector<nMeasurementDim>;
+  using MeasurementMatrix = SquareMatrix<nMeasurementDim>;
 
   if (!trackState.hasFiltered()) {
     throw std::invalid_argument("track state has no filtered parameters");
@@ -617,10 +605,10 @@ calculateFilteredResidual(track_state_proxy_t trackState) {
 /// @return a pair of the residual and its covariance
 template <std::size_t nMeasurementDim,
           TrackStateProxyConcept track_state_proxy_t>
-std::pair<ActsVector<nMeasurementDim>, ActsSquareMatrix<nMeasurementDim>>
+std::pair<Vector<nMeasurementDim>, SquareMatrix<nMeasurementDim>>
 calculateSmoothedResidual(track_state_proxy_t trackState) {
-  using MeasurementVector = ActsVector<nMeasurementDim>;
-  using MeasurementMatrix = ActsSquareMatrix<nMeasurementDim>;
+  using MeasurementVector = Vector<nMeasurementDim>;
+  using MeasurementMatrix = SquareMatrix<nMeasurementDim>;
 
   if (!trackState.hasSmoothed()) {
     throw std::invalid_argument("track state has no smoothed parameters");

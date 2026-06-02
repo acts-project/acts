@@ -15,7 +15,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
-#include <memory>
+#include <format>
 #include <vector>
 
 using namespace Acts;
@@ -237,6 +237,28 @@ BOOST_AUTO_TEST_CASE(hough_transform_sliding_window) {
     BOOST_CHECK_EQUAL_COLLECTIONS(img.begin(), img.end(), expected.begin(),
                                   expected.end());
   }
+}
+
+BOOST_AUTO_TEST_CASE(hough_plane_layers_hits) {
+  // Create 1x1 Hough plane and fill it with hits. For each layer add one more
+  // hit than to the previous one.
+
+  const std::size_t nX = 1;
+  const std::size_t nY = 1;
+  HoughTransformUtils::HoughPlaneConfig config{nX, nY};
+  HoughTransformUtils::HoughPlane<std::uint8_t> plane(config);
+
+  std::uint8_t nHits = 0;
+  static constexpr std::uint8_t nLayers = 10;
+  for (std::uint8_t layer = 1; layer <= nLayers; ++layer) {
+    // Add hits equal to the layer number
+    for (std::uint8_t hit = 0; hit < layer; ++hit) {
+      plane.fillBin(0, 0, nHits++, layer);
+    }
+  }
+
+  BOOST_CHECK_EQUAL(nLayers, plane.nLayers(0, 0));
+  BOOST_CHECK_EQUAL(nHits, plane.nHits(0, 0));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

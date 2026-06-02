@@ -24,7 +24,6 @@
 
 namespace Acts {
 
-class DetectorElementBase;
 class PlanarBounds;
 class SurfaceBounds;
 
@@ -54,12 +53,17 @@ class PlaneSurface : public RegularSurface {
   PlaneSurface(const GeometryContext& gctx, const PlaneSurface& other,
                const Transform3& transform);
 
-  /// Constructor from DetectorElementBase : Element proxy
+  /// Constructor from SurfacePlacementBase : Element proxy
   ///
   /// @param pbounds are the provided planar bounds
-  /// @param detelement is the linked detector element to this surface
+  /// @param placement Reference to the surface placement
+  /// @note The Surface does not take any ownership over the
+  ///       `SurfacePlacementBase` it is expected that the user
+  ///        ensures the life-time of the `SurfacePlacementBase`
+  ///        and that the `Surface` is actually owned by
+  ///        the `SurfacePlacementBase` instance
   PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
-               const DetectorElementBase& detelement);
+               const SurfacePlacementBase& placement);
 
   /// Constructor for Planes with (optional) shared bounds object
   ///
@@ -112,6 +116,18 @@ class PlaneSurface : public RegularSurface {
   Vector3 referencePosition(const GeometryContext& gctx,
                             AxisDirection aDir) const final;
 
+  using Surface::referenceFrame;
+
+  /// Return method for the reference frame
+  /// This is the frame in which the covariance matrix is defined (specialized
+  /// by all surfaces)
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  ///
+  /// @return RotationMatrix3 which defines the three axes of the measurement
+  /// frame
+  RotationMatrix3 referenceFrame(const GeometryContext& gctx) const;
+
   /// Return the surface type
   /// @return Surface type identifier
   SurfaceType type() const override;
@@ -120,6 +136,7 @@ class PlaneSurface : public RegularSurface {
   /// @return Reference to the surface bounds
   const SurfaceBounds& bounds() const override;
   /// This method returns the shared_ptr to the DiscBounds
+  /// @return Shared pointer to the planar bounds
   const std::shared_ptr<const PlanarBounds>& boundsPtr() const;
   /// Overwrite the existing surface bounds with new ones
   /// @param newBounds: Pointer to the new bounds
@@ -221,7 +238,7 @@ class PlaneSurface : public RegularSurface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
+  Matrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const final;
 
   /// Merge two plane surfaces into a single one.
@@ -242,7 +259,10 @@ class PlaneSurface : public RegularSurface {
   /// the bounds of this surface
   std::shared_ptr<const PlanarBounds> m_bounds;
 
- private:
+  /// @copydoc Surface::localAxes
+  std::array<AxisDirection, 2> localAxes() const override {
+    return {AxisDirection::AxisX, AxisDirection::AxisY};
+  }
 };
 
 static_assert(RegularSurfaceConcept<PlaneSurface>,

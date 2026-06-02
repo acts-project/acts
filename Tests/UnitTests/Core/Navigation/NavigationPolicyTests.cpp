@@ -44,6 +44,7 @@ struct APolicy : public INavigationPolicy {
 
   void initializeCandidates(const GeometryContext& /*unused*/,
                             const NavigationArguments& /*unused*/,
+                            NavigationPolicyState& /*unused*/,
                             AppendOnlyNavigationStream& /*unused*/,
                             const Logger& /*unused*/) const {
     const_cast<APolicy*>(this)->executed = true;
@@ -71,6 +72,7 @@ struct BPolicy : public INavigationPolicy {
 
   void initializeCandidates(const GeometryContext& /*unused*/,
                             const NavigationArguments& /*unused*/,
+                            NavigationPolicyState& /*unused*/,
                             AppendOnlyNavigationStream& /*unused*/,
                             const Logger& /*unused*/) const {
     const_cast<BPolicy*>(this)->executed = true;
@@ -99,10 +101,13 @@ BOOST_AUTO_TEST_CASE(DirectTest) {
 
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
-  delegate(gctx,
-           NavigationArguments{.position = Vector3::Zero(),
-                               .direction = Vector3::Zero()},
-           stream, *logger);
+  NavigationArguments args{.position = Vector3::Zero(),
+                           .direction = Vector3::Zero()};
+  NavigationPolicyStateManager stateManager;
+  stateManager.pushState<MultiNavigationPolicy::State>();
+  policy.createState(gctx, args, stateManager, *logger);
+  auto policyState = stateManager.currentState();
+  delegate(gctx, args, policyState, stream, *logger);
 
   BOOST_REQUIRE_EQUAL(policy.policies().size(), 2);
   const auto& policyA = dynamic_cast<const APolicy&>(*policy.policies()[0]);
@@ -137,10 +142,13 @@ BOOST_AUTO_TEST_CASE(FactoryTest) {
 
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
-  delegate(gctx,
-           NavigationArguments{.position = Vector3::Zero(),
-                               .direction = Vector3::Zero()},
-           stream, *logger);
+  NavigationArguments args{.position = Vector3::Zero(),
+                           .direction = Vector3::Zero()};
+  NavigationPolicyStateManager stateManager;
+  stateManager.pushState<MultiNavigationPolicy::State>();
+  policy.createState(gctx, args, stateManager, *logger);
+  auto policyState = stateManager.currentState();
+  delegate(gctx, args, policyState, stream, *logger);
 
   BOOST_REQUIRE_EQUAL(policy.policies().size(), 2);
   const auto& policyA = dynamic_cast<const APolicy&>(*policy.policies()[0]);
@@ -155,10 +163,11 @@ BOOST_AUTO_TEST_CASE(FactoryTest) {
   NavigationDelegate delegate2;
   policyBase2->connect(delegate2);
 
-  delegate2(gctx,
-            NavigationArguments{.position = Vector3::Zero(),
-                                .direction = Vector3::Zero()},
-            stream, *logger);
+  NavigationPolicyStateManager stateManager2;
+  stateManager2.pushState<MultiNavigationPolicy::State>();
+  policy2.createState(gctx, args, stateManager2, *logger);
+  auto policyState2 = stateManager2.currentState();
+  delegate2(gctx, args, policyState2, stream, *logger);
 
   BOOST_REQUIRE_EQUAL(policy2.policies().size(), 2);
   const auto& policy2A = dynamic_cast<const APolicy&>(*policy2.policies()[0]);
@@ -186,10 +195,13 @@ BOOST_AUTO_TEST_CASE(AsUniquePtrTest) {
 
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
-  delegate(gctx,
-           NavigationArguments{.position = Vector3::Zero(),
-                               .direction = Vector3::Zero()},
-           stream, *logger);
+  NavigationArguments args{.position = Vector3::Zero(),
+                           .direction = Vector3::Zero()};
+  NavigationPolicyStateManager stateManager;
+  stateManager.pushState<MultiNavigationPolicy::State>();
+  policy.createState(gctx, args, stateManager, *logger);
+  auto policyState = stateManager.currentState();
+  delegate(gctx, args, policyState, stream, *logger);
 
   BOOST_REQUIRE_EQUAL(policy.policies().size(), 1);
   BOOST_CHECK(dynamic_cast<const APolicy&>(*policy.policies()[0]).executed);
@@ -212,6 +224,7 @@ struct CPolicySpecialized : public CPolicy {
 
   void initializeCandidates(const GeometryContext& /*unused*/,
                             const NavigationArguments& /*unused*/,
+                            NavigationPolicyState& /*unused*/,
                             AppendOnlyNavigationStream& /*stream*/,
                             const Logger& /*logger*/) const {
     auto* self = const_cast<CPolicySpecialized<int>*>(this);
@@ -257,10 +270,13 @@ BOOST_AUTO_TEST_CASE(IsolatedFactory) {
 
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
-  delegate(gctx,
-           NavigationArguments{.position = Vector3::Zero(),
-                               .direction = Vector3::Zero()},
-           stream, *logger);
+  NavigationArguments args{.position = Vector3::Zero(),
+                           .direction = Vector3::Zero()};
+  NavigationPolicyStateManager stateManager;
+  stateManager.pushState<MultiNavigationPolicy::State>();
+  policy.createState(gctx, args, stateManager, *logger);
+  auto policyState = stateManager.currentState();
+  delegate(gctx, args, policyState, stream, *logger);
 
   BOOST_REQUIRE_EQUAL(policy.policies().size(), 2);
 
@@ -288,7 +304,10 @@ std::vector<const Portal*> getTruth(const Vector3& position,
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
   auto gctx = GeometryContext::dangerouslyDefaultConstruct();
-  tryAll.initializeCandidates(gctx, args, stream, logger);
+  NavigationPolicyStateManager stateManager;
+  tryAll.createState(gctx, args, stateManager, logger);
+  auto policyState = stateManager.currentState();
+  tryAll.initializeCandidates(gctx, args, policyState, stream, logger);
   main.initialize(gctx, {gpos, gdir}, BoundaryTolerance::None());
   std::vector<const Portal*> portals;
   for (auto& candidate : main.candidates()) {
@@ -372,7 +391,10 @@ std::vector<const Portal*> getSmart(const Vector3& position,
   NavigationStream main;
   auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   AppendOnlyNavigationStream stream{main};
-  policy.initializeCandidates(gctx, args, stream, *logger);
+  NavigationPolicyStateManager stateManager;
+  policy.createState(gctx, args, stateManager, *logger);
+  auto policyState = stateManager.currentState();
+  policy.initializeCandidates(gctx, args, policyState, stream, *logger);
 
   std::vector<const Portal*> portals;
   // We don't filter here, because we want to test the candidates as they come
@@ -443,7 +465,7 @@ BOOST_DATA_TEST_CASE(
       std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm);
   auto cylVolume =
       std::make_shared<TrackingVolume>(transform, cylBounds, "CylinderVolume");
-  SingleCylinderPortalShell shell{*cylVolume};
+  SingleCylinderPortalShell shell{gctx, *cylVolume};
   shell.applyToVolume();
 
   {
@@ -694,7 +716,7 @@ BOOST_DATA_TEST_CASE(
       std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm);
   auto cylVolume =
       std::make_shared<TrackingVolume>(transform, cylBounds, "CylinderVolume");
-  SingleCylinderPortalShell shell{*cylVolume};
+  SingleCylinderPortalShell shell{gctx, *cylVolume};
   shell.applyToVolume();
 
   Vector3 position{r * std::cos(phiPos), r * std::sin(phiPos), z};
@@ -731,7 +753,7 @@ BOOST_DATA_TEST_CASE(
       std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm);
   auto cylVolume =
       std::make_shared<TrackingVolume>(transform, cylBounds, "CylinderVolume");
-  SingleCylinderPortalShell shell{*cylVolume};
+  SingleCylinderPortalShell shell{gctx, *cylVolume};
   shell.applyToVolume();
 
   Vector3 position{r * std::cos(phiPos), r * std::sin(phiPos), z};
@@ -765,7 +787,7 @@ BOOST_DATA_TEST_CASE(
       std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm);
   auto cylVolume =
       std::make_shared<TrackingVolume>(transform, cylBounds, "CylinderVolume");
-  SingleCylinderPortalShell shell{*cylVolume};
+  SingleCylinderPortalShell shell{gctx, *cylVolume};
   shell.applyToVolume();
 
   Vector3 position{r * std::cos(phiPos), r * std::sin(phiPos),

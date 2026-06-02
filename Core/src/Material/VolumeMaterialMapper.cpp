@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -177,7 +176,7 @@ void VolumeMaterialMapper::collectMaterialSurfaces(
   ACTS_VERBOSE("- boundary surfaces ...");
   // Check the boundary surfaces
   for (auto& bSurface : tVolume.boundarySurfaces()) {
-    if (bSurface->surfaceRepresentation().surfaceMaterial() != nullptr) {
+    if (bSurface->surfaceRepresentation().hasMaterial()) {
       mState.surfaceMaterial[bSurface->surfaceRepresentation().geometryId()] =
           bSurface->surfaceRepresentation().surfaceMaterialSharedPtr();
     }
@@ -193,7 +192,7 @@ void VolumeMaterialMapper::collectMaterialSurfaces(
       }
 
       // Check the representing surface
-      if (cLayer->surfaceRepresentation().surfaceMaterial() != nullptr) {
+      if (cLayer->surfaceRepresentation().hasMaterial()) {
         mState.surfaceMaterial[cLayer->surfaceRepresentation().geometryId()] =
             cLayer->surfaceRepresentation().surfaceMaterialSharedPtr();
       }
@@ -202,7 +201,7 @@ void VolumeMaterialMapper::collectMaterialSurfaces(
       if (cLayer->approachDescriptor() != nullptr) {
         for (auto& aSurface :
              cLayer->approachDescriptor()->containedSurfaces()) {
-          if (aSurface != nullptr && aSurface->surfaceMaterial() != nullptr) {
+          if (aSurface != nullptr && aSurface->hasMaterial()) {
             mState.surfaceMaterial[aSurface->geometryId()] =
                 aSurface->surfaceMaterialSharedPtr();
           }
@@ -213,7 +212,7 @@ void VolumeMaterialMapper::collectMaterialSurfaces(
       if (cLayer->surfaceArray() != nullptr) {
         // Sensitive surface loop
         for (auto& sSurface : cLayer->surfaceArray()->surfaces()) {
-          if (sSurface != nullptr && sSurface->surfaceMaterial() != nullptr) {
+          if (sSurface != nullptr && sSurface->hasMaterial()) {
             mState.surfaceMaterial[sSurface->geometryId()] =
                 sSurface->surfaceMaterialSharedPtr();
           }
@@ -351,16 +350,15 @@ void VolumeMaterialMapper::finalizeMaps(State& mState) const {
   }
 }
 
-void VolumeMaterialMapper::mapMaterialTrack(
+Result<void> VolumeMaterialMapper::mapMaterialTrack(
     State& mState, RecordedMaterialTrack& mTrack) const {
   using VectorHelpers::makeVector4;
 
   // Neutral curvilinear parameters
-  NeutralBoundTrackParameters start =
-      NeutralBoundTrackParameters::createCurvilinear(
-          makeVector4(mTrack.first.first, 0), mTrack.first.second,
-          1 / mTrack.first.second.norm(), std::nullopt,
-          NeutralParticleHypothesis::geantino());
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      makeVector4(mTrack.first.first, 0), mTrack.first.second,
+      1 / mTrack.first.second.norm(), std::nullopt,
+      ParticleHypothesis::geantino());
 
   // Prepare Action list and abort list
   using BoundSurfaceCollector = SurfaceCollector<BoundSurfaceSelector>;
@@ -372,9 +370,16 @@ void VolumeMaterialMapper::mapMaterialTrack(
                                                       mState.magFieldContext);
 
   // Now collect the material volume by using the straight line propagator
-  const auto& result = m_propagator.propagate(start, options).value();
-  auto mcResult = result.get<BoundSurfaceCollector::result_type>();
-  auto mvcResult = result.get<MaterialVolumeCollector::result_type>();
+  const auto& result = m_propagator.propagate(start, options);
+  if (!result.ok()) {
+    ACTS_DEBUG("Encountered a propagator error for initial parameters:");
+    ACTS_DEBUG(" - Position: " << mTrack.first.first.transpose());
+    ACTS_DEBUG(" - Momentum: " << mTrack.first.second.transpose());
+    return result.error();
+  }
+
+  auto mcResult = result.value().get<BoundSurfaceCollector::result_type>();
+  auto mvcResult = result.value().get<MaterialVolumeCollector::result_type>();
 
   auto mappingSurfaces = mcResult.collected;
   auto mappingVolumes = mvcResult.collected;
@@ -498,6 +503,8 @@ void VolumeMaterialMapper::mapMaterialTrack(
     }
     ++rmIter;
   }
+
+  return Result<void>::success();
 }
 
 }  // namespace Acts

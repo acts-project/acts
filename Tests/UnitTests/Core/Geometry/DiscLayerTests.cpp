@@ -56,10 +56,9 @@ BOOST_AUTO_TEST_CASE(DiscLayerConstruction) {
   // construct with thickness:
   auto pDiscLayerWithThickness =
       DiscLayer::create(pTransform, pDisc, nullptr, thickness);
-  BOOST_CHECK_EQUAL(pDiscLayerWithThickness->thickness(), thickness);
+  BOOST_CHECK_EQUAL(pDiscLayerWithThickness->layerThickness(), thickness);
   // with an approach descriptor...
-  std::unique_ptr<ApproachDescriptor> ad(
-      new GenericApproachDescriptor(aSurfaces));
+  auto ad(std::make_unique<GenericApproachDescriptor>(aSurfaces));
   auto adPtr = ad.get();
   auto pDiscLayerWithApproachDescriptor =
       DiscLayer::create(pTransform, pDisc, nullptr, thickness, std::move(ad));

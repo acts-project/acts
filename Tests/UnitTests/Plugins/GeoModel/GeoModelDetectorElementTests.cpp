@@ -36,8 +36,10 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorElementConstruction) {
   auto rBounds = std::make_shared<RectangleBounds>(100, 200);
 
   PVConstLink physXY{fphysXY};
-  auto elementXY = GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
-      physXY, rBounds, Transform3::Identity(), 2.0);
+  auto elementXY =
+      GeoModelDetectorElement::createDetectorElement<PlaneSurface,
+                                                     RectangleBounds>(
+          physXY, rBounds, Transform3::Identity(), 2.0);
 
   const Surface& surface = elementXY->surface();
   BOOST_CHECK(surface.type() == Surface::SurfaceType::Plane);

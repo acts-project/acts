@@ -10,8 +10,6 @@
 
 #include "Acts/Geometry/TrackingVolume.hpp"
 
-#include <sstream>
-
 namespace Acts {
 
 /// Simple struct to select volumes
@@ -39,7 +37,7 @@ struct VolumeSelector {
   /// @param volume is the test volume
   /// @return true if volume meets selection criteria
   bool operator()(const Acts::TrackingVolume& volume) const {
-    if (selectMaterial && volume.volumeMaterial() != nullptr) {
+    if (selectMaterial && volume.hasMaterial()) {
       return true;
     }
     if (selectLayer && volume.confinedLayers() != nullptr) {
@@ -98,6 +96,7 @@ struct VolumeCollector {
   /// @param [in] navigator The navigator in use
   /// @param [in,out] result is the mutable result object
   /// @param logger the logger object
+  /// @return Result of the action
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,

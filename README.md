@@ -12,7 +12,7 @@ or *A Common Tracking Software* if you do not like recursive acronyms
 ACTS is an experiment-independent toolkit for (charged) particle track
 reconstruction in (high energy) physics experiments implemented in modern C++.
 
-More information can be found in the [ACTS documentation](https://acts.readthedocs.io/).
+More information can be found in the [ACTS documentation](https://acts-project.github.io/).
 
 ## Quick start
 
@@ -34,13 +34,19 @@ guide](https://acts-project.github.io/building_acts.html). If you find a bug,
 have a feature request, or want to contribute to ACTS, have a look at the
 [contribution guidelines](CONTRIBUTING.md).
 
+### Python bindings
+
+ACTS is also available as a Python package via `pip install pyacts`. See the
+[Python bindings documentation](https://acts-project.github.io/group__python__bindings.html)
+for details.
+
 ## Versioning and public API
 
 Release versions follow [semantic versioning](https://semver.org/spec/v2.0.0.html)
 to indicate whether a new version contains breaking changes within the public API.
 Currently, only a limited part of the visible API is considered the public API
 and subject to the semantic versioning rules. The details are outlined in the
-[versioning and public API documentation](docs/versioning.rst).
+[versioning and public API documentation](docs/pages/versioning.md).
 
 ## Repository organization
 
@@ -88,3 +94,11 @@ The ACTS project contains copies of the following external packages:
 
 -   [OpenDataDetector](https://github.com/acts-project/OpenDataDetector)
     licensed under the MPLv2 license.
+
+ACTS is a collaborative open source software project, and hence does not base its
+organisational structure on (intellectual) *ownership* of certain pieces of code
+by individuals. The usage of GitHub's `CODEOWNERS` system is currently under
+evaluation primarily to identify opt-in contact persons for certain parts of the
+code base in an attempt to simplify workflows and identify information contacts
+and reviewers. A detailed description of our test usage is part of the
+`CODEOWNERS` file.

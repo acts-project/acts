@@ -55,10 +55,10 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       Transform3::Identity(),
       std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 10_mm));
 
-  BOOST_CHECK_THROW(SingleTrapezoidPortalShell{cylVolume},
+  BOOST_CHECK_THROW(SingleTrapezoidPortalShell(gctx, cylVolume),
                     std::invalid_argument);
 
-  SingleTrapezoidPortalShell trapShell{trapVol};
+  SingleTrapezoidPortalShell trapShell{gctx, trapVol};
 
   // check if the shell is valid and has the expected number of portals
   BOOST_CHECK(trapShell.isValid());
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
   // make a trapezoid volume
   auto trapVol = makeVolume(5_cm, 8_cm, 10_cm, 15_cm);
 
-  SingleTrapezoidPortalShell trapShell{trapVol};
+  SingleTrapezoidPortalShell trapShell{gctx, trapVol};
 
   // get the portal faces
   const auto nXY = trapShell.portal(NegativeZFaceXY);
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(Fill) {
 
   auto trapVol = makeVolume(5_cm, 10_cm, 10_cm, 10_cm);
 
-  SingleTrapezoidPortalShell trapShell{trapVol};
+  SingleTrapezoidPortalShell trapShell{gctx, trapVol};
 
   // without filling the shell with the volume the portal link to this direction
   // should not exist
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(ApplyToVolume) {
 
   auto trapVol = makeVolume(5_cm, 10_cm, 10_cm, 10_cm);
 
-  SingleTrapezoidPortalShell trapShell{trapVol};
+  SingleTrapezoidPortalShell trapShell{gctx, trapVol};
 
   // volume has not portals assigned yet
   BOOST_CHECK_EQUAL(trapVol.portals().size(), 0);

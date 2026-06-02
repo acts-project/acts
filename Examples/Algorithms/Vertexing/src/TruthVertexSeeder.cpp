@@ -12,17 +12,17 @@ namespace ActsExamples {
 
 TruthVertexSeeder::TruthVertexSeeder(const Config &cfg) : m_cfg(cfg) {}
 
-Acts::Result<std::vector<Acts::Vertex>> TruthVertexSeeder::find(
+Acts::Result<VertexContainer> TruthVertexSeeder::find(
     const std::vector<Acts::InputTrack> & /*trackVector*/,
     const Acts::VertexingOptions &vertexingOptions,
     Acts::IVertexFinder::State &anyState) const {
   auto &state = anyState.template as<State>();
 
   if (state.nextVertexIndex >= state.truthVertices.size()) {
-    return std::vector<Acts::Vertex>();
+    return VertexContainer();
   }
 
-  std::vector<Acts::Vertex> seeds;
+  VertexContainer seeds;
   for (std::size_t i = 0; i < m_cfg.simultaneousSeeds; ++i) {
     if (state.nextVertexIndex >= state.truthVertices.size()) {
       break;

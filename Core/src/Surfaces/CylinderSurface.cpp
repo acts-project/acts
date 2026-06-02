@@ -27,6 +27,7 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
+#include <set>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -37,14 +38,12 @@ using VectorHelpers::perp;
 using VectorHelpers::phi;
 
 CylinderSurface::CylinderSurface(const CylinderSurface& other)
-    : GeometryObject(), RegularSurface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject{}, RegularSurface(other), m_bounds(other.m_bounds) {}
 
 CylinderSurface::CylinderSurface(const GeometryContext& gctx,
                                  const CylinderSurface& other,
                                  const Transform3& shift)
-    : GeometryObject(),
-      RegularSurface(gctx, other, shift),
-      m_bounds(other.m_bounds) {}
+    : RegularSurface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
 CylinderSurface::CylinderSurface(const Transform3& transform, double radius,
                                  double halfz, double halfphi, double avphi,
@@ -54,8 +53,8 @@ CylinderSurface::CylinderSurface(const Transform3& transform, double radius,
           radius, halfz, halfphi, avphi, bevelMinZ, bevelMaxZ)) {}
 
 CylinderSurface::CylinderSurface(std::shared_ptr<const CylinderBounds> cbounds,
-                                 const DetectorElementBase& detelement)
-    : RegularSurface(detelement), m_bounds(std::move(cbounds)) {
+                                 const SurfacePlacementBase& placement)
+    : RegularSurface{placement}, m_bounds(std::move(cbounds)) {
   // surfaces representing a detector element must have bounds
   throw_assert(m_bounds, "CylinderBounds must not be nullptr");
 }
@@ -331,7 +330,7 @@ AlignmentToPathMatrix CylinderSurface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-ActsMatrix<2, 3> CylinderSurface::localCartesianToBoundLocalDerivative(
+Matrix<2, 3> CylinderSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
@@ -345,7 +344,7 @@ ActsMatrix<2, 3> CylinderSurface::localCartesianToBoundLocalDerivative(
   const double lsphi = std::sin(lphi);
   // Solve for radius R
   double R = bounds().get(CylinderBounds::eR);
-  ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Zero();
+  Matrix<2, 3> loc3DToLocBound = Matrix<2, 3>::Zero();
   loc3DToLocBound << -R * lsphi / lr, R * lcphi / lr, 0, 0, 0, 1;
 
   return loc3DToLocBound;
@@ -359,8 +358,7 @@ std::pair<std::shared_ptr<CylinderSurface>, bool> CylinderSurface::mergedWith(
   ACTS_VERBOSE("Merging cylinder surfaces in " << axisDirectionName(direction)
                                                << " direction");
 
-  if (m_associatedDetElement != nullptr ||
-      other.m_associatedDetElement != nullptr) {
+  if (isAlignable() || other.isAlignable()) {
     throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
                                   "CylinderSurface::merge: surfaces are "
                                   "associated with a detector element");
@@ -560,9 +558,61 @@ const std::shared_ptr<const CylinderBounds>& CylinderSurface::boundsPtr()
     const {
   return m_bounds;
 }
+
 void CylinderSurface::assignSurfaceBounds(
     std::shared_ptr<const CylinderBounds> newBounds) {
   m_bounds = std::move(newBounds);
+}
+
+void CylinderSurface::assignSurfaceMaterial(
+    std::shared_ptr<const ISurfaceMaterial> material) {
+  if (material != nullptr) {
+    const std::array<AxisDirection, 2> localSurfaceAxes = localAxes();
+    const std::array<AxisDirection, 2> alternativeAxes = {
+        AxisDirection::AxisPhi, AxisDirection::AxisZ};
+    const std::vector<AxisDirection>& localMaterialAxes =
+        material->localAxisDirections();
+
+    if (!std::ranges::includes(
+            std::set(localSurfaceAxes.begin(), localSurfaceAxes.end()),
+            std::set(localMaterialAxes.begin(), localMaterialAxes.end())) &&
+        !std::ranges::includes(
+            std::set(alternativeAxes.begin(), alternativeAxes.end()),
+            std::set(localMaterialAxes.begin(), localMaterialAxes.end()))) {
+      std::string errorMsg =
+          "CylinderSurface::checkSurfaceMaterial: material axis directions " +
+          axesDirectionName(localMaterialAxes) +
+          " are not supported by this surface. Supported axes are: " +
+          axesDirectionName(std::vector<AxisDirection>{
+              localSurfaceAxes.begin(), localSurfaceAxes.end()}) +
+          " or " +
+          axesDirectionName(std::vector<AxisDirection>{alternativeAxes.begin(),
+                                                       alternativeAxes.end()});
+      throw std::invalid_argument(errorMsg);
+    }
+
+    m_swapMaterialAxes = !localMaterialAxes.empty() &&
+                         localMaterialAxes[0] != localSurfaceAxes[0] &&
+                         localMaterialAxes[0] != alternativeAxes[0];
+    m_scaleMaterialAxis =
+        std::ranges::find(localMaterialAxes, AxisDirection::AxisPhi) !=
+        localMaterialAxes.end();
+  }
+
+  m_surfaceMaterial = std::move(material);
+}
+
+Vector2 CylinderSurface::transformSurfaceLocalToMaterialLocal(
+    const Vector2& surfaceLocal) const {
+  Vector2 materialLocal = surfaceLocal;
+  if (m_scaleMaterialAxis) {
+    const double r = bounds().get(CylinderBounds::eR);
+    materialLocal[0] = surfaceLocal[0] / r;
+  }
+  if (m_swapMaterialAxes) {
+    std::swap(materialLocal[0], materialLocal[1]);
+  }
+  return materialLocal;
 }
 
 }  // namespace Acts

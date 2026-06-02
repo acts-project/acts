@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Surfaces/InfiniteBounds.hpp"  //to get s_noBounds
+#include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -18,6 +18,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 
 namespace ActsTests {
+
 /// Surface derived class stub
 class SurfaceStub : public Acts::RegularSurface {
  public:
@@ -27,10 +28,8 @@ class SurfaceStub : public Acts::RegularSurface {
   SurfaceStub(const Acts::GeometryContext& gctx, const SurfaceStub& sf,
               const Acts::Transform3& transf)
       : Acts::GeometryObject(), Acts::RegularSurface(gctx, sf, transf) {}
-  explicit SurfaceStub(const Acts::DetectorElementBase& detelement)
+  explicit SurfaceStub(const Acts::SurfacePlacementBase& detelement)
       : Acts::GeometryObject(), Acts::RegularSurface(detelement) {}
-
-  ~SurfaceStub() override = default;
 
   /// Return method for the Surface type to avoid dynamic casts
   Acts::Surface::SurfaceType type() const final { return Acts::Surface::Other; }
@@ -38,12 +37,12 @@ class SurfaceStub : public Acts::RegularSurface {
   /// Return method for the normal vector of the surface
   Acts::Vector3 normal(const Acts::GeometryContext& /*gctx*/,
                        const Acts::Vector3& /*position*/) const final {
-    return Acts::Vector3{0., 0., 0.};
+    return Acts::Vector3::Zero();
   }
 
   Acts::Vector3 normal(const Acts::GeometryContext& /*gctx*/,
                        const Acts::Vector2& /*lposition*/) const final {
-    return Acts::Vector3{0., 0., 0.};
+    return Acts::Vector3::Zero();
   }
 
   using Acts::RegularSurface::normal;
@@ -57,7 +56,7 @@ class SurfaceStub : public Acts::RegularSurface {
   Acts::Vector3 localToGlobal(const Acts::GeometryContext& /*gctx*/,
                               const Acts::Vector2& /*lpos*/
   ) const final {
-    return Acts::Vector3(0., 0., 0.);
+    return Acts::Vector3::Zero();
   }
 
   using Acts::RegularSurface::localToGlobal;
@@ -81,8 +80,7 @@ class SurfaceStub : public Acts::RegularSurface {
   /// Inherited from GeometryObject base
   Acts::Vector3 referencePosition(const Acts::GeometryContext& /*txt*/,
                                   Acts::AxisDirection /*bValue*/) const final {
-    const Acts::Vector3 v{0., 0., 0.};
-    return v;
+    return Acts::Vector3::Zero();
   }
 
   /// Surface intersction
@@ -115,11 +113,16 @@ class SurfaceStub : public Acts::RegularSurface {
   }
 
   // Cartesian 3D to local bound derivative
-  Acts::ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
+  Acts::Matrix<2, 3> localCartesianToBoundLocalDerivative(
       const Acts::GeometryContext& /*gctx*/,
       const Acts::Vector3& /*position*/) const final {
-    return Acts::ActsMatrix<2, 3>::Identity();
-  };
+    return Acts::Matrix<2, 3>::Identity();
+  }
+
+ protected:
+  std::array<Acts::AxisDirection, 2> localAxes() const override {
+    return {Acts::AxisDirection::AxisX, Acts::AxisDirection::AxisY};
+  }
 
  private:
   /// the bounds of this surface

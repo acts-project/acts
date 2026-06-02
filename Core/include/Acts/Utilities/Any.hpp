@@ -10,10 +10,13 @@
 
 #include "Acts/Utilities/HashedString.hpp"
 
+#include <algorithm>
 #include <any>
 #include <array>
 #include <cassert>
 #include <cstddef>
+#include <type_traits>
+#include <typeinfo>
 #include <utility>
 
 // #define _ACTS_ANY_ENABLE_VERBOSE
@@ -25,7 +28,6 @@
 #include <mutex>
 #include <set>
 #include <typeindex>
-#include <typeinfo>
 #endif
 
 #if defined(_ACTS_ANY_ENABLE_VERBOSE) || defined(_ACTS_ANY_ENABLE_DEBUG)
@@ -56,39 +58,40 @@
 
 namespace Acts {
 
+namespace detail {
 #if defined(_ACTS_ANY_ENABLE_TRACK_ALLOCATIONS)
 static std::mutex _s_any_mutex;
 static std::set<std::pair<std::type_index, void*>> _s_any_allocations;
 
 #define _ACTS_ANY_TRACK_ALLOCATION(T, heap)                                  \
   do {                                                                       \
-    std::lock_guard guard{_s_any_mutex};                                     \
-    _s_any_allocations.emplace(std::type_index(typeid(T)), heap);            \
+    std::lock_guard guard{detail::_s_any_mutex};                             \
+    detail::_s_any_allocations.emplace(std::type_index(typeid(T)), heap);    \
     _ACTS_ANY_DEBUG("Allocate type: " << typeid(T).name() << " at " << heap) \
   } while (0)
 
-#define _ACTS_ANY_TRACK_DEALLOCATION(T, heap)                                 \
-  do {                                                                        \
-    std::lock_guard guard{_s_any_mutex};                                      \
-    auto it =                                                                 \
-        _s_any_allocations.find(std::pair{std::type_index(typeid(T)), heap}); \
-    if (it == _s_any_allocations.end()) {                                     \
-      throw std::runtime_error{                                               \
-          "Trying to deallocate heap address that we didn't allocate"};       \
-    }                                                                         \
-    _s_any_allocations.erase(it);                                             \
+#define _ACTS_ANY_TRACK_DEALLOCATION(T, heap)                           \
+  do {                                                                  \
+    std::lock_guard guard{detail::_s_any_mutex};                        \
+    auto it = detail::_s_any_allocations.find(                          \
+        std::pair{std::type_index(typeid(T)), heap});                   \
+    if (it == detail::_s_any_allocations.end()) {                       \
+      throw std::runtime_error{                                         \
+          "Trying to deallocate heap address that we didn't allocate"}; \
+    }                                                                   \
+    detail::_s_any_allocations.erase(it);                               \
   } while (0)
 
 // Do not make member functions noexcept in the debug case
-#define _ACTS_ANY_NOEXCEPT /*nothing*/
+static constexpr bool kAnyNoexcept = false;
 
 struct _AnyAllocationReporter {
   static void checkAllocations() {
-    std::lock_guard guard{_s_any_mutex};
+    std::lock_guard guard{detail::_s_any_mutex};
 
-    if (!_s_any_allocations.empty()) {
+    if (!detail::_s_any_allocations.empty()) {
       std::cout << "Not all allocations have been released" << std::endl;
-      for (const auto& [idx, addr] : _s_any_allocations) {
+      for (const auto& [idx, addr] : detail::_s_any_allocations) {
         std::cout << "- " << idx.name() << ": " << addr << std::endl;
       }
       throw std::runtime_error{"AnyCheckAllocations failed"};
@@ -105,8 +108,9 @@ static _AnyAllocationReporter s_reporter;
 #define _ACTS_ANY_TRACK_DEALLOCATION(T, heap) \
   do {                                        \
   } while (0)
-#define _ACTS_ANY_NOEXCEPT noexcept
+static constexpr bool kAnyNoexcept = true;
 #endif
+}  // namespace detail
 
 /// @addtogroup utilities
 /// @{
@@ -116,14 +120,26 @@ class AnyBaseAll {};
 
 /// Small opaque type-erased type with configurable small buffer optimization
 ///
+/// @tparam sb_size Size of the internal buffer for small buffer optimization
+/// @tparam copyable If true, stored types must be copyable and AnyBase is
+///         copyable. If false, move-only types are allowed and AnyBase is
+///         move-only (copy constructor and copy assignment are deleted).
+///
 /// @note
-/// Type requirements:
+/// Type requirements when copyable is true:
 /// - All stored types must be copy constructible and copy assignable.
-/// - Types stored locally (`sizeof(T) <= SIZE`) must also be move constructible
+/// - Types stored locally (`sizeof(T) <= sb_size`) must also be move
+/// constructible
 ///   and move assignable because local moves use move operations when not
 ///   trivially movable (trivial moves fall back to buffer copies).
-/// - Types stored on the heap (`sizeof(T) > SIZE`) are moved by stealing the
+/// - Types stored on the heap (`sizeof(T) > sb_size`) are moved by stealing the
 ///   pointer, so no move operations are required in that case.
+///
+/// @note
+/// Type requirements when copyable is false:
+/// - All stored types must be move constructible.
+/// - Types stored locally must also be move assignable.
+/// - Heap-allocated types only need move constructible (pointer steal).
 ///
 /// @note
 /// In summary:
@@ -132,9 +148,27 @@ class AnyBaseAll {};
 ///   copies when trivial.
 /// - Heap storage: values are allocated on the heap; moves transfer ownership
 ///   of the pointer; copies allocate and copy-construct the pointee.
-template <std::size_t SIZE>
+template <std::size_t sb_size, bool copyable = true>
 class AnyBase : public AnyBaseAll {
-  static_assert(sizeof(void*) <= SIZE, "Size is too small for a pointer");
+  static_assert(sizeof(void*) <= sb_size, "Size is too small for a pointer");
+
+  /// Type trait: T is storable when copyable requires copy+move, else
+  /// move-only.
+  /// @tparam U Type to check
+  /// @return True if the type is storable, false otherwise
+  template <typename U>
+  static constexpr bool isStorable() {
+    if constexpr (std::is_base_of_v<AnyBaseAll, U>) {
+      return false;
+    } else if constexpr (copyable) {
+      return std::is_copy_assignable_v<U> && std::is_copy_constructible_v<U> &&
+             (sizeof(U) > sb_size || (std::is_move_assignable_v<U> &&
+                                      std::is_move_constructible_v<U>));
+    } else {
+      return std::is_move_constructible_v<U> &&
+             (sizeof(U) > sb_size || std::is_move_assignable_v<U>);
+    }
+  }
 
  public:
   /// Construct with in-place type construction
@@ -142,11 +176,7 @@ class AnyBase : public AnyBaseAll {
   /// @tparam Args Constructor argument types
   /// @param args Arguments to forward to T's constructor
   template <typename T, typename... Args>
-    requires(std::is_copy_assignable_v<std::decay_t<T>> &&
-             std::is_copy_constructible_v<std::decay_t<T>> &&
-             (sizeof(std::decay_t<T>) > SIZE ||
-              (std::is_move_assignable_v<std::decay_t<T>> &&
-               std::is_move_constructible_v<std::decay_t<T>>)))
+    requires(isStorable<std::decay_t<T>>())
   explicit AnyBase(std::in_place_type_t<T> /*unused*/, Args&&... args) {
     using U = std::decay_t<T>;
     m_handler = makeHandler<U>();
@@ -162,14 +192,13 @@ class AnyBase : public AnyBaseAll {
   /// Construct from any value type
   /// @tparam T Type of the value to store
   /// @param value Value to store in the Any
+  /// @note Not noexcept: storing a type larger than the small buffer allocates
+  ///       on the heap (may throw std::bad_alloc) and the stored type's own
+  ///       constructor may throw.
   template <typename T>
-  explicit AnyBase(T&& value) _ACTS_ANY_NOEXCEPT
-    requires(!std::same_as<std::decay_t<T>, AnyBase<SIZE>> &&
-             std::is_copy_assignable_v<std::decay_t<T>> &&
-             std::is_copy_constructible_v<std::decay_t<T>> &&
-             (sizeof(std::decay_t<T>) > SIZE ||
-              (std::is_move_assignable_v<std::decay_t<T>> &&
-               std::is_move_constructible_v<std::decay_t<T>>)))
+  explicit AnyBase(T&& value)
+    requires(!std::is_base_of_v<AnyBaseAll, std::decay_t<T>> &&
+             isStorable<std::decay_t<T>>())
       : AnyBase{std::in_place_type<T>, std::forward<T>(value)} {}
 
   /// Construct a new value in place, destroying any existing value
@@ -178,16 +207,18 @@ class AnyBase : public AnyBaseAll {
   /// @param args Arguments to forward to T's constructor
   /// @return Reference to the newly constructed value
   template <typename T, typename... Args>
-    requires(std::is_copy_assignable_v<std::decay_t<T>> &&
-             std::is_copy_constructible_v<std::decay_t<T>> &&
-             (sizeof(std::decay_t<T>) > SIZE ||
-              (std::is_move_assignable_v<std::decay_t<T>> &&
-               std::is_move_constructible_v<std::decay_t<T>>)))
+    requires(isStorable<std::decay_t<T>>())
   T& emplace(Args&&... args) {
     using U = std::decay_t<T>;
     destroy();
+    // Construct the new value before installing the handler. constructValue
+    // does not depend on m_handler, so if the constructor throws this object is
+    // left empty (m_handler == nullptr) rather than claiming to hold a value
+    // whose storage was never set up, which would make the next destroy()
+    // operate on stale/freed memory.
+    U* ptr = constructValue<U>(std::forward<Args>(args)...);
     m_handler = makeHandler<U>();
-    return *constructValue<U>(std::forward<Args>(args)...);
+    return *ptr;
   }
 
   /// Get reference to stored value of specified type
@@ -220,16 +251,66 @@ class AnyBase : public AnyBaseAll {
       throw std::bad_any_cast{};
     }
 
-    _ACTS_ANY_VERBOSE("Get as " << (m_handler->heap ? "heap" : "local"));
+    _ACTS_ANY_VERBOSE("Get as "
+                      << (m_handler->heapAllocated ? "heap" : "local"));
 
     return *std::bit_cast<const T*>(dataPtr());
   }
 
+  /// Get pointer to stored value of specified type
+  /// @tparam T Type to retrieve (must be exact type, no const/ref)
+  /// @return Pointer to the stored value, or nullptr if the type doesn't match
+  ///         or the Any is empty
+  template <typename T>
+  T* asPtr() {
+    static_assert(std::is_same_v<T, std::decay_t<T>>,
+                  "Please pass the raw type, no const or ref");
+    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
+      return nullptr;
+    }
+    return std::bit_cast<T*>(dataPtr());
+  }
+
+  /// Get const pointer to stored value of specified type
+  /// @tparam T Type to retrieve (must be exact type, no const/ref)
+  /// @return Const pointer to the stored value, or nullptr if the type doesn't
+  ///         match or the Any is empty
+  template <typename T>
+  const T* asPtr() const {
+    static_assert(std::is_same_v<T, std::decay_t<T>>,
+                  "Please pass the raw type, no const or ref");
+    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
+      return nullptr;
+    }
+    return std::bit_cast<const T*>(dataPtr());
+  }
+
+  /// Move the stored value out. Leaves this Any empty.
+  /// @tparam T Type to retrieve (must be exact type, no const/ref)
+  /// @return The moved-out value
+  /// @throws std::bad_any_cast if stored type doesn't match T or Any is empty
+  template <typename T>
+  T take() {
+    static_assert(std::is_same_v<T, std::decay_t<T>>,
+                  "Please pass the raw type, no const or ref");
+    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
+      throw std::bad_any_cast{};
+    }
+    T* ptr = std::bit_cast<T*>(dataPtr());
+    T value = std::move(*ptr);
+    destroy();
+    return value;
+  }
+
   ~AnyBase() { destroy(); }
 
-  /// Copy constructor
+  /// Copy constructor (only when copyable is true)
   /// @param other The AnyBase to copy from
-  AnyBase(const AnyBase& other) _ACTS_ANY_NOEXCEPT {
+  /// @note Not noexcept: copying a heap-allocated value allocates (may throw
+  ///       std::bad_alloc) and the stored type's copy constructor may throw.
+  AnyBase(const AnyBase& other)
+    requires copyable
+  {
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
       return;
@@ -242,12 +323,26 @@ class AnyBase : public AnyBaseAll {
     copyConstruct(other);
   }
 
-  /// Copy assignment operator
+  /// Copy constructor deleted when copyable is false (move-only variant)
+  AnyBase(const AnyBase&)
+    requires(!copyable)
+  = delete;
+
+  /// Copy assignment operator (only when copyable is true)
   /// @param other The AnyBase to copy from
   /// @return Reference to this object
-  AnyBase& operator=(const AnyBase& other) _ACTS_ANY_NOEXCEPT {
+  /// @note Not noexcept: copying a heap-allocated value allocates (may throw
+  ///       std::bad_alloc) and the stored type's copy operations may throw.
+  AnyBase& operator=(const AnyBase& other)
+    requires copyable
+  {
     _ACTS_ANY_VERBOSE("Copy assign (this="
                       << this << ") at: " << static_cast<void*>(m_data.data()));
+
+    if (this == &other) {
+      // self-assignment, noop
+      return *this;
+    }
 
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
@@ -256,7 +351,7 @@ class AnyBase : public AnyBaseAll {
 
     if (m_handler == other.m_handler) {
       // same type, but checked before they're not both nullptr
-      copy(std::move(other));
+      copy(other);
     } else {
       if (m_handler != nullptr) {
         // this object is not empty, but have different types => destroy
@@ -264,14 +359,29 @@ class AnyBase : public AnyBaseAll {
       }
       assert(m_handler == nullptr);
       m_handler = other.m_handler;
-      copyConstruct(std::move(other));
+      try {
+        copyConstruct(other);
+      } catch (...) {
+        // copyConstruct allocates and/or runs the stored type's copy
+        // constructor, either of which may throw. If it does, no value was
+        // established, so leave *this empty rather than with a handler that
+        // claims a value that does not exist (which would make destruction
+        // operate on uninitialized storage).
+        m_handler = nullptr;
+        throw;
+      }
     }
     return *this;
   }
 
+  /// Copy assignment deleted when copyable is false (move-only variant)
+  AnyBase& operator=(const AnyBase&)
+    requires(!copyable)
+  = delete;
+
   /// Move constructor
   /// @param other The AnyBase to move from
-  AnyBase(AnyBase&& other) _ACTS_ANY_NOEXCEPT {
+  AnyBase(AnyBase&& other) noexcept(detail::kAnyNoexcept) {
     _ACTS_ANY_VERBOSE("Move construct (this="
                       << this << ") at: " << static_cast<void*>(m_data.data()));
     if (m_handler == nullptr && other.m_handler == nullptr) {
@@ -286,9 +396,14 @@ class AnyBase : public AnyBaseAll {
   /// Move assignment operator
   /// @param other The AnyBase to move from
   /// @return Reference to this object
-  AnyBase& operator=(AnyBase&& other) _ACTS_ANY_NOEXCEPT {
+  AnyBase& operator=(AnyBase&& other) noexcept(detail::kAnyNoexcept) {
     _ACTS_ANY_VERBOSE("Move assign (this="
                       << this << ") at: " << static_cast<void*>(m_data.data()));
+    if (this == &other) {
+      // self-assignment, noop (avoids destroying our own value)
+      return *this;
+    }
+
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
       return *this;
@@ -317,6 +432,12 @@ class AnyBase : public AnyBaseAll {
   /// @return True if a value is stored, false if empty
   explicit operator bool() const { return m_handler != nullptr; }
 
+  /// Type info of the stored value. Returns nullptr if empty.
+  /// @return Pointer to the type info of the stored value, or nullptr if empty
+  const std::type_info* typeInfo() const {
+    return m_handler != nullptr ? m_handler->typeInfo : nullptr;
+  }
+
  private:
   void* dataPtr() {
     if (m_handler->heapAllocated) {
@@ -336,12 +457,6 @@ class AnyBase : public AnyBaseAll {
     }
   }
 
-  template <typename T>
-  static std::uint64_t typeHash() {
-    const static std::uint64_t value = detail::fnv1a_64(typeid(T).name());
-    return value;
-  }
-
   struct Handler {
     void (*destroy)(void* ptr) = nullptr;
     void (*moveConstruct)(void* from, void* to) = nullptr;
@@ -350,11 +465,13 @@ class AnyBase : public AnyBaseAll {
     void (*copy)(const void* from, void* to) = nullptr;
     bool heapAllocated{false};
     std::uint64_t typeHash{0};
+    const std::type_info* typeInfo{nullptr};
   };
 
   template <typename T>
   static const Handler* makeHandler() {
-    static_assert(!std::is_same_v<T, AnyBase<SIZE>>, "Cannot wrap any in any");
+    static_assert(!std::is_base_of_v<AnyBaseAll, std::decay_t<T>>,
+                  "Cannot wrap Any in Any");
     static const Handler static_handler = []() {
       Handler h;
       h.heapAllocated = heapAllocated<T>();
@@ -370,16 +487,20 @@ class AnyBase : public AnyBaseAll {
                     !std::is_trivially_move_assignable_v<T>) {
         h.move = &moveImpl<T>;
       }
-      if constexpr (!std::is_trivially_copy_constructible_v<T> ||
-                    heapAllocated<T>()) {
+      if constexpr (std::is_copy_constructible_v<T> &&
+                    (!std::is_trivially_copy_constructible_v<T> ||
+                     heapAllocated<T>())) {
         h.copyConstruct = &copyConstructImpl<T>;
       }
-      if constexpr (!std::is_trivially_copy_assignable_v<T> ||
-                    heapAllocated<T>()) {
+
+      if constexpr (std::is_copy_assignable_v<T> &&
+                    (!std::is_trivially_copy_assignable_v<T> ||
+                     heapAllocated<T>())) {
         h.copy = &copyImpl<T>;
       }
 
       h.typeHash = typeHash<T>();
+      h.typeInfo = &typeid(T);
 
       _ACTS_ANY_DEBUG("Type: " << typeid(T).name());
       _ACTS_ANY_DEBUG(" -> destroy: " << h.destroy);
@@ -397,7 +518,7 @@ class AnyBase : public AnyBaseAll {
 
   template <typename T>
   static constexpr bool heapAllocated() {
-    return sizeof(T) > SIZE;
+    return sizeof(T) > sb_size;
   }
 
   template <typename T, typename... Args>
@@ -483,20 +604,25 @@ class AnyBase : public AnyBaseAll {
       return;
     }
 
-    void* to = dataPtr();
     const void* from = fromAny.dataPtr();
 
     if (m_handler->copyConstruct == nullptr) {
       _ACTS_ANY_VERBOSE("Trivially copy construct");
       // trivially copy constructible
       m_data = fromAny.m_data;
+    } else if (m_handler->heapAllocated) {
+      // heap-allocated: always allocate fresh storage. We must not read the
+      // current contents of m_data here: when copyConstruct runs as part of a
+      // copy assignment with a type change, the previous value has already been
+      // destroyed but m_data still holds its stale bytes (a freed pointer, or
+      // the previous local value's bytes). Passing those as the destination
+      // would placement-new into garbage. Allocate and store the new pointer.
+      void* copyAt = m_handler->copyConstruct(from, nullptr);
+      assert(copyAt != nullptr);
+      setDataPtr(copyAt);
     } else {
-      void* copyAt = m_handler->copyConstruct(from, to);
-      if (to == nullptr) {
-        assert(copyAt != nullptr);
-        // copy allocated, store pointer
-        setDataPtr(copyAt);
-      }
+      // local storage: construct into the internal buffer
+      m_handler->copyConstruct(from, dataPtr());
     }
   }
 
@@ -599,7 +725,7 @@ class AnyBase : public AnyBaseAll {
 #endif
       );
 
-  alignas(kMaxAlignment) std::array<std::byte, SIZE> m_data{};
+  alignas(kMaxAlignment) std::array<std::byte, sb_size> m_data{};
   const Handler* m_handler{nullptr};
 };
 
@@ -607,7 +733,12 @@ class AnyBase : public AnyBaseAll {
 /// @details This is a custom implementation similar to `std::any` but optimized for small types
 ///          that can fit into a pointer-sized buffer. Values larger than a
 ///          pointer are stored on the heap.
-using Any = AnyBase<sizeof(void*)>;
+using Any = AnyBase<sizeof(void*), true>;
+
+/// @brief Move-only variant that can store move-only types (e.g. std::unique_ptr)
+/// @details Same as Any but copy constructor and copy assignment are deleted.
+///          Use when storing types that are not copyable.
+using AnyMoveOnly = AnyBase<sizeof(void*), false>;
 
 /// @}
 

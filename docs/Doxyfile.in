@@ -416,7 +416,7 @@ LOOKUP_CACHE_SIZE      = 0
 # normally produced when WARNINGS is set to YES.
 # The default value is: NO.
 
-EXTRACT_ALL            = YES
+EXTRACT_ALL            = NO
 
 # If the EXTRACT_PRIVATE tag is set to YES, all private members of a class will
 # be included in the documentation.
@@ -774,7 +774,6 @@ WARN_LOGFILE           =
 INPUT                  = index.md \
                          groups \
                          pages \
-                         examples \
                          namespaces.dox \
                          experimental.md \
                          ../Core/include \
@@ -784,11 +783,9 @@ INPUT                  = index.md \
                          ../Plugins/DD4hep/include \
                          ../Plugins/Detray/include \
                          ../Plugins/EDM4hep/include \
-                         ../Plugins/FastJet/include \
                          ../Plugins/FpeMonitoring/include \
                          ../Plugins/Geant4/include \
                          ../Plugins/GeoModel/include \
-                         ../Plugins/Hashing/include \
                          ../Plugins/Json/include \
                          ../Plugins/Onnx/include \
                          ../Plugins/Root/include \
@@ -1177,7 +1174,11 @@ HTML_EXTRA_FILES       = @AWESOME_CSS_DIR@/doxygen-awesome-darkmode-toggle.js \
                          @AWESOME_CSS_DIR@/doxygen-awesome-interactive-toc.js \
                          @CMAKE_CURRENT_SOURCE_DIR@/tex-mml-chtml.js \
                          @CMAKE_CURRENT_SOURCE_DIR@/acts-version-manager.js \
-                         @CMAKE_CURRENT_SOURCE_DIR@/acts-version-manager.css
+                         @CMAKE_CURRENT_SOURCE_DIR@/acts-version-manager.css \
+                         figures/favicon/favicon.ico \
+                         figures/favicon/favicon-32x32.png \
+                         figures/favicon/favicon-16x16.png \
+                         figures/favicon/apple-touch-icon.png
 
 
 HTML_COLORSTYLE        = LIGHT

@@ -22,7 +22,7 @@ using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
 
 Result<BoundState> sympy::boundState(
     const GeometryContext& geoContext, const Surface& surface,
-    BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
+    BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,
@@ -37,7 +37,7 @@ Result<BoundState> sympy::boundState(
   }
 
   // Covariance transport
-  std::optional<BoundSquareMatrix> cov = std::nullopt;
+  std::optional<BoundMatrix> cov = std::nullopt;
   if (covTransport) {
     // Calculate the jacobian and transport the covarianceMatrix to final local.
     // Then reinitialize the transportJacobian, derivatives and the
@@ -57,7 +57,7 @@ Result<BoundState> sympy::boundState(
 }
 
 BoundState sympy::curvilinearState(
-    BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
+    BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,
@@ -67,7 +67,7 @@ BoundState sympy::curvilinearState(
   const Vector3& direction = freeParameters.segment<3>(eFreeDir0);
 
   // Covariance transport
-  std::optional<BoundSquareMatrix> cov = std::nullopt;
+  std::optional<BoundMatrix> cov = std::nullopt;
   if (covTransport) {
     // Calculate the jacobian and transport the covarianceMatrix to final local.
     // Then reinitialize the transportJacobian, derivatives and the
@@ -95,7 +95,7 @@ BoundState sympy::curvilinearState(
 
 void sympy::transportCovarianceToBound(
     const GeometryContext& geoContext, const Surface& surface,
-    BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
+    BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,
@@ -114,9 +114,9 @@ void sympy::transportCovarianceToBound(
   if (freeToBoundCorrection) {
     BoundToFreeMatrix startBoundToFinalFreeJacobian =
         freeTransportJacobian * boundToFreeJacobian;
-    FreeSquareMatrix freeCovariance = startBoundToFinalFreeJacobian *
-                                      boundCovariance *
-                                      startBoundToFinalFreeJacobian.transpose();
+    FreeMatrix freeCovariance = startBoundToFinalFreeJacobian *
+                                boundCovariance *
+                                startBoundToFinalFreeJacobian.transpose();
 
     auto transformer =
         detail::CorrectedFreeToBoundTransformer(freeToBoundCorrection);
@@ -131,7 +131,7 @@ void sympy::transportCovarianceToBound(
           transformBoundToFreeParameters(surface, geoContext, boundParams);
 
       // 2. Update the bound covariance
-      boundCovariance = std::get<BoundSquareMatrix>(correctedValue);
+      boundCovariance = std::get<BoundMatrix>(correctedValue);
 
       correction = true;
     }
@@ -162,7 +162,7 @@ void sympy::transportCovarianceToBound(
 }
 
 void sympy::transportCovarianceToCurvilinear(
-    BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
+    BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,

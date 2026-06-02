@@ -25,15 +25,16 @@ from acts.examples.simulation import (
     ParticleConfig,
     addFatras,
     addDigitization,
-    addGenParticleSelection,
+    addDigiParticleSelection,
     ParticleSelectorConfig,
 )
 from acts.examples.reconstruction import addGnn, addSpacePointsMaking
-from acts.examples.gnn import (
+from acts.gnn import (
     ModuleMapCuda,
     CudaTrackBuilding,
-    NodeFeature,
+    Device,
 )
+from acts.examples.gnn import NodeFeature
 
 
 def runGnnModuleMap(
@@ -94,16 +95,6 @@ def runGnnModuleMap(
         rnd=rnd,
     )
 
-    addGenParticleSelection(
-        s,
-        ParticleSelectorConfig(
-            rho=(0.0, 24 * u.mm),
-            absZ=(0.0, 1.0 * u.m),
-            eta=(-3.0, 3.0),
-            pt=(150 * u.MeV, None),
-        ),
-    )
-
     # FATRAS simulation
     addFatras(
         s,
@@ -127,6 +118,16 @@ def runGnnModuleMap(
         logLevel=acts.logging.INFO,
     )
 
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(1.0 * u.GeV, None),
+            eta=(-3.0, 3.0),
+            measurements=(7, None),
+            removeNeutral=True,
+        ),
+    )
+
     addSpacePointsMaking(
         s,
         trackingGeometry,
@@ -144,7 +145,6 @@ def runGnnModuleMap(
         "etaScale": 1.0,
         "gpuDevice": 0,
         "gpuBlocks": 512,
-        "moreParallel": True,
     }
     graphConstructor = ModuleMapCuda(**moduleMapConfig)
 
@@ -157,15 +157,16 @@ def runGnnModuleMap(
 
     if gnnModel.suffix == ".pt":
         edgeClassifierConfig["useEdgeFeatures"] = True
-        from acts.examples.gnn import TorchEdgeClassifier
+        from acts.gnn import TorchEdgeClassifier
 
         edgeClassifiers = [TorchEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".onnx":
-        from acts.examples.gnn import OnnxEdgeClassifier
+        from acts.gnn import OnnxEdgeClassifier
 
+        edgeClassifierConfig["device"] = Device.Cuda()
         edgeClassifiers = [OnnxEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".engine":
-        from acts.examples.gnn import TensorRTEdgeClassifier
+        from acts.gnn import TensorRTEdgeClassifier
 
         edgeClassifiers = [TensorRTEdgeClassifier(**edgeClassifierConfig)]
     else:
@@ -207,6 +208,24 @@ def runGnnModuleMap(
         logLevel=acts.logging.INFO,
     )
 
+    protoTracksToSeeds = acts.examples.ProtoTracksToSeeds(
+        level=acts.logging.INFO,
+        inputProtoTracks="gnn-protoTracks",
+        inputSpacePoints="spacepoints",
+        outputSeeds="gnn-seeds",
+        outputProtoTracks="gnn-protoTracks-seeds-filtered",
+    )
+    s.addAlgorithm(protoTracksToSeeds)
+
+    parEstAlg = acts.examples.TrackParamsEstimationAlgorithm(
+        level=acts.logging.INFO,
+        inputSeeds=protoTracksToSeeds.config.outputSeeds,
+        outputTrackParameters="gnn-initial-parameters",
+        trackingGeometry=trackingGeometry,
+        magneticField=field,
+    )
+    s.addAlgorithm(parEstAlg)
+
     s.run()
     return s
 
@@ -237,7 +256,9 @@ if __name__ == "__main__":
     model_storage = os.environ.get("MODEL_STORAGE")
     assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
     ci_models_odd = Path(model_storage)
-    moduleMapPath = str(ci_models_odd / "module_map_odd_2k_events.1e-03.float")
+    moduleMapPath = str(
+        ci_models_odd / "module_map_odd_2k_events.1e-03.float.v1_3_PATCH"
+    )
     gnnModel = str(ci_models_odd / "gnn_odd_module_map.pt")
     outputDir = Path.cwd()
     events = 100

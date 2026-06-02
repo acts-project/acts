@@ -71,17 +71,27 @@ class TripletTopCandidates {
     return m_impactParameters;
   }
 
+  /// Proxy providing access to a triplet candidate.
   class Proxy {
    public:
+    /// Constructor
+    /// @param container The container to proxy
+    /// @param index The index of the candidate in the container
     Proxy(const TripletTopCandidates* container, Index index)
         : m_container(container), m_index(index) {}
 
+    /// Get the space point index
+    /// @return The space point index
     SpacePointIndex2 spacePoint() const {
       return m_container->m_topSpacePoints[m_index];
     }
 
+    /// Get the curvature estimation
+    /// @return The curvature value
     float curvature() const { return m_container->m_curvatures[m_index]; }
 
+    /// Get the impact parameter estimation
+    /// @return The impact parameter value
     float impactParameter() const {
       return m_container->m_impactParameters[m_index];
     }
@@ -156,6 +166,12 @@ class TripletSeedFinder {
     /// coordinates in xyz. This is only used in a detector specific check for
     /// strip modules
     float toleranceParam = 1.1 * UnitConstants::mm;
+
+    /// Maximum allowed difference in cot(theta) between the bottom and top
+    /// doublets, applied as a pre-filter before the expensive strip
+    /// coordinate transformation. Only active when useStripInfo is true.
+    /// Set to infinity (default) to disable.
+    float cotThetaDiffMax = std::numeric_limits<float>::infinity();
   };
 
   /// Derived configuration for the triplet seed finder using a magnetic field.

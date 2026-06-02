@@ -34,7 +34,7 @@ using namespace Acts;
 namespace ActsPython {
 
 namespace Test {
-class DetectorElementStub : public DetectorElementBase {
+class DetectorElementStub : public SurfacePlacementBase {
  public:
   DetectorElementStub() = default;
   const Transform3& localToGlobalTransform(
@@ -52,12 +52,8 @@ class DetectorElementStub : public DetectorElementBase {
   /// Non-const return pattern
   Surface& surface() override { throw std::runtime_error("Not implemented"); }
 
-  /// Returns the thickness of the module
-  /// @return double that indicates the thickness of the module
-  double thickness() const override { return 0; }
-
  private:
-  Transform3 m_transform;
+  Transform3 m_transform{Transform3::Identity()};
 };
 
 }  // namespace Test
@@ -129,7 +125,7 @@ void addNavigation(py::module_& m) {
 
         auto surface = Surface::makeShared<CylinderSurface>(
             Transform3::Identity(), std::make_shared<CylinderBounds>(30, 40));
-        surface->assignDetectorElement(*detElem);
+        surface->assignSurfacePlacement(*detElem);
 
         vol1->addSurface(std::move(surface));
 

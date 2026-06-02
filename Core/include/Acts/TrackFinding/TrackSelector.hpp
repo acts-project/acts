@@ -9,11 +9,11 @@
 #pragma once
 
 #include "Acts/EventData/TrackProxyConcept.hpp"
-#include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <functional>
 #include <limits>
@@ -31,16 +31,24 @@ class TrackSelector {
   static constexpr double inf = std::numeric_limits<double>::infinity();
 
  public:
+  /// Measurement counting rules for geometry-specific requirements.
   struct MeasurementCounter {
-    // Combination of a geometry hierarchy map and a minimum hit count
+    /// Type combining a geometry hierarchy map and a minimum hit count
     using CounterElement =
         std::pair<GeometryHierarchyMap<unsigned int>, unsigned int>;
 
+    /// Collection of counter elements
     boost::container::small_vector<CounterElement, 4> counters;
 
+    /// Check if track satisfies all measurement requirements
+    /// @param track The track to check
+    /// @return True if track satisfies all counter thresholds
     template <TrackProxyConcept track_proxy_t>
     bool isValidTrack(const track_proxy_t& track) const;
 
+    /// Add a new counter with threshold for specified geometry
+    /// @param identifiers Geometry identifiers to count measurements in
+    /// @param threshold Minimum number of required measurements
     void addCounter(const std::vector<GeometryIdentifier>& identifiers,
                     unsigned int threshold) {
       std::vector<GeometryHierarchyMap<unsigned int>::InputElement> elements;
@@ -397,9 +405,8 @@ inline std::size_t TrackSelector::EtaBinnedConfig::binIndex(double eta) const {
 
 inline std::size_t TrackSelector::EtaBinnedConfig::binIndexNoCheck(
     double eta) const {
-  auto binIt =
-      std::upper_bound(absEtaEdges.begin(), absEtaEdges.end(), std::abs(eta));
-  std::size_t index = std::distance(absEtaEdges.begin(), binIt);
+  auto binIt = std::ranges::upper_bound(absEtaEdges, std::abs(eta));
+  std::size_t index = std::ranges::distance(absEtaEdges.begin(), binIt);
   if (index == 0) {
     index = absEtaEdges.size() + 1;  // positive value to check for underflow
   }
@@ -431,8 +438,7 @@ void TrackSelector::selectTracks(const input_tracks_t& inputTracks,
       continue;
     }
     auto destProxy = outputTracks.makeTrack();
-    destProxy.copyFromWithoutStates(track);
-    destProxy.tipIndex() = track.tipIndex();
+    destProxy.copyFromShallow(track);
   }
 }
 
@@ -542,7 +548,7 @@ bool TrackSelector::MeasurementCounter::isValidTrack(
   counterValues.resize(counters.size(), 0);
 
   for (const auto& ts : track.trackStatesReversed()) {
-    if (!ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (!ts.typeFlags().isMeasurement()) {
       continue;
     }
 

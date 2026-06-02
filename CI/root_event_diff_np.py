@@ -3,7 +3,6 @@ import argparse
 import numpy as np
 import uproot
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument("a")
 parser.add_argument("b")

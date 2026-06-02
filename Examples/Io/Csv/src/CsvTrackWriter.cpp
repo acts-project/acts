@@ -54,7 +54,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
 
   // Counter of truth-matched reco tracks
   using RecoTrackInfo = std::pair<TrackInfo, std::size_t>;
-  std::map<ActsFatras::Barcode, std::vector<RecoTrackInfo>> matched;
+  std::map<SimBarcode, std::vector<RecoTrackInfo>> matched;
 
   for (const auto& track : tracks) {
     // Reco track selection
@@ -91,7 +91,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
       continue;
     }
     std::size_t nMajorityHits = 0;
-    ActsFatras::Barcode majorityParticleId;
+    SimBarcode majorityParticleId;
     if (!particleHitCount.empty()) {
       // Get the majority particle counts
       majorityParticleId = particleHitCount.front().particleId;
@@ -124,7 +124,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
     toAdd.trackType = "unknown";
 
     for (const auto& state : track.trackStatesReversed()) {
-      if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (state.typeFlags().hasMeasurement()) {
         auto sl =
             state.getUncalibratedSourceLink().template get<IndexSourceLink>();
         auto hitIndex = sl.index();

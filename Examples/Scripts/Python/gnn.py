@@ -7,13 +7,16 @@ import sys
 import acts
 import acts.examples
 import acts.examples.gnn
+import acts.gnn
+from acts.examples.simulation import addDigiParticleSelection, ParticleSelectorConfig
 from acts.examples.reconstruction import addGnn, addSpacePointsMaking
-from acts.examples.gnn import (
+from acts.gnn import (
     TorchMetricLearning,
     TorchEdgeClassifier,
     BoostTrackBuilding,
-    NodeFeature,
+    Device,
 )
+from acts.examples.gnn import NodeFeature
 from acts import UnitConstants as u
 
 from digitization import runDigitization
@@ -28,6 +31,7 @@ def runGnnMetricLearning(
     embedModelPath,
     filterModelPath,
     gnnModelPath,
+    device=None,
     outputRoot=False,
     outputCsv=False,
     s=None,
@@ -41,6 +45,16 @@ def runGnnMetricLearning(
         outputRoot=outputRoot,
         outputCsv=outputCsv,
         s=s,
+    )
+
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(1.0 * u.GeV, None),
+            eta=(-3.0, 3.0),
+            measurements=(7, None),
+            removeNeutral=True,
+        ),
     )
 
     addSpacePointsMaking(
@@ -58,6 +72,7 @@ def runGnnMetricLearning(
         "rVal": 1.6,
         "knnVal": 100,
         "selectedFeatures": [0, 1, 2],  # R, Phi, Z
+        "device": device,
     }
     graphConstructor = TorchMetricLearning(**graphConstructorConfig)
 
@@ -81,11 +96,13 @@ def runGnnMetricLearning(
                 nChunks=5,
                 undirected=False,
                 selectedFeatures=[0, 1, 2],
+                device=device,
             )
         )
     elif filterModelPath.suffix == ".onnx":
-        from acts.examples.gnn import OnnxEdgeClassifier
+        from acts.gnn import OnnxEdgeClassifier
 
+        filterConfig["device"] = device
         edgeClassifiers.append(OnnxEdgeClassifier(**filterConfig))
     else:
         raise ValueError(f"Unsupported model format: {filterModelPath.suffix}")
@@ -96,9 +113,13 @@ def runGnnMetricLearning(
                 **gnnConfig,
                 undirected=True,
                 selectedFeatures=[0, 1, 2],
+                device=device,
             )
         )
     elif gnnModelPath.suffix == ".onnx":
+        from acts.gnn import OnnxEdgeClassifier
+
+        gnnConfig["device"] = device
         edgeClassifiers.append(
             OnnxEdgeClassifier(**gnnConfig),
         )
@@ -128,6 +149,7 @@ def runGnnMetricLearning(
         nodeFeatures=nodeFeatures,
         featureScales=featureScales,
         outputDirRoot=outputDir if outputRoot else None,
+        device=device,
         logLevel=acts.logging.INFO,
     )
 
@@ -152,16 +174,15 @@ if "__main__" == __name__:
     model_storage = os.environ.get("MODEL_STORAGE")
     assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
     ci_models = Path(model_storage)
-    if "onnx" in sys.argv:
-        embedModelPath = ci_models / "torchscript_models/embed.pt"
-        filterModelPath = ci_models / "torchscript_models/filter.pt"
-        gnnModelPath = ci_models / "torchscript_models/gnn.pt"
-    elif "torch" in sys.argv:
-        embedModelPath = ci_models / "torchscript_models/embed.pt"
-        filterModelPath = ci_models / "onnx_models/filtering.onnx"
-        gnnModelPath = ci_models / "onnx_models/gnn.onnx"
-    else:
-        raise ValueError("Please specify backend: 'torch' or 'onnx'")
+
+    # These models are chosen as they work without the torch-scatter dependency
+    embedModelPath = ci_models / "torchscript_models/embed.pt"
+    filterModelPath = ci_models / "torchscript_models/filter.pt"
+    gnnModelPath = ci_models / "onnx_models/gnn.onnx"
+
+    device = (
+        Device.Cpu() if os.environ.get("CUDA_VISIBLE_DEVICES") == "" else Device.Cuda()
+    )
 
     s = acts.examples.Sequencer(events=2, numThreads=1)
     s.config.logLevel = acts.logging.INFO
@@ -178,6 +199,7 @@ if "__main__" == __name__:
         embedModelPath,
         filterModelPath,
         gnnModelPath,
+        device=device,
         outputRoot=True,
         outputCsv=False,
         s=s,

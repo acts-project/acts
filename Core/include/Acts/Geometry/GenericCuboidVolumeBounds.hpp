@@ -21,6 +21,7 @@ namespace Acts {
 
 class IVisualization3D;
 
+/// Volume bounds described by eight arbitrary cuboid vertices.
 class GenericCuboidVolumeBounds : public VolumeBounds {
  public:
   /// @brief  This struct helps to symmetrize with the
@@ -100,6 +101,7 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   };
 
   /// @param sl is the output stream to be written into
+  /// @return The output stream
   std::ostream& toStream(std::ostream& sl) const override;
 
   /// Draw this shape using a visualization helper

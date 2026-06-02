@@ -1,75 +1,28 @@
 include_guard(GLOBAL)
 
 if(NOT ACTS_USE_SYSTEM_LIBS)
-    message(STATUS "Configuring codegen: preparing uv")
+    message(STATUS "Configuring codegen")
 
-    find_program(uv_exe uv)
+    if(NOT DEFINED ACTS_CODEGEN_TMPDIR OR ACTS_CODEGEN_TMPDIR STREQUAL "")
+        find_program(MKTEMP_EXE NAMES mktemp REQUIRED)
+        execute_process(
+            COMMAND ${MKTEMP_EXE} -d
+            OUTPUT_VARIABLE _acts_codegen_tmpdir
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
 
-    set(_uv_version "0.7.19")
-    set(_base_url
-        "https://github.com/astral-sh/uv/releases/download/${_uv_version}"
-    )
-
-    if(uv_exe STREQUAL "uv_exe-NOTFOUND")
-        message(STATUS "uv not found, installing it")
-
-        if(NOT APPLE AND NOT UNIX)
-            message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
-        endif()
-
-        if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
-            if(APPLE)
-                set(UV_NAME "${_base_url}/uv-x86_64-apple-darwin.tar.gz")
-                set(UV_HASH
-                    "SHA256=698d24883fd441960fb4bc153b7030b89517a295502017ff3fdbba2fb0a0aa67"
-                )
-            elseif(UNIX)
-                set(UV_URL "${_base_url}/uv-x86_64-unknown-linux-musl.tar.gz")
-                set(UV_HASH
-                    "SHA256=6236ed00a7442ab2c0f56f807d5a3331f3fb5c7640a357482fbc8492682641b2"
-                )
-            endif()
-        elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "(arm)|(ARM)|(aarch64)")
-            if(APPLE)
-                set(UV_URL "${_base_url}/uv-aarch64-apple-darwin.tar.gz")
-                set(UV_HASH
-                    "SHA256=698d24883fd441960fb4bc153b7030b89517a295502017ff3fdbba2fb0a0aa67"
-                )
-            elseif(UNIX)
-                set(UV_URL "${_base_url}/uv-aarch64-unknown-linux-musl.tar.gz")
-                set(UV_HASH
-                    "SHA256=e83c7c6d86c8e7456078c736a72550ce20222df8083f9317fc58cd49422ce5eb"
-                )
-            endif()
-        else()
-            message(
-                FATAL_ERROR
-                "Unsupported architecture: ${CMAKE_SYSTEM_PROCESSOR}"
-            )
-        endif()
-
-        message(STATUS "Downloading uv from ${UV_URL}")
-        set(UV_DIR "${CMAKE_BINARY_DIR}/uv")
-        file(DOWNLOAD ${UV_URL} ${UV_DIR}/uv.tar.gz EXPECTED_HASH ${UV_HASH})
-
-        file(ARCHIVE_EXTRACT INPUT ${UV_DIR}/uv.tar.gz DESTINATION ${UV_DIR})
-
-        file(REMOVE ${UV_DIR}/uv.tar.gz)
-
-        file(GLOB uv_extracted ${UV_DIR}/uv*)
-        message(STATUS "Extracted uv: ${uv_extracted}")
-
-        find_program(uv_exe uv PATHS ${uv_extracted} REQUIRED NO_DEFAULT_PATH)
+        set(ACTS_CODEGEN_TMPDIR
+            "${_acts_codegen_tmpdir}"
+            CACHE PATH
+            "Codegen temporary directory for ACTS code generation"
+        )
     endif()
 
-    message(STATUS "Found uv: ${uv_exe}")
+    set(_acts_codegen_tmpdir "${ACTS_CODEGEN_TMPDIR}")
+    file(MAKE_DIRECTORY "${_acts_codegen_tmpdir}")
+    message(STATUS "Codegen temporary directory: ${_acts_codegen_tmpdir}")
 
-    execute_process(
-        COMMAND ${uv_exe} --version
-        OUTPUT_VARIABLE uv_version
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    message(STATUS "uv version: ${uv_version}")
+    include(ActsEnsureUv)
 else()
     message(
         STATUS
@@ -110,8 +63,7 @@ else()
     # Finally, we write the path found in the outside virtual env into the
     # new virtual env as described in the StackOverflow answer.
     file(
-        WRITE
-        "${_python_nested_package_dir}/_base_packages.pth"
+        WRITE "${_python_nested_package_dir}/_base_packages.pth"
         ${_python_package_dir}
     )
 
@@ -126,8 +78,7 @@ function(acts_code_generation)
     set(oneValueArgs ADD_TO_TARGET PYTHON PYTHON_VERSION OUTPUT)
     set(multiValueArgs DEPENDS WITH_REQUIREMENTS WITH)
     cmake_parse_arguments(
-        PARSE_ARGV
-        0
+        PARSE_ARGV 0
         ARGS
         "${options}"
         "${oneValueArgs}"
@@ -200,10 +151,26 @@ function(acts_code_generation)
     file(MAKE_DIRECTORY ${_output_dir})
 
     if(NOT ACTS_USE_SYSTEM_LIBS)
+        # If using uv, run it in a clean environment but include the variables
+        # that specify a proxy.
+        set(_propagate
+            HTTP_PROXY
+            HTTPS_PROXY
+            ALL_PROXY
+            NO_PROXY
+            SSL_CERT_FILE
+        )
+        foreach(_var IN LISTS _propagate)
+            if(DEFINED ENV{${_var}})
+                list(APPEND _uv_environment "${_var}=$ENV{${_var}}")
+            endif()
+        endforeach()
         add_custom_command(
             OUTPUT ${_output_file}
             COMMAND
-                env -i UV_NO_CACHE=1 ${uv_exe} run --quiet --python
+                env -i UV_NO_CACHE=1
+                UV_PYTHON_INSTALL_DIR=${ACTS_CODEGEN_TMPDIR}/python_install_dir
+                ${_uv_environment} ${uv_exe} run --quiet --python
                 ${ARGS_PYTHON_VERSION} --no-project ${_arg_isolated}
                 ${_with_args} ${ARGS_PYTHON} ${_output_file}
             DEPENDS ${_depends}
@@ -229,4 +196,10 @@ function(acts_code_generation)
 
     add_dependencies(${ARGS_ADD_TO_TARGET} ${_internal_target})
     target_include_directories(${ARGS_ADD_TO_TARGET} PRIVATE ${_codegen_root})
+
+    # Add a central copde generation target that depends on all codegen targets, so that we can build only them in one go
+    if(NOT TARGET ActsCodegen)
+        add_custom_target(ActsCodegen)
+    endif()
+    add_dependencies(ActsCodegen ${_internal_target})
 endfunction()

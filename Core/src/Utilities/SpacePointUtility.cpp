@@ -55,7 +55,7 @@ std::tuple<Vector3, std::optional<double>, Vector2, std::optional<double>>
 SpacePointUtility::globalCoords(
     const GeometryContext& gctx, const SourceLink& slink,
     const SourceLinkSurfaceAccessor& surfaceAccessor, const BoundVector& par,
-    const BoundSquareMatrix& cov) const {
+    const BoundMatrix& cov) const {
   const Surface* surface = surfaceAccessor(slink);
   Vector2 localPos(par[eBoundLoc0], par[eBoundLoc1]);
   SquareMatrix2 localCov = cov.block<2, 2>(eBoundLoc0, eBoundLoc0);
@@ -77,7 +77,7 @@ SpacePointUtility::globalCoords(
   auto x = globalPos[ePos0];
   auto y = globalPos[ePos1];
   auto scale = 2 / fastHypot(x, y);
-  ActsMatrix<2, 3> jacXyzToRhoZ = ActsMatrix<2, 3>::Zero();
+  Matrix<2, 3> jacXyzToRhoZ = Matrix<2, 3>::Zero();
   jacXyzToRhoZ(0, ePos0) = scale * x;
   jacXyzToRhoZ(0, ePos1) = scale * y;
   jacXyzToRhoZ(1, ePos2) = 1;
@@ -141,7 +141,7 @@ Vector2 SpacePointUtility::rhoZCovariance(const GeometryContext& gctx,
   auto x = globalPos[ePos0];
   auto y = globalPos[ePos1];
   auto scale = 2 / globalPos.head<2>().norm();
-  ActsMatrix<2, 3> jacXyzToRhoZ = ActsMatrix<2, 3>::Zero();
+  Matrix<2, 3> jacXyzToRhoZ = Matrix<2, 3>::Zero();
   jacXyzToRhoZ(0, ePos0) = scale * x;
   jacXyzToRhoZ(0, ePos1) = scale * y;
   jacXyzToRhoZ(1, ePos2) = 1;

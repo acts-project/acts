@@ -20,7 +20,7 @@ inline SurfaceArray* Layer::surfaceArray() {
   return const_cast<SurfaceArray*>(m_surfaceArray.get());
 }
 
-inline double Layer::thickness() const {
+inline double Layer::layerThickness() const {
   return m_layerThickness;
 }
 
@@ -62,7 +62,7 @@ inline bool Layer::resolve(bool resolveSensitive, bool resolveMaterial,
   }
   if (resolveMaterial &&
       (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1 ||
-       (surfaceRepresentation().surfaceMaterial() != nullptr))) {
+       surfaceRepresentation().hasMaterial())) {
     return true;
   }
   return false;

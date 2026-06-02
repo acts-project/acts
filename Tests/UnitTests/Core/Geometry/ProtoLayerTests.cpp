@@ -10,13 +10,13 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(OrientedLayer) {
 
   auto recBounds = std::make_shared<RectangleBounds>(3_mm, 6_mm);
 
-  std::vector<std::unique_ptr<DetectorElementBase>> detectorElements;
+  std::vector<std::unique_ptr<SurfacePlacementBase>> detectorElements;
 
   auto makeFan = [&](double yrot, double thickness = 0) {
     detectorElements.clear();

@@ -53,6 +53,45 @@ BOOST_AUTO_TEST_CASE(Construct) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(GetPtr) {
+  {
+    // correct type returns non-null pointer
+    MySourceLink msl;
+    msl.m_geometryId = GeometryIdentifier().withSensitive(7);
+    SourceLink sl{msl};
+
+    auto* p = sl.getPtr<MySourceLink>();
+    BOOST_REQUIRE_NE(p, static_cast<MySourceLink*>(nullptr));
+    BOOST_CHECK_EQUAL(p->geometryId(), msl.geometryId());
+
+    // wrong type returns nullptr
+    BOOST_CHECK_EQUAL(sl.getPtr<int>(), static_cast<int*>(nullptr));
+    BOOST_CHECK_EQUAL(sl.getPtr<double>(), static_cast<double*>(nullptr));
+  }
+
+  {
+    // const overload
+    int value = 42;
+    const SourceLink sl{value};
+
+    const int* p = sl.getPtr<int>();
+    BOOST_REQUIRE_NE(p, static_cast<const int*>(nullptr));
+    BOOST_CHECK_EQUAL(*p, 42);
+
+    BOOST_CHECK_EQUAL(sl.getPtr<float>(), static_cast<const float*>(nullptr));
+  }
+
+  {
+    // mutation through pointer
+    int value = 10;
+    SourceLink sl{value};
+    int* p = sl.getPtr<int>();
+    BOOST_REQUIRE_NE(p, static_cast<int*>(nullptr));
+    *p = 99;
+    BOOST_CHECK_EQUAL(sl.get<int>(), 99);
+  }
+}
+
 BOOST_AUTO_TEST_CASE(Reassign) {
   int value = 5;
   SourceLink sl{value};

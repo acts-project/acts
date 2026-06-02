@@ -13,14 +13,20 @@ from acts.examples import (
     ParticlesPrinter,
     CsvVertexWriter,
 )
-
-from acts.examples.root import (
-    RootParticleWriter,
-    RootVertexWriter,
-    RootSimHitWriter,
-)
-
 import acts.examples.hepmc3
+
+# ROOT might not be available
+try:
+    from acts.examples.root import (
+        RootParticleWriter,
+        RootVertexWriter,
+        RootSimHitWriter,
+    )
+
+    ACTS_EXAMPLES_ROOT_AVAILABLE = True
+except ImportError:
+    ACTS_EXAMPLES_ROOT_AVAILABLE = False
+
 
 # Defaults (given as `None` here) use class defaults defined in
 # Examples/Algorithms/Generators/ActsExamples/Generators/ParametricParticleGenerator.hpp
@@ -61,8 +67,14 @@ ParticleSelectorConfig = namedtuple(
 
 TruthJetConfig = namedtuple(
     "TruthJetConfig",
-    ["inputTruthParticles", "outputJets", "jetPtMin"],
-    defaults=[None, None],
+    [
+        "inputTruthParticles",
+        "inputTracks",
+        "outputJets",
+        "doTrackJetMatching",
+        "jetPtMin",
+    ],
+    defaults=[None, None, None, False, None],
 )
 
 
@@ -98,7 +110,9 @@ def _getParticleSelectionKWargs(config: ParticleSelectorConfig) -> dict:
 def _getTruthJetKWargs(config: TruthJetConfig) -> dict:
     return {
         "inputTruthParticles": config.inputTruthParticles,
+        "inputTracks": config.inputTracks,
         "outputJets": config.outputJets,
+        "doTrackJetMatching": config.doTrackJetMatching,
         "jetPtMin": config.jetPtMin,
     }
 
@@ -227,6 +241,9 @@ def addParticleGun(
         )
 
     if outputDirRoot is not None:
+        assert (
+            ACTS_EXAMPLES_ROOT_AVAILABLE
+        ), "ROOT output requested but ROOT is not available"
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
@@ -413,6 +430,9 @@ def addPythia8(
         )
 
     if outputDirRoot is not None:
+        assert (
+            ACTS_EXAMPLES_ROOT_AVAILABLE
+        ), "ROOT output requested but ROOT is not available"
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
@@ -477,6 +497,7 @@ def addFatras(
     inputParticles: str = "particles_generated_selected",
     outputParticles: str = "particles_simulated",
     outputSimHits: str = "simhits",
+    writeHelixParameters: bool = False,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirObj: Optional[Union[Path, str]] = None,
@@ -532,6 +553,7 @@ def addFatras(
         simHits=alg.config.outputSimHits,
         particlesSimulated=outputParticles,
         field=field,
+        writeHelixParameters=writeHelixParameters,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         outputDirObj=outputDirObj,
@@ -576,6 +598,9 @@ def addSimWriters(
         )
 
     if outputDirRoot is not None:
+        assert (
+            ACTS_EXAMPLES_ROOT_AVAILABLE
+        ), "ROOT output requested but ROOT is not available"
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
@@ -626,7 +651,9 @@ def addGeant4(
     outputParticles: str = "particles_simulated",
     outputSimHits: str = "simhits",
     recordHitsOfSecondaries=True,
+    recordPropagationSummaries=False,
     keepParticlesWithoutHits=True,
+    writeHelixParameters: bool = False,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirObj: Optional[Union[Path, str]] = None,
@@ -635,7 +662,7 @@ def addGeant4(
     killAfterTime: float = float("inf"),
     killSecondaries: bool = False,
     physicsList: str = "FTFP_BERT",
-    regionList: List[Any] = [],
+    detectorConstructionOptions=None,
 ) -> None:
     """This function steers the detector simulation using Geant4
 
@@ -661,7 +688,13 @@ def addGeant4(
         if given, secondary particles are removed from simulation
     """
 
-    from acts.examples.geant4 import Geant4Simulation, SensitiveSurfaceMapper
+    import acts.examples.geant4
+
+    from acts.examples.geant4 import (
+        Geant4Simulation,
+        Geant4ConstructionOptions,
+        SensitiveSurfaceMapper,
+    )
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -674,11 +707,15 @@ def addGeant4(
         smmConfig, customLogLevel(), trackingGeometry
     )
 
+    if detectorConstructionOptions is None:
+        detectorConstructionOptions = acts.examples.geant4.Geant4ConstructionOptions()
+
     alg = Geant4Simulation(
         level=customLogLevel(),
         geant4Handle=__geant4Handle,
         detector=detector,
         randomNumbers=rnd,
+        constructionOptions=detectorConstructionOptions,
         inputParticles=inputParticles,
         outputParticles=outputParticles,
         outputSimHits=outputSimHits,
@@ -692,7 +729,7 @@ def addGeant4(
         recordHitsOfNeutrals=False,
         recordHitsOfPrimaries=True,
         recordHitsOfSecondaries=recordHitsOfSecondaries,
-        recordPropagationSummaries=False,
+        recordPropagationSummaries=recordPropagationSummaries,
         keepParticlesWithoutHits=keepParticlesWithoutHits,
     )
     __geant4Handle = alg.geant4Handle
@@ -707,6 +744,7 @@ def addGeant4(
         simHits=alg.config.outputSimHits,
         particlesSimulated=outputParticles,
         field=field,
+        writeHelixParameters=writeHelixParameters,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         outputDirObj=outputDirObj,
@@ -824,6 +862,21 @@ def addDigitization(
         )
         s.addWriter(
             acts.examples.root.RootMeasurementWriter(rmwConfig, customLogLevel())
+        )
+        rmpwConfig = acts.examples.root.RootMeasurementPerformanceWriter.Config(
+            inputMeasurements=digiAlg.config.outputMeasurements,
+            inputSimHits=digiAlg.config.inputSimHits,
+            inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
+            inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
+            inputSimHitMeasurementsMap=digiAlg.config.outputSimHitMeasurementsMap,
+            filePath=str(
+                outputDirRoot / f"performance_{digiAlg.config.outputMeasurements}.root"
+            ),
+        )
+        s.addWriter(
+            acts.examples.root.RootMeasurementPerformanceWriter(
+                rmpwConfig, customLogLevel()
+            )
         )
 
     if outputDirCsv is not None:

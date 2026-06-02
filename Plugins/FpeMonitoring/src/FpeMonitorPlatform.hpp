@@ -1,0 +1,62 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
+
+#include <csignal>
+#include <cstddef>
+#include <optional>
+
+namespace ActsPlugins::detail {
+
+inline std::optional<FpeType> fpeTypeFromSiCode(int siCode) {
+  using enum FpeType;
+  switch (siCode) {
+    case FPE_INTDIV:
+      return INTDIV;
+    case FPE_INTOVF:
+      return INTOVF;
+    case FPE_FLTDIV:
+      return FLTDIV;
+    case FPE_FLTOVF:
+      return FLTOVF;
+    case FPE_FLTUND:
+      return FLTUND;
+    case FPE_FLTRES:
+      return FLTRES;
+    case FPE_FLTINV:
+      return FLTINV;
+    case FPE_FLTSUB:
+      return FLTSUB;
+    default:
+      return std::nullopt;
+  }
+}
+
+bool isRuntimeSupported();
+
+std::optional<FpeType> decodeFpeType(int signal, const siginfo_t* si,
+                                     void* ctx);
+
+void clearPendingExceptions(int excepts);
+void enableExceptions(int excepts);
+void disableExceptions(int excepts);
+void maskTrapsInSignalContext(void* ctx, FpeType type);
+
+std::size_t captureStackFromSignalContext(void* ctx, void* buffer,
+                                          std::size_t bufferBytes);
+
+std::size_t safeDumpSkipFrames();
+
+bool shouldFailFastOnUnknownSignal();
+
+void installSignalHandlers(void (*handler)(int, siginfo_t*, void*));
+
+}  // namespace ActsPlugins::detail

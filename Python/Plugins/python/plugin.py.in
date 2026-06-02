@@ -8,6 +8,6 @@ try :
 
     _patch_config(ActsPluginsPythonBindings@PLUGIN_NAME@)
 
-except ImportError:
+except ModuleNotFoundError:
     warnings.warn("@PLUGIN_NAME@ plugin not available. Try building with @PLUGIN_BUILD_FLAG@=ON.")
     raise

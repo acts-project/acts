@@ -40,45 +40,71 @@ namespace Acts {
 /// Without a distinct type for symmetric matrices, there is no way to provide
 /// any conditions e.g. square size, for the dynamic-sized case. Consequently,
 /// no dynamic-sized symmetric matrix type is defined. Use the
-/// @ref Acts::ActsDynamicMatrix instead.
+/// @ref Acts::DynamicMatrix instead.
 ///
 /// @{
 
 /// @brief Fixed-size vector type for N-dimensional vectors
 /// @tparam kSize The dimension of the vector
 template <unsigned int kSize>
-using ActsVector = Eigen::Matrix<double, kSize, 1>;
+using Vector = Eigen::Matrix<double, kSize, 1>;
 
 /// @brief Fixed-size matrix type for NxM matrices
 /// @tparam kRows Number of rows
 /// @tparam kCols Number of columns
 template <unsigned int kRows, unsigned int kCols>
-using ActsMatrix = Eigen::Matrix<double, kRows, kCols>;
+using Matrix = Eigen::Matrix<double, kRows, kCols>;
 
 /// @brief Fixed-size square matrix type for NxN matrices
 /// @tparam kSize The dimension of the square matrix
 template <unsigned int kSize>
-using ActsSquareMatrix = Eigen::Matrix<double, kSize, kSize>;
+using SquareMatrix = Eigen::Matrix<double, kSize, kSize>;
 
 /// @brief Dynamic-sized vector type
-using ActsDynamicVector = Eigen::Matrix<double, Eigen::Dynamic, 1>;
+using DynamicVector = Eigen::Matrix<double, Eigen::Dynamic, 1>;
 
 /// @brief Dynamic-sized matrix type
-using ActsDynamicMatrix = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
+using DynamicMatrix = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
+
+/// @brief Fixed-size vector type for N-dimensional vectors
+/// @tparam kSize The dimension of the vector
+/// @deprecated Use Vector instead
+template <unsigned int kSize>
+using ActsVector [[deprecated("Use Vector instead")]] = Vector<kSize>;
+/// @brief Fixed-size matrix type for NxM matrices
+/// @tparam kRows Number of rows
+/// @tparam kCols Number of columns
+/// @deprecated Use Matrix instead
+template <unsigned int kRows, unsigned int kCols>
+using ActsMatrix [[deprecated("Use Matrix instead")]] = Matrix<kRows, kCols>;
+/// @brief Fixed-size square matrix type for NxN matrices
+/// @tparam kSize The dimension of the square matrix
+/// @deprecated Use SquareMatrix instead
+template <unsigned int kSize>
+using ActsSquareMatrix [[deprecated("Use SquareMatrix instead")]] =
+    SquareMatrix<kSize>;
+/// @brief Dynamic-sized vector type
+/// @deprecated Use DynamicVector instead
+using ActsDynamicVector [[deprecated("Use DynamicVector instead")]] =
+    DynamicVector;
+/// @brief Dynamic-sized matrix type
+/// @deprecated Use DynamicMatrix instead
+using ActsDynamicMatrix [[deprecated("Use DynamicMatrix instead")]] =
+    DynamicMatrix;
 
 /// @brief 2-dimensional vector type for 2D coordinates
-using Vector2 = ActsVector<2>;
+using Vector2 = Vector<2>;
 /// @brief 3-dimensional vector type for e.g. spatial coordinates and momenta
-using Vector3 = ActsVector<3>;
+using Vector3 = Vector<3>;
 /// @brief 4-dimensional vector type for space-time coordinates
-using Vector4 = ActsVector<4>;
+using Vector4 = Vector<4>;
 
 /// @brief 2x2 square matrix type, typically used for 2D coordinate covariance
-using SquareMatrix2 = ActsSquareMatrix<2>;
+using SquareMatrix2 = SquareMatrix<2>;
 /// @brief 3x3 square matrix type, typically used for 3D coordinate covariance
-using SquareMatrix3 = ActsSquareMatrix<3>;
+using SquareMatrix3 = SquareMatrix<3>;
 /// @brief 4x4 square matrix type, typically used for 4D coordinate covariance
-using SquareMatrix4 = ActsSquareMatrix<4>;
+using SquareMatrix4 = SquareMatrix<4>;
 
 /// @brief 2D translation transformation
 using Translation2 = Eigen::Translation<double, 2>;

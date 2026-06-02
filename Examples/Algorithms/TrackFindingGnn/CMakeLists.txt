@@ -1,8 +1,7 @@
 acts_add_library(
     ExamplesTrackFindingGnn
     src/TrackFindingAlgorithmGnn.cpp
-    src/PrototracksToParameters.cpp
-    src/TrackFindingFromPrototrackAlgorithm.cpp
+    src/TrackFindingFromProtoTracksAlgorithm.cpp
     src/TruthGraphBuilder.cpp
     src/createFeatures.cpp
 )
@@ -16,3 +15,7 @@ target_link_libraries(
     ActsExamplesTrackFindingGnn
     PUBLIC Acts::PluginGnn Acts::ExamplesFramework Acts::ExamplesTrackFinding
 )
+
+if(ACTS_ENABLE_CUDA)
+    target_link_libraries(ActsExamplesTrackFindingGnn PRIVATE CUDA::cudart)
+endif()

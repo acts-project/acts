@@ -9,10 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Zip.hpp"
-#include "ActsExamples/Digitization/DigitizationConfig.hpp"
-#include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
@@ -21,8 +18,6 @@
 #include "ActsTests/CommonHelpers/WhiteBoardUtilities.hpp"
 
 #include <algorithm>
-#include <fstream>
-#include <iostream>
 #include <random>
 
 using namespace Acts;
@@ -57,7 +52,7 @@ BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
     m.parameters() = p;
     m.covariance() = c;
 
-    ActsExamples::Cluster cl;
+    Cluster cl;
 
     using Bin2D = ActsFatras::Segmentizer::Bin2D;
     using Seg2D = ActsFatras::Segmentizer::Segment2D;

@@ -26,7 +26,6 @@ class TFile;
 class TTree;
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Write out the residual and pull of track parameters and efficiency.
 ///
@@ -52,6 +51,16 @@ class RootTrackFitterPerformanceWriter final
     ResPlotTool::Config resPlotToolConfig;
     EffPlotTool::Config effPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
+
+    /// Minimum number of entries in a bin for it to be included in the
+    /// mean/width fit.
+    int fitMinEntries = 10;
+    /// The range in sigma for the iterative Gaussian fit
+    double fitSigmaRange = 3.0;
+    /// The maximum number of iterations for the iterative Gaussian fit
+    int fitIterations = 3;
+    /// Threshold for warning about fit failure fraction in profile extraction.
+    double warningThresholdFitFailureFraction = 0.55;
   };
 
   /// Construct from configuration and log level.
@@ -82,13 +91,10 @@ class RootTrackFitterPerformanceWriter final
   TFile* m_outputFile{nullptr};
   /// Plot tool for residuals and pulls.
   ResPlotTool m_resPlotTool;
-  ResPlotTool::Cache m_resPlotCache;
   /// Plot tool for efficiency
   EffPlotTool m_effPlotTool;
-  EffPlotTool::Cache m_effPlotCache;
   /// Plot tool for track hit info
   TrackSummaryPlotTool m_trackSummaryPlotTool;
-  TrackSummaryPlotTool::Cache m_trackSummaryPlotCache{};
 };
 
 }  // namespace ActsExamples

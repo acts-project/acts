@@ -8,7 +8,9 @@
 
 #pragma once
 
+#include "Acts/EventData/SeedColumns.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
@@ -47,16 +49,58 @@ class SeedProxy2 {
     requires ReadOnly
       : m_container(&other.container()), m_index(other.index()) {}
 
+  /// Copy assign a seed proxy.
+  /// @param other The seed proxy to copy.
+  /// @return Reference to this seed proxy after assignment.
+  SeedProxy2 &operator=(const SeedProxy2 &other) noexcept = default;
+
+  /// Copy assign a mutable seed proxy.
+  /// @param other The mutable seed proxy to copy.
+  /// @return Reference to this seed proxy after assignment.
+  SeedProxy2 &operator=(const SeedProxy2<false> &other) noexcept
+    requires ReadOnly
+  {
+    m_container = &other.container();
+    m_index = other.index();
+    return *this;
+  }
+
+  /// Move assign a seed proxy.
+  /// @param other The seed proxy to move.
+  /// @return Reference to this seed proxy after assignment.
+  SeedProxy2 &operator=(SeedProxy2 &&other) noexcept = default;
+
+  /// Move assign a mutable seed proxy.
+  /// @param other The mutable seed proxy to move.
+  /// @return Reference to this seed proxy after assignment.
+  SeedProxy2 &operator=(SeedProxy2<false> &&other) noexcept
+    requires ReadOnly
+  {
+    m_container = &other.container();
+    m_index = other.index();
+    return *this;
+  }
+
+  /// Returns a const proxy of the seed.
+  /// @return A const proxy of the seed.
+  SeedProxy2<true> asConst() const noexcept
+    requires(!ReadOnly)
+  {
+    return {*m_container, m_index};
+  }
+
   /// Gets the container holding the seed.
   /// @return A reference to the container holding the seed.
   SeedContainer2 &container() noexcept
-    requires ReadOnly
+    requires(!ReadOnly)
   {
     return *m_container;
   }
+
   /// Gets the container holding the seed.
   /// @return A const reference to the container holding the seed.
   const SeedContainer2 &container() const noexcept { return *m_container; }
+
   /// Gets the index of the seed in the container.
   /// @return The index of the seed in the container.
   IndexType index() const noexcept { return m_index; }
@@ -69,15 +113,29 @@ class SeedProxy2 {
       std::span<const SpacePointIndex2> spacePointIndices)
     requires(!ReadOnly)
   {
-    m_container->assignSpacePointIndices(m_index, spacePointIndices);
+    if (m_index >= m_container->size()) {
+      throw std::out_of_range("Index out of range in SeedContainer2");
+    }
+    if (m_container->m_spacePointCounts[m_index] != 0) {
+      throw std::logic_error("Space points already assigned to the seed");
+    }
+
+    m_container->m_spacePointOffsets[m_index] =
+        static_cast<std::uint32_t>(m_container->m_spacePoints.size());
+    m_container->m_spacePointCounts[m_index] =
+        static_cast<std::uint8_t>(spacePointIndices.size());
+    m_container->m_spacePoints.insert(m_container->m_spacePoints.end(),
+                                      spacePointIndices.begin(),
+                                      spacePointIndices.end());
   }
 
   /// Returns the size of the seed, i.e., the number of space points
   /// associated with it.
   /// @return The number of space points in the seed.
   [[nodiscard]] std::size_t size() const noexcept {
-    return m_container->spacePointIndices(m_index).size();
+    return spacePointIndices().size();
   }
+
   /// Checks if the seed is empty, i.e., has no space points associated with it.
   /// @return True if the seed is empty, false otherwise.
   [[nodiscard]]
@@ -90,82 +148,123 @@ class SeedProxy2 {
   std::span<SpacePointIndex2> spacePointIndices() noexcept
     requires(!ReadOnly)
   {
-    return m_container->spacePointIndices(m_index);
+    const std::size_t offset = accessImpl(m_container->m_spacePointOffsets);
+    const std::size_t count = accessImpl(m_container->m_spacePointCounts);
+    return std::span<SpacePointIndex2>(
+        m_container->m_spacePoints.data() + offset, count);
   }
+
   /// Mutable access to the quality of the seed.
   /// @return A mutable reference to the quality of the seed.
   float &quality() noexcept
     requires(!ReadOnly)
   {
-    return m_container->quality(m_index);
+    return accessImpl(m_container->m_qualities);
   }
+
   /// Mutable access to the vertex Z coordinate of the seed.
   /// @return A mutable reference to the vertex Z coordinate of the seed.
   float &vertexZ() noexcept
     requires(!ReadOnly)
   {
-    return m_container->vertexZ(m_index);
+    return accessImpl(m_container->m_vertexZs);
   }
 
   /// Const access to the space point indices of the seed.
   /// @return A span of space point indices associated with the seed.
   ///         This span is read-only and cannot be modified.
   std::span<const SpacePointIndex2> spacePointIndices() const noexcept {
-    return m_container->spacePointIndices(m_index);
+    const std::size_t offset = accessImpl(m_container->m_spacePointOffsets);
+    const std::size_t count = accessImpl(m_container->m_spacePointCounts);
+    return std::span<const SpacePointIndex2>(
+        m_container->m_spacePoints.data() + offset, count);
   }
+
   /// Const access to the quality of the seed.
   /// @return The quality of the seed.
-  float quality() const noexcept { return m_container->quality(m_index); }
+  float quality() const noexcept {
+    return accessImpl(m_container->m_qualities);
+  }
+
   /// Const access to the vertex Z coordinate of the seed.
   /// @return The vertex Z coordinate of the seed.
-  float vertexZ() const noexcept { return m_container->vertexZ(m_index); }
+  float vertexZ() const noexcept { return accessImpl(m_container->m_vertexZs); }
 
+  /// Iterator over space points referenced by the seed.
   class SpacePointIterator {
    public:
+    /// Iterator value type
     using value_type = ConstSpacePointProxy2;
+    /// Iterator difference type
     using difference_type = std::ptrdiff_t;
+    /// Iterator pointer type
     using pointer = void;
+    /// Iterator reference type
     using reference = void;
 
+    /// Iterator category
     using iterator_category = std::random_access_iterator_tag;
+    /// Iterator concept
     using iterator_concept = std::random_access_iterator_tag;
 
     SpacePointIterator() = default;
+    /// Constructor from space point container and index pointer
+    /// @param spacePointContainer Container of space points
+    /// @param indexPointer Pointer to space point index
     SpacePointIterator(const SpacePointContainer2 &spacePointContainer,
                        const SpacePointIndex2 *indexPointer) noexcept
         : m_spacePointContainer{&spacePointContainer},
           m_indexPointer{indexPointer} {}
 
+    /// Dereference operator
+    /// @return Proxy to the space point at the current position
     value_type operator*() const noexcept {
       return (*m_spacePointContainer)[*m_indexPointer];
     }
+    /// Subscript operator
+    /// @param n Offset from the current position
+    /// @return Proxy to the space point at offset n
     value_type operator[](difference_type n) const noexcept {
       return (*m_spacePointContainer)[m_indexPointer[n]];
     }
 
+    /// Pre-increment operator
+    /// @return Reference to the incremented iterator
     constexpr SpacePointIterator &operator++() noexcept {
       ++m_indexPointer;
       return *this;
     }
+    /// Post-increment operator
+    /// @return Copy of the iterator before increment
     constexpr SpacePointIterator operator++(int) noexcept {
       auto tmp = *this;
       ++(*this);
       return tmp;
     }
+    /// Pre-decrement operator
+    /// @return Reference to the decremented iterator
     constexpr SpacePointIterator &operator--() noexcept {
       --m_indexPointer;
       return *this;
     }
+    /// Post-decrement operator
+    /// @return Copy of the iterator before decrement
     constexpr SpacePointIterator operator--(int) noexcept {
       auto tmp = *this;
       --(*this);
       return tmp;
     }
 
+    /// Compound addition assignment operator
+    /// @param n Number of positions to advance
+    /// @return Reference to the advanced iterator
     constexpr SpacePointIterator &operator+=(difference_type n) noexcept {
       m_indexPointer += n;
       return *this;
     }
+    /// Compound subtraction assignment operator
+    /// @param n Number of positions to move back
+    /// @return Reference to the moved iterator
     constexpr SpacePointIterator &operator-=(difference_type n) noexcept {
       m_indexPointer -= n;
       return *this;
@@ -199,35 +298,54 @@ class SeedProxy2 {
                                       const SpacePointIterator &b) noexcept {
       return a.m_indexPointer <=> b.m_indexPointer;
     }
+
     friend constexpr bool operator==(const SpacePointIterator &a,
                                      const SpacePointIterator &b) noexcept {
       return a.m_indexPointer == b.m_indexPointer;
     }
   };
 
+  /// Range facade for the seed space points.
   class SpacePointRange {
    public:
+    /// Size type for the range
+    using size_type = std::size_t;
+    /// Value type for the range
+    using value_type = ConstSpacePointProxy2;
+
+    /// Constructor
+    /// @param spacePointContainer The space point container
+    /// @param spacePointIndices The space point indices
     SpacePointRange(
         const SpacePointContainer2 &spacePointContainer,
         std::span<const SpacePointIndex2> spacePointIndices) noexcept
         : m_spacePointContainer{&spacePointContainer},
           m_spacePointIndices{spacePointIndices} {}
 
+    /// Get the number of space points in the range
+    /// @return Number of space points
     std::size_t size() const noexcept { return m_spacePointIndices.size(); }
+    /// Check if the range is empty
+    /// @return True if the range is empty
     bool empty() const noexcept { return size() == 0; }
 
+    /// Subscript operator
+    /// @param index Index of the space point
+    /// @return Proxy to the space point at the given index
     ConstSpacePointProxy2 operator[](std::size_t index) const noexcept {
       return (*m_spacePointContainer)[m_spacePointIndices[index]];
     }
 
+    /// Get iterator to the beginning
+    /// @return Iterator to the first space point
     SpacePointIterator begin() const noexcept {
-      return SpacePointIterator(*m_spacePointContainer,
-                                m_spacePointIndices.data());
+      return {*m_spacePointContainer, m_spacePointIndices.data()};
     }
+    /// Get iterator to the end
+    /// @return Iterator past the last space point
     SpacePointIterator end() const noexcept {
-      return SpacePointIterator(
-          *m_spacePointContainer,
-          m_spacePointIndices.data() + m_spacePointIndices.size());
+      return {*m_spacePointContainer,
+              m_spacePointIndices.data() + m_spacePointIndices.size()};
     }
 
    private:
@@ -235,18 +353,43 @@ class SeedProxy2 {
     std::span<const SpacePointIndex2> m_spacePointIndices;
   };
 
-  /// Get the space points associated with this seed.
-  /// @param spacePointContainer Container holding all space points
+  /// Get the space points associated with this seed. The space point container
+  /// is taken from the seed container.
+  /// @return Range of space points for this seed
+  SpacePointRange spacePoints() const {
+    return {m_container->spacePointContainer(), spacePointIndices()};
+  }
+
+  /// Get the space points associated with this seed using an external space
+  /// point container.
+  /// @param spacePointContainer External container holding all space points
   /// @return Range of space points for this seed
   SpacePointRange spacePoints(
       const SpacePointContainer2 &spacePointContainer) const noexcept {
-    return SpacePointRange(spacePointContainer,
-                           m_container->spacePointIndices(m_index));
+    return {spacePointContainer, spacePointIndices()};
+  }
+
+  /// Copies the specified columns from another seed to this seed.
+  /// @param other The seed proxy to copy from.
+  /// @param columnsToCopy The columns to copy from the other seed.
+  template <bool other_read_only>
+  void copyFrom(const SeedProxy2<other_read_only> &other,
+                SeedColumns columnsToCopy) const
+    requires(!ReadOnly)
+  {
+    m_container->copyFrom(m_index, other.container(), other.index(),
+                          columnsToCopy);
   }
 
  private:
   ContainerType *m_container{nullptr};
   IndexType m_index{0};
+
+  template <typename Column>
+  auto &accessImpl(Column &&column) const {
+    assert(m_index < column.size() && "Index out of bounds");
+    return column[m_index];
+  }
 };
 
 }  // namespace Acts

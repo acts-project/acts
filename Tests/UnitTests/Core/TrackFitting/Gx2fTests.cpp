@@ -93,7 +93,7 @@ BoundTrackParameters makeParameters(
   stddev[eBoundPhi] = 2_degree;
   stddev[eBoundTheta] = 2_degree;
   stddev[eBoundQOverP] = 1 / 100_GeV;
-  const BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  const BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // define a track in the transverse plane along x
   const Vector4 mPos4(x, y, z, w);
   return BoundTrackParameters::createCurvilinear(mPos4, phi, theta, q / p, cov,

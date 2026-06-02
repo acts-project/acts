@@ -8,7 +8,7 @@
 
 #pragma once
 
-// Set the Mangetic Field Context PLUGIN
+// Set the Magnetic Field Context PLUGIN
 #ifdef ACTS_CORE_MAGFIELDCONTEXT_PLUGIN
 #include ACTS_CORE_MAGFIELDCONTEXT_PLUGIN
 #else

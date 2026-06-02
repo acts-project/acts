@@ -9,12 +9,9 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
-namespace podio {
-class Frame;
-}
+#include <podio/Frame.h>
 
 namespace ActsExamples {
 
@@ -26,16 +23,19 @@ class PodioInputConverter : public IAlgorithm {
   /// Constructor for the PODIO input converter.
   ///
   /// @param name The name of the algorithm
-  /// @param level The logging level
   /// @param inputFrame The input frame to convert
-  PodioInputConverter(const std::string& name, Acts::Logging::Level level,
-                      const std::string& inputFrame);
+  /// @param logger The logger instance
+  PodioInputConverter(const std::string& name, const std::string& inputFrame,
+                      std::unique_ptr<const Acts::Logger> logger = nullptr);
+
+  /// Destructor for the PODIO input converter.
+  ~PodioInputConverter() override;
 
   /// Execute the algorithm. Subclasses do not implement this method.
   ///
   /// @param ctx The algorithm context
   /// @return The process code
-  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Convert the input @c podio::Frame object to the internal EDM format.
   ///
@@ -46,7 +46,9 @@ class PodioInputConverter : public IAlgorithm {
                               const podio::Frame& frame) const = 0;
 
  private:
-  ReadDataHandle<podio::Frame> m_inputFrame{this, "InputFrame"};
+  class Impl;
+
+  std::unique_ptr<Impl> m_impl;
 };
 
 }  // namespace ActsExamples

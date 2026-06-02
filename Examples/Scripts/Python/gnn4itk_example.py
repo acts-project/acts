@@ -16,11 +16,12 @@ import argparse
 import acts
 import acts.examples
 from acts.examples.reconstruction import addGnn
-from acts.examples.gnn import (
+from acts.examples.simulation import ParticleSelectorConfig, addDigiParticleSelection
+from acts.gnn import (
     ModuleMapCuda,
     CudaTrackBuilding,
-    NodeFeature,
 )
+from acts.examples.gnn import NodeFeature
 
 u = acts.UnitConstants
 
@@ -31,6 +32,7 @@ def runGNN4ITk(
     gnnModel: Path,
     outputDir: Path = Path.cwd(),
     events: int = 1,
+    bufferEvents: int | None = None,
     logLevel=acts.logging.INFO,
 ):
     """
@@ -64,22 +66,42 @@ def runGNN4ITk(
     )
 
     # Read ATLAS Athena ROOT dump
-    s.addReader(
-        acts.examples.root.RootAthenaDumpReader(
-            level=logLevel,
-            treename="GNN4ITk",
-            inputfiles=[str(inputRootDump)],
-            outputSpacePoints="spacepoints",
-            outputClusters="clusters",
-            outputMeasurements="measurements",
-            outputMeasurementParticlesMap="measurement_particles_map",
-            outputParticleMeasurementsMap="particle_measurements_map",
-            outputParticles="particles",
-            skipOverlapSPsPhi=True,
-            skipOverlapSPsEta=False,
-            absBoundaryTolerance=0.01 * u.mm,
-        )
+
+    reader = acts.examples.root.RootAthenaDumpReader(
+        level=logLevel,
+        treename="GNN4ITk",
+        inputfiles=[str(inputRootDump)],
+        outputSpacePoints="spacepoints",
+        outputClusters="clusters",
+        outputMeasurements="measurements",
+        outputMeasurementSubset="measurement_subset",
+        outputMeasurementParticlesMap="measurement_particles_map",
+        outputParticleMeasurementsMap="particle_measurements_map",
+        outputParticles="particles",
+        skipOverlapSPsPhi=True,
+        skipOverlapSPsEta=False,
+        absBoundaryTolerance=0.01 * u.mm,
     )
+
+    if bufferEvents is not None:
+        s.addReader(
+            acts.examples.BufferedReader(
+                level=logLevel,
+                upstreamReader=reader,
+                bufferSize=min(bufferEvents, events),
+            )
+        )
+    else:
+        s.addReader(reader)
+
+    # Select primary particles with minimum 7 hits and 1 GeV pT for efficiency evaluation
+    s.addWhiteboardAlias("particles_simulated_selected", "particles")
+    particleSelectorConfig = ParticleSelectorConfig(
+        pt=(1.0 * u.GeV, None),
+        hits=(7, None),
+        removeSecondaries=True,
+    )
+    addDigiParticleSelection(s, particleSelectorConfig, logLevel=logLevel)
 
     # Configure GNN stages for module map workflow
     # All parameters hardcoded based on ITk configuration
@@ -94,7 +116,6 @@ def runGNN4ITk(
         "etaScale": 1.0,
         "gpuDevice": 0,
         "gpuBlocks": 512,
-        "moreParallel": True,
     }
     graphConstructor = ModuleMapCuda(**moduleMapConfig)
 
@@ -108,15 +129,15 @@ def runGNN4ITk(
 
     if gnnModel.suffix == ".pt":
         edgeClassifierConfig["useEdgeFeatures"] = True
-        from acts.examples.gnn import TorchEdgeClassifier
+        from acts.gnn import TorchEdgeClassifier
 
         edgeClassifiers = [TorchEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".onnx":
-        from acts.examples.gnn import OnnxEdgeClassifier
+        from acts.gnn import OnnxEdgeClassifier
 
         edgeClassifiers = [OnnxEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".engine":
-        from acts.examples.gnn import TensorRTEdgeClassifier
+        from acts.gnn import TensorRTEdgeClassifier
 
         edgeClassifiers = [TensorRTEdgeClassifier(**edgeClassifierConfig)]
     else:
@@ -130,7 +151,7 @@ def runGNN4ITk(
     }
     trackBuilder = CudaTrackBuilding(**trackBuilderConfig)
 
-    # Node features: ITk 12-feature configuration (spacepoint + 2 clusters)
+    # Node features: ITk 12-feature configuration (space point + 2 clusters)
     e = NodeFeature
     nodeFeatures = [
         e.R,
@@ -148,7 +169,7 @@ def runGNN4ITk(
     ]
     featureScales = [1000.0, 3.141592654, 1000.0, 1.0] * 3
 
-    # Add GNN tracking (spacepoints already created by reader, so no trackingGeometry)
+    # Add GNN tracking (space points already created by reader, so no trackingGeometry)
     addGnn(
         s,
         graphConstructor=graphConstructor,
@@ -201,6 +222,13 @@ if __name__ == "__main__":
         default=1,
         help="Number of events to process",
     )
+    argparser.add_argument(
+        "--bufferEvents",
+        type=int,
+        default=None,
+        help="Number of events to buffer (improves I/O performance)",
+    )
+    argparser.add_argument("--debug", action="store_true")
 
     args = argparser.parse_args()
 
@@ -210,4 +238,6 @@ if __name__ == "__main__":
         gnnModel=args.gnnModel,
         outputDir=args.outputDir,
         events=args.events,
+        bufferEvents=args.bufferEvents,
+        logLevel=acts.logging.DEBUG if args.debug else acts.logging.INFO,
     )
