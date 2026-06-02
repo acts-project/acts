@@ -11,6 +11,7 @@
 #include "ActsExamples/Io/Arrow/ArrowSimHitOutputConverter.hpp"
 #include "ActsExamples/Io/Arrow/ArrowTrackOutputConverter.hpp"
 #include "ActsExamples/Io/Parquet/ArrowOutputConverter.hpp"
+#include "ActsExamples/Io/Parquet/ColliderMLInputConverter.hpp"
 #include "ActsExamples/Io/Parquet/ParquetReader.hpp"
 #include "ActsExamples/Io/Parquet/ParquetWriter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
@@ -71,6 +72,15 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
                        inputSimHitMeasurementsMap, outputTable,
                        trackingGeometry, detectorResolver);
   }
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ColliderMLInputConverter, m, "ColliderMLInputConverter",
+      inputParticlesTable, inputHitsTable, outputParticles, outputSimHits,
+      outputMeasurements, outputMeasurementSubset, outputMeasSimHitsMap,
+      outputMeasParticlesMap, outputParticleMeasurementsMap, trackingGeometry,
+      digiConfig, geoIdMap);
+
+  m.def("loadColliderMLGeoIdMap", &loadColliderMLGeoIdMap, "path"_a);
 
   m.def("makeVolumeIdDetectorResolver",
         &ArrowSimHitOutputConverter::makeVolumeIdDetectorResolver,

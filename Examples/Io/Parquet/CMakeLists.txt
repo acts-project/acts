@@ -78,3 +78,17 @@ target_link_libraries(
 )
 
 acts_compile_headers(ExamplesIoParquet GLOB include/ActsExamples/**/*.hpp)
+
+# ColliderML input converter: separate library because it pulls in
+# ExamplesDigitization and nlohmann_json, which must not bleed into
+# the ActsPluginArrow OBJECT-absorption chain above.
+acts_add_library(ExamplesIoColliderML src/ColliderMLInputConverter.cpp)
+target_include_directories(
+    ActsExamplesIoColliderML
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+)
+target_link_libraries(
+    ActsExamplesIoColliderML
+    PUBLIC Acts::ExamplesFramework Acts::PluginArrow Acts::ExamplesDigitization
+    PRIVATE Acts::ArrowLinkage nlohmann_json::nlohmann_json
+)

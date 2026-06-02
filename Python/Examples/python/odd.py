@@ -25,6 +25,7 @@ def getOpenDataDetector(
     logLevel=acts.logging.INFO,
     gen3=False,
     constructionMethod=None,
+    withExtraBits=True,
 ):
     """This function sets up the open data detector. Requires DD4hep.
     Parameters
@@ -133,9 +134,12 @@ def getOpenDataDetector(
             name="OpenDataDetector",
             logLevel=customLogLevel(),
             dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
-            geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
             materialDecorator=materialDecorator,
         )
+        if withExtraBits:
+            dd4hepConfig.geometryIdentifierHook = acts.GeometryIdentifierHook(
+                geoid_hook
+            )
 
         if misaligned:
             dd4hepConfig.detectorElementFactory = (
