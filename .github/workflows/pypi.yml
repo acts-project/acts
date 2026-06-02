@@ -17,7 +17,7 @@ env:
   SETUP_CMD: "bash {package}/CI/dependencies/setup.sh -t v19.0.0 -d deps -e env.sh"
 
 jobs:
-  # Prepare step: get unique time-stamp and checkout of the repo (otherwise main 
+  # Prepare step: get unique time-stamp and checkout of the repo (otherwise main
   # could get updated during matrix jobs and code could differ between builds)
   prepare:
     runs-on: ubuntu-latest
@@ -53,7 +53,7 @@ jobs:
       max-parallel: 1
       fail-fast: false
       matrix:
-        os: 
+        os:
          - ubuntu-latest
         # - ubuntu-24.04-arm
         # - macos-15-intel
@@ -102,7 +102,7 @@ jobs:
           CIBW_BEFORE_ALL_MACOS: brew install ninja ccache && ${{ env.SETUP_CMD }}
           CIBW_ENVIRONMENT: GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
           CIBW_ENVIRONMENT_PASS: CI
-          CIBW_BEFORE_BUILD: ccache -z 
+          CIBW_BEFORE_BUILD: ccache -z
           CIBW_ENVIRONMENT_LINUX: CMAKE_PREFIX_PATH=$PWD/deps/venv:$PWD/deps/view CCACHE_DIR=/host/${{ env.CCACHE_DIR }}
           CIBW_ENVIRONMENT_MACOS: CMAKE_PREFIX_PATH=$PWD/deps/venv:$PWD/deps/view MACOSX_DEPLOYMENT_TARGET=15.0
           CIBW_BEFORE_TEST: ccache -s
