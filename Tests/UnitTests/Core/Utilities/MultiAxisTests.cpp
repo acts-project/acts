@@ -939,14 +939,16 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
 
   MultiAxis ma1Cl(d);
 
-  BOOST_CHECK(ma1Cl.getNeighborHoodIndices({0}, 1).collectVector() ==
-              (bins_t{}));  // underflow, makes no sense
-  BOOST_CHECK(ma1Cl.getNeighborHoodIndices({11}, 1).collectVector() ==
-              (bins_t({})));  // overflow, makes no sense
+  BOOST_CHECK(ma1Cl.getNeighborHoodIndices({0}, 1)
+                  .collectVector()
+                  .empty());  // underflow, makes no sense
+  BOOST_CHECK(ma1Cl.getNeighborHoodIndices({11}, 1)
+                  .collectVector()
+                  .empty());  // overflow, makes no sense
   BOOST_CHECK(ma1Cl.getNeighborHoodIndices({1}, 1).collectVector() ==
-              (bins_t{10, 1, 2}));  // overflow, makes no sense
+              (bins_t{10, 1, 2}));
   BOOST_CHECK(ma1Cl.getNeighborHoodIndices({5}, 1).collectVector() ==
-              (bins_t{4, 5, 6}));  // overflow, makes no sense
+              (bins_t{4, 5, 6}));
 
   Axis f(AxisClosed, 0.0, 1.0, 5u);
   Axis e(AxisClosed, 0.0, 1.0, 5u);
