@@ -36,6 +36,7 @@ EXCLUDE_FILES = (
     "CMakeLists.txt",
     "CMakePresets.json",
     "CODE_OF_CONDUCT.md",
+    "CODEOWNERS",
     "codecov.yml",
     "pytest.ini",
     "README.md",
