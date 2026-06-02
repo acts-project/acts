@@ -525,10 +525,9 @@ if args.output_parquet:
         level=acts.logging.INFO,
         inputSimHits="simhits",
         inputParticles="particles_simulated",
-        inputMeasurements="measurements",
+        inputClusters="clusters",
         inputSimHitMeasurementsMap="simhit_measurements_map",
         outputTable="simhits_arrow",
-        trackingGeometry=trackingGeometry,
         detectorResolver=_odd_detector_resolver,
     )
     s.addAlgorithm(arrSimHitConv)
