@@ -22,12 +22,11 @@ env:
   CCACHE_KEY_SUFFIX: r2
   ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
 
-permissions:
-  contents: read
-
 jobs:
   linux_ubuntu:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     container: ghcr.io/acts-project/ubuntu2404:85
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
@@ -128,6 +127,8 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     container: ghcr.io/acts-project/ubuntu2404:85
     needs: [linux_ubuntu]
     env:
@@ -168,6 +169,8 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     container: ghcr.io/acts-project/ubuntu2404:85
     needs: [linux_ubuntu]
 
@@ -216,6 +219,8 @@ jobs:
   linux_physmon_perf_report:
     needs: [linux_physmon]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Install dependencies
@@ -243,6 +248,8 @@ jobs:
 
   linux_ubuntu_extra:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
         include:
@@ -332,6 +339,8 @@ jobs:
 
   macos:
     runs-on: macos-26
+    permissions:
+      contents: read
     env:
       INSTALL_DIR: ${{ github.workspace }}/install_acts
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -421,6 +430,8 @@ jobs:
 
   external_eic-shell:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -540,6 +551,8 @@ jobs:
 
   external_key4hep-nightlies:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -620,6 +633,8 @@ jobs:
 
   linux_ubuntu_python_wheel:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: [linux_ubuntu]
     container: ghcr.io/acts-project/ubuntu2404:85
 
