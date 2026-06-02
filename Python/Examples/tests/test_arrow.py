@@ -189,8 +189,7 @@ def _add_arrow_writer(
                 table_key: table_key for table_key in inputs_to_tables.values()
             },
             expectedSchemas={
-                table_key: particleSchema()
-                for table_key in inputs_to_tables.values()
+                table_key: particleSchema() for table_key in inputs_to_tables.values()
             },
             eventsPerShard=eventsPerShard,
         )
@@ -428,9 +427,7 @@ def test_reader_schema_evolution_added_optional_column(tmp_path):
                 "majority_particle_id": pa.array(
                     [[1]], type=field_type("majority_particle_id")
                 ),
-                "hit_ids": pa.array(
-                    [[[1, 2, 3]]], type=field_type("hit_ids")
-                ),
+                "hit_ids": pa.array([[[1, 2, 3]]], type=field_type("hit_ids")),
                 "track_id": pa.array([[7]], type=field_type("track_id")),
             },
             schema=on_disk_schema,
@@ -488,8 +485,7 @@ def test_reader_schema_evolution_added_optional_column(tmp_path):
             )
             for required in ("d0", "z0", "phi", "theta", "qop"):
                 assert required in t.column_names, (
-                    f"event {ctx.eventNumber}: required column "
-                    f"'{required}' missing"
+                    f"event {ctx.eventNumber}: required column " f"'{required}' missing"
                 )
             type(self).events_seen += 1
             return acts.examples.ProcessCode.SUCCESS
@@ -499,9 +495,9 @@ def test_reader_schema_evolution_added_optional_column(tmp_path):
     s.addAlgorithm(TrackTableCheck())
     s.run()
 
-    assert TrackTableCheck.events_seen == nevents, (
-        f"checker saw {TrackTableCheck.events_seen} events, expected {nevents}"
-    )
+    assert (
+        TrackTableCheck.events_seen == nevents
+    ), f"checker saw {TrackTableCheck.events_seen} events, expected {nevents}"
 
 
 def test_python_alg_writes_arrow_table(tmp_path):
@@ -549,12 +545,8 @@ def test_python_alg_writes_arrow_table(tmp_path):
                     "majority_particle_id": pa.array(
                         [[1]], type=field_type("majority_particle_id")
                     ),
-                    "hit_ids": pa.array(
-                        [[[1, 2, 3]]], type=field_type("hit_ids")
-                    ),
-                    "track_id": pa.array(
-                        [[7]], type=field_type("track_id")
-                    ),
+                    "hit_ids": pa.array([[[1, 2, 3]]], type=field_type("hit_ids")),
+                    "track_id": pa.array([[7]], type=field_type("track_id")),
                     "t": pa.array([None], type=field_type("t")),
                 },
                 schema=track_schema_pa,
@@ -579,12 +571,12 @@ def test_python_alg_writes_arrow_table(tmp_path):
             assert t.num_rows == 1
             d0 = t.column("d0").to_pylist()[0]
             z0 = t.column("z0").to_pylist()[0]
-            assert d0 == [pytest.approx(0.1 + evt)], (
-                f"event {ctx.eventNumber}: d0 round-trip mismatch: {d0}"
-            )
-            assert z0 == [pytest.approx(0.2 + evt)], (
-                f"event {ctx.eventNumber}: z0 round-trip mismatch: {z0}"
-            )
+            assert d0 == [
+                pytest.approx(0.1 + evt)
+            ], f"event {ctx.eventNumber}: d0 round-trip mismatch: {d0}"
+            assert z0 == [
+                pytest.approx(0.2 + evt)
+            ], f"event {ctx.eventNumber}: z0 round-trip mismatch: {z0}"
             type(self).events_seen += 1
             return acts.examples.ProcessCode.SUCCESS
 
@@ -594,9 +586,9 @@ def test_python_alg_writes_arrow_table(tmp_path):
     s.addAlgorithm(TrackConsumer(key="produced_tracks_arrow"))
     s.run()
 
-    assert TrackConsumer.events_seen == nevents, (
-        f"consumer saw {TrackConsumer.events_seen} events, expected {nevents}"
-    )
+    assert (
+        TrackConsumer.events_seen == nevents
+    ), f"consumer saw {TrackConsumer.events_seen} events, expected {nevents}"
 
 
 def test_writer_rejects_missing_schema(tmp_path):
@@ -653,5 +645,3 @@ def test_writer_aborts_on_per_event_schema_mismatch(tmp_path):
     # The writer ABORTs, which the Sequencer turns into a runtime error.
     with pytest.raises(RuntimeError):
         s.run()
-
-
