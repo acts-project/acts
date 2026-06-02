@@ -78,8 +78,6 @@ jobs:
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
         run: cat build_version.txt
 
-      #- name: Remote terminal
-      #  run: curl -sSf https://sshx.io/get | sh -s run
 
       - name: Restore ccache
         id: ccache-restore
