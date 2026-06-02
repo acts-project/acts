@@ -26,13 +26,13 @@ jobs:
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
         run: echo "dev$(date +%Y%m%d%H%M%S)" > build_version.txt
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
         with:
           name: build-version
           path: build_version.txt
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
         with:
           ref: ${{ github.event.inputs.acts_ref || 'main' }}
           path: acts
@@ -40,7 +40,7 @@ jobs:
       - name: Package source as tarball
         run: tar czf acts-source.tar.gz acts/
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: acts-source
           path: acts-source.tar.gz
@@ -61,7 +61,7 @@ jobs:
 
     steps:
       - name: Download source tarball
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: acts-source
 
@@ -70,7 +70,7 @@ jobs:
 
       - name: Download build version
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: build-version
 
@@ -81,7 +81,7 @@ jobs:
 
       - name: Restore ccache
         id: ccache-restore
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
@@ -89,7 +89,7 @@ jobs:
             ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.3.1
+        uses: pypa/cibuildwheel@298ed2fb2c105540f5ed055e8a6ad78d82dd3a7e # v3.3.1
         with:
           package-dir: acts
         env:
@@ -107,7 +107,7 @@ jobs:
           CIBW_TEST_COMMAND: python {project}/acts/Examples/Scripts/Python/track_finding_python_only.py
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.13"
 
@@ -122,13 +122,13 @@ jobs:
             change_wheel_version $f --version $PATCHED_VERSION --delete-old-wheel
           done
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
 
       - name: Save ccache
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         if: always()
         with:
           path: ${{ github.workspace }}/ccache
@@ -146,14 +146,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Get wheels
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
       with:
         pattern: cibw-*
         path: dist
         merge-multiple: true
 
     - name: Publish package distributions to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
+      uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
       with:
         packages-dir: dist
         repository-url: https://test.pypi.org/legacy/
@@ -171,14 +171,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Get wheels
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
       with:
         pattern: cibw-*
         path: dist
         merge-multiple: true
 
     - name: Publish package distributions to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
+      uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
       with:
         packages-dir: dist
         skip-existing: true
