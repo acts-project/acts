@@ -83,24 +83,27 @@ class IAxis {
   /// @param min the minimum edge of the axis
   /// @param max the maximum edge of the axis
   /// @param nbins the number of bins
+  /// @param direction the direction of the axis
   ///
   /// @throws std::invalid_argument if min >= max or nbins == 0
   ///
   /// @return a unique pointer to the axis
   static std::unique_ptr<IAxis> createEquidistant(
-      AxisBoundaryType aBoundaryType, double min, double max,
-      std::size_t nbins);
+      AxisBoundaryType aBoundaryType, double min, double max, std::size_t nbins,
+      AxisDirection direction = AxisDirection::AxisUnknown);
 
   /// Centralized axis factory for variable binning
   ///
   /// @param aBoundaryType the axis boundary type
   /// @param edges are the bin edges
+  /// @param direction the direction of the axis
   ///
   /// @throws std::invalid_argument if edges is empty or not strictly increasing
   ///
   /// @return a unique pointer to the axis
   static std::unique_ptr<IAxis> createVariable(
-      AxisBoundaryType aBoundaryType, const std::vector<double>& edges);
+      AxisBoundaryType aBoundaryType, const std::vector<double>& edges,
+      AxisDirection direction = AxisDirection::AxisUnknown);
 
   /// Helper function that dispatches from the @c IAxis base class
   /// to a concrete axis type. It will call the provided @p callable
