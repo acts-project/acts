@@ -27,7 +27,7 @@ class EdgeLayerConnector final : public TrackBuildingBase {
   };
 
   EdgeLayerConnector(const Config &cfg,
-                    std::unique_ptr<const Acts::Logger> logger)
+                     std::unique_ptr<const Acts::Logger> logger)
       : m_cfg(cfg), m_logger(std::move(logger)) {}
 
   std::vector<std::vector<int>> operator()(

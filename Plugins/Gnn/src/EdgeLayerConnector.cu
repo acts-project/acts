@@ -43,10 +43,11 @@ std::vector<std::vector<int>> EdgeLayerConnector::operator()(
                tgtInt64Ptr + numEdges, edgeTgt.data());
 
   // Copy spacepoint IDs to GPU
-  auto spacepointIDsTensor = Tensor<int>::Create({1, spacepointIDs.size()}, execContext);
-  ACTS_CUDA_CHECK(cudaMemcpyAsync(spacepointIDsTensor.data(), spacepointIDs.data(),
-                                  spacepointIDs.size() * sizeof(int),
-                                  cudaMemcpyHostToDevice, stream));
+  auto spacepointIDsTensor =
+      Tensor<int>::Create({1, spacepointIDs.size()}, execContext);
+  ACTS_CUDA_CHECK(cudaMemcpyAsync(
+      spacepointIDsTensor.data(), spacepointIDs.data(),
+      spacepointIDs.size() * sizeof(int), cudaMemcpyHostToDevice, stream));
   ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
   ACTS_DEBUG("Setup graph...");
@@ -57,13 +58,12 @@ std::vector<std::vector<int>> EdgeLayerConnector::operator()(
   ACTS_CUDA_CHECK(cudaGetLastError());
 
   ACTS_DEBUG("Setup EdgeLayerConnector...");
-  CUDA_edge_layer_connector<float> connector(&graph, m_cfg.weightsCut,
-                                             static_cast<int>(m_cfg.minHits),
-                                             static_cast<int>(m_cfg.nBlocks),
-                                             static_cast<int>(m_cfg.maxHitsPerTrack));
+  CUDA_edge_layer_connector<float> connector(
+      &graph, m_cfg.weightsCut, static_cast<int>(m_cfg.minHits),
+      static_cast<int>(m_cfg.nBlocks), static_cast<int>(m_cfg.maxHitsPerTrack));
   ACTS_CUDA_CHECK(cudaDeviceSynchronize());
   ACTS_CUDA_CHECK(cudaGetLastError());
- 
+
   ACTS_DEBUG("Build tracks...");
   connector.build_tracks();
   ACTS_CUDA_CHECK(cudaDeviceSynchronize());

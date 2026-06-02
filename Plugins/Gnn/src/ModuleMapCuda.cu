@@ -489,7 +489,8 @@ CUDA_edge_data<float> ModuleMapCuda::Impl::makeEdges(
   ACTS_CUDA_CHECK(cudaGetLastError());
 
   ACTS_VERBOSE("First 10 doublet edges:\n"
-               << debugPrintEdges(nb_doublet_edges, cuda_reduced_M1_hits->data(),
+               << debugPrintEdges(nb_doublet_edges,
+                                  cuda_reduced_M1_hits->data(),
                                   cuda_reduced_M2_hits->data()));
   if (nb_doublet_edges == 0) {
     throw NoEdgesError{};

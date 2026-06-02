@@ -8,6 +8,7 @@
 
 #include "ActsPlugins/Gnn/BoostTrackBuilding.hpp"
 #include "ActsPlugins/Gnn/CudaTrackBuilding.hpp"
+#include "ActsPlugins/Gnn/EdgeLayerConnector.hpp"
 #include "ActsPlugins/Gnn/GnnPipeline.hpp"
 #include "ActsPlugins/Gnn/ModuleMapCuda.hpp"
 #include "ActsPlugins/Gnn/OnnxEdgeClassifier.hpp"
@@ -96,6 +97,10 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGnn, gnn) {
   ACTS_PYTHON_DECLARE_GNN_STAGE(ModuleMapCuda, GraphConstructionBase, gnn,
                                 moduleMapPath, rScale, phiScale, zScale,
                                 etaScale, gpuDevice, gpuBlocks, epsilon);
+
+  ACTS_PYTHON_DECLARE_GNN_STAGE(EdgeLayerConnector, TrackBuildingBase, gnn,
+                                nBlocks, maxHitsPerTrack, minHits, weightsCut);
+
 #endif
 
   {
