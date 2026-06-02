@@ -126,7 +126,7 @@ class NeighborHoodIndices {
 /// This class provides some basic functionality for calculating bin indices
 /// for a given equidistant binning.
 template <AxisBoundaryType bdt>
-class Axis<AxisType::Equidistant, bdt> : public IAxis {
+class Axis<AxisType::Equidistant, bdt> final : public IAxis {
  public:
   /// Static type identifier for this equidistant axis specialization
   static constexpr AxisType type = AxisType::Equidistant;
@@ -163,21 +163,21 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   /// @brief returns whether the axis is equidistant
   ///
   /// @return bool is equidistant
-  bool isEquidistant() const final { return true; }
+  bool isEquidistant() const override { return true; }
 
   /// @brief returns whether the axis is variable
   ///
   /// @return bool is variable
-  bool isVariable() const final { return false; }
+  bool isVariable() const override { return false; }
 
   /// @brief returns the type of the axis
   /// @return @c AxisType of this axis
-  AxisType getType() const final { return type; }
+  AxisType getType() const override { return type; }
 
   /// @brief returns the boundary type set in the template param
   ///
   /// @return @c AxisBoundaryType of this axis
-  AxisBoundaryType getBoundaryType() const final { return bdt; }
+  AxisBoundaryType getBoundaryType() const override { return bdt; }
 
   /// @brief Get #size bins which neighbor the one given
   ///
@@ -336,7 +336,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   ///       bin with lower bound @c l and upper bound @c u.
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
-  std::size_t getBin(double x) const final {
+  std::size_t getBin(double x) const override {
     return wrapBin(
         static_cast<int>(std::floor((x - getMin()) / getBinWidth()) + 1));
   }
@@ -388,17 +388,17 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   /// @brief get maximum of binning range
   ///
   /// @return maximum of binning range
-  double getMax() const final { return m_max; }
+  double getMax() const override { return m_max; }
 
   /// @brief get minimum of binning range
   ///
   /// @return minimum of binning range
-  double getMin() const final { return m_min; }
+  double getMin() const override { return m_min; }
 
   /// @brief get total number of bins
   ///
   /// @return total number of bins (excluding under-/overflow bins)
-  std::size_t getNBins() const final { return m_bins; }
+  std::size_t getNBins() const override { return m_bins; }
 
   /// @brief check whether value is inside axis limits
   /// @param x The value to check
@@ -412,7 +412,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
 
   /// @brief Return a vector of bin edges
   /// @return Vector which contains the bin edges
-  std::vector<double> getBinEdges() const final {
+  std::vector<double> getBinEdges() const override {
     std::vector<double> binEdges;
     for (std::size_t i = 1; i <= m_bins; i++) {
       binEdges.push_back(getBinLowerBound(i));
@@ -430,7 +430,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   }
 
  protected:
-  void toStream(std::ostream& os) const final { os << *this; }
+  void toStream(std::ostream& os) const override { os << *this; }
 
  private:
   /// minimum of binning range
@@ -448,7 +448,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
 /// This class provides some basic functionality for calculating bin indices
 /// for a given binning with variable bin sizes.
 template <AxisBoundaryType bdt>
-class Axis<AxisType::Variable, bdt> : public IAxis {
+class Axis<AxisType::Variable, bdt> final : public IAxis {
  public:
   /// Static type identifier for this variable-width axis specialization
   static constexpr AxisType type = AxisType::Variable;
@@ -479,21 +479,21 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   /// @brief returns whether the axis is equidistante
   ///
   /// @return bool is equidistant
-  bool isEquidistant() const final { return false; }
+  bool isEquidistant() const override { return false; }
 
   /// @brief returns whether the axis is variable
   ///
   /// @return bool is variable
-  bool isVariable() const final { return true; }
+  bool isVariable() const override { return true; }
 
   /// @brief returns the type of the axis
   /// @return @c AxisType of this axis
-  AxisType getType() const final { return type; }
+  AxisType getType() const override { return type; }
 
   /// @brief returns the boundary type set in the template param
   ///
   /// @return @c AxisBoundaryType of this axis
-  AxisBoundaryType getBoundaryType() const final { return bdt; }
+  AxisBoundaryType getBoundaryType() const override { return bdt; }
 
   /// @brief Get #size bins which neighbor the one given
   ///
@@ -650,7 +650,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   ///       bin with lower bound @c l and upper bound @c u.
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
-  std::size_t getBin(double x) const final {
+  std::size_t getBin(double x) const override {
     const auto it = std::ranges::upper_bound(m_binEdges, x);
     return wrapBin(
         static_cast<int>(std::ranges::distance(m_binEdges.begin(), it)));
@@ -707,17 +707,17 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   /// @brief get maximum of binning range
   ///
   /// @return maximum of binning range
-  double getMax() const final { return m_binEdges.back(); }
+  double getMax() const override { return m_binEdges.back(); }
 
   /// @brief get minimum of binning range
   ///
   /// @return minimum of binning range
-  double getMin() const final { return m_binEdges.front(); }
+  double getMin() const override { return m_binEdges.front(); }
 
   /// @brief get total number of bins
   ///
   /// @return total number of bins (excluding under-/overflow bins)
-  std::size_t getNBins() const final { return m_binEdges.size() - 1; }
+  std::size_t getNBins() const override { return m_binEdges.size() - 1; }
 
   /// @brief check whether value is inside axis limits
   /// @param x The value to check
@@ -733,7 +733,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
 
   /// @brief Return a vector of bin edges
   /// @return Vector which contains the bin edges
-  std::vector<double> getBinEdges() const final { return m_binEdges; }
+  std::vector<double> getBinEdges() const override { return m_binEdges; }
 
   friend std::ostream& operator<<(std::ostream& os, const Axis& axis) {
     os << "Axis<Variable, " << bdt << ">(";
@@ -746,7 +746,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   }
 
  protected:
-  void toStream(std::ostream& os) const final { os << *this; }
+  void toStream(std::ostream& os) const override { os << *this; }
 
  private:
   /// vector of bin edges (sorted in ascending order)
