@@ -61,11 +61,6 @@ parser.add_argument(
 )
 parser.add_argument("--edm4hep", help="Use edm4hep inputs", type=pathlib.Path)
 parser.add_argument(
-    "--hepmc3",
-    help="Read events from a HepMC3 file instead of running Pythia8",
-    type=pathlib.Path,
-)
-parser.add_argument(
     "--geant4", help="Use Geant4 instead of fatras", action="store_true"
 )
 parser.add_argument(
@@ -249,72 +244,6 @@ if args.edm4hep:
             removeNeutral=True,
         ),
     )
-elif args.hepmc3:
-    import acts.examples.hepmc3
-
-    HepMC3Reader = acts.examples.hepmc3.HepMC3Reader
-
-    s.addReader(
-        HepMC3Reader(
-            level=acts.logging.INFO,
-            inputPath=str(args.hepmc3),
-            outputEvent="hepmc3_event",
-            checkEventNumber=False,
-        )
-    )
-
-    hepmc3Converter = acts.examples.hepmc3.HepMC3InputConverter(
-        level=acts.logging.INFO,
-        inputEvent="hepmc3_event",
-        outputParticles="particles_generated",
-        outputVertices="vertices_truth",
-    )
-    s.addAlgorithm(hepmc3Converter)
-
-    s.addWhiteboardAlias("particles", hepmc3Converter.config.outputParticles)
-    s.addWhiteboardAlias(
-        "particles_generated_selected", hepmc3Converter.config.outputParticles
-    )
-
-    addGenParticleSelection(
-        s,
-        ParticleSelectorConfig(
-            rho=(0.0, 24 * u.mm),
-            absZ=(0.0, 1.0 * u.m),
-            eta=(-3.0, 3.0),
-            pt=(150 * u.MeV, None),
-        ),
-    )
-
-    if args.geant4:
-        if s.config.numThreads != 1:
-            raise ValueError("Geant 4 simulation does not support multi-threading")
-        addGeant4(
-            s,
-            detector,
-            trackingGeometry,
-            field,
-            outputDirRoot=outputDir if args.output_root else None,
-            outputDirCsv=outputDir if args.output_csv else None,
-            outputDirObj=outputDir if args.output_obj else None,
-            rnd=rnd,
-            killVolume=trackingGeometry.highestTrackingVolume,
-            killAfterTime=25 * u.ns,
-            writeHelixParameters=True,
-        )
-    else:
-        addFatras(
-            s,
-            trackingGeometry,
-            field,
-            enableInteractions=True,
-            outputDirRoot=outputDir if args.output_root else None,
-            outputDirCsv=outputDir if args.output_csv else None,
-            outputDirObj=outputDir if args.output_obj else None,
-            rnd=rnd,
-            writeHelixParameters=True,
-        )
-else:
     if not args.ttbar:
         addParticleGun(
             s,
