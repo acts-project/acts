@@ -12,7 +12,6 @@
 #include "Acts/Seeding2/GbtsDataStorage.hpp"
 #include "Acts/Seeding2/GbtsGeometry.hpp"
 
-#include <cstring>
 #include <vector>
 
 namespace Acts::Experimental {
