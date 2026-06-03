@@ -390,7 +390,7 @@ RootMaterialMapIo::readTextureSurfaceMaterial(TFile& rFile,
     axbtype = dynamic_cast<TH1F*>(rFile.Get(legacyAxbtypeName.c_str()));
     if (axdir != nullptr && axbtype != nullptr) {
       legacyNamesDetected = true;
-      ACTS_WARNING(
+      ACTS_VERBOSE(
           "The histograms for axis direction and boundary type were found with "
           "legacy names. Please update the file to use the new histogram "
           "names: "
