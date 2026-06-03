@@ -42,14 +42,13 @@ std::array<DirectedProtoAxis, 2> binUtilityToAxes(const BinUtility& bu) {
   const auto& bdata = bu.binningData();
   DirectedProtoAxis ax0 = binningDataToProtoAxis(bdata[0]);
   if (bdata.size() >= 2) {
-    return {std::move(ax0), binningDataToProtoAxis(bdata[1])};
+    return {ax0, binningDataToProtoAxis(bdata[1])};
   }
   // 1D → pad with a single-bin dummy axis on the orthogonal local direction
   AxisDirection dummyDir = (bdata[0].binvalue == AxisDirection::AxisX)
                                ? AxisDirection::AxisY
                                : AxisDirection::AxisX;
-  return {std::move(ax0),
-          DirectedProtoAxis(dummyDir, AxisBoundaryType::Bound, 0., 1., 1)};
+  return {ax0, DirectedProtoAxis(dummyDir, AxisBoundaryType::Bound, 0., 1., 1)};
 }
 
 }  // namespace

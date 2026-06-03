@@ -43,12 +43,12 @@ std::array<DirectedProtoAxis, 2> binUtilityToAxes(const BinUtility& bu) {
   const auto& bdata = bu.binningData();
   DirectedProtoAxis ax0 = binningDataToProtoAxis(bdata[0]);
   if (bdata.size() >= 2) {
-    return {std::move(ax0), binningDataToProtoAxis(bdata[1])};
+    return {ax0, binningDataToProtoAxis(bdata[1])};
   }
   AxisDirection dummyDir = (bdata[0].binvalue == AxisDirection::AxisX)
                                ? AxisDirection::AxisY
                                : AxisDirection::AxisX;
-  return {std::move(ax0), makeDummyAxis(dummyDir)};
+  return {ax0, makeDummyAxis(dummyDir)};
 }
 
 /// Convert a vector of DirectedProtoAxis to a fixed-size pair.
