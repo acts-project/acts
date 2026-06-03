@@ -73,8 +73,8 @@ class MultiAxis final : public IMultiAxisND<sizeof...(Axes)> {
     return detail::grid_helper::getBinCenter(multiIndex, m_axes);
   }
 
-  FlatIndex getFlatIndexFromPosition(const Point& point) const override {
-    return getFlatIndexFromMultiIndex(getMultiIndexFromPosition(point));
+  FlatIndex getFlatIndexFromPoint(const Point& point) const override {
+    return getFlatIndexFromMultiIndex(getMultiIndexFromPoint(point));
   }
 
   FlatIndex getFlatIndexFromMultiIndex(
@@ -82,7 +82,7 @@ class MultiAxis final : public IMultiAxisND<sizeof...(Axes)> {
     return detail::grid_helper::getGlobalBin(multiIndex, m_axes);
   }
 
-  MultiIndex getMultiIndexFromPosition(const Point& point) const override {
+  MultiIndex getMultiIndexFromPoint(const Point& point) const override {
     return detail::grid_helper::getLocalBinIndices(point, m_axes);
   }
 

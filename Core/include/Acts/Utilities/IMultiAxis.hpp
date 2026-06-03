@@ -312,8 +312,8 @@ class IMultiAxisND : public IMultiAxis {
     return result;
   }
 
-  virtual FlatIndex getFlatIndexFromPosition(const Point& point) const {
-    return getFlatIndexFromMultiIndex(getMultiIndexFromPosition(point));
+  virtual FlatIndex getFlatIndexFromPoint(const Point& point) const {
+    return getFlatIndexFromMultiIndex(getMultiIndexFromPoint(point));
   }
 
   virtual FlatIndex getFlatIndexFromMultiIndex(
@@ -321,7 +321,7 @@ class IMultiAxisND : public IMultiAxis {
     return detail::grid_helper::getGlobalBin(multiIndex, getAnyAxesTuple());
   }
 
-  virtual MultiIndex getMultiIndexFromPosition(const Point& point) const {
+  virtual MultiIndex getMultiIndexFromPoint(const Point& point) const {
     return detail::grid_helper::getLocalBinIndices(point, getAnyAxesTuple());
   }
 
@@ -342,7 +342,7 @@ class IMultiAxisND : public IMultiAxis {
 
   virtual detail::GlobalNeighborHoodIndices<DIM> getClosestPointsIndices(
       const Point& position) const {
-    return getClosestPointsIndices(getMultiIndexFromPosition(position));
+    return getClosestPointsIndices(getMultiIndexFromPoint(position));
   }
 };
 
