@@ -16,11 +16,14 @@ env:
   CCACHE_KEY_SUFFIX: r2
   SETUP_CMD: "bash {package}/CI/dependencies/setup.sh -t v19.0.0 -d deps -e env.sh"
 
+permissions: {}
+
 jobs:
   # Prepare step: get unique time-stamp and checkout of the repo (otherwise main
   # could get updated during matrix jobs and code could differ between builds)
   prepare:
     runs-on: ubuntu-latest
+    permissions: {}
     steps:
       - name: Set build version
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
@@ -36,6 +39,7 @@ jobs:
         with:
           ref: ${{ github.event.inputs.acts_ref || 'main' }}
           path: acts
+          persist-credentials: false
 
       - name: Package source as tarball
         run: tar czf acts-source.tar.gz acts/
@@ -49,6 +53,7 @@ jobs:
     needs: prepare
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    permissions: {}
     strategy:
       max-parallel: 1
       fail-fast: false
