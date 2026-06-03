@@ -243,6 +243,7 @@ if args.edm4hep:
             removeNeutral=True,
         ),
     )
+else:
     if not args.ttbar:
         addParticleGun(
             s,
