@@ -9,7 +9,7 @@ variables:
 
   LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
 
-  DEPENDENCY_TAG: v21.0.0
+  DEPENDENCY_TAG: v23.0.0
 
   MODEL_STORAGE: ${CI_PROJECT_DIR}/ci_models
 
@@ -66,7 +66,7 @@ build_gnn_cpu:
     - >
       cmake -B build -S src
       --preset=gitlab-ci-gnn
-      -DACTS_GNN_ENABLE_CUDA=OFF
+      -DACTS_ENABLE_CUDA=OFF
       -DACTS_GNN_ENABLE_MODULEMAP=OFF
 
     - ccache -z
@@ -394,14 +394,12 @@ linux_ubuntu_2404_clang22:
     - cvmfs
 
   variables:
+    LCG_VERSION:
     ACTS_LOG_FAILURE_THRESHOLD: WARNING
     ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
     INSTALL_DIR: ${CI_PROJECT_DIR}/install
     # force off even if it is CI mode
     ROOT_HASH_CHECKS: off
-
-
-    SETUP:
 
   cache:
     - !reference [.ccache_base, cache]
@@ -437,19 +435,6 @@ linux_ubuntu_2404_clang22:
     - ccache -z
     - cmake --build build -- -j8
     - ccache -s
-
-    - ctest --test-dir build -j$(nproc)
-
-    # Install main project for Python tests
-    - cmake --install build > install.log
-
-    # Install Python dependencies
-    - source build/this_acts_withdeps.sh
-    - python3 -m pip install -r src//Python/Examples/tests/requirements.txt
-    - cd src
-    # plotting tests with mplhep fail because an ancient mplhep version in LCG
-    # overrides the mplhep version in our venv
-    - pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
 
 lcg_107:
   extends: .lcg_base_job
@@ -501,6 +486,21 @@ lcg_109:
           - gcc15
           - clang19
 
+  script:
+    - !reference [.lcg_base_job, script]
+    - ctest --test-dir build -j$(nproc)
+
+    # Install main project for Python tests
+    - cmake --install build > install.log
+
+    # Install Python dependencies
+    - source build/this_acts_withdeps.sh
+    - python3 -m pip install -r src//Python/Examples/tests/requirements.txt
+    - cd src
+    # plotting tests with mplhep fail because an ancient mplhep version in LCG
+    # overrides the mplhep version in our venv
+    - pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
+
 # Detray gitlab CI workflows
 detray_build_cuda:
   tags: [docker]
@@ -511,6 +511,10 @@ detray_build_cuda:
   artifacts:
     paths:
       - build
+  only:
+    changes:
+      - Detray/*
+      - .gitlab-ci.yml
   script:
       - git clone $CLONE_URL src
       - git -C src checkout $HEAD_SHA
@@ -530,6 +534,10 @@ detray_test_cuda:
   image: ghcr.io/acts-project/ubuntu2404_cuda:82
   needs:
     - detray_build_cuda
+  only:
+    changes:
+      - Detray/*
+      - .gitlab-ci.yml
   script:
     - git clone $CLONE_URL src
     - git -C src checkout $HEAD_SHA
@@ -548,6 +556,10 @@ detray_build_sycl:
   artifacts:
     paths:
       - build
+  only:
+    changes:
+      - Detray/*
+      - .gitlab-ci.yml
   script:
       - git clone $CLONE_URL src
       - git -C src checkout $HEAD_SHA
@@ -567,6 +579,10 @@ detray_test_sycl:
     - detray_build_sycl
   variables:
     ONEAPI_DEVICE_SELECTOR: "*:cpu"
+  only:
+    changes:
+      - Detray/*
+      - .gitlab-ci.yml
   script:
     - git clone $CLONE_URL src
     - git -C src checkout $HEAD_SHA

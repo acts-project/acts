@@ -9,7 +9,6 @@
 #include "ActsPlugins/Json/MaterialJsonConverter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/GridSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
@@ -33,8 +32,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <functional>
-#include <numbers>
-#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -373,7 +370,7 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
     jMaterial[Acts::jsonKey().maptype] = mapType;
     // Material has been mapped
     jMaterial[Acts::jsonKey().mapkey] = true;
-    nlohmann::json jmat(hsMaterial->materialSlab(Acts::Vector3(0., 0., 0.)));
+    nlohmann::json jmat(hsMaterial->materialSlab());
     jMaterial[Acts::jsonKey().datakey] = nlohmann::json::array({
         nlohmann::json::array({
             jmat,
@@ -670,149 +667,4 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
                                                        bUtility);
     return;
   }
-}
-
-nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
-    const Acts::ISurfaceMaterial& surfaceMaterial, const Acts::Surface& surface,
-    std::size_t surfaceIndex, std::map<std::size_t, std::size_t>& gridLink) {
-  nlohmann::json jSurfaceMaterial;
-
-  // Binned material conversion
-  if (auto binnedMaterial =
-          dynamic_cast<const BinnedSurfaceMaterial*>(&surfaceMaterial);
-      binnedMaterial != nullptr) {
-    // BinUtility modifications
-    bool swapped = false;
-    // Get the bin utility (make a copy as we may modify it)
-    // Detray expects 2-dimensional grid, currently supported are
-    // x-y, r-phi, phi-z
-    BinUtility bUtility = binnedMaterial->binUtility();
-    // Turn the bin value into a 2D grid
-    if (bUtility.dimensions() == 1u) {
-      if (bUtility.binningData()[0u].binvalue == AxisDirection::AxisR) {
-        // Turn to R-Phi
-        bUtility += BinUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
-                               AxisDirection::AxisPhi);
-      } else if (bUtility.binningData()[0u].binvalue == AxisDirection::AxisZ) {
-        // Turn to Phi-Z - swap needed
-        BinUtility nbUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
-                             AxisDirection::AxisPhi);
-        nbUtility += bUtility;
-        bUtility = std::move(nbUtility);
-        swapped = true;
-      } else {
-        std::runtime_error("Unsupported binning for Detray");
-      }
-    } else if (bUtility.dimensions() == 2u &&
-               bUtility.binningData()[0u].binvalue == AxisDirection::AxisZ &&
-               bUtility.binningData()[1u].binvalue == AxisDirection::AxisPhi) {
-      BinUtility nbUtility(bUtility.binningData()[1u]);
-      nbUtility += BinUtility{bUtility.binningData()[0u]};
-      bUtility = std::move(nbUtility);
-      swapped = true;
-    }
-
-    AxisDirection bVal0 = bUtility.binningData()[0u].binvalue;
-    AxisDirection bVal1 = bUtility.binningData()[1u].binvalue;
-
-    // Translate into grid index type
-    int gridIndexType = 0;
-    if (bVal0 == AxisDirection::AxisR && bVal1 == AxisDirection::AxisPhi) {
-      gridIndexType = 0;
-    } else if (bVal0 == AxisDirection::AxisPhi &&
-               bVal1 == AxisDirection::AxisZ) {
-      gridIndexType = 3;
-    } else if (bVal0 == AxisDirection::AxisX && bVal1 == AxisDirection::AxisY) {
-      gridIndexType = 2;
-    } else {
-      std::runtime_error("Unsupported binning for Detray");
-    }
-    // Convert the axes
-    nlohmann::json jAxes = toJsonDetray(bUtility, surface);
-    // Create  a grid index, i.e. type, index tuple
-    nlohmann::json jGridLink;
-    jGridLink["type"] = gridIndexType;
-    std::size_t gridIndex = 0;
-    if (gridLink.contains(gridIndexType)) {
-      std::size_t& fGridIndex = gridLink[gridIndex];
-      gridIndex = fGridIndex;
-      fGridIndex++;
-    } else {
-      gridLink[gridIndexType] = 1;
-    }
-    jGridLink["index"] = gridIndex;
-
-    // The grid data
-    jSurfaceMaterial["axes"] = jAxes;
-    jSurfaceMaterial["grid_link"] = jGridLink;
-    jSurfaceMaterial["owner_link"] = surfaceIndex;
-
-    // The bins to be filled
-    nlohmann::json jBins;
-    auto materialMatrix = binnedMaterial->fullMaterial();
-    for (std::size_t ib1 = 0; ib1 < materialMatrix.size(); ++ib1) {
-      for (std::size_t ib0 = 0; ib0 < materialMatrix[0u].size(); ++ib0) {
-        nlohmann::json jBin;
-        // Look up the material slab
-        MaterialSlab slab = materialMatrix[ib1][ib0];
-        // Translate into a local bin
-        std::size_t lb0 = swapped ? ib1 : ib0;
-        std::size_t lb1 = swapped ? ib0 : ib1;
-        jBin["loc_index"] = std::array<std::size_t, 2u>{lb0, lb1};
-
-        const Material& material = slab.material();
-        // The content
-        nlohmann::json jContent;
-        jContent["thickness"] = slab.thickness();
-        // The actual material
-        nlohmann::json jMaterialParams;
-        if (slab.thickness() > 0.) {
-          jMaterialParams["params"] =
-              std::vector<double>{material.X0(),
-                                  material.L0(),
-                                  material.Ar(),
-                                  material.Z(),
-                                  material.massDensity(),
-                                  material.molarDensity(),
-                                  0.};
-
-        } else {
-          jMaterialParams["params"] =
-              std::vector<double>{0., 0., 0., 0., 0., 0., 0.};
-        }
-        jContent["material"] = jMaterialParams;
-        jContent["type"] = 6;
-        jContent["surface_idx"] = surfaceIndex;
-
-        nlohmann::json jContentVector;
-        jContentVector.push_back(jContent);
-        jBin["content"] = jContentVector;
-        jBins.push_back(jBin);
-      }
-    }
-    jSurfaceMaterial["bins"] = jBins;
-  }
-  return jSurfaceMaterial;
-}
-
-nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
-    const Acts::BinUtility& binUtility, const Surface& surface) {
-  nlohmann::json jAxes;
-  for (const auto [ib, bData] : enumerate(binUtility.binningData())) {
-    nlohmann::json jAxis;
-    jAxis["bounds"] = bData.option == closed ? 2 : 1;
-    jAxis["binning"] = 0u;
-    jAxis["label"] = ib;
-    jAxis["bins"] = bData.bins();
-    double offset = 0;
-    if (bData.binvalue == AxisDirection::AxisZ) {
-      offset =
-          surface.center(Acts::GeometryContext::dangerouslyDefaultConstruct())
-              .z();
-    }
-    jAxis["edges"] =
-        std::array<double, 2>{bData.min + offset, bData.max + offset};
-    jAxes.push_back(jAxis);
-  }
-  return jAxes;
 }

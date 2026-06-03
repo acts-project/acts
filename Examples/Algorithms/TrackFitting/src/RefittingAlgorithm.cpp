@@ -9,12 +9,14 @@
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -53,6 +55,47 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
   TrackContainer tracks(trackContainer, trackStateContainer);
 
+  auto perigeeSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
+      Acts::Vector3{0., 0., 0.});
+
+  // The following code is only necessary if a beamspot constraint is in use but
+  // unguarded for lifetime and simplicity reasons. The Core KF does not support
+  // a beamspot constraint by itself but it can be achieved by injecting a fake
+  // measurement on the perigee surface and processing it first in the fitter.
+  // This can lead to problems if the beamspot constraint moves the initial
+  // parameters too far and we start to miss following surfaces and
+  // measurements. But in a refitting scenario with increased bounds and direct
+  // navigation it *should* work OK.
+
+  auto beamSpotVectorTrackStateContainer =
+      std::make_shared<Acts::VectorMultiTrajectory>();
+  auto beamSpotTrackState = beamSpotVectorTrackStateContainer->makeTrackState();
+
+  const Acts::Vector2 beamSpotMeasValue{0., 0.};
+
+  beamSpotTrackState.setReferenceSurface(perigeeSurface);
+
+  if (m_cfg.beamSpotConstraint.has_value()) {
+    ACTS_DEBUG("Using provided beam spot constraint matrix");
+    beamSpotTrackState.allocateCalibrated(beamSpotMeasValue,
+                                          m_cfg.beamSpotConstraint.value());
+  } else {
+    ACTS_DEBUG("No beam spot constraint provided, using zero matrix");
+    beamSpotTrackState.allocateCalibrated(beamSpotMeasValue,
+                                          Acts::SquareMatrix2::Zero());
+  }
+
+  Acts::SourceLink testSL{42};
+  beamSpotTrackState.setUncalibratedSourceLink(std::move(testSL));
+
+  auto beamSpotConstVectorTrackStateContainer =
+      std::make_shared<Acts::ConstVectorMultiTrajectory>(
+          std::move(*beamSpotVectorTrackStateContainer));
+
+  auto beamSpotConstTrackState =
+      beamSpotConstVectorTrackStateContainer->getTrackState(
+          beamSpotTrackState.index());
+
   // Perform the fit for each input track
   std::vector<Acts::SourceLink> trackSourceLinks;
   std::vector<const Acts::Surface*> surfSequence;
@@ -76,7 +119,7 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
         ctx.geoContext,
         ctx.magFieldContext,
         ctx.calibContext,
-        &track.referenceSurface(),
+        perigeeSurface.get(),
         Acts::PropagatorPlainOptions(ctx.geoContext, ctx.magFieldContext),
         true};
 
@@ -105,8 +148,15 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
     }
 
     if (surfSequence.empty()) {
-      ACTS_WARNING("Empty track " << itrack << " found.");
+      ACTS_DEBUG("Empty track " << itrack << " found.");
       continue;
+    }
+
+    if (m_cfg.beamSpotConstraint.has_value()) {
+      RefittingCalibrator::RefittingSourceLink beamSpotSL{
+          beamSpotConstTrackState};
+      trackSourceLinks.emplace_back(Acts::SourceLink{beamSpotSL});
+      surfSequence.push_back(perigeeSurface.get());
     }
 
     std::ranges::reverse(surfSequence);
@@ -131,9 +181,9 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
         ACTS_DEBUG("No refitted parameters for track " << itrack);
       }
     } else {
-      ACTS_WARNING("Fit failed for event "
-                   << ctx.eventNumber << " track " << itrack << " with error: "
-                   << result.error() << ", " << result.error().message());
+      ACTS_DEBUG("Fit failed for event "
+                 << ctx.eventNumber << " track " << itrack << " with error: "
+                 << result.error() << ", " << result.error().message());
     }
     ++itrack;
   }

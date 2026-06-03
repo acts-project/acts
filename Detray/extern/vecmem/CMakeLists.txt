@@ -15,6 +15,13 @@ if(POLICY CMP0135)
     cmake_policy(SET CMP0135 NEW)
 endif()
 
+if(TARGET vecmem::core)
+    message(
+        FATAL_ERROR
+        "Setup of vecmem requested, but target `vecmem::core` exists!"
+    )
+endif()
+
 # Tell the user what's happening.
 message(STATUS "Building VecMem as part of the Detray project")
 
