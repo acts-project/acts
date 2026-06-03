@@ -148,17 +148,21 @@ class AnyBaseAll {};
 ///   copies when trivial.
 /// - Heap storage: values are allocated on the heap; moves transfer ownership
 ///   of the pointer; copies allocate and copy-construct the pointee.
-template <std::size_t sb_size, bool copyable = true>
+template <std::size_t sb_size, bool copyable = true, typename Base = void>
 class AnyBase : public AnyBaseAll {
   static_assert(sizeof(void*) <= sb_size, "Size is too small for a pointer");
 
   /// Type trait: T is storable when copyable requires copy+move, else
-  /// move-only.
+  /// move-only. When @c Base is not @c void, the type must additionally be
+  /// convertible to @c Base* (i.e. publicly and unambiguously derived).
   /// @tparam U Type to check
   /// @return True if the type is storable, false otherwise
   template <typename U>
   static constexpr bool isStorable() {
     if constexpr (std::is_base_of_v<AnyBaseAll, U>) {
+      return false;
+    } else if constexpr (!std::is_void_v<Base> &&
+                         !std::is_convertible_v<U*, Base*>) {
       return false;
     } else if constexpr (copyable) {
       return std::is_copy_assignable_v<U> && std::is_copy_constructible_v<U> &&
@@ -438,6 +442,80 @@ class AnyBase : public AnyBaseAll {
     return m_handler != nullptr ? m_handler->typeInfo : nullptr;
   }
 
+  // The base accessors below are member templates on a dummy @c B defaulting to
+  // @c Base. This keeps their return types (@c B& / @c B*) from being formed
+  // when @c Base is @c void: the member template is only instantiated on use,
+  // and the @c requires clause removes it entirely for the untyped variant. A
+  // plain non-template member would try to form @c void& at class instantiation
+  // and fail to compile.
+
+  /// Get a pointer to the stored value as @c Base*, regardless of its concrete
+  /// type. Only available when @c Base is not @c void.
+  /// @return Pointer to the stored value upcast to @c Base*, or nullptr if empty
+  template <typename B = Base>
+    requires(!std::is_void_v<B>)
+  B* asBase() {
+    if (m_handler == nullptr) {
+      return nullptr;
+    }
+    return m_handler->upcast(dataPtr());
+  }
+
+  /// Get a const pointer to the stored value as @c Base*. Only available when
+  /// @c Base is not @c void.
+  /// @return Const pointer to the stored value upcast to @c Base*, or nullptr if empty
+  template <typename B = Base>
+    requires(!std::is_void_v<B>)
+  const B* asBase() const {
+    if (m_handler == nullptr) {
+      return nullptr;
+    }
+    // upcast only adjusts the pointer (base-subobject offset); it never touches
+    // the pointee, so casting away const here is safe and the const is restored
+    // in the return type.
+    return m_handler->upcast(const_cast<void*>(dataPtr()));
+  }
+
+  /// Dereference to the stored value as @c Base&. Only available when @c Base
+  /// is not @c void.
+  /// @return Reference to the stored value upcast to @c Base&
+  template <typename B = Base>
+    requires(!std::is_void_v<B>)
+  B& operator*() {
+    assert(m_handler != nullptr && "operator* on empty AnyBase");
+    return *m_handler->upcast(dataPtr());
+  }
+
+  /// Dereference to the stored value as @c const @c Base&. Only available when
+  /// @c Base is not @c void.
+  /// @return Const reference to the stored value upcast to @c Base&
+  template <typename B = Base>
+    requires(!std::is_void_v<B>)
+  const B& operator*() const {
+    assert(m_handler != nullptr && "operator* on empty AnyBase");
+    return *m_handler->upcast(const_cast<void*>(dataPtr()));
+  }
+
+  /// Member access on the stored value as @c Base*. Only available when
+  /// @c Base is not @c void.
+  /// @return Pointer to the stored value upcast to @c Base*
+  template <typename B = Base>
+    requires(!std::is_void_v<B>)
+  B* operator->() {
+    assert(m_handler != nullptr && "operator-> on empty AnyBase");
+    return m_handler->upcast(dataPtr());
+  }
+
+  /// Member access on the stored value as @c const @c Base*. Only available
+  /// when @c Base is not @c void.
+  /// @return Const pointer to the stored value upcast to @c Base*
+  template <typename B = Base>
+    requires(!std::is_void_v<B>)
+  const B* operator->() const {
+    assert(m_handler != nullptr && "operator-> on empty AnyBase");
+    return m_handler->upcast(const_cast<void*>(dataPtr()));
+  }
+
  private:
   void* dataPtr() {
     if (m_handler->heapAllocated) {
@@ -458,6 +536,9 @@ class AnyBase : public AnyBaseAll {
   }
 
   struct Handler {
+    // Maps the stored payload to Base*. Collapses to void*(*)(void*) and stays
+    // nullptr (never read) when Base == void.
+    Base* (*upcast)(void*) = nullptr;
     void (*destroy)(void* ptr) = nullptr;
     void (*moveConstruct)(void* from, void* to) = nullptr;
     void (*move)(void* from, void* to) = nullptr;
@@ -497,6 +578,12 @@ class AnyBase : public AnyBaseAll {
                     (!std::is_trivially_copy_assignable_v<T> ||
                      heapAllocated<T>())) {
         h.copy = &copyImpl<T>;
+      }
+
+      if constexpr (!std::is_void_v<Base>) {
+        h.upcast = [](void* p) -> Base* {
+          return static_cast<Base*>(static_cast<T*>(p));
+        };
       }
 
       h.typeHash = typeHash<T>();
@@ -739,6 +826,19 @@ using Any = AnyBase<sizeof(void*), true>;
 /// @details Same as Any but copy constructor and copy assignment are deleted.
 ///          Use when storing types that are not copyable.
 using AnyMoveOnly = AnyBase<sizeof(void*), false>;
+
+/// @brief Typed type-erased value over a common polymorphic base
+/// @details Stores any value of a type @c T convertible to @c Base* (i.e.
+///          publicly and unambiguously derived from @c Base) and hands it back
+///          as @c Base& / @c Base* through @ref AnyBase::asBase,
+///          @ref AnyBase::operator* and @ref AnyBase::operator-> without naming
+///          @c T. The concrete type can still be recovered with
+///          @ref AnyBase::as / @ref AnyBase::asPtr. Copyable; values up to
+///          @c sb_size bytes are stored inline, larger ones on the heap.
+/// @tparam Base Common base class exposed by the accessors
+/// @tparam sb_size Size of the small-buffer-optimization storage
+template <typename Base, std::size_t sb_size = 48>
+using AnyOf = AnyBase<sb_size, true, Base>;
 
 /// @}
 
