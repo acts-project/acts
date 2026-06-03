@@ -33,7 +33,6 @@ from acts.gnn import (
     ModuleMapCuda,
     CudaTrackBuilding,
     Device,
-    EdgeLayerConnector,
 )
 from acts.examples.gnn import NodeFeature
 
@@ -172,22 +171,13 @@ def runGnnModuleMap(
         edgeClassifiers = [TensorRTEdgeClassifier(**edgeClassifierConfig)]
     else:
         raise ValueError(f"Unsupported model format: {gnnModel.suffix}")
-    if False:
-        trackBuilderConfig = {
-            "level": acts.logging.INFO,
-            "useOneBlockImplementation": False,
-            "doJunctionRemoval": True,
-        }
-        trackBuilder = CudaTrackBuilding(**trackBuilderConfig)
-    else:
-        edgeLayerConnectorConfig = {
-            "level": acts.logging.INFO,
-            "nBlocks": 512,
-            "maxHitsPerTrack": 30,
-            "minHits": 3,
-            "weightsCut": 0.01,
-        }
-        trackBuilder = EdgeLayerConnector(**edgeLayerConnectorConfig)
+
+    trackBuilderConfig = {
+        "level": acts.logging.INFO,
+        "useOneBlockImplementation": False,
+        "doJunctionRemoval": True,
+    }
+    trackBuilder = CudaTrackBuilding(**trackBuilderConfig)
 
     e = NodeFeature
     nodeFeatures = [
