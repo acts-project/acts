@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate a ColliderML → ACTS geometry ID mapping CSV file.
+"""Generate a ColliderML → ACTS geometry ID mapping Parquet file.
 
 For each unique (detector, volume, layer, surface) tuple found in a ColliderML
 tracker-hits parquet file, this script finds the matching ACTS sensitive surface
@@ -8,23 +8,29 @@ distance check.  The perpendicular distance |(hit - centre) · normal| is nearly
 zero for any hit generated on a surface, regardless of how far the hit is from
 the surface centre along the surface (important for long strip sensors).
 
-Output: a CSV file with columns
-    detector, volume, layer, surface, acts_geo_id
-where acts_geo_id is the hex-encoded Acts::GeometryIdentifier value.
+Output: a Parquet file with columns
+    detector  (uint8)   ColliderML detector index
+    volume    (uint8)   ColliderML volume_id
+    layer     (uint16)  ColliderML layer_id
+    surface   (uint32)  ColliderML surface_id
+    acts_geo_id (uint64) ACTS GeometryIdentifier raw value
+
+Read in C++ via loadColliderMLGeoIdMap() in ColliderMLInputConverter.
 
 Usage
 -----
 ./run_in_env.sh python3 Examples/Scripts/Python/generate_colliderml_geo_map.py \\
     --input  colliderml-sample/CERN__ColliderML-Release-1 \\
-    --output colliderml_geo_map.csv
+    --output colliderml_geo_map.parquet
 """
 
 import argparse
-import csv
 import pathlib
 import sys
 
+
 import numpy as np
+import pyarrow as pa
 import pyarrow.parquet as pq
 
 try:
@@ -105,8 +111,8 @@ def main():
         "--output",
         "-o",
         type=pathlib.Path,
-        default=pathlib.Path("colliderml_geo_map.csv"),
-        help="Output CSV path (default: colliderml_geo_map.csv)",
+        default=pathlib.Path("colliderml_geo_map.parquet"),
+        help="Output Parquet path (default: colliderml_geo_map.parquet)",
     )
     parser.add_argument(
         "--odd-dir",
@@ -191,13 +197,30 @@ def main():
         )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    with open(args.output, "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(["detector", "volume", "layer", "surface", "acts_geo_id"])
-        for det, vol, layer, surf, geo_id_val in rows:
-            writer.writerow([det, vol, layer, surf, hex(geo_id_val)])
 
-    print(f"Written to {args.output}")
+    # Write as Parquet using the same type widths that C++ reads back:
+    # detector/volume → uint8, layer → uint16, surface → uint32, acts_geo_id → uint64
+    schema = pa.schema(
+        [
+            pa.field("detector", pa.uint8()),
+            pa.field("volume", pa.uint8()),
+            pa.field("layer", pa.uint16()),
+            pa.field("surface", pa.uint32()),
+            pa.field("acts_geo_id", pa.uint64()),
+        ]
+    )
+    table = pa.table(
+        {
+            "detector": pa.array([r[0] for r in rows], type=pa.uint8()),
+            "volume": pa.array([r[1] for r in rows], type=pa.uint8()),
+            "layer": pa.array([r[2] for r in rows], type=pa.uint16()),
+            "surface": pa.array([r[3] for r in rows], type=pa.uint32()),
+            "acts_geo_id": pa.array([r[4] for r in rows], type=pa.uint64()),
+        },
+        schema=schema,
+    )
+    pq.write_table(table, args.output, compression="snappy")
+    print(f"Written to {args.output}  ({len(rows)} rows)")
 
 
 if __name__ == "__main__":

@@ -90,6 +90,18 @@ class ACTS_ARROW_EXPORT ArrowTable {
   ArrowSchemaHandle schema() const;
   std::string toString() const;
 
+  /// Extract a flat (non-nested) column as a typed vector.
+  ///
+  /// These accessors are intended for static lookup tables (e.g. geometry-ID
+  /// maps) stored as flat Parquet files — one value per row, no list
+  /// wrapping. Returns an empty vector if the column is absent or has an
+  /// incompatible type. All Arrow symbol references stay inside
+  /// @c ArrowUtil.cpp so callers do not need to include Arrow headers.
+  std::vector<std::uint8_t> flatColumnUInt8(const std::string& name) const;
+  std::vector<std::uint16_t> flatColumnUInt16(const std::string& name) const;
+  std::vector<std::uint32_t> flatColumnUInt32(const std::string& name) const;
+  std::vector<std::uint64_t> flatColumnUInt64(const std::string& name) const;
+
   /// Export the wrapped @c arrow::Table through the Arrow C Data
   /// Interface. Multi-chunk tables are combined into a single record
   /// batch first; for the canonical 1-row-per-event layout this is a
@@ -148,6 +160,17 @@ ACTS_ARROW_EXPORT std::shared_ptr<arrow::Schema> trackSchema();
 /// Schema for the per-event simulated-hit table emitted by
 /// @c ArrowSimHitOutputConverter.
 ACTS_ARROW_EXPORT std::shared_ptr<arrow::Schema> simHitSchema();
+
+/// Read a flat (non-event-indexed) Parquet file into an @c ArrowTable.
+///
+/// Unlike @c ParquetDatasetReader, this function reads a single Parquet file
+/// that has no @c event_id column in one shot — suited for static lookup
+/// tables such as geometry-ID maps. All Parquet/Arrow symbols are confined
+/// to @c ArrowUtil.cpp so callers do not need to include Parquet headers.
+///
+/// Throws on I/O or schema errors.
+ACTS_ARROW_EXPORT ArrowTable
+readFlatParquetFile(const std::filesystem::path& path);
 
 /// Thin RAII wrapper around @c parquet::arrow::FileWriter that opens lazily
 /// on first write so the schema can be taken from the first event's table.

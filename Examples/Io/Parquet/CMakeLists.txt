@@ -79,16 +79,57 @@ target_link_libraries(
 
 acts_compile_headers(ExamplesIoParquet GLOB include/ActsExamples/**/*.hpp)
 
-# ColliderML input converter: separate library because it pulls in
-# ExamplesDigitization and nlohmann_json, which must not bleed into
-# the ActsPluginArrow OBJECT-absorption chain above.
-acts_add_library(ExamplesIoColliderML src/ColliderMLInputConverter.cpp)
+# ColliderML input converter — absorbed into libActsPluginArrow like the
+# other Parquet TUs. It needs ExamplesDigitization (for createMeasurement and
+# smearing types), so we add that as a PRIVATE link to ActsPluginArrow and
+# include its headers via genex (not a link-level dep on the OBJECT target).
+add_library(
+    ActsExamplesIoColliderML_obj
+    OBJECT
+    src/ColliderMLInputConverter.cpp
+)
+target_include_directories(
+    ActsExamplesIoColliderML_obj
+    PRIVATE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<TARGET_PROPERTY:Acts::PluginArrow,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:Acts::ExamplesDigitization,INTERFACE_INCLUDE_DIRECTORIES>
+)
+target_link_libraries(
+    ActsExamplesIoColliderML_obj
+    PRIVATE Acts::ExamplesFramework Acts::ArrowLinkage
+)
+set_target_properties(
+    ActsExamplesIoColliderML_obj
+    PROPERTIES POSITION_INDEPENDENT_CODE ON
+)
+if(ACTS_ARROW_ISOLATED)
+    set_target_properties(
+        ActsExamplesIoColliderML_obj
+        PROPERTIES CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN YES
+    )
+endif()
+
+target_sources(
+    ActsPluginArrow
+    PRIVATE $<TARGET_OBJECTS:ActsExamplesIoColliderML_obj>
+)
+target_link_libraries(ActsPluginArrow PRIVATE Acts::ExamplesDigitization)
+# ExamplesDigitization is PRIVATE-linked by ActsPluginArrow; add it to the
+# export set for the same reason ExamplesFramework is exported above.
+install(TARGETS ActsExamplesDigitization EXPORT ActsPluginArrowTargets)
+
+# INTERFACE alias so downstream code using Acts::ExamplesIoColliderML still
+# resolves to libActsPluginArrow (no separate .so produced).
+acts_add_library(ExamplesIoColliderML INTERFACE)
 target_include_directories(
     ActsExamplesIoColliderML
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 target_link_libraries(
     ActsExamplesIoColliderML
-    PUBLIC Acts::ExamplesFramework Acts::PluginArrow Acts::ExamplesDigitization
-    PRIVATE Acts::ArrowLinkage nlohmann_json::nlohmann_json
+    INTERFACE
+        Acts::PluginArrow
+        Acts::ExamplesFramework
+        Acts::ExamplesDigitization
 )

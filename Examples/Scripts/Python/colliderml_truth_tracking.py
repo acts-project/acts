@@ -50,9 +50,9 @@ def main():
         "--geo-map",
         type=pathlib.Path,
         default=None,
-        help="ColliderML → ACTS geometry ID map CSV "
+        help="ColliderML → ACTS geometry ID map Parquet file "
         "(from generate_colliderml_geo_map.py). "
-        "Omit to use direct volume/layer/surface passthrough.",
+        "Strongly recommended; omit only for debugging.",
     )
     parser.add_argument(
         "--digi-config",

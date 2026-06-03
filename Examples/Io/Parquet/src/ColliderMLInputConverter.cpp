@@ -16,19 +16,17 @@
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsPlugins/Arrow/ArrowUtil.hpp"
 
 #include <cmath>
 #include <cstdint>
-#include <fstream>
 #include <memory>
 #include <numeric>
 #include <optional>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 
 #include <arrow/api.h>
-#include <nlohmann/json.hpp>
 
 namespace ActsExamples {
 
@@ -95,49 +93,38 @@ std::optional<double> sigmaFromSmearer(
 }  // namespace
 
 // ---------------------------------------------------------------------------
-// Loader: CSV geometry ID map
+// Loader: Parquet geometry ID map
 // ---------------------------------------------------------------------------
 
 std::unordered_map<std::uint64_t, Acts::GeometryIdentifier>
 loadColliderMLGeoIdMap(const std::filesystem::path& path) {
-  std::ifstream f(path);
-  if (!f.is_open()) {
-    throw std::runtime_error("loadColliderMLGeoIdMap: cannot open '" +
-                             path.string() + "'");
+  // Read via the Arrow plugin abstraction so Parquet symbols stay confined
+  // to libActsPluginsArrow (hidden visibility) and don't leak here.
+  const auto table = ActsPlugins::ArrowUtil::readFlatParquetFile(path);
+
+  // Schema from generate_colliderml_geo_map.py:
+  //   detector (uint8), volume (uint8), layer (uint16),
+  //   surface (uint32), acts_geo_id (uint64)
+  const auto detCol = table.flatColumnUInt8("detector");
+  const auto volCol = table.flatColumnUInt8("volume");
+  const auto layCol = table.flatColumnUInt16("layer");
+  const auto surfCol = table.flatColumnUInt32("surface");
+  const auto geoCol = table.flatColumnUInt64("acts_geo_id");
+
+  const std::size_t n = static_cast<std::size_t>(table.numRows());
+  if (detCol.size() != n || volCol.size() != n || layCol.size() != n ||
+      surfCol.size() != n || geoCol.size() != n) {
+    throw std::runtime_error(
+        "loadColliderMLGeoIdMap: column size mismatch or unexpected type in '" +
+        path.string() + "'");
   }
 
   std::unordered_map<std::uint64_t, Acts::GeometryIdentifier> map;
-  std::string line;
-
-  // skip header
-  if (!std::getline(f, line)) {
-    throw std::runtime_error("loadColliderMLGeoIdMap: empty file");
-  }
-
-  while (std::getline(f, line)) {
-    if (line.empty() || line[0] == '#') {
-      continue;
-    }
-    std::istringstream ss(line);
-    std::string tok;
-    std::uint64_t det, vol, layer, surf, actsId;
-    auto next = [&](std::uint64_t& v) {
-      if (!std::getline(ss, tok, ',')) {
-        throw std::runtime_error("loadColliderMLGeoIdMap: malformed line: " +
-                                 line);
-      }
-      v = std::stoull(tok, nullptr, 0);
-    };
-    next(det);
-    next(vol);
-    next(layer);
-    next(surf);
-    next(actsId);
-
-    std::uint64_t key = colliderMLGeoKey(
-        static_cast<std::uint8_t>(det), static_cast<std::uint8_t>(vol),
-        static_cast<std::uint16_t>(layer), static_cast<std::uint32_t>(surf));
-    map.emplace(key, Acts::GeometryIdentifier(actsId));
+  map.reserve(n);
+  for (std::size_t i = 0; i < n; ++i) {
+    const std::uint64_t key =
+        colliderMLGeoKey(detCol[i], volCol[i], layCol[i], surfCol[i]);
+    map.emplace(key, Acts::GeometryIdentifier(geoCol[i]));
   }
   return map;
 }
