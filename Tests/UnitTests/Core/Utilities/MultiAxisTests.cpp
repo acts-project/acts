@@ -34,8 +34,9 @@ BOOST_AUTO_TEST_CASE(test_1d_equidistant) {
   MultiAxis ma(a);
 
   // test general properties
-  BOOST_CHECK_EQUAL(ma.getNAxes(), 6u);
+  BOOST_CHECK_EQUAL(ma.getNAxes(), 1u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(0), 4u);
+  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 6u);
 
   // flat bin index
   BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({-0.3}), 0u);
@@ -106,9 +107,10 @@ BOOST_AUTO_TEST_CASE(test_2d_equidistant) {
   MultiAxis ma(a, b);
 
   // test general properties
-  BOOST_CHECK_EQUAL(ma.getNAxes(), 30u);
+  BOOST_CHECK_EQUAL(ma.getNAxes(), 2u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(0), 4u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(1), 3u);
+  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 30u);
 
   // flat bin index
   BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({-1, -1}), 0u);
@@ -268,47 +270,48 @@ BOOST_AUTO_TEST_CASE(test_3d_equidistant) {
   MultiAxis ma(a, b, c);
 
   // test general properties
-  BOOST_CHECK_EQUAL(ma.getNAxes(), 80u);
+  BOOST_CHECK_EQUAL(ma.getNAxes(), 3u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(0), 2u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(1), 3u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(2), 2u);
+  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 80u);
 
   // test grid points
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({0, 0, 0}), 25u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({0, 0, 1}), 26u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({0, 0, 2}), 27u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({0, 1, 0}), 29u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({0, 1, 1}), 30u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({0, 1, 2}), 31u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({0, 2, 0}), 33u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({0, 2, 1}), 34u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({0, 2, 2}), 35u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({0, 3, 0}), 37u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({0, 3, 1}), 38u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({0, 3, 2}), 39u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({1, 0, 0}), 45u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({1, 0, 1}), 46u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({1, 0, 2}), 47u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({1, 1, 1}), 49u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({1, 1, 2}), 50u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({1, 2, 0}), 53u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({1, 2, 1}), 54u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({1, 2, 2}), 55u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({1, 3, 0}), 57u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({1, 3, 1}), 58u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({1, 3, 2}), 59u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({2, 0, 0}), 65u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({2, 0, 1}), 66u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({2, 0, 2}), 67u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({2, 1, 0}), 69u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({2, 1, 1}), 70u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({2, 1, 2}), 71u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({2, 2, 0}), 73u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({2, 2, 1}), 74u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({2, 2, 2}), 75u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({2, 3, 0}), 77u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({2, 3, 1}), 78u);
-  BOOST_CHECK_EQUAL(ma.getFlatIndexFromMultiIndex({2, 3, 2}), 79u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({0, 0, 0}), 25u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({0, 0, 1}), 26u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({0, 0, 2}), 27u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({0, 1, 0}), 29u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({0, 1, 1}), 30u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({0, 1, 2}), 31u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({0, 2, 0}), 33u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({0, 2, 1}), 34u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({0, 2, 2}), 35u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({0, 3, 0}), 37u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({0, 3, 1}), 38u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({0, 3, 2}), 39u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({1, 0, 0}), 45u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({1, 0, 1}), 46u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({1, 0, 2}), 47u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({1, 1, 0}), 49u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({1, 1, 1}), 50u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({1, 2, 0}), 53u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({1, 2, 1}), 54u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({1, 2, 2}), 55u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({1, 3, 0}), 57u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({1, 3, 1}), 58u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({1, 3, 2}), 59u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({2, 0, 0}), 65u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({2, 0, 1}), 66u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({2, 0, 2}), 67u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({2, 1, 0}), 69u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({2, 1, 1}), 70u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({2, 1, 2}), 71u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({2, 2, 0}), 73u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({2, 2, 1}), 74u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({2, 2, 2}), 75u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({2, 3, 0}), 77u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({2, 3, 1}), 78u);
+  BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({2, 3, 2}), 79u);
 
   // flat bin index -> multi bin indices
   BOOST_CHECK(ma.getMultiIndexFromFlatIndex(0) == (MultiIndex{0, 0, 0}));
@@ -415,8 +418,9 @@ BOOST_AUTO_TEST_CASE(test_1d_variable) {
   MultiAxis ma(a);
 
   // test general properties
-  BOOST_CHECK_EQUAL(ma.getNAxes(), 4u);
+  BOOST_CHECK_EQUAL(ma.getNAxes(), 1u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(0), 2u);
+  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 4u);
 
   // flat bin index
   BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({-0.3}), 0u);
@@ -473,9 +477,10 @@ BOOST_AUTO_TEST_CASE(test_2d_variable) {
   MultiAxis ma(a, b);
 
   // test general properties
-  BOOST_CHECK_EQUAL(ma.getNAxes(), 16u);
+  BOOST_CHECK_EQUAL(ma.getNAxes(), 2u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(0), 2u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(1), 2u);
+  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 16u);
 
   // test grid points
   BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({0, 0}), 5u);
@@ -586,10 +591,11 @@ BOOST_AUTO_TEST_CASE(test_3d_variable) {
   MultiAxis ma(a, b, c);
 
   // test general properties
-  BOOST_CHECK_EQUAL(ma.getNAxes(), 60u);
+  BOOST_CHECK_EQUAL(ma.getNAxes(), 3u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(0), 1u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(1), 2u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(2), 3u);
+  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 60u);
 
   // test grid points
   BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({0, 0, 0}), 26u);
@@ -715,9 +721,10 @@ BOOST_AUTO_TEST_CASE(test_2d_mixed) {
   MultiAxis ma(a, b);
 
   // test general properties
-  BOOST_CHECK_EQUAL(ma.getNAxes(), 24u);
+  BOOST_CHECK_EQUAL(ma.getNAxes(), 2u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(0), 4u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(1), 2u);
+  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 24u);
 
   // test grid points
   BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({0, 0}), 5u);
