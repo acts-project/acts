@@ -34,7 +34,6 @@ from acts.gnn import (
     CudaTrackBuilding,
     Device,
     EdgeLayerConnector,
-    NodeFeature,
 )
 from acts.examples.gnn import NodeFeature
 
