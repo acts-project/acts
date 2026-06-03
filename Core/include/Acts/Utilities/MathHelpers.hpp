@@ -266,15 +266,13 @@ inline double sinc(double x) {
 }
 
 /// Calculate the integer power of a number at compile time using recursion.
-/// @tparam T The type of the base number, which should support multiplication and negation if negative powers are used
+/// @tparam T The type of the base number, which should support multiplication by itself
 /// @param num The base number to be raised to a power
 /// @param pow The exponent to which the base number is raised
 /// @return The result of num raised to the power of pow
 template <typename T>
 constexpr T ipow(T num, unsigned int pow) {
-  return (pow >= sizeof(unsigned int) * 8) ? 0
-         : pow == 0                        ? 1
-                                           : num * ipow(num, pow - 1);
+  return (pow == 0) ? 1 : num * ipow(num, pow - 1);
 }
 
 }  // namespace Acts
