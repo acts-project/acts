@@ -108,7 +108,7 @@ if "__main__" == __name__:
 
     # File handling
     tfile = TFile.Open(args.input, "READ")
-    ttree = tfile.Get("material-tracks")
+    ttree = tfile.Get("material_tracks")
 
     # {\displaystyle \theta =2\arctan \left(e^{-\eta }\right).}
     def theta_from_eta(eta):

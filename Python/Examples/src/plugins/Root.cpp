@@ -8,6 +8,7 @@
 
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/Io/Root/RootAthenaDumpReader.hpp"
+#include "ActsExamples/Io/Root/RootAthenaDumpWriter.hpp"
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
@@ -79,12 +80,13 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
     ACTS_PYTHON_DECLARE_READER(
         RootAthenaDumpReader, root, "RootAthenaDumpReader", treename,
-        inputfiles, outputMeasurements, outputPixelSpacePoints,
-        outputStripSpacePoints, outputSpacePoints, outputClusters,
-        outputMeasurementParticlesMap, outputParticleMeasurementsMap,
-        outputParticles, onlySpacePoints, onlyPassedParticles,
-        skipOverlapSPsPhi, skipOverlapSPsEta, geometryIdMap, trackingGeometry,
-        absBoundaryTolerance, noTruth, readCellData);
+        inputfiles, outputMeasurements, outputMeasurementSubset,
+        outputPixelSpacePoints, outputStripSpacePoints, outputSpacePoints,
+        outputClusters, outputMeasurementParticlesMap,
+        outputParticleMeasurementsMap, outputParticles, onlySpacePoints,
+        onlyPassedParticles, skipOverlapSPsPhi, skipOverlapSPsEta,
+        geometryIdMap, trackingGeometry, absBoundaryTolerance, noTruth,
+        readCellData);
 
 #ifdef WITH_GEOMODEL_PLUGIN
     ACTS_PYTHON_DECLARE_READER(RootAthenaDumpGeoIdCollector, root,
@@ -98,34 +100,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
   // Output
   {
-    // Bindings for axis variant used in PlotTool configurations
     {
-      py::class_<Acts::Experimental::AxisVariant>(root, "AxisVariant")
-          .def_static(
-              "regular",
-              [](unsigned bins, double low, double high,
-                 const std::string& title) {
-                return Acts::Experimental::AxisVariant(
-                    Acts::Experimental::BoostRegularAxis(bins, low, high,
-                                                         title));
-              },
-              "bins"_a, "low"_a, "high"_a, "title"_a = "")
-          .def_static(
-              "log",
-              [](unsigned bins, double low, double high,
-                 const std::string& title) {
-                return Acts::Experimental::AxisVariant(
-                    Acts::Experimental::BoostLogAxis(bins, low, high, title));
-              },
-              "bins"_a, "low"_a, "high"_a, "title"_a = "")
-          .def_static(
-              "variable",
-              [](const std::vector<double>& edges, const std::string& title) {
-                return Acts::Experimental::AxisVariant(
-                    Acts::Experimental::BoostVariableAxis(edges, title));
-              },
-              "edges"_a, "title"_a = "");
-
       py::class_<EffPlotTool::Config>(root, "EffPlotToolConfig")
           .def(py::init<>())
           .def_readwrite("varBinning", &EffPlotTool::Config::varBinning)
@@ -184,11 +159,12 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
                                inputTrackParticleMatching, filePath, fileMode,
                                treeNameTracks, treeNameParticles);
 
-    ACTS_PYTHON_DECLARE_WRITER(RootTrackFitterPerformanceWriter, root,
-                               "RootTrackFitterPerformanceWriter", inputTracks,
-                               inputParticles, inputTrackParticleMatching,
-                               filePath, resPlotToolConfig, effPlotToolConfig,
-                               trackSummaryPlotToolConfig);
+    ACTS_PYTHON_DECLARE_WRITER(
+        RootTrackFitterPerformanceWriter, root,
+        "RootTrackFitterPerformanceWriter", inputTracks, inputParticles,
+        inputTrackParticleMatching, filePath, resPlotToolConfig,
+        effPlotToolConfig, trackSummaryPlotToolConfig, fitMinEntries,
+        fitSigmaRange, fitIterations, warningThresholdFitFailureFraction);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackParameterWriter, root, "RootTrackParameterWriter",
@@ -277,6 +253,11 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
     ACTS_PYTHON_DECLARE_WRITER(
         RootSpacePointWriter, root, "RootSpacePointWriter", inputSpacePoints,
         inputMeasurementParticlesMap, filePath, fileMode, treeName);
+
+    ACTS_PYTHON_DECLARE_WRITER(
+        RootAthenaDumpWriter, root, "RootAthenaDumpWriter", inputParticles,
+        inputClusters, inputMeasurements, inputMeasParticleMap,
+        inputSpacePoints, filePath, treeName);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackStatesWriter, root, "RootTrackStatesWriter", inputTracks,

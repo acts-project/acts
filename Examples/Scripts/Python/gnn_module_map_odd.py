@@ -29,11 +29,12 @@ from acts.examples.simulation import (
     ParticleSelectorConfig,
 )
 from acts.examples.reconstruction import addGnn, addSpacePointsMaking
-from acts.examples.gnn import (
+from acts.gnn import (
     ModuleMapCuda,
     CudaTrackBuilding,
-    NodeFeature,
+    Device,
 )
+from acts.examples.gnn import NodeFeature
 
 
 def runGnnModuleMap(
@@ -144,7 +145,6 @@ def runGnnModuleMap(
         "etaScale": 1.0,
         "gpuDevice": 0,
         "gpuBlocks": 512,
-        "moreParallel": True,
     }
     graphConstructor = ModuleMapCuda(**moduleMapConfig)
 
@@ -157,15 +157,16 @@ def runGnnModuleMap(
 
     if gnnModel.suffix == ".pt":
         edgeClassifierConfig["useEdgeFeatures"] = True
-        from acts.examples.gnn import TorchEdgeClassifier
+        from acts.gnn import TorchEdgeClassifier
 
         edgeClassifiers = [TorchEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".onnx":
-        from acts.examples.gnn import OnnxEdgeClassifier
+        from acts.gnn import OnnxEdgeClassifier
 
+        edgeClassifierConfig["device"] = Device.Cuda()
         edgeClassifiers = [OnnxEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".engine":
-        from acts.examples.gnn import TensorRTEdgeClassifier
+        from acts.gnn import TensorRTEdgeClassifier
 
         edgeClassifiers = [TensorRTEdgeClassifier(**edgeClassifierConfig)]
     else:
@@ -206,6 +207,24 @@ def runGnnModuleMap(
         outputDirRoot=str(outputDir),
         logLevel=acts.logging.INFO,
     )
+
+    protoTracksToSeeds = acts.examples.ProtoTracksToSeeds(
+        level=acts.logging.INFO,
+        inputProtoTracks="gnn-protoTracks",
+        inputSpacePoints="spacepoints",
+        outputSeeds="gnn-seeds",
+        outputProtoTracks="gnn-protoTracks-seeds-filtered",
+    )
+    s.addAlgorithm(protoTracksToSeeds)
+
+    parEstAlg = acts.examples.TrackParamsEstimationAlgorithm(
+        level=acts.logging.INFO,
+        inputSeeds=protoTracksToSeeds.config.outputSeeds,
+        outputTrackParameters="gnn-initial-parameters",
+        trackingGeometry=trackingGeometry,
+        magneticField=field,
+    )
+    s.addAlgorithm(parEstAlg)
 
     s.run()
     return s

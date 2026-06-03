@@ -15,8 +15,8 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/GenerationProcess.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/EventData/ProcessType.hpp"
 
 #include <algorithm>
 #include <array>
@@ -271,23 +271,22 @@ inline std::array<Particle, 2> PhotonConversion::generateChildren(
   // the calculations for consistency. Using the full Particle constructor with
   // charge and mass also avoids an additional lookup in the internal data
   // tables.
-  std::array<Particle, 2> children = {
+  return {
       Particle(photon.particleId().makeDescendant(0), Acts::eElectron, -1_e,
                electronMass())
           .setPosition4(photon.fourPosition())
           .setDirection(child1Direction)
           .setAbsoluteMomentum(absoluteMomentum1)
-          .setProcess(ProcessType::ePhotonConversion)
+          .setProcess(GenerationProcess::ePhotonConversion)
           .setReferenceSurface(photon.referenceSurface()),
       Particle(photon.particleId().makeDescendant(1), Acts::ePositron, 1_e,
                electronMass())
           .setPosition4(photon.fourPosition())
           .setDirection(child2Direction)
           .setAbsoluteMomentum(absoluteMomentum2)
-          .setProcess(ProcessType::ePhotonConversion)
+          .setProcess(GenerationProcess::ePhotonConversion)
           .setReferenceSurface(photon.referenceSurface()),
   };
-  return children;
 }
 
 template <typename generator_t>

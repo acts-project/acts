@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 
 #pragma once
@@ -28,6 +29,9 @@ class SurfaceArrayNavigationPolicy : public INavigationPolicy {
     /// The number of bins in the local directions. The interpretation depends
     /// on the layer type.
     std::pair<std::size_t, std::size_t> bins;
+    /// Envelope added to the ProtoLayer extent when computing the surface-array
+    /// lookup tolerance.
+    ExtentEnvelope envelope = ExtentEnvelope::Zero();
   };
 
   /// Main constructor, which internally creates the surface array acceleration
@@ -85,7 +89,13 @@ class SurfaceArrayNavigationPolicy : public INavigationPolicy {
   /// @return The surface array
   const SurfaceArray& surfaceArray() const;
 
+  /// Constant access to config
+  /// @return config
+  const Config& config() const;
+
  private:
+  Config m_cfg;
+
   std::unique_ptr<SurfaceArray> m_surfaceArray{};
   const TrackingVolume& m_volume;
 };

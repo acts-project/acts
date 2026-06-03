@@ -34,6 +34,13 @@ DiamondVolumeBounds::DiamondVolumeBounds(double x1, double x2, double x3,
   buildSurfaceBounds();
 }
 
+DiamondVolumeBounds::DiamondVolumeBounds(
+    const std::array<double, eSize>& values) noexcept(false)
+    : m_values(values) {
+  checkConsistency();
+  buildSurfaceBounds();
+}
+
 std::vector<double> DiamondVolumeBounds::values() const {
   return {m_values.begin(), m_values.end()};
 }
@@ -46,13 +53,12 @@ std::vector<OrientedSurface> DiamondVolumeBounds::orientedSurfaces(
   // (0) - At negative local z
   auto negZTransform = transform * Translation3(0., 0., -get(eHalfLengthZ));
   auto sf = Surface::makeShared<PlaneSurface>(negZTransform, m_FaceXYBounds);
-  surfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal()});
+  surfaces.emplace_back(std::move(sf), Direction::AlongNormal());
 
   // (1) - At positive local z
   auto posZTransform = transform * Translation3(0., 0., get(eHalfLengthZ));
   sf = Surface::makeShared<PlaneSurface>(posZTransform, m_FaceXYBounds);
-  surfaces.push_back(
-      OrientedSurface{std::move(sf), Direction::OppositeNormal()});
+  surfaces.emplace_back(std::move(sf), Direction::OppositeNormal());
 
   double posXOffset23 = 0.5 * get(eLengthY2) / std::tan(get(eBetaAngle));
   double posXOffset12 =
@@ -66,7 +72,7 @@ std::vector<OrientedSurface> DiamondVolumeBounds::orientedSurfaces(
       AngleAxis3(-std::numbers::pi / 2. + get(eAlphaAngle), Vector3::UnitZ()) *
       s_planeYZ;
   sf = Surface::makeShared<PlaneSurface>(nyz12Transform, m_FaceYZ12Bounds);
-  surfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal()});
+  surfaces.emplace_back(std::move(sf), Direction::AlongNormal());
 
   // (3) - At positive x face yz12
   Vector3 pyz12Position(get(eHalfLengthX1) + posXOffset12,
@@ -76,8 +82,7 @@ std::vector<OrientedSurface> DiamondVolumeBounds::orientedSurfaces(
       AngleAxis3(-std::numbers::pi / 2. + get(eAlphaAngle), -Vector3::UnitZ()) *
       s_planeYZ;
   sf = Surface::makeShared<PlaneSurface>(pyz12Transform, m_FaceYZ12Bounds);
-  surfaces.push_back(
-      OrientedSurface{std::move(sf), Direction::OppositeNormal()});
+  surfaces.emplace_back(std::move(sf), Direction::OppositeNormal());
 
   // (4) - At negative x face yz23
   Vector3 nyz23Position(-get(eHalfLengthX3) - posXOffset23,
@@ -87,7 +92,7 @@ std::vector<OrientedSurface> DiamondVolumeBounds::orientedSurfaces(
                                    Vector3(0., 0., -1.)) *
                         s_planeYZ;
   sf = Surface::makeShared<PlaneSurface>(nyz23Transform, m_FaceYZ23Bounds);
-  surfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal()});
+  surfaces.emplace_back(std::move(sf), Direction::AlongNormal());
 
   // (5) - At positive x face yz23
   Vector3 pyz23Position(get(eHalfLengthX3) + posXOffset23, 0.5 * get(eLengthY2),
@@ -98,21 +103,19 @@ std::vector<OrientedSurface> DiamondVolumeBounds::orientedSurfaces(
       s_planeYZ;
 
   sf = Surface::makeShared<PlaneSurface>(pyz23Transform, m_FaceYZ23Bounds);
-  surfaces.push_back(
-      OrientedSurface{std::move(sf), Direction::OppositeNormal()});
+  surfaces.emplace_back(std::move(sf), Direction::OppositeNormal());
 
   // (6) - At negative y face zx
   auto nyTransform =
       transform * Translation3(0., -get(eLengthY1), 0.) * s_planeZX;
   sf = Surface::makeShared<PlaneSurface>(nyTransform, m_negYFaceZXBounds);
-  surfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal()});
+  surfaces.emplace_back(std::move(sf), Direction::AlongNormal());
 
   // (7) - At positive y face zx
   auto pyTransform =
       transform * Translation3(0., get(eLengthY2), 0.) * s_planeZX;
   sf = Surface::makeShared<PlaneSurface>(pyTransform, m_posYFaceZXBounds);
-  surfaces.push_back(
-      OrientedSurface{std::move(sf), Direction::OppositeNormal()});
+  surfaces.emplace_back(std::move(sf), Direction::OppositeNormal());
 
   return surfaces;
 };

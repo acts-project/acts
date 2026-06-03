@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
                     volumeConfig.layers.size() * 2 +
                         1u);  // #layers = navigation + material layers
   BOOST_CHECK_EQUAL(trVol->volumeName(), volumeConfig.name);
-  BOOST_CHECK_NE(trVol->volumeMaterial(), nullptr);
+  BOOST_CHECK(trVol->hasMaterial());
 
   // Test the building
   volumeConfig.layers.clear();

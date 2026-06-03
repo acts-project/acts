@@ -72,12 +72,12 @@ MaterialUpdateMode determineMaterialUpdateMode(
 /// @param direction The direction at which to evaluate the material slab
 /// @param updateMode The material update mode
 /// @return The evaluated material slab
-MaterialSlab evaluateMaterialSlab(const GeometryContext& geoContext,
-                                  const Surface& surface,
-                                  Direction propagationDirection,
-                                  const Vector3& position,
-                                  const Vector3& direction,
-                                  MaterialUpdateMode updateMode);
+Result<MaterialSlab> evaluateMaterialSlab(const GeometryContext& geoContext,
+                                          const Surface& surface,
+                                          Direction propagationDirection,
+                                          const Vector3& position,
+                                          const Vector3& direction,
+                                          MaterialUpdateMode updateMode);
 
 /// Evaluate the material slab at the propagation state and surface
 /// @tparam propagator_state_t The type of the propagator state
@@ -88,10 +88,10 @@ MaterialSlab evaluateMaterialSlab(const GeometryContext& geoContext,
 /// @param updateMode The material update mode
 /// @return The evaluated material slab
 template <typename propagator_state_t, typename stepper_t>
-MaterialSlab evaluateMaterialSlab(const propagator_state_t& state,
-                                  const stepper_t& stepper,
-                                  const Surface& surface,
-                                  MaterialUpdateMode updateMode) {
+Result<MaterialSlab> evaluateMaterialSlab(const propagator_state_t& state,
+                                          const stepper_t& stepper,
+                                          const Surface& surface,
+                                          MaterialUpdateMode updateMode) {
   const GeometryContext& geoContext = state.options.geoContext;
   const Direction propagationDirection = state.options.direction;
   const Vector3 position = stepper.position(state.stepping);
@@ -237,12 +237,16 @@ PointwiseMaterialEffects performMaterialInteraction(
 /// @param logger The logger to use for verbose output
 /// @return The computed material effects
 template <typename propagator_state_t, typename stepper_t>
-PointwiseMaterialEffects performMaterialInteraction(
+Result<PointwiseMaterialEffects> performMaterialInteraction(
     propagator_state_t& state, const stepper_t& stepper, const Surface& surface,
     MaterialUpdateMode updateMode, NoiseUpdateMode noiseUpdateMode,
     bool multipleScattering, bool energyLoss, const Logger& logger) {
-  const MaterialSlab slab =
+  const Result<MaterialSlab> slabResult =
       evaluateMaterialSlab(state, stepper, surface, updateMode);
+  if (!slabResult.ok()) {
+    return slabResult.error();
+  }
+  const MaterialSlab& slab = slabResult.value();
   if (slab.isVacuum()) {
     ACTS_VERBOSE("No material effects on surface: " << surface.geometryId()
                                                     << " with update mode: "

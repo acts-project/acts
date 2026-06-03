@@ -129,6 +129,9 @@ class VolumeMaterialMapper {
   /// @param cfg Configuration struct
   /// @param propagator The straight line propagator
   /// @param slogger The logger
+  [[deprecated(
+      "Material mapping with propagation is deprecated. Use MaterialMapper "
+      "instead.")]]
   VolumeMaterialMapper(const Config& cfg, StraightLinePropagator propagator,
                        std::unique_ptr<const Logger> slogger = getDefaultLogger(
                            "VolumeMaterialMapper", Logging::INFO));
@@ -177,9 +180,7 @@ class VolumeMaterialMapper {
 
   /// selector for finding
   struct MaterialVolumeSelector {
-    bool operator()(const TrackingVolume& vf) const {
-      return (vf.volumeMaterial() != nullptr);
-    }
+    bool operator()(const TrackingVolume& vf) const { return vf.hasMaterial(); }
   };
 
   /// @brief finds all surfaces with ProtoVolumeMaterial of a volume

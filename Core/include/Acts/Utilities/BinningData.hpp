@@ -458,6 +458,27 @@ class BinningData {
     return 0.5 * (bmin + bmax);
   }
 
+  /// Create a scaled version of this BinningData
+  /// @param factor is the scaling factor to be applied to the binning parameters
+  /// @return a new BinningData object with scaled parameters
+  BinningData scale(float factor) const {
+    BinningData scaled = *this;
+    scaled.min *= factor;
+    scaled.max *= factor;
+    scaled.step *= factor;
+    for (auto& boundary : scaled.m_boundaries) {
+      boundary *= factor;
+    }
+    for (auto& boundary : scaled.m_totalBoundaries) {
+      boundary *= factor;
+    }
+    if (scaled.subBinningData) {
+      scaled.subBinningData = std::make_unique<const BinningData>(
+          scaled.subBinningData->scale(factor));
+    }
+    return scaled;
+  }
+
  private:
   std::size_t m_bins{};             ///< number of bins
   std::vector<float> m_boundaries;  ///< vector of holding the bin boundaries
@@ -553,10 +574,9 @@ class BinningData {
       return (bData.option == closed) ? 0 : (bData.m_bins - 1);
     }
 
-    auto lb = std::lower_bound(bData.m_boundaries.begin(),
-                               bData.m_boundaries.end(), value);
+    auto lb = std::ranges::lower_bound(bData.m_boundaries, value);
     return static_cast<std::size_t>(
-        std::distance(bData.m_boundaries.begin(), lb) - 1);
+        std::ranges::distance(bData.m_boundaries.begin(), lb) - 1);
   }
 
  public:
@@ -585,4 +605,5 @@ class BinningData {
     return sl.str();
   }
 };
+
 }  // namespace Acts

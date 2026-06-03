@@ -10,7 +10,7 @@
 
 #include "ActsExamples/Utilities/GroupBy.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/EventData/ParticleOutcome.hpp"
+#include "ActsFatras/EventData/SimulationOutcome.hpp"
 
 #include <boost/container/flat_set.hpp>
 
@@ -69,12 +69,14 @@ class SimParticle final {
   ///       is used to identify the whole particle. Setting it on an existing
   ///       particle is usually a mistake.
   SimParticle withParticleId(SimBarcode particleId) const {
-    return SimParticle(initialState().withParticleId(particleId),
-                       finalState().withParticleId(particleId));
+    SimParticle copy(initialState().withParticleId(particleId),
+                     finalState().withParticleId(particleId));
+    copy.setParentParticleId(parentParticleId());
+    return copy;
   }
 
   /// Set the process type that generated this particle.
-  SimParticle& setProcess(ActsFatras::ProcessType proc) {
+  SimParticle& setProcess(ActsFatras::GenerationProcess proc) {
     initialState().setProcess(proc);
     finalState().setProcess(proc);
     return *this;
@@ -103,11 +105,23 @@ class SimParticle final {
     finalState().setParticleId(barcode);
     return *this;
   }
+  /// Set the parent particle id on both initial and final state.
+  SimParticle& setParentParticleId(SimBarcode parentId) {
+    initialState().setParentParticleId(parentId);
+    finalState().setParentParticleId(parentId);
+    return *this;
+  }
 
   /// Particle identifier within an event.
   SimBarcode particleId() const { return initialState().particleId(); }
+  /// Parent particle id, or default-constructed @c SimBarcode if unknown.
+  SimBarcode parentParticleId() const {
+    return initialState().parentParticleId();
+  }
   /// Which type of process generated this particle.
-  ActsFatras::ProcessType process() const { return initialState().process(); }
+  ActsFatras::GenerationProcess process() const {
+    return initialState().process();
+  }
   /// PDG particle number that identifies the type.
   Acts::PdgParticle pdg() const { return initialState().pdg(); }
   /// Absolute PDG particle number that identifies the type.
@@ -170,7 +184,9 @@ class SimParticle final {
   std::uint32_t numberOfHits() const { return finalState().numberOfHits(); }
 
   /// Particle outcome.
-  ActsFatras::ParticleOutcome outcome() const { return finalState().outcome(); }
+  ActsFatras::SimulationOutcome outcome() const {
+    return finalState().outcome();
+  }
 
  private:
   SimParticleState m_initial;

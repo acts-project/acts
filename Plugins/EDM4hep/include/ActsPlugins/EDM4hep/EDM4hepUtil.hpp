@@ -23,6 +23,8 @@
 #include "ActsPodioEdm/MutableTrackerHitLocal.h"
 #include "ActsPodioEdm/TrackerHitLocal.h"
 
+#include <functional>
+#include <optional>
 #include <span>
 #include <stdexcept>
 
@@ -50,6 +52,9 @@ struct std::hash<podio::ObjectID> {
 };
 
 #endif
+
+#include "ActsPodioEdm/TrackerHitLocalCollection.h"
+#include "ActsPodioEdm/TrackerHitLocalSimTrackerHitLinkCollection.h"
 
 /// @namespace ActsPlugins::EDM4hepUtil
 /// @ingroup edm4hep_plugin
@@ -390,5 +395,26 @@ struct MeasurementData {
 /// @return The extracted measurement data (parameters, covariance, indices,
 ///         cellId)
 MeasurementData readMeasurement(const ActsPodioEdm::TrackerHitLocal& from);
+
+/// Callback type for sim hit lookup during TrackerHitLocal link writing.
+/// Given a hit index (position in the TrackerHitLocalCollection), returns the
+/// associated edm4hep SimTrackerHit, or std::nullopt if no association exists.
+using SimHitForHitIndex =
+    std::function<std::optional<edm4hep::SimTrackerHit>(std::size_t hitIndex)>;
+
+/// Write sim-hit links for a TrackerHitLocal collection.
+///
+/// For each hit in @p hits, calls @p lookup with its position index. If the
+/// callback returns a hit, a link entry is created in @p links. Hits with no
+/// association are silently skipped, so the resulting link collection may be
+/// sparse.
+///
+/// @param hits    The TrackerHitLocal collection to link from
+/// @param links   The link collection to populate
+/// @param lookup  Callback mapping hit index → optional SimTrackerHit
+void writeTrackerHitSimHitLinks(
+    const ActsPodioEdm::TrackerHitLocalCollection& hits,
+    ActsPodioEdm::TrackerHitLocalSimTrackerHitLinkCollection& links,
+    const SimHitForHitIndex& lookup);
 
 }  // namespace ActsPlugins::EDM4hepUtil

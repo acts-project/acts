@@ -26,6 +26,7 @@ enum class TelescopeSurfaceType {
 /// Global method to build the telescope tracking geometry
 ///
 /// @param gctx is the detector element dependent geometry context
+/// @param factory is the factory responsible for creating the detector elements
 /// @param detectorStore is the store for the detector element
 /// @param positions are the positions of different layers in the longitudinal
 ///                  direction
