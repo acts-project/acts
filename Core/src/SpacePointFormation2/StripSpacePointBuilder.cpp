@@ -88,6 +88,13 @@ Result<Vector3> StripSpacePointBuilder::computeCosmicSpacePoint(
 
 namespace {
 
+/// Numerical-stability floor for geometric quantities that appear in
+/// denominators below (strip half-lengths, sin of the stereo angle).
+/// Strips and stereo angles in any realistic detector are orders of
+/// magnitude above this; the guard is purely to avoid divide-by-zero on
+/// degenerate inputs.
+constexpr double kGeometryEpsilon = 1e-9;
+
 /// @brief Struct for variables related to the calculation of space points
 struct FormationState {
   /// Vector pointing from bottom to top end of first SDE
@@ -123,7 +130,8 @@ struct FormationState {
 Result<void> computeConstrainedFormationState(
     const StripSpacePointBuilder::StripEnds& stripEnds1,
     const StripSpacePointBuilder::StripEnds& stripEnds2, const Vector3& vertex,
-    FormationState& state, const double stripLengthTolerance) {
+    FormationState& state, const double stripLengthTolerance,
+    const double stripGapParameter) {
   /// The following algorithm is meant for finding the position on the first
   /// strip if there is a corresponding Measurement on the second strip. The
   /// resulting point is a point x on the first surfaces. This point is
@@ -160,6 +168,27 @@ Result<void> computeConstrainedFormationState(
 
   // Set the limit for the parameter
   state.limit = 1 + stripLengthTolerance;
+
+  // Additional acceptance allowance proportional to the geometric gap
+  // between the two stereo wafer faces. See ConstrainedOptions docs for
+  // the formula. Disabled when stripGapParameter == 0.
+  if (stripGapParameter > 0.0) {
+    const Vector3 gapVec =
+        0.5 * (stripEnds2.top + stripEnds2.bottom - stripEnds1.top -
+               stripEnds1.bottom);
+    const double sdir1n = state.firstBtmToTop.norm();
+    const double sdir2n = state.secondBtmToTop.norm();
+    if (sdir1n > kGeometryEpsilon && sdir2n > kGeometryEpsilon) {
+      const double cosStereo =
+          state.firstBtmToTop.dot(state.secondBtmToTop) / (sdir1n * sdir2n);
+      const double sinStereo =
+          std::sqrt(std::max(0.0, 1.0 - cosStereo * cosStereo));
+      const double halfLen = 0.5 * sdir1n;
+      if (sinStereo > kGeometryEpsilon && halfLen > kGeometryEpsilon) {
+        state.limit += stripGapParameter * gapVec.norm() / sinStereo / halfLen;
+      }
+    }
+  }
 
   // Check if m and n can be resolved in the interval (-1, 1)
   if (std::abs(state.m) > state.limit || std::abs(state.n) > state.limit) {
@@ -270,9 +299,9 @@ Result<Vector3> StripSpacePointBuilder::computeConstrainedSpacePoint(
     const ConstrainedOptions& options) {
   FormationState state;
 
-  Result<void> result =
-      computeConstrainedFormationState(stripEnds1, stripEnds2, options.vertex,
-                                       state, options.stripLengthTolerance);
+  Result<void> result = computeConstrainedFormationState(
+      stripEnds1, stripEnds2, options.vertex, state,
+      options.stripLengthTolerance, options.stripGapParameter);
 
   if (!result.ok()) {
     result = recoverConstrainedFormationState(state,

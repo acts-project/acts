@@ -16,6 +16,7 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -25,6 +26,16 @@ class TrackingGeometry;
 }
 
 namespace ActsExamples {
+
+/// Strip cluster pairing strategy, applied after partner-module mapping.
+enum class StripPairingMode : std::uint8_t {
+  /// Keep one best-distance pair per face-1 cluster.
+  TopOne,
+  /// Keep up to `stripTopK` best-distance pairs per face-1 cluster.
+  TopK,
+  /// Keep every cluster pair passing the geometric cuts.
+  AllPairs,
+};
 
 /// Create space point representations from measurements.
 ///
@@ -61,6 +72,24 @@ class SpacePointMaker final : public IAlgorithm {
     std::vector<Acts::GeometryIdentifier> geometrySelection;
 
     std::vector<Acts::GeometryIdentifier> stripGeometrySelection;
+
+    /// Strip cluster pairing strategy, applied after partner-module mapping.
+    StripPairingMode stripPairingMode = StripPairingMode::TopOne;
+    /// k for `stripPairingMode == StripPairingMode::TopK`.
+    std::size_t stripTopK = 1;
+    /// Geometric cuts applied to each candidate pair before mode selection.
+    /// Mirrors Acts::StripSpacePointBuilder::ClusterPairingOptions defaults.
+    double stripPairingMaxDistance = 100.0;     // mm
+    double stripPairingMaxAngleTheta = 1.0;     // rad
+    double stripPairingMaxAnglePhi = 1.0;       // rad
+    /// Constrained-SP geometric tolerances (Acts::StripSpacePointBuilder).
+    double stripLengthTolerance = 0.01;
+    double stripLengthGapTolerance = 0.01;
+    /// Additional acceptance allowance proportional to the geometric gap
+    /// between the two stereo wafer faces. Forwarded to
+    /// `Acts::StripSpacePointBuilder::ConstrainedOptions::stripGapParameter`.
+    /// See the header there for the definition. 0 disables it.
+    double stripGapParameter = 0.0;
   };
 
   /// Construct the space point maker.

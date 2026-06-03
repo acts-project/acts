@@ -42,6 +42,34 @@ namespace {
 
 static constexpr float nanf = std::numeric_limits<float>::quiet_NaN();
 
+/// @brief Build the geometry range used by the strip-spacepoint logic.
+///
+/// Combines `selectLowestNonZeroGeometryObject` (which honours `volume` and
+/// `layer` from the selector) with an explicit filter on `extra`. The
+/// `extra` component of a strip surface's GeometryIdentifier indexes
+/// concentric rings within a layer (e.g. in ODD each LS endcap layer is
+/// split into rings 1, 2). Stereo partners always live in the *same* ring,
+/// so the partner search and the per-event source-link grouping both run
+/// per-ring.
+///
+/// Selector semantics:
+///   selector.extra() == 0 : wildcard, accept every ring on this layer.
+///   selector.extra() != 0 : accept only surfaces with matching `extra`.
+template <typename Container>
+auto selectStripRange(const Container& container,
+                      Acts::GeometryIdentifier selector) {
+  // The underlying (vol, layer) range must be passed to the pipe as an
+  // xvalue: that way `std::views::filter` wraps it in
+  // `std::ranges::owning_view` and the returned `filter_view` keeps it
+  // alive. Storing it in a local would leave the returned view holding a
+  // dangling `ref_view` to a destroyed Range.
+  return selectLowestNonZeroGeometryObject(container, selector) |
+         std::views::filter([selector](const auto& elem) {
+           const auto extra = detail::GeometryIdGetter{}(elem).extra();
+           return selector.extra() == 0u || extra == selector.extra();
+         });
+}
+
 void createPixelSpacePoint(
     const Acts::GeometryContext& gctx, const Acts::Surface& surface,
     const ConstVariableBoundMeasurementProxy& measurement,
@@ -112,13 +140,13 @@ Acts::Result<void> createStripSpacePoint(
     const ConstVariableBoundMeasurementProxy& measurement1,
     const ConstVariableBoundMeasurementProxy& measurement2,
     const IndexSourceLink& sourceLink1, const IndexSourceLink& sourceLink2,
-    SpacePointContainer& spacePoints) {
+    SpacePointContainer& spacePoints,
+    const Acts::StripSpacePointBuilder::ConstrainedOptions& options) {
   const Acts::StripSpacePointBuilder::StripEnds stripEnds1 =
       getStripEnds(gctx, surface1, measurement1);
   const Acts::StripSpacePointBuilder::StripEnds stripEnds2 =
       getStripEnds(gctx, surface2, measurement2);
 
-  const Acts::StripSpacePointBuilder::ConstrainedOptions options{};
   const Acts::Result<Acts::Vector3> spacePoint =
       Acts::StripSpacePointBuilder::computeConstrainedSpacePoint(
           stripEnds1, stripEnds2, options);
@@ -172,8 +200,9 @@ Acts::Result<void> createStripSpacePoint(
 }  // namespace
 
 SpacePointMaker::SpacePointMaker(Config cfg,
-                                 std::unique_ptr<const Acts::Logger> logger)
-    : IAlgorithm("SpacePointMaker", std::move(logger)), m_cfg(std::move(cfg)) {
+                                 std::unique_ptr<const Acts::Logger> logger_)
+    : IAlgorithm("SpacePointMaker", std::move(logger_)),
+      m_cfg(std::move(cfg)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurement input collection");
   }
@@ -186,6 +215,9 @@ SpacePointMaker::SpacePointMaker(Config cfg,
   if (m_cfg.geometrySelection.empty() && m_cfg.stripGeometrySelection.empty()) {
     throw std::invalid_argument("Missing space point maker geometry selection");
   }
+  if (m_cfg.stripPairingMode == StripPairingMode::TopK && m_cfg.stripTopK == 0) {
+    throw std::invalid_argument("stripTopK must be > 0 for TopK mode");
+  }
 
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
@@ -197,8 +229,8 @@ SpacePointMaker::SpacePointMaker(Config cfg,
       if ((geoId.approach() != 0u) || (geoId.boundary() != 0u) ||
           (geoId.sensitive() != 0u)) {
         throw std::invalid_argument(
-            "Invalid geometry selection: only volume and layer are allowed to "
-            "be set");
+            "Invalid geometry selection: only volume, layer and extra are "
+            "allowed to be set");
       }
     }
   }
@@ -209,7 +241,7 @@ SpacePointMaker::SpacePointMaker(Config cfg,
   // we would create the space points for the layer twice.
   const auto isDuplicate = [](Acts::GeometryIdentifier ref,
                               Acts::GeometryIdentifier cmp) {
-    // code assumes ref < cmp and that only volume and layer can be non-zero
+    // code assumes ref < cmp and that only volume/layer/extra can be non-zero
     // root node always contains everything
     if (ref.volume() == 0) {
       return true;
@@ -218,21 +250,22 @@ SpacePointMaker::SpacePointMaker(Config cfg,
     if (ref.volume() != cmp.volume()) {
       return false;
     }
-    // within the same volume hierarchy only consider layers
-    return (ref.layer() == cmp.layer());
+    // within the same volume hierarchy compare (layer, extra). `extra` is
+    // used to distinguish concentric rings inside a layer; two selectors
+    // with the same (volume, layer) but different `extra` address different
+    // physical rings and must not be deduped.
+    return (ref.layer() == cmp.layer()) && (ref.extra() == cmp.extra());
   };
-  // sort geometry selection so the unique filtering works
-  std::ranges::sort(m_cfg.geometrySelection,
-                    std::less<Acts::GeometryIdentifier>{});
-  const auto geoSelLastUnique =
-      std::ranges::unique(m_cfg.geometrySelection, isDuplicate);
-  if (geoSelLastUnique.begin() != geoSelLastUnique.end()) {
-    ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::WARNING,
-                         "Removed " << std::distance(geoSelLastUnique.begin(),
-                                                     geoSelLastUnique.end())
-                                    << " geometry selection duplicates");
-    m_cfg.geometrySelection.erase(geoSelLastUnique.begin(),
-                                  geoSelLastUnique.end());
+  // dedupe both selection lists.
+  for (auto* sel :
+       {&m_cfg.geometrySelection, &m_cfg.stripGeometrySelection}) {
+    std::ranges::sort(*sel, std::less<Acts::GeometryIdentifier>{});
+    const auto last = std::ranges::unique(*sel, isDuplicate);
+    if (last.begin() != last.end()) {
+      ACTS_WARNING("Removed " << std::distance(last.begin(), last.end())
+                              << " geometry selection duplicates");
+      sel->erase(last.begin(), last.end());
+    }
   }
 
   if (!m_cfg.stripGeometrySelection.empty()) {
@@ -272,16 +305,11 @@ void SpacePointMaker::initializeStripPartners() {
       allSensitivesVector.begin(), allSensitivesVector.end());
 
   for (auto selector : m_cfg.stripGeometrySelection) {
-    // Apply volume/layer range
-    auto rangeLayer =
-        selectLowestNonZeroGeometryObject(allSensitives, selector);
-
-    // Apply selector on extra if extra != 0
-    auto range = rangeLayer | std::views::filter([&](auto srf) {
-                   return srf->geometryId().extra() != 0
-                              ? srf->geometryId().extra() == selector.extra()
-                              : true;
-                 });
+    // See selectStripRange: the per-(vol, lay, extra) range builder
+    // shared with execute(). Stereo partners live in the same ring;
+    // running the partner search per-ring keeps the closest-distance
+    // heuristic from ever having to disambiguate across rings.
+    auto range = selectStripRange(allSensitives, selector);
 
     const auto sizeBefore = m_stripPartner.size();
     const std::size_t nSurfaces = std::distance(range.begin(), range.end());
@@ -293,7 +321,8 @@ void SpacePointMaker::initializeStripPartners() {
     }
     ACTS_DEBUG("Found " << nSurfaces << " surfaces for selector " << selector);
 
-    // Very dumb all-to-all search
+    // Closest-distance partner search: for each source module, the partner
+    // is the geometrically closest other module in the selected range.
     for (auto mod1 : range) {
       if (m_stripPartner.contains(mod1->geometryId())) {
         continue;
@@ -314,17 +343,20 @@ void SpacePointMaker::initializeStripPartners() {
         }
       }
 
+      // Closest-distance is asymmetric for layouts where some modules are
+      // not part of a clean reciprocal pair (e.g. an odd number of modules
+      // in a ring, or selectors that mix multiple rings). Only commit a
+      // pair when both ends are unclaimed; skip otherwise so the
+      // unaffected pairs still go through.
+      if (m_stripPartner.contains(partner->geometryId())) {
+        ACTS_VERBOSE("Partner " << partner->geometryId()
+                                << " already paired; skipping " << mod1->geometryId());
+        continue;
+      }
       ACTS_VERBOSE("Found stereo pair: " << mod1->geometryId() << " <-> "
                                          << partner->geometryId());
-      ACTS_VERBOSE("- " << mod1->center(gctx).transpose() << " <-> "
-                        << partner->center(gctx).transpose());
-      const auto [it1, success1] =
-          m_stripPartner.insert({mod1->geometryId(), partner->geometryId()});
-      const auto [it2, success2] =
-          m_stripPartner.insert({partner->geometryId(), mod1->geometryId()});
-      if (!success1 || !success2) {
-        throw std::runtime_error("error inserting in map");
-      }
+      m_stripPartner.insert({mod1->geometryId(), partner->geometryId()});
+      m_stripPartner.insert({partner->geometryId(), mod1->geometryId()});
     }
 
     const std::size_t sizeAfter = m_stripPartner.size();
@@ -382,6 +414,14 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
   ACTS_DEBUG("Build strip space points");
 
   Acts::StripSpacePointBuilder::ClusterPairingOptions pairingOptions;
+  pairingOptions.maxDistance = m_cfg.stripPairingMaxDistance;
+  pairingOptions.maxAngleTheta = m_cfg.stripPairingMaxAngleTheta;
+  pairingOptions.maxAnglePhi = m_cfg.stripPairingMaxAnglePhi;
+
+  Acts::StripSpacePointBuilder::ConstrainedOptions constrainedOptions;
+  constrainedOptions.stripLengthTolerance = m_cfg.stripLengthTolerance;
+  constrainedOptions.stripLengthGapTolerance = m_cfg.stripLengthGapTolerance;
+  constrainedOptions.stripGapParameter = m_cfg.stripGapParameter;
 
   // Loop over the geometry selections
   std::vector<std::pair<IndexSourceLink, IndexSourceLink>> stripSourceLinkPairs;
@@ -390,16 +430,10 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
     stripSourceLinkPairs.clear();
     ACTS_VERBOSE("Process strip selection " << sel);
 
-    // select volume/layer depending on what is set in the geometry id
-    const auto layerRange =
-        selectLowestNonZeroGeometryObject(measurements.orderedIndices(), sel);
-    // Apply filter for extra-id, since this cannot be done with
-    // selectLowestNonZeroGeometryObject
-    auto range = layerRange | std::views::filter([&](auto sl) {
-                   return sl.geometryId().extra() != 0
-                              ? sl.geometryId().extra() == sel.extra()
-                              : true;
-                 });
+    // Same range builder as initializeStripPartners, applied here to the
+    // per-event source-link container so the partner map and the
+    // source-link grouping see the same per-ring scope.
+    auto range = selectStripRange(measurements.orderedIndices(), sel);
 
     // groupByModule only works with geometry containers, not with an
     // arbitrary range. do the equivalent grouping manually
@@ -418,7 +452,14 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
     for (const auto& [mod1, mod1SourceLinks] : mapByModule) {
       ACTS_VERBOSE("Process " << mod1 << " with " << mod1SourceLinks->size()
                               << " source links");
-      const Acts::GeometryIdentifier mod2 = m_stripPartner.at(mod1);
+      // Some surfaces in dense multi-ring layers may not have been paired
+      // (see initializeStripPartners): skip rather than throw.
+      const auto partnerIt = m_stripPartner.find(mod1);
+      if (partnerIt == m_stripPartner.end()) {
+        ACTS_VERBOSE("- No registered partner for " << mod1 << ", skipping");
+        continue;
+      }
+      const Acts::GeometryIdentifier mod2 = partnerIt->second;
 
       // Avoid producing space points twice
       if (done.contains(mod2)) {
@@ -451,9 +492,10 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
         const Acts::Vector3 global1 = surface1.localToGlobal(
             ctx.geoContext, local1, Acts::Vector3::Zero());
 
-        std::optional<double> minDistance;
-        std::optional<IndexSourceLink> bestSourceLink2;
-
+        // Collect every (sourceLink2, distance) candidate that passes the
+        // pairingOptions cuts; mode selection (top_one / top_k / all_pairs)
+        // happens after.
+        std::vector<std::pair<IndexSourceLink, double>> candidates;
         for (const IndexSourceLink& sourceLink2 : *mod2SourceLinks) {
           const Acts::Surface& surface2 =
               *surfaceAccessor(Acts::SourceLink(sourceLink2));
@@ -473,18 +515,39 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
           const Acts::Result<double> distance =
               Acts::StripSpacePointBuilder::computeClusterPairDistance(
                   global1, global2, pairingOptions);
-          if (distance.ok() && (!minDistance.has_value() ||
-                                distance.value() < minDistance.value())) {
-            minDistance = *distance;
-            bestSourceLink2 = sourceLink2;
+          if (distance.ok()) {
+            candidates.emplace_back(sourceLink2, *distance);
           }
         }
 
-        if (bestSourceLink2) {
-          stripSourceLinkPairs.emplace_back(sourceLink1, *bestSourceLink2);
-          ACTS_VERBOSE("Found source link pair: " << sourceLink1.index()
-                                                  << " <-> "
-                                                  << bestSourceLink2->index());
+        if (candidates.empty()) {
+          continue;
+        }
+
+        std::size_t maxOut = 1;
+        switch (m_cfg.stripPairingMode) {
+          case StripPairingMode::TopOne:
+            maxOut = 1;
+            break;
+          case StripPairingMode::TopK:
+            maxOut = m_cfg.stripTopK;
+            break;
+          case StripPairingMode::AllPairs:
+            maxOut = candidates.size();
+            break;
+        }
+
+        // Sort only when we need the K best; for all_pairs the order
+        // doesn't matter.
+        if (maxOut < candidates.size()) {
+          std::ranges::partial_sort(
+              candidates, candidates.begin() + maxOut,
+              [](const auto& a, const auto& b) { return a.second < b.second; });
+        }
+
+        const std::size_t nOut = std::min(maxOut, candidates.size());
+        for (std::size_t k = 0; k < nOut; ++k) {
+          stripSourceLinkPairs.emplace_back(sourceLink1, candidates[k].first);
         }
       }
 
@@ -517,7 +580,7 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
 
       createStripSpacePoint(ctx.geoContext, surface1, surface2, measurement1,
                             measurement2, sourceLink1, sourceLink2,
-                            spacePoints);
+                            spacePoints, constrainedOptions);
     }
 
     ACTS_DEBUG("Built " << spacePoints.size() - nSpacePointsBefore
