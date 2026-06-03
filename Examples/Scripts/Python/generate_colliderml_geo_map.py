@@ -2,10 +2,11 @@
 """Generate a ColliderML → ACTS geometry ID mapping CSV file.
 
 For each unique (detector, volume, layer, surface) tuple found in a ColliderML
-tracker-hits parquet file, this script computes the centroid of all hits with
-that tuple, then uses a KDTree over ACTS sensitive surface centres to find the
-closest surface.  Each match is validated by calling globalToLocal on the
-surface; unmatched tuples are skipped with a warning.
+tracker-hits parquet file, this script finds the matching ACTS sensitive surface
+using a KDTree over surface centres combined with a normal-vector perpendicular
+distance check.  The perpendicular distance |(hit - centre) · normal| is nearly
+zero for any hit generated on a surface, regardless of how far the hit is from
+the surface centre along the surface (important for long strip sensors).
 
 Output: a CSV file with columns
     detector, volume, layer, surface, acts_geo_id
@@ -40,28 +41,36 @@ from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 
 def collect_surfaces(tracking_geometry, gctx):
-    """Return list of (GeometryIdentifier, centre_xyz) for all sensitive surfaces."""
-    surfaces = []
+    """Return arrays of (GeometryIdentifier, centre_xyz, normal_xyz) for sensitive surfaces."""
+    gids = []
+    centres = []
+    normals = []
 
     def visitor(surface):
-        gid = surface.geometryId()
-        if gid.sensitive() == 0:
+        gid = surface.geometryId
+        if gid.sensitive == 0:
             return
         centre = surface.center(gctx)
-        surfaces.append((gid, centre))
+        # normal(gctx, global_position, direction) — direction is a dummy for orientation
+        normal = surface.normal(gctx, centre, centre)
+        gids.append(gid)
+        centres.append(np.array(centre))
+        normals.append(np.array(normal))
 
     tracking_geometry.visitSurfaces(visitor)
-    return surfaces
+    return gids, np.array(centres), np.array(normals)
 
 
-def load_hit_centroids(parquet_path: pathlib.Path):
-    """Return dict (det, vol, layer, surf) -> mean_xyz from the first shard."""
+def load_hit_representatives(parquet_path: pathlib.Path):
+    """Return dict (det, vol, layer, surf) -> first_hit_xyz from the first shard.
+
+    Uses the FIRST hit position per surface rather than the centroid.  A single
+    hit lies exactly on the surface plane; the centroid of many hits on a long
+    strip sensor can be far from the surface centre yet still in the plane.
+    """
     table = pq.read_table(parquet_path)
 
-    from collections import defaultdict
-
-    sums = defaultdict(lambda: np.zeros(3))
-    counts = defaultdict(int)
+    representatives = {}
 
     for row in range(table.num_rows):
         dets = table.column("detector")[row].as_py()
@@ -74,10 +83,10 @@ def load_hit_centroids(parquet_path: pathlib.Path):
 
         for d, v, l, s, x, y, z in zip(dets, vols, layers, surfs, xs, ys, zs):
             key = (int(d), int(v), int(l), int(s))
-            sums[key] += np.array([x, y, z])
-            counts[key] += 1
+            if key not in representatives:
+                representatives[key] = np.array([x, y, z])
 
-    return {k: sums[k] / counts[k] for k in sums}
+    return representatives
 
 
 def main():
@@ -106,10 +115,16 @@ def main():
         help="ODD XML directory (default: auto-detect)",
     )
     parser.add_argument(
-        "--max-distance",
+        "--k",
+        type=int,
+        default=10,
+        help="Number of KDTree neighbours to probe (default: 10)",
+    )
+    parser.add_argument(
+        "--tolerance",
         type=float,
-        default=5.0,
-        help="Maximum KDTree match distance in mm (default: 5)",
+        default=1.0,
+        help="Normal-vector perpendicular distance tolerance in mm (default: 1.0)",
     )
     args = parser.parse_args()
 
@@ -122,8 +137,8 @@ def main():
         sys.exit(1)
 
     print(f"Loading hits from {parquet_files[0]} ...")
-    centroids = load_hit_centroids(parquet_files[0])
-    print(f"  {len(centroids)} unique (det, vol, layer, surface) tuples")
+    representatives = load_hit_representatives(parquet_files[0])
+    print(f"  {len(representatives)} unique (det, vol, layer, surface) tuples")
 
     gctx = acts.GeometryContext()
     odd_dir = args.odd_dir or getOpenDataDetectorDirectory()
@@ -132,45 +147,48 @@ def main():
     tgeo = odd.trackingGeometry()
 
     print("Collecting sensitive surfaces ...")
-    surf_list = collect_surfaces(tgeo, gctx)
-    print(f"  {len(surf_list)} sensitive surfaces")
+    surf_gids, centres, normals = collect_surfaces(tgeo, gctx)
+    print(f"  {len(surf_gids)} sensitive surfaces")
 
-    centres = np.array([c for _, c in surf_list])
     tree = KDTree(centres)
 
     rows = []
     n_matched = 0
     n_unmatched = 0
 
-    for (det, vol, layer, surf), centroid in sorted(centroids.items()):
-        dist, idx = tree.query(centroid)
-        if dist > args.max_distance:
+    for (det, vol, layer, surf), hit_pos in sorted(representatives.items()):
+        # Query k nearest neighbours, accept the first whose surface plane contains hit_pos
+        dists, indices = tree.query(hit_pos, k=min(args.k, len(surf_gids)))
+        matched_idx = None
+        for idx in indices:
+            delta = hit_pos - centres[idx]
+            perp_dist = abs(float(np.dot(delta, normals[idx])))
+            if perp_dist < args.tolerance:
+                matched_idx = idx
+                break
+
+        if matched_idx is None:
+            best_perp = min(
+                abs(float(np.dot(hit_pos - centres[i], normals[i]))) for i in indices
+            )
             print(
-                f"  WARN: ({det},{vol},{layer},{surf}) nearest surface is "
-                f"{dist:.1f} mm away (>{args.max_distance} mm), skipping"
+                f"  WARN: ({det},{vol},{layer},{surf}) no surface within "
+                f"{args.tolerance:.1f} mm normal-distance "
+                f"(best perp dist among {args.k} neighbours: {best_perp:.2f} mm)"
             )
             n_unmatched += 1
             continue
 
-        acts_geo_id = surf_list[idx][0]
-        acts_surface = tgeo.findSurface(acts_geo_id)
-        if acts_surface is None:
-            n_unmatched += 1
-            continue
-
-        local_result = acts_surface.globalToLocal(gctx, centroid, acts.Vector3(0, 0, 0))
-        if not local_result.ok():
-            print(
-                f"  WARN: ({det},{vol},{layer},{surf}) globalToLocal failed "
-                f"on nearest surface {acts_geo_id}, skipping"
-            )
-            n_unmatched += 1
-            continue
-
-        rows.append((det, vol, layer, surf, acts_geo_id.value()))
+        acts_geo_id = surf_gids[matched_idx]
+        rows.append((det, vol, layer, surf, acts_geo_id.value))
         n_matched += 1
 
     print(f"Matched {n_matched} / {n_matched + n_unmatched} tuples")
+    if n_unmatched > 0:
+        print(
+            f"  {n_unmatched} unmatched tuples — these hits will be skipped "
+            f"in ColliderMLInputConverter. Consider increasing --tolerance or --k."
+        )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with open(args.output, "w", newline="") as f:

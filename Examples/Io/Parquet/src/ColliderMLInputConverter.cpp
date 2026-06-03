@@ -289,12 +289,12 @@ ProcessCode ColliderMLInputConverter::execute(
 
   SimHitContainer::sequence_type hitSeq;
   MeasurementContainer measurements;
-  // Temporary: maps original loop index i → measurement index.
-  // Used after sorting to build measSimHitsMap with sorted positions.
+  // Maps original loop index i → measurement index. Used to build
+  // measSimHitsMap.
   std::unordered_map<std::int32_t, Index> hitIndexToMeas;
   MeasurementParticlesMap measParticlesMap;
 
-  if (needSimHits) {
+  if (needSimHits || needMeasurements) {
     hitSeq.reserve(static_cast<std::size_t>(nHits));
   }
   if (needMeasurements) {
@@ -339,6 +339,65 @@ ProcessCode ColliderMLInputConverter::execute(
     const double tz = tzArr->Value(hOff + i);
     const double tt = htArr->Value(hOff + i);
 
+    if (!needMeasurements) {
+      // Without measurements: add all simhits that pass the geoId check.
+      if (needSimHits) {
+        Acts::Vector4 pos4{tx, ty, tz, tt};
+        Acts::Vector4 zero4 = Acts::Vector4::Zero();
+        hitSeq.emplace_back(geoId, barcode, pos4, zero4, zero4,
+                            static_cast<std::int32_t>(i));
+      }
+      continue;
+    }
+
+    // When producing measurements: validate before committing both the simhit
+    // and the measurement, so SimHitContainer and MeasurementContainer always
+    // have a 1:1 correspondence (required by TruthTrackFinder's measSimHitsMap
+    // identity assumption, mirroring DigitizationAlgorithm behaviour).
+
+    auto digiIt = m_cfg.digiConfig.find(geoId);
+    if (digiIt == m_cfg.digiConfig.end()) {
+      ++nUnknownCov;
+      continue;
+    }
+    const auto& smearing = digiIt->smearingDigiConfig;
+
+    const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
+    if (surface == nullptr) {
+      ++nUnknownGeoId;
+      continue;
+    }
+
+    Acts::Vector3 globalPos{static_cast<double>(hxArr->Value(hOff + i)),
+                            static_cast<double>(hyArr->Value(hOff + i)),
+                            static_cast<double>(hzArr->Value(hOff + i))};
+
+    auto localResult =
+        surface->globalToLocal(ctx.geoContext, globalPos, Acts::Vector3{});
+    if (!localResult.ok()) {
+      ++nGlobalToLocalFailed;
+      continue;
+    }
+    const Acts::Vector2& lp = localResult.value();
+
+    DigitizedParameters dParams;
+    for (const auto& param : smearing.params) {
+      // skip time — not a spatial measurement coordinate
+      if (param.index == Acts::eBoundTime) {
+        continue;
+      }
+      const auto sigma = sigmaFromSmearer(param.smearFunction);
+      if (!sigma.has_value()) {
+        // Uniform/Digital: no meaningful single sigma, skip
+        continue;
+      }
+      dParams.indices.push_back(param.index);
+      dParams.values.push_back(lp[static_cast<int>(param.index)]);
+      dParams.variances.push_back((*sigma) * (*sigma));
+    }
+
+    // All validation passed: commit simhit and measurement together so they
+    // stay in 1:1 correspondence across both containers.
     if (needSimHits) {
       Acts::Vector4 pos4{tx, ty, tz, tt};
       Acts::Vector4 zero4 = Acts::Vector4::Zero();
@@ -346,55 +405,12 @@ ProcessCode ColliderMLInputConverter::execute(
                           static_cast<std::int32_t>(i));
     }
 
-    if (needMeasurements) {
-      auto digiIt = m_cfg.digiConfig.find(geoId);
-      if (digiIt == m_cfg.digiConfig.end()) {
-        ++nUnknownCov;
-        continue;
-      }
-      const auto& smearing = digiIt->smearingDigiConfig;
+    auto meas = createMeasurement(measurements, geoId, dParams);
+    const Index measIdx = meas.index();
 
-      const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
-      if (surface == nullptr) {
-        ++nUnknownGeoId;
-        continue;
-      }
-
-      Acts::Vector3 globalPos{static_cast<double>(hxArr->Value(hOff + i)),
-                              static_cast<double>(hyArr->Value(hOff + i)),
-                              static_cast<double>(hzArr->Value(hOff + i))};
-
-      auto localResult =
-          surface->globalToLocal(ctx.geoContext, globalPos, Acts::Vector3{});
-      if (!localResult.ok()) {
-        ++nGlobalToLocalFailed;
-        continue;
-      }
-      const Acts::Vector2& lp = localResult.value();
-
-      DigitizedParameters dParams;
-      for (const auto& param : smearing.params) {
-        // skip time — not a spatial measurement coordinate
-        if (param.index == Acts::eBoundTime) {
-          continue;
-        }
-        const auto sigma = sigmaFromSmearer(param.smearFunction);
-        if (!sigma.has_value()) {
-          // Uniform/Digital: no meaningful single sigma, skip
-          continue;
-        }
-        dParams.indices.push_back(param.index);
-        dParams.values.push_back(lp[static_cast<int>(param.index)]);
-        dParams.variances.push_back((*sigma) * (*sigma));
-      }
-
-      auto meas = createMeasurement(measurements, geoId, dParams);
-      const Index measIdx = meas.index();
-
-      hitIndexToMeas.emplace(static_cast<std::int32_t>(i), measIdx);
-      if (barcode != SimBarcode{}) {
-        measParticlesMap.emplace(measIdx, barcode);
-      }
+    hitIndexToMeas.emplace(static_cast<std::int32_t>(i), measIdx);
+    if (barcode != SimBarcode{}) {
+      measParticlesMap.emplace(measIdx, barcode);
     }
   }
 
@@ -411,8 +427,7 @@ ProcessCode ColliderMLInputConverter::execute(
                             << " hits where globalToLocal failed");
   }
 
-  // Build sorted SimHitContainer before measurements output so we can
-  // compute sorted positions for measSimHitsMap.
+  // Build sorted SimHitContainer.
   SimHitContainer simHits;
   if (needSimHits || needMeasurements) {
     simHits.insert(hitSeq.begin(), hitSeq.end());
@@ -422,8 +437,14 @@ ProcessCode ColliderMLInputConverter::execute(
     m_outputSimHits(ctx, SimHitContainer(simHits));
   }
 
-  // Build measSimHitsMap using the sorted position of each hit in the
-  // flat_multiset (nth-indexed), not the original loop order.
+  // Build measSimHitsMap: measurement k → sorted position of its simhit in
+  // SimHitContainer.  TruthTrackFinder uses this map for time-ordering proto
+  // track measurements via measurementSimHitsMap.nth(simHitIdx).
+  //
+  // With hitSeq containing ONLY measurement-producing hits, SimHitContainer
+  // and MeasurementContainer have the same number of entries, so every sorted
+  // position p satisfies p < simHits.size() == measSimHitsMap.size(), keeping
+  // TruthTrackFinder's nth(p) call in-bounds.
   MeasurementSimHitsMap measSimHitsMap;
   if (needMeasurements && !hitIndexToMeas.empty()) {
     SimHitIndex sortedPos = 0;
