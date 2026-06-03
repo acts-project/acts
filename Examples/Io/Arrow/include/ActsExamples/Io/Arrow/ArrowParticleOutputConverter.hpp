@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Io/Parquet/ArrowOutputConverter.hpp"
@@ -36,18 +34,6 @@ class ACTS_ARROW_EXPORT ArrowParticleOutputConverter final
     std::string inputParticles;
     /// Output whiteboard key for the resulting @c arrow::Table.
     std::string outputTable = "particles";
-    /// Reference point for the perigee surface (usually the beamspot).
-    Acts::Vector3 referencePoint{0., 0., 0.};
-    /// Magnetic field provider used when propagating to the perigee.
-    std::shared_ptr<Acts::MagneticFieldProvider> bField;
-    /// If true, fill @c perigee_d0 / @c perigee_z0 by propagating the truth
-    /// parameters to a perigee surface at @c referencePoint. If false, those
-    /// columns are filled with NaN.
-    bool writeHelixParameters = true;
-    /// Minimum transverse momentum for helix propagation.
-    double minHelixTransverseMomentum = 200.0 * Acts::UnitConstants::MeV;
-    /// Maximum absolute eta for helix propagation.
-    double maxHelixEta = 5.0;
   };
 
   explicit ArrowParticleOutputConverter(
@@ -59,9 +45,6 @@ class ACTS_ARROW_EXPORT ArrowParticleOutputConverter final
 
   std::vector<std::string> collections() const override;
 
-  /// Releases the perigee propagator and flushes the cumulative timer.
-  ProcessCode finalize() override;
-
  private:
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 
@@ -71,12 +54,6 @@ class ACTS_ARROW_EXPORT ArrowParticleOutputConverter final
 
   WriteDataHandle<ActsPlugins::ArrowUtil::ArrowTable> m_outputTable{
       this, "OutputTable"};
-
-  /// Holds the perigee surface, propagator, and cumulative job-lifetime
-  /// timer; constructed in the ctor only when @c writeHelixParameters is
-  /// enabled and released in @c finalize.
-  struct Impl;
-  std::unique_ptr<Impl> m_perigee;
 };
 
 }  // namespace ActsExamples

@@ -8,26 +8,14 @@
 
 #include "ActsExamples/Io/Arrow/ArrowParticleOutputConverter.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/SympyStepper.hpp"
-#include "Acts/Propagator/VoidNavigator.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/ScopedTimer.hpp"
-#include "Acts/Utilities/Table.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
-#include "ActsExamples/Utilities/PerigeeParameters.hpp"
 #include "ActsPlugins/Arrow/ArrowUtil.hpp"
 
-#include <atomic>
-#include <cmath>
 #include <cstdint>
-#include <format>
+#include <iterator>
 #include <memory>
-#include <optional>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include <arrow/api.h>
 
@@ -43,47 +31,6 @@ void check(const arrow::Status& s, const char* what) {
 
 }  // namespace
 
-struct ArrowParticleOutputConverter::Impl {
-  using Stepper = Acts::SympyStepper;
-  using Propagator = Acts::Propagator<Stepper>;
-
-  /// Perigee surface + propagator; only populated when helix writing is
-  /// enabled. Wrapped in an optional so the heavy objects aren't built
-  /// unless needed.
-  std::shared_ptr<Acts::PerigeeSurface> surface;
-  std::optional<Propagator> propagator;
-  /// Accumulates per-particle perigee timings across all events. Wrapped in
-  /// an optional so @c finalize can reset it, forcing the dtor to log the
-  /// aggregate stats at end-of-job rather than at algorithm teardown.
-  mutable std::optional<Acts::AveragingScopedTimer> perigeeTimer;
-
-  /// Job-wide counters for conditions that would otherwise be logged per
-  /// particle. Summarised in @c finalize.
-  mutable std::atomic<std::size_t> nTotal{0};
-  mutable std::atomic<std::size_t> nCharged{0};
-  mutable std::atomic<std::size_t> nLowMomentum{0};
-  mutable std::atomic<std::size_t> nHighEta{0};
-  mutable std::atomic<std::size_t> nNonFinite{0};
-  mutable std::atomic<std::size_t> nZeroCharge{0};
-  mutable std::atomic<std::size_t> nGlobalToLocalFailed{0};
-  mutable std::atomic<std::size_t> nPropagationFailed{0};
-
-  explicit Impl(const Acts::Logger& logger) {
-    perigeeTimer.emplace("Perigee propagation / particle", logger,
-                         Acts::Logging::INFO);
-  }
-
-  void enablePerigee(const Acts::Vector3& referencePoint,
-                     std::shared_ptr<Acts::MagneticFieldProvider> bField) {
-    surface = Acts::Surface::makeShared<Acts::PerigeeSurface>(referencePoint);
-    auto logger = Acts::getDefaultLogger("Propagator", Acts::Logging::INFO);
-    // Propagator prop{Stepper(std::move(bField)), Acts::VoidNavigator{},
-    //                 std::move(logger)};
-    propagator.emplace(Stepper(std::move(bField)), Acts::VoidNavigator{},
-                       std::move(logger));
-  }
-};
-
 ArrowParticleOutputConverter::ArrowParticleOutputConverter(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : ArrowOutputConverter("ArrowParticleOutputConverter", std::move(logger)),
@@ -94,96 +41,11 @@ ArrowParticleOutputConverter::ArrowParticleOutputConverter(
   if (m_cfg.outputTable.empty()) {
     throw std::invalid_argument("Missing output table name");
   }
-  if (m_cfg.writeHelixParameters && m_cfg.bField == nullptr) {
-    throw std::invalid_argument(
-        "writeHelixParameters requires a magnetic field provider");
-  }
-  m_perigee = std::make_unique<Impl>(this->logger());
-  if (m_cfg.writeHelixParameters) {
-    m_perigee->enablePerigee(m_cfg.referencePoint, m_cfg.bField);
-  }
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_outputTable.initialize(m_cfg.outputTable);
 }
 
 ArrowParticleOutputConverter::~ArrowParticleOutputConverter() = default;
-
-ProcessCode ArrowParticleOutputConverter::finalize() {
-  if (m_perigee != nullptr) {
-    const auto nTotal = m_perigee->nTotal.load(std::memory_order_relaxed);
-    const auto nCharged = m_perigee->nCharged.load(std::memory_order_relaxed);
-    const auto nNonFinite =
-        m_perigee->nNonFinite.load(std::memory_order_relaxed);
-    const auto nZeroCharge =
-        m_perigee->nZeroCharge.load(std::memory_order_relaxed);
-    const auto nGlobalToLocalFailed =
-        m_perigee->nGlobalToLocalFailed.load(std::memory_order_relaxed);
-    const auto nPropagationFailed =
-        m_perigee->nPropagationFailed.load(std::memory_order_relaxed);
-    const auto nLowMomentum =
-        m_perigee->nLowMomentum.load(std::memory_order_relaxed);
-    const auto nHighEta = m_perigee->nHighEta.load(std::memory_order_relaxed);
-
-    Acts::Table table;
-    using enum Acts::Table::Alignment;
-    table.addColumn("Condition", "{}", Left);
-    table.addColumn("Count", "{}", Right);
-    table.addColumn("Out of", "{}", Right);
-    table.addColumn("Fraction", "{:.1f}%", Right);
-    table.addColumn("Details", "{}", Left);
-
-    auto fraction = [](std::size_t count, std::size_t total) {
-      return total > 0 ? 100.0 * static_cast<double>(count) /
-                             static_cast<double>(total)
-                       : 0.0;
-    };
-
-    bool hasRows = false;
-    auto addRow = [&](std::string condition, std::size_t count,
-                      std::size_t total, std::string details = "") {
-      table.addRow(condition, count, total, fraction(count, total), details);
-      hasRows = true;
-    };
-
-    if (nNonFinite > 0) {
-      addRow("Non-finite mass or charge", nNonFinite, nTotal);
-    }
-    if (nZeroCharge > 0) {
-      addRow("Zero-charge particles", nZeroCharge, nTotal,
-             "linearly extrapolated to perigee");
-    }
-    if (nGlobalToLocalFailed > 0) {
-      addRow("Global-to-local failures", nGlobalToLocalFailed, nZeroCharge);
-    }
-    if (nPropagationFailed > 0) {
-      addRow("Propagation failures", nPropagationFailed, nCharged,
-             "to perigee surface");
-    }
-    if (nLowMomentum > 0) {
-      addRow("Low-momentum skips", nLowMomentum, nCharged,
-             std::format("< {:.3g} MeV", m_cfg.minHelixTransverseMomentum /
-                                             Acts::UnitConstants::MeV));
-    }
-    if (nHighEta > 0) {
-      addRow("High-eta skips", nHighEta, nCharged,
-             std::format("> {:.3g}", m_cfg.maxHelixEta));
-    }
-
-    if (hasRows) {
-      const bool hasWarnings = nNonFinite > 0 || nGlobalToLocalFailed > 0;
-      if (hasWarnings) {
-        ACTS_WARNING("Perigee particle conversion summary:\n" << table);
-      } else {
-        ACTS_INFO("Perigee particle conversion summary:\n" << table);
-      }
-    }
-    // Reset the timer first so its dtor logs the cumulative stats now,
-    // rather than whenever the algorithm happens to be destroyed.
-    m_perigee->perigeeTimer.reset();
-    m_perigee.reset();
-  }
-  return ProcessCode::SUCCESS;
-}
 
 std::vector<std::string> ArrowParticleOutputConverter::collections() const {
   return {m_cfg.outputTable};
@@ -282,11 +144,6 @@ ProcessCode ArrowParticleOutputConverter::execute(
     const auto pos = s.position();
     const auto bc = s.particleId();
 
-    m_perigee->nTotal.fetch_add(1, std::memory_order_relaxed);
-    if (!std::isfinite(s.mass()) || !std::isfinite(s.charge())) {
-      m_perigee->nNonFinite.fetch_add(1, std::memory_order_relaxed);
-    }
-
     // Emit the row index as the particle id (matches the colliderml
     // convention). Indices are stable within this event/output table even
     // when upstream filtering has dropped some EDM4hep particles.
@@ -303,56 +160,11 @@ ProcessCode ArrowParticleOutputConverter::execute(
     pyV->UnsafeAppend(static_cast<float>(mom.y()));
     pzV->UnsafeAppend(static_cast<float>(mom.z()));
 
-    std::optional<float> d0;
-    std::optional<float> z0;
-    if (m_perigee->propagator.has_value()) {
-      auto perigeeSample = m_perigee->perigeeTimer->sample();
-      const Acts::Vector3 dir = s.direction();
-
-      // Per-charge bookkeeping and kinematic cuts. Neutral particles are
-      // always extrapolated; charged particles are skipped below the
-      // configured momentum / above the configured eta.
-      bool computePerigee = true;
-      if (s.charge() == 0) {
-        m_perigee->nZeroCharge.fetch_add(1, std::memory_order_relaxed);
-      } else {
-        m_perigee->nCharged.fetch_add(1, std::memory_order_relaxed);
-        if (s.transverseMomentum() < m_cfg.minHelixTransverseMomentum) {
-          m_perigee->nLowMomentum.fetch_add(1, std::memory_order_relaxed);
-          computePerigee = false;
-        } else if (std::abs(Acts::VectorHelpers::eta(dir)) >
-                   m_cfg.maxHelixEta) {
-          m_perigee->nHighEta.fetch_add(1, std::memory_order_relaxed);
-          computePerigee = false;
-        }
-      }
-
-      if (computePerigee) {
-        auto perigee = propagateToPerigee(
-            ctx.geoContext, ctx.magFieldContext, *m_perigee->propagator,
-            m_perigee->surface, s.curvilinearParameters());
-        if (perigee.has_value()) {
-          const auto& pars = perigee->parameters();
-          d0 = static_cast<float>(pars[Acts::BoundIndices::eBoundLoc0]);
-          z0 = static_cast<float>(pars[Acts::BoundIndices::eBoundLoc1]);
-        } else if (s.charge() == 0) {
-          m_perigee->nGlobalToLocalFailed.fetch_add(1,
-                                                    std::memory_order_relaxed);
-        } else {
-          m_perigee->nPropagationFailed.fetch_add(1, std::memory_order_relaxed);
-        }
-      }
-    }
-    if (d0.has_value()) {
-      d0V->UnsafeAppend(*d0);
-    } else {
-      d0V->UnsafeAppendNull();
-    }
-    if (z0.has_value()) {
-      z0V->UnsafeAppend(*z0);
-    } else {
-      z0V->UnsafeAppendNull();
-    }
+    // Perigee parameters are not computed here yet: the truth-to-perigee
+    // propagation will be added back in a follow-up PR. Until then these
+    // columns are emitted as null for every particle.
+    d0V->UnsafeAppendNull();
+    z0V->UnsafeAppendNull();
 
     vprimV->UnsafeAppend(static_cast<std::uint16_t>(bc.vertexPrimary()));
     // Emit the parent's row index in this same table so consumers can walk

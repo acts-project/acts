@@ -168,7 +168,6 @@ def _add_arrow_writer(
     from acts.arrow import particleSchema
     from acts.examples.arrow import ArrowParticleOutputConverter, ParquetWriter
 
-    field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
     for input_key, table_key in inputs_to_tables.items():
         assert (
             input_key != table_key
@@ -178,7 +177,6 @@ def _add_arrow_writer(
                 level=acts.logging.INFO,
                 inputParticles=input_key,
                 outputTable=table_key,
-                bField=field,
             )
         )
 

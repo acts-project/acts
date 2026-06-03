@@ -309,7 +309,6 @@ if args.edm4hep:
             rnd=rnd,
             killVolume=trackingGeometry.highestTrackingVolume,
             killAfterTime=25 * u.ns,
-            writeHelixParameters=True,
         )
     else:
         addFatras(
@@ -321,7 +320,6 @@ if args.edm4hep:
             outputDirCsv=outputDir if args.output_csv else None,
             outputDirObj=outputDir if args.output_obj else None,
             rnd=rnd,
-            writeHelixParameters=True,
         )
 
 addDigitization(
@@ -513,10 +511,6 @@ if args.output_parquet:
         level=acts.logging.INFO,
         inputParticles="particles_simulated",
         outputTable="particles_arrow",
-        writeHelixParameters=True,
-        minHelixTransverseMomentum=500 * u.MeV,
-        maxHelixEta=5.0,
-        bField=field,
     )
     s.addAlgorithm(arrParticleConv)
 
