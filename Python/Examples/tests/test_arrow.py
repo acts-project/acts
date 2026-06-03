@@ -435,9 +435,7 @@ def _assert_simhits_parquet(
                 # coordinate(s) pin it to the truth, but the unmeasured strip
                 # coordinate defaults to the surface centre, so allow a generous
                 # module-scale slack rather than a tight smearing tolerance.
-                dist = math.sqrt(
-                    (xv - txv) ** 2 + (yv - tyv) ** 2 + (zv - tzv) ** 2
-                )
+                dist = math.sqrt((xv - txv) ** 2 + (yv - tyv) ** 2 + (zv - tzv) ** 2)
                 assert dist < 250.0, (
                     f"{directory.name}: digitized pos {dist:.1f} mm from truth "
                     f"({txv},{tyv},{tzv}) — wrong surface or unit error?"
@@ -460,9 +458,7 @@ def test_fatras_simhits_digitized(tmp_path, fatras):
     _add_simhit_arrow_writer(s, tmp_path, withClusters=True)
     s.run()
 
-    _assert_simhits_parquet(
-        tmp_path / "simhits_arrow", nevents, expect_digitized=True
-    )
+    _assert_simhits_parquet(tmp_path / "simhits_arrow", nevents, expect_digitized=True)
 
 
 def test_fatras_simhits_no_clusters_are_nan(tmp_path, fatras):
@@ -475,9 +471,7 @@ def test_fatras_simhits_no_clusters_are_nan(tmp_path, fatras):
     _add_simhit_arrow_writer(s, tmp_path, withClusters=False)
     s.run()
 
-    _assert_simhits_parquet(
-        tmp_path / "simhits_arrow", nevents, expect_digitized=False
-    )
+    _assert_simhits_parquet(tmp_path / "simhits_arrow", nevents, expect_digitized=False)
 
 
 @pytest.mark.skipif(not pythia8Enabled, reason="Pythia8 not built")
