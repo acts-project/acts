@@ -191,11 +191,15 @@ def runColliderMLTruthTracking(
         )
     )
 
-    # Proto-track level: evaluate efficiency before KF using seed-tracks and
-    # the seed_particle_matching created by addSeeding/TruthSeedingAlgorithm.
+    # Both writers use truth_seeded_particles as the denominator so efficiency
+    # is evaluated only on particles that the seeding algorithm actually found.
+    # This cleanly separates seeding coverage (determined upstream by the
+    # geoSelection config) from KF quality.
+
+    # Proto-track level: how many seeded particles survive as seed-tracks.
     perf_proto_cfg = PythonTrackFinderPerformanceWriter.Config()
     perf_proto_cfg.inputTracks = "seed-tracks"
-    perf_proto_cfg.inputParticles = "particles_selected"
+    perf_proto_cfg.inputParticles = "truth_seeded_particles"
     perf_proto_cfg.inputTrackParticleMatching = "seed_particle_matching"
     perf_proto_cfg.inputParticleTrackMatching = "particle_seed_matching"
     perf_proto_cfg.inputParticleMeasurementsMap = "particle_measurements_map"
@@ -204,10 +208,10 @@ def runColliderMLTruthTracking(
     )
     s.addWriter(perf_proto_writer)
 
-    # KF track level: evaluate efficiency after fitting and selection.
+    # KF track level: how many seeded particles survive KF fitting + selection.
     perf_cfg = PythonTrackFinderPerformanceWriter.Config()
     perf_cfg.inputTracks = "tracks"
-    perf_cfg.inputParticles = "particles_selected"
+    perf_cfg.inputParticles = "truth_seeded_particles"
     perf_cfg.inputTrackParticleMatching = "track_particle_matching"
     perf_cfg.inputParticleTrackMatching = "particle_track_matching"
     perf_cfg.inputParticleMeasurementsMap = "particle_measurements_map"
