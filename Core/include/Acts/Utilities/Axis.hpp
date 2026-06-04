@@ -24,7 +24,7 @@ namespace Acts {
 /// This class provides some basic functionality for calculating bin indices
 /// for a given equidistant binning.
 template <AxisBoundaryType bdt>
-class Axis<AxisType::Equidistant, bdt> final : public IAxis {
+class Axis<AxisType::Equidistant, bdt> : public IAxis {
  public:
   /// Static type identifier for this equidistant axis specialization
   static constexpr AxisType type = AxisType::Equidistant;
@@ -56,19 +56,19 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
 
   /// returns whether the axis is equidistant
   /// @return bool is equidistant
-  bool isEquidistant() const override { return true; }
+  bool isEquidistant() const final { return true; }
 
   /// returns whether the axis is variable
   /// @return bool is variable
-  bool isVariable() const override { return false; }
+  bool isVariable() const final { return false; }
 
   /// returns the type of the axis
   /// @return @c AxisType of this axis
-  AxisType getType() const override { return type; }
+  AxisType getType() const final { return type; }
 
   /// returns the boundary type set in the template param
   /// @return @c AxisBoundaryType of this axis
-  AxisBoundaryType getBoundaryType() const override { return bdt; }
+  AxisBoundaryType getBoundaryType() const final { return bdt; }
 
   /// Get #size bins which neighbor the one given. Generic overload with
   /// symmetric size.
@@ -207,14 +207,14 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   ///       bin with lower bound @c l and upper bound @c u.
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
-  std::size_t getBin(double x) const override {
+  std::size_t getBin(double x) const final {
     return wrapBin(
         static_cast<int>(std::floor((x - getMin()) / getBinWidth()) + 1));
   }
 
   /// get bin width
   /// @return constant width for all bins
-  double getBinWidth(std::size_t /*bin*/ = 0) const override { return m_width; }
+  double getBinWidth(std::size_t /*bin*/ = 0) const { return m_width; }
 
   /// get lower bound of bin
   /// @param  bin index of bin
@@ -225,7 +225,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   ///
   /// @note Bin intervals have a closed lower bound, i.e. the lower boundary
   ///       belongs to the bin with the given bin index.
-  double getBinLowerBound(std::size_t bin) const override {
+  double getBinLowerBound(std::size_t bin) const {
     return getMin() + (bin - 1) * getBinWidth();
   }
 
@@ -236,7 +236,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   ///      i.e. \f$0 \le \text{bin} \le \text{nBins}\f$
   /// @note Bin intervals have an open upper bound, i.e. the upper boundary
   ///       does @b not belong to the bin with the given bin index.
-  double getBinUpperBound(std::size_t bin) const override {
+  double getBinUpperBound(std::size_t bin) const {
     return getMin() + bin * getBinWidth();
   }
 
@@ -245,21 +245,21 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   /// @return bin center position
   /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
-  double getBinCenter(std::size_t bin) const override {
+  double getBinCenter(std::size_t bin) const {
     return getMin() + (bin - 0.5) * getBinWidth();
   }
 
   /// get maximum of binning range
   /// @return maximum of binning range
-  double getMax() const override { return m_max; }
+  double getMax() const final { return m_max; }
 
   /// get minimum of binning range
   /// @return minimum of binning range
-  double getMin() const override { return m_min; }
+  double getMin() const final { return m_min; }
 
   /// get total number of bins
   /// @return total number of bins (excluding under-/overflow bins)
-  std::size_t getNBins() const override { return m_bins; }
+  std::size_t getNBins() const final { return m_bins; }
 
   /// check whether value is inside axis limits
   /// @param x The value to check
@@ -267,11 +267,11 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   ///         @c false
   /// @post If @c true is returned, the bin containing the given value is a
   ///       valid bin, i.e. it is neither the underflow nor the overflow bin.
-  bool isInside(double x) const override { return (m_min <= x) && (x < m_max); }
+  bool isInside(double x) const { return (m_min <= x) && (x < m_max); }
 
   /// Return a vector of bin edges
   /// @return Vector which contains the bin edges
-  std::vector<double> getBinEdges() const override {
+  std::vector<double> getBinEdges() const final {
     std::vector<double> binEdges;
     for (std::size_t i = 1; i <= m_bins; i++) {
       binEdges.push_back(getBinLowerBound(i));
@@ -289,7 +289,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   }
 
  protected:
-  void toStream(std::ostream& os) const override { os << *this; }
+  void toStream(std::ostream& os) const final { os << *this; }
 
  private:
   /// minimum of binning range
@@ -307,7 +307,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
 /// This class provides some basic functionality for calculating bin indices
 /// for a given binning with variable bin sizes.
 template <AxisBoundaryType bdt>
-class Axis<AxisType::Variable, bdt> final : public IAxis {
+class Axis<AxisType::Variable, bdt> : public IAxis {
  public:
   /// Static type identifier for this variable-width axis specialization
   static constexpr AxisType type = AxisType::Variable;
@@ -335,19 +335,19 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
 
   /// returns whether the axis is equidistante
   /// @return bool is equidistant
-  bool isEquidistant() const override { return false; }
+  bool isEquidistant() const final { return false; }
 
   /// returns whether the axis is variable
   /// @return bool is variable
-  bool isVariable() const override { return true; }
+  bool isVariable() const final { return true; }
 
   /// returns the type of the axis
   /// @return @c AxisType of this axis
-  AxisType getType() const override { return type; }
+  AxisType getType() const final { return type; }
 
   /// returns the boundary type set in the template param
   /// @return @c AxisBoundaryType of this axis
-  AxisBoundaryType getBoundaryType() const override { return bdt; }
+  AxisBoundaryType getBoundaryType() const final { return bdt; }
 
   /// Get #size bins which neighbor the one given. Generic overload with
   /// symmetric size.
@@ -484,7 +484,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   ///       bin with lower bound @c l and upper bound @c u.
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
-  std::size_t getBin(double x) const override {
+  std::size_t getBin(double x) const final {
     const auto it = std::ranges::upper_bound(m_binEdges, x);
     return wrapBin(
         static_cast<int>(std::ranges::distance(m_binEdges.begin(), it)));
@@ -495,7 +495,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// @return width of given bin
   /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
-  double getBinWidth(std::size_t bin) const override {
+  double getBinWidth(std::size_t bin) const {
     return m_binEdges.at(bin) - m_binEdges.at(bin - 1);
   }
 
@@ -506,7 +506,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins} + 1\f$
   /// @note Bin intervals have a closed lower bound, i.e. the lower boundary
   ///       belongs to the bin with the given bin index.
-  double getBinLowerBound(std::size_t bin) const override {
+  double getBinLowerBound(std::size_t bin) const {
     return m_binEdges.at(bin - 1);
   }
 
@@ -517,43 +517,41 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   ///      i.e. \f$0 \le \text{bin} \le \text{nBins}\f$
   /// @note Bin intervals have an open upper bound, i.e. the upper boundary
   ///       does @b not belong to the bin with the given bin index.
-  double getBinUpperBound(std::size_t bin) const override {
-    return m_binEdges.at(bin);
-  }
+  double getBinUpperBound(std::size_t bin) const { return m_binEdges.at(bin); }
 
   /// get bin center
   /// @param bin index of bin
   /// @return bin center position
   /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
-  double getBinCenter(std::size_t bin) const override {
+  double getBinCenter(std::size_t bin) const {
     return 0.5 * (getBinLowerBound(bin) + getBinUpperBound(bin));
   }
 
   /// get maximum of binning range
   /// @return maximum of binning range
-  double getMax() const override { return m_binEdges.back(); }
+  double getMax() const final { return m_binEdges.back(); }
 
   /// get minimum of binning range
   /// @return minimum of binning range
-  double getMin() const override { return m_binEdges.front(); }
+  double getMin() const final { return m_binEdges.front(); }
 
   /// get total number of bins
   /// @return total number of bins (excluding under-/overflow bins)
-  std::size_t getNBins() const override { return m_binEdges.size() - 1; }
+  std::size_t getNBins() const final { return m_binEdges.size() - 1; }
 
   /// check whether value is inside axis limits
   /// @param x The value to check
   /// @return @c true if \f$\text{xmin} \le x < \text{xmax}\f$, otherwise @c false
   /// @post If @c true is returned, the bin containing the given value is a
   ///       valid bin, i.e. it is neither the underflow nor the overflow bin.
-  bool isInside(double x) const override {
+  bool isInside(double x) const {
     return (m_binEdges.front() <= x) && (x < m_binEdges.back());
   }
 
   /// Return a vector of bin edges
   /// @return Vector which contains the bin edges
-  std::vector<double> getBinEdges() const override { return m_binEdges; }
+  std::vector<double> getBinEdges() const final { return m_binEdges; }
 
   friend std::ostream& operator<<(std::ostream& os, const Axis& axis) {
     os << "Axis<Variable, " << bdt << ">(";
@@ -566,7 +564,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   }
 
  protected:
-  void toStream(std::ostream& os) const override { os << *this; }
+  void toStream(std::ostream& os) const final { os << *this; }
 
  private:
   /// vector of bin edges (sorted in ascending order)
