@@ -123,7 +123,7 @@ void ReadDataHandleBase::initialize(std::string_view key) {
 }
 
 bool ReadDataHandleBase::isCompatible(const DataHandleBase& other) const {
-  return dynamic_cast<const ReadDataHandleBase*>(&other) != nullptr;
+  return dynamic_cast<const WriteDataHandleBase*>(&other) != nullptr;
 }
 
 void ReadDataHandleBase::emulate(StateMapType& state,
