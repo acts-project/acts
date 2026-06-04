@@ -30,9 +30,9 @@ class AlignmentHierarchy {
  public:
   /// @brief Outcome of validate()
   struct ValidationResult {
-    /// Detector elements that appear in more than one structure. Each offender
-    /// is listed once.
-    std::vector<const Acts::SurfacePlacementBase*> overlapping;
+    /// Surfaces whose detector element appears in more than one structure.
+    /// One representative surface is listed per conflicting element.
+    std::vector<const Acts::Surface*> overlapping;
 
     /// @brief Whether the hierarchy passes validation
     bool ok() const { return overlapping.empty(); }
@@ -43,23 +43,22 @@ class AlignmentHierarchy {
   explicit AlignmentHierarchy(
       const std::vector<std::shared_ptr<AlignableStructure>>& structures)
       : m_structures(structures) {
-    std::unordered_map<const Acts::SurfacePlacementBase*, unsigned int> counts;
+    std::unordered_map<const Acts::SurfacePlacementBase*, const Acts::Surface*>
+        firstSurface;
     for (const auto& structure : m_structures) {
       if (structure == nullptr) {
         continue;
       }
-      for (const auto& surface : structure->surfaces()) {
-        const auto* detElement = surface->surfacePlacement();
+      for (const Acts::Surface& surface : structure->surfaces()) {
+        const auto* detElement = surface.surfacePlacement();
         if (detElement == nullptr) {
           continue;
         }
         m_detElementToStructure.emplace(detElement, structure.get());
-        counts[detElement]++;
-      }
-    }
-    for (const auto& [detElement, count] : counts) {
-      if (count > 1) {
-        m_overlapping.push_back(detElement);
+        auto [it, inserted] = firstSurface.emplace(detElement, &surface);
+        if (!inserted) {
+          m_overlapping.push_back(it->second);
+        }
       }
     }
   }
@@ -89,9 +88,7 @@ class AlignmentHierarchy {
   ///        structure. Mixed mode is allowed: a detector element may be absent
   ///        from every structure and float as a standalone module.
   /// @return The validation result
-  ValidationResult validate() const {
-    return ValidationResult{m_overlapping};
-  }
+  ValidationResult validate() const { return ValidationResult{m_overlapping}; }
 
   /// @brief A DoF conflict between a structure and one of its child modules.
   struct MaskConflict {
@@ -146,8 +143,9 @@ class AlignmentHierarchy {
   std::unordered_map<const Acts::SurfacePlacementBase*, AlignableStructure*>
       m_detElementToStructure;
 
-  /// Detector elements that appear in more than one structure
-  std::vector<const Acts::SurfacePlacementBase*> m_overlapping;
+  /// One representative surface per detector element claimed by more than one
+  /// structure
+  std::vector<const Acts::Surface*> m_overlapping;
 };
 
 }  // namespace ActsAlignment
