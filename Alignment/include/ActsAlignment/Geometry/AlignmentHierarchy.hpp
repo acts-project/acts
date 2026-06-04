@@ -15,7 +15,6 @@
 
 #include <memory>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 namespace ActsAlignment {
@@ -98,33 +97,23 @@ class AlignmentHierarchy {
     AlignmentMask conflictingBits;
   };
 
-  /// @brief Detect DoF bits that are simultaneously floating at structure and
-  ///        module level for the same detector element.
+  /// @brief Detect DoF conflicts between structure-level and module-level
+  ///        floating parameters.
   ///
-  /// A structure-level DoF and a module-level DoF on the same physical
-  /// element are correlated: if both are floating, the Hessian picks up a
-  /// zero eigenvalue along that direction. This check returns every such
-  /// overlap so the caller can reject the configuration.
-  /// @param moduleMask The DoFs currently floating at module level
-  ///                   (i.e. the iteration's global alignment mask)
-  /// @param floatingModules Detector elements listed in @c alignedDetElements
-  /// @return One entry per conflicting (detElement, structure) pair
+  /// @todo Not yet implemented. A meaningful conflict check requires the
+  ///       chain-rule Jacobian @f$\partial\alpha_\text{surface} /
+  ///       \partial\alpha_\text{structure}@f$ to project structure-level DoFs
+  ///       into the surface frame before comparing masks. Without it, a
+  ///       bitwise mask comparison conflates DoF indices across different
+  ///       coordinate frames and produces both false positives and false
+  ///       negatives. Genuine redundancies are caught at solve time by a
+  ///       rank-deficient Hessian.
+  /// @return Always empty until the chain-rule Jacobian is available.
   std::vector<MaskConflict> detectMaskConflicts(
-      AlignmentMask moduleMask,
-      const std::vector<Acts::SurfacePlacementBase*>& floatingModules) const {
-    std::unordered_set<const Acts::SurfacePlacementBase*> floatingSet(
-        floatingModules.begin(), floatingModules.end());
-    std::vector<MaskConflict> conflicts;
-    for (const auto& [detElement, structure] : m_detElementToStructure) {
-      if (!floatingSet.contains(detElement)) {
-        continue;
-      }
-      AlignmentMask overlap = structure->alignmentMask() & moduleMask;
-      if (overlap != AlignmentMask::None) {
-        conflicts.push_back({detElement, structure, overlap});
-      }
-    }
-    return conflicts;
+      AlignmentMask /*moduleMask*/,
+      const std::vector<Acts::SurfacePlacementBase*>& /*floatingModules*/)
+      const {
+    return {};
   }
 
   /// @brief Access the registered structures
