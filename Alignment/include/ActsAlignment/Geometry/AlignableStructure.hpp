@@ -14,8 +14,8 @@
 #include "Acts/Utilities/TransformRange.hpp"
 #include "ActsAlignment/Kernel/AlignmentMask.hpp"
 
-#include <map>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 namespace ActsAlignment {
@@ -84,12 +84,12 @@ class AlignableStructure {
   /// A DoF that is floating (set in @c alignmentMask) but absent from this
   /// map is unconstrained — no regularization term is added for it.
   /// @return Reference to the constraints map
-  std::map<Acts::AlignmentIndices, double>& constraints() {
+  std::unordered_map<Acts::AlignmentIndices, double>& constraints() {
     return m_constraints;
   }
   /// @brief Access the constraints map (const overload)
   /// @return Const reference to the constraints map
-  const std::map<Acts::AlignmentIndices, double>& constraints() const {
+  const std::unordered_map<Acts::AlignmentIndices, double>& constraints() const {
     return m_constraints;
   }
 
@@ -111,7 +111,7 @@ class AlignableStructure {
   std::vector<std::shared_ptr<AlignableStructure>> m_children;
 
   /// Map of parameter index -> variance constraint (rigidity)
-  std::map<Acts::AlignmentIndices, double> m_constraints;
+  std::unordered_map<Acts::AlignmentIndices, double> m_constraints;
 
   /// Bitmask for determining which of the 6 DoFs are floating
   AlignmentMask m_mask{AlignmentMask::None};
