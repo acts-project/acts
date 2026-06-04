@@ -47,24 +47,26 @@ from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 
 def collect_surfaces(tracking_geometry, gctx):
-    """Return arrays of (GeometryIdentifier, centre_xyz, normal_xyz) for sensitive surfaces."""
+    """Return (gids, centres, normals, surfaces) arrays for sensitive surfaces."""
     gids = []
     centres = []
     normals = []
+    surfaces = []
 
     def visitor(surface):
         gid = surface.geometryId
         if gid.sensitive == 0:
             return
         centre = surface.center(gctx)
-        # normal(gctx, global_position, direction) — direction is a dummy for orientation
-        normal = surface.normal(gctx, centre, centre)
+        centre_v3 = acts.Vector3(float(centre[0]), float(centre[1]), float(centre[2]))
+        normal = surface.normal(gctx, centre_v3, centre_v3)
         gids.append(gid)
         centres.append(np.array(centre))
         normals.append(np.array(normal))
+        surfaces.append(surface)
 
     tracking_geometry.visitSurfaces(visitor)
-    return gids, np.array(centres), np.array(normals)
+    return gids, np.array(centres), np.array(normals), surfaces
 
 
 def load_hit_representatives(parquet_path: pathlib.Path):
@@ -146,14 +148,14 @@ def main():
     representatives = load_hit_representatives(parquet_files[0])
     print(f"  {len(representatives)} unique (det, vol, layer, surface) tuples")
 
-    gctx = acts.GeometryContext()
+    gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
     odd_dir = args.odd_dir or getOpenDataDetectorDirectory()
     print("Building ODD geometry ...")
     odd = getOpenDataDetector(odd_dir=odd_dir)
     tgeo = odd.trackingGeometry()
 
     print("Collecting sensitive surfaces ...")
-    surf_gids, centres, normals = collect_surfaces(tgeo, gctx)
+    surf_gids, centres, normals, surf_objects = collect_surfaces(tgeo, gctx)
     print(f"  {len(surf_gids)} sensitive surfaces")
 
     tree = KDTree(centres)
@@ -163,15 +165,27 @@ def main():
     n_unmatched = 0
 
     for (det, vol, layer, surf), hit_pos in sorted(representatives.items()):
-        # Query k nearest neighbours, accept the first whose surface plane contains hit_pos
+        # Two-step matching:
+        # 1. Normal-distance check: |(hit - centre) · normal| < tolerance
+        #    Accepts any surface whose plane contains the hit.
+        # 2. globalToLocal check: confirms the hit falls within the surface bounds.
+        #    Required for barrel sensors where all surfaces at the same radius pass
+        #    step 1, but only the correct z-slice passes step 2.
         dists, indices = tree.query(hit_pos, k=min(args.k, len(surf_gids)))
         matched_idx = None
+        hit_v3 = acts.Vector3(float(hit_pos[0]), float(hit_pos[1]), float(hit_pos[2]))
         for idx in indices:
             delta = hit_pos - centres[idx]
             perp_dist = abs(float(np.dot(delta, normals[idx])))
             if perp_dist < args.tolerance:
-                matched_idx = idx
-                break
+                if (
+                    surf_objects[idx].globalToLocal(
+                        gctx, hit_v3, acts.Vector3(0, 0, 0), 1.0
+                    )
+                    is not None
+                ):
+                    matched_idx = idx
+                    break
 
         if matched_idx is None:
             best_perp = min(
@@ -179,7 +193,7 @@ def main():
             )
             print(
                 f"  WARN: ({det},{vol},{layer},{surf}) no surface within "
-                f"{args.tolerance:.1f} mm normal-distance "
+                f"{args.tolerance:.1f} mm normal-distance with passing globalToLocal "
                 f"(best perp dist among {args.k} neighbours: {best_perp:.2f} mm)"
             )
             n_unmatched += 1

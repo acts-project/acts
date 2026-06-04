@@ -288,10 +288,6 @@ ProcessCode ColliderMLInputConverter::execute(
     measurements.reserve(static_cast<std::size_t>(nHits));
   }
 
-  std::size_t nUnknownGeoId = 0;
-  std::size_t nUnknownCov = 0;
-  std::size_t nGlobalToLocalFailed = 0;
-
   for (std::int64_t i = 0; i < nHits; ++i) {
     const std::uint8_t det = detArr->Value(hOff + i);
     const std::uint8_t vol = volArr->Value(hOff + i);
@@ -303,8 +299,10 @@ ProcessCode ColliderMLInputConverter::execute(
     if (!m_cfg.geoIdMap.empty()) {
       auto geoIt = m_cfg.geoIdMap.find(key);
       if (geoIt == m_cfg.geoIdMap.end()) {
-        ++nUnknownGeoId;
-        continue;
+        ACTS_ERROR("Hit " << i << " (det=" << +det << " vol=" << +vol
+                          << " lay=" << lay << " surf=" << surf
+                          << ") not found in geoIdMap — regenerate the map");
+        return ProcessCode::ABORT;
       }
       geoId = geoIt->second;
     } else {
@@ -344,15 +342,18 @@ ProcessCode ColliderMLInputConverter::execute(
 
     auto digiIt = m_cfg.digiConfig.find(geoId);
     if (digiIt == m_cfg.digiConfig.end()) {
-      ++nUnknownCov;
-      continue;
+      ACTS_ERROR("Hit " << i << " geoId " << geoId
+                        << " has no digiConfig entry — check smearing config");
+      return ProcessCode::ABORT;
     }
     const auto& smearing = digiIt->smearingDigiConfig;
 
     const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
     if (surface == nullptr) {
-      ++nUnknownGeoId;
-      continue;
+      ACTS_ERROR("Hit " << i << " geoId " << geoId
+                        << " not found in tracking geometry — geoIdMap may be "
+                           "stale, regenerate it");
+      return ProcessCode::ABORT;
     }
 
     Acts::Vector3 globalPos{static_cast<double>(hxArr->Value(hOff + i)),
@@ -362,8 +363,10 @@ ProcessCode ColliderMLInputConverter::execute(
     auto localResult =
         surface->globalToLocal(ctx.geoContext, globalPos, Acts::Vector3{});
     if (!localResult.ok()) {
-      ++nGlobalToLocalFailed;
-      continue;
+      ACTS_ERROR("Hit " << i << " geoId " << geoId
+                        << " globalToLocal failed at (" << globalPos.transpose()
+                        << ") — geoIdMap maps to wrong surface, regenerate it");
+      return ProcessCode::ABORT;
     }
     const Acts::Vector2& lp = localResult.value();
 
@@ -399,19 +402,6 @@ ProcessCode ColliderMLInputConverter::execute(
     if (barcode != SimBarcode{}) {
       measParticlesMap.emplace(measIdx, barcode);
     }
-  }
-
-  if (nUnknownGeoId > 0) {
-    ACTS_WARNING("Skipped " << nUnknownGeoId
-                            << " hits with unknown geometry ID");
-  }
-  if (nUnknownCov > 0) {
-    ACTS_WARNING("Skipped " << nUnknownCov << " hits with unknown volume "
-                            << "in covariance map");
-  }
-  if (nGlobalToLocalFailed > 0) {
-    ACTS_WARNING("Skipped " << nGlobalToLocalFailed
-                            << " hits where globalToLocal failed");
   }
 
   // Build sorted SimHitContainer.
