@@ -73,7 +73,7 @@ struct TrackAlignmentState {
   // Per-alignable-surface pointer to its owning AlignableStructure. Absent
   // when the surface is a standalone floating module or no hierarchy is in
   // use. Populated alongside @c alignedSurfaces.
-  std::unordered_map<const Acts::Surface*, AlignableStructure*>
+  std::unordered_map<const Acts::Surface*, const AlignableStructure*>
       surfaceStructures;
 };
 

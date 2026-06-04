@@ -145,13 +145,13 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
                  &AlignmentHierarchy::detectMaskConflicts,
                  py::arg("moduleMask"), py::arg("floatingModules"))
             .def("structureFor",
-                 static_cast<AlignableStructure* (
+                 static_cast<const AlignableStructure* (
                      AlignmentHierarchy::*)(const Acts::SurfacePlacementBase&)
                                  const>(&AlignmentHierarchy::structureFor),
                  py::arg("detElement"),
                  py::return_value_policy::reference_internal)
             .def("structureFor",
-                 static_cast<AlignableStructure* (
+                 static_cast<const AlignableStructure* (
                      AlignmentHierarchy::*)(const Acts::Surface&) const>(
                      &AlignmentHierarchy::structureFor),
                  py::arg("surface"),

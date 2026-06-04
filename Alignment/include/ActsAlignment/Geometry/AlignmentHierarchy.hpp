@@ -88,7 +88,7 @@ class AlignmentHierarchy {
   /// @param detElement The detector element to look up
   /// @return The owning structure, or nullptr if the element is a standalone
   ///         floating module
-  AlignableStructure* structureFor(
+  const AlignableStructure* structureFor(
       const Acts::SurfacePlacementBase& detElement) const {
     auto it = m_detElementToStructure.find(&detElement);
     return it == m_detElementToStructure.end() ? nullptr : it->second;
@@ -98,7 +98,7 @@ class AlignmentHierarchy {
   /// @param surface The surface to look up
   /// @return The owning structure, or nullptr if the surface's element is a
   ///         standalone floating module (or has no attached placement)
-  AlignableStructure* structureFor(const Acts::Surface& surface) const {
+  const AlignableStructure* structureFor(const Acts::Surface& surface) const {
     const auto* detElement = surface.surfacePlacement();
     if (detElement == nullptr) {
       return nullptr;
@@ -117,7 +117,7 @@ class AlignmentHierarchy {
     /// The offending detector element
     const Acts::SurfacePlacementBase* detElement;
     /// The parent structure whose mask overlaps
-    AlignableStructure* structure;
+    const AlignableStructure* structure;
     /// The bits that are set in both masks
     AlignmentMask conflictingBits;
   };
@@ -152,7 +152,8 @@ class AlignmentHierarchy {
   std::vector<std::shared_ptr<AlignableStructure>> m_structures;
 
   /// Flat lookup from detector element to owning structure
-  std::unordered_map<const Acts::SurfacePlacementBase*, AlignableStructure*>
+  std::unordered_map<const Acts::SurfacePlacementBase*,
+                     const AlignableStructure*>
       m_detElementToStructure;
 
   /// One representative surface per detector element claimed by more than one
