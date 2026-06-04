@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Any.hpp"
+#include "Acts/Utilities/HashedString.hpp"
 
 #include <concepts>
 #include <functional>
@@ -81,6 +82,7 @@ class WhiteBoardRegistry {
               return std::make_unique<Acts::AnyMoveOnly>(std::move(*up));
             },
         .typeinfo = &typeid(type),
+        .typeHash = Acts::typeHash<type>(),
     };
   }
 
@@ -105,6 +107,8 @@ class WhiteBoardRegistry {
     FromPythonFunction fromPython{nullptr};
     /// C++ type for type checking
     const std::type_info* typeinfo{nullptr};
+    /// Hash for type verification
+    std::uint64_t typeHash{0};
   };
 
   /// Look up a registered type by its pybind11 Python type object.

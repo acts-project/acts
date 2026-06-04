@@ -68,12 +68,12 @@ class PySequenceElement : public SequenceElement {
 
 class PyIAlgorithm : public IAlgorithm {
  public:
-  explicit PyIAlgorithm(const std::string& name,
+  explicit PyIAlgorithm(std::string name,
                         std::unique_ptr<const Logger> logger = nullptr)
-      : IAlgorithm(name, std::move(logger)) {}
+      : IAlgorithm(std::move(name), std::move(logger)) {}
 
-  PyIAlgorithm(const std::string& name, Logging::Level level)
-      : IAlgorithm(name, getDefaultLogger(name, level)) {}
+  PyIAlgorithm(std::string name, Logging::Level level)
+      : IAlgorithm(std::move(name), getDefaultLogger(name, level)) {}
 
   ProcessCode execute(const AlgorithmContext& ctx) const override {
     py::gil_scoped_acquire acquire{};
@@ -144,7 +144,7 @@ class PyIReader : public IReader {
 
 class PyReadDataHandle : public ReadDataHandleBase {
  public:
-  PyReadDataHandle(SequenceElement* parent, const py::object& pytype,
+  PyReadDataHandle(SequenceElement* parent, py::object pytype,
                    const std::string& name)
       : ReadDataHandleBase(parent, name) {
     m_entry = WhiteBoardRegistry::find(pytype);
@@ -164,6 +164,8 @@ class PyReadDataHandle : public ReadDataHandleBase {
 
   const std::type_info& typeInfo() const override { return *m_entry->typeinfo; }
 
+  std::uint64_t typeHash() const override { return m_entry->typeHash; }
+
   py::object call(const py::object& wbPy) const {
     if (!isInitialized()) {
       throw std::runtime_error("ReadDataHandle '" + name() +
@@ -175,7 +177,16 @@ class PyReadDataHandle : public ReadDataHandleBase {
       throw py::key_error("Key '" + key() + "' does not exist");
     }
 
-    auto holder = getHolder(wb);
+    auto [holder, storedTypeHash] = getHolder(wb);
+
+    if (m_entry->typeHash != storedTypeHash) {
+      const auto& expected = boost::core::demangle(m_entry->typeinfo->name());
+      const auto& actual = boost::core::demangle(
+          (holder->typeInfo() != nullptr) ? holder->typeInfo()->name()
+                                          : "unknown");
+      throw py::type_error("Type mismatch for key '" + key() + "'. Expected " +
+                           expected + " but got " + actual);
+    }
 
     PyObject* out = m_entry->toPython(*holder, wbPy.ptr());
     return py::reinterpret_steal<py::object>(out);
@@ -201,10 +212,12 @@ class PyWriteDataHandle : public WriteDataHandleBase {
 
   void call(const AlgorithmContext& ctx, const py::object& obj) const {
     auto any = m_entry->fromPython(obj.ptr());
-    addHolder(ctx.eventStore, std::move(any));
+    addHolder(ctx.eventStore, std::move(any), m_entry->typeHash);
   }
 
   const std::type_info& typeInfo() const override { return *m_entry->typeinfo; }
+
+  std::uint64_t typeHash() const override { return m_entry->typeHash; }
 
  private:
   const WhiteBoardRegistry::RegistryEntry* m_entry{nullptr};
@@ -254,7 +267,7 @@ void addFramework(py::module& mex) {
       .def_property_readonly("keys", &WhiteBoard::getKeys);
 
   py::class_<PyReadDataHandle>(mex, "ReadDataHandle")
-      .def(py::init([](const py::object& parent_py, const py::object& pytype,
+      .def(py::init([](const py::object& parent_py, py::object pytype,
                        const std::string& name) {
              auto* parent = parent_py.cast<SequenceElement*>();
              return std::make_unique<PyReadDataHandle>(parent,
@@ -271,7 +284,7 @@ void addFramework(py::module& mex) {
       .def("__call__", &PyReadDataHandle::call, py::arg("whiteboard"));
 
   py::class_<PyWriteDataHandle>(mex, "WriteDataHandle")
-      .def(py::init([](const py::object& parent_py, const py::object& pytype,
+      .def(py::init([](const py::object& parent_py, py::object pytype,
                        const std::string& name) {
              auto* parent = parent_py.cast<SequenceElement*>();
              return std::make_unique<PyWriteDataHandle>(

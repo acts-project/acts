@@ -8,15 +8,36 @@
 
 #pragma once
 
+// Include podio first to ensure full definition before any forward declarations
+// in the DataHandle include chain. Required for std::is_base_of_v constraint.
 #include "ActsExamples/Framework/DataHandle.hpp"
 
 #include <concepts>
+#include <cstdint>
 #include <memory>
 #include <stdexcept>
 
 #include <podio/CollectionBase.h>
 
 namespace ActsExamples {
+
+namespace detail {
+/// Base class for typed Podio collection read handles.
+///
+/// Extends @ref ReadDataHandleBase with @c collectionTypeHash() for compatibility
+/// checking against @ref PodioCollectionWriteHandle. This enables single inheritance
+/// for PodioCollectionReadHandle<T>.
+class PodioCollectionTypedReadHandle : public ReadDataHandleBase {
+ protected:
+  using ReadDataHandleBase::ReadDataHandleBase;
+
+ public:
+  /// Hash of the concrete collection type for compatibility checking.
+  /// Used by @ref PodioCollectionWriteHandle::isCompatible to validate that
+  /// typed read handles match the declared write handle type.
+  virtual std::uint64_t collectionTypeHash() const = 0;
+};
+}  // namespace detail
 
 /// Type-safe PODIO collection write handle.
 ///
@@ -73,6 +94,27 @@ class PodioCollectionWriteHandle final : public WriteDataHandleBase {
     return typeid(std::unique_ptr<T>);
   }
 
+  /// Return the type hash of the collection.
+  /// @return The type hash of the collection
+  std::uint64_t typeHash() const override {
+    return Acts::typeHash<std::unique_ptr<T>>();
+  }
+
+  /// Check if the collection is compatible with another data handle.
+  /// @param other The other data handle to check compatibility with
+  /// @return True if the collection is compatible, false otherwise
+  bool isCompatible(const DataHandleBase& other) const override {
+    const auto baseCollectionHash =
+        Acts::typeHash<std::unique_ptr<podio::CollectionBase>>();
+    if (other.typeHash() == baseCollectionHash) {
+      return true;
+    }
+    const auto* typedReadHandle =
+        dynamic_cast<const detail::PodioCollectionTypedReadHandle*>(&other);
+    return typedReadHandle != nullptr &&
+           typedReadHandle->collectionTypeHash() == typeHash();
+  }
+
  private:
   /// Internal helper to add a collection to the whiteboard.
   /// @param wb The whiteboard to add the collection to
@@ -97,13 +139,14 @@ class PodioCollectionWriteHandle final : public WriteDataHandleBase {
 ///           Must inherit from podio::CollectionBase.
 template <typename T>
   requires std::derived_from<T, podio::CollectionBase>
-class PodioCollectionReadHandle final : public ReadDataHandleBase {
+class PodioCollectionReadHandle final
+    : public detail::PodioCollectionTypedReadHandle {
  public:
   /// Construct a read handle.
   /// @param parent The sequence element that owns this handle
   /// @param name The handle name (used for configuration and error messages)
   PodioCollectionReadHandle(SequenceElement* parent, const std::string& name)
-      : ReadDataHandleBase{parent, name} {
+      : PodioCollectionTypedReadHandle{parent, name} {
     registerAsReadHandle();
   }
 
@@ -145,6 +188,16 @@ class PodioCollectionReadHandle final : public ReadDataHandleBase {
   const std::type_info& typeInfo() const override {
     return typeid(std::unique_ptr<T>);
   }
+
+  /// Return the type hash of the collection.
+  /// @return The type hash of the collection
+  std::uint64_t typeHash() const override {
+    return Acts::typeHash<std::unique_ptr<T>>();
+  }
+
+  /// Return the type hash of the collection.
+  /// @return The type hash of the collection
+  std::uint64_t collectionTypeHash() const override { return typeHash(); }
 };
 
 }  // namespace ActsExamples
