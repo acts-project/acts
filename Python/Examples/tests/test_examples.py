@@ -1149,7 +1149,7 @@ def test_strip_space_points(detector_config, field, tmp_path, assert_root_hash):
             s=s,
         ).run()
 
-    root_file = "strip_spacepoints.root"
+    root_file = "strip_space_points.root"
     rfp = tmp_path / root_file
 
     assert_root_hash(root_file, rfp)
