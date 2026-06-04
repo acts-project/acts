@@ -36,11 +36,11 @@ class IGrid {
   /// @return a vector of axis pointers
   virtual boost::container::small_vector<const IAxis*, 3> axes() const = 0;
 
-  /// @brief Get the number of dimensions of the grid
+  /// Get the number of dimensions of the grid
   /// @return The number of dimensions of the grid
   virtual std::size_t dimensions() const = 0;
 
-  /// @brief Get the type of the values stored in the grid
+  /// Get the type of the values stored in the grid
   /// @return The type of the values stored in the grid
   virtual std::type_info const& valueType() const = 0;
 
@@ -55,22 +55,22 @@ class IGrid {
   /// Type alias for dynamic point type (coordinates as vector of doubles)
   using AnyPointType = boost::container::small_vector<double, 3>;
 
-  /// @brief Get the lower left edge of a bin for a given set of indices
+  /// Get the lower left edge of a bin for a given set of indices
   /// @param indices The indices to get the lower left edge of the bin for
   /// @return The lower left edge of the bin
   virtual AnyPointType lowerLeftBinEdgeAny(AnyIndexType indices) const = 0;
 
-  /// @brief Get the upper right edge of a bin for a given set of indices
+  /// Get the upper right edge of a bin for a given set of indices
   /// @param indices The indices to get the upper right edge of the bin for
   /// @return The upper right edge of the bin
   virtual AnyPointType upperRightBinEdgeAny(AnyIndexType indices) const = 0;
 
-  /// @brief Get the center of a bin for a given set of indices
+  /// Get the center of a bin for a given set of indices
   /// @param indices The indices to get the center of the bin for
   /// @return The center of the bin
   virtual AnyPointType binCenterAny(AnyIndexType indices) const = 0;
 
-  /// @brief Get the number of local bins for a given set of indices
+  /// Get the number of local bins for a given set of indices
   /// @return The number of local bins
   virtual AnyIndexType numLocalBinsAny() const = 0;
 
@@ -97,13 +97,13 @@ class IGrid {
   /// @param os Output stream to write grid representation to
   virtual void toStream(std::ostream& os) const = 0;
 
-  /// @brief Get the value of a bin for a given set of indices
+  /// Get the value of a bin for a given set of indices
   /// @param indices The indices to get the value of the bin for
   /// @return The value of the bin: the @c std::any contains a const pointer to
   ///         the value
   virtual std::any atLocalBinsAny(AnyIndexType indices) const = 0;
 
-  /// @brief Get the value of a bin for a given set of indices
+  /// Get the value of a bin for a given set of indices
   /// @param indices The indices to get the value of the bin for
   /// @return The value of the bin: the @c std::any contains a pointer to the
   ///         value

@@ -15,6 +15,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 # All the different build/test jobs.
 jobs:
 
@@ -38,7 +41,9 @@ jobs:
     # The build/test steps to execute.
     steps:
     # Use a standard checkout of the code.
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        persist-credentials: false
     # Run the CMake configuration. Test that the metadata generation runs
     - name: Configure
       run: cmake --preset detray-full-fp64
@@ -88,7 +93,9 @@ jobs:
     # The build/test steps to execute.
     steps:
     # Use a standard checkout of the code.
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        persist-credentials: false
     # Get the data files for the tests
     - name: Download data files
       run: Detray/data/detray_data_get_files.sh
@@ -162,7 +169,9 @@ jobs:
     # The build/test steps to execute.
     steps:
     # Use a standard checkout of the code.
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        persist-credentials: false
     # Run the CMake configuration.
     - name: Configure
       run: |

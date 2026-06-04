@@ -12,16 +12,16 @@
 
 namespace Acts {
 
-// This object can be iterated to produce up to two sequences of integer
-// indices, corresponding to the half-open integer ranges [begin1, end1[ and
-// [begin2, end2[.
-//
-// The goal is to emulate the effect of enumerating a range of neighbor
-// indices on an axis (which may go out of bounds and wrap around since we
-// have AxisBoundaryType::Closed), inserting them into an std::vector, and
-// discarding duplicates, without paying the price of duplicate removal
-// and dynamic memory allocation in hot magnetic field interpolation code.
-//
+/// This object can be iterated to produce up to two sequences of integer
+/// indices, corresponding to the half-open integer ranges [begin1, end1[ and
+/// [begin2, end2[.
+///
+/// The goal is to emulate the effect of enumerating a range of neighbor
+/// indices on an axis (which may go out of bounds and wrap around since we
+/// have AxisBoundaryType::Closed), inserting them into an std::vector, and
+/// discarding duplicates, without paying the price of duplicate removal
+/// and dynamic memory allocation in hot magnetic field interpolation code.
+///
 /// Iterable indices for neighborhood lookups with optional wrap-around.
 class NeighborHoodIndices {
  public:
