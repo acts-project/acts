@@ -89,8 +89,8 @@ class AlignmentHierarchy {
   /// @return The owning structure, or nullptr if the element is a standalone
   ///         floating module
   AlignableStructure* structureFor(
-      const Acts::SurfacePlacementBase* detElement) const {
-    auto it = m_detElementToStructure.find(detElement);
+      const Acts::SurfacePlacementBase& detElement) const {
+    auto it = m_detElementToStructure.find(&detElement);
     return it == m_detElementToStructure.end() ? nullptr : it->second;
   }
 
@@ -99,7 +99,11 @@ class AlignmentHierarchy {
   /// @return The owning structure, or nullptr if the surface's element is a
   ///         standalone floating module (or has no attached placement)
   AlignableStructure* structureFor(const Acts::Surface& surface) const {
-    return structureFor(surface.surfacePlacement());
+    const auto* detElement = surface.surfacePlacement();
+    if (detElement == nullptr) {
+      return nullptr;
+    }
+    return structureFor(*detElement);
   }
 
   /// @brief Check that no detector element is assigned to more than one
