@@ -16,7 +16,6 @@
 #include <vector>
 
 using namespace Acts;
-using namespace Acts::detail;
 
 namespace ActsTests {
 
