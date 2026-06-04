@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/TransformRange.hpp"
 #include "ActsAlignment/Kernel/AlignmentMask.hpp"
 
 #include <map>
@@ -29,12 +30,25 @@ namespace ActsAlignment {
 class AlignableStructure {
  public:
   /// @brief Constructor
-  /// @param id The geometric identifier for this structure
+  /// @param id A unique identifier for this structure. Must be distinct from
+  ///           every other structure in the same hierarchy and must not collide
+  ///           with any surface @c GeometryIdentifier already present in the
+  ///           alignment store (surface IDs always carry non-zero sensitive
+  ///           bits, so keeping the sensitive field zero here is sufficient).
+  ///           The @c GeometryIdentifier type is chosen because it is the key
+  ///           type of @c GeoIdAlignmentStore; the value need not correspond to
+  ///           any existing geometry object.
+  /// @todo Define a project-wide strategy for assigning structure IDs.
   explicit AlignableStructure(Acts::GeometryIdentifier id) : m_id(id) {}
 
   /// Disallow copy construction to ensure identity uniqueness
   AlignableStructure(const AlignableStructure&) = delete;
   AlignableStructure& operator=(const AlignableStructure&) = delete;
+
+  /// Type alias for a const dereferencing range over associated surfaces
+  using SurfaceRange = Acts::detail::TransformRange<
+      Acts::detail::ConstDereference,
+      const std::vector<std::shared_ptr<Acts::Surface>>>;
 
   /// @brief Add a surface to this alignable structure
   /// @param surface The surface to add
@@ -53,10 +67,8 @@ class AlignableStructure {
   Acts::GeometryIdentifier geometryId() const { return m_id; }
 
   /// @brief Access the list of associated surfaces
-  /// @return A vector of shared pointers to surfaces
-  const std::vector<std::shared_ptr<Acts::Surface>>& surfaces() const {
-    return m_surfaces;
-  }
+  /// @return A dereferencing range yielding @c const Acts::Surface&
+  SurfaceRange surfaces() const { return SurfaceRange{m_surfaces}; }
 
   /// @brief Access the list of child structures
   /// @return A vector of shared pointers to child structures
