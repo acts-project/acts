@@ -25,6 +25,16 @@ namespace ActsAlignment {
 /// construction and exposes it for later steps of the alignment pipeline
 /// (validation, structure-level derivative accumulation). It does not own the
 /// structures; the caller retains ownership.
+///
+/// @par Multi-level alignment
+/// The hierarchy is rebuilt on every call to @c Alignment::align(), so
+/// iterative multi-level alignment (strip system → endcap → disk → module,
+/// one level active per call, cycling until convergence) is supported out of
+/// the box. Each surface is mapped to its immediate owning structure; at most
+/// one level of the hierarchy should have floating DoFs per @c align() call.
+/// Simultaneous fitting of DoFs at multiple levels in a single call would
+/// require extending the lookup to return the full ancestor chain and
+/// accumulating chain-rule Jacobians at each level — this is not implemented.
 class AlignmentHierarchy {
  public:
   /// @brief Outcome of validate()
