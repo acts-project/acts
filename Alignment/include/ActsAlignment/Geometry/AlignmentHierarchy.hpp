@@ -54,10 +54,11 @@ class AlignmentHierarchy {
         if (detElement == nullptr) {
           continue;
         }
-        m_detElementToStructure.emplace(detElement, structure.get());
-        auto [it, inserted] = firstSurface.emplace(detElement, &surface);
-        if (!inserted) {
-          m_overlapping.push_back(it->second);
+        const bool newElement =
+            m_detElementToStructure.emplace(detElement, structure.get()).second;
+        const auto surfIt = firstSurface.emplace(detElement, &surface).first;
+        if (!newElement) {
+          m_overlapping.push_back(surfIt->second);
         }
       }
     }
