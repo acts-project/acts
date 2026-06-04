@@ -123,7 +123,8 @@ def make_plots(hists, output_dir: Path, n_events: int):
     footer = f"{ts}  |  {branch}  |  {commit}"
     subtext = f"ColliderML ttbar PU200, {n_events} particles"
 
-    output_path = output_dir / "performance_plots.pdf"
+    ts_file = datetime.datetime.now().strftime("%Y%m%d_%H%M")
+    output_path = output_dir / f"performance_plots_{ts_file}.pdf"
     with PdfPages(output_path) as pdf:
         d = pdf.infodict()
         d["Title"] = "ColliderML Truth-Tracking Performance"
