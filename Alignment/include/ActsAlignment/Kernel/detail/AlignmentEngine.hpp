@@ -200,7 +200,7 @@ TrackAlignmentState trackAlignmentState(
       // not consumed at this step; it is recorded for later derivative
       // propagation to structure-level DoFs.
       if (hierarchy != nullptr) {
-        if (auto* structure = hierarchy->structureFor(surface);
+        if (auto* structure = hierarchy->structureFor(*surface);
             structure != nullptr) {
           alignState.surfaceStructures.emplace(surface, structure);
         }

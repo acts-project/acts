@@ -152,7 +152,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
                  py::return_value_policy::reference_internal)
             .def("structureFor",
                  static_cast<AlignableStructure* (
-                     AlignmentHierarchy::*)(const Acts::Surface*) const>(
+                     AlignmentHierarchy::*)(const Acts::Surface&) const>(
                      &AlignmentHierarchy::structureFor),
                  py::arg("surface"),
                  py::return_value_policy::reference_internal)
