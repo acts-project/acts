@@ -20,6 +20,7 @@
 #include <array>
 #include <cstddef>
 #include <numeric>
+#include <sstream>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -184,18 +185,31 @@ CuboidStackPortalShell::CuboidStackPortalShell(
     std::ranges::transform(m_shells, std::back_inserter(portals),
                            [face](auto* shell) { return shell->portal(face); });
 
-    auto merged = std::accumulate(
-        std::next(portals.begin()), portals.end(), portals.front(),
-        [&](const auto& aPortal,
-            const auto& bPortal) -> std::shared_ptr<Portal> {
-          assert(aPortal != nullptr);
-          assert(bPortal != nullptr);
+    std::shared_ptr<Portal> merged;
+    try {
+      merged = std::accumulate(
+          std::next(portals.begin()), portals.end(), portals.front(),
+          [&](const auto& aPortal,
+              const auto& bPortal) -> std::shared_ptr<Portal> {
+            assert(aPortal != nullptr);
+            assert(bPortal != nullptr);
 
-          AxisDirection onSurfaceAxis = onSurfaceDirs.at(face);
+            AxisDirection onSurfaceAxis = onSurfaceDirs.at(face);
 
-          return std::make_shared<Portal>(
-              Portal::merge(gctx, *aPortal, *bPortal, onSurfaceAxis, logger));
-        });
+            return std::make_shared<Portal>(
+                Portal::merge(gctx, *aPortal, *bPortal, onSurfaceAxis, logger));
+          });
+    } catch (const PortalMergingException& e) {
+      std::stringstream ss;
+      ss << "Failed to merge portals at face " << face << " while building "
+         << label() << " (stacking in " << m_direction << "). Shells involved:";
+      for (const auto* shell : m_shells) {
+        ss << "\n  - " << shell->label();
+      }
+      ss << "\nUnderlying error: " << e.what();
+      ACTS_ERROR(ss.str());
+      throw PortalMergingException{ss.str()};
+    }
 
     assert(merged != nullptr);
     assert(merged->isValid());

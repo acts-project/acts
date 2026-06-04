@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <numeric>
+#include <sstream>
 #include <stdexcept>
 
 #include <boost/algorithm/string/join.hpp>
@@ -164,18 +165,31 @@ CylinderStackPortalShell::CylinderStackPortalShell(
                            [face](auto* shell) { return shell->portal(face); });
     ACTS_VERBOSE("Portals at " << face << ": " << portals.size());
 
-    auto merged = std::accumulate(
-        std::next(portals.begin()), portals.end(), portals.front(),
-        [&](const auto& aPortal,
-            const auto& bPortal) -> std::shared_ptr<Portal> {
-          if (aPortal == nullptr || bPortal == nullptr) {
-            throw std::invalid_argument(
-                "CylinderStackPortalShell: null portal in merge");
-          }
+    std::shared_ptr<Portal> merged;
+    try {
+      merged = std::accumulate(
+          std::next(portals.begin()), portals.end(), portals.front(),
+          [&](const auto& aPortal,
+              const auto& bPortal) -> std::shared_ptr<Portal> {
+            if (aPortal == nullptr || bPortal == nullptr) {
+              throw std::invalid_argument(
+                  "CylinderStackPortalShell: null portal in merge");
+            }
 
-          return std::make_shared<Portal>(
-              Portal::merge(gctx, *aPortal, *bPortal, direction, logger));
-        });
+            return std::make_shared<Portal>(
+                Portal::merge(gctx, *aPortal, *bPortal, direction, logger));
+          });
+    } catch (const PortalMergingException& e) {
+      std::stringstream ss;
+      ss << "Failed to merge portals at face " << face << " while building "
+         << label() << " (stacking in " << m_direction << "). Shells involved:";
+      for (const auto* shell : m_shells) {
+        ss << "\n  - " << shell->label();
+      }
+      ss << "\nUnderlying error: " << e.what();
+      ACTS_ERROR(ss.str());
+      throw PortalMergingException{ss.str()};
+    }
 
     if (merged == nullptr) {
       throw std::runtime_error(

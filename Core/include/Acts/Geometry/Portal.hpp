@@ -14,7 +14,9 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <exception>
 #include <memory>
+#include <string>
 
 namespace Acts {
 
@@ -30,7 +32,16 @@ class PortalLinkBase;
 
 /// Exception thrown when portals cannot be merged
 class PortalMergingException : public std::exception {
+ public:
+  /// Default constructor producing a generic message.
+  PortalMergingException() = default;
+  /// Construct with a contextual message describing why the merge failed.
+  /// @param message The contextual error message
+  explicit PortalMergingException(std::string message);
   const char* what() const noexcept override;
+
+ private:
+  std::string m_message{"Failure to merge portals"};
 };
 
 /// Exception thrown when portals cannot be fused

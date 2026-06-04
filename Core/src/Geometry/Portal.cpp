@@ -20,12 +20,16 @@
 
 #include <cstdlib>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 
 namespace Acts {
 
+PortalMergingException::PortalMergingException(std::string message)
+    : m_message{std::move(message)} {}
+
 const char* PortalMergingException::what() const noexcept {
-  return "Failure to merge portals";
+  return m_message.c_str();
 }
 
 const char* PortalFusingException::what() const noexcept {
@@ -190,8 +194,27 @@ Portal Portal::merge(const GeometryContext& gctx, Portal& aPortal,
   }
 
   if (aPortal.m_surface->hasMaterial() || bPortal.m_surface->hasMaterial()) {
-    ACTS_ERROR("Cannot merge portals with material");
-    throw PortalMergingException{};
+    std::stringstream ss;
+    ss << "Cannot merge portals with material along " << direction << ": ";
+    bool aHas = aPortal.m_surface->hasMaterial();
+    bool bHas = bPortal.m_surface->hasMaterial();
+    if (aHas) {
+      ss << "portal A surface (bounds=" << aPortal.m_surface->bounds()
+         << ", center=" << aPortal.m_surface->center(gctx).transpose()
+         << ") carries material";
+    }
+    if (bHas) {
+      ss << (aHas ? " and " : "")
+         << "portal B surface (bounds=" << bPortal.m_surface->bounds()
+         << ", center=" << bPortal.m_surface->center(gctx).transpose()
+         << ") carries material";
+    }
+    ss << ". This typically means material was designated on a portal face "
+          "that is subsequently merged during container stacking. Move the "
+          "material designation to a face that is not merged (e.g. the face of "
+          "the enclosing container).";
+    ACTS_ERROR(ss.str());
+    throw PortalMergingException{ss.str()};
   }
 
   std::unique_ptr<PortalLinkBase> mergedAlongNormal = nullptr;

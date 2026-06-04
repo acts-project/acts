@@ -19,6 +19,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
+#include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
@@ -446,6 +447,57 @@ BOOST_AUTO_TEST_CASE(NodeApiTestCuboid) {
   BOOST_REQUIRE(trackingGeometry);
   BOOST_CHECK(trackingGeometry->geometryVersion() ==
               TrackingGeometry::GeometryVersion::Gen3);
+}
+
+// Reproduces the "Cannot merge portals with material" failure: material is
+// designated on a portal face that is subsequently merged during container
+// stacking. The material designator wraps a child of a z-stacking container.
+// Since stacking in z merges the OuterCylinder portals of all children, the
+// merge encounters a surface that already carries material and throws.
+BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalThrows) {
+  Transform3 base{Transform3::Identity()};
+
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {0_mm, 20_mm};
+  auto root = std::make_unique<Blueprint>(cfg);
+
+  root->addCylinderContainer("Stack", AxisDirection::AxisZ, [&](auto& stack) {
+    using enum AxisDirection;
+    using enum AxisBoundaryType;
+    using enum CylinderVolumeBounds::Face;
+
+    // First child: a static volume whose OuterCylinder face is given material.
+    // This is the face that the parent z-stack will try to merge.
+    stack.addMaterial("Material", [&](auto& mat) {
+      mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 20},
+                        {AxisZ, Bound, 20});
+      mat.addStaticVolume(
+          base * Translation3{Vector3{0, 0, -200_mm}},
+          std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm),
+          "VolumeA");
+    });
+
+    // Second child: plain static volume on the other side in z.
+    stack.addStaticVolume(
+        base * Translation3{Vector3{0, 0, 200_mm}},
+        std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm),
+        "VolumeB");
+  });
+
+  // The exception should carry context augmented up the call stack: the
+  // offending face, the shells involved, and the underlying material reason.
+  bool thrown = false;
+  try {
+    root->construct({}, gctx, *logger);
+  } catch (const PortalMergingException& e) {
+    thrown = true;
+    std::string msg = e.what();
+    BOOST_CHECK(msg.find("OuterCylinder") != std::string::npos);
+    BOOST_CHECK(msg.find("VolumeA") != std::string::npos);
+    BOOST_CHECK(msg.find("material") != std::string::npos);
+  }
+  BOOST_CHECK(thrown);
 }
 
 BOOST_AUTO_TEST_SUITE_END();
