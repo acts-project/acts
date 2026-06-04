@@ -294,11 +294,9 @@ ActsAlignment::Alignment<fitter_t>::align(
   AlignmentHierarchy hierarchy(alignOptions.alignedStructures);
   const auto validation = hierarchy.validate();
   if (!validation.ok()) {
-    for (const auto* detElement : validation.overlapping) {
-      ACTS_ERROR("Detector element "
-                 << detElement
-                 << " (Surface ID: " << detElement->surface().geometryId()
-                 << ") is assigned to multiple alignable structures");
+    for (const auto* surface : validation.overlapping) {
+      ACTS_ERROR("Surface " << surface->geometryId()
+                            << " is assigned to multiple alignable structures");
     }
     return AlignmentError::HierarchyValidationFailure;
   }
