@@ -175,6 +175,13 @@ void addGeometry(py::module_& m) {
               self = self.withExtra(value);
             })
         .def_property_readonly("value", &GeometryIdentifier::value)
+        .def("__eq__",
+             [](const GeometryIdentifier& self,
+                const GeometryIdentifier& other) { return self == other; })
+        .def("__hash__",
+             [](const GeometryIdentifier& self) {
+               return std::hash<GeometryIdentifier>{}(self);
+             })
         .def("__str__", [](const GeometryIdentifier& self) {
           std::stringstream ss;
           ss << self;
