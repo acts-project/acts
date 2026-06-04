@@ -206,34 +206,45 @@ def runColliderMLTruthTracking(
 def _serialize_hists(hists):
     """Convert PythonTrackFinderPerformanceWriter histograms to a picklable dict.
 
-    Efficiency1 objects are not picklable; we extract numpy arrays instead.
+    The writer exposes three C++ histogram wrapper types, none of which are
+    picklable. We extract numpy arrays keyed by type tag:
+      "efficiency"  — Efficiency1/2  (has .accepted / .total BoostHistogram)
+      "profile"     — ProfileHistogram1 (.histogram is BoostProfileHistogram)
+      "histogram"   — Histogram1/2/3   (.histogram is plain BoostHistogram)
     """
     import numpy as np
 
     out = {}
     for key, h in hists.items():
         if hasattr(h, "accepted"):
-            # Efficiency1
-            edges = np.asarray(h.total.axis(0).edges)
+            # Efficiency1 / Efficiency2
             out[key] = {
                 "type": "efficiency",
-                "edges": edges,
+                "edges": np.asarray(h.total.axis(0).edges),
                 "accepted": np.asarray(h.accepted.values()),
                 "total": np.asarray(h.total.values()),
                 "label": h.total.axis(0).label,
             }
-        else:
-            # Profile1
+        elif hasattr(h, "histogram"):
             bh = h.histogram
-            edges = np.asarray(bh.axis(0).edges)
-            out[key] = {
-                "type": "profile",
-                "edges": edges,
-                "counts": np.asarray(bh.counts()),
-                "means": np.asarray(bh.means()),
-                "sum_of_deltas_squared": np.asarray(bh.sum_of_deltas_squared()),
-                "label": bh.axis(0).label,
-            }
+            if hasattr(bh, "counts"):
+                # ProfileHistogram1 — BoostProfileHistogram
+                out[key] = {
+                    "type": "profile",
+                    "edges": np.asarray(bh.axis(0).edges),
+                    "counts": np.asarray(bh.counts()),
+                    "means": np.asarray(bh.means()),
+                    "sum_of_deltas_squared": np.asarray(bh.sum_of_deltas_squared()),
+                    "label": bh.axis(0).label,
+                }
+            else:
+                # Histogram1/2/3 — plain BoostHistogram (from FakePlotTool)
+                out[key] = {
+                    "type": "histogram",
+                    "edges": np.asarray(bh.axis(0).edges),
+                    "values": np.asarray(bh.values()),
+                    "label": bh.axis(0).label,
+                }
     return out
 
 
