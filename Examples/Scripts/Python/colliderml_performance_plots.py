@@ -74,12 +74,14 @@ def _plot_eff(ax, hists, key, label=None, color=None, xscale="linear"):
         ax.text(0.5, 0.5, f"(no data: {key})", transform=ax.transAxes, ha="center")
         return
     x, y, ye, xlabel = _eff_arrays(hists[key])
-    kw = dict(fmt="o-", markersize=3, capsize=2, lw=1, elinewidth=0.8)
+    edges = hists[key]["edges"]
+    xerr = 0.5 * (edges[1:] - edges[:-1])
+    kw = dict(fmt="none", capsize=0, lw=1.2, elinewidth=0.8)
     if label is not None:
         kw["label"] = label
     if color is not None:
         kw["color"] = color
-    ax.errorbar(x, y, yerr=ye, **kw)
+    ax.errorbar(x, y, yerr=ye, xerr=xerr, **kw)
     ax.set_xscale(xscale)
     ax.set_xlabel(xlabel)
     ax.set_ylim(0, 1.15)
@@ -91,7 +93,9 @@ def _plot_prof(ax, hists, key, ylabel, ymin=None):
         ax.text(0.5, 0.5, f"(no data: {key})", transform=ax.transAxes, ha="center")
         return
     x, y, ye, xlabel = _prof_arrays(hists[key])
-    ax.errorbar(x, y, yerr=ye, fmt="o-", markersize=3, capsize=2, lw=1, elinewidth=0.8)
+    edges = hists[key]["edges"]
+    xerr = 0.5 * (edges[1:] - edges[:-1])
+    ax.errorbar(x, y, yerr=ye, xerr=xerr, fmt="none", capsize=0, lw=1.2, elinewidth=0.8)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     if ymin is not None:
@@ -117,7 +121,22 @@ def _add_footer(fig, footer_text):
     )
 
 
-def make_plots(hists, output_dir: Path, n_events: int, hists_proto=None):
+def _title_slide(pdf, title, footer):
+    fig = plt.figure(figsize=(12, 6.75))
+    fig.patch.set_facecolor("white")
+    fig.text(0.5, 0.58, title, ha="center", va="center", fontsize=22, fontweight="bold")
+    fig.text(0.5, 0.42, footer, ha="center", va="center", fontsize=10, color="gray")
+    pdf.savefig(fig, bbox_inches="tight")
+    plt.close(fig)
+
+
+def make_plots(
+    hists,
+    output_dir: Path,
+    n_events: int,
+    hists_proto=None,
+    title: str = "ColliderML Truth-Tracking Performance",
+):
     branch, commit = _git_meta()
     ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     footer = f"{ts}  |  {branch}  |  {commit}"
@@ -127,10 +146,12 @@ def make_plots(hists, output_dir: Path, n_events: int, hists_proto=None):
     output_path = output_dir / f"performance_plots_{ts_file}.pdf"
     with PdfPages(output_path) as pdf:
         d = pdf.infodict()
-        d["Title"] = "ColliderML Truth-Tracking Performance"
+        d["Title"] = title
         d["Subject"] = "Kalman filter, ODD, ttbar PU200"
         d["Keywords"] = "ACTS ColliderML tracking performance"
         d["CreationDate"] = datetime.datetime.now()
+
+        _title_slide(pdf, title, footer)
 
         # ------------------------------------------------------------------
         # Slide 1 — Core performance
