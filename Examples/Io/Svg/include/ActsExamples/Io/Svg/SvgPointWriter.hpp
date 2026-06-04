@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Utilities/StringHelpers.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Io/Svg/SvgTrackingGeometryWriter.hpp"
@@ -73,7 +72,7 @@ struct AccessorPositionXYZ {
 ///     event000000002-spacepoints.svg
 ///
 template <typename T, typename Acc = AccessorXYZ>
-class SvgPointWriter final : public WriterT<GeometryIdMultiset<T>> {
+class SvgPointWriter /*final*/ : public WriterT<GeometryIdMultiset<T>> {
  public:
   struct Config {
     std::string writerName = "PointWriter";  ///< the name of the writer
