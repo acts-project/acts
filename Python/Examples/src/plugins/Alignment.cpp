@@ -117,8 +117,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
               s.alignmentMask() = m;
             })
         .def("constraints",
-             static_cast<const std::map<Acts::AlignmentIndices, double>& (
-                 AlignableStructure::*)() const>(
+             static_cast<
+                 const std::unordered_map<Acts::AlignmentIndices, double>& (
+                     AlignableStructure::*)() const>(
                  &AlignableStructure::constraints),
              py::return_value_policy::copy)
         .def(
