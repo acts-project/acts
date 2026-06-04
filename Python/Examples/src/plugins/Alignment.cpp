@@ -146,7 +146,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
                  py::arg("moduleMask"), py::arg("floatingModules"))
             .def("structureFor",
                  static_cast<AlignableStructure* (
-                     AlignmentHierarchy::*)(const Acts::SurfacePlacementBase*)
+                     AlignmentHierarchy::*)(const Acts::SurfacePlacementBase&)
                                  const>(&AlignmentHierarchy::structureFor),
                  py::arg("detElement"),
                  py::return_value_policy::reference_internal)
