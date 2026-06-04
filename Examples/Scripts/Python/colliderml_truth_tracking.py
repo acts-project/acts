@@ -203,6 +203,40 @@ def runColliderMLTruthTracking(
     return s, perf_writer
 
 
+def _serialize_hists(hists):
+    """Convert PythonTrackFinderPerformanceWriter histograms to a picklable dict.
+
+    Efficiency1 objects are not picklable; we extract numpy arrays instead.
+    """
+    import numpy as np
+
+    out = {}
+    for key, h in hists.items():
+        if hasattr(h, "accepted"):
+            # Efficiency1
+            edges = np.asarray(h.total.axis(0).edges)
+            out[key] = {
+                "type": "efficiency",
+                "edges": edges,
+                "accepted": np.asarray(h.accepted.values()),
+                "total": np.asarray(h.total.values()),
+                "label": h.total.axis(0).label,
+            }
+        else:
+            # Profile1
+            bh = h.histogram
+            edges = np.asarray(bh.axis(0).edges)
+            out[key] = {
+                "type": "profile",
+                "edges": edges,
+                "counts": np.asarray(bh.counts()),
+                "means": np.asarray(bh.means()),
+                "sum_of_deltas_squared": np.asarray(bh.sum_of_deltas_squared()),
+                "label": bh.axis(0).label,
+            }
+    return out
+
+
 if "__main__" == __name__:
     import argparse
     import pickle
@@ -261,5 +295,5 @@ if "__main__" == __name__:
 
     hist_path = args.output / "histograms.pkl"
     with open(hist_path, "wb") as f:
-        pickle.dump(perf_writer.histograms(), f)
+        pickle.dump(_serialize_hists(perf_writer.histograms()), f)
     print(f"Saved histograms → {hist_path}")

@@ -37,29 +37,25 @@ def _git_meta():
     return branch, commit
 
 
-def _eff_arrays(eff1):
-    edges = np.asarray(eff1.total.axis(0).edges)
+def _eff_arrays(h):
+    edges = h["edges"]
     centers = 0.5 * (edges[:-1] + edges[1:])
-    acc = np.asarray(eff1.accepted.values())
-    tot = np.asarray(eff1.total.values())
+    acc, tot = h["accepted"], h["total"]
     mask = tot > 0
     eff = np.where(mask, acc / tot, np.nan)
     err = np.where(mask, np.sqrt(acc * (tot - acc) / tot**3), np.nan)
-    return centers, eff, err, eff1.total.axis(0).label
+    return centers, eff, err, h["label"]
 
 
-def _prof_arrays(prof1):
-    bh = prof1.histogram
-    edges = np.asarray(bh.axis(0).edges)
+def _prof_arrays(h):
+    edges = h["edges"]
     centers = 0.5 * (edges[:-1] + edges[1:])
-    counts = np.asarray(bh.counts())
-    means = np.asarray(bh.means())
-    sum_dq = np.asarray(bh.sum_of_deltas_squared())
+    counts, means, sum_dq = h["counts"], h["means"], h["sum_of_deltas_squared"]
     with np.errstate(invalid="ignore", divide="ignore"):
         var = np.where(counts > 1, sum_dq / (counts - 1), 0.0)
         err = np.where(counts > 0, np.sqrt(var / np.maximum(counts, 1)), np.nan)
     means = np.where(counts > 0, means, np.nan)
-    return centers, means, err, bh.axis(0).label
+    return centers, means, err, h["label"]
 
 
 def _plot_eff(ax, hists, key, label=None, color=None, xscale="linear"):
@@ -306,11 +302,11 @@ def main():
     with open(hist_path, "rb") as f:
         hists = pickle.load(f)
 
-    # infer number of events from total entries in one histogram
+    # infer particle count from total entries in efficiency histogram
     n_events = "?"
     if "trackeff_vs_eta" in hists:
         try:
-            n_events = int(np.asarray(hists["trackeff_vs_eta"].total.values()).sum())
+            n_events = int(hists["trackeff_vs_eta"]["total"].sum())
         except Exception:
             pass
 
