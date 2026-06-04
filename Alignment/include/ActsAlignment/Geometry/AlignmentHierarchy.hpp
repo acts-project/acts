@@ -78,11 +78,8 @@ class AlignmentHierarchy {
   /// @param surface The surface to look up
   /// @return The owning structure, or nullptr if the surface's element is a
   ///         standalone floating module (or has no attached placement)
-  AlignableStructure* structureFor(const Acts::Surface* surface) const {
-    if (surface == nullptr) {
-      return nullptr;
-    }
-    return structureFor(surface->surfacePlacement());
+  AlignableStructure* structureFor(const Acts::Surface& surface) const {
+    return structureFor(surface.surfacePlacement());
   }
 
   /// @brief Check that no detector element is assigned to more than one
