@@ -26,59 +26,50 @@ class IAxis {
 
   virtual ~IAxis() = default;
 
-  /// @brief returns whether the axis is equidistant
-  ///
+  /// Returns whether the axis is equidistant
   /// @return bool is equidistant
   virtual bool isEquidistant() const = 0;
 
-  /// @brief returns whether the axis is variable
-  ///
+  /// Returns whether the axis is variable
   /// @return bool is variable
   virtual bool isVariable() const = 0;
 
-  /// @brief returns the type of the axis
+  /// Returns the type of the axis
   /// @return @c AxisType of this axis
   virtual AxisType getType() const = 0;
 
-  /// @brief returns the boundary type set in the template param
-  ///
+  /// Returns the boundary type set in the template param
   /// @return @c AxisBoundaryType of this axis
   virtual AxisBoundaryType getBoundaryType() const = 0;
 
-  /// returns the direction of the axis
+  /// Returns the direction of the axis
   /// @return @c AxisDirection of this axis
   AxisDirection getDirection() const { return m_direction; }
 
-  /// @brief Return a vector of bin edges
+  /// Returns a vector of bin edges
   /// @return Vector which contains the bin edges
   virtual std::vector<double> getBinEdges() const = 0;
 
-  /// @brief get minimum of binning range
-  ///
+  /// Get minimum of binning range
   /// @return minimum of binning range
   virtual double getMin() const = 0;
 
-  /// @brief get maximum of binning range
-  ///
+  /// Get maximum of binning range
   /// @return maximum of binning range
   virtual double getMax() const = 0;
 
-  /// @brief get total number of bins
-  ///
+  /// Get total number of bins
   /// @return total number of bins (excluding under-/overflow bins)
   virtual std::size_t getNBins() const = 0;
 
-  /// @brief get corresponding bin index for given coordinate
-  ///
+  /// Get corresponding bin index for given coordinate
   /// @param  [in] x input coordinate
   /// @return index of bin containing the given value
-  ///
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
   virtual std::size_t getBin(double x) const = 0;
 
   /// Centralized axis factory for equidistant binning
-  ///
   /// @param aBoundaryType the axis boundary type
   /// @param min the minimum edge of the axis
   /// @param max the maximum edge of the axis
@@ -86,20 +77,17 @@ class IAxis {
   /// @param direction the direction of the axis
   ///
   /// @throws std::invalid_argument if min >= max or nbins == 0
-  ///
   /// @return a unique pointer to the axis
   static std::unique_ptr<IAxis> createEquidistant(
       AxisBoundaryType aBoundaryType, double min, double max, std::size_t nbins,
       AxisDirection direction = AxisDirection::AxisUnknown);
 
   /// Centralized axis factory for variable binning
-  ///
   /// @param aBoundaryType the axis boundary type
   /// @param edges are the bin edges
   /// @param direction the direction of the axis
   ///
   /// @throws std::invalid_argument if edges is empty or not strictly increasing
-  ///
   /// @return a unique pointer to the axis
   static std::unique_ptr<IAxis> createVariable(
       AxisBoundaryType aBoundaryType, const std::vector<double>& edges,
