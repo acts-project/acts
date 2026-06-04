@@ -44,21 +44,32 @@ class AlignmentHierarchy {
       : m_structures(structures) {
     std::unordered_map<const Acts::SurfacePlacementBase*, const Acts::Surface*>
         firstSurface;
-    for (const auto& structure : m_structures) {
-      if (structure == nullptr) {
-        continue;
-      }
-      for (const Acts::Surface& surface : structure->surfaces()) {
+    // Register a structure's direct surfaces, then recurse into children.
+    // Each surface is registered under its immediate owning structure so that
+    // child-level DoFs are not silently subsumed by the parent.
+    auto registerStructure = [&](auto& self,
+                                 AlignableStructure& structure) -> void {
+      for (const Acts::Surface& surface : structure.surfaces()) {
         const auto* detElement = surface.surfacePlacement();
         if (detElement == nullptr) {
           continue;
         }
         const bool newElement =
-            m_detElementToStructure.emplace(detElement, structure.get()).second;
+            m_detElementToStructure.emplace(detElement, &structure).second;
         const auto surfIt = firstSurface.emplace(detElement, &surface).first;
         if (!newElement) {
           m_overlapping.push_back(surfIt->second);
         }
+      }
+      for (const auto& child : structure.children()) {
+        if (child != nullptr) {
+          self(self, *child);
+        }
+      }
+    };
+    for (const auto& structure : m_structures) {
+      if (structure != nullptr) {
+        registerStructure(registerStructure, *structure);
       }
     }
   }
