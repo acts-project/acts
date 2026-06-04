@@ -94,14 +94,13 @@ std::string WhiteBoard::typeMismatchMessage(const std::string &name,
 
 void WhiteBoard::copyFrom(const WhiteBoard &other) {
   for (auto &[key, val] : other.m_store) {
-    addHolder(key, val.first, val.second);
+    addHolder(key, val);
     ACTS_VERBOSE("Copied key '" << key << "' to whiteboard");
   }
 }
 
 void WhiteBoard::addHolder(const std::string &name,
-                           const std::shared_ptr<Acts::AnyMoveOnly> &holder,
-                           std::uint64_t typeHash) {
+                           const std::shared_ptr<Acts::AnyMoveOnly> &holder) {
   if (name.empty()) {
     throw std::invalid_argument("Object can not have an empty name");
   }
@@ -110,19 +109,18 @@ void WhiteBoard::addHolder(const std::string &name,
     throw std::invalid_argument("Object '" + name + "' is nullptr");
   }
 
-  StoreValue storeVal{holder, typeHash};
+  StoreValue storeVal{holder};
   auto [storeIt, success] = m_store.try_emplace(name, storeVal);
 
   if (!success) {
     throw std::invalid_argument("Object '" + name + "' already exists");
   }
-  ACTS_VERBOSE("Added object '"
-               << name << "' of type '"
-               << boost::core::demangle(
-                      storeIt->second.first->typeInfo()
-                          ? storeIt->second.first->typeInfo()->name()
-                          : "unknown")
-               << "'");
+  ACTS_VERBOSE("Added object '" << name << "' of type '"
+                                << boost::core::demangle(
+                                       storeIt->second->typeInfo()
+                                           ? storeIt->second->typeInfo()->name()
+                                           : "unknown")
+                                << "'");
 
   // deal with aliases
   auto range = m_objectAliases.equal_range(name);
@@ -130,13 +128,6 @@ void WhiteBoard::addHolder(const std::string &name,
     m_store[it->second] = storeVal;
     ACTS_VERBOSE("Added alias object '" << it->second << "'");
   }
-}
-
-void WhiteBoard::addHolder(const std::string &name,
-                           std::unique_ptr<Acts::AnyMoveOnly> holder,
-                           std::uint64_t typeHash) {
-  addHolder(name, std::shared_ptr<Acts::AnyMoveOnly>(std::move(holder)),
-            typeHash);
 }
 
 std::vector<std::string> WhiteBoard::getKeys() const {
@@ -147,13 +138,24 @@ std::vector<std::string> WhiteBoard::getKeys() const {
   return keys;
 }
 
-std::pair<Acts::AnyMoveOnly *, std::uint64_t> WhiteBoard::getHolder(
-    const std::string &name) const {
+Acts::AnyMoveOnly *WhiteBoard::getHolder(const std::string &name) const {
   auto it = m_store.find(name);
   if (it == m_store.end()) {
-    throw std::out_of_range("Object '" + name + "' does not exists");
+    const auto names = similarNames(name, 10, 3);
+
+    std::stringstream ss;
+    if (!names.empty()) {
+      ss << ", similar ones are: [ ";
+      for (std::size_t i = 0; i < std::min(3ul, names.size()); ++i) {
+        ss << "'" << names[i] << "' ";
+      }
+      ss << "]";
+    }
+
+    throw std::out_of_range("Object '" + name + "' does not exists" + ss.str());
   }
-  return {it->second.first.get(), it->second.second};
+
+  return it->second.get();
 }
 
 }  // namespace ActsExamples

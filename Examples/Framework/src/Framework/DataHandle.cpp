@@ -12,7 +12,6 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 
 #include <regex>
-#include <typeindex>
 #include <typeinfo>
 
 #include <boost/algorithm/string.hpp>
@@ -21,6 +20,7 @@
 namespace ActsExamples {
 
 namespace {
+
 /// Shorten some common but lengthy C++ constructs
 std::string demangleAndShorten(std::string name) {
   name = boost::core::demangle(name.c_str());
@@ -64,7 +64,7 @@ std::string symbol(const char* in) {
   }
   ss << s.substr(pos);
   return ss.str();
-};
+}
 
 }  // namespace
 
@@ -83,7 +83,7 @@ void DataHandleBase::maybeInitialize(std::optional<std::string_view> key) {
 }
 
 bool WriteDataHandleBase::isCompatible(const DataHandleBase& other) const {
-  return typeHash() == other.typeHash();
+  return dynamic_cast<const ReadDataHandleBase*>(&other) != nullptr;
 }
 
 void WriteDataHandleBase::emulate(StateMapType& state,
@@ -123,7 +123,7 @@ void ReadDataHandleBase::initialize(std::string_view key) {
 }
 
 bool ReadDataHandleBase::isCompatible(const DataHandleBase& other) const {
-  return typeHash() == other.typeHash();
+  return dynamic_cast<const ReadDataHandleBase*>(&other) != nullptr;
 }
 
 void ReadDataHandleBase::emulate(StateMapType& state,
