@@ -66,7 +66,7 @@ class AlignableStructure {
   /// @return The ID of the structure
   Acts::GeometryIdentifier geometryId() const { return m_id; }
 
-  /// @brief Access the list of associated surfaces
+  /// @brief Access the surfaces directly associated with this structure.
   /// @return A dereferencing range yielding @c const Acts::Surface&
   SurfaceRange surfaces() const { return SurfaceRange{m_surfaces}; }
 
@@ -81,6 +81,8 @@ class AlignableStructure {
   /// The map key is the standard alignment index. The value is the variance
   /// constraint \f$\sigma_i^2\f$ contributing \f$W_{ii} = 1/\sigma_i^2\f$ to
   /// the Hessian diagonal. Setting \f$\sigma_i \to 0\f$ locks DoF @c i.
+  /// A DoF that is floating (set in @c alignmentMask) but absent from this
+  /// map is unconstrained — no regularization term is added for it.
   /// @return Reference to the constraints map
   std::map<Acts::AlignmentIndices, double>& constraints() {
     return m_constraints;
