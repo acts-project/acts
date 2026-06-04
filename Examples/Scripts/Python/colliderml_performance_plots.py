@@ -117,7 +117,7 @@ def _add_footer(fig, footer_text):
     )
 
 
-def make_plots(hists, output_dir: Path, n_events: int):
+def make_plots(hists, output_dir: Path, n_events: int, hists_proto=None):
     branch, commit = _git_meta()
     ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     footer = f"{ts}  |  {branch}  |  {commit}"
@@ -138,12 +138,40 @@ def make_plots(hists, output_dir: Path, n_events: int):
         fig, axes = plt.subplots(2, 2, figsize=(12, 6.75))
         fig.tight_layout(pad=2.5, rect=[0, 0.03, 1, 1])
 
-        _plot_eff(axes[0, 0], hists, "trackeff_vs_eta")
+        _plot_eff(
+            axes[0, 0], hists, "trackeff_vs_eta", label="KF + selector", color="C0"
+        )
+        if hists_proto:
+            _plot_eff(
+                axes[0, 0],
+                hists_proto,
+                "trackeff_vs_eta",
+                label="Proto-tracks",
+                color="C1",
+            )
+            axes[0, 0].legend(fontsize=8)
         axes[0, 0].set_ylabel("Efficiency")
         axes[0, 0].set_title("Tracking efficiency vs η")
         _atlas(axes[0, 0], subtext)
 
-        _plot_eff(axes[0, 1], hists, "trackeff_vs_pT", xscale="log")
+        _plot_eff(
+            axes[0, 1],
+            hists,
+            "trackeff_vs_pT",
+            xscale="log",
+            label="KF + selector",
+            color="C0",
+        )
+        if hists_proto:
+            _plot_eff(
+                axes[0, 1],
+                hists_proto,
+                "trackeff_vs_pT",
+                xscale="log",
+                label="Proto-tracks",
+                color="C1",
+            )
+            axes[0, 1].legend(fontsize=8)
         axes[0, 1].set_ylabel("Efficiency")
         axes[0, 1].set_title("Tracking efficiency vs $p_T$ [GeV]")
         _atlas(axes[0, 1], subtext)
@@ -161,6 +189,53 @@ def make_plots(hists, output_dir: Path, n_events: int):
         _add_footer(fig, footer)
         pdf.savefig(fig, bbox_inches="tight")
         plt.close(fig)
+
+        # ------------------------------------------------------------------
+        # Slide 1b — Proto vs KF breakdown (only if proto hists available)
+        # ------------------------------------------------------------------
+        if hists_proto:
+            fig, axes = plt.subplots(1, 2, figsize=(12, 6.75))
+            fig.tight_layout(pad=2.5, rect=[0, 0.03, 1, 1])
+
+            _plot_eff(
+                axes[0],
+                hists_proto,
+                "trackeff_vs_eta",
+                label="Proto-tracks (seeding)",
+                color="C1",
+            )
+            _plot_eff(
+                axes[0], hists, "trackeff_vs_eta", label="KF + selector", color="C0"
+            )
+            axes[0].set_ylabel("Efficiency")
+            axes[0].set_title("Seeding vs KF efficiency vs η")
+            axes[0].legend(fontsize=9)
+            _atlas(axes[0], subtext)
+
+            _plot_eff(
+                axes[1],
+                hists_proto,
+                "trackeff_vs_pT",
+                xscale="log",
+                label="Proto-tracks (seeding)",
+                color="C1",
+            )
+            _plot_eff(
+                axes[1],
+                hists,
+                "trackeff_vs_pT",
+                xscale="log",
+                label="KF + selector",
+                color="C0",
+            )
+            axes[1].set_ylabel("Efficiency")
+            axes[1].set_title("Seeding vs KF efficiency vs $p_T$ [GeV]")
+            axes[1].legend(fontsize=9)
+            _atlas(axes[1], subtext)
+
+            _add_footer(fig, footer)
+            pdf.savefig(fig, bbox_inches="tight")
+            plt.close(fig)
 
         # ------------------------------------------------------------------
         # Slide 2 — Hit content
@@ -264,6 +339,12 @@ def main():
     with open(hist_path, "rb") as f:
         hists = pickle.load(f)
 
+    hists_proto = None
+    proto_hist_path = args.output / "histograms_proto.pkl"
+    if proto_hist_path.exists():
+        with open(proto_hist_path, "rb") as f:
+            hists_proto = pickle.load(f)
+
     # infer particle count from total entries in efficiency histogram
     n_events = "?"
     if "trackeff_vs_eta" in hists:
@@ -272,7 +353,7 @@ def main():
         except Exception:
             pass
 
-    make_plots(hists, args.output, n_events)
+    make_plots(hists, args.output, n_events, hists_proto=hists_proto)
 
 
 if "__main__" == __name__:

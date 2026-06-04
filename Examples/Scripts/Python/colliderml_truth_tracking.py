@@ -191,6 +191,20 @@ def runColliderMLTruthTracking(
         )
     )
 
+    # Proto-track level: evaluate efficiency before KF using seed-tracks and
+    # the seed_particle_matching created by addSeeding/TruthSeedingAlgorithm.
+    perf_proto_cfg = PythonTrackFinderPerformanceWriter.Config()
+    perf_proto_cfg.inputTracks = "seed-tracks"
+    perf_proto_cfg.inputParticles = "particles_selected"
+    perf_proto_cfg.inputTrackParticleMatching = "seed_particle_matching"
+    perf_proto_cfg.inputParticleTrackMatching = "particle_seed_matching"
+    perf_proto_cfg.inputParticleMeasurementsMap = "particle_measurements_map"
+    perf_proto_writer = PythonTrackFinderPerformanceWriter(
+        perf_proto_cfg, acts.logging.INFO
+    )
+    s.addWriter(perf_proto_writer)
+
+    # KF track level: evaluate efficiency after fitting and selection.
     perf_cfg = PythonTrackFinderPerformanceWriter.Config()
     perf_cfg.inputTracks = "tracks"
     perf_cfg.inputParticles = "particles_selected"
@@ -200,7 +214,7 @@ def runColliderMLTruthTracking(
     perf_writer = PythonTrackFinderPerformanceWriter(perf_cfg, acts.logging.INFO)
     s.addWriter(perf_writer)
 
-    return s, perf_writer
+    return s, perf_proto_writer, perf_writer
 
 
 def _serialize_hists(hists):
@@ -290,7 +304,7 @@ if "__main__" == __name__:
     decorators = detector.contextDecorators()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    s, perf_writer = runColliderMLTruthTracking(
+    s, perf_proto_writer, perf_writer = runColliderMLTruthTracking(
         trackingGeometry=trackingGeometry,
         field=field,
         outputDir=args.output,
@@ -308,3 +322,8 @@ if "__main__" == __name__:
     with open(hist_path, "wb") as f:
         pickle.dump(_serialize_hists(perf_writer.histograms()), f)
     print(f"Saved histograms → {hist_path}")
+
+    proto_hist_path = args.output / "histograms_proto.pkl"
+    with open(proto_hist_path, "wb") as f:
+        pickle.dump(_serialize_hists(perf_proto_writer.histograms()), f)
+    print(f"Saved proto-track histograms → {proto_hist_path}")
