@@ -360,12 +360,35 @@ ProcessCode ColliderMLInputConverter::execute(
                             static_cast<double>(hyArr->Value(hOff + i)),
                             static_cast<double>(hzArr->Value(hOff + i))};
 
+    // ColliderML digitized positions are full 3D positions inside the sensor
+    // volume (not projected onto the surface plane).  Project unconditionally
+    // with unlimited perpendicular tolerance, then validate that the projected
+    // local coordinates fall within the sensor bounds.  An out-of-bounds result
+    // means the geoIdMap assigned the wrong surface — regenerate it.
     auto localResult =
-        surface->globalToLocal(ctx.geoContext, globalPos, Acts::Vector3{});
+        surface->globalToLocal(ctx.geoContext, globalPos, Acts::Vector3{},
+                               std::numeric_limits<double>::max());
     if (!localResult.ok()) {
       ACTS_ERROR("Hit " << i << " geoId " << geoId
                         << " globalToLocal failed at (" << globalPos.transpose()
-                        << ") — geoIdMap maps to wrong surface, regenerate it");
+                        << ") — unexpected for infinite tolerance; file a bug");
+      return ProcessCode::ABORT;
+    }
+    // Allow 5 mm Euclidean tolerance in local coordinates.  ColliderML hits
+    // are full 3D positions inside the sensor volume; when projected onto the
+    // surface plane, tracks at incidence angles can land a few mm outside the
+    // exact sensor boundary.  5 mm tolerates physical incidence effects on the
+    // largest sensors (halfX ≈ 56 mm) while still catching genuine
+    // wrong-surface assignments from a stale geoIdMap (which would be tens of
+    // mm outside).
+    constexpr double kBoundsTol = 5.0;  // mm
+    if (!surface->bounds().inside(
+            localResult.value(),
+            Acts::BoundaryTolerance::AbsoluteEuclidean(kBoundsTol))) {
+      ACTS_ERROR("Hit " << i << " geoId " << geoId << " projected local ("
+                        << localResult.value().transpose()
+                        << ") outside sensor bounds (tol=" << kBoundsTol
+                        << " mm) — geoIdMap wrong surface, regenerate it");
       return ProcessCode::ABORT;
     }
     const Acts::Vector2& lp = localResult.value();

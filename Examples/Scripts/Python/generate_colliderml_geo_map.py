@@ -158,43 +158,58 @@ def main():
     surf_gids, centres, normals, surf_objects = collect_surfaces(tgeo, gctx)
     print(f"  {len(surf_gids)} sensitive surfaces")
 
+    # Build a direct lookup: (volume, layer, sensitive) → list index in surf_gids.
+    # In the current ODD, ColliderML surface_id == ACTS sensitive ID, so this
+    # resolves most entries without any KDTree search.
+    direct_lookup: dict = {}
+    for idx, gid in enumerate(surf_gids):
+        direct_lookup[(gid.volume, gid.layer, gid.sensitive)] = idx
+
     tree = KDTree(centres)
 
     rows = []
     n_matched = 0
     n_unmatched = 0
+    n_direct = 0
+    n_kdtree = 0
 
     for (det, vol, layer, surf), hit_pos in sorted(representatives.items()):
-        # Two-step matching:
-        # 1. Normal-distance check: |(hit - centre) · normal| < tolerance
-        #    Accepts any surface whose plane contains the hit.
-        # 2. globalToLocal check: confirms the hit falls within the surface bounds.
-        #    Required for barrel sensors where all surfaces at the same radius pass
-        #    step 1, but only the correct z-slice passes step 2.
-        dists, indices = tree.query(hit_pos, k=min(args.k, len(surf_gids)))
         matched_idx = None
         hit_v3 = acts.Vector3(float(hit_pos[0]), float(hit_pos[1]), float(hit_pos[2]))
-        for idx in indices:
-            delta = hit_pos - centres[idx]
-            perp_dist = abs(float(np.dot(delta, normals[idx])))
-            if perp_dist < args.tolerance:
-                if (
-                    surf_objects[idx].globalToLocal(
-                        gctx, hit_v3, acts.Vector3(0, 0, 0), 1.0
+
+        # --- Primary: direct (vol, layer, surf_id = sensitive) lookup ---
+        direct_idx = direct_lookup.get((vol, layer, surf))
+        if direct_idx is not None:
+            local = surf_objects[direct_idx].globalToLocal(
+                gctx, hit_v3, acts.Vector3(0, 0, 0), float("inf")
+            )
+            if local is not None and surf_objects[direct_idx].bounds.inside(
+                local, acts.BoundaryTolerance.absoluteEuclidean(args.tolerance)
+            ):
+                matched_idx = direct_idx
+                n_direct += 1
+
+        # --- Fallback: KDTree + normal-distance + bounds (geometry ID shifted) ---
+        if matched_idx is None:
+            dists, indices = tree.query(hit_pos, k=min(args.k, len(surf_gids)))
+            for idx in indices:
+                delta = hit_pos - centres[idx]
+                perp_dist = abs(float(np.dot(delta, normals[idx])))
+                if perp_dist < args.tolerance:
+                    local = surf_objects[idx].globalToLocal(
+                        gctx, hit_v3, acts.Vector3(0, 0, 0), float("inf")
                     )
-                    is not None
-                ):
-                    matched_idx = idx
-                    break
+                    if local is not None and surf_objects[idx].bounds.inside(
+                        local, acts.BoundaryTolerance.absoluteEuclidean(args.tolerance)
+                    ):
+                        matched_idx = idx
+                        n_kdtree += 1
+                        break
 
         if matched_idx is None:
-            best_perp = min(
-                abs(float(np.dot(hit_pos - centres[i], normals[i]))) for i in indices
-            )
             print(
-                f"  WARN: ({det},{vol},{layer},{surf}) no surface within "
-                f"{args.tolerance:.1f} mm normal-distance with passing globalToLocal "
-                f"(best perp dist among {args.k} neighbours: {best_perp:.2f} mm)"
+                f"  WARN: ({det},{vol},{layer},{surf}) unmatched — "
+                f"no surface found via direct lookup or KDTree"
             )
             n_unmatched += 1
             continue
@@ -204,10 +219,11 @@ def main():
         n_matched += 1
 
     print(f"Matched {n_matched} / {n_matched + n_unmatched} tuples")
+    print(f"  via direct lookup: {n_direct},  via KDTree fallback: {n_kdtree}")
     if n_unmatched > 0:
         print(
-            f"  {n_unmatched} unmatched tuples — these hits will be skipped "
-            f"in ColliderMLInputConverter. Consider increasing --tolerance or --k."
+            f"  {n_unmatched} unmatched — surface IDs may have shifted in this "
+            f"geometry version. Consider increasing --tolerance or --k."
         )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
