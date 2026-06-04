@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Alignment.hpp"
+
 #include "ActsAlignment/Geometry/AlignableStructure.hpp"
 #include "ActsAlignment/Geometry/AlignmentHierarchy.hpp"
 #include "ActsAlignment/Kernel/AlignmentMask.hpp"
@@ -94,8 +95,13 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
         .def_property_readonly("geometryId", &AlignableStructure::geometryId)
         .def_property_readonly(
             "surfaces",
-            static_cast<const std::vector<std::shared_ptr<Acts::Surface>>& (
-                AlignableStructure::*)() const>(&AlignableStructure::surfaces),
+            [](const AlignableStructure& s) {
+              std::vector<const Acts::Surface*> result;
+              for (const auto& srf : s.surfaces()) {
+                result.push_back(&srf);
+              }
+              return result;
+            },
             py::return_value_policy::reference_internal)
         .def_property_readonly(
             "children",
@@ -110,11 +116,11 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
             [](AlignableStructure& s, AlignmentMask m) {
               s.alignmentMask() = m;
             })
-        .def(
-            "constraints",
-            static_cast<const std::map<Acts::AlignmentIndices, double>& (
-                AlignableStructure::*)() const>(&AlignableStructure::constraints),
-            py::return_value_policy::copy)
+        .def("constraints",
+             static_cast<const std::map<Acts::AlignmentIndices, double>& (
+                 AlignableStructure::*)() const>(
+                 &AlignableStructure::constraints),
+             py::return_value_policy::copy)
         .def(
             "setConstraint",
             [](AlignableStructure& s, Acts::AlignmentIndices idx,
@@ -131,24 +137,27 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
   {
     auto hierarchy =
         py::class_<AlignmentHierarchy>(m, "AlignmentHierarchy")
-            .def(py::init<const std::vector<std::shared_ptr<AlignableStructure>>&>(),
+            .def(py::init<
+                     const std::vector<std::shared_ptr<AlignableStructure>>&>(),
                  py::arg("structures"))
             .def("validate", &AlignmentHierarchy::validate)
-            .def("detectMaskConflicts", &AlignmentHierarchy::detectMaskConflicts,
+            .def("detectMaskConflicts",
+                 &AlignmentHierarchy::detectMaskConflicts,
                  py::arg("moduleMask"), py::arg("floatingModules"))
             .def("structureFor",
-                 static_cast<AlignableStructure* (AlignmentHierarchy::*)(
-                     const Acts::SurfacePlacementBase*) const>(
-                     &AlignmentHierarchy::structureFor),
+                 static_cast<AlignableStructure* (
+                     AlignmentHierarchy::*)(const Acts::SurfacePlacementBase*)
+                                 const>(&AlignmentHierarchy::structureFor),
                  py::arg("detElement"),
                  py::return_value_policy::reference_internal)
             .def("structureFor",
-                 static_cast<AlignableStructure* (AlignmentHierarchy::*)(
-                     const Acts::Surface*) const>(
+                 static_cast<AlignableStructure* (
+                     AlignmentHierarchy::*)(const Acts::Surface*) const>(
                      &AlignmentHierarchy::structureFor),
                  py::arg("surface"),
                  py::return_value_policy::reference_internal)
-            .def_property_readonly("structures", &AlignmentHierarchy::structures,
+            .def_property_readonly("structures",
+                                   &AlignmentHierarchy::structures,
                                    py::return_value_policy::reference_internal);
 
     py::class_<AlignmentHierarchy::ValidationResult>(hierarchy,
