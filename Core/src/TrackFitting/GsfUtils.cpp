@@ -151,7 +151,7 @@ double detail::Gsf::applyBetheHeitler(
            "new cov not finite");
 
     // Set the remaining things and push to vector
-    componentCache.push_back({newWeight, newPars, newCov});
+    componentCache.emplace_back(newWeight, newPars, newCov);
   }
 
   return pathXOverX0;

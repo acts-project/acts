@@ -111,7 +111,7 @@ struct CombinatorialKalmanFilterOptions {
   // The following options are only relevant if a multi stepper is used
 
   /// Maximum number of components which the GSF should handle
-  std::size_t maxComponents = 4;
+  std::size_t maxComponents = 12;
 
   /// When to discard components
   double weightCutoff = 1e-4;
@@ -1002,7 +1002,7 @@ class CombinatorialKalmanFilter {
           }
 
           temporaryStates->tips.push_back(trackStateProxy.index());
-          temporaryStates->weights[temporaryStates->tips.back()] = cmp.weight();
+          temporaryStates->weights[trackStateProxy.index()] = cmp.weight();
         }
 
         detail::Gsf::computePosteriorWeights(temporaryStates->traj,

@@ -347,7 +347,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   extensions.createTrackStates
       .template connect<&TrackStateCreatorType ::createTrackStates>(
           &trackStateCreator);
-  extensions.mixtureReducer.connect<&Acts::reduceMixtureLargestWeights>();
+  extensions.mixtureReducer.connect<&Acts::reduceMixtureWithKLDistance>();
 
   Acts::PropagatorPlainOptions firstPropOptions(ctx.geoContext,
                                                 ctx.magFieldContext);
