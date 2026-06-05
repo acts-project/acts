@@ -15,6 +15,7 @@
 
 #include <array>
 #include <memory>
+#include <vector>
 
 namespace Acts {
 
@@ -139,6 +140,13 @@ class CylinderStackPortalShell : public CylinderPortalShell {
                            std::vector<CylinderPortalShell*> shells,
                            AxisDirection direction,
                            const Logger& logger = getDummyLogger());
+
+  /// Return the faces that are *merged* (as opposed to fused) when stacking in
+  /// the given direction. Material designated on these faces of a child shell
+  /// cannot survive the stacking and will cause a merge failure.
+  /// @param direction The stacking direction
+  /// @return The faces that get merged for the given direction
+  static std::vector<Face> mergedFaces(AxisDirection direction);
 
   /// @copydoc PortalShellBase::size
   std::size_t size() const final;

@@ -299,6 +299,21 @@ std::size_t CylinderStackPortalShell::size() const {
   return m_hasInnerCylinder ? 4 : 3;
 }
 
+std::vector<CylinderStackPortalShell::Face>
+CylinderStackPortalShell::mergedFaces(AxisDirection direction) {
+  using enum CylinderVolumeBounds::Face;
+  switch (direction) {
+    case AxisDirection::AxisR:
+      // Discs are merged, cylinders are fused
+      return {PositiveDisc, NegativeDisc};
+    case AxisDirection::AxisZ:
+      // Cylinders are merged, discs are fused
+      return {OuterCylinder, InnerCylinder};
+    default:
+      return {};
+  }
+}
+
 std::shared_ptr<Portal> CylinderStackPortalShell::portal(Face face) {
   if (m_direction == AxisDirection::AxisR) {
     switch (face) {

@@ -20,9 +20,12 @@
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
 
 #include <stdexcept>
+#include <string>
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
@@ -443,6 +446,46 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
                                                AxisDirection::AxisR),
                       SurfaceMergingException);
   }
+}
+
+BOOST_AUTO_TEST_CASE(MaterialOnMergedFaceThrows) {
+  // Directly exercises the shell-level reporting (ideas A+B): assigning
+  // material to a face that is *merged* during stacking must throw a
+  // PortalMergingException whose message is augmented with the offending face,
+  // the shells involved (B), and the underlying material reason from
+  // Portal::merge (A). This path is below the blueprint container node, so the
+  // early node-level check (idea D) does not pre-empt it.
+  using enum CylinderVolumeBounds::Face;
+
+  TrackingVolume vol1(
+      Transform3{Translation3{Vector3::UnitZ() * -100_mm}},
+      std::make_shared<CylinderVolumeBounds>(30_mm, 100_mm, 100_mm));
+  vol1.setVolumeName("MatVolume");
+  TrackingVolume vol2(
+      Transform3{Translation3{Vector3::UnitZ() * 100_mm}},
+      std::make_shared<CylinderVolumeBounds>(30_mm, 100_mm, 100_mm));
+  vol2.setVolumeName("PlainVolume");
+
+  SingleCylinderPortalShell shell1{gctx, vol1};
+  SingleCylinderPortalShell shell2{gctx, vol2};
+
+  // OuterCylinder is merged when stacking in z
+  shell1.portal(OuterCylinder)
+      ->surface()
+      .assignSurfaceMaterial(std::make_shared<HomogeneousSurfaceMaterial>(
+          MaterialSlab::Nothing()));
+
+  auto checkMessage = [](const PortalMergingException& e) {
+    std::string msg = e.what();
+    return msg.find("OuterCylinder") != std::string::npos &&
+           msg.find("MatVolume") != std::string::npos &&
+           msg.find("Underlying error") != std::string::npos &&
+           msg.find("material") != std::string::npos;
+  };
+
+  BOOST_CHECK_EXCEPTION(
+      CylinderStackPortalShell(gctx, {&shell1, &shell2}, AxisDirection::AxisZ),
+      PortalMergingException, checkMessage);
 }
 
 BOOST_AUTO_TEST_CASE(RDirection) {

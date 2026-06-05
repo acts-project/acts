@@ -251,6 +251,15 @@ std::size_t CuboidStackPortalShell::size() const {
   return 6;
 }
 
+std::vector<CuboidStackPortalShell::Face> CuboidStackPortalShell::mergedFaces(
+    AxisDirection direction) {
+  // The side faces (parallel to the stacking direction) are merged, the front
+  // and back faces are fused.
+  const auto& [frontFace, backFace, sideFaces] =
+      CuboidVolumeBounds::facesFromAxisDirection(direction);
+  return {sideFaces.begin(), sideFaces.end()};
+}
+
 std::shared_ptr<Portal> CuboidStackPortalShell::portal(Face face) {
   if (face == m_backFace) {
     return m_shells.back()->portal(face);

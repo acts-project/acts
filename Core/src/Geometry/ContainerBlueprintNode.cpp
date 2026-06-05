@@ -12,6 +12,12 @@
 #include "Acts/Geometry/CuboidVolumeStack.hpp"
 #include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
+#include "Acts/Geometry/Portal.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
+
+#include <sstream>
+#include <string>
+#include <vector>
 
 namespace Acts::Experimental {
 
@@ -239,6 +245,36 @@ PortalShellBase& ContainerBlueprintNode::connectImpl(
   throw_assert(std::ranges::all_of(
                    shells, [](const auto* shell) { return shell->isValid(); }),
                "Invalid shell");
+
+  // Fail fast (and with a node-scoped message) if material has been designated
+  // on a portal face that will be *merged* during stacking. Such material
+  // cannot survive the merge and would otherwise trigger a deep, hard-to-trace
+  // failure inside the stack shell construction. Faces that are *fused* (e.g.
+  // the boundary between two stacked volumes) legitimately carry material and
+  // are not flagged here.
+  std::vector<std::string> materialClashes;
+  for (auto face : ShellStack::mergedFaces(direction())) {
+    for (auto* shell : shells) {
+      auto portal = shell->portal(face);
+      if (portal != nullptr && portal->surface().hasMaterial()) {
+        std::stringstream ss;
+        ss << shell->label() << " carries material on face " << face;
+        materialClashes.push_back(ss.str());
+      }
+    }
+  }
+  if (!materialClashes.empty()) {
+    std::stringstream ss;
+    ss << prefix << "Cannot stack child volumes in " << direction()
+       << " direction: material is designated on portal faces that are merged "
+          "during stacking. Move the material designation to a face that is "
+          "not merged (e.g. the enclosing container's face).";
+    for (const auto& clash : materialClashes) {
+      ss << "\n  - " << clash;
+    }
+    ACTS_ERROR(ss.str());
+    throw PortalMergingException{ss.str()};
+  }
 
   ACTS_DEBUG(prefix << "Producing merged stack shell in " << direction()
                     << " direction from " << shells.size() << " shells");

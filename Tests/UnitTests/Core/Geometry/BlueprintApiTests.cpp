@@ -449,11 +449,15 @@ BOOST_AUTO_TEST_CASE(NodeApiTestCuboid) {
               TrackingGeometry::GeometryVersion::Gen3);
 }
 
-// Reproduces the "Cannot merge portals with material" failure: material is
-// designated on a portal face that is subsequently merged during container
-// stacking. The material designator wraps a child of a z-stacking container.
-// Since stacking in z merges the OuterCylinder portals of all children, the
-// merge encounters a surface that already carries material and throws.
+// Reproduces the "material on a merged portal" failure: material is designated
+// on a portal face that is subsequently merged during container stacking. The
+// material designator wraps a child of a z-stacking container; since stacking
+// in z merges the OuterCylinder portals of all children, the designated face
+// cannot survive the merge.
+//
+// This is detected early (idea D) by the container node, before the stack shell
+// is built, producing a node-scoped error. The deeper shell-level reporting
+// (ideas A+B) is exercised directly in the CylinderPortalShell tests.
 BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalThrows) {
   Transform3 base{Transform3::Identity()};
 
@@ -485,8 +489,8 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalThrows) {
         "VolumeB");
   });
 
-  // The exception should carry context augmented up the call stack: the
-  // offending face, the shells involved, and the underlying material reason.
+  // The early-detection error should name the offending face, the shell
+  // involved, and explain that material was placed on a merged face.
   bool thrown = false;
   try {
     root->construct({}, gctx, *logger);
