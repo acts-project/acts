@@ -8,10 +8,8 @@
 
 #include "ActsExamples/Io/Arrow/ArrowSimHitOutputConverter.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Surfaces/RegularSurface.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "ActsPlugins/Arrow/ArrowUtil.hpp"
 
 #include <array>
@@ -49,22 +47,19 @@ ArrowSimHitOutputConverter::ArrowSimHitOutputConverter(
     throw std::invalid_argument("detectorResolver must be set");
   }
 
-  // The digitized x,y,z columns require the trio (measurements, map, geometry)
-  // — partial wiring would silently produce stale or NaN positions, so reject
-  // it up front.
-  const bool hasMeas = !m_cfg.inputMeasurements.empty();
+  // The digitized x,y,z columns require both (clusters, map) — partial wiring
+  // would silently produce stale or NaN positions, so reject it up front.
+  const bool hasClusters = !m_cfg.inputClusters.empty();
   const bool hasMap = !m_cfg.inputSimHitMeasurementsMap.empty();
-  const bool hasGeo = m_cfg.trackingGeometry != nullptr;
-  if ((hasMeas || hasMap || hasGeo) && !(hasMeas && hasMap && hasGeo)) {
+  if (hasClusters != hasMap) {
     throw std::invalid_argument(
-        "ArrowSimHitOutputConverter: inputMeasurements, "
-        "inputSimHitMeasurementsMap, and trackingGeometry must all be set or "
-        "all be unset");
+        "ArrowSimHitOutputConverter: inputClusters and "
+        "inputSimHitMeasurementsMap must both be set or both be unset");
   }
 
   m_inputSimHits.initialize(m_cfg.inputSimHits);
   m_inputParticles.maybeInitialize(m_cfg.inputParticles);
-  m_inputMeasurements.maybeInitialize(m_cfg.inputMeasurements);
+  m_inputClusters.maybeInitialize(m_cfg.inputClusters);
   m_inputSimHitMeasurementsMap.maybeInitialize(
       m_cfg.inputSimHitMeasurementsMap);
   m_outputTable.initialize(m_cfg.outputTable);
@@ -102,8 +97,8 @@ ProcessCode ArrowSimHitOutputConverter::execute(
   const SimHitContainer& simHits = m_inputSimHits(ctx);
   const SimParticleContainer* particles =
       m_inputParticles.isInitialized() ? &m_inputParticles(ctx) : nullptr;
-  const MeasurementContainer* measurements =
-      m_inputMeasurements.isInitialized() ? &m_inputMeasurements(ctx) : nullptr;
+  const ClusterContainer* clusters =
+      m_inputClusters.isInitialized() ? &m_inputClusters(ctx) : nullptr;
   const SimHitMeasurementsMap* simHitMeasMap =
       m_inputSimHitMeasurementsMap.isInitialized()
           ? &m_inputSimHitMeasurementsMap(ctx)
@@ -190,40 +185,24 @@ ProcessCode ArrowSimHitOutputConverter::execute(
     tzV->UnsafeAppend(tz);
     timeV->UnsafeAppend(t);
 
-    // Digitized global position: project the first matched measurement's
-    // bound parameters through the surface. Multiple measurements per hit
-    // would only happen if a hit migrated across modules during clustering;
-    // we take the first deterministically and leave the rest for a future
-    // "merged hits" extension.
+    // Digitized global position: reuse the precomputed global position of the
+    // first matched cluster. Clusters are indexed one-to-one with
+    // measurements, so the sim-hit → measurement map doubles as a sim-hit →
+    // cluster map. Multiple measurements per hit would only happen if a hit
+    // migrated across modules during clustering; we take the first
+    // deterministically and leave the rest for a future "merged hits"
+    // extension.
     float gx = kNaN;
     float gy = kNaN;
     float gz = kNaN;
-    if (simHitMeasMap != nullptr && measurements != nullptr) {
+    if (simHitMeasMap != nullptr && clusters != nullptr) {
       auto range = simHitMeasMap->equal_range(hitIdx);
       if (range.first != range.second) {
-        const Index measIdx = range.first->second;
-        const auto meas = measurements->getMeasurement(measIdx);
-        const Acts::Surface* surface =
-            m_cfg.trackingGeometry->findSurface(meas.geometryId());
-        if (surface == nullptr) {
-          throw std::runtime_error(
-              "ArrowSimHitOutputConverter: surface not found for geometry id " +
-              std::to_string(meas.geometryId().value()));
-        }
-        const auto* regular =
-            dynamic_cast<const Acts::RegularSurface*>(surface);
-        if (regular != nullptr) {
-          // Expand the (possibly 1D) measurement to a full bound vector so
-          // local positions are read from a stable layout regardless of which
-          // subspace coordinates were measured.
-          const auto full = meas.fullParameters();
-          Acts::Vector2 loc{full[Acts::eBoundLoc0], full[Acts::eBoundLoc1]};
-          const Acts::Vector3 global =
-              regular->localToGlobal(ctx.geoContext, loc);
-          gx = static_cast<float>(global.x() / Acts::UnitConstants::mm);
-          gy = static_cast<float>(global.y() / Acts::UnitConstants::mm);
-          gz = static_cast<float>(global.z() / Acts::UnitConstants::mm);
-        }
+        const Index clusterIdx = range.first->second;
+        const Acts::Vector3& global = (*clusters)[clusterIdx].globalPosition;
+        gx = static_cast<float>(global.x() / Acts::UnitConstants::mm);
+        gy = static_cast<float>(global.y() / Acts::UnitConstants::mm);
+        gz = static_cast<float>(global.z() / Acts::UnitConstants::mm);
       }
     }
     xV->UnsafeAppend(gx);

@@ -1,3 +1,4 @@
+import math
 import warnings
 from pathlib import Path
 
@@ -167,7 +168,6 @@ def _add_arrow_writer(
     from acts.arrow import particleSchema
     from acts.examples.arrow import ArrowParticleOutputConverter, ParquetWriter
 
-    field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
     for input_key, table_key in inputs_to_tables.items():
         assert (
             input_key != table_key
@@ -177,7 +177,6 @@ def _add_arrow_writer(
                 level=acts.logging.INFO,
                 inputParticles=input_key,
                 outputTable=table_key,
-                bField=field,
             )
         )
 
@@ -189,8 +188,7 @@ def _add_arrow_writer(
                 table_key: table_key for table_key in inputs_to_tables.values()
             },
             expectedSchemas={
-                table_key: particleSchema()
-                for table_key in inputs_to_tables.values()
+                table_key: particleSchema() for table_key in inputs_to_tables.values()
             },
             eventsPerShard=eventsPerShard,
         )
@@ -293,6 +291,187 @@ def test_particle_gun_fatras(tmp_path, fatras):
 
     _assert_particles_parquet(tmp_path / "particles_generated_arrow", nevents)
     _assert_particles_parquet(tmp_path / "particles_simulated_arrow", nevents)
+
+
+SIMHIT_FIELDS = {
+    "x",
+    "y",
+    "z",
+    "true_x",
+    "true_y",
+    "true_z",
+    "time",
+    "particle_id",
+    "detector",
+    "volume_id",
+    "layer_id",
+    "surface_id",
+}
+
+
+def _add_simhit_arrow_writer(
+    s: Sequencer,
+    outputDir: Path,
+    table_key: str = "simhits_arrow",
+    *,
+    withClusters: bool,
+    eventsPerShard: int = 2,
+) -> None:
+    """Wire an ArrowSimHitOutputConverter + ParquetWriter for the simhits.
+
+    @param withClusters: if True, feed the cluster container and the
+        sim-hit→measurement map so the digitized x,y,z columns are filled from
+        the precomputed Cluster::globalPosition; otherwise leave them unwired so
+        those columns come out NaN.
+    """
+    from acts.arrow import simHitSchema
+    from acts.examples.arrow import ArrowSimHitOutputConverter, ParquetWriter
+
+    kwargs = {}
+    if withClusters:
+        kwargs["inputClusters"] = "clusters"
+        kwargs["inputSimHitMeasurementsMap"] = "simhit_measurements_map"
+
+    s.addAlgorithm(
+        ArrowSimHitOutputConverter(
+            level=acts.logging.INFO,
+            inputSimHits="simhits",
+            inputParticles="particles_simulated",
+            outputTable=table_key,
+            **kwargs,
+        )
+    )
+
+    s.addWriter(
+        ParquetWriter(
+            level=acts.logging.INFO,
+            outputDir=str(outputDir),
+            collections={table_key: table_key},
+            expectedSchemas={table_key: simHitSchema()},
+            eventsPerShard=eventsPerShard,
+        )
+    )
+
+
+def _assert_simhits_parquet(
+    directory: Path, expected_events: int, *, expect_digitized: bool
+) -> None:
+    """Verify a simhits dataset directory: schema, row count, and the
+    digitized-position semantics.
+
+    The truth columns (true_x/true_y/true_z/time) are always finite. The
+    digitized columns (x/y/z) are finite only for hits matched to a cluster
+    when clusters were wired in; otherwise every value is NaN.
+    """
+    assert directory.exists(), f"{directory} does not exist"
+    assert directory.is_dir(), f"{directory} is not a directory"
+
+    fragments = sorted(directory.glob("*.parquet"))
+    assert fragments, f"{directory} contains no parquet shards"
+    for f in fragments:
+        assert f.stat().st_size > 0, f"{f} is empty"
+
+    @with_pyarrow
+    def _check(pa, pq):
+        first_schema = pq.ParquetFile(str(fragments[0])).schema_arrow
+        names = {first_schema.field(i).name for i in range(len(first_schema))}
+        assert "event_id" in names, f"{directory.name}: event_id column missing"
+        missing = SIMHIT_FIELDS - names
+        assert not missing, f"{directory.name}: missing fields {missing}"
+        for field_name in SIMHIT_FIELDS:
+            ftype = first_schema.field(field_name).type
+            assert pa.types.is_list(
+                ftype
+            ), f"{directory.name}: field '{field_name}' should be list, got {ftype}"
+
+        table = pq.ParquetDataset(str(directory)).read()
+        assert table.num_rows == expected_events, (
+            f"{directory.name}: expected {expected_events} events, "
+            f"got {table.num_rows}"
+        )
+
+        x = table.column("x").to_pylist()
+        y = table.column("y").to_pylist()
+        z = table.column("z").to_pylist()
+        tx = table.column("true_x").to_pylist()
+        ty = table.column("true_y").to_pylist()
+        tz = table.column("true_z").to_pylist()
+
+        total_hits = sum(len(row) for row in tx)
+        assert total_hits > 0, f"{directory.name}: no sim hits across any event"
+
+        # Truth position is always written, so it must be finite everywhere.
+        for col in (tx, ty, tz):
+            for row in col:
+                for v in row:
+                    assert math.isfinite(v), f"{directory.name}: non-finite truth {v}"
+
+        n_digitized = 0
+        for ex, ey, ez, etx, ety, etz in zip(x, y, z, tx, ty, tz):
+            for xv, yv, zv, txv, tyv, tzv in zip(ex, ey, ez, etx, ety, etz):
+                if not expect_digitized:
+                    assert (
+                        math.isnan(xv) and math.isnan(yv) and math.isnan(zv)
+                    ), f"{directory.name}: expected NaN digitized pos, got ({xv},{yv},{zv})"
+                    continue
+                # With clusters wired, matched hits carry a finite digitized
+                # position; unmatched ones stay NaN. A finite x must come with a
+                # finite y and z.
+                if math.isnan(xv):
+                    continue
+                n_digitized += 1
+                assert math.isfinite(yv) and math.isfinite(
+                    zv
+                ), f"{directory.name}: partial digitized pos ({xv},{yv},{zv})"
+                # The position must sit inside the generic-detector envelope
+                # (in mm) — a units regression (e.g. m vs mm) or a stale/garbage
+                # position would blow well past this.
+                r = math.hypot(xv, yv)
+                assert r < 1500.0 and abs(zv) < 4000.0, (
+                    f"{directory.name}: digitized pos ({xv},{yv},{zv}) outside "
+                    f"detector envelope — units or stale-position regression?"
+                )
+                # It must also stay near the truth hit's module. The measured
+                # coordinate(s) pin it to the truth, but the unmeasured strip
+                # coordinate defaults to the surface centre, so allow a generous
+                # module-scale slack rather than a tight smearing tolerance.
+                dist = math.sqrt((xv - txv) ** 2 + (yv - tyv) ** 2 + (zv - tzv) ** 2)
+                assert dist < 250.0, (
+                    f"{directory.name}: digitized pos {dist:.1f} mm from truth "
+                    f"({txv},{tyv},{tzv}) — wrong surface or unit error?"
+                )
+
+        if expect_digitized:
+            assert n_digitized > 0, (
+                f"{directory.name}: clusters were wired but no hit got a "
+                f"digitized position"
+            )
+
+
+def test_fatras_simhits_digitized(tmp_path, fatras):
+    """Fatras + digitization → ArrowSimHitOutputConverter reads cluster
+    positions → Parquet. The matched-hit x,y,z must be the precomputed cluster
+    global positions (finite, near truth)."""
+    nevents = 3
+    s = Sequencer(numThreads=1, events=nevents)
+    fatras(s)
+    _add_simhit_arrow_writer(s, tmp_path, withClusters=True)
+    s.run()
+
+    _assert_simhits_parquet(tmp_path / "simhits_arrow", nevents, expect_digitized=True)
+
+
+def test_fatras_simhits_no_clusters_are_nan(tmp_path, fatras):
+    """Without the cluster container and sim-hit→measurement map wired, the
+    digitized x,y,z columns fall back to NaN while truth positions still
+    populate."""
+    nevents = 3
+    s = Sequencer(numThreads=1, events=nevents)
+    fatras(s)
+    _add_simhit_arrow_writer(s, tmp_path, withClusters=False)
+    s.run()
+
+    _assert_simhits_parquet(tmp_path / "simhits_arrow", nevents, expect_digitized=False)
 
 
 @pytest.mark.skipif(not pythia8Enabled, reason="Pythia8 not built")
@@ -428,9 +607,7 @@ def test_reader_schema_evolution_added_optional_column(tmp_path):
                 "majority_particle_id": pa.array(
                     [[1]], type=field_type("majority_particle_id")
                 ),
-                "hit_ids": pa.array(
-                    [[[1, 2, 3]]], type=field_type("hit_ids")
-                ),
+                "hit_ids": pa.array([[[1, 2, 3]]], type=field_type("hit_ids")),
                 "track_id": pa.array([[7]], type=field_type("track_id")),
             },
             schema=on_disk_schema,
@@ -488,8 +665,7 @@ def test_reader_schema_evolution_added_optional_column(tmp_path):
             )
             for required in ("d0", "z0", "phi", "theta", "qop"):
                 assert required in t.column_names, (
-                    f"event {ctx.eventNumber}: required column "
-                    f"'{required}' missing"
+                    f"event {ctx.eventNumber}: required column " f"'{required}' missing"
                 )
             type(self).events_seen += 1
             return acts.examples.ProcessCode.SUCCESS
@@ -499,9 +675,9 @@ def test_reader_schema_evolution_added_optional_column(tmp_path):
     s.addAlgorithm(TrackTableCheck())
     s.run()
 
-    assert TrackTableCheck.events_seen == nevents, (
-        f"checker saw {TrackTableCheck.events_seen} events, expected {nevents}"
-    )
+    assert (
+        TrackTableCheck.events_seen == nevents
+    ), f"checker saw {TrackTableCheck.events_seen} events, expected {nevents}"
 
 
 def test_python_alg_writes_arrow_table(tmp_path):
@@ -549,12 +725,8 @@ def test_python_alg_writes_arrow_table(tmp_path):
                     "majority_particle_id": pa.array(
                         [[1]], type=field_type("majority_particle_id")
                     ),
-                    "hit_ids": pa.array(
-                        [[[1, 2, 3]]], type=field_type("hit_ids")
-                    ),
-                    "track_id": pa.array(
-                        [[7]], type=field_type("track_id")
-                    ),
+                    "hit_ids": pa.array([[[1, 2, 3]]], type=field_type("hit_ids")),
+                    "track_id": pa.array([[7]], type=field_type("track_id")),
                     "t": pa.array([None], type=field_type("t")),
                 },
                 schema=track_schema_pa,
@@ -579,12 +751,12 @@ def test_python_alg_writes_arrow_table(tmp_path):
             assert t.num_rows == 1
             d0 = t.column("d0").to_pylist()[0]
             z0 = t.column("z0").to_pylist()[0]
-            assert d0 == [pytest.approx(0.1 + evt)], (
-                f"event {ctx.eventNumber}: d0 round-trip mismatch: {d0}"
-            )
-            assert z0 == [pytest.approx(0.2 + evt)], (
-                f"event {ctx.eventNumber}: z0 round-trip mismatch: {z0}"
-            )
+            assert d0 == [
+                pytest.approx(0.1 + evt)
+            ], f"event {ctx.eventNumber}: d0 round-trip mismatch: {d0}"
+            assert z0 == [
+                pytest.approx(0.2 + evt)
+            ], f"event {ctx.eventNumber}: z0 round-trip mismatch: {z0}"
             type(self).events_seen += 1
             return acts.examples.ProcessCode.SUCCESS
 
@@ -594,9 +766,9 @@ def test_python_alg_writes_arrow_table(tmp_path):
     s.addAlgorithm(TrackConsumer(key="produced_tracks_arrow"))
     s.run()
 
-    assert TrackConsumer.events_seen == nevents, (
-        f"consumer saw {TrackConsumer.events_seen} events, expected {nevents}"
-    )
+    assert (
+        TrackConsumer.events_seen == nevents
+    ), f"consumer saw {TrackConsumer.events_seen} events, expected {nevents}"
 
 
 def test_writer_rejects_missing_schema(tmp_path):
@@ -653,5 +825,3 @@ def test_writer_aborts_on_per_event_schema_mismatch(tmp_path):
     # The writer ABORTs, which the Sequencer turns into a runtime error.
     with pytest.raises(RuntimeError):
         s.run()
-
-

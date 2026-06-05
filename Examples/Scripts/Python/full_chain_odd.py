@@ -585,10 +585,6 @@ if args.output_parquet:
         level=acts.logging.INFO,
         inputParticles="particles_simulated",
         outputTable="particles_arrow",
-        writeHelixParameters=True,
-        minHelixTransverseMomentum=500 * u.MeV,
-        maxHelixEta=5.0,
-        bField=field,
     )
     s.addAlgorithm(arrParticleConv)
 
@@ -596,10 +592,9 @@ if args.output_parquet:
         level=acts.logging.INFO,
         inputSimHits="simhits",
         inputParticles="particles_simulated",
-        inputMeasurements="measurements",
+        inputClusters="clusters",
         inputSimHitMeasurementsMap="simhit_measurements_map",
         outputTable="simhits_arrow",
-        trackingGeometry=trackingGeometry,
         detectorResolver=_odd_detector_resolver,
     )
     s.addAlgorithm(arrSimHitConv)

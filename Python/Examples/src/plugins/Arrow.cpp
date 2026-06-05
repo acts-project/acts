@@ -50,9 +50,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
     auto [alg, c] =
         declareAlgorithm<ArrowParticleOutputConverter, ArrowOutputConverter>(
             m, "ArrowParticleOutputConverter");
-    ACTS_PYTHON_STRUCT(c, inputParticles, outputTable, referencePoint, bField,
-                       writeHelixParameters, minHelixTransverseMomentum,
-                       maxHelixEta);
+    ACTS_PYTHON_STRUCT(c, inputParticles, outputTable);
   }
 
   {
@@ -68,9 +66,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
     auto [alg, c] =
         declareAlgorithm<ArrowSimHitOutputConverter, ArrowOutputConverter>(
             m, "ArrowSimHitOutputConverter");
-    ACTS_PYTHON_STRUCT(c, inputSimHits, inputParticles, inputMeasurements,
+    ACTS_PYTHON_STRUCT(c, inputSimHits, inputParticles, inputClusters,
                        inputSimHitMeasurementsMap, outputTable,
-                       trackingGeometry, detectorResolver);
+                       detectorResolver);
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(

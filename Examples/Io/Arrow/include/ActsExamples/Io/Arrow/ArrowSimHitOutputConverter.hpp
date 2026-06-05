@@ -9,8 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
@@ -35,11 +34,13 @@ namespace ActsExamples {
 /// inside the per-event list equals its @c SimHitIndex; downstream tables
 /// (e.g. tracks) can therefore reference hits by that index.
 ///
-/// When @c inputMeasurements, @c inputSimHitMeasurementsMap, and
-/// @c trackingGeometry are all provided, the digitized cluster position
-/// (local-to-global from the matched measurement) is written into @c x,y,z.
-/// Otherwise those columns are filled with NaN. The truth position is always
-/// written into @c true_x,true_y,true_z.
+/// When @c inputClusters and @c inputSimHitMeasurementsMap are both provided,
+/// the precomputed digitized cluster position (@c Cluster::globalPosition) of
+/// the matched measurement is written into @c x,y,z. Clusters have a one-to-one
+/// relation with measurements, so the @c SimHitMeasurementsMap (keyed by
+/// @c SimHitIndex, valued by measurement index) doubles as a sim-hit → cluster
+/// map. Otherwise those columns are filled with NaN. The truth position is
+/// always written into @c true_x,true_y,true_z.
 class ACTS_ARROW_EXPORT ArrowSimHitOutputConverter final
     : public ArrowOutputConverter {
  public:
@@ -51,17 +52,17 @@ class ACTS_ARROW_EXPORT ArrowSimHitOutputConverter final
     /// same container the @c ArrowParticleOutputConverter consumes for that
     /// table — leaving it empty forces the unmatched sentinel.
     std::string inputParticles;
-    /// Optional measurement container. Required (together with the two below)
-    /// to fill the digitized @c x,y,z columns; otherwise those are NaN.
-    std::string inputMeasurements;
+    /// Optional cluster container. Required (together with the map below) to
+    /// fill the digitized @c x,y,z columns from @c Cluster::globalPosition;
+    /// otherwise those are NaN. Clusters are indexed one-to-one with
+    /// measurements.
+    std::string inputClusters;
     /// Optional sim-hit → measurement(s) inverse map; keyed by @c SimHitIndex.
+    /// Because clusters and measurements share indices, the values double as
+    /// cluster indices.
     std::string inputSimHitMeasurementsMap;
     /// Output whiteboard key for the resulting @c arrow::Table.
     std::string outputTable = "simhits";
-    /// Tracking geometry used to find surfaces by @c GeometryIdentifier when
-    /// projecting the matched measurement's local parameters back to global
-    /// coordinates. Required for digitized @c x,y,z to be populated.
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Resolves the @c detector subsystem id for a given hit's geometry id.
     /// Defaults to reading the geometry id's @c extra byte; users can swap
     /// in any custom mapping (e.g. by volume or by surface lookup) when the
@@ -95,8 +96,7 @@ class ACTS_ARROW_EXPORT ArrowSimHitOutputConverter final
 
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
-  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
-                                                           "InputMeasurements"};
+  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
   ReadDataHandle<SimHitMeasurementsMap> m_inputSimHitMeasurementsMap{
       this, "InputSimHitMeasurementsMap"};
 

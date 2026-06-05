@@ -102,7 +102,7 @@ class ParquetReader::Impl {
           std::make_unique<WriteDataHandle<ActsPlugins::ArrowUtil::ArrowTable>>(
               &parent, name);
       state->handle->initialize(name);
-      m_states.push_back(std::move(state));
+      m_collectionStates.push_back(std::move(state));
     }
 
     m_eventsRange = {
@@ -110,7 +110,7 @@ class ParquetReader::Impl {
   }
 
   ParquetReader::Config m_cfg;
-  std::vector<std::unique_ptr<CollectionState>> m_states;
+  std::vector<std::unique_ptr<CollectionState>> m_collectionStates;
   std::pair<std::size_t, std::size_t> m_eventsRange{0, 0};
 };
 
@@ -136,7 +136,7 @@ ProcessCode ParquetReader::read(const AlgorithmContext& context) {
   Acts::ScopedTimer timer("Reading Parquet inputs", logger(),
                           Acts::Logging::DEBUG);
 
-  for (const auto& state : m_impl->m_states) {
+  for (const auto& state : m_impl->m_collectionStates) {
     auto table = state->reader->readEvent(
         static_cast<std::uint64_t>(context.eventNumber));
     if (table == nullptr || table->num_rows() == 0) {

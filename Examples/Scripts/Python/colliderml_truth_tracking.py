@@ -31,6 +31,7 @@ def runColliderMLTruthTracking(
     decorators=[],
     events: int = 10,
     numThreads: int = 1,
+    sample: str = "ttbar_pu200",
     s: Optional[acts.examples.Sequencer] = None,
 ):
     """Set up a ColliderML truth-tracking sequencer and return it with the performance writer.
@@ -71,10 +72,10 @@ def runColliderMLTruthTracking(
     rnd = acts.examples.RandomNumbers(seed=42)
 
     particles_dir = (
-        inputDir / "ttbar_pu200_particles" / "data" / "ttbar_pu200_particles"
+        inputDir / f"{sample}_particles" / "data" / f"{sample}_particles"
     ).resolve()
     hits_dir = (
-        inputDir / "ttbar_pu200_tracker_hits" / "data" / "ttbar_pu200_tracker_hits"
+        inputDir / f"{sample}_tracker_hits" / "data" / f"{sample}_tracker_hits"
     ).resolve()
 
     s.addReader(
@@ -313,7 +314,7 @@ if "__main__" == __name__:
         field=field,
         outputDir=args.output,
         inputDir=args.input,
-        geoIdMapPath=_srcdir / "colliderml_geo_map.parquet",
+        geoIdMapPath=_srcdir / "Examples/Configs/colliderml_geo_map.parquet",
         digiConfigFile=_srcdir
         / "Examples/Configs/odd-digi-smearing-config-notime.json",
         decorators=decorators,
