@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2026 CERN for the benefit of the ACTS project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -89,7 +89,8 @@ class AlignableStructure {
   }
   /// @brief Access the constraints map (const overload)
   /// @return Const reference to the constraints map
-  const std::unordered_map<Acts::AlignmentIndices, double>& constraints() const {
+  const std::unordered_map<Acts::AlignmentIndices, double>& constraints()
+      const {
     return m_constraints;
   }
 

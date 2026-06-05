@@ -37,7 +37,8 @@ class AlignmentErrorCategory : public std::error_category {
       case AlignmentError::ConvergeFailure:
         return "The alignment is not converged";
       case AlignmentError::HierarchyValidationFailure:
-        return "Alignment hierarchy validation failed (assignment uniqueness error)";
+        return "Alignment hierarchy validation failed (assignment uniqueness "
+               "error)";
       default:
         return "unknown";
     }

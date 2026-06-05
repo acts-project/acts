@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2026 CERN for the benefit of the ACTS project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -154,7 +154,8 @@ BOOST_AUTO_TEST_CASE(HierarchyValidation) {
   // NOTE: detectMaskConflicts() is currently stubbed (returns empty) because a
   // correct conflict check requires the chain-rule Jacobian to compare DoFs
   // across coordinate frames. This test only verifies that the configuration
-  // does not crash; it does NOT expect rejection until the check is implemented.
+  // does not crash; it does NOT expect rejection until the check is
+  // implemented.
   auto structC = std::make_shared<ActsAlignment::AlignableStructure>(
       Acts::GeometryIdentifier().withVolume(30));
   structC->addSurface(el1->surface().getSharedPtr());
@@ -191,8 +192,7 @@ BOOST_AUTO_TEST_CASE(AlignmentHierarchyHelper) {
 
   // --- Clean hierarchy ---
   {
-    ActsAlignment::AlignmentHierarchy hierarchy(
-        {structA, structB});
+    ActsAlignment::AlignmentHierarchy hierarchy({structA, structB});
     BOOST_CHECK(hierarchy.validate().ok());
     BOOST_CHECK_EQUAL(hierarchy.structureFor(*el1), structA.get());
     BOOST_CHECK_EQUAL(hierarchy.structureFor(*el2), structA.get());
@@ -202,8 +202,7 @@ BOOST_AUTO_TEST_CASE(AlignmentHierarchyHelper) {
 
   // --- Surface-level lookup ---
   {
-    ActsAlignment::AlignmentHierarchy hierarchy(
-        {structA, structB});
+    ActsAlignment::AlignmentHierarchy hierarchy({structA, structB});
     BOOST_CHECK_EQUAL(hierarchy.structureFor(el1->surface()), structA.get());
     BOOST_CHECK_EQUAL(hierarchy.structureFor(el2->surface()), structA.get());
     BOOST_CHECK_EQUAL(hierarchy.structureFor(el3->surface()), nullptr);
@@ -212,8 +211,7 @@ BOOST_AUTO_TEST_CASE(AlignmentHierarchyHelper) {
   // --- Overlap detected ---
   structB->addSurface(el1->surface().getSharedPtr());
   {
-    ActsAlignment::AlignmentHierarchy hierarchy(
-        {structA, structB});
+    ActsAlignment::AlignmentHierarchy hierarchy({structA, structB});
     const auto result = hierarchy.validate();
     BOOST_CHECK(!result.ok());
     BOOST_CHECK_EQUAL(result.overlapping.size(), 1u);
@@ -232,8 +230,7 @@ BOOST_AUTO_TEST_CASE(AlignmentHierarchyHelper) {
 // currently stubbed to return empty (see AlignmentHierarchy.hpp) because a
 // correct conflict check requires the chain-rule Jacobian to compare DoFs
 // across coordinate frames.
-BOOST_AUTO_TEST_CASE(MaskConflictDetection,
-                     *boost::unit_test::disabled()) {
+BOOST_AUTO_TEST_CASE(MaskConflictDetection, *boost::unit_test::disabled()) {
   using ActsAlignment::AlignmentMask;
 
   auto el1 = makeDummyElement(Acts::Translation3(0, 0, 10_mm) *
@@ -267,8 +264,8 @@ BOOST_AUTO_TEST_CASE(MaskConflictDetection,
 
   // Disjoint masks: parent = Center0, module mask = Rotation0 → no conflict.
   {
-    const auto conflicts =
-        hierarchy.detectMaskConflicts(AlignmentMask::Rotation0, floatingModules);
+    const auto conflicts = hierarchy.detectMaskConflicts(
+        AlignmentMask::Rotation0, floatingModules);
     BOOST_CHECK(conflicts.empty());
   }
 
@@ -283,8 +280,8 @@ BOOST_AUTO_TEST_CASE(MaskConflictDetection,
   // Standalone module (el3) is never in a structure → never a conflict.
   parent->alignmentMask() = AlignmentMask::All;
   {
-    const auto conflicts = hierarchy.detectMaskConflicts(
-        AlignmentMask::All, {el3.get()});
+    const auto conflicts =
+        hierarchy.detectMaskConflicts(AlignmentMask::All, {el3.get()});
     BOOST_CHECK(conflicts.empty());
   }
 }
