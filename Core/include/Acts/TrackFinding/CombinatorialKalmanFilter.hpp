@@ -472,10 +472,15 @@ class CombinatorialKalmanFilter {
 
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
-      performMaterialInteraction(
+      const Result<void> materialRes = performMaterialInteraction(
           state, stepper, currentState.referenceSurface(),
           detail::determineMaterialUpdateMode(state, navigator,
                                               MaterialUpdateMode::PostUpdate));
+      if (!materialRes.ok()) {
+        ACTS_DEBUG("Material interaction failed during reset: "
+                   << materialRes.error().message());
+        return materialRes.error();
+      }
 
       // Set path limit based on loop protection
       detail::setupLoopProtection(state, stepper, result.pathLimitReached, true,
@@ -509,7 +514,7 @@ class CombinatorialKalmanFilter {
       using PM = TrackStatePropMask;
 
       const bool isSensitive = surface.isSensitive();
-      const bool hasMaterial = surface.surfaceMaterial() != nullptr;
+      const bool hasMaterial = surface.hasMaterial();
       const bool isMaterialOnly = hasMaterial && !isSensitive;
       bool expectMeasurements = isSensitive;
 
@@ -533,10 +538,15 @@ class CombinatorialKalmanFilter {
       }
 
       // Update state and stepper with pre material effects
-      performMaterialInteraction(
+      const Result<void> materialPreRes = performMaterialInteraction(
           state, stepper, surface,
           detail::determineMaterialUpdateMode(state, navigator,
                                               MaterialUpdateMode::PreUpdate));
+      if (!materialPreRes.ok()) {
+        ACTS_DEBUG("Material interaction failed during reset: "
+                   << materialPreRes.error().message());
+        return materialPreRes.error();
+      }
 
       // Bind the transported state to the current surface
       auto boundStateRes = [&]() -> Result<SingleBoundState> {
@@ -682,10 +692,15 @@ class CombinatorialKalmanFilter {
       }
 
       // Update state and stepper with post material effects
-      performMaterialInteraction(
+      const Result<void> materialPostRes = performMaterialInteraction(
           state, stepper, surface,
           detail::determineMaterialUpdateMode(state, navigator,
                                               MaterialUpdateMode::PostUpdate));
+      if (!materialPostRes.ok()) {
+        ACTS_DEBUG("Material interaction failed during post-update: "
+                   << materialPostRes.error().message());
+        return materialPostRes.error();
+      }
 
       return Result<void>::success();
     }
@@ -824,7 +839,7 @@ class CombinatorialKalmanFilter {
 
       // Set the track state flags
       auto typeFlags = trackStateProxy.typeFlags();
-      if (trackStateProxy.referenceSurface().surfaceMaterial() != nullptr) {
+      if (trackStateProxy.referenceSurface().hasMaterial()) {
         typeFlags.setHasMaterial();
       }
       typeFlags.setHasParameters();
@@ -857,19 +872,26 @@ class CombinatorialKalmanFilter {
     }
 
     template <typename propagator_state_t, typename stepper_t>
-    void performMaterialInteraction(propagator_state_t& state,
-                                    const stepper_t& stepper,
-                                    const Surface& surface,
-                                    MaterialUpdateMode updateMode) const {
+    Result<void> performMaterialInteraction(
+        propagator_state_t& state, const stepper_t& stepper,
+        const Surface& surface, MaterialUpdateMode updateMode) const {
+      if (!surface.hasMaterial()) {
+        return Result<void>::success();
+      }
+
       if constexpr (!IsMultiStepper) {
-        detail::performMaterialInteraction(
-            state, stepper, surface, updateMode, NoiseUpdateMode::addNoise,
-            multipleScattering, energyLoss, logger());
-      } else {
-        if (surface.surfaceMaterial() == nullptr) {
-          return;
+        const Result<detail::PointwiseMaterialEffects> materialInteractionRes =
+            detail::performMaterialInteraction(
+                state, stepper, surface, updateMode, NoiseUpdateMode::addNoise,
+                multipleScattering, energyLoss, logger());
+        if (!materialInteractionRes.ok()) {
+          ACTS_DEBUG("Material interaction failed during reset: "
+                     << materialInteractionRes.error().message());
+          return materialInteractionRes.error();
         }
 
+        return Result<void>::success();
+      } else {
         if (ACTS_CHECK_BIT(updateMode, MaterialUpdateMode::PostUpdate)) {
           betheHeitlerCache->clear();
           componentCache->clear();
@@ -904,7 +926,7 @@ class CombinatorialKalmanFilter {
                 "Is the weight cutoff "
                 << weightCutoff << " too high?");
             ACTS_WARNING("Return to propagator without applying energy loss");
-            return;
+            return Result<void>::success();
           }
 
           // reduce component number
@@ -914,12 +936,13 @@ class CombinatorialKalmanFilter {
 
           detail::Gsf::removeLowWeightComponents(*componentCache, weightCutoff);
 
-          detail::Gsf::updateStepper(state, stepper, surface, *componentCache,
-                                     logger());
+          detail::Gsf::updateStepper(state, stepper, surface, *componentCache);
         }
 
         detail::Gsf::applyMultipleScattering(state, stepper, surface,
                                              updateMode, logger());
+
+        return Result<void>::success();
       }
     }
 

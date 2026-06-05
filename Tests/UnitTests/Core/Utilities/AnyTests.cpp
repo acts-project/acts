@@ -14,6 +14,7 @@
 #include <array>
 #include <cstddef>
 #include <memory>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 
@@ -352,6 +353,39 @@ BOOST_AUTO_TEST_CASE(AnyCopyTypeChange) {
     BOOST_CHECK(destroyed);
     BOOST_CHECK_EQUAL(a.as<int>(), value);
   }
+}
+
+BOOST_AUTO_TEST_CASE(AnyCopyTypeChangeToHeap) {
+  // Copy-assigning a heap-allocated value over an Any that already holds a
+  // value of a different type. Before the fix this read the stale contents of
+  // the internal buffer as the copy destination (a freed pointer for the
+  // heap->heap case, or the previous local value's bytes for local->heap),
+  // resulting in a wild write / use-after-free.
+  using Large = std::array<unsigned long, 5>;
+
+  BOOST_TEST_CONTEXT("local -> heap") {
+    Any a{42};
+    Large v{1, 2, 3, 4, 5};
+    Any b{v};
+    a = b;
+    BOOST_CHECK_EQUAL_COLLECTIONS(a.as<Large>().begin(), a.as<Large>().end(),
+                                  v.begin(), v.end());
+    // source is left intact
+    BOOST_CHECK_EQUAL_COLLECTIONS(b.as<Large>().begin(), b.as<Large>().end(),
+                                  v.begin(), v.end());
+  }
+  CHECK_ANY_ALLOCATIONS();
+
+  BOOST_TEST_CONTEXT("heap -> heap (different type)") {
+    std::array<int, 4> v1{1, 2, 3, 4};
+    Large v2{6, 7, 8, 9, 10};
+    Any a{v1};
+    Any b{v2};
+    a = b;
+    BOOST_CHECK_EQUAL_COLLECTIONS(a.as<Large>().begin(), a.as<Large>().end(),
+                                  v2.begin(), v2.end());
+  }
+  CHECK_ANY_ALLOCATIONS();
 }
 
 BOOST_AUTO_TEST_CASE(AnyDestroy) {
@@ -726,6 +760,122 @@ BOOST_AUTO_TEST_CASE(AnyTake) {
     Any a;
     BOOST_CHECK_THROW(a.take<int>(), std::bad_any_cast);
   }
+}
+
+struct ThrowOnDemand {
+  // larger than the small-buffer size, so this type is heap-allocated
+  std::array<char, 64> blob{};
+  explicit ThrowOnDemand(bool doThrow) {
+    if (doThrow) {
+      throw std::runtime_error{"boom"};
+    }
+  }
+};
+
+BOOST_AUTO_TEST_CASE(AnyEmplaceThrowingConstructor) {
+  // If the constructor of the emplaced type throws, the previously held value
+  // has already been destroyed, so the Any must be left empty rather than
+  // claiming to hold a value whose storage was never initialised (which would
+  // make the subsequent destruction operate on stale/freed memory).
+  BOOST_TEST_CONTEXT("local") {
+    struct SmallThrow {
+      int x{0};
+      explicit SmallThrow(bool doThrow) {
+        if (doThrow) {
+          throw std::runtime_error{"boom"};
+        }
+      }
+    };
+    Any a{std::in_place_type<SmallThrow>, false};
+    BOOST_CHECK(!!a);
+    BOOST_CHECK_THROW(a.emplace<SmallThrow>(true), std::runtime_error);
+    BOOST_CHECK(!a);
+  }
+  CHECK_ANY_ALLOCATIONS();
+
+  BOOST_TEST_CONTEXT("heap") {
+    Any a{std::in_place_type<ThrowOnDemand>, false};
+    BOOST_CHECK(!!a);
+    BOOST_CHECK_THROW(a.emplace<ThrowOnDemand>(true), std::runtime_error);
+    BOOST_CHECK(!a);
+  }
+  CHECK_ANY_ALLOCATIONS();
+}
+
+BOOST_AUTO_TEST_CASE(AnySelfAssign) {
+  using Large = std::array<unsigned long, 5>;
+
+  BOOST_TEST_CONTEXT("self copy-assign local") {
+    Any a{7};
+    Any& r = a;
+    a = r;
+    BOOST_CHECK_EQUAL(a.as<int>(), 7);
+  }
+  BOOST_TEST_CONTEXT("self copy-assign heap") {
+    Large v{1, 2, 3, 4, 5};
+    Any a{v};
+    Any& r = a;
+    a = r;
+    BOOST_CHECK_EQUAL_COLLECTIONS(a.as<Large>().begin(), a.as<Large>().end(),
+                                  v.begin(), v.end());
+  }
+  BOOST_TEST_CONTEXT("self move-assign local") {
+    Any a{7};
+    Any& r = a;
+    a = std::move(r);
+    BOOST_CHECK(!!a);
+    BOOST_CHECK_EQUAL(a.as<int>(), 7);
+  }
+  BOOST_TEST_CONTEXT("self move-assign heap") {
+    Large v{1, 2, 3, 4, 5};
+    Any a{v};
+    Any& r = a;
+    a = std::move(r);
+    BOOST_CHECK(!!a);
+    BOOST_CHECK_EQUAL_COLLECTIONS(a.as<Large>().begin(), a.as<Large>().end(),
+                                  v.begin(), v.end());
+  }
+  CHECK_ANY_ALLOCATIONS();
+}
+
+// Copying a heap-allocated value allocates and may run a throwing copy
+// constructor, so the copy operations must not be marked noexcept (otherwise
+// such a throw would call std::terminate). Moves only steal a pointer for
+// heap values, so they are noexcept (which lets std::vector<Any> move rather
+// than copy on reallocation) -- except in the allocation-tracking debug build
+// (_ACTS_ANY_ENABLE_TRACK_ALLOCATIONS), where the tracking hooks may throw and
+// kAnyNoexcept is false.
+static_assert(!std::is_nothrow_copy_constructible_v<Any>);
+static_assert(!std::is_nothrow_copy_assignable_v<Any>);
+static_assert(std::is_nothrow_move_constructible_v<Any> ==
+              detail::kAnyNoexcept);
+static_assert(std::is_nothrow_move_assignable_v<Any> == detail::kAnyNoexcept);
+
+struct HeapCopyThrows {
+  // larger than the small-buffer size, so this type is heap-allocated
+  std::array<int, 8> blob{};
+  HeapCopyThrows() = default;
+  HeapCopyThrows(const HeapCopyThrows& /*unused*/) {
+    throw std::runtime_error{"copy boom"};
+  }
+  HeapCopyThrows& operator=(const HeapCopyThrows&) = default;
+  HeapCopyThrows(HeapCopyThrows&&) = default;
+  HeapCopyThrows& operator=(HeapCopyThrows&&) = default;
+};
+
+BOOST_AUTO_TEST_CASE(AnyCopyExceptionPropagates) {
+  {
+    Any a{std::in_place_type<HeapCopyThrows>};
+
+    // copy construction propagates the stored type's throwing copy constructor
+    BOOST_CHECK_THROW(Any b{a}, std::runtime_error);
+
+    // copy assignment likewise propagates and leaves the target empty
+    Any c;
+    BOOST_CHECK_THROW(c = a, std::runtime_error);
+    BOOST_CHECK(!c);
+  }
+  CHECK_ANY_ALLOCATIONS();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
