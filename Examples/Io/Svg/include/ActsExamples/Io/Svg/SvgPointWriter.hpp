@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Io/Svg/SvgTrackingGeometryWriter.hpp"
