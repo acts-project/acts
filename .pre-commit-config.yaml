@@ -5,6 +5,7 @@ repos:
       - id: clang-format
         types_or: [file]
         files: \.(cpp|hpp|ipp|cu|cuh)$
+        exclude: ^Traccc/
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -23,12 +24,14 @@ repos:
     rev: 26.5.1
     hooks:
     - id: black-jupyter
+      exclude: ^Traccc/
 
   - repo: https://github.com/BlankSpruce/gersemi-pre-commit
     rev: 0.27.7
     hooks:
     - id: gersemi
       args: ["-i", "--no-warn-about-unknown-commands"]
+      exclude: ^Traccc/
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.2
@@ -39,7 +42,7 @@ repos:
         "-I", "./CI/codespell_ignore.txt",
         "-w"
       ]
-      exclude: ^CI/.*|^docs/old|docs/tex-mml-chtml.js$
+      exclude: ^CI/.*|^docs/old|docs/tex-mml-chtml.js$|^Traccc/
 
   - repo: local
     hooks:
@@ -48,26 +51,28 @@ repos:
       language: system
       entry: CI/check_license.py --fix
       files: \.(cpp|hpp|ipp|cu|cuh)$
+      exclude: ^Traccc/
 
     - id: include_guards
       name: include_guards
       language: system
       entry: CI/check_include_guards.py --fail-global
       files: \.hpp$
-      exclude: Detray/core/include/detray/utils/logging.hpp
+      exclude: ^Detray/core/include/detray/utils/logging.hpp$|^Traccc/
 
     - id: pragma_once
       name: pragma_once
       language: system
       entry: CI/check_pragma_once.sh
       files: \.(hpp|ipp)$
-      exclude: Detray/core/include/detray/utils/quiet_log_start.hpp|Detray/core/include/detray/utils/quiet_log_end.hpp
+      exclude: "Detray/core/include/detray/utils/quiet_log_start.hpp|Detray/core/include/detray/utils/quiet_log_end.hpp|^Traccc/"
 
     - id: type_t
       name: type_t
       language: system
       entry: CI/check_type_t.py --fix
       files: \.(cpp|hpp|ipp|cu|cuh)$
+      exclude: ^Traccc/
 
     - id: boost_test
       name: boost_test
@@ -92,6 +97,7 @@ repos:
       language: system
       entry: CI/check_math_macros.py
       files: \.(cpp|hpp|ipp|cu|cuh)$
+      exclude: ^Traccc/
 
     - id: codegen_dependencies
       name: codegen_dependencies
@@ -107,7 +113,7 @@ repos:
       types: [json]
       require_serial: true
       args: [--indent=4]
-      exclude: ^.zenodo.json$
+      exclude: ^.zenodo.json$|^Traccc/
 
     - id: sync_citation_metadata
       name: sync citation metadata

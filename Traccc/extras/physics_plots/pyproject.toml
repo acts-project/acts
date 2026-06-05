@@ -1,0 +1,17 @@
+[project]
+name = "traccc-physics-plots"
+version = "0.1.0"
+description = "Scripts to make physics plots with traccc"
+readme = "README.md"
+requires-python = "==3.12.*"
+dependencies = [
+    "matplotlib>=3.10.5",
+    "numpy>=2.2.4",
+    "pandas>=2.2.3",
+    "scipy>=1.16.3",
+]
+
+[dependency-groups]
+dev = [
+    "black>=25.12.0",
+]

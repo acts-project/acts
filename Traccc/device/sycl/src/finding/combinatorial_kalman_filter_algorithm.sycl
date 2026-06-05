@@ -1,0 +1,55 @@
+/** TRACCC library, part of the ACTS project (R&D line)
+ *
+ * (c) 2024-2026 CERN for the benefit of the ACTS project
+ *
+ * Mozilla Public License Version 2.0
+ */
+
+// SYCL include(s).
+#include <sycl/sycl.hpp>
+
+// Local include(s).
+#include "../utils/detector_types.hpp"
+#include "../utils/get_queue.hpp"
+#include "../utils/magnetic_field_types.hpp"
+#include "combinatorial_kalman_filter.hpp"
+#include "traccc/sycl/finding/combinatorial_kalman_filter_algorithm.hpp"
+
+// Project include(s).
+#include "traccc/bfield/magnetic_field_types.hpp"
+#include "traccc/geometry/detector_type_list.hpp"
+#include "traccc/utils/detector_buffer_bfield_visitor.hpp"
+#include "traccc/utils/propagation.hpp"
+
+// System include(s).
+#include <stdexcept>
+
+namespace traccc::sycl {
+namespace kernels {
+template <typename detector_tag_t, typename bfield_tag_t>
+struct combinatorial_kalman_filter;
+}  // namespace kernels
+
+combinatorial_kalman_filter_algorithm::output_type
+combinatorial_kalman_filter_algorithm::operator()(
+    const detector_buffer& detector, const magnetic_field& field,
+    const edm::measurement_collection::const_view& measurements,
+    const bound_track_parameters_collection_types::const_view& seeds) const {
+
+    // Perform the track finding using the templated implementation.
+    return detector_buffer_magnetic_field_visitor<
+        traccc::detector_type_list, sycl::bfield_type_list<scalar>>(
+        detector, field,
+        [&]<typename detector_t, typename bfield_view_t>(
+            const typename detector_t::view& det, const bfield_view_t& bfield) {
+            return details::combinatorial_kalman_filter<
+                kernels::combinatorial_kalman_filter<
+                    detector_tag_selector_t<detector_t>,
+                    bfield_tag_selector_t<typename bfield_view_t::backend_t>>,
+                typename detector_t::device>(det, bfield, measurements, seeds,
+                                             m_config, m_mr, m_copy,
+                                             details::get_queue(m_queue));
+        });
+}
+
+}  // namespace traccc::sycl
