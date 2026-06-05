@@ -34,44 +34,44 @@ class ParticleHypothesis final {
  public:
   /// Create a muon particle hypothesis
   /// @return Muon particle hypothesis with any charge type
-  static ParticleHypothesis muon() {
+  [[nodiscard]] static ParticleHypothesis muon() {
     static const ParticleHypothesis cache(PdgParticle::eMuon);
     return cache;
   }
   /// Create a charged pion particle hypothesis
   /// @return Charged pion particle hypothesis with any charge type
-  static ParticleHypothesis pion() {
+  [[nodiscard]] static ParticleHypothesis pion() {
     static const ParticleHypothesis cache(PdgParticle::ePionPlus);
     return cache;
   }
   /// Create an electron particle hypothesis
   /// @return Electron particle hypothesis with any charge type
-  static ParticleHypothesis electron() {
+  [[nodiscard]] static ParticleHypothesis electron() {
     static const ParticleHypothesis cache(PdgParticle::eElectron);
     return cache;
   }
   /// Create a charged kaon particle hypothesis
   /// @return Charged kaon particle hypothesis with any charge type
-  static ParticleHypothesis kaon() {
+  [[nodiscard]] static ParticleHypothesis kaon() {
     static const ParticleHypothesis cache(PdgParticle::eKaonPlus);
     return cache;
   }
   /// Create a proton particle hypothesis
   /// @return Proton particle hypothesis with any charge type
-  static ParticleHypothesis proton() {
+  [[nodiscard]] static ParticleHypothesis proton() {
     static const ParticleHypothesis cache(PdgParticle::eProton);
     return cache;
   }
 
   /// Create a photon particle hypothesis
   /// @return Photon particle hypothesis with any charge type
-  static ParticleHypothesis photon() {
+  [[nodiscard]] static ParticleHypothesis photon() {
     static const ParticleHypothesis cache(PdgParticle::eGamma);
     return cache;
   }
   /// Create a neutral pion particle hypothesis
   /// @return Neutral pion particle hypothesis with any charge type
-  static ParticleHypothesis pion0() {
+  [[nodiscard]] static ParticleHypothesis pion0() {
     static const ParticleHypothesis cache(PdgParticle::ePionZero);
     return cache;
   }
@@ -79,26 +79,27 @@ class ParticleHypothesis final {
   /// Create a pion-like particle hypothesis with custom charge
   /// @param absoluteCharge The absolute charge value
   /// @return Pion-like particle hypothesis with any charge type
-  static ParticleHypothesis pionLike(float absoluteCharge) {
+  [[nodiscard]] static ParticleHypothesis pionLike(float absoluteCharge) {
     return pion().withAlteredAbsoluteCharge(absoluteCharge);
   }
 
   /// Create a neutral geantino particle hypothesis (massless neutral particle)
   /// @return Neutral geantino particle hypothesis with any charge type
-  static ParticleHypothesis geantino() {
+  [[nodiscard]] static ParticleHypothesis geantino() {
     static const ParticleHypothesis cache(PdgParticle::eInvalid, 0,
                                           ChargeHypothesis{0});
     return cache;
   }
   /// Create a charged geantino particle hypothesis with unit charge
   /// @return Charged geantino particle hypothesis with any charge type
-  static ParticleHypothesis chargedGeantino() {
+  [[nodiscard]] static ParticleHypothesis chargedGeantino() {
     return geantino().withAlteredAbsoluteCharge(1 * UnitConstants::e);
   }
   /// Create a charged geantino particle hypothesis with custom charge
   /// @param absoluteCharge The absolute charge value
   /// @return Charged geantino particle hypothesis with any charge type
-  static ParticleHypothesis chargedGeantino(float absoluteCharge) {
+  [[nodiscard]] static ParticleHypothesis chargedGeantino(
+      float absoluteCharge) {
     return geantino().withAlteredAbsoluteCharge(absoluteCharge);
   }
 
@@ -154,7 +155,7 @@ class ParticleHypothesis final {
   /// different absolute PDG.
   /// @param absPdg The new absolute PDG value
   /// @return A new ParticleHypothesis with the updated absolute PDG
-  ParticleHypothesis withAlteredPdg(PdgParticle absPdg) const {
+  [[nodiscard]] ParticleHypothesis withAlteredPdg(PdgParticle absPdg) const {
     return ParticleHypothesis(absPdg, mass(), absoluteCharge(), m_momentum);
   }
 
@@ -162,7 +163,7 @@ class ParticleHypothesis final {
   /// a different mass.
   /// @param mass The new mass value
   /// @return A new ParticleHypothesis with the updated mass
-  ParticleHypothesis withAlteredMass(float mass) const {
+  [[nodiscard]] ParticleHypothesis withAlteredMass(float mass) const {
     return ParticleHypothesis(absolutePdg(), mass, absoluteCharge(),
                               m_momentum);
   }
@@ -171,7 +172,8 @@ class ParticleHypothesis final {
   /// different charge.
   /// @param absoluteCharge The new absolute charge value
   /// @return A new ParticleHypothesis with the updated charge
-  ParticleHypothesis withAlteredAbsoluteCharge(float absoluteCharge) const {
+  [[nodiscard]] ParticleHypothesis withAlteredAbsoluteCharge(
+      float absoluteCharge) const {
     return ParticleHypothesis(absolutePdg(), mass(), absoluteCharge,
                               m_momentum);
   }
@@ -180,7 +182,8 @@ class ParticleHypothesis final {
   /// different momentum hypothesis.
   /// @param momentum The new momentum hypothesis value
   /// @return A new ParticleHypothesis with the updated momentum
-  ParticleHypothesis withMomentumHypothesis(double momentum) const {
+  [[nodiscard]] ParticleHypothesis withMomentumHypothesis(
+      double momentum) const {
     return ParticleHypothesis(absolutePdg(), mass(), absoluteCharge(),
                               momentum);
   }
@@ -189,7 +192,7 @@ class ParticleHypothesis final {
   /// different momentum hypothesis.
   /// @param momentum The new optional momentum hypothesis value
   /// @return A new ParticleHypothesis with the updated momentum
-  ParticleHypothesis withMomentumHypothesis(
+  [[nodiscard]] ParticleHypothesis withMomentumHypothesis(
       std::optional<double> momentum) const {
     return ParticleHypothesis(absolutePdg(), mass(), absoluteCharge(),
                               momentum);
@@ -198,37 +201,43 @@ class ParticleHypothesis final {
   /// Create a new particle hypothesis with the same absolute PDG and mass but
   /// no momentum hypothesis.
   /// @return A new ParticleHypothesis with no momentum hypothesis
-  ParticleHypothesis withoutMomentumHypothesis() const {
+  [[nodiscard]] ParticleHypothesis withoutMomentumHypothesis() const {
     return ParticleHypothesis(absolutePdg(), mass(), absoluteCharge(),
                               std::nullopt);
   }
 
   /// Get the hypothesized absolute PDG.
   /// @return The absolute PDG particle identifier
-  constexpr PdgParticle absolutePdg() const noexcept { return m_absPdg; }
+  [[nodiscard]] constexpr PdgParticle absolutePdg() const noexcept {
+    return m_absPdg;
+  }
 
   /// Get the hypothesized mass.
   /// @return The particle mass
-  constexpr float mass() const noexcept { return m_mass; }
+  [[nodiscard]] constexpr float mass() const noexcept { return m_mass; }
 
   /// Get the hypothesized absolute charge.
   /// @return The absolute charge magnitude
-  float absoluteCharge() const noexcept { return m_charge.absoluteCharge(); }
+  [[nodiscard]] float absoluteCharge() const noexcept {
+    return m_charge.absoluteCharge();
+  }
 
   /// Check if the particle hypothesis has a hypothesized momentum.
   /// @return True if a momentum hypothesis is present, false otherwise
-  bool hasMomentumHypothesis() const noexcept { return m_momentum.has_value(); }
+  [[nodiscard]] bool hasMomentumHypothesis() const noexcept {
+    return m_momentum.has_value();
+  }
 
   /// Get the hypothesized momentum.
   /// @return The particle momentum
-  double momentumHypothesis() const { return m_momentum.value(); }
+  [[nodiscard]] double momentumHypothesis() const { return m_momentum.value(); }
 
   /// Extracts the signed charge from the `q over p` track parameter using the
   /// charge hypothesis.
   ///
   /// @param qOverP the `q over p` track parameter.
   /// @return The extracted signed charge
-  constexpr float extractCharge(double qOverP) const noexcept {
+  [[nodiscard]] constexpr float extractCharge(double qOverP) const noexcept {
     return m_charge.extractCharge(qOverP);
   }
 
@@ -237,7 +246,7 @@ class ParticleHypothesis final {
   ///
   /// @param qOverP the `q over p` track parameter.
   /// @return The extracted absolute momentum
-  constexpr double extractMomentum(double qOverP) const noexcept {
+  [[nodiscard]] constexpr double extractMomentum(double qOverP) const noexcept {
     if (m_momentum.has_value()) {
       return *m_momentum;
     }
@@ -250,13 +259,16 @@ class ParticleHypothesis final {
   /// @param momentum the absolute momentum.
   /// @param signedQ the signed charge.
   /// @return The calculated charge over momentum ratio
-  constexpr double qOverP(double momentum, float signedQ) const noexcept {
+  [[nodiscard]] constexpr double qOverP(double momentum,
+                                        float signedQ) const noexcept {
     return m_charge.qOverP(momentum, signedQ);
   }
 
   /// Get the hypothesized charge.
   /// @return Reference to the charge type object
-  constexpr const ChargeHypothesis& charge() const noexcept { return m_charge; }
+  [[nodiscard]] constexpr const ChargeHypothesis& charge() const noexcept {
+    return m_charge;
+  }
 
   /// Output stream representation of the particle hypothesis
   /// @param os Output stream to write to
