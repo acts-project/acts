@@ -24,8 +24,6 @@
 #include <stdexcept>
 #include <unordered_map>
 
-#include <boost/algorithm/string/join.hpp>
-
 namespace Acts {
 
 void CuboidPortalShell::fill(TrackingVolume& volume) {
@@ -298,14 +296,13 @@ const Transform3& CuboidStackPortalShell::localToGlobalTransform(
 }
 
 std::string CuboidStackPortalShell::label() const {
+  // Deliberately shallow: only describe this shell, not the whole subtree.
+  // Expanding child labels recursively makes error messages for non-trivial
+  // geometries unreadable. The immediate children are reported separately where
+  // relevant (e.g. in merge-failure messages).
   std::stringstream ss;
-  ss << "CuboidStackShell(dir=" << m_direction << ", children=";
-
-  std::vector<std::string> labels;
-  std::ranges::transform(m_shells, std::back_inserter(labels),
-                         [](const auto* shell) { return shell->label(); });
-  ss << boost::algorithm::join(labels, "|");
-  ss << ")";
+  ss << "CuboidStackShell(dir=" << m_direction << ", " << m_shells.size()
+     << " children)";
   return ss.str();
 }
 

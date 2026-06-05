@@ -19,8 +19,6 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <boost/algorithm/string/join.hpp>
-
 namespace Acts {
 
 void CylinderPortalShell::fill(TrackingVolume& volume) {
@@ -426,14 +424,13 @@ bool CylinderStackPortalShell::isValid() const {
 }
 
 std::string CylinderStackPortalShell::label() const {
+  // Deliberately shallow: only describe this shell, not the whole subtree.
+  // Expanding child labels recursively makes error messages for non-trivial
+  // geometries unreadable. The immediate children are reported separately where
+  // relevant (e.g. in merge-failure messages).
   std::stringstream ss;
-  ss << "CylinderStackShell(dir=" << m_direction << ", children=";
-
-  std::vector<std::string> labels;
-  std::ranges::transform(m_shells, std::back_inserter(labels),
-                         [](const auto* shell) { return shell->label(); });
-  ss << boost::algorithm::join(labels, "|");
-  ss << ")";
+  ss << "CylinderStackShell(dir=" << m_direction << ", " << m_shells.size()
+     << " children)";
   return ss.str();
 }
 
