@@ -1218,7 +1218,7 @@ class CombinatorialKalmanFilter {
     auto rootBranch = trackContainer.makeTrack();
     return findTracks(initialParameters, tfOptions, trackContainer, rootBranch);
   }
-};  // namespace Acts
+};
 
 /// @}
 
