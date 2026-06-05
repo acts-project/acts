@@ -140,7 +140,8 @@ std::string SingleCylinderPortalShell::label() const {
 
 CylinderStackPortalShell::CylinderStackPortalShell(
     const GeometryContext& gctx, std::vector<CylinderPortalShell*> shells,
-    AxisDirection direction, const Logger& logger)
+    AxisDirection direction, const Logger& logger,
+    PortalMaterialMergePolicy materialPolicy)
     : m_direction{direction}, m_shells{std::move(shells)} {
   ACTS_VERBOSE("Making cylinder stack shell in " << m_direction
                                                  << " direction");
@@ -176,8 +177,8 @@ CylinderStackPortalShell::CylinderStackPortalShell(
                   "CylinderStackPortalShell: null portal in merge");
             }
 
-            return std::make_shared<Portal>(
-                Portal::merge(gctx, *aPortal, *bPortal, direction, logger));
+            return std::make_shared<Portal>(Portal::merge(
+                gctx, *aPortal, *bPortal, direction, logger, materialPolicy));
           });
     } catch (const PortalMergingException& e) {
       std::stringstream ss;

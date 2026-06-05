@@ -246,12 +246,17 @@ PortalShellBase& ContainerBlueprintNode::connectImpl(
                    shells, [](const auto* shell) { return shell->isValid(); }),
                "Invalid shell");
 
-  // Fail fast (and with a node-scoped message) if material has been designated
-  // on a portal face that will be *merged* during stacking. Such material
-  // cannot survive the merge and would otherwise trigger a deep, hard-to-trace
-  // failure inside the stack shell construction. Faces that are *fused* (e.g.
-  // the boundary between two stacked volumes) legitimately carry material and
-  // are not flagged here.
+  // Detect (with a node-scoped message) if material has been designated on a
+  // portal face that will be *merged* during stacking. Such material cannot
+  // survive the merge and would otherwise trigger a deep, hard-to-trace failure
+  // inside the stack shell construction. Faces that are *fused* (e.g. the
+  // boundary between two stacked volumes) legitimately carry material and are
+  // not flagged here.
+  const PortalMaterialMergePolicy materialPolicy =
+      options.keepGoingOnMaterialMergeFailure
+          ? PortalMaterialMergePolicy::eDiscardAndMark
+          : PortalMaterialMergePolicy::eThrow;
+
   std::vector<std::string> materialClashes;
   for (auto face : ShellStack::mergedFaces(direction())) {
     for (auto* shell : shells) {
@@ -265,21 +270,27 @@ PortalShellBase& ContainerBlueprintNode::connectImpl(
   }
   if (!materialClashes.empty()) {
     std::stringstream ss;
-    ss << prefix << "Cannot stack child volumes in " << direction()
-       << " direction: material is designated on portal faces that are merged "
-          "during stacking. Move the material designation to a face that is "
-          "not merged (e.g. the enclosing container's face).";
+    ss << prefix << "Material is designated on portal faces that are merged "
+       << "when stacking child volumes in " << direction() << " direction.";
     for (const auto& clash : materialClashes) {
       ss << "\n  - " << clash;
     }
-    ACTS_ERROR(ss.str());
-    throw PortalMergingException{ss.str()};
+    if (materialPolicy == PortalMaterialMergePolicy::eThrow) {
+      ss << "\nMove the material designation to a face that is not merged "
+            "(e.g. "
+            "the enclosing container's face).";
+      ACTS_ERROR(ss.str());
+      throw PortalMergingException{ss.str()};
+    }
+    ss << "\nContinuing anyway: this material will be discarded and the merged "
+          "surface tagged with a MergedMaterialMarker.";
+    ACTS_WARNING(ss.str());
   }
 
   ACTS_DEBUG(prefix << "Producing merged stack shell in " << direction()
                     << " direction from " << shells.size() << " shells");
   m_shell = std::make_unique<ShellStack>(gctx, std::move(shells), direction(),
-                                         logger);
+                                         logger, materialPolicy);
 
   assert(m_shell != nullptr && "No shell was built at the end of connect");
   assert(m_shell->isValid() && "Shell is not valid at the end of connect");

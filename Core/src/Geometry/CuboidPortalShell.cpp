@@ -116,7 +116,8 @@ std::string SingleCuboidPortalShell::label() const {
 
 CuboidStackPortalShell::CuboidStackPortalShell(
     const GeometryContext& gctx, std::vector<CuboidPortalShell*> shells,
-    AxisDirection direction, const Logger& logger)
+    AxisDirection direction, const Logger& logger,
+    PortalMaterialMergePolicy materialPolicy)
     : m_direction(direction), m_shells{std::move(shells)} {
   using enum CuboidVolumeBounds::Face;
   using enum AxisDirection;
@@ -197,7 +198,8 @@ CuboidStackPortalShell::CuboidStackPortalShell(
             AxisDirection onSurfaceAxis = onSurfaceDirs.at(face);
 
             return std::make_shared<Portal>(
-                Portal::merge(gctx, *aPortal, *bPortal, onSurfaceAxis, logger));
+                Portal::merge(gctx, *aPortal, *bPortal, onSurfaceAxis, logger,
+                              materialPolicy));
           });
     } catch (const PortalMergingException& e) {
       std::stringstream ss;

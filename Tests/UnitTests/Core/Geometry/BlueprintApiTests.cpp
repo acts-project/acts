@@ -24,9 +24,11 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
+#include "Acts/Material/MergedMaterialMarker.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
@@ -455,9 +457,9 @@ BOOST_AUTO_TEST_CASE(NodeApiTestCuboid) {
 // in z merges the OuterCylinder portals of all children, the designated face
 // cannot survive the merge.
 //
-// This is detected early (idea D) by the container node, before the stack shell
-// is built, producing a node-scoped error. The deeper shell-level reporting
-// (ideas A+B) is exercised directly in the CylinderPortalShell tests.
+// This is detected early by the container node, before the stack shell is
+// built, producing a node-scoped error. The deeper shell-level reporting is
+// exercised directly in the CylinderPortalShell tests.
 BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalThrows) {
   Transform3 base{Transform3::Identity()};
 
@@ -502,6 +504,58 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalThrows) {
     BOOST_CHECK(msg.find("material") != std::string::npos);
   }
   BOOST_CHECK(thrown);
+}
+
+BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalKeepGoing) {
+  // Same blueprint as MaterialOnMergedPortalThrows, but constructed with the
+  // keep-going option. Construction must succeed, and the merged outer cylinder
+  // surface must carry a MergedMaterialMarker.
+  Transform3 base{Transform3::Identity()};
+
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {0_mm, 20_mm};
+  auto root = std::make_unique<Blueprint>(cfg);
+
+  root->addCylinderContainer("Stack", AxisDirection::AxisZ, [&](auto& stack) {
+    using enum AxisDirection;
+    using enum AxisBoundaryType;
+    using enum CylinderVolumeBounds::Face;
+
+    stack.addMaterial("Material", [&](auto& mat) {
+      mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 20},
+                        {AxisZ, Bound, 20});
+      mat.addStaticVolume(
+          base * Translation3{Vector3{0, 0, -200_mm}},
+          std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm),
+          "VolumeA");
+    });
+
+    stack.addStaticVolume(
+        base * Translation3{Vector3{0, 0, 200_mm}},
+        std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm),
+        "VolumeB");
+  });
+
+  Experimental::BlueprintOptions options;
+  options.keepGoingOnMaterialMergeFailure = true;
+
+  std::unique_ptr<const TrackingGeometry> trackingGeometry;
+  BOOST_REQUIRE_NO_THROW(trackingGeometry =
+                             root->construct(options, gctx, *logger));
+  BOOST_REQUIRE(trackingGeometry != nullptr);
+
+  std::size_t markerCount = 0;
+  trackingGeometry->visitSurfaces(
+      [&](const Surface* surface) {
+        if (surface != nullptr && surface->surfaceMaterial() != nullptr &&
+            dynamic_cast<const MergedMaterialMarker*>(
+                surface->surfaceMaterial()) != nullptr) {
+          ++markerCount;
+        }
+      },
+      false);
+  BOOST_CHECK_GE(markerCount, 1u);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

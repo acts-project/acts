@@ -49,6 +49,17 @@ class PortalFusingException : public std::exception {
   const char* what() const noexcept override;
 };
 
+/// Policy controlling how @ref Portal::merge treats surfaces that carry
+/// material. Merged surfaces cannot retain the material of their inputs, so by
+/// default this is treated as a fatal error.
+enum class PortalMaterialMergePolicy {
+  /// Abort the merge by throwing a @ref PortalMergingException (default).
+  eThrow,
+  /// Continue the merge: discard the input material, tag the merged surface
+  /// with a @ref MergedMaterialMarker and emit a warning. This is lossy.
+  eDiscardAndMark,
+};
+
 /// A portal connects two or more neighboring volumes. Each volume has a set of
 /// portals that describes which volumes lie behind the portal in that
 /// direction. Portals use associated portal links to perform lookups of target
@@ -176,10 +187,17 @@ class Portal {
   /// @param bPortal The second portal
   /// @param direction The direction of the merge (e.g. along z)
   /// @param logger The logger to push output to
+  /// @param materialPolicy How to treat surfaces that carry material. By
+  ///        default the merge aborts with an exception; in
+  ///        @ref PortalMaterialMergePolicy::eDiscardAndMark mode the material is
+  ///        discarded, the merged surface is tagged with a
+  ///        @ref MergedMaterialMarker and a warning is emitted.
   /// @return A new merged portal that encompasses both input portals
   static Portal merge(const GeometryContext& gctx, Portal& aPortal,
                       Portal& bPortal, AxisDirection direction,
-                      const Logger& logger = getDummyLogger());
+                      const Logger& logger = getDummyLogger(),
+                      PortalMaterialMergePolicy materialPolicy =
+                          PortalMaterialMergePolicy::eThrow);
 
   /// Resolve the volume for a 3D position and a direction
   /// The @p direction is used to select the right portal link, if it is set.
