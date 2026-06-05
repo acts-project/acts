@@ -89,7 +89,8 @@ class AlignableStructure {
   }
   /// @brief Access the constraints map (const overload)
   /// @return Const reference to the constraints map
-  const std::unordered_map<Acts::AlignmentIndices, double>& constraints() const {
+  const std::unordered_map<Acts::AlignmentIndices, double>& constraints()
+      const {
     return m_constraints;
   }
 
