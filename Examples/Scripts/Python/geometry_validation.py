@@ -39,8 +39,9 @@ def main():
     # Set log level for the geometry construction and conversion
     p.add_argument(
         "--log-level",
-        type=int,
+        type=lambda x: acts.logging.Level.__members__[x.upper()],
         default=acts.logging.INFO,
+        metavar="|".join(acts.logging.Level.__members__.keys()),
         help="Log level for the geometry construction and conversion",
     )
 
@@ -50,8 +51,7 @@ def main():
 
     gContext = acts.GeometryContext.dangerouslyDefaultConstruct()
 
-    # translate integet log level to acts logging level
-    logLevel = acts.examples.getLogLevel(args.log_level)
+    logLevel = args.log_level
 
     # Material decoration for reconstruction geometry
     materialDecorator = None
