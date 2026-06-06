@@ -85,8 +85,8 @@ using LayerCustomizer = std::function<BlueprintNodePtr(
 /// @ref ContainerBlueprintNode, and returns the (possibly replaced or wrapped)
 /// @ref BlueprintNode to be added to the parent.
 template <typename ElementT>
-using ContainerCustomizer = std::function<BlueprintNodePtr(
-    const ElementT&, ContainerNodePtr)>;
+using ContainerCustomizer =
+    std::function<BlueprintNodePtr(const ElementT&, ContainerNodePtr)>;
 
 /// @brief Concept satisfied when @p CallableT is an `onLayer` callback that
 /// returns a (possibly replaced or wrapped) @ref BlueprintNode.
@@ -113,9 +113,9 @@ concept OnLayerMutatesLayer =
 template <typename ElementT, typename CallableT>
 concept OnContainerReturnsNode =
     std::invocable<CallableT&, const ElementT&, ContainerNodePtr> &&
-    std::same_as<std::invoke_result_t<CallableT&, const ElementT&,
-                                       ContainerNodePtr>,
-                 BlueprintNodePtr>;
+    std::same_as<
+        std::invoke_result_t<CallableT&, const ElementT&, ContainerNodePtr>,
+        BlueprintNodePtr>;
 
 /// @brief Concept satisfied when @p CallableT is an `onContainer` callback
 /// that mutates the created @ref ContainerBlueprintNode in place and returns
@@ -400,13 +400,11 @@ class ElementLayerAssembler {
   /// @return `*this` (rvalue).
   template <typename CustomizerT>
   [[nodiscard]] ElementLayerAssembler&& onLayer(CustomizerT customizer) &&
-    requires(
-        detail::OnLayerReturnsNode<Element,
-                                           std::decay_t<CustomizerT>> ||
-        detail::OnLayerMutatesLayer<Element, std::decay_t<CustomizerT>>)
+    requires(detail::OnLayerReturnsNode<Element, std::decay_t<CustomizerT>> ||
+             detail::OnLayerMutatesLayer<Element, std::decay_t<CustomizerT>>)
   {
-    if constexpr (detail::OnLayerReturnsNode<
-                      Element, std::decay_t<CustomizerT>>) {
+    if constexpr (detail::OnLayerReturnsNode<Element,
+                                             std::decay_t<CustomizerT>>) {
       m_onLayer = std::move(customizer);
     } else {
       m_onLayer = [customizer = std::move(customizer)](
@@ -597,13 +595,11 @@ class SensorLayerAssembler {
   /// @return `*this` (rvalue).
   template <typename CustomizerT>
   [[nodiscard]] SensorLayerAssembler&& onLayer(CustomizerT customizer) &&
-    requires(
-        detail::OnLayerReturnsNode<Element,
-                                           std::decay_t<CustomizerT>> ||
-        detail::OnLayerMutatesLayer<Element, std::decay_t<CustomizerT>>)
+    requires(detail::OnLayerReturnsNode<Element, std::decay_t<CustomizerT>> ||
+             detail::OnLayerMutatesLayer<Element, std::decay_t<CustomizerT>>)
   {
-    if constexpr (detail::OnLayerReturnsNode<
-                      Element, std::decay_t<CustomizerT>>) {
+    if constexpr (detail::OnLayerReturnsNode<Element,
+                                             std::decay_t<CustomizerT>>) {
       m_onLayer = std::move(customizer);
     } else {
       m_onLayer = [customizer = std::move(customizer)](
@@ -748,13 +744,11 @@ class SensorLayer {
   /// @return `*this` (rvalue).
   template <typename CustomizerT>
   [[nodiscard]] SensorLayer&& onLayer(CustomizerT customizer) &&
-    requires(
-        detail::OnLayerReturnsNode<Element,
-                                           std::decay_t<CustomizerT>> ||
-        detail::OnLayerMutatesLayer<Element, std::decay_t<CustomizerT>>)
+    requires(detail::OnLayerReturnsNode<Element, std::decay_t<CustomizerT>> ||
+             detail::OnLayerMutatesLayer<Element, std::decay_t<CustomizerT>>)
   {
-    if constexpr (detail::OnLayerReturnsNode<
-                      Element, std::decay_t<CustomizerT>>) {
+    if constexpr (detail::OnLayerReturnsNode<Element,
+                                             std::decay_t<CustomizerT>>) {
       m_onLayer = std::move(customizer);
     } else {
       m_onLayer = [customizer = std::move(customizer)](
@@ -876,13 +870,11 @@ class BarrelEndcapAssembler {
   /// @return `*this` (rvalue).
   template <typename CustomizerT>
   [[nodiscard]] BarrelEndcapAssembler&& onLayer(CustomizerT customizer) &&
-    requires(
-        detail::OnLayerReturnsNode<Element,
-                                           std::decay_t<CustomizerT>> ||
-        detail::OnLayerMutatesLayer<Element, std::decay_t<CustomizerT>>)
+    requires(detail::OnLayerReturnsNode<Element, std::decay_t<CustomizerT>> ||
+             detail::OnLayerMutatesLayer<Element, std::decay_t<CustomizerT>>)
   {
-    if constexpr (detail::OnLayerReturnsNode<
-                      Element, std::decay_t<CustomizerT>>) {
+    if constexpr (detail::OnLayerReturnsNode<Element,
+                                             std::decay_t<CustomizerT>>) {
       m_onLayer = std::move(customizer);
     } else {
       m_onLayer = [customizer = std::move(customizer)](
@@ -906,9 +898,9 @@ class BarrelEndcapAssembler {
   /// @return `*this` (rvalue).
   template <typename CustomizerT>
   [[nodiscard]] BarrelEndcapAssembler&& onContainer(CustomizerT customizer) &&
-    requires(detail::OnContainerReturnsNode<Element, std::decay_t<CustomizerT>> ||
-             detail::OnContainerMutatesContainer<Element,
-                                                 std::decay_t<CustomizerT>>)
+    requires(
+        detail::OnContainerReturnsNode<Element, std::decay_t<CustomizerT>> ||
+        detail::OnContainerMutatesContainer<Element, std::decay_t<CustomizerT>>)
   {
     if constexpr (detail::OnContainerReturnsNode<Element,
                                                  std::decay_t<CustomizerT>>) {

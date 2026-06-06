@@ -76,8 +76,7 @@ LayerBuildInputs<typename BackendT::Element> resolveLayerBuildInputs(
 template <detail::BlueprintBackend BackendT, typename CustomizerT>
 BlueprintNodePtr finalizeLayer(
     const std::optional<typename BackendT::Element>& layerElement,
-    LayerNodePtr layer,
-    const std::optional<Acts::ExtentEnvelope>& envelope,
+    LayerNodePtr layer, const std::optional<Acts::ExtentEnvelope>& envelope,
     const CustomizerT& onLayer) {
   if (envelope.has_value()) {
     layer->setEnvelope(envelope.value());
