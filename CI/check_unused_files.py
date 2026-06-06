@@ -131,6 +131,7 @@ SUFFIX_OTHER = (
     ".yml",
     ".xml",
     ".sh",
+    ".parquet",
 )
 
 
@@ -148,6 +149,7 @@ def filter_paths(names, root, exclude_paths=(), exclude_files=()):
         )
 
     return [name for name in names if keep(name)]
+
 
 
 def file_can_be_removed(searchstring, scope):
