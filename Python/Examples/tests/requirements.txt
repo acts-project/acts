@@ -67,6 +67,8 @@ pillow==12.2.0
     # via matplotlib
 pluggy==1.6.0
     # via pytest
+pyarrow==24.0.0
+    # via -r Python/Examples/tests/requirements.in
 pygments==2.20.0
     # via pytest
 pyhepmc==2.16.1
