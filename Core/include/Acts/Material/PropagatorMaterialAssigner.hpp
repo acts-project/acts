@@ -98,7 +98,7 @@ struct InteractionVolumeCollector {
 ///
 /// @note eventual navigation problems would affect he material mapping
 template <typename propagator_t>
-class PropagatorMaterialAssigner final : public IAssignmentFinder {
+class PropagatorMaterialAssigner /*final*/ : public IAssignmentFinder {
  public:
   /// @brief  Construct with propagator
   /// @param propagator
