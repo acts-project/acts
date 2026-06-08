@@ -12,6 +12,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/HashedString.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 
 namespace Acts {
 
