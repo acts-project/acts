@@ -8,12 +8,14 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <array>
 #include <cstddef>
+#include <set>
 #include <tuple>
 #include <utility>
 #include <vector>

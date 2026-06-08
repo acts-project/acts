@@ -14,7 +14,7 @@
 #include "Acts/Utilities/Interpolation.hpp"
 #include "Acts/Utilities/MultiAxis.hpp"
 #include "Acts/Utilities/TypeTag.hpp"
-#include "Acts/Utilities/detail/grid_helper.hpp"
+#include "Acts/Utilities/detail/MultiAxisHelper.hpp"
 #include "Acts/Utilities/detail/interpolation_impl.hpp"
 
 #include <algorithm>
@@ -235,7 +235,7 @@ class Grid final : public IGrid {
   ///      dimensions where d is dimensionality of the grid. It must lie
   ///      within the grid range (i.e. not within a under-/overflow bin).
   template <class Point>
-  detail::GlobalNeighborHoodIndices<DIM> closestPointsIndices(
+  detail::FlatNeighborHoodIndices<DIM> closestPointsIndices(
       const Point& position) const {
     return rawClosestPointsIndices(localBinsFromPosition(position));
   }
@@ -321,8 +321,8 @@ class Grid final : public IGrid {
   /// @note This could be a under-/overflow bin along one or more axes.
   template <class Point>
   index_t localBinsFromPosition(const Point& point) const {
-    return detail::grid_helper::getLocalBinIndices(point,
-                                                   m_axes.getAxesTuple());
+    return detail::MultiAxisHelper::getMultiIndexFromPoint(
+        point, m_axes.getAxesTuple());
   }
 
   /// @brief determine local bin index for each axis from global bin index
@@ -353,12 +353,12 @@ class Grid final : public IGrid {
   template <class Point>
   index_t localBinsFromLowerLeftEdge(const Point& point) const {
     Point shiftedPoint;
-    point_t width = detail::grid_helper::getWidth(m_axes.getAxesTuple());
+    point_t width = detail::MultiAxisHelper::getWidth(m_axes.getAxesTuple());
     for (std::size_t i = 0; i < DIM; i++) {
       shiftedPoint[i] = point[i] + width[i] / 2;
     }
-    return detail::grid_helper::getLocalBinIndices(shiftedPoint,
-                                                   m_axes.getAxesTuple());
+    return detail::MultiAxisHelper::getMultiIndexFromPoint(
+        shiftedPoint, m_axes.getAxesTuple());
   }
 
   /// @brief retrieve lower-left bin edge from set of local bin indices
@@ -397,7 +397,7 @@ class Grid final : public IGrid {
   ///
   /// @return array giving the bin width alonf all axes
   point_t binWidth() const {
-    return detail::grid_helper::getWidth(m_axes.getAxesTuple());
+    return detail::MultiAxisHelper::getWidth(m_axes.getAxesTuple());
   }
 
   /// @brief get number of bins along each specific axis
@@ -429,7 +429,7 @@ class Grid final : public IGrid {
   ///
   void setExteriorBins(const value_type& value) {
     for (std::size_t index :
-         detail::grid_helper::exteriorBinIndices(m_axes.getAxesTuple())) {
+         detail::MultiAxisHelper::exteriorBinIndices(m_axes.getAxesTuple())) {
       at(index) = value;
     }
   }
@@ -502,7 +502,7 @@ class Grid final : public IGrid {
   ///       along any axis.
   template <class Point>
   bool isInside(const Point& position) const {
-    return detail::grid_helper::isInside(position, m_axes.getAxesTuple());
+    return detail::MultiAxisHelper::isInside(position, m_axes.getAxesTuple());
   }
 
   /// @brief get global bin indices for neighborhood
@@ -520,9 +520,10 @@ class Grid final : public IGrid {
   ///       Ignoring the truncation of the neighborhood size reaching beyond
   ///       over-/underflow bins, the neighborhood is of size \f$2 \times
   ///       \text{size}+1\f$ along each dimension.
-  detail::GlobalNeighborHoodIndices<DIM> neighborHoodIndices(
+  detail::FlatNeighborHoodIndices<DIM> neighborHoodIndices(
       const index_t& localBins, std::size_t size = 1u) const {
-    return m_axes.getNeighborHoodIndices(localBins, size);
+    return detail::MultiAxisHelper::neighborHoodIndices(localBins, size,
+                                                        m_axes.getAxesTuple());
   }
 
   /// @brief get global bin   indices for neighborhood
@@ -541,10 +542,11 @@ class Grid final : public IGrid {
   ///       Ignoring the truncation of the neighborhood size reaching beyond
   ///       over-/underflow bins, the neighborhood is of size \f$2 \times
   ///       \text{size}+1\f$ along each dimension.
-  detail::GlobalNeighborHoodIndices<DIM> neighborHoodIndices(
+  detail::FlatNeighborHoodIndices<DIM> neighborHoodIndices(
       const index_t& localBins,
       std::array<std::pair<int, int>, DIM>& sizePerAxis) const {
-    return m_axes.getNeighborHoodIndices(localBins, sizePerAxis);
+    return detail::MultiAxisHelper::neighborHoodIndices(localBins, sizePerAxis,
+                                                        m_axes.getAxesTuple());
   }
 
   /// @brief total number of bins
@@ -645,7 +647,7 @@ class Grid final : public IGrid {
   // Part of closestPointsIndices that goes after local bins resolution.
   // Used as an interpolation performance optimization, but not exposed as it
   // doesn't make that much sense from an API design standpoint.
-  detail::GlobalNeighborHoodIndices<DIM> rawClosestPointsIndices(
+  detail::FlatNeighborHoodIndices<DIM> rawClosestPointsIndices(
       const index_t& localBins) const {
     return m_axes.getClosestPointsIndices(localBins);
   }

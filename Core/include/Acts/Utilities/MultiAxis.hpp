@@ -46,31 +46,31 @@ class MultiAxis final : public IMultiAxisND<sizeof...(Axes)> {
   const AxesTuple& getAxesTuple() const { return m_axes; }
 
   MultiIndex getNBins() const override {
-    return detail::grid_helper::getNBins(m_axes);
+    return detail::MultiAxisHelper::getNBins(m_axes);
   }
 
   Point getMinPoint() const override {
-    return detail::grid_helper::getMin(m_axes);
+    return detail::MultiAxisHelper::getMin(m_axes);
   }
 
   Point getMaxPoint() const override {
-    return detail::grid_helper::getMax(m_axes);
+    return detail::MultiAxisHelper::getMax(m_axes);
   }
 
   bool isInside(const Point& point) const override {
-    return detail::grid_helper::isInside(point, m_axes);
+    return detail::MultiAxisHelper::isInside(point, m_axes);
   }
 
   Point getLowerLeftBinCorner(const MultiIndex& multiIndex) const override {
-    return detail::grid_helper::getLowerLeftBinEdge(multiIndex, m_axes);
+    return detail::MultiAxisHelper::getLowerLeftBinCorner(multiIndex, m_axes);
   }
 
   Point getUpperRightBinCorner(const MultiIndex& multiIndex) const override {
-    return detail::grid_helper::getUpperRightBinEdge(multiIndex, m_axes);
+    return detail::MultiAxisHelper::getUpperRightBinCorner(multiIndex, m_axes);
   }
 
   Point getBinCenter(const MultiIndex& multiIndex) const override {
-    return detail::grid_helper::getBinCenter(multiIndex, m_axes);
+    return detail::MultiAxisHelper::getBinCenter(multiIndex, m_axes);
   }
 
   FlatIndex getFlatIndexFromPoint(const Point& point) const override {
@@ -79,32 +79,35 @@ class MultiAxis final : public IMultiAxisND<sizeof...(Axes)> {
 
   FlatIndex getFlatIndexFromMultiIndex(
       const MultiIndex& multiIndex) const override {
-    return detail::grid_helper::getGlobalBin(multiIndex, m_axes);
+    return detail::MultiAxisHelper::getFlatIndexFromMultiIndex(multiIndex,
+                                                               m_axes);
   }
 
   MultiIndex getMultiIndexFromPoint(const Point& point) const override {
-    return detail::grid_helper::getLocalBinIndices(point, m_axes);
+    return detail::MultiAxisHelper::getMultiIndexFromPoint(point, m_axes);
   }
 
   MultiIndex getMultiIndexFromFlatIndex(FlatIndex flatIndex) const override {
-    return detail::grid_helper::getLocalBinIndices(flatIndex, m_axes);
+    return detail::MultiAxisHelper::getMultiIndexFromFlatIndex(flatIndex,
+                                                               m_axes);
   }
 
-  detail::GlobalNeighborHoodIndices<DIM> getNeighborHoodIndices(
+  detail::FlatNeighborHoodIndices<DIM> getNeighborHoodIndices(
       const MultiIndex& multiIndex, std::size_t size = 1u) const override {
-    return detail::grid_helper::neighborHoodIndices(multiIndex, size, m_axes);
+    return detail::MultiAxisHelper::neighborHoodIndices(multiIndex, size,
+                                                        m_axes);
   }
 
-  detail::GlobalNeighborHoodIndices<DIM> getNeighborHoodIndices(
+  detail::FlatNeighborHoodIndices<DIM> getNeighborHoodIndices(
       const MultiIndex& multiIndex,
       std::array<std::pair<int, int>, DIM>& sizePerAxis) const override {
-    return detail::grid_helper::neighborHoodIndices(multiIndex, sizePerAxis,
-                                                    m_axes);
+    return detail::MultiAxisHelper::neighborHoodIndices(multiIndex, sizePerAxis,
+                                                        m_axes);
   }
 
-  detail::GlobalNeighborHoodIndices<DIM> getClosestPointsIndices(
+  detail::FlatNeighborHoodIndices<DIM> getClosestPointsIndices(
       const MultiIndex& multiIndex) const override {
-    return detail::grid_helper::closestPointsIndices(multiIndex, m_axes);
+    return detail::MultiAxisHelper::closestPointsIndices(multiIndex, m_axes);
   }
 
   using Base::getClosestPointsIndices;

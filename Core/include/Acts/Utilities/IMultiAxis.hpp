@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/detail/grid_helper.hpp"
+#include "Acts/Utilities/detail/MultiAxisHelper.hpp"
 
 #include <iosfwd>
 
@@ -318,29 +318,31 @@ class IMultiAxisND : public IMultiAxis {
 
   virtual FlatIndex getFlatIndexFromMultiIndex(
       const MultiIndex& multiIndex) const {
-    return detail::grid_helper::getGlobalBin(multiIndex, getAnyAxesTuple());
+    return detail::MultiAxisHelper::getFlatIndexFromMultiIndex(
+        multiIndex, getAnyAxesTuple());
   }
 
   virtual MultiIndex getMultiIndexFromPoint(const Point& point) const {
-    return detail::grid_helper::getLocalBinIndices(point, getAnyAxesTuple());
+    return detail::MultiAxisHelper::getMultiIndexFromPoint(point,
+                                                           getAnyAxesTuple());
   }
 
   virtual MultiIndex getMultiIndexFromFlatIndex(FlatIndex flatIndex) const {
-    return detail::grid_helper::getLocalBinIndices(flatIndex,
-                                                   getAnyAxesTuple());
+    return detail::MultiAxisHelper::getMultiIndexFromFlatIndex(
+        flatIndex, getAnyAxesTuple());
   }
 
-  virtual detail::GlobalNeighborHoodIndices<DIM> getNeighborHoodIndices(
+  virtual detail::FlatNeighborHoodIndices<DIM> getNeighborHoodIndices(
       const MultiIndex& multiIndex, std::size_t size = 1u) const = 0;
 
-  virtual detail::GlobalNeighborHoodIndices<DIM> getNeighborHoodIndices(
+  virtual detail::FlatNeighborHoodIndices<DIM> getNeighborHoodIndices(
       const MultiIndex& multiIndex,
       std::array<std::pair<int, int>, DIM>& sizePerAxis) const = 0;
 
-  virtual detail::GlobalNeighborHoodIndices<DIM> getClosestPointsIndices(
+  virtual detail::FlatNeighborHoodIndices<DIM> getClosestPointsIndices(
       const MultiIndex& multiIndex) const = 0;
 
-  virtual detail::GlobalNeighborHoodIndices<DIM> getClosestPointsIndices(
+  virtual detail::FlatNeighborHoodIndices<DIM> getClosestPointsIndices(
       const Point& position) const {
     return getClosestPointsIndices(getMultiIndexFromPoint(position));
   }
