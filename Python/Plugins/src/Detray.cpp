@@ -66,11 +66,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
           for (const auto& f : files) {
             cfg.add_file(f);
           }
-          auto [det, names] =
-              detray::io::read_detector<DetrayDetectorODD>(mr, cfg);
-          return std::make_pair(
-              std::make_shared<DetrayDetectorODD>(std::move(det)),
-              std::move(names));
+          return detray::io::read_detector<DetrayDetectorODD>(mr, cfg);
         },
         "mr"_a, "files"_a);
 

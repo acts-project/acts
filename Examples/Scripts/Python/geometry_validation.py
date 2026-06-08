@@ -120,7 +120,7 @@ def main():
         __pmr = acts.vecmem.HostMemoryResource()
 
         if args.input != "":
-            files = sorted(glob.glob(args.input.rstrip("/") + "/*.json"))
+            files = glob.glob(args.input.rstrip("/") + "/*.json")
             print(">>> Reading detray geometry from", args.input, "->", files)
             detrayGeometry, detrayNames = acts.detray.readODD(__pmr, files)
         else:

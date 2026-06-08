@@ -38,6 +38,8 @@ namespace ActsPlugins::DetrayGeometryConverter {
 /// @param gctx the geometry context
 /// @param trackingGeometry the ACTS tracking geometry to convert
 /// @param beampipeVolumeName the beampipe volume name
+/// @param detectorName the name to set for the detray detector (optional,
+///     if not set, it will be taken from the payloads or defaulted to empty)
 /// @param logLevel the logging level to use for the conversion process
 ///
 /// This method performs the following steps:
@@ -107,7 +109,7 @@ toDetray(vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
 
   if (!detectorName.empty()) {
     detectorBuilder.set_name(detectorName);
-  } else if (payloads.names.count(0) > 0) {
+  } else if (payloads.names.contains(0)) {
     detectorBuilder.set_name(payloads.names.at(0));
   }
 
