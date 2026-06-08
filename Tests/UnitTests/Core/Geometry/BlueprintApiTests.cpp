@@ -494,14 +494,17 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalThrows) {
   // The early-detection error should name the offending face, the shell
   // involved, and explain that material was placed on a merged face.
   bool thrown = false;
-  try {
-    root->construct({}, gctx, *logger);
-  } catch (const PortalMergingException& e) {
-    thrown = true;
-    std::string msg = e.what();
-    BOOST_CHECK(msg.find("OuterCylinder") != std::string::npos);
-    BOOST_CHECK(msg.find("VolumeA") != std::string::npos);
-    BOOST_CHECK(msg.find("material") != std::string::npos);
+  {
+    Logging::ScopedFailureThreshold threshold{Logging::Level::FATAL};
+    try {
+      root->construct({}, gctx, *logger);
+    } catch (const PortalMergingException& e) {
+      thrown = true;
+      std::string msg = e.what();
+      BOOST_CHECK(msg.find("OuterCylinder") != std::string::npos);
+      BOOST_CHECK(msg.find("VolumeA") != std::string::npos);
+      BOOST_CHECK(msg.find("material") != std::string::npos);
+    }
   }
   BOOST_CHECK(thrown);
 }
@@ -541,8 +544,11 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalKeepGoing) {
   options.keepGoingOnMaterialMergeFailure = true;
 
   std::unique_ptr<const TrackingGeometry> trackingGeometry;
-  BOOST_REQUIRE_NO_THROW(trackingGeometry =
-                             root->construct(options, gctx, *logger));
+  {
+    Logging::ScopedFailureThreshold threshold{Logging::Level::FATAL};
+    BOOST_REQUIRE_NO_THROW(trackingGeometry =
+                               root->construct(options, gctx, *logger));
+  }
   BOOST_REQUIRE(trackingGeometry != nullptr);
 
   std::size_t markerCount = 0;
