@@ -597,9 +597,19 @@ if(ACTS_BUILD_PLUGIN_GEANT4)
     find_package(Geant4 ${_acts_geant4_version} REQUIRED CONFIG COMPONENTS gdml)
 endif()
 if(ACTS_BUILD_PLUGIN_ARROW)
-    find_package(Arrow ${_acts_arrow_version} REQUIRED CONFIG)
-    find_package(Parquet ${_acts_arrow_version} REQUIRED CONFIG)
-    find_package(ArrowDataset ${_acts_arrow_version} REQUIRED CONFIG)
+    find_package(Arrow REQUIRED CONFIG)
+    find_package(Parquet REQUIRED CONFIG)
+    find_package(ArrowDataset REQUIRED CONFIG)
+    # Arrow's package config requires an exact version match, so enforce our
+    # minimum supported major version manually instead.
+    string(REPLACE "." ";" _acts_arrow_version_list ${_acts_arrow_version})
+    list(GET _acts_arrow_version_list 0 _acts_arrow_version_major)
+    if(Arrow_VERSION_MAJOR LESS _acts_arrow_version_major)
+        message(
+            FATAL_ERROR
+            "Found Arrow ${Arrow_VERSION}, but at least ${_acts_arrow_version} is required"
+        )
+    endif()
 endif()
 
 if(ACTS_SETUP_VECMEM)
