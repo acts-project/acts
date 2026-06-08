@@ -14,6 +14,7 @@
 #include <cassert>
 #include <cstddef>
 #include <type_traits>
+#include <typeinfo>
 #include <utility>
 
 // #define _ACTS_ANY_ENABLE_VERBOSE
@@ -58,46 +59,36 @@ namespace Acts {
 namespace detail {
 #if defined(_ACTS_ANY_ENABLE_TRACK_ALLOCATIONS)
 static std::mutex _s_any_mutex;
-static std::set<std::pair<std::type_index, void*>> _s_any_allocations;
+struct _s_any_allocations {
+  static std::set<std::pair<const void*, void*>>& set() {
+    static std::set<std::pair<const void*, void*>> any_allocations;
+    return any_allocations;
+  }
+};
 
 #define _ACTS_ANY_TRACK_ALLOCATION(T, heap)                                  \
   do {                                                                       \
     std::lock_guard guard{detail::_s_any_mutex};                             \
-    detail::_s_any_allocations.emplace(std::type_index(typeid(T)), heap);    \
+    detail::_s_any_allocations::set().emplace(makeHandler<T>(), heap);       \
     _ACTS_ANY_DEBUG("Allocate type: " << typeid(T).name() << " at " << heap) \
   } while (0)
 
 #define _ACTS_ANY_TRACK_DEALLOCATION(T, heap)                           \
   do {                                                                  \
     std::lock_guard guard{detail::_s_any_mutex};                        \
-    auto it = detail::_s_any_allocations.find(                          \
-        std::pair{std::type_index(typeid(T)), heap});                   \
-    if (it == detail::_s_any_allocations.end()) {                       \
+    auto it = detail::_s_any_allocations::set().find(                   \
+        std::pair{makeHandler<T>(), heap});                             \
+    if (it == detail::_s_any_allocations::set().end()) {                \
       throw std::runtime_error{                                         \
           "Trying to deallocate heap address that we didn't allocate"}; \
     }                                                                   \
-    detail::_s_any_allocations.erase(it);                               \
+    detail::_s_any_allocations::set().erase(it);                        \
   } while (0)
 
 // Do not make member functions noexcept in the debug case
 static constexpr bool kAnyNoexcept = false;
 
-struct _AnyAllocationReporter {
-  static void checkAllocations() {
-    std::lock_guard guard{detail::_s_any_mutex};
-
-    if (!detail::_s_any_allocations.empty()) {
-      std::cout << "Not all allocations have been released" << std::endl;
-      for (const auto& [idx, addr] : detail::_s_any_allocations) {
-        std::cout << "- " << idx.name() << ": " << addr << std::endl;
-      }
-      throw std::runtime_error{"AnyCheckAllocations failed"};
-    }
-  }
-
-  ~_AnyAllocationReporter() noexcept { checkAllocations(); }
-};
-static _AnyAllocationReporter s_reporter;
+struct _AnyAllocationReporter;
 #else
 #define _ACTS_ANY_TRACK_ALLOCATION(T, heap) \
   do {                                      \
@@ -428,6 +419,12 @@ class AnyBase : public AnyBaseAll {
   /// @return True if a value is stored, false if empty
   explicit operator bool() const { return m_handler != nullptr; }
 
+  /// Type info of the stored value. Returns nullptr if empty.
+  /// @return Pointer to the type info of the stored value, or nullptr if empty
+  const std::type_info* typeInfo() const {
+    return m_handler != nullptr ? m_handler->typeInfo : nullptr;
+  }
+
  private:
   void* dataPtr() {
     if (m_handler->heapAllocated) {
@@ -447,6 +444,9 @@ class AnyBase : public AnyBaseAll {
     }
   }
 
+#if defined(_ACTS_ANY_ENABLE_TRACK_ALLOCATIONS)
+  friend struct detail::_AnyAllocationReporter;
+#endif
   struct Handler {
     void (*destroy)(void* ptr) = nullptr;
     void (*moveConstruct)(void* from, void* to) = nullptr;
@@ -454,6 +454,7 @@ class AnyBase : public AnyBaseAll {
     void* (*copyConstruct)(const void* from, void* to) = nullptr;
     void (*copy)(const void* from, void* to) = nullptr;
     bool heapAllocated{false};
+    const std::type_info* typeInfo{nullptr};
   };
 
   template <typename T>
@@ -486,6 +487,8 @@ class AnyBase : public AnyBaseAll {
                      heapAllocated<T>())) {
         h.copy = &copyImpl<T>;
       }
+
+      h.typeInfo = &typeid(T);
 
       _ACTS_ANY_DEBUG("Type: " << typeid(T).name());
       _ACTS_ANY_DEBUG(" -> destroy: " << h.destroy);
@@ -724,6 +727,27 @@ using Any = AnyBase<sizeof(void*), true>;
 /// @details Same as Any but copy constructor and copy assignment are deleted.
 ///          Use when storing types that are not copyable.
 using AnyMoveOnly = AnyBase<sizeof(void*), false>;
+
+#if defined(_ACTS_ANY_ENABLE_TRACK_ALLOCATIONS)
+namespace detail {
+struct _AnyAllocationReporter {
+  static void checkAllocations() {
+    std::lock_guard guard{detail::_s_any_mutex};
+
+    if (!detail::_s_any_allocations::set().empty()) {
+      std::cout << "Not all allocations have been released" << std::endl;
+      for (const auto& [handler, addr] : detail::_s_any_allocations::set()) {
+        std::cout << "- " << static_cast<const Any::Handler*>(handler)->typeInfo->name() << ": " << addr << std::endl;
+      }
+      throw std::runtime_error{"AnyCheckAllocations failed"};
+    }
+  }
+
+  ~_AnyAllocationReporter() noexcept { checkAllocations(); }
+};
+static _AnyAllocationReporter s_reporter;
+}
+#endif
 
 /// @}
 
