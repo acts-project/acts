@@ -95,10 +95,6 @@ ProtoSurfaceMaterial::ProtoSurfaceMaterial(
 
 #pragma GCC diagnostic pop
 
-// ---------------------------------------------------------------------------
-// Deprecated binning() accessor
-// ---------------------------------------------------------------------------
-
 BinUtility ProtoSurfaceMaterial::binning() const {
   std::vector<DirectedProtoAxis> sigAxes;
   for (const auto& ax : m_axes) {
