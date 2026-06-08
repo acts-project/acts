@@ -22,7 +22,8 @@ class IAxis {
  public:
   IAxis() = default;
 
-  explicit IAxis(AxisDirection direction) : m_direction(direction) {}
+  explicit IAxis(std::optional<AxisDirection> direction)
+      : m_direction(direction) {}
 
   virtual ~IAxis() = default;
 
@@ -44,7 +45,7 @@ class IAxis {
 
   /// Returns the direction of the axis
   /// @return @c AxisDirection of this axis
-  AxisDirection getDirection() const { return m_direction; }
+  std::optional<AxisDirection> getDirection() const { return m_direction; }
 
   /// Returns a vector of bin edges
   /// @return Vector which contains the bin edges
@@ -80,7 +81,7 @@ class IAxis {
   /// @return a unique pointer to the axis
   static std::unique_ptr<IAxis> createEquidistant(
       AxisBoundaryType aBoundaryType, double min, double max, std::size_t nbins,
-      AxisDirection direction = AxisDirection::AxisUnknown);
+      std::optional<AxisDirection> direction = std::nullopt);
 
   /// Centralized axis factory for variable binning
   /// @param aBoundaryType the axis boundary type
@@ -91,7 +92,7 @@ class IAxis {
   /// @return a unique pointer to the axis
   static std::unique_ptr<IAxis> createVariable(
       AxisBoundaryType aBoundaryType, const std::vector<double>& edges,
-      AxisDirection direction = AxisDirection::AxisUnknown);
+      std::optional<AxisDirection> direction = std::nullopt);
 
   /// Helper function that dispatches from the @c IAxis base class
   /// to a concrete axis type. It will call the provided @p callable
@@ -156,7 +157,7 @@ class IAxis {
   virtual void toStream(std::ostream& os) const = 0;
 
  private:
-  AxisDirection m_direction{AxisDirection::AxisUnknown};
+  std::optional<AxisDirection> m_direction;
 };
 
 template <typename T>

@@ -15,10 +15,9 @@
 
 namespace Acts {
 
-std::unique_ptr<IAxis> IAxis::createEquidistant(AxisBoundaryType aBoundaryType,
-                                                double min, double max,
-                                                std::size_t nbins,
-                                                AxisDirection direction) {
+std::unique_ptr<IAxis> IAxis::createEquidistant(
+    AxisBoundaryType aBoundaryType, double min, double max, std::size_t nbins,
+    std::optional<AxisDirection> direction) {
   using enum AxisType;
   using enum AxisBoundaryType;
 
@@ -49,9 +48,9 @@ std::unique_ptr<IAxis> IAxis::createEquidistant(AxisBoundaryType aBoundaryType,
   }
 }
 
-std::unique_ptr<IAxis> IAxis::createVariable(AxisBoundaryType aBoundaryType,
-                                             const std::vector<double>& edges,
-                                             AxisDirection direction) {
+std::unique_ptr<IAxis> IAxis::createVariable(
+    AxisBoundaryType aBoundaryType, const std::vector<double>& edges,
+    std::optional<AxisDirection> direction) {
   using enum AxisType;
   using enum AxisBoundaryType;
 

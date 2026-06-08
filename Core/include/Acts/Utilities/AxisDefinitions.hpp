@@ -16,8 +16,6 @@ namespace Acts {
 
 /// @enum AxisDirection to specify a local axis direction
 enum class AxisDirection : int {
-  /// Unknown axis direction - unspecified or none of the below
-  AxisUnknown = -1,
   /// AxisX, AxisY, AxisZ are the cartesian directions in the local frame
   AxisX = 0,
   AxisY = 1,
