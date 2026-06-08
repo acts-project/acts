@@ -22,6 +22,8 @@ class IAxis {
  public:
   IAxis() = default;
 
+  /// Constructs a new axis with the given direction
+  /// @param direction the optional direction of the axis
   explicit IAxis(std::optional<AxisDirection> direction)
       : m_direction(direction) {}
 
@@ -75,8 +77,7 @@ class IAxis {
   /// @param min the minimum edge of the axis
   /// @param max the maximum edge of the axis
   /// @param nbins the number of bins
-  /// @param direction the direction of the axis
-  ///
+  /// @param direction the optional direction of the axis
   /// @throws std::invalid_argument if min >= max or nbins == 0
   /// @return a unique pointer to the axis
   static std::unique_ptr<IAxis> createEquidistant(
@@ -86,8 +87,7 @@ class IAxis {
   /// Centralized axis factory for variable binning
   /// @param aBoundaryType the axis boundary type
   /// @param edges are the bin edges
-  /// @param direction the direction of the axis
-  ///
+  /// @param direction the optional direction of the axis
   /// @throws std::invalid_argument if edges is empty or not strictly increasing
   /// @return a unique pointer to the axis
   static std::unique_ptr<IAxis> createVariable(
