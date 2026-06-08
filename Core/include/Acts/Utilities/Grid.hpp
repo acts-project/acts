@@ -14,7 +14,6 @@
 #include "Acts/Utilities/Interpolation.hpp"
 #include "Acts/Utilities/TypeTag.hpp"
 #include "Acts/Utilities/detail/MultiAxisHelper.hpp"
-#include "Acts/Utilities/detail/interpolation_impl.hpp"
 
 #include <algorithm>
 #include <any>
@@ -433,10 +432,7 @@ class Grid final : public IGrid {
   /// @note Bin values are interpreted as being the field values at the
   /// lower-left corner of the corresponding hyper-box.
   template <class Point>
-  T interpolate(const Point& point) const
-    requires(Concepts::interpolatable<T, Point, std::array<double, DIM>,
-                                      std::array<double, DIM>>)
-  {
+  T interpolate(const Point& point) const {
     // there are 2^DIM corner points used during the interpolation
     constexpr std::size_t nCorners = 1 << DIM;
 
