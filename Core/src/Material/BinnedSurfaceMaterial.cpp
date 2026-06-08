@@ -78,11 +78,6 @@ BinnedSurfaceMaterial::BinnedSurfaceMaterial(
     }
   }
 }
-
-// ---------------------------------------------------------------------------
-// Deprecated BinUtility constructors
-// ---------------------------------------------------------------------------
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
