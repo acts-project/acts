@@ -737,7 +737,9 @@ struct _AnyAllocationReporter {
     if (!detail::_s_any_allocations::set().empty()) {
       std::cout << "Not all allocations have been released" << std::endl;
       for (const auto& [handler, addr] : detail::_s_any_allocations::set()) {
-        std::cout << "- " << static_cast<const Any::Handler*>(handler)->typeInfo->name() << ": " << addr << std::endl;
+        std::cout << "- "
+                  << static_cast<const Any::Handler*>(handler)->typeInfo->name()
+                  << ": " << addr << std::endl;
       }
       throw std::runtime_error{"AnyCheckAllocations failed"};
     }
@@ -746,7 +748,7 @@ struct _AnyAllocationReporter {
   ~_AnyAllocationReporter() noexcept { checkAllocations(); }
 };
 static _AnyAllocationReporter s_reporter;
-}
+}  // namespace detail
 #endif
 
 /// @}
