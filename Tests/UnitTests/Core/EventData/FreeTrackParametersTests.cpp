@@ -32,7 +32,9 @@ const FreeMatrix cov = FreeMatrix::Identity();
 
 void checkParameters(const FreeTrackParameters& params, const Vector4& pos4,
                      const Vector3& unitDir, double p, double q) {
-  const auto qOverP = (q != 0) ? (q / p) : (1 / p);
+  const auto particleHypothesis = ParticleHypothesis::pionLike(std::abs(q));
+
+  const auto qOverP = particleHypothesis.qOverP(p, q);
   const auto pos = pos4.segment<3>(ePos0);
 
   // native values
@@ -48,15 +50,17 @@ void checkParameters(const FreeTrackParameters& params, const Vector4& pos4,
                        eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eFreeQOverP>(), qOverP, eps, eps);
   // convenience accessors
+  BOOST_CHECK_EQUAL(params.charge(), q);
   CHECK_CLOSE_OR_SMALL(params.fourPosition(), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), pos4[eFreeTime], eps, eps);
   CHECK_CLOSE_OR_SMALL(params.direction(), unitDir, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.transverseMomentum(),
-                       p * unitDir.template head<2>().norm(), eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
-  BOOST_CHECK_EQUAL(params.charge(), q);
+  if (q != 0) {
+    CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
+    CHECK_CLOSE_OR_SMALL(params.transverseMomentum(),
+                         p * unitDir.template head<2>().norm(), eps, eps);
+    CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
+  }
   // self-consistency
   CHECK_CLOSE_OR_SMALL(params.position(),
                        params.parameters().template segment<3>(eFreePos0), eps,
@@ -86,13 +90,13 @@ BOOST_DATA_TEST_CASE(NeutralConstructFromAngles,
   Vector4 pos4(x, y, z, time);
   Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
-  FreeTrackParameters params(pos4, phi, theta, 1 / p, std::nullopt,
+  FreeTrackParameters params(pos4, phi, theta, 0, std::nullopt,
                              ParticleHypothesis::pion0());
   checkParameters(params, pos4, dir, p, 0_e);
   BOOST_CHECK(!params.covariance());
 
   // reassign w/ covariance
-  params = FreeTrackParameters(pos4, phi, theta, 1 / p, cov,
+  params = FreeTrackParameters(pos4, phi, theta, 0, cov,
                                ParticleHypothesis::pion0());
   BOOST_CHECK(params.covariance());
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
