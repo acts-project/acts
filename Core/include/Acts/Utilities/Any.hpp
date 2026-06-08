@@ -120,23 +120,23 @@ class AnyBaseAll {};
 
 /// Small opaque type-erased type with configurable small buffer optimization
 ///
-/// @tparam sb_size Size of the internal buffer for small buffer optimization
-/// @tparam copyable If true, stored types must be copyable and AnyBase is
+/// @tparam SbSize Size of the internal buffer for small buffer optimization
+/// @tparam Copyable If true, stored types must be copyable and AnyBase is
 ///         copyable. If false, move-only types are allowed and AnyBase is
 ///         move-only (copy constructor and copy assignment are deleted).
 ///
 /// @note
-/// Type requirements when copyable is true:
+/// Type requirements when Copyable is true:
 /// - All stored types must be copy constructible and copy assignable.
-/// - Types stored locally (`sizeof(T) <= sb_size`) must also be move
+/// - Types stored locally (`sizeof(T) <= SbSize`) must also be move
 /// constructible
 ///   and move assignable because local moves use move operations when not
 ///   trivially movable (trivial moves fall back to buffer copies).
-/// - Types stored on the heap (`sizeof(T) > sb_size`) are moved by stealing the
+/// - Types stored on the heap (`sizeof(T) > SbSize`) are moved by stealing the
 ///   pointer, so no move operations are required in that case.
 ///
 /// @note
-/// Type requirements when copyable is false:
+/// Type requirements when Copyable is false:
 /// - All stored types must be move constructible.
 /// - Types stored locally must also be move assignable.
 /// - Heap-allocated types only need move constructible (pointer steal).
@@ -148,11 +148,11 @@ class AnyBaseAll {};
 ///   copies when trivial.
 /// - Heap storage: values are allocated on the heap; moves transfer ownership
 ///   of the pointer; copies allocate and copy-construct the pointee.
-template <std::size_t sb_size, bool copyable = true, typename Base = void>
+template <std::size_t SbSize, bool Copyable = true, typename Base = void>
 class AnyBase : public AnyBaseAll {
-  static_assert(sizeof(void*) <= sb_size, "Size is too small for a pointer");
+  static_assert(sizeof(void*) <= SbSize, "Size is too small for a pointer");
 
-  /// Type trait: T is storable when copyable requires copy+move, else
+  /// Type trait: T is storable when Copyable requires copy+move, else
   /// move-only. When @c Base is not @c void, the type must additionally be
   /// convertible to @c Base* (i.e. publicly and unambiguously derived).
   /// @tparam U Type to check
@@ -164,13 +164,13 @@ class AnyBase : public AnyBaseAll {
     } else if constexpr (!std::is_void_v<Base> &&
                          !std::is_convertible_v<U*, Base*>) {
       return false;
-    } else if constexpr (copyable) {
+    } else if constexpr (Copyable) {
       return std::is_copy_assignable_v<U> && std::is_copy_constructible_v<U> &&
-             (sizeof(U) > sb_size || (std::is_move_assignable_v<U> &&
+             (sizeof(U) > SbSize || (std::is_move_assignable_v<U> &&
                                       std::is_move_constructible_v<U>));
     } else {
       return std::is_move_constructible_v<U> &&
-             (sizeof(U) > sb_size || std::is_move_assignable_v<U>);
+             (sizeof(U) > SbSize || std::is_move_assignable_v<U>);
     }
   }
 
@@ -308,12 +308,12 @@ class AnyBase : public AnyBaseAll {
 
   ~AnyBase() { destroy(); }
 
-  /// Copy constructor (only when copyable is true)
+  /// Copy constructor (only when Copyable is true)
   /// @param other The AnyBase to copy from
   /// @note Not noexcept: copying a heap-allocated value allocates (may throw
   ///       std::bad_alloc) and the stored type's copy constructor may throw.
   AnyBase(const AnyBase& other)
-    requires copyable
+    requires Copyable
   {
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
@@ -327,18 +327,18 @@ class AnyBase : public AnyBaseAll {
     copyConstruct(other);
   }
 
-  /// Copy constructor deleted when copyable is false (move-only variant)
+  /// Copy constructor deleted when Copyable is false (move-only variant)
   AnyBase(const AnyBase&)
-    requires(!copyable)
+    requires(!Copyable)
   = delete;
 
-  /// Copy assignment operator (only when copyable is true)
+  /// Copy assignment operator (only when Copyable is true)
   /// @param other The AnyBase to copy from
   /// @return Reference to this object
   /// @note Not noexcept: copying a heap-allocated value allocates (may throw
   ///       std::bad_alloc) and the stored type's copy operations may throw.
   AnyBase& operator=(const AnyBase& other)
-    requires copyable
+    requires Copyable
   {
     _ACTS_ANY_VERBOSE("Copy assign (this="
                       << this << ") at: " << static_cast<void*>(m_data.data()));
@@ -378,9 +378,9 @@ class AnyBase : public AnyBaseAll {
     return *this;
   }
 
-  /// Copy assignment deleted when copyable is false (move-only variant)
+  /// Copy assignment deleted when Copyable is false (move-only variant)
   AnyBase& operator=(const AnyBase&)
-    requires(!copyable)
+    requires(!Copyable)
   = delete;
 
   /// Move constructor
@@ -609,7 +609,7 @@ class AnyBase : public AnyBaseAll {
 
   template <typename T>
   static constexpr bool heapAllocated() {
-    return sizeof(T) > sb_size;
+    return sizeof(T) > SbSize;
   }
 
   template <typename T, typename... Args>
@@ -816,7 +816,7 @@ class AnyBase : public AnyBaseAll {
 #endif
       );
 
-  alignas(kMaxAlignment) std::array<std::byte, sb_size> m_data{};
+  alignas(kMaxAlignment) std::array<std::byte, SbSize> m_data{};
   const Handler* m_handler{nullptr};
 };
 
@@ -838,11 +838,11 @@ using AnyMoveOnly = AnyBase<sizeof(void*), false>;
 ///          @ref AnyBase::operator* and @ref AnyBase::operator-> without naming
 ///          @c T. The concrete type can still be recovered with
 ///          @ref AnyBase::as / @ref AnyBase::asPtr. Copyable; values up to
-///          @c sb_size bytes are stored inline, larger ones on the heap.
+///          @c SbSize bytes are stored inline, larger ones on the heap.
 /// @tparam Base Common base class exposed by the accessors
-/// @tparam sb_size Size of the small-buffer-optimization storage
-template <typename Base, std::size_t sb_size = sizeof(void*)>
-using AnyOf = AnyBase<sb_size, true, Base>;
+/// @tparam SbSize Size of the small-buffer-optimization storage
+template <typename Base, std::size_t SbSize = sizeof(void*)>
+using AnyOf = AnyBase<SbSize, true, Base>;
 
 /// @}
 
