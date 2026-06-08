@@ -349,7 +349,7 @@ set(_acts_covfie_version 0.15.2)
 set(_acts_vecmem_version 1.24.0)
 set(_acts_annoy_version 1.17.3)
 set(_acts_fastjet_version 3.4.1)
-set(_acts_arrow_version 20.0.0)
+set(_acts_arrow_version 21.0.0)
 
 # Help with compiler flags discovery
 include(ActsFunctions)
