@@ -214,7 +214,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
 
   /// get bin width
   /// @return constant width for all bins
-  double getBinWidth(std::size_t /*bin*/ = 0) const { return m_width; }
+  double getBinWidth(std::size_t /*bin*/ = 0) const final { return m_width; }
 
   /// get lower bound of bin
   /// @param  bin index of bin
@@ -225,7 +225,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   ///
   /// @note Bin intervals have a closed lower bound, i.e. the lower boundary
   ///       belongs to the bin with the given bin index.
-  double getBinLowerBound(std::size_t bin) const {
+  double getBinLowerBound(std::size_t bin) const final {
     return getMin() + (bin - 1) * getBinWidth();
   }
 
@@ -236,7 +236,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   ///      i.e. \f$0 \le \text{bin} \le \text{nBins}\f$
   /// @note Bin intervals have an open upper bound, i.e. the upper boundary
   ///       does @b not belong to the bin with the given bin index.
-  double getBinUpperBound(std::size_t bin) const {
+  double getBinUpperBound(std::size_t bin) const final {
     return getMin() + bin * getBinWidth();
   }
 
@@ -245,7 +245,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   /// @return bin center position
   /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
-  double getBinCenter(std::size_t bin) const {
+  double getBinCenter(std::size_t bin) const final {
     return getMin() + (bin - 0.5) * getBinWidth();
   }
 
@@ -267,7 +267,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   ///         @c false
   /// @post If @c true is returned, the bin containing the given value is a
   ///       valid bin, i.e. it is neither the underflow nor the overflow bin.
-  bool isInside(double x) const { return (m_min <= x) && (x < m_max); }
+  bool isInside(double x) const final { return (m_min <= x) && (x < m_max); }
 
   /// Return a vector of bin edges
   /// @return Vector which contains the bin edges
