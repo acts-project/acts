@@ -43,7 +43,7 @@ mark_as_advanced(ACTS_NLOHMANN_JSON_SOURCE)
 # translate version string to the historical Mille release naming convention
 string(REPLACE "." "-" _acts_mille_release_string ${_acts_mille_version})
 set(ACTS_MILLE_SOURCE
-    "URL;https://gitlab.desy.de/millepede/mille/-/archive/V${_acts_mille_release_string}/mille-V${_acts_mille_release_string}.tar.gz;URL_HASH;SHA256=1953e2a341fed3a1c431c954d6e8f1c823926bc2886bdc209d859d2cb9dac6d8"
+    "URL;https://gitlab.desy.de/millepede/mille/-/archive/V${_acts_mille_release_string}/mille-V${_acts_mille_release_string}.tar.gz;URL_HASH;SHA256=00efaa82631482f3ead7bec548a09a80938c08950f84cdbc2e7bb47de9186228"
     CACHE STRING
     "Source to take Mille from"
 )
@@ -52,7 +52,7 @@ mark_as_advanced(ACTS_MILLE_SOURCE)
 # translate version string to the historical GBL release naming convention
 string(REPLACE "." "-" _acts_gbl_release_string ${_acts_gbl_version})
 set(ACTS_GBL_SOURCE
-    "URL;https://gitlab.desy.de/millepede/general-broken-lines/-/archive/V${_acts_gbl_release_string}/general-broken-lines-V${_acts_gbl_release_string}.tar.gz;URL_HASH;SHA256=e40401a77a828c81a9217d8df3201e7712ac86b4fd5058d526ae1e1f6664304f"
+    "URL;https://gitlab.desy.de/millepede/general-broken-lines/-/archive/V${_acts_gbl_release_string}/general-broken-lines-V${_acts_gbl_release_string}.tar.gz;URL_HASH;SHA256=d6090b1515dc33cd9532f1470e2038b7794258fbb8a411fa8a6e4520e933241b"
     CACHE STRING
     "Source to take General Broken Lines (GBL) from"
 )
@@ -60,7 +60,7 @@ mark_as_advanced(ACTS_GBL_SOURCE)
 # translate version string to the historical Millepede release naming convention
 string(REPLACE "." "-" _acts_mp2_release_string ${_acts_mp2_version})
 set(ACTS_MP2_SOURCE
-    "URL;https://gitlab.desy.de/millepede/millepede-ii/-/archive/V${_acts_mp2_release_string}/millepede-ii-V${_acts_mp2_release_string}.tar.gz;URL_HASH;SHA256=18f707a1b372f07420e26969f503518b6dd067642f5eab45f05728aa7ff742ec"
+    "URL;https://gitlab.desy.de/millepede/millepede-ii/-/archive/V${_acts_mp2_release_string}/millepede-ii-V${_acts_mp2_release_string}.tar.gz;URL_HASH;SHA256=e74dd397c779ec87c437c2c62366c4d1419ac3957166fdfdb86abe617289bd33"
     CACHE STRING
     "Source to take Millepede-II from"
 )
