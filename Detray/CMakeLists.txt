@@ -246,12 +246,10 @@ if(DETRAY_SETUP_VECMEM)
         find_package(vecmem ${DETRAY_VECMEM_VERSION} REQUIRED)
     else()
         add_subdirectory(extern/vecmem)
-        # Make the "VecMem language code" available for the whole project.
-        include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
     endif()
+    # Make the "VecMem language code" available for the whole project.
+    list(APPEND CMAKE_MODULE_PATH "${VECMEM_LANGUAGE_DIR}")
 endif()
-
-include(vecmem-check-language)
 
 # Set up JSON for I/O
 option(

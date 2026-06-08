@@ -13,7 +13,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsFatras/Digitization/Channelizer.hpp"
-#include "ActsFatras/Digitization/PlanarSurfaceMask.hpp"
+#include "ActsFatras/Digitization/SurfaceMask.hpp"
 
 #include <numeric>
 

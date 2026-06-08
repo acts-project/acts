@@ -192,9 +192,13 @@ class AnyBase : public AnyBaseAll {
   /// Construct from any value type
   /// @tparam T Type of the value to store
   /// @param value Value to store in the Any
+  /// @note Not noexcept: storing a type larger than the small buffer allocates
+  ///       on the heap (may throw std::bad_alloc) and the stored type's own
+  ///       constructor may throw.
   template <typename T>
-  explicit AnyBase(T&& value) noexcept(detail::kAnyNoexcept)
-    requires(isStorable<std::decay_t<T>>())
+  explicit AnyBase(T&& value)
+    requires(!std::is_base_of_v<AnyBaseAll, std::decay_t<T>> &&
+             isStorable<std::decay_t<T>>())
       : AnyBase{std::in_place_type<T>, std::forward<T>(value)} {}
 
   /// Construct a new value in place, destroying any existing value
@@ -302,7 +306,9 @@ class AnyBase : public AnyBaseAll {
 
   /// Copy constructor (only when copyable is true)
   /// @param other The AnyBase to copy from
-  AnyBase(const AnyBase& other) noexcept(detail::kAnyNoexcept)
+  /// @note Not noexcept: copying a heap-allocated value allocates (may throw
+  ///       std::bad_alloc) and the stored type's copy constructor may throw.
+  AnyBase(const AnyBase& other)
     requires copyable
   {
     if (m_handler == nullptr && other.m_handler == nullptr) {
@@ -325,7 +331,9 @@ class AnyBase : public AnyBaseAll {
   /// Copy assignment operator (only when copyable is true)
   /// @param other The AnyBase to copy from
   /// @return Reference to this object
-  AnyBase& operator=(const AnyBase& other) noexcept(detail::kAnyNoexcept)
+  /// @note Not noexcept: copying a heap-allocated value allocates (may throw
+  ///       std::bad_alloc) and the stored type's copy operations may throw.
+  AnyBase& operator=(const AnyBase& other)
     requires copyable
   {
     _ACTS_ANY_VERBOSE("Copy assign (this="
@@ -351,7 +359,17 @@ class AnyBase : public AnyBaseAll {
       }
       assert(m_handler == nullptr);
       m_handler = other.m_handler;
-      copyConstruct(other);
+      try {
+        copyConstruct(other);
+      } catch (...) {
+        // copyConstruct allocates and/or runs the stored type's copy
+        // constructor, either of which may throw. If it does, no value was
+        // established, so leave *this empty rather than with a handler that
+        // claims a value that does not exist (which would make destruction
+        // operate on uninitialized storage).
+        m_handler = nullptr;
+        throw;
+      }
     }
     return *this;
   }

@@ -10,8 +10,6 @@
 
 #include "Acts/Geometry/TrackingVolume.hpp"
 
-#include <sstream>
-
 namespace Acts {
 
 /// Simple struct to select volumes
@@ -39,7 +37,7 @@ struct VolumeSelector {
   /// @param volume is the test volume
   /// @return true if volume meets selection criteria
   bool operator()(const Acts::TrackingVolume& volume) const {
-    if (selectMaterial && volume.volumeMaterial() != nullptr) {
+    if (selectMaterial && volume.hasMaterial()) {
       return true;
     }
     if (selectLayer && volume.confinedLayers() != nullptr) {

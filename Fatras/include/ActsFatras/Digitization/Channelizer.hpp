@@ -11,9 +11,9 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
-#include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
-#include "ActsFatras/Digitization/PlanarSurfaceMask.hpp"
 #include "ActsFatras/Digitization/Segmentizer.hpp"
+#include "ActsFatras/Digitization/SurfaceDrift.hpp"
+#include "ActsFatras/Digitization/SurfaceMask.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 
 namespace Acts {
@@ -23,9 +23,15 @@ class Surface;
 namespace ActsFatras {
 
 /// @brief Class that ties the digitization modules together and produces the channels
+///
+/// The drift and masking steps are surface-type agnostic: SurfaceDrift and
+/// SurfaceMask each dispatch internally on the surface type (plane / disc /
+/// cylinder). The resulting (already-clipped) 2-D segment is fed into the
+/// Segmentizer, which steps through the channel grid defined by the supplied
+/// BinUtility.
 class Channelizer {
-  PlanarSurfaceDrift m_surfaceDrift;
-  PlanarSurfaceMask m_surfaceMask;
+  SurfaceDrift m_surfaceDrift;
+  SurfaceMask m_surfaceMask;
   Segmentizer m_segmentizer;
 
  public:
