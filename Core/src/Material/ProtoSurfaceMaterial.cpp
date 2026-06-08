@@ -74,10 +74,6 @@ std::array<DirectedProtoAxis, 2> protoAxesFromBinUtility(const BinUtility& bu) {
   return binUtilityToAxes(bu);
 }
 
-// ---------------------------------------------------------------------------
-// Constructors
-// ---------------------------------------------------------------------------
-
 ProtoSurfaceMaterial::ProtoSurfaceMaterial()
     : m_axes{makeDummyAxis(AxisDirection::AxisX),
              makeDummyAxis(AxisDirection::AxisY)} {}
