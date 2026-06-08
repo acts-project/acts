@@ -150,7 +150,7 @@ def runGNN4ITk(
     if useEdgeLayerConnector:
         trackBuilderObj = EdgeLayerConnector(
             level=logLevel,
-            nBlocks=512,
+            blockSize=512,
             maxHitsPerTrack=30,
             minHits=3,
             weightsCut=0.01,

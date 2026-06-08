@@ -99,7 +99,8 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGnn, gnn) {
                                 etaScale, gpuDevice, gpuBlocks, epsilon);
 
   ACTS_PYTHON_DECLARE_GNN_STAGE(EdgeLayerConnector, TrackBuildingBase, gnn,
-                                nBlocks, maxHitsPerTrack, minHits, weightsCut);
+                                blockSize, maxHitsPerTrack, minHits,
+                                weightsCut);
 
 #endif
 

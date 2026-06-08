@@ -24,7 +24,7 @@ class EdgeLayerConnector final : public TrackBuildingBase {
   /// Configuration for the EdgeLayerConnector
   struct Config {
     /// Number of thread blocks for parallel edge processing
-    std::size_t nBlocks = 512;
+    std::size_t blockSize = 512;
     /// Maximum number of hits allowed per track candidate
     std::size_t maxHitsPerTrack = 30;
     /// Minimum number of hits required to keep a track candidate

@@ -59,7 +59,8 @@ std::vector<std::vector<int>> EdgeLayerConnector::operator()(
   ACTS_DEBUG("Setup EdgeLayerConnector...");
   CUDA_edge_layer_connector<float> connector(
       &graph, m_cfg.weightsCut, static_cast<int>(m_cfg.minHits),
-      static_cast<int>(m_cfg.nBlocks), static_cast<int>(m_cfg.maxHitsPerTrack));
+      static_cast<int>(m_cfg.blockSize),
+      static_cast<int>(m_cfg.maxHitsPerTrack));
   ACTS_CUDA_CHECK(cudaDeviceSynchronize());
   ACTS_CUDA_CHECK(cudaGetLastError());
 
