@@ -132,6 +132,12 @@ struct [[deprecated(
   /// helix. This is useful for e.g. misaligned seeding.
   float helixCutTolerance = 1.;
 
+  /// Maximum allowed difference between the r-z slopes of the top-middle
+  /// seed segment and the middle-bottom seed segment.
+  /// This cut is used to reject seed candidates that are kinematically
+  /// inconsistent in the barrel-to-endcap transition region.
+  float maxTopMiddleTanDifference = 0.005;
+
   /// Seeding parameters used for quality seed confirmation
 
   /// Enable quality seed confirmation, this is different than default seeding

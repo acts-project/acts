@@ -376,7 +376,7 @@ void SeedFinderOrthogonal<external_space_point_t>::filterCandidates(
       const std::size_t t = sorted_tops[index_t];
       auto lt = linCircleTop[t];
 
-      if (std::abs(tanLM - tanMT[t]) > 0.005) {
+      if (std::abs(tanLM - tanMT[t]) > m_config.maxTopMiddleTanDifference) {
         continue;
       }
 
