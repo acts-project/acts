@@ -441,31 +441,6 @@ linux_ubuntu_2404_clang22:
     - cmake --build build -- -j8
     - ccache -s
 
-lcg_107:
-  extends: .lcg_base_job
-
-  variables:
-    LCG_VERSION: "107"
-
-  parallel:
-    matrix:
-      - OS: [alma9]
-        COMPILER:
-          - gcc13
-          - clang16
-
-lcg_107a:
-  extends: .lcg_base_job
-
-  variables:
-    LCG_VERSION: "107a"
-
-  parallel:
-    matrix:
-      - OS: [alma9]
-        COMPILER:
-          - gcc14
-
 lcg_108:
   extends: .lcg_base_job
 
@@ -515,6 +490,12 @@ lcg_dev4:
   variables:
     LCG_REPO: sft-nightlies.cern.ch
     LCG_VIEW: dev4/latest
+
+  before_script:
+    # The dev4 view's Geant4 requires EXPAT >= 2.5.0 but the view does not
+    # ship/expose expat; provide the system one (alma9 ships expat 2.5.0).
+    - dnf install -y expat-devel
+    - !reference [.lcg_base_job, before_script]
 
   parallel:
     matrix:
