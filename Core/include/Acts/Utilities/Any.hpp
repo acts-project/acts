@@ -470,10 +470,7 @@ class AnyBase : public AnyBaseAll {
     if (m_handler == nullptr) {
       return nullptr;
     }
-    // upcast only adjusts the pointer (base-subobject offset); it never touches
-    // the pointee, so casting away const here is safe and the const is restored
-    // in the return type.
-    return m_handler->upcast(const_cast<void*>(dataPtr()));
+    return m_handler->upcastConst(dataPtr());
   }
 
   /// Dereference to the stored value as @c Base&. Only available when @c Base
@@ -493,7 +490,7 @@ class AnyBase : public AnyBaseAll {
     requires(!std::is_void_v<B>)
   const B& operator*() const {
     assert(m_handler != nullptr && "operator* on empty AnyBase");
-    return *m_handler->upcast(const_cast<void*>(dataPtr()));
+    return *m_handler->upcastConst(dataPtr());
   }
 
   /// Member access on the stored value as @c Base*. Only available when
@@ -513,7 +510,7 @@ class AnyBase : public AnyBaseAll {
     requires(!std::is_void_v<B>)
   const B* operator->() const {
     assert(m_handler != nullptr && "operator-> on empty AnyBase");
-    return m_handler->upcast(const_cast<void*>(dataPtr()));
+    return m_handler->upcastConst(dataPtr());
   }
 
  private:
@@ -539,6 +536,10 @@ class AnyBase : public AnyBaseAll {
     // Maps the stored payload to Base*. Collapses to void*(*)(void*) and stays
     // nullptr (never read) when Base == void.
     Base* (*upcast)(void*) = nullptr;
+    // Const-qualified counterpart used by the const accessors so they don't
+    // have to cast away const on the data pointer. Same as above when
+    // Base == void.
+    const Base* (*upcastConst)(const void*) = nullptr;
     void (*destroy)(void* ptr) = nullptr;
     void (*moveConstruct)(void* from, void* to) = nullptr;
     void (*move)(void* from, void* to) = nullptr;
@@ -583,6 +584,9 @@ class AnyBase : public AnyBaseAll {
       if constexpr (!std::is_void_v<Base>) {
         h.upcast = [](void* p) -> Base* {
           return static_cast<Base*>(static_cast<T*>(p));
+        };
+        h.upcastConst = [](const void* p) -> const Base* {
+          return static_cast<const Base*>(static_cast<const T*>(p));
         };
       }
 
@@ -837,7 +841,7 @@ using AnyMoveOnly = AnyBase<sizeof(void*), false>;
 ///          @c sb_size bytes are stored inline, larger ones on the heap.
 /// @tparam Base Common base class exposed by the accessors
 /// @tparam sb_size Size of the small-buffer-optimization storage
-template <typename Base, std::size_t sb_size = 48>
+template <typename Base, std::size_t sb_size = sizeof(void*)>
 using AnyOf = AnyBase<sb_size, true, Base>;
 
 /// @}
