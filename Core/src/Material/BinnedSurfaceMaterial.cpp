@@ -53,10 +53,6 @@ std::array<DirectedProtoAxis, 2> binUtilityToAxes(const BinUtility& bu) {
 
 }  // namespace
 
-// ---------------------------------------------------------------------------
-// Primary constructor
-// ---------------------------------------------------------------------------
-
 BinnedSurfaceMaterial::BinnedSurfaceMaterial(
     std::array<DirectedProtoAxis, 2> axes, MaterialSlabMatrix materialMatrix,
     double splitFactor, MappingType mappingType)
