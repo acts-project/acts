@@ -70,10 +70,6 @@ std::array<DirectedProtoAxis, 2> vectorToAxes(
 
 }  // namespace
 
-// ---------------------------------------------------------------------------
-// Free helper: public API for migration code
-// ---------------------------------------------------------------------------
-
 std::array<DirectedProtoAxis, 2> protoAxesFromBinUtility(const BinUtility& bu) {
   return binUtilityToAxes(bu);
 }
