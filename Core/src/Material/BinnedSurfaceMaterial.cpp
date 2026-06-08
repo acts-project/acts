@@ -176,11 +176,6 @@ std::vector<AxisDirection> BinnedSurfaceMaterial::localAxisDirections() const {
   }
   return dirs;
 }
-
-// ---------------------------------------------------------------------------
-// toStream
-// ---------------------------------------------------------------------------
-
 std::ostream& BinnedSurfaceMaterial::toStream(std::ostream& sl) const {
   sl << "BinnedSurfaceMaterial : " << std::endl;
   sl << "   - Number of Material bins [0,1] : "
