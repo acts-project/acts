@@ -38,6 +38,8 @@ class PortalMergingException : public std::exception {
   /// Construct with a contextual message describing why the merge failed.
   /// @param message The contextual error message
   explicit PortalMergingException(std::string message);
+  /// Get exception description.
+  /// @return C-style string describing the exception
   const char* what() const noexcept override;
 
  private:
@@ -49,7 +51,7 @@ class PortalFusingException : public std::exception {
   const char* what() const noexcept override;
 };
 
-/// Policy controlling how @ref Portal::merge treats surfaces that carry
+/// Policy controlling how @ref Acts::Portal::merge treats surfaces that carry
 /// material. Merged surfaces cannot retain the material of their inputs, so by
 /// default this is treated as a fatal error.
 enum class PortalMaterialMergePolicy {
