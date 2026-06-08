@@ -26,6 +26,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <limits>
 
 class G4RunManager;
 class G4VUserPrimaryGeneratorAction;
@@ -76,7 +77,7 @@ class Geant4SimulationBase : public IAlgorithm {
   ~Geant4SimulationBase() override;
 
   /// Initialize the algorithm
-  ProcessCode initialize() final;
+  ProcessCode initialize();
 
   /// Algorithm execute method, called once per event with context
   ///
@@ -149,6 +150,11 @@ class Geant4Simulation final : public Geant4SimulationBase {
     bool keepParticlesWithoutHits = true;
 
     bool recordPropagationSummaries = false;
+
+    /// Cap the largest acceptable step in the propagator
+    /// if inf use Geant4 default (100m)
+    double propagatorLargestAcceptableStep = std::numeric_limits<double>::infinity(); //mm
+    
   };
 
   /// Simulation constructor
@@ -164,6 +170,9 @@ class Geant4Simulation final : public Geant4SimulationBase {
   ///
   /// @param ctx the AlgorithmContext for this event
   ProcessCode execute(const AlgorithmContext& ctx) const final;
+
+  /// Initialize the algorithm
+  ProcessCode initialize() final;
 
   /// Readonly access to the configuration
   const Config& config() const final { return m_cfg; }

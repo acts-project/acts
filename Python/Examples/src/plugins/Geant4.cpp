@@ -146,7 +146,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
         sensitiveSurfaceMapper, magneticField, physicsList, killVolume,
         killAfterTime, killSecondaries, recordHitsOfCharged,
         recordHitsOfNeutrals, recordHitsOfPrimaries, recordHitsOfSecondaries,
-        keepParticlesWithoutHits, recordPropagationSummaries);
+        keepParticlesWithoutHits, recordPropagationSummaries, propagatorLargestAcceptableStep);
   }
 
   {
