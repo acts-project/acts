@@ -77,16 +77,15 @@ class BinnedGroupIterator {
   operator*() const;
 
  private:
-  /// @brief Move to the next not-empty bin in the grid
-  void findNotEmptyBin();
-
- private:
   /// @brief The group that contains the grid and the bin finders
   detail::RefHolder<const BinnedGroup<grid_t>> m_group{nullptr};
   /// @brief Current N-dimentional grid iterator
   typename grid_t::local_iterator_t m_gridItr;
   /// @brief End iterator;
   typename grid_t::local_iterator_t m_gridItrEnd;
+
+  /// @brief Move to the next not-empty bin in the grid
+  void findNotEmptyBin();
 };
 
 }  // namespace Acts
