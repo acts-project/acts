@@ -10,6 +10,8 @@
 
 #include "Acts/Seeding/SeedFinder.hpp"
 
+#include "Acts/Utilities/MathHelpers.hpp"
+
 #include <algorithm>
 #include <cmath>
 
@@ -205,8 +207,8 @@ inline void
 SeedFinder<external_space_point_t, grid_t, platform_t>::getCompatibleDoublets(
     const SeedFinderOptions& options, const grid_t& grid,
     SpacePointMutableData& mutableData,
-    boost::container::small_vector<
-        Neighbour<grid_t>, detail::ipow(3, grid_t::DIM)>& otherSPsNeighbours,
+    boost::container::small_vector<Neighbour<grid_t>, ipow(3, grid_t::DIM)>&
+        otherSPsNeighbours,
     const external_space_point_t& mediumSP,
     std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
     const float deltaRMinSP, const float deltaRMaxSP, const float uIP,
