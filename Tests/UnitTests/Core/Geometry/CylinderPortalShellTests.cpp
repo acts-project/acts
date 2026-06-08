@@ -454,7 +454,7 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedFaceThrows) {
   // that is *merged* during stacking must throw a PortalMergingException whose
   // message is augmented with the offending face, the shells involved, and the
   // underlying material reason from Portal::merge. This path is below the
-  // blueprint container node, so the early node-level check does not pre-empt
+  // blueprint container node, so the early node-level check does not preempt
   // it.
   using enum CylinderVolumeBounds::Face;
 
