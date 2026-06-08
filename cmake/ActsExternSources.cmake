@@ -60,7 +60,7 @@ mark_as_advanced(ACTS_GBL_SOURCE)
 # translate version string to the historical Millepede release naming convention
 string(REPLACE "." "-" _acts_mp2_release_string ${_acts_mp2_version})
 set(ACTS_MP2_SOURCE
-    "URL;https://gitlab.desy.de/millepede/millepede-ii/-/archive/V${_acts_mp2_release_string}/millepede-ii-V${_acts_mp2_release_string}.tar.gz;URL_HASH;SHA256=e74dd397c779ec87c437c2c62366c4d1419ac3957166fdfdb86abe617289bd33"
+    "URL;https://gitlab.desy.de/millepede/millepede-ii/-/archive/V${_acts_mp2_release_string}/millepede-ii-V${_acts_mp2_release_string}.tar.gz;URL_HASH;SHA256=c567c8f486194c1edf9e04c53c15f22635120be13e1de19c428f2eb088ae3222"
     CACHE STRING
     "Source to take Millepede-II from"
 )
