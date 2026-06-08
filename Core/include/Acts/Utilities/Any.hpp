@@ -167,7 +167,7 @@ class AnyBase : public AnyBaseAll {
     } else if constexpr (Copyable) {
       return std::is_copy_assignable_v<U> && std::is_copy_constructible_v<U> &&
              (sizeof(U) > SbSize || (std::is_move_assignable_v<U> &&
-                                      std::is_move_constructible_v<U>));
+                                     std::is_move_constructible_v<U>));
     } else {
       return std::is_move_constructible_v<U> &&
              (sizeof(U) > SbSize || std::is_move_assignable_v<U>);
