@@ -74,16 +74,15 @@ LayerBuildInputs<typename BackendT::Element> resolveLayerBuildInputs(
 // LayerCustomizer type (a std::function with identical signature), so a single
 // template deducing CustomizerT covers both.
 template <detail::BlueprintBackend BackendT, typename CustomizerT>
-std::shared_ptr<Acts::Experimental::LayerBlueprintNode> finalizeLayer(
+BlueprintNodePtr finalizeLayer(
     const std::optional<typename BackendT::Element>& layerElement,
-    std::shared_ptr<Acts::Experimental::LayerBlueprintNode> layer,
-    const std::optional<Acts::ExtentEnvelope>& envelope,
+    LayerNodePtr layer, const std::optional<Acts::ExtentEnvelope>& envelope,
     const CustomizerT& onLayer) {
   if (envelope.has_value()) {
     layer->setEnvelope(envelope.value());
   }
   if (onLayer) {
-    layer = onLayer(layerElement, std::move(layer));
+    return onLayer(layerElement, std::move(layer));
   }
   return layer;
 }
@@ -486,7 +485,7 @@ void SensorLayer<BackendT>::addTo(
 }
 
 template <detail::BlueprintBackend BackendT>
-std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
+std::shared_ptr<Acts::Experimental::BlueprintNode>
 SensorLayer<BackendT>::build() const {
   if (!m_layerType.has_value()) {
     throw std::runtime_error("Layer type not set in SensorLayer");
