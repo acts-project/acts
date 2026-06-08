@@ -141,7 +141,7 @@ class PropagatorMaterialAssigner /*final*/ : public IAssignmentFinder {
 
     PropagatorOptions options(gctx, mctx);
 
-    const auto& result = m_propagator.propagate(start, options).value();
+    const auto& result = m_propagator.propagate(start, options, false).value();
 
     // The surface collection results
     auto scResult =

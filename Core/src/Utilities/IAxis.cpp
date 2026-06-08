@@ -15,9 +15,9 @@
 
 namespace Acts {
 
-std::unique_ptr<IAxis> IAxis::createEquidistant(AxisBoundaryType aBoundaryType,
-                                                double min, double max,
-                                                std::size_t nbins) {
+std::unique_ptr<IAxis> IAxis::createEquidistant(
+    AxisBoundaryType aBoundaryType, double min, double max, std::size_t nbins,
+    std::optional<AxisDirection> direction) {
   using enum AxisType;
   using enum AxisBoundaryType;
 
@@ -35,18 +35,22 @@ std::unique_ptr<IAxis> IAxis::createEquidistant(AxisBoundaryType aBoundaryType,
 
   switch (aBoundaryType) {
     case Open:
-      return std::make_unique<Axis<Equidistant, Open>>(min, max, nbins);
+      return std::make_unique<Axis<Equidistant, Open>>(min, max, nbins,
+                                                       direction);
     case Bound:
-      return std::make_unique<Axis<Equidistant, Bound>>(min, max, nbins);
+      return std::make_unique<Axis<Equidistant, Bound>>(min, max, nbins,
+                                                        direction);
     case Closed:
-      return std::make_unique<Axis<Equidistant, Closed>>(min, max, nbins);
+      return std::make_unique<Axis<Equidistant, Closed>>(min, max, nbins,
+                                                         direction);
     default:  // should never happen
       throw std::logic_error("Unknown axis boundary type");
   }
 }
 
-std::unique_ptr<IAxis> IAxis::createVariable(AxisBoundaryType aBoundaryType,
-                                             const std::vector<double>& edges) {
+std::unique_ptr<IAxis> IAxis::createVariable(
+    AxisBoundaryType aBoundaryType, const std::vector<double>& edges,
+    std::optional<AxisDirection> direction) {
   using enum AxisType;
   using enum AxisBoundaryType;
 
@@ -63,11 +67,11 @@ std::unique_ptr<IAxis> IAxis::createVariable(AxisBoundaryType aBoundaryType,
   }
   switch (aBoundaryType) {
     case Open:
-      return std::make_unique<Axis<Variable, Open>>(edges);
+      return std::make_unique<Axis<Variable, Open>>(edges, direction);
     case Bound:
-      return std::make_unique<Axis<Variable, Bound>>(edges);
+      return std::make_unique<Axis<Variable, Bound>>(edges, direction);
     case Closed:
-      return std::make_unique<Axis<Variable, Closed>>(edges);
+      return std::make_unique<Axis<Variable, Closed>>(edges, direction);
     default:  // should never happen
       throw std::logic_error("Unknown axis boundary type");
   }
