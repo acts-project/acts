@@ -424,7 +424,12 @@ linux_ubuntu_2404_clang22:
     - cd ..
 
     - 'echo "LCG_PLATFORM: ${LCG_PLATFORM}"'
-    - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/x86_64-${LCG_PLATFORM}-${COMPILER}-opt/setup.sh
+    # Default to the released views; nightly jobs override LCG_REPO/LCG_VIEW
+    - LCG_REPO=${LCG_REPO:-sft.cern.ch}
+    - LCG_VIEW=${LCG_VIEW:-LCG_${LCG_VERSION}}
+    - 'echo "LCG_REPO: ${LCG_REPO}"'
+    - 'echo "LCG_VIEW: ${LCG_VIEW}"'
+    - source /cvmfs/${LCG_REPO}/lcg/views/${LCG_VIEW}/x86_64-${LCG_PLATFORM}-${COMPILER}-opt/setup.sh
 
   script:
     - >
@@ -500,6 +505,22 @@ lcg_109:
     # plotting tests with mplhep fail because an ancient mplhep version in LCG
     # overrides the mplhep version in our venv
     - pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
+
+lcg_dev4:
+  extends: .lcg_base_job
+
+  # Nightly views break frequently and are not release-blocking
+  allow_failure: true
+
+  variables:
+    LCG_REPO: sft-nightlies.cern.ch
+    LCG_VIEW: dev4/latest
+
+  parallel:
+    matrix:
+      - OS: [alma9]
+        COMPILER:
+          - gcc15
 
 # Detray gitlab CI workflows
 detray_build_cuda:
