@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/GridSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
@@ -37,7 +36,7 @@ struct transform_payload;
 struct mask_payload;
 struct surface_payload;
 struct volume_payload;
-struct material_slab_payload;
+struct surface_material_payload;
 struct material_volume_payload;
 struct detector_homogeneous_material_payload;
 
@@ -73,10 +72,10 @@ namespace ActsPlugins {
 class DetrayPayloadConverter {
  public:
   /// Detray surface material payload type
-  using DetraySurfaceMaterial =
-      std::variant<detray::io::grid_payload<detray::io::material_slab_payload,
-                                            detray::io::material_id>,
-                   detray::io::material_slab_payload>;
+  using DetraySurfaceMaterial = std::variant<
+      detray::io::grid_payload<detray::io::surface_material_payload,
+                               detray::io::material_id>,
+      detray::io::surface_material_payload>;
 
   /// Detray surface grid payload type
   using DetraySurfaceGrid =
@@ -88,36 +87,46 @@ class DetrayPayloadConverter {
 
   /// Convert homogeneous surface material
   /// @param material Homogeneous surface material
+  /// @param surface Surface associated with the material
   /// @return Detray surface material payload
   static std::optional<DetraySurfaceMaterial> convertHomogeneousSurfaceMaterial(
-      const Acts::HomogeneousSurfaceMaterial& material);
+      const Acts::HomogeneousSurfaceMaterial& material,
+      const Acts::Surface& surface);
 
   /// Convert grid surface material
   /// @param material Grid surface material
+  /// @param surface Surface associated with the material
   /// @return Detray surface material payload
   static std::optional<DetraySurfaceMaterial> convertGridSurfaceMaterial(
-      const Acts::IGridSurfaceMaterialBase& material);
+      const Acts::IGridSurfaceMaterialBase& material,
+      const Acts::Surface& surface);
 
   /// Convert binned surface material
   /// @param material Binned surface material
+  /// @param surface Surface associated with the material
   /// @return Detray surface material payload
   static std::optional<DetraySurfaceMaterial> convertBinnedSurfaceMaterial(
-      const Acts::BinnedSurfaceMaterial& material);
+      const Acts::BinnedSurfaceMaterial& material,
+      const Acts::Surface& surface);
 
   /// Convert proto surface material with bin utility
   /// @param material Proto surface material
+  /// @param surface Surface associated with the material
   /// @return Detray surface material payload
   static std::optional<DetraySurfaceMaterial>
   convertProtoSurfaceMaterialBinUtility(
-      const Acts::ProtoSurfaceMaterialT<Acts::BinUtility>& material);
+      const Acts::ProtoSurfaceMaterialT<Acts::BinUtility>& material,
+      const Acts::Surface& surface);
 
   /// Convert proto surface material with proto axes
   /// @param material Proto surface material
+  /// @param surface Surface associated with the material
   /// @return Detray surface material payload
   static std::optional<DetraySurfaceMaterial>
   convertProtoSurfaceMaterialProtoAxes(
       const Acts::ProtoSurfaceMaterialT<std::vector<Acts::DirectedProtoAxis>>&
-          material);
+          material,
+      const Acts::Surface& surface);
 
   /// Convert surface array navigation policy
   /// @param policy Surface array navigation policy
@@ -217,7 +226,8 @@ class DetrayPayloadConverter {
 
     /// Type dispatcher for converting surface materials
     Acts::TypeDispatcher<Acts::ISurfaceMaterial,
-                         std::optional<DetraySurfaceMaterial>()>
+                         std::optional<DetraySurfaceMaterial>(
+                             const Acts::Surface& surface)>
         convertSurfaceMaterial{
             convertHomogeneousSurfaceMaterial, convertBinnedSurfaceMaterial,
             convertGridSurfaceMaterial, convertProtoSurfaceMaterialProtoAxes,
@@ -259,7 +269,7 @@ class DetrayPayloadConverter {
 
     /// Material grids payload
     std::unique_ptr<detray::io::detector_grids_payload<
-        detray::io::material_slab_payload, detray::io::material_id>>
+        detray::io::surface_material_payload, detray::io::material_id>>
         materialGrids;
 
     /// Surface grids payload
@@ -293,10 +303,9 @@ class DetrayPayloadConverter {
   /// @param volPayload Volume payload
   /// @return Material grids and volume material payloads
   std::pair<std::vector<detray::io::grid_payload<
-                detray::io::material_slab_payload, detray::io::material_id>>,
+                detray::io::surface_material_payload, detray::io::material_id>>,
             detray::io::material_volume_payload>
   convertMaterial(const Acts::TrackingVolume& volume,
-
                   const std::unordered_map<const Acts::Surface*, std::size_t>&
                       surfaceIndices,
                   detray::io::volume_payload& volPayload) const;

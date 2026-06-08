@@ -116,6 +116,18 @@ class PlaneSurface : public RegularSurface {
   Vector3 referencePosition(const GeometryContext& gctx,
                             AxisDirection aDir) const final;
 
+  using Surface::referenceFrame;
+
+  /// Return method for the reference frame
+  /// This is the frame in which the covariance matrix is defined (specialized
+  /// by all surfaces)
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  ///
+  /// @return RotationMatrix3 which defines the three axes of the measurement
+  /// frame
+  RotationMatrix3 referenceFrame(const GeometryContext& gctx) const;
+
   /// Return the surface type
   /// @return Surface type identifier
   SurfaceType type() const override;
@@ -247,7 +259,10 @@ class PlaneSurface : public RegularSurface {
   /// the bounds of this surface
   std::shared_ptr<const PlanarBounds> m_bounds;
 
- private:
+  /// @copydoc Surface::localAxes
+  std::array<AxisDirection, 2> localAxes() const override {
+    return {AxisDirection::AxisX, AxisDirection::AxisY};
+  }
 };
 
 static_assert(RegularSurfaceConcept<PlaneSurface>,

@@ -45,6 +45,9 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// seeds
     std::string outputSeeds;
 
+    /// Magnetic field in z direction
+    float bFieldInZ = 2 * Acts::UnitConstants::T;
+
     /// contains all the options used to steer the algorithm
     /// includes both user options available to change in the python script and
     /// those seen just be the algorithm
@@ -91,6 +94,12 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
 
   /// used to assign LayerIds to the GbtsActsMap
   std::map<std::uint32_t, std::uint32_t> m_layerIdMap{};
+
+  /// used to tell if a layer is a strip or pixel layer
+  std::vector<bool> m_isPixelLayer{};
+
+  /// used to define region of interest
+  std::optional<Acts::Experimental::GbtsRoiDescriptor> m_internalRoi;
 
   /// handle that points to the container of input space points
   ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,

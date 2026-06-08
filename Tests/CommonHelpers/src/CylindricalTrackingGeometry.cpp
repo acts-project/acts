@@ -292,8 +292,9 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3(
   std::vector<float> binEdges = {// empirical bin edges. these are not checked!
                                  -476.5, 0, 476.5};
 
-  BinUtility binUtility(2u, -std::numbers::pi, std::numbers::pi,
-                        BinningOption::closed, AxisPhi);
+  BinUtility binUtility(2u, -kBeamPipeRadius * std::numbers::pi,
+                        kBeamPipeRadius * std::numbers::pi,
+                        BinningOption::closed, AxisRPhi);
 
   binUtility += Acts::BinUtility(binEdges, BinningOption::open, AxisZ);
 
@@ -380,4 +381,5 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::operator()(
     return buildGen1(logger);
   }
 }
+
 }  // namespace ActsTests

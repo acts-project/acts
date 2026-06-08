@@ -19,6 +19,7 @@
 #include "ActsExamples/EventData/SpacePoint.hpp"
 
 #include <algorithm>
+#include <numeric>
 
 #include <TChain.h>
 #include <boost/container/static_vector.hpp>
@@ -69,6 +70,7 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
   if (!m_cfg.onlySpacePoints) {
     m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+    m_outputMeasurementSubset.initialize(m_cfg.outputMeasurementSubset);
     m_outputClusters.initialize(m_cfg.outputClusters);
     if (!m_cfg.noTruth) {
       m_outputParticles.initialize(m_cfg.outputParticles);
@@ -78,8 +80,13 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   }
 
   if (m_inputchain->GetBranch("SPtopStripDirection") == nullptr) {
-    ACTS_WARNING("Additional SP strip features not available");
+    ACTS_INFO("Additional SP strip features not available");
     m_haveStripFeatures = false;
+  }
+
+  if (m_inputchain->GetBranch("CLetas") == nullptr) {
+    ACTS_INFO("Cluster cell data (CLetas/CLphis/CLtots) not available");
+    m_haveCellData = false;
   }
 
   // Set the branches
@@ -101,9 +108,11 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_inputchain->SetBranchAddress("CLphi_module", CLphi_module);
   m_inputchain->SetBranchAddress("CLside", CLside);
   m_inputchain->SetBranchAddress("CLmoduleID", CLmoduleID);
-  m_inputchain->SetBranchAddress("CLphis", &CLphis.get());
-  m_inputchain->SetBranchAddress("CLetas", &CLetas.get());
-  m_inputchain->SetBranchAddress("CLtots", &CLtots.get());
+  if (m_haveCellData) {
+    m_inputchain->SetBranchAddress("CLphis", &CLphis.get());
+    m_inputchain->SetBranchAddress("CLetas", &CLetas.get());
+    m_inputchain->SetBranchAddress("CLtots", &CLtots.get());
+  }
   m_inputchain->SetBranchAddress("CLloc_direction1", CLloc_direction1);
   m_inputchain->SetBranchAddress("CLloc_direction2", CLloc_direction2);
   m_inputchain->SetBranchAddress("CLloc_direction3", CLloc_direction3);
@@ -309,17 +318,19 @@ RootAthenaDumpReader::readMeasurements(
 
     // Make cluster
     // TODO refactor Cluster class so it is not so tedious
-    const auto& etas = CLetas->at(im);
-    const auto& phis = CLetas->at(im);
-    const auto& tots = CLtots->at(im);
-
-    const auto totalTot = std::accumulate(tots.begin(), tots.end(), 0);
-
-    const auto [minEta, maxEta] = std::minmax_element(etas.begin(), etas.end());
-    const auto [minPhi, maxPhi] = std::minmax_element(phis.begin(), phis.end());
-
     Cluster cluster;
-    if (m_cfg.readCellData) {
+    if (m_cfg.readCellData && m_haveCellData) {
+      const auto& etas = CLetas->at(im);
+      const auto& phis = CLetas->at(im);
+      const auto& tots = CLtots->at(im);
+
+      const auto totalTot = std::accumulate(tots.begin(), tots.end(), 0);
+
+      const auto [minEta, maxEta] =
+          std::minmax_element(etas.begin(), etas.end());
+      const auto [minPhi, maxPhi] =
+          std::minmax_element(phis.begin(), phis.end());
+
       cluster.channels.reserve(etas.size());
 
       cluster.sizeLoc0 = *maxEta - *minEta;
@@ -368,8 +379,6 @@ RootAthenaDumpReader::readMeasurements(
     cluster.phiAngle = CLphi_angle[im];
 
     // Measurement creation
-    const auto& locCov = CLlocal_cov->at(im);
-
     Acts::GeometryIdentifier geoId;
     std::vector<double> localParams;
     if (m_cfg.geometryIdMap && m_cfg.trackingGeometry) {
@@ -426,6 +435,8 @@ RootAthenaDumpReader::readMeasurements(
       geoId = Acts::GeometryIdentifier(CLmoduleID[im]);
       localParams = {CLloc_direction1[im], CLloc_direction2[im]};
     }
+
+    const auto& locCov = CLlocal_cov->at(im);
 
     DigitizedParameters digiPars;
     if (type == ePixel) {
@@ -754,7 +765,14 @@ ProcessCode RootAthenaDumpReader::read(const AlgorithmContext& ctx) {
     optImIdxMap.emplace(std::move(imIdxMap));
 
     m_outputClusters(ctx, std::move(clusters));
-    m_outputMeasurements(ctx, std::move(measurements));
+    const auto& storedMeasurements =
+        m_outputMeasurements(ctx, std::move(measurements));
+    std::vector<MeasurementContainer::Index> allIndices(
+        storedMeasurements.size());
+    std::iota(allIndices.begin(), allIndices.end(),
+              MeasurementContainer::Index{0});
+    m_outputMeasurementSubset(
+        ctx, MeasurementSubset(storedMeasurements, std::move(allIndices)));
 
     if (!m_cfg.noTruth) {
       auto [particles, measPartMap] =

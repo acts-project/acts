@@ -14,12 +14,10 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderOptions.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <algorithm>
 #include <cmath>
-#include <memory>
 
 namespace Acts {
 
