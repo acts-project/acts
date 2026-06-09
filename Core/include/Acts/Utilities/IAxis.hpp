@@ -12,6 +12,7 @@
 
 #include <iosfwd>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace Acts {
@@ -20,7 +21,13 @@ namespace Acts {
 /// such as for inspection.
 class IAxis {
  public:
-  /// Virtual destructor
+  IAxis() = default;
+
+  /// Constructs a new axis with the given direction
+  /// @param direction the optional direction of the axis
+  explicit IAxis(std::optional<AxisDirection> direction)
+      : m_direction(direction) {}
+
   virtual ~IAxis() = default;
 
   /// Returns whether the axis is equidistant
@@ -38,6 +45,10 @@ class IAxis {
   /// Returns the boundary type set in the template param
   /// @return @c AxisBoundaryType of this axis
   virtual AxisBoundaryType getBoundaryType() const = 0;
+
+  /// Returns the direction of the axis
+  /// @return @c AxisDirection of this axis
+  std::optional<AxisDirection> getDirection() const { return m_direction; }
 
   /// Returns a vector of bin edges
   /// @return Vector which contains the bin edges
@@ -77,19 +88,22 @@ class IAxis {
   /// @param min the minimum edge of the axis
   /// @param max the maximum edge of the axis
   /// @param nbins the number of bins
+  /// @param direction the optional direction of the axis
   /// @throws std::invalid_argument if min >= max or nbins == 0
   /// @return a unique pointer to the axis
   static std::unique_ptr<IAxis> createEquidistant(
-      AxisBoundaryType aBoundaryType, double min, double max,
-      std::size_t nbins);
+      AxisBoundaryType aBoundaryType, double min, double max, std::size_t nbins,
+      std::optional<AxisDirection> direction = std::nullopt);
 
   /// Centralized axis factory for variable binning
   /// @param aBoundaryType the axis boundary type
   /// @param edges are the bin edges
+  /// @param direction the optional direction of the axis
   /// @throws std::invalid_argument if edges is empty or not strictly increasing
   /// @return a unique pointer to the axis
   static std::unique_ptr<IAxis> createVariable(
-      AxisBoundaryType aBoundaryType, const std::vector<double>& edges);
+      AxisBoundaryType aBoundaryType, const std::vector<double>& edges,
+      std::optional<AxisDirection> direction = std::nullopt);
 
   /// Helper function that dispatches from the @c IAxis base class
   /// to a concrete axis type. It will call the provided @p callable
@@ -152,6 +166,9 @@ class IAxis {
   /// Dispatch to the correct stream operator
   /// @param os output stream
   virtual void toStream(std::ostream& os) const = 0;
+
+ private:
+  std::optional<AxisDirection> m_direction;
 };
 
 template <typename T>
