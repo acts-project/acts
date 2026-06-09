@@ -9,10 +9,11 @@
 #pragma once
 
 #include "Acts/Utilities/Holders.hpp"
-#include "Acts/Utilities/detail/grid_helper.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <array>
 #include <tuple>
+#include <vector>
 
 #include <boost/container/small_vector.hpp>
 
@@ -57,29 +58,6 @@ class BinnedGroupIterator {
                       std::array<std::size_t, DIM> index,
                       std::array<std::vector<std::size_t>, DIM> navigation);
 
-  /// Do not allow Copy operations
-
-  /// @brief Copy Constructor
-  /// @param [in] other The BinnedGroupIterator to copy
-  BinnedGroupIterator(const BinnedGroupIterator<grid_t>& other) = delete;
-  /// @brief Copy assignment
-  /// @param [in] other The BinnedGroupIterator to copy
-  /// @return The copied BinnedGroupIterator
-  BinnedGroupIterator<grid_t>& operator=(
-      const BinnedGroupIterator<grid_t>& other) = delete;
-
-  /// @brief Move Constructor
-  /// @param [in] other The BinnedGroupIterator to move
-  BinnedGroupIterator(BinnedGroupIterator<grid_t>&& other) noexcept = default;
-  /// @brief Move assignment
-  /// @param [in] other The BinnedGroupIterator to move
-  /// @return The moved BinnedGroupIterator
-  BinnedGroupIterator<grid_t>& operator=(BinnedGroupIterator&& other) noexcept =
-      default;
-
-  /// @brief Default Destructor
-  ~BinnedGroupIterator() = default;
-
   /// @brief Equality operator
   /// @param [in] other The BinnedGroupIterator we are comparing against this one
   /// @return The result of the comparison
@@ -93,15 +71,10 @@ class BinnedGroupIterator {
   /// bins with the possible bottom and top candidates
   ///
   /// @return The collection of all the bins in the grid
-  std::tuple<
-      boost::container::small_vector<std::size_t, detail::ipow(3, grid_t::DIM)>,
-      std::size_t,
-      boost::container::small_vector<std::size_t, detail::ipow(3, grid_t::DIM)>>
+  std::tuple<boost::container::small_vector<std::size_t, ipow(3, grid_t::DIM)>,
+             std::size_t,
+             boost::container::small_vector<std::size_t, ipow(3, grid_t::DIM)>>
   operator*() const;
-
- private:
-  /// @brief Move to the next not-empty bin in the grid
-  void findNotEmptyBin();
 
  private:
   /// @brief The group that contains the grid and the bin finders
@@ -110,6 +83,9 @@ class BinnedGroupIterator {
   typename grid_t::local_iterator_t m_gridItr;
   /// @brief End iterator;
   typename grid_t::local_iterator_t m_gridItrEnd;
+
+  /// @brief Move to the next not-empty bin in the grid
+  void findNotEmptyBin();
 };
 
 }  // namespace Acts
