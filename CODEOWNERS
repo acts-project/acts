@@ -25,6 +25,11 @@
 # owners of code they work on. We encourage contributors to take ownership of
 # code, but only on a voluntary basis.
 
+**/*GlobalChiSquareFitter* @AJPfleger
+**/*gx2f* @AJPfleger
+**/*Gx2f* @AJPfleger
+**/*requirements* @AJPfleger
+CI/check_unused_files.py @AJPfleger
 Detray/** @niermann999
 Plugins/Covfie/** @stephenswat
 Plugins/Detray/** @niermann999
