@@ -134,9 +134,16 @@ def main():
         default=1.0,
         help="Normal-vector perpendicular distance tolerance in mm (default: 1.0)",
     )
+    parser.add_argument(
+        "--hits-dir",
+        type=pathlib.Path,
+        default=None,
+        help="Directory containing the tracker-hits Parquet shards. "
+        "Defaults to <input>/ttbar_pu200_tracker_hits/data/ttbar_pu200_tracker_hits",
+    )
     args = parser.parse_args()
 
-    hits_dir = (
+    hits_dir = args.hits_dir or (
         args.input / "ttbar_pu200_tracker_hits" / "data" / "ttbar_pu200_tracker_hits"
     )
     parquet_files = sorted(hits_dir.glob("*.parquet"))

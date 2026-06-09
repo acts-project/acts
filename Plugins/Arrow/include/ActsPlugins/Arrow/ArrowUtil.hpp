@@ -149,16 +149,11 @@ ACTS_ARROW_EXPORT std::shared_ptr<arrow::Schema> trackSchema();
 /// @c ArrowSimHitOutputConverter.
 ACTS_ARROW_EXPORT std::shared_ptr<arrow::Schema> simHitSchema();
 
-/// Read a flat (non-event-indexed) Parquet file into an @c ArrowTable.
-///
-/// Unlike @c ParquetDatasetReader, this function reads a single Parquet file
-/// that has no @c event_id column in one shot — suited for static lookup
-/// tables such as geometry-ID maps. All Parquet/Arrow symbols are confined
-/// to @c ArrowUtil.cpp so callers do not need to include Parquet headers.
-///
-/// Throws on I/O or schema errors.
-ACTS_ARROW_EXPORT ArrowTable
-readFlatParquetFile(const std::filesystem::path& path);
+/// Expected schema for the per-event particle table in the ColliderML
+/// dataset format. Contains only the columns that ColliderML provides; the
+/// ACTS @c particleSchema() is a strict superset (it adds @c energy,
+/// @c perigee_d0/z0, @c parent_id which ColliderML omits).
+ACTS_ARROW_EXPORT std::shared_ptr<arrow::Schema> collidermlParticleSchema();
 
 /// Thin RAII wrapper around @c parquet::arrow::FileWriter that opens lazily
 /// on first write so the schema can be taken from the first event's table.

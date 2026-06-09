@@ -41,7 +41,7 @@ def runColliderMLTruthTracking(
     (Sequencer, PythonTrackFinderPerformanceWriter)
         Call s.run() on the sequencer, then access perf_writer.histograms().
     """
-    from acts.arrow import particleSchema, simHitSchema
+    from acts.arrow import collidermlParticleSchema, simHitSchema
     from acts.examples.arrow import (
         loadColliderMLGeoIdMap,
         ColliderMLInputConverter,
@@ -87,7 +87,7 @@ def runColliderMLTruthTracking(
                 "cml_hits": str(hits_dir),
             },
             expectedSchemas={
-                "cml_particles": particleSchema(),
+                "cml_particles": collidermlParticleSchema(),
                 "cml_hits": simHitSchema(),
             },
         )

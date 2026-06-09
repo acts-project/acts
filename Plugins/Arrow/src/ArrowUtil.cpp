@@ -216,6 +216,24 @@ std::shared_ptr<arrow::Schema> simHitSchema() {
   });
 }
 
+std::shared_ptr<arrow::Schema> collidermlParticleSchema() {
+  return arrow::schema({
+      arrow::field("particle_id", arrow::list(arrow::uint64()), false),
+      arrow::field("pdg_id", arrow::list(arrow::int64()), false),
+      arrow::field("mass", arrow::list(arrow::float32()), false),
+      arrow::field("charge", arrow::list(arrow::float32()), false),
+      arrow::field("vx", arrow::list(arrow::float32()), false),
+      arrow::field("vy", arrow::list(arrow::float32()), false),
+      arrow::field("vz", arrow::list(arrow::float32()), false),
+      arrow::field("time", arrow::list(arrow::float32()), false),
+      arrow::field("px", arrow::list(arrow::float32()), false),
+      arrow::field("py", arrow::list(arrow::float32()), false),
+      arrow::field("pz", arrow::list(arrow::float32()), false),
+      arrow::field("vertex_primary", arrow::list(arrow::uint16()), false),
+      arrow::field("primary", arrow::list(arrow::boolean()), false),
+  });
+}
+
 std::shared_ptr<arrow::Table> withEventId(
     const std::shared_ptr<arrow::Table>& table, std::uint64_t eventId) {
   if (table == nullptr) {
@@ -240,26 +258,6 @@ std::shared_ptr<arrow::Table> withEventId(
 
   return unwrap(table->AddColumn(0, eventIdField(), std::move(chunked)),
                 "add event_id column");
-}
-
-ArrowTable readFlatParquetFile(const std::filesystem::path& path) {
-  if (!std::filesystem::exists(path)) {
-    throw std::runtime_error("readFlatParquetFile: file not found: '" +
-                             path.string() + "'");
-  }
-  auto infile = unwrap(arrow::io::ReadableFile::Open(
-                           path.string(), arrow::default_memory_pool()),
-                       "readFlatParquetFile open");
-  auto reader =
-      unwrap(parquet::arrow::OpenFile(infile, arrow::default_memory_pool()),
-             "readFlatParquetFile parquet open");
-  std::shared_ptr<arrow::Table> table;
-  auto status = reader->ReadTable(&table);
-  if (!status.ok()) {
-    throw std::runtime_error("readFlatParquetFile: read '" + path.string() +
-                             "': " + status.ToString());
-  }
-  return ArrowTable{std::move(table)};
 }
 
 class ParquetFileWriter::Impl {

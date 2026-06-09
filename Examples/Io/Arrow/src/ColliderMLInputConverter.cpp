@@ -28,10 +28,34 @@
 #include <string>
 
 #include <arrow/api.h>
+#include <arrow/io/file.h>
+#include <parquet/arrow/reader.h>
 
 namespace ActsExamples {
 
 namespace {
+
+// Read a flat (non-event-indexed) Parquet file into an ArrowTable.
+// Only used by loadColliderMLGeoIdMap — kept local to this translation unit.
+ActsPlugins::ArrowUtil::ArrowTable readFlatParquetFile(
+    const std::filesystem::path& path) {
+  if (!std::filesystem::exists(path)) {
+    throw std::runtime_error("readFlatParquetFile: file not found: '" +
+                             path.string() + "'");
+  }
+  auto infile =
+      arrow::io::ReadableFile::Open(path.string(), arrow::default_memory_pool())
+          .ValueOrDie();
+  auto reader = parquet::arrow::OpenFile(infile, arrow::default_memory_pool())
+                    .ValueOrDie();
+  std::shared_ptr<arrow::Table> table;
+  auto status = reader->ReadTable(&table);
+  if (!status.ok()) {
+    throw std::runtime_error("readFlatParquetFile: read '" + path.string() +
+                             "': " + status.ToString());
+  }
+  return ActsPlugins::ArrowUtil::ArrowTable{std::move(table)};
+}
 
 // Return the row-0 (offset, length) for a list column in the table.
 std::pair<std::int64_t, std::int64_t> rowBounds(const arrow::Table& table,
@@ -91,6 +115,26 @@ std::optional<double> sigmaFromSmearer(
   return std::nullopt;
 }
 
+// Get a typed flat (non-list) column from a table by name.
+// Used by loadColliderMLGeoIdMap to read the geo-id map file.
+template <typename ArrayType>
+std::shared_ptr<ArrayType> getFlatColumn(const arrow::Table& table,
+                                         const std::string& name,
+                                         const std::filesystem::path& path) {
+  auto col = table.GetColumnByName(name);
+  if (!col || col->num_chunks() == 0) {
+    throw std::runtime_error("loadColliderMLGeoIdMap: missing column '" + name +
+                             "' in '" + path.string() + "'");
+  }
+  auto arr = std::dynamic_pointer_cast<ArrayType>(col->chunk(0));
+  if (!arr) {
+    throw std::runtime_error("loadColliderMLGeoIdMap: column '" + name +
+                             "' has unexpected type in '" + path.string() +
+                             "'");
+  }
+  return arr;
+}
+
 // Packed ColliderML geometry key: det(8b)|vol(8b)|layer(16b)|surface(32b).
 std::uint64_t colliderMLGeoKey(std::uint8_t detector, std::uint8_t volume,
                                std::uint16_t layer, std::uint32_t surface) {
@@ -108,32 +152,17 @@ std::uint64_t colliderMLGeoKey(std::uint8_t detector, std::uint8_t volume,
 
 std::unordered_map<std::uint64_t, Acts::GeometryIdentifier>
 loadColliderMLGeoIdMap(const std::filesystem::path& path) {
-  const auto arrowTable = ActsPlugins::ArrowUtil::readFlatParquetFile(path);
+  const auto arrowTable = readFlatParquetFile(path);
   const arrow::Table& table = *arrowTable.table();
 
   // Schema from generate_colliderml_geo_map.py:
   //   detector (uint8), volume (uint8), layer (uint16),
   //   surface (uint32), acts_geo_id (uint64)
-  auto getCol = [&]<typename ArrayType>(const std::string& name) {
-    auto col = table.GetColumnByName(name);
-    if (!col || col->num_chunks() == 0) {
-      throw std::runtime_error("loadColliderMLGeoIdMap: missing column '" +
-                               name + "' in '" + path.string() + "'");
-    }
-    auto arr = std::dynamic_pointer_cast<ArrayType>(col->chunk(0));
-    if (!arr) {
-      throw std::runtime_error("loadColliderMLGeoIdMap: column '" + name +
-                               "' has unexpected type in '" + path.string() +
-                               "'");
-    }
-    return arr;
-  };
-
-  auto detArr = getCol.operator()<arrow::UInt8Array>("detector");
-  auto volArr = getCol.operator()<arrow::UInt8Array>("volume");
-  auto layArr = getCol.operator()<arrow::UInt16Array>("layer");
-  auto surfArr = getCol.operator()<arrow::UInt32Array>("surface");
-  auto geoArr = getCol.operator()<arrow::UInt64Array>("acts_geo_id");
+  auto detArr = getFlatColumn<arrow::UInt8Array>(table, "detector", path);
+  auto volArr = getFlatColumn<arrow::UInt8Array>(table, "volume", path);
+  auto layArr = getFlatColumn<arrow::UInt16Array>(table, "layer", path);
+  auto surfArr = getFlatColumn<arrow::UInt32Array>(table, "surface", path);
+  auto geoArr = getFlatColumn<arrow::UInt64Array>(table, "acts_geo_id", path);
 
   const std::int64_t n = table.num_rows();
   std::unordered_map<std::uint64_t, Acts::GeometryIdentifier> map;
@@ -209,6 +238,31 @@ ProcessCode ColliderMLInputConverter::execute(
     const AlgorithmContext& ctx) const {
   const arrow::Table& particleTable = *m_inputParticles(ctx).table();
   const arrow::Table& hitsTable = *m_inputHits(ctx).table();
+
+  // Validate incoming table schemas — downstream column access trusts this.
+  auto validateSchema = [](const arrow::Table& table,
+                           const std::shared_ptr<arrow::Schema>& expected,
+                           std::string_view ctx_name) {
+    for (int i = 0; i < expected->num_fields(); ++i) {
+      const auto& field = expected->field(i);
+      auto col = table.GetColumnByName(field->name());
+      if (!col) {
+        throw std::runtime_error(std::string(ctx_name) + ": missing column '" +
+                                 field->name() + "'");
+      }
+      if (!col->type()->Equals(field->type())) {
+        throw std::runtime_error(std::string(ctx_name) + ": column '" +
+                                 field->name() + "' has type " +
+                                 col->type()->ToString() + ", expected " +
+                                 field->type()->ToString());
+      }
+    }
+  };
+  validateSchema(particleTable,
+                 ActsPlugins::ArrowUtil::collidermlParticleSchema(),
+                 "ColliderMLInputConverter particles");
+  validateSchema(hitsTable, ActsPlugins::ArrowUtil::simHitSchema(),
+                 "ColliderMLInputConverter hits");
 
   // ------------------------------------------------------------------
   // 1. Parse particles table → SimParticleContainer + barcode index
