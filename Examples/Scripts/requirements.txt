@@ -42,7 +42,7 @@ mdurl==0.1.2
     # via markdown-it-py
 mplhep==1.2.0
     # via -r Examples/Scripts/requirements.in
-mplhep-data==0.0.5
+mplhep-data==0.1.0
     # via mplhep
 numpy==2.4.6
     # via
@@ -93,7 +93,7 @@ shellingham==1.5.4
     # via typer
 six==1.17.0
     # via python-dateutil
-typer==0.26.4
+typer==0.26.7
     # via -r Examples/Scripts/requirements.in
 typing-extensions==4.15.0
     # via
