@@ -12,22 +12,41 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
+#include <array>
 #include <iosfwd>
 
 namespace Acts {
 
 /// @ingroup material
 ///
-/// It extends the @ref ISurfaceMaterial base class and is an array pf
+/// It extends the @ref ISurfaceMaterial base class and is an array of
 /// MaterialSlab. This is not memory optimised as every bin
 /// holds one material property object.
+///
+/// The binning is described by two @ref DirectedProtoAxis objects. A
+/// conceptually 1D surface uses a second axis with a single bin.
 ///
 /// The split factors:
 ///    - 1. : oppositePre
 ///    - 0. : alongPre
 class BinnedSurfaceMaterial : public ISurfaceMaterial {
  public:
+  /// Primary constructor using two directed proto axes (always 2D).
+  ///
+  /// @param axes defines the 2D binning structure on the surface; for a
+  ///             conceptually 1D surface use a second axis with a single bin
+  /// @param materialMatrix is the matrix of material slabs (moved)
+  /// @param splitFactor is the pre/post splitting directive
+  /// @param mappingType is the type of surface mapping associated to the surface
+  BinnedSurfaceMaterial(std::array<DirectedProtoAxis, 2> axes,
+                        MaterialSlabMatrix materialMatrix,
+                        double splitFactor = 0.,
+                        MappingType mappingType = MappingType::Default);
+
+  /// @deprecated Use the DirectedProtoAxis-based constructor instead.
+  ///
   /// Explicit constructor with only full MaterialSlab,
   /// for one-dimensional binning.
   ///
@@ -35,11 +54,16 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @param materialVector is the vector of material slabs as recorded (moved)
   /// @param splitFactor is the pre/post splitting directive
   /// @param mappingType is the type of surface mapping associated to the surface
+  [[deprecated(
+      "Use BinnedSurfaceMaterial(std::array<DirectedProtoAxis, 2>, "
+      "MaterialSlabMatrix) instead")]]
   BinnedSurfaceMaterial(const BinUtility& binUtility,
                         MaterialSlabVector materialVector,
                         double splitFactor = 0.,
                         MappingType mappingType = MappingType::Default);
 
+  /// @deprecated Use the DirectedProtoAxis-based constructor instead.
+  ///
   /// Explicit constructor with only full MaterialSlab,
   /// for two-dimensional binning.
   ///
@@ -47,6 +71,9 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @param materialMatrix is the matrix of material slabs as recorded (moved)
   /// @param splitFactor is the pre/post splitting directive
   /// @param mappingType is the type of surface mapping associated to the surface
+  [[deprecated(
+      "Use BinnedSurfaceMaterial(std::array<DirectedProtoAxis, 2>, "
+      "MaterialSlabMatrix) instead")]]
   BinnedSurfaceMaterial(const BinUtility& binUtility,
                         MaterialSlabMatrix materialMatrix,
                         double splitFactor = 0.,
@@ -58,9 +85,18 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @return Reference to this object after scaling
   BinnedSurfaceMaterial& scale(double factor) final;
 
-  /// Return the BinUtility
-  /// @return Reference to the bin utility used for material binning
-  const BinUtility& binUtility() const { return m_binUtility; }
+  /// Return the two directed proto axes describing the binning.
+  /// @return const reference to the axes array
+  const std::array<DirectedProtoAxis, 2>& axes() const { return m_axes; }
+
+  /// @deprecated Use axes() instead.
+  ///
+  /// Return a BinUtility reconstructed from the internal axes.
+  /// Single-bin dummy axes are omitted so the result matches what was
+  /// originally provided to the deprecated BinUtility constructors.
+  ///
+  /// @return reconstructed BinUtility
+  [[deprecated("Use axes() instead")]] BinUtility binUtility() const;
 
   /// @brief Retrieve the entire material slab matrix
   /// @return Reference to the complete matrix of material slabs
@@ -86,10 +122,11 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   std::ostream& toStream(std::ostream& sl) const final;
 
  private:
-  /// The helper for the bin finding
-  BinUtility m_binUtility;
+  /// The two directed axes defining the binning (axis 0 → lp[0], axis 1 →
+  /// lp[1])
+  std::array<DirectedProtoAxis, 2> m_axes;
 
-  /// The five different MaterialSlab
+  /// The MaterialSlab matrix (row = axis-1 bin, col = axis-0 bin)
   MaterialSlabMatrix m_fullMaterial;
 };
 

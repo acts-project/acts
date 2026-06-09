@@ -343,10 +343,15 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
     jMaterial[Acts::jsonKey().maptype] = mapType;
     // by default the protoMaterial is not used for mapping
     jMaterial[Acts::jsonKey().mapkey] = false;
-    // write the bin utility
-    bUtility = &(psMaterial->binning());
-    // Check in the number of bin is different from 1
-    auto& binningData = bUtility->binningData();
+    // Build a BinUtility from all axes for serialisation (preserves the
+    // JSON format, including any single-bin axes that describe the full 2D
+    // structure and are needed for a lossless round-trip).
+    const auto& protoAxes = psMaterial->axes();
+    Acts::BinUtility bu(std::vector<Acts::DirectedProtoAxis>(protoAxes.begin(),
+                                                             protoAxes.end()));
+    bUtility = &bu;
+    // Check if the number of bins is different from 1
+    const auto& binningData = bUtility->binningData();
     for (std::size_t ibin = 0; ibin < binningData.size(); ++ibin) {
       if (binningData[ibin].bins() > 1) {
         jMaterial[Acts::jsonKey().mapkey] = true;
@@ -390,7 +395,11 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
     jMaterial[Acts::jsonKey().maptype] = mapType;
     // Material has been mapped
     jMaterial[Acts::jsonKey().mapkey] = true;
-    bUtility = &(bsMaterial->binUtility());
+    // Build a BinUtility from all axes for serialisation (preserves format).
+    const auto& bsmAxes = bsMaterial->axes();
+    Acts::BinUtility bsmBu(
+        std::vector<Acts::DirectedProtoAxis>(bsmAxes.begin(), bsmAxes.end()));
+    bUtility = &bsmBu;
     // convert the data
     // get the material matrix
     nlohmann::json mmat = nlohmann::json::array();
@@ -485,13 +494,16 @@ void Acts::from_json(const nlohmann::json& j,
       from_json(value, mapType);
     }
   }
-  // Return the appropriate typr of material
+  // Return the appropriate type of material
   if (mpMatrix.empty()) {
-    material = new Acts::ProtoSurfaceMaterial(bUtility, mapType);
+    material = new Acts::ProtoSurfaceMaterial(
+        Acts::protoAxesFromBinUtility(bUtility), mapType);
   } else if (bUtility.bins() == 1) {
     material = new Acts::HomogeneousSurfaceMaterial(mpMatrix[0][0], 1, mapType);
   } else {
-    material = new Acts::BinnedSurfaceMaterial(bUtility, mpMatrix, 1, mapType);
+    material =
+        new Acts::BinnedSurfaceMaterial(Acts::protoAxesFromBinUtility(bUtility),
+                                        std::move(mpMatrix), 1, mapType);
   }
 }
 

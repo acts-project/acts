@@ -52,9 +52,9 @@ class RootMaterialMapIo {
     /// The bin number tag
     std::string nBinsHistName = "n";
     /// The axis direction histogram name: AxisZ, AxisR, AxisPhi, etc.
-    std::string axisDirHistName = "v";
+    std::string axisDirHistName = "axdir";
     /// The axis boundary type hist name
-    std::string axisBoundaryTypeHistName = "o";
+    std::string axisBoundaryTypeHistName = "axbtype";
     /// The range histogram name: min value
     std::string minRangeHistName = "min";
     /// The range histogram name: max value
@@ -73,6 +73,12 @@ class RootMaterialMapIo {
     std::string rhoHistName = "rho";
     /// The index histogram name
     std::string indexHistName = "i";
+
+    /// These legace names, when detector will print a warning if they are used
+    /// Legacy names - the legacy binning value
+    std::string legacyBinningValue = "v";
+    /// Legacy names - the legacy binning option
+    std::string legacyBinningOption = "o";
   };
 
   /// Options for writing the material maps

@@ -126,14 +126,13 @@ void SurfaceMaterialMapper::checkAndInsert(State& mState,
     // We need a dynamic_cast to either a surface material proxy or
     // proper surface material
     auto psm = dynamic_cast<const ProtoSurfaceMaterial*>(surfaceMaterial);
-
-    // Get the bin utility: try proxy material first
-    const BinUtility* bu = (psm != nullptr) ? (&psm->binning()) : nullptr;
-    if (bu != nullptr) {
+    if (psm != nullptr) {
+      const auto& protoAxes = psm->axes();
+      BinUtility bu(
+          std::vector<DirectedProtoAxis>(protoAxes.begin(), protoAxes.end()));
       // Screen output for Binned Surface material
-      ACTS_DEBUG("       - (proto) binning is " << *bu);
-      // Now update
-      BinUtility buAdjusted = adjustBinUtility(*bu, surface, mState.geoContext);
+      ACTS_DEBUG("       - (proto) binning is " << bu);
+      BinUtility buAdjusted = adjustBinUtility(bu, surface, mState.geoContext);
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - adjusted binning is " << buAdjusted);
       mState.accumulatedMaterial[geoID] =
@@ -143,12 +142,13 @@ void SurfaceMaterialMapper::checkAndInsert(State& mState,
 
     // Second attempt: binned material
     auto bmp = dynamic_cast<const BinnedSurfaceMaterial*>(surfaceMaterial);
-    bu = (bmp != nullptr) ? (&bmp->binUtility()) : nullptr;
-    // Create a binned type of material
-    if (bu != nullptr) {
+    if (bmp != nullptr) {
+      const auto& bmpAxes = bmp->axes();
+      BinUtility bu(
+          std::vector<DirectedProtoAxis>(bmpAxes.begin(), bmpAxes.end()));
       // Screen output for Binned Surface material
-      ACTS_DEBUG("       - binning is " << *bu);
-      mState.accumulatedMaterial[geoID] = AccumulatedSurfaceMaterial(*bu);
+      ACTS_DEBUG("       - binning is " << bu);
+      mState.accumulatedMaterial[geoID] = AccumulatedSurfaceMaterial(bu);
     } else {
       // Create a homogeneous type of material
       ACTS_DEBUG("       - this is homogeneous material.");

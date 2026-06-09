@@ -37,7 +37,8 @@ std::shared_ptr<ProtoSurfaceMaterial> ActsPlugins::createProtoMaterial(
     AxisDirection bval = axisDirectionFromName(bin.first);
     BinningOption bopt = bin.second;
     double min = 0.;
-    double max = 0.;
+    double max =
+        1.;  // placeholder for open axes; replaced by the material mapper
     if (bopt == closed) {
       min = -std::numbers::pi;
       max = std::numbers::pi;

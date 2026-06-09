@@ -9,9 +9,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
+#include <array>
 #include <utility>
 
 using namespace Acts;
@@ -22,11 +23,14 @@ BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(ProtoSurfaceMaterial_construction_test) {
-  BinUtility smpBU(10, -10., 10., open, AxisDirection::AxisX);
-  smpBU += BinUtility(10, -10., 10., open, AxisDirection::AxisY);
+  std::array<DirectedProtoAxis, 2> axes{
+      DirectedProtoAxis(AxisDirection::AxisX, AxisBoundaryType::Bound, -10.,
+                        10., 10),
+      DirectedProtoAxis(AxisDirection::AxisY, AxisBoundaryType::Bound, -10.,
+                        10., 10)};
 
   // Constructor from arguments
-  ProtoSurfaceMaterial smp(smpBU);
+  ProtoSurfaceMaterial smp(axes);
   // Copy constructor
   ProtoSurfaceMaterial smpCopy(smp);
   // Copy move constructor
