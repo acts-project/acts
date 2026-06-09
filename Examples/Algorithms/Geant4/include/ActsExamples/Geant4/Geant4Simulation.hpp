@@ -73,7 +73,7 @@ class Geant4SimulationBase : public IAlgorithm {
     /// Cap the largest acceptable step in the propagator
     /// if inf use Geant4 default (100m)
     double propagatorLargestAcceptableStep =
-      std::numeric_limits<double>::infinity();  // mm
+        std::numeric_limits<double>::infinity();  // mm
   };
 
   Geant4SimulationBase(const Config& cfg, const std::string& name,
@@ -155,7 +155,6 @@ class Geant4Simulation final : public Geant4SimulationBase {
     bool keepParticlesWithoutHits = true;
 
     bool recordPropagationSummaries = false;
-
   };
 
   /// Simulation constructor

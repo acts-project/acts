@@ -111,7 +111,6 @@ ProcessCode Geant4SimulationBase::execute(const AlgorithmContext& ctx) const {
   // Ensure exclusive access to the Geant4 run manager
   std::lock_guard<std::mutex> guard(m_geant4Instance->mutex);
 
-
   // If requested cap the max propagator in field to avoid initial stepping
   // errors in case volumes are larger than field map
 
@@ -119,8 +118,8 @@ ProcessCode Geant4SimulationBase::execute(const AlgorithmContext& ctx) const {
     G4PropagatorInField* propagator =
         G4TransportationManager::GetTransportationManager()
             ->GetPropagatorInField();
-    propagator->SetLargestAcceptableStep(config().propagatorLargestAcceptableStep *
-                                         Acts::UnitConstants::mm);
+    propagator->SetLargestAcceptableStep(
+        config().propagatorLargestAcceptableStep * Acts::UnitConstants::mm);
   }
 
   // Set the seed new per event, so that we get reproducible results
