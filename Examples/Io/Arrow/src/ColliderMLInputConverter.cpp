@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Parquet/ColliderMLInputConverter.hpp"
+#include "ActsExamples/Io/Arrow/ColliderMLInputConverter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -20,6 +20,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <numeric>
 #include <optional>
@@ -90,6 +91,15 @@ std::optional<double> sigmaFromSmearer(
   return std::nullopt;
 }
 
+// Packed ColliderML geometry key: det(8b)|vol(8b)|layer(16b)|surface(32b).
+std::uint64_t colliderMLGeoKey(std::uint8_t detector, std::uint8_t volume,
+                               std::uint16_t layer, std::uint32_t surface) {
+  return (static_cast<std::uint64_t>(detector) << 40) |
+         (static_cast<std::uint64_t>(volume) << 32) |
+         (static_cast<std::uint64_t>(layer) << 16) |
+         static_cast<std::uint64_t>(surface);
+}
+
 }  // namespace
 
 // ---------------------------------------------------------------------------
@@ -98,33 +108,41 @@ std::optional<double> sigmaFromSmearer(
 
 std::unordered_map<std::uint64_t, Acts::GeometryIdentifier>
 loadColliderMLGeoIdMap(const std::filesystem::path& path) {
-  // Read via the Arrow plugin abstraction so Parquet symbols stay confined
-  // to libActsPluginsArrow (hidden visibility) and don't leak here.
-  const auto table = ActsPlugins::ArrowUtil::readFlatParquetFile(path);
+  const auto arrowTable = ActsPlugins::ArrowUtil::readFlatParquetFile(path);
+  const arrow::Table& table = *arrowTable.table();
 
   // Schema from generate_colliderml_geo_map.py:
   //   detector (uint8), volume (uint8), layer (uint16),
   //   surface (uint32), acts_geo_id (uint64)
-  const auto detCol = table.flatColumnUInt8("detector");
-  const auto volCol = table.flatColumnUInt8("volume");
-  const auto layCol = table.flatColumnUInt16("layer");
-  const auto surfCol = table.flatColumnUInt32("surface");
-  const auto geoCol = table.flatColumnUInt64("acts_geo_id");
+  auto getCol = [&]<typename ArrayType>(const std::string& name) {
+    auto col = table.GetColumnByName(name);
+    if (!col || col->num_chunks() == 0) {
+      throw std::runtime_error("loadColliderMLGeoIdMap: missing column '" +
+                               name + "' in '" + path.string() + "'");
+    }
+    auto arr = std::dynamic_pointer_cast<ArrayType>(col->chunk(0));
+    if (!arr) {
+      throw std::runtime_error("loadColliderMLGeoIdMap: column '" + name +
+                               "' has unexpected type in '" + path.string() +
+                               "'");
+    }
+    return arr;
+  };
 
-  const std::size_t n = static_cast<std::size_t>(table.numRows());
-  if (detCol.size() != n || volCol.size() != n || layCol.size() != n ||
-      surfCol.size() != n || geoCol.size() != n) {
-    throw std::runtime_error(
-        "loadColliderMLGeoIdMap: column size mismatch or unexpected type in '" +
-        path.string() + "'");
-  }
+  auto detArr = getCol.operator()<arrow::UInt8Array>("detector");
+  auto volArr = getCol.operator()<arrow::UInt8Array>("volume");
+  auto layArr = getCol.operator()<arrow::UInt16Array>("layer");
+  auto surfArr = getCol.operator()<arrow::UInt32Array>("surface");
+  auto geoArr = getCol.operator()<arrow::UInt64Array>("acts_geo_id");
 
+  const std::int64_t n = table.num_rows();
   std::unordered_map<std::uint64_t, Acts::GeometryIdentifier> map;
-  map.reserve(n);
-  for (std::size_t i = 0; i < n; ++i) {
+  map.reserve(static_cast<std::size_t>(n));
+  for (std::int64_t i = 0; i < n; ++i) {
     const std::uint64_t key =
-        colliderMLGeoKey(detCol[i], volCol[i], layCol[i], surfCol[i]);
-    map.emplace(key, Acts::GeometryIdentifier(geoCol[i]));
+        colliderMLGeoKey(detArr->Value(i), volArr->Value(i), layArr->Value(i),
+                         surfArr->Value(i));
+    map.emplace(key, Acts::GeometryIdentifier(geoArr->Value(i)));
   }
   return map;
 }
@@ -159,6 +177,7 @@ ColliderMLInputConverter::ColliderMLInputConverter(
           "digiConfig is required for outputMeasurements");
     }
   }
+
   m_inputParticles.initialize(m_cfg.inputParticlesTable);
   m_inputHits.initialize(m_cfg.inputHitsTable);
 
@@ -175,7 +194,14 @@ ColliderMLInputConverter::ColliderMLInputConverter(
 ColliderMLInputConverter::ColliderMLInputConverter(const Config& cfg,
                                                    Acts::Logging::Level level)
     : ColliderMLInputConverter(
-          cfg, Acts::getDefaultLogger("ColliderMLInputConverter", level)) {}
+          cfg, Acts::getDefaultLogger("ColliderMLInputConverter", level)) {
+  if (m_cfg.geoIdMap.empty()) {
+    ACTS_WARNING(
+        "No geoIdMap provided — geometry IDs constructed directly from "
+        "ColliderML (volume, layer, surface) fields. Only valid when data "
+        "matches the current geometry's ID scheme.");
+  }
+}
 
 ColliderMLInputConverter::~ColliderMLInputConverter() = default;
 
@@ -251,13 +277,6 @@ ProcessCode ColliderMLInputConverter::execute(
 
   if (!needSimHits && !needMeasurements) {
     return ProcessCode::SUCCESS;
-  }
-
-  if (m_cfg.geoIdMap.empty() && ctx.eventNumber == 0) {
-    ACTS_WARNING(
-        "No geoIdMap provided — geometry IDs constructed directly from "
-        "ColliderML (volume, layer, surface) fields. Only valid when data "
-        "matches the current geometry's ID scheme.");
   }
 
   auto [hOff, nHits] = rowBounds(hitsTable, "x");
@@ -361,34 +380,22 @@ ProcessCode ColliderMLInputConverter::execute(
                             static_cast<double>(hzArr->Value(hOff + i))};
 
     // ColliderML digitized positions are full 3D positions inside the sensor
-    // volume (not projected onto the surface plane).  Project unconditionally
-    // with unlimited perpendicular tolerance, then validate that the projected
-    // local coordinates fall within the sensor bounds.  An out-of-bounds result
-    // means the geoIdMap assigned the wrong surface — regenerate it.
+    // volume. Project with unlimited perpendicular tolerance, then check
+    // that the 2D local position is within the sensor boundary + configurable
+    // Euclidean tolerance. Out-of-bounds means the geoIdMap assigned the wrong
+    // surface.
     auto localResult =
         surface->globalToLocal(ctx.geoContext, globalPos, Acts::Vector3{},
                                std::numeric_limits<double>::max());
-    if (!localResult.ok()) {
-      ACTS_ERROR("Hit " << i << " geoId " << geoId
-                        << " globalToLocal failed at (" << globalPos.transpose()
-                        << ") — unexpected for infinite tolerance; file a bug");
-      return ProcessCode::ABORT;
-    }
-    // Allow 5 mm Euclidean tolerance in local coordinates.  ColliderML hits
-    // are full 3D positions inside the sensor volume; when projected onto the
-    // surface plane, tracks at incidence angles can land a few mm outside the
-    // exact sensor boundary.  5 mm tolerates physical incidence effects on the
-    // largest sensors (halfX ≈ 56 mm) while still catching genuine
-    // wrong-surface assignments from a stale geoIdMap (which would be tens of
-    // mm outside).
-    constexpr double kBoundsTol = 5.0;  // mm
-    if (!surface->bounds().inside(
-            localResult.value(),
-            Acts::BoundaryTolerance::AbsoluteEuclidean(kBoundsTol))) {
-      ACTS_ERROR("Hit " << i << " geoId " << geoId << " projected local ("
-                        << localResult.value().transpose()
-                        << ") outside sensor bounds (tol=" << kBoundsTol
-                        << " mm) — geoIdMap wrong surface, regenerate it");
+    if (!localResult.ok() ||
+        !surface->bounds().inside(localResult.value(),
+                                  Acts::BoundaryTolerance::AbsoluteEuclidean(
+                                      m_cfg.hitBoundsTolerance))) {
+      ACTS_ERROR(
+          "Hit " << i << " geoId " << geoId
+                 << " projected local position outside sensor bounds (tol="
+                 << m_cfg.hitBoundsTolerance
+                 << " mm) — geoIdMap wrong surface, regenerate it");
       return ProcessCode::ABORT;
     }
     const Acts::Vector2& lp = localResult.value();

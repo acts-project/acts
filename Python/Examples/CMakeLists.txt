@@ -193,7 +193,7 @@ add_examples_binding_if(
 )
 add_examples_binding_if(
     NAME Arrow
-    LINK_LIBRARIES Acts::ExamplesIoParquet Acts::ExamplesIoArrow Acts::ExamplesIoColliderML
+    LINK_LIBRARIES Acts::ExamplesIoParquet Acts::ExamplesIoArrow
     FLAG ACTS_BUILD_EXAMPLES_PARQUET
     PLUGIN_IMPORT TRUE
 )

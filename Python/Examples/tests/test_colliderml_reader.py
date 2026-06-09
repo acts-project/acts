@@ -43,6 +43,11 @@ def colliderml_pu0_sample(tmp_path_factory):
             release_dir = base / "CERN__ColliderML-Release-1"
             if not (release_dir / "ttbar_pu0_particles").exists():
                 base.mkdir(parents=True, exist_ok=True)
+                # Clear PYTHONHOME/PYTHONPATH so uv can manage its own
+                # interpreter without interference from LCG or other venvs.
+                dl_env = os.environ.copy()
+                dl_env.pop("PYTHONHOME", None)
+                dl_env.pop("PYTHONPATH", None)
                 subprocess.check_call(
                     [
                         "uv",
@@ -62,7 +67,8 @@ def colliderml_pu0_sample(tmp_path_factory):
                         str(_N_EVENTS),
                         "--out",
                         str(base),
-                    ]
+                    ],
+                    env=dl_env,
                 )
 
     release_dir = base / "CERN__ColliderML-Release-1"

@@ -130,61 +130,6 @@ void ArrowTable::exportToC(::ArrowSchema* out_schema,
   }
 }
 
-namespace {
-
-// Helper: extract a flat (non-list) column as a typed Arrow array.
-// Returns nullptr if the column is absent or has the wrong array type.
-template <typename ArrowArrayType>
-std::shared_ptr<ArrowArrayType> flatCol(const arrow::Table* table,
-                                        const std::string& name) {
-  if (!table) {
-    return nullptr;
-  }
-  auto col = table->GetColumnByName(name);
-  if (!col || col->num_chunks() == 0) {
-    return nullptr;
-  }
-  return std::dynamic_pointer_cast<ArrowArrayType>(col->chunk(0));
-}
-
-}  // namespace
-
-std::vector<std::uint8_t> ArrowTable::flatColumnUInt8(
-    const std::string& name) const {
-  auto arr = flatCol<arrow::UInt8Array>(m_table.get(), name);
-  if (!arr) {
-    return {};
-  }
-  return {arr->raw_values(), arr->raw_values() + arr->length()};
-}
-
-std::vector<std::uint16_t> ArrowTable::flatColumnUInt16(
-    const std::string& name) const {
-  auto arr = flatCol<arrow::UInt16Array>(m_table.get(), name);
-  if (!arr) {
-    return {};
-  }
-  return {arr->raw_values(), arr->raw_values() + arr->length()};
-}
-
-std::vector<std::uint32_t> ArrowTable::flatColumnUInt32(
-    const std::string& name) const {
-  auto arr = flatCol<arrow::UInt32Array>(m_table.get(), name);
-  if (!arr) {
-    return {};
-  }
-  return {arr->raw_values(), arr->raw_values() + arr->length()};
-}
-
-std::vector<std::uint64_t> ArrowTable::flatColumnUInt64(
-    const std::string& name) const {
-  auto arr = flatCol<arrow::UInt64Array>(m_table.get(), name);
-  if (!arr) {
-    return {};
-  }
-  return {arr->raw_values(), arr->raw_values() + arr->length()};
-}
-
 ArrowTable ArrowTable::importFromC(::ArrowSchema* in_schema,
                                    ::ArrowArray* in_array) {
   if (in_schema == nullptr || in_array == nullptr) {

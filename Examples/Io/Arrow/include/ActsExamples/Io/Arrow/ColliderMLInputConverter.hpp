@@ -31,23 +31,13 @@ class TrackingGeometry;
 
 namespace ActsExamples {
 
-/// Packed ColliderML geometry key: det(8b)|vol(8b)|layer(16b)|surface(32b).
-inline std::uint64_t colliderMLGeoKey(std::uint8_t detector,
-                                      std::uint8_t volume, std::uint16_t layer,
-                                      std::uint32_t surface) {
-  return (static_cast<std::uint64_t>(detector) << 40) |
-         (static_cast<std::uint64_t>(volume) << 32) |
-         (static_cast<std::uint64_t>(layer) << 16) |
-         static_cast<std::uint64_t>(surface);
-}
-
-/// Load a ColliderML geometry ID map from a CSV file.
+/// Load a ColliderML geometry ID map from a Parquet file.
 ///
 /// Expected columns (with header): detector, volume, layer, surface,
 /// acts_geo_id. The @c acts_geo_id value is parsed as a hex or decimal
 /// unsigned 64-bit integer (e.g. @c 0x1000000000010001).
 ///
-/// @param path  Path to the CSV file.
+/// @param path  Path to the Parquet file.
 /// @return Map from packed ColliderML key to @c Acts::GeometryIdentifier.
 std::unordered_map<std::uint64_t, Acts::GeometryIdentifier>
 loadColliderMLGeoIdMap(const std::filesystem::path& path);
@@ -109,6 +99,14 @@ class ColliderMLInputConverter : public IAlgorithm {
     /// was produced from a geometry whose ID scheme matches the current build.
     /// Load with @c loadColliderMLGeoIdMap().
     std::unordered_map<std::uint64_t, Acts::GeometryIdentifier> geoIdMap;
+
+    /// Euclidean boundary tolerance (mm) for projecting ColliderML 3D hit
+    /// positions onto sensor surfaces. ColliderML hits are full 3D positions
+    /// inside the sensor volume; at incidence angles the projected 2D
+    /// coordinate can land a few mm outside the exact sensor boundary.
+    /// Default 5 mm tolerates physical incidence effects while still catching
+    /// wrong-surface assignments from a stale geoIdMap (tens of mm off).
+    double hitBoundsTolerance = 5.0;
   };
 
   ColliderMLInputConverter(const Config& cfg,
