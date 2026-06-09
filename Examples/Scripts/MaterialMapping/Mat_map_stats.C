@@ -44,7 +44,7 @@ void makeBinCountsDist(const char* filename = "material-maps.root")
     if (!h2){
         std::cout<<"Histogram not found - continue"<<std::endl;
         continue;
-    } 
+    }
 
     std::cout << "\nProcessing: " << dir->GetName() << std::endl;
 
@@ -77,5 +77,3 @@ void makeBinCountsDist(const char* filename = "material-maps.root")
     c->SaveAs(Form("%s_binCounts.png", dir->GetName()));
   }
 }
-
-  
