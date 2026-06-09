@@ -167,16 +167,22 @@ class iota_view : public detray::ranges::view_interface<iota_view<incr_t>> {
     requires(!std::same_as<interval_t, iota_view>)
   DETRAY_HOST_DEVICE constexpr explicit iota_view(interval_t &&interval)
       : m_start{detray::detail::get<0>(interval)},
-        m_end{detray::detail::get<1>(interval)} {}
+        m_end{detray::detail::get<1>(interval)} {
+    assert(m_start <= m_end);
+  }
 
   /// Construct from a @param start start and @param end value.
   DETRAY_HOST_DEVICE constexpr iota_view(incr_t start, incr_t end)
-      : m_start{start}, m_end{end} {}
+      : m_start{start}, m_end{end} {
+    assert(m_start <= m_end);
+  }
 
   /// Construct from just a @param start value to represent a single value seq
   DETRAY_HOST_DEVICE
   constexpr explicit iota_view(incr_t start)
-      : m_start{start}, m_end{start + 1} {}
+      : m_start{start}, m_end{start + 1} {
+    assert(m_start <= m_end);
+  }
 
   /// @return start position of range on container.
   DETRAY_HOST_DEVICE
