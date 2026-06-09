@@ -38,6 +38,7 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   BinnedSurfaceMaterial(const BinUtility& binUtility,
                         MaterialSlabVector materialVector,
                         double splitFactor = 0.,
+                        std::vector<unsigned int> binCounts = {},
                         MappingType mappingType = MappingType::Default);
 
   /// Explicit constructor with only full MaterialSlab,
@@ -50,6 +51,7 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   BinnedSurfaceMaterial(const BinUtility& binUtility,
                         MaterialSlabMatrix materialMatrix,
                         double splitFactor = 0.,
+                        std::vector<std::vector<unsigned int>> binCounts = {},
                         MappingType mappingType = MappingType::Default);
 
   /// Scale operation
@@ -65,6 +67,10 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @brief Retrieve the entire material slab matrix
   /// @return Reference to the complete matrix of material slabs
   const MaterialSlabMatrix& fullMaterial() const { return m_fullMaterial; }
+
+  const std::vector<std::vector<unsigned int>> binCounts() const {
+    return m_binCounts;
+  }
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
   const MaterialSlab& materialSlab(const Vector2& lp) const final;
@@ -91,6 +97,9 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
 
   /// The five different MaterialSlab
   MaterialSlabMatrix m_fullMaterial;
+
+  // The bin counts of the mapped bins
+  std::vector<std::vector<unsigned int>> m_binCounts;
 };
 
 }  // namespace Acts

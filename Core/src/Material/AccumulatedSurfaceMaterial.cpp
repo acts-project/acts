@@ -132,7 +132,7 @@ void Acts::AccumulatedSurfaceMaterial::trackAverage(
 
 /// Total average creates SurfaceMaterial
 std::unique_ptr<const Acts::ISurfaceMaterial>
-Acts::AccumulatedSurfaceMaterial::totalAverage() {
+Acts::AccumulatedSurfaceMaterial::totalAverage(bool recordBinCounts) {
   if (m_binUtility.bins() == 1) {
     // Return HomogeneousSurfaceMaterial
     return std::make_unique<HomogeneousSurfaceMaterial>(
@@ -142,13 +142,25 @@ Acts::AccumulatedSurfaceMaterial::totalAverage() {
   MaterialSlabMatrix mpMatrix(
       m_binUtility.bins(1),
       MaterialSlabVector(m_binUtility.bins(0), MaterialSlab::Nothing()));
+
+  std::vector<std::vector<unsigned int>> binCounts{};
+
+  if (recordBinCounts) {
+    binCounts.resize(m_binUtility.bins(1),
+                     std::vector<unsigned int>(m_binUtility.bins(0), 0));
+  }
+
   // Loop over and fill
   for (std::size_t ib1 = 0; ib1 < m_binUtility.bins(1); ++ib1) {
     for (std::size_t ib0 = 0; ib0 < m_binUtility.bins(0); ++ib0) {
       mpMatrix[ib1][ib0] = m_accumulatedMaterial[ib1][ib0].totalAverage().first;
+      if (recordBinCounts) {
+        binCounts[ib1][ib0] =
+            m_accumulatedMaterial[ib1][ib0].totalAverage().second;
+      }
     }
   }
   // Now return the BinnedSurfaceMaterial
   return std::make_unique<const BinnedSurfaceMaterial>(
-      m_binUtility, std::move(mpMatrix), m_splitFactor);
+      m_binUtility, std::move(mpMatrix), m_splitFactor, binCounts);
 }
