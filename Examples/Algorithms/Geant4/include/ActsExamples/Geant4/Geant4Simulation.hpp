@@ -69,6 +69,11 @@ class Geant4SimulationBase : public IAlgorithm {
 
     /// Optional Geant4 instance overwrite.
     std::shared_ptr<Geant4Handle> geant4Handle;
+
+    /// Cap the largest acceptable step in the propagator
+    /// if inf use Geant4 default (100m)
+    double propagatorLargestAcceptableStep =
+      std::numeric_limits<double>::infinity();  // mm
   };
 
   Geant4SimulationBase(const Config& cfg, const std::string& name,
@@ -77,7 +82,7 @@ class Geant4SimulationBase : public IAlgorithm {
   ~Geant4SimulationBase() override;
 
   /// Initialize the algorithm
-  ProcessCode initialize() override;
+  ProcessCode initialize() final;
 
   /// Algorithm execute method, called once per event with context
   ///
@@ -151,10 +156,6 @@ class Geant4Simulation final : public Geant4SimulationBase {
 
     bool recordPropagationSummaries = false;
 
-    /// Cap the largest acceptable step in the propagator
-    /// if inf use Geant4 default (100m)
-    double propagatorLargestAcceptableStep =
-        std::numeric_limits<double>::infinity();  // mm
   };
 
   /// Simulation constructor
@@ -170,9 +171,6 @@ class Geant4Simulation final : public Geant4SimulationBase {
   ///
   /// @param ctx the AlgorithmContext for this event
   ProcessCode execute(const AlgorithmContext& ctx) const final;
-
-  /// Initialize the algorithm
-  ProcessCode initialize() final;
 
   /// Readonly access to the configuration
   const Config& config() const final { return m_cfg; }
