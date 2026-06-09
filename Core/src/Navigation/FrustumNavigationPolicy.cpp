@@ -20,12 +20,9 @@ namespace Acts::Experimental {
                         m_boxes.push_back(std::make_unique<BoundingBox>(volume.boundingBox(volume.center(gctx))));
                         prims.push_back(m_boxes.back().get());
                         for(auto & vol : volume.volumes()) {
-				ACTS_INFO("add volume "<<vol.volumeName()<<" to list of bounding boxes");
-				std::string vname=vol.volumeName();
-				if(vname.find("MM")!=std::string::npos){
-					for(auto & svol : vol.volumes()) ACTS_INFO("subvolume "<<svol.volumeName());
-				}
-				m_boxes.push_back(std::make_unique<BoundingBox>(vol.boundingBox(vol.center(gctx))));
+				ACTS_DEBUG("add volume "<<vol.volumeName()<<" to list of bounding boxes");
+				BoundingBox bb=vol.boundingBox();
+				m_boxes.push_back(std::make_unique<BoundingBox>(&vol,bb.min()+vol.center(gctx),bb.max()+vol.center(gctx)));
                                 prims.push_back(m_boxes.back().get());
                         }
                         m_topBox=make_octree(m_boxes,prims,config.depth);
@@ -74,13 +71,6 @@ namespace Acts::Experimental {
 							Acts::Result<const TrackingVolume*> pvolr=portal.resolveVolume(gctx,s.frustum.origin(),s.frustum.dir());
 							if(pvolr.ok()){
 								const TrackingVolume* pvol=*pvolr;
-								if(pvol->volumeName().compare(m_name)==0){
-									Acts::Result<const TrackingVolume*> mpvolr=portal.resolveVolume(gctx,s.frustum.origin(),-s.frustum.dir());
-									if(mpvolr.ok()){
-										const TrackingVolume* mpvol=*mpvolr;
-										ACTS_DEBUG("portal from "<<m_name<<" to "<<mpvol->volumeName());
-									}
-								}
 								if(tvol->inside(gctx,pvol->center(gctx))){
 									ACTS_DEBUG("skip portal to volume "<<pvol->volumeName());
 									continue;

@@ -40,6 +40,7 @@ struct Step {
   GeometryIdentifier geoID;
   /// Note that this is the total number of trials including the previous steps
   std::size_t nTotalTrials = 0;
+  int nCandidates=0;
 };
 
 /// @brief a step length logger for debugging the stepping
@@ -83,6 +84,7 @@ struct SteppingLogger {
     step.position = stepper.position(state.stepping);
     step.momentum = stepper.momentum(state.stepping);
     step.nTotalTrials = state.stepping.nStepTrials;
+    step.nCandidates = state.navigation.navCandidates.size();
 
     // Record the information about the surface
     if (navigator.currentSurface(state.navigation) != nullptr) {

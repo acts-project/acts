@@ -166,7 +166,7 @@ bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
   // for loop, we could eliminate this, probably,
   // but sides+1 is known at compile time, so the compiler
   // will most likely unroll the loop
-  for (std::size_t i = 0; i < sides + 1; i++) {
+  for (std::size_t i = 1; i < sides + 1; i++) {
     const VertexType& normal = normals[i];
 
     // for AABBs, take the component from the min vertex, if the normal
