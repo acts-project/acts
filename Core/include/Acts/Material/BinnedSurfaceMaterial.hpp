@@ -34,6 +34,7 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @param binUtility defines the binning structure on the surface (copied)
   /// @param materialVector is the vector of material slabs as recorded (moved)
   /// @param splitFactor is the pre/post splitting directive
+  /// @param binCounts is the vector of the bin counts recorded
   /// @param mappingType is the type of surface mapping associated to the surface
   BinnedSurfaceMaterial(const BinUtility& binUtility,
                         MaterialSlabVector materialVector,
@@ -47,6 +48,7 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @param binUtility defines the binning structure on the surface (copied)
   /// @param materialMatrix is the matrix of material slabs as recorded (moved)
   /// @param splitFactor is the pre/post splitting directive
+  /// @param binCounts is the matrix of the bin counts recorded
   /// @param mappingType is the type of surface mapping associated to the surface
   BinnedSurfaceMaterial(const BinUtility& binUtility,
                         MaterialSlabMatrix materialMatrix,
@@ -68,7 +70,9 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @return Reference to the complete matrix of material slabs
   const MaterialSlabMatrix& fullMaterial() const { return m_fullMaterial; }
 
-  const std::vector<std::vector<unsigned int>> binCounts() const {
+  /// @brief Retrieve the bin counts matrix of the mapped bins
+  /// @return Reference to the bin counts matrix of the map
+  const std::vector<std::vector<unsigned int>>& binCounts() const {
     return m_binCounts;
   }
 

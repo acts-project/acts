@@ -142,7 +142,7 @@ class AccumulatedSurfaceMaterial {
   void trackAverage(const Vector3& gp, bool emptyHit = false);
 
   /// Total average creates SurfaceMaterial
-  /// @param reCordBinCounts flag to record the counts of the mapped bins from all the tracks
+  /// @param recordBinCounts flag to record the counts of the mapped bins from all the tracks
   /// @return Unique pointer to the surface material with the bin counts information if enabled
   std::unique_ptr<const ISurfaceMaterial> totalAverage(
       bool recordBinCounts = false);
