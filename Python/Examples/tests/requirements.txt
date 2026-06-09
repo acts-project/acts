@@ -18,7 +18,7 @@ cycler==0.12.1
     # via matplotlib
 execnet==2.1.2
     # via pytest-xdist
-filelock==3.29.0
+filelock==3.29.1
     # via -r Python/Examples/tests/requirements.in
 fonttools==4.63.0
     # via matplotlib
@@ -38,7 +38,7 @@ matplotlib==3.10.9
     # via mplhep
 mplhep==1.2.0
     # via -r Python/Examples/tests/requirements.in
-mplhep-data==0.0.5
+mplhep-data==0.1.0
     # via mplhep
 numpy==2.4.6
     # via
