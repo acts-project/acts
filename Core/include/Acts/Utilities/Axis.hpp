@@ -503,7 +503,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   /// @return width of given bin
   /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
-  double getBinWidth(std::size_t bin) const {
+  double getBinWidth(std::size_t bin) const final {
     return m_binEdges.at(bin) - m_binEdges.at(bin - 1);
   }
 
@@ -514,7 +514,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins} + 1\f$
   /// @note Bin intervals have a closed lower bound, i.e. the lower boundary
   ///       belongs to the bin with the given bin index.
-  double getBinLowerBound(std::size_t bin) const {
+  double getBinLowerBound(std::size_t bin) const final {
     return m_binEdges.at(bin - 1);
   }
 
@@ -525,14 +525,16 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   ///      i.e. \f$0 \le \text{bin} \le \text{nBins}\f$
   /// @note Bin intervals have an open upper bound, i.e. the upper boundary
   ///       does @b not belong to the bin with the given bin index.
-  double getBinUpperBound(std::size_t bin) const { return m_binEdges.at(bin); }
+  double getBinUpperBound(std::size_t bin) const final {
+    return m_binEdges.at(bin);
+  }
 
   /// get bin center
   /// @param bin index of bin
   /// @return bin center position
   /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
-  double getBinCenter(std::size_t bin) const {
+  double getBinCenter(std::size_t bin) const final {
     return 0.5 * (getBinLowerBound(bin) + getBinUpperBound(bin));
   }
 
@@ -553,7 +555,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   /// @return @c true if \f$\text{xmin} \le x < \text{xmax}\f$, otherwise @c false
   /// @post If @c true is returned, the bin containing the given value is a
   ///       valid bin, i.e. it is neither the underflow nor the overflow bin.
-  bool isInside(double x) const {
+  bool isInside(double x) const final {
     return (m_binEdges.front() <= x) && (x < m_binEdges.back());
   }
 
