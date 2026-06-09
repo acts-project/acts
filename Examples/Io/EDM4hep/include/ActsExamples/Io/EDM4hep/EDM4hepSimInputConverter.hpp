@@ -10,7 +10,6 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/ScopedTimer.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
@@ -19,7 +18,6 @@
 #include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 
 #include <memory>
-#include <optional>
 #include <string>
 
 #include <edm4hep/MCParticle.h>
@@ -35,14 +33,6 @@ struct ParticleInfo;
 class DD4hepDetector;
 
 using EDM4hepSimHitAssociation = std::vector<edm4hep::SimTrackerHit>;
-
-/// Maps an @c edm4hep::MCParticle podio index (i.e. the index of the particle
-/// inside the input @c MCParticleCollection) to its row index in the output
-/// simulated @c SimParticleContainer. Particles that were filtered out have
-/// no entry. Lets downstream converters reading directly from EDM4hep emit
-/// @c particle_id values that match what @c ArrowParticleOutputConverter
-/// writes for the same simulated container.
-using EDM4hepMCParticleIndexMap = std::unordered_map<int, std::size_t>;
 
 /// Read particles from EDM4hep.
 ///
@@ -69,9 +59,6 @@ class EDM4hepSimInputConverter final : public PodioInputConverter {
     std::optional<std::string> outputSimHitAssociation = std::nullopt;
     /// Output simulated vertices collection.
     std::string outputSimVertices;
-    /// Optional output: per-event map from EDM4hep @c MCParticle podio index
-    /// to row index in @c outputParticlesSimulation. Only populated when set.
-    std::optional<std::string> outputMCParticleMap = std::nullopt;
 
     /// DD4hep detector for cellID resolution.
     std::shared_ptr<DD4hepDetector> dd4hepDetector;
@@ -104,8 +91,6 @@ class EDM4hepSimInputConverter final : public PodioInputConverter {
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
-
-  ProcessCode finalize() override;
 
  private:
   ProcessCode convert(const AlgorithmContext& ctx,
@@ -144,19 +129,6 @@ class EDM4hepSimInputConverter final : public PodioInputConverter {
 
   WriteDataHandle<SimVertexContainer> m_outputSimVertices{this,
                                                           "OutputSimVertices"};
-
-  WriteDataHandle<EDM4hepMCParticleIndexMap> m_outputMCParticleMap{
-      this, "OutputMCParticleMap"};
-
-  mutable std::optional<Acts::AveragingScopedTimer> m_timerFindPrimaryVertices;
-  mutable std::optional<Acts::AveragingScopedTimer>
-      m_timerFindGeneratorStableParticles;
-  mutable std::optional<Acts::AveragingScopedTimer> m_timerWalkParticleTree;
-  mutable std::optional<Acts::AveragingScopedTimer> m_timerConvertParticles;
-  mutable std::optional<Acts::AveragingScopedTimer> m_timerReadSimHits;
-  mutable std::optional<Acts::AveragingScopedTimer> m_timerBuildSimHitAssoc;
-  mutable std::optional<Acts::AveragingScopedTimer> m_timerSortSimHitsInTime;
-  mutable std::optional<Acts::AveragingScopedTimer> m_timerFindSourceVertices;
 };
 
 }  // namespace ActsExamples
