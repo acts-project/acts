@@ -239,31 +239,6 @@ ProcessCode ColliderMLInputConverter::execute(
   const arrow::Table& particleTable = *m_inputParticles(ctx).table();
   const arrow::Table& hitsTable = *m_inputHits(ctx).table();
 
-  // Validate incoming table schemas — downstream column access trusts this.
-  auto validateSchema = [](const arrow::Table& table,
-                           const std::shared_ptr<arrow::Schema>& expected,
-                           std::string_view ctx_name) {
-    for (int i = 0; i < expected->num_fields(); ++i) {
-      const auto& field = expected->field(i);
-      auto col = table.GetColumnByName(field->name());
-      if (!col) {
-        throw std::runtime_error(std::string(ctx_name) + ": missing column '" +
-                                 field->name() + "'");
-      }
-      if (!col->type()->Equals(field->type())) {
-        throw std::runtime_error(std::string(ctx_name) + ": column '" +
-                                 field->name() + "' has type " +
-                                 col->type()->ToString() + ", expected " +
-                                 field->type()->ToString());
-      }
-    }
-  };
-  validateSchema(particleTable,
-                 ActsPlugins::ArrowUtil::collidermlParticleSchema(),
-                 "ColliderMLInputConverter particles");
-  validateSchema(hitsTable, ActsPlugins::ArrowUtil::simHitSchema(),
-                 "ColliderMLInputConverter hits");
-
   // ------------------------------------------------------------------
   // 1. Parse particles table → SimParticleContainer + barcode index
   // ------------------------------------------------------------------
