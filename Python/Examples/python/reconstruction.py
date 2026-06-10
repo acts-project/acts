@@ -384,7 +384,7 @@ def addSeeding(
     rnd : RandomNumbers, None
         random number generator. Only used by SeedingAlgorithm.TruthSmeared.
     customSeeder : callable, None
-        A custom python function that implements the seeding algorithm. Used only when seedingAlgorithm is SeedingAlgorithm.PythonCallable. 
+        A custom python function that implements the seeding algorithm. Used only when seedingAlgorithm is SeedingAlgorithm.PythonCallable.
         It must accept s, spacePoints, outputSeeds, trackingGeometry, logLevel, and config as kwargs, and it must return the string key to the generated seeds collection.
     customSeederConfig : dict, None
         Configuration dictionary passed directly to the customSeeder function.

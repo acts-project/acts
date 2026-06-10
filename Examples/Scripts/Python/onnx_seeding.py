@@ -48,7 +48,8 @@ parser = argparse.ArgumentParser(
     description="ODD full chain with an ONNX PythonCallable seeder (GUNTAM)"
 )
 parser.add_argument(
-    "--output", "-o",
+    "--output",
+    "-o",
     help="Output directory",
     type=pathlib.Path,
     default=pathlib.Path.cwd() / "onnx_seeding_output",
@@ -102,19 +103,19 @@ args = parser.parse_args()
 outputDir = args.output
 outputDir.mkdir(parents=True, exist_ok=True)
 
-geoDir  = getOpenDataDetectorDirectory()
+geoDir = getOpenDataDetectorDirectory()
 actsDir = pathlib.Path(__file__).resolve().parents[3]
 
 oddMaterialMap = geoDir / "data/odd-material-maps.root"
-oddDigiConfig  = actsDir / "Examples/Configs/odd-digi-smearing-config.json"
-oddSeedingSel  = actsDir / "Examples/Configs/odd-seeding-config.json"
+oddDigiConfig = actsDir / "Examples/Configs/odd-digi-smearing-config.json"
+oddSeedingSel = actsDir / "Examples/Configs/odd-seeding-config.json"
 
-oddMaterialDeco  = acts.IMaterialDecorator.fromFile(oddMaterialMap)
-detector         = getOpenDataDetector(odd_dir=geoDir, materialDecorator=oddMaterialDeco)
+oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
+detector = getOpenDataDetector(odd_dir=geoDir, materialDecorator=oddMaterialDeco)
 trackingGeometry = detector.trackingGeometry()
 
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
-rnd   = acts.examples.RandomNumbers(seed=42)
+rnd = acts.examples.RandomNumbers(seed=42)
 
 s = acts.examples.Sequencer(
     events=args.events,
@@ -133,9 +134,7 @@ if not args.ttbar:
         ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
         vtxGen=acts.examples.GaussianVertexGenerator(
             mean=acts.Vector4(0, 0, 0, 0),
-            stddev=acts.Vector4(
-                0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
-            ),
+            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns),
         ),
         multiplicity=200,
         rnd=rnd,
@@ -147,9 +146,7 @@ else:
         npileup=args.ttbar_pu,
         vtxGen=acts.examples.GaussianVertexGenerator(
             mean=acts.Vector4(0, 0, 0, 0),
-            stddev=acts.Vector4(
-                0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
-            ),
+            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
         ),
         rnd=rnd,
         outputDirRoot=outputDir if args.output_root else None,
@@ -202,7 +199,10 @@ addSeeding(
     field,
     seedingAlgorithm=SeedingAlgorithm.PythonCallable,
     customSeeder=guntam_transformer_seeder,
-    customSeederConfig={"model_path": str(args.model_path), "num_threads": args.onnx_threads},
+    customSeederConfig={
+        "model_path": str(args.model_path),
+        "num_threads": args.onnx_threads,
+    },
     geoSelectionConfigFile=oddSeedingSel,
     initialSigmas=[
         1 * u.mm,
@@ -243,15 +243,21 @@ addCKFTracks(
         maxPixelHoles=1,
         maxStripHoles=2,
         constrainToVolumes=[
-            2,   # beam pipe
+            2,  # beam pipe
             32,
-            4,   # beam pipe gap
-            16, 17, 18,  # pixel
-            20,          # PST
-            23, 24, 25,  # short strip
+            4,  # beam pipe gap
+            16,
+            17,
+            18,  # pixel
+            20,  # PST
+            23,
+            24,
+            25,  # short strip
             26,
-            8,           # long strip gap
-            28, 29, 30,  # long strip
+            8,  # long strip gap
+            28,
+            29,
+            30,  # long strip
         ],
     ),
     outputDirRoot=outputDir if args.output_root else None,

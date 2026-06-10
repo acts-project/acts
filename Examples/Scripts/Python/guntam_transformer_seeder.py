@@ -27,11 +27,11 @@ import acts
 import acts.examples
 
 # Geometry acceptance window matching the GUNTAM training domain.
-_R_MAX = 500.0   # mm
+_R_MAX = 500.0  # mm
 _Z_MAX = 1000.0  # mm
 
 # Avoid z-degenerate triplets, which can make track-parameter estimation ill-defined.
-_Z_EPS = 0.01    # mm
+_Z_EPS = 0.01  # mm
 
 
 def _apply_model_acceptance(sp, xyz: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -53,9 +53,7 @@ def _filter_valid_seeds(
     return seeds[valid], scores[valid]
 
 
-def _filter_degenerate_triplets(
-    seeds: np.ndarray, hits: np.ndarray
-) -> np.ndarray:
+def _filter_degenerate_triplets(seeds: np.ndarray, hits: np.ndarray) -> np.ndarray:
     """Return a boolean mask for triplets that pass geometric validity checks.
 
     Rejects seeds with out-of-bounds indices, duplicate hit indices, or any
@@ -123,9 +121,7 @@ class _GuntamAlgorithm(acts.examples.IAlgorithm):
 
     def execute(self, ctx) -> acts.examples.ProcessCode:
         sp = self._sp_handle(ctx.eventStore)
-        xyz = np.stack(
-            [np.asarray(sp.x), np.asarray(sp.y), np.asarray(sp.z)], axis=1
-        )
+        xyz = np.stack([np.asarray(sp.x), np.asarray(sp.y), np.asarray(sp.z)], axis=1)
 
         hits, orig_idx = _apply_model_acceptance(sp, xyz)
 
