@@ -381,12 +381,12 @@ class metadata_generator:
     # Beginning of the header
     def __preamble(self, md: metadata):
         copy_right = "\
-// This file is part of the ACTS project.\
-//\
-// Copyright (C) 2016 CERN for the benefit of the ACTS project\
-//\
-// This Source Code Form is subject to the terms of the Mozilla Public\
-// License, v. 2.0. If a copy of the MPL was not distributed with this\
+// This file is part of the ACTS project.\n\
+//\n\
+// Copyright (C) 2016 CERN for the benefit of the ACTS project\n\
+//\n\
+// This Source Code Form is subject to the terms of the Mozilla Public\n\
+// License, v. 2.0. If a copy of the MPL was not distributed with this\n\
 // file, You can obtain one at https://mozilla.org/MPL/2.0/."
         self.__put(copy_right)
         self.__lines(2)
