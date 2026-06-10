@@ -544,10 +544,10 @@ void addEventData(py::module& mex) {
           .def("reserve", &MeasurementContainer::reserve)
           .def(
               "emplaceMeasurement",
-              [mcAlive](py::object self, Acts::GeometryIdentifier geometryId,
-                        const std::vector<int>& indices,
-                        const std::vector<double>& par,
-                        const std::vector<double>& cov) -> MeasTether {
+              [](py::object self, Acts::GeometryIdentifier geometryId,
+                 const std::vector<int>& indices,
+                 const std::vector<double>& par,
+                 const std::vector<double>& cov) -> MeasTether {
                 auto& container = self.cast<MeasurementContainer&>();
                 if (indices.size() != par.size() ||
                     indices.size() != cov.size()) {
@@ -578,7 +578,7 @@ void addEventData(py::module& mex) {
               py::arg("geometryId"), py::arg("indices"), py::arg("parameters"),
               py::arg("covariance"))
           .def("__getitem__",
-               [mcAlive](py::object self, MeasurementContainer::Index idx) {
+               [](py::object self, MeasurementContainer::Index idx) {
                  const auto& container =
                      self.cast<const MeasurementContainer&>();
                  return MeasTether{self, container.getMeasurement(idx),
@@ -610,7 +610,7 @@ void addEventData(py::module& mex) {
           .def("__len__",
                [](const MeasurementSubset& self) { return self.size(); })
           .def("__getitem__",
-               [msAlive](py::object self, std::size_t i) {
+               [](py::object self, std::size_t i) {
                  const auto& subset = self.cast<const MeasurementSubset&>();
                  if (i >= subset.size()) {
                    throw py::index_error("index out of range");
@@ -630,7 +630,7 @@ void addEventData(py::module& mex) {
                })
           .def(
               "getMeasurement",
-              [msAlive](py::object self, MeasurementContainer::Index idx) {
+              [](py::object self, MeasurementContainer::Index idx) {
                 const auto& subset = self.cast<const MeasurementSubset&>();
                 return MeasTether{self, subset.getMeasurement(idx), msAlive};
               },

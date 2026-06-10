@@ -213,13 +213,13 @@ void addEventData(py::module_& m) {
                py::arg("averageSourceLinks") = 1)
           .def("clear", &SpacePointContainer2::clear)
           .def("createSpacePoint",
-               [spAlive](py::object self) {
+               [](py::object self) {
                  auto& c = self.cast<SpacePointContainer2&>();
                  return MutSpTether{self, c.createSpacePoint(), spAlive};
                })
           .def("__len__", &SpacePointContainer2::size)
           .def("__getitem__",
-               [spAlive](py::object self, SpacePointIndex2 idx) {
+               [](py::object self, SpacePointIndex2 idx) {
                  auto& c = self.cast<SpacePointContainer2&>();
                  return MutSpTether{self, MutableSpacePointProxy2(c, idx),
                                     spAlive};
@@ -502,7 +502,7 @@ void addEventData(py::module_& m) {
           .def_property_readonly("empty", &SeedContainer2::empty)
           .def("__len__", &SeedContainer2::size)
           .def("__getitem__",
-               [seedAlive](py::object self, SeedIndex2 idx) {
+               [](py::object self, SeedIndex2 idx) {
                  const auto& c = self.cast<const SeedContainer2&>();
                  return ConstSeedTether{self, ConstSeedProxy2(c, idx),
                                         seedAlive};
@@ -520,7 +520,7 @@ void addEventData(py::module_& m) {
                     }};
               })
           .def("createSeed",
-               [seedAlive](py::object self) {
+               [](py::object self) {
                  auto& c = self.cast<SeedContainer2&>();
                  return MutSeedTether{self, c.createSeed(), seedAlive};
                })
