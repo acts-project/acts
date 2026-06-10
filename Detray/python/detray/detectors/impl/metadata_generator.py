@@ -264,11 +264,13 @@ class metadata_generator:
     def __init__(
         self,
         md: metadata,
-        output="../Detray/detectors/include/detray/detectors/",
+        output="",
         format_header=True,
     ):
         # Internal state during header generation
-        self.out_dir = output
+        self.out_dir = (
+            "../Detray/detectors/include/detray/detectors/" if not output else output
+        )
         self.file = None
         self.logger = logging.getLogger(__name__)
         self.format_header = format_header

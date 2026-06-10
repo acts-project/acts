@@ -76,6 +76,13 @@ def add_io_options(parser):
         default="",
         type=str,
     )
+    parser.add_argument(
+        "-f",
+        "--format",
+        help=("Format the header file"),
+        default=True,
+        action=argparse.BooleanOptionalAction,
+    )
 
     return parser
 

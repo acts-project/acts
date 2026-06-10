@@ -50,6 +50,7 @@ if(NOT "${DETRAY_GENERATE_METADATA}" STREQUAL "")
             COMMAND
                 ${CMAKE_CURRENT_SOURCE_DIR}/generate_metadata.sh -m
                 ${GENERATOR_SCRIPT} -o ${OUTPUT_DIR} -p ${CMAKE_BINARY_DIR}
+                --no-format
             DEPENDS
                 "${GENERATOR_SCRIPT}"
                 "${PROJECT_SOURCE_DIR}/detectors/generate_metadata.sh"
