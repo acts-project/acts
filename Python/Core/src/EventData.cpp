@@ -191,13 +191,13 @@ void addEventData(py::module_& m) {
   auto floatColumn = [](FloatColumnGetter column,
                         SpacePointColumns requiredColumn,
                         const std::string_view& columnName) {
-    return [column, requiredColumn,
-            columnName](const SpacePointContainer2& self) {
-      if (!self.hasColumns(requiredColumn)) {
-        throw py::attribute_error(missingColumnMessage(columnName));
-      }
-      return spanToNumpy1d((self.*column)().data(), py::cast(self));
-    };
+    return
+        [column, requiredColumn, columnName](const SpacePointContainer2& self) {
+          if (!self.hasColumns(requiredColumn)) {
+            throw py::attribute_error(missingColumnMessage(columnName));
+          }
+          return spanToNumpy1d((self.*column)().data(), py::cast(self));
+        };
   };
 
   // SpacePointContainer2
@@ -362,8 +362,8 @@ void addEventData(py::module_& m) {
   // MutableSpacePointProxy2
   // Getters and setters are wrapped in guardedRead/guardedWrite so accessing or
   // writing a column that was not requested at construction raises
-  // py::attribute_error instead of dereferencing a missing (disengaged) optional
-  // column.
+  // py::attribute_error instead of dereferencing a missing (disengaged)
+  // optional column.
   using MutProxy = MutableSpacePointProxy2;
   py::class_<MutSpTether>(m, "MutableSpacePointProxy2")
       .def_property_readonly("index",

@@ -499,8 +499,8 @@ void addEventData(py::module& mex) {
 
   // bind measurements
   // The measurement proxy is bound as a ProxyTether (see ProxyTether.hpp). The
-  // type-erased alive-check lets both MeasurementContainer and MeasurementSubset
-  // produce the same bound proxy type.
+  // type-erased alive-check lets both MeasurementContainer and
+  // MeasurementSubset produce the same bound proxy type.
   using MeasTether = ProxyTether<ConstVariableBoundMeasurementProxy>;
   constexpr auto mcAlive = &ownerAlive<MeasurementContainer>;
   constexpr auto msAlive = &ownerAlive<MeasurementSubset>;
