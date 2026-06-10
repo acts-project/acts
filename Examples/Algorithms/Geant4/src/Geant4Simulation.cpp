@@ -119,7 +119,7 @@ ProcessCode Geant4SimulationBase::execute(const AlgorithmContext& ctx) const {
         G4TransportationManager::GetTransportationManager()
             ->GetPropagatorInField();
     propagator->SetLargestAcceptableStep(
-        config().propagatorLargestAcceptableStep / Acts::UnitConstants::mm * 
+        config().propagatorLargestAcceptableStep / Acts::UnitConstants::mm *
         CLHEP::mm);
   }
 
