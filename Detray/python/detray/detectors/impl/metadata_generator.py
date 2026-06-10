@@ -1132,6 +1132,17 @@ template <template <typename...> class vector_t = dvector>\n\
         if self.format_header and os.path.isfile(self.file.name):
             logging.debug("Formatting the header...")
             try:
-                subprocess.run(["clang-format", "-i", "-style=file", self.file.name])
+                subprocess.run(
+                    ["clang-format", "-i", "-style=file", self.file.name], check=True
+                )
             except FileNotFoundError:
-                logging.error("clang-format not found")
+                logging.error("clang-format not found!")
+            except PermissionError:
+                logging.error("Permission denied: clang-format!")
+            except OSError:
+                logging.error("Cannot open clang-format!")
+            except subprocess.CalledProcessError:
+                logging.error("Running 'clang-format' failed!")
+            except Exception as e:
+                logging.error(f"Unexpected error for clang-format: {e}")
+                raise
