@@ -177,12 +177,18 @@ class IMultiAxis {
   /// const reference to the @c IAxis at the current dimension.
   class iterator {
    public:
+    /// The type of the values the iterator points to
     using value_type = const IAxis;
+    /// The type used to represent the distance between two iterators
     using difference_type = std::ptrdiff_t;
+    /// The pointer type of the values the iterator points to
     using pointer = const IAxis*;
+    /// The reference type of the values the iterator points to
     using reference = const IAxis&;
 
+    /// The iterator category (random-access)
     using iterator_category = std::random_access_iterator_tag;
+    /// The iterator concept (random-access)
     using iterator_concept = std::random_access_iterator_tag;
 
     constexpr iterator() noexcept = default;
@@ -192,31 +198,47 @@ class IMultiAxis {
     constexpr iterator(const IMultiAxis& multiAxis, std::size_t index) noexcept
         : m_multiAxis(&multiAxis), m_index(index) {}
 
+    /// Dereference the iterator
+    /// @return a const reference to the axis at the current dimension
     constexpr reference operator*() const {
       return m_multiAxis->getAxis(m_index);
     }
+    /// Pre-increment the iterator
+    /// @return a reference to the incremented iterator
     constexpr iterator& operator++() noexcept {
       ++m_index;
       return *this;
     }
+    /// Post-increment the iterator
+    /// @return a copy of the iterator before incrementing
     constexpr iterator operator++(int) noexcept {
       auto tmp = *this;
       ++(*this);
       return tmp;
     }
+    /// Pre-decrement the iterator
+    /// @return a reference to the decremented iterator
     constexpr iterator& operator--() noexcept {
       --m_index;
       return *this;
     }
+    /// Post-decrement the iterator
+    /// @return a copy of the iterator before decrementing
     constexpr iterator operator--(int) noexcept {
       auto tmp = *this;
       --(*this);
       return tmp;
     }
+    /// Advance the iterator by @p n positions
+    /// @param n the number of positions to advance
+    /// @return a reference to the advanced iterator
     constexpr iterator& operator+=(difference_type n) noexcept {
       m_index += n;
       return *this;
     }
+    /// Move the iterator back by @p n positions
+    /// @param n the number of positions to move back
+    /// @return a reference to the moved iterator
     constexpr iterator& operator-=(difference_type n) noexcept {
       m_index -= n;
       return *this;
