@@ -43,7 +43,7 @@ def _apply_model_acceptance(
     """
     r = np.asarray(sp.r)
     mask = (r < r_max) & (np.abs(xyz[:, 2]) < z_max)
-    return xyz[mask].astype(np.float32), np.where(mask)[0].astype(np.int64)
+    return xyz[mask].astype(np.float32), np.where(mask)[0].astype(np.uint32)
 
 
 def _filter_valid_seeds(
