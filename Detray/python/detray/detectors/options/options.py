@@ -73,7 +73,6 @@ def add_io_options(parser):
         "-o",
         "--output",
         help=("Metadata output directory"),
-        default="",
         type=str,
     )
     parser.add_argument(

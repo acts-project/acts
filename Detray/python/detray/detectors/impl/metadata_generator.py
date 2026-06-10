@@ -264,12 +264,14 @@ class metadata_generator:
     def __init__(
         self,
         md: metadata,
-        output="",
+        output=None,
         format_header=True,
     ):
         # Internal state during header generation
         self.out_dir = (
-            "../Detray/detectors/include/detray/detectors/" if not output else output
+            "../Detray/detectors/include/detray/detectors/"
+            if output is None
+            else output
         )
         self.file = None
         self.logger = logging.getLogger(__name__)
@@ -380,15 +382,15 @@ class metadata_generator:
 
     # Beginning of the header
     def __preamble(self, md: metadata):
-        copy_right = "\
-// This file is part of the ACTS project.\n\
-//\n\
-// Copyright (C) 2016 CERN for the benefit of the ACTS project\n\
-//\n\
-// This Source Code Form is subject to the terms of the Mozilla Public\n\
-// License, v. 2.0. If a copy of the MPL was not distributed with this\n\
-// file, You can obtain one at https://mozilla.org/MPL/2.0/."
-        self.__put(copy_right)
+        copy_right = """
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/."""
+        self.__put(copy_right.lstrip())
         self.__lines(2)
         self.__add_header_includes(md.shapes, md.materials, md.acceleration_structs)
         self.__lines(2)
