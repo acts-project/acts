@@ -69,6 +69,11 @@ parser.add_argument(
     default=1,
 )
 parser.add_argument(
+    "--gpu",
+    help="Use CUDA GPU for ONNX inference (CUDAExecutionProvider with CPU fallback).",
+    action="store_true",
+)
+parser.add_argument(
     "--model-path",
     help="Path to the ONNX seeding model",
     type=pathlib.Path,
@@ -202,6 +207,9 @@ addSeeding(
     customSeederConfig={
         "model_path": str(args.model_path),
         "num_threads": args.onnx_threads,
+        "providers": (
+            ["CUDAExecutionProvider", "CPUExecutionProvider"] if args.gpu else None
+        ),
     },
     geoSelectionConfigFile=oddSeedingSel,
     initialSigmas=[
