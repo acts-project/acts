@@ -126,11 +126,13 @@ class _GuntamAlgorithm(acts.examples.IAlgorithm):
         container = acts.SeedContainer2()
         container.assignSpacePointContainer(sp)
 
+        sp_indices_v = orig_idx[seeds_v]
+
         seed_proxies = [container.createSeed() for _ in range(len(seeds_v))]
-        for seed, triplet, score in zip(seed_proxies, seeds_v, scores_v):
+        for seed, sp_indices, score in zip(seed_proxies, sp_indices_v, scores_v):
             seed.quality = float(score)
             seed.vertexZ = 0.0
-            seed.assignSpacePointIndices([int(orig_idx[j]) for j in triplet])
+            seed.assignSpacePointIndices(sp_indices.tolist())
 
         # MutableSeedProxy2 holds raw pointers into the container; drop them before
         # the whiteboard write which transfers container ownership to C++.
