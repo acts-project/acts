@@ -9,6 +9,7 @@
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -31,6 +32,7 @@
 #include <utility>
 
 #include <G4FieldManager.hh>
+#include <G4PropagatorInField.hh>
 #include <G4RunManager.hh>
 #include <G4TransportationManager.hh>
 #include <G4UniformMagField.hh>
@@ -108,6 +110,18 @@ ProcessCode Geant4SimulationBase::initialize() {
 ProcessCode Geant4SimulationBase::execute(const AlgorithmContext& ctx) const {
   // Ensure exclusive access to the Geant4 run manager
   std::lock_guard<std::mutex> guard(m_geant4Instance->mutex);
+
+  // If requested cap the max propagator in field to avoid initial stepping
+  // errors in case volumes are larger than field map
+
+  if (std::isfinite(config().propagatorLargestAcceptableStep)) {
+    G4PropagatorInField* propagator =
+        G4TransportationManager::GetTransportationManager()
+            ->GetPropagatorInField();
+    propagator->SetLargestAcceptableStep(
+        config().propagatorLargestAcceptableStep / Acts::UnitConstants::mm *
+        CLHEP::mm);
+  }
 
   // Set the seed new per event, so that we get reproducible results
   G4Random::setTheSeed(config().randomNumbers->generateSeed(ctx));
