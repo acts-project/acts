@@ -28,7 +28,7 @@ class BinnedSurfaceMaterialAccumulator final
     /// Correct for empty bins (recommended)
     bool emptyBinCorrection = true;
 
-    // Record the counts in the mapped bins (useful for statistics studies )
+    /// Record the counts in the mapped bins (useful for statistics studies )
     bool recordBinCounts = false;
 
     /// The surfaces to be used for the accumulation
