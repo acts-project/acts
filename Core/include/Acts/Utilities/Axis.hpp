@@ -32,11 +32,14 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   /// Divide the range \f$[\text{xmin},\text{xmax})\f$ into \f$\text{nBins}\f$
   /// equidistant bins.
   ///
-  /// @param  xmin lower boundary of axis range
-  /// @param  xmax upper boundary of axis range
-  /// @param  nBins number of bins to divide the axis range into
-  Axis(double xmin, double xmax, std::size_t nBins)
-      : m_min(xmin),
+  /// @param xmin lower boundary of axis range
+  /// @param xmax upper boundary of axis range
+  /// @param nBins number of bins to divide the axis range into
+  /// @param direction optional direction of the axis
+  Axis(double xmin, double xmax, std::size_t nBins,
+       std::optional<AxisDirection> direction = std::nullopt)
+      : IAxis(direction),
+        m_min(xmin),
         m_max(xmax),
         m_width((xmax - xmin) / nBins),
         m_bins(nBins) {}
@@ -44,13 +47,14 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   /// Divide the range \f$[\text{xmin},\text{xmax})\f$ into \f$\text{nBins}\f$
   /// equidistant bins.
   ///
-  /// @param  typeTag boundary type tag
-  /// @param  xmin lower boundary of axis range
-  /// @param  xmax upper boundary of axis range
-  /// @param  nBins number of bins to divide the axis range into
+  /// @param typeTag boundary type tag
+  /// @param xmin lower boundary of axis range
+  /// @param xmax upper boundary of axis range
+  /// @param nBins number of bins to divide the axis range into
+  /// @param direction optional direction of the axis
   Axis(AxisBoundaryTypeTag<bdt> typeTag, double xmin, double xmax,
-       std::size_t nBins)
-      : Axis(xmin, xmax, nBins) {
+       std::size_t nBins, std::optional<AxisDirection> direction = std::nullopt)
+      : Axis(xmin, xmax, nBins, direction) {
     static_cast<void>(typeTag);
   }
 
@@ -72,8 +76,8 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
 
   /// Get #size bins which neighbor the one given. Generic overload with
   /// symmetric size.
-  /// @param  idx requested bin index
-  /// @param  size how many neighboring bins (up/down)
+  /// @param idx requested bin index
+  /// @param size how many neighboring bins (up/down)
   /// @return Set of neighboring bin indices (global)
   NeighborHoodIndices neighborHoodIndices(std::size_t idx,
                                           std::size_t size = 1) const {
@@ -82,8 +86,8 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   }
 
   /// Get #size bins which neighbor the one given. This is the version for Open.
-  /// @param  idx requested bin index
-  /// @param  sizes how many neighboring bins (up/down)
+  /// @param idx requested bin index
+  /// @param sizes how many neighboring bins (up/down)
   /// @return Set of neighboring bin indices (global)
   /// @note Open varies given bin and allows 0 and NBins+1 (underflow, overflow) as neighbors
   NeighborHoodIndices neighborHoodIndices(std::size_t idx,
@@ -101,8 +105,8 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
 
   /// Get #size bins which neighbor the one given. This is the version for
   /// Bound.
-  /// @param  idx requested bin index
-  /// @param  sizes how many neighboring bins (up/down)
+  /// @param idx requested bin index
+  /// @param sizes how many neighboring bins (up/down)
   /// @return Set of neighboring bin indices (global)
   /// @note Bound varies given bin and allows 1 and NBins (regular bins) as neighbors
   NeighborHoodIndices neighborHoodIndices(std::size_t idx,
@@ -123,8 +127,8 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
 
   /// Get #size bins which neighbor the one given. This is the version for
   /// Closed (i.e. Wrapping).
-  /// @param  idx requested bin index
-  /// @param  sizes how many neighboring bins (up/down)
+  /// @param idx requested bin index
+  /// @param sizes how many neighboring bins (up/down)
   /// @return Set of neighboring bin indices (global)
   /// @note Closed varies given bin and allows bins on the opposite
   ///       side of the axis as neighbors. (excludes underflow / overflow)
@@ -169,7 +173,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
 
   /// Converts bin index into a valid one for this axis.
   /// @note Open: bin index is clamped to [0, nBins+1]
-  /// @param  bin The bin to wrap
+  /// @param bin The bin to wrap
   /// @return valid bin index
   std::size_t wrapBin(int bin) const
     requires(bdt == AxisBoundaryType::Open)
@@ -217,7 +221,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   double getBinWidth(std::size_t /*bin*/ = 0) const { return m_width; }
 
   /// get lower bound of bin
-  /// @param  bin index of bin
+  /// @param bin index of bin
   /// @return lower bin boundary
   ///
   /// @pre @c bin must be a valid bin index (excluding the underflow bin),
@@ -316,20 +320,24 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   /// given bin boundaries. @c nBins is given by the number of bin edges
   /// reduced by one.
   /// @param binEdges vector of bin edges
+  /// @param direction optional direction of the axis
   /// @pre @c binEdges must be strictly sorted in ascending order.
   /// @pre @c binEdges must contain at least two entries.
-  explicit Axis(std::vector<double> binEdges)
-      : m_binEdges(std::move(binEdges)) {}
+  explicit Axis(std::vector<double> binEdges,
+                std::optional<AxisDirection> direction = std::nullopt)
+      : IAxis(direction), m_binEdges(std::move(binEdges)) {}
 
   /// Create a binning structure with @c nBins variable-sized bins from the
   /// given bin boundaries. @c nBins is given by the number of bin edges
   /// reduced by one.
   /// @param typeTag boundary type tag
   /// @param binEdges vector of bin edges
+  /// @param direction optional direction of the axis
   /// @pre @c binEdges must be strictly sorted in ascending order.
   /// @pre @c binEdges must contain at least two entries.
-  Axis(AxisBoundaryTypeTag<bdt> typeTag, std::vector<double> binEdges)
-      : Axis(std::move(binEdges)) {
+  Axis(AxisBoundaryTypeTag<bdt> typeTag, std::vector<double> binEdges,
+       std::optional<AxisDirection> direction = std::nullopt)
+      : Axis(std::move(binEdges), direction) {
     static_cast<void>(typeTag);
   }
 
