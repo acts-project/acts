@@ -963,7 +963,7 @@ def test_gnn_shrink_nodes_same_output(tmp_path, trk_geo, field, hardware):
 
     embed_model = ci_models / "torchscript_models/embed.pt"
     filter_model = ci_models / "torchscript_models/filter.pt"
-    gnn_model = ci_models / "torchscript_models/gnn.pt"
+    gnn_model = ci_models / "onnx_models/gnn.onnx"
     assert embed_model.exists()
     assert filter_model.exists()
     assert gnn_model.exists()
