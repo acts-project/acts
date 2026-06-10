@@ -93,9 +93,10 @@ using ContainerCustomizer =
 template <typename ElementT, typename CallableT>
 concept OnLayerReturnsNode =
     std::invocable<CallableT&, const std::optional<ElementT>&, LayerNodePtr> &&
-    std::same_as<std::invoke_result_t<
-                     CallableT&, const std::optional<ElementT>&, LayerNodePtr>,
-                 BlueprintNodePtr>;
+    std::convertible_to<
+        std::invoke_result_t<CallableT&, const std::optional<ElementT>&,
+                             LayerNodePtr>,
+        BlueprintNodePtr>;
 
 /// @brief Concept satisfied when @p CallableT is an `onLayer` callback that
 /// mutates the created @ref LayerBlueprintNode in place and returns `void`.
@@ -113,7 +114,7 @@ concept OnLayerMutatesLayer =
 template <typename ElementT, typename CallableT>
 concept OnContainerReturnsNode =
     std::invocable<CallableT&, const ElementT&, ContainerNodePtr> &&
-    std::same_as<
+    std::convertible_to<
         std::invoke_result_t<CallableT&, const ElementT&, ContainerNodePtr>,
         BlueprintNodePtr>;
 
