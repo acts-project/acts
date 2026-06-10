@@ -1,6 +1,5 @@
-
-
 import ROOT
+
 
 def make_bin_counts_dist(filename="material-maps.root"):
 
@@ -64,6 +63,7 @@ def make_bin_counts_dist(filename="material-maps.root"):
         pt.Draw()
 
         c.SaveAs(f"{directory.GetName()}_binCounts.png")
+
 
 if __name__ == "__main__":
     make_bin_counts_dist("material-maps.root")
