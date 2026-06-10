@@ -40,17 +40,17 @@ class MergedMaterialMarker final : public ISurfaceMaterial {
   /// Scale operator -- no-op, the marker carries no material
   /// @param factor is the scale factor (ignored)
   /// @return Reference to this marker
-  MergedMaterialMarker& scale(double factor) final;
+  MergedMaterialMarker& scale(double factor) override;
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
   ///
   /// @note the input parameter is ignored, always returns
   ///       @ref MaterialSlab::Nothing()
-  const MaterialSlab& materialSlab(const Vector2& lp = Vector2{0.,
-                                                               0.}) const final;
+  const MaterialSlab& materialSlab(const Vector2& lp = Vector2{
+                                       0., 0.}) const override;
 
   /// @copydoc ISurfaceMaterial::localAxisDirections() const
-  std::vector<AxisDirection> localAxisDirections() const final;
+  std::vector<AxisDirection> localAxisDirections() const override;
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
   ///
@@ -59,7 +59,7 @@ class MergedMaterialMarker final : public ISurfaceMaterial {
   [[deprecated(
       "Use materialSlab(const Vector2& lp) with a prior "
       "Surface::globalToLocal() call instead")]] const MaterialSlab&
-  materialSlab(const Vector3& gp) const final;
+  materialSlab(const Vector3& gp) const override;
 
   // Inherit additional materialSlab overloads from base class
   using ISurfaceMaterial::materialSlab;
@@ -70,7 +70,7 @@ class MergedMaterialMarker final : public ISurfaceMaterial {
   /// Output Method for std::ostream
   /// @param sl The output stream
   /// @return Reference to the output stream for chaining
-  std::ostream& toStream(std::ostream& sl) const final;
+  std::ostream& toStream(std::ostream& sl) const override;
 
  private:
   /// The marker carries no material
