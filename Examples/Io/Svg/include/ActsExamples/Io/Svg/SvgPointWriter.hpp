@@ -73,7 +73,7 @@ struct AccessorPositionXYZ {
 ///     event000000002-spacepoints.svg
 ///
 template <typename T, typename Acc = AccessorXYZ>
-class SvgPointWriter final : public WriterT<GeometryIdMultiset<T>> {
+class SvgPointWriter /*final*/ : public WriterT<GeometryIdMultiset<T>> {
  public:
   struct Config {
     std::string writerName = "PointWriter";  ///< the name of the writer

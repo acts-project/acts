@@ -54,9 +54,8 @@ class Gen1GeometryClosureVisitor : public TrackingGeometryMutableVisitor {
                                         << " with material");
       m_materialDecorator->decorate(volume);
     }
-    if (volume.volumeMaterial() == nullptr &&
-        volume.motherVolume() != nullptr &&
-        volume.motherVolume()->volumeMaterial() != nullptr) {
+    if (!volume.hasMaterial() && volume.motherVolume() != nullptr &&
+        volume.motherVolume()->hasMaterial()) {
       auto protoMaterial = dynamic_cast<const ProtoVolumeMaterial*>(
           volume.motherVolume()->volumeMaterial());
       if (protoMaterial == nullptr) {

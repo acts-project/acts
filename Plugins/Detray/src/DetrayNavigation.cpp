@@ -14,7 +14,6 @@
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"

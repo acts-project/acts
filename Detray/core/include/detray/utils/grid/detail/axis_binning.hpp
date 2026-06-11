@@ -14,6 +14,7 @@
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/grid_axis.hpp"
 #include "detray/definitions/indexing.hpp"
+#include "detray/definitions/math.hpp"
 
 // System include(s).
 #include <cstddef>
@@ -78,6 +79,8 @@ struct regular {
   /// @returns the corresponding bin index
   DETRAY_HOST_DEVICE
   int bin(const scalar_type v) const {
+    assert(std::isfinite(v));
+    assert(math::fabs(v) < std::numeric_limits<scalar_type>::max());
     return static_cast<int>((v - span()[0]) / bin_width() + 1.f) - 1;
   }
 
@@ -92,8 +95,14 @@ struct regular {
   DETRAY_HOST_DEVICE
   bin_range range(const scalar_type v, const darray<dindex, 2> &nhood) const {
     const int ibin{bin(v)};
+    assert(std::isfinite(ibin));
+
     const int ibinmin{ibin - static_cast<int>(nhood[0])};
     const int ibinmax{ibin + static_cast<int>(nhood[1])};
+
+    assert(ibin < std::numeric_limits<int>::max() -
+                      math::max(static_cast<int>(nhood[0]),
+                                static_cast<int>(nhood[1])));
 
     return {ibinmin, ibinmax};
   }
@@ -109,6 +118,7 @@ struct regular {
   DETRAY_HOST_DEVICE
   bin_range range(const scalar_type v,
                   const darray<scalar_type, 2> &nhood) const {
+    assert(nhood[0] >= 0.f && nhood[1] >= 0.f);
     return {bin(v - nhood[0]), bin(v + nhood[1])};
   }
 
@@ -145,6 +155,8 @@ struct regular {
   DETRAY_HOST_DEVICE
   scalar_type bin_width() const {
     // Get the binning information
+    assert(m_bin_edges != nullptr);
+    assert(m_offset + 1 < m_bin_edges->size());
     const scalar_type min{(*m_bin_edges)[m_offset]};
     const scalar_type max{(*m_bin_edges)[m_offset + 1]};
 
@@ -159,6 +171,8 @@ struct regular {
   DETRAY_HOST_DEVICE
   darray<scalar_type, 2> span() const {
     // Get the binning information
+    assert(m_bin_edges != nullptr);
+    assert(m_offset + 1 < m_bin_edges->size());
     const scalar_type min{(*m_bin_edges)[m_offset]};
     const scalar_type max{(*m_bin_edges)[m_offset + 1]};
 
@@ -230,6 +244,7 @@ struct irregular {
   /// @returns the corresponding bin index
   DETRAY_HOST_DEVICE
   int bin(const scalar_type v) const {
+    assert(std::isfinite(v));
     auto bins_begin = m_bin_edges->begin() + static_cast<index_type>(m_offset);
     auto bins_end = bins_begin + static_cast<index_type>(m_n_bins);
 
@@ -249,6 +264,8 @@ struct irregular {
   DETRAY_HOST_DEVICE
   bin_range range(const scalar_type v, const darray<dindex, 2> &nhood) const {
     const int ibin{bin(v)};
+    assert(std::isfinite(ibin));
+
     const int ibinmin{ibin - static_cast<int>(nhood[0])};
     const int ibinmax{ibin + static_cast<int>(nhood[1])};
 
@@ -264,12 +281,16 @@ struct irregular {
   DETRAY_HOST_DEVICE
   bin_range range(const scalar_type v,
                   const darray<scalar_type, 2> &nhood) const {
+    assert(nhood[0] >= 0.f && nhood[1] >= 0.f);
     return {bin(v - nhood[0]), bin(v + nhood[1])};
   }
 
   /// @return the bin edges for a given @param ibin
   DETRAY_HOST_DEVICE
   darray<scalar_type, 2> bin_edges(const dindex ibin) const {
+    assert(std::isfinite(ibin));
+    assert(m_bin_edges != nullptr);
+    assert(m_offset + ibin + 1u < m_bin_edges->size());
     return {(*m_bin_edges)[m_offset + ibin],
             (*m_bin_edges)[m_offset + ibin + 1u]};
   }
@@ -282,6 +303,7 @@ struct irregular {
     vector_type<scalar_type> edges;
     detray::detail::call_reserve(edges, nbins());
 
+    assert(m_bin_edges != nullptr);
     edges.insert(
         edges.end(), m_bin_edges->begin() + static_cast<index_type>(m_offset),
         m_bin_edges->begin() + static_cast<index_type>(m_offset + m_n_bins));
@@ -303,6 +325,8 @@ struct irregular {
   DETRAY_HOST_DEVICE
   darray<scalar_type, 2> span() const {
     // Get the binning information
+    assert(m_bin_edges != nullptr);
+    assert(m_offset + m_n_bins < m_bin_edges->size());
     const scalar_type min{(*m_bin_edges)[m_offset]};
     const scalar_type max{(*m_bin_edges)[m_offset + m_n_bins]};
 

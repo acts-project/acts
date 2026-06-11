@@ -15,7 +15,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Ranges.hpp"
-#include "Acts/Utilities/detail/grid_helper.hpp"
+#include "Acts/Utilities/detail/MultiAxisHelper.hpp"
 
 #include <limits>
 #include <map>
@@ -247,26 +247,28 @@ struct SurfaceArray::SurfaceGridLookupImpl final
   }
 
   GridIndex localBinsFromPosition2D(const GridPoint& point) const {
-    return detail::grid_helper::getLocalBinIndices(point, m_axes);
+    return detail::MultiAxisHelper::getMultiIndexFromPoint(point, m_axes);
   }
 
   GridIndex localBinsFromGlobalBin2D(std::size_t globalBin) const {
-    return detail::grid_helper::getLocalBinIndices(globalBin, m_axes);
+    return detail::MultiAxisHelper::getMultiIndexFromFlatIndex(globalBin,
+                                                               m_axes);
   }
 
   std::size_t globalBinFromLocalBins2D(const GridIndex& localBins) const {
-    return detail::grid_helper::getGlobalBin(localBins, m_axes);
+    return detail::MultiAxisHelper::getFlatIndexFromMultiIndex(localBins,
+                                                               m_axes);
   }
 
   std::size_t globalBinFromLocalBins3D(const GridIndex& localBins,
                                        std::uint8_t neighborDistance) const {
     const std::size_t globalGridBin =
-        detail::grid_helper::getGlobalBin(localBins, m_axes);
+        detail::MultiAxisHelper::getFlatIndexFromMultiIndex(localBins, m_axes);
     return globalGridBin * (m_maxNeighborDistance + 1) + neighborDistance;
   }
 
   GridPoint binCenter(const GridIndex& localBins) const {
-    return detail::grid_helper::getBinCenter(localBins, m_axes);
+    return detail::MultiAxisHelper::getBinCenter(localBins, m_axes);
   }
 
   /// map surface center to grid
@@ -292,7 +294,7 @@ struct SurfaceArray::SurfaceGridLookupImpl final
                                const Surface& surface, std::size_t startBin) {
     const GridIndex startIndices = localBinsFromGlobalBin2D(startBin);
     const auto startNeighborIndices =
-        detail::grid_helper::neighborHoodIndices(startIndices, 1u, m_axes);
+        detail::MultiAxisHelper::neighborHoodIndices(startIndices, 1u, m_axes);
 
     std::set<std::size_t> visited({startBin});
     std::vector<std::size_t> queue(startNeighborIndices.begin(),
@@ -323,8 +325,8 @@ struct SurfaceArray::SurfaceGridLookupImpl final
       }
       m_fillingGrid.at(current).push_back(&surface);
 
-      const auto neighborIndices =
-          detail::grid_helper::neighborHoodIndices(currentIndices, 1u, m_axes);
+      const auto neighborIndices = detail::MultiAxisHelper::neighborHoodIndices(
+          currentIndices, 1u, m_axes);
       queue.insert(queue.end(), neighborIndices.begin(), neighborIndices.end());
     }
   }
@@ -352,7 +354,8 @@ struct SurfaceArray::SurfaceGridLookupImpl final
            neighborDistance <= m_maxNeighborDistance; ++neighborDistance) {
         surfacePack.clear();
 
-        for (const std::size_t idx : detail::grid_helper::neighborHoodIndices(
+        for (const std::size_t idx :
+             detail::MultiAxisHelper::neighborHoodIndices(
                  indices, neighborDistance, m_axes)) {
           const std::vector<const Surface*>& binContent = m_fillingGrid.at(idx);
           std::copy(binContent.begin(), binContent.end(),
