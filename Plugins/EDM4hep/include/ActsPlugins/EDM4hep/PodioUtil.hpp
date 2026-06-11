@@ -13,6 +13,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "ActsPlugins/EDM4hep/PodioDynamicColumns.hpp"
+#include "ActsPodioEdm/TrackerHitLocal.h"
 
 #include <limits>
 #include <memory>
@@ -43,6 +44,7 @@ namespace PodioUtil {
 // We want to support podio 0.16 and 1.x for now
 
 // See https://github.com/AIDASoft/podio/pull/549
+
 #if podio_VERSION_MAJOR >= 1 || \
     (podio_VERSION_MAJOR == 0 && podio_VERSION_MINOR == 99)
 using ROOTWriter = podio::ROOTWriter;
@@ -79,11 +81,14 @@ constexpr int kNoSurface = -1;
 /// @ingroup edm4hep_plugin
 class ConversionHelper {
  public:
+  virtual ~ConversionHelper() = default;
+
   /// Convert surface to identifier
   /// @param surface The surface to convert
   /// @return Optional identifier for the surface
   virtual std::optional<Identifier> surfaceToIdentifier(
       const Acts::Surface& surface) const = 0;
+
   /// Convert identifier to surface
   /// @param identifier The identifier to convert
   /// @return Pointer to the surface
@@ -92,13 +97,28 @@ class ConversionHelper {
 
   /// Convert source link to identifier
   /// @param sl The source link to convert
-  /// @return Identifier for the source link
-  virtual Identifier sourceLinkToIdentifier(const Acts::SourceLink& sl) = 0;
+  /// @return Identifier for the source link, or nullopt if not supported
+  virtual std::optional<Identifier> sourceLinkToIdentifier(
+      [[maybe_unused]] const Acts::SourceLink& sl) const {
+    return std::nullopt;
+  }
+
   /// Convert identifier to source link
   /// @param identifier The identifier to convert
-  /// @return Source link for the identifier
-  virtual Acts::SourceLink identifierToSourceLink(
-      Identifier identifier) const = 0;
+  /// @return Source link for the identifier, or nullopt if not supported
+  virtual std::optional<Acts::SourceLink> identifierToSourceLink(
+      [[maybe_unused]] Identifier identifier) const {
+    return std::nullopt;
+  }
+
+  /// Convert source link to TrackerHitLocal
+  /// @param sourceLink The source link to convert
+  /// @return TrackerHitLocal for the source link, or nullopt if not supported
+  virtual std::optional<ActsPodioEdm::TrackerHitLocal>
+  sourceLinkToTrackerHitLocal(
+      [[maybe_unused]] const Acts::SourceLink& sourceLink) const {
+    return std::nullopt;
+  }
 };
 
 std::shared_ptr<const Acts::Surface> convertSurfaceFromPodio(

@@ -167,6 +167,18 @@ class DiscSurface : public RegularSurface {
   double referencePositionValue(const GeometryContext& gctx,
                                 AxisDirection aDir) const final;
 
+  using Surface::referenceFrame;
+
+  /// Return method for the reference frame
+  /// This is the frame in which the covariance matrix is defined (specialized
+  /// by all surfaces)
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  ///
+  /// @return RotationMatrix3 which defines the three axes of the measurement
+  /// frame
+  RotationMatrix3 referenceFrame(const GeometryContext& gctx) const;
+
   /// This method returns the bounds by reference
   /// @return Reference to the surface bounds
   const SurfaceBounds& bounds() const final;
@@ -355,6 +367,11 @@ class DiscSurface : public RegularSurface {
 
  protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)
+
+  /// @copydoc Surface::localAxes
+  std::array<AxisDirection, 2> localAxes() const override {
+    return {AxisDirection::AxisR, AxisDirection::AxisPhi};
+  }
 };
 
 static_assert(RegularSurfaceConcept<DiscSurface>,

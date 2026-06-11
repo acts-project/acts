@@ -13,12 +13,17 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-#include <TChain.h>
 #include <TTree.h>
 
 using namespace Acts;
 
-void ActsPlugins::RootMaterialTrackIo::connectForRead(TChain& materialChain) {
+namespace ActsPlugins {
+
+std::uint32_t RootMaterialTrackIo::eventId() const {
+  return m_eventId;
+}
+
+void RootMaterialTrackIo::connectForRead(TTree& materialChain) {
   materialChain.SetBranchAddress("event_id", &m_eventId);
   materialChain.SetBranchAddress("v_x", &m_summaryPayload.vX);
   materialChain.SetBranchAddress("v_y", &m_summaryPayload.vY);
@@ -43,6 +48,8 @@ void ActsPlugins::RootMaterialTrackIo::connectForRead(TChain& materialChain) {
   materialChain.SetBranchAddress("mat_A", &m_stepPayload.stepMatAPtr);
   materialChain.SetBranchAddress("mat_Z", &m_stepPayload.stepMatZPtr);
   materialChain.SetBranchAddress("mat_rho", &m_stepPayload.stepMatRhoPtr);
+  materialChain.SetBranchAddress("elements", &m_stepPayload.stepElementZPtr);
+  materialChain.SetBranchAddress("fraction", &m_stepPayload.stepFractionPtr);
   if (m_cfg.surfaceInfo) {
     materialChain.SetBranchAddress("sur_id", &m_surfacePayload.surfaceIdPtr);
     materialChain.SetBranchAddress("sur_x", &m_surfacePayload.surfaceXPtr);
@@ -53,7 +60,7 @@ void ActsPlugins::RootMaterialTrackIo::connectForRead(TChain& materialChain) {
   }
 }
 
-void ActsPlugins::RootMaterialTrackIo::connectForWrite(TTree& materialTree) {
+void RootMaterialTrackIo::connectForWrite(TTree& materialTree) {
   // This sets the branch addresses for the material track
   // Set the branches
   materialTree.Branch("event_id", &m_eventId);
@@ -80,6 +87,8 @@ void ActsPlugins::RootMaterialTrackIo::connectForWrite(TTree& materialTree) {
   materialTree.Branch("mat_A", &m_stepPayload.stepMatA);
   materialTree.Branch("mat_Z", &m_stepPayload.stepMatZ);
   materialTree.Branch("mat_rho", &m_stepPayload.stepMatRho);
+  materialTree.Branch("elements", &m_stepPayload.stepElementZ);
+  materialTree.Branch("fraction", &m_stepPayload.stepFraction);
 
   if (m_cfg.prePostStepInfo) {
     materialTree.Branch("mat_sx", &m_stepPayload.stepXs);
@@ -104,9 +113,9 @@ void ActsPlugins::RootMaterialTrackIo::connectForWrite(TTree& materialTree) {
   }
 }
 
-void ActsPlugins::RootMaterialTrackIo::write(
-    const GeometryContext& gctx, std::uint32_t eventNum,
-    const RecordedMaterialTrack& materialTrack) {
+void RootMaterialTrackIo::write(const GeometryContext& gctx,
+                                std::uint32_t eventNum,
+                                const RecordedMaterialTrack& materialTrack) {
   m_eventId = eventNum;
   // Clearing the vector first
   m_stepPayload.stepXs.clear();
@@ -128,6 +137,8 @@ void ActsPlugins::RootMaterialTrackIo::write(
   m_stepPayload.stepMatA.clear();
   m_stepPayload.stepMatZ.clear();
   m_stepPayload.stepMatRho.clear();
+  m_stepPayload.stepElementZ.clear();
+  m_stepPayload.stepFraction.clear();
 
   m_surfacePayload.surfaceId.clear();
   m_surfacePayload.surfaceX.clear();
@@ -162,6 +173,8 @@ void ActsPlugins::RootMaterialTrackIo::write(
   m_stepPayload.stepMatA.reserve(mints);
   m_stepPayload.stepMatZ.reserve(mints);
   m_stepPayload.stepMatRho.reserve(mints);
+  m_stepPayload.stepElementZ.reserve(mints);
+  m_stepPayload.stepFraction.reserve(mints);
 
   m_surfacePayload.surfaceId.reserve(mints);
   m_surfacePayload.surfaceX.reserve(mints);
@@ -274,6 +287,8 @@ void ActsPlugins::RootMaterialTrackIo::write(
     m_stepPayload.stepMatA.push_back(mprops.material().Ar());
     m_stepPayload.stepMatZ.push_back(mprops.material().Z());
     m_stepPayload.stepMatRho.push_back(mprops.material().massDensity());
+    m_stepPayload.stepElementZ.push_back(mint.elementZ);
+    m_stepPayload.stepFraction.push_back(mint.elementFrac);
     // re-calculate if defined to do so
     if (m_cfg.recalculateTotals) {
       m_summaryPayload.tX0 += mprops.thicknessInX0();
@@ -282,7 +297,7 @@ void ActsPlugins::RootMaterialTrackIo::write(
   }
 }
 
-RecordedMaterialTrack ActsPlugins::RootMaterialTrackIo::read() const {
+RecordedMaterialTrack RootMaterialTrackIo::read() const {
   RecordedMaterialTrack rmTrack;
   // Fill the position and momentum
   rmTrack.first.first =
@@ -320,6 +335,11 @@ RecordedMaterialTrack ActsPlugins::RootMaterialTrackIo::read() const {
                                   m_stepPayload.stepMatZ[is],
                                   m_stepPayload.stepMatRho[is]),
         s);
+    /// adding the element vectors and fractions
+    if (is < m_stepPayload.stepElementZ.size()) {
+      mInteraction.elementZ = m_stepPayload.stepElementZ[is];
+      mInteraction.elementFrac = m_stepPayload.stepFraction[is];
+    }
     if (m_cfg.surfaceInfo) {
       // add the surface information to the interaction this allows the
       // mapping to be speed up
@@ -337,3 +357,4 @@ RecordedMaterialTrack ActsPlugins::RootMaterialTrackIo::read() const {
   }
   return rmTrack;
 }
+}  // namespace ActsPlugins

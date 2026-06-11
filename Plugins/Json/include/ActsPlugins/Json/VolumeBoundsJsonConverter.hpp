@@ -72,6 +72,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(
      {VolumeBounds::BoundsType::eCuboid, "Cuboid"},
      {VolumeBounds::BoundsType::eCutoutCylinder, "CutoutCylinder"},
      {VolumeBounds::BoundsType::eCylinder, "Cylinder"},
+     {VolumeBounds::BoundsType::eDiamond, "Diamond"},
      {VolumeBounds::BoundsType::eGenericCuboid, "GenericCuboid"},
      {VolumeBounds::BoundsType::eTrapezoid, "Trapezoid"}})
 

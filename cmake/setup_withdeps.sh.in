@@ -22,6 +22,7 @@ podio_PYTHON_DIR="@podio_PYTHON_DIR@"
 EDM4HEP_DIR="@EDM4HEP_DIR@"
 EDM4HEP_LIBRARY_DIR="@EDM4HEP_LIBRARY_DIR@"
 EDM4HEP_INCLUDE_DIR="@EDM4HEP_INCLUDE_DIR@"
+TensorRT_DIR="@TensorRT_LIBRARY_DIRS@"
 
 if [ -n "${ZSH_VERSION:-}" ]; then
     script_dir=${0:a:h}
@@ -38,8 +39,6 @@ fi
 python_path=$(which python3)
 python_path=$(dirname "${python_path}")
 
-# source the basic ACTS environment
-source "${script_dir}/this_acts.sh"
 
 # activate dependencies if present
 if [[ -n "${ROOT_SETUP_SCRIPT:-}" ]]; then
@@ -79,6 +78,13 @@ if [[ -d "${EDM4HEP_DIR}" ]]; then
   export DYLD_LIBRARY_PATH="${EDM4HEP_LIBRARY_DIR}/lib:${DYLD_LIBRARY_PATH}"
   export ROOT_INCLUDE_PATH="${EDM4HEP_INCLUDE_DIR}:${ROOT_INCLUDE_PATH}"
 fi
+if [[ -d "${TensorRT_DIR}" ]]; then
+  export LD_LIBRARY_PATH="${TensorRT_DIR}:${LD_LIBRARY_PATH}"
+  export DYLD_LIBRARY_PATH="${TensorRT_DIR}:${DYLD_LIBRARY_PATH}"
+fi
+
+# source the basic ACTS environment
+source "${script_dir}/this_acts.sh"
 
 # ensure that we end up with the same python as before sourcing this script
 # this was observed to be a problem as other activation scripts like ROOT modify PATH

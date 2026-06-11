@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -105,10 +106,23 @@ class CuboidStackPortalShell final : public CuboidPortalShell {
   /// @note The shells must be ordered in the given direction
   /// @param direction The stacking direction (along x/y/z axis) in local stack coordinates
   /// @param logger A logging instance for debugging
+  /// @param materialPolicy How to treat material designated on faces that are
+  ///        merged during stacking. By default this is a fatal error; in
+  ///        @ref PortalMaterialMergePolicy::eDiscardAndMark mode the material is
+  ///        discarded and the merged surface is tagged with a marker.
   CuboidStackPortalShell(const GeometryContext& gctx,
                          std::vector<CuboidPortalShell*> shells,
                          AxisDirection direction,
-                         const Logger& logger = getDummyLogger());
+                         const Logger& logger = getDummyLogger(),
+                         PortalMaterialMergePolicy materialPolicy =
+                             PortalMaterialMergePolicy::eThrow);
+
+  /// Return the faces that are *merged* (as opposed to fused) when stacking in
+  /// the given direction. Material designated on these faces of a child shell
+  /// cannot survive the stacking and will cause a merge failure.
+  /// @param direction The stacking direction
+  /// @return The faces that get merged for the given direction
+  static std::vector<Face> mergedFaces(AxisDirection direction);
 
   /// @copydoc PortalShellBase::size
   std::size_t size() const override;

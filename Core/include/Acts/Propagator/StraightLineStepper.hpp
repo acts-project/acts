@@ -106,8 +106,6 @@ class StraightLineStepper final {
     bool covTransport = false;
     /// Covariance matrix for track parameter uncertainties
     Covariance cov = Covariance::Zero();
-    /// Additional free parameter covariance matrix
-    std::optional<FreeMatrix> additionalFreeCovariance = std::nullopt;
 
     /// accumulated path length state
     double pathAccumulated = 0.;
@@ -417,7 +415,7 @@ class StraightLineStepper final {
     const auto m = state.particleHypothesis.mass();
     const auto p = absoluteMomentum(state);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
-    const auto dtds = fastHypot(1., m / p);
+    const auto dtds = fastHypot(1, m / p);
     // Update the track parameters according to the equations of motion
     Vector3 dir = direction(state);
     state.pars.template segment<3>(eFreePos0) += h * dir;

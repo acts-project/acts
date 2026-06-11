@@ -131,21 +131,21 @@ Acts::Result<void> createStripSpacePoint(
   const double var2 =
       measurement2.fullCovariance()(Acts::eBoundLoc0, Acts::eBoundLoc0);
 
-  const Acts::Vector3 btmToTop1 = stripEnds1.top - stripEnds1.bottom;
-  const Acts::Vector3 btmToTop2 = stripEnds2.top - stripEnds2.bottom;
-  const double theta = std::acos(btmToTop1.dot(btmToTop2) /
-                                 (btmToTop1.norm() * btmToTop2.norm()));
+  const Acts::Vector3 innerStripCenter =
+      0.5 * (stripEnds1.top + stripEnds1.bottom);
+  const Acts::Vector3 innerStripHalfVector =
+      0.5 * (stripEnds1.top - stripEnds1.bottom);
+  const Acts::Vector3 outerStripCenter =
+      0.5 * (stripEnds2.top + stripEnds2.bottom);
+  const Acts::Vector3 outerStripHalfVector =
+      0.5 * (stripEnds2.top - stripEnds2.bottom);
+  const Acts::Vector3 stripSeparation = outerStripCenter - innerStripCenter;
+
+  const double theta = std::acos(
+      innerStripHalfVector.normalized().dot(outerStripHalfVector.normalized()));
 
   const Acts::Vector2 varZR = Acts::StripSpacePointBuilder::computeVarianceZR(
       gctx, surface1, *spacePoint, var1, var2, theta);
-
-  const Acts::Vector3 topStripVector = stripEnds1.top - stripEnds1.bottom;
-  const Acts::Vector3 bottomStripVector = stripEnds2.top - stripEnds2.bottom;
-  const Acts::Vector3 stripCenterDistance =
-      (0.5 * (stripEnds1.top + stripEnds1.bottom) -
-       0.5 * (stripEnds2.top + stripEnds2.bottom));
-  const Acts::Vector3 topStripCenter =
-      0.5 * (stripEnds1.top + stripEnds1.bottom);
 
   auto sp = spacePoints.createSpacePoint();
   sp.assignSourceLinks(
@@ -154,17 +154,17 @@ Acts::Result<void> createStripSpacePoint(
   sp.y() = spacePoint->y();
   sp.z() = spacePoint->z();
   sp.r() = Acts::fastHypot(spacePoint->x(), spacePoint->y());
-  sp.time() = nanf;
+  sp.time() = Acts::NoTime;
   sp.varianceZ() = varZR[0];
   sp.varianceR() = varZR[1];
   Eigen::Map<Eigen::Vector3f>(sp.topStripVector().data()) =
-      topStripVector.cast<float>();
+      outerStripHalfVector.cast<float>();
   Eigen::Map<Eigen::Vector3f>(sp.bottomStripVector().data()) =
-      bottomStripVector.cast<float>();
+      innerStripHalfVector.cast<float>();
   Eigen::Map<Eigen::Vector3f>(sp.stripCenterDistance().data()) =
-      stripCenterDistance.cast<float>();
+      stripSeparation.cast<float>();
   Eigen::Map<Eigen::Vector3f>(sp.topStripCenter().data()) =
-      topStripCenter.cast<float>();
+      outerStripCenter.cast<float>();
 
   return Acts::Result<void>::success();
 }
@@ -236,103 +236,8 @@ SpacePointMaker::SpacePointMaker(Config cfg,
   }
 
   if (!m_cfg.stripGeometrySelection.empty()) {
-    initializeStripPartners();
-  }
-}
-
-ProcessCode SpacePointMaker::initialize() {
-  ACTS_INFO("space point geometry selection:");
-  for (const auto& geoId : m_cfg.geometrySelection) {
-    ACTS_INFO("  " << geoId);
-  }
-
-  return ProcessCode::SUCCESS;
-}
-
-void SpacePointMaker::initializeStripPartners() {
-  ACTS_INFO("Strip space point geometry selection:");
-  for (const auto& geoId : m_cfg.stripGeometrySelection) {
-    ACTS_INFO("  " << geoId);
-  }
-
-  // We need to use a default geometry context here to access the center
-  // coordinates of modules.
-  const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
-
-  // Build strip partner map, i.e., which modules are stereo partners
-  // As a heuristic we assume that the stereo partners are the modules
-  // which have the shortest mutual distance
-  std::vector<const Acts::Surface*> allSensitivesVector;
-  m_cfg.trackingGeometry->visitSurfaces(
-      [&](const auto surface) { allSensitivesVector.push_back(surface); },
-      true);
-  std::ranges::sort(allSensitivesVector, detail::CompareGeometryId{},
-                    detail::GeometryIdGetter{});
-  GeometryIdMultiset<const Acts::Surface*> allSensitives(
-      allSensitivesVector.begin(), allSensitivesVector.end());
-
-  for (auto selector : m_cfg.stripGeometrySelection) {
-    // Apply volume/layer range
-    auto rangeLayer =
-        selectLowestNonZeroGeometryObject(allSensitives, selector);
-
-    // Apply selector on extra if extra != 0
-    auto range = rangeLayer | std::views::filter([&](auto srf) {
-                   return srf->geometryId().extra() != 0
-                              ? srf->geometryId().extra() == selector.extra()
-                              : true;
-                 });
-
-    const auto sizeBefore = m_stripPartner.size();
-    const std::size_t nSurfaces = std::distance(range.begin(), range.end());
-
-    if (nSurfaces < 2) {
-      ACTS_WARNING("Only " << nSurfaces << " surfaces for selector " << selector
-                           << ", skip");
-      continue;
-    }
-    ACTS_DEBUG("Found " << nSurfaces << " surfaces for selector " << selector);
-
-    // Very dumb all-to-all search
-    for (auto mod1 : range) {
-      if (m_stripPartner.contains(mod1->geometryId())) {
-        continue;
-      }
-
-      const Acts::Surface* partner = nullptr;
-      double minDist = std::numeric_limits<double>::max();
-
-      for (auto mod2 : range) {
-        if (mod1 == mod2) {
-          continue;
-        }
-        auto c1 = mod1->center(gctx);
-        auto c2 = mod2->center(gctx);
-        if (minDist > (c1 - c2).norm()) {
-          minDist = (c1 - c2).norm();
-          partner = mod2;
-        }
-      }
-
-      ACTS_VERBOSE("Found stereo pair: " << mod1->geometryId() << " <-> "
-                                         << partner->geometryId());
-      ACTS_VERBOSE("- " << mod1->center(gctx).transpose() << " <-> "
-                        << partner->center(gctx).transpose());
-      const auto [it1, success1] =
-          m_stripPartner.insert({mod1->geometryId(), partner->geometryId()});
-      const auto [it2, success2] =
-          m_stripPartner.insert({partner->geometryId(), mod1->geometryId()});
-      if (!success1 || !success2) {
-        throw std::runtime_error("error inserting in map");
-      }
-    }
-
-    const std::size_t sizeAfter = m_stripPartner.size();
-    const std::size_t missing = nSurfaces - (sizeAfter - sizeBefore);
-    if (missing > 0) {
-      ACTS_WARNING("Did not find a stereo partner for " << missing
-                                                        << " surfaces");
-    }
+    m_stripModulePairMap = pairStripModules(
+        *m_cfg.trackingGeometry, m_cfg.stripGeometrySelection, this->logger());
   }
 }
 
@@ -418,7 +323,7 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
     for (const auto& [mod1, mod1SourceLinks] : mapByModule) {
       ACTS_VERBOSE("Process " << mod1 << " with " << mod1SourceLinks->size()
                               << " source links");
-      const Acts::GeometryIdentifier mod2 = m_stripPartner.at(mod1);
+      const Acts::GeometryIdentifier mod2 = m_stripModulePairMap.at(mod1);
 
       // Avoid producing space points twice
       if (done.contains(mod2)) {
