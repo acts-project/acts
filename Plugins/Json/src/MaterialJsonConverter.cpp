@@ -9,7 +9,6 @@
 #include "ActsPlugins/Json/MaterialJsonConverter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/GridSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
@@ -19,6 +18,7 @@
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
 #include "Acts/Material/MaterialGridHelper.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Material/MergedMaterialMarker.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -33,8 +33,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <functional>
-#include <numbers>
-#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -336,6 +334,16 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
   // A bin utility needs to be written
   const Acts::BinUtility* bUtility = nullptr;
 
+  // Marker material left behind by a lossy portal merge. It carries no actual
+  // material, so only the type tag is written.
+  if (dynamic_cast<const Acts::MergedMaterialMarker*>(material) != nullptr) {
+    jMaterial[Acts::jsonKey().typekey] = "merged-material-marker";
+    // Flag as "mapped" so the reader does not discard it.
+    jMaterial[Acts::jsonKey().mapkey] = true;
+    j[Acts::jsonKey().materialkey] = jMaterial;
+    return;
+  }
+
   // First: Check if we have a proto material
   auto psMaterial = dynamic_cast<const Acts::ProtoSurfaceMaterial*>(material);
   if (psMaterial != nullptr) {
@@ -373,7 +381,7 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
     jMaterial[Acts::jsonKey().maptype] = mapType;
     // Material has been mapped
     jMaterial[Acts::jsonKey().mapkey] = true;
-    nlohmann::json jmat(hsMaterial->materialSlab(Acts::Vector3(0., 0., 0.)));
+    nlohmann::json jmat(hsMaterial->materialSlab());
     jMaterial[Acts::jsonKey().datakey] = nlohmann::json::array({
         nlohmann::json::array({
             jmat,
@@ -463,6 +471,13 @@ void Acts::from_json(const nlohmann::json& j,
   // By default no material is return.
   material = nullptr;
   if (jMaterial[Acts::jsonKey().mapkey] == false) {
+    return;
+  }
+
+  // Marker material left behind by a lossy portal merge
+  if (jMaterial.contains(Acts::jsonKey().typekey) &&
+      jMaterial[Acts::jsonKey().typekey] == "merged-material-marker") {
+    material = new Acts::MergedMaterialMarker();
     return;
   }
 

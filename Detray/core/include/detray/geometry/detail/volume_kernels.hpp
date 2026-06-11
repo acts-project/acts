@@ -88,6 +88,7 @@ struct apply_to_neighbourhood {
     if constexpr (concepts::surface_accelerator<accel_type>) {
       // Run over the surfaces in a single acceleration data structure
       for (const auto &sf : accel.search(det, volume, track, win_size, ctx)) {
+        assert(sf.volume() == volume.index());
         functor_t{}(sf, std::forward<Args>(args)...);
       }
     } else if constexpr (concepts::volume_accelerator<accel_type>) {
