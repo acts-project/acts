@@ -72,9 +72,19 @@ option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system 
 option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_USE_SYSTEM_LIBS} )
 option(ACTS_USE_SYSTEM_MODULEMAPGRAPH "Use a system installation of ModuleMapGraph" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
+option(ACTS_USE_SYSTEM_GBL "Use a system-provided General Broken Lines (GBL) from Mille" OFF)
 option(ACTS_USE_SYSTEM_MILLE "Use a system-provided Mille" ON)
 
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
+option(ACTS_BUILD_PLUGIN_ARROW "Build Apache Arrow/Parquet plugin" OFF)
+option(ACTS_ARROW_ISOLATED
+    "Statically link arrow/parquet into libActsPluginArrow and hide their \
+symbols, so they cannot collide with other arrow consumers in the same \
+process (e.g. pyarrow's bundled libarrow). Disable only if your arrow \
+install is ABI-compatible with every other arrow consumer that will be \
+loaded alongside ACTS."
+    ON
+)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
@@ -99,6 +109,7 @@ option(ACTS_GNN_ENABLE_TORCH "Build the torchscript backend for the gnn plugin" 
 option(ACTS_GNN_ENABLE_MODULEMAP "Enable Module-Map-based graph construction" OFF)
 option(ACTS_GNN_ENABLE_TENSORRT "Enable the native TensorRT inference modules" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
+option(ACTS_BUILD_PLUGIN_GBL "Build General Broken Lines (GBL) plugin from Mille" OFF)
 option(ACTS_BUILD_PLUGIN_MILLE "Build Mille plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ROOT "Build ROOT plugin" OFF)
@@ -122,6 +133,7 @@ option(ACTS_BUILD_EXAMPLES_FASTJET "Build FastJet plugin" OFF)
 option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_GNN "Build the GNN example code" OFF)
 option(ACTS_BUILD_EXAMPLES_HASHING "Build Hashing-based code in the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_PARQUET "Build Arrow/Parquet-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PODIO "Build Podio-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "[Deprecated] Build python bindings and enables the examples" OFF)
@@ -180,6 +192,8 @@ set_option_if(
     OR
     ACTS_BUILD_EXAMPLES_HASHING
     OR
+    ACTS_BUILD_EXAMPLES_PARQUET
+    OR
     ACTS_BUILD_EXAMPLES_PODIO
     OR
     ACTS_BUILD_EXAMPLES_PYTHIA8
@@ -198,6 +212,7 @@ set_option_if(
 )
 set_option_if(ACTS_BUILD_PLUGIN_EDM4HEP ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_EXAMPLES_PODIO ACTS_BUILD_EXAMPLES_EDM4HEP)
+set_option_if(ACTS_BUILD_PLUGIN_ARROW ACTS_BUILD_EXAMPLES_PARQUET)
 set_option_if(ACTS_BUILD_PLUGIN_GEANT4 ACTS_BUILD_EXAMPLES_GEANT4)
 set_option_if(
     ACTS_BUILD_PLUGIN_ROOT
@@ -322,6 +337,7 @@ set(_acts_doxygen_version 1.9.4)
 set(_acts_hepmc3_version 3.2.4)
 set(_acts_nlohmanjson_version 3.11.3)
 set(_acts_mille_version 01.00.00)
+set(_acts_gbl_version 04.00.04)
 set(_acts_onnxruntime_version 1.12.0)
 set(_acts_geomodel_version 6.8.0)
 set(_acts_root_version 6.28.04) # first version with C++20 support
@@ -333,6 +349,7 @@ set(_acts_covfie_version 0.15.2)
 set(_acts_vecmem_version 1.24.0)
 set(_acts_annoy_version 1.17.3)
 set(_acts_fastjet_version 3.4.1)
+set(_acts_arrow_version 21.0.0)
 
 # Help with compiler flags discovery
 include(ActsFunctions)
@@ -474,6 +491,13 @@ if(ACTS_BUILD_PLUGIN_JSON)
         add_subdirectory(thirdparty/nlohmann_json)
     endif()
 endif()
+if(ACTS_BUILD_PLUGIN_GBL)
+    if(ACTS_USE_SYSTEM_GBL)
+        find_package(GBL ${_acts_gbl_version} REQUIRED CONFIG)
+    else()
+        add_subdirectory(thirdparty/GBL)
+    endif()
+endif()
 if(ACTS_BUILD_PLUGIN_MILLE)
     if(ACTS_USE_SYSTEM_MILLE)
         find_package(Mille ${_acts_mille_version} REQUIRED CONFIG)
@@ -572,14 +596,37 @@ endif()
 if(ACTS_BUILD_PLUGIN_GEANT4)
     find_package(Geant4 ${_acts_geant4_version} REQUIRED CONFIG COMPONENTS gdml)
 endif()
+if(ACTS_BUILD_PLUGIN_ARROW)
+    find_package(Arrow REQUIRED CONFIG)
+    find_package(Parquet REQUIRED CONFIG)
+    find_package(ArrowDataset REQUIRED CONFIG)
+    # Arrow's package config requires an exact version match, so enforce our
+    # minimum supported major version manually instead.
+    string(REPLACE "." ";" _acts_arrow_version_list ${_acts_arrow_version})
+    list(GET _acts_arrow_version_list 0 _acts_arrow_version_major)
+    if(Arrow_VERSION_MAJOR LESS _acts_arrow_version_major)
+        message(
+            FATAL_ERROR
+            "Found Arrow ${Arrow_VERSION}, but at least ${_acts_arrow_version} is required"
+        )
+    endif()
+endif()
 
 if(ACTS_SETUP_VECMEM)
     if(ACTS_USE_SYSTEM_VECMEM)
         find_package(vecmem ${_acts_vecmem_version} REQUIRED)
     else()
         add_subdirectory(thirdparty/vecmem)
-        # Make the "VecMem language code" available for the whole project.
-        include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
+    endif()
+    # Make the "VecMem language code" available for the whole project.
+    list(APPEND CMAKE_MODULE_PATH "${VECMEM_LANGUAGE_DIR}")
+endif()
+
+if(ACTS_SETUP_COVFIE)
+    if(ACTS_USE_SYSTEM_COVFIE)
+        find_package(covfie ${_acts_covfie_version} REQUIRED CONFIG)
+    else()
+        add_subdirectory(thirdparty/covfie)
     endif()
 endif()
 
@@ -615,14 +662,6 @@ if(ACTS_BUILD_TRACCC)
         set(TRACCC_SETUP_TBB TRUE CACHE BOOL "")
     else()
         set(TRACCC_SETUP_TBB FALSE CACHE BOOL "")
-    endif()
-
-    if(ACTS_SETUP_COVFIE)
-        if(ACTS_USE_SYSTEM_COVFIE)
-            find_package(covfie ${_acts_covfie_version} REQUIRED CONFIG)
-        else()
-            add_subdirectory(thirdparty/covfie)
-        endif()
     endif()
 
     # traccc also depends on vecmem and covfie, but those plugins should always

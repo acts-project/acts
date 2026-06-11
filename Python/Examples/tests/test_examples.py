@@ -860,7 +860,14 @@ def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "ERROR"
     try:
         subprocess.check_call(
-            [sys.executable, str(script), "-n1", "--ambi-solver", "ML"],
+            [
+                sys.executable,
+                str(script),
+                "-n1",
+                "--ambi-solver",
+                "ML",
+                "--output-root",
+            ],
             cwd=tmp_path,
             env=env,
             stderr=subprocess.STDOUT,
@@ -1018,7 +1025,8 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
 
 @pytest.mark.odd
 @pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
-def test_gnn4itk_example(tmp_path, assert_root_hash):
+@pytest.mark.parametrize("useEdgeLayerConnector", [False, True])
+def test_gnn4itk_example(tmp_path, assert_root_hash, useEdgeLayerConnector):
     from gnn4itk_example import runGNN4ITk
     from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
     from acts.examples.simulation import (
@@ -1033,12 +1041,10 @@ def test_gnn4itk_example(tmp_path, assert_root_hash):
     from acts.examples.reconstruction import addSpacePointsMaking
     from acts.examples.root import RootAthenaDumpWriter
 
-    # get required files from MODEL_STORAGE environment variable
     model_storage = os.environ.get("MODEL_STORAGE")
     assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
     ci_models = Path(model_storage)
 
-    # only ODD onnx and module map
     model = ci_models / "gnn_odd_module_map.onnx"
     module_map = str(ci_models / "module_map_odd_2k_events.1e-03.float.v1_3_PATCH")
 
@@ -1059,7 +1065,6 @@ def test_gnn4itk_example(tmp_path, assert_root_hash):
 
     dump_file = tmp_path / "athena_dump.root"
 
-    # Generate one event of Athena-format input using FATRAS simulation
     detector = getOpenDataDetector()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
     rnd = acts.examples.RandomNumbers(seed=42)
@@ -1114,13 +1119,13 @@ def test_gnn4itk_example(tmp_path, assert_root_hash):
 
     assert dump_file.exists()
 
-    # Only check if this runs
     runGNN4ITk(
         inputRootDump=dump_file,
         moduleMapPath=module_map,
         gnnModel=model,
         outputDir=tmp_path,
         events=1,
+        useEdgeLayerConnector=useEdgeLayerConnector,
         logLevel=acts.logging.INFO,
     )
 
@@ -1149,7 +1154,7 @@ def test_strip_space_points(detector_config, field, tmp_path, assert_root_hash):
             s=s,
         ).run()
 
-    root_file = "strip_spacepoints.root"
+    root_file = "strip_space_points.root"
     rfp = tmp_path / root_file
 
     assert_root_hash(root_file, rfp)

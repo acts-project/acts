@@ -1,0 +1,42 @@
+# This file defines the ownership of files and directories within the ACTS
+# project. We use the term "ownership" to refer to a non-binding, opt-in
+# connection between parts of the code base and contributors. The core idea is
+# to improve the findability of experts regarding specific parts of the ACTS
+# codebase, without imposing additional burdens on contributors.
+#
+# Code ownership implies the following:
+#
+# * Users viewing code through the Github website will automatically be shown
+#   who owns that code.
+# * Users are encouraged to contact code owners with questions or comments
+#   about the owned code.
+# * Pull requests touching owned code will automatically request a review from
+#   the code owner.
+#
+# However, the non-binding nature of code ownership also implies the
+# following:
+#
+# * Contributors can disown code at any time and for any reason.
+# * Code owners are not required to review all pull requests affecting their
+#   owned code.
+#
+# Because code ownership is opt-in, code doesn't necessarily have to have an
+# owner. Furthermore, contributors are not required to register themselves as
+# owners of code they work on. We encourage contributors to take ownership of
+# code, but only on a voluntary basis.
+
+**/*GlobalChiSquareFitter* @AJPfleger
+**/*gx2f* @AJPfleger
+**/*Gx2f* @AJPfleger
+**/*requirements* @AJPfleger
+CI/check_unused_files.py @AJPfleger
+Detray/** @niermann999
+Plugins/Covfie/** @stephenswat
+Plugins/Detray/** @niermann999
+thirdparty/covfie/** @stephenswat
+thirdparty/traccc/** @stephenswat
+Plugins/Gnn/** @benjaminhuth
+Examples/Algorithms/TrackFindingGnn/** @benjaminhuth
+pyproject.toml @benjaminhuth
+**/*Gsf* @benjaminhuth
+**/*GaussianSumFitter* @benjaminhuth
