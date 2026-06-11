@@ -31,6 +31,7 @@
 // System include(s)
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace detray::test {
@@ -80,23 +81,22 @@ class navigation_validation : public test::fixture_base<> {
         typename truth_trace_t::value_type::intersection_type;
 
     // Runge-Kutta stepper
-    using hom_bfield_t = bfield::const_field_t<scalar_t>;
+    using hom_bfield_t = typename bfield::const_field_t<scalar_t>::view_t;
     using bfield_t =
         std::conditional_t<k_use_rays, navigation_validator::empty_bfield,
                            hom_bfield_t>;
     using rk_stepper_t =
-        rk_stepper<typename hom_bfield_t::view_t, algebra_t,
-                   unconstrained_step<scalar_t>, stepper_rk_policy<scalar_t>,
-                   stepping::print_inspector>;
+        rk_stepper<hom_bfield_t, algebra_t, unconstrained_step<scalar_t>,
+                   stepper_rk_policy<scalar_t>, stepping::print_inspector>;
     using line_stepper_t = line_stepper<algebra_t, unconstrained_step<scalar_t>,
                                         stepper_default_policy<scalar_t>,
                                         stepping::print_inspector>;
     using stepper_t =
         std::conditional_t<k_use_rays, line_stepper_t, rk_stepper_t>;
 
-    bfield_t b_field{};
+    std::optional<bfield_t> b_field{};
     if constexpr (!k_use_rays) {
-      b_field = create_const_field<scalar_t>(m_cfg.B_vector());
+      b_field.emplace(create_const_field<scalar_t>(m_cfg.B_vector()));
     }
 
     // Use ray or helix
