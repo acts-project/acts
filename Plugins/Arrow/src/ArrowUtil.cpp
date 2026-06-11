@@ -302,7 +302,7 @@ void ParquetFileWriter::close() {
 class ParquetDatasetReader::Impl {
  public:
   Impl(std::filesystem::path directory,
-       std::shared_ptr<arrow::Schema> targetSchema)
+       const std::shared_ptr<arrow::Schema>& targetSchema)
       : m_directory(std::move(directory)) {
     ensureComputeInitialized();
 
@@ -412,9 +412,8 @@ class ParquetDatasetReader::Impl {
 
 ParquetDatasetReader::ParquetDatasetReader(
     std::filesystem::path directory,
-    std::shared_ptr<arrow::Schema> targetSchema)
-    : m_impl(std::make_unique<Impl>(std::move(directory),
-                                    std::move(targetSchema))) {}
+    const std::shared_ptr<arrow::Schema>& targetSchema)
+    : m_impl(std::make_unique<Impl>(std::move(directory), targetSchema)) {}
 
 ParquetDatasetReader::~ParquetDatasetReader() = default;
 

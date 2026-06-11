@@ -195,7 +195,7 @@ class ACTS_ARROW_EXPORT ParquetDatasetReader {
  public:
   explicit ParquetDatasetReader(
       std::filesystem::path directory,
-      std::shared_ptr<arrow::Schema> targetSchema = nullptr);
+      const std::shared_ptr<arrow::Schema>& targetSchema = nullptr);
   ~ParquetDatasetReader();
 
   ParquetDatasetReader(const ParquetDatasetReader&) = delete;
