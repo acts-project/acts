@@ -132,7 +132,7 @@ nlohmann::json surfaceToJsonT(const surface_t& surface,
   jSurface["type"] = surface.type();
   jSurface["geo_id"] = nlohmann::json(surface.geometryId());
   jSurface["sensitive"] = surface.isSensitive();
-  if (surface.surfaceMaterial() != nullptr && opt.writeMaterial) {
+  if (surface.hasMaterial() && opt.writeMaterial) {
     jSurface["material"] =
         nlohmann::json(surface.surfaceMaterial())["material"];
   }

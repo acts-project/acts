@@ -10,20 +10,16 @@
 
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/TrackStateProxy.hpp"
 #include "Acts/EventData/TrackStateProxyCommon.hpp"
 #include "Acts/EventData/TrackStateProxyConcept.hpp"
-#include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
-#include <algorithm>
 #include <any>
 #include <cassert>
 #include <memory>
-#include <ranges>
 #include <string_view>
 #include <type_traits>
 #include <utility>
@@ -154,7 +150,7 @@ template <typename trajectory_t,
 class TrackStateHandler;
 
 template <typename trajectory_t>
-class TrackStateHandler<trajectory_t, true> final
+class TrackStateHandler<trajectory_t, true> /*final*/
     : public TrackStateHandlerConstBase {
   using MultiTrajectoryType =
       typename TrackStateHandlerTraits<trajectory_t>::MultiTrajectoryType;
@@ -166,88 +162,88 @@ class TrackStateHandler<trajectory_t, true> final
   }
 
   TrackIndexType calibratedSize(const void* container,
-                                TrackIndexType index) const override {
+                                TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->calibratedSize(index);
   }
 
   ConstParametersMap parameters(const void* container,
-                                TrackIndexType index) const override {
+                                TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->parameters(index);
   }
 
   ConstCovarianceMap covariance(const void* container,
-                                TrackIndexType index) const override {
+                                TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->covariance(index);
   }
 
   const double* calibratedData(const void* container,
-                               TrackIndexType index) const override {
+                               TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->template calibrated<eBoundSize>(index).data();
   }
 
   const double* calibratedCovarianceData(const void* container,
-                                         TrackIndexType index) const override {
+                                         TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->template calibratedCovariance<eBoundSize>(index).data();
   }
 
   const Surface* referenceSurface(const void* container,
-                                  TrackIndexType index) const override {
+                                  TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->referenceSurface(index);
   }
 
   bool hasReferenceSurface(const void* container,
-                           TrackIndexType index) const override {
+                           TrackIndexType index) const final {
     return referenceSurface(container, index) != nullptr;
   }
 
   bool hasUncalibratedSourceLink(const void* container,
-                                 TrackIndexType index) const override {
+                                 TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->has(hashString("uncalibratedSourceLink"), index);
   }
 
   SourceLink getUncalibratedSourceLink(const void* container,
-                                       TrackIndexType index) const override {
+                                       TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->getUncalibratedSourceLink(index);
   }
 
   ConstCovarianceMap jacobian(const void* container,
-                              TrackIndexType index) const override {
+                              TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->jacobian(index);
   }
 
   bool has(const void* container, TrackIndexType index,
-           HashedString key) const override {
+           HashedString key) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->has(key, index);
   }
 
   std::any component(const void* container, TrackIndexType index,
-                     HashedString key) const override {
+                     HashedString key) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->self().component_impl(key, index);
   }
 
-  bool hasColumn(const void* container, HashedString key) const override {
+  bool hasColumn(const void* container, HashedString key) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->hasColumn(key);
@@ -258,7 +254,7 @@ class TrackStateHandler<trajectory_t, true> final
 };
 
 template <typename trajectory_t>
-class TrackStateHandler<trajectory_t, false> final
+class TrackStateHandler<trajectory_t, false> /*final*/
     : public TrackStateHandlerMutableBase {
   using MultiTrajectoryType =
       typename TrackStateHandlerTraits<trajectory_t>::MultiTrajectoryType;
@@ -270,165 +266,162 @@ class TrackStateHandler<trajectory_t, false> final
   }
 
   TrackIndexType calibratedSize(const void* container,
-                                TrackIndexType index) const override {
+                                TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->calibratedSize(index);
   }
 
   ConstParametersMap parameters(const void* container,
-                                TrackIndexType index) const override {
+                                TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->parameters(index);
   }
 
-  ParametersMap parameters(void* container,
-                           TrackIndexType index) const override {
+  ParametersMap parameters(void* container, TrackIndexType index) const final {
     assert(container != nullptr);
     auto* traj = static_cast<MultiTrajectoryType*>(container);
     return traj->parameters(index);
   }
 
   ConstCovarianceMap covariance(const void* container,
-                                TrackIndexType index) const override {
+                                TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->covariance(index);
   }
 
-  CovarianceMap covariance(void* container,
-                           TrackIndexType index) const override {
+  CovarianceMap covariance(void* container, TrackIndexType index) const final {
     assert(container != nullptr);
     auto* traj = static_cast<MultiTrajectoryType*>(container);
     return traj->covariance(index);
   }
 
   const double* calibratedData(const void* container,
-                               TrackIndexType index) const override {
+                               TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->template calibrated<eBoundSize>(index).data();
   }
 
   const double* calibratedCovarianceData(const void* container,
-                                         TrackIndexType index) const override {
+                                         TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->template calibratedCovariance<eBoundSize>(index).data();
   }
 
   double* calibratedDataMutable(void* container,
-                                TrackIndexType index) const override {
+                                TrackIndexType index) const final {
     assert(container != nullptr);
     auto* traj = static_cast<MultiTrajectoryType*>(container);
     return traj->template calibrated<eBoundSize>(index).data();
   }
 
   double* calibratedCovarianceDataMutable(void* container,
-                                          TrackIndexType index) const override {
+                                          TrackIndexType index) const final {
     assert(container != nullptr);
     auto* traj = static_cast<MultiTrajectoryType*>(container);
     return traj->template calibratedCovariance<eBoundSize>(index).data();
   }
 
   const Surface* referenceSurface(const void* container,
-                                  TrackIndexType index) const override {
+                                  TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->referenceSurface(index);
   }
 
   bool hasReferenceSurface(const void* container,
-                           TrackIndexType index) const override {
+                           TrackIndexType index) const final {
     return referenceSurface(container, index) != nullptr;
   }
 
   bool hasUncalibratedSourceLink(const void* container,
-                                 TrackIndexType index) const override {
+                                 TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->has(hashString("uncalibratedSourceLink"), index);
   }
 
   SourceLink getUncalibratedSourceLink(const void* container,
-                                       TrackIndexType index) const override {
+                                       TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->getUncalibratedSourceLink(index);
   }
 
   ConstCovarianceMap jacobian(const void* container,
-                              TrackIndexType index) const override {
+                              TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->jacobian(index);
   }
 
-  CovarianceMap jacobian(void* container, TrackIndexType index) const override {
+  CovarianceMap jacobian(void* container, TrackIndexType index) const final {
     assert(container != nullptr);
     auto* traj = static_cast<MultiTrajectoryType*>(container);
     return traj->jacobian(index);
   }
 
   bool has(const void* container, TrackIndexType index,
-           HashedString key) const override {
+           HashedString key) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->has(key, index);
   }
 
   std::any component(const void* container, TrackIndexType index,
-                     HashedString key) const override {
+                     HashedString key) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->self().component_impl(key, index);
   }
 
-  bool hasColumn(const void* container, HashedString key) const override {
+  bool hasColumn(const void* container, HashedString key) const final {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->hasColumn(key);
   }
 
   std::any component(void* container, TrackIndexType index,
-                     HashedString key) const override {
+                     HashedString key) const final {
     assert(container != nullptr);
     auto* traj = static_cast<MultiTrajectoryType*>(container);
     return traj->self().component_impl(key, index);
   }
 
   void unset(void* container, TrackIndexType index,
-             TrackStatePropMask target) const override {
+             TrackStatePropMask target) const final {
     assert(container != nullptr);
     auto* traj = static_cast<MultiTrajectoryType*>(container);
     traj->unset(target, index);
   }
 
   void allocateCalibrated(void* container, TrackIndexType index,
-                          std::size_t measdim) const override {
+                          std::size_t measdim) const final {
     assert(container != nullptr);
     auto* traj = static_cast<MultiTrajectoryType*>(container);
     traj->allocateCalibrated(index, measdim);
   }
 
   void setUncalibratedSourceLink(void* container, TrackIndexType index,
-                                 SourceLink&& sourceLink) const override {
+                                 SourceLink&& sourceLink) const final {
     assert(container != nullptr);
     auto* traj = static_cast<MultiTrajectoryType*>(container);
     traj->setUncalibratedSourceLink(index, std::move(sourceLink));
   }
 
-  void setReferenceSurface(
-      void* container, TrackIndexType index,
-      std::shared_ptr<const Surface> surface) const override {
+  void setReferenceSurface(void* container, TrackIndexType index,
+                           std::shared_ptr<const Surface> surface) const final {
     assert(container != nullptr);
     auto* traj = static_cast<MultiTrajectoryType*>(container);
     traj->setReferenceSurface(index, std::move(surface));
   }
 
   void addTrackStateComponents(void* container, TrackIndexType index,
-                               TrackStatePropMask mask) const override {
+                               TrackStatePropMask mask) const final {
     assert(container != nullptr);
     auto* traj = static_cast<MultiTrajectoryType*>(container);
     traj->addTrackStateComponents(index, mask);

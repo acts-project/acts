@@ -10,20 +10,20 @@
 
 #include <sstream>
 
-Acts::ProtoAxis::ProtoAxis(Acts::AxisBoundaryType abType,
-                           const std::vector<double>& edges)
+namespace Acts {
+
+ProtoAxis::ProtoAxis(AxisBoundaryType abType, const std::vector<double>& edges)
     : m_axis(IAxis::createVariable(abType, edges)) {}
 
-Acts::ProtoAxis::ProtoAxis(AxisBoundaryType abType, double minE, double maxE,
-                           std::size_t nbins)
+ProtoAxis::ProtoAxis(AxisBoundaryType abType, double minE, double maxE,
+                     std::size_t nbins)
     : m_axis(IAxis::createEquidistant(abType, minE, maxE, nbins)) {}
 
-Acts::ProtoAxis::ProtoAxis(AxisBoundaryType abType, std::size_t nbins)
+ProtoAxis::ProtoAxis(AxisBoundaryType abType, std::size_t nbins)
     : m_axis(IAxis::createEquidistant(abType, 0., 1., nbins)),
       m_autorange(true) {}
 
-Acts::ProtoAxis::ProtoAxis(const ProtoAxis& other)
-    : m_autorange(other.m_autorange) {
+ProtoAxis::ProtoAxis(const ProtoAxis& other) : m_autorange(other.m_autorange) {
   const auto& axis = other.getAxis();
   if (!m_autorange) {
     const auto& edges = axis.getBinEdges();
@@ -39,7 +39,7 @@ Acts::ProtoAxis::ProtoAxis(const ProtoAxis& other)
   }
 }
 
-Acts::ProtoAxis& Acts::ProtoAxis::operator=(const ProtoAxis& other) {
+ProtoAxis& ProtoAxis::operator=(const ProtoAxis& other) {
   if (this != &other) {
     m_autorange = other.m_autorange;
     const auto& axis = other.getAxis();
@@ -59,11 +59,11 @@ Acts::ProtoAxis& Acts::ProtoAxis::operator=(const ProtoAxis& other) {
   return *this;
 }
 
-const Acts::IAxis& Acts::ProtoAxis::getAxis() const {
+const IAxis& ProtoAxis::getAxis() const {
   return *m_axis;
 }
 
-void Acts::ProtoAxis::setRange(double minE, double maxE) {
+void ProtoAxis::setRange(double minE, double maxE) {
   if (minE > maxE) {
     throw std::invalid_argument(
         "ProtoAxis::setRange: minE > maxE is not allowed.");
@@ -88,15 +88,15 @@ void Acts::ProtoAxis::setRange(double minE, double maxE) {
   m_autorange = false;
 }
 
-bool Acts::ProtoAxis::isAutorange() const {
+bool ProtoAxis::isAutorange() const {
   return m_autorange;
 }
 
-void Acts::ProtoAxis::toStream(std::ostream& os) const {
+void ProtoAxis::toStream(std::ostream& os) const {
   os << toString();
 }
 
-std::string Acts::ProtoAxis::toString() const {
+std::string ProtoAxis::toString() const {
   std::stringstream ss;
   const auto& axis = getAxis();
   ss << "ProtoAxis: " << axis.getNBins() << " bins";
@@ -112,38 +112,36 @@ std::string Acts::ProtoAxis::toString() const {
 }
 
 // Ostream operator implementation
-std::ostream& Acts::operator<<(std::ostream& os,
-                               const std::vector<ProtoAxis>& as) {
+std::ostream& operator<<(std::ostream& os, const std::vector<ProtoAxis>& as) {
   for (const auto& a : as) {
     os << a.toString() << '\n';
   }
   return os;
 }
 
-Acts::DirectedProtoAxis::DirectedProtoAxis(AxisDirection axisDir,
-                                           AxisBoundaryType abType,
-                                           const std::vector<double>& edges)
+DirectedProtoAxis::DirectedProtoAxis(AxisDirection axisDir,
+                                     AxisBoundaryType abType,
+                                     const std::vector<double>& edges)
     : ProtoAxis(abType, edges), m_direction(axisDir) {}
 
-Acts::DirectedProtoAxis::DirectedProtoAxis(AxisDirection axisDir,
-                                           AxisBoundaryType abType, double minE,
-                                           double maxE, std::size_t nbins)
+DirectedProtoAxis::DirectedProtoAxis(AxisDirection axisDir,
+                                     AxisBoundaryType abType, double minE,
+                                     double maxE, std::size_t nbins)
     : ProtoAxis(abType, minE, maxE, nbins), m_direction(axisDir) {}
 
-Acts::DirectedProtoAxis::DirectedProtoAxis(AxisDirection axisDir,
-                                           AxisBoundaryType abType,
-                                           std::size_t nbins)
+DirectedProtoAxis::DirectedProtoAxis(AxisDirection axisDir,
+                                     AxisBoundaryType abType, std::size_t nbins)
     : ProtoAxis(abType, nbins), m_direction(axisDir) {}
 
-Acts::AxisDirection Acts::DirectedProtoAxis::getAxisDirection() const {
+AxisDirection DirectedProtoAxis::getAxisDirection() const {
   return m_direction;
 }
 
-void Acts::DirectedProtoAxis::toStream(std::ostream& os) const {
+void DirectedProtoAxis::toStream(std::ostream& os) const {
   os << toString();
 }
 
-std::string Acts::DirectedProtoAxis::toString() const {
+std::string DirectedProtoAxis::toString() const {
   std::stringstream ss;
   const auto& axis = getAxis();
   ss << "DirectedProtoAxis: " << axis.getNBins() << " bins in "
@@ -160,10 +158,12 @@ std::string Acts::DirectedProtoAxis::toString() const {
 }
 
 // Ostream operator implementation vector of directed proto axes
-std::ostream& Acts::operator<<(std::ostream& os,
-                               const std::vector<DirectedProtoAxis>& as) {
+std::ostream& operator<<(std::ostream& os,
+                         const std::vector<DirectedProtoAxis>& as) {
   for (const auto& a : as) {
     os << a << '\n';
   }
   return os;
 }
+
+}  // namespace Acts
