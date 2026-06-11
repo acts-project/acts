@@ -38,6 +38,8 @@ namespace ActsPlugins::DetrayGeometryConverter {
 /// @param gctx the geometry context
 /// @param trackingGeometry the ACTS tracking geometry to convert
 /// @param beampipeVolumeName the beampipe volume name
+/// @param detectorName the name to set for the detray detector (optional,
+///     if not set, it will be taken from the payloads or defaulted to empty)
 /// @param logLevel the logging level to use for the conversion process
 ///
 /// This method performs the following steps:
@@ -49,13 +51,14 @@ namespace ActsPlugins::DetrayGeometryConverter {
 /// 3. It builds a detray detector from the converted payloads using the
 /// detray::detector_builder.
 ///
-/// @return A tuple containing the built detray detector and the detray→ACTS mapping.
+/// @return A pair of the built detray detector and its volume name map.
 template <typename metadata_t>
-std::shared_ptr<detray::detector<metadata_t>> toDetray(
-    vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
-    const Acts::TrackingGeometry& trackingGeometry,
-    const std::string& beampipeVolumeName,
-    Acts::Logging::Level logLevel = Acts::Logging::INFO) {
+std::pair<std::shared_ptr<detray::detector<metadata_t>>, detray::name_map>
+toDetray(vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
+         const Acts::TrackingGeometry& trackingGeometry,
+         const std::string& beampipeVolumeName,
+         const std::string& detectorName = "",
+         Acts::Logging::Level logLevel = Acts::Logging::INFO) {
   auto localLogger =
       Acts::getDefaultLogger("DetrayGeometryConverter", logLevel);
   auto payloadLogger = localLogger->clone("DetrayPayloadConverter");
@@ -104,7 +107,16 @@ std::shared_ptr<detray::detector<metadata_t>> toDetray(
       template from_payload<detector_t>(detectorBuilder,
                                         *payloads.surfaceGrids);
 
-  return std::make_shared<detector_t>(detectorBuilder.build(mr));
+  if (!detectorName.empty()) {
+    detectorBuilder.set_name(detectorName);
+  } else if (payloads.names.contains(0)) {
+    detectorBuilder.set_name(payloads.names.at(0));
+  }
+
+  detray::name_map names{};
+  auto det = std::make_shared<detector_t>(detectorBuilder.build(mr, names));
+
+  return {std::move(det), std::move(names)};
 }
 
 /// Build a mapping from detray surface identifiers to ACTS
