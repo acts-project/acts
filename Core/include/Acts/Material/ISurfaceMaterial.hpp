@@ -12,8 +12,10 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <sstream>
+#include <vector>
 
 namespace Acts {
 
@@ -54,6 +56,10 @@ class ISurfaceMaterial {
   /// Destructor
   virtual ~ISurfaceMaterial() = default;
 
+  /// Returns the axis directions for the local coordinate system
+  /// @return Vector of axis directions defining the local coordinate system
+  virtual std::vector<AxisDirection> localAxisDirections() const = 0;
+
   /// Scale material
   ///
   /// @param factor is the scale factor applied
@@ -61,7 +67,7 @@ class ISurfaceMaterial {
   virtual ISurfaceMaterial& scale(double factor) = 0;
 
   /// Return method for full material description of the Surface
-  /// - from local coordinate on the surface
+  /// - from local coordinate of the material grid
   ///
   /// @param lp is the local position used for the (eventual) lookup
   ///
@@ -74,22 +80,15 @@ class ISurfaceMaterial {
   /// @param gp is the global position used for the (eventual) lookup
   ///
   /// @return const MaterialSlab
-  virtual const MaterialSlab& materialSlab(const Vector3& gp) const = 0;
-
-  /// Update pre factor
-  ///
-  /// @param pDir is the positive direction through the surface
-  /// @param mode is the material update directive
-  /// @return Factor for material scaling based on direction and update mode
-  double factor(Direction pDir, MaterialUpdateMode mode) const;
-
-  /// Return the type of surface material mapping
-  ///
-  /// @return The mapping type indicating how material is associated with the surface
-  MappingType mappingType() const { return m_mappingType; }
+  /// @deprecated Use materialSlab(const Vector2&) with a prior
+  ///             Surface::globalToLocal() call to convert the global position.
+  [[deprecated(
+      "Use materialSlab(const Vector2& lp) with a prior "
+      "Surface::globalToLocal() call instead")]] virtual const MaterialSlab&
+  materialSlab(const Vector3& gp) const = 0;
 
   /// Return method for fully scaled material description of the Surface
-  /// - from local coordinate on the surface
+  /// - from local coordinate of the material grid
   ///
   /// @param lp is the local position used for the (eventual) lookup
   /// @param pDir is the positive direction through the surface
@@ -107,8 +106,25 @@ class ISurfaceMaterial {
   /// @param mode is the material update directive
   ///
   /// @return MaterialSlab
-  virtual MaterialSlab materialSlab(const Vector3& gp, Direction pDir,
-                                    MaterialUpdateMode mode) const;
+  /// @deprecated Use materialSlab(const Vector2&, Direction, MaterialUpdateMode)
+  ///             with a prior Surface::globalToLocal() call to convert gp.
+  [[deprecated(
+      "Use materialSlab(const Vector2& lp) with a prior "
+      "Surface::globalToLocal() call instead")]] virtual MaterialSlab
+  materialSlab(const Vector3& gp, Direction pDir,
+               MaterialUpdateMode mode) const;
+
+  /// Update pre factor
+  ///
+  /// @param pDir is the positive direction through the surface
+  /// @param mode is the material update directive
+  /// @return Factor for material scaling based on direction and update mode
+  double factor(Direction pDir, MaterialUpdateMode mode) const;
+
+  /// Return the type of surface material mapping
+  ///
+  /// @return The mapping type indicating how material is associated with the surface
+  MappingType mappingType() const { return m_mappingType; }
 
   /// @brief output stream operator
   ///

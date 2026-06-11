@@ -1,0 +1,13 @@
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        "*": hash-pin
+  # These checkouts intentionally keep the persisted GITHUB_TOKEN credentials
+  # because a later step pushes commits back to the repository. Configured here
+  # (rather than via an inline comment) so dependabot version bumps don't drop
+  # the suppression.
+  artipacked:
+    ignore:
+      - release.yml
+      - update-pip-requirements.yml

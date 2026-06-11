@@ -8,10 +8,8 @@
 
 #pragma once
 
-#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-
-#include <sstream>
 
 namespace Acts {
 
@@ -43,7 +41,7 @@ struct SurfaceSelector {
     if (selectSensitive && surface.isSensitive()) {
       return true;
     }
-    if (selectMaterial && surface.surfaceMaterial() != nullptr) {
+    if (selectMaterial && surface.hasMaterial()) {
       return true;
     }
     if (selectPassive) {

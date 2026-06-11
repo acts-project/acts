@@ -16,7 +16,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
-#include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
+#include "ActsFatras/Digitization/SurfaceDrift.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <fstream>
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_SUITE(DigitizationSuite)
 BOOST_AUTO_TEST_CASE(PlanarSurfaceDriftCase) {
   auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 
-  PlanarSurfaceDrift psd;
+  SurfaceDrift psd;
 
   Vector3 cPosition = Vector3(10., 50., 12.);
   Vector3 cNormal = Vector3(1., 1., 1.).normalized();
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDriftEnhancedTests) {
   };
 
   // The drift module
-  ActsFatras::PlanarSurfaceDrift psd;
+  ActsFatras::SurfaceDrift psd;
 
   auto writeSegment = [&](const std::string& tag, const Vector3& p0,
                           const Vector3& p1) -> void {
