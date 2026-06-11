@@ -16,6 +16,8 @@ Acts::Result<std::vector<Segmentizer::ChannelSegment>> Channelizer::channelize(
     const Acts::BinUtility& segmentation, double thickness,
     double minRelPerpDrift) const {
   // Drifted surface and scalor 2D to 3D segment
+  // SurfaceDrift handles the surface-type-specific local frame internally
+  // (plane/disc Cartesian, cylinder unrolled (rPhi, z))
   const auto atReadoutPlane = m_surfaceDrift.toReadout(
       gctx, surface, thickness, hit.position(), hit.direction(), driftDir);
   if (!atReadoutPlane.ok()) {
@@ -24,7 +26,7 @@ Acts::Result<std::vector<Segmentizer::ChannelSegment>> Channelizer::channelize(
   // The drifted and the full segment
   const auto& [driftedSegment, fullSegment] = *atReadoutPlane;
 
-  // Applies the surface mask
+  // Applies the surface mask (also surface-type agnostic)
   const auto maskedSegmentRes = m_surfaceMask.apply(surface, driftedSegment);
   if (!maskedSegmentRes.ok()) {
     return maskedSegmentRes.error();
