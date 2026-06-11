@@ -95,7 +95,7 @@ if command -v {$python_command} > /dev/null; then
     fi
 fi
 
-generator_command="${python_command} ${metadata_generator}"
+generator_command="${python_command} ${metadata_generator} --no-format"
 
 # Configure verbosity
 if [ ${log_lvl} -eq 1 ]; then

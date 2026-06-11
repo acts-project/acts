@@ -9,12 +9,14 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <iomanip>
+#include <set>
 #include <utility>
 
 namespace Acts {
@@ -317,6 +319,59 @@ void Surface::assignThickness(double thick) {
   m_thickness = thick;
 }
 
+const MaterialSlab& Surface::materialSlab(const Vector2& lp) const {
+  if (m_surfaceMaterial == nullptr) {
+    static const MaterialSlab emptyMaterialSlab;
+    return emptyMaterialSlab;
+  }
+  const Vector2 materialLocal = transformSurfaceLocalToMaterialLocal(lp);
+  return m_surfaceMaterial->materialSlab(materialLocal);
+}
+
+MaterialSlab Surface::materialSlab(const Vector2& lp, Direction pDir,
+                                   MaterialUpdateMode mode) const {
+  if (m_surfaceMaterial == nullptr) {
+    return MaterialSlab();
+  }
+  const Vector2 materialLocal = transformSurfaceLocalToMaterialLocal(lp);
+  return m_surfaceMaterial->materialSlab(materialLocal, pDir, mode);
+}
+
+void Surface::assignSurfaceMaterial(
+    std::shared_ptr<const ISurfaceMaterial> material) {
+  if (material != nullptr) {
+    const std::array<AxisDirection, 2> localSurfaceAxes = localAxes();
+    const std::vector<AxisDirection>& localMaterialAxes =
+        material->localAxisDirections();
+
+    if (!std::ranges::includes(
+            std::set(localSurfaceAxes.begin(), localSurfaceAxes.end()),
+            std::set(localMaterialAxes.begin(), localMaterialAxes.end()))) {
+      std::string errorMsg =
+          "Surface::assignSurfaceMaterial: material axis directions " +
+          axesDirectionName(localMaterialAxes) +
+          " are not supported by this surface. Supported axes are: " +
+          axesDirectionName(std::vector<AxisDirection>{localSurfaceAxes.begin(),
+                                                       localSurfaceAxes.end()});
+      throw std::invalid_argument(errorMsg);
+    }
+
+    m_swapMaterialAxes = !localMaterialAxes.empty() &&
+                         localMaterialAxes[0] != localSurfaceAxes[0];
+  }
+
+  m_surfaceMaterial = std::move(material);
+}
+
+Vector2 Surface::transformSurfaceLocalToMaterialLocal(
+    const Vector2& surfaceLocal) const {
+  Vector2 materialLocal = surfaceLocal;
+  if (m_swapMaterialAxes) {
+    std::swap(materialLocal[0], materialLocal[1]);
+  }
+  return materialLocal;
+}
+
 const Layer* Surface::associatedLayer() const {
   return m_associatedLayer;
 }
@@ -337,11 +392,6 @@ void Surface::assignSurfacePlacement(const SurfacePlacementBase& placement) {
   m_transform.reset();
   // reset sensitivity flag
   m_isSensitive = false;
-}
-
-void Surface::assignSurfaceMaterial(
-    std::shared_ptr<const ISurfaceMaterial> material) {
-  m_surfaceMaterial = std::move(material);
 }
 
 void Surface::associateLayer(const Layer& lay) {
@@ -370,8 +420,13 @@ bool Surface::isSensitive() const {
   }
   return m_isSensitive;
 }
+
 bool Surface::isAlignable() const {
   return m_placement != nullptr;
+}
+
+bool Surface::hasMaterial() const {
+  return m_surfaceMaterial != nullptr;
 }
 
 }  // namespace Acts

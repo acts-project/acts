@@ -8,11 +8,12 @@
 
 message(STATUS "Building detray SYCL integration tests")
 
+# Enable SYCL as a language.
+include(vecmem-check-language) # Needed for the SYCL language.
+enable_language(SYCL)
+
 # Set the SYCL build flags.
 include(detray-compiler-options-sycl)
-
-# Enable SYCL as a language.
-enable_language(SYCL)
 
 # make unit tests for multiple algebras
 # Currently eigen, vc and smatrix is not supported
