@@ -9,6 +9,8 @@
 #include "ActsPlugins/Arrow/ArrowUtil.hpp"
 
 #include <algorithm>
+#include <exception>
+#include <iostream>
 #include <mutex>
 #include <stdexcept>
 #include <vector>
@@ -226,13 +228,13 @@ std::shared_ptr<arrow::Table> withEventId(
         "withEventId: expected a 1-row (nested-layout) table, got " +
         std::to_string(table->num_rows()) + " rows");
   }
-  if (table->schema()->GetFieldIndex(std::string{kEventIdColumn}) != -1) {
+  if (table->schema()->GetFieldIndex(kEventIdColumn) != -1) {
     throw std::invalid_argument("withEventId: table already has event_id");
   }
 
   arrow::UInt32Builder builder;
-  auto status = builder.Append(static_cast<std::uint32_t>(eventId));
-  if (!status.ok()) {
+  if (auto status = builder.Append(static_cast<std::uint32_t>(eventId));
+      !status.ok()) {
     throwArrow("event_id append", status);
   }
   auto array = unwrap(builder.Finish(), "event_id finish");
@@ -285,9 +287,20 @@ class ParquetFileWriter::Impl {
 ParquetFileWriter::ParquetFileWriter(std::filesystem::path path)
     : m_impl(std::make_unique<Impl>(std::move(path))) {}
 
-ParquetFileWriter::~ParquetFileWriter() {
+ParquetFileWriter::~ParquetFileWriter() noexcept {
   if (m_impl) {
-    m_impl->close();
+    try {
+      m_impl->close();
+    } catch (const std::exception& e) {
+      std::cerr << "ParquetFileWriter::~ParquetFileWriter failed during close: "
+                << e.what() << std::endl;
+      std::terminate();
+    } catch (...) {
+      std::cerr << "ParquetFileWriter::~ParquetFileWriter failed during close "
+                   "with an unknown exception"
+                << std::endl;
+      std::terminate();
+    }
   }
 }
 
@@ -313,7 +326,7 @@ class ParquetDatasetReader::Impl {
     }
 
     if (targetSchema != nullptr &&
-        targetSchema->GetFieldIndex(std::string{kEventIdColumn}) != -1) {
+        targetSchema->GetFieldIndex(kEventIdColumn) != -1) {
       throw std::invalid_argument(
           "ParquetDatasetReader: target schema must not contain event_id; "
           "the reader prepends it internally");
@@ -367,7 +380,7 @@ class ParquetDatasetReader::Impl {
     m_dataset = unwrap(factory->Finish(finishOpts), "finish dataset");
 
     auto fullSchema = m_dataset->schema();
-    const int idx = fullSchema->GetFieldIndex(std::string{kEventIdColumn});
+    const int idx = fullSchema->GetFieldIndex(kEventIdColumn);
     if (idx < 0) {
       throw std::invalid_argument("ParquetDatasetReader: dataset under '" +
                                   m_directory.string() +
@@ -383,7 +396,7 @@ class ParquetDatasetReader::Impl {
   std::shared_ptr<arrow::Table> readEvent(std::uint64_t eventId) const {
     auto builder = unwrap(m_dataset->NewScan(), "new scan");
     auto status = builder->Filter(arrow::compute::equal(
-        arrow::compute::field_ref(std::string{kEventIdColumn}),
+        arrow::compute::field_ref(kEventIdColumn.data()),
         arrow::compute::literal(static_cast<std::uint32_t>(eventId))));
     if (!status.ok()) {
       throwArrow("set scan filter", status);

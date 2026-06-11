@@ -156,7 +156,7 @@ ACTS_ARROW_EXPORT std::shared_ptr<arrow::Schema> simHitSchema();
 class ACTS_ARROW_EXPORT ParquetFileWriter {
  public:
   explicit ParquetFileWriter(std::filesystem::path path);
-  ~ParquetFileWriter();
+  ~ParquetFileWriter() noexcept;
 
   ParquetFileWriter(const ParquetFileWriter&) = delete;
   ParquetFileWriter& operator=(const ParquetFileWriter&) = delete;
