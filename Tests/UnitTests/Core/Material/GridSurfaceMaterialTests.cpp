@@ -165,24 +165,24 @@ BOOST_AUTO_TEST_CASE(GridMaterial1D) {
 
   BOOST_CHECK(ismX != nullptr);
 
-  // Global access test
-  Vector3 g0(0.5, 0., 0.);
-  Vector3 g1(1.5, 0., 0.);
-  Vector3 g2(2.5, 0., 0.);
-  Vector3 g3(3.5, 0., 0.);
-  Vector3 g4(4.5, 0., 0.);
+  // Local access test
+  Vector2 l0(0.5, 0.);
+  Vector2 l1(1.5, 0.);
+  Vector2 l2(2.5, 0.);
+  Vector2 l3(3.5, 0.);
+  Vector2 l4(4.5, 0.);
 
-  const MaterialSlab& mg0 = ismX->materialSlab(g0);
-  const MaterialSlab& mg1 = ismX->materialSlab(g1);
-  const MaterialSlab& mg2 = ismX->materialSlab(g2);
-  const MaterialSlab& mg3 = ismX->materialSlab(g3);
-  const MaterialSlab& mg4 = ismX->materialSlab(g4);
+  const MaterialSlab& ml0 = ismX->materialSlab(l0);
+  const MaterialSlab& ml1 = ismX->materialSlab(l1);
+  const MaterialSlab& ml2 = ismX->materialSlab(l2);
+  const MaterialSlab& ml3 = ismX->materialSlab(l3);
+  const MaterialSlab& ml4 = ismX->materialSlab(l4);
 
-  BOOST_CHECK(mg0.material().isVacuum());
-  BOOST_CHECK_EQUAL(mg1.material().X0(), 1.);
-  BOOST_CHECK_EQUAL(mg2.material().X0(), 11.);
-  BOOST_CHECK_EQUAL(mg3.material().X0(), 21.);
-  BOOST_CHECK_EQUAL(mg4.material().X0(), 31.);
+  BOOST_CHECK(ml0.material().isVacuum());
+  BOOST_CHECK_EQUAL(ml1.material().X0(), 1.);
+  BOOST_CHECK_EQUAL(ml2.material().X0(), 11.);
+  BOOST_CHECK_EQUAL(ml3.material().X0(), 21.);
+  BOOST_CHECK_EQUAL(ml4.material().X0(), 31.);
 
   // Try the same with Closed access
   // Bound, equidistant axis
@@ -277,27 +277,27 @@ BOOST_AUTO_TEST_CASE(GridMaterial2D) {
 
   BOOST_CHECK(ismXY != nullptr);
 
-  // Global access test
-  Vector3 g00(-0.5, -1.5, 0.);
-  Vector3 g01(-0.5, 0., 0.);
-  Vector3 g02(-0.5, 1.5, 0.);
-  Vector3 g10(0.5, -1.5, 0.);
-  Vector3 g11(0.5, 0., 0.);
-  Vector3 g12(0.5, 1.5, 0.);
+  // Local access test
+  Vector2 l00(-0.5, -1.5);
+  Vector2 l01(-0.5, 0.);
+  Vector2 l02(-0.5, 1.5);
+  Vector2 l10(0.5, -1.5);
+  Vector2 l11(0.5, 0.);
+  Vector2 l12(0.5, 1.5);
 
-  const MaterialSlab& mg00 = ismXY->materialSlab(g00);
-  const MaterialSlab& mg01 = ismXY->materialSlab(g01);
-  const MaterialSlab& mg02 = ismXY->materialSlab(g02);
-  const MaterialSlab& mg10 = ismXY->materialSlab(g10);
-  const MaterialSlab& mg11 = ismXY->materialSlab(g11);
-  const MaterialSlab& mg12 = ismXY->materialSlab(g12);
+  const MaterialSlab& ml00 = ismXY->materialSlab(l00);
+  const MaterialSlab& ml01 = ismXY->materialSlab(l01);
+  const MaterialSlab& ml02 = ismXY->materialSlab(l02);
+  const MaterialSlab& ml10 = ismXY->materialSlab(l10);
+  const MaterialSlab& ml11 = ismXY->materialSlab(l11);
+  const MaterialSlab& ml12 = ismXY->materialSlab(l12);
 
-  BOOST_CHECK_EQUAL(mg00.material().X0(), 1.);
-  BOOST_CHECK_EQUAL(mg01.material().X0(), 11.);
-  BOOST_CHECK_EQUAL(mg02.material().X0(), 21.);
-  BOOST_CHECK_EQUAL(mg10.material().X0(), 2.);
-  BOOST_CHECK_EQUAL(mg11.material().X0(), 12.);
-  BOOST_CHECK_EQUAL(mg12.material().X0(), 22.);
+  BOOST_CHECK_EQUAL(ml00.material().X0(), 1.);
+  BOOST_CHECK_EQUAL(ml01.material().X0(), 11.);
+  BOOST_CHECK_EQUAL(ml02.material().X0(), 21.);
+  BOOST_CHECK_EQUAL(ml10.material().X0(), 2.);
+  BOOST_CHECK_EQUAL(ml11.material().X0(), 12.);
+  BOOST_CHECK_EQUAL(ml12.material().X0(), 22.);
 
   // Let's try a ZPhi model as well
   auto materialZPhi = material2x3;
@@ -322,31 +322,31 @@ BOOST_AUTO_TEST_CASE(GridMaterial2D) {
 
   // Local access test - trick here is also to
   // see BoundtoGridLocal switches from r*phi, z -> phi,z
-  Vector2 l00(-0.5 * std::numbers::pi, -0.5);
-  Vector2 l01(0., -0.5);
-  Vector2 l02(0.5 * std::numbers::pi, -0.5);
-  Vector2 l10(-0.5 * std::numbers::pi, 0.5);
-  Vector2 l11(0., 0.5);
-  Vector2 l12(0.5 * std::numbers::pi, 0.5);
+  Vector2 cl00(-0.5 * std::numbers::pi, -0.5);
+  Vector2 cl01(0., -0.5);
+  Vector2 cl02(0.5 * std::numbers::pi, -0.5);
+  Vector2 cl10(-0.5 * std::numbers::pi, 0.5);
+  Vector2 cl11(0., 0.5);
+  Vector2 cl12(0.5 * std::numbers::pi, 0.5);
 
-  const MaterialSlab& ml00 = ismZPhi->materialSlab(l00);
-  const MaterialSlab& ml01 = ismZPhi->materialSlab(l01);
-  const MaterialSlab& ml02 = ismZPhi->materialSlab(l02);
-  const MaterialSlab& ml10 = ismZPhi->materialSlab(l10);
-  const MaterialSlab& ml11 = ismZPhi->materialSlab(l11);
-  const MaterialSlab& ml12 = ismZPhi->materialSlab(l12);
+  const MaterialSlab& cml00 = ismZPhi->materialSlab(cl00);
+  const MaterialSlab& cml01 = ismZPhi->materialSlab(cl01);
+  const MaterialSlab& cml02 = ismZPhi->materialSlab(cl02);
+  const MaterialSlab& cml10 = ismZPhi->materialSlab(cl10);
+  const MaterialSlab& cml11 = ismZPhi->materialSlab(cl11);
+  const MaterialSlab& cml12 = ismZPhi->materialSlab(cl12);
 
-  BOOST_CHECK_EQUAL(ml00.material().X0(), 1.);
-  BOOST_CHECK_EQUAL(ml01.material().X0(), 11.);
-  BOOST_CHECK_EQUAL(ml02.material().X0(), 21.);
-  BOOST_CHECK_EQUAL(ml10.material().X0(), 2.);
-  BOOST_CHECK_EQUAL(ml11.material().X0(), 12.);
-  BOOST_CHECK_EQUAL(ml12.material().X0(), 22.);
+  BOOST_CHECK_EQUAL(cml00.material().X0(), 1.);
+  BOOST_CHECK_EQUAL(cml01.material().X0(), 11.);
+  BOOST_CHECK_EQUAL(cml02.material().X0(), 21.);
+  BOOST_CHECK_EQUAL(cml10.material().X0(), 2.);
+  BOOST_CHECK_EQUAL(cml11.material().X0(), 12.);
+  BOOST_CHECK_EQUAL(cml12.material().X0(), 22.);
 
   // Test the closed character of the phi axis
-  Vector2 l03(1.05 * std::numbers::pi, -0.5);
-  const MaterialSlab& ml03 = ismZPhi->materialSlab(l03);
-  BOOST_CHECK(ml03.material().X0() == ml00.material().X0());
+  Vector2 cl03(1.05 * std::numbers::pi, -0.5);
+  const MaterialSlab& cml03 = ismZPhi->materialSlab(cl03);
+  BOOST_CHECK(cml03.material().X0() == cml00.material().X0());
 }
 
 // This test covers the locally indexed grid material in 1D
@@ -384,25 +384,6 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial1D) {
   IndexedSurfaceMaterial<EqGrid> ism(
       std::move(eqGrid), IndexedMaterialAccessor{std::move(material)},
       std::move(bToX), std::move(gToX));
-
-  // Global access test
-  Vector3 g0(0.5, 0., 0.);
-  Vector3 g1(1.5, 0., 0.);
-  Vector3 g2(2.5, 0., 0.);
-  Vector3 g3(3.5, 0., 0.);
-  Vector3 g4(4.5, 0., 0.);
-
-  const MaterialSlab& mg0 = ism.materialSlab(g0);
-  const MaterialSlab& mg1 = ism.materialSlab(g1);
-  const MaterialSlab& mg2 = ism.materialSlab(g2);
-  const MaterialSlab& mg3 = ism.materialSlab(g3);
-  const MaterialSlab& mg4 = ism.materialSlab(g4);
-
-  BOOST_CHECK_EQUAL(mg0.material().X0(), 1.);
-  BOOST_CHECK(mg1.material().isVacuum());
-  BOOST_CHECK_EQUAL(mg2.material().X0(), 11.);
-  BOOST_CHECK_EQUAL(mg3.material().X0(), 11.);
-  BOOST_CHECK_EQUAL(mg4.material().X0(), 21.);
 
   // Local access test
   Vector2 l0(0.5, 0.);
@@ -470,23 +451,23 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial1D) {
   // Check construction
   BOOST_CHECK(ismXidx != nullptr);
   // The vacuum (==0) indexed entries
-  BOOST_CHECK(ismXidx->materialSlab(Vector3{0.5, 0., 0.}).isVacuum());
-  BOOST_CHECK(ismXidx->materialSlab(Vector3{4.5, 0., 0.}).isVacuum());
-  BOOST_CHECK(ismXidx->materialSlab(Vector3{8.5, 0., 0.}).isVacuum());
+  BOOST_CHECK(ismXidx->materialSlab(Vector2{0.5, 0.}).isVacuum());
+  BOOST_CHECK(ismXidx->materialSlab(Vector2{4.5, 0.}).isVacuum());
+  BOOST_CHECK(ismXidx->materialSlab(Vector2{8.5, 0.}).isVacuum());
   // The material 1 (==1) indexed entries
-  BOOST_CHECK_EQUAL(ismXidx->materialSlab(Vector3{1.5, 0., 0.}).material().X0(),
+  BOOST_CHECK_EQUAL(ismXidx->materialSlab(Vector2{1.5, 0.}).material().X0(),
                     1.);
-  BOOST_CHECK_EQUAL(ismXidx->materialSlab(Vector3{7.5, 0., 0.}).material().X0(),
+  BOOST_CHECK_EQUAL(ismXidx->materialSlab(Vector2{7.5, 0.}).material().X0(),
                     1.);
   // The material 2 (==2) indexed entries
-  BOOST_CHECK_EQUAL(ismXidx->materialSlab(Vector3{2.5, 0., 0.}).material().X0(),
+  BOOST_CHECK_EQUAL(ismXidx->materialSlab(Vector2{2.5, 0.}).material().X0(),
                     11.);
-  BOOST_CHECK_EQUAL(ismXidx->materialSlab(Vector3{6.5, 0., 0.}).material().X0(),
+  BOOST_CHECK_EQUAL(ismXidx->materialSlab(Vector2{6.5, 0.}).material().X0(),
                     11.);
   // The material 3 (==3) indexed entries
-  BOOST_CHECK_EQUAL(ismXidx->materialSlab(Vector3{3.5, 0., 0.}).material().X0(),
+  BOOST_CHECK_EQUAL(ismXidx->materialSlab(Vector2{3.5, 0.}).material().X0(),
                     21.);
-  BOOST_CHECK_EQUAL(ismXidx->materialSlab(Vector3{5.5, 0., 0.}).material().X0(),
+  BOOST_CHECK_EQUAL(ismXidx->materialSlab(Vector2{5.5, 0.}).material().X0(),
                     21.);
 }
 
@@ -561,31 +542,26 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial2D) {
       pAxisZ, pAxisPhi, IndexedMaterialAccessor{std::move(materialT2)},
       std::move(bToZPhiT2), std::move(gToZphiT2), indexPayload);
 
-  // Global access test, both should give material 1
-  Vector3 g0(-0.5, -0.5, -10.5);
-  const MaterialSlab& mg0T1 = ism.materialSlab(g0);
-  const MaterialSlab& mg0T2 = ismZPhi->materialSlab(g0);
-  BOOST_CHECK_EQUAL(mg0T1.material().X0(), 1.);
-  BOOST_CHECK_EQUAL(mg0T2.material().X0(), 1.);
+  // Local access test, both should give material 1
+  Vector2 l0(-20 * std::numbers::pi * 0.75, -10.5);
+  const MaterialSlab& ml0T1 = ism.materialSlab(l0);
+  const MaterialSlab& ml0T2 = ismZPhi->materialSlab(l0);
+  BOOST_CHECK_EQUAL(ml0T1.material().X0(), 1.);
+  BOOST_CHECK_EQUAL(ml0T2.material().X0(), 1.);
 
-  Vector3 g1(0.5, -0.5, -11.5);  // checking out of bound access
-  const MaterialSlab& mg1T1 = ism.materialSlab(g1);
-  const MaterialSlab& mg1T2 = ismZPhi->materialSlab(g1);
+  Vector2 l1(-20 * std::numbers::pi * 0.25,
+             -11.5);  // checking out of bound access
+
+  const MaterialSlab& mg1T1 = ism.materialSlab(l1);
+  const MaterialSlab& mg1T2 = ismZPhi->materialSlab(l1);
   BOOST_CHECK_EQUAL(mg1T1.material().X0(), 1.);
   BOOST_CHECK_EQUAL(mg1T2.material().X0(), 1.);
 
-  Vector3 g2(0.5, 0.5, -10.5);
-  const MaterialSlab& mg2T1 = ism.materialSlab(g2);
-  const MaterialSlab& mg2T2 = ismZPhi->materialSlab(g2);
+  Vector2 l2(20 * std::numbers::pi * 0.25, -10.5);
+  const MaterialSlab& mg2T1 = ism.materialSlab(l2);
+  const MaterialSlab& mg2T2 = ismZPhi->materialSlab(l2);
   BOOST_CHECK(mg2T1.material().isVacuum());  // vacuum
   BOOST_CHECK(mg2T2.material().isVacuum());  // vacuum
-
-  Vector3 g3(0.5, 0.5,
-             -9.5);  // should be material 3, same phi but different z
-  const MaterialSlab& mg3T1 = ism.materialSlab(g3);
-  const MaterialSlab& mg3T2 = ismZPhi->materialSlab(g3);
-  BOOST_CHECK_EQUAL(mg3T1.material().X0(), 21.);
-  BOOST_CHECK_EQUAL(mg3T2.material().X0(), 21.);
 }
 
 // This test covers the globally indexed grid material with non-shared material
@@ -762,25 +738,6 @@ BOOST_AUTO_TEST_CASE(GridSurfaceMaterialTests) {
 
   GridSurfaceMaterial<EqGrid> gsm(std::move(eqGrid), GridMaterialAccessor{},
                                   std::move(bToX), std::move(gToX));
-
-  // Global access test
-  Vector3 g0(0.5, 0., 0.);
-  Vector3 g1(1.5, 0., 0.);
-  Vector3 g2(2.5, 0., 0.);
-  Vector3 g3(3.5, 0., 0.);
-  Vector3 g4(4.5, 0., 0.);
-
-  const MaterialSlab& mg0 = gsm.materialSlab(g0);
-  const MaterialSlab& mg1 = gsm.materialSlab(g1);
-  const MaterialSlab& mg2 = gsm.materialSlab(g2);
-  const MaterialSlab& mg3 = gsm.materialSlab(g3);
-  const MaterialSlab& mg4 = gsm.materialSlab(g4);
-
-  BOOST_CHECK_EQUAL(mg0.thickness(), 0.);
-  BOOST_CHECK_EQUAL(mg1.thickness(), 1.);
-  BOOST_CHECK_EQUAL(mg2.thickness(), 2.);
-  BOOST_CHECK_EQUAL(mg3.thickness(), 3.);
-  BOOST_CHECK_EQUAL(mg4.thickness(), 4.);
 
   // Local access test
   Vector2 l0(0.5, 0.);
