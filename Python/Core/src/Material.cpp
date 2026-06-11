@@ -14,6 +14,7 @@
 #include "Acts/Material/IntersectionMaterialAssigner.hpp"
 #include "Acts/Material/MaterialMapper.hpp"
 #include "Acts/Material/MaterialValidator.hpp"
+#include "Acts/Material/MergedMaterialMarker.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
@@ -55,6 +56,10 @@ void addMaterial(py::module_& m) {
     py::class_<HomogeneousSurfaceMaterial, ISurfaceMaterial,
                std::shared_ptr<HomogeneousSurfaceMaterial>>(
         m, "HomogeneousSurfaceMaterial");
+
+    py::class_<MergedMaterialMarker, ISurfaceMaterial,
+               std::shared_ptr<MergedMaterialMarker>>(m, "MergedMaterialMarker")
+        .def(py::init<>());
 
     py::class_<IVolumeMaterial, std::shared_ptr<IVolumeMaterial>>(
         m, "IVolumeMaterial");
