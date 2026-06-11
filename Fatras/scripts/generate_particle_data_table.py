@@ -51,8 +51,7 @@ inline float readCsvFloatAt(const std::string& csvPath, // path to the CSV file
                             int lineIndex,              // line number to read, one-based
                             int columnIndex) {          // column number to read, one-based
   if (lineIndex == 0 || columnIndex == 0) {
-    throw std::invalid_argument(
-        "Line and column numbers must be one-based and greater than 0");
+    throw std::invalid_argument("Line and column numbers must be one-based and greater than 0");
   }
 
   std::ifstream input(csvPath);
@@ -80,9 +79,10 @@ inline float readCsvFloatAt(const std::string& csvPath, // path to the CSV file
   }
 
   try {
-    return std::stof(columns[columnIndex - 1u]);
+    return std::stof(columns[columnIndex - 1]);
   } catch (...) {
-    throw std::runtime_error("Failed to convert column value to float");
+    std::string errorMsg = "Failed to convert column value to float: " + columns[columnIndex - 1] + " at line " + std::to_string(lineIndex) + " column " + std::to_string(columnIndex) + " in file " + csvPath;
+    throw std::runtime_error(errorMsg.c_str());
   }
   return 0.f;
 }
@@ -215,11 +215,11 @@ def generate_code(additional_particles_csv: str | None = None):
                         )
                     elif variable_name == "mass":
                         lines.append(
-                            f"{{ {pdgid}, readCsvFloatAt(\"{additional_particles_csv}\", {line_number}, 2) }},"
+                            f"{{ {pdgid}, readCsvFloatAt(\"{additional_particles_csv}\", {line_number}, 3) }},"
                         )
                     elif variable_name == "three_charge":
                         lines.append(
-                            f"{{ {pdgid}, readCsvFloatAt(\"{additional_particles_csv}\", {line_number}, 3) }},"
+                            f"{{ {pdgid}, readCsvFloatAt(\"{additional_particles_csv}\", {line_number}, 4) }},"
                         )
                     else:
                         raise ValueError(f"Unsupported variable name: {variable_name}")
