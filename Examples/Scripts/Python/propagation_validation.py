@@ -82,6 +82,8 @@ def main():
         help="Convert to detray detector and run detray navigation and propagation",
     )
 
+    # Output options
+
     p.add_argument(
         "--output-summary",
         action=argparse.BooleanOptionalAction,
@@ -190,6 +192,8 @@ def main():
                     trackingGeometry,
                     beampipeVolumeName="BeamPipe",
                     logLevel=logLevel,
+                    convertMaterial=True,
+                    convertSurfaceGrids=False,
                 )
             propagatorImpl = acts.examples.detray.StraightLinePropagatorODD(
                 detrayGeometry, __pmr, sterileRun, logLevel
