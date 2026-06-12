@@ -8,16 +8,11 @@
 
 #include "ActsExamples/Io/Arrow/ArrowSimHitOutputConverter.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Surfaces/RegularSurface.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Index.hpp"
 #include "ActsPlugins/Arrow/ArrowUtil.hpp"
 
 #include <array>
-#include <cmath>
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -53,22 +48,8 @@ ArrowSimHitOutputConverter::ArrowSimHitOutputConverter(
     throw std::invalid_argument("detectorResolver must be set");
   }
 
-  // v2 emits one row per measurement, so the measurement container, the
-  // sim-hit -> measurement map (inverted internally), and the tracking
-  // geometry (for the reco position) are all required.
-  if (m_cfg.inputMeasurements.empty() ||
-      m_cfg.inputSimHitMeasurementsMap.empty() ||
-      m_cfg.trackingGeometry == nullptr) {
-    throw std::invalid_argument(
-        "ArrowSimHitOutputConverter: inputMeasurements, "
-        "inputSimHitMeasurementsMap, and trackingGeometry are required (one "
-        "row per measurement)");
-  }
-
   m_inputSimHits.initialize(m_cfg.inputSimHits);
   m_inputParticles.maybeInitialize(m_cfg.inputParticles);
-  m_inputMeasurements.initialize(m_cfg.inputMeasurements);
-  m_inputSimHitMeasurementsMap.initialize(m_cfg.inputSimHitMeasurementsMap);
   m_outputTable.initialize(m_cfg.outputTable);
 }
 
@@ -104,56 +85,25 @@ ProcessCode ArrowSimHitOutputConverter::execute(
   const SimHitContainer& simHits = m_inputSimHits(ctx);
   const SimParticleContainer* particles =
       m_inputParticles.isInitialized() ? &m_inputParticles(ctx) : nullptr;
-  const MeasurementContainer& measurements = m_inputMeasurements(ctx);
-  const SimHitMeasurementsMap& simHitMeasMap = m_inputSimHitMeasurementsMap(ctx);
-
-  // Invert the sim-hit -> measurement map into measurement -> sim-hits, and
-  // record which sim-hits contribute to a measurement (the rest are dropped
-  // from the v2 table and counted for the diagnostic below).
-  std::unordered_multimap<Index, SimHitIndex> measToSimHits;
-  measToSimHits.reserve(simHitMeasMap.size());
-  std::vector<bool> referenced(simHits.size(), false);
-  for (const auto& [simHitIdx, measIdx] : simHitMeasMap) {
-    measToSimHits.emplace(measIdx, simHitIdx);
-    if (simHitIdx < referenced.size()) {
-      referenced[simHitIdx] = true;
-    }
-  }
-
-  // Diagnostic: sim-hits belonging to no measurement are dropped from v2. This
-  // is expected to be a tiny fraction (<0.01%); warn always and fail if it
-  // exceeds the configured threshold, so a regression can't silently grow.
-  const std::size_t totalSimHits = simHits.size();
-  std::size_t droppedSimHits = 0;
-  for (bool seen : referenced) {
-    if (!seen) {
-      ++droppedSimHits;
-    }
-  }
-  const double droppedFraction =
-      totalSimHits > 0
-          ? static_cast<double>(droppedSimHits) / static_cast<double>(totalSimHits)
-          : 0.0;
-  if (droppedSimHits > 0) {
-    ACTS_WARNING("ArrowSimHitOutputConverter: "
-                 << droppedSimHits << " / " << totalSimHits << " sim-hits ("
-                 << droppedFraction * 100.0
-                 << "%) belong to no measurement and were dropped from the "
-                    "measurement table");
-  }
-  if (droppedFraction > m_cfg.maxUnmatchedSimHitFraction) {
-    throw std::runtime_error(
-        "ArrowSimHitOutputConverter: dropped sim-hit fraction " +
-        std::to_string(droppedFraction) + " exceeds threshold " +
-        std::to_string(m_cfg.maxUnmatchedSimHitFraction));
-  }
 
   auto* pool = arrow::default_memory_pool();
 
-  // Flat columns: one value per measurement.
-  arrow::ListBuilder xList(pool, std::make_shared<arrow::FloatBuilder>(pool));
-  arrow::ListBuilder yList(pool, std::make_shared<arrow::FloatBuilder>(pool));
-  arrow::ListBuilder zList(pool, std::make_shared<arrow::FloatBuilder>(pool));
+  // Truth table: one entry per sim-hit, ALL sim-hits in container order. The
+  // entry's position is the sim-hit id that the measurement table references
+  // via simhit_ids.
+  arrow::ListBuilder txList(pool, std::make_shared<arrow::FloatBuilder>(pool));
+  arrow::ListBuilder tyList(pool, std::make_shared<arrow::FloatBuilder>(pool));
+  arrow::ListBuilder tzList(pool, std::make_shared<arrow::FloatBuilder>(pool));
+  arrow::ListBuilder ttList(pool, std::make_shared<arrow::FloatBuilder>(pool));
+  arrow::ListBuilder tpxList(pool, std::make_shared<arrow::FloatBuilder>(pool));
+  arrow::ListBuilder tpyList(pool, std::make_shared<arrow::FloatBuilder>(pool));
+  arrow::ListBuilder tpzList(pool, std::make_shared<arrow::FloatBuilder>(pool));
+  arrow::ListBuilder teList(pool, std::make_shared<arrow::FloatBuilder>(pool));
+  arrow::ListBuilder deList(pool, std::make_shared<arrow::FloatBuilder>(pool));
+  arrow::ListBuilder pidList(pool,
+                             std::make_shared<arrow::UInt64Builder>(pool));
+  arrow::ListBuilder hidxList(pool,
+                              std::make_shared<arrow::UInt16Builder>(pool));
   arrow::ListBuilder detList(pool, std::make_shared<arrow::UInt8Builder>(pool));
   arrow::ListBuilder volList(pool, std::make_shared<arrow::UInt8Builder>(pool));
   arrow::ListBuilder layList(pool,
@@ -161,148 +111,89 @@ ProcessCode ArrowSimHitOutputConverter::execute(
   arrow::ListBuilder surfList(pool,
                               std::make_shared<arrow::UInt32Builder>(pool));
 
-  // Nested truth columns: outer = per measurement, inner = per contributing
-  // sim-hit (mirrors the calo contrib_* columns).
-  auto pidInner = std::make_shared<arrow::ListBuilder>(
-      pool, std::make_shared<arrow::UInt64Builder>(pool));
-  auto txInner = std::make_shared<arrow::ListBuilder>(
-      pool, std::make_shared<arrow::FloatBuilder>(pool));
-  auto tyInner = std::make_shared<arrow::ListBuilder>(
-      pool, std::make_shared<arrow::FloatBuilder>(pool));
-  auto tzInner = std::make_shared<arrow::ListBuilder>(
-      pool, std::make_shared<arrow::FloatBuilder>(pool));
-  auto timeInner = std::make_shared<arrow::ListBuilder>(
-      pool, std::make_shared<arrow::FloatBuilder>(pool));
-  arrow::ListBuilder pidList(pool, pidInner);
-  arrow::ListBuilder txList(pool, txInner);
-  arrow::ListBuilder tyList(pool, tyInner);
-  arrow::ListBuilder tzList(pool, tzInner);
-  arrow::ListBuilder timeList(pool, timeInner);
+  std::array<arrow::ListBuilder*, 15> all = {
+      &txList,  &tyList,  &tzList, &ttList,   &tpxList,
+      &tpyList, &tpzList, &teList, &deList,   &pidList,
+      &hidxList, &detList, &volList, &layList, &surfList};
+  for (auto* b : all) {
+    check(b->Append(), "open per-event list");
+  }
 
-  // Open the per-event (outer) list on every column once.
-  check(xList.Append(), "open x list");
-  check(yList.Append(), "open y list");
-  check(zList.Append(), "open z list");
-  check(detList.Append(), "open detector list");
-  check(volList.Append(), "open volume_id list");
-  check(layList.Append(), "open layer_id list");
-  check(surfList.Append(), "open surface_id list");
-  check(pidList.Append(), "open particle_id list");
-  check(txList.Append(), "open true_x list");
-  check(tyList.Append(), "open true_y list");
-  check(tzList.Append(), "open true_z list");
-  check(timeList.Append(), "open time list");
-
-  auto* xV = static_cast<arrow::FloatBuilder*>(xList.value_builder());
-  auto* yV = static_cast<arrow::FloatBuilder*>(yList.value_builder());
-  auto* zV = static_cast<arrow::FloatBuilder*>(zList.value_builder());
+  auto* txV = static_cast<arrow::FloatBuilder*>(txList.value_builder());
+  auto* tyV = static_cast<arrow::FloatBuilder*>(tyList.value_builder());
+  auto* tzV = static_cast<arrow::FloatBuilder*>(tzList.value_builder());
+  auto* ttV = static_cast<arrow::FloatBuilder*>(ttList.value_builder());
+  auto* tpxV = static_cast<arrow::FloatBuilder*>(tpxList.value_builder());
+  auto* tpyV = static_cast<arrow::FloatBuilder*>(tpyList.value_builder());
+  auto* tpzV = static_cast<arrow::FloatBuilder*>(tpzList.value_builder());
+  auto* teV = static_cast<arrow::FloatBuilder*>(teList.value_builder());
+  auto* deV = static_cast<arrow::FloatBuilder*>(deList.value_builder());
+  auto* pidV = static_cast<arrow::UInt64Builder*>(pidList.value_builder());
+  auto* hidxV = static_cast<arrow::UInt16Builder*>(hidxList.value_builder());
   auto* detV = static_cast<arrow::UInt8Builder*>(detList.value_builder());
   auto* volV = static_cast<arrow::UInt8Builder*>(volList.value_builder());
   auto* layV = static_cast<arrow::UInt16Builder*>(layList.value_builder());
   auto* surfV = static_cast<arrow::UInt32Builder*>(surfList.value_builder());
 
-  auto* pidVL = static_cast<arrow::ListBuilder*>(pidList.value_builder());
-  auto* txVL = static_cast<arrow::ListBuilder*>(txList.value_builder());
-  auto* tyVL = static_cast<arrow::ListBuilder*>(tyList.value_builder());
-  auto* tzVL = static_cast<arrow::ListBuilder*>(tzList.value_builder());
-  auto* timeVL = static_cast<arrow::ListBuilder*>(timeList.value_builder());
-  auto* pidVV = static_cast<arrow::UInt64Builder*>(pidVL->value_builder());
-  auto* txVV = static_cast<arrow::FloatBuilder*>(txVL->value_builder());
-  auto* tyVV = static_cast<arrow::FloatBuilder*>(tyVL->value_builder());
-  auto* tzVV = static_cast<arrow::FloatBuilder*>(tzVL->value_builder());
-  auto* timeVV = static_cast<arrow::FloatBuilder*>(timeVL->value_builder());
-
-  const std::size_t nMeas = measurements.size();
-  check(xV->Reserve(nMeas), "reserve x");
-  check(yV->Reserve(nMeas), "reserve y");
-  check(zV->Reserve(nMeas), "reserve z");
-  check(detV->Reserve(nMeas), "reserve detector");
-  check(volV->Reserve(nMeas), "reserve volume_id");
-  check(layV->Reserve(nMeas), "reserve layer_id");
-  check(surfV->Reserve(nMeas), "reserve surface_id");
+  const std::size_t nHits = simHits.size();
+  check(txV->Reserve(nHits), "reserve true_x");
+  check(tyV->Reserve(nHits), "reserve true_y");
+  check(tzV->Reserve(nHits), "reserve true_z");
+  check(ttV->Reserve(nHits), "reserve true_time");
+  check(tpxV->Reserve(nHits), "reserve tpx");
+  check(tpyV->Reserve(nHits), "reserve tpy");
+  check(tpzV->Reserve(nHits), "reserve tpz");
+  check(teV->Reserve(nHits), "reserve tE");
+  check(deV->Reserve(nHits), "reserve dE");
+  check(pidV->Reserve(nHits), "reserve particle_id");
+  check(hidxV->Reserve(nHits), "reserve hit_index");
+  check(detV->Reserve(nHits), "reserve detector");
+  check(volV->Reserve(nHits), "reserve volume_id");
+  check(layV->Reserve(nHits), "reserve layer_id");
+  check(surfV->Reserve(nHits), "reserve surface_id");
 
   constexpr std::uint64_t kUnmatched =
       std::numeric_limits<std::uint64_t>::max();
-  constexpr float kNaN = std::numeric_limits<float>::quiet_NaN();
+  constexpr std::uint16_t kNoIndex = std::numeric_limits<std::uint16_t>::max();
 
-  for (Index measIdx = 0; measIdx < nMeas; ++measIdx) {
-    const auto meas = measurements.getMeasurement(measIdx);
-    const auto gid = meas.geometryId();
+  for (const auto& hit : simHits) {
+    const auto& pos = hit.fourPosition();
+    txV->UnsafeAppend(static_cast<float>(pos.x() / Acts::UnitConstants::mm));
+    tyV->UnsafeAppend(static_cast<float>(pos.y() / Acts::UnitConstants::mm));
+    tzV->UnsafeAppend(static_cast<float>(pos.z() / Acts::UnitConstants::mm));
+    ttV->UnsafeAppend(static_cast<float>(pos.w() / Acts::UnitConstants::mm));
 
-    // Reco (digitized) global position: project the measurement's bound
-    // parameters through its surface. NaN for non-regular surfaces.
-    float gx = kNaN;
-    float gy = kNaN;
-    float gz = kNaN;
-    const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(gid);
-    if (surface == nullptr) {
-      throw std::runtime_error(
-          "ArrowSimHitOutputConverter: surface not found for geometry id " +
-          std::to_string(gid.value()));
+    const auto& mom = hit.momentum4Before();
+    tpxV->UnsafeAppend(static_cast<float>(mom.x() / Acts::UnitConstants::GeV));
+    tpyV->UnsafeAppend(static_cast<float>(mom.y() / Acts::UnitConstants::GeV));
+    tpzV->UnsafeAppend(static_cast<float>(mom.z() / Acts::UnitConstants::GeV));
+    teV->UnsafeAppend(static_cast<float>(mom.w() / Acts::UnitConstants::GeV));
+    deV->UnsafeAppend(
+        static_cast<float>(hit.depositedEnergy() / Acts::UnitConstants::GeV));
+
+    std::uint64_t pid = kUnmatched;
+    if (particles != nullptr) {
+      auto pIt = particles->find(hit.particleId());
+      if (pIt != particles->end()) {
+        pid =
+            static_cast<std::uint64_t>(std::distance(particles->begin(), pIt));
+      }
     }
-    if (const auto* regular =
-            dynamic_cast<const Acts::RegularSurface*>(surface)) {
-      // Expand the (possibly 1D) measurement to a full bound vector so local
-      // positions are read from a stable layout regardless of the measured
-      // subspace.
-      const auto full = meas.fullParameters();
-      Acts::Vector2 loc{full[Acts::eBoundLoc0], full[Acts::eBoundLoc1]};
-      const Acts::Vector3 global = regular->localToGlobal(ctx.geoContext, loc);
-      gx = static_cast<float>(global.x() / Acts::UnitConstants::mm);
-      gy = static_cast<float>(global.y() / Acts::UnitConstants::mm);
-      gz = static_cast<float>(global.z() / Acts::UnitConstants::mm);
-    }
-    xV->UnsafeAppend(gx);
-    yV->UnsafeAppend(gy);
-    zV->UnsafeAppend(gz);
+    pidV->UnsafeAppend(pid);
 
+    // Hit index along the particle trajectory (ordering for consumers); -1
+    // (unset) maps to the uint16 sentinel.
+    const std::int32_t idx = hit.index();
+    hidxV->UnsafeAppend(
+        (idx < 0 || idx > static_cast<std::int32_t>(kNoIndex))
+            ? kNoIndex
+            : static_cast<std::uint16_t>(idx));
+
+    const auto gid = hit.geometryId();
+    detV->UnsafeAppend(m_cfg.detectorResolver(gid));
     volV->UnsafeAppend(static_cast<std::uint8_t>(gid.volume()));
     layV->UnsafeAppend(static_cast<std::uint16_t>(gid.layer()));
     surfV->UnsafeAppend(static_cast<std::uint32_t>(gid.sensitive()));
-    // The default `detectorResolver` reads the geometry id's `extra` byte,
-    // which geometry construction is expected to stamp with a per-surface
-    // subsystem id; users can swap in a custom resolver.
-    detV->UnsafeAppend(m_cfg.detectorResolver(gid));
-
-    // Open one inner list per measurement on each nested truth column.
-    check(pidVL->Append(), "open per-measurement particle_id list");
-    check(txVL->Append(), "open per-measurement true_x list");
-    check(tyVL->Append(), "open per-measurement true_y list");
-    check(tzVL->Append(), "open per-measurement true_z list");
-    check(timeVL->Append(), "open per-measurement time list");
-
-    // Reserve the nested inner value builders for this measurement's
-    // contributors, then append. (Unlike the flat builders we cannot reserve
-    // these up front because the per-measurement multiplicity is only known
-    // here; without the reserve, UnsafeAppend would write past the buffer.)
-    auto range = measToSimHits.equal_range(measIdx);
-    const auto nContribs =
-        static_cast<std::int64_t>(std::distance(range.first, range.second));
-    check(pidVV->Reserve(nContribs), "reserve particle_id contribs");
-    check(txVV->Reserve(nContribs), "reserve true_x contribs");
-    check(tyVV->Reserve(nContribs), "reserve true_y contribs");
-    check(tzVV->Reserve(nContribs), "reserve true_z contribs");
-    check(timeVV->Reserve(nContribs), "reserve time contribs");
-    for (auto it = range.first; it != range.second; ++it) {
-      const SimHitIndex simHitIdx = it->second;
-      const auto& hit = *simHits.nth(simHitIdx);
-      const auto& pos = hit.fourPosition();
-      txVV->UnsafeAppend(static_cast<float>(pos.x() / Acts::UnitConstants::mm));
-      tyVV->UnsafeAppend(static_cast<float>(pos.y() / Acts::UnitConstants::mm));
-      tzVV->UnsafeAppend(static_cast<float>(pos.z() / Acts::UnitConstants::mm));
-      timeVV->UnsafeAppend(
-          static_cast<float>(pos.w() / Acts::UnitConstants::mm));
-
-      std::uint64_t pid = kUnmatched;
-      if (particles != nullptr) {
-        auto pIt = particles->find(hit.particleId());
-        if (pIt != particles->end()) {
-          pid = static_cast<std::uint64_t>(
-              std::distance(particles->begin(), pIt));
-        }
-      }
-      pidVV->UnsafeAppend(pid);
-    }
   }
 
   auto finish = [](arrow::ListBuilder& b) {
@@ -312,9 +203,10 @@ ProcessCode ArrowSimHitOutputConverter::execute(
   };
 
   std::vector<std::shared_ptr<arrow::Array>> arrays = {
-      finish(xList),    finish(yList),   finish(zList),    finish(detList),
-      finish(volList),  finish(layList), finish(surfList), finish(pidList),
-      finish(txList),   finish(tyList),  finish(tzList),   finish(timeList),
+      finish(txList),  finish(tyList),  finish(tzList),  finish(ttList),
+      finish(tpxList), finish(tpyList), finish(tpzList), finish(teList),
+      finish(deList),  finish(pidList), finish(hidxList), finish(detList),
+      finish(volList), finish(layList), finish(surfList),
   };
 
   auto table =

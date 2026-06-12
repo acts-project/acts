@@ -145,9 +145,18 @@ ACTS_ARROW_EXPORT std::shared_ptr<arrow::Schema> particleSchema();
 /// per event row instead of an opened list of N inner nulls.
 ACTS_ARROW_EXPORT std::shared_ptr<arrow::Schema> trackSchema();
 
-/// Schema for the per-event simulated-hit table emitted by
-/// @c ArrowSimHitOutputConverter.
+/// Schema for the per-event TRUTH simulated-hit table emitted by
+/// @c ArrowSimHitOutputConverter: one entry per sim-hit (ALL sim-hits, in
+/// container order — the entry's position is the sim-hit id referenced by the
+/// measurement table's @c simhit_ids).
 ACTS_ARROW_EXPORT std::shared_ptr<arrow::Schema> simHitSchema();
+
+/// Schema for the per-event RECO measurement table emitted by
+/// @c ArrowMeasurementOutputConverter: one entry per measurement (the entry's
+/// position is the measurement id referenced by track @c hit_ids), carrying
+/// the measured local parameters, cluster-shape features, and truth links
+/// (@c particle_ids and @c simhit_ids) into the particle / sim-hit tables.
+ACTS_ARROW_EXPORT std::shared_ptr<arrow::Schema> measurementSchema();
 
 /// Thin RAII wrapper around @c parquet::arrow::FileWriter that opens lazily
 /// on first write so the schema can be taken from the first event's table.
