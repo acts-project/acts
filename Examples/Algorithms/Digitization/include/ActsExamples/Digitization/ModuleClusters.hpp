@@ -45,6 +45,7 @@ class ModuleClusters {
         m_commonCorner(commonCorner) {}
 
   void add(DigitizedParameters params, SimHitIndex simhit);
+
   std::vector<std::pair<DigitizedParameters, std::set<SimHitIndex>>>
   digitizedParameters();
 
@@ -56,13 +57,17 @@ class ModuleClusters {
   double m_nsigma;
   bool m_commonCorner;
 
-  std::vector<ModuleValue> createCellCollection();
+  std::vector<ModuleValue> createCellCollection() const;
+
   void merge();
-  ModuleValue squash(std::vector<ModuleValue>& values);
+
+  ModuleValue squash(std::vector<ModuleValue>& values) const;
+
   std::vector<std::size_t> nonGeoEntries(
-      std::vector<Acts::BoundIndices>& indices);
+      std::vector<Acts::BoundIndices>& indices) const;
+
   std::vector<std::vector<ModuleValue>> mergeParameters(
-      std::vector<ModuleValue> values);
+      std::vector<ModuleValue> values) const;
 };
 
 }  // namespace ActsExamples
