@@ -293,8 +293,15 @@ def test_particle_gun_fatras(tmp_path, fatras):
     _assert_particles_parquet(tmp_path / "particles_simulated_arrow", nevents)
 
 
-# Reco position + geometry are one value per measurement (flat list<scalar>).
-SIMHIT_FLAT_FIELDS = {
+# tracker_hits (RECO): one value per measurement (flat list<scalar>) ...
+TRACKER_HITS_FLAT_FIELDS = {
+    "loc0",
+    "loc1",
+    "var_loc0",
+    "var_loc1",
+    "time",
+    "var_time",
+    "subspace",
     "x",
     "y",
     "z",
@@ -302,46 +309,84 @@ SIMHIT_FLAT_FIELDS = {
     "volume_id",
     "layer_id",
     "surface_id",
+    "size_loc0",
+    "size_loc1",
+    "n_channels",
+    "sum_activation",
+    "local_eta",
+    "local_phi",
+    "global_eta",
+    "global_phi",
+    "eta_angle",
+    "phi_angle",
 }
-# Contributing sim-hits' truth is nested per measurement (list<list<scalar>>).
-SIMHIT_NESTED_FIELDS = {
-    "particle_id",
+# ... plus the nested truth LINKS (list<list<scalar>>): row indices into the
+# particle table and the tracker_simhits table respectively.
+TRACKER_HITS_NESTED_FIELDS = {
+    "particle_ids",
+    "simhit_ids",
+}
+TRACKER_HITS_FIELDS = TRACKER_HITS_FLAT_FIELDS | TRACKER_HITS_NESTED_FIELDS
+
+# tracker_simhits (TRUTH): one value per sim-hit, ALL sim-hits, flat columns.
+TRACKER_SIMHITS_FIELDS = {
     "true_x",
     "true_y",
     "true_z",
-    "time",
+    "true_time",
+    "tpx",
+    "tpy",
+    "tpz",
+    "tE",
+    "dE",
+    "particle_id",
+    "hit_index",
+    "detector",
+    "volume_id",
+    "layer_id",
+    "surface_id",
 }
-SIMHIT_FIELDS = SIMHIT_FLAT_FIELDS | SIMHIT_NESTED_FIELDS
 
 
-def _add_simhit_arrow_writer(
+def _add_tracker_arrow_writers(
     s: Sequencer,
     outputDir: Path,
     trackingGeometry,
-    table_key: str = "simhits_arrow",
     *,
     eventsPerShard: int = 2,
 ) -> None:
-    """Wire an ArrowSimHitOutputConverter + ParquetWriter for the simhits.
+    """Wire the two tracker-table converters + one ParquetWriter.
 
-    The converter emits one row per measurement: reco x,y,z (projected from the
-    measurement's bound parameters through its surface) and geometry once per
-    measurement, with the contributing sim-hits' truth as nested lists. It needs
-    the measurement container, the sim-hit→measurement map, and the tracking
-    geometry — all produced/owned by the fatras+digitization fixture.
+    `ArrowSimHitOutputConverter` emits the TRUTH table (one row per sim-hit,
+    ALL sim-hits); `ArrowMeasurementOutputConverter` emits the RECO table (one
+    row per measurement) whose `simhit_ids` index the truth table. Both need
+    collections produced/owned by the fatras+digitization fixture.
     """
-    from acts.arrow import simHitSchema
-    from acts.examples.arrow import ArrowSimHitOutputConverter, ParquetWriter
+    from acts.arrow import measurementSchema, simHitSchema
+    from acts.examples.arrow import (
+        ArrowMeasurementOutputConverter,
+        ArrowSimHitOutputConverter,
+        ParquetWriter,
+    )
 
     s.addAlgorithm(
         ArrowSimHitOutputConverter(
             level=acts.logging.INFO,
             inputSimHits="simhits",
             inputParticles="particles_simulated",
+            outputTable="tracker_simhits",
+        )
+    )
+    s.addAlgorithm(
+        ArrowMeasurementOutputConverter(
+            level=acts.logging.INFO,
             inputMeasurements="measurements",
+            inputClusters="clusters",
+            inputSimHits="simhits",
+            inputParticles="particles_simulated",
             inputSimHitMeasurementsMap="simhit_measurements_map",
             trackingGeometry=trackingGeometry,
-            outputTable=table_key,
+            outputTable="tracker_hits",
         )
     )
 
@@ -349,106 +394,109 @@ def _add_simhit_arrow_writer(
         ParquetWriter(
             level=acts.logging.INFO,
             outputDir=str(outputDir),
-            collections={table_key: table_key},
-            expectedSchemas={table_key: simHitSchema()},
+            collections={
+                "tracker_hits": "tracker_hits",
+                "tracker_simhits": "tracker_simhits",
+            },
+            expectedSchemas={
+                "tracker_hits": measurementSchema(),
+                "tracker_simhits": simHitSchema(),
+            },
             eventsPerShard=eventsPerShard,
         )
     )
 
 
-def _assert_simhits_parquet(directory: Path, expected_events: int) -> None:
-    """Verify a simhits dataset directory: schema shape (flat reco vs nested
-    truth), row count, and measurement-row semantics.
-
-    One row per event; within an event one entry per measurement. Reco x,y,z are
-    flat (one per measurement) and finite; the contributing sim-hits' truth is
-    nested (outer per measurement, inner per contributing sim-hit) and finite.
-    """
+def _read_dataset(directory: Path, expected_fields, expected_events: int):
     assert directory.exists(), f"{directory} does not exist"
-    assert directory.is_dir(), f"{directory} is not a directory"
-
     fragments = sorted(directory.glob("*.parquet"))
     assert fragments, f"{directory} contains no parquet shards"
-    for f in fragments:
-        assert f.stat().st_size > 0, f"{f} is empty"
 
     @with_pyarrow
     def _check(pa, pq):
-        first_schema = pq.ParquetFile(str(fragments[0])).schema_arrow
-        names = {first_schema.field(i).name for i in range(len(first_schema))}
+        schema = pq.ParquetFile(str(fragments[0])).schema_arrow
+        names = {schema.field(i).name for i in range(len(schema))}
         assert "event_id" in names, f"{directory.name}: event_id column missing"
-        missing = SIMHIT_FIELDS - names
+        missing = expected_fields - names
         assert not missing, f"{directory.name}: missing fields {missing}"
-        # The row index is the measurement id, so there must be no id column.
-        assert (
-            "measurement_id" not in names
-        ), f"{directory.name}: measurement_id column should not exist (row index is the id)"
-
-        # Reco + geometry are flat list<scalar>; truth is nested list<list<scalar>>.
-        for field_name in SIMHIT_FLAT_FIELDS:
-            ftype = first_schema.field(field_name).type
-            assert pa.types.is_list(ftype) and not pa.types.is_list(
-                ftype.value_type
-            ), f"{directory.name}: '{field_name}' should be flat list, got {ftype}"
-        for field_name in SIMHIT_NESTED_FIELDS:
-            ftype = first_schema.field(field_name).type
-            assert pa.types.is_list(ftype) and pa.types.is_list(
-                ftype.value_type
-            ), f"{directory.name}: '{field_name}' should be nested list<list>, got {ftype}"
-
         table = pq.ParquetDataset(str(directory)).read()
         assert table.num_rows == expected_events, (
             f"{directory.name}: expected {expected_events} events, "
             f"got {table.num_rows}"
         )
+        return table
 
-        x = table.column("x").to_pylist()
-        y = table.column("y").to_pylist()
-        z = table.column("z").to_pylist()
-        tx = table.column("true_x").to_pylist()
-
-        total_meas = sum(len(row) for row in x)
-        assert total_meas > 0, f"{directory.name}: no measurements across any event"
-
-        for ex, ey, ez, etx in zip(x, y, z, tx):
-            # Reco rows and the nested truth must align one-to-one per measurement.
-            assert (
-                len(ex) == len(etx)
-            ), f"{directory.name}: {len(ex)} reco rows vs {len(etx)} truth rows"
-            for xv, yv, zv in zip(ex, ey, ez):
-                # Reco position is always computed for a measurement — finite,
-                # and inside the generic-detector envelope (mm). A units
-                # regression (m vs mm) or stale position would blow past this.
-                assert (
-                    math.isfinite(xv) and math.isfinite(yv) and math.isfinite(zv)
-                ), f"{directory.name}: non-finite reco pos ({xv},{yv},{zv})"
-                r = math.hypot(xv, yv)
-                assert r < 1500.0 and abs(zv) < 4000.0, (
-                    f"{directory.name}: reco pos ({xv},{yv},{zv}) outside "
-                    f"detector envelope — units or stale-position regression?"
-                )
-            # Every measurement carries at least one contributing sim-hit (the
-            # truth-only ones are dropped), and their truth must be finite.
-            for contribs in etx:
-                assert (
-                    len(contribs) >= 1
-                ), f"{directory.name}: measurement with no contributing sim-hit"
-                for v in contribs:
-                    assert math.isfinite(v), f"{directory.name}: non-finite truth {v}"
+    return _check
 
 
-def test_fatras_simhits_measurement_rows(tmp_path, fatras, trk_geo):
-    """Fatras + digitization → ArrowSimHitOutputConverter emits one row per
-    measurement with reco x,y,z (finite, in-envelope) and nested per-measurement
-    truth → Parquet. `trk_geo` is the same geometry the fixture digitizes
-    against, so surface lookups resolve."""
+def test_fatras_tracker_tables(tmp_path, fatras, trk_geo):
+    """Fatras + digitization → the two tracker tables → Parquet.
+
+    Checks the sim/reco split contract: the truth table holds ALL sim-hits
+    (flat columns, finite momentum/deposit); the reco table holds one entry
+    per measurement with always-filled local parameters + a subspace bitmask,
+    finite in-envelope global positions, and truth LINKS whose simhit_ids
+    resolve into the truth table and whose particle_ids agree with the linked
+    sim-hits' particle column.
+    """
     nevents = 3
     s = Sequencer(numThreads=1, events=nevents)
     fatras(s)
-    _add_simhit_arrow_writer(s, tmp_path, trk_geo)
+    _add_tracker_arrow_writers(s, tmp_path, trk_geo)
     s.run()
 
-    _assert_simhits_parquet(tmp_path / "simhits_arrow", nevents)
+    hits_t = _read_dataset(
+        tmp_path / "tracker_hits", TRACKER_HITS_FIELDS, nevents
+    )
+    sim_t = _read_dataset(
+        tmp_path / "tracker_simhits", TRACKER_SIMHITS_FIELDS, nevents
+    )
+
+    hits = {name: hits_t.column(name).to_pylist() for name in TRACKER_HITS_FIELDS}
+    sims = {
+        name: sim_t.column(name).to_pylist() for name in TRACKER_SIMHITS_FIELDS
+    }
+
+    total_meas = sum(len(row) for row in hits["x"])
+    total_sims = sum(len(row) for row in sims["true_x"])
+    assert total_meas > 0, "no measurements across any event"
+    assert total_sims >= total_meas, "fewer sim-hits than measurements"
+
+    for ev in range(nevents):
+        n_sim = len(sims["true_x"][ev])
+        # Truth table: finite positions and momenta; deposits non-negative.
+        for i in range(n_sim):
+            for col in ("true_x", "true_y", "true_z", "tpx", "tpy", "tpz", "tE"):
+                assert math.isfinite(sims[col][ev][i]), f"non-finite {col}"
+            assert sims["dE"][ev][i] >= 0.0, "negative energy deposit"
+
+        n_meas = len(hits["x"][ev])
+        for m in range(n_meas):
+            # Reco position finite and inside the generic-detector envelope.
+            xv, yv, zv = hits["x"][ev][m], hits["y"][ev][m], hits["z"][ev][m]
+            assert math.isfinite(xv) and math.isfinite(yv) and math.isfinite(zv)
+            assert math.hypot(xv, yv) < 1500.0 and abs(zv) < 4000.0, (
+                f"reco pos ({xv},{yv},{zv}) outside envelope - units regression?"
+            )
+            # Local parameters always filled; the subspace bitmask says which
+            # components were actually measured (and must measure something).
+            assert math.isfinite(hits["loc0"][ev][m])
+            assert math.isfinite(hits["loc1"][ev][m])
+            assert hits["subspace"][ev][m] & 0x3, "no local component measured"
+
+            # Truth links: at least one contributor, ids resolve into the
+            # truth table, and the linked particles agree between the tables.
+            simhit_ids = hits["simhit_ids"][ev][m]
+            particle_ids = hits["particle_ids"][ev][m]
+            assert len(simhit_ids) >= 1, "measurement with no contributing sim-hit"
+            assert len(simhit_ids) == len(particle_ids)
+            for sid, pid in zip(simhit_ids, particle_ids):
+                assert sid < n_sim, f"simhit_id {sid} out of range ({n_sim})"
+                assert sims["particle_id"][ev][sid] == pid, (
+                    "particle_ids disagree between tracker_hits and "
+                    "tracker_simhits for the same contributor"
+                )
+
 
 
 @pytest.mark.skipif(not pythia8Enabled, reason="Pythia8 not built")

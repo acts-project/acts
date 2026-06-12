@@ -234,5 +234,9 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsArrow, m) {
       "Schema produced by ArrowTrackOutputConverter.");
   m.def(
       "simHitSchema", [wrap]() { return wrap(ArrowUtil::simHitSchema()); },
-      "Schema produced by ArrowSimHitOutputConverter.");
+      "Schema produced by ArrowSimHitOutputConverter (truth tracker_simhits).");
+  m.def(
+      "measurementSchema",
+      [wrap]() { return wrap(ArrowUtil::measurementSchema()); },
+      "Schema produced by ArrowMeasurementOutputConverter (reco tracker_hits).");
 }
