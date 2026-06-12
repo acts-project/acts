@@ -222,6 +222,21 @@ ProcessCode ArrowMeasurementOutputConverter::execute(
   };
 
   const std::size_t nMeas = measurements.size();
+  // Reserve every flat value builder before the UnsafeAppend loop — without
+  // this, UnsafeAppend writes past the buffer (heap corruption, not a clean
+  // failure).
+  for (auto* fb : {loc0V, loc1V, vl0V, vl1V, timeV, vtV, xV, yV, zV, sumV,
+                   letaV, lphiV, getaV, gphiV, eangV, pangV}) {
+    check(fb->Reserve(nMeas), "reserve float column");
+  }
+  check(subV->Reserve(nMeas), "reserve subspace");
+  check(detV->Reserve(nMeas), "reserve detector");
+  check(volV->Reserve(nMeas), "reserve volume_id");
+  for (auto* ub : {layV, sz0V, sz1V, nchV}) {
+    check(ub->Reserve(nMeas), "reserve uint16 column");
+  }
+  check(surfV->Reserve(nMeas), "reserve surface_id");
+
   for (Index measIdx = 0; measIdx < nMeas; ++measIdx) {
     const auto meas = measurements.getMeasurement(measIdx);
     const auto gid = meas.geometryId();
