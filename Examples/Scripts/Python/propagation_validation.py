@@ -108,6 +108,17 @@ def main():
         help="Write out sim hits, only makes sense for Geant4",
     )
 
+    p.add_argument(
+        "--detray-search-window",
+        type=int,
+        nargs=2,
+        default=[0, 0],
+        metavar=("AXIS0", "AXIS1"),
+        help="Detray grid acceleration search window per axis. {0, 0} (default) "
+        "only looks at the current bin; increase to probe whether the converted "
+        "surface grids are missing neighbor-cell entries",
+    )
+
     args = p.parse_args()
 
     prfx = args.output + "_" if args.output != "" else ""
@@ -193,10 +204,14 @@ def main():
                     beampipeVolumeName="BeamPipe",
                     logLevel=logLevel,
                     convertMaterial=True,
-                    convertSurfaceGrids=False,
+                    convertSurfaceGrids=True,
                 )
             propagatorImpl = acts.examples.detray.StraightLinePropagatorODD(
-                detrayGeometry, __pmr, sterileRun, logLevel
+                detrayGeometry,
+                __pmr,
+                sterileRun,
+                logLevel,
+                searchWindow=args.detray_search_window,
             )
 
         # Run particle smearing
