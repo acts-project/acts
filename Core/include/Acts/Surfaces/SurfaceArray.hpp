@@ -33,90 +33,6 @@ using SurfaceVector = std::vector<const Surface*>;
 /// and performs utility actions. This struct needs to be initialised
 /// externally and passed to @c SurfaceArray on construction.
 class SurfaceArray {
- private:
-  /// Base interface for all surface lookups.
-  struct ISurfaceGridLookup {
-    virtual ~ISurfaceGridLookup() = default;
-
-    /// Fill provided surfaces into the contained @c Grid.
-    /// @param gctx The current geometry context object, e.g. alignment
-    /// @param surfaces Input surface pointers
-    virtual void fill(const GeometryContext& gctx,
-                      std::span<const Surface* const> surfaces) = 0;
-
-    /// Get all surfaces in bin given by the global bin index
-    /// @param bin the global bin index
-    /// @return span of surface pointers of the bin at that position
-    virtual std::span<const Surface* const> at(std::size_t bin) const = 0;
-
-    /// Performs lookup at @c pos and returns bin content as const reference
-    /// @param gctx The current geometry context object, e.g. alignment
-    /// @param position Lookup position
-    /// @param direction Lookup direction
-    /// @return A span of surface pointers
-    virtual std::span<const Surface* const> at(
-        const GeometryContext& gctx, const Vector3& position,
-        const Vector3& direction) const = 0;
-
-    /// Get all surfaces in bin given by local grid indices and neighbor
-    /// distance.
-    /// @param gridIndices the local grid indices
-    /// @param neighborDistance the neighbor distance to include in the lookup
-    /// @return span of surface pointers of the bin at that position and its neighbors
-    virtual std::span<const Surface* const> neighbors(
-        std::array<std::size_t, 2> gridIndices,
-        std::uint8_t neighborDistance) const = 0;
-
-    /// Performs a lookup at @c pos, but returns neighbors as well
-    /// @param gctx The current geometry context object, e.g. alignment
-    /// @param position Lookup position
-    /// @param direction Lookup direction
-    /// @return A span of surface pointers
-    virtual std::span<const Surface* const> neighbors(
-        const GeometryContext& gctx, const Vector3& position,
-        const Vector3& direction) const = 0;
-
-    /// Returns the total size of the grid (including under/overflow bins)
-    /// @return Size of the grid data structure
-    virtual std::size_t size() const = 0;
-
-    /// Gets the center position of bin @c bin in global coordinates
-    /// @param bin the global bin index
-    /// @return The bin center
-    virtual Vector3 getBinCenter(std::size_t bin) const = 0;
-
-    /// Returns copies of the axes used in the grid as @c AnyAxis
-    /// @return The axes
-    /// @note This returns copies. Use for introspection and querying.
-    virtual std::vector<const IAxis*> getAxes() const = 0;
-
-    /// Get the representative surface used for this lookup
-    /// @return Surface pointer
-    virtual const Surface* surfaceRepresentation() const = 0;
-
-    /// Checks if global bin is valid
-    /// @param bin the global bin index
-    /// @return bool if the bin is valid
-    /// @note Valid means that the index points to a bin which is not a under
-    ///       or overflow bin or out of range in any axis.
-    virtual bool isValidBin(std::size_t bin) const = 0;
-
-    /// The binning values described by this surface grid lookup. They are in
-    /// order of the axes (optional) and empty for eingle lookups
-    /// @return Vector of axis directions for binning
-    virtual std::vector<AxisDirection> binningValues() const { return {}; }
-
-    /// Get the number of local bins in each dimension. This is used to
-    /// determine the size of the grid for neighbor lookups.
-    /// @return Array of number of local bins in each dimension
-    virtual std::array<std::size_t, 2> numLocalBins() const = 0;
-
-    /// Get the maximum neighbor distance that is supported by this lookup. This
-    /// is used to determine how many neighbors to include in neighbor lookups.
-    /// @return Maximum neighbor distance
-    virtual std::uint8_t maxNeighborDistance() const = 0;
-  };
-
  public:
   /// Constructor with a single surface
   /// @param srf The one and only surface
@@ -247,9 +163,7 @@ class SurfaceArray {
   }
 
  private:
-  struct SingleElementLookupImpl;
-  template <class Axis1, class Axis2>
-  struct SurfaceGridLookupImpl;
+  struct ISurfaceGridLookup;
 
   /// The actual grid lookup implementation
   std::unique_ptr<ISurfaceGridLookup> m_gridLookup;
@@ -259,8 +173,92 @@ class SurfaceArray {
   /// vector does not happen by default
   std::vector<const Surface*> m_surfacesRawPointers;
 
-  friend class SurfaceArrayCreator;
-  friend struct ActsTests::SurfaceArrayCreatorFixture;
+  /// Base interface for all surface lookups.
+  struct ISurfaceGridLookup {
+    virtual ~ISurfaceGridLookup() = default;
+
+    /// Fill provided surfaces into the contained @c Grid.
+    /// @param gctx The current geometry context object, e.g. alignment
+    /// @param surfaces Input surface pointers
+    virtual void fill(const GeometryContext& gctx,
+                      std::span<const Surface* const> surfaces) = 0;
+
+    /// Get all surfaces in bin given by the global bin index
+    /// @param bin the global bin index
+    /// @return span of surface pointers of the bin at that position
+    virtual std::span<const Surface* const> at(std::size_t bin) const = 0;
+
+    /// Performs lookup at @c pos and returns bin content as const reference
+    /// @param gctx The current geometry context object, e.g. alignment
+    /// @param position Lookup position
+    /// @param direction Lookup direction
+    /// @return A span of surface pointers
+    virtual std::span<const Surface* const> at(
+        const GeometryContext& gctx, const Vector3& position,
+        const Vector3& direction) const = 0;
+
+    /// Get all surfaces in bin given by local grid indices and neighbor
+    /// distance.
+    /// @param gridIndices the local grid indices
+    /// @param neighborDistance the neighbor distance to include in the lookup
+    /// @return span of surface pointers of the bin at that position and its neighbors
+    virtual std::span<const Surface* const> neighbors(
+        std::array<std::size_t, 2> gridIndices,
+        std::uint8_t neighborDistance) const = 0;
+
+    /// Performs a lookup at @c pos, but returns neighbors as well
+    /// @param gctx The current geometry context object, e.g. alignment
+    /// @param position Lookup position
+    /// @param direction Lookup direction
+    /// @return A span of surface pointers
+    virtual std::span<const Surface* const> neighbors(
+        const GeometryContext& gctx, const Vector3& position,
+        const Vector3& direction) const = 0;
+
+    /// Returns the total size of the grid (including under/overflow bins)
+    /// @return Size of the grid data structure
+    virtual std::size_t size() const = 0;
+
+    /// Gets the center position of bin @c bin in global coordinates
+    /// @param bin the global bin index
+    /// @return The bin center
+    virtual Vector3 getBinCenter(std::size_t bin) const = 0;
+
+    /// Returns copies of the axes used in the grid as @c AnyAxis
+    /// @return The axes
+    /// @note This returns copies. Use for introspection and querying.
+    virtual std::vector<const IAxis*> getAxes() const = 0;
+
+    /// Get the representative surface used for this lookup
+    /// @return Surface pointer
+    virtual const Surface* surfaceRepresentation() const = 0;
+
+    /// Checks if global bin is valid
+    /// @param bin the global bin index
+    /// @return bool if the bin is valid
+    /// @note Valid means that the index points to a bin which is not a under
+    ///       or overflow bin or out of range in any axis.
+    virtual bool isValidBin(std::size_t bin) const = 0;
+
+    /// The binning values described by this surface grid lookup. They are in
+    /// order of the axes (optional) and empty for eingle lookups
+    /// @return Vector of axis directions for binning
+    virtual std::vector<AxisDirection> binningValues() const { return {}; }
+
+    /// Get the number of local bins in each dimension. This is used to
+    /// determine the size of the grid for neighbor lookups.
+    /// @return Array of number of local bins in each dimension
+    virtual std::array<std::size_t, 2> numLocalBins() const = 0;
+
+    /// Get the maximum neighbor distance that is supported by this lookup. This
+    /// is used to determine how many neighbors to include in neighbor lookups.
+    /// @return Maximum neighbor distance
+    virtual std::uint8_t maxNeighborDistance() const = 0;
+  };
+
+  struct SingleElementLookupImpl;
+  template <class Axis1, class Axis2>
+  struct SurfaceGridLookupImpl;
 
   /// Factory method to create a surface grid lookup for a given representative
   /// surface, tolerance, and axes. This will internally create the appropriate
@@ -274,13 +272,6 @@ class SurfaceArray {
       std::shared_ptr<RegularSurface> representative, double tolerance,
       std::tuple<const IAxis&, const IAxis&> axes,
       std::uint8_t maxNeighborDistance = 1);
-
-  /// Default constructor which takes a @c SurfaceLookup and a vector of surfaces
-  /// @param gridLookup The grid storage. @c SurfaceArray does not fill it on its own
-  /// @param surfaces The input vector of surfaces. This is only for bookkeeping, so we can ask
-  [[deprecated("Use the constructor with axes instead")]]
-  SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
-               std::vector<std::shared_ptr<const Surface>> surfaces);
 };
 
 }  // namespace Acts

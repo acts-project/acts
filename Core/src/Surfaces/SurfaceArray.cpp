@@ -480,16 +480,6 @@ SurfaceArray::SurfaceArray(std::shared_ptr<const Surface> srf)
   m_surfacesRawPointers.push_back(m_surfaces.at(0).get());
 }
 
-SurfaceArray::SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
-                           std::vector<std::shared_ptr<const Surface>> surfaces)
-    : m_gridLookup(std::move(gridLookup)), m_surfaces(std::move(surfaces)) {
-  m_surfacesRawPointers =
-      m_surfaces |
-      std::views::transform(
-          [](const std::shared_ptr<const Surface>& sp) { return sp.get(); }) |
-      Ranges::to<std::vector>;
-}
-
 std::ostream& SurfaceArray::toStream(const GeometryContext& /*gctx*/,
                                      std::ostream& sl) const {
   sl << std::fixed << std::setprecision(4);
