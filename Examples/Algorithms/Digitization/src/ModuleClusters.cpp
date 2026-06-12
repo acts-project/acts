@@ -255,7 +255,7 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) const {
 
   // Do the geometric indices first: they precede the smeared ones in
   // the parameter vectors filled by the digitization algorithm, so
-  // seeding `mval' with them keeps the slot positions used in the
+  // seeding `result' with them keeps the slot positions used in the
   // non-geometric accumulation below aligned with the source layout.
   Cluster cluster;
 
