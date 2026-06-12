@@ -28,27 +28,6 @@ namespace Acts {
 /// recommended to start from bit position 16 or in reverse from 63 to avoid
 /// conflicts with future additions.
 enum class TrackStateFlag {
-  MeasurementFlag [[deprecated("Replaced by HasMeasurement; consider to use "
-                               "isMeasurement()/setIsMeasurement() instead")]] =
-      0,
-  ParameterFlag [[deprecated("Replaced by HasParameters; consider to use "
-                             "hasParameters()/setHasParameters() instead")]] =
-      1,
-  OutlierFlag [[deprecated("Replaced by IsOutlier; consider to use "
-                           "isOutlier()/setIsOutlier() instead")]] = 2,
-  HoleFlag [[deprecated("Replaced by IsHole; consider to use "
-                        "isHole()/setIsHole() instead")]] = 3,
-  MaterialFlag [[deprecated("Replaced by HasMaterial; consider to use "
-                            "hasMaterial()/setHasMaterial() instead")]] = 4,
-  SharedHitFlag [[deprecated("Replaced by IsSharedHit; consider to use "
-                             "isSharedHit()/setIsSharedHit() instead")]] = 5,
-  SplitHitFlag [[deprecated("Replaced by IsSplitHit; consider to use "
-                            "isSplitHit()/setIsSplitHit() instead")]] = 6,
-  NoExpectedHitFlag
-  [[deprecated("Replaced by HasNoExpectedHit; consider to use "
-               "hasNoExpectedHit()/setHasNoExpectedHit() instead")]] = 7,
-  NumTrackStateFlags [[deprecated("Replaced by NumFlags")]] = 8,
-
   /// Indicates that the track state has an associated measurement.
   /// Note that an outlier also has a measurement.
   HasMeasurement = 0,
