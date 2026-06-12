@@ -55,12 +55,6 @@ class GeometryContext : public ContextType {
     ACTS_POP_IGNORE_DEPRECATED()
   }
 
-  /// Default constructor
-  /// @deprecated Use GeometryContext::dangerouslyDefaultConstruct() instead
-  ///             to make empty context construction explicit
-  [[deprecated("Use GeometryContext::dangerouslyDefaultConstruct() instead")]]
-  GeometryContext() = default;
-
   /// Move construct from arbitrary type (inherited from ContextType)
   /// @tparam T The type of the value to construct from
   /// @param value The value to construct from
@@ -79,6 +73,9 @@ class GeometryContext : public ContextType {
 
   /// Inherit assignment operators
   using ContextType::operator=;
+
+ private:
+  GeometryContext() = default;
 };
 
 /// Helper struct that stores an object and a context, and will print it to
