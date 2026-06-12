@@ -429,6 +429,44 @@ def _read_dataset(directory: Path, expected_fields, expected_events: int):
     return _check
 
 
+def test_measurement_table_reco_only(tmp_path, fatras, trk_geo):
+    """The measurement converter runs without truth or clusters wired (data /
+    reco-only mode): link columns come out as empty lists, shape columns as
+    zeros, and the reco columns are unchanged."""
+    from acts.arrow import measurementSchema
+    from acts.examples.arrow import ArrowMeasurementOutputConverter, ParquetWriter
+
+    nevents = 2
+    s = Sequencer(numThreads=1, events=nevents)
+    fatras(s)
+    s.addAlgorithm(
+        ArrowMeasurementOutputConverter(
+            level=acts.logging.INFO,
+            inputMeasurements="measurements",
+            trackingGeometry=trk_geo,
+            outputTable="tracker_hits",
+        )
+    )
+    s.addWriter(
+        ParquetWriter(
+            level=acts.logging.INFO,
+            outputDir=str(tmp_path),
+            collections={"tracker_hits": "tracker_hits"},
+            expectedSchemas={"tracker_hits": measurementSchema()},
+        )
+    )
+    s.run()
+
+    table = _read_dataset(tmp_path / "tracker_hits", TRACKER_HITS_FIELDS, nevents)
+    loc0 = table.column("loc0").to_pylist()
+    simhit_ids = table.column("simhit_ids").to_pylist()
+    n_channels = table.column("n_channels").to_pylist()
+    assert sum(len(row) for row in loc0) > 0, "no measurements"
+    for ev_ids, ev_nch in zip(simhit_ids, n_channels):
+        assert all(len(ids) == 0 for ids in ev_ids), "links should be empty"
+        assert all(n == 0 for n in ev_nch), "shape should be zeros"
+
+
 def test_fatras_tracker_tables(tmp_path, fatras, trk_geo):
     """Fatras + digitization → the two tracker tables → Parquet.
 

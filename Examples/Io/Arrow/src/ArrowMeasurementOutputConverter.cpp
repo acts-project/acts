@@ -46,16 +46,11 @@ ArrowMeasurementOutputConverter::ArrowMeasurementOutputConverter(
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
   }
-  if (m_cfg.inputClusters.empty()) {
+  // Truth is optional (e.g. data, or reco-only conversions), but the sim-hit
+  // container and the sim-hit -> measurement map only make sense as a pair.
+  if (m_cfg.inputSimHits.empty() != m_cfg.inputSimHitMeasurementsMap.empty()) {
     throw std::invalid_argument(
-        "Missing clusters input collection (required for the shape columns)");
-  }
-  if (m_cfg.inputSimHits.empty()) {
-    throw std::invalid_argument("Missing sim hits input collection");
-  }
-  if (m_cfg.inputSimHitMeasurementsMap.empty()) {
-    throw std::invalid_argument(
-        "Missing sim-hit measurements map input collection");
+        "inputSimHits and inputSimHitMeasurementsMap must be set together");
   }
   if (m_cfg.outputTable.empty()) {
     throw std::invalid_argument("Missing output table name");
@@ -68,10 +63,10 @@ ArrowMeasurementOutputConverter::ArrowMeasurementOutputConverter(
   }
 
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
-  m_inputClusters.initialize(m_cfg.inputClusters);
-  m_inputSimHits.initialize(m_cfg.inputSimHits);
+  m_inputClusters.maybeInitialize(m_cfg.inputClusters);
+  m_inputSimHits.maybeInitialize(m_cfg.inputSimHits);
   m_inputParticles.maybeInitialize(m_cfg.inputParticles);
-  m_inputSimHitMeasurementsMap.initialize(m_cfg.inputSimHitMeasurementsMap);
+  m_inputSimHitMeasurementsMap.maybeInitialize(m_cfg.inputSimHitMeasurementsMap);
   m_outputTable.initialize(m_cfg.outputTable);
 }
 
@@ -82,16 +77,21 @@ std::vector<std::string> ArrowMeasurementOutputConverter::collections() const {
 ProcessCode ArrowMeasurementOutputConverter::execute(
     const AlgorithmContext& ctx) const {
   const MeasurementContainer& measurements = m_inputMeasurements(ctx);
-  const ClusterContainer& clusters = m_inputClusters(ctx);
-  const SimHitContainer& simHits = m_inputSimHits(ctx);
+  const ClusterContainer* clusters =
+      m_inputClusters.isInitialized() ? &m_inputClusters(ctx) : nullptr;
+  const SimHitContainer* simHits =
+      m_inputSimHits.isInitialized() ? &m_inputSimHits(ctx) : nullptr;
   const SimParticleContainer* particles =
       m_inputParticles.isInitialized() ? &m_inputParticles(ctx) : nullptr;
-  const SimHitMeasurementsMap& simHitMeasMap = m_inputSimHitMeasurementsMap(ctx);
+  const SimHitMeasurementsMap* simHitMeasMap =
+      m_inputSimHitMeasurementsMap.isInitialized()
+          ? &m_inputSimHitMeasurementsMap(ctx)
+          : nullptr;
 
-  if (clusters.size() != measurements.size()) {
+  if (clusters != nullptr && clusters->size() != measurements.size()) {
     throw std::runtime_error(
         "ArrowMeasurementOutputConverter: clusters (" +
-        std::to_string(clusters.size()) + ") and measurements (" +
+        std::to_string(clusters->size()) + ") and measurements (" +
         std::to_string(measurements.size()) +
         ") are not parallel containers");
   }
@@ -100,30 +100,32 @@ ProcessCode ArrowMeasurementOutputConverter::execute(
   // Sim-hits referencing no measurement stay in the truth table; here they
   // only feed a diagnostic.
   std::unordered_multimap<Index, SimHitIndex> measToSimHits;
-  measToSimHits.reserve(simHitMeasMap.size());
-  std::vector<bool> referenced(simHits.size(), false);
-  for (const auto& [simHitIdx, measIdx] : simHitMeasMap) {
-    measToSimHits.emplace(measIdx, simHitIdx);
-    if (simHitIdx < referenced.size()) {
-      referenced[simHitIdx] = true;
+  if (simHitMeasMap != nullptr) {
+    measToSimHits.reserve(simHitMeasMap->size());
+    std::vector<bool> referenced(simHits->size(), false);
+    for (const auto& [simHitIdx, measIdx] : *simHitMeasMap) {
+      measToSimHits.emplace(measIdx, simHitIdx);
+      if (simHitIdx < referenced.size()) {
+        referenced[simHitIdx] = true;
+      }
     }
-  }
-  std::size_t droppedSimHits = 0;
-  for (bool seen : referenced) {
-    if (!seen) {
-      ++droppedSimHits;
+    std::size_t droppedSimHits = 0;
+    for (bool seen : referenced) {
+      if (!seen) {
+        ++droppedSimHits;
+      }
     }
-  }
-  const double droppedFraction =
-      simHits.empty() ? 0.0
-                      : static_cast<double>(droppedSimHits) /
-                            static_cast<double>(simHits.size());
-  if (droppedFraction > m_cfg.maxUnmatchedSimHitFraction) {
-    ACTS_WARNING("ArrowMeasurementOutputConverter: "
-                 << droppedSimHits << " / " << simHits.size() << " sim-hits ("
-                 << droppedFraction * 100.0
-                 << "%) contribute to no measurement (links absent from this "
-                    "table; the hits remain in the truth table)");
+    const double droppedFraction =
+        simHits->empty() ? 0.0
+                         : static_cast<double>(droppedSimHits) /
+                               static_cast<double>(simHits->size());
+    if (droppedFraction > m_cfg.maxUnmatchedSimHitFraction) {
+      ACTS_WARNING("ArrowMeasurementOutputConverter: "
+                   << droppedSimHits << " / " << simHits->size()
+                   << " sim-hits (" << droppedFraction * 100.0
+                   << "%) contribute to no measurement (links absent from this "
+                      "table; the hits remain in the truth table)");
+    }
   }
 
   auto* pool = arrow::default_memory_pool();
@@ -302,8 +304,11 @@ ProcessCode ArrowMeasurementOutputConverter::execute(
     layV->UnsafeAppend(static_cast<std::uint16_t>(gid.layer()));
     surfV->UnsafeAppend(static_cast<std::uint32_t>(gid.sensitive()));
 
-    // Cluster-shape features (parallel container, checked above).
-    const Cluster& clu = clusters[measIdx];
+    // Cluster-shape features (parallel container, checked above). Without a
+    // clusters input the shape columns are zeros - the schema stays stable.
+    static const Cluster kEmptyCluster{};
+    const Cluster& clu =
+        clusters != nullptr ? (*clusters)[measIdx] : kEmptyCluster;
     sz0V->UnsafeAppend(clampU16(clu.sizeLoc0));
     sz1V->UnsafeAppend(clampU16(clu.sizeLoc1));
     nchV->UnsafeAppend(clampU16(clu.channels.size()));
@@ -329,8 +334,8 @@ ProcessCode ArrowMeasurementOutputConverter::execute(
       shidVV->UnsafeAppend(static_cast<std::uint32_t>(simHitIdx));
 
       std::uint64_t pid = kUnmatched;
-      if (particles != nullptr) {
-        const auto& hit = *simHits.nth(simHitIdx);
+      if (particles != nullptr && simHits != nullptr) {
+        const auto& hit = *simHits->nth(simHitIdx);
         auto pIt = particles->find(hit.particleId());
         if (pIt != particles->end()) {
           pid = static_cast<std::uint64_t>(

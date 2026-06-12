@@ -44,11 +44,15 @@ class ACTS_ARROW_EXPORT ArrowMeasurementOutputConverter final
   struct Config {
     /// Measurement container (required). One output row per measurement.
     std::string inputMeasurements;
-    /// Cluster container parallel to the measurements (required for the
-    /// shape columns; produced by the geometric digitization).
+    /// Optional cluster container parallel to the measurements (produced by
+    /// the geometric digitization). When unset - e.g. smearing-only
+    /// digitization - the shape columns are emitted as zeros so the schema
+    /// stays stable.
     std::string inputClusters;
-    /// Input @c SimHitContainer (required; used to resolve contributing
-    /// particles for @c particle_ids).
+    /// Optional input @c SimHitContainer; must be set together with
+    /// @c inputSimHitMeasurementsMap. When unset (e.g. data, or a reco-only
+    /// conversion) the @c particle_ids / @c simhit_ids link columns are
+    /// emitted as empty lists.
     std::string inputSimHits;
     /// Optional input particle container used to resolve a contributing
     /// sim-hit's particle barcode to a row index in the corresponding parquet
@@ -56,8 +60,9 @@ class ACTS_ARROW_EXPORT ArrowMeasurementOutputConverter final
     /// consumes for that table — leaving it empty forces the unmatched
     /// sentinel.
     std::string inputParticles;
-    /// Sim-hit → measurement(s) map keyed by @c SimHitIndex (required). It is
-    /// inverted internally to measurement → contributing sim-hits.
+    /// Optional sim-hit → measurement(s) map keyed by @c SimHitIndex; must be
+    /// set together with @c inputSimHits. It is inverted internally to
+    /// measurement → contributing sim-hits.
     std::string inputSimHitMeasurementsMap;
     /// Output whiteboard key for the resulting @c arrow::Table.
     std::string outputTable = "tracker_hits";
