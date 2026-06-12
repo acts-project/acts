@@ -55,6 +55,7 @@ EXCLUDE_FILES = (
     "generic-input-config.json",
     "generic-alignment-geo.json",
     "odd-digi-smearing-config-notime.json",
+    "odd-digi-geometric-config-notime.json",
     # TODO Mention these files somewhere?
     "codegen/src/codegen/sympy_common.py",
     "CompressedIO.h",
