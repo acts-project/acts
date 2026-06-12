@@ -85,8 +85,9 @@ Vector2 DiamondBounds::center() const {
 }
 
 std::ostream& DiamondBounds::toStream(std::ostream& sl) const {
-  sl << std::setiosflags(std::ios::fixed);
-  sl << std::setprecision(7);
+  const auto flags = sl.flags();
+  const auto precision = sl.precision();
+  sl << std::fixed << std::setprecision(7);
   sl << "Acts::DiamondBounds: (halfXatYneg, halfXatYzero, halfXatYpos, "
         "halfYneg, halfYpos) = ";
   sl << "(" << get(DiamondBounds::eHalfLengthXnegY) << ", "
@@ -94,7 +95,8 @@ std::ostream& DiamondBounds::toStream(std::ostream& sl) const {
      << get(DiamondBounds::eHalfLengthXposY) << ", "
      << get(DiamondBounds::eHalfLengthYneg) << ", "
      << get(DiamondBounds::eHalfLengthYpos) << ")";
-  sl << std::setprecision(-1);
+  sl.flags(flags);
+  sl.precision(precision);
   return sl;
 }
 

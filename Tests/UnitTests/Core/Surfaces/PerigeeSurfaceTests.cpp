@@ -14,7 +14,9 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <iomanip>
 #include <memory>
+#include <sstream>
 #include <string>
 
 using namespace Acts;
@@ -74,6 +76,21 @@ BOOST_AUTO_TEST_CASE(PerigeeSurfaceProperties) {
   BOOST_CHECK(
       dumpOutput.is_equal("Acts::PerigeeSurface:\n\
      Center position  (x, y, z) = (1.0000000, 1.0000000, 1.0000000)"));
+}
+
+BOOST_AUTO_TEST_CASE(PerigeeSurfaceToStreamPreservesStreamState) {
+  std::ostringstream stream;
+  stream << std::scientific << std::showpos << std::setprecision(3);
+
+  const auto flags = stream.flags();
+  const auto precision = stream.precision();
+
+  auto perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(Vector3{1., 1., 1.});
+  stream << perigeeSurface->toStream(tgContext);
+
+  BOOST_CHECK(stream.flags() == flags);
+  BOOST_CHECK_EQUAL(stream.precision(), precision);
 }
 
 BOOST_AUTO_TEST_CASE(EqualityOperators) {

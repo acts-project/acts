@@ -106,14 +106,16 @@ Vector2 CylinderBounds::center() const {
 }
 
 std::ostream& CylinderBounds::toStream(std::ostream& sl) const {
-  sl << std::setiosflags(std::ios::fixed);
-  sl << std::setprecision(7);
+  const auto flags = sl.flags();
+  const auto precision = sl.precision();
+  sl << std::fixed << std::setprecision(7);
   sl << "Acts::CylinderBounds: (radius, halfLengthZ, halfPhiSector, "
         "averagePhi, bevelMinZ, bevelMaxZ) = ";
   sl << "(" << get(eR) << ", " << get(eHalfLengthZ) << ", ";
   sl << get(eHalfPhiSector) << ", " << get(eAveragePhi) << ", ";
   sl << get(eBevelMinZ) << ", " << get(eBevelMaxZ) << ")";
-  sl << std::setprecision(-1);
+  sl.flags(flags);
+  sl.precision(precision);
   return sl;
 }
 

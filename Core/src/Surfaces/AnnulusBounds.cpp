@@ -408,14 +408,16 @@ Vector2 AnnulusBounds::center() const {
 }
 
 std::ostream& AnnulusBounds::toStream(std::ostream& sl) const {
-  sl << std::setiosflags(std::ios::fixed);
-  sl << std::setprecision(7);
+  const auto flags = sl.flags();
+  const auto precision = sl.precision();
+  sl << std::fixed << std::setprecision(7);
   sl << "Acts::AnnulusBounds:  (innerRadius, outerRadius, minPhi, maxPhi) = ";
   sl << "(" << get(eMinR) << ", " << get(eMaxR) << ", " << phiMin() << ", "
      << phiMax() << ")" << '\n';
   sl << " - shift xy = " << m_shiftXY.x() << ", " << m_shiftXY.y() << '\n';
   sl << " - shift pc = " << m_shiftPC.x() << ", " << m_shiftPC.y() << '\n';
-  sl << std::setprecision(-1);
+  sl.flags(flags);
+  sl.precision(precision);
   return sl;
 }
 

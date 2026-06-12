@@ -17,6 +17,7 @@
 #include "Acts/Utilities/Ranges.hpp"
 #include "Acts/Utilities/detail/MultiAxisHelper.hpp"
 
+#include <iomanip>
 #include <limits>
 #include <map>
 #include <ranges>
@@ -116,6 +117,8 @@ SurfaceArray::SurfaceArray(std::shared_ptr<const Surface> srf)
 
 std::ostream& SurfaceArray::toStream(const GeometryContext& /*gctx*/,
                                      std::ostream& sl) const {
+  const auto flags = sl.flags();
+  const auto precision = sl.precision();
   sl << std::fixed << std::setprecision(4);
   sl << "SurfaceArray:" << std::endl;
   sl << " - no surfaces: " << m_surfaces.size() << std::endl;
@@ -150,6 +153,8 @@ std::ostream& SurfaceArray::toStream(const GeometryContext& /*gctx*/,
     }
     sl << " ]" << std::endl;
   }
+  sl.flags(flags);
+  sl.precision(precision);
   return sl;
 }
 

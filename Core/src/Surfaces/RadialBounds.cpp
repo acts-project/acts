@@ -87,13 +87,15 @@ Vector2 RadialBounds::center() const {
 }
 
 std::ostream& RadialBounds::toStream(std::ostream& sl) const {
-  sl << std::setiosflags(std::ios::fixed);
-  sl << std::setprecision(7);
+  const auto flags = sl.flags();
+  const auto precision = sl.precision();
+  sl << std::fixed << std::setprecision(7);
   sl << "Acts::RadialBounds:  (innerRadius, outerRadius, hPhiSector, "
         "averagePhi) = ";
   sl << "(" << get(eMinR) << ", " << get(eMaxR) << ", " << get(eHalfPhiSector)
      << ", " << get(eAveragePhi) << ")";
-  sl << std::setprecision(-1);
+  sl.flags(flags);
+  sl.precision(precision);
   return sl;
 }
 
