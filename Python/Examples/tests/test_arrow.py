@@ -293,52 +293,55 @@ def test_particle_gun_fatras(tmp_path, fatras):
     _assert_particles_parquet(tmp_path / "particles_simulated_arrow", nevents)
 
 
-SIMHIT_FIELDS = {
+# Reco position + geometry are one value per measurement (flat list<scalar>).
+SIMHIT_FLAT_FIELDS = {
     "x",
     "y",
     "z",
-    "true_x",
-    "true_y",
-    "true_z",
-    "time",
-    "particle_id",
     "detector",
     "volume_id",
     "layer_id",
     "surface_id",
 }
+# Contributing sim-hits' truth is nested per measurement (list<list<scalar>>).
+SIMHIT_NESTED_FIELDS = {
+    "particle_id",
+    "true_x",
+    "true_y",
+    "true_z",
+    "time",
+}
+SIMHIT_FIELDS = SIMHIT_FLAT_FIELDS | SIMHIT_NESTED_FIELDS
 
 
 def _add_simhit_arrow_writer(
     s: Sequencer,
     outputDir: Path,
+    trackingGeometry,
     table_key: str = "simhits_arrow",
     *,
-    withClusters: bool,
     eventsPerShard: int = 2,
 ) -> None:
     """Wire an ArrowSimHitOutputConverter + ParquetWriter for the simhits.
 
-    @param withClusters: if True, feed the cluster container and the
-        sim-hit→measurement map so the digitized x,y,z columns are filled from
-        the precomputed Cluster::globalPosition; otherwise leave them unwired so
-        those columns come out NaN.
+    The converter emits one row per measurement: reco x,y,z (projected from the
+    measurement's bound parameters through its surface) and geometry once per
+    measurement, with the contributing sim-hits' truth as nested lists. It needs
+    the measurement container, the sim-hit→measurement map, and the tracking
+    geometry — all produced/owned by the fatras+digitization fixture.
     """
     from acts.arrow import simHitSchema
     from acts.examples.arrow import ArrowSimHitOutputConverter, ParquetWriter
-
-    kwargs = {}
-    if withClusters:
-        kwargs["inputClusters"] = "clusters"
-        kwargs["inputSimHitMeasurementsMap"] = "simhit_measurements_map"
 
     s.addAlgorithm(
         ArrowSimHitOutputConverter(
             level=acts.logging.INFO,
             inputSimHits="simhits",
             inputParticles="particles_simulated",
+            inputMeasurements="measurements",
+            inputSimHitMeasurementsMap="simhit_measurements_map",
+            trackingGeometry=trackingGeometry,
             outputTable=table_key,
-            **kwargs,
         )
     )
 
@@ -353,15 +356,13 @@ def _add_simhit_arrow_writer(
     )
 
 
-def _assert_simhits_parquet(
-    directory: Path, expected_events: int, *, expect_digitized: bool
-) -> None:
-    """Verify a simhits dataset directory: schema, row count, and the
-    digitized-position semantics.
+def _assert_simhits_parquet(directory: Path, expected_events: int) -> None:
+    """Verify a simhits dataset directory: schema shape (flat reco vs nested
+    truth), row count, and measurement-row semantics.
 
-    The truth columns (true_x/true_y/true_z/time) are always finite. The
-    digitized columns (x/y/z) are finite only for hits matched to a cluster
-    when clusters were wired in; otherwise every value is NaN.
+    One row per event; within an event one entry per measurement. Reco x,y,z are
+    flat (one per measurement) and finite; the contributing sim-hits' truth is
+    nested (outer per measurement, inner per contributing sim-hit) and finite.
     """
     assert directory.exists(), f"{directory} does not exist"
     assert directory.is_dir(), f"{directory} is not a directory"
@@ -378,11 +379,22 @@ def _assert_simhits_parquet(
         assert "event_id" in names, f"{directory.name}: event_id column missing"
         missing = SIMHIT_FIELDS - names
         assert not missing, f"{directory.name}: missing fields {missing}"
-        for field_name in SIMHIT_FIELDS:
+        # The row index is the measurement id, so there must be no id column.
+        assert (
+            "measurement_id" not in names
+        ), f"{directory.name}: measurement_id column should not exist (row index is the id)"
+
+        # Reco + geometry are flat list<scalar>; truth is nested list<list<scalar>>.
+        for field_name in SIMHIT_FLAT_FIELDS:
             ftype = first_schema.field(field_name).type
-            assert pa.types.is_list(
-                ftype
-            ), f"{directory.name}: field '{field_name}' should be list, got {ftype}"
+            assert pa.types.is_list(ftype) and not pa.types.is_list(
+                ftype.value_type
+            ), f"{directory.name}: '{field_name}' should be flat list, got {ftype}"
+        for field_name in SIMHIT_NESTED_FIELDS:
+            ftype = first_schema.field(field_name).type
+            assert pa.types.is_list(ftype) and pa.types.is_list(
+                ftype.value_type
+            ), f"{directory.name}: '{field_name}' should be nested list<list>, got {ftype}"
 
         table = pq.ParquetDataset(str(directory)).read()
         assert table.num_rows == expected_events, (
@@ -394,84 +406,49 @@ def _assert_simhits_parquet(
         y = table.column("y").to_pylist()
         z = table.column("z").to_pylist()
         tx = table.column("true_x").to_pylist()
-        ty = table.column("true_y").to_pylist()
-        tz = table.column("true_z").to_pylist()
 
-        total_hits = sum(len(row) for row in tx)
-        assert total_hits > 0, f"{directory.name}: no sim hits across any event"
+        total_meas = sum(len(row) for row in x)
+        assert total_meas > 0, f"{directory.name}: no measurements across any event"
 
-        # Truth position is always written, so it must be finite everywhere.
-        for col in (tx, ty, tz):
-            for row in col:
-                for v in row:
-                    assert math.isfinite(v), f"{directory.name}: non-finite truth {v}"
-
-        n_digitized = 0
-        for ex, ey, ez, etx, ety, etz in zip(x, y, z, tx, ty, tz):
-            for xv, yv, zv, txv, tyv, tzv in zip(ex, ey, ez, etx, ety, etz):
-                if not expect_digitized:
-                    assert (
-                        math.isnan(xv) and math.isnan(yv) and math.isnan(zv)
-                    ), f"{directory.name}: expected NaN digitized pos, got ({xv},{yv},{zv})"
-                    continue
-                # With clusters wired, matched hits carry a finite digitized
-                # position; unmatched ones stay NaN. A finite x must come with a
-                # finite y and z.
-                if math.isnan(xv):
-                    continue
-                n_digitized += 1
-                assert math.isfinite(yv) and math.isfinite(
-                    zv
-                ), f"{directory.name}: partial digitized pos ({xv},{yv},{zv})"
-                # The position must sit inside the generic-detector envelope
-                # (in mm) — a units regression (e.g. m vs mm) or a stale/garbage
-                # position would blow well past this.
+        for ex, ey, ez, etx in zip(x, y, z, tx):
+            # Reco rows and the nested truth must align one-to-one per measurement.
+            assert (
+                len(ex) == len(etx)
+            ), f"{directory.name}: {len(ex)} reco rows vs {len(etx)} truth rows"
+            for xv, yv, zv in zip(ex, ey, ez):
+                # Reco position is always computed for a measurement — finite,
+                # and inside the generic-detector envelope (mm). A units
+                # regression (m vs mm) or stale position would blow past this.
+                assert (
+                    math.isfinite(xv) and math.isfinite(yv) and math.isfinite(zv)
+                ), f"{directory.name}: non-finite reco pos ({xv},{yv},{zv})"
                 r = math.hypot(xv, yv)
                 assert r < 1500.0 and abs(zv) < 4000.0, (
-                    f"{directory.name}: digitized pos ({xv},{yv},{zv}) outside "
+                    f"{directory.name}: reco pos ({xv},{yv},{zv}) outside "
                     f"detector envelope — units or stale-position regression?"
                 )
-                # It must also stay near the truth hit's module. The measured
-                # coordinate(s) pin it to the truth, but the unmeasured strip
-                # coordinate defaults to the surface centre, so allow a generous
-                # module-scale slack rather than a tight smearing tolerance.
-                dist = math.sqrt((xv - txv) ** 2 + (yv - tyv) ** 2 + (zv - tzv) ** 2)
-                assert dist < 250.0, (
-                    f"{directory.name}: digitized pos {dist:.1f} mm from truth "
-                    f"({txv},{tyv},{tzv}) — wrong surface or unit error?"
-                )
-
-        if expect_digitized:
-            assert n_digitized > 0, (
-                f"{directory.name}: clusters were wired but no hit got a "
-                f"digitized position"
-            )
+            # Every measurement carries at least one contributing sim-hit (the
+            # truth-only ones are dropped), and their truth must be finite.
+            for contribs in etx:
+                assert (
+                    len(contribs) >= 1
+                ), f"{directory.name}: measurement with no contributing sim-hit"
+                for v in contribs:
+                    assert math.isfinite(v), f"{directory.name}: non-finite truth {v}"
 
 
-def test_fatras_simhits_digitized(tmp_path, fatras):
-    """Fatras + digitization → ArrowSimHitOutputConverter reads cluster
-    positions → Parquet. The matched-hit x,y,z must be the precomputed cluster
-    global positions (finite, near truth)."""
+def test_fatras_simhits_measurement_rows(tmp_path, fatras, trk_geo):
+    """Fatras + digitization → ArrowSimHitOutputConverter emits one row per
+    measurement with reco x,y,z (finite, in-envelope) and nested per-measurement
+    truth → Parquet. `trk_geo` is the same geometry the fixture digitizes
+    against, so surface lookups resolve."""
     nevents = 3
     s = Sequencer(numThreads=1, events=nevents)
     fatras(s)
-    _add_simhit_arrow_writer(s, tmp_path, withClusters=True)
+    _add_simhit_arrow_writer(s, tmp_path, trk_geo)
     s.run()
 
-    _assert_simhits_parquet(tmp_path / "simhits_arrow", nevents, expect_digitized=True)
-
-
-def test_fatras_simhits_no_clusters_are_nan(tmp_path, fatras):
-    """Without the cluster container and sim-hit→measurement map wired, the
-    digitized x,y,z columns fall back to NaN while truth positions still
-    populate."""
-    nevents = 3
-    s = Sequencer(numThreads=1, events=nevents)
-    fatras(s)
-    _add_simhit_arrow_writer(s, tmp_path, withClusters=False)
-    s.run()
-
-    _assert_simhits_parquet(tmp_path / "simhits_arrow", nevents, expect_digitized=False)
+    _assert_simhits_parquet(tmp_path / "simhits_arrow", nevents)
 
 
 @pytest.mark.skipif(not pythia8Enabled, reason="Pythia8 not built")
@@ -608,6 +585,9 @@ def test_reader_schema_evolution_added_optional_column(tmp_path):
                     [[1]], type=field_type("majority_particle_id")
                 ),
                 "hit_ids": pa.array([[[1, 2, 3]]], type=field_type("hit_ids")),
+                "hit_outlier": pa.array(
+                    [[[False, False, False]]], type=field_type("hit_outlier")
+                ),
                 "track_id": pa.array([[7]], type=field_type("track_id")),
             },
             schema=on_disk_schema,
@@ -726,6 +706,9 @@ def test_python_alg_writes_arrow_table(tmp_path):
                         [[1]], type=field_type("majority_particle_id")
                     ),
                     "hit_ids": pa.array([[[1, 2, 3]]], type=field_type("hit_ids")),
+                    "hit_outlier": pa.array(
+                        [[[False, False, False]]], type=field_type("hit_outlier")
+                    ),
                     "track_id": pa.array([[7]], type=field_type("track_id")),
                     "t": pa.array([None], type=field_type("t")),
                 },

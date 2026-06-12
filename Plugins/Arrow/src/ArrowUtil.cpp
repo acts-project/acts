@@ -195,26 +195,42 @@ std::shared_ptr<arrow::Schema> trackSchema() {
       arrow::field("theta", nullableFloatList(), false),
       arrow::field("qop", nullableFloatList(), false),
       arrow::field("majority_particle_id", arrow::list(arrow::uint64()), false),
+      // Measurement indices on the track: each entry is the row index of a
+      // measurement in the per-event tracker-hits table (== the measurement's
+      // IndexSourceLink index). One element per measurement state on the track.
       arrow::field("hit_ids", arrow::list(arrow::list(arrow::uint32())), false),
       arrow::field("track_id", arrow::list(arrow::uint16()), false),
       arrow::field("t", nullableFloatList(), true),
+      // Per-measurement outlier flag, parallel to hit_ids: true where the track
+      // state is an outlier (still source-linked, but rejected from the fit).
+      // The number of measurements is len(hit_ids) (or the non-outlier count),
+      // so no separate num_measurements column is needed.
+      arrow::field("hit_outlier", arrow::list(arrow::list(arrow::boolean())),
+                   false),
   });
 }
 
 std::shared_ptr<arrow::Schema> simHitSchema() {
+  // One entry per MEASUREMENT (not per sim-hit). The entry's position in these
+  // per-event lists is the measurement's id, referenced by track hit_ids — so
+  // there is no separate measurement_id column. Reco x,y,z + geometry are one
+  // value per measurement; the contributing sim-hits' truth (particle_id,
+  // true_x/y/z, time) are nested lists (outer = per measurement, inner = per
+  // contributing sim-hit), mirroring the calo contrib_* columns.
   return arrow::schema({
       arrow::field("x", arrow::list(arrow::float32()), false),
       arrow::field("y", arrow::list(arrow::float32()), false),
       arrow::field("z", arrow::list(arrow::float32()), false),
-      arrow::field("true_x", arrow::list(arrow::float32()), false),
-      arrow::field("true_y", arrow::list(arrow::float32()), false),
-      arrow::field("true_z", arrow::list(arrow::float32()), false),
-      arrow::field("time", arrow::list(arrow::float32()), false),
-      arrow::field("particle_id", arrow::list(arrow::uint64()), false),
       arrow::field("detector", arrow::list(arrow::uint8()), false),
       arrow::field("volume_id", arrow::list(arrow::uint8()), false),
       arrow::field("layer_id", arrow::list(arrow::uint16()), false),
       arrow::field("surface_id", arrow::list(arrow::uint32()), false),
+      arrow::field("particle_id", arrow::list(arrow::list(arrow::uint64())),
+                   false),
+      arrow::field("true_x", arrow::list(arrow::list(arrow::float32())), false),
+      arrow::field("true_y", arrow::list(arrow::list(arrow::float32())), false),
+      arrow::field("true_z", arrow::list(arrow::list(arrow::float32())), false),
+      arrow::field("time", arrow::list(arrow::list(arrow::float32())), false),
   });
 }
 
