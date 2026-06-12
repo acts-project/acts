@@ -564,4 +564,53 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalKeepGoing) {
   BOOST_CHECK_GE(markerCount, 1u);
 }
 
+BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalKeepGoingSingleChildFalseWarning) {
+  // Reproducer for a false-positive in the early material-clash check:
+  // a single-child AxisZ stack must NOT trigger a merge-material error because
+  // no portal merge actually happens.  With keepGoingOnMaterialMergeFailure at
+  // its default (false / strict), construction must succeed without throwing.
+  Transform3 base{Transform3::Identity()};
+
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {0_mm, 20_mm};
+  auto root = std::make_unique<Blueprint>(cfg);
+
+  root->addCylinderContainer("Stack", AxisDirection::AxisZ, [&](auto& stack) {
+    using enum AxisDirection;
+    using enum AxisBoundaryType;
+    using enum CylinderVolumeBounds::Face;
+
+    stack.addMaterial("Material", [&](auto& mat) {
+      mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 20},
+                        {AxisZ, Bound, 20});
+      mat.addStaticVolume(
+          base, std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm),
+          "VolumeA");
+    });
+  });
+
+  // Use strict mode (keepGoingOnMaterialMergeFailure = false by default).
+  // The single-child stack must not be mistaken for a real merge, so no
+  // exception should be thrown.
+  Experimental::BlueprintOptions options;
+
+  std::unique_ptr<const TrackingGeometry> trackingGeometry;
+  BOOST_REQUIRE_NO_THROW(trackingGeometry =
+                             root->construct(options, gctx, *logger));
+  BOOST_REQUIRE(trackingGeometry != nullptr);
+
+  std::size_t markerCount = 0;
+  trackingGeometry->visitSurfaces(
+      [&](const Surface* surface) {
+        if (surface != nullptr && surface->surfaceMaterial() != nullptr &&
+            dynamic_cast<const MergedMaterialMarker*>(
+                surface->surfaceMaterial()) != nullptr) {
+          ++markerCount;
+        }
+      },
+      false);
+  BOOST_CHECK_EQUAL(markerCount, 0u);
+}
+
 BOOST_AUTO_TEST_SUITE_END();
