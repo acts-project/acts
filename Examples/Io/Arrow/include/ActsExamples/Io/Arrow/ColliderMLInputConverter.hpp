@@ -123,6 +123,13 @@ class ColliderMLInputConverter : public IAlgorithm {
  private:
   Config m_cfg;
 
+  /// Fallback map built at construction when geoIdMap is empty.
+  /// Keys are GeometryIdentifiers with only volume/layer/sensitive set;
+  /// values are the full GeometryIdentifier (including extra) from the
+  /// tracking geometry.
+  std::unordered_map<Acts::GeometryIdentifier, Acts::GeometryIdentifier>
+      m_volLaySenMap;
+
   ReadDataHandle<ActsPlugins::ArrowUtil::ArrowTable> m_inputParticles{
       this, "InputParticles"};
   ReadDataHandle<ActsPlugins::ArrowUtil::ArrowTable> m_inputHits{this,

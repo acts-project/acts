@@ -218,6 +218,20 @@ ColliderMLInputConverter::ColliderMLInputConverter(
   m_outputMeasParticlesMap.maybeInitialize(m_cfg.outputMeasParticlesMap);
   m_outputParticleMeasurementsMap.maybeInitialize(
       m_cfg.outputParticleMeasurementsMap);
+
+  if (m_cfg.geoIdMap.empty() && m_cfg.trackingGeometry != nullptr) {
+    for (const auto& [gid, surface] :
+         m_cfg.trackingGeometry->geoIdSurfaceMap()) {
+      if (gid.sensitive() == 0) {
+        continue;
+      }
+      Acts::GeometryIdentifier key = Acts::GeometryIdentifier()
+                                         .withVolume(gid.volume())
+                                         .withLayer(gid.layer())
+                                         .withSensitive(gid.sensitive());
+      m_volLaySenMap[key] = gid;
+    }
+  }
 }
 
 ColliderMLInputConverter::ColliderMLInputConverter(const Config& cfg,
@@ -226,9 +240,11 @@ ColliderMLInputConverter::ColliderMLInputConverter(const Config& cfg,
           cfg, Acts::getDefaultLogger("ColliderMLInputConverter", level)) {
   if (m_cfg.geoIdMap.empty()) {
     ACTS_WARNING(
-        "No geoIdMap provided — geometry IDs constructed directly from "
-        "ColliderML (volume, layer, surface) fields. Only valid when data "
-        "matches the current geometry's ID scheme.");
+        "No geoIdMap provided — geometry IDs resolved by matching "
+        "(volume, layer, sensitive) from the tracking geometry. Valid when "
+        "the ColliderML volume/layer/surface fields match the ACTS IDs.");
+    ACTS_DEBUG("Built (vol, lay, sen) fallback map with "
+               << m_volLaySenMap.size() << " entries.");
   }
 }
 
@@ -354,10 +370,19 @@ ProcessCode ColliderMLInputConverter::execute(
       }
       geoId = geoIt->second;
     } else {
-      geoId = Acts::GeometryIdentifier()
-                  .withVolume(vol)
-                  .withLayer(lay)
-                  .withSensitive(surf);
+      Acts::GeometryIdentifier partialId = Acts::GeometryIdentifier()
+                                               .withVolume(vol)
+                                               .withLayer(lay)
+                                               .withSensitive(surf);
+      auto it = m_volLaySenMap.find(partialId);
+      if (it == m_volLaySenMap.end()) {
+        ACTS_ERROR("Hit " << i << " (vol=" << +vol << " lay=" << lay
+                          << " surf=" << surf
+                          << ") not found in tracking geometry — check "
+                             "volume/layer/surface IDs match ACTS IDs");
+        return ProcessCode::ABORT;
+      }
+      geoId = it->second;
     }
 
     // particle barcode lookup

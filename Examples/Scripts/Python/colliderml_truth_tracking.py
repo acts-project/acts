@@ -26,8 +26,9 @@ def runColliderMLTruthTracking(
     field: acts.MagneticFieldProvider,
     outputDir: Path,
     inputDir: Path,
-    geoIdMapPath: Path,
+    geoIdMapPath: Optional[Path],
     digiConfigFile: Path,
+    geoIdMap: Optional[dict] = None,
     decorators=[],
     events: int = 10,
     numThreads: int = 1,
@@ -107,7 +108,15 @@ def runColliderMLTruthTracking(
             outputParticleMeasurementsMap="particle_measurements_map",
             trackingGeometry=trackingGeometry,
             digiConfig=readDigiConfigFromJson(str(digiConfigFile)),
-            geoIdMap=loadColliderMLGeoIdMap(str(geoIdMapPath)),
+            geoIdMap=(
+                geoIdMap
+                if geoIdMap is not None
+                else (
+                    loadColliderMLGeoIdMap(str(geoIdMapPath))
+                    if geoIdMapPath is not None
+                    else {}
+                )
+            ),
         )
     )
 

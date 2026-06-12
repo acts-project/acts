@@ -16,6 +16,7 @@ repos:
     - id: check-yaml
       exclude: \.gitlab-ci.yml$
     - id: check-added-large-files
+      args: ['--maxkb=1000']
 
 
   # Using this mirror lets us use mypyc-compiled black, which is about 2x faster
