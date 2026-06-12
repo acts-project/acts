@@ -261,8 +261,9 @@ PortalShellBase& ContainerBlueprintNode::connectImpl(
   // With a single child there is nothing to merge, so the "merged" faces are
   // actually kept as-is. Skip the clash check to avoid false positives.
   std::vector<std::string> materialClashes;
-  for (auto face : shells.size() > 1 ? ShellStack::mergedFaces(direction())
-                                     : std::vector<typename ShellStack::Face>{}) {
+  for (auto face : shells.size() > 1
+                       ? ShellStack::mergedFaces(direction())
+                       : std::vector<typename ShellStack::Face>{}) {
     for (auto* shell : shells) {
       auto portal = shell->portal(face);
       if (portal != nullptr && portal->surface().hasMaterial()) {
