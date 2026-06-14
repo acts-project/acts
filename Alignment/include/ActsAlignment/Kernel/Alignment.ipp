@@ -208,7 +208,7 @@ double ActsAlignment::Alignment<fitter_t>::decompositionAnalysis(
     }
     lastEV = EV;
     out << " Eigenvector " << index << " has eigenvalue " << EV << std::endl;
-    for (std::size_t row = 0; row < eigenVecs.rows(); ++row) {
+    for (Eigen::Index row = 0; row < eigenVecs.rows(); ++row) {
       out << "        " << std::setw(12) << "  " << std::setw(3) << row + 1
           << "  " << std::setw(12) << eigenVecs(row, index) << std::endl;
     }

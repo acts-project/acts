@@ -179,8 +179,18 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
 
   // regularise the (full) Kalman covariance. This is needed to stabilise
   // poorly constrained directions
-  const Acts::DynamicMatrix regularisedCov =
-      regulariseCovariance(updatedCovariance, -1, -1, 1.e-9);
+  double regCondCutOff = 1e-10;
+  double regHugeLeading = 100.;
+  double regOnDiag = 1.e-10;
+  if (removeUnconstrainedTrackPar) {
+    // if we trim the poorly constrained directions ahead of time,
+    // we can be a bit less aggressive in the regularisation
+    regCondCutOff = -1;
+    regHugeLeading = -1.;
+    regOnDiag = 1.e-9;
+  }
+  const Acts::DynamicMatrix regularisedCov = regulariseCovariance(
+      updatedCovariance, regCondCutOff, regHugeLeading, regOnDiag);
 
   // now we can get the piece of the weight matrix not already covered by
   // the measurement uncertainties
@@ -354,9 +364,10 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
       // find out where to book it in the ACTS matrix
       unsigned int localIndex = measurement.localLabels[iLoc] - firstLocal;
       // if we are a surface measurement, fill the projection matrix
-      if (isMeasurementOnSurface)
+      if (isMeasurementOnSurface) {
         targetState.projectionMatrix(iMeas, localIndex) =
             measurement.localDerivatives[iLoc];
+      }
       // now fill the covariance matrix by looping over all products of (local)
       // derivatives
       for (std::size_t jLoc = 0; jLoc < measurement.localLabels.size();
@@ -382,8 +393,9 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
     }
     // increment the measurement-on-surface index every time we finish
     // processing one.
-    if (isMeasurementOnSurface)
+    if (isMeasurementOnSurface) {
       ++iMeas;
+    }
   }
 
   /// (carefully) invert the covariance - upstairs, we filled it as a weight

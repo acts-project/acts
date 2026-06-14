@@ -43,7 +43,7 @@ mark_as_advanced(ACTS_NLOHMANN_JSON_SOURCE)
 # translate version string to the historical Mille release naming convention
 string(REPLACE "." "-" _acts_mille_release_string ${_acts_mille_version})
 set(ACTS_MILLE_SOURCE
-    "URL;https://gitlab.desy.de/millepede/mille/-/archive/V${_acts_mille_release_string}/mille-V${_acts_mille_release_string}.tar.gz;URL_HASH;SHA256=ae4bf37de8d835aa8adc2960bb795a2080233a4c8af3d4b55adf395e20df0f3e"
+    "URL;https://gitlab.desy.de/millepede/mille/-/archive/V${_acts_mille_release_string}/mille-V${_acts_mille_release_string}.tar.gz;URL_HASH;SHA256=00efaa82631482f3ead7bec548a09a80938c08950f84cdbc2e7bb47de9186228"
     CACHE STRING
     "Source to take Mille from"
 )
@@ -52,11 +52,19 @@ mark_as_advanced(ACTS_MILLE_SOURCE)
 # translate version string to the historical GBL release naming convention
 string(REPLACE "." "-" _acts_gbl_release_string ${_acts_gbl_version})
 set(ACTS_GBL_SOURCE
-    "URL;https://gitlab.desy.de/millepede/general-broken-lines/-/archive/V${_acts_gbl_release_string}/general-broken-lines-V${_acts_gbl_release_string}.tar.gz;URL_HASH;SHA256=e40401a77a828c81a9217d8df3201e7712ac86b4fd5058d526ae1e1f6664304f"
+    "URL;https://gitlab.desy.de/millepede/general-broken-lines/-/archive/V${_acts_gbl_release_string}/general-broken-lines-V${_acts_gbl_release_string}.tar.gz;URL_HASH;SHA256=d6090b1515dc33cd9532f1470e2038b7794258fbb8a411fa8a6e4520e933241b"
     CACHE STRING
     "Source to take General Broken Lines (GBL) from"
 )
 mark_as_advanced(ACTS_GBL_SOURCE)
+# translate version string to the historical Millepede release naming convention
+string(REPLACE "." "-" _acts_mp2_release_string ${_acts_mp2_version})
+set(ACTS_MP2_SOURCE
+    "URL;https://gitlab.desy.de/millepede/millepede-ii/-/archive/V${_acts_mp2_release_string}/millepede-ii-V${_acts_mp2_release_string}.tar.gz;URL_HASH;SHA256=c567c8f486194c1edf9e04c53c15f22635120be13e1de19c428f2eb088ae3222"
+    CACHE STRING
+    "Source to take Millepede-II from"
+)
+mark_as_advanced(ACTS_MP2_SOURCE)
 
 set(ACTS_EIGEN3_SOURCE
     "URL;https://gitlab.com/libeigen/eigen/-/archive/${_acts_eigen3_version}/${_acts_eigen3_version}.tar.gz;URL_HASH;SHA256=ba6ef66ba2d319e0a871a267889411c550d4bdf5bc7c62f86c60276913f3f4ba"
