@@ -91,17 +91,6 @@ option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEOMODEL "Build GeoModel plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TRACCC "Build Traccc plugin" OFF)
 option(ACTS_ENABLE_CUDA "Enable CUDA for the gnn/Traccc plugins" OFF)
-option(ACTS_GNN_ENABLE_CUDA "[Deprecated] Enable CUDA for the gnn plugin" OFF)
-
-# Preserve previous behaviour of ACTS_GNN_ENABLE_CUDA but mark as deprecated
-if(ACTS_GNN_ENABLE_CUDA)
-    message(
-        DEPRECATION
-        "ACTS_GNN_ENABLE_CUDA is deprecated. Enable ACTS_ENABLE_CUDA to achieve the same effect."
-    )
-    set(ACTS_ENABLE_CUDA ON)
-endif()
-
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GNN "Build the GNN plugin" OFF)
 option(ACTS_GNN_ENABLE_ONNX "Build the Onnx backend for the gnn plugin" OFF)
@@ -136,7 +125,6 @@ option(ACTS_BUILD_EXAMPLES_HASHING "Build Hashing-based code in the examples" OF
 option(ACTS_BUILD_EXAMPLES_PARQUET "Build Arrow/Parquet-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PODIO "Build Podio-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
-option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "[Deprecated] Build python bindings and enables the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_ROOT "Build modules based on ROOT I/O" OFF)
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
 # test related options
@@ -169,14 +157,6 @@ option(ACTS_COMPILE_HEADERS "Generate targets to compile header files" ON)
 # NOTE: ordering is important here. dependencies must come before dependees
 include(ActsOptionHelpers)
 
-# Preserve previous behaviour of ACTS_BUILD_PYTHON_BINDINGS but mark as deprecated
-if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
-    message(
-        DEPRECATION
-        "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS is deprecated. Enable ACTS_BUILD_EXAMPLES and ACTS_BUILD_PYTHON_BINDINGS to achieve the same effect."
-    )
-    set(ACTS_BUILD_PYTHON_BINDINGS ON)
-endif()
 # any examples component activates the general examples option
 set_option_if(
     ACTS_BUILD_EXAMPLES
