@@ -18,6 +18,8 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
+#include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 
@@ -25,6 +27,7 @@ namespace Acts {
 
 class Layer;
 class Surface;
+class Portal;
 class PerigeeSurface;
 class IMaterialDecorator;
 class TrackingVolume;
@@ -190,6 +193,14 @@ class TrackingGeometry {
   /// @retval pointer to the found surface otherwise.
   const Surface* findSurface(GeometryIdentifier id) const;
 
+  /// Search for a portal that was tagged with the given label during the
+  /// blueprint construction (see @ref Acts::Experimental::PortalDesignatorBlueprintNode).
+  ///
+  /// @param tag the tag assigned to the portal
+  /// @retval nullptr if no portal carries the tag
+  /// @retval pointer to the tagged portal otherwise.
+  const Portal* findPortal(std::string_view tag) const;
+
   /// Access to the GeometryIdentifier - Surface association map
   /// @return Const reference to the geometry ID to surface map
   const std::unordered_map<GeometryIdentifier, const Surface*>&
@@ -219,6 +230,7 @@ class TrackingGeometry {
   // lookup containers
   std::unordered_map<GeometryIdentifier, const TrackingVolume*> m_volumesById;
   std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById;
+  std::unordered_map<std::string, const Portal*> m_portalsByTag;
 };
 
 }  // namespace Acts

@@ -56,6 +56,7 @@ target_sources(
         LayerBlueprintNode.cpp
         IndexGrid.cpp
         MaterialDesignatorBlueprintNode.cpp
+        PortalDesignatorBlueprintNode.cpp
         VolumeAttachmentStrategy.cpp
         VolumeResizeStrategy.cpp
         GeometryIdentifierBlueprintNode.cpp
