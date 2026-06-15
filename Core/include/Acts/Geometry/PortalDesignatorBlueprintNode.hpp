@@ -12,9 +12,7 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 
 namespace detail {
 class PortalDesignatorBlueprintNodeImpl;
@@ -107,5 +105,4 @@ class PortalDesignatorBlueprintNode final : public BlueprintNode {
   std::unique_ptr<detail::PortalDesignatorBlueprintNodeImpl> m_impl;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
