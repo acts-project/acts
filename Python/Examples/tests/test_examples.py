@@ -964,7 +964,7 @@ def test_gnn_shrink_nodes_same_output(tmp_path, hardware):
     ci_models = Path(model_storage)
 
     module_map = str(ci_models / "module_map_odd_2k_events.1e-03.float.v1_3_PATCH")
-    gnn_model = str(ci_models / "gnn_odd_module_map.onnx")
+    gnn_model = str(ci_models / "gnn_odd_module_map.pt")
     assert Path(module_map + ".doublets.root").exists()
     assert Path(module_map + ".triplets.root").exists()
     assert Path(gnn_model).exists()
@@ -997,6 +997,7 @@ def test_gnn_shrink_nodes_same_output(tmp_path, hardware):
                 shrinkNodes=shrink,
                 s=s,
             )
+        del s  # Ensure ROOT TFile is closed (happens in sequencer destructor)
         output_dirs[shrink] = out
 
     root_files = ["performance_finding_gnn.root", "ntuple_finding_gnn.root"]
