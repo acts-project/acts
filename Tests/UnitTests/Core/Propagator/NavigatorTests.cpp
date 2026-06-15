@@ -509,10 +509,7 @@ createDenseTelescope(const GeometryContext& geoCtx) {
       [=](const auto& context, const auto& inner, const auto&) {
         return cvb.trackingVolume(context, inner, nullptr);
       });
-  auto detector =
-      TrackingGeometryBuilder(
-          tgbCfg, getDefaultLogger("TrackingGeometryBuilder", Logging::VERBOSE))
-          .trackingGeometry(geoCtx);
+  auto detector = TrackingGeometryBuilder(tgbCfg).trackingGeometry(geoCtx);
 
   std::vector<const Surface*> surfaces;
   detector->visitSurfaces(
