@@ -488,10 +488,12 @@ createDenseTelescope(const GeometryContext& geoCtx) {
     surfaceBottom.rBounds = std::make_shared<RectangleBounds>(0.8_m, 0.2_m);
 
     CuboidVolumeBuilder::LayerConfig layer;
+    layer.binningDimension = AxisDirection::AxisZ;
     layer.surfaceCfg.push_back(surfaceTop);
     layer.surfaceCfg.push_back(surfaceBottom);
 
     CuboidVolumeBuilder::VolumeConfig start;
+    start.binningDimension = AxisDirection::AxisZ;
     start.position = {0, 0, 0};
     start.length = {1.9_m, 1.9_m, 1.9_m};
     start.name = "start";
@@ -507,7 +509,10 @@ createDenseTelescope(const GeometryContext& geoCtx) {
       [=](const auto& context, const auto& inner, const auto&) {
         return cvb.trackingVolume(context, inner, nullptr);
       });
-  auto detector = TrackingGeometryBuilder(tgbCfg).trackingGeometry(geoCtx);
+  auto detector =
+      TrackingGeometryBuilder(
+          tgbCfg, getDefaultLogger("TrackingGeometryBuilder", Logging::VERBOSE))
+          .trackingGeometry(geoCtx);
 
   std::vector<const Surface*> surfaces;
   detector->visitSurfaces(
