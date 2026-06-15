@@ -714,4 +714,64 @@ BOOST_AUTO_TEST_CASE(PortalTagDuplicateThrows) {
   BOOST_CHECK_THROW(root->construct({}, gctx, *logger), std::invalid_argument);
 }
 
+// Same as PortalTagLookup, but for a cuboid x-stack: VolumeA's PositiveXFace is
+// fused with VolumeB's NegativeXFace.
+BOOST_AUTO_TEST_CASE(PortalTagLookupCuboid) {
+  using Experimental::PortalDesignatorBlueprintNode;
+  Transform3 base{Transform3::Identity()};
+
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisX] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisY] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  auto root = std::make_unique<Blueprint>(cfg);
+
+  root->addCuboidContainer("Stack", AxisDirection::AxisX, [&](auto& stack) {
+    using enum CuboidVolumeBounds::Face;
+
+    stack.addPortalDesignator("Tags", [&](auto& tags) {
+      tags.tagFace(PositiveXFace, "cuboid_boundary");
+      tags.addStaticVolume(
+          base * Translation3{Vector3{-200_mm, 0, 0}},
+          std::make_shared<CuboidVolumeBounds>(100_mm, 100_mm, 100_mm),
+          "VolumeA");
+    });
+
+    stack.addStaticVolume(
+        base * Translation3{Vector3{200_mm, 0, 0}},
+        std::make_shared<CuboidVolumeBounds>(100_mm, 100_mm, 100_mm), "VolumeB");
+  });
+
+  std::unique_ptr<const TrackingGeometry> trackingGeometry =
+      root->construct({}, gctx, *logger);
+  BOOST_REQUIRE(trackingGeometry != nullptr);
+
+  const Portal* portal = trackingGeometry->findPortal("cuboid_boundary");
+  BOOST_REQUIRE(portal != nullptr);
+
+  auto containsPortal = [&](const TrackingVolume& volume) {
+    for (const auto& p : volume.portals()) {
+      if (&p == portal) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const TrackingVolume* volumeA = nullptr;
+  const TrackingVolume* volumeB = nullptr;
+  trackingGeometry->apply([&](const TrackingVolume& volume) {
+    if (volume.volumeName() == "VolumeA") {
+      volumeA = &volume;
+    } else if (volume.volumeName() == "VolumeB") {
+      volumeB = &volume;
+    }
+  });
+
+  BOOST_REQUIRE(volumeA != nullptr);
+  BOOST_REQUIRE(volumeB != nullptr);
+  BOOST_CHECK(containsPortal(*volumeA));
+  BOOST_CHECK(containsPortal(*volumeB));
+}
+
 BOOST_AUTO_TEST_SUITE_END();
