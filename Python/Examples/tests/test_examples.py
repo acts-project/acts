@@ -950,51 +950,53 @@ def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, hardwar
         assert_root_hash(f, rfp)
 
 
+@pytest.mark.odd
 @pytest.mark.parametrize("hardware", ["gpu"])
 @pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
-def test_gnn_shrink_nodes_same_output(tmp_path, trk_geo, field, hardware):
+def test_gnn_shrink_nodes_same_output(tmp_path, hardware):
     """Verify that shrinkNodes=True produces the same tracks as shrinkNodes=False"""
     from helpers.hash_root import hash_root_file
-    from gnn import runGnnMetricLearning
+    from gnn_module_map_odd import runGnnModuleMap
+    from acts.examples.odd import getOpenDataDetector
 
     model_storage = os.environ.get("MODEL_STORAGE")
     assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
     ci_models = Path(model_storage)
 
-    embed_model = ci_models / "torchscript_models/embed.pt"
-    filter_model = ci_models / "torchscript_models/filter.pt"
-    gnn_model = ci_models / "onnx_models/gnn.onnx"
-    assert embed_model.exists()
-    assert filter_model.exists()
-    assert gnn_model.exists()
+    module_map = str(ci_models / "module_map_odd_2k_events.1e-03.float.v1_3_PATCH")
+    gnn_model = str(ci_models / "gnn_odd_module_map.onnx")
+    assert Path(module_map + ".doublets.root").exists()
+    assert Path(module_map + ".triplets.root").exists()
+    assert Path(gnn_model).exists()
 
     repo_root = Path(__file__).parent.parent.parent.parent
-    digi_config = repo_root / "Examples/Configs/generic-digi-smearing-config.json"
-    geo_sel = repo_root / "Examples/Configs/generic-seeding-config.json"
-
-    from acts.gnn import Device
-
-    device = Device.Cuda()
 
     output_dirs = {}
     for shrink in (False, True):
         out = tmp_path / ("shrink" if shrink else "noshrink")
         out.mkdir()
+        detector = getOpenDataDetector()
+        field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
         s = Sequencer(events=2, numThreads=1)
-        runGnnMetricLearning(
-            trackingGeometry=trk_geo,
-            field=field,
-            outputDir=out,
-            digiConfigFile=digi_config,
-            geometrySelection=geo_sel,
-            embedModelPath=embed_model,
-            filterModelPath=filter_model,
-            gnnModelPath=gnn_model,
-            device=device,
-            outputRoot=True,
-            shrinkNodes=shrink,
-            s=s,
-        )
+        with detector:
+            runGnnModuleMap(
+                trackingGeometry=detector.trackingGeometry(),
+                field=field,
+                geometrySelection=str(
+                    repo_root / "Examples/Configs/odd-seeding-config.json"
+                ),
+                stripGeometrySelection=str(
+                    repo_root / "Examples/Configs/odd-strip-spacepoint-selection.json"
+                ),
+                digiConfigFile=str(
+                    repo_root / "Examples/Configs/odd-digi-smearing-config.json"
+                ),
+                moduleMapPath=module_map,
+                gnnModel=gnn_model,
+                outputDir=out,
+                shrinkNodes=shrink,
+                s=s,
+            )
         output_dirs[shrink] = out
 
     root_files = ["performance_finding_gnn.root", "ntuple_finding_gnn.root"]
