@@ -339,16 +339,13 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   explicit Axis(std::vector<double> binEdges,
                 std::optional<AxisDirection> direction = std::nullopt)
       : IAxis(direction), m_binEdges(std::move(binEdges)) {
-    // Not enough edges
     if (m_binEdges.size() < 2) {
       throw std::invalid_argument(
-          "IAxis: Invalid binning, at least two bin edges are needed.");
+          "Axis: Invalid binning, at least two bin edges are needed.");
     }
-
-    // Not sorted
     if (!std::ranges::is_sorted(m_binEdges)) {
       throw std::invalid_argument(
-          "IAxis: Invalid binning, bin edges are not sorted.");
+          "Axis: Invalid binning, bin edges are not sorted.");
     }
   }
 
