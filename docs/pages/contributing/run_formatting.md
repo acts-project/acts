@@ -50,7 +50,7 @@ black <source>
 
 > [!tip]
 > It is **strongly recommended** to use a [virtual
-> environment](https://realpython.com/python-virtual-environments-a-primer/) for
+> environment](https://docs.python.org/3/library/venv.html) for
 > this purpose! For example, run
 >
 > ```console
