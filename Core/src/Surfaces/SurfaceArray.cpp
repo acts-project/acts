@@ -402,6 +402,11 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     while (!queue.empty()) {
       const std::size_t current = queue.back();
       queue.pop_back();
+
+      // Skip overflow bins as they do not produce a valid bin center
+      if (!isValidBin(current)) {
+        continue;
+      }
       if (visited.contains(current)) {
         continue;
       }
