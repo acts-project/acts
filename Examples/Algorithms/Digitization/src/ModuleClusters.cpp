@@ -236,6 +236,10 @@ std::vector<std::vector<ModuleValue>> ModuleClusters::mergeParameters(
 }
 
 ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) const {
+  if (values.empty()) {
+    throw std::runtime_error("Cannot squash empty cluster!");
+  }
+
   ModuleValue result;
 
   double tot = 0;
@@ -305,19 +309,20 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) const {
     cluster.sizeLoc1 = b1max - b1min + 1;
   }
 
+  if (m_geoIndices.size() > 0 && cluster.channels.empty()) {
+    throw std::runtime_error(
+        "Expected to have at least one cell for a cluster with geo indices!");
+  }
+
   if (tot > 0) {
     pos /= tot;
     var /= tot * tot;
   }
 
-  // Without any cells there is no geometric position; skip the
-  // geometric entries instead of emitting a bogus (0, 0) measurement.
-  if (!cluster.channels.empty()) {
-    for (const Acts::BoundIndices idx : m_geoIndices) {
-      result.paramIndices.push_back(idx);
-      result.paramValues.push_back(pos[idx]);
-      result.paramVariances.push_back(var[idx]);
-    }
+  for (const Acts::BoundIndices idx : m_geoIndices) {
+    result.paramIndices.push_back(idx);
+    result.paramValues.push_back(pos[idx]);
+    result.paramVariances.push_back(var[idx]);
   }
 
   // Now, go over the non-geometric indices. Each source value carries
