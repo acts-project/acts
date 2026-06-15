@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Ranges.hpp"
@@ -303,6 +304,11 @@ struct SurfaceArray::SurfaceGridLookupImpl final
     while (!queue.empty()) {
       const std::size_t current = queue.back();
       queue.pop_back();
+
+      // Skip overflow bins as they do not produce a valid bin center
+      if (!isValidBin(current)) {
+        continue;
+      }
       if (visited.contains(current)) {
         continue;
       }

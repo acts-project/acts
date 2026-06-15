@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/NeighborHoodIndices.hpp"
 
 #include <array>
 #include <set>

@@ -34,9 +34,9 @@ SurfaceArray SurfaceArrayCreator::surfaceArrayOnCylinder(
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
     std::size_t binsZ, std::optional<ProtoLayer> protoLayerOpt,
     const Transform3& transform, std::uint8_t maxNeighborDistance) const {
-  std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
+  const std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
   // Check if we have proto layer, else build it
-  ProtoLayer protoLayer =
+  const ProtoLayer protoLayer =
       protoLayerOpt ? *protoLayerOpt : ProtoLayer(gctx, surfacesRaw);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
@@ -69,9 +69,9 @@ SurfaceArray SurfaceArrayCreator::surfaceArrayOnCylinder(
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypePhi,
     BinningType bTypeZ, std::optional<ProtoLayer> protoLayerOpt,
     const Transform3& transform, std::uint8_t maxNeighborDistance) const {
-  std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
+  const std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer =
+  const ProtoLayer protoLayer =
       protoLayerOpt ? *protoLayerOpt : ProtoLayer(gctx, surfacesRaw);
 
   const double R = protoLayer.medium(AxisDirection::AxisR, true);
@@ -122,9 +122,9 @@ SurfaceArray SurfaceArrayCreator::surfaceArrayOnDisc(
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
     std::size_t binsPhi, std::optional<ProtoLayer> protoLayerOpt,
     const Transform3& transform, std::uint8_t maxNeighborDistance) const {
-  std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
+  const std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer =
+  const ProtoLayer protoLayer =
       protoLayerOpt ? *protoLayerOpt : ProtoLayer(gctx, surfacesRaw);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a disc");
@@ -170,9 +170,9 @@ SurfaceArray SurfaceArrayCreator::surfaceArrayOnDisc(
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
     BinningType bTypePhi, std::optional<ProtoLayer> protoLayerOpt,
     const Transform3& transform, std::uint8_t maxNeighborDistance) const {
-  std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
+  const std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer =
+  const ProtoLayer protoLayer =
       protoLayerOpt ? *protoLayerOpt : ProtoLayer(gctx, surfacesRaw);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a disc");
@@ -200,15 +200,16 @@ SurfaceArray SurfaceArrayCreator::surfaceArrayOnDisc(
     // this FORCES equidistant binning
     std::vector<std::vector<const Surface*>> phiModules(pAxisR->getNBins());
     for (const auto& srf : surfacesRaw) {
-      Vector3 bpos =
+      const Vector3 bpos =
           inverseTransform * srf->referencePosition(gctx, AxisDirection::AxisR);
-      std::size_t bin = pAxisR->getBin(perp(bpos));
+      const std::size_t bin =
+          pAxisR->getBin(perp(bpos)) - 1;  // subtract underflow bin
       phiModules.at(bin).push_back(srf);
     }
 
     std::vector<std::size_t> nPhiModules;
-    auto matcher = m_cfg.surfaceMatcher;
-    auto equal = [&gctx, &matcher](const Surface* a, const Surface* b) {
+    const auto& matcher = m_cfg.surfaceMatcher;
+    const auto equal = [&gctx, &matcher](const Surface* a, const Surface* b) {
       return matcher(gctx, AxisDirection::AxisPhi, a, b);
     };
 
@@ -225,8 +226,8 @@ SurfaceArray SurfaceArrayCreator::surfaceArrayOnDisc(
     // but the rotation is done considering all bins.
     // This might be resolved through bin completion, but not sure.
     // @TODO: check in extrapolation
-    std::size_t nBinsPhi =
-        (*std::min_element(nPhiModules.begin(), nPhiModules.end()));
+    const std::size_t nBinsPhi =
+        *std::min_element(nPhiModules.begin(), nPhiModules.end());
     pAxisPhi = createEquidistantAxis(
         gctx, surfacesRaw, AxisBoundaryType::Closed, AxisDirection::AxisPhi,
         protoLayer, fullTransform, nBinsPhi);
@@ -278,9 +279,9 @@ SurfaceArray SurfaceArrayCreator::surfaceArrayOnPlane(
     std::size_t bins2, AxisDirection aDir,
     std::optional<ProtoLayer> protoLayerOpt, const Transform3& transform,
     std::uint8_t maxNeighborDistance) const {
-  std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
+  const std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer =
+  const ProtoLayer protoLayer =
       protoLayerOpt ? *protoLayerOpt : ProtoLayer(gctx, surfacesRaw);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a plance");
@@ -375,11 +376,12 @@ std::vector<const Surface*> SurfaceArrayCreator::findKeySurfaces(
 std::size_t SurfaceArrayCreator::determineBinCount(
     const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
     AxisDirection aDir) const {
-  auto matcher = m_cfg.surfaceMatcher;
-  auto equal = [&gctx, &aDir, &matcher](const Surface* a, const Surface* b) {
+  const auto& matcher = m_cfg.surfaceMatcher;
+  const auto equal = [&gctx, &aDir, &matcher](const Surface* a,
+                                              const Surface* b) {
     return matcher(gctx, aDir, a, b);
   };
-  std::vector<const Surface*> keys = findKeySurfaces(surfaces, equal);
+  const std::vector<const Surface*> keys = findKeySurfaces(surfaces, equal);
 
   return keys.size();
 }
@@ -396,9 +398,10 @@ std::unique_ptr<const IAxis> SurfaceArrayCreator::createVariableAxis(
   // the vector with the binning Values (boundaries for each bin)
 
   // bind matcher with binning type
-  auto matcher = m_cfg.surfaceMatcher;
+  const auto& matcher = m_cfg.surfaceMatcher;
   // find the key surfaces
-  auto equal = [&gctx, &aDir, &matcher](const Surface* a, const Surface* b) {
+  const auto equal = [&gctx, &aDir, &matcher](const Surface* a,
+                                              const Surface* b) {
     return matcher(gctx, aDir, a, b);
   };
   std::vector<const Surface*> keys = findKeySurfaces(surfaces, equal);
@@ -440,7 +443,7 @@ std::unique_ptr<const IAxis> SurfaceArrayCreator::createVariableAxis(
     }
 
     // segments
-    unsigned int segments = 72;
+    constexpr unsigned int segments = 72;
 
     // get the bounds of the last surfaces
     const Surface* backSurface = keys.back();
@@ -452,7 +455,7 @@ std::unique_ptr<const IAxis> SurfaceArrayCreator::createVariableAxis(
           "other bounds yet! ");
     }
     // get the global vertices
-    std::vector<Vector3> backVertices =
+    const std::vector<Vector3> backVertices =
         makeGlobalVertices(gctx, *backSurface, backBounds->vertices(segments));
     const double maxBValue = phi(*std::max_element(
         backVertices.begin(), backVertices.end(),
@@ -463,11 +466,9 @@ std::unique_ptr<const IAxis> SurfaceArrayCreator::createVariableAxis(
     binEdges.push_back(std::numbers::pi);
 
   } else if (aDir == AxisDirection::AxisZ) {
-    std::stable_sort(
-        keys.begin(), keys.end(), [&gctx](const Surface* a, const Surface* b) {
-          return (a->referencePosition(gctx, AxisDirection::AxisZ).z() <
-                  b->referencePosition(gctx, AxisDirection::AxisZ).z());
-        });
+    std::ranges::stable_sort(keys, {}, [&gctx](const Surface* s) {
+      return s->referencePosition(gctx, AxisDirection::AxisZ).z();
+    });
 
     binEdges.push_back(protoLayer.min(AxisDirection::AxisZ));
     binEdges.push_back(protoLayer.max(AxisDirection::AxisZ));
@@ -487,11 +488,9 @@ std::unique_ptr<const IAxis> SurfaceArrayCreator::createVariableAxis(
       previous = (*surface)->referencePosition(gctx, AxisDirection::AxisZ).z();
     }
   } else {  // AxisDirection::AxisR
-    std::stable_sort(
-        keys.begin(), keys.end(), [&gctx](const Surface* a, const Surface* b) {
-          return (perp(a->referencePosition(gctx, AxisDirection::AxisR)) <
-                  perp(b->referencePosition(gctx, AxisDirection::AxisR)));
-        });
+    std::ranges::stable_sort(keys, {}, [&gctx](const Surface* s) {
+      return perp(s->referencePosition(gctx, AxisDirection::AxisR));
+    });
 
     binEdges.push_back(protoLayer.min(AxisDirection::AxisR));
     binEdges.push_back(protoLayer.max(AxisDirection::AxisR));
