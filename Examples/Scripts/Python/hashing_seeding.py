@@ -126,7 +126,7 @@ class Config:
             geoDir = getOpenDataDetectorDirectory()
 
             oddMaterialMap = geoDir / "data/odd-material-maps.root"
-            oddDigiConfig = actsExamplesDir / "Configs/odd-digi-smearing-config.json"
+            oddDigiConfig = actsExamplesDir / "Configs/odd-digi-geometric-config.json"
             oddSeedingSel = actsExamplesDir / "Configs/odd-seeding-config.json"
             oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 

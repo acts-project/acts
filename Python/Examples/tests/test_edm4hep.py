@@ -88,7 +88,7 @@ def test_edm4hep_measurement_writer(tmp_path, ptcl_gun, rng):
             digitizationConfigs=acts.examples.json.readDigiConfigFromJson(
                 str(
                     Path(__file__).parent.parent.parent.parent
-                    / "Examples/Configs/odd-digi-smearing-config.json"
+                    / "Examples/Configs/odd-digi-geometric-config.json"
                 )
             ),
             surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
@@ -563,7 +563,7 @@ def test_edm4hep_measurement_reader(tmp_path, ptcl_gun, rng):
             digitizationConfigs=acts.examples.json.readDigiConfigFromJson(
                 str(
                     Path(__file__).parent.parent.parent.parent
-                    / "Examples/Configs/odd-digi-smearing-config.json"
+                    / "Examples/Configs/odd-digi-geometric-config.json"
                 )
             ),
             surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
@@ -720,7 +720,7 @@ def test_edm4hep_podio_track_output_converter(tmp_path):
             digiConfigFile=Path(
                 str(
                     Path(__file__).parent.parent.parent.parent
-                    / "Examples/Configs/odd-digi-smearing-config.json"
+                    / "Examples/Configs/odd-digi-geometric-config.json"
                 )
             ),
             outputDir=tmp_path,

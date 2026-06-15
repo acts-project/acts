@@ -117,7 +117,7 @@ if __name__ == "__main__":
     detector = getOpenDataDetector()
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
-    digiConfigFile = srcdir / "Examples/Configs/odd-digi-smearing-config.json"
+    digiConfigFile = srcdir / "Examples/Configs/odd-digi-geometric-config.json"
 
     ## GenericDetector
     # detector = acts.examples.GenericDetector()

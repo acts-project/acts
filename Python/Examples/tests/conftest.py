@@ -269,7 +269,7 @@ def _get_odd_detector_config(srcdir: Path) -> DetectorConfig:
         detector,
         trackingGeometry,
         decorators,
-        digiConfigFile=(srcdir / "Examples/Configs/odd-digi-smearing-config.json"),
+        digiConfigFile=(srcdir / "Examples/Configs/odd-digi-geometric-config.json"),
         geometrySelection=(srcdir / "Examples/Configs/odd-seeding-config.json"),
         name="odd",
     )

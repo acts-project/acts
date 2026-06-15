@@ -40,7 +40,7 @@ def makeSetup() -> PhysmonSetup:
         detector=detector,
         trackingGeometry=trackingGeometry,
         decorators=decorators,
-        digiConfig=srcdir / "Examples/Configs/odd-digi-smearing-config.json",
+        digiConfig=srcdir / "Examples/Configs/odd-digi-geometric-config.json",
         geoSel=srcdir / "Examples/Configs/odd-seeding-config.json",
         field=acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T)),
         outdir=Path(args.outdir),
