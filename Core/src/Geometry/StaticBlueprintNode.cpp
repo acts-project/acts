@@ -107,9 +107,6 @@ void StaticBlueprintNode::finalize(const BlueprintOptions& options,
                       << " portals into volume " << m_volume->volumeName());
   m_shell->applyToVolume();
 
-  ACTS_DEBUG(prefix() << " Adding volume (" << m_volume->volumeName()
-                      << ") to parent volume (" << parent.volumeName() << ")");
-
   const auto* policyFactory = options.defaultNavigationPolicyFactory.get();
 
   if (m_navigationPolicyFactory) {
@@ -117,64 +114,69 @@ void StaticBlueprintNode::finalize(const BlueprintOptions& options,
   }
   m_volume->setNavigationPolicy(policyFactory->build(gctx, *m_volume, logger));
 
-  parent.addVolume(std::move(m_volume));
-}
-
-const std::string& StaticBlueprintNode::name() const {
-  static const std::string uninitialized = "uninitialized";
-  if (m_volume == nullptr) {
-    return uninitialized;
-  }
-  return m_volume->volumeName();
-}
-
-StaticBlueprintNode& StaticBlueprintNode::setNavigationPolicyFactory(
-    std::shared_ptr<NavigationPolicyFactory> navigationPolicyFactory) {
-  m_navigationPolicyFactory = std::move(navigationPolicyFactory);
-  return *this;
-}
-
-const NavigationPolicyFactory* StaticBlueprintNode::navigationPolicyFactory()
-    const {
-  return m_navigationPolicyFactory.get();
-}
-
-void StaticBlueprintNode::addToGraphviz(std::ostream& os) const {
-  std::stringstream ss;
-  ss << "<b>" << name() << "</b>";
-  ss << "<br/>";
-  if (m_volume == nullptr) {
-    throw std::runtime_error("Volume is not built");
-  }
-  switch (m_volume->volumeBounds().type()) {
-    case VolumeBounds::eCylinder:
-      ss << "Cylinder";
-      break;
-    case VolumeBounds::eCuboid:
-      ss << "Cuboid";
-      break;
-    case VolumeBounds::eCone:
-      ss << "Cone";
-      break;
-    case VolumeBounds::eCutoutCylinder:
-      ss << "CutoutCylinder";
-      break;
-    case VolumeBounds::eGenericCuboid:
-      ss << "GenericCuboid";
-      break;
-    case VolumeBounds::eTrapezoid:
-      ss << "Trapezoid";
-      break;
-    default:
-      ss << "Other";
+  // only add the volume to the parent if it is not the parent itself.
+  if (name() != "World") {
+    ACTS_DEBUG(prefix() << " Adding volume (" << m_volume->volumeName()
+                        << ") to parent volume (" << parent.volumeName()
+                        << ")");
+    parent.addVolume(std::move(m_volume));
   }
 
-  GraphViz::Node node{
-      .id = name(), .label = ss.str(), .shape = GraphViz::Shape::Rectangle};
+  const std::string& StaticBlueprintNode::name() const {
+    static const std::string uninitialized = "uninitialized";
+    if (m_volume == nullptr) {
+      return uninitialized;
+    }
+    return m_volume->volumeName();
+  }
 
-  os << node;
+  StaticBlueprintNode& StaticBlueprintNode::setNavigationPolicyFactory(
+      std::shared_ptr<NavigationPolicyFactory> navigationPolicyFactory) {
+    m_navigationPolicyFactory = std::move(navigationPolicyFactory);
+    return *this;
+  }
 
-  BlueprintNode::addToGraphviz(os);
-}
+  const NavigationPolicyFactory* StaticBlueprintNode::navigationPolicyFactory()
+      const {
+    return m_navigationPolicyFactory.get();
+  }
+
+  void StaticBlueprintNode::addToGraphviz(std::ostream & os) const {
+    std::stringstream ss;
+    ss << "<b>" << name() << "</b>";
+    ss << "<br/>";
+    if (m_volume == nullptr) {
+      throw std::runtime_error("Volume is not built");
+    }
+    switch (m_volume->volumeBounds().type()) {
+      case VolumeBounds::eCylinder:
+        ss << "Cylinder";
+        break;
+      case VolumeBounds::eCuboid:
+        ss << "Cuboid";
+        break;
+      case VolumeBounds::eCone:
+        ss << "Cone";
+        break;
+      case VolumeBounds::eCutoutCylinder:
+        ss << "CutoutCylinder";
+        break;
+      case VolumeBounds::eGenericCuboid:
+        ss << "GenericCuboid";
+        break;
+      case VolumeBounds::eTrapezoid:
+        ss << "Trapezoid";
+        break;
+      default:
+        ss << "Other";
+    }
+
+    GraphViz::Node node{
+        .id = name(), .label = ss.str(), .shape = GraphViz::Shape::Rectangle};
+
+    os << node;
+
+    BlueprintNode::addToGraphviz(os);
+  }
 
 }  // namespace Acts::Experimental

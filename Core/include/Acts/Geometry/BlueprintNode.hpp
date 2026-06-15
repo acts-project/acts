@@ -310,6 +310,17 @@ class BlueprintNode {
   /// @note This method is called by the stream operator.
   virtual void toStream(std::ostream& os) const;
 
+  /// Return a span over the children's shared_ptrs.
+  /// This allows derived classes to access the underlying shared ownership
+  /// of any child via e.g. @c childPtr().at(i).
+  /// @return Span over the children shared_ptrs
+  std::span<std::shared_ptr<BlueprintNode>> childPtr() { return m_children; }
+
+  /// @copydoc childPtr()
+  std::span<const std::shared_ptr<BlueprintNode>> childPtr() const {
+    return m_children;
+  }
+
   /// Set the depth to @p depth and update children recursively
   /// @param depth New depth value to set
   void setDepth(std::size_t depth);
