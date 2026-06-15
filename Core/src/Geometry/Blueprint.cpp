@@ -167,12 +167,7 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   world->setNavigationPolicy(std::make_unique<Acts::TryAllNavigationPolicy>(
       gctx, *world, logger, Acts::TryAllNavigationPolicy::Config{}));
 
-  auto &shell = autoSizingNode->connect(options, gctx, logger);
-
-  // Composite of trivial will not be converted to grid like this
-  // Performance impact should be negligible since it's a rare case, but might
-  // want to change
-  shell.fill(*world);
+  autoSizingNode->connect(options, gctx, logger);
 
   if (m_cfg.boundDeduplication) {
     ACTS_DEBUG("Deduplicate equivalent bounds");

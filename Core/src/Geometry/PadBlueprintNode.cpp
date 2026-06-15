@@ -70,10 +70,6 @@ Volume &PadBlueprintNode::build(const BlueprintOptions &options,
     m_volume = std::make_unique<TrackingVolume>(
         topVolume.localToGlobalTransform(gctx), std::move(newBounds), m_name);
 
-    // Need one-sided portal shell that connects outwards to nullptr
-    SingleCylinderPortalShell worldShell{gctx, *m_volume};
-    worldShell.applyToVolume();
-
   } else if (const auto *box =
                  dynamic_cast<const CuboidVolumeBounds *>(&bounds);
              box != nullptr) {
@@ -124,10 +120,6 @@ Volume &PadBlueprintNode::build(const BlueprintOptions &options,
 
     m_volume = std::make_unique<TrackingVolume>(
         topVolume.localToGlobalTransform(gctx), std::move(newBounds), m_name);
-
-    // Need one-sided portal shell that connects outwards to nullptr
-    SingleCuboidPortalShell worldShell{gctx, *m_volume};
-    worldShell.applyToVolume();
 
   } else {
     throw std::logic_error{"Unsupported volume bounds type"};
