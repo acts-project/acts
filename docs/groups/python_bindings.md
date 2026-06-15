@@ -90,7 +90,7 @@ then simply run `pytest` from the repository root.
 
 > [!tip]
 > It is **strongly recommended** to use a [virtual
-> environment](https://docs.python.org/3/library/venv.html)
+> environment](https://realpython.com/python-virtual-environments-a-primer/)
 > for this purpose! For example, run
 > ```console
 > python -m venv venv

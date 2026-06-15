@@ -108,7 +108,7 @@ then simply run ``pytest`` from the repository root.
    to create a local virtual environment, and then run the `pip` command above.
 
 
-.. _virtual environment: https://docs.python.org/3/library/venv.html
+.. _virtual environment: https://realpython.com/python-virtual-environments-a-primer/
 
 .. _root_hash_checks:
 

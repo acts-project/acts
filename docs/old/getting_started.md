@@ -210,7 +210,7 @@ pip install -r docs/requirements.txt
 
 :::{tip}
 It is **strongly recommended** to use a [virtual
-environment](https://docs.python.org/3/library/venv.html) for
+environment](https://realpython.com/python-virtual-environments-a-primer/) for
 this purpose! For example, run
 
 ```console
