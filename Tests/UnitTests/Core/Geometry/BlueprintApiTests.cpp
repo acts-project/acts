@@ -639,7 +639,8 @@ BOOST_AUTO_TEST_CASE(PortalTagLookup) {
 
     stack.addStaticVolume(
         base * Translation3{Vector3{0, 0, 200_mm}},
-        std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm), "VolumeB");
+        std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm),
+        "VolumeB");
   });
 
   std::unique_ptr<const TrackingGeometry> trackingGeometry =
@@ -700,7 +701,8 @@ BOOST_AUTO_TEST_CASE(PortalTagDuplicateThrows) {
           "VolumeA");
     });
 
-    // Tag VolumeB's PositiveDisc (a different outer boundary) with the same tag.
+    // Tag VolumeB's PositiveDisc (a different outer boundary) with the same
+    // tag.
     stack.addPortalDesignator("TagsB", [&](auto& tags) {
       tags.tagFace(PositiveDisc, "dup");
       tags.addStaticVolume(
@@ -739,7 +741,8 @@ BOOST_AUTO_TEST_CASE(PortalTagLookupCuboid) {
 
     stack.addStaticVolume(
         base * Translation3{Vector3{200_mm, 0, 0}},
-        std::make_shared<CuboidVolumeBounds>(100_mm, 100_mm, 100_mm), "VolumeB");
+        std::make_shared<CuboidVolumeBounds>(100_mm, 100_mm, 100_mm),
+        "VolumeB");
   });
 
   std::unique_ptr<const TrackingGeometry> trackingGeometry =

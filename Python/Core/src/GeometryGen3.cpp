@@ -463,11 +463,11 @@ void addGeometryGen3(py::module_& m) {
                  std::shared_ptr<PortalDesignatorBlueprintNode>>(
           m, "PortalDesignatorBlueprintNode")
           .def(py::init<const std::string&>(), "name"_a)
-          .def("tagFace",
-               py::overload_cast<CylinderVolumeBounds::Face,
-                                 const std::string&>(
-                   &PortalDesignatorBlueprintNode::tagFace),
-               "face"_a, "label"_a)
+          .def(
+              "tagFace",
+              py::overload_cast<CylinderVolumeBounds::Face, const std::string&>(
+                  &PortalDesignatorBlueprintNode::tagFace),
+              "face"_a, "label"_a)
           .def("tagFace",
                py::overload_cast<CuboidVolumeBounds::Face, const std::string&>(
                    &PortalDesignatorBlueprintNode::tagFace),

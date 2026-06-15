@@ -72,7 +72,8 @@ class PortalTagDesignator {
     if (concreteShell == nullptr) {
       ACTS_ERROR(prefix << "Concrete shell type mismatch: configured for "
                         << portalShellShapeName(typeid(ShellType))
-                        << " but received " << portalShellShapeName(typeid(shell)));
+                        << " but received "
+                        << portalShellShapeName(typeid(shell)));
       throw std::invalid_argument(prefix + "Concrete shell type mismatch");
     }
 
