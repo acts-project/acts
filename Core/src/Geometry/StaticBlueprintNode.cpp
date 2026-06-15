@@ -121,62 +121,62 @@ void StaticBlueprintNode::finalize(const BlueprintOptions& options,
                         << ")");
     parent.addVolume(std::move(m_volume));
   }
+}
+const std::string& StaticBlueprintNode::name() const {
+  static const std::string uninitialized = "uninitialized";
+  if (m_volume == nullptr) {
+    return uninitialized;
+  }
+  return m_volume->volumeName();
+}
 
-  const std::string& StaticBlueprintNode::name() const {
-    static const std::string uninitialized = "uninitialized";
-    if (m_volume == nullptr) {
-      return uninitialized;
-    }
-    return m_volume->volumeName();
+StaticBlueprintNode& StaticBlueprintNode::setNavigationPolicyFactory(
+    std::shared_ptr<NavigationPolicyFactory> navigationPolicyFactory) {
+  m_navigationPolicyFactory = std::move(navigationPolicyFactory);
+  return *this;
+}
+
+const NavigationPolicyFactory* StaticBlueprintNode::navigationPolicyFactory()
+    const {
+  return m_navigationPolicyFactory.get();
+}
+
+void StaticBlueprintNode::addToGraphviz(std::ostream& os) const {
+  std::stringstream ss;
+  ss << "<b>" << name() << "</b>";
+  ss << "<br/>";
+  if (m_volume == nullptr) {
+    throw std::runtime_error("Volume is not built");
+  }
+  switch (m_volume->volumeBounds().type()) {
+    case VolumeBounds::eCylinder:
+      ss << "Cylinder";
+      break;
+    case VolumeBounds::eCuboid:
+      ss << "Cuboid";
+      break;
+    case VolumeBounds::eCone:
+      ss << "Cone";
+      break;
+    case VolumeBounds::eCutoutCylinder:
+      ss << "CutoutCylinder";
+      break;
+    case VolumeBounds::eGenericCuboid:
+      ss << "GenericCuboid";
+      break;
+    case VolumeBounds::eTrapezoid:
+      ss << "Trapezoid";
+      break;
+    default:
+      ss << "Other";
   }
 
-  StaticBlueprintNode& StaticBlueprintNode::setNavigationPolicyFactory(
-      std::shared_ptr<NavigationPolicyFactory> navigationPolicyFactory) {
-    m_navigationPolicyFactory = std::move(navigationPolicyFactory);
-    return *this;
-  }
+  GraphViz::Node node{
+      .id = name(), .label = ss.str(), .shape = GraphViz::Shape::Rectangle};
 
-  const NavigationPolicyFactory* StaticBlueprintNode::navigationPolicyFactory()
-      const {
-    return m_navigationPolicyFactory.get();
-  }
+  os << node;
 
-  void StaticBlueprintNode::addToGraphviz(std::ostream & os) const {
-    std::stringstream ss;
-    ss << "<b>" << name() << "</b>";
-    ss << "<br/>";
-    if (m_volume == nullptr) {
-      throw std::runtime_error("Volume is not built");
-    }
-    switch (m_volume->volumeBounds().type()) {
-      case VolumeBounds::eCylinder:
-        ss << "Cylinder";
-        break;
-      case VolumeBounds::eCuboid:
-        ss << "Cuboid";
-        break;
-      case VolumeBounds::eCone:
-        ss << "Cone";
-        break;
-      case VolumeBounds::eCutoutCylinder:
-        ss << "CutoutCylinder";
-        break;
-      case VolumeBounds::eGenericCuboid:
-        ss << "GenericCuboid";
-        break;
-      case VolumeBounds::eTrapezoid:
-        ss << "Trapezoid";
-        break;
-      default:
-        ss << "Other";
-    }
-
-    GraphViz::Node node{
-        .id = name(), .label = ss.str(), .shape = GraphViz::Shape::Rectangle};
-
-    os << node;
-
-    BlueprintNode::addToGraphviz(os);
-  }
+  BlueprintNode::addToGraphviz(os);
+}
 
 }  // namespace Acts::Experimental
