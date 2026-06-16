@@ -596,9 +596,7 @@ class Grid final : public IGrid {
 
   /// @brief get the axes as an array of IAxis pointers
   /// @return Vector containing pointers to all grid axes
-  boost::container::small_vector<const IAxis*, 3> axes() const override {
-    return m_axes.getAnyAxesVector();
-  }
+  AnyAxesVector axes() const override { return m_axes.getAnyAxesVector(); }
 
   /// begin iterator for global bins
   /// @return Iterator pointing to the first global bin

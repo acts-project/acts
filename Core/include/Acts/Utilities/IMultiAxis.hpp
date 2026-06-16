@@ -24,7 +24,7 @@ namespace Acts {
 /// product of several one-dimensional @c IAxis objects. The number of axes
 /// (i.e. the dimension of the grid) is only known at runtime through this
 /// interface; the dimension-aware variant is exposed by the derived
-/// @c IMultiAxisND template.
+/// @c IMultiAxisXD template.
 ///
 /// This base class exposes a type-erased, dynamically sized API (the @c *Any
 /// methods, using small vectors) so that grids of differing dimension can be
@@ -72,13 +72,13 @@ class IMultiAxis {
   }
 
   /// Get the total number of bins in the grid
-  /// @param fullCounter if @c true the under-/overflow bins of every axis are
-  ///        included in the count, otherwise only the regular bins are counted
+  /// @param includeOverflowBins if @c true the under-/overflow bins of every axis are
+  /// included in the count, otherwise only the regular bins are counted
   /// @return product of the per-axis bin counts
-  virtual std::size_t getNTotalBins(bool fullCounter = true) const {
+  virtual std::size_t getNTotalBins(bool includeOverflowBins = false) const {
     std::size_t result = 1;
     for (const IAxis& axis : *this) {
-      result *= axis.getNBins() + (fullCounter ? 2 : 0);
+      result *= axis.getNBins() + (includeOverflowBins ? 2 : 0);
     }
     return result;
   }
@@ -332,7 +332,7 @@ class IMultiAxis {
 ///
 /// @tparam _DIM number of axes (dimension of the grid)
 template <std::size_t _DIM>
-class IMultiAxisND : public IMultiAxis {
+class IMultiAxisXD : public IMultiAxis {
  public:
   /// Dimension of the grid (number of axes)
   static constexpr std::size_t DIM = _DIM;

@@ -19,7 +19,7 @@ namespace Acts {
 /// axes
 ///
 /// This class stores a fixed set of concrete @c Axis objects in a tuple and
-/// implements the @c IMultiAxisND interface for the resulting grid. The grid
+/// implements the @c IMultiAxisXD interface for the resulting grid. The grid
 /// dimension and the concrete axis types (binning and boundary types) are
 /// fixed at compile time, while the @c IMultiAxis base allows handling
 /// different multi-axes through a common pointer. The grid index conventions
@@ -29,10 +29,10 @@ namespace Acts {
 ///
 /// @tparam Axes parameter pack of concrete @c Axis types spanning the grid
 template <class... Axes>
-class MultiAxis final : public IMultiAxisND<sizeof...(Axes)> {
+class MultiAxis final : public IMultiAxisXD<sizeof...(Axes)> {
  public:
   /// Base interface for this multi-axis' dimension
-  using Base = IMultiAxisND<sizeof...(Axes)>;
+  using Base = IMultiAxisXD<sizeof...(Axes)>;
 
   /// Dimension of the grid (number of axes)
   static constexpr std::size_t DIM = Base::DIM;
@@ -67,8 +67,8 @@ class MultiAxis final : public IMultiAxisND<sizeof...(Axes)> {
   /// @return const reference to the requested axis
   const IAxis& getAxis(std::size_t i) const override {
     return template_switch_lambda<0, DIM - 1>(
-        i, [this](auto iType) -> const IAxis& {
-          constexpr std::size_t iValue = decltype(iType)::value;
+        i, [this]<typename T>(T) -> const IAxis& {
+          constexpr std::size_t iValue = T::value;
           return std::get<iValue>(m_axes);
         });
   }

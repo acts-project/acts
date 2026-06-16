@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/IMultiAxis.hpp"
 
 #include <algorithm>
 #include <any>
@@ -32,10 +33,6 @@ class IGrid {
  public:
   virtual ~IGrid() = default;
 
-  /// Get a dynamically sized vector of axis objects for inspection
-  /// @return a vector of axis pointers
-  virtual boost::container::small_vector<const IAxis*, 3> axes() const = 0;
-
   /// Get the number of dimensions of the grid
   /// @return The number of dimensions of the grid
   virtual std::size_t dimensions() const = 0;
@@ -51,9 +48,17 @@ class IGrid {
   ///       point types. **USE WITH CARE!**
   ///
   /// @{
-  using AnyIndexType = boost::container::small_vector<std::size_t, 3>;
+
+  /// Type alias for dynamic index type (indices as vector of std::size_t)
+  using AnyIndexType = IMultiAxis::AnyMultiIndex;
   /// Type alias for dynamic point type (coordinates as vector of doubles)
-  using AnyPointType = boost::container::small_vector<double, 3>;
+  using AnyPointType = IMultiAxis::AnyPoint;
+  /// Dynamically sized vector of (non-owning) pointers to the contained axes
+  using AnyAxesVector = IMultiAxis::SmallVector<const IAxis*>;
+
+  /// Get a dynamically sized vector of axis objects for inspection
+  /// @return a vector of axis pointers
+  virtual AnyAxesVector axes() const = 0;
 
   /// Get the lower left edge of a bin for a given set of indices
   /// @param indices The indices to get the lower left edge of the bin for
