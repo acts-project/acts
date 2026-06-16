@@ -41,6 +41,8 @@ namespace ActsPlugins::DetrayGeometryConverter {
 /// @param detectorName the name to set for the detray detector (optional,
 ///     if not set, it will be taken from the payloads or defaulted to empty)
 /// @param logLevel the logging level to use for the conversion process
+/// @param convertMaterial whether to convert material information from ACTS to detray
+/// @param convertSurfaceGrids whether to convert surface grid information from ACTS to detray
 ///
 /// This method performs the following steps:
 /// 1. It searches for the beampipe volume in the ACTS tracking geometry using
@@ -58,7 +60,8 @@ toDetray(vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
          const Acts::TrackingGeometry& trackingGeometry,
          const std::string& beampipeVolumeName,
          const std::string& detectorName = "",
-         Acts::Logging::Level logLevel = Acts::Logging::INFO) {
+         Acts::Logging::Level logLevel = Acts::Logging::INFO,
+         bool convertMaterial = true, bool convertSurfaceGrids = true) {
   auto localLogger =
       Acts::getDefaultLogger("DetrayGeometryConverter", logLevel);
   auto payloadLogger = localLogger->clone("DetrayPayloadConverter");
@@ -94,18 +97,22 @@ toDetray(vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
   detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
                                                         *payloads.detector);
 
-  detray::io::homogeneous_material_reader::from_payload<detector_t>(
-      detectorBuilder, *payloads.homogeneousMaterial);
+  if (convertMaterial) {
+    detray::io::homogeneous_material_reader::from_payload<detector_t>(
+        detectorBuilder, *payloads.homogeneousMaterial);
 
-  detray::io::material_map_reader<std::integral_constant<std::size_t, 2>>::
-      from_payload<detector_t>(detectorBuilder,
-                               std::move(*payloads.materialGrids));
+    detray::io::material_map_reader<std::integral_constant<std::size_t, 2>>::
+        from_payload<detector_t>(detectorBuilder,
+                                 std::move(*payloads.materialGrids));
+  }
 
-  detray::io::surface_grid_reader<typename detector_t::surface_type,
-                                  std::integral_constant<std::size_t, 0>,
-                                  std::integral_constant<std::size_t, 2>>::
-      template from_payload<detector_t>(detectorBuilder,
-                                        *payloads.surfaceGrids);
+  if (convertSurfaceGrids) {
+    detray::io::surface_grid_reader<typename detector_t::surface_type,
+                                    std::integral_constant<std::size_t, 0>,
+                                    std::integral_constant<std::size_t, 2>>::
+        template from_payload<detector_t>(detectorBuilder,
+                                          *payloads.surfaceGrids);
+  }
 
   if (!detectorName.empty()) {
     detectorBuilder.set_name(detectorName);
