@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(test_1d_equidistant) {
   // test general properties
   BOOST_CHECK_EQUAL(ma.getNAxes(), 1u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(0), 4u);
-  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 6u);
+  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 4u);
 
   // flat bin index
   BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({-0.3}), 0u);
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(test_2d_equidistant) {
   BOOST_CHECK_EQUAL(ma.getNAxes(), 2u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(0), 4u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(1), 3u);
-  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 30u);
+  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 12u);
 
   // flat bin index
   BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({-1, -1}), 0u);
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(test_3d_equidistant) {
   BOOST_CHECK_EQUAL(ma.getNBins().at(0), 2u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(1), 3u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(2), 2u);
-  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 80u);
+  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 12u);
 
   // test grid points
   BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({0, 0, 0}), 25u);
@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE(test_1d_variable) {
   // test general properties
   BOOST_CHECK_EQUAL(ma.getNAxes(), 1u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(0), 2u);
-  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 4u);
+  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 2u);
 
   // flat bin index
   BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({-0.3}), 0u);
@@ -480,7 +480,7 @@ BOOST_AUTO_TEST_CASE(test_2d_variable) {
   BOOST_CHECK_EQUAL(ma.getNAxes(), 2u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(0), 2u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(1), 2u);
-  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 16u);
+  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 4u);
 
   // test grid points
   BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({0, 0}), 5u);
@@ -595,7 +595,7 @@ BOOST_AUTO_TEST_CASE(test_3d_variable) {
   BOOST_CHECK_EQUAL(ma.getNBins().at(0), 1u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(1), 2u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(2), 3u);
-  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 60u);
+  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 6u);
 
   // test grid points
   BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({0, 0, 0}), 26u);
@@ -724,7 +724,7 @@ BOOST_AUTO_TEST_CASE(test_2d_mixed) {
   BOOST_CHECK_EQUAL(ma.getNAxes(), 2u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(0), 4u);
   BOOST_CHECK_EQUAL(ma.getNBins().at(1), 2u);
-  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 24u);
+  BOOST_CHECK_EQUAL(ma.getNTotalBins(), 8u);
 
   // test grid points
   BOOST_CHECK_EQUAL(ma.getFlatIndexFromPoint({0, 0}), 5u);
