@@ -1,12 +1,8 @@
 name: Checks
 
 on:
-  push:
-  pull_request:
-    branches:
-      - main
-      - 'release/**'
-      - 'develop/**'
+  # DISABLED for physmon CI test — manual trigger only. Do not merge.
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
