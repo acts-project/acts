@@ -143,6 +143,21 @@ double eta(const Eigen::MatrixBase<Derived>& v) noexcept
   }
 }
 
+/// Calculate the pseudo rapdity from anything implementing a method
+/// like `theta()` returning anything convertible to `double`.
+/// @tparam T anything that has a theta method
+/// @param v Any type that implements a theta method
+/// @return The pseudo rapidity value
+template <typename T>
+double eta(const T& v) noexcept
+  requires requires {
+    { v.theta() } -> std::floating_point;
+  }
+{
+  return -std::log(std::tan(0.5*v.theta()));
+}
+
+
 /// @brief Fast evaluation of trigonomic functions.
 ///
 /// @param direction for this evaluatoin
