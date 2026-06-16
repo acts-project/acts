@@ -2,7 +2,7 @@
 #    uv pip compile --python-version 3.14 docs/old/requirements.in -o docs/old/requirements.txt
 aiohappyeyeballs==2.6.2
     # via aiohttp
-aiohttp==3.14.0
+aiohttp==3.14.1
     # via -r docs/old/requirements.in
 aiosignal==1.4.0
     # via aiohttp
@@ -24,7 +24,7 @@ cffi==2.0.0
     # via cryptography
 charset-normalizer==3.4.7
     # via requests
-cryptography==48.0.0
+cryptography==49.0.0
     # via pyjwt
 docutils==0.21.2
     # via
