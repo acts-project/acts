@@ -16,7 +16,7 @@ jobs:
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:86
+    container: ghcr.io/acts-project/ubuntu2404:87
     if: github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Install APT packages

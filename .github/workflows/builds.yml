@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    container: ghcr.io/acts-project/ubuntu2404:86
+    container: ghcr.io/acts-project/ubuntu2404:87
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -129,7 +129,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    container: ghcr.io/acts-project/ubuntu2404:86
+    container: ghcr.io/acts-project/ubuntu2404:87
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
@@ -171,7 +171,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    container: ghcr.io/acts-project/ubuntu2404:86
+    container: ghcr.io/acts-project/ubuntu2404:87
     needs: [linux_ubuntu]
 
     steps:
@@ -636,7 +636,7 @@ jobs:
     permissions:
       contents: read
     needs: [linux_ubuntu]
-    container: ghcr.io/acts-project/ubuntu2404:86
+    container: ghcr.io/acts-project/ubuntu2404:87
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2

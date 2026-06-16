@@ -9,7 +9,7 @@ variables:
 
   LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
 
-  DEPENDENCY_TAG: v23.1.0
+  DEPENDENCY_TAG: v23.2.0
 
   MODEL_STORAGE: ${CI_PROJECT_DIR}/ci_models
 
@@ -45,7 +45,7 @@ variables:
 
 build_gnn_cpu:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:86
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
   tags:
     - large
 
@@ -78,7 +78,7 @@ build_gnn_cpu:
 
 build_gnn:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:86
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
   tags:
     - large
 
@@ -120,7 +120,7 @@ test_gnn_unittests:
   stage: test
   needs:
     - build_gnn
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:86
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
   tags:
     - docker-gpu-nvidia
 
@@ -144,7 +144,7 @@ test_gnn_python:
   stage: test
   needs:
     - build_gnn
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:86
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
   tags:
     - docker-gpu-nvidia
 
@@ -175,7 +175,7 @@ test_gnn_python:
 
 build_gnn_tensorrt:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404_tensorrt:86
+  image: ghcr.io/acts-project/ubuntu2404_tensorrt:87
 
   cache:
     - !reference [.spack_cache, cache]
@@ -200,7 +200,7 @@ build_gnn_tensorrt:
 
 build_linux_ubuntu:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:86
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
 
   cache:
    - !reference [.ccache_base, cache]
@@ -261,7 +261,7 @@ build_linux_ubuntu:
 
 linux_test_examples:
   stage: test
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:86
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
   needs: [build_linux_ubuntu]
 
   cache:
@@ -287,7 +287,7 @@ linux_test_examples:
 linux_physmon:
   stage: test
   needs: [build_linux_ubuntu]
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:86
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
 
   artifacts:
     when: always
@@ -380,7 +380,7 @@ linux_ubuntu_2404_clang22:
   variables:
     CXX: clang++-22
     CXXSTD: 23
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang22:86
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang22:87
 
 
 ######################
@@ -507,7 +507,7 @@ lcg_dev4:
 detray_build_cuda:
   tags: [docker]
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404_cuda:86
+  image: ghcr.io/acts-project/ubuntu2404_cuda:87
   cache:
    - !reference [.ccache_base, cache]
   artifacts:
@@ -533,7 +533,7 @@ detray_test_cuda:
     DETRAY_BFIELD_FILE: $CI_PROJECT_DIR/src/Detray/data/odd-bfield_v0_9_0.cvf
   stage: test
   tags: [docker-gpu-nvidia]
-  image: ghcr.io/acts-project/ubuntu2404_cuda:86
+  image: ghcr.io/acts-project/ubuntu2404_cuda:87
   needs:
     - detray_build_cuda
   only:
@@ -552,7 +552,7 @@ detray_test_cuda:
 detray_build_sycl:
   tags: [docker-gpu-nvidia]
   stage: build
-  image: "ghcr.io/acts-project/ubuntu2404_oneapi:86"
+  image: "ghcr.io/acts-project/ubuntu2404_oneapi:87"
   cache:
    - !reference [.ccache_base, cache]
   artifacts:
@@ -576,7 +576,7 @@ detray_build_sycl:
 detray_test_sycl:
   stage: test
   tags: [docker-gpu-nvidia]
-  image: "ghcr.io/acts-project/ubuntu2404_oneapi:86"
+  image: "ghcr.io/acts-project/ubuntu2404_oneapi:87"
   needs:
     - detray_build_sycl
   variables:
