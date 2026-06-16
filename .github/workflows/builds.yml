@@ -146,6 +146,7 @@ jobs:
           ctest --test-dir build-downstream --output-on-failure
 
   linux_examples_test:
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
@@ -264,6 +265,7 @@ jobs:
           path: physmon
 
   linux_ubuntu_extra:
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
@@ -375,6 +377,9 @@ jobs:
   # keeps requiring them.
   # ─────────────────────────────────────────────────────────────────────
   changes:
+    # Gates gnn_build, gnn_tensorrt and cuda_muon_build, which in turn gate
+    # gnn_gpu and cuda_muon_gpu. Skipping it here skips all five.
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -827,6 +832,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────
   lcg:
     name: lcg_${{ matrix.tag }}
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: [self-hosted, linux, x64, husk-size-standard, cvmfs]
     permissions:
       contents: read
@@ -973,6 +979,7 @@ jobs:
           pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
 
   macos:
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: macos-26
     permissions:
       contents: read
@@ -1068,6 +1075,7 @@ jobs:
         run: ctest --test-dir build-downstream --output-on-failure
 
   external_eic-shell:
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -1191,6 +1199,7 @@ jobs:
   # Sources the key4hep nightly view straight out of the job container: the
   # `cvmfs` label binds the repositories in, so nothing has to mount them.
   external_key4hep-nightlies:
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: [self-hosted, linux, x64, husk-size-standard, cvmfs]
     permissions:
       contents: read
@@ -1325,6 +1334,7 @@ jobs:
 
 
   linux_ubuntu_python_wheel:
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: ubuntu-latest
     permissions:
       contents: read

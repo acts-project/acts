@@ -1,9 +1,8 @@
 name: Trigger Athena build
 
 on:
-  push:
-    branches:
-      - main
+  # DISABLED for physmon CI test — manual trigger only. Do not merge.
+  workflow_dispatch:
 permissions: {}
 
 jobs:
