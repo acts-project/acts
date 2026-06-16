@@ -80,8 +80,8 @@ target_include_directories(
 # Generate the propagator codegen headers from the shared ACTS sympy codegen
 # core instead of committing them. detray is built here via add_subdirectory
 # from ACTS, so acts_code_generation is already available; when detray is
-# configured standalone inside the acts4 tree, pull the ACTS cmake infra in by
-# relative path (../../cmake -> acts4/cmake, ../../codegen -> acts4/codegen).
+# configured standalone inside the ACTS tree, pull the ACTS cmake infra in by
+# relative path (../../cmake -> acts/cmake, ../../codegen -> acts/codegen).
 if(NOT COMMAND acts_code_generation)
     include(${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/ActsCodegen.cmake)
 endif()
@@ -89,36 +89,34 @@ endif()
 set(_detray_codegen_dir ${CMAKE_CURRENT_SOURCE_DIR}/../codegen/detray-sympy)
 set(_acts_codegen_pkg ${CMAKE_CURRENT_SOURCE_DIR}/../../codegen)
 
-foreach(
-    _spec IN
-    ITEMS
-        "gen_transport_covariance_to_bound_impl.py|detray/propagator/actors/codegen/covariance_transport.hpp"
-        "gen_full_jacobian.py|detray/propagator/actors/codegen/full_jacobian.hpp"
-        "gen_update_rk_transport_jacobian_impl.py|detray/propagator/codegen/update_rk_transport_jacobian.hpp"
-        "gen_transport_jacobian_types.py|detray/propagator/codegen/transport_jacobian.hpp"
+detray_add_codegen_header(
+    TARGET detray_core
+    CODEGEN_DIR ${_detray_codegen_dir}
+    ACTS_CODEGEN_PKG ${_acts_codegen_pkg}
+    SCRIPT gen_transport_covariance_to_bound_impl.py
+    OUTPUT detray/propagator/actors/codegen/covariance_transport.hpp
 )
-    string(REPLACE "|" ";" _spec_parts "${_spec}")
-    list(GET _spec_parts 0 _script)
-    list(GET _spec_parts 1 _output)
-
-    acts_code_generation(
-        ADD_TO_TARGET detray_core
-        PYTHON ${_detray_codegen_dir}/${_script}
-        WITH_REQUIREMENTS ${_acts_codegen_pkg}/requirements.txt
-        WITH ${_acts_codegen_pkg}
-        ISOLATED
-        OUTPUT ${_output}
-        RESULT_INCLUDE_DIR _gen_root
-    )
-
-    # Install the generated header alongside the other detray headers so that
-    # installed (non build-tree) consumers can find it too.
-    get_filename_component(_output_subdir ${_output} DIRECTORY)
-    install(
-        FILES ${_gen_root}/${_output}
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${_output_subdir}
-    )
-endforeach()
+detray_add_codegen_header(
+    TARGET detray_core
+    CODEGEN_DIR ${_detray_codegen_dir}
+    ACTS_CODEGEN_PKG ${_acts_codegen_pkg}
+    SCRIPT gen_full_jacobian.py
+    OUTPUT detray/propagator/actors/codegen/full_jacobian.hpp
+)
+detray_add_codegen_header(
+    TARGET detray_core
+    CODEGEN_DIR ${_detray_codegen_dir}
+    ACTS_CODEGEN_PKG ${_acts_codegen_pkg}
+    SCRIPT gen_update_rk_transport_jacobian_impl.py
+    OUTPUT detray/propagator/codegen/update_rk_transport_jacobian.hpp
+)
+detray_add_codegen_header(
+    TARGET detray_core
+    CODEGEN_DIR ${_detray_codegen_dir}
+    ACTS_CODEGEN_PKG ${_acts_codegen_pkg}
+    SCRIPT gen_transport_jacobian_types.py
+    OUTPUT detray/propagator/codegen/transport_jacobian.hpp
+)
 
 unset(_detray_codegen_dir)
 unset(_acts_codegen_pkg)

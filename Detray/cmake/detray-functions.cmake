@@ -248,3 +248,48 @@ function(detray_add_flag name value)
     # If not, then let's add it now:
     set(${name} "${${name}} ${value}" PARENT_SCOPE)
 endfunction(detray_add_flag)
+
+# Generate a single detray sympy codegen header via acts_code_generation and
+# install it alongside the other detray headers.
+#
+# Usage: detray_add_codegen_header(
+#            TARGET detray_core
+#            CODEGEN_DIR ${detray_codegen_dir}
+#            ACTS_CODEGEN_PKG ${acts_codegen_pkg}
+#            SCRIPT gen_full_jacobian.py
+#            OUTPUT detray/propagator/actors/codegen/full_jacobian.hpp
+#        )
+#
+function(detray_add_codegen_header)
+    set(oneValueArgs TARGET CODEGEN_DIR ACTS_CODEGEN_PKG SCRIPT OUTPUT)
+    cmake_parse_arguments(ARG "" "${oneValueArgs}" "" ${ARGN})
+
+    if(
+        NOT ARG_TARGET
+        OR NOT ARG_SCRIPT
+        OR NOT ARG_OUTPUT
+        OR NOT ARG_CODEGEN_DIR
+        OR NOT ARG_ACTS_CODEGEN_PKG
+    )
+        message(
+            FATAL_ERROR
+            "detray_add_codegen_header: TARGET, CODEGEN_DIR, ACTS_CODEGEN_PKG, SCRIPT and OUTPUT are required"
+        )
+    endif()
+
+    acts_code_generation(
+        ADD_TO_TARGET ${ARG_TARGET}
+        PYTHON ${ARG_CODEGEN_DIR}/${ARG_SCRIPT}
+        WITH_REQUIREMENTS ${ARG_ACTS_CODEGEN_PKG}/requirements.txt
+        WITH ${ARG_ACTS_CODEGEN_PKG}
+        ISOLATED
+        OUTPUT ${ARG_OUTPUT}
+        RESULT_INCLUDE_DIR _gen_root
+    )
+
+    get_filename_component(_output_subdir ${ARG_OUTPUT} DIRECTORY)
+    install(
+        FILES ${_gen_root}/${ARG_OUTPUT}
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${_output_subdir}
+    )
+endfunction(detray_add_codegen_header)
