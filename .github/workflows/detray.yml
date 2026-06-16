@@ -1,16 +1,8 @@
 name: Detray
 
 on:
-  push:
-    paths:
-      - "Detray/**"
-      - ".github/workflows/detray.yml"
-  pull_request:
-    branches:
-      - main
-    paths:
-      - "Detray/**"
-      - ".github/workflows/detray.yml"
+  # DISABLED for physmon CI test — manual trigger only. Do not merge.
+  workflow_dispatch:
 
 # Cancel existing jobs on new pushes.
 concurrency:
