@@ -54,9 +54,14 @@ class SurfaceArray {
 
   // non-copyable but movable due to unique_ptr member. deferred implementation
   // to source since the pimpl is not fully defined in the header.
+
+  /// @param other the other SurfaceArray to copy from
   SurfaceArray(const SurfaceArray& other) = delete;
+  /// @param other the other SurfaceArray to move from
   SurfaceArray(SurfaceArray&& other) noexcept;
+  /// @param other the other SurfaceArray to copy-assign from
   SurfaceArray& operator=(const SurfaceArray& other) = delete;
+  /// @param other the other SurfaceArray to move-assign from
   SurfaceArray& operator=(SurfaceArray&& other) noexcept;
   ~SurfaceArray();
 
