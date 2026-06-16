@@ -14,9 +14,11 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/OstreamStateGuard.hpp"
 #include "Acts/Utilities/Ranges.hpp"
 #include "Acts/Utilities/detail/MultiAxisHelper.hpp"
 
+#include <iomanip>
 #include <limits>
 #include <map>
 #include <ranges>
@@ -116,6 +118,7 @@ SurfaceArray::SurfaceArray(std::shared_ptr<const Surface> srf)
 
 std::ostream& SurfaceArray::toStream(const GeometryContext& /*gctx*/,
                                      std::ostream& sl) const {
+  OstreamStateGuard guard{sl};
   sl << std::fixed << std::setprecision(4);
   sl << "SurfaceArray:" << std::endl;
   sl << " - no surfaces: " << m_surfaces.size() << std::endl;
