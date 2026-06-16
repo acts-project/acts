@@ -14,6 +14,8 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+#include "ActsPodioEdm/TrackerHitLocalCollection.h"
+#include "ActsPodioEdm/TrackerHitLocalSimTrackerHitLinkCollection.h"
 
 #include <numbers>
 
@@ -372,6 +374,21 @@ MeasurementData readMeasurement(const ActsPodioEdm::TrackerHitLocal& from) {
   }
 
   return result;
+}
+
+void writeTrackerHitSimHitLinks(
+    const ActsPodioEdm::TrackerHitLocalCollection& hits,
+    ActsPodioEdm::TrackerHitLocalSimTrackerHitLinkCollection& links,
+    const SimHitForHitIndex& lookup) {
+  for (std::size_t i = 0; i < static_cast<std::size_t>(hits.size()); ++i) {
+    auto simHit = lookup(i);
+    if (!simHit.has_value()) {
+      continue;
+    }
+    auto link = links.create();
+    link.setFrom(hits.at(i));
+    link.setTo(simHit.value());
+  }
 }
 
 }  // namespace ActsPlugins::EDM4hepUtil

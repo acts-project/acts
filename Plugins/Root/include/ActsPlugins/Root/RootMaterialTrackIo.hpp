@@ -16,7 +16,6 @@
 #include <utility>
 #include <vector>
 
-class TChain;
 class TTree;
 
 namespace Acts {
@@ -44,25 +43,25 @@ class RootMaterialTrackIo {
     bool recalculateTotals = false;
   };
 
-  /// @brief Constructor from config struct
+  /// Constructor from config struct
   ///
   /// @param cfg the configuration for the accessor
   explicit RootMaterialTrackIo(const Config& cfg) : m_cfg(cfg) {}
 
-  /// @brief Destructor
+  /// Destructor
   ~RootMaterialTrackIo() = default;
 
-  /// @brief sets the branch connection for reading from a file
+  /// sets the branch connection for reading from a file
   ///
-  /// @param materialChain the TChain to read the material track from
-  void connectForRead(TChain& materialChain);
+  /// @param materialChain the TTree to read the material track from
+  void connectForRead(TTree& materialChain);
 
-  /// @brief sets the branch connection for writing to a file
+  /// sets the branch connection for writing to a file
   ///
   /// @param materialTree the TTree to write the material track to
   void connectForWrite(TTree& materialTree);
 
-  /// @brief Write the material track to the tree
+  /// Write the material track to the tree
   ///
   /// @param gctx the geometry context
   /// @param eventNum the event number to write
@@ -72,12 +71,15 @@ class RootMaterialTrackIo {
   void write(const Acts::GeometryContext& gctx, std::uint32_t eventNum,
              const Acts::RecordedMaterialTrack& materialTrack);
 
-  /// @brief Read the material track from the tree
+  /// Read the material track from the tree
   ///
   /// @note the caller has to do the TChain::GetEntry() before this call
   ///
   /// @return the material track
   Acts::RecordedMaterialTrack read() const;
+
+  /// @return The current event ID
+  std::uint32_t eventId() const;
 
  private:
   struct MateriaSummaryPayload {
@@ -155,6 +157,12 @@ class RootMaterialTrackIo {
     /// step material rho
     std::vector<float> stepMatRho;
     std::vector<float>* stepMatRhoPtr = &stepMatRho;
+    /// step material element
+    std::vector<std::vector<unsigned int>> stepElementZ;
+    std::vector<std::vector<unsigned int>>* stepElementZPtr = &stepElementZ;
+    /// step material fraction of elements
+    std::vector<std::vector<float>> stepFraction;
+    std::vector<std::vector<float>>* stepFractionPtr = &stepFraction;
   };
 
   struct MaterialSurfacePayload {

@@ -13,7 +13,7 @@
 
 #include <chrono>
 
-#ifndef ACTS_GNN_CPUONLY
+#ifdef ACTS_GNN_WITH_CUDA
 #include <c10/cuda/CUDAGuard.h>
 #endif
 
@@ -34,26 +34,24 @@ TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
   c10::InferenceMode guard(true);
   torch::Device device = torch::kCPU;
 
-  if (!torch::cuda::is_available()) {
-    ACTS_DEBUG("Running on CPU...");
-  } else {
-    if (cfg.deviceID >= 0 && cfg.deviceID < torch::cuda::device_count()) {
-      ACTS_DEBUG("GPU device " << cfg.deviceID << " is being used.");
-      device = torch::Device(torch::kCUDA, cfg.deviceID);
-    } else {
-      ACTS_WARNING("GPU device " << cfg.deviceID
-                                 << " not available, falling back to CPU.");
+  if (cfg.device.isCuda()) {
+    if (!torch::cuda::is_available()) {
+      throw std::runtime_error(
+          "CUDA device requested but CUDA is not available");
     }
+    if (cfg.device.index >=
+        static_cast<std::size_t>(torch::cuda::device_count())) {
+      throw std::runtime_error(
+          "CUDA device index " + std::to_string(cfg.device.index) +
+          " is out of range (" + std::to_string(torch::cuda::device_count()) +
+          " devices available)");
+    }
+    device = torch::Device(torch::kCUDA, cfg.device.index);
   }
 
   ACTS_DEBUG("Using torch version " << TORCH_VERSION_MAJOR << "."
                                     << TORCH_VERSION_MINOR << "."
                                     << TORCH_VERSION_PATCH);
-#ifndef ACTS_GNN_CPUONLY
-  if (!torch::cuda::is_available()) {
-    ACTS_INFO("CUDA not available, falling back to CPU");
-  }
-#endif
 
   try {
     m_model = std::make_unique<torch::jit::Module>();
@@ -83,7 +81,7 @@ PipelineTensors TorchEdgeClassifier::operator()(
   c10::InferenceMode guard(true);
 
   // add a protection to avoid calling for kCPU
-#ifdef ACTS_GNN_CPUONLY
+#ifndef ACTS_GNN_WITH_CUDA
   assert(device == torch::Device(torch::kCPU));
 #else
   std::optional<c10::cuda::CUDAGuard> device_guard;
@@ -177,6 +175,14 @@ PipelineTensors TorchEdgeClassifier::operator()(
 
   ACTS_VERBOSE("Size after score cut: " << edgesAfterCut.size(1));
   printCudaMemInfo(logger());
+
+  std::optional<Tensor<float>> filteredEdgeFeatures;
+  if (edgeFeatures.has_value()) {
+    auto filtered = edgeFeatures->index({mask, Slice()}).contiguous();
+    filteredEdgeFeatures =
+        detail::torchToActsTensor<float>(filtered, execContext);
+  }
+
   t3 = std::chrono::high_resolution_clock::now();
 
   auto milliseconds = [](const auto& a, const auto& b) {
@@ -186,11 +192,9 @@ PipelineTensors TorchEdgeClassifier::operator()(
   ACTS_DEBUG("Time inference:      " << milliseconds(t1, t2));
   ACTS_DEBUG("Time postprocessing: " << milliseconds(t2, t3));
 
-  // Don't propagate edge features right now since they are not needed by any
-  // track building algorithm
   return {std::move(tensors.nodeFeatures),
           detail::torchToActsTensor<std::int64_t>(edgesAfterCut, execContext),
-          {},
+          std::move(filteredEdgeFeatures),
           detail::torchToActsTensor<float>(output.masked_select(mask),
                                            execContext)};
 }

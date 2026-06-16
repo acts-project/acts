@@ -282,6 +282,9 @@ class MultiStepperLoop final {
 
     const auto surface = par.referenceSurface().getSharedPtr();
 
+    state.components.clear();
+    state.components.reserve(par.size());
+
     for (std::size_t i = 0; i < par.size(); ++i) {
       const auto& [weight, singlePars] = par[i];
       auto& cmp = state.components.emplace_back(
@@ -431,9 +434,8 @@ class MultiStepperLoop final {
   /// @note The returned component-proxy is only garantueed to be valid until
   /// the component number is again modified
   /// @return ComponentProxy for the newly added component or error
-  Result<ComponentProxy> addComponent(State& state,
-                                      const BoundTrackParameters& pars,
-                                      double weight) const {
+  ComponentProxy addComponent(State& state, const BoundTrackParameters& pars,
+                              double weight) const {
     auto& cmp =
         state.components.emplace_back(m_singleStepper.makeState(state.options),
                                       weight, IntersectionStatus::onSurface);

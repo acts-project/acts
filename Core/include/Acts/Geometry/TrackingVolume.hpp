@@ -196,18 +196,17 @@ class TrackingVolume : public Volume {
   /// this, e.g. as a private member
   template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
-    auto sensitive = [&visitor](const Surface& surface) {
-      if (surface.geometryId().sensitive() == 0) {
-        return;
-      }
-      visitor(&surface);
-    };
-
     if (restrictToSensitives) {
-      apply(sensitive);
+      apply([&visitor](const Surface& surface) {
+        if (surface.geometryId().sensitive() == 0) {
+          return;
+        }
+        visitor(&surface);
+      });
+
     } else {
       apply(overloaded{
-          sensitive,
+          [&visitor](const Surface& surface) { visitor(&surface); },
           [&visitor](const Portal& portal) { visitor(&portal.surface()); },
           [&visitor](const BoundarySurface& bs) {
             visitor(&bs.surfaceRepresentation());
@@ -293,6 +292,10 @@ class TrackingVolume : public Volume {
   /// Set the volume name to @p volumeName
   /// @param volumeName is the new name of
   void setVolumeName(std::string_view volumeName);
+
+  /// Check if the volume has an associated material description
+  /// @return True if the volume has an associated material, false otherwise
+  bool hasMaterial() const;
 
   /// Return the material of the volume
   /// @return Pointer to volume material or nullptr if no material assigned

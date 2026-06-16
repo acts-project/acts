@@ -8,12 +8,10 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
@@ -46,7 +44,7 @@ namespace Acts {
 /// (corresponding to the new PCA to linPoint). Note that p1 corresponds to
 /// the x-position of the PCA, p2 corresponds to the y-position of the PCA, etc.
 ///
-/// @note Connection to RiddersPropagator: The RiddersPropagator does a very
+/// @note Connection to RiddersStepper: The RiddersStepper does a very
 /// similar thing to what this class does, but it wiggles BoundTrackParameters
 /// (FreeTrackParameters could also be used if Propagator.hpp and Propagator.ipp
 /// were adapted to accommodate them). Here, we wiggle neither

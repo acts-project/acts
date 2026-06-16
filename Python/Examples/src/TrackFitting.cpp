@@ -14,7 +14,6 @@
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <cstddef>
@@ -40,7 +39,7 @@ void addTrackFitting(py::module& mex) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(RefittingAlgorithm, mex, "RefittingAlgorithm",
                                 inputTracks, outputTracks, fit, pickTrack,
-                                initialVarInflation);
+                                initialVarInflation, beamSpotConstraint);
 
   {
     py::class_<TrackFitterFunction, std::shared_ptr<TrackFitterFunction>>(
@@ -53,18 +52,34 @@ void addTrackFitting(py::module& mex) {
            bool multipleScattering, bool energyLoss,
            double reverseFilteringMomThreshold,
            double reverseFilteringCovarianceScaling,
-           FreeToBoundCorrection freeToBoundCorrection, double chi2Cut,
-           Logging::Level level) {
+           const FreeToBoundCorrection& freeToBoundCorrection, double chi2Cut,
+           bool useJosephFormulation, Logging::Level level) {
           return makeKalmanFitterFunction(
               std::move(trackingGeometry), std::move(magneticField),
               multipleScattering, energyLoss, reverseFilteringMomThreshold,
               reverseFilteringCovarianceScaling, freeToBoundCorrection, chi2Cut,
-              *getDefaultLogger("Kalman", level));
+              useJosephFormulation, *getDefaultLogger("Kalman", level));
         },
         "trackingGeometry"_a, "magneticField"_a, "multipleScattering"_a,
         "energyLoss"_a, "reverseFilteringMomThreshold"_a,
         "reverseFilteringCovarianceScaling"_a, "freeToBoundCorrection"_a,
-        "chi2Cut"_a, "level"_a);
+        "chi2Cut"_a, "useJosephFormulation"_a, "level"_a);
+
+    mex.def(
+        "makeKalmanReferenceTrajectoryFitterFunction",
+        [](std::shared_ptr<const TrackingGeometry> trackingGeometry,
+           std::shared_ptr<const MagneticFieldProvider> magneticField,
+           bool multipleScattering, bool energyLoss,
+           const FreeToBoundCorrection& freeToBoundCorrection,
+           bool useJosephFormulation, Logging::Level level) {
+          return makeKalmanReferenceTrajectoryFitterFunction(
+              std::move(trackingGeometry), std::move(magneticField),
+              multipleScattering, energyLoss, freeToBoundCorrection,
+              useJosephFormulation, *getDefaultLogger("Kalman", level));
+        },
+        "trackingGeometry"_a, "magneticField"_a, "multipleScattering"_a,
+        "energyLoss"_a, "freeToBoundCorrection"_a, "useJosephFormulation"_a,
+        "level"_a);
 
     py::class_<MeasurementCalibrator, std::shared_ptr<MeasurementCalibrator>>(
         mex, "MeasurementCalibrator");
@@ -125,8 +140,9 @@ void addTrackFitting(py::module& mex) {
         [](std::shared_ptr<const TrackingGeometry> trackingGeometry,
            std::shared_ptr<const MagneticFieldProvider> magneticField,
            bool multipleScattering, bool energyLoss,
-           FreeToBoundCorrection freeToBoundCorrection, std::size_t nUpdateMax,
-           double relChi2changeCutOff, Logging::Level level) {
+           const FreeToBoundCorrection& freeToBoundCorrection,
+           std::size_t nUpdateMax, double relChi2changeCutOff,
+           Logging::Level level) {
           return makeGlobalChiSquareFitterFunction(
               std::move(trackingGeometry), std::move(magneticField),
               multipleScattering, energyLoss, freeToBoundCorrection, nUpdateMax,

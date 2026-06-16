@@ -32,6 +32,7 @@ from acts.examples.reconstruction import addGnn, addSpacePointsMaking
 from acts.gnn import (
     ModuleMapCuda,
     CudaTrackBuilding,
+    Device,
 )
 from acts.examples.gnn import NodeFeature
 
@@ -144,7 +145,6 @@ def runGnnModuleMap(
         "etaScale": 1.0,
         "gpuDevice": 0,
         "gpuBlocks": 512,
-        "moreParallel": True,
     }
     graphConstructor = ModuleMapCuda(**moduleMapConfig)
 
@@ -163,6 +163,7 @@ def runGnnModuleMap(
     elif gnnModel.suffix == ".onnx":
         from acts.gnn import OnnxEdgeClassifier
 
+        edgeClassifierConfig["device"] = Device.Cuda()
         edgeClassifiers = [OnnxEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".engine":
         from acts.gnn import TensorRTEdgeClassifier
@@ -206,6 +207,24 @@ def runGnnModuleMap(
         outputDirRoot=str(outputDir),
         logLevel=acts.logging.INFO,
     )
+
+    protoTracksToSeeds = acts.examples.ProtoTracksToSeeds(
+        level=acts.logging.INFO,
+        inputProtoTracks="gnn-protoTracks",
+        inputSpacePoints="spacepoints",
+        outputSeeds="gnn-seeds",
+        outputProtoTracks="gnn-protoTracks-seeds-filtered",
+    )
+    s.addAlgorithm(protoTracksToSeeds)
+
+    parEstAlg = acts.examples.TrackParamsEstimationAlgorithm(
+        level=acts.logging.INFO,
+        inputSeeds=protoTracksToSeeds.config.outputSeeds,
+        outputTrackParameters="gnn-initial-parameters",
+        trackingGeometry=trackingGeometry,
+        magneticField=field,
+    )
+    s.addAlgorithm(parEstAlg)
 
     s.run()
     return s

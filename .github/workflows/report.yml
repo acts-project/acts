@@ -1,19 +1,29 @@
 name: Report on physmon
 
 on:
-  workflow_run:
+  # workflow_run is required to post results back to PRs from forks; this
+  # workflow runs in the base repo context and does not check out or execute
+  # untrusted PR code.
+  workflow_run: # zizmor: ignore[dangerous-triggers]
     workflows: [Builds]
     types:
       - completed
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: write
 
 jobs:
   post_comment:
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
 
       - name: 'Download artifact'
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         id: dl-af
         with:
           script: |
@@ -80,11 +90,11 @@ jobs:
         if: steps.get-pr-number.outcome == 'success'
         run: curl -sL $ARTIFACT_URL
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: '3.14'
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         if: steps.dl-af.outputs.comment-artifacts-found
         with:
           pattern: comment-*.md
@@ -111,7 +121,7 @@ jobs:
 
       - name: Find Comment
         if: steps.get-pr-number.outcome == 'success'
-        uses: peter-evans/find-comment@v4
+        uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad # v4.0.0
         id: fc
         with:
           issue-number: ${{ steps.get-pr-number.outputs.PR_NUMBER }}
@@ -120,7 +130,7 @@ jobs:
 
       - name: Create or update comment
         if: steps.get-pr-number.outcome == 'success'
-        uses: peter-evans/create-or-update-comment@v5
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           issue-number: ${{ steps.get-pr-number.outputs.PR_NUMBER }}
@@ -131,9 +141,10 @@ jobs:
         if: steps.get-pr-number.outcome == 'success'
         env:
           EIC_EPIC_MATTERMOST_HOOK_URL: ${{secrets.EIC_EPIC_MATTERMOST_HOOK_URL}}
+          PR_NUMBER: ${{ steps.get-pr-number.outputs.PR_NUMBER }}
         run: |
           if [ -f comment-50-external-failure.md ] ; then
-            echo "{\"text\":\"External pipeline failure in ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}?pr=${{steps.get-pr-number.outputs.PR_NUMBER}}.\"}" | tee data.json
+            echo "{\"text\":\"External pipeline failure in ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}?pr=${PR_NUMBER}.\"}" | tee data.json
             curl -X POST -H 'Content-type: application/json' --data "@data.json" ${EIC_EPIC_MATTERMOST_HOOK_URL}
           fi
 
@@ -141,8 +152,9 @@ jobs:
         if: steps.get-pr-number.outcome == 'success'
         env:
           KEY4HEP_MATTERMOST_HOOK_URL: ${{secrets.KEY4HEP_MATTERMOST_HOOK_URL}}
+          PR_NUMBER: ${{ steps.get-pr-number.outputs.PR_NUMBER }}
         run: |
           if [ -f comment-51-key4hep-external-failure.md ] ; then
-            echo "{\"text\":\"External pipeline failure in ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}?pr=${{steps.get-pr-number.outputs.PR_NUMBER}}.\"}" | tee data.json
+            echo "{\"text\":\"External pipeline failure in ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}?pr=${PR_NUMBER}.\"}" | tee data.json
             curl -X POST -H 'Content-type: application/json' --data "@data.json" ${KEY4HEP_MATTERMOST_HOOK_URL}
           fi

@@ -52,17 +52,6 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsRoundTripTests) {
   BOOST_CHECK(rectangeRef->values() == rectangleTest->values());
 }
 
-BOOST_AUTO_TEST_CASE(SurfaceBoundsDetrayConversion) {
-  auto rectangeRef = std::make_shared<const RectangleBounds>(4., 6.);
-  nlohmann::json rectangleOutDetray =
-      SurfaceBoundsJsonConverter::toJsonDetray(*rectangeRef);
-
-  std::vector<double> boundariesRef = {4, 6};
-  BOOST_CHECK_EQUAL(rectangleOutDetray["shape"].get<unsigned int>(), 5u);
-  BOOST_CHECK(rectangleOutDetray["boundaries"].get<std::vector<double>>() ==
-              boundariesRef);
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

@@ -25,7 +25,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
@@ -107,9 +106,7 @@ struct LayerCreatorFixture {
       if (!sArray->isValidBin(i)) {
         continue;
       }
-      ACTS_PUSH_IGNORE_DEPRECATED()
-      const std::vector<const Surface*>& binContent = sArray->at(i);
-      ACTS_POP_IGNORE_DEPRECATED()
+      const std::span<const Surface* const> binContent = sArray->at(i);
       BOOST_TEST_INFO("Bin: " << i);
       BOOST_CHECK_EQUAL(binContent.size(), n);
       result = result && binContent.size() == n;
@@ -429,15 +426,12 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_barrelStagger, LayerCreatorFixture) {
     // std::endl;
 
     Vector3 ctr = A->referencePosition(tgContext, AxisDirection::AxisR);
-    ACTS_PUSH_IGNORE_DEPRECATED()
-    const std::vector<const Surface*>& binContent =
-        layer->surfaceArray()->at(ctr, ctr.normalized());
-    ACTS_POP_IGNORE_DEPRECATED()
+    const std::span<const Surface* const> binContent =
+        layer->surfaceArray()->at(tgContext, ctr, ctr.normalized());
     BOOST_CHECK_EQUAL(binContent.size(), 2u);
-    std::set<const Surface*> act(binContent.begin(), binContent.end());
 
     std::set<const Surface*> exp({A, B});
-    BOOST_CHECK(std::ranges::includes(act, exp));
+    BOOST_CHECK(std::ranges::includes(binContent, exp));
   }
 }
 
