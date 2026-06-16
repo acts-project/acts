@@ -27,19 +27,6 @@ namespace Acts {
 
 /// Base interface for all surface lookups.
 struct SurfaceArray::ISurfaceGridLookup {
-  /// Factory method to create a surface grid lookup for a given representative
-  /// surface, tolerance, and axes. This will internally create the appropriate
-  /// lookup class based on the axes and concrete @ref Grid.
-  /// @param representative The surface which is used as representative
-  /// @param tolerance The tolerance used for intersection checks
-  /// @param axes The axes used for the grid
-  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
-  /// @return A unique pointer to the surface grid lookup
-  static std::unique_ptr<ISurfaceGridLookup> makeSurfaceGridLookup(
-      std::shared_ptr<RegularSurface> representative, double tolerance,
-      std::tuple<const IAxis&, const IAxis&> axes,
-      std::uint8_t maxNeighborDistance);
-
   virtual ~ISurfaceGridLookup() = default;
 
   /// Fill provided surfaces into the contained @c Grid.
@@ -121,8 +108,9 @@ struct SurfaceArray::ISurfaceGridLookup {
   virtual std::uint8_t maxNeighborDistance() const = 0;
 };
 
-struct SurfaceArray::SingleElementLookupImpl final
-    : SurfaceArray::ISurfaceGridLookup {
+namespace {
+
+struct SingleElementLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   explicit SingleElementLookupImpl(const Surface* element)
       : m_element({element}) {}
 
@@ -182,8 +170,7 @@ struct SurfaceArray::SingleElementLookupImpl final
 };
 
 template <class Axis1, class Axis2>
-struct SurfaceArray::SurfaceGridLookupImpl final
-    : SurfaceArray::ISurfaceGridLookup {
+struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   SurfaceGridLookupImpl(std::shared_ptr<RegularSurface> representative,
                         double tolerance, std::tuple<Axis1, Axis2> axes,
                         std::vector<AxisDirection> binValues = {},
@@ -576,8 +563,7 @@ struct SurfaceArray::SurfaceGridLookupImpl final
   }
 };
 
-std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
-SurfaceArray::ISurfaceGridLookup::makeSurfaceGridLookup(
+std::unique_ptr<SurfaceArray::ISurfaceGridLookup> makeSurfaceGridLookup(
     std::shared_ptr<RegularSurface> representative, double tolerance,
     std::tuple<const IAxis&, const IAxis&> axes,
     std::uint8_t maxNeighborDistance) {
@@ -595,6 +581,8 @@ SurfaceArray::ISurfaceGridLookup::makeSurfaceGridLookup(
   });
 }
 
+}  // namespace
+
 SurfaceArray::SurfaceArray(std::shared_ptr<const Surface> srf)
     : m_gridLookup(std::make_unique<SingleElementLookupImpl>(srf.get())),
       m_surfaces({std::move(srf)}) {
@@ -607,8 +595,8 @@ SurfaceArray::SurfaceArray(const GeometryContext& gctx,
                            double tolerance,
                            std::tuple<const IAxis&, const IAxis&> axes,
                            std::uint8_t maxNeighborDistance) {
-  m_gridLookup = ISurfaceGridLookup::makeSurfaceGridLookup(
-      std::move(representative), tolerance, axes, maxNeighborDistance);
+  m_gridLookup = makeSurfaceGridLookup(std::move(representative), tolerance,
+                                       axes, maxNeighborDistance);
   m_surfaces = std::move(surfaces);
   m_surfacesRawPointers =
       m_surfaces |

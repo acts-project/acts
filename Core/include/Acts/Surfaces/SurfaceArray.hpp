@@ -160,12 +160,11 @@ class SurfaceArray {
   /// @return Maximum neighbor distance
   std::uint8_t maxNeighborDistance() const;
 
- private:
+  /// Forward declaration of the internal lookup struct. The actual definition
+  /// is in the source file.
   struct ISurfaceGridLookup;
-  struct SingleElementLookupImpl;
-  template <class Axis1, class Axis2>
-  struct SurfaceGridLookupImpl;
 
+ private:
   /// The actual grid lookup implementation
   std::unique_ptr<ISurfaceGridLookup> m_gridLookup;
   /// this vector makes sure we have shared ownership over the surfaces
