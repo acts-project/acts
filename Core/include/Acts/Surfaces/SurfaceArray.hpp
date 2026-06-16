@@ -57,12 +57,18 @@ class SurfaceArray {
 
   /// @param other the other SurfaceArray to copy from
   SurfaceArray(const SurfaceArray& other) = delete;
+
   /// @param other the other SurfaceArray to move from
   SurfaceArray(SurfaceArray&& other) noexcept;
+
   /// @param other the other SurfaceArray to copy-assign from
+  /// @return reference to this SurfaceArray
   SurfaceArray& operator=(const SurfaceArray& other) = delete;
+
   /// @param other the other SurfaceArray to move-assign from
+  /// @return reference to this SurfaceArray
   SurfaceArray& operator=(SurfaceArray&& other) noexcept;
+
   ~SurfaceArray();
 
   /// Get all surfaces in bin given by the global bin index
