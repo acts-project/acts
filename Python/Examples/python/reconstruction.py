@@ -1537,7 +1537,7 @@ def addKalmanTracks(
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks=fitAlg.config.outputTracks,
-        inputParticles="particles_selected",
+        inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="kf_track_particle_matching",
         outputParticleTrackMatching="kf_particle_track_matching",
@@ -1594,7 +1594,7 @@ def addTruthTrackingGsf(
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks=gsfAlg.config.outputTracks,
-        inputParticles="particles_selected",
+        inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="gsf_track_particle_matching",
         outputParticleTrackMatching="gsf_particle_track_matching",
@@ -1747,7 +1747,7 @@ def addCKFTracks(
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks=trackFinder.config.outputTracks,
-        inputParticles="particles_selected",
+        inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching=f"{prefix}ckf_track_particle_matching",
         outputParticleTrackMatching=f"{prefix}ckf_particle_track_matching",
@@ -1821,7 +1821,7 @@ def addGx2fTracks(
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks=fitAlg.config.outputTracks,
-        inputParticles="particles_selected",
+        inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="gx2f_track_particle_matching",
         outputParticleTrackMatching="gx2f_particle_track_matching",
@@ -2052,7 +2052,7 @@ def addGnn(
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks=convAlg.config.outputTracks,
-        inputParticles="particles_selected",
+        inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="gnn_track_particle_matching",
         outputParticleTrackMatching="gnn_particle_track_matching",
@@ -2119,7 +2119,7 @@ def addAmbiguityResolution(
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks=alg.config.outputTracks,
-        inputParticles="particles_selected",
+        inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching=f"{prefix}ambi_track_particle_matching",
         outputParticleTrackMatching=f"{prefix}ambi_particle_track_matching",
@@ -2190,7 +2190,7 @@ def addScoreBasedAmbiguityResolution(
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks=algScoreBased.config.outputTracks,
-        inputParticles="particles_selected",
+        inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="ambi_scorebased_track_particle_matching",
         outputParticleTrackMatching="ambi_scorebased_particle_track_matching",
@@ -2270,7 +2270,7 @@ def addAmbiguityResolutionML(
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks=algGreedy.config.outputTracks,
-        inputParticles="particles_selected",
+        inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="ambiML_track_particle_matching",
         outputParticleTrackMatching="ambiML_particle_track_matching",
@@ -2446,7 +2446,7 @@ def addVertexFitting(
             level=customLogLevel(),
             inputVertices=outputVertices,
             inputTracks=tracks,
-            inputParticles=selectedParticles,
+            inputParticles=inputParticles,
             inputTrackParticleMatching="track_particle_matching",
             outputVertexTruthMatching=outputVertexTruthMatching,
             outputTruthVertexMatching=outputTruthVertexMatching,
