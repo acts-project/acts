@@ -9,7 +9,7 @@
 #pragma once
 
 // Project include(s).
-#include "./codegen/update_rk_transport_jacobian.hpp"
+#include "detray/propagator/codegen/update_rk_transport_jacobian.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/units.hpp"

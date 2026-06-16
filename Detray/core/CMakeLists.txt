@@ -77,6 +77,52 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}>
 )
 
+# Generate the propagator codegen headers from the shared ACTS sympy codegen
+# core instead of committing them. detray is built here via add_subdirectory
+# from ACTS, so acts_code_generation is already available; when detray is
+# configured standalone inside the acts4 tree, pull the ACTS cmake infra in by
+# relative path (../../cmake -> acts4/cmake, ../../codegen -> acts4/codegen).
+if(NOT COMMAND acts_code_generation)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/ActsCodegen.cmake)
+endif()
+
+set(_detray_codegen_dir ${CMAKE_CURRENT_SOURCE_DIR}/../codegen/detray-sympy)
+set(_acts_codegen_pkg ${CMAKE_CURRENT_SOURCE_DIR}/../../codegen)
+
+foreach(
+    _spec IN
+    ITEMS
+        "gen_transport_covariance_to_bound_impl.py|detray/propagator/actors/codegen/covariance_transport.hpp"
+        "gen_full_jacobian.py|detray/propagator/actors/codegen/full_jacobian.hpp"
+        "gen_update_rk_transport_jacobian_impl.py|detray/propagator/codegen/update_rk_transport_jacobian.hpp"
+        "gen_transport_jacobian_types.py|detray/propagator/codegen/transport_jacobian.hpp"
+)
+    string(REPLACE "|" ";" _spec_parts "${_spec}")
+    list(GET _spec_parts 0 _script)
+    list(GET _spec_parts 1 _output)
+
+    acts_code_generation(
+        ADD_TO_TARGET detray_core
+        PYTHON ${_detray_codegen_dir}/${_script}
+        WITH_REQUIREMENTS ${_acts_codegen_pkg}/requirements.txt
+        WITH ${_acts_codegen_pkg}
+        ISOLATED
+        OUTPUT ${_output}
+        RESULT_INCLUDE_DIR _gen_root
+    )
+
+    # Install the generated header alongside the other detray headers so that
+    # installed (non build-tree) consumers can find it too.
+    get_filename_component(_output_subdir ${_output} DIRECTORY)
+    install(
+        FILES ${_gen_root}/${_output}
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${_output_subdir}
+    )
+endforeach()
+
+unset(_detray_codegen_dir)
+unset(_acts_codegen_pkg)
+
 # Set up the libraries that use specific algebra plugins.
 detray_add_library( detray_core_array core_array )
 target_link_libraries(

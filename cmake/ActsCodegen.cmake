@@ -1,5 +1,14 @@
 include_guard(GLOBAL)
 
+# Ensure this module's own directory is on the module path so that nested bare
+# includes (e.g. ActsEnsureUv) resolve even when this file is included by
+# absolute path from outside the ACTS module path — for example detray's build,
+# which manages its own CMAKE_MODULE_PATH. include_guard already runs this once;
+# the IN_LIST check just avoids a redundant entry in the normal ACTS build.
+if(NOT "${CMAKE_CURRENT_LIST_DIR}" IN_LIST CMAKE_MODULE_PATH)
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR})
+endif()
+
 if(NOT ACTS_USE_SYSTEM_LIBS)
     message(STATUS "Configuring codegen")
 
@@ -75,7 +84,7 @@ endif()
 
 function(acts_code_generation)
     set(options ISOLATED)
-    set(oneValueArgs ADD_TO_TARGET PYTHON PYTHON_VERSION OUTPUT)
+    set(oneValueArgs ADD_TO_TARGET PYTHON PYTHON_VERSION OUTPUT RESULT_INCLUDE_DIR)
     set(multiValueArgs DEPENDS WITH_REQUIREMENTS WITH)
     cmake_parse_arguments(
         PARSE_ARGV 0
@@ -195,7 +204,25 @@ function(acts_code_generation)
     add_custom_target(${_internal_target} DEPENDS ${_output_file})
 
     add_dependencies(${ARGS_ADD_TO_TARGET} ${_internal_target})
-    target_include_directories(${ARGS_ADD_TO_TARGET} PRIVATE ${_codegen_root})
+
+    # INTERFACE libraries (e.g. header-only detray::core) cannot carry PRIVATE
+    # include directories; expose the generated headers on their INTERFACE so
+    # consumers can find them. Compiled targets keep using PRIVATE as before.
+    get_target_property(_add_to_target_type ${ARGS_ADD_TO_TARGET} TYPE)
+    if(_add_to_target_type STREQUAL "INTERFACE_LIBRARY")
+        target_include_directories(
+            ${ARGS_ADD_TO_TARGET}
+            INTERFACE $<BUILD_INTERFACE:${_codegen_root}>
+        )
+    else()
+        target_include_directories(${ARGS_ADD_TO_TARGET} PRIVATE ${_codegen_root})
+    endif()
+
+    # Optionally expose the generated include root to the caller (used to set up
+    # installation of the generated headers).
+    if(DEFINED ARGS_RESULT_INCLUDE_DIR)
+        set(${ARGS_RESULT_INCLUDE_DIR} ${_codegen_root} PARENT_SCOPE)
+    endif()
 
     # Add a central copde generation target that depends on all codegen targets, so that we can build only them in one go
     if(NOT TARGET ActsCodegen)
