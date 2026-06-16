@@ -12,6 +12,7 @@
 #include "Acts/Utilities/detail/MultiAxisHelper.hpp"
 
 #include <iosfwd>
+#include <memory>
 
 #include <boost/container/small_vector.hpp>
 
@@ -336,6 +337,8 @@ class IMultiAxisXD : public IMultiAxis {
  public:
   /// Dimension of the grid (number of axes)
   static constexpr std::size_t DIM = _DIM;
+
+  static_assert(DIM > 0, "MultiAxis dimension must be greater than zero");
 
   /// Statically sized multi-index holding one local bin index per axis
   using MultiIndex = std::array<std::size_t, DIM>;

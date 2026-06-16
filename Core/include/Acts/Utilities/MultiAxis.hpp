@@ -28,7 +28,7 @@ namespace Acts {
 /// under-/overflow bins) are described on @c IMultiAxis.
 ///
 /// @tparam Axes parameter pack of concrete @c Axis types spanning the grid
-template <class... Axes>
+template <AxisConcept... Axes>
 class MultiAxis final : public IMultiAxisXD<sizeof...(Axes)> {
  public:
   /// Base interface for this multi-axis' dimension
