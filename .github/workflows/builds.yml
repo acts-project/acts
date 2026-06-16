@@ -126,6 +126,7 @@ jobs:
           ctest --test-dir build-downstream --output-on-failure
 
   linux_examples_test:
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -233,6 +234,7 @@ jobs:
           path: physmon
 
   linux_ubuntu_extra:
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -324,6 +326,7 @@ jobs:
         run: ctest --test-dir build-downstream --output-on-failure
 
   macos:
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: macos-26
     permissions:
       contents: read
@@ -618,6 +621,7 @@ jobs:
 
 
   linux_ubuntu_python_wheel:
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: ubuntu-latest
     permissions:
       contents: read

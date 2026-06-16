@@ -1,12 +1,8 @@
 name: Devcontainer CI
 
 on:
-  push:
-  pull_request:
-    branches:
-      - main
-      - 'release/**'
-      - 'develop/**'
+  # DISABLED for physmon CI test — manual trigger only. Do not merge.
+  workflow_dispatch:
 
 permissions:
   contents: read

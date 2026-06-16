@@ -1,3 +1,10 @@
+# TEMP: GitLab CI fully disabled for physmon testing (the GitHub physmon job is
+# used instead). This never-rule prevents any pipeline from being created.
+# Revert (drop this commit) before merging. DO NOT MERGE.
+workflow:
+  rules:
+    - when: never
+
 variables:
   CCACHE_DIR: ${CI_PROJECT_DIR}/ccache
   CCACHE_MAXSIZE: 2G
