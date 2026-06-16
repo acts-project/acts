@@ -251,14 +251,19 @@ PortalShellBase& ContainerBlueprintNode::connectImpl(
   // survive the merge and would otherwise trigger a deep, hard-to-trace failure
   // inside the stack shell construction. Faces that are *fused* (e.g. the
   // boundary between two stacked volumes) legitimately carry material and are
-  // not flagged here.
+  // not flagged here.  With only a single child there is no actual merge, so
+  // the check is skipped entirely to avoid false positives.
   const PortalMaterialMergePolicy materialPolicy =
       options.keepGoingOnMaterialMergeFailure
           ? PortalMaterialMergePolicy::eDiscardAndMark
           : PortalMaterialMergePolicy::eThrow;
 
+  // With a single child there is nothing to merge, so the "merged" faces are
+  // actually kept as-is. Skip the clash check to avoid false positives.
   std::vector<std::string> materialClashes;
-  for (auto face : ShellStack::mergedFaces(direction())) {
+  for (auto face : shells.size() > 1
+                       ? ShellStack::mergedFaces(direction())
+                       : std::vector<typename ShellStack::Face>{}) {
     for (auto* shell : shells) {
       auto portal = shell->portal(face);
       if (portal != nullptr && portal->surface().hasMaterial()) {
