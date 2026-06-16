@@ -154,9 +154,8 @@ double eta(const T& v) noexcept
     { v.theta() } -> std::floating_point;
   }
 {
-  return -std::log(std::tan(0.5*v.theta()));
+  return -std::log(std::tan(0.5 * v.theta()));
 }
-
 
 /// @brief Fast evaluation of trigonomic functions.
 ///
