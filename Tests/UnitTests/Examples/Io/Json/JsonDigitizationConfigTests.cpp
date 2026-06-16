@@ -13,8 +13,7 @@
 #include "Acts/EventData/detail/GenerateParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
@@ -157,9 +156,11 @@ BOOST_AUTO_TEST_CASE(DigitizationConfigRoundTrip) {
 
   GeometricConfig gdc;
 
-  BinUtility segmentation;
-  segmentation += BinUtility(336, -8.4, 8.4, open, AxisDirection::AxisX);
-  segmentation += BinUtility(1280, -36, 36, open, AxisDirection::AxisY);
+  std::vector<DirectedProtoAxis> segmentation;
+  segmentation.emplace_back(AxisDirection::AxisX, AxisBoundaryType::Open, -8.4,
+                            8.4, 336);
+  segmentation.emplace_back(AxisDirection::AxisY, AxisBoundaryType::Open, -36,
+                            36, 1280);
 
   gdc.segmentation = segmentation;
   gdc.threshold = 0.01;
@@ -185,8 +186,8 @@ BOOST_AUTO_TEST_CASE(DigitizationConfigRoundTrip) {
   DigiComponentsConfig dcTest(dcJsonIn);
   BOOST_CHECK(dcTest.geometricDigiConfig.indices ==
               dcRef.geometricDigiConfig.indices);
-  BOOST_CHECK_EQUAL(dcTest.geometricDigiConfig.segmentation.dimensions(),
-                    dcRef.geometricDigiConfig.segmentation.dimensions());
+  BOOST_CHECK_EQUAL(dcTest.geometricDigiConfig.segmentation.size(),
+                    dcRef.geometricDigiConfig.segmentation.size());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

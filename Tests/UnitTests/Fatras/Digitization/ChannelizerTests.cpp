@@ -10,10 +10,9 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsFatras/Digitization/Channelizer.hpp"
-#include "ActsFatras/Digitization/SurfaceDrift.hpp"
 #include "ActsFatras/Digitization/SurfaceMask.hpp"
 
 #include <numeric>
@@ -24,7 +23,7 @@ using namespace ActsFatras;
 
 struct Helper {
   std::shared_ptr<Surface> surface;
-  BinUtility segmentation;
+  std::vector<DirectedProtoAxis> segmentation;
 
   GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
   double thickness = 125_um;
@@ -33,17 +32,17 @@ struct Helper {
   ActsFatras::Channelizer channelizer;
 
   Helper() {
-    surface = CurvilinearSurface(Vector3::Zero(), Vector3{0.0, 0.0, 1.0})
-                  .planeSurface();
+    surface =
+        CurvilinearSurface(Vector3::Zero(), Vector3{0.0, 0.0, 1.0}).surface();
 
     float pitchSize = 50_um;
     float min = -200_um;
     float max = 200_um;
     int bins = static_cast<int>((max - min) / pitchSize);
-    segmentation =
-        BinUtility(bins, min, max, BinningOption::open, AxisDirection::AxisX);
-    segmentation +=
-        BinUtility(bins, min, max, BinningOption::open, AxisDirection::AxisY);
+    segmentation.emplace_back(AxisDirection::AxisX, AxisBoundaryType::Open, min,
+                              max, bins);
+    segmentation.emplace_back(AxisDirection::AxisY, AxisBoundaryType::Open, min,
+                              max, bins);
   }
 
   auto channelize(const Vector3 &pos3, const Vector3 &dir3) const {

@@ -275,7 +275,6 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
   // Now do the geometric indices
   Cluster clus;
 
-  const auto& binningData = m_segmentation.binningData();
   Acts::Vector2 pos(0., 0.);
   Acts::Vector2 var(0., 0.);
 
@@ -301,10 +300,10 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
     b1min = std::min(b1min, b1);
     b1max = std::max(b1max, b1);
 
-    float p0 = binningData[0].center(b0);
-    float w0 = binningData[0].width(b0);
-    float p1 = binningData[1].center(b1);
-    float w1 = binningData[1].width(b1);
+    const double p0 = m_segmentation[0].binCenter(b0);
+    const double w0 = m_segmentation[0].binWidth(b0);
+    const double p1 = m_segmentation[1].binCenter(b1);
+    const double w1 = m_segmentation[1].binWidth(b1);
 
     pos += Acts::Vector2(weights.at(i) * p0, weights.at(i) * p1);
     // Assume uniform distribution to compute error
