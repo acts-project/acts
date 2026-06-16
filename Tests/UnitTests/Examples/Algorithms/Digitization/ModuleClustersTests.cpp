@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 #include "ActsFatras/Digitization/Segmentizer.hpp"
 

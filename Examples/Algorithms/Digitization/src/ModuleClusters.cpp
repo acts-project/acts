@@ -309,7 +309,7 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) const {
     cluster.sizeLoc1 = b1max - b1min + 1;
   }
 
-  if (m_geoIndices.size() > 0 && cluster.channels.empty()) {
+  if (!m_geoIndices.empty() && cluster.channels.empty()) {
     throw std::runtime_error(
         "Expected to have at least one cell for a cluster with geo indices!");
   }
