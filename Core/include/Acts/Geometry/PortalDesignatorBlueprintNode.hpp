@@ -12,6 +12,8 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 
+#include <string_view>
+
 namespace Acts::Experimental {
 
 namespace detail {
@@ -34,7 +36,7 @@ class PortalDesignatorBlueprintNode final : public BlueprintNode {
  public:
   /// Main constructor for the portal designator node.
   /// @param name The name of the node (for debug only)
-  explicit PortalDesignatorBlueprintNode(const std::string& name);
+  explicit PortalDesignatorBlueprintNode(std::string_view name);
 
   ~PortalDesignatorBlueprintNode() override;
 

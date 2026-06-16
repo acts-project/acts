@@ -33,7 +33,7 @@ class PortalDesignatorBlueprintNodeImpl {
 }  // namespace detail
 
 PortalDesignatorBlueprintNode::PortalDesignatorBlueprintNode(
-    const std::string& name) {
+    std::string_view name) {
   m_impl = std::make_unique<detail::PortalDesignatorBlueprintNodeImpl>();
   m_impl->m_name = name;
 }

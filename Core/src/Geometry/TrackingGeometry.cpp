@@ -194,7 +194,7 @@ class GeometryIdMapVisitor : public TrackingGeometryVisitor {
     m_surfacesById.emplace(surface.geometryId(), &surface);
 
     for (const auto& tag : portal.tags()) {
-      auto [it, inserted] = m_portalsByTag.emplace(tag, &portal);
+      auto [it, inserted] = m_portalsByTag.try_emplace(tag, &portal);
       // A fused/merged portal is shared between volumes, so it is visited once
       // per owning volume slot. Re-inserting the same tag for the *same* portal
       // is fine; a different portal claiming the same tag is a collision.
@@ -209,7 +209,7 @@ class GeometryIdMapVisitor : public TrackingGeometryVisitor {
 
   std::unordered_map<GeometryIdentifier, const TrackingVolume*> m_volumesById{};
   std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById{};
-  std::unordered_map<std::string, const Portal*> m_portalsByTag{};
+  detail::PortalTagMap m_portalsByTag{};
 
   std::unordered_map<GeometryIdentifier, const GeometryObject*> m_objectsById{};
 };
@@ -288,7 +288,7 @@ const Surface* TrackingGeometry::findSurface(GeometryIdentifier id) const {
 }
 
 const Portal* TrackingGeometry::findPortal(std::string_view tag) const {
-  auto it = m_portalsByTag.find(std::string{tag});
+  auto it = m_portalsByTag.find(tag);
   if (it == m_portalsByTag.end()) {
     return nullptr;
   }

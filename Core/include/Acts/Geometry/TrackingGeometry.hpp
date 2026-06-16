@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -33,6 +34,24 @@ class IMaterialDecorator;
 class TrackingVolume;
 class TrackingGeometryVisitor;
 class TrackingGeometryMutableVisitor;
+
+namespace detail {
+/// Transparent hash for string-keyed associative containers, allowing
+/// heterogeneous lookup with @c std::string_view without constructing a
+/// temporary @c std::string.
+struct TransparentStringHash {
+  using is_transparent = void;
+
+  std::size_t operator()(std::string_view sv) const {
+    return std::hash<std::string_view>{}(sv);
+  }
+};
+
+/// Map from portal tag to portal, with transparent string lookup.
+using PortalTagMap =
+    std::unordered_map<std::string, const Portal*, TransparentStringHash,
+                       std::equal_to<>>;
+}  // namespace detail
 
 // Forward declaration only, the implementation is hidden in the .cpp file.
 class Gen1GeometryClosureVisitor;
@@ -230,7 +249,7 @@ class TrackingGeometry {
   // lookup containers
   std::unordered_map<GeometryIdentifier, const TrackingVolume*> m_volumesById;
   std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById;
-  std::unordered_map<std::string, const Portal*> m_portalsByTag;
+  detail::PortalTagMap m_portalsByTag;
 };
 
 }  // namespace Acts
