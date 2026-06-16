@@ -847,7 +847,7 @@ class Gx2Fitter {
       ACTS_DEBUG("Surface " << geoId << " detected.");
 
       const bool surfaceIsSensitive = surface->isSensitive();
-      const bool surfaceHasMaterial = (surface->surfaceMaterial() != nullptr);
+      const bool surfaceHasMaterial = surface->hasMaterial();
       // First we figure out, if we would need to look into material surfaces at
       // all. Later, we also check, if the material slab is valid, otherwise we
       // modify this flag to ignore the material completely.
@@ -862,10 +862,18 @@ class Gx2Fitter {
         if (scatteringMapId == scatteringMap->end()) {
           ACTS_DEBUG("    ... create entry in scattering map.");
 
-          const MaterialSlab slab = Acts::detail::evaluateMaterialSlab(
-              state, stepper, *surface,
-              Acts::detail::determineMaterialUpdateMode(
-                  state, navigator, MaterialUpdateMode::FullUpdate));
+          const Result<MaterialSlab> slabResult =
+              Acts::detail::evaluateMaterialSlab(
+                  state, stepper, *surface,
+                  Acts::detail::determineMaterialUpdateMode(
+                      state, navigator, MaterialUpdateMode::FullUpdate));
+          if (!slabResult.ok()) {
+            ACTS_DEBUG("GlobalChiSquareFitter | "
+                       << "Failed to evaluate material slab: "
+                       << slabResult.error());
+            return Result<void>::failure(slabResult.error());
+          }
+          const MaterialSlab& slab = *slabResult;
           const bool slabIsValid = !slab.isVacuum();
 
           double invSigma2 = 0.;

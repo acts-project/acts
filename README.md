@@ -37,7 +37,7 @@ have a feature request, or want to contribute to ACTS, have a look at the
 ### Python bindings
 
 ACTS is also available as a Python package via `pip install pyacts`. See the
-[Python bindings documentation](https://acts-project.github.io/python_bindings.html)
+[Python bindings documentation](https://acts-project.github.io/group__python__bindings.html)
 for details.
 
 ## Versioning and public API
@@ -94,3 +94,11 @@ The ACTS project contains copies of the following external packages:
 
 -   [OpenDataDetector](https://github.com/acts-project/OpenDataDetector)
     licensed under the MPLv2 license.
+
+ACTS is a collaborative open source software project, and hence does not base its
+organisational structure on (intellectual) *ownership* of certain pieces of code
+by individuals. The usage of GitHub's `CODEOWNERS` system is currently under
+evaluation primarily to identify opt-in contact persons for certain parts of the
+code base in an attempt to simplify workflows and identify information contacts
+and reviewers. A detailed description of our test usage is part of the
+`CODEOWNERS` file.

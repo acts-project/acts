@@ -58,8 +58,8 @@ def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
         outputDir=tmp_path,
     )
 
-    runGeometry(outputJson=True, **kwargs)
-    runGeometry(outputJson=False, **kwargs)
+    runGeometry(outputSurfacesJson=True, **kwargs)
+    runGeometry(outputSurfacesJson=False, **kwargs)
 
     assert len(list(obj_dir.iterdir())) == nobj
 
@@ -150,6 +150,7 @@ def test_odd_gen1():
         pytest.param("BarrelEndcap", id="barrel-endcap"),
         pytest.param("DirectLayer", id="direct-layer"),
         pytest.param("DirectLayerGrouped", id="direct-layer-grouped"),
+        pytest.param("TGeo", id="tgeo"),
     ],
 )
 def test_odd_gen3(constructionMethod):
@@ -177,3 +178,86 @@ def test_odd_gen3(constructionMethod):
         assert visitor.num_surfaces == 19261
         assert visitor.num_volumes == 109
         assert visitor.num_portals == 437
+
+
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.odd
+def test_odd_gen3_json_roundtrip(tmp_path):
+    from geometry import runGeometry
+    from acts.json import TrackingGeometryJsonConverter
+
+    json_dir = tmp_path / "json"
+    json_dir.mkdir()
+
+    gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
+
+    with getOpenDataDetector(gen3=True) as detector:
+        trackingGeometry = detector.trackingGeometry()
+
+        original = CountingVisitor()
+        trackingGeometry.apply(original)
+
+        runGeometry(
+            trackingGeometry=trackingGeometry,
+            decorators=detector.contextDecorators(),
+            outputDir=tmp_path,
+            events=1,
+            outputObj=False,
+            outputCsv=False,
+            outputSurfacesJson=False,
+            serializeGeometryJson=True,
+        )
+
+    json_path = json_dir / "tracking-geometry.json"
+    assert json_path.exists()
+    assert json_path.stat().st_size > 0
+
+    converter = TrackingGeometryJsonConverter()
+    rebuilt_geometry = converter.fromJson(gctx, json_path.read_text())
+
+    rebuilt = CountingVisitor()
+    rebuilt_geometry.apply(rebuilt)
+
+    assert rebuilt.num_surfaces == original.num_surfaces
+    assert rebuilt.num_volumes == original.num_volumes
+    assert rebuilt.num_portals == original.num_portals
+    assert rebuilt.num_layers == 0
+    assert rebuilt.num_boundary_surfaces == 0
+
+    # Propagation comparison: identical seed → identical navigation results
+    import numpy as np
+    import uproot
+    from propagation import runPropagation
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
+
+    def run_prop(geo, out_dir):
+        out_dir.mkdir(exist_ok=True)
+        s = acts.examples.Sequencer(
+            events=5, numThreads=1, logLevel=acts.logging.WARNING
+        )
+        runPropagation(geo, field, str(out_dir), s=s, sterileLogger=False).run()
+
+    orig_dir = tmp_path / "prop_original"
+    rebuilt_dir = tmp_path / "prop_rebuilt"
+    run_prop(trackingGeometry, orig_dir)
+    run_prop(rebuilt_geometry, rebuilt_dir)
+
+    branches = ["nSensitives", "nPortals", "nSuccessfulSteps", "pathLength"]
+    with uproot.open(orig_dir / "propagation_summary.root") as f:
+        orig = f["propagation_summary"].arrays(branches, library="np")
+    with uproot.open(rebuilt_dir / "propagation_summary.root") as f:
+        rebuilt_data = f["propagation_summary"].arrays(branches, library="np")
+
+    assert orig["nSensitives"].mean() > 0.0
+    assert orig["nPortals"].mean() > 0.0
+    assert orig["pathLength"].mean() > 0.0
+
+    np.testing.assert_array_equal(orig["nSensitives"], rebuilt_data["nSensitives"])
+    np.testing.assert_array_equal(orig["nPortals"], rebuilt_data["nPortals"])
+    np.testing.assert_array_equal(
+        orig["nSuccessfulSteps"], rebuilt_data["nSuccessfulSteps"]
+    )
+    np.testing.assert_allclose(
+        orig["pathLength"], rebuilt_data["pathLength"], rtol=1e-5
+    )

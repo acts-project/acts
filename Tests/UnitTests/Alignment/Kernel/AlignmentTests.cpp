@@ -8,272 +8,27 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
-#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/LayerArrayCreator.hpp"
-#include "Acts/Geometry/LayerCreator.hpp"
-#include "Acts/Geometry/PlaneLayer.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Geometry/TrackingGeometryBuilder.hpp"
-#include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/Navigator.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
-#include "Acts/TrackFitting/GainMatrixUpdater.hpp"
-#include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "Acts/Utilities/CalibrationContext.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
-#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/AlignmentHelpers.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
-#include "ActsTests/CommonHelpers/MeasurementsCreator.hpp"
-#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
-#include <random>
 #include <string>
 
-namespace {
-
 using namespace Acts;
-using namespace ActsAlignment;
 using namespace ActsTests;
+using namespace ActsTests::AlignmentUtils;
 using namespace Acts::detail::Test;
-using namespace Acts::UnitLiterals;
-
-using StraightPropagator = Propagator<StraightLineStepper, Navigator>;
-using ConstantFieldStepper = EigenStepper<>;
-using ConstantFieldPropagator = Propagator<ConstantFieldStepper, Navigator>;
-
-using KalmanUpdater = GainMatrixUpdater;
-using KalmanSmoother = GainMatrixSmoother;
-using KalmanFitterType =
-    KalmanFitter<ConstantFieldPropagator, VectorMultiTrajectory>;
-
-KalmanUpdater kfUpdater;
-KalmanSmoother kfSmoother;
-
-// Create a test context
-const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
-const MagneticFieldContext magCtx;
-const CalibrationContext calCtx;
-
-std::normal_distribution<double> normalDist(0., 1.);
-std::default_random_engine rng(42);
-
-KalmanFitterExtensions<VectorMultiTrajectory> getExtensions() {
-  KalmanFitterExtensions<VectorMultiTrajectory> extensions;
-  extensions.calibrator
-      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  extensions.updater.connect<&KalmanUpdater::operator()<VectorMultiTrajectory>>(
-      &kfUpdater);
-  extensions.smoother
-      .connect<&KalmanSmoother::operator()<VectorMultiTrajectory>>(&kfSmoother);
-  return extensions;
-}
-
-///
-/// @brief Construct a telescope-like detector
-///
-struct TelescopeDetector {
-  /// Default constructor for the Cubic tracking geometry
-  ///
-  /// @param gctx the geometry context for this geometry at building time
-  explicit TelescopeDetector(std::reference_wrapper<const GeometryContext> gctx)
-      : geoContext(gctx) {
-    // Construct the rotation
-    rotation.col(0) = Vector3(0, 0, -1);
-    rotation.col(1) = Vector3(0, 1, 0);
-    rotation.col(2) = Vector3(1, 0, 0);
-
-    // Boundaries of the surfaces
-    rBounds = std::make_shared<const RectangleBounds>(0.1_m, 0.1_m);
-
-    // Material of the surfaces
-    MaterialSlab matProp(makeSilicon(), 80_um);
-
-    surfaceMaterial = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
-  }
-
-  ///
-  /// Call operator to build the standard cubic tracking geometry
-  ///
-  std::shared_ptr<const TrackingGeometry> operator()() {
-    using namespace UnitLiterals;
-
-    unsigned int nLayers = 6;
-    std::vector<double> positions = {-500_mm, -300_mm, -100_mm,
-                                     100_mm,  300_mm,  500_mm};
-    auto length = positions.back() - positions.front();
-
-    std::vector<LayerPtr> layers(nLayers);
-    for (unsigned int i = 0; i < nLayers; ++i) {
-      // The transform
-      Translation3 trans(0., 0., positions[i]);
-      Transform3 trafo(rotation * trans);
-      auto detElement = std::make_shared<DetectorElementStub>(
-          trafo, rBounds, 1._um, surfaceMaterial);
-      // The surface is not right!!!
-      auto surface = detElement->surface().getSharedPtr();
-      // Add it to the event store
-      detectorStore.push_back(std::move(detElement));
-      auto surArray = std::make_unique<SurfaceArray>(surface);
-      // The layer thickness should not be too large
-      layers[i] =
-          PlaneLayer::create(trafo, rBounds, std::move(surArray),
-                             1._mm);  // Associate the layer to the surface
-      auto mutableSurface = const_cast<Surface*>(surface.get());
-      mutableSurface->associateLayer(*layers[i]);
-    }
-
-    // The volume transform
-    Translation3 transVol(0, 0, 0);
-    Transform3 trafoVol(rotation * transVol);
-    auto boundsVol = std::make_shared<CuboidVolumeBounds>(
-        rBounds->halfLengthX() + 10._mm, rBounds->halfLengthY() + 10._mm,
-        length + 10._mm);
-
-    LayerArrayCreator::Config lacConfig;
-    LayerArrayCreator layArrCreator(
-        lacConfig, getDefaultLogger("LayerArrayCreator", Logging::INFO));
-    LayerVector layVec;
-    for (unsigned int i = 0; i < nLayers; i++) {
-      layVec.push_back(layers[i]);
-    }
-
-    // Create the layer array
-    std::unique_ptr<const LayerArray> layArr(layArrCreator.layerArray(
-        geoContext, layVec, positions.front() - 2._mm, positions.back() + 2._mm,
-        BinningType::arbitrary, AxisDirection::AxisX));
-
-    // Build the tracking volume
-    auto trackVolume = std::make_shared<TrackingVolume>(
-        trafoVol, boundsVol, nullptr, std::move(layArr), nullptr,
-        MutableTrackingVolumeVector{}, "Telescope");
-
-    return std::make_shared<const TrackingGeometry>(trackVolume);
-  }
-
-  RotationMatrix3 rotation = RotationMatrix3::Identity();
-  std::shared_ptr<const RectangleBounds> rBounds = nullptr;
-  std::shared_ptr<const ISurfaceMaterial> surfaceMaterial = nullptr;
-
-  std::vector<std::shared_ptr<DetectorElementStub>> detectorStore;
-
-  std::reference_wrapper<const GeometryContext> geoContext;
-};
-
-// Construct a straight-line propagator.
-StraightPropagator makeStraightPropagator(
-    std::shared_ptr<const TrackingGeometry> geo) {
-  Navigator::Config cfg{std::move(geo)};
-  cfg.resolvePassive = false;
-  cfg.resolveMaterial = true;
-  cfg.resolveSensitive = true;
-  Navigator navigator(cfg);
-  StraightLineStepper stepper;
-  return StraightPropagator(stepper, std::move(navigator));
-}
-
-// Construct a propagator using a constant magnetic field along z.
-ConstantFieldPropagator makeConstantFieldPropagator(
-    std::shared_ptr<const TrackingGeometry> geo, double bz,
-    std::unique_ptr<const Logger> logger) {
-  Navigator::Config cfg{std::move(geo)};
-  cfg.resolvePassive = false;
-  cfg.resolveMaterial = true;
-  cfg.resolveSensitive = true;
-  Navigator navigator(cfg, logger->cloneWithSuffix("Nav"));
-  auto field = std::make_shared<ConstantBField>(Vector3(0.0, 0.0, bz));
-  ConstantFieldStepper stepper(std::move(field));
-  return ConstantFieldPropagator(std::move(stepper), std::move(navigator),
-                                 logger->cloneWithSuffix("Prop"));
-}
-
-// Construct initial track parameters.
-BoundTrackParameters makeParameters() {
-  // create covariance matrix from reasonable standard deviations
-  BoundVector stddev;
-  stddev[eBoundLoc0] = 100_um;
-  stddev[eBoundLoc1] = 100_um;
-  stddev[eBoundTime] = 25_ns;
-  stddev[eBoundPhi] = 0.5_degree;
-  stddev[eBoundTheta] = 0.5_degree;
-  stddev[eBoundQOverP] = 1 / 100_GeV;
-  BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
-
-  auto loc0 = 0. + stddev[eBoundLoc0] * normalDist(rng);
-  auto loc1 = 0. + stddev[eBoundLoc1] * normalDist(rng);
-  auto t = 42_ns + stddev[eBoundTime] * normalDist(rng);
-  auto phi = 0_degree + stddev[eBoundPhi] * normalDist(rng);
-  auto theta = 90_degree + stddev[eBoundTheta] * normalDist(rng);
-  auto qOverP = 1_e / 1_GeV + stddev[eBoundQOverP] * normalDist(rng);
-
-  // define a track in the transverse plane along x
-  Vector4 mPos4(-1_m, loc0, loc1, t);
-
-  return BoundTrackParameters::createCurvilinear(mPos4, phi, theta, qOverP, cov,
-                                                 ParticleHypothesis::pion());
-}
-
-// detector resolutions
-const MeasurementResolution resPixel = {MeasurementType::eLoc01,
-                                        {30_um, 50_um}};
-const MeasurementResolutionMap resolutions = {
-    {GeometryIdentifier(), resPixel},
-};
-
-struct KalmanFitterInputTrajectory {
-  // The source links
-  std::vector<TestSourceLink> sourceLinks;
-  // The start parameters
-  std::optional<BoundTrackParameters> startParameters;
-};
-
-///
-/// Function to create trajectories for kalman fitter
-///
-std::vector<KalmanFitterInputTrajectory> createTrajectories(
-    std::shared_ptr<const TrackingGeometry> geo, std::size_t nTrajectories) {
-  // simulation propagator
-  const auto simPropagator = makeStraightPropagator(std::move(geo));
-
-  std::vector<KalmanFitterInputTrajectory> trajectories;
-  trajectories.reserve(nTrajectories);
-
-  for (unsigned int iTrack = 0; iTrack < nTrajectories; iTrack++) {
-    auto start = makeParameters();
-    // Launch and collect - the measurements
-    auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
-                                           resolutions, rng);
-
-    // Extract measurements from result of propagation.
-    KalmanFitterInputTrajectory traj;
-    traj.startParameters = start;
-    traj.sourceLinks = measurements.sourceLinks;
-
-    trajectories.push_back(std::move(traj));
-  }
-  return trajectories;
-}
-}  // namespace
-
+using namespace Acts::UnitConstants;
 ///
 /// @brief Unit test for KF-based alignment algorithm
 ///
 BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
+  aliTestUtils utils;
   // Build detector
-  TelescopeDetector detector(geoCtx);
+  TelescopeDetector detector(utils.geoCtx);
   const auto geometry = detector();
 
   // reconstruction propagator and fitter
@@ -284,28 +39,30 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
 
   // alignment
   auto alignLogger = getDefaultLogger("Alignment", Logging::INFO);
-  const auto alignZero = Alignment(std::move(kfZero), std::move(alignLogger));
+  const auto alignZero =
+      ActsAlignment::Alignment(std::move(kfZero), std::move(alignLogger));
 
   // Create 10 trajectories
-  const auto& trajectories = createTrajectories(geometry, 10);
+  const auto& trajectories = createTrajectories(geometry, 10, utils);
 
   // Construct the KalmanFitter options
 
-  auto extensions = getExtensions();
+  auto extensions = getExtensions(utils);
   TestSourceLink::SurfaceAccessor surfaceAccessor{*geometry};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
-  KalmanFitterOptions kfOptions(geoCtx, magCtx, calCtx, extensions,
-                                PropagatorPlainOptions(geoCtx, magCtx));
+  KalmanFitterOptions kfOptions(
+      utils.geoCtx, utils.magCtx, utils.calCtx, extensions,
+      PropagatorPlainOptions(utils.geoCtx, utils.magCtx));
 
   // Construct a non-updating alignment updater
-  AlignedTransformUpdater voidAlignUpdater =
+  ActsAlignment::AlignedTransformUpdater voidAlignUpdater =
       [](SurfacePlacementBase* /*element*/, const GeometryContext& /*gctx*/,
          const Transform3& /*transform*/) { return true; };
 
   // Construct the alignment options
-  AlignmentOptions<KalmanFitterOptions<VectorMultiTrajectory>> alignOptions(
-      kfOptions, voidAlignUpdater);
+  ActsAlignment::AlignmentOptions<KalmanFitterOptions<VectorMultiTrajectory>>
+      alignOptions(kfOptions, voidAlignUpdater);
   alignOptions.maxIterations = 1;
 
   // Set the surfaces to be aligned (fix the layer 8)
@@ -327,7 +84,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
 
   auto evaluateRes = alignZero.evaluateTrackAlignmentState(
       kfOptions.geoContext, inputTraj.sourceLinks, *inputTraj.startParameters,
-      kfOptions, idxedAlignSurfaces, AlignmentMask::All);
+      kfOptions, idxedAlignSurfaces, ActsAlignment::AlignmentMask::All);
   BOOST_CHECK(evaluateRes.ok());
 
   const auto& alignState = evaluateRes.value();

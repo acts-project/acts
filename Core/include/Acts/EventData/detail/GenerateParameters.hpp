@@ -113,7 +113,7 @@ inline std::pair<double, double> generateBoundDirection(
   // monothonical decreasing between [0, pi]
   double cosThetaMin = std::cos(options.thetaMax);
   // ensure upper bound is included. see e.g.
-  // https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
+  // https://en.cppreference.com/cpp/numeric/random/uniform_real_distribution
   double cosThetaMax = std::nextafter(std::cos(options.thetaMin),
                                       std::numeric_limits<double>::max());
 
@@ -192,7 +192,7 @@ inline double generateQoverP(generator_t& rng,
   const double q = qChoices[type];
 
   const double p = drawP(rng, theta);
-  const double qOverP = (q != 0) ? q / p : 1 / p;
+  const double qOverP = q / p;
 
   return qOverP;
 }

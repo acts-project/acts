@@ -15,10 +15,16 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -287,6 +293,38 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceAlignment) {
   Matrix<2, 3> expLoc3DToLocBound = Matrix<2, 3>::Zero();
   expLoc3DToLocBound << -1, 0, std::numbers::pi / 2. * std::tan(alpha), 0, 0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
+}
+
+BOOST_AUTO_TEST_CASE(ConeSurfaceMaterialAssignment) {
+  const double alpha = 0.3;
+  auto surface = Surface::makeShared<ConeSurface>(Transform3::Identity(), alpha,
+                                                  true /*symmetric*/);
+  MaterialSlab slab(Material::fromMolarDensity(1., 2., 3., 4., 5.), 0.1);
+
+  // HomogeneousSurfaceMaterial is always valid
+  auto homMat = std::make_shared<HomogeneousSurfaceMaterial>(slab);
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(homMat));
+  BOOST_CHECK_NE(surface->surfaceMaterial(), nullptr);
+
+  // nullptr clears the material
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(nullptr));
+  BOOST_CHECK_EQUAL(surface->surfaceMaterial(), nullptr);
+
+  // 1D AxisZ - valid for cone
+  BinUtility buZ(10, -100.f, 100.f, Acts::open, AxisDirection::AxisZ);
+  auto matZ = std::make_shared<BinnedSurfaceMaterial>(
+      buZ, MaterialSlabVector(10, slab));
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(matZ));
+
+  // Wrong axis directions - should throw
+  for (auto badDir : {AxisDirection::AxisR, AxisDirection::AxisPhi,
+                      AxisDirection::AxisX, AxisDirection::AxisY}) {
+    BinUtility buBad(10, 0.f, 10.f, Acts::open, badDir);
+    auto matBad = std::make_shared<BinnedSurfaceMaterial>(
+        buBad, MaterialSlabVector(10, slab));
+    BOOST_CHECK_THROW(surface->assignSurfaceMaterial(matBad),
+                      std::invalid_argument);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

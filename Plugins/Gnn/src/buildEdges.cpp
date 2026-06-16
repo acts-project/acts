@@ -19,7 +19,7 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
-#ifndef ACTS_GNN_CPUONLY
+#ifdef ACTS_GNN_WITH_CUDA
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <grid/counting_sort.h>
@@ -67,7 +67,7 @@ torch::Tensor ActsPlugins::detail::postprocessEdgeTensor(torch::Tensor edges,
 torch::Tensor ActsPlugins::detail::buildEdgesFRNN(torch::Tensor &embedFeatures,
                                                   float rVal, int kVal,
                                                   bool flipDirections) {
-#ifndef ACTS_GNN_CPUONLY
+#ifdef ACTS_GNN_WITH_CUDA
   const auto device = embedFeatures.device();
 
   const std::int64_t numSpacePoints = embedFeatures.size(0);
@@ -267,13 +267,10 @@ torch::Tensor ActsPlugins::detail::buildEdgesKDTree(
 torch::Tensor ActsPlugins::detail::buildEdges(torch::Tensor &embedFeatures,
                                               float rVal, int kVal,
                                               bool flipDirections) {
-#ifndef ACTS_GNN_CPUONLY
-  if (torch::cuda::is_available()) {
+#ifdef ACTS_GNN_WITH_CUDA
+  if (embedFeatures.is_cuda()) {
     return detail::buildEdgesFRNN(embedFeatures, rVal, kVal, flipDirections);
-  } else {
-    return detail::buildEdgesKDTree(embedFeatures, rVal, kVal, flipDirections);
   }
-#else
-  return detail::buildEdgesKDTree(embedFeatures, rVal, kVal, flipDirections);
 #endif
+  return detail::buildEdgesKDTree(embedFeatures, rVal, kVal, flipDirections);
 }

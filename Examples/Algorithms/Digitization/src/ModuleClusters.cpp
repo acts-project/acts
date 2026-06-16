@@ -9,6 +9,7 @@
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 
 #include "Acts/Clusterization/Clusterization.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -85,7 +86,7 @@ void clusterAddCell(std::vector<ModuleValue>& cl, const ModuleValue& ce) {
   cl.push_back(ce);
 }
 
-std::vector<ModuleValue> ModuleClusters::createCellCollection() {
+std::vector<ModuleValue> ModuleClusters::createCellCollection() const {
   std::map<ActsFatras::Segmentizer::Bin2D, ModuleValue> uniqueCells;
   for (const ModuleValue& mval : m_moduleValues) {
     if (!std::holds_alternative<Cluster::Cell>(mval.value)) {
@@ -147,7 +148,7 @@ void ModuleClusters::merge() {
 
 // ATTN: returns vector of index into `indices'
 std::vector<std::size_t> ModuleClusters::nonGeoEntries(
-    std::vector<Acts::BoundIndices>& indices) {
+    std::vector<Acts::BoundIndices>& indices) const {
   std::vector<std::size_t> retv;
   for (std::size_t i = 0; i < indices.size(); i++) {
     auto idx = indices.at(i);
@@ -160,7 +161,7 @@ std::vector<std::size_t> ModuleClusters::nonGeoEntries(
 
 // Merging based on parameters
 std::vector<std::vector<ModuleValue>> ModuleClusters::mergeParameters(
-    std::vector<ModuleValue> values) {
+    std::vector<ModuleValue> values) const {
   std::vector<std::vector<ModuleValue>> retv;
 
   std::vector<bool> used(values.size(), false);
@@ -234,14 +235,19 @@ std::vector<std::vector<ModuleValue>> ModuleClusters::mergeParameters(
   return retv;
 }
 
-ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
-  ModuleValue mval;
+ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) const {
+  if (values.empty()) {
+    throw std::runtime_error("Cannot squash empty cluster!");
+  }
+
+  ModuleValue result;
+
   double tot = 0;
   double tot2 = 0;
   std::vector<double> weights;
 
   // First, start by computing cell weights
-  for (ModuleValue& other : values) {
+  for (const ModuleValue& other : values) {
     if (std::holds_alternative<Cluster::Cell>(other.value)) {
       weights.push_back(std::get<Cluster::Cell>(other.value).activation);
     } else {
@@ -251,29 +257,11 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
     tot2 += weights.back() * weights.back();
   }
 
-  // Now, go over the non-geometric indices
-  for (std::size_t i = 0; i < values.size(); i++) {
-    ModuleValue& other = values.at(i);
-    for (std::size_t j = 0; j < other.paramIndices.size(); j++) {
-      auto idx = other.paramIndices.at(j);
-      if (!rangeContainsValue(m_geoIndices, idx)) {
-        if (!rangeContainsValue(mval.paramIndices, idx)) {
-          mval.paramIndices.push_back(idx);
-        }
-        if (mval.paramValues.size() < (j + 1)) {
-          mval.paramValues.push_back(0);
-          mval.paramVariances.push_back(0);
-        }
-        double f = weights.at(i) / (tot > 0 ? tot : 1);
-        double f2 = weights.at(i) * weights.at(i) / (tot2 > 0 ? tot2 : 1);
-        mval.paramValues.at(j) += f * other.paramValues.at(j);
-        mval.paramVariances.at(j) += f2 * other.paramVariances.at(j);
-      }
-    }
-  }
-
-  // Now do the geometric indices
-  Cluster clus;
+  // Do the geometric indices first: they precede the smeared ones in
+  // the parameter vectors filled by the digitization algorithm, so
+  // seeding `result' with them keeps the slot positions used in the
+  // non-geometric accumulation below aligned with the source layout.
+  Cluster cluster;
 
   const auto& binningData = m_segmentation.binningData();
   Acts::Vector2 pos(0., 0.);
@@ -285,26 +273,26 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
   std::size_t b1max = 0;
 
   for (std::size_t i = 0; i < values.size(); i++) {
-    ModuleValue& other = values.at(i);
+    const ModuleValue& other = values.at(i);
     if (!std::holds_alternative<Cluster::Cell>(other.value)) {
       continue;
     }
 
     Cluster::Cell ch = std::get<Cluster::Cell>(other.value);
-    auto bin = ch.bin;
+    const auto bin = ch.bin;
 
-    std::size_t b0 = bin[0];
-    std::size_t b1 = bin[1];
+    const std::size_t b0 = bin[0];
+    const std::size_t b1 = bin[1];
 
     b0min = std::min(b0min, b0);
     b0max = std::max(b0max, b0);
     b1min = std::min(b1min, b1);
     b1max = std::max(b1max, b1);
 
-    float p0 = binningData[0].center(b0);
-    float w0 = binningData[0].width(b0);
-    float p1 = binningData[1].center(b1);
-    float w1 = binningData[1].width(b1);
+    const float p0 = binningData[0].center(b0);
+    const float w0 = binningData[0].width(b0);
+    const float p1 = binningData[1].center(b1);
+    const float w1 = binningData[1].width(b1);
 
     pos += Acts::Vector2(weights.at(i) * p0, weights.at(i) * p1);
     // Assume uniform distribution to compute error
@@ -313,33 +301,62 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
     var += Acts::Vector2(weights.at(i) * weights.at(i) * w0 * w0 / 12,
                          weights.at(i) * weights.at(i) * w1 * w1 / 12);
 
-    clus.channels.push_back(std::move(ch));
+    cluster.channels.push_back(std::move(ch));
 
     // Will have the right value at last iteration Do it here to
     // avoid having bogus values when there are no clusters
-    clus.sizeLoc0 = b0max - b0min + 1;
-    clus.sizeLoc1 = b1max - b1min + 1;
+    cluster.sizeLoc0 = b0max - b0min + 1;
+    cluster.sizeLoc1 = b1max - b1min + 1;
+  }
+
+  if (!m_geoIndices.empty() && cluster.channels.empty()) {
+    throw std::runtime_error(
+        "Expected to have at least one cell for a cluster with geo indices!");
   }
 
   if (tot > 0) {
     pos /= tot;
-    var /= (tot * tot);
+    var /= tot * tot;
   }
 
-  for (auto idx : m_geoIndices) {
-    mval.paramIndices.push_back(idx);
-    mval.paramValues.push_back(pos[idx]);
-    mval.paramVariances.push_back(var[idx]);
+  for (const Acts::BoundIndices idx : m_geoIndices) {
+    result.paramIndices.push_back(idx);
+    result.paramValues.push_back(pos[idx]);
+    result.paramVariances.push_back(var[idx]);
   }
 
-  mval.value = std::move(clus);
+  // Now, go over the non-geometric indices. Each source value carries
+  // the geometric entries (if any) first, in `m_geoIndices' order, so
+  // after seeding `result' with the geometric entries above the source
+  // position `j' is also the correct slot in `result'.
+  for (std::size_t i = 0; i < values.size(); i++) {
+    const ModuleValue& other = values.at(i);
+    for (std::size_t j = 0; j < other.paramIndices.size(); j++) {
+      const Acts::BoundIndices idx = other.paramIndices.at(j);
+      if (!rangeContainsValue(m_geoIndices, idx)) {
+        if (!rangeContainsValue(result.paramIndices, idx)) {
+          result.paramIndices.push_back(idx);
+        }
+        if (result.paramValues.size() < j + 1) {
+          result.paramValues.push_back(0);
+          result.paramVariances.push_back(0);
+        }
+        double f = weights.at(i) / (tot > 0 ? tot : 1);
+        double f2 = weights.at(i) * weights.at(i) / (tot2 > 0 ? tot2 : 1);
+        result.paramValues.at(j) += f * other.paramValues.at(j);
+        result.paramVariances.at(j) += f2 * other.paramVariances.at(j);
+      }
+    }
+  }
+
+  result.value = std::move(cluster);
 
   // Finally do the hit association
   for (ModuleValue& other : values) {
-    mval.sources.merge(other.sources);
+    result.sources.merge(other.sources);
   }
 
-  return mval;
+  return result;
 }
 
 }  // namespace ActsExamples

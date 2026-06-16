@@ -35,8 +35,6 @@ class ModuleMapCuda : public GraphConstructionBase {
     /// Pseudorapidity scaling factor
     float etaScale = 1.0;
 
-    /// Enable more parallel execution
-    bool moreParallel = true;
     /// CUDA device ID
     int gpuDevice = 0;
     /// Number of GPU blocks
