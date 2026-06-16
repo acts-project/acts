@@ -83,10 +83,6 @@ EXCLUDE_FILES = (
     # Python uv files
     "Detray/codegen/detray-sympy/uv.lock",
     "Detray/python/detray/uv.lock",
-    # Temporarily excluded files. TODO remove in next major release.
-    "Core/include/Acts/EventData/detail/ParameterTraits.hpp",
-    "Core/include/Acts/Seeding/PathSeeder.hpp",
-    "Tests/CommonHelpers/include/ActsTests/CommonHelpers/TestSpacePoint.hpp",
 )
 SUFFIX_CPP = (
     ".hpp",

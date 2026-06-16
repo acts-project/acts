@@ -13,12 +13,14 @@
 #include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
+#include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
@@ -229,7 +231,11 @@ void addGeometryGen3(py::module_& m) {
   using Experimental::MaterialDesignatorBlueprintNode;
   using Experimental::StaticBlueprintNode;
 
-  py::class_<Portal>(m, "Portal");
+  py::class_<Portal>(m, "Portal")
+      .def_property_readonly(
+          "surface",
+          [](Portal& self) -> const Surface& { return self.surface(); },
+          py::return_value_policy::reference_internal);
 
   auto blueprintNode =
       py::class_<BlueprintNode, std::shared_ptr<BlueprintNode>>(
@@ -299,7 +305,9 @@ void addGeometryGen3(py::module_& m) {
   py::class_<BlueprintOptions>(m, "BlueprintOptions")
       .def(py::init<>())
       .def_readwrite("defaultNavigationPolicyFactory",
-                     &BlueprintOptions::defaultNavigationPolicyFactory);
+                     &BlueprintOptions::defaultNavigationPolicyFactory)
+      .def_readwrite("keepGoingOnMaterialMergeFailure",
+                     &BlueprintOptions::keepGoingOnMaterialMergeFailure);
 
   py::class_<BlueprintNode::MutableChildRange>(blueprintNode,
                                                "MutableChildRange")

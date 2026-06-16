@@ -43,6 +43,7 @@
 #include <iomanip>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <ranges>
 #include <sstream>
 
@@ -140,7 +141,7 @@ inline auto record_propagation(
     const free_track_parameters<typename detector_t::algebra_type> &track,
     const pdg_particle<typename detector_t::scalar_type> ptc_hypo =
         muon<typename detector_t::scalar_type>(),
-    const bfield_t &bfield = {},
+    const std::optional<bfield_t> &bfield = {},
     const navigation::direction nav_dir = navigation::direction::e_forward,
     typename actor_chain<actor_ts...>::state_ref_tuple state_tuple = {},
     const std::array<dscalar<typename detector_t::algebra_type>, e_bound_size>
@@ -214,10 +215,12 @@ inline auto record_propagation(
     propagation =
         std::make_unique<typename propagator_t::state>(track, det, ctx);
   } else {
-    typename propagator_t::stepper_type::magnetic_field_type bfield_view(
-        bfield);
-    propagation = std::make_unique<typename propagator_t::state>(
-        track, bfield_view, det, ctx);
+    if (!bfield.has_value()) {
+      DETRAY_FATAL_HOST("No bfield passed for RKN stepper!");
+      std::exit(EXIT_FAILURE);
+    }
+    propagation = std::make_unique<typename propagator_t::state>(track, *bfield,
+                                                                 det, ctx);
   }
 
   // Set the initial covariances
@@ -273,10 +276,12 @@ inline auto record_propagation(
       fw_propagation =
           std::make_unique<typename fw_propagator_t::state>(track, det, ctx);
     } else {
-      typename fw_propagator_t::stepper_type::magnetic_field_type bfield_view(
-          bfield);
+      if (!bfield.has_value()) {
+        DETRAY_FATAL_HOST("No bfield passed for RKN stepper!");
+        std::exit(EXIT_FAILURE);
+      }
       fw_propagation = std::make_unique<typename fw_propagator_t::state>(
-          track, bfield_view, det, ctx);
+          track, *bfield, det, ctx);
     }
 
     // Make a deep copy of states for forward propagation, but omit the
@@ -1040,7 +1045,8 @@ auto compare_to_navigation(
     vecmem::host_memory_resource &host_mr, const detector_t &det,
     const typename detector_t::name_map &names,
     const typename detector_t::geometry_context ctx,
-    const field_view_t field_view, const propagation::config &prop_cfg,
+    const std::optional<field_view_t> field_view,
+    const propagation::config &prop_cfg,
     std::vector<dvector<navigation::detail::candidate_record<intersection_t>>>
         &truth_traces,
     const std::vector<free_track_parameters<algebra_t>> &tracks,

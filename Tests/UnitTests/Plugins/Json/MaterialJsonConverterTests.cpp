@@ -11,6 +11,7 @@
 #include "Acts/Material/GridSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Material/MergedMaterialMarker.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "ActsPlugins/Json/MaterialJsonConverter.hpp"
@@ -155,6 +156,24 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial2DTests) {
   const ISurfaceMaterial* ismRead = nullptr;
   from_json(jMaterial, ismRead);
   BOOST_REQUIRE(ismRead != nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(MergedMaterialMarkerRoundTrip) {
+  // The marker left behind by a lossy portal merge must survive a JSON
+  // round-trip so it can be picked up by downstream tooling.
+  const ISurfaceMaterial* marker = new MergedMaterialMarker();
+
+  nlohmann::json jMaterial = marker;
+  BOOST_REQUIRE(jMaterial.find("material") != jMaterial.end());
+  BOOST_CHECK_EQUAL(jMaterial["material"]["type"], "merged-material-marker");
+
+  const ISurfaceMaterial* markerRead = nullptr;
+  from_json(jMaterial, markerRead);
+  BOOST_REQUIRE(markerRead != nullptr);
+  BOOST_CHECK(dynamic_cast<const MergedMaterialMarker*>(markerRead) != nullptr);
+
+  delete marker;
+  delete markerRead;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
