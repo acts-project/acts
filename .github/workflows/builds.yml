@@ -164,6 +164,7 @@ jobs:
           secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
   linux_examples_test:
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
@@ -173,7 +174,6 @@ jobs:
       packages: read
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
     needs: [linux_ubuntu, changes]
-    if: github.event_name != 'pull_request' || needs.changes.outputs.acts == 'true'
     env:
       # Enforce FPE masking on the RelWithDebInfo (github-ci-fpe) build: source
       # locations resolve, so the test_fpe.py masking tests run instead of being
@@ -282,6 +282,8 @@ jobs:
         run: |
           git config --global safe.directory "$GITHUB_WORKSPACE"
           source .env
+          # DEBUG for the physmon CI test, do not merge: show the runner's size.
+          nproc; grep -E 'MemTotal|MemAvailable' /proc/meminfo
           # The jobs may reserve 12 GB of the runner's 16 GB of memory together.
           # --keep-incomplete keeps the summary when a comparison fails and
           # the summary rule exits 1.
@@ -307,6 +309,7 @@ jobs:
   linux_ubuntu_extra:
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
@@ -428,6 +431,9 @@ jobs:
   # keeps requiring them.
   # ─────────────────────────────────────────────────────────────────────
   changes:
+    # Gates gnn_build, gnn_tensorrt and cuda_muon_build, which in turn gate
+    # gnn_gpu and cuda_muon_gpu. Skipping it here skips all five.
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -926,10 +932,10 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────
   lcg:
     needs: changes
-    if: github.event_name != 'pull_request' || needs.changes.outputs.acts == 'true'
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     name: lcg_${{ matrix.tag }}
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: [self-hosted, linux, x64, husk-size-standard, cvmfs]
     permissions:
       contents: read
@@ -1294,6 +1300,7 @@ jobs:
   macos:
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: macos-26
     permissions:
       contents: read
@@ -1400,9 +1407,9 @@ jobs:
 
   external_eic-shell:
     needs: changes
-    if: github.event_name != 'pull_request' || needs.changes.outputs.acts == 'true'
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -1567,9 +1574,9 @@ jobs:
   # `cvmfs` label binds the repositories in, so nothing has to mount them.
   external_key4hep-nightlies:
     needs: changes
-    if: github.event_name != 'pull_request' || needs.changes.outputs.acts == 'true'
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: [self-hosted, linux, x64, husk-size-standard, cvmfs]
     permissions:
       contents: read
@@ -1703,9 +1710,9 @@ jobs:
 
   linux_ubuntu_python_wheel:
     needs: changes
-    if: github.event_name != 'pull_request' || needs.changes.outputs.acts == 'true'
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: ubuntu-latest
     permissions:
       contents: read

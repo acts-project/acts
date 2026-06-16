@@ -1,40 +1,8 @@
 name: Detray
 
 on:
-  push:
-    # The release branches (keep in sync with release.yml) carry a tree the
-    # merge queue has already built. The queue's own temp ref triggers
-    # merge_group below; a push run there shares its concurrency group and
-    # evicts the PR from the queue.
-    branches-ignore:
-      - 'releases'
-      - 'release/**'
-      - 'gh-readonly-queue/**'
-    # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
-    paths:
-      - "Detray/**"
-      - ".github/workflows/detray.yml"
-      - ".github/actions/dependencies/**"
-      - ".github/actions/ccache-s3/**"
-      - "CI/ccache_snapshot.py*"
-      - "CI/ccache_stats.sh"
-      - ".github/detray-traccc-filters.yml"
-  pull_request:
-    branches:
-      - main
-    # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
-    paths:
-      - "Detray/**"
-      - ".github/workflows/detray.yml"
-      - ".github/actions/dependencies/**"
-      - ".github/actions/ccache-s3/**"
-      - "CI/ccache_snapshot.py*"
-      - "CI/ccache_stats.sh"
-      - ".github/detray-traccc-filters.yml"
-  # The changes job applies path filtering to merge groups, which do not
-  # support the workflow-level path filters above.
-  merge_group:
-    types: [checks_requested]
+  # DISABLED for physmon CI test — manual trigger only. Do not merge.
+  workflow_dispatch:
 
 # Cancel existing jobs on new pushes.
 concurrency:
