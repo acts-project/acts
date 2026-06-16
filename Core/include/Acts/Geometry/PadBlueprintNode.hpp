@@ -33,6 +33,8 @@ namespace Acts::Experimental {
 class PadBlueprintNode final : public StaticBlueprintNode {
  public:
   /// Main constructor for the padding node.
+  /// @param name The name of the padded volume.
+  /// @param envelope The envelope to apply to the child node's extent to create the padded volume.
   explicit PadBlueprintNode(const std::string& name,
                             const ExtentEnvelope& envelope);
 
