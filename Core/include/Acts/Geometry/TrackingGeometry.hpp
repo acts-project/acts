@@ -48,9 +48,8 @@ struct TransparentStringHash {
 };
 
 /// Map from portal tag to portal, with transparent string lookup.
-using PortalTagMap =
-    std::unordered_map<std::string, const Portal*, TransparentStringHash,
-                       std::equal_to<>>;
+using PortalTagMap = std::unordered_map<std::string, const Portal*,
+                                        TransparentStringHash, std::equal_to<>>;
 }  // namespace detail
 
 // Forward declaration only, the implementation is hidden in the .cpp file.
