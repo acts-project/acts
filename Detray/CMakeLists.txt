@@ -7,7 +7,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # Set up the project.
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.21)
 project(detray VERSION 0.111.0 LANGUAGES CXX)
 
 # Set up the used C++ standard(s).
@@ -19,11 +19,13 @@ set(CMAKE_SYCL_STANDARD 20 CACHE STRING "The (SYCL) C++ standard to use")
 set(CMAKE_HIP_STANDARD 20 CACHE STRING "The (HIP) C++ standard to use")
 set(CMAKE_HIP_EXTENSIONS FALSE CACHE BOOL "Disable (HIP) C++ extensions")
 
-if(${CMAKE_CXX_STANDARD} LESS 20)
-    message(
-        SEND_ERROR
-        "CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}, but detray requires C++>=20"
-    )
+if(PROJECT_IS_TOP_LEVEL)
+    if(${CMAKE_CXX_STANDARD} LESS 20)
+        message(
+            SEND_ERROR
+            "CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}, but detray requires C++>=20"
+        )
+    endif()
 endif()
 
 # Explicitly set the output directory for the binaries. Such that if this
@@ -244,12 +246,10 @@ if(DETRAY_SETUP_VECMEM)
         find_package(vecmem ${DETRAY_VECMEM_VERSION} REQUIRED)
     else()
         add_subdirectory(extern/vecmem)
-        # Make the "VecMem language code" available for the whole project.
-        include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
     endif()
+    # Make the "VecMem language code" available for the whole project.
+    list(APPEND CMAKE_MODULE_PATH "${VECMEM_LANGUAGE_DIR}")
 endif()
-
-include(vecmem-check-language)
 
 # Set up JSON for I/O
 option(

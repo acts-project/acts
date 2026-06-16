@@ -90,6 +90,9 @@ def addAlignmentSandbox(
     inputTracks: str = "ckf_tracks",
     logLevel: acts.logging.Level = acts.logging.INFO,
     milleOutput: str = "MilleBinary.root",
+    discardUnconstrainedTrackPar: bool = True,
+    outFileInternalSolving: str = "ActsInternalAlignment_Result.txt",
+    outFileDecomposition: str = "ActsInternalAlignment_Eigenvals.txt",
 ):
     sandbox = MillePedeAlignmentSandbox(
         level=logLevel,
@@ -99,6 +102,9 @@ def addAlignmentSandbox(
         trackingGeometry=trackingGeometry,
         magneticField=magField,
         fixModules=fixModules,
+        discardUnconstrainedTrackPar=discardUnconstrainedTrackPar,
+        outFileInternalSolving=outFileInternalSolving,
+        outFileDecomposition=outFileDecomposition,
     )
     s.addAlgorithm(sandbox)
     return s
@@ -111,6 +117,7 @@ def addSolverFromMille(
     fixModules: set,
     logLevel: acts.logging.Level = acts.logging.INFO,
     milleInput: str = "MilleBinary.root",
+    outFile: str = "ActsAlignmentViaMille.txt",
 ):
 
     solver = ActsSolverFromMille(
@@ -119,6 +126,7 @@ def addSolverFromMille(
         trackingGeometry=trackingGeometry,
         magneticField=magField,
         fixModules=fixModules,
+        outFile=outFile,
     )
     s.addAlgorithm(solver)
     return s
@@ -179,7 +187,11 @@ contextDecorators = [alignDeco]
 # decide on at least on detector module to fix in place
 # as a reference for the alignment.
 # By default, fix the innermost layer.
-fixModules = {acts.GeometryIdentifier(layer=2, volume=1, sensitive=1)}
+fixModules = {
+    acts.GeometryIdentifier(layer=2, volume=1, sensitive=1),
+    acts.GeometryIdentifier(layer=10, volume=1, sensitive=1),
+    acts.GeometryIdentifier(layer=18, volume=1, sensitive=1),
+}
 
 
 # More Boilerplate code - for setting up the sequence

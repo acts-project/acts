@@ -8,6 +8,7 @@
 
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/Io/Root/RootAthenaDumpReader.hpp"
+#include "ActsExamples/Io/Root/RootAthenaDumpWriter.hpp"
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
@@ -25,6 +26,7 @@
 #include "ActsExamples/Io/Root/RootSeedWriter.hpp"
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
+#include "ActsExamples/Io/Root/RootSpacePointPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootSpacePointWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFinderNTupleWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFinderPerformanceWriter.hpp"
@@ -79,12 +81,13 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
     ACTS_PYTHON_DECLARE_READER(
         RootAthenaDumpReader, root, "RootAthenaDumpReader", treename,
-        inputfiles, outputMeasurements, outputPixelSpacePoints,
-        outputStripSpacePoints, outputSpacePoints, outputClusters,
-        outputMeasurementParticlesMap, outputParticleMeasurementsMap,
-        outputParticles, onlySpacePoints, onlyPassedParticles,
-        skipOverlapSPsPhi, skipOverlapSPsEta, geometryIdMap, trackingGeometry,
-        absBoundaryTolerance, noTruth, readCellData);
+        inputfiles, outputMeasurements, outputMeasurementSubset,
+        outputPixelSpacePoints, outputStripSpacePoints, outputSpacePoints,
+        outputClusters, outputMeasurementParticlesMap,
+        outputParticleMeasurementsMap, outputParticles, onlySpacePoints,
+        onlyPassedParticles, skipOverlapSPsPhi, skipOverlapSPsEta,
+        geometryIdMap, trackingGeometry, absBoundaryTolerance, noTruth,
+        readCellData);
 
 #ifdef WITH_GEOMODEL_PLUGIN
     ACTS_PYTHON_DECLARE_READER(RootAthenaDumpGeoIdCollector, root,
@@ -250,7 +253,20 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootSpacePointWriter, root, "RootSpacePointWriter", inputSpacePoints,
-        inputMeasurementParticlesMap, filePath, fileMode, treeName);
+        inputSimHits, inputMeasurementParticlesMap, inputMeasurementSimHitsMap,
+        trackingGeometry, filePath, fileMode, treeName);
+
+    ACTS_PYTHON_DECLARE_WRITER(
+        RootSpacePointPerformanceWriter, root,
+        "RootSpacePointPerformanceWriter", inputSpacePoints, inputParticles,
+        inputMeasurements, inputSimHits, inputMeasurementSimHitsMap,
+        inputMeasurementParticlesMap, trackingGeometry, stripGeometrySelection,
+        filePath, fileMode, treeName, zAxis, rAxis, etaAxis, phiAxis);
+
+    ACTS_PYTHON_DECLARE_WRITER(
+        RootAthenaDumpWriter, root, "RootAthenaDumpWriter", inputParticles,
+        inputClusters, inputMeasurements, inputMeasParticleMap,
+        inputSpacePoints, filePath, treeName);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackStatesWriter, root, "RootTrackStatesWriter", inputTracks,

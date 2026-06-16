@@ -79,6 +79,7 @@ def runTrackFindingPythonOnly(
         )
     )
 
+    # Option 1: Implement a track finding algorithm...
     class PythonTrackFinder(acts.examples.IAlgorithm):
         def __init__(self, name, level):
             acts.examples.IAlgorithm.__init__(self, name, level)
@@ -110,6 +111,18 @@ def runTrackFindingPythonOnly(
 
     s.addAlgorithm(PythonTrackFinder("PythonTrackFinder", acts.logging.INFO))
 
+    # ... or option 2: use truth values
+    truthTrkFndAlg = acts.examples.TruthTrackFinder(
+        level=acts.logging.INFO,
+        inputParticles="particles_generated_selected",
+        inputMeasurements="measurements",
+        inputParticleMeasurementsMap="particle_measurements_map",
+        inputSimHits="simhits",
+        inputMeasurementSimHitsMap="measurement_simhits_map",
+        outputProtoTracks="prototracks",
+    )
+    # s.addAlgorithm(truthTrkFndAlg)
+
     class PythonTrackFitter(acts.examples.IAlgorithm):
         def __init__(self, name, level):
             acts.examples.IAlgorithm.__init__(self, name, level)
@@ -124,14 +137,41 @@ def runTrackFindingPythonOnly(
             )
             self.tracks.initialize("fitted_tracks")
 
+            self.spacepoints = acts.examples.ReadDataHandle(
+                self, acts.SpacePointContainer2, "Spacepoints"
+            )
+            self.spacepoints.initialize("spacepoints")
+
         def execute(self, context):
             prototracks = self.prototracks(context.eventStore)
+            spacepoints = self.spacepoints(context.eventStore)
+
+            measurement_to_spacepoint = {}
+            measurement_to_sourcelink = {}
+            for sp in spacepoints:
+                for sl in sp.sourceLinks:
+                    isl = acts.examples.IndexSourceLink.FromSourceLink(sl)
+                    meas_id = isl.index()
+                    measurement_to_spacepoint[meas_id] = sp
+                    measurement_to_sourcelink[meas_id] = sl
+            surface_map = trackingGeometry.geoIdSurfaceMap()
 
             container = acts.examples.TrackContainer()
             for prototrack in prototracks:
                 track = container.makeTrack()
                 track.parameters = acts.BoundVector(1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
                 track.nMeasurements = len(prototrack)
+
+                for meas_id in prototrack:
+                    sp = measurement_to_spacepoint[meas_id]
+                    sl = measurement_to_sourcelink[meas_id]
+                    isl = acts.examples.IndexSourceLink.FromSourceLink(sl)
+                    sf = surface_map[isl.geometryId()]
+
+                    trackState = track.appendTrackState()
+                    trackState.typeFlags.isMeasurement = True
+                    trackState.uncalibratedSourceLink = sl
+                    trackState.referenceSurface = sf
 
             self.tracks(context, container.makeConst())
             return acts.examples.ProcessCode.SUCCESS
@@ -174,7 +214,9 @@ if __name__ == "__main__":
     field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
 
     digiConfigFile = srcdir / "Examples/Configs/generic-digi-smearing-config.json"
-    geoSelectionConfigFile = srcdir / "Examples/Configs/generic-seeding-config.json"
+    geoSelectionConfigFile = (
+        srcdir / "Examples/Configs/generic-pixel-sstrips-lstrips-spacepoints.json"
+    )
 
     outputDir = Path.cwd() / "output_track_finding_python_only"
     outputDir.mkdir(exist_ok=True)
