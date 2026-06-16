@@ -410,8 +410,7 @@ ProcessCode ColliderMLInputConverter::execute(
 
     // When producing measurements: validate before committing both the simhit
     // and the measurement, so SimHitContainer and MeasurementContainer always
-    // have a 1:1 correspondence (required by TruthTrackFinder's measSimHitsMap
-    // identity assumption, mirroring DigitizationAlgorithm behaviour).
+    // have a 1:1 correspondence.
 
     auto digiIt = m_cfg.digiConfig.find(geoId);
     if (digiIt == m_cfg.digiConfig.end()) {
@@ -424,8 +423,15 @@ ProcessCode ColliderMLInputConverter::execute(
     const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
     if (surface == nullptr) {
       ACTS_ERROR("Hit " << i << " geoId " << geoId
-                        << " not found in tracking geometry — geoIdMap may be "
-                           "stale, regenerate it");
+                        << " not found in tracking geometry");
+      return ProcessCode::ABORT;
+    }
+
+    const Acts::Surface* regSurface =
+        dynamic_cast<const Acts::RegularSurface*>(surface);
+    if (regSurface == nullptr) {
+      ACTS_ERROR("Hit " << i << " geoId " << geoId
+                        << " surface is not a RegularSurface — unsupported");
       return ProcessCode::ABORT;
     }
 
@@ -438,9 +444,8 @@ ProcessCode ColliderMLInputConverter::execute(
     // that the 2D local position is within the sensor boundary + configurable
     // Euclidean tolerance. Out-of-bounds means the geoIdMap assigned the wrong
     // surface.
-    auto localResult =
-        surface->globalToLocal(ctx.geoContext, globalPos, Acts::Vector3{},
-                               std::numeric_limits<double>::max());
+    auto localResult = regSurface->globalToLocal(
+        ctx.geoContext, globalPos, std::numeric_limits<double>::max());
     if (!localResult.ok() ||
         !surface->bounds().inside(localResult.value(),
                                   Acts::BoundaryTolerance::AbsoluteEuclidean(
@@ -448,8 +453,7 @@ ProcessCode ColliderMLInputConverter::execute(
       ACTS_ERROR(
           "Hit " << i << " geoId " << geoId
                  << " projected local position outside sensor bounds (tol="
-                 << m_cfg.hitBoundsTolerance
-                 << " mm) — geoIdMap wrong surface, regenerate it");
+                 << m_cfg.hitBoundsTolerance << " mm)");
       return ProcessCode::ABORT;
     }
     const Acts::Vector2& lp = localResult.value();
