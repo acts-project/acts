@@ -23,9 +23,8 @@ namespace BetheHeitlerApproxJsonConverter {
 struct RangeData {
   double lowX0 = 0;
   double highX0 = 0;
-  std::vector<double> weightCoeffs;
-  std::vector<double> meanCoeffs;
-  std::vector<double> varCoeffs;
+  bool transform = true;
+  std::vector<PolynomialBetheHeitlerApprox::PolyData> data;
 };
 
 /// Convert PolyData (component coefficients) to JSON

@@ -28,13 +28,12 @@ namespace Acts {
 ///
 /// The JSON file should contain:
 /// - "version": string (optional)
-/// - "n_components": number of Gaussian components
-/// - "polynomial_order": polynomial order
-/// - "transform": whether to apply logistic transform
-/// - "limits": object with "low_x0" and "high_x0" values
-/// - "components": array of component definitions with "weight_low",
-/// "mean_low",
-///   "var_low", "weight_high", "mean_high", "var_high" coefficient arrays
+/// - "ranges": array of range objects with:
+///   - "low_x0": lower limit of x/x0 range
+///   - "high_x0": upper limit of x/x0 range
+///   - "transform": whether to apply logistic transform (default: true)
+///   - "components": array of component objects with "weight_coeffs",
+///   "mean_coeffs", "var_coeffs"
 std::shared_ptr<const PolynomialBetheHeitlerApprox>
 loadBetheHeitlerApproxFromJson(const std::string& filepath,
                                bool clampToRange = false,

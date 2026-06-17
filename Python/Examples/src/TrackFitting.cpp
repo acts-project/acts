@@ -122,7 +122,11 @@ void addTrackFitting(py::module& mex) {
             [](bool clampToRange) {
               return makeDefaultBetheHeitlerApprox(clampToRange);
             },
-            "clampToRange"_a);
+            "clampToRange"_a)
+        .def(py::init<std::vector<PolynomialBetheHeitlerApprox::RangeData>,
+                      bool, double, double>(),
+             "ranges"_a, "clampToRange"_a = false, "noChangeLimit"_a = 0.0001,
+             "singleGaussianLimit"_a = 0.002);
 
     mex.def("loadBetheHeitlerApproxFromJson",
             &Acts::loadBetheHeitlerApproxFromJson, "filepath"_a,

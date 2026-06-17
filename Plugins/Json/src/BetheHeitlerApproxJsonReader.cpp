@@ -37,13 +37,6 @@ loadBetheHeitlerApproxFromJson(const std::string& filepath, bool clampToRange,
   nlohmann::json j;
   readJsonFile(filepath, j);
 
-  // Parse limits from JSON
-  double transform = true;
-
-  if (j.contains("transform")) {
-    transform = j["transform"].get<bool>();
-  }
-
   // Parse multiple x0 ranges
   std::vector<BetheHeitlerApproxJsonConverter::RangeData> ranges;
 
@@ -55,41 +48,18 @@ loadBetheHeitlerApproxFromJson(const std::string& filepath, bool clampToRange,
     }
   }
 
-  // Build low and high data from ranges
-  // For now, just use the first range as low and the last as high
-  // This will be expanded when we support multiple ranges
-  PolynomialBetheHeitlerApprox::Data lowData;
-  PolynomialBetheHeitlerApprox::Data highData;
-
-  if (!ranges.empty()) {
-    // Use the first range for low data
-    for (const auto& r : ranges) {
-      PolynomialBetheHeitlerApprox::PolyData poly;
-      poly.weightCoeffs = r.weightCoeffs;
-      poly.meanCoeffs = r.meanCoeffs;
-      poly.varCoeffs = r.varCoeffs;
-      lowData.push_back(poly);
-    }
-
-    // For now, use the same as high data
-    // In the future, we'll support truly distinct ranges
-    highData = lowData;
+  if (ranges.empty()) {
+    throw std::invalid_argument(
+        "JSON file must contain 'ranges' array with at least one range");
   }
 
-  // Use first range low_x0 as low limit, last range high_x0 as high limit
-  double lowLimit = 0.10;   // Default
-  double highLimit = 0.20;  // Default
+  // Sort ranges by lowX0 to ensure they are properly ordered
+  std::sort(ranges.begin(), ranges.end(),
+            [](const auto& a, const auto& b) { return a.lowX0 < b.lowX0; });
 
-  if (!ranges.empty()) {
-    lowLimit = ranges.front().lowX0;
-    highLimit = ranges.back().highX0;
-  }
-
-  // For now, use low data for both (same as current behavior)
-  // When we expand to multiple ranges, this will need to be restructured
+  // Build the PolynomialBetheHeitlerApprox with the ranges
   return std::make_shared<const PolynomialBetheHeitlerApprox>(
-      lowData, lowData, transform, transform, lowLimit, highLimit, clampToRange,
-      noChangeLimit, singleGaussianLimit);
+      ranges, clampToRange, noChangeLimit, singleGaussianLimit);
 }
 
 }  // namespace Acts
