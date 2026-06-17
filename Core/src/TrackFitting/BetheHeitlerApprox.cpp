@@ -8,12 +8,39 @@
 
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 
+#include "Acts/Utilities/RangeXD.hpp"
+
 #include <algorithm>
 #include <fstream>
 #include <stdexcept>
 #include <tuple>
 
 namespace Acts {
+
+PolynomialBetheHeitlerApprox::PolynomialBetheHeitlerApprox(
+    std::vector<RangeData> ranges, bool clampToRange, double noChangeLimit,
+    double singleGaussianLimit)
+    : m_ranges(std::move(ranges)),
+      m_clampToRange(clampToRange),
+      m_noChangeLimit(noChangeLimit),
+      m_singleGaussianLimit(singleGaussianLimit) {
+  if (m_ranges.empty()) {
+    throw std::invalid_argument("At least one range is required");
+  }
+
+  // Sort ranges by minimum value
+  std::sort(m_ranges.begin(), m_ranges.end(), [](const auto &a, const auto &b) {
+    return a.range.min() < b.range.min();
+  });
+
+  // Validate that ranges don't overlap
+  for (std::size_t i = 1; i < m_ranges.size(); ++i) {
+    if (m_ranges[i - 1].range && m_ranges[i].range) {
+      throw std::invalid_argument(
+          "Overlapping ranges detected. Ranges must be non-overlapping.");
+    }
+  }
+}
 
 PolynomialBetheHeitlerApprox PolynomialBetheHeitlerApprox::loadFromFiles(
     const std::string &low_parameters_path,

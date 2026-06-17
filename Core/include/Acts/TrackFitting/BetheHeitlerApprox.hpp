@@ -173,22 +173,16 @@ class PolynomialBetheHeitlerApprox : public BetheHeitlerApprox {
 
   /// Construct the Bethe-Heitler approximation description with N ranges.
   /// Each range has its own data and transformation flag.
-  /// The ranges must be non-overlapping and sorted by lowX0.
+  /// The ranges will be sorted by minimum value and validated for
+  /// non-overlapping.
   ///
   /// @param ranges Vector of range data
   /// @param clampToRange whether to clamp the input x/x0 to the allowed range
   /// @param noChangeLimit limit below which no change is applied
   /// @param singleGaussianLimit limit below which a single Gaussian is used
   PolynomialBetheHeitlerApprox(std::vector<RangeData> ranges, bool clampToRange,
-                               double noChangeLimit, double singleGaussianLimit)
-      : m_ranges(std::move(ranges)),
-        m_clampToRange(clampToRange),
-        m_noChangeLimit(noChangeLimit),
-        m_singleGaussianLimit(singleGaussianLimit) {
-    if (m_ranges.empty()) {
-      throw std::invalid_argument("At least one range is required");
-    }
-  }
+                               double noChangeLimit,
+                               double singleGaussianLimit);
 
   /// Construct the Bethe-Heitler approximation description with two
   /// parameterizations, one for lower ranges, one for higher ranges.
