@@ -8,6 +8,8 @@
 
 #include "ActsPlugins/Json/BetheHeitlerApproxJsonConverter.hpp"
 
+#include "Acts/Utilities/RangeXD.hpp"
+
 namespace Acts {
 
 namespace BetheHeitlerApproxJsonConverter {
@@ -28,16 +30,16 @@ void from_json(const nlohmann::json& j,
 
 void to_json(nlohmann::json& j,
              const PolynomialBetheHeitlerApprox::RangeData& data) {
-  j["low_x0"] = data.lowX0;
-  j["high_x0"] = data.highX0;
+  j["low_x0"] = data.range.min();
+  j["high_x0"] = data.range.max();
   j["transform"] = data.transform;
   to_json(j, data.data);
 }
 
 void from_json(const nlohmann::json& j,
                PolynomialBetheHeitlerApprox::RangeData& data) {
-  data.lowX0 = j.at("low_x0").get<double>();
-  data.highX0 = j.at("high_x0").get<double>();
+  data.range = Range1D<double>{j.at("low_x0").get<double>(),
+                               j.at("high_x0").get<double>()};
   data.transform = j.value("transform", true);
 
   if (j.contains("components")) {

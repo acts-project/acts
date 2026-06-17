@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/RangeXD.hpp"
+
 #include <cmath>
 #include <cstddef>
 #include <numbers>
@@ -135,10 +137,15 @@ class PolynomialBetheHeitlerApprox : public BetheHeitlerApprox {
 
   /// Single x/x0 range with its data and transformation flag
   struct RangeData {
-    double lowX0 = 0;
-    double highX0 = 0;
+    Range1D<double> range;
     Data data;
     bool transform = false;
+
+    RangeData() = default;
+    RangeData(Range1D<double> r, Data d, bool t)
+        : range(r), data(std::move(d)), transform(t) {}
+    RangeData(double l, double h, Data d, bool t)
+        : range(l, h), data(std::move(d)), transform(t) {}
   };
 
   /// Loads a parameterization from a file according to the Atlas file
@@ -226,7 +233,7 @@ class PolynomialBetheHeitlerApprox : public BetheHeitlerApprox {
     if (m_clampToRange) {
       return true;
     } else {
-      return xOverX0 < m_ranges.back().highX0;
+      return xOverX0 < m_ranges.back().range.max();
     }
   }
 

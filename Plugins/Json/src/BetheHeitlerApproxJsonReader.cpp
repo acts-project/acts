@@ -53,9 +53,10 @@ loadBetheHeitlerApproxFromJson(const std::string& filepath, bool clampToRange,
         "JSON file must contain 'ranges' array with at least one range");
   }
 
-  // Sort ranges by lowX0 to ensure they are properly ordered
-  std::sort(ranges.begin(), ranges.end(),
-            [](const auto& a, const auto& b) { return a.lowX0 < b.lowX0; });
+  // Sort ranges by range.min() to ensure they are properly ordered
+  std::sort(ranges.begin(), ranges.end(), [](const auto& a, const auto& b) {
+    return a.range.min() < b.range.min();
+  });
 
   // Build the PolynomialBetheHeitlerApprox with the ranges
   return std::make_shared<const PolynomialBetheHeitlerApprox>(

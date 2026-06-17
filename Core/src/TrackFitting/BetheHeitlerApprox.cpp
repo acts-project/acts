@@ -59,16 +59,19 @@ PolynomialBetheHeitlerApprox PolynomialBetheHeitlerApprox::loadFromFiles(
   const auto [lowData, lowTransform] = read_file(low_parameters_path);
   const auto [highData, highTransform] = read_file(high_parameters_path);
 
-  return {{lowLimit, highLimit, lowData, lowTransform},
-          {highLimit, highLimit * 2, highData, highTransform}},
-         clampToRange, noChangeLimit, singleGaussianLimit;
+  std::vector<PolynomialBetheHeitlerApprox::RangeData> ranges = {
+      {Range1D<double>{lowLimit, highLimit}, lowData, lowTransform},
+      {Range1D<double>{highLimit, highLimit * 2}, highData, highTransform}};
+
+  return PolynomialBetheHeitlerApprox(std::move(ranges), clampToRange,
+                                      noChangeLimit, singleGaussianLimit);
 }
 
 std::span<PolynomialBetheHeitlerApprox::Component>
 PolynomialBetheHeitlerApprox::mixture(
     double xOverX0, const std::span<Component> mixture) const {
   if (m_clampToRange) {
-    xOverX0 = std::clamp(xOverX0, 0.0, m_ranges.back().highX0);
+    xOverX0 = std::clamp(xOverX0, 0.0, m_ranges.back().range.max());
   }
 
   // Evaluate polynomial at x
@@ -124,19 +127,17 @@ PolynomialBetheHeitlerApprox::mixture(
   }
 
   // Find the appropriate range and return mixture for that range
-  for (const auto &range : m_ranges) {
-    if (xOverX0 < range.highX0) {
-      return make_mixture(range.data, xOverX0, range.transform);
+  for (const auto &[range, data, transform] : m_ranges) {
+    if (range.contains(xOverX0)) {
+      return make_mixture(data, xOverX0, transform);
     }
   }
 
   // Should not reach here if validXOverX0 is called first
   // But return the last range's mixture as fallback
-  return make_mixture(m_ranges.back().data, m_ranges.back().highX0,
-                      m_ranges.back().transform);
+  const auto &[lastRange, lastData, lastTransform] = m_ranges.back();
+  return make_mixture(lastData, lastRange.max(), lastTransform);
 }
-
-}  // namespace Acts
 
 PolynomialBetheHeitlerApprox makeDefaultBetheHeitlerApprox(bool clampToRange) {
   // Tracking/TrkFitter/TrkGaussianSumFilterUtils/Data/BetheHeitler_cdf_nC6_O5.par
@@ -181,5 +182,11 @@ PolynomialBetheHeitlerApprox makeDefaultBetheHeitlerApprox(bool clampToRange) {
   }};
   // clang-format on
 
-  return {{0.0, 0.2, cdf_cmps6_order5_data, true}}, clampToRange, 0.0001, 0.002;
+  std::vector<PolynomialBetheHeitlerApprox::RangeData> ranges = {
+      {Range1D<double>{0.0, 0.2}, cdf_cmps6_order5_data, true}};
+
+  return PolynomialBetheHeitlerApprox(std::move(ranges), clampToRange, 0.0001,
+                                      0.002);
 }
+
+}  // namespace Acts

@@ -19,20 +19,6 @@ namespace Acts {
 
 namespace BetheHeitlerApproxJsonConverter {
 
-/// Convert RangeData to JSON (using core class type)
-/// @param j Destination JSON object
-/// @param data Source RangeData to convert
-void to_json(nlohmann::json& j,
-             const PolynomialBetheHeitlerApprox::RangeData& data);
-
-/// Convert JSON to RangeData (using core class type)
-/// @param j Source JSON object
-/// @param data Destination RangeData to populate
-void from_json(const nlohmann::json& j,
-               PolynomialBetheHeitlerApprox::RangeData& data);
-
-}  // namespace BetheHeitlerApproxJsonConverter
-
 /// Convert PolyData (component coefficients) to JSON
 /// @param j Destination JSON object
 /// @param data Source PolyData to convert
@@ -56,18 +42,29 @@ void to_json(nlohmann::json& j, const PolynomialBetheHeitlerApprox::Data& data);
 void from_json(const nlohmann::json& j,
                PolynomialBetheHeitlerApprox::Data& data);
 
-/// Convert RangeData to JSON
+/// Convert RangeData to JSON (using core class type)
 /// @param j Destination JSON object
 /// @param data Source RangeData to convert
-void to_json(nlohmann::json& j, const RangeData& data);
+void to_json(nlohmann::json& j,
+             const PolynomialBetheHeitlerApprox::RangeData& data);
 
-/// Convert JSON to RangeData
+/// Convert JSON to RangeData (using core class type)
 /// @param j Source JSON object
 /// @param data Destination RangeData to populate
-void from_json(const nlohmann::json& j, RangeData& data);
+void from_json(const nlohmann::json& j,
+               PolynomialBetheHeitlerApprox::RangeData& data);
 
 }  // namespace BetheHeitlerApproxJsonConverter
 
 /// @}
+
+}  // namespace Acts
+
+// Make nlohmann::json from_json/to_json functions available in Acts namespace
+// so they can be found by ADL
+namespace Acts {
+
+using BetheHeitlerApproxJsonConverter::from_json;
+using BetheHeitlerApproxJsonConverter::to_json;
 
 }  // namespace Acts
