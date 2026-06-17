@@ -14,16 +14,17 @@ namespace Acts {
 
 namespace BetheHeitlerApproxJsonConverter {
 
-using Data = std::vector<AtlasBetheHeitlerApprox::PolyData>;
+using Data = std::vector<PolynomialBetheHeitlerApprox::PolyData>;
 
-void to_json(nlohmann::json& j, const AtlasBetheHeitlerApprox::PolyData& data) {
+void to_json(nlohmann::json& j,
+             const PolynomialBetheHeitlerApprox::PolyData& data) {
   j["weight_coeffs"] = data.weightCoeffs;
   j["mean_coeffs"] = data.meanCoeffs;
   j["var_coeffs"] = data.varCoeffs;
 }
 
 void from_json(const nlohmann::json& j,
-               AtlasBetheHeitlerApprox::PolyData& data) {
+               PolynomialBetheHeitlerApprox::PolyData& data) {
   data.weightCoeffs = j.at("weight_coeffs").get<std::vector<double>>();
   data.meanCoeffs = j.at("mean_coeffs").get<std::vector<double>>();
   data.varCoeffs = j.at("var_coeffs").get<std::vector<double>>();
@@ -41,7 +42,7 @@ void to_json(nlohmann::json& j, const Data& data) {
 void from_json(const nlohmann::json& j, Data& data) {
   data.clear();
   for (const auto& jcmp : j) {
-    AtlasBetheHeitlerApprox::PolyData component;
+    PolynomialBetheHeitlerApprox::PolyData component;
     from_json(jcmp, component);
     data.push_back(component);
   }

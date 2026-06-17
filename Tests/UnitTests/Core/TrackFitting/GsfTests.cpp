@@ -72,9 +72,9 @@ using Stepper = MultiEigenStepperLoop<>;
 using Propagator = Propagator<Stepper, Navigator>;
 using GSF = GaussianSumFitter<Propagator, VectorMultiTrajectory>;
 
-const GSF gsfZero(
-    makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T),
-    std::make_shared<AtlasBetheHeitlerApprox>(makeDefaultBetheHeitlerApprox()));
+const GSF gsfZero(makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T),
+                  std::make_shared<PolynomialBetheHeitlerApprox>(
+                      makeDefaultBetheHeitlerApprox()));
 
 std::default_random_engine rng(42);
 

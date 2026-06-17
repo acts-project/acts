@@ -24,7 +24,7 @@ namespace Acts {
 /// @param clampToRange Whether to clamp x/x0 values to the valid range
 /// @param noChangeLimit Limit below which no change is applied (default: 0.0001)
 /// @param singleGaussianLimit Limit below which a single Gaussian is used (default: 0.002)
-/// @return Shared pointer to the loaded AtlasBetheHeitlerApprox
+/// @return Shared pointer to the loaded PolynomialBetheHeitlerApprox
 ///
 /// The JSON file should contain:
 /// - "version": string (optional)
@@ -35,9 +35,11 @@ namespace Acts {
 /// - "components": array of component definitions with "weight_low",
 /// "mean_low",
 ///   "var_low", "weight_high", "mean_high", "var_high" coefficient arrays
-std::shared_ptr<const AtlasBetheHeitlerApprox> loadBetheHeitlerApproxFromJson(
-    const std::string& filepath, bool clampToRange = false,
-    double noChangeLimit = 0.0001, double singleGaussianLimit = 0.002);
+std::shared_ptr<const PolynomialBetheHeitlerApprox>
+loadBetheHeitlerApproxFromJson(const std::string& filepath,
+                               bool clampToRange = false,
+                               double noChangeLimit = 0.0001,
+                               double singleGaussianLimit = 0.002);
 
 /// @}
 

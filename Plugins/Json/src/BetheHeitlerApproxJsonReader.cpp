@@ -30,9 +30,10 @@ void readJsonFile(const std::string& filepath, nlohmann::json& j) {
 
 }  // namespace
 
-std::shared_ptr<const AtlasBetheHeitlerApprox> loadBetheHeitlerApproxFromJson(
-    const std::string& filepath, bool clampToRange, double noChangeLimit,
-    double singleGaussianLimit) {
+std::shared_ptr<const PolynomialBetheHeitlerApprox>
+loadBetheHeitlerApproxFromJson(const std::string& filepath, bool clampToRange,
+                               double noChangeLimit,
+                               double singleGaussianLimit) {
   nlohmann::json j;
   readJsonFile(filepath, j);
 
@@ -57,13 +58,13 @@ std::shared_ptr<const AtlasBetheHeitlerApprox> loadBetheHeitlerApproxFromJson(
   // Build low and high data from ranges
   // For now, just use the first range as low and the last as high
   // This will be expanded when we support multiple ranges
-  AtlasBetheHeitlerApprox::Data lowData;
-  AtlasBetheHeitlerApprox::Data highData;
+  PolynomialBetheHeitlerApprox::Data lowData;
+  PolynomialBetheHeitlerApprox::Data highData;
 
   if (!ranges.empty()) {
     // Use the first range for low data
     for (const auto& r : ranges) {
-      AtlasBetheHeitlerApprox::PolyData poly;
+      PolynomialBetheHeitlerApprox::PolyData poly;
       poly.weightCoeffs = r.weightCoeffs;
       poly.meanCoeffs = r.meanCoeffs;
       poly.varCoeffs = r.varCoeffs;
@@ -86,7 +87,7 @@ std::shared_ptr<const AtlasBetheHeitlerApprox> loadBetheHeitlerApproxFromJson(
 
   // For now, use low data for both (same as current behavior)
   // When we expand to multiple ranges, this will need to be restructured
-  return std::make_shared<const AtlasBetheHeitlerApprox>(
+  return std::make_shared<const PolynomialBetheHeitlerApprox>(
       lowData, lowData, transform, transform, lowLimit, highLimit, clampToRange,
       noChangeLimit, singleGaussianLimit);
 }

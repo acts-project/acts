@@ -101,13 +101,22 @@ void addTrackFitting(py::module& mex) {
 
     py::class_<BetheHeitlerApprox, std::shared_ptr<BetheHeitlerApprox>>(
         mex, "BetheHeitlerApprox");
-    py::class_<AtlasBetheHeitlerApprox, BetheHeitlerApprox,
-               std::shared_ptr<AtlasBetheHeitlerApprox>>(
-        mex, "AtlasBetheHeitlerApprox")
-        .def_static("loadFromFiles", &AtlasBetheHeitlerApprox::loadFromFiles,
-                    "lowParametersPath"_a, "highParametersPath"_a, "lowLimit"_a,
-                    "highLimit"_a, "clampToRange"_a, "noChangeLimit"_a,
-                    "singleGaussianLimit"_a)
+    py::class_<PolynomialBetheHeitlerApprox, BetheHeitlerApprox,
+               std::shared_ptr<PolynomialBetheHeitlerApprox>>(
+        mex, "PolynomialBetheHeitlerApprox")
+        .def_static(
+            "loadFromFiles",
+            [](const std::string& lowParametersPath,
+               const std::string& highParametersPath, double lowLimit,
+               double highLimit, bool clampToRange, double noChangeLimit,
+               double singleGaussianLimit) {
+              return PolynomialBetheHeitlerApprox::loadFromFiles(
+                  lowParametersPath, highParametersPath, lowLimit, highLimit,
+                  clampToRange, noChangeLimit, singleGaussianLimit);
+            },
+            "lowParametersPath"_a, "highParametersPath"_a, "lowLimit"_a,
+            "highLimit"_a, "clampToRange"_a, "noChangeLimit"_a,
+            "singleGaussianLimit"_a)
         .def_static(
             "makeDefault",
             [](bool clampToRange) {

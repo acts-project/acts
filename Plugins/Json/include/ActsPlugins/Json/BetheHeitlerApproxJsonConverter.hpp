@@ -31,23 +31,25 @@ struct RangeData {
 /// Convert PolyData (component coefficients) to JSON
 /// @param j Destination JSON object
 /// @param data Source PolyData to convert
-void to_json(nlohmann::json& j, const AtlasBetheHeitlerApprox::PolyData& data);
+void to_json(nlohmann::json& j,
+             const PolynomialBetheHeitlerApprox::PolyData& data);
 
 /// Convert JSON to PolyData (component coefficients)
 /// @param j Source JSON object
 /// @param data Destination PolyData to populate
 void from_json(const nlohmann::json& j,
-               AtlasBetheHeitlerApprox::PolyData& data);
+               PolynomialBetheHeitlerApprox::PolyData& data);
 
 /// Convert Data (vector of PolyData) to JSON for a single x0 range
 /// @param j Destination JSON object
 /// @param data Source Data to convert
-void to_json(nlohmann::json& j, const AtlasBetheHeitlerApprox::Data& data);
+void to_json(nlohmann::json& j, const PolynomialBetheHeitlerApprox::Data& data);
 
 /// Convert JSON to Data (vector of PolyData) for a single x0 range
 /// @param j Source JSON object
 /// @param data Destination Data to populate
-void from_json(const nlohmann::json& j, AtlasBetheHeitlerApprox::Data& data);
+void from_json(const nlohmann::json& j,
+               PolynomialBetheHeitlerApprox::Data& data);
 
 /// Convert RangeData to JSON
 /// @param j Destination JSON object
