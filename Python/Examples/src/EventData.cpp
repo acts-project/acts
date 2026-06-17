@@ -45,7 +45,7 @@ template <typename Map>
 auto bindFlatMultimap(py::module& m, const char* name) {
   // Register the iterator type before the __iter__ binding that returns it.
   const std::string iterName = std::string(name) + "Iterator";
-  ActsPython::bindCheckedIterator<Map>(m, iterName.c_str());
+  ActsPython::bindIteratorTether<Map>(m, iterName.c_str());
 
   auto cls = py::classh<Map>(m, name)
                  .def(py::init<>())
@@ -53,7 +53,7 @@ auto bindFlatMultimap(py::module& m, const char* name) {
                  .def("__iter__",
                       [](py::object self) {
                         const auto& map = self.cast<const Map&>();
-                        return ActsPython::CheckedIterator<Map>{
+                        return ActsPython::IteratorTether<Map>{
                             self, py::make_iterator(map.begin(), map.end())};
                       })
                  .def("__contains__",
@@ -506,10 +506,9 @@ void addEventData(py::module& mex) {
   constexpr auto msAlive = &ownerAlive<MeasurementSubset>;
 
   // Register iterator types before the __iter__ bindings that return them.
-  bindCheckedIndexIterator<MeasurementContainer>(
+  bindIndexIteratorTether<MeasurementContainer>(
       mex, "_MeasurementContainerIterator");
-  bindCheckedIndexIterator<MeasurementSubset>(mex,
-                                              "_MeasurementSubsetIterator");
+  bindIndexIteratorTether<MeasurementSubset>(mex, "_MeasurementSubsetIterator");
 
   using MeasProxy = ConstVariableBoundMeasurementProxy;
   py::class_<MeasTether>(mex, "ConstVariableBoundMeasurementProxy")
@@ -585,7 +584,7 @@ void addEventData(py::module& mex) {
                                    mcAlive};
                })
           .def("__iter__", [](py::object self) {
-            return CheckedIndexIterator<MeasurementContainer>{
+            return IndexIteratorTether<MeasurementContainer>{
                 self, 0,
                 [](const py::object& owner, MeasurementContainer& c,
                    std::size_t i) {
@@ -619,7 +618,7 @@ void addEventData(py::module& mex) {
                })
           .def("__iter__",
                [](py::object self) {
-                 return CheckedIndexIterator<MeasurementSubset>{
+                 return IndexIteratorTether<MeasurementSubset>{
                      self, 0,
                      [](const py::object& owner, MeasurementSubset& c,
                         std::size_t i) {

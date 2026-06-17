@@ -205,7 +205,7 @@ def test_space_point_proxy_fails_loud_after_disown():
     """A space point proxy/iterator whose container was transferred away (the
     whiteboard takes it as a unique_ptr, disowning the Python wrapper) must raise
     ValueError on access instead of dereferencing freed memory (SIGSEGV)."""
-    tb = pytest.importorskip("_acts_core_test_bindings")
+    tb = acts._testing
 
     Cols = acts.SpacePointColumns
     container = acts.SpacePointContainer2(Cols.X | Cols.Y | Cols.Z)
@@ -233,7 +233,7 @@ def test_space_point_proxy_fails_loud_after_disown():
 def test_seed_proxy_fails_loud_after_disown():
     """Same fail-loud contract for seed proxies/iterators after the container is
     disowned by a unique_ptr transfer."""
-    tb = pytest.importorskip("_acts_core_test_bindings")
+    tb = acts._testing
 
     container = acts.SeedContainer2()
     seed = container.createSeed()

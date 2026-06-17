@@ -42,16 +42,6 @@ target_link_libraries(
     PUBLIC Acts::Core Acts::PythonUtilities
 )
 
-# Test-only module: a Core-only way to disown EventData containers (by taking
-# them as std::unique_ptr<T>) so the proxy fail-loud behaviour can be tested
-# without acts.examples. Built into the python tree but never installed.
-pybind11_add_module(_acts_core_test_bindings tests/DisownTestBindings.cpp)
-target_link_libraries(_acts_core_test_bindings PRIVATE Acts::Core)
-set_target_properties(
-    _acts_core_test_bindings
-    PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}
-)
-
 configure_file(setup.sh.in ${_python_dir}/setup.sh @ONLY)
 install(FILES ${_python_dir}/setup.sh DESTINATION python)
 

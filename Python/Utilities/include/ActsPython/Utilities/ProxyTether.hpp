@@ -50,13 +50,28 @@ bool ownerAlive(const pybind11::object& owner) {
 /// rather than a Container template parameter, so a single bound proxy type can
 /// be produced by several different container types (e.g. a measurement proxy
 /// returned by both MeasurementContainer and MeasurementSubset).
-template <typename Proxy>
+template <typename Proxy, typename Owner = void>
 struct ProxyTether {
   using AliveFn = bool (*)(const pybind11::object&);
 
   pybind11::object owner;
   Proxy proxy;
   AliveFn aliveFn;
+
+  /// Single-owner constructor: alive check is derived from Owner at compile
+  /// time. Use when there is exactly one container type that can own the proxy.
+  ProxyTether(pybind11::object owner_, Proxy proxy_)
+    requires(!std::is_void_v<Owner>)
+      : owner{std::move(owner_)},
+        proxy{std::move(proxy_)},
+        aliveFn{&ownerAlive<Owner>} {}
+
+  /// Multi-owner constructor: alive check is supplied explicitly. Use when the
+  /// same bound proxy type can be produced by more than one container type
+  /// (e.g. MeasurementContainer and MeasurementSubset both yield the same
+  /// ConstVariableBoundMeasurementProxy).
+  ProxyTether(pybind11::object owner_, Proxy proxy_, AliveFn aliveFn_)
+      : owner{std::move(owner_)}, proxy{std::move(proxy_)}, aliveFn{aliveFn_} {}
 
   /// Validate the container is still owned, then return the proxy. Throws
   /// pybind11::value_error (a Python ValueError) if it was consumed.
@@ -71,7 +86,7 @@ struct ProxyTether {
 
  private:
   void validate() const {
-    if (aliveFn == nullptr || !aliveFn(owner)) {
+    if (!aliveFn(owner)) {
       throw pybind11::value_error(
           "proxy is no longer valid: its container was consumed (moved to the "
           "whiteboard)");
@@ -103,7 +118,7 @@ auto tetheredWrite(Assign assign) {
 /// still being alive. Used for containers whose iteration yields values/pairs
 /// whose Python conversion is still registered (e.g. the flat multimaps).
 template <typename Container>
-struct CheckedIterator {
+struct IteratorTether {
   pybind11::object owner;
   pybind11::iterator inner;
 
@@ -117,13 +132,13 @@ struct CheckedIterator {
   }
 };
 
-/// Register a CheckedIterator type. MUST be called before any container's
+/// Register a IteratorTether type. MUST be called before any container's
 /// `__iter__` that returns it, or pybind11 raises an unregistered-type error.
 template <typename Container>
-void bindCheckedIterator(pybind11::module_& m, const char* name) {
-  pybind11::class_<CheckedIterator<Container>>(m, name)
+void bindIteratorTether(pybind11::module_& m, const char* name) {
+  pybind11::class_<IteratorTether<Container>>(m, name)
       .def("__iter__", [](pybind11::object self) { return self; })
-      .def("__next__", &CheckedIterator<Container>::next);
+      .def("__next__", &IteratorTether<Container>::next);
 }
 
 /// A Python iterator over an index-accessible container that yields freshly
@@ -132,7 +147,7 @@ void bindCheckedIterator(pybind11::module_& m, const char* name) {
 /// unregistered type). `maker(owner, container, index)` builds the tethered
 /// proxy for each element.
 template <typename Container>
-struct CheckedIndexIterator {
+struct IndexIteratorTether {
   using Maker = std::function<pybind11::object(const pybind11::object&,
                                                Container&, std::size_t)>;
   pybind11::object owner;
@@ -156,13 +171,13 @@ struct CheckedIndexIterator {
   }
 };
 
-/// Register a CheckedIndexIterator type. MUST be called before any container's
+/// Register a IndexIteratorTether type. MUST be called before any container's
 /// `__iter__` that returns it.
 template <typename Container>
-void bindCheckedIndexIterator(pybind11::module_& m, const char* name) {
-  pybind11::class_<CheckedIndexIterator<Container>>(m, name)
+void bindIndexIteratorTether(pybind11::module_& m, const char* name) {
+  pybind11::class_<IndexIteratorTether<Container>>(m, name)
       .def("__iter__", [](pybind11::object self) { return self; })
-      .def("__next__", &CheckedIndexIterator<Container>::next);
+      .def("__next__", &IndexIteratorTether<Container>::next);
 }
 
 }  // namespace ActsPython

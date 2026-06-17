@@ -174,17 +174,17 @@ void addEventData(py::module_& m) {
   // Proxies are bound as ProxyTether under the same Python names, so isinstance
   // is preserved; see ProxyTether.hpp for the disown/keep-alive rationale. The
   // aliases below keep the binding call sites readable.
-  using ConstSpTether = ProxyTether<ConstSpacePointProxy2>;
-  using MutSpTether = ProxyTether<MutableSpacePointProxy2>;
-  using ConstSeedTether = ProxyTether<ConstSeedProxy2>;
-  using MutSeedTether = ProxyTether<MutableSeedProxy2>;
-  constexpr auto spAlive = &ownerAlive<SpacePointContainer2>;
-  constexpr auto seedAlive = &ownerAlive<SeedContainer2>;
+  using ConstSpTether =
+      ProxyTether<ConstSpacePointProxy2, SpacePointContainer2>;
+  using MutSpTether =
+      ProxyTether<MutableSpacePointProxy2, SpacePointContainer2>;
+  using ConstSeedTether = ProxyTether<ConstSeedProxy2, SeedContainer2>;
+  using MutSeedTether = ProxyTether<MutableSeedProxy2, SeedContainer2>;
 
   // Register iterator types before the __iter__ bindings that return them.
-  bindCheckedIndexIterator<SpacePointContainer2>(
+  bindIndexIteratorTether<SpacePointContainer2>(
       m, "_SpacePointContainer2Iterator");
-  bindCheckedIndexIterator<SeedContainer2>(m, "_SeedContainer2Iterator");
+  bindIndexIteratorTether<SeedContainer2>(m, "_SeedContainer2Iterator");
 
   using FloatColumnGetter =
       ConstSpacePointColumnProxy<float> (SpacePointContainer2::*)() const;
@@ -215,26 +215,23 @@ void addEventData(py::module_& m) {
           .def("createSpacePoint",
                [](py::object self) {
                  auto& c = self.cast<SpacePointContainer2&>();
-                 return MutSpTether{self, c.createSpacePoint(), spAlive};
+                 return MutSpTether{self, c.createSpacePoint()};
                })
           .def("__len__", &SpacePointContainer2::size)
           .def("__getitem__",
                [](py::object self, SpacePointIndex2 idx) {
                  auto& c = self.cast<SpacePointContainer2&>();
-                 return MutSpTether{self, MutableSpacePointProxy2(c, idx),
-                                    spAlive};
+                 return MutSpTether{self, MutableSpacePointProxy2(c, idx)};
                })
           .def("__iter__",
                [](py::object self) {
-                 return CheckedIndexIterator<SpacePointContainer2>{
+                 return IndexIteratorTether<SpacePointContainer2>{
                      self, 0,
                      [](const py::object& owner, SpacePointContainer2& c,
                         std::size_t i) {
-                       return py::cast(
-                           MutSpTether{owner,
-                                       MutableSpacePointProxy2(
-                                           c, static_cast<SpacePointIndex2>(i)),
-                                       &ownerAlive<SpacePointContainer2>});
+                       return py::cast(MutSpTether{
+                           owner, MutableSpacePointProxy2(
+                                      c, static_cast<SpacePointIndex2>(i))});
                      }};
                })
           .def_property_readonly("x",
@@ -504,25 +501,23 @@ void addEventData(py::module_& m) {
           .def("__getitem__",
                [](py::object self, SeedIndex2 idx) {
                  const auto& c = self.cast<const SeedContainer2&>();
-                 return ConstSeedTether{self, ConstSeedProxy2(c, idx),
-                                        seedAlive};
+                 return ConstSeedTether{self, ConstSeedProxy2(c, idx)};
                })
-          .def(
-              "__iter__",
-              [](py::object self) {
-                return CheckedIndexIterator<SeedContainer2>{
-                    self, 0,
-                    [](const py::object& owner, SeedContainer2& c,
-                       std::size_t i) {
-                      return py::cast(ConstSeedTether{
-                          owner, ConstSeedProxy2(c, static_cast<SeedIndex2>(i)),
-                          &ownerAlive<SeedContainer2>});
-                    }};
-              })
+          .def("__iter__",
+               [](py::object self) {
+                 return IndexIteratorTether<SeedContainer2>{
+                     self, 0,
+                     [](const py::object& owner, SeedContainer2& c,
+                        std::size_t i) {
+                       return py::cast(ConstSeedTether{
+                           owner,
+                           ConstSeedProxy2(c, static_cast<SeedIndex2>(i))});
+                     }};
+               })
           .def("createSeed",
                [](py::object self) {
                  auto& c = self.cast<SeedContainer2&>();
-                 return MutSeedTether{self, c.createSeed(), seedAlive};
+                 return MutSeedTether{self, c.createSeed()};
                })
           .def(
               "assignSpacePointContainer",
@@ -614,6 +609,13 @@ void addEventData(py::module_& m) {
   // Note: SourceLink has no default constructor; concrete types (e.g.
   // IndexSourceLink from Examples) are typically used to construct it.
   py::class_<SourceLink>(m, "SourceLink");
+
+  // Test-only helpers: taking by unique_ptr triggers smart_holder disown,
+  // replicating what the whiteboard does, so proxy tether failures can be
+  // tested without acts.examples.
+  auto mt = m.def_submodule("_testing");
+  mt.def("consume_spacepoints", [](std::unique_ptr<SpacePointContainer2>) {});
+  mt.def("consume_seeds", [](std::unique_ptr<SeedContainer2>) {});
 }
 
 }  // namespace ActsPython
