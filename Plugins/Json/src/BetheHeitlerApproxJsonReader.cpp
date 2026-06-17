@@ -37,12 +37,12 @@ loadBetheHeitlerApproxFromJson(const std::string& filepath, bool clampToRange,
   nlohmann::json j;
   readJsonFile(filepath, j);
 
-  // Parse multiple x0 ranges
-  std::vector<BetheHeitlerApproxJsonConverter::RangeData> ranges;
+  // Parse multiple x0 ranges using core class type
+  std::vector<PolynomialBetheHeitlerApprox::RangeData> ranges;
 
   if (j.contains("ranges")) {
     for (const auto& jrange : j["ranges"]) {
-      BetheHeitlerApproxJsonConverter::RangeData range;
+      PolynomialBetheHeitlerApprox::RangeData range;
       from_json(jrange, range);
       ranges.push_back(range);
     }

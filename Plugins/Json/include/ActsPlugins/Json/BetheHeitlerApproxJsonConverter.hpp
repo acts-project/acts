@@ -19,13 +19,19 @@ namespace Acts {
 
 namespace BetheHeitlerApproxJsonConverter {
 
-/// Single x/x0 range data for one component
-struct RangeData {
-  double lowX0 = 0;
-  double highX0 = 0;
-  bool transform = true;
-  std::vector<PolynomialBetheHeitlerApprox::PolyData> data;
-};
+/// Convert RangeData to JSON (using core class type)
+/// @param j Destination JSON object
+/// @param data Source RangeData to convert
+void to_json(nlohmann::json& j,
+             const PolynomialBetheHeitlerApprox::RangeData& data);
+
+/// Convert JSON to RangeData (using core class type)
+/// @param j Source JSON object
+/// @param data Destination RangeData to populate
+void from_json(const nlohmann::json& j,
+               PolynomialBetheHeitlerApprox::RangeData& data);
+
+}  // namespace BetheHeitlerApproxJsonConverter
 
 /// Convert PolyData (component coefficients) to JSON
 /// @param j Destination JSON object

@@ -8,13 +8,9 @@
 
 #include "ActsPlugins/Json/BetheHeitlerApproxJsonConverter.hpp"
 
-#include <cstddef>
-
 namespace Acts {
 
 namespace BetheHeitlerApproxJsonConverter {
-
-using Data = std::vector<PolynomialBetheHeitlerApprox::PolyData>;
 
 void to_json(nlohmann::json& j,
              const PolynomialBetheHeitlerApprox::PolyData& data) {
@@ -30,53 +26,37 @@ void from_json(const nlohmann::json& j,
   data.varCoeffs = j.at("var_coeffs").get<std::vector<double>>();
 }
 
-void to_json(nlohmann::json& j, const Data& data) {
-  j = nlohmann::json::array();
-  for (const auto& component : data) {
-    nlohmann::json jcmp;
-    to_json(jcmp, component);
-    j.push_back(jcmp);
-  }
-}
-
-void from_json(const nlohmann::json& j, Data& data) {
-  data.clear();
-  for (const auto& jcmp : j) {
-    PolynomialBetheHeitlerApprox::PolyData component;
-    from_json(jcmp, component);
-    data.push_back(component);
-  }
-}
-
-void to_json(nlohmann::json& j, const RangeData& data) {
+void to_json(nlohmann::json& j,
+             const PolynomialBetheHeitlerApprox::RangeData& data) {
   j["low_x0"] = data.lowX0;
   j["high_x0"] = data.highX0;
   j["transform"] = data.transform;
-  j["components"] = nlohmann::json::array();
-  for (const auto& component : data.data) {
-    nlohmann::json jcmp;
-    to_json(jcmp, component);
-    j["components"].push_back(jcmp);
-  }
+  to_json(j, data.data);
 }
 
-void from_json(const nlohmann::json& j, RangeData& data) {
+void from_json(const nlohmann::json& j,
+               PolynomialBetheHeitlerApprox::RangeData& data) {
   data.lowX0 = j.at("low_x0").get<double>();
   data.highX0 = j.at("high_x0").get<double>();
   data.transform = j.value("transform", true);
 
   if (j.contains("components")) {
+    // Components array format
     data.data.clear();
     for (const auto& jcmp : j["components"]) {
       PolynomialBetheHeitlerApprox::PolyData component;
       from_json(jcmp, component);
       data.data.push_back(component);
     }
-  } else {
-    // Flat coefficients format (original) - convert to components format
+  } else if (j.contains("weight_coeffs")) {
+    // Flat coefficients format (single component) - convert to Data
     PolynomialBetheHeitlerApprox::PolyData component;
     from_json(j, component);
     data.data = {component};
+  } else {
+    throw std::runtime_error(
+        "JSON range data must contain either 'components' array or "
+        "'weight_coeffs' (flat format)");
   }
 }
 

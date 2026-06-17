@@ -34,6 +34,8 @@ namespace Acts {
 ///   - "transform": whether to apply logistic transform (default: true)
 ///   - "components": array of component objects with "weight_coeffs",
 ///   "mean_coeffs", "var_coeffs"
+///   - (alternatively, flat format with "weight_coeffs", "mean_coeffs",
+///   "var_coeffs" directly)
 std::shared_ptr<const PolynomialBetheHeitlerApprox>
 loadBetheHeitlerApproxFromJson(const std::string& filepath,
                                bool clampToRange = false,
