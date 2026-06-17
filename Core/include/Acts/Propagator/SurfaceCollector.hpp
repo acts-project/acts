@@ -178,7 +178,7 @@ struct BoundParameterRecorder {
     }
 
     return {};
-  };
+  }
 };
 
 }  // namespace Acts
