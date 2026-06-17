@@ -18,6 +18,9 @@
 
 namespace Acts {
 
+template <std::size_t _DIM>
+class IMultiAxisXD;
+
 /// @brief Common base class for all MultiAxis instances. This allows generic
 /// handling such as for inspection.
 ///
@@ -49,6 +52,27 @@ class IMultiAxis {
   using AnyPoint = SmallVector<double>;
   /// Dynamically sized vector of (non-owning) pointers to the contained axes
   using AnyAxesVector = SmallVector<const IAxis*>;
+
+  /// Factory method to create a multi-axis of dimension 1
+  /// @param axis1 the single axis of the grid
+  /// @return unique pointer to the created multi-axis
+  static std::unique_ptr<IMultiAxisXD<1>> create(const IAxis& axis1);
+
+  /// Factory method to create a multi-axis of dimension 2
+  /// @param axis1 the first axis of the grid
+  /// @param axis2 the second axis of the grid
+  /// @return unique pointer to the created multi-axis
+  static std::unique_ptr<IMultiAxisXD<2>> create(const IAxis& axis1,
+                                                 const IAxis& axis2);
+
+  /// Factory method to create a multi-axis of dimension 3
+  /// @param axis1 the first axis of the grid
+  /// @param axis2 the second axis of the grid
+  /// @param axis3 the third axis of the grid
+  /// @return unique pointer to the created multi-axis
+  static std::unique_ptr<IMultiAxisXD<3>> create(const IAxis& axis1,
+                                                 const IAxis& axis2,
+                                                 const IAxis& axis3);
 
   virtual ~IMultiAxis() = default;
 
