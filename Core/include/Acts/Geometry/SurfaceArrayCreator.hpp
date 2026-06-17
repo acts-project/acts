@@ -12,19 +12,16 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
-#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <functional>
-#include <iterator>
 #include <memory>
 #include <numbers>
 #include <optional>
@@ -62,9 +59,6 @@ using V3Vector = std::vector<Vector3>;
 /// 3D points.
 using V3Matrix = std::vector<V3Vector>;
 
-/// @brief Scalar type used for axis values in surface array binning
-using AxisScalar = Vector3::Scalar;
-
 /// @class SurfaceArrayCreator
 ///
 /// It is designed create sub surface arrays to be ordered on Surfaces
@@ -73,40 +67,6 @@ using AxisScalar = Vector3::Scalar;
 class SurfaceArrayCreator {
  public:
   friend struct ActsTests::SurfaceArrayCreatorFixture;
-  friend class SurfaceArray;
-
-  /// Prototype axis definition for surface binning.
-  struct ProtoAxis {
-    /// Binning type (equidistant or variable)
-    BinningType bType = BinningType::equidistant;
-    /// Axis direction for binning
-    AxisDirection axisDir = AxisDirection::AxisX;
-    /// Number of bins
-    std::size_t nBins = 0;
-    /// Minimum value of the axis
-    AxisScalar min = 0;
-    /// Maximum value of the axis
-    AxisScalar max = 0;
-    /// Bin edges for variable binning
-    std::vector<AxisScalar> binEdges;
-
-    /// Get the bin index for a given value
-    /// @param x The value to find the bin for
-    /// @return The bin index
-    std::size_t getBin(AxisScalar x) const {
-      if (binEdges.empty()) {
-        // equidistant
-        AxisScalar w = (max - min) / nBins;
-        return static_cast<std::size_t>(std::floor((x - min) / w));
-      } else {
-        // variable
-        const auto it = std::ranges::upper_bound(binEdges, x);
-        return static_cast<std::size_t>(
-                   std::ranges::distance(binEdges.begin(), it)) -
-               1;
-      }
-    }
-  };
 
   /// Configuration options for the surface array creator.
   struct Config {
@@ -157,7 +117,7 @@ class SurfaceArrayCreator {
   /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return a unique pointer to a new SurfaceArray
-  std::unique_ptr<SurfaceArray> surfaceArrayOnCylinder(
+  SurfaceArray surfaceArrayOnCylinder(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
       std::size_t binsZ, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
@@ -182,7 +142,7 @@ class SurfaceArrayCreator {
   /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return a unique pointer a new SurfaceArray
-  std::unique_ptr<SurfaceArray> surfaceArrayOnCylinder(
+  SurfaceArray surfaceArrayOnCylinder(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces,
       BinningType bTypePhi = equidistant, BinningType bTypeZ = equidistant,
@@ -207,7 +167,7 @@ class SurfaceArrayCreator {
   /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return a unique pointer a new SurfaceArray
-  std::unique_ptr<SurfaceArray> surfaceArrayOnDisc(
+  SurfaceArray surfaceArrayOnDisc(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
       std::size_t binsPhi,
@@ -237,7 +197,7 @@ class SurfaceArrayCreator {
   /// @note If there is more than on R-Ring, number of phi bins
   ///       will be set to lowest number of surfaces of any R-ring.
   ///       This ignores bTypePhi and produces equidistant binning in phi
-  std::unique_ptr<SurfaceArray> surfaceArrayOnDisc(
+  SurfaceArray surfaceArrayOnDisc(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
       BinningType bTypePhi,
@@ -265,7 +225,7 @@ class SurfaceArrayCreator {
   /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return a unique pointer a new SurfaceArray
-  std::unique_ptr<SurfaceArray> surfaceArrayOnPlane(
+  SurfaceArray surfaceArrayOnPlane(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
       std::size_t bins2, AxisDirection aDir,
@@ -354,6 +314,7 @@ class SurfaceArrayCreator {
   /// @todo implement for x,y binning
   /// @param [in] gctx the geometry context for this call
   /// @param surfaces are the sensitive surfaces to be
+  /// @param aBoundaryType the AxisBoundaryType for the axis to be created
   /// @param aDir the AxisDirection in which direction should be binned
   /// (currently possible: AxisPhi, AxisR, AxisZ)
   /// @param protoLayer Instance of @c ProtoLayer holding generic layer info
@@ -361,14 +322,14 @@ class SurfaceArrayCreator {
   /// @return Instance of @c ProtoAxis containing determined properties
   /// @note This only creates the @c ProtoAxis, this needs to be turned
   ///       into an actual @c Axis object to be used
-  ProtoAxis createVariableAxis(const GeometryContext& gctx,
-                               const std::vector<const Surface*>& surfaces,
-                               AxisDirection aDir, const ProtoLayer& protoLayer,
-                               Transform3& transform) const;
+  std::unique_ptr<const IAxis> createVariableAxis(
+      const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
+      AxisBoundaryType aBoundaryType, AxisDirection aDir,
+      const ProtoLayer& protoLayer, Transform3& transform) const;
 
   /// SurfaceArrayCreator internal method
   /// Creates a equidistant @c ProtoAxis when the extrema and the bin number
-  /// are
+  /// are known.
   /// It loops through the surfaces and finds out the needed information
   /// First the surfaces are sorted in the binning direction and the so called
   /// "key" surfaces (surfaces with different positions in the binning
@@ -380,6 +341,7 @@ class SurfaceArrayCreator {
   /// @todo implement for x,y binning
   /// @param [in] gctx the geometry context for this call
   /// @param surfaces are the sensitive surfaces to be
+  /// @param aBoundaryType the AxisBoundaryType for the axis to be created
   /// @param aDir the AxisDirection in which direction should be binned
   /// (currently possible: AxisPhi, AxisR, AxisZ)
   /// @param protoLayer Instance of @c ProtoLayer holding generic layer info
@@ -388,72 +350,11 @@ class SurfaceArrayCreator {
   /// @return Instance of @c ProtoAxis containing determined properties
   /// @note This only creates the @c ProtoAxis, this needs to be turned
   ///       into an actual @c Axis object to be used
-  ProtoAxis createEquidistantAxis(const GeometryContext& gctx,
-                                  const std::vector<const Surface*>& surfaces,
-                                  AxisDirection aDir,
-                                  const ProtoLayer& protoLayer,
-                                  Transform3& transform,
-                                  std::size_t nBins = 0) const;
-
-  /// SurfaceArrayCreator internal method
-  /// @brief Creates a SurfaceGridLookup instance within an any
-  /// This is essentially a factory which absorbs some if/else logic
-  /// that is required by the templating.
-  /// @tparam bdtA AxisBoundaryType of axis A
-  /// @tparam bdtB AxisBoundaryType of axis B
-  /// @param surface the surface of the grid
-  /// @param layerTolerance the layer tolerance
-  /// @param pAxisA ProtoAxis object for axis A
-  /// @param pAxisB ProtoAxis object for axis B
-  /// @param maxNeighborDistance the maximum neighbor distance for the grid lookup
-  template <AxisBoundaryType bdtA, AxisBoundaryType bdtB>
-  static std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
-  makeSurfaceGridLookup2D(std::shared_ptr<RegularSurface> surface,
-                          double layerTolerance, const ProtoAxis& pAxisA,
-                          const ProtoAxis& pAxisB,
-                          std::uint8_t maxNeighborDistance) {
-    using ISGL = SurfaceArray::ISurfaceGridLookup;
-    std::unique_ptr<ISGL> ptr;
-
-    if (pAxisA.bType == equidistant && pAxisB.bType == equidistant) {
-      Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max,
-                                              pAxisA.nBins);
-      Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max,
-                                              pAxisB.nBins);
-
-      ptr = SurfaceArray::makeSurfaceGridLookup(
-          std::move(surface), layerTolerance, std::tuple{axisA, axisB},
-          maxNeighborDistance);
-
-    } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
-      Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max,
-                                              pAxisA.nBins);
-      Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
-
-      ptr = SurfaceArray::makeSurfaceGridLookup(
-          std::move(surface), layerTolerance, std::tuple{axisA, axisB},
-          maxNeighborDistance);
-
-    } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
-      Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
-      Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max,
-                                              pAxisB.nBins);
-
-      ptr = SurfaceArray::makeSurfaceGridLookup(
-          std::move(surface), layerTolerance, std::tuple{axisA, axisB},
-          maxNeighborDistance);
-
-    } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
-      Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
-      Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
-
-      ptr = SurfaceArray::makeSurfaceGridLookup(
-          std::move(surface), layerTolerance, std::tuple{axisA, axisB},
-          maxNeighborDistance);
-    }
-
-    return ptr;
-  }
+  std::unique_ptr<const IAxis> createEquidistantAxis(
+      const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
+      AxisBoundaryType aBoundaryType, AxisDirection aDir,
+      const ProtoLayer& protoLayer, Transform3& transform,
+      std::size_t nBins = 0) const;
 
   /// logging instance
   std::unique_ptr<const Logger> m_logger;
