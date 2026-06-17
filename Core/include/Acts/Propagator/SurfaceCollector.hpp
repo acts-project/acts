@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Propagator/PropagatorState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -167,18 +168,11 @@ struct BoundParameterRecorder {
 
     // The current surface has been assigned by the navigator
     if (currentSurface && selector(*currentSurface)) {
-      std::optional<BoundMatrix> cov =
-          state.stepping.covTransport
-              ? std::make_optional<BoundMatrix>(state.stepping.cov)
-              : std::nullopt;
-      auto boundPars = BoundTrackParameters::create(
-          state.geoContext, currentSurface->getSharedPtr(),
-          state.stepping.pars.template segment<4>(eFreePos0),
-          stepper.direction(state.stepping), stepper.qOverP(state.stepping),
-          std::move(cov), stepper.particleHypothesis(state.stepping));
-      if (boundPars.ok()) {
-        result.emplace_back(*boundPars);
+      auto res = stepper.boundState(state.stepping, *currentSurface);
+      if (res.ok()) {
+        result.emplace_back(std::get<0>(*res));
       }
+
       // Screen output
       ACTS_VERBOSE("Collect surface  " << currentSurface->geometryId());
     }

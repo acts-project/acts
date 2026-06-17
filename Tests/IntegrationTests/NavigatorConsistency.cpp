@@ -90,7 +90,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
   fwdSurfaceCollector.selector.selectPassive = true;
 
   auto& paramRecorder = fwdOptions.actorList.template get<ParamRecorder>();
- paramRecorder.selector.selectSensitive = true;
+  paramRecorder.selector.selectSensitive = true;
   paramRecorder.selector.selectMaterial = true;
   paramRecorder.selector.selectPassive = true;
 
@@ -102,13 +102,21 @@ void runSelfConsistencyTest(const propagator_t& prop,
   auto fwdTrackRecords = fwdResult.template get<ParamRecorder::result_type>();
 
   BOOST_CHECK_EQUAL(fwdTrackRecords.size(), fwdSurfaceHits.size());
-  for (const auto& boundPars : fwdResult.template get<ParamRecorder::result_type>()) {
-    BOOST_CHECK_EQUAL(boundPars.particleHypothesis(), start.particleHypothesis());
-    BOOST_CHECK_EQUAL(boundPars.covariance().has_value(), start.covariance().has_value());
-    BOOST_CHECK_EQUAL(std::ranges::any_of(fwdSurfaceHits, [&](const Acts::SurfaceHit& hit){
-        return hit.surface == boundPars.refernceSurface().getSharedPtr().get();
-    }), true);
-}
+  for (const auto& boundPars :
+       fwdResult.template get<ParamRecorder::result_type>()) {
+    BOOST_CHECK_EQUAL(boundPars.particleHypothesis(),
+                      start.particleHypothesis());
+    BOOST_CHECK_EQUAL(boundPars.covariance().has_value(),
+                      start.covariance().has_value());
+    BOOST_CHECK_EQUAL(
+        std::ranges::any_of(
+            fwdSurfaceHits,
+            [&](const Acts::SurfaceHit& hit) {
+              return hit.surface ==
+                     boundPars.referenceSurface().getSharedPtr().get();
+            }),
+        true);
+  }
 
   auto fwdSurfaces = collectRelevantGeoIds(
       fwdResult.template get<TestSurfaceCollector::result_type>());
