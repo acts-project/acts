@@ -11,8 +11,10 @@
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/detail/MultiAxisHelper.hpp"
 
+#include <algorithm>
 #include <iosfwd>
 #include <memory>
+#include <stdexcept>
 
 #include <boost/container/small_vector.hpp>
 
@@ -20,6 +22,12 @@ namespace Acts {
 
 template <std::size_t _DIM>
 class IMultiAxisXD;
+/// Type alias for a multi-axis of dimension 1
+using IMultiAxis1D = IMultiAxisXD<1>;
+/// Type alias for a multi-axis of dimension 2
+using IMultiAxis2D = IMultiAxisXD<2>;
+/// Type alias for a multi-axis of dimension 3
+using IMultiAxis3D = IMultiAxisXD<3>;
 
 /// @brief Common base class for all MultiAxis instances. This allows generic
 /// handling such as for inspection.
@@ -56,23 +64,23 @@ class IMultiAxis {
   /// Factory method to create a multi-axis of dimension 1
   /// @param axis1 the single axis of the grid
   /// @return unique pointer to the created multi-axis
-  static std::unique_ptr<IMultiAxisXD<1>> create(const IAxis& axis1);
+  static std::unique_ptr<IMultiAxis1D> create(const IAxis& axis1);
 
   /// Factory method to create a multi-axis of dimension 2
   /// @param axis1 the first axis of the grid
   /// @param axis2 the second axis of the grid
   /// @return unique pointer to the created multi-axis
-  static std::unique_ptr<IMultiAxisXD<2>> create(const IAxis& axis1,
-                                                 const IAxis& axis2);
+  static std::unique_ptr<IMultiAxis2D> create(const IAxis& axis1,
+                                              const IAxis& axis2);
 
   /// Factory method to create a multi-axis of dimension 3
   /// @param axis1 the first axis of the grid
   /// @param axis2 the second axis of the grid
   /// @param axis3 the third axis of the grid
   /// @return unique pointer to the created multi-axis
-  static std::unique_ptr<IMultiAxisXD<3>> create(const IAxis& axis1,
-                                                 const IAxis& axis2,
-                                                 const IAxis& axis3);
+  static std::unique_ptr<IMultiAxis3D> create(const IAxis& axis1,
+                                              const IAxis& axis2,
+                                              const IAxis& axis3);
 
   virtual ~IMultiAxis() = default;
 
