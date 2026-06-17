@@ -47,7 +47,9 @@ def runRefittingGsf(
     # NOTE we specify clampToRange as True to silence warnings in the test about
     # queries to the loss distribution outside the specified range, since no dedicated
     # approximation for the ODD is done yet.
-    bha = acts.examples.AtlasBetheHeitlerApprox.makeDefault(clampToRange=True)
+    bha = acts.examples.loadBetheHeitlerApproxFromJson(
+        "Examples/Configs/betheHeitler_geantSim_cdf_nC6_O5.json", clamp_to_range=True
+    )
 
     gsfOptions = {
         "betheHeitlerApprox": bha,

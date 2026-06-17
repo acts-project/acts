@@ -14,6 +14,7 @@
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
+#include "ActsPlugins/Json/BetheHeitlerApproxJsonReader.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <cstddef>
@@ -113,6 +114,11 @@ void addTrackFitting(py::module& mex) {
               return makeDefaultBetheHeitlerApprox(clampToRange);
             },
             "clampToRange"_a);
+
+    mex.def("loadBetheHeitlerApproxFromJson",
+            &Acts::loadBetheHeitlerApproxFromJson, "filepath"_a,
+            "clamp_to_range"_a = false, "no_change_limit"_a = 0.0001,
+            "single_gaussian_limit"_a = 0.002);
 
     mex.def(
         "makeGsfFitterFunction",

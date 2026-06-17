@@ -117,9 +117,6 @@ class BetheHeitlerApproxSingleCmp final : public BetheHeitlerApprox {
 /// mixture. To enable an approximation for continuous input variables, the
 /// weights, means and variances are internally parametrized as a Nth order
 /// polynomial.
-/// @todo This class is rather inflexible: It forces two data representations,
-/// making it a bit awkward to add a single parameterization. It would be good
-/// to generalize this at some point.
 /// @ingroup material
 class AtlasBetheHeitlerApprox : public BetheHeitlerApprox {
  public:

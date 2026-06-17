@@ -1,0 +1,44 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
+
+#include <memory>
+#include <string>
+
+namespace Acts {
+
+/// @addtogroup json_plugin
+/// @{
+
+/// Load a Bethe-Heitler approximation from a JSON file.
+///
+/// @param filepath Path to the JSON file
+/// @param clampToRange Whether to clamp x/x0 values to the valid range
+/// @param noChangeLimit Limit below which no change is applied (default: 0.0001)
+/// @param singleGaussianLimit Limit below which a single Gaussian is used (default: 0.002)
+/// @return Shared pointer to the loaded AtlasBetheHeitlerApprox
+///
+/// The JSON file should contain:
+/// - "version": string (optional)
+/// - "n_components": number of Gaussian components
+/// - "polynomial_order": polynomial order
+/// - "transform": whether to apply logistic transform
+/// - "limits": object with "low_x0" and "high_x0" values
+/// - "components": array of component definitions with "weight_low",
+/// "mean_low",
+///   "var_low", "weight_high", "mean_high", "var_high" coefficient arrays
+std::shared_ptr<const AtlasBetheHeitlerApprox> loadBetheHeitlerApproxFromJson(
+    const std::string& filepath, bool clampToRange = false,
+    double noChangeLimit = 0.0001, double singleGaussianLimit = 0.002);
+
+/// @}
+
+}  // namespace Acts
