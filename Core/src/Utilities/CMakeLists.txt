@@ -13,4 +13,5 @@ target_sources(
         ScopedTimer.cpp
         TransformComparator.cpp
         Histogram.cpp
+        IMultiAxis.cpp
 )
