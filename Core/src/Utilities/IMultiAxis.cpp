@@ -8,6 +8,7 @@
 
 #include "Acts/Utilities/IMultiAxis.hpp"
 
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/MultiAxis.hpp"
 
 namespace Acts {
