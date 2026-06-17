@@ -261,7 +261,13 @@ endfunction(detray_add_flag)
 #        )
 #
 function(detray_add_codegen_header)
-    set(oneValueArgs TARGET CODEGEN_DIR ACTS_CODEGEN_PKG SCRIPT OUTPUT)
+    set(oneValueArgs
+        TARGET
+        CODEGEN_DIR
+        ACTS_CODEGEN_PKG
+        SCRIPT
+        OUTPUT
+    )
     cmake_parse_arguments(ARG "" "${oneValueArgs}" "" ${ARGN})
 
     if(
