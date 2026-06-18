@@ -477,6 +477,17 @@ class IMultiAxisXD : public IMultiAxis {
     return result;
   }
 
+  /// Get the bin width along each axis for a given multi-index
+  /// @param multiIndex local bin indices along each axis
+  /// @return point holding the bin width along each axis
+  virtual Point getBinWidth(const MultiIndex& multiIndex) const {
+    Point result{};
+    for (std::size_t i = 0; i < DIM; ++i) {
+      result[i] = getAxis(i).getBinWidth(multiIndex[i]);
+    }
+    return result;
+  }
+
   /// Determine the flattened global bin index for a given point
   /// @param point coordinates to look up, one per axis
   /// @return global bin index of the bin containing the point

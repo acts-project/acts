@@ -123,6 +123,13 @@ class MultiAxis final : public IMultiAxisXD<sizeof...(Axes)> {
     return detail::MultiAxisHelper::getBinCenter(multiIndex, m_axes);
   }
 
+  /// Get the bin width along each axis for a given multi-index
+  /// @param multiIndex local bin indices along each axis
+  /// @return point holding the bin width along each axis
+  Point getBinWidth(const MultiIndex& multiIndex) const override {
+    return detail::MultiAxisHelper::getBinWidth(multiIndex, m_axes);
+  }
+
   /// Determine the flattened global bin index for a given point
   /// @param point coordinates to look up, one per axis
   /// @return global bin index of the bin containing the point
@@ -145,6 +152,16 @@ class MultiAxis final : public IMultiAxisXD<sizeof...(Axes)> {
   /// @return local bin indices along each axis (may be under-/overflow bins)
   MultiIndex getMultiIndexFromPoint(const Point& point) const override {
     return detail::MultiAxisHelper::getMultiIndexFromPoint(point, m_axes);
+  }
+
+  /// Determine the multi-index of local bin indices for a given point, where
+  /// the point is interpreted as being shifted by half a bin width along each
+  /// axis.
+  /// @param point coordinates to look up, one per axis
+  /// @return local bin indices along each axis (may be under-/overflow bins)
+  MultiIndex getMultiIndexFromLowerLeftCorner(const Point& point) const {
+    return detail::MultiAxisHelper::getMultiIndexFromLowerLeftCorner(
+        point, m_axes.getAxesTuple());
   }
 
   /// Determine the multi-index of local bin indices from a flattened global

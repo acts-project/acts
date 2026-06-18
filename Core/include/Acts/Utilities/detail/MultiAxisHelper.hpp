@@ -173,6 +173,15 @@ struct MultiAxisHelperImpl {
   }
 
   template <class... Axes>
+  static void getBinWidth(
+      std::array<double, sizeof...(Axes)>& widthArray,
+      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::tuple<Axes...>& axes) {
+    widthArray[N] = std::get<N>(axes).getBinWidth(multiIndex.at(N));
+    MultiAxisHelperImpl<N - 1>::getBinWidth(widthArray, multiIndex, axes);
+  }
+
+  template <class... Axes>
   static void getFlatIndexFromMultiIndex(
       const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
       const std::tuple<Axes...>& axes, std::size_t& bin, std::size_t& area) {
@@ -270,13 +279,6 @@ struct MultiAxisHelperImpl {
     MultiAxisHelperImpl<N - 1>::getMax(axes, maxArray);
   }
 
-  template <class... Axes>
-  static void getWidth(const std::tuple<Axes...>& axes,
-                       std::array<double, sizeof...(Axes)>& widthArray) {
-    widthArray[N] = std::get<N>(axes).getBinWidth();
-    MultiAxisHelperImpl<N - 1>::getWidth(axes, widthArray);
-  }
-
   template <class Point, class... Axes>
   static bool isInside(const Point& point, const std::tuple<Axes...>& axes) {
     bool insideThisAxis = std::get<N>(axes).isInside(point[N]);
@@ -338,6 +340,14 @@ struct MultiAxisHelperImpl<0u> {
       const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
       const std::tuple<Axes...>& axes) {
     center.at(0u) = std::get<0u>(axes).getBinCenter(multiIndex.at(0u));
+  }
+
+  template <class... Axes>
+  static void getBinWidth(
+      std::array<double, sizeof...(Axes)>& widthArray,
+      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::tuple<Axes...>& axes) {
+    widthArray[0u] = std::get<0u>(axes).getBinWidth(multiIndex.at(0u));
   }
 
   template <class... Axes>
@@ -418,12 +428,6 @@ struct MultiAxisHelperImpl<0u> {
   static void getMax(const std::tuple<Axes...>& axes,
                      std::array<double, sizeof...(Axes)>& maxArray) {
     maxArray[0u] = std::get<0u>(axes).getMax();
-  }
-
-  template <class... Axes>
-  static void getWidth(const std::tuple<Axes...>& axes,
-                       std::array<double, sizeof...(Axes)>& widthArray) {
-    widthArray[0u] = std::get<0u>(axes).getBinWidth();
   }
 
   template <class Point, class... Axes>
@@ -535,6 +539,21 @@ struct MultiAxisHelper {
     return center;
   }
 
+  /// get the bin width of all axes of one grid
+  ///
+  /// @tparam Axes parameter pack of axis types defining the grid
+  /// @param axes actual axis objects spanning the grid
+  /// @return array returning the maxima of all given axes
+  template <class... Axes>
+  static std::array<double, sizeof...(Axes)> getBinWidth(
+      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::tuple<Axes...>& axes) {
+    std::array<double, sizeof...(Axes)> widthArray{};
+    MultiAxisHelperImpl<sizeof...(Axes) - 1>::getBinWidth(widthArray,
+                                                          multiIndex, axes);
+    return widthArray;
+  }
+
   /// determine global bin index from local indices along each axis
   ///
   /// @tparam Axes parameter pack of axis types defining the grid
@@ -581,6 +600,38 @@ struct MultiAxisHelper {
         point, axes, multiIndex);
 
     return multiIndex;
+  }
+
+  /// determine local bin index of the bin with the lower left edge closest to
+  /// the given point for each axis
+  ///
+  /// @tparam Point any type with point semantics supporting component access
+  /// through @c operator[]
+  /// @tparam Axes parameter pack of axis types defining the grid
+  ///
+  /// @param point point to look up in the grid
+  /// @return array with local bin indices along each axis (in same order as
+  /// given @c axes object)
+  ///
+  /// @pre The given @c Point type must represent a point in d (or higher)
+  /// dimensions where d is dimensionality of the grid.
+  /// @note This could be a under-/overflow bin along one or more axes.
+  template <class Point, class... Axes>
+  static std::array<std::size_t, sizeof...(Axes)>
+  getMultiIndexFromLowerLeftCorner(const Point& point,
+                                   const std::tuple<Axes...>& axes) {
+    constexpr std::size_t DIM = sizeof...(Axes);
+
+    const auto multiIndex =
+        detail::MultiAxisHelper::getMultiIndexFromPoint(point, axes);
+
+    Point shiftedPoint;
+    const auto width = detail::MultiAxisHelper::getBinWidth(multiIndex, axes);
+    for (std::size_t i = 0; i < DIM; i++) {
+      shiftedPoint[i] = point[i] + width[i] / 2;
+    }
+
+    return detail::MultiAxisHelper::getMultiIndexFromPoint(shiftedPoint, axes);
   }
 
   /// determine local bin index for each axis from global bin index
@@ -745,19 +796,6 @@ struct MultiAxisHelper {
     std::array<double, sizeof...(Axes)> maxArray{};
     MultiAxisHelperImpl<sizeof...(Axes) - 1>::getMax(axes, maxArray);
     return maxArray;
-  }
-
-  /// get the bin width of all axes of one grid
-  ///
-  /// @tparam Axes parameter pack of axis types defining the grid
-  /// @param axes actual axis objects spanning the grid
-  /// @return array returning the maxima of all given axes
-  template <class... Axes>
-  static std::array<double, sizeof...(Axes)> getWidth(
-      const std::tuple<Axes...>& axes) {
-    std::array<double, sizeof...(Axes)> widthArray{};
-    MultiAxisHelperImpl<sizeof...(Axes) - 1>::getWidth(axes, widthArray);
-    return widthArray;
   }
 
   /// get global bin indices for bins in specified neighborhood
