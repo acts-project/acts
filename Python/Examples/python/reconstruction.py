@@ -1991,6 +1991,7 @@ def addGnn(
     inputClusters: str = "",
     outputDirRoot: Optional[Union[Path, str]] = None,
     device=None,
+    shrinkNodes: bool = False,
     writeMatchingDetails: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
@@ -2011,6 +2012,7 @@ def addGnn(
         inputClusters: Name of input cluster collection (default: "")
         outputDirRoot: Optional output directory for performance ROOT files
         device: acts.gnn.Device to run the GNN pipeline on (default: acts.gnn.Device.Cuda())
+        shrinkNodes: Remove unused nodes before each edge classification step
         logLevel: Logging level
     """
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -2039,6 +2041,7 @@ def addGnn(
         nodeFeatures=nodeFeatures,
         featureScales=featureScales,
         device=device,
+        shrinkNodes=shrinkNodes,
     )
     s.addAlgorithm(findingAlg)
     s.addWhiteboardAlias("protoTracks", findingAlg.config.outputProtoTracks)
