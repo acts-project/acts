@@ -82,6 +82,8 @@ def main():
         help="Convert to detray detector and run detray navigation and propagation",
     )
 
+    # Output options
+
     p.add_argument(
         "--output-summary",
         action=argparse.BooleanOptionalAction,
@@ -104,6 +106,17 @@ def main():
         "--output-sim-hits",
         action=argparse.BooleanOptionalAction,
         help="Write out sim hits, only makes sense for Geant4",
+    )
+
+    p.add_argument(
+        "--detray-search-window",
+        type=int,
+        nargs=2,
+        default=[0, 0],
+        metavar=("AXIS0", "AXIS1"),
+        help="Detray grid acceleration search window per axis. {0, 0} (default) "
+        "only looks at the current bin; increase to probe whether the converted "
+        "surface grids are missing neighbor-cell entries",
     )
 
     args = p.parse_args()
@@ -148,13 +161,16 @@ def main():
     trackingGeometry = None
     detectorStore = {}
 
-    buildGen3 = args.geo_mode == "gen3" or args.geo_mode == "detray"
+    # Build from ODD unless reading detray geometry from file
+    build_from_odd = args.input == "" or args.geo_mode != "detray"
 
-    with getOpenDataDetector(gen3=buildGen3) as detector:
-        trackingGeometry = detector.trackingGeometry()
-        detectorStore["Detector"] = detector
-        detectorStore["Volume"] = trackingGeometry.highestTrackingVolume
-        detectorStore["SurfaceByIdentifier"] = trackingGeometry.geoIdSurfaceMap()
+    if build_from_odd:
+        buildGen3 = args.geo_mode == "gen3" or args.geo_mode == "detray"
+        with getOpenDataDetector(gen3=buildGen3) as detector:
+            trackingGeometry = detector.trackingGeometry()
+            detectorStore["Detector"] = detector
+            detectorStore["Volume"] = trackingGeometry.highestTrackingVolume
+            detectorStore["SurfaceByIdentifier"] = trackingGeometry.geoIdSurfaceMap()
 
     print(">>> Test mode is :", args.geo_mode)
     # check if the mode does not contain geant4
@@ -170,20 +186,32 @@ def main():
             propagator = acts.Propagator(stepper, navigator)
             propagatorImpl = acts.examples.ConcretePropagator(propagator)
         else:
+            import glob
             import acts.vecmem, acts.detray
             import acts.examples.detray
 
             __pmr = acts.vecmem.HostMemoryResource()
 
-            detrayGeometry = acts.detray.convertODD(
-                __pmr,
-                gContext,
-                trackingGeometry,
-                beampipeVolumeName="BeamPipe",
-                logLevel=logLevel,
-            )
+            if args.input != "":
+                files = glob.glob(args.input.rstrip("/") + "/*.json")
+                print(">>> Reading detray geometry from", args.input, "->", files)
+                detrayGeometry, _ = acts.detray.readODD(__pmr, files)
+            else:
+                detrayGeometry, _ = acts.detray.convertODD(
+                    __pmr,
+                    gContext,
+                    trackingGeometry,
+                    beampipeVolumeName="BeamPipe",
+                    logLevel=logLevel,
+                    convertMaterial=True,
+                    convertSurfaceGrids=True,
+                )
             propagatorImpl = acts.examples.detray.StraightLinePropagatorODD(
-                detrayGeometry, __pmr, sterileRun, logLevel
+                detrayGeometry,
+                __pmr,
+                sterileRun,
+                logLevel,
+                searchWindow=args.detray_search_window,
             )
 
         # Run particle smearing

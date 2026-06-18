@@ -17,6 +17,7 @@
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
 #include <memory>
@@ -75,12 +76,10 @@ SeedFinder {
     /// Managing seed candidates for SpM
     CandidatesForMiddleSp<const external_space_point_t> candidatesCollector{};
     /// Managing bottom doublet candidates
-    boost::container::small_vector<Neighbour<grid_t>,
-                                   detail::ipow(3, grid_t::DIM)>
+    boost::container::small_vector<Neighbour<grid_t>, ipow(3, grid_t::DIM)>
         bottomNeighbours{};
     /// Managing top doublet candidates
-    boost::container::small_vector<Neighbour<grid_t>,
-                                   detail::ipow(3, grid_t::DIM)>
+    boost::container::small_vector<Neighbour<grid_t>, ipow(3, grid_t::DIM)>
         topNeighbours{};
 
     /// Mutable variables for Space points used in the seeding
@@ -148,8 +147,8 @@ SeedFinder {
   void getCompatibleDoublets(
       const SeedFinderOptions& options, const grid_t& grid,
       SpacePointMutableData& mutableData,
-      boost::container::small_vector<
-          Neighbour<grid_t>, detail::ipow(3, grid_t::DIM)>& otherSPsNeighbours,
+      boost::container::small_vector<Neighbour<grid_t>, ipow(3, grid_t::DIM)>&
+          otherSPsNeighbours,
       const external_space_point_t& mediumSP,
       std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
       const float deltaRMinSP, const float deltaRMaxSP, const float uIP,

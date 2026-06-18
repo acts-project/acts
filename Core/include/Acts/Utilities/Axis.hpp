@@ -10,116 +10,15 @@
 
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/NeighborHoodIndices.hpp"
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
+#include <stdexcept>
 #include <vector>
 
 namespace Acts {
-
-// This object can be iterated to produce up to two sequences of integer
-// indices, corresponding to the half-open integer ranges [begin1, end1[ and
-// [begin2, end2[.
-//
-// The goal is to emulate the effect of enumerating a range of neighbor
-// indices on an axis (which may go out of bounds and wrap around since we
-// have AxisBoundaryType::Closed), inserting them into an std::vector, and
-// discarding duplicates, without paying the price of duplicate removal
-// and dynamic memory allocation in hot magnetic field interpolation code.
-//
-/// Iterable indices for neighborhood lookups with optional wrap-around.
-class NeighborHoodIndices {
- public:
-  NeighborHoodIndices() = default;
-
-  /// Constructor for continuous range
-  /// @param begin Start index
-  /// @param end End index (exclusive)
-  NeighborHoodIndices(std::size_t begin, std::size_t end)
-      : m_begin1(begin), m_end1(end), m_begin2(end), m_end2(end) {}
-
-  /// Constructor for wrapped range (two segments)
-  /// @param begin1 Start of first segment
-  /// @param end1 End of first segment (exclusive)
-  /// @param begin2 Start of second segment
-  /// @param end2 End of second segment (exclusive)
-  NeighborHoodIndices(std::size_t begin1, std::size_t end1, std::size_t begin2,
-                      std::size_t end2)
-      : m_begin1(begin1), m_end1(end1), m_begin2(begin2), m_end2(end2) {}
-
-  /// Iterator over the neighborhood index sequence.
-  class iterator {
-   public:
-    iterator() = default;
-
-    /// Constructor for end iterator
-    /// @param current End position
-    explicit iterator(std::size_t current)
-        : m_current(current), m_wrapped(true) {}
-
-    /// Constructor for begin iterator
-    /// @param begin1 Start of first segment
-    /// @param end1 End of first segment
-    /// @param begin2 Start of second segment
-    iterator(std::size_t begin1, std::size_t end1, std::size_t begin2)
-        : m_current(begin1),
-          m_end1(end1),
-          m_begin2(begin2),
-          m_wrapped(begin1 == begin2) {}
-
-    /// Dereference operator
-    /// @return Current index
-    std::size_t operator*() const { return m_current; }
-
-    /// Pre-increment operator
-    /// @return Reference to this iterator
-    iterator& operator++() {
-      ++m_current;
-      if (m_current == m_end1) {
-        m_current = m_begin2;
-        m_wrapped = true;
-      }
-      return *this;
-    }
-
-    /// Equality comparison operator
-    /// @param it Other iterator
-    /// @return True if iterators are equal
-    bool operator==(const iterator& it) const {
-      return (m_current == it.m_current) && (m_wrapped == it.m_wrapped);
-    }
-
-   private:
-    std::size_t m_current = 0, m_end1 = 0, m_begin2 = 0;
-    bool m_wrapped = false;
-  };
-
-  /// Get begin iterator
-  /// @return Iterator to first index
-  iterator begin() const { return iterator(m_begin1, m_end1, m_begin2); }
-
-  /// Get end iterator
-  /// @return Iterator past last index
-  iterator end() const { return iterator(m_end2); }
-
-  /// Get total number of indices in the sequence
-  /// @return Number of indices
-  std::size_t size() const { return (m_end1 - m_begin1) + (m_end2 - m_begin2); }
-
-  /// Collect all indices into a vector
-  /// @return Vector containing all indices
-  std::vector<std::size_t> collect() const {
-    std::vector<std::size_t> result;
-    result.reserve(this->size());
-    for (std::size_t idx : *this) {
-      result.push_back(idx);
-    }
-    return result;
-  }
-
- private:
-  std::size_t m_begin1 = 0, m_end1 = 0, m_begin2 = 0, m_end2 = 0;
-};
 
 /// @brief calculate bin indices for an equidistant binning
 ///
@@ -131,60 +30,67 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   /// Static type identifier for this equidistant axis specialization
   static constexpr AxisType type = AxisType::Equidistant;
 
-  /// @brief default constructor
-  ///
-  /// @param [in] xmin lower boundary of axis range
-  /// @param [in] xmax upper boundary of axis range
-  /// @param [in] nBins number of bins to divide the axis range into
-  ///
   /// Divide the range \f$[\text{xmin},\text{xmax})\f$ into \f$\text{nBins}\f$
   /// equidistant bins.
-  Axis(double xmin, double xmax, std::size_t nBins)
-      : m_min(xmin),
+  ///
+  /// @param xmin lower boundary of axis range
+  /// @param xmax upper boundary of axis range
+  /// @param nBins number of bins to divide the axis range into
+  /// @param direction optional direction of the axis
+  Axis(double xmin, double xmax, std::size_t nBins,
+       std::optional<AxisDirection> direction = std::nullopt)
+      : IAxis(direction),
+        m_min(xmin),
         m_max(xmax),
         m_width((xmax - xmin) / nBins),
-        m_bins(nBins) {}
+        m_bins(nBins) {
+    if (m_min >= m_max) {
+      std::string msg = "Axis: Invalid axis range'";
+      msg += "', min edge (" + std::to_string(m_min) + ") ";
+      msg += " needs to be smaller than max edge (";
+      msg += std::to_string(m_max) + ").";
+      throw std::invalid_argument(msg);
+    }
+    if (m_bins < 1u) {
+      throw std::invalid_argument(
+          "Axis: Invalid binning, at least one bin is needed.");
+    }
+  }
 
-  /// Constructor with a tag for the boundary type
-  ///
-  /// @param [in] typeTag boundary type tag
-  /// @param [in] xmin lower boundary of axis range
-  /// @param [in] xmax upper boundary of axis range
-  /// @param [in] nBins number of bins to divide the axis range into
-  ///
   /// Divide the range \f$[\text{xmin},\text{xmax})\f$ into \f$\text{nBins}\f$
   /// equidistant bins.
+  ///
+  /// @param typeTag boundary type tag
+  /// @param xmin lower boundary of axis range
+  /// @param xmax upper boundary of axis range
+  /// @param nBins number of bins to divide the axis range into
+  /// @param direction optional direction of the axis
   Axis(AxisBoundaryTypeTag<bdt> typeTag, double xmin, double xmax,
-       std::size_t nBins)
-      : Axis(xmin, xmax, nBins) {
+       std::size_t nBins, std::optional<AxisDirection> direction = std::nullopt)
+      : Axis(xmin, xmax, nBins, direction) {
     static_cast<void>(typeTag);
   }
 
-  /// @brief returns whether the axis is equidistant
-  ///
+  /// returns whether the axis is equidistant
   /// @return bool is equidistant
   bool isEquidistant() const final { return true; }
 
-  /// @brief returns whether the axis is variable
-  ///
+  /// returns whether the axis is variable
   /// @return bool is variable
   bool isVariable() const final { return false; }
 
-  /// @brief returns the type of the axis
+  /// returns the type of the axis
   /// @return @c AxisType of this axis
   AxisType getType() const final { return type; }
 
-  /// @brief returns the boundary type set in the template param
-  ///
+  /// returns the boundary type set in the template param
   /// @return @c AxisBoundaryType of this axis
   AxisBoundaryType getBoundaryType() const final { return bdt; }
 
-  /// @brief Get #size bins which neighbor the one given
-  ///
-  /// Generic overload with symmetric size
-  ///
-  /// @param [in] idx requested bin index
-  /// @param [in] size how many neighboring bins (up/down)
+  /// Get #size bins which neighbor the one given. Generic overload with
+  /// symmetric size.
+  /// @param idx requested bin index
+  /// @param size how many neighboring bins (up/down)
   /// @return Set of neighboring bin indices (global)
   NeighborHoodIndices neighborHoodIndices(std::size_t idx,
                                           std::size_t size = 1) const {
@@ -192,16 +98,11 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
                                std::make_pair(-static_cast<int>(size), size));
   }
 
-  /// @brief Get #size bins which neighbor the one given
-  ///
-  /// This is the version for Open
-  ///
-  /// @param [in] idx requested bin index
-  /// @param [in] sizes how many neighboring bins (up/down)
+  /// Get #size bins which neighbor the one given. This is the version for Open.
+  /// @param idx requested bin index
+  /// @param sizes how many neighboring bins (up/down)
   /// @return Set of neighboring bin indices (global)
-  /// @note Open varies given bin and allows 0 and NBins+1 (underflow,
-  /// overflow)
-  ///       as neighbors
+  /// @note Open varies given bin and allows 0 and NBins+1 (underflow, overflow) as neighbors
   NeighborHoodIndices neighborHoodIndices(std::size_t idx,
                                           std::pair<int, int> sizes = {-1,
                                                                        1}) const
@@ -215,15 +116,12 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
     return NeighborHoodIndices(itmin, itmax + 1);
   }
 
-  /// @brief Get #size bins which neighbor the one given
-  ///
-  /// This is the version for Bound
-  ///
-  /// @param [in] idx requested bin index
-  /// @param [in] sizes how many neighboring bins (up/down)
+  /// Get #size bins which neighbor the one given. This is the version for
+  /// Bound.
+  /// @param idx requested bin index
+  /// @param sizes how many neighboring bins (up/down)
   /// @return Set of neighboring bin indices (global)
-  /// @note Bound varies given bin and allows 1 and NBins (regular bins)
-  ///       as neighbors
+  /// @note Bound varies given bin and allows 1 and NBins (regular bins) as neighbors
   NeighborHoodIndices neighborHoodIndices(std::size_t idx,
                                           std::pair<int, int> sizes = {-1,
                                                                        1}) const
@@ -240,12 +138,10 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
     return NeighborHoodIndices(itmin, itmax + 1);
   }
 
-  /// @brief Get #size bins which neighbor the one given
-  ///
-  /// This is the version for Closed (i.e. Wrapping)
-  ///
-  /// @param [in] idx requested bin index
-  /// @param [in] sizes how many neighboring bins (up/down)
+  /// Get #size bins which neighbor the one given. This is the version for
+  /// Closed (i.e. Wrapping).
+  /// @param idx requested bin index
+  /// @param sizes how many neighboring bins (up/down)
   /// @return Set of neighboring bin indices (global)
   /// @note Closed varies given bin and allows bins on the opposite
   ///       side of the axis as neighbors. (excludes underflow / overflow)
@@ -288,11 +184,9 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
     }
   }
 
-  /// @brief Converts bin index into a valid one for this axis.
-  ///
+  /// Converts bin index into a valid one for this axis.
   /// @note Open: bin index is clamped to [0, nBins+1]
-  ///
-  /// @param [in] bin The bin to wrap
+  /// @param bin The bin to wrap
   /// @return valid bin index
   std::size_t wrapBin(int bin) const
     requires(bdt == AxisBoundaryType::Open)
@@ -300,11 +194,9 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
     return std::max(std::min(bin, static_cast<int>(getNBins()) + 1), 0);
   }
 
-  /// @brief Converts bin index into a valid one for this axis.
-  ///
+  /// Converts bin index into a valid one for this axis.
   /// @note Bound: bin index is clamped to [1, nBins]
-  ///
-  /// @param [in] bin The bin to wrap
+  /// @param bin The bin to wrap
   /// @return valid bin index
   std::size_t wrapBin(int bin) const
     requires(bdt == AxisBoundaryType::Bound)
@@ -312,11 +204,9 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
     return std::max(std::min(bin, static_cast<int>(getNBins())), 1);
   }
 
-  /// @brief Converts bin index into a valid one for this axis.
-  ///
+  /// Converts bin index into a valid one for this axis.
   /// @note Closed: bin index wraps around to other side
-  ///
-  /// @param [in] bin The bin to wrap
+  /// @param bin The bin to wrap
   /// @return valid bin index
   std::size_t wrapBin(int bin) const
     requires(bdt == AxisBoundaryType::Closed)
@@ -326,11 +216,9 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
     // return int(bin<1)*w - int(bin>w)*w + bin;
   }
 
-  /// @brief get corresponding bin index for given coordinate
-  ///
-  /// @param  [in] x input coordinate
+  /// get corresponding bin index for given coordinate
+  /// @param x input coordinate
   /// @return index of bin containing the given value
-  ///
   /// @note Bin intervals are defined with closed lower bounds and open upper
   ///       bounds, that is \f$l <= x < u\f$ if the value @c x lies within a
   ///       bin with lower bound @c l and upper bound @c u.
@@ -341,14 +229,12 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
         static_cast<int>(std::floor((x - getMin()) / getBinWidth()) + 1));
   }
 
-  /// @brief get bin width
-  ///
+  /// get bin width
   /// @return constant width for all bins
   double getBinWidth(std::size_t /*bin*/ = 0) const { return m_width; }
 
-  /// @brief get lower bound of bin
-  ///
-  /// @param  [in] bin index of bin
+  /// get lower bound of bin
+  /// @param bin index of bin
   /// @return lower bin boundary
   ///
   /// @pre @c bin must be a valid bin index (excluding the underflow bin),
@@ -360,57 +246,47 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
     return getMin() + (bin - 1) * getBinWidth();
   }
 
-  /// @brief get upper bound of bin
-  ///
-  /// @param  [in] bin index of bin
+  /// get upper bound of bin
+  /// @param bin index of bin
   /// @return upper bin boundary
-  ///
   /// @pre @c bin must be a valid bin index (excluding the overflow bin),
   ///      i.e. \f$0 \le \text{bin} \le \text{nBins}\f$
-  ///
   /// @note Bin intervals have an open upper bound, i.e. the upper boundary
   ///       does @b not belong to the bin with the given bin index.
   double getBinUpperBound(std::size_t bin) const {
     return getMin() + bin * getBinWidth();
   }
 
-  /// @brief get bin center
-  ///
-  /// @param  [in] bin index of bin
+  /// get bin center
+  /// @param bin index of bin
   /// @return bin center position
-  ///
   /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
   double getBinCenter(std::size_t bin) const {
     return getMin() + (bin - 0.5) * getBinWidth();
   }
 
-  /// @brief get maximum of binning range
-  ///
+  /// get maximum of binning range
   /// @return maximum of binning range
   double getMax() const final { return m_max; }
 
-  /// @brief get minimum of binning range
-  ///
+  /// get minimum of binning range
   /// @return minimum of binning range
   double getMin() const final { return m_min; }
 
-  /// @brief get total number of bins
-  ///
+  /// get total number of bins
   /// @return total number of bins (excluding under-/overflow bins)
   std::size_t getNBins() const final { return m_bins; }
 
-  /// @brief check whether value is inside axis limits
+  /// check whether value is inside axis limits
   /// @param x The value to check
-  ///
   /// @return @c true if \f$\text{xmin} \le x < \text{xmax}\f$, otherwise
   ///         @c false
-  ///
   /// @post If @c true is returned, the bin containing the given value is a
   ///       valid bin, i.e. it is neither the underflow nor the overflow bin.
   bool isInside(double x) const { return (m_min <= x) && (x < m_max); }
 
-  /// @brief Return a vector of bin edges
+  /// Return a vector of bin edges
   /// @return Vector which contains the bin edges
   std::vector<double> getBinEdges() const final {
     std::vector<double> binEdges;
@@ -443,7 +319,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   std::size_t m_bins{};
 };
 
-/// @brief calculate bin indices for a variable binning
+/// calculate bin indices for a variable binning
 ///
 /// This class provides some basic functionality for calculating bin indices
 /// for a given binning with variable bin sizes.
@@ -453,54 +329,60 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   /// Static type identifier for this variable-width axis specialization
   static constexpr AxisType type = AxisType::Variable;
 
-  /// @param [in] binEdges vector of bin edges
-  /// @pre @c binEdges must be strictly sorted in ascending order.
-  /// @pre @c binEdges must contain at least two entries.
-  ///
   /// Create a binning structure with @c nBins variable-sized bins from the
   /// given bin boundaries. @c nBins is given by the number of bin edges
   /// reduced by one.
-  explicit Axis(std::vector<double> binEdges)
-      : m_binEdges(std::move(binEdges)) {}
+  /// @param binEdges vector of bin edges
+  /// @param direction optional direction of the axis
+  /// @pre @c binEdges must be strictly sorted in ascending order.
+  /// @pre @c binEdges must contain at least two entries.
+  explicit Axis(std::vector<double> binEdges,
+                std::optional<AxisDirection> direction = std::nullopt)
+      : IAxis(direction), m_binEdges(std::move(binEdges)) {
+    if (m_binEdges.size() < 2) {
+      throw std::invalid_argument(
+          "Axis: Invalid binning, at least two bin edges are needed.");
+    }
+    if (!std::ranges::is_sorted(m_binEdges)) {
+      throw std::invalid_argument(
+          "Axis: Invalid binning, bin edges are not sorted.");
+    }
+  }
 
-  /// @param [in] typeTag boundary type tag
-  /// @param [in] binEdges vector of bin edges
-  /// @pre @c binEdges must be strictly sorted in ascending order.
-  /// @pre @c binEdges must contain at least two entries.
-  ///
   /// Create a binning structure with @c nBins variable-sized bins from the
   /// given bin boundaries. @c nBins is given by the number of bin edges
   /// reduced by one.
-  Axis(AxisBoundaryTypeTag<bdt> typeTag, std::vector<double> binEdges)
-      : Axis(std::move(binEdges)) {
+  /// @param typeTag boundary type tag
+  /// @param binEdges vector of bin edges
+  /// @param direction optional direction of the axis
+  /// @pre @c binEdges must be strictly sorted in ascending order.
+  /// @pre @c binEdges must contain at least two entries.
+  Axis(AxisBoundaryTypeTag<bdt> typeTag, std::vector<double> binEdges,
+       std::optional<AxisDirection> direction = std::nullopt)
+      : Axis(std::move(binEdges), direction) {
     static_cast<void>(typeTag);
   }
 
-  /// @brief returns whether the axis is equidistante
-  ///
+  /// returns whether the axis is equidistante
   /// @return bool is equidistant
   bool isEquidistant() const final { return false; }
 
-  /// @brief returns whether the axis is variable
-  ///
+  /// returns whether the axis is variable
   /// @return bool is variable
   bool isVariable() const final { return true; }
 
-  /// @brief returns the type of the axis
+  /// returns the type of the axis
   /// @return @c AxisType of this axis
   AxisType getType() const final { return type; }
 
-  /// @brief returns the boundary type set in the template param
-  ///
+  /// returns the boundary type set in the template param
   /// @return @c AxisBoundaryType of this axis
   AxisBoundaryType getBoundaryType() const final { return bdt; }
 
-  /// @brief Get #size bins which neighbor the one given
-  ///
-  /// Generic overload with symmetric size
-  ///
-  /// @param [in] idx requested bin index
-  /// @param [in] size how many neighboring bins
+  /// Get #size bins which neighbor the one given. Generic overload with
+  /// symmetric size.
+  /// @param idx requested bin index
+  /// @param size how many neighboring bins
   /// @return Set of neighboring bin indices (global)
   NeighborHoodIndices neighborHoodIndices(std::size_t idx,
                                           std::size_t size = 1) const {
@@ -508,16 +390,11 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
                                std::make_pair(-static_cast<int>(size), size));
   }
 
-  /// @brief Get #size bins which neighbor the one given
-  ///
-  /// This is the version for Open
-  ///
-  /// @param [in] idx requested bin index
-  /// @param [in] sizes how many neighboring bins (up/down)
+  /// Get #size bins which neighbor the one given. This is the version for Open.
+  /// @param idx requested bin index
+  /// @param sizes how many neighboring bins (up/down)
   /// @return Set of neighboring bin indices (global)
-  /// @note Open varies given bin and allows 0 and NBins+1 (underflow,
-  /// overflow)
-  ///       as neighbors
+  /// @note Open varies given bin and allows 0 and NBins+1 (underflow, overflow) as neighbors
   NeighborHoodIndices neighborHoodIndices(std::size_t idx,
                                           std::pair<int, int> sizes = {-1,
                                                                        1}) const
@@ -530,15 +407,12 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
     return NeighborHoodIndices(itmin, itmax + 1);
   }
 
-  /// @brief Get #size bins which neighbor the one given
-  ///
-  /// This is the version for Bound
-  ///
-  /// @param [in] idx requested bin index
-  /// @param [in] sizes how many neighboring bins (up/down)
+  /// Get #size bins which neighbor the one given. This is the version for
+  /// Bound.
+  /// @param idx requested bin index
+  /// @param sizes how many neighboring bins (up/down)
   /// @return Set of neighboring bin indices (global)
-  /// @note Bound varies given bin and allows 1 and NBins (regular bins)
-  ///       as neighbors
+  /// @note Bound varies given bin and allows 1 and NBins (regular bins) as neighbors
   NeighborHoodIndices neighborHoodIndices(std::size_t idx,
                                           std::pair<int, int> sizes = {-1,
                                                                        1}) const
@@ -554,12 +428,10 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
     return NeighborHoodIndices(itmin, itmax + 1);
   }
 
-  /// @brief Get #size bins which neighbor the one given
-  ///
-  /// This is the version for Closed
-  ///
-  /// @param [in] idx requested bin index
-  /// @param [in] sizes how many neighboring bins (up/down)
+  /// Get #size bins which neighbor the one given. This is the version for
+  /// Closed.
+  /// @param idx requested bin index
+  /// @param sizes how many neighboring bins (up/down)
   /// @return Set of neighboring bin indices (global)
   /// @note Closed varies given bin and allows bins on the opposite
   ///       side of the axis as neighbors. (excludes underflow / overflow)
@@ -602,11 +474,9 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
     }
   }
 
-  /// @brief Converts bin index into a valid one for this axis.
-  ///
+  /// Converts bin index into a valid one for this axis.
   /// @note Open: bin index is clamped to [0, nBins+1]
-  ///
-  /// @param [in] bin The bin to wrap
+  /// @param bin The bin to wrap
   /// @return valid bin index
   std::size_t wrapBin(int bin) const
     requires(bdt == AxisBoundaryType::Open)
@@ -614,11 +484,9 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
     return std::max(std::min(bin, static_cast<int>(getNBins()) + 1), 0);
   }
 
-  /// @brief Converts bin index into a valid one for this axis.
-  ///
+  /// Converts bin index into a valid one for this axis.
   /// @note Bound: bin index is clamped to [1, nBins]
-  ///
-  /// @param [in] bin The bin to wrap
+  /// @param bin The bin to wrap
   /// @return valid bin index
   std::size_t wrapBin(int bin) const
     requires(bdt == AxisBoundaryType::Bound)
@@ -626,11 +494,9 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
     return std::max(std::min(bin, static_cast<int>(getNBins())), 1);
   }
 
-  /// @brief Converts bin index into a valid one for this axis.
-  ///
+  /// Converts bin index into a valid one for this axis.
   /// @note Closed: bin index wraps around to other side
-  ///
-  /// @param [in] bin The bin to wrap
+  /// @param bin The bin to wrap
   /// @return valid bin index
   std::size_t wrapBin(int bin) const
     requires(bdt == AxisBoundaryType::Closed)
@@ -640,11 +506,9 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
     // return int(bin<1)*w - int(bin>w)*w + bin;
   }
 
-  /// @brief get corresponding bin index for given coordinate
-  ///
-  /// @param  [in] x input coordinate
+  /// get corresponding bin index for given coordinate
+  /// @param x input coordinate
   /// @return index of bin containing the given value
-  ///
   /// @note Bin intervals are defined with closed lower bounds and open upper
   ///       bounds, that is \f$l <= x < u\f$ if the value @c x lies within a
   ///       bin with lower bound @c l and upper bound @c u.
@@ -656,82 +520,66 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
         static_cast<int>(std::ranges::distance(m_binEdges.begin(), it)));
   }
 
-  /// @brief get bin width
-  ///
-  /// @param  [in] bin index of bin
+  /// get bin width
+  /// @param bin index of bin
   /// @return width of given bin
-  ///
   /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
   double getBinWidth(std::size_t bin) const {
     return m_binEdges.at(bin) - m_binEdges.at(bin - 1);
   }
 
-  /// @brief get lower bound of bin
-  ///
-  /// @param  [in] bin index of bin
+  /// get lower bound of bin
+  /// @param bin index of bin
   /// @return lower bin boundary
-  ///
   /// @pre @c bin must be a valid bin index (excluding the underflow bin),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins} + 1\f$
-  ///
   /// @note Bin intervals have a closed lower bound, i.e. the lower boundary
   ///       belongs to the bin with the given bin index.
   double getBinLowerBound(std::size_t bin) const {
     return m_binEdges.at(bin - 1);
   }
 
-  /// @brief get upper bound of bin
-  ///
-  /// @param  [in] bin index of bin
+  /// get upper bound of bin
+  /// @param bin index of bin
   /// @return upper bin boundary
-  ///
   /// @pre @c bin must be a valid bin index (excluding the overflow bin),
   ///      i.e. \f$0 \le \text{bin} \le \text{nBins}\f$
-  ///
   /// @note Bin intervals have an open upper bound, i.e. the upper boundary
   ///       does @b not belong to the bin with the given bin index.
   double getBinUpperBound(std::size_t bin) const { return m_binEdges.at(bin); }
 
-  /// @brief get bin center
-  ///
-  /// @param  [in] bin index of bin
+  /// get bin center
+  /// @param bin index of bin
   /// @return bin center position
-  ///
   /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
   double getBinCenter(std::size_t bin) const {
     return 0.5 * (getBinLowerBound(bin) + getBinUpperBound(bin));
   }
 
-  /// @brief get maximum of binning range
-  ///
+  /// get maximum of binning range
   /// @return maximum of binning range
   double getMax() const final { return m_binEdges.back(); }
 
-  /// @brief get minimum of binning range
-  ///
+  /// get minimum of binning range
   /// @return minimum of binning range
   double getMin() const final { return m_binEdges.front(); }
 
-  /// @brief get total number of bins
-  ///
+  /// get total number of bins
   /// @return total number of bins (excluding under-/overflow bins)
   std::size_t getNBins() const final { return m_binEdges.size() - 1; }
 
-  /// @brief check whether value is inside axis limits
+  /// check whether value is inside axis limits
   /// @param x The value to check
-  ///
-  /// @return @c true if \f$\text{xmin} \le x < \text{xmax}\f$, otherwise
-  ///         @c false
-  ///
+  /// @return @c true if \f$\text{xmin} \le x < \text{xmax}\f$, otherwise @c false
   /// @post If @c true is returned, the bin containing the given value is a
   ///       valid bin, i.e. it is neither the underflow nor the overflow bin.
   bool isInside(double x) const {
     return (m_binEdges.front() <= x) && (x < m_binEdges.back());
   }
 
-  /// @brief Return a vector of bin edges
+  /// Return a vector of bin edges
   /// @return Vector which contains the bin edges
   std::vector<double> getBinEdges() const final { return m_binEdges; }
 
@@ -752,4 +600,5 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   /// vector of bin edges (sorted in ascending order)
   std::vector<double> m_binEdges;
 };
+
 }  // namespace Acts

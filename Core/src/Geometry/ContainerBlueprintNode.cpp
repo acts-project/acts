@@ -12,6 +12,12 @@
 #include "Acts/Geometry/CuboidVolumeStack.hpp"
 #include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
+#include "Acts/Geometry/Portal.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
+
+#include <sstream>
+#include <string>
+#include <vector>
 
 namespace Acts::Experimental {
 
@@ -240,10 +246,56 @@ PortalShellBase& ContainerBlueprintNode::connectImpl(
                    shells, [](const auto* shell) { return shell->isValid(); }),
                "Invalid shell");
 
+  // Detect (with a node-scoped message) if material has been designated on a
+  // portal face that will be *merged* during stacking. Such material cannot
+  // survive the merge and would otherwise trigger a deep, hard-to-trace failure
+  // inside the stack shell construction. Faces that are *fused* (e.g. the
+  // boundary between two stacked volumes) legitimately carry material and are
+  // not flagged here.  With only a single child there is no actual merge, so
+  // the check is skipped entirely to avoid false positives.
+  const PortalMaterialMergePolicy materialPolicy =
+      options.keepGoingOnMaterialMergeFailure
+          ? PortalMaterialMergePolicy::eDiscardAndMark
+          : PortalMaterialMergePolicy::eThrow;
+
+  // With a single child there is nothing to merge, so the "merged" faces are
+  // actually kept as-is. Skip the clash check to avoid false positives.
+  std::vector<std::string> materialClashes;
+  for (auto face : shells.size() > 1
+                       ? ShellStack::mergedFaces(direction())
+                       : std::vector<typename ShellStack::Face>{}) {
+    for (auto* shell : shells) {
+      auto portal = shell->portal(face);
+      if (portal != nullptr && portal->surface().hasMaterial()) {
+        std::stringstream ss;
+        ss << shell->label() << " carries material on face " << face;
+        materialClashes.push_back(ss.str());
+      }
+    }
+  }
+  if (!materialClashes.empty()) {
+    std::stringstream ss;
+    ss << prefix << "Material is designated on portal faces that are merged "
+       << "when stacking child volumes in " << direction() << " direction.";
+    for (const auto& clash : materialClashes) {
+      ss << "\n  - " << clash;
+    }
+    if (materialPolicy == PortalMaterialMergePolicy::eThrow) {
+      ss << "\nMove the material designation to a face that is not merged "
+            "(e.g. "
+            "the enclosing container's face).";
+      ACTS_ERROR(ss.str());
+      throw PortalMergingException{ss.str()};
+    }
+    ss << "\nContinuing anyway: this material will be discarded and the merged "
+          "surface tagged with a MergedMaterialMarker.";
+    ACTS_WARNING(ss.str());
+  }
+
   ACTS_DEBUG(prefix << "Producing merged stack shell in " << direction()
                     << " direction from " << shells.size() << " shells");
   m_shell = std::make_unique<ShellStack>(gctx, std::move(shells), direction(),
-                                         logger);
+                                         logger, materialPolicy);
 
   assert(m_shell != nullptr && "No shell was built at the end of connect");
   assert(m_shell->isValid() && "Shell is not valid at the end of connect");

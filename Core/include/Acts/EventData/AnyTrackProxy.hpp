@@ -8,9 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/TrackProxyCommon.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/Types.hpp"
@@ -18,7 +16,6 @@
 
 #include <any>
 #include <cassert>
-#include <cmath>
 #include <type_traits>
 
 namespace Acts {
@@ -107,7 +104,7 @@ template <typename container_t,
 class TrackHandler;
 
 template <typename container_t>
-class TrackHandler<container_t, true> final : public TrackHandlerConstBase {
+class TrackHandler<container_t, true> /*final*/ : public TrackHandlerConstBase {
   using ContainerType = typename TrackHandlerTraits<container_t>::Container;
 
  public:
@@ -118,55 +115,55 @@ class TrackHandler<container_t, true> final : public TrackHandlerConstBase {
   }
 
   const Surface* referenceSurface(const void* container,
-                                  TrackIndexType index) const override {
+                                  TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return &tc->getTrack(index).referenceSurface();
   }
 
   bool hasReferenceSurface(const void* container,
-                           TrackIndexType index) const override {
+                           TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).hasReferenceSurface();
   }
 
   ParticleHypothesis particleHypothesis(const void* container,
-                                        TrackIndexType index) const override {
+                                        TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).particleHypothesis();
   }
 
   ConstParametersMap parameters(const void* container,
-                                TrackIndexType index) const override {
+                                TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).parameters();
   }
 
   ConstCovarianceMap covariance(const void* container,
-                                TrackIndexType index) const override {
+                                TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).covariance();
   }
 
   unsigned int nTrackStates(const void* container,
-                            TrackIndexType index) const override {
+                            TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).nTrackStates();
   }
 
-  bool hasColumn(const void* container, HashedString key) const override {
+  bool hasColumn(const void* container, HashedString key) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->hasColumn(key);
   }
 
   std::any component(const void* container, TrackIndexType index,
-                     HashedString key) const override {
+                     HashedString key) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->container().component_impl(key, index);
@@ -177,7 +174,8 @@ class TrackHandler<container_t, true> final : public TrackHandlerConstBase {
 };
 
 template <typename container_t>
-class TrackHandler<container_t, false> final : public TrackHandlerMutableBase {
+class TrackHandler<container_t,
+                   false> /*final*/ : public TrackHandlerMutableBase {
   using ContainerType = typename TrackHandlerTraits<container_t>::Container;
 
  public:
@@ -188,76 +186,74 @@ class TrackHandler<container_t, false> final : public TrackHandlerMutableBase {
   }
 
   const Surface* referenceSurface(const void* container,
-                                  TrackIndexType index) const override {
+                                  TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return &tc->getTrack(index).referenceSurface();
   }
 
   bool hasReferenceSurface(const void* container,
-                           TrackIndexType index) const override {
+                           TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).hasReferenceSurface();
   }
 
   ParticleHypothesis particleHypothesis(const void* container,
-                                        TrackIndexType index) const override {
+                                        TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).particleHypothesis();
   }
 
   ConstParametersMap parameters(const void* container,
-                                TrackIndexType index) const override {
+                                TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).parameters();
   }
 
-  ParametersMap parameters(void* container,
-                           TrackIndexType index) const override {
+  ParametersMap parameters(void* container, TrackIndexType index) const final {
     assert(container != nullptr);
     auto* tc = static_cast<ContainerType*>(container);
     return tc->getTrack(index).parameters();
   }
 
   ConstCovarianceMap covariance(const void* container,
-                                TrackIndexType index) const override {
+                                TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).covariance();
   }
 
-  CovarianceMap covariance(void* container,
-                           TrackIndexType index) const override {
+  CovarianceMap covariance(void* container, TrackIndexType index) const final {
     assert(container != nullptr);
     auto* tc = static_cast<ContainerType*>(container);
     return tc->getTrack(index).covariance();
   }
 
   unsigned int nTrackStates(const void* container,
-                            TrackIndexType index) const override {
+                            TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).nTrackStates();
   }
 
-  bool hasColumn(const void* container, HashedString key) const override {
+  bool hasColumn(const void* container, HashedString key) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->hasColumn(key);
   }
 
   std::any component(const void* container, TrackIndexType index,
-                     HashedString key) const override {
+                     HashedString key) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->container().component_impl(key, index);
   }
 
   std::any component(void* container, TrackIndexType index,
-                     HashedString key) const override {
+                     HashedString key) const final {
     assert(container != nullptr);
     auto* tc = static_cast<ContainerType*>(container);
     return tc->container().component_impl(key, index);
