@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -33,6 +34,17 @@ class TrackingGeometry;
 }
 
 namespace ActsExamples {
+
+/// Pre-extracted sigma for a single bound parameter from the digitization
+/// config. Used to avoid re-extracting per hit at runtime.
+struct DigitizationSigmaConfig {
+  Acts::BoundIndices index;
+  double sigma;
+};
+
+/// A digitization config entry paired with its pre-extracted sigma values.
+using DigitizationConfigWithSigmas =
+    std::pair<DigiComponentsConfig, std::vector<DigitizationSigmaConfig>>;
 
 /// Load a ColliderML geometry ID map from a Parquet file.
 ///

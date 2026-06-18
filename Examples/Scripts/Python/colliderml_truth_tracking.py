@@ -276,7 +276,7 @@ def _serialize_hists(hists):
     return out
 
 
-if "__main__" == __name__:
+if __name__ == "__main__":
     import argparse
     import pickle
 

@@ -11,9 +11,9 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
-#include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -46,11 +46,21 @@ ActsPlugins::ArrowUtil::ArrowTable readFlatParquetFile(
     throw std::runtime_error("readFlatParquetFile: file not found: '" +
                              path.string() + "'");
   }
-  auto infile =
-      arrow::io::ReadableFile::Open(path.string(), arrow::default_memory_pool())
-          .ValueOrDie();
-  auto reader = parquet::arrow::OpenFile(infile, arrow::default_memory_pool())
-                    .ValueOrDie();
+  auto infileResult = arrow::io::ReadableFile::Open(
+      path.string(), arrow::default_memory_pool());
+  if (!infileResult.ok()) {
+    throw std::runtime_error("readFlatParquetFile: open '" + path.string() +
+                             "': " + infileResult.status().ToString());
+  }
+  auto infile = std::move(infileResult).ValueOrDie();
+  auto readerResult =
+      parquet::arrow::OpenFile(infile, arrow::default_memory_pool());
+  if (!readerResult.ok()) {
+    throw std::runtime_error("readFlatParquetFile: open parquet '" +
+                             path.string() +
+                             "': " + readerResult.status().ToString());
+  }
+  auto reader = std::move(readerResult).ValueOrDie();
   std::shared_ptr<arrow::Table> table;
   auto status = reader->ReadTable(&table);
   if (!status.ok()) {
@@ -97,17 +107,6 @@ std::shared_ptr<ArrowArrayType> colValues(const arrow::Table& table,
   }
   return values;
 }
-
-// Struct to hold pre-extracted sigma for a single parameter
-struct DigitizationSigmaConfig {
-  Acts::BoundIndices index;
-  double sigma;
-};
-
-// Type alias for unified digitization config with pre-extracted sigmas
-using DigitizationConfigWithSigmas = std::pair<
-    ActsExamples::DigiComponentsConfig,
-    std::vector<DigitizationSigmaConfig>>;
 
 // Extract sigma from a smearer function. Returns nullopt for Uniform/Digital.
 std::optional<double> sigmaFromSmearer(
@@ -243,15 +242,23 @@ ColliderMLInputConverter::ColliderMLInputConverter(
                                          .withSensitive(gid.sensitive());
       m_volLaySenMap[key] = gid;
     }
+    ACTS_WARNING(
+        "No geoIdMap provided — geometry IDs resolved by matching "
+        "(volume, layer, sensitive) from the tracking geometry. Valid when "
+        "the ColliderML volume/layer/surface fields match the ACTS IDs.");
+    ACTS_DEBUG("Built (vol, lay, sen) fallback map with "
+               << m_volLaySenMap.size() << " entries.");
   }
 
   if (!m_cfg.outputMeasurements.empty() && !m_cfg.digiConfig.empty()) {
-    std::vector<Acts::GeometryHierarchyMap<DigitizationConfigWithSigmas>::InputElement> elements;
+    std::vector<
+        Acts::GeometryHierarchyMap<DigitizationConfigWithSigmas>::InputElement>
+        elements;
     elements.reserve(m_cfg.digiConfig.size());
 
-    for (const auto& entry : m_cfg.digiConfig) {
-      const auto geoId = m_cfg.digiConfig.idAt(&entry - &*m_cfg.digiConfig.begin());
-      const auto& digiComp = m_cfg.digiConfig.valueAt(&entry - &*m_cfg.digiConfig.begin());
+    for (std::size_t idx = 0; idx < m_cfg.digiConfig.size(); ++idx) {
+      const auto geoId = m_cfg.digiConfig.idAt(idx);
+      const auto& digiComp = m_cfg.digiConfig.valueAt(idx);
 
       std::vector<DigitizationSigmaConfig> sigmaConfigs;
       sigmaConfigs.reserve(digiComp.smearingDigiConfig.params.size());
@@ -265,31 +272,25 @@ ColliderMLInputConverter::ColliderMLInputConverter(
           throw std::invalid_argument(
               "Digitization config for geoId " + geoId.str() +
               " contains smearer without meaningful sigma (Uniform/Digital). "
-              "ColliderML input converter requires Gaussian-like smearing with single sigma.");
+              "ColliderML input converter requires Gaussian-like smearing with "
+              "single sigma.");
         }
         sigmaConfigs.push_back({param.index, *sigma});
       }
 
-      elements.emplace_back(geoId, DigitizationConfigWithSigmas{digiComp, sigmaConfigs});
+      elements.emplace_back(
+          geoId, DigitizationConfigWithSigmas{digiComp, sigmaConfigs});
     }
 
-    m_digiSigmaMap = Acts::GeometryHierarchyMap<DigitizationConfigWithSigmas>(std::move(elements));
+    m_digiSigmaMap = Acts::GeometryHierarchyMap<DigitizationConfigWithSigmas>(
+        std::move(elements));
   }
 }
 
 ColliderMLInputConverter::ColliderMLInputConverter(const Config& cfg,
                                                    Acts::Logging::Level level)
     : ColliderMLInputConverter(
-          cfg, Acts::getDefaultLogger("ColliderMLInputConverter", level)) {
-  if (m_cfg.geoIdMap.empty()) {
-    ACTS_WARNING(
-        "No geoIdMap provided — geometry IDs resolved by matching "
-        "(volume, layer, sensitive) from the tracking geometry. Valid when "
-        "the ColliderML volume/layer/surface fields match the ACTS IDs.");
-    ACTS_DEBUG("Built (vol, lay, sen) fallback map with "
-               << m_volLaySenMap.size() << " entries.");
-  }
-}
+          cfg, Acts::getDefaultLogger("ColliderMLInputConverter", level)) {}
 
 ColliderMLInputConverter::~ColliderMLInputConverter() = default;
 
@@ -471,8 +472,7 @@ ProcessCode ColliderMLInputConverter::execute(
       return ProcessCode::ABORT;
     }
 
-    const Acts::Surface* regSurface =
-        dynamic_cast<const Acts::RegularSurface*>(surface);
+    const auto* regSurface = dynamic_cast<const Acts::RegularSurface*>(surface);
     if (regSurface == nullptr) {
       ACTS_ERROR("Hit " << i << " geoId " << geoId
                         << " surface is not a RegularSurface — unsupported");
