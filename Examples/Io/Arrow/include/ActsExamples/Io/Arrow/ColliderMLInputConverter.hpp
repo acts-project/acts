@@ -20,6 +20,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsPlugins/Arrow/ArrowUtil.hpp"
+#include "ActsPlugins/Arrow/Export.hpp"
 
 #include <cstdint>
 #include <filesystem>
@@ -46,15 +47,14 @@ struct DigitizationSigmaConfig {
 using DigitizationConfigWithSigmas =
     std::pair<DigiComponentsConfig, std::vector<DigitizationSigmaConfig>>;
 
-/// Load a ColliderML geometry ID map from a Parquet file.
+/// Load a ColliderML geometry ID map from a CSV file.
 ///
 /// Expected columns (with header): detector, volume, layer, surface,
-/// acts_geo_id. The @c acts_geo_id value is parsed as a hex or decimal
-/// unsigned 64-bit integer (e.g. @c 0x1000000000010001).
+/// acts_geo_id.
 ///
-/// @param path  Path to the Parquet file.
+/// @param path  Path to the CSV file.
 /// @return Map from packed ColliderML key to @c Acts::GeometryIdentifier.
-std::unordered_map<std::uint64_t, Acts::GeometryIdentifier>
+ACTS_ARROW_EXPORT std::unordered_map<std::uint64_t, Acts::GeometryIdentifier>
 loadColliderMLGeoIdMap(const std::filesystem::path& path);
 
 /// Convert ColliderML Arrow tables to ACTS EDM types.
@@ -72,7 +72,7 @@ loadColliderMLGeoIdMap(const std::filesystem::path& path);
 ///
 /// @note SimHit momentum fields are zero-filled; ColliderML does not
 ///       record per-hit momentum.
-class ColliderMLInputConverter : public IAlgorithm {
+class ACTS_ARROW_EXPORT ColliderMLInputConverter : public IAlgorithm {
  public:
   struct Config {
     /// Whiteboard key for the particles Arrow table (from ParquetReader).

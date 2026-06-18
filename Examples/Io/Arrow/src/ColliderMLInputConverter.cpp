@@ -31,43 +31,54 @@
 #include <vector>
 
 #include <arrow/api.h>
+#include <arrow/csv/api.h>
 #include <arrow/io/file.h>
-#include <parquet/arrow/reader.h>
 
 namespace ActsExamples {
 
 namespace {
 
-// Read a flat (non-event-indexed) Parquet file into an ArrowTable.
+// Read a flat CSV file into an Arrow Table.
 // Only used by loadColliderMLGeoIdMap — kept local to this translation unit.
-ActsPlugins::ArrowUtil::ArrowTable readFlatParquetFile(
+std::shared_ptr<arrow::Table> readFlatCsvFile(
     const std::filesystem::path& path) {
   if (!std::filesystem::exists(path)) {
-    throw std::runtime_error("readFlatParquetFile: file not found: '" +
+    throw std::runtime_error("readFlatCsvFile: file not found: '" +
                              path.string() + "'");
   }
   auto infileResult = arrow::io::ReadableFile::Open(
       path.string(), arrow::default_memory_pool());
   if (!infileResult.ok()) {
-    throw std::runtime_error("readFlatParquetFile: open '" + path.string() +
+    throw std::runtime_error("readFlatCsvFile: open '" + path.string() +
                              "': " + infileResult.status().ToString());
   }
   auto infile = std::move(infileResult).ValueOrDie();
-  auto readerResult =
-      parquet::arrow::OpenFile(infile, arrow::default_memory_pool());
+
+  auto readOptions = arrow::csv::ReadOptions::Defaults();
+  auto parseOptions = arrow::csv::ParseOptions::Defaults();
+  auto convertOptions = arrow::csv::ConvertOptions::Defaults();
+  convertOptions.column_types = {
+      {"detector", arrow::uint8()},
+      {"volume", arrow::uint8()},
+      {"layer", arrow::uint16()},
+      {"surface", arrow::uint32()},
+      {"acts_geo_id", arrow::uint64()},
+  };
+
+  auto readerResult = arrow::csv::TableReader::Make(
+      arrow::io::default_io_context(), infile, readOptions, parseOptions,
+      convertOptions);
   if (!readerResult.ok()) {
-    throw std::runtime_error("readFlatParquetFile: open parquet '" +
+    throw std::runtime_error("readFlatCsvFile: create reader for '" +
                              path.string() +
                              "': " + readerResult.status().ToString());
   }
-  auto reader = std::move(readerResult).ValueOrDie();
-  std::shared_ptr<arrow::Table> table;
-  auto status = reader->ReadTable(&table);
-  if (!status.ok()) {
-    throw std::runtime_error("readFlatParquetFile: read '" + path.string() +
-                             "': " + status.ToString());
+  auto tableResult = (*readerResult)->Read();
+  if (!tableResult.ok()) {
+    throw std::runtime_error("readFlatCsvFile: read '" + path.string() +
+                             "': " + tableResult.status().ToString());
   }
-  return ActsPlugins::ArrowUtil::ArrowTable{std::move(table)};
+  return std::move(tableResult).ValueOrDie();
 }
 
 // Return the row-0 (offset, length) for a list column in the table.
@@ -126,26 +137,6 @@ std::optional<double> sigmaFromSmearer(
   return std::nullopt;
 }
 
-// Get a typed flat (non-list) column from a table by name.
-// Used by loadColliderMLGeoIdMap to read the geo-id map file.
-template <typename ArrayType>
-std::shared_ptr<ArrayType> getFlatColumn(const arrow::Table& table,
-                                         const std::string& name,
-                                         const std::filesystem::path& path) {
-  auto col = table.GetColumnByName(name);
-  if (!col || col->num_chunks() == 0) {
-    throw std::runtime_error("loadColliderMLGeoIdMap: missing column '" + name +
-                             "' in '" + path.string() + "'");
-  }
-  auto arr = std::dynamic_pointer_cast<ArrayType>(col->chunk(0));
-  if (!arr) {
-    throw std::runtime_error("loadColliderMLGeoIdMap: column '" + name +
-                             "' has unexpected type in '" + path.string() +
-                             "'");
-  }
-  return arr;
-}
-
 // Packed ColliderML geometry key: det(8b)|vol(8b)|layer(16b)|surface(32b).
 std::uint64_t colliderMLGeoKey(std::uint8_t detector, std::uint8_t volume,
                                std::uint16_t layer, std::uint32_t surface) {
@@ -158,24 +149,34 @@ std::uint64_t colliderMLGeoKey(std::uint8_t detector, std::uint8_t volume,
 }  // namespace
 
 // ---------------------------------------------------------------------------
-// Loader: Parquet geometry ID map
+// Loader: CSV geometry ID map
 // ---------------------------------------------------------------------------
 
 std::unordered_map<std::uint64_t, Acts::GeometryIdentifier>
 loadColliderMLGeoIdMap(const std::filesystem::path& path) {
-  const auto arrowTable = readFlatParquetFile(path);
-  const arrow::Table& table = *arrowTable.table();
+  auto table = readFlatCsvFile(path);
 
-  // Schema from generate_colliderml_geo_map.py:
-  //   detector (uint8), volume (uint8), layer (uint16),
-  //   surface (uint32), acts_geo_id (uint64)
-  auto detArr = getFlatColumn<arrow::UInt8Array>(table, "detector", path);
-  auto volArr = getFlatColumn<arrow::UInt8Array>(table, "volume", path);
-  auto layArr = getFlatColumn<arrow::UInt16Array>(table, "layer", path);
-  auto surfArr = getFlatColumn<arrow::UInt32Array>(table, "surface", path);
-  auto geoArr = getFlatColumn<arrow::UInt64Array>(table, "acts_geo_id", path);
+  auto getColumn = [&](const std::string& name) {
+    auto col = table->GetColumnByName(name);
+    if (!col || col->num_chunks() == 0) {
+      throw std::runtime_error("loadColliderMLGeoIdMap: missing column '" +
+                               name + "' in '" + path.string() + "'");
+    }
+    return col->chunk(0);
+  };
 
-  const std::int64_t n = table.num_rows();
+  auto detArr =
+      std::dynamic_pointer_cast<arrow::UInt8Array>(getColumn("detector"));
+  auto volArr =
+      std::dynamic_pointer_cast<arrow::UInt8Array>(getColumn("volume"));
+  auto layArr =
+      std::dynamic_pointer_cast<arrow::UInt16Array>(getColumn("layer"));
+  auto surfArr =
+      std::dynamic_pointer_cast<arrow::UInt32Array>(getColumn("surface"));
+  auto geoArr =
+      std::dynamic_pointer_cast<arrow::UInt64Array>(getColumn("acts_geo_id"));
+
+  const std::int64_t n = table->num_rows();
   std::unordered_map<std::uint64_t, Acts::GeometryIdentifier> map;
   map.reserve(static_cast<std::size_t>(n));
   for (std::int64_t i = 0; i < n; ++i) {
@@ -192,8 +193,8 @@ loadColliderMLGeoIdMap(const std::filesystem::path& path) {
 // ---------------------------------------------------------------------------
 
 ColliderMLInputConverter::ColliderMLInputConverter(
-    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
-    : IAlgorithm("ColliderMLInputConverter", std::move(logger)), m_cfg(cfg) {
+    const Config& cfg, std::unique_ptr<const Acts::Logger> _logger)
+    : IAlgorithm("ColliderMLInputConverter", std::move(_logger)), m_cfg(cfg) {
   if (m_cfg.inputParticlesTable.empty()) {
     throw std::invalid_argument("inputParticlesTable must be set");
   }
@@ -242,7 +243,7 @@ ColliderMLInputConverter::ColliderMLInputConverter(
                                          .withSensitive(gid.sensitive());
       m_volLaySenMap[key] = gid;
     }
-    ACTS_WARNING(
+    ACTS_INFO(
         "No geoIdMap provided — geometry IDs resolved by matching "
         "(volume, layer, sensitive) from the tracking geometry. Valid when "
         "the ColliderML volume/layer/surface fields match the ACTS IDs.");
@@ -270,7 +271,7 @@ ColliderMLInputConverter::ColliderMLInputConverter(
         const auto sigma = sigmaFromSmearer(param.smearFunction);
         if (!sigma.has_value()) {
           throw std::invalid_argument(
-              "Digitization config for geoId " + geoId.str() +
+              "Digitization config for geoId " + std::to_string(geoId.value()) +
               " contains smearer without meaningful sigma (Uniform/Digital). "
               "ColliderML input converter requires Gaussian-like smearing with "
               "single sigma.");
