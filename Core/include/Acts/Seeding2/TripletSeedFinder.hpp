@@ -164,8 +164,8 @@ class TripletSeedFinder {
 
     /// Tolerance parameter used to check the compatibility of space-point
     /// coordinates in xyz. This is only used in a detector specific check for
-    /// strip modules
-    float toleranceParam = 1.1 * UnitConstants::mm;
+    /// strip modules.
+    float toleranceParam = 1.1;
 
     /// Maximum allowed difference in cot(theta) between the bottom and top
     /// doublets, applied as a pre-filter before the expensive strip

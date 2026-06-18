@@ -92,6 +92,7 @@ void addEventData(py::module_& m) {
   py::enum_<SpacePointColumns>(m, "SpacePointColumns")
       .value("None", SpacePointColumns::None)
       .value("SourceLinks", SpacePointColumns::SourceLinks)
+      .value("CopiedFromIndex", SpacePointColumns::CopiedFromIndex)
       .value("X", SpacePointColumns::X)
       .value("Y", SpacePointColumns::Y)
       .value("Z", SpacePointColumns::Z)
@@ -101,17 +102,13 @@ void addEventData(py::module_& m) {
       .value("VarianceZ", SpacePointColumns::VarianceZ)
       .value("VarianceR", SpacePointColumns::VarianceR)
       .value("VarianceT", SpacePointColumns::VarianceT)
-      .value("TopStripVector", SpacePointColumns::TopStripVector)
-      .value("BottomStripVector", SpacePointColumns::BottomStripVector)
-      .value("StripCenterDistance", SpacePointColumns::StripCenterDistance)
-      .value("TopStripCenter", SpacePointColumns::TopStripCenter)
-      .value("CopyFromIndex", SpacePointColumns::CopyFromIndex)
+      .value("StripCalibrationDetails",
+             SpacePointColumns::StripCalibrationDetails)
       .value("PackedXY", SpacePointColumns::PackedXY)
       .value("PackedZR", SpacePointColumns::PackedZR)
       .value("PackedXYZ", SpacePointColumns::PackedXYZ)
       .value("PackedXYZR", SpacePointColumns::PackedXYZR)
       .value("PackedVarianceZR", SpacePointColumns::PackedVarianceZR)
-      .value("Strip", SpacePointColumns::Strip)
       .value("All", SpacePointColumns::All)
       .def("__or__",
            [](SpacePointColumns a, SpacePointColumns b) {
@@ -152,22 +149,24 @@ void addEventData(py::module_& m) {
                [](const SpacePointContainer2& self) {
                  return py::make_iterator(self.begin(), self.end());
                })
-          .def_property_readonly("x",
+          .def_property_readonly("xColumn",
                                  floatColumn(&SpacePointContainer2::xColumn))
-          .def_property_readonly("y",
+          .def_property_readonly("yColumn",
                                  floatColumn(&SpacePointContainer2::yColumn))
-          .def_property_readonly("z",
+          .def_property_readonly("zColumn",
                                  floatColumn(&SpacePointContainer2::zColumn))
-          .def_property_readonly("r",
+          .def_property_readonly("rColumn",
                                  floatColumn(&SpacePointContainer2::rColumn))
-          .def_property_readonly("phi",
+          .def_property_readonly("phiColumn",
                                  floatColumn(&SpacePointContainer2::phiColumn))
-          .def_property_readonly("time",
+          .def_property_readonly("timeColumn",
                                  floatColumn(&SpacePointContainer2::timeColumn))
           .def_property_readonly(
-              "varianceZ", floatColumn(&SpacePointContainer2::varianceZColumn))
+              "varianceZColumn",
+              floatColumn(&SpacePointContainer2::varianceZColumn))
           .def_property_readonly(
-              "varianceR", floatColumn(&SpacePointContainer2::varianceRColumn))
+              "varianceRColumn",
+              floatColumn(&SpacePointContainer2::varianceRColumn))
           .def_property_readonly(
               "varianceT", floatColumn(&SpacePointContainer2::varianceTColumn))
           .def_property_readonly(
@@ -177,26 +176,17 @@ void addEventData(py::module_& m) {
               "zrColumn", arrayColumn<2>(&SpacePointContainer2::zrColumn,
                                          SpacePointColumns::PackedZR, "zr"))
           .def_property_readonly(
-              "xy", arrayColumn<2>(&SpacePointContainer2::xyColumn,
-                                   SpacePointColumns::PackedXY, "xy"))
+              "xyzColumn", arrayColumn<3>(&SpacePointContainer2::xyzColumn,
+                                          SpacePointColumns::PackedXYZ, "xyz"))
           .def_property_readonly(
-              "zr", arrayColumn<2>(&SpacePointContainer2::zrColumn,
-                                   SpacePointColumns::PackedZR, "zr"))
-          .def_property_readonly(
-              "xyz", arrayColumn<3>(&SpacePointContainer2::xyzColumn,
-                                    SpacePointColumns::PackedXYZ, "xyz"))
-          .def_property_readonly(
-              "xyzr", arrayColumn<4>(&SpacePointContainer2::xyzrColumn,
-                                     SpacePointColumns::PackedXYZR, "xyzr"))
+              "xyzrColumn",
+              arrayColumn<4>(&SpacePointContainer2::xyzrColumn,
+                             SpacePointColumns::PackedXYZR, "xyzr"))
           .def_property_readonly(
               "varianceZRColumn",
               arrayColumn<2>(&SpacePointContainer2::varianceZRColumn,
-                             SpacePointColumns::PackedVarianceZR, "varianceZR"))
-          .def_property_readonly(
-              "topStripVectorColumn",
-              arrayColumn<3>(&SpacePointContainer2::topStripVectorColumn,
-                             SpacePointColumns::TopStripVector,
-                             "topStripVector"));
+                             SpacePointColumns::PackedVarianceZR,
+                             "varianceZR"));
 
   WhiteBoardRegistry::registerClass(spc2);
 

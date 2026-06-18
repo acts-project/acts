@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SpacePointColumns.hpp"
+#include "Acts/EventData/StripSpacePointCalibrationDetails.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
@@ -151,6 +152,13 @@ class SpacePointProxy2 {
     return std::span<SourceLink>(m_container->m_sourceLinks.data() + offset,
                                  count);
   }
+  /// Mutable access to the `copied from index` of the space point.
+  /// @return A mutable reference to the `copied from index` of the space point.
+  SpacePointIndex2 &copiedFromIndex() const noexcept
+    requires(!ReadOnly)
+  {
+    return accessImpl(m_container->m_copiedFromIndexColumn);
+  }
   /// Mutable access to the `x` coordinate of the space point.
   /// @return A mutable reference to the `x` coordinate of the space point.
   float &x() const noexcept
@@ -193,92 +201,66 @@ class SpacePointProxy2 {
   {
     return accessImpl(m_container->m_timeColumn);
   }
-  /// Mutable access to the variance in `Z` direction of the space point.
-  /// @return A mutable reference to the variance in `Z` direction of the space point.
+  /// Mutable access to the `variance z` of the space point.
+  /// @return A mutable reference to the `variance z` of the space point.
   float &varianceZ() const noexcept
     requires(!ReadOnly)
   {
     return accessImpl(m_container->m_varianceZColumn);
   }
-  /// Mutable access to the variance in `R` direction of the space point.
-  /// @return A mutable reference to the variance in `R` direction of the space point.
+  /// Mutable access to the `variance r` of the space point.
+  /// @return A mutable reference to the `variance r` of the space point.
   float &varianceR() const noexcept
     requires(!ReadOnly)
   {
     return accessImpl(m_container->m_varianceRColumn);
   }
-  /// Mutable access to the variance in `T` direction of the space point.
-  /// @return A mutable reference to the variance in `T` direction of the space point.
+  /// Mutable access to the `variance t` of the space point.
+  /// @return A mutable reference to the `variance t` of the space point.
   float &varianceT() const noexcept
     requires(!ReadOnly)
   {
     return accessImpl(m_container->m_varianceTColumn);
   }
-  /// Mutable access to the `top strip vector` of the space point.
-  /// @return A mutable reference to the `top strip vector` of the space point.
-  std::array<float, 3> &topStripVector() const noexcept
+  /// Mutable access to the `outer strip calibration details` of the space
+  /// point.
+  /// @return A mutable reference to the `outer strip calibration details` of the space point.
+  OuterStripSpacePointCalibrationDetails &outerStripCalibrationDetails()
+      const noexcept
     requires(!ReadOnly)
   {
-    return accessImpl(m_container->m_topStripVectorColumn);
+    return accessImpl(m_container->m_outerStripCalibrationDetailsColumn);
   }
-  /// Mutable access to the `bottom strip vector` of the space point.
-  /// @return A mutable reference to the `bottom strip vector` of the space point.
-  std::array<float, 3> &bottomStripVector() const noexcept
-    requires(!ReadOnly)
-  {
-    return accessImpl(m_container->m_bottomStripVectorColumn);
-  }
-  /// Mutable access to the `strip center distance` of the space point.
-  /// @return A mutable reference to the `strip center distance` of the space point.
-  std::array<float, 3> &stripCenterDistance() const noexcept
-    requires(!ReadOnly)
-  {
-    return accessImpl(m_container->m_stripCenterDistanceColumn);
-  }
-  /// Mutable access to the t`op strip center` of the space point.
-  /// @return A mutable reference to the `top strip center` of the space point.
-  std::array<float, 3> &topStripCenter() const noexcept
-    requires(!ReadOnly)
-  {
-    return accessImpl(m_container->m_topStripCenterColumn);
-  }
-  /// Mutable access to the `copy from index` of the space point.
-  /// @return A mutable reference to the `copy from index` of the space point.
-  SpacePointIndex2 &copyFromIndex() const noexcept
-    requires(!ReadOnly)
-  {
-    return accessImpl(m_container->m_copyFromIndexColumn);
-  }
-  /// @brief Get mutable reference to `XY` coordinates of the space point
-  /// @return Mutable reference to array containing `[x, y]` coordinates
+  /// Mutable access to the `XY` coordinates of the space point
+  /// @return A mutable reference to array containing `[x, y]` coordinates
   std::array<float, 2> &xy() const noexcept
     requires(!ReadOnly)
   {
     return accessImpl(m_container->m_xyColumn);
   }
-  /// @brief Get mutable reference to `ZR` coordinates of the space point
-  /// @return Mutable reference to array containing `[z, r]` coordinates
+  /// Mutable access to the `ZR` coordinates of the space point
+  /// @return A mutable reference to array containing `[z, r]` coordinates
   std::array<float, 2> &zr() const noexcept
     requires(!ReadOnly)
   {
     return accessImpl(m_container->m_zrColumn);
   }
-  /// @brief Get mutable reference to `XYZ` coordinates of the space point
-  /// @return Mutable reference to array containing `[x, y, z]` coordinates
+  /// Mutable access to the `XYZ` coordinates of the space point
+  /// @return A mutable reference to array containing `[x, y, z]` coordinates
   std::array<float, 3> &xyz() const noexcept
     requires(!ReadOnly)
   {
     return accessImpl(m_container->m_xyzColumn);
   }
-  /// @brief Get mutable reference to `XYZR` coordinates of the space point
-  /// @return Mutable reference to array containing `[x, y, z, r]` coordinates
+  /// Mutable access to the `XYZR` coordinates of the space point
+  /// @return A mutable reference to array containing `[x, y, z, r]` coordinates
   std::array<float, 4> &xyzr() const noexcept
     requires(!ReadOnly)
   {
     return accessImpl(m_container->m_xyzrColumn);
   }
-  /// @brief Get mutable reference to `ZR` coordinate variances
-  /// @return Mutable reference to array containing `[var_z, var_r]` variances
+  /// Mutable access to the `ZR` coordinate variances of the space point
+  /// @return A mutable reference to array containing `[var_z, var_r]` variances
   std::array<float, 2> &varianceZR() const noexcept
     requires(!ReadOnly)
   {
@@ -302,6 +284,11 @@ class SpacePointProxy2 {
     return std::span<const SourceLink>(
         m_container->m_sourceLinks.data() + offset, count);
   }
+  /// Const access to the `copied from index` of the space point.
+  /// @return A const reference to the `copied from index` of the space point.
+  SpacePointIndex2 copiedFromIndex() const noexcept {
+    return accessImpl(m_container->m_copiedFromIndexColumn);
+  }
   /// Const access to the `x` coordinate of the space point.
   /// @return The `x` coordinate of the space point.
   float x() const noexcept { return accessImpl(m_container->m_xColumn); }
@@ -320,68 +307,49 @@ class SpacePointProxy2 {
   /// Const access to the `time` information of the space point.
   /// @return An optional containing the `time` information of the space point, or
   float time() const noexcept { return accessImpl(m_container->m_timeColumn); }
-  /// Const access to the variance in `Z` direction of the space point.
-  /// @return The variance in `Z` direction of the space point.
+  /// Const access to the `variance z` of the space point.
+  /// @return Value of the `variance z` of the space point.
   float varianceZ() const noexcept {
     return accessImpl(m_container->m_varianceZColumn);
   }
-  /// Const access to the variance in `R` direction of the space point.
-  /// @return The variance in `R` direction of the space point.
+  /// Const access to the `variance r` of the space point.
+  /// @return Value of the `variance r` of the space point.
   float varianceR() const noexcept {
     return accessImpl(m_container->m_varianceRColumn);
   }
-  /// Const access to the variance in `T` direction of the space point.
-  /// @return An optional containing the variance in `T` direction of the space point.
+  /// Const access to the `variance t` of the space point.
+  /// @return Value of the `variance t` of the space point.
   float varianceT() const noexcept {
     return accessImpl(m_container->m_varianceTColumn);
   }
-  /// Const access to the `top strip vector` of the space point.
-  /// @return A const reference to the `top strip vector` of the space point.
-  const std::array<float, 3> &topStripVector() const noexcept {
-    return accessImpl(m_container->m_topStripVectorColumn);
+  /// Const access to the `outer strip calibration details` of the space point.
+  /// @return A const reference to the `outer strip calibration details` of the space point.
+  const OuterStripSpacePointCalibrationDetails &outerStripCalibrationDetails()
+      const noexcept {
+    return accessImpl(m_container->m_outerStripCalibrationDetailsColumn);
   }
-  /// Const access to the `bottom strip vector` of the space point.
-  /// @return A const reference to the `bottom strip vector` of the space point.
-  const std::array<float, 3> &bottomStripVector() const noexcept {
-    return accessImpl(m_container->m_bottomStripVectorColumn);
-  }
-  /// Const access to the `strip center distance` of the space point.
-  /// @return A const reference to the `strip center distance` of the space point.
-  const std::array<float, 3> &stripCenterDistance() const noexcept {
-    return accessImpl(m_container->m_stripCenterDistanceColumn);
-  }
-  /// Const access to the `top strip center` of the space point.
-  /// @return A const reference to the `top strip center` of the space point.
-  const std::array<float, 3> &topStripCenter() const noexcept {
-    return accessImpl(m_container->m_topStripCenterColumn);
-  }
-  /// Const access to the `copy from index` of the space point.
-  /// @return A const reference to the `copy from index` of the space point.
-  SpacePointIndex2 copyFromIndex() const noexcept {
-    return accessImpl(m_container->m_copyFromIndexColumn);
-  }
-  /// @brief Get const reference to `XY` coordinates of the space point
-  /// @return Const reference to array containing `[x, y]` coordinates
+  /// Const access to the `XY` coordinates of the space point
+  /// @return A const reference to array containing `[x, y]` coordinates
   const std::array<float, 2> &xy() const noexcept {
     return accessImpl(m_container->m_xyColumn);
   }
-  /// @brief Get const reference to `ZR` coordinates of the space point
-  /// @return Const reference to array containing `[z, r]` coordinates
+  /// Const access to the `ZR` coordinates of the space point
+  /// @return A const reference to array containing `[z, r]` coordinates
   const std::array<float, 2> &zr() const noexcept {
     return accessImpl(m_container->m_zrColumn);
   }
-  /// @brief Get const reference to `XYZ` coordinates of the space point
-  /// @return Const reference to array containing `[x, y, z]` coordinates
+  /// Const access to the `XYZ` coordinates of the space point
+  /// @return A const reference to array containing `[x, y, z]` coordinates
   const std::array<float, 3> &xyz() const noexcept {
     return accessImpl(m_container->m_xyzColumn);
   }
-  /// @brief Get const reference to `XYZR` coordinates of the space point
-  /// @return Const reference to array containing `[x, y, z, r]` coordinates
+  /// Const access to the `XYZR` coordinates of the space point
+  /// @return A const reference to array containing `[x, y, z, r]` coordinates
   const std::array<float, 4> &xyzr() const noexcept {
     return accessImpl(m_container->m_xyzrColumn);
   }
-  /// @brief Get const reference to `ZR` coordinate variances
-  /// @return Const reference to array containing `[var_z, var_r]` variances
+  /// Const access to the `ZR` coordinate variances
+  /// @return A const reference to array containing `[var_z, var_r]` variances
   const std::array<float, 2> &varianceZR() const noexcept {
     return accessImpl(m_container->m_varianceZRColumn);
   }

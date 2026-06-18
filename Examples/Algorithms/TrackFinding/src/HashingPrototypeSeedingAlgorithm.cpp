@@ -311,9 +311,10 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
   const SpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
 
   Acts::SpacePointContainer2 coreSpacePoints(
+      Acts::SpacePointColumns::CopiedFromIndex |
       Acts::SpacePointColumns::PackedXY | Acts::SpacePointColumns::PackedZR |
       Acts::SpacePointColumns::VarianceZ | Acts::SpacePointColumns::VarianceR |
-      Acts::SpacePointColumns::Phi | Acts::SpacePointColumns::CopyFromIndex);
+      Acts::SpacePointColumns::Phi);
 
   // create and train the hashing model
   AnnoyModel hashingModel = createModel(m_cfg.f, m_cfg.annoySeed);
@@ -324,13 +325,13 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
     }
 
     auto newSp = coreSpacePoints.createSpacePoint();
+    newSp.copiedFromIndex() = sp.index();
     newSp.xy() = std::array<float, 2>{static_cast<float>(sp.x()),
                                       static_cast<float>(sp.y())};
     newSp.zr() = std::array<float, 2>{static_cast<float>(sp.z()),
                                       static_cast<float>(sp.r())};
     newSp.varianceZ() = static_cast<float>(sp.varianceZ());
     newSp.varianceR() = static_cast<float>(sp.varianceR());
-    newSp.copyFromIndex() = sp.index();
 
     const float phi = std::atan2(newSp.xy()[1], newSp.xy()[0]);
     const float eta = Acts::AngleHelpers::etaFromTheta(
@@ -380,7 +381,7 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
     // update seed space point indices to original space point container
     for (auto seed : tmpSeeds) {
       for (auto& spIndex : seed.spacePointIndices()) {
-        spIndex = coreSpacePoints.at(spIndex).copyFromIndex();
+        spIndex = coreSpacePoints.at(spIndex).copiedFromIndex();
       }
 
       uniqueSeeds.insert(seed.asConst());

@@ -176,14 +176,14 @@ class Impl final : public TripletSeedFinder {
     tripletTopCandidates.reserve(tripletTopCandidates.size() +
                                  topDoublets.size());
 
-    float cotThetaB = bottomDoublet.cotTheta();
+    const float cotThetaB0 = bottomDoublet.cotTheta();
     const float erB = bottomDoublet.er();
     const float iDeltaRB = bottomDoublet.iDeltaR();
-    const float Vb = bottomDoublet.v();
-    const float Ub = bottomDoublet.u();
+    const float Ub0 = bottomDoublet.u();
+    const float Vb0 = bottomDoublet.v();
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
-    const float iSinTheta2 = 1 + cotThetaB * cotThetaB;
+    const float iSinTheta2 = 1 + cotThetaB0 * cotThetaB0;
     const float sigmaSquaredPtDependent = iSinTheta2 * m_cfg.sigmapT2perRadius;
     // calculate max scattering for min momentum at the seed's theta angle
     // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
@@ -197,7 +197,7 @@ class Impl final : public TripletSeedFinder {
     const float scatteringInRegion2 = m_cfg.multipleScattering2 * iSinTheta2;
 
     const float sinTheta = 1 / std::sqrt(iSinTheta2);
-    const float cosTheta = cotThetaB * sinTheta;
+    const float cosTheta = cotThetaB0 * sinTheta;
 
     // coordinate transformation and checks for middle space point
     // x and y terms for the rotation from UV to XY plane
@@ -207,14 +207,12 @@ class Impl final : public TripletSeedFinder {
     // Pre-cache strip data for the loop-invariant middle and bottom SPs
     const OuterStripSpacePointCalibrationDetailsDerived calM =
         detail::deriveOuterStripSpacePointCalibrationDetails(
-            spM.bottomStripVector(), spM.topStripVector(),
-            spM.stripCenterDistance(), spM.topStripCenter());
+            spM.outerStripCalibrationDetails());
     const ConstSpacePointProxy2 spB =
         spacePoints[bottomDoublet.spacePointIndex()];
     const OuterStripSpacePointCalibrationDetailsDerived calB =
         detail::deriveOuterStripSpacePointCalibrationDetails(
-            spB.bottomStripVector(), spB.topStripVector(),
-            spB.stripCenterDistance(), spB.topStripCenter());
+            spB.outerStripCalibrationDetails());
 
     std::size_t topDoubletOffset = 0;
     for (auto [topDoublet, topDoubletIndex] :
@@ -233,11 +231,11 @@ class Impl final : public TripletSeedFinder {
       // for any subsequent (larger) bottom cotTheta.
       if constexpr (sortedByCotTheta) {
         const float cotThetaT = topDoublet.cotTheta();
-        const float deltaCotTheta = cotThetaB - cotThetaT;
+        const float deltaCotTheta = cotThetaB0 - cotThetaT;
         const float cotThetaDiffMax2 =
             m_cfg.cotThetaDiffMax * m_cfg.cotThetaDiffMax;
         if (deltaCotTheta * deltaCotTheta > cotThetaDiffMax2) {
-          if (cotThetaB < cotThetaT) {
+          if (cotThetaB0 < cotThetaT) {
             break;
           }
           topDoubletOffset = topDoubletIndex + 1;
@@ -246,17 +244,18 @@ class Impl final : public TripletSeedFinder {
       }
 
       // protects against division by 0
-      float dU = topDoublet.u() - Ub;
-      if (dU == 0) {
+      const float dU0 = topDoublet.u() - Ub0;
+      if (dU0 == 0) {
         continue;
       }
       // A and B are evaluated as a function of the circumference parameters
       // x_0 and y_0
-      const float A0 = (topDoublet.v() - Vb) / dU;
+      const float A0 = (topDoublet.v() - Vb0) / dU0;
 
       // The middle strip check is scale-invariant (ratios s1/bd1 and s0/bd1
-      // are unaffected by uniform scaling of pm), so we use cosTheta as the
-      // z-component instead of cosTheta * sqrt(1 + A0^2), deferring the sqrt.
+      // are unaffected by uniform scaling of direction), so we use cosTheta as
+      // the z-component instead of cosTheta * sqrt(1 + A0^2), deferring the
+      // sqrt.
       const std::array<float, 3> directionMiddle = {
           rotationTermsUVtoXY[0] - rotationTermsUVtoXY[1] * A0,
           rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1], cosTheta};
@@ -271,7 +270,7 @@ class Impl final : public TripletSeedFinder {
       const float zDirectionMiddle = cosTheta * std::sqrt(1 + A0 * A0);
 
       // coordinate transformation and checks for bottom space point
-      const float B0 = 2 * (Vb - A0 * Ub);
+      const float B0 = 2 * (Vb0 - A0 * Ub0);
       const float Cb = 1 - B0 * bottomDoublet.y();
       const float Sb = A0 + B0 * bottomDoublet.x();
       const std::array<float, 3> directionBottom = {
@@ -297,8 +296,7 @@ class Impl final : public TripletSeedFinder {
           spacePoints[topDoublet.spacePointIndex()];
       const OuterStripSpacePointCalibrationDetailsDerived calT =
           detail::deriveOuterStripSpacePointCalibrationDetails(
-              spT.bottomStripVector(), spT.topStripVector(),
-              spT.stripCenterDistance(), spT.topStripCenter());
+              spT.outerStripCalibrationDetails());
       std::array<float, 3> rTTransf{};
       if (!detail::calibrateOuterStripSpacePoint(directionTop, calT, rTTransf,
                                                  m_cfg.toleranceParam)) {
@@ -316,7 +314,7 @@ class Impl final : public TripletSeedFinder {
       const float iDeltaRB2 = 1 / (xB * xB + yB * yB);
       const float iDeltaRT2 = 1 / (xT * xT + yT * yT);
 
-      cotThetaB = -zB * std::sqrt(iDeltaRB2);
+      const float cotThetaB = -zB * std::sqrt(iDeltaRB2);
       const float cotThetaT = zT * std::sqrt(iDeltaRT2);
 
       // use arithmetic average
@@ -353,19 +351,19 @@ class Impl final : public TripletSeedFinder {
       const float Ax = rMTransf[0] * irMxy;
       const float Ay = rMTransf[1] * irMxy;
 
-      const float ub = (xB * Ax + yB * Ay) * iDeltaRB2;
-      const float vb = (yB * Ax - xB * Ay) * iDeltaRB2;
-      const float ut = (xT * Ax + yT * Ay) * iDeltaRT2;
-      const float vt = (yT * Ax - xT * Ay) * iDeltaRT2;
+      const float Ub = (xB * Ax + yB * Ay) * iDeltaRB2;
+      const float Vb = (yB * Ax - xB * Ay) * iDeltaRB2;
+      const float Ut = (xT * Ax + yT * Ay) * iDeltaRT2;
+      const float Vt = (yT * Ax - xT * Ay) * iDeltaRT2;
 
-      dU = ut - ub;
+      const float dU = Ut - Ub;
       // protects against division by 0
       if (dU == 0) {
         continue;
       }
-      const float A = (vt - vb) / dU;
+      const float A = (Vt - Vb) / dU;
       const float S2 = 1 + A * A;
-      const float B = vb - A * ub;
+      const float B = Vb - A * Ub;
       const float B2 = B * B;
 
       // sqrt(S2)/B = 2 * helixradius
