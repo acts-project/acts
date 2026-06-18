@@ -21,7 +21,7 @@
 #include <numbers>
 
 #include "Eigen/Dense"
-
+#include "Acts/Utilities/AngleHelpers.hpp"
 namespace Acts::VectorHelpers {
 
 /// Calculate phi (transverse plane angle) from compatible Eigen types with
@@ -154,7 +154,7 @@ double eta(const T& v) noexcept
     { v.theta() } -> std::floating_point;
   }
 {
-  return -std::log(std::tan(0.5 * v.theta()));
+  return  Acts::AngleHelpers::etaFromTheta(v.theta());
 }
 
 /// @brief Fast evaluation of trigonomic functions.
