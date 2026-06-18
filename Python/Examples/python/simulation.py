@@ -663,6 +663,7 @@ def addGeant4(
     killSecondaries: bool = False,
     physicsList: str = "FTFP_BERT",
     detectorConstructionOptions=None,
+    propagatorLargestAcceptableStep: float = float("inf"),
 ) -> None:
     """This function steers the detector simulation using Geant4
 
@@ -731,6 +732,7 @@ def addGeant4(
         recordHitsOfSecondaries=recordHitsOfSecondaries,
         recordPropagationSummaries=recordPropagationSummaries,
         keepParticlesWithoutHits=keepParticlesWithoutHits,
+        propagatorLargestAcceptableStep=propagatorLargestAcceptableStep,
     )
     __geant4Handle = alg.geant4Handle
     s.addAlgorithm(alg)
