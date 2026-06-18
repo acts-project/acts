@@ -31,6 +31,8 @@ namespace Acts::detail {
 template <std::size_t DIM>
 class FlatNeighborHoodIndices {
  public:
+  using size_type = std::size_t;
+
   /// You can get the neighbor multi indices from
   /// MultiAxisHelperImpl<DIM>::neighborHoodIndices and the number of bins in
   /// each direction from MultiAxisHelperImpl<DIM>::getNBins.

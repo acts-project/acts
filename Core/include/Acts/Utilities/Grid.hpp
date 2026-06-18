@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Axis.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/GridIterator.hpp"
 #include "Acts/Utilities/IGrid.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
@@ -200,6 +201,22 @@ class Grid final : public IGrid {
   /// @copydoc Acts::IGrid::atLocalBinsAny
   std::any atLocalBinsAny(const AnyIndexType& indices) override {
     return &atLocalBins(toIndexType(indices));
+  }
+
+  /// @brief get global bin indices for closest points on grid
+  ///
+  /// @tparam Point any type with point semantics supporting component access
+  ///               through @c operator[]
+  /// @param [in] position point of interest
+  /// @return Iterable thatemits the indices of bins whose lower-left corners
+  ///         are the closest points on the grid to the input.
+  ///
+  /// @pre The given @c Point type must represent a point in d (or higher)
+  ///      dimensions where d is dimensionality of the grid. It must lie
+  ///      within the grid range (i.e. not within a under-/overflow bin).
+  detail::FlatNeighborHoodIndices<DIM> closestPointsIndices(
+      const index_t& localBins) const {
+    return m_axes.getClosestPointsIndices(localBins);
   }
 
   /// @brief get global bin indices for closest points on grid
@@ -431,24 +448,23 @@ class Grid final : public IGrid {
   /// lower-left corner of the corresponding hyper-box.
   template <class Point>
   T interpolate(const Point& point) const {
+    // get local indices for current bin
+    // value of bin is interpreted as being the field value at its lower left
+    // corner
+    const auto llIndices = localBinsFromPosition(point);
+
+    // get global indices for all surrounding corner points
+    const auto closestIndices = closestPointsIndices(llIndices);
+
     // there are 2^DIM corner points used during the interpolation
     constexpr std::size_t nCorners = 1 << DIM;
 
     // construct vector of pairs of adjacent bin centers and values
     std::array<value_type, nCorners> neighbors{};
 
-    // get local indices for current bin
-    // value of bin is interpreted as being the field value at its lower left
-    // corner
-    const auto& llIndices = localBinsFromPosition(point);
-
-    // get global indices for all surrounding corner points
-    const auto& closestIndices = closestPointsIndices(llIndices);
-
     // get values on grid points
-    std::size_t i = 0;
-    for (std::size_t index : closestIndices) {
-      neighbors.at(i++) = at(index);
+    for (const auto [i, index] : enumerate(closestIndices)) {
+      neighbors.at(i) = at(index);
     }
 
     return Acts::interpolate(point, m_axes.getLowerLeftBinEdge(llIndices),

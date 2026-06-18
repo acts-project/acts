@@ -22,12 +22,11 @@ namespace Acts {
 /// with 'container' any stl-like container
 /// @param iterable Container to enumerate
 /// @return Enumerable wrapper with index and value pairs
-template <
-    typename container_type,
-    typename index_type = typename std::decay_t<container_type>::size_type,
-    typename container_type_iter =
-        decltype(std::begin(std::declval<container_type>())),
-    typename = decltype(std::end(std::declval<container_type>()))>
+template <typename container_type,
+          typename index_type = decltype(std::declval<container_type>().size()),
+          typename container_type_iter =
+              decltype(std::declval<container_type>().begin()),
+          typename = decltype(std::declval<container_type>().end())>
 constexpr auto enumerate(container_type &&iterable) {
   struct iterator {
     index_type i;
@@ -35,14 +34,12 @@ constexpr auto enumerate(container_type &&iterable) {
 
     bool operator!=(const iterator &rhs) const { return iter != rhs.iter; }
 
-    /** Increase index and iterator at once */
     void operator++() {
       ++i;
       ++iter;
     }
 
-    /** Tie them together for returning */
-    auto operator*() const { return std::tie(i, *iter); }
+    decltype(auto) operator*() const { return std::forward_as_tuple(i, *iter); }
   };
   struct iterable_wrapper {
     container_type iterable;
