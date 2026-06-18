@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
+#include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -26,6 +27,8 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include <arrow/api.h>
 #include <arrow/io/file.h>
@@ -95,9 +98,18 @@ std::shared_ptr<ArrowArrayType> colValues(const arrow::Table& table,
   return values;
 }
 
-// Extract the effective sigma from a smearer stored in a std::function.
-// Returns nullopt for smearer types that have no single sigma
-// (Uniform, Digital).
+// Struct to hold pre-extracted sigma for a single parameter
+struct DigitizationSigmaConfig {
+  Acts::BoundIndices index;
+  double sigma;
+};
+
+// Type alias for unified digitization config with pre-extracted sigmas
+using DigitizationConfigWithSigmas = std::pair<
+    ActsExamples::DigiComponentsConfig,
+    std::vector<DigitizationSigmaConfig>>;
+
+// Extract sigma from a smearer function. Returns nullopt for Uniform/Digital.
 std::optional<double> sigmaFromSmearer(
     const ActsFatras::SingleParameterSmearFunction<RandomEngine>& fn) {
   if (const auto* g = fn.target<const Digitization::Gauss>()) {
@@ -231,6 +243,37 @@ ColliderMLInputConverter::ColliderMLInputConverter(
                                          .withSensitive(gid.sensitive());
       m_volLaySenMap[key] = gid;
     }
+  }
+
+  if (!m_cfg.outputMeasurements.empty() && !m_cfg.digiConfig.empty()) {
+    std::vector<Acts::GeometryHierarchyMap<DigitizationConfigWithSigmas>::InputElement> elements;
+    elements.reserve(m_cfg.digiConfig.size());
+
+    for (const auto& entry : m_cfg.digiConfig) {
+      const auto geoId = m_cfg.digiConfig.idAt(&entry - &*m_cfg.digiConfig.begin());
+      const auto& digiComp = m_cfg.digiConfig.valueAt(&entry - &*m_cfg.digiConfig.begin());
+
+      std::vector<DigitizationSigmaConfig> sigmaConfigs;
+      sigmaConfigs.reserve(digiComp.smearingDigiConfig.params.size());
+
+      for (const auto& param : digiComp.smearingDigiConfig.params) {
+        if (param.index == Acts::eBoundTime) {
+          continue;
+        }
+        const auto sigma = sigmaFromSmearer(param.smearFunction);
+        if (!sigma.has_value()) {
+          throw std::invalid_argument(
+              "Digitization config for geoId " + geoId.str() +
+              " contains smearer without meaningful sigma (Uniform/Digital). "
+              "ColliderML input converter requires Gaussian-like smearing with single sigma.");
+        }
+        sigmaConfigs.push_back({param.index, *sigma});
+      }
+
+      elements.emplace_back(geoId, DigitizationConfigWithSigmas{digiComp, sigmaConfigs});
+    }
+
+    m_digiSigmaMap = Acts::GeometryHierarchyMap<DigitizationConfigWithSigmas>(std::move(elements));
   }
 }
 
@@ -412,13 +455,14 @@ ProcessCode ColliderMLInputConverter::execute(
     // and the measurement, so SimHitContainer and MeasurementContainer always
     // have a 1:1 correspondence.
 
-    auto digiIt = m_cfg.digiConfig.find(geoId);
-    if (digiIt == m_cfg.digiConfig.end()) {
+    auto digiSigmaIt = m_digiSigmaMap.find(geoId);
+    if (digiSigmaIt == m_digiSigmaMap.end()) {
       ACTS_ERROR("Hit " << i << " geoId " << geoId
                         << " has no digiConfig entry — check smearing config");
       return ProcessCode::ABORT;
     }
-    const auto& smearing = digiIt->smearingDigiConfig;
+    const auto& [digiComp, sigmaConfigs] = *digiSigmaIt;
+    const auto& smearing = digiComp.smearingDigiConfig;
 
     const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
     if (surface == nullptr) {
@@ -459,19 +503,13 @@ ProcessCode ColliderMLInputConverter::execute(
     const Acts::Vector2& lp = localResult.value();
 
     DigitizedParameters dParams;
-    for (const auto& param : smearing.params) {
-      // skip time — not a spatial measurement coordinate
-      if (param.index == Acts::eBoundTime) {
+    for (const auto& sigmaCfg : sigmaConfigs) {
+      if (sigmaCfg.index == Acts::eBoundTime) {
         continue;
       }
-      const auto sigma = sigmaFromSmearer(param.smearFunction);
-      if (!sigma.has_value()) {
-        // Uniform/Digital: no meaningful single sigma, skip
-        continue;
-      }
-      dParams.indices.push_back(param.index);
-      dParams.values.push_back(lp[static_cast<int>(param.index)]);
-      dParams.variances.push_back((*sigma) * (*sigma));
+      dParams.indices.push_back(sigmaCfg.index);
+      dParams.values.push_back(lp[static_cast<int>(sigmaCfg.index)]);
+      dParams.variances.push_back(sigmaCfg.sigma * sigmaCfg.sigma);
     }
 
     // All validation passed: commit simhit and measurement together so they

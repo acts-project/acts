@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
@@ -24,6 +25,8 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 class TrackingGeometry;
@@ -129,6 +132,11 @@ class ColliderMLInputConverter : public IAlgorithm {
   /// tracking geometry.
   std::unordered_map<Acts::GeometryIdentifier, Acts::GeometryIdentifier>
       m_volLaySenMap;
+
+  /// Unified digitization config with pre-extracted sigmas mapped by
+  /// geometry hierarchy (surface → layer → volume fallback).
+  /// Stores pairs of (original digiConfig, vector of sigma configs).
+  Acts::GeometryHierarchyMap<DigitizationConfigWithSigmas> m_digiSigmaMap;
 
   ReadDataHandle<ActsPlugins::ArrowUtil::ArrowTable> m_inputParticles{
       this, "InputParticles"};
