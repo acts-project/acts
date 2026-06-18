@@ -301,7 +301,13 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
     os << "Axis<Equidistant, " << bdt << ">(";
     os << axis.m_min << ", ";
     os << axis.m_max << ", ";
-    os << axis.m_bins << ")";
+    os << axis.m_bins << ", ";
+    if (axis.getDirection().has_value()) {
+      os << *axis.getDirection();
+    } else {
+      os << "Undefined";
+    }
+    os << ")";
     return os;
   }
 
@@ -586,10 +592,16 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   std::vector<double> getBinEdges() const final { return m_binEdges; }
 
   friend std::ostream& operator<<(std::ostream& os, const Axis& axis) {
-    os << "Axis<Variable, " << bdt << ">(";
+    os << "Axis<Variable, " << bdt << ">({";
     os << axis.m_binEdges.front();
-    for (std::size_t i = 1; i < axis.m_binEdges.size(); i++) {
-      os << ", " << axis.m_binEdges[i];
+    for (std::size_t i = 1; i < axis.m_binEdges.size(); ++i) {
+      os << ", " << axis.m_binEdges.at(i);
+    }
+    os << "}, ";
+    if (axis.getDirection().has_value()) {
+      os << *axis.getDirection();
+    } else {
+      os << "Undefined";
     }
     os << ")";
     return os;

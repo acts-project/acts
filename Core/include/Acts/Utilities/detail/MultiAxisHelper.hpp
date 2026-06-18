@@ -504,25 +504,6 @@ struct MultiAxisHelperImpl<0u> {
 
 /// helper functions for grid-related operations
 struct MultiAxisHelper {
-  /// get the global indices for closest points on grid
-  ///
-  /// @tparam Axes parameter pack of axis types defining the grid
-  /// @param bin global bin index for bin of interest
-  /// @param axes actual axis objects spanning the grid
-  /// @return Sorted collection of global bin indices for bins whose
-  /// lower-left corners are the closest points on the grid to every
-  /// point in the given bin
-  ///
-  /// @note @c bin must be a valid bin index (excluding under-/overflow bins
-  /// along any axis).
-  template <class... Axes>
-  static FlatNeighborHoodIndices<sizeof...(Axes)> closestPointsIndices(
-      const std::array<std::size_t, sizeof...(Axes)>& localBins,
-      const std::tuple<Axes...>& axes) {
-    // get neighboring bins, but only increment.
-    return neighborHoodIndices(localBins, std::make_pair(0, 1), axes);
-  }
-
   /// retrieve bin center from set of local bin indices
   ///
   /// @tparam Axes parameter pack of axis types defining the grid
@@ -805,7 +786,7 @@ struct MultiAxisHelper {
   ///
   /// @tparam Axes parameter pack of axis types defining the grid
   /// @param localBins local bin indices along each axis
-  /// @param size size of neighborhood determining how many
+  /// @param sizes size of neighborhood determining how many
   /// adjacent bins along each axis are considered
   /// @param axes actual axis objects spanning the grid
   /// @return Sorted collection of global bin indices for all bins in
@@ -850,7 +831,7 @@ struct MultiAxisHelper {
   ///
   /// @tparam Axes parameter pack of axis types defining the grid
   /// @param localBins local bin indices along each axis
-  /// @param size size of neighborhood for each axis, which
+  /// @param sizes size of neighborhood for each axis, which
   /// bins along each axis are considered
   /// @param axes actual axis objects spanning the grid
   /// @return Sorted collection of global bin indices for all bins in
@@ -868,7 +849,7 @@ struct MultiAxisHelper {
   template <class... Axes>
   static FlatNeighborHoodIndices<sizeof...(Axes)> neighborHoodIndices(
       const std::array<std::size_t, sizeof...(Axes)>& localBins,
-      std::array<std::pair<int, int>, sizeof...(Axes)>& sizes,
+      const std::array<std::pair<int, int>, sizeof...(Axes)>& sizes,
       const std::tuple<Axes...>& axes) {
     // length N array which contains local neighbors based on size par
     std::array<NeighborHoodIndices, sizeof...(Axes)> neighborIndices{};

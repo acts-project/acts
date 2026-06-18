@@ -6,11 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/MultiAxis.hpp"
+#include "ActsTests/CommonHelpers/Assertions.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <array>
@@ -29,9 +31,9 @@ BOOST_AUTO_TEST_CASE(test_1d_equidistant) {
   using Point = std::array<double, 1>;
   using MultiIndex = std::array<std::size_t, 1>;
 
-  Axis a(0.0, 4.0, 4u);
+  const Axis a(0.0, 4.0, 4u);
 
-  MultiAxis ma(a);
+  const MultiAxis ma(a);
 
   // test general properties
   BOOST_CHECK_EQUAL(ma.getNAxes(), 1u);
@@ -101,10 +103,10 @@ BOOST_AUTO_TEST_CASE(test_2d_equidistant) {
   using Point = std::array<double, 2>;
   using MultiIndex = std::array<std::size_t, 2>;
 
-  Axis a(0.0, 4.0, 4u);
-  Axis b(0.0, 3.0, 3u);
+  const Axis a(0.0, 4.0, 4u);
+  const Axis b(0.0, 3.0, 3u);
 
-  MultiAxis ma(a, b);
+  const MultiAxis ma(a, b);
 
   // test general properties
   BOOST_CHECK_EQUAL(ma.getNAxes(), 2u);
@@ -263,11 +265,11 @@ BOOST_AUTO_TEST_CASE(test_3d_equidistant) {
   using Point = std::array<double, 3>;
   using MultiIndex = std::array<std::size_t, 3>;
 
-  Axis a(0.0, 2.0, 2u);
-  Axis b(0.0, 3.0, 3u);
-  Axis c(0.0, 2.0, 2u);
+  const Axis a(0.0, 2.0, 2u);
+  const Axis b(0.0, 3.0, 3u);
+  const Axis c(0.0, 2.0, 2u);
 
-  MultiAxis ma(a, b, c);
+  const MultiAxis ma(a, b, c);
 
   // test general properties
   BOOST_CHECK_EQUAL(ma.getNAxes(), 3u);
@@ -409,9 +411,9 @@ BOOST_AUTO_TEST_CASE(test_1d_variable) {
   using Point = std::array<double, 1>;
   using MultiIndex = std::array<std::size_t, 1>;
 
-  Axis a({0.0, 1.0, 4.0});
+  const Axis a({0.0, 1.0, 4.0});
 
-  MultiAxis ma(a);
+  const MultiAxis ma(a);
 
   // test general properties
   BOOST_CHECK_EQUAL(ma.getNAxes(), 1u);
@@ -467,10 +469,10 @@ BOOST_AUTO_TEST_CASE(test_2d_variable) {
   using Point = std::array<double, 2>;
   using MultiIndex = std::array<std::size_t, 2>;
 
-  Axis a({0.0, 0.5, 3.0});
-  Axis b({0.0, 1.0, 4.0});
+  const Axis a({0.0, 0.5, 3.0});
+  const Axis b({0.0, 1.0, 4.0});
 
-  MultiAxis ma(a, b);
+  const MultiAxis ma(a, b);
 
   // test general properties
   BOOST_CHECK_EQUAL(ma.getNAxes(), 2u);
@@ -580,11 +582,11 @@ BOOST_AUTO_TEST_CASE(test_3d_variable) {
   using Point = std::array<double, 3>;
   using MultiIndex = std::array<std::size_t, 3>;
 
-  Axis a({0.0, 1.0});
-  Axis b({0.0, 0.5, 3.0});
-  Axis c({0.0, 0.5, 3.0, 3.3});
+  const Axis a({0.0, 1.0});
+  const Axis b({0.0, 0.5, 3.0});
+  const Axis c({0.0, 0.5, 3.0, 3.3});
 
-  MultiAxis ma(a, b, c);
+  const MultiAxis ma(a, b, c);
 
   // test general properties
   BOOST_CHECK_EQUAL(ma.getNAxes(), 3u);
@@ -709,10 +711,10 @@ BOOST_AUTO_TEST_CASE(test_2d_mixed) {
   using Point = std::array<double, 2>;
   using MultiIndex = std::array<std::size_t, 2>;
 
-  Axis a(0.0, 1.0, 4u);
-  Axis b({0.0, 0.5, 3.0});
+  const Axis a(0.0, 1.0, 4u);
+  const Axis b({0.0, 0.5, 3.0});
 
-  MultiAxis ma(a, b);
+  const MultiAxis ma(a, b);
 
   // test general properties
   BOOST_CHECK_EQUAL(ma.getNAxes(), 2u);
@@ -855,13 +857,13 @@ BOOST_AUTO_TEST_CASE(test_2d_mixed) {
 BOOST_AUTO_TEST_CASE(neighborhood) {
   using bins_t = std::vector<std::size_t>;
 
-  Axis a(0.0, 1.0, 10u);
-  Axis b(0.0, 1.0, 10u);
-  Axis c(0.0, 1.0, 10u);
+  const Axis a(0.0, 1.0, 10u);
+  const Axis b(0.0, 1.0, 10u);
+  const Axis c(0.0, 1.0, 10u);
 
-  MultiAxis ma1(a);
-  MultiAxis ma2(a, b);
-  MultiAxis ma3(a, b, c);
+  const MultiAxis ma1(a);
+  const MultiAxis ma2(a, b);
+  const MultiAxis ma3(a, b, c);
 
   // 1D case
   BOOST_CHECK(ma1.getNeighborHoodIndices({0}, 1).collectVector() ==
@@ -936,9 +938,9 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   BOOST_CHECK(ma1.getNeighborHoodIndices({2}, a1).collectVector() ==
               (bins_t{0, 1}));
 
-  Axis d(AxisClosed, 0.0, 1.0, 10u);
+  const Axis d(AxisClosed, 0.0, 1.0, 10u);
 
-  MultiAxis ma1Cl(d);
+  const MultiAxis ma1Cl(d);
 
   BOOST_CHECK(ma1Cl.getNeighborHoodIndices({0}, 1)
                   .collectVector()
@@ -951,10 +953,10 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   BOOST_CHECK(ma1Cl.getNeighborHoodIndices({5}, 1).collectVector() ==
               (bins_t{4, 5, 6}));
 
-  Axis f(AxisClosed, 0.0, 1.0, 5u);
-  Axis e(AxisClosed, 0.0, 1.0, 5u);
+  const Axis f(AxisClosed, 0.0, 1.0, 5u);
+  const Axis e(AxisClosed, 0.0, 1.0, 5u);
 
-  MultiAxis ma2Cl(e, f);
+  const MultiAxis ma2Cl(e, f);
 
   BOOST_CHECK(ma2Cl.getNeighborHoodIndices({3, 3}, 1).collectVector() ==
               (bins_t{16, 17, 18, 23, 24, 25, 30, 31, 32}));
@@ -1039,32 +1041,38 @@ BOOST_AUTO_TEST_CASE(closestPoints) {
   using Point3 = std::array<double, 3>;
   using bins_t = std::vector<std::size_t>;
 
-  Axis a(0.0, 1.0, 10u);
-  Axis b(0.0, 1.0, 5u);
-  Axis c(0.0, 1.0, 3u);
+  const Axis a(0.0, 1.0, 10u);
+  const Axis b(0.0, 1.0, 5u);
+  const Axis c(0.0, 1.0, 3u);
 
-  MultiAxis g1(a);
-  MultiAxis g2(a, b);
-  MultiAxis g3(a, b, c);
+  const MultiAxis ma1(a);
+  const MultiAxis ma2(a, b);
+  const MultiAxis ma3(a, b, c);
 
   // 1D case
-  BOOST_CHECK(g1.getClosestPointsIndices(Point1{0.52}).collectVector() ==
-              (bins_t{6, 7}));
-  BOOST_CHECK(g1.getClosestPointsIndices(Point1{0.98}).collectVector() ==
-              (bins_t{10, 11}));
+  CHECK_EQUAL_COLLECTIONS(
+      ma1.getClosestPointsIndices(Point1{0.52}).collectVector(),
+      (bins_t{6, 7}));
+  CHECK_EQUAL_COLLECTIONS(
+      ma1.getClosestPointsIndices(Point1{0.98}).collectVector(),
+      (bins_t{10, 11}));
 
   // 2D case
-  BOOST_CHECK(g2.getClosestPointsIndices(Point2{0.52, 0.08}).collectVector() ==
-              (bins_t{43, 44, 50, 51}));
-  BOOST_CHECK(g2.getClosestPointsIndices(Point2{0.05, 0.08}).collectVector() ==
-              (bins_t{8, 9, 15, 16}));
+  CHECK_EQUAL_COLLECTIONS(
+      ma2.getClosestPointsIndices(Point2{0.52, 0.08}).collectVector(),
+      (bins_t{43, 44, 50, 51}));
+  CHECK_EQUAL_COLLECTIONS(
+      ma2.getNeighborHoodIndices(ma2.getLocalBinsFromPoint(Point2{0.05, 0.08}),
+                                 {0, 1})
+          .collectVector(),
+      (bins_t{8, 9, 15, 16}));
 
   // 3D case
-  BOOST_CHECK(
-      g3.getClosestPointsIndices(Point3{0.23, 0.13, 0.61}).collectVector() ==
+  CHECK_EQUAL_COLLECTIONS(
+      ma3.getClosestPointsIndices(Point3{0.23, 0.13, 0.61}).collectVector(),
       (bins_t{112, 113, 117, 118, 147, 148, 152, 153}));
-  BOOST_CHECK(
-      g3.getClosestPointsIndices(Point3{0.52, 0.35, 0.71}).collectVector() ==
+  CHECK_EQUAL_COLLECTIONS(
+      ma3.getClosestPointsIndices(Point3{0.52, 0.35, 0.71}).collectVector(),
       (bins_t{223, 224, 228, 229, 258, 259, 263, 264}));
 
   using EAxisClosed = Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
@@ -1081,59 +1089,64 @@ BOOST_AUTO_TEST_CASE(closestPoints) {
   MultiAxis2Cl_t ma2Cl(std::make_tuple(aCl, bCl));
 
   // 1D case
-  BOOST_CHECK(ma1Cl.getClosestPointsIndices(Point1{0.52}).collectVector() ==
-              (bins_t{6, 7}));
-  BOOST_CHECK(ma1Cl.getClosestPointsIndices(Point1{0.98}).collectVector() ==
-              (bins_t{10, 1}));
+  CHECK_EQUAL_COLLECTIONS(
+      ma1Cl.getClosestPointsIndices(Point1{0.52}).collectVector(),
+      (bins_t{6, 7}));
+  CHECK_EQUAL_COLLECTIONS(
+      ma1Cl.getClosestPointsIndices(Point1{0.98}).collectVector(),
+      (bins_t{10, 1}));
 
   // 2D case
-  BOOST_CHECK(
-      ma2Cl.getClosestPointsIndices(Point2{0.52, 0.08}).collectVector() ==
+  CHECK_EQUAL_COLLECTIONS(
+      ma2Cl.getClosestPointsIndices(Point2{0.52, 0.08}).collectVector(),
       (bins_t{43, 44, 50, 51}));
-  BOOST_CHECK(
-      ma2Cl.getClosestPointsIndices(Point2{0.52, 0.68}).collectVector() ==
+  CHECK_EQUAL_COLLECTIONS(
+      ma2Cl.getClosestPointsIndices(Point2{0.52, 0.68}).collectVector(),
       (bins_t{46, 47, 53, 54}));
-  BOOST_CHECK(
-      ma2Cl.getClosestPointsIndices(Point2{0.52, 0.88}).collectVector() ==
+  CHECK_EQUAL_COLLECTIONS(
+      ma2Cl.getClosestPointsIndices(Point2{0.52, 0.88}).collectVector(),
       (bins_t{47, 43, 54, 50}));
-  BOOST_CHECK(
-      ma2Cl.getClosestPointsIndices(Point2{0.05, 0.08}).collectVector() ==
+  CHECK_EQUAL_COLLECTIONS(
+      ma2Cl.getClosestPointsIndices(Point2{0.05, 0.08}).collectVector(),
       (bins_t{8, 9, 15, 16}));
-  BOOST_CHECK(
-      ma2Cl.getClosestPointsIndices(Point2{0.9, 0.95}).collectVector() ==
+  CHECK_EQUAL_COLLECTIONS(
+      ma2Cl.getClosestPointsIndices(Point2{0.9, 0.95}).collectVector(),
       (bins_t{75, 71, 12, 8}));
 
   // @TODO: 3D checks would also be nice
 
-  Axis aOp(AxisBound, 0.0, 1.0, 10u);
-  Axis bOp(AxisBound, 0.0, 1.0, 5u);
+  const Axis aOp(AxisBound, 0.0, 1.0, 10u);
+  const Axis bOp(AxisBound, 0.0, 1.0, 5u);
 
-  MultiAxis ma1Op(aOp);
-  MultiAxis ma2Op(aOp, bOp);
+  const MultiAxis ma1Op(aOp);
+  const MultiAxis ma2Op(aOp, bOp);
 
   // 1D case
-  BOOST_CHECK(ma1Op.getClosestPointsIndices(Point1{0.52}).collectVector() ==
-              (bins_t{6, 7}));
-  BOOST_CHECK(ma1Op.getClosestPointsIndices(Point1{0.98}).collectVector() ==
-              (bins_t{10}));
-  BOOST_CHECK(ma1Op.getClosestPointsIndices(Point1{0.88}).collectVector() ==
-              (bins_t{9, 10}));
+  CHECK_EQUAL_COLLECTIONS(
+      ma1Op.getClosestPointsIndices(Point1{0.52}).collectVector(),
+      (bins_t{6, 7}));
+  CHECK_EQUAL_COLLECTIONS(
+      ma1Op.getClosestPointsIndices(Point1{0.98}).collectVector(),
+      (bins_t{10}));
+  CHECK_EQUAL_COLLECTIONS(
+      ma1Op.getClosestPointsIndices(Point1{0.88}).collectVector(),
+      (bins_t{9, 10}));
 
   // 2D case
-  BOOST_CHECK(
-      ma2Op.getClosestPointsIndices(Point2{0.52, 0.08}).collectVector() ==
+  CHECK_EQUAL_COLLECTIONS(
+      ma2Op.getClosestPointsIndices(Point2{0.52, 0.08}).collectVector(),
       (bins_t{43, 44, 50, 51}));
-  BOOST_CHECK(
-      ma2Op.getClosestPointsIndices(Point2{0.52, 0.68}).collectVector() ==
+  CHECK_EQUAL_COLLECTIONS(
+      ma2Op.getClosestPointsIndices(Point2{0.52, 0.68}).collectVector(),
       (bins_t{46, 47, 53, 54}));
-  BOOST_CHECK(
-      ma2Op.getClosestPointsIndices(Point2{0.52, 0.88}).collectVector() ==
+  CHECK_EQUAL_COLLECTIONS(
+      ma2Op.getClosestPointsIndices(Point2{0.52, 0.88}).collectVector(),
       (bins_t{47, 54}));
-  BOOST_CHECK(
-      ma2Op.getClosestPointsIndices(Point2{0.05, 0.1}).collectVector() ==
+  CHECK_EQUAL_COLLECTIONS(
+      ma2Op.getClosestPointsIndices(Point2{0.05, 0.1}).collectVector(),
       (bins_t{8, 9, 15, 16}));
-  BOOST_CHECK(
-      ma2Op.getClosestPointsIndices(Point2{0.95, 0.95}).collectVector() ==
+  CHECK_EQUAL_COLLECTIONS(
+      ma2Op.getClosestPointsIndices(Point2{0.95, 0.95}).collectVector(),
       (bins_t{75}));
 
   // @TODO: 3D checks would also be nice
@@ -1168,16 +1181,16 @@ BOOST_AUTO_TEST_CASE(closestPoints) {
 }
 
 BOOST_AUTO_TEST_CASE(Output) {
-  Axis a{AxisOpen, 0.0, 1.0, 10u};
-  Axis b{AxisBound, {1, 2, 3}};
+  const Axis a{AxisOpen, 0.0, 1.0, 10u};
+  const Axis b{AxisBound, {1, 2, 3}};
 
-  MultiAxis ma(a, b);
+  const MultiAxis ma(a, b);
 
   std::stringstream ss;
   ss << ma;
-  BOOST_CHECK_EQUAL(
-      ss.str(),
-      "Axis<Equidistant, Open>(0, 1, 10), Axis<Variable, Bound>(1, 2, 3)");
+  BOOST_CHECK_EQUAL(ss.str(),
+                    "Axis<Equidistant, Open>(0, 1, 10, Undefined), "
+                    "Axis<Variable, Bound>({1, 2, 3}, Undefined)");
 
   const IMultiAxis& ima = ma;
 
@@ -1185,18 +1198,18 @@ BOOST_AUTO_TEST_CASE(Output) {
 
   ss << ima;
 
-  BOOST_CHECK_EQUAL(
-      ss.str(),
-      "Axis<Equidistant, Open>(0, 1, 10), Axis<Variable, Bound>(1, 2, 3)");
+  BOOST_CHECK_EQUAL(ss.str(),
+                    "Axis<Equidistant, Open>(0, 1, 10, Undefined), "
+                    "Axis<Variable, Bound>({1, 2, 3}, Undefined)");
 }
 
 BOOST_AUTO_TEST_CASE(Equality) {
-  Axis a{AxisOpen, 0.0, 1.0, 10u};
-  Axis b{AxisBound, {1, 2, 3}};
-  Axis c{AxisClosed, {1, 2, 5}};
+  const Axis a{AxisOpen, 0.0, 1.0, 10u};
+  const Axis b{AxisBound, {1, 2, 3}};
+  const Axis c{AxisClosed, {1, 2, 5}};
 
-  MultiAxis ma_ab(a, b);
-  MultiAxis ma_ac(a, c);
+  const MultiAxis ma_ab(a, b);
+  const MultiAxis ma_ac(a, c);
 
   BOOST_CHECK_EQUAL(ma_ab, ma_ab);
   BOOST_CHECK_EQUAL(ma_ac, ma_ac);

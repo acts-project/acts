@@ -527,6 +527,14 @@ class IMultiAxisXD : public IMultiAxis {
   virtual detail::FlatNeighborHoodIndices<DIM> getNeighborHoodIndices(
       const LocalBins& localBins, std::size_t size = 1u) const = 0;
 
+  /// Get the global bin indices of the bins in the neighborhood of a bin
+  /// @param localBins local bin indices of the bin of interest
+  /// @param size of neighborhood determining how many
+  /// adjacent bins along each axis are considered
+  /// @return sorted collection of global bin indices in the neighborhood
+  virtual detail::FlatNeighborHoodIndices<DIM> getNeighborHoodIndices(
+      const LocalBins& localBins, const std::pair<int, int>& size) const = 0;
+
   /// Get the global bin indices of the bins in the neighborhood of a bin, with
   /// a separate neighborhood size per axis
   /// @param localBins local bin indices of the bin of interest
@@ -534,7 +542,7 @@ class IMultiAxisXD : public IMultiAxis {
   /// @return sorted collection of global bin indices in the neighborhood
   virtual detail::FlatNeighborHoodIndices<DIM> getNeighborHoodIndices(
       const LocalBins& localBins,
-      std::array<std::pair<int, int>, DIM>& sizePerAxis) const = 0;
+      const std::array<std::pair<int, int>, DIM>& sizePerAxis) const = 0;
 
   /// Get the global bin indices of the grid points closest to the given bin
   /// @param localBins local bin indices of the bin of interest

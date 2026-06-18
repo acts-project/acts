@@ -22,3 +22,11 @@
     }                                                                    \
     BOOST_CHECK(!std::ranges::all_of(result, [](bool r) { return r; })); \
   } while (0)
+
+#define CHECK_EQUAL_COLLECTIONS(col1, col2)                                    \
+  do {                                                                         \
+    const auto &c1 = col1;                                                     \
+    const auto &c2 = col2;                                                     \
+    BOOST_CHECK_EQUAL(c1.size(), c2.size());                                   \
+    BOOST_CHECK_EQUAL_COLLECTIONS(c1.begin(), c1.end(), c2.begin(), c2.end()); \
+  } while (0)

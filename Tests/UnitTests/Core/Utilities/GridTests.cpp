@@ -1081,9 +1081,9 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   const Grid g1Cl(Type<double>, d);
 
   // underflow, makes no sense
-  BOOST_CHECK(g1Cl.neighborHoodIndices({0}, 1).collectVector() == bins_t{});
+  BOOST_CHECK(g1Cl.neighborHoodIndices({0}, 1).collectVector().empty());
   // overflow, makes no sense
-  BOOST_CHECK(g1Cl.neighborHoodIndices({11}, 1).collectVector() == bins_t{});
+  BOOST_CHECK(g1Cl.neighborHoodIndices({11}, 1).collectVector().empty());
   // overflow, makes no sense
   BOOST_CHECK(
       (g1Cl.neighborHoodIndices({1}, 1).collectVector() == bins_t{10, 1, 2}));
@@ -1335,9 +1335,9 @@ BOOST_AUTO_TEST_CASE(Output) {
 
   std::stringstream ss;
   ss << g;
-  BOOST_CHECK_EQUAL(
-      ss.str(),
-      "Axis<Equidistant, Open>(0, 1, 10), Axis<Variable, Bound>(1, 2, 3)");
+  BOOST_CHECK_EQUAL(ss.str(),
+                    "Axis<Equidistant, Open>(0, 1, 10, Undefined), "
+                    "Axis<Variable, Bound>({1, 2, 3}, Undefined)");
 
   const IGrid& ig = g;
 
@@ -1345,9 +1345,9 @@ BOOST_AUTO_TEST_CASE(Output) {
 
   ss << ig;
 
-  BOOST_CHECK_EQUAL(
-      ss.str(),
-      "Axis<Equidistant, Open>(0, 1, 10), Axis<Variable, Bound>(1, 2, 3)");
+  BOOST_CHECK_EQUAL(ss.str(),
+                    "Axis<Equidistant, Open>(0, 1, 10, Undefined), "
+                    "Axis<Variable, Bound>({1, 2, 3}, Undefined)");
 }
 
 BOOST_AUTO_TEST_CASE(Equality) {
