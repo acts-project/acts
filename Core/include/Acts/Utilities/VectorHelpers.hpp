@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/AngleHelpers.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -21,7 +22,6 @@
 #include <numbers>
 
 #include "Eigen/Dense"
-#include "Acts/Utilities/AngleHelpers.hpp"
 namespace Acts::VectorHelpers {
 
 /// Calculate phi (transverse plane angle) from compatible Eigen types with
@@ -154,7 +154,7 @@ double eta(const T& v) noexcept
     { v.theta() } -> std::floating_point;
   }
 {
-  return  Acts::AngleHelpers::etaFromTheta(v.theta());
+  return Acts::AngleHelpers::etaFromTheta(v.theta());
 }
 
 /// @brief Fast evaluation of trigonomic functions.
