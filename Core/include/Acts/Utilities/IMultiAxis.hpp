@@ -53,9 +53,9 @@ class IMultiAxis {
   using SmallVector = boost::container::small_vector<T, 3>;
 
   /// Flattened global bin index across all axes
-  using FlatIndex = std::size_t;
+  using GlobalBin = std::size_t;
   /// Dynamically sized multi-index holding one local bin index per axis
-  using AnyMultiIndex = SmallVector<std::size_t>;
+  using AnyLocalBins = SmallVector<std::size_t>;
   /// Dynamically sized point holding one coordinate per axis
   using AnyPoint = SmallVector<double>;
   /// Dynamically sized vector of (non-owning) pointers to the contained axes
@@ -95,8 +95,8 @@ class IMultiAxis {
 
   /// Get the number of bins along each axis
   /// @return per-axis number of bins (excluding under-/overflow bins)
-  virtual AnyMultiIndex getNBinsAny() const {
-    AnyMultiIndex result;
+  virtual AnyLocalBins getNBinsAny() const {
+    AnyLocalBins result;
     result.reserve(getNAxes());
     for (const IAxis& axis : *this) {
       result.push_back(axis.getNBins());
@@ -168,8 +168,7 @@ class IMultiAxis {
   /// Get the lower-left corner of the bin given by a multi-index
   /// @param indices local bin indices along each axis
   /// @return point holding the lower bin boundary of each axis
-  virtual AnyPoint getLowerLeftBinCornerAny(
-      const AnyMultiIndex& indices) const {
+  virtual AnyPoint getLowerLeftBinEdgeAny(const AnyLocalBins& indices) const {
     AnyPoint result;
     result.reserve(getNAxes());
     for (std::size_t i = 0; i < indices.size(); ++i) {
@@ -182,8 +181,7 @@ class IMultiAxis {
   /// Get the upper-right corner of the bin given by a multi-index
   /// @param indices local bin indices along each axis
   /// @return point holding the upper bin boundary of each axis
-  virtual AnyPoint getUpperRightBinCornerAny(
-      const AnyMultiIndex& indices) const {
+  virtual AnyPoint getUpperRightBinEdgeAny(const AnyLocalBins& indices) const {
     AnyPoint result;
     result.reserve(getNAxes());
     for (std::size_t i = 0; i < indices.size(); ++i) {
@@ -196,7 +194,7 @@ class IMultiAxis {
   /// Get the center of the bin given by a multi-index
   /// @param indices local bin indices along each axis
   /// @return point holding the bin center coordinate of each axis
-  virtual AnyPoint getBinCenterAny(const AnyMultiIndex& indices) const {
+  virtual AnyPoint getBinCenterAny(const AnyLocalBins& indices) const {
     AnyPoint result;
     result.reserve(getNAxes());
     for (std::size_t i = 0; i < indices.size(); ++i) {
@@ -373,7 +371,7 @@ class IMultiAxisXD : public IMultiAxis {
   static_assert(DIM > 0, "MultiAxis dimension must be greater than zero");
 
   /// Statically sized multi-index holding one local bin index per axis
-  using MultiIndex = std::array<std::size_t, DIM>;
+  using LocalBins = std::array<std::size_t, DIM>;
   /// Statically sized point holding one coordinate per axis
   using Point = std::array<double, DIM>;
   /// Statically sized array of (non-owning) pointers to the contained axes
@@ -404,8 +402,8 @@ class IMultiAxisXD : public IMultiAxis {
 
   /// Get the number of bins along each axis
   /// @return per-axis number of bins (excluding under-/overflow bins)
-  virtual MultiIndex getNBins() const {
-    MultiIndex result{};
+  virtual LocalBins getNBins() const {
+    LocalBins result{};
     for (std::size_t i = 0; i < DIM; ++i) {
       result[i] = getAxis(i).getNBins();
     }
@@ -445,45 +443,45 @@ class IMultiAxisXD : public IMultiAxis {
   }
 
   /// Get the lower-left corner of the bin given by a multi-index
-  /// @param multiIndex local bin indices along each axis
+  /// @param localBins local bin indices along each axis
   /// @return point holding the lower bin boundary of each axis
-  virtual Point getLowerLeftBinCorner(const MultiIndex& multiIndex) const {
+  virtual Point getLowerLeftBinEdge(const LocalBins& localBins) const {
     Point result{};
     for (std::size_t i = 0; i < DIM; ++i) {
-      result[i] = getAxis(i).getBinLowerBound(multiIndex[i]);
+      result[i] = getAxis(i).getBinLowerBound(localBins[i]);
     }
     return result;
   }
 
   /// Get the upper-right corner of the bin given by a multi-index
-  /// @param multiIndex local bin indices along each axis
+  /// @param localBins local bin indices along each axis
   /// @return point holding the upper bin boundary of each axis
-  virtual Point getUpperRightBinCorner(const MultiIndex& multiIndex) const {
+  virtual Point getUpperRightBinEdge(const LocalBins& localBins) const {
     Point result{};
     for (std::size_t i = 0; i < DIM; ++i) {
-      result[i] = getAxis(i).getBinUpperBound(multiIndex[i]);
+      result[i] = getAxis(i).getBinUpperBound(localBins[i]);
     }
     return result;
   }
 
   /// Get the center of the bin given by a multi-index
-  /// @param multiIndex local bin indices along each axis
+  /// @param localBins local bin indices along each axis
   /// @return point holding the bin center coordinate of each axis
-  virtual Point getBinCenter(const MultiIndex& multiIndex) const {
+  virtual Point getBinCenter(const LocalBins& localBins) const {
     Point result{};
     for (std::size_t i = 0; i < DIM; ++i) {
-      result[i] = getAxis(i).getBinCenter(multiIndex[i]);
+      result[i] = getAxis(i).getBinCenter(localBins[i]);
     }
     return result;
   }
 
   /// Get the bin width along each axis for a given multi-index
-  /// @param multiIndex local bin indices along each axis
+  /// @param localBins local bin indices along each axis
   /// @return point holding the bin width along each axis
-  virtual Point getBinWidth(const MultiIndex& multiIndex) const {
+  virtual Point getBinWidth(const LocalBins& localBins) const {
     Point result{};
     for (std::size_t i = 0; i < DIM; ++i) {
-      result[i] = getAxis(i).getBinWidth(multiIndex[i]);
+      result[i] = getAxis(i).getBinWidth(localBins[i]);
     }
     return result;
   }
@@ -491,66 +489,66 @@ class IMultiAxisXD : public IMultiAxis {
   /// Determine the flattened global bin index for a given point
   /// @param point coordinates to look up, one per axis
   /// @return global bin index of the bin containing the point
-  virtual FlatIndex getFlatIndexFromPoint(const Point& point) const {
-    return getFlatIndexFromMultiIndex(getMultiIndexFromPoint(point));
+  virtual GlobalBin getGlobalBinFromPoint(const Point& point) const {
+    return getGlobalBinFromLocalBins(getLocalBinsFromPoint(point));
   }
 
   /// Determine the flattened global bin index from a multi-index
-  /// @param multiIndex local bin indices along each axis (under-/overflow bins
+  /// @param localBins local bin indices along each axis (under-/overflow bins
   ///        are allowed)
   /// @return global bin index of the bin
-  virtual FlatIndex getFlatIndexFromMultiIndex(
-      const MultiIndex& multiIndex) const {
-    return detail::MultiAxisHelper::getFlatIndexFromMultiIndex(
-        multiIndex, getAnyAxesTuple());
+  virtual GlobalBin getGlobalBinFromLocalBins(
+      const LocalBins& localBins) const {
+    return detail::MultiAxisHelper::getGlobalBinFromLocalBins(
+        localBins, getAnyAxesTuple());
   }
 
   /// Determine the multi-index of local bin indices for a given point
   /// @param point coordinates to look up, one per axis
   /// @return local bin indices along each axis (may be under-/overflow bins)
-  virtual MultiIndex getMultiIndexFromPoint(const Point& point) const {
-    return detail::MultiAxisHelper::getMultiIndexFromPoint(point,
-                                                           getAnyAxesTuple());
+  virtual LocalBins getLocalBinsFromPoint(const Point& point) const {
+    return detail::MultiAxisHelper::getLocalBinsFromPoint(point,
+                                                          getAnyAxesTuple());
   }
 
   /// Determine the multi-index of local bin indices from a flattened global
   /// bin index
-  /// @param flatIndex global bin index
+  /// @param globalBin global bin index
   /// @return local bin indices along each axis (may be under-/overflow bins)
-  virtual MultiIndex getMultiIndexFromFlatIndex(FlatIndex flatIndex) const {
-    return detail::MultiAxisHelper::getMultiIndexFromFlatIndex(
-        flatIndex, getAnyAxesTuple());
+  virtual LocalBins getLocalBinsFromGlobalBin(GlobalBin globalBin) const {
+    return detail::MultiAxisHelper::getLocalBinsFromGlobalBin(
+        globalBin, getAnyAxesTuple());
   }
 
   /// Get the global bin indices of the bins in the neighborhood of a bin
-  /// @param multiIndex local bin indices of the bin of interest
+  /// @param localBins local bin indices of the bin of interest
   /// @param size number of adjacent bins to include along each axis (symmetric)
   /// @return sorted collection of global bin indices in the neighborhood
   virtual detail::FlatNeighborHoodIndices<DIM> getNeighborHoodIndices(
-      const MultiIndex& multiIndex, std::size_t size = 1u) const = 0;
+      const LocalBins& localBins, std::size_t size = 1u) const = 0;
 
   /// Get the global bin indices of the bins in the neighborhood of a bin, with
   /// a separate neighborhood size per axis
-  /// @param multiIndex local bin indices of the bin of interest
+  /// @param localBins local bin indices of the bin of interest
   /// @param sizePerAxis per-axis lower/upper number of adjacent bins to include
   /// @return sorted collection of global bin indices in the neighborhood
   virtual detail::FlatNeighborHoodIndices<DIM> getNeighborHoodIndices(
-      const MultiIndex& multiIndex,
+      const LocalBins& localBins,
       std::array<std::pair<int, int>, DIM>& sizePerAxis) const = 0;
 
   /// Get the global bin indices of the grid points closest to the given bin
-  /// @param multiIndex local bin indices of the bin of interest
+  /// @param localBins local bin indices of the bin of interest
   /// @return sorted collection of global bin indices whose lower-left corners
   ///         are the closest grid points to every point in the given bin
   virtual detail::FlatNeighborHoodIndices<DIM> getClosestPointsIndices(
-      const MultiIndex& multiIndex) const = 0;
+      const LocalBins& localBins) const = 0;
 
   /// Get the global bin indices of the grid points closest to the given point
   /// @param position coordinates to look up, one per axis
   /// @return sorted collection of global bin indices of the closest grid points
   virtual detail::FlatNeighborHoodIndices<DIM> getClosestPointsIndices(
       const Point& position) const {
-    return getClosestPointsIndices(getMultiIndexFromPoint(position));
+    return getClosestPointsIndices(getLocalBinsFromPoint(position));
   }
 };
 

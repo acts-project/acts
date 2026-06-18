@@ -58,7 +58,7 @@ class IGrid {
   virtual std::type_info const& valueType() const = 0;
 
   /// Type alias for dynamic index type (indices as vector of std::size_t)
-  using AnyIndexType = IMultiAxis::AnyMultiIndex;
+  using AnyIndexType = IMultiAxis::AnyLocalBins;
   /// Type alias for dynamic point type (coordinates as vector of doubles)
   using AnyPointType = IMultiAxis::AnyPoint;
   /// Dynamically sized vector of (non-owning) pointers to the contained axes
@@ -74,14 +74,14 @@ class IGrid {
   /// @param indices The indices to get the lower left edge of the bin for
   /// @return The lower left edge of the bin
   virtual AnyPointType lowerLeftBinEdgeAny(const AnyIndexType& indices) const {
-    return multiAxisAny().getLowerLeftBinCornerAny(indices);
+    return multiAxisAny().getLowerLeftBinEdgeAny(indices);
   }
 
   /// Get the upper right edge of a bin for a given set of indices
   /// @param indices The indices to get the upper right edge of the bin for
   /// @return The upper right edge of the bin
   virtual AnyPointType upperRightBinEdgeAny(const AnyIndexType& indices) const {
-    return multiAxisAny().getUpperRightBinCornerAny(indices);
+    return multiAxisAny().getUpperRightBinEdgeAny(indices);
   }
 
   /// Get the center of a bin for a given set of indices

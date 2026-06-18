@@ -103,14 +103,14 @@ class AnyGridView {
   /// @param indices The local bin indices
   /// @return The lower left edge position of the bin
   AnyPointType lowerLeftBinEdge(const IGrid::AnyIndexType& indices) const {
-    return multiAxisAny().getLowerLeftBinCornerAny(indices);
+    return multiAxisAny().getLowerLeftBinEdgeAny(indices);
   }
 
   /// @brief Get the upper right edge position of a bin for given indices
   /// @param indices The local bin indices
   /// @return The upper right edge position of the bin
   AnyPointType upperRightBinEdge(const IGrid::AnyIndexType& indices) const {
-    return multiAxisAny().getUpperRightBinCornerAny(indices);
+    return multiAxisAny().getUpperRightBinEdgeAny(indices);
   }
 
   /// @brief Get the number of bins along each axis
@@ -204,14 +204,14 @@ class AnyGridConstView {
   /// @param indices The local bin indices
   /// @return The lower left edge position of the bin
   AnyPointType lowerLeftBinEdge(const IGrid::AnyIndexType& indices) const {
-    return multiAxisAny().getLowerLeftBinCornerAny(indices);
+    return multiAxisAny().getLowerLeftBinEdgeAny(indices);
   }
 
   /// @brief Get the upper right edge position of a bin for given indices
   /// @param indices The local bin indices
   /// @return The upper right edge position of the bin
   AnyPointType upperRightBinEdge(const IGrid::AnyIndexType& indices) const {
-    return multiAxisAny().getUpperRightBinCornerAny(indices);
+    return multiAxisAny().getUpperRightBinEdgeAny(indices);
   }
 
   /// @brief Get the number of bins along each axis

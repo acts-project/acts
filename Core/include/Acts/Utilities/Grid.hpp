@@ -176,7 +176,7 @@ class Grid final : public IGrid {
   /// @pre All local bin indices must be a valid index for the corresponding
   ///      axis (including the under-/overflow bin for this axis).
   reference atLocalBins(const index_t& localBins) {
-    return m_values.at(m_axes.getFlatIndexFromMultiIndex(localBins));
+    return m_values.at(m_axes.getGlobalBinFromLocalBins(localBins));
   }
 
   /// @brief access value stored in bin with given local bin numbers
@@ -188,7 +188,7 @@ class Grid final : public IGrid {
   /// @pre All local bin indices must be a valid index for the corresponding
   ///      axis (including the under-/overflow bin for this axis).
   const_reference atLocalBins(const index_t& localBins) const {
-    return m_values.at(m_axes.getFlatIndexFromMultiIndex(localBins));
+    return m_values.at(m_axes.getGlobalBinFromLocalBins(localBins));
   }
 
   /// @copydoc Acts::IGrid::atLocalBinsAny
@@ -262,7 +262,7 @@ class Grid final : public IGrid {
   /// @note This could be a under-/overflow bin along one or more axes.
   template <class Point>
   std::size_t globalBinFromPosition(const Point& point) const {
-    return m_axes.getFlatIndexFromMultiIndex(localBinsFromPosition(point));
+    return m_axes.getGlobalBinFromLocalBins(localBinsFromPosition(point));
   }
 
   /// @brief determine global bin index from local bin indices along each axis
@@ -273,7 +273,7 @@ class Grid final : public IGrid {
   /// @pre All local bin indices must be a valid index for the corresponding
   ///      axis (including the under-/overflow bin for this axis).
   std::size_t globalBinFromLocalBins(const index_t& localBins) const {
-    return m_axes.getFlatIndexFromMultiIndex(localBins);
+    return m_axes.getGlobalBinFromLocalBins(localBins);
   }
 
   /// @brief  determine global bin index of the bin with the lower left edge
@@ -290,7 +290,7 @@ class Grid final : public IGrid {
   /// @note This could be a under-/overflow bin along one or more axes.
   template <class Point>
   std::size_t globalBinFromFromLowerLeftEdge(const Point& point) const {
-    return m_axes.getFlatIndexFromMultiIndex(localBinsFromLowerLeftEdge(point));
+    return m_axes.getGlobalBinFromLocalBins(localBinsFromLowerLeftEdge(point));
   }
 
   /// @brief  determine local bin index for each axis from the given point
@@ -307,7 +307,7 @@ class Grid final : public IGrid {
   /// @note This could be a under-/overflow bin along one or more axes.
   template <class Point>
   index_t localBinsFromPosition(const Point& point) const {
-    return detail::MultiAxisHelper::getMultiIndexFromPoint(
+    return detail::MultiAxisHelper::getLocalBinsFromPoint(
         point, m_axes.getAxesTuple());
   }
 
@@ -320,7 +320,7 @@ class Grid final : public IGrid {
   /// @note Local bin indices can contain under-/overflow bins along the
   ///       corresponding axis.
   index_t localBinsFromGlobalBin(std::size_t bin) const {
-    return m_axes.getMultiIndexFromFlatIndex(bin);
+    return m_axes.getLocalBinsFromGlobalBin(bin);
   }
 
   /// @brief  determine local bin index of the bin with the lower left edge
@@ -338,7 +338,7 @@ class Grid final : public IGrid {
   /// @note This could be a under-/overflow bin along one or more axes.
   template <class Point>
   index_t localBinsFromLowerLeftEdge(const Point& point) const {
-    return detail::MultiAxisHelper::getMultiIndexFromLowerLeftCorner(
+    return detail::MultiAxisHelper::getLocalBinsFromLowerLeftEdge(
         point, m_axes.getAxesTuple());
   }
 
@@ -350,7 +350,7 @@ class Grid final : public IGrid {
   /// @pre @c localBins must only contain valid bin indices (excluding
   ///      underflow bins).
   point_t lowerLeftBinEdge(const index_t& localBins) const {
-    return m_axes.getLowerLeftBinCorner(localBins);
+    return m_axes.getLowerLeftBinEdge(localBins);
   }
 
   /// @brief retrieve upper-right bin edge from set of local bin indices
@@ -361,7 +361,7 @@ class Grid final : public IGrid {
   /// @pre @c localBins must only contain valid bin indices (excluding
   ///      overflow bins).
   point_t upperRightBinEdge(const index_t& localBins) const {
-    return m_axes.getUpperRightBinCorner(localBins);
+    return m_axes.getUpperRightBinEdge(localBins);
   }
 
   /// @brief get bin width along each specific axis
@@ -450,9 +450,8 @@ class Grid final : public IGrid {
       neighbors.at(i++) = at(index);
     }
 
-    return Acts::interpolate(point, m_axes.getLowerLeftBinCorner(llIndices),
-                             m_axes.getUpperRightBinCorner(llIndices),
-                             neighbors);
+    return Acts::interpolate(point, m_axes.getLowerLeftBinEdge(llIndices),
+                             m_axes.getUpperRightBinEdge(llIndices), neighbors);
   }
 
   /// @brief check whether given point is inside grid limits

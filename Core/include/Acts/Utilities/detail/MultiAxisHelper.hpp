@@ -36,7 +36,7 @@ class FlatNeighborHoodIndices {
   /// each direction from MultiAxisHelperImpl<DIM>::getNBins.
   FlatNeighborHoodIndices(std::array<NeighborHoodIndices, DIM>& neighborIndices,
                           const std::array<std::size_t, DIM>& nBinsArray)
-      : m_multiIndices(neighborIndices) {
+      : m_localBins(neighborIndices) {
     if (DIM == 1) {
       return;
     }
@@ -59,36 +59,36 @@ class FlatNeighborHoodIndices {
 
     iterator(const FlatNeighborHoodIndices& parent,
              std::array<NeighborHoodIndices::iterator, DIM>&& multiIndicesIter)
-        : m_multiIndicesIter(std::move(multiIndicesIter)), m_parent(&parent) {}
+        : m_localBinsIter(std::move(multiIndicesIter)), m_parent(&parent) {}
 
     std::size_t operator*() const {
-      std::size_t flatIndex = *m_multiIndicesIter[DIM - 1];
+      std::size_t globalBin = *m_localBinsIter[DIM - 1];
       if (DIM == 1) {
-        return flatIndex;
+        return globalBin;
       }
       for (std::size_t i = 0; i < DIM - 1; ++i) {
-        flatIndex += m_parent->m_flatStride[i] * (*m_multiIndicesIter[i]);
+        globalBin += m_parent->m_flatStride[i] * (*m_localBinsIter[i]);
       }
-      return flatIndex;
+      return globalBin;
     }
 
     iterator& operator++() {
-      const auto& multiIndices = m_parent->m_multiIndices;
+      const auto& multiIndices = m_parent->m_localBins;
 
       // Go to the next flat index via a lexicographic increment:
       // - Start by incrementing the last multi index
       // - If it reaches the end, reset it and increment the previous one...
       for (long i = DIM - 1; i > 0; --i) {
-        ++m_multiIndicesIter[i];
-        if (m_multiIndicesIter[i] != multiIndices[i].end()) {
+        ++m_localBinsIter[i];
+        if (m_localBinsIter[i] != multiIndices[i].end()) {
           return *this;
         }
-        m_multiIndicesIter[i] = multiIndices[i].begin();
+        m_localBinsIter[i] = multiIndices[i].begin();
       }
 
       // The first index should stay at the end value when it reaches it, so
       // that we know when we've reached the end of iteration.
-      ++m_multiIndicesIter[0];
+      ++m_localBinsIter[0];
       return *this;
     }
 
@@ -100,9 +100,9 @@ class FlatNeighborHoodIndices {
 
     bool isEqual(const iterator& b) const {
       if (b.m_parent == nullptr) {
-        return m_multiIndicesIter[0] == m_parent->m_multiIndices[0].end();
+        return m_localBinsIter[0] == m_parent->m_localBins[0].end();
       } else {
-        return m_multiIndicesIter == b.m_multiIndicesIter;
+        return m_localBinsIter == b.m_localBinsIter;
       }
     }
 
@@ -111,14 +111,14 @@ class FlatNeighborHoodIndices {
     }
 
    private:
-    std::array<NeighborHoodIndices::iterator, DIM> m_multiIndicesIter;
+    std::array<NeighborHoodIndices::iterator, DIM> m_localBinsIter;
     const FlatNeighborHoodIndices* m_parent = nullptr;
   };
 
   iterator begin() const {
     std::array<NeighborHoodIndices::iterator, DIM> multiIndicesIter{};
     for (std::size_t i = 0; i < DIM; ++i) {
-      multiIndicesIter[i] = m_multiIndices[i].begin();
+      multiIndicesIter[i] = m_localBins[i].begin();
     }
     return iterator(*this, std::move(multiIndicesIter));
   }
@@ -127,9 +127,9 @@ class FlatNeighborHoodIndices {
 
   /// Number of indices that will be produced if this sequence is iterated
   std::size_t size() const {
-    std::size_t result = m_multiIndices[0].size();
+    std::size_t result = m_localBins[0].size();
     for (std::size_t i = 1; i < DIM; ++i) {
-      result *= m_multiIndices[i].size();
+      result *= m_localBins[i].size();
     }
     return result;
   }
@@ -150,7 +150,7 @@ class FlatNeighborHoodIndices {
   }
 
  private:
-  std::array<NeighborHoodIndices, DIM> m_multiIndices{};
+  std::array<NeighborHoodIndices, DIM> m_localBins{};
   std::array<std::size_t, DIM - 1> m_flatStride{};
 };
 
@@ -166,70 +166,70 @@ struct MultiAxisHelperImpl {
   template <class... Axes>
   static void getBinCenter(
       std::array<double, sizeof...(Axes)>& center,
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
-    center.at(N) = std::get<N>(axes).getBinCenter(multiIndex.at(N));
-    MultiAxisHelperImpl<N - 1>::getBinCenter(center, multiIndex, axes);
+    center.at(N) = std::get<N>(axes).getBinCenter(localBins.at(N));
+    MultiAxisHelperImpl<N - 1>::getBinCenter(center, localBins, axes);
   }
 
   template <class... Axes>
   static void getBinWidth(
       std::array<double, sizeof...(Axes)>& widthArray,
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
-    widthArray[N] = std::get<N>(axes).getBinWidth(multiIndex.at(N));
-    MultiAxisHelperImpl<N - 1>::getBinWidth(widthArray, multiIndex, axes);
+    widthArray[N] = std::get<N>(axes).getBinWidth(localBins.at(N));
+    MultiAxisHelperImpl<N - 1>::getBinWidth(widthArray, localBins, axes);
   }
 
   template <class... Axes>
-  static void getFlatIndexFromMultiIndex(
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+  static void getGlobalBinFromLocalBins(
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes, std::size_t& bin, std::size_t& area) {
     const auto& thisAxis = std::get<N>(axes);
-    bin += area * multiIndex.at(N);
+    bin += area * localBins.at(N);
     // make sure to account for under-/overflow bins
     area *= (thisAxis.getNBins() + 2);
-    MultiAxisHelperImpl<N - 1>::getFlatIndexFromMultiIndex(multiIndex, axes,
-                                                           bin, area);
+    MultiAxisHelperImpl<N - 1>::getGlobalBinFromLocalBins(localBins, axes, bin,
+                                                          area);
   }
 
   template <class Point, class... Axes>
-  static void getMultiIndexFromPoint(
+  static void getLocalBinsFromPoint(
       const Point& point, const std::tuple<Axes...>& axes,
-      std::array<std::size_t, sizeof...(Axes)>& multiIndex) {
+      std::array<std::size_t, sizeof...(Axes)>& localBins) {
     const auto& thisAxis = std::get<N>(axes);
-    multiIndex.at(N) = static_cast<std::size_t>(thisAxis.getBin(point[N]));
-    MultiAxisHelperImpl<N - 1>::getMultiIndexFromPoint(point, axes, multiIndex);
+    localBins.at(N) = static_cast<std::size_t>(thisAxis.getBin(point[N]));
+    MultiAxisHelperImpl<N - 1>::getLocalBinsFromPoint(point, axes, localBins);
   }
 
   template <class... Axes>
-  static void getMultiIndexFromFlatIndex(
+  static void getLocalBinsFromGlobalBin(
       std::size_t& bin, const std::tuple<Axes...>& axes, std::size_t& area,
-      std::array<std::size_t, sizeof...(Axes)>& multiIndex) {
+      std::array<std::size_t, sizeof...(Axes)>& localBins) {
     const auto& thisAxis = std::get<N>(axes);
     // make sure to account for under-/overflow bins
     std::size_t new_area = area * (thisAxis.getNBins() + 2);
-    MultiAxisHelperImpl<N - 1>::getMultiIndexFromFlatIndex(bin, axes, new_area,
-                                                           multiIndex);
-    multiIndex.at(N) = bin / area;
+    MultiAxisHelperImpl<N - 1>::getLocalBinsFromGlobalBin(bin, axes, new_area,
+                                                          localBins);
+    localBins.at(N) = bin / area;
     bin %= area;
   }
 
   template <class... Axes>
-  static void getLowerLeftBinCorner(
+  static void getLowerLeftBinEdge(
       std::array<double, sizeof...(Axes)>& llEdge,
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
-    llEdge.at(N) = std::get<N>(axes).getBinLowerBound(multiIndex.at(N));
-    MultiAxisHelperImpl<N - 1>::getLowerLeftBinCorner(llEdge, multiIndex, axes);
+    llEdge.at(N) = std::get<N>(axes).getBinLowerBound(localBins.at(N));
+    MultiAxisHelperImpl<N - 1>::getLowerLeftBinEdge(llEdge, localBins, axes);
   }
 
   template <class... Axes>
   static void getLowerLeftBinIndices(
-      std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
-    multiIndex.at(N) = std::get<N>(axes).wrapBin(multiIndex.at(N) - 1);
-    MultiAxisHelperImpl<N - 1>::getLowerLeftBinIndices(multiIndex, axes);
+    localBins.at(N) = std::get<N>(axes).wrapBin(localBins.at(N) - 1);
+    MultiAxisHelperImpl<N - 1>::getLowerLeftBinIndices(localBins, axes);
   }
 
   template <class... Axes>
@@ -248,21 +248,20 @@ struct MultiAxisHelperImpl {
   }
 
   template <class... Axes>
-  static void getUpperRightBinCorner(
+  static void getUpperRightBinEdge(
       std::array<double, sizeof...(Axes)>& urEdge,
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
-    urEdge.at(N) = std::get<N>(axes).getBinUpperBound(multiIndex.at(N));
-    MultiAxisHelperImpl<N - 1>::getUpperRightBinCorner(urEdge, multiIndex,
-                                                       axes);
+    urEdge.at(N) = std::get<N>(axes).getBinUpperBound(localBins.at(N));
+    MultiAxisHelperImpl<N - 1>::getUpperRightBinEdge(urEdge, localBins, axes);
   }
 
   template <class... Axes>
   static void getUpperRightBinIndices(
-      std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
-    multiIndex.at(N) = std::get<N>(axes).wrapBin(multiIndex.at(N) + 1);
-    MultiAxisHelperImpl<N - 1>::getUpperRightBinIndices(multiIndex, axes);
+    localBins.at(N) = std::get<N>(axes).wrapBin(localBins.at(N) + 1);
+    MultiAxisHelperImpl<N - 1>::getUpperRightBinIndices(localBins, axes);
   }
 
   template <class... Axes>
@@ -287,46 +286,46 @@ struct MultiAxisHelperImpl {
 
   template <class... Axes>
   static void neighborHoodIndices(
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       std::pair<int, int> sizes, const std::tuple<Axes...>& axes,
       std::array<NeighborHoodIndices, sizeof...(Axes)>& neighborIndices) {
     // ask n-th axis
-    std::size_t locIdx = multiIndex.at(N);
+    std::size_t locIdx = localBins.at(N);
     NeighborHoodIndices locNeighbors =
         std::get<N>(axes).neighborHoodIndices(locIdx, sizes);
     neighborIndices.at(N) = locNeighbors;
 
-    MultiAxisHelperImpl<N - 1>::neighborHoodIndices(multiIndex, sizes, axes,
+    MultiAxisHelperImpl<N - 1>::neighborHoodIndices(localBins, sizes, axes,
                                                     neighborIndices);
   }
 
   template <class... Axes>
   static void neighborHoodIndices(
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       std::array<std::pair<int, int>, sizeof...(Axes)> sizes,
       const std::tuple<Axes...>& axes,
       std::array<NeighborHoodIndices, sizeof...(Axes)>& neighborIndices) {
     // ask n-th axis
-    std::size_t locIdx = multiIndex.at(N);
+    std::size_t locIdx = localBins.at(N);
     NeighborHoodIndices locNeighbors =
         std::get<N>(axes).neighborHoodIndices(locIdx, sizes.at(N));
     neighborIndices.at(N) = locNeighbors;
 
-    MultiAxisHelperImpl<N - 1>::neighborHoodIndices(multiIndex, sizes, axes,
+    MultiAxisHelperImpl<N - 1>::neighborHoodIndices(localBins, sizes, axes,
                                                     neighborIndices);
   }
 
   template <class... Axes>
   static void exteriorBinIndices(
-      std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      std::array<std::size_t, sizeof...(Axes)>& localBins,
       std::array<bool, sizeof...(Axes)> isExterior,
       std::set<std::size_t>& combinations, const std::tuple<Axes...>& axes) {
     // iterate over this axis' bins, remembering which bins are exterior
     for (std::size_t i = 0; i < std::get<N>(axes).getNBins() + 2; ++i) {
-      multiIndex.at(N) = i;
+      localBins.at(N) = i;
       isExterior.at(N) = (i == 0) || (i == std::get<N>(axes).getNBins() + 1);
       // vary other axes recursively
-      MultiAxisHelperImpl<N - 1>::exteriorBinIndices(multiIndex, isExterior,
+      MultiAxisHelperImpl<N - 1>::exteriorBinIndices(localBins, isExterior,
                                                      combinations, axes);
     }
   }
@@ -337,57 +336,57 @@ struct MultiAxisHelperImpl<0u> {
   template <class... Axes>
   static void getBinCenter(
       std::array<double, sizeof...(Axes)>& center,
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
-    center.at(0u) = std::get<0u>(axes).getBinCenter(multiIndex.at(0u));
+    center.at(0u) = std::get<0u>(axes).getBinCenter(localBins.at(0u));
   }
 
   template <class... Axes>
   static void getBinWidth(
       std::array<double, sizeof...(Axes)>& widthArray,
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
-    widthArray[0u] = std::get<0u>(axes).getBinWidth(multiIndex.at(0u));
+    widthArray[0u] = std::get<0u>(axes).getBinWidth(localBins.at(0u));
   }
 
   template <class... Axes>
-  static void getFlatIndexFromMultiIndex(
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+  static void getGlobalBinFromLocalBins(
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& /*axes*/, std::size_t& bin,
       std::size_t& area) {
-    bin += area * multiIndex.at(0u);
+    bin += area * localBins.at(0u);
   }
 
   template <class Point, class... Axes>
-  static void getMultiIndexFromPoint(
+  static void getLocalBinsFromPoint(
       const Point& point, const std::tuple<Axes...>& axes,
-      std::array<std::size_t, sizeof...(Axes)>& multiIndex) {
+      std::array<std::size_t, sizeof...(Axes)>& localBins) {
     const auto& thisAxis = std::get<0u>(axes);
-    multiIndex.at(0u) = thisAxis.getBin(point[0u]);
+    localBins.at(0u) = thisAxis.getBin(point[0u]);
   }
 
   template <class... Axes>
-  static void getMultiIndexFromFlatIndex(
+  static void getLocalBinsFromGlobalBin(
       std::size_t& bin, const std::tuple<Axes...>& /*axes*/, std::size_t& area,
-      std::array<std::size_t, sizeof...(Axes)>& multiIndex) {
+      std::array<std::size_t, sizeof...(Axes)>& localBins) {
     // make sure to account for under-/overflow bins
-    multiIndex.at(0u) = bin / area;
+    localBins.at(0u) = bin / area;
     bin %= area;
   }
 
   template <class... Axes>
-  static void getLowerLeftBinCorner(
+  static void getLowerLeftBinEdge(
       std::array<double, sizeof...(Axes)>& llEdge,
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
-    llEdge.at(0u) = std::get<0u>(axes).getBinLowerBound(multiIndex.at(0u));
+    llEdge.at(0u) = std::get<0u>(axes).getBinLowerBound(localBins.at(0u));
   }
 
   template <class... Axes>
   static void getLowerLeftBinIndices(
-      std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
-    multiIndex.at(0u) = std::get<0u>(axes).wrapBin(multiIndex.at(0u) - 1);
+    localBins.at(0u) = std::get<0u>(axes).wrapBin(localBins.at(0u) - 1);
   }
 
   template <class... Axes>
@@ -404,18 +403,18 @@ struct MultiAxisHelperImpl<0u> {
   }
 
   template <class... Axes>
-  static void getUpperRightBinCorner(
+  static void getUpperRightBinEdge(
       std::array<double, sizeof...(Axes)>& urEdge,
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
-    urEdge.at(0u) = std::get<0u>(axes).getBinUpperBound(multiIndex.at(0u));
+    urEdge.at(0u) = std::get<0u>(axes).getBinUpperBound(localBins.at(0u));
   }
 
   template <class... Axes>
   static void getUpperRightBinIndices(
-      std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
-    multiIndex.at(0u) = std::get<0u>(axes).wrapBin(multiIndex.at(0u) + 1);
+    localBins.at(0u) = std::get<0u>(axes).wrapBin(localBins.at(0u) + 1);
   }
 
   template <class... Axes>
@@ -437,11 +436,11 @@ struct MultiAxisHelperImpl<0u> {
 
   template <class... Axes>
   static void neighborHoodIndices(
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       std::pair<int, int> sizes, const std::tuple<Axes...>& axes,
       std::array<NeighborHoodIndices, sizeof...(Axes)>& neighborIndices) {
     // ask 0-th axis
-    std::size_t locIdx = multiIndex.at(0u);
+    std::size_t locIdx = localBins.at(0u);
     NeighborHoodIndices locNeighbors =
         std::get<0u>(axes).neighborHoodIndices(locIdx, sizes);
     neighborIndices.at(0u) = locNeighbors;
@@ -449,12 +448,12 @@ struct MultiAxisHelperImpl<0u> {
 
   template <class... Axes>
   static void neighborHoodIndices(
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       std::array<std::pair<int, int>, sizeof...(Axes)> sizes,
       const std::tuple<Axes...>& axes,
       std::array<NeighborHoodIndices, sizeof...(Axes)>& neighborIndices) {
     // ask 0-th axis
-    std::size_t locIdx = multiIndex.at(0u);
+    std::size_t locIdx = localBins.at(0u);
     NeighborHoodIndices locNeighbors =
         std::get<0u>(axes).neighborHoodIndices(locIdx, sizes.at(0u));
     neighborIndices.at(0u) = locNeighbors;
@@ -462,16 +461,16 @@ struct MultiAxisHelperImpl<0u> {
 
   template <class... Axes>
   static void exteriorBinIndices(
-      std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      std::array<std::size_t, sizeof...(Axes)>& localBins,
       std::array<bool, sizeof...(Axes)> isExterior,
       std::set<std::size_t>& combinations, const std::tuple<Axes...>& axes) {
     // For each exterior bin on this axis, we will do this
     auto recordExteriorBin = [&](std::size_t i) {
-      multiIndex.at(0u) = i;
+      localBins.at(0u) = i;
       // at this point, combinations are complete: save the global bin
       std::size_t bin = 0, area = 1;
-      MultiAxisHelperImpl<sizeof...(Axes) - 1>::getFlatIndexFromMultiIndex(
-          multiIndex, axes, bin, area);
+      MultiAxisHelperImpl<sizeof...(Axes) - 1>::getGlobalBinFromLocalBins(
+          localBins, axes, bin, area);
       combinations.insert(bin);
     };
 
@@ -513,27 +512,27 @@ struct MultiAxisHelper {
   /// along any axis).
   template <class... Axes>
   static FlatNeighborHoodIndices<sizeof...(Axes)> closestPointsIndices(
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
     // get neighboring bins, but only increment.
-    return neighborHoodIndices(multiIndex, std::make_pair(0, 1), axes);
+    return neighborHoodIndices(localBins, std::make_pair(0, 1), axes);
   }
 
   /// retrieve bin center from set of local bin indices
   ///
   /// @tparam Axes parameter pack of axis types defining the grid
-  /// @param multiIndex local bin indices along each axis
+  /// @param localBins local bin indices along each axis
   /// @param axes actual axis objects spanning the grid
   /// @return center position of bin
   ///
-  /// @pre @c multiIndex must only contain valid bin indices (i.e. excluding
+  /// @pre @c localBins must only contain valid bin indices (i.e. excluding
   /// under-/overflow bins).
   template <class... Axes>
   static std::array<double, sizeof...(Axes)> getBinCenter(
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
     std::array<double, sizeof...(Axes)> center{};
-    MultiAxisHelperImpl<sizeof...(Axes) - 1>::getBinCenter(center, multiIndex,
+    MultiAxisHelperImpl<sizeof...(Axes) - 1>::getBinCenter(center, localBins,
                                                            axes);
 
     return center;
@@ -546,11 +545,11 @@ struct MultiAxisHelper {
   /// @return array returning the maxima of all given axes
   template <class... Axes>
   static std::array<double, sizeof...(Axes)> getBinWidth(
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
     std::array<double, sizeof...(Axes)> widthArray{};
-    MultiAxisHelperImpl<sizeof...(Axes) - 1>::getBinWidth(widthArray,
-                                                          multiIndex, axes);
+    MultiAxisHelperImpl<sizeof...(Axes) - 1>::getBinWidth(widthArray, localBins,
+                                                          axes);
     return widthArray;
   }
 
@@ -565,14 +564,14 @@ struct MultiAxisHelper {
   /// @pre All local bin indices must be a valid index for the corresponding
   /// axis (including the under-/overflow bin for this axis).
   template <class... Axes>
-  static std::size_t getFlatIndexFromMultiIndex(
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+  static std::size_t getGlobalBinFromLocalBins(
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
     std::size_t area = 1;
     std::size_t bin = 0;
 
-    MultiAxisHelperImpl<sizeof...(Axes) - 1>::getFlatIndexFromMultiIndex(
-        multiIndex, axes, bin, area);
+    MultiAxisHelperImpl<sizeof...(Axes) - 1>::getGlobalBinFromLocalBins(
+        localBins, axes, bin, area);
 
     return bin;
   }
@@ -592,14 +591,14 @@ struct MultiAxisHelper {
   /// dimensions where d is the number of axis objects in the tuple.
   /// @note This could be a under-/overflow bin along one or more axes.
   template <class Point, class... Axes>
-  static std::array<std::size_t, sizeof...(Axes)> getMultiIndexFromPoint(
+  static std::array<std::size_t, sizeof...(Axes)> getLocalBinsFromPoint(
       const Point& point, const std::tuple<Axes...>& axes) {
-    std::array<std::size_t, sizeof...(Axes)> multiIndex{};
+    std::array<std::size_t, sizeof...(Axes)> localBins{};
 
-    MultiAxisHelperImpl<sizeof...(Axes) - 1>::getMultiIndexFromPoint(
-        point, axes, multiIndex);
+    MultiAxisHelperImpl<sizeof...(Axes) - 1>::getLocalBinsFromPoint(point, axes,
+                                                                    localBins);
 
-    return multiIndex;
+    return localBins;
   }
 
   /// determine local bin index of the bin with the lower left edge closest to
@@ -617,21 +616,20 @@ struct MultiAxisHelper {
   /// dimensions where d is dimensionality of the grid.
   /// @note This could be a under-/overflow bin along one or more axes.
   template <class Point, class... Axes>
-  static std::array<std::size_t, sizeof...(Axes)>
-  getMultiIndexFromLowerLeftCorner(const Point& point,
-                                   const std::tuple<Axes...>& axes) {
+  static std::array<std::size_t, sizeof...(Axes)> getLocalBinsFromLowerLeftEdge(
+      const Point& point, const std::tuple<Axes...>& axes) {
     constexpr std::size_t DIM = sizeof...(Axes);
 
-    const auto multiIndex =
-        detail::MultiAxisHelper::getMultiIndexFromPoint(point, axes);
+    const auto localBins =
+        detail::MultiAxisHelper::getLocalBinsFromPoint(point, axes);
 
     Point shiftedPoint;
-    const auto width = detail::MultiAxisHelper::getBinWidth(multiIndex, axes);
+    const auto width = detail::MultiAxisHelper::getBinWidth(localBins, axes);
     for (std::size_t i = 0; i < DIM; i++) {
       shiftedPoint[i] = point[i] + width[i] / 2;
     }
 
-    return detail::MultiAxisHelper::getMultiIndexFromPoint(shiftedPoint, axes);
+    return detail::MultiAxisHelper::getLocalBinsFromPoint(shiftedPoint, axes);
   }
 
   /// determine local bin index for each axis from global bin index
@@ -645,33 +643,33 @@ struct MultiAxisHelper {
   ///
   /// @note Local bin indices can contain under-/overflow bins along any axis.
   template <class... Axes>
-  static std::array<std::size_t, sizeof...(Axes)> getMultiIndexFromFlatIndex(
+  static std::array<std::size_t, sizeof...(Axes)> getLocalBinsFromGlobalBin(
       std::size_t bin, const std::tuple<Axes...>& axes) {
     std::size_t area = 1;
-    std::array<std::size_t, sizeof...(Axes)> multiIndex{};
+    std::array<std::size_t, sizeof...(Axes)> localBins{};
 
-    MultiAxisHelperImpl<sizeof...(Axes) - 1>::getMultiIndexFromFlatIndex(
-        bin, axes, area, multiIndex);
+    MultiAxisHelperImpl<sizeof...(Axes) - 1>::getLocalBinsFromGlobalBin(
+        bin, axes, area, localBins);
 
-    return multiIndex;
+    return localBins;
   }
 
   /// retrieve lower-left bin edge from set of local bin indices
   ///
   /// @tparam Axes parameter pack of axis types defining the grid
-  /// @param multiIndex local bin indices along each axis
+  /// @param localBins local bin indices along each axis
   /// @param axes actual axis objects spanning the grid
   /// @return generalized lower-left bin edge
   ///
-  /// @pre @c multiIndex must only contain valid bin indices (excluding
+  /// @pre @c localBins must only contain valid bin indices (excluding
   /// underflow bins).
   template <class... Axes>
-  static std::array<double, sizeof...(Axes)> getLowerLeftBinCorner(
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+  static std::array<double, sizeof...(Axes)> getLowerLeftBinEdge(
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
     std::array<double, sizeof...(Axes)> llEdge{};
-    MultiAxisHelperImpl<sizeof...(Axes) - 1>::getLowerLeftBinCorner(
-        llEdge, multiIndex, axes);
+    MultiAxisHelperImpl<sizeof...(Axes) - 1>::getLowerLeftBinEdge(
+        llEdge, localBins, axes);
 
     return llEdge;
   }
@@ -679,11 +677,11 @@ struct MultiAxisHelper {
   /// get local bin indices for lower-left neighboring bin
   ///
   /// @tparam Axes parameter pack of axis types defining the grid
-  /// @param multiIndex local bin indices along each axis
+  /// @param localBins local bin indices along each axis
   /// @param axes actual axis objects spanning the grid
   /// @return array with local bin indices of lower-left neighbor bin
   ///
-  /// @pre @c multiIndex must only contain valid bin indices (excluding
+  /// @pre @c localBins must only contain valid bin indices (excluding
   /// underflow bins).
   ///
   /// This function returns the local bin indices for the generalized
@@ -691,9 +689,9 @@ struct MultiAxisHelper {
   /// decremented by one.
   template <class... Axes>
   static std::array<std::size_t, sizeof...(Axes)> getLowerLeftBinIndices(
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
-    auto llIndices = multiIndex;
+    auto llIndices = localBins;
     MultiAxisHelperImpl<sizeof...(Axes) - 1>::getLowerLeftBinIndices(llIndices,
                                                                      axes);
 
@@ -731,19 +729,19 @@ struct MultiAxisHelper {
   /// retrieve upper-right bin edge from set of local bin indices
   ///
   /// @tparam Axes parameter pack of axis types defining the grid
-  /// @param multiIndex local bin indices along each axis
+  /// @param localBins local bin indices along each axis
   /// @param axes actual axis objects spanning the grid
   /// @return generalized upper-right bin edge
   ///
-  /// @pre @c multiIndex must only contain valid bin indices (excluding
+  /// @pre @c localBins must only contain valid bin indices (excluding
   ///      overflow bins).
   template <class... Axes>
-  static std::array<double, sizeof...(Axes)> getUpperRightBinCorner(
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+  static std::array<double, sizeof...(Axes)> getUpperRightBinEdge(
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
     std::array<double, sizeof...(Axes)> urEdge{};
-    MultiAxisHelperImpl<sizeof...(Axes) - 1>::getUpperRightBinCorner(
-        urEdge, multiIndex, axes);
+    MultiAxisHelperImpl<sizeof...(Axes) - 1>::getUpperRightBinEdge(
+        urEdge, localBins, axes);
 
     return urEdge;
   }
@@ -755,17 +753,17 @@ struct MultiAxisHelper {
   /// incremented by one.
   ///
   /// @tparam Axes parameter pack of axis types defining the grid
-  /// @param multiIndex local bin indices along each axis
+  /// @param localBins local bin indices along each axis
   /// @param axes axis objects spanning the grid
   /// @return array with local bin indices of upper-right neighbor bin
   ///
-  /// @pre @c multiIndex must only contain valid bin indices (excluding
+  /// @pre @c localBins must only contain valid bin indices (excluding
   ///      overflow bins).
   template <class... Axes>
   static std::array<std::size_t, sizeof...(Axes)> getUpperRightBinIndices(
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
-    auto urIndices = multiIndex;
+    auto urIndices = localBins;
     MultiAxisHelperImpl<sizeof...(Axes) - 1>::getUpperRightBinIndices(urIndices,
                                                                       axes);
 
@@ -801,7 +799,7 @@ struct MultiAxisHelper {
   /// get global bin indices for bins in specified neighborhood
   ///
   /// @tparam Axes parameter pack of axis types defining the grid
-  /// @param multiIndex local bin indices along each axis
+  /// @param localBins local bin indices along each axis
   /// @param size size of neighborhood determining how many
   /// adjacent bins along each axis are considered
   /// @param axes actual axis objects spanning the grid
@@ -819,14 +817,14 @@ struct MultiAxisHelper {
   /// of the contained axes
   template <class... Axes>
   static FlatNeighborHoodIndices<sizeof...(Axes)> neighborHoodIndices(
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       std::pair<std::size_t, std::size_t> sizes,
       const std::tuple<Axes...>& axes) {
     // length N array which contains local neighbors based on size par
     std::array<NeighborHoodIndices, sizeof...(Axes)> neighborIndices{};
     // get local bin indices for neighboring bins
     MultiAxisHelperImpl<sizeof...(Axes) - 1>::neighborHoodIndices(
-        multiIndex, sizes, axes, neighborIndices);
+        localBins, sizes, axes, neighborIndices);
 
     // Query the number of bins
     std::array<std::size_t, sizeof...(Axes)> nBinsArray = getNBins(axes);
@@ -837,16 +835,16 @@ struct MultiAxisHelper {
 
   template <class... Axes>
   static FlatNeighborHoodIndices<sizeof...(Axes)> neighborHoodIndices(
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       std::size_t size, const std::tuple<Axes...>& axes) {
     return neighborHoodIndices(
-        multiIndex, std::make_pair(-static_cast<int>(size), size), axes);
+        localBins, std::make_pair(-static_cast<int>(size), size), axes);
   }
 
   /// get global bin indices for bins in specified neighborhood for each axis
   ///
   /// @tparam Axes parameter pack of axis types defining the grid
-  /// @param multiIndex local bin indices along each axis
+  /// @param localBins local bin indices along each axis
   /// @param size size of neighborhood for each axis, which
   /// bins along each axis are considered
   /// @param axes actual axis objects spanning the grid
@@ -864,14 +862,14 @@ struct MultiAxisHelper {
   /// of the contained axes
   template <class... Axes>
   static FlatNeighborHoodIndices<sizeof...(Axes)> neighborHoodIndices(
-      const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
       std::array<std::pair<int, int>, sizeof...(Axes)>& sizes,
       const std::tuple<Axes...>& axes) {
     // length N array which contains local neighbors based on size par
     std::array<NeighborHoodIndices, sizeof...(Axes)> neighborIndices{};
     // get local bin indices for neighboring bins
     MultiAxisHelperImpl<sizeof...(Axes) - 1>::neighborHoodIndices(
-        multiIndex, sizes, axes, neighborIndices);
+        localBins, sizes, axes, neighborIndices);
 
     // Query the number of bins
     std::array<std::size_t, sizeof...(Axes)> nBinsArray = getNBins(axes);
@@ -888,11 +886,11 @@ struct MultiAxisHelper {
   template <class... Axes>
   static std::set<std::size_t> exteriorBinIndices(
       const std::tuple<Axes...>& axes) {
-    std::array<std::size_t, sizeof...(Axes)> multiIndex{};
+    std::array<std::size_t, sizeof...(Axes)> localBins{};
     std::array<bool, sizeof...(Axes)> isExterior{};
     std::set<std::size_t> combinations;
     MultiAxisHelperImpl<sizeof...(Axes) - 1>::exteriorBinIndices(
-        multiIndex, isExterior, combinations, axes);
+        localBins, isExterior, combinations, axes);
 
     return combinations;
   }
