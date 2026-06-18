@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/NeighborHoodIndices.hpp"
 
 #include <array>
 #include <set>
@@ -175,7 +175,7 @@ struct MultiAxisHelperImpl {
   template <class... Axes>
   static void getFlatIndexFromMultiIndex(
       const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
-      const std::tuple<Axes...>& axes, std::size_t& bin, std::size_t& area) {
+      const std::tuple<Axes...>& axes, std::size_t& bin, std::size_t area) {
     const auto& thisAxis = std::get<N>(axes);
     bin += area * multiIndex.at(N);
     // make sure to account for under-/overflow bins
@@ -195,7 +195,7 @@ struct MultiAxisHelperImpl {
 
   template <class... Axes>
   static void getMultiIndexFromFlatIndex(
-      std::size_t& bin, const std::tuple<Axes...>& axes, std::size_t& area,
+      std::size_t& bin, const std::tuple<Axes...>& axes, const std::size_t area,
       std::array<std::size_t, sizeof...(Axes)>& multiIndex) {
     const auto& thisAxis = std::get<N>(axes);
     // make sure to account for under-/overflow bins
@@ -344,7 +344,7 @@ struct MultiAxisHelperImpl<0u> {
   static void getFlatIndexFromMultiIndex(
       const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
       const std::tuple<Axes...>& /*axes*/, std::size_t& bin,
-      std::size_t& area) {
+      const std::size_t area) {
     bin += area * multiIndex.at(0u);
   }
 
@@ -358,7 +358,8 @@ struct MultiAxisHelperImpl<0u> {
 
   template <class... Axes>
   static void getMultiIndexFromFlatIndex(
-      std::size_t& bin, const std::tuple<Axes...>& /*axes*/, std::size_t& area,
+      std::size_t& bin, const std::tuple<Axes...>& /*axes*/,
+      const std::size_t area,
       std::array<std::size_t, sizeof...(Axes)>& multiIndex) {
     // make sure to account for under-/overflow bins
     multiIndex.at(0u) = bin / area;
@@ -465,7 +466,8 @@ struct MultiAxisHelperImpl<0u> {
     auto recordExteriorBin = [&](std::size_t i) {
       multiIndex.at(0u) = i;
       // at this point, combinations are complete: save the global bin
-      std::size_t bin = 0, area = 1;
+      std::size_t bin = 0;
+      const std::size_t area = 1;
       MultiAxisHelperImpl<sizeof...(Axes) - 1>::getFlatIndexFromMultiIndex(
           multiIndex, axes, bin, area);
       combinations.insert(bin);
@@ -549,8 +551,8 @@ struct MultiAxisHelper {
   static std::size_t getFlatIndexFromMultiIndex(
       const std::array<std::size_t, sizeof...(Axes)>& multiIndex,
       const std::tuple<Axes...>& axes) {
-    std::size_t area = 1;
     std::size_t bin = 0;
+    const std::size_t area = 1;
 
     MultiAxisHelperImpl<sizeof...(Axes) - 1>::getFlatIndexFromMultiIndex(
         multiIndex, axes, bin, area);
