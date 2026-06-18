@@ -666,7 +666,7 @@ BOOST_AUTO_TEST_CASE(Output) {
 
   ss << b;
 
-  BOOST_CHECK_EQUAL(ss.str(), "Axis<Variable, Bound>(0, 10, 11, Undefined)");
+  BOOST_CHECK_EQUAL(ss.str(), "Axis<Variable, Bound>({0, 10, 11}, Undefined)");
 }
 
 BOOST_AUTO_TEST_CASE(Equality) {

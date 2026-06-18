@@ -552,11 +552,11 @@ class IMultiAxisXD : public IMultiAxis {
       const LocalBins& localBins) const = 0;
 
   /// Get the global bin indices of the grid points closest to the given point
-  /// @param position coordinates to look up, one per axis
+  /// @param point coordinates to look up, one per axis
   /// @return sorted collection of global bin indices of the closest grid points
   virtual detail::FlatNeighborHoodIndices<DIM> getClosestPointsIndices(
-      const Point& position) const {
-    return getClosestPointsIndices(getLocalBinsFromPoint(position));
+      const Point& point) const {
+    return getClosestPointsIndices(getLocalBinsFromPoint(point));
   }
 };
 

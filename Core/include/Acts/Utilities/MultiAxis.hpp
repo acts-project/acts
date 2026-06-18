@@ -126,7 +126,7 @@ class MultiAxis : public IMultiAxisXD<sizeof...(Axes)> {
                                                               m_axes);
   }
 
-  /// @copydoc IMultiAxisXD::getLocalBinsFromPoint(Point) const
+  /// @copydoc IMultiAxisXD::getLocalBinsFromPoint(const Point&) const
   LocalBins getLocalBinsFromPoint(const Point& point) const final {
     return detail::MultiAxisHelper::getLocalBinsFromPoint(point, m_axes);
   }
