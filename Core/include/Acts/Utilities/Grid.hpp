@@ -27,7 +27,7 @@
 
 namespace Acts {
 
-/// @brief class for describing a regular multi-dimensional grid
+/// class for describing a regular multi-dimensional grid
 ///
 /// @tparam T    type of values stored inside the bins of the grid
 /// @tparam Axes parameter pack of axis types defining the grid
@@ -63,7 +63,7 @@ class Grid final : public IGrid {
   /// local iterator type
   using local_iterator_t = GridLocalIterator<T, Axes...>;
 
-  /// @brief Constructor from const axis tuple, this will allow
+  /// Constructor from const axis tuple, this will allow
   /// creating a grid with a different value type from a template
   /// grid object.
   ///
@@ -72,56 +72,56 @@ class Grid final : public IGrid {
     m_values.resize(size());
   }
 
-  /// @brief Move constructor from axis tuple
+  /// Move constructor from axis tuple
   /// @param axes
   explicit Grid(std::tuple<Axes...>&& axes) : m_axes(std::move(axes)) {
     m_values.resize(size());
   }
 
-  /// @brief constructor from parameters pack of axes
+  /// constructor from parameters pack of axes
   /// @param axes
   explicit Grid(Axes&&... axes) : m_axes(std::forward_as_tuple(axes...)) {
     m_values.resize(size());
   }
 
-  /// @brief constructor from parameters pack of axes
+  /// constructor from parameters pack of axes
   /// @param axes
   explicit Grid(const Axes&... axes) : m_axes(std::tuple(axes...)) {
     m_values.resize(size());
   }
 
-  /// @brief constructor from parameters pack of axes and type tag
+  /// constructor from parameters pack of axes and type tag
   /// @param axes
   explicit Grid(TypeTag<T> /*tag*/, Axes&&... axes)
       : m_axes(std::forward_as_tuple(axes...)) {
     m_values.resize(size());
   }
 
-  /// @brief constructor from parameters pack of axes and type tag
+  /// constructor from parameters pack of axes and type tag
   /// @param axes
   explicit Grid(TypeTag<T> /*tag*/, const Axes&... axes)
       : m_axes(std::tuple(axes...)) {
     m_values.resize(size());
   }
 
-  /// @brief Move constructor from axis tuple
+  /// Move constructor from axis tuple
   /// @param axes
   explicit Grid(multi_axis_t axes) : m_axes(std::move(axes)) {
     m_values.resize(size());
   }
 
-  /// @brief constructor from parameters pack of axes and type tag
+  /// constructor from parameters pack of axes and type tag
   /// @param axes
   explicit Grid(TypeTag<T> /*tag*/, multi_axis_t axes)
       : m_axes(std::move(axes)) {
     m_values.resize(size());
   }
 
-  /// @brief access value stored in bin for a given point
+  /// access value stored in bin for a given point
   ///
   /// @tparam Point any type with point semantics supporting component access
   ///               through @c operator[]
-  /// @param [in] point point used to look up the corresponding bin in the
+  /// @param point point used to look up the corresponding bin in the
   ///                   grid
   /// @return reference to value stored in bin containing the given point
   ///
@@ -136,11 +136,11 @@ class Grid final : public IGrid {
     return m_values.at(globalBinFromPosition(point));
   }
 
-  /// @brief access value stored in bin for a given point
+  /// access value stored in bin for a given point
   ///
   /// @tparam Point any type with point semantics supporting component access
   ///               through @c operator[]
-  /// @param [in] point point used to look up the corresponding bin in the
+  /// @param point point used to look up the corresponding bin in the
   ///                   grid
   /// @return const-reference to value stored in bin containing the given
   ///         point
@@ -155,23 +155,23 @@ class Grid final : public IGrid {
     return m_values.at(globalBinFromPosition(point));
   }
 
-  /// @brief access value stored in bin with given global bin number
+  /// access value stored in bin with given global bin number
   ///
-  /// @param  [in] bin global bin number
+  /// @param bin global bin number
   /// @return reference to value stored in bin containing the given
   ///         point
   reference at(std::size_t bin) { return m_values.at(bin); }
 
-  /// @brief access value stored in bin with given global bin number
+  /// access value stored in bin with given global bin number
   ///
-  /// @param  [in] bin global bin number
+  /// @param bin global bin number
   /// @return const-reference to value stored in bin containing the given
   ///         point
   const_reference at(std::size_t bin) const { return m_values.at(bin); }
 
-  /// @brief access value stored in bin with given local bin numbers
+  /// access value stored in bin with given local bin numbers
   ///
-  /// @param  [in] localBins local bin indices along each axis
+  /// @param localBins local bin indices along each axis
   /// @return reference to value stored in bin containing the given
   ///         point
   ///
@@ -181,9 +181,9 @@ class Grid final : public IGrid {
     return m_values.at(m_axes.getGlobalBinFromLocalBins(localBins));
   }
 
-  /// @brief access value stored in bin with given local bin numbers
+  /// access value stored in bin with given local bin numbers
   ///
-  /// @param  [in] localBins local bin indices along each axis
+  /// @param localBins local bin indices along each axis
   /// @return const-reference to value stored in bin containing the given
   ///         point
   ///
@@ -203,27 +203,21 @@ class Grid final : public IGrid {
     return &atLocalBins(toIndexType(indices));
   }
 
-  /// @brief get global bin indices for closest points on grid
+  /// get global bin indices for closest points on grid
   ///
-  /// @tparam Point any type with point semantics supporting component access
-  ///               through @c operator[]
-  /// @param [in] position point of interest
+  /// @param localBins local bin indices along each axis
   /// @return Iterable thatemits the indices of bins whose lower-left corners
   ///         are the closest points on the grid to the input.
-  ///
-  /// @pre The given @c Point type must represent a point in d (or higher)
-  ///      dimensions where d is dimensionality of the grid. It must lie
-  ///      within the grid range (i.e. not within a under-/overflow bin).
   detail::FlatNeighborHoodIndices<DIM> closestPointsIndices(
       const index_t& localBins) const {
     return m_axes.getClosestPointsIndices(localBins);
   }
 
-  /// @brief get global bin indices for closest points on grid
+  /// get global bin indices for closest points on grid
   ///
   /// @tparam Point any type with point semantics supporting component access
   ///               through @c operator[]
-  /// @param [in] position point of interest
+  /// @param position point of interest
   /// @return Iterable thatemits the indices of bins whose lower-left corners
   ///         are the closest points on the grid to the input.
   ///
@@ -236,7 +230,7 @@ class Grid final : public IGrid {
     return m_axes.getClosestPointsIndices(localBinsFromPosition(position));
   }
 
-  /// @brief dimensionality of grid
+  /// dimensionality of grid
   ///
   /// @return number of axes spanning the grid
   std::size_t dimensions() const override { return DIM; }
@@ -256,9 +250,9 @@ class Grid final : public IGrid {
   /// @copydoc Acts::IGrid::valueType
   const std::type_info& valueType() const override { return typeid(T); }
 
-  /// @brief get center position of bin with given local bin numbers
+  /// get center position of bin with given local bin numbers
   ///
-  /// @param  [in] localBins local bin indices along each axis
+  /// @param localBins local bin indices along each axis
   /// @return center position of bin
   ///
   /// @pre All local bin indices must be a valid index for the corresponding
@@ -267,12 +261,12 @@ class Grid final : public IGrid {
     return m_axes.getBinCenter(localBins);
   }
 
-  /// @brief determine global index for bin containing the given point
+  /// determine global index for bin containing the given point
   ///
   /// @tparam Point any type with point semantics supporting component access
   ///               through @c operator[]
   ///
-  /// @param  [in] point point to look up in the grid
+  /// @param point point to look up in the grid
   /// @return global index for bin containing the given point
   ///
   /// @pre The given @c Point type must represent a point in d (or higher)
@@ -283,9 +277,9 @@ class Grid final : public IGrid {
     return m_axes.getGlobalBinFromLocalBins(localBinsFromPosition(point));
   }
 
-  /// @brief determine global bin index from local bin indices along each axis
+  /// determine global bin index from local bin indices along each axis
   ///
-  /// @param  [in] localBins local bin indices along each axis
+  /// @param localBins local bin indices along each axis
   /// @return global index for bin defined by the local bin indices
   ///
   /// @pre All local bin indices must be a valid index for the corresponding
@@ -294,13 +288,13 @@ class Grid final : public IGrid {
     return m_axes.getGlobalBinFromLocalBins(localBins);
   }
 
-  /// @brief  determine global bin index of the bin with the lower left edge
+  ///  determine global bin index of the bin with the lower left edge
   ///         closest to the given point for each axis
   ///
   /// @tparam Point any type with point semantics supporting component access
   ///               through @c operator[]
   ///
-  /// @param  [in] point point to look up in the grid
+  /// @param point point to look up in the grid
   /// @return global index for bin containing the given point
   ///
   /// @pre The given @c Point type must represent a point in d (or higher)
@@ -311,12 +305,12 @@ class Grid final : public IGrid {
     return m_axes.getGlobalBinFromLocalBins(localBinsFromLowerLeftEdge(point));
   }
 
-  /// @brief  determine local bin index for each axis from the given point
+  ///  determine local bin index for each axis from the given point
   ///
   /// @tparam Point any type with point semantics supporting component access
   ///               through @c operator[]
   ///
-  /// @param  [in] point point to look up in the grid
+  /// @param point point to look up in the grid
   /// @return array with local bin indices along each axis (in same order as
   ///         given @c axes object)
   ///
@@ -329,9 +323,9 @@ class Grid final : public IGrid {
         point, m_axes.getAxesTuple());
   }
 
-  /// @brief determine local bin index for each axis from global bin index
+  /// determine local bin index for each axis from global bin index
   ///
-  /// @param  [in] bin global bin index
+  /// @param bin global bin index
   /// @return array with local bin indices along each axis (in same order as
   ///         given @c axes object)
   ///
@@ -341,13 +335,13 @@ class Grid final : public IGrid {
     return m_axes.getLocalBinsFromGlobalBin(bin);
   }
 
-  /// @brief  determine local bin index of the bin with the lower left edge
+  ///  determine local bin index of the bin with the lower left edge
   ///         closest to the given point for each axis
   ///
   /// @tparam Point any type with point semantics supporting component access
   ///               through @c operator[]
   ///
-  /// @param  [in] point point to look up in the grid
+  /// @param point point to look up in the grid
   /// @return array with local bin indices along each axis (in same order as
   ///         given @c axes object)
   ///
@@ -360,9 +354,9 @@ class Grid final : public IGrid {
         point, m_axes.getAxesTuple());
   }
 
-  /// @brief retrieve lower-left bin edge from set of local bin indices
+  /// retrieve lower-left bin edge from set of local bin indices
   ///
-  /// @param  [in] localBins local bin indices along each axis
+  /// @param localBins local bin indices along each axis
   /// @return generalized lower-left bin edge position
   ///
   /// @pre @c localBins must only contain valid bin indices (excluding
@@ -371,9 +365,9 @@ class Grid final : public IGrid {
     return m_axes.getLowerLeftBinEdge(localBins);
   }
 
-  /// @brief retrieve upper-right bin edge from set of local bin indices
+  /// retrieve upper-right bin edge from set of local bin indices
   ///
-  /// @param  [in] localBins local bin indices along each axis
+  /// @param localBins local bin indices along each axis
   /// @return generalized upper-right bin edge position
   ///
   /// @pre @c localBins must only contain valid bin indices (excluding
@@ -382,12 +376,12 @@ class Grid final : public IGrid {
     return m_axes.getUpperRightBinEdge(localBins);
   }
 
-  /// @brief get bin width along each specific axis
+  /// get bin width along each specific axis
   ///
   /// @return array giving the bin width alonf all axes
   point_t binWidth() const { return m_axes.getBinWidth({}); }
 
-  /// @brief get number of bins along each specific axis
+  /// get number of bins along each specific axis
   ///
   /// @return array giving the number of bins along all axes
   ///
@@ -399,19 +393,19 @@ class Grid final : public IGrid {
     return toAnyIndexType(numLocalBins());
   }
 
-  /// @brief get the minimum value of all axes of one grid
+  /// get the minimum value of all axes of one grid
   ///
   /// @return array returning the minima of all given axes
   point_t minPosition() const { return m_axes.getMinPoint(); }
 
-  /// @brief get the maximum value of all axes of one grid
+  /// get the maximum value of all axes of one grid
   ///
   /// @return array returning the maxima of all given axes
   point_t maxPosition() const { return m_axes.getMaxPoint(); }
 
-  /// @brief set all overflow and underflow bins to a certain value
+  /// set all overflow and underflow bins to a certain value
   ///
-  /// @param [in] value value to be inserted in every overflow and underflow
+  /// @param value value to be inserted in every overflow and underflow
   ///                   bin of the grid.
   ///
   void setExteriorBins(const value_type& value) {
@@ -421,12 +415,12 @@ class Grid final : public IGrid {
     }
   }
 
-  /// @brief interpolate grid values to given position
+  /// interpolate grid values to given position
   ///
   /// @tparam Point type specifying geometric positions
   /// @tparam U     dummy template parameter identical to @c T
   ///
-  /// @param [in] point location to which to interpolate grid values. The
+  /// @param point location to which to interpolate grid values. The
   ///                   position must be within the grid dimensions and not
   ///                   lie in an under-/overflow bin along any axis.
   ///
@@ -471,7 +465,7 @@ class Grid final : public IGrid {
                              m_axes.getUpperRightBinEdge(llIndices), neighbors);
   }
 
-  /// @brief check whether given point is inside grid limits
+  /// check whether given point is inside grid limits
   ///
   /// @param position Point to check for inclusion within grid boundaries
   /// @return @c true if \f$\text{xmin_i} \le x_i < \text{xmax}_i \forall i=0,
@@ -488,11 +482,11 @@ class Grid final : public IGrid {
     return detail::MultiAxisHelper::isInside(position, m_axes.getAxesTuple());
   }
 
-  /// @brief get global bin indices for neighborhood
+  /// get global bin indices for neighborhood
   ///
-  /// @param [in] localBins center bin defined by local bin indices along each
+  /// @param localBins center bin defined by local bin indices along each
   ///                       axis
-  /// @param [in] size      size of neighborhood determining how many adjacent
+  /// @param size      size of neighborhood determining how many adjacent
   ///                       bins along each axis are considered
   /// @return set of global bin indices for all bins in neighborhood
   ///
@@ -509,12 +503,12 @@ class Grid final : public IGrid {
                                                         m_axes.getAxesTuple());
   }
 
-  /// @brief get global bin   indices for neighborhood
+  /// get global bin   indices for neighborhood
   ///
-  /// @param [in] localBins   center bin defined by local bin indices along
+  /// @param localBins   center bin defined by local bin indices along
   ///                         each axis. If size is negative, center bin
   ///                         is not returned.
-  /// @param [in] sizePerAxis size of neighborhood for each axis, how many
+  /// @param sizePerAxis size of neighborhood for each axis, how many
   ///                         adjacent bins along each axis are considered
   /// @return set of global bin indices for all bins in neighborhood
   ///
@@ -532,7 +526,7 @@ class Grid final : public IGrid {
                                                         m_axes.getAxesTuple());
   }
 
-  /// @brief total number of bins
+  /// total number of bins
   ///
   /// @param fullCounter Whether to include under-and overflow bins in the count
   /// @return total number of bins in the grid
@@ -542,7 +536,7 @@ class Grid final : public IGrid {
     return m_axes.getNTotalBins(fullCounter);
   }
 
-  /// @brief Convenience function to convert the type of the grid
+  /// Convenience function to convert the type of the grid
   /// to hold another object type.
   ///
   /// @tparam U the new grid value type
@@ -554,7 +548,7 @@ class Grid final : public IGrid {
     return cGrid;
   }
 
-  /// @brief Convenience function to convert the type of the grid
+  /// Convenience function to convert the type of the grid
   /// to hold another object type.
   ///
   /// @tparam converter_t the converter type
@@ -577,11 +571,11 @@ class Grid final : public IGrid {
     return cGrid;
   }
 
-  /// @brief get the axes as a tuple
+  /// get the axes as a tuple
   /// @return Reference to the tuple containing all grid axes
   const std::tuple<Axes...>& axesTuple() const { return m_axes.getAxesTuple(); }
 
-  /// @brief get the axes as an array of IAxis pointers
+  /// get the axes as an array of IAxis pointers
   /// @return Vector containing pointers to all grid axes
   AnyAxesVector axes() const override { return m_axes.getAnyAxesVector(); }
 
@@ -593,7 +587,7 @@ class Grid final : public IGrid {
   /// @return Iterator pointing one past the last global bin
   global_iterator_t end() const { return global_iterator_t(*this, size()); }
 
-  /// @brief begin iterator for local bins
+  /// begin iterator for local bins
   ///
   /// @param navigator is local navigator for the grid
   /// @return Iterator pointing to the first local bin
@@ -603,7 +597,7 @@ class Grid final : public IGrid {
     return local_iterator_t(*this, std::move(localBin), navigator);
   }
 
-  /// @brief end iterator for local bins
+  /// end iterator for local bins
   ///
   /// @param navigator is local navigator for the grid
   /// @return Iterator pointing one past the last local bin
