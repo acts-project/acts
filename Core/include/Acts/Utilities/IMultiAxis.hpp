@@ -12,7 +12,7 @@
 #include "Acts/Utilities/detail/MultiAxisHelper.hpp"
 
 #include <algorithm>
-#include <iosfwd>
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 

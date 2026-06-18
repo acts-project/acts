@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/GridIterator.hpp"
 #include "Acts/Utilities/IGrid.hpp"
 #include "Acts/Utilities/Interpolation.hpp"

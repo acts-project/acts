@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/NeighborHoodIndices.hpp"
 
 #include <array>
 #include <set>
@@ -37,13 +37,14 @@ class FlatNeighborHoodIndices {
   FlatNeighborHoodIndices(std::array<NeighborHoodIndices, DIM>& neighborIndices,
                           const std::array<std::size_t, DIM>& nBinsArray)
       : m_localBins(neighborIndices) {
-    if (DIM == 1) {
+    if constexpr (DIM == 1) {
       return;
-    }
-    std::size_t flatStride = 1;
-    for (long i = DIM - 2; i >= 0; --i) {
-      flatStride *= (nBinsArray[i + 1] + 2);
-      m_flatStride[i] = flatStride;
+    } else {
+      std::size_t flatStride = 1;
+      for (long i = DIM - 2; i >= 0; --i) {
+        flatStride *= (nBinsArray[i + 1] + 2);
+        m_flatStride[i] = flatStride;
+      }
     }
   }
 
@@ -63,13 +64,14 @@ class FlatNeighborHoodIndices {
 
     std::size_t operator*() const {
       std::size_t globalBin = *m_localBinsIter[DIM - 1];
-      if (DIM == 1) {
+      if constexpr (DIM == 1) {
+        return globalBin;
+      } else {
+        for (std::size_t i = 0; i < DIM - 1; ++i) {
+          globalBin += m_parent->m_flatStride[i] * (*m_localBinsIter[i]);
+        }
         return globalBin;
       }
-      for (std::size_t i = 0; i < DIM - 1; ++i) {
-        globalBin += m_parent->m_flatStride[i] * (*m_localBinsIter[i]);
-      }
-      return globalBin;
     }
 
     iterator& operator++() {
@@ -184,7 +186,7 @@ struct MultiAxisHelperImpl {
   template <class... Axes>
   static void getGlobalBinFromLocalBins(
       const std::array<std::size_t, sizeof...(Axes)>& localBins,
-      const std::tuple<Axes...>& axes, std::size_t& bin, std::size_t& area) {
+      const std::tuple<Axes...>& axes, std::size_t& bin, std::size_t area) {
     const auto& thisAxis = std::get<N>(axes);
     bin += area * localBins.at(N);
     // make sure to account for under-/overflow bins
@@ -204,7 +206,7 @@ struct MultiAxisHelperImpl {
 
   template <class... Axes>
   static void getLocalBinsFromGlobalBin(
-      std::size_t& bin, const std::tuple<Axes...>& axes, std::size_t& area,
+      std::size_t& bin, const std::tuple<Axes...>& axes, std::size_t area,
       std::array<std::size_t, sizeof...(Axes)>& localBins) {
     const auto& thisAxis = std::get<N>(axes);
     // make sure to account for under-/overflow bins
@@ -329,7 +331,7 @@ struct MultiAxisHelperImpl {
                                                      combinations, axes);
     }
   }
-};
+};  // namespace Acts::detail
 
 template <>
 struct MultiAxisHelperImpl<0u> {
@@ -352,8 +354,7 @@ struct MultiAxisHelperImpl<0u> {
   template <class... Axes>
   static void getGlobalBinFromLocalBins(
       const std::array<std::size_t, sizeof...(Axes)>& localBins,
-      const std::tuple<Axes...>& /*axes*/, std::size_t& bin,
-      std::size_t& area) {
+      const std::tuple<Axes...>& /*axes*/, std::size_t& bin, std::size_t area) {
     bin += area * localBins.at(0u);
   }
 
@@ -367,7 +368,7 @@ struct MultiAxisHelperImpl<0u> {
 
   template <class... Axes>
   static void getLocalBinsFromGlobalBin(
-      std::size_t& bin, const std::tuple<Axes...>& /*axes*/, std::size_t& area,
+      std::size_t& bin, const std::tuple<Axes...>& /*axes*/, std::size_t area,
       std::array<std::size_t, sizeof...(Axes)>& localBins) {
     // make sure to account for under-/overflow bins
     localBins.at(0u) = bin / area;
@@ -453,7 +454,7 @@ struct MultiAxisHelperImpl<0u> {
       const std::tuple<Axes...>& axes,
       std::array<NeighborHoodIndices, sizeof...(Axes)>& neighborIndices) {
     // ask 0-th axis
-    std::size_t locIdx = localBins.at(0u);
+    const std::size_t locIdx = localBins.at(0u);
     NeighborHoodIndices locNeighbors =
         std::get<0u>(axes).neighborHoodIndices(locIdx, sizes.at(0u));
     neighborIndices.at(0u) = locNeighbors;
@@ -468,7 +469,8 @@ struct MultiAxisHelperImpl<0u> {
     auto recordExteriorBin = [&](std::size_t i) {
       localBins.at(0u) = i;
       // at this point, combinations are complete: save the global bin
-      std::size_t bin = 0, area = 1;
+      std::size_t bin = 0;
+      const std::size_t area = 1;
       MultiAxisHelperImpl<sizeof...(Axes) - 1>::getGlobalBinFromLocalBins(
           localBins, axes, bin, area);
       combinations.insert(bin);
@@ -495,6 +497,7 @@ struct MultiAxisHelperImpl<0u> {
     }
   }
 };
+
 /// @endcond
 
 /// helper functions for grid-related operations
@@ -567,8 +570,8 @@ struct MultiAxisHelper {
   static std::size_t getGlobalBinFromLocalBins(
       const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
-    std::size_t area = 1;
     std::size_t bin = 0;
+    const std::size_t area = 1;
 
     MultiAxisHelperImpl<sizeof...(Axes) - 1>::getGlobalBinFromLocalBins(
         localBins, axes, bin, area);

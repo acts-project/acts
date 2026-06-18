@@ -29,13 +29,13 @@ jobs:
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
         run: echo "dev$(date +%Y%m%d%H%M%S)" > build_version.txt
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
         with:
           name: build-version
           path: build_version.txt
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           ref: ${{ github.event.inputs.acts_ref || 'main' }}
           path: acts
@@ -44,7 +44,7 @@ jobs:
       - name: Package source as tarball
         run: tar czf acts-source.tar.gz acts/
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: acts-source
           path: acts-source.tar.gz
@@ -127,7 +127,7 @@ jobs:
             change_wheel_version $f --version $PATCHED_VERSION --delete-old-wheel
           done
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl

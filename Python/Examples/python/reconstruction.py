@@ -1631,6 +1631,7 @@ def addCKFTracks(
     writeTrackStates: bool = False,
     writePerformance: bool = True,
     writeCovMat=False,
+    writeMatchingDetails: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
     prefix: str = "",
 ) -> None:
@@ -1770,6 +1771,7 @@ def addCKFTracks(
         writeSummary=writeTrackSummary,
         writeStates=writeTrackStates,
         writeFitterPerformance=writePerformance,
+        writeMatchingDetails=writeMatchingDetails,
         writeFinderPerformance=writePerformance,
         writeCovMat=writeCovMat,
         logLevel=logLevel,
@@ -1851,6 +1853,7 @@ def addTrackWriters(
     writeFinderNTuple: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
     writeCovMat=False,
+    writeMatchingDetails: bool = False,
 ):
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -1906,6 +1909,7 @@ def addTrackWriters(
                 inputParticleTrackMatching="particle_track_matching",
                 inputParticleMeasurementsMap="particle_measurements_map",
                 filePath=str(outputDirRoot / f"performance_finding_{name}.root"),
+                writeMatchingDetails=writeMatchingDetails,
             )
             s.addWriter(trackFinderPerfWriter)
 
@@ -1987,6 +1991,7 @@ def addGnn(
     inputClusters: str = "",
     outputDirRoot: Optional[Union[Path, str]] = None,
     device=None,
+    writeMatchingDetails: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
     """
@@ -2075,6 +2080,7 @@ def addGnn(
         writeFinderPerformance=True,
         writeSummary=False,
         writeFinderNTuple=True,
+        writeMatchingDetails=writeMatchingDetails,
     )
 
     return s
@@ -2093,6 +2099,7 @@ def addAmbiguityResolution(
     writeTrackStates: bool = False,
     writePerformance: bool = True,
     writeCovMat=False,
+    writeMatchingDetails: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
     prefix: str = "",
 ) -> None:
@@ -2142,6 +2149,7 @@ def addAmbiguityResolution(
         writeSummary=writeTrackSummary,
         writeStates=writeTrackStates,
         writeFitterPerformance=writePerformance,
+        writeMatchingDetails=writeMatchingDetails,
         writeFinderPerformance=writePerformance,
         writeCovMat=writeCovMat,
         logLevel=logLevel,
@@ -2164,6 +2172,7 @@ def addScoreBasedAmbiguityResolution(
     writeTrackStates: bool = False,
     writePerformance: bool = True,
     writeCovMat=False,
+    writeMatchingDetails: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     from acts.examples import ScoreBasedAmbiguityResolutionAlgorithm
@@ -2213,6 +2222,7 @@ def addScoreBasedAmbiguityResolution(
         writeSummary=writeTrackSummary,
         writeStates=writeTrackStates,
         writeFitterPerformance=writePerformance,
+        writeMatchingDetails=writeMatchingDetails,
         writeFinderPerformance=writePerformance,
         writeCovMat=writeCovMat,
         logLevel=logLevel,
@@ -2235,6 +2245,7 @@ def addAmbiguityResolutionML(
     writeTrackStates: bool = False,
     writePerformance: bool = True,
     writeCovMat=False,
+    writeMatchingDetails: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     from acts.examples.onnx import AmbiguityResolutionMLAlgorithm
@@ -2293,6 +2304,7 @@ def addAmbiguityResolutionML(
         writeSummary=writeTrackSummary,
         writeStates=writeTrackStates,
         writeFitterPerformance=writePerformance,
+        writeMatchingDetails=writeMatchingDetails,
         writeFinderPerformance=writePerformance,
         writeCovMat=writeCovMat,
         logLevel=logLevel,

@@ -21,6 +21,7 @@
 #include <detray/propagator/propagator.hpp>
 #include <detray/propagator/rk_stepper.hpp>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include <vecmem/memory/host_memory_resource.hpp>
 #include <vecmem/memory/memory_resource.hpp>
 
@@ -43,7 +44,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsDetray, detray) {
         "StraightLinePropagatorODD",
         [](std::shared_ptr<DetrayDetectorODD> detrayDetector,
            vecmem::memory_resource& memoryResource, bool sterile,
-           Acts::Logging::Level logLevel = Acts::Logging::INFO) {
+           Acts::Logging::Level logLevel,
+           std::array<unsigned int, 2> searchWindow) {
           std::shared_ptr<PropagatorInterface> detrayProagator = nullptr;
 
           using DetrayLineStepper =
@@ -55,16 +57,21 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsDetray, detray) {
 
             detrayProagator = std::make_shared<DetrayPropagator>(
                 detrayDetector, memoryResource,
-                Acts::getDefaultLogger("DetrayPropagator", logLevel));
+                Acts::getDefaultLogger("DetrayPropagator", logLevel),
+                searchWindow);
           } else {
             using DetrayPropagator =
                 DetrayPropagator<DetrayLineStepper, DetrayDetectorODD>;
 
             detrayProagator = std::make_shared<DetrayPropagator>(
                 detrayDetector, memoryResource,
-                Acts::getDefaultLogger("DetrayPropagator", logLevel));
+                Acts::getDefaultLogger("DetrayPropagator", logLevel),
+                searchWindow);
           }
           return detrayProagator;
-        });
+        },
+        py::arg("detrayDetector"), py::arg("memoryResource"),
+        py::arg("sterile"), py::arg("logLevel") = Acts::Logging::INFO,
+        py::arg("searchWindow") = std::array<unsigned int, 2>{0u, 0u});
   }
 }
