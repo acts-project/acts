@@ -11,9 +11,7 @@
 #include "Acts/Utilities/RangeXD.hpp"
 
 #include <algorithm>
-#include <fstream>
 #include <stdexcept>
-#include <tuple>
 
 namespace Acts {
 
@@ -40,58 +38,6 @@ PolynomialBetheHeitlerApprox::PolynomialBetheHeitlerApprox(
           "Overlapping ranges detected. Ranges must be non-overlapping.");
     }
   }
-}
-
-PolynomialBetheHeitlerApprox PolynomialBetheHeitlerApprox::loadFromFiles(
-    const std::string &low_parameters_path,
-    const std::string &high_parameters_path, double lowLimit, double highLimit,
-    bool clampToRange, double noChangeLimit, double singleGaussianLimit) {
-  const auto read_file = [](const std::string &filepath) {
-    std::ifstream file(filepath);
-
-    if (!file) {
-      throw std::invalid_argument("Could not open '" + filepath + "'");
-    }
-
-    std::size_t n_cmps = 0;
-    std::size_t degree = 0;
-    bool transform_code = false;
-
-    file >> n_cmps >> degree >> transform_code;
-
-    Data data;
-
-    for (std::size_t i = 0; i < n_cmps; ++i) {
-      PolyData cmp;
-      cmp.weightCoeffs.resize(degree + 1);
-      cmp.meanCoeffs.resize(degree + 1);
-      cmp.varCoeffs.resize(degree + 1);
-
-      for (auto &coeff : cmp.weightCoeffs) {
-        file >> coeff;
-      }
-      for (auto &coeff : cmp.meanCoeffs) {
-        file >> coeff;
-      }
-      for (auto &coeff : cmp.varCoeffs) {
-        file >> coeff;
-      }
-
-      data.push_back(std::move(cmp));
-    }
-
-    return std::make_tuple(data, transform_code);
-  };
-
-  const auto [lowData, lowTransform] = read_file(low_parameters_path);
-  const auto [highData, highTransform] = read_file(high_parameters_path);
-
-  std::vector<PolynomialBetheHeitlerApprox::RangeData> ranges = {
-      {Range1D<double>{lowLimit, highLimit}, lowData, lowTransform},
-      {Range1D<double>{highLimit, highLimit * 2}, highData, highTransform}};
-
-  return PolynomialBetheHeitlerApprox(std::move(ranges), clampToRange,
-                                      noChangeLimit, singleGaussianLimit);
 }
 
 std::span<PolynomialBetheHeitlerApprox::Component>

@@ -14,7 +14,7 @@
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
-#include "ActsPlugins/Json/BetheHeitlerApproxJsonReader.hpp"
+#include "ActsPlugins/Json/BetheHeitlerApproxJsonConverter.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <cstddef>
@@ -104,25 +104,6 @@ void addTrackFitting(py::module& mex) {
     py::class_<PolynomialBetheHeitlerApprox, BetheHeitlerApprox,
                std::shared_ptr<PolynomialBetheHeitlerApprox>>(
         mex, "PolynomialBetheHeitlerApprox")
-        .def_static(
-            "loadFromFiles",
-            [](const std::string& lowParametersPath,
-               const std::string& highParametersPath, double lowLimit,
-               double highLimit, bool clampToRange, double noChangeLimit,
-               double singleGaussianLimit) {
-              return PolynomialBetheHeitlerApprox::loadFromFiles(
-                  lowParametersPath, highParametersPath, lowLimit, highLimit,
-                  clampToRange, noChangeLimit, singleGaussianLimit);
-            },
-            "lowParametersPath"_a, "highParametersPath"_a, "lowLimit"_a,
-            "highLimit"_a, "clampToRange"_a, "noChangeLimit"_a,
-            "singleGaussianLimit"_a)
-        .def_static(
-            "makeDefault",
-            [](bool clampToRange) {
-              return makeDefaultBetheHeitlerApprox(clampToRange);
-            },
-            "clampToRange"_a)
         .def(py::init<std::vector<PolynomialBetheHeitlerApprox::RangeData>,
                       bool, double, double>(),
              "ranges"_a, "clampToRange"_a = false, "noChangeLimit"_a = 0.0001,

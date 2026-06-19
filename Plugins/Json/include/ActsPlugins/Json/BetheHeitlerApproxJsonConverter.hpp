@@ -10,6 +10,9 @@
 
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 
+#include <memory>
+#include <string>
+
 #include <nlohmann/json.hpp>
 
 namespace Acts {
@@ -17,54 +20,31 @@ namespace Acts {
 /// @addtogroup json_plugin
 /// @{
 
-namespace BetheHeitlerApproxJsonConverter {
-
-/// Convert PolyData (component coefficients) to JSON
-/// @param j Destination JSON object
-/// @param data Source PolyData to convert
 void to_json(nlohmann::json& j,
              const PolynomialBetheHeitlerApprox::PolyData& data);
 
-/// Convert JSON to PolyData (component coefficients)
-/// @param j Source JSON object
-/// @param data Destination PolyData to populate
 void from_json(const nlohmann::json& j,
                PolynomialBetheHeitlerApprox::PolyData& data);
 
-/// Convert Data (vector of PolyData) to JSON for a single x0 range
-/// @param j Destination JSON object
-/// @param data Source Data to convert
-void to_json(nlohmann::json& j, const PolynomialBetheHeitlerApprox::Data& data);
-
-/// Convert JSON to Data (vector of PolyData) for a single x0 range
-/// @param j Source JSON object
-/// @param data Destination Data to populate
-void from_json(const nlohmann::json& j,
-               PolynomialBetheHeitlerApprox::Data& data);
-
-/// Convert RangeData to JSON (using core class type)
-/// @param j Destination JSON object
-/// @param data Source RangeData to convert
 void to_json(nlohmann::json& j,
              const PolynomialBetheHeitlerApprox::RangeData& data);
 
-/// Convert JSON to RangeData (using core class type)
-/// @param j Source JSON object
-/// @param data Destination RangeData to populate
 void from_json(const nlohmann::json& j,
                PolynomialBetheHeitlerApprox::RangeData& data);
 
-}  // namespace BetheHeitlerApproxJsonConverter
+/// Load a Bethe-Heitler approximation from a JSON file.
+///
+/// @param filepath Path to the JSON file
+/// @param clampToRange Whether to clamp x/x0 values to the valid range
+/// @param noChangeLimit Limit below which no change is applied
+/// @param singleGaussianLimit Limit below which a single Gaussian is used
+/// @return Shared pointer to the loaded PolynomialBetheHeitlerApprox
+std::shared_ptr<const PolynomialBetheHeitlerApprox>
+loadBetheHeitlerApproxFromJson(const std::string& filepath,
+                               bool clampToRange = false,
+                               double noChangeLimit = 0.0001,
+                               double singleGaussianLimit = 0.002);
 
 /// @}
-
-}  // namespace Acts
-
-// Make nlohmann::json from_json/to_json functions available in Acts namespace
-// so they can be found by ADL
-namespace Acts {
-
-using BetheHeitlerApproxJsonConverter::from_json;
-using BetheHeitlerApproxJsonConverter::to_json;
 
 }  // namespace Acts

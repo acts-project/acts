@@ -10,9 +10,10 @@
 
 #include "Acts/Utilities/RangeXD.hpp"
 
-namespace Acts {
+#include <fstream>
+#include <stdexcept>
 
-namespace BetheHeitlerApproxJsonConverter {
+namespace Acts {
 
 void to_json(nlohmann::json& j,
              const PolynomialBetheHeitlerApprox::PolyData& data) {
@@ -33,7 +34,14 @@ void to_json(nlohmann::json& j,
   j["low_x0"] = data.range.min();
   j["high_x0"] = data.range.max();
   j["transform"] = data.transform;
-  to_json(j, data.data);
+
+  nlohmann::json components = nlohmann::json::array();
+  for (const auto& cmp : data.data) {
+    nlohmann::json jcmp;
+    to_json(jcmp, cmp);
+    components.push_back(jcmp);
+  }
+  j["components"] = components;
 }
 
 void from_json(const nlohmann::json& j,
@@ -43,7 +51,6 @@ void from_json(const nlohmann::json& j,
   data.transform = j.value("transform", true);
 
   if (j.contains("components")) {
-    // Components array format
     data.data.clear();
     for (const auto& jcmp : j["components"]) {
       PolynomialBetheHeitlerApprox::PolyData component;
@@ -51,7 +58,6 @@ void from_json(const nlohmann::json& j,
       data.data.push_back(component);
     }
   } else if (j.contains("weight_coeffs")) {
-    // Flat coefficients format (single component) - convert to Data
     PolynomialBetheHeitlerApprox::PolyData component;
     from_json(j, component);
     data.data = {component};
@@ -62,6 +68,36 @@ void from_json(const nlohmann::json& j,
   }
 }
 
-}  // namespace BetheHeitlerApproxJsonConverter
+std::shared_ptr<const PolynomialBetheHeitlerApprox>
+loadBetheHeitlerApproxFromJson(const std::string& filepath, bool clampToRange,
+                               double noChangeLimit,
+                               double singleGaussianLimit) {
+  std::ifstream in(filepath);
+  if (!in) {
+    throw std::invalid_argument("Could not open JSON file '" + filepath + "'");
+  }
+  nlohmann::json j;
+  in >> j;
+
+  if (!j.contains("ranges")) {
+    throw std::invalid_argument(
+        "JSON file must contain 'ranges' array with at least one range");
+  }
+
+  std::vector<PolynomialBetheHeitlerApprox::RangeData> ranges;
+  for (const auto& jrange : j["ranges"]) {
+    PolynomialBetheHeitlerApprox::RangeData range;
+    from_json(jrange, range);
+    ranges.push_back(range);
+  }
+
+  if (ranges.empty()) {
+    throw std::invalid_argument(
+        "JSON file must contain 'ranges' array with at least one range");
+  }
+
+  return std::make_shared<const PolynomialBetheHeitlerApprox>(
+      std::move(ranges), clampToRange, noChangeLimit, singleGaussianLimit);
+}
 
 }  // namespace Acts

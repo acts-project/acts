@@ -14,7 +14,6 @@
 #include <cstddef>
 #include <numbers>
 #include <span>
-#include <string>
 #include <vector>
 
 namespace Acts {
@@ -148,29 +147,6 @@ class PolynomialBetheHeitlerApprox : public BetheHeitlerApprox {
         : range(l, h), data(std::move(d)), transform(t) {}
   };
 
-  /// Loads a parameterization from a file according to the Atlas file
-  /// description
-  ///
-  /// @param low_parameters_path Path to the foo.par file that stores
-  /// the parameterization for low x/x0
-  /// @param high_parameters_path Path to the foo.par file that stores
-  /// the parameterization for high x/x0
-  /// @param lowLimit the upper limit for the low x/x0-data
-  /// @param highLimit the upper limit for the high x/x0-data
-  /// @param clampToRange forwarded to constructor
-  /// @param noChangeLimit forwarded to constructor
-  /// @param singleGaussianLimit forwarded to constructor
-  /// @return PolynomialBetheHeitlerApprox instance loaded from parameter files
-  /// @deprecated Use loadBetheHeitlerApproxFromJson instead
-  [[deprecated(
-      "loadFromFiles is deprecated. Use loadBetheHeitlerApproxFromJson "
-      "instead.")]]
-  static PolynomialBetheHeitlerApprox loadFromFiles(
-      const std::string &low_parameters_path,
-      const std::string &high_parameters_path, double lowLimit,
-      double highLimit, bool clampToRange, double noChangeLimit,
-      double singleGaussianLimit);
-
   /// Construct the Bethe-Heitler approximation description with N ranges.
   /// Each range has its own data and transformation flag.
   /// The ranges will be sorted by minimum value and validated for
@@ -205,8 +181,8 @@ class PolynomialBetheHeitlerApprox : public BetheHeitlerApprox {
                                bool clampToRange, double noChangeLimit,
                                double singleGaussianLimit)
       : PolynomialBetheHeitlerApprox(
-            {{lowLimit, highLimit, lowData, lowTransform},
-             {highLimit, highLimit * 2, highData, highTransform}},
+            {{0.0, lowLimit, lowData, lowTransform},
+             {lowLimit, highLimit, highData, highTransform}},
             clampToRange, noChangeLimit, singleGaussianLimit) {}
 
   /// Returns the number of components the returned mixture will have
@@ -250,13 +226,14 @@ class PolynomialBetheHeitlerApprox : public BetheHeitlerApprox {
 /// @deprecated Use PolynomialBetheHeitlerApprox instead
 using AtlasBetheHeitlerApprox = PolynomialBetheHeitlerApprox;
 
-/// @deprecated Use PolynomialBetheHeitlerApprox instead
-/// @note This function is deprecated for documentation purposes. It still
-///       returns PolynomialBetheHeitlerApprox which is the new default.
-[[deprecated(
-    "AtlasBetheHeitlerApprox is deprecated. Use PolynomialBetheHeitlerApprox "
-    "instead.")]]
-inline PolynomialBetheHeitlerApprox makeDefaultBetheHeitlerApprox(
+/// Creates a @ref PolynomialBetheHeitlerApprox object based on a default
+/// configuration, stored as static data in the source code.
+/// This may not be an optimal configuration, but allows running
+/// the GSF without loading external files.
+/// @param clampToRange Whether to clamp values to the valid range
+/// @return PolynomialBetheHeitlerApprox with default configuration parameters
+/// @ingroup material
+PolynomialBetheHeitlerApprox makeDefaultBetheHeitlerApprox(
     bool clampToRange = false);
 
 /// @}

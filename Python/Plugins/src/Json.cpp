@@ -9,7 +9,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsPlugins/Json/BetheHeitlerApproxJsonReader.hpp"
 #include "ActsPlugins/Json/JsonMaterialDecorator.hpp"
 #include "ActsPlugins/Json/JsonSurfacesReader.hpp"
 #include "ActsPlugins/Json/MaterialMapJsonConverter.hpp"
@@ -118,8 +117,5 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
               return self.fromJson(gctx, nlohmann::json::parse(encoded));
             },
             py::arg("gctx"), py::arg("encoded"));
-  }
-
-  {
   }
 }
