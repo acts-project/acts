@@ -17,6 +17,7 @@
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsPlugins/Arrow/ArrowUtil.hpp"
 
 #include <cmath>
@@ -31,51 +32,10 @@
 #include <vector>
 
 #include <arrow/api.h>
-#include <arrow/csv/api.h>
-#include <arrow/io/file.h>
 
 namespace ActsExamples {
 
 namespace {
-
-std::shared_ptr<arrow::Table> readFlatCsvFile(
-    const std::filesystem::path& path) {
-  if (!std::filesystem::exists(path)) {
-    throw std::runtime_error("readFlatCsvFile: file not found: '" +
-                             path.string() + "'");
-  }
-  auto infileResult = arrow::io::ReadableFile::Open(
-      path.string(), arrow::default_memory_pool());
-  if (!infileResult.ok()) {
-    throw std::runtime_error("readFlatCsvFile: open '" + path.string() +
-                             "': " + infileResult.status().ToString());
-  }
-  auto infile = std::move(infileResult).ValueOrDie();
-
-  auto readOptions = arrow::csv::ReadOptions::Defaults();
-  auto parseOptions = arrow::csv::ParseOptions::Defaults();
-  auto convertOptions = arrow::csv::ConvertOptions::Defaults();
-  convertOptions.column_types = {
-      {"detector", arrow::uint8()},     {"volume", arrow::uint8()},
-      {"layer", arrow::uint16()},       {"surface", arrow::uint32()},
-      {"acts_geo_id", arrow::uint64()},
-  };
-
-  auto readerResult =
-      arrow::csv::TableReader::Make(arrow::io::default_io_context(), infile,
-                                    readOptions, parseOptions, convertOptions);
-  if (!readerResult.ok()) {
-    throw std::runtime_error("readFlatCsvFile: create reader for '" +
-                             path.string() +
-                             "': " + readerResult.status().ToString());
-  }
-  auto tableResult = (*readerResult)->Read();
-  if (!tableResult.ok()) {
-    throw std::runtime_error("readFlatCsvFile: read '" + path.string() +
-                             "': " + tableResult.status().ToString());
-  }
-  return std::move(tableResult).ValueOrDie();
-}
 
 // Return the row-0 (offset, length) for a list column in the table.
 std::pair<std::int64_t, std::int64_t> rowBounds(const arrow::Table& table,
@@ -137,38 +97,56 @@ std::optional<double> sigmaFromSmearer(
 
 std::unordered_map<Acts::GeometryIdentifier, Acts::GeometryIdentifier>
 loadGeoIdMapFromCsv(const std::filesystem::path& path) {
-  auto table = readFlatCsvFile(path);
+  CsvReader reader(path.string());
+  std::vector<std::string> columns;
 
-  auto getColumn = [&](const std::string& name) {
-    auto col = table->GetColumnByName(name);
-    if (!col || col->num_chunks() == 0) {
-      throw std::runtime_error("loadGeoIdMapFromCsv: missing column '" + name +
-                               "' in '" + path.string() + "'");
+  if (!reader.read(columns)) {
+    throw std::runtime_error("loadGeoIdMapFromCsv: empty file '" +
+                             path.string() + "'");
+  }
+
+  // Auto-discover prefixes from *_packed columns in the header.
+  std::string srcPrefix;
+  std::string tgtPrefix;
+  for (const auto& col : columns) {
+    if (col.size() > 7 && col.substr(col.size() - 7) == "_packed") {
+      (srcPrefix.empty() ? srcPrefix : tgtPrefix) =
+          col.substr(0, col.size() - 7);
     }
-    return col->chunk(0);
+  }
+  if (srcPrefix.empty() || tgtPrefix.empty()) {
+    throw std::runtime_error(
+        "loadGeoIdMapFromCsv: expected two *_packed columns in header of '" +
+        path.string() + "'");
+  }
+
+  auto findCol = [&](const std::string& name) -> std::size_t {
+    for (std::size_t i = 0; i < columns.size(); ++i) {
+      if (columns[i] == name) {
+        return i;
+      }
+    }
+    throw std::runtime_error("loadGeoIdMapFromCsv: missing column '" + name +
+                             "' in '" + path.string() + "'");
   };
 
-  auto detArr =
-      std::dynamic_pointer_cast<arrow::UInt8Array>(getColumn("detector"));
-  auto volArr =
-      std::dynamic_pointer_cast<arrow::UInt8Array>(getColumn("volume"));
-  auto layArr =
-      std::dynamic_pointer_cast<arrow::UInt16Array>(getColumn("layer"));
-  auto surfArr =
-      std::dynamic_pointer_cast<arrow::UInt32Array>(getColumn("surface"));
-  auto geoArr =
-      std::dynamic_pointer_cast<arrow::UInt64Array>(getColumn("acts_geo_id"));
+  const std::size_t iExtra = findCol(srcPrefix + "_extra");
+  const std::size_t iVolume = findCol(srcPrefix + "_volume");
+  const std::size_t iLayer = findCol(srcPrefix + "_layer");
+  const std::size_t iSensitive = findCol(srcPrefix + "_sensitive");
+  const std::size_t iTarget = findCol(tgtPrefix + "_packed");
 
-  const std::int64_t n = table->num_rows();
   std::unordered_map<Acts::GeometryIdentifier, Acts::GeometryIdentifier> map;
-  map.reserve(static_cast<std::size_t>(n));
-  for (std::int64_t i = 0; i < n; ++i) {
-    const auto key = Acts::GeometryIdentifier()
-                         .withExtra(detArr->Value(i))
-                         .withVolume(volArr->Value(i))
-                         .withLayer(layArr->Value(i))
-                         .withSensitive(surfArr->Value(i));
-    map.emplace(key, Acts::GeometryIdentifier(geoArr->Value(i)));
+  while (reader.read(columns)) {
+    auto key =
+        Acts::GeometryIdentifier()
+            .withExtra(static_cast<std::uint32_t>(std::stoul(columns[iExtra])))
+            .withVolume(
+                static_cast<std::uint32_t>(std::stoul(columns[iVolume])))
+            .withLayer(static_cast<std::uint32_t>(std::stoul(columns[iLayer])))
+            .withSensitive(
+                static_cast<std::uint32_t>(std::stoul(columns[iSensitive])));
+    map.emplace(key, Acts::GeometryIdentifier(std::stoull(columns[iTarget])));
   }
   return map;
 }

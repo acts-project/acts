@@ -17,6 +17,7 @@ target_include_directories(
         $<TARGET_PROPERTY:Acts::ExamplesIoParquet,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:Acts::PluginArrow,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:Acts::ExamplesDigitization,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:Acts::ExamplesIoCsv,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 target_link_libraries(
