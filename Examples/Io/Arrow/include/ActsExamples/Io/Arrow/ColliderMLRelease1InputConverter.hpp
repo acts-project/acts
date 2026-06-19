@@ -108,6 +108,12 @@ class ACTS_ARROW_EXPORT ColliderMLRelease1InputConverter : public IAlgorithm {
     /// Produce with @c generate_geoid_map.py.
     std::filesystem::path geoIdMapPath;
 
+    /// Column name prefixes in the geo-ID-map CSV for the source (ColliderML)
+    /// and target (reconstruction) geometries.  Required when @c geoIdMapPath
+    /// is set.
+    std::string geoIdMapSourcePrefix;
+    std::string geoIdMapTargetPrefix;
+
     /// ColliderML geometry → ACTS GeometryIdentifier.
     /// The source key is a GeometryIdentifier constructed from ColliderML
     /// fields: extra=detector, volume=volume_id, layer=layer_id,

@@ -28,6 +28,8 @@ def runColliderMLTruthTracking(
     inputDir: Path,
     digiConfigFile: Path,
     geoIdMapPath: Optional[Path] = None,
+    geoIdMapSourcePrefix: str = "gen1",
+    geoIdMapTargetPrefix: str = "gen3",
     decorators=[],
     events: int = 10,
     numThreads: int = 1,
@@ -109,6 +111,8 @@ def runColliderMLTruthTracking(
     )
     if geoIdMapPath is not None:
         converter_kwargs["geoIdMapPath"] = geoIdMapPath
+        converter_kwargs["geoIdMapSourcePrefix"] = geoIdMapSourcePrefix
+        converter_kwargs["geoIdMapTargetPrefix"] = geoIdMapTargetPrefix
 
     s.addAlgorithm(ColliderMLRelease1InputConverter(**converter_kwargs))
 

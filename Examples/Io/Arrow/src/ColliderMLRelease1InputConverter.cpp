@@ -96,28 +96,15 @@ std::optional<double> sigmaFromSmearer(
 }
 
 std::unordered_map<Acts::GeometryIdentifier, Acts::GeometryIdentifier>
-loadGeoIdMapFromCsv(const std::filesystem::path& path) {
+loadGeoIdMapFromCsv(const std::filesystem::path& path,
+                    const std::string& srcPrefix,
+                    const std::string& tgtPrefix) {
   CsvReader reader(path.string());
   std::vector<std::string> columns;
 
   if (!reader.read(columns)) {
     throw std::runtime_error("loadGeoIdMapFromCsv: empty file '" +
                              path.string() + "'");
-  }
-
-  // Auto-discover prefixes from *_packed columns in the header.
-  std::string srcPrefix;
-  std::string tgtPrefix;
-  for (const auto& col : columns) {
-    if (col.size() > 7 && col.substr(col.size() - 7) == "_packed") {
-      (srcPrefix.empty() ? srcPrefix : tgtPrefix) =
-          col.substr(0, col.size() - 7);
-    }
-  }
-  if (srcPrefix.empty() || tgtPrefix.empty()) {
-    throw std::runtime_error(
-        "loadGeoIdMapFromCsv: expected two *_packed columns in header of '" +
-        path.string() + "'");
   }
 
   auto findCol = [&](const std::string& name) -> std::size_t {
@@ -226,7 +213,9 @@ ColliderMLRelease1InputConverter::ColliderMLRelease1InputConverter(
   }
 
   if (m_cfg.geoIdMap.empty() && !m_cfg.geoIdMapPath.empty()) {
-    m_cfg.geoIdMap = loadGeoIdMapFromCsv(m_cfg.geoIdMapPath);
+    m_cfg.geoIdMap =
+        loadGeoIdMapFromCsv(m_cfg.geoIdMapPath, m_cfg.geoIdMapSourcePrefix,
+                            m_cfg.geoIdMapTargetPrefix);
   }
 
   m_inputParticles.initialize(m_cfg.inputParticlesTable);

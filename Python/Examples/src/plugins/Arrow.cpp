@@ -76,7 +76,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
       inputParticlesTable, inputHitsTable, outputParticles, outputSimHits,
       outputMeasurements, outputMeasurementSubset, outputMeasSimHitsMap,
       outputMeasParticlesMap, outputParticleMeasurementsMap, trackingGeometry,
-      digiConfig, geoIdMapPath, geoIdMap, hitBoundsTolerance);
+      digiConfig, geoIdMapPath, geoIdMapSourcePrefix, geoIdMapTargetPrefix,
+      geoIdMap, hitBoundsTolerance);
 
   m.def(
       "collidermlRelease1ParticleSchema",
