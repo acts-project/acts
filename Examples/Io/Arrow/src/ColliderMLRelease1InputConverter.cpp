@@ -135,17 +135,8 @@ std::optional<double> sigmaFromSmearer(
   return std::nullopt;
 }
 
-// Packed ColliderML geometry key: det(8b)|vol(8b)|layer(16b)|surface(32b).
-std::uint64_t colliderMLGeoKey(std::uint8_t detector, std::uint8_t volume,
-                               std::uint16_t layer, std::uint32_t surface) {
-  return (static_cast<std::uint64_t>(detector) << 40) |
-         (static_cast<std::uint64_t>(volume) << 32) |
-         (static_cast<std::uint64_t>(layer) << 16) |
-         static_cast<std::uint64_t>(surface);
-}
-
-std::unordered_map<std::uint64_t, Acts::GeometryIdentifier> loadGeoIdMapFromCsv(
-    const std::filesystem::path& path) {
+std::unordered_map<Acts::GeometryIdentifier, Acts::GeometryIdentifier>
+loadGeoIdMapFromCsv(const std::filesystem::path& path) {
   auto table = readFlatCsvFile(path);
 
   auto getColumn = [&](const std::string& name) {
@@ -169,12 +160,14 @@ std::unordered_map<std::uint64_t, Acts::GeometryIdentifier> loadGeoIdMapFromCsv(
       std::dynamic_pointer_cast<arrow::UInt64Array>(getColumn("acts_geo_id"));
 
   const std::int64_t n = table->num_rows();
-  std::unordered_map<std::uint64_t, Acts::GeometryIdentifier> map;
+  std::unordered_map<Acts::GeometryIdentifier, Acts::GeometryIdentifier> map;
   map.reserve(static_cast<std::size_t>(n));
   for (std::int64_t i = 0; i < n; ++i) {
-    const std::uint64_t key =
-        colliderMLGeoKey(detArr->Value(i), volArr->Value(i), layArr->Value(i),
-                         surfArr->Value(i));
+    const auto key = Acts::GeometryIdentifier()
+                         .withExtra(detArr->Value(i))
+                         .withVolume(volArr->Value(i))
+                         .withLayer(layArr->Value(i))
+                         .withSensitive(surfArr->Value(i));
     map.emplace(key, Acts::GeometryIdentifier(geoArr->Value(i)));
   }
   return map;
@@ -423,16 +416,13 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
   auto layerArr = colValues<arrow::UInt16Array>(hitsTable, "layer_id");
   auto surfArr = colValues<arrow::UInt32Array>(hitsTable, "surface_id");
 
-  SimHitContainer::sequence_type hitSeq;
+  SimHitContainer simHits;
   MeasurementContainer measurements;
-  // Maps original loop index i → measurement index. Used to build
-  // measSimHitsMap.
+  // Maps loop index i → measurement index; used to cross-reference simhits
+  // and measurements after the container sorts by geoId.
   std::unordered_map<std::int32_t, Index> hitIndexToMeas;
   MeasurementParticlesMap measParticlesMap;
 
-  if (needSimHits || needMeasurements) {
-    hitSeq.reserve(static_cast<std::size_t>(nHits));
-  }
   if (needMeasurements) {
     measurements.reserve(static_cast<std::size_t>(nHits));
   }
@@ -442,7 +432,11 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
     const std::uint8_t vol = volArr->Value(hOff + i);
     const std::uint16_t lay = layerArr->Value(hOff + i);
     const std::uint32_t surf = surfArr->Value(hOff + i);
-    const std::uint64_t key = colliderMLGeoKey(det, vol, lay, surf);
+    const auto key = Acts::GeometryIdentifier()
+                         .withExtra(det)
+                         .withVolume(vol)
+                         .withLayer(lay)
+                         .withSensitive(surf);
 
     Acts::GeometryIdentifier geoId;
     if (!m_cfg.geoIdMap.empty()) {
@@ -482,122 +476,96 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
     const double tz = tzArr->Value(hOff + i);
     const double tt = htArr->Value(hOff + i);
 
-    if (!needMeasurements) {
-      // Without measurements: add all simhits that pass the geoId check.
-      if (needSimHits) {
-        Acts::Vector4 pos4{tx, ty, tz, tt};
-        Acts::Vector4 zero4 = Acts::Vector4::Zero();
-        hitSeq.emplace_back(geoId, barcode, pos4, zero4, zero4,
-                            static_cast<std::int32_t>(i));
+    if (needMeasurements) {
+      auto digiSigmaIt = m_digiSigmaMap.find(geoId);
+      if (digiSigmaIt == m_digiSigmaMap.end()) {
+        ACTS_ERROR("Hit " << i << " geoId " << geoId
+                          << " has no digiConfig entry — check smearing "
+                             "config");
+        return ProcessCode::ABORT;
       }
-      continue;
-    }
+      const auto& [digiComp, sigmaConfigs] = *digiSigmaIt;
 
-    // When producing measurements: validate before committing both the simhit
-    // and the measurement, so SimHitContainer and MeasurementContainer always
-    // have a 1:1 correspondence.
-
-    auto digiSigmaIt = m_digiSigmaMap.find(geoId);
-    if (digiSigmaIt == m_digiSigmaMap.end()) {
-      ACTS_ERROR("Hit " << i << " geoId " << geoId
-                        << " has no digiConfig entry — check smearing config");
-      return ProcessCode::ABORT;
-    }
-    const auto& [digiComp, sigmaConfigs] = *digiSigmaIt;
-
-    const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
-    if (surface == nullptr) {
-      ACTS_ERROR("Hit " << i << " geoId " << geoId
-                        << " not found in tracking geometry");
-      return ProcessCode::ABORT;
-    }
-
-    const auto* regSurface = dynamic_cast<const Acts::RegularSurface*>(surface);
-    if (regSurface == nullptr) {
-      ACTS_ERROR("Hit " << i << " geoId " << geoId
-                        << " surface is not a RegularSurface — unsupported");
-      return ProcessCode::ABORT;
-    }
-
-    Acts::Vector3 globalPos{static_cast<double>(hxArr->Value(hOff + i)),
-                            static_cast<double>(hyArr->Value(hOff + i)),
-                            static_cast<double>(hzArr->Value(hOff + i))};
-
-    // ColliderML digitized positions are full 3D positions inside the sensor
-    // volume. Project with unlimited perpendicular tolerance, then check
-    // that the 2D local position is within the sensor boundary + configurable
-    // Euclidean tolerance. Out-of-bounds means the geoIdMap assigned the wrong
-    // surface.
-    auto localResult = regSurface->globalToLocal(
-        ctx.geoContext, globalPos, std::numeric_limits<double>::max());
-    if (!localResult.ok() ||
-        !surface->bounds().inside(localResult.value(),
-                                  Acts::BoundaryTolerance::AbsoluteEuclidean(
-                                      m_cfg.hitBoundsTolerance))) {
-      ACTS_ERROR(
-          "Hit " << i << " geoId " << geoId
-                 << " projected local position outside sensor bounds (tol="
-                 << m_cfg.hitBoundsTolerance << " mm)");
-      return ProcessCode::ABORT;
-    }
-    const Acts::Vector2& lp = localResult.value();
-
-    DigitizedParameters dParams;
-    for (const auto& sigmaCfg : sigmaConfigs) {
-      if (sigmaCfg.index == Acts::eBoundTime) {
-        continue;
+      const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
+      if (surface == nullptr) {
+        ACTS_ERROR("Hit " << i << " geoId " << geoId
+                          << " not found in tracking geometry");
+        return ProcessCode::ABORT;
       }
-      dParams.indices.push_back(sigmaCfg.index);
-      dParams.values.push_back(lp[static_cast<int>(sigmaCfg.index)]);
-      dParams.variances.push_back(sigmaCfg.sigma * sigmaCfg.sigma);
+
+      const auto* regSurface =
+          dynamic_cast<const Acts::RegularSurface*>(surface);
+      if (regSurface == nullptr) {
+        ACTS_ERROR("Hit " << i << " geoId " << geoId
+                          << " surface is not a RegularSurface — unsupported");
+        return ProcessCode::ABORT;
+      }
+
+      Acts::Vector3 globalPos{static_cast<double>(hxArr->Value(hOff + i)),
+                              static_cast<double>(hyArr->Value(hOff + i)),
+                              static_cast<double>(hzArr->Value(hOff + i))};
+
+      auto localResult = regSurface->globalToLocal(
+          ctx.geoContext, globalPos, std::numeric_limits<double>::max());
+      if (!localResult.ok() ||
+          !surface->bounds().inside(localResult.value(),
+                                    Acts::BoundaryTolerance::AbsoluteEuclidean(
+                                        m_cfg.hitBoundsTolerance))) {
+        ACTS_ERROR(
+            "Hit " << i << " geoId " << geoId
+                   << " projected local position outside sensor bounds (tol="
+                   << m_cfg.hitBoundsTolerance << " mm)");
+        return ProcessCode::ABORT;
+      }
+      const Acts::Vector2& lp = localResult.value();
+
+      DigitizedParameters dParams;
+      for (const auto& sigmaCfg : sigmaConfigs) {
+        if (sigmaCfg.index == Acts::eBoundTime) {
+          continue;
+        }
+        dParams.indices.push_back(sigmaCfg.index);
+        dParams.values.push_back(lp[static_cast<int>(sigmaCfg.index)]);
+        dParams.variances.push_back(sigmaCfg.sigma * sigmaCfg.sigma);
+      }
+
+      auto meas = createMeasurement(measurements, geoId, dParams);
+      const Index measIdx = meas.index();
+
+      hitIndexToMeas.emplace(static_cast<std::int32_t>(i), measIdx);
+      if (barcode != SimBarcode{}) {
+        measParticlesMap.emplace(measIdx, barcode);
+      }
     }
 
-    // All validation passed: commit simhit and measurement together so they
-    // stay in 1:1 correspondence across both containers.
+    // Temporarily stash the loop counter in Hit::index() as a cross-reference
+    // key for building measSimHitsMap; cleared to -1 below.
     if (needSimHits) {
       Acts::Vector4 pos4{tx, ty, tz, tt};
       Acts::Vector4 zero4 = Acts::Vector4::Zero();
-      hitSeq.emplace_back(geoId, barcode, pos4, zero4, zero4,
-                          static_cast<std::int32_t>(i));
-    }
-
-    auto meas = createMeasurement(measurements, geoId, dParams);
-    const Index measIdx = meas.index();
-
-    hitIndexToMeas.emplace(static_cast<std::int32_t>(i), measIdx);
-    if (barcode != SimBarcode{}) {
-      measParticlesMap.emplace(measIdx, barcode);
+      simHits.emplace_hint(simHits.end(), geoId, barcode, pos4, zero4, zero4,
+                           static_cast<std::int32_t>(i));
     }
   }
 
-  // Build sorted SimHitContainer.
-  SimHitContainer simHits;
-  if (needSimHits || needMeasurements) {
-    simHits.insert(hitSeq.begin(), hitSeq.end());
-  }
-
-  if (needSimHits) {
-    m_outputSimHits(ctx, SimHitContainer(simHits));
-  }
-
-  // Build measSimHitsMap: measurement k → sorted position of its simhit in
-  // SimHitContainer.  TruthTrackFinder uses this map for time-ordering proto
-  // track measurements via measurementSimHitsMap.nth(simHitIdx).
-  //
-  // With hitSeq containing ONLY measurement-producing hits, SimHitContainer
-  // and MeasurementContainer have the same number of entries, so every sorted
-  // position p satisfies p < simHits.size() == measSimHitsMap.size(), keeping
-  // TruthTrackFinder's nth(p) call in-bounds.
+  // Build measSimHitsMap from the sorted SimHitContainer, using the temporary
+  // index() as cross-reference, then reset index() to -1 (undefined).
   MeasurementSimHitsMap measSimHitsMap;
-  if (needMeasurements && !hitIndexToMeas.empty()) {
+  if (needMeasurements && needSimHits && !hitIndexToMeas.empty()) {
     SimHitIndex sortedPos = 0;
-    for (const auto& hit : simHits) {
+    for (auto& hit : simHits) {
       auto it = hitIndexToMeas.find(hit.index());
       if (it != hitIndexToMeas.end()) {
         measSimHitsMap.emplace(it->second, sortedPos);
       }
+      hit = SimHit(hit.geometryId(), hit.particleId(), hit.fourPosition(),
+                   hit.momentum4Before(), hit.momentum4After(), -1);
       ++sortedPos;
     }
+  }
+
+  if (needSimHits) {
+    m_outputSimHits(ctx, std::move(simHits));
   }
 
   if (needMeasurements) {

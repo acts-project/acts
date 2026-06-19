@@ -108,11 +108,13 @@ class ACTS_ARROW_EXPORT ColliderMLRelease1InputConverter : public IAlgorithm {
     /// Produce with @c generate_geoid_map.py.
     std::filesystem::path geoIdMapPath;
 
-    /// ColliderML (det, vol, layer, surf) → ACTS GeometryIdentifier.
-    /// Optional. When empty, geometry IDs are constructed directly from the
-    /// ColliderML (volume, layer, surface) fields — only correct when the data
-    /// was produced from a geometry whose ID scheme matches the current build.
-    std::unordered_map<std::uint64_t, Acts::GeometryIdentifier> geoIdMap;
+    /// ColliderML geometry → ACTS GeometryIdentifier.
+    /// The source key is a GeometryIdentifier constructed from ColliderML
+    /// fields: extra=detector, volume=volume_id, layer=layer_id,
+    /// sensitive=surface_id.  When empty, the converter falls back to matching
+    /// (volume, layer, sensitive) directly from the tracking geometry.
+    std::unordered_map<Acts::GeometryIdentifier, Acts::GeometryIdentifier>
+        geoIdMap;
 
     /// Euclidean boundary tolerance (mm) for projecting ColliderML 3D hit
     /// positions onto sensor surfaces. ColliderML hits are full 3D positions

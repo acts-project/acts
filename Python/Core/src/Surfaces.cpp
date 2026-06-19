@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
@@ -321,20 +320,6 @@ void addSurfaces(py::module_& m) {
         .def("isOnSurface", &Surface::isOnSurface)
         .def("localToGlobal", &Surface::localToGlobal)
         .def("localToGlobalTransform", &Surface::localToGlobalTransform)
-        .def(
-            "globalToLocal",
-            [](const Surface& self, const GeometryContext& gctx,
-               const Vector3& pos, const Vector3& dir,
-               double tolerance) -> std::optional<Vector2> {
-              auto result = self.globalToLocal(gctx, pos, dir, tolerance);
-              if (result.ok()) {
-                return result.value();
-              }
-              return std::nullopt;
-            },
-            py::arg("gctx"), py::arg("position"), py::arg("direction"),
-            py::arg("tolerance") = s_onSurfaceTolerance,
-            "Returns local 2D coordinates, or None if projection fails.")
         .def("toString", &Surface::toString)
         .def_property_readonly("type", &Surface::type)
         .def_property_readonly("name", &Surface::name)
