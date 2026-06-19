@@ -26,9 +26,8 @@ def runColliderMLTruthTracking(
     field: acts.MagneticFieldProvider,
     outputDir: Path,
     inputDir: Path,
-    geoIdMapPath: Optional[Path],
     digiConfigFile: Path,
-    geoIdMap: Optional[dict] = None,
+    geoIdMapPath: Optional[Path] = None,
     decorators=[],
     events: int = 10,
     numThreads: int = 1,
@@ -42,10 +41,10 @@ def runColliderMLTruthTracking(
     (Sequencer, PythonTrackFinderPerformanceWriter)
         Call s.run() on the sequencer, then access perf_writer.histograms().
     """
-    from acts.arrow import collidermlParticleSchema, simHitSchema
     from acts.examples.arrow import (
-        loadColliderMLGeoIdMap,
-        ColliderMLInputConverter,
+        ColliderMLRelease1InputConverter,
+        collidermlRelease1ParticleSchema,
+        collidermlRelease1HitSchema,
         ParquetReader,
     )
     from acts.examples.json import readDigiConfigFromJson
@@ -88,37 +87,30 @@ def runColliderMLTruthTracking(
                 "cml_hits": str(hits_dir),
             },
             expectedSchemas={
-                "cml_particles": collidermlParticleSchema(),
-                "cml_hits": simHitSchema(),
+                "cml_particles": collidermlRelease1ParticleSchema(),
+                "cml_hits": collidermlRelease1HitSchema(),
             },
         )
     )
 
-    s.addAlgorithm(
-        ColliderMLInputConverter(
-            level=acts.logging.INFO,
-            inputParticlesTable="cml_particles",
-            inputHitsTable="cml_hits",
-            outputParticles="particles",
-            outputSimHits="simhits",
-            outputMeasurements="measurements",
-            outputMeasurementSubset="measurement_subset",
-            outputMeasSimHitsMap="measurement_simhits_map",
-            outputMeasParticlesMap="measurement_particles_map",
-            outputParticleMeasurementsMap="particle_measurements_map",
-            trackingGeometry=trackingGeometry,
-            digiConfig=readDigiConfigFromJson(str(digiConfigFile)),
-            geoIdMap=(
-                geoIdMap
-                if geoIdMap is not None
-                else (
-                    loadColliderMLGeoIdMap(str(geoIdMapPath))
-                    if geoIdMapPath is not None
-                    else {}
-                )
-            ),
-        )
+    converter_kwargs = dict(
+        level=acts.logging.INFO,
+        inputParticlesTable="cml_particles",
+        inputHitsTable="cml_hits",
+        outputParticles="particles",
+        outputSimHits="simhits",
+        outputMeasurements="measurements",
+        outputMeasurementSubset="measurement_subset",
+        outputMeasSimHitsMap="measurement_simhits_map",
+        outputMeasParticlesMap="measurement_particles_map",
+        outputParticleMeasurementsMap="particle_measurements_map",
+        trackingGeometry=trackingGeometry,
+        digiConfig=readDigiConfigFromJson(str(digiConfigFile)),
     )
+    if geoIdMapPath is not None:
+        converter_kwargs["geoIdMapPath"] = geoIdMapPath
+
+    s.addAlgorithm(ColliderMLRelease1InputConverter(**converter_kwargs))
 
     s.addWhiteboardAlias("particles_simulated_selected", "particles")
     addDigiParticleSelection(
@@ -323,7 +315,6 @@ if __name__ == "__main__":
         field=field,
         outputDir=args.output,
         inputDir=args.input,
-        geoIdMapPath=_srcdir / "Examples/Configs/colliderml_geo_map.parquet",
         digiConfigFile=_srcdir
         / "Examples/Configs/odd-digi-smearing-config-notime.json",
         decorators=decorators,

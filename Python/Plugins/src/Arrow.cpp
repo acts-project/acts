@@ -235,8 +235,4 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsArrow, m) {
   m.def(
       "simHitSchema", [wrap]() { return wrap(ArrowUtil::simHitSchema()); },
       "Schema produced by ArrowSimHitOutputConverter.");
-  m.def(
-      "collidermlParticleSchema",
-      [wrap]() { return wrap(ArrowUtil::collidermlParticleSchema()); },
-      "Expected schema for the ColliderML per-event particle table.");
 }

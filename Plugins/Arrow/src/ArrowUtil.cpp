@@ -218,24 +218,6 @@ std::shared_ptr<arrow::Schema> simHitSchema() {
   });
 }
 
-std::shared_ptr<arrow::Schema> collidermlParticleSchema() {
-  return arrow::schema({
-      arrow::field("particle_id", arrow::list(arrow::uint64()), false),
-      arrow::field("pdg_id", arrow::list(arrow::int64()), false),
-      arrow::field("mass", arrow::list(arrow::float32()), false),
-      arrow::field("charge", arrow::list(arrow::float32()), false),
-      arrow::field("vx", arrow::list(arrow::float32()), false),
-      arrow::field("vy", arrow::list(arrow::float32()), false),
-      arrow::field("vz", arrow::list(arrow::float32()), false),
-      arrow::field("time", arrow::list(arrow::float32()), false),
-      arrow::field("px", arrow::list(arrow::float32()), false),
-      arrow::field("py", arrow::list(arrow::float32()), false),
-      arrow::field("pz", arrow::list(arrow::float32()), false),
-      arrow::field("vertex_primary", arrow::list(arrow::uint16()), false),
-      arrow::field("primary", arrow::list(arrow::boolean()), false),
-  });
-}
-
 std::shared_ptr<arrow::Table> withEventId(
     const std::shared_ptr<arrow::Table>& table, std::uint64_t eventId) {
   if (table == nullptr) {

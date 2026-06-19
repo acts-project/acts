@@ -4,7 +4,7 @@ add_library(
     src/ArrowParticleOutputConverter.cpp
     src/ArrowSimHitOutputConverter.cpp
     src/ArrowTrackOutputConverter.cpp
-    src/ColliderMLInputConverter.cpp
+    src/ColliderMLRelease1InputConverter.cpp
 )
 
 target_include_directories(
@@ -39,7 +39,7 @@ target_sources(
     ActsPluginArrow
     PRIVATE $<TARGET_OBJECTS:ActsExamplesIoArrow_obj>
 )
-# ColliderMLInputConverter needs ExamplesDigitization at link time.
+# ColliderMLRelease1InputConverter needs ExamplesDigitization at link time.
 target_link_libraries(ActsPluginArrow PRIVATE Acts::ExamplesDigitization)
 # ExamplesDigitization is PRIVATE-linked by ActsPluginArrow; add it to the
 # export set so the install(EXPORT ActsPluginArrowTargets) resolves.

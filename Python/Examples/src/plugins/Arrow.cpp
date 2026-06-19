@@ -10,7 +10,7 @@
 #include "ActsExamples/Io/Arrow/ArrowParticleOutputConverter.hpp"
 #include "ActsExamples/Io/Arrow/ArrowSimHitOutputConverter.hpp"
 #include "ActsExamples/Io/Arrow/ArrowTrackOutputConverter.hpp"
-#include "ActsExamples/Io/Arrow/ColliderMLInputConverter.hpp"
+#include "ActsExamples/Io/Arrow/ColliderMLRelease1InputConverter.hpp"
 #include "ActsExamples/Io/Parquet/ArrowOutputConverter.hpp"
 #include "ActsExamples/Io/Parquet/ParquetReader.hpp"
 #include "ActsExamples/Io/Parquet/ParquetWriter.hpp"
@@ -72,13 +72,28 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ColliderMLInputConverter, m, "ColliderMLInputConverter",
+      ColliderMLRelease1InputConverter, m, "ColliderMLRelease1InputConverter",
       inputParticlesTable, inputHitsTable, outputParticles, outputSimHits,
       outputMeasurements, outputMeasurementSubset, outputMeasSimHitsMap,
       outputMeasParticlesMap, outputParticleMeasurementsMap, trackingGeometry,
-      digiConfig, geoIdMap, hitBoundsTolerance);
+      digiConfig, geoIdMapPath, geoIdMap, hitBoundsTolerance);
 
-  m.def("loadColliderMLGeoIdMap", &loadColliderMLGeoIdMap, "path"_a);
+  m.def(
+      "collidermlRelease1ParticleSchema",
+      []() {
+        return ActsPlugins::ArrowUtil::ArrowSchemaHandle{
+            ColliderMLRelease1InputConverter::particleSchema()};
+      },
+      "Expected schema for the ColliderML Release 1 per-event particle "
+      "table.");
+  m.def(
+      "collidermlRelease1HitSchema",
+      []() {
+        return ActsPlugins::ArrowUtil::ArrowSchemaHandle{
+            ColliderMLRelease1InputConverter::hitSchema()};
+      },
+      "Expected schema for the ColliderML Release 1 per-event tracker-hit "
+      "table.");
 
   m.def("makeVolumeIdDetectorResolver",
         &ArrowSimHitOutputConverter::makeVolumeIdDetectorResolver,

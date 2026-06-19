@@ -30,32 +30,15 @@
 #include <utility>
 #include <vector>
 
+namespace arrow {
+class Schema;
+}
+
 namespace Acts {
 class TrackingGeometry;
 }
 
 namespace ActsExamples {
-
-/// Pre-extracted sigma for a single bound parameter from the digitization
-/// config. Used to avoid re-extracting per hit at runtime.
-struct DigitizationSigmaConfig {
-  Acts::BoundIndices index;
-  double sigma;
-};
-
-/// A digitization config entry paired with its pre-extracted sigma values.
-using DigitizationConfigWithSigmas =
-    std::pair<DigiComponentsConfig, std::vector<DigitizationSigmaConfig>>;
-
-/// Load a ColliderML geometry ID map from a CSV file.
-///
-/// Expected columns (with header): detector, volume, layer, surface,
-/// acts_geo_id.
-///
-/// @param path  Path to the CSV file.
-/// @return Map from packed ColliderML key to @c Acts::GeometryIdentifier.
-ACTS_ARROW_EXPORT std::unordered_map<std::uint64_t, Acts::GeometryIdentifier>
-loadColliderMLGeoIdMap(const std::filesystem::path& path);
 
 /// Convert ColliderML Arrow tables to ACTS EDM types.
 ///
@@ -72,8 +55,19 @@ loadColliderMLGeoIdMap(const std::filesystem::path& path);
 ///
 /// @note SimHit momentum fields are zero-filled; ColliderML does not
 ///       record per-hit momentum.
-class ACTS_ARROW_EXPORT ColliderMLInputConverter : public IAlgorithm {
+class ACTS_ARROW_EXPORT ColliderMLRelease1InputConverter : public IAlgorithm {
  public:
+  /// Pre-extracted sigma for a single bound parameter from the digitization
+  /// config. Used to avoid re-extracting per hit at runtime.
+  struct DigitizationSigmaConfig {
+    Acts::BoundIndices index;
+    double sigma;
+  };
+
+  /// A digitization config entry paired with its pre-extracted sigma values.
+  using DigitizationConfigWithSigmas =
+      std::pair<DigiComponentsConfig, std::vector<DigitizationSigmaConfig>>;
+
   struct Config {
     /// Whiteboard key for the particles Arrow table (from ParquetReader).
     std::string inputParticlesTable;
@@ -108,11 +102,16 @@ class ACTS_ARROW_EXPORT ColliderMLInputConverter : public IAlgorithm {
     /// (sensitive → layer → volume).
     DigiConfigContainer digiConfig;
 
+    /// Path to a CSV file mapping geometry IDs between two geometries.
+    /// When non-empty, the file is loaded at construction and used to
+    /// populate @c geoIdMap.  Ignored when @c geoIdMap is already set.
+    /// Produce with @c generate_geoid_map.py.
+    std::filesystem::path geoIdMapPath;
+
     /// ColliderML (det, vol, layer, surf) → ACTS GeometryIdentifier.
     /// Optional. When empty, geometry IDs are constructed directly from the
     /// ColliderML (volume, layer, surface) fields — only correct when the data
     /// was produced from a geometry whose ID scheme matches the current build.
-    /// Load with @c loadColliderMLGeoIdMap().
     std::unordered_map<std::uint64_t, Acts::GeometryIdentifier> geoIdMap;
 
     /// Euclidean boundary tolerance (mm) for projecting ColliderML 3D hit
@@ -124,12 +123,21 @@ class ACTS_ARROW_EXPORT ColliderMLInputConverter : public IAlgorithm {
     double hitBoundsTolerance = 5.0;
   };
 
-  ColliderMLInputConverter(const Config& cfg,
-                           std::unique_ptr<const Acts::Logger> logger);
+  /// Expected Arrow schema for the per-event particle table in the
+  /// ColliderML Release 1 dataset format.
+  static std::shared_ptr<arrow::Schema> particleSchema();
 
-  ColliderMLInputConverter(const Config& cfg, Acts::Logging::Level level);
+  /// Expected Arrow schema for the per-event tracker-hit table in the
+  /// ColliderML Release 1 dataset format.
+  static std::shared_ptr<arrow::Schema> hitSchema();
 
-  ~ColliderMLInputConverter() override;
+  ColliderMLRelease1InputConverter(const Config& cfg,
+                                   std::unique_ptr<const Acts::Logger> logger);
+
+  ColliderMLRelease1InputConverter(const Config& cfg,
+                                   Acts::Logging::Level level);
+
+  ~ColliderMLRelease1InputConverter() override;
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 

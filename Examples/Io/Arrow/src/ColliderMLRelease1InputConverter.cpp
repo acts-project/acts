@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Arrow/ColliderMLInputConverter.hpp"
+#include "ActsExamples/Io/Arrow/ColliderMLRelease1InputConverter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -38,8 +38,6 @@ namespace ActsExamples {
 
 namespace {
 
-// Read a flat CSV file into an Arrow Table.
-// Only used by loadColliderMLGeoIdMap — kept local to this translation unit.
 std::shared_ptr<arrow::Table> readFlatCsvFile(
     const std::filesystem::path& path) {
   if (!std::filesystem::exists(path)) {
@@ -58,16 +56,14 @@ std::shared_ptr<arrow::Table> readFlatCsvFile(
   auto parseOptions = arrow::csv::ParseOptions::Defaults();
   auto convertOptions = arrow::csv::ConvertOptions::Defaults();
   convertOptions.column_types = {
-      {"detector", arrow::uint8()},
-      {"volume", arrow::uint8()},
-      {"layer", arrow::uint16()},
-      {"surface", arrow::uint32()},
+      {"detector", arrow::uint8()},     {"volume", arrow::uint8()},
+      {"layer", arrow::uint16()},       {"surface", arrow::uint32()},
       {"acts_geo_id", arrow::uint64()},
   };
 
-  auto readerResult = arrow::csv::TableReader::Make(
-      arrow::io::default_io_context(), infile, readOptions, parseOptions,
-      convertOptions);
+  auto readerResult =
+      arrow::csv::TableReader::Make(arrow::io::default_io_context(), infile,
+                                    readOptions, parseOptions, convertOptions);
   if (!readerResult.ok()) {
     throw std::runtime_error("readFlatCsvFile: create reader for '" +
                              path.string() +
@@ -86,12 +82,13 @@ std::pair<std::int64_t, std::int64_t> rowBounds(const arrow::Table& table,
                                                 const std::string& name) {
   auto col = table.GetColumnByName(name);
   if (!col) {
-    throw std::runtime_error("ColliderMLInputConverter: missing column '" +
-                             name + "'");
+    throw std::runtime_error(
+        "ColliderMLRelease1InputConverter: missing column '" + name + "'");
   }
   auto listArr = std::dynamic_pointer_cast<arrow::ListArray>(col->chunk(0));
   if (!listArr) {
-    throw std::runtime_error("ColliderMLInputConverter: column '" + name +
+    throw std::runtime_error("ColliderMLRelease1InputConverter: column '" +
+                             name +
                              "' is not a list array (expected nested layout)");
   }
   return {listArr->value_offset(0), listArr->value_length(0)};
@@ -103,18 +100,19 @@ std::shared_ptr<ArrowArrayType> colValues(const arrow::Table& table,
                                           const std::string& name) {
   auto col = table.GetColumnByName(name);
   if (!col) {
-    throw std::runtime_error("ColliderMLInputConverter: missing column '" +
-                             name + "'");
+    throw std::runtime_error(
+        "ColliderMLRelease1InputConverter: missing column '" + name + "'");
   }
   auto listArr = std::dynamic_pointer_cast<arrow::ListArray>(col->chunk(0));
   if (!listArr) {
-    throw std::runtime_error("ColliderMLInputConverter: column '" + name +
+    throw std::runtime_error("ColliderMLRelease1InputConverter: column '" +
+                             name +
                              "' is not a list array (expected nested layout)");
   }
   auto values = std::dynamic_pointer_cast<ArrowArrayType>(listArr->values());
   if (!values) {
-    throw std::runtime_error("ColliderMLInputConverter: column '" + name +
-                             "' has unexpected value type");
+    throw std::runtime_error("ColliderMLRelease1InputConverter: column '" +
+                             name + "' has unexpected value type");
   }
   return values;
 }
@@ -146,21 +144,15 @@ std::uint64_t colliderMLGeoKey(std::uint8_t detector, std::uint8_t volume,
          static_cast<std::uint64_t>(surface);
 }
 
-}  // namespace
-
-// ---------------------------------------------------------------------------
-// Loader: CSV geometry ID map
-// ---------------------------------------------------------------------------
-
-std::unordered_map<std::uint64_t, Acts::GeometryIdentifier>
-loadColliderMLGeoIdMap(const std::filesystem::path& path) {
+std::unordered_map<std::uint64_t, Acts::GeometryIdentifier> loadGeoIdMapFromCsv(
+    const std::filesystem::path& path) {
   auto table = readFlatCsvFile(path);
 
   auto getColumn = [&](const std::string& name) {
     auto col = table->GetColumnByName(name);
     if (!col || col->num_chunks() == 0) {
-      throw std::runtime_error("loadColliderMLGeoIdMap: missing column '" +
-                               name + "' in '" + path.string() + "'");
+      throw std::runtime_error("loadGeoIdMapFromCsv: missing column '" + name +
+                               "' in '" + path.string() + "'");
     }
     return col->chunk(0);
   };
@@ -188,13 +180,56 @@ loadColliderMLGeoIdMap(const std::filesystem::path& path) {
   return map;
 }
 
+}  // namespace
+
 // ---------------------------------------------------------------------------
-// ColliderMLInputConverter
+// Schemas
 // ---------------------------------------------------------------------------
 
-ColliderMLInputConverter::ColliderMLInputConverter(
+std::shared_ptr<arrow::Schema>
+ColliderMLRelease1InputConverter::particleSchema() {
+  return arrow::schema({
+      arrow::field("particle_id", arrow::list(arrow::uint64()), false),
+      arrow::field("pdg_id", arrow::list(arrow::int64()), false),
+      arrow::field("mass", arrow::list(arrow::float32()), false),
+      arrow::field("charge", arrow::list(arrow::float32()), false),
+      arrow::field("vx", arrow::list(arrow::float32()), false),
+      arrow::field("vy", arrow::list(arrow::float32()), false),
+      arrow::field("vz", arrow::list(arrow::float32()), false),
+      arrow::field("time", arrow::list(arrow::float32()), false),
+      arrow::field("px", arrow::list(arrow::float32()), false),
+      arrow::field("py", arrow::list(arrow::float32()), false),
+      arrow::field("pz", arrow::list(arrow::float32()), false),
+      arrow::field("vertex_primary", arrow::list(arrow::uint16()), false),
+      arrow::field("primary", arrow::list(arrow::boolean()), false),
+  });
+}
+
+std::shared_ptr<arrow::Schema> ColliderMLRelease1InputConverter::hitSchema() {
+  return arrow::schema({
+      arrow::field("x", arrow::list(arrow::float32()), false),
+      arrow::field("y", arrow::list(arrow::float32()), false),
+      arrow::field("z", arrow::list(arrow::float32()), false),
+      arrow::field("true_x", arrow::list(arrow::float32()), false),
+      arrow::field("true_y", arrow::list(arrow::float32()), false),
+      arrow::field("true_z", arrow::list(arrow::float32()), false),
+      arrow::field("time", arrow::list(arrow::float32()), false),
+      arrow::field("particle_id", arrow::list(arrow::uint64()), false),
+      arrow::field("detector", arrow::list(arrow::uint8()), false),
+      arrow::field("volume_id", arrow::list(arrow::uint8()), false),
+      arrow::field("layer_id", arrow::list(arrow::uint16()), false),
+      arrow::field("surface_id", arrow::list(arrow::uint32()), false),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// ColliderMLRelease1InputConverter
+// ---------------------------------------------------------------------------
+
+ColliderMLRelease1InputConverter::ColliderMLRelease1InputConverter(
     const Config& cfg, std::unique_ptr<const Acts::Logger> _logger)
-    : IAlgorithm("ColliderMLInputConverter", std::move(_logger)), m_cfg(cfg) {
+    : IAlgorithm("ColliderMLRelease1InputConverter", std::move(_logger)),
+      m_cfg(cfg) {
   if (m_cfg.inputParticlesTable.empty()) {
     throw std::invalid_argument("inputParticlesTable must be set");
   }
@@ -217,6 +252,10 @@ ColliderMLInputConverter::ColliderMLInputConverter(
       throw std::invalid_argument(
           "digiConfig is required for outputMeasurements");
     }
+  }
+
+  if (m_cfg.geoIdMap.empty() && !m_cfg.geoIdMapPath.empty()) {
+    m_cfg.geoIdMap = loadGeoIdMapFromCsv(m_cfg.geoIdMapPath);
   }
 
   m_inputParticles.initialize(m_cfg.inputParticlesTable);
@@ -288,14 +327,15 @@ ColliderMLInputConverter::ColliderMLInputConverter(
   }
 }
 
-ColliderMLInputConverter::ColliderMLInputConverter(const Config& cfg,
-                                                   Acts::Logging::Level level)
-    : ColliderMLInputConverter(
-          cfg, Acts::getDefaultLogger("ColliderMLInputConverter", level)) {}
+ColliderMLRelease1InputConverter::ColliderMLRelease1InputConverter(
+    const Config& cfg, Acts::Logging::Level level)
+    : ColliderMLRelease1InputConverter(
+          cfg,
+          Acts::getDefaultLogger("ColliderMLRelease1InputConverter", level)) {}
 
-ColliderMLInputConverter::~ColliderMLInputConverter() = default;
+ColliderMLRelease1InputConverter::~ColliderMLRelease1InputConverter() = default;
 
-ProcessCode ColliderMLInputConverter::execute(
+ProcessCode ColliderMLRelease1InputConverter::execute(
     const AlgorithmContext& ctx) const {
   const arrow::Table& particleTable = *m_inputParticles(ctx).table();
   const arrow::Table& hitsTable = *m_inputHits(ctx).table();
@@ -464,7 +504,6 @@ ProcessCode ColliderMLInputConverter::execute(
       return ProcessCode::ABORT;
     }
     const auto& [digiComp, sigmaConfigs] = *digiSigmaIt;
-    const auto& smearing = digiComp.smearingDigiConfig;
 
     const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
     if (surface == nullptr) {
