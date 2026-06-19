@@ -1,81 +1,34 @@
-name: Detray
+name: Detray Nightly
 
 on:
+  #schedule:
+  #  - cron: '0 3 * * *' # run at 3 AM UTC
+  #workflow_dispatch:
   push:
     paths:
       - "Detray/**"
-      - ".github/workflows/detray.yml"
+      - ".github/workflows/detray_nightly.yml"
   pull_request:
     branches:
       - main
     paths:
       - "Detray/**"
-      - ".github/workflows/detray.yml"
-
-# Cancel existing jobs on new pushes.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
-
-permissions:
-  contents: read
+      - ".github/workflows/detray_nightly.yml"
 
 # All the different build/test jobs.
 jobs:
-
-  # Native build jobs.
-  host-native:
-
-    # The different build modes to test.
-    strategy:
-      matrix:
-        BUILD_TYPE: ["Debug"]
-        PLATFORM:
-          - OS: "ubuntu-latest"
-            GENERATOR: "Unix Makefiles"
-          - OS: "macos-latest"
-            GENERATOR: "Ninja"
-
-    # The system to run on.
-    runs-on: ${{ matrix.PLATFORM.OS }}
-    name: "native (${{ matrix.PLATFORM.OS }})"
-
-    # The build/test steps to execute.
-    steps:
-    # Use a standard checkout of the code.
-    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      with:
-        persist-credentials: false
-    # Run the CMake configuration. Test that the metadata generation runs
-    - name: Configure
-      run: cmake --preset detray-full-fp64
-                 -DCMAKE_BUILD_TYPE=${{ matrix.BUILD_TYPE }}
-                 -DDETRAY_FAIL_ON_WARNINGS=ON
-                 -DDETRAY_SET_LOGGING=DEBUG
-                 -DDETRAY_EIGEN_PLUGIN=OFF
-                 -DDETRAY_SMATRIX_PLUGIN=OFF
-                 -DDETRAY_FASTOR_PLUGIN=OFF
-                 -DDETRAY_VC_AOS_PLUGIN=OFF
-                 -DDETRAY_VC_SOA_PLUGIN=OFF
-                 -DDETRAY_GENERATE_METADATA="default_metadata;itk_metadata;odd_metadata;toy_metadata;wire_chamber_metadata"
-                 -S ${{ github.workspace }}/Detray -B build
-                 -G "${{ matrix.PLATFORM.GENERATOR }}"
-    # Perform the build.
-    - name: Build
-      run: cmake --build build --config ${{ matrix.BUILD_TYPE }} -- -j 2
-
-  # Containerised build jobs.
-  host-container:
-
+  # Nightly build jobs.
+  nightly-host:
     # The different build modes to test.
     strategy:
       matrix:
         BUILD_TYPE: ["Release", "Debug"]
+        SCALAR_TYPE: ["float", "double"]
         PLATFORM:
           - NAME: "HOST"
             CXX_STANDARD: "20"
             CONTAINER: "ghcr.io/acts-project/ubuntu2404:56"
-            OPTIONS: -DDETRAY_EIGEN_PLUGIN=OFF -DDETRAY_FASTOR_PLUGIN=OFF -DDETRAY_SMATRIX_PLUGIN=OFF -DDETRAY_VC_AOS_PLUGIN=OFF -DDETRAY_VC_SOA_PLUGIN=OFF
+            OPTIONS: -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_FASTOR_PLUGIN=OFF -DDETRAY_SMATRIX_PLUGIN=ON -DDETRAY_VC_AOS_PLUGIN=ON -DDETRAY_VC_SOA_PLUGIN=ON
 
     # The system to run on.
     runs-on: ubuntu-latest
@@ -95,9 +48,7 @@ jobs:
     # The build/test steps to execute.
     steps:
     # Use a standard checkout of the code.
-    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      with:
-        persist-credentials: false
+    - uses: actions/checkout@v4
     # Get the data files for the tests
     - name: Download data files
       run: Detray/data/detray_data_get_files.sh
@@ -107,14 +58,9 @@ jobs:
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
         cmake --preset detray-full-fp32 \
           -DCMAKE_CXX_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
-          -DCMAKE_BUILD_TYPE=${{ matrix.BUILD_TYPE }} \
           -DDETRAY_FAIL_ON_WARNINGS=ON \
-          -DDETRAY_SET_LOGGING=INFO \
-          -DDETRAY_EIGEN_PLUGIN=OFF \
-          -DDETRAY_SMATRIX_PLUGIN=OFF \
-          -DDETRAY_FASTOR_PLUGIN=OFF \
-          -DDETRAY_VC_AOS_PLUGIN=OFF \
-          -DDETRAY_VC_SOA_PLUGIN=ON \
+          -DCMAKE_BUILD_TYPE=${{ matrix.BUILD_TYPE }} \
+          -DDETRAY_CUSTOM_SCALARTYPE=${{ matrix.SCALAR_TYPE }} \
           ${{ matrix.PLATFORM.OPTIONS }} \
           -S ${GITHUB_WORKSPACE}/Detray \
           -B build
@@ -135,20 +81,33 @@ jobs:
       run: |
         cd build
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
-        ctest -R detray_unit_test_. --output-on-failure
+        ctest -R detray_unit_test_. -E "._eigen|._fastor|._vc_aos" --output-on-failure
 
   # Containerised build jobs.
-  device-container:
+  nightly-device:
 
     # The different build modes to test.
     strategy:
       matrix:
         BUILD_TYPE: ["Debug"]
+        SCALAR_TYPE: ["float", "double"]
         PLATFORM:
           - NAME: "CUDA"
             CXX_STANDARD: "20"
             CONTAINER: "ghcr.io/acts-project/ubuntu2404_cuda:67"
-            OPTIONS: -DDETRAY_BUILD_CUDA=ON -DDETRAY_SET_LOGGING=DEBUG
+            OPTIONS: -DDETRAY_BUILD_CUDA=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON
+          - NAME: "HIP-AMD"
+            CXX_STANDARD: "20"
+            CONTAINER: "ghcr.io/acts-project/ubuntu2404_rocm_oneapi:69"
+            OPTIONS: -DCMAKE_PREFIX_PATH=/opt/rocm/lib/cmake/ -DCMAKE_HIP_PLATFORM=amd -DDETRAY_BUILD_HIP=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_BUILD_INTEGRATIONTESTS=OFF -DDETRAY_BUILD_BENCHMARKS=OFF
+          #- NAME: "HIP-NVIDIA"
+          #  CXX_STANDARD: "20"
+          #  CONTAINER:
+          #  OPTIONS: -DCMAKE_HIP_PLATFORM=nvidia -DDETRAY_BUILD_HIP=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_BUILD_BENCHMARKS=OFF
+          - NAME: "SYCL"
+            CXX_STANDARD: "20"
+            CONTAINER: "ghcr.io/acts-project/ubuntu2404_oneapi:85"
+            OPTIONS: -DDETRAY_BUILD_CUDA=OFF -DDETRAY_BUILD_SYCL=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON
 
     # The system to run on.
     runs-on: ubuntu-latest
@@ -163,9 +122,7 @@ jobs:
     # The build/test steps to execute.
     steps:
     # Use a standard checkout of the code.
-    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      with:
-        persist-credentials: false
+    - uses: actions/checkout@v4
     # Run the CMake configuration.
     - name: Configure
       run: |
@@ -176,13 +133,13 @@ jobs:
           -DCMAKE_SYCL_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
           -DCMAKE_HIP_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
           -DDETRAY_BUILD_HOST=OFF \
-          -DDETRAY_EGIEN_PLUGIN=OFF \
           -DDETRAY_FASTOR_PLUGIN=OFF \
           -DDETRAY_SMATRIX_PLUGIN=OFF \
           -DDETRAY_VC_AOS_PLUGIN=OFF \
           -DDETRAY_VC_SOA_PLUGIN=OFF \
           -DDETRAY_FAIL_ON_WARNINGS=ON \
           -DCMAKE_BUILD_TYPE=${{ matrix.BUILD_TYPE }} \
+          -DDETRAY_CUSTOM_SCALARTYPE=${{ matrix.SCALAR_TYPE }} \
           ${{ matrix.PLATFORM.OPTIONS }} \
           -S ${GITHUB_WORKSPACE}/Detray \
           -B build
@@ -192,6 +149,6 @@ jobs:
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
         cmake --build build
     - name: FP64 Compliance
-      if: "matrix.PLATFORM.NAME == 'CUDA' && matrix.BUILD_TYPE == 'Debug'"
+      if: "matrix.PLATFORM.NAME == 'CUDA' && matrix.BUILD_TYPE == 'Debug' && matrix.SCALAR_TYPE == 'float'"
       continue-on-error: true
       run: ${GITHUB_WORKSPACE}/Detray/CI/find_f64_ptx.py --source ${GITHUB_WORKSPACE}/Detray --build build $(find build -name "*.ptx" ! -name "container_cuda_kernel.ptx")
