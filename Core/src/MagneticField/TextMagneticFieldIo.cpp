@@ -9,6 +9,7 @@
 #include "Acts/MagneticField/TextMagneticFieldIo.hpp"
 
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
+#include "Acts/Utilities/Axis.hpp"
 
 #include <fstream>
 #include <iostream>
