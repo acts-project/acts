@@ -122,13 +122,13 @@ PipelineTensors OnnxEdgeClassifier::operator()(
   bc::static_vector<const char *, 3> inputNames;
 
   // Apply feature selection if configured
-  auto nodeFeatures = tensors.nodeFeatures;
   std::optional<Tensor<float>> selectedNodeFeatures;
+  ActsPlugins::Tensor<float> *nodeFeatures = &tensors.nodeFeatures;
   if (!m_cfg.selectedFeatures.empty()) {
     // Create filtered node features with only selected indices
-    selectedNodeFeatures = Tensor<float>::Create(
+    selectedNodeFeatures.emplace(Tensor<float>::Create(
         {tensors.nodeFeatures.shape()[0], m_cfg.selectedFeatures.size()},
-        execContext);
+        execContext));
     auto *srcData = tensors.nodeFeatures.data();
     auto *dstData = selectedNodeFeatures->data();
     std::size_t numNodes = tensors.nodeFeatures.shape()[0];
@@ -144,11 +144,11 @@ PipelineTensors OnnxEdgeClassifier::operator()(
             srcData[n * numAllFeatures + featureIdx];
       }
     }
-    nodeFeatures = *selectedNodeFeatures;
+    nodeFeatures = &(*selectedNodeFeatures);
   }
 
   // Node tensor
-  inputTensors.push_back(toOnnx(memoryInfo, nodeFeatures));
+  inputTensors.push_back(toOnnx(memoryInfo, *nodeFeatures));
   inputNames.push_back(m_inputNames.at(0).c_str());
   ACTS_DEBUG("Node features shape: (" << nodeFeatures.shape()[0] << ", "
                                       << nodeFeatures.shape()[1] << ")");
@@ -199,7 +199,8 @@ PipelineTensors OnnxEdgeClassifier::operator()(
   auto newEdgeIndex = selectCols(tensors.edgeIndex, mask, execContext);
   std::optional<Tensor<float>> newEdgeFeatures;
   if (tensors.edgeFeatures.has_value()) {
-    newEdgeFeatures = selectRows(*tensors.edgeFeatures, mask, execContext);
+    newEdgeFeatures.emplace(
+        selectRows(*tensors.edgeFeatures, mask, execContext));
   }
 
   ACTS_DEBUG("Finished edge classification, after cut: "
