@@ -13,9 +13,7 @@
 #include <fstream>
 #include <stdexcept>
 
-namespace Acts {
-
-void to_json(nlohmann::json& j,
+void Acts::to_json(nlohmann::json& j,
              const PolynomialBetheHeitlerApprox::PolyData& data) {
   j["weight_coeffs"] = data.weightCoeffs;
   j["mean_coeffs"] = data.meanCoeffs;

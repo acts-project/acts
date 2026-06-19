@@ -27,9 +27,7 @@ PolynomialBetheHeitlerApprox::PolynomialBetheHeitlerApprox(
   }
 
   // Sort ranges by minimum value
-  std::sort(m_ranges.begin(), m_ranges.end(), [](const auto &a, const auto &b) {
-    return a.range.min() < b.range.min();
-  });
+  std::ranges::sort(m_ranges, {}, [](const auto &r) { return r.range.min(); });
 
   // Validate that ranges don't overlap
   for (std::size_t i = 1; i < m_ranges.size(); ++i) {
