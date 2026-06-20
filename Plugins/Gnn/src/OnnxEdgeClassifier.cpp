@@ -150,8 +150,8 @@ PipelineTensors OnnxEdgeClassifier::operator()(
   // Node tensor
   inputTensors.push_back(toOnnx(memoryInfo, *nodeFeatures));
   inputNames.push_back(m_inputNames.at(0).c_str());
-  ACTS_DEBUG("Node features shape: (" << nodeFeatures.shape()[0] << ", "
-                                      << nodeFeatures.shape()[1] << ")");
+  ACTS_DEBUG("Node features shape: (" << nodeFeatures->shape()[0] << ", "
+                                      << nodeFeatures->shape()[1] << ")");
 
   // Edge tensor
   inputTensors.push_back(toOnnx(memoryInfo, tensors.edgeIndex));
