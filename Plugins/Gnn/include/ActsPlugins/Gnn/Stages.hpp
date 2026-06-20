@@ -69,6 +69,17 @@ class EdgeClassificationBase {
   virtual ~EdgeClassificationBase() = default;
 };
 
+/// Remove nodes not referenced by any edge, renumbering edges in-place.
+///
+/// @param tensors  Graph tensors to shrink (consumed)
+/// @param spacePointIds  Updated in-place: remapped to the surviving nodes
+/// @param execCtx  Device and stream
+/// @return Shrunk pipeline tensors with updated node features and edge indices
+/// @throws NoEdgesError if there are no edges
+PipelineTensors removeUnusedNodes(PipelineTensors &&tensors,
+                                  std::vector<int> &spacePointIds,
+                                  const ExecutionContext &execCtx);
+
 /// Base class for track building implementations
 class TrackBuildingBase {
  public:

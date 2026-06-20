@@ -21,7 +21,7 @@ inputs:
   DEPENDENCY_TAG:
     description: 'Dependency tag to pull from'
     required: false
-    default: 'v23.1.0'
+    default: 'v23.2.0'
   full_install:
     description: 'Whether to do a full dependency installation including Geant4 datasets and Python packages'
     required: false
