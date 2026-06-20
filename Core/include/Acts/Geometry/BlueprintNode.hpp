@@ -33,6 +33,7 @@ class PortalShellBase;
 namespace Experimental {
 
 class MaterialDesignatorBlueprintNode;
+class PortalDesignatorBlueprintNode;
 class StaticBlueprintNode;
 class LayerBlueprintNode;
 class GeometryIdentifierBlueprintNode;
@@ -229,6 +230,16 @@ class BlueprintNode {
   MaterialDesignatorBlueprintNode& addMaterial(
       const std::string& name,
       const std::function<void(MaterialDesignatorBlueprintNode& material)>&
+          callback = {});
+
+  /// Convenience method for creating a @ref Acts::Experimental::PortalDesignatorBlueprintNode.
+  /// @param name The name of the portal designator node. Used for debugging
+  ///             the node tree only.
+  /// @param callback An optional callback that receives the node as an argument
+  /// @return Reference to the newly created portal designator blueprint node
+  PortalDesignatorBlueprintNode& addPortalDesignator(
+      const std::string& name,
+      const std::function<void(PortalDesignatorBlueprintNode& portals)>&
           callback = {});
 
   /// Convenience method for creating a @ref Acts::Experimental::LayerBlueprintNode.
