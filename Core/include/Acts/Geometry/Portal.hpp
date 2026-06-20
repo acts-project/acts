@@ -16,7 +16,9 @@
 
 #include <exception>
 #include <memory>
+#include <span>
 #include <string>
+#include <vector>
 
 namespace Acts {
 
@@ -255,6 +257,16 @@ class Portal {
   /// @return The portal surface
   RegularSurface& surface();
 
+  /// Add a string tag to this portal. Tags are used to look the portal up from
+  /// the final @ref Acts::TrackingGeometry (e.g. the portal connecting the
+  /// tracker and the calorimeter).
+  /// @param tag The tag to add
+  void addTag(std::string tag);
+
+  /// Access the tags assigned to this portal.
+  /// @return A view of the tags assigned to this portal
+  std::span<const std::string> tags() const;
+
  private:
   /// Helper to check surface equivalence without checking material status. This
   /// is needed because we allow fusing portals with surfaces that are
@@ -272,6 +284,8 @@ class Portal {
 
   std::unique_ptr<PortalLinkBase> m_alongNormal;
   std::unique_ptr<PortalLinkBase> m_oppositeNormal;
+
+  std::vector<std::string> m_tags;
 };
 
 }  // namespace Acts
