@@ -1,3 +1,10 @@
+# TEMP: GitLab CI fully disabled for physmon testing (the GitHub physmon job is
+# used instead). This never-rule prevents any pipeline from being created.
+# Revert (drop this commit) before merging. DO NOT MERGE.
+workflow:
+  rules:
+    - when: never
+
 variables:
   CCACHE_DIR: ${CI_PROJECT_DIR}/ccache
   CCACHE_MAXSIZE: 2G
@@ -299,7 +306,7 @@ linux_physmon:
    - !reference [.spack_cache, cache]
 
   script:
-    - apt-get update && apt-get install -y git-lfs time
+    - apt-get update && apt-get install -y git-lfs
 
     - git clone $CLONE_URL src
     - cd src
@@ -308,10 +315,12 @@ linux_physmon:
     - source .env
     - cd ..
 
+    - uv tool install 'snakemake>=9,<10'
+
     - git config --global safe.directory "$GITHUB_WORKSPACE"
     - source build/this_acts_withdeps.sh
     - cd src
-    - CI/physmon/phys_perf_mon.sh all physmon
+    - snakemake -s CI/physmon/Snakefile --cores 4 -p all
 
   after_script:
    - !reference [.spack_cleanup, after_script]

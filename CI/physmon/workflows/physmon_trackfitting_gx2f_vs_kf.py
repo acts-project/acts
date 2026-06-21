@@ -38,7 +38,7 @@ digiConfigFile = setup.digiConfig
 with tempfile.TemporaryDirectory() as temp:
     s = acts.examples.Sequencer(
         events=100000,
-        numThreads=-1,
+        numThreads=setup.threads,
         logLevel=acts.logging.INFO,
         skip=0,
         trackFpes=False,

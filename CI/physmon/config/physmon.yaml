@@ -1,0 +1,112 @@
+# Job catalog for the Snakemake-based physmon workflow.
+#
+# Three top-level sections:
+#   - comparisons: each entry is one histcmp call. Optionally carries a `plot`
+#     sub-config describing how to derive a `_hist.root` input from a raw ntuple
+#     via Examples/Scripts/generic_plotter.py.
+#   - trackfinding: short per-generator config for trackfinding workflows; the
+#     Snakefile expands each entry into the standard pack of comparisons (see
+#     TRACKFINDING_BASE / TRACKFINDING_EXTRAS in the Snakefile).
+#
+# Generator metadata (variants, upstream deps) lives directly in the Snakefile
+# next to the rule definitions, not here.
+#
+# Paths are relative:
+#   - current files     -> {OUTDIR}/data/<path>
+#   - reference files   -> CI/physmon/reference/<path>   (unless reference_in: outdir)
+#   - html/plots output -> {OUTDIR}/html/<path>          (.root replaced with .html)
+#
+# `mode` groups comparisons for the Snakefile's per-mode meta-targets.
+
+comparisons:
+  # ---- simulation ---------------------------------------------------------
+  - title: "Particles fatras"
+    current: simulation/particles_fatras_hist.root
+    mode: simulation
+    plot:
+      from: simulation/particles_fatras.root
+      tree: particles
+      config: simulation.yml
+
+  - title: "Particles geant4"
+    current: simulation/particles_geant4_hist.root
+    mode: simulation
+    plot:
+      from: simulation/particles_geant4.root
+      tree: particles
+      config: simulation.yml
+
+  - title: "Particles ttbar"
+    current: simulation/particles_ttbar_hist.root
+    mode: simulation
+    plot:
+      from: simulation/particles_ttbar.root
+      tree: particles
+      config: pythia8_ttbar.yml
+
+  - title: "Vertices ttbar"
+    current: simulation/vertices_ttbar_hist.root
+    mode: simulation
+    plot:
+      from: simulation/vertices_ttbar.root
+      tree: vertices
+      config: pythia8_ttbar.yml
+
+  # ---- trackfitting / trackrefitting --------------------------------------
+  - title: "Truth tracking (KF)"
+    current: trackfitting_kf/performance_trackfitting.root
+    config: trackfitting_kf.yml
+    mode: kf
+
+  - title: "Truth tracking (GSF)"
+    current: trackfitting_gsf/performance_trackfitting.root
+    config: trackfitting_gsf.yml
+    mode: gsf
+
+  - title: "Truth tracking (GX2F)"
+    current: trackfitting_gx2f/performance_trackfitting.root
+    config: trackfitting_gx2f.yml
+    mode: gx2f
+
+  - title: "Truth tracking (KF refit)"
+    current: trackrefitting_kf/performance_trackrefitting.root
+    config: trackfitting_kf.yml
+    mode: refit_kf
+
+  - title: "Truth tracking (GSF refit)"
+    current: trackrefitting_gsf/performance_trackrefitting.root
+    config: trackfitting_gsf.yml
+    mode: refit_gsf
+
+  # ---- gx2f vs kf (special: reference is generated, not in reference/) ---
+  - title: "Comparison - Truth tracking (GX2F vs KF)"
+    current: trackfitting_gx2f_vs_kf/performance_trackfitting_gx2f.root
+    reference: trackfitting_gx2f_vs_kf/performance_trackfitting_kf.root
+    reference_in: outdir
+    config: info_only.yml
+    label_reference: KF
+    label_monitored: GX2F
+    mode: gx2f_vs_kf
+
+
+# Trackfinding workflows. Each entry is expanded by the Snakefile into the
+# standard {seeding, finding, fitting, tracksummary} pack of comparisons, plus
+# the listed `extras`. See TRACKFINDING_BASE / TRACKFINDING_EXTRAS in the
+# Snakefile for the exact pack and what each extras key adds.
+#
+# Variant-aware generators (currently just trackfinding_1muon) use `label_fmt`
+# with a `{variant_label}` placeholder; the variant set and labels are defined
+# in TRACKFINDING_1MUON_VARIANTS in the Snakefile.
+trackfinding:
+  trackfinding_1muon:
+    label_fmt: "trackfinding | single muon | {variant_label}"
+
+  trackfinding_4muon_50vertices:
+    label: "trackfinding | 4 muon x 50 vertices | default seeding"
+    extras: [ambisolver, vertexing_ivf, vertexing_amvf]
+    vertexing_config: vertexing_4muon_50vertices.yml
+
+  trackfinding_ttbar_pu200:
+    label: "trackfinding | ttbar with 200 pileup | default seeding"
+    extras: [ambisolver, ml_solver, vertexing_amvf]
+    vertexing_config: vertexing_ttbar_pu200.yml
