@@ -22,7 +22,7 @@ cycler==0.12.1
     # via matplotlib
 fonttools==4.63.0
     # via matplotlib
-fsspec==2026.4.0
+fsspec==2026.6.0
     # via
     #   awkward
     #   uproot
@@ -87,7 +87,7 @@ rich==15.0.0
     # via
     #   -r Examples/Scripts/requirements.in
     #   typer
-scipy==1.17.1
+scipy==1.18.0
     # via -r Examples/Scripts/requirements.in
 shellingham==1.5.4
     # via typer
