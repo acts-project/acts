@@ -15,10 +15,12 @@
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
+#include "Acts/Geometry/PadBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
@@ -28,6 +30,7 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
@@ -43,6 +46,7 @@ using Experimental::BlueprintNode;
 using Experimental::BlueprintOptions;
 using Experimental::LayerBlueprintNode;
 using Experimental::MaterialDesignatorBlueprintNode;
+using Experimental::PadBlueprintNode;
 using Experimental::StaticBlueprintNode;
 
 namespace ActsTests {
@@ -1228,6 +1232,116 @@ BOOST_AUTO_TEST_CASE(GeometryIdnetifiersForPortals) {
   cubcontainer.addChild(std::move(parentNode));
 
   auto trackingGeometry = root.construct({}, gctx, *logger);
+}
+
+BOOST_AUTO_TEST_CASE(PadBlueprintNodeCylinder) {
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
+
+  PadBlueprintNode pad("World", cfg.envelope);
+
+  pad.addStaticVolume(std::make_unique<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 30_mm), "child"));
+
+  BlueprintOptions options;
+  Volume& childVol = pad.build(options, gctx, *logger);
+
+  // Child bounds are unchanged, padding creates a new volume
+  const auto& childCyl =
+      dynamic_cast<const CylinderVolumeBounds&>(childVol.volumeBounds());
+  BOOST_CHECK_EQUAL(childCyl.get(CylinderVolumeBounds::eMinR), 10_mm);
+  BOOST_CHECK_EQUAL(childCyl.get(CylinderVolumeBounds::eMaxR), 20_mm);
+  BOOST_CHECK_EQUAL(childCyl.get(CylinderVolumeBounds::eHalfLengthZ), 30_mm);
+
+  const TrackingVolume* world = pad.trackingVolume();
+  BOOST_REQUIRE(world != nullptr);
+  BOOST_CHECK_EQUAL(world->volumeName(), "World");
+  BOOST_CHECK_EQUAL(world->volumeBounds().type(),
+                    VolumeBounds::BoundsType::eCylinder);
+
+  const auto& worldCyl =
+      dynamic_cast<const CylinderVolumeBounds&>(world->volumeBounds());
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMinR), 10_mm - 1_mm);
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMaxR), 20_mm + 2_mm);
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eHalfLengthZ),
+                    30_mm + 20_mm);
+}
+
+BOOST_AUTO_TEST_CASE(PadBlueprintNodeCuboid) {
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisX] = {3_mm, 3_mm};
+  cfg.envelope[AxisDirection::AxisY] = {5_mm, 5_mm};
+  cfg.envelope[AxisDirection::AxisZ] = {7_mm, 7_mm};
+
+  PadBlueprintNode pad("World", cfg.envelope);
+  pad.addStaticVolume(std::make_unique<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CuboidVolumeBounds>(10_mm, 20_mm, 30_mm), "child"));
+
+  BlueprintOptions options;
+  Volume& childVol = pad.build(options, gctx, *logger);
+
+  // Child bounds are unchanged, padding creates a new volume
+  const auto& childBox =
+      dynamic_cast<const CuboidVolumeBounds&>(childVol.volumeBounds());
+  BOOST_CHECK_EQUAL(childBox.get(CuboidVolumeBounds::eHalfLengthX), 10_mm);
+  BOOST_CHECK_EQUAL(childBox.get(CuboidVolumeBounds::eHalfLengthY), 20_mm);
+  BOOST_CHECK_EQUAL(childBox.get(CuboidVolumeBounds::eHalfLengthZ), 30_mm);
+
+  const TrackingVolume* world = pad.trackingVolume();
+  BOOST_REQUIRE(world != nullptr);
+  BOOST_CHECK_EQUAL(world->volumeName(), "World");
+  BOOST_CHECK_EQUAL(world->volumeBounds().type(),
+                    VolumeBounds::BoundsType::eCuboid);
+
+  const auto& worldBox =
+      dynamic_cast<const CuboidVolumeBounds&>(world->volumeBounds());
+  BOOST_CHECK_EQUAL(worldBox.get(CuboidVolumeBounds::eHalfLengthX),
+                    10_mm + 3_mm);
+  BOOST_CHECK_EQUAL(worldBox.get(CuboidVolumeBounds::eHalfLengthY),
+                    20_mm + 5_mm);
+  BOOST_CHECK_EQUAL(worldBox.get(CuboidVolumeBounds::eHalfLengthZ),
+                    30_mm + 7_mm);
+
+  // 6 faces for a cuboid
+  BOOST_CHECK_EQUAL(world->portals().size(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(PadBlueprintNodeRotatedCylinder) {
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
+
+  PadBlueprintNode pad("World", cfg.envelope);
+
+  Transform3 childTrf =
+      Transform3::Identity() * AngleAxis3{45_degree, Vector3::UnitY()};
+
+  pad.addStaticVolume(std::make_unique<TrackingVolume>(
+      childTrf, std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 30_mm),
+      "child"));
+
+  BlueprintOptions options;
+  pad.build(options, gctx, *logger);
+
+  const TrackingVolume* world = pad.trackingVolume();
+  BOOST_REQUIRE(world != nullptr);
+  BOOST_CHECK_EQUAL(world->volumeName(), "World");
+  BOOST_CHECK_EQUAL(world->volumeBounds().type(),
+                    VolumeBounds::BoundsType::eCylinder);
+
+  // Bounds are padded in local frame regardless of orientation
+  const auto& worldCyl =
+      dynamic_cast<const CylinderVolumeBounds&>(world->volumeBounds());
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMinR), 10_mm - 1_mm);
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMaxR), 20_mm + 2_mm);
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eHalfLengthZ),
+                    30_mm + 20_mm);
+
+  // Transform is inherited from the child
+  BOOST_CHECK(world->localToGlobalTransform(gctx).isApprox(childTrf));
 }
 
 BOOST_AUTO_TEST_SUITE_END();

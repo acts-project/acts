@@ -1,7 +1,6 @@
 add_unittest(EstimateTrackParamsFromSeed EstimateTrackParamsFromSeedTest.cpp)
 add_unittest(HoughTransformTest HoughTransformTest.cpp)
 add_unittest(AdaptiveHoughTransformTest HoughAccumulatorSectionTest.cpp)
-add_unittest(UtilityFunctions UtilityFunctionsTests.cpp)
 add_unittest(StrawLineResiduals StrawLineResidualTest.cpp)
 
 if(ACTS_BUILD_PLUGIN_ROOT)

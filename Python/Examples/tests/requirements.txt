@@ -22,7 +22,7 @@ filelock==3.29.4
     # via -r Python/Examples/tests/requirements.in
 fonttools==4.63.0
     # via matplotlib
-fsspec==2026.4.0
+fsspec==2026.6.0
     # via
     #   awkward
     #   uproot
@@ -75,7 +75,7 @@ pyhepmc==2.16.1
     # via -r Python/Examples/tests/requirements.in
 pyparsing==3.3.2
     # via matplotlib
-pytest==9.1.0
+pytest==9.1.1
     # via
     #   -r Python/Examples/tests/requirements.in
     #   pytest-check

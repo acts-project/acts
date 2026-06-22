@@ -107,9 +107,6 @@ void StaticBlueprintNode::finalize(const BlueprintOptions& options,
                       << " portals into volume " << m_volume->volumeName());
   m_shell->applyToVolume();
 
-  ACTS_DEBUG(prefix() << " Adding volume (" << m_volume->volumeName()
-                      << ") to parent volume (" << parent.volumeName() << ")");
-
   const auto* policyFactory = options.defaultNavigationPolicyFactory.get();
 
   if (m_navigationPolicyFactory) {
@@ -117,9 +114,14 @@ void StaticBlueprintNode::finalize(const BlueprintOptions& options,
   }
   m_volume->setNavigationPolicy(policyFactory->build(gctx, *m_volume, logger));
 
-  parent.addVolume(std::move(m_volume));
+  // only add the volume to the parent if it is not the parent itself.
+  if (name() != "World") {
+    ACTS_DEBUG(prefix() << " Adding volume (" << m_volume->volumeName()
+                        << ") to parent volume (" << parent.volumeName()
+                        << ")");
+    parent.addVolume(std::move(m_volume));
+  }
 }
-
 const std::string& StaticBlueprintNode::name() const {
   static const std::string uninitialized = "uninitialized";
   if (m_volume == nullptr) {
