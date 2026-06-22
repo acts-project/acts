@@ -5,8 +5,6 @@ WORKSPACE=$1
 git config --global --add safe.directory $WORKSPACE
 
 pushd $WORKSPACE
-git config --unset-all core.hooksPath
-pre-commit install
 # Signing does not seem to work
 git config --add commit.gpgsign false
 popd
@@ -25,8 +23,8 @@ chmod +x $HOME/.local/bin/build_acts
 
 cat > /etc/motd <<EOF
 =============== ACTS dev container with dependencies ===============
-- If you want to run with ODD, you'll need to run:
-    git submodule init && git submodule update
+- To enable git pre-commit hooks:
+    prek install
 - Configure:
     configure_acts
 - Build:
