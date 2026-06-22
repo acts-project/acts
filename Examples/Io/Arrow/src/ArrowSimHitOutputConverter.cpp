@@ -8,16 +8,17 @@
 
 #include "ActsExamples/Io/Arrow/ArrowSimHitOutputConverter.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Arrow/ArrowUtil.hpp"
 
 #include <array>
-#include <cmath>
 #include <cstdint>
 #include <limits>
 #include <memory>
 #include <stdexcept>
+#include <unordered_map>
+#include <vector>
 
 #include <arrow/api.h>
 
@@ -47,21 +48,8 @@ ArrowSimHitOutputConverter::ArrowSimHitOutputConverter(
     throw std::invalid_argument("detectorResolver must be set");
   }
 
-  // The digitized x,y,z columns require both (clusters, map) — partial wiring
-  // would silently produce stale or NaN positions, so reject it up front.
-  const bool hasClusters = !m_cfg.inputClusters.empty();
-  const bool hasMap = !m_cfg.inputSimHitMeasurementsMap.empty();
-  if (hasClusters != hasMap) {
-    throw std::invalid_argument(
-        "ArrowSimHitOutputConverter: inputClusters and "
-        "inputSimHitMeasurementsMap must both be set or both be unset");
-  }
-
   m_inputSimHits.initialize(m_cfg.inputSimHits);
   m_inputParticles.maybeInitialize(m_cfg.inputParticles);
-  m_inputClusters.maybeInitialize(m_cfg.inputClusters);
-  m_inputSimHitMeasurementsMap.maybeInitialize(
-      m_cfg.inputSimHitMeasurementsMap);
   m_outputTable.initialize(m_cfg.outputTable);
 }
 
@@ -97,25 +85,25 @@ ProcessCode ArrowSimHitOutputConverter::execute(
   const SimHitContainer& simHits = m_inputSimHits(ctx);
   const SimParticleContainer* particles =
       m_inputParticles.isInitialized() ? &m_inputParticles(ctx) : nullptr;
-  const ClusterContainer* clusters =
-      m_inputClusters.isInitialized() ? &m_inputClusters(ctx) : nullptr;
-  const SimHitMeasurementsMap* simHitMeasMap =
-      m_inputSimHitMeasurementsMap.isInitialized()
-          ? &m_inputSimHitMeasurementsMap(ctx)
-          : nullptr;
 
   auto* pool = arrow::default_memory_pool();
 
-  arrow::ListBuilder xList(pool, std::make_shared<arrow::FloatBuilder>(pool));
-  arrow::ListBuilder yList(pool, std::make_shared<arrow::FloatBuilder>(pool));
-  arrow::ListBuilder zList(pool, std::make_shared<arrow::FloatBuilder>(pool));
+  // Truth table: one entry per sim-hit, ALL sim-hits in container order. The
+  // entry's position is the sim-hit id that the measurement table references
+  // via simhit_ids.
   arrow::ListBuilder txList(pool, std::make_shared<arrow::FloatBuilder>(pool));
   arrow::ListBuilder tyList(pool, std::make_shared<arrow::FloatBuilder>(pool));
   arrow::ListBuilder tzList(pool, std::make_shared<arrow::FloatBuilder>(pool));
-  arrow::ListBuilder timeList(pool,
-                              std::make_shared<arrow::FloatBuilder>(pool));
+  arrow::ListBuilder ttList(pool, std::make_shared<arrow::FloatBuilder>(pool));
+  arrow::ListBuilder tpxList(pool, std::make_shared<arrow::FloatBuilder>(pool));
+  arrow::ListBuilder tpyList(pool, std::make_shared<arrow::FloatBuilder>(pool));
+  arrow::ListBuilder tpzList(pool, std::make_shared<arrow::FloatBuilder>(pool));
+  arrow::ListBuilder teList(pool, std::make_shared<arrow::FloatBuilder>(pool));
+  arrow::ListBuilder deList(pool, std::make_shared<arrow::FloatBuilder>(pool));
   arrow::ListBuilder pidList(pool,
                              std::make_shared<arrow::UInt64Builder>(pool));
+  arrow::ListBuilder hidxList(pool,
+                              std::make_shared<arrow::UInt16Builder>(pool));
   arrow::ListBuilder detList(pool, std::make_shared<arrow::UInt8Builder>(pool));
   arrow::ListBuilder volList(pool, std::make_shared<arrow::UInt8Builder>(pool));
   arrow::ListBuilder layList(pool,
@@ -123,91 +111,65 @@ ProcessCode ArrowSimHitOutputConverter::execute(
   arrow::ListBuilder surfList(pool,
                               std::make_shared<arrow::UInt32Builder>(pool));
 
-  check(xList.Append(), "open x list");
-  check(yList.Append(), "open y list");
-  check(zList.Append(), "open z list");
-  check(txList.Append(), "open true_x list");
-  check(tyList.Append(), "open true_y list");
-  check(tzList.Append(), "open true_z list");
-  check(timeList.Append(), "open time list");
-  check(pidList.Append(), "open particle_id list");
-  check(detList.Append(), "open detector list");
-  check(volList.Append(), "open volume_id list");
-  check(layList.Append(), "open layer_id list");
-  check(surfList.Append(), "open surface_id list");
+  std::array<arrow::ListBuilder*, 15> all = {
+      &txList,  &tyList,  &tzList, &ttList,   &tpxList,
+      &tpyList, &tpzList, &teList, &deList,   &pidList,
+      &hidxList, &detList, &volList, &layList, &surfList};
+  for (auto* b : all) {
+    check(b->Append(), "open per-event list");
+  }
 
-  // TODO: Keep typed child builder handles when constructing the list builders
-  // instead of recovering them through value_builder() and static_cast.
-  auto* xV = static_cast<arrow::FloatBuilder*>(xList.value_builder());
-  auto* yV = static_cast<arrow::FloatBuilder*>(yList.value_builder());
-  auto* zV = static_cast<arrow::FloatBuilder*>(zList.value_builder());
   auto* txV = static_cast<arrow::FloatBuilder*>(txList.value_builder());
   auto* tyV = static_cast<arrow::FloatBuilder*>(tyList.value_builder());
   auto* tzV = static_cast<arrow::FloatBuilder*>(tzList.value_builder());
-  auto* timeV = static_cast<arrow::FloatBuilder*>(timeList.value_builder());
+  auto* ttV = static_cast<arrow::FloatBuilder*>(ttList.value_builder());
+  auto* tpxV = static_cast<arrow::FloatBuilder*>(tpxList.value_builder());
+  auto* tpyV = static_cast<arrow::FloatBuilder*>(tpyList.value_builder());
+  auto* tpzV = static_cast<arrow::FloatBuilder*>(tpzList.value_builder());
+  auto* teV = static_cast<arrow::FloatBuilder*>(teList.value_builder());
+  auto* deV = static_cast<arrow::FloatBuilder*>(deList.value_builder());
   auto* pidV = static_cast<arrow::UInt64Builder*>(pidList.value_builder());
+  auto* hidxV = static_cast<arrow::UInt16Builder*>(hidxList.value_builder());
   auto* detV = static_cast<arrow::UInt8Builder*>(detList.value_builder());
   auto* volV = static_cast<arrow::UInt8Builder*>(volList.value_builder());
   auto* layV = static_cast<arrow::UInt16Builder*>(layList.value_builder());
   auto* surfV = static_cast<arrow::UInt32Builder*>(surfList.value_builder());
 
-  const auto n = simHits.size();
-  check(xV->Reserve(n), "reserve x");
-  check(yV->Reserve(n), "reserve y");
-  check(zV->Reserve(n), "reserve z");
-  check(txV->Reserve(n), "reserve true_x");
-  check(tyV->Reserve(n), "reserve true_y");
-  check(tzV->Reserve(n), "reserve true_z");
-  check(timeV->Reserve(n), "reserve time");
-  check(pidV->Reserve(n), "reserve particle_id");
-  check(detV->Reserve(n), "reserve detector");
-  check(volV->Reserve(n), "reserve volume_id");
-  check(layV->Reserve(n), "reserve layer_id");
-  check(surfV->Reserve(n), "reserve surface_id");
+  const std::size_t nHits = simHits.size();
+  check(txV->Reserve(nHits), "reserve true_x");
+  check(tyV->Reserve(nHits), "reserve true_y");
+  check(tzV->Reserve(nHits), "reserve true_z");
+  check(ttV->Reserve(nHits), "reserve true_time");
+  check(tpxV->Reserve(nHits), "reserve tpx");
+  check(tpyV->Reserve(nHits), "reserve tpy");
+  check(tpzV->Reserve(nHits), "reserve tpz");
+  check(teV->Reserve(nHits), "reserve tE");
+  check(deV->Reserve(nHits), "reserve dE");
+  check(pidV->Reserve(nHits), "reserve particle_id");
+  check(hidxV->Reserve(nHits), "reserve hit_index");
+  check(detV->Reserve(nHits), "reserve detector");
+  check(volV->Reserve(nHits), "reserve volume_id");
+  check(layV->Reserve(nHits), "reserve layer_id");
+  check(surfV->Reserve(nHits), "reserve surface_id");
 
-  // Sentinel matches the convention used by ArrowTrackOutputConverter for
-  // unmatched rows.
-  // @TODO: Turn into explicit optionals?
   constexpr std::uint64_t kUnmatched =
       std::numeric_limits<std::uint64_t>::max();
-  constexpr float kNaN = std::numeric_limits<float>::quiet_NaN();
+  constexpr std::uint16_t kNoIndex = std::numeric_limits<std::uint16_t>::max();
 
-  SimHitIndex hitIdx = 0;
   for (const auto& hit : simHits) {
     const auto& pos = hit.fourPosition();
-    const float tx = static_cast<float>(pos.x() / Acts::UnitConstants::mm);
-    const float ty = static_cast<float>(pos.y() / Acts::UnitConstants::mm);
-    const float tz = static_cast<float>(pos.z() / Acts::UnitConstants::mm);
-    const float t = static_cast<float>(pos.w() / Acts::UnitConstants::mm);
+    txV->UnsafeAppend(static_cast<float>(pos.x() / Acts::UnitConstants::mm));
+    tyV->UnsafeAppend(static_cast<float>(pos.y() / Acts::UnitConstants::mm));
+    tzV->UnsafeAppend(static_cast<float>(pos.z() / Acts::UnitConstants::mm));
+    ttV->UnsafeAppend(static_cast<float>(pos.w() / Acts::UnitConstants::mm));
 
-    txV->UnsafeAppend(tx);
-    tyV->UnsafeAppend(ty);
-    tzV->UnsafeAppend(tz);
-    timeV->UnsafeAppend(t);
-
-    // Digitized global position: reuse the precomputed global position of the
-    // first matched cluster. Clusters are indexed one-to-one with
-    // measurements, so the sim-hit → measurement map doubles as a sim-hit →
-    // cluster map. Multiple measurements per hit would only happen if a hit
-    // migrated across modules during clustering; we take the first
-    // deterministically and leave the rest for a future "merged hits"
-    // extension.
-    float gx = kNaN;
-    float gy = kNaN;
-    float gz = kNaN;
-    if (simHitMeasMap != nullptr && clusters != nullptr) {
-      auto range = simHitMeasMap->equal_range(hitIdx);
-      if (range.first != range.second) {
-        const Index clusterIdx = range.first->second;
-        const Acts::Vector3& global = (*clusters)[clusterIdx].globalPosition;
-        gx = static_cast<float>(global.x() / Acts::UnitConstants::mm);
-        gy = static_cast<float>(global.y() / Acts::UnitConstants::mm);
-        gz = static_cast<float>(global.z() / Acts::UnitConstants::mm);
-      }
-    }
-    xV->UnsafeAppend(gx);
-    yV->UnsafeAppend(gy);
-    zV->UnsafeAppend(gz);
+    const auto& mom = hit.momentum4Before();
+    tpxV->UnsafeAppend(static_cast<float>(mom.x() / Acts::UnitConstants::GeV));
+    tpyV->UnsafeAppend(static_cast<float>(mom.y() / Acts::UnitConstants::GeV));
+    tpzV->UnsafeAppend(static_cast<float>(mom.z() / Acts::UnitConstants::GeV));
+    teV->UnsafeAppend(static_cast<float>(mom.w() / Acts::UnitConstants::GeV));
+    deV->UnsafeAppend(
+        static_cast<float>(hit.depositedEnergy() / Acts::UnitConstants::GeV));
 
     std::uint64_t pid = kUnmatched;
     if (particles != nullptr) {
@@ -219,17 +181,19 @@ ProcessCode ArrowSimHitOutputConverter::execute(
     }
     pidV->UnsafeAppend(pid);
 
+    // Hit index along the particle trajectory (ordering for consumers); -1
+    // (unset) maps to the uint16 sentinel.
+    const std::int32_t idx = hit.index();
+    hidxV->UnsafeAppend(
+        (idx < 0 || idx > static_cast<std::int32_t>(kNoIndex))
+            ? kNoIndex
+            : static_cast<std::uint16_t>(idx));
+
     const auto gid = hit.geometryId();
+    detV->UnsafeAppend(m_cfg.detectorResolver(gid));
     volV->UnsafeAppend(static_cast<std::uint8_t>(gid.volume()));
     layV->UnsafeAppend(static_cast<std::uint16_t>(gid.layer()));
     surfV->UnsafeAppend(static_cast<std::uint32_t>(gid.sensitive()));
-    // The default `detectorResolver` reads the geometry id's
-    // `extra` byte, which we rely on geometry construction to stamp with a
-    // per-surface subsystem id. By default, every hit gets `extra() == 0`
-    // unless the user supplies a custom resolver.
-    detV->UnsafeAppend(m_cfg.detectorResolver(gid));
-
-    ++hitIdx;
   }
 
   auto finish = [](arrow::ListBuilder& b) {
@@ -239,9 +203,10 @@ ProcessCode ArrowSimHitOutputConverter::execute(
   };
 
   std::vector<std::shared_ptr<arrow::Array>> arrays = {
-      finish(xList),   finish(yList),   finish(zList),    finish(txList),
-      finish(tyList),  finish(tzList),  finish(timeList), finish(pidList),
-      finish(detList), finish(volList), finish(layList),  finish(surfList),
+      finish(txList),  finish(tyList),  finish(tzList),  finish(ttList),
+      finish(tpxList), finish(tpyList), finish(tpzList), finish(teList),
+      finish(deList),  finish(pidList), finish(hidxList), finish(detList),
+      finish(volList), finish(layList), finish(surfList),
   };
 
   auto table =

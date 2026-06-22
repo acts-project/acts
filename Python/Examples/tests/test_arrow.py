@@ -293,15 +293,54 @@ def test_particle_gun_fatras(tmp_path, fatras):
     _assert_particles_parquet(tmp_path / "particles_simulated_arrow", nevents)
 
 
-SIMHIT_FIELDS = {
+# tracker_hits (RECO): one value per measurement (flat list<scalar>) ...
+TRACKER_HITS_FLAT_FIELDS = {
+    "loc0",
+    "loc1",
+    "var_loc0",
+    "var_loc1",
+    "time",
+    "var_time",
+    "subspace",
     "x",
     "y",
     "z",
+    "detector",
+    "volume_id",
+    "layer_id",
+    "surface_id",
+    "size_loc0",
+    "size_loc1",
+    "n_channels",
+    "sum_activation",
+    "local_eta",
+    "local_phi",
+    "global_eta",
+    "global_phi",
+    "eta_angle",
+    "phi_angle",
+}
+# ... plus the nested truth LINKS (list<list<scalar>>): row indices into the
+# particle table and the tracker_simhits table respectively.
+TRACKER_HITS_NESTED_FIELDS = {
+    "particle_ids",
+    "simhit_ids",
+}
+TRACKER_HITS_FIELDS = TRACKER_HITS_FLAT_FIELDS | TRACKER_HITS_NESTED_FIELDS
+
+# tracker_simhits (TRUTH): one value per sim-hit, ALL sim-hits, flat columns.
+TRACKER_SIMHITS_FIELDS = {
     "true_x",
     "true_y",
     "true_z",
-    "time",
+    "true_time",
+    "tpx",
+    "tpy",
+    "tpz",
+    "tE",
+    "dE",
     "particle_id",
+    "hit_index",
     "detector",
     "volume_id",
     "layer_id",
@@ -309,36 +348,45 @@ SIMHIT_FIELDS = {
 }
 
 
-def _add_simhit_arrow_writer(
+def _add_tracker_arrow_writers(
     s: Sequencer,
     outputDir: Path,
-    table_key: str = "simhits_arrow",
+    trackingGeometry,
     *,
-    withClusters: bool,
     eventsPerShard: int = 2,
 ) -> None:
-    """Wire an ArrowSimHitOutputConverter + ParquetWriter for the simhits.
+    """Wire the two tracker-table converters + one ParquetWriter.
 
-    @param withClusters: if True, feed the cluster container and the
-        sim-hit→measurement map so the digitized x,y,z columns are filled from
-        the precomputed Cluster::globalPosition; otherwise leave them unwired so
-        those columns come out NaN.
+    `ArrowSimHitOutputConverter` emits the TRUTH table (one row per sim-hit,
+    ALL sim-hits); `ArrowMeasurementOutputConverter` emits the RECO table (one
+    row per measurement) whose `simhit_ids` index the truth table. Both need
+    collections produced/owned by the fatras+digitization fixture.
     """
-    from acts.arrow import simHitSchema
-    from acts.examples.arrow import ArrowSimHitOutputConverter, ParquetWriter
-
-    kwargs = {}
-    if withClusters:
-        kwargs["inputClusters"] = "clusters"
-        kwargs["inputSimHitMeasurementsMap"] = "simhit_measurements_map"
+    from acts.arrow import measurementSchema, simHitSchema
+    from acts.examples.arrow import (
+        ArrowMeasurementOutputConverter,
+        ArrowSimHitOutputConverter,
+        ParquetWriter,
+    )
 
     s.addAlgorithm(
         ArrowSimHitOutputConverter(
             level=acts.logging.INFO,
             inputSimHits="simhits",
             inputParticles="particles_simulated",
-            outputTable=table_key,
-            **kwargs,
+            outputTable="tracker_simhits",
+        )
+    )
+    s.addAlgorithm(
+        ArrowMeasurementOutputConverter(
+            level=acts.logging.INFO,
+            inputMeasurements="measurements",
+            inputClusters="clusters",
+            inputSimHits="simhits",
+            inputParticles="particles_simulated",
+            inputSimHitMeasurementsMap="simhit_measurements_map",
+            trackingGeometry=trackingGeometry,
+            outputTable="tracker_hits",
         )
     )
 
@@ -346,132 +394,147 @@ def _add_simhit_arrow_writer(
         ParquetWriter(
             level=acts.logging.INFO,
             outputDir=str(outputDir),
-            collections={table_key: table_key},
-            expectedSchemas={table_key: simHitSchema()},
+            collections={
+                "tracker_hits": "tracker_hits",
+                "tracker_simhits": "tracker_simhits",
+            },
+            expectedSchemas={
+                "tracker_hits": measurementSchema(),
+                "tracker_simhits": simHitSchema(),
+            },
             eventsPerShard=eventsPerShard,
         )
     )
 
 
-def _assert_simhits_parquet(
-    directory: Path, expected_events: int, *, expect_digitized: bool
-) -> None:
-    """Verify a simhits dataset directory: schema, row count, and the
-    digitized-position semantics.
-
-    The truth columns (true_x/true_y/true_z/time) are always finite. The
-    digitized columns (x/y/z) are finite only for hits matched to a cluster
-    when clusters were wired in; otherwise every value is NaN.
-    """
+def _read_dataset(directory: Path, expected_fields, expected_events: int):
     assert directory.exists(), f"{directory} does not exist"
-    assert directory.is_dir(), f"{directory} is not a directory"
-
     fragments = sorted(directory.glob("*.parquet"))
     assert fragments, f"{directory} contains no parquet shards"
-    for f in fragments:
-        assert f.stat().st_size > 0, f"{f} is empty"
 
     @with_pyarrow
     def _check(pa, pq):
-        first_schema = pq.ParquetFile(str(fragments[0])).schema_arrow
-        names = {first_schema.field(i).name for i in range(len(first_schema))}
+        schema = pq.ParquetFile(str(fragments[0])).schema_arrow
+        names = {schema.field(i).name for i in range(len(schema))}
         assert "event_id" in names, f"{directory.name}: event_id column missing"
-        missing = SIMHIT_FIELDS - names
+        missing = expected_fields - names
         assert not missing, f"{directory.name}: missing fields {missing}"
-        for field_name in SIMHIT_FIELDS:
-            ftype = first_schema.field(field_name).type
-            assert pa.types.is_list(
-                ftype
-            ), f"{directory.name}: field '{field_name}' should be list, got {ftype}"
-
         table = pq.ParquetDataset(str(directory)).read()
         assert table.num_rows == expected_events, (
             f"{directory.name}: expected {expected_events} events, "
             f"got {table.num_rows}"
         )
+        return table
 
-        x = table.column("x").to_pylist()
-        y = table.column("y").to_pylist()
-        z = table.column("z").to_pylist()
-        tx = table.column("true_x").to_pylist()
-        ty = table.column("true_y").to_pylist()
-        tz = table.column("true_z").to_pylist()
+    return _check
 
-        total_hits = sum(len(row) for row in tx)
-        assert total_hits > 0, f"{directory.name}: no sim hits across any event"
 
-        # Truth position is always written, so it must be finite everywhere.
-        for col in (tx, ty, tz):
-            for row in col:
-                for v in row:
-                    assert math.isfinite(v), f"{directory.name}: non-finite truth {v}"
+def test_measurement_table_reco_only(tmp_path, fatras, trk_geo):
+    """The measurement converter runs without truth or clusters wired (data /
+    reco-only mode): link columns come out as empty lists, shape columns as
+    zeros, and the reco columns are unchanged."""
+    from acts.arrow import measurementSchema
+    from acts.examples.arrow import ArrowMeasurementOutputConverter, ParquetWriter
 
-        n_digitized = 0
-        for ex, ey, ez, etx, ety, etz in zip(x, y, z, tx, ty, tz):
-            for xv, yv, zv, txv, tyv, tzv in zip(ex, ey, ez, etx, ety, etz):
-                if not expect_digitized:
-                    assert (
-                        math.isnan(xv) and math.isnan(yv) and math.isnan(zv)
-                    ), f"{directory.name}: expected NaN digitized pos, got ({xv},{yv},{zv})"
-                    continue
-                # With clusters wired, matched hits carry a finite digitized
-                # position; unmatched ones stay NaN. A finite x must come with a
-                # finite y and z.
-                if math.isnan(xv):
-                    continue
-                n_digitized += 1
-                assert math.isfinite(yv) and math.isfinite(
-                    zv
-                ), f"{directory.name}: partial digitized pos ({xv},{yv},{zv})"
-                # The position must sit inside the generic-detector envelope
-                # (in mm) — a units regression (e.g. m vs mm) or a stale/garbage
-                # position would blow well past this.
-                r = math.hypot(xv, yv)
-                assert r < 1500.0 and abs(zv) < 4000.0, (
-                    f"{directory.name}: digitized pos ({xv},{yv},{zv}) outside "
-                    f"detector envelope — units or stale-position regression?"
-                )
-                # It must also stay near the truth hit's module. The measured
-                # coordinate(s) pin it to the truth, but the unmeasured strip
-                # coordinate defaults to the surface centre, so allow a generous
-                # module-scale slack rather than a tight smearing tolerance.
-                dist = math.sqrt((xv - txv) ** 2 + (yv - tyv) ** 2 + (zv - tzv) ** 2)
-                assert dist < 250.0, (
-                    f"{directory.name}: digitized pos {dist:.1f} mm from truth "
-                    f"({txv},{tyv},{tzv}) — wrong surface or unit error?"
-                )
+    nevents = 2
+    s = Sequencer(numThreads=1, events=nevents)
+    fatras(s)
+    s.addAlgorithm(
+        ArrowMeasurementOutputConverter(
+            level=acts.logging.INFO,
+            inputMeasurements="measurements",
+            trackingGeometry=trk_geo,
+            outputTable="tracker_hits",
+        )
+    )
+    s.addWriter(
+        ParquetWriter(
+            level=acts.logging.INFO,
+            outputDir=str(tmp_path),
+            collections={"tracker_hits": "tracker_hits"},
+            expectedSchemas={"tracker_hits": measurementSchema()},
+        )
+    )
+    s.run()
 
-        if expect_digitized:
-            assert n_digitized > 0, (
-                f"{directory.name}: clusters were wired but no hit got a "
-                f"digitized position"
+    table = _read_dataset(tmp_path / "tracker_hits", TRACKER_HITS_FIELDS, nevents)
+    loc0 = table.column("loc0").to_pylist()
+    simhit_ids = table.column("simhit_ids").to_pylist()
+    n_channels = table.column("n_channels").to_pylist()
+    assert sum(len(row) for row in loc0) > 0, "no measurements"
+    for ev_ids, ev_nch in zip(simhit_ids, n_channels):
+        assert all(len(ids) == 0 for ids in ev_ids), "links should be empty"
+        assert all(n == 0 for n in ev_nch), "shape should be zeros"
+
+
+def test_fatras_tracker_tables(tmp_path, fatras, trk_geo):
+    """Fatras + digitization → the two tracker tables → Parquet.
+
+    Checks the sim/reco split contract: the truth table holds ALL sim-hits
+    (flat columns, finite momentum/deposit); the reco table holds one entry
+    per measurement with always-filled local parameters + a subspace bitmask,
+    finite in-envelope global positions, and truth LINKS whose simhit_ids
+    resolve into the truth table and whose particle_ids agree with the linked
+    sim-hits' particle column.
+    """
+    nevents = 3
+    s = Sequencer(numThreads=1, events=nevents)
+    fatras(s)
+    _add_tracker_arrow_writers(s, tmp_path, trk_geo)
+    s.run()
+
+    hits_t = _read_dataset(
+        tmp_path / "tracker_hits", TRACKER_HITS_FIELDS, nevents
+    )
+    sim_t = _read_dataset(
+        tmp_path / "tracker_simhits", TRACKER_SIMHITS_FIELDS, nevents
+    )
+
+    hits = {name: hits_t.column(name).to_pylist() for name in TRACKER_HITS_FIELDS}
+    sims = {
+        name: sim_t.column(name).to_pylist() for name in TRACKER_SIMHITS_FIELDS
+    }
+
+    total_meas = sum(len(row) for row in hits["x"])
+    total_sims = sum(len(row) for row in sims["true_x"])
+    assert total_meas > 0, "no measurements across any event"
+    assert total_sims >= total_meas, "fewer sim-hits than measurements"
+
+    for ev in range(nevents):
+        n_sim = len(sims["true_x"][ev])
+        # Truth table: finite positions and momenta; deposits non-negative.
+        for i in range(n_sim):
+            for col in ("true_x", "true_y", "true_z", "tpx", "tpy", "tpz", "tE"):
+                assert math.isfinite(sims[col][ev][i]), f"non-finite {col}"
+            assert sims["dE"][ev][i] >= 0.0, "negative energy deposit"
+
+        n_meas = len(hits["x"][ev])
+        for m in range(n_meas):
+            # Reco position finite and inside the generic-detector envelope.
+            xv, yv, zv = hits["x"][ev][m], hits["y"][ev][m], hits["z"][ev][m]
+            assert math.isfinite(xv) and math.isfinite(yv) and math.isfinite(zv)
+            assert math.hypot(xv, yv) < 1500.0 and abs(zv) < 4000.0, (
+                f"reco pos ({xv},{yv},{zv}) outside envelope - units regression?"
             )
+            # Local parameters always filled; the subspace bitmask says which
+            # components were actually measured (and must measure something).
+            assert math.isfinite(hits["loc0"][ev][m])
+            assert math.isfinite(hits["loc1"][ev][m])
+            assert hits["subspace"][ev][m] & 0x3, "no local component measured"
 
+            # Truth links: at least one contributor, ids resolve into the
+            # truth table, and the linked particles agree between the tables.
+            simhit_ids = hits["simhit_ids"][ev][m]
+            particle_ids = hits["particle_ids"][ev][m]
+            assert len(simhit_ids) >= 1, "measurement with no contributing sim-hit"
+            assert len(simhit_ids) == len(particle_ids)
+            for sid, pid in zip(simhit_ids, particle_ids):
+                assert sid < n_sim, f"simhit_id {sid} out of range ({n_sim})"
+                assert sims["particle_id"][ev][sid] == pid, (
+                    "particle_ids disagree between tracker_hits and "
+                    "tracker_simhits for the same contributor"
+                )
 
-def test_fatras_simhits_digitized(tmp_path, fatras):
-    """Fatras + digitization → ArrowSimHitOutputConverter reads cluster
-    positions → Parquet. The matched-hit x,y,z must be the precomputed cluster
-    global positions (finite, near truth)."""
-    nevents = 3
-    s = Sequencer(numThreads=1, events=nevents)
-    fatras(s)
-    _add_simhit_arrow_writer(s, tmp_path, withClusters=True)
-    s.run()
-
-    _assert_simhits_parquet(tmp_path / "simhits_arrow", nevents, expect_digitized=True)
-
-
-def test_fatras_simhits_no_clusters_are_nan(tmp_path, fatras):
-    """Without the cluster container and sim-hit→measurement map wired, the
-    digitized x,y,z columns fall back to NaN while truth positions still
-    populate."""
-    nevents = 3
-    s = Sequencer(numThreads=1, events=nevents)
-    fatras(s)
-    _add_simhit_arrow_writer(s, tmp_path, withClusters=False)
-    s.run()
-
-    _assert_simhits_parquet(tmp_path / "simhits_arrow", nevents, expect_digitized=False)
 
 
 @pytest.mark.skipif(not pythia8Enabled, reason="Pythia8 not built")
@@ -608,6 +671,9 @@ def test_reader_schema_evolution_added_optional_column(tmp_path):
                     [[1]], type=field_type("majority_particle_id")
                 ),
                 "hit_ids": pa.array([[[1, 2, 3]]], type=field_type("hit_ids")),
+                "hit_outlier": pa.array(
+                    [[[False, False, False]]], type=field_type("hit_outlier")
+                ),
                 "track_id": pa.array([[7]], type=field_type("track_id")),
             },
             schema=on_disk_schema,
@@ -726,6 +792,9 @@ def test_python_alg_writes_arrow_table(tmp_path):
                         [[1]], type=field_type("majority_particle_id")
                     ),
                     "hit_ids": pa.array([[[1, 2, 3]]], type=field_type("hit_ids")),
+                    "hit_outlier": pa.array(
+                        [[[False, False, False]]], type=field_type("hit_outlier")
+                    ),
                     "track_id": pa.array([[7]], type=field_type("track_id")),
                     "t": pa.array([None], type=field_type("t")),
                 },

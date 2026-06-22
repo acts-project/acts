@@ -65,10 +65,9 @@ ProcessCode ArrowTrackOutputConverter::execute(
           : nullptr;
   const SimParticleContainer* particles =
       m_inputParticles.isInitialized() ? &m_inputParticles(ctx) : nullptr;
-  const MeasurementSimHitsMap* measToSimHits =
-      m_inputMeasurementSimHitsMap.isInitialized()
-          ? &m_inputMeasurementSimHitsMap(ctx)
-          : nullptr;
+  // Note: inputMeasurementSimHitsMap is still accepted (config + handle kept
+  // for call-site compatibility) but no longer used — v2 hit_ids are the
+  // measurement indices themselves, not the contributing sim-hit ids.
 
   auto* pool = arrow::default_memory_pool();
 
@@ -86,6 +85,10 @@ ProcessCode ArrowTrackOutputConverter::execute(
                 pool, std::make_shared<arrow::UInt32Builder>(pool)));
   arrow::ListBuilder trackIdList(pool,
                                  std::make_shared<arrow::UInt16Builder>(pool));
+  // Nested per-measurement outlier flag, parallel to hit_ids.
+  arrow::ListBuilder hitOutlierList(
+      pool, std::make_shared<arrow::ListBuilder>(
+                pool, std::make_shared<arrow::BooleanBuilder>(pool)));
 
   check(d0List.Append(), "open d0 list");
   check(z0List.Append(), "open z0 list");
@@ -102,6 +105,7 @@ ProcessCode ArrowTrackOutputConverter::execute(
   check(majIdList.Append(), "open majority_particle_id list");
   check(hitIdsList.Append(), "open hit_ids outer list");
   check(trackIdList.Append(), "open track_id list");
+  check(hitOutlierList.Append(), "open hit_outlier outer list");
 
   auto* d0V = static_cast<arrow::FloatBuilder*>(d0List.value_builder());
   auto* z0V = static_cast<arrow::FloatBuilder*>(z0List.value_builder());
@@ -116,6 +120,10 @@ ProcessCode ArrowTrackOutputConverter::execute(
       static_cast<arrow::UInt32Builder*>(hitIdsInner->value_builder());
   auto* trackIdV =
       static_cast<arrow::UInt16Builder*>(trackIdList.value_builder());
+  auto* hitOutlierInner =
+      static_cast<arrow::ListBuilder*>(hitOutlierList.value_builder());
+  auto* hitOutlierV =
+      static_cast<arrow::BooleanBuilder*>(hitOutlierInner->value_builder());
 
   const auto n = tracks.size();
   check(d0V->Reserve(n), "reserve d0");
@@ -175,32 +183,31 @@ ProcessCode ArrowTrackOutputConverter::execute(
     majIdV->UnsafeAppend(majId);
 
     check(hitIdsInner->Append(), "open hit_ids inner list");
-    // Without a measurement→sim-hit map we leave the inner list empty rather
-    // than silently emit measurement indices, which would alias mismatched
-    // ids into a downstream sim-hit table.
-    if (measToSimHits != nullptr) {
-      // `trackStatesReversed()` walks outermost→innermost (the only direct
-      // iteration the MultiTrajectory proxy offers); buffer and reverse so
-      // the per-track list comes out inner→outer along the trajectory, which
-      // is what downstream consumers expect.
-      std::vector<std::uint32_t> hitIds;
-      for (const auto& state : track.trackStatesReversed()) {
-        if (!state.hasUncalibratedSourceLink()) {
-          continue;
-        }
-        const auto sl =
-            state.getUncalibratedSourceLink().template get<IndexSourceLink>();
-        const auto measIdx = static_cast<Index>(sl.index());
-        // One measurement may map to multiple sim hits (clustering merged
-        // them); flatten them into the per-track list.
-        auto range = measToSimHits->equal_range(measIdx);
-        for (auto it = range.first; it != range.second; ++it) {
-          hitIds.push_back(static_cast<std::uint32_t>(it->second));
-        }
+    check(hitOutlierInner->Append(), "open hit_outlier inner list");
+    // hit_ids are the measurement indices on the track (the row index of each
+    // measurement in the per-event tracker-hits table == its IndexSourceLink
+    // index). `trackStatesReversed()` walks outermost→innermost (the only
+    // direct iteration the MultiTrajectory proxy offers); buffer and reverse so
+    // the per-track list comes out inner→outer along the trajectory. `hitOut`
+    // is built in lockstep so each measurement carries whether its track state
+    // is an outlier (rejected from the fit but still source-linked). The number
+    // of measurements is len(hit_ids) (or the non-outlier count), so no
+    // separate num_measurements column is emitted.
+    std::vector<std::uint32_t> hitIds;
+    std::vector<bool> hitOut;
+    for (const auto& state : track.trackStatesReversed()) {
+      if (!state.hasUncalibratedSourceLink()) {
+        continue;
       }
-      for (auto rit = hitIds.rbegin(); rit != hitIds.rend(); ++rit) {
-        check(hitIdsV->Append(*rit), "append hit_id");
-      }
+      const bool isOutlier = state.typeFlags().isOutlier();
+      const auto sl =
+          state.getUncalibratedSourceLink().template get<IndexSourceLink>();
+      hitIds.push_back(static_cast<std::uint32_t>(sl.index()));
+      hitOut.push_back(isOutlier);
+    }
+    for (std::size_t k = hitIds.size(); k-- > 0;) {
+      check(hitIdsV->Append(hitIds[k]), "append hit_id");
+      check(hitOutlierV->Append(hitOut[k]), "append hit_outlier");
     }
 
     trackIdV->UnsafeAppend(static_cast<std::uint16_t>(track.index()));
@@ -212,10 +219,13 @@ ProcessCode ArrowTrackOutputConverter::execute(
     return out;
   };
 
+  // NOTE: order MUST match ArrowUtil::trackSchema() field order (hit_outlier
+  // is the last field, after t).
   std::vector<std::shared_ptr<arrow::Array>> arrays = {
       finish(d0List),     finish(z0List),      finish(phiList),
       finish(thetaList),  finish(qopList),     finish(majIdList),
       finish(hitIdsList), finish(trackIdList), finish(tList),
+      finish(hitOutlierList),
   };
 
   auto table =

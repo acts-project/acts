@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Io/Arrow/ArrowMeasurementOutputConverter.hpp"
 #include "ActsExamples/Io/Arrow/ArrowParticleOutputConverter.hpp"
 #include "ActsExamples/Io/Arrow/ArrowSimHitOutputConverter.hpp"
 #include "ActsExamples/Io/Arrow/ArrowTrackOutputConverter.hpp"
@@ -65,9 +66,18 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
     auto [alg, c] =
         declareAlgorithm<ArrowSimHitOutputConverter, ArrowOutputConverter>(
             m, "ArrowSimHitOutputConverter");
-    ACTS_PYTHON_STRUCT(c, inputSimHits, inputParticles, inputClusters,
-                       inputSimHitMeasurementsMap, outputTable,
+    ACTS_PYTHON_STRUCT(c, inputSimHits, inputParticles, outputTable,
                        detectorResolver);
+  }
+
+  {
+    auto [alg, c] = declareAlgorithm<ArrowMeasurementOutputConverter,
+                                     ArrowOutputConverter>(
+        m, "ArrowMeasurementOutputConverter");
+    ACTS_PYTHON_STRUCT(c, inputMeasurements, inputClusters, inputSimHits,
+                       inputParticles, inputSimHitMeasurementsMap, outputTable,
+                       trackingGeometry, detectorResolver,
+                       maxUnmatchedSimHitFraction);
   }
 
   m.def("makeVolumeIdDetectorResolver",

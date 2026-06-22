@@ -9,10 +9,8 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Io/Parquet/ArrowOutputConverter.hpp"
 #include "ActsPlugins/Arrow/ArrowUtil.hpp"
@@ -27,42 +25,26 @@
 
 namespace ActsExamples {
 
-/// Convert a @c SimHitContainer to an @c arrow::Table.
-///
-/// The output table has one row per event with list-valued columns. Hits are
-/// emitted in @c SimHitContainer iteration order, so the row index of a hit
-/// inside the per-event list equals its @c SimHitIndex; downstream tables
-/// (e.g. tracks) can therefore reference hits by that index.
-///
-/// When @c inputClusters and @c inputSimHitMeasurementsMap are both provided,
-/// the precomputed digitized cluster position (@c Cluster::globalPosition) of
-/// the matched measurement is written into @c x,y,z. Clusters have a one-to-one
-/// relation with measurements, so the @c SimHitMeasurementsMap (keyed by
-/// @c SimHitIndex, valued by measurement index) doubles as a sim-hit → cluster
-/// map. Otherwise those columns are filled with NaN. The truth position is
-/// always written into @c true_x,true_y,true_z.
+/// Convert simulated tracker hits into the per-event TRUTH table
+/// (`tracker_simhits`): one entry per sim-hit, ALL sim-hits in container
+/// order. The entry's position is the sim-hit id that the measurement table
+/// (`ArrowMeasurementOutputConverter`) references via its `simhit_ids`
+/// column. The table is standalone-complete for re-digitization: position +
+/// time, 4-momentum at the hit, deposited energy, particle link, hit index
+/// along the trajectory, and sensor identification.
 class ACTS_ARROW_EXPORT ArrowSimHitOutputConverter final
     : public ArrowOutputConverter {
  public:
   struct Config {
-    /// Input @c SimHitContainer on the whiteboard.
+    /// Input @c SimHitContainer on the whiteboard (required).
     std::string inputSimHits;
-    /// Optional input particle container used to resolve the hit's particle
+    /// Optional input particle container used to resolve a sim-hit's particle
     /// barcode to a row index in the corresponding parquet table. Must be the
     /// same container the @c ArrowParticleOutputConverter consumes for that
     /// table — leaving it empty forces the unmatched sentinel.
     std::string inputParticles;
-    /// Optional cluster container. Required (together with the map below) to
-    /// fill the digitized @c x,y,z columns from @c Cluster::globalPosition;
-    /// otherwise those are NaN. Clusters are indexed one-to-one with
-    /// measurements.
-    std::string inputClusters;
-    /// Optional sim-hit → measurement(s) inverse map; keyed by @c SimHitIndex.
-    /// Because clusters and measurements share indices, the values double as
-    /// cluster indices.
-    std::string inputSimHitMeasurementsMap;
     /// Output whiteboard key for the resulting @c arrow::Table.
-    std::string outputTable = "simhits";
+    std::string outputTable = "tracker_simhits";
     /// Resolves the @c detector subsystem id for a given hit's geometry id.
     /// Defaults to reading the geometry id's @c extra byte; users can swap
     /// in any custom mapping (e.g. by volume or by surface lookup) when the
@@ -96,9 +78,6 @@ class ACTS_ARROW_EXPORT ArrowSimHitOutputConverter final
 
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
-  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
-  ReadDataHandle<SimHitMeasurementsMap> m_inputSimHitMeasurementsMap{
-      this, "InputSimHitMeasurementsMap"};
 
   WriteDataHandle<ActsPlugins::ArrowUtil::ArrowTable> m_outputTable{
       this, "OutputTable"};
