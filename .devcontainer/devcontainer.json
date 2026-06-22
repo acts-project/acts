@@ -15,7 +15,7 @@
                 "clangd.arguments": [
                     "--compile-commands-dir=${containerWorkspaceFolder}/build_devcontainer"
                 ],
-                "cmake.defaultConfigurePreset": "devcontainer",
+                "cmake.configurePreset": "devcontainer",
                 "cmake.ctest.testSuiteDelimiter": "/",
                 "cmake.testEnvironment": {
                     "BOOST_TEST_COLOR_OUTPUT": "0"
