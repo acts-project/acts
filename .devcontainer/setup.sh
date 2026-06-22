@@ -5,6 +5,7 @@ WORKSPACE=$1
 git config --global --add safe.directory $WORKSPACE
 
 pushd $WORKSPACE
+git config --unset-all core.hooksPath
 pre-commit install
 # Signing does not seem to work
 git config --add commit.gpgsign false

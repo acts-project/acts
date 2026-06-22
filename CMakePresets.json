@@ -33,6 +33,15 @@
             }
         },
         {
+            "name": "devcontainer",
+            "displayName": "Devcontainer",
+            "inherits": "dev",
+            "binaryDir": "build_devcontainer",
+            "cacheVariables": {
+                "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON"
+            }
+        },
+        {
             "name": "perf",
             "displayName": "Performance",
             "inherits": "common",
