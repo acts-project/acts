@@ -119,37 +119,28 @@ loadGeoIdMapFromCsv(const std::filesystem::path& path,
 
 struct SubsystemSigmaConfig {
   std::vector<Acts::BoundIndices> indices;
-  std::vector<double> sigmas;
+  std::vector<double> pitches;  // mm
+
+  double sigma(std::size_t k) const { return pitches[k] / std::sqrt(12.0); }
 };
 
-// ColliderML Release 1 volume_id → measurement subspace and sigmas.
-// Pixel (vol 16, 17, 18): 2D, σ_loc0 = 0.015 mm, σ_loc1 = 0.015 mm
-// Short strip (vol 23, 24, 25): 2D, σ_loc0 = 0.043 mm, σ_loc1 = 1.2 mm
-// Long strip (vol 28, 29, 30): 1D, σ_loc0 = 0.072 mm
-const SubsystemSigmaConfig* colliderMLSubsystemConfig(std::uint8_t volumeId) {
-  static const SubsystemSigmaConfig kPixel = {
-      {Acts::eBoundLoc0, Acts::eBoundLoc1}, {0.015, 0.015}};
-  static const SubsystemSigmaConfig kShortStrip = {
-      {Acts::eBoundLoc0, Acts::eBoundLoc1}, {0.043, 1.2}};
-  static const SubsystemSigmaConfig kLongStrip = {{Acts::eBoundLoc0}, {0.072}};
-
-  switch (volumeId) {
-    case 16:
-    case 17:
-    case 18:
-      return &kPixel;
-    case 23:
-    case 24:
-    case 25:
-      return &kShortStrip;
-    case 28:
-    case 29:
-    case 30:
-      return &kLongStrip;
-    default:
-      return nullptr;
-  }
-}
+// ColliderML Release 1 volume_id → measurement subspace and pitch sizes.
+// σ = pitch / √12 (binary readout, uniform distribution).
+const std::unordered_map<std::uint8_t, SubsystemSigmaConfig> kSubsystemSigmas =
+    {
+        // Pixel: 50×50 µm
+        {16, {{Acts::eBoundLoc0, Acts::eBoundLoc1}, {0.050, 0.050}}},
+        {17, {{Acts::eBoundLoc0, Acts::eBoundLoc1}, {0.050, 0.050}}},
+        {18, {{Acts::eBoundLoc0, Acts::eBoundLoc1}, {0.050, 0.050}}},
+        // Short strip: 80×500 µm
+        {23, {{Acts::eBoundLoc0, Acts::eBoundLoc1}, {0.080, 0.500}}},
+        {24, {{Acts::eBoundLoc0, Acts::eBoundLoc1}, {0.080, 0.500}}},
+        {25, {{Acts::eBoundLoc0, Acts::eBoundLoc1}, {0.080, 0.500}}},
+        // Long strip: 125 µm (vol 28, 30), 100 µm (vol 29)
+        {28, {{Acts::eBoundLoc0}, {0.125}}},
+        {29, {{Acts::eBoundLoc0}, {0.100}}},
+        {30, {{Acts::eBoundLoc0}, {0.125}}},
+};
 
 }  // namespace
 
@@ -418,13 +409,13 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
     const double tt = htArr->Value(hOff + i);
 
     if (needMeasurements) {
-      const auto* sigmaCfgPtr = colliderMLSubsystemConfig(vol);
-      if (sigmaCfgPtr == nullptr) {
+      auto sigmaIt = kSubsystemSigmas.find(vol);
+      if (sigmaIt == kSubsystemSigmas.end()) {
         ACTS_ERROR("Hit " << i << " ColliderML volume_id " << +vol
                           << " is not a known tracker subsystem");
         return ProcessCode::ABORT;
       }
-      const auto& sigmaCfg = *sigmaCfgPtr;
+      const auto& sigmaCfg = sigmaIt->second;
 
       const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
       if (surface == nullptr) {
@@ -463,7 +454,7 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
       for (std::size_t k = 0; k < sigmaCfg.indices.size(); ++k) {
         dParams.indices.push_back(sigmaCfg.indices[k]);
         dParams.values.push_back(lp[static_cast<int>(sigmaCfg.indices[k])]);
-        dParams.variances.push_back(sigmaCfg.sigmas[k] * sigmaCfg.sigmas[k]);
+        dParams.variances.push_back(sigmaCfg.sigma(k) * sigmaCfg.sigma(k));
       }
 
       auto meas = createMeasurement(measurements, geoId, dParams);
