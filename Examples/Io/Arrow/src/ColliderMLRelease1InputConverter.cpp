@@ -11,9 +11,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
-#include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -25,7 +23,6 @@
 #include <limits>
 #include <memory>
 #include <numeric>
-#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -77,24 +74,6 @@ std::shared_ptr<ArrowArrayType> colValues(const arrow::Table& table,
   return values;
 }
 
-// Extract sigma from a smearer function. Returns nullopt for Uniform/Digital.
-std::optional<double> sigmaFromSmearer(
-    const ActsFatras::SingleParameterSmearFunction<RandomEngine>& fn) {
-  if (const auto* g = fn.target<const Digitization::Gauss>()) {
-    return g->sigma;
-  }
-  if (const auto* g = fn.target<const Digitization::GaussTrunc>()) {
-    return g->sigma;
-  }
-  if (const auto* g = fn.target<const Digitization::GaussClipped>()) {
-    return g->sigma;
-  }
-  if (const auto* g = fn.target<const Digitization::Exact>()) {
-    return g->sigma;
-  }
-  return std::nullopt;
-}
-
 std::unordered_map<Acts::GeometryIdentifier, Acts::GeometryIdentifier>
 loadGeoIdMapFromCsv(const std::filesystem::path& path,
                     const std::string& srcPrefix,
@@ -136,6 +115,40 @@ loadGeoIdMapFromCsv(const std::filesystem::path& path,
     map.emplace(key, Acts::GeometryIdentifier(std::stoull(columns[iTarget])));
   }
   return map;
+}
+
+struct SubsystemSigmaConfig {
+  std::vector<Acts::BoundIndices> indices;
+  std::vector<double> sigmas;
+};
+
+// ColliderML Release 1 volume_id → measurement subspace and sigmas.
+// Pixel (vol 16, 17, 18): 2D, σ_loc0 = 0.015 mm, σ_loc1 = 0.015 mm
+// Short strip (vol 23, 24, 25): 2D, σ_loc0 = 0.043 mm, σ_loc1 = 1.2 mm
+// Long strip (vol 28, 29, 30): 1D, σ_loc0 = 0.072 mm
+const SubsystemSigmaConfig* colliderMLSubsystemConfig(std::uint8_t volumeId) {
+  static const SubsystemSigmaConfig kPixel = {
+      {Acts::eBoundLoc0, Acts::eBoundLoc1}, {0.015, 0.015}};
+  static const SubsystemSigmaConfig kShortStrip = {
+      {Acts::eBoundLoc0, Acts::eBoundLoc1}, {0.043, 1.2}};
+  static const SubsystemSigmaConfig kLongStrip = {{Acts::eBoundLoc0}, {0.072}};
+
+  switch (volumeId) {
+    case 16:
+    case 17:
+    case 18:
+      return &kPixel;
+    case 23:
+    case 24:
+    case 25:
+      return &kShortStrip;
+    case 28:
+    case 29:
+    case 30:
+      return &kLongStrip;
+    default:
+      return nullptr;
+  }
 }
 
 }  // namespace
@@ -206,10 +219,6 @@ ColliderMLRelease1InputConverter::ColliderMLRelease1InputConverter(
       throw std::invalid_argument(
           "trackingGeometry is required for outputMeasurements");
     }
-    if (m_cfg.digiConfig.empty()) {
-      throw std::invalid_argument(
-          "digiConfig is required for outputMeasurements");
-    }
   }
 
   if (m_cfg.geoIdMap.empty() && !m_cfg.geoIdMapPath.empty()) {
@@ -248,42 +257,6 @@ ColliderMLRelease1InputConverter::ColliderMLRelease1InputConverter(
         "the ColliderML volume/layer/surface fields match the ACTS IDs.");
     ACTS_DEBUG("Built (vol, lay, sen) fallback map with "
                << m_volLaySenMap.size() << " entries.");
-  }
-
-  if (!m_cfg.outputMeasurements.empty() && !m_cfg.digiConfig.empty()) {
-    std::vector<
-        Acts::GeometryHierarchyMap<DigitizationConfigWithSigmas>::InputElement>
-        elements;
-    elements.reserve(m_cfg.digiConfig.size());
-
-    for (std::size_t idx = 0; idx < m_cfg.digiConfig.size(); ++idx) {
-      const auto geoId = m_cfg.digiConfig.idAt(idx);
-      const auto& digiComp = m_cfg.digiConfig.valueAt(idx);
-
-      std::vector<DigitizationSigmaConfig> sigmaConfigs;
-      sigmaConfigs.reserve(digiComp.smearingDigiConfig.params.size());
-
-      for (const auto& param : digiComp.smearingDigiConfig.params) {
-        if (param.index == Acts::eBoundTime) {
-          continue;
-        }
-        const auto sigma = sigmaFromSmearer(param.smearFunction);
-        if (!sigma.has_value()) {
-          throw std::invalid_argument(
-              "Digitization config for geoId " + std::to_string(geoId.value()) +
-              " contains smearer without meaningful sigma (Uniform/Digital). "
-              "ColliderML input converter requires Gaussian-like smearing with "
-              "single sigma.");
-        }
-        sigmaConfigs.push_back({param.index, *sigma});
-      }
-
-      elements.emplace_back(
-          geoId, DigitizationConfigWithSigmas{digiComp, sigmaConfigs});
-    }
-
-    m_digiSigmaMap = Acts::GeometryHierarchyMap<DigitizationConfigWithSigmas>(
-        std::move(elements));
   }
 }
 
@@ -444,14 +417,13 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
     const double tt = htArr->Value(hOff + i);
 
     if (needMeasurements) {
-      auto digiSigmaIt = m_digiSigmaMap.find(geoId);
-      if (digiSigmaIt == m_digiSigmaMap.end()) {
-        ACTS_ERROR("Hit " << i << " geoId " << geoId
-                          << " has no digiConfig entry — check smearing "
-                             "config");
+      const auto* sigmaCfgPtr = colliderMLSubsystemConfig(vol);
+      if (sigmaCfgPtr == nullptr) {
+        ACTS_ERROR("Hit " << i << " ColliderML volume_id " << +vol
+                          << " is not a known tracker subsystem");
         return ProcessCode::ABORT;
       }
-      const auto& [digiComp, sigmaConfigs] = *digiSigmaIt;
+      const auto& sigmaCfg = *sigmaCfgPtr;
 
       const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
       if (surface == nullptr) {
@@ -487,13 +459,10 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
       const Acts::Vector2& lp = localResult.value();
 
       DigitizedParameters dParams;
-      for (const auto& sigmaCfg : sigmaConfigs) {
-        if (sigmaCfg.index == Acts::eBoundTime) {
-          continue;
-        }
-        dParams.indices.push_back(sigmaCfg.index);
-        dParams.values.push_back(lp[static_cast<int>(sigmaCfg.index)]);
-        dParams.variances.push_back(sigmaCfg.sigma * sigmaCfg.sigma);
+      for (std::size_t k = 0; k < sigmaCfg.indices.size(); ++k) {
+        dParams.indices.push_back(sigmaCfg.indices[k]);
+        dParams.values.push_back(lp[static_cast<int>(sigmaCfg.indices[k])]);
+        dParams.variances.push_back(sigmaCfg.sigmas[k] * sigmaCfg.sigmas[k]);
       }
 
       auto meas = createMeasurement(measurements, geoId, dParams);

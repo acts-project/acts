@@ -26,7 +26,6 @@ def runColliderMLTruthTracking(
     field: acts.MagneticFieldProvider,
     outputDir: Path,
     inputDir: Path,
-    digiConfigFile: Path,
     geoIdMapPath: Optional[Path] = None,
     geoIdMapSourcePrefix: str = "gen1",
     geoIdMapTargetPrefix: str = "gen3",
@@ -49,7 +48,6 @@ def runColliderMLTruthTracking(
         collidermlRelease1HitSchema,
         ParquetReader,
     )
-    from acts.examples.json import readDigiConfigFromJson
     from acts.examples.root import (
         RootTrackStatesWriter,
         RootTrackSummaryWriter,
@@ -107,7 +105,6 @@ def runColliderMLTruthTracking(
         outputMeasParticlesMap="measurement_particles_map",
         outputParticleMeasurementsMap="particle_measurements_map",
         trackingGeometry=trackingGeometry,
-        digiConfig=readDigiConfigFromJson(str(digiConfigFile)),
     )
     if geoIdMapPath is not None:
         converter_kwargs["geoIdMapPath"] = geoIdMapPath
@@ -319,8 +316,6 @@ if __name__ == "__main__":
         field=field,
         outputDir=args.output,
         inputDir=args.input,
-        digiConfigFile=_srcdir
-        / "Examples/Configs/odd-digi-smearing-config-notime.json",
         decorators=decorators,
         events=args.events,
         numThreads=args.jobs,

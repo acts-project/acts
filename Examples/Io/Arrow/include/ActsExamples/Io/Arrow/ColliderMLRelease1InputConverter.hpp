@@ -8,11 +8,8 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -22,13 +19,10 @@
 #include "ActsPlugins/Arrow/ArrowUtil.hpp"
 #include "ActsPlugins/Arrow/Export.hpp"
 
-#include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <utility>
-#include <vector>
 
 namespace arrow {
 class Schema;
@@ -57,17 +51,6 @@ namespace ActsExamples {
 ///       record per-hit momentum.
 class ACTS_ARROW_EXPORT ColliderMLRelease1InputConverter : public IAlgorithm {
  public:
-  /// Pre-extracted sigma for a single bound parameter from the digitization
-  /// config. Used to avoid re-extracting per hit at runtime.
-  struct DigitizationSigmaConfig {
-    Acts::BoundIndices index;
-    double sigma;
-  };
-
-  /// A digitization config entry paired with its pre-extracted sigma values.
-  using DigitizationConfigWithSigmas =
-      std::pair<DigiComponentsConfig, std::vector<DigitizationSigmaConfig>>;
-
   struct Config {
     /// Whiteboard key for the particles Arrow table (from ParquetReader).
     std::string inputParticlesTable;
@@ -94,13 +77,6 @@ class ACTS_ARROW_EXPORT ColliderMLRelease1InputConverter : public IAlgorithm {
 
     /// Required when @c outputMeasurements is non-empty.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
-
-    /// Digitisation config used to determine subspace and covariance per
-    /// surface. Required when @c outputMeasurements is non-empty.
-    /// Load with @c readDigiConfigFromJson (acts.examples.json module).
-    /// The hierarchy map is queried per hit with full fallback
-    /// (sensitive → layer → volume).
-    DigiConfigContainer digiConfig;
 
     /// Path to a CSV file mapping geometry IDs between two geometries.
     /// When non-empty, the file is loaded at construction and used to
@@ -160,11 +136,6 @@ class ACTS_ARROW_EXPORT ColliderMLRelease1InputConverter : public IAlgorithm {
   /// tracking geometry.
   std::unordered_map<Acts::GeometryIdentifier, Acts::GeometryIdentifier>
       m_volLaySenMap;
-
-  /// Unified digitization config with pre-extracted sigmas mapped by
-  /// geometry hierarchy (surface → layer → volume fallback).
-  /// Stores pairs of (original digiConfig, vector of sigma configs).
-  Acts::GeometryHierarchyMap<DigitizationConfigWithSigmas> m_digiSigmaMap;
 
   ReadDataHandle<ActsPlugins::ArrowUtil::ArrowTable> m_inputParticles{
       this, "InputParticles"};

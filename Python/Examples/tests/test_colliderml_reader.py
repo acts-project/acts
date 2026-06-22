@@ -183,12 +183,9 @@ def test_colliderml_truth_tracking(
     from acts.examples.odd import getOpenDataDetector
     from colliderml_truth_tracking import runColliderMLTruthTracking
     from generate_geoid_map import generate_geoid_map
-    from convert_digi_config import convert_digi_config
 
     inputDir, sample = colliderml_fatras_sample
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-
-    gen1_digi_config = _srcdir / "Examples/Configs/odd-digi-smearing-config-notime.json"
 
     if reco_geo == "gen3":
         # Build both geometries to generate the mapping on the fly
@@ -208,14 +205,6 @@ def test_colliderml_truth_tracking(
             prefix_b="gen3",
         )
 
-        digi_config = convert_digi_config(
-            gen1_digi_config,
-            geoid_map_path,
-            source_prefix="gen1",
-            target_prefix="gen3",
-            output_path=tmp_path / "digi_config_gen3.json",
-        )
-
         ctx = None
     else:
         odd_dir = acts.examples.odd.getOpenDataDetectorDirectory()
@@ -226,7 +215,6 @@ def test_colliderml_truth_tracking(
         trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
         geoid_map_path = None
-        digi_config = gen1_digi_config
         ctx = detector
 
     def _run():
@@ -236,7 +224,6 @@ def test_colliderml_truth_tracking(
             outputDir=tmp_path,
             inputDir=inputDir,
             geoIdMapPath=geoid_map_path,
-            digiConfigFile=digi_config,
             decorators=decorators,
             events=_N_EVENTS,
             numThreads=1,
