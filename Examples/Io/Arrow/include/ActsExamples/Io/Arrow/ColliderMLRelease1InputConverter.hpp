@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -19,10 +20,15 @@
 #include "ActsPlugins/Arrow/ArrowUtil.hpp"
 #include "ActsPlugins/Arrow/Export.hpp"
 
+#include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include <boost/container/flat_map.hpp>
 
 namespace arrow {
 class Schema;
@@ -63,6 +69,8 @@ class ACTS_ARROW_EXPORT ColliderMLRelease1InputConverter : public IAlgorithm {
     std::string outputSimHits;
     /// Output key for @c MeasurementContainer. Empty = skip.
     std::string outputMeasurements;
+    /// Output key for @c ClusterContainer. Empty = skip.
+    std::string outputClusters;
     /// Output key for @c MeasurementSubset covering all measurements (required
     /// by CKF / SpacePointMaker). Empty = skip.
     std::string outputMeasurementSubset;
@@ -80,7 +88,7 @@ class ACTS_ARROW_EXPORT ColliderMLRelease1InputConverter : public IAlgorithm {
 
     /// Path to a CSV file mapping geometry IDs between two geometries.
     /// When non-empty, the file is loaded at construction and used to
-    /// populate @c geoIdMap.  Ignored when @c geoIdMap is already set.
+    /// remap ColliderML geometry IDs to ACTS GeometryIdentifiers.
     /// Produce with @c generate_geoid_map.py.
     std::filesystem::path geoIdMapPath;
 
@@ -89,14 +97,6 @@ class ACTS_ARROW_EXPORT ColliderMLRelease1InputConverter : public IAlgorithm {
     /// is set.
     std::string geoIdMapSourcePrefix;
     std::string geoIdMapTargetPrefix;
-
-    /// ColliderML geometry → ACTS GeometryIdentifier.
-    /// The source key is a GeometryIdentifier constructed from ColliderML
-    /// fields: extra=detector, volume=volume_id, layer=layer_id,
-    /// sensitive=surface_id.  When empty, the converter falls back to matching
-    /// (volume, layer, sensitive) directly from the tracking geometry.
-    std::unordered_map<Acts::GeometryIdentifier, Acts::GeometryIdentifier>
-        geoIdMap;
 
     /// Euclidean boundary tolerance (mm) for projecting ColliderML 3D hit
     /// positions onto sensor surfaces. ColliderML hits are full 3D positions
@@ -130,12 +130,17 @@ class ACTS_ARROW_EXPORT ColliderMLRelease1InputConverter : public IAlgorithm {
  private:
   Config m_cfg;
 
-  /// Fallback map built at construction when geoIdMap is empty.
-  /// Keys are GeometryIdentifiers with only volume/layer/sensitive set;
-  /// values are the full GeometryIdentifier (including extra) from the
-  /// tracking geometry.
+  /// ColliderML geometry → ACTS GeometryIdentifier.
+  /// Loaded from CSV at construction, or built as a fallback from the
+  /// tracking geometry when no CSV is provided.
   std::unordered_map<Acts::GeometryIdentifier, Acts::GeometryIdentifier>
-      m_volLaySenMap;
+      m_geoIdMap;
+
+  /// ColliderML volume_id → (BoundIndex, sigma) pairs.
+  /// Built once in the constructor from hardcoded pitch sizes.
+  boost::container::flat_map<std::uint8_t,
+                             std::vector<std::pair<Acts::BoundIndices, double>>>
+      m_subsystemSigmas;
 
   ReadDataHandle<ActsPlugins::ArrowUtil::ArrowTable> m_inputParticles{
       this, "InputParticles"};
@@ -147,6 +152,7 @@ class ACTS_ARROW_EXPORT ColliderMLRelease1InputConverter : public IAlgorithm {
   WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};
+  WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};
   WriteDataHandle<MeasurementSubset> m_outputMeasurementSubset{
       this, "OutputMeasurementSubset"};
   WriteDataHandle<MeasurementSimHitsMap> m_outputMeasSimHitsMap{

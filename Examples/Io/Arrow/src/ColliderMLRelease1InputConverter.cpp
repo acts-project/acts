@@ -117,31 +117,6 @@ loadGeoIdMapFromCsv(const std::filesystem::path& path,
   return map;
 }
 
-struct SubsystemSigmaConfig {
-  std::vector<Acts::BoundIndices> indices;
-  std::vector<double> pitches;  // mm
-
-  double sigma(std::size_t k) const { return pitches[k] / std::sqrt(12.0); }
-};
-
-// ColliderML Release 1 volume_id → measurement subspace and pitch sizes.
-// σ = pitch / √12 (binary readout, uniform distribution).
-const std::unordered_map<std::uint8_t, SubsystemSigmaConfig> kSubsystemSigmas =
-    {
-        // Pixel: 50×50 µm
-        {16, {{Acts::eBoundLoc0, Acts::eBoundLoc1}, {0.050, 0.050}}},
-        {17, {{Acts::eBoundLoc0, Acts::eBoundLoc1}, {0.050, 0.050}}},
-        {18, {{Acts::eBoundLoc0, Acts::eBoundLoc1}, {0.050, 0.050}}},
-        // Short strip: 80×500 µm
-        {23, {{Acts::eBoundLoc0, Acts::eBoundLoc1}, {0.080, 0.500}}},
-        {24, {{Acts::eBoundLoc0, Acts::eBoundLoc1}, {0.080, 0.500}}},
-        {25, {{Acts::eBoundLoc0, Acts::eBoundLoc1}, {0.080, 0.500}}},
-        // Long strip: 125 µm (vol 28, 30), 100 µm (vol 29)
-        {28, {{Acts::eBoundLoc0}, {0.125}}},
-        {29, {{Acts::eBoundLoc0}, {0.100}}},
-        {30, {{Acts::eBoundLoc0}, {0.125}}},
-};
-
 }  // namespace
 
 // ---------------------------------------------------------------------------
@@ -213,10 +188,36 @@ ColliderMLRelease1InputConverter::ColliderMLRelease1InputConverter(
     }
   }
 
-  if (m_cfg.geoIdMap.empty() && !m_cfg.geoIdMapPath.empty()) {
-    m_cfg.geoIdMap =
-        loadGeoIdMapFromCsv(m_cfg.geoIdMapPath, m_cfg.geoIdMapSourcePrefix,
-                            m_cfg.geoIdMapTargetPrefix);
+  // ColliderML Release 1 volume_id → (BoundIndex, pitch in mm) pairs.
+  // σ = pitch / √12 (binary readout, uniform distribution).
+  auto sigmaFromPitch = [](double pitch) { return pitch / std::sqrt(12.0); };
+  struct PitchEntry {
+    std::uint8_t volumeId;
+    std::vector<std::pair<Acts::BoundIndices, double>> pitches;
+  };
+  // clang-format off
+  static const std::vector<PitchEntry> kPitchData = {
+      // Pixel: 50×50 µm
+      {16, {{Acts::eBoundLoc0, 0.050}, {Acts::eBoundLoc1, 0.050}}},
+      {17, {{Acts::eBoundLoc0, 0.050}, {Acts::eBoundLoc1, 0.050}}},
+      {18, {{Acts::eBoundLoc0, 0.050}, {Acts::eBoundLoc1, 0.050}}},
+      // Short strip: 80×500 µm
+      {23, {{Acts::eBoundLoc0, 0.080}, {Acts::eBoundLoc1, 0.500}}},
+      {24, {{Acts::eBoundLoc0, 0.080}, {Acts::eBoundLoc1, 0.500}}},
+      {25, {{Acts::eBoundLoc0, 0.080}, {Acts::eBoundLoc1, 0.500}}},
+      // Long strip: 125 µm (vol 28, 30), 100 µm (vol 29)
+      {28, {{Acts::eBoundLoc0, 0.125}}},
+      {29, {{Acts::eBoundLoc0, 0.100}}},
+      {30, {{Acts::eBoundLoc0, 0.125}}},
+  };
+  // clang-format on
+  for (const auto& entry : kPitchData) {
+    std::vector<std::pair<Acts::BoundIndices, double>> sigmas;
+    sigmas.reserve(entry.pitches.size());
+    for (const auto& [idx, pitch] : entry.pitches) {
+      sigmas.emplace_back(idx, sigmaFromPitch(pitch));
+    }
+    m_subsystemSigmas.emplace(entry.volumeId, std::move(sigmas));
   }
 
   m_inputParticles.initialize(m_cfg.inputParticlesTable);
@@ -225,13 +226,20 @@ ColliderMLRelease1InputConverter::ColliderMLRelease1InputConverter(
   m_outputParticles.maybeInitialize(m_cfg.outputParticles);
   m_outputSimHits.maybeInitialize(m_cfg.outputSimHits);
   m_outputMeasurements.maybeInitialize(m_cfg.outputMeasurements);
+  m_outputClusters.maybeInitialize(m_cfg.outputClusters);
   m_outputMeasurementSubset.maybeInitialize(m_cfg.outputMeasurementSubset);
   m_outputMeasSimHitsMap.maybeInitialize(m_cfg.outputMeasSimHitsMap);
   m_outputMeasParticlesMap.maybeInitialize(m_cfg.outputMeasParticlesMap);
   m_outputParticleMeasurementsMap.maybeInitialize(
       m_cfg.outputParticleMeasurementsMap);
 
-  if (m_cfg.geoIdMap.empty() && m_cfg.trackingGeometry != nullptr) {
+  if (!m_cfg.geoIdMapPath.empty()) {
+    m_geoIdMap =
+        loadGeoIdMapFromCsv(m_cfg.geoIdMapPath, m_cfg.geoIdMapSourcePrefix,
+                            m_cfg.geoIdMapTargetPrefix);
+    ACTS_INFO("Loaded geo-ID map with " << m_geoIdMap.size() << " entries from "
+                                        << m_cfg.geoIdMapPath);
+  } else if (m_cfg.trackingGeometry != nullptr) {
     for (const auto& [gid, surface] :
          m_cfg.trackingGeometry->geoIdSurfaceMap()) {
       if (gid.sensitive() == 0) {
@@ -241,14 +249,13 @@ ColliderMLRelease1InputConverter::ColliderMLRelease1InputConverter(
                                          .withVolume(gid.volume())
                                          .withLayer(gid.layer())
                                          .withSensitive(gid.sensitive());
-      m_volLaySenMap[key] = gid;
+      m_geoIdMap[key] = gid;
     }
     ACTS_INFO(
-        "No geoIdMap provided — geometry IDs resolved by matching "
-        "(volume, layer, sensitive) from the tracking geometry. Valid when "
-        "the ColliderML volume/layer/surface fields match the ACTS IDs.");
-    ACTS_DEBUG("Built (vol, lay, sen) fallback map with "
-               << m_volLaySenMap.size() << " entries.");
+        "No geoIdMap CSV provided — geometry IDs resolved by matching "
+        "(volume, layer, sensitive) from the tracking geometry.");
+    ACTS_DEBUG("Built (vol, lay, sen) fallback map with " << m_geoIdMap.size()
+                                                          << " entries.");
   }
 }
 
@@ -350,6 +357,7 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
 
   SimHitContainer simHits;
   MeasurementContainer measurements;
+  ClusterContainer clusters;
   // Maps loop index i → measurement index; used to cross-reference simhits
   // and measurements after the container sorts by geoId.
   std::unordered_map<std::int32_t, Index> hitIndexToMeas;
@@ -357,46 +365,35 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
 
   if (needMeasurements) {
     measurements.reserve(static_cast<std::size_t>(nHits));
+    clusters.reserve(static_cast<std::size_t>(nHits));
   }
 
   for (std::int64_t i = 0; i < nHits; ++i) {
-    const std::uint8_t det = detArr->Value(hOff + i);
-    const std::uint8_t vol = volArr->Value(hOff + i);
-    const std::uint16_t lay = layerArr->Value(hOff + i);
-    const std::uint32_t surf = surfArr->Value(hOff + i);
-    const auto key = Acts::GeometryIdentifier()
-                         .withExtra(det)
-                         .withVolume(vol)
-                         .withLayer(lay)
-                         .withSensitive(surf);
+    const std::uint8_t cmlDet = detArr->Value(hOff + i);
+    const std::uint8_t cmlVol = volArr->Value(hOff + i);
+    const std::uint16_t cmlLay = layerArr->Value(hOff + i);
+    const std::uint32_t cmlSurf = surfArr->Value(hOff + i);
+    const auto cmlKey = Acts::GeometryIdentifier()
+                            .withExtra(cmlDet)
+                            .withVolume(cmlVol)
+                            .withLayer(cmlLay)
+                            .withSensitive(cmlSurf);
 
-    Acts::GeometryIdentifier geoId;
-    if (!m_cfg.geoIdMap.empty()) {
-      auto geoIt = m_cfg.geoIdMap.find(key);
-      if (geoIt == m_cfg.geoIdMap.end()) {
-        ACTS_ERROR("Hit " << i << " (det=" << +det << " vol=" << +vol
-                          << " lay=" << lay << " surf=" << surf
-                          << ") not found in geoIdMap — regenerate the map");
-        return ProcessCode::ABORT;
-      }
-      geoId = geoIt->second;
-    } else {
-      Acts::GeometryIdentifier partialId = Acts::GeometryIdentifier()
-                                               .withVolume(vol)
-                                               .withLayer(lay)
-                                               .withSensitive(surf);
-      auto it = m_volLaySenMap.find(partialId);
-      if (it == m_volLaySenMap.end()) {
-        ACTS_ERROR("Hit " << i << " (vol=" << +vol << " lay=" << lay
-                          << " surf=" << surf
-                          << ") not found in tracking geometry — check "
-                             "volume/layer/surface IDs match ACTS IDs");
-        return ProcessCode::ABORT;
-      }
-      geoId = it->second;
+    const auto lookupKey = m_cfg.geoIdMapPath.empty()
+                               ? Acts::GeometryIdentifier()
+                                     .withVolume(cmlVol)
+                                     .withLayer(cmlLay)
+                                     .withSensitive(cmlSurf)
+                               : cmlKey;
+    auto geoIt = m_geoIdMap.find(lookupKey);
+    if (geoIt == m_geoIdMap.end()) {
+      ACTS_ERROR("Hit " << i << " (det=" << +cmlDet << " vol=" << +cmlVol
+                        << " lay=" << cmlLay << " surf=" << cmlSurf
+                        << ") not found in geo-ID map");
+      return ProcessCode::ABORT;
     }
+    const Acts::GeometryIdentifier geoId = geoIt->second;
 
-    // particle barcode lookup
     const std::uint64_t cmlPid = hpidArr->Value(hOff + i);
     SimBarcode barcode{};
     if (cmlPid < static_cast<std::uint64_t>(barcodes.size())) {
@@ -408,14 +405,20 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
     const double tz = tzArr->Value(hOff + i);
     const double tt = htArr->Value(hOff + i);
 
+    if (needSimHits) {
+      Acts::Vector4 pos4{tx, ty, tz, tt};
+      Acts::Vector4 zero4 = Acts::Vector4::Zero();
+      simHits.emplace_hint(simHits.end(), geoId, barcode, pos4, zero4, zero4,
+                           static_cast<std::int32_t>(i));
+    }
+
     if (needMeasurements) {
-      auto sigmaIt = kSubsystemSigmas.find(vol);
-      if (sigmaIt == kSubsystemSigmas.end()) {
-        ACTS_ERROR("Hit " << i << " ColliderML volume_id " << +vol
+      auto sigmaIt = m_subsystemSigmas.find(cmlVol);
+      if (sigmaIt == m_subsystemSigmas.end()) {
+        ACTS_ERROR("Hit " << i << " ColliderML volume_id " << +cmlVol
                           << " is not a known tracker subsystem");
         return ProcessCode::ABORT;
       }
-      const auto& sigmaCfg = sigmaIt->second;
 
       const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
       if (surface == nullptr) {
@@ -451,12 +454,14 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
       const Acts::Vector2& lp = localResult.value();
 
       DigitizedParameters dParams;
-      for (std::size_t k = 0; k < sigmaCfg.indices.size(); ++k) {
-        dParams.indices.push_back(sigmaCfg.indices[k]);
-        dParams.values.push_back(lp[static_cast<int>(sigmaCfg.indices[k])]);
-        dParams.variances.push_back(sigmaCfg.sigma(k) * sigmaCfg.sigma(k));
+      dParams.cluster.globalPosition = globalPos;
+      for (const auto& [idx, sigma] : sigmaIt->second) {
+        dParams.indices.push_back(idx);
+        dParams.values.push_back(lp[static_cast<int>(idx)]);
+        dParams.variances.push_back(sigma * sigma);
       }
 
+      clusters.push_back(std::move(dParams.cluster));
       auto meas = createMeasurement(measurements, geoId, dParams);
       const Index measIdx = meas.index();
 
@@ -464,15 +469,6 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
       if (barcode != SimBarcode{}) {
         measParticlesMap.emplace(measIdx, barcode);
       }
-    }
-
-    // Temporarily stash the loop counter in Hit::index() as a cross-reference
-    // key for building measSimHitsMap; cleared to -1 below.
-    if (needSimHits) {
-      Acts::Vector4 pos4{tx, ty, tz, tt};
-      Acts::Vector4 zero4 = Acts::Vector4::Zero();
-      simHits.emplace_hint(simHits.end(), geoId, barcode, pos4, zero4, zero4,
-                           static_cast<std::int32_t>(i));
     }
   }
 
@@ -499,6 +495,9 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
   if (needMeasurements) {
     const auto& storedMeasurements =
         m_outputMeasurements(ctx, std::move(measurements));
+    if (m_outputClusters.isInitialized()) {
+      m_outputClusters(ctx, std::move(clusters));
+    }
 
     if (m_outputMeasurementSubset.isInitialized()) {
       std::vector<MeasurementContainer::Index> allIndices(

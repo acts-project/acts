@@ -44,8 +44,6 @@ def runColliderMLTruthTracking(
     """
     from acts.examples.arrow import (
         ColliderMLRelease1InputConverter,
-        collidermlRelease1ParticleSchema,
-        collidermlRelease1HitSchema,
         ParquetReader,
     )
     from acts.examples.root import (
@@ -87,8 +85,8 @@ def runColliderMLTruthTracking(
                 "cml_hits": str(hits_dir),
             },
             expectedSchemas={
-                "cml_particles": collidermlRelease1ParticleSchema(),
-                "cml_hits": collidermlRelease1HitSchema(),
+                "cml_particles": ColliderMLRelease1InputConverter.particleSchema(),
+                "cml_hits": ColliderMLRelease1InputConverter.hitSchema(),
             },
         )
     )

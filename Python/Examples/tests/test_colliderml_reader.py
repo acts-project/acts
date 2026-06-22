@@ -214,7 +214,6 @@ def test_colliderml_truth_tracking(
         detector = getOpenDataDetector(matDeco)
         trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
-        geoid_map_path = None
         ctx = detector
 
     def _run():
@@ -223,7 +222,6 @@ def test_colliderml_truth_tracking(
             field=field,
             outputDir=tmp_path,
             inputDir=inputDir,
-            geoIdMapPath=geoid_map_path,
             decorators=decorators,
             events=_N_EVENTS,
             numThreads=1,

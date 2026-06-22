@@ -76,11 +76,11 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
                                      ActsExamples::IAlgorithm>(
         m, "ColliderMLRelease1InputConverter");
     ACTS_PYTHON_STRUCT(c, inputParticlesTable, inputHitsTable, outputParticles,
-                       outputSimHits, outputMeasurements,
+                       outputSimHits, outputMeasurements, outputClusters,
                        outputMeasurementSubset, outputMeasSimHitsMap,
                        outputMeasParticlesMap, outputParticleMeasurementsMap,
                        trackingGeometry, geoIdMapPath, geoIdMapSourcePrefix,
-                       geoIdMapTargetPrefix, geoIdMap, hitBoundsTolerance);
+                       geoIdMapTargetPrefix, hitBoundsTolerance);
 
     alg.def_static(
         "particleSchema", &ColliderMLRelease1InputConverter::particleSchema,
