@@ -33,5 +33,6 @@ rules:
      - "develop/*"
     paths:
      - "Detray/*"
+     - ".github/workflows/detray.yml"
     required_pattern:
      - "Detray / *"

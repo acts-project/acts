@@ -4,11 +4,13 @@ on:
   push:
     paths:
       - "Detray/**"
+      - ".github/workflows/detray.yml"
   pull_request:
     branches:
       - main
     paths:
       - "Detray/**"
+      - ".github/workflows/detray.yml"
 
 # Cancel existing jobs on new pushes.
 concurrency:
