@@ -66,10 +66,10 @@ def convert_digi_config(
                 f"map {geoid_map_path}"
             )
 
-        tgt_vol = volume_map[src_vol]
-        new_entry = dict(entry)
-        new_entry["volume"] = tgt_vol
-        new_entries.append(new_entry)
+        for tgt_vol in sorted(volume_map[src_vol]):
+            new_entry = dict(entry)
+            new_entry["volume"] = tgt_vol
+            new_entries.append(new_entry)
 
     config["entries"] = new_entries
 
@@ -90,7 +90,7 @@ def convert_digi_config(
 
 
 def _build_volume_map(geoid_map_path, source_prefix, target_prefix):
-    """Build a source_volume → target_volume mapping from the geo ID CSV."""
+    """Build a source_volume → set of target_volumes mapping from the geo ID CSV."""
     volume_map = {}
     with open(geoid_map_path, newline="") as f:
         reader = csv.DictReader(f)
@@ -99,15 +99,7 @@ def _build_volume_map(geoid_map_path, source_prefix, target_prefix):
         for row in reader:
             src_vol = int(row[src_col])
             tgt_vol = int(row[tgt_col])
-            if src_vol in volume_map:
-                if volume_map[src_vol] != tgt_vol:
-                    raise RuntimeError(
-                        f"Inconsistent volume mapping: source volume "
-                        f"{src_vol} maps to both {volume_map[src_vol]} and "
-                        f"{tgt_vol}"
-                    )
-            else:
-                volume_map[src_vol] = tgt_vol
+            volume_map.setdefault(src_vol, set()).add(tgt_vol)
     return volume_map
 
 
