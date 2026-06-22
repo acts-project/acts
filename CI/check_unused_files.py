@@ -127,7 +127,6 @@ SUFFIX_OTHER = (
     ".yml",
     ".xml",
     ".sh",
-    ".parquet",
 )
 
 
