@@ -71,30 +71,26 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
                        detectorResolver);
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ColliderMLRelease1InputConverter, m, "ColliderMLRelease1InputConverter",
-      inputParticlesTable, inputHitsTable, outputParticles, outputSimHits,
-      outputMeasurements, outputMeasurementSubset, outputMeasSimHitsMap,
-      outputMeasParticlesMap, outputParticleMeasurementsMap, trackingGeometry,
-      geoIdMapPath, geoIdMapSourcePrefix, geoIdMapTargetPrefix, geoIdMap,
-      hitBoundsTolerance);
+  {
+    auto [alg, c] = declareAlgorithm<ColliderMLRelease1InputConverter,
+                                     ActsExamples::IAlgorithm>(
+        m, "ColliderMLRelease1InputConverter");
+    ACTS_PYTHON_STRUCT(c, inputParticlesTable, inputHitsTable, outputParticles,
+                       outputSimHits, outputMeasurements,
+                       outputMeasurementSubset, outputMeasSimHitsMap,
+                       outputMeasParticlesMap, outputParticleMeasurementsMap,
+                       trackingGeometry, geoIdMapPath, geoIdMapSourcePrefix,
+                       geoIdMapTargetPrefix, geoIdMap, hitBoundsTolerance);
 
-  m.def(
-      "collidermlRelease1ParticleSchema",
-      []() {
-        return ActsPlugins::ArrowUtil::ArrowSchemaHandle{
-            ColliderMLRelease1InputConverter::particleSchema()};
-      },
-      "Expected schema for the ColliderML Release 1 per-event particle "
-      "table.");
-  m.def(
-      "collidermlRelease1HitSchema",
-      []() {
-        return ActsPlugins::ArrowUtil::ArrowSchemaHandle{
-            ColliderMLRelease1InputConverter::hitSchema()};
-      },
-      "Expected schema for the ColliderML Release 1 per-event tracker-hit "
-      "table.");
+    alg.def_static(
+        "particleSchema", &ColliderMLRelease1InputConverter::particleSchema,
+        "Expected schema for the ColliderML Release 1 per-event particle "
+        "table.");
+    alg.def_static(
+        "hitSchema", &ColliderMLRelease1InputConverter::hitSchema,
+        "Expected schema for the ColliderML Release 1 per-event tracker-hit "
+        "table.");
+  }
 
   m.def("makeVolumeIdDetectorResolver",
         &ArrowSimHitOutputConverter::makeVolumeIdDetectorResolver,

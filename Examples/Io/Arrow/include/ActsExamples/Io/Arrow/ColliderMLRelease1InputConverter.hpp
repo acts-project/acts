@@ -109,11 +109,11 @@ class ACTS_ARROW_EXPORT ColliderMLRelease1InputConverter : public IAlgorithm {
 
   /// Expected Arrow schema for the per-event particle table in the
   /// ColliderML Release 1 dataset format.
-  static std::shared_ptr<arrow::Schema> particleSchema();
+  static ActsPlugins::ArrowUtil::ArrowSchemaHandle particleSchema();
 
   /// Expected Arrow schema for the per-event tracker-hit table in the
   /// ColliderML Release 1 dataset format.
-  static std::shared_ptr<arrow::Schema> hitSchema();
+  static ActsPlugins::ArrowUtil::ArrowSchemaHandle hitSchema();
 
   ColliderMLRelease1InputConverter(const Config& cfg,
                                    std::unique_ptr<const Acts::Logger> logger);

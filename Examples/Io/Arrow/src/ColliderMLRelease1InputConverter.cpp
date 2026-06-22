@@ -157,9 +157,9 @@ const SubsystemSigmaConfig* colliderMLSubsystemConfig(std::uint8_t volumeId) {
 // Schemas
 // ---------------------------------------------------------------------------
 
-std::shared_ptr<arrow::Schema>
+ActsPlugins::ArrowUtil::ArrowSchemaHandle
 ColliderMLRelease1InputConverter::particleSchema() {
-  return arrow::schema({
+  return ActsPlugins::ArrowUtil::ArrowSchemaHandle{arrow::schema({
       arrow::field("particle_id", arrow::list(arrow::uint64()), false),
       arrow::field("pdg_id", arrow::list(arrow::int64()), false),
       arrow::field("mass", arrow::list(arrow::float32()), false),
@@ -173,11 +173,12 @@ ColliderMLRelease1InputConverter::particleSchema() {
       arrow::field("pz", arrow::list(arrow::float32()), false),
       arrow::field("vertex_primary", arrow::list(arrow::uint16()), false),
       arrow::field("primary", arrow::list(arrow::boolean()), false),
-  });
+  })};
 }
 
-std::shared_ptr<arrow::Schema> ColliderMLRelease1InputConverter::hitSchema() {
-  return arrow::schema({
+ActsPlugins::ArrowUtil::ArrowSchemaHandle
+ColliderMLRelease1InputConverter::hitSchema() {
+  return ActsPlugins::ArrowUtil::ArrowSchemaHandle{arrow::schema({
       arrow::field("x", arrow::list(arrow::float32()), false),
       arrow::field("y", arrow::list(arrow::float32()), false),
       arrow::field("z", arrow::list(arrow::float32()), false),
@@ -190,7 +191,7 @@ std::shared_ptr<arrow::Schema> ColliderMLRelease1InputConverter::hitSchema() {
       arrow::field("volume_id", arrow::list(arrow::uint8()), false),
       arrow::field("layer_id", arrow::list(arrow::uint16()), false),
       arrow::field("surface_id", arrow::list(arrow::uint32()), false),
-  });
+  })};
 }
 
 // ---------------------------------------------------------------------------
