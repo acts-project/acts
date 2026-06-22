@@ -158,11 +158,28 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
     return spT.zr()[1];
   };
 
+  // bottom space point time and distance from the interaction point, used by
+  // the time-of-flight cut below when a cut is configured and times are present
+  const bool useTimeCut =
+      std::isfinite(config().deltaTMax) && spacePoints.hasColumns(SpacePointColumns::Time);
+  const float tB = useTimeCut ? spB.time() : 0.0f;
+  const float LB = useTimeCut ? fastHypot(spB.zr()[1], spB.zr()[0]) : 0.0f;
+
   std::size_t beginCompTopIndex = 0;
   // loop over top SPs and other compatible top SP candidates
   for (const std::size_t topSpIndex : cache().topSpIndexVec) {
     auto topSp = tripletTopCandidates.topSpacePoints()[topSpIndex];
     auto spT = spacePoints[topSp];
+
+    // reject triplets whose bottom-to-top time difference is incompatible with
+    // the time-of-flight expectation for a particle from the interaction point
+    if (useTimeCut) {
+      const float LT = fastHypot(spT.zr()[1], spT.zr()[0]);
+      const float resBT = (spT.time() - tB) - (LT - LB) * config().tofInverseSpeed;
+      if (std::abs(resBT) > config().deltaTMax) {
+        continue;
+      }
+    }
 
     cache().compatibleSeedR.clear();
 

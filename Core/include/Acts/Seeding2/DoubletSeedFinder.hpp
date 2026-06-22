@@ -303,6 +303,16 @@ class DoubletSeedFinder {
     /// Maximum z distance between two doublet components
     float deltaZMax = std::numeric_limits<float>::infinity();
 
+    /// Maximum allowed deviation of the time difference between the two doublet
+    /// space points from the time-of-flight expectation for a particle from the
+    /// interaction point: |(t_other - t_middle) - (L_other - L_middle) *
+    /// tofInverseSpeed|, with L = sqrt(r^2 + z^2). No cut for the default
+    /// of infinity.
+    float deltaTMax = std::numeric_limits<float>::infinity();
+    /// Inverse signal speed (time per unit length) used for the time-of-flight
+    /// expectation, defaulting to 1/c. A value of zero compares the raw times.
+    float tofInverseSpeed = 1.0f / 299.792458f;
+
     /// Maximum value of impact parameter estimation of the seed candidates
     float impactMax = 20 * UnitConstants::mm;
 
