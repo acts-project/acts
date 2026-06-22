@@ -6,7 +6,7 @@ set(ACTS_ACTSVG_SOURCE
 mark_as_advanced(ACTS_ACTSVG_SOURCE)
 
 set(ACTS_VECMEM_SOURCE
-    "URL;https://github.com/acts-project/vecmem/archive/refs/tags/v${_acts_vecmem_version}.tar.gz;URL_HASH;SHA256=f13ba18b923d2f6da3dc8a20b76152f7ebf4420fbebb12684e7215d178780029"
+    "URL;https://github.com/acts-project/vecmem/archive/refs/tags/v${_acts_vecmem_version}.tar.gz;URL_HASH;SHA256=a1dd195e154ed23a0e50c52e22fb9f986fc65cd99860020fc47a292f597fa88d"
     CACHE STRING
     "Source to take VECMEM from"
 )
@@ -20,7 +20,7 @@ set(ACTS_COVFIE_SOURCE
 mark_as_advanced(ACTS_COVFIE_SOURCE)
 
 set(ACTS_TRACCC_SOURCE
-    "URL;https://github.com/acts-project/traccc/archive/refs/tags/v${_acts_traccc_version}.tar.gz;URL_HASH;SHA256=6416ed79c38201397a294a23b43dfbb255bd20603faf652707c67e5022f98af8"
+    "URL;https://github.com/acts-project/traccc/archive/refs/tags/v${_acts_traccc_version}.tar.gz;URL_HASH;SHA256=9c7e772a088cadfbdcb63abe51e4064241c84f10fbfc27594cbd0cc78d140d64"
     CACHE STRING
     "Source to take TRACCC from"
 )
