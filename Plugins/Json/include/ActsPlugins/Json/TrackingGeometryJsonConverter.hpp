@@ -172,7 +172,7 @@ class TrackingGeometryJsonConverter {
   ///
   /// @return pointer to deserialized geometry
   std::shared_ptr<TrackingGeometry> fromJson(
-      const GeometryContext& gctx, const std::string& jsonPath,
+      const GeometryContext& gctx, const std::filesystem::path& jsonPath,
       const Options& options = Options{}) const;
 
   /// @brief Convert a tracking volume hierarchy to JSON.
