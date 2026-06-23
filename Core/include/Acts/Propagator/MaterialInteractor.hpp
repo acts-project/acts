@@ -79,10 +79,17 @@ struct MaterialInteractor {
       ACTS_VERBOSE("MaterialInteractor | " << "Found material on surface "
                                            << surface->geometryId());
 
-      const MaterialSlab slab = detail::evaluateMaterialSlab(
+      const Result<MaterialSlab> slabResult = detail::evaluateMaterialSlab(
           state, stepper, *surface,
           detail::determineMaterialUpdateMode(state, navigator,
                                               MaterialUpdateMode::FullUpdate));
+      if (!slabResult.ok()) {
+        ACTS_DEBUG("MaterialInteractor | "
+                   << "Failed to evaluate material slab: "
+                   << slabResult.error());
+        return Result<void>::failure(slabResult.error());
+      }
+      const MaterialSlab& slab = *slabResult;
 
       // Determine the effective traversed material and its properties
       // Material exists but it's not real, i.e. vacuum; there is nothing to do
@@ -135,7 +142,7 @@ struct MaterialInteractor {
     const TrackingVolume* volume = navigator.currentVolume(state.navigation);
 
     // We only have material interactions if there is potential material
-    if (volume && volume->volumeMaterial()) {
+    if (volume && volume->hasMaterial()) {
       ACTS_VERBOSE("MaterialInteractor | " << "Found material in volume "
                                            << volume->geometryId());
 

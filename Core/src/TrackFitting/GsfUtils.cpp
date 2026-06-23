@@ -12,7 +12,6 @@
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
 #include <cstddef>
@@ -78,9 +77,10 @@ double detail::Gsf::applyBetheHeitler(
       initialParameters.particleHypothesis();
 
   // Evaluate material slab
-  MaterialSlab slab = surface.surfaceMaterial()->materialSlab(
-      initialParameters.position(geoContext), direction,
-      MaterialUpdateMode::FullUpdate);
+  const Vector2 lposition =
+      initialParameters.parameters().template segment<2>(eBoundLoc0);
+  MaterialSlab slab = surface.materialSlab(lposition, direction,
+                                           MaterialUpdateMode::FullUpdate);
 
   const double pathCorrection =
       surface.pathCorrection(geoContext, initialParameters.position(geoContext),

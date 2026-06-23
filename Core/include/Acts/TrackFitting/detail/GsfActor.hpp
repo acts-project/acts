@@ -186,7 +186,7 @@ struct GsfActor {
     const auto foundSourceLink =
         m_cfg.inputMeasurements->find(surface.geometryId());
     const bool haveMaterial =
-        surface.surfaceMaterial() && !m_cfg.disableAllMaterialHandling;
+        surface.hasMaterial() && !m_cfg.disableAllMaterialHandling;
     const bool haveMeasurement =
         foundSourceLink != m_cfg.inputMeasurements->end();
 
@@ -223,17 +223,23 @@ struct GsfActor {
 
     if (m_cfg.multipleScattering && haveMaterial) {
       if (haveMeasurement) {
-        applyMultipleScattering(
+        const Result<void> materialInteractionRes = applyMultipleScattering(
             state, stepper, surface,
             determineMaterialUpdateMode(state, navigator,
                                         MaterialUpdateMode::PreUpdate),
             logger());
+        if (!materialInteractionRes.ok()) {
+          return materialInteractionRes.error();
+        }
       } else {
-        applyMultipleScattering(
+        const Result<void> materialInteractionRes = applyMultipleScattering(
             state, stepper, surface,
             determineMaterialUpdateMode(state, navigator,
                                         MaterialUpdateMode::FullUpdate),
             logger());
+        if (!materialInteractionRes.ok()) {
+          return materialInteractionRes.error();
+        }
       }
     }
 
@@ -303,16 +309,19 @@ struct GsfActor {
 
       removeLowWeightComponents(componentCache, m_cfg.weightCutoff);
 
-      updateStepper(state, stepper, surface, componentCache, logger());
+      updateStepper(state, stepper, surface, componentCache);
     }
 
     // If we have only done preUpdate before, now do postUpdate
     if (m_cfg.multipleScattering && haveMaterial && haveMeasurement) {
-      applyMultipleScattering(
+      const Result<void> materialInteractionRes = applyMultipleScattering(
           state, stepper, surface,
           determineMaterialUpdateMode(state, navigator,
                                       MaterialUpdateMode::PostUpdate),
           logger());
+      if (!materialInteractionRes.ok()) {
+        return materialInteractionRes.error();
+      }
     }
 
     return Result<void>::success();
@@ -431,13 +440,12 @@ struct GsfActor {
       ++result.measurementStates;
     }
 
-    updateMultiTrajectory(
-        result, tmpStates, surface,
-        TrackStateType()
-            .setHasParameters()
-            .setHasMaterial(surface.surfaceMaterial() != nullptr)
-            .setHasMeasurement()
-            .setIsOutlier(isOutlier));
+    updateMultiTrajectory(result, tmpStates, surface,
+                          TrackStateType()
+                              .setHasParameters()
+                              .setHasMaterial(surface.hasMaterial())
+                              .setHasMeasurement()
+                              .setIsOutlier(isOutlier));
 
     result.lastMeasurementTip = result.currentTip;
     result.lastMeasurementSurface = &surface;
@@ -515,12 +523,11 @@ struct GsfActor {
       ++result.measurementHoles;
     }
 
-    updateMultiTrajectory(
-        result, tmpStates, surface,
-        TrackStateType()
-            .setHasParameters()
-            .setHasMaterial(surface.surfaceMaterial() != nullptr)
-            .setIsHole(isHole));
+    updateMultiTrajectory(result, tmpStates, surface,
+                          TrackStateType()
+                              .setHasParameters()
+                              .setHasMaterial(surface.hasMaterial())
+                              .setIsHole(isHole));
 
     return Result<void>::success();
   }

@@ -114,7 +114,7 @@ std::array<value_t, kDIM> toArray(const std::vector<value_t>& vecvals) {
 /// that is callable with @c Args
 template <template <std::size_t> class Callable, std::size_t N,
           std::size_t NMAX, typename... Args>
-auto template_switch(std::size_t v, Args&&... args) {
+decltype(auto) template_switch(std::size_t v, Args&&... args) {
   if (v == N) {
     return Callable<N>::invoke(std::forward<Args>(args)...);
   }
@@ -141,7 +141,8 @@ auto template_switch(std::size_t v, Args&&... args) {
 /// @param args Additional arguments passed to @p func
 /// @return The result of calling the dispatched lambda function
 template <std::size_t N, std::size_t NMAX, typename Lambda, typename... Args>
-auto template_switch_lambda(std::size_t v, Lambda&& func, Args&&... args) {
+decltype(auto) template_switch_lambda(std::size_t v, Lambda&& func,
+                                      Args&&... args) {
   if (v == N) {
     return func(std::integral_constant<std::size_t, N>{},
                 std::forward<Args>(args)...);

@@ -21,6 +21,7 @@ using namespace Acts;
 namespace ActsTests {
 
 class SurfaceMaterialStub : public ISurfaceMaterial {
+ public:
   using ISurfaceMaterial::ISurfaceMaterial;
 
   ISurfaceMaterial& scale(double /*factor*/) override { return *this; };
@@ -39,6 +40,8 @@ class SurfaceMaterialStub : public ISurfaceMaterial {
     sl << "SurfaceMaterialStub";
     return sl;
   };
+
+  std::vector<AxisDirection> localAxisDirections() const override { return {}; }
 
   MaterialSlab m_fullMaterial = MaterialSlab::Nothing();
 };

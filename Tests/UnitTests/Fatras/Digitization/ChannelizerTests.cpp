@@ -13,8 +13,8 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "ActsFatras/Digitization/Channelizer.hpp"
-#include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
-#include "ActsFatras/Digitization/PlanarSurfaceMask.hpp"
+#include "ActsFatras/Digitization/SurfaceDrift.hpp"
+#include "ActsFatras/Digitization/SurfaceMask.hpp"
 
 #include <numeric>
 

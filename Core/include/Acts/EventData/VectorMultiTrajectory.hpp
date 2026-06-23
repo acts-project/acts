@@ -496,7 +496,11 @@ class VectorMultiTrajectory final
   template <typename T>
   void addColumn_impl(std::string_view key) {
     HashedString hashedKey = hashStringDynamic(key);
-    m_dynamic.insert({hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
+    auto insertItr = m_dynamic.insert(
+        {hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
+    if (insertItr.second && size() > 0ul) {
+      insertItr.first->second->resize(size());
+    }
   }
 
   bool hasColumn_impl(HashedString key) const {

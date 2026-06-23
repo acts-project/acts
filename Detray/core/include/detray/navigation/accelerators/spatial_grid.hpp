@@ -79,6 +79,7 @@ class spatial_grid_impl : public grid_t {
   ///
   /// @return the iterable view of the bin content
   DETRAY_HOST_DEVICE decltype(auto) search(const query_type &p) const {
+    DETRAY_DEBUG_HOST(" -> lookup pos: " << p);
     return this->bin(p);
   }
 
@@ -88,6 +89,7 @@ class spatial_grid_impl : public grid_t {
   ///
   /// @return the iterable view of the bin content
   DETRAY_HOST_DEVICE decltype(auto) search(const query_type &p) {
+    DETRAY_DEBUG_HOST(" -> lookup pos: " << p);
     return this->bin(p);
   }
 
@@ -115,13 +117,33 @@ class spatial_grid_impl : public grid_t {
       result = intersector.point_of_intersection(tangential, trf, overstep_tol);
     }
 
-    // Retrieve the closest intersection point
+    // Retrieve the closest intersection point and check its valid
     typename intersector_t::point_type intr_point;
+    bool is_inside{true};
     if constexpr (intersector_t::n_solutions == 1) {
-      intr_point = result.point;
+      // Intersection with the grid was found
+      if (detray::detail::all_of(result.is_valid())) [[likely]] {
+        intr_point = result.point;
+      } else {
+        is_inside = false;
+      }
     } else {
-      // Use the closest intersection
-      intr_point = result[0].point;
+      // Closest intersection with the grid was found
+      if (detray::detail::all_of(result[0].is_valid())) [[likely]] {
+        intr_point = result[0].point;
+      } else {
+        is_inside = false;
+      }
+    }
+    // Use ray origin as query position
+    if (!is_inside) [[unlikely]] {
+      // In case the intersection results come in local coordinates
+      if constexpr (std::same_as<decltype(intr_point), query_type>) {
+        intr_point =
+            frame_t::global_to_local(trf, tangential.pos(), tangential.dir());
+      } else {
+        intr_point = tangential.pos();
+      }
     }
 
     // Most intersectors return global positions -> project to grid axes
@@ -148,6 +170,10 @@ class spatial_grid_impl : public grid_t {
   DETRAY_HOST_DEVICE auto search(
       const query_type &p,
       const search_window<window_size_t, 2> &win_size) const {
+    DETRAY_DEBUG_HOST(" -> lookup pos: " << p);
+    DETRAY_DEBUG_HOST(" -> search window: [" << win_size[0] << ", "
+                                             << win_size[1] << "]");
+
     // Return iterable over bins in the search window
     auto bin_ranges = this->axes().bin_ranges(p, win_size);
     auto search_area = axis::detail::bin_view(*this, bin_ranges);
@@ -185,8 +211,6 @@ class spatial_grid_impl : public grid_t {
     } else {
       loc_pos = this->project(trf, track.pos(), track.dir());
     }
-
-    DETRAY_DEBUG_HOST(" -> lookup pos: " << loc_pos);
 
     // Grid lookup
     return search(loc_pos, win_size);

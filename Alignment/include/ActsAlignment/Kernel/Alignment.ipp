@@ -13,6 +13,7 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/detail/EigenCompat.hpp"
 #include "ActsAlignment/Kernel/AlignmentError.hpp"
 #include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
@@ -113,9 +114,9 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
   alignResult.alignmentDof =
       alignResult.idxedAlignSurfaces.size() * Acts::eAlignmentSize;
   // Initialize derivative of chi2 w.r.t. alignment parameters for all tracks
-  Acts::DynamicVector sumChi2Derivative =
+  alignResult.sumChi2Derivative =
       Acts::DynamicVector::Zero(alignResult.alignmentDof);
-  Acts::DynamicMatrix sumChi2SecondDerivative = Acts::DynamicMatrix::Zero(
+  alignResult.sumChi2SecondDerivative = Acts::DynamicMatrix::Zero(
       alignResult.alignmentDof, alignResult.alignmentDof);
   alignResult.chi2 = 0;
   alignResult.measurementDim = 0;
@@ -125,14 +126,14 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
     for (const auto& [rowSurface, rows] : alignState.alignedSurfaces) {
       const auto& [dstRow, srcRow] = rows;
       // Fill the results into full chi2 derivative matrix
-      sumChi2Derivative.segment<Acts::eAlignmentSize>(dstRow *
-                                                      Acts::eAlignmentSize) +=
+      alignResult.sumChi2Derivative.segment<Acts::eAlignmentSize>(
+          dstRow * Acts::eAlignmentSize) +=
           alignState.alignmentToChi2Derivative.segment(
               srcRow * Acts::eAlignmentSize, Acts::eAlignmentSize);
 
       for (const auto& [colSurface, cols] : alignState.alignedSurfaces) {
         const auto& [dstCol, srcCol] = cols;
-        sumChi2SecondDerivative
+        alignResult.sumChi2SecondDerivative
             .block<Acts::eAlignmentSize, Acts::eAlignmentSize>(
                 dstRow * Acts::eAlignmentSize, dstCol * Acts::eAlignmentSize) +=
             alignState.alignmentToChi2SecondDerivative.block(
@@ -152,7 +153,8 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
   std::size_t alignDof = alignResult.alignmentDof;
   Acts::DynamicMatrix sumChi2SecondDerivativeInverse =
       Acts::DynamicMatrix::Zero(alignDof, alignDof);
-  sumChi2SecondDerivativeInverse = sumChi2SecondDerivative.inverse();
+  sumChi2SecondDerivativeInverse =
+      alignResult.sumChi2SecondDerivative.inverse();
   if (sumChi2SecondDerivativeInverse.hasNaN()) {
     ACTS_DEBUG("Chi2 second derivative inverse has NaN");
   }
@@ -163,16 +165,56 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
       Acts::DynamicMatrix::Zero(alignDof, alignDof);
   // Solve the linear equation to get alignment parameters change
   alignResult.deltaAlignmentParameters =
-      -sumChi2SecondDerivative.fullPivLu().solve(sumChi2Derivative);
-  ACTS_VERBOSE("sumChi2SecondDerivative = \n" << sumChi2SecondDerivative);
-  ACTS_VERBOSE("sumChi2Derivative = \n" << sumChi2Derivative);
+      -alignResult.sumChi2SecondDerivative.fullPivLu().solve(
+          alignResult.sumChi2Derivative);
+  ACTS_VERBOSE("sumChi2SecondDerivative = \n"
+               << alignResult.sumChi2SecondDerivative);
+  ACTS_VERBOSE("sumChi2Derivative = \n" << alignResult.sumChi2Derivative);
   ACTS_VERBOSE("alignResult.deltaAlignmentParameters \n");
 
   // Alignment parameters covariance
   alignResult.alignmentCovariance = 2 * sumChi2SecondDerivativeInverse;
   // chi2 change
-  alignResult.deltaChi2 = 0.5 * sumChi2Derivative.transpose() *
+  alignResult.deltaChi2 = 0.5 * alignResult.sumChi2Derivative.transpose() *
                           alignResult.deltaAlignmentParameters;
+}
+
+template <typename fitter_t>
+double ActsAlignment::Alignment<fitter_t>::decompositionAnalysis(
+    const AlignmentResult& res, std::ostream& out) {
+  if (res.sumChi2SecondDerivative.cols() == 0) {
+    ACTS_ERROR(
+        "Please run Alignment::calculateAlignmentParameters before calling "
+        "Alignment::decompositionAnalysis.");
+    return -1;
+  }
+  Eigen::SelfAdjointEigenSolver<Acts::DynamicMatrix> eigenSolver(
+      res.sumChi2SecondDerivative);
+  if (eigenSolver.info() != Eigen::Success) {
+    std::cout << " FAILED to find decompose correlation term" << std::endl;
+    return -1;
+  }
+  const Acts::DynamicVector eigenVals = eigenSolver.eigenvalues();
+  const Acts::DynamicMatrix eigenVecs = eigenSolver.eigenvectors();
+
+  std::map<double, int> sortedEV;
+  for (int k = 0; k < eigenVals.size(); ++k) {
+    sortedEV.emplace(eigenVals(k), k);
+  }
+  double firstEV = -1, lastEV = -1;
+  for (auto& [EV, index] : sortedEV) {
+    if (EV > 0 && firstEV < 0) {
+      firstEV = EV;
+    }
+    lastEV = EV;
+    out << " Eigenvector " << index << " has eigenvalue " << EV << std::endl;
+    for (std::size_t row = 0; row < eigenVecs.rows(); ++row) {
+      out << "        " << std::setw(12) << "  " << std::setw(3) << row + 1
+          << "  " << std::setw(12) << eigenVecs(row, index) << std::endl;
+    }
+    out << std::endl;
+  }
+  return lastEV / firstEV;
 }
 
 template <typename fitter_t>

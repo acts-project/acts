@@ -9,6 +9,7 @@
 message(STATUS "Building 'detray::test_sycl' component")
 
 # Enable SYCL as a language.
+include(vecmem-check-language) # Needed for the SYCL language.
 enable_language(SYCL)
 
 # Set the default SYCL compiler flags.

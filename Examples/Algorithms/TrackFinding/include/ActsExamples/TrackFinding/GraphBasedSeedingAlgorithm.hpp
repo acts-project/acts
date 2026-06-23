@@ -95,6 +95,12 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// used to assign LayerIds to the GbtsActsMap
   std::map<std::uint32_t, std::uint32_t> m_layerIdMap{};
 
+  /// used to tell if a layer is a strip or pixel layer
+  std::vector<bool> m_isPixelLayer{};
+
+  /// used to define region of interest
+  std::optional<Acts::Experimental::GbtsRoiDescriptor> m_internalRoi;
+
   /// handle that points to the container of input space points
   ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
                                                          "InputSpacePoints"};

@@ -490,10 +490,12 @@ createDenseTelescope(const GeometryContext& geoCtx) {
     surfaceBottom.isSensitive = true;
 
     CuboidVolumeBuilder::LayerConfig layer;
+    layer.binningDimension = AxisDirection::AxisZ;
     layer.surfaceCfg.push_back(surfaceTop);
     layer.surfaceCfg.push_back(surfaceBottom);
 
     CuboidVolumeBuilder::VolumeConfig start;
+    start.binningDimension = AxisDirection::AxisZ;
     start.position = {0, 0, 0};
     start.length = {1.9_m, 1.9_m, 1.9_m};
     start.name = "start";

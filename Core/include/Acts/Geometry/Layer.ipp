@@ -62,7 +62,7 @@ inline bool Layer::resolve(bool resolveSensitive, bool resolveMaterial,
   }
   if (resolveMaterial &&
       (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1 ||
-       (surfaceRepresentation().surfaceMaterial() != nullptr))) {
+       surfaceRepresentation().hasMaterial())) {
     return true;
   }
   return false;

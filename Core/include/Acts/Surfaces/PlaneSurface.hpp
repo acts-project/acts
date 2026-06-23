@@ -259,7 +259,10 @@ class PlaneSurface : public RegularSurface {
   /// the bounds of this surface
   std::shared_ptr<const PlanarBounds> m_bounds;
 
- private:
+  /// @copydoc Surface::localAxes
+  std::array<AxisDirection, 2> localAxes() const override {
+    return {AxisDirection::AxisX, AxisDirection::AxisY};
+  }
 };
 
 static_assert(RegularSurfaceConcept<PlaneSurface>,

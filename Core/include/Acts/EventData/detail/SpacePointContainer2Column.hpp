@@ -42,7 +42,7 @@ class ColumnHolderBase {
 };
 
 template <typename T>
-class ColumnHolder final : public ColumnHolderBase {
+class ColumnHolder /*final*/ : public ColumnHolderBase {
  public:
   using Value = T;
   using Container = std::vector<Value>;
@@ -60,17 +60,17 @@ class ColumnHolder final : public ColumnHolderBase {
     return ConstProxy(container, m_data);
   }
 
-  std::unique_ptr<ColumnHolderBase> copy() const override {
+  std::unique_ptr<ColumnHolderBase> copy() const final {
     return std::make_unique<ColumnHolder<T>>(*this);
   }
 
-  std::size_t size() const override { return m_data.size(); }
-  void reserve(std::size_t size) override { m_data.reserve(size); }
-  void clear() override { m_data.clear(); }
-  void resize(std::size_t size) override { m_data.resize(size, m_default); }
-  void emplace_back() override { m_data.emplace_back(m_default); }
+  std::size_t size() const final { return m_data.size(); }
+  void reserve(std::size_t size) final { m_data.reserve(size); }
+  void clear() final { m_data.clear(); }
+  void resize(std::size_t size) final { m_data.resize(size, m_default); }
+  void emplace_back() final { m_data.emplace_back(m_default); }
   void copyFrom(const ColumnHolderBase &source, std::size_t sourceIndex,
-                std::size_t destinationIndex) override {
+                std::size_t destinationIndex) final {
     const auto &typedSource = static_cast<const ColumnHolder<T> &>(source);
     m_data[destinationIndex] = typedSource.m_data[sourceIndex];
   }

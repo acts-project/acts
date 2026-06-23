@@ -13,7 +13,6 @@
 #include <algorithm>
 #include <exception>
 #include <iterator>
-#include <ranges>
 #include <string>
 
 #include <boost/algorithm/string/join.hpp>

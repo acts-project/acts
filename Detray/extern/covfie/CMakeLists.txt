@@ -15,8 +15,15 @@ if(POLICY CMP0135)
     cmake_policy(SET CMP0135 NEW)
 endif()
 
+if(TARGET covfie::core)
+    message(
+        FATAL_ERROR
+        "Setup of covfie requested, but target `covfie::core` exists!"
+    )
+endif()
+
 # Tell the user what's happening.
-message(STATUS "Fetching covfie as part of the Detray project")
+message(STATUS "Building covfie as part of the Detray project")
 
 # Declare where to get covfie from.
 set(DETRAY_COVFIE_SOURCE

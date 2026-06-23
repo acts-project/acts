@@ -1488,6 +1488,7 @@ def addKalmanTracks(
     calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
     linkForward: bool = False,
     useJosephFormulation: bool = False,
+    useReferenceTrajectory: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -1502,6 +1503,21 @@ def addKalmanTracks(
         "chi2Cut": float("inf"),
         "useJosephFormulation": useJosephFormulation,
     }
+    fitFunction = acts.examples.makeKalmanFitterFunction(
+        trackingGeometry, field, **kalmanOptions
+    )
+
+    if useReferenceTrajectory:
+        kalmanOptions = {
+            "multipleScattering": multipleScattering,
+            "energyLoss": energyLoss,
+            "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
+            "level": customLogLevel(),
+            "useJosephFormulation": useJosephFormulation,
+        }
+        fitFunction = acts.examples.makeKalmanReferenceTrajectoryFitterFunction(
+            trackingGeometry, field, **kalmanOptions
+        )
 
     fitAlg = acts.examples.TrackFittingAlgorithm(
         level=customLogLevel(),
@@ -1511,9 +1527,7 @@ def addKalmanTracks(
         inputClusters=clusters if clusters is not None else "",
         outputTracks="kf_tracks",
         pickTrack=-1,
-        fit=acts.examples.makeKalmanFitterFunction(
-            trackingGeometry, field, **kalmanOptions
-        ),
+        fit=fitFunction,
         calibrator=calibrator,
         linkForward=linkForward,
     )
@@ -1617,6 +1631,7 @@ def addCKFTracks(
     writeTrackStates: bool = False,
     writePerformance: bool = True,
     writeCovMat=False,
+    writeMatchingDetails: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
     prefix: str = "",
 ) -> None:
@@ -1756,6 +1771,7 @@ def addCKFTracks(
         writeSummary=writeTrackSummary,
         writeStates=writeTrackStates,
         writeFitterPerformance=writePerformance,
+        writeMatchingDetails=writeMatchingDetails,
         writeFinderPerformance=writePerformance,
         writeCovMat=writeCovMat,
         logLevel=logLevel,
@@ -1837,6 +1853,7 @@ def addTrackWriters(
     writeFinderNTuple: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
     writeCovMat=False,
+    writeMatchingDetails: bool = False,
 ):
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -1892,6 +1909,7 @@ def addTrackWriters(
                 inputParticleTrackMatching="particle_track_matching",
                 inputParticleMeasurementsMap="particle_measurements_map",
                 filePath=str(outputDirRoot / f"performance_finding_{name}.root"),
+                writeMatchingDetails=writeMatchingDetails,
             )
             s.addWriter(trackFinderPerfWriter)
 
@@ -1973,6 +1991,8 @@ def addGnn(
     inputClusters: str = "",
     outputDirRoot: Optional[Union[Path, str]] = None,
     device=None,
+    shrinkNodes: bool = False,
+    writeMatchingDetails: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
     """
@@ -1988,20 +2008,12 @@ def addGnn(
         trackBuilder: Track building stage (BoostTrackBuilding, CudaTrackBuilding, etc.)
         nodeFeatures: List of node features to extract from space points/clusters
         featureScales: Scaling factors for each feature
-        trackingGeometry: Optional tracking geometry for creating space points
-        geometrySelection: Optional geometry selection file for space point creation
         inputSpacePoints: Name of input space point collection (default: "spacepoints")
         inputClusters: Name of input cluster collection (default: "")
         outputDirRoot: Optional output directory for performance ROOT files
         device: acts.gnn.Device to run the GNN pipeline on (default: acts.gnn.Device.Cuda())
+        shrinkNodes: Remove unused nodes before each edge classification step
         logLevel: Logging level
-
-    Note:
-        The trackingGeometry parameter serves two distinct purposes depending on the workflow:
-        1. Space point creation: When provided along with geometrySelection, creates space points
-           from measurements using SpacePointMaker (typical for simulation workflows)
-        2. Module map usage: Some graph constructors (e.g., ModuleMapCuda) require
-           trackingGeometry to map module IDs even when using pre-existing space points
     """
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -2029,6 +2041,7 @@ def addGnn(
         nodeFeatures=nodeFeatures,
         featureScales=featureScales,
         device=device,
+        shrinkNodes=shrinkNodes,
     )
     s.addAlgorithm(findingAlg)
     s.addWhiteboardAlias("protoTracks", findingAlg.config.outputProtoTracks)
@@ -2070,6 +2083,7 @@ def addGnn(
         writeFinderPerformance=True,
         writeSummary=False,
         writeFinderNTuple=True,
+        writeMatchingDetails=writeMatchingDetails,
     )
 
     return s
@@ -2088,6 +2102,7 @@ def addAmbiguityResolution(
     writeTrackStates: bool = False,
     writePerformance: bool = True,
     writeCovMat=False,
+    writeMatchingDetails: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
     prefix: str = "",
 ) -> None:
@@ -2137,6 +2152,7 @@ def addAmbiguityResolution(
         writeSummary=writeTrackSummary,
         writeStates=writeTrackStates,
         writeFitterPerformance=writePerformance,
+        writeMatchingDetails=writeMatchingDetails,
         writeFinderPerformance=writePerformance,
         writeCovMat=writeCovMat,
         logLevel=logLevel,
@@ -2159,6 +2175,7 @@ def addScoreBasedAmbiguityResolution(
     writeTrackStates: bool = False,
     writePerformance: bool = True,
     writeCovMat=False,
+    writeMatchingDetails: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     from acts.examples import ScoreBasedAmbiguityResolutionAlgorithm
@@ -2208,6 +2225,7 @@ def addScoreBasedAmbiguityResolution(
         writeSummary=writeTrackSummary,
         writeStates=writeTrackStates,
         writeFitterPerformance=writePerformance,
+        writeMatchingDetails=writeMatchingDetails,
         writeFinderPerformance=writePerformance,
         writeCovMat=writeCovMat,
         logLevel=logLevel,
@@ -2230,6 +2248,7 @@ def addAmbiguityResolutionML(
     writeTrackStates: bool = False,
     writePerformance: bool = True,
     writeCovMat=False,
+    writeMatchingDetails: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     from acts.examples.onnx import AmbiguityResolutionMLAlgorithm
@@ -2288,6 +2307,7 @@ def addAmbiguityResolutionML(
         writeSummary=writeTrackSummary,
         writeStates=writeTrackStates,
         writeFitterPerformance=writePerformance,
+        writeMatchingDetails=writeMatchingDetails,
         writeFinderPerformance=writePerformance,
         writeCovMat=writeCovMat,
         logLevel=logLevel,

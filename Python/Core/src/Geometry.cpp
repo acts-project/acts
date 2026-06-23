@@ -8,10 +8,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
@@ -23,20 +21,14 @@
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/RangeXD.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
-#include "ActsPython/Utilities/Macros.hpp"
 
 #include <array>
 #include <memory>
 #include <numbers>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -48,7 +40,6 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 using namespace Acts;
-using namespace ActsExamples;
 
 namespace {
 struct GeometryIdentifierHookBinding : public GeometryIdentifierHook {
@@ -66,8 +57,7 @@ struct MaterialSurfaceSelector {
 
   /// @param surface is the test surface
   void operator()(const Surface* surface) {
-    if (surface->surfaceMaterial() != nullptr &&
-        !rangeContainsValue(surfaces, surface)) {
+    if (surface->hasMaterial() && !rangeContainsValue(surfaces, surface)) {
       surfaces.push_back(surface);
     }
   }
@@ -185,6 +175,13 @@ void addGeometry(py::module_& m) {
               self = self.withExtra(value);
             })
         .def_property_readonly("value", &GeometryIdentifier::value)
+        .def("__eq__",
+             [](const GeometryIdentifier& self,
+                const GeometryIdentifier& other) { return self == other; })
+        .def("__hash__",
+             [](const GeometryIdentifier& self) {
+               return std::hash<GeometryIdentifier>{}(self);
+             })
         .def("__str__", [](const GeometryIdentifier& self) {
           std::stringstream ss;
           ss << self;
@@ -228,6 +225,8 @@ void addGeometry(py::module_& m) {
                    self.visitSurfaces(func);
                  })
             .def("geoIdSurfaceMap", &TrackingGeometry::geoIdSurfaceMap)
+            .def("findPortal", &TrackingGeometry::findPortal, py::arg("tag"),
+                 py::return_value_policy::reference_internal)
             .def("extractMaterialSurfaces",
                  [](TrackingGeometry& self) {
                    MaterialSurfaceSelector selector;
@@ -250,6 +249,7 @@ void addGeometry(py::module_& m) {
   {
     py::class_<VolumeBounds, std::shared_ptr<VolumeBounds>>(m, "VolumeBounds")
         .def("type", &VolumeBounds::type)
+        .def("values", &VolumeBounds::values)
         .def("__str__", [](const VolumeBounds& self) {
           std::stringstream ss;
           ss << self;
@@ -279,7 +279,10 @@ void addGeometry(py::module_& m) {
         .def_property_readonly(
             "volumeBounds",
             py::overload_cast<>(&Volume::volumeBounds, py::const_),
-            py::return_value_policy::reference_internal);
+            py::return_value_policy::reference_internal)
+        .def("center", &Volume::center, py::arg("gctx"))
+        .def("localToGlobalTransform", &Volume::localToGlobalTransform,
+             py::arg("gctx"));
 
     py::class_<TrackingVolume, Volume, std::shared_ptr<TrackingVolume>>(
         m, "TrackingVolume")

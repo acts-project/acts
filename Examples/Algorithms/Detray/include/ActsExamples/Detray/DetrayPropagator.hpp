@@ -11,10 +11,11 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "ActsExamples/Detray/DetrayStore.hpp"
 #include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
+
+#include <array>
 
 #include <covfie/core/field.hpp>
 #include <detray/navigation/caching_navigator.hpp>
@@ -24,49 +25,37 @@
 #include <detray/test/common/bfield.hpp>
 #include <detray/test/utils/inspectors.hpp>
 #include <detray/test/validation/material_validation_utils.hpp>
+#include <vecmem/memory/memory_resource.hpp>
 
 namespace ActsExamples {
 
-/// Define the algebra type
-using DetrayAlgebraType =
-    typename ActsPlugins::DetrayHostDetector::algebra_type;
-
-/// Type that holds the intersection information
-using DetrayIntersection = detray::intersection2D<
-    typename ActsPlugins::DetrayHostDetector::surface_type, DetrayAlgebraType,
-    false>;
-
-using DetrayMaterialTracer =
-    detray::material_validator::material_tracer<double, vecmem::vector>;
-
-/// Inspector that records all encountered surfaces
-using DetrayObjectTracer =
-    detray::navigation::object_tracer<DetrayIntersection, detray::dvector,
-                                      detray::navigation::status::e_on_object,
-                                      detray::navigation::status::e_on_portal>;
-
-template <typename stepper_t, typename detray_store_t, typename field_t = bool>
-class DetrayPropagator : public PropagatorInterface {
+template <typename stepper_t, typename detector_t, typename field_t,
+          bool kSTERILE>
+class DetrayConcretePropagator : public PropagatorInterface {
  public:
-  /// Configuration struct
-  struct Config {
-    /// The detray store
-    std::shared_ptr<const detray_store_t> detrayStore = nullptr;
-    /// Switch to sterile
-    bool sterile = false;
-    /// The field (if any)
-    field_t field = field_t();
-  };
-
-  /// Create a DetrayPropagator
+  /// Create a DetrayConcretePropagator - this is for testing purposes only,
+  /// it runs without actor chain.
   ///
-  /// @param cfg configuration struct
+  /// @param dGeometry the detray geometry
+  /// @param memoryResource the memory resource to use for the detray propagation
   /// @param logger The logger instance
-  explicit DetrayPropagator(const Config& cfg,
-                            std::unique_ptr<const Acts::Logger> logger =
-                                Acts::getDefaultLogger("DetrayPropagator",
-                                                       Acts::Logging::INFO))
-      : PropagatorInterface(), m_cfg(cfg), m_logger(std::move(logger)) {}
+  /// @param searchWindow the grid acceleration search window (per axis).
+  ///        Defaults to {0, 0}, i.e. detray only looks at the current bin and
+  ///        does no neighbor lookup. Increasing this lets a client probe
+  ///        whether the surface-grid filling needs to merge neighbor cells:
+  ///        if results change with a larger window, the converted grids are
+  ///        missing neighbor entries and the filling should be optimized.
+  explicit DetrayConcretePropagator(
+      std::shared_ptr<detector_t> dGeometry,
+      vecmem::memory_resource& memoryResource,
+      std::unique_ptr<const Acts::Logger> logger =
+          Acts::getDefaultLogger("DetrayPropagator", Acts::Logging::INFO),
+      std::array<unsigned int, 2> searchWindow = {0u, 0u})
+      : PropagatorInterface(),
+        m_detrayGeometry(std::move(dGeometry)),
+        m_memoryResource(&memoryResource),
+        m_searchWindow(searchWindow),
+        m_logger(std::move(logger)) {}
 
   ///@brief  Execute a propagation for charged particle parameters
   ///
@@ -85,78 +74,90 @@ class DetrayPropagator : public PropagatorInterface {
     // Get the track information
     const Acts::Vector3 position = startParameters.position(geoContext);
     const Acts::Vector3 direction = startParameters.momentum().normalized();
-
     ACTS_VERBOSE("Starting propagation at " << position.transpose()
                                             << " with direction "
                                             << direction.transpose());
 
     // Now follow that ray with the same track and check, if we find
     // the same volumes and distances along the way
-    detray::free_track_parameters<DetrayAlgebraType> track(
-        {position.x(), position.y(), position.z()}, 0.f,
-        {direction.x(), direction.y(), direction.z()},
-        startParameters.charge());
+    using DAlgebra = typename detector_t::algebra_type;
+
+    detray::free_track_parameters<DAlgebra> track(
+        {static_cast<float>(position.x()), static_cast<float>(position.y()),
+         static_cast<float>(position.z())},
+        0.f,
+        {static_cast<float>(direction.x()), static_cast<float>(direction.y()),
+         static_cast<float>(direction.z())},
+        static_cast<float>(startParameters.charge()));
 
     // Return material
     RecordedMaterial recordedMaterial;
     PropagationSummary summary(startParameters);
 
-    if (!m_cfg.sterile) {
-      /// Aggregation of multiple inspectors
-      using DetrayInspector = detray::aggregate_inspector<DetrayObjectTracer>;
+    detray::propagation::config dCfg{};
 
-      // Navigation with inspection
-      using DetrayNavigator =
-          detray::caching_navigator<ActsPlugins::DetrayHostDetector,
-                                    detray::navigation::default_cache_size,
-                                    DetrayInspector, DetrayIntersection>;
+    // Configure the grid acceleration search window. {0, 0} (the default) means
+    // detray only inspects the current bin and performs no neighbor lookup.
+    // A client can widen this to test whether the converted surface grids are
+    // missing neighbor-cell entries (see ctor documentation).
+    dCfg.navigation.search_window = {m_searchWindow[0], m_searchWindow[1]};
 
-      // Propagator with empty actor chain (for the moment)
-      using Propagator =
-          detray::propagator<stepper_t, DetrayNavigator,
-                             detray::actor_chain<DetrayMaterialTracer>>;
+    // Sterile propagation without actor chain
+    if constexpr (kSTERILE) {
+      using DNavigator = detray::caching_navigator<detector_t>;
+      using DPropagator =
+          detray::propagator<stepper_t, DNavigator, detray::actor_chain<>>;
 
-      detray::propagation::config prop_cfg{};
-      auto dCtx = prop_cfg.context;
-
+      DPropagator propagator(dCfg);
       // With and without field dispatch at compile time
       if constexpr (std::is_same<field_t, bool>::value == true) {
-        typename Propagator::state propagation(
-            track, m_cfg.detrayStore->detector, dCtx);
-        propagateAndRecord<Propagator>(propagation, summary, recordedMaterial);
+        typename DPropagator::state propagation(track, *m_detrayGeometry,
+                                                dCfg.context);
+        // Run the detray propagation
+        propagator.propagate(propagation);
       } else {
-        typename Propagator::state propagation(
-            track, m_cfg.field, m_cfg.detrayStore->detector, dCtx);
-        propagateAndRecord<Propagator>(propagation, summary, recordedMaterial);
+        typename DPropagator::state propagation(
+            track, m_field, *m_detrayGeometry, dCfg.context);
+        // Run the detray propagation
+        propagator.propagate(propagation);
       }
-
     } else {
+      /// Types for propagation tracing and inspection
+      using DIntersection =
+          detray::intersection2D<typename detector_t::surface_type, DAlgebra>;
+      using DMaterialTracer =
+          detray::material_validator::material_tracer<float, vecmem::vector>;
+      using DObjectTracer = detray::navigation::object_tracer<
+          DIntersection, detray::dvector,
+          detray::navigation::status::e_on_object,
+          detray::navigation::status::e_on_portal>;
+      using DInspector = detray::aggregate_inspector<DObjectTracer>;
+
       // Navigation with inspection
-      using DetrayNavigator =
-          detray::caching_navigator<ActsPlugins::DetrayHostDetector>;
+      using DNavigator =
+          detray::caching_navigator<detector_t,
+                                    detray::navigation::default_cache_size,
+                                    DInspector, DIntersection>;
 
       // Propagator with empty actor chain (for the moment)
-      using Propagator =
-          detray::propagator<stepper_t, DetrayNavigator, detray::actor_chain<>>;
-
-      detray::propagation::config prop_cfg{};
-      auto dCtx = prop_cfg.context;
-
-      using DetrayConfig = detray::propagation::config;
-      DetrayConfig dCfg{};
-      Propagator propagator(dCfg);
+      using DPropagator =
+          detray::propagator<stepper_t, DNavigator,
+                             detray::actor_chain<DMaterialTracer>>;
 
       // With and without field dispatch at compile time
       if constexpr (std::is_same<field_t, bool>::value == true) {
-        typename Propagator::state propagation(
-            track, m_cfg.detrayStore->detector, dCtx);
-        // Run the detray propagation
-        propagator.propagate(propagation);
+        typename DPropagator::state propagation(track, *m_detrayGeometry,
+                                                dCfg.context);
+        DPropagator propagator(dCfg);
+
+        propagateAndRecord<DMaterialTracer, DObjectTracer>(
+            propagation, propagator, summary, recordedMaterial);
       } else {
-        typename Propagator::state propagation(
-            track, m_cfg.field, m_cfg.detrayStore->detector, dCtx);
-        // Run the detray propagation
-        propagator.propagate(propagation);
+        typename DPropagator::state propagation(
+            track, m_field, *m_detrayGeometry, dCfg.context);
+        DPropagator propagator(dCfg);
+        propagateAndRecord<DMaterialTracer, DObjectTracer>(
+            propagation, propagator, summary, recordedMaterial);
       }
     }
 
@@ -167,19 +168,16 @@ class DetrayPropagator : public PropagatorInterface {
   /// Propagate and record the steps and material
   /// @tparam propagator_type The type of the propagator
   /// @param propagation The propagation state
+  /// @param propagator The propagator to run
   /// @param summary The propagation summary to fill
   /// @param recordedMaterial The recorded material to fill
-  template <typename propagator_type>
-  void propagateAndRecord(typename propagator_type::state& propagation,
+  template <typename material_tracer_t, typename object_tracer_t,
+            typename propagator_t>
+  void propagateAndRecord(typename propagator_t::state& propagation,
+                          const propagator_t& propagator,
                           PropagationSummary& summary,
                           RecordedMaterial& recordedMaterial) const {
-    using DetrayConfig = detray::propagation::config;
-    DetrayConfig dCfg{};
-
-    propagator_type propagator(dCfg);
-
-    DetrayMaterialTracer::state materialTracerState{
-        *m_cfg.detrayStore->memoryResource};
+    typename material_tracer_t::state materialTracerState{*m_memoryResource};
 
     auto actorStates = detray::tie(materialTracerState);
 
@@ -188,15 +186,14 @@ class DetrayPropagator : public PropagatorInterface {
 
     // Retrieve navigation information
     auto& inspector = propagation.navigation().inspector();
-    auto& objectTracer = inspector.template get<DetrayObjectTracer>();
+    auto& objectTracer = inspector.template get<object_tracer_t>();
 
     // Translate the objects into the steps
     for (const auto& object : objectTracer.object_trace) {
       // Get the position of the object
       const auto& dposition = object.pos;
       const auto& sfDesription = object.intersection.surface();
-      const auto sf =
-          detray::tracking_surface{m_cfg.detrayStore->detector, sfDesription};
+      const auto sf = detray::tracking_surface{*m_detrayGeometry, sfDesription};
       Acts::GeometryIdentifier geoID(sf.source());
       // Create a step from the object
       Acts::detail::Step step;
@@ -215,12 +212,27 @@ class DetrayPropagator : public PropagatorInterface {
   }
 
   /// The detray detector store and memory resource
-  Config m_cfg;
+  std::shared_ptr<detector_t> m_detrayGeometry = nullptr;
+  vecmem::memory_resource* m_memoryResource = nullptr;
+
+  /// Grid acceleration search window (per axis) applied to the navigation
+  /// config. {0, 0} disables neighbor lookup.
+  std::array<unsigned int, 2> m_searchWindow = {0u, 0u};
+
+  field_t m_field = field_t();
 
   /// The logging instance
   std::unique_ptr<const Acts::Logger> m_logger = nullptr;
 
   const Acts::Logger& logger() const { return *m_logger; }
 };
+
+template <typename stepper_t, typename detector_t, typename field_t = bool>
+using DetraySterilePropagator =
+    DetrayConcretePropagator<stepper_t, detector_t, field_t, true>;
+
+template <typename stepper_t, typename detector_t, typename field_t = bool>
+using DetrayPropagator =
+    DetrayConcretePropagator<stepper_t, detector_t, field_t, false>;
 
 }  // namespace ActsExamples

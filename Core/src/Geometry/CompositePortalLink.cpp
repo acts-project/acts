@@ -257,7 +257,7 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
     for (const auto& [i, child] : enumerate(trivialLinks)) {
       gridPortalLink->grid().atLocalBins({i + 1}) = &child.volume();
     }
-
+    gridPortalLink->setArtifactPortalLinks(std::move(trivialLinks));
     return gridPortalLink;
 
   } else if (surface().type() == Surface::SurfaceType::Disc) {
@@ -294,12 +294,14 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
 
     Axis axis{AxisBound, edges};
 
-    auto grid = GridPortalLink::make(m_surface, m_direction, std::move(axis));
+    auto gridPortalLink =
+        GridPortalLink::make(m_surface, m_direction, std::move(axis));
     for (const auto& [i, child] : enumerate(trivialLinks)) {
-      grid->grid().atLocalBins({i + 1}) = &child.volume();
+      gridPortalLink->grid().atLocalBins({i + 1}) = &child.volume();
     }
 
-    return grid;
+    gridPortalLink->setArtifactPortalLinks(std::move(trivialLinks));
+    return gridPortalLink;
   } else if (surface().type() == Surface::SurfaceType::Plane) {
     ACTS_VERBOSE("Combining composite into plane grid");
 
@@ -344,14 +346,15 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
 
     Axis axis{AxisBound, edges};
 
-    auto grid = GridPortalLink::make(m_surface, m_direction, std::move(axis));
+    auto gridPortalLink =
+        GridPortalLink::make(m_surface, m_direction, std::move(axis));
     for (const auto& [i, child] : enumerate(trivialLinks)) {
-      grid->grid().atLocalBins({i + 1}) = &child.volume();
+      gridPortalLink->grid().atLocalBins({i + 1}) = &child.volume();
     }
 
-    grid->setArtifactPortalLinks(std::move(trivialLinks));
+    gridPortalLink->setArtifactPortalLinks(std::move(trivialLinks));
 
-    return grid;
+    return gridPortalLink;
 
   } else {
     throw std::invalid_argument{"Unsupported surface type"};

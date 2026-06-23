@@ -25,6 +25,8 @@ enum class DigitizationError {
   UndefinedSurface,
   /// Surface mask could not be applied.
   MaskingError,
+  /// Drift error
+  DriftError,
   /// Maximum number of retries exceeded.
   MaximumRetriesExceeded,
 };

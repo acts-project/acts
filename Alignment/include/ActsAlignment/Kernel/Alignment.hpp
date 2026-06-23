@@ -103,6 +103,10 @@ struct AlignmentResult {
   // The covariance of alignment parameters
   Acts::DynamicMatrix alignmentCovariance;
 
+  // The matrix and vector defining the normal equations
+  Acts::DynamicVector sumChi2Derivative;
+  Acts::DynamicMatrix sumChi2SecondDerivative;
+
   // The average chi2/ndf (ndf is the measurement dim)
   double averageChi2ONdf = std::numeric_limits<double>::max();
 
@@ -197,6 +201,8 @@ struct Alignment {
   /// as input of fitting
   /// @param alignResult [in, out] The aligned result
   /// @param alignMask The alignment mask (same for all measurements now)
+  /// @param performDecomposition Perform a decomposition of the
+  /// second derivative matrix and write eigenvectors/values to a file.
   void calculateAlignmentParameters(
       const std::vector<detail::TrackAlignmentState>& trackAlignmentStates,
       AlignmentResult& alignResult) const;
@@ -232,6 +238,15 @@ struct Alignment {
       const trajectory_container_t& trajectoryCollection,
       const start_parameters_container_t& startParametersCollection,
       const AlignmentOptions<fit_options_t>& alignOptions) const;
+
+  /// @brief perform decomposition analysis. Extracts eigenvectors and
+  /// writes them, sorted by ascending eigenvalue, in a format consistent
+  /// with the Millepede-II SVD solver for problem analysis.
+  /// @param res Alignment result that has already been processed
+  /// by calculateAlignmentParameters
+  /// @param out output stream to write to.
+  /// @return The condition number of the second derivative matrix or -1 in case of error
+  double decompositionAnalysis(const AlignmentResult& res, std::ostream& out);
 
  private:
   // The fitter

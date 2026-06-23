@@ -9,7 +9,6 @@
 #include "ActsPlugins/Mille/ActsToMille.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Alignment.hpp"
 #include "ActsPlugins/Mille/Helpers.hpp"
 
 #include <algorithm>
@@ -43,15 +42,10 @@ unsigned long globalIndexSurfToParam(unsigned long surfaceIndex,
 }  // namespace
 
 void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
-                 MilleRecord& record) {
+                 MilleRecord& record, bool removeUnconstrainedTrackPar) {
   // prepare the vectors to interface to Mille
-  std::vector<unsigned int> localIndices(state.trackParametersDim, 0);
   std::vector<int> globalIndices(state.alignmentDof, 0.);
-  std::vector<double> localDeriv(state.trackParametersDim, 0.);
   std::vector<double> globalDeriv(state.alignmentDof, 0.);
-
-  // prepare the track parameter index array (always the same)
-  std::iota(localIndices.begin(), localIndices.end(), 1);
 
   // map the alignment parameter labels.
   // Important: Millepede expects indices to start with 1
@@ -64,6 +58,36 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
           globalIndexSurfToParam(globalSurfIndex, iPar));
     }
   }
+
+  // Analyse the track fit, and potentially discard unconstrained
+  // parameters to stabilise the system
+  std::set<std::size_t> skippedTrackParams = {};
+  if (removeUnconstrainedTrackPar) {
+    // collect (sorted by covariance) the indices of all track parameters
+    std::map<double, int> trkParByCov;
+    for (std::size_t k = 0; k < state.trackParametersDim; ++k) {
+      trkParByCov.emplace(state.trackParametersCovariance(k, k), k);
+    }
+
+    // now, loop through the parameter list and look for huge jumps.
+    double prev = 0;
+    for (auto& [sigmaSquared, index] : trkParByCov) {
+      // a jump of 1e6 is indicative that we are not in Kansas anymore
+      if (prev != 0 && sigmaSquared > 1e6 * prev) {
+        skippedTrackParams.insert(index);
+      } else {
+        prev = sigmaSquared;
+      }
+    }
+  }
+  // calculate number of remaining active track parameters
+  std::size_t effectiveTrackParDim =
+      state.trackParametersDim - skippedTrackParams.size();
+
+  std::vector<unsigned int> localIndices(effectiveTrackParDim, 0);
+  std::vector<double> localDeriv(effectiveTrackParDim, 0.);
+  // prepare the track parameter index array (always the same)
+  std::iota(localIndices.begin(), localIndices.end(), 1);
 
   /// 1) write out the local measurements on the surfaces and their direct
   /// derivatives. This will populate the upper / left three quadrants of the
@@ -79,10 +103,17 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
       globalDeriv[srcGlobal] =
           state.alignmentToResidualDerivative(iMeas, srcGlobal);
     }
+    // index that we show to Mille (differs from internal index if we
+    // skip any parameters)
+    std::size_t iPar = 0;
     // local derivatives due to measurement uncertainties
     for (std::size_t iTrkPar = 0; iTrkPar < state.trackParametersDim;
          ++iTrkPar) {
-      localDeriv[iTrkPar] = state.projectionMatrix(iMeas, iTrkPar);
+      if (skippedTrackParams.contains(iTrkPar)) {
+        continue;
+      }
+      localDeriv[iPar] = state.projectionMatrix(iMeas, iTrkPar);
+      ++iPar;
     }
     // write a measurement to the ongoing Mille record.
     record.addData(
@@ -110,14 +141,46 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
   /// compute the part of the weight matrix arising from Step 1).
   /// This is already present in the Mille record and should not
   /// be duplicated
+
+  // for this, we need to calculate the "reduced" covariance
+  // and projection matrices, accounting for skipped parameters
+  Acts::DynamicMatrix updatedCovariance{effectiveTrackParDim,
+                                        effectiveTrackParDim};
+  Acts::DynamicMatrix updatedProjection{state.measurementDim,
+                                        effectiveTrackParDim};
+  std::size_t milleTPindex = 0;
+  for (std::size_t internalTPindex = 0;
+       internalTPindex < state.trackParametersDim; ++internalTPindex) {
+    if (skippedTrackParams.contains(internalTPindex)) {
+      continue;
+    }
+
+    // update projection matrix
+    updatedProjection.col(milleTPindex) =
+        state.projectionMatrix.col(internalTPindex);
+
+    std::size_t secondMilleIndex = 0;
+    for (std::size_t secondInternalIndex = 0;
+         secondInternalIndex < state.trackParametersDim;
+         ++secondInternalIndex) {
+      if (skippedTrackParams.contains(secondInternalIndex)) {
+        continue;
+      }
+      updatedCovariance(milleTPindex, secondMilleIndex) =
+          state.trackParametersCovariance(internalTPindex, secondInternalIndex);
+      ++secondMilleIndex;
+    }
+    ++milleTPindex;
+  }
+
   const Acts::DynamicMatrix weightMatMeasurements =
-      state.projectionMatrix.transpose() *
-      state.measurementCovariance.inverse() * state.projectionMatrix;
+      updatedProjection.transpose() * state.measurementCovariance.inverse() *
+      updatedProjection;
 
   // regularise the (full) Kalman covariance. This is needed to stabilise
-  // poorly constrained directions (usually: time)
+  // poorly constrained directions
   const Acts::DynamicMatrix regularisedCov =
-      regulariseCovariance(state.trackParametersCovariance);
+      regulariseCovariance(updatedCovariance, -1, -1, 1.e-9);
 
   // now we can get the piece of the weight matrix not already covered by
   // the measurement uncertainties
@@ -144,10 +207,14 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
   globalIndices.clear();
 
   /// convert each EV to a pseudo-measurement
-  for (std::size_t iMeas = 0; iMeas < state.trackParametersDim; ++iMeas) {
-    // fill the local derivatives from the current eigenvector
-    for (std::size_t iTrkPar = 0; iTrkPar < localDeriv.size(); ++iTrkPar) {
-      localDeriv[iTrkPar] = eigenVecs(iTrkPar, iMeas);
+  for (long iMeas = 0; iMeas < eigenVecs.rows();
+       ++iMeas) {  // fill the local derivatives from the current eigenvector
+    // skip negative EV
+    if (eigenVals(iMeas) <= 0) {
+      continue;
+    }
+    for (std::size_t iPar = 0; iPar < effectiveTrackParDim; ++iPar) {
+      localDeriv[iPar] = eigenVecs(iPar, iMeas);
     }
     // and write a pseudo-measurement to Mille.
     record.addData(
@@ -177,7 +244,7 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
   auto res = decoder.decode(reader, measurements);
 
   // if we are EoF or encountered an error, return the result.
-  if (res != Mille::MilleDecoder::ReadResult::OK) {
+  if (res != Mille::MilleDecoder::ReadResult::OK || measurements.empty()) {
     return res;
   }
 
@@ -205,12 +272,18 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
 
   // discover labels in use
   for (const Mille::MilleMeasurement& measurement : measurements) {
+    if (measurement.localLabels.empty()) {
+      continue;
+    }
     auto [minLabel, maxLabel] = std::minmax_element(
         measurement.localLabels.begin(), measurement.localLabels.end());
     firstLocal = std::min(firstLocal, *minLabel);
     lastLocal = std::max(lastLocal, *maxLabel);
     seenGlobalLabels.insert(measurement.globalLabels.begin(),
                             measurement.globalLabels.end());
+  }
+  if (lastLocal < firstLocal) {
+    return Mille::MilleDecoder::ReadResult::error;
   }
   targetState.trackParametersDim = lastLocal - firstLocal + 1;
   targetState.alignmentDof = seenGlobalLabels.size();
@@ -325,6 +398,32 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
   ActsAlignment::detail::finaliseTrackAlignState(targetState);
 
   return res;
+}
+
+void dumpAsMillepedeRes(const ActsAlignment::AlignmentResult& result,
+                        std::ostream& out) {
+  for (auto [surface, index] : result.idxedAlignSurfaces) {
+    for (std::size_t i = 0; i < Acts::eAlignmentSize; ++i) {
+      std::size_t row = Acts::eAlignmentSize * index + i;
+      out << std::setw(8)
+          << row + 1
+          // column 2: parameter delta from fit
+          << "   " << std::setw(12)
+          << result.deltaAlignmentParameters(row)
+          // column 3: optional pre-sigma for parameter delta
+          << "   " << std::setw(4)
+          << 0.
+          // column 4: change of parameter delta w.r.t start value
+          << "   " << std::setw(12)
+          << result.deltaAlignmentParameters(row)
+          // column 5: uncertainty of parameter delta from the fit
+          << "   " << std::setw(12)
+          << std::sqrt(result.alignmentCovariance(row, row))
+          // column 6: count of measurements seeing this parameter.
+          // Not available in ACTS solver, write a placeholder of 99
+          << "    99 " << std::endl;
+    }
+  }
 }
 
 }  // namespace ActsPlugins::ActsToMille

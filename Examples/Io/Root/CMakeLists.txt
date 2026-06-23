@@ -11,6 +11,7 @@ acts_add_library(
     src/RootSeedWriter.cpp
     src/RootSimHitWriter.cpp
     src/RootSimHitReader.cpp
+    src/RootSpacePointPerformanceWriter.cpp
     src/RootSpacePointWriter.cpp
     src/RootTrackParameterWriter.cpp
     src/RootTrackStatesWriter.cpp
@@ -21,6 +22,7 @@ acts_add_library(
     src/RootVertexReader.cpp
     src/RootVertexWriter.cpp
     src/RootAthenaDumpReader.cpp
+    src/RootAthenaDumpWriter.cpp
     src/RootNuclearInteractionParametersWriter.cpp
     src/detail/NuclearInteractionParametrisation.cpp
     src/RootTrackFinderPerformanceWriter.cpp

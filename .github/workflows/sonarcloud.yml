@@ -1,30 +1,34 @@
 name: SonarCloud
 on:
-  workflow_run:
+  # workflow_run is required to run analysis on PRs from forks with access to
+  # secrets; the job recreates the merge state from trusted metadata and does
+  # not execute untrusted PR code.
+  workflow_run: # zizmor: ignore[dangerous-triggers]
     workflows: [Analysis]
     types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
 
 jobs:
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:85
+    container: ghcr.io/acts-project/ubuntu2404:87
     if: github.event.workflow_run.conclusion == 'success'
     steps:
-      - name: Dump job context
-        env:
-          PAYLOAD: ${{ toJson(github) }}
-        run: echo "${PAYLOAD}"
-
       - name: Install APT packages
         run: |
           apt-get update
           apt-get install -y unzip
 
       - name: "Checkout repository"
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0 # To prevent shallow clone
+          persist-credentials: false
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
@@ -34,7 +38,7 @@ jobs:
           env_file: .env
 
       - name: 'Download artifact'
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         id: dl-af
         with:
           script: |
@@ -64,16 +68,10 @@ jobs:
         if: github.event.workflow_run.event == 'pull_request'
         run: unzip PR_metadata.zip
 
-      - name: Debug
-        run: |
-          ls -al
-          ls -al build
-          ls -al build/coverage
-
       - name: Read PR metadata
         if: github.event.workflow_run.event == 'pull_request'
         id: pr_metadata
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const fs = require('fs');
@@ -86,7 +84,7 @@ jobs:
 
       - name: Request GitHub API for PR data
         if: github.event.workflow_run.event == 'pull_request'
-        uses: octokit/request-action@v2.x
+        uses: octokit/request-action@b91aabaa861c777dcdb14e2387e30eddf04619ae # v3.0.0
         id: get_pr_data
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -94,6 +92,24 @@ jobs:
           route: GET /repos/{full_name}/pulls/{number}
           number: ${{ steps.pr_metadata.outputs.pr_number }}
           full_name: ${{ github.event.repository.full_name }}
+
+      - name: Validate PR branch names
+        if: github.event.workflow_run.event == 'pull_request'
+        env:
+          HEAD_REF: ${{ fromJson(steps.get_pr_data.outputs.data).head.ref }}
+          BASE_REF: ${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
+        run: |
+          # These values are attacker-controlled (the PR branch name) and are
+          # passed to sonar-scanner as CLI arguments below. Reject anything that
+          # isn't a well-formed git ref to prevent argument injection.
+          for ref in "$HEAD_REF" "$BASE_REF"; do
+            case "$ref" in
+              ""|*[!A-Za-z0-9._/-]*)
+                echo "Refusing to proceed: unexpected branch name '$ref'" >&2
+                exit 1
+                ;;
+            esac
+          done
 
       - name: Get upcoming version from milestones
         env:
@@ -104,12 +120,17 @@ jobs:
 
       - name: Read next_version.txt
         id: next_version
-        uses: juliangruber/read-file-action@v1
+        uses: juliangruber/read-file-action@271ff311a4947af354c6abcd696a306553b9ec18 # v1.1.8
         with:
           path: ./next_version.txt
 
       - name: Recreate merge commit state
         if: github.event.workflow_run.event == 'pull_request'
+        env:
+          PR_CLONE_URL: ${{ fromJson(steps.get_pr_data.outputs.data).head.repo.clone_url }}
+          BASE_SHA: ${{ steps.pr_metadata.outputs.base_sha }}
+          PR_SHA: ${{ steps.pr_metadata.outputs.pr_sha }}
+          MERGE_SHA: ${{ steps.pr_metadata.outputs.merge_sha }}
         run: |
           git config --global --add safe.directory $PWD
           git config user.email "ci@acts-project.org"
@@ -117,31 +138,31 @@ jobs:
 
           # upstream: main branch, origin: PR branch
           git remote rename origin upstream
-          git remote add origin ${{ fromJson(steps.get_pr_data.outputs.data).head.repo.clone_url }}
+          git remote add origin "$PR_CLONE_URL"
           git fetch origin
 
           # Check out the exact base commit that was used in the original merge
-          git checkout ${{ steps.pr_metadata.outputs.base_sha }}
+          git checkout "$BASE_SHA"
 
           # Merge the PR commit to recreate the same merge state as the analysis run
-          git merge --no-edit ${{ steps.pr_metadata.outputs.pr_sha }}
+          git merge --no-edit "$PR_SHA"
+
+          # Restore the trusted scanner configuration: the merged tree contains
+          # attacker-controlled files, and sonar-scanner reads
+          # sonar-project.properties from the working directory. Reset it to the
+          # base commit so the PR cannot override scanner settings.
+          git checkout "$BASE_SHA" -- sonar-project.properties
 
           echo "Recreated merge state:"
-          echo "  Base SHA: ${{ steps.pr_metadata.outputs.base_sha }}"
-          echo "  PR SHA: ${{ steps.pr_metadata.outputs.pr_sha }}"
+          echo "  Base SHA: $BASE_SHA"
+          echo "  PR SHA: $PR_SHA"
           echo "  Current HEAD: $(git rev-parse HEAD)"
-          echo "  Original merge SHA: ${{ steps.pr_metadata.outputs.merge_sha }}"
+          echo "  Original merge SHA: $MERGE_SHA"
           git remote -v
           git status
 
-      - name: Debug
-        run: |
-          ls -al
-          ls -al build
-          ls -al build/coverage
-
       - name: Run sonar-scanner (PR mode)
-        uses: SonarSource/sonarqube-scan-action@v8.0.0
+        uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
         if: github.event.workflow_run.event == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -157,7 +178,7 @@ jobs:
             --define sonar.pullrequest.base=${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
 
       - name: Run sonar-scanner (push mode)
-        uses: SonarSource/sonarqube-scan-action@v8.0.0
+        uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
         if: github.event.workflow_run.event == 'push' && github.ref == 'refs/heads/main'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

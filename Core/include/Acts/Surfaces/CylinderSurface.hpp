@@ -165,6 +165,7 @@ class CylinderSurface : public RegularSurface {
   /// This method returns the shared_ptr to the CylinderBounds
   /// @return Shared pointer to the cylinder bounds
   const std::shared_ptr<const CylinderBounds>& boundsPtr() const;
+
   /// Overwrite the existing surface bounds with new ones
   /// @param newBounds: Pointer to the new bounds
   void assignSurfaceBounds(std::shared_ptr<const CylinderBounds> newBounds);
@@ -279,10 +280,25 @@ class CylinderSurface : public RegularSurface {
       const CylinderSurface& other, AxisDirection direction,
       bool externalRotation, const Logger& logger = getDummyLogger()) const;
 
+  /// @copydoc Surface::assignSurfaceMaterial
+  void assignSurfaceMaterial(
+      std::shared_ptr<const ISurfaceMaterial> material) override;
+
  protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
 
+  /// @copydoc Surface::localAxes
+  std::array<AxisDirection, 2> localAxes() const override {
+    return {AxisDirection::AxisRPhi, AxisDirection::AxisZ};
+  }
+
+  /// @copydoc Surface::transformSurfaceLocalToMaterialLocal
+  Vector2 transformSurfaceLocalToMaterialLocal(
+      const Vector2& surfaceLocal) const override;
+
  private:
+  bool m_scaleMaterialAxis = false;
+
   /// Implementation of the intersection solver
   ///
   ///  <b>mathematical motivation:</b>

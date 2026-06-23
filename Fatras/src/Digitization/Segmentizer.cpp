@@ -11,20 +11,17 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
 #include <cmath>
-#include <memory>
 #include <span>
 
-std::vector<ActsFatras::Segmentizer::ChannelSegment>
-ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
-                                  const Acts::Surface& surface,
-                                  const Acts::BinUtility& segmentation,
-                                  const Segment2D& segment) const {
+namespace ActsFatras {
+
+std::vector<Segmentizer::ChannelSegment> Segmentizer::segments(
+    const Acts::GeometryContext& geoCtx, const Acts::Surface& surface,
+    const Acts::BinUtility& segmentation, const Segment2D& segment) const {
   // Return if the segmentation is not two-dimensional
   // (strips need to have one bin along the strip)
   if (segmentation.dimensions() != 2) {
@@ -41,7 +38,11 @@ ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
   Bin2D bstart = {0, 0};
   Bin2D bend = {0, 0};
 
-  if (surface.type() == Acts::Surface::SurfaceType::Plane) {
+  if (surface.type() == Acts::Surface::SurfaceType::Plane ||
+      surface.type() == Acts::Surface::SurfaceType::Cylinder) {
+    // For Plane the local frame is Cartesian (x, y); for Cylinder it is the
+    // unrolled readout frame (rPhi, z). Either way the cell boundaries are
+    // axis-aligned straight lines and the stepping algorithm is identical.
     // Get the segmentation and convert it to lines & arcs
     bstart = {static_cast<unsigned int>(segmentation.bin(start, 0)),
               static_cast<unsigned int>(segmentation.bin(start, 1))};
@@ -164,3 +165,5 @@ ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
 
   return cSegments;
 }
+
+}  // namespace ActsFatras

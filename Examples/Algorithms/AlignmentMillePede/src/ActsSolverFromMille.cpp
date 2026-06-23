@@ -21,6 +21,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsPlugins/Mille/ActsToMille.hpp"
 
+#include <fstream>
 #include <memory>
 
 #include <Mille/MilleFactory.h>
@@ -99,14 +100,20 @@ ProcessCode ActsSolverFromMille::finalize() {
   std::vector<ActsAlignment::detail::TrackAlignmentState> alignmentStates;
   ActsAlignment::detail::TrackAlignmentState state;
   std::size_t iRec = 0;
-  while (ActsPlugins::ActsToMille::unpackMilleRecord(
-             *milleReader, state, alignResult.idxedAlignSurfaces) ==
-         Mille::MilleDecoder::ReadResult::OK) {
+  auto res = Mille::MilleDecoder::ReadResult::OK;
+  do {
     if (++iRec % 10000 == 0) {
       ACTS_INFO("     Reading input record " << iRec);
     }
-    alignmentStates.push_back(state);
-  }
+    res = ActsPlugins::ActsToMille::unpackMilleRecord(
+        *milleReader, state, alignResult.idxedAlignSurfaces);
+    if (res == Mille::MilleDecoder::ReadResult::OK) {
+      alignmentStates.push_back(state);
+    } else if (res == Mille::MilleDecoder::ReadResult::error) {
+      ACTS_ERROR("Encountered a read error in Mille for binary "
+                 << m_cfg.milleInput);
+    }
+  } while (res != Mille::MilleDecoder::ReadResult::atEof);
 
   /// TODO: Should try a local iteration without track state info.
   /// Can use the linearised info in the Track Alignment State
@@ -138,6 +145,15 @@ ProcessCode ActsSolverFromMille::finalize() {
                 << " +/- " << std::setw(10)
                 << std::sqrt(alignResult.alignmentCovariance(row, row)));
     }
+  }
+
+  if (!m_cfg.outFile.empty()) {
+    std::ofstream resFile;
+    resFile.open(m_cfg.outFile);
+    // also write in a text file format that can be parsed consistently with
+    // Millepede output
+    ActsPlugins::ActsToMille::dumpAsMillepedeRes(alignResult, resFile);
+    resFile.close();
   }
 
   return ProcessCode::SUCCESS;

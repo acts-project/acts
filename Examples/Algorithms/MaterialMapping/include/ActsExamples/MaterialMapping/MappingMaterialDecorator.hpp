@@ -12,7 +12,6 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
@@ -87,7 +86,7 @@ class MappingMaterialDecorator : public IMaterialDecorator {
       // this volume was already visited
       return;
     }
-    if (tVolume->volumeMaterial() != nullptr) {
+    if (tVolume->hasMaterial()) {
       m_volumeMaterialMap.insert(
           {tVolume->geometryId(), tVolume->volumeMaterialPtr()});
     }
@@ -115,14 +114,14 @@ class MappingMaterialDecorator : public IMaterialDecorator {
       // loop over the layers
       for (auto& lay : layers) {
         auto& layRep = lay->surfaceRepresentation();
-        if (layRep.surfaceMaterial() != nullptr &&
+        if (layRep.hasMaterial() &&
             layRep.geometryId() != GeometryIdentifier()) {
           m_binningMap.insert(
               {layRep.geometryId().value(), std::make_pair(1, 1)});
         }
         if (lay->approachDescriptor() != nullptr) {
           for (auto& asf : lay->approachDescriptor()->containedSurfaces()) {
-            if (asf->surfaceMaterial() != nullptr) {
+            if (asf->hasMaterial()) {
               m_binningMap.insert(
                   {asf->geometryId().value(), std::make_pair(1, 1)});
             }
@@ -130,7 +129,7 @@ class MappingMaterialDecorator : public IMaterialDecorator {
         }
         if (lay->surfaceArray() != nullptr) {
           for (auto& ssf : lay->surfaceArray()->surfaces()) {
-            if (ssf->surfaceMaterial() != nullptr) {
+            if (ssf->hasMaterial()) {
               m_binningMap.insert(
                   {ssf->geometryId().value(), std::make_pair(1, 1)});
             }
@@ -143,7 +142,7 @@ class MappingMaterialDecorator : public IMaterialDecorator {
       // the surface representation
       auto& bssfRep = bsurf->surfaceRepresentation();
       if (bssfRep.geometryId().volume() == tVolume->geometryId().volume()) {
-        if (bssfRep.surfaceMaterial() != nullptr) {
+        if (bssfRep.hasMaterial()) {
           m_binningMap.insert(
               {bssfRep.geometryId().value(), std::make_pair(1, 1)});
         }

@@ -89,6 +89,20 @@ class GraphBasedTrackSeeder {
     float minDeltaRadius = 2.0 * Acts::UnitConstants::mm;
     /// Maximum d0 impact parameter when validating edge connection triplet
     float d0Max = 3.0 * UnitConstants::mm;
+    /// Maximum difference in allowed tangent between candidate edge connection
+    float cutDPhiMax = 0.012f;
+    /// Maximum allowed curvature tolerance for candidate edge connections
+    float cutDCurvMax = 0.001f;
+    /// Minimum z0 value, set as optionl as if in pixel mode,
+    /// The value is picked from the ROI
+    float minZ0 = -600;
+    /// Minimum z0 value, set as optionl as if in pixel mode,
+    /// The value is picked from the ROI
+    float maxZ0 = 600;
+    /// When old tunings are used, this defines the minimum phi window used
+    float minDeltaPhi = 0.001f;
+    /// Maximum radius of pixel detector
+    float maxOuterRadius = 550.0f;
 
     // Seed extraction options
     /// Minimum eta for edge masking.
@@ -191,14 +205,16 @@ class GraphBasedTrackSeeder {
   /// Create seeds from space points in a region of interest.
   /// @param spacePoints Space point container
   /// @param roi Region of interest descriptor
+  /// @param isPixelLayer Information on if a layer is pixel or strip
   /// @param maxLayers Maximum number of layers
   /// @param filter Tracking filter to be applied
   /// @param options Event based options such as magnetic field strength
   /// @param outputSeeds Container with generated seeds
   void createSeeds(const SpacePointContainer2& spacePoints,
-                   const GbtsRoiDescriptor& roi, std::uint32_t maxLayers,
-                   const GbtsTrackingFilter& filter, const Options& options,
-                   SeedContainer2& outputSeeds) const;
+                   const GbtsRoiDescriptor& roi,
+                   const std::vector<bool>& isPixelLayer,
+                   std::uint32_t maxLayers, const GbtsTrackingFilter& filter,
+                   const Options& options, SeedContainer2& outputSeeds) const;
 
   /// Create graph nodes from space points.
   /// @param spacePoints Space point container
@@ -209,11 +225,13 @@ class GraphBasedTrackSeeder {
 
   /// Create seeds from space points in a region of interest.
   /// @param nodesPerLayer Vector of node vectors organized by layer
+  /// @param isPixelLayer Information on if a layer is pixel or strip
   /// @param roi Region of interest descriptor
   /// @param filter Tracking filter to be applied
   /// @param options Event based options such as magnetic field strength
   /// @param outputSeeds Container with generated seeds
   void createSeeds(const std::vector<std::vector<GbtsNode>>& nodesPerLayer,
+                   const std::vector<bool>& isPixelLayer,
                    const GbtsRoiDescriptor& roi,
                    const GbtsTrackingFilter& filter, const Options& options,
                    SeedContainer2& outputSeeds) const;

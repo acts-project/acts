@@ -237,7 +237,9 @@ class Particle {
   Acts::ParticleHypothesis hypothesis() const {
     return Acts::ParticleHypothesis(
         absolutePdg(), static_cast<float>(mass()),
-        Acts::ChargeHypothesis{static_cast<float>(absoluteCharge())});
+        Acts::ChargeHypothesis{static_cast<float>(absoluteCharge())},
+        charge() != 0 ? std::nullopt
+                      : std::optional<double>(absoluteMomentum()));
   }
   /// Particl qOverP.
   /// @return The charge over momentum ratio

@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(Geant4BoxVPhysConversion) {
   auto material = planeSurface->surfaceMaterial();
   BOOST_REQUIRE_NE(material, nullptr);
 
-  auto materialSlab = material->materialSlab(Vector3{0., 0., 0.});
+  auto materialSlab = material->materialSlab(Vector2{0., 0.});
   // Here it should be uncompressed material
   CHECK_CLOSE_ABS(materialSlab.material().massDensity(), rho, 0.001);
   CHECK_CLOSE_REL(thickness / g4Material->GetRadlen(),
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(Geant4BoxVPhysConversion) {
 
   material = planeSurface->surfaceMaterial();
   BOOST_REQUIRE_NE(material, nullptr);
-  materialSlab = material->materialSlab(Vector3{0., 0., 0.});
+  materialSlab = material->materialSlab(Vector2{0., 0.});
 
   // Here it should be uncompressed material
   CHECK_CLOSE_ABS(materialSlab.material().massDensity(), compression * rho,
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(Geant4CylVPhysConversion) {
   auto material = cylinderSurface->surfaceMaterial();
   BOOST_REQUIRE_NE(material, nullptr);
 
-  auto materialSlab = material->materialSlab(Vector3{0., 0., 0.});
+  auto materialSlab = material->materialSlab(Vector2{0., 0.});
   CHECK_CLOSE_REL(thickness / g4Material->GetRadlen(),
                   materialSlab.thicknessInX0(), 0.1);
 
@@ -373,7 +373,7 @@ BOOST_AUTO_TEST_CASE(Geant4VDiscVPhysConversion) {
   auto material = discSurface->surfaceMaterial();
   BOOST_REQUIRE_NE(material, nullptr);
 
-  auto materialSlab = material->materialSlab(Vector3{0., 0., 0.});
+  auto materialSlab = material->materialSlab(Vector2{0., 0.});
   // Here it should be uncompressed material
   CHECK_CLOSE_ABS(materialSlab.material().massDensity(), rho, 0.001);
 

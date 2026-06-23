@@ -20,12 +20,3 @@ nlohmann::json Acts::SurfaceBoundsJsonConverter::toJson(
     const Acts::SurfaceBounds& bounds) {
   return nlohmann::json(bounds);
 }
-
-nlohmann::json Acts::SurfaceBoundsJsonConverter::toJsonDetray(
-    const Acts::SurfaceBounds& bounds, bool portal) {
-  nlohmann::json jMask;
-  auto [shape, boundaries] = DetrayJsonHelper::maskFromBounds(bounds, portal);
-  jMask["shape"] = shape;
-  jMask["boundaries"] = boundaries;
-  return jMask;
-}

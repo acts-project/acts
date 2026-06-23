@@ -71,13 +71,19 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
   ///
   /// @note the input parameter is ignored
-  const MaterialSlab& materialSlab(const Vector2& lp) const final;
+  const MaterialSlab& materialSlab(const Vector2& lp = Vector2{0.,
+                                                               0.}) const final;
+
+  /// @copydoc ISurfaceMaterial::localAxisDirections() const
+  std::vector<AxisDirection> localAxisDirections() const final;
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
   ///
   /// @note the input parameter is ignored
-  const MaterialSlab& materialSlab(const Vector3& gp = Vector3{0., 0.,
-                                                               0.}) const final;
+  [[deprecated(
+      "Use materialSlab(const Vector2& lp) with a prior "
+      "Surface::globalToLocal() call instead")]] const MaterialSlab&
+  materialSlab(const Vector3& gp) const final;
 
   // Inherit additional materialSlab overloads from base class
   using ISurfaceMaterial::materialSlab;

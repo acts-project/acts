@@ -39,9 +39,7 @@ struct MaterialSurface {
   /// Selection function for surfaces with material
   /// @param sf The surface to check
   /// @return True if surface has material, false otherwise
-  bool operator()(const Surface& sf) const {
-    return (sf.surfaceMaterial() != nullptr);
-  }
+  bool operator()(const Surface& sf) const { return sf.hasMaterial(); }
 };
 
 /// @brief selector for finding volume
@@ -49,9 +47,7 @@ struct MaterialVolume {
   /// Selection function for volumes with material
   /// @param vf The tracking volume to check
   /// @return True if volume has material, false otherwise
-  bool operator()(const TrackingVolume& vf) const {
-    return (vf.volumeMaterial() != nullptr);
-  }
+  bool operator()(const TrackingVolume& vf) const { return vf.hasMaterial(); }
 };
 
 /// @brief SurfaceMaterialMapper

@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/PropagatorState.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -148,16 +147,15 @@ struct SimulationActor {
     const Particle before = result.particle;
 
     // interactions only make sense if there is material to interact with.
-    if (surface.surfaceMaterial()) {
+    if (surface.hasMaterial()) {
       // TODO is this the right thing to do when globalToLocal fails?
       //   it should in principle never happen, so probably it would be best
       //   to change to a model using transform() directly
       auto lpResult = surface.globalToLocal(state.geoContext, before.position(),
                                             before.direction());
       if (lpResult.ok()) {
-        Acts::Vector2 local = lpResult.value();
-        Acts::MaterialSlab slab =
-            surface.surfaceMaterial()->materialSlab(local);
+        const Acts::Vector2 local = lpResult.value();
+        Acts::MaterialSlab slab = surface.materialSlab(local);
         // again: interact only if there is valid material to interact with
         if (!slab.isVacuum()) {
           // adapt material for non-zero incidence

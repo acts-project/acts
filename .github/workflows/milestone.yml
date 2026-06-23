@@ -1,10 +1,17 @@
 name: Check PR milestone
 
 on:
-  pull_request_target:
+  # pull_request_target is required to set milestones on PRs from forks; the
+  # workflow does not check out or execute untrusted PR code.
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
     types: [milestoned, demilestoned, opened, reopened, synchronize]
     branches:
       - main
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
 
 jobs:
   check_milestone:
@@ -13,10 +20,12 @@ jobs:
     runs-on: ubuntu-slim
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
 
       - name: "Check for milestone on PR"
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             let milestone = context.payload.pull_request.milestone;

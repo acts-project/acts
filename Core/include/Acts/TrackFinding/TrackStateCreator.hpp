@@ -280,7 +280,7 @@ struct TrackStateCreator {
       auto typeFlags = trackState.typeFlags();
       typeFlags.setHasParameters();
       typeFlags.setHasMeasurement();
-      if (trackState.referenceSurface().surfaceMaterial() != nullptr) {
+      if (trackState.referenceSurface().hasMaterial()) {
         typeFlags.setHasMaterial();
       }
       if (isOutlier) {

@@ -264,11 +264,15 @@ class metadata_generator:
     def __init__(
         self,
         md: metadata,
-        output="../Detray/detectors/include/detray/detectors/",
+        output=None,
         format_header=True,
     ):
         # Internal state during header generation
-        self.out_dir = output
+        self.out_dir = (
+            "../Detray/detectors/include/detray/detectors/"
+            if output is None
+            else output
+        )
         self.file = None
         self.logger = logging.getLogger(__name__)
         self.format_header = format_header
@@ -378,15 +382,15 @@ class metadata_generator:
 
     # Beginning of the header
     def __preamble(self, md: metadata):
-        copy_right = "\
-// This file is part of the ACTS project.\
-//\
-// Copyright (C) 2016 CERN for the benefit of the ACTS project\
-//\
-// This Source Code Form is subject to the terms of the Mozilla Public\
-// License, v. 2.0. If a copy of the MPL was not distributed with this\
-// file, You can obtain one at https://mozilla.org/MPL/2.0/."
-        self.__put(copy_right)
+        copy_right = """
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/."""
+        self.__put(copy_right.lstrip())
         self.__lines(2)
         self.__add_header_includes(md.shapes, md.materials, md.acceleration_structs)
         self.__lines(2)
@@ -1130,6 +1134,17 @@ template <template <typename...> class vector_t = dvector>\n\
         if self.format_header and os.path.isfile(self.file.name):
             logging.debug("Formatting the header...")
             try:
-                subprocess.run(["clang-format", "-i", "-style=file", self.file.name])
+                subprocess.run(
+                    ["clang-format", "-i", "-style=file", self.file.name], check=True
+                )
             except FileNotFoundError:
-                logging.error("clang-format not found")
+                logging.error("clang-format not found!")
+            except PermissionError:
+                logging.error("Permission denied: clang-format!")
+            except OSError:
+                logging.error("Cannot open clang-format!")
+            except subprocess.CalledProcessError:
+                logging.error("Running 'clang-format' failed!")
+            except Exception as e:
+                logging.error(f"Unexpected error for clang-format: {e}")
+                raise

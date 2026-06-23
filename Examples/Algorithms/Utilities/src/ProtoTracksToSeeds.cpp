@@ -42,6 +42,7 @@ ProcessCode ProtoTracksToSeeds::execute(const AlgorithmContext& ctx) const {
 
   SeedContainer seeds;
   seeds.reserve(protoTracks.size());
+  seeds.assignSpacePointContainer(spacePoints);
 
   for (const ProtoTrack& pt : protoTracks) {
     protoTrackToSeed(pt, spacePoints, seeds);

@@ -50,12 +50,6 @@ enum class SpacePointColumns : std::uint32_t {
         TopStripVector | BottomStripVector | StripCenterDistance |
         TopStripCenter | CopyFromIndex | PackedXY | PackedZR | PackedXYZ |
         PackedXYZR | PackedVarianceZR,
-
-  XY [[deprecated("Use PackedXY instead")]] = 1 << 15,
-  ZR [[deprecated("Use PackedZR instead")]] = 1 << 16,
-  XYZ [[deprecated("Use PackedXYZ instead")]] = 1 << 17,
-  XYZR [[deprecated("Use PackedXYZR instead")]] = 1 << 18,
-  VarianceZR [[deprecated("Use PackedVarianceZR instead")]] = 1 << 19,
 };
 
 /// Enable bitwise operators for SpacePointColumns enum

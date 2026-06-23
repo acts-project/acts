@@ -13,15 +13,15 @@ inputs:
   spack_version:
     description: 'Version of Spack to use'
     required: false
-    default: 'bf1637a793b507a76bdc06e1169a373c83a5e535'
+    default: '426ab4d83b93df5c1ace836bd12d514ab2074b77'
   spack_repo_version:
     description: 'Spack builtin packages repo commit (git SHA) to pin'
     required: false
-    default: '182b26b2612f9cdabc4af13ae62b92a321e11d5f'
+    default: '6a3dd42c514510c234f203b5fef392162da80049'
   DEPENDENCY_TAG:
     description: 'Dependency tag to pull from'
     required: false
-    default: 'v23.0.0'
+    default: 'v23.2.0'
   full_install:
     description: 'Whether to do a full dependency installation including Geant4 datasets and Python packages'
     required: false
@@ -39,12 +39,12 @@ runs:
   using: 'composite'
   steps:
     - name: Setup Python version
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
         python-version: "3.12"
 
     - name: Install the latest version of uv
-      uses: astral-sh/setup-uv@v7
+      uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
 
     - name: Prerequisites
       if: startsWith(runner.os, 'macos')
@@ -54,7 +54,7 @@ runs:
 
     - name: Restore cache
       id: cache-restore
-      uses: actions/cache/restore@v5
+      uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: spack_cache
         key: spack-r4-${{ inputs.spack_version }}-${{ inputs.spack_repo_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
@@ -81,7 +81,7 @@ runs:
 
     - name: Save cache
       if: steps.cache-restore.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: |
           spack_cache
@@ -94,15 +94,18 @@ runs:
         SPACK_REPO_VERSION: ${{ inputs.spack_repo_version }}
         DEPENDENCY_TAG: ${{ inputs.DEPENDENCY_TAG }}
         CXXSTD: ${{ inputs.cxx_std }}
+        ENV_FILE: ${{ inputs.env_file }}
+        FULL_INSTALL: ${{ inputs.full_install }}
+        COMPILER: ${{ inputs.compiler }}
       run: |
-        args="-e ${{ inputs.env_file }}"
-        if [ "${{ inputs.full_install }}" == "true" ]; then
+        args="-e $ENV_FILE"
+        if [ "$FULL_INSTALL" == "true" ]; then
           echo "Full install"
           args="${args} -f"
         fi
-        if [ -n "${{ inputs.compiler }}" ]; then
+        if [ -n "$COMPILER" ]; then
           echo "With compiler"
-          args="${args} -c ${{ inputs.compiler }}"
+          args="${args} -c $COMPILER"
         fi
 
         CI/dependencies/setup.sh $args

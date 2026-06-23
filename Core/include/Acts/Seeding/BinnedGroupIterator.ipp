@@ -42,10 +42,9 @@ BinnedGroupIterator<grid_t>& BinnedGroupIterator<grid_t>::operator++() {
 }
 
 template <typename grid_t>
-std::tuple<
-    boost::container::small_vector<std::size_t, detail::ipow(3, grid_t::DIM)>,
-    std::size_t,
-    boost::container::small_vector<std::size_t, detail::ipow(3, grid_t::DIM)>>
+std::tuple<boost::container::small_vector<std::size_t, ipow(3, grid_t::DIM)>,
+           std::size_t,
+           boost::container::small_vector<std::size_t, ipow(3, grid_t::DIM)>>
 BinnedGroupIterator<grid_t>::operator*() const {
   /// Get the global and local position from current iterator. This is the bin
   /// with the middle candidate And we know this is not an empty bin
@@ -54,9 +53,9 @@ BinnedGroupIterator<grid_t>::operator*() const {
       m_group->grid().globalBinFromLocalBins(localPosition);
 
   /// Get the neighbouring bins
-  boost::container::small_vector<std::size_t, detail::ipow(3, DIM)> bottoms =
+  boost::container::small_vector<std::size_t, ipow(3, DIM)> bottoms =
       m_group->m_bottomBinFinder->findBins(localPosition, m_group->grid());
-  boost::container::small_vector<std::size_t, detail::ipow(3, DIM)> tops =
+  boost::container::small_vector<std::size_t, ipow(3, DIM)> tops =
       m_group->m_topBinFinder->findBins(localPosition, m_group->grid());
 
   // GCC12+ in Release throws an overread warning here due to the move.

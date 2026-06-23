@@ -8,7 +8,7 @@
 
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/CompositePortalLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -287,6 +287,46 @@ std::vector<const TrivialPortalLink*> decomposeToTrivials(
 
   return trivials;
 }
+
+/// Build a portal mask for a trivial child surface, expressed in the frame of
+/// the parent (merged) portal surface. This allows a single detray portal
+/// surface to carry one mask per neighbour volume (multi-mask portal).
+///
+/// Only concentric cylinders (z-binning) and rings/discs (r-binning) can be
+/// folded onto a single shared transform; everything else returns nullopt so
+/// the caller can fall back to emitting one surface per trivial.
+///
+/// @param gctx the geometry context
+/// @param parent the merged portal surface that provides the shared transform
+/// @param child the trivial child surface whose sub-region is encoded
+/// @returns the mask payload in the parent frame, or nullopt if unsupported
+std::optional<detray::io::mask_payload> convertPortalMask(
+    const GeometryContext& gctx, const Surface& parent, const Surface& child) {
+  using enum detray::io::shape_id;
+
+  detray::io::mask_payload payload =
+      DetrayPayloadConverter::convertMask(child.bounds(), true);
+
+  if (payload.shape == portal_cylinder2) {
+    // The child z-range is centered on the child transform: shift it into the
+    // parent frame. The detray reader folds the (parent) surface-transform z
+    // back into every mask, so this reconstructs the correct global z-range.
+    using enum detray::concentric_cylinder2D::boundaries;
+    const double dz = (parent.localToGlobalTransform(gctx).inverse() *
+                       child.localToGlobalTransform(gctx))
+                          .translation()[eZ];
+    payload.boundaries.at(e_lower_z) += dz;
+    payload.boundaries.at(e_upper_z) += dz;
+    return payload;
+  } else if (payload.shape == ring2) {
+    // Ring boundaries are inner_r/outer_r only and frame-independent for
+    // coplanar r-split children.
+    return payload;
+  }
+
+  return std::nullopt;
+}
+
 /// Check compatibility between ACTS surface type and detray material_id
 /// @returns pair<is_compatible, expected_material_id>
 std::pair<bool, detray::io::material_id> isGridMaterialCompatible(
@@ -326,6 +366,56 @@ void DetrayPayloadConverter::handlePortalLink(
     ACTS_VERBOSE("At least one trivial link points at this volume ("
                  << volume.volumeName() << ") => skipping");
     return;
+  }
+
+  // Multi-mask portal: a single detray portal surface can carry one mask per
+  // neighbour volume. This is possible for concentric cylinders (z-binning)
+  // and rings/discs (r-binning), where all sub-regions share the parent
+  // surface transform. For everything else we fall back to one surface per
+  // trivial below.
+  const Surface& parentSurface = link.surface();
+  const bool canMultiMask =
+      trivials.size() > 1 &&
+      (parentSurface.type() == Surface::SurfaceType::Cylinder ||
+       parentSurface.type() == Surface::SurfaceType::Disc);
+
+  if (canMultiMask) {
+    std::vector<detray::io::mask_payload> masks;
+    masks.reserve(trivials.size());
+    bool ok = true;
+    for (const auto* trivial : trivials) {
+      auto mask = convertPortalMask(gctx, parentSurface, trivial->surface());
+      if (!mask.has_value()) {
+        ok = false;
+        break;
+      }
+      mask->volume_link.link = volumeLookup(&trivial->volume());
+      masks.push_back(*mask);
+    }
+
+    if (ok) {
+      ACTS_VERBOSE("Converting " << trivials.size()
+                                 << " trivial portal links into a single "
+                                    "multi-mask portal in volume "
+                                 << volume.volumeName());
+      // Reuse convertSurface for the parent transform / source / portal type,
+      // then replace its single mask with the per-trivial masks.
+      auto& srfPayload = volPayload.surfaces.emplace_back(
+          convertSurface(gctx, parentSurface, true));
+      srfPayload.index_in_coll = volPayload.surfaces.size() - 1;
+      srfPayload.masks = std::move(masks);
+
+      // All trivial child surfaces map to this single detray surface index so
+      // that material assignment can resolve them later.
+      for (const auto* trivial : trivials) {
+        surfaceIndices[&trivial->surface()] = srfPayload.index_in_coll.value();
+      }
+      return;
+    }
+
+    ACTS_VERBOSE("Multi-mask portal conversion not possible for volume "
+                 << volume.volumeName()
+                 << " => falling back to one surface per trivial");
   }
 
   for (const auto* trivial : trivials) {
@@ -563,12 +653,12 @@ DetrayPayloadConverter::convertMaterial(
 
     std::size_t srfIdx = srfIt->second;
 
-    if (surface.surfaceMaterial() == nullptr) {
+    if (!surface.hasMaterial()) {
       continue;
     }
 
     std::optional detrayMaterial =
-        m_cfg.convertSurfaceMaterial(*surface.surfaceMaterial());
+        m_cfg.convertSurfaceMaterial(*surface.surfaceMaterial(), surface);
 
     if (!detrayMaterial.has_value()) {
       continue;
@@ -594,7 +684,7 @@ DetrayPayloadConverter::convertMaterial(
     }
 
     std::optional detrayMaterial =
-        m_cfg.convertSurfaceMaterial(*surfaceMaterial);
+        m_cfg.convertSurfaceMaterial(*surfaceMaterial, portal.surface());
 
     // Portal surface material reports it does not apply to detray, skip
     if (!detrayMaterial.has_value()) {

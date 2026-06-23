@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
+#include "ActsAlignment/Kernel/Alignment.hpp"
 
 #include "Mille/IMilleReader.h"
 #include "Mille/MilleDecoder.h"
@@ -29,8 +29,10 @@ using Mille::MilleRecord;
 /// Note: Not very efficient - we have to "un-fit" the kalman track.
 /// Used for R&D, recommending the GBL track model (under development)
 /// for production use.
+/// @param removeUnconstrainedTrackPar If enabled, will remove
+/// poorly constrained parameters from the (local) track fits.
 void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
-                 MilleRecord& record);
+                 MilleRecord& record, bool removeUnconstrainedTrackPar = true);
 
 /// @brief read one record (= track or (constrained) track pair) from
 /// a Mille binary into the equivalent matrices of a TrackAlignmentState.
@@ -48,5 +50,12 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
     ActsAlignment::detail::TrackAlignmentState& targetState,
     const std::unordered_map<const Acts::Surface*, std::size_t>&
         idxedAlignSurfaces);
+
+/// Writes an alignment outcome into a text file in the format
+/// used by Millepede. Allows the constants to be processed
+/// in the same visualisation code use for MP-II results,
+/// or to be read back as initial values for a fit with MP-II
+void dumpAsMillepedeRes(const ActsAlignment::AlignmentResult& result,
+                        std::ostream& out);
 
 }  // namespace ActsPlugins::ActsToMille

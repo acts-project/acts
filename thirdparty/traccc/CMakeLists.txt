@@ -19,22 +19,16 @@ set(TRACCC_VERSION "${_acts_traccc_version}")
 # Declare where to get traccc from.
 FetchContent_Declare(traccc SYSTEM ${ACTS_TRACCC_SOURCE})
 
-set(ACTS_TRACCC_SCALARTYPE "double")
-
 set(TRACCC_CUSTOM_SCALARTYPE
-    "${ACTS_TRACCC_SCALARTYPE}"
+    "float"
     CACHE STRING
     "Scalar type to use in the traccc code"
 )
 
-set(TRACCC_SETUP_VECMEM OFF CACHE BOOL "Do not set up Actsvg as part of Traccc")
+set(TRACCC_SETUP_VECMEM OFF CACHE BOOL "Do not set up VecMem as part of Traccc")
 set(TRACCC_SETUP_EIGEN3 OFF CACHE BOOL "Do not set up Eigen3 as part of Traccc")
 set(TRACCC_SETUP_THRUST ON CACHE BOOL "Do not set up Thrust as part of Traccc")
-set(TRACCC_SETUP_ALGEBRA_PLUGINS
-    OFF
-    CACHE BOOL
-    "Do not set up Algebra Plugins as part of Traccc"
-)
+
 set(TRACCC_SETUP_COVFIE OFF CACHE BOOL "Do not set up Covfie as part of Traccc")
 set(TRACCC_SETUP_DFELIBS
     ON
@@ -43,17 +37,29 @@ set(TRACCC_SETUP_DFELIBS
 )
 set(TRACCC_SETUP_DETRAY OFF CACHE BOOL "Set up Detray as part of Traccc")
 set(TRACCC_SETUP_ACTS OFF CACHE BOOL "Do not set up ACTS as part of Traccc")
-set(TRACCC_SETUP_TBB OFF CACHE BOOL "Do not set up TBB as part of Traccc")
-set(TRACCC_SETUP_BENCHMARKS
-    OFF
+
+set(TRACCC_BUILD_CUDA
+    ${ACTS_ENABLE_CUDA}
     CACHE BOOL
-    "Do not set up google benchmarks as part of Traccc"
+    "Build Traccc with CUDA support"
 )
 
 set(TRACCC_BUILD_IO
-    OFF
+    ON
     CACHE BOOL
     "Turn off the build of the Traccc IO code THIS IS TEMPORARY"
+)
+
+set(TRACCC_BUILD_PERFORMANCE
+    OFF
+    CACHE BOOL
+    "Turn off the build of the Traccc performance code"
+)
+
+set(TRACCC_BUILD_SIMULATION
+    OFF
+    CACHE BOOL
+    "Turn off the build of the Traccc simulation code"
 )
 
 set(TRACCC_BUILD_TESTING
@@ -61,11 +67,15 @@ set(TRACCC_BUILD_TESTING
     CACHE BOOL
     "Turn off the build of the Traccc unit tests"
 )
+
+set(TRACCC_SETUP_TBB OFF CACHE BOOL "Do not set up TBB as part of Traccc")
+
 set(TRACCC_BUILD_EXAMPLES
     OFF
     CACHE BOOL
     "Turn off the build of the Traccc examples"
 )
+
 set(TRACCC_BUILD_BENCHMARKS
     OFF
     CACHE BOOL

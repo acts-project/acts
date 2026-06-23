@@ -8,43 +8,65 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/detail/interpolation_impl.hpp"
-
 #include <array>
-#include <type_traits>
+#include <bit>
+#include <cassert>
 
 namespace Acts {
 
-/// @brief performs linear interpolation inside a hyper box
+namespace Concepts {
+
+/// @brief check types for requirements needed by interpolation
 ///
-/// @tparam T      type of values to be interpolated
-/// @tparam N      number of hyper box corners
-/// @tparam Point1 type specifying geometric positions
-/// @tparam Point2 type specifying geometric positions
-/// @tparam Point3 type specifying geometric positions
+/// This helper struct provides compile-time information whether the provided
+/// @c Point and @c Value types can be used in the Acts::interpolate function.
 ///
-/// @param [in] position    position to which to interpolate
-/// @param [in] lowerCorner generalized lower-left corner of hyper box
-///                         (containing the minima of the hyper box along each
-///                         dimension)
-/// @param [in] upperCorner generalized upper-right corner of hyper box
-///                         (containing the maxima of the hyper box along each
-///                         dimension)
-/// @param [in] values      field values at the hyper box corners sorted in the
-///                         canonical order defined below.
+/// @tparam T type of values to be interpolated
+/// @tparam N number of hyper box corners
+/// @tparam P1 type for specifying the input point
+/// @tparam P2 type for specifying the lower corner of the hyper box
+/// @tparam P3 type for specifying the upper corner of the hyper box
+template <typename T, std::size_t N, typename P1, typename P2, typename P3>
+concept Interpolatable = requires {
+  std::has_single_bit(N);
+  {
+    std::declval<double>() * std::declval<T>() +
+        std::declval<double>() * std::declval<T>()
+  } -> std::convertible_to<T>;
+  { std::declval<P1>()[0] } -> std::convertible_to<double>;
+  { std::declval<P2>()[0] } -> std::convertible_to<double>;
+  { std::declval<P3>()[0] } -> std::convertible_to<double>;
+};
+
+}  // namespace Concepts
+
+/// performs linear interpolation inside a hyper box
 ///
-/// @return interpolated value at given position
+/// @tparam T type of values to be interpolated
+/// @tparam N number of hyper box corners
+/// @tparam Point1 type specifying the input point
+/// @tparam Point2 type specifying the lower corner of the hyper box
+/// @tparam Point3 type specifying the upper corner of the hyper box
 ///
-/// @pre @c position must describe a position inside the given hyper box, that
-///      is \f$\text{lowerCorner}[i] \le \text{position}[i] \le
-///      \text{upperCorner}[i] \quad \forall i=0, \dots, d-1\f$.
+/// @param point point to which to interpolate
+/// @param lowerCorner generalized lower-left corner of hyper box
+/// (containing the minima of the hyper box along each dimension)
+/// @param upperCorner generalized upper-right corner of hyper box
+/// (containing the maxima of the hyper box along each dimension)
+/// @param values field values at the hyper box corners sorted in the
+/// canonical order defined below.
+///
+/// @return interpolated value at given point
+///
+/// @pre @c point must be inside the given hyper box, that
+/// is \f$\text{lowerCorner}[i] \le \text{point}[i] \le
+/// \text{upperCorner}[i] \quad \forall i=0, \dots, d-1\f$.
 ///
 /// @note
 /// - Given @c U and @c V of value type @c T as well as two @c double @c a and
 /// @c b, then the following must be a valid expression <tt>a * U + b * V</tt>
 /// yielding an object which is (implicitly) convertible to @c T.
-/// - All @c Point types must represent d-dimensional positions and support
+/// - All @c Point types must represent d-dimensional points and support
 /// coordinate access using @c operator[] which should return a @c double (or a
 /// value which is implicitly convertible). Coordinate indices must start at 0.
 /// - @c N is the number of hyper box corners which is \f$2^d\f$ where \f$d\f$
@@ -73,14 +95,28 @@ namespace Acts {
 ///    - (4,5,6): 111 = 7
 template <typename T, std::size_t N, class Point1, class Point2 = Point1,
           class Point3 = Point2>
-inline T interpolate(const Point1& position, const Point2& lowerCorner,
-                     const Point3& upperCorner, const std::array<T, N>& values)
-  requires(Concepts::interpolatable<T, Point1, Point2, Point3>)
+T interpolate(const Point1& point, const Point2& lowerCorner,
+              const Point3& upperCorner, const std::array<T, N>& values)
+  requires Concepts::Interpolatable<T, N, Point1, Point2, Point3>
 {
-  return detail::interpolate_impl<T, Point1, Point2, Point3,
-                                  detail::get_dimension<N>::value - 1,
-                                  N>::run(position, lowerCorner, upperCorner,
-                                          values);
+  static constexpr std::size_t D = std::bit_width(N) - 1;
+  static constexpr std::size_t I = D - 1;
+
+  // get distance to lower boundary relative to total bin width
+  const double f =
+      (point[I] - lowerCorner[I]) / (upperCorner[I] - lowerCorner[I]);
+  assert(f >= 0 && f <= 1 && "point must be inside the given hyper box");
+
+  std::array<T, N / 2> newValues{};
+  for (std::size_t i = 0; i < N / 2; ++i) {
+    newValues[i] = (1 - f) * values[2 * i] + f * values[2 * i + 1];
+  }
+
+  if constexpr (D == 1) {
+    return newValues[0];
+  } else {
+    return interpolate(point, lowerCorner, upperCorner, newValues);
+  }
 }
 
 }  // namespace Acts

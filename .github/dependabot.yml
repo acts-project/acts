@@ -7,6 +7,8 @@ updates:
       day: "sunday"
       time: "01:23"
       timezone: "Europe/Zurich"
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: "pre-commit"
     directory: "/"
@@ -15,3 +17,5 @@ updates:
       day: "sunday"
       time: "01:23"
       timezone: "Europe/Zurich"
+    cooldown:
+      default-days: 7

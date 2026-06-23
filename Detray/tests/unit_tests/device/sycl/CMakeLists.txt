@@ -9,8 +9,7 @@
 message(STATUS "Building detray SYCL unit tests")
 
 # Enable SYCL as a language.
-vecmem_check_language( SYCL )
-
+include(vecmem-check-language) # Needed for the SYCL language.
 enable_language(SYCL)
 
 # Set the default SYCL compiler flags.

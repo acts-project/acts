@@ -17,4 +17,7 @@ add_component_if(Root PluginRoot ACTS_BUILD_PLUGIN_ROOT)
 add_component_if(DD4hep PluginDD4hep ACTS_BUILD_PLUGIN_DD4HEP)
 add_component_if(EDM4hep PluginEDM4hep ACTS_BUILD_PLUGIN_EDM4HEP)
 
+# Arrow must be registered last, since it links ExamplesFramework and its dependencies.
+add_component_if(Arrow PluginArrow ACTS_BUILD_PLUGIN_ARROW)
+
 propagate_components_to_parent()

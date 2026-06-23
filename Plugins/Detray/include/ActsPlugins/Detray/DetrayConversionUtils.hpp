@@ -24,16 +24,7 @@
 #include <detray/detectors/default_metadata.hpp>
 #include <detray/io/frontend/payloads.hpp>
 
-namespace ActsPlugins {
-
-/// Detray metadata type
-using DetrayMetaData = detray::default_metadata<detray::array<double>>;
-
-/// Detray host detector type
-using DetrayHostDetector = detray::detector<DetrayMetaData>;
-
-/// @ingroup detray_plugin
-namespace DetrayConversionUtils {
+namespace ActsPlugins::DetrayConversionUtils {
 
 /// @addtogroup detray_plugin
 /// @{
@@ -61,6 +52,9 @@ struct Cache {
 detray::axis::bounds convertBinningOption(Acts::BinningOption bOption);
 
 /// Convert the binning value
+///
+/// @note The IO label is ignored during detector construction in detray,
+/// it is only added for readability
 ///
 /// @param bValue the binning value
 ///
@@ -120,5 +114,4 @@ std::tuple<Acts::BinUtility, bool> convertBinUtilityTo2D(
 
 /// @}
 
-}  // namespace DetrayConversionUtils
-}  // namespace ActsPlugins
+}  // namespace ActsPlugins::DetrayConversionUtils

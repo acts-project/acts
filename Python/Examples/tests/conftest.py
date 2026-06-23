@@ -17,7 +17,6 @@ sys.path = [
 
 
 import helpers
-import helpers.hash_root
 
 import pytest
 
@@ -88,6 +87,10 @@ def assert_root_hash(request, root_file_exp_hashes):
         file: Root file to check the expected hash against
         """
         __tracebackhide__ = True
+        # Lazy import: pulls uproot which pulls pyarrow; only relevant for
+        # tests that actually use this fixture.
+        import helpers.hash_root
+
         gkey = f"{request.node.name}__{key}"
         act_hash = helpers.hash_root.hash_root_file(file)
         if not gkey in root_file_exp_hashes:

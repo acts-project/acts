@@ -8,19 +8,15 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/detail/grid_helper.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-#include <algorithm>
 #include <array>
 #include <concepts>
 #include <cstddef>
 #include <set>
-#include <string>
 #include <tuple>
 #include <utility>
 #include <vector>

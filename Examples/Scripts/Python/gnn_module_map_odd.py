@@ -47,6 +47,7 @@ def runGnnModuleMap(
     gnnModel,
     outputDir,
     events=100,
+    shrinkNodes=False,
     s=None,
 ):
     """
@@ -145,7 +146,6 @@ def runGnnModuleMap(
         "etaScale": 1.0,
         "gpuDevice": 0,
         "gpuBlocks": 512,
-        "moreParallel": True,
     }
     graphConstructor = ModuleMapCuda(**moduleMapConfig)
 
@@ -206,8 +206,27 @@ def runGnnModuleMap(
         featureScales=featureScales,
         inputClusters="clusters",
         outputDirRoot=str(outputDir),
+        shrinkNodes=shrinkNodes,
         logLevel=acts.logging.INFO,
     )
+
+    protoTracksToSeeds = acts.examples.ProtoTracksToSeeds(
+        level=acts.logging.INFO,
+        inputProtoTracks="gnn-protoTracks",
+        inputSpacePoints="spacepoints",
+        outputSeeds="gnn-seeds",
+        outputProtoTracks="gnn-protoTracks-seeds-filtered",
+    )
+    s.addAlgorithm(protoTracksToSeeds)
+
+    parEstAlg = acts.examples.TrackParamsEstimationAlgorithm(
+        level=acts.logging.INFO,
+        inputSeeds=protoTracksToSeeds.config.outputSeeds,
+        outputTrackParameters="gnn-initial-parameters",
+        trackingGeometry=trackingGeometry,
+        magneticField=field,
+    )
+    s.addAlgorithm(parEstAlg)
 
     s.run()
     return s

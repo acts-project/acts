@@ -282,6 +282,10 @@ class TrackingVolume : public Volume {
   /// @param volumeName is the new name of
   void setVolumeName(std::string_view volumeName);
 
+  /// Check if the volume has an associated material description
+  /// @return True if the volume has an associated material, false otherwise
+  bool hasMaterial() const;
+
   /// Return the material of the volume
   /// @return Pointer to volume material or nullptr if no material assigned
   const IVolumeMaterial* volumeMaterial() const;

@@ -38,15 +38,6 @@ namespace SurfaceBoundsJsonConverter {
 /// @return the json object
 nlohmann::json toJson(const SurfaceBounds& bounds);
 
-/// Interface with detray conversion option
-/// @param bounds is the bounds object
-/// @param portal is the flag for conversion into detray portal format
-///
-/// @note reading back detray json format to Acts is not supported
-///
-/// @return the json object
-nlohmann::json toJsonDetray(const SurfaceBounds& bounds, bool portal = false);
-
 /// Conversion to surfaceBounds from json
 ///
 /// The type is given as a template argument in order to be able

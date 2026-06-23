@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/TrackingGeometryVisitor.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
@@ -54,9 +55,8 @@ class Gen1GeometryClosureVisitor : public TrackingGeometryMutableVisitor {
                                         << " with material");
       m_materialDecorator->decorate(volume);
     }
-    if (volume.volumeMaterial() == nullptr &&
-        volume.motherVolume() != nullptr &&
-        volume.motherVolume()->volumeMaterial() != nullptr) {
+    if (!volume.hasMaterial() && volume.motherVolume() != nullptr &&
+        volume.motherVolume()->hasMaterial()) {
       auto protoMaterial = dynamic_cast<const ProtoVolumeMaterial*>(
           volume.motherVolume()->volumeMaterial());
       if (protoMaterial == nullptr) {
@@ -192,10 +192,24 @@ class GeometryIdMapVisitor : public TrackingGeometryVisitor {
     const auto& surface = portal.surface();
     checkIdentifier(surface, "portal");
     m_surfacesById.emplace(surface.geometryId(), &surface);
+
+    for (const auto& tag : portal.tags()) {
+      auto [it, inserted] = m_portalsByTag.try_emplace(tag, &portal);
+      // A fused/merged portal is shared between volumes, so it is visited once
+      // per owning volume slot. Re-inserting the same tag for the *same* portal
+      // is fine; a different portal claiming the same tag is a collision.
+      if (!inserted && it->second != &portal) {
+        std::stringstream ss;
+        ss << "Duplicate portal tag: " << tag;
+        ACTS_ERROR(ss.str());
+        throw std::invalid_argument(ss.str());
+      }
+    }
   }
 
   std::unordered_map<GeometryIdentifier, const TrackingVolume*> m_volumesById{};
   std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById{};
+  detail::PortalTagMap m_portalsByTag{};
 
   std::unordered_map<GeometryIdentifier, const GeometryObject*> m_objectsById{};
 };
@@ -216,6 +230,7 @@ TrackingGeometry::TrackingGeometry(
   apply(mapVisitor);
   m_volumesById = std::move(mapVisitor.m_volumesById);
   m_surfacesById = std::move(mapVisitor.m_surfacesById);
+  m_portalsByTag = std::move(mapVisitor.m_portalsByTag);
 
   ACTS_DEBUG("TrackingGeometry created with "
              << m_volumesById.size() << " volumes and " << m_surfacesById.size()
@@ -223,6 +238,7 @@ TrackingGeometry::TrackingGeometry(
 
   m_volumesById.rehash(0);
   m_surfacesById.rehash(0);
+  m_portalsByTag.rehash(0);
 }
 
 TrackingGeometry::~TrackingGeometry() = default;
@@ -269,6 +285,14 @@ const Surface* TrackingGeometry::findSurface(GeometryIdentifier id) const {
     return nullptr;
   }
   return srf->second;
+}
+
+const Portal* TrackingGeometry::findPortal(std::string_view tag) const {
+  auto it = m_portalsByTag.find(tag);
+  if (it == m_portalsByTag.end()) {
+    return nullptr;
+  }
+  return it->second;
 }
 
 const std::unordered_map<GeometryIdentifier, const Surface*>&

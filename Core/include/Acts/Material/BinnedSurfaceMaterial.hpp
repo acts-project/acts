@@ -22,67 +22,35 @@ namespace Acts {
 /// It extends the @ref ISurfaceMaterial base class and is an array pf
 /// MaterialSlab. This is not memory optimised as every bin
 /// holds one material property object.
+///
+/// The split factors:
+///    - 1. : oppositePre
+///    - 0. : alongPre
 class BinnedSurfaceMaterial : public ISurfaceMaterial {
  public:
-  /// Default Constructor - deleted
-  BinnedSurfaceMaterial() = delete;
-
   /// Explicit constructor with only full MaterialSlab,
   /// for one-dimensional binning.
   ///
-  /// The split factors:
-  ///    - 1. : oppositePre
-  ///    - 0. : alongPre
-  ///  ===> 1 Dimensional array
-  ///
   /// @param binUtility defines the binning structure on the surface (copied)
-  /// @param fullProperties is the vector of properties as recorded (moved)
+  /// @param materialVector is the vector of material slabs as recorded (moved)
   /// @param splitFactor is the pre/post splitting directive
   /// @param mappingType is the type of surface mapping associated to the surface
   BinnedSurfaceMaterial(const BinUtility& binUtility,
-                        MaterialSlabVector fullProperties,
+                        MaterialSlabVector materialVector,
                         double splitFactor = 0.,
                         MappingType mappingType = MappingType::Default);
 
   /// Explicit constructor with only full MaterialSlab,
   /// for two-dimensional binning.
   ///
-  /// The split factors:
-  ///    - 1. : oppositePre
-  ///    - 0. : alongPre
-  ///  ===> 1 Dimensional array
-  ///
   /// @param binUtility defines the binning structure on the surface (copied)
-  /// @param fullProperties is the vector of properties as recorded (moved)
+  /// @param materialMatrix is the matrix of material slabs as recorded (moved)
   /// @param splitFactor is the pre/post splitting directive
   /// @param mappingType is the type of surface mapping associated to the surface
   BinnedSurfaceMaterial(const BinUtility& binUtility,
-                        MaterialSlabMatrix fullProperties,
+                        MaterialSlabMatrix materialMatrix,
                         double splitFactor = 0.,
                         MappingType mappingType = MappingType::Default);
-
-  /// Copy Move Constructor
-  ///
-  /// @param bsm is the source object to be copied
-  BinnedSurfaceMaterial(BinnedSurfaceMaterial&& bsm) = default;
-
-  /// Copy Constructor
-  ///
-  /// @param bsm is the source object to be copied
-  BinnedSurfaceMaterial(const BinnedSurfaceMaterial& bsm) = default;
-
-  /// Assignment Move operator
-  /// @param bsm The source object to move from
-  /// @return Reference to this object after move assignment
-  BinnedSurfaceMaterial& operator=(BinnedSurfaceMaterial&& bsm) = default;
-
-  /// Assignment operator
-  /// @param bsm The source object to copy from
-  /// @return Reference to this object after copy assignment
-  BinnedSurfaceMaterial& operator=(const BinnedSurfaceMaterial& bsm) = default;
-
-  /// Destructor
-  ~BinnedSurfaceMaterial() override = default;
 
   /// Scale operation
   ///
@@ -92,19 +60,25 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
 
   /// Return the BinUtility
   /// @return Reference to the bin utility used for material binning
-  const BinUtility& binUtility() const;
+  const BinUtility& binUtility() const { return m_binUtility; }
 
   /// @brief Retrieve the entire material slab matrix
   /// @return Reference to the complete matrix of material slabs
-  const MaterialSlabMatrix& fullMaterial() const;
+  const MaterialSlabMatrix& fullMaterial() const { return m_fullMaterial; }
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
   const MaterialSlab& materialSlab(const Vector2& lp) const final;
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
-  const MaterialSlab& materialSlab(const Vector3& gp) const final;
+  [[deprecated(
+      "Use materialSlab(const Vector2& lp) with a prior "
+      "Surface::globalToLocal() call instead")]] const MaterialSlab&
+  materialSlab(const Vector3& gp) const final;
 
   using ISurfaceMaterial::materialSlab;
+
+  /// @copydoc ISurfaceMaterial::localAxisDirections() const
+  std::vector<AxisDirection> localAxisDirections() const final;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   /// @param sl The output stream to write to
@@ -118,13 +92,5 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// The five different MaterialSlab
   MaterialSlabMatrix m_fullMaterial;
 };
-
-inline const BinUtility& BinnedSurfaceMaterial::binUtility() const {
-  return m_binUtility;
-}
-
-inline const MaterialSlabMatrix& BinnedSurfaceMaterial::fullMaterial() const {
-  return m_fullMaterial;
-}
 
 }  // namespace Acts

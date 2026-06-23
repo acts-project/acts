@@ -10,6 +10,13 @@
 cmake_minimum_required(VERSION 3.14)
 include(FetchContent)
 
+if(TARGET Eigen3::Eigen)
+    message(
+        FATAL_ERROR
+        "Setup of Eigen3 requested, but target `Eigen3::Eigen` exists!"
+    )
+endif()
+
 # Tell the user what's happening.
 message(STATUS "Building Eigen3 as part of the Detray project")
 

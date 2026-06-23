@@ -19,8 +19,6 @@
 #include <array>
 #include <cstddef>
 #include <iostream>
-#include <iterator>
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -96,15 +94,6 @@ class BinUtility {
     m_binningData.emplace_back(opt, value, bValues);
   }
 
-  /// Copy constructor
-  ///
-  /// @param sbu is the source bin utility
-  BinUtility(const BinUtility& sbu) = default;
-
-  /// Move constructor
-  /// @param sbu is the source bin utility
-  BinUtility(BinUtility&& sbu) = default;
-
   /// Create from a DirectedProtoAxis
   ///
   /// @param dpAxis the DirectedProtoAxis to be used
@@ -129,23 +118,6 @@ class BinUtility {
     }
   }
 
-  /// Assignment operator
-  ///
-  /// @param sbu is the source bin utility
-  /// @return Reference to this BinUtility after assignment
-  BinUtility& operator=(const BinUtility& sbu) {
-    if (this != &sbu) {
-      m_binningData = sbu.m_binningData;
-      m_transform = sbu.m_transform;
-      m_itransform = sbu.m_itransform;
-    }
-    return (*this);
-  }
-
-  /// Move assignment operator
-  /// @return Reference to this BinUtility after move assignment
-  BinUtility& operator=(BinUtility&&) = default;
-
   /// Operator+= to make multidimensional BinUtility
   ///
   /// @param gbu is the additional BinUtility to be chosen
@@ -161,9 +133,6 @@ class BinUtility {
     m_binningData.insert(m_binningData.end(), bData.begin(), bData.end());
     return (*this);
   }
-
-  /// Virtual Destructor
-  ~BinUtility() = default;
 
   /// Equality operator
   /// @param other The other BinUtility to compare with
@@ -215,23 +184,6 @@ class BinUtility {
     return bEval;
   }
 
-  /// Return the other direction for fast interlinking
-  ///
-  /// @param position is the global position for the next search
-  /// @param direction is the global position for the next search
-  /// @param ba is the bin accessor
-  ///
-  /// @todo the
-  ///
-  /// @return the next bin
-  int nextDirection(const Vector3& position, const Vector3& direction,
-                    std::size_t ba = 0) const {
-    if (ba >= m_binningData.size()) {
-      return 0;
-    }
-    return m_binningData[ba].nextDirection(position, direction);
-  }
-
   /// Bin from a 2D vector (following local parameters definitions)
   /// - no optional transform applied
   /// - USE WITH CARE !!
@@ -249,6 +201,42 @@ class BinUtility {
     }
     return m_binningData[ba].searchLocal(lposition);
   }
+
+  /// Bin from a scalar (following local parameters definitions)
+  /// - no optional transform applied
+  /// - USE WITH CARE !!
+  ///
+  /// You need to make sure that the local position is actually in the binning
+  /// frame of the BinUtility
+  ///
+  /// @param value is the scalar value to be evaluated
+  /// @param ba is the bin dimension
+  ///
+  /// @return bin calculated from local
+  std::size_t bin(float value, std::size_t ba = 0) const {
+    if (ba >= m_binningData.size()) {
+      return 0;
+    }
+    return m_binningData[ba].search(value);
+  }
+
+  /// Return the other direction for fast interlinking
+  ///
+  /// @param position is the global position for the next search
+  /// @param direction is the global position for the next search
+  /// @param ba is the bin accessor
+  ///
+  /// @todo the
+  ///
+  /// @return the next bin
+  int nextDirection(const Vector3& position, const Vector3& direction,
+                    std::size_t ba = 0) const {
+    if (ba >= m_binningData.size()) {
+      return 0;
+    }
+    return m_binningData[ba].nextDirection(position, direction);
+  }
+
   /// Check if bin is inside from Vector2 - optional transform applied
   ///
   /// @param position is the global position to be evaluated

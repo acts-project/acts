@@ -434,9 +434,8 @@ class MultiStepperLoop final {
   /// @note The returned component-proxy is only garantueed to be valid until
   /// the component number is again modified
   /// @return ComponentProxy for the newly added component or error
-  Result<ComponentProxy> addComponent(State& state,
-                                      const BoundTrackParameters& pars,
-                                      double weight) const {
+  ComponentProxy addComponent(State& state, const BoundTrackParameters& pars,
+                              double weight) const {
     auto& cmp =
         state.components.emplace_back(m_singleStepper.makeState(state.options),
                                       weight, IntersectionStatus::onSurface);

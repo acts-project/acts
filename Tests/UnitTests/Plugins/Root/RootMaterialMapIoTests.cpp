@@ -111,8 +111,6 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIoHomogeneousReadWrite) {
   BOOST_REQUIRE_EQUAL(surfaceMapsRead.size(), surfaceMaterials.size());
   BOOST_REQUIRE_EQUAL(volumeMapsRead.size(), 0);
 
-  Vector3 accessorPosition(0., 0., 0.);
-
   for (const auto& [geoID, sMaterial] : surfaceMaterials) {
     auto it = surfaceMapsRead.find(geoID);
     BOOST_REQUIRE(it != surfaceMapsRead.end());
@@ -121,11 +119,11 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIoHomogeneousReadWrite) {
     const auto* hMaterial =
         dynamic_cast<const HomogeneousSurfaceMaterial*>(readMaterial.get());
     BOOST_REQUIRE(hMaterial != nullptr);
-    BOOST_CHECK_CLOSE(hMaterial->materialSlab(accessorPosition).material().X0(),
-                      sMaterial->materialSlab(accessorPosition).material().X0(),
+    BOOST_CHECK_CLOSE(hMaterial->materialSlab().material().X0(),
+                      sMaterial->materialSlab(Vector2{0., 0.}).material().X0(),
                       1e-6);
-    BOOST_CHECK_CLOSE(hMaterial->materialSlab(accessorPosition).material().L0(),
-                      sMaterial->materialSlab(accessorPosition).material().L0(),
+    BOOST_CHECK_CLOSE(hMaterial->materialSlab().material().L0(),
+                      sMaterial->materialSlab(Vector2{0., 0.}).material().L0(),
                       1e-6);
   }
 }

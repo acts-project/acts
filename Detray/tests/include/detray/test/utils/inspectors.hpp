@@ -203,9 +203,11 @@ struct object_tracer {
     if ((is_status(state.status(), navigation_status) || ...)) {
       // Reached a new position: log it
       // Also log volume switches that happen without position update
-      if ((vector::norm(last_pos - pos) >=
-           10.f * std::numeric_limits<scalar_t>::epsilon()) ||
-          (state.is_on_portal() && current_vol != state.volume()) ||
+      const bool first_obj{(last_pos == point3_t{inv_pos, inv_pos, inv_pos}) &&
+                           (last_dir == point3_t{0.f, 0.f, 0.f})};
+
+      if ((state.is_on_portal() && current_vol != state.volume()) ||
+          object_trace.empty() || first_obj ||
           state.current().surface().identifier() !=
               object_trace.back().intersection.surface().identifier()) {
         object_trace.push_back({pos, dir, state.current()});

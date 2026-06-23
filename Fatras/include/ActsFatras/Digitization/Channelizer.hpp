@@ -8,19 +8,32 @@
 
 #pragma once
 
-#include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
-#include "ActsFatras/Digitization/PlanarSurfaceMask.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 #include "ActsFatras/Digitization/Segmentizer.hpp"
+#include "ActsFatras/Digitization/SurfaceDrift.hpp"
+#include "ActsFatras/Digitization/SurfaceMask.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 
 #include <numeric>
 
+namespace Acts {
+class Surface;
+}
+
 namespace ActsFatras {
 
 /// @brief Class that ties the digitization modules together and produces the channels
+///
+/// The drift and masking steps are surface-type agnostic: SurfaceDrift and
+/// SurfaceMask each dispatch internally on the surface type (plane / disc /
+/// cylinder). The resulting (already-clipped) 2-D segment is fed into the
+/// Segmentizer, which steps through the channel grid defined by the supplied
+/// BinUtility.
 class Channelizer {
-  PlanarSurfaceDrift m_surfaceDrift;
-  PlanarSurfaceMask m_surfaceMask;
+  SurfaceDrift m_surfaceDrift;
+  SurfaceMask m_surfaceMask;
   Segmentizer m_segmentizer;
 
  public:
@@ -32,39 +45,14 @@ class Channelizer {
   /// @param driftDir the drift direction
   /// @param segmentation the segmentation of the surface
   /// @param thickness the thickness of the surface
+  /// @param minRelPerpDrift minimum relative perpendicular drift (to avoid numerical instability)
   ///
   /// @return the list of channels
   Acts::Result<std::vector<Segmentizer::ChannelSegment>> channelize(
       const Hit& hit, const Acts::Surface& surface,
       const Acts::GeometryContext& gctx, const Acts::Vector3& driftDir,
-      const Acts::BinUtility& segmentation, double thickness) const {
-    auto driftedSegment = m_surfaceDrift.toReadout(
-        gctx, surface, thickness, hit.position(), hit.direction(), driftDir);
-
-    auto maskedSegmentRes = m_surfaceMask.apply(surface, driftedSegment);
-
-    if (!maskedSegmentRes.ok()) {
-      return maskedSegmentRes.error();
-    }
-
-    // Now Channelize
-    auto segments =
-        m_segmentizer.segments(gctx, surface, segmentation, *maskedSegmentRes);
-
-    // Go from 2D-path to 3D-path by applying thickness
-    const auto path2D = std::accumulate(
-        segments.begin(), segments.end(), 0.0,
-        [](double sum, const auto& seg) { return sum + seg.activation; });
-
-    for (auto& seg : segments) {
-      auto r = path2D != 0.0 ? (seg.activation / path2D) : 1.0;
-      auto segThickness = r * thickness;
-
-      seg.activation = std::hypot(segThickness, seg.activation);
-    }
-
-    return segments;
-  }
+      const Acts::BinUtility& segmentation, double thickness,
+      double minRelPerpDrift = 0.001) const;
 };
 
 }  // namespace ActsFatras

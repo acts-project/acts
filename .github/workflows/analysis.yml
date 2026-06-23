@@ -26,13 +26,18 @@ env:
 # NOTE this only builds core unittests to reduce the output size. if we
 #      found a way to have Github actions not fail regularly with this job
 #      all unit tests should be reactivated.
+permissions:
+  contents: read
+
 jobs:
   build_debug:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:85
+    container: ghcr.io/acts-project/ubuntu2404:87
     steps:
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
@@ -43,26 +48,31 @@ jobs:
 
       - name: Save PR metadata
         if: github.event_name == 'pull_request'
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+          PR_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          MERGE_SHA: ${{ github.sha }}
         run: |
           # Shallow clone: parent commits aren't available via git,
           # but GitHub provides the SHAs through the event context.
           printf '{"pr_number":"%s","pr_sha":"%s","base_sha":"%s","merge_sha":"%s"}\n' \
-            "${{ github.event.number }}" \
-            "${{ github.event.pull_request.head.sha }}" \
-            "${{ github.event.pull_request.base.sha }}" \
-            "${{ github.sha }}" \
+            "$PR_NUMBER" \
+            "$PR_SHA" \
+            "$BASE_SHA" \
+            "$MERGE_SHA" \
             > PR_metadata.json
           cat PR_metadata.json
 
       - name: Persist PR metadata
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: PR_metadata
           path: PR_metadata.json
 
       - name: Cache build
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
@@ -81,7 +91,7 @@ jobs:
       - name: Unit tests
         run: >
           CI/dependencies/run.sh .env
-          ctest --test-dir build -j$(nproc)
+          ctest --test-dir build -j$(nproc) --label-exclude "slow"
 
       - name: Remove .o files
         run: >
@@ -90,9 +100,9 @@ jobs:
           && du -sh build
       - name: Coverage
         run: |
-          uv run --no-project CI/test_coverage.py build --filter
+          uv run --no-project --no-build CI/test_coverage.py build --filter
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: coverage-build
@@ -100,7 +110,7 @@ jobs:
             build/compile_commands.json
             build/coverage/cov.xml
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         id: artifact-upload-step
         with:
@@ -108,29 +118,35 @@ jobs:
           path: build/coverage/html
 
       - name: Coverage display
+        env:
+          REPOSITORY: ${{ github.repository }}
+          ARTIFACT_ID: ${{ steps.artifact-upload-step.outputs.artifact-id }}
         run: |
-          base_link='https://acts-herald.app.cern.ch/view/${{ github.repository }}/${{ steps.artifact-upload-step.outputs.artifact-id }}'
+          base_link="https://acts-herald.app.cern.ch/view/${REPOSITORY}/${ARTIFACT_ID}"
           link="$base_link/index.html"
           echo "🛡️ Code coverage available at: $link"
           echo "**🛡️ Code coverage available [here]($link)**" >> $GITHUB_STEP_SUMMARY
 
   clang_tidy:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404_clang22:85
+    container: ghcr.io/acts-project/ubuntu2404_clang22:87
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Mark workspace as safe
         run: git config --global --add safe.directory /__w/acts/acts
 
       - name: Fetch base branch
         if: github.event_name == 'pull_request'
-        run: git fetch origin "${{ github.base_ref }}"
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: git fetch origin "$BASE_REF"
 
-      - uses: astral-sh/setup-uv@v7
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
 
       - name: Install clang-tidy
         run: |
@@ -158,24 +174,26 @@ jobs:
 
       - name: Analyze (PR - changed files only)
         if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: >
-          uv run CI/clang_tidy/run_clang_tidy_pr.py
-          analyze build fixes.yml --base-ref "origin/${{ github.base_ref }}"
+          uv run --no-build CI/clang_tidy/run_clang_tidy_pr.py
+          analyze build fixes.yml --base-ref "origin/$BASE_REF"
 
       - name: Analyze (push - all files)
         if: github.event_name == 'push'
         run: >
-          uv run CI/clang_tidy/run_clang_tidy_pr.py
+          uv run --no-build CI/clang_tidy/run_clang_tidy_pr.py
           analyze build fixes.yml --all
 
       - name: Upload fixes
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: clang-tidy-fixes
           path: fixes.yml
 
       - name: Annotate
         run: >
-          uv run CI/clang_tidy/run_clang_tidy_pr.py
+          uv run --no-build CI/clang_tidy/run_clang_tidy_pr.py
           annotate fixes.yml

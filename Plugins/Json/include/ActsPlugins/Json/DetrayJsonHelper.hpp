@@ -25,37 +25,6 @@ namespace Acts::DetrayJsonHelper {
 /// @addtogroup json_plugin
 /// @{
 
-/// @brief Helper function to switch keys from ACTS to detray
-///
-/// DETRAY types @todo change to detray imports when available
-///    annulus2 = 0u,
-///    cuboid3 = 1u,
-///    cylinder2 = 2u,
-///    cylinder3 = 3u,
-///    portal_cylinder2 = 4u,
-///    rectangle2 = 5u,
-///    ring2 = 6u,
-///    trapezoid2 = 7u,
-///    cell_wire = 8u,
-///    straw_wire = 9u,
-///    single1 = 10u,
-///    single2 = 11u,
-///    single3 = 12u,
-///    unknown = 13u
-///
-/// @param sBounds is the surface bounds type
-/// @param portal is the flag for conversion into detray portal format
-///
-/// @return type and value array in detray format
-std::tuple<unsigned int, std::vector<double>> maskFromBounds(
-    const Acts::SurfaceBounds& sBounds, bool portal = false);
-
-/// @brief add volume link
-///
-/// @param jSurface [in,out] is the json object to be patched
-/// @param vLink is the volume link to be added
-void addVolumeLink(nlohmann::json& jSurface, int vLink);
-
 /// Determine the acceleration link from a grid
 ///
 ///

@@ -56,7 +56,8 @@ TrackFindingAlgorithmGnn::TrackFindingAlgorithmGnn(
     : IAlgorithm("TrackFindingMLBasedAlgorithm", std::move(logger)),
       m_cfg(std::move(config)),
       m_pipeline(m_cfg.graphConstructor, m_cfg.edgeClassifiers,
-                 m_cfg.trackBuilder, this->logger().clone()) {
+                 m_cfg.trackBuilder, this->logger().clone(),
+                 m_cfg.shrinkNodes) {
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing space point input collection");
   }

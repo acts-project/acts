@@ -100,10 +100,10 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
   for (std::size_t iseed = 0; iseed < seeds.size(); ++iseed) {
     const auto& seed = seeds[iseed];
     if (seed.spacePoints().size() < 3) {
-      ACTS_WARNING("Seed " << iseed << " has less than 3 space points");
+      ACTS_WARNING("Seed " << iseed << " has less than 3 space points, skip");
       continue;
     } else if (seed.spacePoints().size() > 3) {
-      ACTS_WARNING(
+      ACTS_DEBUG(
           "Seed "
           << iseed
           << " has more than 3 space points, only the first 3 will be used");

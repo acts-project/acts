@@ -86,8 +86,7 @@ struct VolumeMaterialInteraction {
                             const navigator_t& navigator) {
     pathCorrection = 0;
     if (navigator.currentVolume(state.navigation) != nullptr &&
-        navigator.currentVolume(state.navigation)->volumeMaterial() !=
-            nullptr) {
+        navigator.currentVolume(state.navigation)->hasMaterial()) {
       slab = MaterialSlab(navigator.currentVolume(state.navigation)
                               ->volumeMaterial()
                               ->material(pos),

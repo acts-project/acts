@@ -15,12 +15,18 @@
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/detail/GenerateParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -354,6 +360,49 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
   }
 
   CHECK_CLOSE_ABS(initialParams.parameters(), endParameters.parameters(), eps);
+}
+
+BOOST_AUTO_TEST_CASE(LineSurfaceMaterialAssignment) {
+  LineSurfaceStub surface(Transform3::Identity(), 1., 100.);
+  MaterialSlab slab(Material::fromMolarDensity(1., 2., 3., 4., 5.), 0.1);
+
+  // HomogeneousSurfaceMaterial is always valid
+  auto homMat = std::make_shared<HomogeneousSurfaceMaterial>(slab);
+  BOOST_CHECK_NO_THROW(surface.assignSurfaceMaterial(homMat));
+  BOOST_CHECK_NE(surface.surfaceMaterial(), nullptr);
+
+  // nullptr clears the material
+  BOOST_CHECK_NO_THROW(surface.assignSurfaceMaterial(nullptr));
+  BOOST_CHECK_EQUAL(surface.surfaceMaterial(), nullptr);
+
+  // 1D AxisR - valid for line surface
+  BinUtility buR(10, 0.f, 1.f, Acts::open, AxisDirection::AxisR);
+  auto matR = std::make_shared<BinnedSurfaceMaterial>(
+      buR, MaterialSlabVector(10, slab));
+  BOOST_CHECK_NO_THROW(surface.assignSurfaceMaterial(matR));
+
+  // 1D AxisZ - valid for line surface
+  BinUtility buZ(10, -100.f, 100.f, Acts::open, AxisDirection::AxisZ);
+  auto matZ = std::make_shared<BinnedSurfaceMaterial>(
+      buZ, MaterialSlabVector(10, slab));
+  BOOST_CHECK_NO_THROW(surface.assignSurfaceMaterial(matZ));
+
+  // 2D {AxisR, AxisZ} - valid for line surface
+  BinUtility bu2D(5, 0.f, 1.f, Acts::open, AxisDirection::AxisR);
+  bu2D += BinUtility(3, -100.f, 100.f, Acts::open, AxisDirection::AxisZ);
+  auto mat2D = std::make_shared<BinnedSurfaceMaterial>(
+      bu2D, MaterialSlabMatrix(3, MaterialSlabVector(5, slab)));
+  BOOST_CHECK_NO_THROW(surface.assignSurfaceMaterial(mat2D));
+
+  // Wrong axis directions - should throw
+  for (auto badDir : {AxisDirection::AxisRPhi, AxisDirection::AxisPhi,
+                      AxisDirection::AxisX, AxisDirection::AxisY}) {
+    BinUtility buBad(10, 0.f, 10.f, Acts::open, badDir);
+    auto matBad = std::make_shared<BinnedSurfaceMaterial>(
+        buBad, MaterialSlabVector(10, slab));
+    BOOST_CHECK_THROW(surface.assignSurfaceMaterial(matBad),
+                      std::invalid_argument);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

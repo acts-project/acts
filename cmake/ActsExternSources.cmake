@@ -6,7 +6,7 @@ set(ACTS_ACTSVG_SOURCE
 mark_as_advanced(ACTS_ACTSVG_SOURCE)
 
 set(ACTS_VECMEM_SOURCE
-    "URL;https://github.com/acts-project/vecmem/archive/refs/tags/v${_acts_vecmem_version}.tar.gz;URL_HASH;SHA256=f13ba18b923d2f6da3dc8a20b76152f7ebf4420fbebb12684e7215d178780029"
+    "URL;https://github.com/acts-project/vecmem/archive/refs/tags/v${_acts_vecmem_version}.tar.gz;URL_HASH;SHA256=a1dd195e154ed23a0e50c52e22fb9f986fc65cd99860020fc47a292f597fa88d"
     CACHE STRING
     "Source to take VECMEM from"
 )
@@ -20,7 +20,7 @@ set(ACTS_COVFIE_SOURCE
 mark_as_advanced(ACTS_COVFIE_SOURCE)
 
 set(ACTS_TRACCC_SOURCE
-    "URL;https://github.com/acts-project/traccc/archive/refs/tags/v${_acts_traccc_version}.tar.gz;URL_HASH;SHA256=de4c88028f51deb63d75c5bdcde40803832e372219cd59d195a748560dacdeb1"
+    "URL;https://github.com/acts-project/traccc/archive/refs/tags/v${_acts_traccc_version}.tar.gz;URL_HASH;SHA256=9c7e772a088cadfbdcb63abe51e4064241c84f10fbfc27594cbd0cc78d140d64"
     CACHE STRING
     "Source to take TRACCC from"
 )
@@ -38,6 +38,7 @@ set(ACTS_NLOHMANNJSON_SOURCE
     CACHE STRING
     "Source to take nlohmann_json from"
 )
+mark_as_advanced(ACTS_NLOHMANN_JSON_SOURCE)
 
 # translate version string to the historical Mille release naming convention
 string(REPLACE "." "-" _acts_mille_release_string ${_acts_mille_version})
@@ -46,7 +47,16 @@ set(ACTS_MILLE_SOURCE
     CACHE STRING
     "Source to take Mille from"
 )
-mark_as_advanced(ACTS_NLOHMANN_JSON_SOURCE)
+mark_as_advanced(ACTS_MILLE_SOURCE)
+
+# translate version string to the historical GBL release naming convention
+string(REPLACE "." "-" _acts_gbl_release_string ${_acts_gbl_version})
+set(ACTS_GBL_SOURCE
+    "URL;https://gitlab.desy.de/millepede/general-broken-lines/-/archive/V${_acts_gbl_release_string}/general-broken-lines-V${_acts_gbl_release_string}.tar.gz;URL_HASH;SHA256=e40401a77a828c81a9217d8df3201e7712ac86b4fd5058d526ae1e1f6664304f"
+    CACHE STRING
+    "Source to take General Broken Lines (GBL) from"
+)
+mark_as_advanced(ACTS_GBL_SOURCE)
 
 set(ACTS_EIGEN3_SOURCE
     "URL;https://gitlab.com/libeigen/eigen/-/archive/${_acts_eigen3_version}/${_acts_eigen3_version}.tar.gz;URL_HASH;SHA256=ba6ef66ba2d319e0a871a267889411c550d4bdf5bc7c62f86c60276913f3f4ba"

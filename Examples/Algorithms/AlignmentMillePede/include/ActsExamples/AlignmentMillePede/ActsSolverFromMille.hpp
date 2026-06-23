@@ -48,12 +48,15 @@ class ActsSolverFromMille final : public IAlgorithm {
     /// to get ROOT tree / plain text / classic Millepede
     /// binary outputs. All three can be read by the interface.
     std::string milleInput;
-    // the tracking geometry to use
+    /// the tracking geometry to use
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
-    // magnetic field
+    /// magnetic field
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
-    // modules to fix in the alignment to suppress global movements
+    /// modules to fix in the alignment to suppress global movements
     std::set<Acts::GeometryIdentifier> fixModules;
+    /// output text file to write alignment results to.
+    /// Will be skipped if empty.
+    std::string outFile = "";
   };
 
   /// Constructor of the sandbox algorithm

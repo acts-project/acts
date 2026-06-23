@@ -340,8 +340,7 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
     // this volume was already visited
     return;
   }
-  if ((tVolume->volumeMaterial() != nullptr ||
-       m_cfg.processNonMaterial == true) &&
+  if ((tVolume->hasMaterial() || m_cfg.processNonMaterial == true) &&
       m_cfg.processVolumes == true) {
     volumeHierarchy.push_back(
         {tVolume->geometryId(), defaultVolumeMaterial(tVolume)});
@@ -371,8 +370,7 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
     for (auto& lay : layers) {
       if (m_cfg.processRepresenting == true) {
         auto& layRep = lay->surfaceRepresentation();
-        if ((layRep.surfaceMaterial() != nullptr ||
-             m_cfg.processNonMaterial == true) &&
+        if ((layRep.hasMaterial() || m_cfg.processNonMaterial == true) &&
             layRep.geometryId() != GeometryIdentifier()) {
           surfaceHierarchy.push_back(
               {layRep.geometryId(),
@@ -382,8 +380,7 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
       if (lay->approachDescriptor() != nullptr &&
           m_cfg.processApproaches == true) {
         for (auto& asf : lay->approachDescriptor()->containedSurfaces()) {
-          if (asf->surfaceMaterial() != nullptr ||
-              m_cfg.processNonMaterial == true) {
+          if (asf->hasMaterial() || m_cfg.processNonMaterial == true) {
             surfaceHierarchy.push_back(
                 {asf->geometryId(),
                  defaultSurfaceMaterial(asf->getSharedPtr(), m_cfg.context)});
@@ -392,8 +389,7 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
       }
       if (lay->surfaceArray() != nullptr && m_cfg.processSensitives == true) {
         for (auto& ssf : lay->surfaceArray()->surfaces()) {
-          if (ssf->surfaceMaterial() != nullptr ||
-              m_cfg.processNonMaterial == true) {
+          if (ssf->hasMaterial() || m_cfg.processNonMaterial == true) {
             auto sp = ssf->getSharedPtr();
             auto sm = defaultSurfaceMaterial(sp, m_cfg.context);
             auto id = ssf->geometryId();
@@ -411,8 +407,7 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
     auto& bssfRep = bsurf->surfaceRepresentation();
     if (bssfRep.geometryId().volume() == tVolume->geometryId().volume() &&
         m_cfg.processBoundaries == true) {
-      if (bssfRep.surfaceMaterial() != nullptr ||
-          m_cfg.processNonMaterial == true) {
+      if (bssfRep.hasMaterial() || m_cfg.processNonMaterial == true) {
         surfaceHierarchy.push_back(
             {bssfRep.geometryId(),
              defaultSurfaceMaterial(bssfRep.getSharedPtr(), m_cfg.context)});
