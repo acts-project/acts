@@ -415,7 +415,6 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
     out << encoded.dump(2);
   }
 
-
   auto decodedGeometry = converter.fromJson(gctx, jsonPath);
 
   const auto* htvSource = sourceGeometry->highestTrackingVolume();
