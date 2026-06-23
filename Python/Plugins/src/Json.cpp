@@ -88,6 +88,9 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
         .def_static("defaultConfig",
                     &TrackingGeometryJsonConverter::Config::defaultConfig);
 
+    py::class_<TrackingGeometryJsonConverter::Options>(cls, "Options")
+        .def(py::init<>());
+
     cls.def(py::init([](TrackingGeometryJsonConverter::Config config,
                         Acts::Logging::Level level) {
               return std::make_unique<TrackingGeometryJsonConverter>(
@@ -106,7 +109,11 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
              py::arg("config") =
                  TrackingGeometryJsonConverter::Config::defaultConfig(),
              py::arg("logger"))
-        .def("toJson", &TrackingGeometryJsonConverter::toJson)
-        .def("fromJson", &TrackingGeometryJsonConverter::fromJson);
+        .def("toJson", &TrackingGeometryJsonConverter::toJson, py::arg("gctx"),
+             py::arg("geometry"),
+             py::arg("options") = TrackingGeometryJsonConverter::Options())
+        .def("fromJson", &TrackingGeometryJsonConverter::fromJson,
+             py::arg("gctx"), py::arg("jsonPath"),
+             py::arg("options") = TrackingGeometryJsonConverter::Options());
   }
 }
