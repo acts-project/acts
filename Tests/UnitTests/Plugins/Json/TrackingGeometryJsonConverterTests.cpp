@@ -415,14 +415,8 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
     out << encoded.dump(2);
   }
 
-  nlohmann::json encodedFromFile;
-  {
-    std::ifstream in(jsonPath);
-    BOOST_REQUIRE(in.good());
-    in >> encodedFromFile;
-  }
 
-  auto decodedGeometry = converter.fromJson(gctx, encodedFromFile);
+  auto decodedGeometry = converter.fromJson(gctx, jsonPath);
 
   const auto* htvSource = sourceGeometry->highestTrackingVolume();
   const auto* htvDecoded = decodedGeometry->highestTrackingVolume();

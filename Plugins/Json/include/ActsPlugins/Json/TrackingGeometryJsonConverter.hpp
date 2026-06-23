@@ -76,7 +76,7 @@ class TrackingGeometryJsonConverter {
   using SurfaceIdLookup = PointerToIdLookup<Surface, kSurfaceLookupContext>;
   /// JSON ID map to its surface
   using SurfacePointerLookup =
-      IdToPointerLikeLookup<RegularSurface, std::shared_ptr<RegularSurface>,
+      IdToPointerLikeLookup<Surface, std::shared_ptr<Surface>,
                             kSurfaceLookupContext>;
 
   /// Portal map to its JSON ID
@@ -167,12 +167,12 @@ class TrackingGeometryJsonConverter {
   /// @brief Reconstruct a tracking geometry from JSON.
   ///
   /// @param gctx geometry context
-  /// @param encoded serialized tracking geometry
+  /// @param jsonPath The path to the JSON file on disc
   /// @param options options for the conversion
   ///
   /// @return pointer to deserialized geometry
   std::shared_ptr<TrackingGeometry> fromJson(
-      const GeometryContext& gctx, const nlohmann::json& encoded,
+      const GeometryContext& gctx, const std::string& jsonPath,
       const Options& options = Options{}) const;
 
   /// @brief Convert a tracking volume hierarchy to JSON.

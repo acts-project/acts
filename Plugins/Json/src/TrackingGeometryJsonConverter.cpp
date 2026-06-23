@@ -44,6 +44,8 @@
 #include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
 #include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
 
+#include <filesystem>
+#include <fstream>
 #include <stdexcept>
 #include <unordered_set>
 
@@ -409,25 +411,15 @@ std::unique_ptr<Acts::INavigationPolicy> decodeCylinderNavigationPolicy(
   return std::make_unique<Acts::CylinderNavigationPolicy>(gctx, volume, logger);
 }
 
-// -------------------------------------------------------------------
-// Portal link encoder/decoder
-
-std::shared_ptr<Acts::RegularSurface> regularSurfaceFromJson(
-    const nlohmann::json& jSurface) {
-  auto surface = Acts::SurfaceJsonConverter::fromJson(jSurface);
-  auto regular = std::dynamic_pointer_cast<Acts::RegularSurface>(surface);
-  if (regular == nullptr) {
-    throw std::invalid_argument("Portal link surface is not a RegularSurface");
-  }
-  return regular;
-}
-
 std::unique_ptr<Acts::GridPortalLink> makeGridPortalLink(
     const std::shared_ptr<Acts::RegularSurface>& surface,
     Acts::AxisDirection direction, const Acts::IAxis& axis0,
     const Acts::IAxis* axis1) {
   std::unique_ptr<Acts::GridPortalLink> grid;
-
+  if (!surface) {
+    throw std::invalid_argument(
+        "makeGridPortalLink() - Non regular srurface was passed");
+  }
   if (axis1 == nullptr) {
     axis0.visit([&](const auto& a0) {
       using axis_t = std::remove_cvref_t<decltype(a0)>;
@@ -555,7 +547,16 @@ std::unique_ptr<Acts::PortalLinkBase> decodeTrivialPortalLink(
     const Acts::TrackingGeometryJsonConverter::VolumePointerLookup& volumes) {
   const auto linkSurfaceId = encoded.at(kSurfaceIdKey).get<std::size_t>();
   const auto targetVolumeId = encoded.at(kTargetVolumeIdKey).get<std::size_t>();
-  return std::make_unique<Acts::TrivialPortalLink>(surfaces.at(linkSurfaceId),
+  auto regularSurf = std::dynamic_pointer_cast<Acts::RegularSurface>(
+      surfaces.at(linkSurfaceId));
+  if (!regularSurf) {
+    throw std::invalid_argument(
+        std::format("decodeTrivialPortallink() - {:}Surface with geoID: {:} is "
+                    "not regular ",
+                    surfaces.at(linkSurfaceId)->type(),
+                    surfaces.at(linkSurfaceId)->geometryId()));
+  }
+  return std::make_unique<Acts::TrivialPortalLink>(regularSurf,
                                                    *volumes.at(targetVolumeId));
 }
 
@@ -589,9 +590,10 @@ std::unique_ptr<Acts::PortalLinkBase> decodeGridPortalLink(
     throw std::invalid_argument("GridPortalLink requires 1 or 2 axes");
   }
 
-  auto grid =
-      makeGridPortalLink(surfaces.at(linkSurfaceId), direction, *axes.at(0),
-                         axes.size() == 2u ? axes.at(1).get() : nullptr);
+  auto grid = makeGridPortalLink(
+      std::dynamic_pointer_cast<Acts::RegularSurface>(
+          surfaces.at(linkSurfaceId)),
+      direction, *axes.at(0), axes.size() == 2u ? axes.at(1).get() : nullptr);
 
   Acts::AnyGridView<const Acts::TrackingVolume*> view(grid->grid());
   const auto dim = view.dimensions();
@@ -1075,7 +1077,7 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
 
   // ---------------------------------------------------
   for (const auto& [surfaceId, record] : surfaceRecords) {
-    auto surface = regularSurfaceFromJson(record.payload);
+    auto surface = Acts::SurfaceJsonConverter::fromJson(record.payload);
     surfacePointers.emplace(surfaceId, surface);
   }
 
@@ -1204,8 +1206,21 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
 
 std::shared_ptr<Acts::TrackingGeometry>
 Acts::TrackingGeometryJsonConverter::fromJson(const GeometryContext& gctx,
-                                              const nlohmann::json& encoded,
+                                              const std::string& path,
                                               const Options& options) const {
+  if (!std::filesystem::exists(path)) {
+    throw std::invalid_argument(std::format(
+        "TrackingGeometryJsonConverter() - JSON file {:} does not exist",
+        path));
+  }
+  std::ifstream istr{path};
+  if (!istr.good()) {
+    throw std::invalid_argument(std::format(
+        "TrackingGeometryJsonConverter() - Cannot open '{:}'", path));
+  }
+  nlohmann::json encoded{};
+  istr >> encoded;
+
   ACTS_DEBUG("Reconstructing TrackingGeometry from JSON");
   auto world = trackingVolumeFromJson(gctx, encoded, options);
 

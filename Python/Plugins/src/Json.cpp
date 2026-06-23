@@ -16,6 +16,8 @@
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
+#include <filesystem>
+#include <iostream>
 #include <memory>
 #include <string>
 
@@ -113,8 +115,8 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
         .def(
             "fromJson",
             [](const TrackingGeometryJsonConverter& self,
-               const GeometryContext& gctx, const std::string& encoded) {
-              return self.fromJson(gctx, nlohmann::json::parse(encoded));
+               const GeometryContext& gctx, const std::string& filePath) {
+              return self.fromJson(gctx, filePath);
             },
             py::arg("gctx"), py::arg("encoded"));
   }
