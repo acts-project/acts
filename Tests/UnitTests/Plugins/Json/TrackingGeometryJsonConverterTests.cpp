@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
   }
   BOOST_CHECK(sharedPortalPreserved);
 
-  auto decodedGeometry = converter.fromJson(gctx, encodedFromFile);
+  auto decodedGeometry = converter.fromJson(gctx, jsonPath);
   BOOST_REQUIRE(decodedGeometry != nullptr);
   BOOST_REQUIRE(decodedGeometry->highestTrackingVolume() != nullptr);
   BOOST_CHECK_EQUAL(decodedGeometry->highestTrackingVolume()->volumeName(),
