@@ -97,7 +97,7 @@ def load_tracking_geometry(
     from acts.json import TrackingGeometryJsonConverter
 
     converter = TrackingGeometryJsonConverter()
-    return converter.fromJson(gctx, json_path)
+    return converter.fromJson(gctx, json_path.absolute())
 
 
 def collect_rz(tracking_geometry: acts.TrackingGeometry, gctx: acts.GeometryContext):
