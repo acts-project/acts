@@ -213,7 +213,7 @@ def test_odd_gen3_json_roundtrip(tmp_path):
     assert json_path.stat().st_size > 0
 
     converter = TrackingGeometryJsonConverter()
-    rebuilt_geometry = converter.fromJson(gctx, json_path.absolute())
+    rebuilt_geometry = converter.fromJson(gctx, str(json_path.absolute()))
 
     rebuilt = CountingVisitor()
     rebuilt_geometry.apply(rebuilt)
