@@ -1206,17 +1206,17 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
 
 std::shared_ptr<Acts::TrackingGeometry>
 Acts::TrackingGeometryJsonConverter::fromJson(const GeometryContext& gctx,
-                                              const std::string& path,
+                                              const std::filesystem::path& path,
                                               const Options& options) const {
   if (!std::filesystem::exists(path)) {
     throw std::invalid_argument(std::format(
         "TrackingGeometryJsonConverter() - JSON file {:} does not exist",
-        path));
+        path.native()));
   }
   std::ifstream istr{path};
   if (!istr.good()) {
     throw std::invalid_argument(std::format(
-        "TrackingGeometryJsonConverter() - Cannot open '{:}'", path));
+        "TrackingGeometryJsonConverter() - Cannot open '{:}'", path.native()));
   }
   nlohmann::json encoded{};
   istr >> encoded;

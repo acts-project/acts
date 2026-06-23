@@ -106,18 +106,8 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
                  TrackingGeometryJsonConverter::Config::defaultConfig(),
              py::arg("logger"))
         .def(
-            "toJson",
-            [](const TrackingGeometryJsonConverter& self,
-               const GeometryContext& gctx, const TrackingGeometry& geometry) {
-              return self.toJson(gctx, geometry).dump();
-            },
-            py::arg("gctx"), py::arg("geometry"))
+            "toJson",&TrackingGeometryJsonConverter::toJson)
         .def(
-            "fromJson",
-            [](const TrackingGeometryJsonConverter& self,
-               const GeometryContext& gctx, const std::string& filePath) {
-              return self.fromJson(gctx, filePath);
-            },
-            py::arg("gctx"), py::arg("encoded"));
+            "fromJson", &TrackingGeometryJsonConverter::fromJson);
   }
 }
