@@ -42,7 +42,7 @@ std::span<PolynomialBetheHeitlerApprox::Component>
 PolynomialBetheHeitlerApprox::mixture(
     double xOverX0, const std::span<Component> mixture) const {
   if (m_clampToRange) {
-    xOverX0 = std::clamp(xOverX0, 0.0, m_ranges.back().range.max());
+    xOverX0 = std::clamp(xOverX0, 0.0, rangeMax());
   }
 
   // Evaluate polynomial at x

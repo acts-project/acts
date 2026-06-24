@@ -103,16 +103,18 @@ void addTrackFitting(py::module& mex) {
         mex, "BetheHeitlerApprox");
     py::class_<PolynomialBetheHeitlerApprox, BetheHeitlerApprox,
                std::shared_ptr<PolynomialBetheHeitlerApprox>>(
-        mex, "PolynomialBetheHeitlerApprox")
-        .def(py::init<std::vector<PolynomialBetheHeitlerApprox::RangeData>,
-                      bool, double, double>(),
-             "ranges"_a, "clampToRange"_a = false, "noChangeLimit"_a = 0.0001,
-             "singleGaussianLimit"_a = 0.002);
+        mex, "PolynomialBetheHeitlerApprox");
 
-    mex.def("loadBetheHeitlerApproxFromJson",
-            &Acts::loadBetheHeitlerApproxFromJson, "filepath"_a,
-            "clamp_to_range"_a = false, "no_change_limit"_a = 0.0001,
-            "single_gaussian_limit"_a = 0.002);
+    mex.def(
+        "loadBetheHeitlerApproxFromJson",
+        [](const std::string& filepath, bool clampToRange, double noChangeLimit,
+           double singleGaussianLimit) {
+          return std::make_shared<PolynomialBetheHeitlerApprox>(
+              Acts::loadBetheHeitlerApproxFromJson(
+                  filepath, clampToRange, noChangeLimit, singleGaussianLimit));
+        },
+        "filepath"_a, "clamp_to_range"_a, "no_change_limit"_a,
+        "single_gaussian_limit"_a);
 
     mex.def(
         "makeGsfFitterFunction",

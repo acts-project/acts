@@ -14,7 +14,7 @@
 #include <stdexcept>
 
 void Acts::to_json(nlohmann::json& j,
-             const PolynomialBetheHeitlerApprox::PolyData& data) {
+                   const PolynomialBetheHeitlerApprox::PolyData& data) {
   j["weight_coeffs"] = data.weightCoeffs;
   j["mean_coeffs"] = data.meanCoeffs;
   j["var_coeffs"] = data.varCoeffs;
@@ -66,10 +66,9 @@ void from_json(const nlohmann::json& j,
   }
 }
 
-std::shared_ptr<const PolynomialBetheHeitlerApprox>
-loadBetheHeitlerApproxFromJson(const std::string& filepath, bool clampToRange,
-                               double noChangeLimit,
-                               double singleGaussianLimit) {
+PolynomialBetheHeitlerApprox loadBetheHeitlerApproxFromJson(
+    const std::string& filepath, bool clampToRange, double noChangeLimit,
+    double singleGaussianLimit) {
   std::ifstream in(filepath);
   if (!in) {
     throw std::invalid_argument("Could not open JSON file '" + filepath + "'");
@@ -94,8 +93,8 @@ loadBetheHeitlerApproxFromJson(const std::string& filepath, bool clampToRange,
         "JSON file must contain 'ranges' array with at least one range");
   }
 
-  return std::make_shared<const PolynomialBetheHeitlerApprox>(
-      std::move(ranges), clampToRange, noChangeLimit, singleGaussianLimit);
+  return PolynomialBetheHeitlerApprox(std::move(ranges), clampToRange,
+                                      noChangeLimit, singleGaussianLimit);
 }
 
 }  // namespace Acts

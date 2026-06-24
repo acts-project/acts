@@ -10,7 +10,6 @@
 
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 
-#include <memory>
 #include <string>
 
 #include <nlohmann/json.hpp>
@@ -38,12 +37,10 @@ void from_json(const nlohmann::json& j,
 /// @param clampToRange Whether to clamp x/x0 values to the valid range
 /// @param noChangeLimit Limit below which no change is applied
 /// @param singleGaussianLimit Limit below which a single Gaussian is used
-/// @return Shared pointer to the loaded PolynomialBetheHeitlerApprox
-std::shared_ptr<const PolynomialBetheHeitlerApprox>
-loadBetheHeitlerApproxFromJson(const std::string& filepath,
-                               bool clampToRange = false,
-                               double noChangeLimit = 0.0001,
-                               double singleGaussianLimit = 0.002);
+/// @return The loaded PolynomialBetheHeitlerApprox
+PolynomialBetheHeitlerApprox loadBetheHeitlerApproxFromJson(
+    const std::string& filepath, bool clampToRange = false,
+    double noChangeLimit = 0.0001, double singleGaussianLimit = 0.002);
 
 /// @}
 

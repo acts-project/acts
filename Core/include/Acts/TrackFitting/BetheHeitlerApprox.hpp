@@ -188,7 +188,8 @@ class PolynomialBetheHeitlerApprox : public BetheHeitlerApprox {
   /// Returns the number of components the returned mixture will have
   /// @return Number of components in the mixture
   std::size_t maxComponents() const override {
-    return std::ranges::max(m_ranges, {}, [](const auto &range) { return range.data.size(); });
+    return std::ranges::max(
+        m_ranges, {}, [](const auto &range) { return range.data.size(); });
   }
 
   /// Checks if an input is valid for the parameterization
@@ -199,7 +200,7 @@ class PolynomialBetheHeitlerApprox : public BetheHeitlerApprox {
     if (m_clampToRange) {
       return true;
     } else {
-      return xOverX0 < m_ranges.back().range.max();
+      return xOverX0 < rangeMax();
     }
   }
 
@@ -213,6 +214,8 @@ class PolynomialBetheHeitlerApprox : public BetheHeitlerApprox {
       double xOverX0, const std::span<Component> mixture) const override;
 
  private:
+  double rangeMax() const { return m_ranges.back().range.max(); }
+
   std::vector<RangeData> m_ranges;
   bool m_clampToRange = false;
   double m_noChangeLimit = 0;
