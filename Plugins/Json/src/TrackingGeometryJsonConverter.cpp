@@ -418,7 +418,7 @@ std::unique_ptr<Acts::GridPortalLink> makeGridPortalLink(
   std::unique_ptr<Acts::GridPortalLink> grid;
   if (!surface) {
     throw std::invalid_argument(
-        "makeGridPortalLink() - Non regular srurface was passed");
+        "makeGridPortalLink() - Non regular surface was passed");
   }
   if (axis1 == nullptr) {
     axis0.visit([&](const auto& a0) {
