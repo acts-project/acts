@@ -57,7 +57,9 @@ class TrackingGeometryJsonConverter {
    public:
     /// Default constructor
     Options() = default;
-    /// Wrapper method to return default options
+    /// Wrapper method to return default options to be used
+    /// if options are optional arguments in the conversion methods
+    /// @return A default constructed Options object
     static Options defaultOptions() { return Options{}; }
 
     /// The number of white space characters used for indentation
