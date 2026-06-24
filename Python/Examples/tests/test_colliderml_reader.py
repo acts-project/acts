@@ -222,6 +222,7 @@ def test_colliderml_truth_tracking(
             field=field,
             outputDir=tmp_path,
             inputDir=inputDir,
+            geoIdMapPath=geoid_map_path if reco_geo == "gen3" else None,
             decorators=decorators,
             events=_N_EVENTS,
             numThreads=1,
