@@ -25,6 +25,7 @@
 #include <pybind11/complex.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -109,15 +110,9 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
              py::arg("config") =
                  TrackingGeometryJsonConverter::Config::defaultConfig(),
              py::arg("logger"))
-        .def(
-            "toJson",
-            [](const TrackingGeometryJsonConverter& self,
-               const GeometryContext& gctx, const TrackingGeometry& geometry,
-               const TrackingGeometryJsonConverter::Options& options) {
-              return self.toJson(gctx, geometry, options).dump();
-            },
-            py::arg("gctx"), py::arg("geometry"),
-            py::arg("options") = TrackingGeometryJsonConverter::Options())
+        .def("toJson", &TrackingGeometryJsonConverter::toJson, py::arg("gctx"),
+             py::arg("geometry"),
+             py::arg("options") = TrackingGeometryJsonConverter::Options())
         .def("fromJson", &TrackingGeometryJsonConverter::fromJson,
              py::arg("gctx"), py::arg("jsonPath"),
              py::arg("options") = TrackingGeometryJsonConverter::Options());
