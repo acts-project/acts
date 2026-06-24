@@ -23,12 +23,12 @@
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 using namespace Acts::VectorHelpers;
-/// @brief Converts a surface Identifier to the one of the surrounding volume
+/// Converts a surface Identifier to the one of the surrounding volume
 /// @param id: Surface identifier to convert
 constexpr GeometryIdentifier toChamberId(const GeometryIdentifier& id) {
   return GeometryIdentifier{}.withVolume(id.volume()).withLayer(id.layer());
 }
-/// @brief Pushes value back to a vector and applies a static cast at the same
+/// Pushes value back to a vector and applies a static cast at the same
 /// @param vec: Vector into which the value is pushed back
 /// @param val: Value to push
 template <typename T, typename T1>
@@ -38,7 +38,7 @@ void castPush(std::vector<T>& vec, const T1& val) {
   vec.push_back(castedVal);
   // MARK: fpeMaskEnd(FLTUND)
 }
-/// @brief Converts an angle in radians into an angle in degree
+/// Converts an angle in radians into an angle in degree
 constexpr double inDeg(const double radians) {
   if (Acts::abs(radians) < std::numeric_limits<float>::epsilon()) {
     return 0.;
