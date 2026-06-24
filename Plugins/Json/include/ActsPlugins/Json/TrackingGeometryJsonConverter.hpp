@@ -53,7 +53,16 @@ class VolumeBounds;
 class TrackingGeometryJsonConverter {
  public:
   /// JSON serialization options for tracking geometry conversion.
-  struct Options {};
+  struct Options {
+   public:
+    /// Default constructor
+    Options() = default;
+    /// Wrapper method to return default options
+    static Options defaultOptions() { return Options{}; }
+
+    /// The number of white space characters used for indentation
+    unsigned indentation{4};
+  };
 
   /// Generic lookup from object pointer identity to serialized object ID.
   template <typename object_t, const char* kContext>
@@ -161,9 +170,9 @@ class TrackingGeometryJsonConverter {
   /// @param options options for the conversion
   ///
   /// @return serialized tracking geometry
-  nlohmann::json toJson(const GeometryContext& gctx,
-                        const TrackingGeometry& geometry,
-                        const Options& options = Options{}) const;
+  nlohmann::json toJson(
+      const GeometryContext& gctx, const TrackingGeometry& geometry,
+      const Options& options = Options::defaultOptions()) const;
 
   /// @brief Reconstruct a tracking geometry from JSON.
   ///
@@ -174,7 +183,7 @@ class TrackingGeometryJsonConverter {
   /// @return pointer to deserialized geometry
   std::shared_ptr<TrackingGeometry> fromJson(
       const GeometryContext& gctx, const std::filesystem::path& jsonPath,
-      const Options& options = Options{}) const;
+      const Options& options = Options::defaultOptions()) const;
 
   /// @brief Convert a tracking volume hierarchy to JSON.
   ///
@@ -186,9 +195,9 @@ class TrackingGeometryJsonConverter {
   ///
   /// @note the geometry context is applied to the transformations
   /// during the serialization
-  nlohmann::json trackingVolumeToJson(const GeometryContext& gctx,
-                                      const TrackingVolume& world,
-                                      const Options& options = Options{}) const;
+  nlohmann::json trackingVolumeToJson(
+      const GeometryContext& gctx, const TrackingVolume& world,
+      const Options& options = Options::defaultOptions()) const;
 
   /// @brief Reconstruct a tracking volume hierarchy from JSON.
   ///
@@ -202,7 +211,7 @@ class TrackingGeometryJsonConverter {
   /// Portal construction and the NavigationPolicy assignment
   std::shared_ptr<TrackingVolume> trackingVolumeFromJson(
       const GeometryContext& gctx, const nlohmann::json& encoded,
-      const Options& options = Options{}) const;
+      const Options& options = Options::defaultOptions()) const;
 
   /// @brief Serialize one portal link using the configured dispatcher.
   ///
