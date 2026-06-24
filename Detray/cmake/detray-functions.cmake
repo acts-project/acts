@@ -257,7 +257,7 @@ endfunction(detray_add_flag)
 #            CODEGEN_DIR ${detray_codegen_dir}
 #            ACTS_CODEGEN_PKG ${acts_codegen_pkg}
 #            SCRIPT gen_full_jacobian.py
-#            OUTPUT detray/propagator/actors/codegen/full_jacobian.hpp
+#            OUTPUT detray/propagator/detail/codegen/full_jacobian.hpp
 #        )
 #
 function(detray_add_codegen_header)
