@@ -231,7 +231,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
 
   /// get bin width
   /// @return constant width for all bins
-  double getBinWidth(std::size_t /*bin*/ = 0) const final { return m_width; }
+  double getBinWidth(std::size_t /*bin*/) const final { return m_width; }
 
   /// get lower bound of bin
   /// @param bin index of bin
