@@ -119,20 +119,14 @@ class DetrayGeometryConverter {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-/// Declarator for an explicit (extern) instantiation of @c convert for a
-/// given metadata. The leading `template` keyword makes it an explicit
-/// instantiation definition; prefix with `extern` for a declaration.
-#define ACTS_DETRAY_CONVERT_INSTANTIATION(META)                    \
-  template DetrayGeometryConverter::DetrayGeometry<META>           \
+// Suppress implicit instantiation of `convert` for the closed set; the matching
+// definitions are emitted in generated translation units (see CMakeLists.txt).
+#define ACTS_DETRAY_EXTERN_CONVERT(META)                           \
+  extern template DetrayGeometryConverter::DetrayGeometry<META>    \
   DetrayGeometryConverter::convert<META>(                          \
       vecmem::memory_resource&, const Acts::GeometryContext&,      \
       const std::shared_ptr<const Acts::TrackingGeometry>&,        \
-      const std::string&) const
-
-// Suppress implicit instantiation of `convert` for the closed set; the
-// definitions are emitted in dedicated translation units (see src/).
-#define ACTS_DETRAY_EXTERN_CONVERT(META) \
-  extern ACTS_DETRAY_CONVERT_INSTANTIATION(META);
+      const std::string&) const;
 ACTS_DETRAY_METADATA_FOR_EACH(ACTS_DETRAY_EXTERN_CONVERT)
 #undef ACTS_DETRAY_EXTERN_CONVERT
 

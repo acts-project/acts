@@ -23,7 +23,7 @@
 #include <detray/io/frontend/detector_writer_config.hpp>
 #include <detray/utils/consistency_checker.hpp>
 
-namespace ActsPlugins {
+namespace ActsPlugins::detail {
 
 template <typename metadata_t>
 void checkDetrayConsistency(const detray::detector<metadata_t>& detector) {
@@ -50,4 +50,4 @@ std::pair<detray::detector<metadata_t>, detray::name_map> readDetrayDetector(
   return detray::io::read_detector<detray::detector<metadata_t>>(mr, cfg);
 }
 
-}  // namespace ActsPlugins
+}  // namespace ActsPlugins::detail

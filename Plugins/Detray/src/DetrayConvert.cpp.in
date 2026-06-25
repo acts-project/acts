@@ -6,15 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// Per-metadata instantiation of the heavy detray detector code (geometry
-// conversion and detector I/O) for the ODD metadata.
+// Generated from DetrayConvert.cpp.in by CMake — do not edit.
+// Instantiates DetrayGeometryConverter::convert for a single metadata type.
 
-#include "ActsPlugins/Detray/DetrayDetectorIO.ipp"
 #include "ActsPlugins/Detray/DetrayGeometryConverter.ipp"
 
 namespace ActsPlugins {
 
-ACTS_DETRAY_CONVERT_INSTANTIATION(DetrayMetadata::Odd);
-ACTS_DETRAY_IO_INSTANTIATION(, DetrayMetadata::Odd)
+template DetrayGeometryConverter::DetrayGeometry<@DETRAY_METADATA_TYPE@>
+DetrayGeometryConverter::convert<@DETRAY_METADATA_TYPE@>(
+    vecmem::memory_resource&, const Acts::GeometryContext&,
+    const std::shared_ptr<const Acts::TrackingGeometry>&,
+    const std::string&) const;
 
 }  // namespace ActsPlugins

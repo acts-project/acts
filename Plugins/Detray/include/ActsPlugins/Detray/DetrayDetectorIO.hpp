@@ -17,14 +17,14 @@
 #include <detray/core/detector.hpp>
 #include <vecmem/memory/memory_resource.hpp>
 
-namespace ActsPlugins {
+namespace ActsPlugins::detail {
 
 /// @ingroup detray_plugin
-/// @brief Per-metadata detray detector operations
+/// @brief Per-metadata detray detector operations (internal)
 ///
-/// These are thin wrappers around the heavy detray detector algorithms
-/// (consistency checking and JSON I/O). They are member templates over the
-/// detray metadata type and are explicitly instantiated (and declared
+/// These are thin, internal wrappers around the heavy detray detector
+/// algorithms (consistency checking and JSON I/O). They are function templates
+/// over the detray metadata type and are explicitly instantiated (and declared
 /// `extern template`) for the closed set of metadata types, so that the
 /// expensive detray template trees are compiled only once per metadata in a
 /// dedicated translation unit instead of in every consumer (Python bindings,
@@ -52,23 +52,19 @@ template <typename metadata_t>
 std::pair<detray::detector<metadata_t>, detray::name_map> readDetrayDetector(
     vecmem::memory_resource& mr, const std::vector<std::string>& files);
 
-/// Explicit instantiation declarators for the operations of one metadata.
-/// @p PREFIX is empty for an instantiation definition or `extern` for a
-/// declaration.
-#define ACTS_DETRAY_IO_INSTANTIATION(PREFIX, META)                         \
-  PREFIX template void checkDetrayConsistency<META>(                       \
-      const detray::detector<META>&);                                      \
-  PREFIX template void writeDetrayJson<META>(const detray::detector<META>&, \
-                                             const detray::name_map&,      \
-                                             const std::string&);          \
-  PREFIX template std::pair<detray::detector<META>, detray::name_map>      \
-  readDetrayDetector<META>(vecmem::memory_resource&,                       \
-                           const std::vector<std::string>&);
-
 // Suppress implicit instantiation of the operations for the closed set; the
-// definitions are emitted in dedicated translation units (see src/).
-#define ACTS_DETRAY_EXTERN_IO(META) ACTS_DETRAY_IO_INSTANTIATION(extern, META)
+// matching definitions are emitted in generated translation units (see
+// CMakeLists.txt).
+#define ACTS_DETRAY_EXTERN_IO(META)                                         \
+  extern template void checkDetrayConsistency<META>(                        \
+      const detray::detector<META>&);                                       \
+  extern template void writeDetrayJson<META>(const detray::detector<META>&, \
+                                             const detray::name_map&,       \
+                                             const std::string&);           \
+  extern template std::pair<detray::detector<META>, detray::name_map>       \
+  readDetrayDetector<META>(vecmem::memory_resource&,                        \
+                           const std::vector<std::string>&);
 ACTS_DETRAY_METADATA_FOR_EACH(ACTS_DETRAY_EXTERN_IO)
 #undef ACTS_DETRAY_EXTERN_IO
 
-}  // namespace ActsPlugins
+}  // namespace ActsPlugins::detail

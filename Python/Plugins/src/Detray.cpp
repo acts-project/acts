@@ -52,11 +52,12 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
           py::object metadata, vecmem::memory_resource& mr,
           const std::vector<std::string>& files) -> py::object {
         if (metadata.is(oddType)) {
-          return py::cast(readDetrayDetector<DetrayMetadata::Odd>(mr, files));
+          return py::cast(
+              detail::readDetrayDetector<DetrayMetadata::Odd>(mr, files));
         }
         if (metadata.is(defaultType)) {
           return py::cast(
-              readDetrayDetector<DetrayMetadata::Default>(mr, files));
+              detail::readDetrayDetector<DetrayMetadata::Default>(mr, files));
         }
         throw std::invalid_argument(
             "detray.read: unsupported metadata; pass one of the metadata "
@@ -126,11 +127,11 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
         .def("volumes", [](Detector& self) { return self.volumes(); })
         .def("surfaces", [](Detector& self) { return self.surfaces(); })
         .def("checkConsistency",
-             [](Detector& self) { checkDetrayConsistency(self); })
+             [](Detector& self) { detail::checkDetrayConsistency(self); })
         .def("writeToJson",
              [](Detector& self, const detray::name_map& names,
                 const std::string& fname) {
-               writeDetrayJson(self, names, fname);
+               detail::writeDetrayJson(self, names, fname);
              });
 
     py::class_<Geometry>(geometryConverter, ("DetrayGeometry" + suffix).c_str())
