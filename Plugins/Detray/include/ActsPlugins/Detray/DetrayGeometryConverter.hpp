@@ -12,16 +12,14 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
+#include "ActsPlugins/Detray/DetrayMetadata.hpp"
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 
-#include <detray/builders/detector_builder.hpp>
-#include <detray/io/backend/geometry_reader.hpp>
-#include <detray/io/backend/homogeneous_material_reader.hpp>
-#include <detray/io/backend/material_map_reader.hpp>
-#include <detray/io/backend/surface_grid_reader.hpp>
+#include <detray/core/detector.hpp>
 #include <vecmem/memory/memory_resource.hpp>
 
 namespace ActsPlugins {
@@ -35,6 +33,14 @@ namespace ActsPlugins {
 /// the second step and lets the call site fully customize the first step by
 /// supplying its own configured @c DetrayPayloadConverter instance through the
 /// @c Config.
+///
+/// @c convert is a member template over the detray metadata type. It is
+/// explicitly instantiated (and declared `extern template`) for the closed set
+/// of supported metadata types listed in @ref DetrayMetadata.hpp, so that the
+/// heavy detray detector-building code is compiled only once per metadata in a
+/// dedicated translation unit. Experiment code may still convert to a custom
+/// metadata by including @c DetrayGeometryConverter.ipp and instantiating
+/// @c convert with the desired metadata type.
 class DetrayGeometryConverter {
  public:
   /// @brief Configuration for the geometry converter
@@ -95,58 +101,16 @@ class DetrayGeometryConverter {
   /// 2. It builds a detray detector from the converted payloads using the
   ///    detray::detector_builder.
   ///
+  /// @note The definition lives in @c DetrayGeometryConverter.ipp; for the
+  ///     closed set of metadata types it is `extern template` declared here and
+  ///     instantiated in a dedicated translation unit.
+  ///
   /// @return The built detray detector together with its name map.
   template <typename metadata_t>
   DetrayGeometry<metadata_t> convert(
       vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
       const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
-      const std::string& detectorName = "") const {
-    using detector_t = detray::detector<metadata_t>;
-
-    if (trackingGeometry == nullptr) {
-      throw std::invalid_argument(
-          "DetrayGeometryConverter: trackingGeometry must not be null");
-    }
-
-    // ── Convert TrackingGeometry → detray payloads ────────────────────────
-    auto payloads = m_cfg.payloadConverter->convertTrackingGeometry(
-        gctx, *trackingGeometry);
-
-    // ── Build detray detector from payloads ───────────────────────────────
-    detray::detector_builder<metadata_t> detectorBuilder{};
-
-    detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
-                                                          *payloads.detector);
-
-    if (m_cfg.convertMaterial) {
-      detray::io::homogeneous_material_reader::from_payload<detector_t>(
-          detectorBuilder, *payloads.homogeneousMaterial);
-
-      detray::io::material_map_reader<std::integral_constant<std::size_t, 2>>::
-          from_payload<detector_t>(detectorBuilder,
-                                   std::move(*payloads.materialGrids));
-    }
-
-    if (m_cfg.convertSurfaceGrids) {
-      detray::io::surface_grid_reader<typename detector_t::surface_type,
-                                      std::integral_constant<std::size_t, 0>,
-                                      std::integral_constant<std::size_t, 2>>::
-          template from_payload<detector_t>(detectorBuilder,
-                                            *payloads.surfaceGrids);
-    }
-
-    if (!detectorName.empty()) {
-      detectorBuilder.set_name(detectorName);
-    } else if (payloads.names.contains(0)) {
-      detectorBuilder.set_name(payloads.names.at(0));
-    }
-
-    DetrayGeometry<metadata_t> result{};
-    result.detector =
-        std::make_shared<detector_t>(detectorBuilder.build(mr, result.names));
-
-    return result;
-  }
+      const std::string& detectorName = "") const;
 
  private:
   Config m_cfg;
@@ -154,5 +118,22 @@ class DetrayGeometryConverter {
   const Acts::Logger& logger() const { return *m_logger; }
   std::unique_ptr<const Acts::Logger> m_logger;
 };
+
+/// Declarator for an explicit (extern) instantiation of @c convert for a
+/// given metadata. The leading `template` keyword makes it an explicit
+/// instantiation definition; prefix with `extern` for a declaration.
+#define ACTS_DETRAY_CONVERT_INSTANTIATION(META)                    \
+  template DetrayGeometryConverter::DetrayGeometry<META>           \
+  DetrayGeometryConverter::convert<META>(                          \
+      vecmem::memory_resource&, const Acts::GeometryContext&,      \
+      const std::shared_ptr<const Acts::TrackingGeometry>&,        \
+      const std::string&) const
+
+// Suppress implicit instantiation of `convert` for the closed set; the
+// definitions are emitted in dedicated translation units (see src/).
+#define ACTS_DETRAY_EXTERN_CONVERT(META) \
+  extern ACTS_DETRAY_CONVERT_INSTANTIATION(META);
+ACTS_DETRAY_METADATA_FOR_EACH(ACTS_DETRAY_EXTERN_CONVERT)
+#undef ACTS_DETRAY_EXTERN_CONVERT
 
 }  // namespace ActsPlugins

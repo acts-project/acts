@@ -8,21 +8,19 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "ActsPlugins/Detray/DetrayDetectorIO.hpp"
 #include "ActsPlugins/Detray/DetrayGeometryConverter.hpp"
+#include "ActsPlugins/Detray/DetrayMetadata.hpp"
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <type_traits>
 
-#include <detray/builders/detector_builder.hpp>
-#include <detray/detectors/default_metadata.hpp>
-#include <detray/detectors/odd_metadata.hpp>
-#include <detray/io/frontend/detector_reader.hpp>
-#include <detray/io/frontend/detector_reader_config.hpp>
-#include <detray/io/frontend/detector_writer.hpp>
-#include <detray/io/frontend/detector_writer_config.hpp>
+#include <detray/core/detector.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <vecmem/memory/host_memory_resource.hpp>
@@ -34,42 +32,37 @@ using namespace pybind11::literals;
 PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
   using namespace ActsPlugins;
 
-  using DetrayMetaDataODD = detray::odd_metadata<detray::array<float>>;
-  using DetrayDetectorODD = detray::detector<DetrayMetaDataODD>;
+  // The detray volume/surface name map is the same type for every metadata, so
+  // it is registered exactly once.
+  py::class_<detray::name_map>(detray, "DetrayNameMap");
 
-  py::class_<DetrayDetectorODD::name_map>(detray, "DetrayDetectorODDNameMap");
+  // Metadata markers for the closed set. These empty classes are passed (as the
+  // class object) to DetrayGeometryConverter.convert to select the metadata,
+  // mirroring the C++ template argument convert<Metadata>.
+  auto oddMetadata = py::class_<DetrayMetadata::Odd>(detray, "OddMetadata");
+  auto defaultMetadata =
+      py::class_<DetrayMetadata::Default>(detray, "DefaultMetadata");
 
-  // Register the raw detector type so shared_ptr<DetrayDetectorODD> can be
-  // passed to functions in other pybind11 modules (e.g.
-  // StraightLinePropagatorODD).
-  py::class_<DetrayDetectorODD, std::shared_ptr<DetrayDetectorODD>>(
-      detray, "DetrayDetectorODD")
-      .def("volumes", [](DetrayDetectorODD& self) { return self.volumes(); })
-      .def("surfaces", [](DetrayDetectorODD& self) { return self.surfaces(); })
-      .def("checkConsistency",
-           [](DetrayDetectorODD& self) {
-             detray::detail::check_consistency(self);
-           })
-      .def("writeToJson",
-           [](DetrayDetectorODD& self, const DetrayDetectorODD::name_map& names,
-              const std::string& fname) {
-             auto cfg = detray::io::detector_writer_config{}
-                            .format(detray::io::format::json)
-                            .path(fname)
-                            .replace_files(true);
-             detray::io::write_detector(self, names, cfg);
-           });
-
+  // Read a pre-built detray detector from JSON file(s). The metadata is
+  // selected by passing one of the metadata markers, mirroring convert.
   detray.def(
-      "readODD",
-      [](vecmem::memory_resource& mr, const std::vector<std::string>& files) {
-        auto cfg = detray::io::detector_reader_config{}.do_check(false);
-        for (const auto& f : files) {
-          cfg.add_file(f);
+      "read",
+      [oddType = py::object(oddMetadata),
+       defaultType = py::object(defaultMetadata)](
+          py::object metadata, vecmem::memory_resource& mr,
+          const std::vector<std::string>& files) -> py::object {
+        if (metadata.is(oddType)) {
+          return py::cast(readDetrayDetector<DetrayMetadata::Odd>(mr, files));
         }
-        return detray::io::read_detector<DetrayDetectorODD>(mr, cfg);
+        if (metadata.is(defaultType)) {
+          return py::cast(
+              readDetrayDetector<DetrayMetadata::Default>(mr, files));
+        }
+        throw std::invalid_argument(
+            "detray.read: unsupported metadata; pass one of the metadata "
+            "markers (e.g. acts.detray.OddMetadata)");
       },
-      "mr"_a, "files"_a);
+      "metadata"_a, "mr"_a, "files"_a);
 
   // ── Payload converter ──────────────────────────────────────────────────
   auto payloadConverter = py::class_<DetrayPayloadConverter,
@@ -122,11 +115,31 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
       .def_readwrite("convertSurfaceGrids",
                      &DetrayGeometryConverter::Config::convertSurfaceGrids);
 
-  using DetrayGeometryODD =
-      DetrayGeometryConverter::DetrayGeometry<DetrayMetaDataODD>;
-  py::class_<DetrayGeometryODD>(geometryConverter, "DetrayGeometry")
-      .def_readonly("detector", &DetrayGeometryODD::detector)
-      .def_readonly("names", &DetrayGeometryODD::names);
+  // Register the per-metadata detector and conversion-result types.
+  auto registerMetadata = [&](auto metadataTag, const std::string& suffix) {
+    using Metadata = typename decltype(metadataTag)::type;
+    using Detector = detray::detector<Metadata>;
+    using Geometry = DetrayGeometryConverter::DetrayGeometry<Metadata>;
+
+    py::class_<Detector, std::shared_ptr<Detector>>(
+        detray, ("DetrayDetector" + suffix).c_str())
+        .def("volumes", [](Detector& self) { return self.volumes(); })
+        .def("surfaces", [](Detector& self) { return self.surfaces(); })
+        .def("checkConsistency",
+             [](Detector& self) { checkDetrayConsistency(self); })
+        .def("writeToJson",
+             [](Detector& self, const detray::name_map& names,
+                const std::string& fname) {
+               writeDetrayJson(self, names, fname);
+             });
+
+    py::class_<Geometry>(geometryConverter, ("DetrayGeometry" + suffix).c_str())
+        .def_readonly("detector", &Geometry::detector)
+        .def_readonly("names", &Geometry::names);
+  };
+
+  registerMetadata(std::type_identity<DetrayMetadata::Odd>{}, "ODD");
+  registerMetadata(std::type_identity<DetrayMetadata::Default>{}, "Default");
 
   geometryConverter
       .def(py::init([](DetrayGeometryConverter::Config config,
@@ -138,12 +151,24 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
            "config"_a, "level"_a = Acts::Logging::INFO)
       .def(
           "convert",
-          [](const DetrayGeometryConverter& self, vecmem::memory_resource& mr,
-             const Acts::GeometryContext& gctx,
-             std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-             const std::string& detectorName) {
-            return self.convert<DetrayMetaDataODD>(
-                mr, gctx, std::move(trackingGeometry), detectorName);
+          [oddType = py::object(oddMetadata),
+           defaultType = py::object(defaultMetadata)](
+              const DetrayGeometryConverter& self, py::object metadata,
+              vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
+              std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+              const std::string& detectorName) -> py::object {
+            if (metadata.is(oddType)) {
+              return py::cast(self.convert<DetrayMetadata::Odd>(
+                  mr, gctx, std::move(trackingGeometry), detectorName));
+            }
+            if (metadata.is(defaultType)) {
+              return py::cast(self.convert<DetrayMetadata::Default>(
+                  mr, gctx, std::move(trackingGeometry), detectorName));
+            }
+            throw std::invalid_argument(
+                "DetrayGeometryConverter.convert: unsupported metadata; pass "
+                "one of the metadata markers (e.g. acts.detray.OddMetadata)");
           },
-          "mr"_a, "gctx"_a, "trackingGeometry"_a, "detectorName"_a = "");
+          "metadata"_a, "mr"_a, "gctx"_a, "trackingGeometry"_a,
+          "detectorName"_a = "");
 }

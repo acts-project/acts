@@ -195,7 +195,9 @@ def main():
             if args.input != "":
                 files = glob.glob(args.input.rstrip("/") + "/*.json")
                 print(">>> Reading detray geometry from", args.input, "->", files)
-                detrayDetector, _ = acts.detray.readODD(__pmr, files)
+                detrayDetector, _ = acts.detray.read(
+                    acts.detray.OddMetadata, __pmr, files
+                )
             else:
                 payloadConfig = acts.detray.DetrayPayloadConverter.Config()
                 payloadConfig.beampipeVolume = trackingGeometry.findVolumeByName(
@@ -214,7 +216,7 @@ def main():
                 )
 
                 detrayDetector = converter.convert(
-                    __pmr, gContext, trackingGeometry
+                    acts.detray.OddMetadata, __pmr, gContext, trackingGeometry
                 ).detector
             propagatorImpl = acts.examples.detray.StraightLinePropagatorODD(
                 detrayDetector,

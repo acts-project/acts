@@ -4,6 +4,8 @@ acts_add_library(
     src/DetrayPayloadConverter.cpp
     src/DetrayMaterial.cpp
     src/DetrayNavigation.cpp
+    src/DetrayDetectorOdd.cpp
+    src/DetrayDetectorDefault.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
