@@ -18,3 +18,12 @@ add_unittest(SubspaceHelpers SubspaceHelpersTests.cpp)
 add_unittest(TrackParameterHelpers TrackParameterHelpersTests.cpp)
 add_unittest(SpacePointContainer2 SpacePointContainer2Tests.cpp)
 add_unittest(SeedContainer2 SeedContainer2Tests.cpp)
+add_unittest(CudaSpacePointContainer CudaSpacePointContainerTests.cpp)
+
+find_package(CUDAToolkit REQUIRED)
+
+target_link_libraries(
+  ActsUnitTestCudaSpacePointContainer
+  PRIVATE
+    CUDA::cudart
+)
