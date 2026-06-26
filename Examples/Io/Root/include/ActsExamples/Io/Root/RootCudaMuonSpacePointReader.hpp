@@ -8,9 +8,11 @@
 
 #pragma once
 
+#ifdef ACTS_ENABLE_CUDA
+
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/MuonSpacePoint.hpp"
+#include "ActsExamples/EventData/CudaMuonSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 
@@ -25,25 +27,25 @@
 
 namespace ActsExamples {
 
-class RootMuonSpacePointReader : public IReader {
+class RootCudaMuonSpacePointReader : public IReader {
  public:
   struct Config {
-    /// Input sim hit collection to write.
-    std::string outputSpacePoints{"MuonSpacePoints"};
-    /// Path to the output file.
+    /// Output CUDA muon space point collection.
+    std::string outputSpacePoints{"CudaMuonSpacePoints"};
+    /// Path to the input ROOT file.
     std::string filePath{};
-    /// Name of the tree within the output file.
+    /// Name of the tree within the input ROOT file.
     std::string treeName{"muonSpacePoints"};
   };
 
-  /// Construct the particle reader.
+  /// Construct the CUDA muon space point reader.
   ///
-  /// @param config is the configuration object
-  /// @param level is the logging level
-  RootMuonSpacePointReader(const Config& config, Acts::Logging::Level level);
+  /// @param config The configuration object.
+  /// @param level The logging level.
+  RootCudaMuonSpacePointReader(const Config& config, Acts::Logging::Level level);
 
   /// Ensure underlying file is closed.
-  ~RootMuonSpacePointReader() override;
+  ~RootCudaMuonSpacePointReader() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -67,51 +69,55 @@ class RootMuonSpacePointReader : public IReader {
   /// @brief Configuration object
   Config m_cfg{};
 
-  WriteDataHandle<MuonSpacePointContainer> m_outputContainer{
+  /// Output CUDA muon space point container.
+  WriteDataHandle<CudaMuonSpacePointContainer> m_outputContainer{
       this, "OutputSpacePoints"};
   std::unique_ptr<const Acts::Logger> m_logger{};
 
-  /// @brief Input file directly read at construction stage
+  /// @brief Input file directly read at construction stage.
   std::unique_ptr<TFile> m_file{TFile::Open(m_cfg.filePath.c_str(), "READ")};
 
-  /// @brief TTree reader
+  /// @brief TTree reader.
   TTreeReader m_reader{m_cfg.treeName.c_str(), m_file.get()};
 
   std::vector<std::uint32_t> m_eventRanges{};
 
   template <typename T>
   using VecReader_t = TTreeReaderValue<std::vector<T>>;
+
   /// @brief Event identifier.
   TTreeReaderValue<std::uint32_t> m_eventId{m_reader, "event_id"};
 
-  /// @brief Geometry identifier of the associated surface
+  /// @brief Geometry identifier of the associated surface.
   VecReader_t<Acts::GeometryIdentifier::Value> m_geometryId{
       m_reader, "spacePoint_geometryId"};
-  /// @brief Identifier of the associated bucket
+  /// @brief Identifier of the associated bucket.
   VecReader_t<std::uint16_t> m_bucketId{m_reader, "spacePoint_bucketId"};
-  /// @brief Muon identifier
+  /// @brief Muon identifier.
   VecReader_t<std::uint32_t> m_muonId{m_reader, "spacePoint_muonId"};
-  /// @brief Position of the measurement
+  /// @brief Position of the measurement.
   VecReader_t<float> m_localPositionX{m_reader, "spacePoint_localPosX"};
   VecReader_t<float> m_localPositionY{m_reader, "spacePoint_localPosY"};
   VecReader_t<float> m_localPositionZ{m_reader, "spacePoint_localPosZ"};
-  /// @brief Direction of the sensor / wire
+  /// @brief Direction of the sensor / wire.
   VecReader_t<float> m_sensorDirectionTheta{m_reader,
                                             "spacePoint_sensorDirTheta"};
   VecReader_t<float> m_sensorDirectionPhi{m_reader, "spacePoint_sensorDirPhi"};
-  /// @brief Vector pointing to the next channel in the same measurement plane
+  /// @brief Vector pointing to the next channel in the same measurement plane.
   VecReader_t<float> m_toNextSensorTheta{m_reader, "spacePoint_toNextDirTheta"};
   VecReader_t<float> m_toNextSensorPhi{m_reader, "spacePoint_toNextDirPhi"};
-  /// @brief Covariance value along the non-bending direction
+  /// @brief Covariance value along the non-bending direction.
   VecReader_t<float> m_covLoc0{m_reader, "spacePoint_covLoc0"};
-  /// @brief Covaraiance value along the bending direction
+  /// @brief Covariance value along the bending direction.
   VecReader_t<float> m_covLoc1{m_reader, "spacePoint_covLoc1"};
-  /// @brief Time covariance value
+  /// @brief Time covariance value.
   VecReader_t<float> m_covT{m_reader, "spacePoint_covT"};
-  /// @brief Drift radius of the straw measurements
+  /// @brief Drift radius of the straw measurements.
   VecReader_t<float> m_driftR{m_reader, "spacePoint_driftRadius"};
   /// @brief Recorded measurement time.
   VecReader_t<float> m_time{m_reader, "spacePoint_time"};
 };
 
 }  // namespace ActsExamples
+
+#endif

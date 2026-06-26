@@ -32,6 +32,8 @@ acts_add_library(
     src/RootMuonSpacePointWriter.cpp
     src/RootMuonSpacePointReader.cpp
     src/RootMeasurementPerformanceWriter.cpp
+    #src/RootMuonSpacePointWriter.cpp
+    src/RootMuonSpacePointReader.cpp
 )
 target_include_directories(
     ActsExamplesIoRoot
