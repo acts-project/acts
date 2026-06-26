@@ -18,12 +18,22 @@ add_unittest(SubspaceHelpers SubspaceHelpersTests.cpp)
 add_unittest(TrackParameterHelpers TrackParameterHelpersTests.cpp)
 add_unittest(SpacePointContainer2 SpacePointContainer2Tests.cpp)
 add_unittest(SeedContainer2 SeedContainer2Tests.cpp)
-add_unittest(CudaSpacePointContainer CudaSpacePointContainerTests.cpp)
 
-find_package(CUDAToolkit REQUIRED)
+if(ACTS_ENABLE_CUDA)
+  add_unittest(CudaMuonSpacePoint CudaMuonSpacePointTests.cpp)
 
-target_link_libraries(
-  ActsUnitTestCudaSpacePointContainer
-  PRIVATE
-    CUDA::cudart
-)
+  find_package(CUDAToolkit REQUIRED)
+
+  target_link_libraries(
+    ActsUnitTestCudaMuonSpacePoint
+    PRIVATE
+      CUDA::cudart
+  )
+
+  target_compile_definitions(
+    ActsUnitTestCudaMuonSpacePoint
+    # Change to public later when it becomes needed there
+    PRIVATE
+      ACTS_ENABLE_CUDA
+  )
+endif()
