@@ -8,20 +8,19 @@
 
 #include "ActsPlugins/Arrow/ArrowUtil.hpp"
 
+#include "Acts/Utilities/LRUCache.hpp"
+
 #include <algorithm>
 #include <exception>
 #include <iostream>
 #include <mutex>
+#include <optional>
 #include <stdexcept>
 #include <vector>
 
 #include <arrow/c/abi.h>
 #include <arrow/c/bridge.h>
-#include <arrow/compute/api.h>
-#include <arrow/dataset/dataset.h>
-#include <arrow/dataset/discovery.h>
-#include <arrow/dataset/file_parquet.h>
-#include <arrow/dataset/scanner.h>
+#include <arrow/dataset/api.h>
 #include <arrow/filesystem/localfs.h>
 #include <arrow/io/file.h>
 #include <parquet/arrow/reader.h>
@@ -42,21 +41,6 @@ T unwrap(arrow::Result<T> result, const std::string& what) {
     throwArrow(what, result.status());
   }
   return std::move(result).ValueOrDie();
-}
-
-// Arrow's compute kernels (e.g. `equal` used for the event_id filter
-// pushdown below) are registered lazily. With the linker-isolated arrow
-// island the registry is empty until we ask for it explicitly — without
-// this call, scan-time filtering fails with "No function registered with
-// name: equal".
-void ensureComputeInitialized() {
-  static std::once_flag flag;
-  std::call_once(flag, [] {
-    auto status = arrow::compute::Initialize();
-    if (!status.ok()) {
-      throwArrow("arrow compute init", status);
-    }
-  });
 }
 
 }  // namespace
@@ -315,10 +299,11 @@ void ParquetFileWriter::close() {
 class ParquetDatasetReader::Impl {
  public:
   Impl(std::filesystem::path directory,
-       const std::shared_ptr<arrow::Schema>& targetSchema)
-      : m_directory(std::move(directory)) {
-    ensureComputeInitialized();
-
+       const std::shared_ptr<arrow::Schema>& targetSchema,
+       std::size_t cacheCapacity)
+      : m_directory(std::move(directory)),
+        m_targetSchema(targetSchema),
+        m_cache(cacheCapacity) {
     if (!std::filesystem::exists(m_directory) ||
         !std::filesystem::is_directory(m_directory)) {
       throw std::invalid_argument("ParquetDatasetReader: not a directory: " +
@@ -353,80 +338,135 @@ class ParquetDatasetReader::Impl {
       auto reader =
           unwrap(parquet::arrow::OpenFile(infile, arrow::default_memory_pool()),
                  "open parquet reader");
+      m_shardFirstEvent.push_back(m_numEvents);
+      m_shardFiles.push_back(f);
       m_numEvents += reader->parquet_reader()->metadata()->num_rows();
+
+      // Derive the public schema from the first file when no target is given.
+      if (m_publicSchema == nullptr && targetSchema == nullptr) {
+        std::shared_ptr<arrow::Schema> fileSchema;
+        auto status = reader->GetSchema(&fileSchema);
+        if (!status.ok()) {
+          throwArrow("get schema from " + f, status);
+        }
+        const int idx = fileSchema->GetFieldIndex(std::string{kEventIdColumn});
+        if (idx < 0) {
+          throw std::invalid_argument("ParquetDatasetReader: file '" + f +
+                                      "' lacks event_id column");
+        }
+        m_publicSchema = unwrap(fileSchema->RemoveField(idx), "strip event_id");
+      }
     }
 
-    auto fs = std::make_shared<arrow::fs::LocalFileSystem>();
-    auto format = std::make_shared<arrow::dataset::ParquetFileFormat>();
-    arrow::dataset::FileSystemFactoryOptions options;
-    auto factory = unwrap(arrow::dataset::FileSystemDatasetFactory::Make(
-                              std::move(fs), files, std::move(format), options),
-                          "make dataset factory");
-
-    arrow::dataset::FinishOptions finishOpts;
     if (targetSchema != nullptr) {
-      // Prepend event_id; the dataset must carry it for the per-event
-      // filter, but callers see it as an internal column and the
-      // public schema below strips it again.
-      auto withEventId =
-          unwrap(targetSchema->AddField(0, eventIdField()), "prepend event_id");
-      finishOpts.schema = std::move(withEventId);
-    } else {
-      arrow::dataset::InspectOptions inspectOpts;
-      inspectOpts.fragments =
-          arrow::dataset::InspectOptions::kInspectAllFragments;
-      finishOpts.inspect_options = inspectOpts;
+      m_publicSchema = targetSchema;
     }
-    m_dataset = unwrap(factory->Finish(finishOpts), "finish dataset");
 
-    auto fullSchema = m_dataset->schema();
-    const int idx = fullSchema->GetFieldIndex(kEventIdColumn);
-    if (idx < 0) {
-      throw std::invalid_argument("ParquetDatasetReader: dataset under '" +
-                                  m_directory.string() +
-                                  "' lacks event_id column");
+    if (m_publicSchema == nullptr) {
+      throw std::invalid_argument(
+          "ParquetDatasetReader: no parquet files under " +
+          m_directory.string());
     }
-    m_publicSchema =
-        unwrap(fullSchema->RemoveField(idx), "strip event_id from schema");
   }
 
   std::int64_t numEvents() const { return m_numEvents; }
   std::shared_ptr<arrow::Schema> schema() const { return m_publicSchema; }
 
   std::shared_ptr<arrow::Table> readEvent(std::uint64_t eventId) const {
-    auto builder = unwrap(m_dataset->NewScan(), "new scan");
-    auto status = builder->Filter(arrow::compute::equal(
-        arrow::compute::field_ref(kEventIdColumn.data()),
-        arrow::compute::literal(static_cast<std::uint32_t>(eventId))));
-    if (!status.ok()) {
-      throwArrow("set scan filter", status);
+    if (static_cast<std::int64_t>(eventId) >= m_numEvents) {
+      throw std::out_of_range("ParquetDatasetReader: event_id " +
+                              std::to_string(eventId) + " out of range [0, " +
+                              std::to_string(m_numEvents) + ")");
     }
-    status = builder->UseThreads(false);
-    if (!status.ok()) {
-      throwArrow("set use threads", status);
-    }
-    auto scanner = unwrap(builder->Finish(), "finish scanner");
-    auto table = unwrap(scanner->ToTable(), "scan to table");
 
-    const int idx = table->schema()->GetFieldIndex(std::string{kEventIdColumn});
-    if (idx < 0) {
-      throw std::runtime_error(
-          "ParquetDatasetReader: scanned table lacks event_id column");
+    // Locate shard: find last entry with first_event <= eventId.
+    auto it =
+        std::upper_bound(m_shardFirstEvent.begin(), m_shardFirstEvent.end(),
+                         static_cast<std::int64_t>(eventId));
+    --it;  // safe: eventId < m_numEvents guarantees at least one entry
+    const std::size_t shardIdx =
+        static_cast<std::size_t>(it - m_shardFirstEvent.begin());
+    const std::int64_t rowWithinShard =
+        static_cast<std::int64_t>(eventId) - *it;
+    const std::string& shardPath = m_shardFiles[shardIdx];
+
+    // Check cache (fast path, lock only long enough to inspect).
+    std::shared_ptr<arrow::Table> shardTable;
+    {
+      std::lock_guard lock(m_cacheMutex);
+      if (auto cached = m_cache.get(shardPath)) {
+        shardTable = *cached;
+      }
     }
-    return unwrap(table->RemoveColumn(idx), "drop event_id column");
+
+    if (!shardTable) {
+      // Load shard outside the lock — I/O can take several seconds.
+      auto loaded = loadShard(shardPath);
+      // Re-acquire and insert; a concurrent thread may have loaded the same
+      // shard, in which case we simply overwrite (correct, just redundant).
+      std::lock_guard lock(m_cacheMutex);
+      if (auto cached = m_cache.get(shardPath)) {
+        shardTable = *cached;
+      } else {
+        m_cache.put(shardPath, loaded);
+        shardTable = std::move(loaded);
+      }
+    }
+
+    // Slice in-memory: O(1) for contiguous row groups.
+    auto eventTable = shardTable->Slice(rowWithinShard, 1);
+
+    const int idx =
+        eventTable->schema()->GetFieldIndex(std::string{kEventIdColumn});
+    if (idx < 0) {
+      throw std::runtime_error("ParquetDatasetReader: shard '" + shardPath +
+                               "' lacks event_id column");
+    }
+    return unwrap(eventTable->RemoveColumn(idx), "drop event_id column");
   }
 
  private:
+  std::shared_ptr<arrow::Table> loadShard(const std::string& path) const {
+    auto filesystem = std::make_shared<arrow::fs::LocalFileSystem>();
+    auto format = std::make_shared<arrow::dataset::ParquetFileFormat>();
+
+    auto factory =
+        unwrap(arrow::dataset::FileSystemDatasetFactory::Make(
+                   filesystem, std::vector<std::string>{path}, format,
+                   arrow::dataset::FileSystemFactoryOptions{}),
+               "make dataset factory for " + path);
+
+    arrow::dataset::FinishOptions finishOpts;
+    if (m_targetSchema != nullptr) {
+      // Include event_id so the scanner produces the full on-disk layout.
+      // Columns in this schema that are absent from the file are
+      // materialized as nulls (schema evolution / backwards compatibility).
+      finishOpts.schema = unwrap(m_targetSchema->AddField(0, eventIdField()),
+                                 "prepend event_id");
+    }
+
+    auto dataset = unwrap(factory->Finish(finishOpts), "finish dataset");
+    auto scanBuilder = unwrap(dataset->NewScan(), "new scan");
+    auto scanner = unwrap(scanBuilder->Finish(), "finish scanner");
+    return unwrap(scanner->ToTable(), "scan shard " + path);
+  }
+
   std::filesystem::path m_directory;
-  std::int64_t m_numEvents = 0;
-  std::shared_ptr<arrow::dataset::Dataset> m_dataset;
+  std::shared_ptr<arrow::Schema> m_targetSchema;
   std::shared_ptr<arrow::Schema> m_publicSchema;
+  std::int64_t m_numEvents = 0;
+  std::vector<std::string> m_shardFiles;
+  std::vector<std::int64_t> m_shardFirstEvent;
+  mutable std::mutex m_cacheMutex;
+  mutable Acts::LRUCache<std::string, std::shared_ptr<arrow::Table>> m_cache;
 };
 
 ParquetDatasetReader::ParquetDatasetReader(
     std::filesystem::path directory,
-    const std::shared_ptr<arrow::Schema>& targetSchema)
-    : m_impl(std::make_unique<Impl>(std::move(directory), targetSchema)) {}
+    const std::shared_ptr<arrow::Schema>& targetSchema,
+    std::size_t cacheCapacity)
+    : m_impl(std::make_unique<Impl>(std::move(directory), targetSchema,
+                                    cacheCapacity)) {}
 
 ParquetDatasetReader::~ParquetDatasetReader() = default;
 

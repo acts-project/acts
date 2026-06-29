@@ -84,7 +84,8 @@ class ParquetReader::Impl {
       state->name = name;
       state->reader =
           std::make_unique<ActsPlugins::ArrowUtil::ParquetDatasetReader>(
-              directory, m_cfg.expectedSchemas.at(name).schema());
+              directory, m_cfg.expectedSchemas.at(name).schema(),
+              m_cfg.shardCacheCapacity);
 
       const auto events = state->reader->numEvents();
       if (referenceEvents < 0) {

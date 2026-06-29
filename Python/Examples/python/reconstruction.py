@@ -700,6 +700,8 @@ def addSpacePointsMaking(
     """adds space points making
     For parameters description see addSeeding
     """
+    import acts.examples.json
+
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
     spAlg = acts.examples.SpacePointMaker(
         level=logLevel,
