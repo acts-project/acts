@@ -9,14 +9,14 @@
 #pragma once
 
 // Project include(s).
-#include "./codegen/covariance_transport.hpp"
-#include "./codegen/full_jacobian.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/track_parametrization.hpp"
 #include "detray/geometry/tracking_surface.hpp"
 #include "detray/propagator/base_actor.hpp"
 #include "detray/propagator/composite_actor.hpp"
+#include "detray/propagator/detail/codegen/covariance_transport.hpp"
+#include "detray/propagator/detail/codegen/full_jacobian.hpp"
 #include "detray/propagator/detail/jacobian_engine.hpp"
 #include "detray/propagator/detail/noise_estimation.hpp"
 #include "detray/propagator/propagation_config.hpp"
