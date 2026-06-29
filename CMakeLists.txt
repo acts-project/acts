@@ -143,6 +143,7 @@ option(ACTS_BUILD_DOCS "Build documentation" OFF)
 option(ACTS_SETUP_BOOST "Explicitly set up Boost for the project" ON)
 option(ACTS_SETUP_EIGEN3 "Explicitly set up Eigen3 for the project" ON)
 option(ACTS_BUILD_ODD "Build the OpenDataDetector" OFF)
+set(ACTS_ADDITIONAL_PARTICLES_CSV "" CACHE FILEPATH "CSV filename with additional particles to include in the particle data table. Format of the file: name,pdgid,mass,charge,spin")
 # profiling related options
 option(ACTS_ENABLE_CPU_PROFILING "Enable CPU profiling using gperftools" OFF)
 option(ACTS_ENABLE_MEMORY_PROFILING "Enable memory profiling using gperftools" OFF)
