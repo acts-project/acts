@@ -9,12 +9,10 @@
 #pragma once
 
 #include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/IMultiAxis.hpp"
 
-#include <algorithm>
 #include <any>
 #include <typeinfo>
-
-#include <boost/container/small_vector.hpp>
 
 namespace Acts {
 
@@ -32,17 +30,20 @@ class IGrid {
  public:
   virtual ~IGrid() = default;
 
-  /// Get a dynamically sized vector of axis objects for inspection
-  /// @return a vector of axis pointers
-  virtual boost::container::small_vector<const IAxis*, 3> axes() const = 0;
-
   /// Get the number of dimensions of the grid
   /// @return The number of dimensions of the grid
   virtual std::size_t dimensions() const = 0;
 
-  /// Get the type of the values stored in the grid
-  /// @return The type of the values stored in the grid
-  virtual std::type_info const& valueType() const = 0;
+  /// Get the multi-axis object for the grid
+  /// @return The multi-axis object for the grid
+  virtual const IMultiAxis& multiAxisAny() const = 0;
+
+  /// Get the axis object for a given index
+  /// @param index The index of the axis to get
+  /// @return The axis object for the given index
+  virtual const IAxis& axis(std::size_t index) const {
+    return multiAxisAny().getAxis(index);
+  }
 
   /// Type-erased interface to access the contents of the grid
   ///
@@ -51,28 +52,62 @@ class IGrid {
   ///       point types. **USE WITH CARE!**
   ///
   /// @{
-  using AnyIndexType = boost::container::small_vector<std::size_t, 3>;
+
+  /// Get the type of the values stored in the grid
+  /// @return The type of the values stored in the grid
+  virtual std::type_info const& valueType() const = 0;
+
+  /// Type alias for dynamic index type (indices as vector of std::size_t)
+  using AnyIndexType = IMultiAxis::AnyLocalBins;
   /// Type alias for dynamic point type (coordinates as vector of doubles)
-  using AnyPointType = boost::container::small_vector<double, 3>;
+  using AnyPointType = IMultiAxis::AnyPoint;
+  /// Dynamically sized vector of (non-owning) pointers to the contained axes
+  using AnyAxesVector = IMultiAxis::SmallVector<const IAxis*>;
+
+  /// Get a dynamically sized vector of axis objects for inspection
+  /// @return a vector of axis pointers
+  virtual AnyAxesVector axes() const {
+    return multiAxisAny().getAnyAxesVector();
+  }
 
   /// Get the lower left edge of a bin for a given set of indices
   /// @param indices The indices to get the lower left edge of the bin for
   /// @return The lower left edge of the bin
-  virtual AnyPointType lowerLeftBinEdgeAny(AnyIndexType indices) const = 0;
+  virtual AnyPointType lowerLeftBinEdgeAny(const AnyIndexType& indices) const {
+    return multiAxisAny().getLowerLeftBinEdgeAny(indices);
+  }
 
   /// Get the upper right edge of a bin for a given set of indices
   /// @param indices The indices to get the upper right edge of the bin for
   /// @return The upper right edge of the bin
-  virtual AnyPointType upperRightBinEdgeAny(AnyIndexType indices) const = 0;
+  virtual AnyPointType upperRightBinEdgeAny(const AnyIndexType& indices) const {
+    return multiAxisAny().getUpperRightBinEdgeAny(indices);
+  }
 
   /// Get the center of a bin for a given set of indices
   /// @param indices The indices to get the center of the bin for
   /// @return The center of the bin
-  virtual AnyPointType binCenterAny(AnyIndexType indices) const = 0;
+  virtual AnyPointType binCenterAny(const AnyIndexType& indices) const {
+    return multiAxisAny().getBinCenterAny(indices);
+  }
 
   /// Get the number of local bins for a given set of indices
   /// @return The number of local bins
-  virtual AnyIndexType numLocalBinsAny() const = 0;
+  virtual AnyIndexType numLocalBinsAny() const {
+    return multiAxisAny().getNBinsAny();
+  }
+
+  /// Get the value of a bin for a given set of indices
+  /// @param indices The indices to get the value of the bin for
+  /// @return The value of the bin: the @c std::any contains a const pointer to
+  ///         the value
+  virtual std::any atLocalBinsAny(const AnyIndexType& indices) const = 0;
+
+  /// Get the value of a bin for a given set of indices
+  /// @param indices The indices to get the value of the bin for
+  /// @return The value of the bin: the @c std::any contains a pointer to the
+  ///         value
+  virtual std::any atLocalBinsAny(const AnyIndexType& indices) = 0;
 
   /// @}
 
@@ -86,29 +121,14 @@ class IGrid {
   }
 
   friend bool operator==(const IGrid& lhs, const IGrid& rhs) {
-    auto lhsAxes = lhs.axes();
-    auto rhsAxes = rhs.axes();
-    return lhsAxes.size() == rhsAxes.size() &&
-           std::equal(lhsAxes.begin(), lhsAxes.end(), rhsAxes.begin(),
-                      [](const IAxis* a, const IAxis* b) { return *a == *b; });
+    return lhs.multiAxisAny() == rhs.multiAxisAny();
   }
 
  protected:
   /// @param os Output stream to write grid representation to
   virtual void toStream(std::ostream& os) const = 0;
 
-  /// Get the value of a bin for a given set of indices
-  /// @param indices The indices to get the value of the bin for
-  /// @return The value of the bin: the @c std::any contains a const pointer to
-  ///         the value
-  virtual std::any atLocalBinsAny(AnyIndexType indices) const = 0;
-
-  /// Get the value of a bin for a given set of indices
-  /// @param indices The indices to get the value of the bin for
-  /// @return The value of the bin: the @c std::any contains a pointer to the
-  ///         value
-  virtual std::any atLocalBinsAny(AnyIndexType indices) = 0;
-
+ private:
   template <typename>
   friend class AnyGridView;
   template <typename>

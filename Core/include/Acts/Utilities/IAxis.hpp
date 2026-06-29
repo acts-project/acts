@@ -17,7 +17,7 @@
 
 namespace Acts {
 
-/// Common base class for all Axis instance. This allows generice handling
+/// Common base class for all Axis instances. This allows generice handling
 /// such as for inspection.
 class IAxis {
  public:
@@ -72,6 +72,37 @@ class IAxis {
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
   virtual std::size_t getBin(double x) const = 0;
+
+  /// Check whether value is inside axis limits
+  /// @param x The value to check
+  /// @return @c true if the value is within the axis range, otherwise @c false
+  /// @post If @c true is returned, the bin containing the given value is a
+  ///       valid bin, i.e. it is neither the underflow nor the overflow bin.
+  virtual bool isInside(double x) const = 0;
+
+  /// Get bin width
+  /// @param bin index of bin
+  /// @return width of given bin
+  virtual double getBinWidth(std::size_t bin) const = 0;
+
+  /// Get lower bound of bin
+  /// @param bin index of bin
+  /// @return lower bin boundary
+  /// @note Bin intervals have a closed lower bound, i.e. the lower boundary
+  ///       belongs to the bin with the given bin index.
+  virtual double getBinLowerBound(std::size_t bin) const = 0;
+
+  /// Get upper bound of bin
+  /// @param bin index of bin
+  /// @return upper bin boundary
+  /// @note Bin intervals have an open upper bound, i.e. the upper boundary
+  ///       does @b not belong to the bin with the given bin index.
+  virtual double getBinUpperBound(std::size_t bin) const = 0;
+
+  /// Get bin center
+  /// @param bin index of bin
+  /// @return bin center position
+  virtual double getBinCenter(std::size_t bin) const = 0;
 
   /// Centralized axis factory for equidistant binning
   /// @param aBoundaryType the axis boundary type
