@@ -4,12 +4,12 @@ add_unittest(RootSimhitReaderWriter SimhitReaderWriterTests.cpp)
 
 
 if(ACTS_ENABLE_CUDA)
-    add_unittest(RootCudaMuonSpacePointReader RootCudaMuonSpacePointReaderTests.cpp)
+  add_unittest(RootCudaMuonSpacePointReaderWriter RootCudaMuonSpacePointReaderWriterTests.cpp)
 
   find_package(CUDAToolkit REQUIRED)
 
   target_link_libraries(
-    ActsUnitTestRootCudaMuonSpacePointReader
+    ActsUnitTestRootCudaMuonSpacePointReaderWriter
     PRIVATE
       CUDA::cudart
       ROOT::TreePlayer
@@ -19,7 +19,7 @@ if(ACTS_ENABLE_CUDA)
   )
 
   target_compile_definitions(
-    ActsUnitTestRootCudaMuonSpacePointReader
+    ActsUnitTestRootCudaMuonSpacePointReaderWriter
     # Change to public later when it becomes needed there
     PRIVATE
       ACTS_ENABLE_CUDA

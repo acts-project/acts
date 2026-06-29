@@ -8,7 +8,7 @@
 
 #include "ActsExamples/Io/Root/RootCudaMuonSpacePointReader.hpp"
 
-//#ifdef ACTS_ENABLE_CUDA
+#ifdef ACTS_ENABLE_CUDA
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
