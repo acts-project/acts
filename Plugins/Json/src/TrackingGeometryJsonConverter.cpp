@@ -1220,7 +1220,12 @@ Acts::TrackingGeometryJsonConverter::fromJson(const GeometryContext& gctx,
   }
   nlohmann::json encoded{};
   istr >> encoded;
-
+  return fromJson(gctx, encoded, options);
+}
+std::shared_ptr<Acts::TrackingGeometry>
+Acts::TrackingGeometryJsonConverter::fromJsonPayload(
+    const GeometryContext& gctx, const nlohmann::json& encoded,
+    const Options& options) const {
   ACTS_DEBUG("Reconstructing TrackingGeometry from JSON");
   auto world = trackingVolumeFromJson(gctx, encoded, options);
 

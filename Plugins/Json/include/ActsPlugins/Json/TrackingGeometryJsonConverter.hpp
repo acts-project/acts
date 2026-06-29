@@ -34,7 +34,7 @@ class VolumeBounds;
 /// @addtogroup json_plugin
 /// @{
 
-/// @brief Converter for tracking geometry JSON payloads
+/// Converter for tracking geometry JSON payloads
 ///
 /// High-level conversion overview:
 /// - Serialization:
@@ -156,7 +156,7 @@ class TrackingGeometryJsonConverter {
     static Config defaultConfig();
   };
 
-  /// @brief Construct converter with custom or default dispatch configuration.
+  /// Construct converter with custom or default dispatch configuration.
   ///
   /// @param config The conversion dispatch configuration
   /// @param logger The logger instance
@@ -165,7 +165,7 @@ class TrackingGeometryJsonConverter {
       std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
           "TrackingGeometryJsonConverter", Acts::Logging::INFO));
 
-  /// @brief Convert a tracking geometry to JSON.
+  /// Convert a tracking geometry to JSON.
   ///
   /// @param gctx geometry context
   /// @param geometry tracking geometry to convert
@@ -176,10 +176,11 @@ class TrackingGeometryJsonConverter {
       const GeometryContext& gctx, const TrackingGeometry& geometry,
       const Options& options = Options::defaultOptions()) const;
 
-  /// @brief Reconstruct a tracking geometry from JSON.
+  /// Reconstruct a tracking geometry from a JSON file on
+  /// stored on disk
   ///
   /// @param gctx geometry context
-  /// @param jsonPath The path to the JSON file on disc
+  /// @param jsonPath The path to the JSON file on disk
   /// @param options options for the conversion
   ///
   /// @return pointer to deserialized geometry
@@ -187,7 +188,18 @@ class TrackingGeometryJsonConverter {
       const GeometryContext& gctx, const std::filesystem::path& jsonPath,
       const Options& options = Options::defaultOptions()) const;
 
-  /// @brief Convert a tracking volume hierarchy to JSON.
+  /// Reconstruct a tracking geometry from a deserialized JSON file
+  ///
+  /// @param gctx geometry context
+  /// @param encoded Reference to the encoded JSON object
+  /// @param options options for the conversion
+  ///
+  /// @return pointer to deserialized geometry
+  std::shared_ptr<TrackingGeometry> fromJsonPayload(
+      const GeometryContext& gctx, const nlohmann::json& encoded,
+      const Options& options = Options::defaultOptions()) const;
+
+  /// Convert a tracking volume hierarchy to JSON.
   ///
   /// @param gctx geometry context
   /// @param world top tracking volume in the hierarchy
@@ -201,7 +213,7 @@ class TrackingGeometryJsonConverter {
       const GeometryContext& gctx, const TrackingVolume& world,
       const Options& options = Options::defaultOptions()) const;
 
-  /// @brief Reconstruct a tracking volume hierarchy from JSON.
+  /// Reconstruct a tracking volume hierarchy from JSON.
   ///
   /// @param gctx geometry context
   /// @param encoded serialized tracking volume hierarchy
@@ -215,7 +227,7 @@ class TrackingGeometryJsonConverter {
       const GeometryContext& gctx, const nlohmann::json& encoded,
       const Options& options = Options::defaultOptions()) const;
 
-  /// @brief Serialize one portal link using the configured dispatcher.
+  /// Serialize one portal link using the configured dispatcher.
   ///
   /// @param gctx geometry context
   /// @param link portal link to serialize
@@ -228,7 +240,7 @@ class TrackingGeometryJsonConverter {
                                   const SurfaceIdLookup& surfaceIds,
                                   const VolumeIdLookup& volumeIds) const;
 
-  /// @brief Deserialize one portal link using configured decoders.
+  /// Deserialize one portal link using configured decoders.
   ///
   /// @param encoded serialized portal link
   /// @param surfaces id-to-surface map for internal lookup
@@ -239,14 +251,14 @@ class TrackingGeometryJsonConverter {
       const nlohmann::json& encoded, const SurfacePointerLookup& surfaces,
       const VolumePointerLookup& volumes) const;
 
-  /// @brief Serialize navigation policy using the configured dispatcher.
+  /// Serialize navigation policy using the configured dispatcher.
   ///
   /// @param policy navigation policy to serialize
   ///
   /// @return serialized navigation policy
   nlohmann::json navigationPolicyToJson(const INavigationPolicy& policy) const;
 
-  /// @brief Deserialize navigation policy using configured decoders.
+  /// Deserialize navigation policy using configured decoders.
   ///
   /// @param gctx geometry context
   /// @param encoded serialized navigation policy

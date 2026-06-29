@@ -408,7 +408,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
   TrackingGeometryJsonConverter converter;
   nlohmann::json encoded = converter.toJson(gctx, *sourceGeometry);
   // TemporaryDirectory tmpDir{};
-  auto jsonPath = "tracking_geometry_roundtrip.json";
+  std::string jsonPath = "tracking_geometry_roundtrip.json";
   {
     std::ofstream out(jsonPath);
     BOOST_REQUIRE(out.good());
