@@ -13,6 +13,7 @@
 #include <cmath>
 #include <cstddef>
 #include <numbers>
+#include <ranges>
 #include <span>
 #include <vector>
 
@@ -188,8 +189,10 @@ class PolynomialBetheHeitlerApprox : public BetheHeitlerApprox {
   /// Returns the number of components the returned mixture will have
   /// @return Number of components in the mixture
   std::size_t maxComponents() const override {
-    return std::ranges::max(
-        m_ranges, {}, [](const auto &range) { return range.data.size(); });
+    return std::ranges::max(m_ranges |
+                            std::views::transform([](const auto &range) {
+                              return range.data.size();
+                            }));
   }
 
   /// Checks if an input is valid for the parameterization
