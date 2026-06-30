@@ -48,7 +48,13 @@ def runRefittingGsf(
     # queries to the loss distribution outside the specified range, since no dedicated
     # approximation for the ODD is done yet.
     bha = acts.examples.loadBetheHeitlerApproxFromJson(
-        "Examples/Configs/betheHeitler_geantSim_cdf_nC6_O5.json", clamp_to_range=True
+        str(
+            Path(__file__).resolve().parent.parent.parent.parent
+            / "Examples/Configs/betheHeitler_geantSim_cdf_nC6_O5.json"
+        ),
+        clamp_to_range=True,
+        no_change_limit=0.0001,
+        single_gaussian_limit=0.002,
     )
 
     gsfOptions = {
