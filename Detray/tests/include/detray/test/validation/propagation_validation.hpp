@@ -29,15 +29,6 @@
 
 namespace detray {
 
-template <typename detector_t>
-using intersection_type =
-    intersection2D<typename detector_t::surface_type,
-                   typename detector_t::algebra_type, true>;
-
-template <typename detector_t>
-using candidate_type =
-    navigation::detail::candidate_record<intersection_type<detector_t>>;
-
 /// Configure the Kalman Filter comparison test
 struct propagation_validation_config {
   propagation::config propagation;
@@ -70,7 +61,8 @@ bool propagation_validation(
     const propagation_validation_config& cfg,
     const std::vector<free_track_parameters<typename detector_t::algebra_type>>&
         tracks,
-    std::vector<vecmem::vector<candidate_type<detector_t>>>& truth_traces_fw) {
+    std::vector<vecmem::vector<intersection_record<detector_t>>>&
+        truth_traces_fw) {
   // 'false' if any failures were detected
   bool test_successful{true};
 
@@ -79,8 +71,7 @@ bool propagation_validation(
   using stepper_t =
       rk_stepper<bfield_view_t, algebra_t, constrained_step<scalar_t>,
                  stepper_rk_policy<scalar_t>, stepping::print_inspector>;
-  using sf_candidate_t =
-      traccc::propagation_validator::candidate_type<detector_t>;
+  using sf_candidate_t = intersection_record<detector_t>;
 
   // Host memory resource
   vecmem::host_memory_resource host_mr;
