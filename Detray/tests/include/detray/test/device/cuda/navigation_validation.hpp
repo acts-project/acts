@@ -56,8 +56,7 @@ void navigation_validation_device(
     bfield_t field_data,
     vecmem::data::jagged_vector_view<const intersection_record_t>
         &truth_intersection_traces_view,
-    vecmem::data::jagged_vector_view<navigation::detail::candidate_record<
-        typename intersection_record_t::intersection_type>>
+    vecmem::data::jagged_vector_view<intersection_record<detector_t>>
         &recorded_intersections_view,
     vecmem::data::vector_view<
         material_validator::material_record<typename detector_t::scalar_type>>
@@ -77,7 +76,6 @@ inline auto run_navigation_validation(
     const std::vector<std::vector<intersection_record_t>>
         &truth_intersection_traces) {
   using scalar_t = dscalar<typename detector_t::algebra_type>;
-  using intersection_t = typename intersection_record_t::intersection_type;
   using material_record_t = material_validator::material_record<scalar_t>;
   using material_params_t = material_validator::material_params<scalar_t>;
 
@@ -106,8 +104,7 @@ inline auto run_navigation_validation(
     capacities.push_back(trace.size() + 10u);
   }
 
-  vecmem::data::jagged_vector_buffer<
-      navigation::detail::candidate_record<intersection_t>>
+  vecmem::data::jagged_vector_buffer<intersection_record<detector_t>>
       recorded_intersections_buffer(capacities, *dev_mr, host_mr,
                                     vecmem::data::buffer_type::resizable);
   cuda_cpy.setup(recorded_intersections_buffer)->wait();
@@ -132,8 +129,8 @@ inline auto run_navigation_validation(
       recorded_intersections_view, mat_records_view, mat_steps_view);
 
   // Get the results back to the host and pass them on to the checking
-  vecmem::jagged_vector<navigation::detail::candidate_record<intersection_t>>
-      recorded_intersections(host_mr);
+  vecmem::jagged_vector<intersection_record<detector_t>> recorded_intersections(
+      host_mr);
   cuda_cpy(recorded_intersections_buffer, recorded_intersections)->wait();
 
   vecmem::vector<material_record_t> mat_records(host_mr);
@@ -301,7 +298,7 @@ class navigation_validation : public test::fixture_base<> {
 
       // Get the original test trajectory (ray or helix)
       const auto &start = truth_trace.front();
-      const auto &trck_param = start.track_param;
+      const auto &trck_param = start.track_param();
       trajectory_type test_traj = get_parametrized_trajectory(trck_param);
 
       const scalar q = start.charge;
