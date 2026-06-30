@@ -80,7 +80,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
                        outputMeasurementSubset, outputMeasSimHitsMap,
                        outputMeasParticlesMap, outputParticleMeasurementsMap,
                        trackingGeometry, geoIdMapPath, geoIdMapSourcePrefix,
-                       geoIdMapTargetPrefix, hitBoundsTolerance);
+                       geoIdMapTargetPrefix, hitBoundsTolerance,
+                       keepParticlesWithoutHits);
 
     alg.def_static(
         "particleSchema", &ColliderMLRelease1InputConverter::particleSchema,
