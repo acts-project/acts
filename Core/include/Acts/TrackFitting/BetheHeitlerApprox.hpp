@@ -137,13 +137,25 @@ class PolynomialBetheHeitlerApprox : public BetheHeitlerApprox {
 
   /// Single x/x0 range with its data and transformation flag
   struct RangeData {
+    /// The x/x0 range covered by this data
     Range1D<double> range;
+    /// Polynomial data for all mixture components in this range
     Data data;
+    /// Whether a log transformation is applied before evaluating polynomials
     bool transform = false;
 
     RangeData() = default;
+    /// Construct from an existing range object.
+    /// @param r The x/x0 range
+    /// @param d Component polynomial data
+    /// @param t Whether to apply a log transformation
     RangeData(Range1D<double> r, Data d, bool t)
         : range(r), data(std::move(d)), transform(t) {}
+    /// Construct from explicit lower and upper bounds.
+    /// @param l Lower bound of the x/x0 range
+    /// @param h Upper bound of the x/x0 range
+    /// @param d Component polynomial data
+    /// @param t Whether to apply a log transformation
     RangeData(double l, double h, Data d, bool t)
         : range(l, h), data(std::move(d)), transform(t) {}
   };

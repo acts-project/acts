@@ -19,15 +19,27 @@ namespace Acts {
 /// @addtogroup json_plugin
 /// @{
 
+/// Serialize polynomial component data to JSON.
+/// @param j Output JSON object
+/// @param data The PolyData to serialize
 void to_json(nlohmann::json& j,
              const PolynomialBetheHeitlerApprox::PolyData& data);
 
+/// Deserialize polynomial component data from JSON.
+/// @param j Input JSON object
+/// @param data The PolyData to populate
 void from_json(const nlohmann::json& j,
                PolynomialBetheHeitlerApprox::PolyData& data);
 
+/// Serialize a single x/x0 range with its data to JSON.
+/// @param j Output JSON object
+/// @param data The RangeData to serialize
 void to_json(nlohmann::json& j,
              const PolynomialBetheHeitlerApprox::RangeData& data);
 
+/// Deserialize a single x/x0 range with its data from JSON.
+/// @param j Input JSON object
+/// @param data The RangeData to populate
 void from_json(const nlohmann::json& j,
                PolynomialBetheHeitlerApprox::RangeData& data);
 
