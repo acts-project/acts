@@ -356,6 +356,8 @@ struct parameter_transporter : base_actor {
       DETRAY_VERBOSE_HOST_DEVICE(
           "Actor: Transport track covariance to surface %d", dest_sf.index());
 
+      DETRAY_DEBUG_HOST("Actor: Departure bound param.: " << departure_params);
+
       // Transport the covariance
       const bound_matrix<algebra_t> propagation_step_jacobian =
           get_full_jacobian(propagation, departure_params);
@@ -381,9 +383,6 @@ struct parameter_transporter : base_actor {
       DETRAY_VERBOSE_HOST_DEVICE(
           "Actor: Departure surface link invalid, setting covariance to "
           "identity");
-
-      // Dummy covariance that allows to multiply the transport jacobian
-      departure_params.set_covariance(matrix::identity<bound_matrix_type>());
     }
 
     DETRAY_VERBOSE_HOST_DEVICE(
