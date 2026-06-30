@@ -20,6 +20,7 @@
 
 #include <arrow/c/abi.h>
 #include <arrow/c/bridge.h>
+#include <arrow/compute/api.h>
 #include <arrow/dataset/api.h>
 #include <arrow/filesystem/localfs.h>
 #include <arrow/io/file.h>
@@ -427,6 +428,9 @@ class ParquetDatasetReader::Impl {
 
  private:
   std::shared_ptr<arrow::Table> loadShard(const std::string& path) const {
+    static std::once_flag computeInitFlag;
+    std::call_once(computeInitFlag, [] { arrow::compute::Initialize(); });
+
     auto filesystem = std::make_shared<arrow::fs::LocalFileSystem>();
     auto format = std::make_shared<arrow::dataset::ParquetFileFormat>();
 
