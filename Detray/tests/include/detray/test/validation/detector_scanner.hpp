@@ -21,6 +21,9 @@
 #include "detray/io/csv/intersection2D.hpp"
 #include "detray/io/csv/track_parameters.hpp"
 
+// Test include(s)
+#include "detray/test/utils/data_record.hpp"
+
 // System include(s)
 #include <algorithm>
 #include <sstream>
@@ -28,27 +31,6 @@
 #include <type_traits>
 
 namespace detray {
-
-/// Record of a surface intersection along a track
-template <typename detector_t>
-struct intersection_record {
-  using algebra_t = typename detector_t::algebra_type;
-  using scalar_t = dscalar<algebra_t>;
-  using track_parameter_type = free_track_parameters<algebra_t>;
-  using intersection_type =
-      intersection2D<typename detector_t::surface_type, algebra_t,
-                     intersection::contains_pos>;
-
-  /// The charge associated with the track parameters
-  scalar_t charge{};
-  /// Current global track parameters
-  track_parameter_type track_param{
-      {0.f, 0.f, 0.f}, 0.f, {0.f, 0.f, 1.f}, detail::invalid_value<scalar_t>()};
-  /// Index of the volume the intersection was found in
-  dindex vol_idx{};
-  /// The intersection result, including the surface descriptor
-  intersection_type intersection{};
-};
 
 /// @brief struct that holds functionality to shoot a parametrized particle
 /// trajectory through a detector.
@@ -106,11 +88,9 @@ struct brute_force_scan {
         if (sfi.is_along()) {
           sfi.surface() = sf_desc;
           // Record the intersection
-          intersection_trace.push_back(
-              {q,
-               {traj.pos(sfi.path()), 0.f, p * traj.dir(sfi.path()), q},
-               sf.volume(),
-               sfi});
+          intersection_trace.emplace_back(traj.pos(sfi.path()),
+                                          traj.dir(sfi.path()), sfi, q, p,
+                                          sf.volume());
         }
       }
       intersections.clear();
@@ -140,12 +120,10 @@ struct brute_force_scan {
     start_intersection.set_volume_link(
         static_cast<nav_link_t>(first_record.vol_idx));
 
-    intersection_trace.insert(
-        intersection_trace.begin(),
-        intersection_record<detector_t>{q,
-                                        {traj.pos(), 0.f, p * traj.dir(), q},
-                                        first_record.vol_idx,
-                                        start_intersection});
+    intersection_trace.insert(intersection_trace.begin(),
+                              intersection_record<detector_t>{
+                                  traj.pos(), traj.dir(), start_intersection, q,
+                                  p, first_record.vol_idx});
 
     return intersection_trace;
   }
@@ -252,8 +230,8 @@ inline auto write_tracks(
     const std::vector<std::vector<intersection_record<detector_t>>>
         &intersection_traces) {
   using scalar_t = dscalar<typename detector_t::algebra_type>;
-  using record_t = intersection_record<detector_t>;
-  using track_param_t = typename record_t::track_parameter_type;
+  using track_param_t =
+      free_track_parameters<typename detector_t::algebra_type>;
 
   std::vector<std::vector<std::pair<scalar_t, track_param_t>>> track_params{};
 
@@ -263,7 +241,7 @@ inline auto write_tracks(
     track_params.back().reserve(trace.size());
 
     for (const auto &record : trace) {
-      track_params.back().emplace_back(record.charge, record.track_param);
+      track_params.back().emplace_back(record.charge, record.track_param());
     }
   }
 
@@ -277,6 +255,8 @@ inline auto read(const std::string &intersection_file_name,
                  const std::string &track_param_file_name,
                  std::vector<std::vector<intersection_record<detector_t>>>
                      &intersection_traces) {
+  using track_t = free_track_parameters<typename detector_t::algebra_type>;
+
   // Read from file
   auto intersections_per_track =
       io::csv::read_intersection2D<detector_t>(intersection_file_name);
@@ -318,9 +298,11 @@ inline auto read(const std::string &intersection_file_name,
 
     // Add records to trace
     for (dindex i = 0u; i < intersections.size(); ++i) {
+      const track_t &free_param = track_params[i].second;
       intersection_traces[trk_idx].push_back(intersection_record<detector_t>{
-          track_params[i].first, track_params[i].second,
-          intersections[i].surface().volume(), intersections[i]});
+          free_param.pos(), free_param.dir(), intersections[i],
+          track_params[i].first, free_param.p(track_params[i].first),
+          intersections[i].surface().volume()});
     }
   }
 }

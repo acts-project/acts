@@ -108,7 +108,7 @@ class material_scan : public test::fixture_base<> {
 
   /// Run the ray scan
   void TestBody() override {
-    using material_record_t = material_validator::material_record<scalar_t>;
+    using track_material_t = material_validator::track_material<scalar_t>;
 
     std::size_t n_tracks{0u};
     auto ray_generator = track_generator_t(m_cfg.track_generator());
@@ -121,8 +121,8 @@ class material_scan : public test::fixture_base<> {
     dvector<free_track_parameters<algebra_t>> tracks{};
     tracks.reserve(ray_generator.size());
 
-    dvector<material_record_t> mat_records{};
-    mat_records.reserve(ray_generator.size());
+    dvector<track_material_t> track_mat_vec{};
+    track_mat_vec.reserve(ray_generator.size());
 
     for (const auto ray : ray_generator) {
       // Record all intersections and surfaces along the ray
@@ -146,9 +146,9 @@ class material_scan : public test::fixture_base<> {
       tracks.push_back({ray.pos(), 0.f, ray.dir(), 0.f});
 
       // New material record
-      material_record_t mat_record{};
-      mat_record.eta = vector::eta(ray.dir());
-      mat_record.phi = vector::phi(ray.dir());
+      track_material_t track_mat{};
+      track_mat.eta = vector::eta(ray.dir());
+      track_mat.phi = vector::phi(ray.dir());
 
       // Record material for this ray
       for (const auto &[i, record] :
@@ -185,39 +185,39 @@ class material_scan : public test::fixture_base<> {
         }
 
         const auto &p = record.intersection.local();
-        const auto mat_params =
-            sf.template visit_material<material_validator::get_material_params>(
+        const auto mat_record =
+            sf.template visit_material<material_validator::get_material_record>(
                 point2_t{p[0], p[1]}, cos_angle(m_gctx, sf, ray.dir(), p));
 
-        const scalar_t seg{mat_params.path};
-        const scalar_t t{mat_params.thickness};
-        const scalar_t mx0{mat_params.mat_X0};
-        const scalar_t ml0{mat_params.mat_L0};
+        const scalar_t seg{mat_record.path};
+        const scalar_t t{mat_record.thickness};
+        const scalar_t mx0{mat_record.mat_X0};
+        const scalar_t ml0{mat_record.mat_L0};
 
         if (mx0 > 0.f) {
-          mat_record.sX0 += seg / mx0;
-          mat_record.tX0 += t / mx0;
+          track_mat.sX0 += seg / mx0;
+          track_mat.tX0 += t / mx0;
         } else {
           DETRAY_ERROR_HOST(
               "Encountered invalid X_0: " << mx0 << "\nOn surface: " << sf);
         }
         if (ml0 > 0.f) {
-          mat_record.sL0 += seg / ml0;
-          mat_record.tL0 += t / ml0;
+          track_mat.sL0 += seg / ml0;
+          track_mat.tL0 += t / ml0;
         } else {
           DETRAY_ERROR_HOST(
               "Encountered invalid L_0: " << ml0 << "\nOn surface: " << sf);
         }
       }
 
-      if (mat_record.sX0 == 0.f || mat_record.sL0 == 0.f ||
-          mat_record.tX0 == 0.f || mat_record.tL0 == 0.f) {
+      if (track_mat.sX0 == 0.f || track_mat.sL0 == 0.f ||
+          track_mat.tX0 == 0.f || track_mat.tL0 == 0.f) {
         DETRAY_VERBOSE_HOST("No material recorded for ray "
                             << n_tracks << "/" << ray_generator.size() << ": "
                             << ray);
       }
 
-      mat_records.push_back(mat_record);
+      track_mat_vec.push_back(track_mat);
 
       ++n_tracks;
     }
@@ -234,10 +234,10 @@ class material_scan : public test::fixture_base<> {
 
     std::string file_name{det_name + "_" + material_path.stem().string() +
                           ".csv"};
-    material_validator::write_material(data_path / file_name, mat_records);
+    material_validator::write_material(data_path / file_name, track_mat_vec);
 
     // Pin data to whiteboard
-    m_whiteboard->add(det_name + "_material_scan", std::move(mat_records));
+    m_whiteboard->add(det_name + "_material_scan", std::move(track_mat_vec));
     m_whiteboard->add(det_name + "_material_scan_tracks", std::move(tracks));
   }
 

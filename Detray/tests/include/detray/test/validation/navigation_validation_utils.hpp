@@ -153,7 +153,7 @@ inline auto record_propagation(
 
   /// Inspector that records all encountered surfaces
   using object_tracer_t =
-      navigation::object_tracer<intersection_t, dvector,
+      navigation::object_tracer<detector_t, dvector,
                                 navigation::status::e_on_object,
                                 navigation::status::e_on_portal>;
   /// Inspector that prints the navigator state from within the
@@ -350,7 +350,7 @@ inline auto record_propagation(
 
   return std::make_tuple(success, std::move(obj_tracer),
                          std::move(step_tracer_state).release_step_data(),
-                         std::move(mat_tracer_state).release_material_record(),
+                         std::move(mat_tracer_state).release_track_material(),
                          std::move(mat_tracer_state).release_material_steps(),
                          std::move(nav_printer), std::move(step_printer));
 }
@@ -1039,8 +1039,7 @@ inline auto print_efficiency(std::size_t n_tracks,
 /// missed surfaces for truth traces, recorded step traces, recorded material
 /// traces and integrated material
 template <typename stepper_t, typename... actor_ts, typename detector_t,
-          typename field_view_t, typename intersection_t,
-          concepts::algebra algebra_t>
+          typename field_view_t, concepts::algebra algebra_t>
 auto compare_to_navigation(
     const detray::test::navigation_validation_config<algebra_t> &cfg,
     vecmem::host_memory_resource &host_mr, const detector_t &det,
@@ -1048,8 +1047,7 @@ auto compare_to_navigation(
     const typename detector_t::geometry_context ctx,
     const std::optional<field_view_t> field_view,
     const propagation::config &prop_cfg,
-    std::vector<dvector<navigation::detail::candidate_record<intersection_t>>>
-        &truth_traces,
+    std::vector<dvector<intersection_record<detector_t>>> &truth_traces,
     const std::vector<free_track_parameters<algebra_t>> &tracks,
     dvector<typename actor_chain<actor_ts...>::state_ref_tuple> state_tuples = {
         {}}) {
@@ -1081,13 +1079,13 @@ auto compare_to_navigation(
   surface_stats n_miss_truth{};
 
   // Collect step and material traces for all tracks
-  std::vector<dvector<detail::step_data<algebra_t>>> step_traces{};
-  std::vector<material_validator::material_record<scalar_t>> mat_records{};
-  std::vector<dvector<material_validator::material_params<scalar_t>>>
-      mat_traces{};
+  std::vector<dvector<step_record<detector_t>>> step_traces{};
+  std::vector<material_record<scalar_t>> mat_steps{};
+  std::vector<dvector<material_validator::track_material<scalar_t>>>
+      track_mat_vec{};
 
-  mat_records.reserve(n_samples);
-  mat_traces.reserve(n_samples);
+  mat_steps.reserve(n_samples);
+  track_mat_vec.reserve(n_samples);
   step_traces.reserve(n_samples);
 
   // Run the navigation on every truth trace
@@ -1102,7 +1100,7 @@ auto compare_to_navigation(
     DETRAY_VERBOSE_HOST("Track " << i << ":");
 
     // Record the propagation through the geometry
-    auto [success, obj_tracer, step_trace, mat_record, mat_trace, nav_printer,
+    auto [success, obj_tracer, step_trace, mat_record, track_mat, nav_printer,
           step_printer] =
         record_propagation<stepper_t, actor_ts...>(
             ctx, &host_mr, det, prop_cfg, track, cfg.ptc_hypothesis(),
@@ -1123,8 +1121,8 @@ auto compare_to_navigation(
 
     // Save material for later comparison
     step_traces.push_back(std::move(step_trace));
-    mat_records.push_back(std::move(mat_record));
-    mat_traces.push_back(mat_trace);
+    mat_steps.push_back(std::move(mat_record));
+    track_mat_vec.push_back(track_mat);
 
     // Compare to truth trace
     using obj_tracer_t = decltype(obj_tracer);
@@ -1278,8 +1276,8 @@ auto compare_to_navigation(
             << ")" << std::endl;
   std::clog << "\n-----------------------------------" << std::endl;
 
-  return std::tuple{trk_stats,   n_surfaces, n_miss_nav, n_miss_truth,
-                    step_traces, mat_traces, mat_records};
+  return std::tuple{trk_stats,   n_surfaces,    n_miss_nav, n_miss_truth,
+                    step_traces, track_mat_vec, mat_steps};
 }
 
 }  // namespace detray::navigation_validator
