@@ -10,12 +10,12 @@
 
 #include "Acts/Utilities/HashCombine.hpp"
 
+#include <array>
 #include <cstdint>
 #include <ostream>
 #include <span>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 namespace ActsFatras {
 
@@ -130,7 +130,7 @@ class Barcode {
   /// @return True if barcodes are equal
   bool operator==(const Barcode&) const = default;
   friend constexpr auto operator<=>(Barcode lhs, Barcode rhs) {
-    return lhs.asVector() <=> rhs.asVector();
+    return lhs.asArray() <=> rhs.asArray();
   }
 
   /// Check validity of the barcode
@@ -163,9 +163,9 @@ class Barcode {
   /// @return The sub-particle identifier value
   constexpr SubParticleId subParticle() const { return subParticleID; }
 
-  /// Export barcode as vector
-  /// @return Vector of barcode components
-  constexpr std::vector<std::uint32_t> asVector() const {
+  /// Export barcode as array
+  /// @return Array of barcode components
+  constexpr std::array<std::uint32_t, 5> asArray() const {
     return {vertexPrimary(), vertexSecondary(), particle(), generation(),
             subParticle()};
   }
