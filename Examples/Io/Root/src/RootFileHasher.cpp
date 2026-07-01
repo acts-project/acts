@@ -100,12 +100,19 @@ std::string toHex(const Digest& digest) {
   return out;
 }
 
+/// Append the raw object representation of `x` to a byte buffer.
+template <typename T>
+void appendBytes(std::vector<std::byte>& out, const T& x) {
+  const auto* p = reinterpret_cast<const std::byte*>(&x);
+  out.insert(out.end(), p, p + sizeof(T));
+}
+
 /// Type-erased reader appending the raw bytes of one branch's current-entry
 /// value(s) to a buffer.
 struct IBranchReader {
   virtual ~IBranchReader() = default;
   /// Append the bytes of the current entry to `out`.
-  virtual void append(std::string& out) = 0;
+  virtual void append(std::vector<std::byte>& out) = 0;
   /// Whether the underlying branch was matched successfully. Only meaningful
   /// after the first entry has been loaded.
   virtual bool valid() const = 0;
@@ -123,10 +130,7 @@ struct ScalarReader final : IBranchReader {
   TTreeReaderValue<T> value;
   ScalarReader(TTreeReader& reader, const char* name) : value(reader, name) {}
   bool valid() const override { return setupOk(value); }
-  void append(std::string& out) override {
-    T x = *value;
-    out.append(reinterpret_cast<const char*>(&x), sizeof(T));
-  }
+  void append(std::vector<std::byte>& out) override { appendBytes(out, *value); }
 };
 
 /// Reader for a 1D array branch (`std::vector<T>` or a C-style array leaf).
@@ -135,9 +139,9 @@ struct ArrayReader final : IBranchReader {
   TTreeReaderArray<T> array;
   ArrayReader(TTreeReader& reader, const char* name) : array(reader, name) {}
   bool valid() const override { return setupOk(array); }
-  void append(std::string& out) override {
+  void append(std::vector<std::byte>& out) override {
     for (T x : array) {
-      out.append(reinterpret_cast<const char*>(&x), sizeof(T));
+      appendBytes(out, x);
     }
   }
 };
@@ -148,10 +152,10 @@ struct NestedReader final : IBranchReader {
   TTreeReaderValue<std::vector<std::vector<T>>> value;
   NestedReader(TTreeReader& reader, const char* name) : value(reader, name) {}
   bool valid() const override { return setupOk(value); }
-  void append(std::string& out) override {
+  void append(std::vector<std::byte>& out) override {
     for (const auto& inner : *value) {
       for (T x : inner) {
-        out.append(reinterpret_cast<const char*>(&x), sizeof(T));
+        appendBytes(out, x);
       }
     }
   }
@@ -334,7 +338,7 @@ Digest hashTree(TTree& tree, bool orderInvariant) {
   }
 
   std::vector<Digest> rowDigests;
-  std::string buffer;
+  std::vector<std::byte> buffer;
   bool pruned = false;
   while (treeReader.Next()) {
     if (!pruned) {
@@ -358,12 +362,12 @@ Digest hashTree(TTree& tree, bool orderInvariant) {
       for (auto& r : readers) {
         r.reader->append(buffer);
       }
-      rowDigests.push_back(digestOf(std::as_bytes(std::span(buffer))));
+      rowDigests.push_back(digestOf(buffer));
     } else {
       for (auto& r : readers) {
         buffer.clear();
         r.reader->append(buffer);
-        r.hasher->update(std::as_bytes(std::span(buffer)));
+        r.hasher->update(buffer);
       }
     }
   }
