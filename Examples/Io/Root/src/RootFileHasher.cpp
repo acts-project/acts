@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Io/Root/RootFileHasher.hpp"
 
+#include "ActsExamples/Io/Root/detail/RootFileHasherHelpers.hpp"
+
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -19,8 +21,6 @@
 #include <span>
 #include <stdexcept>
 #include <vector>
-
-#include <boost/algorithm/string/trim.hpp>
 
 #include <TBranch.h>
 #include <TFile.h>
@@ -227,34 +227,6 @@ std::unique_ptr<IBranchReader> dispatch(const std::string& type, Kind kind,
   return nullptr;
 }
 
-/// Return the first top-level template argument of a type name, e.g.
-/// "vector<float>" -> "float" and "vector<vector<int> >" -> "vector<int>".
-std::string firstTemplateArg(const std::string& s) {
-  auto lt = s.find('<');
-  if (lt == std::string::npos) {
-    return "";
-  }
-  int depth = 0;
-  std::size_t start = lt + 1;
-  for (std::size_t i = lt; i < s.size(); ++i) {
-    char c = s[i];
-    if (c == '<') {
-      ++depth;
-      if (depth == 1) {
-        start = i + 1;
-      }
-    } else if (c == '>') {
-      --depth;
-      if (depth == 0) {
-        return boost::algorithm::trim_copy(s.substr(start, i - start));
-      }
-    } else if (c == ',' && depth == 1) {
-      return boost::algorithm::trim_copy(s.substr(start, i - start));
-    }
-  }
-  return "";
-}
-
 struct BranchInfo {
   std::string name;
   Kind kind = Kind::Scalar;
@@ -279,10 +251,10 @@ std::vector<BranchInfo> describeBranches(TTree& tree) {
     std::string className = branch->GetClassName();
     if (!className.empty()) {
       // STL collection branch.
-      std::string arg = firstTemplateArg(className);
+      std::string arg = detail::firstTemplateArg(className);
       if (arg.rfind("vector<", 0) == 0) {
         info.kind = Kind::Nested;
-        info.elementType = firstTemplateArg(arg);
+        info.elementType = detail::firstTemplateArg(arg);
       } else {
         info.kind = Kind::Array;
         info.elementType = arg;
