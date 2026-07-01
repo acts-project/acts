@@ -20,42 +20,63 @@ namespace Acts {
 /// @param qOverP    Particle charge divided by absolute momentum
 /// @param absQ      Absolute particle charge
 ///
-/// This computes the mean energy loss -dE(x) through a material with
-/// the given properties, i.e. it computes
+/// This computes the mean ionisation energy loss @f$-dE(x)@f$ of a particle
+/// traversing the material slab,
 ///
-///     -dE(x) = -dE/dx * x
+/// @f[
+///   -dE(x) = -\frac{dE}{dx}\, x,
+/// @f]
 ///
-/// where -dE/dx is given by the Bethe formula. The computations are valid
-/// for intermediate particle energies.
-/// @return Mean energy loss through the material slab
+/// where @f$-dE/dx@f$ is given by the Bethe formula
+/// @cite ParticleDataGroup:2018ovx (eq. 33.5), including the density-effect
+/// correction. The result is the magnitude of the loss (always @f$\geq 0@f$);
+/// the caller is responsible for applying the sign according to the
+/// propagation direction. The formula is valid for intermediate energies,
+/// roughly @f$0.1 \lesssim \beta\gamma \lesssim 1000@f$.
+///
+/// @return Mean ionisation energy loss through the slab in native energy units
+/// @see @ref computeEnergyLossLandau for the most probable value,
+///   @ref computeEnergyLossRadiative for radiative losses, and
+///   @ref computeEnergyLossMean for the sum of both
 float computeEnergyLossBethe(const MaterialSlab& slab, float m, float qOverP,
                              float absQ);
 /// Derivative of the Bethe energy loss with respect to q/p.
 ///
 /// @copydoc computeEnergyLossBethe
+/// @return Derivative of the mean ionisation energy loss with respect to q/p
 float deriveEnergyLossBetheQOverP(const MaterialSlab& slab, float m,
                                   float qOverP, float absQ);
 
 /// Compute the most probable energy loss due to ionisation and excitation.
 ///
-/// @copydoc computeEnergyLossBethe
+/// @param slab      The traversed material and its properties
+/// @param m         Particle mass
+/// @param qOverP    Particle charge divided by absolute momentum
+/// @param absQ      Absolute particle charge
 ///
-/// This computes the most probable energy loss -dE(x) through a material of
-/// the given properties and thickness as described by the mode of the
-/// Landau-Vavilov-Bichsel distribution. The computations are valid
-/// for intermediate particle energies.
-/// @return Most probable energy loss through the material slab
+/// This computes the most probable ionisation energy loss @f$-dE(x)@f$ through
+/// the material slab, i.e. the mode of the Landau-Vavilov-Bichsel distribution
+/// @cite ParticleDataGroup:2018ovx (eq. 33.12), including the density-effect
+/// correction. Unlike @ref computeEnergyLossBethe (which returns the mean), this is
+/// the most probable value, which for thin slabs is noticeably smaller than the
+/// mean because of the long tail of the distribution. The formula is valid for
+/// intermediate energies, roughly @f$0.1 \lesssim \beta\gamma \lesssim 1000@f$.
+///
+/// @return Most probable ionisation energy loss through the slab in native
+///   energy units
 float computeEnergyLossLandau(const MaterialSlab& slab, float m, float qOverP,
                               float absQ);
 /// Derivative of the most probable ionisation energy loss with respect to q/p.
 ///
-/// @copydoc computeEnergyLossBethe
+/// @copydoc computeEnergyLossLandau
+/// @return Derivative of the most probable ionisation energy loss with respect
+///   to q/p
 float deriveEnergyLossLandauQOverP(const MaterialSlab& slab, float m,
                                    float qOverP, float absQ);
 
 /// Compute the Gaussian-equivalent sigma for the ionisation loss fluctuations.
 ///
-/// @see computeEnergyLossBethe for parameters description
+/// @see @ref computeEnergyLossBethe for parameters description
 ///
 /// This is the sigma parameter of a Gaussian distribution with the same
 /// full-width-half-maximum as the Landau-Vavilov-Bichsel distribution. The
@@ -78,9 +99,25 @@ float computeEnergyLossLandauSigma(const MaterialSlab& slab, float m,
 float computeEnergyLossLandauFwhm(const MaterialSlab& slab, float m,
                                   float qOverP, float absQ);
 
-/// Compute q/p Gaussian-equivalent sigma due to ionisation loss fluctuations.
+/// Compute the Gaussian-equivalent sigma of q/p due to ionisation fluctuations.
 ///
-/// @copydoc computeEnergyLossBethe
+/// @param slab   The traversed material and its properties
+/// @param m      Particle mass
+/// @param qOverP Particle charge divided by absolute momentum
+/// @param absQ   Absolute particle charge
+///
+/// This propagates the energy-loss straggling (the Gaussian-equivalent sigma
+/// @f$\sigma_E@f$ from @ref computeEnergyLossLandauSigma) into a standard deviation
+/// on @f$q/p@f$ using the Jacobian @f$d(q/p)/dE@f$,
+///
+/// @f[
+///   \sigma_{q/p} = \left|\frac{d(q/p)}{dE}\right|\, \sigma_E .
+/// @f]
+///
+/// This is the quantity used as the @f$q/p@f$ process noise in the Kalman
+/// fitters.
+///
+/// @return Gaussian-equivalent standard deviation of q/p
 float computeEnergyLossLandauSigmaQOverP(const MaterialSlab& slab, float m,
                                          float qOverP, float absQ);
 
@@ -92,10 +129,14 @@ float computeEnergyLossLandauSigmaQOverP(const MaterialSlab& slab, float m,
 /// @param qOverP    Particle charge divided by absolute momentum
 /// @param absQ      Absolute particle charge
 ///
-/// This computes the mean energy loss -dE(x) using an approximative formula.
-/// Bremsstrahlung is always included; direct e+e- pair production and
-/// photo-nuclear interactions only for muons.
-/// @return Mean radiative energy loss through the material slab
+/// This computes the mean radiative energy loss @f$-dE(x)@f$ using the
+/// approximation of @cite Lund:2008ad. Bremsstrahlung, scaling with
+/// @f$(m_e/m)^2@f$, is always included; direct @f$e^+e^-@f$ pair production and
+/// photo-nuclear interactions are added only for muons above @f$8\,\mathrm{GeV}@f$.
+/// Like @ref computeEnergyLossBethe the result is the magnitude of the loss (always
+/// @f$\geq 0@f$).
+///
+/// @return Mean radiative energy loss through the slab in native energy units
 float computeEnergyLossRadiative(const MaterialSlab& slab, PdgParticle absPdg,
                                  float m, float qOverP, float absQ);
 /// Derivative of the mean radiative energy loss with respect to q/p.
@@ -147,16 +188,35 @@ float deriveEnergyLossModeQOverP(const MaterialSlab& slab, PdgParticle absPdg,
 /// @param m         Particle mass
 /// @param qOverP    Particle charge divided by absolute momentum
 /// @param absQ      Absolute particle charge
-/// @return Core width of the scattering distribution
+///
+/// The returned @f$\theta_0@f$ is the standard deviation of the central
+/// (Gaussian) part of the multiple-Coulomb-scattering angle, projected onto a
+/// plane. For all particles except electrons and positrons it is evaluated with
+/// the Highland formula @cite Highland:1975pq in the parametrisation of
+/// @cite ParticleDataGroup:2018ovx (eq. 33.15); for electrons and positrons the
+/// Rossi-Greisen form is used instead.
+///
+/// @note This is the projected (single-plane) width; the width of the polar
+///   space angle is larger by a factor @f$\sqrt{2}@f$.
+/// @return Projected scattering angle standard deviation @f$\theta_0@f$ in radians
+/// @see @ref approximateHighlandScattering for a charge- and momentum-independent
+///   approximation
 float computeMultipleScatteringTheta0(const MaterialSlab& slab,
                                       PdgParticle absPdg, float m, float qOverP,
                                       float absQ);
 
 /// Approximate the core width of the projected planar scattering distribution
-/// with highland's formula.
+/// with Highland's formula.
+///
+/// In contrast to @ref computeMultipleScatteringTheta0, this ignores the particle
+/// charge and velocity (assuming a singly-charged, ultra-relativistic particle
+/// with @f$q^2/\beta^2 = 1@f$) and does not divide by the momentum. It therefore
+/// returns @f$\theta_0 \cdot p@f$ rather than @f$\theta_0@f$ itself, which is
+/// convenient when the momentum is not yet known.
 ///
 /// @param xOverX0  The thickness of the material in radiation lengths
-/// @return         The approximate scattering angle times momentum in radians*GeV
+/// @return The projected scattering angle scaled by momentum,
+///   @f$\theta_0 \cdot p@f$, in native units (radians times momentum)
 float approximateHighlandScattering(float xOverX0);
 
 }  // namespace Acts
