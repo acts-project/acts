@@ -109,7 +109,6 @@ std::string printListing(const auto& vertices, const auto& particles) {
 
 Acts::HfOrigin HepMC3InputConverter::checkHfOrigin(
     std::shared_ptr<const HepMC3::GenParticle> particleToCheck) const {
-
   std::stack<std::shared_ptr<const HepMC3::GenParticle>> st;
   std::unordered_set<int> visited;
   st.push(particleToCheck);
