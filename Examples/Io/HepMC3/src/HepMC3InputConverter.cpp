@@ -108,7 +108,7 @@ std::string printListing(const auto& vertices, const auto& particles) {
 }  // namespace
 
 Acts::HfOrigin HepMC3InputConverter::checkHfOrigin(
-  std::shared_ptr<const HepMC3::GenParticle> particleToCheck) const {
+    std::shared_ptr<const HepMC3::GenParticle> particleToCheck) const {
 
   std::stack<std::shared_ptr<const HepMC3::GenParticle>> st;
   std::unordered_set<int> visited;
@@ -131,18 +131,21 @@ Acts::HfOrigin HepMC3InputConverter::checkHfOrigin(
     int pdgCode = std::abs(part->pid());
 
     // --- beauty PDG IDs ---
-    if (static_cast<Acts::HfOrigin>(pdgCode / 100) == Acts::HfOrigin::Bottom || 
+    if (static_cast<Acts::HfOrigin>(pdgCode / 100) == Acts::HfOrigin::Bottom ||
         static_cast<Acts::HfOrigin>(pdgCode / 1000) == Acts::HfOrigin::Bottom ||
-        (m_cfg.searchUpToHfQuark && static_cast<Acts::HfOrigin>(pdgCode) == Acts::HfOrigin::Bottom)) {
+        (m_cfg.searchUpToHfQuark &&
+         static_cast<Acts::HfOrigin>(pdgCode) == Acts::HfOrigin::Bottom)) {
       return Acts::HfOrigin::Bottom;
     }
 
     // --- charm PDG IDs ---
     if (static_cast<Acts::HfOrigin>(pdgCode / 100) == Acts::HfOrigin::Charm ||
-        static_cast<Acts::HfOrigin>(pdgCode / 1000) == Acts::HfOrigin::Charm || 
-        (m_cfg.searchUpToHfQuark && static_cast<Acts::HfOrigin>(pdgCode / 100) == Acts::HfOrigin::Charm)) {
-      isFromCharm = true; // we do not return directly because 
-                          // B -> D -> X should be tagged as from beauty and not charm
+        static_cast<Acts::HfOrigin>(pdgCode / 1000) == Acts::HfOrigin::Charm ||
+        (m_cfg.searchUpToHfQuark &&
+         static_cast<Acts::HfOrigin>(pdgCode / 100) == Acts::HfOrigin::Charm)) {
+      // we do not return directly because
+      // B -> D -> X should be tagged as from beauty and not charm
+      isFromCharm = true;
     }
 
     // go to parents
