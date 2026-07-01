@@ -125,11 +125,7 @@ enum class HadronType {
 };
 
 /// Hadron heavy-flavour origin classification
-enum class HfOrigin : std::uint8_t {
-  None = 0,
-  Charm = 4,
-  Bottom = 5
-};
+enum class HfOrigin : std::uint8_t { None = 0, Charm = 4, Bottom = 5 };
 
 /// Stream operator for HadronType
 /// @param os Output stream

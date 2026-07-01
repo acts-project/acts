@@ -137,7 +137,7 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
 
     p.setOrigParticleIdx((*m_origParticleIdx).at(i));
     p.setHfOrigin(static_cast<Acts::HfOrigin>((*m_hfOrigin).at(i)));
-    
+
     SimParticleState& initialState = p.initialState();
 
     initialState.setPosition4((*m_vx).at(i) * Acts::UnitConstants::mm,
