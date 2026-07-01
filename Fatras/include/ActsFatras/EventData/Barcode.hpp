@@ -16,6 +16,7 @@
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace ActsFatras {
 
@@ -168,6 +169,14 @@ class Barcode {
   constexpr std::array<std::uint32_t, 5> asArray() const {
     return {vertexPrimary(), vertexSecondary(), particle(), generation(),
             subParticle()};
+  }
+
+  /// @deprecated Use asArray() instead to avoid a heap allocation.
+  /// @return Vector of barcode components
+  [[deprecated("Use asArray() instead to avoid a heap allocation")]]
+  std::vector<std::uint32_t> asVector() const {
+    auto arr = asArray();
+    return std::vector<std::uint32_t>(arr.begin(), arr.end());
   }
 
   /// Create a new barcode with a different primary vertex identifier.
