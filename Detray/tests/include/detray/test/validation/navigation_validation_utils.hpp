@@ -155,7 +155,7 @@ inline auto record_propagation(
 
   /// Inspector that records all encountered surfaces
   using object_tracer_t =
-      navigation::object_tracer<intersection_t, dvector,
+      navigation::object_tracer<detector_t, dvector,
                                 navigation::status::e_on_object,
                                 navigation::status::e_on_portal>;
   /// Inspector that prints the navigator state from within the
@@ -1038,8 +1038,7 @@ inline auto print_efficiency(std::size_t n_tracks,
 /// missed surfaces for truth traces, recorded step traces, recorded material
 /// traces and integrated material
 template <typename stepper_t, typename... actor_ts, typename detector_t,
-          typename field_view_t, typename intersection_t,
-          concepts::algebra algebra_t>
+          typename field_view_t, concepts::algebra algebra_t>
 auto compare_to_navigation(
     const detray::test::navigation_validation_config<algebra_t> &cfg,
     vecmem::host_memory_resource &host_mr, const detector_t &det,
@@ -1047,8 +1046,7 @@ auto compare_to_navigation(
     const typename detector_t::geometry_context ctx,
     const std::optional<field_view_t> field_view,
     const propagation::config &prop_cfg,
-    std::vector<dvector<navigation::detail::candidate_record<intersection_t>>>
-        &truth_traces,
+    std::vector<dvector<intersection_record<detector_t>>> &truth_traces,
     const std::vector<free_track_parameters<algebra_t>> &tracks,
     dvector<typename actor_chain<actor_ts...>::state_ref_tuple> state_tuples =
         {{}},
@@ -1083,7 +1081,7 @@ auto compare_to_navigation(
   surface_stats n_miss_truth{};
 
   // Collect step and material traces for all tracks
-  std::vector<dvector<detail::step_data<algebra_t>>> step_traces{};
+  std::vector<dvector<detail::step_data<detector_t>>> step_traces{};
   std::vector<material_validator::material_record<scalar_t>> mat_records{};
   std::vector<dvector<material_validator::material_params<scalar_t>>>
       mat_traces{};

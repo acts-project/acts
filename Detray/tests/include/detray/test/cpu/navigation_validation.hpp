@@ -147,8 +147,7 @@ class navigation_validation : public test::fixture_base<> {
     detray::io::file_handle debug_file{debug_file_name, io_mode};
 
     // Keep a record of track positions and material along the track
-    dvector<dvector<navigation::detail::candidate_record<intersection_t>>>
-        recorded_traces{};
+    dvector<dvector<intersection_record<detector_t>>> recorded_traces{};
     dvector<material_validator::material_record<scalar_t>> mat_records{};
     std::vector<std::pair<trajectory_type, std::vector<intersection_t>>>
         missed_intersections{};
@@ -163,7 +162,7 @@ class navigation_validation : public test::fixture_base<> {
       // Follow the test trajectory with a track and check, if we find
       // the same volumes and distances along the way
       const auto &start = truth_trace.front();
-      const auto &track = start.track_param;
+      const auto &track = start.track_param();
       assert(!track.is_invalid());
       trajectory_type test_traj = get_parametrized_trajectory(track);
 

@@ -16,6 +16,9 @@
 #include "detray/tracks/bound_track_parameters.hpp"
 #include "detray/tracks/free_track_parameters.hpp"
 
+// Test include(s)
+#include "detray/test/utils/data_record.hpp"
+
 namespace detray {
 
 namespace detail {

@@ -26,6 +26,9 @@
 #include "detray/tracks/ray.hpp"
 #include "detray/utils/tuple_helpers.hpp"
 
+// Test include(s)
+#include "detray/test/utils/data_record.hpp"
+
 // System include(s)
 #include <iomanip>
 #include <limits>
@@ -123,7 +126,7 @@ struct aggregate_inspector {
 
 namespace navigation {
 
-namespace detail {
+/*namespace detail {
 
 /// Record of a surface intersection along a track
 template <typename intersetion_t>
@@ -162,14 +165,14 @@ struct candidate_record {
   scalar_type p_mag{1.f};
 };
 
-}  // namespace detail
+}  // namespace detail*/
 
 /// A navigation inspector that relays information about the encountered
 /// objects whenever the navigator reaches one or more status flags
-template <typename candidate_t, template <typename...> class vector_t = dvector,
+template <typename detector_t, template <typename...> class vector_t = dvector,
           status... navigation_status>
 struct object_tracer {
-  using candidate_record_t = detail::candidate_record<candidate_t>;
+  using candidate_record_t = intersection_record<detector_t>;
   using scalar_t = typename candidate_record_t::scalar_type;
 
   using view_type = dvector_view<candidate_record_t>;
