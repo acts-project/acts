@@ -20,6 +20,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include <boost/algorithm/string/trim.hpp>
+
 #include <TBranch.h>
 #include <TFile.h>
 #include <TKey.h>
@@ -225,15 +227,6 @@ std::unique_ptr<IBranchReader> dispatch(const std::string& type, Kind kind,
   return nullptr;
 }
 
-std::string trim(const std::string& s) {
-  auto begin = s.find_first_not_of(" \t");
-  if (begin == std::string::npos) {
-    return "";
-  }
-  auto end = s.find_last_not_of(" \t");
-  return s.substr(begin, end - begin + 1);
-}
-
 /// Return the first top-level template argument of a type name, e.g.
 /// "vector<float>" -> "float" and "vector<vector<int> >" -> "vector<int>".
 std::string firstTemplateArg(const std::string& s) {
@@ -253,10 +246,10 @@ std::string firstTemplateArg(const std::string& s) {
     } else if (c == '>') {
       --depth;
       if (depth == 0) {
-        return trim(s.substr(start, i - start));
+        return boost::algorithm::trim_copy(s.substr(start, i - start));
       }
     } else if (c == ',' && depth == 1) {
-      return trim(s.substr(start, i - start));
+      return boost::algorithm::trim_copy(s.substr(start, i - start));
     }
   }
   return "";
