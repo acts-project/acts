@@ -123,8 +123,8 @@ class Particle {
     m_particleId = barcode;
     return *this;
   }
-  /// Set the particle HF origin (0->none, 4->charm, 5->beauty) 
-  /// @param orig particle HF origin (0->none, 4->charm, 5->beauty) 
+  /// Set the particle HF origin (0->none, 4->charm, 5->beauty)
+  /// @param orig particle HF origin (0->none, 4->charm, 5->beauty)
   /// @return Reference to this particle in HepMC file
   Particle &setHfOrigin(Acts::HfOrigin orig) {
     m_hfOrigin = orig;
@@ -225,10 +225,10 @@ class Particle {
   /// Particle identifier within an event.
   /// @return The unique particle identifier barcode
   Barcode particleId() const { return m_particleId; }
-  /// Original particle index (to match HepMC) 
+  /// Original particle index (to match HepMC)
   /// @return The particle index
   std::uint32_t origParticleIdx() const { return m_origParticleIdx; }
-  /// Particle HF origin (0->none, 4->charm, 5->beauty) 
+  /// Particle HF origin (0->none, 4->charm, 5->beauty)
   /// @return The particle index
   Acts::HfOrigin hfOrigin() const { return m_hfOrigin; }
   /// Which type of process generated this particle.

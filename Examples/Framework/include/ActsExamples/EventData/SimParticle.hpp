@@ -131,7 +131,9 @@ class SimParticle final {
     return initialState().parentParticleId();
   }
   /// Original particle index (to match HepMC)
-  std::uint32_t origParticleIdx() const { return initialState().origParticleIdx(); }
+  std::uint32_t origParticleIdx() const {
+    return initialState().origParticleIdx();
+  }
   /// Particle HF origin (0->none, 4->charm, 5->beauty)
   Acts::HfOrigin hfOrigin() const { return initialState().hfOrigin(); }
   /// Which type of process generated this particle.
