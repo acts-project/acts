@@ -132,7 +132,9 @@ struct ScalarReader final : IBranchReader {
   TTreeReaderValue<T> value;
   ScalarReader(TTreeReader& reader, const char* name) : value(reader, name) {}
   bool valid() const override { return setupOk(value); }
-  void append(std::vector<std::byte>& out) override { appendBytes(out, *value); }
+  void append(std::vector<std::byte>& out) override {
+    appendBytes(out, *value);
+  }
 };
 
 /// Reader for a 1D array branch (`std::vector<T>` or a C-style array leaf).
