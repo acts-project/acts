@@ -1220,7 +1220,7 @@ Acts::TrackingGeometryJsonConverter::fromJson(const GeometryContext& gctx,
   }
   nlohmann::json encoded{};
   istr >> encoded;
-  return fromJson(gctx, encoded, options);
+  return fromJsonPayload(gctx, encoded, options);
 }
 std::shared_ptr<Acts::TrackingGeometry>
 Acts::TrackingGeometryJsonConverter::fromJsonPayload(
