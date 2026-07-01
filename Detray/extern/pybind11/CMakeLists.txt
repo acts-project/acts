@@ -38,8 +38,8 @@ mark_as_advanced(DETRAY_PYBIND11_SOURCE_FULL)
 FetchContent_Declare(pybind11 ${DETRAY_PYBIND11_SOURCE_FULL})
 
 # Set up its build.
-set(PYBIND11_TEST OFF)
-set(PYBIND11_INSTALL OFF)
+set(PYBIND11_TEST OFF CACHE BOOL "Turn off the pybind11 test suite build")
+set(PYBIND11_INSTALL OFF CACHE BOOL "Turn off the pybind11 installation")
 
 # Get it into the current directory.
 FetchContent_MakeAvailable(pybind11)
