@@ -481,7 +481,7 @@ endif()
 # Set up pybind11.
 option(
     DETRAY_SETUP_PYBIND11
-    "Build python bindings for all enabled components"
+    "Set up the pybind11 target(s) explicitly"
     ${DETRAY_BUILD_PYTHON_BINDINGS}
 )
 option(
