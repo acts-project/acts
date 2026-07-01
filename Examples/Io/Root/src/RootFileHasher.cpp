@@ -41,50 +41,45 @@ namespace ActsExamples {
 namespace {
 
 #if defined(ACTS_ROOT_FILE_HASHER_USE_BOOST_HASH2)
-
 constexpr std::size_t kDigestSize = 32;
+#else
+constexpr std::size_t kDigestSize = 16;
+#endif
+
 using Digest = std::array<unsigned char, kDigestSize>;
 
-/// Incremental hasher backed by Boost.Hash2 SHA-256.
+/// Incremental hasher backed by Boost.Hash2 SHA-256 (preferred) or ROOT's
+/// TMD5 (fallback for Boost < 1.86). Only the backend member and the two
+/// method bodies differ between the two configurations.
 class Hasher {
  public:
   void update(std::span<const std::byte> data) {
+#if defined(ACTS_ROOT_FILE_HASHER_USE_BOOST_HASH2)
     m_hasher.update(reinterpret_cast<const unsigned char*>(data.data()),
                     data.size());
-  }
-  Digest finalize() {
-    boost::hash2::digest<kDigestSize> result = m_hasher.result();
-    Digest digest{};
-    std::copy(result.data(), result.data() + kDigestSize, digest.begin());
-    return digest;
-  }
-
- private:
-  boost::hash2::sha2_256 m_hasher;
-};
-
 #else
-
-constexpr std::size_t kDigestSize = 16;
-using Digest = std::array<unsigned char, kDigestSize>;
-
-/// Incremental hasher backed by ROOT's TMD5 (fallback for Boost < 1.86).
-class Hasher {
- public:
-  void update(std::span<const std::byte> data) {
     m_hasher.Update(reinterpret_cast<const UChar_t*>(data.data()), data.size());
+#endif
   }
+
   Digest finalize() {
     Digest digest{};
+#if defined(ACTS_ROOT_FILE_HASHER_USE_BOOST_HASH2)
+    boost::hash2::digest<kDigestSize> result = m_hasher.result();
+    std::copy(result.data(), result.data() + kDigestSize, digest.begin());
+#else
     m_hasher.Final(digest.data());
+#endif
     return digest;
   }
 
  private:
+#if defined(ACTS_ROOT_FILE_HASHER_USE_BOOST_HASH2)
+  boost::hash2::sha2_256 m_hasher;
+#else
   TMD5 m_hasher;
-};
-
 #endif
+};
 
 /// Compute the digest of a contiguous byte buffer.
 Digest digestOf(std::span<const std::byte> data) {
