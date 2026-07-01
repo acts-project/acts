@@ -19,6 +19,7 @@
 namespace HepMC3 {
 class GenEvent;
 class GenVertex;
+class GenParticle;
 }  // namespace HepMC3
 
 namespace ActsExamples {
@@ -50,6 +51,9 @@ class HepMC3InputConverter : public IAlgorithm {
 
     /// If true, check the consistency of the generated event.
     bool checkConsistency = false;
+
+    /// Search up to quark in HF tagging
+    bool searchUpToHfQuark = false;
   };
 
   explicit HepMC3InputConverter(

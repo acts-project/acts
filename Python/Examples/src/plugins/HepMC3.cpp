@@ -93,7 +93,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsHepMC3, hepmc3) {
       HepMC3InputConverter, hepmc3, "HepMC3InputConverter", inputEvent,
       outputParticles, outputVertices, printListing, checkConsistency,
       mergePrimaries, primaryVertexSpatialThreshold, vertexSpatialThreshold,
-      mergeSecondaries);
+      mergeSecondaries, searchUpToHfQuark);
 
   {
     using enum HepMC3Util::Compression;
