@@ -57,6 +57,7 @@ EXCLUDE_FILES = (
     "odd-digi-smearing-config-notime.json",
     # TODO Mention these files somewhere?
     "codegen/src/codegen/sympy_common.py",
+    "codegen/src/codegen/detray_backend.py",
     "CompressedIO.h",
     "generate_particle_data_table.py",
     "GeometryModule.h",
@@ -77,6 +78,7 @@ EXCLUDE_FILES = (
     "Detray/codegen/detray-sympy/tests/test_matrices.py",
     # Used in traccc
     "Detray/tests/include/detray/test/utils/perigee_stopper.hpp",
+    "Detray/tests/include/detray/test/validation/propagation_validation.hpp",
     # Build-time metadata generation
     "Detray/python/detray/detectors/impl/definitions.py",
     "Detray/python/detray/detectors/impl/type_helpers.py",

@@ -1,6 +1,26 @@
-from detray_sympy.common import (
-    cxx_printer,
+"""detray C++ emission backend for the shared sympy codegen core.
+
+This module renders detray-dialect C++ from the shared symbolic machinery in
+``codegen.sympy_common``: algebra-templated, concept-constrained
+``DETRAY_HOST_DEVICE`` function signatures whose matrix entries are accessed via
+``getter::element<i, j>(var)`` and which assert the known (0/1) substructure of
+their inputs. The ACTS dialect lives alongside it as ``my_function_print`` in
+``codegen.sympy_common``; both share the same expression printing, CSE and
+ordering so the two stay in sync.
+"""
+
+from codegen.sympy_common import (
+    MyCXXCodePrinter,
+    MyCXXCodePrinterWithoutKnownAssignment,
+    getter_element_accessor,
     my_expression_print,
+)
+
+# detray-dialect printers: same core printer, but rendering matrix elements via
+# ``getter::element`` instead of flat buffer indexing.
+cxx_printer = MyCXXCodePrinter(element_accessor=getter_element_accessor)
+cxx_printer_wo_known = MyCXXCodePrinterWithoutKnownAssignment(
+    element_accessor=getter_element_accessor
 )
 
 
