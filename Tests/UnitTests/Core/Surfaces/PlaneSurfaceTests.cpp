@@ -352,9 +352,9 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   const AlignmentToPathMatrix& alignToPath =
       planeSurfaceObject->alignmentToPathDerivative(tgContext, globalPosition,
                                                     direction);
-  // The expected results
+  // The expected results (local translations along local x/y/z)
   AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
-  expAlignToPath << 1, 0, 0, 2, -1, 0;
+  expAlignToPath << 0, 0, 1, 2, -1, 0;
 
   // Check if the calculated derivative is as expected
   CHECK_CLOSE_ABS(alignToPath, expAlignToPath, 1e-10);
@@ -378,9 +378,9 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
       alignToBound.block<1, 6>(eBoundLoc0, eAlignmentCenter0);
   const AlignmentToPathMatrix alignToloc1 =
       alignToBound.block<1, 6>(eBoundLoc1, eAlignmentCenter0);
-  // The expected results
+  // The expected results (local translations along local x/y/z)
   AlignmentToPathMatrix expAlignToloc0;
-  expAlignToloc0 << 0, 0, 1, 0, 0, 2;
+  expAlignToloc0 << -1, 0, 0, 0, 0, 2;
   AlignmentToPathMatrix expAlignToloc1;
   expAlignToloc1 << 0, -1, 0, 0, 0, -1;
   // Check if the calculated derivatives are as expected
