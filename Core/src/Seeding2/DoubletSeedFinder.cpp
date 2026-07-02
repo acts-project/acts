@@ -93,6 +93,14 @@ class Impl final : public DoubletSeedFinder {
     }
 
     const SpacePointContainer2& container = candidateSps.container();
+
+    // middle space point time and distance from the interaction point, used by
+    // the time-of-flight cut below when a cut is configured and times are present
+    const bool useTimeCut =
+        std::isfinite(m_cfg.deltaTMax) && container.hasColumns(SpacePointColumns::Time);
+    const float tM = useTimeCut ? middleSp.time() : 0.0f;
+    const float LM = useTimeCut ? std::sqrt(rM * rM + zM * zM) : 0.0f;
+
     for (auto [indexO, xyO, zrO, varianceZO, varianceRO] : candidateSps.zip(
              container.xyColumn(), container.zrColumn(),
              container.varianceZColumn(), container.varianceRColumn())) {
@@ -137,6 +145,17 @@ class Impl final : public DoubletSeedFinder {
 
       if (outsideRangeCheck(deltaZ, m_cfg.deltaZMin, m_cfg.deltaZMax)) {
         continue;
+      }
+
+      // reject doublets whose time difference is incompatible with the
+      // time-of-flight expectation for a particle from the interaction point
+      if (useTimeCut) {
+        const float tO = container[indexO].time();
+        const float LO = std::sqrt(rO * rO + zO * zO);
+        const float tofResidual = (tO - tM) - (LO - LM) * m_cfg.tofInverseSpeed;
+        if (std::abs(tofResidual) > m_cfg.deltaTMax) {
+          continue;
+        }
       }
 
       // the longitudinal impact parameter zOrigin is defined as (zM - rM *

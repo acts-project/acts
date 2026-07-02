@@ -65,6 +65,16 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
  public:
   /// @brief Structure that holds configuration parameters for the seed filter algorithm
   struct Config {
+    /// Maximum allowed deviation of the time difference between a triplet's
+    /// bottom and top space points from the time-of-flight expectation for a
+    /// particle from the interaction point: |(t_top - t_bottom) - (L_top -
+    /// L_bottom) * tofInverseSpeed|, with L = sqrt(r^2 + z^2). No cut for the
+    /// default of infinity.
+    float deltaTMax = std::numeric_limits<float>::infinity();
+    /// Inverse signal speed (time per unit length) used for the time-of-flight
+    /// expectation, defaulting to 1/c. A value of zero compares the raw times.
+    float tofInverseSpeed = 1.0f / 299.792458f;
+
     /// Allowed difference in curvature (inverted seed radii) between two
     /// compatible seeds
     float deltaInvHelixDiameter = 0.00003 * (1 / UnitConstants::mm);
