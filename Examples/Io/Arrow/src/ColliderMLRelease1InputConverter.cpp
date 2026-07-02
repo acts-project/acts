@@ -25,6 +25,7 @@
 #include <numeric>
 #include <stdexcept>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -273,6 +274,22 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
   const arrow::Table& hitsTable = *m_inputHits(ctx).table();
 
   // ------------------------------------------------------------------
+  // 0. Build set of particle IDs that have at least one hit (optional).
+  //    The particle_id in the hits table is the row index in the particles
+  //    table. Pre-scanning here lets the particle loop skip unreferenced
+  //    particles without a second pass.
+  // ------------------------------------------------------------------
+  std::unordered_set<std::uint64_t> particleIdsWithHits;
+  if (!m_cfg.keepParticlesWithoutHits) {
+    auto [hpOff, nHitsForFilter] = rowBounds(hitsTable, "particle_id");
+    auto hpidFilterArr =
+        colValues<arrow::UInt64Array>(hitsTable, "particle_id");
+    for (std::int64_t i = 0; i < nHitsForFilter; ++i) {
+      particleIdsWithHits.insert(hpidFilterArr->Value(hpOff + i));
+    }
+  }
+
+  // ------------------------------------------------------------------
   // 1. Parse particles table → SimParticleContainer + barcode index
   // ------------------------------------------------------------------
   auto [pOff, nParticles] = rowBounds(particleTable, "particle_id");
@@ -306,6 +323,11 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
                         .withParticle(static_cast<std::uint64_t>(i))
                         .withGeneration(isPrimary ? 0u : 1u);
     barcodes[static_cast<std::size_t>(i)] = bc;
+
+    if (!m_cfg.keepParticlesWithoutHits &&
+        !particleIdsWithHits.count(static_cast<std::uint64_t>(i))) {
+      continue;
+    }
 
     const double mass = static_cast<double>(massArr->Value(pOff + i));
     const double charge = static_cast<double>(chargeArr->Value(pOff + i));
