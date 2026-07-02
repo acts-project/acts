@@ -70,6 +70,10 @@ function(detray_pybind_generate_stubs _module _target)
     add_custom_target(${_target}Stubs ALL DEPENDS ${_stub_file})
 endfunction()
 
+if(DETRAY_BUILD_PYTHON_BINDINGS)
+    add_subdirectory(Examples)
+endif()
+
 # Install the generated stub files alongside the package.
 if(DETRAY_GENERATE_PYTHON_STUBS)
     install(
