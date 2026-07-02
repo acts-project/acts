@@ -34,6 +34,7 @@ def runGnnMetricLearning(
     device=None,
     outputRoot=False,
     outputCsv=False,
+    shrinkNodes=False,
     s=None,
 ):
     s = runDigitization(
@@ -150,6 +151,7 @@ def runGnnMetricLearning(
         featureScales=featureScales,
         outputDirRoot=outputDir if outputRoot else None,
         device=device,
+        shrinkNodes=shrinkNodes,
         logLevel=acts.logging.INFO,
     )
 
