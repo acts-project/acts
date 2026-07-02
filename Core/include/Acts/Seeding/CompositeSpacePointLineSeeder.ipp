@@ -282,7 +282,7 @@ CompositeSpacePointLineSeeder::nextSeed(
 
   Selector_t<UncalibCont_t> selector{};
   selector.template connect<&Delegate_t::goodCandidate>(&state);
-  /// The layer hast not yet been initialized
+  /// The layer has not yet been initialized
   if (!state.m_upperLayer || !state.m_lowerLayer) {
     state.m_nStrawCut = m_cfg.nStrawHitCut;
     /// Check whether the seeding can start with the external pattern
@@ -455,7 +455,7 @@ CompositeSpacePointLineSeeder::buildSeed(
   const auto& lowerHit =
       *strawLayers.at(state.m_lowerLayer.value()).at(state.m_lowerHitIndex);
   const auto ambi{static_cast<TangentAmbi>(state.m_signComboIndex)};
-  ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - " << toString(ambi)
+  ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - " << ambi
                         << "\n   Top seed hit: " << Acts::toString(upperHit)
                         << "\n   Bottom seed hit:" << Acts::toString(lowerHit)
                         << ".");
