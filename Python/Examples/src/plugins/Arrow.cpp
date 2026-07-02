@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Io/Arrow/ArrowCaloHitOutputConverter.hpp"
 #include "ActsExamples/Io/Arrow/ArrowParticleOutputConverter.hpp"
 #include "ActsExamples/Io/Arrow/ArrowSimHitOutputConverter.hpp"
 #include "ActsExamples/Io/Arrow/ArrowTrackOutputConverter.hpp"
@@ -101,4 +102,12 @@ Create a C++ detector resolver from a volume-id lookup map.
 This avoids per-hit Python callback overhead by baking the mapping into
 a C++ lambda once at configuration time.
 )doc");
+
+  {
+    auto [alg, c] =
+        declareAlgorithm<ArrowCaloHitOutputConverter, ArrowOutputConverter>(
+            m, "ArrowCaloHitOutputConverter");
+    ACTS_PYTHON_STRUCT(c, inputCaloHits, outputTable, ecalEnergyThreshold,
+                       hcalEnergyThreshold, cellThreshold);
+  }
 }
