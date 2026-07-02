@@ -74,6 +74,41 @@ void addGenerators(py::module& mex) {
                        printListing);
   }
 
+  py::class_<CartesianVertexPositionGenerator,
+             PrimaryVertexPositionGenerator,
+             std::shared_ptr<CartesianVertexPositionGenerator>>(
+      mex, "CartesianVertexPositionGenerator")
+      .def(py::init<>())
+      .def(py::init([](double xMean, double xStdDev, double yMean,
+                       double yStdDev, double zMean,
+                       double zStdDev, double tMean, double tStdDev) {
+             CartesianVertexPositionGenerator g;
+             g.xMean = xMean;
+             g.xStdDev = xStdDev;
+             g.yMean = yMean;
+             g.yStdDev = yStdDev;
+             g.zMean = zMean;
+             g.zStdDev = zStdDev;
+             g.tMean = tMean;
+             g.tStdDev = tStdDev;
+             return g;
+           }),
+           py::arg("xMean"), py::arg("xStdDev"), py::arg("yMean"),
+           py::arg("yStdDev"), py::arg("zMean"),
+           py::arg("zStdDev"), py::arg("tMean"), py::arg("tStdDev"))
+      .def_readwrite("xMean", &CartesianVertexPositionGenerator::xMean)
+      .def_readwrite("xStdDev",
+                     &CartesianVertexPositionGenerator::xStdDev)
+      .def_readwrite("yMean", &CartesianVertexPositionGenerator::yMean)
+      .def_readwrite("yStdDev",
+                     &CartesianVertexPositionGenerator::yStdDev)
+      .def_readwrite("zMean", &CartesianVertexPositionGenerator::zMean)
+      .def_readwrite("zStdDev",
+                     &CartesianVertexPositionGenerator::zStdDev)
+      .def_readwrite("tMean", &CartesianVertexPositionGenerator::tMean)
+      .def_readwrite("tStdDev",
+                     &CartesianVertexPositionGenerator::tStdDev);
+
   py::class_<GaussianPrimaryVertexPositionGenerator,
              PrimaryVertexPositionGenerator,
              std::shared_ptr<GaussianPrimaryVertexPositionGenerator>>(

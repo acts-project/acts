@@ -99,6 +99,34 @@ struct GaussianDisplacedVertexPositionGenerator
   }
 };
 
+struct CartesianVertexPositionGenerator
+    : public PrimaryVertexPositionGenerator {
+  double xMean = 0;
+  double xStdDev = 1;
+  double yMean = 0;
+  double yStdDev = 1;
+  double zMean = 0;
+  double zStdDev = 1;
+  double tMean = 0;
+  double tStdDev = 1;
+
+  Acts::Vector4 operator()(RandomEngine& rng, std::size_t /*eventNumber*/) const override {
+    
+
+    std::normal_distribution xDist(xMean, xStdDev);
+    std::normal_distribution yDist(yMean, yStdDev);
+    std::normal_distribution zDist(zMean, zStdDev);
+    std::normal_distribution tDist(tMean, tStdDev);
+
+    // Generate random values from normal distributions
+    double x = xDist(rng);
+    double y = yDist(rng);  // Random angle in radians
+    double z = zDist(rng);
+    double t = tDist(rng);
+    return Acts::Vector4(x, y, z, t);
+  }
+};
+
 struct UniformPrimaryVertexPositionGenerator
     : public PrimaryVertexPositionGenerator {
   /// Vertex position and time minimum.

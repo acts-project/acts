@@ -10,6 +10,7 @@
 #include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/CosmicGridTripletSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/MeasurementFilterAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
@@ -54,6 +55,20 @@ void addTrackFinding(py::module& mex) {
       zBinNeighborsBottom, numPhiNeighbors, zBinEdges, zBinsCustomLooping,
       rMinMiddle, rMaxMiddle, useVariableMiddleSPRange, rRangeMiddleSP,
       deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange, deltaZMin, deltaZMax,
+      interactionPointCut, collisionRegionMin, collisionRegionMax,
+      helixCutTolerance, sigmaScattering, radLengthPerSeed, toleranceParam,
+      deltaInvHelixDiameter, compatSeedWeight, impactWeightFactor,
+      zOriginWeightFactor, maxSeedsPerSpM, compatSeedLimit, seedWeightIncrement,
+      numSeedIncrement, seedConfirmation, centralSeedConfirmationRange,
+      forwardSeedConfirmationRange, maxSeedsPerSpMConf,
+      maxQualitySeedsPerSpMConf, useDeltaRinsteadOfTopRadius, useExtraCuts);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      CosmicGridTripletSeedingAlgorithm, mex, "CosmicGridTripletSeedingAlgorithm",
+      inputSpacePoints, outputSeeds, bFieldInZ, minPt, cotThetaMax, impactMax,
+      deltaRMin, deltaRMax, deltaRMinTop, deltaRMaxTop, deltaRMinBottom,
+      deltaRMaxBottom, xMin, xMax, yMin, yMax, zMin, zMax, xNbins, yNbins, zNbins, zBinNeighborsTop,
+      zBinNeighborsBottom, deltaZMin, deltaZMax,
       interactionPointCut, collisionRegionMin, collisionRegionMax,
       helixCutTolerance, sigmaScattering, radLengthPerSeed, toleranceParam,
       deltaInvHelixDiameter, compatSeedWeight, impactWeightFactor,
