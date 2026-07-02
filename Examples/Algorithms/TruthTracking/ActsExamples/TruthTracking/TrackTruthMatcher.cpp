@@ -13,9 +13,9 @@
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
-#include <map>
 #include <optional>
 #include <stdexcept>
+#include <unordered_map>
 #include <vector>
 
 namespace ActsExamples {
@@ -59,7 +59,7 @@ ProcessCode TrackTruthMatcher::execute(const AlgorithmContext& ctx) const {
 
   // TODO this may be computed in a separate algorithm
   // TODO can we wire this through?
-  std::map<SimBarcode, std::size_t> particleTruthHitCount;
+  std::unordered_map<SimBarcode, std::size_t> particleTruthHitCount;
   for (const auto& [_, pid] : hitParticlesMap) {
     particleTruthHitCount[pid]++;
   }
