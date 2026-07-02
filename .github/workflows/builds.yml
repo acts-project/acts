@@ -27,13 +27,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    container: ghcr.io/acts-project/ubuntu2404:85
+    container: ghcr.io/acts-project/ubuntu2404:87
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           lfs: true
           persist-credentials: false
@@ -129,13 +129,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    container: ghcr.io/acts-project/ubuntu2404:85
+    container: ghcr.io/acts-project/ubuntu2404:87
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
 
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           lfs: true
           persist-credentials: false
@@ -171,11 +171,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    container: ghcr.io/acts-project/ubuntu2404:85
+    container: ghcr.io/acts-project/ubuntu2404:87
     needs: [linux_ubuntu]
 
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           lfs: true
           persist-credentials: false
@@ -256,13 +256,13 @@ jobs:
           - image: ubuntu2404_clang22
             std: 23
             cxx: clang++-22
-    container: ghcr.io/acts-project/${{ matrix.image }}:85
+    container: ghcr.io/acts-project/${{ matrix.image }}:86
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           lfs: true
           persist-credentials: false
@@ -346,7 +346,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           lfs: true
           persist-credentials: false
@@ -433,12 +433,12 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           path: acts
           persist-credentials: false
 
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: eic/EICrecon
           path: EICrecon
@@ -554,11 +554,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           path: acts
           persist-credentials: false
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: key4hep/k4ActsTracking
           path: k4ActsTracking
@@ -636,10 +636,10 @@ jobs:
     permissions:
       contents: read
     needs: [linux_ubuntu]
-    container: ghcr.io/acts-project/ubuntu2404:85
+    container: ghcr.io/acts-project/ubuntu2404:87
 
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
 

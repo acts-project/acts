@@ -135,12 +135,14 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGnn, gnn) {
                      [](std::shared_ptr<GraphConstructionBase> g,
                         std::vector<std::shared_ptr<EdgeClassificationBase>> e,
                         std::shared_ptr<TrackBuildingBase> t,
-                        Logging::Level lvl) {
+                        Logging::Level lvl, bool shrinkNodes) {
                        return std::make_shared<Class>(
-                           g, e, t, getDefaultLogger("MetricLearning", lvl));
+                           g, e, t, getDefaultLogger("MetricLearning", lvl),
+                           shrinkNodes);
                      }),
                  py::arg("graphConstructor"), py::arg("edgeClassifiers"),
-                 py::arg("trackBuilder"), py::arg("level"))
+                 py::arg("trackBuilder"), py::arg("level"),
+                 py::arg("shrinkNodes") = false)
             .def("run", &GnnPipeline::run, py::arg("features"),
                  py::arg("moduleIds"), py::arg("spacepoints"),
                  py::arg("device") = Device::Cuda(0),

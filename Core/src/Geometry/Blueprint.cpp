@@ -14,6 +14,7 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/PadBlueprintNode.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Geometry/detail/AlignablePortalVisitor.hpp"
@@ -146,115 +147,19 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
     throw std::logic_error("Root node must have exactly one child");
   }
 
-  auto &child = children().at(0);
+  auto child = childPtr()[0];
+  clearChildren();
 
   ACTS_DEBUG(prefix() << "Executing building on tree");
-  Volume &topVolume = child.build(options, gctx, logger);
-  const auto &bounds = topVolume.volumeBounds();
 
-  std::stringstream ss;
-  bounds.toStream(ss);
-  ACTS_DEBUG(prefix() << "have top volume: " << ss.str() << "\n"
-                      << topVolume.localToGlobalTransform(gctx).matrix());
+  auto autoSizingNode = std::make_shared<Acts::Experimental::PadBlueprintNode>(
+      "World", m_cfg.envelope);
 
-  std::unique_ptr<TrackingVolume> world;
-  static const std::string worldName = "World";
+  autoSizingNode->addChild(std::move(child));
 
-  if (const auto *cyl = dynamic_cast<const CylinderVolumeBounds *>(&bounds);
-      cyl != nullptr) {
-    ACTS_VERBOSE(prefix() << "Expanding cylinder bounds");
-    using enum CylinderVolumeBounds::BoundValues;
+  autoSizingNode->build(options, gctx, logger);
 
-    // Make a copy that we'll modify
-    auto newBounds = std::make_shared<CylinderVolumeBounds>(*cyl);
-
-    const auto &zEnv = m_cfg.envelope[AxisZ];
-    if (zEnv[0] != zEnv[1]) {
-      ACTS_ERROR(
-          prefix() << "Root node cylinder envelope for z must be symmetric");
-      throw std::logic_error(
-          "Root node cylinder envelope for z must be "
-          "symmetric");
-    }
-
-    const auto &rEnv = m_cfg.envelope[AxisR];
-
-    newBounds->set({
-        {eHalfLengthZ, newBounds->get(eHalfLengthZ) + zEnv[0]},
-        {eMinR, std::max(0.0, newBounds->get(eMinR) - rEnv[0])},
-        {eMaxR, newBounds->get(eMaxR) + rEnv[1]},
-    });
-
-    ACTS_DEBUG(prefix() << "Applied envelope to cylinder: Z=" << zEnv[0]
-                        << ", Rmin=" << rEnv[0] << ", Rmax=" << rEnv[1]);
-
-    world =
-        std::make_unique<TrackingVolume>(topVolume.localToGlobalTransform(gctx),
-                                         std::move(newBounds), worldName);
-
-    // Need one-sided portal shell that connects outwards to nullptr
-    SingleCylinderPortalShell worldShell{gctx, *world};
-    worldShell.applyToVolume();
-
-  } else if (const auto *box =
-                 dynamic_cast<const CuboidVolumeBounds *>(&bounds);
-             box != nullptr) {
-    ACTS_VERBOSE(prefix() << "Expanding cuboid bounds");
-    // Make a copy that we'll modify
-    auto newBounds = std::make_shared<CuboidVolumeBounds>(*box);
-
-    // Get the current half lengths
-    double halfX = newBounds->get(CuboidVolumeBounds::eHalfLengthX);
-    double halfY = newBounds->get(CuboidVolumeBounds::eHalfLengthY);
-    double halfZ = newBounds->get(CuboidVolumeBounds::eHalfLengthZ);
-
-    // Apply envelope to each dimension
-    const auto &xEnv = m_cfg.envelope[AxisX];
-    const auto &yEnv = m_cfg.envelope[AxisY];
-    const auto &zEnv = m_cfg.envelope[AxisZ];
-
-    // Check if envelopes are symmetric for all dimensions
-    if (xEnv[0] != xEnv[1]) {
-      ACTS_ERROR(
-          prefix() << "Root node cuboid envelope for X must be symmetric");
-      throw std::logic_error(
-          "Root node cuboid envelope for X must be symmetric");
-    }
-
-    if (yEnv[0] != yEnv[1]) {
-      ACTS_ERROR(
-          prefix() << "Root node cuboid envelope for Y must be symmetric");
-      throw std::logic_error(
-          "Root node cuboid envelope for Y must be symmetric");
-    }
-
-    if (zEnv[0] != zEnv[1]) {
-      ACTS_ERROR(
-          prefix() << "Root node cuboid envelope for Z must be symmetric");
-      throw std::logic_error(
-          "Root node cuboid envelope for Z must be symmetric");
-    }
-
-    newBounds->set({
-        {CuboidVolumeBounds::eHalfLengthX, halfX + xEnv[0]},
-        {CuboidVolumeBounds::eHalfLengthY, halfY + yEnv[0]},
-        {CuboidVolumeBounds::eHalfLengthZ, halfZ + zEnv[0]},
-    });
-
-    ACTS_DEBUG(prefix() << "Applied envelope to cuboid: X=" << xEnv[0]
-                        << ", Y=" << yEnv[0] << ", Z=" << zEnv[0]);
-
-    world =
-        std::make_unique<TrackingVolume>(topVolume.localToGlobalTransform(gctx),
-                                         std::move(newBounds), worldName);
-
-    // Need one-sided portal shell that connects outwards to nullptr
-    SingleCuboidPortalShell worldShell{gctx, *world};
-    worldShell.applyToVolume();
-
-  } else {
-    throw std::logic_error{"Unsupported volume bounds type"};
-  }
+  auto world = autoSizingNode->trackingVolume();
 
   ACTS_DEBUG(prefix() << "New root volume bounds are: "
                       << world->volumeBounds());
@@ -262,19 +167,14 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   world->setNavigationPolicy(std::make_unique<Acts::TryAllNavigationPolicy>(
       gctx, *world, logger, Acts::TryAllNavigationPolicy::Config{}));
 
-  auto &shell = child.connect(options, gctx, logger);
-
-  // Composite of trivial will not be converted to grid like this
-  // Performance impact should be negligible since it's a rare case, but might
-  // want to change
-  shell.fill(*world);
+  autoSizingNode->connect(options, gctx, logger);
 
   if (m_cfg.boundDeduplication) {
     ACTS_DEBUG("Deduplicate equivalent bounds");
     detail::BoundDeduplicator deduplicator{};
     world->apply(deduplicator);
   }
-  child.finalize(options, gctx, *world, logger);
+  autoSizingNode->finalize(options, gctx, *world, logger);
 
   std::set<std::string, std::less<>> volumeNames;
   std::array<const TrackingVolume *, GeometryIdentifier::getMaxVolume()>
@@ -314,7 +214,8 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   world->apply(alignPortals);
 
   return std::make_unique<TrackingGeometry>(
-      std::move(world), nullptr, GeometryIdentifierHook{}, logger, false);
+      std::shared_ptr<TrackingVolume>(autoSizingNode->releaseVolume()), nullptr,
+      GeometryIdentifierHook{}, logger, false);
 }
 
 }  // namespace Acts::Experimental

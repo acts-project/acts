@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Propagator/PropagatorState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -37,7 +38,7 @@ struct SurfaceSelector {
   ///
   /// @param surface is the test surface
   /// @return true if surface meets selection criteria
-  bool operator()(const Acts::Surface& surface) const {
+  bool operator()(const Surface& surface) const {
     if (selectSensitive && surface.isSensitive()) {
       return true;
     }
@@ -118,6 +119,60 @@ struct SurfaceCollector {
       surface_hit.direction = stepper.direction(state.stepping);
       // Save if in the result
       result.collected.push_back(surface_hit);
+      // Screen output
+      ACTS_VERBOSE("Collect surface  " << currentSurface->geometryId());
+    }
+
+    return {};
+  }
+};
+
+/// Collector of the bound track parameters. Every time when the
+/// propagator reaches a surface, and the surface passes the selection,
+/// the @ref BoundTrackParameters are recorded on this surface.
+/// @tparam Selector: Any surface selector class implementation
+///                   to select the parameters on surface for record
+template <typename Selector = SurfaceSelector>
+struct BoundParameterRecorder {
+  /// The selector used for this surface
+  Selector selector;
+
+  /// Type alias for collector result type
+  using result_type = std::vector<BoundTrackParameters>;
+
+  /// Collector action for the ActionList of the Propagator
+  /// It checks if the propagator state has a current surface,
+  /// in which case the action is performed:
+  /// - it records the bound track parameters
+  ///
+  /// @tparam propagator_state_t is the type of Propagator state
+  /// @tparam stepper_t Type of the stepper used for the propagation
+  /// @tparam navigator_t Type of the navigator used for the propagation
+  ///
+  /// @param [in,out] state is the mutable stepper state object
+  /// @param [in] stepper The stepper in use
+  /// @param [in] navigator The navigator in use
+  /// @param [in,out] result is the mutable result object
+  /// @param logger a logger instance
+  /// @return Result indicating success or failure
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& navigator, result_type& result,
+                   const Logger& logger) const {
+    if (state.stage == PropagatorStage::postPropagation) {
+      return {};
+    }
+
+    auto currentSurface = navigator.currentSurface(state.navigation);
+
+    // The current surface has been assigned by the navigator
+    if (currentSurface && selector(*currentSurface)) {
+      auto res = stepper.boundState(state.stepping, *currentSurface);
+      if (res.ok()) {
+        result.emplace_back(std::get<0>(*res));
+      }
+
       // Screen output
       ACTS_VERBOSE("Collect surface  " << currentSurface->geometryId());
     }

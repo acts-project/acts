@@ -18,7 +18,7 @@ babel==2.18.0
     # via sphinx
 breathe==4.36.0
     # via -r docs/old/requirements.in
-certifi==2026.5.20
+certifi==2026.6.17
     # via requests
 cffi==2.0.0
     # via cryptography
@@ -36,7 +36,7 @@ frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
-fsspec==2026.4.0
+fsspec==2026.6.0
     # via -r docs/old/requirements.in
 gidgethub==5.4.0
     # via -r docs/old/requirements.in
@@ -125,7 +125,7 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 toml==0.10.2
     # via -r docs/old/requirements.in
-typer==0.26.7
+typer==0.26.8
     # via -r docs/old/requirements.in
 typing-extensions==4.15.0
     # via

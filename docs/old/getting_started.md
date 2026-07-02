@@ -152,7 +152,7 @@ docker search --list-tags ghcr.io/acts-project/ubuntu2404
 The following command then downloads a stable tag of the `ubuntu2404` image:
 
 ```console
-docker pull ghcr.io/acts-project/ubuntu2404:83
+docker pull ghcr.io/acts-project/ubuntu2404:87
 ```
 
 This should print the image id as part of the output. You can also find out the
