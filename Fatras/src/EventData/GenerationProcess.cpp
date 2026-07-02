@@ -26,6 +26,10 @@ std::ostream &operator<<(std::ostream &os, GenerationProcess processType) {
       return (os << "bremsstrahlung");
     case eNuclearInteraction:
       return (os << "nuclear interaction");
+    case eIonisation:
+      return (os << "ionisation (delta-ray)");
+    case eOther:
+      return (os << "other");
     default:
       return (os << static_cast<std::uint32_t>(processType));
   }
