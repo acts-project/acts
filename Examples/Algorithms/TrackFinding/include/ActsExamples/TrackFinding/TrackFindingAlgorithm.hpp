@@ -62,10 +62,13 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   };
 
   /// Create the track finder function implementation.
-  ///
-  /// The magnetic field is intentionally given by-value since the variant
-  /// contains shared_ptr anyway.
   static std::shared_ptr<TrackFinderFunction> makeTrackFinderFunction(
+      std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+      const Acts::Logger& logger);
+
+  /// Create the bremstrahlung track finder function implementation.
+  static std::shared_ptr<TrackFinderFunction> makeBremTrackFinderFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
       const Acts::Logger& logger);
@@ -88,6 +91,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
     /// Type erased track finder function.
     std::shared_ptr<TrackFinderFunction> findTracks;
+    /// Type erased track finder with brem recovery function.
+    std::shared_ptr<TrackFinderFunction> findTracksBrem;
     /// CKF measurement selector config
     Acts::MeasurementSelector::Config measurementSelectorCfg;
     /// Track selector config
