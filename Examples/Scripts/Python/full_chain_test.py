@@ -306,7 +306,7 @@ def full_chain(args):
         if args.loglevel <= 2:
             logger.info(f"Load Open Data Detector from {geoDir.resolve()}")
         if args.digi_config is None:
-            args.digi_config = actsDir / "Examples/Configs/odd-digi-smearing-config.json"
+            args.digi_config = actsDir / "Examples/Configs/odd-digi-geometric-config.json"
         seedingConfigFile = actsDir / "Examples/Configs/odd-seeding-config.json"
         if args.material_config is None:
             args.material_config = geoDir / "data/odd-material-maps.root"

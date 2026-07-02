@@ -251,7 +251,7 @@ if __name__ == "__main__":
     )
     assert srcdir.exists(), f"File not found: {stripGeometrySelection}"
 
-    digiConfigFile = srcdir / "Examples/Configs/odd-digi-smearing-config.json"
+    digiConfigFile = srcdir / "Examples/Configs/odd-digi-geometric-config.json"
     assert digiConfigFile.exists(), f"File not found: {digiConfigFile}"
 
     # Model paths from MODEL_STORAGE environment variable

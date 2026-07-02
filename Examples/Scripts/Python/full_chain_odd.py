@@ -176,7 +176,7 @@ oddMaterialMap = (
 oddDigiConfig = (
     args.digi_config
     if args.digi_config
-    else actsDir / "Examples/Configs/odd-digi-smearing-config.json"
+    else actsDir / "Examples/Configs/odd-digi-geometric-config.json"
 )
 
 oddSeedingSel = actsDir / "Examples/Configs/odd-seeding-config.json"

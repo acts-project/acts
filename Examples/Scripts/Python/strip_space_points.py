@@ -160,7 +160,7 @@ if "__main__" == __name__:
     detector = getOpenDataDetector()
     trackingGeometry = detector.trackingGeometry()
     digiConfigFile = (
-        getOpenDataDetectorDirectory() / "config/odd-digi-smearing-config.json"
+        getOpenDataDetectorDirectory() / "config/odd-digi-geometric-config.json"
     )
 
     geoSelection = srcdir / "Examples/Configs/odd-strip-spacepoint-selection.json"
