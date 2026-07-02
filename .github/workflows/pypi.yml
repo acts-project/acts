@@ -14,7 +14,7 @@ on:
 env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_KEY_SUFFIX: r2
-  SETUP_CMD: "bash {package}/CI/dependencies/setup.sh -t v19.0.0 -d deps -e env.sh"
+  SETUP_CMD: "bash {package}/CI/dependencies/setup.sh -t v23.2.0 -d deps -e env.sh"
 
 permissions: {}
 
