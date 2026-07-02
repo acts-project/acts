@@ -60,7 +60,10 @@ void addTrackFinding(py::module& mex) {
       zOriginWeightFactor, maxSeedsPerSpM, compatSeedLimit, seedWeightIncrement,
       numSeedIncrement, seedConfirmation, centralSeedConfirmationRange,
       forwardSeedConfirmationRange, maxSeedsPerSpMConf,
-      maxQualitySeedsPerSpMConf, useDeltaRinsteadOfTopRadius, useExtraCuts);
+      maxQualitySeedsPerSpMConf, useDeltaRinsteadOfTopRadius,
+      useTimeCutMiddleBottomDoubletFinder, timeCoffMiddleBottomDoubletFinder,
+      useTimeCutMiddleTopDoubletFinder, timeCoffMiddleTopDoubletFinder,
+      useTimeCutTripletFilter, timeCoffTripletFilter, useExtraCuts);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       OrthogonalTripletSeedingAlgorithm, mex,

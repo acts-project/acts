@@ -52,6 +52,10 @@ class Impl final : public DoubletSeedFinder {
     const float rM = middleSp.zr()[1];
     const float varianceZM = middleSp.varianceZ();
     const float varianceRM = middleSp.varianceR();
+    const float tM = middleSp.time();
+    const float varianceTM = middleSp.varianceT();
+    const float t0M =
+        tM - std::sqrt(rM * rM + zM * zM) / Acts::PhysicalConstants::c;
 
     // equivalent to impactMax / (rM * rM);
     const float vIPAbs = impactMax * middleSpInfo.uIP2;
@@ -93,13 +97,25 @@ class Impl final : public DoubletSeedFinder {
     }
 
     const SpacePointContainer2& container = candidateSps.container();
-    for (auto [indexO, xyO, zrO, varianceZO, varianceRO] : candidateSps.zip(
-             container.xyColumn(), container.zrColumn(),
-             container.varianceZColumn(), container.varianceRColumn())) {
+    for (auto [indexO, xyO, zrO, varianceZO, varianceRO, timeO, varianceTO] :
+         candidateSps.zip(container.xyColumn(), container.zrColumn(),
+                          container.varianceZColumn(),
+                          container.varianceRColumn(), container.timeColumn(),
+                          container.varianceTColumn())) {
       const float xO = xyO[0];
       const float yO = xyO[1];
       const float zO = zrO[0];
       const float rO = zrO[1];
+      const float t0O =
+          timeO - std::sqrt(rO * rO + zO * zO) / Acts::PhysicalConstants::c;
+
+      if (m_cfg.applyTimeCut && (!std::isnan(timeO) && !std::isnan(tM))) {
+        const float deltaT0 = std::abs(t0O - t0M);
+        const float sigmaT0 = std::sqrt(varianceTM + varianceTO);
+        if (deltaT0 > m_cfg.timeCutCoff * sigmaT0) {
+          continue;
+        }
+      }
 
       float deltaR = 0;
       if constexpr (isBottomCandidate) {
