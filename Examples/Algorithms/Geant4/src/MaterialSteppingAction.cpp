@@ -76,10 +76,26 @@ void MaterialSteppingAction::UserSteppingAction(const G4Step* stepPtr) {
     }
   }
 
+  // Element vector and Fraction
+  std::vector<unsigned int> zVec;
+  std::vector<float> fracVec;
+  if (m_cfg.recordElementFractions) {
+    if (nElements == 1) {
+      zVec.push_back(static_cast<unsigned int>(material.GetZ()));
+      fracVec.push_back(1.0f);
+    } else {
+      for (std::size_t i = 0; i < nElements; i++) {
+        zVec.push_back(static_cast<unsigned int>(elements->at(i)->GetZ()));
+        fracVec.push_back(static_cast<float>(fraction[i]));
+      }
+    }
+  }
+
   // Construct passed material slab for the step
   const Acts::MaterialSlab slab(
       Acts::Material::fromMassDensity(X0, L0, Ar, Z, rho),
-      convertLengthToActs * step.GetStepLength());
+      convertLengthToActs * step.GetStepLength(), std::move(zVec),
+      std::move(fracVec));
 
   // Create the RecordedMaterialSlab
   Acts::MaterialInteraction mInteraction;
@@ -89,20 +105,6 @@ void MaterialSteppingAction::UserSteppingAction(const G4Step* stepPtr) {
       convertDirection(step.GetPreStepPoint()->GetMomentum()).normalized();
   mInteraction.materialSlab = slab;
   mInteraction.pathCorrection = step.GetStepLength() * convertLengthToActs;
-
-  if (m_cfg.recordElementFractions) {
-    if (nElements == 1) {
-      mInteraction.elementZ.push_back(
-          static_cast<unsigned int>(material.GetZ()));
-      mInteraction.elementFrac.push_back(1.0f);
-    } else {
-      for (std::size_t i = 0; i < nElements; i++) {
-        mInteraction.elementZ.push_back(
-            static_cast<unsigned int>(elements->at(i)->GetZ()));
-        mInteraction.elementFrac.push_back(static_cast<float>(fraction[i]));
-      }
-    }
-  }
 
   assert(step.GetTrack() != nullptr);
   const G4Track& track = *step.GetTrack();

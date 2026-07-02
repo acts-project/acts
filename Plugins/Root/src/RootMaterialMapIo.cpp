@@ -145,6 +145,7 @@ void RootMaterialMapIo::write(TFile& rFile,
   for (const auto& [geoID, sMaterial] : surfaceMaterials) {
     write(rFile, geoID, *sMaterial, options);
   }
+  rFile.cd();
   if (m_hTree != nullptr) {
     m_hTree->Write();
   }
@@ -177,6 +178,13 @@ void RootMaterialMapIo::connectForRead(TTree& rTree,
   rTree.SetBranchAddress(m_cfg.aHistName.c_str(), &treePayload.hA);
   rTree.SetBranchAddress(m_cfg.zHistName.c_str(), &treePayload.hZ);
   rTree.SetBranchAddress(m_cfg.rhoHistName.c_str(), &treePayload.hRho);
+  if (rTree.GetBranch(m_cfg.elementZHistName.c_str()) != nullptr &&
+      rTree.GetBranch(m_cfg.elementFracHistName.c_str()) != nullptr) {
+    rTree.SetBranchAddress(m_cfg.elementZHistName.c_str(),
+                           &treePayload.hElementZ);
+    rTree.SetBranchAddress(m_cfg.elementFracHistName.c_str(),
+                           &treePayload.hElementFrac);
+  }
 }
 
 void RootMaterialMapIo::fillMaterialSlab(MaterialTreePayload& payload,
@@ -187,6 +195,8 @@ void RootMaterialMapIo::fillMaterialSlab(MaterialTreePayload& payload,
   payload.hA = materialSlab.material().Ar();
   payload.hZ = materialSlab.material().Z();
   payload.hRho = materialSlab.material().massDensity();
+  payload.hElementZ = materialSlab.elementZ();
+  payload.hElementFrac = materialSlab.elementFrac();
 }
 
 void RootMaterialMapIo::fillBinnedSurfaceMaterial(
@@ -251,6 +261,12 @@ void RootMaterialMapIo::fillBinnedSurfaceMaterial(
                         static_cast<float>(payload.index));
       payload.index++;
       fillMaterialSlab(payload, mat);
+      if (!m_elementBranchesCreated && !payload.hElementZ.empty()) {
+        m_gTree->Branch(m_cfg.elementZHistName.c_str(), &payload.hElementZ);
+        m_gTree->Branch(m_cfg.elementFracHistName.c_str(),
+                        &payload.hElementFrac);
+        m_elementBranchesCreated = true;
+      }
       m_gTree->Fill();
     }
   }
@@ -278,7 +294,9 @@ TrackingGeometryMaterial RootMaterialMapIo::read(TFile& rFile,
                                     m_homogenousMaterialTreePayload.hA,
                                     m_homogenousMaterialTreePayload.hZ,
                                     m_homogenousMaterialTreePayload.hRho),
-          m_homogenousMaterialTreePayload.ht);
+          m_homogenousMaterialTreePayload.ht,
+          m_homogenousMaterialTreePayload.hElementZ,
+          m_homogenousMaterialTreePayload.hElementFrac);
       auto homogeneousMaterial =
           std::make_shared<HomogeneousSurfaceMaterial>(materialSlab);
       surfaceMaterials.try_emplace(geoID, homogeneousMaterial);
