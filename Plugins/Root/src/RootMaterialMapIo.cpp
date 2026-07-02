@@ -227,6 +227,23 @@ void RootMaterialMapIo::fillBinnedSurfaceMaterial(
                         mat.material().massDensity());
     }
   }
+
+  // bin counts writing - if not empty and recorded from the binned surface
+  // material accumulator
+  const auto& binCountsMatrix = bsMaterial.binCounts();
+  if (!binCountsMatrix.empty()) {
+    TH2F binCounts(m_cfg.binCountsHistName.c_str(), "#binCounts ; b0; b1",
+                   bins0, -0.5, fBins0 - 0.5, bins1, -0.5, fBins1 - 0.5);
+
+    for (auto [b1, binVector] : enumerate(binCountsMatrix)) {
+      for (auto [b0, bin] : enumerate(binVector)) {
+        binCounts.SetBinContent(static_cast<int>(b0) + 1,
+                                static_cast<int>(b1) + 1, bin);
+      }
+    }
+    binCounts.Write();
+  }
+
   t.Write();
   x0.Write();
   l0.Write();
