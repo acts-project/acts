@@ -14,7 +14,7 @@ on:
 env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_KEY_SUFFIX: r2
-  SETUP_CMD: "bash {package}/CI/dependencies/setup.sh -t v19.0.0 -d deps -e env.sh"
+  SETUP_CMD: "bash {package}/CI/dependencies/setup.sh -t v23.2.0 -d deps -e env.sh"
 
 permissions: {}
 
@@ -35,7 +35,7 @@ jobs:
           name: build-version
           path: build_version.txt
 
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ github.event.inputs.acts_ref || 'main' }}
           path: acts
