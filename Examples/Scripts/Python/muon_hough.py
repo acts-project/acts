@@ -76,12 +76,6 @@ if "__main__" == __name__:
         "--input",
         help="Path to the script's input. By default it's assumed that a ROOT n-tuple is parsed. Otherwise, it's also possible to parse a CSV directory",
     )
-    p.add_argument(
-        "--isCSV",
-        default=False,
-        action="store_true",
-        help="Flag toggling that the input is a CSV directory",
-    )
     p.add_argument("--nEvents", default=100, help="Number of events to run", type=int)
 
     args = p.parse_args()

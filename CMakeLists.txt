@@ -433,6 +433,11 @@ macro(enable_cuda)
     )
 endmacro()
 
+# CUDA will be always enabled if the options is set
+if (ACTS_ENABLE_CUDA) 
+    enable_cuda()
+endif()
+
 # optional packages
 #
 # find packages explicitly for each component even if this means searching for
