@@ -12,6 +12,7 @@
 #include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/OstreamFormatter.hpp"
 
 namespace Acts::Experimental {
 namespace detail {
@@ -558,4 +559,7 @@ class CompositeSpacePointLineSeeder {
       std::array{-1, -1}};
 };
 }  // namespace Acts::Experimental
+
+ACTS_OSTREAM_FORMATTER(
+    Acts::Experimental::CompositeSpacePointLineSeeder::TangentAmbi);
 #include "Acts/Seeding/CompositeSpacePointLineSeeder.ipp"

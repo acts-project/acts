@@ -107,7 +107,7 @@ SeedParam_t CompositeSpacePointLineSeeder::combineWithPattern(
 void CompositeSpacePointLineSeeder::TwoCircleTangentPars::print(
     std::ostream& ostr) const {
   ostr << ambi << ", ";
-  << std::format("theta: {:.3f} pm {:.3f}", inDeg(theta), inDeg(dTheta));
+  ostr << std::format("theta: {:.3f} pm {:.3f}", inDeg(theta), inDeg(dTheta));
   ostr << ", " << std::format("y_{{0}}: {:.2f} : pm {:.2f}", y0, dY0);
 }
 bool CompositeSpacePointLineSeeder::isValidLine(

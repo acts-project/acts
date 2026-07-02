@@ -166,8 +166,8 @@ void CompositeSpacePointLineSeeder::SeedingState<
   ostr << "upperLayer " << m_upperLayer.value_or(nStraw - 1ul) << " lowerLayer "
        << m_lowerLayer.value_or(0u) << " upperHitIndex " << m_upperHitIndex
        << " lower layer hit index " << m_lowerHitIndex << " sign combo index "
-       << toString(encodeAmbiguity(s_signCombo[m_signComboIndex][0],
-                                   s_signCombo[m_signComboIndex][1]))
+       << encodeAmbiguity(s_signCombo[m_signComboIndex][0],
+                          s_signCombo[m_signComboIndex][1])
        << "\n";
   ostr << "Number of seeds " << nGenSeeds() << " nStrawCut " << m_nStrawCut
        << "\n";
