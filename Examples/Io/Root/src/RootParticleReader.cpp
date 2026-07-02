@@ -62,6 +62,8 @@ RootParticleReader::RootParticleReader(const RootParticleReader::Config& config,
   m_inputChain->SetBranchAddress("particle", &m_particle.get());
   m_inputChain->SetBranchAddress("generation", &m_generation.get());
   m_inputChain->SetBranchAddress("sub_particle", &m_subParticle.get());
+  m_inputChain->SetBranchAddress("orig_part_idx", &m_origParticleIdx.get());
+  m_inputChain->SetBranchAddress("hf_origin", &m_hfOrigin.get());
 
   m_inputChain->SetBranchAddress("e_loss", &m_eLoss.get());
   m_inputChain->SetBranchAddress("total_x0", &m_pathInX0.get());
@@ -132,6 +134,9 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
                         .withParticle((*m_particle).at(i))
                         .withGeneration((*m_generation).at(i))
                         .withSubParticle((*m_subParticle).at(i)));
+
+    p.setOrigParticleIdx((*m_origParticleIdx).at(i));
+    p.setHfOrigin(static_cast<Acts::HfOrigin>((*m_hfOrigin).at(i)));
 
     SimParticleState& initialState = p.initialState();
 

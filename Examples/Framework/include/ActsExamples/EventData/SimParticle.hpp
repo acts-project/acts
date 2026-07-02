@@ -111,6 +111,18 @@ class SimParticle final {
     finalState().setParentParticleId(parentId);
     return *this;
   }
+  /// Original particle index (to match HepMC).
+  SimParticle& setOrigParticleIdx(std::uint32_t idx) {
+    initialState().setOrigParticleIdx(idx);
+    finalState().setOrigParticleIdx(idx);
+    return *this;
+  }
+  /// Particle HF origin (0->none, 4->charm, 5->beauty)
+  SimParticle& setHfOrigin(Acts::HfOrigin origin) {
+    initialState().setHfOrigin(origin);
+    finalState().setHfOrigin(origin);
+    return *this;
+  }
 
   /// Particle identifier within an event.
   SimBarcode particleId() const { return initialState().particleId(); }
@@ -118,6 +130,12 @@ class SimParticle final {
   SimBarcode parentParticleId() const {
     return initialState().parentParticleId();
   }
+  /// Original particle index (to match HepMC)
+  std::uint32_t origParticleIdx() const {
+    return initialState().origParticleIdx();
+  }
+  /// Particle HF origin (0->none, 4->charm, 5->beauty)
+  Acts::HfOrigin hfOrigin() const { return initialState().hfOrigin(); }
   /// Which type of process generated this particle.
   ActsFatras::GenerationProcess process() const {
     return initialState().process();

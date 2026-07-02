@@ -19,6 +19,7 @@
 namespace HepMC3 {
 class GenEvent;
 class GenVertex;
+class GenParticle;
 }  // namespace HepMC3
 
 namespace ActsExamples {
@@ -50,6 +51,9 @@ class HepMC3InputConverter : public IAlgorithm {
 
     /// If true, check the consistency of the generated event.
     bool checkConsistency = false;
+
+    /// Search up to quark in HF tagging
+    bool searchUpToHfQuark = false;
   };
 
   explicit HepMC3InputConverter(
@@ -63,6 +67,9 @@ class HepMC3InputConverter : public IAlgorithm {
  private:
   void convertHepMC3ToInternalEdm(const AlgorithmContext& ctx,
                                   const HepMC3::GenEvent& genEvent) const;
+
+  Acts::HfOrigin checkHfOrigin(
+      std::shared_ptr<const HepMC3::GenParticle> particle) const;
 
   void handleVertex(const HepMC3::GenVertex& genVertex, SimVertex& vertex,
                     std::vector<SimVertex>& vertices,
