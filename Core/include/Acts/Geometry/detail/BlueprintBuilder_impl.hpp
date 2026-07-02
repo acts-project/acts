@@ -420,6 +420,9 @@ SensorLayerAssembler<BackendT>::build() const {
     }
     LayerSpec layerSpec = m_layerSpec;
     layerSpec.layerName = group.key;
+    if (m_containerName.has_value()) {
+      layerSpec.layerName = m_containerName.value() + "|" + group.key;
+    }
     auto layer = m_builder->makeLayer(std::span<const Element>{group.sensors},
                                       layerSpec);
     layer->setLayerType(m_layerType.value());
