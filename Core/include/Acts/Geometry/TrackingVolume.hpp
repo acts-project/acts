@@ -187,7 +187,7 @@ class TrackingVolume : public Volume {
   void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
     if (restrictToSensitives) {
       apply([&visitor](const Surface& surface) {
-        if (surface.geometryId().sensitive() == 0) {
+        if (!surface.isSensitive()) {
           return;
         }
         visitor(&surface);

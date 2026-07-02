@@ -482,10 +482,12 @@ createDenseTelescope(const GeometryContext& geoCtx) {
     CuboidVolumeBuilder::SurfaceConfig surfaceTop;
     surfaceTop.position = {0, 0.5_m, 0.5_m};
     surfaceTop.rBounds = std::make_shared<RectangleBounds>(0.8_m, 0.2_m);
+    surfaceTop.isSensitive = true;
 
     CuboidVolumeBuilder::SurfaceConfig surfaceBottom;
     surfaceBottom.position = {0, -0.5_m, 0.5_m};
     surfaceBottom.rBounds = std::make_shared<RectangleBounds>(0.8_m, 0.2_m);
+    surfaceBottom.isSensitive = true;
 
     CuboidVolumeBuilder::LayerConfig layer;
     layer.binningDimension = AxisDirection::AxisZ;

@@ -40,12 +40,15 @@ TrackingVolumePtr constructCylinderVolume(
   auto sfnBounds = std::make_shared<CylinderBounds>(
       surfaceR - 0.5 * surfaceRstagger, surfaceHalfLengthZ);
   auto sfn = Surface::makeShared<CylinderSurface>(sfnTransform, sfnBounds);
+  sfn->assignIsSensitive(true);
   auto sfcBounds = std::make_shared<CylinderBounds>(
       surfaceR + 0.5 * surfaceRstagger, surfaceHalfLengthZ);
   auto sfc = Surface::makeShared<CylinderSurface>(sfcTransform, sfcBounds);
+  sfc->assignIsSensitive(true);
   auto sfpBounds = std::make_shared<CylinderBounds>(
       surfaceR - 0.5 * surfaceRstagger, surfaceHalfLengthZ);
   auto sfp = Surface::makeShared<CylinderSurface>(sfpTransform, sfpBounds);
+  sfp->assignIsSensitive(true);
 
   ///  prepare the surfaces
 
