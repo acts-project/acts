@@ -135,7 +135,7 @@ class TrackingVolume : public Volume {
   /// @param volbounds is the description of the volume boundaries
   /// @param volumeName is a string identifier
   TrackingVolume(std::shared_ptr<VolumePlacementBase> placement,
-                 std::shared_ptr<VolumeBounds> volBounds,
+                 std::shared_ptr<VolumeBounds> volbounds,
                  const std::string& volumeName = "undefined");
 
   /// Constructor for a container Volume
