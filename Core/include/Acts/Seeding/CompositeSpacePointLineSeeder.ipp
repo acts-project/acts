@@ -479,15 +479,24 @@ CompositeSpacePointLineSeeder::buildSeed(
     ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - Reject seed.");
     return std::nullopt;
   }
+
+  const Line_t tangentSeed{seedPars.y0 * Vector3::UnitY(),
+                           makeDirection(lowerHit, seedPars.theta)};
+
+  if (state.parameterSelector != nullptr &&
+      !state.parameterSelector(tangentSeed)) {
+    ACTS_DEBUG(__func__
+               << "() " << __LINE__
+               << " - Parameters rejected by the state's parameter selector.");
+    return std::nullopt;
+  }
+
   /// Continue to construct a new solution
   const double t0 = state.initialParameters()[toUnderlying(ParIdx::t0)];
   SeedSolution<UncalibCont_t, Delegate_t> newSolution{seedPars, state};
 
   ACTS_DEBUG(__func__ << "() " << __LINE__
                       << " - Start looking for compatible hits");
-
-  const Line_t tangentSeed{seedPars.y0 * Vector3::UnitY(),
-                           makeDirection(lowerHit, seedPars.theta)};
   const auto& [seedPos, seedDir] = tangentSeed;
   const double maxPullSq{Acts::square(m_cfg.hitPullCut)};
   constexpr auto covIdx = Acts::toUnderlying(CovIdx::bending);
