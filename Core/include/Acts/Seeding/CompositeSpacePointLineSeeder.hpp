@@ -102,6 +102,17 @@ concept CompositeSpacePointSorter =
       } -> std::same_as<const std::vector<SpacePointCont_t>&>;
     };
 
+/// Optional selector to filter out bad line seeds at the moment when they
+/// have been constructed. The filtering is based completely on the line
+/// parameters.
+template <typename Selector_t>
+concept CompositeSpacePointSeedSelector =
+    requires(const Selector_t& selector, const Vector3& seedPos,
+             const Vector3& seedDir) {
+      /// Returns whether the seedLine described by the position and the
+      /// direction
+      { selector.goodForSeeding(seedPos, seedDir) } -> std::same_as<bool>;
+    };
 /// Concept of the interface for the auxiliary class such that the
 /// CompositeSpacePointLineSeeder can construct segment seeds
 template <typename SeedAuxiliary_t, typename UnCalibCont_t,

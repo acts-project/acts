@@ -483,12 +483,15 @@ CompositeSpacePointLineSeeder::buildSeed(
   const Line_t tangentSeed{seedPars.y0 * Vector3::UnitY(),
                            makeDirection(lowerHit, seedPars.theta)};
 
-  if (state.parameterSelector != nullptr &&
-      !state.parameterSelector(tangentSeed)) {
-    ACTS_DEBUG(__func__
-               << "() " << __LINE__
-               << " - Parameters rejected by the state's parameter selector.");
-    return std::nullopt;
+  const auto& [seedPos, seedDir] = tangentSeed;
+
+  if constexpr (detail::CompositeSpacePointSeedSelector<Delegate_t>) {
+    ACTS_VERBOSE(__func__ << "() " << __LINE__
+                          << " - Check with the seeding state the orientation");
+    if (!state.goodForSeeding(seedPos, seedDir)) {
+      ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - Reject seed.");
+      return std::nullopt;
+    }
   }
 
   /// Continue to construct a new solution
@@ -497,7 +500,6 @@ CompositeSpacePointLineSeeder::buildSeed(
 
   ACTS_DEBUG(__func__ << "() " << __LINE__
                       << " - Start looking for compatible hits");
-  const auto& [seedPos, seedDir] = tangentSeed;
   const double maxPullSq{Acts::square(m_cfg.hitPullCut)};
   constexpr auto covIdx = Acts::toUnderlying(CovIdx::bending);
 
