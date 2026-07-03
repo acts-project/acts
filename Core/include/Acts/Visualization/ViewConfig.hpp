@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <string_view>
 
+
 namespace Acts {
 
 /// Struct describing a color. Internally, the color is represented using a

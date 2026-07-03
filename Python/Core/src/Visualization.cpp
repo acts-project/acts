@@ -8,6 +8,7 @@
 
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "Acts/Visualization/PyVisualization.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
@@ -59,5 +60,13 @@ void addVisualization(py::module& m) {
             self.object(name);
           },
           py::arg("name"));
+
+  py::class_<PyVisualization, IVisualization3D>(m, "PyVisualization")
+      .def(py::init<unsigned int, double, std::string>(), py::arg("prec") = 4u,
+           py::arg("scale") = 1.,  py::arg("projection"))
+      .def_property_readonly("surfaces", &PyVisualization::surfaces)
+      .def_property_readonly("color", &PyVisualization::color);
+
+  
 }
 }  // namespace ActsPython
