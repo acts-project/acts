@@ -382,9 +382,6 @@ class CompositeSpacePointLineSeeder {
     /// Returns the pattern parameters
     /// @return Pattern parameters
     const SeedParam_t& initialParameters() const { return m_initialPars; }
-    /// Optional selector function which checks the tangential seed line
-    /// before other hits are tried to be appended to the seed.
-    std::function<bool(const Line_t& testLine)> parameterSelector{nullptr};
     /// Grant the embedding class access to the private members
     friend CompositeSpacePointLineSeeder;
 
