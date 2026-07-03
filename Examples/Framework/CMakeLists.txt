@@ -30,11 +30,18 @@ acts_add_library(
     src/Validation/TrackQualityPlotTool.cpp
     src/Validation/TrackSummaryPlotTool.cpp
     src/EventData/CudaMuonSpacePoint.cpp
+    src/EventData/CudaMuonPatternContainers.cpp
     ACTS_INCLUDE_FOLDER include/ActsExamples
 )
 
 if(ACTS_ENABLE_CUDA) 
     find_package(CUDAToolkit REQUIRED)
+
+    target_sources(
+      ActsExamplesFramework
+      PRIVATE
+        src/Utilities/CudaHoughTransformUtils.cu
+    )
 
     target_compile_definitions(
       ActsExamplesFramework

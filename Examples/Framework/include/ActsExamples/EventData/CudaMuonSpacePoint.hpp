@@ -20,13 +20,39 @@
 #include <cstddef>
 #include <cstdint>
 #include <vector>
+#include <cstdint>
+#include <cuda_runtime.h>
+
 
 namespace ActsExamples {
+
+/// Decode the detector layer from the raw MuonId representation.
+///
+/// This reproduces:
+///
+///   m_layer = ((rawRep >> 17) & fourBit) + 1u;
+///
+/// Bit layout relevant here:
+///
+///   bits 17..20 = encoded layer - 1
+///
+/// Therefore:
+///
+///   stored value 0 -> layer 1
+///   stored value 1 -> layer 2
+///   ...
+///   stored value 15 -> layer 16
+__host__ __device__ inline std::uint8_t detLayer(std::uint32_t rawRep) noexcept {
+  uint32_t fourBit = 0xFu;
+  return static_cast<std::uint8_t>(((rawRep >> 17u) & fourBit) + 1u);
+}
 
 /// Device-side raw structure-of-arrays view.
 ///
 /// This structure does not own memory. It only stores raw device pointers.
 /// CUDA kernels should receive this object by value.
+
+/// Structure of Arrays
 struct CudaMuonSpacePointArrays {
   Acts::GeometryIdentifier::Value* geometryId = nullptr;
   std::uint32_t* muonId = nullptr;
@@ -58,7 +84,7 @@ struct CudaMuonSpacePointArrays {
   std::uint32_t* bucketEnd = nullptr;
 };
 
-/// Host-side structure-of-arrays storage.
+
 ///
 /// This is the RAM copy of the data. The container copies this data to VRAM
 /// with moveToDevice() and copies it back with moveToHost().
@@ -346,6 +372,9 @@ class CudaMuonSpacePointContainer {
 
   /// Returns const iterator past the last space point.
   const_iterator end() const noexcept { return {*this, size()}; }
+
+  std::uint32_t muonId(std::uint32_t idx) const noexcept { return m_host.muonId[idx]; }
+  void setLogicalLayer(size_type index, std::uint32_t layer);
 
  private:
   friend class CudaMuonSpacePointProxy;

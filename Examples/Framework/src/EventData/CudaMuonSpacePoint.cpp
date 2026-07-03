@@ -468,6 +468,38 @@ void CudaMuonSpacePointContainer::checkBucket(size_type bucket) const {
   }
 }
 
+void CudaMuonSpacePointContainer::setLogicalLayer(size_type index,
+                                                  std::uint32_t layer) {
+  checkIndex(index);
+
+  static constexpr std::uint32_t fourBit = 0xFu;
+  static constexpr std::uint32_t layerShift = 17u;
+
+  // Here `layer` is zero-based:
+  //
+  //   layer = 0 -> stored raw MuonId layer bits = 0 -> MuonId::detLayer() = 1
+  //   layer = 1 -> stored raw MuonId layer bits = 1 -> MuonId::detLayer() = 2
+  //   ...
+  //   layer = 15 -> stored raw MuonId layer bits = 15 -> MuonId::detLayer() = 16
+  //
+  // This matches usage like:
+  //
+  //   container.setLogicalLayer(i, static_cast<std::uint32_t>(i));
+  if (layer > fourBit) {
+    throw std::out_of_range("CudaMuonSpacePointContainer logical layer out of range");
+  }
+
+  std::uint32_t rawId = m_host.muonId[index];
+
+  // Clear old layer bits 17..20.
+  rawId &= ~(fourBit << layerShift);
+
+  // Insert new layer bits 17..20.
+  rawId |= ((layer & fourBit) << layerShift);
+
+  m_host.muonId[index] = rawId;
+}
+
 }  // namespace ActsExamples
 
 #endif
