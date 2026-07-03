@@ -325,7 +325,7 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
     barcodes[static_cast<std::size_t>(i)] = bc;
 
     if (!m_cfg.keepParticlesWithoutHits &&
-        !particleIdsWithHits.count(static_cast<std::uint64_t>(i))) {
+        particleIdsWithHits.count(static_cast<std::uint64_t>(i)) == 0) {
       continue;
     }
 

@@ -8,15 +8,15 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Utilities/LRUCache.hpp"
+#include "Acts/Utilities/detail/LruCache.hpp"
 
 #include <string>
 
 namespace {
-using Cache = Acts::LRUCache<std::string, int>;
+using Cache = Acts::detail::LruCache<std::string, int>;
 }
 
-BOOST_AUTO_TEST_SUITE(LRUCacheTests)
+BOOST_AUTO_TEST_SUITE(LruCacheTests)
 
 BOOST_AUTO_TEST_CASE(ZeroCapacityThrows) {
   BOOST_CHECK_THROW(Cache{0}, std::invalid_argument);

@@ -15,7 +15,7 @@
 #include <stdexcept>
 #include <unordered_map>
 
-namespace Acts {
+namespace Acts::detail {
 
 /// @brief Fixed-capacity least-recently-used (LRU) cache.
 ///
@@ -37,18 +37,19 @@ namespace Acts {
 /// @tparam Equal Equality functor for @p Key (default: @c std::equal_to<Key>).
 template <typename Key, typename Value, typename Hash = std::hash<Key>,
           typename Equal = std::equal_to<Key>>
-class LRUCache {
+class LruCache {
  public:
   /// @brief Construct a cache with the given capacity.
   /// @param capacity Maximum number of entries to keep.
   /// @throws std::invalid_argument if @p capacity is zero.
-  explicit LRUCache(std::size_t capacity) : m_capacity(capacity) {
+  explicit LruCache(std::size_t capacity) : m_capacity(capacity) {
     if (capacity == 0) {
-      throw std::invalid_argument("LRUCache: capacity must be >= 1");
+      throw std::invalid_argument("LruCache: capacity must be >= 1");
     }
   }
 
   /// @brief Look up @p key; promote it to MRU on hit.
+  /// @param key Key to look up.
   /// @return A copy of the cached value, or @c std::nullopt on miss.
   std::optional<Value> get(const Key& key) {
     auto it = m_index.find(key);
@@ -61,6 +62,8 @@ class LRUCache {
   }
 
   /// @brief Insert or update @p key → @p value; evict LRU when at capacity.
+  /// @param key Key to insert or update.
+  /// @param value Value to associate with @p key.
   void put(const Key& key, Value value) {
     auto it = m_index.find(key);
     if (it != m_index.end()) {
@@ -94,4 +97,4 @@ class LRUCache {
       m_index;
 };
 
-}  // namespace Acts
+}  // namespace Acts::detail

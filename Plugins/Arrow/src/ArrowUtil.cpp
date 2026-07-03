@@ -8,7 +8,7 @@
 
 #include "ActsPlugins/Arrow/ArrowUtil.hpp"
 
-#include "Acts/Utilities/LRUCache.hpp"
+#include "Acts/Utilities/detail/LruCache.hpp"
 
 #include <algorithm>
 #include <exception>
@@ -429,7 +429,12 @@ class ParquetDatasetReader::Impl {
  private:
   std::shared_ptr<arrow::Table> loadShard(const std::string& path) const {
     static std::once_flag computeInitFlag;
-    std::call_once(computeInitFlag, [] { arrow::compute::Initialize(); });
+    std::call_once(computeInitFlag, [] {
+      auto status = arrow::compute::Initialize();
+      if (!status.ok()) {
+        throwArrow("arrow::compute::Initialize", status);
+      }
+    });
 
     auto filesystem = std::make_shared<arrow::fs::LocalFileSystem>();
     auto format = std::make_shared<arrow::dataset::ParquetFileFormat>();
@@ -462,7 +467,8 @@ class ParquetDatasetReader::Impl {
   std::vector<std::string> m_shardFiles;
   std::vector<std::int64_t> m_shardFirstEvent;
   mutable std::mutex m_cacheMutex;
-  mutable Acts::LRUCache<std::string, std::shared_ptr<arrow::Table>> m_cache;
+  mutable Acts::detail::LruCache<std::string, std::shared_ptr<arrow::Table>>
+      m_cache;
 };
 
 ParquetDatasetReader::ParquetDatasetReader(
