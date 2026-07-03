@@ -590,6 +590,48 @@ def addSeeding(
     return s
 
 
+def addGbtsTraining(
+    sequence: acts.examples.Sequencer,
+    selectedParticles: str = "particles_selected",
+    geometryFile: str = "gbts_layer_geometry.txt",
+    outputConnectionTable: str = "new_test_CT.txt",
+    probThreshold: float = -1.0,
+    zMinTol: float = 0.2340,
+    zMaxTol: float = 0.2340,
+    rMinTol: float = 2.5337,
+    rMaxTol: float = 2.5337,
+    doSymmetrization: bool = False,
+    useOldFormatting: bool = False,
+    logLevel: acts.logging.Level = None,
+):
+    logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+
+    gbtsTrainingConfig = acts.examples.GbtsLayerConnectionConfig(
+        zMinTol=zMinTol,
+        zMaxTol=zMaxTol,
+        rMinTol=rMinTol,
+        rMaxTol=rMaxTol,
+        probThreshold=probThreshold,
+        doSymmetrization=doSymmetrization,
+        useOldFormatting=useOldFormatting,
+    )
+
+    alg = acts.examples.GbtsTrainingAlgorithm(
+        level=logLevel,
+        inputParticles=selectedParticles,
+        inputParticleMeasurementsMap="particle_measurements_map",
+        inputMeasurements="measurements",
+        inputSimHits="simhits",
+        inputMeasurementSimHitsMap="measurement_simhits_map",
+        gbtsTrainingConfig=gbtsTrainingConfig,
+        geometryFileDir=str(geometryFile),
+        outputFileDir=str(outputConnectionTable),
+    )
+
+    sequence.addAlgorithm(alg)
+    return alg
+
+
 def addTruthSmearedSeeding(
     s: acts.examples.Sequencer,
     rnd: Optional[acts.examples.RandomNumbers],
