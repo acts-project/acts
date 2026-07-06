@@ -107,10 +107,9 @@ overview on what we are currently testing):
 
 Current LCG/compiler combinations covered in CI are:
 
-- `LCG_107`: `gcc13`, `clang16`
-- `LCG_107a`: `gcc14`
 - `LCG_108`: `gcc15`
 - `LCG_109`: `gcc15`, `clang19`
+- `dev4` (nightly): `gcc15`
 
 ```console
 source /cvmfs/sft.cern.ch/lcg/views/<lcg_release>/<lcg_platform>/setup.sh
@@ -131,7 +130,7 @@ and they contain all the dependencies required to build ACTS.
 
 Furthermore, we are also testing on, but do not provide the corresponding containers:
 
-- `alma9` (HEP-specific software from LCG 107/107a/108/109 and compilers `gcc13`, `gcc14`, `gcc15`, `clang16`, `clang19`)
+- `alma9` (HEP-specific software from LCG 108/109 and dev4 nightly, and compilers `gcc15`, `clang19`)
 - `macOS-10.15`
 
 > [!warning]
@@ -151,7 +150,7 @@ docker search --list-tags ghcr.io/acts-project/ubuntu2404
 The following command then downloads a stable tag of the `ubuntu2404` image:
 
 ```console
-docker pull ghcr.io/acts-project/ubuntu2404:51
+docker pull ghcr.io/acts-project/ubuntu2404:87
 ```
 
 This should print the image id as part of the output. You can also find out the
