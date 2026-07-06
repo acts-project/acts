@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <stdexcept>
 #include <vector>
 
 namespace Acts {
@@ -42,7 +43,19 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
         m_min(xmin),
         m_max(xmax),
         m_width((xmax - xmin) / nBins),
-        m_bins(nBins) {}
+        m_bins(nBins) {
+    if (m_min >= m_max) {
+      std::string msg = "Axis: Invalid axis range'";
+      msg += "', min edge (" + std::to_string(m_min) + ") ";
+      msg += " needs to be smaller than max edge (";
+      msg += std::to_string(m_max) + ").";
+      throw std::invalid_argument(msg);
+    }
+    if (m_bins < 1u) {
+      throw std::invalid_argument(
+          "Axis: Invalid binning, at least one bin is needed.");
+    }
+  }
 
   /// Divide the range \f$[\text{xmin},\text{xmax})\f$ into \f$\text{nBins}\f$
   /// equidistant bins.
@@ -325,7 +338,16 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   /// @pre @c binEdges must contain at least two entries.
   explicit Axis(std::vector<double> binEdges,
                 std::optional<AxisDirection> direction = std::nullopt)
-      : IAxis(direction), m_binEdges(std::move(binEdges)) {}
+      : IAxis(direction), m_binEdges(std::move(binEdges)) {
+    if (m_binEdges.size() < 2) {
+      throw std::invalid_argument(
+          "Axis: Invalid binning, at least two bin edges are needed.");
+    }
+    if (!std::ranges::is_sorted(m_binEdges)) {
+      throw std::invalid_argument(
+          "Axis: Invalid binning, bin edges are not sorted.");
+    }
+  }
 
   /// Create a binning structure with @c nBins variable-sized bins from the
   /// given bin boundaries. @c nBins is given by the number of bin edges

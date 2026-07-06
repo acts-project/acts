@@ -55,6 +55,12 @@ class StaticBlueprintNode : public BlueprintNode {
   virtual StaticBlueprintNode& setNavigationPolicyFactory(
       std::shared_ptr<NavigationPolicyFactory> navigationPolicyFactory);
 
+  /// Release ownership of the wrapped tracking volume
+  /// @return The tracking volume as a unique_ptr (m_volume becomes nullptr)
+  std::unique_ptr<TrackingVolume> releaseVolume() {
+    return std::move(m_volume);
+  }
+
   /// Get the navigation policy factory for this node
   /// @return Pointer to the navigation policy factory (may be nullptr)
   const NavigationPolicyFactory* navigationPolicyFactory() const;
