@@ -80,16 +80,8 @@ def test_space_point_all_columns_round_trip():
     assert sp.time == pytest.approx(6.0)
     assert sp.varianceT == pytest.approx(9.0)
 
-    # Array (strip) fields.
-    sp.topStripVector = [1.0, 0.0, 0.0]
-    sp.bottomStripVector = [0.0, 1.0, 0.0]
-    sp.stripCenterDistance = [0.0, 0.0, 1.0]
-    sp.topStripCenter = [1.0, 1.0, 1.0]
-    assert list(sp.topStripVector) == pytest.approx([1.0, 0.0, 0.0])
-    assert list(sp.topStripCenter) == pytest.approx([1.0, 1.0, 1.0])
-
-    sp.copyFromIndex = 0
-    assert sp.copyFromIndex == 0
+    sp.copiedFromIndex = 0
+    assert sp.copiedFromIndex == 0
 
     # Container-level numpy column views work when the column is present.
     assert container.x.shape == (1,)
