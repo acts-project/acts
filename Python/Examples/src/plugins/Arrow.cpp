@@ -36,7 +36,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
   // before importing this module so that the type is in pybind's
   // registry by the time `expectedSchemas` is bound below.
   ACTS_PYTHON_DECLARE_READER(ParquetReader, m, "ParquetReader", inputDir,
-                             collections, expectedSchemas);
+                             collections, expectedSchemas, shardCacheCapacity);
 
   ACTS_PYTHON_DECLARE_WRITER(ParquetWriter, m, "ParquetWriter", outputDir,
                              collections, expectedSchemas, eventsPerShard,
