@@ -147,6 +147,21 @@ PipelineTensors OnnxEdgeClassifier::operator()(
     nodeFeatures = &(*selectedNodeFeatures);
   }
 
+  // scale node features if featureScales is given in cfg
+  if (!m_cfg.featureScales.empty()) {
+    if (m_cfg.featureScales.size() != static_cast<std::size_t>(nodeFeatures->shape()[1])) {
+      throw std::runtime_error("featureScales size must match the number of input features");
+    }
+    auto *data = nodeFeatures->data();
+    std::size_t numNodes = nodeFeatures->shape()[0];
+    std::size_t numFeatures = nodeFeatures->shape()[1];
+    for (std::size_t n = 0; n < numNodes; ++n) {
+      for (std::size_t f = 0; f < numFeatures; ++f) {
+        data[n * numFeatures + f] *= m_cfg.featureScales[f];
+      }
+    }
+  }
+
   // Node tensor
   inputTensors.push_back(toOnnx(memoryInfo, *nodeFeatures));
   inputNames.push_back(m_inputNames.at(0).c_str());
