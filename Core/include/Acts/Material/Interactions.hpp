@@ -30,8 +30,7 @@ namespace Acts {
 /// where @f$-dE/dx@f$ is given by the Bethe formula
 /// @cite ParticleDataGroup:2018ovx (eq. 33.5), including the density-effect
 /// correction. The result is the magnitude of the loss (always @f$\geq 0@f$);
-/// the caller is responsible for applying the sign according to the
-/// propagation direction. The formula is valid for intermediate energies,
+/// The formula is valid for intermediate energies,
 /// roughly @f$0.1 \lesssim \beta\gamma \lesssim 1000@f$.
 ///
 /// @return Mean ionisation energy loss through the slab in native energy units
