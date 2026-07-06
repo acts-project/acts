@@ -60,11 +60,7 @@ def test_space_point_all_columns_round_trip():
         | Cols.VarianceZ
         | Cols.VarianceR
         | Cols.VarianceT
-        | Cols.TopStripVector
-        | Cols.BottomStripVector
-        | Cols.StripCenterDistance
-        | Cols.TopStripCenter
-        | Cols.CopyFromIndex
+        | Cols.CopiedFromIndex
     )
     container = acts.SpacePointContainer2(columns)
     sp = container.createSpacePoint()
