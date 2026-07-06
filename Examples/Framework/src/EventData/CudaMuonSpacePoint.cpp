@@ -10,10 +10,10 @@
 
 #ifdef ACTS_ENABLE_CUDA
 
-#include <cuda_runtime.h>
-
 #include <stdexcept>
 #include <utility>
+
+#include <cuda_runtime.h>
 
 namespace {
 
@@ -63,8 +63,8 @@ void allocateDeviceColumn(T*& deviceColumn, std::size_t size) {
     return;
   }
 
-  cudaCheck(cudaMalloc(reinterpret_cast<void**>(&deviceColumn),
-                       size * sizeof(T)));
+  cudaCheck(
+      cudaMalloc(reinterpret_cast<void**>(&deviceColumn), size * sizeof(T)));
 }
 
 template <typename T>
@@ -82,8 +82,7 @@ void copyColumnToDevice(T* deviceColumn, const std::vector<T>& hostColumn) {
   }
 
   cudaCheck(cudaMemcpy(deviceColumn, hostColumn.data(),
-                       hostColumn.size() * sizeof(T),
-                       cudaMemcpyHostToDevice));
+                       hostColumn.size() * sizeof(T), cudaMemcpyHostToDevice));
 }
 
 template <typename T>
@@ -93,13 +92,11 @@ void copyColumnToHost(std::vector<T>& hostColumn, const T* deviceColumn) {
   }
 
   cudaCheck(cudaMemcpy(hostColumn.data(), deviceColumn,
-                       hostColumn.size() * sizeof(T),
-                       cudaMemcpyDeviceToHost));
+                       hostColumn.size() * sizeof(T), cudaMemcpyDeviceToHost));
 }
 
 void allocateDeviceData(ActsExamples::CudaMuonSpacePointArrays& device,
-                        std::size_t spacePointCount,
-                        std::size_t bucketCount) {
+                        std::size_t spacePointCount, std::size_t bucketCount) {
   allocateDeviceColumn(device.geometryId, spacePointCount);
   allocateDeviceColumn(device.muonId, spacePointCount);
 
@@ -401,7 +398,8 @@ void CudaMuonSpacePointContainer::defineCoordinates(
   m_host.toNextSensorY[index] = toNextSensor.y();
   m_host.toNextSensorZ[index] = toNextSensor.z();
 
-  const Acts::Vector3 planeNormal = sensorDirection.cross(toNextSensor).normalized();
+  const Acts::Vector3 planeNormal =
+      sensorDirection.cross(toNextSensor).normalized();
 
   m_host.planeNormalX[index] = planeNormal.x();
   m_host.planeNormalY[index] = planeNormal.y();
@@ -480,13 +478,15 @@ void CudaMuonSpacePointContainer::setLogicalLayer(size_type index,
   //   layer = 0 -> stored raw MuonId layer bits = 0 -> MuonId::detLayer() = 1
   //   layer = 1 -> stored raw MuonId layer bits = 1 -> MuonId::detLayer() = 2
   //   ...
-  //   layer = 15 -> stored raw MuonId layer bits = 15 -> MuonId::detLayer() = 16
+  //   layer = 15 -> stored raw MuonId layer bits = 15 -> MuonId::detLayer() =
+  //   16
   //
   // This matches usage like:
   //
   //   container.setLogicalLayer(i, static_cast<std::uint32_t>(i));
   if (layer > fourBit) {
-    throw std::out_of_range("CudaMuonSpacePointContainer logical layer out of range");
+    throw std::out_of_range(
+        "CudaMuonSpacePointContainer logical layer out of range");
   }
 
   std::uint32_t rawId = m_host.muonId[index];

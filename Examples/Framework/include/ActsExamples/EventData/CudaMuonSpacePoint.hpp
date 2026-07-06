@@ -20,9 +20,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <vector>
-#include <cstdint>
-#include <cuda_runtime.h>
 
+#include <cuda_runtime.h>
 
 namespace ActsExamples {
 
@@ -42,8 +41,9 @@ namespace ActsExamples {
 ///   stored value 1 -> layer 2
 ///   ...
 ///   stored value 15 -> layer 16
-__host__ __device__ inline std::uint8_t detLayer(std::uint32_t rawRep) noexcept {
-  uint32_t fourBit = 0xFu;
+__host__ __device__ inline std::uint8_t detLayer(
+    std::uint32_t rawRep) noexcept {
+  std::uint32_t fourBit = 0xFu;
   return static_cast<std::uint8_t>(((rawRep >> 17u) & fourBit) + 1u);
 }
 
@@ -83,7 +83,6 @@ struct CudaMuonSpacePointArrays {
   std::uint32_t* bucketStart = nullptr;
   std::uint32_t* bucketEnd = nullptr;
 };
-
 
 ///
 /// This is the RAM copy of the data. The container copies this data to VRAM
@@ -233,10 +232,8 @@ class CudaMuonSpacePointContainer {
 
   /// Iterator type over the flat space point container.
   template <bool read_only>
-  using Iterator =
-      Acts::detail::ContainerIterator<CudaMuonSpacePointContainer,
-                                      CudaMuonSpacePointPtr, size_type,
-                                      read_only>;
+  using Iterator = Acts::detail::ContainerIterator<
+      CudaMuonSpacePointContainer, CudaMuonSpacePointPtr, size_type, read_only>;
 
   /// Mutable iterator.
   using iterator = Iterator<false>;
@@ -250,10 +247,12 @@ class CudaMuonSpacePointContainer {
   /// @param size The number of flat space points.
   explicit CudaMuonSpacePointContainer(size_type size);
 
-  /// Copy constructor is deleted because the container owns pointer to CUDA memory.
+  /// Copy constructor is deleted because the container owns pointer to CUDA
+  /// memory.
   CudaMuonSpacePointContainer(const CudaMuonSpacePointContainer&) = delete;
 
-  /// Copy assignment is deleted because the container owns pointer to CUDA memory.
+  /// Copy assignment is deleted because the container owns pointer to CUDA
+  /// memory.
   CudaMuonSpacePointContainer& operator=(const CudaMuonSpacePointContainer&) =
       delete;
 
@@ -373,7 +372,9 @@ class CudaMuonSpacePointContainer {
   /// Returns const iterator past the last space point.
   const_iterator end() const noexcept { return {*this, size()}; }
 
-  std::uint32_t muonId(std::uint32_t idx) const noexcept { return m_host.muonId[idx]; }
+  std::uint32_t muonId(std::uint32_t idx) const noexcept {
+    return m_host.muonId[idx];
+  }
   void setLogicalLayer(size_type index, std::uint32_t layer);
 
  private:
@@ -389,10 +390,10 @@ class CudaMuonSpacePointContainer {
 };
 
 static_assert(Acts::Experimental::CompositeSpacePoint<CudaMuonSpacePointProxy>);
-static_assert(Acts::Experimental::CompositeSpacePointPtr<CudaMuonSpacePointPtr>);
 static_assert(
-    Acts::Experimental::CompositeSpacePointContainer<
-        CudaMuonSpacePointContainer>);
+    Acts::Experimental::CompositeSpacePointPtr<CudaMuonSpacePointPtr>);
+static_assert(Acts::Experimental::CompositeSpacePointContainer<
+              CudaMuonSpacePointContainer>);
 
 }  // namespace ActsExamples
 

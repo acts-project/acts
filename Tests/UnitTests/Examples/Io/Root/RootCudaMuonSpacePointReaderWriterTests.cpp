@@ -6,30 +6,29 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include <boost/test/unit_test.hpp>
+
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
+#include "ActsExamples/EventData/CudaMuonSpacePoint.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/EventData/CudaMuonSpacePoint.hpp"
 #include "ActsExamples/Io/Root/RootCudaMuonSpacePointReader.hpp"
 #include "ActsExamples/Io/Root/RootCudaMuonSpacePointWriter.hpp"
-
-#include <boost/test/unit_test.hpp>
-
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/UnitVectors.hpp"
-
-#include <TFile.h>
-#include <TTree.h>
-#include <TTreeReader.h>
-#include <TTreeReaderValue.h>
 
 #include <cmath>
 #include <filesystem>
 #include <memory>
 #include <vector>
+
+#include <TFile.h>
+#include <TTree.h>
+#include <TTreeReader.h>
+#include <TTreeReaderValue.h>
 
 using namespace Acts;
 
@@ -39,18 +38,16 @@ ActsExamples::CudaMuonSpacePointContainer makeTestContainer() {
   ActsExamples::CudaMuonSpacePointContainer container{2};
 
   ActsExamples::MuonSpacePoint::MuonId firstId{};
-  firstId.setChamber(
-      ActsExamples::MuonSpacePoint::MuonId::StationName::BIS,
-      ActsExamples::MuonSpacePoint::MuonId::DetSide::A, 1,
-      ActsExamples::MuonSpacePoint::MuonId::TechField::Mdt);
+  firstId.setChamber(ActsExamples::MuonSpacePoint::MuonId::StationName::BIS,
+                     ActsExamples::MuonSpacePoint::MuonId::DetSide::A, 1,
+                     ActsExamples::MuonSpacePoint::MuonId::TechField::Mdt);
   firstId.setLayAndCh(1, 1);
   firstId.setCoordFlags(false, true, true);
 
   ActsExamples::MuonSpacePoint::MuonId secondId{};
-  secondId.setChamber(
-      ActsExamples::MuonSpacePoint::MuonId::StationName::BIL,
-      ActsExamples::MuonSpacePoint::MuonId::DetSide::C, 2,
-      ActsExamples::MuonSpacePoint::MuonId::TechField::Rpc);
+  secondId.setChamber(ActsExamples::MuonSpacePoint::MuonId::StationName::BIL,
+                      ActsExamples::MuonSpacePoint::MuonId::DetSide::C, 2,
+                      ActsExamples::MuonSpacePoint::MuonId::TechField::Rpc);
   secondId.setLayAndCh(2, 3);
   secondId.setCoordFlags(true, false, false);
 
@@ -83,9 +80,8 @@ ActsExamples::CudaMuonSpacePointContainer makeTestContainer() {
 namespace ActsTests {
 
 BOOST_AUTO_TEST_CASE(RootCudaMuonSpacePointWriterWritesAdHocContainer) {
-  const auto filePath =
-      std::filesystem::temp_directory_path() /
-      "ActsRootCudaMuonSpacePointWriterAdHoc.root";
+  const auto filePath = std::filesystem::temp_directory_path() /
+                        "ActsRootCudaMuonSpacePointWriterAdHoc.root";
 
   std::filesystem::remove(filePath);
 
@@ -121,20 +117,20 @@ BOOST_AUTO_TEST_CASE(RootCudaMuonSpacePointWriterWritesAdHocContainer) {
   BOOST_REQUIRE_EQUAL(reader.GetEntries(), 1);
 
   TTreeReaderValue<std::uint32_t> eventId{reader, "event_id"};
-  TTreeReaderValue<std::vector<std::uint16_t>> bucketId{
-      reader, "spacePoint_bucketId"};
+  TTreeReaderValue<std::vector<std::uint16_t>> bucketId{reader,
+                                                        "spacePoint_bucketId"};
   TTreeReaderValue<std::vector<Acts::GeometryIdentifier::Value>> geometryId{
       reader, "spacePoint_geometryId"};
-  TTreeReaderValue<std::vector<std::uint32_t>> muonId{
-      reader, "spacePoint_muonId"};
-  TTreeReaderValue<std::vector<float>> localPositionX{
-      reader, "spacePoint_localPosX"};
-  TTreeReaderValue<std::vector<float>> localPositionY{
-      reader, "spacePoint_localPosY"};
-  TTreeReaderValue<std::vector<float>> localPositionZ{
-      reader, "spacePoint_localPosZ"};
-  TTreeReaderValue<std::vector<float>> driftRadius{
-      reader, "spacePoint_driftRadius"};
+  TTreeReaderValue<std::vector<std::uint32_t>> muonId{reader,
+                                                      "spacePoint_muonId"};
+  TTreeReaderValue<std::vector<float>> localPositionX{reader,
+                                                      "spacePoint_localPosX"};
+  TTreeReaderValue<std::vector<float>> localPositionY{reader,
+                                                      "spacePoint_localPosY"};
+  TTreeReaderValue<std::vector<float>> localPositionZ{reader,
+                                                      "spacePoint_localPosZ"};
+  TTreeReaderValue<std::vector<float>> driftRadius{reader,
+                                                   "spacePoint_driftRadius"};
   TTreeReaderValue<std::vector<float>> time{reader, "spacePoint_time"};
 
   BOOST_REQUIRE(reader.Next());
@@ -169,7 +165,7 @@ BOOST_AUTO_TEST_CASE(RootCudaMuonSpacePointWriterWritesAdHocContainer) {
 }
 
 /*
-/// Test is problematic as it relies on existance of ParticleGun_MU0.root file
+/// Test is problematic as it relies on existence of ParticleGun_MU0.root file
 BOOST_AUTO_TEST_CASE(RootCudaMuonSpacePointReaderReadsFirstEvent) {
   const std::filesystem::path filePath{
       "/data/mgawlas/ACTS/acts/Tests/Data/ParticleGun_MU0.root"};
@@ -234,9 +230,8 @@ BOOST_AUTO_TEST_CASE(RootCudaMuonSpacePointReaderReadsFirstEvent) {
 */
 
 BOOST_AUTO_TEST_CASE(RootCudaMuonSpacePointWriterReaderRoundTrip) {
-  const auto filePath =
-      std::filesystem::temp_directory_path() /
-      "ActsRootCudaMuonSpacePointWriterReaderRoundTrip.root";
+  const auto filePath = std::filesystem::temp_directory_path() /
+                        "ActsRootCudaMuonSpacePointWriterReaderRoundTrip.root";
 
   std::filesystem::remove(filePath);
 
@@ -310,8 +305,7 @@ BOOST_AUTO_TEST_CASE(RootCudaMuonSpacePointWriterReaderRoundTrip) {
   BOOST_CHECK_EQUAL(firstSpacePoint->driftRadius(), 4.0);
   BOOST_CHECK_EQUAL(firstSpacePoint->time(), 5.0);
 
-  const std::array<double, 3>& firstCovariance =
-      firstSpacePoint->covariance();
+  const std::array<double, 3>& firstCovariance = firstSpacePoint->covariance();
 
   BOOST_CHECK_EQUAL(firstCovariance[0], 6.0);
   BOOST_CHECK_EQUAL(firstCovariance[1], 7.0);

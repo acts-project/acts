@@ -6,28 +6,25 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include <boost/test/unit_test.hpp>
+
+#include "Acts/Seeding/HoughTransformUtils.hpp"
 #include "ActsExamples/EventData/CudaMuonSpacePoint.hpp"
-#include "ActsExamples/Utilities/CudaHoughTransformUtils.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-
 #include "ActsExamples/Io/Root/RootCudaMuonSpacePointReader.hpp"
-
-#include "Acts/Seeding/HoughTransformUtils.hpp"
-
-#include <boost/test/unit_test.hpp>
+#include "ActsExamples/Utilities/CudaHoughTransformUtils.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
-#include <vector>
-#include <cstdlib>
 #include <limits>
-
+#include <vector>
 
 namespace ActsTests {
 
@@ -77,11 +74,9 @@ ActsExamples::CudaMuonSpacePointContainer makeBatchedDriftCircleContainer(
       container.setGeometryId(index, index);
       container.setId(index, 0u);
 
-      container.defineCoordinates(index,
-                                  Acts::Vector3{0.0, dc.y + bucketYOffset,
-                                                dc.z},
-                                  Acts::Vector3{1.0, 0.0, 0.0},
-                                  Acts::Vector3{0.0, 1.0, 0.0});
+      container.defineCoordinates(
+          index, Acts::Vector3{0.0, dc.y + bucketYOffset, dc.z},
+          Acts::Vector3{1.0, 0.0, 0.0}, Acts::Vector3{0.0, 1.0, 0.0});
 
       container.setRadius(index, dc.r);
       container.setTime(index, 0.0);
@@ -97,7 +92,7 @@ ActsExamples::CudaMuonSpacePointContainer makeBatchedDriftCircleContainer(
   return container;
 }
 
-// Utility to save data to CSNV  for pyhton visualization
+// Utility to save data to CSNV  for python visualization
 void writeDriftCircleCsv(const std::filesystem::path& path) {
   const std::vector<DriftCircleInput> driftCircles = driftCircleInputs();
 
@@ -110,20 +105,14 @@ void writeDriftCircleCsv(const std::filesystem::path& path) {
   for (std::size_t i = 0; i < driftCircles.size(); ++i) {
     const auto& dc = driftCircles[i];
 
-    out << i << ","
-        << 0.0 << ","
-        << dc.y << ","
-        << dc.z << ","
-        << dc.r << ","
-        << dc.uncert << ","
-        << i << "\n";
+    out << i << "," << 0.0 << "," << dc.y << "," << dc.z << "," << dc.r << ","
+        << dc.uncert << "," << i << "\n";
   }
 }
 
-// Utility to save data to CSNV  for pyhton visualization
+// Utility to save data to CSNV  for python visualization
 void writeHoughHistogramCsv(
-    const std::filesystem::path& path,
-    const CudaHT::CudaHoughPlaneBatch& plane,
+    const std::filesystem::path& path, const CudaHT::CudaHoughPlaneBatch& plane,
     const Acts::HoughTransformUtils::HoughAxisRanges& axisRanges) {
   std::ofstream out{path};
   BOOST_REQUIRE_MESSAGE(out, "Failed to open " << path.string());
@@ -141,13 +130,11 @@ void writeHoughHistogramCsv(
       const double interceptY = Acts::HoughTransformUtils::binCenter(
           axisRanges.yMin, axisRanges.yMax, plane.nBinsY(), yBin);
 
-      out << xBin << ","
-          << yBin << ","
-          << tanTheta << ","
-          << interceptY << ","
+      out << xBin << "," << yBin << "," << tanTheta << "," << interceptY << ","
           << plane.nHits(bucketId, xBin, yBin) << ","
           << plane.nLayers(bucketId, xBin, yBin) << ","
-          << static_cast<unsigned long long>(plane.layerMask(bucketId, xBin, yBin))
+          << static_cast<unsigned long long>(
+                 plane.layerMask(bucketId, xBin, yBin))
           << "\n";
     }
   }
@@ -181,15 +168,10 @@ void writeFirstBucketHitsCsv(
     const Acts::Vector3& pos = sp->localPosition();
     const std::array<double, 3>& cov = sp->covariance();
 
-    const double uncert =
-        std::sqrt(std::max(cov[1], 0.0));
+    const double uncert = std::sqrt(std::max(cov[1], 0.0));
 
-    out << (i - start) << ","
-        << pos.x() << ","
-        << pos.y() << ","
-        << pos.z() << ","
-        << sp->driftRadius() << ","
-        << uncert << ","
+    out << (i - start) << "," << pos.x() << "," << pos.y() << "," << pos.z()
+        << "," << sp->driftRadius() << "," << uncert << ","
         << rawMuonIdLayer(container.muonId(i)) << "\n";
   }
 }
@@ -231,15 +213,16 @@ BOOST_AUTO_TEST_CASE(cuda_hough_batch_eta_mdt_fill_matches_host_reference) {
   auto spacePointsForHost = makeBatchedDriftCircleContainer(nBuckets);
   auto spacePointsForCuda = makeBatchedDriftCircleContainer(nBuckets);
 
-  Acts::HoughTransformUtils::HoughAxisRanges axisRanges{-0.20, 0.20, -650.0, -150.0};
+  Acts::HoughTransformUtils::HoughAxisRanges axisRanges{-0.20, 0.20, -650.0,
+                                                        -150.0};
 
   CudaHT::CudaHoughPlaneBatch hostBatch{{40, 40}, nBuckets};
   CudaHT::CudaHoughPlaneBatch cudaBatch{{40, 40}, nBuckets};
 
   hostBatch.fillEtaDriftCirclesHost(spacePointsForHost, axisRanges);
 
-  cudaBatch.fillEtaDriftCirclesOnDevice(spacePointsForCuda, axisRanges,
-                                        3.0, 1.0, 1.0f, 128);
+  cudaBatch.fillEtaDriftCirclesOnDevice(spacePointsForCuda, axisRanges, 3.0,
+                                        1.0, 1.0f, 128);
   cudaBatch.moveToHost();
 
   for (std::size_t bucket = 0; bucket < nBuckets; ++bucket) {
@@ -259,7 +242,6 @@ BOOST_AUTO_TEST_CASE(cuda_hough_batch_eta_mdt_fill_matches_host_reference) {
   }
 }
 
-
 // This is the visual test, that exports cvs files for python script.
 //
 // The known simulated line from the original ACTS test is approximately:
@@ -275,8 +257,8 @@ BOOST_AUTO_TEST_CASE(cuda_hough_eta_drift_circle_csv_visual_example) {
   std::uint32_t bucketId = 0;
 
   // The axis has to be relatively small, as plane is very sparse.
-  Acts::HoughTransformUtils::HoughAxisRanges axisRanges{
-      -0.1, 0.0, -500.0, -400.0};
+  Acts::HoughTransformUtils::HoughAxisRanges axisRanges{-0.1, 0.0, -500.0,
+                                                        -400.0};
 
   CudaHT::CudaHoughPlaneBatch plane{{15, 15}, 1};
 
@@ -298,15 +280,13 @@ BOOST_AUTO_TEST_CASE(cuda_hough_eta_drift_circle_csv_visual_example) {
   writeDriftCircleCsv(hitsCsv);
   writeHoughHistogramCsv(histCsv, plane, axisRanges);
 
-  BOOST_TEST_MESSAGE("Wrote Hough visual debug hits to: "
-                     << hitsCsv.string());
-  BOOST_TEST_MESSAGE("Wrote Hough visual debug histogram to: "
-                     << histCsv.string());
+  BOOST_TEST_MESSAGE("Wrote Hough visual debug hits to: " << hitsCsv.string());
+  BOOST_TEST_MESSAGE(
+      "Wrote Hough visual debug histogram to: " << histCsv.string());
 
   BOOST_TEST_MESSAGE("Maximum bin: x=" << xBin << ", y=" << yBin);
-  BOOST_TEST_MESSAGE("Maximum parameters: tanTheta=" << foundTanTheta
-                                                     << ", interceptY="
-                                                     << foundInterceptY);
+  BOOST_TEST_MESSAGE("Maximum parameters: tanTheta="
+                     << foundTanTheta << ", interceptY=" << foundInterceptY);
   BOOST_TEST_MESSAGE("Max hits: " << plane.maxHits(bucketId));
   BOOST_TEST_MESSAGE("Max layers: " << plane.maxLayers(0));
 
@@ -317,15 +297,17 @@ BOOST_AUTO_TEST_CASE(cuda_hough_eta_drift_circle_csv_visual_example) {
   BOOST_CHECK_GE(plane.maxLayers(bucketId), 3.0f);
 }
 
-// Visual test with realistic data 
+// Visual test with realistic data
 // Bucket 0 exported for visualization
 BOOST_AUTO_TEST_CASE(cuda_hough_eta_mdt_root_first_event_whole_event_sanity) {
   const char* envPath = std::getenv("ACTS_CUDA_MUON_SP_ROOT");
 
-  const std::filesystem::path filePath = std::filesystem::path{"/data/mgawlas/ACTS/acts/Tests/Data/ParticleGun_MU0.root"};
+  const std::filesystem::path filePath = std::filesystem::path{
+      "/data/mgawlas/ACTS/acts/Tests/Data/ParticleGun_MU0.root"};
 
   if (!std::filesystem::exists(filePath)) {
-    BOOST_TEST_MESSAGE("Skipping ROOT CUDA Hough test. File does not exist: " << filePath);
+    BOOST_TEST_MESSAGE(
+        "Skipping ROOT CUDA Hough test. File does not exist: " << filePath);
     return;
   }
 
@@ -356,15 +338,19 @@ BOOST_AUTO_TEST_CASE(cuda_hough_eta_mdt_root_first_event_whole_event_sanity) {
   BOOST_REQUIRE_GT(constContainer.size(), 0u);
   BOOST_REQUIRE_GT(constContainer.bucketCount(), 0u);
 
-  // The CUDA fill moves the container to device, so it needs a non-const object.
-  auto& spacePoints = const_cast<ActsExamples::CudaMuonSpacePointContainer&>(constContainer);
+  // The CUDA fill moves the container to device, so it needs a non-const
+  // object.
+  auto& spacePoints =
+      const_cast<ActsExamples::CudaMuonSpacePointContainer&>(constContainer);
 
   for (std::size_t bucket = 0; bucket < spacePoints.bucketCount(); ++bucket) {
-    BOOST_CHECK_LE(spacePoints.bucketStart(bucket), spacePoints.bucketEnd(bucket));
+    BOOST_CHECK_LE(spacePoints.bucketStart(bucket),
+                   spacePoints.bucketEnd(bucket));
     BOOST_CHECK_LE(spacePoints.bucketEnd(bucket), spacePoints.size());
   }
 
-  const Acts::HoughTransformUtils::HoughAxisRanges axisRanges{-1.00, 1.20, -550.0, 450.0};
+  const Acts::HoughTransformUtils::HoughAxisRanges axisRanges{-1.00, 1.20,
+                                                              -550.0, 450.0};
 
   CudaHT::CudaHoughPlaneBatch plane{{15, 15}, spacePoints.bucketCount()};
 
@@ -414,23 +400,17 @@ BOOST_AUTO_TEST_CASE(cuda_hough_eta_mdt_root_first_event_whole_event_sanity) {
   BOOST_TEST_MESSAGE("Events in file: " << lastEvent);
   BOOST_TEST_MESSAGE("Space points in first event: " << spacePoints.size());
   BOOST_TEST_MESSAGE("Buckets in first event: " << spacePoints.bucketCount());
-  BOOST_TEST_MESSAGE("Hough axis ranges: tanTheta=[" << axisRanges.xMin
-                                                     << ", "
-                                                     << axisRanges.xMax
-                                                     << "], interceptY=["
-                                                     << axisRanges.yMin
-                                                     << ", "
-                                                     << axisRanges.yMax
-                                                     << "]");
+  BOOST_TEST_MESSAGE("Hough axis ranges: tanTheta=["
+                     << axisRanges.xMin << ", " << axisRanges.xMax
+                     << "], interceptY=[" << axisRanges.yMin << ", "
+                     << axisRanges.yMax << "]");
   BOOST_TEST_MESSAGE("Buckets with non-empty Hough response: "
                      << bucketsWithHits << " / " << plane.nBuckets());
   BOOST_TEST_MESSAGE("Total non-empty cells: " << totalNonEmptyCells);
   BOOST_TEST_MESSAGE("Best bucket: " << bestBucket);
-  BOOST_TEST_MESSAGE("Best maximum bin: x=" << bestXBin
-                                            << ", y=" << bestYBin);
-  BOOST_TEST_MESSAGE("Best maximum parameters: tanTheta=" << bestTanTheta
-                                                          << ", interceptY="
-                                                          << bestInterceptY);
+  BOOST_TEST_MESSAGE("Best maximum bin: x=" << bestXBin << ", y=" << bestYBin);
+  BOOST_TEST_MESSAGE("Best maximum parameters: tanTheta="
+                     << bestTanTheta << ", interceptY=" << bestInterceptY);
   BOOST_TEST_MESSAGE("Best max hits: " << bestMaxHits);
   BOOST_TEST_MESSAGE("Best max layers: " << bestMaxLayers);
 
@@ -444,10 +424,9 @@ BOOST_AUTO_TEST_CASE(cuda_hough_eta_mdt_root_first_event_whole_event_sanity) {
   writeFirstBucketHitsCsv(hitsCsv, spacePoints);
   writeHoughHistogramCsv(histCsv, plane, axisRanges);
 
-  BOOST_TEST_MESSAGE("Wrote first ROOT bucket hits to: "
-                     << hitsCsv.string());
-  BOOST_TEST_MESSAGE("Wrote first ROOT bucket Hough histogram to: "
-                     << histCsv.string());
+  BOOST_TEST_MESSAGE("Wrote first ROOT bucket hits to: " << hitsCsv.string());
+  BOOST_TEST_MESSAGE(
+      "Wrote first ROOT bucket Hough histogram to: " << histCsv.string());
 
   const auto [bucket0XBin, bucket0YBin] = plane.locMaxHits(0);
 
@@ -456,7 +435,6 @@ BOOST_AUTO_TEST_CASE(cuda_hough_eta_mdt_root_first_event_whole_event_sanity) {
   BOOST_TEST_MESSAGE("Bucket 0 max hits: " << plane.maxHits(0));
   BOOST_TEST_MESSAGE("Bucket 0 max layers: " << plane.maxLayers(0));
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
 

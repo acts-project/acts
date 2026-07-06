@@ -21,8 +21,8 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
-RootCudaMuonSpacePointReader::RootCudaMuonSpacePointReader(const Config& config, 
-                                                           Acts::Logging::Level level)
+RootCudaMuonSpacePointReader::RootCudaMuonSpacePointReader(
+    const Config& config, Acts::Logging::Level level)
     : m_cfg{config},
       m_logger{getDefaultLogger("RootCudaMuonSpacePointReader", level)} {
   if (m_cfg.outputSpacePoints.empty()) {

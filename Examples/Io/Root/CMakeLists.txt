@@ -53,25 +53,16 @@ target_link_libraries(
 )
 
 if(ACTS_ENABLE_CUDA)
-  find_package(CUDAToolkit REQUIRED)
+    find_package(CUDAToolkit REQUIRED)
 
-  target_sources(
-    ActsExamplesIoRoot
-    PRIVATE
-      src/RootCudaMuonSpacePointReader.cpp
-  )
+    target_sources(
+        ActsExamplesIoRoot
+        PRIVATE src/RootCudaMuonSpacePointReader.cpp
+    )
 
-  target_compile_definitions(
-    ActsExamplesIoRoot
-    PUBLIC
-      ACTS_ENABLE_CUDA
-  )
+    target_compile_definitions(ActsExamplesIoRoot PUBLIC ACTS_ENABLE_CUDA)
 
-  target_link_libraries(
-    ActsExamplesIoRoot
-    PRIVATE
-      CUDA::cudart
-  )
+    target_link_libraries(ActsExamplesIoRoot PRIVATE CUDA::cudart)
 endif()
 
 root_generate_dictionary(

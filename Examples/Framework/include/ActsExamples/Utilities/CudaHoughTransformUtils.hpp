@@ -10,7 +10,6 @@
 
 #ifdef ACTS_ENABLE_CUDA
 
-
 #include "Acts/Seeding/HoughTransformUtils.hpp"
 #include "ActsExamples/EventData/CudaMuonSpacePoint.hpp"
 
@@ -27,7 +26,7 @@ using HoughPlaneConfig = Acts::HoughTransformUtils::HoughPlaneConfig;
 using HoughAxisRanges = Acts::HoughTransformUtils::HoughAxisRanges;
 
 /// Bit mask encoding which logical detector layers contributed to one Hough
-/// cell. 
+/// cell.
 ///
 /// One bit corresponds to one zero-based logical layer:
 ///
@@ -79,7 +78,8 @@ class CudaHoughCell {
 ///   nLayers[bucket, cell]
 ///   layerMask[bucket, cell]
 ///
-/// Hit association is done later after peak finding, since otherwise there would be need for large prealocation.
+/// Hit association is done later after peak finding, since otherwise there
+/// would be need for large prealocation.
 class CudaHoughPlaneBatch {
  public:
   using size_type = std::size_t;
@@ -114,23 +114,21 @@ class CudaHoughPlaneBatch {
   Index axisBins(size_type globalBin) const;
 
   /// CPU-side direct bin fill. Useful for vdalidation.
-  void fillBin(size_type bucket, size_type xBin, size_type yBin,
-               unsigned layer, YieldType weight = 1.0f);
+  void fillBin(size_type bucket, size_type xBin, size_type yBin, unsigned layer,
+               YieldType weight = 1.0f);
 
   /// CPU reference fill for MDT eta Hough, all buckets in the event.
   void fillEtaDriftCirclesHost(const CudaMuonSpacePointContainer& spacePoints,
                                const HoughAxisRanges& axisRanges,
-                               double widthScale = 3.0,
-                               double maxWidth = 1.0,
+                               double widthScale = 3.0, double maxWidth = 1.0,
                                YieldType weight = 1.0f);
 
-void fillEtaDriftCirclesOnDevice(CudaMuonSpacePointContainer& spacePoints,
-                                 const HoughAxisRanges& axisRanges,
-                                 double widthScale = 3.0,
-                                 double maxWidth = 1.0,
-                                 YieldType weight = 1.0f,
-                                 std::uint32_t threadsPerBlock = 128,
-                                 std::uint32_t num_blocks = 0); // 0 is auto use number of SMs
+  void fillEtaDriftCirclesOnDevice(
+      CudaMuonSpacePointContainer& spacePoints,
+      const HoughAxisRanges& axisRanges, double widthScale = 3.0,
+      double maxWidth = 1.0, YieldType weight = 1.0f,
+      std::uint32_t threadsPerBlock = 128,
+      std::uint32_t num_blocks = 0);  // 0 is auto use number of SMs
 
   /// Reset host data and device data if allocated.
   void reset();

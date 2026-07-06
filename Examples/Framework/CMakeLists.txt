@@ -34,26 +34,17 @@ acts_add_library(
     ACTS_INCLUDE_FOLDER include/ActsExamples
 )
 
-if(ACTS_ENABLE_CUDA) 
+if(ACTS_ENABLE_CUDA)
     find_package(CUDAToolkit REQUIRED)
 
     target_sources(
-      ActsExamplesFramework
-      PRIVATE
-        src/Utilities/CudaHoughTransformUtils.cu
+        ActsExamplesFramework
+        PRIVATE src/Utilities/CudaHoughTransformUtils.cu
     )
 
-    target_compile_definitions(
-      ActsExamplesFramework
-      PRIVATE
-        ACTS_ENABLE_CUDA
-    )
+    target_compile_definitions(ActsExamplesFramework PRIVATE ACTS_ENABLE_CUDA)
 
-    target_link_libraries(
-      ActsExamplesFramework
-      PRIVATE
-        CUDA::cudart
-    )
+    target_link_libraries(ActsExamplesFramework PRIVATE CUDA::cudart)
 endif()
 
 target_include_directories(

@@ -10,8 +10,6 @@
 
 #ifdef ACTS_ENABLE_CUDA
 
-#include <cuda_runtime.h>
-
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -19,6 +17,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+#include <cuda_runtime.h>
 
 namespace {
 
@@ -40,8 +40,8 @@ void allocateDeviceColumn(T*& deviceColumn, std::size_t size) {
     return;
   }
 
-  cudaCheck(cudaMalloc(reinterpret_cast<void**>(&deviceColumn),
-                       size * sizeof(T)));
+  cudaCheck(
+      cudaMalloc(reinterpret_cast<void**>(&deviceColumn), size * sizeof(T)));
 }
 
 template <typename T>
@@ -59,8 +59,7 @@ void copyColumnToDevice(T* deviceColumn, const std::vector<T>& hostColumn) {
   }
 
   cudaCheck(cudaMemcpy(deviceColumn, hostColumn.data(),
-                       hostColumn.size() * sizeof(T),
-                       cudaMemcpyHostToDevice));
+                       hostColumn.size() * sizeof(T), cudaMemcpyHostToDevice));
 }
 
 template <typename T>
@@ -70,8 +69,7 @@ void copyColumnToHost(std::vector<T>& hostColumn, const T* deviceColumn) {
   }
 
   cudaCheck(cudaMemcpy(hostColumn.data(), deviceColumn,
-                       hostColumn.size() * sizeof(T),
-                       cudaMemcpyDeviceToHost));
+                       hostColumn.size() * sizeof(T), cudaMemcpyDeviceToHost));
 }
 
 std::size_t alignUp(std::size_t value, std::size_t alignment) {
@@ -79,8 +77,7 @@ std::size_t alignUp(std::size_t value, std::size_t alignment) {
 }
 
 /// Decode the zero-based layer index from raw MuonId.
-__host__ __device__ inline unsigned layerIndexFromMuonId(
-    std::uint32_t rawId) {
+__host__ __device__ inline unsigned layerIndexFromMuonId(std::uint32_t rawId) {
   static constexpr std::uint32_t fourBit = 0xFu;
   static constexpr std::uint32_t layerShift = 17u;
 
@@ -220,8 +217,7 @@ __global__ void fillEtaDriftCirclesMdtBatchKernel(
 
     // Thread-stride loop inside one bucket.
     // One logical task is hit x tanTheta-bin x left/right drift-circle solution
-    for (std::uint32_t task = threadIdx.x; task < nTasks;
-         task += blockDim.x) {
+    for (std::uint32_t task = threadIdx.x; task < nTasks; task += blockDim.x) {
       const std::uint32_t solution = task % nSolutions;
       const std::uint32_t xBin = (task / nSolutions) % batch.nBinsX;
       const std::uint32_t localHit = task / (nSolutions * batch.nBinsX);
@@ -248,8 +244,7 @@ __global__ void fillEtaDriftCirclesMdtBatchKernel(
         width = maxWidth;
       }
 
-      const unsigned layer =
-          layerIndexFromMuonId(spacePoints.muonId[hitIndex]);
+      const unsigned layer = layerIndexFromMuonId(spacePoints.muonId[hitIndex]);
 
       fillSharedYBand(sHits, sLayers, sMask, batch, ranges, xBin, y0, width,
                       layer, weight);
@@ -343,7 +338,7 @@ CudaHoughPlaneBatch::CudaHoughPlaneBatch(const HoughPlaneConfig& cfg,
       m_cfg.nBinsY > std::numeric_limits<std::uint32_t>::max() ||
       m_nBuckets > std::numeric_limits<std::uint32_t>::max()) {
     throw std::overflow_error(
-        "CudaHoughPlaneBatch dimensions must fit into uint32_t");
+        "CudaHoughPlaneBatch dimensions must fit into std::uint32_t");
   }
 
   m_hostHits.resize(totalCells(), 0.0f);
@@ -351,8 +346,7 @@ CudaHoughPlaneBatch::CudaHoughPlaneBatch(const HoughPlaneConfig& cfg,
   m_hostLayerMask.resize(totalCells(), LayerMask{0ull});
 }
 
-CudaHoughPlaneBatch::CudaHoughPlaneBatch(
-    CudaHoughPlaneBatch&& other) noexcept
+CudaHoughPlaneBatch::CudaHoughPlaneBatch(CudaHoughPlaneBatch&& other) noexcept
     : m_cfg{other.m_cfg},
       m_nBuckets{other.m_nBuckets},
       m_hostHits{std::move(other.m_hostHits)},
@@ -479,10 +473,9 @@ void CudaHoughPlaneBatch::fillEtaDriftCirclesHost(
 }
 
 void CudaHoughPlaneBatch::fillEtaDriftCirclesOnDevice(
-    CudaMuonSpacePointContainer& spacePoints,
-    const HoughAxisRanges& axisRanges, double widthScale, double maxWidth,
-    YieldType weight, std::uint32_t threadsPerBlock,
-    std::uint32_t num_blocks) {
+    CudaMuonSpacePointContainer& spacePoints, const HoughAxisRanges& axisRanges,
+    double widthScale, double maxWidth, YieldType weight,
+    std::uint32_t threadsPerBlock, std::uint32_t num_blocks) {
   checkSpacePointBuckets(spacePoints);
 
   if (threadsPerBlock == 0) {
@@ -503,18 +496,16 @@ void CudaHoughPlaneBatch::fillEtaDriftCirclesOnDevice(
   cudaCheck(cudaGetDevice(&device));
 
   int smCount = 0;
-  cudaCheck(cudaDeviceGetAttribute(&smCount, cudaDevAttrMultiProcessorCount,
-                                   device));
+  cudaCheck(
+      cudaDeviceGetAttribute(&smCount, cudaDevAttrMultiProcessorCount, device));
 
   int maxSharedMemory = 0;
   cudaCheck(cudaDeviceGetAttribute(&maxSharedMemory,
-                                   cudaDevAttrMaxSharedMemoryPerBlock,
-                                   device));
+                                   cudaDevAttrMaxSharedMemoryPerBlock, device));
 
   int maxThreadsPerBlock = 0;
   cudaCheck(cudaDeviceGetAttribute(&maxThreadsPerBlock,
-                                   cudaDevAttrMaxThreadsPerBlock,
-                                   device));
+                                   cudaDevAttrMaxThreadsPerBlock, device));
 
   if (sharedBytes > static_cast<std::size_t>(maxSharedMemory)) {
     throw std::runtime_error(
@@ -536,15 +527,14 @@ void CudaHoughPlaneBatch::fillEtaDriftCirclesOnDevice(
     throw std::runtime_error("Resolved num_blocks is zero");
   }
 
-  num_blocks =
-      std::min<std::uint32_t>(num_blocks,
-                              static_cast<std::uint32_t>(nBuckets()));
+  num_blocks = std::min<std::uint32_t>(num_blocks,
+                                       static_cast<std::uint32_t>(nBuckets()));
 
-  fillEtaDriftCirclesMdtBatchKernel<<<
-      static_cast<unsigned>(num_blocks),
-      static_cast<unsigned>(threadsPerBlock),
-      sharedBytes>>>(m_device, spacePoints.deviceArrays(), axisRanges,
-                     widthScale, maxWidth, weight);
+  fillEtaDriftCirclesMdtBatchKernel<<<static_cast<unsigned>(num_blocks),
+                                      static_cast<unsigned>(threadsPerBlock),
+                                      sharedBytes>>>(
+      m_device, spacePoints.deviceArrays(), axisRanges, widthScale, maxWidth,
+      weight);
 
   cudaCheck(cudaGetLastError());
   cudaCheck(cudaDeviceSynchronize());
@@ -649,8 +639,7 @@ CudaHoughPlaneBatch::Index CudaHoughPlaneBatch::locMaxHits(
   const auto end = begin + static_cast<std::ptrdiff_t>(nCellsPerBucket());
   const auto iter = std::max_element(begin, end);
 
-  const size_type localBin =
-      static_cast<size_type>(std::distance(begin, iter));
+  const size_type localBin = static_cast<size_type>(std::distance(begin, iter));
 
   return {localBin % nBinsX(), localBin / nBinsX()};
 }
@@ -664,14 +653,13 @@ CudaHoughPlaneBatch::Index CudaHoughPlaneBatch::locMaxLayers(
   const auto end = begin + static_cast<std::ptrdiff_t>(nCellsPerBucket());
   const auto iter = std::max_element(begin, end);
 
-  const size_type localBin =
-      static_cast<size_type>(std::distance(begin, iter));
+  const size_type localBin = static_cast<size_type>(std::distance(begin, iter));
 
   return {localBin % nBinsX(), localBin / nBinsX()};
 }
 
-std::vector<CudaHoughPlaneBatch::size_type>
-CudaHoughPlaneBatch::nonEmptyBins(size_type bucket) const {
+std::vector<CudaHoughPlaneBatch::size_type> CudaHoughPlaneBatch::nonEmptyBins(
+    size_type bucket) const {
   checkBucket(bucket);
 
   std::vector<size_type> out{};
@@ -744,7 +732,8 @@ void CudaHoughPlaneBatch::checkSpacePointBuckets(
     const CudaMuonSpacePointContainer& spacePoints) const {
   if (spacePoints.bucketCount() != nBuckets()) {
     throw std::invalid_argument(
-        "CudaHoughPlaneBatch bucket count does not match space point bucket count");
+        "CudaHoughPlaneBatch bucket count does not match space point bucket "
+        "count");
   }
 }
 

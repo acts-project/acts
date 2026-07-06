@@ -13,12 +13,12 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-#include "TFile.h"
-#include "TTree.h"
-
 #include <ios>
 #include <limits>
 #include <stdexcept>
+
+#include "TFile.h"
+#include "TTree.h"
 
 using namespace Acts;
 using namespace Acts::VectorHelpers;
@@ -53,11 +53,13 @@ RootCudaMuonSpacePointWriter::RootCudaMuonSpacePointWriter(
     : WriterT(config.inputSpacePoints, "RootCudaMuonSpacePointWriter", level),
       m_cfg{config} {
   if (m_cfg.filePath.empty()) {
-    throw std::invalid_argument("RootCudaMuonSpacePointWriter - Missing file path");
+    throw std::invalid_argument(
+        "RootCudaMuonSpacePointWriter - Missing file path");
   }
 
   if (m_cfg.treeName.empty()) {
-    throw std::invalid_argument("RootCudaMuonSpacePointWriter - Missing tree name");
+    throw std::invalid_argument(
+        "RootCudaMuonSpacePointWriter - Missing tree name");
   }
 
   m_file.reset(TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str()));
@@ -99,9 +101,8 @@ ProcessCode RootCudaMuonSpacePointWriter::finalize() {
   m_file->Write();
   m_file.reset();
 
-  ACTS_INFO("Wrote CUDA muon space points to tree '" << m_cfg.treeName
-                                                     << "' in '"
-                                                     << m_cfg.filePath << "'");
+  ACTS_INFO("Wrote CUDA muon space points to tree '"
+            << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
 
   return ProcessCode::SUCCESS;
 }
@@ -112,8 +113,7 @@ ProcessCode RootCudaMuonSpacePointWriter::writeT(
 
   m_eventId = ctx.eventNumber;
 
-  for (std::size_t bucketIdx = 0; bucketIdx < hits.bucketCount();
-       ++bucketIdx) {
+  for (std::size_t bucketIdx = 0; bucketIdx < hits.bucketCount(); ++bucketIdx) {
     for (std::size_t spIdx = hits.bucketStart(bucketIdx);
          spIdx < hits.bucketEnd(bucketIdx); ++spIdx) {
       auto writeMe = hits[spIdx];

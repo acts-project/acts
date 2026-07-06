@@ -11,9 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "ActsExamples/EventData/MuonSpacePoint.hpp"
-
 #include "ActsExamples/EventData/CudaMuonSpacePoint.hpp"
+#include "ActsExamples/EventData/MuonSpacePoint.hpp"
 
 #include <cuda_runtime.h>
 
@@ -34,10 +33,9 @@ BOOST_AUTO_TEST_CASE(CudaMuonSpacePointHostAccess) {
   ActsExamples::CudaMuonSpacePointContainer container{2};
 
   ActsExamples::MuonSpacePoint::MuonId muonId{};
-  muonId.setChamber(
-      ActsExamples::MuonSpacePoint::MuonId::StationName::BIS,
-      ActsExamples::MuonSpacePoint::MuonId::DetSide::A, 1,
-      ActsExamples::MuonSpacePoint::MuonId::TechField::Mdt);
+  muonId.setChamber(ActsExamples::MuonSpacePoint::MuonId::StationName::BIS,
+                    ActsExamples::MuonSpacePoint::MuonId::DetSide::A, 1,
+                    ActsExamples::MuonSpacePoint::MuonId::TechField::Mdt);
   muonId.setLayAndCh(1, 1);
   muonId.setCoordFlags(false, true, true);
 
@@ -101,17 +99,15 @@ BOOST_AUTO_TEST_CASE(CudaMuonSpacePointDeviceTransfer) {
   ActsExamples::CudaMuonSpacePointContainer container{1};
 
   ActsExamples::MuonSpacePoint::MuonId muonId{};
-  muonId.setChamber(
-      ActsExamples::MuonSpacePoint::MuonId::StationName::BIS,
-      ActsExamples::MuonSpacePoint::MuonId::DetSide::A, 1,
-      ActsExamples::MuonSpacePoint::MuonId::TechField::Mdt);
+  muonId.setChamber(ActsExamples::MuonSpacePoint::MuonId::StationName::BIS,
+                    ActsExamples::MuonSpacePoint::MuonId::DetSide::A, 1,
+                    ActsExamples::MuonSpacePoint::MuonId::TechField::Mdt);
   muonId.setLayAndCh(1, 1);
   muonId.setCoordFlags(false, true, true);
 
   container.setGeometryId(0, GeometryIdentifier{42}.value());
   container.setId(0, muonId.toInt());
-  container.defineCoordinates(0, Vector3{1.0, 2.0, 3.0},
-                              Vector3{1.0, 0.0, 0.0},
+  container.defineCoordinates(0, Vector3{1.0, 2.0, 3.0}, Vector3{1.0, 0.0, 0.0},
                               Vector3{0.0, 1.0, 0.0});
   container.setRadius(0, 4.0);
   container.setTime(0, 5.0);
@@ -127,8 +123,7 @@ BOOST_AUTO_TEST_CASE(CudaMuonSpacePointDeviceTransfer) {
   BOOST_CHECK(container.deviceArrays().bucketStart != nullptr);
   BOOST_CHECK(container.deviceArrays().bucketEnd != nullptr);
 
-  container.defineCoordinates(0, Vector3{0.0, 0.0, 0.0},
-                              Vector3{0.0, 1.0, 0.0},
+  container.defineCoordinates(0, Vector3{0.0, 0.0, 0.0}, Vector3{0.0, 1.0, 0.0},
                               Vector3{0.0, 0.0, 1.0});
 
   container.moveToHost();

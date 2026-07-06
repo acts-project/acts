@@ -42,7 +42,8 @@ class RootCudaMuonSpacePointReader : public IReader {
   ///
   /// @param config The configuration object.
   /// @param level The logging level.
-  RootCudaMuonSpacePointReader(const Config& config, Acts::Logging::Level level);
+  RootCudaMuonSpacePointReader(const Config& config,
+                               Acts::Logging::Level level);
 
   /// Ensure underlying file is closed.
   ~RootCudaMuonSpacePointReader() override;
