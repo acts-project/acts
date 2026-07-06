@@ -15,6 +15,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Geometry/IDesign.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
