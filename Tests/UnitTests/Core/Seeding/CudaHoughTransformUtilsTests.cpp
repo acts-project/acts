@@ -8,6 +8,11 @@
 
 #include "ActsExamples/EventData/CudaMuonSpacePoint.hpp"
 #include "ActsExamples/Utilities/CudaHoughTransformUtils.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+
+#include "ActsExamples/Io/Root/RootCudaMuonSpacePointReader.hpp"
 
 #include "Acts/Seeding/HoughTransformUtils.hpp"
 
@@ -20,6 +25,9 @@
 #include <fstream>
 #include <iomanip>
 #include <vector>
+#include <cstdlib>
+#include <limits>
+
 
 namespace ActsTests {
 
@@ -145,6 +153,47 @@ void writeHoughHistogramCsv(
   }
 }
 
+std::uint32_t rawMuonIdLayer(std::uint32_t rawId) {
+  static constexpr std::uint32_t fourBit = 0xFu;
+  static constexpr std::uint32_t layerShift = 17u;
+
+  return (rawId >> layerShift) & fourBit;
+}
+
+void writeFirstBucketHitsCsv(
+    const std::filesystem::path& path,
+    const ActsExamples::CudaMuonSpacePointContainer& container) {
+  std::ofstream out{path};
+  BOOST_REQUIRE_MESSAGE(out, "Failed to open " << path.string());
+
+  BOOST_REQUIRE_GT(container.bucketCount(), 0u);
+
+  const std::size_t bucketId = 0;
+  const std::size_t start = container.bucketStart(bucketId);
+  const std::size_t end = container.bucketEnd(bucketId);
+
+  out << std::setprecision(17);
+  out << "hitIndex,x,y,z,r,uncert,layer\n";
+
+  for (std::size_t i = start; i < end; ++i) {
+    auto sp = container[i];
+
+    const Acts::Vector3& pos = sp->localPosition();
+    const std::array<double, 3>& cov = sp->covariance();
+
+    const double uncert =
+        std::sqrt(std::max(cov[1], 0.0));
+
+    out << (i - start) << ","
+        << pos.x() << ","
+        << pos.y() << ","
+        << pos.z() << ","
+        << sp->driftRadius() << ","
+        << uncert << ","
+        << rawMuonIdLayer(container.muonId(i)) << "\n";
+  }
+}
+
 }  // namespace
 
 // This checks the batched cell model.
@@ -182,8 +231,7 @@ BOOST_AUTO_TEST_CASE(cuda_hough_batch_eta_mdt_fill_matches_host_reference) {
   auto spacePointsForHost = makeBatchedDriftCircleContainer(nBuckets);
   auto spacePointsForCuda = makeBatchedDriftCircleContainer(nBuckets);
 
-  Acts::HoughTransformUtils::HoughAxisRanges axisRanges{
-      -0.20, 0.20, -650.0, -150.0};
+  Acts::HoughTransformUtils::HoughAxisRanges axisRanges{-0.20, 0.20, -650.0, -150.0};
 
   CudaHT::CudaHoughPlaneBatch hostBatch{{40, 40}, nBuckets};
   CudaHT::CudaHoughPlaneBatch cudaBatch{{40, 40}, nBuckets};
@@ -268,6 +316,147 @@ BOOST_AUTO_TEST_CASE(cuda_hough_eta_drift_circle_csv_visual_example) {
   BOOST_CHECK_GE(plane.maxHits(bucketId), 3.0f);
   BOOST_CHECK_GE(plane.maxLayers(bucketId), 3.0f);
 }
+
+// Visual test with realistic data 
+// Bucket 0 exported for visualization
+BOOST_AUTO_TEST_CASE(cuda_hough_eta_mdt_root_first_event_whole_event_sanity) {
+  const char* envPath = std::getenv("ACTS_CUDA_MUON_SP_ROOT");
+
+  const std::filesystem::path filePath = std::filesystem::path{"/data/mgawlas/ACTS/acts/Tests/Data/ParticleGun_MU0.root"};
+
+  if (!std::filesystem::exists(filePath)) {
+    BOOST_TEST_MESSAGE("Skipping ROOT CUDA Hough test. File does not exist: " << filePath);
+    return;
+  }
+
+  ActsExamples::RootCudaMuonSpacePointReader::Config cfg{};
+  cfg.filePath = filePath.string();
+  cfg.treeName = "MuonSpacePoints";
+  cfg.outputSpacePoints = "CudaMuonSpacePoints";
+
+  ActsExamples::RootCudaMuonSpacePointReader reader{cfg, Acts::Logging::INFO};
+
+  const auto [firstEvent, lastEvent] = reader.availableEvents();
+
+  BOOST_CHECK_EQUAL(firstEvent, 0u);
+  BOOST_REQUIRE_GT(lastEvent, 0u);
+
+  ActsExamples::WhiteBoard eventStore;
+  ActsExamples::AlgorithmContext context{0, 0, eventStore, 0};
+
+  BOOST_CHECK(reader.read(context) == ActsExamples::ProcessCode::SUCCESS);
+  BOOST_REQUIRE(eventStore.exists(cfg.outputSpacePoints));
+
+  ActsExamples::ReadDataHandle<ActsExamples::CudaMuonSpacePointContainer>
+      outputHandle{&reader, "OutputSpacePoints"};
+  outputHandle.initialize(cfg.outputSpacePoints);
+
+  const auto& constContainer = outputHandle(context);
+
+  BOOST_REQUIRE_GT(constContainer.size(), 0u);
+  BOOST_REQUIRE_GT(constContainer.bucketCount(), 0u);
+
+  // The CUDA fill moves the container to device, so it needs a non-const object.
+  auto& spacePoints = const_cast<ActsExamples::CudaMuonSpacePointContainer&>(constContainer);
+
+  for (std::size_t bucket = 0; bucket < spacePoints.bucketCount(); ++bucket) {
+    BOOST_CHECK_LE(spacePoints.bucketStart(bucket), spacePoints.bucketEnd(bucket));
+    BOOST_CHECK_LE(spacePoints.bucketEnd(bucket), spacePoints.size());
+  }
+
+  const Acts::HoughTransformUtils::HoughAxisRanges axisRanges{-1.00, 1.20, -550.0, 450.0};
+
+  CudaHT::CudaHoughPlaneBatch plane{{15, 15}, spacePoints.bucketCount()};
+
+  plane.fillEtaDriftCirclesOnDevice(spacePoints, axisRanges);
+  plane.moveToHost();
+
+  std::size_t bucketsWithHits = 0;
+  std::size_t totalNonEmptyCells = 0;
+
+  std::size_t bestBucket = 0;
+  CudaHT::YieldType bestMaxHits = 0.0f;
+  CudaHT::YieldType bestMaxLayers = 0.0f;
+
+  for (std::size_t bucket = 0; bucket < plane.nBuckets(); ++bucket) {
+    const auto maxHits = plane.maxHits(bucket);
+    const auto maxLayers = plane.maxLayers(bucket);
+
+    BOOST_CHECK(std::isfinite(maxHits));
+    BOOST_CHECK(std::isfinite(maxLayers));
+    BOOST_CHECK_LE(maxLayers, maxHits);
+
+    const auto nonEmpty = plane.nonEmptyBins(bucket);
+    totalNonEmptyCells += nonEmpty.size();
+
+    if (maxHits > 0.0f) {
+      ++bucketsWithHits;
+    }
+
+    if (maxHits > bestMaxHits) {
+      bestMaxHits = maxHits;
+      bestMaxLayers = maxLayers;
+      bestBucket = bucket;
+    }
+  }
+
+  BOOST_CHECK_GT(bucketsWithHits, 0u);
+  BOOST_CHECK_GT(totalNonEmptyCells, 0u);
+  BOOST_CHECK_GT(bestMaxHits, 0.0f);
+
+  const auto [bestXBin, bestYBin] = plane.locMaxHits(bestBucket);
+
+  const double bestTanTheta = Acts::HoughTransformUtils::binCenter(
+      axisRanges.xMin, axisRanges.xMax, plane.nBinsX(), bestXBin);
+  const double bestInterceptY = Acts::HoughTransformUtils::binCenter(
+      axisRanges.yMin, axisRanges.yMax, plane.nBinsY(), bestYBin);
+
+  BOOST_TEST_MESSAGE("Events in file: " << lastEvent);
+  BOOST_TEST_MESSAGE("Space points in first event: " << spacePoints.size());
+  BOOST_TEST_MESSAGE("Buckets in first event: " << spacePoints.bucketCount());
+  BOOST_TEST_MESSAGE("Hough axis ranges: tanTheta=[" << axisRanges.xMin
+                                                     << ", "
+                                                     << axisRanges.xMax
+                                                     << "], interceptY=["
+                                                     << axisRanges.yMin
+                                                     << ", "
+                                                     << axisRanges.yMax
+                                                     << "]");
+  BOOST_TEST_MESSAGE("Buckets with non-empty Hough response: "
+                     << bucketsWithHits << " / " << plane.nBuckets());
+  BOOST_TEST_MESSAGE("Total non-empty cells: " << totalNonEmptyCells);
+  BOOST_TEST_MESSAGE("Best bucket: " << bestBucket);
+  BOOST_TEST_MESSAGE("Best maximum bin: x=" << bestXBin
+                                            << ", y=" << bestYBin);
+  BOOST_TEST_MESSAGE("Best maximum parameters: tanTheta=" << bestTanTheta
+                                                          << ", interceptY="
+                                                          << bestInterceptY);
+  BOOST_TEST_MESSAGE("Best max hits: " << bestMaxHits);
+  BOOST_TEST_MESSAGE("Best max layers: " << bestMaxLayers);
+
+  // Dump bucket 0 for visualization.
+  const std::filesystem::path outDir = std::filesystem::current_path();
+  const std::filesystem::path hitsCsv =
+      outDir / "cuda_hough_root_first_bucket_hits.csv";
+  const std::filesystem::path histCsv =
+      outDir / "cuda_hough_root_first_bucket_histogram.csv";
+
+  writeFirstBucketHitsCsv(hitsCsv, spacePoints);
+  writeHoughHistogramCsv(histCsv, plane, axisRanges);
+
+  BOOST_TEST_MESSAGE("Wrote first ROOT bucket hits to: "
+                     << hitsCsv.string());
+  BOOST_TEST_MESSAGE("Wrote first ROOT bucket Hough histogram to: "
+                     << histCsv.string());
+
+  const auto [bucket0XBin, bucket0YBin] = plane.locMaxHits(0);
+
+  BOOST_TEST_MESSAGE("Bucket 0 max bin: x=" << bucket0XBin
+                                            << ", y=" << bucket0YBin);
+  BOOST_TEST_MESSAGE("Bucket 0 max hits: " << plane.maxHits(0));
+  BOOST_TEST_MESSAGE("Bucket 0 max layers: " << plane.maxLayers(0));
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

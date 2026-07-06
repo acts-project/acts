@@ -24,6 +24,7 @@ if(ACTS_BUILD_PLUGIN_ROOT)
     set_tests_properties(StrawLineFitterTest PROPERTIES LABELS "slow")
 endif()
 
+
 if(ACTS_ENABLE_CUDA)
   add_unittest(CudaHoughTransformUtils CudaHoughTransformUtilsTests.cpp)
 
@@ -33,7 +34,12 @@ if(ACTS_ENABLE_CUDA)
     ActsUnitTestCudaHoughTransformUtils
     PRIVATE
       ActsExamplesFramework
+      ActsExamplesIoRoot
       CUDA::cudart
+      ROOT::TreePlayer
+      ROOT::Tree
+      ROOT::RIO
+      ROOT::Core
   )
 
   target_compile_definitions(
