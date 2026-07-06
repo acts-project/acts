@@ -12,9 +12,9 @@
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Seeding2/GbtsGeometry.hpp"
-#include "Acts/Seeding2/GbtsTrackingFilter.hpp"
-#include "Acts/Seeding2/GraphBasedTrackSeeder.hpp"
+#include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsTrackingFilter.hpp"
+#include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"

@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/Seeding/BroadTripletSeedFilter.hpp"
+#include "Acts/Seeding/CylindricalSpacePointGrid.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
-#include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
-#include "Acts/Seeding2/CylindricalSpacePointGrid2.hpp"
-#include "Acts/Seeding2/TripletSeeder.hpp"
+#include "Acts/Seeding/TripletSeeder.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Seed.hpp"
@@ -248,7 +248,7 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
-  Acts::CylindricalSpacePointGrid2::Config m_gridConfig;
+  Acts::CylindricalSpacePointGrid::Config m_gridConfig;
 
   std::unique_ptr<const Acts::GridBinFinder<3ul>> m_bottomBinFinder{nullptr};
   std::unique_ptr<const Acts::GridBinFinder<3ul>> m_topBinFinder{nullptr};

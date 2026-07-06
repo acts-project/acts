@@ -12,9 +12,9 @@
 #include "Acts/EventData/SeedContainer2.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
-#include "Acts/Seeding2/DoubletSeedFinder.hpp"
-#include "Acts/Seeding2/TripletSeedFinder.hpp"
+#include "Acts/Seeding/BroadTripletSeedFilter.hpp"
+#include "Acts/Seeding/DoubletSeedFinder.hpp"
+#include "Acts/Seeding/TripletSeedFinder.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
 
@@ -133,8 +133,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   const SpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
 
-  Acts::CylindricalSpacePointGrid2 grid(m_gridConfig,
-                                        logger().cloneWithSuffix("Grid"));
+  Acts::CylindricalSpacePointGrid grid(m_gridConfig,
+                                       logger().cloneWithSuffix("Grid"));
 
   for (std::size_t i = 0; i < spacePoints.size(); ++i) {
     const auto& sp = spacePoints[i];

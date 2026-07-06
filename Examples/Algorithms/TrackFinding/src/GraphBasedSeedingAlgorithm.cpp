@@ -12,9 +12,9 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Seeding2/GbtsGeometry.hpp"
-#include "Acts/Seeding2/GbtsLayerConnection.hpp"
-#include "Acts/Seeding2/GbtsTrackingFilter.hpp"
+#include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsLayerConnection.hpp"
+#include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 #include <cmath>

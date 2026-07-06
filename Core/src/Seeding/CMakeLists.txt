@@ -6,4 +6,19 @@ target_sources(
         CompositeSpacePointLineFitter.cpp
         FastStrawLineFitter.cpp
         CompositeSpacePointLineSeeder.cpp
+        detail/CandidatesForMiddleSp.cpp
+        BroadTripletSeedFilter.cpp
+        CylindricalSpacePointGrid.cpp
+        CartesianSpacePointGrid.cpp
+        CylindricalSpacePointKDTree.cpp
+        DoubletSeedFinder.cpp
+        TripletSeedFinder.cpp
+        TripletSeeder.cpp
+        GbtsDataStorage.cpp
+        GbtsGeometry.cpp
+        GbtsTrackingFilter.cpp
+        GraphBasedTrackSeeder.cpp
+        GbtsLayerConnection.cpp
+        GbtsRoiDescriptor.cpp
+        HoughAccumulatorSection.cpp
 )
