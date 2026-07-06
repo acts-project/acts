@@ -26,7 +26,7 @@ that actor. Instead they call the underlying routine directly from their Kalman
 actors so the material noise can be interleaved with the Kalman update at
 precisely the right point on each surface.
 
-## Where the update is applied {#kf-material-where}
+## Where the update is applied
 
 On every surface the fitters apply the pointwise material update, using a
 @ref Acts::MaterialUpdateMode that avoids double counting:
