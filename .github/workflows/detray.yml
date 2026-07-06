@@ -4,11 +4,13 @@ on:
   push:
     paths:
       - "Detray/**"
+      - ".github/workflows/detray.yml"
   pull_request:
     branches:
       - main
     paths:
       - "Detray/**"
+      - ".github/workflows/detray.yml"
 
 # Cancel existing jobs on new pushes.
 concurrency:
@@ -41,7 +43,7 @@ jobs:
     # The build/test steps to execute.
     steps:
     # Use a standard checkout of the code.
-    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       with:
         persist-credentials: false
     # Run the CMake configuration. Test that the metadata generation runs
@@ -72,7 +74,7 @@ jobs:
         PLATFORM:
           - NAME: "HOST"
             CXX_STANDARD: "20"
-            CONTAINER: "ghcr.io/acts-project/ubuntu2404:87"
+            CONTAINER: "ghcr.io/acts-project/ubuntu2404:69"
             OPTIONS: -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_FASTOR_PLUGIN=OFF -DDETRAY_SMATRIX_PLUGIN=OFF -DDETRAY_VC_AOS_PLUGIN=OFF -DDETRAY_VC_SOA_PLUGIN=OFF
 
     # The system to run on.
@@ -93,7 +95,7 @@ jobs:
     # The build/test steps to execute.
     steps:
     # Use a standard checkout of the code.
-    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       with:
         persist-credentials: false
     # Get the data files for the tests
@@ -141,11 +143,11 @@ jobs:
         PLATFORM:
           - NAME: "CUDA"
             CXX_STANDARD: "20"
-            CONTAINER: "ghcr.io/acts-project/ubuntu2404_cuda:87"
+            CONTAINER: "ghcr.io/acts-project/ubuntu2404_cuda:69"
             OPTIONS: -DDETRAY_BUILD_CUDA=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON
           - NAME: "HIP-AMD"
             CXX_STANDARD: "20"
-            CONTAINER: "ghcr.io/acts-project/ubuntu2404_rocm_oneapi:87"
+            CONTAINER: "ghcr.io/acts-project/ubuntu2404_rocm_oneapi:69"
             OPTIONS: -DCMAKE_PREFIX_PATH=/opt/rocm/lib/cmake/ -DCMAKE_HIP_PLATFORM=amd -DDETRAY_BUILD_HIP=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_BUILD_BENCHMARKS=OFF -DDETRAY_BUILD_INTEGRATIONTESTS=OFF
           #- NAME: "HIP-NVIDIA"
           #  CXX_STANDARD: "20"
@@ -153,7 +155,7 @@ jobs:
           #  OPTIONS: -DCMAKE_HIP_PLATFORM=nvidia -DDETRAY_BUILD_HIP=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_BUILD_BENCHMARKS=OFF
           - NAME: "SYCL"
             CXX_STANDARD: "20"
-            CONTAINER: "ghcr.io/acts-project/ubuntu2404_oneapi:87"
+            CONTAINER: "ghcr.io/acts-project/ubuntu2404_oneapi:69"
             OPTIONS: -DDETRAY_BUILD_CUDA=OFF -DDETRAY_BUILD_SYCL=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON
 
     # The system to run on.
@@ -169,7 +171,7 @@ jobs:
     # The build/test steps to execute.
     steps:
     # Use a standard checkout of the code.
-    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       with:
         persist-credentials: false
     # Run the CMake configuration.

@@ -13,4 +13,5 @@ target_sources(
         TransformComparator.cpp
         Histogram.cpp
         IMultiAxis.cpp
+        StringHelpers.cpp
 )
