@@ -30,9 +30,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
-#include "ActsPlugins/Detray/DetrayDetectorIO.hpp"
 #include "ActsPlugins/Detray/DetrayGeometryConverter.hpp"
-#include "ActsPlugins/Detray/DetrayMetadata.hpp"
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
@@ -711,23 +709,27 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   }
 
   // Payloads DONE, let's actually build a detray detector. We go through the
-  // geometry converter so this translation unit links the explicitly
-  // instantiated `convert` for the closed-set Default metadata instead of
-  // instantiating the detray detector builder/readers here.
+  // geometry converter, whose heavy detector-building core is pre-instantiated
+  // in detray::detector_io_array for the Default metadata.
+  using DefaultMetadata = detray::default_metadata<detray::array<float>>;
   DetrayGeometryConverter geoConverter(DetrayGeometryConverter::Config{
       std::make_shared<DetrayPayloadConverter>(cfg)});
 
   auto detrayGeometry =
-      geoConverter.convert<DetrayMetadata::Default>(mr, gctx, tGeometry);
+      geoConverter.convert<DefaultMetadata>(mr, gctx, tGeometry);
 
   auto& detrayDetector = *detrayGeometry.detector;
   const auto& detrayNames = detrayGeometry.names;
 
-  // Consistency check (explicitly instantiated for the closed set).
-  ActsPlugins::detail::checkDetrayConsistency(detrayDetector);
+  // Consistency check (pre-instantiated in detray::detector_io_array).
+  detray::detail::check_consistency(detrayDetector);
 
-  // Write the detector to JSON (explicitly instantiated for the closed set).
-  ActsPlugins::detail::writeDetrayJson(detrayDetector, detrayNames, "");
+  // Write the detector to JSON (pre-instantiated in detray::detector_io_array).
+  auto writerCfg = detray::io::detector_writer_config{}
+                       .format(detray::io::format::json)
+                       .path("")
+                       .replace_files(true);
+  detray::io::write_detector(detrayDetector, detrayNames, writerCfg);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

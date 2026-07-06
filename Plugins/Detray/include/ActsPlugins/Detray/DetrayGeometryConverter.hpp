@@ -12,7 +12,6 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
-#include "ActsPlugins/Detray/DetrayMetadata.hpp"
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
 
 #include <memory>
@@ -20,6 +19,8 @@
 #include <string>
 
 #include <detray/core/detector.hpp>
+#include <detray/detectors/detector_io_array.hpp>
+#include <detray/io/frontend/detector_assembler.hpp>
 #include <vecmem/memory/memory_resource.hpp>
 
 namespace ActsPlugins {
@@ -34,13 +35,13 @@ namespace ActsPlugins {
 /// supplying its own configured @c DetrayPayloadConverter instance through the
 /// @c Config.
 ///
-/// @c convert is a member template over the detray metadata type. It is
-/// explicitly instantiated (and declared `extern template`) for the closed set
-/// of supported metadata types listed in @ref DetrayMetadata.hpp, so that the
-/// heavy detray detector-building code is compiled only once per metadata in a
-/// dedicated translation unit. Experiment code may still convert to a custom
-/// metadata by including @c DetrayGeometryConverter.ipp and instantiating
-/// @c convert with the desired metadata type.
+/// @c convert is a member template over the detray metadata type. Its heavy
+/// detector-building core lives in detray as @c detray::io::assemble_detector,
+/// which is pre-compiled for the shipped metadata types (see detray's
+/// @c detector_io_array.hpp), so @c convert itself is thin glue that instantiates
+/// cheaply. Experiment code may convert to a custom metadata simply by calling
+/// @c convert with the desired metadata type; the detray assembly then
+/// instantiates on demand.
 class DetrayGeometryConverter {
  public:
   /// @brief Configuration for the geometry converter
@@ -101,10 +102,6 @@ class DetrayGeometryConverter {
   /// 2. It builds a detray detector from the converted payloads using the
   ///    detray::detector_builder.
   ///
-  /// @note The definition lives in @c DetrayGeometryConverter.ipp; for the
-  ///     closed set of metadata types it is `extern template` declared here and
-  ///     instantiated in a dedicated translation unit.
-  ///
   /// @return The built detray detector together with its name map.
   template <typename metadata_t>
   DetrayGeometry<metadata_t> convert(
@@ -119,15 +116,43 @@ class DetrayGeometryConverter {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-// Suppress implicit instantiation of `convert` for the closed set; the matching
-// definitions are emitted in generated translation units (see CMakeLists.txt).
-#define ACTS_DETRAY_EXTERN_CONVERT(META)                           \
-  extern template DetrayGeometryConverter::DetrayGeometry<META>    \
-  DetrayGeometryConverter::convert<META>(                          \
-      vecmem::memory_resource&, const Acts::GeometryContext&,      \
-      const std::shared_ptr<const Acts::TrackingGeometry>&,        \
-      const std::string&) const;
-ACTS_DETRAY_METADATA_FOR_EACH(ACTS_DETRAY_EXTERN_CONVERT)
-#undef ACTS_DETRAY_EXTERN_CONVERT
+template <typename metadata_t>
+DetrayGeometryConverter::DetrayGeometry<metadata_t>
+DetrayGeometryConverter::convert(
+    vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
+    const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
+    const std::string& detectorName) const {
+  using detector_t = detray::detector<metadata_t>;
+
+  if (trackingGeometry == nullptr) {
+    throw std::invalid_argument(
+        "DetrayGeometryConverter: trackingGeometry must not be null");
+  }
+
+  // ── Convert TrackingGeometry → detray payloads ──────────────────────────
+  auto payloads =
+      m_cfg.payloadConverter->convertTrackingGeometry(gctx, *trackingGeometry);
+
+  // Resolve the detector name (explicit argument wins, else the payload name).
+  std::string name = detectorName;
+  if (name.empty() && payloads.names.contains(0)) {
+    name = payloads.names.at(0);
+  }
+
+  // ── Build the detray detector from the payloads ─────────────────────────
+  // The heavy detector-building template tree lives in detray and is
+  // pre-instantiated for the shipped metadata types (see
+  // detector_io_array.hpp).
+  DetrayGeometry<metadata_t> result{};
+  result.detector =
+      std::make_shared<detector_t>(detray::io::assemble_detector<detector_t>(
+          mr, *payloads.detector,
+          m_cfg.convertMaterial ? payloads.homogeneousMaterial.get() : nullptr,
+          m_cfg.convertMaterial ? payloads.materialGrids.get() : nullptr,
+          m_cfg.convertSurfaceGrids ? payloads.surfaceGrids.get() : nullptr,
+          name, result.names));
+
+  return result;
+}
 
 }  // namespace ActsPlugins

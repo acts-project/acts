@@ -71,8 +71,9 @@ void read_components_from_file(const std::vector<std::string>& file_names,
 /// @returns a complete detector object + a map that contains the volume names
 template <class detector_t, std::size_t CAP = 0u, std::size_t DIM = 2u,
           template <typename> class volume_builder_t = volume_builder>
-auto read_detector(vecmem::memory_resource& resc,
-                   const detector_reader_config& cfg) noexcept(false) {
+std::pair<detector_t, typename detector_t::name_map> read_detector(
+    vecmem::memory_resource& resc,
+    const detector_reader_config& cfg) noexcept(false) {
   // Map the volume names to their indices
   typename detector_t::name_map names{};
 
