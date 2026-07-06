@@ -104,11 +104,11 @@ BOOST_AUTO_TEST_CASE(BarcodeConstructors) {
   auto p3 = Barcode().withData(arrayValues);
   auto p4 = Barcode::Invalid();
   auto p5 = Barcode();
-  std::vector<std::uint32_t> vectorZeros = {0u, 0u, 0u, 0u, 0u};
+  std::array<std::uint32_t, 5> arrayZeros = {0u, 0u, 0u, 0u, 0u};
 
   BOOST_CHECK_EQUAL(p1, p2);
   BOOST_CHECK_EQUAL(p1, p3);
-  BOOST_CHECK(p4.asVector() == vectorZeros);
+  BOOST_CHECK(p4.asArray() == arrayZeros);
   BOOST_CHECK_EQUAL(p4, p5);
   BOOST_CHECK(p1.isValid());
   BOOST_CHECK(!p4.isValid());
