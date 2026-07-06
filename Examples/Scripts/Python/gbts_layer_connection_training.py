@@ -14,7 +14,7 @@ from acts.examples.simulation import (
 )
 from acts.examples.reconstruction import addGbtsTraining
 
-ttbar_pu200 = True
+ttbar_pu200 = False
 u = acts.UnitConstants
 geo_dir = pathlib.Path("acts-itk")
 outputDir = pathlib.Path.cwd() / "itk_output"
@@ -25,7 +25,7 @@ trackingGeometry = detector.trackingGeometry()
 field = acts.root.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-s = acts.examples.Sequencer(events=500, numThreads=96, outputDir=str(outputDir))
+s = acts.examples.Sequencer(events=1000000, numThreads=96, outputDir=str(outputDir))
 
 if not ttbar_pu200:
     addParticleGun(
@@ -89,14 +89,14 @@ addGbtsTraining(
     s,
     selectedParticles="particles_selected",
     geometryFile=pathlib.Path.cwd() / "gbts_layer_geometry.txt",
-    outputConnectionTable=outputDir / "new_implementation_500ttbar200.txt",
+    outputConnectionTable=outputDir / "new_implementation_symm_1000k_singleMu.txt",
     probThreshold=-1.0,
     zMinTol=0.2340,
     zMaxTol=0.2340,
     rMinTol=2.5337,
     rMaxTol=2.5337,
-    doSymmetrization=False,
-    useOldFormatting=False,
+    doSymmetrization=True,
+    useOldFormatting=True,
     logLevel=acts.logging.INFO,
 )
 

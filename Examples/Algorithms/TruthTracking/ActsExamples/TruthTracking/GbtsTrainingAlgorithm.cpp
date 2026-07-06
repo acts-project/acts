@@ -18,8 +18,9 @@
 namespace ActsExamples {
 
 GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
-    const Config& config, std::unique_ptr<const Acts::Logger> logger)
-    : IAlgorithm("GbtsTrainingAlgorithm", std::move(logger)), m_cfg(config) {
+    const Config& config, std::unique_ptr<const Acts::Logger> inputLogger)
+    : IAlgorithm("GbtsTrainingAlgorithm", std::move(inputLogger)),
+      m_cfg(config) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
   }
@@ -44,14 +45,17 @@ GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
   m_inputSimHits.initialize(m_cfg.inputSimHits);
   m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
 
-  m_gbtsTrainingTool.emplace(
-      m_cfg.gbtsTrainingConfig, config.geometryFileDir,
+  ACTS_INFO("LayerConnectionTool chosen");
+
+  m_layerConnectionTool.emplace(
+      m_cfg.gbtsLayerConnectionToolConfig, config.geometryFileDir,
       this->logger().cloneWithSuffix("GbtsLayerConnectionTool"));
 }
 
 GbtsTrainingAlgorithm::~GbtsTrainingAlgorithm() {
-  m_gbtsTrainingTool->createConnectionTable(m_cfg.outputFileDir);
+  m_layerConnectionTool->createConnectionTable(m_cfg.outputFileDir);
 }
+
 ProcessCode GbtsTrainingAlgorithm::execute(const AlgorithmContext& ctx) const {
   // prepare input collections
   const auto& particles = m_inputParticles(ctx);
@@ -128,7 +132,7 @@ ProcessCode GbtsTrainingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     {
       std::lock_guard<std::mutex> lock(m_gbtsTrainingToolMutex);
-      m_gbtsTrainingTool->addTrack(coords);
+      m_layerConnectionTool->addTrack(coords);
     }
   }
 

@@ -144,8 +144,8 @@ void GbtsLayerConnectionTool::createConnectionTable(
   // define output text file
   std::ofstream outputFile(outputFileLocation);
 
-  // obtain total icoing transitions for each src layer (used as denominator of
-  // probability)
+  // obtain total incoming transitions for each src layer (used as denominator
+  // of probability)
   std::vector<std::uint32_t> srcTotals;
   srcTotals.resize(m_detectorGeometry.size(), 0);
 
@@ -184,7 +184,7 @@ void GbtsLayerConnectionTool::createConnectionTable(
       const auto srcSwappedId = oppositeSideLayer(pair.first);
       const auto dstSwappedId = oppositeSideLayer(pair.second);
 
-      if (!srcSwappedId && !dstSwappedId) {
+      if (!srcSwappedId || !dstSwappedId) {
         ACTS_WARNING("Cannot find oppisite side layer, skipping");
         continue;
       }
@@ -203,6 +203,7 @@ void GbtsLayerConnectionTool::createConnectionTable(
   if (m_cfg.useOldFormatting) {
     oldStyleFormatting(outputFileLocation, tempPairs);
   } else {
+    outputFile << tempPairs.size() << "\n";
     for (const auto& pair : tempPairs) {
       // swap order as we want outward -> inward ordering
       outputFile << pair.second << " " << pair.first << "\n";

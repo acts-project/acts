@@ -36,7 +36,8 @@ class GbtsTrainingAlgorithm final : public IAlgorithm {
     /// The input measurement-sim hits map collection.
     std::string inputMeasurementSimHitsMap;
 
-    Acts::Experimental::GbtsLayerConnectionTool::Config gbtsTrainingConfig;
+    Acts::Experimental::GbtsLayerConnectionTool::Config
+        gbtsLayerConnectionToolConfig;
 
     // TO DO: inplace them explicitly into config
     std::string geometryFileDir =
@@ -77,7 +78,7 @@ class GbtsTrainingAlgorithm final : public IAlgorithm {
   // make the mutable class thread safe
   mutable std::mutex m_gbtsTrainingToolMutex;
   mutable std::optional<Acts::Experimental::GbtsLayerConnectionTool>
-      m_gbtsTrainingTool;
+      m_layerConnectionTool;
 };
 
 }  // namespace ActsExamples

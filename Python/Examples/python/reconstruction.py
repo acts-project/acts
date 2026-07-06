@@ -591,7 +591,7 @@ def addSeeding(
 
 
 def addGbtsTraining(
-    sequence: acts.examples.Sequencer,
+    s: acts.examples.Sequencer,
     selectedParticles: str = "particles_selected",
     geometryFile: str = "gbts_layer_geometry.txt",
     outputConnectionTable: str = "new_test_CT.txt",
@@ -604,9 +604,9 @@ def addGbtsTraining(
     useOldFormatting: bool = False,
     logLevel: acts.logging.Level = None,
 ):
-    logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+    logLevel = acts.examples.defaultLogging(s, logLevel)()
 
-    gbtsTrainingConfig = acts.examples.GbtsLayerConnectionConfig(
+    gbtsLayerConnectionToolConfig = acts.examples.GbtsLayerConnectionToolConfig(
         zMinTol=zMinTol,
         zMaxTol=zMaxTol,
         rMinTol=rMinTol,
@@ -623,12 +623,12 @@ def addGbtsTraining(
         inputMeasurements="measurements",
         inputSimHits="simhits",
         inputMeasurementSimHitsMap="measurement_simhits_map",
-        gbtsTrainingConfig=gbtsTrainingConfig,
+        gbtsLayerConnectionToolConfig=gbtsLayerConnectionToolConfig,
         geometryFileDir=str(geometryFile),
         outputFileDir=str(outputConnectionTable),
     )
 
-    sequence.addAlgorithm(alg)
+    s.addAlgorithm(alg)
     return alg
 
 
