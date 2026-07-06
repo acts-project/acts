@@ -17,11 +17,14 @@ namespace Acts::Experimental {
 			ACTS_INFO("Constructing FrustumNavigationPolicy for volume " << volume.volumeName());
 			m_name=volume.volumeName();
                         std::vector<BoundingBox*> prims;
-                        m_boxes.push_back(std::make_unique<BoundingBox>(volume.boundingBox(volume.center(gctx))));
+			BoundingBox bb=volume.boundingBox();
+                        //m_boxes.push_back(std::make_unique<BoundingBox>(&volume,volume.localToGlobalTransform(gctx)*bb.min(),volume.localToGlobalTransform(gctx)*bb.max()));
+			m_boxes.push_back(std::make_unique<BoundingBox>(&volume,bb.min()+volume.center(gctx),bb.max()+volume.center(gctx)));
                         prims.push_back(m_boxes.back().get());
                         for(auto & vol : volume.volumes()) {
 				ACTS_DEBUG("add volume "<<vol.volumeName()<<" to list of bounding boxes");
-				BoundingBox bb=vol.boundingBox();
+				bb=vol.boundingBox();
+				//m_boxes.push_back(std::make_unique<BoundingBox>(&vol,vol.localToGlobalTransform(gctx)*bb.min(),vol.localToGlobalTransform(gctx)*bb.max()));
 				m_boxes.push_back(std::make_unique<BoundingBox>(&vol,bb.min()+vol.center(gctx),bb.max()+vol.center(gctx)));
                                 prims.push_back(m_boxes.back().get());
                         }
@@ -59,24 +62,26 @@ namespace Acts::Experimental {
 		*/
 		const BoundingBox* topBoxCopy = m_topBox;
 		ACTS_DEBUG("search the octree");
+		int nVolsChecked=0;
 		while (topBoxCopy != nullptr) {
+			nVolsChecked++;
 			if(topBoxCopy->intersect(s.frustum)){
 				if (topBoxCopy->hasEntity()) {
 					const TrackingVolume* tvol=dynamic_cast<const TrackingVolume*>(topBoxCopy->entity());
 					ACTS_DEBUG("get portals from volume "<<tvol->volumeName());
 					const auto& portals = tvol->portals();
-					ACTS_DEBUG("add "<<portals.size()<<" portal candidates");
+					//ACTS_DEBUG("add "<<portals.size()<<" portal candidates");
 					for(const auto& portal : portals){
 						if(tvol->volumeName().compare(m_name)==0){ //only check for top-level volume
 							Acts::Result<const TrackingVolume*> pvolr=portal.resolveVolume(gctx,s.frustum.origin(),s.frustum.dir());
 							if(pvolr.ok()){
 								const TrackingVolume* pvol=*pvolr;
 								if(tvol->inside(gctx,pvol->center(gctx))){
-									ACTS_DEBUG("skip portal to volume "<<pvol->volumeName());
+									//ACTS_DEBUG("skip portal to volume "<<pvol->volumeName());
 									continue;
 								}
 								else{
-									ACTS_DEBUG("add portal to volume "<<pvol->volumeName());
+									//ACTS_DEBUG("add portal to volume "<<pvol->volumeName());
 									stream.addPortalCandidate(portal);
 								}
 							}
@@ -85,21 +90,23 @@ namespace Acts::Experimental {
 						else stream.addPortalCandidate(portal);
 						//stream.addPortalCandidate(portal);
 					}
-					ACTS_DEBUG("reset copy");
 					topBoxCopy = topBoxCopy->getSkip();
+					ACTS_DEBUG("found intersection, now move to skip node");
 				} else {
-					ACTS_DEBUG("no entity");
 					topBoxCopy = topBoxCopy->getLeftChild();
+					ACTS_DEBUG("no entity, move to left child");
 				}
 			} else {
 				if (topBoxCopy->hasEntity()) {
 					const TrackingVolume* tvol=dynamic_cast<const TrackingVolume*>(topBoxCopy->entity());
 					ACTS_DEBUG("no intersection with "<<tvol->volumeName());
 				}
+				else ACTS_DEBUG("no intersection and no entity");
 				topBoxCopy = topBoxCopy->getSkip();
+				ACTS_DEBUG("no intersection, move to skip node");
 			}
 		}
-		ACTS_DEBUG("done with while loop");
+		ACTS_DEBUG("done with while loop, checked "<<nVolsChecked<<" volumes");
 	}
 
 	void FrustumNavigationPolicy::connect(NavigationDelegate& delegate) const {
