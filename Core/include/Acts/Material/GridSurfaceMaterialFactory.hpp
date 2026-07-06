@@ -50,7 +50,7 @@ create1D(
   // Fill it via the grid view
   AnyGridView<typename material_accessor_t::grid_value_type> gv =
       ism->gridView();
-  auto indices = gv.numLocalBins();
+  auto indices = gv.multiAxisAny().getNBinsAny();
   for (std::size_t i0 = 0; i0 < indices[0]; ++i0) {
     // Offset comes from overflow/underflow bin
     gv.atLocalBins({i0 + 1u}) = payload[i0];
@@ -102,7 +102,7 @@ create2D(
   // Fill it via the grid view
   AnyGridView<typename material_accessor_t::grid_value_type> gv =
       ism->gridView();
-  auto indices = gv.numLocalBins();
+  auto indices = gv.multiAxisAny().getNBinsAny();
   for (std::size_t i0 = 0; i0 < indices[0]; ++i0) {
     for (std::size_t i1 = 0; i1 < indices[1]; ++i1) {
       // Offset comes from overflow/underflow bin

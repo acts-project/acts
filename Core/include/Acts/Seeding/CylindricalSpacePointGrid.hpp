@@ -118,10 +118,10 @@ class CylindricalSpacePointGrid {
   /// @return The index of the bin in which the space point is located, or
   ///         `std::nullopt` if the space point is outside the grid bounds.
   std::optional<std::size_t> binIndex(const Vector3& position) const {
-    if (!grid().isInside(position)) {
+    if (!grid().multiAxis().isInside(position)) {
       return std::nullopt;
     }
-    return grid().globalBinFromPosition(position);
+    return grid().multiAxis().getGlobalBinFromPoint(position);
   }
   /// Get the bin index for a space point given its azimuthal angle, radial
   /// distance, and z-coordinate.

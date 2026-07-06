@@ -74,8 +74,8 @@ BOOST_AUTO_TEST_CASE(BoundGridXY) {
           double yp = 0.8 * edgesY[iy] + 0.2 * edgesY[iy - 1u];
           decltype(gridXY)::point_t p = {xp, yp};
           // Get local and global index
-          auto g = gridXY.globalBinFromPosition(p);
-          auto l = gridXY.localBinsFromPosition(p);
+          auto g = gridXY.multiAxis().getGlobalBinFromPoint(p);
+          auto l = gridXY.multiAxis().getLocalBinsFromPoint(p);
           std::string gBin = std::string("g = ") + std::to_string(g);
           std::string lBin =
               std::string("l = ") +
@@ -154,8 +154,8 @@ BOOST_AUTO_TEST_CASE(OpenGridXY) {
           double yp = 0.8 * edgesY[iy] + 0.2 * edgesY[iy - 1u];
           decltype(gridXY)::point_t p = {xp, yp};
           // Get local and global index
-          auto g = gridXY.globalBinFromPosition(p);
-          auto l = gridXY.localBinsFromPosition(p);
+          auto g = gridXY.multiAxis().getGlobalBinFromPoint(p);
+          auto l = gridXY.multiAxis().getLocalBinsFromPoint(p);
           std::string gBin = std::string("g = ") + std::to_string(g);
           std::string lBin =
               std::string("l = ") +
@@ -235,8 +235,8 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
           double phip = 0.8 * edgesPhi[iphi] + 0.2 * edgesPhi[iphi - 1u];
           decltype(gridZPhi)::point_t p = {zp, phip};
           // Get local and global index
-          auto g = gridZPhi.globalBinFromPosition(p);
-          auto l = gridZPhi.localBinsFromPosition(p);
+          auto g = gridZPhi.multiAxis().getGlobalBinFromPoint(p);
+          auto l = gridZPhi.multiAxis().getLocalBinsFromPoint(p);
           std::string gBin = std::string("g = ") + std::to_string(g);
           std::string lBin =
               std::string("l = ") + localToString<decltype(gridZPhi)::index_t,
@@ -314,8 +314,8 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
           double phip = 0.5 * (edgesPhi[iphi] + edgesPhi[iphi - 1u]);
           decltype(gridRPhi)::point_t p = {rp, phip};
           // Get local and global index
-          auto g = gridRPhi.globalBinFromPosition(p);
-          auto l = gridRPhi.localBinsFromPosition(p);
+          auto g = gridRPhi.multiAxis().getGlobalBinFromPoint(p);
+          auto l = gridRPhi.multiAxis().getLocalBinsFromPoint(p);
           std::string gBin = std::string("g = ") + std::to_string(g);
           std::string lBin =
               std::string("l = ") + localToString<decltype(gridRPhi)::index_t,

@@ -124,8 +124,9 @@ BOOST_AUTO_TEST_CASE(CreateFromConcreteGrid) {
   BOOST_CHECK_EQUAL(view.dimensions(), 2u);
 
   // Check values
-  BOOST_CHECK_CLOSE(view.atLocalBins({1, 1}),
-                    1.5 * doubleGrid.globalBinFromLocalBins({1, 1}), 1e-10);
+  BOOST_CHECK_CLOSE(
+      view.atLocalBins({1, 1}),
+      1.5 * doubleGrid.multiAxis().getGlobalBinFromLocalBins({1, 1}), 1e-10);
 
   // Modify through view
   view.atLocalBins({1, 1}) = 42.0;
@@ -144,8 +145,9 @@ BOOST_AUTO_TEST_CASE(CreateFromIGrid) {
   BOOST_CHECK_EQUAL(view.dimensions(), 2u);
 
   // Check values
-  BOOST_CHECK_CLOSE(view.atLocalBins({1, 1}),
-                    1.5 * doubleGrid.globalBinFromLocalBins({1, 1}), 1e-10);
+  BOOST_CHECK_CLOSE(
+      view.atLocalBins({1, 1}),
+      1.5 * doubleGrid.multiAxis().getGlobalBinFromLocalBins({1, 1}), 1e-10);
 }
 
 // Test creation of const grid view from const IGrid type
@@ -160,8 +162,9 @@ BOOST_AUTO_TEST_CASE(CreateConstViewFromConstIGrid) {
   BOOST_CHECK_EQUAL(constView.dimensions(), 2u);
 
   // Check values
-  BOOST_CHECK_CLOSE(constView.atLocalBins({1, 1}),
-                    1.5 * doubleGrid.globalBinFromLocalBins({1, 1}), 1e-10);
+  BOOST_CHECK_CLOSE(
+      constView.atLocalBins({1, 1}),
+      1.5 * doubleGrid.multiAxis().getGlobalBinFromLocalBins({1, 1}), 1e-10);
 }
 
 // Test type mismatch handling when creating from IGrid
@@ -268,26 +271,26 @@ BOOST_AUTO_TEST_CASE(GridPropertiesAccess) {
   BOOST_CHECK_EQUAL(view.dimensions(), 2u);
 
   // Test bin center
-  auto center = view.binCenter({1, 1});
-  auto expectedCenter = doubleGrid.binCenter({1, 1});
+  auto center = view.multiAxisAny().getBinCenterAny({1, 1});
+  auto expectedCenter = doubleGrid.multiAxis().getBinCenter({1, 1});
   BOOST_CHECK_CLOSE(center[0], expectedCenter[0], 1e-10);
   BOOST_CHECK_CLOSE(center[1], expectedCenter[1], 1e-10);
 
   // Test lower left bin edge
-  auto lowerLeft = view.lowerLeftBinEdge({1, 1});
-  auto expectedLowerLeft = doubleGrid.lowerLeftBinEdge({1, 1});
+  auto lowerLeft = view.multiAxisAny().getLowerLeftBinEdgeAny({1, 1});
+  auto expectedLowerLeft = doubleGrid.multiAxis().getLowerLeftBinEdge({1, 1});
   BOOST_CHECK_CLOSE(lowerLeft[0], expectedLowerLeft[0], 1e-10);
   BOOST_CHECK_CLOSE(lowerLeft[1], expectedLowerLeft[1], 1e-10);
 
   // Test upper right bin edge
-  auto upperRight = view.upperRightBinEdge({1, 1});
-  auto expectedUpperRight = doubleGrid.upperRightBinEdge({1, 1});
+  auto upperRight = view.multiAxisAny().getUpperRightBinEdgeAny({1, 1});
+  auto expectedUpperRight = doubleGrid.multiAxis().getUpperRightBinEdge({1, 1});
   BOOST_CHECK_CLOSE(upperRight[0], expectedUpperRight[0], 1e-10);
   BOOST_CHECK_CLOSE(upperRight[1], expectedUpperRight[1], 1e-10);
 
   // Test number of local bins
-  auto numBins = view.numLocalBins();
-  auto expectedNumBins = doubleGrid.numLocalBins();
+  auto numBins = view.multiAxisAny().getNBinsAny();
+  auto expectedNumBins = doubleGrid.multiAxis().getNBins();
   BOOST_CHECK_EQUAL(numBins[0], expectedNumBins[0]);
   BOOST_CHECK_EQUAL(numBins[1], expectedNumBins[1]);
 }
@@ -302,26 +305,26 @@ BOOST_AUTO_TEST_CASE(GridPropertiesAccessConstView) {
   BOOST_CHECK_EQUAL(constView.dimensions(), 2u);
 
   // Test bin center
-  auto center = constView.binCenter({1, 1});
-  auto expectedCenter = doubleGrid.binCenter({1, 1});
+  auto center = constView.multiAxisAny().getBinCenterAny({1, 1});
+  auto expectedCenter = doubleGrid.multiAxis().getBinCenter({1, 1});
   BOOST_CHECK_CLOSE(center[0], expectedCenter[0], 1e-10);
   BOOST_CHECK_CLOSE(center[1], expectedCenter[1], 1e-10);
 
   // Test lower left bin edge
-  auto lowerLeft = constView.lowerLeftBinEdge({1, 1});
-  auto expectedLowerLeft = doubleGrid.lowerLeftBinEdge({1, 1});
+  auto lowerLeft = constView.multiAxisAny().getLowerLeftBinEdgeAny({1, 1});
+  auto expectedLowerLeft = doubleGrid.multiAxis().getLowerLeftBinEdge({1, 1});
   BOOST_CHECK_CLOSE(lowerLeft[0], expectedLowerLeft[0], 1e-10);
   BOOST_CHECK_CLOSE(lowerLeft[1], expectedLowerLeft[1], 1e-10);
 
   // Test upper right bin edge
-  auto upperRight = constView.upperRightBinEdge({1, 1});
-  auto expectedUpperRight = doubleGrid.upperRightBinEdge({1, 1});
+  auto upperRight = constView.multiAxisAny().getUpperRightBinEdgeAny({1, 1});
+  auto expectedUpperRight = doubleGrid.multiAxis().getUpperRightBinEdge({1, 1});
   BOOST_CHECK_CLOSE(upperRight[0], expectedUpperRight[0], 1e-10);
   BOOST_CHECK_CLOSE(upperRight[1], expectedUpperRight[1], 1e-10);
 
   // Test number of local bins
-  auto numBins = constView.numLocalBins();
-  auto expectedNumBins = doubleGrid.numLocalBins();
+  auto numBins = constView.multiAxisAny().getNBinsAny();
+  auto expectedNumBins = doubleGrid.multiAxis().getNBins();
   BOOST_CHECK_EQUAL(numBins[0], expectedNumBins[0]);
   BOOST_CHECK_EQUAL(numBins[1], expectedNumBins[1]);
 }

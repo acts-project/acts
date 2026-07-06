@@ -255,8 +255,9 @@ void VolumeMaterialMapper::createExtraHits(
       auto grid = mState.grid2D.find(currentBinning.first);
       if (grid != mState.grid2D.end()) {
         // Find which grid bin the material fall into then accumulate
-        Grid2D::index_t index = grid->second.localBinsFromLowerLeftEdge(
-            mState.transform2D[currentBinning.first](extraPosition));
+        Grid2D::index_t index =
+            grid->second.multiAxis().getLocalBinsFromLowerLeftEdge(
+                mState.transform2D[currentBinning.first](extraPosition));
         grid->second.atLocalBins(index).accumulate(properties);
       } else {
         throw std::domain_error("No grid 2D was found");
@@ -265,8 +266,9 @@ void VolumeMaterialMapper::createExtraHits(
       auto grid = mState.grid3D.find(currentBinning.first);
       if (grid != mState.grid3D.end()) {
         // Find which grid bin the material fall into then accumulate
-        Grid3D::index_t index = grid->second.localBinsFromLowerLeftEdge(
-            mState.transform3D[currentBinning.first](extraPosition));
+        Grid3D::index_t index =
+            grid->second.multiAxis().getLocalBinsFromLowerLeftEdge(
+                mState.transform3D[currentBinning.first](extraPosition));
         grid->second.atLocalBins(index).accumulate(properties);
       } else {
         throw std::domain_error("No grid 3D was found");
@@ -283,8 +285,9 @@ void VolumeMaterialMapper::createExtraHits(
       auto grid = mState.grid2D.find(currentBinning.first);
       if (grid != mState.grid2D.end()) {
         // Find which grid bin the material fall into then accumulate
-        Grid2D::index_t index = grid->second.localBinsFromLowerLeftEdge(
-            mState.transform2D[currentBinning.first](extraPosition));
+        Grid2D::index_t index =
+            grid->second.multiAxis().getLocalBinsFromLowerLeftEdge(
+                mState.transform2D[currentBinning.first](extraPosition));
         grid->second.atLocalBins(index).accumulate(properties);
       } else {
         throw std::domain_error("No grid 2D was found");
@@ -293,8 +296,9 @@ void VolumeMaterialMapper::createExtraHits(
       auto grid = mState.grid3D.find(currentBinning.first);
       if (grid != mState.grid3D.end()) {
         // Find which grid bin the material fall into then accumulate
-        Grid3D::index_t index = grid->second.localBinsFromLowerLeftEdge(
-            mState.transform3D[currentBinning.first](extraPosition));
+        Grid3D::index_t index =
+            grid->second.multiAxis().getLocalBinsFromLowerLeftEdge(
+                mState.transform3D[currentBinning.first](extraPosition));
         grid->second.atLocalBins(index).accumulate(properties);
       } else {
         throw std::domain_error("No grid 3D was found");
