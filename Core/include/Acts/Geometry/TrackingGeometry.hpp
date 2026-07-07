@@ -31,7 +31,6 @@ class Surface;
 class Portal;
 class PerigeeSurface;
 class IMaterialDecorator;
-class TrackingVolume;
 class TrackingGeometryVisitor;
 class TrackingGeometryMutableVisitor;
 
@@ -252,6 +251,9 @@ class TrackingGeometry {
  private:
   // the known world
   std::shared_ptr<TrackingVolume> m_world;
+
+  // Cache of surface and volume placements owned by the tracking geometry
+  std::vector<TrackingVolume::PlacementOwnPtr> m_placements{};
   // lookup containers
   std::unordered_map<GeometryIdentifier, const TrackingVolume*> m_volumesById;
   std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById;
