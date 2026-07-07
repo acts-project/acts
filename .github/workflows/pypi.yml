@@ -86,7 +86,7 @@ jobs:
 
       - name: Restore ccache
         id: ccache-restore
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
@@ -94,7 +94,7 @@ jobs:
             ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@8d2b08b68458a16aeb24b64e68a09ab1c8e82084 # v3.4.1
+        uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
         with:
           package-dir: acts
         env:
@@ -112,7 +112,7 @@ jobs:
           CIBW_TEST_COMMAND: python {project}/acts/Examples/Scripts/Python/track_finding_python_only.py
 
       - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.13"
 
