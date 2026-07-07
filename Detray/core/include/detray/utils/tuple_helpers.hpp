@@ -204,51 +204,50 @@ using tuple_cat_t = typename tuple_cat_type<tuple_ts...>::type;
 
 /// Remove duplicate types from tuple
 /// @{
-template <std::size_t I, typename... tuple_ts>
+template <typename result_tuple_t, typename arg_t>
+struct push_back_unique_type {};
+
+template <template <typename...> class tuple_t, typename... Args,
+          typename arg_t>
+struct push_back_unique_type<tuple_t<Args...>, arg_t> {
+  using type = std::conditional_t<has_type_v<arg_t, tuple_t<Args...>>,
+                                  tuple_t<Args...>, tuple_t<Args..., arg_t>>;
+};
+
+template <typename result_tuple_t, typename arg_t>
+using push_back_unique_t =
+    typename push_back_unique_type<result_tuple_t, arg_t>::type;
+
+template <typename result_tuple_t, typename input_tuple_t>
 struct unique_types {};
 
-/// No elements in tuple
-template <std::size_t I>
-struct unique_types<I, std::tuple<>> {
-  using type = std::tuple<>;
+template <template <typename...> class tuple_t, typename... Args>
+struct unique_types<tuple_t<Args...>, tuple_t<>> {
+  using type = tuple_t<Args...>;
 };
 
-/// Recursively check for duplicate entries in the tuple and remove them
-template <std::size_t I, typename Arg1, typename... Args>
-struct unique_types<I, std::tuple<Arg1, Args...>> {
-  using type = std::conditional_t<
-      has_type_v<Arg1, std::tuple<Args...>>,
-      typename unique_types<I - 1u, std::tuple<Args...>>::type,
-      typename unique_types<I - 1u, std::tuple<Args..., Arg1>>::type>;
-};
+template <template <typename...> class tuple_t, typename... Args,
+          typename arg_t, typename... input_args>
+struct unique_types<tuple_t<Args...>, tuple_t<arg_t, input_args...>> {
+ private:
+  using result_tuple = tuple_t<Args...>;
+  using next_result_tuple = push_back_unique_t<result_tuple, arg_t>;
 
-/// All elements have been checked
-template <typename Arg1, typename... Args>
-struct unique_types<0u, std::tuple<Arg1, Args...>> {
-  using type = std::tuple<Arg1, Args...>;
-};
-
-template <std::size_t I>
-struct unique_types<I, detray::dtuple<>> {
-  using type = detray::dtuple<>;
-};
-
-template <std::size_t I, typename Arg1, typename... Args>
-struct unique_types<I, detray::dtuple<Arg1, Args...>> {
-  using type = std::conditional_t<
-      has_type_v<Arg1, detray::dtuple<Args...>>,
-      typename unique_types<I - 1u, detray::dtuple<Args...>>::type,
-      typename unique_types<I - 1u, detray::dtuple<Args..., Arg1>>::type>;
-};
-
-template <typename Arg1, typename... Args>
-struct unique_types<0u, detray::dtuple<Arg1, Args...>> {
-  using type = detray::dtuple<Arg1, Args...>;
+ public:
+  using type =
+      typename unique_types<next_result_tuple, tuple_t<input_args...>>::type;
 };
 
 template <typename tuple_t>
-using unique_t =
-    typename unique_types<tuple_size_v<tuple_t> - 1u, tuple_t>::type;
+struct unique_type {};
+
+template <template <typename...> class tuple_t, typename... Args>
+struct unique_type<tuple_t<Args...>> {
+  using type = typename unique_types<tuple_t<>, tuple_t<Args...>>::type;
+};
+
+template <typename tuple_t>
+using unique_t = typename unique_type<tuple_t>::type;
 /// @}
 
 /// Check for equality of tuple types modulo permutation
