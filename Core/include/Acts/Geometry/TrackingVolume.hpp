@@ -27,6 +27,7 @@
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TransformRange.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <cstddef>
@@ -564,7 +565,10 @@ class TrackingVolume : public Volume {
   /// with the volume
   /// @param placement: Pointer to the placement to be managed by the
   ///                   tracking volume
-  void retainPlacement(PlacementOwnPtr placement);
+  template <isVariantCompatible<PlacementOwnPtr> Obj_t>
+  void retainPlacement(Obj_t placement) {
+    placementCache().emplace_back(std::move(placement));
+  }
 
  private:
   void connectDenseBoundarySurfaces(

@@ -85,7 +85,10 @@ void ContainerBlueprintNode::finalize(
   }
 
   const auto* policyFactory = options.defaultNavigationPolicyFactory.get();
-
+  for (auto& placement : m_placements) {
+    parent.retainPlacement(std::move(placement));
+  }
+  m_placements.clear();
   ACTS_DEBUG(prefix() << "Registering " << m_gaps.size()
                       << " gap volumes with parent");
   for (auto& [shell, gap] : m_gaps) {

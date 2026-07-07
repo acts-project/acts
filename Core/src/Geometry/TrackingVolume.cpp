@@ -576,9 +576,6 @@ TrackingVolume& TrackingVolume::addVolume(
   return *m_volumes.back();
 }
 
-void TrackingVolume::retainPlacement(PlacementOwnPtr placement) {
-  placementCache().emplace_back(std::move(placement));
-}
 std::vector<TrackingVolume::PlacementOwnPtr>& TrackingVolume::placementCache() {
   return m_motherVolume == nullptr ? m_placements
                                    : m_motherVolume->placementCache();

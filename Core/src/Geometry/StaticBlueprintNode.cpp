@@ -119,6 +119,12 @@ void StaticBlueprintNode::finalize(const BlueprintOptions& options,
     ACTS_DEBUG(prefix() << " Adding volume (" << m_volume->volumeName()
                         << ") to parent volume (" << parent.volumeName()
                         << ")");
+    /// Shortly before the volume is passed to the parent, move the ownership
+    /// of all received placements to it
+    for (auto& placement : m_placements) {
+      m_volume->retainPlacement(std::move(placement));
+    }
+    m_placements.clear();
     parent.addVolume(std::move(m_volume));
   }
 }

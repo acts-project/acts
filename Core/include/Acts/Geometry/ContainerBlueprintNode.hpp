@@ -139,6 +139,18 @@ class ContainerBlueprintNode : public BlueprintNode {
   /// @copydoc BlueprintNode::addToGraphviz
   void addToGraphviz(std::ostream& os) const override;
 
+  /// Take over the ownership over a Surface or VolumePlacement and pass it on
+  /// to the tracking geometry
+  /// @tparam Obj_t Either the PlacementOwnPtr variant or any other pointer
+  ///               type where the object inhherits from the Surface or
+  ///               VolumePlacement base class
+  /// @param placement Pointer to the placement to be managed by the
+  ///                   tracking volume
+  template <isVariantCompatible<TrackingVolume::PlacementOwnPtr> Obj_t>
+  void retainPlacement(Obj_t placement) {
+    m_placements.emplace_back(std::move(placement));
+  }
+
  protected:
   /// Make the volume stack for the container. This is called by the build
   /// method and is implemented by the derived classes.
@@ -241,6 +253,8 @@ class ContainerBlueprintNode : public BlueprintNode {
   std::vector<std::pair<std::unique_ptr<PortalShellBase>,
                         std::unique_ptr<TrackingVolume>>>
       m_gaps;
+  /// Vector of volume or surface plaements to be owned by the tracking geometry
+  std::vector<TrackingVolume::PlacementOwnPtr> m_placements{};
 };
 
 /// Container blueprint node stacking cylindrical volumes.
