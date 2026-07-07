@@ -119,14 +119,20 @@ __device__ void fillSharedBin(YieldType* sHits, YieldType* sLayers,
 
   atomicAdd(&sHits[localBin], weight);
 
+  // For example for 2 get 0..0010
   const LayerMask bit = layerBitDevice(layer);
 
+  // Out of range check
+  // Can be removed later
   if (bit == LayerMask{0ull}) {
     return;
   }
 
+  // atomic returns old value
   const LayerMask oldMask = atomicOr(&sMask[localBin], bit);
 
+  
+  // if layer bit was 0 & 1 then we know this if first time and we add layer number
   if ((oldMask & bit) == LayerMask{0ull}) {
     atomicAdd(&sLayers[localBin], weight);
   }
@@ -158,6 +164,7 @@ __device__ void fillSharedYBand(YieldType* sHits, YieldType* sLayers,
     yBinUp = static_cast<int>(batch.nBinsY) - 1;
   }
 
+  // Top hat add, so 1 for all values
   for (int yBin = yBinDown; yBin <= yBinUp; ++yBin) {
     fillSharedBin(sHits, sLayers, sMask, batch.nBinsX, xBin,
                   static_cast<std::uint32_t>(yBin), layer, weight);
@@ -197,8 +204,7 @@ __global__ void fillEtaDriftCirclesMdtBatchKernel(
   auto* sMask = reinterpret_cast<LayerMask*>(sharedMemory + maskOffsetBytes);
 
   // Grid-stride loop over buckets.
-  for (std::uint32_t bucket = blockIdx.x; bucket < batch.nBuckets;
-       bucket += gridDim.x) {
+  for (std::uint32_t bucket = blockIdx.x; bucket < batch.nBuckets; bucket += gridDim.x) {
     // Clear this block's shared-memory accumulator for the current bucket.
     for (std::uint32_t i = threadIdx.x; i < nCells; i += blockDim.x) {
       sHits[i] = 0.0f;
@@ -644,19 +650,6 @@ CudaHoughPlaneBatch::Index CudaHoughPlaneBatch::locMaxHits(
   return {localBin % nBinsX(), localBin / nBinsX()};
 }
 
-CudaHoughPlaneBatch::Index CudaHoughPlaneBatch::locMaxLayers(
-    size_type bucket) const {
-  checkBucket(bucket);
-
-  const auto begin = m_hostLayers.begin() +
-                     static_cast<std::ptrdiff_t>(bucket * nCellsPerBucket());
-  const auto end = begin + static_cast<std::ptrdiff_t>(nCellsPerBucket());
-  const auto iter = std::max_element(begin, end);
-
-  const size_type localBin = static_cast<size_type>(std::distance(begin, iter));
-
-  return {localBin % nBinsX(), localBin / nBinsX()};
-}
 
 std::vector<CudaHoughPlaneBatch::size_type> CudaHoughPlaneBatch::nonEmptyBins(
     size_type bucket) const {
