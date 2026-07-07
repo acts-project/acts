@@ -14,9 +14,12 @@
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
+#include <cstddef>
 #include <iosfwd>
 #include <stdexcept>
 #include <tuple>
+#include <utility>
+#include <vector>
 
 namespace Acts::detail::Gsf {
 
@@ -346,37 +349,50 @@ std::tuple<BoundVector, BoundMatrix> mergeGaussianMixture(
 }
 
 /// @brief Class representing a symmetric distance matrix
+///
+/// Internally, the pairwise KL distances are kept in a flat lower-triangular
+/// array, but only over the currently *active* set of components. When a
+/// component is removed via @ref maskAssociatedDistances, its row/column is
+/// swapped with the row/column of the last active component and the active
+/// count is shrunk by one, so later scans and updates only touch components
+/// that are still present (rather than scanning a mask over the full,
+/// never-shrinking array). All public methods take and return the original
+/// component indices (indices into the range passed to the constructor); the
+/// swap-based compaction is purely an internal bookkeeping detail.
+///
 class SymmetricKLDistanceMatrix {
   using Array = Eigen::Array<double, Eigen::Dynamic, 1>;
-  using Mask = Eigen::Array<bool, Eigen::Dynamic, 1>;
 
   Array m_distances;
-  Mask m_mask;
   std::vector<std::pair<std::size_t, std::size_t>> m_mapToPair;
+  std::vector<std::size_t> m_activeToOriginal;
+  std::vector<std::size_t> m_originalToActive;
   std::size_t m_numberComponents{};
+  std::size_t m_numberActive{};
 
-  template <typename array_t, typename setter_t>
-  void setAssociated(std::size_t n, array_t &array, const setter_t &setter) {
-    const std::size_t indexConst = (n - 1) * n / 2;
+  static std::size_t triangularIndex(std::size_t i, std::size_t j) {
+    return i * (i - 1) / 2 + j;
+  }
+
+  template <typename setter_t>
+  void setAssociated(std::size_t n, const setter_t &setter) {
     // Rows
     for (std::size_t i = 0ul; i < n; ++i) {
-      array[indexConst + i] = setter(n, i);
+      m_distances[triangularIndex(n, i)] = setter(n, i);
     }
     // Columns
-    for (std::size_t i = n + 1; i < m_numberComponents; ++i) {
-      array[(i - 1) * i / 2 + n] = setter(n, i);
+    for (std::size_t i = n + 1; i < m_numberActive; ++i) {
+      m_distances[triangularIndex(i, n)] = setter(i, n);
     }
   }
 
  public:
   explicit SymmetricKLDistanceMatrix(std::span<const GsfComponent> cmps);
 
-  double at(std::size_t i, std::size_t j) const;
-
-  void recomputeAssociatedDistances(std::size_t n,
+  void recomputeAssociatedDistances(std::size_t originalIdx,
                                     std::span<const GsfComponent> cmps);
 
-  void maskAssociatedDistances(std::size_t n);
+  void maskAssociatedDistances(std::size_t originalIdx);
 
   std::pair<std::size_t, std::size_t> minDistancePair() const;
 

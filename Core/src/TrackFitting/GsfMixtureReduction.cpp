@@ -33,12 +33,14 @@ void reduceWithKLDistanceImpl(std::vector<GsfComponent> &cmpCache,
     // Set one component and compute associated distances
     cmpCache[minI] =
         mergeTwoComponents(cmpCache[minI], cmpCache[minJ], surface);
-    distances.recomputeAssociatedDistances(minI, cmpCache);
 
-    // Set weight of the other component to -1 so we can remove it later and
-    // mask its distances
+    // Set weight of the other component to -1 so we can remove it later, and
+    // remove it from the active set (this must happen before recomputing
+    // minI's distances since minI's internal slot may move as part of the
+    // removal's swap-to-last compaction)
     cmpCache[minJ].weight = -1.0;
     distances.maskAssociatedDistances(minJ);
+    distances.recomputeAssociatedDistances(minI, cmpCache);
 
     remainingComponents--;
   }
