@@ -20,10 +20,12 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <algorithm>
 #include <cmath>
+#include <iomanip>
 #include <numbers>
 #include <stdexcept>
 #include <utility>
@@ -289,8 +291,8 @@ void ConeVolumeBounds::buildSurfaceBounds() {
 }
 
 std::ostream& ConeVolumeBounds::toStream(std::ostream& os) const {
-  os << std::setiosflags(std::ios::fixed);
-  os << std::setprecision(5);
+  detail::OstreamStateGuard guard{os};
+  os << std::fixed << std::setprecision(5);
   os << "Acts::ConeVolumeBounds : (innerAlpha, innerOffsetZ, outerAlpha,";
   os << "  outerOffsetZ, halflenghZ, averagePhi, halfPhiSector) = ";
   os << get(eInnerAlpha) << ", " << get(eInnerOffsetZ) << ", ";
