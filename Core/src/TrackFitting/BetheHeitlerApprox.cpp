@@ -8,58 +8,41 @@
 
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 
+#include "Acts/Utilities/RangeXD.hpp"
+
 #include <algorithm>
-#include <fstream>
 #include <stdexcept>
-#include <tuple>
 
 namespace Acts {
 
-AtlasBetheHeitlerApprox AtlasBetheHeitlerApprox::loadFromFiles(
-    const std::string &low_parameters_path,
-    const std::string &high_parameters_path, double lowLimit, double highLimit,
-    bool clampToRange, double noChangeLimit, double singleGaussianLimit) {
-  const auto read_file = [](const std::string &filepath) {
-    std::ifstream file(filepath);
+PolynomialBetheHeitlerApprox::PolynomialBetheHeitlerApprox(
+    std::vector<RangeData> ranges, bool clampToRange, double noChangeLimit,
+    double singleGaussianLimit)
+    : m_ranges(std::move(ranges)),
+      m_clampToRange(clampToRange),
+      m_noChangeLimit(noChangeLimit),
+      m_singleGaussianLimit(singleGaussianLimit) {
+  if (m_ranges.empty()) {
+    throw std::invalid_argument("At least one range is required");
+  }
 
-    if (!file) {
-      throw std::invalid_argument("Could not open '" + filepath + "'");
+  // Sort ranges by minimum value
+  std::ranges::sort(m_ranges, {}, [](const auto &r) { return r.range.min(); });
+
+  // Validate that ranges don't overlap
+  for (std::size_t i = 1; i < m_ranges.size(); ++i) {
+    if (m_ranges[i - 1].range && m_ranges[i].range) {
+      throw std::invalid_argument(
+          "Overlapping ranges detected. Ranges must be non-overlapping.");
     }
-
-    std::size_t n_cmps = 0;
-    std::size_t degree = 0;
-    bool transform_code = false;
-
-    file >> n_cmps >> degree >> transform_code;
-
-    Data data;
-
-    for (auto &cmp : data) {
-      for (auto &coeff : cmp.weightCoeffs) {
-        file >> coeff;
-      }
-      for (auto &coeff : cmp.meanCoeffs) {
-        file >> coeff;
-      }
-      for (auto &coeff : cmp.varCoeffs) {
-        file >> coeff;
-      }
-    }
-
-    return std::make_tuple(data, transform_code);
-  };
-
-  const auto [lowData, lowTransform] = read_file(low_parameters_path);
-  const auto [highData, highTransform] = read_file(high_parameters_path);
-
-  return {lowData,   highData,     lowTransform,  highTransform,      lowLimit,
-          highLimit, clampToRange, noChangeLimit, singleGaussianLimit};
+  }
 }
 
-std::span<AtlasBetheHeitlerApprox::Component> AtlasBetheHeitlerApprox::mixture(
+std::span<PolynomialBetheHeitlerApprox::Component>
+PolynomialBetheHeitlerApprox::mixture(
     double xOverX0, const std::span<Component> mixture) const {
   if (m_clampToRange) {
-    xOverX0 = std::clamp(xOverX0, 0.0, m_highLimit);
+    xOverX0 = std::clamp(xOverX0, 0.0, rangeMax());
   }
 
   // Evaluate polynomial at x
@@ -71,10 +54,10 @@ std::span<AtlasBetheHeitlerApprox::Component> AtlasBetheHeitlerApprox::mixture(
     return sum;
   };
 
-  // Lambda which builds the components
+  // Lambda which builds the components for a single range
   const auto make_mixture = [&](const Data &data, double xx,
                                 bool transform) -> std::span<Component> {
-    // Value initialization should garanuee that all is initialized to zero
+    // Value initialization should guarantee that all is initialized to zero
     double weight_sum = 0;
     for (std::size_t i = 0; i < data.size(); ++i) {
       // These transformations must be applied to the data according to ATHENA
@@ -114,24 +97,23 @@ std::span<AtlasBetheHeitlerApprox::Component> AtlasBetheHeitlerApprox::mixture(
     return {mixture.data(), 1};
   }
 
-  // Return a component representation for lower x0
-  if (xOverX0 < m_lowLimit) {
-    return make_mixture(m_lowData, xOverX0, m_lowTransform);
+  // Find the appropriate range and return mixture for that range
+  for (const auto &[range, data, transform] : m_ranges) {
+    if (range.contains(xOverX0)) {
+      return make_mixture(data, xOverX0, transform);
+    }
   }
 
-  // Return a component representation for higher x0
-  // Cap the x because beyond the parameterization goes wild
-  const auto high_x = std::min(m_highLimit, xOverX0);
-  return make_mixture(m_highData, high_x, m_highTransform);
+  // Should not reach here if validXOverX0 is called first
+  // But return the last range's mixture as fallback
+  const auto &[lastRange, lastData, lastTransform] = m_ranges.back();
+  return make_mixture(lastData, lastRange.max(), lastTransform);
 }
 
-}  // namespace Acts
-
-Acts::AtlasBetheHeitlerApprox Acts::makeDefaultBetheHeitlerApprox(
-    bool clampToRange) {
+PolynomialBetheHeitlerApprox makeDefaultBetheHeitlerApprox(bool clampToRange) {
   // Tracking/TrkFitter/TrkGaussianSumFilterUtils/Data/BetheHeitler_cdf_nC6_O5.par
   // clang-format off
-  static AtlasBetheHeitlerApprox::Data cdf_cmps6_order5_data = {{
+  static PolynomialBetheHeitlerApprox::Data cdf_cmps6_order5_data = {{
       // Component #1
       {
           {{3.74397e+004,-1.95241e+004, 3.51047e+003,-2.54377e+002, 1.81080e+001,-3.57643e+000}},
@@ -171,13 +153,11 @@ Acts::AtlasBetheHeitlerApprox Acts::makeDefaultBetheHeitlerApprox(
   }};
   // clang-format on
 
-  return {cdf_cmps6_order5_data,
-          cdf_cmps6_order5_data,
-          true,
-          true,
-          0.2,
-          0.2,
-          clampToRange,
-          0.0001,
-          0.002};
+  std::vector<PolynomialBetheHeitlerApprox::RangeData> ranges = {
+      {Range1D<double>{0.0, 0.2}, cdf_cmps6_order5_data, true}};
+
+  return PolynomialBetheHeitlerApprox(std::move(ranges), clampToRange, 0.0001,
+                                      0.002);
 }
+
+}  // namespace Acts
