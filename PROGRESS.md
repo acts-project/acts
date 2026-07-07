@@ -1419,3 +1419,129 @@ significant, portable, benchmark-confirmed win identified in the
 investigation phase. `float` distance bookkeeping (Stage 3, revisited in
 Stage 7c) was tried twice now and dropped both times for the same
 reason: a small measured win not worth a second code path.
+
+## Stage 8 — Side investigation: `SympyStepper` in the GSF fitter (separate branch)
+
+Follow-up question from Benjamin: how much of `TrackFittingAlgorithm`'s
+remaining cost is the propagator/stepper rather than the mixture
+reduction, and would swapping `EigenStepper` for `SympyStepper` (ACTS's
+SymPy-code-generated RK4/Jacobian-transport implementation, already used
+elsewhere e.g. `TrackFindingAlgorithm`) help. This is **orthogonal to the
+mixture-reduction work** in Stages 1-7 — it changes
+`Examples/Algorithms/TrackFitting/src/GsfFitterFunction.cpp`'s propagator
+type, not `GsfComponentMerging`/`GsfMixtureReduction` — so it is being
+merged to `main` as its **own, separate branch/PR**, not part of this
+branch. This section records the investigation; the code change itself
+lives on that other branch.
+
+### The change
+
+`GaussianSumFitter`'s propagator was hardcoded to
+`Acts::MultiEigenStepperLoop<Acts::EigenStepperDefaultExtension,
+Acts::MaxWeightReducerLoop>`. `MultiStepperLoop<Stepper, Reducer>`
+(`Core/include/Acts/Propagator/MultiStepperLoop.hpp`) is generic over the
+single-component stepper type -- `MultiEigenStepperLoop` is just an alias
+for `MultiStepperLoop<EigenStepper<extension_t>, reducer_t>`, and
+`MultiStepperLoop<SympyStepper, ...>` is already exercised by
+`Tests/UnitTests/Core/Propagator/MultiSympyStepperLoopTests.cpp`. Swapped
+the alias to `Acts::MultiStepperLoop<Acts::SympyStepper,
+Acts::MaxWeightReducerLoop>` (`SympyStepper` isn't templated on an
+extension, and its `(bField)`-only constructor matches what
+`MultiStepperLoop`'s generic constructor forwards to the single stepper,
+so no other call sites needed changes). Builds clean, no warnings.
+
+**Correctness was not verified for this change** -- unlike the
+mixture-reduction changes, `SympyStepper` is a numerically distinct
+implementation (different RK4/Jacobian code path, not just a recompile of
+the same algorithm), so it would need a tolerance-based comparison of
+fitted track parameters/pulls, not the bit-identical `tracksummary` check
+used for Stages 7a/7b. Not done in this session -- a prerequisite before
+that other branch merges.
+
+### Timing: `EigenStepper` vs `SympyStepper`, both on top of this branch's Stage 7a+7b reducer
+
+500-event ODD run, same methodology as Stage 4/7 (seed 42, `numThreads=1`,
+`truth_tracking_gsf.py`, real ODD material maps):
+
+| Stepper | `TrackFittingAlgorithm` total | ms/event |
+|---|---:|---:|
+| `EigenStepper` (Stage 7a+7b reducer) | 1238.37 ms | 2.48 |
+| `SympyStepper` (Stage 7a+7b reducer) | 1103.92 ms | 2.21 |
+
+**~10.9% faster** from the stepper swap alone -- a bigger single win than
+either Stage 7a or 7b individually, on top of an already-optimized
+reducer.
+
+### Profiling: where `TrackFittingAlgorithm`'s time goes, per stepper
+
+Used `perf record -F 999 -g` on the same 500-event run, then isolated
+every call stack containing `TrackFittingAlgorithm::execute` (a custom
+stack-aggregation script, not `perf report`'s whole-process view, since
+most of a full-process profile is DD4hep/ROOT/Python setup overhead
+unrelated to the fit itself) to get self-time and inclusive (self+
+descendants) breakdowns scoped to just the GSF fit.
+
+**`EigenStepper`** (1126 of 5889 total samples inside
+`TrackFittingAlgorithm::execute`) -- top inclusive blocks:
+
+| Block | Share of `TrackFittingAlgorithm` |
+|---|---:|
+| `transportCovarianceToBound` | 20.25% |
+| `boundToBoundTransportJacobian` | 16.43% |
+| `reduceWithKLDistanceImpl` (mixture reduction) | 15.99% |
+| `Eigen::general_matrix_matrix_product` (GEMM) | 12.08% |
+| `MultiStepperLoop::step` / `EigenStepper::step` | 9.59% / 7.90% |
+| `GsfActor::kalmanUpdate` (2 instantiations) | 7.02% + 6.66% |
+| `applyBetheHeitler` (mixture expansion) | 5.24% |
+
+**`SympyStepper`** (998 of 5649 total samples inside
+`TrackFittingAlgorithm::execute`) -- top inclusive blocks:
+
+| Block | Share of `TrackFittingAlgorithm` |
+|---|---:|
+| `reduceWithKLDistanceImpl` (mixture reduction) | **19.44%** |
+| `SympyStepper::transportCovarianceToBound` | 11.62% |
+| `SympyStepper::step` | 8.72% |
+| `applyBetheHeitler` | 5.61% |
+| `boundToBoundTransportJacobian` (sympy) | 4.51% |
+| `GainMatrixUpdater` | 4.41% |
+
+With `EigenStepper`, covariance/Jacobian transport (~37% combined) was the
+single largest cost, ahead of the mixture reduction (~16%). With
+`SympyStepper`, transport shrinks to ~16% combined (transport + step),
+and the mixture reduction's *share* actually **grows** to ~19.4% --  not
+because the reducer got slower, but because it didn't get faster while
+everything around it did, so it becomes proportionally the largest single
+identifiable block in the fit. This is the expected effect of two
+independent optimizations compounding on the same function: shrinking one
+part of a pipeline makes whatever's left proportionally more prominent
+(and thus a better target for further work), even though its absolute
+cost is unchanged.
+
+### Combined effect: this branch's reducer changes on top of `SympyStepper`
+
+To isolate what Stages 7a/7b contribute specifically in the `SympyStepper`
+world (not just on top of `EigenStepper`), compared the unmodified `main`
+reducer (`Stage 0`, pre-Stage-1 baseline) against this branch's Stage
+7a+7b reducer, both with `SympyStepper`, same 500-event run:
+
+| | `TrackFittingAlgorithm` total | ms/event |
+|---|---:|---:|
+| `main` reducer + `SympyStepper` | 1225.99 ms | 2.45 |
+| this branch's reducer (Stage 7a+7b) + `SympyStepper` | 1075.92 ms | 2.15 |
+
+**~12.2% reduction** -- larger than the ~4.0% Stage 7a/7b delta measured
+against `EigenStepper` in the Final full-GSF validation section above, for
+the same proportional-share reason: with a faster stepper, the same
+absolute reducer improvement is a bigger slice of a smaller total.
+
+### Status
+
+Investigation only -- the `SympyStepper` code change
+(`GsfFitterFunction.cpp`) is being split into its own branch off `main`
+for a separate PR, since it's an independent, unrelated-to-mixture-
+reduction win. Before that branch merges it still needs: a tolerance-based
+correctness check against `EigenStepper`'s fitted track parameters (not
+done here), and a decision on whether `SympyStepper` should be the new
+GSF default or an opt-in, matching how other ACTS algorithms
+(`TrackFindingAlgorithm`) already expose stepper choice.
