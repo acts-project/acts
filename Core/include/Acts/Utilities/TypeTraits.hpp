@@ -29,12 +29,12 @@ template <typename T, typename... Types>
 struct is_variant_alternative<T, std::variant<Types...>>
     : std::bool_constant<(
           std::is_same_v<std::remove_cv_t<std::remove_reference_t<T>>,
-                         std::remove_cv_t<std::remove_reference_t<Types>>>
-          || ...)> {};
+                         std::remove_cv_t<std::remove_reference_t<Types>>> ||
+          ...)> {};
 
 /// @brief Concept that is satisfied if a type can be used as an alternative in
 /// a std::variant.
 template <typename T, typename Variant>
-concept VariantCompatible =
-    is_variant_alternative<T, std::remove_cv_t<std::remove_reference_t<Variant>>>::value;
+concept VariantCompatible = is_variant_alternative<
+    T, std::remove_cv_t<std::remove_reference_t<Variant>>>::value;
 }  // namespace Acts

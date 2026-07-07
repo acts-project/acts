@@ -76,7 +76,6 @@ TrackingVolume::TrackingVolume(VolumePlacementBase& placement,
   m_navigationDelegate.connect<&INavigationPolicy::noopInitializeCandidates>();
 }
 
-
 TrackingVolume::~TrackingVolume() = default;
 TrackingVolume::TrackingVolume(TrackingVolume&&) noexcept = default;
 TrackingVolume& TrackingVolume::operator=(TrackingVolume&&) noexcept = default;
@@ -580,8 +579,7 @@ TrackingVolume& TrackingVolume::addVolume(
 void TrackingVolume::retainPlacement(PlacementOwnPtr placement) {
   placementCache().emplace_back(std::move(placement));
 }
-std::vector<TrackingVolume::PlacementOwnPtr>&
-TrackingVolume::placementCache() {
+std::vector<TrackingVolume::PlacementOwnPtr>& TrackingVolume::placementCache() {
   return m_motherVolume == nullptr ? m_placements
                                    : m_motherVolume->placementCache();
 }
@@ -609,13 +607,11 @@ TrackingVolume::MutableSurfaceRange TrackingVolume::surfaces() {
   return MutableSurfaceRange{m_surfaces};
 }
 
-void TrackingVolume::addSurface(
-    std::shared_ptr<Surface> surface) {
+void TrackingVolume::addSurface(std::shared_ptr<Surface> surface) {
   if (surface == nullptr) {
     throw std::invalid_argument("Surface is nullptr");
   }
   m_surfaces.push_back(std::move(surface));
- 
 }
 
 void TrackingVolume::visualize(IVisualization3D& helper,

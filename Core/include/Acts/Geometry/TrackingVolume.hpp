@@ -377,8 +377,7 @@ class TrackingVolume : public Volume {
   /// Add a surface to this tracking volume
   /// @param surface The surface to add
   /// @note The volume takes shared ownership of the placement
-  void addSurface(
-      std::shared_ptr<Surface> surface);
+  void addSurface(std::shared_ptr<Surface> surface);
 
   /// Add a child volume to this tracking volume
   /// @param volume The volume to add
