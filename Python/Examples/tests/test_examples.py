@@ -576,13 +576,32 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
             ],
         ),
         pytest.param(
+            (ACTS_DIR / "Examples/Configs" / "odd-digi-smearing-config-notime.json"),
+            marks=[
+                pytest.mark.odd,
+            ],
+        ),
+        pytest.param(
             (ACTS_DIR / "Examples/Configs" / "odd-digi-geometric-config.json"),
             marks=[
                 pytest.mark.odd,
             ],
         ),
+        pytest.param(
+            (ACTS_DIR / "Examples/Configs" / "odd-digi-geometric-config-notime.json"),
+            marks=[
+                pytest.mark.odd,
+            ],
+        ),
     ],
-    ids=["smeared", "geometric", "odd-smeared", "odd-geometric"],
+    ids=[
+        "generic-smeared",
+        "generic-geometric",
+        "odd-smeared",
+        "odd-smeared-notime",
+        "odd-geometric",
+        "odd-geometric-notime",
+    ],
 )
 def test_digitization_example_input_parsing(digi_config_file):
     from acts.examples.json import readDigiConfigFromJson
