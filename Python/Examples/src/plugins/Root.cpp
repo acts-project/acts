@@ -23,6 +23,7 @@
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationSummaryWriter.hpp"
+#include "ActsExamples/Io/Root/RootSeedEventAnaWriter.hpp"
 #include "ActsExamples/Io/Root/RootSeedWriter.hpp"
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
@@ -247,6 +248,11 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
     ACTS_PYTHON_DECLARE_WRITER(RootSeedWriter, root, "RootSeedWriter",
                                inputSeeds, writingMode, filePath, fileMode,
                                treeName);
+    ACTS_PYTHON_DECLARE_WRITER(
+        RootSeedEventAnaWriter, root, "RootSeedEventAnaWriter",
+        inputTrackParameters, inputSimSeeds, inputSimHits,
+        inputMeasurementParticlesMap, inputMeasurementSimHitsMap, outputDir,
+        ROOTFileName, fileMode, treeName);
 
     ACTS_PYTHON_DECLARE_WRITER(RootSimHitWriter, root, "RootSimHitWriter",
                                inputSimHits, filePath, fileMode, treeName);

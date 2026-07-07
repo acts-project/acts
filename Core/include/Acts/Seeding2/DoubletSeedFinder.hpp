@@ -330,6 +330,10 @@ class DoubletSeedFinder {
     /// helix. This is useful for e.g. misaligned seeding.
     float helixCutTolerance = 1;
 
+    /// time-related configurations
+    bool applyTimeCut = false;
+    float timeCutCoff = 5.f;
+
     /// Type alias for delegate to apply experiment specific cuts during doublet
     /// finding
     using ExperimentCuts =

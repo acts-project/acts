@@ -71,6 +71,7 @@ void createPixelSpacePoint(
   sp.time() = t.value_or(nanf);
   sp.varianceZ() = varZR[0];
   sp.varianceR() = varZR[1];
+  sp.varianceT() = varT.value_or(nanf);
 }
 
 Acts::StripSpacePointBuilder::StripEnds getStripEnds(
@@ -251,7 +252,8 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
       SpacePointColumns::SourceLinks | SpacePointColumns::X |
       SpacePointColumns::Y | SpacePointColumns::Z | SpacePointColumns::R |
       SpacePointColumns::Time | SpacePointColumns::VarianceZ |
-      SpacePointColumns::VarianceR | SpacePointColumns::Strip);
+      SpacePointColumns::VarianceR | SpacePointColumns::VarianceT |
+      SpacePointColumns::Strip);
 
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
     // select volume/layer depending on what is set in the geometry id

@@ -223,6 +223,22 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     /// compatible SPs
     bool useDeltaRinsteadOfTopRadius = false;
 
+    /// time-ralated configurations
+    /// Whether to apply a time cut in the middle-bottom doublet finder
+    bool useTimeCutMiddleBottomDoubletFinder = false;
+    float timeCoffMiddleBottomDoubletFinder =
+        5.f;  // times the sigma of the time difference distribution for
+              // compatible doublets
+    /// Whether to apply a time cut in the middle-top doublet finder
+    bool useTimeCutMiddleTopDoubletFinder = false;
+    float timeCoffMiddleTopDoubletFinder =
+        5.f;  // times the sigma of the time difference distribution for
+              // compatible doublets
+    /// Whether to apply a time cut in the triplet filter
+    bool useTimeCutTripletFilter = false;
+    float timeCoffTripletFilter =
+        15.f;  // chi2 cut for the time compatibility of the triplet
+
     // other
 
     /// Connect custom selections on the space points or to the doublet
