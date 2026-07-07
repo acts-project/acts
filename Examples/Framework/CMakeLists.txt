@@ -30,7 +30,6 @@ acts_add_library(
     src/Validation/TrackQualityPlotTool.cpp
     src/Validation/TrackSummaryPlotTool.cpp
     src/EventData/CudaMuonSpacePoint.cpp
-    src/EventData/CudaMuonPatternContainers.cpp
     ACTS_INCLUDE_FOLDER include/ActsExamples
 )
 
