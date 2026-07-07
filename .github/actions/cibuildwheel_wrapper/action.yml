@@ -1,5 +1,5 @@
 name: 'cibuildwheel_wrapper'
-description: 'Build ACTS Python wheels via CI/dependencies/cibuildwheel.sh, with ccache support'
+description: 'Build ACTS Python wheels via CI/cibuildwheel.sh, with ccache support'
 
 inputs:
   package-dir:
@@ -30,7 +30,7 @@ runs:
 
     - name: Build wheels
       shell: bash
-      run: "${PACKAGE_DIR}/CI/dependencies/cibuildwheel.sh ${PACKAGE_DIR}"
+      run: "${PACKAGE_DIR}/CI/cibuildwheel.sh ${PACKAGE_DIR}"
       env:
         PACKAGE_DIR: ${{ inputs.package-dir }}
         CIBW_BUILD: ${{ inputs.cibw-build }}
