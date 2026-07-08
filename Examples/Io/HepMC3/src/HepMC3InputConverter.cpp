@@ -108,21 +108,21 @@ std::string printListing(const auto& vertices, const auto& particles) {
 }  // namespace
 
 Acts::HfOrigin HepMC3InputConverter::checkHfOrigin(
-    std::shared_ptr<const HepMC3::GenParticle> particleToCheck) const {
+    const std::shared_ptr<const HepMC3::GenParticle>& particleToCheck) const {
   std::stack<std::shared_ptr<const HepMC3::GenParticle>> st;
   std::unordered_set<int> visited;
   st.push(particleToCheck);
 
   bool isFromCharm{false};
   while (!st.empty()) {
-    auto part = st.top();
+    const auto& part = st.top();
     st.pop();
 
     if (!part) {
       continue;
     }
 
-    if (visited.count(part->id())) {
+    if (visited.count(part->id()) != 0u) {
       continue;
     }
     visited.insert(part->id());
@@ -148,12 +148,12 @@ Acts::HfOrigin HepMC3InputConverter::checkHfOrigin(
     }
 
     // go to parents
-    auto vtx = part->production_vertex();
+    const auto& vtx = part->production_vertex();
     if (!vtx) {
       continue;
     }
 
-    for (auto parent : vtx->particles_in()) {
+    for (const auto& parent : vtx->particles_in()) {
       st.push(parent);
     }
   }
