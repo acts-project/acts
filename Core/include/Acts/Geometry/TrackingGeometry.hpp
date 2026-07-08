@@ -17,7 +17,10 @@
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <functional>
 #include <memory>
+#include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 
@@ -25,11 +28,29 @@ namespace Acts {
 
 class Layer;
 class Surface;
+class Portal;
 class PerigeeSurface;
 class IMaterialDecorator;
 class TrackingVolume;
 class TrackingGeometryVisitor;
 class TrackingGeometryMutableVisitor;
+
+namespace detail {
+/// Transparent hash for string-keyed associative containers, allowing
+/// heterogeneous lookup with @c std::string_view without constructing a
+/// temporary @c std::string.
+struct TransparentStringHash {
+  using is_transparent = void;
+
+  std::size_t operator()(std::string_view sv) const {
+    return std::hash<std::string_view>{}(sv);
+  }
+};
+
+/// Map from portal tag to portal, with transparent string lookup.
+using PortalTagMap = std::unordered_map<std::string, const Portal*,
+                                        TransparentStringHash, std::equal_to<>>;
+}  // namespace detail
 
 // Forward declaration only, the implementation is hidden in the .cpp file.
 class Gen1GeometryClosureVisitor;
@@ -183,12 +204,27 @@ class TrackingGeometry {
   /// @retval pointer to the found volume otherwise.
   const TrackingVolume* findVolume(GeometryIdentifier id) const;
 
+  /// Search for the first volume with the given name.
+  ///
+  /// @param name is the volume name to search for
+  /// @retval nullptr if no volume carries the name
+  /// @retval pointer to the first matching volume otherwise.
+  const TrackingVolume* findVolumeByName(std::string_view name) const;
+
   /// Search for a surface with the given identifier.
   ///
   /// @param id is the geometry identifier of the surface
   /// @retval nullptr if no such surface exists
   /// @retval pointer to the found surface otherwise.
   const Surface* findSurface(GeometryIdentifier id) const;
+
+  /// Search for a portal that was tagged with the given label during the
+  /// blueprint construction (see @ref Acts::Experimental::PortalDesignatorBlueprintNode).
+  ///
+  /// @param tag the tag assigned to the portal
+  /// @retval nullptr if no portal carries the tag
+  /// @retval pointer to the tagged portal otherwise.
+  const Portal* findPortal(std::string_view tag) const;
 
   /// Access to the GeometryIdentifier - Surface association map
   /// @return Const reference to the geometry ID to surface map
@@ -219,6 +255,7 @@ class TrackingGeometry {
   // lookup containers
   std::unordered_map<GeometryIdentifier, const TrackingVolume*> m_volumesById;
   std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById;
+  detail::PortalTagMap m_portalsByTag;
 };
 
 }  // namespace Acts

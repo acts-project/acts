@@ -33,6 +33,7 @@ class PortalShellBase;
 namespace Experimental {
 
 class MaterialDesignatorBlueprintNode;
+class PortalDesignatorBlueprintNode;
 class StaticBlueprintNode;
 class LayerBlueprintNode;
 class GeometryIdentifierBlueprintNode;
@@ -231,6 +232,16 @@ class BlueprintNode {
       const std::function<void(MaterialDesignatorBlueprintNode& material)>&
           callback = {});
 
+  /// Convenience method for creating a @ref Acts::Experimental::PortalDesignatorBlueprintNode.
+  /// @param name The name of the portal designator node. Used for debugging
+  ///             the node tree only.
+  /// @param callback An optional callback that receives the node as an argument
+  /// @return Reference to the newly created portal designator blueprint node
+  PortalDesignatorBlueprintNode& addPortalDesignator(
+      const std::string& name,
+      const std::function<void(PortalDesignatorBlueprintNode& portals)>&
+          callback = {});
+
   /// Convenience method for creating a @ref Acts::Experimental::LayerBlueprintNode.
   /// @param name The name of the layer node.
   /// @param callback An optional callback that receives the node as an argument
@@ -309,6 +320,17 @@ class BlueprintNode {
   /// @param os Output stream to write to
   /// @note This method is called by the stream operator.
   virtual void toStream(std::ostream& os) const;
+
+  /// Return a span over the children's shared_ptrs.
+  /// This allows derived classes to access the underlying shared ownership
+  /// of any child via e.g. @c childPtr().at(i).
+  /// @return Span over the children shared_ptrs
+  std::span<std::shared_ptr<BlueprintNode>> childPtr() { return m_children; }
+
+  /// @copydoc childPtr()
+  std::span<const std::shared_ptr<BlueprintNode>> childPtr() const {
+    return m_children;
+  }
 
   /// Set the depth to @p depth and update children recursively
   /// @param depth New depth value to set

@@ -8,6 +8,9 @@
 
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 
+#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
+
+#include <iomanip>
 #include <iostream>
 
 namespace Acts {
@@ -117,7 +120,7 @@ std::pair<std::size_t, std::size_t> SymmetricKLDistanceMatrix::minDistancePair()
 }
 
 std::ostream &SymmetricKLDistanceMatrix::toStream(std::ostream &os) const {
-  const auto prev_precision = os.precision();
+  detail::OstreamStateGuard guard{os};
   const int width = 8;
   const int prec = 2;
 
@@ -139,7 +142,6 @@ std::ostream &SymmetricKLDistanceMatrix::toStream(std::ostream &os) const {
     }
     os << "\n";
   }
-  os << std::setprecision(prev_precision);
   return os;
 }
 

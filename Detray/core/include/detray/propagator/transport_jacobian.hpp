@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "./codegen/transport_jacobian.hpp"
+#include "detray/propagator/detail/codegen/transport_jacobian.hpp"
 
 namespace detray {
 

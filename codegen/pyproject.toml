@@ -1,7 +1,7 @@
 [project]
 name = "codegen"
-version = "0.2.0"
-description = "Add your description here"
+version = "0.3.0"
+description = "Shared sympy-based C++ code generation core for ACTS and detray"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

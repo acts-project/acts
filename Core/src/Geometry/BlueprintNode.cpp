@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
+#include "Acts/Geometry/PortalDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
@@ -147,6 +148,18 @@ MaterialDesignatorBlueprintNode& BlueprintNode::addMaterial(
     callback(*material);
   }
   return *material;
+}
+
+PortalDesignatorBlueprintNode& BlueprintNode::addPortalDesignator(
+    const std::string& name,
+    const std::function<void(PortalDesignatorBlueprintNode& portals)>&
+        callback) {
+  auto portals = std::make_shared<PortalDesignatorBlueprintNode>(name);
+  addChild(portals);
+  if (callback) {
+    callback(*portals);
+  }
+  return *portals;
 }
 
 LayerBlueprintNode& BlueprintNode::addLayer(

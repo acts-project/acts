@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -157,14 +156,18 @@ Acts::Result<void> createStripSpacePoint(
   sp.time() = Acts::NoTime;
   sp.varianceZ() = varZR[0];
   sp.varianceR() = varZR[1];
-  Eigen::Map<Eigen::Vector3f>(sp.topStripVector().data()) =
-      outerStripHalfVector.cast<float>();
-  Eigen::Map<Eigen::Vector3f>(sp.bottomStripVector().data()) =
-      innerStripHalfVector.cast<float>();
-  Eigen::Map<Eigen::Vector3f>(sp.stripCenterDistance().data()) =
-      stripSeparation.cast<float>();
-  Eigen::Map<Eigen::Vector3f>(sp.topStripCenter().data()) =
+  Eigen::Map<Eigen::Vector3f>(
+      sp.outerStripCalibrationDetails().outerCenter.data()) =
       outerStripCenter.cast<float>();
+  Eigen::Map<Eigen::Vector3f>(
+      sp.outerStripCalibrationDetails().innerToOuterSeparation.data()) =
+      stripSeparation.cast<float>();
+  Eigen::Map<Eigen::Vector3f>(
+      sp.outerStripCalibrationDetails().outerHalfVector.data()) =
+      outerStripHalfVector.cast<float>();
+  Eigen::Map<Eigen::Vector3f>(
+      sp.outerStripCalibrationDetails().innerHalfVector.data()) =
+      innerStripHalfVector.cast<float>();
 
   return Acts::Result<void>::success();
 }
@@ -251,7 +254,8 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
       SpacePointColumns::SourceLinks | SpacePointColumns::X |
       SpacePointColumns::Y | SpacePointColumns::Z | SpacePointColumns::R |
       SpacePointColumns::Time | SpacePointColumns::VarianceZ |
-      SpacePointColumns::VarianceR | SpacePointColumns::Strip);
+      SpacePointColumns::VarianceR |
+      SpacePointColumns::StripCalibrationDetails);
 
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
     // select volume/layer depending on what is set in the geometry id
