@@ -62,7 +62,7 @@ class IGrid {
   /// Type alias for dynamic point type (coordinates as vector of doubles)
   using AnyPointType = IMultiAxis::AnyPoint;
   /// Dynamically sized vector of (non-owning) pointers to the contained axes
-  using AnyAxesVector = IMultiAxis::SmallVector<const IAxis*>;
+  using AnyAxesVector = IMultiAxis::AnyAxesVector;
 
   /// Get a dynamically sized vector of axis objects for inspection
   /// @return a vector of axis pointers

@@ -46,12 +46,13 @@ using IMultiAxis3D = IMultiAxisXD<3>;
 /// @c 0 and <tt>nBins + 1</tt> denoting the underflow and overflow bins of an
 /// axis; flattened global indices include these under-/overflow bins.
 class IMultiAxis {
- public:
+ private:
   /// Small vector type used to hold per-axis values without heap allocation
   /// for the common low-dimensional cases.
   template <typename T>
   using SmallVector = boost::container::small_vector<T, 3>;
 
+ public:
   /// Flattened global bin index across all axes
   using GlobalBin = std::size_t;
   /// Dynamically sized multi-index holding one local bin index per axis
