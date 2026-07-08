@@ -15,9 +15,11 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 
 #include <cmath>
 #include <cstddef>
+#include <iomanip>
 #include <numbers>
 #include <utility>
 
@@ -154,8 +156,8 @@ bool TrapezoidVolumeBounds::inside(const Vector3& pos, double tol) const {
 }
 
 std::ostream& TrapezoidVolumeBounds::toStream(std::ostream& os) const {
-  os << std::setiosflags(std::ios::fixed);
-  os << std::setprecision(5);
+  detail::OstreamStateGuard guard{os};
+  os << std::fixed << std::setprecision(5);
   os << "TrapezoidVolumeBounds: (halfX @-Y, halfX @+Y, halfY, halfZ, alpha, "
         "beta) "
         "= ";
