@@ -11,6 +11,7 @@
 // Project include(s)
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/utils/tuple.hpp"
+#include "detray/utils/type_list.hpp"
 #include "detray/utils/type_traits.hpp"
 
 // System include(s)
@@ -204,38 +205,39 @@ using tuple_cat_t = typename tuple_cat_type<tuple_ts...>::type;
 
 /// Remove duplicate types from tuple
 /// @{
-template <typename result_tuple_t, typename arg_t>
-struct push_back_unique_type {};
-
-template <template <typename...> class tuple_t, typename... Args,
-          typename arg_t>
-struct push_back_unique_type<tuple_t<Args...>, arg_t> {
-  using type = std::conditional_t<has_type_v<arg_t, tuple_t<Args...>>,
-                                  tuple_t<Args...>, tuple_t<Args..., arg_t>>;
-};
-
-template <typename result_tuple_t, typename arg_t>
-using push_back_unique_t =
-    typename push_back_unique_type<result_tuple_t, arg_t>::type;
-
-template <typename result_tuple_t, typename input_tuple_t>
-struct unique_types {};
+template <typename tuple_t>
+struct tuple_to_type_list {};
 
 template <template <typename...> class tuple_t, typename... Args>
-struct unique_types<tuple_t<Args...>, tuple_t<>> {
+struct tuple_to_type_list<tuple_t<Args...>> {
+  using type = detray::types::list<Args...>;
+};
+
+template <template <typename...> class tuple_t, typename type_list_t>
+struct type_list_to_tuple {};
+
+template <template <typename...> class tuple_t, typename... Args>
+struct type_list_to_tuple<tuple_t, detray::types::list<Args...>> {
   using type = tuple_t<Args...>;
 };
 
-template <template <typename...> class tuple_t, typename... Args,
-          typename arg_t, typename... input_args>
-struct unique_types<tuple_t<Args...>, tuple_t<arg_t, input_args...>> {
+template <typename result_list_t, typename input_list_t>
+struct unique_types {};
+
+template <typename result_list_t>
+struct unique_types<result_list_t, detray::types::list<>> {
+  using type = result_list_t;
+};
+
+template <typename result_list_t, typename arg_t, typename... input_args>
+struct unique_types<result_list_t, detray::types::list<arg_t, input_args...>> {
  private:
-  using result_tuple = tuple_t<Args...>;
-  using next_result_tuple = push_back_unique_t<result_tuple, arg_t>;
+  using next_result_list_t =
+      detray::types::push_back_unique<result_list_t, arg_t>;
 
  public:
-  using type =
-      typename unique_types<next_result_tuple, tuple_t<input_args...>>::type;
+  using type = typename unique_types<next_result_list_t,
+                                     detray::types::list<input_args...>>::type;
 };
 
 template <typename tuple_t>
@@ -243,7 +245,13 @@ struct unique_type {};
 
 template <template <typename...> class tuple_t, typename... Args>
 struct unique_type<tuple_t<Args...>> {
-  using type = typename unique_types<tuple_t<>, tuple_t<Args...>>::type;
+ private:
+  using unique_list_t = typename unique_types<
+      detray::types::list<>,
+      typename tuple_to_type_list<tuple_t<Args...>>::type>::type;
+
+ public:
+  using type = typename type_list_to_tuple<tuple_t, unique_list_t>::type;
 };
 
 template <typename tuple_t>
