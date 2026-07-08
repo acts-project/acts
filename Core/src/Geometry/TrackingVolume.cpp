@@ -567,11 +567,7 @@ TrackingVolume& TrackingVolume::addVolume(
 
   volume->setMotherVolume(this);
   // Take over the ownership of all placements hold
-  auto& placements = placementCache();
-  placements.insert(placements.end(),
-                    std::make_move_iterator(volume->m_placements.begin()),
-                    std::make_move_iterator(volume->m_placements.end()));
-  volume->m_placements.clear();
+  retainPlacements(volume->m_placements);
   m_volumes.push_back(std::move(volume));
   return *m_volumes.back();
 }
