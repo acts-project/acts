@@ -346,11 +346,10 @@ class ParquetDatasetReader::Impl {
       // Derive the public schema from the first file when no target is given.
       if (m_publicSchema == nullptr && targetSchema == nullptr) {
         std::shared_ptr<arrow::Schema> fileSchema;
-        auto status = reader->GetSchema(&fileSchema);
-        if (!status.ok()) {
+        if (auto status = reader->GetSchema(&fileSchema); !status.ok()) {
           throwArrow("get schema from " + f, status);
         }
-        const int idx = fileSchema->GetFieldIndex(std::string{kEventIdColumn});
+        const int idx = fileSchema->GetFieldIndex(kEventIdColumn);
         if (idx < 0) {
           throw std::invalid_argument("ParquetDatasetReader: file '" + f +
                                       "' lacks event_id column");
@@ -381,11 +380,10 @@ class ParquetDatasetReader::Impl {
     }
 
     // Locate shard: find last entry with first_event <= eventId.
-    auto it =
-        std::upper_bound(m_shardFirstEvent.begin(), m_shardFirstEvent.end(),
-                         static_cast<std::int64_t>(eventId));
+    auto it = std::ranges::upper_bound(m_shardFirstEvent,
+                                       static_cast<std::int64_t>(eventId));
     --it;  // safe: eventId < m_numEvents guarantees at least one entry
-    const std::size_t shardIdx =
+    const auto shardIdx =
         static_cast<std::size_t>(it - m_shardFirstEvent.begin());
     const std::int64_t rowWithinShard =
         static_cast<std::int64_t>(eventId) - *it;
@@ -417,8 +415,7 @@ class ParquetDatasetReader::Impl {
     // Slice in-memory: O(1) for contiguous row groups.
     auto eventTable = shardTable->Slice(rowWithinShard, 1);
 
-    const int idx =
-        eventTable->schema()->GetFieldIndex(std::string{kEventIdColumn});
+    const int idx = eventTable->schema()->GetFieldIndex(kEventIdColumn);
     if (idx < 0) {
       throw std::runtime_error("ParquetDatasetReader: shard '" + shardPath +
                                "' lacks event_id column");

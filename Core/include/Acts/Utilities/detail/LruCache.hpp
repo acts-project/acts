@@ -65,8 +65,7 @@ class LruCache {
   /// @param key Key to insert or update.
   /// @param value Value to associate with @p key.
   void put(const Key& key, Value value) {
-    auto it = m_index.find(key);
-    if (it != m_index.end()) {
+    if (auto it = m_index.find(key); it != m_index.end()) {
       it->second->value = std::move(value);
       m_list.splice(m_list.begin(), m_list, it->second);
       return;
