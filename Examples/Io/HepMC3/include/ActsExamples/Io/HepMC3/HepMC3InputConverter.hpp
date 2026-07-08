@@ -69,7 +69,7 @@ class HepMC3InputConverter : public IAlgorithm {
                                   const HepMC3::GenEvent& genEvent) const;
 
   Acts::HfOrigin checkHfOrigin(
-      std::shared_ptr<const HepMC3::GenParticle> particle) const;
+      const std::shared_ptr<const HepMC3::GenParticle>& particleToCheck) const;
 
   void handleVertex(const HepMC3::GenVertex& genVertex, SimVertex& vertex,
                     std::vector<SimVertex>& vertices,
