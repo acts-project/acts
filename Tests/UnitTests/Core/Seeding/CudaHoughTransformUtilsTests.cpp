@@ -221,8 +221,7 @@ BOOST_AUTO_TEST_CASE(cuda_hough_batch_eta_mdt_fill_matches_host_reference) {
 
   hostBatch.fillEtaDriftCirclesHost(spacePointsForHost, axisRanges);
 
-  cudaBatch.fillEtaDriftCirclesOnDevice(spacePointsForCuda, axisRanges, 3.0,
-                                        1.0, 1.0f, 128);
+  cudaBatch.fillEtaDriftCirclesOnDevice(spacePointsForCuda, axisRanges);
   cudaBatch.moveToHost();
 
   for (std::size_t bucket = 0; bucket < nBuckets; ++bucket) {
@@ -300,8 +299,6 @@ BOOST_AUTO_TEST_CASE(cuda_hough_eta_drift_circle_csv_visual_example) {
 // Visual test with realistic data
 // Bucket 0 exported for visualization
 BOOST_AUTO_TEST_CASE(cuda_hough_eta_mdt_root_first_event_whole_event_sanity) {
-  const char* envPath = std::getenv("ACTS_CUDA_MUON_SP_ROOT");
-
   const std::filesystem::path filePath = std::filesystem::path{
       "/data/mgawlas/ACTS/acts/Tests/Data/ParticleGun_MU0.root"};
 
@@ -358,7 +355,6 @@ BOOST_AUTO_TEST_CASE(cuda_hough_eta_mdt_root_first_event_whole_event_sanity) {
   plane.moveToHost();
 
   std::size_t bucketsWithHits = 0;
-  std::size_t totalNonEmptyCells = 0;
 
   std::size_t bestBucket = 0;
   CudaHT::YieldType bestMaxHits = 0.0f;
@@ -372,9 +368,6 @@ BOOST_AUTO_TEST_CASE(cuda_hough_eta_mdt_root_first_event_whole_event_sanity) {
     BOOST_CHECK(std::isfinite(maxLayers));
     BOOST_CHECK_LE(maxLayers, maxHits);
 
-    const auto nonEmpty = plane.nonEmptyBins(bucket);
-    totalNonEmptyCells += nonEmpty.size();
-
     if (maxHits > 0.0f) {
       ++bucketsWithHits;
     }
@@ -387,7 +380,6 @@ BOOST_AUTO_TEST_CASE(cuda_hough_eta_mdt_root_first_event_whole_event_sanity) {
   }
 
   BOOST_CHECK_GT(bucketsWithHits, 0u);
-  BOOST_CHECK_GT(totalNonEmptyCells, 0u);
   BOOST_CHECK_GT(bestMaxHits, 0.0f);
 
   const auto [bestXBin, bestYBin] = plane.locMaxHits(bestBucket);
@@ -406,7 +398,6 @@ BOOST_AUTO_TEST_CASE(cuda_hough_eta_mdt_root_first_event_whole_event_sanity) {
                      << axisRanges.yMax << "]");
   BOOST_TEST_MESSAGE("Buckets with non-empty Hough response: "
                      << bucketsWithHits << " / " << plane.nBuckets());
-  BOOST_TEST_MESSAGE("Total non-empty cells: " << totalNonEmptyCells);
   BOOST_TEST_MESSAGE("Best bucket: " << bestBucket);
   BOOST_TEST_MESSAGE("Best maximum bin: x=" << bestXBin << ", y=" << bestYBin);
   BOOST_TEST_MESSAGE("Best maximum parameters: tanTheta="

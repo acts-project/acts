@@ -72,10 +72,6 @@ void copyColumnToHost(std::vector<T>& hostColumn, const T* deviceColumn) {
                        hostColumn.size() * sizeof(T), cudaMemcpyDeviceToHost));
 }
 
-std::size_t alignUp(std::size_t value, std::size_t alignment) {
-  return ((value + alignment - 1u) / alignment) * alignment;
-}
-
 /// Decode the zero-based layer index from raw MuonId.
 __host__ __device__ inline unsigned layerIndexFromMuonId(std::uint32_t rawId) {
   static constexpr std::uint32_t fourBit = 0xFu;
@@ -85,18 +81,23 @@ __host__ __device__ inline unsigned layerIndexFromMuonId(std::uint32_t rawId) {
 }
 
 LayerMask layerBitHost(unsigned layer) {
+#ifdef ACTS_ENABLE_CUDA_RUNTIME_CHECKS
   if (layer >= 8u * sizeof(LayerMask)) {
     throw std::out_of_range(
         "CudaHoughPlaneBatch supports at most 64 logical layers");
   }
+#endif
 
   return LayerMask{1ull} << layer;
 }
 
 __device__ LayerMask layerBitDevice(unsigned layer) {
+
+#ifdef ACTS_ENABLE_CUDA_RUNTIME_CHECKS
   if (layer >= 8u * sizeof(LayerMask)) {
     return LayerMask{0ull};
   }
+#endif
 
   return LayerMask{1ull} << layer;
 }
@@ -122,11 +123,13 @@ __device__ void fillSharedBin(YieldType* sHits, YieldType* sLayers,
   // For example for 2 get 0..0010
   const LayerMask bit = layerBitDevice(layer);
 
+#ifdef ACTS_ENABLE_CUDA_RUNTIME_CHECKS
   // Out of range check
   // Can be removed later
   if (bit == LayerMask{0ull}) {
     return;
   }
+#endif
 
   // atomic returns old value
   const LayerMask oldMask = atomicOr(&sMask[localBin], bit);
@@ -150,12 +153,15 @@ __device__ void fillSharedYBand(YieldType* sHits, YieldType* sLayers,
   int yBinUp = binIndexDevice(ranges.yMin, ranges.yMax, batch.nBinsY,
                               yCenter + yHalfWidth);
 
+#ifdef ACTS_ENABLE_CUDA_RUNTIME_CHECKS
   if (yBinDown > yBinUp) {
     const int tmp = yBinDown;
     yBinDown = yBinUp;
     yBinUp = tmp;
   }
+#endif
 
+  // Those are necessary
   if (yBinDown < 0) {
     yBinDown = 0;
   }
@@ -169,20 +175,6 @@ __device__ void fillSharedYBand(YieldType* sHits, YieldType* sLayers,
     fillSharedBin(sHits, sLayers, sMask, batch.nBinsX, xBin,
                   static_cast<std::uint32_t>(yBin), layer, weight);
   }
-}
-
-__global__ void resetBatchKernel(CudaHoughPlaneBatchArrays batch,
-                                 std::size_t totalCells) {
-  const std::size_t globalThread =
-      blockIdx.x * static_cast<std::size_t>(blockDim.x) + threadIdx.x;
-
-  if (globalThread >= totalCells) {
-    return;
-  }
-
-  batch.nHits[globalThread] = 0.0f;
-  batch.nLayers[globalThread] = 0.0f;
-  batch.layerMask[globalThread] = LayerMask{0ull};
 }
 
 __global__ void fillEtaDriftCirclesMdtBatchKernel(
@@ -302,14 +294,10 @@ void copyDeviceToHost(std::vector<YieldType>& hits,
   copyColumnToHost(layerMask, device.layerMask);
 }
 
-std::size_t launchBlocks(std::size_t nTasks,
-                         std::size_t threadsPerBlock = 256u) {
-  return (nTasks + threadsPerBlock - 1u) / threadsPerBlock;
-}
-
 std::size_t sharedBytesForCells(std::size_t nCells) {
   std::size_t bytes = 2u * nCells * sizeof(YieldType);
-  bytes = alignUp(bytes, alignof(LayerMask));
+  std::size_t layerMaskSize = alignof(LayerMask); // for normal types alignof and sizeof should regturn same
+  bytes = ((bytes + layerMaskSize - 1u) / layerMaskSize) * layerMaskSize;
   bytes += nCells * sizeof(LayerMask);
   return bytes;
 }
@@ -317,15 +305,6 @@ std::size_t sharedBytesForCells(std::size_t nCells) {
 }  // namespace
 
 namespace ActsExamples::CudaHoughTransformUtils {
-
-bool CudaHoughCell::hasLayer(unsigned layer) const noexcept {
-  if (layer >= 8u * sizeof(LayerMask)) {
-    return false;
-  }
-
-  const LayerMask bit = LayerMask{1ull} << layer;
-  return (m_layerMask & bit) != LayerMask{0ull};
-}
 
 CudaHoughPlaneBatch::CudaHoughPlaneBatch(const HoughPlaneConfig& cfg,
                                          size_type nBuckets)
@@ -395,9 +374,8 @@ CudaHoughPlaneBatch::size_type CudaHoughPlaneBatch::globalBin(
   return uncheckedGlobalBin(bucket, xBin, yBin);
 }
 
-CudaHoughPlaneBatch::Index CudaHoughPlaneBatch::axisBins(
+std::pair<std::size_t, std::size_t> CudaHoughPlaneBatch::axisBins(
     size_type globalBin) const {
-  checkGlobalBin(globalBin);
 
   const size_type localBin = globalBin % nCellsPerBucket();
   return {localBin % nBinsX(), localBin / nBinsX()};
@@ -427,9 +405,14 @@ void CudaHoughPlaneBatch::fillBin(size_type bucket, size_type xBin,
 
 void CudaHoughPlaneBatch::fillEtaDriftCirclesHost(
     const CudaMuonSpacePointContainer& spacePoints,
-    const HoughAxisRanges& axisRanges, double widthScale, double maxWidth,
+    const HoughAxisRanges& axisRanges,
     YieldType weight) {
-  checkSpacePointBuckets(spacePoints);
+
+  // No width, however original implementation has this as widthPar:
+  // CoordType dy = widthPar(x, measurement);
+  // {0, 0} means that for loop will default to single central element
+  double widthScale = 0; 
+  double maxWidth = 0;
 
   for (size_type bucket = 0; bucket < nBuckets(); ++bucket) {
     const size_type start = spacePoints.bucketStart(bucket);
@@ -480,9 +463,14 @@ void CudaHoughPlaneBatch::fillEtaDriftCirclesHost(
 
 void CudaHoughPlaneBatch::fillEtaDriftCirclesOnDevice(
     CudaMuonSpacePointContainer& spacePoints, const HoughAxisRanges& axisRanges,
-    double widthScale, double maxWidth, YieldType weight,
+    YieldType weight,
     std::uint32_t threadsPerBlock, std::uint32_t num_blocks) {
-  checkSpacePointBuckets(spacePoints);
+
+  // No width, however original implementation has this as widthPar:
+  // CoordType dy = widthPar(x, measurement);
+  // {0, 0} means that for loop will default to single central element
+  double widthScale = 0; 
+  double maxWidth = 0;
 
   if (threadsPerBlock == 0) {
     throw std::invalid_argument("threadsPerBlock must be non-zero");
@@ -546,26 +534,6 @@ void CudaHoughPlaneBatch::fillEtaDriftCirclesOnDevice(
   cudaCheck(cudaDeviceSynchronize());
 }
 
-void CudaHoughPlaneBatch::reset() {
-  std::fill(m_hostHits.begin(), m_hostHits.end(), 0.0f);
-  std::fill(m_hostLayers.begin(), m_hostLayers.end(), 0.0f);
-  std::fill(m_hostLayerMask.begin(), m_hostLayerMask.end(), LayerMask{0ull});
-
-  if (!m_onDevice) {
-    return;
-  }
-
-  constexpr std::size_t threadsPerBlock = 256;
-  const std::size_t blocks = launchBlocks(totalCells(), threadsPerBlock);
-
-  resetBatchKernel<<<static_cast<unsigned>(blocks),
-                     static_cast<unsigned>(threadsPerBlock)>>>(m_device,
-                                                               totalCells());
-
-  cudaCheck(cudaGetLastError());
-  cudaCheck(cudaDeviceSynchronize());
-}
-
 YieldType CudaHoughPlaneBatch::nHits(size_type bucket, size_type xBin,
                                      size_type yBin) const {
   return m_hostHits[globalBin(bucket, xBin, yBin)];
@@ -609,13 +577,6 @@ std::vector<unsigned> CudaHoughPlaneBatch::layers(size_type bucket,
   return out;
 }
 
-CudaHoughCell CudaHoughPlaneBatch::cell(size_type bucket, size_type xBin,
-                                        size_type yBin) const {
-  const size_type bin = globalBin(bucket, xBin, yBin);
-  return CudaHoughCell{m_hostHits[bin], m_hostLayers[bin],
-                       m_hostLayerMask[bin]};
-}
-
 YieldType CudaHoughPlaneBatch::maxHits(size_type bucket) const {
   checkBucket(bucket);
 
@@ -636,8 +597,9 @@ YieldType CudaHoughPlaneBatch::maxLayers(size_type bucket) const {
   return *std::max_element(begin, end);
 }
 
-CudaHoughPlaneBatch::Index CudaHoughPlaneBatch::locMaxHits(
+ std::pair<std::size_t, std::size_t>CudaHoughPlaneBatch::locMaxHits(
     size_type bucket) const {
+
   checkBucket(bucket);
 
   const auto begin = m_hostHits.begin() +
@@ -648,27 +610,6 @@ CudaHoughPlaneBatch::Index CudaHoughPlaneBatch::locMaxHits(
   const size_type localBin = static_cast<size_type>(std::distance(begin, iter));
 
   return {localBin % nBinsX(), localBin / nBinsX()};
-}
-
-
-std::vector<CudaHoughPlaneBatch::size_type> CudaHoughPlaneBatch::nonEmptyBins(
-    size_type bucket) const {
-  checkBucket(bucket);
-
-  std::vector<size_type> out{};
-
-  const size_type base = bucket * nCellsPerBucket();
-
-  for (size_type localBin = 0; localBin < nCellsPerBucket(); ++localBin) {
-    const size_type bin = base + localBin;
-
-    if (m_hostHits[bin] != 0.0f || m_hostLayers[bin] != 0.0f ||
-        m_hostLayerMask[bin] != LayerMask{0ull}) {
-      out.push_back(localBin);
-    }
-  }
-
-  return out;
 }
 
 void CudaHoughPlaneBatch::moveToDevice() {
@@ -698,6 +639,7 @@ void CudaHoughPlaneBatch::clearDevice() noexcept {
   m_onDevice = false;
 }
 
+
 void CudaHoughPlaneBatch::checkBucket(size_type bucket) const {
   if (bucket >= nBuckets()) {
     throw std::out_of_range("CudaHoughPlaneBatch bucket index out of range");
@@ -711,22 +653,6 @@ void CudaHoughPlaneBatch::checkIndices(size_type xBin, size_type yBin) const {
 
   if (yBin >= nBinsY()) {
     throw std::out_of_range("CudaHoughPlaneBatch y-bin index out of range");
-  }
-}
-
-void CudaHoughPlaneBatch::checkGlobalBin(size_type globalBin) const {
-  if (globalBin >= totalCells()) {
-    throw std::out_of_range(
-        "CudaHoughPlaneBatch global-bin index out of range");
-  }
-}
-
-void CudaHoughPlaneBatch::checkSpacePointBuckets(
-    const CudaMuonSpacePointContainer& spacePoints) const {
-  if (spacePoints.bucketCount() != nBuckets()) {
-    throw std::invalid_argument(
-        "CudaHoughPlaneBatch bucket count does not match space point bucket "
-        "count");
   }
 }
 

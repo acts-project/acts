@@ -44,30 +44,13 @@ struct CudaHoughPlaneBatchArrays {
   /// Bit mask of logical layers seen by each bucket/cell.
   LayerMask* layerMask = nullptr;
 
+  // nBinsX is in our case tanTheta
+  // nBinsY is y intercept
+  // This is keept as X, Y to be complient with original HoughTransformUtils
+  // and to later support generalization of this algorithm to also support phi
   std::uint32_t nBuckets = 0;
   std::uint32_t nBinsX = 0;
   std::uint32_t nBinsY = 0;
-};
-
-/// Host-side snapshot of one Hough cell.
-class CudaHoughCell {
- public:
-  CudaHoughCell() = default;
-
-  CudaHoughCell(YieldType nHits, YieldType nLayers,
-                LayerMask layerMask) noexcept
-      : m_nHits{nHits}, m_nLayers{nLayers}, m_layerMask{layerMask} {}
-
-  YieldType nHits() const noexcept { return m_nHits; }
-  YieldType nLayers() const noexcept { return m_nLayers; }
-  LayerMask layerMask() const noexcept { return m_layerMask; }
-
-  bool hasLayer(unsigned layer) const noexcept;
-
- private:
-  YieldType m_nHits = 0.0f;
-  YieldType m_nLayers = 0.0f;
-  LayerMask m_layerMask = 0ull;
 };
 
 /// Event-level CUDA Hough accumulator batch.
@@ -83,7 +66,6 @@ class CudaHoughCell {
 class CudaHoughPlaneBatch {
  public:
   using size_type = std::size_t;
-  using Index = std::array<size_type, 2>;
 
   CudaHoughPlaneBatch(const HoughPlaneConfig& cfg, size_type nBuckets);
 
@@ -111,7 +93,7 @@ class CudaHoughPlaneBatch {
   size_type globalBin(size_type bucket, size_type xBin, size_type yBin) const;
 
   /// Reverse mapping from global batch bin to {xBin, yBin}.
-  Index axisBins(size_type globalBin) const;
+  std::pair<std::size_t, std::size_t> axisBins(size_type globalBin) const;
 
   /// CPU-side direct bin fill. Useful for vdalidation.
   void fillBin(size_type bucket, size_type xBin, size_type yBin, unsigned layer,
@@ -120,38 +102,31 @@ class CudaHoughPlaneBatch {
   /// CPU reference fill for MDT eta Hough, all buckets in the event.
   void fillEtaDriftCirclesHost(const CudaMuonSpacePointContainer& spacePoints,
                                const HoughAxisRanges& axisRanges,
-                               double widthScale = 3.0, double maxWidth = 1.0,
                                YieldType weight = 1.0f);
 
   void fillEtaDriftCirclesOnDevice(
       CudaMuonSpacePointContainer& spacePoints,
-      const HoughAxisRanges& axisRanges, double widthScale = 3.0,
-      double maxWidth = 1.0, YieldType weight = 1.0f,
+      const HoughAxisRanges& axisRanges,
+      YieldType weight = 1.0f,
       std::uint32_t threadsPerBlock = 128,
       std::uint32_t num_blocks = 0);  // 0 is auto use number of SMs
 
-  /// Reset host data and device data if allocated.
-  void reset();
-
+  // Usefull utilities for testing
   YieldType nHits(size_type bucket, size_type xBin, size_type yBin) const;
   YieldType nLayers(size_type bucket, size_type xBin, size_type yBin) const;
   LayerMask layerMask(size_type bucket, size_type xBin, size_type yBin) const;
-
   bool hasLayer(size_type bucket, size_type xBin, size_type yBin,
                 unsigned layer) const;
 
+  // Usefull for testing and in case of translation to original container type
   std::vector<unsigned> layers(size_type bucket, size_type xBin,
                                size_type yBin) const;
 
-  CudaHoughCell cell(size_type bucket, size_type xBin, size_type yBin) const;
-
+  // Useful for testing
   YieldType maxHits(size_type bucket) const;
   YieldType maxLayers(size_type bucket) const;
-
-  Index locMaxHits(size_type bucket) const;
-  Index locMaxLayers(size_type bucket) const;
-
-  std::vector<size_type> nonEmptyBins(size_type bucket) const;
+  std::pair<std::size_t, std::size_t> locMaxHits(size_type bucket) const;
+  std::pair<std::size_t, std::size_t> locMaxLayers(size_type bucket) const;
 
   void moveToDevice();
   void moveToHost();
@@ -161,7 +136,7 @@ class CudaHoughPlaneBatch {
 
   CudaHoughPlaneBatchArrays deviceArrays() const noexcept { return m_device; }
 
- private:
+private:
   HoughPlaneConfig m_cfg{};
   size_type m_nBuckets = 0;
 
@@ -177,6 +152,7 @@ class CudaHoughPlaneBatch {
     return bucket * nCellsPerBucket() + yBin * nBinsX() + xBin;
   }
 
+  // Get rid of those
   void checkBucket(size_type bucket) const;
   void checkIndices(size_type xBin, size_type yBin) const;
   void checkGlobalBin(size_type globalBin) const;
