@@ -161,11 +161,11 @@ class FlatNeighborHoodIndices {
 /// helper functions for grid-related operations
 struct MultiAxisHelper {
  private:
-  /// Invoke @p f with a compile-time axis index (as an integral constant) for
-  /// every axis @c 0, 1, ..., sizeof...(Is)-1 in order.
+  /// Invoke @p f with a compile-time axis index (as an explicit template
+  /// argument) for every axis @c 0, 1, ..., sizeof...(Is)-1 in order.
   template <std::size_t... Is, class F>
   static constexpr void forEachAxis(std::index_sequence<Is...> /*seq*/, F&& f) {
-    (f(std::integral_constant<std::size_t, Is>{}), ...);
+    (f.template operator()<Is>(), ...);
   }
 
   /// Same as @c forEachAxis but visiting the axes in reverse order, i.e.
@@ -175,7 +175,7 @@ struct MultiAxisHelper {
   static constexpr void forEachAxisReverse(std::index_sequence<Is...> /*seq*/,
                                            F&& f) {
     constexpr std::size_t N = sizeof...(Is);
-    (f(std::integral_constant<std::size_t, N - 1 - Is>{}), ...);
+    (f.template operator()<N - 1 - Is>(), ...);
   }
 
  public:
@@ -193,8 +193,7 @@ struct MultiAxisHelper {
       const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
     std::array<double, sizeof...(Axes)> center{};
-    forEachAxis(std::index_sequence_for<Axes...>{}, [&](auto I) {
-      constexpr std::size_t i = I;
+    forEachAxis(std::index_sequence_for<Axes...>{}, [&]<std::size_t i>() {
       center[i] = std::get<i>(axes).getBinCenter(localBins[i]);
     });
     return center;
@@ -210,8 +209,7 @@ struct MultiAxisHelper {
       const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
     std::array<double, sizeof...(Axes)> widthArray{};
-    forEachAxis(std::index_sequence_for<Axes...>{}, [&](auto I) {
-      constexpr std::size_t i = I;
+    forEachAxis(std::index_sequence_for<Axes...>{}, [&]<std::size_t i>() {
       widthArray[i] = std::get<i>(axes).getBinWidth(localBins[i]);
     });
     return widthArray;
@@ -237,11 +235,11 @@ struct MultiAxisHelper {
     // reverse.
     std::size_t bin = 0;
     std::size_t area = 1;
-    forEachAxisReverse(std::index_sequence_for<Axes...>{}, [&](auto I) {
-      constexpr std::size_t i = I;
-      bin += area * localBins[i];
-      area *= std::get<i>(axes).getNBins() + 2;
-    });
+    forEachAxisReverse(std::index_sequence_for<Axes...>{},
+                       [&]<std::size_t i>() {
+                         bin += area * localBins[i];
+                         area *= std::get<i>(axes).getNBins() + 2;
+                       });
     return bin;
   }
 
@@ -263,8 +261,7 @@ struct MultiAxisHelper {
   static std::array<std::size_t, sizeof...(Axes)> getLocalBinsFromPoint(
       const Point& point, const std::tuple<Axes...>& axes) {
     std::array<std::size_t, sizeof...(Axes)> localBins{};
-    forEachAxis(std::index_sequence_for<Axes...>{}, [&](auto I) {
-      constexpr std::size_t i = I;
+    forEachAxis(std::index_sequence_for<Axes...>{}, [&]<std::size_t i>() {
       localBins[i] = std::get<i>(axes).getBin(point[i]);
     });
     return localBins;
@@ -320,15 +317,13 @@ struct MultiAxisHelper {
     // then peel off the local bin indices from the most significant axis down.
     std::array<std::size_t, sizeof...(Axes)> strides{};
     std::size_t area = 1;
-    forEachAxisReverse(Seq{}, [&](auto I) {
-      constexpr std::size_t i = I;
+    forEachAxisReverse(Seq{}, [&]<std::size_t i>() {
       strides[i] = area;
       area *= std::get<i>(axes).getNBins() + 2;
     });
 
     std::array<std::size_t, sizeof...(Axes)> localBins{};
-    forEachAxis(Seq{}, [&](auto I) {
-      constexpr std::size_t i = I;
+    forEachAxis(Seq{}, [&]<std::size_t i>() {
       localBins[i] = bin / strides[i];
       bin %= strides[i];
     });
@@ -349,8 +344,7 @@ struct MultiAxisHelper {
       const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
     std::array<double, sizeof...(Axes)> llEdge{};
-    forEachAxis(std::index_sequence_for<Axes...>{}, [&](auto I) {
-      constexpr std::size_t i = I;
+    forEachAxis(std::index_sequence_for<Axes...>{}, [&]<std::size_t i>() {
       llEdge[i] = std::get<i>(axes).getBinLowerBound(localBins[i]);
     });
     return llEdge;
@@ -374,8 +368,7 @@ struct MultiAxisHelper {
       const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
     auto llIndices = localBins;
-    forEachAxis(std::index_sequence_for<Axes...>{}, [&](auto I) {
-      constexpr std::size_t i = I;
+    forEachAxis(std::index_sequence_for<Axes...>{}, [&]<std::size_t i>() {
       llIndices[i] = std::get<i>(axes).wrapBin(llIndices[i] - 1);
     });
     return llIndices;
@@ -393,8 +386,7 @@ struct MultiAxisHelper {
       const std::tuple<Axes...>& axes) {
     std::array<std::size_t, sizeof...(Axes)> nBinsArray{};
     // by convention getNBins does not include under-/overflow bins
-    forEachAxis(std::index_sequence_for<Axes...>{}, [&](auto I) {
-      constexpr std::size_t i = I;
+    forEachAxis(std::index_sequence_for<Axes...>{}, [&]<std::size_t i>() {
       nBinsArray[i] = std::get<i>(axes).getNBins();
     });
     return nBinsArray;
@@ -409,8 +401,7 @@ struct MultiAxisHelper {
   static std::array<const IAxis*, sizeof...(Axes)> getAxes(
       const std::tuple<Axes...>& axes) {
     std::array<const IAxis*, sizeof...(Axes)> arr{};
-    forEachAxis(std::index_sequence_for<Axes...>{}, [&](auto I) {
-      constexpr std::size_t i = I;
+    forEachAxis(std::index_sequence_for<Axes...>{}, [&]<std::size_t i>() {
       arr[i] = static_cast<const IAxis*>(&std::get<i>(axes));
     });
     return arr;
@@ -430,8 +421,7 @@ struct MultiAxisHelper {
       const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
     std::array<double, sizeof...(Axes)> urEdge{};
-    forEachAxis(std::index_sequence_for<Axes...>{}, [&](auto I) {
-      constexpr std::size_t i = I;
+    forEachAxis(std::index_sequence_for<Axes...>{}, [&]<std::size_t i>() {
       urEdge[i] = std::get<i>(axes).getBinUpperBound(localBins[i]);
     });
     return urEdge;
@@ -455,8 +445,7 @@ struct MultiAxisHelper {
       const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
     auto urIndices = localBins;
-    forEachAxis(std::index_sequence_for<Axes...>{}, [&](auto I) {
-      constexpr std::size_t i = I;
+    forEachAxis(std::index_sequence_for<Axes...>{}, [&]<std::size_t i>() {
       urIndices[i] = std::get<i>(axes).wrapBin(urIndices[i] + 1);
     });
     return urIndices;
@@ -471,8 +460,7 @@ struct MultiAxisHelper {
   static std::array<double, sizeof...(Axes)> getMin(
       const std::tuple<Axes...>& axes) {
     std::array<double, sizeof...(Axes)> minArray{};
-    forEachAxis(std::index_sequence_for<Axes...>{}, [&](auto I) {
-      constexpr std::size_t i = I;
+    forEachAxis(std::index_sequence_for<Axes...>{}, [&]<std::size_t i>() {
       minArray[i] = std::get<i>(axes).getMin();
     });
     return minArray;
@@ -487,8 +475,7 @@ struct MultiAxisHelper {
   static std::array<double, sizeof...(Axes)> getMax(
       const std::tuple<Axes...>& axes) {
     std::array<double, sizeof...(Axes)> maxArray{};
-    forEachAxis(std::index_sequence_for<Axes...>{}, [&](auto I) {
-      constexpr std::size_t i = I;
+    forEachAxis(std::index_sequence_for<Axes...>{}, [&]<std::size_t i>() {
       maxArray[i] = std::get<i>(axes).getMax();
     });
     return maxArray;
@@ -521,8 +508,7 @@ struct MultiAxisHelper {
     // length N array which contains local neighbors based on size par
     std::array<NeighborHoodIndices, sizeof...(Axes)> neighborIndices{};
     // get local bin indices for neighboring bins (same size on every axis)
-    forEachAxis(std::index_sequence_for<Axes...>{}, [&](auto I) {
-      constexpr std::size_t i = I;
+    forEachAxis(std::index_sequence_for<Axes...>{}, [&]<std::size_t i>() {
       neighborIndices[i] =
           std::get<i>(axes).neighborHoodIndices(localBins[i], sizes);
     });
@@ -569,8 +555,7 @@ struct MultiAxisHelper {
     // length N array which contains local neighbors based on size par
     std::array<NeighborHoodIndices, sizeof...(Axes)> neighborIndices{};
     // get local bin indices for neighboring bins (per-axis size)
-    forEachAxis(std::index_sequence_for<Axes...>{}, [&](auto I) {
-      constexpr std::size_t i = I;
+    forEachAxis(std::index_sequence_for<Axes...>{}, [&]<std::size_t i>() {
       neighborIndices[i] =
           std::get<i>(axes).neighborHoodIndices(localBins[i], sizes[i]);
     });
