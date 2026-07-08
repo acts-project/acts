@@ -14,11 +14,16 @@
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <array>
+#include <cstddef>
 #include <optional>
+#include <span>
 #include <stdexcept>
+#include <system_error>
+#include <type_traits>
 
 namespace Acts {
 
@@ -197,6 +202,91 @@ BoundMatrix estimateTrackParamCovariance(
     const EstimateTrackParamCovarianceConfig& config, const BoundVector& params,
     bool hasTime);
 
+/// Error codes for the multi-space-point track parameter estimation
+/// @ingroup errors
+enum class TrackParamsEstimationError {
+  // ensure all values are non-zero
+  /// Fewer than three space points were provided
+  NotEnoughSpacePoints = 1,
+  /// The fit is degenerate (e.g. all space points coincide)
+  DegenerateFit,
+};
+
+/// Create error code from @ref TrackParamsEstimationError
+/// @param e The error code enum value
+/// @return Standard error code
+std::error_code make_error_code(Acts::TrackParamsEstimationError e);
+
+/// Estimate free track parameters from an ordered set of N >= 3 space points.
+///
+/// Generalizes @ref estimateTrackParamsFromSeed (limited to three space points)
+/// to a least-squares helix fit: the circle transverse to the field is fitted
+/// algebraically with the Taubin method (optionally refined geometrically) and
+/// the coordinate along the field is fitted linearly against the transverse arc
+/// length. The parameters are represented at the first (reference) space point.
+/// Points are taken in track order (first = reference, usually innermost) and
+/// are not sorted internally.
+///
+/// Straight tracks are handled naturally: for a vanishing curvature (high
+/// momentum or weak field) the circle fit degenerates to a line and only the
+/// direction is estimated. q/p is left at zero when the field magnitude
+/// vanishes, as the momentum cannot be estimated without a field.
+///
+/// Optional per-space-point weights turn the two least-squares stages into
+/// weighted fits. The transverse weights enter the circle fit (Taubin plus
+/// geometric refinement) and the longitudinal weights enter the R-Z line fit,
+/// matching the anisotropic measurement uncertainty of a space point (its
+/// transverse and longitudinal resolutions generally differ). Weights act as
+/// relative (e.g. inverse-variance) factors; an empty span selects uniform
+/// weights, so passing neither reproduces the unweighted fit. Each non-empty
+/// span must match `spacePoints` in size.
+///
+/// @param spacePoints the ordered global space point positions
+/// @param bField the homogeneous magnetic field vector
+/// @param t0 the time assigned to the reference point (eFreeTime)
+/// @param geometricRefineIterations number of Gauss-Newton refinement
+///        iterations on top of the algebraic circle fit (0 disables it)
+/// @param weightsTransverse optional per-point weights for the transverse
+///        circle fit (empty span = uniform)
+/// @param weightsLongitudinal optional per-point weights for the longitudinal
+///        R-Z line fit (empty span = uniform)
+/// @return the free parameters at the reference point, or an error
+Result<FreeVector> estimateTrackParamsFromSpacePoints(
+    std::span<const Vector3> spacePoints, const Vector3& bField, double t0 = 0.,
+    std::size_t geometricRefineIterations = 0,
+    std::span<const double> weightsTransverse = {},
+    std::span<const double> weightsLongitudinal = {});
+
+/// Estimate bound track parameters from an ordered set of N >= 3 space points.
+///
+/// As @ref estimateTrackParamsFromSpacePoints, but expressed at the given
+/// surface, which is assumed to be that of the first (reference) space point.
+///
+/// @param gctx the geometry context
+/// @param surface the surface of the reference space point
+/// @param spacePoints the ordered global space point positions
+/// @param bField the homogeneous magnetic field vector
+/// @param t0 the time assigned to the reference point (eBoundTime)
+/// @param geometricRefineIterations number of Gauss-Newton refinement
+///        iterations on top of the algebraic circle fit (0 disables it)
+/// @param weightsTransverse optional per-point weights for the transverse
+///        circle fit (empty span = uniform)
+/// @param weightsLongitudinal optional per-point weights for the longitudinal
+///        R-Z line fit (empty span = uniform)
+/// @return the bound parameters at the surface, or an error
+Result<BoundVector> estimateTrackParamsFromSpacePoints(
+    const GeometryContext& gctx, const Surface& surface,
+    std::span<const Vector3> spacePoints, const Vector3& bField, double t0 = 0.,
+    std::size_t geometricRefineIterations = 0,
+    std::span<const double> weightsTransverse = {},
+    std::span<const double> weightsLongitudinal = {});
+
 /// @}
 
 }  // namespace Acts
+
+namespace std {
+// register with STL
+template <>
+struct is_error_code_enum<Acts::TrackParamsEstimationError> : std::true_type {};
+}  // namespace std
