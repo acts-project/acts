@@ -11,6 +11,7 @@ on:
       - 'develop/**'
     paths-ignore:
       - "docs/**"
+      - "Detray/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
