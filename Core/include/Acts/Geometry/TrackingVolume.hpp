@@ -571,9 +571,9 @@ class TrackingVolume : public Volume {
   void retainPlacement(Obj_t placement) {
     placementCache().emplace_back(std::move(placement));
   }
-  /// Convinience method to pass a container of (Volume / Surface)
+  /// Convenience method to pass a container of (Volume / Surface)
   /// placements to the tracking volume to retain ownership
-  /// @param placements: Container of volume placements to be hold  
+  /// @param placements: Container of volume placements to be hold
   template <typename Range>
     requires std::ranges::input_range<Range> &&
              isVariantCompatible<
