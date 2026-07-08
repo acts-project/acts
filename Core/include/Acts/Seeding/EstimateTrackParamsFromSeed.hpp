@@ -232,30 +232,29 @@ std::error_code make_error_code(Acts::TrackParamsEstimationError e);
 /// direction is estimated. q/p is left at zero when the field magnitude
 /// vanishes, as the momentum cannot be estimated without a field.
 ///
-/// Optional per-space-point weights turn the two least-squares stages into
-/// weighted fits. The transverse weights enter the circle fit (Taubin plus
-/// geometric refinement) and the longitudinal weights enter the R-Z line fit,
-/// matching the anisotropic measurement uncertainty of a space point (its
-/// transverse and longitudinal resolutions generally differ). Weights act as
-/// relative (e.g. inverse-variance) factors; an empty span selects uniform
-/// weights, so passing neither reproduces the unweighted fit. Each non-empty
-/// span must match `spacePoints` in size.
+/// An optional per-space-point weight turns every least-squares stage (the
+/// circle fit, the R-Z line fit and the straight-line PCA fallback) into a
+/// weighted fit, expressing the relative trust in each point (e.g. a more
+/// precise detector type). A single scalar weight per point is used rather than
+/// a per-plane split: the estimation frame is a general rotation fixed by the
+/// field, so a transverse/longitudinal variance split would not be
+/// rotation-invariant and is only meaningful when the field is along global z.
+/// Weights act as relative (e.g. inverse-variance) factors; an empty span
+/// selects uniform weights, so passing none reproduces the unweighted fit. A
+/// non-empty span must match `spacePoints` in size.
 ///
 /// @param spacePoints the ordered global space point positions
 /// @param bField the homogeneous magnetic field vector
 /// @param t0 the time assigned to the reference point (eFreeTime)
 /// @param geometricRefineIterations number of Gauss-Newton refinement
 ///        iterations on top of the algebraic circle fit (0 disables it)
-/// @param weightsTransverse optional per-point weights for the transverse
-///        circle fit (empty span = uniform)
-/// @param weightsLongitudinal optional per-point weights for the longitudinal
-///        R-Z line fit (empty span = uniform)
+/// @param weights optional per-point weights for all fit stages
+///        (empty span = uniform)
 /// @return the free parameters at the reference point, or an error
 Result<FreeVector> estimateTrackParamsFromSpacePoints(
     std::span<const Vector3> spacePoints, const Vector3& bField, double t0 = 0.,
     std::size_t geometricRefineIterations = 0,
-    std::span<const double> weightsTransverse = {},
-    std::span<const double> weightsLongitudinal = {});
+    std::span<const double> weights = {});
 
 /// Estimate bound track parameters from an ordered set of N >= 3 space points.
 ///
@@ -269,17 +268,14 @@ Result<FreeVector> estimateTrackParamsFromSpacePoints(
 /// @param t0 the time assigned to the reference point (eBoundTime)
 /// @param geometricRefineIterations number of Gauss-Newton refinement
 ///        iterations on top of the algebraic circle fit (0 disables it)
-/// @param weightsTransverse optional per-point weights for the transverse
-///        circle fit (empty span = uniform)
-/// @param weightsLongitudinal optional per-point weights for the longitudinal
-///        R-Z line fit (empty span = uniform)
+/// @param weights optional per-point weights for all fit stages
+///        (empty span = uniform)
 /// @return the bound parameters at the surface, or an error
 Result<BoundVector> estimateTrackParamsFromSpacePoints(
     const GeometryContext& gctx, const Surface& surface,
     std::span<const Vector3> spacePoints, const Vector3& bField, double t0 = 0.,
     std::size_t geometricRefineIterations = 0,
-    std::span<const double> weightsTransverse = {},
-    std::span<const double> weightsLongitudinal = {});
+    std::span<const double> weights = {});
 
 /// @}
 
