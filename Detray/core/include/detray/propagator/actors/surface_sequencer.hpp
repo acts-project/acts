@@ -87,10 +87,15 @@ struct surface_sequencer : public base_actor {
     }
 
     if (actor_state.sequence().size() == actor_state.sequence().capacity()) {
-      DETRAY_VERBOSE_HOST_DEVICE("Sequence overflow!");
-      actor_state.set_overflow();
-      propagation.navigation().exit();
-      propagation.heartbeat(false);
+      if (actor_state.sequence().capacity() == 0) {
+        DETRAY_VERBOSE_HOST_DEVICE(
+            "Actor: No capacity to store surface candidate - skipping");
+      } else {
+        DETRAY_VERBOSE_HOST_DEVICE("Actor: Sequence overflow!");
+        actor_state.set_overflow();
+        propagation.navigation().exit();
+        propagation.heartbeat(false);
+      }
       return;
     }
 
@@ -98,7 +103,7 @@ struct surface_sequencer : public base_actor {
     assert(!sf_desc.identifier().is_invalid());
 
     actor_state.sequence().push_back(sf_desc);
-    DETRAY_VERBOSE_HOST("Added surface: " << sf_desc);
+    DETRAY_VERBOSE_HOST("Actor: Added surface: " << sf_desc);
   }
 };
 

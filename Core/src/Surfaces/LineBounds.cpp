@@ -9,6 +9,7 @@
 #include "Acts/Surfaces/LineBounds.hpp"
 
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
+#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -49,12 +50,11 @@ Vector2 LineBounds::center() const {
 }
 
 std::ostream& LineBounds::toStream(std::ostream& sl) const {
-  sl << std::setiosflags(std::ios::fixed);
-  sl << std::setprecision(7);
+  detail::OstreamStateGuard guard{sl};
+  sl << std::fixed << std::setprecision(7);
   sl << "Acts::LineBounds: (radius, halflengthInZ) = ";
   sl << "(" << get(LineBounds::eR) << ", " << get(LineBounds::eHalfLengthZ)
      << ")";
-  sl << std::setprecision(-1);
   return sl;
 }
 
