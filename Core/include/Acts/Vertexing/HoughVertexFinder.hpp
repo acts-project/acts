@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -30,7 +30,7 @@ namespace Acts {
 /// position
 /// 5. Repeats 2-4 if necessary
 ///
-class HoughVertexFinder2 {
+class HoughVertexFinder {
  public:
   /// Configuration struct
   struct Config {
@@ -95,9 +95,9 @@ class HoughVertexFinder2 {
   /// @brief Constructor
   /// @param cfg Configuration object
   /// @param lgr Logging instance
-  explicit HoughVertexFinder2(
+  explicit HoughVertexFinder(
       Config cfg,
-      std::unique_ptr<const Logger> lgr = getDefaultLogger("HoughVertexFinder2",
+      std::unique_ptr<const Logger> lgr = getDefaultLogger("HoughVertexFinder",
                                                            Logging::INFO));
 
   /// Const access to the config
@@ -108,7 +108,7 @@ class HoughVertexFinder2 {
   /// @param spacePoints Vector of the input space points; they do not need to be sorted anyhow
   /// @return Position of the vertex
   Acts::Result<Acts::Vector3> find(
-      const SpacePointContainer2& spacePoints) const;
+      const SpacePointContainer& spacePoints) const;
 
  private:
   /// Configuration instance
@@ -124,7 +124,7 @@ class HoughVertexFinder2 {
   /// @param numCotThetaBins Number of bins along cot(theta) axis
   /// @return Position of the vertex in (X,Y,Z)
   Acts::Result<Acts::Vector3> findHoughVertex(
-      const SpacePointContainer2& spacePoints, const Acts::Vector3& vtxOld,
+      const SpacePointContainer& spacePoints, const Acts::Vector3& vtxOld,
       double rangeZ, std::uint32_t numZBins, double minCotTheta,
       double maxCotTheta, std::uint32_t numCotThetaBins) const;
 

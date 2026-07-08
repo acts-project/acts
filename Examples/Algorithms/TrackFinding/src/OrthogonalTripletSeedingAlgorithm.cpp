@@ -9,8 +9,8 @@
 #include "ActsExamples/TrackFinding/OrthogonalTripletSeedingAlgorithm.hpp"
 
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/EventData/SeedContainer2.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SeedContainer.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BroadTripletSeedFilter.hpp"
@@ -30,8 +30,8 @@ namespace ActsExamples {
 namespace {
 
 static inline bool itkFastTrackingCuts(
-    const Acts::ConstSpacePointProxy2 & /*middle*/,
-    const Acts::ConstSpacePointProxy2 &other, float cotTheta,
+    const Acts::ConstSpacePointProxy & /*middle*/,
+    const Acts::ConstSpacePointProxy &other, float cotTheta,
     bool isBottomCandidate) {
   static float rMin = 45;
   static float cotThetaMax = 1.5;
@@ -102,7 +102,7 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
     const AlgorithmContext &ctx) const {
   const SpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
 
-  Acts::SpacePointContainer2 coreSpacePoints(
+  Acts::SpacePointContainer coreSpacePoints(
       Acts::SpacePointColumns::CopiedFromIndex |
       Acts::SpacePointColumns::PackedXY | Acts::SpacePointColumns::PackedZR |
       Acts::SpacePointColumns::Phi | Acts::SpacePointColumns::VarianceZ |
@@ -122,7 +122,7 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
       continue;
     }
 
-    Acts::SpacePointIndex2 newSpIndex = coreSpacePoints.size();
+    Acts::SpacePointIndex newSpIndex = coreSpacePoints.size();
     auto newSp = coreSpacePoints.createSpacePoint();
     newSp.copiedFromIndex() = sp.index();
     newSp.xy() = std::array<float, 2>{static_cast<float>(sp.x()),
@@ -233,7 +233,7 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   static thread_local Acts::Experimental::CylindricalSpacePointKDTree::
       Candidates candidates;
 
-  Acts::SeedContainer2 seeds;
+  Acts::SeedContainer seeds;
   seeds.assignSpacePointContainer(spacePoints);
 
   // Run the seeding algorithm by iterating over all the points in the tree
@@ -285,9 +285,9 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
     candidates.clear();
     kdTree.validTuples(lhOptions, hlOptions, spM, nTopSeedConf, candidates);
 
-    Acts::SpacePointContainer2::ConstSubset bottomSps =
+    Acts::SpacePointContainer::ConstSubset bottomSps =
         coreSpacePoints.subset(candidates.bottom_lh_v).asConst();
-    Acts::SpacePointContainer2::ConstSubset topSps =
+    Acts::SpacePointContainer::ConstSubset topSps =
         coreSpacePoints.subset(candidates.top_lh_v).asConst();
     m_seedFinder->createSeedsFromGroup(
         cache, *bottomDoubletFinder, *topDoubletFinder, *tripletFinder,

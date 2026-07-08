@@ -8,7 +8,7 @@
 
 #include "Acts/Seeding/BroadTripletSeedFilter.hpp"
 
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Seeding/TripletSeedFinder.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
@@ -22,8 +22,8 @@ namespace Acts {
 namespace {
 
 float getBestSeedQuality(
-    const std::unordered_map<SpacePointIndex2, float>& bestSeedQualityMap,
-    SpacePointIndex2 sp) {
+    const std::unordered_map<SpacePointIndex, float>& bestSeedQualityMap,
+    SpacePointIndex sp) {
   auto it = bestSeedQualityMap.find(sp);
   if (it != bestSeedQualityMap.end()) {
     return it->second;
@@ -32,10 +32,10 @@ float getBestSeedQuality(
 }
 
 void setBestSeedQuality(
-    std::unordered_map<SpacePointIndex2, float>& bestSeedQualityMap,
-    SpacePointIndex2 bottom, SpacePointIndex2 middle, SpacePointIndex2 top,
+    std::unordered_map<SpacePointIndex, float>& bestSeedQualityMap,
+    SpacePointIndex bottom, SpacePointIndex middle, SpacePointIndex top,
     float quality) {
-  const auto set = [&](SpacePointIndex2 sp) {
+  const auto set = [&](SpacePointIndex sp) {
     auto it = bestSeedQualityMap.find(sp);
     if (it != bestSeedQualityMap.end()) {
       it->second = std::max(quality, it->second);
@@ -44,7 +44,7 @@ void setBestSeedQuality(
     }
   };
 
-  for (SpacePointIndex2 sp : {top, middle, bottom}) {
+  for (SpacePointIndex sp : {top, middle, bottom}) {
     set(sp);
   }
 }
@@ -61,8 +61,7 @@ BroadTripletSeedFilter::BroadTripletSeedFilter(const Config& config,
 }
 
 bool BroadTripletSeedFilter::sufficientTopDoublets(
-    const SpacePointContainer2& /*spacePoints*/,
-    const ConstSpacePointProxy2& spM,
+    const SpacePointContainer& /*spacePoints*/, const ConstSpacePointProxy& spM,
     const DoubletsForMiddleSp& topDoublets) const {
   // apply cut on the number of top SP if seedConfirmation is true
   if (!config().seedConfirmation) {
@@ -95,7 +94,7 @@ bool BroadTripletSeedFilter::sufficientTopDoublets(
 }
 
 void BroadTripletSeedFilter::filterTripletTopCandidates(
-    const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
+    const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
     const DoubletsForMiddleSp::Proxy& bottomLink,
     const TripletTopCandidates& tripletTopCandidates) const {
   auto spB = spacePoints[bottomLink.spacePointIndex()];
@@ -151,7 +150,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   // vector containing the radius of all compatible seeds
   cache().compatibleSeedR.reserve(config().compatSeedLimit);
 
-  const auto getTopR = [&](ConstSpacePointProxy2 spT) {
+  const auto getTopR = [&](ConstSpacePointProxy spT) {
     if (config().useDeltaRinsteadOfTopRadius) {
       return fastHypot(spT.zr()[1] - spM.zr()[1], spT.zr()[0] - spM.zr()[0]);
     }
@@ -323,8 +322,8 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
 }
 
 void BroadTripletSeedFilter::filterTripletsMiddleFixed(
-    const SpacePointContainer2& spacePoints,
-    SeedContainer2& outputCollection) const {
+    const SpacePointContainer& spacePoints,
+    SeedContainer& outputCollection) const {
   const std::size_t numQualitySeeds =
       state().candidatesCollector.nHighQualityCandidates();
 
@@ -353,9 +352,9 @@ void BroadTripletSeedFilter::filterTripletsMiddleFixed(
       break;
     }
 
-    std::array<SpacePointIndex2, 3> triplet{spacePoints[bottom].index(),
-                                            spacePoints[middle].index(),
-                                            spacePoints[top].index()};
+    std::array<SpacePointIndex, 3> triplet{spacePoints[bottom].index(),
+                                           spacePoints[middle].index(),
+                                           spacePoints[top].index()};
 
     if (config().seedConfirmation) {
       // continue if higher-quality seeds were found

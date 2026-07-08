@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Vertexing/HoughVertexFinder2.hpp"
+#include "Acts/Vertexing/HoughVertexFinder.hpp"
 
 #include "Acts/Seeding/HoughTransformUtils.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -27,8 +27,8 @@ using HoughHist = Grid<HoughCount, HoughAxis, HoughAxis>;
 
 }  // namespace
 
-HoughVertexFinder2::HoughVertexFinder2(Config cfg,
-                                       std::unique_ptr<const Logger> lgr)
+HoughVertexFinder::HoughVertexFinder(Config cfg,
+                                     std::unique_ptr<const Logger> lgr)
     : m_cfg(std::move(cfg)), m_logger(std::move(lgr)) {
   if (m_cfg.absEtaFractions.size() != m_cfg.absEtaRanges.size()) {
     throw std::invalid_argument("size of the absEtaFractions is " +
@@ -55,8 +55,8 @@ HoughVertexFinder2::HoughVertexFinder2(Config cfg,
   }
 }
 
-Result<Vector3> HoughVertexFinder2::find(
-    const SpacePointContainer2& spacePoints) const {
+Result<Vector3> HoughVertexFinder::find(
+    const SpacePointContainer& spacePoints) const {
   if (spacePoints.empty()) {
     return Result<Vector3>::failure(std::error_code());
   }
@@ -114,8 +114,8 @@ Result<Vector3> HoughVertexFinder2::find(
   return Result<Vector3>::success(vtx);
 }
 
-Result<Vector3> HoughVertexFinder2::findHoughVertex(
-    const SpacePointContainer2& spacePoints, const Vector3& vtxOld,
+Result<Vector3> HoughVertexFinder::findHoughVertex(
+    const SpacePointContainer& spacePoints, const Vector3& vtxOld,
     double rangeZ, std::uint32_t numZBins, double minCotTheta,
     double maxCotTheta, std::uint32_t numCotThetaBins) const {
   const double zBinSize = 2. * rangeZ / numZBins;
@@ -190,7 +190,7 @@ Result<Vector3> HoughVertexFinder2::findHoughVertex(
   return Result<Vector3>::failure(std::error_code());
 }
 
-Result<double> HoughVertexFinder2::findHoughPeak(
+Result<double> HoughVertexFinder::findHoughPeak(
     const std::vector<std::uint32_t>& houghZProjection,
     const std::vector<double>& vtxZPositions) const {
   std::uint32_t numZBins = houghZProjection.size();

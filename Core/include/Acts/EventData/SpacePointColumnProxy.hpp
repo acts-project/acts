@@ -18,7 +18,7 @@
 
 namespace Acts {
 
-class SpacePointContainer2;
+class SpacePointContainer;
 
 /// Additional column of data that can be added to the space point container.
 /// The column is indexed by the space point index.
@@ -28,15 +28,15 @@ class SpacePointColumnProxy {
   /// Flag indicating whether this space point column proxy is read-only
   constexpr static bool ReadOnly = read_only;
   /// Type alias for space point index type
-  using Index = SpacePointIndex2;
+  using Index = SpacePointIndex;
   /// Type alias for space point index range type
-  using IndexRange = SpacePointIndexRange2;
+  using IndexRange = SpacePointIndexRange;
   /// Type alias for space point index subset type
-  using IndexSubset = SpacePointIndexSubset2;
+  using IndexSubset = SpacePointIndexSubset;
   /// Type alias for column value type
   using Value = T;
   /// Type alias for container type (const if read-only)
-  using Container = const_if_t<ReadOnly, SpacePointContainer2>;
+  using Container = const_if_t<ReadOnly, SpacePointContainer>;
   /// Type alias for column container type (const if read-only)
   using Column = const_if_t<ReadOnly, std::vector<Value>>;
 
@@ -71,16 +71,14 @@ class SpacePointColumnProxy {
 
   /// Gets the container holding the space point.
   /// @return A reference to the container holding the space point.
-  SpacePointContainer2 &container() noexcept
+  SpacePointContainer &container() noexcept
     requires(!ReadOnly)
   {
     return *m_container;
   }
   /// Gets the container holding the space point.
   /// @return A const reference to the container holding the space point.
-  const SpacePointContainer2 &container() const noexcept {
-    return *m_container;
-  }
+  const SpacePointContainer &container() const noexcept { return *m_container; }
 
   /// Returns a const reference to the column container.
   /// @return A const reference to the column container.
@@ -108,7 +106,7 @@ class SpacePointColumnProxy {
     requires(!ReadOnly)
   {
     if (index >= column().size()) {
-      throw std::out_of_range("Index out of range in SpacePointContainer2: " +
+      throw std::out_of_range("Index out of range in SpacePointContainer: " +
                               std::to_string(index) +
                               " >= " + std::to_string(size()));
     }
@@ -121,7 +119,7 @@ class SpacePointColumnProxy {
   /// @throws std::out_of_range if the index is out of range.
   const Value &at(Index index) const {
     if (index >= column().size()) {
-      throw std::out_of_range("Index out of range in SpacePointContainer2: " +
+      throw std::out_of_range("Index out of range in SpacePointContainer: " +
                               std::to_string(index) +
                               " >= " + std::to_string(size()));
     }
@@ -186,7 +184,7 @@ class SpacePointColumnProxy {
     return *m_column;
   }
 
-  friend class SpacePointContainer2;
+  friend class SpacePointContainer;
 };
 
 /// Const proxy to a space point column for read-only access

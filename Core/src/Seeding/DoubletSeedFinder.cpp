@@ -8,7 +8,7 @@
 
 #include "Acts/Seeding/DoubletSeedFinder.hpp"
 
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <stdexcept>
@@ -39,7 +39,7 @@ class Impl final : public DoubletSeedFinder {
   ///   applied based on the middle SP radius.
   /// @param compatibleDoublets Output container for compatible doublets
   template <typename CandidateSps>
-  void createDoubletsImpl(const ConstSpacePointProxy2& middleSp,
+  void createDoubletsImpl(const ConstSpacePointProxy& middleSp,
                           const MiddleSpInfo& middleSpInfo,
                           CandidateSps& candidateSps,
                           DoubletsForMiddleSp& compatibleDoublets) const {
@@ -74,7 +74,7 @@ class Impl final : public DoubletSeedFinder {
       // find the first SP inside the radius region of interest and update
       // the iterator so we don't need to look at the other SPs again
       std::uint32_t offset = 0;
-      for (ConstSpacePointProxy2 otherSp : candidateSps) {
+      for (ConstSpacePointProxy otherSp : candidateSps) {
         if constexpr (isBottomCandidate) {
           // if r-distance is too big, try next SP in bin
           if (rM - otherSp.zr()[1] <= m_cfg.deltaRMax) {
@@ -92,7 +92,7 @@ class Impl final : public DoubletSeedFinder {
       candidateSps = candidateSps.subrange(offset);
     }
 
-    const SpacePointContainer2& container = candidateSps.container();
+    const SpacePointContainer& container = candidateSps.container();
     for (auto [indexO, xyO, zrO, varianceZO, varianceRO] : candidateSps.zip(
              container.xyColumn(), container.zrColumn(),
              container.varianceZColumn(), container.varianceRColumn())) {
@@ -261,17 +261,17 @@ class Impl final : public DoubletSeedFinder {
     }
   }
 
-  void createDoublets(const ConstSpacePointProxy2& middleSp,
+  void createDoublets(const ConstSpacePointProxy& middleSp,
                       const MiddleSpInfo& middleSpInfo,
-                      SpacePointContainer2::ConstSubset& candidateSps,
+                      SpacePointContainer::ConstSubset& candidateSps,
                       DoubletsForMiddleSp& compatibleDoublets) const override {
     createDoubletsImpl(middleSp, middleSpInfo, candidateSps,
                        compatibleDoublets);
   }
 
-  void createDoublets(const ConstSpacePointProxy2& middleSp,
+  void createDoublets(const ConstSpacePointProxy& middleSp,
                       const MiddleSpInfo& middleSpInfo,
-                      SpacePointContainer2::ConstRange& candidateSps,
+                      SpacePointContainer::ConstRange& candidateSps,
                       DoubletsForMiddleSp& compatibleDoublets) const override {
     createDoubletsImpl(middleSp, middleSpInfo, candidateSps,
                        compatibleDoublets);
@@ -346,7 +346,7 @@ DoubletSeedFinder::DerivedConfig::DerivedConfig(const Config& config,
 }
 
 MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
-    const ConstSpacePointProxy2& spM) {
+    const ConstSpacePointProxy& spM) {
   const float rM = spM.zr()[1];
   const float uIP = -1 / rM;
   const float cosPhiM = -spM.xy()[0] * uIP;

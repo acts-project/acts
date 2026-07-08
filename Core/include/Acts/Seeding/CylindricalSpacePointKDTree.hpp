@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Utilities/KDTree.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -137,13 +137,13 @@ class CylindricalSpacePointKDTree {
   /// @param low Low space point
   /// @return Valid range
   Tree::range_t validTupleOrthoRangeLH(const Options& options,
-                                       const ConstSpacePointProxy2& low) const;
+                                       const ConstSpacePointProxy& low) const;
   /// @brief Get valid orthogonal range for high-low pairs
   /// @param options Search options
   /// @param high High space point
   /// @return Valid range
   Tree::range_t validTupleOrthoRangeHL(const Options& options,
-                                       const ConstSpacePointProxy2& high) const;
+                                       const ConstSpacePointProxy& high) const;
 
   /// @brief Find valid seed tuples
   /// @param lhOptions Low-high search options
@@ -152,7 +152,7 @@ class CylindricalSpacePointKDTree {
   /// @param nTopSeedConf Number of top seed configurations
   /// @param candidates Output candidates container
   void validTuples(const Options& lhOptions, const Options& hlOptions,
-                   const ConstSpacePointProxy2& spM, std::size_t nTopSeedConf,
+                   const ConstSpacePointProxy& spM, std::size_t nTopSeedConf,
                    Candidates& candidates) const;
 
  private:
@@ -211,13 +211,13 @@ class CylindricalSpacePointKDTreeBuilder {
 
   /// Insert a space point into the grid.
   /// @param sp The space point to insert
-  void insert(const ConstSpacePointProxy2& sp) {
+  void insert(const ConstSpacePointProxy& sp) {
     return insert(sp.index(), sp.phi(), sp.r(), sp.z());
   }
 
   /// Fill the grid with space points from the container.
   /// @param spacePoints The space point container to fill the grid with
-  void extend(const SpacePointContainer2::ConstRange& spacePoints);
+  void extend(const SpacePointContainer::ConstRange& spacePoints);
 
   /// Build the KD-tree from accumulated space points
   /// @return The constructed cylindrical space point KD-tree

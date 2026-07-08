@@ -16,7 +16,7 @@ CylindricalSpacePointKDTree::CylindricalSpacePointKDTree(
 
 CylindricalSpacePointKDTree::Tree::range_t
 CylindricalSpacePointKDTree::validTupleOrthoRangeLH(
-    const Options &options, const ConstSpacePointProxy2 &low) const {
+    const Options &options, const ConstSpacePointProxy &low) const {
   float colMin = options.collisionRegionMin;
   float colMax = options.collisionRegionMax;
   float pL = low.phi();
@@ -89,7 +89,7 @@ CylindricalSpacePointKDTree::validTupleOrthoRangeLH(
 
 CylindricalSpacePointKDTree::Tree::range_t
 CylindricalSpacePointKDTree::validTupleOrthoRangeHL(
-    const Options &options, const ConstSpacePointProxy2 &high) const {
+    const Options &options, const ConstSpacePointProxy &high) const {
   float pM = high.phi();
   float rM = high.zr()[1];
   float zM = high.zr()[0];
@@ -152,7 +152,7 @@ CylindricalSpacePointKDTree::validTupleOrthoRangeHL(
 
 void CylindricalSpacePointKDTree::validTuples(const Options &lhOptions,
                                               const Options &hlOptions,
-                                              const ConstSpacePointProxy2 &spM,
+                                              const ConstSpacePointProxy &spM,
                                               std::size_t nTopSeedConf,
                                               Candidates &candidates) const {
   using range_t = Tree::range_t;
@@ -270,7 +270,7 @@ void CylindricalSpacePointKDTreeBuilder::insert(SpacePointIndex index,
 }
 
 void CylindricalSpacePointKDTreeBuilder::extend(
-    const SpacePointContainer2::ConstRange &spacePoints) {
+    const SpacePointContainer::ConstRange &spacePoints) {
   for (const auto &sp : spacePoints) {
     insert(sp);
   }

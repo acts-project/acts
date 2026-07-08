@@ -27,13 +27,13 @@ struct TripletCandidate {
   /// @param w The quality of the candidate
   /// @param z The z coordinate of the origin
   /// @param q Whether the candidate is high or low quality
-  TripletCandidate(SpacePointIndex2 b, SpacePointIndex2 m, SpacePointIndex2 t,
+  TripletCandidate(SpacePointIndex b, SpacePointIndex m, SpacePointIndex t,
                    float w, float z, bool q)
       : bottom(b), middle(m), top(t), weight(w), zOrigin(z), isQuality(q) {}
 
-  SpacePointIndex2 bottom{};
-  SpacePointIndex2 middle{};
-  SpacePointIndex2 top{};
+  SpacePointIndex bottom{};
+  SpacePointIndex middle{};
+  SpacePointIndex top{};
   float weight{};
   float zOrigin{};
   bool isQuality{};
@@ -79,7 +79,7 @@ class CandidatesForMiddleSp {
   /// @param zOrigin The z-coordinate of the origin
   /// @param isQuality Whether the triplet candidate is high or low quality
   /// @returns whether the triplet candidate has been added or not to the collection
-  bool push(SpacePointIndex2 spB, SpacePointIndex2 spM, SpacePointIndex2 spT,
+  bool push(SpacePointIndex spB, SpacePointIndex spM, SpacePointIndex spT,
             float weight, float zOrigin, bool isQuality);
 
   /// @brief Retrieve the triplet candidates, the resulting vector is already sorted,
@@ -106,8 +106,8 @@ class CandidatesForMiddleSp {
   Container m_indicesLow;
   Container m_indicesHigh;
 
-  bool push(Container& container, Size nMax, SpacePointIndex2 spB,
-            SpacePointIndex2 spM, SpacePointIndex2 spT, float weight,
+  bool push(Container& container, Size nMax, SpacePointIndex spB,
+            SpacePointIndex spM, SpacePointIndex spT, float weight,
             float zOrigin, bool isQuality);
 };
 

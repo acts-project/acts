@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Seeding/DoubletSeedFinder.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
@@ -50,7 +50,7 @@ class TripletTopCandidates {
   /// @param spT Space point index for the top space point of the triplet
   /// @param curvature Track curvature estimation for the triplet
   /// @param impactParameter Impact parameter estimation for the triplet
-  void emplace_back(SpacePointIndex2 spT, float curvature,
+  void emplace_back(SpacePointIndex spT, float curvature,
                     float impactParameter) {
     m_topSpacePoints.emplace_back(spT);
     m_curvatures.emplace_back(curvature);
@@ -59,7 +59,7 @@ class TripletTopCandidates {
 
   /// @brief Returns the vector of top space point indices
   /// @return Const reference to vector containing all top space point indices
-  const std::vector<SpacePointIndex2>& topSpacePoints() const {
+  const std::vector<SpacePointIndex>& topSpacePoints() const {
     return m_topSpacePoints;
   }
   /// @brief Returns the vector of track curvature estimations
@@ -82,7 +82,7 @@ class TripletTopCandidates {
 
     /// Get the space point index
     /// @return The space point index
-    SpacePointIndex2 spacePoint() const {
+    SpacePointIndex spacePoint() const {
       return m_container->m_topSpacePoints[m_index];
     }
 
@@ -118,7 +118,7 @@ class TripletTopCandidates {
   const_iterator end() const { return const_iterator(*this, size()); }
 
  private:
-  std::vector<SpacePointIndex2> m_topSpacePoints;
+  std::vector<SpacePointIndex> m_topSpacePoints;
   std::vector<float> m_curvatures;
   std::vector<float> m_impactParameters;
 };
@@ -214,7 +214,7 @@ class TripletSeedFinder {
   /// @param topDoublets Top doublets to be used for triplet creation
   /// @param tripletTopCandidates Cache for triplet top candidates
   virtual void createTripletTopCandidates(
-      const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
       DoubletsForMiddleSp::Range& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const = 0;
@@ -227,7 +227,7 @@ class TripletSeedFinder {
   /// @param topDoublets Top doublets to be used for triplet creation
   /// @param tripletTopCandidates Cache for triplet top candidates
   virtual void createTripletTopCandidates(
-      const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
       DoubletsForMiddleSp::Subset& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const = 0;
@@ -240,7 +240,7 @@ class TripletSeedFinder {
   /// @param topDoublets Top doublets to be used for triplet creation
   /// @param tripletTopCandidates Cache for triplet top candidates
   virtual void createTripletTopCandidates(
-      const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
       DoubletsForMiddleSp::Subset2& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const = 0;

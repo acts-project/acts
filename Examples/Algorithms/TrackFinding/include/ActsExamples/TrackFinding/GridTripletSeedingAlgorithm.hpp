@@ -269,7 +269,7 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
   /// @param spM space point candidate to be used as middle SP in a seed
   /// @param rMiddleSPRange range object containing the minimum and maximum r for middle SP for a certain z bin
   std::pair<float, float> retrieveRadiusRangeForMiddle(
-      const Acts::ConstSpacePointProxy2& spM,
+      const Acts::ConstSpacePointProxy& spM,
       const Acts::Range1D<float>& rMiddleSPRange) const;
 };
 

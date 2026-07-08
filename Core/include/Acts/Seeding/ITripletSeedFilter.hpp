@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/EventData/SeedContainer2.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SeedContainer.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Seeding/DoubletSeedFinder.hpp"
 #include "Acts/Seeding/TripletSeedFinder.hpp"
 
@@ -29,7 +29,7 @@ class ITripletSeedFilter {
   /// @param topDoublets Collection of top doublets for the middle space point
   /// @return True if sufficient doublets are available for triplet seeds
   virtual bool sufficientTopDoublets(
-      const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp& topDoublets) const = 0;
 
   /// Create seed candidates with fixed bottom and middle space points and
@@ -40,7 +40,7 @@ class ITripletSeedFilter {
   /// @param bottomLink Link to the bottom doublet space point
   /// @param tripletTopCandidates Collection of triplet top candidates
   virtual void filterTripletTopCandidates(
-      const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp::Proxy& bottomLink,
       const TripletTopCandidates& tripletTopCandidates) const = 0;
 
@@ -49,8 +49,8 @@ class ITripletSeedFilter {
   /// @param spacePoints Container with all space points
   /// @param outputCollection Output container for the seeds
   virtual void filterTripletsMiddleFixed(
-      const SpacePointContainer2& spacePoints,
-      SeedContainer2& outputCollection) const = 0;
+      const SpacePointContainer& spacePoints,
+      SeedContainer& outputCollection) const = 0;
 };
 
 }  // namespace Acts

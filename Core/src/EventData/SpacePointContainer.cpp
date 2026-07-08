@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -23,36 +23,35 @@ using tuple_indices =
 
 namespace Acts {
 
-static_assert(std::ranges::random_access_range<SpacePointContainer2>);
+static_assert(std::ranges::random_access_range<SpacePointContainer>);
 static_assert(
-    std::ranges::random_access_range<SpacePointContainer2::MutableRange>);
+    std::ranges::random_access_range<SpacePointContainer::MutableRange>);
 static_assert(
-    std::ranges::random_access_range<SpacePointContainer2::ConstRange>);
+    std::ranges::random_access_range<SpacePointContainer::ConstRange>);
 static_assert(
-    std::ranges::random_access_range<SpacePointContainer2::MutableSubset>);
+    std::ranges::random_access_range<SpacePointContainer::MutableSubset>);
 static_assert(
-    std::ranges::random_access_range<SpacePointContainer2::ConstSubset>);
+    std::ranges::random_access_range<SpacePointContainer::ConstSubset>);
 
-SpacePointContainer2::SpacePointContainer2(SpacePointColumns columns) noexcept {
+SpacePointContainer::SpacePointContainer(SpacePointColumns columns) noexcept {
   createColumns(columns);
 }
 
-SpacePointContainer2::SpacePointContainer2(
-    const SpacePointContainer2 &other) noexcept
+SpacePointContainer::SpacePointContainer(
+    const SpacePointContainer &other) noexcept
     : m_size(other.m_size), m_sourceLinks(other.m_sourceLinks) {
   copyColumns(other);
 }
 
-SpacePointContainer2::SpacePointContainer2(
-    SpacePointContainer2 &&other) noexcept
+SpacePointContainer::SpacePointContainer(SpacePointContainer &&other) noexcept
     : m_size(other.m_size), m_sourceLinks(std::move(other.m_sourceLinks)) {
   moveColumns(other);
 
   other.m_size = 0;
 }
 
-SpacePointContainer2 &SpacePointContainer2::operator=(
-    const SpacePointContainer2 &other) noexcept {
+SpacePointContainer &SpacePointContainer::operator=(
+    const SpacePointContainer &other) noexcept {
   if (this == &other) {
     return *this;
   }
@@ -64,8 +63,8 @@ SpacePointContainer2 &SpacePointContainer2::operator=(
   return *this;
 }
 
-SpacePointContainer2 &SpacePointContainer2::operator=(
-    SpacePointContainer2 &&other) noexcept {
+SpacePointContainer &SpacePointContainer::operator=(
+    SpacePointContainer &&other) noexcept {
   if (this == &other) {
     return *this;
   }
@@ -79,7 +78,7 @@ SpacePointContainer2 &SpacePointContainer2::operator=(
   return *this;
 }
 
-void SpacePointContainer2::copyColumns(const SpacePointContainer2 &other) {
+void SpacePointContainer::copyColumns(const SpacePointContainer &other) {
   m_allColumns.reserve(other.m_allColumns.size());
   m_dynamicColumns.reserve(other.m_dynamicColumns.size());
 
@@ -108,7 +107,7 @@ void SpacePointContainer2::copyColumns(const SpacePointContainer2 &other) {
   }
 }
 
-void SpacePointContainer2::moveColumns(SpacePointContainer2 &other) noexcept {
+void SpacePointContainer::moveColumns(SpacePointContainer &other) noexcept {
   m_allColumns.reserve(other.m_allColumns.size());
   m_dynamicColumns.reserve(other.m_dynamicColumns.size());
 
@@ -140,8 +139,8 @@ void SpacePointContainer2::moveColumns(SpacePointContainer2 &other) noexcept {
   other.m_dynamicColumns.clear();
 }
 
-void SpacePointContainer2::reserve(std::uint32_t size,
-                                   float averageSourceLinks) noexcept {
+void SpacePointContainer::reserve(std::uint32_t size,
+                                  float averageSourceLinks) noexcept {
   if (hasColumns(SpacePointColumns::SourceLinks)) {
     m_sourceLinks.reserve(
         static_cast<std::uint32_t>(size * averageSourceLinks));
@@ -152,7 +151,7 @@ void SpacePointContainer2::reserve(std::uint32_t size,
   }
 }
 
-void SpacePointContainer2::clear() noexcept {
+void SpacePointContainer::clear() noexcept {
   m_size = 0;
   m_sourceLinks.clear();
 
@@ -161,7 +160,7 @@ void SpacePointContainer2::clear() noexcept {
   }
 }
 
-MutableSpacePointProxy2 SpacePointContainer2::createSpacePoint() noexcept {
+MutableSpacePointProxy SpacePointContainer::createSpacePoint() noexcept {
   ++m_size;
 
   for (const auto &[name, column] : m_allColumns) {
@@ -171,13 +170,13 @@ MutableSpacePointProxy2 SpacePointContainer2::createSpacePoint() noexcept {
   return MutableProxy(*this, size() - 1);
 }
 
-void SpacePointContainer2::copyFrom(Index index,
-                                    const SpacePointContainer2 &otherContainer,
-                                    Index otherIndex,
-                                    SpacePointColumns columnsToCopy) {
+void SpacePointContainer::copyFrom(Index index,
+                                   const SpacePointContainer &otherContainer,
+                                   Index otherIndex,
+                                   SpacePointColumns columnsToCopy) {
   if (index >= size() || otherIndex >= otherContainer.size()) {
     throw std::out_of_range(
-        "Index out of range in SpacePointContainer2::copyFrom");
+        "Index out of range in SpacePointContainer::copyFrom");
   }
   if ((columnsToCopy & otherContainer.m_knownColumns) != columnsToCopy) {
     throw std::logic_error(
@@ -217,7 +216,7 @@ void SpacePointContainer2::copyFrom(Index index,
   }(tuple_indices<decltype(knownColumns())>{});
 }
 
-void SpacePointContainer2::createColumns(SpacePointColumns columns) noexcept {
+void SpacePointContainer::createColumns(SpacePointColumns columns) noexcept {
   using enum SpacePointColumns;
 
   const auto createColumn =
@@ -239,7 +238,7 @@ void SpacePointContainer2::createColumns(SpacePointColumns columns) noexcept {
   }(tuple_indices<decltype(knownColumns())>{});
 }
 
-void SpacePointContainer2::dropColumns(SpacePointColumns columns) noexcept {
+void SpacePointContainer::dropColumns(SpacePointColumns columns) noexcept {
   using enum SpacePointColumns;
 
   const auto dropColumn = [&]<typename T>(
@@ -264,7 +263,7 @@ void SpacePointContainer2::dropColumns(SpacePointColumns columns) noexcept {
   }
 }
 
-void SpacePointContainer2::dropColumn(const std::string &name) {
+void SpacePointContainer::dropColumn(const std::string &name) {
   if (reservedColumn(name)) {
     throw std::runtime_error("Cannot drop reserved column: " + name);
   }
@@ -278,7 +277,7 @@ void SpacePointContainer2::dropColumn(const std::string &name) {
   m_dynamicColumns.erase(name);
 }
 
-bool SpacePointContainer2::reservedColumn(const std::string &name) noexcept {
+bool SpacePointContainer::reservedColumn(const std::string &name) noexcept {
   static const auto reservedColumns = std::apply(
       [](auto... reservedNames) {
         return std::unordered_set<std::string, std::hash<std::string_view>,

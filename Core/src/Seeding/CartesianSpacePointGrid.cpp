@@ -48,7 +48,7 @@ CartesianSpacePointGrid::CartesianSpacePointGrid(
                         m_cfg.topBinFinder.value(), m_cfg.navigation);
   m_grid = &m_binnedGroup->grid();
   m_sortCoordGetter = [c = m_cfg.sortingCoord, d = m_cfg.sortingDirection](
-                          const ConstSpacePointProxy2& p) {
+                          const ConstSpacePointProxy& p) {
     return d * p.xyz()[c];
   };
 }
@@ -73,22 +73,22 @@ std::optional<std::size_t> CartesianSpacePointGrid::insert(
 }
 
 void CartesianSpacePointGrid::extend(
-    const SpacePointContainer2::ConstRange& spacePoints) {
+    const SpacePointContainer::ConstRange& spacePoints) {
   ACTS_VERBOSE("Inserting " << spacePoints.size()
                             << " space points to the grid");
 
-  for (const ConstSpacePointProxy2& sp : spacePoints) {
+  for (const ConstSpacePointProxy& sp : spacePoints) {
     insert(sp);
   }
 }
 
 void CartesianSpacePointGrid::sortBinsByCoord(
-    const SpacePointContainer2& spacePoints) {
+    const SpacePointContainer& spacePoints) {
   ACTS_VERBOSE("Sorting the grid");
 
   for (std::size_t i = 0; i < grid().size(); ++i) {
     BinType& bin = grid().at(i);
-    std::ranges::sort(bin, {}, [&](SpacePointIndex2 spIndex) {
+    std::ranges::sort(bin, {}, [&](SpacePointIndex spIndex) {
       return m_sortCoordGetter(spacePoints[spIndex]);
     });
   }
@@ -98,7 +98,7 @@ void CartesianSpacePointGrid::sortBinsByCoord(
 }
 
 Range1D<float> CartesianSpacePointGrid::computeCoordRange(
-    const SpacePointContainer2& spacePoints) const {
+    const SpacePointContainer& spacePoints) const {
   float minRange = std::numeric_limits<float>::max();
   float maxRange = std::numeric_limits<float>::lowest();
   for (const BinType& bin : grid()) {

@@ -28,8 +28,8 @@ void CandidatesForMiddleSp::clear() {
   m_indicesHigh.clear();
 }
 
-bool CandidatesForMiddleSp::push(SpacePointIndex2 spB, SpacePointIndex2 spM,
-                                 SpacePointIndex2 spT, float weight,
+bool CandidatesForMiddleSp::push(SpacePointIndex spB, SpacePointIndex spM,
+                                 SpacePointIndex spT, float weight,
                                  float zOrigin, bool isQuality) {
   // Decide in which collection this candidate may be added to according to the
   // isQuality boolean
@@ -42,8 +42,8 @@ bool CandidatesForMiddleSp::push(SpacePointIndex2 spB, SpacePointIndex2 spM,
 }
 
 bool CandidatesForMiddleSp::push(Container& container, Size nMax,
-                                 SpacePointIndex2 spB, SpacePointIndex2 spM,
-                                 SpacePointIndex2 spT, float weight,
+                                 SpacePointIndex spB, SpacePointIndex spM,
+                                 SpacePointIndex spT, float weight,
                                  float zOrigin, bool isQuality) {
   if (nMax == 0) {
     return false;

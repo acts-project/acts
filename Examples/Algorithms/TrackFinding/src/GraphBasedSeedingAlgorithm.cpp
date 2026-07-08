@@ -9,7 +9,7 @@
 #include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
 
 #include "Acts/EventData/SpacePointColumns.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
@@ -91,7 +91,7 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   // container due to how space point container works, we need to keep the
   // container and the external columns we added alive this is done by using a
   // tuple of the core container and the two extra columns
-  const Acts::SpacePointContainer2 coreSpacePoints =
+  const Acts::SpacePointContainer coreSpacePoints =
       makeSpContainer(spacePoints, m_actsGbtsMap);
 
   // used to reserve size of nodes 2D vector in core
@@ -100,7 +100,7 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   const Acts::Experimental::GraphBasedTrackSeeder::Options options(
       m_cfg.bFieldInZ);
 
-  Acts::SeedContainer2 seeds;
+  Acts::SeedContainer seeds;
   seeds.assignSpacePointContainer(spacePoints);
 
   // create the seeds
@@ -162,10 +162,10 @@ GraphBasedSeedingAlgorithm::makeActsGbtsMap() const {
   return actsToGbtsMap;
 }
 
-Acts::SpacePointContainer2 GraphBasedSeedingAlgorithm::makeSpContainer(
+Acts::SpacePointContainer GraphBasedSeedingAlgorithm::makeSpContainer(
     const SpacePointContainer &spacePoints,
     std::map<ActsIDs, GbtsIDs> map) const {
-  Acts::SpacePointContainer2 coreSpacePoints(
+  Acts::SpacePointContainer coreSpacePoints(
       Acts::SpacePointColumns::CopiedFromIndex | Acts::SpacePointColumns::X |
       Acts::SpacePointColumns::Y | Acts::SpacePointColumns::Z |
       Acts::SpacePointColumns::R | Acts::SpacePointColumns::Phi);

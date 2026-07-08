@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/SeedColumns.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
@@ -19,49 +19,49 @@
 namespace Acts {
 
 template <bool read_only>
-class SeedProxy2;
+class SeedProxy;
 
 /// Mutable proxy to a seed allowing modification
-using MutableSeedProxy2 = SeedProxy2<false>;
+using MutableSeedProxy = SeedProxy<false>;
 /// Const proxy to a seed for read-only access
-using ConstSeedProxy2 = SeedProxy2<true>;
+using ConstSeedProxy = SeedProxy<true>;
 
 /// A container of seeds. Individual seeds are modeled as a sequence of N space
 /// points which are addressed via an index into the space point container.
 /// Individual seeds are addressed via index. A proxy object simplifies the
 /// handling.
-class SeedContainer2 {
+class SeedContainer {
  public:
   /// Type alias for seed index type
-  using Index = SeedIndex2;
+  using Index = SeedIndex;
   /// Type alias for mutable seed proxy
-  using MutableProxy = MutableSeedProxy2;
+  using MutableProxy = MutableSeedProxy;
   /// Type alias for const seed proxy
-  using ConstProxy = ConstSeedProxy2;
+  using ConstProxy = ConstSeedProxy;
 
   /// Constructs and empty seed container.
-  SeedContainer2() noexcept;
+  SeedContainer() noexcept;
 
   /// Constructs a copy of the given seed container.
   /// @param other The seed container to copy.
-  SeedContainer2(const SeedContainer2 &other) noexcept;
+  SeedContainer(const SeedContainer &other) noexcept;
 
   /// Move constructs a seed container.
   /// @param other The seed container to move.
-  SeedContainer2(SeedContainer2 &&other) noexcept;
+  SeedContainer(SeedContainer &&other) noexcept;
 
   /// Detructs the seed container.
-  ~SeedContainer2() noexcept = default;
+  ~SeedContainer() noexcept = default;
 
   /// Assignment operator for copying a seed container.
   /// @param other The seed container to copy.
   /// @return A reference to this seed container.
-  SeedContainer2 &operator=(const SeedContainer2 &other) noexcept;
+  SeedContainer &operator=(const SeedContainer &other) noexcept;
 
   /// Move assignment operator for a seed container.
   /// @param other The seed container to move.
   /// @return A reference to this seed container.
-  SeedContainer2 &operator=(SeedContainer2 &&other) noexcept;
+  SeedContainer &operator=(SeedContainer &&other) noexcept;
 
   /// Returns the size of the seed container, i.e., the number of seeds
   /// contained in it.
@@ -86,7 +86,7 @@ class SeedContainer2 {
   /// this seed container.
   /// @param spacePointContainer The space point container to assign.
   void assignSpacePointContainer(
-      SpacePointContainer2 &&spacePointContainer) noexcept;
+      SpacePointContainer &&spacePointContainer) noexcept;
 
   /// Assigns the mutable space point container to be used by this seed
   /// container by reference. Note that the ownership of the space point
@@ -94,7 +94,7 @@ class SeedContainer2 {
   /// container remains valid for the lifetime of this seed container.
   /// @param spacePointContainer The space point container to assign.
   void assignSpacePointContainer(
-      SpacePointContainer2 &spacePointContainer) noexcept;
+      SpacePointContainer &spacePointContainer) noexcept;
 
   /// Assigns the const space point container to be used by this seed container
   /// by const reference. Note that the ownership of the space point container
@@ -102,21 +102,21 @@ class SeedContainer2 {
   /// remains valid for the lifetime of this seed container.
   /// @param spacePointContainer The space point container to assign.
   void assignSpacePointContainer(
-      const SpacePointContainer2 &spacePointContainer) noexcept;
+      const SpacePointContainer &spacePointContainer) noexcept;
 
   /// Assigns the mutable space point container to be used by this seed
   /// container by shared pointer. The ownership of the space point container is
   /// shared between this seed container and the user.
   /// @param spacePointContainer The space point container to assign.
-  void assignSpacePointContainer(const std::shared_ptr<SpacePointContainer2>
-                                     &spacePointContainer) noexcept;
+  void assignSpacePointContainer(
+      const std::shared_ptr<SpacePointContainer> &spacePointContainer) noexcept;
 
   /// Assigns the const space point container to be used by this seed container
   /// by shared pointer. The ownership of the space point container is shared
   /// between this seed container and the user.
   /// @param spacePointContainer The space point container to assign.
   void assignSpacePointContainer(
-      const std::shared_ptr<const SpacePointContainer2>
+      const std::shared_ptr<const SpacePointContainer>
           &spacePointContainer) noexcept;
 
   /// Checks if a space point container has been assigned to this seed
@@ -132,12 +132,12 @@ class SeedContainer2 {
   /// Returns a const reference to the assigned space point container.
   /// @return A const reference to the assigned space point container.
   /// @throws std::logic_error if no space point container has been assigned.
-  const SpacePointContainer2 &spacePointContainer() const;
+  const SpacePointContainer &spacePointContainer() const;
 
   /// Returns a mutable reference to the assigned space point container.
   /// @return A mutable reference to the assigned space point container.
   /// @throws std::logic_error if no mutable space point container has been assigned.
-  SpacePointContainer2 &mutableSpacePointContainer();
+  SpacePointContainer &mutableSpacePointContainer();
 
   /// Creates a new seed.
   /// @return A mutable proxy to the newly created seed.
@@ -148,7 +148,7 @@ class SeedContainer2 {
   /// @param otherContainer The seed container to copy from.
   /// @param otherIndex The index of the seed to copy from in the other container.
   /// @param columnsToCopy The columns to copy from the other seed.
-  void copyFrom(Index index, const SeedContainer2 &otherContainer,
+  void copyFrom(Index index, const SeedContainer &otherContainer,
                 Index otherIndex, SeedColumns columnsToCopy);
 
   /// Returns a mutable proxy to the seed at the given index.
@@ -178,8 +178,8 @@ class SeedContainer2 {
   /// Type alias for iterator template over seed container
   template <bool read_only>
   using Iterator = detail::ContainerIterator<
-      SeedContainer2,
-      std::conditional_t<read_only, ConstSeedProxy2, MutableSeedProxy2>, Index,
+      SeedContainer,
+      std::conditional_t<read_only, ConstSeedProxy, MutableSeedProxy>, Index,
       read_only>;
 
   /// Type alias for mutable iterator over seeds
@@ -203,20 +203,20 @@ class SeedContainer2 {
 
  private:
   template <bool>
-  friend class SeedProxy2;
+  friend class SeedProxy;
 
   std::uint32_t m_size{0};
   std::vector<std::uint32_t> m_spacePointOffsets;
   std::vector<std::uint8_t> m_spacePointCounts;
   std::vector<float> m_qualities;
   std::vector<float> m_vertexZs;
-  std::vector<SpacePointIndex2> m_spacePoints;
+  std::vector<SpacePointIndex> m_spacePoints;
 
-  std::shared_ptr<const SpacePointContainer2> m_sharedConstSpacePointContainer;
-  SpacePointContainer2 *m_mutableSpacePointContainer{nullptr};
-  const SpacePointContainer2 *m_constSpacePointContainer{nullptr};
+  std::shared_ptr<const SpacePointContainer> m_sharedConstSpacePointContainer;
+  SpacePointContainer *m_mutableSpacePointContainer{nullptr};
+  const SpacePointContainer *m_constSpacePointContainer{nullptr};
 };
 
 }  // namespace Acts
 
-#include "Acts/EventData/SeedContainer2.ipp"
+#include "Acts/EventData/SeedContainer.ipp"

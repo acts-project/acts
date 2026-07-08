@@ -181,22 +181,22 @@ std::optional<std::size_t> CylindricalSpacePointGrid::insert(
 }
 
 void CylindricalSpacePointGrid::extend(
-    const SpacePointContainer2::ConstRange& spacePoints) {
+    const SpacePointContainer::ConstRange& spacePoints) {
   ACTS_VERBOSE("Inserting " << spacePoints.size()
                             << " space points to the grid");
 
-  for (const ConstSpacePointProxy2& sp : spacePoints) {
+  for (const ConstSpacePointProxy& sp : spacePoints) {
     insert(sp);
   }
 }
 
 void CylindricalSpacePointGrid::sortBinsByR(
-    const SpacePointContainer2& spacePoints) {
+    const SpacePointContainer& spacePoints) {
   ACTS_VERBOSE("Sorting the grid");
 
   for (std::size_t i = 0; i < grid().size(); ++i) {
     BinType& bin = grid().at(i);
-    std::ranges::sort(bin, {}, [&](SpacePointIndex2 spIndex) {
+    std::ranges::sort(bin, {}, [&](SpacePointIndex spIndex) {
       return spacePoints[spIndex].zr()[1];
     });
   }
@@ -206,7 +206,7 @@ void CylindricalSpacePointGrid::sortBinsByR(
 }
 
 Range1D<float> CylindricalSpacePointGrid::computeRadiusRange(
-    const SpacePointContainer2& spacePoints) const {
+    const SpacePointContainer& spacePoints) const {
   float minRange = std::numeric_limits<float>::max();
   float maxRange = std::numeric_limits<float>::lowest();
   for (const BinType& bin : grid()) {

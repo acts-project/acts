@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/EventData/SeedContainer2.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SeedContainer.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Seeding/DoubletSeedFinder.hpp"
 #include "Acts/Seeding/ITripletSeedFilter.hpp"
 #include "Acts/Seeding/TripletSeedFinder.hpp"
@@ -62,11 +62,11 @@ class TripletSeeder {
                             const DoubletSeedFinder& topFinder,
                             const TripletSeedFinder& tripletFinder,
                             const ITripletSeedFilter& filter,
-                            const SpacePointContainer2& spacePoints,
-                            SpacePointContainer2::ConstSubset& bottomSps,
-                            const ConstSpacePointProxy2& middleSp,
-                            SpacePointContainer2::ConstSubset& topSps,
-                            SeedContainer2& outputSeeds) const;
+                            const SpacePointContainer& spacePoints,
+                            SpacePointContainer::ConstSubset& bottomSps,
+                            const ConstSpacePointProxy& middleSp,
+                            SpacePointContainer::ConstSubset& topSps,
+                            SeedContainer& outputSeeds) const;
 
   /// Create all possible seeds from bottom, middle, and top space points.
   ///
@@ -85,12 +85,12 @@ class TripletSeeder {
       Cache& cache, const DoubletSeedFinder& bottomFinder,
       const DoubletSeedFinder& topFinder,
       const TripletSeedFinder& tripletFinder, const ITripletSeedFilter& filter,
-      const SpacePointContainer2& spacePoints,
-      const std::span<SpacePointContainer2::ConstRange>& bottomSpGroups,
-      const SpacePointContainer2::ConstRange& middleSpGroup,
-      const std::span<SpacePointContainer2::ConstRange>& topSpGroups,
+      const SpacePointContainer& spacePoints,
+      const std::span<SpacePointContainer::ConstRange>& bottomSpGroups,
+      const SpacePointContainer::ConstRange& middleSpGroup,
+      const std::span<SpacePointContainer::ConstRange>& topSpGroups,
       const std::pair<float, float>& radiusRangeForMiddle,
-      SeedContainer2& outputSeeds) const;
+      SeedContainer& outputSeeds) const;
 
  private:
   std::unique_ptr<const Logger> m_logger;

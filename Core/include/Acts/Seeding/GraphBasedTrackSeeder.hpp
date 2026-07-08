@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SeedContainer2.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SeedContainer.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Seeding/GbtsDataStorage.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
@@ -210,18 +210,18 @@ class GraphBasedTrackSeeder {
   /// @param filter Tracking filter to be applied
   /// @param options Event based options such as magnetic field strength
   /// @param outputSeeds Container with generated seeds
-  void createSeeds(const SpacePointContainer2& spacePoints,
+  void createSeeds(const SpacePointContainer& spacePoints,
                    const GbtsRoiDescriptor& roi,
                    const std::vector<bool>& isPixelLayer,
                    std::uint32_t maxLayers, const GbtsTrackingFilter& filter,
-                   const Options& options, SeedContainer2& outputSeeds) const;
+                   const Options& options, SeedContainer& outputSeeds) const;
 
   /// Create graph nodes from space points.
   /// @param spacePoints Space point container
   /// @param maxLayers Maximum number of layers
   /// @return Vector of node vectors organized by layer
   std::vector<std::vector<GbtsNode>> createNodes(
-      const SpacePointContainer2& spacePoints, std::uint32_t maxLayers) const;
+      const SpacePointContainer& spacePoints, std::uint32_t maxLayers) const;
 
   /// Create seeds from space points in a region of interest.
   /// @param nodesPerLayer Vector of node vectors organized by layer
@@ -234,7 +234,7 @@ class GraphBasedTrackSeeder {
                    const std::vector<bool>& isPixelLayer,
                    const GbtsRoiDescriptor& roi,
                    const GbtsTrackingFilter& filter, const Options& options,
-                   SeedContainer2& outputSeeds) const;
+                   SeedContainer& outputSeeds) const;
 
  private:
   DerivedConfig m_cfg;

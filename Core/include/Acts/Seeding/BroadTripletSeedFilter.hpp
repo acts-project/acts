@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SeedContainer2.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SeedContainer.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Seeding/DoubletSeedFinder.hpp"
 #include "Acts/Seeding/ITripletSeedFilter.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
@@ -37,9 +37,9 @@ class ITripletSeedCuts {
   /// @param middle middle space point of the current seed
   /// @param top top space point of the current seed
   /// @return seed weight to be added to the seed's weight
-  virtual float seedWeight(const ConstSpacePointProxy2& bottom,
-                           const ConstSpacePointProxy2& middle,
-                           const ConstSpacePointProxy2& top) const = 0;
+  virtual float seedWeight(const ConstSpacePointProxy& bottom,
+                           const ConstSpacePointProxy& middle,
+                           const ConstSpacePointProxy& top) const = 0;
 
   /// @param weight the current seed weight
   /// @param bottom bottom space point of the current seed
@@ -47,9 +47,9 @@ class ITripletSeedCuts {
   /// @param top top space point of the current seed
   /// @return true if the seed should be kept, false if the seed should be
   /// discarded
-  virtual bool singleSeedCut(float weight, const ConstSpacePointProxy2& bottom,
-                             const ConstSpacePointProxy2& middle,
-                             const ConstSpacePointProxy2& top) const = 0;
+  virtual bool singleSeedCut(float weight, const ConstSpacePointProxy& bottom,
+                             const ConstSpacePointProxy& middle,
+                             const ConstSpacePointProxy& top) const = 0;
 
   /// @param seedCandidates contains collection of seed candidates created for one middle
   /// space point in a std::tuple format
@@ -159,7 +159,7 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
     /// The key is the space point index, and the value is the best seed quality
     /// found for that space point.
     /// @note The index is the space point index, not the seed index.
-    std::unordered_map<SpacePointIndex2, float> bestSeedQualityMap;
+    std::unordered_map<SpacePointIndex, float> bestSeedQualityMap;
   };
 
   /// Cache for intermediate results to avoid reallocations. No information is
@@ -187,17 +187,17 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
   /// @param topDoublets Collection of top doublets for the middle space point
   /// @return true if sufficient top doublets are found
   bool sufficientTopDoublets(
-      const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp& topDoublets) const override;
 
   void filterTripletTopCandidates(
-      const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp::Proxy& bottomLink,
       const TripletTopCandidates& tripletTopCandidates) const override;
 
   void filterTripletsMiddleFixed(
-      const SpacePointContainer2& spacePoints,
-      SeedContainer2& outputCollection) const override;
+      const SpacePointContainer& spacePoints,
+      SeedContainer& outputCollection) const override;
 
  private:
   /// Configuration parameters for the seed filter algorithm

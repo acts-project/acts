@@ -8,31 +8,31 @@
 
 #pragma once
 
-#include "Acts/EventData/SeedContainer2.hpp"
+#include "Acts/EventData/SeedContainer.hpp"
 
-#include "Acts/EventData/SeedProxy2.hpp"
+#include "Acts/EventData/SeedProxy.hpp"
 
 namespace Acts {
 
-inline MutableSeedProxy2 SeedContainer2::at(Index index) {
+inline MutableSeedProxy SeedContainer::at(Index index) {
   if (index >= size()) {
-    throw std::out_of_range("Index out of range in SeedContainer2");
+    throw std::out_of_range("Index out of range in SeedContainer");
   }
   return MutableProxy(*this, index);
 }
 
-inline ConstSeedProxy2 SeedContainer2::at(Index index) const {
+inline ConstSeedProxy SeedContainer::at(Index index) const {
   if (index >= size()) {
-    throw std::out_of_range("Index out of range in SeedContainer2");
+    throw std::out_of_range("Index out of range in SeedContainer");
   }
   return ConstProxy(*this, index);
 }
 
-inline MutableSeedProxy2 SeedContainer2::operator[](Index index) noexcept {
+inline MutableSeedProxy SeedContainer::operator[](Index index) noexcept {
   return MutableProxy(*this, index);
 }
 
-inline ConstSeedProxy2 SeedContainer2::operator[](Index index) const noexcept {
+inline ConstSeedProxy SeedContainer::operator[](Index index) const noexcept {
   return ConstProxy(*this, index);
 }
 

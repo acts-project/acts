@@ -9,8 +9,8 @@
 #include "ActsExamples/TrackFinding/HashingPrototypeSeedingAlgorithm.hpp"
 
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/EventData/SeedContainer2.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SeedContainer.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Seeding/BroadTripletSeedFilter.hpp"
 #include "Acts/Seeding/DoubletSeedFinder.hpp"
 #include "Acts/Seeding/TripletSeedFinder.hpp"
@@ -32,8 +32,8 @@ namespace ActsExamples {
 namespace {
 
 static inline bool itkFastTrackingCuts(
-    const Acts::ConstSpacePointProxy2& /*middle*/,
-    const Acts::ConstSpacePointProxy2& other, float cotTheta,
+    const Acts::ConstSpacePointProxy& /*middle*/,
+    const Acts::ConstSpacePointProxy& other, float cotTheta,
     bool isBottomCandidate) {
   static float rMin = 45;
   static float cotThetaMax = 1.5;
@@ -94,7 +94,7 @@ void buildModel(AnnoyModel& model) {
 }
 
 SpacePointsBuckets computeSpacePointsBuckets(
-    const AnnoyModel& annoyModel, const Acts::SpacePointContainer2& spacePoints,
+    const AnnoyModel& annoyModel, const Acts::SpacePointContainer& spacePoints,
     const std::size_t bucketSize, const std::size_t zBins,
     const std::size_t phiBins, const double layerRMin, const double layerRMax,
     const double layerZMin, const double layerZMax) {
@@ -310,7 +310,7 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
 
   const SpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
 
-  Acts::SpacePointContainer2 coreSpacePoints(
+  Acts::SpacePointContainer coreSpacePoints(
       Acts::SpacePointColumns::CopiedFromIndex |
       Acts::SpacePointColumns::PackedXY | Acts::SpacePointColumns::PackedZR |
       Acts::SpacePointColumns::VarianceZ | Acts::SpacePointColumns::VarianceR |
@@ -359,7 +359,7 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
   }
 
   std::set<ConstSeedProxy, SeedComparison> uniqueSeeds;
-  Acts::SeedContainer2 tmpSeeds;
+  Acts::SeedContainer tmpSeeds;
   tmpSeeds.assignSpacePointContainer(spacePoints);
 
   for (const auto& bucket : buckets) {
@@ -390,7 +390,7 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
 
   ACTS_DEBUG("Total unique seeds created: " << uniqueSeeds.size());
 
-  Acts::SeedContainer2 seeds;
+  Acts::SeedContainer seeds;
   seeds.assignSpacePointContainer(spacePoints);
 
   for (const auto& seed : uniqueSeeds) {

@@ -8,7 +8,7 @@
 
 #include "Acts/Seeding/TripletSeeder.hpp"
 
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Seeding/DoubletSeedFinder.hpp"
 #include "Acts/Seeding/TripletSeedFinder.hpp"
 
@@ -22,9 +22,9 @@ template <typename DoubletCollections>
 void createAndFilterTriplets(TripletSeeder::Cache& cache,
                              const TripletSeedFinder& tripletFinder,
                              const ITripletSeedFilter& filter,
-                             const SpacePointContainer2& spacePoints,
+                             const SpacePointContainer& spacePoints,
                              DoubletCollections bottomDoublets,
-                             const ConstSpacePointProxy2& spM,
+                             const ConstSpacePointProxy& spM,
                              DoubletCollections topDoublets) {
   for (auto bottomDoublet : bottomDoublets) {
     if (topDoublets.empty()) {
@@ -46,10 +46,9 @@ void createSeedsFromGroupsImpl(
     const Logger& logger, TripletSeeder::Cache& cache,
     const DoubletSeedFinder& bottomFinder, const DoubletSeedFinder& topFinder,
     const TripletSeedFinder& tripletFinder, const ITripletSeedFilter& filter,
-    const SpacePointContainer2& spacePoints,
-    SpacePointCollections& bottomSpGroups,
-    const ConstSpacePointProxy2& middleSp, SpacePointCollections& topSpGroups,
-    SeedContainer2& outputSeeds) {
+    const SpacePointContainer& spacePoints,
+    SpacePointCollections& bottomSpGroups, const ConstSpacePointProxy& middleSp,
+    SpacePointCollections& topSpGroups, SeedContainer& outputSeeds) {
   MiddleSpInfo middleSpInfo = DoubletSeedFinder::computeMiddleSpInfo(middleSp);
 
   // create middle-top doublets
@@ -119,17 +118,17 @@ TripletSeeder::TripletSeeder(std::unique_ptr<const Logger> logger_)
 void TripletSeeder::createSeedsFromGroup(
     Cache& cache, const DoubletSeedFinder& bottomFinder,
     const DoubletSeedFinder& topFinder, const TripletSeedFinder& tripletFinder,
-    const ITripletSeedFilter& filter, const SpacePointContainer2& spacePoints,
-    SpacePointContainer2::ConstSubset& bottomSps,
-    const ConstSpacePointProxy2& middleSp,
-    SpacePointContainer2::ConstSubset& topSps,
-    SeedContainer2& outputSeeds) const {
+    const ITripletSeedFilter& filter, const SpacePointContainer& spacePoints,
+    SpacePointContainer::ConstSubset& bottomSps,
+    const ConstSpacePointProxy& middleSp,
+    SpacePointContainer::ConstSubset& topSps,
+    SeedContainer& outputSeeds) const {
   assert((bottomFinder.config().spacePointsSortedByRadius ==
           topFinder.config().spacePointsSortedByRadius) &&
          "Inconsistent space point sorting");
 
-  std::array<SpacePointContainer2::ConstSubset, 1> bottomSpGroups{bottomSps};
-  std::array<SpacePointContainer2::ConstSubset, 1> topSpGroups{topSps};
+  std::array<SpacePointContainer::ConstSubset, 1> bottomSpGroups{bottomSps};
+  std::array<SpacePointContainer::ConstSubset, 1> topSpGroups{topSps};
 
   createSeedsFromGroupsImpl(*m_logger, cache, bottomFinder, topFinder,
                             tripletFinder, filter, spacePoints, bottomSpGroups,
@@ -139,12 +138,12 @@ void TripletSeeder::createSeedsFromGroup(
 void TripletSeeder::createSeedsFromGroups(
     Cache& cache, const DoubletSeedFinder& bottomFinder,
     const DoubletSeedFinder& topFinder, const TripletSeedFinder& tripletFinder,
-    const ITripletSeedFilter& filter, const SpacePointContainer2& spacePoints,
-    const std::span<SpacePointContainer2::ConstRange>& bottomSpGroups,
-    const SpacePointContainer2::ConstRange& middleSpGroup,
-    const std::span<SpacePointContainer2::ConstRange>& topSpGroups,
+    const ITripletSeedFilter& filter, const SpacePointContainer& spacePoints,
+    const std::span<SpacePointContainer::ConstRange>& bottomSpGroups,
+    const SpacePointContainer::ConstRange& middleSpGroup,
+    const std::span<SpacePointContainer::ConstRange>& topSpGroups,
     const std::pair<float, float>& radiusRangeForMiddle,
-    SeedContainer2& outputSeeds) const {
+    SeedContainer& outputSeeds) const {
   assert((bottomFinder.config().spacePointsSortedByRadius ==
           topFinder.config().spacePointsSortedByRadius) &&
          "Inconsistent space point sorting");
@@ -159,7 +158,7 @@ void TripletSeeder::createSeedsFromGroups(
     // Initialize initial offsets for bottom and top space points with binary
     // search. This requires at least one middle space point to be present which
     // is already checked above.
-    const ConstSpacePointProxy2 firstMiddleSp = middleSpGroup.front();
+    const ConstSpacePointProxy firstMiddleSp = middleSpGroup.front();
     const float firstMiddleSpR = firstMiddleSp.zr()[1];
 
     for (auto& bottomSpGroup : bottomSpGroups) {
@@ -167,7 +166,7 @@ void TripletSeeder::createSeedsFromGroups(
       // first middle space point.
       const auto low = std::ranges::lower_bound(
           bottomSpGroup, firstMiddleSpR - bottomFinder.config().deltaRMax, {},
-          [&](const ConstSpacePointProxy2& sp) { return sp.zr()[1]; });
+          [&](const ConstSpacePointProxy& sp) { return sp.zr()[1]; });
       bottomSpGroup = bottomSpGroup.subrange(low - bottomSpGroup.begin());
     }
 
@@ -176,12 +175,12 @@ void TripletSeeder::createSeedsFromGroups(
       // first middle space point.
       const auto low = std::ranges::lower_bound(
           topSpGroup, firstMiddleSpR + topFinder.config().deltaRMin, {},
-          [&](const ConstSpacePointProxy2& sp) { return sp.zr()[1]; });
+          [&](const ConstSpacePointProxy& sp) { return sp.zr()[1]; });
       topSpGroup = topSpGroup.subrange(low - topSpGroup.begin());
     }
   }
 
-  for (ConstSpacePointProxy2 spM : middleSpGroup) {
+  for (ConstSpacePointProxy spM : middleSpGroup) {
     const float rM = spM.zr()[1];
 
     if (spacePointsSortedByRadius) {

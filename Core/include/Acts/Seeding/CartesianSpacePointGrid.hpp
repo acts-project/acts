@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -129,18 +129,18 @@ class CartesianSpacePointGrid {
   /// @param sp The space point to insert
   /// @return The index of the bin in which the space point was inserted, or
   ///         `std::nullopt` if the space point is outside the grid bounds.
-  std::optional<std::size_t> insert(const ConstSpacePointProxy2& sp) {
+  std::optional<std::size_t> insert(const ConstSpacePointProxy& sp) {
     return insert(sp.index(), sp.x(), sp.y(), sp.z());
   }
 
   /// Fill the grid with space points from the container.
   /// @param spacePoints The space point container to fill the grid with
-  void extend(const SpacePointContainer2::ConstRange& spacePoints);
+  void extend(const SpacePointContainer::ConstRange& spacePoints);
 
   /// Sort the bins in the grid by the space point sorting-coordinate, which is
   /// required by some algorithms that operate on the grid.
   /// @param spacePoints The space point container to sort the bins by the configured coordinate
-  void sortBinsByCoord(const SpacePointContainer2& spacePoints);
+  void sortBinsByCoord(const SpacePointContainer& spacePoints);
 
   /// Compute the range of the sorting coordinates in the grid. This requires
   /// the grid to be filled with space points and sorted by coordinate. The
@@ -148,7 +148,7 @@ class CartesianSpacePointGrid {
   /// @param spacePoints The space point container to compute the y-range
   /// @return The range of y-values in the grid
   Range1D<float> computeCoordRange(
-      const SpacePointContainer2& spacePoints) const;
+      const SpacePointContainer& spacePoints) const;
 
   /// Mutable bin access by index.
   /// @param index The index of the bin to access
@@ -189,7 +189,7 @@ class CartesianSpacePointGrid {
 
   std::size_t m_counter{};
 
-  std::function<float(const ConstSpacePointProxy2&)> m_sortCoordGetter;
+  std::function<float(const ConstSpacePointProxy&)> m_sortCoordGetter;
 
   const Logger& logger() const { return *m_logger; }
 };

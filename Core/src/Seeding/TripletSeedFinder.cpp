@@ -8,7 +8,7 @@
 
 #include "Acts/Seeding/TripletSeedFinder.hpp"
 
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/StripSpacePointCalibrationDetails.hpp"
 #include "Acts/SpacePointFormation/detail/StripSpacePointCalibrationImpl.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
@@ -33,7 +33,7 @@ class Impl final : public TripletSeedFinder {
 
   template <typename TopDoublets>
   void createPixelTripletTopCandidates(
-      const ConstSpacePointProxy2& spM,
+      const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
     const float rM = spM.zr()[1];
@@ -68,7 +68,7 @@ class Impl final : public TripletSeedFinder {
     for (auto [topDoublet, topDoubletIndex] :
          zip(topDoublets, std::ranges::iota_view<std::size_t, std::size_t>(
                               0, topDoublets.size()))) {
-      const SpacePointIndex2 spT = topDoublet.spacePointIndex();
+      const SpacePointIndex spT = topDoublet.spacePointIndex();
       const float cotThetaT = topDoublet.cotTheta();
 
       // use geometric average
@@ -163,7 +163,7 @@ class Impl final : public TripletSeedFinder {
 
   template <typename TopDoublets>
   void createStripTripletTopCandidates(
-      const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
     const float rM = spM.zr()[1];
@@ -208,7 +208,7 @@ class Impl final : public TripletSeedFinder {
     const OuterStripSpacePointCalibrationDetailsDerived calM =
         detail::deriveOuterStripSpacePointCalibrationDetails(
             spM.outerStripCalibrationDetails());
-    const ConstSpacePointProxy2 spB =
+    const ConstSpacePointProxy spB =
         spacePoints[bottomDoublet.spacePointIndex()];
     const OuterStripSpacePointCalibrationDetailsDerived calB =
         detail::deriveOuterStripSpacePointCalibrationDetails(
@@ -292,7 +292,7 @@ class Impl final : public TripletSeedFinder {
           rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
           zDirectionMiddle};
 
-      const ConstSpacePointProxy2 spT =
+      const ConstSpacePointProxy spT =
           spacePoints[topDoublet.spacePointIndex()];
       const OuterStripSpacePointCalibrationDetailsDerived calT =
           detail::deriveOuterStripSpacePointCalibrationDetails(
@@ -406,7 +406,7 @@ class Impl final : public TripletSeedFinder {
   }
 
   void createTripletTopCandidates(
-      const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
       DoubletsForMiddleSp::Range& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const override {
@@ -420,7 +420,7 @@ class Impl final : public TripletSeedFinder {
   }
 
   void createTripletTopCandidates(
-      const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
       DoubletsForMiddleSp::Subset& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const override {
@@ -434,7 +434,7 @@ class Impl final : public TripletSeedFinder {
   }
 
   void createTripletTopCandidates(
-      const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
       DoubletsForMiddleSp::Subset2& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const override {

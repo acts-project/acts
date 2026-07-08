@@ -9,7 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/EventData/SeedColumns.hpp"
-#include "Acts/EventData/SeedContainer2.hpp"
+#include "Acts/EventData/SeedContainer.hpp"
 
 using namespace Acts;
 
@@ -18,7 +18,7 @@ namespace ActsTests {
 BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE(Empty) {
-  SeedContainer2 container;
+  SeedContainer container;
 
   BOOST_CHECK(container.empty());
   BOOST_CHECK_EQUAL(container.size(), 0u);
@@ -29,12 +29,12 @@ BOOST_AUTO_TEST_CASE(Empty) {
 }
 
 BOOST_AUTO_TEST_CASE(Create) {
-  SeedContainer2 container;
+  SeedContainer container;
   container.reserve(1);
 
   {
     auto seed = container.createSeed();
-    seed.assignSpacePointIndices(std::array<SpacePointIndex2, 3>{0, 1, 2});
+    seed.assignSpacePointIndices(std::array<SpacePointIndex, 3>{0, 1, 2});
     seed.quality() = 1.0f;
     seed.vertexZ() = 3.0f;
   }
@@ -52,12 +52,12 @@ BOOST_AUTO_TEST_CASE(Create) {
 }
 
 BOOST_AUTO_TEST_CASE(Iterate) {
-  SeedContainer2 container;
+  SeedContainer container;
   container.reserve(1);
 
   {
     auto seed = container.createSeed();
-    seed.assignSpacePointIndices(std::array<SpacePointIndex2, 3>{0, 1, 2});
+    seed.assignSpacePointIndices(std::array<SpacePointIndex, 3>{0, 1, 2});
     seed.quality() = 1.0f;
     seed.vertexZ() = 3.0f;
   }
@@ -70,21 +70,21 @@ BOOST_AUTO_TEST_CASE(Iterate) {
 }
 
 BOOST_AUTO_TEST_CASE(CopyAndMove) {
-  SeedContainer2 container;
+  SeedContainer container;
   container.reserve(1);
 
   {
     auto seed = container.createSeed();
-    seed.assignSpacePointIndices(std::array<SpacePointIndex2, 3>{0, 1, 2});
+    seed.assignSpacePointIndices(std::array<SpacePointIndex, 3>{0, 1, 2});
     seed.quality() = 1.0f;
     seed.vertexZ() = 3.0f;
   }
 
-  SeedContainer2 containerCopy = container;
+  SeedContainer containerCopy = container;
   BOOST_CHECK(!containerCopy.empty());
   BOOST_CHECK_EQUAL(containerCopy.size(), 1u);
 
-  SeedContainer2 containerMove = std::move(container);
+  SeedContainer containerMove = std::move(container);
   BOOST_CHECK(!containerMove.empty());
   BOOST_CHECK_EQUAL(containerMove.size(), 1u);
   // copy should be unchanged
@@ -93,12 +93,12 @@ BOOST_AUTO_TEST_CASE(CopyAndMove) {
 }
 
 BOOST_AUTO_TEST_CASE(Clear) {
-  SeedContainer2 container;
+  SeedContainer container;
   container.reserve(1);
 
   {
     auto seed = container.createSeed();
-    seed.assignSpacePointIndices(std::array<SpacePointIndex2, 3>{0, 1, 2});
+    seed.assignSpacePointIndices(std::array<SpacePointIndex, 3>{0, 1, 2});
     seed.quality() = 1.0f;
     seed.vertexZ() = 3.0f;
   }
@@ -113,19 +113,19 @@ BOOST_AUTO_TEST_CASE(Clear) {
 }
 
 BOOST_AUTO_TEST_CASE(CopyFrom) {
-  SeedContainer2 container;
+  SeedContainer container;
   container.reserve(1);
 
   {
     auto seed = container.createSeed();
-    seed.assignSpacePointIndices(std::array<SpacePointIndex2, 3>{0, 1, 2});
+    seed.assignSpacePointIndices(std::array<SpacePointIndex, 3>{0, 1, 2});
     seed.quality() = 1.0f;
     seed.vertexZ() = 3.0f;
   }
 
   {
-    SeedContainer2 copyTo;
-    MutableSeedProxy2 seed = copyTo.createSeed();
+    SeedContainer copyTo;
+    MutableSeedProxy seed = copyTo.createSeed();
     seed.copyFrom(container.at(0), SeedColumns::SpacePointIndices |
                                        SeedColumns::Quality |
                                        SeedColumns::VertexZ);
@@ -138,8 +138,8 @@ BOOST_AUTO_TEST_CASE(CopyFrom) {
   }
 
   {
-    SeedContainer2 copyTo;
-    MutableSeedProxy2 seed = copyTo.createSeed();
+    SeedContainer copyTo;
+    MutableSeedProxy seed = copyTo.createSeed();
     seed.copyFrom(container.at(0),
                   SeedColumns::SpacePointIndices | SeedColumns::Quality);
 

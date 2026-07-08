@@ -13,7 +13,7 @@
 
 namespace Acts {
 
-class SpacePointContainer2;
+class SpacePointContainer;
 template <typename T, bool read_only>
 class SpacePointColumnProxy;
 template <typename T>
@@ -23,7 +23,7 @@ using ConstSpacePointColumnProxy = SpacePointColumnProxy<T, true>;
 
 namespace detail::sp {
 
-// These classes should have gone into `SpacePointContainer2` but a compiler bug
+// These classes should have gone into `SpacePointContainer` but a compiler bug
 // prevents that
 
 class ColumnHolderBase {
@@ -53,10 +53,10 @@ class ColumnHolder /*final*/ : public ColumnHolderBase {
   explicit ColumnHolder(Value defaultValue)
       : m_default(std::move(defaultValue)) {}
 
-  MutableProxy proxy(SpacePointContainer2 &container) {
+  MutableProxy proxy(SpacePointContainer &container) {
     return MutableProxy(container, m_data);
   }
-  ConstProxy proxy(const SpacePointContainer2 &container) const {
+  ConstProxy proxy(const SpacePointContainer &container) const {
     return ConstProxy(container, m_data);
   }
 

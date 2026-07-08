@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
@@ -59,8 +59,8 @@ class DoubletsForMiddleSp {
   /// @param v V coordinate parameter
   /// @param x X coordinate
   /// @param y Y coordinate
-  void emplace_back(SpacePointIndex2 sp, float cotTheta, float iDeltaR,
-                    float er, float u, float v, float x, float y) {
+  void emplace_back(SpacePointIndex sp, float cotTheta, float iDeltaR, float er,
+                    float u, float v, float x, float y) {
     m_spacePoints.push_back(sp);
     m_cotTheta.push_back(cotTheta);
     m_er_iDeltaR.push_back({er, iDeltaR});
@@ -70,7 +70,7 @@ class DoubletsForMiddleSp {
 
   /// Get reference to space point indices container
   /// @return Const reference to space point indices vector
-  const std::vector<SpacePointIndex2>& spacePoints() const {
+  const std::vector<SpacePointIndex>& spacePoints() const {
     return m_spacePoints;
   }
   /// Get reference to cotTheta values container
@@ -121,7 +121,7 @@ class DoubletsForMiddleSp {
 
     /// Get space point index pair
     /// @return The space point index
-    SpacePointIndex2 spacePointIndex() const {
+    SpacePointIndex spacePointIndex() const {
       return m_container->m_spacePoints[m_index];
     }
 
@@ -252,7 +252,7 @@ class DoubletsForMiddleSp {
   }
 
  private:
-  std::vector<SpacePointIndex2> m_spacePoints;
+  std::vector<SpacePointIndex> m_spacePoints;
 
   // parameters required to calculate a circle with linear equation
   std::vector<float> m_cotTheta;
@@ -333,9 +333,9 @@ class DoubletSeedFinder {
     /// Type alias for delegate to apply experiment specific cuts during doublet
     /// finding
     using ExperimentCuts =
-        Delegate<bool(const ConstSpacePointProxy2& /*middle*/,
-                      const ConstSpacePointProxy2& /*other*/,
-                      float /*cotTheta*/, bool /*isBottomCandidate*/)>;
+        Delegate<bool(const ConstSpacePointProxy& /*middle*/,
+                      const ConstSpacePointProxy& /*other*/, float /*cotTheta*/,
+                      bool /*isBottomCandidate*/)>;
 
     /// Delegate to apply experiment specific cuts during doublet finding
     ExperimentCuts experimentCuts;
@@ -359,7 +359,7 @@ class DoubletSeedFinder {
   /// reused during doublet finding.
   /// @param spM Middle space point for doublet computation
   /// @return MiddleSpInfo structure with computed quantities
-  static MiddleSpInfo computeMiddleSpInfo(const ConstSpacePointProxy2& spM);
+  static MiddleSpInfo computeMiddleSpInfo(const ConstSpacePointProxy& spM);
 
   /// Creates a new doublet seed finder instance given the configuration.
   /// @param config Configuration for the doublet seed finder
@@ -381,8 +381,8 @@ class DoubletSeedFinder {
   ///   middle SP in a seed
   /// @param compatibleDoublets Output container for compatible doublets
   virtual void createDoublets(
-      const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
-      SpacePointContainer2::ConstSubset& candidateSps,
+      const ConstSpacePointProxy& middleSp, const MiddleSpInfo& middleSpInfo,
+      SpacePointContainer::ConstSubset& candidateSps,
       DoubletsForMiddleSp& compatibleDoublets) const = 0;
 
   /// Creates compatible dublets by applying a series of cuts that can be
@@ -394,8 +394,8 @@ class DoubletSeedFinder {
   ///   middle SP in a seed
   /// @param compatibleDoublets Output container for compatible doublets
   virtual void createDoublets(
-      const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
-      SpacePointContainer2::ConstRange& candidateSps,
+      const ConstSpacePointProxy& middleSp, const MiddleSpInfo& middleSpInfo,
+      SpacePointContainer::ConstRange& candidateSps,
       DoubletsForMiddleSp& compatibleDoublets) const = 0;
 };
 

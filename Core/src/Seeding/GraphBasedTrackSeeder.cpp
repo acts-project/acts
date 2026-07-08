@@ -41,13 +41,13 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
   m_mlLut = parseGbtsMlLookupTable(m_cfg.lutInputFile);
 }
 
-void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer2& spacePoints,
+void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer& spacePoints,
                                         const GbtsRoiDescriptor& roi,
                                         const std::vector<bool>& isPixelLayer,
                                         const std::uint32_t maxLayers,
                                         const GbtsTrackingFilter& filter,
                                         const Options& options,
-                                        SeedContainer2& outputSeeds) const {
+                                        SeedContainer& outputSeeds) const {
   const std::vector<std::vector<GbtsNode>> nodesPerLayer =
       createNodes(spacePoints, maxLayers);
 
@@ -58,7 +58,7 @@ void GraphBasedTrackSeeder::createSeeds(
     const std::vector<std::vector<GbtsNode>>& nodesPerLayer,
     const std::vector<bool>& isPixelLayer, const GbtsRoiDescriptor& roi,
     const GbtsTrackingFilter& filter, const Options& options,
-    SeedContainer2& outputSeeds) const {
+    SeedContainer& outputSeeds) const {
   GbtsNodeStorage nodeStorage(m_geometry, m_mlLut);
 
   std::uint32_t nPixelLoaded = 0;
@@ -161,7 +161,7 @@ GbtsMlLookupTable GraphBasedTrackSeeder::parseGbtsMlLookupTable(
 }
 
 std::vector<std::vector<GbtsNode>> GraphBasedTrackSeeder::createNodes(
-    const SpacePointContainer2& spacePoints,
+    const SpacePointContainer& spacePoints,
     const std::uint32_t maxLayers) const {
   auto layerColumn = spacePoints.column<std::uint32_t>("layerId");
   auto clusterWidthColumn = spacePoints.column<float>("clusterWidth");

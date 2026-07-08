@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -147,18 +147,18 @@ class CylindricalSpacePointGrid {
   /// @param sp The space point to insert
   /// @return The index of the bin in which the space point was inserted, or
   ///         `std::nullopt` if the space point is outside the grid bounds.
-  std::optional<std::size_t> insert(const ConstSpacePointProxy2& sp) {
+  std::optional<std::size_t> insert(const ConstSpacePointProxy& sp) {
     return insert(sp.index(), sp.phi(), sp.z(), sp.r());
   }
 
   /// Fill the grid with space points from the container.
   /// @param spacePoints The space point container to fill the grid with
-  void extend(const SpacePointContainer2::ConstRange& spacePoints);
+  void extend(const SpacePointContainer::ConstRange& spacePoints);
 
   /// Sort the bins in the grid by the space point radius, which is required by
   /// some algorithms that operate on the grid.
   /// @param spacePoints The space point container to sort the bins by radius
-  void sortBinsByR(const SpacePointContainer2& spacePoints);
+  void sortBinsByR(const SpacePointContainer& spacePoints);
 
   /// Compute the range of radii in the grid. This requires the grid to be
   /// filled with space points and sorted by radius. The sorting can be done
@@ -166,7 +166,7 @@ class CylindricalSpacePointGrid {
   /// @param spacePoints The space point container to compute the radius range
   /// @return The range of radii in the grid
   Range1D<float> computeRadiusRange(
-      const SpacePointContainer2& spacePoints) const;
+      const SpacePointContainer& spacePoints) const;
 
   /// Mutable bin access by index.
   /// @param index The index of the bin to access
