@@ -164,7 +164,8 @@ struct MultiAxisHelper {
   /// Invoke @p f with a compile-time axis index (as an explicit template
   /// argument) for every axis @c 0, 1, ..., sizeof...(Is)-1 in order.
   template <std::size_t... Is, class F>
-  static constexpr void forEachAxis(std::index_sequence<Is...> /*seq*/, F&& f) {
+  static constexpr void forEachAxis(std::index_sequence<Is...> /*seq*/,
+                                    const F& f) {
     (f.template operator()<Is>(), ...);
   }
 
@@ -173,7 +174,7 @@ struct MultiAxisHelper {
   /// axes has to be accumulated.
   template <std::size_t... Is, class F>
   static constexpr void forEachAxisReverse(std::index_sequence<Is...> /*seq*/,
-                                           F&& f) {
+                                           const F& f) {
     constexpr std::size_t N = sizeof...(Is);
     (f.template operator()<N - 1 - Is>(), ...);
   }
