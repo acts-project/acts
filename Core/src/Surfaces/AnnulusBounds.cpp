@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <algorithm>
@@ -408,14 +409,13 @@ Vector2 AnnulusBounds::center() const {
 }
 
 std::ostream& AnnulusBounds::toStream(std::ostream& sl) const {
-  sl << std::setiosflags(std::ios::fixed);
-  sl << std::setprecision(7);
+  detail::OstreamStateGuard guard{sl};
+  sl << std::fixed << std::setprecision(7);
   sl << "Acts::AnnulusBounds:  (innerRadius, outerRadius, minPhi, maxPhi) = ";
   sl << "(" << get(eMinR) << ", " << get(eMaxR) << ", " << phiMin() << ", "
      << phiMax() << ")" << '\n';
   sl << " - shift xy = " << m_shiftXY.x() << ", " << m_shiftXY.y() << '\n';
   sl << " - shift pc = " << m_shiftPC.x() << ", " << m_shiftPC.y() << '\n';
-  sl << std::setprecision(-1);
   return sl;
 }
 
