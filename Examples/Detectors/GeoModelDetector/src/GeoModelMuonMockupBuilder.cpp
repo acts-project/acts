@@ -323,9 +323,13 @@ GeoModelMuonMockupBuilder::buildChildChamber(
     }
 
     mwCfg.name = box.name;
-    mwCfg.mlSurfaces = box.surfaces;
+    std::ranges::transform(
+        box.surfaces, std::back_inserter(mwCfg.mlSurfaces),
+        [](const std::shared_ptr<ActsPlugins::GeoModelDetectorElement>& detEl) {
+          return detEl->surface().getSharedPtr();
+        });
     mwCfg.transform = box.volume->localToGlobalTransform(gctx);
-    auto& sb = box.surfaces.front()->bounds();
+    auto& sb = box.surfaces.front()->surface().bounds();
     auto lineBounds = dynamic_cast<const Acts::LineBounds*>(&sb);
     if (lineBounds == nullptr) {
       throw std::runtime_error(
@@ -347,10 +351,12 @@ GeoModelMuonMockupBuilder::buildChildChamber(
     trVol = std::make_unique<Acts::TrackingVolume>(*box.volume, box.name);
 
     // add the sensitives in the constructed tracking volume
-    for (const auto& surface : box.surfaces) {
-      trVol->addSurface(surface);
+    for (const auto& detEl : box.surfaces) {
+      trVol->addSurface(detEl->surface().getSharedPtr());
     }
   }
+  trVol->retainPlacements(box.surfaces);
+
   return trVol;
 }
 template <Acts::VolumeBounds::BoundsType VolBounds_t>

@@ -59,7 +59,7 @@ class GeoModelDetectorObjectFactory {
     /// @brief Name of the converted volume
     std::string name{};
     /// @brief List of surfaces belonging to this volume
-    std::vector<std::shared_ptr<Acts::Surface>> surfaces{};
+    std::vector<std::shared_ptr<GeoModelDetectorElement>> surfaces{};
   };
   /// List of converted GeoModel volumes
   using ConvertedVolList_t = std::vector<ConvertedGeoVol>;
@@ -67,7 +67,7 @@ class GeoModelDetectorObjectFactory {
   /// Options for the GeoModel detector object factory
   struct Options {
     /// Query strings for volume selection
-    std::vector<std::string> queries = {};
+    std::vector<std::string> queries{};
   };
 
   // substring matching for additional parameters
@@ -81,7 +81,7 @@ class GeoModelDetectorObjectFactory {
     /// Boolean flag to build subvolumes
     bool convertSubVolumes = false;
     /// Flag to build the desired bounding boxes
-    std::vector<std::string> convertBox;
+    std::vector<std::string> convertBox{};
   };
 
   /// @brief Cache for storing created detector elements and factory objects

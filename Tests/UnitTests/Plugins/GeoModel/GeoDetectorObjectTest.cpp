@@ -52,7 +52,8 @@ void test(const GeoModelDetectorObjectFactory::Cache& cache, GeoDims geoDims) {
     for (std::size_t i = 0; i < geoDims.boxO.size(); i++) {
       BOOST_CHECK(geoDims.boxO[i] == bounds.values()[i]);
     }
-    for (const auto& surface : convertedObj.surfaces) {
+    for (const auto& detEl : convertedObj.surfaces) {
+      const auto surface = detEl->surface().getSharedPtr();
       const SurfaceBounds& sbounds = surface->bounds();
       // check straws
       if (surface->type() == Surface::SurfaceType::Straw) {

@@ -177,7 +177,7 @@ void GeoModelDetectorObjectFactory::convertFpv(
                    cache.sensitiveSurfaces.end(),
                    std::back_inserter(convEnvelope.surfaces),
                    [](const GeoModelSensitiveSurface &sensitive) {
-                     return std::get<1>(sensitive);
+                     return std::get<0>(sensitive);
                    });
   }
 }

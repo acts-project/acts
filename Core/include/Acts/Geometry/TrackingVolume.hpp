@@ -32,6 +32,8 @@
 
 #include <cstddef>
 #include <memory>
+#include <ranges>
+#include <span>
 #include <string>
 #include <utility>
 #include <vector>
@@ -568,6 +570,19 @@ class TrackingVolume : public Volume {
   template <isVariantCompatible<PlacementOwnPtr> Obj_t>
   void retainPlacement(Obj_t placement) {
     placementCache().emplace_back(std::move(placement));
+  }
+  /// Convinience method to pass a container of (Volume / Surface)
+  /// placements to the tracking volume to retain ownership
+  /// @param placements: Container of volume placements to be hold  
+  template <typename Range>
+    requires std::ranges::input_range<Range> &&
+             isVariantCompatible<
+                 PlacementOwnPtr,
+                 std::remove_cvref_t<std::ranges::range_value_t<Range>>>
+  void retainPlacements(Range&& placements) {
+    for (auto&& obj : placements) {
+      placementCache().emplace_back(std::move(obj));
+    }
   }
 
  private:
