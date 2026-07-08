@@ -145,9 +145,9 @@ std::pair<std::size_t, std::size_t> SymmetricKLDistanceMatrix::minDistancePair()
   // two-pass search (vectorized min-value pass + full-array early-exit
   // index scan) with one pass plus a small bounded rescan, avoiding the
   // O(nActivePairs/2)-average scalar index search of the two-pass approach.
-  // BLOCK=16 was benchmarked as the sweet spot for the array sizes that
+  // BLOCK=16 was found to be the sweet spot for the array sizes that
   // dominate this reduction (N=48-72 active components, i.e. up to ~2556
-  // active pairs); see scratch_benchmarks/argmin_bench5.cpp.
+  // active pairs).
   constexpr std::size_t BLOCK = 16;
 
   const double *data = m_distances.data();
