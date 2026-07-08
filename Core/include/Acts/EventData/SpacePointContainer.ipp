@@ -18,7 +18,8 @@
 namespace Acts {
 
 template <typename container_t, template <typename> class holder_t>
-template <template <typename> class, typename>
+template <template <typename> class H>
+  requires(Acts::detail::is_same_template<H, Acts::detail::RefHolder>::value)
 SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     const SpacePointContainerConfig& config,
     const SpacePointContainerOptions& options, const container_t& container)
@@ -27,7 +28,8 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(
 }
 
 template <typename container_t, template <typename> class holder_t>
-template <template <typename> class, typename>
+template <template <typename> class H>
+  requires(Acts::detail::is_same_template<H, Acts::detail::ValueHolder>::value)
 SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     const SpacePointContainerConfig& config,
     const SpacePointContainerOptions& options, container_t&& container)

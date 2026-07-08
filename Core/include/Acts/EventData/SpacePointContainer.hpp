@@ -85,9 +85,8 @@ class [[deprecated(
   /// @param config Configuration for the space point container
   /// @param options Options for the space point container
   /// @param container Reference to the underlying space point container
-  template <template <typename> class H = holder_t,
-            typename = std::enable_if_t<Acts::detail::is_same_template<
-                H, Acts::detail::RefHolder>::value>>
+  template <template <typename> class H = holder_t>
+    requires(Acts::detail::is_same_template<H, Acts::detail::RefHolder>::value)
   SpacePointContainer(const Acts::SpacePointContainerConfig& config,
                       const Acts::SpacePointContainerOptions& options,
                       const container_t& container);
@@ -98,9 +97,9 @@ class [[deprecated(
   /// @param config Configuration for the space point container
   /// @param options Options for the space point container
   /// @param container Rvalue reference to the underlying space point container
-  template <template <typename> class H = holder_t,
-            typename = std::enable_if_t<Acts::detail::is_same_template<
-                H, Acts::detail::ValueHolder>::value>>
+  template <template <typename> class H = holder_t>
+    requires(
+        Acts::detail::is_same_template<H, Acts::detail::ValueHolder>::value)
   SpacePointContainer(const Acts::SpacePointContainerConfig& config,
                       const Acts::SpacePointContainerOptions& options,
                       container_t&& container);
