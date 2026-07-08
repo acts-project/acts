@@ -444,9 +444,9 @@ BOOST_AUTO_TEST_CASE(taubin_circle_fit_weighted) {
 }
 
 // End-to-end weighting through the multi-space-point estimator: an analytic
-// helix with one longitudinally displaced point. The longitudinal weights
-// suppress the outlier so the recovered z-slope (theta) matches the truth,
-// while uniform weights are biased.
+// helix with one longitudinally displaced point. Down-weighting the outlier
+// suppresses it so the recovered z-slope (theta) matches the truth, while
+// uniform weights are biased.
 BOOST_AUTO_TEST_CASE(spacepoint_estimator_weighted) {
   const double bMag = 2._T;
   const Vector3 bField(0, 0, bMag);
@@ -465,18 +465,17 @@ BOOST_AUTO_TEST_CASE(spacepoint_estimator_weighted) {
                              100. + lambda * s);
   }
   // Displace one point in z only (transverse position untouched, so the circle
-  // fit is unaffected) and down-weight it longitudinally.
+  // fit stays on the true circle) and down-weight it.
   spacePoints[3].z() += 50.;
-  std::vector<double> weightsZ(nsp, 1.);
-  weightsZ[3] = 1e-6;
+  std::vector<double> weights(nsp, 1.);
+  weights[3] = 1e-6;
 
   const std::span<const Vector3> sp(spacePoints);
-  const std::span<const double> noWeights;
 
   auto biased = estimateTrackParamsFromSpacePoints(sp, bField, 0., 0);
   BOOST_CHECK(biased.ok());
-  auto corrected = estimateTrackParamsFromSpacePoints(sp, bField, 0., 0,
-                                                      noWeights, weightsZ);
+  auto corrected =
+      estimateTrackParamsFromSpacePoints(sp, bField, 0., 0, weights);
   BOOST_CHECK(corrected.ok());
 
   Vector3 dir(-std::sin(alpha0), std::cos(alpha0), lambda);

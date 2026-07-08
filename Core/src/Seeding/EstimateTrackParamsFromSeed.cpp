@@ -263,26 +263,17 @@ std::error_code Acts::make_error_code(Acts::TrackParamsEstimationError e) {
 
 Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
     std::span<const Vector3> spacePoints, const Vector3& bField, double t0,
-    std::size_t geometricRefineIterations,
-    std::span<const double> weightsTransverse,
-    std::span<const double> weightsLongitudinal) {
+    std::size_t geometricRefineIterations, std::span<const double> weights) {
   if (spacePoints.size() < 3) {
     return Result<FreeVector>::failure(
         TrackParamsEstimationError::NotEnoughSpacePoints);
   }
-  assert((weightsTransverse.empty() ||
-          weightsTransverse.size() == spacePoints.size()) &&
-         "transverse weights must be empty or match the space points");
-  assert((weightsLongitudinal.empty() ||
-          weightsLongitudinal.size() == spacePoints.size()) &&
-         "longitudinal weights must be empty or match the space points");
+  assert((weights.empty() || weights.size() == spacePoints.size()) &&
+         "weights must be empty or match the space points");
 
-  // Per-point weight accessors: an empty span means uniform weights of one.
-  const auto wT = [&](std::size_t i) {
-    return weightsTransverse.empty() ? 1. : weightsTransverse[i];
-  };
-  const auto wL = [&](std::size_t i) {
-    return weightsLongitudinal.empty() ? 1. : weightsLongitudinal[i];
+  // Per-point weight accessor: an empty span means uniform weights of one.
+  const auto w = [&](std::size_t i) {
+    return weights.empty() ? 1. : weights[i];
   };
 
   const Vector3& reference = spacePoints.front();
@@ -305,25 +296,22 @@ Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
   const double bMag = bField.norm();
 
   // Algebraic circle fit in the transverse plane, optionally refined
-  // geometrically. Both stages use the transverse weights.
-  detail::CircleFit circle = detail::fitCircleTaubin(local, weightsTransverse);
+  // geometrically. Both stages use the per-point weights.
+  detail::CircleFit circle = detail::fitCircleTaubin(local, weights);
   if (circle.valid && geometricRefineIterations > 0) {
     detail::refineCircleGeometric(circle, local, geometricRefineIterations,
-                                  weightsTransverse);
+                                  weights);
   }
 
   if (!circle.valid) {
     // Straight-line limit (collinear transverse points, i.e. a straight track
     // or a vanishing field): the direction is the principal axis of the local
-    // points and the momentum is dropped (q/p stays zero). The 3D principal
-    // axis mixes both planes, so each point carries the mean of its transverse
-    // and longitudinal weight.
+    // points and the momentum is dropped (q/p stays zero).
     double sumW = 0.;
     Vector3 mean = Vector3::Zero();
     for (std::size_t i = 0; i < local.size(); ++i) {
-      const double w = 0.5 * (wT(i) + wL(i));
-      sumW += w;
-      mean += w * local[i];
+      sumW += w(i);
+      mean += w(i) * local[i];
     }
     if (!(sumW > 0.)) {
       return Result<FreeVector>::failure(
@@ -332,9 +320,8 @@ Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
     mean /= sumW;
     SquareMatrix3 cov = SquareMatrix3::Zero();
     for (std::size_t i = 0; i < local.size(); ++i) {
-      const double w = 0.5 * (wT(i) + wL(i));
       const Vector3 d = local[i] - mean;
-      cov += w * d * d.transpose();
+      cov += w(i) * d * d.transpose();
     }
     Eigen::SelfAdjointEigenSolver<SquareMatrix3> solver(cov);
     // Eigenvalues are ascending; the largest measures the spread along the
@@ -391,14 +378,14 @@ Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
       phi += 2. * std::numbers::pi;
     }
     phiPrev = phi;
-    const double w = wL(i);
+    const double wi = w(i);
     const double s = rotSense * radius * (phi - phiRef);
     const double z = p.z();
-    sumW += w;
-    sumS += w * s;
-    sumZ += w * z;
-    sumSS += w * s * s;
-    sumSZ += w * s * z;
+    sumW += wi;
+    sumS += wi * s;
+    sumZ += wi * z;
+    sumSS += wi * s * s;
+    sumSZ += wi * s * z;
   }
   const double denom = sumW * sumSS - sumS * sumS;
   const double lambda =
@@ -425,12 +412,9 @@ Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
 Acts::Result<Acts::BoundVector> Acts::estimateTrackParamsFromSpacePoints(
     const GeometryContext& gctx, const Surface& surface,
     std::span<const Vector3> spacePoints, const Vector3& bField, double t0,
-    std::size_t geometricRefineIterations,
-    std::span<const double> weightsTransverse,
-    std::span<const double> weightsLongitudinal) {
+    std::size_t geometricRefineIterations, std::span<const double> weights) {
   Result<FreeVector> freeParams = estimateTrackParamsFromSpacePoints(
-      spacePoints, bField, t0, geometricRefineIterations, weightsTransverse,
-      weightsLongitudinal);
+      spacePoints, bField, t0, geometricRefineIterations, weights);
   if (!freeParams.ok()) {
     return Result<BoundVector>::failure(freeParams.error());
   }
