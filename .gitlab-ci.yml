@@ -1,3 +1,8 @@
+stages:
+  - changeset
+  - build
+  - test
+
 variables:
   CCACHE_DIR: ${CI_PROJECT_DIR}/ccache
   CCACHE_MAXSIZE: 2G
@@ -503,6 +508,24 @@ lcg_dev4:
         COMPILER:
           - gcc15
 
+get_changeset:
+  tags: [docker]
+  stage: changeset
+  image: ghcr.io/acts-project/ubuntu2404_cuda:87
+  artifacts:
+    reports:
+      dotenv: changeset.env
+  script:
+      - git clone https://github.com/acts-project/acts.git src
+      - git -C src remote add downstream $CLONE_URL
+      - git -C src fetch origin main
+      - git -C src fetch downstream $HEAD_REF
+      - git -C src checkout $HEAD_SHA
+      - (cd src && CI/changeset.sh "main" "" "" $CI_PROJECT_DIR/.changeset.txt)
+      - cat $CI_PROJECT_DIR/.changeset.txt
+      - (cd src && CI/set_changeset_output.sh $CI_PROJECT_DIR/.changeset.txt $CI_PROJECT_DIR/changeset.env)
+
+
 # Detray gitlab CI workflows
 detray_build_cuda:
   tags: [docker]
@@ -513,11 +536,11 @@ detray_build_cuda:
   artifacts:
     paths:
       - build
-  only:
-    changes:
-      - Detray/*
-      - .gitlab-ci.yml
+  needs:
+    - get_changeset
   script:
+      - mkdir build
+      - '[ "$TOUCHES_DETRAY" = "true" ] || { echo "Skipping because detray is not touched"; exit 0; }'
       - git clone $CLONE_URL src
       - git -C src checkout $HEAD_SHA
       - >
@@ -536,11 +559,8 @@ detray_test_cuda:
   image: ghcr.io/acts-project/ubuntu2404_cuda:87
   needs:
     - detray_build_cuda
-  only:
-    changes:
-      - Detray/*
-      - .gitlab-ci.yml
   script:
+    - '[ "$TOUCHES_DETRAY" = "true" ] || { echo "Skipping because detray is not touched"; exit 0; }'
     - git clone $CLONE_URL src
     - git -C src checkout $HEAD_SHA
     - src/Detray/data/detray_data_get_files.sh
@@ -558,11 +578,11 @@ detray_build_sycl:
   artifacts:
     paths:
       - build
-  only:
-    changes:
-      - Detray/*
-      - .gitlab-ci.yml
+  needs:
+    - get_changeset
   script:
+      - mkdir build
+      - '[ "$TOUCHES_DETRAY" = "true" ] || { echo "Skipping because detray is not touched"; exit 0; }'
       - git clone $CLONE_URL src
       - git -C src checkout $HEAD_SHA
       - source src/Detray/CI/ci_setup.sh SYCL
@@ -581,11 +601,8 @@ detray_test_sycl:
     - detray_build_sycl
   variables:
     ONEAPI_DEVICE_SELECTOR: "*:cpu"
-  only:
-    changes:
-      - Detray/*
-      - .gitlab-ci.yml
   script:
+    - '[ "$TOUCHES_DETRAY" = "true" ] || { echo "Skipping because detray is not touched"; exit 0; }'
     - git clone $CLONE_URL src
     - git -C src checkout $HEAD_SHA
     - source src/Detray/CI/ci_setup.sh SYCL
@@ -614,7 +631,11 @@ detray_test_sycl:
   artifacts:
     paths:
       - build
+  needs:
+    - get_changeset
   script:
+    - mkdir build
+    - '[ "$TOUCHES_DETRAY" = "true" ] || [ "$TOUCHES_TRACCC" = "true" ] || [ "$TOUCHES_CORE" = "true" ] ||  { echo "Skipping because detray, traccc, and core are not touched"; exit 0; }'
     - SYCLFLAGS="${TRACCC_SYCL_FLAGS}" CXXFLAGS="${TRACCC_CXX_FLAGS}"
       cmake -G Ninja --preset ${TRACCC_BUILD_PRESET} -DFETCHCONTENT_SOURCE_DIR_ACTS=src/ -DTRACCC_SETUP_VECMEM=ON -DTRACCC_SETUP_COVFIE=ON -DACTS_SETUP_VECMEM=OFF -DACTS_SETUP_COVFIE=OFF -DDETRAY_SET_LOGGING=NONE -DCMAKE_BUILD_TYPE=Release -DTRACCC_BUILD_EXAMPLES=FALSE ${TRACCC_CMAKE_ARGS}
       -S src/Traccc -B build
@@ -625,6 +646,7 @@ detray_test_sycl:
   tags: [docker-gpu-nvidia]
   stage: test
   script:
+    - '[ "$TOUCHES_DETRAY" = "true" ] || [ "$TOUCHES_TRACCC" = "true" ] || [ "$TOUCHES_CORE" = "true" ] ||  { echo "Skipping because detray, traccc, and core are not touched"; exit 0; }'
     - nvidia-smi
     - ./src/Traccc/data/traccc_data_get_files.sh
     - ctest --output-on-failure --test-dir build/ -R "${TRACCC_BUILD_TYPE}"
@@ -634,6 +656,7 @@ detray_test_sycl:
   tags: [docker-gpu-nvidia]
   stage: test
   script:
+    - '[ "$TOUCHES_DETRAY" = "true" ] || [ "$TOUCHES_TRACCC" = "true" ] || [ "$TOUCHES_CORE" = "true" ] ||  { echo "Skipping because detray, traccc, and core are not touched"; exit 0; }'
     - ./src/Traccc/data/traccc_data_get_files.sh
     - ctest --output-on-failure --test-dir build/ -R "${TRACCC_BUILD_TYPE}"
 
