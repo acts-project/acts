@@ -36,8 +36,8 @@ ACTS_DEFINE_ENUM_BITWISE_OPERATORS(MaterialUpdateMode);
 /// @return Reference to output stream
 std::ostream& operator<<(std::ostream& os, MaterialUpdateMode mode);
 
-/// @enum NoiseUpdateMode to tell how to deal with noise term in covariance
-/// transport
+/// Steering enum to tell how to deal with the noise term in covariance
+/// transport:
 /// - removeNoise: subtract noise term
 /// - addNoise: add noise term
 enum class NoiseUpdateMode : int { removeNoise = -1, addNoise = 1 };
