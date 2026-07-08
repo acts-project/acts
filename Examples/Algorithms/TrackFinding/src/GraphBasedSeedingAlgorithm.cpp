@@ -113,7 +113,7 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   // update seed space point indices to original space point container
   for (auto seed : seeds) {
     for (auto &spIndex : seed.spacePointIndices()) {
-      spIndex = coreSpacePoints.at(spIndex).copyFromIndex();
+      spIndex = coreSpacePoints.at(spIndex).copiedFromIndex();
     }
   }
 
@@ -166,9 +166,9 @@ Acts::SpacePointContainer2 GraphBasedSeedingAlgorithm::makeSpContainer(
     const SpacePointContainer &spacePoints,
     std::map<ActsIDs, GbtsIDs> map) const {
   Acts::SpacePointContainer2 coreSpacePoints(
-      Acts::SpacePointColumns::X | Acts::SpacePointColumns::Y |
-      Acts::SpacePointColumns::Z | Acts::SpacePointColumns::R |
-      Acts::SpacePointColumns::Phi | Acts::SpacePointColumns::CopyFromIndex);
+      Acts::SpacePointColumns::CopiedFromIndex | Acts::SpacePointColumns::X |
+      Acts::SpacePointColumns::Y | Acts::SpacePointColumns::Z |
+      Acts::SpacePointColumns::R | Acts::SpacePointColumns::Phi);
 
   // add new column for layer ID and clusterwidth
   auto layerColomn = coreSpacePoints.createColumn<std::uint32_t>("layerId");
@@ -244,7 +244,7 @@ Acts::SpacePointContainer2 GraphBasedSeedingAlgorithm::makeSpContainer(
     newSp.z() = spacePoint.z();
     newSp.r() = spacePoint.r();
     newSp.phi() = std::atan2(spacePoint.y(), spacePoint.x());
-    newSp.copyFromIndex() = spacePoint.index();
+    newSp.copiedFromIndex() = spacePoint.index();
     newSp.extra(layerColomn) = std::get<2>(find->second);
     // false input as this is not available in examples
     newSp.extra(clusterWidthColomn) = 0;

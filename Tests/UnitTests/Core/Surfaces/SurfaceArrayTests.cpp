@@ -27,6 +27,7 @@
 #include <iostream>
 #include <memory>
 #include <numbers>
+#include <sstream>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -228,6 +229,30 @@ BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {
   BOOST_CHECK_EQUAL(binContent[0], srf.get());
   BOOST_CHECK_EQUAL(sa.surfaces().size(), 1u);
   BOOST_CHECK_EQUAL(sa.surfaces().at(0), srf.get());
+}
+
+BOOST_AUTO_TEST_CASE(SurfaceArrayToStreamPreservesStreamState) {
+  const auto bounds = std::make_shared<const RectangleBounds>(3., 4.);
+  auto surface =
+      Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
+  SurfaceArray surfaceArray(surface);
+
+  std::ostringstream stream;
+  stream << std::scientific << std::showpos << std::setfill('#')
+         << std::setprecision(3);
+  stream.width(17);
+
+  const auto flags = stream.flags();
+  const auto precision = stream.precision();
+  const auto width = stream.width();
+  const auto fill = stream.fill();
+
+  surfaceArray.toStream(tgContext, stream);
+
+  BOOST_CHECK(stream.flags() == flags);
+  BOOST_CHECK_EQUAL(stream.precision(), precision);
+  BOOST_CHECK_EQUAL(stream.width(), width);
+  BOOST_CHECK_EQUAL(stream.fill(), fill);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
