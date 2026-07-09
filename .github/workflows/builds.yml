@@ -23,10 +23,25 @@ env:
   ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
 
 jobs:
+  changeset:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - name: Discover changeset
+        id: changeset
+        run: >
+          CI/changeset.sh "${BASE_REF}" "${{ github.event.before }}" "${{ github.event.after }}"
+        env:
+          BASE_REF: ${{ github.base_ref }}
+
   linux_ubuntu:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    needs: [changeset]
     container: ghcr.io/acts-project/ubuntu2404:87
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
@@ -37,12 +52,6 @@ jobs:
         with:
           lfs: true
           persist-credentials: false
-
-      - name: Discover changeset
-        run: >
-          CI/changeset.sh "${BASE_REF}" "${{ github.event.before }}" "${{ github.event.after }}"
-        env:
-          BASE_REF: ${{ github.base_ref }}
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
@@ -136,7 +145,7 @@ jobs:
     permissions:
       contents: read
     container: ghcr.io/acts-project/ubuntu2404:87
-    needs: [linux_ubuntu]
+    needs: [changeset, linux_ubuntu]
     env:
       ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
 
@@ -178,7 +187,7 @@ jobs:
     permissions:
       contents: read
     container: ghcr.io/acts-project/ubuntu2404:87
-    needs: [linux_ubuntu]
+    needs: [changeset, linux_ubuntu]
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -223,7 +232,7 @@ jobs:
           path: physmon
 
   linux_physmon_perf_report:
-    needs: [linux_physmon]
+    needs: [changeset, linux_physmon]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -256,6 +265,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    needs: [changeset]
     strategy:
       matrix:
         include:
@@ -347,6 +357,7 @@ jobs:
     runs-on: macos-26
     permissions:
       contents: read
+    needs: [changeset]
     env:
       INSTALL_DIR: ${{ github.workspace }}/install_acts
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -438,6 +449,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    needs: [changeset]
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -559,6 +571,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    needs: [changeset]
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -641,7 +654,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-
+    needs: [changeset]
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
