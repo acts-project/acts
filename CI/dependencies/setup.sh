@@ -152,7 +152,14 @@ _spack_repo_directory="$(realpath "$(spack location --repo builtin)/../../../")"
 
 echo "Ensure builtin repo is synced to commit ${_spack_repo_version}"
 
-git config --global --add safe.directory "${_spack_repo_directory}"
+# -C /tmp: `git config --global` only touches ~/.gitconfig, but git still
+# does repository discovery from cwd before running any command. If cwd is
+# inside a linked git worktree whose .git pointer file references a gitdir
+# that doesn't exist here (e.g. this script's package dir was copied without
+# the worktree's main checkout, as cibuildwheel does), that discovery fails
+# with "fatal: not a git repository" even though this command needs no repo
+# at all. Anchor discovery to a directory that's never part of one instead.
+git -C /tmp config --global --add safe.directory "${_spack_repo_directory}"
 spack repo update builtin --commit "${_spack_repo_version}"
 checkpoint "Spack repository updated"
 
