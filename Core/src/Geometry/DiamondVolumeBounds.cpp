@@ -14,6 +14,13 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
+
+#include <cmath>
+#include <iomanip>
+#include <numbers>
+#include <stdexcept>
+#include <utility>
 
 namespace Acts {
 
@@ -210,8 +217,8 @@ void DiamondVolumeBounds::checkConsistency() noexcept(false) {
 }
 
 std::ostream& DiamondVolumeBounds::toStream(std::ostream& os) const {
-  os << std::setiosflags(std::ios::fixed);
-  os << std::setprecision(5);
+  detail::OstreamStateGuard guard{os};
+  os << std::fixed << std::setprecision(5);
   os << "DiamondVolumeBounds: (halfX1, halfX2, halfX3, halfY1, halfY2, "
         "halfZ) = ";
   os << "(" << get(eHalfLengthX1) << ", " << get(eHalfLengthX2) << ", "
