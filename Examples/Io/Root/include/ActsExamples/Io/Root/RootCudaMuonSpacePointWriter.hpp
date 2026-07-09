@@ -23,6 +23,8 @@ class TTree;
 
 namespace ActsExamples {
 
+/// @brief Root Writer into CudaMuonSpacePointContainer
+/// Analogous to RootMuonSpacePointWriter
 class RootCudaMuonSpacePointWriter
     : public WriterT<CudaMuonSpacePointContainer> {
  public:

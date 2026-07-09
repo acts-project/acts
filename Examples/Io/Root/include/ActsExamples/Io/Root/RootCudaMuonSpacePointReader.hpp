@@ -27,6 +27,8 @@
 
 namespace ActsExamples {
 
+/// @brief Root Reader into CudaMuonSpacePointContainer
+/// Analogous to RootMuonSpacePointReader
 class RootCudaMuonSpacePointReader : public IReader {
  public:
   struct Config {

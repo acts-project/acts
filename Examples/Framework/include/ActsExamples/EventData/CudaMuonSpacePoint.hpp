@@ -25,11 +25,11 @@
 
 namespace ActsExamples {
 
-/// Decode the detector layer from the raw MuonId representation.
+/// @brief Decode the detector layer from the raw MuonId representation, taken from MuonSpacePoint.
 ///
 /// This reproduces:
 ///
-///   m_layer = ((rawRep >> 17) & fourBit) + 1u;
+///   m_layer = ((rawRep >> 17) & fourBit);
 ///
 /// Bit layout relevant here:
 ///
@@ -37,22 +37,25 @@ namespace ActsExamples {
 ///
 /// Therefore:
 ///
-///   stored value 0 -> layer 1
-///   stored value 1 -> layer 2
+///   stored value 0 -> layer 0
+///   stored value 1 -> layer 1
 ///   ...
-///   stored value 15 -> layer 16
-__host__ __device__ inline std::uint8_t detLayer(
-    std::uint32_t rawRep) noexcept {
-  std::uint32_t fourBit = 0xFu;
-  return static_cast<std::uint8_t>(((rawRep >> 17u) & fourBit) + 1u);
+///   stored value 15 -> layer 15
+/// This function is used and we do not store layers to avoid repetition of memory storage
+///
+/// @param rawId -> Muon ID as given to MuonSpacePoint
+/// @return Layer number in range of 0..31
+__host__ __device__ inline unsigned detLayer(std::uint32_t rawId) noexcept {
+  static constexpr std::uint32_t fourBit = 0xFu;
+  static constexpr std::uint32_t layerShift = 17u;
+
+  return static_cast<unsigned>((rawId >> layerShift) & fourBit);
 }
 
-/// Device-side raw structure-of-arrays view.
+/// @brief Device-side raw structure-of-arrays view.
 ///
 /// This structure does not own memory. It only stores raw device pointers.
 /// CUDA kernels should receive this object by value.
-
-/// Structure of Arrays
 struct CudaMuonSpacePointArrays {
   Acts::GeometryIdentifier::Value* geometryId = nullptr;
   std::uint32_t* muonId = nullptr;
@@ -84,8 +87,7 @@ struct CudaMuonSpacePointArrays {
   std::uint32_t* bucketEnd = nullptr;
 };
 
-///
-/// This is the RAM copy of the data. The container copies this data to VRAM
+/// @brief This is the RAM copy of the data. The container copies this data to VRAM
 /// with moveToDevice() and copies it back with moveToHost().
 struct CudaMuonSpacePointHostData {
   std::vector<Acts::GeometryIdentifier::Value> geometryId;
@@ -120,10 +122,11 @@ struct CudaMuonSpacePointHostData {
 
 class CudaMuonSpacePointContainer;
 
-/// Host-side proxy representing one logical muon space point.
+/// @brief Host-side proxy representing one logical muon space point.
+/// As specified by CompositeSpacePoint concept.
 ///
 /// The proxy does not own data. It stores a pointer to the container and an
-/// index into the flat SoA columns.
+/// index into the flat SoA columns. 
 class CudaMuonSpacePointProxy {
  public:
   /// Empty default constructor.
@@ -187,7 +190,7 @@ class CudaMuonSpacePointProxy {
   mutable std::array<double, 3> m_covarianceCache{0.0, 0.0, 0.0};
 };
 
-/// Pointer-like wrapper required by CompositeSpacePointContainer.
+/// @brief Pointer-like wrapper required by CompositeSpacePointContainer.
 ///
 /// The ACTS CompositeSpacePointContainer concept expects value_type to be
 /// pointer-like. This class provides operator-> and operator* over the proxy.
@@ -219,7 +222,7 @@ class CudaMuonSpacePointPtr {
   bool m_valid = false;
 };
 
-/// CUDA-backed flat SoA container for muon space points.
+/// @brief CUDA-backed flat SoA container for muon space points.
 ///
 /// The old MuonSpacePointContainer is a jagged vector of buckets. This class
 /// keeps all space points in one flat SoA and stores bucket ranges separately.
@@ -247,62 +250,53 @@ class CudaMuonSpacePointContainer {
   /// @param size The number of flat space points.
   explicit CudaMuonSpacePointContainer(size_type size);
 
-  /// Copy constructor is deleted because the container owns pointer to CUDA
-  /// memory.
+  /// Deleted because the container owns CUDA device memory.
   CudaMuonSpacePointContainer(const CudaMuonSpacePointContainer&) = delete;
-
-  /// Copy assignment is deleted because the container owns pointer to CUDA
-  /// memory.
   CudaMuonSpacePointContainer& operator=(const CudaMuonSpacePointContainer&) =
       delete;
 
-  /// Move constructor.
-  /// @param other The container to move from.
+  /// Movable to transfer ownership of host/device storage.
   CudaMuonSpacePointContainer(CudaMuonSpacePointContainer&& other) noexcept;
-
-  /// Move assignment.
-  /// @param other The container to move from.
-  /// @return Reference to this container.
   CudaMuonSpacePointContainer& operator=(
       CudaMuonSpacePointContainer&& other) noexcept;
 
-  /// Destructor releases VRAM pointer.
+  /// @brief Destructor releases VRAM pointer.
   ~CudaMuonSpacePointContainer() noexcept;
 
-  /// Returns the number of flat space points.
+  /// @brief Returns the number of flat space points.
   size_type size() const noexcept { return m_size; }
 
-  /// Checks whether the container is empty.
+  /// @brief Checks whether the container is empty.
   bool empty() const noexcept { return size() == 0; }
 
-  /// Returns the number of buckets.
+  /// @brief Returns the number of buckets.
   size_type bucketCount() const noexcept { return m_host.bucketStart.size(); }
 
-  /// Returns the first space point index of a bucket.
+  /// @brief Returns the first space point index of a bucket.
   /// @param bucket The bucket index.
   size_type bucketStart(size_type bucket) const;
 
-  /// Returns the past-the-end space point index of a bucket.
+  /// @brief Returns the past-the-end space point index of a bucket.
   /// @param bucket The bucket index.
   size_type bucketEnd(size_type bucket) const;
 
-  /// Adds a bucket range.
+  /// @brief Adds a bucket range.
   /// @param start First space point index in the bucket.
   /// @param end Past-the-end space point index in the bucket.
   void addBucket(size_type start, size_type end);
 
-  /// Sets the geometry identifier.
+  /// @brief Sets the geometry identifier.
   /// @param index The space point index.
   /// @param geometryId The raw geometry identifier.
   void setGeometryId(size_type index,
                      Acts::GeometryIdentifier::Value geometryId);
 
-  /// Sets the muon identifier.
+  /// @brief Sets the muon identifier.
   /// @param index The space point index.
   /// @param muonId The raw muon identifier.
   void setId(size_type index, std::uint32_t muonId);
 
-  /// Defines the coordinate system and computes the plane normal.
+  /// @brief Defines the coordinate system and computes the plane normal.
   /// @param index The space point index.
   /// @param position The local position.
   /// @param sensorDirection The sensor direction.
@@ -311,73 +305,70 @@ class CudaMuonSpacePointContainer {
                          const Acts::Vector3& sensorDirection,
                          const Acts::Vector3& toNextSensor);
 
-  /// Sets the drift radius.
+  /// @brief Sets the drift radius.
   /// @param index The space point index.
   /// @param radius The drift radius.
   void setRadius(size_type index, double radius);
 
-  /// Sets the measurement time.
+  /// @brief Sets the measurement time.
   /// @param index The space point index.
   /// @param time The measurement time.
   void setTime(size_type index, double time);
 
-  /// Sets covariance values.
+  /// @brief Sets covariance values.
   /// @param index The space point index.
   /// @param cov0 First covariance component.
   /// @param cov1 Second covariance component.
   /// @param cov2 Time covariance component.
   void setCovariance(size_type index, double cov0, double cov1, double cov2);
 
-  /// Copies all host columns to device memory.
+  /// @brief Copies all host columns to device memory.
   void moveToDevice();
 
-  /// Copies all device columns back to host memory.
+  /// @brief Copies all device columns back to host memory.
   void moveToHost();
 
-  /// Releases all device memory.
+  /// @brief Releases all device memory.
   void clearDevice() noexcept;
 
-  /// Checks whether device memory is currently allocated.
+  /// @brief Checks whether device memory is currently allocated.
   bool isOnDevice() const noexcept { return m_onDevice; }
 
-  /// Returns raw device arrays for CUDA kernels.
+  /// @brief Returns raw device arrays for CUDA kernels.
   CudaMuonSpacePointArrays deviceArrays() const noexcept { return m_device; }
 
-  /// Returns a pointer-like proxy to a space point.
+  /// @brief Returns a pointer-like proxy to a space point.
   /// @param index The space point index.
   value_type operator[](size_type index) noexcept {
     return value_type{*this, index};
   }
 
-  /// Returns a const pointer-like proxy to a space point.
+  /// @brief Returns a const pointer-like proxy to a space point.
   /// @param index The space point index.
   value_type operator[](size_type index) const noexcept {
     return value_type{*this, index};
   }
 
-  /// Returns a checked pointer-like proxy to a space point.
-  /// @param index The space point index.
-  /// @throws std::out_of_range if the index is out of range.
   value_type at(size_type index) const;
 
-  /// Returns iterator to the first space point.
   iterator begin() noexcept { return {*this, 0}; }
 
-  /// Returns iterator past the last space point.
   iterator end() noexcept { return {*this, size()}; }
 
-  /// Returns const iterator to the first space point.
   const_iterator begin() const noexcept { return {*this, 0}; }
 
-  /// Returns const iterator past the last space point.
   const_iterator end() const noexcept { return {*this, size()}; }
 
+  // Returns raw muonId stored in space point
   std::uint32_t muonId(std::uint32_t idx) const noexcept {
     return m_host.muonId[idx];
   }
+
+  // Write zero based layer into MuonId
   void setLogicalLayer(size_type index, std::uint32_t layer);
 
  private:
+  /// Allow proxy to accesses private data
   friend class CudaMuonSpacePointProxy;
 
   size_type m_size = 0;
@@ -386,9 +377,9 @@ class CudaMuonSpacePointContainer {
   bool m_onDevice = false;
 
   void checkIndex(size_type index) const;
-  void checkBucket(size_type bucket) const;
-};
+  void checkBucket(size_type bucket) const; };
 
+/// Assert all concepts are fulfilled
 static_assert(Acts::Experimental::CompositeSpacePoint<CudaMuonSpacePointProxy>);
 static_assert(
     Acts::Experimental::CompositeSpacePointPtr<CudaMuonSpacePointPtr>);

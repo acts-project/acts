@@ -23,11 +23,15 @@
 namespace {
 
 using ActsExamples::CudaMuonSpacePointArrays;
+using ActsExamples::detLayer;
 using ActsExamples::CudaHoughTransformUtils::CudaHoughPlaneBatchArrays;
 using ActsExamples::CudaHoughTransformUtils::HoughAxisRanges;
 using ActsExamples::CudaHoughTransformUtils::LayerMask;
 using ActsExamples::CudaHoughTransformUtils::YieldType;
 
+/// @brief Check error status
+/// This is also implemented inside the Plugins/Gnn/include/ActsPlugins/Gnn/detail/CudaUtils.cuh
+/// However I keep it for now here as seperate, that one seems to be Gnn specific implmentation it should likely be moved to some other general CUDA utility in other PR and generalized with some other utilities.
 void cudaCheck(cudaError_t status) {
   if (status != cudaSuccess) {
     throw std::runtime_error(cudaGetErrorString(status));
@@ -72,27 +76,8 @@ void copyColumnToHost(std::vector<T>& hostColumn, const T* deviceColumn) {
                        hostColumn.size() * sizeof(T), cudaMemcpyDeviceToHost));
 }
 
-/// Decode the zero-based layer index from raw MuonId.
-__host__ __device__ inline unsigned layerIndexFromMuonId(std::uint32_t rawId) {
-  static constexpr std::uint32_t fourBit = 0xFu;
-  static constexpr std::uint32_t layerShift = 17u;
-
-  return static_cast<unsigned>((rawId >> layerShift) & fourBit);
-}
-
-LayerMask layerBitHost(unsigned layer) {
-#ifdef ACTS_ENABLE_CUDA_RUNTIME_CHECKS
-  if (layer >= 8u * sizeof(LayerMask)) {
-    throw std::out_of_range(
-        "CudaHoughPlaneBatch supports at most 64 logical layers");
-  }
-#endif
-
-  return LayerMask{1ull} << layer;
-}
-
-__device__ LayerMask layerBitDevice(unsigned layer) {
-
+/// Convert layer index into bit mask
+__device__ __host__ LayerMask layerBit(unsigned layer) {
 #ifdef ACTS_ENABLE_CUDA_RUNTIME_CHECKS
   if (layer >= 8u * sizeof(LayerMask)) {
     return LayerMask{0ull};
@@ -100,6 +85,11 @@ __device__ LayerMask layerBitDevice(unsigned layer) {
 #endif
 
   return LayerMask{1ull} << layer;
+}
+
+// Return true if bit is not already in oldMask
+__device__ bool notInMask(const LayerMask oldMask, const LayerMask bit) {
+  return (oldMask & bit) == LayerMask{0ull};
 }
 
 __device__ double binCenterDevice(double min, double max, unsigned nSteps,
@@ -121,7 +111,7 @@ __device__ void fillSharedBin(YieldType* sHits, YieldType* sLayers,
   atomicAdd(&sHits[localBin], weight);
 
   // For example for 2 get 0..0010
-  const LayerMask bit = layerBitDevice(layer);
+  const LayerMask bit = layerBit(layer);
 
 #ifdef ACTS_ENABLE_CUDA_RUNTIME_CHECKS
   // Out of range check
@@ -134,9 +124,8 @@ __device__ void fillSharedBin(YieldType* sHits, YieldType* sLayers,
   // atomic returns old value
   const LayerMask oldMask = atomicOr(&sMask[localBin], bit);
 
-  
-  // if layer bit was 0 & 1 then we know this if first time and we add layer number
-  if ((oldMask & bit) == LayerMask{0ull}) {
+  // if layer was not in layerMaks already then add number of layers
+  if (notInMask(oldMask, bit)) {
     atomicAdd(&sLayers[localBin], weight);
   }
 }
@@ -242,7 +231,7 @@ __global__ void fillEtaDriftCirclesMdtBatchKernel(
         width = maxWidth;
       }
 
-      const unsigned layer = layerIndexFromMuonId(spacePoints.muonId[hitIndex]);
+      const unsigned layer = detLayer(spacePoints.muonId[hitIndex]);
 
       fillSharedYBand(sHits, sLayers, sMask, batch, ranges, xBin, y0, width,
                       layer, weight);
@@ -395,7 +384,7 @@ void CudaHoughPlaneBatch::fillBin(size_type bucket, size_type xBin,
 
   m_hostHits[bin] += weight;
 
-  const LayerMask bit = layerBitHost(layer);
+  const LayerMask bit = layerBit(layer);
 
   if ((m_hostLayerMask[bin] & bit) == LayerMask{0ull}) {
     m_hostLayerMask[bin] |= bit;
@@ -428,7 +417,7 @@ void CudaHoughPlaneBatch::fillEtaDriftCirclesHost(
       const double cov = std::max(sp->covariance()[1], 0.0);
       const double width = std::min(std::sqrt(cov) * widthScale, maxWidth);
 
-      const unsigned layer = layerIndexFromMuonId(spacePoints.muonId(hitIndex));
+      const unsigned layer = detLayer(spacePoints.muonId(hitIndex));
 
       for (size_type xBin = 0; xBin < nBinsX(); ++xBin) {
         const double tanTheta = Acts::HoughTransformUtils::binCenter(

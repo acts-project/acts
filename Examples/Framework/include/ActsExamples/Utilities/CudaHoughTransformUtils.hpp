@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <vector>
+#include <utility>
 
 namespace ActsExamples::CudaHoughTransformUtils {
 
@@ -25,15 +26,24 @@ using CoordType = Acts::HoughTransformUtils::CoordType;
 using HoughPlaneConfig = Acts::HoughTransformUtils::HoughPlaneConfig;
 using HoughAxisRanges = Acts::HoughTransformUtils::HoughAxisRanges;
 
-/// Bit mask encoding which logical detector layers contributed to one Hough
+/// @brief Bit mask encoding which logical detector layers contributed to one Hough
 /// cell.
 ///
 /// One bit corresponds to one zero-based logical layer:
 ///
 ///   layer 0 -> bit 0 -> 00000001
+///   layer 1 -> bit 1 -> 00000010
 using LayerMask = unsigned long long;
 
-/// Non-owning device-side event-level batch of Hough planes.
+/// @brief Non-owning device-side event-level batch of Hough planes.
+/// 
+/// All arrays are flat 1D arrays. Buckets are stored one after another, and
+/// inside each bucket x changes fastest, then y:
+///
+///   [ b0(y0,x0) b0(y0,x1) ... b0(y1,x0) b0(y1,x1) ... | b1(y0,x0) b1(y0,x1) ... | b2(y0,x0) ... ]
+///
+/// Access:
+///   globalBin = bucket * nBinsX * nBinsY + yBin * nBinsX + xBin
 struct CudaHoughPlaneBatchArrays {
   /// Weighted hit contribution per bucket/cell.
   YieldType* nHits = nullptr;
@@ -44,16 +54,14 @@ struct CudaHoughPlaneBatchArrays {
   /// Bit mask of logical layers seen by each bucket/cell.
   LayerMask* layerMask = nullptr;
 
-  // nBinsX is in our case tanTheta
-  // nBinsY is y intercept
   // This is keept as X, Y to be complient with original HoughTransformUtils
   // and to later support generalization of this algorithm to also support phi
-  std::uint32_t nBuckets = 0;
-  std::uint32_t nBinsX = 0;
-  std::uint32_t nBinsY = 0;
+  std::uint32_t nBuckets = 0; 
+  std::uint32_t nBinsX = 0; // nBinsX is in our case tanTheta
+  std::uint32_t nBinsY = 0; // nBinsY is y intercept
 };
 
-/// Event-level CUDA Hough accumulator batch.
+/// @brief Event-level CUDA Hough accumulator batch.
 ///
 /// This class intentionally does not store per-cell hit identifiers. It stores:
 ///
@@ -61,7 +69,7 @@ struct CudaHoughPlaneBatchArrays {
 ///   nLayers[bucket, cell]
 ///   layerMask[bucket, cell]
 ///
-/// Hit association is done later after peak finding, since otherwise there
+/// Hit association will be done later after peak finding, since otherwise there
 /// would be need for large prealocation.
 class CudaHoughPlaneBatch {
  public:
@@ -69,9 +77,11 @@ class CudaHoughPlaneBatch {
 
   CudaHoughPlaneBatch(const HoughPlaneConfig& cfg, size_type nBuckets);
 
+  /// Device memory is owned, so no copy
   CudaHoughPlaneBatch(const CudaHoughPlaneBatch&) = delete;
   CudaHoughPlaneBatch& operator=(const CudaHoughPlaneBatch&) = delete;
 
+  // Move allowed
   CudaHoughPlaneBatch(CudaHoughPlaneBatch&& other) noexcept;
   CudaHoughPlaneBatch& operator=(CudaHoughPlaneBatch&& other) noexcept;
 
@@ -87,12 +97,12 @@ class CudaHoughPlaneBatch {
 
   bool empty() const noexcept { return totalCells() == 0; }
 
-  /// Row-major flat index inside the whole batch:
+  /// @brief Row-major flat index inside the whole batch:
   ///
   ///   globalBin = bucket * nCellsPerBucket + yBin * nBinsX + xBin
   size_type globalBin(size_type bucket, size_type xBin, size_type yBin) const;
 
-  /// Reverse mapping from global batch bin to {xBin, yBin}.
+  /// @brief Reverse mapping from global batch bin to {xBin, yBin}.
   std::pair<std::size_t, std::size_t> axisBins(size_type globalBin) const;
 
   /// CPU-side direct bin fill. Useful for vdalidation.
@@ -104,6 +114,10 @@ class CudaHoughPlaneBatch {
                                const HoughAxisRanges& axisRanges,
                                YieldType weight = 1.0f);
 
+  /// @brief CUDA fill for MDT eta drift-circle Hough accumulators.
+  /// Processes all buckets in the event. Each CUDA block processes one or more
+  /// buckets using a grid-stride loop over buckets. Within a bucket, threads
+  /// process hit x tanTheta-bin x left/right drift-circle solution tasks.
   void fillEtaDriftCirclesOnDevice(
       CudaMuonSpacePointContainer& spacePoints,
       const HoughAxisRanges& axisRanges,
@@ -117,19 +131,19 @@ class CudaHoughPlaneBatch {
   LayerMask layerMask(size_type bucket, size_type xBin, size_type yBin) const;
   bool hasLayer(size_type bucket, size_type xBin, size_type yBin,
                 unsigned layer) const;
-
   // Usefull for testing and in case of translation to original container type
   std::vector<unsigned> layers(size_type bucket, size_type xBin,
                                size_type yBin) const;
-
-  // Useful for testing
   YieldType maxHits(size_type bucket) const;
   YieldType maxLayers(size_type bucket) const;
   std::pair<std::size_t, std::size_t> locMaxHits(size_type bucket) const;
   std::pair<std::size_t, std::size_t> locMaxLayers(size_type bucket) const;
 
+  /// @brief Allocate device array and copy host accumulator to device.
   void moveToDevice();
+  /// @brief Copy device accumulator back to host.
   void moveToHost();
+  /// @brief Free device accumulator array
   void clearDevice() noexcept;
 
   bool isOnDevice() const noexcept { return m_onDevice; }
@@ -152,7 +166,6 @@ private:
     return bucket * nCellsPerBucket() + yBin * nBinsX() + xBin;
   }
 
-  // Get rid of those
   void checkBucket(size_type bucket) const;
   void checkIndices(size_type xBin, size_type yBin) const;
   void checkGlobalBin(size_type globalBin) const;

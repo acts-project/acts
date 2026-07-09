@@ -398,6 +398,7 @@ void CudaMuonSpacePointContainer::defineCoordinates(
   m_host.toNextSensorY[index] = toNextSensor.y();
   m_host.toNextSensorZ[index] = toNextSensor.z();
 
+  // CompositeSpacePoint expects the measurement plane normal
   const Acts::Vector3 planeNormal =
       sensorDirection.cross(toNextSensor).normalized();
 
@@ -466,6 +467,8 @@ void CudaMuonSpacePointContainer::checkBucket(size_type bucket) const {
   }
 }
 
+// The raw MuonId stores layer - 1 in bits 17..20. Here `layer` is already
+// zero-based because CUDA layer masks use layer 0 -> bit 0.
 void CudaMuonSpacePointContainer::setLogicalLayer(size_type index,
                                                   std::uint32_t layer) {
   checkIndex(index);
@@ -473,17 +476,6 @@ void CudaMuonSpacePointContainer::setLogicalLayer(size_type index,
   static constexpr std::uint32_t fourBit = 0xFu;
   static constexpr std::uint32_t layerShift = 17u;
 
-  // Here `layer` is zero-based:
-  //
-  //   layer = 0 -> stored raw MuonId layer bits = 0 -> MuonId::detLayer() = 1
-  //   layer = 1 -> stored raw MuonId layer bits = 1 -> MuonId::detLayer() = 2
-  //   ...
-  //   layer = 15 -> stored raw MuonId layer bits = 15 -> MuonId::detLayer() =
-  //   16
-  //
-  // This matches usage like:
-  //
-  //   container.setLogicalLayer(i, static_cast<std::uint32_t>(i));
   if (layer > fourBit) {
     throw std::out_of_range(
         "CudaMuonSpacePointContainer logical layer out of range");
