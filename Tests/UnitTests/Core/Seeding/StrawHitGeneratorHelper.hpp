@@ -507,6 +507,10 @@ class SpSorter {
     return 15._mm;
   }
 
+  bool goodForSeeding(const Vector3& /*pos*/, const Vector3& /* dir*/) const {
+    return true;
+  }
+
  private:
   const SpCalibrator* m_calibrator{nullptr};
   std::vector<Container_t> m_straws{};
@@ -514,6 +518,8 @@ class SpSorter {
 };
 
 static_assert(CompositeSpacePointSorter<SpSorter, Container_t>);
+static_assert(CompositeSpacePointSeedSelector<SpSorter>);
+static_assert(CompSpacePointSeederDelegate<SpSorter, Container_t, Container_t>);
 
 /// @brief Generates a random straight line
 /// @param engine Random number sequence to draw the parameters from
