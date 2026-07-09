@@ -25,10 +25,13 @@ env:
 jobs:
   changeset:
     runs-on: ubuntu-latest
+    outputs:
+      touches_core: ${{ steps.changeset.outputs.touches_core }}
+      touches_examples: ${{ steps.changeset.outputs.touches_examples }}
+      touches_infra: ${{ steps.changeset.outputs.touches_infra }}
+      touches_detray: ${{ steps.changeset.outputs.touches_detray }}
     permissions:
       contents: read
-    outputs:
-      backend: ${{ steps.filter.outputs.backend }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
@@ -40,6 +43,8 @@ jobs:
         run: |
           ${GITHUB_WORKSPACE}/CI/changeset.sh "${BASE_REF}" "${{ github.event.before }}" "${{ github.event.after }}" ${GITHUB_WORKSPACE}/.changeset.txt
           cat ${GITHUB_WORKSPACE}/.changeset.txt
+          source ${GITHUB_WORKSPACE}/CI/set_changeset_output.sh
+          echo $GITHUB_OUTPUT
         env:
           BASE_REF: ${{ github.base_ref }}
 
@@ -194,6 +199,7 @@ jobs:
       contents: read
     container: ghcr.io/acts-project/ubuntu2404:87
     needs: [changeset, linux_ubuntu]
+    if: needs.changeset.outputs.touches_core == 'true'
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
