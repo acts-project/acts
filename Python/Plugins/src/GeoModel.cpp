@@ -148,11 +148,11 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGeoModel, gm) {
     auto convVol = py::class_<GeoModelDetectorObjectFactory::ConvertedGeoVol>(
         a, "ConvertedGeoVol");
 
-    ACTS_PYTHON_STRUCT(convVol, volume, fullPhysVol, name, surfaces);
+    ACTS_PYTHON_STRUCT(convVol, volume, fullPhysVol, surfaces);
     py::class_<GeoModelDetectorObjectFactory::Cache>(a, "Cache")
         .def(py::init<>())
-        .def_readwrite("sensitiveSurfaces",
-                       &GeoModelDetectorObjectFactory::Cache::sensitiveSurfaces)
+        //.def_readwrite("sensitiveSurfaces",
+        //               &GeoModelDetectorObjectFactory::Cache::sensitiveSurfaces)
         .def_readwrite("boundingBoxes",
                        &GeoModelDetectorObjectFactory::Cache::volumeBoxFPVs);
 

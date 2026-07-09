@@ -165,19 +165,7 @@ void GeoModelDetectorObjectFactory::convertFpv(
                                  *cache.volumeBoundFactory),
         name);
 
-    // Set the corresponding database entry name to all sensitive surfaces
-    static_assert(Acts::isVariantCompatible<
-                  Acts::TrackingVolume::PlacementOwnPtr,
-                  std::shared_ptr<ActsPlugins::GeoModelDetectorElement>>);
-
-    static_assert(Acts::isVariantCompatible<
-                  Acts::TrackingVolume::PlacementOwnPtr,
-                  std::shared_ptr<const ActsPlugins::GeoModelDetectorElement>>);
-    static_assert(Acts::isVariantCompatible<
-                  Acts::TrackingVolume::PlacementOwnPtr,
-                  const std::shared_ptr<ActsPlugins::GeoModelDetectorElement>>);
-
-    for (auto [detEl, surface] : sensitives) {
+    for (auto &[detEl, surface] : sensitives) {
       detEl->setDatabaseEntryName(name);
       ACTS_VERBOSE("Set database name of the DetectorElement to "
                    << detEl->databaseEntryName());

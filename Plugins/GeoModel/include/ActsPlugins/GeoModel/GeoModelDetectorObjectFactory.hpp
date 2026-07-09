@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/Volume.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
@@ -47,8 +47,7 @@ class GeoModelDetectorObjectFactory {
   /// abrivation of the smart pointer to a full physical volume
   using FpvConstLink = GeoModelTree::FpvConstLink;
   /// Struct containing the link to the full physical volume
-  /// that is converted into a tracking volume, the tracking
-  /// volume and the associated surfaces.
+  /// that is converted into a tracking volume, and the associated surfaces.
   struct ConvertedGeoVol {
     /// Pointer to the tracking volume built
     std::unique_ptr<Acts::TrackingVolume> volume{};
