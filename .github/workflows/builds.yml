@@ -37,7 +37,7 @@ jobs:
       - name: Discover changeset
         id: changeset
         run: >
-          ${GITHUB_WORKSPACE}/CI/changeset.sh "${BASE_REF}" "${{ github.event.before }}" "${{ github.event.after }}"
+          ${GITHUB_WORKSPACE}/CI/changeset.sh "${BASE_REF}" "${{ github.event.before }}" "${{ github.event.after }}" ${GITHUB_WORKSPACE}/.changeset.txt
         env:
           BASE_REF: ${{ github.base_ref }}
 
