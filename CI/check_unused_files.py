@@ -54,7 +54,6 @@ EXCLUDE_FILES = (
     # TODO Add README next to the following files?
     "generic-input-config.json",
     "generic-alignment-geo.json",
-    "odd-digi-smearing-config-notime.json",
     # TODO Mention these files somewhere?
     "codegen/src/codegen/sympy_common.py",
     "codegen/src/codegen/detray_backend.py",

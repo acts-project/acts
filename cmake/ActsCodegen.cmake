@@ -220,6 +220,11 @@ function(acts_code_generation)
             ${ARGS_ADD_TO_TARGET}
             INTERFACE $<BUILD_INTERFACE:${_codegen_root}>
         )
+
+        # Use the CMake 3.19 functionality of attaching private sources to
+        # interface targets to create an explicit dependency between the target
+        # and the output file.
+        target_sources(${ARGS_ADD_TO_TARGET} PRIVATE ${_output_file})
     else()
         target_include_directories(
             ${ARGS_ADD_TO_TARGET}
