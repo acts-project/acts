@@ -567,8 +567,8 @@ class TrackingVolume : public Volume {
   /// with the volume
   /// @param placement: Pointer to the placement to be managed by the
   ///                   tracking volume
-  template <isVariantCompatible<PlacementOwnPtr> Obj_t>
-  void retainPlacement(Obj_t placement) {
+  template <typename Obj_t>
+  void retainPlacement(Obj_t placement) requires (isVariantCompatible<PlacementOwnPtr, Obj_t>) {
     placementCache().emplace_back(std::move(placement));
   }
   /// Convenience method to pass a container of (Volume / Surface)
