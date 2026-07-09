@@ -9,7 +9,6 @@ on:
       - 'develop/**'
     paths-ignore:
       - "docs/**"
-      - "Detray/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -38,6 +37,12 @@ jobs:
         with:
           lfs: true
           persist-credentials: false
+
+      - name: Discover changeset
+        run: >
+          CI/changeset.sh "${BASE_REF}" "${{ github.event.before }}" "${{ github.event.after }}"
+        env:
+          BASE_REF: ${{ github.base_ref }}
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
