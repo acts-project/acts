@@ -153,8 +153,11 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGeoModel, gm) {
         .def(py::init<>())
         //.def_readwrite("sensitiveSurfaces",
         //               &GeoModelDetectorObjectFactory::Cache::sensitiveSurfaces)
-        .def_readwrite("boundingBoxes",
-                       &GeoModelDetectorObjectFactory::Cache::volumeBoxFPVs);
+        //.def_read("boundingBoxes",
+        //               &GeoModelDetectorObjectFactory::Cache::volumeBoxFPVs)
+        //
+
+        ;
 
     py::class_<GeoModelDetectorObjectFactory::Options>(a, "Options")
         .def(py::init<>())

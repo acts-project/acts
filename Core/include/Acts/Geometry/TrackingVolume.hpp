@@ -581,8 +581,10 @@ class TrackingVolume : public Volume {
     m_placements.insert(m_placements.end(),
                         std::make_move_iterator(placements.begin()),
                         std::make_move_iterator(placements.end()));
-    placements.clear();
   }
+
+  /// Returns the view on all the placements owned by the tracking volume
+  std::span<const PlacementOwnPtr> ownedPlacements() const;
 
  private:
   void connectDenseBoundarySurfaces(

@@ -348,15 +348,13 @@ GeoModelMuonMockupBuilder::buildChildChamber(
     trVol = mdtBuilder.buildVolume();
 
   } else {
-    trVol = std::make_unique<Acts::TrackingVolume>(*box.volume, box.name);
+    trVol = std::move(box.volume);
 
     // add the sensitives in the constructed tracking volume
-    for (const auto& detEl : box.surfaces) {
-      trVol->addSurface(detEl->surface().getSharedPtr());
+    for (const auto& surface : box.surfaces) {
+      trVol->addSurface(surface);
     }
   }
-  trVol->retainPlacements(box.surfaces);
-
   return trVol;
 }
 template <Acts::VolumeBounds::BoundsType VolBounds_t>

@@ -569,6 +569,11 @@ TrackingVolume& TrackingVolume::addVolume(
   m_volumes.push_back(std::move(volume));
   return *m_volumes.back();
 }
+
+std::span<const TrackingVolume::PlacementOwnPtr> TrackingVolume::ownedPlacements() const {
+  return m_placements;
+}
+
 TrackingVolume::PortalRange TrackingVolume::portals() const {
   return PortalRange{m_portals};
 }
