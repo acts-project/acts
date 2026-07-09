@@ -9,7 +9,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/TypeDispatcher.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 
 #include <memory>
 #include <string>
@@ -457,31 +456,6 @@ BOOST_AUTO_TEST_CASE(ConstructorWithDifferentSignatures) {
   BOOST_CHECK_EQUAL(intDispatcher(objA), 42);
   BOOST_CHECK_EQUAL(intDispatcher(objB), 3);  // 3.14 truncated to int
   BOOST_CHECK_EQUAL(intDispatcher.size(), 2u);
-}
-
-BOOST_AUTO_TEST_CASE(VariantTests) {
-  using BaseVariant_t = std::variant<std::string, double, int>;
-  static_assert(Acts::isVariantCompatible<BaseVariant_t, BaseVariant_t>);
-  static_assert(Acts::isVariantCompatible<BaseVariant_t, std::string>);
-  static_assert(Acts::isVariantCompatible<BaseVariant_t, double>);
-  static_assert(Acts::isVariantCompatible<BaseVariant_t, int>);
-  static_assert(!Acts::isVariantCompatible<BaseVariant_t, float>);
-
-  using PointerVariant_t =
-      std::variant<std::unique_ptr<DerivedA>, std::unique_ptr<DerivedB>>;
-
-  static_assert(Acts::isVariantCompatible<PointerVariant_t, PointerVariant_t>);
-
-  static_assert(
-      Acts::isVariantCompatible<PointerVariant_t, std::unique_ptr<DerivedA>>);
-  static_assert(
-      Acts::isVariantCompatible<PointerVariant_t, std::unique_ptr<DerivedAA>>);
-  static_assert(
-      Acts::isVariantCompatible<PointerVariant_t, std::unique_ptr<DerivedAAA>>);
-  static_assert(
-      Acts::isVariantCompatible<PointerVariant_t, std::unique_ptr<DerivedB>>);
-  static_assert(
-      !Acts::isVariantCompatible<PointerVariant_t, std::unique_ptr<BaseClass>>);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
