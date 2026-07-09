@@ -14,15 +14,14 @@
 namespace Acts {
 
 /// The Pointer concept is an extension of the usual std::is_pointer_v type
-/// trait to
-///         also include the smart pointers like
+/// trait to also include the smart pointers like
 ///     std::shared_ptr<T>,
 ///     std::unique_ptr<T>
-///  The smart pointer is required to have an element_type typedef indicating
+/// The smart pointer is required to have an element_type typedef indicating
 /// over which data type the pointer is constructed, the arrow operator
 ///
 ///      T* operator->() const;
-///  and also the dereference operator
+/// and also the dereference operator
 ///
 ///      T& operator*() const
 template <typename Pointer_t>
@@ -41,9 +40,8 @@ template <typename Pointer_t>
 concept PointerConcept =
     (std::is_pointer_v<Pointer_t> || SmartPointerConcept<Pointer_t>);
 /// Introduce the Acts version of the pointer remove type trait because we want
-/// to
-///        fetch the underlying type for the pointer concept and std::library
-///        does not allow for an extension of the std::remove_pointer;
+/// to fetch the underlying type for the pointer concept and std::library does
+/// not allow for an extension of the std::remove_pointer;
 template <typename T>
 struct RemovePointer {
   /// Type alias for the original type (non-pointer case)
@@ -51,7 +49,7 @@ struct RemovePointer {
 };
 
 /// This specialization allows std::remove_pointer to work with types satisfying
-///         Acts::SmartPointerConcept, similar to how it works with raw pointers
+/// Acts::SmartPointerConcept, similar to how it works with raw pointers
 template <SmartPointerConcept T>
 struct RemovePointer<T> {
   /// Type alias for the element type pointed to by smart pointer
