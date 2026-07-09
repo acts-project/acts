@@ -37,7 +37,7 @@ Transform3 volumePosInSpace(const PVConstLink& physVol) {
       fullPhys != nullptr) {
     return fullPhys->getAbsoluteTransform();
   }
-  /// @brief GeoNodePositioning is the class which handles
+  /// GeoNodePositioning is the class which handles
   ///        the absolute placement of a GeoVPhysVol. Its constructor
   ///        is protected though -> create helper class to make it public
   class GeoVolumePositioner : public GeoNodePositioning {
@@ -49,7 +49,7 @@ Transform3 volumePosInSpace(const PVConstLink& physVol) {
   GeoVolumePositioner positioner{physVol};
   return positioner.getAbsoluteTransform();
 }
-std::shared_ptr<Volume> convertVolume(const Transform3& trf,
+std::unique_ptr<Volume> convertVolume(const Transform3& trf,
                                       const GeoShape* shape,
                                       VolumeBoundFactory& boundFactory) {
   assert(shape);
@@ -130,7 +130,7 @@ std::shared_ptr<Volume> convertVolume(const Transform3& trf,
   } else {
     throw std::runtime_error("Cannot convert " + printGeoShape(shape));
   }
-  return std::make_shared<Volume>(newTrf, bounds);
+  return std::make_unique<Volume>(newTrf, bounds);
 }
 
 }  // namespace ActsPlugins::GeoModel
