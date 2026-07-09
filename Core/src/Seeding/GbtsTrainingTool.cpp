@@ -11,7 +11,6 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
-#include <set>
 #include <stdexcept>
 #include <string>
 
@@ -22,54 +21,27 @@ GbtsLayerConnectionTool::LayerDescription::LayerDescription(
     : minR(minR_), maxR(maxR_), minZ(minZ_), maxZ(maxZ_), gbtsId(gbtsId_) {}
 
 GbtsLayerConnectionTool::GbtsLayerConnectionTool(
-    Config config, const std::string& geometryInformation,
-    std::unique_ptr<const Acts::Logger> logger)
+    Config& config, std::unique_ptr<const Logger> logger)
     : m_cfg(config), m_logger(std::move(logger)) {
-  std::ifstream inStream(geometryInformation.c_str());
-
-  if (!inStream) {
+  if (m_cfg.detectorGeometry.empty()) {
     throw std::runtime_error("File does not exist or could not be opened");
   }
 
-  // define how many lines there are for reserving
-  std::uint32_t lines{};
-  std::string line{};
-  while (std::getline(inStream, line)) {
-    lines++;
-  }
-  inStream.clear();
-  inStream.seekg(0);
-
   // reserves
-  m_detectorGeometry.reserve(lines);
-  m_layerPairs.reserve(lines * (lines - 1));
-
-  // create geometry objects
-  float minR{};
-  float maxR{};
-
-  float minZ{};
-  float maxZ{};
-
-  std::int32_t gbtsId{};
-
-  for (std::uint32_t l = 0; l < lines; l++) {
-    inStream >> minR >> maxR >> minZ >> maxZ >> gbtsId;
-
-    m_detectorGeometry.emplace_back(minR, maxR, minZ, maxZ, gbtsId);
-  }
+  const std::uint32_t pairReserve = m_cfg.detectorGeometry.size();
+  m_layerPairs.reserve(pairReserve * (pairReserve - 1));
 
   // create map linked pairs of GBTS ids with number of transitions between
   // layers
-  for (std::uint32_t i = 0; i < m_detectorGeometry.size(); i++) {
-    for (std::uint32_t j = 0; j < m_detectorGeometry.size(); j++) {
+  for (std::uint32_t i = 0; i < m_cfg.detectorGeometry.size(); i++) {
+    for (std::uint32_t j = 0; j < m_cfg.detectorGeometry.size(); j++) {
       if (i == j) {
         continue;
       }
 
       LayerIdPair pair;
-      pair.first = m_detectorGeometry[i].gbtsId;
-      pair.second = m_detectorGeometry[j].gbtsId;
+      pair.first = m_cfg.detectorGeometry[i].gbtsId;
+      pair.second = m_cfg.detectorGeometry[j].gbtsId;
 
       // key = GBTS ids of pair, value = number of transitions
       m_layerPairs.emplace(pair, 0);
@@ -78,7 +50,7 @@ GbtsLayerConnectionTool::GbtsLayerConnectionTool(
 }
 
 void GbtsLayerConnectionTool::addTrack(
-    const std::vector<TrackCoordinates>& track) {
+    const std::vector<HitCoordinates>& track) {
   if (track.size() < 2) {
     ACTS_WARNING("Track only has one measurement, skipping");
     return;
@@ -147,17 +119,18 @@ void GbtsLayerConnectionTool::createConnectionTable(
   // obtain total incoming transitions for each src layer (used as denominator
   // of probability)
   std::vector<std::uint32_t> srcTotals;
-  srcTotals.resize(m_detectorGeometry.size(), 0);
+  srcTotals.resize(m_cfg.detectorGeometry.size(), 0);
 
-  for (const auto& [indexes, nTransitions] : m_layerPairs) {
-    std::uint32_t layerIndex = getIndexByGbtsId(indexes.first);
+  for (const auto& [layerPair, nTransitions] : m_layerPairs) {
+    std::uint32_t layerIndex = getIndexByGbtsId(layerPair.first);
     srcTotals[layerIndex] += nTransitions;
   }
 
   // find transitions that pass probability cut and add to temp container
-  std::set<LayerIdPair> tempPairs;
-  for (const auto& [indexes, nTransitions] : m_layerPairs) {
-    const std::uint32_t srcIndex = getIndexByGbtsId(indexes.first);
+  std::ofstream outputMap("map_output.txt");
+  LayerIdPairs tempPairs;
+  for (const auto& [layerPair, nTransitions] : m_layerPairs) {
+    const std::uint32_t srcIndex = getIndexByGbtsId(layerPair.first);
 
     float probability{};
 
@@ -167,22 +140,24 @@ void GbtsLayerConnectionTool::createConnectionTable(
     } else {
       probability = static_cast<float>(nTransitions) / srcTotals[srcIndex];
     }
-
+    outputMap << "src: " << layerPair.first << " dst: " << layerPair.second
+              << " Transitions: " << nTransitions
+              << " probability: " << probability << "\n";
     const bool passCut = (m_cfg.probThreshold == -1)
                              ? (probability != 0)
                              : (probability >= m_cfg.probThreshold);
 
     if (passCut) {
-      tempPairs.emplace(indexes.first, indexes.second);
+      tempPairs.emplace(layerPair.first, layerPair.second);
     }
   }
 
   // if symmetrizing connection table, add transitions that mirror found ones
   if (m_cfg.doSymmetrization) {
-    for (const auto& pair : tempPairs) {
+    for (const auto& layerPair : tempPairs) {
       // find swapped ids
-      const auto srcSwappedId = oppositeSideLayer(pair.first);
-      const auto dstSwappedId = oppositeSideLayer(pair.second);
+      const auto srcSwappedId = oppositeSideLayer(layerPair.first);
+      const auto dstSwappedId = oppositeSideLayer(layerPair.second);
 
       if (!srcSwappedId || !dstSwappedId) {
         ACTS_WARNING("Cannot find oppisite side layer, skipping");
@@ -204,16 +179,16 @@ void GbtsLayerConnectionTool::createConnectionTable(
     oldStyleFormatting(outputFileLocation, tempPairs);
   } else {
     outputFile << tempPairs.size() << "\n";
-    for (const auto& pair : tempPairs) {
+    for (const auto& layerPair : tempPairs) {
       // swap order as we want outward -> inward ordering
-      outputFile << pair.second << " " << pair.first << "\n";
+      outputFile << layerPair.second << " " << layerPair.first << "\n";
     }
   }
 }
 
 std::optional<std::int32_t> GbtsLayerConnectionTool::findGbtsIdByCoord(
     const float r, const float z) const {
-  for (const auto& layer : m_detectorGeometry) {
+  for (const auto& layer : m_cfg.detectorGeometry) {
     const float zMin = layer.minZ - m_cfg.zMinTol;
     const float zMax = layer.maxZ + m_cfg.zMaxTol;
     const float rMin = layer.minR - m_cfg.rMinTol;
@@ -231,8 +206,8 @@ std::optional<std::int32_t> GbtsLayerConnectionTool::findGbtsIdByCoord(
 
 std::uint32_t GbtsLayerConnectionTool::getIndexByGbtsId(
     std::int32_t gbtsId) const {
-  for (std::uint32_t idx = 0; idx < m_detectorGeometry.size(); idx++) {
-    if (gbtsId == m_detectorGeometry[idx].gbtsId) {
+  for (std::uint32_t idx = 0; idx < m_cfg.detectorGeometry.size(); idx++) {
+    if (gbtsId == m_cfg.detectorGeometry[idx].gbtsId) {
       return idx;
     }
   }
@@ -244,7 +219,7 @@ std::optional<std::int32_t> GbtsLayerConnectionTool::oppositeSideLayer(
     std::int32_t layerId) const {
   const std::uint32_t layerIndex = getIndexByGbtsId(layerId);
 
-  const auto& layer = m_detectorGeometry[layerIndex];
+  const auto& layer = m_cfg.detectorGeometry[layerIndex];
 
   bool switchedMinZ{};
   bool switchedMaxZ{};
@@ -252,7 +227,7 @@ std::optional<std::int32_t> GbtsLayerConnectionTool::oppositeSideLayer(
   bool sameMaxR{};
   bool sameMinR{};
 
-  for (const auto& switchedLayer : m_detectorGeometry) {
+  for (const auto& switchedLayer : m_cfg.detectorGeometry) {
     switchedMinZ = (switchedLayer.minZ == -layer.maxZ);
     switchedMaxZ = (switchedLayer.maxZ == -layer.minZ);
 
@@ -269,13 +244,13 @@ std::optional<std::int32_t> GbtsLayerConnectionTool::oppositeSideLayer(
 
 void GbtsLayerConnectionTool::oldStyleFormatting(
     const std::string& outputFileLocations,
-    const std::set<LayerIdPair>& tempTable) const {
+    const LayerIdPairs& tempTable) const {
   std::ofstream outputFile(outputFileLocations);
 
   outputFile << tempTable.size() << " " << 0.2 << "\n";
-  for (const auto& pair : tempTable) {
-    outputFile << 0 << " " << 1 << " " << pair.second << " " << pair.first
-               << " " << 1 << " " << 1 << " " << 100 << "\n";
+  for (const auto& layerPair : tempTable) {
+    outputFile << 0 << " " << 1 << " " << layerPair.second << " "
+               << layerPair.first << " " << 1 << " " << 1 << " " << 100 << "\n";
 
     outputFile << 100 << "\n";
   }

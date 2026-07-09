@@ -11,11 +11,50 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
+#include <fstream>
 #include <ostream>
 #include <stdexcept>
 #include <utility>
 
 namespace ActsExamples {
+
+static void geometryParser(
+    const std::string& geometryInformation,
+    std::vector<Acts::Experimental::GbtsLayerConnectionTool::LayerDescription>&
+        detectorGeometry) {
+  std::ifstream inStream(geometryInformation.c_str());
+
+  if (!inStream) {
+    throw std::runtime_error("File does not exist or could not be opened");
+  }
+
+  // define how many lines there are for reserving
+  std::uint32_t lines{};
+  std::string line{};
+  while (std::getline(inStream, line)) {
+    lines++;
+  }
+  inStream.clear();
+  inStream.seekg(0);
+
+  // reserves
+  detectorGeometry.reserve(lines);
+
+  // create geometry objects
+  float minR{};
+  float maxR{};
+
+  float minZ{};
+  float maxZ{};
+
+  std::int32_t gbtsId{};
+
+  for (std::uint32_t l = 0; l < lines; l++) {
+    inStream >> minR >> maxR >> minZ >> maxZ >> gbtsId;
+
+    detectorGeometry.emplace_back(minR, maxR, minZ, maxZ, gbtsId);
+  }
+}
 
 GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
     const Config& config, std::unique_ptr<const Acts::Logger> inputLogger)
@@ -47,8 +86,11 @@ GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
 
   ACTS_INFO("LayerConnectionTool chosen");
 
+  geometryParser(m_cfg.geometryFileDir,
+                 m_cfg.gbtsLayerConnectionToolConfig.detectorGeometry);
+
   m_layerConnectionTool.emplace(
-      m_cfg.gbtsLayerConnectionToolConfig, config.geometryFileDir,
+      m_cfg.gbtsLayerConnectionToolConfig,
       this->logger().cloneWithSuffix("GbtsLayerConnectionTool"));
 }
 
@@ -75,7 +117,7 @@ ProcessCode GbtsTrainingAlgorithm::execute(const AlgorithmContext& ctx) const {
                  << " measurements for particle " << particle);
 
     std::vector<double> hitTimes;
-    std::vector<Acts::Experimental::GbtsLayerConnectionTool::TrackCoordinates>
+    std::vector<Acts::Experimental::GbtsLayerConnectionTool::HitCoordinates>
         hitCoords;
 
     hitTimes.reserve(measurements.size());
@@ -121,7 +163,7 @@ ProcessCode GbtsTrainingAlgorithm::execute(const AlgorithmContext& ctx) const {
       return hitTimes[a] < hitTimes[b];
     });
 
-    std::vector<Acts::Experimental::GbtsLayerConnectionTool::TrackCoordinates>
+    std::vector<Acts::Experimental::GbtsLayerConnectionTool::HitCoordinates>
         coords;
 
     coords.reserve(hitCoords.size());
