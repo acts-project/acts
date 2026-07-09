@@ -72,8 +72,10 @@ class StaticBlueprintNode : public BlueprintNode {
   ///               VolumePlacement base class
   /// @param placement Pointer to the placement to be managed by the
   ///                   tracking volume
-  template <isVariantCompatible<TrackingVolume::PlacementOwnPtr> Obj_t>
-  void retainPlacement(Obj_t placement) {
+  template <typename Obj_t>
+  void retainPlacement(Obj_t placement)
+    requires(std::is_constructible_v<TrackingVolume::PlacementOwnPtr, Obj_t>)
+  {
     m_placements.emplace_back(std::move(placement));
   }
 

@@ -571,16 +571,17 @@ class TrackingVolume : public Volume {
   void retainPlacement(Obj_t placement)
     requires(std::is_constructible_v<PlacementOwnPtr, Obj_t>)
   {
-    placementCache().emplace_back(std::move(placement));
+    m_placements.emplace_back(std::move(placement));
   }
   /// Convenience method to pass a container of (Volume / Surface)
   /// placements to the tracking volume to retain ownership
   /// @param placements: Container of volume placements to be hold
   template <std::ranges::input_range Range>
   void retainPlacements(Range&& placements) {
-    for (auto&& obj : placements) {
-      retainPlacement(std::move(obj));
-    }
+    m_placements.insert(m_placements.end(),
+                        std::make_move_iterator(placements.begin()),
+                        std::make_move_iterator(placements.end()));
+    placements.clear();
   }
 
  private:
@@ -598,10 +599,6 @@ class TrackingVolume : public Volume {
   ///
   /// @param envelope is the clearance between volume boundary and layer
   void synchronizeLayers(double envelope = 1.) const;
-
-  /// Return the garbage container into which the placements are pushed. If the
-  /// volume does not have a mother it's the volume itself otherwise the mother
-  std::vector<PlacementOwnPtr>& placementCache();
 
   // the boundary surfaces
   std::vector<TrackingVolumeBoundaryPtr> m_boundarySurfaces;

@@ -226,7 +226,6 @@ TrackingGeometry::TrackingGeometry(
     apply(visitor);
   }
 
-  m_placements = std::move(highestVolume->m_placements);
   GeometryIdMapVisitor mapVisitor{logger};
   apply(mapVisitor);
   m_volumesById = std::move(mapVisitor.m_volumesById);
