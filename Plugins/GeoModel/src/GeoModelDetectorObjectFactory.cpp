@@ -12,7 +12,6 @@
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "ActsPlugins/GeoModel/GeoModelConverters.hpp"
 #include "ActsPlugins/GeoModel/IGeoShapeConverter.hpp"
@@ -135,44 +134,51 @@ bool GeoModelDetectorObjectFactory::convertBox(const std::string &name) const {
 void GeoModelDetectorObjectFactory::convertFpv(
     const std::string &name, const FpvConstLink &fpv, Cache &cache,
     const GeometryContext & /*gctx*/) {
-  /** Search all subvolumes that may be converted to sensitive surfaces */
-  std::vector<GeoChildNodeWithTrf> subVolToTrf = findAllSubVolumes(fpv);
+  const std::size_t prevSize = cache.sensitiveSurfaces.size();
+  {
+    /** Search all subvolumes that may be converted to sensitive surfaces */
+    std::vector<GeoChildNodeWithTrf> subVolToTrf = findAllSubVolumes(fpv);
 
-  std::vector<GeoModelSensitiveSurface> sensitives{};
-  sensitives.reserve(subVolToTrf.size());
+    std::vector<GeoModelSensitiveSurface> sensitives;
+    sensitives.reserve(subVolToTrf.size());
 
-  for (const auto &convertMe : subVolToTrf) {
-    /** Align the surface with the global position of the detector */
-    const Transform3 transform =
-        fpv->getAbsoluteTransform() * convertMe.transform;
-    convertSensitive(convertMe.volume, transform, *cache.surfBoundFactory,
-                     sensitives);
-  }
+    for (const auto &convertMe : subVolToTrf) {
+      /** Align the surface with the global position of the detector */
+      const Transform3 transform =
+          fpv->getAbsoluteTransform() * convertMe.transform;
+      convertSensitive(convertMe.volume, transform, *cache.surfBoundFactory,
+                       sensitives);
+    }
 
-  if (sensitives.empty() && matches(name, fpv)) {
-    convertSensitive(fpv, fpv->getAbsoluteTransform(), *cache.surfBoundFactory,
-                     sensitives);
-  }
-
-  // Extract the bounding box surrounding the surface
-  if (convertBox(name)) {
-    ConvertedGeoVol &convEnvelope = cache.volumeBoxFPVs.emplace_back();
-    convEnvelope.fullPhysVol = fpv;
-
-    convEnvelope.volume = std::make_unique<Acts::TrackingVolume>(
-        *GeoModel::convertVolume(fpv->getAbsoluteTransform(),
-                                 fpv->getLogVol()->getShape(),
-                                 *cache.volumeBoundFactory),
-        name);
-
-    for (auto &[detEl, surface] : sensitives) {
+    if (sensitives.empty() && matches(name, fpv)) {
+      convertSensitive(fpv, fpv->getAbsoluteTransform(),
+                       *cache.surfBoundFactory, cache.sensitiveSurfaces);
+    }
+    cache.sensitiveSurfaces.insert(cache.sensitiveSurfaces.end(),
+                                   std::make_move_iterator(sensitives.begin()),
+                                   std::make_move_iterator(sensitives.end()));
+    // Set the corresponding database entry name to all sensitive surfaces
+    for (auto i = prevSize; i < cache.sensitiveSurfaces.size(); ++i) {
+      const auto &detEl = std::get<0>(cache.sensitiveSurfaces[i]);
       detEl->setDatabaseEntryName(name);
       ACTS_VERBOSE("Set database name of the DetectorElement to "
                    << detEl->databaseEntryName());
-
-      convEnvelope.surfaces.push_back(surface);
-      convEnvelope.volume->retainPlacement(detEl);
     }
+  }
+  // Extract the bounding box surrounding the surface
+  if (convertBox(name)) {
+    ConvertedGeoVol &convEnvelope = cache.volumeBoxFPVs.emplace_back();
+    convEnvelope.name = name;
+    convEnvelope.fullPhysVol = fpv;
+    convEnvelope.volume = GeoModel::convertVolume(fpv->getAbsoluteTransform(),
+                                                  fpv->getLogVol()->getShape(),
+                                                  *cache.volumeBoundFactory);
+    std::transform(cache.sensitiveSurfaces.begin() + prevSize,
+                   cache.sensitiveSurfaces.end(),
+                   std::back_inserter(convEnvelope.surfaces),
+                   [](const GeoModelSensitiveSurface &sensitive) {
+                     return std::get<1>(sensitive);
+                   });
   }
 }
 // function to determine if object fits query

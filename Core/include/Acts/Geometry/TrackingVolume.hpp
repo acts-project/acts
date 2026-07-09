@@ -578,9 +578,9 @@ class TrackingVolume : public Volume {
   /// @param placements: Container of volume placements to be hold
   template <std::ranges::input_range Range>
   void retainPlacements(Range&& placements) {
-    m_placements.insert(m_placements.end(),
-                        std::make_move_iterator(placements.begin()),
-                        std::make_move_iterator(placements.end()));
+    m_placements.insert(m_placements.end(), placements.begin(), placements.end()
+
+    );
   }
 
   /// Returns the view on all the placements owned by the tracking volume

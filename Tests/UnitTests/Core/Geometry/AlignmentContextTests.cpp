@@ -446,8 +446,9 @@ BOOST_AUTO_TEST_CASE(AlignVolumeTests) {
 }
 
 BOOST_AUTO_TEST_CASE(ConfinedVolumes) {
-  AlignableVolumePlacement outsidePlacement{Transform3::Identity()};
-  std::vector<std::unique_ptr<AlignableVolumePlacement>> innerPlacements{};
+  auto outsidePlacement =
+      std::make_shared<AlignableVolumePlacement>(Transform3::Identity());
+  std::vector<std::shared_ptr<AlignableVolumePlacement>> innerPlacements{};
 
   const AlignmentContext gctx{};
   using namespace Acts::Experimental;
@@ -467,8 +468,8 @@ BOOST_AUTO_TEST_CASE(ConfinedVolumes) {
 
   // auto& cubcontainer = root->addCuboidContainer("CuboidContainer",
   // AxisDirection::AxisX);
-  auto parentVol =
-      std::make_unique<TrackingVolume>(outsidePlacement, outerBounds, "parent");
+  auto parentVol = std::make_unique<TrackingVolume>(*outsidePlacement,
+                                                    outerBounds, "parent");
   parentVol->assignGeometryId(GeometryIdentifier{}.withVolume(5));
   auto parentNode = std::make_shared<StaticBlueprintNode>(std::move(parentVol));
   // start from the edge of the parent volume
@@ -485,16 +486,18 @@ BOOST_AUTO_TEST_CASE(ConfinedVolumes) {
         std::make_unique<AlignableVolumePlacement>(trf));
     childVol = std::make_unique<TrackingVolume>(
         *placement, innerBounds, std::format("alignable_child_{:}", i));
-
     ++i;
     childVol->assignGeometryId(
         GeometryIdentifier{}.withVolume(10).withLayer(i + 1));
     auto childNode = std::make_shared<StaticBlueprintNode>(std::move(childVol));
+    childNode->retainPlacement(placement);
     parentNode->addChild(std::move(childNode));
   }
+  parentNode->retainPlacement(outsidePlacement);
 
   root->addChild(std::move(parentNode));
   auto trackingGeometry = root->construct({}, gctx.getContext(), logger());
+
   const auto* rootVol =
       trackingGeometry->findVolume(GeometryIdentifier{}.withVolume(5));
   BOOST_CHECK_NE(rootVol, nullptr);
@@ -507,14 +510,44 @@ BOOST_AUTO_TEST_CASE(ConfinedVolumes) {
   }
   // Ensure that the volume is alignable
   BOOST_CHECK_EQUAL(rootVol->isAlignable(), true);
-  BOOST_CHECK_EQUAL(rootVol->volumePlacement(), &outsidePlacement);
-  BOOST_CHECK_EQUAL(outsidePlacement.nPortalPlacements(), 6);
+  BOOST_CHECK_EQUAL(rootVol->volumePlacement(), outsidePlacement.get());
+  BOOST_CHECK_EQUAL(outsidePlacement->nPortalPlacements(), 6);
+  BOOST_CHECK_EQUAL(outsidePlacement.use_count(), 2);
   for (const auto& [child, placement] :
        zip(rootVol->volumes(), innerPlacements)) {
     BOOST_CHECK_EQUAL(child.isAlignable(), true);
     BOOST_CHECK_EQUAL(child.volumePlacement(), placement.get());
     BOOST_CHECK_EQUAL(placement->nPortalPlacements(), 6);
+    BOOST_CHECK_EQUAL(placement.use_count(), 2);
   }
+  // Reset the blue print
+  root.reset();
+  /// Ensure that the blue print did not retain the ownership over the
+  /// placements
+  innerPlacements.push_back(std::move(outsidePlacement));
+  BOOST_CHECK_EQUAL(
+      std::ranges::all_of(innerPlacements,
+                          [](const auto& pl) { return pl.use_count() == 2; }),
+      true);
+  /// Now reset the tracking geometry
+  trackingGeometry.reset();
+  /// Perform the check again but this time the inner placements is the only one
+  /// that has ownership
+  BOOST_CHECK_EQUAL(
+      std::ranges::all_of(innerPlacements,
+                          [](const auto& pl) { return pl.use_count() == 1; }),
+      true);
+
+  auto vecCheckPlacement = std::make_unique<TrackingVolume>(
+      Acts::Transform3::Identity(), outerBounds);
+  vecCheckPlacement->retainPlacements(innerPlacements);
+  BOOST_CHECK_EQUAL(vecCheckPlacement->ownedPlacements().size(),
+                    innerPlacements.size());
+
+  BOOST_CHECK_EQUAL(
+      std::ranges::all_of(innerPlacements,
+                          [](const auto& pl) { return pl.use_count() == 2; }),
+      true);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

@@ -570,7 +570,8 @@ TrackingVolume& TrackingVolume::addVolume(
   return *m_volumes.back();
 }
 
-std::span<const TrackingVolume::PlacementOwnPtr> TrackingVolume::ownedPlacements() const {
+std::span<const TrackingVolume::PlacementOwnPtr>
+TrackingVolume::ownedPlacements() const {
   return m_placements;
 }
 
