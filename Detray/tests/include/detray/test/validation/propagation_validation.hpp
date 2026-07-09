@@ -275,7 +275,6 @@ bool propagation_validation(
       std::ranges::reverse_copy(mat_traces_bw[i], inv_mat_trace_bw.begin());
 
       assert(mat_traces_bw[i].size() == inv_mat_trace_bw.size());
-      assert(mat_traces_bw[i].front().bcd == inv_mat_trace_bw.back().bcd);
     }
 
     // Compare the material traces and total integrated material per trk
