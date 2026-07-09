@@ -50,7 +50,18 @@ std::string CompSpacePointAuxiliaries::parName(const FitParIndex idx) {
   }
   return "unknown";
 }
-
+std::string CompSpacePointAuxiliaries::residualName(const ResidualIdx resIdx) {
+  switch (resIdx) {
+    using enum ResidualIdx;
+    case bending:
+      return "bending";
+    case nonBending:
+      return "nonBending";
+    case time:
+      return "time";
+  }
+  return "unknown";
+}
 void CompSpacePointAuxiliaries::ChiSqWithDerivatives::reset() {
   *this = ChiSqWithDerivatives();
 }

@@ -371,10 +371,10 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   Result<bool> isMergedVertex(const Vertex& vtx,
                               const std::vector<Vertex*>& allVertices) const;
 
-  /// @brief Method that deletes last vertex from list of all vertices
+  /// @brief Method that deletes a vertex from list of all vertices
   /// and refits all vertices afterwards
   ///
-  /// @param vtx The last added vertex which will be removed
+  /// @param vtx The vertex which will be removed
   /// @param allVertices Vector containing the unique_ptr to vertices
   /// @param allVerticesPtr Vector containing the actual addresses
   /// @param fitterState The current vertex fitter state
