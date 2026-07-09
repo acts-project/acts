@@ -584,6 +584,7 @@ class TrackingVolume : public Volume {
   }
 
   /// Returns the view on all the placements owned by the tracking volume
+  /// @returns The const view on all the placements owned by this volume
   std::span<const PlacementOwnPtr> ownedPlacements() const;
 
  private:
