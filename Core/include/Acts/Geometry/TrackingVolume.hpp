@@ -31,10 +31,12 @@
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <cstddef>
+#include <iterator>
 #include <memory>
 #include <ranges>
 #include <span>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -578,9 +580,16 @@ class TrackingVolume : public Volume {
   /// @param placements: Container of volume placements to be hold
   template <std::ranges::input_range Range>
   void retainPlacements(Range&& placements) {
-    m_placements.insert(m_placements.end(), placements.begin(), placements.end()
-
-    );
+    using value_type = std::ranges::range_value_t<Range>;
+    if constexpr (std::is_lvalue_reference_v<Range> ||
+                  std::is_copy_constructible_v<value_type>) {
+      m_placements.insert(m_placements.end(), placements.begin(),
+                          placements.end());
+    } else {
+      for (auto&& placement : placements) {
+        m_placements.emplace_back(std::move(placement));
+      }
+    }
   }
 
   /// Returns the view on all the placements owned by the tracking volume

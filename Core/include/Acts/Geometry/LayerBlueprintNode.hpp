@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
+#include "Acts/Utilities/OstreamFormatter.hpp"
 
 #include <memory>
 #include <ostream>
@@ -151,6 +152,20 @@ class LayerBlueprintNode final : public StaticBlueprintNode {
     return os;
   }
 
+  /// Pass the shared ownership of a geometry placement towards the tracking
+  /// volume later constructed by the node
+  /// @tparam Obj_t Either the PlacementOwnPtr variant or any other pointer
+  ///               type where the object inhherits from the Surface or
+  ///               VolumePlacement base class
+  /// @param placement Pointer to the placement to be managed by the
+  ///                   tracking volume
+  template <typename Obj_t>
+  void retainPlacement(Obj_t placement)
+    requires(std::is_constructible_v<TrackingVolume::PlacementOwnPtr, Obj_t>)
+  {
+    m_placements.emplace_back(std::move(placement));
+  }
+
  private:
   /// @copydoc Acts::Experimental::BlueprintNode::addToGraphviz
   void addToGraphviz(std::ostream& os) const override;
@@ -166,6 +181,10 @@ class LayerBlueprintNode final : public StaticBlueprintNode {
   const detail::LayerBlueprintNodeImpl& impl() const;
 
   std::unique_ptr<detail::LayerBlueprintNodeImpl> m_impl;
+  /// Vector of volume or surface plaements to be owned by the tracking geometry
+  std::vector<TrackingVolume::PlacementOwnPtr> m_placements{};
 };
 
 }  // namespace Acts::Experimental
+
+ACTS_OSTREAM_FORMATTER(Acts::Experimental::LayerBlueprintNode::LayerType);

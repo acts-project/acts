@@ -548,6 +548,12 @@ BOOST_AUTO_TEST_CASE(ConfinedVolumes) {
       std::ranges::all_of(innerPlacements,
                           [](const auto& pl) { return pl.use_count() == 2; }),
       true);
+
+  /// Compile time check that we can also pass on a collection of unique ptr
+  std::vector<std::unique_ptr<AlignableVolumePlacement>> uniquePlacements{};
+  vecCheckPlacement->retainPlacements(std::move(uniquePlacements));
+  vecCheckPlacement->retainPlacement(
+      std::unique_ptr<AlignableVolumePlacement>{});
 }
 
 BOOST_AUTO_TEST_SUITE_END();
