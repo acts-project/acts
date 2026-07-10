@@ -4,18 +4,18 @@ import acts
 
 
 def test_space_point_container():
-    """Test SpacePointContainer2 and MutableSpacePointProxy2 bindings."""
+    """Test SpacePointContainer and MutableSpacePointProxy bindings."""
     columns = (
         acts.SpacePointColumns.X | acts.SpacePointColumns.Y | acts.SpacePointColumns.Z
     )
-    container = acts.SpacePointContainer2(columns)
+    container = acts.SpacePointContainer(columns)
     assert container.empty
     assert len(container) == 0
     assert list(container) == []
 
-    # createSpacePoint returns a MutableSpacePointProxy2
+    # createSpacePoint returns a MutableSpacePointProxy
     sp0 = container.createSpacePoint()
-    assert isinstance(sp0, acts.MutableSpacePointProxy2)
+    assert isinstance(sp0, acts.MutableSpacePointProxy)
     assert not container.empty
     assert len(container) == 1
     assert sp0.index == 0
@@ -28,21 +28,21 @@ def test_space_point_container():
     assert sp0.y == pytest.approx(2.0)
     assert sp0.z == pytest.approx(3.0)
 
-    # __getitem__ returns MutableSpacePointProxy2
+    # __getitem__ returns MutableSpacePointProxy
     via_index = container[0]
-    assert isinstance(via_index, acts.MutableSpacePointProxy2)
+    assert isinstance(via_index, acts.MutableSpacePointProxy)
     assert via_index.x == pytest.approx(1.0)
 
     # Mutation via __getitem__ proxy is reflected in the container
     via_index.x = 99.0
     assert sp0.x == pytest.approx(99.0)
 
-    # __iter__ yields MutableSpacePointProxy2
+    # __iter__ yields MutableSpacePointProxy
     sp1 = container.createSpacePoint()
     sp1.x = 5.0
     items = list(container)
     assert len(items) == 2
-    assert isinstance(items[0], acts.MutableSpacePointProxy2)
+    assert isinstance(items[0], acts.MutableSpacePointProxy)
     assert items[0].x == pytest.approx(99.0)
     assert items[1].x == pytest.approx(5.0)
 
@@ -62,7 +62,7 @@ def test_space_point_all_columns_round_trip():
         | Cols.VarianceT
         | Cols.CopiedFromIndex
     )
-    container = acts.SpacePointContainer2(columns)
+    container = acts.SpacePointContainer(columns)
     sp = container.createSpacePoint()
 
     # Scalar fields, including varianceT (writeable in C++ but previously not
@@ -98,13 +98,13 @@ def test_space_point_missing_column_raises():
     Cols = acts.SpacePointColumns
 
     # Proxy read of a column absent from an otherwise-populated container.
-    container = acts.SpacePointContainer2(Cols.X)
+    container = acts.SpacePointContainer(Cols.X)
     sp = container.createSpacePoint()
     with pytest.raises(AttributeError, match="time"):
         _ = sp.time
 
     # Proxy read on a fully empty (None) container: even x is absent.
-    none_container = acts.SpacePointContainer2()
+    none_container = acts.SpacePointContainer()
     none_sp = none_container.createSpacePoint()
     with pytest.raises(AttributeError, match="x"):
         _ = none_sp.x
@@ -132,15 +132,15 @@ def test_space_point_missing_column_raises():
 
 
 def test_seed_container():
-    """Test SeedContainer2, MutableSeedProxy2 and ConstSeedProxy2 bindings."""
-    seed_container = acts.SeedContainer2()
+    """Test SeedContainer, MutableSeedProxy and ConstSeedProxy bindings."""
+    seed_container = acts.SeedContainer()
     assert seed_container.empty
     assert len(seed_container) == 0
     assert list(seed_container) == []
 
-    # createSeed returns a MutableSeedProxy2
+    # createSeed returns a MutableSeedProxy
     seed0 = seed_container.createSeed()
-    assert isinstance(seed0, acts.MutableSeedProxy2)
+    assert isinstance(seed0, acts.MutableSeedProxy)
     assert not seed_container.empty
     assert len(seed_container) == 1
 
@@ -165,22 +165,22 @@ def test_seed_container():
     assert seed1.index == 1
     assert len(seed_container) == 2
 
-    # Read back via ConstSeedProxy2 (__getitem__)
+    # Read back via ConstSeedProxy (__getitem__)
     const0 = seed_container[0]
-    assert isinstance(const0, acts.ConstSeedProxy2)
+    assert isinstance(const0, acts.ConstSeedProxy)
     assert const0.quality == pytest.approx(0.9)
     assert const0.vertexZ == pytest.approx(12.5)
     assert const0.size == 3
     assert list(const0.spacePointIndices) == [0, 1, 2]
 
-    # Iteration yields ConstSeedProxy2 objects
+    # Iteration yields ConstSeedProxy objects
     seeds = list(seed_container)
     assert len(seeds) == 2
-    assert isinstance(seeds[0], acts.ConstSeedProxy2)
+    assert isinstance(seeds[0], acts.ConstSeedProxy)
 
     # assignSpacePointContainer links the two containers (shared ownership).
     # After the call, spacePoints() on a seed proxy is resolvable.
-    sp_container = acts.SpacePointContainer2(
+    sp_container = acts.SpacePointContainer(
         acts.SpacePointColumns.X | acts.SpacePointColumns.Y | acts.SpacePointColumns.Z
     )
     seed_container.assignSpacePointContainer(sp_container)
@@ -196,7 +196,7 @@ def test_space_point_proxy_fails_loud_after_disown():
     tb = acts._testing
 
     Cols = acts.SpacePointColumns
-    container = acts.SpacePointContainer2(Cols.X | Cols.Y | Cols.Z)
+    container = acts.SpacePointContainer(Cols.X | Cols.Y | Cols.Z)
     sp = container.createSpacePoint()
     sp.x = 1.0
     via_index = container[0]
@@ -223,7 +223,7 @@ def test_seed_proxy_fails_loud_after_disown():
     disowned by a unique_ptr transfer."""
     tb = acts._testing
 
-    container = acts.SeedContainer2()
+    container = acts.SeedContainer()
     seed = container.createSeed()
     seed.quality = 0.9
     via_index = container[0]
@@ -247,21 +247,21 @@ def test_proxy_survives_container_gc():
     working after the local container handle is dropped and collected (the
     container is only truly gone once transferred, not merely unreferenced)."""
     Cols = acts.SpacePointColumns
-    sp_container = acts.SpacePointContainer2(Cols.X)
+    sp_container = acts.SpacePointContainer(Cols.X)
     sp = sp_container.createSpacePoint()
     sp.x = 7.0
     del sp_container
     gc.collect()
     assert sp.x == pytest.approx(7.0)
-    assert isinstance(sp, acts.MutableSpacePointProxy2)
+    assert isinstance(sp, acts.MutableSpacePointProxy)
 
-    seed_container = acts.SeedContainer2()
+    seed_container = acts.SeedContainer()
     seed = seed_container.createSeed()
     seed.quality = 3.0
     del seed_container
     gc.collect()
     assert seed.quality == pytest.approx(3.0)
-    assert isinstance(seed, acts.MutableSeedProxy2)
+    assert isinstance(seed, acts.MutableSeedProxy)
 
 
 def test_particle_hypothesis():

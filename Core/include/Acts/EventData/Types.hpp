@@ -51,22 +51,22 @@ static constexpr BoundSubspaceIndices kBoundSubspaceIndicesInvalid = {
 using SerializedSubspaceIndices = std::uint64_t;
 
 /// Index type for space points
-using SpacePointIndex2 = std::uint32_t;
+using SpacePointIndex = std::uint32_t;
 /// Range of space point indices defined by a pair of start and end indices
-using SpacePointIndexRange2 = std::pair<SpacePointIndex2, SpacePointIndex2>;
+using SpacePointIndexRange = std::pair<SpacePointIndex, SpacePointIndex>;
 /// Subset of space point indices represented as a span
-using SpacePointIndexSubset2 = std::span<const SpacePointIndex2>;
+using SpacePointIndexSubset = std::span<const SpacePointIndex>;
 
 /// Index type for seeds
-using SeedIndex2 = std::uint32_t;
+using SeedIndex = std::uint32_t;
 
 /// Sentinel value for an invalid / unset space point EDM related index
-static constexpr SpacePointIndex2 kSpacePointIndex2Invalid =
-    std::numeric_limits<SpacePointIndex2>::max();
+static constexpr SpacePointIndex kSpacePointIndexInvalid =
+    std::numeric_limits<SpacePointIndex>::max();
 
 /// Sentinel value for an invalid / unset seed EDM related index
-static constexpr SeedIndex2 kSeedIndex2Invalid =
-    std::numeric_limits<SeedIndex2>::max();
+static constexpr SeedIndex kSeedIndexInvalid =
+    std::numeric_limits<SeedIndex>::max();
 
 namespace detail_tsp {
 
