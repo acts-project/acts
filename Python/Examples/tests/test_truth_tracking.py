@@ -409,13 +409,13 @@ def test_python_space_point_access(generic_detector_config, tmp_path):
                 super().__init__("SpacePointAccess", acts.logging.INFO)
 
                 self.spacePoints = acts.examples.ReadDataHandle(
-                    self, acts.SpacePointContainer2, "InputSpacePoints"
+                    self, acts.SpacePointContainer, "InputSpacePoints"
                 )
                 self.spacePoints.initialize("spacepoints2")
 
             def execute(self, context: acts.examples.AlgorithmContext):
                 self.logger.info("Space point access")
-                spacePoints: acts.SpacePointContainer2 = self.spacePoints(
+                spacePoints: acts.SpacePointContainer = self.spacePoints(
                     context.eventStore
                 )
 

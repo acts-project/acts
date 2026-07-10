@@ -7,11 +7,11 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/BoundTrackParameters.hpp"
-#include "Acts/EventData/SeedContainer2.hpp"
-#include "Acts/EventData/SeedProxy2.hpp"
+#include "Acts/EventData/SeedContainer.hpp"
+#include "Acts/EventData/SeedProxy.hpp"
 #include "Acts/EventData/SpacePointColumns.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/EventData/SpacePointProxy2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
+#include "Acts/EventData/SpacePointProxy.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -55,38 +55,38 @@ auto spanToNumpy1d(std::span<T> s, const py::object& base) {
 /// Throws if the container does not have the required column.
 template <std::size_t Cols>
 using ArrayColumnGetter = ConstSpacePointColumnProxy<std::array<float, Cols>> (
-    SpacePointContainer2::*)() const;
+    SpacePointContainer::*)() const;
 
 template <std::size_t Cols>
 auto arrayColumn(ArrayColumnGetter<Cols> getColumn,
                  SpacePointColumns requiredColumn,
                  const std::string_view& columnName) {
-  return [getColumn, requiredColumn,
-          columnName](const SpacePointContainer2& self) {
-    if (!self.hasColumns(requiredColumn)) {
-      throw py::attribute_error(
-          std::format("SpacePointContainer2 does not have "
-                      "the {} column",
-                      columnName));
-    }
-    const auto nRows = static_cast<py::ssize_t>(self.size());
-    if (nRows == 0) {
-      auto arr = py::array_t<float>(
-          std::vector<py::ssize_t>{0, static_cast<py::ssize_t>(Cols)});
-      arr.attr("flags").attr("writeable") = py::bool_(false);
-      return arr;
-    }
-    const auto col = (self.*getColumn)();
-    const auto& data = col.data();
-    constexpr py::ssize_t rowStride =
-        static_cast<py::ssize_t>(Cols * sizeof(float));
-    constexpr py::ssize_t colStride = sizeof(float);
-    auto arr = py::array_t<float>(
-        {nRows, static_cast<py::ssize_t>(Cols)}, {rowStride, colStride},
-        reinterpret_cast<const float*>(data.data()), py::cast(self));
-    arr.attr("flags").attr("writeable") = py::bool_(false);
-    return arr;
-  };
+  return
+      [getColumn, requiredColumn, columnName](const SpacePointContainer& self) {
+        if (!self.hasColumns(requiredColumn)) {
+          throw py::attribute_error(
+              std::format("SpacePointContainer does not have "
+                          "the {} column",
+                          columnName));
+        }
+        const auto nRows = static_cast<py::ssize_t>(self.size());
+        if (nRows == 0) {
+          auto arr = py::array_t<float>(
+              std::vector<py::ssize_t>{0, static_cast<py::ssize_t>(Cols)});
+          arr.attr("flags").attr("writeable") = py::bool_(false);
+          return arr;
+        }
+        const auto col = (self.*getColumn)();
+        const auto& data = col.data();
+        constexpr py::ssize_t rowStride =
+            static_cast<py::ssize_t>(Cols * sizeof(float));
+        constexpr py::ssize_t colStride = sizeof(float);
+        auto arr = py::array_t<float>(
+            {nRows, static_cast<py::ssize_t>(Cols)}, {rowStride, colStride},
+            reinterpret_cast<const float*>(data.data()), py::cast(self));
+        arr.attr("flags").attr("writeable") = py::bool_(false);
+        return arr;
+      };
 }
 
 /// Build the "missing column" error message for a space point accessor.
@@ -171,25 +171,23 @@ void addEventData(py::module_& m) {
   // Proxies are bound as ProxyTether under the same Python names, so isinstance
   // is preserved; see ProxyTether.hpp for the disown/keep-alive rationale. The
   // aliases below keep the binding call sites readable.
-  using ConstSpTether =
-      ProxyTether<ConstSpacePointProxy2, SpacePointContainer2>;
-  using MutSpTether =
-      ProxyTether<MutableSpacePointProxy2, SpacePointContainer2>;
-  using ConstSeedTether = ProxyTether<ConstSeedProxy2, SeedContainer2>;
-  using MutSeedTether = ProxyTether<MutableSeedProxy2, SeedContainer2>;
+  using ConstSpTether = ProxyTether<ConstSpacePointProxy, SpacePointContainer>;
+  using MutSpTether = ProxyTether<MutableSpacePointProxy, SpacePointContainer>;
+  using ConstSeedTether = ProxyTether<ConstSeedProxy, SeedContainer>;
+  using MutSeedTether = ProxyTether<MutableSeedProxy, SeedContainer>;
 
   // Register iterator types before the __iter__ bindings that return them.
-  bindIndexIteratorTether<SpacePointContainer2>(
-      m, "_SpacePointContainer2Iterator");
-  bindIndexIteratorTether<SeedContainer2>(m, "_SeedContainer2Iterator");
+  bindIndexIteratorTether<SpacePointContainer>(m,
+                                               "_SpacePointContainerIterator");
+  bindIndexIteratorTether<SeedContainer>(m, "_SeedContainerIterator");
 
   using FloatColumnGetter =
-      ConstSpacePointColumnProxy<float> (SpacePointContainer2::*)() const;
+      ConstSpacePointColumnProxy<float> (SpacePointContainer::*)() const;
   auto floatColumn = [](FloatColumnGetter column,
                         SpacePointColumns requiredColumn,
                         const std::string_view& columnName) {
     return
-        [column, requiredColumn, columnName](const SpacePointContainer2& self) {
+        [column, requiredColumn, columnName](const SpacePointContainer& self) {
           if (!self.hasColumns(requiredColumn)) {
             throw py::attribute_error(missingColumnMessage(columnName));
           }
@@ -197,160 +195,154 @@ void addEventData(py::module_& m) {
         };
   };
 
-  // SpacePointContainer2
-  auto spc2 =
-      py::classh<SpacePointContainer2>(m, "SpacePointContainer2")
+  // SpacePointContainer
+  auto spc =
+      py::classh<SpacePointContainer>(m, "SpacePointContainer")
           .def(py::init<SpacePointColumns>(),
                py::arg("columns") = SpacePointColumns::None)
-          .def_property_readonly("size", &SpacePointContainer2::size)
-          .def_property_readonly("empty", &SpacePointContainer2::empty)
-          .def_property_readonly("hasColumns",
-                                 &SpacePointContainer2::hasColumns)
-          .def("reserve", &SpacePointContainer2::reserve, py::arg("size"),
+          .def_property_readonly("size", &SpacePointContainer::size)
+          .def_property_readonly("empty", &SpacePointContainer::empty)
+          .def_property_readonly("hasColumns", &SpacePointContainer::hasColumns)
+          .def("reserve", &SpacePointContainer::reserve, py::arg("size"),
                py::arg("averageSourceLinks") = 1)
-          .def("clear", &SpacePointContainer2::clear)
+          .def("clear", &SpacePointContainer::clear)
           .def("createSpacePoint",
                [](const py::object& self) {
-                 auto& c = self.cast<SpacePointContainer2&>();
+                 auto& c = self.cast<SpacePointContainer&>();
                  return MutSpTether{self, c.createSpacePoint()};
                })
-          .def("__len__", &SpacePointContainer2::size)
+          .def("__len__", &SpacePointContainer::size)
           .def("__getitem__",
-               [](const py::object& self, SpacePointIndex2 idx) {
-                 auto& c = self.cast<SpacePointContainer2&>();
-                 return MutSpTether{self, MutableSpacePointProxy2(c, idx)};
+               [](const py::object& self, SpacePointIndex idx) {
+                 auto& c = self.cast<SpacePointContainer&>();
+                 return MutSpTether{self, MutableSpacePointProxy(c, idx)};
                })
           .def("__iter__",
                [](py::object self) {
-                 return IndexIteratorTether<SpacePointContainer2>{
+                 return IndexIteratorTether<SpacePointContainer>{
                      std::move(self), 0,
-                     [](const py::object& owner, SpacePointContainer2& c,
+                     [](const py::object& owner, SpacePointContainer& c,
                         std::size_t i) {
                        return py::cast(MutSpTether{
-                           owner, MutableSpacePointProxy2(
-                                      c, static_cast<SpacePointIndex2>(i))});
+                           owner, MutableSpacePointProxy(
+                                      c, static_cast<SpacePointIndex>(i))});
                      }};
                })
-          .def_property_readonly("x",
-                                 floatColumn(&SpacePointContainer2::xColumn,
-                                             SpacePointColumns::X, "x"))
-          .def_property_readonly("y",
-                                 floatColumn(&SpacePointContainer2::yColumn,
-                                             SpacePointColumns::Y, "y"))
-          .def_property_readonly("z",
-                                 floatColumn(&SpacePointContainer2::zColumn,
-                                             SpacePointColumns::Z, "z"))
-          .def_property_readonly("r",
-                                 floatColumn(&SpacePointContainer2::rColumn,
-                                             SpacePointColumns::R, "r"))
+          .def_property_readonly("x", floatColumn(&SpacePointContainer::xColumn,
+                                                  SpacePointColumns::X, "x"))
+          .def_property_readonly("y", floatColumn(&SpacePointContainer::yColumn,
+                                                  SpacePointColumns::Y, "y"))
+          .def_property_readonly("z", floatColumn(&SpacePointContainer::zColumn,
+                                                  SpacePointColumns::Z, "z"))
+          .def_property_readonly("r", floatColumn(&SpacePointContainer::rColumn,
+                                                  SpacePointColumns::R, "r"))
           .def_property_readonly("phi",
-                                 floatColumn(&SpacePointContainer2::phiColumn,
+                                 floatColumn(&SpacePointContainer::phiColumn,
                                              SpacePointColumns::Phi, "phi"))
           .def_property_readonly("time",
-                                 floatColumn(&SpacePointContainer2::timeColumn,
+                                 floatColumn(&SpacePointContainer::timeColumn,
                                              SpacePointColumns::Time, "time"))
           .def_property_readonly(
               "varianceZ",
-              floatColumn(&SpacePointContainer2::varianceZColumn,
+              floatColumn(&SpacePointContainer::varianceZColumn,
                           SpacePointColumns::VarianceZ, "varianceZ"))
           .def_property_readonly(
               "varianceR",
-              floatColumn(&SpacePointContainer2::varianceRColumn,
+              floatColumn(&SpacePointContainer::varianceRColumn,
                           SpacePointColumns::VarianceR, "varianceR"))
           .def_property_readonly(
               "varianceT",
-              floatColumn(&SpacePointContainer2::varianceTColumn,
+              floatColumn(&SpacePointContainer::varianceTColumn,
                           SpacePointColumns::VarianceT, "varianceT"))
           .def_property_readonly(
-              "xyColumn", arrayColumn<2>(&SpacePointContainer2::xyColumn,
+              "xyColumn", arrayColumn<2>(&SpacePointContainer::xyColumn,
                                          SpacePointColumns::PackedXY, "xy"))
           .def_property_readonly(
-              "zrColumn", arrayColumn<2>(&SpacePointContainer2::zrColumn,
+              "zrColumn", arrayColumn<2>(&SpacePointContainer::zrColumn,
                                          SpacePointColumns::PackedZR, "zr"))
           .def_property_readonly(
-              "xyzColumn", arrayColumn<3>(&SpacePointContainer2::xyzColumn,
+              "xyzColumn", arrayColumn<3>(&SpacePointContainer::xyzColumn,
                                           SpacePointColumns::PackedXYZ, "xyz"))
           .def_property_readonly(
               "xyzrColumn",
-              arrayColumn<4>(&SpacePointContainer2::xyzrColumn,
+              arrayColumn<4>(&SpacePointContainer::xyzrColumn,
                              SpacePointColumns::PackedXYZR, "xyzr"))
           .def_property_readonly(
               "varianceZRColumn",
-              arrayColumn<2>(&SpacePointContainer2::varianceZRColumn,
+              arrayColumn<2>(&SpacePointContainer::varianceZRColumn,
                              SpacePointColumns::PackedVarianceZR,
                              "varianceZR"));
 
-  WhiteBoardRegistry::registerClass(spc2);
+  WhiteBoardRegistry::registerClass(spc);
 
-  // ConstSpacePointProxy2
+  // ConstSpacePointProxy
   // Note: every column is optional and only present when the corresponding
   // SpacePointColumns flag was requested. The proxy accessors guard existence
   // with assert only (no-op in release), so each getter is wrapped in
   // guardedRead to raise py::attribute_error instead of dereferencing a missing
   // column. The accessors are called on a const reference, which selects the
   // const overload unambiguously (no static_cast needed).
-  py::class_<ConstSpTether>(m, "ConstSpacePointProxy2")
-      .def_property_readonly("index", tetheredRead<ConstSpTether>(
-                                          [](const ConstSpacePointProxy2& s) {
-                                            return s.index();
-                                          }))
+  py::class_<ConstSpTether>(m, "ConstSpacePointProxy")
+      .def_property_readonly(
+          "index", tetheredRead<ConstSpTether>(
+                       [](const ConstSpacePointProxy& s) { return s.index(); }))
       .def_property_readonly(
           "x", guardedRead<ConstSpTether>(
                    SpacePointColumns::X, "x",
-                   [](const ConstSpacePointProxy2& s) { return s.x(); }))
+                   [](const ConstSpacePointProxy& s) { return s.x(); }))
       .def_property_readonly(
           "y", guardedRead<ConstSpTether>(
                    SpacePointColumns::Y, "y",
-                   [](const ConstSpacePointProxy2& s) { return s.y(); }))
+                   [](const ConstSpacePointProxy& s) { return s.y(); }))
       .def_property_readonly(
           "z", guardedRead<ConstSpTether>(
                    SpacePointColumns::Z, "z",
-                   [](const ConstSpacePointProxy2& s) { return s.z(); }))
+                   [](const ConstSpacePointProxy& s) { return s.z(); }))
       .def_property_readonly(
           "r", guardedRead<ConstSpTether>(
                    SpacePointColumns::R, "r",
-                   [](const ConstSpacePointProxy2& s) { return s.r(); }))
+                   [](const ConstSpacePointProxy& s) { return s.r(); }))
       .def_property_readonly(
           "phi", guardedRead<ConstSpTether>(
                      SpacePointColumns::Phi, "phi",
-                     [](const ConstSpacePointProxy2& s) { return s.phi(); }))
+                     [](const ConstSpacePointProxy& s) { return s.phi(); }))
       .def_property_readonly(
           "time", guardedRead<ConstSpTether>(
                       SpacePointColumns::Time, "time",
-                      [](const ConstSpacePointProxy2& s) { return s.time(); }))
+                      [](const ConstSpacePointProxy& s) { return s.time(); }))
       .def_property_readonly(
           "varianceZ",
           guardedRead<ConstSpTether>(
               SpacePointColumns::VarianceZ, "varianceZ",
-              [](const ConstSpacePointProxy2& s) { return s.varianceZ(); }))
+              [](const ConstSpacePointProxy& s) { return s.varianceZ(); }))
       .def_property_readonly(
           "varianceR",
           guardedRead<ConstSpTether>(
               SpacePointColumns::VarianceR, "varianceR",
-              [](const ConstSpacePointProxy2& s) { return s.varianceR(); }))
+              [](const ConstSpacePointProxy& s) { return s.varianceR(); }))
       .def_property_readonly(
           "varianceT",
           guardedRead<ConstSpTether>(
               SpacePointColumns::VarianceT, "varianceT",
-              [](const ConstSpacePointProxy2& s) { return s.varianceT(); }))
+              [](const ConstSpacePointProxy& s) { return s.varianceT(); }))
       .def_property_readonly(
           "sourceLinks",
           py::cpp_function(guardedRead<ConstSpTether>(
                                SpacePointColumns::SourceLinks, "sourceLinks",
-                               [](const ConstSpacePointProxy2& self) {
+                               [](const ConstSpacePointProxy& self) {
                                  auto sls = self.sourceLinks();
                                  return py::make_iterator(sls.begin(),
                                                           sls.end());
                                }),
                            py::keep_alive<0, 1>()));
 
-  // MutableSpacePointProxy2
+  // MutableSpacePointProxy
   // Getters and setters are wrapped in guardedRead/guardedWrite so accessing or
   // writing a column that was not requested at construction raises
   // py::attribute_error instead of dereferencing a missing (disengaged)
   // optional column.
-  using MutProxy = MutableSpacePointProxy2;
-  py::class_<MutSpTether>(m, "MutableSpacePointProxy2")
+  using MutProxy = MutableSpacePointProxy;
+  py::class_<MutSpTether>(m, "MutableSpacePointProxy")
       .def_property_readonly("index",
                              tetheredRead<MutSpTether>(
                                  [](const MutProxy& s) { return s.index(); }))
@@ -421,9 +413,9 @@ void addEventData(py::module_& m) {
                     guardedRead<MutSpTether>(
                         SpacePointColumns::CopiedFromIndex, "copiedFromIndex",
                         [](const MutProxy& s) { return s.copiedFromIndex(); }),
-                    guardedWrite<MutSpTether, SpacePointIndex2>(
+                    guardedWrite<MutSpTether, SpacePointIndex>(
                         SpacePointColumns::CopiedFromIndex, "copiedFromIndex",
-                        [](MutProxy& s, const SpacePointIndex2& v) {
+                        [](MutProxy& s, const SpacePointIndex& v) {
                           s.copiedFromIndex() = v;
                         }))
       .def("assignSourceLinks",
@@ -441,61 +433,61 @@ void addEventData(py::module_& m) {
                                }),
                            py::keep_alive<0, 1>()));
 
-  // SeedContainer2
-  auto seedContainer2 =
-      py::classh<SeedContainer2>(m, "SeedContainer2")
+  // SeedContainer
+  auto seedContainer =
+      py::classh<SeedContainer>(m, "SeedContainer")
           .def(py::init<>())
-          .def_property_readonly("size", &SeedContainer2::size)
-          .def_property_readonly("empty", &SeedContainer2::empty)
-          .def("__len__", &SeedContainer2::size)
+          .def_property_readonly("size", &SeedContainer::size)
+          .def_property_readonly("empty", &SeedContainer::empty)
+          .def("__len__", &SeedContainer::size)
           .def("__getitem__",
-               [](const py::object& self, SeedIndex2 idx) {
-                 const auto& c = self.cast<const SeedContainer2&>();
-                 return ConstSeedTether{self, ConstSeedProxy2(c, idx)};
+               [](const py::object& self, SeedIndex idx) {
+                 const auto& c = self.cast<const SeedContainer&>();
+                 return ConstSeedTether{self, ConstSeedProxy(c, idx)};
                })
-          .def("__iter__",
-               [](py::object self) {
-                 return IndexIteratorTether<SeedContainer2>{
-                     std::move(self), 0,
-                     [](const py::object& owner, SeedContainer2& c,
-                        std::size_t i) {
-                       return py::cast(ConstSeedTether{
-                           owner,
-                           ConstSeedProxy2(c, static_cast<SeedIndex2>(i))});
-                     }};
-               })
+          .def(
+              "__iter__",
+              [](py::object self) {
+                return IndexIteratorTether<SeedContainer>{
+                    std::move(self), 0,
+                    [](const py::object& owner, SeedContainer& c,
+                       std::size_t i) {
+                      return py::cast(ConstSeedTether{
+                          owner, ConstSeedProxy(c, static_cast<SeedIndex>(i))});
+                    }};
+              })
           .def("createSeed",
                [](const py::object& self) {
-                 auto& c = self.cast<SeedContainer2&>();
+                 auto& c = self.cast<SeedContainer&>();
                  return MutSeedTether{self, c.createSeed()};
                })
           .def(
               "assignSpacePointContainer",
-              [](SeedContainer2& self, const SpacePointContainer2& sp) {
+              [](SeedContainer& self, const SpacePointContainer& sp) {
                 self.assignSpacePointContainer(sp);
               },
               py::keep_alive<1, 2>());
 
-  WhiteBoardRegistry::registerClass(seedContainer2);
+  WhiteBoardRegistry::registerClass(seedContainer);
 
-  // ConstSeedProxy2 (bound as a tether; seeds have no optional columns, so the
+  // ConstSeedProxy (bound as a tether; seeds have no optional columns, so the
   // accessors only need the disown check).
-  py::class_<ConstSeedTether>(m, "ConstSeedProxy2")
+  py::class_<ConstSeedTether>(m, "ConstSeedProxy")
       .def_property_readonly(
           "index", tetheredRead<ConstSeedTether>(
-                       [](const ConstSeedProxy2& s) { return s.index(); }))
+                       [](const ConstSeedProxy& s) { return s.index(); }))
       .def_property_readonly(
           "size", tetheredRead<ConstSeedTether>(
-                      [](const ConstSeedProxy2& s) { return s.size(); }))
+                      [](const ConstSeedProxy& s) { return s.size(); }))
       .def_property_readonly(
           "empty", tetheredRead<ConstSeedTether>(
-                       [](const ConstSeedProxy2& s) { return s.empty(); }))
+                       [](const ConstSeedProxy& s) { return s.empty(); }))
       .def_property_readonly(
           "quality", tetheredRead<ConstSeedTether>(
-                         [](const ConstSeedProxy2& s) { return s.quality(); }))
+                         [](const ConstSeedProxy& s) { return s.quality(); }))
       .def_property_readonly(
           "vertexZ", tetheredRead<ConstSeedTether>(
-                         [](const ConstSeedProxy2& s) { return s.vertexZ(); }))
+                         [](const ConstSeedProxy& s) { return s.vertexZ(); }))
       // spacePointIndices needs the owner (container) py::object as the numpy
       // base, so it is a custom tethered accessor rather than tetheredRead.
       .def_property_readonly(
@@ -504,34 +496,34 @@ void addEventData(py::module_& m) {
             return spanToNumpy1d(proxy.spacePointIndices(), self.owner);
           });
 
-  // MutableSeedProxy2 (tether; disown check only).
-  py::class_<MutSeedTether>(m, "MutableSeedProxy2")
+  // MutableSeedProxy (tether; disown check only).
+  py::class_<MutSeedTether>(m, "MutableSeedProxy")
       .def_property_readonly(
           "index", tetheredRead<MutSeedTether>(
-                       [](const MutableSeedProxy2& s) { return s.index(); }))
+                       [](const MutableSeedProxy& s) { return s.index(); }))
       .def_property_readonly(
           "size", tetheredRead<MutSeedTether>(
-                      [](const MutableSeedProxy2& s) { return s.size(); }))
+                      [](const MutableSeedProxy& s) { return s.size(); }))
       .def_property_readonly(
           "empty", tetheredRead<MutSeedTether>(
-                       [](const MutableSeedProxy2& s) { return s.empty(); }))
+                       [](const MutableSeedProxy& s) { return s.empty(); }))
       .def_property(
-          "quality",
-          tetheredRead<MutSeedTether>(
-              [](const MutableSeedProxy2& s) { return s.quality(); }),
+          "quality", tetheredRead<MutSeedTether>([](const MutableSeedProxy& s) {
+            return s.quality();
+          }),
           tetheredWrite<MutSeedTether, float>(
-              [](MutableSeedProxy2& s, const float& q) { s.quality() = q; }))
+              [](MutableSeedProxy& s, const float& q) { s.quality() = q; }))
       .def_property(
-          "vertexZ",
-          tetheredRead<MutSeedTether>(
-              [](const MutableSeedProxy2& s) { return s.vertexZ(); }),
+          "vertexZ", tetheredRead<MutSeedTether>([](const MutableSeedProxy& s) {
+            return s.vertexZ();
+          }),
           tetheredWrite<MutSeedTether, float>(
-              [](MutableSeedProxy2& s, const float& z) { s.vertexZ() = z; }))
-      .def("assignSpacePointIndices",
-           [](MutSeedTether& self,
-              const std::vector<SpacePointIndex2>& indices) {
-             self.checked().assignSpacePointIndices(indices);
-           });
+              [](MutableSeedProxy& s, const float& z) { s.vertexZ() = z; }))
+      .def(
+          "assignSpacePointIndices",
+          [](MutSeedTether& self, const std::vector<SpacePointIndex>& indices) {
+            self.checked().assignSpacePointIndices(indices);
+          });
 
   // BoundTrackParameters (alias for
   // GenericBoundTrackParameters<ParticleHypothesis>)
@@ -564,8 +556,8 @@ void addEventData(py::module_& m) {
   // replicating what the whiteboard does, so proxy tether failures can be
   // tested without acts.examples.
   auto mt = m.def_submodule("_testing");
-  mt.def("consume_spacepoints", [](std::unique_ptr<SpacePointContainer2>) {});
-  mt.def("consume_seeds", [](std::unique_ptr<SeedContainer2>) {});
+  mt.def("consume_spacepoints", [](std::unique_ptr<SpacePointContainer>) {});
+  mt.def("consume_seeds", [](std::unique_ptr<SeedContainer>) {});
 }
 
 }  // namespace ActsPython
