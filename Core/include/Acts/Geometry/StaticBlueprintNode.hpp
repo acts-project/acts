@@ -65,27 +65,11 @@ class StaticBlueprintNode : public BlueprintNode {
   /// @return Pointer to the navigation policy factory (may be nullptr)
   const NavigationPolicyFactory* navigationPolicyFactory() const;
 
-  /// Take over the ownership over a Surface or VolumePlacement and pass it on
-  /// to the tracking geometry
-  /// @tparam Obj_t Either the PlacementOwnPtr variant or any other pointer
-  ///               type where the object inhherits from the Surface or
-  ///               VolumePlacement base class
-  /// @param placement Pointer to the placement to be managed by the
-  ///                   tracking volume
-  template <typename Obj_t>
-  void retainPlacement(Obj_t placement)
-    requires(std::is_constructible_v<TrackingVolume::PlacementOwnPtr, Obj_t>)
-  {
-    m_placements.emplace_back(std::move(placement));
-  }
-
  protected:
   void addToGraphviz(std::ostream& os) const override;
 
   /// The wrapped tracking volume managed by this blueprint node
   std::unique_ptr<TrackingVolume> m_volume;
-  /// Vector of volume or surface plaements to be owned by the tracking geometry
-  std::vector<TrackingVolume::PlacementOwnPtr> m_placements{};
 
   /// Portal shell representation for geometry connection
   std::unique_ptr<PortalShellBase> m_shell;
