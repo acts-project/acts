@@ -103,9 +103,10 @@ ProcessCode TrackTruthMatcher::execute(const AlgorithmContext& ctx) const {
 
     if ((!m_cfg.doubleMatching && recoMatched) ||
         (m_cfg.doubleMatching && recoMatched && truthMatched)) {
-      auto& trackParticleMatch = trackParticleMatching[track.index()] = {
-          TrackMatchClassification::Matched, majorityParticleId,
-          particleHitCounts};
+      trackParticleMatching[track.index()] = {TrackMatchClassification::Matched,
+                                              majorityParticleId,
+                                              particleHitCounts};
+      auto& trackParticleMatch = trackParticleMatching[track.index()];
 
       auto& particleTrackMatch = particleTrackMatching[majorityParticleId];
       if (!particleTrackMatch.track) {
