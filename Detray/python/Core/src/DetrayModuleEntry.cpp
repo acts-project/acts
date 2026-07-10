@@ -62,7 +62,15 @@ std::pair<detector_handle, name_map_t> read_detector(
 PYBIND11_MODULE(DetrayPythonBindings, m) {
   m.doc() = "Detray core bindings";
 
-  py::class_<detector_handle>(m, "Detector");
+  py::class_<detector_handle>(m, "Detector")
+      .def(
+          "n_volumes",
+          [](const detector_handle &d) { return d.detector.volumes().size(); },
+          "Number of volumes in the detector")
+      .def(
+          "n_surfaces",
+          [](const detector_handle &d) { return d.detector.surfaces().size(); },
+          "Number of surfaces in the detector");
   py::class_<name_map_t>(m, "NameMap");
 
   m.def("read_detector", &read_detector, py::arg("file_name"),
