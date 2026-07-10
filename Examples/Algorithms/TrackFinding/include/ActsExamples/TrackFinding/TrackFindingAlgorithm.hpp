@@ -45,8 +45,12 @@ class TrackFindingAlgorithm final : public IAlgorithm {
  public:
   /// Track finder function that takes input measurements, initial trackstate
   /// and track finder options and returns some track-finder-specific result.
+  /// The type-erased options carry the full (bremsstrahlung) configuration.
+  /// The plain single-component finder binds to its base slice, the
+  /// multi-component finder uses it whole; the runtime switch happens in the
+  /// algorithm.
   using TrackFinderOptions =
-      Acts::CombinatorialKalmanFilterOptions<TrackContainer>;
+      Acts::BremCombinatorialKalmanFilterOptions<TrackContainer>;
   using TrackFinderResult =
       Acts::Result<std::vector<TrackContainer::TrackProxy>>;
 

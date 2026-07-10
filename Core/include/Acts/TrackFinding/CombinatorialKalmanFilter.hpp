@@ -36,6 +36,7 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <type_traits>
 
 namespace Acts {
 
@@ -107,8 +108,22 @@ struct CombinatorialKalmanFilterOptions {
   /// Skip the pre propagation call. This effectively skips the first surface
   /// @note This is useful if the first surface should not be considered in a second reverse pass
   bool skipPrePropagationUpdate = false;
+};
 
-  // The following options are only relevant if a multi stepper is used
+/// Options for the combinatorial Kalman filter with bremsstrahlung recovery.
+///
+/// These extend the plain options with the parameters that are only meaningful
+/// when the filter runs with a multi-component (GSF-like) stepper. Keeping them
+/// in a dedicated type means the single-component configuration cannot even
+/// name them.
+///
+/// @tparam track_container_t Type of the track container
+template <typename track_container_t>
+struct BremCombinatorialKalmanFilterOptions
+    : public CombinatorialKalmanFilterOptions<track_container_t> {
+  /// Reuse the base-class constructors.
+  using CombinatorialKalmanFilterOptions<
+      track_container_t>::CombinatorialKalmanFilterOptions;
 
   /// Maximum number of components which the GSF should handle
   std::size_t maxComponents = 12;
@@ -245,27 +260,37 @@ class CombinatorialKalmanFilter {
 
     CombinatorialKalmanFilterExtensions<track_container_t> extensions;
 
-    /// Maximum number of components which the GSF should handle
-    std::size_t maxComponents = 4;
-
-    /// When to discard components
-    double weightCutoff = 1e-4;
-
-    /// How to reduce the states that are stored in the multi trajectory
-    ComponentMergeMethod mergeMethod = ComponentMergeMethod::eMaxWeight;
-
-    /// The Bethe-Heitler approximation for bremsstrahlung energy loss
-    const BetheHeitlerApprox* betheHeitlerApprox{nullptr};
-
     /// End of world aborter
     EndOfWorldReached endOfWorldReached;
 
     /// Volume constraint aborter
     VolumeConstraintAborter volumeConstraintAborter;
 
-    TemporaryStates* temporaryStates{nullptr};
-    std::vector<BetheHeitlerApprox::Component>* betheHeitlerCache{nullptr};
-    std::vector<GsfComponent>* componentCache{nullptr};
+    /// State that is only meaningful when the filter runs with a
+    /// multi-component stepper (bremsstrahlung recovery).
+    struct BremState {
+      /// Maximum number of components which the GSF should handle
+      std::size_t maxComponents = 12;
+      /// When to discard components
+      double weightCutoff = 1e-4;
+      /// How to reduce the states that are stored in the multi trajectory
+      ComponentMergeMethod mergeMethod = ComponentMergeMethod::eMaxWeight;
+      /// The Bethe-Heitler approximation for bremsstrahlung energy loss
+      const BetheHeitlerApprox* betheHeitlerApprox{nullptr};
+
+      /// Scratch buffers reused across surfaces during the multi-component
+      /// update. Owned by `findTracks` and wired in before propagation.
+      TemporaryStates* temporaryStates{nullptr};
+      std::vector<BetheHeitlerApprox::Component>* betheHeitlerCache{nullptr};
+      std::vector<GsfComponent>* componentCache{nullptr};
+    };
+    /// Empty stand-in for the single-component stepper.
+    struct NoBremState {};
+
+    /// Bremsstrahlung-only state, gated on the stepper type so it adds no
+    /// storage in the single-component case.
+    [[no_unique_address]] std::conditional_t<IsMultiStepper, BremState,
+                                             NoBremState> brem;
 
     /// Actor logger instance
     const Logger* actorLogger{nullptr};
@@ -381,7 +406,7 @@ class CombinatorialKalmanFilter {
             currentBranch.parameters() = boundParams.parameters();
             currentBranch.covariance() = *boundParams.covariance();
           } else {
-            const auto singleParams = boundParams.merge(mergeMethod);
+            const auto singleParams = boundParams.merge(brem.mergeMethod);
             currentBranch.parameters() = singleParams.parameters();
             currentBranch.covariance() = *singleParams.covariance();
           }
@@ -570,7 +595,7 @@ class CombinatorialKalmanFilter {
             return res.error();
           }
           auto [multiBoundParams, jacobian, pathLength] = *res;
-          const auto singleParams = multiBoundParams.merge(mergeMethod);
+          const auto singleParams = multiBoundParams.merge(brem.mergeMethod);
           return Result<SingleBoundState>::success(
               {singleParams, jacobian, pathLength});
         }
@@ -893,8 +918,8 @@ class CombinatorialKalmanFilter {
         return Result<void>::success();
       } else {
         if (ACTS_CHECK_BIT(updateMode, MaterialUpdateMode::PostUpdate)) {
-          betheHeitlerCache->clear();
-          componentCache->clear();
+          brem.betheHeitlerCache->clear();
+          brem.componentCache->clear();
           std::size_t nInvalidBetheHeitler = 0;
           double maxPathXOverX0 = 0;
 
@@ -915,28 +940,33 @@ class CombinatorialKalmanFilter {
 
             detail::Gsf::applyBetheHeitler(
                 state.options.geoContext, surface, state.options.direction,
-                bound, cmp.weight(), *betheHeitlerApprox, *betheHeitlerCache,
-                weightCutoff, *componentCache, nInvalidBetheHeitler,
-                maxPathXOverX0, logger());
+                bound, cmp.weight(), *brem.betheHeitlerApprox,
+                *brem.betheHeitlerCache, brem.weightCutoff,
+                *brem.componentCache, nInvalidBetheHeitler, maxPathXOverX0,
+                logger());
           }
 
-          if (componentCache->empty()) {
+          if (brem.componentCache->empty()) {
             ACTS_WARNING(
                 "No components left after applying energy loss. "
                 "Is the weight cutoff "
-                << weightCutoff << " too high?");
+                << brem.weightCutoff << " too high?");
             ACTS_WARNING("Return to propagator without applying energy loss");
             return Result<void>::success();
           }
 
           // reduce component number
-          const auto finalCmpNumber = std::min(
-              static_cast<std::size_t>(stepper.maxComponents), maxComponents);
-          extensions.mixtureReducer(*componentCache, finalCmpNumber, surface);
+          const auto finalCmpNumber =
+              std::min(static_cast<std::size_t>(stepper.maxComponents),
+                       brem.maxComponents);
+          extensions.mixtureReducer(*brem.componentCache, finalCmpNumber,
+                                    surface);
 
-          detail::Gsf::removeLowWeightComponents(*componentCache, weightCutoff);
+          detail::Gsf::removeLowWeightComponents(*brem.componentCache,
+                                                 brem.weightCutoff);
 
-          detail::Gsf::updateStepper(state, stepper, surface, *componentCache);
+          detail::Gsf::updateStepper(state, stepper, surface,
+                                     *brem.componentCache);
         }
 
         detail::Gsf::applyMultipleScattering(state, stepper, surface,
@@ -960,7 +990,8 @@ class CombinatorialKalmanFilter {
 
         const auto& surface = trackState.referenceSurface();
 
-        temporaryStates->clear();
+        auto& temporaryStates = *brem.temporaryStates;
+        temporaryStates.clear();
 
         for (auto cmp : stepper.componentIterable(state.stepping)) {
           auto& singleState = cmp.singleState(state).stepping;
@@ -970,7 +1001,7 @@ class CombinatorialKalmanFilter {
               TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
               TrackStatePropMask::Jacobian | TrackStatePropMask::Calibrated;
           TrackStateProxy trackStateProxy =
-              temporaryStates->traj.makeTrackState(mask, kTrackIndexInvalid);
+              temporaryStates.traj.makeTrackState(mask, kTrackIndexInvalid);
 
           // TODO call calibrator again?
 
@@ -1001,30 +1032,30 @@ class CombinatorialKalmanFilter {
             return updateRes.error();
           }
 
-          temporaryStates->tips.push_back(trackStateProxy.index());
-          temporaryStates->weights[trackStateProxy.index()] = cmp.weight();
+          temporaryStates.tips.push_back(trackStateProxy.index());
+          temporaryStates.weights[trackStateProxy.index()] = cmp.weight();
         }
 
-        detail::Gsf::computePosteriorWeights(temporaryStates->traj,
-                                             temporaryStates->tips,
-                                             temporaryStates->weights);
+        detail::Gsf::computePosteriorWeights(temporaryStates.traj,
+                                             temporaryStates.tips,
+                                             temporaryStates.weights);
 
-        detail::Gsf::normalizeWeights(temporaryStates->tips,
+        detail::Gsf::normalizeWeights(temporaryStates.tips,
                                       [&](auto idx) -> double& {
-                                        return temporaryStates->weights.at(idx);
+                                        return temporaryStates.weights.at(idx);
                                       });
 
         const auto [prtMean, prtCov] = detail::Gsf::mergeGaussianMixture(
-            temporaryStates->tips,
-            PrtProjector{temporaryStates->traj, temporaryStates->weights},
-            surface, mergeMethod);
+            temporaryStates.tips,
+            PrtProjector{temporaryStates.traj, temporaryStates.weights},
+            surface, brem.mergeMethod);
         trackState.predicted() = prtMean;
         trackState.predictedCovariance() = prtCov;
 
         const auto [fltMean, fltCov] = detail::Gsf::mergeGaussianMixture(
-            temporaryStates->tips,
-            FltProjector{temporaryStates->traj, temporaryStates->weights},
-            surface, mergeMethod);
+            temporaryStates.tips,
+            FltProjector{temporaryStates.traj, temporaryStates.weights},
+            surface, brem.mergeMethod);
         trackState.filtered() = fltMean;
         trackState.filteredCovariance() = fltCov;
 
@@ -1048,8 +1079,8 @@ class CombinatorialKalmanFilter {
         // multi bound parameters on the track state and recover them here. This
         // would also behave better in case of branching.
         // TODO revisit this
-        detail::Gsf::updateStepper(state, stepper, *temporaryStates,
-                                   weightCutoff);
+        detail::Gsf::updateStepper(state, stepper, *brem.temporaryStates,
+                                   brem.weightCutoff);
       }
     }
   };
@@ -1069,6 +1100,14 @@ class CombinatorialKalmanFilter {
   };
 
  public:
+  /// Options for this filter instantiation, selected by the stepper: the plain
+  /// @ref CombinatorialKalmanFilterOptions for a single-component stepper, and
+  /// @ref BremCombinatorialKalmanFilterOptions (bremsstrahlung recovery) for a
+  /// multi-component stepper.
+  using Options = std::conditional_t<
+      IsMultiStepper, BremCombinatorialKalmanFilterOptions<track_container_t>,
+      CombinatorialKalmanFilterOptions<track_container_t>>;
+
   /// Combinatorial Kalman Filter implementation, calls the Kalman filter
   ///
   /// @param initialParameters The initial track parameters
@@ -1084,8 +1123,7 @@ class CombinatorialKalmanFilter {
   /// @return a container of track finding result for all the initial track
   /// parameters
   Result<std::vector<TrackProxy>> findTracks(
-      const BoundTrackParameters& initialParameters,
-      const CombinatorialKalmanFilterOptions<track_container_t>& tfOptions,
+      const BoundTrackParameters& initialParameters, const Options& tfOptions,
       track_container_t& trackContainer, TrackProxy rootBranch) const {
     // Create the ActorList
     using CombinatorialKalmanFilterActor = Actor;
@@ -1114,17 +1152,25 @@ class CombinatorialKalmanFilter {
     // copy delegates to calibrator, updater, branch stopper
     combKalmanActor.extensions = tfOptions.extensions;
 
-    combKalmanActor.maxComponents = tfOptions.maxComponents;
-    combKalmanActor.weightCutoff = tfOptions.weightCutoff;
-    combKalmanActor.mergeMethod = tfOptions.mergeMethod;
-    combKalmanActor.betheHeitlerApprox = tfOptions.betheHeitlerApprox.get();
-
+    // Scratch buffers for the multi-component (bremsstrahlung) path. They must
+    // outlive the propagation below; they are left untouched by a
+    // single-component stepper.
     TemporaryStates temporaryStates;
     std::vector<BetheHeitlerApprox::Component> betheHeitlerCache;
     std::vector<GsfComponent> componentCache;
-    combKalmanActor.temporaryStates = &temporaryStates;
-    combKalmanActor.betheHeitlerCache = &betheHeitlerCache;
-    combKalmanActor.componentCache = &componentCache;
+
+    // The bremsstrahlung parameters only exist on the multi-component options.
+    if constexpr (IsMultiStepper) {
+      combKalmanActor.brem.maxComponents = tfOptions.maxComponents;
+      combKalmanActor.brem.weightCutoff = tfOptions.weightCutoff;
+      combKalmanActor.brem.mergeMethod = tfOptions.mergeMethod;
+      combKalmanActor.brem.betheHeitlerApprox =
+          tfOptions.betheHeitlerApprox.get();
+
+      combKalmanActor.brem.temporaryStates = &temporaryStates;
+      combKalmanActor.brem.betheHeitlerCache = &betheHeitlerCache;
+      combKalmanActor.brem.componentCache = &componentCache;
+    }
 
     auto propState =
         m_propagator
@@ -1212,8 +1258,7 @@ class CombinatorialKalmanFilter {
   /// @return a container of track finding result for all the initial track
   /// parameters
   Result<std::vector<TrackProxy>> findTracks(
-      const BoundTrackParameters& initialParameters,
-      const CombinatorialKalmanFilterOptions<track_container_t>& tfOptions,
+      const BoundTrackParameters& initialParameters, const Options& tfOptions,
       track_container_t& trackContainer) const {
     auto rootBranch = trackContainer.makeTrack();
     return findTracks(initialParameters, tfOptions, trackContainer, rootBranch);
