@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackProxyCommon.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
@@ -16,6 +17,7 @@
 
 #include <any>
 #include <cassert>
+#include <optional>
 #include <type_traits>
 
 namespace Acts {
@@ -59,6 +61,10 @@ class TrackHandlerConstBase {
   virtual unsigned int nTrackStates(const void* container,
                                     TrackIndexType index) const = 0;
 
+  /// Get a type-erased track state proxy at the given state index
+  virtual AnyConstTrackStateProxy trackStateAtIndex(
+      const void* container, TrackIndexType stateIndex) const = 0;
+
   /// Check if track has a specific dynamic column
   virtual bool hasColumn(const void* container, HashedString key) const = 0;
 
@@ -74,6 +80,11 @@ class TrackHandlerMutableBase : public TrackHandlerConstBase {
   using TrackHandlerConstBase::component;
   using TrackHandlerConstBase::covariance;
   using TrackHandlerConstBase::parameters;
+  using TrackHandlerConstBase::trackStateAtIndex;
+
+  /// Get a mutable type-erased track state proxy at the given state index
+  virtual AnyMutableTrackStateProxy trackStateAtIndex(
+      void* container, TrackIndexType stateIndex) const = 0;
 
   /// Get mutable parameter vector
   virtual ParametersMap parameters(void* container,
@@ -154,6 +165,14 @@ class TrackHandler<container_t, true> /*final*/ : public TrackHandlerConstBase {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).nTrackStates();
+  }
+
+  AnyConstTrackStateProxy trackStateAtIndex(
+      const void* container, TrackIndexType stateIndex) const final {
+    assert(container != nullptr);
+    const auto* tc = static_cast<const ContainerType*>(container);
+    auto ts = tc->trackStateContainer().getTrackState(stateIndex);
+    return AnyConstTrackStateProxy(ts);
   }
 
   bool hasColumn(const void* container, HashedString key) const final {
@@ -237,6 +256,22 @@ class TrackHandler<container_t,
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).nTrackStates();
+  }
+
+  AnyConstTrackStateProxy trackStateAtIndex(
+      const void* container, TrackIndexType stateIndex) const final {
+    assert(container != nullptr);
+    const auto* tc = static_cast<const ContainerType*>(container);
+    auto ts = tc->trackStateContainer().getTrackState(stateIndex);
+    return AnyConstTrackStateProxy(ts);
+  }
+
+  AnyMutableTrackStateProxy trackStateAtIndex(
+      void* container, TrackIndexType stateIndex) const final {
+    assert(container != nullptr);
+    auto* tc = static_cast<ContainerType*>(container);
+    auto ts = tc->trackStateContainer().getTrackState(stateIndex);
+    return AnyMutableTrackStateProxy(ts);
   }
 
   bool hasColumn(const void* container, HashedString key) const final {
@@ -473,6 +508,100 @@ class AnyTrackProxy : public TrackProxyCommon<AnyTrackProxy<read_only>,
   /// @return The number of track states
   unsigned int nTrackStates() const {
     return constHandler()->nTrackStates(containerPtr(), m_index);
+  }
+
+  /// Return a const type-erased track state proxy to the outermost track state
+  /// @return The outermost track state proxy
+  AnyConstTrackStateProxy outermostTrackState() const {
+    return constHandler()->trackStateAtIndex(containerPtr(),
+                                             this->tipIndex());
+  }
+
+  /// Return a mutable type-erased track state proxy to the outermost track
+  /// state
+  /// @return The outermost track state proxy
+  AnyMutableTrackStateProxy outermostTrackState()
+    requires(!ReadOnly)
+  {
+    return mutableHandler()->trackStateAtIndex(mutableContainerPtr(),
+                                               this->tipIndex());
+  }
+
+  /// Return a const type-erased track state proxy to the innermost track state
+  /// @note This is only available if the track is forward linked
+  /// @return The innermost track state proxy, or nullopt if not forward linked
+  std::optional<AnyConstTrackStateProxy> innermostTrackState() const {
+    TrackIndexType stem = this->stemIndex();
+    if (stem == kTrackIndexInvalid) {
+      return std::nullopt;
+    }
+    return constHandler()->trackStateAtIndex(containerPtr(), stem);
+  }
+
+  /// Return a mutable type-erased track state proxy to the innermost track
+  /// state
+  /// @note This is only available if the track is forward linked
+  /// @return The innermost track state proxy, or nullopt if not forward linked
+  std::optional<AnyMutableTrackStateProxy> innermostTrackState()
+    requires(!ReadOnly)
+  {
+    TrackIndexType stem = this->stemIndex();
+    if (stem == kTrackIndexInvalid) {
+      return std::nullopt;
+    }
+    return mutableHandler()->trackStateAtIndex(mutableContainerPtr(), stem);
+  }
+
+  /// Get a range over the track states of this track, from the outside inwards.
+  /// Compatible with range-based for loops. Const version.
+  /// @return Track state range to iterate over
+  AnyTrackStateRange<true, true> trackStatesReversed() const {
+    if (this->tipIndex() == kTrackIndexInvalid) {
+      return {};
+    }
+    return AnyTrackStateRange<true, true>{outermostTrackState()};
+  }
+
+  /// Get a range over the track states of this track, from the outside inwards.
+  /// Compatible with range-based for loops. Mutable version.
+  /// @note Only available if the track proxy is not read-only
+  /// @return Track state range to iterate over
+  AnyTrackStateRange<true, false> trackStatesReversed()
+    requires(!ReadOnly)
+  {
+    if (this->tipIndex() == kTrackIndexInvalid) {
+      return {};
+    }
+    return AnyTrackStateRange<true, false>{outermostTrackState()};
+  }
+
+  /// Get a range over the track states of this track, from the inside outwards.
+  /// Compatible with range-based for loops. Const version.
+  /// @warning This access direction is only possible if the track states are
+  ///          **forward-linked**. The range is empty otherwise.
+  /// @return Track state range to iterate over
+  AnyTrackStateRange<false, true> trackStates() const {
+    std::optional<AnyConstTrackStateProxy> inner = innermostTrackState();
+    if (!inner.has_value()) {
+      return {};
+    }
+    return AnyTrackStateRange<false, true>{*inner};
+  }
+
+  /// Get a range over the track states of this track, from the inside outwards.
+  /// Compatible with range-based for loops. Mutable version.
+  /// @note Only available if the track proxy is not read-only
+  /// @warning This access direction is only possible if the track states are
+  ///          **forward-linked**. The range is empty otherwise.
+  /// @return Track state range to iterate over
+  AnyTrackStateRange<false, false> trackStates()
+    requires(!ReadOnly)
+  {
+    std::optional<AnyMutableTrackStateProxy> inner = innermostTrackState();
+    if (!inner.has_value()) {
+      return {};
+    }
+    return AnyTrackStateRange<false, false>{*inner};
   }
 
   /// Check if the track has a specific dynamic column
