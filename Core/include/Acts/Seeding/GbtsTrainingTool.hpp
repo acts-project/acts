@@ -31,6 +31,7 @@ class GbtsLayerConnectionTool {
     /// @param maxR_ maximum radius of layer
     /// @param minZ_ minimum z coordinate of layer
     /// @param maxZ_ maximum z coordinate of layer
+    /// @param gbtsId_ GBTS id of layer
     LayerDescription(float minR_, float maxR_, float minZ_, float maxZ_,
                      std::int32_t gbtsId_);
 
@@ -77,6 +78,7 @@ class GbtsLayerConnectionTool {
     float z{};
   };
 
+  /// pair of layer transitions
   using LayerIdPair = std::pair<std::int32_t, std::int32_t>;
 
   /// Hash id used for unordered sets and maps
@@ -84,6 +86,7 @@ class GbtsLayerConnectionTool {
     /// operator to allow the lookup of std::pair objects
     /// in unordered maps or sets
     /// @param pair Layer transition pair
+    /// @return hash id
     std::size_t operator()(const LayerIdPair& pair) const noexcept {
       const auto h1 = std::hash<std::int32_t>{}(pair.first);
       const auto h2 = std::hash<std::int32_t>{}(pair.second);
@@ -92,7 +95,9 @@ class GbtsLayerConnectionTool {
     }
   };
 
+  /// Container of pairs of layer transitions
   using LayerIdPairs = std::unordered_set<LayerIdPair, LayerIdPairHash>;
+  /// Map of layer pair transitions, quantifying the amount of times they occur
   using LayerIdPairMap =
       std::unordered_map<LayerIdPair, std::uint32_t, LayerIdPairHash>;
 
@@ -130,7 +135,7 @@ class GbtsLayerConnectionTool {
   std::optional<std::int32_t> oppositeSideLayer(std::int32_t layer) const;
 
   /// Formatts table in legacy formatting
-  /// @param outputFilelocation the location for the layer connection table
+  /// @param outputFileLocation the location for the layer connection table
   /// @param tempTable the temporary container for holding layer transitions before sorting
   void oldStyleFormatting(const std::string& outputFileLocation,
                           const LayerIdPairs& tempTable) const;
