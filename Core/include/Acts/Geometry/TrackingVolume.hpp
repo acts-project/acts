@@ -586,9 +586,9 @@ class TrackingVolume : public Volume {
       m_placements.insert(m_placements.end(), placements.begin(),
                           placements.end());
     } else {
-      for (auto&& placement : placements) {
-        m_placements.emplace_back(std::move(placement));
-      }
+      m_placements.insert(m_placements.end(),
+                          std::make_move_iterator(placements.begin()),
+                          std::make_move_iterator(placements.end()));
     }
   }
 
