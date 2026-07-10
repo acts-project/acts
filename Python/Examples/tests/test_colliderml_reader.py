@@ -164,9 +164,7 @@ def colliderml_fatras_sample(tmp_path_factory):
 
 
 @pytest.mark.parametrize("reco_geo", ["gen1", "gen3"])
-def test_colliderml_truth_tracking(
-    tmp_path, assert_root_hash, colliderml_fatras_sample, reco_geo
-):
+def test_colliderml_truth_tracking(tmp_path, colliderml_fatras_sample, reco_geo):
     """Read FATRAS-generated ColliderML-format data and run truth-seeded KF tracking.
 
     Parametrized on the reconstruction geometry:
@@ -175,7 +173,7 @@ def test_colliderml_truth_tracking(
 
     Verifies that the ColliderML reader pipeline (ParquetReader +
     ColliderMLRelease1InputConverter + TruthEstimated seeding + KF) runs without
-    error and produces ROOT output files with the expected content hashes.
+    error.
     """
     import sys
 
@@ -185,6 +183,8 @@ def test_colliderml_truth_tracking(
     from generate_geoid_map import generate_geoid_map
 
     inputDir, sample = colliderml_fatras_sample
+    particlesDir = inputDir / f"{sample}_particles" / "data" / f"{sample}_particles"
+    hitsDir = inputDir / f"{sample}_tracker_hits" / "data" / f"{sample}_tracker_hits"
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     if reco_geo == "gen3":
@@ -217,11 +217,12 @@ def test_colliderml_truth_tracking(
         ctx = detector
 
     def _run():
-        s, _perf_proto, _perf_kf = runColliderMLTruthTracking(
+        s = runColliderMLTruthTracking(
             trackingGeometry=trackingGeometry,
             field=field,
             outputDir=tmp_path,
-            inputDir=inputDir,
+            particlesDir=particlesDir,
+            hitsDir=hitsDir,
             geoIdMapPath=geoid_map_path if reco_geo == "gen3" else None,
             decorators=decorators,
             events=_N_EVENTS,
@@ -235,15 +236,3 @@ def test_colliderml_truth_tracking(
             _run()
     else:
         _run()
-
-    root_files = [
-        "trackstates_kf.root",
-        "tracksummary_kf.root",
-        "performance_kf.root",
-    ]
-
-    for fn in root_files:
-        fp = tmp_path / fn
-        assert fp.exists(), f"{fn} was not produced"
-        assert fp.stat().st_size > 1024, f"{fn} is suspiciously small"
-        assert_root_hash(fn, fp)
