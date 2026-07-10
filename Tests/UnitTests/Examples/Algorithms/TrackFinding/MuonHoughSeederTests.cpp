@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
-
 #include "ActsExamples/EventData/MuonHoughMaximum.hpp"
 #include "ActsExamples/EventData/MuonSegment.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
@@ -80,8 +79,8 @@ ActsExamples::MuonSpacePointContainer makeDriftCircleSpacePoints() {
     sp.setId(makeMdtEtaId(static_cast<std::uint8_t>(i + 1u),
                           static_cast<std::uint16_t>(i + 1u)));
 
-    sp.defineCoordinates(Acts::Vector3{0.0, dc.y, dc.z},
-                         Acts::Vector3::UnitX(), Acts::Vector3::UnitY());
+    sp.defineCoordinates(Acts::Vector3{0.0, dc.y, dc.z}, Acts::Vector3::UnitX(),
+                         Acts::Vector3::UnitY());
 
     sp.setRadius(dc.rDrift);
     sp.setTime(0.0);
@@ -95,7 +94,7 @@ ActsExamples::MuonSpacePointContainer makeDriftCircleSpacePoints() {
 
 BOOST_AUTO_TEST_SUITE(MuonHoughTransformSuite)
 
-/// 
+///
 BOOST_AUTO_TEST_CASE(muon_hough_seeder_drift_circle_sanity) {
   // Truth from the original HoughTransformUtils unit test.
   constexpr double trueTanTheta = -0.0401472 / 0.994974;
@@ -131,8 +130,8 @@ BOOST_AUTO_TEST_CASE(muon_hough_seeder_drift_circle_sanity) {
   // The algorithm requires a configured truth-segment key. With visualization
   // disabled this collection is not used, but writing an empty container keeps
   // the event store complete.
-  ActsExamples::WriteDataHandle<ActsExamples::MuonSegmentContainer>
-      truthHandle{&seeder, "TestInputTruthSegments"};
+  ActsExamples::WriteDataHandle<ActsExamples::MuonSegmentContainer> truthHandle{
+      &seeder, "TestInputTruthSegments"};
   truthHandle.initialize(cfg.inTruthSegments);
   truthHandle(ctx, ActsExamples::MuonSegmentContainer{});
 
@@ -163,8 +162,10 @@ BOOST_AUTO_TEST_CASE(muon_hough_seeder_drift_circle_sanity) {
     }
   }
 
-  /// Result aquired: -0.041608695652173948 -422.02655249999998
-  BOOST_TEST_MESSAGE("Maximum coordinates (tanBeta, interceptY): " << foundTanBeta << " " << foundInterceptY << " truth: " << trueTanTheta << " " << trueInterceptY);
+  /// Result acquired: -0.041608695652173948 -422.02655249999998
+  BOOST_TEST_MESSAGE("Maximum coordinates (tanBeta, interceptY): "
+                     << foundTanBeta << " " << foundInterceptY
+                     << " truth: " << trueTanTheta << " " << trueInterceptY);
   BOOST_CHECK(foundExpectedMaximum);
 }
 
