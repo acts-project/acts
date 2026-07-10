@@ -124,33 +124,41 @@ PipelineTensors OnnxEdgeClassifier::operator()(
   // Apply feature selection if configured
   std::optional<Tensor<float>> selectedNodeFeatures;
   ActsPlugins::Tensor<float> *nodeFeatures = &tensors.nodeFeatures;
+
   if (!m_cfg.selectedFeatures.empty()) {
-    // Create filtered node features with only selected indices
-    selectedNodeFeatures.emplace(Tensor<float>::Create(
-        {tensors.nodeFeatures.shape()[0], m_cfg.selectedFeatures.size()},
-        execContext));
-    auto *srcData = tensors.nodeFeatures.data();
-    auto *dstData = selectedNodeFeatures->data();
-    std::size_t numNodes = tensors.nodeFeatures.shape()[0];
     std::size_t numAllFeatures = tensors.nodeFeatures.shape()[1];
 
-    for (std::size_t n = 0; n < numNodes; ++n) {
-      for (std::size_t j = 0; j < m_cfg.selectedFeatures.size(); ++j) {
-        int featureIdx = m_cfg.selectedFeatures[j];
-        if (featureIdx < 0 || featureIdx >= static_cast<int>(numAllFeatures)) {
-          throw std::runtime_error("Selected feature index out of range");
-        }
-        dstData[n * m_cfg.selectedFeatures.size() + j] =
-            srcData[n * numAllFeatures + featureIdx];
+    // Create feature mask on CPU (and clone to device)
+    auto maskCpu =
+        Tensor<bool>::Create({numAllFeatures, 1ul}, ExecutionContext{});
+    auto *maskCpuData = maskCpu.data();
+    std::fill_n(maskCpuData, numAllFeatures, false);
+
+    for (std::size_t j = 0; j < m_cfg.selectedFeatures.size(); ++j) {
+      int featureIdx = m_cfg.selectedFeatures[j];
+      if (featureIdx < 0 || featureIdx >= static_cast<int>(numAllFeatures)) {
+        throw std::runtime_error("Selected feature index out of range");
       }
+      maskCpuData[static_cast<std::size_t>(featureIdx)] = true;
     }
+
+    // Clone if inputs not on CPU
+    Tensor<bool> mask = tensors.nodeFeatures.device().isCpu()
+                            ? std::move(maskCpu)
+                            : maskCpu.clone(execContext);
+
+    // Select features
+    selectedNodeFeatures.emplace(
+        selectCols(tensors.nodeFeatures, mask, execContext));
     nodeFeatures = &(*selectedNodeFeatures);
   }
 
   // scale node features if featureScales is given in cfg
   if (!m_cfg.featureScales.empty()) {
-    if (m_cfg.featureScales.size() != static_cast<std::size_t>(nodeFeatures->shape()[1])) {
-      throw std::runtime_error("featureScales size must match the number of input features");
+    if (m_cfg.featureScales.size() !=
+        static_cast<std::size_t>(nodeFeatures->shape()[1])) {
+      throw std::runtime_error(
+          "featureScales size must match the number of input features");
     }
     auto *data = nodeFeatures->data();
     std::size_t numNodes = nodeFeatures->shape()[0];
