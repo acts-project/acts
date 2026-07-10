@@ -85,7 +85,7 @@ def runTrackFindingPythonOnly(
             acts.examples.IAlgorithm.__init__(self, name, level)
 
             self.spacepoints = acts.examples.ReadDataHandle(
-                self, acts.SpacePointContainer2, "Spacepoints"
+                self, acts.SpacePointContainer, "Spacepoints"
             )
             self.spacepoints.initialize("spacepoints")
 
@@ -138,7 +138,7 @@ def runTrackFindingPythonOnly(
             self.tracks.initialize("fitted_tracks")
 
             self.spacepoints = acts.examples.ReadDataHandle(
-                self, acts.SpacePointContainer2, "Spacepoints"
+                self, acts.SpacePointContainer, "Spacepoints"
             )
             self.spacepoints.initialize("spacepoints")
 
