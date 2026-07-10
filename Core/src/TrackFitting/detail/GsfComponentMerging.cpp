@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
+
 #include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 
 #include <algorithm>
