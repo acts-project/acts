@@ -15,7 +15,11 @@
 #include "ActsExamples/Framework/IWriter.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
+#include "ActsExamples/Validation/EffPlotTool.hpp"
+#include "ActsExamples/Validation/ResPlotTool.hpp"
 #include "ActsExamples/Validation/TrackFinderPerformanceCollector.hpp"
+#include "ActsExamples/Validation/TrackFitterPerformanceCollector.hpp"
+#include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <mutex>
@@ -174,26 +178,178 @@ class PythonTrackFinderPerformanceWriter final
 
 }  // namespace
 
+/// A ROOT-free writer that collects track-fitter performance histograms and
+/// exposes them to Python via histograms() after s.run().
+class PythonTrackFitterPerformanceWriter final
+    : public WriterT<ConstTrackContainer> {
+ public:
+  struct Config {
+    /// Input (fitted) tracks collection.
+    std::string inputTracks;
+    /// Input particles collection.
+    std::string inputParticles;
+    /// Input track-particle matching.
+    std::string inputTrackParticleMatching;
+    /// Output filename (optional).
+    std::string filePath = "performance_track_fitter.root";
+    /// Plot tool configurations.
+    ResPlotTool::Config resPlotToolConfig;
+    EffPlotTool::Config effPlotToolConfig;
+    TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
+    /// Fit parameters.
+    int fitMinEntries = 10;
+    double fitSigmaRange = 3.0;
+    int fitIterations = 3;
+  };
+
+  PythonTrackFitterPerformanceWriter(Config cfg, Acts::Logging::Level lvl)
+      : WriterT(cfg.inputTracks, "PythonTrackFitterPerformanceWriter", lvl),
+        m_cfg(std::move(cfg)),
+        m_collector(
+            TrackFitterPerformanceCollector::Config{
+                m_cfg.resPlotToolConfig, m_cfg.effPlotToolConfig,
+                m_cfg.trackSummaryPlotToolConfig, m_cfg.fitMinEntries,
+                m_cfg.fitSigmaRange, m_cfg.fitIterations},
+            logger().clone()) {
+    if (m_cfg.inputParticles.empty()) {
+      throw std::invalid_argument("Missing particles input collection");
+    }
+    if (m_cfg.inputTrackParticleMatching.empty()) {
+      throw std::invalid_argument("Missing input track particles matching");
+    }
+
+    m_inputParticles.initialize(m_cfg.inputParticles);
+    m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
+  }
+
+  ProcessCode finalize() override {
+    m_collector.logSummary();
+    return ProcessCode::SUCCESS;
+  }
+
+  const Config& config() const { return m_cfg; }
+
+  /// Return all filled histograms as a Python dict keyed by histogram name.
+  py::dict histograms() const {
+    py::dict d;
+    const auto& coll = m_collector;
+
+    // Residual histograms
+    for (const auto& [name, hist] : coll.resPlotTool().res()) {
+      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+    }
+    for (const auto& [name, hist] : coll.resPlotTool().resVsEta()) {
+      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+    }
+    for (const auto& [name, hist] : coll.resPlotTool().resVsPt()) {
+      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+    }
+    for (const auto& [name, hist] : coll.resPlotTool().resVsEtaPhi()) {
+      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+    }
+    for (const auto& [name, hist] : coll.resPlotTool().resVsEtaPt()) {
+      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+    }
+
+    // Pull histograms
+    for (const auto& [name, hist] : coll.resPlotTool().pull()) {
+      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+    }
+    for (const auto& [name, hist] : coll.resPlotTool().pullVsEta()) {
+      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+    }
+    for (const auto& [name, hist] : coll.resPlotTool().pullVsPt()) {
+      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+    }
+    for (const auto& [name, hist] : coll.resPlotTool().pullVsEtaPhi()) {
+      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+    }
+    for (const auto& [name, hist] : coll.resPlotTool().pullVsEtaPt()) {
+      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+    }
+
+    // Efficiency histograms
+    for (const auto& [name, eff] : coll.effPlotTool().efficiencies1D()) {
+      d[py::str(name)] = py::cast(eff, py::return_value_policy::copy);
+    }
+    for (const auto& [name, eff] : coll.effPlotTool().efficiencies2D()) {
+      d[py::str(name)] = py::cast(eff, py::return_value_policy::copy);
+    }
+    for (const auto& eff : coll.effPlotTool().trackEffVsEtaInPtRanges()) {
+      d[py::str(eff.name())] = py::cast(eff, py::return_value_policy::copy);
+    }
+    for (const auto& eff : coll.effPlotTool().trackEffVsPtInAbsEtaRanges()) {
+      d[py::str(eff.name())] = py::cast(eff, py::return_value_policy::copy);
+    }
+
+    // Track summary histograms
+    for (const auto& [name, prof] : coll.trackSummaryPlotTool().profiles()) {
+      d[py::str(name)] = py::cast(prof, py::return_value_policy::copy);
+    }
+
+    return d;
+  }
+
+ private:
+  ProcessCode writeT(const AlgorithmContext& ctx,
+                     const ConstTrackContainer& tracks) override {
+    const auto& particles = m_inputParticles(ctx);
+    const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
+
+    std::lock_guard<std::mutex> lock(m_writeMutex);
+    return m_collector.fill(ctx.geoContext, tracks, particles,
+                            trackParticleMatching);
+  }
+
+  Config m_cfg;
+  std::mutex m_writeMutex;
+  TrackFitterPerformanceCollector m_collector;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
+      this, "InputTrackParticleMatching"};
+};
+
 namespace ActsPython {
 
 void addPythonSpecific(py::module_& mex) {
-  using Writer = PythonTrackFinderPerformanceWriter;
-  using Config = Writer::Config;
+  {
+    using Writer = PythonTrackFinderPerformanceWriter;
+    using Config = Writer::Config;
 
-  auto w = py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
-               mex, "PythonTrackFinderPerformanceWriter")
-               .def(py::init<const Config&, Acts::Logging::Level>(),
-                    py::arg("config"), py::arg("level"))
-               .def_property_readonly("config", &Writer::config)
-               .def("histograms", &Writer::histograms);
+    auto w = py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
+                 mex, "PythonTrackFinderPerformanceWriter")
+                 .def(py::init<const Config&, Acts::Logging::Level>(),
+                      py::arg("config"), py::arg("level"))
+                 .def_property_readonly("config", &Writer::config)
+                 .def("histograms", &Writer::histograms);
 
-  auto c = py::class_<Config>(w, "Config").def(py::init<>());
-  ACTS_PYTHON_STRUCT(c, inputTracks, inputParticles, inputTrackParticleMatching,
-                     inputParticleTrackMatching, inputParticleMeasurementsMap,
-                     effPlotToolConfig, fakePlotToolConfig,
-                     duplicationPlotToolConfig, trackSummaryPlotToolConfig,
-                     trackQualityPlotToolConfig,
-                     subDetectorTrackSummaryVolumes);
+    auto c = py::class_<Config>(w, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, inputTracks, inputParticles,
+                       inputTrackParticleMatching, inputParticleTrackMatching,
+                       inputParticleMeasurementsMap, effPlotToolConfig,
+                       fakePlotToolConfig, duplicationPlotToolConfig,
+                       trackSummaryPlotToolConfig, trackQualityPlotToolConfig,
+                       subDetectorTrackSummaryVolumes);
+  }
+
+  {
+    using Writer = PythonTrackFitterPerformanceWriter;
+    using Config = Writer::Config;
+
+    auto w = py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
+                 mex, "PythonTrackFitterPerformanceWriter")
+                 .def(py::init<const Config&, Acts::Logging::Level>(),
+                      py::arg("config"), py::arg("level"))
+                 .def_property_readonly("config", &Writer::config)
+                 .def("histograms", &Writer::histograms);
+
+    auto c = py::class_<Config>(w, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, inputTracks, inputParticles,
+                       inputTrackParticleMatching, filePath, resPlotToolConfig,
+                       effPlotToolConfig, trackSummaryPlotToolConfig,
+                       fitMinEntries, fitSigmaRange, fitIterations);
+  }
 }
 
 }  // namespace ActsPython
