@@ -22,8 +22,10 @@
 
 namespace ActsExamples {
 
+/// gbst training algorithm for all training or tuning procedures
 class GbtsTrainingAlgorithm final : public IAlgorithm {
  public:
+  /// Configuration for GBTS training algorithm
   struct Config {
     /// The input truth particles that should be used to create proto tracks.
     std::string inputParticles;
@@ -35,48 +37,57 @@ class GbtsTrainingAlgorithm final : public IAlgorithm {
     std::string inputSimHits;
     /// The input measurement-sim hits map collection.
     std::string inputMeasurementSimHitsMap;
-
+    /// The layer connection tool config
     Acts::Experimental::GbtsLayerConnectionTool::Config
         gbtsLayerConnectionToolConfig;
-
-    // TO DO: inplace them explicitly into config
+    /// geometry file used for creating layers
     std::string geometryFileDir =
         "/home/ppd/jasper/QT/acts/gbts_layer_geometry.txt";
-
+    /// output directory for layer connection table
     std::string outputFileDir =
         "/home/ppd/jasper/QT/acts/connection-tables/"
         "conditional_prob_2kttbar200_new.txt";
   };
 
+  /// Constructor for GBTS training algorithm
+  /// @param config config for GBTS training algorithm
+  /// @param logger acts logger
   explicit GbtsTrainingAlgorithm(
       const Config& config,
       std::unique_ptr<const Acts::Logger> logger = nullptr);
 
+  /// run time execution per event
+  /// @param ctx event context
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
 
+  /// GBTS training algorithm destructor
   ~GbtsTrainingAlgorithm();
 
  private:
+  /// GBTS training algorithm config
   Config m_cfg;
-
+  /// Handle for input truth particles that should be used to create proto
+  /// tracks.
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
-
+  /// Handle for input particle-measurements map collection
   ReadDataHandle<ParticleMeasurementsMap> m_inputParticleMeasurementsMap{
       this, "InputParticleMeasurementsMap"};
-
+  /// Handle for input measurements collection that is used to sort the proto
+  /// tracks
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
-
+  /// Handle for input sim hits collection that is used to create the proto
+  /// tracks
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputHits"};
-
+  /// Handle for input measurement-sim hits map collection
   ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
       this, "MeasurementSimHitsMap"};
-
-  // make the mutable class thread safe
+  /// mutex used for thread safety
   mutable std::mutex m_gbtsTrainingToolMutex;
+  /// layer connection tool from core
   mutable std::optional<Acts::Experimental::GbtsLayerConnectionTool>
       m_layerConnectionTool;
 };
