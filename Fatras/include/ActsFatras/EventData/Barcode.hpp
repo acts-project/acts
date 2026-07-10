@@ -170,6 +170,14 @@ class Barcode {
             subParticle()};
   }
 
+  /// @deprecated Use asArray() instead to avoid a heap allocation.
+  /// @return Vector of barcode components
+  [[deprecated("Use asArray() instead to avoid a heap allocation")]]
+  std::vector<std::uint32_t> asVector() const {
+    auto arr = asArray();
+    return std::vector<std::uint32_t>(arr.begin(), arr.end());
+  }
+
   /// Create a new barcode with a different primary vertex identifier.
   /// @param id Primary vertex identifier to set
   /// @return New barcode with modified primary vertex identifier

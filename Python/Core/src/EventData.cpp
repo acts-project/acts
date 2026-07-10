@@ -9,7 +9,6 @@
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/SeedContainer2.hpp"
 #include "Acts/EventData/SeedProxy2.hpp"
-#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SpacePointColumns.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/SpacePointProxy2.hpp"
@@ -26,6 +25,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include <pybind11/numpy.h>
@@ -140,6 +140,7 @@ void addEventData(py::module_& m) {
   py::enum_<SpacePointColumns>(m, "SpacePointColumns")
       .value("None", SpacePointColumns::None)
       .value("SourceLinks", SpacePointColumns::SourceLinks)
+      .value("CopiedFromIndex", SpacePointColumns::CopiedFromIndex)
       .value("X", SpacePointColumns::X)
       .value("Y", SpacePointColumns::Y)
       .value("Z", SpacePointColumns::Z)
@@ -149,17 +150,13 @@ void addEventData(py::module_& m) {
       .value("VarianceZ", SpacePointColumns::VarianceZ)
       .value("VarianceR", SpacePointColumns::VarianceR)
       .value("VarianceT", SpacePointColumns::VarianceT)
-      .value("TopStripVector", SpacePointColumns::TopStripVector)
-      .value("BottomStripVector", SpacePointColumns::BottomStripVector)
-      .value("StripCenterDistance", SpacePointColumns::StripCenterDistance)
-      .value("TopStripCenter", SpacePointColumns::TopStripCenter)
-      .value("CopyFromIndex", SpacePointColumns::CopyFromIndex)
+      .value("StripCalibrationDetails",
+             SpacePointColumns::StripCalibrationDetails)
       .value("PackedXY", SpacePointColumns::PackedXY)
       .value("PackedZR", SpacePointColumns::PackedZR)
       .value("PackedXYZ", SpacePointColumns::PackedXYZ)
       .value("PackedXYZR", SpacePointColumns::PackedXYZR)
       .value("PackedVarianceZR", SpacePointColumns::PackedVarianceZR)
-      .value("Strip", SpacePointColumns::Strip)
       .value("All", SpacePointColumns::All)
       .def("__or__",
            [](SpacePointColumns a, SpacePointColumns b) {
@@ -213,20 +210,20 @@ void addEventData(py::module_& m) {
                py::arg("averageSourceLinks") = 1)
           .def("clear", &SpacePointContainer2::clear)
           .def("createSpacePoint",
-               [](py::object self) {
+               [](const py::object& self) {
                  auto& c = self.cast<SpacePointContainer2&>();
                  return MutSpTether{self, c.createSpacePoint()};
                })
           .def("__len__", &SpacePointContainer2::size)
           .def("__getitem__",
-               [](py::object self, SpacePointIndex2 idx) {
+               [](const py::object& self, SpacePointIndex2 idx) {
                  auto& c = self.cast<SpacePointContainer2&>();
                  return MutSpTether{self, MutableSpacePointProxy2(c, idx)};
                })
           .def("__iter__",
                [](py::object self) {
                  return IndexIteratorTether<SpacePointContainer2>{
-                     self, 0,
+                     std::move(self), 0,
                      [](const py::object& owner, SpacePointContainer2& c,
                         std::size_t i) {
                        return py::cast(MutSpTether{
@@ -271,26 +268,17 @@ void addEventData(py::module_& m) {
               "zrColumn", arrayColumn<2>(&SpacePointContainer2::zrColumn,
                                          SpacePointColumns::PackedZR, "zr"))
           .def_property_readonly(
-              "xy", arrayColumn<2>(&SpacePointContainer2::xyColumn,
-                                   SpacePointColumns::PackedXY, "xy"))
+              "xyzColumn", arrayColumn<3>(&SpacePointContainer2::xyzColumn,
+                                          SpacePointColumns::PackedXYZ, "xyz"))
           .def_property_readonly(
-              "zr", arrayColumn<2>(&SpacePointContainer2::zrColumn,
-                                   SpacePointColumns::PackedZR, "zr"))
-          .def_property_readonly(
-              "xyz", arrayColumn<3>(&SpacePointContainer2::xyzColumn,
-                                    SpacePointColumns::PackedXYZ, "xyz"))
-          .def_property_readonly(
-              "xyzr", arrayColumn<4>(&SpacePointContainer2::xyzrColumn,
-                                     SpacePointColumns::PackedXYZR, "xyzr"))
+              "xyzrColumn",
+              arrayColumn<4>(&SpacePointContainer2::xyzrColumn,
+                             SpacePointColumns::PackedXYZR, "xyzr"))
           .def_property_readonly(
               "varianceZRColumn",
               arrayColumn<2>(&SpacePointContainer2::varianceZRColumn,
-                             SpacePointColumns::PackedVarianceZR, "varianceZR"))
-          .def_property_readonly(
-              "topStripVectorColumn",
-              arrayColumn<3>(&SpacePointContainer2::topStripVectorColumn,
-                             SpacePointColumns::TopStripVector,
-                             "topStripVector"));
+                             SpacePointColumns::PackedVarianceZR,
+                             "varianceZR"));
 
   WhiteBoardRegistry::registerClass(spc2);
 
@@ -429,52 +417,14 @@ void addEventData(py::module_& m) {
                     guardedWrite<MutSpTether, float>(
                         SpacePointColumns::VarianceT, "varianceT",
                         [](MutProxy& s, const float& v) { s.varianceT() = v; }))
-      .def_property("topStripVector",
+      .def_property("copiedFromIndex",
                     guardedRead<MutSpTether>(
-                        SpacePointColumns::TopStripVector, "topStripVector",
-                        [](const MutProxy& s) { return s.topStripVector(); }),
-                    guardedWrite<MutSpTether, std::array<float, 3>>(
-                        SpacePointColumns::TopStripVector, "topStripVector",
-                        [](MutProxy& s, const std::array<float, 3>& v) {
-                          s.topStripVector() = v;
-                        }))
-      .def_property(
-          "bottomStripVector",
-          guardedRead<MutSpTether>(
-              SpacePointColumns::BottomStripVector, "bottomStripVector",
-              [](const MutProxy& s) { return s.bottomStripVector(); }),
-          guardedWrite<MutSpTether, std::array<float, 3>>(
-              SpacePointColumns::BottomStripVector, "bottomStripVector",
-              [](MutProxy& s, const std::array<float, 3>& v) {
-                s.bottomStripVector() = v;
-              }))
-      .def_property(
-          "stripCenterDistance",
-          guardedRead<MutSpTether>(
-              SpacePointColumns::StripCenterDistance, "stripCenterDistance",
-              [](const MutProxy& s) { return s.stripCenterDistance(); }),
-          guardedWrite<MutSpTether, std::array<float, 3>>(
-              SpacePointColumns::StripCenterDistance, "stripCenterDistance",
-              [](MutProxy& s, const std::array<float, 3>& v) {
-                s.stripCenterDistance() = v;
-              }))
-      .def_property("topStripCenter",
-                    guardedRead<MutSpTether>(
-                        SpacePointColumns::TopStripCenter, "topStripCenter",
-                        [](const MutProxy& s) { return s.topStripCenter(); }),
-                    guardedWrite<MutSpTether, std::array<float, 3>>(
-                        SpacePointColumns::TopStripCenter, "topStripCenter",
-                        [](MutProxy& s, const std::array<float, 3>& v) {
-                          s.topStripCenter() = v;
-                        }))
-      .def_property("copyFromIndex",
-                    guardedRead<MutSpTether>(
-                        SpacePointColumns::CopyFromIndex, "copyFromIndex",
-                        [](const MutProxy& s) { return s.copyFromIndex(); }),
+                        SpacePointColumns::CopiedFromIndex, "copiedFromIndex",
+                        [](const MutProxy& s) { return s.copiedFromIndex(); }),
                     guardedWrite<MutSpTether, SpacePointIndex2>(
-                        SpacePointColumns::CopyFromIndex, "copyFromIndex",
+                        SpacePointColumns::CopiedFromIndex, "copiedFromIndex",
                         [](MutProxy& s, const SpacePointIndex2& v) {
-                          s.copyFromIndex() = v;
+                          s.copiedFromIndex() = v;
                         }))
       .def("assignSourceLinks",
            [](MutSpTether& self, const std::vector<SourceLink>& sourceLinks) {
@@ -499,14 +449,14 @@ void addEventData(py::module_& m) {
           .def_property_readonly("empty", &SeedContainer2::empty)
           .def("__len__", &SeedContainer2::size)
           .def("__getitem__",
-               [](py::object self, SeedIndex2 idx) {
+               [](const py::object& self, SeedIndex2 idx) {
                  const auto& c = self.cast<const SeedContainer2&>();
                  return ConstSeedTether{self, ConstSeedProxy2(c, idx)};
                })
           .def("__iter__",
                [](py::object self) {
                  return IndexIteratorTether<SeedContainer2>{
-                     self, 0,
+                     std::move(self), 0,
                      [](const py::object& owner, SeedContainer2& c,
                         std::size_t i) {
                        return py::cast(ConstSeedTether{
@@ -515,7 +465,7 @@ void addEventData(py::module_& m) {
                      }};
                })
           .def("createSeed",
-               [](py::object self) {
+               [](const py::object& self) {
                  auto& c = self.cast<SeedContainer2&>();
                  return MutSeedTether{self, c.createSeed()};
                })

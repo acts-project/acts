@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.19)
 
 # LCG sets CPATH, which gets treated like -I by the compiler. We want to ignore
 # warnings from libraries, by unsetting it here, it gets processed by the usual
@@ -618,6 +618,7 @@ if(ACTS_SETUP_DETRAY)
     option(DETRAY_SETUP_EIGEN3 "" FALSE)
     option(DETRAY_SETUP_ACTSVG "" FALSE)
     option(DETRAY_SETUP_COVFIE "" FALSE)
+    option(DETRAY_SETUP_PYBIND11 "" FALSE)
     option(DETRAY_SVG_DISPLAY "" TRUE)
     if(ACTS_BUILD_TRACCC)
         option(DETRAY_BUILD_TEST_UTILS "" TRUE)
