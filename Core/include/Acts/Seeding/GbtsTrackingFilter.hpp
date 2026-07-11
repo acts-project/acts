@@ -118,6 +118,19 @@ class GbtsTrackingFilter final {
 
     /// Global state counter
     std::uint32_t globalStateCounter{0};
+
+    /// debug counters, accumulated across followTrack calls
+    std::uint32_t nUpdates{0};
+    /// Updates rejected by the transverse chi2 gate
+    std::uint32_t nRejChi2X{0};
+    /// Updates rejected by the longitudinal chi2 gate
+    std::uint32_t nRejChi2Y{0};
+    /// Updates rejected by the curvature cut
+    std::uint32_t nRejCurv{0};
+    /// Updates rejected by the z0 cut
+    std::uint32_t nRejZ0{0};
+    /// Propagations dropped because the state store was exhausted
+    std::uint32_t nStateOverflow{0};
   };
 
   /// @param config Configuration for seed finder
@@ -149,10 +162,11 @@ class GbtsTrackingFilter final {
                  GbtsEdgeState& ts) const;
 
   /// Update edge state with edge
+  /// @param state Tracking filter state (for the debug counters)
   /// @param pS Edge to update with
   /// @param ts Edge state to update
   /// @return Success flag
-  bool update(const GbtsEdge& pS, GbtsEdgeState& ts) const;
+  bool update(State& state, const GbtsEdge& pS, GbtsEdgeState& ts) const;
 
   /// Get layer type from layer index
   /// @param layerIndex Layer index

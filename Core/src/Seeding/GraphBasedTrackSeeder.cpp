@@ -266,6 +266,14 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
   std::uint32_t nEdges = 0;
 
+  // per-call cut accounting for inefficiency debugging (reported at DEBUG)
+  struct CutStats {
+    std::uint64_t candidates{}, rejIsolated{}, rejDeltaR{}, rejTauAbs{},
+        rejTauRange{}, rejZ0Mask{}, rejZ0{}, rejZOuter{}, rejKappa{},
+        rejPrecut{}, rejMaxEdges{}, neiPairs{}, rejNeiFull{}, rejTauRatio{},
+        rejDPhi{}, rejDCurv{}, rejTriplet{};
+  } cutStats;
+
   // scale factor to get indexes of binned beamspot
   // assuming 16-bit z0 bitmask
 
@@ -427,8 +435,11 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
           const std::uint16_t nodeInfo = B2.vIsConnected[n2Idx];
 
+          ++cutStats.candidates;
+
           // skip isolated nodes as their incoming edges lead to nowhere
           if (entryLayerGate && (nodeInfo == 0)) {
+            ++cutStats.rejIsolated;
             continue;
           }
 
@@ -443,6 +454,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
           const float dr = r2 - r1;
 
           if (dr < m_cfg.minDeltaRadius) {
+            ++cutStats.rejDeltaR;
             continue;
           }
 
@@ -452,20 +464,13 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
           const float tau = dz / dr;
           const float ftau = std::fabs(tau);
           if (ftau > 36.0f) {
+            ++cutStats.rejTauAbs;
             continue;
           }
 
-          if (ftau < n1pars[0]) {
-            continue;
-          }
-          if (ftau > n1pars[1]) {
-            continue;
-          }
-
-          if (ftau < n2pars[0]) {
-            continue;
-          }
-          if (ftau > n2pars[1]) {
+          if (ftau < n1pars[0] || ftau > n1pars[1] || ftau < n2pars[0] ||
+              ftau > n2pars[1]) {
+            ++cutStats.rejTauRange;
             continue;
           }
 
@@ -473,18 +478,24 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
           if (entryLayerGate) {  // check against non-empty z0 histogram
             if (!checkZ0BitMask(nodeInfo, z0, m_cfg.minZ0, z0HistoCoeff)) {
+              ++cutStats.rejZ0Mask;
               continue;
             }
           }
 
           if (m_cfg.doubletFilterRZ) {
             if (z0 < m_cfg.minZ0 || z0 > m_cfg.maxZ0) {
+              ++cutStats.rejZ0;
+              ACTS_VERBOSE("rej z0: z0=" << z0 << " r1=" << r1 << " z1=" << z1
+                                         << " r2=" << r2 << " z2=" << z2
+                                         << " tau=" << tau);
               continue;
             }
 
             const float zOuter = z0 + m_cfg.maxOuterRadius * tau;
 
             if (zOuter < cutZMinU || zOuter > cutZMaxU) {
+              ++cutStats.rejZOuter;
               continue;
             }
           }
@@ -498,6 +509,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
           if (absCurv > maxKappa) {
             if (!lrt) {
+              ++cutStats.rejKappa;
               continue;
             }
             // displaced tracks: the position-azimuth slope picks up a
@@ -508,6 +520,11 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
                  std::asin(std::min(1.0f, m_cfg.d0Max / std::max(r2, 1.0f)))) /
                 dr;
             if (absCurv > maxKappa + std::abs(d0Kappa)) {
+              ++cutStats.rejKappa;
+              ACTS_VERBOSE("rej kappa: absCurv="
+                           << absCurv << " maxKappa=" << maxKappa
+                           << " d0Kappa=" << d0Kappa << " r1=" << r1
+                           << " r2=" << r2);
               continue;
             }
           }
@@ -553,12 +570,17 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
             }
 
             if (!isGood) {  // no match found, skip creating [n1 <- n2] edge
+              ++cutStats.rejPrecut;
               continue;
             }
           }
 
           const float dPhi2 = curv * r2;
           const float dPhi1 = curv * r1;
+
+          if (nEdges >= m_cfg.nMaxEdges) {
+            ++cutStats.rejMaxEdges;
+          }
 
           if (nEdges < m_cfg.nMaxEdges) {
             edgeStorage.emplace_back(B1.vn[n1Idx], B2.vn[n2Idx], expEta, curv,
@@ -577,7 +599,10 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
                  ++inEdgeIdx) {
               GbtsEdge* pS = &(edgeStorage.at(inEdgeIdx));
 
+              ++cutStats.neiPairs;
+
               if (pS->nNei >= gbtsNumSegConns) {
+                ++cutStats.rejNeiFull;
                 continue;
               }
 
@@ -621,6 +646,11 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
               // bad match
               if (absTauRatio > m_cfg.tauRatioCut + addTauRatioCorr) {
+                ++cutStats.rejTauRatio;
+                ACTS_VERBOSE("rej tauRatio: absTauRatio="
+                             << absTauRatio << " cut="
+                             << m_cfg.tauRatioCut + addTauRatioCorr
+                             << " r1=" << r1 << " r2=" << r2 << " lk3=" << lk3);
                 continue;
               }
 
@@ -633,12 +663,18 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
               }
 
               if (std::abs(dPhi) > m_cfg.cutDPhiMax) {
+                ++cutStats.rejDPhi;
+                ACTS_VERBOSE("rej dPhi: dPhi=" << dPhi << " r1=" << r1
+                                               << " r2=" << r2);
                 continue;
               }
 
               const float dcurv = curv2 - pS->p[1];
 
               if (dcurv < -m_cfg.cutDCurvMax || dcurv > m_cfg.cutDCurvMax) {
+                ++cutStats.rejDCurv;
+                ACTS_VERBOSE("rej dCurv: dcurv=" << dcurv << " r1=" << r1
+                                                 << " r2=" << r2);
                 continue;
               }
 
@@ -652,6 +688,10 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
                   if (!validateTriplet(
                           candidateTriplet, tripletPtMin, absTauRatio,
                           m_cfg.tauRatioCut + addTauRatioCorr, options)) {
+                    ++cutStats.rejTriplet;
+                    ACTS_VERBOSE("rej triplet: absTauRatio="
+                                 << absTauRatio << " r1=" << r1 << " r2=" << r2
+                                 << " r3=" << pS->n2->r);
                     continue;
                   }
                 }
@@ -706,6 +746,26 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
         "Maximum number of graph edges exceeded - possible efficiency loss "
         << nEdges);
   }
+  ACTS_DEBUG("GBTS graph cuts: candidates="
+             << cutStats.candidates << " rejIsolated=" << cutStats.rejIsolated
+             << " rejDeltaR=" << cutStats.rejDeltaR
+             << " rejTauAbs=" << cutStats.rejTauAbs
+             << " rejTauRange=" << cutStats.rejTauRange
+             << " rejZ0Mask=" << cutStats.rejZ0Mask
+             << " rejZ0=" << cutStats.rejZ0
+             << " rejZOuter=" << cutStats.rejZOuter
+             << " rejKappa=" << cutStats.rejKappa
+             << " rejPrecut=" << cutStats.rejPrecut
+             << " rejMaxEdges=" << cutStats.rejMaxEdges
+             << " edges=" << nEdges);
+  ACTS_DEBUG("GBTS edge matching: neiPairs="
+             << cutStats.neiPairs << " rejNeiFull=" << cutStats.rejNeiFull
+             << " rejTauRatio=" << cutStats.rejTauRatio
+             << " rejDPhi=" << cutStats.rejDPhi
+             << " rejDCurv=" << cutStats.rejDCurv
+             << " rejTriplet=" << cutStats.rejTriplet
+             << " connections=" << nConnections);
+
   return std::make_pair(nEdges, nConnections);
 }
 
@@ -833,6 +893,21 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
   std::ranges::sort(vChainHeads, std::ranges::greater{},
                     [](const GbtsEdge* e) { return e->level; });
 
+  if (logger().doPrint(Acts::Logging::DEBUG)) {
+    std::array<std::uint32_t, 9> levelCount{};
+    for (std::uint32_t edgeIndex = 0; edgeIndex < nEdges; ++edgeIndex) {
+      const int lvl = std::clamp<int>(edgeStorage[edgeIndex].level, 0, 8);
+      ++levelCount[lvl];
+    }
+    ACTS_DEBUG("GBTS extract: maxLevel="
+               << maxLevel << " chainHeads=" << vChainHeads.size()
+               << " edge levels: L1=" << levelCount[1]
+               << " L2=" << levelCount[2] << " L3=" << levelCount[3]
+               << " L4=" << levelCount[4]
+               << " L5+=" << levelCount[5] + levelCount[6] + levelCount[7] +
+                                 levelCount[8]);
+  }
+
   // backtracking
 
   std::vector<SeedCandidateProperties> vSeedCandidates;
@@ -845,6 +920,10 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
   std::uint32_t seedCounter = 0;
 
+  std::uint32_t nFollowed = 0;
+  std::uint32_t nNotInitialized = 0;
+  std::uint32_t nShortChains = 0;
+
   GbtsTrackingFilter::State filterState{};
 
   for (GbtsEdge* pS : vChainHeads) {
@@ -852,9 +931,12 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
       continue;
     }
 
+    ++nFollowed;
+
     GbtsEdgeState rs = filter.followTrack(filterState, edgeStorage, *pS);
 
     if (!rs.initialized) {
+      ++nNotInitialized;
       continue;
     }
 
@@ -864,15 +946,18 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     if (m_cfg.lrtMode || !m_cfg.addTriplets) {
       if (chainLength < minLevel) {
+        ++nShortChains;
         continue;
       }
     } else {
       if (seedAbsEta > m_cfg.maxAbsEtaAddTripelts) {
         if (chainLength < minLevel) {
+          ++nShortChains;
           continue;
         }
       } else {
         if (chainLength < static_cast<std::uint32_t>(minLevel) - 1u) {
+          ++nShortChains;
           continue;
         }
       }
@@ -962,6 +1047,17 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     ++seedCounter;
   }
+
+  ACTS_DEBUG("GBTS chains: followed="
+             << nFollowed << " notInitialized=" << nNotInitialized
+             << " tooShort=" << nShortChains
+             << " candidates=" << vSeedCandidates.size());
+  ACTS_DEBUG("GBTS filter: updates="
+             << filterState.nUpdates << " rejChi2X=" << filterState.nRejChi2X
+             << " rejChi2Y=" << filterState.nRejChi2Y
+             << " rejCurv=" << filterState.nRejCurv
+             << " rejZ0=" << filterState.nRejZ0
+             << " stateOverflow=" << filterState.nStateOverflow);
 
   // clone removal code goes below ...
 

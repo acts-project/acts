@@ -111,6 +111,7 @@ GbtsEdgeState GbtsTrackingFilter::followTrack(State& state,
 void GbtsTrackingFilter::propagate(State& state, std::vector<GbtsEdge>& sb,
                                    GbtsEdge& pS, GbtsEdgeState& ts) const {
   if (state.globalStateCounter >= GbtsMaxEdgeState) {
+    ++state.nStateOverflow;
     return;
   }
 
@@ -121,7 +122,7 @@ void GbtsTrackingFilter::propagate(State& state, std::vector<GbtsEdge>& sb,
   newTs.vs.push_back(&pS);
 
   // update using n1 of the segment
-  bool accepted = update(pS, newTs);
+  bool accepted = update(state, pS, newTs);
 
   if (!accepted) {
     // stop further propagation
@@ -178,7 +179,9 @@ void GbtsTrackingFilter::propagate(State& state, std::vector<GbtsEdge>& sb,
   }
 }
 
-bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
+bool GbtsTrackingFilter::update(State& state, const GbtsEdge& pS,
+                                GbtsEdgeState& ts) const {
+  ++state.nUpdates;
   if (ts.cx[2][2] < 0 || ts.cx[1][1] < 0 || ts.cx[0][0] < 0) {
     std::cout << "Negative cov_x" << std::endl;
   }
@@ -296,6 +299,11 @@ bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
   const float dchi2_y = resid_y * resid_y * Dy;
 
   if (dchi2_x > m_cfg.maxDChi2X || dchi2_y > m_cfg.maxDChi2Y) {
+    if (dchi2_x > m_cfg.maxDChi2X) {
+      ++state.nRejChi2X;
+    } else {
+      ++state.nRejChi2Y;
+    }
     return false;
   }
 
@@ -311,6 +319,7 @@ bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
   }
 
   if (std::abs(ts.x[2]) > m_cfg.maxCurvature) {
+    ++state.nRejCurv;
     return false;
   }
 
@@ -321,6 +330,7 @@ bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
   const float z0 = ts.y[0] - refY * ts.y[1];
 
   if (std::abs(z0) > m_cfg.maxZ0) {
+    ++state.nRejZ0;
     return false;
   }
 
