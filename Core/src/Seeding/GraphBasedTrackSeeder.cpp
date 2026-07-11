@@ -663,10 +663,38 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
               }
 
               if (std::abs(dPhi) > m_cfg.cutDPhiMax) {
-                ++cutStats.rejDPhi;
-                ACTS_VERBOSE("rej dPhi: dPhi=" << dPhi << " r1=" << r1
-                                               << " r2=" << r2);
-                continue;
+                // displaced tracks: both direction estimates anchor at the
+                // shared node, so their difference for a track with impact
+                // parameter d0 is (c12 - c23) * r2 with
+                // c_ab = (asin(d0/r_b) - asin(d0/r_a)) / (r_b - r_a), the
+                // position-azimuth chord slope of each segment. Widen the
+                // acceptance by that bound evaluated at d0Max, computed only
+                // for candidates in the marginal band.
+                bool reject = true;
+
+                if (lrt) {
+                  const float r3 = pS->n2->r;
+                  const float dr23 = r3 - r2;
+
+                  if (dr23 > 1.0f) {
+                    const float a2 =
+                        std::asin(std::min(1.0f, m_cfg.d0Max / r2));
+                    const float a3 =
+                        std::asin(std::min(1.0f, m_cfg.d0Max / r3));
+                    const float c12 = (a2 - asinD0n1) / dr;
+                    const float c23 = (a3 - a2) / dr23;
+                    const float dPhiD0 = std::abs((c12 - c23) * r2);
+
+                    reject = std::abs(dPhi) > m_cfg.cutDPhiMax + dPhiD0;
+                  }
+                }
+
+                if (reject) {
+                  ++cutStats.rejDPhi;
+                  ACTS_VERBOSE("rej dPhi: dPhi=" << dPhi << " r1=" << r1
+                                                 << " r2=" << r2);
+                  continue;
+                }
               }
 
               const float dcurv = curv2 - pS->p[1];
