@@ -288,15 +288,21 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
     // gates for the entry-layer graph pruning optimizations. For prompt
     // seeding these follow the original hardcoded ITk pixel-barrel layer
-    // numbering; in LRT mode they are derived from the connection graph so
-    // that they also apply to strip-only (or any other) configurations:
-    //  - the entry gate is valid on layers with nothing inside them, where an
-    //    edge can never be the innermost extension of a longer chain;
-    //  - the match gate is valid on layers close enough to the inside that a
-    //    chain starting there cannot reach the minimum level without an
-    //    outward continuation.
-    const bool entryLayerGate =
-        lrt ? (B1.layerDepth == 0) : (layerId1 == 80000);
+    // numbering; in LRT mode the match gate is derived from the connection
+    // graph so that it also applies to strip-only (or any other)
+    // configurations.
+    //
+    // The isolated-node skip and the z0-bitmask veto require the outer node
+    // to have a CONFIRMED outward continuation (an edge that itself found a
+    // neighbour, i.e. two more hits beyond the candidate doublet). That is
+    // only a valid requirement when minLevel >= 3: with minLevel == 2 a bare
+    // triplet is a valid seed and its middle node is never confirmed, so
+    // these vetoes must stay off in LRT mode.
+    const bool entryLayerGate = !lrt && (layerId1 == 80000);
+    // the match gate only requires an EXISTING tau-compatible continuation
+    // edge, which any chain of length >= minLevel provides, so it is valid on
+    // layers close enough to the inside that a chain starting there cannot
+    // reach the minimum level without an outward continuation
     const bool matchBeforeCreateGate =
         m_cfg.matchBeforeCreate &&
         (lrt ? (B1.layerDepth < minLevel - 1)
