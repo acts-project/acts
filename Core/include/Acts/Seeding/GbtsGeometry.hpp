@@ -11,6 +11,7 @@
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
 
 #include <cstdint>
+#include <limits>
 #include <map>
 #include <unordered_map>
 #include <vector>
@@ -119,8 +120,14 @@ class GbtsGeometry final {
   /// Constructor
   /// @param layerDescriptions Layer descriptions for the layers
   /// @param layerConnections Layer connections map
+  /// @param connectionZ0Min Minimum z0 at the beamline used to prune eta-bin
+  ///        pair connectivity (straight-line extrapolation). Widen well beyond
+  ///        the luminous region for displaced-track (LRT) seeding: the chord
+  ///        of a large-d0 track extrapolates far outside the true vertex z.
+  /// @param connectionZ0Max Maximum z0 at the beamline for bin-pair pruning
   GbtsGeometry(const std::vector<GbtsLayerDescription>& layerDescriptions,
-               const GbtsLayerConnectionMap& layerConnections);
+               const GbtsLayerConnectionMap& layerConnections,
+               float connectionZ0Min = -168.0f, float connectionZ0Max = 168.0f);
 
   /// Get number of eta bins
   /// @return Number of eta bins
@@ -154,6 +161,18 @@ class GbtsGeometry final {
     return m_layers.at(idx).layerDescription().id;
   }
 
+  /// Get the "inward depth" of a layer in the connection graph: 0 for entry
+  /// layers (layers that never act as the outer element of a connection,
+  /// i.e. the innermost layers of the configured seeding graph), otherwise
+  /// 1 + the maximum depth of the layers it connects to on the inside.
+  /// @param id Layer ID
+  /// @return Inward depth, or uint32 max for layers absent from the connection map
+  std::uint32_t layerDepthById(std::uint32_t id) const {
+    const auto it = m_layerDepth.find(id);
+    return it == m_layerDepth.end() ? std::numeric_limits<std::uint32_t>::max()
+                                    : it->second;
+  }
+
  private:
   /// @param layerDescription Layer description for the layer
   /// @param bin0 Starting bin index
@@ -168,6 +187,8 @@ class GbtsGeometry final {
   std::vector<GbtsLayer> m_layers;
   /// Layer per user ID map
   std::map<std::uint32_t, std::uint32_t> m_layerFromUserIdMap;
+  /// Inward depth of each layer in the connection graph (see layerDepthById)
+  std::map<std::uint32_t, std::uint32_t> m_layerDepth;
   /// Number of eta bins
   std::uint32_t m_nEtaBins{};
 

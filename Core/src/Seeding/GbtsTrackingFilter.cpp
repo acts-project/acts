@@ -80,6 +80,16 @@ GbtsEdgeState GbtsTrackingFilter::followTrack(State& state,
 
   pInitState.initialize(pS);
 
+  // apply the configured initial covariances
+  pInitState.cx = {};
+  pInitState.cx[0][0] = m_cfg.initCovX[0];
+  pInitState.cx[1][1] = m_cfg.initCovX[1];
+  pInitState.cx[2][2] = m_cfg.initCovX[2];
+
+  pInitState.cy = {};
+  pInitState.cy[0][0] = m_cfg.initCovY[0];
+  pInitState.cy[1][1] = m_cfg.initCovY[1];
+
   state.stateVec.clear();
 
   // recursive branching and propagation
@@ -208,6 +218,20 @@ bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
   const float y = pS.n1->y;
   const float z = pS.n1->z;
   const float r = pS.n1->r;
+
+  if (m_cfg.d0Max > 0) {
+    // extra r-z slope process noise for displaced tracks: dz/dr scales with
+    // the chord factor ds/dr = r/sqrt(r^2 - d0^2), so between the previous
+    // radius and this one the slope may change by up to
+    // |y[1]| * (k(r)/k(refY) - 1) for a track with impact parameter d0Max
+    const float d0Max2 = m_cfg.d0Max * m_cfg.d0Max;
+    const float sPrev = std::sqrt(std::max(ts.refY * ts.refY - d0Max2, 1.0f));
+    const float sNext = std::sqrt(std::max(r * r - d0Max2, 1.0f));
+    const float kPrev = ts.refY / sPrev;
+    const float kNext = r / sNext;
+    const float dTau = ts.y[1] * (kNext / kPrev - 1.0f);
+    ts.cy[1][1] += dTau * dTau;
+  }
 
   const float refX = x * ts.c + y * ts.s;
   const float mx = -x * ts.s + y * ts.c;  // measured X[0]

@@ -91,6 +91,20 @@ class GbtsTrackingFilter final {
     float maxCurvature = 1e-3f / Acts::UnitConstants::mm;
     /// Maximum longitudinal impact parameter.
     float maxZ0 = 170.0 * Acts::UnitConstants::mm;
+
+    /// Initial covariance of the transverse state (y, dy/dx, d2y/dx2).
+    std::array<float, 3> initCovX = {0.25f, 0.001f, 0.001f};
+    /// Initial covariance of the longitudinal state (z, dz/dr). The dz/dr
+    /// term acts as a prior on how much the r-z slope may vary along the
+    /// chain; the default is tuned for prompt tracks.
+    std::array<float, 2> initCovY = {1.5f, 0.001f};
+
+    /// Maximum transverse impact parameter assumed for the seeded tracks.
+    /// When positive, an additional r-z slope process noise is added at each
+    /// filter step to account for the geometric variation of dz/dr along a
+    /// displaced trajectory (dz/dr scales with ds/dr = r/sqrt(r^2-d0^2)).
+    /// Leave at 0 for prompt configurations (no extra noise).
+    float d0Max = 0.0f * Acts::UnitConstants::mm;
   };
 
   /// State for the tracking filter, containing edge states and a global

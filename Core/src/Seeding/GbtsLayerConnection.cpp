@@ -16,11 +16,12 @@
 #include <ranges>
 #include <set>
 #include <unordered_map>
+#include <utility>
 
 namespace Acts::Experimental {
 
 GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
-    std::istream& inStream, bool lrtMode) {
+    std::istream& inStream, const GbtsConnectionFilter filter) {
   GbtsLayerConnectionMap connectionMap;
 
   std::uint32_t nLinks{};
@@ -53,11 +54,11 @@ GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
 
     bool srcIsStrip = (srcvol_id == 13 || srcvol_id == 12 || srcvol_id == 14);
     bool dstIsStrip = (dstvol_id == 13 || dstvol_id == 12 || dstvol_id == 14);
-    if (lrtMode) {
+    if (filter == GbtsConnectionFilter::StripOnly) {
       if (!srcIsStrip || !dstIsStrip) {
         continue;
       }
-    } else {
+    } else if (filter == GbtsConnectionFilter::PixelOnly) {
       if (srcIsStrip || dstIsStrip) {
         continue;
       }
@@ -188,10 +189,23 @@ GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
   return connectionMap;
 }
 
-GbtsLayerConnectionMap GbtsLayerConnectionMap::fromFile(std::string& inFile,
-                                                        bool lrtMode) {
+GbtsLayerConnectionMap GbtsLayerConnectionMap::fromFile(
+    const std::string& inFile, const GbtsConnectionFilter filter) {
   std::ifstream inputStream(inFile.c_str());
-  return fromStream(inputStream, lrtMode);
+  return fromStream(inputStream, filter);
+}
+
+GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
+    std::istream& inStream, const bool lrtMode) {
+  return fromStream(inStream, lrtMode ? GbtsConnectionFilter::StripOnly
+                                      : GbtsConnectionFilter::PixelOnly);
+}
+
+GbtsLayerConnectionMap GbtsLayerConnectionMap::fromFile(std::string& inFile,
+                                                        const bool lrtMode) {
+  return fromFile(std::as_const(inFile), lrtMode
+                                             ? GbtsConnectionFilter::StripOnly
+                                             : GbtsConnectionFilter::PixelOnly);
 }
 
 }  // namespace Acts::Experimental
