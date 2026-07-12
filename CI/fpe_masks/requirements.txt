@@ -10,7 +10,7 @@ annotated-doc==0.0.4
     # via typer
 attrs==26.1.0
     # via aiohttp
-cffi==2.0.0
+cffi==2.1.0
     # via cryptography
 cryptography==49.0.0
     # via pyjwt
