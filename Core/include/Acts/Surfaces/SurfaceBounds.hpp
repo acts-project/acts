@@ -44,7 +44,8 @@ class SurfaceBounds {
     eConvexPolygon = 10,
     eAnnulus = 11,
     eBoundless = 12,
-    eOther = 13
+    eOther = 13,
+    ePoint = 14
   };
 
   virtual ~SurfaceBounds() = default;

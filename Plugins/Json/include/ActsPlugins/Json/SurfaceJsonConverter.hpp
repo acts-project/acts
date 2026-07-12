@@ -138,6 +138,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(
      {Surface::SurfaceType::Plane, "PlaneSurface"},
      {Surface::SurfaceType::Straw, "StrawSurface"},
      {Surface::SurfaceType::Curvilinear, "CurvilinearSurface"},
-     {Surface::SurfaceType::Other, "Other"}})
+     {Surface::SurfaceType::Other, "Other"},
+     {Surface::SurfaceType::Point, "PointSurface"}})
 
 }  // namespace Acts
