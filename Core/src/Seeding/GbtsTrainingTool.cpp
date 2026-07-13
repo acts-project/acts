@@ -56,17 +56,6 @@ void GbtsLayerConnectionTool::addTrack(
     return;
   }
 
-  // check to see if tracks have backward transitions
-  for (std::uint32_t idx = 0; idx + 1 < track.size(); idx++) {
-    const float hit1Magnitude = std::hypot(track[idx].r, track[idx].z);
-    const float hit2Magnitude = std::hypot(track[idx + 1].r, track[idx + 1].z);
-
-    if (hit1Magnitude > hit2Magnitude) {
-      ACTS_WARNING("Track travels inwards, skipping");
-      return;
-    }
-  }
-
   // container for gbts IDs of the track
   std::vector<std::optional<std::int32_t>> layerGbtsIds{};
   layerGbtsIds.reserve(track.size());
@@ -103,7 +92,7 @@ void GbtsLayerConnectionTool::addTrack(
   m_totalTracks++;
 }
 
-void GbtsLayerConnectionTool::createConnectionTable(
+GbtsLayerConnectionTool::LayerIdPairs GbtsLayerConnectionTool::createConnectionTable(
     const std::string& outputFileLocation) const {
   if (m_totalTracks == 0) {
     throw std::runtime_error(
@@ -171,16 +160,8 @@ void GbtsLayerConnectionTool::createConnectionTable(
     }
   }
 
-  // finally, add transitions to output file (old or new format)
-  if (m_cfg.useOldFormatting) {
-    oldStyleFormatting(outputFileLocation, tempPairs);
-  } else {
-    outputFile << tempPairs.size() << "\n";
-    for (const auto& layerPair : tempPairs) {
-      // swap order as we want outward -> inward ordering
-      outputFile << layerPair.second << " " << layerPair.first << "\n";
-    }
-  }
+
+  return tempPairs;
 }
 
 std::optional<std::int32_t> GbtsLayerConnectionTool::findGbtsIdByCoord(
@@ -237,20 +218,6 @@ std::optional<std::int32_t> GbtsLayerConnectionTool::oppositeSideLayer(
   }
 
   return std::nullopt;
-}
-
-void GbtsLayerConnectionTool::oldStyleFormatting(
-    const std::string& outputFileLocations,
-    const LayerIdPairs& tempTable) const {
-  std::ofstream outputFile(outputFileLocations);
-
-  outputFile << tempTable.size() << " " << 0.2 << "\n";
-  for (const auto& layerPair : tempTable) {
-    outputFile << 0 << " " << 1 << " " << layerPair.second << " "
-               << layerPair.first << " " << 1 << " " << 1 << " " << 100 << "\n";
-
-    outputFile << 100 << "\n";
-  }
 }
 
 }  // namespace Acts::Experimental

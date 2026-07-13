@@ -594,7 +594,7 @@ def addGbtsTraining(
     s: acts.examples.Sequencer,
     selectedParticles: str = "particles_selected",
     geometryFile: str = "gbts_layer_geometry.txt",
-    outputConnectionTable: str = "new_test_CT.txt",
+    outputConnectionTable: str = "layer_connection_table.txt",
     probThreshold: float = -1.0,
     zMinTol: float = 0.2340,
     zMaxTol: float = 0.2340,
@@ -613,7 +613,6 @@ def addGbtsTraining(
         rMaxTol=rMaxTol,
         probThreshold=probThreshold,
         doSymmetrization=doSymmetrization,
-        useOldFormatting=useOldFormatting,
     )
 
     alg = acts.examples.GbtsTrainingAlgorithm(

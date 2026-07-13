@@ -41,12 +41,11 @@ class GbtsTrainingAlgorithm final : public IAlgorithm {
     Acts::Experimental::GbtsLayerConnectionTool::Config
         gbtsLayerConnectionToolConfig;
     /// geometry file used for creating layers
-    std::string geometryFileDir =
-        "/home/ppd/jasper/QT/acts/gbts_layer_geometry.txt";
+    std::string geometryFileDir{};
     /// output directory for layer connection table
-    std::string outputFileDir =
-        "/home/ppd/jasper/QT/acts/connection-tables/"
-        "conditional_prob_2kttbar200_new.txt";
+    std::string outputFileDir{};
+    /// Use legacy athena style table formatting
+    bool useOldFormatting = false;
   };
 
   /// Constructor for GBTS training algorithm

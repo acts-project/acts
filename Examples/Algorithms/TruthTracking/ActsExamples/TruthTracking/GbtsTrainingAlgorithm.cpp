@@ -56,6 +56,20 @@ static void geometryParser(
   }
 }
 
+static void oldStyleFormatting(
+    const std::string& outputFileLocation,
+    const Acts::Experimental::GbtsLayerConnectionTool::LayerIdPairs& tempTable){
+  std::ofstream outputFile(outputFileLocation);
+
+  outputFile << tempTable.size() << " " << 0.2 << "\n";
+  for (const auto& layerPair : tempTable) {
+    outputFile << 0 << " " << 1 << " " << layerPair.second << " "
+               << layerPair.first << " " << 1 << " " << 1 << " " << 100 << "\n";
+
+    outputFile << 100 << "\n";
+  }
+}
+
 GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
     const Config& config, std::unique_ptr<const Acts::Logger> inputLogger)
     : IAlgorithm("GbtsTrainingAlgorithm", std::move(inputLogger)),
@@ -95,7 +109,22 @@ GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
 }
 
 ProcessCode GbtsTrainingAlgorithm::finalize() {
-  m_layerConnectionTool->createConnectionTable(m_cfg.outputFileDir);
+
+  const auto layerTable = m_layerConnectionTool->createConnectionTable(m_cfg.outputFileDir);
+
+  // define output text file
+  std::ofstream outputFile(m_cfg.outputFileDir);
+
+  // finally, add transitions to output file (old or new format)
+  if (m_cfg.useOldFormatting) {
+    oldStyleFormatting(m_cfg.outputFileDir, layerTable);
+  } else {
+    outputFile << layerTable.size() << "\n";
+    for (const auto& layerPair : layerTable) {
+      // swap order as we want outward -> inward ordering
+      outputFile << layerPair.second << " " << layerPair.first << "\n";
+    }
+  }
 
   return ProcessCode::SUCCESS;
 }

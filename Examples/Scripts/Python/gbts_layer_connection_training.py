@@ -88,7 +88,7 @@ addDigiParticleSelection(
 addGbtsTraining(
     s,
     selectedParticles="particles_selected",
-    geometryFile=pathlib.Path.cwd() / "gbts_layer_geometry.txt",
+    geometryFile= geo_dir / "itk-hgtd/gbts_layer_geometry.txt",
     outputConnectionTable=outputDir / "new_implementation_symm_1000k_singleMu.txt",
     probThreshold=-1.0,
     zMinTol=0.2340,

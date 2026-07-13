@@ -62,10 +62,9 @@ class GbtsLayerConnectionTool {
     float rMinTol = 2.5337f;
     /// Tolerance on maximum radius value
     float rMaxTol = 2.5337f;
+    
     /// Symmeterize layer connection table
     bool doSymmetrization = false;
-    /// Use legacy athena style table formatting
-    bool useOldFormatting = false;
     /// Minimum probability cut applied to layer transitions
     float probThreshold = -1;
   };
@@ -114,7 +113,7 @@ class GbtsLayerConnectionTool {
   void addTrack(const std::vector<HitCoordinates>& track);
   /// Creates the connection table
   /// @param outputFileLocation the location for the layer connection table
-  void createConnectionTable(const std::string& outputFileLocation) const;
+  GbtsLayerConnectionTool::LayerIdPairs createConnectionTable(const std::string& outputFileLocation) const;
 
  private:
   /// returns the Acts logger
@@ -133,12 +132,6 @@ class GbtsLayerConnectionTool {
   /// layer
   /// @param layer the detecor layer
   std::optional<std::int32_t> oppositeSideLayer(std::int32_t layer) const;
-
-  /// Formatts table in legacy formatting
-  /// @param outputFileLocation the location for the layer connection table
-  /// @param tempTable the temporary container for holding layer transitions before sorting
-  void oldStyleFormatting(const std::string& outputFileLocation,
-                          const LayerIdPairs& tempTable) const;
 
   /// Config for layer connection tool
   Config m_cfg;
