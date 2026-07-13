@@ -14,9 +14,20 @@
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <algorithm>
-#include <unordered_set>
+
+#include <boost/container/flat_set.hpp>
+#include <boost/container/small_vector.hpp>
 
 namespace Acts {
+
+namespace {
+/// Number of surfaces the de-duplication set can hold without heap allocation
+constexpr std::size_t s_processedInlineCapacity = 64;
+
+using ProcessedSurfaces = boost::container::flat_set<
+    const Surface*, std::less<const Surface*>,
+    boost::container::small_vector<const Surface*, s_processedInlineCapacity>>;
+}  // namespace
 
 bool NavigationStream::initialize(const GeometryContext& gctx,
                                   const QueryPoint& queryPoint,
@@ -27,10 +38,12 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   const Vector3& direction = queryPoint.direction;
 
   // A container collecting additional candidates from multiple
-  // valid intersections
+  // valid intersections. Most streams produce none, so it is left unreserved to
+  // avoid an allocation on every call.
   std::vector<NavigationTarget> additionalCandidates = {};
-  additionalCandidates.reserve(m_candidates.size());
-  std::unordered_set<const Surface*> processed{};
+  ProcessedSurfaces processed{};
+  // No-op while the inline capacity suffices, single allocation beyond it
+  processed.reserve(m_candidates.size());
   for (auto& candidate : m_candidates) {
     // Get the surface from the object intersection
     const Surface& surface = candidate.surface();
