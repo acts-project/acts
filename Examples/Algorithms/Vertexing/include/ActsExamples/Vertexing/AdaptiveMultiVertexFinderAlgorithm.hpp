@@ -29,6 +29,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace ActsExamples {
@@ -88,6 +89,15 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
     /// Bin extent in t-direction which is only used with `AdaptiveGridSeeder`
     /// and `useTime`
     double temporalBinExtent = 19. * Acts::UnitConstants::mm;
+    /// (min,max) spatial (z) window for filling the seeding density map
+    /// (AdaptiveGridSeeder only).
+    std::pair<double, double> spatialWindow = {-250. * Acts::UnitConstants::mm,
+                                               250. * Acts::UnitConstants::mm};
+    /// (min,max) temporal (t) window for filling the seeding density map
+    /// (AdaptiveGridSeeder + useTime). Widen this for vertices separated by
+    /// more than the default +/- 10 ns.
+    std::pair<double, double> temporalWindow = {-10. * Acts::UnitConstants::ns,
+                                                10. * Acts::UnitConstants::ns};
     /// Number of simultaneous seeds that should be created by the vertex seeder
     std::size_t simultaneousSeeds = 1;
   };
