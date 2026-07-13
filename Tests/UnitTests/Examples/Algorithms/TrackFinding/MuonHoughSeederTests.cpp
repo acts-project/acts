@@ -24,8 +24,8 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <vector>
 #include <limits>
+#include <vector>
 
 namespace ActsTests {
 
@@ -102,7 +102,8 @@ BOOST_AUTO_TEST_CASE(muon_hough_seeder_drift_circle_sanity) {
 
   ActsExamples::MuonHoughSeeder::Config cfg{};
   cfg.inSpacePoints = "MuonSpacePoints";
-  cfg.inTruthSegments = "TruthSegments"; // this is required even if empty in ctx
+  cfg.inTruthSegments =
+      "TruthSegments";  // this is required even if empty in ctx
   cfg.outHoughMax = "MuonHoughMaxima";
 
   cfg.nBinsTanTheta = 1000;
