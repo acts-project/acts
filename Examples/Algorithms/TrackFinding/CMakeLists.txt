@@ -11,6 +11,7 @@ acts_add_library(
     src/GraphBasedSeedingAlgorithm.cpp
     src/TrackParamsLookupEstimation.cpp
     src/GridTripletSeedingAlgorithm.cpp
+    src/SphericalGridTripletSeedingAlgorithm.cpp
     src/OrthogonalTripletSeedingAlgorithm.cpp
 )
 

@@ -9,6 +9,7 @@ target_sources(
         detail/CandidatesForMiddleSp.cpp
         BroadTripletSeedFilter.cpp
         CylindricalSpacePointGrid.cpp
+        SphericalSpacePointGrid.cpp
         CartesianSpacePointGrid.cpp
         CylindricalSpacePointKDTree.cpp
         DoubletSeedFinder.cpp
