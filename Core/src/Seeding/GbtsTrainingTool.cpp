@@ -73,11 +73,10 @@ void GbtsLayerConnectionTool::addTrack(
 
   // find GBTS ids for all measurements in a track
   for (const auto& measurement : track) {
-    
     const auto gbtsId = findGbtsIdByCoord(measurement);
     if (!gbtsId) {
-      ACTS_WARNING("No Gbts Layer for coordinates with r: " << measurement.r
-                                                            << " and z: " << measurement.z);
+      ACTS_WARNING("No Gbts Layer for coordinates with r: "
+                   << measurement.r << " and z: " << measurement.z);
     }
     layerGbtsIds.emplace_back(gbtsId);
   }

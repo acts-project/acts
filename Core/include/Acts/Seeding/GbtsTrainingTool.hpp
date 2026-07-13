@@ -106,8 +106,8 @@ class GbtsLayerConnectionTool {
   /// @param logger The Acts logger
   explicit GbtsLayerConnectionTool(
       const Config& config,
-      std::unique_ptr<const Logger> logger = getDefaultLogger(
-          "GbtsLayerConnectionTool", Logging::Level::INFO));
+      std::unique_ptr<const Logger> logger =
+          getDefaultLogger("GbtsLayerConnectionTool", Logging::Level::INFO));
 
   /// converts layer hits to layer transitions
   /// @param track the layer hits of a particle

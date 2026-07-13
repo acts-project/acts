@@ -94,7 +94,7 @@ GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
       this->logger().cloneWithSuffix("GbtsLayerConnectionTool"));
 }
 
-ProcessCode GbtsTrainingAlgorithm::finalize(){
+ProcessCode GbtsTrainingAlgorithm::finalize() {
   m_layerConnectionTool->createConnectionTable(m_cfg.outputFileDir);
 
   return ProcessCode::SUCCESS;

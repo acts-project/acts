@@ -59,7 +59,7 @@ class GbtsTrainingAlgorithm final : public IAlgorithm {
   /// run time execution per event
   /// @param ctx event context
   ProcessCode execute(const AlgorithmContext& ctx) const final;
-
+  /// finalize for tidy up, in this case creates connection table
   ProcessCode finalize() final;
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
