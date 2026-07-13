@@ -278,6 +278,59 @@ def test_particle_gun_roundtrip(tmp_path, ptcl_gun):
 
 
 @pytest.mark.pypi
+def test_particle_gun_roundtrip_parallel_cache(tmp_path, ptcl_gun):
+    """Write a multi-shard Parquet dataset, then read it back with a
+    multi-threaded Sequencer and shardCacheCapacity > 1. Exercises the
+    ParquetDatasetReader's concurrent shard-cache path (double-checked
+    locking + LRU eviction across multiple resident shards) end-to-end,
+    which the single-threaded/default-capacity tests above don't reach."""
+    from acts.arrow import particleSchema
+    from acts.examples.arrow import ParquetReader
+
+    nevents = 12
+    events_per_shard = 2  # -> 6 shards, more than numThreads/cacheCapacity
+    num_threads = 3
+    cache_capacity = 3
+
+    s_write = Sequencer(numThreads=1, events=nevents)
+    ptcl_gun(s_write)
+    _add_arrow_writer(
+        s_write,
+        tmp_path,
+        {"particles_generated": "particles_generated_arrow"},
+        eventsPerShard=events_per_shard,
+    )
+    s_write.run()
+
+    out_dir = tmp_path / "particles_generated_arrow"
+    _assert_particles_parquet(out_dir, nevents)
+
+    reader = ParquetReader(
+        level=acts.logging.INFO,
+        inputDir=str(tmp_path),
+        collections={"particles_generated_arrow": "particles_generated_arrow"},
+        expectedSchemas={"particles_generated_arrow": particleSchema()},
+        shardCacheCapacity=cache_capacity,
+    )
+    assert reader.availableEvents() == (0, nevents)
+
+    s_read = Sequencer(numThreads=num_threads)
+    s_read.addReader(reader)
+    counter = AssertCollectionExistsAlg(
+        collections="particles_generated_arrow",
+        name="roundtrip_check_parallel",
+        level=acts.logging.INFO,
+    )
+    s_read.addAlgorithm(counter)
+    s_read.run()
+
+    assert counter.events_seen == nevents, (
+        f"reader-driven parallel sequencer processed {counter.events_seen} events, "
+        f"expected {nevents}"
+    )
+
+
+@pytest.mark.pypi
 def test_particle_gun_fatras(tmp_path, fatras):
     """Particle gun + Fatras → both generated and simulated particles → Parquet."""
     nevents = 5

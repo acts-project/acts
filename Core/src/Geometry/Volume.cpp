@@ -59,8 +59,10 @@ std::ostream& operator<<(std::ostream& sl, const Volume& vol) {
   return sl;
 }
 
-Volume::BoundingBox Volume::boundingBox(const Vector3& envelope) const {
-  return m_volumeBounds->boundingBox(m_transform.get(), envelope, this);
+Volume::BoundingBox Volume::boundingBox(const GeometryContext& gctx,
+                                        const Vector3& envelope) const {
+  const Transform3& trf{localToGlobalTransform(gctx)};
+  return m_volumeBounds->boundingBox(&trf, envelope, this);
 }
 
 Volume::BoundingBox Volume::orientedBoundingBox() const {
