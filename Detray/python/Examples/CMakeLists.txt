@@ -7,9 +7,11 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 set(_python_dir "${CMAKE_BINARY_DIR}/python")
-file(MAKE_DIRECTORY ${_python_dir}/detray)
+set(_pkg_dir ${_python_dir}/detray/examples)
 
 if(DETRAY_BUILD_TEST_UTILS)
+    file(MAKE_DIRECTORY ${_pkg_dir})
+
     pybind11_add_module(DetrayExamplesPythonBindings src/ExamplesModuleEntry.cpp)
 
     target_link_libraries(
@@ -21,20 +23,20 @@ if(DETRAY_BUILD_TEST_UTILS)
             detray::test_utils
     )
 
-    # Place the compiled module inside the detray package directory.
+    # Place the compiled module inside the `detray.examples` package.
     set_target_properties(
         DetrayExamplesPythonBindings
-        PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/detray
+        PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_pkg_dir}
     )
     install(
         TARGETS DetrayExamplesPythonBindings
-        DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}
+        DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/examples
     )
 
-    set(py_files examples.py)
+    set(py_files __init__.py)
 
     foreach(f ${py_files})
-        set(_target ${_python_dir}/detray/${f})
+        set(_target ${_pkg_dir}/${f})
         get_filename_component(_dir ${_target} DIRECTORY)
         file(MAKE_DIRECTORY ${_dir})
 
@@ -47,7 +49,7 @@ if(DETRAY_BUILD_TEST_UTILS)
 
         install(
             FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/${f}
-            DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/${_rel}
+            DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/examples/${_rel}
         )
     endforeach()
 

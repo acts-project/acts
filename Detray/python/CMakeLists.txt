@@ -36,8 +36,8 @@ install(
 )
 
 # Generate stubs for a user-facing Python module using pybind11-stubgen.
-# _module: dotted Python module name of the wrapper (e.g. detray.core)
-# _target: pybind11 module target; its .so is importable as detray.<_target>
+# _module: dotted Python module name (e.g. detray.core)
+# _target: pybind11 module target whose .so must exist before stub generation
 # [ARGN]:  additional CMake targets that must be built first
 function(detray_pybind_generate_stubs _module _target)
     if(NOT DETRAY_GENERATE_PYTHON_STUBS)
@@ -48,15 +48,11 @@ function(detray_pybind_generate_stubs _module _target)
 
     set(_extra_deps ${ARGN})
     set(_python_dir "${CMAKE_BINARY_DIR}/python")
-    set(_stub_file "${_python_dir}/detray/${_target}.pyi")
+    string(REPLACE "." "/" _module_path ${_module})
+    set(_stub_file "${_python_dir}/${_module_path}/__init__.pyi")
 
     add_custom_command(
         OUTPUT ${_stub_file}
-        COMMAND
-            ${CMAKE_COMMAND} -E env "PYTHONPATH=${_python_dir}" ${uv_exe} tool
-            run --python ${Python_EXECUTABLE} pybind11-stubgen detray.${_target}
-            --exit-code --output-dir ${_python_dir} --ignore-invalid-expressions
-            ".*" --ignore-unresolved-names ".*"
         COMMAND
             ${CMAKE_COMMAND} -E env "PYTHONPATH=${_python_dir}" ${uv_exe} tool
             run --python ${Python_EXECUTABLE} pybind11-stubgen ${_module}

@@ -7,7 +7,8 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 set(_python_dir "${CMAKE_BINARY_DIR}/python")
-file(MAKE_DIRECTORY ${_python_dir}/detray)
+set(_pkg_dir ${_python_dir}/detray/core)
+file(MAKE_DIRECTORY ${_pkg_dir})
 
 pybind11_add_module(DetrayPythonBindings src/CoreModuleEntry.cpp)
 
@@ -21,18 +22,20 @@ target_link_libraries(
         covfie::core
 )
 
-# Place the compiled module inside the detray package directory.
+# Place the compiled module inside the `detray.core` package.
 set_target_properties(
     DetrayPythonBindings
-    PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/detray
+    PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_pkg_dir}
 )
-install(TARGETS DetrayPythonBindings DESTINATION ${DETRAY_PYTHON_INSTALL_DIR})
+install(
+    TARGETS DetrayPythonBindings
+    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/core
+)
 
-# Public submodule wrapper(s): `core.py` exposes the bindings as `detray.core`.
-set(py_files core.py)
+set(py_files __init__.py)
 
 foreach(f ${py_files})
-    set(_target ${_python_dir}/detray/${f})
+    set(_target ${_pkg_dir}/${f})
     get_filename_component(_dir ${_target} DIRECTORY)
     file(MAKE_DIRECTORY ${_dir})
 
@@ -45,7 +48,7 @@ foreach(f ${py_files})
 
     install(
         FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/${f}
-        DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/${_rel}
+        DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/core/${_rel}
     )
 endforeach()
 
