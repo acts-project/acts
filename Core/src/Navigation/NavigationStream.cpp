@@ -15,19 +15,7 @@
 
 #include <algorithm>
 
-#include <boost/container/flat_set.hpp>
-#include <boost/container/small_vector.hpp>
-
 namespace Acts {
-
-namespace {
-/// Number of surfaces the de-duplication set can hold without heap allocation
-constexpr std::size_t s_processedInlineCapacity = 64;
-
-using ProcessedSurfaces = boost::container::flat_set<
-    const Surface*, std::less<const Surface*>,
-    boost::container::small_vector<const Surface*, s_processedInlineCapacity>>;
-}  // namespace
 
 bool NavigationStream::initialize(const GeometryContext& gctx,
                                   const QueryPoint& queryPoint,
@@ -37,20 +25,24 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   const Vector3& position = queryPoint.position;
   const Vector3& direction = queryPoint.direction;
 
-  // A container collecting additional candidates from multiple
-  // valid intersections. Most streams produce none, so it is left unreserved to
-  // avoid an allocation on every call.
+  // De-duplicate by surface pointer first, so each surface is intersected only
+  // once in this pass.
+  std::ranges::stable_sort(m_candidates, [](const NavigationTarget& a,
+                                            const NavigationTarget& b) {
+    return &a.surface() < &b.surface();
+  });
+  auto initialDuplicates = std::ranges::unique(
+      m_candidates.begin(), m_candidates.end(),
+      [](const NavigationTarget& a, const NavigationTarget& b) {
+        return &a.surface() == &b.surface();
+      });
+  m_candidates.erase(initialDuplicates.begin(), initialDuplicates.end());
+
+  // Collect additional candidates for the second valid intersection.
   std::vector<NavigationTarget> additionalCandidates = {};
-  ProcessedSurfaces processed{};
-  // No-op while the inline capacity suffices, single allocation beyond it
-  processed.reserve(m_candidates.size());
   for (auto& candidate : m_candidates) {
     // Get the surface from the object intersection
     const Surface& surface = candidate.surface();
-    // Check whether the surface already has been processed
-    if (!processed.insert(&surface).second) {
-      continue;
-    }
     // Intersect the surface
     auto multiIntersection = surface.intersect(gctx, position, direction,
                                                cTolerance, onSurfaceTolerance);
