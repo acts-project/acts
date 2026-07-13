@@ -113,8 +113,8 @@ MuonHoughMaxContainer MuonHoughSeeder::constructEtaMaxima(
     const AlgorithmContext& ctx, const MuonSpacePointBucket& bucket,
     HoughPlane_t& plane) const {
   MuonHoughMaxContainer etaMaxima{};
-  AxisRange_t axisRanges{-3., 3., -100. * Acts::UnitConstants::m,
-                         100. * Acts::UnitConstants::m};
+  AxisRange_t axisRanges{-3., 3., 100. * Acts::UnitConstants::m,
+                         -100. * Acts::UnitConstants::m};
   /** brief Adapt the intercept axis ranges */
   for (const MuonSpacePoint& sp : bucket) {
     /** Require that the space point measures eta */
@@ -123,8 +123,8 @@ MuonHoughMaxContainer MuonHoughSeeder::constructEtaMaxima(
     }
     const double y = sp.localPosition().y();
 
-    axisRanges.yMin = std::max(axisRanges.yMin, y - m_cfg.etaPlaneMarginIcept);
-    axisRanges.yMax = std::min(axisRanges.yMax, y + m_cfg.etaPlaneMarginIcept);
+    axisRanges.yMin = std::min(axisRanges.yMin, y - m_cfg.etaPlaneMarginIcept);
+    axisRanges.yMax = std::max(axisRanges.yMax, y + m_cfg.etaPlaneMarginIcept);
   }
   /** Ranges are adapted. Now fill the hough plane */
   plane.reset();
@@ -191,8 +191,8 @@ MuonHoughMaxContainer MuonHoughSeeder::extendMaximaWithPhi(
 
   for (MuonHoughMaximum& etaMax : etaMaxima) {
     plane.reset();
-    AxisRange_t axisRanges{-3., 3., -100. * Acts::UnitConstants::m,
-                           100. * Acts::UnitConstants::m};
+    AxisRange_t axisRanges{-3., 3., 100. * Acts::UnitConstants::m,
+                           -100. * Acts::UnitConstants::m};
 
     unsigned nPhiHits{0};
     for (const MuonSpacePoint* sp : etaMax.hits()) {
@@ -201,10 +201,10 @@ MuonHoughMaxContainer MuonHoughSeeder::extendMaximaWithPhi(
       }
       ++nPhiHits;
       const double x = sp->localPosition().x();
-      axisRanges.yMax =
-          std::min(axisRanges.yMax, x + m_cfg.phiPlaneMarginIcept);
       axisRanges.yMin =
-          std::max(axisRanges.yMin, x - m_cfg.phiPlaneMarginIcept);
+          std::min(axisRanges.yMin, x - m_cfg.phiPlaneMarginIcept);
+      axisRanges.yMax =
+          std::max(axisRanges.yMax, x + m_cfg.phiPlaneMarginIcept);
     }
     if (nPhiHits < 2) {
       outMaxima.emplace_back(std::move(etaMax));

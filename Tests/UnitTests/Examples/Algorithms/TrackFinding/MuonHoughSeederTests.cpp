@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(muon_hough_seeder_drift_circle_sanity) {
     }
   }
 
-  /// Result acquired: -0.041608695652173948 -422.02655249999998
+  /// Result acquired: -0.041608695652173948 -421.93644749999976
   BOOST_TEST_MESSAGE("Maximum coordinates (tanBeta, interceptY): "
                      << foundTanBeta << " " << foundInterceptY
                      << " truth: " << trueTanTheta << " " << trueInterceptY);
