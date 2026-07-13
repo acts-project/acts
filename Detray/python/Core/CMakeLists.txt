@@ -39,6 +39,9 @@ configure_file(
     ${_pkg_dir}/__init__.py
     @ONLY
 )
-install(FILES ${_pkg_dir}/__init__.py DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/core)
+install(
+    FILES ${_pkg_dir}/__init__.py
+    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/core
+)
 
 acts_pybind_generate_stubs(detray.core DetrayPythonBindings)
