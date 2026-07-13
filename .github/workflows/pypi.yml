@@ -14,7 +14,6 @@ on:
 env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_KEY_SUFFIX: r2
-  SETUP_CMD: "bash {package}/CI/dependencies/setup.sh -t v23.2.0 -d deps -e env.sh"
 
 permissions: {}
 
@@ -60,9 +59,7 @@ jobs:
       matrix:
         os:
          - ubuntu-latest
-        # - ubuntu-24.04-arm
-        # - macos-15-intel
-         - macos-latest
+         - macos-26
 
     steps:
       - name: Download source tarball
@@ -84,32 +81,12 @@ jobs:
         run: cat build_version.txt
 
 
-      - name: Restore ccache
-        id: ccache-restore
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
-
       - name: Build wheels
-        uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
+        uses: ./acts/.github/actions/cibuildwheel_wrapper
         with:
           package-dir: acts
-        env:
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_34 # based on almalinux9
-          CIBW_BUILD: "cp311-* cp310-* cp312-* cp313-* cp314-*"
-          CIBW_SKIP: "*-musllinux* *-manylinux_i686"
-          CIBW_BEFORE_ALL_LINUX: dnf install -y bc ccache && ${{ env.SETUP_CMD }}
-          CIBW_BEFORE_ALL_MACOS: brew install ninja ccache && ${{ env.SETUP_CMD }}
-          CIBW_ENVIRONMENT: GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
-          CIBW_ENVIRONMENT_PASS: CI
-          CIBW_BEFORE_BUILD: ccache -z
-          CIBW_ENVIRONMENT_LINUX: CMAKE_PREFIX_PATH=$PWD/deps/venv:$PWD/deps/view CCACHE_DIR=/host/${{ env.CCACHE_DIR }}
-          CIBW_ENVIRONMENT_MACOS: CMAKE_PREFIX_PATH=$PWD/deps/venv:$PWD/deps/view MACOSX_DEPLOYMENT_TARGET=15.0
-          CIBW_BEFORE_TEST: ccache -s
-          CIBW_TEST_COMMAND: python {project}/acts/Examples/Scripts/Python/track_finding_python_only.py
+          cibw-build: "cp311-* cp310-* cp312-* cp313-* cp314-*"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
@@ -131,13 +108,6 @@ jobs:
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
-
-      - name: Save ccache
-        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        if: always()
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
 
   upload_pypi_test:

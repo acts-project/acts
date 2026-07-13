@@ -105,6 +105,10 @@ class ACTS_ARROW_EXPORT ColliderMLRelease1InputConverter : public IAlgorithm {
     /// Default 5 mm tolerates physical incidence effects while still catching
     /// wrong-surface assignments from a stale geoIdMap (tens of mm off).
     double hitBoundsTolerance = 5.0;
+
+    /// When false (default), particles not referenced by any hit are dropped
+    /// from @c outputParticles. Set to true to retain all particles.
+    bool keepParticlesWithoutHits = false;
   };
 
   /// Expected Arrow schema for the per-event particle table in the

@@ -14,7 +14,7 @@
 #pragma once
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Seeding2/HoughAccumulatorSection.hpp"
+#include "Acts/Seeding/HoughAccumulatorSection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
