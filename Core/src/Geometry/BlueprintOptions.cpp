@@ -8,8 +8,15 @@
 
 #include "Acts/Geometry/BlueprintOptions.hpp"
 
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Navigation/CylinderNavigationPolicy.hpp"
+#include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
+
+#include <memory>
 
 namespace Acts::Experimental {
 
@@ -21,7 +28,23 @@ void BlueprintOptions::validate() const {
 
 std::unique_ptr<NavigationPolicyFactory>
 BlueprintOptions::makeDefaultNavigationPolicyFactory() {
-  return NavigationPolicyFactory{}.add<TryAllNavigationPolicy>().asUniquePtr();
+  return NavigationPolicyFactory{}
+      .add([](const GeometryContext& gctx, const TrackingVolume& volume,
+              const Logger& logger) -> std::unique_ptr<INavigationPolicy> {
+        const auto& bounds = volume.volumeBounds();
+        if (bounds.type() == VolumeBounds::BoundsType::eCylinder &&
+            dynamic_cast<const CylinderVolumeBounds&>(bounds).get(
+                CylinderVolumeBounds::eMinR) > 0.) {
+          // Cylinder with a non-zero inner radius: the cylinder policy is
+          // applicable (it requires a non-zero inner radius).
+          return std::make_unique<CylinderNavigationPolicy>(gctx, volume,
+                                                            logger);
+        }
+        // Solid cylinder (zero inner radius) or non-cylinder volume: fall back
+        // to try-all, since the cylinder policy is not applicable.
+        return std::make_unique<TryAllNavigationPolicy>(gctx, volume, logger);
+      })
+      .asUniquePtr();
 }
 
 }  // namespace Acts::Experimental
