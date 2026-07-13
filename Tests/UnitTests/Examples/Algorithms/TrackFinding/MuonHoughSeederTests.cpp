@@ -25,6 +25,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <vector>
+#include <limits>
 
 namespace ActsTests {
 
@@ -94,7 +95,6 @@ ActsExamples::MuonSpacePointContainer makeDriftCircleSpacePoints() {
 
 BOOST_AUTO_TEST_SUITE(MuonHoughTransformSuite)
 
-///
 BOOST_AUTO_TEST_CASE(muon_hough_seeder_drift_circle_sanity) {
   // Truth from the original HoughTransformUtils unit test.
   constexpr double trueTanTheta = -0.0401472 / 0.994974;
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(muon_hough_seeder_drift_circle_sanity) {
 
   ActsExamples::MuonHoughSeeder::Config cfg{};
   cfg.inSpacePoints = "MuonSpacePoints";
-  cfg.inTruthSegments = "TruthSegments";
+  cfg.inTruthSegments = "TruthSegments"; // this is required even if empty in ctx
   cfg.outHoughMax = "MuonHoughMaxima";
 
   cfg.nBinsTanTheta = 1000;
@@ -127,14 +127,6 @@ BOOST_AUTO_TEST_CASE(muon_hough_seeder_drift_circle_sanity) {
   spacePointHandle.initialize(cfg.inSpacePoints);
   spacePointHandle(ctx, makeDriftCircleSpacePoints());
 
-  // The algorithm requires a configured truth-segment key. With visualization
-  // disabled this collection is not used, but writing an empty container keeps
-  // the event store complete.
-  ActsExamples::WriteDataHandle<ActsExamples::MuonSegmentContainer> truthHandle{
-      &seeder, "TestInputTruthSegments"};
-  truthHandle.initialize(cfg.inTruthSegments);
-  truthHandle(ctx, ActsExamples::MuonSegmentContainer{});
-
   BOOST_REQUIRE(seeder.execute(ctx) == ActsExamples::ProcessCode::SUCCESS);
 
   ActsExamples::ReadDataHandle<ActsExamples::MuonHoughMaxContainer>
@@ -147,8 +139,8 @@ BOOST_AUTO_TEST_CASE(muon_hough_seeder_drift_circle_sanity) {
 
   bool foundExpectedMaximum = false;
 
-  double foundTanBeta;
-  double foundInterceptY;
+  double foundTanBeta = std::numeric_limits<double>::quiet_NaN();
+  double foundInterceptY = std::numeric_limits<double>::quiet_NaN();
   for (const ActsExamples::MuonHoughMaximum& maximum : maxima) {
     const double tanTheta = maximum.tanBeta();
     const double interceptY = maximum.interceptY();
