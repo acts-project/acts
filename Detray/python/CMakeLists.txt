@@ -35,36 +35,10 @@ install(
     DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}
 )
 
-# Generate stubs for a user-facing Python module using pybind11-stubgen.
-# _module: dotted Python module name (e.g. detray.core)
-# _target: pybind11 module target whose .so must exist before stub generation
-# [ARGN]:  additional CMake targets that must be built first
-function(detray_pybind_generate_stubs _module _target)
-    if(NOT DETRAY_GENERATE_PYTHON_STUBS)
-        return()
-    endif()
-
-    find_program(uv_exe uv REQUIRED)
-
-    set(_extra_deps ${ARGN})
-    set(_python_dir "${CMAKE_BINARY_DIR}/python")
-    string(REPLACE "." "/" _module_path ${_module})
-    set(_stub_file "${_python_dir}/${_module_path}/__init__.pyi")
-
-    add_custom_command(
-        OUTPUT ${_stub_file}
-        COMMAND
-            ${CMAKE_COMMAND} -E env "PYTHONPATH=${_python_dir}" ${uv_exe} tool
-            run --python ${Python_EXECUTABLE} pybind11-stubgen ${_module}
-            --exit-code --output-dir ${_python_dir} --ignore-invalid-expressions
-            ".*" --ignore-unresolved-names ".*"
-        DEPENDS ${_target} ${_extra_deps}
-        COMMENT "Generating python stubs for ${_module}"
-        VERBATIM
-    )
-
-    add_custom_target(${_target}Stubs ALL DEPENDS ${_stub_file})
-endfunction()
+if(NOT COMMAND acts_pybind_generate_stubs)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/ActsPybindStubs.cmake)
+endif()
+set(ACTS_GENERATE_PYTHON_STUBS ${DETRAY_GENERATE_PYTHON_STUBS})
 
 if(DETRAY_BUILD_PYTHON_BINDINGS)
     add_subdirectory(Core)
