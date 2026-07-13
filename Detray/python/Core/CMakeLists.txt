@@ -9,7 +9,7 @@
 set(_python_dir "${CMAKE_BINARY_DIR}/python")
 file(MAKE_DIRECTORY ${_python_dir}/detray)
 
-pybind11_add_module(DetrayPythonBindings src/DetrayModuleEntry.cpp)
+pybind11_add_module(DetrayPythonBindings src/CoreModuleEntry.cpp)
 
 target_link_libraries(
     DetrayPythonBindings
