@@ -27,10 +27,10 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
 
   // De-duplicate by surface pointer first, so each surface is intersected only
   // once in this pass.
-  std::ranges::stable_sort(m_candidates, [](const NavigationTarget& a,
-                                            const NavigationTarget& b) {
-    return &a.surface() < &b.surface();
-  });
+  std::ranges::stable_sort(
+      m_candidates, [](const NavigationTarget& a, const NavigationTarget& b) {
+        return &a.surface() < &b.surface();
+      });
   auto initialDuplicates = std::ranges::unique(
       m_candidates.begin(), m_candidates.end(),
       [](const NavigationTarget& a, const NavigationTarget& b) {
