@@ -33,25 +33,25 @@ jobs:
       matrix:
         platform:
           - name: CPU
-            container: ghcr.io/acts-project/ubuntu2404:69
+            container: ghcr.io/acts-project/ubuntu2404:87
             options: --preset host-fp32
             run_tests: true
             enable_cuda: false
             enable_sycl: false
           - name: CPU
-            container: ghcr.io/acts-project/ubuntu2404:69
+            container: ghcr.io/acts-project/ubuntu2404:87
             options: --preset host-fp64
             run_tests: false
             enable_cuda: false
             enable_sycl: false
           - name: CUDA
-            container: ghcr.io/acts-project/ubuntu2404_cuda:69
+            container: ghcr.io/acts-project/ubuntu2404_cuda:87
             options: --preset cuda-fp32 -DTRACCC_BUILD_TESTING=FALSE
             run_tests: false
             enable_cuda: true
             enable_sycl: false
           - name: "SYCL Intel"
-            container: ghcr.io/acts-project/ubuntu2404_oneapi:69
+            container: ghcr.io/acts-project/ubuntu2404_oneapi:87
             options: --preset sycl-fp32
             run_tests: true
             enable_cuda: false
@@ -62,7 +62,7 @@ jobs:
         include:
           - platform:
               name: CUDA
-              container: ghcr.io/acts-project/ubuntu2404_cuda:69
+              container: ghcr.io/acts-project/ubuntu2404_cuda:87
               options: --preset cuda-fp64
               run_tests: false
               enable_cuda: true
@@ -71,7 +71,7 @@ jobs:
             build: Release
           - platform:
               name: "SYCL NVIDIA"
-              container: ghcr.io/acts-project/ubuntu2404_cuda_oneapi:69
+              container: ghcr.io/acts-project/ubuntu2404_cuda_oneapi:82
               options: --preset sycl-fp32
               run_tests: false
               enable_cuda: false
@@ -80,7 +80,7 @@ jobs:
             build: Release
           - platform:
               name: "SYCL AMD"
-              container: ghcr.io/acts-project/ubuntu2404_rocm_oneapi:69
+              container: ghcr.io/acts-project/ubuntu2404_rocm_oneapi:82
               options: --preset sycl-fp32
               run_tests: false
               enable_cuda: false
@@ -89,7 +89,7 @@ jobs:
             build: Release
           - platform:
               name: "ALPAKA_CPU"
-              container: ghcr.io/acts-project/ubuntu2404:69
+              container: ghcr.io/acts-project/ubuntu2404:87
               options: --preset alpaka-fp32
               run_tests: true
               enable_cuda: false
@@ -98,7 +98,7 @@ jobs:
             build: Release
           - platform:
               name: "ALPAKA_CUDA"
-              container: ghcr.io/acts-project/ubuntu2404_cuda:69
+              container: ghcr.io/acts-project/ubuntu2404_cuda:87
               options: --preset alpaka-fp32 -Dalpaka_ACC_GPU_CUDA_ENABLE=ON -DTRACCC_FAIL_ON_WARNINGS=OFF -DTRACCC_BUILD_CUDA_UTILS=ON
               run_tests: false
               enable_cuda: true
@@ -107,7 +107,7 @@ jobs:
             build: Release
           - platform:
               name: "ALPAKA_HIP_SYCL"
-              container: ghcr.io/acts-project/ubuntu2404_rocm_oneapi:69
+              container: ghcr.io/acts-project/ubuntu2404_rocm_oneapi:82
               options: --preset alpaka-fp32 -Dalpaka_ACC_GPU_HIP_ENABLE=ON -Dalpaka_DISABLE_VENDOR_RNG=ON -DTRACCC_USE_ROOT=OFF -DTRACCC_SETUP_ROCTHRUST=ON -DTRACCC_BUILD_HIP=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20
               run_tests: false
               enable_cuda: false
@@ -116,7 +116,7 @@ jobs:
             build: Release
           - platform:
               name: "ALPAKA_SYCL"
-              container: ghcr.io/acts-project/ubuntu2404_oneapi:69
+              container: ghcr.io/acts-project/ubuntu2404_oneapi:87
               options: --preset alpaka-fp32 -Dalpaka_ACC_CPU_B_SEQ_T_THREADS_ENABLE=OFF -Dalpaka_ACC_SYCL_ENABLE=ON -Dalpaka_SYCL_ONEAPI_GPU=ON -Dalpaka_SYCL_ONEAPI_GPU_DEVICES=spir64 -DTRACCC_BUILD_SYCL_UTILS=ON
               run_tests: false
               enable_cuda: false
