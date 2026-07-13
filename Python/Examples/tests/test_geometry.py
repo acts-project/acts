@@ -261,3 +261,104 @@ def test_odd_gen3_json_roundtrip(tmp_path):
     np.testing.assert_allclose(
         orig["pathLength"], rebuilt_data["pathLength"], rtol=1e-5
     )
+
+
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.odd
+@pytest.mark.json
+def test_odd_gen3_json_material(tmp_path):
+    """
+    Validates that the JSON-only workflow (topology-only geometry JSON +
+    JsonMaterialDecorator reading a standalone material-map JSON) reproduces
+    the same accumulated material (X0/L0) as the reference DD4hep +
+    RootMaterialDecorator workflow, including material assigned to volumes
+    (not just surfaces).
+    """
+    import acts.examples
+    from acts.json import (
+        TrackingGeometryJsonConverter,
+        MaterialMapJsonConverter,
+        JsonMaterialDecorator,
+    )
+    from acts.examples.json import JsonMaterialWriter, JsonFormat
+    from material_validation import runMaterialValidation
+
+    gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
+
+    # Gen3 geometry, decorated with the default RootMaterialDecorator (the
+    # reference workflow) -- this is both the ground truth to compare against
+    # and the source geometry for the topology-only JSON below.
+    with getOpenDataDetector(gen3=True) as detector:
+        trackingGeometry = detector.trackingGeometry()
+
+        # Geometry JSON with no material embedded: geometry description and
+        # material are orthogonal, exactly like DD4hep XML + RootMaterialDecorator.
+        converter = TrackingGeometryJsonConverter()
+        options = TrackingGeometryJsonConverter.Options()
+        options.writeMaterial = False
+        geometry_json_path = tmp_path / "tracking-geometry.json"
+        geometry_json_path.write_text(converter.toJson(gctx, trackingGeometry, options))
+
+        # Material map JSON extracted from the already-decorated reference
+        # geometry (includes both surface and volume material).
+        material_map_base = tmp_path / "material-map"
+        jmw = JsonMaterialWriter(
+            level=acts.logging.INFO,
+            converterCfg=MaterialMapJsonConverter.Config(
+                processSensitives=True,
+                processApproaches=True,
+                processRepresenting=True,
+                processBoundaries=True,
+                processVolumes=True,
+                processNonMaterial=True,
+                context=gctx,
+            ),
+            fileName=str(material_map_base),
+            writeFormat=JsonFormat.Json,
+        )
+        jmw.write(trackingGeometry)
+        material_map_path = tmp_path / "material-map.json"
+        assert material_map_path.exists()
+
+        # Rebuild geometry from the topology-only JSON, applying material via
+        # JsonMaterialDecorator independently, mirroring RootMaterialDecorator.
+        materialDecorator = JsonMaterialDecorator(
+            rConfig=MaterialMapJsonConverter.Config(),
+            jFileName=str(material_map_path),
+            level=acts.logging.INFO,
+        )
+        rebuilt_geometry = converter.fromJson(
+            gctx, geometry_json_path.absolute(), materialDecorator=materialDecorator
+        )
+
+    def run_validation(geo, out_dir):
+        out_dir.mkdir()
+        s = acts.examples.Sequencer(
+            events=5, numThreads=1, logLevel=acts.logging.WARNING
+        )
+        runMaterialValidation(
+            surfaces=geo.extractMaterialSurfaces(),
+            s=s,
+            tracksPerEvent=100,
+            outputFileBase=str(out_dir / "material_validation"),
+        )
+        s.run()
+
+    orig_dir = tmp_path / "val_original"
+    rebuilt_dir = tmp_path / "val_rebuilt"
+    run_validation(trackingGeometry, orig_dir)
+    run_validation(rebuilt_geometry, rebuilt_dir)
+
+    import numpy as np
+    import uproot
+
+    with uproot.open(orig_dir / "material_validation.root") as f:
+        orig = f["material_tracks"].arrays(["t_X0", "t_L0"], library="np")
+    with uproot.open(rebuilt_dir / "material_validation.root") as f:
+        rebuilt = f["material_tracks"].arrays(["t_X0", "t_L0"], library="np")
+
+    assert orig["t_X0"].mean() > 0.0
+    assert orig["t_L0"].mean() > 0.0
+
+    np.testing.assert_allclose(orig["t_X0"], rebuilt["t_X0"], rtol=1e-9)
+    np.testing.assert_allclose(orig["t_L0"], rebuilt["t_L0"], rtol=1e-9)

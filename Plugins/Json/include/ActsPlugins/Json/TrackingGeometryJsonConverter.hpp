@@ -24,6 +24,7 @@
 
 namespace Acts {
 
+class IMaterialDecorator;
 class PortalLinkBase;
 class Portal;
 class Surface;
@@ -64,6 +65,9 @@ class TrackingGeometryJsonConverter {
 
     /// The number of white space characters used for indentation
     unsigned indentation{4};
+
+    /// Whether to write surface material information during serialization
+    bool writeMaterial{true};
   };
 
   /// Generic lookup from object pointer identity to serialized object ID.
@@ -182,22 +186,30 @@ class TrackingGeometryJsonConverter {
   /// @param gctx geometry context
   /// @param jsonPath The path to the JSON file on disk
   /// @param options options for the conversion
+  /// @param materialDecorator optional decorator applied to every
+  ///        reconstructed surface and volume, e.g. to attach material that
+  ///        was not embedded in the JSON payload itself
   ///
   /// @return pointer to deserialized geometry
   std::shared_ptr<TrackingGeometry> fromJson(
       const GeometryContext& gctx, const std::filesystem::path& jsonPath,
-      const Options& options = Options::defaultOptions()) const;
+      const Options& options = Options::defaultOptions(),
+      const IMaterialDecorator* materialDecorator = nullptr) const;
 
   /// Reconstruct a tracking geometry from a deserialized JSON file
   ///
   /// @param gctx geometry context
   /// @param encoded Reference to the encoded JSON object
   /// @param options options for the conversion
+  /// @param materialDecorator optional decorator applied to every
+  ///        reconstructed surface and volume, e.g. to attach material that
+  ///        was not embedded in the JSON payload itself
   ///
   /// @return pointer to deserialized geometry
   std::shared_ptr<TrackingGeometry> fromJsonPayload(
       const GeometryContext& gctx, const nlohmann::json& encoded,
-      const Options& options = Options::defaultOptions()) const;
+      const Options& options = Options::defaultOptions(),
+      const IMaterialDecorator* materialDecorator = nullptr) const;
 
   /// Convert a tracking volume hierarchy to JSON.
   ///
@@ -218,6 +230,9 @@ class TrackingGeometryJsonConverter {
   /// @param gctx geometry context
   /// @param encoded serialized tracking volume hierarchy
   /// @param options options for the conversion
+  /// @param materialDecorator optional decorator applied to every
+  ///        reconstructed surface and volume, e.g. to attach material that
+  ///        was not embedded in the JSON payload itself
   ///
   /// @return pointer to deserialized tracking volume hierarchy
   ///
@@ -225,7 +240,8 @@ class TrackingGeometryJsonConverter {
   /// Portal construction and the NavigationPolicy assignment
   std::shared_ptr<TrackingVolume> trackingVolumeFromJson(
       const GeometryContext& gctx, const nlohmann::json& encoded,
-      const Options& options = Options::defaultOptions()) const;
+      const Options& options = Options::defaultOptions(),
+      const IMaterialDecorator* materialDecorator = nullptr) const;
 
   /// Serialize one portal link using the configured dispatcher.
   ///
