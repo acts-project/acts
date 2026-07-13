@@ -12,12 +12,16 @@
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/BlueprintOptions.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
+#include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "ActsPlugins/DD4hep/BlueprintBuilder.hpp"
 
@@ -256,7 +260,28 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
   addBarrelEndcapSubsystem(builder, outer, "LongStrips", "ls",
                            ActsPlugins::DD4hep::detail::kLongStripLayerFilter);
 
-  return root.construct(BlueprintOptions{}, gctx, logger);
+  BlueprintOptions options;
+  options.defaultNavigationPolicyFactory =
+      Acts::NavigationPolicyFactory{}
+          .add([](const Acts::GeometryContext& gctx,
+                  const Acts::TrackingVolume& volume, const Acts::Logger& logger)
+                   -> std::unique_ptr<Acts::INavigationPolicy> {
+            const auto& bounds = volume.volumeBounds();
+            if (bounds.type() == Acts::VolumeBounds::BoundsType::eCylinder &&
+                dynamic_cast<const Acts::CylinderVolumeBounds&>(bounds).get(
+                    Acts::CylinderVolumeBounds::eMinR) > 0.) {
+              // Cylinder with a non-zero inner radius: the cylinder policy is
+              // applicable (it requires a non-zero inner radius).
+              return std::make_unique<Acts::CylinderNavigationPolicy>(
+                  gctx, volume, logger);
+            }
+            // Solid cylinder (zero inner radius) or non-cylinder volume: fall
+            // back to try-all, since the cylinder policy is not applicable.
+            return std::make_unique<Acts::TryAllNavigationPolicy>(gctx, volume,
+                                                                  logger);
+          })
+          .asUniquePtr();
+  return root.construct(options, gctx, logger);
 }
 
 std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayer(
