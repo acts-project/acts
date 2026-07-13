@@ -46,7 +46,7 @@ void addTruthTracking(py::module& mex) {
                  .def(py::init<>());
 
     ACTS_PYTHON_STRUCT(c, zMinTol, zMaxTol, rMinTol, rMaxTol, doSymmetrization,
-                        probThreshold);
+                       probThreshold);
 
     patchKwargsConstructor(c);
   }

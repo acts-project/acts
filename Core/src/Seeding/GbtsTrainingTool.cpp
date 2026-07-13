@@ -92,7 +92,8 @@ void GbtsLayerConnectionTool::addTrack(
   m_totalTracks++;
 }
 
-GbtsLayerConnectionTool::LayerIdPairs GbtsLayerConnectionTool::createConnectionTable(
+GbtsLayerConnectionTool::LayerIdPairs
+GbtsLayerConnectionTool::createConnectionTable(
     const std::string& outputFileLocation) const {
   if (m_totalTracks == 0) {
     throw std::runtime_error(
@@ -159,7 +160,6 @@ GbtsLayerConnectionTool::LayerIdPairs GbtsLayerConnectionTool::createConnectionT
       }
     }
   }
-
 
   return tempPairs;
 }

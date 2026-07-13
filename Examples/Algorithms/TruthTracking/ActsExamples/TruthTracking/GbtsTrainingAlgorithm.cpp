@@ -58,7 +58,8 @@ static void geometryParser(
 
 static void oldStyleFormatting(
     const std::string& outputFileLocation,
-    const Acts::Experimental::GbtsLayerConnectionTool::LayerIdPairs& tempTable){
+    const Acts::Experimental::GbtsLayerConnectionTool::LayerIdPairs&
+        tempTable) {
   std::ofstream outputFile(outputFileLocation);
 
   outputFile << tempTable.size() << " " << 0.2 << "\n";
@@ -109,8 +110,8 @@ GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
 }
 
 ProcessCode GbtsTrainingAlgorithm::finalize() {
-
-  const auto layerTable = m_layerConnectionTool->createConnectionTable(m_cfg.outputFileDir);
+  const auto layerTable =
+      m_layerConnectionTool->createConnectionTable(m_cfg.outputFileDir);
 
   // define output text file
   std::ofstream outputFile(m_cfg.outputFileDir);

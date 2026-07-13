@@ -62,7 +62,7 @@ class GbtsLayerConnectionTool {
     float rMinTol = 2.5337f;
     /// Tolerance on maximum radius value
     float rMaxTol = 2.5337f;
-    
+
     /// Symmeterize layer connection table
     bool doSymmetrization = false;
     /// Minimum probability cut applied to layer transitions
@@ -113,7 +113,8 @@ class GbtsLayerConnectionTool {
   void addTrack(const std::vector<HitCoordinates>& track);
   /// Creates the connection table
   /// @param outputFileLocation the location for the layer connection table
-  GbtsLayerConnectionTool::LayerIdPairs createConnectionTable(const std::string& outputFileLocation) const;
+  GbtsLayerConnectionTool::LayerIdPairs createConnectionTable(
+      const std::string& outputFileLocation) const;
 
  private:
   /// returns the Acts logger
