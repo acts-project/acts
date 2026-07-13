@@ -33,25 +33,17 @@ if(DETRAY_BUILD_TEST_UTILS)
         DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/examples
     )
 
-    set(py_files __init__.py)
-
-    foreach(f ${py_files})
-        set(_target ${_pkg_dir}/${f})
-        get_filename_component(_dir ${_target} DIRECTORY)
-        file(MAKE_DIRECTORY ${_dir})
-
-        file(
-            CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/python/${f} ${_target}
-            SYMBOLIC
-        )
-
-        get_filename_component(_rel ${f} DIRECTORY)
-
-        install(
-            FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/${f}
-            DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/examples/${_rel}
-        )
-    endforeach()
+    # Generate the package __init__ that re-exports the compiled module.
+    set(BINDINGS_MODULE DetrayExamplesPythonBindings)
+    configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/../module_init.py.in
+        ${_pkg_dir}/__init__.py
+        @ONLY
+    )
+    install(
+        FILES ${_pkg_dir}/__init__.py
+        DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/examples
+    )
 
     acts_pybind_generate_stubs(detray.examples DetrayExamplesPythonBindings)
 endif()
