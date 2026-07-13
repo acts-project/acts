@@ -105,9 +105,9 @@ class GbtsLayerConnectionTool {
   /// @param config The training tool config
   /// @param logger The Acts logger
   explicit GbtsLayerConnectionTool(
-      Config& config,
-      std::unique_ptr<const Logger> logger = Acts::getDefaultLogger(
-          "GbtsLayerConnectionTool", Acts::Logging::Level::INFO));
+      const Config& config,
+      std::unique_ptr<const Logger> logger = getDefaultLogger(
+          "GbtsLayerConnectionTool", Logging::Level::INFO));
 
   /// converts layer hits to layer transitions
   /// @param track the layer hits of a particle
@@ -118,12 +118,12 @@ class GbtsLayerConnectionTool {
 
  private:
   /// returns the Acts logger
-  const Acts::Logger& logger() const { return *m_logger; }
+  const Logger& logger() const { return *m_logger; }
 
   /// Finds the Gbts Coordinate of a given hits coordinate
   /// @param r radius
   /// @param z z coordinate
-  std::optional<std::int32_t> findGbtsIdByCoord(float r, float z) const;
+  std::optional<std::int32_t> findGbtsIdByCoord(HitCoordinates) const;
 
   /// gets the index to the vector of detector layers via an GBTS id
   /// @param gbtsId Gbts Id of layer
@@ -143,8 +143,7 @@ class GbtsLayerConnectionTool {
   /// Config for layer connection tool
   Config m_cfg;
   /// Acts logger
-  std::unique_ptr<const Acts::Logger> m_logger =
-      Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
+  std::unique_ptr<const Acts::Logger> m_logger;
   /// map of layer transition pairs
   LayerIdPairMap m_layerPairs{};
   /// total number of tracks used to train the table on

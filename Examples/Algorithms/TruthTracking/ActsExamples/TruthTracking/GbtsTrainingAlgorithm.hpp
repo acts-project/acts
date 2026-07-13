@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Seeding2/GbtsTrainingTool.hpp"
+#include "Acts/Seeding/GbtsTrainingTool.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -60,11 +60,9 @@ class GbtsTrainingAlgorithm final : public IAlgorithm {
   /// @param ctx event context
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 
+  ProcessCode finalize() final;
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
-
-  /// GBTS training algorithm destructor
-  ~GbtsTrainingAlgorithm();
 
  private:
   /// GBTS training algorithm config

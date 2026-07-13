@@ -21,7 +21,7 @@ GbtsLayerConnectionTool::LayerDescription::LayerDescription(
     : minR(minR_), maxR(maxR_), minZ(minZ_), maxZ(maxZ_), gbtsId(gbtsId_) {}
 
 GbtsLayerConnectionTool::GbtsLayerConnectionTool(
-    Config& config, std::unique_ptr<const Logger> logger)
+    const Config& config, std::unique_ptr<const Logger> logger)
     : m_cfg(config), m_logger(std::move(logger)) {
   if (m_cfg.detectorGeometry.empty()) {
     throw std::runtime_error("File does not exist or could not be opened");
@@ -73,13 +73,11 @@ void GbtsLayerConnectionTool::addTrack(
 
   // find GBTS ids for all measurements in a track
   for (const auto& measurement : track) {
-    const float r = measurement.r;
-    const float z = measurement.z;
-
-    const auto gbtsId = findGbtsIdByCoord(r, z);
+    
+    const auto gbtsId = findGbtsIdByCoord(measurement);
     if (!gbtsId) {
-      ACTS_WARNING("No Gbts Layer for coordinates with r: " << r
-                                                            << " and z: " << z);
+      ACTS_WARNING("No Gbts Layer for coordinates with r: " << measurement.r
+                                                            << " and z: " << measurement.z);
     }
     layerGbtsIds.emplace_back(gbtsId);
   }
@@ -187,15 +185,15 @@ void GbtsLayerConnectionTool::createConnectionTable(
 }
 
 std::optional<std::int32_t> GbtsLayerConnectionTool::findGbtsIdByCoord(
-    const float r, const float z) const {
+    const HitCoordinates hit) const {
   for (const auto& layer : m_cfg.detectorGeometry) {
     const float zMin = layer.minZ - m_cfg.zMinTol;
     const float zMax = layer.maxZ + m_cfg.zMaxTol;
     const float rMin = layer.minR - m_cfg.rMinTol;
     const float rMax = layer.maxR + m_cfg.rMaxTol;
 
-    if (zMin <= z && z <= zMax) {
-      if (rMin <= r && r <= rMax) {
+    if (zMin <= hit.z && hit.z <= zMax) {
+      if (rMin <= hit.r && hit.r <= rMax) {
         return layer.gbtsId;
       }
     }
