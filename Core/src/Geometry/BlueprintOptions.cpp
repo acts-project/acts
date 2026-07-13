@@ -8,10 +8,8 @@
 
 #include "Acts/Geometry/BlueprintOptions.hpp"
 
-#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
@@ -31,17 +29,15 @@ BlueprintOptions::makeDefaultNavigationPolicyFactory() {
   return NavigationPolicyFactory{}
       .add([](const GeometryContext& gctx, const TrackingVolume& volume,
               const Logger& logger) -> std::unique_ptr<INavigationPolicy> {
-        const auto& bounds = volume.volumeBounds();
-        if (bounds.type() == VolumeBounds::BoundsType::eCylinder &&
-            dynamic_cast<const CylinderVolumeBounds&>(bounds).get(
-                CylinderVolumeBounds::eMinR) > 0.) {
-          // Cylinder with a non-zero inner radius: the cylinder policy is
-          // applicable (it requires a non-zero inner radius).
+        // The cylinder policy only produces portal candidates, so it can only
+        // be the sole policy of a volume that does not confine any surfaces.
+        if (volume.surfaces().empty() &&
+            CylinderNavigationPolicy::isApplicable(volume, logger)) {
           return std::make_unique<CylinderNavigationPolicy>(gctx, volume,
                                                             logger);
         }
-        // Solid cylinder (zero inner radius) or non-cylinder volume: fall back
-        // to try-all, since the cylinder policy is not applicable.
+        // Fall back to try-all for every volume the cylinder policy cannot
+        // describe on its own.
         return std::make_unique<TryAllNavigationPolicy>(gctx, volume, logger);
       })
       .asUniquePtr();
