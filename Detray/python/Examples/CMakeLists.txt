@@ -10,7 +10,7 @@ set(_python_dir "${CMAKE_BINARY_DIR}/python")
 file(MAKE_DIRECTORY ${_python_dir}/detray)
 
 if(DETRAY_BUILD_TEST_UTILS)
-    pybind11_add_module(DetrayExamplesPythonBindings src/DetrayModuleEntry.cpp)
+    pybind11_add_module(DetrayExamplesPythonBindings src/ExamplesModuleEntry.cpp)
 
     target_link_libraries(
         DetrayExamplesPythonBindings
