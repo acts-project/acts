@@ -52,4 +52,4 @@ foreach(f ${py_files})
     )
 endforeach()
 
-detray_pybind_generate_stubs(detray.core DetrayPythonBindings)
+acts_pybind_generate_stubs(detray.core DetrayPythonBindings)

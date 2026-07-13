@@ -53,5 +53,5 @@ if(DETRAY_BUILD_TEST_UTILS)
         )
     endforeach()
 
-    detray_pybind_generate_stubs(detray.examples DetrayExamplesPythonBindings)
+    acts_pybind_generate_stubs(detray.examples DetrayExamplesPythonBindings)
 endif()
