@@ -9,7 +9,12 @@
 #include "Acts/Geometry/BlueprintOptions.hpp"
 
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Navigation/CylinderNavigationPolicy.hpp"
+#include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
+
+#include <memory>
 
 namespace Acts::Experimental {
 
@@ -21,7 +26,21 @@ void BlueprintOptions::validate() const {
 
 std::unique_ptr<NavigationPolicyFactory>
 BlueprintOptions::makeDefaultNavigationPolicyFactory() {
-  return NavigationPolicyFactory{}.add<TryAllNavigationPolicy>().asUniquePtr();
+  return NavigationPolicyFactory{}
+      .add([](const GeometryContext& gctx, const TrackingVolume& volume,
+              const Logger& logger) -> std::unique_ptr<INavigationPolicy> {
+        // The cylinder policy only produces portal candidates, so it can only
+        // be the sole policy of a volume that does not confine any surfaces.
+        if (volume.surfaces().empty() &&
+            CylinderNavigationPolicy::isApplicable(volume, logger)) {
+          return std::make_unique<CylinderNavigationPolicy>(gctx, volume,
+                                                            logger);
+        }
+        // Fall back to try-all for every volume the cylinder policy cannot
+        // describe on its own.
+        return std::make_unique<TryAllNavigationPolicy>(gctx, volume, logger);
+      })
+      .asUniquePtr();
 }
 
 }  // namespace Acts::Experimental
