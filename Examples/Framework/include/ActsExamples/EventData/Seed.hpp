@@ -8,16 +8,16 @@
 
 #pragma once
 
-#include "Acts/EventData/SeedContainer2.hpp"
+#include "Acts/EventData/SeedContainer.hpp"
 #include "Acts/EventData/Types.hpp"
 
 namespace ActsExamples {
 
-using SeedIndex = Acts::SeedIndex2;
+using SeedIndex = Acts::SeedIndex;
 
-using SeedProxy = Acts::SeedContainer2::MutableProxy;
-using ConstSeedProxy = Acts::SeedContainer2::ConstProxy;
+using SeedProxy = Acts::SeedContainer::MutableProxy;
+using ConstSeedProxy = Acts::SeedContainer::ConstProxy;
 
-using SeedContainer = Acts::SeedContainer2;
+using SeedContainer = Acts::SeedContainer;
 
 }  // namespace ActsExamples
