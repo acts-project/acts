@@ -48,10 +48,8 @@ GsfComponent detail::Gsf::mergeTwoComponents(const GsfComponent &a,
   return ret;
 }
 
-namespace detail::Gsf {
-
-double computeSymmetricKlDivergence(const GsfComponent &a,
-                                    const GsfComponent &b) {
+double detail::Gsf::computeSymmetricKlDivergence(const GsfComponent &a,
+                                                 const GsfComponent &b) {
   const double parsA = a.boundPars[eBoundQOverP];
   const double parsB = b.boundPars[eBoundQOverP];
   const double covA = a.boundCov(eBoundQOverP, eBoundQOverP);
@@ -69,6 +67,8 @@ double computeSymmetricKlDivergence(const GsfComponent &a,
 
   return kl;
 }
+
+namespace detail::Gsf {
 
 SymmetricKLDistanceMatrix::SymmetricKLDistanceMatrix(
     std::span<const GsfComponent> cmps)
@@ -133,25 +133,17 @@ std::pair<std::size_t, std::size_t> SymmetricKLDistanceMatrix::minDistancePair()
     const {
   const std::size_t nActivePairs = m_numberActive * (m_numberActive - 1) / 2;
 
-  // Fused single-pass, block-tracking argmin: process the active prefix in
-  // fixed-size blocks, computing each block's minimum with a plain
-  // sequential reduction (auto-vectorized by the compiler -- min/max
-  // reductions are exactly associative/commutative, so this is legal
-  // without -ffast-math). While scanning, track which block produced the
-  // running minimum. Since the running minimum only updates on a strict
-  // '<', the tracked block is guaranteed to contain the *first* occurrence
-  // of the true minimum (a later, equal value can't overwrite it) -- so
-  // after the single pass, recovering the index only requires rescanning
-  // one fixed-size block instead of the whole array. This replaces a
-  // two-pass search (vectorized min-value pass + full-array early-exit
-  // index scan) with one pass plus a small bounded rescan, avoiding the
-  // O(nActivePairs/2)-average scalar index search of the two-pass approach.
-  // BLOCK=16 was found to be the sweet spot for the array sizes that
-  // dominate this reduction (N=48-72 active components, i.e. up to ~2556
-  // active pairs).
+  // Single-pass, block-tracking argmin: scan in fixed-size blocks with a
+  // plain sequential min reduction (auto-vectorizable, since min is
+  // associative/commutative), tracking which block held the running
+  // minimum. Because the minimum only updates on a strict '<', that block
+  // is guaranteed to contain the first occurrence, so recovering the index
+  // only needs a small rescan of one block instead of the whole array.
+  // BLOCK=16 was empirically best for the N=48-72 active components (up to
+  // ~2556 pairs) typical here.
   constexpr std::size_t BLOCK = 16;
 
-  const double *data = m_distances.data();
+  const Array &data = m_distances;
   double currentMin = std::numeric_limits<double>::max();
   std::size_t currentBlockStart = 0;
   std::size_t currentBlockLen = 0;
@@ -180,11 +172,9 @@ std::pair<std::size_t, std::size_t> SymmetricKLDistanceMatrix::minDistancePair()
     }
   }
 
-  // Find the first occurrence of the minimum within the winning block. Ties
-  // (multiple pairs at the exact minimum distance) are broken by first
-  // occurrence in the current compacted scan order; since merging
-  // exactly-tied components is physically equivalent either way, there is
-  // no need to reproduce any particular tie-break convention.
+  // Find the first occurrence of the minimum within the winning block; tie
+  // order doesn't matter since merging exactly-tied components is
+  // equivalent either way.
   std::size_t idx = currentBlockStart;
   for (std::size_t j = currentBlockStart;
        j < currentBlockStart + currentBlockLen; ++j) {
