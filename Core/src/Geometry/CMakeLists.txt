@@ -49,6 +49,7 @@ target_sources(
         PortalError.cpp
         CylinderPortalShell.cpp
         CuboidPortalShell.cpp
+        PortalShellFactory.cpp
         BlueprintNode.cpp
         Blueprint.cpp
         BlueprintOptions.cpp

@@ -1248,7 +1248,9 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeCylinder) {
   pad.addStaticVolume(std::move(child));
 
   BlueprintOptions options;
-  Volume& padded = pad.build(options, gctx, *logger);
+  // build() presents the padded volume to the parent
+  auto& world =
+      dynamic_cast<TrackingVolume&>(pad.build(options, gctx, *logger));
 
   // Child bounds are unchanged, padding creates a new volume
   const auto& childCyl =
@@ -1257,16 +1259,12 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeCylinder) {
   BOOST_CHECK_EQUAL(childCyl.get(CylinderVolumeBounds::eMaxR), 20_mm);
   BOOST_CHECK_EQUAL(childCyl.get(CylinderVolumeBounds::eHalfLengthZ), 30_mm);
 
-  const TrackingVolume* world = pad.trackingVolume();
-  BOOST_REQUIRE(world != nullptr);
-  // build() presents the padded volume to the parent
-  BOOST_CHECK_EQUAL(&padded, world);
-  BOOST_CHECK_EQUAL(world->volumeName(), "World");
-  BOOST_CHECK_EQUAL(world->volumeBounds().type(),
+  BOOST_CHECK_EQUAL(world.volumeName(), "World");
+  BOOST_CHECK_EQUAL(world.volumeBounds().type(),
                     VolumeBounds::BoundsType::eCylinder);
 
   const auto& worldCyl =
-      dynamic_cast<const CylinderVolumeBounds&>(world->volumeBounds());
+      dynamic_cast<const CylinderVolumeBounds&>(world.volumeBounds());
   BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMinR), 10_mm - 1_mm);
   BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMaxR), 20_mm + 2_mm);
   BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eHalfLengthZ),
@@ -1287,7 +1285,9 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeCuboid) {
   pad.addStaticVolume(std::move(child));
 
   BlueprintOptions options;
-  Volume& padded = pad.build(options, gctx, *logger);
+  // build() presents the padded volume to the parent
+  auto& world =
+      dynamic_cast<TrackingVolume&>(pad.build(options, gctx, *logger));
 
   // Child bounds are unchanged, padding creates a new volume
   const auto& childBox =
@@ -1296,16 +1296,12 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeCuboid) {
   BOOST_CHECK_EQUAL(childBox.get(CuboidVolumeBounds::eHalfLengthY), 20_mm);
   BOOST_CHECK_EQUAL(childBox.get(CuboidVolumeBounds::eHalfLengthZ), 30_mm);
 
-  const TrackingVolume* world = pad.trackingVolume();
-  BOOST_REQUIRE(world != nullptr);
-  // build() presents the padded volume to the parent
-  BOOST_CHECK_EQUAL(&padded, world);
-  BOOST_CHECK_EQUAL(world->volumeName(), "World");
-  BOOST_CHECK_EQUAL(world->volumeBounds().type(),
+  BOOST_CHECK_EQUAL(world.volumeName(), "World");
+  BOOST_CHECK_EQUAL(world.volumeBounds().type(),
                     VolumeBounds::BoundsType::eCuboid);
 
   const auto& worldBox =
-      dynamic_cast<const CuboidVolumeBounds&>(world->volumeBounds());
+      dynamic_cast<const CuboidVolumeBounds&>(world.volumeBounds());
   BOOST_CHECK_EQUAL(worldBox.get(CuboidVolumeBounds::eHalfLengthX),
                     10_mm + 3_mm);
   BOOST_CHECK_EQUAL(worldBox.get(CuboidVolumeBounds::eHalfLengthY),
@@ -1314,7 +1310,7 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeCuboid) {
                     30_mm + 7_mm);
 
   // 6 faces for a cuboid
-  BOOST_CHECK_EQUAL(world->portals().size(), 0);
+  BOOST_CHECK_EQUAL(world.portals().size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(PadBlueprintNodeRotatedCylinder) {
@@ -1332,24 +1328,23 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeRotatedCylinder) {
       "child"));
 
   BlueprintOptions options;
-  pad.build(options, gctx, *logger);
+  auto& world =
+      dynamic_cast<TrackingVolume&>(pad.build(options, gctx, *logger));
 
-  const TrackingVolume* world = pad.trackingVolume();
-  BOOST_REQUIRE(world != nullptr);
-  BOOST_CHECK_EQUAL(world->volumeName(), "World");
-  BOOST_CHECK_EQUAL(world->volumeBounds().type(),
+  BOOST_CHECK_EQUAL(world.volumeName(), "World");
+  BOOST_CHECK_EQUAL(world.volumeBounds().type(),
                     VolumeBounds::BoundsType::eCylinder);
 
   // Bounds are padded in local frame regardless of orientation
   const auto& worldCyl =
-      dynamic_cast<const CylinderVolumeBounds&>(world->volumeBounds());
+      dynamic_cast<const CylinderVolumeBounds&>(world.volumeBounds());
   BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMinR), 10_mm - 1_mm);
   BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMaxR), 20_mm + 2_mm);
   BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eHalfLengthZ),
                     30_mm + 20_mm);
 
   // Transform is inherited from the child
-  BOOST_CHECK(world->localToGlobalTransform(gctx).isApprox(childTrf));
+  BOOST_CHECK(world.localToGlobalTransform(gctx).isApprox(childTrf));
 }
 
 BOOST_AUTO_TEST_CASE(PadBlueprintNodeNestedInContainer) {
