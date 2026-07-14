@@ -513,8 +513,7 @@ class AnyTrackProxy : public TrackProxyCommon<AnyTrackProxy<read_only>,
   /// Return a const type-erased track state proxy to the outermost track state
   /// @return The outermost track state proxy
   AnyConstTrackStateProxy outermostTrackState() const {
-    return constHandler()->trackStateAtIndex(containerPtr(),
-                                             this->tipIndex());
+    return constHandler()->trackStateAtIndex(containerPtr(), this->tipIndex());
   }
 
   /// Return a mutable type-erased track state proxy to the outermost track
@@ -559,7 +558,8 @@ class AnyTrackProxy : public TrackProxyCommon<AnyTrackProxy<read_only>,
     if (this->tipIndex() == kTrackIndexInvalid) {
       return {};
     }
-    return detail_anytstate::AnyTrackStateRange<true, true>{outermostTrackState()};
+    return detail_anytstate::AnyTrackStateRange<true, true>{
+        outermostTrackState()};
   }
 
   /// Get a range over the track states of this track, from the outside inwards.
@@ -572,7 +572,8 @@ class AnyTrackProxy : public TrackProxyCommon<AnyTrackProxy<read_only>,
     if (this->tipIndex() == kTrackIndexInvalid) {
       return {};
     }
-    return detail_anytstate::AnyTrackStateRange<true, false>{outermostTrackState()};
+    return detail_anytstate::AnyTrackStateRange<true, false>{
+        outermostTrackState()};
   }
 
   /// Get a range over the track states of this track, from the inside outwards.
