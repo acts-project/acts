@@ -202,8 +202,7 @@ function run_histcmp() {
     local b=$2
     local title=$3
     local html_path=$4
-    local plots_path=$5
-    shift 5
+    shift 4
 
     if [ ! -f "$a" ]; then
         echo "::error::histcmp failed: File $a does not exist"
@@ -222,6 +221,9 @@ function run_histcmp() {
     comparison_job_html[$comparison_job_index]="$html_path"
     comparison_job_index=$(($comparison_job_index + 1))
 
+    # histcmp only creates this directory when a plot directory is configured
+    mkdir -p $(dirname $outdir/html/$html_path)
+
     wait_for_job_slot
     (
         start=$(date +%s)
@@ -231,7 +233,6 @@ function run_histcmp() {
             --label-monitored=monitored \
             --title="$title" \
             -o $outdir/html/$html_path \
-            -p $outdir/html/$plots_path \
             "$@" || rc=$?
         echo "histcmp took $(($(date +%s) - $start)) seconds"
         echo $rc > $jobdir/ec
@@ -278,7 +279,6 @@ function trackfinding() {
             $refdir/$path/performance_seeding.root \
             "Seeding ${name}" \
             $path/performance_seeding.html \
-            $path/performance_seeding_plots \
             --config $default_config
     fi
 
@@ -287,7 +287,6 @@ function trackfinding() {
         $refdir/$path/performance_finding_ckf.root \
         "CKF finding performance | ${name}" \
         $path/performance_finding_ckf.html \
-        $path/performance_finding_ckf_plots \
         --config $default_config
 
     run_histcmp \
@@ -295,7 +294,6 @@ function trackfinding() {
         $refdir/$path/performance_fitting_ckf.root \
         "CKF fitting performance | ${name}" \
         $path/performance_fitting_ckf.html \
-        $path/performance_fitting_ckf_plots \
         --config $default_config
 
     # TODO remove
@@ -317,16 +315,14 @@ function trackfinding() {
         $outdir/data/$path/tracksummary_ckf_hist.root \
         $refdir/$path/tracksummary_ckf_hist.root \
         "CKF track summary | ${name}" \
-        $path/tracksummary_ckf.html \
-        $path/tracksummary_ckf_plots
+        $path/tracksummary_ckf.html
 
     if [ -f $refdir/$path/performance_finding_ckf_ambi.root ]; then
         run_histcmp \
             $outdir/data/$path/performance_finding_ckf_ambi.root \
             $refdir/$path/performance_finding_ckf_ambi.root \
             "Ambisolver finding performance | ${name}" \
-            $path/performance_finding_ckf_ambi.html \
-            $path/performance_finding_ckf_ambi
+            $path/performance_finding_ckf_ambi.html
     fi
 
     if [ -f $refdir/$path/performance_finding_ckf_ml_solver.root ]; then
@@ -334,8 +330,7 @@ function trackfinding() {
             $outdir/data/$path/performance_finding_ckf_ml_solver.root \
             $refdir/$path/performance_finding_ckf_ml_solver.root \
             "ML Ambisolver | ${name}" \
-            $path/performance_finding_ckf_ml_solver.html \
-            $path/performance_finding_ckf_ml_solver
+            $path/performance_finding_ckf_ml_solver.html
     fi
 }
 
@@ -360,8 +355,7 @@ function vertexing() {
             $outdir/data/$path/performance_vertexing_ivf_notime_hist.root \
             $refdir/$path/performance_vertexing_ivf_notime_hist.root \
             "IVF notime | ${name}" \
-            $path/performance_vertexing_ivf_notime.html \
-            $path/performance_vertexing_ivf_notime_plots
+            $path/performance_vertexing_ivf_notime.html
     fi
 
     run python3 Examples/Scripts/generic_plotter.py \
@@ -379,8 +373,7 @@ function vertexing() {
         $outdir/data/$path/performance_vertexing_amvf_gauss_notime_hist.root \
         $refdir/$path/performance_vertexing_amvf_gauss_notime_hist.root \
         "AMVF gauss notime | ${name}" \
-        $path/performance_vertexing_amvf_gauss_notime.html \
-        $path/performance_vertexing_amvf_gauss_notime_plots
+        $path/performance_vertexing_amvf_gauss_notime.html
 
     run python3 Examples/Scripts/generic_plotter.py \
         $outdir/data/$path/performance_vertexing_amvf_grid_time.root \
@@ -397,8 +390,7 @@ function vertexing() {
         $outdir/data/$path/performance_vertexing_amvf_grid_time_hist.root \
         $refdir/$path/performance_vertexing_amvf_grid_time_hist.root \
         "AMVF grid time | ${name}" \
-        $path/performance_vertexing_amvf_grid_time.html \
-        $path/performance_vertexing_amvf_grid_time_plots
+        $path/performance_vertexing_amvf_grid_time.html
 }
 
 function simulation() {
@@ -421,8 +413,7 @@ function simulation() {
         $outdir/data/simulation/particles_${suffix}_hist.root \
         $refdir/simulation/particles_${suffix}_hist.root \
         "Particles ${suffix}" \
-        simulation/particles_${suffix}.html \
-        simulation/particles_${suffix}_plots
+        simulation/particles_${suffix}.html
 }
 
 function generation() {
@@ -440,8 +431,7 @@ function generation() {
         $outdir/data/simulation/particles_ttbar_hist.root \
         $refdir/simulation/particles_ttbar_hist.root \
         "Particles ttbar" \
-        simulation/particles_ttbar.html \
-        simulation/particles_ttbar_plots
+        simulation/particles_ttbar.html
 
     run python3 Examples/Scripts/generic_plotter.py \
         $outdir/data/simulation/vertices_ttbar.root \
@@ -457,8 +447,7 @@ function generation() {
         $outdir/data/simulation/vertices_ttbar_hist.root \
         $refdir/simulation/vertices_ttbar_hist.root \
         "Vertices ttbar" \
-        simulation/vertices_ttbar.html \
-        simulation/vertices_ttbar_plots
+        simulation/vertices_ttbar.html
 }
 
 if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
@@ -474,7 +463,6 @@ if [[ "$mode" == "all" || "$mode" == "kf" ]]; then
         $refdir/trackfitting_kf/performance_trackfitting.root \
         "Truth tracking (KF)" \
         trackfitting_kf/performance_trackfitting.html \
-        trackfitting_kf/performance_trackfitting_plots \
         --config CI/physmon/config/trackfitting_kf.yml \
         -f "$res_pull_2d3d_filter"
 fi
@@ -485,7 +473,6 @@ if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
         $refdir/trackfitting_gsf/performance_trackfitting.root \
         "Truth tracking (GSF)" \
         trackfitting_gsf/performance_trackfitting.html \
-        trackfitting_gsf/performance_trackfitting_plots \
         --config CI/physmon/config/trackfitting_gsf.yml \
         -f "$res_pull_2d3d_filter"
 fi
@@ -496,7 +483,6 @@ if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
         $refdir/trackfitting_gx2f/performance_trackfitting.root \
         "Truth tracking (GX2F)" \
         trackfitting_gx2f/performance_trackfitting.html \
-        trackfitting_gx2f/performance_trackfitting_plots \
         --config CI/physmon/config/trackfitting_gx2f.yml \
         -f "$res_pull_2d3d_filter"
 fi
@@ -507,7 +493,6 @@ if [[ "$mode" == "all" || "$mode" == "refit_kf" ]]; then
         $refdir/trackrefitting_kf/performance_trackrefitting.root \
         "Truth tracking (KF refit)" \
         trackrefitting_kf/performance_trackrefitting.html \
-        trackrefitting_kf/performance_trackrefitting_plots \
         --config CI/physmon/config/trackfitting_kf.yml \
         -f "$res_pull_2d3d_filter"
 fi
@@ -518,7 +503,6 @@ if [[ "$mode" == "all" || "$mode" == "refit_gsf" ]]; then
         $refdir/trackrefitting_gsf/performance_trackrefitting.root \
         "Truth tracking (GSF refit)" \
         trackrefitting_gsf/performance_trackrefitting.html \
-        trackrefitting_gsf/performance_trackrefitting_plots \
         --config CI/physmon/config/trackfitting_gsf.yml \
         -f "$res_pull_2d3d_filter"
 fi
@@ -542,7 +526,6 @@ if [[ "$mode" == "all" || "$mode" == "gx2f_vs_kf" ]]; then
         $outdir/data/trackfitting_gx2f_vs_kf/performance_trackfitting_kf.root \
         "Comparison - Truth tracking (GX2F vs KF)" \
         trackfitting_gx2f_vs_kf/performance_trackfitting.html \
-        trackfitting_gx2f_vs_kf/performance_trackfitting_plots \
         --config CI/physmon/config/info_only.yml \
         --label-reference=KF \
         --label-monitored=GX2F \
