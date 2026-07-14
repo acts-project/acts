@@ -651,11 +651,6 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
     state.navCandidates.emplace_back(candidate);
   }
 
-  // Sort the candidates with the path length
-  std::ranges::sort(state.navCandidates, [](const auto& a, const auto& b) {
-    return a.intersection().pathLength() < b.intersection().pathLength();
-  });
-
   // Print the navigation candidates
   ACTS_VERBOSE("Navigation candidates: " << state.navCandidates.size() << "\n"
                                          << state.navCandidates);
