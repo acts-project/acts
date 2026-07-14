@@ -40,3 +40,6 @@ codegen/src/codegen.egg-info/
 !.clang-tidy
 !.oclint
 !.devcontainer
+
+# don't ignore CMake preset files
+!CMakePresets.json

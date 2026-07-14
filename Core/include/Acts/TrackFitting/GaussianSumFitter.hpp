@@ -528,6 +528,8 @@ struct GaussianSumFitter {
 
     calculateTrackQuantities(track);
 
+    track.linkForward();
+
     return track;
   }
 };
