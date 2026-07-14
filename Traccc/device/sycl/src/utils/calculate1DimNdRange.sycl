@@ -1,0 +1,20 @@
+/** TRACCC library, part of the ACTS project (R&D line)
+ *
+ * (c) 2022-2024 CERN for the benefit of the ACTS project
+ *
+ * Mozilla Public License Version 2.0
+ */
+
+// Project include(s).
+#include "calculate1DimNdRange.hpp"
+
+namespace traccc::sycl::details {
+
+::sycl::nd_range<1> calculate1DimNdRange(const std::size_t globalSize,
+                                         const std::size_t localSize) {
+
+    const std::size_t nBlocks = (globalSize + localSize - 1) / localSize;
+    return {::sycl::range<1>(nBlocks * localSize), ::sycl::range<1>(localSize)};
+}
+
+}  // namespace traccc::sycl::details
