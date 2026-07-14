@@ -78,7 +78,7 @@ def _decoratorFromFile(file: Union[str, Path], **kwargs):
 
         return JsonMaterialDecorator(jFileName=str(file), rConfig=c, **kwargs)
     elif file.suffix == ".root":
-        from .root import RootMaterialDecorator
+        from acts.root import RootMaterialDecorator
 
         return RootMaterialDecorator(fileName=str(file), **kwargs)
     else:
