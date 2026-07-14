@@ -27,6 +27,9 @@ fi
 outdir=${2:-physmon}
 # number of concurrent histcmp comparison processes
 num_jobs=${3:-1}
+# set PHYSMON_PDF_PLOTS=0 to skip writing the individual comparison plots as
+# PDF files next to the HTML reports; the reports embed all plots anyway
+pdf_plots=${PHYSMON_PDF_PLOTS:-1}
 mkdir -p $outdir
 mkdir -p $outdir/data
 mkdir -p $outdir/html
@@ -216,6 +219,15 @@ function run_histcmp() {
     comparison_job_html[$comparison_job_index]="$html_path"
     comparison_job_index=$(($comparison_job_index + 1))
 
+    local plot_args=()
+    if [ "$pdf_plots" != "0" ]; then
+        plot_args=(-p $outdir/html/$plots_path)
+    fi
+
+    # histcmp does not create the output directory if no plot directory is
+    # given
+    mkdir -p $(dirname $outdir/html/$html_path)
+
     wait_for_job_slot
     (
         start=$(date +%s)
@@ -225,7 +237,7 @@ function run_histcmp() {
             --label-monitored=monitored \
             --title="$title" \
             -o $outdir/html/$html_path \
-            -p $outdir/html/$plots_path \
+            "${plot_args[@]}" \
             "$@" || rc=$?
         echo "histcmp took $(($(date +%s) - $start)) seconds"
         echo $rc > $jobdir/ec
