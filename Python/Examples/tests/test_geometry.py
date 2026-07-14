@@ -261,4 +261,3 @@ def test_odd_gen3_json_roundtrip(tmp_path):
     np.testing.assert_allclose(
         orig["pathLength"], rebuilt_data["pathLength"], rtol=1e-5
     )
-
