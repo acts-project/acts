@@ -39,6 +39,7 @@ if(ACTS_ENABLE_CUDA)
             ROOT::Tree
             ROOT::RIO
             ROOT::Core
+            ROOT::Hist
     )
 
     target_compile_definitions(

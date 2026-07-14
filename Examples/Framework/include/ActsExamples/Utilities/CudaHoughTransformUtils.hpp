@@ -54,6 +54,10 @@ struct CudaHoughPlaneBatchArrays {
   /// Bit mask of logical layers seen by each bucket/cell.
   LayerMask* layerMask = nullptr;
 
+  /// Dynamic axis ranges in y-intercept - one of each for each bucket
+  CoordType* yMin = nullptr;
+  CoordType* yMax = nullptr;
+
   // This is keept as X, Y to be complient with original HoughTransformUtils
   // and to later support generalization of this algorithm to also support phi
   std::uint32_t nBuckets = 0; 
@@ -150,6 +154,11 @@ class CudaHoughPlaneBatch {
 
   CudaHoughPlaneBatchArrays deviceArrays() const noexcept { return m_device; }
 
+  CoordType yMin(size_type bucket) const;
+  CoordType yMax(size_type bucket) const;
+
+  HoughAxisRanges bucketAxisRanges(size_type bucket, const HoughAxisRanges& baseRanges) const;
+
 private:
   HoughPlaneConfig m_cfg{};
   size_type m_nBuckets = 0;
@@ -157,6 +166,9 @@ private:
   std::vector<YieldType> m_hostHits{};
   std::vector<YieldType> m_hostLayers{};
   std::vector<LayerMask> m_hostLayerMask{};
+
+  std::vector<CoordType> m_hostYMin{};
+  std::vector<CoordType> m_hostYMax{};
 
   CudaHoughPlaneBatchArrays m_device{};
   bool m_onDevice = false;

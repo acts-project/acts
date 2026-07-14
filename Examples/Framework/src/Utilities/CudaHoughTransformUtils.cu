@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Utilities/CudaHoughTransformUtils.hpp"
+#include "Acts/Definitions/Units.hpp"
 
 #ifdef ACTS_ENABLE_CUDA
 
@@ -24,6 +25,7 @@ namespace {
 
 using ActsExamples::CudaMuonSpacePointArrays;
 using ActsExamples::detLayer;
+using ActsExamples::CudaHoughTransformUtils::CoordType;
 using ActsExamples::CudaHoughTransformUtils::CudaHoughPlaneBatchArrays;
 using ActsExamples::CudaHoughTransformUtils::HoughAxisRanges;
 using ActsExamples::CudaHoughTransformUtils::LayerMask;
@@ -36,6 +38,14 @@ void cudaCheck(cudaError_t status) {
   if (status != cudaSuccess) {
     throw std::runtime_error(cudaGetErrorString(status));
   }
+}
+
+__device__ CoordType minCoord(CoordType a, CoordType b) {
+  return a < b ? a : b;
+}
+
+__device__ CoordType maxCoord(CoordType a, CoordType b) {
+  return a > b ? a : b;
 }
 
 template <typename T>
@@ -92,16 +102,97 @@ __device__ bool notInMask(const LayerMask oldMask, const LayerMask bit) {
   return (oldMask & bit) == LayerMask{0ull};
 }
 
+/// Device mirrors of Acts:HoughTransformUtils bin helpers
+/// convenience functions to link bin indices to axis coordinates
+
+/// @brief Returns the lower bound of the bin specified by step
+/// @param min: Start of axis range
+/// @param max: End of axis range
+/// @param nSteps: Number of bins in axis
+/// @param binIndex: The index of the bin
+/// @return the parameter value at the bin center.
+/// No special logic to prevent over-/underflow, checking these is
+/// left to the caller
 __device__ double binCenterDevice(double min, double max, unsigned nSteps,
                                   unsigned binIndex) {
   return min + (max - min) * 0.5 * (2.0 * binIndex + 1.0) / nSteps;
 }
 
+/// @brief Find the bin index corresponding to a certain abscissa
+/// of the coordinate axis, based on the axis limits and binning.
+/// @param min: Start of axis range
+/// @param max: End of axis range
+/// @param nSteps: Number of bins in axis
+/// @param val: value to find the corresponding bin for
+/// @return the bin number.
+/// No special logic to prevent over-/underflow, checking these is
+/// left to the caller
 __device__ int binIndexDevice(double min, double max, unsigned nSteps,
                               double val) {
   return static_cast<int>((val - min) / (max - min) * nSteps);
 }
 
+// @brief Compute optimal ranges for each buchet specific HoughPlane.
+//
+// This algorithm is not part of HoughTransformUtils and but is executed in MuonHoughSeeder.
+__global__ void computeEtaInterceptRangesMdtBatchKernel(
+    CudaHoughPlaneBatchArrays batch, CudaMuonSpacePointArrays spacePoints,
+    HoughAxisRanges baseRanges, CoordType interceptMargin) {
+  const std::uint32_t bucket = blockIdx.x;
+
+  if (bucket >= batch.nBuckets) {
+    return;
+  }
+
+  extern __shared__ CoordType sharedRanges[];
+
+  CoordType* sMin = sharedRanges;
+  CoordType* sMax = sMin + blockDim.x;
+
+  constexpr CoordType inf = 1.0e100;
+
+  CoordType localMin = inf;
+  CoordType localMax = -inf;
+
+  const std::uint32_t bucketStart = spacePoints.bucketStart[bucket];
+  const std::uint32_t bucketEnd = spacePoints.bucketEnd[bucket];
+
+  for (std::uint32_t hit = bucketStart + threadIdx.x; hit < bucketEnd;
+       hit += blockDim.x) {
+    const CoordType y = spacePoints.localPositionY[hit];
+
+    localMin = minCoord(localMin, y - interceptMargin);
+    localMax = maxCoord(localMax, y + interceptMargin);
+  }
+
+  sMin[threadIdx.x] = localMin;
+  sMax[threadIdx.x] = localMax;
+
+  __syncthreads();
+
+  for (std::uint32_t stride = blockDim.x / 2u; stride > 0u; stride >>= 1u) {
+    if (threadIdx.x < stride) {
+      sMin[threadIdx.x] =
+          minCoord(sMin[threadIdx.x], sMin[threadIdx.x + stride]);
+      sMax[threadIdx.x] =
+          maxCoord(sMax[threadIdx.x], sMax[threadIdx.x + stride]);
+    }
+
+    __syncthreads();
+  }
+
+  if (threadIdx.x == 0u) {
+    if (bucketStart == bucketEnd || sMin[0] > sMax[0]) {
+      batch.yMin[bucket] = baseRanges.yMin;
+      batch.yMax[bucket] = baseRanges.yMax;
+    } else {
+      batch.yMin[bucket] = sMin[0];
+      batch.yMax[bucket] = sMax[0];
+    }
+  }
+}
+
+/// @brief Fill one bin in shared memory
 __device__ void fillSharedBin(YieldType* sHits, YieldType* sLayers,
                               LayerMask* sMask, std::uint32_t nBinsX,
                               std::uint32_t xBin, std::uint32_t yBin,
@@ -130,6 +221,7 @@ __device__ void fillSharedBin(YieldType* sHits, YieldType* sLayers,
   }
 }
 
+/// @brief Fill bins in Y-column
 __device__ void fillSharedYBand(YieldType* sHits, YieldType* sLayers,
                                 LayerMask* sMask,
                                 const CudaHoughPlaneBatchArrays batch,
@@ -166,9 +258,10 @@ __device__ void fillSharedYBand(YieldType* sHits, YieldType* sLayers,
   }
 }
 
+/// @brief Kernel to fill the batch plane of Mdts
 __global__ void fillEtaDriftCirclesMdtBatchKernel(
     CudaHoughPlaneBatchArrays batch, CudaMuonSpacePointArrays spacePoints,
-    HoughAxisRanges ranges, double widthScale, double maxWidth,
+    HoughAxisRanges baseRanges, double widthScale, double maxWidth,
     YieldType weight) {
   const std::uint32_t nCells = batch.nBinsX * batch.nBinsY;
 
@@ -186,6 +279,9 @@ __global__ void fillEtaDriftCirclesMdtBatchKernel(
 
   // Grid-stride loop over buckets.
   for (std::uint32_t bucket = blockIdx.x; bucket < batch.nBuckets; bucket += gridDim.x) {
+    const HoughAxisRanges ranges{baseRanges.xMin, baseRanges.xMax,
+                                 batch.yMin[bucket], batch.yMax[bucket]};
+
     // Clear this block's shared-memory accumulator for the current bucket.
     for (std::uint32_t i = threadIdx.x; i < nCells; i += blockDim.x) {
       sHits[i] = 0.0f;
@@ -253,34 +349,51 @@ __global__ void fillEtaDriftCirclesMdtBatchKernel(
 }
 
 void allocateDeviceData(CudaHoughPlaneBatchArrays& device,
-                        std::size_t totalCells) {
+                        std::size_t totalCells, std::size_t nBuckets) {
   allocateDeviceColumn(device.nHits, totalCells);
   allocateDeviceColumn(device.nLayers, totalCells);
   allocateDeviceColumn(device.layerMask, totalCells);
+
+  allocateDeviceColumn(device.yMin, nBuckets);
+  allocateDeviceColumn(device.yMax, nBuckets);
 }
 
 void freeDeviceData(CudaHoughPlaneBatchArrays& device) noexcept {
   freeDeviceColumn(device.nHits);
   freeDeviceColumn(device.nLayers);
   freeDeviceColumn(device.layerMask);
+
+  freeDeviceColumn(device.yMin);
+  freeDeviceColumn(device.yMax);
 }
 
 void copyHostToDevice(CudaHoughPlaneBatchArrays& device,
                       const std::vector<YieldType>& hits,
                       const std::vector<YieldType>& layers,
-                      const std::vector<LayerMask>& layerMask) {
+                      const std::vector<LayerMask>& layerMask, 
+                      const std::vector<CoordType>& yMin, 
+                      const std::vector<CoordType>& yMax
+                      ) {
   copyColumnToDevice(device.nHits, hits);
   copyColumnToDevice(device.nLayers, layers);
   copyColumnToDevice(device.layerMask, layerMask);
+
+  copyColumnToDevice(device.yMin, yMin);
+  copyColumnToDevice(device.yMax, yMax);
 }
 
 void copyDeviceToHost(std::vector<YieldType>& hits,
                       std::vector<YieldType>& layers,
                       std::vector<LayerMask>& layerMask,
+                      std::vector<CoordType>& yMin, 
+                      std::vector<CoordType>& yMax, 
                       const CudaHoughPlaneBatchArrays& device) {
   copyColumnToHost(hits, device.nHits);
   copyColumnToHost(layers, device.nLayers);
   copyColumnToHost(layerMask, device.layerMask);
+
+  copyColumnToHost(yMin, device.yMin);
+  copyColumnToHost(yMax, device.yMax);
 }
 
 std::size_t sharedBytesForCells(std::size_t nCells) {
@@ -318,6 +431,9 @@ CudaHoughPlaneBatch::CudaHoughPlaneBatch(const HoughPlaneConfig& cfg,
   m_hostHits.resize(totalCells(), 0.0f);
   m_hostLayers.resize(totalCells(), 0.0f);
   m_hostLayerMask.resize(totalCells(), LayerMask{0ull});
+
+  m_hostYMin.resize(nBuckets, 0.0);
+  m_hostYMax.resize(nBuckets, 0.0);
 }
 
 CudaHoughPlaneBatch::CudaHoughPlaneBatch(CudaHoughPlaneBatch&& other) noexcept
@@ -450,6 +566,12 @@ void CudaHoughPlaneBatch::fillEtaDriftCirclesHost(
   }
 }
 
+/// @brief Fill the batch plane on device for one event
+/// @param spacePoints: device space point container
+/// @param axisRanges: scope in which we evaluate the plane -> this maybe need to be update to be dynamic
+/// @param weight: weight of one hit, by default 1
+/// @param threadsPerBlock: number of threads used in block, should be around 128-256
+/// @param num_blocks: number of blocks on which it it used, 0 translates to number of available SMs
 void CudaHoughPlaneBatch::fillEtaDriftCirclesOnDevice(
     CudaMuonSpacePointContainer& spacePoints, const HoughAxisRanges& axisRanges,
     YieldType weight,
@@ -509,6 +631,20 @@ void CudaHoughPlaneBatch::fillEtaDriftCirclesOnDevice(
   if (num_blocks == 0) {
     throw std::runtime_error("Resolved num_blocks is zero");
   }
+
+  constexpr CoordType etaPlaneMarginIntercept = 10.0 * Acts::UnitConstants::cm;
+
+  const std::size_t rangeSharedBytes =
+      2u * static_cast<std::size_t>(threadsPerBlock) * sizeof(CoordType);
+
+  computeEtaInterceptRangesMdtBatchKernel<<<
+      static_cast<unsigned>(nBuckets()),
+      static_cast<unsigned>(threadsPerBlock),
+      rangeSharedBytes>>>(
+      m_device, spacePoints.deviceArrays(), axisRanges,
+      etaPlaneMarginIntercept);
+
+cudaCheck(cudaGetLastError());
 
   num_blocks = std::min<std::uint32_t>(num_blocks,
                                        static_cast<std::uint32_t>(nBuckets()));
@@ -608,8 +744,8 @@ void CudaHoughPlaneBatch::moveToDevice() {
   m_device.nBinsX = static_cast<std::uint32_t>(nBinsX());
   m_device.nBinsY = static_cast<std::uint32_t>(nBinsY());
 
-  allocateDeviceData(m_device, totalCells());
-  copyHostToDevice(m_device, m_hostHits, m_hostLayers, m_hostLayerMask);
+  allocateDeviceData(m_device, totalCells(), nBuckets());
+  copyHostToDevice(m_device, m_hostHits, m_hostLayers, m_hostLayerMask, m_hostYMin, m_hostYMax);
 
   m_onDevice = true;
 }
@@ -619,7 +755,7 @@ void CudaHoughPlaneBatch::moveToHost() {
     return;
   }
 
-  copyDeviceToHost(m_hostHits, m_hostLayers, m_hostLayerMask, m_device);
+  copyDeviceToHost(m_hostHits, m_hostLayers, m_hostLayerMask, m_hostYMin, m_hostYMax, m_device);
 }
 
 void CudaHoughPlaneBatch::clearDevice() noexcept {
@@ -643,6 +779,23 @@ void CudaHoughPlaneBatch::checkIndices(size_type xBin, size_type yBin) const {
   if (yBin >= nBinsY()) {
     throw std::out_of_range("CudaHoughPlaneBatch y-bin index out of range");
   }
+}
+
+CoordType CudaHoughPlaneBatch::yMin(size_type bucket) const {
+  checkBucket(bucket);
+  return m_hostYMin[bucket];
+}
+
+CoordType CudaHoughPlaneBatch::yMax(size_type bucket) const {
+  checkBucket(bucket);
+  return m_hostYMax[bucket];
+}
+
+HoughAxisRanges CudaHoughPlaneBatch::bucketAxisRanges(
+    size_type bucket, const HoughAxisRanges& baseRanges) const {
+  checkBucket(bucket);
+  return HoughAxisRanges{baseRanges.xMin, baseRanges.xMax, m_hostYMin[bucket],
+                         m_hostYMax[bucket]};
 }
 
 }  // namespace ActsExamples::CudaHoughTransformUtils
