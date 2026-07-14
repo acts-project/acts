@@ -1,0 +1,168 @@
+/*
+ * traccc library, part of the ACTS project (R&D line)
+ *
+ * (c) 2024-2026 CERN for the benefit of the ACTS project
+ *
+ * Mozilla Public License Version 2.0
+ */
+
+// System include
+#include <sycl/sycl.hpp>
+
+// vecmem includes
+#include <vecmem/containers/device_vector.hpp>
+#include <vecmem/memory/sycl/device_memory_resource.hpp>
+#include <vecmem/utils/sycl/async_copy.hpp>
+
+// traccc includes
+#include "../../device/sycl/src/sanity/contiguous_on.hpp"
+
+// GTest include(s).
+#include <gtest/gtest.h>
+
+struct int_identity_projection {
+    int operator()(const int& v) const { return v; }
+};
+
+class SYCLSanityContiguousOn : public testing::Test {
+    protected:
+    ::sycl::queue queue;
+    vecmem::sycl::device_memory_resource mr{&queue};
+    vecmem::sycl::async_copy copy{&queue};
+};
+
+TEST_F(SYCLSanityContiguousOn, TrueOrdered) {
+    std::vector<int> host_vector;
+
+    for (int i = 0; i < 5000; ++i) {
+        for (int j = 0; j < i; ++j) {
+            host_vector.push_back(i);
+        }
+    }
+
+    auto device_data = copy.to(vecmem::get_data(host_vector), mr,
+                               vecmem::copy::type::host_to_device);
+    auto device_view = vecmem::get_data(device_data);
+
+    ASSERT_TRUE(
+        traccc::sycl::is_contiguous_on<vecmem::device_vector<const int>>(
+            int_identity_projection(), mr, copy, queue, device_view));
+}
+
+TEST_F(SYCLSanityContiguousOn, TrueRandom) {
+    std::vector<int> host_vector;
+
+    for (int i : {603, 6432, 1, 3, 67, 2, 1111}) {
+        for (int j = 0; j < i; ++j) {
+            host_vector.push_back(i);
+        }
+    }
+
+    auto device_data = copy.to(vecmem::get_data(host_vector), mr,
+                               vecmem::copy::type::host_to_device);
+    auto device_view = vecmem::get_data(device_data);
+
+    ASSERT_TRUE(
+        traccc::sycl::is_contiguous_on<vecmem::device_vector<const int>>(
+            int_identity_projection(), mr, copy, queue, device_view));
+}
+
+TEST_F(SYCLSanityContiguousOn, FalseOrdered) {
+    std::vector<int> host_vector;
+
+    for (int i = 0; i < 5000; ++i) {
+        if (i == 105) {
+            host_vector.push_back(5);
+        } else {
+            for (int j = 0; j < i; ++j) {
+                host_vector.push_back(i);
+            }
+        }
+    }
+
+    auto device_data = copy.to(vecmem::get_data(host_vector), mr,
+                               vecmem::copy::type::host_to_device);
+    auto device_view = vecmem::get_data(device_data);
+
+    ASSERT_FALSE(
+        traccc::sycl::is_contiguous_on<vecmem::device_vector<const int>>(
+            int_identity_projection(), mr, copy, queue, device_view));
+}
+
+TEST_F(SYCLSanityContiguousOn, FalseOrderedPathologicalFirst) {
+    std::vector<int> host_vector;
+
+    host_vector.push_back(4000);
+
+    for (int i = 0; i < 5000; ++i) {
+        for (int j = 0; j < i; ++j) {
+            host_vector.push_back(i);
+        }
+    }
+
+    auto device_data = copy.to(vecmem::get_data(host_vector), mr,
+                               vecmem::copy::type::host_to_device);
+    auto device_view = vecmem::get_data(device_data);
+
+    ASSERT_FALSE(
+        traccc::sycl::is_contiguous_on<vecmem::device_vector<const int>>(
+            int_identity_projection(), mr, copy, queue, device_view));
+}
+
+TEST_F(SYCLSanityContiguousOn, TrueOrderedPathologicalFirst) {
+    std::vector<int> host_vector;
+
+    host_vector.push_back(6000);
+
+    for (int i = 0; i < 5000; ++i) {
+        for (int j = 0; j < i; ++j) {
+            host_vector.push_back(i);
+        }
+    }
+
+    auto device_data = copy.to(vecmem::get_data(host_vector), mr,
+                               vecmem::copy::type::host_to_device);
+    auto device_view = vecmem::get_data(device_data);
+
+    ASSERT_TRUE(
+        traccc::sycl::is_contiguous_on<vecmem::device_vector<const int>>(
+            int_identity_projection(), mr, copy, queue, device_view));
+}
+
+TEST_F(SYCLSanityContiguousOn, FalseOrderedPathologicalLast) {
+    std::vector<int> host_vector;
+
+    for (int i = 0; i < 5000; ++i) {
+        for (int j = 0; j < i; ++j) {
+            host_vector.push_back(i);
+        }
+    }
+
+    host_vector.push_back(2);
+
+    auto device_data = copy.to(vecmem::get_data(host_vector), mr,
+                               vecmem::copy::type::host_to_device);
+    auto device_view = vecmem::get_data(device_data);
+
+    ASSERT_FALSE(
+        traccc::sycl::is_contiguous_on<vecmem::device_vector<const int>>(
+            int_identity_projection(), mr, copy, queue, device_view));
+}
+
+TEST_F(SYCLSanityContiguousOn, FalseRandom) {
+    std::vector<int> host_vector;
+
+    for (int i : {603, 6432, 1, 3, 67, 1, 1111}) {
+        for (int j = 0; j < i; ++j) {
+            host_vector.push_back(i);
+        }
+    }
+
+    auto device_data = copy.to(vecmem::get_data(host_vector), mr,
+                               vecmem::copy::type::host_to_device);
+    auto device_view = vecmem::get_data(device_data);
+
+    ASSERT_FALSE(
+        traccc::sycl::is_contiguous_on<vecmem::device_vector<const int>>(
+            int_identity_projection(), mr, copy, queue, device_view));
+}
