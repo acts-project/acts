@@ -8,10 +8,8 @@
 
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 
-#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
-
 #include <algorithm>
-#include <iomanip>
+#include <format>
 #include <iostream>
 #include <limits>
 #include <numeric>
@@ -99,7 +97,7 @@ void SymmetricKLDistanceMatrix::recomputeAssociatedDistances(
 
   const std::size_t activeIdx = m_originalToActive[originalIdx];
 
-  setAssociated(activeIdx, [&](std::size_t row, std::size_t col) {
+  setAssociated(activeIdx, [&cmps, this](std::size_t row, std::size_t col) {
     return computeSymmetricKlDivergence(cmps[m_activeToOriginal[row]],
                                         cmps[m_activeToOriginal[col]]);
   });
@@ -201,24 +199,24 @@ std::pair<std::size_t, std::size_t> SymmetricKLDistanceMatrix::minDistancePair()
 }
 
 std::ostream &SymmetricKLDistanceMatrix::toStream(std::ostream &os) const {
-  detail::OstreamStateGuard guard{os};
   const int width = 8;
   const int prec = 2;
 
   os << "\n";
-  os << std::string(width, ' ') << " | ";
+  os << std::format("{:>{}}", "", width) << " | ";
   for (std::size_t j = 0ul; j < m_numberActive - 1; ++j) {
-    os << std::setw(width) << m_activeToOriginal[j] << "  ";
+    os << std::format("{:>{}}", m_activeToOriginal[j], width) << "  ";
   }
   os << "\n";
   os << std::string((width + 3) + (width + 2) * (m_numberActive - 1), '-');
   os << "\n";
 
   for (std::size_t i = 1ul; i < m_numberActive; ++i) {
-    os << std::setw(width) << m_activeToOriginal[i] << " | ";
+    os << std::format("{:>{}}", m_activeToOriginal[i], width) << " | ";
     for (std::size_t j = 0ul; j < i; ++j) {
-      os << std::setw(width) << std::setprecision(prec)
-         << m_distances[triangularIndex(i, j)] << "  ";
+      os << std::format("{:>{}.{}f}", m_distances[triangularIndex(i, j)], width,
+                        prec)
+         << "  ";
     }
     os << "\n";
   }
