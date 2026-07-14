@@ -214,8 +214,6 @@ set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_EXAMPLES_FASTJET)
 set_option_if(ACTS_BUILD_PLUGIN_GNN ACTS_BUILD_EXAMPLES_GNN)
 set_option_if(ACTS_BUILD_PLUGIN_FPEMON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_PLUGIN_TRACCC)
-set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
-set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_SETUP_DETRAY)
 set_option_if(
     ACTS_ENABLE_CUDA
     ACTS_GNN_ENABLE_MODULEMAP
@@ -230,7 +228,6 @@ set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_TRACCC)
 set_option_if(ACTS_SETUP_DETRAY ACTS_BUILD_TRACCC)
 set_option_if(ACTS_SETUP_VECMEM ACTS_SETUP_DETRAY)
 set_option_if(ACTS_SETUP_COVFIE ACTS_SETUP_DETRAY)
-set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_SETUP_DETRAY)
 
 # feature tests
 include(CheckCXXSourceCompiles)
@@ -447,7 +444,15 @@ if(ACTS_BUILD_PYTHON_BINDINGS)
         add_subdirectory(thirdparty/pybind11)
     endif()
 endif()
-if(ACTS_BUILD_PLUGIN_ACTSVG)
+# Set up ActSVG when explicitly requested via plugin build, or when Detray's
+# SVG display path is enabled in the superbuild.
+if(
+    ACTS_BUILD_PLUGIN_ACTSVG
+    OR (
+        ACTS_SETUP_DETRAY
+        AND (NOT DEFINED DETRAY_SVG_DISPLAY OR DETRAY_SVG_DISPLAY)
+    )
+)
     if(ACTS_USE_SYSTEM_ACTSVG)
         find_package(actsvg ${_acts_actsvg_version} REQUIRED CONFIG)
     else()
