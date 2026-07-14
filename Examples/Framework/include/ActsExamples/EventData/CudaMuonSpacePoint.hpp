@@ -41,7 +41,8 @@ namespace ActsExamples {
 ///   stored value 1 -> layer 1
 ///   ...
 ///   stored value 15 -> layer 15
-/// This function is used and we do not store layers to avoid repetition of memory storage
+/// This function is used and we do not store layers to avoid repetition of
+/// memory storage
 ///
 /// @param rawId -> Muon ID as given to MuonSpacePoint
 /// @return Layer number in range of 0..31
@@ -126,7 +127,7 @@ class CudaMuonSpacePointContainer;
 /// As specified by CompositeSpacePoint concept.
 ///
 /// The proxy does not own data. It stores a pointer to the container and an
-/// index into the flat SoA columns. 
+/// index into the flat SoA columns.
 class CudaMuonSpacePointProxy {
  public:
   /// Empty default constructor.
@@ -378,7 +379,8 @@ class CudaMuonSpacePointContainer {
   bool m_onDevice = false;
 
   void checkIndex(size_type index) const;
-  void checkBucket(size_type bucket) const; };
+  void checkBucket(size_type bucket) const;
+};
 
 /// Assert all concepts are fulfilled
 static_assert(Acts::Experimental::CompositeSpacePoint<CudaMuonSpacePointProxy>);
