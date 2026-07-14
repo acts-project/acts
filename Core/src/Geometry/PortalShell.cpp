@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/detail/PortalShellFactory.hpp"
+#include "Acts/Geometry/PortalShell.hpp"
 
 #include "Acts/Geometry/CuboidPortalShell.hpp"
 #include "Acts/Geometry/CylinderPortalShell.hpp"
@@ -17,9 +17,9 @@
 
 #include <stdexcept>
 
-namespace Acts::detail {
+namespace Acts {
 
-std::unique_ptr<PortalShellBase> makeSinglePortalShell(
+std::unique_ptr<PortalShellBase> PortalShellBase::makeSingle(
     const GeometryContext& gctx, TrackingVolume& volume) {
   switch (volume.volumeBounds().type()) {
     case VolumeBounds::eCylinder:
@@ -35,4 +35,4 @@ std::unique_ptr<PortalShellBase> makeSinglePortalShell(
   }
 }
 
-}  // namespace Acts::detail
+}  // namespace Acts

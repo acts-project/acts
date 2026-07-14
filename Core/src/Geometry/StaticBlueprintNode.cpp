@@ -10,7 +10,6 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Geometry/detail/PortalShellFactory.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
@@ -56,7 +55,7 @@ PortalShellBase& StaticBlueprintNode::connect(const BlueprintOptions& options,
     shell.fill(*m_volume);
   }
 
-  m_shell = detail::makeSinglePortalShell(gctx, *m_volume);
+  m_shell = PortalShellBase::makeSingle(gctx, *m_volume);
 
   assert(m_shell != nullptr &&
          "No shell was built at the end of StaticBlueprintNode::connect");

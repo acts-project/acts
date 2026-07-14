@@ -19,7 +19,6 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Geometry/detail/AlignablePortalVisitor.hpp"
 #include "Acts/Geometry/detail/BoundDeduplicator.hpp"
-#include "Acts/Geometry/detail/PortalShellFactory.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -169,7 +168,7 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   // world's own (outermost) portals.
   child.connect(options, gctx, logger).fill(*world);
   std::unique_ptr<PortalShellBase> worldShell =
-      detail::makeSinglePortalShell(gctx, *world);
+      PortalShellBase::makeSingle(gctx, *world);
 
   if (m_cfg.boundDeduplication) {
     ACTS_DEBUG("Deduplicate equivalent bounds");

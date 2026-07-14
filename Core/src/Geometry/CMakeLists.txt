@@ -47,9 +47,9 @@ target_sources(
         CompositePortalLink.cpp
         PortalLinkBase.cpp
         PortalError.cpp
+        PortalShell.cpp
         CylinderPortalShell.cpp
         CuboidPortalShell.cpp
-        PortalShellFactory.cpp
         BlueprintNode.cpp
         Blueprint.cpp
         BlueprintOptions.cpp

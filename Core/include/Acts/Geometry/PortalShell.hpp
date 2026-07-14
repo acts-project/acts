@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 #include <string>
 
 namespace Acts {
@@ -27,6 +28,16 @@ class GeometryContext;
 /// This class is the base class for all portal shells
 class PortalShellBase {
  public:
+  /// Create the single-volume shell matching the bounds type of @p volume,
+  /// e.g. a @c SingleCylinderPortalShell for a volume with cylinder bounds.
+  /// @param gctx The geometry context
+  /// @param volume The volume to create the shell for
+  /// @return The portal shell for the volume
+  /// @throws std::logic_error if the volume's bounds type has no shell
+  ///         implementation
+  static std::unique_ptr<PortalShellBase> makeSingle(
+      const GeometryContext& gctx, TrackingVolume& volume);
+
   /// Virtual destructor
   virtual ~PortalShellBase() = default;
 
