@@ -67,6 +67,44 @@ def test_odd():
         assert count_surfaces(trackingGeometry) == 18824
 
 
+# ODD v6 adds a calorimeter and a muon system. Neither contributes surfaces to
+# the tracking geometry, so the count must stay at 18824 as they are staged in.
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
+def test_odd_tracker():
+    with getOpenDataDetector(
+        buildTracker=True, buildCalorimeter=False, buildMuonSystem=False
+    ) as detector:
+        trackingGeometry = detector.trackingGeometry()
+
+        trackingGeometry.visitSurfaces(check_extra_odd)
+
+        assert count_surfaces(trackingGeometry) == 18824
+
+
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
+def test_odd_tracker_calorimeter():
+    with getOpenDataDetector(
+        buildTracker=True, buildCalorimeter=True, buildMuonSystem=False
+    ) as detector:
+        trackingGeometry = detector.trackingGeometry()
+
+        trackingGeometry.visitSurfaces(check_extra_odd)
+
+        assert count_surfaces(trackingGeometry) == 18824
+
+
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
+def test_odd_tracker_calorimeter_muon_system():
+    with getOpenDataDetector(
+        buildTracker=True, buildCalorimeter=True, buildMuonSystem=True
+    ) as detector:
+        trackingGeometry = detector.trackingGeometry()
+
+        trackingGeometry.visitSurfaces(check_extra_odd)
+
+        assert count_surfaces(trackingGeometry) == 18824
+
+
 import itertools
 
 

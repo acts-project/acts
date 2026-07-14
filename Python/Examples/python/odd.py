@@ -25,6 +25,9 @@ def getOpenDataDetector(
     logLevel=acts.logging.INFO,
     gen3=False,
     constructionMethod=None,
+    buildTracker=True,
+    buildCalorimeter=True,
+    buildMuonSystem=True,
 ):
     """This function sets up the open data detector. Requires DD4hep.
     Parameters
@@ -35,6 +38,9 @@ def getOpenDataDetector(
     constructionMethod: Gen3 conversion method enum value of
       OpenDataDetector.Config.ConstructionMethod
       use `ConstructionMethod.TGeo` for the TGeo-backed Gen3 path
+    buildTracker: build the silicon tracker (beam pipe, pixels, strips, solenoid)
+    buildCalorimeter: build the calorimeter, added in ODD v6
+    buildMuonSystem: build the muon system, added in ODD v6
     """
     import acts.examples.dd4hep
 
@@ -45,9 +51,24 @@ def getOpenDataDetector(
     if not odd_dir.exists():
         raise RuntimeError(f"OpenDataDetector not found at {odd_dir}")
 
-    odd_xml = odd_dir / "xml" / "OpenDataDetector.xml"
-    if not odd_xml.exists():
-        raise RuntimeError(f"OpenDataDetector.xml not found at {odd_xml}")
+    # ODD v6 splits the detector into composable XML files. The shared
+    # definitions are always needed; the subsystems are opt-out. Only the
+    # tracker contributes to the ACTS tracking geometry, so simulation-only
+    # workflows can drop the calorimeter and muon system to avoid paying for
+    # geometry that is subsequently discarded.
+    odd_xml_dir = odd_dir / "xml"
+    xml_files = [odd_xml_dir / "OpenDataDetectorDefs.xml"]
+    if buildTracker:
+        xml_files.append(odd_xml_dir / "OpenDataDetectorTracker.xml")
+    if buildCalorimeter:
+        xml_files.append(odd_xml_dir / "OpenDataDetectorCalorimeter.xml")
+    if buildMuonSystem:
+        xml_files.append(odd_xml_dir / "OpenDataDetectorMuonSystem.xml")
+
+    for xml_file in xml_files:
+        if not xml_file.exists():
+            raise RuntimeError(f"OpenDataDetector XML not found at {xml_file}")
+    xml_files = [str(xml_file) for xml_file in xml_files]
 
     env_vars = []
     map_name = "libOpenDataDetector.components"
@@ -88,7 +109,7 @@ def getOpenDataDetector(
             )
 
         oddConfig = acts.examples.dd4hep.OpenDataDetector.Config(
-            xmlFileNames=[str(odd_xml)],
+            xmlFileNames=xml_files,
             name="OpenDataDetector",
             logLevel=customLogLevel(),
             dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
@@ -129,7 +150,7 @@ def getOpenDataDetector(
             return geoid
 
         dd4hepConfig = acts.examples.dd4hep.DD4hepDetector.Config(
-            xmlFileNames=[str(odd_xml)],
+            xmlFileNames=xml_files,
             name="OpenDataDetector",
             logLevel=customLogLevel(),
             dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
