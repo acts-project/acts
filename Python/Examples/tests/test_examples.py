@@ -770,6 +770,38 @@ def test_ckf_tracks_example(
     assert all([f.stat().st_size > 300 for f in csv.iterdir()])
 
 
+@pytest.mark.pypi
+def test_track_finding_python_only(tmp_path, generic_detector_config):
+    """Pytest wrapper for track_finding_python_only.py, the script used as
+    the cibuildwheel wheel smoke test. Exercises particle gun -> Fatras ->
+    digitization -> pure-Python proto-tracking/fitting -> truth matching
+    -> performance histograms, using only what's in the wheel (no ROOT).
+    """
+    srcdir = Path(__file__).resolve().parent.parent.parent.parent
+
+    with generic_detector_config.detector:
+        from track_finding_python_only import runTrackFindingPythonOnly
+
+        field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
+        geoSelectionConfigFile = (
+            srcdir / "Examples/Configs/generic-pixel-sstrips-lstrips-spacepoints.json"
+        )
+
+        s, perfWriter = runTrackFindingPythonOnly(
+            trackingGeometry=generic_detector_config.trackingGeometry,
+            field=field,
+            digiConfigFile=generic_detector_config.digiConfigFile,
+            geoSelectionConfigFile=geoSelectionConfigFile,
+            outputDir=tmp_path,
+            decorators=generic_detector_config.decorators,
+            s=Sequencer(events=1, numThreads=1, logLevel=acts.logging.INFO),
+        )
+        s.run()
+
+        histograms = perfWriter.histograms()
+        assert len(histograms) > 0, "no performance histograms were produced"
+
+
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.odd
 @pytest.mark.slow
