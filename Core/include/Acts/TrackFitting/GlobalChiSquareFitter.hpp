@@ -1664,6 +1664,8 @@ class Gx2Fitter {
     // it for each state
     track.chi2() = chi2sum;
 
+    track.linkForward();
+
     // Return the converted Track
     return track;
   }
