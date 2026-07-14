@@ -639,14 +639,14 @@ detray_test_sycl:
 
 traccc_build_cuda:
   <<: *traccc_build_job
-  image: ghcr.io/acts-project/ubuntu2404_cuda:69
+  image: ghcr.io/acts-project/ubuntu2404_cuda:87
   variables:
     TRACCC_BUILD_TYPE: CUDA
     TRACCC_BUILD_PRESET: cuda-fp32
 
 traccc_test_cuda:
   <<: *traccc_nvidia_test_job
-  image: ghcr.io/acts-project/ubuntu2404_cuda:69
+  image: ghcr.io/acts-project/ubuntu2404_cuda:87
   variables:
     TRACCC_BUILD_TYPE: CUDA
     TRACCC_CMAKE_ARGS: -DACTS_ENABLE_CUDA=ON -DVECMEM_BUILD_CUDA_LIBRARY=ON
@@ -655,7 +655,7 @@ traccc_test_cuda:
 
 traccc_build_sycl_intel:
   <<: *traccc_build_job
-  image: ghcr.io/acts-project/ubuntu2404_oneapi:69
+  image: ghcr.io/acts-project/ubuntu2404_oneapi:87
   variables:
     TRACCC_BUILD_TYPE: SYCL
     TRACCC_BUILD_PRESET: sycl-fp32
@@ -664,7 +664,7 @@ traccc_build_sycl_intel:
 
 traccc_test_sycl_intel:
   <<: *traccc_intel_test_job
-  image: ghcr.io/acts-project/ubuntu2404_oneapi:69
+  image: ghcr.io/acts-project/ubuntu2404_oneapi:87
   variables:
     TRACCC_BUILD_TYPE: SYCL
     ONEAPI_DEVICE_SELECTOR: opencl:*
@@ -673,7 +673,7 @@ traccc_test_sycl_intel:
 
 traccc_build_sycl_nvidia:
   <<: *traccc_build_job
-  image: ghcr.io/acts-project/ubuntu2404_cuda_oneapi:69
+  image: ghcr.io/acts-project/ubuntu2404_cuda_oneapi:82
   variables:
     TRACCC_BUILD_TYPE: SYCL
     TRACCC_BUILD_PRESET: sycl-fp32
@@ -683,7 +683,7 @@ traccc_build_sycl_nvidia:
 
 traccc_test_sycl_nvidia:
   <<: *traccc_nvidia_test_job
-  image: ghcr.io/acts-project/ubuntu2404_cuda_oneapi:69
+  image: ghcr.io/acts-project/ubuntu2404_cuda_oneapi:82
   variables:
     TRACCC_BUILD_TYPE: SYCL
     ONEAPI_DEVICE_SELECTOR: cuda:*
