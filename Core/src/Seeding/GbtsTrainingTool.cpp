@@ -114,7 +114,6 @@ GbtsLayerConnectionTool::createConnectionTable(
   }
 
   // find transitions that pass probability cut and add to temp container
-  std::ofstream outputMap("map_output.txt");
   LayerIdPairs tempPairs;
   for (const auto& [layerPair, nTransitions] : m_layerPairs) {
     const std::uint32_t srcIndex = getIndexByGbtsId(layerPair.first);
@@ -127,9 +126,7 @@ GbtsLayerConnectionTool::createConnectionTable(
     } else {
       probability = static_cast<float>(nTransitions) / srcTotals[srcIndex];
     }
-    outputMap << "src: " << layerPair.first << " dst: " << layerPair.second
-              << " Transitions: " << nTransitions
-              << " probability: " << probability << "\n";
+
     const bool passCut = (m_cfg.probThreshold == -1)
                              ? (probability != 0)
                              : (probability >= m_cfg.probThreshold);

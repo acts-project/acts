@@ -625,6 +625,7 @@ def addGbtsTraining(
         gbtsLayerConnectionToolConfig=gbtsLayerConnectionToolConfig,
         geometryFileDir=str(geometryFile),
         outputFileDir=str(outputConnectionTable),
+        useOldFormatting=useOldFormatting,
     )
 
     s.addAlgorithm(alg)
