@@ -111,8 +111,10 @@ class GbtsLayerConnectionTool {
   /// converts layer hits to layer transitions
   /// @param track the layer hits of a particle
   void addTrack(const std::vector<HitCoordinates>& track);
+
   /// Creates the connection table
   /// @param outputFileLocation the location for the layer connection table
+  /// @return layer pairs
   GbtsLayerConnectionTool::LayerIdPairs createConnectionTable(
       const std::string& outputFileLocation) const;
 
@@ -122,16 +124,19 @@ class GbtsLayerConnectionTool {
 
   /// Finds the Gbts Coordinate of a given hits coordinate
   /// @param hit the coordinates of the particle hit on a layer
+  /// @return gbts coordinate
   std::optional<std::int32_t> findGbtsIdByCoord(
       const HitCoordinates& hit) const;
 
   /// gets the index to the vector of detector layers via an GBTS id
   /// @param gbtsId Gbts Id of layer
+  /// @return detector layer index
   std::uint32_t getIndexByGbtsId(std::int32_t gbtsId) const;
 
   /// finds the opposide layer of a symmetrical detector with a given reference
   /// layer
-  /// @param layer the detecor layer
+  /// @param layer the detector layer
+  /// @return oppsite side layers gbts id
   std::optional<std::int32_t> oppositeSideLayer(std::int32_t layer) const;
 
   /// Config for layer connection tool
