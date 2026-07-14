@@ -13,6 +13,7 @@
 #include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsExamples/Geant4/UnitConversion.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/GenerationProcess.hpp"
 #include "ActsFatras/EventData/SimulationOutcome.hpp"
 
 #include <cassert>
@@ -20,12 +21,60 @@
 #include <unordered_map>
 #include <utility>
 
+#include <G4EmProcessSubType.hh>
 #include <G4ParticleDefinition.hh>
+#include <G4ProcessType.hh>
 #include <G4RunManager.hh>
 #include <G4Track.hh>
 #include <G4UnitsTable.hh>
+#include <G4VProcess.hh>
 
 namespace ActsExamples::Geant4 {
+
+namespace {
+
+/// Map the Geant4 process that created a particle to an ActsFatras
+/// GenerationProcess enum value, so it can be stored on the SimParticle.
+/// Primaries have no creator process.
+///
+/// We translate the G4 creator process into the finer GenerationProcess codes:
+/// - decay                          -> eDecay        (G4ProcessType fDecay)
+/// - true nuclear / photo-nuclear   -> eNuclearInteraction
+///                                         (fHadronic / fPhotolepton_hadron)
+/// EM processes defined in G4EmProcessSubType.hh:
+/// - bremsstrahlung                -> eBremsstrahlung  (fBremsstrahlung in G4)
+/// - photon conversion (pair prod.)-> ePhotonConversion(fGammaConversion in G4)
+/// - ionisation (delta-ray)        -> eIonisation      (fIonisation in G4)
+/// - anything else (Compton, photo-
+///   electric, annihilation, ...)  -> eOther (usually rare)
+/// Primaries have no creator process and stay eUndefined.
+ActsFatras::GenerationProcess g4CreatorToGenerationProcess(
+    const G4VProcess* proc) {
+  using ActsFatras::GenerationProcess;
+  if (proc == nullptr) {
+    return GenerationProcess::eUndefined;  // primary / no creator process
+  }
+  const G4ProcessType type = proc->GetProcessType();
+  if (type == fDecay) {
+    return GenerationProcess::eDecay;
+  }
+  if (type == fHadronic || type == fPhotolepton_hadron) {
+    return GenerationProcess::eNuclearInteraction;  // genuinely nuclear
+  }
+  switch (proc->GetProcessSubType()) {
+    case fBremsstrahlung:
+      return GenerationProcess::eBremsstrahlung;
+    case fGammaConversion:
+      return GenerationProcess::ePhotonConversion;
+    case fIonisation:
+      return GenerationProcess::eIonisation;  // delta-ray
+    default:
+      return GenerationProcess::eOther;  // residual EM (Compton, photoelectric,
+                                         // ...)
+  }
+}
+
+}  // namespace
 
 ParticleTrackingAction::ParticleTrackingAction(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
@@ -146,6 +195,9 @@ SimParticleState ParticleTrackingAction::convert(const G4Track& track,
   aParticle.setAbsoluteMomentum(p);
   aParticle.setNumberOfHits(numberOfHits);
   aParticle.setOutcome(particleOutcome);
+  // Record which Geant4 process created this particle (decay / material / ...).
+  // Primaries have no creator process and stay eUndefined.
+  aParticle.setProcess(g4CreatorToGenerationProcess(track.GetCreatorProcess()));
   return aParticle;
 }
 

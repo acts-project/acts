@@ -20,6 +20,7 @@
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/Portal.hpp"
+#include "Acts/Geometry/PortalDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
@@ -562,6 +563,218 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalKeepGoing) {
       },
       false);
   BOOST_CHECK_GE(markerCount, 1u);
+}
+
+BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalKeepGoingSingleChildFalseWarning) {
+  // Reproducer for a false-positive in the early material-clash check:
+  // a single-child AxisZ stack must NOT trigger a merge-material error because
+  // no portal merge actually happens.  With keepGoingOnMaterialMergeFailure at
+  // its default (false / strict), construction must succeed without throwing.
+  Transform3 base{Transform3::Identity()};
+
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {0_mm, 20_mm};
+  auto root = std::make_unique<Blueprint>(cfg);
+
+  root->addCylinderContainer("Stack", AxisDirection::AxisZ, [&](auto& stack) {
+    using enum AxisDirection;
+    using enum AxisBoundaryType;
+    using enum CylinderVolumeBounds::Face;
+
+    stack.addMaterial("Material", [&](auto& mat) {
+      mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 20},
+                        {AxisZ, Bound, 20});
+      mat.addStaticVolume(
+          base, std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm),
+          "VolumeA");
+    });
+  });
+
+  // Use strict mode (keepGoingOnMaterialMergeFailure = false by default).
+  // The single-child stack must not be mistaken for a real merge, so no
+  // exception should be thrown.
+  Experimental::BlueprintOptions options;
+
+  std::unique_ptr<const TrackingGeometry> trackingGeometry;
+  BOOST_REQUIRE_NO_THROW(trackingGeometry =
+                             root->construct(options, gctx, *logger));
+  BOOST_REQUIRE(trackingGeometry != nullptr);
+
+  std::size_t markerCount = 0;
+  trackingGeometry->visitSurfaces(
+      [&](const Surface* surface) {
+        if (surface != nullptr && surface->surfaceMaterial() != nullptr &&
+            dynamic_cast<const MergedMaterialMarker*>(
+                surface->surfaceMaterial()) != nullptr) {
+          ++markerCount;
+        }
+      },
+      false);
+  BOOST_CHECK_EQUAL(markerCount, 0u);
+}
+
+// Tag the fused face between two z-stacked volumes and look the portal back up
+// from the final geometry. The tagged portal is shared by both volumes.
+BOOST_AUTO_TEST_CASE(PortalTagLookup) {
+  using Experimental::PortalDesignatorBlueprintNode;
+  Transform3 base{Transform3::Identity()};
+
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {0_mm, 20_mm};
+  auto root = std::make_unique<Blueprint>(cfg);
+
+  root->addCylinderContainer("Stack", AxisDirection::AxisZ, [&](auto& stack) {
+    using enum CylinderVolumeBounds::Face;
+
+    // Tag VolumeA's PositiveDisc, the face fused with VolumeB's NegativeDisc.
+    stack.addPortalDesignator("Tags", [&](auto& tags) {
+      tags.tagFace(PositiveDisc, "tracker_calo_boundary");
+      tags.addStaticVolume(
+          base * Translation3{Vector3{0, 0, -200_mm}},
+          std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm),
+          "VolumeA");
+    });
+
+    stack.addStaticVolume(
+        base * Translation3{Vector3{0, 0, 200_mm}},
+        std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm),
+        "VolumeB");
+  });
+
+  std::unique_ptr<const TrackingGeometry> trackingGeometry =
+      root->construct({}, gctx, *logger);
+  BOOST_REQUIRE(trackingGeometry != nullptr);
+
+  const Portal* portal = trackingGeometry->findPortal("tracker_calo_boundary");
+  BOOST_REQUIRE(portal != nullptr);
+
+  BOOST_CHECK(trackingGeometry->findPortal("does_not_exist") == nullptr);
+
+  // The tagged portal must be the shared portal reachable from both volumes.
+  auto containsPortal = [&](const TrackingVolume& volume) {
+    for (const auto& p : volume.portals()) {
+      if (&p == portal) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const TrackingVolume* volumeA = nullptr;
+  const TrackingVolume* volumeB = nullptr;
+  trackingGeometry->apply([&](const TrackingVolume& volume) {
+    if (volume.volumeName() == "VolumeA") {
+      volumeA = &volume;
+    } else if (volume.volumeName() == "VolumeB") {
+      volumeB = &volume;
+    }
+  });
+
+  BOOST_REQUIRE(volumeA != nullptr);
+  BOOST_REQUIRE(volumeB != nullptr);
+  BOOST_CHECK(containsPortal(*volumeA));
+  BOOST_CHECK(containsPortal(*volumeB));
+}
+
+// Tagging two distinct (non-fused) portals with the same label must be detected
+// as a collision when the geometry is closed.
+BOOST_AUTO_TEST_CASE(PortalTagDuplicateThrows) {
+  using Experimental::PortalDesignatorBlueprintNode;
+  Transform3 base{Transform3::Identity()};
+
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {0_mm, 20_mm};
+  auto root = std::make_unique<Blueprint>(cfg);
+
+  root->addCylinderContainer("Stack", AxisDirection::AxisZ, [&](auto& stack) {
+    using enum CylinderVolumeBounds::Face;
+
+    // Tag VolumeA's NegativeDisc (an outer boundary, not fused).
+    stack.addPortalDesignator("TagsA", [&](auto& tags) {
+      tags.tagFace(NegativeDisc, "dup");
+      tags.addStaticVolume(
+          base * Translation3{Vector3{0, 0, -200_mm}},
+          std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm),
+          "VolumeA");
+    });
+
+    // Tag VolumeB's PositiveDisc (a different outer boundary) with the same
+    // tag.
+    stack.addPortalDesignator("TagsB", [&](auto& tags) {
+      tags.tagFace(PositiveDisc, "dup");
+      tags.addStaticVolume(
+          base * Translation3{Vector3{0, 0, 200_mm}},
+          std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm),
+          "VolumeB");
+    });
+  });
+
+  Logging::ScopedFailureThreshold threshold{Logging::Level::FATAL};
+  BOOST_CHECK_THROW(root->construct({}, gctx, *logger), std::invalid_argument);
+}
+
+// Same as PortalTagLookup, but for a cuboid x-stack: VolumeA's PositiveXFace is
+// fused with VolumeB's NegativeXFace.
+BOOST_AUTO_TEST_CASE(PortalTagLookupCuboid) {
+  using Experimental::PortalDesignatorBlueprintNode;
+  Transform3 base{Transform3::Identity()};
+
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisX] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisY] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  auto root = std::make_unique<Blueprint>(cfg);
+
+  root->addCuboidContainer("Stack", AxisDirection::AxisX, [&](auto& stack) {
+    using enum CuboidVolumeBounds::Face;
+
+    stack.addPortalDesignator("Tags", [&](auto& tags) {
+      tags.tagFace(PositiveXFace, "cuboid_boundary");
+      tags.addStaticVolume(
+          base * Translation3{Vector3{-200_mm, 0, 0}},
+          std::make_shared<CuboidVolumeBounds>(100_mm, 100_mm, 100_mm),
+          "VolumeA");
+    });
+
+    stack.addStaticVolume(
+        base * Translation3{Vector3{200_mm, 0, 0}},
+        std::make_shared<CuboidVolumeBounds>(100_mm, 100_mm, 100_mm),
+        "VolumeB");
+  });
+
+  std::unique_ptr<const TrackingGeometry> trackingGeometry =
+      root->construct({}, gctx, *logger);
+  BOOST_REQUIRE(trackingGeometry != nullptr);
+
+  const Portal* portal = trackingGeometry->findPortal("cuboid_boundary");
+  BOOST_REQUIRE(portal != nullptr);
+
+  auto containsPortal = [&](const TrackingVolume& volume) {
+    for (const auto& p : volume.portals()) {
+      if (&p == portal) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const TrackingVolume* volumeA = nullptr;
+  const TrackingVolume* volumeB = nullptr;
+  trackingGeometry->apply([&](const TrackingVolume& volume) {
+    if (volume.volumeName() == "VolumeA") {
+      volumeA = &volume;
+    } else if (volume.volumeName() == "VolumeB") {
+      volumeB = &volume;
+    }
+  });
+
+  BOOST_REQUIRE(volumeA != nullptr);
+  BOOST_REQUIRE(volumeB != nullptr);
+  BOOST_CHECK(containsPortal(*volumeA));
+  BOOST_CHECK(containsPortal(*volumeB));
 }
 
 BOOST_AUTO_TEST_SUITE_END();

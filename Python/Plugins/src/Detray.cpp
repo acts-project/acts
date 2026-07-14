@@ -76,14 +76,16 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
            const Acts::TrackingGeometry& trackingGeometry,
            const std::string& beampipeVolumeName,
            const std::string& detectorName = "",
-           Acts::Logging::Level logLevel = Acts::Logging::INFO) {
+           Acts::Logging::Level logLevel = Acts::Logging::INFO,
+           bool convertMaterial = true, bool convertSurfaceGrids = true) {
           auto [det, names] =
               DetrayGeometryConverter::toDetray<DetrayMetaDataODD>(
                   mr, gctx, trackingGeometry, beampipeVolumeName, detectorName,
-                  logLevel);
+                  logLevel, convertMaterial, convertSurfaceGrids);
           return std::make_pair(std::move(det), std::move(names));
         },
         "mr"_a, "gctx"_a, "trackingGeometry"_a, "beampipeVolumeName"_a,
-        "detectorName"_a = "", "logLevel"_a = Acts::Logging::INFO);
+        "detectorName"_a = "", "logLevel"_a = Acts::Logging::INFO,
+        "convertMaterial"_a = true, "convertSurfaceGrids"_a = true);
   }
 }

@@ -6,14 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
+#include "ActsPython/Utilities/ProxyTether.hpp"
 #include "ActsPython/Utilities/WhiteBoardRegistry.hpp"
+
+#include <string>
 
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
@@ -40,15 +43,19 @@ namespace {
 
 template <typename Map>
 auto bindFlatMultimap(py::module& m, const char* name) {
+  // Register the iterator type before the __iter__ binding that returns it.
+  const std::string iterName = std::string(name) + "Iterator";
+  ActsPython::bindIteratorTether<Map>(m, iterName.c_str());
+
   auto cls = py::classh<Map>(m, name)
                  .def(py::init<>())
                  .def("__len__", &Map::size)
-                 .def(
-                     "__iter__",
-                     [](const Map& self) {
-                       return py::make_iterator(self.begin(), self.end());
-                     },
-                     py::keep_alive<0, 1>())
+                 .def("__iter__",
+                      [](py::object self) {
+                        const auto& map = self.cast<const Map&>();
+                        return ActsPython::IteratorTether<Map>{
+                            self, py::make_iterator(map.begin(), map.end())};
+                      })
                  .def("__contains__",
                       [](const Map& self, const typename Map::key_type& key) {
                         return self.find(key) != self.end();
@@ -330,12 +337,16 @@ void addEventData(py::module& mex) {
   auto constTrackContainer =
       py::classh<ConstTrackContainer>(mex, "ConstTrackContainer")
           .def("__len__", &ConstTrackContainer::size)
-          .def("__iter__",
-               [](const ConstTrackContainer& self) {
-                 return py::make_iterator(self.begin(), self.end());
-               })
-          .def("__getitem__", py::overload_cast<ConstTrackContainer::IndexType>(
-                                  &ConstTrackContainer::getTrack, py::const_))
+          .def(
+              "__iter__",
+              [](const ConstTrackContainer& self) {
+                return py::make_iterator(self.begin(), self.end());
+              },
+              py::keep_alive<0, 1>())
+          .def("__getitem__",
+               py::overload_cast<ConstTrackContainer::IndexType>(
+                   &ConstTrackContainer::getTrack, py::const_),
+               py::keep_alive<0, 1>())
 
           // Zero-copy numpy array views of the underlying SoA columns.
           // The returned arrays are read-only and keep the container alive via
@@ -487,23 +498,43 @@ void addEventData(py::module& mex) {
       });
 
   // bind measurements
-  py::class_<ConstVariableBoundMeasurementProxy>(
-      mex, "ConstVariableBoundMeasurementProxy")
-      .def_property_readonly("geometryId",
-                             &ConstVariableBoundMeasurementProxy::geometryId)
-      .def_property_readonly("size", &ConstVariableBoundMeasurementProxy::size)
+  // The measurement proxy is bound as a ProxyTether (see ProxyTether.hpp). The
+  // type-erased alive-check lets both MeasurementContainer and
+  // MeasurementSubset produce the same bound proxy type.
+  using MeasTether = ProxyTether<ConstVariableBoundMeasurementProxy>;
+  constexpr auto mcAlive = &ownerAlive<MeasurementContainer>;
+  constexpr auto msAlive = &ownerAlive<MeasurementSubset>;
+
+  // Register iterator types before the __iter__ bindings that return them.
+  bindIndexIteratorTether<MeasurementContainer>(
+      mex, "_MeasurementContainerIterator");
+  bindIndexIteratorTether<MeasurementSubset>(mex, "_MeasurementSubsetIterator");
+
+  using MeasProxy = ConstVariableBoundMeasurementProxy;
+  py::class_<MeasTether>(mex, "ConstVariableBoundMeasurementProxy")
+      .def_property_readonly(
+          "geometryId", tetheredRead<MeasTether>(
+                            [](const MeasProxy& s) { return s.geometryId(); }))
+      .def_property_readonly(
+          "size",
+          tetheredRead<MeasTether>([](const MeasProxy& s) { return s.size(); }))
       .def_property_readonly("index",
-                             &ConstVariableBoundMeasurementProxy::index)
-      .def_property_readonly(
-          "fullParameters", &ConstVariableBoundMeasurementProxy::fullParameters)
-      .def_property_readonly(
-          "fullCovariance", &ConstVariableBoundMeasurementProxy::fullCovariance)
+                             tetheredRead<MeasTether>(
+                                 [](const MeasProxy& s) { return s.index(); }))
+      .def_property_readonly("fullParameters",
+                             tetheredRead<MeasTether>([](const MeasProxy& s) {
+                               return s.fullParameters();
+                             }))
+      .def_property_readonly("fullCovariance",
+                             tetheredRead<MeasTether>([](const MeasProxy& s) {
+                               return s.fullCovariance();
+                             }))
       .def_property_readonly(
           "subspaceIndices",
-          [](const ConstVariableBoundMeasurementProxy& self) {
+          tetheredRead<MeasTether>([](const MeasProxy& self) {
             auto indices = self.subspaceHelper().indices();
             return std::vector<int>(indices.begin(), indices.end());
-          });
+          }));
 
   auto measurementContainer =
       py::classh<MeasurementContainer>(mex, "MeasurementContainer")
@@ -512,11 +543,11 @@ void addEventData(py::module& mex) {
           .def("reserve", &MeasurementContainer::reserve)
           .def(
               "emplaceMeasurement",
-              [](MeasurementContainer& self,
-                 Acts::GeometryIdentifier geometryId,
+              [](py::object self, Acts::GeometryIdentifier geometryId,
                  const std::vector<int>& indices,
-                 const std::vector<double>& par, const std::vector<double>& cov)
-                  -> ConstVariableBoundMeasurementProxy {
+                 const std::vector<double>& par,
+                 const std::vector<double>& cov) -> MeasTether {
+                auto& container = self.cast<MeasurementContainer&>();
                 if (indices.size() != par.size() ||
                     indices.size() != cov.size()) {
                   throw std::invalid_argument(
@@ -537,22 +568,32 @@ void addEventData(py::module& mex) {
                 dParams.indices = boundIndices;
                 dParams.values = par;
                 dParams.variances = cov;
-                return ConstVariableBoundMeasurementProxy{
-                    createMeasurement(self, geometryId, dParams)};
+                return MeasTether{
+                    self,
+                    ConstVariableBoundMeasurementProxy{
+                        createMeasurement(container, geometryId, dParams)},
+                    mcAlive};
               },
               py::arg("geometryId"), py::arg("indices"), py::arg("parameters"),
               py::arg("covariance"))
           .def("__getitem__",
-               [](const MeasurementContainer& self,
-                  MeasurementContainer::Index idx) {
-                 return self.getMeasurement(idx);
+               [](py::object self, MeasurementContainer::Index idx) {
+                 const auto& container =
+                     self.cast<const MeasurementContainer&>();
+                 return MeasTether{self, container.getMeasurement(idx),
+                                   mcAlive};
                })
-          .def(
-              "__iter__",
-              [](const MeasurementContainer& self) {
-                return py::make_iterator(self.begin(), self.end());
-              },
-              py::keep_alive<0, 1>());
+          .def("__iter__", [](py::object self) {
+            return IndexIteratorTether<MeasurementContainer>{
+                self, 0,
+                [](const py::object& owner, MeasurementContainer& c,
+                   std::size_t i) {
+                  const MeasurementContainer& cc = c;
+                  return py::cast(
+                      MeasTether{owner, cc.getMeasurement(i),
+                                 &ownerAlive<MeasurementContainer>});
+                }};
+          });
 
   WhiteBoardRegistry::registerClass(measurementContainer);
 
@@ -568,23 +609,29 @@ void addEventData(py::module& mex) {
           .def("__len__",
                [](const MeasurementSubset& self) { return self.size(); })
           .def("__getitem__",
-               [](const MeasurementSubset& self, std::size_t i) {
-                 if (i >= self.size()) {
+               [](py::object self, std::size_t i) {
+                 const auto& subset = self.cast<const MeasurementSubset&>();
+                 if (i >= subset.size()) {
                    throw py::index_error("index out of range");
                  }
-                 return self.at(i);
+                 return MeasTether{self, subset.at(i), msAlive};
+               })
+          .def("__iter__",
+               [](py::object self) {
+                 return IndexIteratorTether<MeasurementSubset>{
+                     self, 0,
+                     [](const py::object& owner, MeasurementSubset& c,
+                        std::size_t i) {
+                       const MeasurementSubset& cc = c;
+                       return py::cast(MeasTether{
+                           owner, cc.at(i), &ownerAlive<MeasurementSubset>});
+                     }};
                })
           .def(
-              "__iter__",
-              [](const MeasurementSubset& self) {
-                return py::make_iterator(self.begin(), self.end());
-              },
-              py::keep_alive<0, 1>())
-          .def(
               "getMeasurement",
-              [](const MeasurementSubset& self,
-                 MeasurementContainer::Index idx) {
-                return self.getMeasurement(idx);
+              [](py::object self, MeasurementContainer::Index idx) {
+                const auto& subset = self.cast<const MeasurementSubset&>();
+                return MeasTether{self, subset.getMeasurement(idx), msAlive};
               },
               py::arg("index"));
 

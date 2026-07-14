@@ -82,6 +82,8 @@ def main():
         help="Convert to detray detector and run detray navigation and propagation",
     )
 
+    # Output options
+
     p.add_argument(
         "--output-summary",
         action=argparse.BooleanOptionalAction,
@@ -104,6 +106,17 @@ def main():
         "--output-sim-hits",
         action=argparse.BooleanOptionalAction,
         help="Write out sim hits, only makes sense for Geant4",
+    )
+
+    p.add_argument(
+        "--detray-search-window",
+        type=int,
+        nargs=2,
+        default=[0, 0],
+        metavar=("AXIS0", "AXIS1"),
+        help="Detray grid acceleration search window per axis. {0, 0} (default) "
+        "only looks at the current bin; increase to probe whether the converted "
+        "surface grids are missing neighbor-cell entries",
     )
 
     args = p.parse_args()
@@ -190,9 +203,15 @@ def main():
                     trackingGeometry,
                     beampipeVolumeName="BeamPipe",
                     logLevel=logLevel,
+                    convertMaterial=True,
+                    convertSurfaceGrids=True,
                 )
             propagatorImpl = acts.examples.detray.StraightLinePropagatorODD(
-                detrayGeometry, __pmr, sterileRun, logLevel
+                detrayGeometry,
+                __pmr,
+                sterileRun,
+                logLevel,
+                searchWindow=args.detray_search_window,
             )
 
         # Run particle smearing

@@ -12,6 +12,7 @@
 #include "Acts/Geometry/CuboidVolumeStack.hpp"
 #include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
+#include "Acts/Geometry/PadBlueprintNode.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 
@@ -52,11 +53,20 @@ Volume& ContainerBlueprintNode::build(
   }
 
   for (auto& child : children()) {
-    Volume& volume = child.build(options, gctx, logger);
-    m_childVolumes.push_back(&volume);
+    Volume& built = child.build(options, gctx, logger);
+    Volume* volume = &built;
+    if (auto* pad = dynamic_cast<PadBlueprintNode*>(&child); pad != nullptr) {
+      // PadBlueprintNode::build() intentionally returns the *unpadded* child
+      // volume (padding is only reflected in trackingVolume()). Containers
+      // must size themselves using the padded volume, or the padding is
+      // silently lost for every ancestor except the implicit root node,
+      // which Blueprint::construct() special-cases via trackingVolume().
+      volume = pad->trackingVolume();
+    }
+    m_childVolumes.push_back(volume);
     // We need to remember which volume we got from which child, so we can
     // assemble a crrect portal shell later
-    m_volumeToNode[&volume] = &child;
+    m_volumeToNode[volume] = &child;
   }
   ACTS_VERBOSE(prefix() << "-> Collected " << m_childVolumes.size()
                         << " child volumes");
@@ -251,14 +261,19 @@ PortalShellBase& ContainerBlueprintNode::connectImpl(
   // survive the merge and would otherwise trigger a deep, hard-to-trace failure
   // inside the stack shell construction. Faces that are *fused* (e.g. the
   // boundary between two stacked volumes) legitimately carry material and are
-  // not flagged here.
+  // not flagged here.  With only a single child there is no actual merge, so
+  // the check is skipped entirely to avoid false positives.
   const PortalMaterialMergePolicy materialPolicy =
       options.keepGoingOnMaterialMergeFailure
           ? PortalMaterialMergePolicy::eDiscardAndMark
           : PortalMaterialMergePolicy::eThrow;
 
+  // With a single child there is nothing to merge, so the "merged" faces are
+  // actually kept as-is. Skip the clash check to avoid false positives.
   std::vector<std::string> materialClashes;
-  for (auto face : ShellStack::mergedFaces(direction())) {
+  for (auto face : shells.size() > 1
+                       ? ShellStack::mergedFaces(direction())
+                       : std::vector<typename ShellStack::Face>{}) {
     for (auto* shell : shells) {
       auto portal = shell->portal(face);
       if (portal != nullptr && portal->surface().hasMaterial()) {

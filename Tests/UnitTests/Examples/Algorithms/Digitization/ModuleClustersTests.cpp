@@ -10,8 +10,12 @@
 
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 #include "ActsFatras/Digitization/Segmentizer.hpp"
+
+#include <algorithm>
+#include <iterator>
 
 using namespace Acts;
 using namespace ActsFatras;
@@ -44,6 +48,17 @@ DigitizedParameters makeDigitizationParameters(const Vector2 &position,
   return params;
 }
 
+DigitizedParameters makeDigitizationParametersWithTime(
+    const Vector2 &position, const Vector2 &variance, double time,
+    double timeVariance, const BinUtility &binUtility) {
+  DigitizedParameters params =
+      makeDigitizationParameters(position, variance, binUtility);
+  params.indices.push_back(eBoundTime);
+  params.values.push_back(time);
+  params.variances.push_back(timeVariance);
+  return params;
+}
+
 auto testDigitizedParametersWithTwoClusters(bool merge, const Vector2 &firstHit,
                                             const Vector2 &secondHit) {
   BinUtility binUtility;
@@ -61,6 +76,33 @@ auto testDigitizedParametersWithTwoClusters(bool merge, const Vector2 &firstHit,
   moduleClusters.add(makeDigitizationParameters(firstHit, {1, 1}, binUtility),
                      0);
   moduleClusters.add(makeDigitizationParameters(secondHit, {1, 1}, binUtility),
+                     1);
+
+  return moduleClusters.digitizedParameters();
+}
+
+auto testDigitizedParametersWithTwoTimedClusters(bool merge,
+                                                 const Vector2 &firstHit,
+                                                 double firstTime,
+                                                 const Vector2 &secondHit,
+                                                 double secondTime) {
+  BinUtility binUtility;
+  binUtility += BinUtility(BinningData(
+      BinningOption::open, AxisDirection::AxisX, 20, -10.0f, 10.0f));
+  binUtility += BinUtility(BinningData(
+      BinningOption::open, AxisDirection::AxisY, 20, -10.0f, 10.0f));
+  std::vector<Acts::BoundIndices> boundIndices = {eBoundLoc0, eBoundLoc1};
+  double nsigma = 1;
+  bool commonCorner = true;
+
+  ModuleClusters moduleClusters(binUtility, boundIndices, merge, nsigma,
+                                commonCorner);
+
+  moduleClusters.add(makeDigitizationParametersWithTime(
+                         firstHit, {1, 1}, firstTime, 1, binUtility),
+                     0);
+  moduleClusters.add(makeDigitizationParametersWithTime(
+                         secondHit, {1, 1}, secondTime, 1, binUtility),
                      1);
 
   return moduleClusters.digitizedParameters();
@@ -84,6 +126,30 @@ BOOST_AUTO_TEST_CASE(digitizedParameters_merging) {
     BOOST_CHECK_EQUAL(result.size(), 2);
 
     result = testDigitizedParametersWithTwoClusters(false, {0, 0}, {5, 0});
+    BOOST_CHECK_EQUAL(result.size(), 2);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(digitizedParameters_merging_with_smeared_time) {
+  // hits with geometric (loc0, loc1) and smeared (time) parameters in
+  // adjacent cells: compatible times are expected to be merged
+  {
+    auto result = testDigitizedParametersWithTwoTimedClusters(true, {0, 0}, 1.0,
+                                                              {1.05, 0}, 2.0);
+    BOOST_REQUIRE_EQUAL(result.size(), 1);
+
+    const auto &[params, simHits] = result.front();
+    auto it = std::ranges::find(params.indices, eBoundTime);
+    BOOST_REQUIRE(it != params.indices.end());
+    auto slot = std::distance(params.indices.begin(), it);
+    BOOST_CHECK_CLOSE(params.values.at(slot), 1.5, 1e-6);
+    BOOST_CHECK_EQUAL(simHits.size(), 2);
+  }
+
+  // incompatible times prevent merging
+  {
+    auto result = testDigitizedParametersWithTwoTimedClusters(true, {0, 0}, 0.0,
+                                                              {1.05, 0}, 10.0);
     BOOST_CHECK_EQUAL(result.size(), 2);
   }
 }

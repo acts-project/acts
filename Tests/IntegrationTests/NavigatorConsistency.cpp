@@ -46,6 +46,7 @@ const double Bz = 2_T;
 auto bField = std::make_shared<ConstantBField>(Vector3{0, 0, Bz});
 
 using TestSurfaceCollector = SurfaceCollector<SurfaceSelector>;
+using ParamRecorder = BoundParameterRecorder<SurfaceSelector>;
 
 std::vector<GeometryIdentifier> collectRelevantGeoIds(
     const TestSurfaceCollector::result_type& surfaceHits) {
@@ -74,7 +75,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
                             const BoundTrackParameters& start,
                             const Logger& logger) {
   // Actor list
-  using ActorList = ActorList<TestSurfaceCollector>;
+  using ActorList = ActorList<TestSurfaceCollector, ParamRecorder>;
   using Options = typename propagator_t::template Options<ActorList>;
 
   // forward surface test
@@ -88,10 +89,35 @@ void runSelfConsistencyTest(const propagator_t& prop,
   fwdSurfaceCollector.selector.selectMaterial = true;
   fwdSurfaceCollector.selector.selectPassive = true;
 
+  auto& paramRecorder = fwdOptions.actorList.template get<ParamRecorder>();
+  paramRecorder.selector.selectSensitive = true;
+  paramRecorder.selector.selectMaterial = true;
+  paramRecorder.selector.selectPassive = true;
+
   ACTS_DEBUG(">>> Forward Propagation : start.");
   auto fwdResult = prop.propagate(start, fwdOptions).value();
   auto fwdSurfaceHits =
       fwdResult.template get<TestSurfaceCollector::result_type>().collected;
+
+  auto fwdTrackRecords = fwdResult.template get<ParamRecorder::result_type>();
+
+  BOOST_CHECK_EQUAL(fwdTrackRecords.size(), fwdSurfaceHits.size());
+  for (const auto& boundPars :
+       fwdResult.template get<ParamRecorder::result_type>()) {
+    BOOST_CHECK_EQUAL(boundPars.particleHypothesis(),
+                      start.particleHypothesis());
+    BOOST_CHECK_EQUAL(boundPars.covariance().has_value(),
+                      start.covariance().has_value());
+    BOOST_CHECK_EQUAL(
+        std::ranges::any_of(
+            fwdSurfaceHits,
+            [&](const Acts::SurfaceHit& hit) {
+              return hit.surface ==
+                     boundPars.referenceSurface().getSharedPtr().get();
+            }),
+        true);
+  }
+
   auto fwdSurfaces = collectRelevantGeoIds(
       fwdResult.template get<TestSurfaceCollector::result_type>());
 

@@ -4,6 +4,7 @@ add_library(
     src/ArrowParticleOutputConverter.cpp
     src/ArrowSimHitOutputConverter.cpp
     src/ArrowTrackOutputConverter.cpp
+    src/ColliderMLRelease1InputConverter.cpp
 )
 
 target_include_directories(
@@ -15,6 +16,8 @@ target_include_directories(
         # since it absorbs this OBJECT lib's .o files.
         $<TARGET_PROPERTY:Acts::ExamplesIoParquet,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:Acts::PluginArrow,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:Acts::ExamplesDigitization,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:Acts::ExamplesIoCsv,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 target_link_libraries(
@@ -37,6 +40,11 @@ target_sources(
     ActsPluginArrow
     PRIVATE $<TARGET_OBJECTS:ActsExamplesIoArrow_obj>
 )
+# ColliderMLRelease1InputConverter needs ExamplesDigitization at link time.
+target_link_libraries(ActsPluginArrow PRIVATE Acts::ExamplesDigitization)
+# ExamplesDigitization is PRIVATE-linked by ActsPluginArrow; add it to the
+# export set so the install(EXPORT ActsPluginArrowTargets) resolves.
+install(TARGETS ActsExamplesDigitization EXPORT ActsPluginArrowTargets)
 
 acts_add_library(ExamplesIoArrow INTERFACE)
 target_include_directories(
@@ -45,7 +53,11 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesIoArrow
-    INTERFACE Acts::ExamplesIoParquet Acts::PluginArrow Acts::ExamplesFramework
+    INTERFACE
+        Acts::ExamplesIoParquet
+        Acts::PluginArrow
+        Acts::ExamplesFramework
+        Acts::ExamplesDigitization
 )
 
 acts_compile_headers(ExamplesIoArrow GLOB include/**/*.hpp)

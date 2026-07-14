@@ -16,6 +16,8 @@ EXCLUDE_PATHS = (
     "Detray/detectors",
     # CLI tools
     "Detray/tests/tools",
+    # TODO: Remove the traccc part.
+    "Traccc",
     "git",
     "Python",
     "Scripts",
@@ -54,9 +56,9 @@ EXCLUDE_FILES = (
     # TODO Add README next to the following files?
     "generic-input-config.json",
     "generic-alignment-geo.json",
-    "odd-digi-smearing-config-notime.json",
     # TODO Mention these files somewhere?
     "codegen/src/codegen/sympy_common.py",
+    "codegen/src/codegen/detray_backend.py",
     "CompressedIO.h",
     "generate_particle_data_table.py",
     "GeometryModule.h",
@@ -77,16 +79,13 @@ EXCLUDE_FILES = (
     "Detray/codegen/detray-sympy/tests/test_matrices.py",
     # Used in traccc
     "Detray/tests/include/detray/test/utils/perigee_stopper.hpp",
+    "Detray/tests/include/detray/test/validation/propagation_validation.hpp",
     # Build-time metadata generation
     "Detray/python/detray/detectors/impl/definitions.py",
     "Detray/python/detray/detectors/impl/type_helpers.py",
     # Python uv files
     "Detray/codegen/detray-sympy/uv.lock",
     "Detray/python/detray/uv.lock",
-    # Temporarily excluded files. TODO remove in next major release.
-    "Core/include/Acts/EventData/detail/ParameterTraits.hpp",
-    "Core/include/Acts/Seeding/PathSeeder.hpp",
-    "Tests/CommonHelpers/include/ActsTests/CommonHelpers/TestSpacePoint.hpp",
 )
 SUFFIX_CPP = (
     ".hpp",

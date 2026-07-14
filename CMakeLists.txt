@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.19)
 
 # LCG sets CPATH, which gets treated like -I by the compiler. We want to ignore
 # warnings from libraries, by unsetting it here, it gets processed by the usual
@@ -91,17 +91,6 @@ option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEOMODEL "Build GeoModel plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TRACCC "Build Traccc plugin" OFF)
 option(ACTS_ENABLE_CUDA "Enable CUDA for the gnn/Traccc plugins" OFF)
-option(ACTS_GNN_ENABLE_CUDA "[Deprecated] Enable CUDA for the gnn plugin" OFF)
-
-# Preserve previous behaviour of ACTS_GNN_ENABLE_CUDA but mark as deprecated
-if(ACTS_GNN_ENABLE_CUDA)
-    message(
-        DEPRECATION
-        "ACTS_GNN_ENABLE_CUDA is deprecated. Enable ACTS_ENABLE_CUDA to achieve the same effect."
-    )
-    set(ACTS_ENABLE_CUDA ON)
-endif()
-
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GNN "Build the GNN plugin" OFF)
 option(ACTS_GNN_ENABLE_ONNX "Build the Onnx backend for the gnn plugin" OFF)
@@ -136,7 +125,6 @@ option(ACTS_BUILD_EXAMPLES_HASHING "Build Hashing-based code in the examples" OF
 option(ACTS_BUILD_EXAMPLES_PARQUET "Build Arrow/Parquet-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PODIO "Build Podio-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
-option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "[Deprecated] Build python bindings and enables the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_ROOT "Build modules based on ROOT I/O" OFF)
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
 # test related options
@@ -169,14 +157,6 @@ option(ACTS_COMPILE_HEADERS "Generate targets to compile header files" ON)
 # NOTE: ordering is important here. dependencies must come before dependees
 include(ActsOptionHelpers)
 
-# Preserve previous behaviour of ACTS_BUILD_PYTHON_BINDINGS but mark as deprecated
-if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
-    message(
-        DEPRECATION
-        "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS is deprecated. Enable ACTS_BUILD_EXAMPLES and ACTS_BUILD_PYTHON_BINDINGS to achieve the same effect."
-    )
-    set(ACTS_BUILD_PYTHON_BINDINGS ON)
-endif()
 # any examples component activates the general examples option
 set_option_if(
     ACTS_BUILD_EXAMPLES
@@ -234,7 +214,6 @@ set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_EXAMPLES_FASTJET)
 set_option_if(ACTS_BUILD_PLUGIN_GNN ACTS_BUILD_EXAMPLES_GNN)
 set_option_if(ACTS_BUILD_PLUGIN_FPEMON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_PLUGIN_TRACCC)
-set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(
     ACTS_ENABLE_CUDA
     ACTS_GNN_ENABLE_MODULEMAP
@@ -249,7 +228,6 @@ set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_TRACCC)
 set_option_if(ACTS_SETUP_DETRAY ACTS_BUILD_TRACCC)
 set_option_if(ACTS_SETUP_VECMEM ACTS_SETUP_DETRAY)
 set_option_if(ACTS_SETUP_COVFIE ACTS_SETUP_DETRAY)
-set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_SETUP_DETRAY)
 
 # feature tests
 include(CheckCXXSourceCompiles)
@@ -344,9 +322,9 @@ set(_acts_root_version 6.28.04) # first version with C++20 support
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 3.0.1)
-set(_acts_traccc_version 1.3.1)
+set(_acts_traccc_version 1.4.0)
 set(_acts_covfie_version 0.15.2)
-set(_acts_vecmem_version 1.24.0)
+set(_acts_vecmem_version 1.25.0)
 set(_acts_annoy_version 1.17.3)
 set(_acts_fastjet_version 3.4.1)
 set(_acts_arrow_version 21.0.0)
@@ -466,7 +444,15 @@ if(ACTS_BUILD_PYTHON_BINDINGS)
         add_subdirectory(thirdparty/pybind11)
     endif()
 endif()
-if(ACTS_BUILD_PLUGIN_ACTSVG)
+# Set up ActSVG when explicitly requested via plugin build, or when Detray's
+# SVG display path is enabled in the superbuild.
+if(
+    ACTS_BUILD_PLUGIN_ACTSVG
+    OR (
+        ACTS_SETUP_DETRAY
+        AND (NOT DEFINED DETRAY_SVG_DISPLAY OR DETRAY_SVG_DISPLAY)
+    )
+)
     if(ACTS_USE_SYSTEM_ACTSVG)
         find_package(actsvg ${_acts_actsvg_version} REQUIRED CONFIG)
     else()
@@ -615,8 +601,12 @@ endif()
 if(ACTS_SETUP_VECMEM)
     if(ACTS_USE_SYSTEM_VECMEM)
         find_package(vecmem ${_acts_vecmem_version} REQUIRED)
-    else()
+    elseif(NOT TARGET vecmem::core)
         add_subdirectory(thirdparty/vecmem)
+        list(PREPEND CMAKE_MODULE_PATH "${VECMEM_LANGUAGE_DIR}")
+        list(PREPEND CMAKE_MODULE_PATH "${VECMEM_LANGUAGE_DIR}/sycl")
+        # Make the "VecMem language code" available for the whole project.
+        include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
     endif()
     # Make the "VecMem language code" available for the whole project.
     list(APPEND CMAKE_MODULE_PATH "${VECMEM_LANGUAGE_DIR}")
@@ -638,6 +628,7 @@ if(ACTS_SETUP_DETRAY)
     option(DETRAY_SETUP_EIGEN3 "" FALSE)
     option(DETRAY_SETUP_ACTSVG "" FALSE)
     option(DETRAY_SETUP_COVFIE "" FALSE)
+    option(DETRAY_SETUP_PYBIND11 "" FALSE)
     option(DETRAY_SVG_DISPLAY "" TRUE)
     if(ACTS_BUILD_TRACCC)
         option(DETRAY_BUILD_TEST_UTILS "" TRUE)
@@ -657,6 +648,19 @@ if(ACTS_BUILD_TRACCC)
     option(TRACCC_USE_ROOT "" FALSE)
     option(TRACCC_SETUP_ACTS "" FALSE)
     option(TRACCC_SETUP_VECMEM "" FALSE)
+    option(TRACCC_SETUP_EIGEN3 "" FALSE)
+    option(TRACCC_SETUP_THRUST "" TRUE)
+    option(TRACCC_SETUP_COVFIE "" FALSE)
+    option(TRACCC_SETUP_DETRAY "" FALSE)
+    option(TRACCC_BUILD_CUDA "" ${ACTS_ENABLE_CUDA})
+    option(TRACCC_SETUP_TBB "" FALSE)
+    option(TRACCC_BUILD_IO "" TRUE)
+    option(TRACCC_BUILD_PERFORMANCE "" FALSE)
+    option(TRACCC_BUILD_SIMULATION "" FALSE)
+    option(TRACCC_BUILD_TESTING "" FALSE)
+    option(TRACCC_BUILD_EXAMPLES "" FALSE)
+    option(TRACCC_BUILD_BENCHMARKS "" FALSE)
+
     find_package(TBB ${_acts_tbb_version} CONFIG)
     if(NOT TBB_FOUND)
         set(TRACCC_SETUP_TBB TRUE CACHE BOOL "")
@@ -664,13 +668,7 @@ if(ACTS_BUILD_TRACCC)
         set(TRACCC_SETUP_TBB FALSE CACHE BOOL "")
     endif()
 
-    # traccc also depends on vecmem and covfie, but those plugins should always
-    # be enabled if traccc is.
-    if(ACTS_USE_SYSTEM_TRACCC)
-        find_package(traccc ${_acts_traccc_version} REQUIRED CONFIG)
-    else()
-        add_subdirectory(thirdparty/traccc)
-    endif()
+    add_subdirectory(Traccc)
 endif()
 
 # examples dependencies

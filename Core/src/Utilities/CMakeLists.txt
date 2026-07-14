@@ -4,7 +4,6 @@ target_sources(
         AnnealingUtility.cpp
         AxisDefinitions.cpp
         Logger.cpp
-        SpacePointUtility.cpp
         TrackHelpers.cpp
         Intersection.cpp
         IAxis.cpp
@@ -13,4 +12,5 @@ target_sources(
         ScopedTimer.cpp
         TransformComparator.cpp
         Histogram.cpp
+        StringHelpers.cpp
 )

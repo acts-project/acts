@@ -9,12 +9,12 @@
 #include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
 
 #include "Acts/EventData/SpacePointColumns.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Seeding2/GbtsGeometry.hpp"
-#include "Acts/Seeding2/GbtsLayerConnection.hpp"
-#include "Acts/Seeding2/GbtsTrackingFilter.hpp"
+#include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsLayerConnection.hpp"
+#include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 #include <cmath>
@@ -91,7 +91,7 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   // container due to how space point container works, we need to keep the
   // container and the external columns we added alive this is done by using a
   // tuple of the core container and the two extra columns
-  const Acts::SpacePointContainer2 coreSpacePoints =
+  const Acts::SpacePointContainer coreSpacePoints =
       makeSpContainer(spacePoints, m_actsGbtsMap);
 
   // used to reserve size of nodes 2D vector in core
@@ -100,7 +100,7 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   const Acts::Experimental::GraphBasedTrackSeeder::Options options(
       m_cfg.bFieldInZ);
 
-  Acts::SeedContainer2 seeds;
+  Acts::SeedContainer seeds;
   seeds.assignSpacePointContainer(spacePoints);
 
   // create the seeds
@@ -113,7 +113,7 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   // update seed space point indices to original space point container
   for (auto seed : seeds) {
     for (auto &spIndex : seed.spacePointIndices()) {
-      spIndex = coreSpacePoints.at(spIndex).copyFromIndex();
+      spIndex = coreSpacePoints.at(spIndex).copiedFromIndex();
     }
   }
 
@@ -162,13 +162,13 @@ GraphBasedSeedingAlgorithm::makeActsGbtsMap() const {
   return actsToGbtsMap;
 }
 
-Acts::SpacePointContainer2 GraphBasedSeedingAlgorithm::makeSpContainer(
+Acts::SpacePointContainer GraphBasedSeedingAlgorithm::makeSpContainer(
     const SpacePointContainer &spacePoints,
     std::map<ActsIDs, GbtsIDs> map) const {
-  Acts::SpacePointContainer2 coreSpacePoints(
-      Acts::SpacePointColumns::X | Acts::SpacePointColumns::Y |
-      Acts::SpacePointColumns::Z | Acts::SpacePointColumns::R |
-      Acts::SpacePointColumns::Phi | Acts::SpacePointColumns::CopyFromIndex);
+  Acts::SpacePointContainer coreSpacePoints(
+      Acts::SpacePointColumns::CopiedFromIndex | Acts::SpacePointColumns::X |
+      Acts::SpacePointColumns::Y | Acts::SpacePointColumns::Z |
+      Acts::SpacePointColumns::R | Acts::SpacePointColumns::Phi);
 
   // add new column for layer ID and clusterwidth
   auto layerColomn = coreSpacePoints.createColumn<std::uint32_t>("layerId");
@@ -244,7 +244,7 @@ Acts::SpacePointContainer2 GraphBasedSeedingAlgorithm::makeSpContainer(
     newSp.z() = spacePoint.z();
     newSp.r() = spacePoint.r();
     newSp.phi() = std::atan2(spacePoint.y(), spacePoint.x());
-    newSp.copyFromIndex() = spacePoint.index();
+    newSp.copiedFromIndex() = spacePoint.index();
     newSp.extra(layerColomn) = std::get<2>(find->second);
     // false input as this is not available in examples
     newSp.extra(clusterWidthColomn) = 0;
