@@ -121,9 +121,9 @@ class GbtsLayerConnectionTool {
   const Logger& logger() const { return *m_logger; }
 
   /// Finds the Gbts Coordinate of a given hits coordinate
-  /// @param r radius
-  /// @param z z coordinate
-  std::optional<std::int32_t> findGbtsIdByCoord(HitCoordinates) const;
+  /// @param hit the coordinates of the particle hit on a layer
+  std::optional<std::int32_t> findGbtsIdByCoord(
+      const HitCoordinates& hit) const;
 
   /// gets the index to the vector of detector layers via an GBTS id
   /// @param gbtsId Gbts Id of layer

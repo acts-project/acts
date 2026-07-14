@@ -165,7 +165,7 @@ GbtsLayerConnectionTool::createConnectionTable(
 }
 
 std::optional<std::int32_t> GbtsLayerConnectionTool::findGbtsIdByCoord(
-    const HitCoordinates hit) const {
+    const HitCoordinates& hit) const {
   for (const auto& layer : m_cfg.detectorGeometry) {
     const float zMin = layer.minZ - m_cfg.zMinTol;
     const float zMax = layer.maxZ + m_cfg.zMaxTol;
