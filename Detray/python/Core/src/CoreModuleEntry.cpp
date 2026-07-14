@@ -27,7 +27,9 @@
 
 // System include(s)
 #include <memory>
+#include <sstream>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace py = pybind11;
@@ -40,6 +42,16 @@ namespace {
 
 using algebra_t = detray::array<DETRAY_CUSTOM_SCALARTYPE>;
 using detector_t = detray::detector<detray::default_metadata<algebra_t>>;
+using volume_descriptor_t = detector_t::volume_type;
+using volume_container_t = detector_t::volume_container;
+using surface_descriptor_t = detector_t::surface_type;
+using surface_store_t = detector_t::surface_lookup_container;
+using surface_container_t = detector_t::surface_container;
+using geometry_context_t = detector_t::geometry_context;
+using transform_store_t = detector_t::transform_container;
+using mask_store_t = detector_t::mask_container;
+using material_store_t = detector_t::material_container;
+using accelerator_store_t = detector_t::accelerator_container;
 
 /// Owns a detector together with the memory resource its data lives in.
 struct detector_handle {
@@ -65,6 +77,16 @@ std::pair<detector_handle, detray::name_map> read_detector(
 PYBIND11_MODULE(DetrayPythonBindings, m) {
   m.doc() = "Detray core bindings";
 
+  py::class_<volume_descriptor_t>(m, "VolumeDescriptor");
+  py::class_<surface_descriptor_t>(m, "SurfaceDescriptor");
+  py::class_<surface_store_t>(m, "SurfaceStore");
+  py::class_<geometry_context_t>(m, "GeometryContext");
+  py::class_<transform_store_t>(m, "TransformStore");
+  py::class_<mask_store_t>(m, "MaskStore");
+  py::class_<material_store_t>(m, "MaterialStore");
+  py::class_<accelerator_store_t>(m, "AcceleratorStore");
+  py::class_<detray::name_map>(m, "NameMap");
+
   py::class_<detector_handle>(
       m, "DetectorDefaultMetadata" STRINGIFY_HELPER(DETRAY_CUSTOM_SCALARTYPE))
       .def(
@@ -74,8 +96,70 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
       .def(
           "n_surfaces",
           [](const detector_handle &d) { return d.detector.surfaces().size(); },
-          "Number of surfaces in the detector");
-  py::class_<detray::name_map>(m, "NameMap");
+          "Number of surfaces in the detector")
+      .def(
+          "name",
+          [](const detector_handle &d, const detray::name_map &names) {
+            return d.detector.name(names);
+          },
+          py::arg("names"), "Detector name")
+      .def_property_readonly(
+          "volumes",
+          // Converts to list[VolumeDescriptor].
+          [](const detector_handle &d) -> const volume_container_t & {
+            return d.detector.volumes();
+          },
+          py::return_value_policy::reference_internal, "All volumes")
+      .def_property_readonly(
+          "surfaces",
+          [](const detector_handle &d) -> const surface_store_t & {
+            return d.detector.surfaces();
+          },
+          py::return_value_policy::reference_internal, "All surfaces")
+      .def(
+          "surface",
+          [](const detector_handle &d,
+             detray::dindex index) -> const surface_descriptor_t & {
+            return d.detector.surface(index);
+          },
+          py::arg("index"), py::return_value_policy::reference_internal,
+          "Surface by index")
+      .def_property_readonly(
+          "portals",
+          // Converts to list[SurfaceDescriptor].
+          [](const detector_handle &d) -> const surface_container_t & {
+            return d.detector.portals();
+          },
+          "All portals")
+      .def_property_readonly(
+          "transformStore",
+          [](const detector_handle &d) -> const transform_store_t & {
+            return d.detector.transform_store();
+          },
+          py::return_value_policy::reference_internal, "Transform store")
+      .def_property_readonly(
+          "maskStore",
+          [](const detector_handle &d) -> const mask_store_t & {
+            return d.detector.mask_store();
+          },
+          py::return_value_policy::reference_internal, "Mask store")
+      .def_property_readonly(
+          "materialStore",
+          [](const detector_handle &d) -> const material_store_t & {
+            return d.detector.material_store();
+          },
+          py::return_value_policy::reference_internal, "Material store")
+      .def_property_readonly(
+          "acceleratorStore",
+          [](const detector_handle &d) -> const accelerator_store_t & {
+            return d.detector.accelerator_store();
+          },
+          py::return_value_policy::reference_internal, "Accelerator store")
+      .def("__repr__", [](const detector_handle &d) {
+        std::ostringstream os;
+        os << d.detector;
+        return os.str();
+      });
 
   m.def("readDetector", &read_detector, py::arg("fileName"),
         "Read a detector from a JSON file");
