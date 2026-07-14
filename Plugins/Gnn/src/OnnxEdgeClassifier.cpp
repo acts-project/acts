@@ -153,21 +153,30 @@ PipelineTensors OnnxEdgeClassifier::operator()(
     nodeFeatures = &(*selectedNodeFeatures);
   }
 
-  // scale node features if featureScales is given in cfg
+  // Scale node features if featureScales is given in cfg.
+  // using device-aware mulPerColumn with inverse scales
   if (!m_cfg.featureScales.empty()) {
     if (m_cfg.featureScales.size() !=
         static_cast<std::size_t>(nodeFeatures->shape()[1])) {
       throw std::runtime_error(
           "featureScales size must match the number of input features");
     }
-    auto *data = nodeFeatures->data();
-    std::size_t numNodes = nodeFeatures->shape()[0];
-    std::size_t numFeatures = nodeFeatures->shape()[1];
-    for (std::size_t n = 0; n < numNodes; ++n) {
-      for (std::size_t f = 0; f < numFeatures; ++f) {
-        data[n * numFeatures + f] /= m_cfg.featureScales[f];
+
+    // Compute inverse scales (1 / featureScales) for division
+    std::vector<float> inverseScales(m_cfg.featureScales.size());
+    for (std::size_t f = 0; f < m_cfg.featureScales.size(); ++f) {
+      if (m_cfg.featureScales[f] == 0.f) {
+        throw std::runtime_error(
+            "featureScales contains zero: division by zero");
       }
+      inverseScales[f] = 1.f / m_cfg.featureScales[f];
     }
+
+    // Apply scales to node features
+    auto scaledFeatures =
+        mulPerColumn(*nodeFeatures, inverseScales, execContext);
+    selectedNodeFeatures.emplace(std::move(scaledFeatures));
+    nodeFeatures = &(*selectedNodeFeatures);
   }
 
   // Node tensor
