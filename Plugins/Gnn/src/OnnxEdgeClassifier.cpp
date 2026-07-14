@@ -165,7 +165,7 @@ PipelineTensors OnnxEdgeClassifier::operator()(
     std::size_t numFeatures = nodeFeatures->shape()[1];
     for (std::size_t n = 0; n < numNodes; ++n) {
       for (std::size_t f = 0; f < numFeatures; ++f) {
-        data[n * numFeatures + f] *= m_cfg.featureScales[f];
+        data[n * numFeatures + f] /= m_cfg.featureScales[f];
       }
     }
   }
