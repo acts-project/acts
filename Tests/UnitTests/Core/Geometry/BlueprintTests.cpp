@@ -1241,22 +1241,26 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeCylinder) {
 
   PadBlueprintNode pad("World", cfg.envelope);
 
-  pad.addStaticVolume(std::make_unique<TrackingVolume>(
+  auto child = std::make_unique<TrackingVolume>(
       Transform3::Identity(),
-      std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 30_mm), "child"));
+      std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 30_mm), "child");
+  const TrackingVolume* childVol = child.get();
+  pad.addStaticVolume(std::move(child));
 
   BlueprintOptions options;
-  Volume& childVol = pad.build(options, gctx, *logger);
+  Volume& padded = pad.build(options, gctx, *logger);
 
   // Child bounds are unchanged, padding creates a new volume
   const auto& childCyl =
-      dynamic_cast<const CylinderVolumeBounds&>(childVol.volumeBounds());
+      dynamic_cast<const CylinderVolumeBounds&>(childVol->volumeBounds());
   BOOST_CHECK_EQUAL(childCyl.get(CylinderVolumeBounds::eMinR), 10_mm);
   BOOST_CHECK_EQUAL(childCyl.get(CylinderVolumeBounds::eMaxR), 20_mm);
   BOOST_CHECK_EQUAL(childCyl.get(CylinderVolumeBounds::eHalfLengthZ), 30_mm);
 
   const TrackingVolume* world = pad.trackingVolume();
   BOOST_REQUIRE(world != nullptr);
+  // build() presents the padded volume to the parent
+  BOOST_CHECK_EQUAL(&padded, world);
   BOOST_CHECK_EQUAL(world->volumeName(), "World");
   BOOST_CHECK_EQUAL(world->volumeBounds().type(),
                     VolumeBounds::BoundsType::eCylinder);
@@ -1276,22 +1280,26 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeCuboid) {
   cfg.envelope[AxisDirection::AxisZ] = {7_mm, 7_mm};
 
   PadBlueprintNode pad("World", cfg.envelope);
-  pad.addStaticVolume(std::make_unique<TrackingVolume>(
+  auto child = std::make_unique<TrackingVolume>(
       Transform3::Identity(),
-      std::make_shared<CuboidVolumeBounds>(10_mm, 20_mm, 30_mm), "child"));
+      std::make_shared<CuboidVolumeBounds>(10_mm, 20_mm, 30_mm), "child");
+  const TrackingVolume* childVol = child.get();
+  pad.addStaticVolume(std::move(child));
 
   BlueprintOptions options;
-  Volume& childVol = pad.build(options, gctx, *logger);
+  Volume& padded = pad.build(options, gctx, *logger);
 
   // Child bounds are unchanged, padding creates a new volume
   const auto& childBox =
-      dynamic_cast<const CuboidVolumeBounds&>(childVol.volumeBounds());
+      dynamic_cast<const CuboidVolumeBounds&>(childVol->volumeBounds());
   BOOST_CHECK_EQUAL(childBox.get(CuboidVolumeBounds::eHalfLengthX), 10_mm);
   BOOST_CHECK_EQUAL(childBox.get(CuboidVolumeBounds::eHalfLengthY), 20_mm);
   BOOST_CHECK_EQUAL(childBox.get(CuboidVolumeBounds::eHalfLengthZ), 30_mm);
 
   const TrackingVolume* world = pad.trackingVolume();
   BOOST_REQUIRE(world != nullptr);
+  // build() presents the padded volume to the parent
+  BOOST_CHECK_EQUAL(&padded, world);
   BOOST_CHECK_EQUAL(world->volumeName(), "World");
   BOOST_CHECK_EQUAL(world->volumeBounds().type(),
                     VolumeBounds::BoundsType::eCuboid);

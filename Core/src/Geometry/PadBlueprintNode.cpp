@@ -125,7 +125,7 @@ Volume &PadBlueprintNode::build(const BlueprintOptions &options,
     throw std::logic_error{"Unsupported volume bounds type"};
   }
 
-  return topVolume;
+  return *m_volume;
 }
 
 TrackingVolume *PadBlueprintNode::trackingVolume() const {
