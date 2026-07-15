@@ -7,8 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/EventData/CudaMuonSpacePoint.hpp"
-
-#ifdef ACTS_ENABLE_CUDA
+#include "ActsExamples/Utilities/CudaUtilities.hpp"
 
 #include <stdexcept>
 #include <utility>
@@ -17,11 +16,7 @@
 
 namespace {
 
-void cudaCheck(cudaError_t status) {
-  if (status != cudaSuccess) {
-    throw std::runtime_error(cudaGetErrorString(status));
-  }
-}
+using namespace ActsExamples;
 
 template <typename T>
 void resizeColumn(std::vector<T>& column, std::size_t size) {
@@ -55,44 +50,6 @@ void resizeHostData(ActsExamples::CudaMuonSpacePointHostData& host,
 
   resizeColumn(host.driftRadius, size);
   resizeColumn(host.time, size);
-}
-
-template <typename T>
-void allocateDeviceColumn(T*& deviceColumn, std::size_t size) {
-  if (size == 0) {
-    return;
-  }
-
-  cudaCheck(
-      cudaMalloc(reinterpret_cast<void**>(&deviceColumn), size * sizeof(T)));
-}
-
-template <typename T>
-void freeDeviceColumn(T*& deviceColumn) noexcept {
-  if (deviceColumn != nullptr) {
-    cudaFree(deviceColumn);
-    deviceColumn = nullptr;
-  }
-}
-
-template <typename T>
-void copyColumnToDevice(T* deviceColumn, const std::vector<T>& hostColumn) {
-  if (hostColumn.empty()) {
-    return;
-  }
-
-  cudaCheck(cudaMemcpy(deviceColumn, hostColumn.data(),
-                       hostColumn.size() * sizeof(T), cudaMemcpyHostToDevice));
-}
-
-template <typename T>
-void copyColumnToHost(std::vector<T>& hostColumn, const T* deviceColumn) {
-  if (hostColumn.empty() || deviceColumn == nullptr) {
-    return;
-  }
-
-  cudaCheck(cudaMemcpy(hostColumn.data(), deviceColumn,
-                       hostColumn.size() * sizeof(T), cudaMemcpyDeviceToHost));
 }
 
 void allocateDeviceData(ActsExamples::CudaMuonSpacePointArrays& device,
@@ -222,6 +179,17 @@ void copyDeviceToHost(ActsExamples::CudaMuonSpacePointHostData& host,
   copyColumnToHost(host.bucketEnd, device.bucketEnd);
 }
 
+std::size_t countSpacePoints(
+    const ActsExamples::MuonSpacePointContainer& spacePoints) {
+  std::size_t totalSize = 0;
+
+  for (const auto& bucket : spacePoints) {
+    totalSize += bucket.size();
+  }
+
+  return totalSize;
+}
+
 }  // namespace
 
 namespace ActsExamples {
@@ -322,6 +290,39 @@ CudaMuonSpacePointPtr::CudaMuonSpacePointPtr(
 CudaMuonSpacePointContainer::CudaMuonSpacePointContainer(size_type size)
     : m_size{size} {
   resizeHostData(m_host, m_size);
+}
+
+CudaMuonSpacePointContainer::CudaMuonSpacePointContainer(
+    const MuonSpacePointContainer& spacePoints)
+    : CudaMuonSpacePointContainer{countSpacePoints(spacePoints)} {
+  m_host.bucketStart.reserve(spacePoints.size());
+  m_host.bucketEnd.reserve(spacePoints.size());
+
+  size_type index = 0;
+
+  for (const MuonSpacePointBucket& bucket : spacePoints) {
+    const size_type bucketBegin = index;
+
+    for (const MuonSpacePoint& spacePoint : bucket) {
+      setGeometryId(index, spacePoint.geometryId().value());
+      setId(index, spacePoint.id().toInt());
+
+      defineCoordinates(index, spacePoint.localPosition(),
+                        spacePoint.sensorDirection(),
+                        spacePoint.toNextSensor());
+
+      setRadius(index, spacePoint.driftRadius());
+      setTime(index, spacePoint.time());
+
+      const auto& covariance = spacePoint.covariance();
+      setCovariance(index, covariance[0], covariance[1], covariance[2]);
+
+      ++index;
+    }
+
+    // Empty buckets are preserved as ranges for which begin == end.
+    addBucket(bucketBegin, index);
+  }
 }
 
 CudaMuonSpacePointContainer::CudaMuonSpacePointContainer(
@@ -500,5 +501,3 @@ void CudaMuonSpacePointContainer::setLogicalLayer(size_type index,
 }
 
 }  // namespace ActsExamples
-
-#endif

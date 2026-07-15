@@ -11,8 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "ActsExamples/EventData/CudaMuonSpacePoint.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
+#include "ActsExamples/EventData/CudaMuonSpacePoint.hpp"
 
 #include <cuda_runtime.h>
 

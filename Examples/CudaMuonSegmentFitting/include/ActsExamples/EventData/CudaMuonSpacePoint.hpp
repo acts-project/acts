@@ -8,8 +8,6 @@
 
 #pragma once
 
-#ifdef ACTS_ENABLE_CUDA
-
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -248,6 +246,10 @@ class CudaMuonSpacePointContainer {
   /// Empty default constructor.
   CudaMuonSpacePointContainer() = default;
 
+  /// Construct from MuonSpacePointContaier, implemented to avoid reader
+  explicit CudaMuonSpacePointContainer(
+      const MuonSpacePointContainer& spacePoints);
+
   /// Constructor with fixed number of space points.
   /// @param size The number of flat space points.
   explicit CudaMuonSpacePointContainer(size_type size);
@@ -390,5 +392,3 @@ static_assert(Acts::Experimental::CompositeSpacePointContainer<
               CudaMuonSpacePointContainer>);
 
 }  // namespace ActsExamples
-
-#endif

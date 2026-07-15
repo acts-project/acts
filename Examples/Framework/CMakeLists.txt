@@ -29,7 +29,6 @@ acts_add_library(
     src/Validation/TrackFinderPerformanceCollector.cpp
     src/Validation/TrackQualityPlotTool.cpp
     src/Validation/TrackSummaryPlotTool.cpp
-    src/EventData/CudaMuonSpacePoint.cpp
     ACTS_INCLUDE_FOLDER include/ActsExamples
 )
 
@@ -91,14 +90,6 @@ find_package(TBB ${_acts_tbb_version} CONFIG)
 if(NOT TBB_FOUND)
     # no version check possible when using the find module
     find_package(TBB ${_acts_tbb_version} MODULE REQUIRED)
-endif()
-
-if(ACTS_ENABLE_CUDA)
-    find_package(CUDAToolkit REQUIRED)
-
-    target_compile_definitions(ActsExamplesFramework PRIVATE ACTS_ENABLE_CUDA)
-
-    target_link_libraries(ActsExamplesFramework PRIVATE CUDA::cudart)
 endif()
 
 target_link_libraries(ActsExamplesFramework PUBLIC TBB::tbb)

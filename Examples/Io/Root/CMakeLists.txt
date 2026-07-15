@@ -32,7 +32,6 @@ acts_add_library(
     src/RootMuonSpacePointWriter.cpp
     src/RootMuonSpacePointReader.cpp
     src/RootMeasurementPerformanceWriter.cpp
-    src/RootCudaMuonSpacePointReader.cpp
 )
 target_include_directories(
     ActsExamplesIoRoot
@@ -50,19 +49,6 @@ target_link_libraries(
         Threads::Threads
     PRIVATE ROOT::Core ROOT::Hist ROOT::Tree ROOT::TreePlayer
 )
-
-if(ACTS_ENABLE_CUDA)
-    find_package(CUDAToolkit REQUIRED)
-
-    target_sources(
-        ActsExamplesIoRoot
-        PRIVATE src/RootCudaMuonSpacePointReader.cpp
-    )
-
-    target_compile_definitions(ActsExamplesIoRoot PUBLIC ACTS_ENABLE_CUDA)
-
-    target_link_libraries(ActsExamplesIoRoot PRIVATE CUDA::cudart)
-endif()
 
 root_generate_dictionary(
   ActsExamplesIoRootDict MODULE ActsExamplesIoRoot LINKDEF LinkDef.hpp
