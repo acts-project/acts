@@ -1,0 +1,185 @@
+/** TRACCC library, part of the ACTS project (R&D line)
+ *
+ * (c) 2022-2026 CERN for the benefit of the ACTS project
+ *
+ * Mozilla Public License Version 2.0
+ */
+
+// SYCL include(s).
+#include <sycl/sycl.hpp>
+
+// Local include(s).
+#include "../utils/calculate1DimNdRange.hpp"
+#include "../utils/detector_types.hpp"
+#include "../utils/get_queue.hpp"
+#include "../utils/global_index.hpp"
+#include "../utils/magnetic_field_types.hpp"
+#include "../utils/oneDPL.hpp"
+#include "traccc/sycl/fitting/kalman_fitting_algorithm.hpp"
+
+// Project include(s).
+#include "traccc/bfield/magnetic_field_types.hpp"
+#include "traccc/fitting/device/fill_fitting_sort_keys.hpp"
+#include "traccc/fitting/device/fit_backward.hpp"
+#include "traccc/fitting/device/fit_forward.hpp"
+#include "traccc/fitting/device/fit_prelude.hpp"
+#include "traccc/utils/detector_buffer_bfield_visitor.hpp"
+
+namespace traccc::sycl {
+namespace kernels {
+
+struct fill_fitting_sort_keys;
+struct fit_prelude;
+template <typename detector_t, typename bfield_t>
+struct fit_forward;
+template <typename detector_t, typename bfield_t>
+struct fit_backward;
+
+}  // namespace kernels
+
+void kalman_fitting_algorithm::prepare_track_fit_order(
+    const edm::track_collection<default_algebra>::const_view& tracks,
+    vecmem::data::vector_view<device::sort_key>& track_sort_keys,
+    vecmem::data::vector_view<unsigned int>& track_indices) const {
+
+    // Get the number of tracks.
+    const unsigned int n_tracks = tracks.capacity();
+    assert(n_tracks == copy().get_size(tracks));
+    assert(n_tracks == track_indices.capacity());
+    assert(track_indices.size_ptr() == nullptr);
+
+    // Launch parameters for the kernel.
+    static constexpr unsigned int localSize = 64;
+    ::sycl::nd_range<1> range =
+        details::calculate1DimNdRange(n_tracks, localSize);
+
+    // Fill the keys and indices buffers.
+    details::get_queue(queue()).submit([&](::sycl::handler& h) {
+        h.parallel_for<kernels::fill_fitting_sort_keys>(
+            range,
+            [tracks, track_sort_keys, track_indices](::sycl::nd_item<1> item) {
+                device::fill_fitting_sort_keys(details::global_index(item),
+                                               tracks, track_sort_keys,
+                                               track_indices);
+            });
+    });
+
+    // Sort the key to get the sorted parameter ids
+    vecmem::device_vector<device::sort_key> keys_device(track_sort_keys);
+    vecmem::device_vector<unsigned int> track_indices_device(track_indices);
+    oneapi::dpl::sort_by_key(
+        oneapi::dpl::execution::device_policy{details::get_queue(queue())},
+        keys_device.begin(), keys_device.end(), track_indices_device.begin());
+}
+
+void kalman_fitting_algorithm::fit_prelude_kernel(
+    const device::fit_prelude_payload& payload) const {
+
+    // Get the number of tracks.
+    const unsigned int n_tracks = payload.input_tracks.tracks.capacity();
+    assert(n_tracks == copy().get_size(payload.input_tracks.tracks));
+    assert(n_tracks == payload.track_indices.capacity());
+    assert(payload.track_indices.size_ptr() == nullptr);
+    assert(n_tracks == copy().get_size(payload.output_tracks.tracks));
+
+    // Launch parameters for the kernel.
+    static constexpr unsigned int localSize = 64;
+    ::sycl::nd_range<1> range =
+        details::calculate1DimNdRange(n_tracks, localSize);
+
+    // Run the fitting, using the sorted parameter IDs.
+    details::get_queue(queue()).submit([&](::sycl::handler& h) {
+        h.parallel_for<kernels::fit_prelude>(
+            range, [payload](::sycl::nd_item<1> item) {
+                device::fit_prelude(details::global_index(item), payload);
+            });
+    });
+}
+
+auto kalman_fitting_algorithm::prepare_fit_payload(
+    const detector_buffer& det, const magnetic_field& field,
+    const std::vector<unsigned int>& n_surfaces,
+    const device::fit_payload& payload) const -> fit_payload {
+
+    return prepare_fit_payload_helper<detector_type_list,
+                                      sycl::bfield_type_list<scalar>>(
+        det, field, n_surfaces, payload);
+}
+
+void kalman_fitting_algorithm::fit_forward_kernel(
+    const fitting_config& config, const fit_payload& payload) const {
+
+    return detector_buffer_magnetic_field_visitor<
+        detector_type_list, sycl::bfield_type_list<scalar>>(
+        payload.detector, payload.field,
+        [&]<typename detector_traits_t, typename bfield_view_t>(
+            const typename detector_traits_t::view&, const bfield_view_t&) {
+            // Get the number of tracks.
+            const unsigned int n_tracks =
+                payload.payload.tracks.tracks.capacity();
+            assert(n_tracks == copy().get_size(payload.payload.tracks.tracks));
+
+            // Launch parameters for the kernel.
+            static constexpr unsigned int localSize = 64;
+            ::sycl::nd_range<1> range =
+                details::calculate1DimNdRange(n_tracks, localSize);
+
+            // Fitter type to use.
+            using fitter_t = traccc::details::kalman_fitter_t<
+                typename detector_traits_t::device, bfield_view_t>;
+
+            // Run the track fitting
+            details::get_queue(queue()).submit([&](::sycl::handler& h) {
+                h.parallel_for<kernels::fit_forward<
+                    detector_tag_selector_t<detector_traits_t>,
+                    bfield_tag_selector_t<typename bfield_view_t::backend_t>>>(
+                    range, [config, payload = payload.payload,
+                            tpayload = payload.get_tpayload<fitter_t>()](
+                               ::sycl::nd_item<1> item) {
+                        device::fit_forward<fitter_t>(
+                            details::global_index(item), config, payload,
+                            *tpayload);
+                    });
+            });
+        });
+}
+
+void kalman_fitting_algorithm::fit_backward_kernel(
+    const fitting_config& config, const fit_payload& payload) const {
+
+    return detector_buffer_magnetic_field_visitor<
+        detector_type_list, sycl::bfield_type_list<scalar>>(
+        payload.detector, payload.field,
+        [&]<typename detector_traits_t, typename bfield_view_t>(
+            const typename detector_traits_t::view&, const bfield_view_t&) {
+            // Get the number of tracks.
+            const unsigned int n_tracks =
+                payload.payload.tracks.tracks.capacity();
+            assert(n_tracks == copy().get_size(payload.payload.tracks.tracks));
+
+            // Launch parameters for the kernel.
+            static constexpr unsigned int localSize = 64;
+            ::sycl::nd_range<1> range =
+                details::calculate1DimNdRange(n_tracks, localSize);
+
+            // Fitter type to use.
+            using fitter_t = traccc::details::kalman_fitter_t<
+                typename detector_traits_t::device, bfield_view_t>;
+
+            // Run the track fitting
+            details::get_queue(queue()).submit([&](::sycl::handler& h) {
+                h.parallel_for<kernels::fit_backward<
+                    detector_tag_selector_t<detector_traits_t>,
+                    bfield_tag_selector_t<typename bfield_view_t::backend_t>>>(
+                    range, [config, payload = payload.payload,
+                            tpayload = payload.get_tpayload<fitter_t>()](
+                               ::sycl::nd_item<1> item) {
+                        device::fit_backward<fitter_t>(
+                            details::global_index(item), config, payload,
+                            *tpayload);
+                    });
+            });
+        });
+}
+
+}  // namespace traccc::sycl
