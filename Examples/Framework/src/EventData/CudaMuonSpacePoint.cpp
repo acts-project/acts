@@ -363,7 +363,10 @@ CudaMuonSpacePointContainer::size_type CudaMuonSpacePointContainer::bucketEnd(
 
 void CudaMuonSpacePointContainer::addBucket(size_type start, size_type end) {
   if (start > end || end > m_size) {
-    throw std::out_of_range(std::format("CudaMuonSpacePointContainer invalid bucket range [{:};{:}]. Allowed [0;{:})", start,end, m_size));
+    throw std::out_of_range(
+        std::format("CudaMuonSpacePointContainer invalid bucket range "
+                    "[{:};{:}]. Allowed [0;{:})",
+                    start, end, m_size));
   }
 
   m_host.bucketStart.push_back(static_cast<std::uint32_t>(start));
@@ -457,13 +460,17 @@ CudaMuonSpacePointContainer::value_type CudaMuonSpacePointContainer::at(
 
 inline void CudaMuonSpacePointContainer::checkIndex(size_type index) const {
   if (index >= m_size) {
-    throw std::out_of_range(std::format("CudaMuonSpacePointContainer index {:}out of range. Max allowed: {:}", index, m_size-1));
+    throw std::out_of_range(std::format(
+        "CudaMuonSpacePointContainer index {:}out of range. Max allowed: {:}",
+        index, m_size - 1));
   }
 }
 
 void CudaMuonSpacePointContainer::checkBucket(size_type bucket) const {
   if (bucket >= bucketCount()) {
-    throw std::out_of_range(std::format("CudaMuonSpacePointContainer bucket {:} out of range. Max allowed: {:}" , bucket, bucketCount() - 1));
+    throw std::out_of_range(std::format(
+        "CudaMuonSpacePointContainer bucket {:} out of range. Max allowed: {:}",
+        bucket, bucketCount() - 1));
   }
 }
 
