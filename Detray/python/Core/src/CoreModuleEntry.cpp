@@ -28,6 +28,7 @@
 // System include(s)
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -85,7 +86,61 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
   py::class_<mask_store_t>(m, "MaskStore");
   py::class_<material_store_t>(m, "MaterialStore");
   py::class_<accelerator_store_t>(m, "AcceleratorStore");
-  py::class_<detray::name_map>(m, "NameMap");
+  py::class_<detray::name_map>(m, "NameMap")
+      .def(py::init<>())
+      .def_property(
+          "detector_name",
+          [](const detray::name_map &n) { return n.get_detector_name(); },
+          [](detray::name_map &n, std::string_view name) {
+            n.set_detector_name(name);
+          },
+          "Name of the detector")
+      .def("empty", &detray::name_map::empty, "Whether no volume names are mapped")
+      .def(
+          "__contains__",
+          [](const detray::name_map &n, detray::dindex index) {
+            return n.contains(index);
+          },
+          py::arg("index"), "Whether a volume index is mapped")
+      .def(
+          "__contains__",
+          [](const detray::name_map &n, std::string_view name) {
+            return n.contains(name);
+          },
+          py::arg("name"), "Whether a volume name is mapped")
+      .def(
+          "__setitem__",
+          [](detray::name_map &n, detray::dindex index, const std::string &name) {
+            n.emplace(index, name);
+          },
+          py::arg("index"), py::arg("name"), "Map a volume index to a name")
+      .def(
+          "__getitem__",
+          [](const detray::name_map &n, detray::dindex index) -> std::string {
+            try {
+              return n.at(index);
+            } catch (const std::out_of_range &) {
+              throw py::key_error(std::to_string(index));
+            }
+          },
+          py::arg("index"), "Volume name at a volume index")
+      .def(
+          "__getitem__",
+          [](const detray::name_map &n,
+             std::string_view name) -> detray::dindex {
+            try {
+              return n.at(name);
+            } catch (const std::out_of_range &) {
+              throw py::key_error(std::string{name});
+            }
+          },
+          py::arg("name"), "Volume index at a volume name")
+      .def("clear", &detray::name_map::clear, "Clear detector and volume names")
+      .def("clear_names", &detray::name_map::clear_names,
+           "Clear volume names, keep the detector name")
+      .def("__repr__", [](const detray::name_map &n) {
+        return "NameMap(detector_name='" + n.get_detector_name() + "')";
+      });
 
   py::class_<detector_handle>(
       m, "DetectorDefaultMetadata" STRINGIFY_HELPER(DETRAY_CUSTOM_SCALARTYPE))
