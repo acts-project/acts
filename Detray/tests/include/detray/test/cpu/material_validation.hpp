@@ -53,7 +53,6 @@ struct run_material_validation {
     track_mat_vec.reserve(tracks.size());
 
     dvector<dvector<material_record<scalar_t>>> mat_steps_vec{host_mr};
-
     mat_steps_vec.reserve(tracks.size());
 
     for (const auto &[i, track] : detray::views::enumerate(tracks)) {

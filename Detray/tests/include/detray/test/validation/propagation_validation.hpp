@@ -30,10 +30,11 @@
 namespace detray {
 
 /// Configure the Kalman Filter comparison test
+template <concepts::scalar scalar_t>
 struct propagation_validation_config {
   propagation::config propagation;
 
-  pdg_particle<float> particle = detray::muon<float>();
+  pdg_particle<scalar_t> particle = detray::muon<scalar_t>();
 
   bool do_multiple_scattering{true};
   bool do_energy_loss{true};
@@ -58,11 +59,10 @@ template <typename detector_t, typename bfield_view_t>
 bool propagation_validation(
     const detector_t& det, const typename detector_t::name_map& names,
     const std::optional<bfield_view_t>& bfield,
-    const propagation_validation_config& cfg,
+    const propagation_validation_config<typename detector_t::scalar_type>& cfg,
     const std::vector<free_track_parameters<typename detector_t::algebra_type>>&
         tracks,
-    std::vector<vecmem::vector<intersection_record<detector_t>>>&
-        truth_traces_fw) {
+    std::vector<dvector<intersection_record<detector_t>>>& truth_traces_fw) {
   // 'false' if any failures were detected
   bool test_successful{true};
 
@@ -71,7 +71,7 @@ bool propagation_validation(
   using stepper_t =
       rk_stepper<bfield_view_t, algebra_t, constrained_step<scalar_t>,
                  stepper_rk_policy<scalar_t>, stepping::print_inspector>;
-  using sf_candidate_t = intersection_record<detector_t>;
+  using data_record_t = intersection_record<detector_t>;
 
   // Host memory resource
   vecmem::host_memory_resource host_mr;
@@ -90,12 +90,12 @@ bool propagation_validation(
   test_cfg.verbose(false);
 
   // Create the backward truth traces by reverting the order
-  std::vector<vecmem::vector<sf_candidate_t>> truth_traces_bw;
+  std::vector<dvector<data_record_t>> truth_traces_bw;
   truth_traces_bw.reserve(tracks.capacity());
 
   for (const auto& truth_trace_fw : truth_traces_fw) {
     // Revert the forward trace for the backward propagation
-    vecmem::vector<sf_candidate_t> truth_trace_bw(truth_trace_fw.size());
+    dvector<data_record_t> truth_trace_bw(truth_trace_fw.size());
     std::ranges::reverse_copy(truth_trace_fw, truth_trace_bw.begin());
 
     assert(!truth_trace_bw.empty());
@@ -126,7 +126,7 @@ bool propagation_validation(
   typename perigee_stopper::state stopper_state{};
 
   std::cout << "-----------------------------------"
-            << "\nFORWARD - No KF" << std::endl
+            << "\nFORWARD - Propagation" << std::endl
             << "-----------------------------------\n";
 
   using parameter_updater = actor::parameter_updater<algebra_t, interactor>;
@@ -142,8 +142,8 @@ bool propagation_validation(
       cfg.propagation.navigation.estimate_scattering_noise;
 
   // Prepare the actor states for every track
-  vecmem::vector<typename actor_chain_t::state_tuple> state_tuples{};
-  vecmem::vector<typename actor_chain_t::state_ref_tuple> state_ref_tuples{};
+  dvector<typename actor_chain_t::state_tuple> state_tuples{};
+  dvector<typename actor_chain_t::state_ref_tuple> state_ref_tuples{};
   state_tuples.reserve(tracks.size());
   state_ref_tuples.reserve(tracks.size());
 
@@ -160,7 +160,7 @@ bool propagation_validation(
   test_cfg.name(det.name(names) + "_GeV_fw");
   test_cfg.navigation_direction(navigation::direction::e_forward);
   const auto [trk_stats_fw, n_surfaces_fw, n_miss_nav_fw, n_miss_truth_fw,
-              step_traces_fw, mat_traces_fw, mat_records_fw] =
+              step_traces_fw, track_mat_fw, mat_steps_fw] =
       navigation_validator::compare_to_navigation<stepper_t, parameter_updater>(
           test_cfg, host_mr, det, names, ctx, bfield, cfg.propagation,
           truth_traces_fw, tracks, state_ref_tuples);
@@ -179,15 +179,14 @@ bool propagation_validation(
   }
 
   std::cout << "\n-----------------------------------\n"
-            << "BACKWARD - No KF" << std::endl
+            << "BACKWARD - Propagation" << std::endl
             << "-----------------------------------\n";
 
   using actor_chain_bw_t = actor_chain<parameter_updater, perigee_stopper>;
 
   // Prepare the actor states for every track
-  vecmem::vector<typename actor_chain_bw_t::state_tuple> bw_state_tuples{};
-  vecmem::vector<typename actor_chain_bw_t::state_ref_tuple>
-      bw_state_ref_tuples{};
+  dvector<typename actor_chain_bw_t::state_tuple> bw_state_tuples{};
+  dvector<typename actor_chain_bw_t::state_ref_tuple> bw_state_ref_tuples{};
   bw_state_tuples.reserve(tracks.size());
   bw_state_ref_tuples.reserve(tracks.size());
 
@@ -205,7 +204,7 @@ bool propagation_validation(
   test_cfg.name(det.name(names) + "_GeV_bw");
   test_cfg.navigation_direction(navigation::direction::e_backward);
   const auto [trk_stats_bw, n_surfaces_bw, n_miss_nav_bw, n_miss_truth_bw,
-              step_traces_bw, mat_traces_bw, mat_records_bw] =
+              step_traces_bw, track_mat_bw, mat_steps_bw] =
       navigation_validator::compare_to_navigation<stepper_t, parameter_updater,
                                                   perigee_stopper>(
           test_cfg, host_mr, det, names, ctx, bfield, cfg.propagation,
@@ -221,11 +220,11 @@ bool propagation_validation(
 
   // Check, the amount of collected material between forward and backward
   assert(step_traces_fw.size() == trk_stats_fw.n_tracks);
-  assert(mat_traces_fw.size() == trk_stats_fw.n_tracks);
-  assert(mat_records_fw.size() == trk_stats_fw.n_tracks);
-  assert(mat_records_fw.size() == mat_records_bw.size());
+  assert(mat_steps_fw.size() == trk_stats_fw.n_tracks);
+  assert(track_mat_fw.size() == trk_stats_fw.n_tracks);
+  assert(track_mat_fw.size() == track_mat_bw.size());
   assert(step_traces_fw.size() == step_traces_bw.size());
-  assert(mat_traces_fw.size() == mat_traces_bw.size());
+  assert(mat_steps_fw.size() == mat_steps_bw.size());
 
   // Check stats
   n_tracks = static_cast<double>(trk_stats_bw.n_tracks);
@@ -241,7 +240,7 @@ bool propagation_validation(
   }
 
   std::cout << "\n-----------------------------------\n"
-            << "MATERIAL TRACE - No KF" << std::endl
+            << "MATERIAL TRACE" << std::endl
             << "-----------------------------------\n";
 
   constexpr double rel_mat_error{0.01};
@@ -252,26 +251,26 @@ bool propagation_validation(
   std::size_t n_diff_mat{0u};
 
   // Loop over tracks
-  for (std::size_t i = 0u; i < mat_records_fw.size(); ++i) {
+  for (std::size_t i = 0u; i < track_mat_fw.size(); ++i) {
     // No material on that track (e.g. detector model without material)
-    if (mat_traces_fw[i].empty() && mat_traces_bw[i].empty()) {
+    if (mat_steps_fw[i].empty() && mat_steps_bw[i].empty()) {
       continue;
     }
 
-    std::remove_cvref_t<decltype(mat_traces_bw[i])> inv_mat_trace_bw{};
-    if (!mat_traces_bw[i].empty()) {
-      inv_mat_trace_bw.resize(mat_traces_bw[i].size());
+    std::remove_cvref_t<decltype(mat_steps_bw[i])> inv_mat_trace_bw{};
+    if (!mat_steps_bw[i].empty()) {
+      inv_mat_trace_bw.resize(mat_steps_bw[i].size());
 
       // Revert the backward trace to compare to the forward trace
-      std::ranges::reverse_copy(mat_traces_bw[i], inv_mat_trace_bw.begin());
+      std::ranges::reverse_copy(mat_steps_bw[i], inv_mat_trace_bw.begin());
 
-      assert(mat_traces_bw[i].size() == inv_mat_trace_bw.size());
+      assert(mat_steps_bw[i].size() == inv_mat_trace_bw.size());
     }
 
     // Compare the material traces and total integrated material per trk
     const auto [is_bad_comp, is_diff_mat] = material_validator::compare_traces(
-        mat_traces_fw[i], mat_records_fw[i], inv_mat_trace_bw,
-        mat_records_bw[i], i, rel_mat_error, test_cfg.verbose());
+        mat_steps_fw[i], track_mat_fw[i], inv_mat_trace_bw, track_mat_bw[i], i,
+        rel_mat_error, test_cfg.verbose());
 
     if (is_bad_comp) {
       n_bad_comp++;

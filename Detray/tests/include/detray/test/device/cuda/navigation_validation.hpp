@@ -48,13 +48,12 @@ namespace detray::cuda {
 /// @param[in] truth_intersection_traces_view vecemem view of the truth data
 /// @param[out] recorded_intersections_view vecemem view of the intersections
 ///                                         recorded by the navigator
-template <typename bfield_t, typename detector_t,
-          typename intersection_record_t>
+template <typename bfield_t, typename detector_t>
 void navigation_validation_device(
     typename detector_t::view_type det_view, const propagation::config &cfg,
     pdg_particle<typename detector_t::scalar_type> ptc_hypo,
     bfield_t field_data,
-    vecmem::data::jagged_vector_view<const intersection_record_t>
+    vecmem::data::jagged_vector_view<const intersection_record<detector_t>>
         &truth_intersection_traces_view,
     vecmem::data::jagged_vector_view<intersection_record<detector_t>>
         &recorded_intersections_view,
@@ -65,14 +64,13 @@ void navigation_validation_device(
         material_record<typename detector_t::scalar_type>> &mat_steps_view);
 
 /// Prepare data for device navigation run
-template <typename bfield_t, typename detector_t,
-          typename intersection_record_t>
+template <typename bfield_t, typename detector_t>
 inline auto run_navigation_validation(
     vecmem::memory_resource *host_mr, vecmem::memory_resource *dev_mr,
     const detector_t &det, const propagation::config &cfg,
     pdg_particle<typename detector_t::scalar_type> ptc_hypo,
     bfield_t field_data,
-    const std::vector<std::vector<intersection_record_t>>
+    const std::vector<dvector<intersection_record<detector_t>>>
         &truth_intersection_traces) {
   using scalar_t = dscalar<typename detector_t::algebra_type>;
   using material_record_t = material_record<scalar_t>;
@@ -91,7 +89,7 @@ inline auto run_navigation_validation(
   auto truth_intersection_traces_buffer =
       cuda_cpy.to(truth_intersection_traces_data, *dev_mr, host_mr,
                   vecmem::copy::type::host_to_device);
-  vecmem::data::jagged_vector_view<const intersection_record_t>
+  vecmem::data::jagged_vector_view<const intersection_record<detector_t>>
       truth_intersection_traces_view =
           vecmem::get_data(truth_intersection_traces_buffer);
 
@@ -123,7 +121,7 @@ inline auto run_navigation_validation(
   auto mat_steps_view = vecmem::get_data(mat_steps_buffer);
 
   // Run the navigation validation test on device
-  navigation_validation_device<bfield_t, detector_t, intersection_record_t>(
+  navigation_validation_device<bfield_t, detector_t>(
       det_view, cfg, ptc_hypo, field_data, truth_intersection_traces_view,
       recorded_intersections_view, track_mat_view, mat_steps_view);
 
