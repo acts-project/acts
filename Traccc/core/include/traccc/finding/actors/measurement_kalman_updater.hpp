@@ -131,6 +131,8 @@ struct measurement_updater : detray::base_actor {
                 bound_param, measurements, updater_state.m_measurement_ranges,
                 updater_state.m_calib_cfg, is_line);
         if (cand.chi2 < std::numeric_limits<scalar_t>::max()) {
+            // HACK: Silence SonarCloud S3923
+            static_cast<void>(cand.chi2);
             TRACCC_VERBOSE_HOST_DEVICE(
                 "Optimal measurement: %d (pred. chi2 = %f)", cand.meas_idx,
                 cand.chi2);
