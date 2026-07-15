@@ -25,7 +25,6 @@
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
@@ -998,8 +997,7 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::trackingVolumeToJson(
 std::shared_ptr<Acts::TrackingVolume>
 Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     const GeometryContext& gctx, const nlohmann::json& encoded,
-    const Options& /*options*/,
-    const IMaterialDecorator* materialDecorator) const {
+    const Options& /*options*/) const {
   verifySchemaHeader(encoded);
 
   if (!encoded.contains(kVolumesKey) || !encoded.contains(kRootVolumeIdKey) ||
@@ -1083,9 +1081,6 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
   // ---------------------------------------------------
   for (const auto& [surfaceId, record] : surfaceRecords) {
     auto surface = Acts::SurfaceJsonConverter::fromJson(record.payload);
-    if (materialDecorator != nullptr) {
-      materialDecorator->decorate(*surface);
-    }
     surfacePointers.emplace(surfaceId, surface);
   }
 
@@ -1104,9 +1099,6 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
       geometryId = GeometryIdentifier{}.withVolume(volumeId + 1u);
     }
     volume->assignGeometryId(geometryId);
-    if (materialDecorator != nullptr) {
-      materialDecorator->decorate(*volume);
-    }
     volumePointers.emplace(volumeId, volume.get());
     volumeStorage.emplace(volumeId, std::move(volume));
   }
@@ -1218,7 +1210,7 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
 std::shared_ptr<Acts::TrackingGeometry>
 Acts::TrackingGeometryJsonConverter::fromJson(
     const GeometryContext& gctx, const std::filesystem::path& path,
-    const Options& options, const IMaterialDecorator* materialDecorator) const {
+    const Options& options) const {
   if (!std::filesystem::exists(path)) {
     throw std::invalid_argument(std::format(
         "TrackingGeometryJsonConverter() - JSON file {:} does not exist",
@@ -1231,15 +1223,14 @@ Acts::TrackingGeometryJsonConverter::fromJson(
   }
   nlohmann::json encoded{};
   istr >> encoded;
-  return fromJsonPayload(gctx, encoded, options, materialDecorator);
+  return fromJsonPayload(gctx, encoded, options);
 }
 std::shared_ptr<Acts::TrackingGeometry>
 Acts::TrackingGeometryJsonConverter::fromJsonPayload(
     const GeometryContext& gctx, const nlohmann::json& encoded,
-    const Options& options, const IMaterialDecorator* materialDecorator) const {
+    const Options& options) const {
   ACTS_DEBUG("Reconstructing TrackingGeometry from JSON");
-  auto world =
-      trackingVolumeFromJson(gctx, encoded, options, materialDecorator);
+  auto world = trackingVolumeFromJson(gctx, encoded, options);
 
   GeometryIdentifier::Value nextVolumeId = 1u;
   ensureIdentifiers(*world, nextVolumeId);
