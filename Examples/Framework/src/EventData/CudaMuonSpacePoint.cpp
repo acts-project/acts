@@ -463,7 +463,7 @@ inline void CudaMuonSpacePointContainer::checkIndex(size_type index) const {
 
 void CudaMuonSpacePointContainer::checkBucket(size_type bucket) const {
   if (bucket >= bucketCount()) {
-    throw std::out_of_range("CudaMuonSpacePointContainer bucket out of range");
+    throw std::out_of_range(std::format("CudaMuonSpacePointContainer bucket {:} out of range. Max allowed: {:}" , bucket, bucketCount() - 1));
   }
 }
 
