@@ -35,6 +35,12 @@ mkdir -p $outdir/logs
 refdir=CI/physmon/reference
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  )
 
+# Skip the raw 2D/3D res_*/pull_* scatter histograms (vs eta, pT, eta-phi,
+# eta-pT) in histcmp: their projections are redundant with the 1D res_*/
+# pull_* histograms.
+res_pull_params="d0|phi|qop|qopt|qopt_rel|t|theta|z0"
+res_pull_2d3d_filter="! ^(res|pull)_(${res_pull_params})_vs_(eta|pT|eta_phi|eta_pT)$"
+
 # File to accumulate the histcmp results
 histcmp_results=$outdir/histcmp_results.csv
 echo -n "" > $histcmp_results
@@ -469,7 +475,8 @@ if [[ "$mode" == "all" || "$mode" == "kf" ]]; then
         "Truth tracking (KF)" \
         trackfitting_kf/performance_trackfitting.html \
         trackfitting_kf/performance_trackfitting_plots \
-        --config CI/physmon/config/trackfitting_kf.yml
+        --config CI/physmon/config/trackfitting_kf.yml \
+        -f "$res_pull_2d3d_filter"
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
@@ -479,7 +486,8 @@ if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
         "Truth tracking (GSF)" \
         trackfitting_gsf/performance_trackfitting.html \
         trackfitting_gsf/performance_trackfitting_plots \
-        --config CI/physmon/config/trackfitting_gsf.yml
+        --config CI/physmon/config/trackfitting_gsf.yml \
+        -f "$res_pull_2d3d_filter"
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
@@ -489,7 +497,8 @@ if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
         "Truth tracking (GX2F)" \
         trackfitting_gx2f/performance_trackfitting.html \
         trackfitting_gx2f/performance_trackfitting_plots \
-        --config CI/physmon/config/trackfitting_gx2f.yml
+        --config CI/physmon/config/trackfitting_gx2f.yml \
+        -f "$res_pull_2d3d_filter"
 fi
 
 if [[ "$mode" == "all" || "$mode" == "refit_kf" ]]; then
@@ -499,7 +508,8 @@ if [[ "$mode" == "all" || "$mode" == "refit_kf" ]]; then
         "Truth tracking (KF refit)" \
         trackrefitting_kf/performance_trackrefitting.html \
         trackrefitting_kf/performance_trackrefitting_plots \
-        --config CI/physmon/config/trackfitting_kf.yml
+        --config CI/physmon/config/trackfitting_kf.yml \
+        -f "$res_pull_2d3d_filter"
 fi
 
 if [[ "$mode" == "all" || "$mode" == "refit_gsf" ]]; then
@@ -509,7 +519,8 @@ if [[ "$mode" == "all" || "$mode" == "refit_gsf" ]]; then
         "Truth tracking (GSF refit)" \
         trackrefitting_gsf/performance_trackrefitting.html \
         trackrefitting_gsf/performance_trackrefitting_plots \
-        --config CI/physmon/config/trackfitting_gsf.yml
+        --config CI/physmon/config/trackfitting_gsf.yml \
+        -f "$res_pull_2d3d_filter"
 fi
 
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
@@ -534,7 +545,8 @@ if [[ "$mode" == "all" || "$mode" == "gx2f_vs_kf" ]]; then
         trackfitting_gx2f_vs_kf/performance_trackfitting_plots \
         --config CI/physmon/config/info_only.yml \
         --label-reference=KF \
-        --label-monitored=GX2F
+        --label-monitored=GX2F \
+        -f "$res_pull_2d3d_filter"
 fi
 
 finish_comparisons
