@@ -363,7 +363,7 @@ CudaMuonSpacePointContainer::size_type CudaMuonSpacePointContainer::bucketEnd(
 
 void CudaMuonSpacePointContainer::addBucket(size_type start, size_type end) {
   if (start > end || end > m_size) {
-    throw std::out_of_range("CudaMuonSpacePointContainer invalid bucket range");
+    throw std::out_of_range(std::format("CudaMuonSpacePointContainer invalid bucket range [{:};{:}]. Allowed [0;{:})", start,end, m_size));
   }
 
   m_host.bucketStart.push_back(static_cast<std::uint32_t>(start));
