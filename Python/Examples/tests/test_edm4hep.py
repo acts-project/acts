@@ -781,15 +781,18 @@ def test_edm4hep_podio_track_output_converter(tmp_path):
     num_measurements = 0
     num_links = 0
 
+    # Use `.size()` instead of `len(...)` here: `frame.get(...)` returns the
+    # collections typed as the abstract `podio::CollectionBase`, and `len()`
+    # is only available on the concrete, downcast collection types.
     for frame in reader.get("events"):
         tracks = frame.get("ActsPodioTracks")
-        num_tracks += len(tracks)
+        num_tracks += tracks.size()
         track_states = frame.get("ActsPodioTracks_trackStates")
-        num_track_states += len(track_states)
+        num_track_states += track_states.size()
         measurements = frame.get("ActsPodioTracks_trackerHits")
-        num_measurements += len(measurements)
+        num_measurements += measurements.size()
         links = frame.get("ActsPodioTracks_trackStateHitLinks")
-        num_links += len(links)
+        num_links += links.size()
 
     assert num_tracks > 0, "No tracks were written"
     assert num_track_states > 0, "No track states were written"
