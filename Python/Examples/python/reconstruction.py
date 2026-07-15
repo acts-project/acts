@@ -22,17 +22,6 @@ try:
 except ImportError:
     ACTS_EXAMPLES_ROOT_AVAILABLE = False
 
-# Python-only writers (no ROOT required)
-try:
-    from acts.examples import (
-        PythonTrackFinderPerformanceWriter,
-        PythonTrackFitterPerformanceWriter,
-    )
-
-    ACTS_EXAMPLES_PYTHON_AVAILABLE = True
-except ImportError:
-    ACTS_EXAMPLES_PYTHON_AVAILABLE = False
-
 u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
@@ -1921,15 +1910,6 @@ def addTrackWriters(
             )
             s.addWriter(trackFitterPerformanceWriter)
 
-        if ACTS_EXAMPLES_PYTHON_AVAILABLE and writeFitterPerformance:
-            pythonFitterPerformanceWriter = PythonTrackFitterPerformanceWriter(
-                level=customLogLevel(),
-                inputTracks=tracks,
-                inputParticles="particles_selected",
-                inputTrackParticleMatching="track_particle_matching",
-            )
-            s.addWriter(pythonFitterPerformanceWriter)
-
         if writeFinderPerformance:
             trackFinderPerfWriter = RootTrackFinderPerformanceWriter(
                 level=customLogLevel(),
@@ -1942,17 +1922,6 @@ def addTrackWriters(
                 writeMatchingDetails=writeMatchingDetails,
             )
             s.addWriter(trackFinderPerfWriter)
-
-        if ACTS_EXAMPLES_PYTHON_AVAILABLE and writeFinderPerformance:
-            pythonFinderPerformanceWriter = PythonTrackFinderPerformanceWriter(
-                level=customLogLevel(),
-                inputTracks=tracks,
-                inputParticles="particles_selected",
-                inputTrackParticleMatching="track_particle_matching",
-                inputParticleTrackMatching="particle_track_matching",
-                inputParticleMeasurementsMap="particle_measurements_map",
-            )
-            s.addWriter(pythonFinderPerformanceWriter)
 
         if writeFinderNTuple:
             nTupleWriter = RootTrackFinderNTupleWriter(
