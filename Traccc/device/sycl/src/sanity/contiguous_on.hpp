@@ -95,9 +95,9 @@ class is_contiguous_on_all_unique {};
  * @return true If the container is contiguous on `P`.
  * @return false Otherwise.
  */
-template <typename CONTAINER, std::semiregular P, typename VIEW>
+template <typename CONTAINER, typename P, typename VIEW>
     requires std::regular_invocable<P,
-                                    decltype(std::declval<CONTAINER>().at(0))>
+                                    decltype(std::declval<CONTAINER>().at(0))> && std::semiregular<P>
 bool is_contiguous_on(P&& projection, vecmem::memory_resource& mr,
                       const vecmem::copy& copy, ::sycl::queue& queue,
                       const VIEW& view) {

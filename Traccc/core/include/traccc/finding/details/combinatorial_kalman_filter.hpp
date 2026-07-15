@@ -610,6 +610,8 @@ combinatorial_kalman_filter(
             if (!valid_track &&
                 (step >= (config.min_track_candidates_per_track - 1u))) {
                 if (!ckf_aborter_state.success) {
+                    // HACK: Silence SonarCloud S3923
+                    static_cast<void>(ckf_aborter_state.success);
                     TRACCC_VERBOSE_HOST("Create tip: No next sensitive found");
                 } else {
                     TRACCC_VERBOSE_HOST("Create tip: Encountered error");
