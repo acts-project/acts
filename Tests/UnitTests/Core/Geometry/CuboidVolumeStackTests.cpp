@@ -16,6 +16,7 @@
 #include <boost/test/unit_test_suite.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CuboidVolumeStack.hpp"
@@ -1070,6 +1071,56 @@ BOOST_DATA_TEST_CASE(JoinCuboidVolumeSingle,
   BOOST_CHECK_EQUAL(vol->localToGlobalTransform(gctx).matrix(),
                     stack.localToGlobalTransform(gctx).matrix());
   BOOST_CHECK_EQUAL(vol->volumeBounds(), stack.volumeBounds());
+}
+
+// A change in the stacking-direction bounds that is smaller than the on-surface
+// tolerance must be treated as "no change" and must not spawn a spurious,
+// near-zero thickness gap volume. This is the cuboid analogue of the cylinder
+// r-direction reproduction (see CylinderVolumeStackTests::RStackGapCreation-
+// Tolerance). The cuboid gap-resize path already guards its comparisons with
+// the tolerance, so this acts as a regression guard.
+BOOST_DATA_TEST_CASE(GapCreationTolerance,
+                     boost::unit_test::data::make(AxisDirection::AxisX,
+                                                  AxisDirection::AxisY,
+                                                  AxisDirection::AxisZ),
+                     dir) {
+  auto boundDir = CuboidVolumeBounds::boundsFromAxisDirection(dir);
+  auto [dirOrth1, dirOrth2] = CuboidVolumeStack::getOrthogonalAxes(dir);
+  auto boundDirOrth1 = CuboidVolumeBounds::boundsFromAxisDirection(dirOrth1);
+  auto boundDirOrth2 = CuboidVolumeBounds::boundsFromAxisDirection(dirOrth2);
+  auto dirIdx = CuboidVolumeStack::axisToIndex(dir);
+
+  auto makeBounds = [&](double hl) {
+    return std::make_shared<CuboidVolumeBounds>(
+        std::initializer_list<
+            std::pair<CuboidVolumeBounds::BoundValues, double>>{
+            {boundDir, hl}, {boundDirOrth1, 70}, {boundDirOrth2, 100}});
+  };
+
+  // Sub-tolerance perturbation of the half length along the stacking direction
+  const double eps = s_onSurfaceTolerance / 2.0;
+
+  for (const double sign : {+1.0, -1.0}) {
+    BOOST_TEST_CONTEXT("sign=" << sign) {
+      Volume vol{Transform3::Identity(), makeBounds(100)};
+      std::vector<Volume*> volumes = {&vol};
+      CuboidVolumeStack stack(gctx, volumes, dir,
+                              VolumeAttachmentStrategy::Gap,
+                              VolumeResizeStrategy::Gap, *logger);
+
+      BOOST_CHECK(stack.gaps().empty());
+
+      // Grow the half length by less than the tolerance, on one side only
+      stack.update(gctx, makeBounds(100 + eps / 2.0),
+                   Transform3{Translation3{Vector3::Unit(dirIdx) * sign * eps /
+                                           2.0}},
+                   *logger);
+
+      // No gap volume should have been created for a sub-tolerance change
+      BOOST_CHECK(stack.gaps().empty());
+      BOOST_CHECK_EQUAL(volumes.size(), 1);
+    }
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
