@@ -455,7 +455,7 @@ CudaMuonSpacePointContainer::value_type CudaMuonSpacePointContainer::at(
   return value_type{*this, index};
 }
 
-void CudaMuonSpacePointContainer::checkIndex(size_type index) const {
+inline void CudaMuonSpacePointContainer::checkIndex(size_type index) const {
   if (index >= m_size) {
     throw std::out_of_range("CudaMuonSpacePointContainer index out of range");
   }
