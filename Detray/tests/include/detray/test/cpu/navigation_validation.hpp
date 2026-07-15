@@ -147,7 +147,7 @@ class navigation_validation : public test::fixture_base<> {
     detray::io::file_handle debug_file{debug_file_name, io_mode};
 
     // Keep a record of track positions and material along the track
-    dvector<dvector<intersection_record<detector_t>>> recorded_traces{};
+    std::vector<dvector<intersection_record<detector_t>>> recorded_traces{};
     dvector<material_validator::track_material<scalar_t>> track_mat_vec{};
     std::vector<std::pair<trajectory_type, std::vector<intersection_t>>>
         missed_intersections{};

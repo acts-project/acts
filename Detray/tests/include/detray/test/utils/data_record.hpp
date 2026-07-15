@@ -61,12 +61,13 @@ struct intersection_record {
   /// Charge hypothesis of the particle (invalid value if not known)
   scalar_type charge{detray::detail::invalid_value<scalar_type>()};
   /// Current momentum magnitude of the particle
-  scalar_type p_mag{1.f};
+  scalar_type p_mag{1.f * unit<scalar_type>::GeV};
 
   /// @returns the information as free track parameters
   DETRAY_HOST_DEVICE
   free_track_parameters<algebra_type> track_param() const {
-    return {pos, detail::invalid_value<scalar_type>(), dir, p_mag / charge};
+    assert(p_mag > 0.f);
+    return {pos, detail::invalid_value<scalar_type>(), p_mag * dir, charge};
   }
 };
 

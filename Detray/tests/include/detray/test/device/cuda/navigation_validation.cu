@@ -11,13 +11,12 @@
 
 namespace detray::cuda {
 
-template <typename bfield_t, typename detector_t,
-          typename intersection_record_t>
+template <typename bfield_t, typename detector_t>
 __global__ void navigation_validation_kernel(
     typename detector_t::view_type det_data, const propagation::config cfg,
     pdg_particle<typename detector_t::scalar_type> ptc_hypo,
     bfield_t field_data,
-    vecmem::data::jagged_vector_view<const intersection_record_t>
+    vecmem::data::jagged_vector_view<const intersection_record<detector_t>>
         truth_intersection_traces_view,
     vecmem::data::jagged_vector_view<intersection_record<detector_t>>
         recorded_intersections_view,
@@ -46,7 +45,8 @@ __global__ void navigation_validation_kernel(
       std::conditional_t<is_no_bfield, line_stepper_t, rk_stepper_t>;
 
   // Inspector that records all encountered surfaces
-  using intersection_t = typename intersection_record_t::intersection_type;
+  using intersection_t =
+      typename intersection_record<detector_t>::intersection_type;
   using object_tracer_t =
       navigation::object_tracer<detector_t, vecmem::device_vector,
                                 navigation::status::e_on_object,
@@ -65,7 +65,7 @@ __global__ void navigation_validation_kernel(
 
   detector_device_t det(det_data);
 
-  vecmem::jagged_device_vector<const intersection_record_t>
+  vecmem::jagged_device_vector<const intersection_record<detector_t>>
       truth_intersection_traces(truth_intersection_traces_view);
   vecmem::jagged_device_vector<intersection_record<detector_t>>
       recorded_intersections(recorded_intersections_view);
@@ -129,13 +129,12 @@ __global__ void navigation_validation_kernel(
 }
 
 /// Launch the device kernel
-template <typename bfield_t, typename detector_t,
-          typename intersection_record_t>
+template <typename bfield_t, typename detector_t>
 void navigation_validation_device(
     typename detector_t::view_type det_view, const propagation::config &cfg,
     pdg_particle<typename detector_t::scalar_type> ptc_hypo,
     bfield_t field_data,
-    vecmem::data::jagged_vector_view<const intersection_record_t>
+    vecmem::data::jagged_vector_view<const intersection_record<detector_t>>
         &truth_intersection_traces_view,
     vecmem::data::jagged_vector_view<intersection_record<detector_t>>
         &recorded_intersections_view,
@@ -148,10 +147,9 @@ void navigation_validation_device(
   int block_dim = truth_intersection_traces_view.size() / thread_dim + 1;
 
   // run the test kernel
-  navigation_validation_kernel<bfield_t, detector_t, intersection_record_t>
-      <<<block_dim, thread_dim>>>(
-          det_view, cfg, ptc_hypo, field_data, truth_intersection_traces_view,
-          recorded_intersections_view, track_mat_view, mat_steps_view);
+  navigation_validation_kernel<bfield_t, detector_t><<<block_dim, thread_dim>>>(
+      det_view, cfg, ptc_hypo, field_data, truth_intersection_traces_view,
+      recorded_intersections_view, track_mat_view, mat_steps_view);
 
   // cuda error check
   DETRAY_CUDA_ERROR_CHECK(cudaGetLastError());
@@ -159,38 +157,37 @@ void navigation_validation_device(
 }
 
 /// Macro declaring the template instantiations for the different detector types
-#define DECLARE_NAVIGATION_VALIDATION(METADATA)                             \
-                                                                            \
-  template void navigation_validation_device<                               \
-      covfie::field_view<                                                   \
-          bfield::const_bknd_t<dscalar<typename METADATA::algebra_type>>>,  \
-      detector<METADATA>, detray::intersection_record<detector<METADATA>>>( \
-      typename detector<METADATA>::view_type, const propagation::config &,  \
-      pdg_particle<typename detector<METADATA>::scalar_type>,               \
-      covfie::field_view<                                                   \
-          bfield::const_bknd_t<dscalar<typename METADATA::algebra_type>>>,  \
-      vecmem::data::jagged_vector_view<                                     \
-          const detray::intersection_record<detector<METADATA>>> &,         \
-      vecmem::data::jagged_vector_view<                                     \
-          intersection_record<detector<METADATA>>> &,                       \
-      vecmem::data::vector_view<material_validator::track_material<         \
-          typename detector<METADATA>::scalar_type>> &,                     \
-      vecmem::data::jagged_vector_view<                                     \
-          material_record<typename detector<METADATA>::scalar_type>> &);    \
-                                                                            \
-  template void navigation_validation_device<                               \
-      detray::navigation_validator::empty_bfield, detector<METADATA>,       \
-      detray::intersection_record<detector<METADATA>>>(                     \
-      typename detector<METADATA>::view_type, const propagation::config &,  \
-      pdg_particle<typename detector<METADATA>::scalar_type>,               \
-      detray::navigation_validator::empty_bfield,                           \
-      vecmem::data::jagged_vector_view<                                     \
-          const detray::intersection_record<detector<METADATA>>> &,         \
-      vecmem::data::jagged_vector_view<                                     \
-          intersection_record<detector<METADATA>>> &,                       \
-      vecmem::data::vector_view<material_validator::track_material<         \
-          typename detector<METADATA>::scalar_type>> &,                     \
-      vecmem::data::jagged_vector_view<                                     \
+#define DECLARE_NAVIGATION_VALIDATION(METADATA)                            \
+                                                                           \
+  template void navigation_validation_device<                              \
+      covfie::field_view<                                                  \
+          bfield::const_bknd_t<dscalar<typename METADATA::algebra_type>>>, \
+      detector<METADATA>>(                                                 \
+      typename detector<METADATA>::view_type, const propagation::config &, \
+      pdg_particle<typename detector<METADATA>::scalar_type>,              \
+      covfie::field_view<                                                  \
+          bfield::const_bknd_t<dscalar<typename METADATA::algebra_type>>>, \
+      vecmem::data::jagged_vector_view<                                    \
+          const detray::intersection_record<detector<METADATA>>> &,        \
+      vecmem::data::jagged_vector_view<                                    \
+          intersection_record<detector<METADATA>>> &,                      \
+      vecmem::data::vector_view<material_validator::track_material<        \
+          typename detector<METADATA>::scalar_type>> &,                    \
+      vecmem::data::jagged_vector_view<                                    \
+          material_record<typename detector<METADATA>::scalar_type>> &);   \
+                                                                           \
+  template void navigation_validation_device<                              \
+      detray::navigation_validator::empty_bfield, detector<METADATA>>(     \
+      typename detector<METADATA>::view_type, const propagation::config &, \
+      pdg_particle<typename detector<METADATA>::scalar_type>,              \
+      detray::navigation_validator::empty_bfield,                          \
+      vecmem::data::jagged_vector_view<                                    \
+          const detray::intersection_record<detector<METADATA>>> &,        \
+      vecmem::data::jagged_vector_view<                                    \
+          intersection_record<detector<METADATA>>> &,                      \
+      vecmem::data::vector_view<material_validator::track_material<        \
+          typename detector<METADATA>::scalar_type>> &,                    \
+      vecmem::data::jagged_vector_view<                                    \
           material_record<typename detector<METADATA>::scalar_type>> &);
 
 DECLARE_NAVIGATION_VALIDATION(test::default_metadata)

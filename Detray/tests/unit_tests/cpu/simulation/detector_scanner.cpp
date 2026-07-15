@@ -59,10 +59,10 @@ GTEST_TEST(detray_simulation, detector_scanner) {
   for (const auto test_ray : uniform_track_generator<detail::ray<test_algebra>>(
            phi_steps, theta_steps)) {
     // Record all intersections and objects along the ray
-    const auto intersection_record =
+    const auto intersection_trace =
         detector_scanner::run<ray_scan>(gctx, toy_det, test_ray);
 
-    expected.push_back(intersection_record);
+    expected.push_back(intersection_trace);
   }
 
   // Iterate through uniformly distributed momentum directions with helix

@@ -33,7 +33,7 @@ namespace detray::detail {
 /// - intersection record
 template <typename record_t>
 std::unordered_set<dindex> get_volume_indices(
-    const std::vector<record_t> &intersection_record) {
+    const dvector<record_t> &intersection_record) {
   std::unordered_set<dindex> volumes{};
   volumes.reserve(intersection_record.size());
   for (const auto &single_ir : intersection_record) {

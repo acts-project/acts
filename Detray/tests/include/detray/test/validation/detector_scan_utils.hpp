@@ -16,6 +16,7 @@
 #include "detray/plugins/svgtools/illustrator.hpp"
 
 // Detray test include(s)
+#include "detray/test/utils/data_record.hpp"
 #include "detray/test/validation/svg_display.hpp"
 
 // System include(s)
@@ -42,10 +43,10 @@ namespace detray::detector_scanner {
 /// ACTS geometries can produce multiple overlapping portals, since some portals
 /// are larger than the volumes they belong to. This leads to duplicate
 /// intersections in the traces.
-template <typename record_container>
-inline dindex_range overlaps_removal(record_container &intersection_records,
-                                     const float tol = 1e-4f *
-                                                       unit<float>::mm) {
+template <typename detector_t>
+inline dindex_range overlaps_removal(
+    dvector<intersection_record<detector_t>> &intersection_records,
+    const float tol = 1e-4f * unit<float>::mm) {
   // Document any overlaps on the range
   constexpr auto inv_idx{detray::detail::invalid_value<dindex>()};
   dindex_range overlap_idx{inv_idx, inv_idx};
@@ -315,9 +316,9 @@ inline bool check_connectivity(
 ///       boundary surfaces?
 ///     - Do portals always appear in pairs (exit + entry portal)?
 ///
-/// @tparam record_container contains volume indices and intersections
+/// @tparam detector_t different detector types for different metadata
 ///
-/// @param volume_record the recorded portal crossings between volumes
+/// @param intersection_records the recorded portal crossings between volumes
 /// @param start_volume where the ray started
 ///
 /// @note the input record needs to be sorted according to the distance from the
@@ -325,9 +326,10 @@ inline bool check_connectivity(
 ///
 /// @return a set of volume connections that were found by portal intersection
 ///         of a ray.
-template <dindex invalid_value = dindex_invalid, typename record_container>
-inline auto trace_intersections(const record_container &intersection_records,
-                                dindex start_volume = 0u) {
+template <typename detector_t>
+inline auto trace_intersections(
+    const dvector<intersection_record<detector_t>> &intersection_records,
+    dindex start_volume = 0u) {
   /// surface index and index of the volume the intersection was found in
   using trace_entry = std::pair<dindex, dindex>;
   /// Pairs of adjacent portals along the ray
@@ -342,7 +344,7 @@ inline auto trace_intersections(const record_container &intersection_records,
 
   /// Readable access to the data of a recorded intersection
   struct record {
-    const typename record_container::value_type &entry;
+    const intersection_record<detector_t> &entry;
 
     /// getter
     /// @{
@@ -556,8 +558,12 @@ inline auto trace_intersections(const record_container &intersection_records,
 
 /// Build an adjacency list from intersection traces.
 ///
-/// @tparam portal_trace_type container of portal link pairs
-/// @tparam module_trace_type container of module surface links
+/// @tparam invalid_value to keep the implementation simple, all indices are of
+///                       type @c dindex here, but that does not need to be the
+///                       case in the intersection code, so we need to know what
+///                       the invalid value is interpreted as a @c dindex
+/// @tparam entry_type the record entry, which must contain the portal index
+///                    and the volume index the portal was discovered in.
 ///
 /// @param portal_trace the portal indices and their volume links (in adjacent
 ///                     portal pairs)
@@ -565,15 +571,11 @@ inline auto trace_intersections(const record_container &intersection_records,
 /// @param obj_hashes record which modules/portals were already added
 ///
 /// @return an adjacency list from the traced ray scan of a given geometry.
-template <dindex invalid_value = dindex_invalid, typename portal_trace_type,
-          typename module_trace_type,
+template <dindex invalid_value = dindex_invalid,
           typename entry_type = std::pair<dindex, dindex>>
-  requires std::is_same_v<typename portal_trace_type::value_type,
-                          std::pair<entry_type, entry_type>> &&
-           std::is_same_v<typename module_trace_type::value_type, entry_type>
 inline auto build_adjacency(
-    const portal_trace_type &portal_trace,
-    const module_trace_type &module_trace,
+    const std::vector<std::pair<entry_type, entry_type>> &portal_trace,
+    const std::vector<entry_type> &module_trace,
     std::map<dindex, std::map<dindex, dindex>> &adj_list,
     std::unordered_set<dindex> &obj_hashes) {
   // Every module that was recorded adds a link to the mother volume
@@ -611,8 +613,12 @@ inline auto build_adjacency(
 
 /// Build an adjacency list from intersection traces.
 ///
-/// @tparam portal_trace_type container of portal link pairs
-/// @tparam module_trace_type container of module links
+/// @tparam invalid_value to keep the implementation simple, all indices are of
+///                       type @c dindex here, but that does not need to be the
+///                       case in the intersection code, so we need to know what
+///                       the invalid value is interpreted as a @c dindex
+/// @tparam entry_type the record entry, which must contain the portal index
+///                    and the volume index the portal was discovered in.
 ///
 /// @param portal_trace the portal indices and their volume links (in adjacent
 ///                     portal pairs)
@@ -620,16 +626,12 @@ inline auto build_adjacency(
 /// @param obj_hashes record which modules/portals were already added
 ///
 /// @return an adjacency list from the traced ray scan of a given geometry.
-template <dindex invalid_value = dindex_invalid, typename portal_trace_type,
-          typename module_trace_type,
+template <dindex invalid_value = dindex_invalid,
           typename entry_type = std::pair<dindex, dindex>>
-  requires std::is_same_v<typename portal_trace_type::value_type,
-                          std::pair<entry_type, entry_type>> &&
-           std::is_same_v<typename module_trace_type::value_type, entry_type>
-inline auto build_adjacency(const portal_trace_type &portal_trace,
-                            const module_trace_type &module_trace,
-                            dvector<dindex> &adj_matrix,
-                            std::unordered_set<dindex> &obj_hashes) {
+inline auto build_adjacency(
+    const std::vector<std::pair<entry_type, entry_type>> &portal_trace,
+    const std::vector<entry_type> &module_trace, dvector<dindex> &adj_matrix,
+    std::unordered_set<dindex> &obj_hashes) {
   const auto dim = static_cast<dindex>(math::sqrt(adj_matrix.size()));
 
   // Every module that was recorded adds a link to the mother volume
@@ -652,8 +654,7 @@ inline auto build_adjacency(const portal_trace_type &portal_trace,
 
     if (obj_hashes.find(pt_index_1) == obj_hashes.end()) {
       dindex mat_elem_vol1{dindex_invalid};
-      // Assume the return link for now (filtering out portals that leave
-      // world)
+      // Assume the return link for now (filtering out portals that leave world)
       if (vol_index_2 != invalid_value) {
         mat_elem_vol1 = dim * vol_index_1 + vol_index_2;
 
@@ -680,10 +681,11 @@ inline auto build_adjacency(const portal_trace_type &portal_trace,
 /// @param[out] obj_hashes objects in a volume that were already visisted
 ///
 /// @return true if the checks were successful
-template <typename detector_t, typename record_t>
-inline bool check_trace(const std::vector<record_t> &intersection_trace,
-                        const dindex start_index, dvector<dindex> &adj_mat_scan,
-                        std::unordered_set<dindex> &obj_hashes) {
+template <typename detector_t>
+inline bool check_trace(
+    const dvector<intersection_record<detector_t>> &intersection_trace,
+    const dindex start_index, dvector<dindex> &adj_mat_scan,
+    std::unordered_set<dindex> &obj_hashes) {
   using nav_link_t = typename detector_t::surface_type::navigation_link;
   static constexpr auto leaving_world{
       detray::detail::invalid_value<nav_link_t>()};
@@ -691,8 +693,10 @@ inline bool check_trace(const std::vector<record_t> &intersection_trace,
   // Create a trace of the volume indices that were encountered
   // and check that portal intersections are connected
   auto [portal_trace, surface_trace, err_code] =
-      detector_scanner::trace_intersections<leaving_world>(intersection_trace,
-                                                           start_index);
+      detector_scanner::trace_intersections(intersection_trace, start_index);
+
+  DETRAY_DEBUG_HOST("portal_trace " << portal_trace.size() << ", surface_trace "
+                                    << surface_trace.size());
 
   // Is the succession of volumes consistent ?
   err_code = err_code &&
@@ -719,16 +723,15 @@ inline bool check_trace(const std::vector<record_t> &intersection_trace,
 /// @param svg_style svgtools style for the detector display
 /// @param i_track index of the test track
 /// @param n_track total number of test tracks
-template <typename detector_t, typename trajectory_t, typename truth_trace_t,
-          typename recorded_trace_t>
+template <typename detector_t, typename trajectory_t>
 inline void display_error(
     const typename detector_t::geometry_context gctx, const detector_t &det,
     const typename detector_t::name_map &vol_names,
     const std::string &test_name, const trajectory_t &test_track,
-    const truth_trace_t &truth_trace,
+    const dvector<intersection_record<detector_t>> &truth_trace,
     const detray::svgtools::styling::style &svg_style,
     const std::size_t i_track, [[maybe_unused]] const std::size_t n_tracks,
-    const recorded_trace_t &recorded_trace = {},
+    const dvector<intersection_record<detector_t>> &recorded_trace = {},
     const dindex_range overlap_idx = {detray::detail::invalid_value<dindex>(),
                                       detray::detail::invalid_value<dindex>()},
     const bool verbose = true) {
@@ -761,9 +764,10 @@ inline void display_error(
 }
 
 /// Print an intersection trace
-template <typename truth_trace_t>
-inline std::string print_trace(const truth_trace_t &truth_trace,
-                               std::size_t n) {
+template <typename detector_t>
+inline std::string print_trace(
+    const dvector<intersection_record<detector_t>> &truth_trace,
+    std::size_t n) {
   std::stringstream out_stream{};
   out_stream << "TRACE NO. " << n << std::endl;
 
