@@ -73,10 +73,16 @@ CylindricalSpacePointGrid::CylindricalSpacePointGrid(
           std::atan(1.f / fastCathetus(2 * minHelixRadius / innerCircleR, 1));
     }
 
-    // evaluating the azimutal deflection including the maximum impact parameter
+    // evaluating the azimutal deflection including the maximum impact
+    // parameter. A track with |d0| >= r cannot reach radius r, so the azimuthal
+    // deflection saturates at pi/2: clamp the asin arguments to [0, 1] so that
+    // impactMax >= (rMax - deltaRMax) falls to full-2pi single phi bin
+    // instead of producing a NaN (and hence a zero phi-bin count and a
+    // "Invalid binning" exception).
+    const float sinInner = std::min(1.f, m_cfg.impactMax / rMin);
+    const float sinOuter = std::min(1.f, m_cfg.impactMax / m_cfg.rMax);
     const float deltaAngleWithMaxD0 =
-        std::abs(std::asin(m_cfg.impactMax / rMin) -
-                 std::asin(m_cfg.impactMax / m_cfg.rMax));
+        std::abs(std::asin(sinInner) - std::asin(sinOuter));
 
     // evaluating delta Phi based on the inner and outer angle, and the azimutal
     // deflection including the maximum impact parameter
