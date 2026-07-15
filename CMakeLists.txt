@@ -215,7 +215,6 @@ set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_EXAMPLES_FASTJET)
 set_option_if(ACTS_BUILD_PLUGIN_GNN ACTS_BUILD_EXAMPLES_GNN)
 set_option_if(ACTS_BUILD_PLUGIN_FPEMON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_PLUGIN_TRACCC)
-set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(
     ACTS_ENABLE_CUDA
     ACTS_GNN_ENABLE_MODULEMAP
@@ -230,7 +229,6 @@ set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_TRACCC)
 set_option_if(ACTS_SETUP_DETRAY ACTS_BUILD_TRACCC)
 set_option_if(ACTS_SETUP_VECMEM ACTS_SETUP_DETRAY)
 set_option_if(ACTS_SETUP_COVFIE ACTS_SETUP_DETRAY)
-set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_SETUP_DETRAY)
 
 # feature tests
 include(CheckCXXSourceCompiles)
@@ -448,7 +446,15 @@ if(ACTS_BUILD_PYTHON_BINDINGS)
         add_subdirectory(thirdparty/pybind11)
     endif()
 endif()
-if(ACTS_BUILD_PLUGIN_ACTSVG)
+# Set up ActSVG when explicitly requested via plugin build, or when Detray's
+# SVG display path is enabled in the superbuild.
+if(
+    ACTS_BUILD_PLUGIN_ACTSVG
+    OR (
+        ACTS_SETUP_DETRAY
+        AND (NOT DEFINED DETRAY_SVG_DISPLAY OR DETRAY_SVG_DISPLAY)
+    )
+)
     if(ACTS_USE_SYSTEM_ACTSVG)
         find_package(actsvg ${_acts_actsvg_version} REQUIRED CONFIG)
     else()
@@ -602,8 +608,12 @@ endif()
 if(ACTS_SETUP_VECMEM)
     if(ACTS_USE_SYSTEM_VECMEM)
         find_package(vecmem ${_acts_vecmem_version} REQUIRED)
-    else()
+    elseif(NOT TARGET vecmem::core)
         add_subdirectory(thirdparty/vecmem)
+        list(PREPEND CMAKE_MODULE_PATH "${VECMEM_LANGUAGE_DIR}")
+        list(PREPEND CMAKE_MODULE_PATH "${VECMEM_LANGUAGE_DIR}/sycl")
+        # Make the "VecMem language code" available for the whole project.
+        include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
     endif()
     # Make the "VecMem language code" available for the whole project.
     list(APPEND CMAKE_MODULE_PATH "${VECMEM_LANGUAGE_DIR}")
@@ -645,6 +655,19 @@ if(ACTS_BUILD_TRACCC)
     option(TRACCC_USE_ROOT "" FALSE)
     option(TRACCC_SETUP_ACTS "" FALSE)
     option(TRACCC_SETUP_VECMEM "" FALSE)
+    option(TRACCC_SETUP_EIGEN3 "" FALSE)
+    option(TRACCC_SETUP_THRUST "" TRUE)
+    option(TRACCC_SETUP_COVFIE "" FALSE)
+    option(TRACCC_SETUP_DETRAY "" FALSE)
+    option(TRACCC_BUILD_CUDA "" ${ACTS_ENABLE_CUDA})
+    option(TRACCC_SETUP_TBB "" FALSE)
+    option(TRACCC_BUILD_IO "" TRUE)
+    option(TRACCC_BUILD_PERFORMANCE "" FALSE)
+    option(TRACCC_BUILD_SIMULATION "" FALSE)
+    option(TRACCC_BUILD_TESTING "" FALSE)
+    option(TRACCC_BUILD_EXAMPLES "" FALSE)
+    option(TRACCC_BUILD_BENCHMARKS "" FALSE)
+
     find_package(TBB ${_acts_tbb_version} CONFIG)
     if(NOT TBB_FOUND)
         set(TRACCC_SETUP_TBB TRUE CACHE BOOL "")
@@ -652,13 +675,7 @@ if(ACTS_BUILD_TRACCC)
         set(TRACCC_SETUP_TBB FALSE CACHE BOOL "")
     endif()
 
-    # traccc also depends on vecmem and covfie, but those plugins should always
-    # be enabled if traccc is.
-    if(ACTS_USE_SYSTEM_TRACCC)
-        find_package(traccc ${_acts_traccc_version} REQUIRED CONFIG)
-    else()
-        add_subdirectory(thirdparty/traccc)
-    endif()
+    add_subdirectory(Traccc)
 endif()
 
 # examples dependencies

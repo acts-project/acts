@@ -1,0 +1,34 @@
+/** TRACCC library, part of the ACTS project (R&D line)
+ *
+ * (c) 2026 CERN for the benefit of the ACTS project
+ *
+ * Mozilla Public License Version 2.0
+ */
+
+// Local include(s).
+#include "src/utils/magnetic_field_types.hpp"
+#include "src/finding/kernels/specializations/progressive_kalman_filter_src.cuh"
+
+// Project include(s).
+#include "traccc/finding/details/progressive_kalman_filter_types.hpp"
+#include "traccc/geometry/detector.hpp"
+#include "traccc/utils/propagation.hpp"
+
+// Covfie include(s).
+#include <covfie/core/field.hpp>
+
+namespace traccc::cuda {
+
+using bfield_t = covfie::field<@BFIELD_NAME@>::view_t;
+using propagator_t = traccc::details::pkf_propagator_t<@DETECTOR_NAME@::device, bfield_t>;
+
+template void progressive_kalman_filter<propagator_t>(
+    const dim3& grid_size, const dim3& block_size, std::size_t shared_mem_size,
+    const cudaStream_t& stream, const finding_config&,
+    const @DETECTOR_NAME@::device::const_view_type&,
+    const typename propagator_t::stepper_type::magnetic_field_type&,
+    const vecmem::data::jagged_vector_view<
+        typename propagator_t::detector_type::surface_type>&,
+    const device::progressive_kalman_filter_payload&);
+
+}  // namespace traccc::cuda

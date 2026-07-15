@@ -30,8 +30,7 @@
 #include <TH3.h>
 #include <TProfile.h>
 
-using Acts::VectorHelpers::eta;
-using Acts::VectorHelpers::phi;
+using Acts::VectorHelpers::deltaR;
 using ActsPlugins::toRoot;
 
 namespace ActsExamples {
@@ -239,11 +238,7 @@ ProcessCode RootTrackFitterPerformanceWriter::writeT(
       if (closeParticle.particleId() == particle.particleId()) {
         continue;
       }
-      double p_phi = phi(particle.direction());
-      double p_eta = eta(particle.direction());
-      double c_phi = phi(closeParticle.direction());
-      double c_eta = eta(closeParticle.direction());
-      double distance = sqrt(pow(p_phi - c_phi, 2) + pow(p_eta - c_eta, 2));
+      double distance = deltaR(particle.direction(), closeParticle.direction());
       if (minDeltaR == -1 || distance < minDeltaR) {
         minDeltaR = distance;
       }
