@@ -42,46 +42,58 @@ namespace ActsExamples {
 
 namespace {
 
-#if defined(ACTS_ROOT_FILE_HASHER_USE_BOOST_HASH2)
-constexpr std::size_t kDigestSize = 32;
-#else
-constexpr std::size_t kDigestSize = 16;
-#endif
+template <typename H>
+concept HasBoostUpdate =
+    requires(H h, const unsigned char* data, std::size_t size) {
+      { h.update(data, size) } -> std::same_as<void>;
+    };
 
-using Digest = std::array<unsigned char, kDigestSize>;
+template <typename H>
+concept HasFinalize = requires(H h, unsigned char* data) { h.Final(data); };
 
 /// Incremental hasher backed by Boost.Hash2 SHA-256 (preferred) or ROOT's
 /// TMD5 (fallback for Boost < 1.86). Only the backend member and the two
 /// method bodies differ between the two configurations.
-class Hasher {
+template <typename H, std::size_t digestSize>
+class HasherT {
  public:
+  using HasherType = H;
+  static constexpr std::size_t kDigestSize = digestSize;
+  using Digest = std::array<unsigned char, kDigestSize>;
+
   void update(std::span<const std::byte> data) {
-#if defined(ACTS_ROOT_FILE_HASHER_USE_BOOST_HASH2)
-    m_hasher.update(reinterpret_cast<const unsigned char*>(data.data()),
-                    data.size());
-#else
-    m_hasher.Update(reinterpret_cast<const UChar_t*>(data.data()), data.size());
-#endif
+    if constexpr (HasBoostUpdate<H>) {
+      m_hasher.update(reinterpret_cast<const unsigned char*>(data.data()),
+                      data.size());
+    } else {
+      m_hasher.Update(reinterpret_cast<const UChar_t*>(data.data()),
+                      data.size());
+    }
   }
 
   Digest finalize() {
     Digest digest{};
-#if defined(ACTS_ROOT_FILE_HASHER_USE_BOOST_HASH2)
-    boost::hash2::digest<kDigestSize> result = m_hasher.result();
-    std::copy(result.data(), result.data() + kDigestSize, digest.begin());
-#else
-    m_hasher.Final(digest.data());
-#endif
+
+    if constexpr (HasFinalize<H>) {
+      m_hasher.Final(digest.data());
+    } else {
+      boost::hash2::digest<kDigestSize> result = m_hasher.result();
+      std::copy(result.data(), result.data() + kDigestSize, digest.begin());
+    }
     return digest;
   }
 
  private:
-#if defined(ACTS_ROOT_FILE_HASHER_USE_BOOST_HASH2)
-  boost::hash2::sha2_256 m_hasher;
-#else
-  TMD5 m_hasher;
-#endif
+  HasherType m_hasher;
 };
+
+#if defined(ACTS_ROOT_FILE_HASHER_USE_BOOST_HASH2)
+using Hasher = HasherT<boost::hash2::sha2_256, 32>;
+#else
+using Hasher = HasherT<TMD5, 16>;
+#endif
+
+using Digest = typename Hasher::Digest;
 
 /// Compute the digest of a contiguous byte buffer.
 Digest digestOf(std::span<const std::byte> data) {
