@@ -17,7 +17,9 @@
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Ranges.hpp"
 #include "Acts/Utilities/detail/MultiAxisHelper.hpp"
+#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 
+#include <iomanip>
 #include <limits>
 #include <map>
 #include <ranges>
@@ -656,6 +658,7 @@ std::vector<AxisDirection> SurfaceArray::binningValues() const {
 
 std::ostream& SurfaceArray::toStream(const GeometryContext& /*gctx*/,
                                      std::ostream& sl) const {
+  detail::OstreamStateGuard guard{sl};
   sl << std::fixed << std::setprecision(4);
   sl << "SurfaceArray:" << std::endl;
   sl << " - no surfaces: " << m_surfaces.size() << std::endl;

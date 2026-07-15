@@ -182,6 +182,7 @@ PointwiseMaterialEffects performMaterialInteraction(
   const float qOverP = stepper.qOverP(state.stepping);
   const double momentum = stepper.absoluteMomentum(state.stepping);
 
+  //! [energy loss update]
   // in forward(backward) propagation, energy decreases(increases) and
   // variances increase(decrease)
   const double nextE = fastHypot(mass, momentum) - effects.eLoss * propDir;
@@ -198,6 +199,7 @@ PointwiseMaterialEffects performMaterialInteraction(
 
   // update track parameters
   stepper.update(state.stepping, position, direction, nextQOverP, time);
+  //! [energy loss update]
 
   // Convenience method to update a variance given a change and noise update
   // mode
@@ -210,6 +212,7 @@ PointwiseMaterialEffects performMaterialInteraction(
   };
 
   // update covariance matrix
+  //! [covariance update]
   state.stepping.cov(eBoundPhi, eBoundPhi) =
       updateVariance(state.stepping.cov(eBoundPhi, eBoundPhi),
                      effects.variancePhi, noiseUpdateMode);
@@ -219,6 +222,7 @@ PointwiseMaterialEffects performMaterialInteraction(
   state.stepping.cov(eBoundQOverP, eBoundQOverP) =
       updateVariance(state.stepping.cov(eBoundQOverP, eBoundQOverP),
                      effects.varianceQoverP, noiseUpdateMode);
+  //! [covariance update]
 
   return effects;
 }

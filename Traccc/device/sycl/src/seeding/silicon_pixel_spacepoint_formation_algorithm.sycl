@@ -1,0 +1,64 @@
+/** TRACCC library, part of the ACTS project (R&D line)
+ *
+ * (c) 2023-2026 CERN for the benefit of the ACTS project
+ *
+ * Mozilla Public License Version 2.0
+ */
+
+// SYCL include
+#include <sycl/sycl.hpp>
+
+// Local include(s).
+#include "../utils/calculate1DimNdRange.hpp"
+#include "../utils/get_queue.hpp"
+#include "../utils/global_index.hpp"
+#include "traccc/sycl/seeding/silicon_pixel_spacepoint_formation_algorithm.hpp"
+
+// Project include(s).
+#include "traccc/geometry/detector.hpp"
+#include "traccc/seeding/device/form_spacepoints.hpp"
+
+namespace traccc::sycl {
+
+silicon_pixel_spacepoint_formation_algorithm::
+    silicon_pixel_spacepoint_formation_algorithm(
+        const traccc::memory_resource& mr, const vecmem::copy& copy,
+        queue_wrapper& queue, std::unique_ptr<const Logger> logger)
+    : device::silicon_pixel_spacepoint_formation_algorithm(mr, copy,
+                                                           std::move(logger)),
+      sycl::algorithm_base(queue) {}
+
+void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
+    const form_spacepoints_kernel_payload& payload) const {
+
+    ::sycl::queue& squeue = details::get_queue(queue());
+    squeue.throw_asynchronous();
+    detector_buffer_visitor<detector_type_list>(
+        payload.detector, [&]<typename detector_traits_t>(
+                              const typename detector_traits_t::view& det) {
+            // Put the detector view into device memory.
+            vecmem::data::vector_buffer<typename detector_traits_t::view>
+                device_det(1u, mr().main);
+            copy().setup(device_det)->ignore();
+            copy()(vecmem::data::vector_view<
+                       const typename detector_traits_t::view>(1u, &det),
+                   device_det)
+                ->ignore();
+
+            // Launch the kernel.
+            squeue.submit([&](::sycl::handler& h) {
+                h.parallel_for(details::calculate1DimNdRange(
+                                   payload.n_measurements, warp_size() * 8),
+                               [det_ptr = device_det.ptr(),
+                                measurements = payload.measurements,
+                                spacepoints = payload.spacepoints](
+                                   ::sycl::nd_item<1> item) {
+                                   device::form_spacepoints<detector_traits_t>(
+                                       details::global_index(item), *det_ptr,
+                                       measurements, spacepoints);
+                               });
+            });
+        });
+}
+
+}  // namespace traccc::sycl
