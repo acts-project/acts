@@ -1208,9 +1208,9 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
 }
 
 std::shared_ptr<Acts::TrackingGeometry>
-Acts::TrackingGeometryJsonConverter::fromJson(
-    const GeometryContext& gctx, const std::filesystem::path& path,
-    const Options& options) const {
+Acts::TrackingGeometryJsonConverter::fromJson(const GeometryContext& gctx,
+                                              const std::filesystem::path& path,
+                                              const Options& options) const {
   if (!std::filesystem::exists(path)) {
     throw std::invalid_argument(std::format(
         "TrackingGeometryJsonConverter() - JSON file {:} does not exist",

@@ -128,7 +128,6 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
         .def("fromJson", &TrackingGeometryJsonConverter::fromJson,
              py::arg("gctx"), py::arg("jsonPath"),
              py::arg("options") =
-                 TrackingGeometryJsonConverter::Options::defaultOptions(),
-             py::arg("materialDecorator") = nullptr);
+                 TrackingGeometryJsonConverter::Options::defaultOptions());
   }
 }
