@@ -153,7 +153,7 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
     const auto dj = mapj(j);
 
     const std::span<const Acts::Surface* const> surfaces =
-        surfaceArray.at({i, j}, 0);
+        surfaceArray.neighbors({i, j}, 0);
 
     std::vector<std::size_t> surfaceIndices;
 

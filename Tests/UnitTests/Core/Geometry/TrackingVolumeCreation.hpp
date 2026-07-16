@@ -59,7 +59,8 @@ TrackingVolumePtr constructCylinderVolume(
   SurfaceArrayCreator::Config sacConfig;
   SurfaceArrayCreator sac{sacConfig};
 
-  auto bArray = sac.surfaceArrayOnCylinder(gctx, surfaces_only);
+  auto bArray = std::make_unique<SurfaceArray>(
+      sac.surfaceArrayOnCylinder(gctx, surfaces_only));
 
   ///  now create the Layer
   auto layer0bounds = std::make_shared<const CylinderBounds>(surfaceR, bUmax);

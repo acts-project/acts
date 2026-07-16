@@ -24,6 +24,7 @@
 #include "detray/propagator/detail/print_stepper_state.hpp"
 #include "detray/propagator/stepping_config.hpp"
 #include "detray/tracks/ray.hpp"
+#include "detray/utils/logging.hpp"
 #include "detray/utils/tuple_helpers.hpp"
 
 // System include(s)
@@ -199,15 +200,23 @@ struct object_tracer {
                                      const point3_t &pos, const vector3_t &dir,
                                      const char * /*message*/,
                                      Args &&.../*unused*/) {
+    DETRAY_VERBOSE_HOST_DEVICE("Actor: Check navigation status...");
+
     // Record the candidate of an encountered object
     if ((is_status(state.status(), navigation_status) || ...)) {
+      DETRAY_VERBOSE_HOST_DEVICE("Actor: ...Status matched:");
       // Reached a new position: log it
       // Also log volume switches that happen without position update
-      if ((vector::norm(last_pos - pos) >=
-           10.f * std::numeric_limits<scalar_t>::epsilon()) ||
-          (state.is_on_portal() && current_vol != state.volume()) ||
+      const bool first_obj{(last_pos == point3_t{inv_pos, inv_pos, inv_pos}) &&
+                           (last_dir == point3_t{0.f, 0.f, 0.f})};
+
+      if ((state.is_on_portal() && current_vol != state.volume()) ||
+          object_trace.empty() || first_obj ||
           state.current().surface().identifier() !=
               object_trace.back().intersection.surface().identifier()) {
+        DETRAY_VERBOSE_HOST_DEVICE("Actor: -> Record surface %d",
+                                   state.current_surface().index());
+
         object_trace.push_back({pos, dir, state.current()});
         last_pos = pos;
         last_dir = dir;

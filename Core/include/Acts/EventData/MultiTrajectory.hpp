@@ -126,29 +126,6 @@ concept VisitorConcept = requires(T& t, TS& ts) {
 
 }  // namespace detail_lt
 
-/// This namespace contains typedefs and constant values that are used by
-/// other parts of the @c MultiTrajectory implementation. It extracts these
-/// from @c TrackStateTraits using the default maximum measurement dimension.
-/// @deprecated Use aliased types and constants directly
-namespace MultiTrajectoryTraits {
-
-/// Maximum number of measurement dimensions supported by trajectory
-/// @deprecated Use @ref Acts::kMeasurementSizeMax instead.
-[[deprecated("Use Acts::kMeasurementSizeMax instead.")]]
-constexpr unsigned int MeasurementSizeMax = kMeasurementSizeMax;
-
-/// Type alias for trajectory index type
-/// @deprecated Use @ref Acts::TrackIndexType instead.
-using IndexType [[deprecated("Use Acts::TrackIndexType instead.")]] =
-    TrackIndexType;
-
-/// Invalid track state index constant
-/// @deprecated Use @ref Acts::kTrackIndexInvalid instead.
-[[deprecated("Use Acts::kTrackIndexInvalid instead.")]]
-constexpr IndexType kInvalid = kTrackIndexInvalid;
-
-}  // namespace MultiTrajectoryTraits
-
 template <typename T>
 struct IsReadOnlyMultiTrajectory;
 

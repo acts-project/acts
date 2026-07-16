@@ -113,6 +113,13 @@ option(DETRAY_SMATRIX_PLUGIN "Build ROOT/SMatrix math plugin" OFF)
 option(DETRAY_VC_AOS_PLUGIN "Build Vc based AoS math plugin" OFF)
 option(DETRAY_VC_SOA_PLUGIN "Build Vc based SoA math plugin" OFF)
 
+# Python related options
+option(
+    DETRAY_BUILD_PYTHON_BINDINGS
+    "Build python bindings for all enabled components"
+    OFF
+)
+
 # Test and benchmark suite
 include(CTest)
 
@@ -246,12 +253,10 @@ if(DETRAY_SETUP_VECMEM)
         find_package(vecmem ${DETRAY_VECMEM_VERSION} REQUIRED)
     else()
         add_subdirectory(extern/vecmem)
-        # Make the "VecMem language code" available for the whole project.
-        include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
     endif()
+    # Make the "VecMem language code" available for the whole project.
+    list(APPEND CMAKE_MODULE_PATH "${VECMEM_LANGUAGE_DIR}")
 endif()
-
-include(vecmem-check-language)
 
 # Set up JSON for I/O
 option(
@@ -470,6 +475,28 @@ if(DETRAY_SETUP_COVFIE)
         find_package(covfie ${DETRAY_COVFIE_VERSION} REQUIRED)
     else()
         add_subdirectory(extern/covfie)
+    endif()
+endif()
+
+# Set up pybind11.
+option(
+    DETRAY_SETUP_PYBIND11
+    "Set up the pybind11 target(s) explicitly"
+    ${DETRAY_BUILD_PYTHON_BINDINGS}
+)
+option(
+    DETRAY_USE_SYSTEM_PYBIND11
+    "Pick up an existing installation of pybind11 from the build environment"
+    ${DETRAY_USE_SYSTEM_LIBS}
+)
+if(DETRAY_SETUP_PYBIND11)
+    set(DETRAY_PYBIND11_VERSION 3.0.1)
+
+    find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development.Module)
+    if(DETRAY_USE_SYSTEM_PYBIND11)
+        find_package(pybind11 CONFIG REQUIRED)
+    else()
+        add_subdirectory(extern/pybind11)
     endif()
 endif()
 

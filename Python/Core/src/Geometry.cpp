@@ -225,6 +225,8 @@ void addGeometry(py::module_& m) {
                    self.visitSurfaces(func);
                  })
             .def("geoIdSurfaceMap", &TrackingGeometry::geoIdSurfaceMap)
+            .def("findPortal", &TrackingGeometry::findPortal, py::arg("tag"),
+                 py::return_value_policy::reference_internal)
             .def("extractMaterialSurfaces",
                  [](TrackingGeometry& self) {
                    MaterialSurfaceSelector selector;
@@ -247,6 +249,7 @@ void addGeometry(py::module_& m) {
   {
     py::class_<VolumeBounds, std::shared_ptr<VolumeBounds>>(m, "VolumeBounds")
         .def("type", &VolumeBounds::type)
+        .def("values", &VolumeBounds::values)
         .def("__str__", [](const VolumeBounds& self) {
           std::stringstream ss;
           ss << self;
@@ -276,7 +279,10 @@ void addGeometry(py::module_& m) {
         .def_property_readonly(
             "volumeBounds",
             py::overload_cast<>(&Volume::volumeBounds, py::const_),
-            py::return_value_policy::reference_internal);
+            py::return_value_policy::reference_internal)
+        .def("center", &Volume::center, py::arg("gctx"))
+        .def("localToGlobalTransform", &Volume::localToGlobalTransform,
+             py::arg("gctx"));
 
     py::class_<TrackingVolume, Volume, std::shared_ptr<TrackingVolume>>(
         m, "TrackingVolume")

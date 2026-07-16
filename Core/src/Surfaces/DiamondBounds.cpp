@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
+#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -85,8 +86,8 @@ Vector2 DiamondBounds::center() const {
 }
 
 std::ostream& DiamondBounds::toStream(std::ostream& sl) const {
-  sl << std::setiosflags(std::ios::fixed);
-  sl << std::setprecision(7);
+  detail::OstreamStateGuard guard{sl};
+  sl << std::fixed << std::setprecision(7);
   sl << "Acts::DiamondBounds: (halfXatYneg, halfXatYzero, halfXatYpos, "
         "halfYneg, halfYpos) = ";
   sl << "(" << get(DiamondBounds::eHalfLengthXnegY) << ", "
@@ -94,7 +95,6 @@ std::ostream& DiamondBounds::toStream(std::ostream& sl) const {
      << get(DiamondBounds::eHalfLengthXposY) << ", "
      << get(DiamondBounds::eHalfLengthYneg) << ", "
      << get(DiamondBounds::eHalfLengthYpos) << ")";
-  sl << std::setprecision(-1);
   return sl;
 }
 

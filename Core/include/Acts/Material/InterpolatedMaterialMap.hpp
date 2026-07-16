@@ -151,7 +151,7 @@ struct MaterialMapLookup {
   MaterialCell getMaterialCell(const Vector3& position) const {
     const auto& gridPosition = m_transformPos(position);
     std::size_t bin = m_grid.globalBinFromPosition(gridPosition);
-    const auto& indices = m_grid.localBinsFromPosition(bin);
+    const auto& indices = m_grid.localBinsFromGlobalBin(bin);
     const auto& lowerLeft = m_grid.lowerLeftBinEdge(indices);
     const auto& upperRight = m_grid.upperRightBinEdge(indices);
 

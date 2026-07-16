@@ -11,8 +11,8 @@
 #include "Acts/Utilities/Grid.hpp"
 
 #include <array>
+#include <functional>
 #include <span>
-#include <stdexcept>
 #include <unordered_set>
 
 namespace Acts::HoughTransformUtils {

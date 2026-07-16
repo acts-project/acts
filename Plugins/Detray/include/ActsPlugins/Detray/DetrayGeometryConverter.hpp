@@ -38,7 +38,11 @@ namespace ActsPlugins::DetrayGeometryConverter {
 /// @param gctx the geometry context
 /// @param trackingGeometry the ACTS tracking geometry to convert
 /// @param beampipeVolumeName the beampipe volume name
+/// @param detectorName the name to set for the detray detector (optional,
+///     if not set, it will be taken from the payloads or defaulted to empty)
 /// @param logLevel the logging level to use for the conversion process
+/// @param convertMaterial whether to convert material information from ACTS to detray
+/// @param convertSurfaceGrids whether to convert surface grid information from ACTS to detray
 ///
 /// This method performs the following steps:
 /// 1. It searches for the beampipe volume in the ACTS tracking geometry using
@@ -49,13 +53,15 @@ namespace ActsPlugins::DetrayGeometryConverter {
 /// 3. It builds a detray detector from the converted payloads using the
 /// detray::detector_builder.
 ///
-/// @return A tuple containing the built detray detector and the detray→ACTS mapping.
+/// @return A pair of the built detray detector and its volume name map.
 template <typename metadata_t>
-std::shared_ptr<detray::detector<metadata_t>> toDetray(
-    vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
-    const Acts::TrackingGeometry& trackingGeometry,
-    const std::string& beampipeVolumeName,
-    Acts::Logging::Level logLevel = Acts::Logging::INFO) {
+std::pair<std::shared_ptr<detray::detector<metadata_t>>, detray::name_map>
+toDetray(vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
+         const Acts::TrackingGeometry& trackingGeometry,
+         const std::string& beampipeVolumeName,
+         const std::string& detectorName = "",
+         Acts::Logging::Level logLevel = Acts::Logging::INFO,
+         bool convertMaterial = true, bool convertSurfaceGrids = true) {
   auto localLogger =
       Acts::getDefaultLogger("DetrayGeometryConverter", logLevel);
   auto payloadLogger = localLogger->clone("DetrayPayloadConverter");
@@ -91,20 +97,33 @@ std::shared_ptr<detray::detector<metadata_t>> toDetray(
   detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
                                                         *payloads.detector);
 
-  detray::io::homogeneous_material_reader::from_payload<detector_t>(
-      detectorBuilder, *payloads.homogeneousMaterial);
+  if (convertMaterial) {
+    detray::io::homogeneous_material_reader::from_payload<detector_t>(
+        detectorBuilder, *payloads.homogeneousMaterial);
 
-  detray::io::material_map_reader<std::integral_constant<std::size_t, 2>>::
-      from_payload<detector_t>(detectorBuilder,
-                               std::move(*payloads.materialGrids));
+    detray::io::material_map_reader<std::integral_constant<std::size_t, 2>>::
+        from_payload<detector_t>(detectorBuilder,
+                                 std::move(*payloads.materialGrids));
+  }
 
-  detray::io::surface_grid_reader<typename detector_t::surface_type,
-                                  std::integral_constant<std::size_t, 0>,
-                                  std::integral_constant<std::size_t, 2>>::
-      template from_payload<detector_t>(detectorBuilder,
-                                        *payloads.surfaceGrids);
+  if (convertSurfaceGrids) {
+    detray::io::surface_grid_reader<typename detector_t::surface_type,
+                                    std::integral_constant<std::size_t, 0>,
+                                    std::integral_constant<std::size_t, 2>>::
+        template from_payload<detector_t>(detectorBuilder,
+                                          *payloads.surfaceGrids);
+  }
 
-  return std::make_shared<detector_t>(detectorBuilder.build(mr));
+  if (!detectorName.empty()) {
+    detectorBuilder.set_name(detectorName);
+  } else if (payloads.names.contains(0)) {
+    detectorBuilder.set_name(payloads.names.at(0));
+  }
+
+  detray::name_map names{};
+  auto det = std::make_shared<detector_t>(detectorBuilder.build(mr, names));
+
+  return {std::move(det), std::move(names)};
 }
 
 /// Build a mapping from detray surface identifiers to ACTS

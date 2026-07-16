@@ -1,6 +1,7 @@
 acts_add_library(
     PluginGnn
     src/GnnPipeline.cpp
+    src/Stages.cpp
     src/Tensor.cpp
     src/BoostTrackBuilding.cpp
     src/TruthGraphMetricsHook.cpp
@@ -17,6 +18,7 @@ if(ACTS_GNN_ENABLE_MODULEMAP)
         ActsPluginGnn
         PRIVATE ModuleMapGraph::CPU ModuleMapGraph::GPU
     )
+    # EdgeLayerConnector.cu is included in ModuleMapGraph.cu because of ODR violations in ModuleMapGraph
     target_sources(ActsPluginGnn PRIVATE src/ModuleMapCuda.cu)
 endif()
 
@@ -75,7 +77,11 @@ if(ACTS_ENABLE_CUDA)
     target_link_libraries(ActsPluginGnn PRIVATE CUDA::cudart CUDA::nvtx3)
     target_sources(
         ActsPluginGnn
-        PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu src/Tensor.cu
+        PRIVATE
+            src/CudaTrackBuilding.cu
+            src/JunctionRemoval.cu
+            src/Tensor.cu
+            src/Stages.cu
     )
 else()
 endif()

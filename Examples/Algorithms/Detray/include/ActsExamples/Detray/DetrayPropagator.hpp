@@ -15,6 +15,8 @@
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
 
+#include <array>
+
 #include <covfie/core/field.hpp>
 #include <detray/navigation/caching_navigator.hpp>
 #include <detray/propagator/actor_chain.hpp>
@@ -37,14 +39,22 @@ class DetrayConcretePropagator : public PropagatorInterface {
   /// @param dGeometry the detray geometry
   /// @param memoryResource the memory resource to use for the detray propagation
   /// @param logger The logger instance
+  /// @param searchWindow the grid acceleration search window (per axis).
+  ///        Defaults to {0, 0}, i.e. detray only looks at the current bin and
+  ///        does no neighbor lookup. Increasing this lets a client probe
+  ///        whether the surface-grid filling needs to merge neighbor cells:
+  ///        if results change with a larger window, the converted grids are
+  ///        missing neighbor entries and the filling should be optimized.
   explicit DetrayConcretePropagator(
       std::shared_ptr<detector_t> dGeometry,
       vecmem::memory_resource& memoryResource,
       std::unique_ptr<const Acts::Logger> logger =
-          Acts::getDefaultLogger("DetrayPropagator", Acts::Logging::INFO))
+          Acts::getDefaultLogger("DetrayPropagator", Acts::Logging::INFO),
+      std::array<unsigned int, 2> searchWindow = {0u, 0u})
       : PropagatorInterface(),
         m_detrayGeometry(std::move(dGeometry)),
         m_memoryResource(&memoryResource),
+        m_searchWindow(searchWindow),
         m_logger(std::move(logger)) {}
 
   ///@brief  Execute a propagation for charged particle parameters
@@ -85,6 +95,12 @@ class DetrayConcretePropagator : public PropagatorInterface {
     PropagationSummary summary(startParameters);
 
     detray::propagation::config dCfg{};
+
+    // Configure the grid acceleration search window. {0, 0} (the default) means
+    // detray only inspects the current bin and performs no neighbor lookup.
+    // A client can widen this to test whether the converted surface grids are
+    // missing neighbor-cell entries (see ctor documentation).
+    dCfg.navigation.search_window = {m_searchWindow[0], m_searchWindow[1]};
 
     // Sterile propagation without actor chain
     if constexpr (kSTERILE) {
@@ -198,6 +214,10 @@ class DetrayConcretePropagator : public PropagatorInterface {
   /// The detray detector store and memory resource
   std::shared_ptr<detector_t> m_detrayGeometry = nullptr;
   vecmem::memory_resource* m_memoryResource = nullptr;
+
+  /// Grid acceleration search window (per axis) applied to the navigation
+  /// config. {0, 0} disables neighbor lookup.
+  std::array<unsigned int, 2> m_searchWindow = {0u, 0u};
 
   field_t m_field = field_t();
 

@@ -9,7 +9,7 @@ variables:
 
   LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
 
-  DEPENDENCY_TAG: v23.0.0
+  DEPENDENCY_TAG: v23.2.0
 
   MODEL_STORAGE: ${CI_PROJECT_DIR}/ci_models
 
@@ -45,7 +45,7 @@ variables:
 
 build_gnn_cpu:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:85
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
   tags:
     - large
 
@@ -78,7 +78,7 @@ build_gnn_cpu:
 
 build_gnn:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:85
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
   tags:
     - large
 
@@ -120,7 +120,7 @@ test_gnn_unittests:
   stage: test
   needs:
     - build_gnn
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:85
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
   tags:
     - docker-gpu-nvidia
 
@@ -144,7 +144,7 @@ test_gnn_python:
   stage: test
   needs:
     - build_gnn
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:85
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
   tags:
     - docker-gpu-nvidia
 
@@ -175,7 +175,7 @@ test_gnn_python:
 
 build_gnn_tensorrt:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404_tensorrt:85
+  image: ghcr.io/acts-project/ubuntu2404_tensorrt:87
 
   cache:
     - !reference [.spack_cache, cache]
@@ -200,7 +200,7 @@ build_gnn_tensorrt:
 
 build_linux_ubuntu:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:85
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
 
   cache:
    - !reference [.ccache_base, cache]
@@ -261,7 +261,7 @@ build_linux_ubuntu:
 
 linux_test_examples:
   stage: test
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:85
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
   needs: [build_linux_ubuntu]
 
   cache:
@@ -287,7 +287,7 @@ linux_test_examples:
 linux_physmon:
   stage: test
   needs: [build_linux_ubuntu]
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:85
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
 
   artifacts:
     when: always
@@ -311,7 +311,7 @@ linux_physmon:
     - git config --global safe.directory "$GITHUB_WORKSPACE"
     - source build/this_acts_withdeps.sh
     - cd src
-    - CI/physmon/phys_perf_mon.sh all physmon
+    - CI/physmon/phys_perf_mon.sh all physmon $(nproc)
 
   after_script:
    - !reference [.spack_cleanup, after_script]
@@ -380,7 +380,7 @@ linux_ubuntu_2404_clang22:
   variables:
     CXX: clang++-22
     CXXSTD: 23
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang22:85
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang22:87
 
 
 ######################
@@ -388,7 +388,7 @@ linux_ubuntu_2404_clang22:
 ######################
 
 .lcg_base_job:
-  image: registry.cern.ch/ghcr.io/acts-project/${OS}-base:85
+  image: registry.cern.ch/ghcr.io/acts-project/${OS}-base:86
   stage: build
   tags:
     - cvmfs
@@ -424,7 +424,12 @@ linux_ubuntu_2404_clang22:
     - cd ..
 
     - 'echo "LCG_PLATFORM: ${LCG_PLATFORM}"'
-    - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/x86_64-${LCG_PLATFORM}-${COMPILER}-opt/setup.sh
+    # Default to the released views; nightly jobs override LCG_REPO/LCG_VIEW
+    - LCG_REPO=${LCG_REPO:-sft.cern.ch}
+    - LCG_VIEW=${LCG_VIEW:-LCG_${LCG_VERSION}}
+    - 'echo "LCG_REPO: ${LCG_REPO}"'
+    - 'echo "LCG_VIEW: ${LCG_VIEW}"'
+    - source /cvmfs/${LCG_REPO}/lcg/views/${LCG_VIEW}/x86_64-${LCG_PLATFORM}-${COMPILER}-opt/setup.sh
 
   script:
     - >
@@ -435,31 +440,6 @@ linux_ubuntu_2404_clang22:
     - ccache -z
     - cmake --build build -- -j8
     - ccache -s
-
-lcg_107:
-  extends: .lcg_base_job
-
-  variables:
-    LCG_VERSION: "107"
-
-  parallel:
-    matrix:
-      - OS: [alma9]
-        COMPILER:
-          - gcc13
-          - clang16
-
-lcg_107a:
-  extends: .lcg_base_job
-
-  variables:
-    LCG_VERSION: "107a"
-
-  parallel:
-    matrix:
-      - OS: [alma9]
-        COMPILER:
-          - gcc14
 
 lcg_108:
   extends: .lcg_base_job
@@ -501,11 +481,33 @@ lcg_109:
     # overrides the mplhep version in our venv
     - pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
 
+lcg_dev4:
+  extends: .lcg_base_job
+
+  # Nightly views break frequently and are not release-blocking
+  allow_failure: true
+
+  variables:
+    LCG_REPO: sft-nightlies.cern.ch
+    LCG_VIEW: dev4/latest
+
+  before_script:
+    # The dev4 view's Geant4 requires EXPAT >= 2.5.0 but the view does not
+    # ship/expose expat; provide the system one (alma9 ships expat 2.5.0).
+    - dnf install -y expat-devel
+    - !reference [.lcg_base_job, before_script]
+
+  parallel:
+    matrix:
+      - OS: [alma9]
+        COMPILER:
+          - gcc15
+
 # Detray gitlab CI workflows
 detray_build_cuda:
   tags: [docker]
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404_cuda:82
+  image: ghcr.io/acts-project/ubuntu2404_cuda:87
   cache:
    - !reference [.ccache_base, cache]
   artifacts:
@@ -531,7 +533,7 @@ detray_test_cuda:
     DETRAY_BFIELD_FILE: $CI_PROJECT_DIR/src/Detray/data/odd-bfield_v0_9_0.cvf
   stage: test
   tags: [docker-gpu-nvidia]
-  image: ghcr.io/acts-project/ubuntu2404_cuda:82
+  image: ghcr.io/acts-project/ubuntu2404_cuda:87
   needs:
     - detray_build_cuda
   only:
@@ -550,7 +552,7 @@ detray_test_cuda:
 detray_build_sycl:
   tags: [docker-gpu-nvidia]
   stage: build
-  image: "ghcr.io/acts-project/ubuntu2404_oneapi:81"
+  image: "ghcr.io/acts-project/ubuntu2404_oneapi:87"
   cache:
    - !reference [.ccache_base, cache]
   artifacts:
@@ -574,7 +576,7 @@ detray_build_sycl:
 detray_test_sycl:
   stage: test
   tags: [docker-gpu-nvidia]
-  image: "ghcr.io/acts-project/ubuntu2404_oneapi:81"
+  image: "ghcr.io/acts-project/ubuntu2404_oneapi:87"
   needs:
     - detray_build_sycl
   variables:
@@ -592,3 +594,98 @@ detray_test_sycl:
     - sycl-ls
     - ctest --output-on-failure -R ".*sycl.*"
     - find bin -type f -name "*sycl" -not -name "*text*" -exec {} \;
+
+# traccc GitLab CI workflows
+.traccc_base_template: &traccc_base_job
+  before_script:
+    - apt install -y zstd
+    - curl --retry 5 --retry-delay 10 --output deps.tar.zst https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.v6.tar.zst
+    - tar -xf deps.tar.zst -C /usr/local --strip-components=1
+    - rm deps.tar.zst
+    - git clone $CLONE_URL src
+    - git -C src checkout $HEAD_SHA
+    - source ./src/Traccc/.github/ci_setup.sh ${TRACCC_BUILD_TYPE}
+    - export CTEST_PARALLEL_LEVEL=2
+
+.traccc_build_template: &traccc_build_job
+  <<: *traccc_base_job
+  tags: [docker]
+  stage: build
+  artifacts:
+    paths:
+      - build
+  script:
+    - SYCLFLAGS="${TRACCC_SYCL_FLAGS}" CXXFLAGS="${TRACCC_CXX_FLAGS}"
+      cmake -G Ninja --preset ${TRACCC_BUILD_PRESET} -DFETCHCONTENT_SOURCE_DIR_ACTS=src/ -DTRACCC_SETUP_VECMEM=ON -DTRACCC_SETUP_COVFIE=ON -DACTS_SETUP_VECMEM=OFF -DACTS_SETUP_COVFIE=OFF -DDETRAY_SET_LOGGING=NONE -DCMAKE_BUILD_TYPE=Release -DTRACCC_BUILD_EXAMPLES=FALSE ${TRACCC_CMAKE_ARGS}
+      -S src/Traccc -B build
+    - cmake --build build --parallel 2
+
+.traccc_nvidia_test_template: &traccc_nvidia_test_job
+  <<: *traccc_base_job
+  tags: [docker-gpu-nvidia]
+  stage: test
+  script:
+    - nvidia-smi
+    - ./src/Traccc/data/traccc_data_get_files.sh
+    - ctest --output-on-failure --test-dir build/ -R "${TRACCC_BUILD_TYPE}"
+
+.traccc_intel_test_template: &traccc_intel_test_job
+  <<: *traccc_base_job
+  tags: [docker-gpu-nvidia]
+  stage: test
+  script:
+    - ./src/Traccc/data/traccc_data_get_files.sh
+    - ctest --output-on-failure --test-dir build/ -R "${TRACCC_BUILD_TYPE}"
+
+traccc_build_cuda:
+  <<: *traccc_build_job
+  image: ghcr.io/acts-project/ubuntu2404_cuda:87
+  variables:
+    TRACCC_BUILD_TYPE: CUDA
+    TRACCC_BUILD_PRESET: cuda-fp32
+
+traccc_test_cuda:
+  <<: *traccc_nvidia_test_job
+  image: ghcr.io/acts-project/ubuntu2404_cuda:87
+  variables:
+    TRACCC_BUILD_TYPE: CUDA
+    TRACCC_CMAKE_ARGS: -DACTS_ENABLE_CUDA=ON -DVECMEM_BUILD_CUDA_LIBRARY=ON
+  dependencies:
+    - traccc_build_cuda
+
+traccc_build_sycl_intel:
+  <<: *traccc_build_job
+  image: ghcr.io/acts-project/ubuntu2404_oneapi:87
+  variables:
+    TRACCC_BUILD_TYPE: SYCL
+    TRACCC_BUILD_PRESET: sycl-fp32
+    TRACCC_SYCL_FLAGS: -fsycl -fsycl-targets=spir64
+    TRACCC_CMAKE_ARGS: -DTRACCC_BUILD_CUDA=FALSE -DACTS_ENABLE_CUDA=OFF -DVECMEM_BUILD_SYCL_LIBRARY=ON
+
+traccc_test_sycl_intel:
+  <<: *traccc_intel_test_job
+  image: ghcr.io/acts-project/ubuntu2404_oneapi:87
+  variables:
+    TRACCC_BUILD_TYPE: SYCL
+    ONEAPI_DEVICE_SELECTOR: opencl:*
+  dependencies:
+    - traccc_build_sycl_intel
+
+traccc_build_sycl_nvidia:
+  <<: *traccc_build_job
+  image: ghcr.io/acts-project/ubuntu2404_cuda_oneapi:82
+  variables:
+    TRACCC_BUILD_TYPE: SYCL
+    TRACCC_BUILD_PRESET: sycl-fp32
+    TRACCC_SYCL_FLAGS: -fsycl -fsycl-targets=nvidia_gpu_sm_75 -Wno-unknown-cuda-version -Wno-deprecated-declarations
+    TRACCC_CXX_FLAGS: -Wno-deprecated-declarations
+    TRACCC_CMAKE_ARGS: -DTRACCC_BUILD_CUDA=FALSE -DACTS_ENABLE_CUDA=OFF -DVECMEM_BUILD_SYCL_LIBRARY=ON
+
+traccc_test_sycl_nvidia:
+  <<: *traccc_nvidia_test_job
+  image: ghcr.io/acts-project/ubuntu2404_cuda_oneapi:82
+  variables:
+    TRACCC_BUILD_TYPE: SYCL
+    ONEAPI_DEVICE_SELECTOR: cuda:*
+  dependencies:
+    - traccc_build_sycl_nvidia

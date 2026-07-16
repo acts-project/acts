@@ -25,8 +25,19 @@
 # owners of code they work on. We encourage contributors to take ownership of
 # code, but only on a voluntary basis.
 
+**/*GlobalChiSquareFitter* @AJPfleger
+**/*gx2f* @AJPfleger
+**/*Gx2f* @AJPfleger
+**/*requirements* @AJPfleger
+CI/check_unused_files.py @AJPfleger
 Detray/** @niermann999
 Plugins/Covfie/** @stephenswat
 Plugins/Detray/** @niermann999
 thirdparty/covfie/** @stephenswat
 thirdparty/traccc/** @stephenswat
+Plugins/Gnn/** @benjaminhuth
+Examples/Algorithms/TrackFindingGnn/** @benjaminhuth
+pyproject.toml @benjaminhuth
+**/*Gsf* @benjaminhuth
+**/*GaussianSumFitter* @benjaminhuth
+Traccc/** @stephenswat

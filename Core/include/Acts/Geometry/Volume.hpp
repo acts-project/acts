@@ -129,8 +129,10 @@ class Volume : public GeometryObject {
 
   /// Construct bounding box for this shape
   /// @param envelope Optional envelope to add / subtract from min/max
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @return Constructed bounding box pointing to this volume
-  BoundingBox boundingBox(const Vector3& envelope = {0, 0, 0}) const;
+  BoundingBox boundingBox(const GeometryContext& gctx,
+                          const Vector3& envelope = Vector3::Zero()) const;
 
   /// Construct oriented bounding box for this shape
   /// @note This will build an oriented bounding box with an

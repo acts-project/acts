@@ -3,12 +3,19 @@ import hashlib
 from pathlib import Path
 import argparse
 
-import uproot
-import numpy as np
-import awkward as ak
 
+def hash_root_file(
+    path: Path, ordering_invariant: bool = True, use_cpp: bool = True
+) -> str:
+    if use_cpp:
+        import acts.examples.root
 
-def hash_root_file(path: Path, ordering_invariant: bool = True) -> str:
+        return acts.examples.root.hashRootFile(path, ordering_invariant)
+
+    import uproot
+    import numpy as np
+    import awkward as ak
+
     rf = uproot.open(path)
 
     gh = hashlib.sha256()
@@ -76,6 +83,12 @@ if "__main__" == __name__:
         action="store_true",
         help="Calculate a hash that is not invariant under reordering of entries? (faster than invariant)",
     )
+    p.add_argument(
+        "--cpp",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Dispatch to the C++ implementation (acts.examples.root.hashRootFile) instead of the uproot-based one. Note: the two produce different (non-interchangeable) digests.",
+    )
 
     args = p.parse_args()
 
@@ -83,5 +96,6 @@ if "__main__" == __name__:
         hash_root_file(
             path=args.input_file,
             ordering_invariant=not args.no_ordering_invariant,
+            use_cpp=args.cpp,
         )
     )

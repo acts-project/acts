@@ -20,6 +20,7 @@ from acts.examples.simulation import ParticleSelectorConfig, addDigiParticleSele
 from acts.gnn import (
     ModuleMapCuda,
     CudaTrackBuilding,
+    EdgeLayerConnector,
 )
 from acts.examples.gnn import NodeFeature
 
@@ -33,6 +34,7 @@ def runGNN4ITk(
     outputDir: Path = Path.cwd(),
     events: int = 1,
     bufferEvents: int | None = None,
+    useEdgeLayerConnector: bool = False,
     logLevel=acts.logging.INFO,
 ):
     """
@@ -48,6 +50,7 @@ def runGNN4ITk(
         gnnModel: Path to trained model (.pt, .onnx, or .engine)
         outputDir: Output directory for performance files
         events: Number of events to process
+        useEdgeLayerConnector: Use EdgeLayerConnector instead of CudaTrackBuilding
         logLevel: Logging level
     """
     # Validate inputs
@@ -66,7 +69,6 @@ def runGNN4ITk(
     )
 
     # Read ATLAS Athena ROOT dump
-
     reader = acts.examples.root.RootAthenaDumpReader(
         level=logLevel,
         treename="GNN4ITk",
@@ -143,13 +145,21 @@ def runGNN4ITk(
     else:
         raise ValueError(f"Unsupported model format: {gnnModel.suffix}")
 
-    # Stage 3: GPU track building
-    trackBuilderConfig = {
-        "level": logLevel,
-        "useOneBlockImplementation": False,
-        "doJunctionRemoval": True,
-    }
-    trackBuilder = CudaTrackBuilding(**trackBuilderConfig)
+    # Stage 3: Track building
+    if useEdgeLayerConnector:
+        trackBuilderObj = EdgeLayerConnector(
+            level=logLevel,
+            blockSize=512,
+            maxHitsPerTrack=30,
+            minHits=3,
+            weightsCut=0.01,
+        )
+    else:
+        trackBuilderObj = CudaTrackBuilding(
+            level=logLevel,
+            useOneBlockImplementation=False,
+            doJunctionRemoval=True,
+        )
 
     # Node features: ITk 12-feature configuration (space point + 2 clusters)
     e = NodeFeature
@@ -174,7 +184,7 @@ def runGNN4ITk(
         s,
         graphConstructor=graphConstructor,
         edgeClassifiers=edgeClassifiers,
-        trackBuilder=trackBuilder,
+        trackBuilder=trackBuilderObj,
         nodeFeatures=nodeFeatures,
         featureScales=featureScales,
         inputSpacePoints="spacepoints",
@@ -228,6 +238,12 @@ if __name__ == "__main__":
         default=None,
         help="Number of events to buffer (improves I/O performance)",
     )
+    argparser.add_argument(
+        "--useEdgeLayerConnector",
+        action="store_true",
+        default=False,
+        help="Use EdgeLayerConnector instead of CudaTrackBuilding for track building",
+    )
     argparser.add_argument("--debug", action="store_true")
 
     args = argparser.parse_args()
@@ -239,5 +255,6 @@ if __name__ == "__main__":
         outputDir=args.outputDir,
         events=args.events,
         bufferEvents=args.bufferEvents,
+        useEdgeLayerConnector=args.useEdgeLayerConnector,
         logLevel=acts.logging.DEBUG if args.debug else acts.logging.INFO,
     )

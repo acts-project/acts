@@ -878,6 +878,184 @@ BOOST_AUTO_TEST_CASE(AnyCopyExceptionPropagates) {
   CHECK_ANY_ALLOCATIONS();
 }
 
+// ---------------------------------------------------------------------------
+// AnyOf<Base>: typed type-erasure over a common polymorphic base
+// ---------------------------------------------------------------------------
+
+namespace {
+
+struct AnyOfBase {
+  virtual ~AnyOfBase() = default;
+  virtual int value() const = 0;
+};
+
+// Small enough to live in the inline buffer (vtable ptr + int).
+struct DerivedSmall : public AnyOfBase {
+  int v;
+  explicit DerivedSmall(int x) : v{x} {}
+  int value() const override { return v; }
+};
+
+// Large enough to force heap storage for the default sb_size of AnyOf (48).
+struct DerivedLarge : public AnyOfBase {
+  std::array<std::int64_t, 16> pad{};
+  int v;
+  explicit DerivedLarge(int x) : v{x} { pad.fill(x); }
+  int value() const override { return v; }
+};
+
+// AnyOfBase is the SECOND base, so its subobject sits at a non-zero offset
+// within the complete object. Exercises the upcast offset adjustment.
+struct OtherBase {
+  virtual ~OtherBase() = default;
+  std::int64_t tag = 0;
+  virtual std::int64_t getTag() const { return tag; }
+};
+
+struct DerivedMI : public OtherBase, public AnyOfBase {
+  int v;
+  explicit DerivedMI(int x) : v{x} { tag = x; }
+  int value() const override { return v; }
+};
+
+struct Unrelated {
+  int v;
+};
+
+template <typename T>
+concept HasAsBase = requires(T t) { t.asBase(); };
+
+}  // namespace
+
+// Plain Any (Base == void) exposes no base accessors; AnyOf<Base> does.
+static_assert(!HasAsBase<Any>);
+static_assert(HasAsBase<AnyOf<AnyOfBase>>);
+
+// Storable iff convertible to AnyOfBase*; unrelated types are rejected.
+static_assert(std::is_constructible_v<AnyOf<AnyOfBase>, DerivedSmall>);
+static_assert(std::is_constructible_v<AnyOf<AnyOfBase>, DerivedLarge>);
+static_assert(std::is_constructible_v<AnyOf<AnyOfBase>, DerivedMI>);
+static_assert(!std::is_constructible_v<AnyOf<AnyOfBase>, Unrelated>);
+
+BOOST_AUTO_TEST_CASE(AnyOfBasicAccess) {
+  {
+    AnyOf<AnyOfBase> a{DerivedSmall{42}};
+    BOOST_CHECK(static_cast<bool>(a));
+
+    // base access via asBase / operator* / operator->
+    BOOST_REQUIRE(a.asBase() != nullptr);
+    BOOST_CHECK_EQUAL(a.asBase()->value(), 42);
+    BOOST_CHECK_EQUAL((*a).value(), 42);
+    BOOST_CHECK_EQUAL(a->value(), 42);
+
+    // concrete type is still recoverable
+    BOOST_REQUIRE(a.asPtr<DerivedSmall>() != nullptr);
+    BOOST_CHECK_EQUAL(a.asPtr<DerivedSmall>()->v, 42);
+    BOOST_CHECK(a.asPtr<DerivedLarge>() == nullptr);
+  }
+  CHECK_ANY_ALLOCATIONS();
+}
+
+BOOST_AUTO_TEST_CASE(AnyOfConstAccess) {
+  {
+    const AnyOf<AnyOfBase> a{DerivedSmall{7}};
+    const AnyOfBase* base = a.asBase();
+    BOOST_REQUIRE(base != nullptr);
+    BOOST_CHECK_EQUAL(base->value(), 7);
+    BOOST_CHECK_EQUAL((*a).value(), 7);
+    BOOST_CHECK_EQUAL(a->value(), 7);
+  }
+  CHECK_ANY_ALLOCATIONS();
+}
+
+BOOST_AUTO_TEST_CASE(AnyOfEmpty) {
+  {
+    AnyOf<AnyOfBase> a;
+    BOOST_CHECK(!a);
+    BOOST_CHECK(a.asBase() == nullptr);
+
+    const AnyOf<AnyOfBase> b;
+    BOOST_CHECK(b.asBase() == nullptr);
+  }
+  CHECK_ANY_ALLOCATIONS();
+}
+
+BOOST_AUTO_TEST_CASE(AnyOfCopyMoveLocal) {
+  {
+    AnyOf<AnyOfBase> a{DerivedSmall{1}};
+
+    // copy construct
+    AnyOf<AnyOfBase> b{a};
+    BOOST_CHECK_EQUAL(a->value(), 1);
+    BOOST_CHECK_EQUAL(b->value(), 1);
+    // independent copies
+    BOOST_CHECK(a.asBase() != b.asBase());
+
+    // copy assign
+    AnyOf<AnyOfBase> c;
+    c = a;
+    BOOST_CHECK_EQUAL(c->value(), 1);
+
+    // move construct
+    AnyOf<AnyOfBase> d{std::move(b)};
+    BOOST_CHECK_EQUAL(d->value(), 1);
+
+    // move assign
+    AnyOf<AnyOfBase> e;
+    e = std::move(c);
+    BOOST_CHECK_EQUAL(e->value(), 1);
+  }
+  CHECK_ANY_ALLOCATIONS();
+}
+
+BOOST_AUTO_TEST_CASE(AnyOfCopyMoveHeap) {
+  {
+    AnyOf<AnyOfBase> a{DerivedLarge{5}};
+    BOOST_CHECK_EQUAL(a->value(), 5);
+
+    // copy construct allocates a fresh, independent heap object
+    AnyOf<AnyOfBase> b{a};
+    BOOST_CHECK_EQUAL(b->value(), 5);
+    BOOST_CHECK(a.asBase() != b.asBase());
+
+    // copy assign
+    AnyOf<AnyOfBase> c;
+    c = a;
+    BOOST_CHECK_EQUAL(c->value(), 5);
+
+    // move construct steals the pointer
+    AnyOf<AnyOfBase> d{std::move(b)};
+    BOOST_CHECK_EQUAL(d->value(), 5);
+    BOOST_CHECK(!b);
+
+    // move assign
+    AnyOf<AnyOfBase> e;
+    e = std::move(c);
+    BOOST_CHECK_EQUAL(e->value(), 5);
+    BOOST_CHECK(!c);
+  }
+  CHECK_ANY_ALLOCATIONS();
+}
+
+BOOST_AUTO_TEST_CASE(AnyOfMultipleInheritanceOffset) {
+  {
+    AnyOf<AnyOfBase> a{DerivedMI{99}};
+
+    DerivedMI* concrete = a.asPtr<DerivedMI>();
+    BOOST_REQUIRE(concrete != nullptr);
+
+    // Sanity: the AnyOfBase subobject is genuinely at a non-zero offset, so
+    // this test actually exercises the offset adjustment.
+    BOOST_REQUIRE(static_cast<void*>(static_cast<AnyOfBase*>(concrete)) !=
+                  static_cast<void*>(concrete));
+
+    // The function-pointer upcast must apply that same offset.
+    BOOST_CHECK_EQUAL(a.asBase(), static_cast<AnyOfBase*>(concrete));
+    BOOST_CHECK_EQUAL(a->value(), 99);
+  }
+  CHECK_ANY_ALLOCATIONS();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

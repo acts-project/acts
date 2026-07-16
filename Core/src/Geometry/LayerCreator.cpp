@@ -20,12 +20,9 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Diagnostics.hpp"
 
-#include <algorithm>
-#include <iterator>
+#include <memory>
 #include <ostream>
-#include <set>
 #include <utility>
 
 namespace Acts {
@@ -101,9 +98,10 @@ MutableLayerPtr LayerCreator::cylinderLayer(
                                         << binsPhi << " x " << binsZ << ")");
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
-    sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-        gctx, std::move(surfaces), binsPhi, binsZ, protoLayer, fullTransform,
-        maxNeighborDistance);
+    sArray = std::make_unique<SurfaceArray>(
+        m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
+            gctx, std::move(surfaces), binsPhi, binsZ, protoLayer,
+            fullTransform, maxNeighborDistance));
   }
 
   // create the layer and push it back
@@ -179,9 +177,10 @@ MutableLayerPtr LayerCreator::cylinderLayer(
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
-    sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-        gctx, std::move(surfaces), bTypePhi, bTypeZ, protoLayer, fullTransform,
-        maxNeighborDistance);
+    sArray = std::make_unique<SurfaceArray>(
+        m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
+            gctx, std::move(surfaces), bTypePhi, bTypeZ, protoLayer,
+            fullTransform, maxNeighborDistance));
   }
 
   // create the layer and push it back
@@ -247,9 +246,10 @@ MutableLayerPtr LayerCreator::discLayer(
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
-    sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-        gctx, std::move(surfaces), binsR, binsPhi, protoLayer, fullTransform,
-        maxNeighborDistance);
+    sArray = std::make_unique<SurfaceArray>(
+        m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
+            gctx, std::move(surfaces), binsR, binsPhi, protoLayer,
+            fullTransform, maxNeighborDistance));
   }
 
   // create the share disc bounds
@@ -317,9 +317,10 @@ MutableLayerPtr LayerCreator::discLayer(
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
-    sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-        gctx, std::move(surfaces), bTypeR, bTypePhi, protoLayer, fullTransform,
-        maxNeighborDistance);
+    sArray = std::make_unique<SurfaceArray>(
+        m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
+            gctx, std::move(surfaces), bTypeR, bTypePhi, protoLayer,
+            fullTransform, maxNeighborDistance));
   }
 
   // create the shared disc bounds
@@ -408,9 +409,10 @@ MutableLayerPtr LayerCreator::planeLayer(
 
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
-    sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnPlane(
-        gctx, std::move(surfaces), bins1, bins2, aDir, protoLayer,
-        fullTransform, maxNeighborDistance);
+    sArray = std::make_unique<SurfaceArray>(
+        m_cfg.surfaceArrayCreator->surfaceArrayOnPlane(
+            gctx, std::move(surfaces), bins1, bins2, aDir, protoLayer,
+            fullTransform, maxNeighborDistance));
   }
 
   // create the layer and push it back

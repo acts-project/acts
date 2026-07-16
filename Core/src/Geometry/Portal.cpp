@@ -15,17 +15,23 @@
 #include "Acts/Geometry/GridPortalLink.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
+#include "Acts/Material/MergedMaterialMarker.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
+#include <algorithm>
 #include <cstdlib>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 
 namespace Acts {
 
+PortalMergingException::PortalMergingException(std::string message)
+    : m_message{std::move(message)} {}
+
 const char* PortalMergingException::what() const noexcept {
-  return "Failure to merge portals";
+  return m_message.c_str();
 }
 
 const char* PortalFusingException::what() const noexcept {
@@ -179,9 +185,25 @@ RegularSurface& Portal::surface() {
   return *m_surface;
 }
 
+void Portal::addTag(std::string tag) {
+  if (std::ranges::find(m_tags, tag) != m_tags.end()) {
+    throw std::invalid_argument("Portal already has tag: " + tag);
+  }
+  m_tags.push_back(std::move(tag));
+}
+
+std::span<const std::string> Portal::tags() const {
+  return m_tags;
+}
+
+// Note: tags are intentionally *not* propagated through merge/fuse. These
+// operations build new portals, and portal tagging is a post-stacking operation
+// (applied in the finalize phase of the blueprint construction, after all
+// merging and fusing has happened), so there is nothing to carry over here.
 Portal Portal::merge(const GeometryContext& gctx, Portal& aPortal,
                      Portal& bPortal, AxisDirection direction,
-                     const Logger& logger) {
+                     const Logger& logger,
+                     PortalMaterialMergePolicy materialPolicy) {
   ACTS_VERBOSE("Merging two portals along " << direction);
 
   if (&aPortal == &bPortal) {
@@ -189,9 +211,42 @@ Portal Portal::merge(const GeometryContext& gctx, Portal& aPortal,
     throw PortalMergingException{};
   }
 
-  if (aPortal.m_surface->hasMaterial() || bPortal.m_surface->hasMaterial()) {
-    ACTS_ERROR("Cannot merge portals with material");
-    throw PortalMergingException{};
+  const bool aHasMaterial = aPortal.m_surface->hasMaterial();
+  const bool bHasMaterial = bPortal.m_surface->hasMaterial();
+  const bool hadMaterial = aHasMaterial || bHasMaterial;
+
+  if (hadMaterial) {
+    std::stringstream ss;
+    ss << "portals with material along " << direction << ": ";
+    if (aHasMaterial) {
+      ss << "portal A surface (bounds=" << aPortal.m_surface->bounds()
+         << ", center=" << aPortal.m_surface->center(gctx).transpose()
+         << ") carries material";
+    }
+    if (bHasMaterial) {
+      ss << (aHasMaterial ? " and " : "")
+         << "portal B surface (bounds=" << bPortal.m_surface->bounds()
+         << ", center=" << bPortal.m_surface->center(gctx).transpose()
+         << ") carries material";
+    }
+
+    if (materialPolicy == PortalMaterialMergePolicy::eThrow) {
+      std::stringstream es;
+      es << "Cannot merge " << ss.str()
+         << ". This typically means material was designated on a portal face "
+            "that is subsequently merged during container stacking. Move the "
+            "material designation to a face that is not merged (e.g. the face "
+            "of the enclosing container).";
+      ACTS_ERROR(es.str());
+      throw PortalMergingException{es.str()};
+    }
+
+    ACTS_WARNING("Merging "
+                 << ss.str()
+                 << ". The input material is discarded and the merged surface "
+                    "is tagged with a MergedMaterialMarker. This is lossy: the "
+                    "material designation should be moved to a face that is "
+                    "not merged (e.g. the face of the enclosing container).");
   }
 
   std::unique_ptr<PortalLinkBase> mergedAlongNormal = nullptr;
@@ -238,8 +293,18 @@ Portal Portal::merge(const GeometryContext& gctx, Portal& aPortal,
 
   aPortal.m_surface.reset();
   bPortal.m_surface.reset();
-  return Portal{gctx, std::move(mergedAlongNormal),
+  Portal merged{gctx, std::move(mergedAlongNormal),
                 std::move(mergedOppositeNormal)};
+
+  if (hadMaterial &&
+      materialPolicy == PortalMaterialMergePolicy::eDiscardAndMark) {
+    // Tag the merged surface so the lossy merge remains discoverable
+    // downstream.
+    merged.m_surface->assignSurfaceMaterial(
+        std::make_shared<MergedMaterialMarker>());
+  }
+
+  return merged;
 }
 
 Portal Portal::fuse(const GeometryContext& gctx, Portal& aPortal,

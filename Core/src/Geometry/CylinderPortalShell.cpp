@@ -16,9 +16,8 @@
 
 #include <algorithm>
 #include <numeric>
+#include <sstream>
 #include <stdexcept>
-
-#include <boost/algorithm/string/join.hpp>
 
 namespace Acts {
 
@@ -139,7 +138,8 @@ std::string SingleCylinderPortalShell::label() const {
 
 CylinderStackPortalShell::CylinderStackPortalShell(
     const GeometryContext& gctx, std::vector<CylinderPortalShell*> shells,
-    AxisDirection direction, const Logger& logger)
+    AxisDirection direction, const Logger& logger,
+    PortalMaterialMergePolicy materialPolicy)
     : m_direction{direction}, m_shells{std::move(shells)} {
   ACTS_VERBOSE("Making cylinder stack shell in " << m_direction
                                                  << " direction");
@@ -164,18 +164,31 @@ CylinderStackPortalShell::CylinderStackPortalShell(
                            [face](auto* shell) { return shell->portal(face); });
     ACTS_VERBOSE("Portals at " << face << ": " << portals.size());
 
-    auto merged = std::accumulate(
-        std::next(portals.begin()), portals.end(), portals.front(),
-        [&](const auto& aPortal,
-            const auto& bPortal) -> std::shared_ptr<Portal> {
-          if (aPortal == nullptr || bPortal == nullptr) {
-            throw std::invalid_argument(
-                "CylinderStackPortalShell: null portal in merge");
-          }
+    std::shared_ptr<Portal> merged;
+    try {
+      merged = std::accumulate(
+          std::next(portals.begin()), portals.end(), portals.front(),
+          [&](const auto& aPortal,
+              const auto& bPortal) -> std::shared_ptr<Portal> {
+            if (aPortal == nullptr || bPortal == nullptr) {
+              throw std::invalid_argument(
+                  "CylinderStackPortalShell: null portal in merge");
+            }
 
-          return std::make_shared<Portal>(
-              Portal::merge(gctx, *aPortal, *bPortal, direction, logger));
-        });
+            return std::make_shared<Portal>(Portal::merge(
+                gctx, *aPortal, *bPortal, direction, logger, materialPolicy));
+          });
+    } catch (const PortalMergingException& e) {
+      std::stringstream ss;
+      ss << "Failed to merge portals at face " << face << " while building "
+         << label() << " (stacking in " << m_direction << "). Shells involved:";
+      for (const auto* shell : m_shells) {
+        ss << "\n  - " << shell->label();
+      }
+      ss << "\nUnderlying error: " << e.what();
+      ACTS_ERROR(ss.str());
+      throw PortalMergingException{ss.str()};
+    }
 
     if (merged == nullptr) {
       throw std::runtime_error(
@@ -283,6 +296,21 @@ CylinderStackPortalShell::CylinderStackPortalShell(
 
 std::size_t CylinderStackPortalShell::size() const {
   return m_hasInnerCylinder ? 4 : 3;
+}
+
+std::vector<CylinderStackPortalShell::Face>
+CylinderStackPortalShell::mergedFaces(AxisDirection direction) {
+  using enum CylinderVolumeBounds::Face;
+  switch (direction) {
+    case AxisDirection::AxisR:
+      // Discs are merged, cylinders are fused
+      return {PositiveDisc, NegativeDisc};
+    case AxisDirection::AxisZ:
+      // Cylinders are merged, discs are fused
+      return {OuterCylinder, InnerCylinder};
+    default:
+      return {};
+  }
 }
 
 std::shared_ptr<Portal> CylinderStackPortalShell::portal(Face face) {
@@ -396,14 +424,13 @@ bool CylinderStackPortalShell::isValid() const {
 }
 
 std::string CylinderStackPortalShell::label() const {
+  // Deliberately shallow: only describe this shell, not the whole subtree.
+  // Expanding child labels recursively makes error messages for non-trivial
+  // geometries unreadable. The immediate children are reported separately where
+  // relevant (e.g. in merge-failure messages).
   std::stringstream ss;
-  ss << "CylinderStackShell(dir=" << m_direction << ", children=";
-
-  std::vector<std::string> labels;
-  std::ranges::transform(m_shells, std::back_inserter(labels),
-                         [](const auto* shell) { return shell->label(); });
-  ss << boost::algorithm::join(labels, "|");
-  ss << ")";
+  ss << "CylinderStackShell(dir=" << m_direction << ", " << m_shells.size()
+     << " children)";
   return ss.str();
 }
 

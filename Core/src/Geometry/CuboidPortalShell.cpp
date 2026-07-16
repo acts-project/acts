@@ -20,10 +20,9 @@
 #include <array>
 #include <cstddef>
 #include <numeric>
+#include <sstream>
 #include <stdexcept>
 #include <unordered_map>
-
-#include <boost/algorithm/string/join.hpp>
 
 namespace Acts {
 
@@ -115,7 +114,8 @@ std::string SingleCuboidPortalShell::label() const {
 
 CuboidStackPortalShell::CuboidStackPortalShell(
     const GeometryContext& gctx, std::vector<CuboidPortalShell*> shells,
-    AxisDirection direction, const Logger& logger)
+    AxisDirection direction, const Logger& logger,
+    PortalMaterialMergePolicy materialPolicy)
     : m_direction(direction), m_shells{std::move(shells)} {
   using enum CuboidVolumeBounds::Face;
   using enum AxisDirection;
@@ -184,18 +184,32 @@ CuboidStackPortalShell::CuboidStackPortalShell(
     std::ranges::transform(m_shells, std::back_inserter(portals),
                            [face](auto* shell) { return shell->portal(face); });
 
-    auto merged = std::accumulate(
-        std::next(portals.begin()), portals.end(), portals.front(),
-        [&](const auto& aPortal,
-            const auto& bPortal) -> std::shared_ptr<Portal> {
-          assert(aPortal != nullptr);
-          assert(bPortal != nullptr);
+    std::shared_ptr<Portal> merged;
+    try {
+      merged = std::accumulate(
+          std::next(portals.begin()), portals.end(), portals.front(),
+          [&](const auto& aPortal,
+              const auto& bPortal) -> std::shared_ptr<Portal> {
+            assert(aPortal != nullptr);
+            assert(bPortal != nullptr);
 
-          AxisDirection onSurfaceAxis = onSurfaceDirs.at(face);
+            AxisDirection onSurfaceAxis = onSurfaceDirs.at(face);
 
-          return std::make_shared<Portal>(
-              Portal::merge(gctx, *aPortal, *bPortal, onSurfaceAxis, logger));
-        });
+            return std::make_shared<Portal>(
+                Portal::merge(gctx, *aPortal, *bPortal, onSurfaceAxis, logger,
+                              materialPolicy));
+          });
+    } catch (const PortalMergingException& e) {
+      std::stringstream ss;
+      ss << "Failed to merge portals at face " << face << " while building "
+         << label() << " (stacking in " << m_direction << "). Shells involved:";
+      for (const auto* shell : m_shells) {
+        ss << "\n  - " << shell->label();
+      }
+      ss << "\nUnderlying error: " << e.what();
+      ACTS_ERROR(ss.str());
+      throw PortalMergingException{ss.str()};
+    }
 
     assert(merged != nullptr);
     assert(merged->isValid());
@@ -237,6 +251,15 @@ std::size_t CuboidStackPortalShell::size() const {
   return 6;
 }
 
+std::vector<CuboidStackPortalShell::Face> CuboidStackPortalShell::mergedFaces(
+    AxisDirection direction) {
+  // The side faces (parallel to the stacking direction) are merged, the front
+  // and back faces are fused.
+  const auto& [frontFace, backFace, sideFaces] =
+      CuboidVolumeBounds::facesFromAxisDirection(direction);
+  return {sideFaces.begin(), sideFaces.end()};
+}
+
 std::shared_ptr<Portal> CuboidStackPortalShell::portal(Face face) {
   if (face == m_backFace) {
     return m_shells.back()->portal(face);
@@ -273,14 +296,13 @@ const Transform3& CuboidStackPortalShell::localToGlobalTransform(
 }
 
 std::string CuboidStackPortalShell::label() const {
+  // Deliberately shallow: only describe this shell, not the whole subtree.
+  // Expanding child labels recursively makes error messages for non-trivial
+  // geometries unreadable. The immediate children are reported separately where
+  // relevant (e.g. in merge-failure messages).
   std::stringstream ss;
-  ss << "CuboidStackShell(dir=" << m_direction << ", children=";
-
-  std::vector<std::string> labels;
-  std::ranges::transform(m_shells, std::back_inserter(labels),
-                         [](const auto* shell) { return shell->label(); });
-  ss << boost::algorithm::join(labels, "|");
-  ss << ")";
+  ss << "CuboidStackShell(dir=" << m_direction << ", " << m_shells.size()
+     << " children)";
   return ss.str();
 }
 

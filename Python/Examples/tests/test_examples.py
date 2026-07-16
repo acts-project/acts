@@ -576,13 +576,32 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
             ],
         ),
         pytest.param(
+            (ACTS_DIR / "Examples/Configs" / "odd-digi-smearing-config-notime.json"),
+            marks=[
+                pytest.mark.odd,
+            ],
+        ),
+        pytest.param(
             (ACTS_DIR / "Examples/Configs" / "odd-digi-geometric-config.json"),
             marks=[
                 pytest.mark.odd,
             ],
         ),
+        pytest.param(
+            (ACTS_DIR / "Examples/Configs" / "odd-digi-geometric-config-notime.json"),
+            marks=[
+                pytest.mark.odd,
+            ],
+        ),
     ],
-    ids=["smeared", "geometric", "odd-smeared", "odd-geometric"],
+    ids=[
+        "generic-smeared",
+        "generic-geometric",
+        "odd-smeared",
+        "odd-smeared-notime",
+        "odd-geometric",
+        "odd-geometric-notime",
+    ],
 )
 def test_digitization_example_input_parsing(digi_config_file):
     from acts.examples.json import readDigiConfigFromJson
@@ -860,7 +879,14 @@ def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "ERROR"
     try:
         subprocess.check_call(
-            [sys.executable, str(script), "-n1", "--ambi-solver", "ML"],
+            [
+                sys.executable,
+                str(script),
+                "-n1",
+                "--ambi-solver",
+                "ML",
+                "--output-root",
+            ],
             cwd=tmp_path,
             env=env,
             stderr=subprocess.STDOUT,
@@ -951,6 +977,65 @@ def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, hardwar
 
 
 @pytest.mark.odd
+@pytest.mark.parametrize("hardware", ["gpu"])
+@pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
+def test_gnn_shrink_nodes_same_output(tmp_path, hardware):
+    """Verify that shrinkNodes=True produces the same tracks as shrinkNodes=False"""
+    from helpers.hash_root import hash_root_file
+    from gnn_module_map_odd import runGnnModuleMap
+    from acts.examples.odd import getOpenDataDetector
+
+    model_storage = os.environ.get("MODEL_STORAGE")
+    assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
+    ci_models = Path(model_storage)
+
+    module_map = str(ci_models / "module_map_odd_2k_events.1e-03.float.v1_3_PATCH")
+    gnn_model = str(ci_models / "gnn_odd_module_map.pt")
+    assert Path(module_map + ".doublets.root").exists()
+    assert Path(module_map + ".triplets.root").exists()
+    assert Path(gnn_model).exists()
+
+    repo_root = Path(__file__).parent.parent.parent.parent
+
+    output_dirs = {}
+    for shrink in (False, True):
+        out = tmp_path / ("shrink" if shrink else "noshrink")
+        out.mkdir()
+        detector = getOpenDataDetector()
+        field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+        s = Sequencer(events=2, numThreads=1)
+        with detector:
+            runGnnModuleMap(
+                trackingGeometry=detector.trackingGeometry(),
+                field=field,
+                geometrySelection=str(
+                    repo_root / "Examples/Configs/odd-seeding-config.json"
+                ),
+                stripGeometrySelection=str(
+                    repo_root / "Examples/Configs/odd-strip-spacepoint-selection.json"
+                ),
+                digiConfigFile=str(
+                    repo_root / "Examples/Configs/odd-digi-smearing-config.json"
+                ),
+                moduleMapPath=module_map,
+                gnnModel=gnn_model,
+                outputDir=out,
+                shrinkNodes=shrink,
+                s=s,
+            )
+        del s  # Ensure ROOT TFile is closed (happens in sequencer destructor)
+        output_dirs[shrink] = out
+
+    root_files = ["performance_finding_gnn.root", "ntuple_finding_gnn.root"]
+    for fname in root_files:
+        h_no_shrink = hash_root_file(output_dirs[False] / fname)
+        h_shrink = hash_root_file(output_dirs[True] / fname)
+        assert h_no_shrink == h_shrink, (
+            f"shrinkNodes changed output for {fname}: " f"{h_no_shrink} != {h_shrink}"
+        )
+
+
+@pytest.mark.odd
 @pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
 @pytest.mark.parametrize("backend", ["torch", "onnx"])
 @pytest.mark.parametrize("hardware", ["gpu"])
@@ -1018,7 +1103,8 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
 
 @pytest.mark.odd
 @pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
-def test_gnn4itk_example(tmp_path, assert_root_hash):
+@pytest.mark.parametrize("useEdgeLayerConnector", [False, True])
+def test_gnn4itk_example(tmp_path, assert_root_hash, useEdgeLayerConnector):
     from gnn4itk_example import runGNN4ITk
     from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
     from acts.examples.simulation import (
@@ -1033,12 +1119,10 @@ def test_gnn4itk_example(tmp_path, assert_root_hash):
     from acts.examples.reconstruction import addSpacePointsMaking
     from acts.examples.root import RootAthenaDumpWriter
 
-    # get required files from MODEL_STORAGE environment variable
     model_storage = os.environ.get("MODEL_STORAGE")
     assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
     ci_models = Path(model_storage)
 
-    # only ODD onnx and module map
     model = ci_models / "gnn_odd_module_map.onnx"
     module_map = str(ci_models / "module_map_odd_2k_events.1e-03.float.v1_3_PATCH")
 
@@ -1059,7 +1143,6 @@ def test_gnn4itk_example(tmp_path, assert_root_hash):
 
     dump_file = tmp_path / "athena_dump.root"
 
-    # Generate one event of Athena-format input using FATRAS simulation
     detector = getOpenDataDetector()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
     rnd = acts.examples.RandomNumbers(seed=42)
@@ -1114,13 +1197,13 @@ def test_gnn4itk_example(tmp_path, assert_root_hash):
 
     assert dump_file.exists()
 
-    # Only check if this runs
     runGNN4ITk(
         inputRootDump=dump_file,
         moduleMapPath=module_map,
         gnnModel=model,
         outputDir=tmp_path,
         events=1,
+        useEdgeLayerConnector=useEdgeLayerConnector,
         logLevel=acts.logging.INFO,
     )
 

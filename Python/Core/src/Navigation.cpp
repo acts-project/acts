@@ -13,6 +13,9 @@
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscBounds.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
@@ -123,8 +126,8 @@ void addNavigation(py::module_& m) {
 
         auto detElem = std::make_unique<Test::DetectorElementStub>();
 
-        auto surface = Surface::makeShared<CylinderSurface>(
-            Transform3::Identity(), std::make_shared<CylinderBounds>(30, 40));
+        auto surface = Surface::makeShared<DiscSurface>(
+            Transform3::Identity(), std::make_shared<RadialBounds>(30, 40));
         surface->assignSurfacePlacement(*detElem);
 
         vol1->addSurface(std::move(surface));

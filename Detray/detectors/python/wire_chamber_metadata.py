@@ -48,10 +48,7 @@ def __main__():
     add_wire_chamber_types(md)
 
     # Dump the metadata to header file
-    if args.output:
-        metadata_generator(md, args.output)
-    else:
-        metadata_generator(md)
+    metadata_generator(md, output=args.output, format_header=args.format)
 
 
 if __name__ == "__main__":

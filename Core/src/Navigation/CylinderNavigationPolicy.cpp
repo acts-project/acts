@@ -15,6 +15,8 @@
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 
+#include <numbers>
+
 namespace Acts {
 
 namespace {
@@ -35,6 +37,46 @@ std::string_view faceName(CylinderVolumeBounds::Face face) {
 }
 }  // namespace
 
+bool CylinderNavigationPolicy::isApplicable(const TrackingVolume& volume,
+                                            const Logger& logger) {
+  const auto& volumeBounds = volume.volumeBounds();
+
+  if (volumeBounds.type() != VolumeBounds::eCylinder) {
+    ACTS_DEBUG("CylinderNavigationPolicy can only be used with "
+               << "cylinder volumes, which " << volume.volumeName()
+               << " is not");
+    return false;
+  }
+
+  const auto& bounds =
+      dynamic_cast<const CylinderVolumeBounds&>(volume.volumeBounds());
+
+  if (bounds.get(CylinderVolumeBounds::eMinR) == 0) {
+    ACTS_DEBUG("CylinderNavigationPolicy can only be used with "
+               << "non-zero inner radius, which " << volume.volumeName()
+               << " has not");
+    return false;
+  }
+
+  if (bounds.get(CylinderVolumeBounds::eHalfPhiSector) < std::numbers::pi) {
+    ACTS_DEBUG("CylinderNavigationPolicy can only be used with "
+               << "full-phi volumes, which " << volume.volumeName()
+               << " is not");
+    return false;
+  }
+
+  // A volume confining sub-volumes also carries their portals, so this
+  // implicitly rejects those as well.
+  if (volume.portals().size() != 4) {
+    ACTS_DEBUG("CylinderNavigationPolicy can only be used with "
+               << "volumes with 4 portals, but " << volume.volumeName()
+               << " has " << volume.portals().size());
+    return false;
+  }
+
+  return true;
+}
+
 CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
                                                    const TrackingVolume& volume,
                                                    const Logger& logger)
@@ -43,15 +85,15 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
                << volume.volumeName());
   using enum CylinderVolumeBounds::Face;
 
-  if (m_volume->volumeBounds().type() != VolumeBounds::eCylinder) {
-    ACTS_ERROR("CylinderNavigationPolicy can only be used with "
-               << "cylinder volumes");
+  if (!isApplicable(volume, logger)) {
+    ACTS_ERROR("CylinderNavigationPolicy is not applicable to volume "
+               << volume.volumeName());
     throw std::invalid_argument(
-        "CylinderNavigationPolicy can only be used with "
-        "cylinder volumes");
+        "CylinderNavigationPolicy is not applicable to volume " +
+        volume.volumeName());
   }
 
-  auto& bounds =
+  const auto& bounds =
       dynamic_cast<const CylinderVolumeBounds&>(m_volume->volumeBounds());
 
   double rMin = bounds.get(CylinderVolumeBounds::eMinR);
@@ -59,23 +101,6 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
   double rMax = bounds.get(CylinderVolumeBounds::eMaxR);
   m_rMax2 = rMax * rMax;
   m_halfLengthZ = bounds.get(CylinderVolumeBounds::eHalfLengthZ);
-
-  if (rMin == 0) {
-    ACTS_ERROR("CylinderNavigationPolicy can only be used with "
-               << "non-zero inner radius, which " << m_volume->volumeName()
-               << " has not");
-    throw std::invalid_argument(
-        "CylinderNavigationPolicy can only be used with "
-        "non-zero inner radius");
-  }
-
-  if (m_volume->portals().size() != 4) {
-    ACTS_ERROR("CylinderNavigationPolicy can only be used with "
-               << "volumes with 4 portals");
-    throw std::invalid_argument(
-        "CylinderNavigationPolicy can only be used with "
-        "volumes with 4 portals");
-  }
 
   ACTS_VERBOSE("CylinderNavigationPolicy created for volume "
                << volume.volumeName());
