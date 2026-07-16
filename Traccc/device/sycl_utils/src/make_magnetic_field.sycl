@@ -1,0 +1,67 @@
+/** TRACCC library, part of the ACTS project (R&D line)
+ *
+ * (c) 2025-2026 CERN for the benefit of the ACTS project
+ *
+ * Mozilla Public License Version 2.0
+ */
+
+// Local include(s).
+#include "traccc/sycl/utils/make_magnetic_field.hpp"
+
+// Project include(s).
+#include "traccc/bfield/magnetic_field_types.hpp"
+#include "traccc/definitions/common.hpp"
+
+// Covfie include(s).
+#include <covfie/core/backend/primitive/constant.hpp>
+#include <covfie/core/backend/transformer/affine.hpp>
+#include <covfie/core/backend/transformer/clamp.hpp>
+#include <covfie/core/backend/transformer/linear.hpp>
+#include <covfie/core/backend/transformer/strided.hpp>
+#include <covfie/core/concepts.hpp>
+#include <covfie/core/field.hpp>
+#include <covfie/core/vector.hpp>
+#include <covfie/sycl/backend/primitive/sycl_device_array.hpp>
+#include <covfie/sycl/utility/copy.hpp>
+
+// SYCL include(s).
+#include <sycl/sycl.hpp>
+
+// System include(s).
+#include <cassert>
+#include <stdexcept>
+
+namespace traccc::sycl {
+
+/// Inhomogeneous B-field backend type for SYCL
+template <typename scalar_t>
+using inhom_bfield_backend_t =
+    covfie::backend::affine<covfie::backend::linear<covfie::backend::clamp<
+        covfie::backend::strided<covfie::vector::vector_d<std::size_t, 3>,
+                                 covfie::backend::sycl_device_array<
+                                     covfie::vector::vector_d<scalar_t, 3>>>>>>;
+// Test that the type is a valid backend for a field
+static_assert(covfie::concepts::field_backend<inhom_bfield_backend_t<float>>,
+              "sycl::inhom_bfield_backend_t is not a valid field backend type");
+
+magnetic_field make_magnetic_field(const magnetic_field& bfield,
+                                   queue_wrapper& queue) {
+
+    if (bfield.is<const_bfield_backend_t<scalar>>()) {
+        return magnetic_field{covfie::field<const_bfield_backend_t<scalar>>{
+            bfield.as_field<const_bfield_backend_t<scalar>>()}};
+    } else if (bfield.is<host::inhom_bfield_backend_t<scalar>>()) {
+        ::sycl::queue* sycl_queue = static_cast<::sycl::queue*>(queue.queue());
+        assert(sycl_queue != nullptr);
+        magnetic_field result{covfie::utility::sycl::copy_field_with_queue<
+            covfie::field<sycl::inhom_bfield_backend_t<scalar>>>(
+            bfield.as_field<host::inhom_bfield_backend_t<scalar>>(),
+            *sycl_queue)};
+        sycl_queue->wait_and_throw();
+        return result;
+    } else {
+        throw std::invalid_argument("Unsupported b-field type received");
+    }
+}
+
+}  // namespace traccc::sycl

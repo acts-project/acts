@@ -1,0 +1,165 @@
+/** TRACCC library, part of the ACTS project (R&D line)
+ *
+ * (c) 2022-2026 CERN for the benefit of the ACTS project
+ *
+ * Mozilla Public License Version 2.0
+ */
+
+// SYCL include(s).
+#include <sycl/sycl.hpp>
+
+// Local include(s).
+#include "../sanity/contiguous_on.hpp"
+#include "../sanity/ordered_on.hpp"
+#include "../utils/barrier.hpp"
+#include "../utils/calculate1DimNdRange.hpp"
+#include "../utils/get_queue.hpp"
+#include "../utils/thread_id.hpp"
+#include "traccc/sycl/clusterization/clusterization_algorithm.hpp"
+
+// Project include(s)
+#include "traccc/clusterization/device/ccl_kernel.hpp"
+#include "traccc/clusterization/device/reify_cluster_data.hpp"
+#include "traccc/utils/projections.hpp"
+#include "traccc/utils/relations.hpp"
+
+// Vecmem include(s).
+#include <vecmem/utils/sycl/local_accessor.hpp>
+
+// System include(s).
+#include <stdexcept>
+
+namespace traccc::sycl {
+namespace kernels {
+
+/// Class identifying the kernel running @c traccc::device::ccl_kernel
+class ccl_kernel;
+/// Class identifying the kernel running @c traccc::device::reify_cluster_data
+class reify_cluster_data;
+
+}  // namespace kernels
+
+clusterization_algorithm::clusterization_algorithm(
+    const traccc::memory_resource& mr, const vecmem::copy& copy,
+    queue_wrapper& queue, const config_type& config,
+    std::unique_ptr<const Logger> logger)
+    : device::clusterization_algorithm(mr, copy, config, std::move(logger)),
+      sycl::algorithm_base(queue) {}
+
+bool clusterization_algorithm::input_is_contiguous(
+    const edm::silicon_cell_collection::const_view& cells) const {
+
+    return is_contiguous_on<edm::silicon_cell_collection::const_device>(
+        cell_module_projection(), mr().main, copy(),
+        details::get_queue(queue()), cells);
+}
+
+bool clusterization_algorithm::input_is_sorted(
+    const edm::silicon_cell_collection::const_view& cells) const {
+
+    return is_ordered_on<edm::silicon_cell_collection::const_device>(
+        channel0_major_cell_order_relation(), mr().main, copy(),
+        details::get_queue(queue()), cells);
+}
+
+void clusterization_algorithm::sort_cells_kernel(
+    const unsigned int, const edm::silicon_cell_collection::const_view&,
+    edm::silicon_cell_collection::view&,
+    vecmem::data::vector_view<unsigned int>&, const bool) const {
+
+    throw std::runtime_error(
+        "Cell sorting is not yet implemented for the SYCL backend.");
+}
+
+void clusterization_algorithm::ccl_kernel(
+    const ccl_kernel_payload& payload) const {
+
+    // Check if device is capable of allocating sufficient local memory
+    assert(sizeof(device::details::index_t) * 2 *
+                   payload.config.max_partition_size() +
+               3 * sizeof(std::size_t) <
+           details::get_queue(queue())
+               .get_device()
+               .get_info<::sycl::info::device::local_mem_size>());
+
+    std::size_t num_blocks =
+        (payload.n_cells + payload.config.target_partition_size() - 1) /
+        payload.config.target_partition_size();
+    const ::sycl::nd_range cclKernelRange(
+        ::sycl::range<1>(num_blocks * payload.config.threads_per_partition),
+        ::sycl::range<1>(payload.config.threads_per_partition));
+    details::get_queue(queue())
+        .submit([&](::sycl::handler& h) {
+            // Allocate shared memory for the kernel.
+            vecmem::sycl::local_accessor<std::size_t> shared_uint(3, h);
+            vecmem::sycl::local_accessor<device::details::index_t> shared_idx(
+                2 * payload.config.max_partition_size(), h);
+
+            // Launch the kernel.
+            h.parallel_for<kernels::ccl_kernel>(
+                cclKernelRange,
+                [shared_uint, shared_idx, cells = payload.cells,
+                 det_descr = payload.det_descr, det_cond = payload.det_cond,
+                 measurements = payload.measurements,
+                 f_backup = payload.f_backup, gf_backup = payload.gf_backup,
+                 adjc_backup = payload.adjc_backup,
+                 adjv_backup = payload.adjv_backup,
+                 backup_mutex = payload.backup_mutex, config = payload.config,
+                 disjoint_set = payload.disjoint_set,
+                 cluster_sizes =
+                     payload.cluster_sizes](::sycl::nd_item<1> item) {
+                    // Construct more readable variable names.
+                    using vector_size_t = vecmem::data::vector_view<
+                        device::details::index_t>::size_type;
+                    vecmem::data::vector_view<device::details::index_t> f_view{
+                        static_cast<vector_size_t>(config.max_partition_size()),
+                        &shared_idx[0]};
+                    vecmem::data::vector_view<device::details::index_t> gf_view{
+                        static_cast<vector_size_t>(config.max_partition_size()),
+                        &shared_idx[config.max_partition_size()]};
+                    std::size_t& partition_start = shared_uint[0];
+                    std::size_t& partition_end = shared_uint[1];
+                    std::size_t& outi = shared_uint[2];
+
+                    // Mutex for scratch space
+                    vecmem::device_atomic_ref<unsigned int> mutex(
+                        *backup_mutex);
+
+                    // Barrier used in the algorithm.
+                    const details::barrier barrier{item};
+                    const details::thread_id thread_id{item};
+
+                    // Run the algorithm for this thread.
+                    device::ccl_kernel(
+                        config, thread_id, cells, det_descr, det_cond,
+                        partition_start, partition_end, outi, f_view, gf_view,
+                        f_backup, gf_backup, adjc_backup, adjv_backup, mutex,
+                        disjoint_set, cluster_sizes, barrier, measurements);
+                });
+        })
+        .wait_and_throw();
+}
+
+void clusterization_algorithm::cluster_maker_kernel(
+    unsigned int num_cells,
+    const vecmem::data::vector_view<unsigned int>& disjoint_set,
+    edm::silicon_cluster_collection::view& cluster_data,
+    const vecmem::data::vector_view<const unsigned int>& permutation_map_view)
+    const {
+
+    const ::sycl::nd_range range =
+        details::calculate1DimNdRange(num_cells, warp_size() * 8u);
+    details::get_queue(queue())
+        .submit([&](::sycl::handler& h) {
+            h.parallel_for<kernels::reify_cluster_data>(
+                range, [disjoint_set, permutation_map_view,
+                        cluster_data](::sycl::nd_item<1> item) {
+                    device::reify_cluster_data(
+                        static_cast<unsigned int>(item.get_global_linear_id()),
+                        disjoint_set, permutation_map_view, cluster_data);
+                });
+        })
+        .wait_and_throw();
+}
+
+}  // namespace traccc::sycl

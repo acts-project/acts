@@ -14,7 +14,6 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/Grid.hpp"
 
 #include <iostream>
 #include <numbers>
@@ -149,16 +148,16 @@ void GridPortalLink::checkConsistency(const IGrid& grid,
     }
   };
 
-  if (grid.axes().size() == 1) {
-    const IAxis& axisLoc0 = *grid.axes().front();
+  if (grid.dimensions() == 1) {
+    const IAxis& axisLoc0 = grid.multiAxisAny().getAxis(0);
     if (direction == AxisDirection::AxisRPhi) {
       checkRPhi(axisLoc0);
     } else {
       checkZ(axisLoc0);
     }
   } else {  // DIM == 2
-    const auto& axisLoc0 = *grid.axes().front();
-    const auto& axisLoc1 = *grid.axes().back();
+    const auto& axisLoc0 = grid.multiAxisAny().getAxis(0);
+    const auto& axisLoc1 = grid.multiAxisAny().getAxis(1);
     checkRPhi(axisLoc0);
     checkZ(axisLoc1);
   }
@@ -213,16 +212,16 @@ void GridPortalLink::checkConsistency(const IGrid& grid,
     }
   };
 
-  if (grid.axes().size() == 1) {
-    const IAxis& axisLoc0 = *grid.axes().front();
+  if (grid.dimensions() == 1) {
+    const IAxis& axisLoc0 = grid.multiAxisAny().getAxis(0);
     if (direction == AxisDirection::AxisR) {
       checkR(axisLoc0);
     } else {
       checkPhi(axisLoc0);
     }
   } else {  // DIM == 2
-    const auto& axisLoc0 = *grid.axes().front();
-    const auto& axisLoc1 = *grid.axes().back();
+    const auto& axisLoc0 = grid.multiAxisAny().getAxis(0);
+    const auto& axisLoc1 = grid.multiAxisAny().getAxis(1);
     checkR(axisLoc0);
     checkPhi(axisLoc1);
   }
@@ -252,19 +251,19 @@ void GridPortalLink::checkConsistency(const IGrid& grid,
     }
   };
 
-  if (grid.axes().size() == 1) {
-    const IAxis& axisLoc0 = *grid.axes().front();
+  if (grid.dimensions() == 1) {
+    const IAxis& axisLoc0 = grid.multiAxisAny().getAxis(0);
     check(axisLoc0, direction);
   } else {  // DIM == 2
-    const auto& axisLoc0 = *grid.axes().front();
-    const auto& axisLoc1 = *grid.axes().back();
+    const auto& axisLoc0 = grid.multiAxisAny().getAxis(0);
+    const auto& axisLoc1 = grid.multiAxisAny().getAxis(1);
     check(axisLoc0, AxisDirection::AxisX);
     check(axisLoc1, AxisDirection::AxisY);
   }
 }
 
 void GridPortalLink::printContents(std::ostream& os) const {
-  std::size_t dim = grid().axes().size();
+  std::size_t dim = grid().dimensions();
   os << "----- GRID " << dim << "d -----" << std::endl;
   os << grid() << " along " << direction() << std::endl;
 

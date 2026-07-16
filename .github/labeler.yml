@@ -15,6 +15,12 @@
       - Detray/**
       - Plugins/Detray/**
       - .github/detray.yml
+'Component - Traccc':
+  - changed-files:
+    - any-glob-to-any-file:
+      - Traccc/**
+      - Plugins/Traccc/**
+      - .github/traccc.yml
 'Component - Examples':
   - changed-files:
     - any-glob-to-any-file:

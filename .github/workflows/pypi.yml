@@ -23,6 +23,7 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     permissions: {}
+    if: github.repository == 'acts-project/acts' || github.event_name != 'schedule'
     steps:
       - name: Set build version
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
@@ -59,9 +60,7 @@ jobs:
       matrix:
         os:
          - ubuntu-latest
-        # - ubuntu-24.04-arm
-        # - macos-15-intel
-         - macos-latest
+         - macos-26
 
     steps:
       - name: Download source tarball
