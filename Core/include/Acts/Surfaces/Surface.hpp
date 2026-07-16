@@ -254,6 +254,17 @@ class Surface : public virtual GeometryObject,
   virtual void assignSurfaceMaterial(
       std::shared_ptr<const ISurfaceMaterial> material);
 
+  /// Assign a design object to this surface.
+  ///
+  /// The design is planned to describe the sensor independently of the
+  /// digitization algorithm.
+  ///
+  /// @param design The design object to attach
+  void assignDesign(std::shared_ptr<const IDesign> design);
+
+  /// Return the design object associated to this surface, or nullptr.
+  const IDesign* design() const { return m_surfaceDesign.get(); }
+
   /// Assign whether the surface is sensitive
   /// @param isSensitive Boolean flag to set sensitivity
   /// @throw logic_error if the surface is associated to a detector element
@@ -580,6 +591,9 @@ class Surface : public virtual GeometryObject,
 
   /// Possibility to attach a material description
   std::shared_ptr<const ISurfaceMaterial> m_surfaceMaterial;
+
+  /// Optional design object describing the sensor layout
+  std::shared_ptr<const IDesign> m_surfaceDesign{nullptr};
 
   /// Whether to swap the local coordinates for material lookup
   bool m_swapMaterialAxes{false};

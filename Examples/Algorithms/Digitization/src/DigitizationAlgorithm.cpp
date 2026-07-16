@@ -12,6 +12,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "ActsExamples/Digitization/DigitizationDesign.hpp"
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -140,6 +141,16 @@ DigitizationAlgorithm::DigitizationAlgorithm(
   }
 
   m_digitizers = Acts::GeometryHierarchyMap<Digitizer>(digitizerInput);
+
+  // Attach a DigitizationDesign to each surface that has a digitizer
+  for (const auto& [geoId, surfacePtr] : m_cfg.surfaceByIdentifier) {
+    auto digitizerItr = m_digitizers.find(geoId);
+    if (digitizerItr == m_digitizers.end()) {
+      continue;
+    }
+    auto design = std::make_shared<DigitizationDesign>(&(*digitizerItr));
+    const_cast<Acts::Surface*>(surfacePtr)->assignDesign(std::move(design));
+  }
 }
 
 ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
@@ -189,13 +200,22 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     const Acts::Surface* surfacePtr = surfaceItr->second;
 
-    auto digitizerItr = m_digitizers.find(moduleGeoId);
-    if (digitizerItr == m_digitizers.end()) {
+    // Replace m_digitizers.find() with design
+    const auto* design =
+        dynamic_cast<const DigitizationDesign*>(surfacePtr->design());
+    if (design == nullptr) {
       ACTS_VERBOSE("No digitizer present for module " << moduleGeoId);
       continue;
     } else {
       ACTS_VERBOSE("Digitizer found for module " << moduleGeoId);
     }
+    // auto digitizerItr = m_digitizers.find(moduleGeoId);
+    //  if (digitizerItr == m_digitizers.end()) {
+    //    ACTS_VERBOSE("No digitizer present for module " << moduleGeoId);
+    //    continue;
+    //  } else {
+    //    ACTS_VERBOSE("Digitizer found for module " << moduleGeoId);
+    //  }
 
     // Run the digitizer. Iterate over the hits for this surface inside the
     // visitor so we do not need to lookup the variant object per-hit.
@@ -307,7 +327,8 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
             }
           }
         },
-        *digitizerItr);
+        //*digitizerItr
+        design->digitizer());
   }
 
   if (skippedHits > 0) {
