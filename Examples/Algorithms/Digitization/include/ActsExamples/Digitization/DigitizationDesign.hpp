@@ -13,6 +13,10 @@
 
 #include <string_view>
 
+// A class that implements the IDesign interface for digitization.
+// This design can be attached to surfaces in the geometry to indicate that they
+// have an associated digitizer.
+
 namespace ActsExamples {
 
 class DigitizationDesign final : public Acts::IDesign {
@@ -27,7 +31,7 @@ class DigitizationDesign final : public Acts::IDesign {
   std::string_view name() const override { return "DigitizationDesign"; }
 
  private:
-  const DigitizationAlgorithm::Digitizer* m_digitizer;  // non-owning
+  const DigitizationAlgorithm::Digitizer* m_digitizer;
 };
 
 }  // namespace ActsExamples

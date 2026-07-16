@@ -200,7 +200,7 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     const Acts::Surface* surfacePtr = surfaceItr->second;
 
-    // Replace m_digitizers.find() with design
+    // Associate the digitizer with the surface design.
     const auto* design =
         dynamic_cast<const DigitizationDesign*>(surfacePtr->design());
     if (design == nullptr) {
@@ -209,13 +209,6 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
     } else {
       ACTS_VERBOSE("Digitizer found for module " << moduleGeoId);
     }
-    // auto digitizerItr = m_digitizers.find(moduleGeoId);
-    //  if (digitizerItr == m_digitizers.end()) {
-    //    ACTS_VERBOSE("No digitizer present for module " << moduleGeoId);
-    //    continue;
-    //  } else {
-    //    ACTS_VERBOSE("Digitizer found for module " << moduleGeoId);
-    //  }
 
     // Run the digitizer. Iterate over the hits for this surface inside the
     // visitor so we do not need to lookup the variant object per-hit.
@@ -327,7 +320,6 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
             }
           }
         },
-        //*digitizerItr
         design->digitizer());
   }
 
