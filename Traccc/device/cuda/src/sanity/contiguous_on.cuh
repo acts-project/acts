@@ -33,10 +33,10 @@ namespace traccc::cuda {
 namespace kernels {
 
 /// Kernel used in implementing @c traccc::cuda::is_contiguous_on
-template <typename CONTAINER, std::semiregular P, typename VIEW,
+template <typename CONTAINER, typename P, typename VIEW,
           std::equality_comparable S>
     requires std::regular_invocable<P,
-                                    decltype(std::declval<CONTAINER>().at(0))>
+                                    decltype(std::declval<CONTAINER>().at(0))> && std::semiregular<P>
 __global__ void is_contiguous_on_compress_adjacent(
     P projection, VIEW _in, vecmem::data::vector_view<S> out_view) {
 
@@ -94,9 +94,9 @@ __global__ void is_contiguous_on_all_unique(
  * @return true If the container is contiguous on `P`.
  * @return false Otherwise.
  */
-template <typename CONTAINER, std::semiregular P, typename VIEW>
+template <typename CONTAINER, typename P, typename VIEW>
     requires std::regular_invocable<P,
-                                    decltype(std::declval<CONTAINER>().at(0))>
+                                    decltype(std::declval<CONTAINER>().at(0))> && std::semiregular<P>
 bool is_contiguous_on(P&& projection, vecmem::memory_resource& mr,
                       const vecmem::copy& copy, const stream_wrapper& stream,
                       const VIEW& view) {
