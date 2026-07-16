@@ -281,7 +281,9 @@ class CombinatorialKalmanFilter {
       /// Scratch buffers reused across surfaces during the multi-component
       /// update. Owned by `findTracks` and wired in before propagation.
       TemporaryStates* temporaryStates{nullptr};
+      /// Bethe-Heitler approximation components cache
       std::vector<BetheHeitlerApprox::Component>* betheHeitlerCache{nullptr};
+      /// GsfComponent cache for the multi-component update
       std::vector<GsfComponent>* componentCache{nullptr};
     };
     /// Empty stand-in for the single-component stepper.
@@ -736,7 +738,10 @@ class CombinatorialKalmanFilter {
     ///     or share the predicted state for states flagged as outliers
     ///     and add them to the list of active branches
     ///
-    /// @param gctx The geometry context for this track finding/fitting
+    /// @tparam propagator_state_t Type of the Propagator state
+    /// @tparam stepper_t Type of the stepper
+    /// @param state The mutable propagator state object
+    /// @param stepper The stepper in use
     /// @param newTrackStateList index list of new track states
     /// @param result which contains among others the new states, and the list of active branches
     /// @return the number of newly added branches or an error
