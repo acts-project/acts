@@ -35,9 +35,9 @@ namespace traccc::host {
  * @return true If the vector is contiguous on `P`.
  * @return false Otherwise.
  */
-template <std::semiregular P, typename CONTAINER>
+template <typename P, typename CONTAINER>
     requires std::regular_invocable<P,
-                                    decltype(std::declval<CONTAINER>().at(0))>
+                                    decltype(std::declval<CONTAINER>().at(0))> && std::semiregular<P>
 bool is_contiguous_on(P&& projection, const CONTAINER& in) {
 
     // Grab the number of elements in our container.
