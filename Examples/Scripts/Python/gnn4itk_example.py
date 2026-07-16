@@ -20,6 +20,7 @@ from acts.examples.simulation import ParticleSelectorConfig, addDigiParticleSele
 from acts.gnn import (
     ModuleMapCuda,
     CudaTrackBuilding,
+    DWalkTrackBuilding,
     EdgeLayerConnector,
 )
 from acts.examples.gnn import NodeFeature
@@ -35,6 +36,8 @@ def runGNN4ITk(
     events: int = 1,
     bufferEvents: int | None = None,
     useEdgeLayerConnector: bool = False,
+    trackBuilder: str = "junctionRemoval",
+    edgeClassifierCut: float | None = None,
     logLevel=acts.logging.INFO,
 ):
     """
@@ -51,6 +54,9 @@ def runGNN4ITk(
         outputDir: Output directory for performance files
         events: Number of events to process
         useEdgeLayerConnector: Use EdgeLayerConnector instead of CudaTrackBuilding
+        trackBuilder: Track builder to run: junctionRemoval, edgeLayerConnector, or dwalk
+        edgeClassifierCut: Optional edge classifier cut. Defaults to 0.01 for D-WALK and
+                           0.5 for the other builders.
         logLevel: Logging level
     """
     # Validate inputs
@@ -63,6 +69,9 @@ def runGNN4ITk(
     ).exists(), f"Module map not found: {moduleMapPath}.triplets.root"
     assert gnnModel.exists(), f"Model file not found: {gnnModel}"
 
+    # Avoid an expensive recursive source-tree scan for automatic FPE masks on
+    # large CFS-mounted ACTS workspaces.
+    acts.examples.Sequencer._autoFpeMasks = []
     s = acts.examples.Sequencer(
         events=events,
         numThreads=1,
@@ -121,12 +130,28 @@ def runGNN4ITk(
     }
     graphConstructor = ModuleMapCuda(**moduleMapConfig)
 
+    if useEdgeLayerConnector:
+        trackBuilder = "edgeLayerConnector"
+    trackBuilder = {
+        "junctionremoval": "junctionRemoval",
+        "edgeLayerConnector": "edgeLayerConnector",
+        "edgelayerconnector": "edgeLayerConnector",
+        "dwalk": "dwalk",
+    }.get(trackBuilder, trackBuilder)
+    if trackBuilder not in {"junctionRemoval", "edgeLayerConnector", "dwalk"}:
+        raise ValueError(f"Unsupported track builder: {trackBuilder}")
+
+    defaultEdgeClassifierCut = 0.01 if trackBuilder == "dwalk" else 0.5
+    resolvedEdgeClassifierCut = (
+        defaultEdgeClassifierCut if edgeClassifierCut is None else edgeClassifierCut
+    )
+
     # Stage 2: Single-stage edge classification (auto-detect backend)
     gnnModel = Path(gnnModel)
     edgeClassifierConfig = {
         "level": logLevel,
         "modelPath": str(gnnModel),
-        "cut": 0.5,
+        "cut": resolvedEdgeClassifierCut,
     }
 
     if gnnModel.suffix == ".pt":
@@ -146,13 +171,22 @@ def runGNN4ITk(
         raise ValueError(f"Unsupported model format: {gnnModel.suffix}")
 
     # Stage 3: Track building
-    if useEdgeLayerConnector:
+    if trackBuilder == "edgeLayerConnector":
         trackBuilderObj = EdgeLayerConnector(
             level=logLevel,
             blockSize=512,
             maxHitsPerTrack=30,
             minHits=3,
             weightsCut=0.01,
+        )
+    elif trackBuilder == "dwalk":
+        trackBuilderObj = DWalkTrackBuilding(
+            level=logLevel,
+            thMin=0.1,
+            thAdd=0.6,
+            minCandidateSize=3,
+            radialFeatureIndex=0,
+            pathMetric="score_weighted_length",
         )
     else:
         trackBuilderObj = CudaTrackBuilding(
@@ -244,6 +278,18 @@ if __name__ == "__main__":
         default=False,
         help="Use EdgeLayerConnector instead of CudaTrackBuilding for track building",
     )
+    argparser.add_argument(
+        "--trackBuilder",
+        choices=["junctionRemoval", "edgeLayerConnector", "dwalk"],
+        default="junctionRemoval",
+        help="Track builder to use for graph segmentation",
+    )
+    argparser.add_argument(
+        "--edgeClassifierCut",
+        type=float,
+        default=None,
+        help="Override the edge classifier score cut",
+    )
     argparser.add_argument("--debug", action="store_true")
 
     args = argparser.parse_args()
@@ -256,5 +302,7 @@ if __name__ == "__main__":
         events=args.events,
         bufferEvents=args.bufferEvents,
         useEdgeLayerConnector=args.useEdgeLayerConnector,
+        trackBuilder=args.trackBuilder,
+        edgeClassifierCut=args.edgeClassifierCut,
         logLevel=acts.logging.DEBUG if args.debug else acts.logging.INFO,
     )
