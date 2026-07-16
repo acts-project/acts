@@ -23,8 +23,7 @@ seeding_algorithm::seeding_algorithm(const seedfinder_config& finder_config,
 
 seeding_algorithm::output_type seeding_algorithm::operator()(
     const edm::spacepoint_collection::const_view& spacepoints) const {
-
-    return m_finding(spacepoints, m_binning(spacepoints));
+  return m_finding(spacepoints, m_binning(spacepoints));
 }
 
 }  // namespace traccc::host

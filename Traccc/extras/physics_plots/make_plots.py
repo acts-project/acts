@@ -3,7 +3,6 @@ import pathlib
 import logging
 import traccc_physics_plots.plot
 
-
 log = logging.getLogger("traccc_physics_plots.run_seeding_example")
 
 

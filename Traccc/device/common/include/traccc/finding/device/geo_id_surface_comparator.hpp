@@ -21,19 +21,18 @@ namespace traccc::device {
 /// efficiently.
 ///
 struct geo_id_surface_comparator {
+  template <typename sf_descriptor_t>
+  TRACCC_HOST_DEVICE bool operator()(
+      const sf_descriptor_t sf_desc,
+      const detray::geometry::identifier& geo_id) {
+    return sf_desc.identifier() < geo_id;
+  }
 
-    template <typename sf_descriptor_t>
-    TRACCC_HOST_DEVICE bool operator()(
-        const sf_descriptor_t sf_desc,
-        const detray::geometry::identifier& geo_id) {
-        return sf_desc.identifier() < geo_id;
-    }
-
-    template <typename sf_descriptor_t>
-    TRACCC_HOST_DEVICE bool operator()(const detray::geometry::identifier& bc,
-                                       const sf_descriptor_t sf_desc) {
-        return bc < sf_desc.identifier();
-    }
+  template <typename sf_descriptor_t>
+  TRACCC_HOST_DEVICE bool operator()(const detray::geometry::identifier& bc,
+                                     const sf_descriptor_t sf_desc) {
+    return bc < sf_desc.identifier();
+  }
 
 };  // struct geo_id_surface_comparator
 

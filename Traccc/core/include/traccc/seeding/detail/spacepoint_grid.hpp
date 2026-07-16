@@ -30,33 +30,32 @@ namespace traccc::details {
 /// the spacepoint grid.
 ///
 struct spacepoint_grid_types {
+  /// Spacepoint grid host type
+  using host =
+      grid2<attach_populator, axis2::circular, axis2::regular, serializer2>;
 
-    /// Spacepoint grid host type
-    using host =
-        grid2<attach_populator, axis2::circular, axis2::regular, serializer2>;
+  /// Spacepoint grid (non-const) device type
+  using device =
+      grid2<attach_populator, axis2::circular, axis2::regular, serializer2,
+            vecmem::device_vector, vecmem::jagged_device_vector>;
+  /// Spacepoint grid (const) device type
+  using const_device =
+      grid2<attach_populator, axis2::circular, axis2::regular, serializer2,
+            vecmem::device_vector, vecmem::jagged_device_vector, std::array,
+            detray::tuple, const unsigned int>;
 
-    /// Spacepoint grid (non-const) device type
-    using device =
-        grid2<attach_populator, axis2::circular, axis2::regular, serializer2,
-              vecmem::device_vector, vecmem::jagged_device_vector>;
-    /// Spacepoint grid (const) device type
-    using const_device =
-        grid2<attach_populator, axis2::circular, axis2::regular, serializer2,
-              vecmem::device_vector, vecmem::jagged_device_vector, std::array,
-              detray::tuple, const unsigned int>;
+  /// Spacepoint grid (non-const) data type
+  using data = grid2_data<host>;
+  /// Spacepoint grid (const) data type
+  using const_data = const_grid2_data<host>;
 
-    /// Spacepoint grid (non-const) data type
-    using data = grid2_data<host>;
-    /// Spacepoint grid (const) data type
-    using const_data = const_grid2_data<host>;
+  /// Spacepoint grid (non-const) view type
+  using view = grid2_view<host>;
+  /// Spacepoint grid (const) view type
+  using const_view = const_grid2_view<host>;
 
-    /// Spacepoint grid (non-const) view type
-    using view = grid2_view<host>;
-    /// Spacepoint grid (const) view type
-    using const_view = const_grid2_view<host>;
-
-    /// Spacepoint grid buffer type
-    using buffer = grid2_buffer<host>;
+  /// Spacepoint grid buffer type
+  using buffer = grid2_buffer<host>;
 
 };  // struct spacepoint_grid_types
 

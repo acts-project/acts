@@ -18,21 +18,21 @@ namespace traccc {
 
 /// Definition of a truth particle
 struct particle {
-    std::uint64_t particle_id;
-    int particle_type;
-    int process;
-    point3 vertex;
-    scalar time;
-    vector3 momentum;
-    scalar mass;
-    scalar charge;
+  std::uint64_t particle_id;
+  int particle_type;
+  int process;
+  point3 vertex;
+  scalar time;
+  vector3 momentum;
+  scalar mass;
+  scalar charge;
 };
 
 inline bool operator<(const particle& lhs, const particle& rhs) {
-    if (lhs.particle_id < rhs.particle_id) {
-        return true;
-    }
-    return false;
+  if (lhs.particle_id < rhs.particle_id) {
+    return true;
+  }
+  return false;
 }
 
 /// Declare all particle collection types

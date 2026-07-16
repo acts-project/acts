@@ -20,14 +20,14 @@
 #include <stdexcept>
 
 /// Helper macro for checking the return value of CUDA function calls
-#define CUDA_ERROR_CHECK(EXP)                                                  \
-    do {                                                                       \
-        const cudaError_t errorCode = EXP;                                     \
-        if (errorCode != cudaSuccess) {                                        \
-            throw std::runtime_error(std::string("Failed to run " #EXP " (") + \
-                                     cudaGetErrorString(errorCode) + ")");     \
-        }                                                                      \
-    } while (false)
+#define CUDA_ERROR_CHECK(EXP)                                            \
+  do {                                                                   \
+    const cudaError_t errorCode = EXP;                                   \
+    if (errorCode != cudaSuccess) {                                      \
+      throw std::runtime_error(std::string("Failed to run " #EXP " (") + \
+                               cudaGetErrorString(errorCode) + ")");     \
+    }                                                                    \
+  } while (false)
 
 namespace traccc::cuda {
 
@@ -60,18 +60,18 @@ full_chain_algorithm::full_chain_algorithm(
       m_det_cond(det_cond),
       m_device_det_descr(
           [&]() {
-              // number of elements in the detector design description
-              std::vector<unsigned int> sizes(det_descr.size());
-              for (std::size_t i = 0; i < det_descr.size(); ++i) {
-                  auto this_design = det_descr.at(i);
-                  // now for each element, set the size to the largest size of
-                  // that element across all modules
-                  sizes[i] = std::max(static_cast<unsigned int>(
-                                          ((this_design.bin_edges_x()).size())),
-                                      static_cast<unsigned int>((
-                                          (this_design.bin_edges_y()).size())));
-              }
-              return sizes;
+            // number of elements in the detector design description
+            std::vector<unsigned int> sizes(det_descr.size());
+            for (std::size_t i = 0; i < det_descr.size(); ++i) {
+              auto this_design = det_descr.at(i);
+              // now for each element, set the size to the largest size of
+              // that element across all modules
+              sizes[i] = std::max(static_cast<unsigned int>(
+                                      ((this_design.bin_edges_x()).size())),
+                                  static_cast<unsigned int>(
+                                      ((this_design.bin_edges_y()).size())));
+            }
+            return sizes;
           }(),
           m_device_mr, &m_host_mr, vecmem::data::buffer_type::resizable),
       m_device_det_cond(
@@ -110,24 +110,23 @@ full_chain_algorithm::full_chain_algorithm(
       m_finding_config(finding_config),
       m_fitting_config(fitting_config),
       usingGBTS(useGBTS) {
+  // Tell the user what device is being used.
+  int device = 0;
+  CUDA_ERROR_CHECK(cudaGetDevice(&device));
+  cudaDeviceProp props;
+  CUDA_ERROR_CHECK(cudaGetDeviceProperties(&props, device));
+  std::cout << "Using CUDA device: " << props.name << " [id: " << device
+            << ", bus: " << props.pciBusID << ", device: " << props.pciDeviceID
+            << "]" << std::endl;
 
-    // Tell the user what device is being used.
-    int device = 0;
-    CUDA_ERROR_CHECK(cudaGetDevice(&device));
-    cudaDeviceProp props;
-    CUDA_ERROR_CHECK(cudaGetDeviceProperties(&props, device));
-    std::cout << "Using CUDA device: " << props.name << " [id: " << device
-              << ", bus: " << props.pciBusID
-              << ", device: " << props.pciDeviceID << "]" << std::endl;
-
-    // Copy the detector (description) to the device.
-    m_copy.setup(m_device_det_descr)->wait();
-    m_copy(vecmem::get_data(m_det_descr.get()), m_device_det_descr)->wait();
-    m_copy(vecmem::get_data(m_det_cond.get()), m_device_det_cond)->wait();
-    if (m_detector != nullptr) {
-        m_device_detector =
-            traccc::buffer_from_host_detector(*m_detector, m_device_mr, m_copy);
-    }
+  // Copy the detector (description) to the device.
+  m_copy.setup(m_device_det_descr)->wait();
+  m_copy(vecmem::get_data(m_det_descr.get()), m_device_det_descr)->wait();
+  m_copy(vecmem::get_data(m_det_cond.get()), m_device_det_cond)->wait();
+  if (m_detector != nullptr) {
+    m_device_detector =
+        traccc::buffer_from_host_detector(*m_detector, m_device_mr, m_copy);
+  }
 }
 
 full_chain_algorithm::full_chain_algorithm(const full_chain_algorithm& parent)
@@ -146,19 +145,18 @@ full_chain_algorithm::full_chain_algorithm(const full_chain_algorithm& parent)
       m_det_cond(parent.m_det_cond),
       m_device_det_descr(
           [&]() {
-              // number of elements in the detector design description
-              std::vector<unsigned int> sizes(parent.m_det_descr.get().size());
-              for (std::size_t i = 0; i < parent.m_det_descr.get().size();
-                   ++i) {
-                  auto this_design = parent.m_det_descr.get().at(i);
-                  // now for each element, set the size to the largest size of
-                  // that element across all modules
-                  sizes[i] = std::max(static_cast<unsigned int>(
-                                          ((this_design.bin_edges_x()).size())),
-                                      static_cast<unsigned int>((
-                                          (this_design.bin_edges_y()).size())));
-              }
-              return sizes;
+            // number of elements in the detector design description
+            std::vector<unsigned int> sizes(parent.m_det_descr.get().size());
+            for (std::size_t i = 0; i < parent.m_det_descr.get().size(); ++i) {
+              auto this_design = parent.m_det_descr.get().at(i);
+              // now for each element, set the size to the largest size of
+              // that element across all modules
+              sizes[i] = std::max(static_cast<unsigned int>(
+                                      ((this_design.bin_edges_x()).size())),
+                                  static_cast<unsigned int>(
+                                      ((this_design.bin_edges_y()).size())));
+            }
+            return sizes;
           }(),
           m_device_mr, &m_host_mr, vecmem::data::buffer_type::resizable),
       m_device_det_cond(
@@ -200,126 +198,118 @@ full_chain_algorithm::full_chain_algorithm(const full_chain_algorithm& parent)
       m_finding_config(parent.m_finding_config),
       m_fitting_config(parent.m_fitting_config),
       usingGBTS(parent.usingGBTS) {
-
-    m_copy.setup(m_device_det_descr)->wait();
-    m_copy(vecmem::get_data(m_det_descr.get()), m_device_det_descr)->wait();
-    m_copy(vecmem::get_data(m_det_cond.get()), m_device_det_cond)->wait();
-    if (m_detector != nullptr) {
-        m_device_detector =
-            traccc::buffer_from_host_detector(*m_detector, m_device_mr, m_copy);
-    }
+  m_copy.setup(m_device_det_descr)->wait();
+  m_copy(vecmem::get_data(m_det_descr.get()), m_device_det_descr)->wait();
+  m_copy(vecmem::get_data(m_det_cond.get()), m_device_det_cond)->wait();
+  if (m_detector != nullptr) {
+    m_device_detector =
+        traccc::buffer_from_host_detector(*m_detector, m_device_mr, m_copy);
+  }
 }
 
 full_chain_algorithm::~full_chain_algorithm() = default;
 
 full_chain_algorithm::output_type full_chain_algorithm::operator()(
     const edm::silicon_cell_collection::host& cells) const {
+  // Create device copy of input collections
+  edm::silicon_cell_collection::buffer cells_buffer(
+      static_cast<unsigned int>(cells.size()), m_cached_device_mr);
+  m_copy(vecmem::get_data(cells), cells_buffer)->ignore();
 
-    // Create device copy of input collections
-    edm::silicon_cell_collection::buffer cells_buffer(
-        static_cast<unsigned int>(cells.size()), m_cached_device_mr);
-    m_copy(vecmem::get_data(cells), cells_buffer)->ignore();
+  // Run the clusterization (asynchronously).
+  const auto unsorted_measurements =
+      m_clusterization(cells_buffer, m_device_det_descr, m_device_det_cond);
+  const measurement_sorting_algorithm::output_type measurements =
+      m_measurement_sorting(unsorted_measurements);
 
-    // Run the clusterization (asynchronously).
-    const auto unsorted_measurements =
-        m_clusterization(cells_buffer, m_device_det_descr, m_device_det_cond);
-    const measurement_sorting_algorithm::output_type measurements =
-        m_measurement_sorting(unsorted_measurements);
+  // If we have a Detray detector, run the seeding, track finding and fitting.
+  if (m_detector != nullptr) {
+    // Run the seed-finding (asynchronously).
+    const spacepoint_formation_algorithm::output_type spacepoints =
+        m_spacepoint_formation(m_device_detector, measurements);
 
-    // If we have a Detray detector, run the seeding, track finding and fitting.
-    if (m_detector != nullptr) {
-        // Run the seed-finding (asynchronously).
-        const spacepoint_formation_algorithm::output_type spacepoints =
-            m_spacepoint_formation(m_device_detector, measurements);
-
-        triplet_seeding_algorithm::output_type seeds;
-        if (usingGBTS) {
-            seeds = m_gbts_seeding(spacepoints, measurements);
-        } else {
-            seeds = m_seeding(spacepoints);
-        }
-        const seed_parameter_estimation_algorithm::output_type track_params =
-            m_track_parameter_estimation(m_field, measurements, spacepoints,
-                                         seeds);
-
-        // Run the track finding (asynchronously).
-        const finding_algorithm::output_type track_candidates =
-            m_finding(m_device_detector, m_field, measurements, track_params);
-
-        // Copy a limited amount of result data back to the host.
-        const auto host_tracks =
-            m_copy.to(track_candidates.tracks, m_cached_pinned_host_mr, nullptr,
-                      vecmem::copy::type::device_to_host);
-        output_type result{m_host_mr};
-        vecmem::copy host_copy;
-        host_copy(host_tracks, result)->wait();
-        return result;
-
+    triplet_seeding_algorithm::output_type seeds;
+    if (usingGBTS) {
+      seeds = m_gbts_seeding(spacepoints, measurements);
+    } else {
+      seeds = m_seeding(spacepoints);
     }
-    // If not, copy the measurements back to the host, and return a dummy
-    // object.
-    else {
+    const seed_parameter_estimation_algorithm::output_type track_params =
+        m_track_parameter_estimation(m_field, measurements, spacepoints, seeds);
 
-        // Copy the measurements back to the host.
-        edm::measurement_collection::host measurements_host(m_host_mr);
-        m_copy(measurements, measurements_host)->wait();
+    // Run the track finding (asynchronously).
+    const finding_algorithm::output_type track_candidates =
+        m_finding(m_device_detector, m_field, measurements, track_params);
 
-        // Return an empty object.
-        return output_type{m_host_mr};
-    }
+    // Copy a limited amount of result data back to the host.
+    const auto host_tracks =
+        m_copy.to(track_candidates.tracks, m_cached_pinned_host_mr, nullptr,
+                  vecmem::copy::type::device_to_host);
+    output_type result{m_host_mr};
+    vecmem::copy host_copy;
+    host_copy(host_tracks, result)->wait();
+    return result;
+
+  }
+  // If not, copy the measurements back to the host, and return a dummy
+  // object.
+  else {
+    // Copy the measurements back to the host.
+    edm::measurement_collection::host measurements_host(m_host_mr);
+    m_copy(measurements, measurements_host)->wait();
+
+    // Return an empty object.
+    return output_type{m_host_mr};
+  }
 }
 
 bound_track_parameters_collection_types::host full_chain_algorithm::seeding(
     const edm::silicon_cell_collection::host& cells) const {
+  // Create device copy of input collections
+  edm::silicon_cell_collection::buffer cells_buffer(
+      static_cast<unsigned int>(cells.size()), m_cached_device_mr);
+  m_copy(vecmem::get_data(cells), cells_buffer)->ignore();
 
-    // Create device copy of input collections
-    edm::silicon_cell_collection::buffer cells_buffer(
-        static_cast<unsigned int>(cells.size()), m_cached_device_mr);
-    m_copy(vecmem::get_data(cells), cells_buffer)->ignore();
+  // Run the clusterization (asynchronously).
+  const auto unsorted_measurements =
+      m_clusterization(cells_buffer, m_device_det_descr, m_device_det_cond);
+  const measurement_sorting_algorithm::output_type measurements =
+      m_measurement_sorting(unsorted_measurements);
 
-    // Run the clusterization (asynchronously).
-    const auto unsorted_measurements =
-        m_clusterization(cells_buffer, m_device_det_descr, m_device_det_cond);
-    const measurement_sorting_algorithm::output_type measurements =
-        m_measurement_sorting(unsorted_measurements);
+  // If we have a Detray detector, run the seeding, track finding and fitting.
+  if (m_detector != nullptr) {
+    // Run the seed-finding (asynchronously).
+    const spacepoint_formation_algorithm::output_type spacepoints =
+        m_spacepoint_formation(m_device_detector, measurements);
 
-    // If we have a Detray detector, run the seeding, track finding and fitting.
-    if (m_detector != nullptr) {
-
-        // Run the seed-finding (asynchronously).
-        const spacepoint_formation_algorithm::output_type spacepoints =
-            m_spacepoint_formation(m_device_detector, measurements);
-
-        triplet_seeding_algorithm::output_type seeds;
-        if (usingGBTS) {
-            seeds = m_gbts_seeding(spacepoints, measurements);
-        } else {
-            seeds = m_seeding(spacepoints);
-        }
-        const seed_parameter_estimation_algorithm::output_type track_params =
-            m_track_parameter_estimation(m_field, measurements, spacepoints,
-                                         seeds);
-
-        // Copy a limited amount of result data back to the host.
-        const auto host_seeds = m_copy.to(track_params, m_cached_pinned_host_mr,
-                                          vecmem::copy::type::device_to_host);
-        bound_track_parameters_collection_types::host result{&m_host_mr};
-        vecmem::copy host_copy;
-        host_copy(host_seeds, result)->wait();
-        return result;
-
+    triplet_seeding_algorithm::output_type seeds;
+    if (usingGBTS) {
+      seeds = m_gbts_seeding(spacepoints, measurements);
+    } else {
+      seeds = m_seeding(spacepoints);
     }
-    // If not, copy the measurements back to the host, and return a dummy
-    // object.
-    else {
+    const seed_parameter_estimation_algorithm::output_type track_params =
+        m_track_parameter_estimation(m_field, measurements, spacepoints, seeds);
 
-        // Copy the measurements back to the host.
-        edm::measurement_collection::host measurements_host(m_host_mr);
-        m_copy(measurements, measurements_host)->wait();
+    // Copy a limited amount of result data back to the host.
+    const auto host_seeds = m_copy.to(track_params, m_cached_pinned_host_mr,
+                                      vecmem::copy::type::device_to_host);
+    bound_track_parameters_collection_types::host result{&m_host_mr};
+    vecmem::copy host_copy;
+    host_copy(host_seeds, result)->wait();
+    return result;
 
-        // Return an empty object.
-        return {};
-    }
+  }
+  // If not, copy the measurements back to the host, and return a dummy
+  // object.
+  else {
+    // Copy the measurements back to the host.
+    edm::measurement_collection::host measurements_host(m_host_mr);
+    m_copy(measurements, measurements_host)->wait();
+
+    // Return an empty object.
+    return {};
+  }
 }
 
 }  // namespace traccc::cuda

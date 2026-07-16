@@ -11,8 +11,7 @@
 #include "traccc/examples/alpaka/full_chain_algorithm.hpp"
 
 int main(int argc, char* argv[]) {
-
-    // Execute the throughput test.
-    return traccc::throughput_mt<traccc::alpaka::full_chain_algorithm>(
-        "Multi-threaded Alpaka GPU throughput tests", argc, argv);
+  // Execute the throughput test.
+  return traccc::throughput_mt<traccc::alpaka::full_chain_algorithm>(
+      "Multi-threaded Alpaka GPU throughput tests", argc, argv);
 }

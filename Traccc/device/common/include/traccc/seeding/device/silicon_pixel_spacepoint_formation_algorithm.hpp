@@ -31,54 +31,53 @@ class silicon_pixel_spacepoint_formation_algorithm
           const edm::measurement_collection::const_view&)>,
       public messaging,
       public algorithm_base {
+ public:
+  /// Constructor for spacepoint_formation algorithm
+  ///
+  /// @param mr The memory resource(s) to use in the algorithm
+  /// @param copy The copy object to use for copying data between device
+  ///             and host memory blocks
+  /// @param logger The logger instance to use
+  ///
+  silicon_pixel_spacepoint_formation_algorithm(
+      const traccc::memory_resource& mr, const vecmem::copy& copy,
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
 
-    public:
-    /// Constructor for spacepoint_formation algorithm
-    ///
-    /// @param mr The memory resource(s) to use in the algorithm
-    /// @param copy The copy object to use for copying data between device
-    ///             and host memory blocks
-    /// @param logger The logger instance to use
-    ///
-    silicon_pixel_spacepoint_formation_algorithm(
-        const traccc::memory_resource& mr, const vecmem::copy& copy,
-        std::unique_ptr<const Logger> logger = getDummyLogger().clone());
+  /// Construct spacepoints from 2D silicon pixel measurements
+  ///
+  /// @param det Detector object
+  /// @param measurements A collection of measurements
+  /// @return A spacepoint buffer, with one spacepoint for every
+  ///         silicon pixel measurement
+  ///
+  output_type operator()(const detector_buffer& det,
+                         const edm::measurement_collection::const_view&
+                             measurements) const override;
 
-    /// Construct spacepoints from 2D silicon pixel measurements
-    ///
-    /// @param det Detector object
-    /// @param measurements A collection of measurements
-    /// @return A spacepoint buffer, with one spacepoint for every
-    ///         silicon pixel measurement
-    ///
-    output_type operator()(const detector_buffer& det,
-                           const edm::measurement_collection::const_view&
-                               measurements) const override;
+ protected:
+  /// @name Function(s) to be implemented by derived classes
+  /// @{
 
-    protected:
-    /// @name Function(s) to be implemented by derived classes
-    /// @{
+  /// Payload for the @c form_spacepoints_kernel function
+  struct form_spacepoints_kernel_payload {
+    /// The number of measurements in the event
+    edm::measurement_collection::const_view::size_type n_measurements;
+    /// The detector object
+    const detector_buffer& detector;
+    /// The input measurements
+    const edm::measurement_collection::const_view& measurements;
+    /// The output spacepoints
+    edm::spacepoint_collection::view& spacepoints;
+  };
 
-    /// Payload for the @c form_spacepoints_kernel function
-    struct form_spacepoints_kernel_payload {
-        /// The number of measurements in the event
-        edm::measurement_collection::const_view::size_type n_measurements;
-        /// The detector object
-        const detector_buffer& detector;
-        /// The input measurements
-        const edm::measurement_collection::const_view& measurements;
-        /// The output spacepoints
-        edm::spacepoint_collection::view& spacepoints;
-    };
+  /// Launch the spacepoint formation kernel
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void form_spacepoints_kernel(
+      const form_spacepoints_kernel_payload& payload) const = 0;
 
-    /// Launch the spacepoint formation kernel
-    ///
-    /// @param payload The payload for the kernel
-    ///
-    virtual void form_spacepoints_kernel(
-        const form_spacepoints_kernel_payload& payload) const = 0;
-
-    /// @}
+  /// @}
 
 };  // class silicon_pixel_spacepoint_formation_algorithm
 

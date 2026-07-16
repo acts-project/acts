@@ -5,13 +5,13 @@
 # Mozilla Public License Version 2.0
 
 # We need the SYCL language in this directory.
-include( vecmem-check-language )
+include(vecmem-check-language)
 vecmem_check_language( SYCL )
-enable_language( SYCL )
+enable_language(SYCL)
 
 # Project include(s).
-include( traccc-compiler-options-cpp )
-include( traccc-compiler-options-sycl )
+include(traccc-compiler-options-cpp)
+include(traccc-compiler-options-sycl)
 
 # Set up the build of the traccc::sycl library.
 traccc_add_library( traccc_sycl sycl TYPE SHARED
@@ -52,14 +52,20 @@ traccc_add_library( traccc_sycl sycl TYPE SHARED
   "src/sanity/contiguous_on.hpp"
   "src/sanity/ordered_on.hpp"
 )
-target_link_libraries( traccc_sycl
-  PUBLIC detray::core vecmem::core
-         traccc::core traccc::device_common traccc::sycl_utils
-  PRIVATE vecmem::sycl covfie::sycl oneDPL )
+target_link_libraries(
+    traccc_sycl
+    PUBLIC
+        detray::core
+        vecmem::core
+        traccc::core
+        traccc::device_common
+        traccc::sycl_utils
+    PRIVATE vecmem::sycl covfie::sycl oneDPL
+)
 
 # Set up Thrust specifically for the traccc::sycl library.
 thrust_create_target( traccc::sycl_thrust
   HOST CPP
-  DEVICE CPP )
-target_link_libraries( traccc_sycl
-  PRIVATE traccc::sycl_thrust )
+  DEVICE CPP
+)
+target_link_libraries(traccc_sycl PRIVATE traccc::sycl_thrust)

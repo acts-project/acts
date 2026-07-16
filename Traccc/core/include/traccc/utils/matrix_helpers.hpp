@@ -28,20 +28,19 @@ namespace traccc {
 template <detray::concepts::algebra algebra_t>
 TRACCC_HOST_DEVICE inline detray::dmatrix<algebra_t, 2, 2> masked_inverse(
     const detray::dmatrix<algebra_t, 2, 2>& M, const unsigned int dim) {
+  assert(dim == 1u || dim == 2u);
 
-    assert(dim == 1u || dim == 2u);
-
-    detray::dmatrix<algebra_t, 2, 2> M_inv;
-    if (dim == 1u) {
-        assert(getter::element(M, 0u, 0u) != 0.f);
-        getter::element(M_inv, 0u, 0u) = 1.f / getter::element(M, 0u, 0u);
-        getter::element(M_inv, 0u, 1u) = 0.f;
-        getter::element(M_inv, 1u, 0u) = 0.f;
-        getter::element(M_inv, 1u, 1u) = 0.f;
-    } else {
-        M_inv = matrix::inverse(M);
-    }
-    return M_inv;
+  detray::dmatrix<algebra_t, 2, 2> M_inv;
+  if (dim == 1u) {
+    assert(getter::element(M, 0u, 0u) != 0.f);
+    getter::element(M_inv, 0u, 0u) = 1.f / getter::element(M, 0u, 0u);
+    getter::element(M_inv, 0u, 1u) = 0.f;
+    getter::element(M_inv, 1u, 0u) = 0.f;
+    getter::element(M_inv, 1u, 1u) = 0.f;
+  } else {
+    M_inv = matrix::inverse(M);
+  }
+  return M_inv;
 }
 
 }  // namespace traccc

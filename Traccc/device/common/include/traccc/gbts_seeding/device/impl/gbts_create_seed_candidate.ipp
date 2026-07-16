@@ -26,35 +26,34 @@ inline void gbts_create_seed_candidate(
     const vecmem::data::vector_view<unsigned long long int> d_edge_bids_view,
     const vecmem::data::vector_view<const int2>& d_path_store_view,
     char depth) {
+  vecmem::device_vector<char> d_seed_ambiguity(d_seed_ambiguity_view);
+  vecmem::device_vector<int2> d_seed_proposals(d_seed_proposals_view);
+  vecmem::device_vector<unsigned long long int> d_edge_bids(d_edge_bids_view);
+  const vecmem::device_vector<const int2> d_path_store(d_path_store_view);
 
-    vecmem::device_vector<char> d_seed_ambiguity(d_seed_ambiguity_view);
-    vecmem::device_vector<int2> d_seed_proposals(d_seed_proposals_view);
-    vecmem::device_vector<unsigned long long int> d_edge_bids(d_edge_bids_view);
-    const vecmem::device_vector<const int2> d_path_store(d_path_store_view);
+  d_seed_proposals[prop_idx] = int2{qual, path_idx};
+  d_seed_ambiguity[prop_idx] = 0;
 
-    d_seed_proposals[prop_idx] = int2{qual, path_idx};
-    d_seed_ambiguity[prop_idx] = 0;
+  const unsigned long long int seed_bid =
+      (static_cast<unsigned long long int>(qual) << 32) |
+      (static_cast<unsigned long long int>(prop_idx));
 
-    const unsigned long long int seed_bid =
-        (static_cast<unsigned long long int>(qual) << 32) |
-        (static_cast<unsigned long long int>(prop_idx));
+  int2 path = int2{0, d_seed_proposals[prop_idx].y};
+  while (path.y >= 0 && depth != 0) {
+    path = d_path_store[static_cast<unsigned int>(path.y)];
+    depth--;
 
-    int2 path = int2{0, d_seed_proposals[prop_idx].y};
-    while (path.y >= 0 && depth != 0) {
-        path = d_path_store[static_cast<unsigned int>(path.y)];
-        depth--;
+    vecmem::device_atomic_ref<unsigned long long int> atomic_bid(
+        d_edge_bids[static_cast<unsigned int>(path.x)]);
+    const unsigned long long int competing_offer =
+        atomic_bid.fetch_max(seed_bid);
 
-        vecmem::device_atomic_ref<unsigned long long int> atomic_bid(
-            d_edge_bids[static_cast<unsigned int>(path.x)]);
-        const unsigned long long int competing_offer =
-            atomic_bid.fetch_max(seed_bid);
-
-        if (competing_offer > seed_bid) {
-            d_seed_ambiguity[prop_idx] = -1;
-        } else if (competing_offer != 0) {
-            d_seed_ambiguity[competing_offer & 0xFFFFFFFFLL] = -1;
-        }
+    if (competing_offer > seed_bid) {
+      d_seed_ambiguity[prop_idx] = -1;
+    } else if (competing_offer != 0) {
+      d_seed_ambiguity[competing_offer & 0xFFFFFFFFLL] = -1;
     }
+  }
 }
 
 }  // namespace traccc::device::details

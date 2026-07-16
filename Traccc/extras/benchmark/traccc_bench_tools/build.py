@@ -10,7 +10,6 @@ import os
 
 from . import git
 
-
 log = logging.getLogger("traccc_benchmark")
 
 

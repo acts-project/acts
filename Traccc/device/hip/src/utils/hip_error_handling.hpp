@@ -11,14 +11,13 @@
 #include <hip/hip_runtime_api.h>
 
 /// Helper macro used for checking @c hipError_t type return values.
-#define TRACCC_HIP_ERROR_CHECK(EXP)                                      \
-    do {                                                                 \
-        hipError_t errorCode = EXP;                                      \
-        if (errorCode != hipSuccess) {                                   \
-            traccc::hip::details::throw_error(errorCode, #EXP, __FILE__, \
-                                              __LINE__);                 \
-        }                                                                \
-    } while (false)
+#define TRACCC_HIP_ERROR_CHECK(EXP)                                           \
+  do {                                                                        \
+    hipError_t errorCode = EXP;                                               \
+    if (errorCode != hipSuccess) {                                            \
+      traccc::hip::details::throw_error(errorCode, #EXP, __FILE__, __LINE__); \
+    }                                                                         \
+  } while (false)
 
 namespace traccc::hip::details {
 

@@ -15,7 +15,6 @@ from .types import GpuSpec
 from .kernels import simplify_name, map_name
 from .utils import harmonic_sum
 
-
 log = logging.getLogger("traccc_bench_tools.parse_profile")
 
 
