@@ -1,0 +1,39 @@
+diff -ur rocThrust-rocm-6.1.1-orig/cmake/Dependencies.cmake rocThrust-rocm-6.1.1-fixed/cmake/Dependencies.cmake
+--- rocThrust-rocm-6.1.1-orig/cmake/Dependencies.cmake	2024-02-07 00:12:37.000000000 +0100
++++ rocThrust-rocm-6.1.1-fixed/cmake/Dependencies.cmake	2024-05-17 09:33:52.423910609 +0200
+@@ -23,7 +23,7 @@
+     GIT_REPOSITORY      https://github.com/ROCmSoftwarePlatform/rocPRIM.git
+     GIT_TAG             develop
+     INSTALL_DIR         ${CMAKE_CURRENT_BINARY_DIR}/deps/rocprim
+-    CMAKE_ARGS          -DBUILD_TEST=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_PREFIX_PATH=/opt/rocm
++    CMAKE_ARGS          -DBUILD_TEST=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_PREFIX_PATH=/opt/rocm -DHIP_COMPILER=${HIP_COMPILER} -DHIP_CXX_COMPILER=${HIP_CXX_COMPILER}
+     LOG_DOWNLOAD        TRUE
+     LOG_CONFIGURE       TRUE
+     LOG_BUILD           TRUE
+diff -ur rocThrust-rocm-6.1.1-orig/CMakeLists.txt rocThrust-rocm-6.1.1-fixed/CMakeLists.txt
+--- rocThrust-rocm-6.1.1-orig/CMakeLists.txt	2024-02-07 00:12:37.000000000 +0100
++++ rocThrust-rocm-6.1.1-fixed/CMakeLists.txt	2024-05-16 16:52:07.600882025 +0200
+@@ -63,10 +63,6 @@
+ # Get dependencies
+ include(cmake/Dependencies.cmake)
+ 
+-# Verify that supported compilers are used
+-if (NOT WIN32)
+-  include(cmake/VerifyCompiler.cmake)
+-endif()
+ # Build options
+ # Disable -Werror
+ option(DISABLE_WERROR "Disable building with Werror" ON)
+diff --git a/cmake/Dependencies.cmake b/cmake/Dependencies.cmake
+index 218f6122..6394bfec 100644
+--- a/cmake/Dependencies.cmake
++++ b/cmake/Dependencies.cmake
+@@ -21,7 +21,7 @@ if(NOT rocprim_FOUND)
+   download_project(
+     PROJ                rocprim
+     GIT_REPOSITORY      https://github.com/ROCmSoftwarePlatform/rocPRIM.git
+-    GIT_TAG             develop
++    GIT_TAG             rocm-6.1.1
+     INSTALL_DIR         ${CMAKE_CURRENT_BINARY_DIR}/deps/rocprim
+     CMAKE_ARGS          -DBUILD_TEST=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_PREFIX_PATH=/opt/rocm
+     LOG_DOWNLOAD        TRUE

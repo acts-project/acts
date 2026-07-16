@@ -9,7 +9,7 @@
 #include "ActsPlugins/Root/RootSpacePointIo.hpp"
 
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/Types.hpp"
 
 #include <TChain.h>
@@ -20,7 +20,7 @@ using namespace Acts;
 namespace ActsPlugins {
 
 void RootSpacePointIo::connectForRead(TChain& tchain,
-                                      const SpacePointContainer2& spacePoints) {
+                                      const SpacePointContainer& spacePoints) {
   using enum SpacePointColumns;
 
   if (spacePoints.hasColumns(X)) {
@@ -49,8 +49,8 @@ void RootSpacePointIo::connectForRead(TChain& tchain,
   }
 }
 
-void RootSpacePointIo::connectForWrite(
-    TTree& ttree, const SpacePointContainer2& spacePoints) {
+void RootSpacePointIo::connectForWrite(TTree& ttree,
+                                       const SpacePointContainer& spacePoints) {
   using enum SpacePointColumns;
 
   if (spacePoints.hasColumns(X)) {
@@ -79,7 +79,7 @@ void RootSpacePointIo::connectForWrite(
   }
 }
 
-void RootSpacePointIo::write(const ConstSpacePointProxy2& spacePoint) {
+void RootSpacePointIo::write(const ConstSpacePointProxy& spacePoint) {
   using enum SpacePointColumns;
 
   if (spacePoint.container().hasColumns(X)) {
@@ -108,18 +108,18 @@ void RootSpacePointIo::write(const ConstSpacePointProxy2& spacePoint) {
   }
 }
 
-void RootSpacePointIo::write(const SpacePointContainer2& spacePoints,
+void RootSpacePointIo::write(const SpacePointContainer& spacePoints,
                              TTree& ttree) {
   connectForWrite(ttree, spacePoints);
 
-  for (ConstSpacePointProxy2 spacePoint : spacePoints) {
+  for (ConstSpacePointProxy spacePoint : spacePoints) {
     write(spacePoint);
     ttree.Fill();
   }
 }
 
-void RootSpacePointIo::read(MutableSpacePointProxy2& spacePoint,
-                            SpacePointIndex2 index) {
+void RootSpacePointIo::read(MutableSpacePointProxy& spacePoint,
+                            SpacePointIndex index) {
   using enum SpacePointColumns;
 
   if (spacePoint.container().hasColumns(SourceLinks)) {
@@ -152,7 +152,7 @@ void RootSpacePointIo::read(MutableSpacePointProxy2& spacePoint,
   }
 }
 
-void RootSpacePointIo::read(TChain& tchain, SpacePointContainer2& spacePoints) {
+void RootSpacePointIo::read(TChain& tchain, SpacePointContainer& spacePoints) {
   connectForRead(tchain, spacePoints);
 
   std::size_t nEntries = tchain.GetEntries();
@@ -160,7 +160,7 @@ void RootSpacePointIo::read(TChain& tchain, SpacePointContainer2& spacePoints) {
     tchain.GetEntry(i);
 
     auto spacePoint = spacePoints.createSpacePoint();
-    read(spacePoint, static_cast<SpacePointIndex2>(i));
+    read(spacePoint, static_cast<SpacePointIndex>(i));
   }
 }
 
