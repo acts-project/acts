@@ -202,7 +202,7 @@ jobs:
           git config --global safe.directory "$GITHUB_WORKSPACE"
           source .env
           source build/this_acts_withdeps.sh
-          CI/physmon/phys_perf_mon.sh all physmon
+          CI/physmon/phys_perf_mon.sh all physmon $(nproc)
 
       - name: Post step summary
         if: always()

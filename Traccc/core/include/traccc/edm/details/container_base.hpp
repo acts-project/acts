@@ -102,7 +102,7 @@ class container_base {
     /// Default copy-constructor
     container_base(const container_base&) = default;
     /// Default move-constructor
-    container_base(container_base&&) = default;
+    container_base(container_base&&) noexcept = default;
 
     /**
      * @brief (Copy) Constructor from a header and item vector
@@ -171,7 +171,7 @@ class container_base {
     /// Default (copy) assignment operator
     container_base& operator=(const container_base&) = default;
     /// Default (move) assignment operator
-    container_base& operator=(container_base&&) = default;
+    container_base& operator=(container_base&&) noexcept = default;
 
     /**
      * @brief Accessor method for the internal header vector.

@@ -38,7 +38,7 @@ class silicon_cell : public BASE {
     /// Use a default copy constructor
     silicon_cell(const silicon_cell& other) = default;
     /// Use a default move constructor
-    silicon_cell(silicon_cell&& other) = default;
+    silicon_cell(silicon_cell&& other) noexcept = default;
 
     /// @}
 
