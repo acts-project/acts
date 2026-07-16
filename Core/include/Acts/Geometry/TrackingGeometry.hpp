@@ -204,6 +204,13 @@ class TrackingGeometry {
   /// @retval pointer to the found volume otherwise.
   const TrackingVolume* findVolume(GeometryIdentifier id) const;
 
+  /// Search for the first volume with the given name.
+  ///
+  /// @param name is the volume name to search for
+  /// @retval nullptr if no volume carries the name
+  /// @retval pointer to the first matching volume otherwise.
+  const TrackingVolume* findVolumeByName(std::string_view name) const;
+
   /// Search for a surface with the given identifier.
   ///
   /// @param id is the geometry identifier of the surface

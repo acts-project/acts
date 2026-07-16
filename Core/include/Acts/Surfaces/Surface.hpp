@@ -24,6 +24,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/CloneablePtr.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/OstreamFormatter.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
@@ -632,3 +633,5 @@ class Surface : public virtual GeometryObject,
 };
 
 }  // namespace Acts
+
+ACTS_OSTREAM_FORMATTER(Acts::Surface::SurfaceType);

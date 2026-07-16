@@ -279,6 +279,17 @@ const TrackingVolume* TrackingGeometry::findVolume(
   return vol->second;
 }
 
+const TrackingVolume* TrackingGeometry::findVolumeByName(
+    std::string_view name) const {
+  const TrackingVolume* found = nullptr;
+  apply([&](const TrackingVolume& volume) {
+    if (found == nullptr && volume.volumeName() == name) {
+      found = &volume;
+    }
+  });
+  return found;
+}
+
 const Surface* TrackingGeometry::findSurface(GeometryIdentifier id) const {
   auto srf = m_surfacesById.find(id);
   if (srf == m_surfacesById.end()) {

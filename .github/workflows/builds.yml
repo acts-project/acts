@@ -33,7 +33,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           lfs: true
           persist-credentials: false
@@ -47,7 +47,7 @@ jobs:
 
       - name: Restore ccache
         id: ccache-restore
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
@@ -74,7 +74,7 @@ jobs:
         run: ccache -s
 
       - name: Save ccache
-        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: always()
         with:
           path: ${{ github.workspace }}/ccache
@@ -135,7 +135,7 @@ jobs:
       ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
 
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           lfs: true
           persist-credentials: false
@@ -175,7 +175,7 @@ jobs:
     needs: [linux_ubuntu]
 
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           lfs: true
           persist-credentials: false
@@ -202,7 +202,7 @@ jobs:
           git config --global safe.directory "$GITHUB_WORKSPACE"
           source .env
           source build/this_acts_withdeps.sh
-          CI/physmon/phys_perf_mon.sh all physmon
+          CI/physmon/phys_perf_mon.sh all physmon $(nproc)
 
       - name: Post step summary
         if: always()
@@ -262,7 +262,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           lfs: true
           persist-credentials: false
@@ -276,7 +276,7 @@ jobs:
           env_file: .env
 
       - name: Restore ccache
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         id: ccache-restore
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -301,7 +301,7 @@ jobs:
         run: ccache -s
 
       - name: Save ccache
-        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: always()
         with:
           path: ${{ github.workspace }}/ccache
@@ -346,7 +346,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           lfs: true
           persist-credentials: false
@@ -364,7 +364,7 @@ jobs:
           env_file: .env
 
       - name: Restore ccache
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         id: ccache-restore
         env:
           DYLD_LIBRARY_PATH: ""
@@ -389,7 +389,7 @@ jobs:
         run: ccache -s
 
       - name: Save ccache
-        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: always()
         with:
           path: ${{ github.workspace }}/ccache
@@ -433,12 +433,12 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           path: acts
           persist-credentials: false
 
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: eic/EICrecon
           path: EICrecon
@@ -449,7 +449,7 @@ jobs:
 
       - name: Restore ccache
         id: ccache-restore
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
@@ -543,7 +543,7 @@ jobs:
           retention-days: 5
 
       - name: Save ccache
-        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: always()
         with:
           path: ${{ github.workspace }}/ccache
@@ -554,11 +554,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           path: acts
           persist-credentials: false
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: key4hep/k4ActsTracking
           path: k4ActsTracking
@@ -635,53 +635,20 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    needs: [linux_ubuntu]
-    container: ghcr.io/acts-project/ubuntu2404:87
 
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
 
-      - name: Install dependencies
-        uses: ./.github/actions/dependencies
+      - name: Build wheel
+        uses: ./.github/actions/cibuildwheel_wrapper
         with:
-          compiler: g++
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          env_file: .env
-
-      - name: Restore ccache
-        id: ccache-restore
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
-
-      - name: Reset ccache
-        run: ccache -z
-
-      - name: Build wheel with pip
-        run: CI/dependencies/run.sh .env pip wheel . -v
-
-      - name: ccache stats
-        run: ccache -s
-
-      - name: Install wheel
-        run: CI/dependencies/run.sh .env pip install $(ls ./*.whl)
-
-      - name: Save ccache
-        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        if: always()
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+          package-dir: .
+          cibw-build: "cp313-*"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: linux-ubuntu-wheel
-          path: "*.whl"
-
-      - name: Test
-        run: CI/dependencies/run.sh .env python3 Examples/Scripts/Python/track_finding_python_only.py
+          path: ./wheelhouse/*.whl

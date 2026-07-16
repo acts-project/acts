@@ -57,7 +57,7 @@ ProcessCode CsvSpacePointReader::read(const AlgorithmContext& ctx) {
       SpacePointColumns::SourceLinks | SpacePointColumns::X |
       SpacePointColumns::Y | SpacePointColumns::Z |
       SpacePointColumns::VarianceR | SpacePointColumns::VarianceZ |
-      SpacePointColumns::Strip);
+      SpacePointColumns::StripCalibrationDetails);
 
   const auto& filename = m_cfg.inputCollection.empty()
                              ? m_cfg.inputStem
@@ -78,31 +78,35 @@ ProcessCode CsvSpacePointReader::read(const AlgorithmContext& ctx) {
     sp.varianceZ() = data.sp_covz;
 
     if (m_cfg.extendCollection) {
-      const Acts::Vector3 topStripVector =
-          Acts::Vector3(data.sp_topStripDirection_0,
-                        data.sp_topStripDirection_1,
-                        data.sp_topStripDirection_2) *
-          2 * data.sp_topHalfStripLength;
-      const Acts::Vector3 bottomStripVector =
+      const Acts::Vector3 innerStripHalfVector =
           Acts::Vector3(data.sp_bottomStripDirection_0,
                         data.sp_bottomStripDirection_1,
                         data.sp_bottomStripDirection_2) *
-          2 * data.sp_bottomHalfStripLength;
-      const Acts::Vector3 stripCenterDistance(data.sp_stripCenterDistance_0,
-                                              data.sp_stripCenterDistance_1,
-                                              data.sp_stripCenterDistance_2);
-      const Acts::Vector3 topStripCenter(data.sp_topStripCenterPosition_0,
-                                         data.sp_topStripCenterPosition_1,
-                                         data.sp_topStripCenterPosition_2);
+          data.sp_bottomHalfStripLength;
+      const Acts::Vector3 outerStripCenter(data.sp_topStripCenterPosition_0,
+                                           data.sp_topStripCenterPosition_1,
+                                           data.sp_topStripCenterPosition_2);
+      const Acts::Vector3 outerStripHalfVector =
+          Acts::Vector3(data.sp_topStripDirection_0,
+                        data.sp_topStripDirection_1,
+                        data.sp_topStripDirection_2) *
+          data.sp_topHalfStripLength;
+      const Acts::Vector3 stripSeparation(data.sp_stripCenterDistance_0,
+                                          data.sp_stripCenterDistance_1,
+                                          data.sp_stripCenterDistance_2);
 
-      Eigen::Map<Eigen::Vector3f>(sp.topStripVector().data()) =
-          topStripVector.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(sp.bottomStripVector().data()) =
-          bottomStripVector.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(sp.stripCenterDistance().data()) =
-          stripCenterDistance.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(sp.topStripCenter().data()) =
-          topStripCenter.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(
+          sp.outerStripCalibrationDetails().outerCenter.data()) =
+          outerStripCenter.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(
+          sp.outerStripCalibrationDetails().innerToOuterSeparation.data()) =
+          stripSeparation.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(
+          sp.outerStripCalibrationDetails().outerHalfVector.data()) =
+          outerStripHalfVector.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(
+          sp.outerStripCalibrationDetails().innerHalfVector.data()) =
+          innerStripHalfVector.cast<float>();
     }
   }
 
