@@ -88,10 +88,10 @@ struct is_ordered_on {
  * @return true If the container is ordered on `R`.
  * @return false Otherwise.
  */
-template <typename CONTAINER, std::semiregular R, typename VIEW>
+template <typename CONTAINER, typename R, typename VIEW>
     requires std::regular_invocable<R,
                                     decltype(std::declval<CONTAINER>().at(0)),
-                                    decltype(std::declval<CONTAINER>().at(0))>
+                                    decltype(std::declval<CONTAINER>().at(0))> && std::semiregular<R>
 bool is_ordered_on(R&& relation, vecmem::memory_resource& mr,
                    const vecmem::copy& copy, ::sycl::queue& queue,
                    const VIEW& view) {
