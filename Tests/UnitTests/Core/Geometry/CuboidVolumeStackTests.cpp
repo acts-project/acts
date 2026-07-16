@@ -1104,17 +1104,16 @@ BOOST_DATA_TEST_CASE(GapCreationTolerance,
     BOOST_TEST_CONTEXT("sign=" << sign) {
       Volume vol{Transform3::Identity(), makeBounds(100)};
       std::vector<Volume*> volumes = {&vol};
-      CuboidVolumeStack stack(gctx, volumes, dir,
-                              VolumeAttachmentStrategy::Gap,
+      CuboidVolumeStack stack(gctx, volumes, dir, VolumeAttachmentStrategy::Gap,
                               VolumeResizeStrategy::Gap, *logger);
 
       BOOST_CHECK(stack.gaps().empty());
 
       // Grow the half length by less than the tolerance, on one side only
-      stack.update(gctx, makeBounds(100 + eps / 2.0),
-                   Transform3{Translation3{Vector3::Unit(dirIdx) * sign * eps /
-                                           2.0}},
-                   *logger);
+      stack.update(
+          gctx, makeBounds(100 + eps / 2.0),
+          Transform3{Translation3{Vector3::Unit(dirIdx) * sign * eps / 2.0}},
+          *logger);
 
       // No gap volume should have been created for a sub-tolerance change
       BOOST_CHECK(stack.gaps().empty());

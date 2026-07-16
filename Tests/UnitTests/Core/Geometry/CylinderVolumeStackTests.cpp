@@ -1041,10 +1041,10 @@ BOOST_AUTO_TEST_CASE(ResizeSubToleranceBoundaryNoDegenerateGap) {
     const double newMaxZ = 500.0;
     const double newHlZ = (newMaxZ - newMinZ) / 2.0;
     const double newMidZ = (newMaxZ + newMinZ) / 2.0;
-    stack.update(gctx, std::make_shared<CylinderVolumeBounds>(70, 100, newHlZ),
-                 Transform3::Identity() *
-                     Translation3{Vector3::UnitZ() * newMidZ},
-                 *logger);
+    stack.update(
+        gctx, std::make_shared<CylinderVolumeBounds>(70, 100, newHlZ),
+        Transform3::Identity() * Translation3{Vector3::UnitZ() * newMidZ},
+        *logger);
 
     // Exactly one gap: the genuine one on the +z side. The sub-tolerance -z
     // boundary must not have produced a (degenerate) gap.
@@ -1067,10 +1067,10 @@ BOOST_AUTO_TEST_CASE(ResizeSubToleranceBoundaryNoDegenerateGap) {
     const double newMaxZ = 100.0 + subTol;
     const double newHlZ = (newMaxZ - newMinZ) / 2.0;
     const double newMidZ = (newMaxZ + newMinZ) / 2.0;
-    stack.update(gctx, std::make_shared<CylinderVolumeBounds>(70, 100, newHlZ),
-                 Transform3::Identity() *
-                     Translation3{Vector3::UnitZ() * newMidZ},
-                 *logger);
+    stack.update(
+        gctx, std::make_shared<CylinderVolumeBounds>(70, 100, newHlZ),
+        Transform3::Identity() * Translation3{Vector3::UnitZ() * newMidZ},
+        *logger);
 
     BOOST_CHECK_EQUAL(stack.gaps().size(), 1);
     checkNoDegenerateGap(stack);

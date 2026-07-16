@@ -180,9 +180,9 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
               dynamic_cast<const CylinderBounds*>(&surface.bounds());
           cylBounds != nullptr) {
         const double r = cylBounds->get(CylinderBounds::eR);
-        diag << "      CylinderBounds: r=" << r << " |r-rMin|="
-             << std::abs(r - rMin) << " |r-rMax|=" << std::abs(r - rMax)
-             << "\n";
+        diag << "      CylinderBounds: r=" << r
+             << " |r-rMin|=" << std::abs(r - rMin)
+             << " |r-rMax|=" << std::abs(r - rMax) << "\n";
       } else if (const auto* radBounds =
                      dynamic_cast<const RadialBounds*>(&surface.bounds());
                  radBounds != nullptr) {
@@ -198,7 +198,8 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
              << " |localZ+halfLengthZ|=" << std::abs(localZ + m_halfLengthZ)
              << "\n";
       } else {
-        diag << "      (bounds type " << static_cast<int>(surface.bounds().type())
+        diag << "      (bounds type "
+             << static_cast<int>(surface.bounds().type())
              << " is not handled by the recovery logic)\n";
       }
     }
