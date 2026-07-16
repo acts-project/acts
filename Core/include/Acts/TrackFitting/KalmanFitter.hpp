@@ -456,8 +456,11 @@ class KalmanFitter {
         ACTS_VERBOSE("Measurement surface " << surface.geometryId()
                                             << " detected.");
         // Transport the covariance to the surface
-        stepper.transportCovarianceToBound(state.stepping, surface,
-                                           freeToBoundCorrection);
+        Result<void> transportRes = stepper.transportCovarianceToBound(
+            state.stepping, surface, freeToBoundCorrection);
+        if (!transportRes.ok()) {
+          return transportRes.error();
+        }
 
         // Update state and stepper with pre material effects
         const Result<detail::PointwiseMaterialEffects>

@@ -132,10 +132,10 @@ void SympyStepper::transportCovarianceToCurvilinear(State& state) const {
       state.pars.template segment<3>(eFreeDir0));
 }
 
-void SympyStepper::transportCovarianceToBound(
+Result<void> SympyStepper::transportCovarianceToBound(
     State& state, const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
-  detail::sympy::transportCovarianceToBound(
+  return detail::sympy::transportCovarianceToBound(
       state.options.geoContext, surface, state.cov, state.jacobian,
       state.jacTransport, state.derivative, state.jacToGlobal, std::nullopt,
       state.pars, freeToBoundCorrection);

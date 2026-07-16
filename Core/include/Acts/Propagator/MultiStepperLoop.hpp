@@ -751,14 +751,18 @@ class MultiStepperLoop final {
   /// @param [in] freeToBoundCorrection Flag steering non-linear correction during global to local correction
   /// to
   /// @note no check is done if the position is actually on the surface
-  void transportCovarianceToBound(
+  Result<void> transportCovarianceToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const {
     for (auto& component : state.components) {
-      m_singleStepper.transportCovarianceToBound(component.state, surface,
-                                                 freeToBoundCorrection);
+      Result<void> result = m_singleStepper.transportCovarianceToBound(
+          component.state, surface, freeToBoundCorrection);
+      if (!result.ok()) {
+        return result.error();
+      }
     }
+    return Result<void>::success();
   }
 
   /// Perform a Runge-Kutta track parameter propagation step

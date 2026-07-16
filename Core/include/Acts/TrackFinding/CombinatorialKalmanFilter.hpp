@@ -481,7 +481,11 @@ class CombinatorialKalmanFilter {
       if (isMaterialOnly) {
         stepper.transportCovarianceToCurvilinear(state.stepping);
       } else {
-        stepper.transportCovarianceToBound(state.stepping, surface);
+        Result<void> transportRes =
+            stepper.transportCovarianceToBound(state.stepping, surface);
+        if (!transportRes.ok()) {
+          return transportRes.error();
+        }
       }
 
       // Update state and stepper with pre material effects
