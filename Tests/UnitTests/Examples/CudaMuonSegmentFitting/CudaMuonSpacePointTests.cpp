@@ -137,6 +137,66 @@ BOOST_AUTO_TEST_CASE(CudaMuonSpacePointDeviceTransfer) {
   BOOST_CHECK_EQUAL(position.z(), 3.0);
 }
 
+BOOST_AUTO_TEST_CASE(CudaMuonSpacePointConstructFromMuonSpacePointContainer) {
+  ActsExamples::MuonSpacePoint::MuonId muonId{};
+  muonId.setChamber(ActsExamples::MuonSpacePoint::MuonId::StationName::BIS,
+                    ActsExamples::MuonSpacePoint::MuonId::DetSide::A, 1,
+                    ActsExamples::MuonSpacePoint::MuonId::TechField::Mdt);
+  muonId.setLayAndCh(2, 17);
+  muonId.setCoordFlags(true, false, true);
+
+  ActsExamples::MuonSpacePoint spacePoint{};
+  spacePoint.setGeometryId(GeometryIdentifier{42});
+  spacePoint.setId(muonId);
+  spacePoint.defineCoordinates(Vector3{1.0, 2.0, 3.0},
+                               Vector3{1.0, 0.0, 0.0},
+                               Vector3{0.0, 1.0, 0.0});
+  spacePoint.setRadius(4.0);
+  spacePoint.setTime(5.0);
+  spacePoint.setCovariance(6.0, 7.0, 8.0);
+
+  ActsExamples::MuonSpacePointContainer input{};
+  input.emplace_back();
+  input.back().push_back(std::move(spacePoint));
+
+  ActsExamples::CudaMuonSpacePointContainer container{input};
+
+  BOOST_CHECK_EQUAL(container.size(), 1u);
+  BOOST_CHECK_EQUAL(container.bucketCount(), 1u);
+  BOOST_CHECK_EQUAL(container.bucketStart(0), 0u);
+  BOOST_CHECK_EQUAL(container.bucketEnd(0), 1u);
+  BOOST_CHECK(!container.isOnDevice());
+
+  auto converted = container[0];
+
+  BOOST_CHECK_EQUAL(converted->geometryId().value(),
+                    GeometryIdentifier{42}.value());
+  BOOST_CHECK_EQUAL(converted->id().toInt(), muonId.toInt());
+
+  BOOST_CHECK_EQUAL(converted->localPosition().x(), 1.0);
+  BOOST_CHECK_EQUAL(converted->localPosition().y(), 2.0);
+  BOOST_CHECK_EQUAL(converted->localPosition().z(), 3.0);
+
+  BOOST_CHECK_EQUAL(converted->sensorDirection().x(), 1.0);
+  BOOST_CHECK_EQUAL(converted->sensorDirection().y(), 0.0);
+  BOOST_CHECK_EQUAL(converted->sensorDirection().z(), 0.0);
+
+  BOOST_CHECK_EQUAL(converted->toNextSensor().x(), 0.0);
+  BOOST_CHECK_EQUAL(converted->toNextSensor().y(), 1.0);
+  BOOST_CHECK_EQUAL(converted->toNextSensor().z(), 0.0);
+
+  BOOST_CHECK_EQUAL(converted->planeNormal().x(), 0.0);
+  BOOST_CHECK_EQUAL(converted->planeNormal().y(), 0.0);
+  BOOST_CHECK_EQUAL(converted->planeNormal().z(), 1.0);
+
+  BOOST_CHECK_EQUAL(converted->driftRadius(), 4.0);
+  BOOST_CHECK_EQUAL(converted->time(), 5.0);
+
+  BOOST_CHECK_EQUAL(converted->covariance()[0], 6.0);
+  BOOST_CHECK_EQUAL(converted->covariance()[1], 7.0);
+  BOOST_CHECK_EQUAL(converted->covariance()[2], 8.0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests
