@@ -156,11 +156,9 @@ void sympy::transportCovarianceToBound(
   // ->The transportJacobian is reinitialized to Identity
   // ->The derivatives is reinitialized to Zero
   // ->The boundToFreeJacobian is initialized to that at the current surface
-  // TODO transportCovarianceToBound() has no error return, so an error here
-  // is silently ignored (pre-existing behavior, not related to [[nodiscard]])
-  (void)reinitializeJacobians(geoContext, surface, freeTransportJacobian,
-                              freeToPathDerivatives, boundToFreeJacobian,
-                              freeParameters);
+  reinitializeJacobians(geoContext, surface, freeTransportJacobian,
+                        freeToPathDerivatives, boundToFreeJacobian,
+                        freeParameters);
 }
 
 void sympy::transportCovarianceToCurvilinear(
