@@ -24,7 +24,7 @@ TrackFitterPerformanceCollector::TrackFitterPerformanceCollector(
       m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig,
                              m_logger->level()) {}
 
-ProcessCode TrackFitterPerformanceCollector::fill(
+void TrackFitterPerformanceCollector::fill(
     const Acts::GeometryContext& geoContext, const ConstTrackContainer& tracks,
     const SimParticleContainer& particles,
     const TrackParticleMatching& trackParticleMatching) {
@@ -105,8 +105,6 @@ ProcessCode TrackFitterPerformanceCollector::fill(
     m_effPlotTool.fill(geoContext, particle.initialState(), minDeltaR,
                        isReconstructed);
   }
-
-  return ProcessCode::SUCCESS;
 }
 
 void TrackFitterPerformanceCollector::logSummary() const {

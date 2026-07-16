@@ -297,8 +297,8 @@ class PythonTrackFitterPerformanceWriter final
     const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
 
     std::lock_guard<std::mutex> lock(m_writeMutex);
-    return m_collector.fill(ctx.geoContext, tracks, particles,
-                            trackParticleMatching);
+    m_collector.fill(ctx.geoContext, tracks, particles, trackParticleMatching);
+    return ProcessCode::SUCCESS;
   }
 
   Config m_cfg;
