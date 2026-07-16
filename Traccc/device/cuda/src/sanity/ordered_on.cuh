@@ -28,10 +28,10 @@
 
 namespace traccc::cuda {
 namespace kernels {
-template <typename CONTAINER, std::semiregular R, typename VIEW>
+template <typename CONTAINER, typename R, typename VIEW>
     requires std::regular_invocable<R,
                                     decltype(std::declval<CONTAINER>().at(0)),
-                                    decltype(std::declval<CONTAINER>().at(0))>
+                                    decltype(std::declval<CONTAINER>().at(0))> && std::semiregular<R>
 __global__ void is_ordered_on_kernel(R relation, VIEW _in, bool* out) {
 
     const device::global_index_t tid = details::global_index1();
@@ -70,10 +70,10 @@ __global__ void is_ordered_on_kernel(R relation, VIEW _in, bool* out) {
  * @return true If the container is ordered on `R`.
  * @return false Otherwise.
  */
-template <typename CONTAINER, std::semiregular R, typename VIEW>
+template <typename CONTAINER, typename R, typename VIEW>
     requires std::regular_invocable<R,
                                     decltype(std::declval<CONTAINER>().at(0)),
-                                    decltype(std::declval<CONTAINER>().at(0))>
+                                    decltype(std::declval<CONTAINER>().at(0))> && std::semiregular<R>
 bool is_ordered_on(R&& relation, vecmem::memory_resource& mr,
                    const vecmem::copy& copy, const stream_wrapper& stream,
                    const VIEW& view) {
