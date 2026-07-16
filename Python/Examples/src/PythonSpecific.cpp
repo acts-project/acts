@@ -158,9 +158,9 @@ class PythonTrackFinderPerformanceWriter final
     const auto& particleMeasurementsMap = m_inputParticleMeasurementsMap(ctx);
 
     std::lock_guard<std::mutex> lock(m_writeMutex);
-    return m_collector.fill(ctx.geoContext, tracks, particles,
-                            trackParticleMatching, particleTrackMatching,
-                            particleMeasurementsMap);
+    m_collector.fill(ctx.geoContext, tracks, particles, trackParticleMatching,
+                     particleTrackMatching, particleMeasurementsMap);
+    return ProcessCode::SUCCESS;
   }
 
   Config m_cfg;
