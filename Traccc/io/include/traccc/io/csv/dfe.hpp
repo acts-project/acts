@@ -105,10 +105,10 @@ class DsvWriter {
     public:
     DsvWriter() = delete;
     DsvWriter(const DsvWriter&) = delete;
-    DsvWriter(DsvWriter&&) = default;
+    DsvWriter(DsvWriter&&) noexcept = default;
     ~DsvWriter() = default;
     DsvWriter& operator=(const DsvWriter&) = delete;
-    DsvWriter& operator=(DsvWriter&&) = default;
+    DsvWriter& operator=(DsvWriter&&) noexcept = default;
 
     DsvWriter(const std::vector<std::string>& columns, const std::string& path,
               int precision = std::numeric_limits<double>::max_digits10);
@@ -133,10 +133,10 @@ class DsvReader {
     public:
     DsvReader() = delete;
     DsvReader(const DsvReader&) = delete;
-    DsvReader(DsvReader&&) = default;
+    DsvReader(DsvReader&&) noexcept = default;
     ~DsvReader() = default;
     DsvReader& operator=(const DsvReader&) = delete;
-    DsvReader& operator=(DsvReader&&) = default;
+    DsvReader& operator=(DsvReader&&) noexcept = default;
 
     explicit DsvReader(const std::string& path);
 
@@ -155,10 +155,10 @@ class NamedTupleDsvWriter {
     public:
     NamedTupleDsvWriter() = delete;
     NamedTupleDsvWriter(const NamedTupleDsvWriter&) = delete;
-    NamedTupleDsvWriter(NamedTupleDsvWriter&&) = default;
+    NamedTupleDsvWriter(NamedTupleDsvWriter&&) noexcept = default;
     ~NamedTupleDsvWriter() = default;
     NamedTupleDsvWriter& operator=(const NamedTupleDsvWriter&) = delete;
-    NamedTupleDsvWriter& operator=(NamedTupleDsvWriter&&) = default;
+    NamedTupleDsvWriter& operator=(NamedTupleDsvWriter&&) noexcept = default;
 
     NamedTupleDsvWriter(
         const std::string& path,
@@ -197,10 +197,10 @@ class NamedTupleDsvReader {
     public:
     NamedTupleDsvReader() = delete;
     NamedTupleDsvReader(const NamedTupleDsvReader&) = delete;
-    NamedTupleDsvReader(NamedTupleDsvReader&&) = default;
+    NamedTupleDsvReader(NamedTupleDsvReader&&) noexcept = default;
     ~NamedTupleDsvReader() = default;
     NamedTupleDsvReader& operator=(const NamedTupleDsvReader&) = delete;
-    NamedTupleDsvReader& operator=(NamedTupleDsvReader&&) = default;
+    NamedTupleDsvReader& operator=(NamedTupleDsvReader&&) noexcept = default;
 
     NamedTupleDsvReader(const std::string& path,
                         const std::vector<std::string>& optional_columns = {},
