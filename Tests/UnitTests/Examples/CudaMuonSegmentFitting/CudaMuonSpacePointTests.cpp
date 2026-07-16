@@ -11,8 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "ActsExamples/EventData/MuonSpacePoint.hpp"
 #include "ActsExamples/EventData/CudaMuonSpacePoint.hpp"
+#include "ActsExamples/EventData/MuonSpacePoint.hpp"
 
 #include <cuda_runtime.h>
 
@@ -148,8 +148,7 @@ BOOST_AUTO_TEST_CASE(CudaMuonSpacePointConstructFromMuonSpacePointContainer) {
   ActsExamples::MuonSpacePoint spacePoint{};
   spacePoint.setGeometryId(GeometryIdentifier{42});
   spacePoint.setId(muonId);
-  spacePoint.defineCoordinates(Vector3{1.0, 2.0, 3.0},
-                               Vector3{1.0, 0.0, 0.0},
+  spacePoint.defineCoordinates(Vector3{1.0, 2.0, 3.0}, Vector3{1.0, 0.0, 0.0},
                                Vector3{0.0, 1.0, 0.0});
   spacePoint.setRadius(4.0);
   spacePoint.setTime(5.0);

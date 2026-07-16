@@ -14,7 +14,7 @@
 
 namespace ActsExamples {
 
-inline void cudaAssert(cudaError_t code, const char *file, int line) {
+inline void cudaAssert(cudaError_t code, const char* file, int line) {
   if (code != cudaSuccess) {
     std::stringstream ss;
     ss << "CUDA error: " << cudaGetErrorString(code) << ", " << file << ":"
@@ -25,8 +25,8 @@ inline void cudaAssert(cudaError_t code, const char *file, int line) {
 
 }  // namespace ActsExamples
 
-#define ACTS_CUDA_CHECK(ans)                                    \
-  do {                                                          \
+#define ACTS_CUDA_CHECK(ans)                             \
+  do {                                                   \
     ActsExamples::cudaAssert((ans), __FILE__, __LINE__); \
   } while (0)
 
@@ -57,7 +57,8 @@ void copyColumnToDevice(T* deviceColumn, const std::vector<T>& hostColumn) {
   }
 
   ACTS_CUDA_CHECK(cudaMemcpy(deviceColumn, hostColumn.data(),
-                       hostColumn.size() * sizeof(T), cudaMemcpyHostToDevice));
+                             hostColumn.size() * sizeof(T),
+                             cudaMemcpyHostToDevice));
 }
 
 template <typename T>
@@ -67,7 +68,8 @@ void copyColumnToHost(std::vector<T>& hostColumn, const T* deviceColumn) {
   }
 
   ACTS_CUDA_CHECK(cudaMemcpy(hostColumn.data(), deviceColumn,
-                       hostColumn.size() * sizeof(T), cudaMemcpyDeviceToHost));
+                             hostColumn.size() * sizeof(T),
+                             cudaMemcpyDeviceToHost));
 }
 
 }  // namespace ActsExamples
