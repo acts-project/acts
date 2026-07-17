@@ -202,7 +202,14 @@ struct GsfActor {
       // No hole before first measurement
       if (result.processedStates > 0 && surface.isSensitive()) {
         TemporaryStates tmpStates;
-        noMeasurementUpdate(state, stepper, surface, result, tmpStates, true);
+        Result<void> res = noMeasurementUpdate(state, stepper, surface, result,
+                                               tmpStates, true);
+        if (!res.ok()) {
+          if (m_cfg.abortOnError) {
+            std::abort();
+          }
+          return res.error();
+        }
       }
       return Result<void>::success();
     }

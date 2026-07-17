@@ -638,7 +638,10 @@ class CombinatorialKalmanFilter {
           ACTS_VERBOSE("All branches on surface " << surface.geometryId()
                                                   << " have been stopped");
 
-          reset(state, stepper, navigator, result);
+          Result<void> resetRes = reset(state, stepper, navigator, result);
+          if (!resetRes.ok()) {
+            return resetRes.error();
+          }
 
           return Result<void>::success();
         }
@@ -695,7 +698,10 @@ class CombinatorialKalmanFilter {
           ACTS_VERBOSE("Branch on surface " << surface.geometryId()
                                             << " has been stopped");
 
-          reset(state, stepper, navigator, result);
+          Result<void> resetRes = reset(state, stepper, navigator, result);
+          if (!resetRes.ok()) {
+            return resetRes.error();
+          }
 
           return Result<void>::success();
         }
