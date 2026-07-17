@@ -448,7 +448,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test a case where no step size adjustment is required
   esState.options.stepTolerance = 2. * 4.4258e+09;
   double h0 = esState.stepSize.value();
-  es.step(esState, navDir, nullptr);
+  BOOST_CHECK(es.step(esState, navDir, nullptr).ok());
   CHECK_CLOSE_ABS(h0, esState.stepSize.value(), eps);
 
   // Produce some errors
