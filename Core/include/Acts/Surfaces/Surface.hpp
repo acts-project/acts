@@ -70,14 +70,14 @@ class Surface : public virtual GeometryObject,
     Plane = 4,
     Straw = 5,
     Curvilinear = 6,
-    Other = 7,
-    Point = 8
+    Point = 7,
+    Other = 8
   };
 
   /// Helper strings for screen output
-  static constexpr std::array<std::string_view, Surface::SurfaceType::Point + 1>
+  static constexpr std::array<std::string_view, Surface::SurfaceType::Other + 1>
       s_surfaceTypeNames = {"Cone",  "Cylinder",    "Disc",  "Perigee", "Plane",
-                            "Straw", "Curvilinear", "Other", "Point"};
+                            "Straw", "Curvilinear", "Point", "Other"};
 
   friend std::ostream& operator<<(std::ostream& os, SurfaceType type);
 

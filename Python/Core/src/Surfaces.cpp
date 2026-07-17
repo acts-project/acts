@@ -93,8 +93,8 @@ void addSurfaces(py::module_& m) {
         .value("ConvexPolygon", SurfaceBounds::BoundsType::eConvexPolygon)
         .value("Annulus", SurfaceBounds::BoundsType::eAnnulus)
         .value("Boundless", SurfaceBounds::BoundsType::eBoundless)
-        .value("Other", SurfaceBounds::BoundsType::eOther)
-        .value("Point", SurfaceBounds::BoundsType::ePoint);
+        .value("Point", SurfaceBounds::BoundsType::ePoint)
+        .value("Other", SurfaceBounds::BoundsType::eOther);
   }
 
   {
@@ -420,8 +420,8 @@ void addSurfaces(py::module_& m) {
         .value("Plane", Surface::SurfaceType::Plane)
         .value("Straw", Surface::SurfaceType::Straw)
         .value("Curvilinear", Surface::SurfaceType::Curvilinear)
-        .value("Other", Surface::SurfaceType::Other)
-        .value("Point", Surface::SurfaceType::Point);
+        .value("Point", Surface::SurfaceType::Point)
+        .value("Other", Surface::SurfaceType::Other);
   }
 
   // Add the surface hierarchy map
