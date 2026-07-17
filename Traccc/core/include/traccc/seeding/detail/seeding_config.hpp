@@ -30,8 +30,8 @@ struct seedfinder_config {
   // limiting location of collision region in z
   float collisionRegionMin = -250 * unit<float>::mm;
   float collisionRegionMax = +250 * unit<float>::mm;
-  float phiMin = static_cast<float>(-M_PI);
-  float phiMax = static_cast<float>(M_PI);
+  float phiMin = -std::numbers::pi_v<float>;
+  float phiMax = std::numbers::pi_v<float>;
 
   // Seed Cuts
   // lower cutoff for seeds in MeV
@@ -97,7 +97,7 @@ struct seedfinder_config {
   float pT2perRadius = 0;
 
   // Multiplicator for the number of phi-bins. The minimum number of phi-bins
-  // depends on min_pt, magnetic field: 2*M_PI/(minPT particle
+  // depends on min_pt, magnetic field: 2*pi/(minPT particle
   // phi-deflection). phiBinDeflectionCoverage is a multiplier for this
   // number. If numPhiNeighbors (in the configuration of the BinFinders) is
   // configured to return 1 neighbor on either side of the current phi-bin
@@ -173,11 +173,11 @@ struct spacepoint_grid_config {
   // impact parameter in mm
   float impactMax;
   // minimum phi value for phiAxis construction
-  float phiMin = static_cast<float>(-M_PI);
+  float phiMin = -std::numbers::pi_v<float>;
   // maximum phi value for phiAxis construction
-  float phiMax = static_cast<float>(M_PI);
+  float phiMax = std::numbers::pi_v<float>;
   // Multiplicator for the number of phi-bins. The minimum number of phi-bins
-  // depends on min_pt, magnetic field: 2*M_PI/(minPT particle
+  // depends on min_pt, magnetic field: 2*pi/(minPT particle
   // phi-deflection). phiBinDeflectionCoverage is a multiplier for this
   // number. If numPhiNeighbors (in the configuration of the BinFinders) is
   // configured to return 1 neighbor on either side of the current phi-bin
