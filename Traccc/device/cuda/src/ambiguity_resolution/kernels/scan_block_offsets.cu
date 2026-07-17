@@ -26,7 +26,7 @@ __global__ void scan_block_offsets(device::scan_block_offsets_payload payload) {
   vecmem::device_vector<int> scanned_block_offsets(
       payload.scanned_block_offsets_view);
 
-  // The number of blocks in the previous block_inclusive_scan = the nubmer of
+  // The number of blocks in the previous block_inclusive_scan = the number of
   // threads of this kernel
   int n_blocks_prev = blockDim.x;
   auto threadIndex = threadIdx.x;
@@ -38,7 +38,7 @@ __global__ void scan_block_offsets(device::scan_block_offsets_payload payload) {
   }
   __syncthreads();
 
-  // 2. Inclusive scan to caculated the scanned block offset which is the
+  // 2. Inclusive scan to calculated the scanned block offset which is the
   // prefix sum of block offsets
   for (int offset = 1; offset < n_blocks_prev; offset *= 2) {
     int temp = 0;

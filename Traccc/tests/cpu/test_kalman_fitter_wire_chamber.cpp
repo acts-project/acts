@@ -54,7 +54,7 @@ TEST_P(KalmanFittingWireChamberTests, Run) {
    *****************************/
   // Memory resources used by the application.
   vecmem::host_memory_resource host_mr;
-  // Copy obejct
+  // Copy object
   vecmem::copy copy;
 
   // Read back detector file

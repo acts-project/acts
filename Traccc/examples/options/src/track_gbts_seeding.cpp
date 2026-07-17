@@ -32,7 +32,7 @@ track_gbts_seeding::track_gbts_seeding() : interface("GBTS Options") {
   // set CLI tunings for graph building
   m_desc.add_options()(
       "min_pt", po::value(&min_pt)->default_value(min_pt),
-      "min_pt to scale other cuts by with refrence to 900 MeV [MeV]");
+      "min_pt to scale other cuts by with reference to 900 MeV [MeV]");
   m_desc.add_options()("max_edges_factor",
                        po::value(&gbts_config.max_edges_factor)
                            ->default_value(gbts_config.max_edges_factor),

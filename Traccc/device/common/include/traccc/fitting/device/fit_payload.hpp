@@ -49,7 +49,7 @@ struct fit_tpayload {
   bfield_t field;
 
   /**
-   * @brief View object to the output geometry identifer sequence
+   * @brief View object to the output geometry identifier sequence
    */
   vecmem::data::jagged_vector_view<surface_t> surfaces;
 };
