@@ -62,7 +62,7 @@ repos:
       language: system
       entry: CI/check_pragma_once.sh
       files: \.(hpp|ipp)$
-      exclude: "Detray/core/include/detray/utils/quiet_log_start.hpp|Detray/core/include/detray/utils/quiet_log_end.hpp|^Traccc/"
+      exclude: "Detray/core/include/detray/utils/quiet_log_start.hpp|Detray/core/include/detray/utils/quiet_log_end.hpp"
 
     - id: type_t
       name: type_t
