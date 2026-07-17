@@ -55,7 +55,7 @@ repos:
       language: system
       entry: CI/check_include_guards.py --fail-global
       files: \.hpp$
-      exclude: ^Detray/core/include/detray/utils/logging.hpp$|^Traccc/
+      exclude: ^Detray/core/include/detray/utils/logging.hpp$
 
     - id: pragma_once
       name: pragma_once
