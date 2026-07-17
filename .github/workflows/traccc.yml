@@ -133,7 +133,7 @@ jobs:
           persist-credentials: false
       - name: Install dependencies
         run: |
-          apt install -y zstd wget
+          apt-get update && apt-get install -y zstd wget
           curl --retry 5 --retry-delay 10 --output deps.tar.zst https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.v6.tar.zst
           tar -xf deps.tar.zst -C /usr/local --strip-components=1
           rm deps.tar.zst
