@@ -69,7 +69,10 @@ def _decoratorFromFile(file: Union[str, Path], **kwargs):
     kwargs.setdefault("level", ActsPythonBindings.logging.INFO)
 
     if file.suffix in (".json", ".cbor"):
-        from .json import MaterialMapJsonConverter, JsonMaterialDecorator
+        from .ActsPluginsPythonBindingsJson import (
+            MaterialMapJsonConverter,
+            JsonMaterialDecorator,
+        )
 
         c = MaterialMapJsonConverter.Config()
         for k in kwargs.keys():
@@ -78,7 +81,7 @@ def _decoratorFromFile(file: Union[str, Path], **kwargs):
 
         return JsonMaterialDecorator(jFileName=str(file), rConfig=c, **kwargs)
     elif file.suffix == ".root":
-        from acts.root import RootMaterialDecorator
+        from .ActsPluginsPythonBindingsRoot import RootMaterialDecorator
 
         return RootMaterialDecorator(fileName=str(file), **kwargs)
     else:
