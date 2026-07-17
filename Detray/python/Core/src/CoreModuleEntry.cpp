@@ -26,6 +26,7 @@
 #include <pybind11/stl.h>
 
 // System include(s)
+#include <cstddef>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
@@ -80,7 +81,35 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
 
   py::class_<volume_descriptor_t>(m, "VolumeDescriptor");
   py::class_<surface_descriptor_t>(m, "SurfaceDescriptor");
-  py::class_<surface_store_t>(m, "SurfaceStore");
+  py::class_<surface_store_t>(m, "SurfaceStore")
+      .def("__len__", [](const surface_store_t &s) { return s.size(); })
+      .def(
+          "empty", [](const surface_store_t &s) { return s.empty(); },
+          "Whether the collection has no surfaces")
+      .def(
+          "__getitem__",
+          [](const surface_store_t &s,
+             py::ssize_t i) -> const surface_descriptor_t & {
+            const auto n = static_cast<py::ssize_t>(s.size());
+            if (i < 0) {
+              i += n;
+            }
+            if (i < 0 || i >= n) {
+              throw py::index_error();
+            }
+            return s[static_cast<std::size_t>(i)];
+          },
+          py::arg("index"), py::return_value_policy::reference_internal,
+          "Surface at a given index")
+      .def(
+          "__iter__",
+          [](const surface_store_t &s) {
+            return py::make_iterator<
+                py::return_value_policy::reference_internal,
+                decltype(s.begin()), decltype(s.end()),
+                const surface_descriptor_t &>(s.begin(), s.end());
+          },
+          py::keep_alive<0, 1>(), "Iterate over the surfaces");
   py::class_<geometry_context_t>(m, "GeometryContext");
   py::class_<transform_store_t>(m, "TransformStore");
   py::class_<mask_store_t>(m, "MaskStore");
