@@ -94,7 +94,6 @@ repos:
       language: system
       entry: CI/check_math_macros.py
       files: \.(cpp|hpp|ipp|cu|cuh)$
-      exclude: ^Traccc/
 
     - id: codegen_dependencies
       name: codegen_dependencies

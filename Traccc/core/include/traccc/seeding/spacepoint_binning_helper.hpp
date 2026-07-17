@@ -80,8 +80,8 @@ inline std::pair<axis2::circular<>, axis2::regular<>> get_axes(
 
     // divide 2pi by angle delta to get number of phi-bins
     // size is always 2pi even for regions of interest
-    phiBins =
-        static_cast<detray::dindex>(std::llround(2 * M_PI / deltaPhi + 0.5));
+    phiBins = static_cast<detray::dindex>(
+        std::llround(2 * std::numbers::pi_v<scalar> / deltaPhi + 0.5));
     // need to scale the number of phi bins accordingly to the number of
     // consecutive phi bins in the seed making step.
     // Each individual bin should be approximately a fraction (depending on

@@ -63,8 +63,8 @@ class triplet_fitter {
   // Convenience function: wrap angle between -Pi and Pi
   static inline scalar wrap_pi_mpi(scalar angle) {
     // Map angle to [ -2*PI, 2*PI ]
-    const scalar two_pi = 2.0f * static_cast<scalar>(M_PI);
-    angle = std::fmod(angle + static_cast<scalar>(M_PI), two_pi);
+    const scalar two_pi = 2.0f * std::numbers::pi_v<scalar>;
+    angle = std::fmod(angle + std::numbers::pi_v<scalar>, two_pi);
 
     // Handle negative results from fmod to ensure we are in [ 0, 2*PI ]
     if (angle < 0) {
@@ -72,17 +72,17 @@ class triplet_fitter {
     }
 
     // Shift back to [ -PI, PI ]
-    return angle - static_cast<scalar>(M_PI);
+    return angle - std::numbers::pi_v<scalar>;
   }
 
   // Convenience function: difference of two azimuthal angles
   static inline scalar delta_phi(scalar phi_a, scalar phi_b) {
-    scalar dphi = math::fmod(phi_a - phi_b, 2.f * static_cast<scalar>(M_PI));
+    scalar dphi = math::fmod(phi_a - phi_b, 2.f * std::numbers::pi_v<scalar>);
 
-    if (dphi > static_cast<scalar>(M_PI))
-      dphi -= 2.f * static_cast<scalar>(M_PI);
-    if (dphi < -1.f * static_cast<scalar>(M_PI))
-      dphi += 2.f * static_cast<scalar>(M_PI);
+    if (dphi > std::numbers::pi_v<scalar>)
+      dphi -= 2.f * std::numbers::pi_v<scalar>;
+    if (dphi < -1.f * std::numbers::pi_v<scalar>)
+      dphi += 2.f * std::numbers::pi_v<scalar>;
     return dphi;
   }
 
