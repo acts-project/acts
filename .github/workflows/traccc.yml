@@ -11,12 +11,14 @@ on:
     paths:
       - "Traccc/**"
       - "Detray/**"
+      - ".github/workflows/traccc.yml"
   pull_request:
     branches:
       - main
     paths:
       - "Traccc/**"
       - "Detray/**"
+      - ".github/workflows/traccc.yml"
 
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
@@ -70,24 +72,6 @@ jobs:
               enable_sycl: false
             build: Release
           - platform:
-              name: "SYCL NVIDIA"
-              container: ghcr.io/acts-project/ubuntu2404_cuda_oneapi:82
-              options: --preset sycl-fp32
-              run_tests: false
-              enable_cuda: false
-              enable_hip: false
-              enable_sycl: true
-            build: Release
-          - platform:
-              name: "SYCL AMD"
-              container: ghcr.io/acts-project/ubuntu2404_rocm_oneapi:82
-              options: --preset sycl-fp32
-              run_tests: false
-              enable_cuda: false
-              enable_hip: true
-              enable_sycl: true
-            build: Release
-          - platform:
               name: "ALPAKA_CPU"
               container: ghcr.io/acts-project/ubuntu2404:87
               options: --preset alpaka-fp32
@@ -104,15 +88,6 @@ jobs:
               enable_cuda: true
               enable_hip: false
               enable_sycl: false
-            build: Release
-          - platform:
-              name: "ALPAKA_HIP_SYCL"
-              container: ghcr.io/acts-project/ubuntu2404_rocm_oneapi:82
-              options: --preset alpaka-fp32 -Dalpaka_ACC_GPU_HIP_ENABLE=ON -Dalpaka_DISABLE_VENDOR_RNG=ON -DTRACCC_USE_ROOT=OFF -DTRACCC_SETUP_ROCTHRUST=ON -DTRACCC_BUILD_HIP=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20
-              run_tests: false
-              enable_cuda: false
-              enable_hip: true
-              enable_sycl: true
             build: Release
           - platform:
               name: "ALPAKA_SYCL"
@@ -133,14 +108,13 @@ jobs:
           persist-credentials: false
       - name: Install dependencies
         run: |
-          apt install -y zstd wget
           curl --retry 5 --retry-delay 10 --output deps.tar.zst https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.v6.tar.zst
           tar -xf deps.tar.zst -C /usr/local --strip-components=1
           rm deps.tar.zst
       - name: Build nlohmann
         run: |
-          wget https://github.com/nlohmann/json/archive/refs/tags/v3.11.3.tar.gz
-          tar -xzvf v3.11.3.tar.gz
+          curl --retry 5 --retry-delay 10 --output nlohmann.tar.gz https://github.com/nlohmann/json/archive/refs/tags/v3.11.3.tar.gz
+          tar -xzvf nlohmann.tar.gz
           export CXX=g++
           cmake \
             -S json-3.11.3 \
@@ -152,8 +126,8 @@ jobs:
           cmake --install /json_build/
       - name: Build covfie
         run: |
-          wget https://github.com/acts-project/covfie/archive/refs/tags/v0.15.2.tar.gz
-          tar -xzvf v0.15.2.tar.gz
+          curl --retry 5 --retry-delay 10 --output covfie.tar.gz https://github.com/acts-project/covfie/archive/refs/tags/v0.15.2.tar.gz
+          tar -xzvf covfie.tar.gz
           export CXX=g++
           cmake \
             -S covfie-0.15.2 \
@@ -164,8 +138,8 @@ jobs:
       - name: Build vecmem
         run: |
           source ${GITHUB_WORKSPACE}/Traccc/.github/ci_setup.sh ${{ matrix.platform.name }}
-          wget https://github.com/acts-project/vecmem/archive/refs/tags/v1.25.0.tar.gz
-          tar -xzvf v1.25.0.tar.gz
+          curl --retry 5 --retry-delay 10 --output vecmem.tar.gz https://github.com/acts-project/vecmem/archive/refs/tags/v1.25.0.tar.gz
+          tar -xzvf vecmem.tar.gz
           export CXX=${SYCLCXX:-g++}
           cmake \
             -S vecmem-1.25.0/ \
