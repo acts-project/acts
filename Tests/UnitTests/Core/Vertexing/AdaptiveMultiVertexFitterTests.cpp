@@ -644,7 +644,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   state.addVertexToMultiMap(vtx2);
 
   // Fit vertices
-  fitter.fit(state, vertexingOptions);
+  auto fitRes = fitter.fit(state, vertexingOptions);
+  BOOST_CHECK(fitRes.ok());
 
   auto vtx1Fitted = state.vertexCollection.at(0);
   auto vtx1PosFitted = vtx1Fitted->position();

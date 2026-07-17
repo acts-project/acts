@@ -311,7 +311,7 @@ linux_physmon:
     - git config --global safe.directory "$GITHUB_WORKSPACE"
     - source build/this_acts_withdeps.sh
     - cd src
-    - CI/physmon/phys_perf_mon.sh all physmon
+    - CI/physmon/phys_perf_mon.sh all physmon $(nproc)
 
   after_script:
    - !reference [.spack_cleanup, after_script]
