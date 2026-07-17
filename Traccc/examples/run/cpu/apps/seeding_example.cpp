@@ -102,12 +102,12 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
       logger().clone("FittingPerformanceWriter"));
 
   // Output stats
-  uint64_t n_spacepoints = 0;
-  uint64_t n_measurements = 0;
-  uint64_t n_seeds = 0;
-  uint64_t n_found_tracks = 0;
-  uint64_t n_ambiguity_free_tracks = 0;
-  uint64_t n_fitted_tracks = 0;
+  std::uint64_t n_spacepoints = 0;
+  std::uint64_t n_measurements = 0;
+  std::uint64_t n_seeds = 0;
+  std::uint64_t n_found_tracks = 0;
+  std::uint64_t n_ambiguity_free_tracks = 0;
+  std::uint64_t n_fitted_tracks = 0;
 
   /*****************************
    * Build a geometry

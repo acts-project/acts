@@ -139,7 +139,7 @@ bool is_contiguous_on(P&& projection, vecmem::memory_resource& mr,
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 
   // Launch the second kernel, which will check if the values are unique.
-  uint32_t grid_size_rd =
+  std::uint32_t grid_size_rd =
       (copy.get_size(iout) + block_size_2d - 1) / block_size_2d;
   dim3 all_unique_grid_size(grid_size_rd, grid_size_rd);
   dim3 all_unique_block_size(block_size_2d, block_size_2d);
