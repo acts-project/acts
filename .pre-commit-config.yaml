@@ -47,7 +47,7 @@ repos:
       name: license
       language: system
       entry: CI/check_license.py --fix
-      files: \.(cpp|hpp|ipp|cu|cuh)$
+      files: \.(cpp|hpp|ipp|cu|cuh|hip|sycl)$
       exclude: ^Traccc/
 
     - id: include_guards
@@ -68,14 +68,14 @@ repos:
       name: type_t
       language: system
       entry: CI/check_type_t.py --fix
-      files: \.(cpp|hpp|ipp|cu|cuh)$
+      files: \.(cpp|hpp|ipp|cu|cuh|hip|sycl)$
       exclude: ^Traccc/
 
     - id: boost_test
       name: boost_test
       language: system
       entry: CI/check_boost_test_macro.sh
-      files: ^Tests\/.*\.(cpp|hpp|ipp|cu|cuh)$
+      files: ^Tests\/.*\.(cpp|hpp|ipp|cu|cuh|hip|sycl)$
 
     - id: cmake_options
       name: cmake_options
@@ -93,7 +93,7 @@ repos:
       name: math_macros
       language: system
       entry: CI/check_math_macros.py
-      files: \.(cpp|hpp|ipp|cu|cuh)$
+      files: \.(cpp|hpp|ipp|cu|cuh|hip|sycl)$
 
     - id: codegen_dependencies
       name: codegen_dependencies
