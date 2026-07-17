@@ -113,7 +113,7 @@ jobs:
           rm deps.tar.zst
       - name: Build nlohmann
         run: |
-          curl --retry 5 --retry-delay 10 --output nlohmann.tar.gz https://github.com/nlohmann/json/archive/refs/tags/v3.11.3.tar.gz
+          curl -L --retry 5 --retry-delay 10 --output nlohmann.tar.gz https://github.com/nlohmann/json/archive/refs/tags/v3.11.3.tar.gz
           tar -xzvf nlohmann.tar.gz
           export CXX=g++
           cmake \
@@ -126,7 +126,7 @@ jobs:
           cmake --install /json_build/
       - name: Build covfie
         run: |
-          curl --retry 5 --retry-delay 10 --output covfie.tar.gz https://github.com/acts-project/covfie/archive/refs/tags/v0.15.2.tar.gz
+          curl -L --retry 5 --retry-delay 10 --output covfie.tar.gz https://github.com/acts-project/covfie/archive/refs/tags/v0.15.2.tar.gz
           tar -xzvf covfie.tar.gz
           export CXX=g++
           cmake \
@@ -138,7 +138,7 @@ jobs:
       - name: Build vecmem
         run: |
           source ${GITHUB_WORKSPACE}/Traccc/.github/ci_setup.sh ${{ matrix.platform.name }}
-          curl --retry 5 --retry-delay 10 --output vecmem.tar.gz https://github.com/acts-project/vecmem/archive/refs/tags/v1.25.0.tar.gz
+          curl -L --retry 5 --retry-delay 10 --output vecmem.tar.gz https://github.com/acts-project/vecmem/archive/refs/tags/v1.25.0.tar.gz
           tar -xzvf vecmem.tar.gz
           export CXX=${SYCLCXX:-g++}
           cmake \
