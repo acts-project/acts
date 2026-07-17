@@ -32,7 +32,7 @@ class InstructionCounter:
         self.translations = collections.defaultdict(int)
 
     def add(self, instr, trans):
-        """Register the occurance of an instruction in a translation unit."""
+        """Register the occurrence of an instruction in a translation unit."""
         self.instructions[instr] += 1
         self.translations[trans] += 1
 

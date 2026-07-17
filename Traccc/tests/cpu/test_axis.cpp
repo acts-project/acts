@@ -76,7 +76,7 @@ GTEST_TEST(traccc_grid2, regular_closed_axis) {
   expected_range = {0u, 9u};
   EXPECT_EQ(ten_bins.range(2.5f, szoneAll), expected_range);
 
-  // Axis sequence acces - scalar (symmteric & asymmetric)
+  // Axis sequence access - scalar (symmteric & asymmetric)
   expected_zone = {5u};
   EXPECT_EQ(ten_bins.zone(2.5f, szone00), expected_zone);
   EXPECT_EQ(ten_bins.zone(2.5f, sepsilon), expected_zone);

@@ -87,7 +87,7 @@ int seq_run(const traccc::opts::input_data& input_opts,
   // Memory resource used by the application.
   vecmem::host_memory_resource host_mr;
 
-  // Copy obejct
+  // Copy object
   vecmem::copy copy;
 
   // Construct the detector description object.

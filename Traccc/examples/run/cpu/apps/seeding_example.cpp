@@ -78,7 +78,7 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
   // Memory resource used by the EDM.
   vecmem::host_memory_resource host_mr;
 
-  // Copy obejct
+  // Copy object
   vecmem::copy copy;
 
   // Performance writer

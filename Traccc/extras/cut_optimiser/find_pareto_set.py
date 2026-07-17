@@ -72,7 +72,7 @@ def main():
 
     for i in sorted(pareto_set, key=lambda x: x["rec_throughput"], reverse=True):
         log.info(
-            "  Eff. %.2f, fake rate %.2f, duplicate rate %.2f with reciprocal througput %.1fms is achieved by setup {%s}",
+            "  Eff. %.2f, fake rate %.2f, duplicate rate %.2f with reciprocal throughput %.1fms is achieved by setup {%s}",
             100.0 * i["efficiency"],
             i["fake_rate"],
             i["duplicate_rate"],

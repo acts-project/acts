@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
 
   // Memory resources used by the application.
   vecmem::host_memory_resource host_mr;
-  // Copy obejct
+  // Copy object
   vecmem::copy copy;
 
   // Performance writer

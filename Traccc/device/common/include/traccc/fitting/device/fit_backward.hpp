@@ -53,7 +53,7 @@ TRACCC_HOST_DEVICE inline void fit_backward(
     fitter.update_statistics(fitter_state);
 
     // Assume that this branch is only called if the forward fit was
-    // successfull (track param are alive)
+    // successful (track param are alive)
     fitter.check_fitting_result(fitter_state, kalman_fitter_status::SUCCESS,
                                 fit_status);
 

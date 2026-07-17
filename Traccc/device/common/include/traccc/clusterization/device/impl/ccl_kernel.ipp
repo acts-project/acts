@@ -37,9 +37,9 @@ namespace traccc::device {
 /// @param[in] adjv     Vector of adjacent cells
 /// @param[in] tid      The thread index
 /// @param[in] blckDim  The block size
-/// @param[inout] f     array holding the parent cell ID for the current
+/// @param[in,out] f     array holding the parent cell ID for the current
 ///                     iteration.
-/// @param[inout] gf    array holding grandparent cell ID from the previous
+/// @param[in,out] gf    array holding grandparent cell ID from the previous
 ///                     iteration.
 /// @param[in] barrier  A generic object for block-wide synchronisation
 ///
@@ -53,7 +53,7 @@ TRACCC_HOST_DEVICE void fast_sv_1(const thread_id_t& thread_id,
                                   barrier_t& barrier) {
   /*
    * The algorithm finishes if an iteration leaves the arrays unchanged.
-   * This varible will be set if a change is made, and dictates if another
+   * This variable will be set if a change is made, and dictates if another
    * loop is necessary.
    */
   bool gf_changed;

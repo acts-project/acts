@@ -139,10 +139,10 @@ class triplet_fitter {
     ///
     /// @param hit_idx hit index
     /// @param dir_idx direction index
-    /// @param multipler multipler
+    /// @param multiplier multiplier
     /// @param detector detector
     void shiftHit(const unsigned& hit_idx, const unsigned& dir_idx,
-                  const scalar& multipler,
+                  const scalar& multiplier,
                   edm::measurement_collection::const_device measurements,
                   const detector_t& detector) {
       // The shifts are applied to the global
@@ -161,7 +161,7 @@ class triplet_fitter {
 
       // Shift local position
       assert(dir_idx <= measurements.at(m_meas_idx[hit_idx]).dimensions());
-      loc_pos[dir_idx] += multipler * math::sqrt(loc_var[dir_idx]);
+      loc_pos[dir_idx] += multiplier * math::sqrt(loc_var[dir_idx]);
 
       // Surface
       detray::tracking_surface sf{
@@ -782,7 +782,7 @@ class triplet_fitter {
     // Calculation of track state vector and covariance matrix //
     // ------------------------------------------------------- //
 
-    // At the first measurement surface (first triplet, first segement)
+    // At the first measurement surface (first triplet, first segment)
 
     const triplet& triplet_first = m_triplets[0u];
 

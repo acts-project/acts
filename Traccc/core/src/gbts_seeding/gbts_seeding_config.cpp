@@ -15,7 +15,7 @@ namespace traccc {
 
 // binTables contains pairs of linked layer-eta bins
 // the layerInfo should really be calculated from the geoIDBinning
-// GeoIDBinning pair is detray geo ID and bin index (corrisponding to the
+// GeoIDBinning pair is detray geo ID and bin index (corresponding to the
 // layers in layerInfo) minPt in MeV
 bool gbts_seedfinder_config::setLinkingScheme(
     const std::vector<std::pair<unsigned int, std::vector<unsigned int>>>&
@@ -26,7 +26,7 @@ bool gbts_seedfinder_config::setLinkingScheme(
     std::unique_ptr<const traccc::Logger> callers_logger =
         getDummyLogger().clone()) {
   TRACCC_LOCAL_LOGGER(std::move(callers_logger));
-  // copy layer-eta binning infomation
+  // copy layer-eta binning information
   layerInfo = input_layerInfo;
   // unroll binTables
   for (std::pair<unsigned int, std::vector<unsigned int>> binPairs :
@@ -89,7 +89,7 @@ bool gbts_seedfinder_config::setLinkingScheme(
     // is volume encompassed by a layer
     layerChange |= (current_layer != geoIDLayerPair.second);
 
-    // save surfaces incase volume is not encommpassed by a layer
+    // save surfaces in case volume is not encommpassed by a layer
     surfacesInVolume.push_back(
         std::make_pair(static_cast<unsigned int>(geo_id.index()),
                        static_cast<unsigned int>(geoIDLayerPair.second)));
@@ -108,12 +108,12 @@ bool gbts_seedfinder_config::setLinkingScheme(
   gbts_dphi_window_params.dphi_coeff_low_dr *= ptScale;
   gbts_make_graph_edges_params.max_Kappa *= ptScale;
 
-  // contianers sizes
+  // containers sizes
   nLayers = static_cast<unsigned int>(layerInfo.type.size());
 
   TRACCC_INFO("volume layer map has " << volumeToLayerMap_unordered.size()
                                       << " volumes");
-  TRACCC_INFO("The maxium volume index in the layer map is "
+  TRACCC_INFO("The maximum volume index in the layer map is "
               << volumeToLayerMap.size());
   TRACCC_INFO("surface to layer map has " << surfaceToLayerMap.size()
                                           << " geo IDs from " << split_volumes

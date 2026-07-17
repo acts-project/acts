@@ -264,7 +264,7 @@ struct gbts_seedfinder_config {
   // Phi bin width
   unsigned int n_phi_bins = 128;
 
-  // graph making maxiums: max neighbours kept per edge.
+  // graph making maximums: max neighbours kept per edge.
   unsigned int max_num_neighbours = 10;
 
   // graph extraction cuts: minimum number of edges as a CCA level,
