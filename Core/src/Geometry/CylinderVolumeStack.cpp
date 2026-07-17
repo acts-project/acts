@@ -796,7 +796,7 @@ void CylinderVolumeStack::update(const GeometryContext& gctx,
     if (same(newHlZ, oldHlZ)) {
       ACTS_VERBOSE("Halflength z is the same, no z resize needed");
     } else {
-      if (newMinZ < oldMinZ) {
+      if (!same(newMinZ, oldMinZ) && newMinZ < oldMinZ) {
         if (firstStrategy == VolumeResizeStrategy::Expand) {
           ACTS_VERBOSE("Expanding first volume to new z bounds");
 
@@ -854,7 +854,7 @@ void CylinderVolumeStack::update(const GeometryContext& gctx,
         }
       }
 
-      if (newMaxZ > oldMaxZ) {
+      if (!same(newMaxZ, oldMaxZ) && newMaxZ > oldMaxZ) {
         if (secondStrategy == VolumeResizeStrategy::Expand) {
           ACTS_VERBOSE("Expanding last volume to new z bounds");
 
@@ -946,7 +946,7 @@ void CylinderVolumeStack::update(const GeometryContext& gctx,
     ACTS_VERBOSE("*** Volume configuration after z resizing:");
     printVolumeSequence(volumeTuples, logger, Acts::Logging::DEBUG);
 
-    if (oldMinR == newMinR && oldMaxR == newMaxR) {
+    if (same(oldMinR, newMinR) && same(oldMaxR, newMaxR)) {
       ACTS_VERBOSE("Radii are the same, no r resize needed");
     } else {
       auto printGapDimensions = [&](const VolumeTuple& gap,
@@ -957,7 +957,7 @@ void CylinderVolumeStack::update(const GeometryContext& gctx,
                                << gap.maxR() << " ]");
       };
 
-      if (oldMinR > newMinR) {
+      if (!same(oldMinR, newMinR) && oldMinR > newMinR) {
         if (firstStrategy == VolumeResizeStrategy::Expand) {
           // expand innermost volume
           auto& first = volumeTuples.front();
@@ -993,7 +993,7 @@ void CylinderVolumeStack::update(const GeometryContext& gctx,
         }
       }
 
-      if (oldMaxR < newMaxR) {
+      if (!same(oldMaxR, newMaxR) && oldMaxR < newMaxR) {
         if (secondStrategy == VolumeResizeStrategy::Expand) {
           // expand outermost volume
           auto& last = volumeTuples.back();
