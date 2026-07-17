@@ -118,7 +118,7 @@ inline TRACCC_HOST_DEVICE bool is_valid_sp(const seedfinder_config& config,
     return false;
   }
 
-  return (static_cast<size_t>(vector::perp(vector2{
+  return (static_cast<std::size_t>(vector::perp(vector2{
               sp.x() - config.beamPos[0], sp.y() - config.beamPos[1]})) <
           config.get_num_rbins());
 }

@@ -107,8 +107,8 @@ struct seedfinder_config {
   std::array<unsigned int, 2> neighbor_scope{1, 1};
 
   TRACCC_HOST_DEVICE
-  size_t get_num_rbins() const {
-    return static_cast<size_t>(rMax + vector::norm(beamPos));
+  std::size_t get_num_rbins() const {
+    return static_cast<std::size_t>(rMax + vector::norm(beamPos));
   }
 
   TRACCC_HOST_DEVICE
@@ -199,7 +199,7 @@ struct seedfilter_config {
   float deltaRMin = 5.f * unit<float>::mm;
   // how often do you want to increase the weight of a seed for finding a
   // compatible seed?
-  size_t compatSeedLimit = 2;
+  std::size_t compatSeedLimit = 2;
 
   // seed weight increase
   float good_spB_min_radius = 150.f * unit<float>::mm;
