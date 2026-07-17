@@ -10,42 +10,43 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
-#include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
-#include "ActsExamples/Validation/FakePlotTool.hpp"
-#include "ActsExamples/Validation/TrackQualityPlotTool.hpp"
+#include "ActsExamples/Validation/ResPlotTool.hpp"
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
 #include <cstddef>
 #include <map>
-#include <set>
 #include <string>
 
 namespace ActsExamples {
 
-/// Collects track-finder performance histograms without any file I/O.
+/// Collects track-fitter performance histograms without any file I/O.
 ///
-/// Fill histograms for each event via fill(). Caller is responsible for
-/// thread safety — this class applies no locking of its own.
-class TrackFinderPerformanceCollector {
+/// Collects residual/pull histograms, efficiency plots, and track summary
+/// information for track fitting performance evaluation.
+///
+/// @note The caller must ensure exclusive access (e.g. hold a mutex) when
+///       calling fill(). This class applies no locking of its own.
+class TrackFitterPerformanceCollector {
  public:
   struct Config {
+    ResPlotTool::Config resPlotToolConfig;
     EffPlotTool::Config effPlotToolConfig;
-    FakePlotTool::Config fakePlotToolConfig;
-    DuplicationPlotTool::Config duplicationPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
-    TrackQualityPlotTool::Config trackQualityPlotToolConfig;
 
-    /// Optional per-subdetector track summary plots, keyed by name.
-    /// The value is the set of geometry volume IDs to include.
-    std::map<std::string, std::set<int>> subDetectorTrackSummaryVolumes;
+    /// Minimum number of entries in a bin for it to be included in the
+    /// mean/width fit.
+    int fitMinEntries = 10;
+    /// The range in sigma for the iterative Gaussian fit
+    double fitSigmaRange = 3.0;
+    /// The maximum number of iterations for the iterative Gaussian fit
+    int fitIterations = 3;
   };
 
-  TrackFinderPerformanceCollector(Config cfg,
+  TrackFitterPerformanceCollector(Config cfg,
                                   std::unique_ptr<const Acts::Logger> logger);
 
   /// Fill histograms for one event.
@@ -54,44 +55,29 @@ class TrackFinderPerformanceCollector {
   void fill(const Acts::GeometryContext& geoContext,
             const ConstTrackContainer& tracks,
             const SimParticleContainer& particles,
-            const TrackParticleMatching& trackParticleMatching,
-            const ParticleTrackMatching& particleTrackMatching,
-            const InverseMultimap<SimBarcode>& particleMeasurementsMap);
+            const TrackParticleMatching& trackParticleMatching);
 
   /// Summary count statistics accumulated across all filled events.
   struct Stats {
     std::size_t nTotalTracks = 0;
     std::size_t nTotalMatchedTracks = 0;
     std::size_t nTotalFakeTracks = 0;
-    std::size_t nTotalDuplicateTracks = 0;
     std::size_t nTotalParticles = 0;
     std::size_t nTotalMatchedParticles = 0;
-    std::size_t nTotalDuplicateParticles = 0;
-    std::size_t nTotalFakeParticles = 0;
   };
 
   /// Return accumulated event counts.
   const Stats& stats() const { return m_stats; }
 
-  /// Emit efficiency/fake/duplicate summary statistics via the internal logger.
+  /// Emit summary statistics via the internal logger.
   void logSummary() const;
 
   /// @name Accessors for the underlying plot tools
   /// @{
+  const ResPlotTool& resPlotTool() const { return m_resPlotTool; }
   const EffPlotTool& effPlotTool() const { return m_effPlotTool; }
-  const FakePlotTool& fakePlotTool() const { return m_fakePlotTool; }
-  const DuplicationPlotTool& duplicationPlotTool() const {
-    return m_duplicationPlotTool;
-  }
   const TrackSummaryPlotTool& trackSummaryPlotTool() const {
     return m_trackSummaryPlotTool;
-  }
-  const std::map<std::string, TrackSummaryPlotTool>& subDetectorSummaryTools()
-      const {
-    return m_subDetectorSummaryTools;
-  }
-  const TrackQualityPlotTool& trackQualityPlotTool() const {
-    return m_trackQualityPlotTool;
   }
   /// @}
 
@@ -101,12 +87,9 @@ class TrackFinderPerformanceCollector {
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
 
+  ResPlotTool m_resPlotTool;
   EffPlotTool m_effPlotTool;
-  FakePlotTool m_fakePlotTool;
-  DuplicationPlotTool m_duplicationPlotTool;
   TrackSummaryPlotTool m_trackSummaryPlotTool;
-  std::map<std::string, TrackSummaryPlotTool> m_subDetectorSummaryTools;
-  TrackQualityPlotTool m_trackQualityPlotTool;
 
   Stats m_stats;
 };
