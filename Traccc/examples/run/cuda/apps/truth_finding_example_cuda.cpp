@@ -89,10 +89,10 @@ int seq_run(const traccc::opts::track_finding& finding_opts,
       logger().clone("FittingPerformanceWriter"));
 
   // Output Stats
-  uint64_t n_found_tracks = 0;
-  uint64_t n_found_tracks_cuda = 0;
-  uint64_t n_fitted_tracks = 0;
-  uint64_t n_fitted_tracks_cuda = 0;
+  std::uint64_t n_found_tracks = 0;
+  std::uint64_t n_found_tracks_cuda = 0;
+  std::uint64_t n_fitted_tracks = 0;
+  std::uint64_t n_fitted_tracks_cuda = 0;
 
   /*****************************
    * Build a geometry

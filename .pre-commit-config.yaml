@@ -69,7 +69,6 @@ repos:
       language: system
       entry: CI/check_type_t.py --fix
       files: \.(cpp|hpp|ipp|cu|cuh|hip|sycl)$
-      exclude: ^Traccc/
 
     - id: boost_test
       name: boost_test

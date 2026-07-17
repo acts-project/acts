@@ -21,7 +21,7 @@ bool gbts_seedfinder_config::setLinkingScheme(
     const std::vector<std::pair<unsigned int, std::vector<unsigned int>>>&
         input_binTables,
     const device::gbts_layerInfo input_layerInfo,
-    std::vector<std::pair<uint64_t, short>>& detrayGeoIDBinning,
+    std::vector<std::pair<std::uint64_t, short>>& detrayGeoIDBinning,
     const float minPt = 900.0f,
     std::unique_ptr<const traccc::Logger> callers_logger =
         getDummyLogger().clone()) {
@@ -40,10 +40,11 @@ bool gbts_seedfinder_config::setLinkingScheme(
     n_eta_bins = std::max(n_eta_bins, lI.first + lI.second);
 
   // bin by volume
-  std::ranges::sort(detrayGeoIDBinning, [](const std::pair<uint64_t, short> a,
-                                           const std::pair<uint64_t, short> b) {
-    return a.first > b.first;
-  });
+  std::ranges::sort(detrayGeoIDBinning,
+                    [](const std::pair<std::uint64_t, short> a,
+                       const std::pair<std::uint64_t, short> b) {
+                      return a.first > b.first;
+                    });
 
   unsigned int largest_volume_index =
       detray::geometry::identifier(detrayGeoIDBinning[0].first).volume();
@@ -63,7 +64,7 @@ bool gbts_seedfinder_config::setLinkingScheme(
   detrayGeoIDBinning.push_back(
       std::make_pair(UINT_MAX, -1));  // end-of-vector element
   std::vector<std::pair<unsigned int, unsigned int>> surfacesInVolume;
-  for (std::pair<uint64_t, short> geoIDLayerPair : detrayGeoIDBinning) {
+  for (std::pair<std::uint64_t, short> geoIDLayerPair : detrayGeoIDBinning) {
     detray::geometry::identifier geo_id(geoIDLayerPair.first);
     if (current_volume != static_cast<short>(geo_id.volume())) {
       // reached the end of this volume so add it to the maps

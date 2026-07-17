@@ -109,13 +109,13 @@ int seq_run(const traccc::opts::input_data& input_opts,
       detector_opts.material_file, detector_opts.grid_file);
 
   // Output stats
-  uint64_t n_cells = 0;
-  uint64_t n_measurements = 0;
-  uint64_t n_spacepoints = 0;
-  uint64_t n_seeds = 0;
-  uint64_t n_found_tracks = 0;
-  uint64_t n_ambiguity_free_tracks = 0;
-  uint64_t n_fitted_tracks = 0;
+  std::uint64_t n_cells = 0;
+  std::uint64_t n_measurements = 0;
+  std::uint64_t n_spacepoints = 0;
+  std::uint64_t n_seeds = 0;
+  std::uint64_t n_found_tracks = 0;
+  std::uint64_t n_ambiguity_free_tracks = 0;
+  std::uint64_t n_fitted_tracks = 0;
 
   // Type definitions
   using spacepoint_formation_algorithm =

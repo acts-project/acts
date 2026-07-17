@@ -159,7 +159,7 @@ void track_gbts_seeding::read(const boost::program_options::variables_map&) {
     return;
   }
   // config info from file
-  std::vector<std::pair<uint64_t, int16_t>> geoidBinning;
+  std::vector<std::pair<std::uint64_t, std::int16_t>> geoidBinning;
   std::vector<std::pair<unsigned int, std::vector<unsigned int>>> binTables;
   traccc::device::gbts_layerInfo layerInfo;
 
@@ -174,7 +174,7 @@ void track_gbts_seeding::read(const boost::program_options::variables_map&) {
   geoidBinningFile >> nGeoIDs;
   geoidBinning.reserve(nGeoIDs);
 
-  std::pair<uint64_t, int16_t> geoidLayerPair;
+  std::pair<std::uint64_t, std::int16_t> geoidLayerPair;
   for (; nGeoIDs > 0u; --nGeoIDs) {
     geoidBinningFile >> geoidLayerPair.first;
     geoidBinningFile >> geoidLayerPair.second;

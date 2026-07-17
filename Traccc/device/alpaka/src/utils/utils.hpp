@@ -12,7 +12,7 @@
 namespace traccc::alpaka {
 
 using Dim = ::alpaka::DimInt<1>;
-using Idx = uint32_t;
+using Idx = std::uint32_t;
 using WorkDiv = ::alpaka::WorkDivMembers<Dim, Idx>;
 
 // Get alpaka accelerator - based on alpaka/examples/ExampleDefaultAcc.hpp

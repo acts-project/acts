@@ -231,7 +231,7 @@ struct gbts_seedfinder_config {
       const std::vector<std::pair<unsigned int, std::vector<unsigned int>>>&
           binTables,
       const device::gbts_layerInfo layerInfo,
-      std::vector<std::pair<uint64_t, int16_t>>& detrayGeoIDBinning,
+      std::vector<std::pair<std::uint64_t, std::int16_t>>& detrayGeoIDBinning,
       const float minPt, std::unique_ptr<const traccc::Logger> logger);
 
   // layer linking and geometry
@@ -239,7 +239,7 @@ struct gbts_seedfinder_config {
   traccc::device::gbts_layerInfo layerInfo{};
   unsigned int nLayers = 0;
 
-  std::vector<int16_t> volumeToLayerMap{};
+  std::vector<std::int16_t> volumeToLayerMap{};
   std::vector<std::pair<unsigned int, unsigned int>> surfaceToLayerMap{};
 
   // Per kernel structs

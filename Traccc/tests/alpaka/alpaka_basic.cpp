@@ -26,14 +26,14 @@
 #include <iostream>
 
 template <typename Acc>
-ALPAKA_FN_ACC float process(Acc const& acc, uint32_t idx) {
+ALPAKA_FN_ACC float process(Acc const& acc, std::uint32_t idx) {
   return static_cast<float>(alpaka::math::sin(acc, idx));
 }
 
 struct VectorOpKernel {
   template <typename Acc>
   ALPAKA_FN_ACC void operator()(Acc const& acc, float* result,
-                                uint32_t n) const {
+                                std::uint32_t n) const {
     using namespace alpaka;
     auto const globalThreadIdx = getIdx<alpaka::Grid, alpaka::Threads>(acc)[0u];
 
@@ -50,7 +50,7 @@ struct VectorOpKernel {
 GTEST_TEST(AlpakaBasic, VectorOp) {
   using namespace alpaka;
   using Dim = DimInt<1>;
-  using Idx = uint32_t;
+  using Idx = std::uint32_t;
 
   using Acc = ExampleDefaultAcc<Dim, Idx>;
   std::cout << "Using alpaka accelerator: " << alpaka::getAccName<Acc>()
@@ -63,11 +63,11 @@ GTEST_TEST(AlpakaBasic, VectorOp) {
   using Queue = Queue<Acc, Blocking>;
   auto queue = Queue{devAcc};
 
-  uint32_t n = 10000;
+  std::uint32_t n = 10000;
 
-  uint32_t blocksPerGrid = n;
-  uint32_t threadsPerBlock = 1;
-  uint32_t elementsPerThread = 4;
+  std::uint32_t blocksPerGrid = n;
+  std::uint32_t threadsPerBlock = 1;
+  std::uint32_t elementsPerThread = 4;
   using WorkDiv = WorkDivMembers<Dim, Idx>;
   auto workDiv = WorkDiv{blocksPerGrid, threadsPerBlock, elementsPerThread};
 
@@ -77,7 +77,7 @@ GTEST_TEST(AlpakaBasic, VectorOp) {
   auto devHost = getDevByIdx(platformDevCpu, 0u);
 
   // Allocate memory on the device side:
-  auto bufAcc = alpaka::allocBuf<float, uint32_t>(devAcc, n);
+  auto bufAcc = alpaka::allocBuf<float, std::uint32_t>(devAcc, n);
 
   alpaka::exec<Acc>(queue, workDiv, VectorOpKernel{},
                     alpaka::getPtrNative(bufAcc), n);
@@ -85,11 +85,11 @@ GTEST_TEST(AlpakaBasic, VectorOp) {
   alpaka::wait(queue);
 
   // Allocate memory on the host side:
-  auto bufHost = alpaka::allocBuf<float, uint32_t>(devHost, n);
+  auto bufHost = alpaka::allocBuf<float, std::uint32_t>(devHost, n);
   // Copy bufAcc to bufHost
   alpaka::memcpy(queue, bufHost, bufAcc);
   // Calculate on the host and compare result
-  for (uint32_t i = 0u; i < n; i++) {
+  for (std::uint32_t i = 0u; i < n; i++) {
     EXPECT_FLOAT_EQ(bufHost[i], static_cast<float>(std::sin(i)));
   }
 }
@@ -112,7 +112,7 @@ struct VecMemOpKernel {
 GTEST_TEST(AlpakaBasic, VecMemOp) {
   using namespace alpaka;
   using Dim = DimInt<1>;
-  using Idx = uint32_t;
+  using Idx = std::uint32_t;
 
   // Select a device and create queue for it
   using Acc = ExampleDefaultAcc<Dim, Idx>;
@@ -122,11 +122,11 @@ GTEST_TEST(AlpakaBasic, VecMemOp) {
   using Queue = Queue<Acc, Blocking>;
   auto alpaka_queue = Queue{devAcc};
 
-  uint32_t n = 10000;
+  std::uint32_t n = 10000;
 
-  uint32_t blocksPerGrid = n;
-  uint32_t threadsPerBlock = 1;
-  uint32_t elementsPerThread = 4;
+  std::uint32_t blocksPerGrid = n;
+  std::uint32_t threadsPerBlock = 1;
+  std::uint32_t elementsPerThread = 4;
   using WorkDiv = WorkDivMembers<Dim, Idx>;
   auto workDiv = WorkDiv{blocksPerGrid, threadsPerBlock, elementsPerThread};
 
@@ -153,7 +153,7 @@ GTEST_TEST(AlpakaBasic, VecMemOp) {
   vm_copy(device_buffer, host_buffer, vecmem::copy::type::device_to_host)
       ->wait();
 
-  for (uint32_t i = 0u; i < n; i++) {
+  for (std::uint32_t i = 0u; i < n; i++) {
     EXPECT_FLOAT_EQ(host_vector[i], static_cast<float>(std::sin(i)));
   }
 }
