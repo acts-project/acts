@@ -3,11 +3,14 @@ acts_add_library(
     src/DD4hepDetector.cpp
     src/AlignedDD4hepDetectorElement.cpp
     src/OpenDataDetector.cpp
+    ACTS_INCLUDE_FOLDER include/ActsExamples
 )
 
 target_include_directories(
     ActsExamplesDetectorDD4hep
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_link_libraries(
     ActsExamplesDetectorDD4hep
@@ -29,12 +32,12 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
 
     target_sources(
         ActsExamplesDetectorDD4hep
-        PUBLIC src/DDG4DetectorConstruction.cpp src/DD4hepDetectorGeant4.cpp
+        PRIVATE src/DDG4DetectorConstruction.cpp src/DD4hepDetectorGeant4.cpp
     )
 else()
     target_sources(
         ActsExamplesDetectorDD4hep
-        PUBLIC src/DD4hepDetectorGeant4Stub.cpp
+        PRIVATE src/DD4hepDetectorGeant4Stub.cpp
     )
 endif()
 
