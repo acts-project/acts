@@ -42,10 +42,11 @@ namespace traccc::host {
  * @return true If the vector is ordered on `R`.
  * @return false Otherwise.
  */
-template <std::semiregular R, typename CONTAINER>
+template <typename R, typename CONTAINER>
     requires std::regular_invocable<R,
                                     decltype(std::declval<CONTAINER>().at(0)),
-                                    decltype(std::declval<CONTAINER>().at(0))>
+                                    decltype(std::declval<CONTAINER>().at(0))> && std::semiregular<R>
+
 bool is_ordered_on(R&& relation, const CONTAINER& in) {
 
     // Grab the number of elements in our vector.

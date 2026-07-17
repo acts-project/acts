@@ -28,7 +28,14 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
   state.stage = PropagatorStage::prePropagation;
 
   // Pre-Propagation: call to the actor list, abort condition check
-  state.options.actorList.act(state, m_stepper, m_navigator, logger());
+  if (Result<void> preActResult =
+          state.options.actorList.act(state, m_stepper, m_navigator, logger());
+      !preActResult.ok()) {
+    ACTS_DEBUG("Pre-propagation actor call failed: "
+               << preActResult.error() << ": "
+               << preActResult.error().message());
+    return preActResult.error();
+  }
 
   if (state.options.actorList.checkAbort(state, m_stepper, m_navigator,
                                          logger())) {
