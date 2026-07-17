@@ -15,5 +15,5 @@ def test_generate_and_read_detector():
 
     detector, names = detray.core.readDetector(geometry_file)
     assert isinstance(names, detray.core.NameMap)
-    assert detector.n_volumes() == 22
-    assert detector.n_surfaces() == 3230
+    assert len(detector.volumes) == 22
+    assert len(detector.surfaces) == 3230

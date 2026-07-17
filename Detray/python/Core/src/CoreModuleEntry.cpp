@@ -174,14 +174,6 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
   py::class_<detector_handle>(
       m, "DetectorDefaultMetadata" STRINGIFY_HELPER(DETRAY_CUSTOM_SCALARTYPE))
       .def(
-          "n_volumes",
-          [](const detector_handle &d) { return d.detector.volumes().size(); },
-          "Number of volumes in the detector")
-      .def(
-          "n_surfaces",
-          [](const detector_handle &d) { return d.detector.surfaces().size(); },
-          "Number of surfaces in the detector")
-      .def(
           "name",
           [](const detector_handle &d, const detray::name_map &names) {
             return d.detector.name(names);
