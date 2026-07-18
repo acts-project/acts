@@ -1775,6 +1775,9 @@ def addCKFTracks(
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field, customLogLevel()
         ),
+        findTracksBrem=acts.examples.TrackFindingAlgorithm.makeBremTrackFinderFunction(
+            trackingGeometry, field, customLogLevel()
+        ),
         **acts.examples.defaultKWArgs(
             trackingGeometry=trackingGeometry,
             magneticField=field,
