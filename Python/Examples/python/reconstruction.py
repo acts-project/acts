@@ -590,6 +590,48 @@ def addSeeding(
     return s
 
 
+def addGbtsTraining(
+    s: acts.examples.Sequencer,
+    selectedParticles: str = "particles_selected",
+    geometryFile: str = "gbts_layer_geometry.txt",
+    outputConnectionTable: str = "layer_connection_table.txt",
+    probThreshold: float = -1.0,
+    zMinTol: float = 0.2340,
+    zMaxTol: float = 0.2340,
+    rMinTol: float = 2.5337,
+    rMaxTol: float = 2.5337,
+    doSymmetrization: bool = False,
+    useOldFormatting: bool = False,
+    logLevel: acts.logging.Level = None,
+):
+    logLevel = acts.examples.defaultLogging(s, logLevel)()
+
+    gbtsLayerConnectionToolConfig = acts.examples.GbtsLayerConnectionToolConfig(
+        zMinTol=zMinTol,
+        zMaxTol=zMaxTol,
+        rMinTol=rMinTol,
+        rMaxTol=rMaxTol,
+        probThreshold=probThreshold,
+        doSymmetrization=doSymmetrization,
+    )
+
+    alg = acts.examples.GbtsTrainingAlgorithm(
+        level=logLevel,
+        inputParticles=selectedParticles,
+        inputParticleMeasurementsMap="particle_measurements_map",
+        inputMeasurements="measurements",
+        inputSimHits="simhits",
+        inputMeasurementSimHitsMap="measurement_simhits_map",
+        gbtsLayerConnectionToolConfig=gbtsLayerConnectionToolConfig,
+        geometryFileDir=str(geometryFile),
+        outputFileDir=str(outputConnectionTable),
+        useOldFormatting=useOldFormatting,
+    )
+
+    s.addAlgorithm(alg)
+    return alg
+
+
 def addTruthSmearedSeeding(
     s: acts.examples.Sequencer,
     rnd: Optional[acts.examples.RandomNumbers],
@@ -1731,6 +1773,9 @@ def addCKFTracks(
         ),
         outputTracks=f"{prefix}ckf_tracks",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
+            trackingGeometry, field, customLogLevel()
+        ),
+        findTracksBrem=acts.examples.TrackFindingAlgorithm.makeBremTrackFinderFunction(
             trackingGeometry, field, customLogLevel()
         ),
         **acts.examples.defaultKWArgs(
