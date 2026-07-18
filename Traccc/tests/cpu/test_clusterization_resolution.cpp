@@ -28,79 +28,76 @@ class SurfaceBinningTests
 
 // This defines the local frame test suite
 TEST_P(SurfaceBinningTests, Run) {
+  std::string detector_file = std::get<0>(GetParam());
+  std::string digi_config_file = std::get<1>(GetParam());
+  std::string det_cond_file = std::get<1>(GetParam());
+  std::string data_dir = std::get<2>(GetParam());
+  unsigned int event = std::get<3>(GetParam());
 
-    std::string detector_file = std::get<0>(GetParam());
-    std::string digi_config_file = std::get<1>(GetParam());
-    std::string det_cond_file = std::get<1>(GetParam());
-    std::string data_dir = std::get<2>(GetParam());
-    unsigned int event = std::get<3>(GetParam());
+  // Memory resource used by the EDM.
+  vecmem::host_memory_resource host_mr;
 
-    // Memory resource used by the EDM.
-    vecmem::host_memory_resource host_mr;
+  // Read the detector description.
+  traccc::detector_design_description::host det_desc{host_mr};
+  traccc::detector_conditions_description::host det_cond{host_mr};
+  traccc::io::read_detector_description(det_desc, det_cond, detector_file,
+                                        digi_config_file, det_cond_file,
+                                        traccc::json);
+  const traccc::detector_design_description::data det_desc_data =
+      vecmem::get_data(det_desc);
+  const traccc::detector_conditions_description::data det_cond_data =
+      vecmem::get_data(det_cond);
 
-    // Read the detector description.
-    traccc::detector_design_description::host det_desc{host_mr};
-    traccc::detector_conditions_description::host det_cond{host_mr};
-    traccc::io::read_detector_description(det_desc, det_cond, detector_file,
-                                          digi_config_file, det_cond_file,
-                                          traccc::json);
-    const traccc::detector_design_description::data det_desc_data =
-        vecmem::get_data(det_desc);
-    const traccc::detector_conditions_description::data det_cond_data =
-        vecmem::get_data(det_cond);
+  // Read the detector
+  traccc::host_detector detector;
+  traccc::io::read_detector(detector, host_mr, detector_file);
 
-    // Read the detector
-    traccc::host_detector detector;
-    traccc::io::read_detector(detector, host_mr, detector_file);
+  // Algorithms
+  traccc::host::clusterization_algorithm ca(host_mr);
+  traccc::host::silicon_pixel_spacepoint_formation_algorithm sf(host_mr);
 
-    // Algorithms
-    traccc::host::clusterization_algorithm ca(host_mr);
-    traccc::host::silicon_pixel_spacepoint_formation_algorithm sf(host_mr);
+  // Read the cells from the relevant event file
+  traccc::edm::silicon_cell_collection::host cells_truth{host_mr};
+  traccc::io::read_cells(cells_truth, event, data_dir,
+                         traccc::getDummyLogger().clone(), &det_cond);
 
-    // Read the cells from the relevant event file
-    traccc::edm::silicon_cell_collection::host cells_truth{host_mr};
-    traccc::io::read_cells(cells_truth, event, data_dir,
-                           traccc::getDummyLogger().clone(), &det_cond);
+  // Get Reconstructed Spacepoints
+  auto measurements_recon =
+      ca(vecmem::get_data(cells_truth), det_desc_data, det_cond_data);
+  auto spacepoints_recon = sf(detector, vecmem::get_data(measurements_recon));
 
-    // Get Reconstructed Spacepoints
-    auto measurements_recon =
-        ca(vecmem::get_data(cells_truth), det_desc_data, det_cond_data);
-    auto spacepoints_recon = sf(detector, vecmem::get_data(measurements_recon));
+  // Read the hits from the relevant event file
+  traccc::edm::spacepoint_collection::host spacepoints_truth{host_mr};
+  traccc::edm::measurement_collection::host measurements_truth{host_mr};
+  traccc::io::read_spacepoints(spacepoints_truth, measurements_truth, event,
+                               data_dir, &detector);
 
-    // Read the hits from the relevant event file
-    traccc::edm::spacepoint_collection::host spacepoints_truth{host_mr};
-    traccc::edm::measurement_collection::host measurements_truth{host_mr};
-    traccc::io::read_spacepoints(spacepoints_truth, measurements_truth, event,
-                                 data_dir, &detector);
+  // Check the size of spacepoints
+  EXPECT_TRUE(spacepoints_recon.size() > 0);
 
-    // Check the size of spacepoints
-    EXPECT_TRUE(spacepoints_recon.size() > 0);
+  for (traccc::edm::spacepoint_collection::host::size_type i = 0u;
+       i < spacepoints_recon.size(); ++i) {
+    const auto sp_recon = spacepoints_recon.at(i);
 
-    for (traccc::edm::spacepoint_collection::host::size_type i = 0u;
-         i < spacepoints_recon.size(); ++i) {
+    bool found_match = false;
 
-        const auto sp_recon = spacepoints_recon.at(i);
+    // 20% resolution (Should be improved)
+    auto iso = traccc::details::is_same_object(sp_recon, 0.2f);
 
-        bool found_match = false;
+    for (traccc::edm::spacepoint_collection::host::size_type j = 0u;
+         j < spacepoints_truth.size(); ++j) {
+      const auto sp_truth = spacepoints_truth.at(j);
 
-        // 20% resolution (Should be improved)
-        auto iso = traccc::details::is_same_object(sp_recon, 0.2f);
+      // Do not include the comparison of the measurement of spacepoint
+      found_match = iso(sp_truth);
 
-        for (traccc::edm::spacepoint_collection::host::size_type j = 0u;
-             j < spacepoints_truth.size(); ++j) {
-
-            const auto sp_truth = spacepoints_truth.at(j);
-
-            // Do not include the comparison of the measurement of spacepoint
-            found_match = iso(sp_truth);
-
-            if (found_match) {
-                break;
-            }
-        }
-
-        EXPECT_EQ(found_match, true);
+      if (found_match) {
+        break;
+      }
     }
+
+    EXPECT_EQ(found_match, true);
+  }
 }
 
 INSTANTIATE_TEST_SUITE_P(

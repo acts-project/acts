@@ -12,13 +12,13 @@
 
 /// Helper macro used for checking @c cudaError_t type return values.
 #define TRACCC_CUDA_ERROR_CHECK(EXP)                                      \
-    do {                                                                  \
-        cudaError_t errorCode = EXP;                                      \
-        if (errorCode != cudaSuccess) {                                   \
-            traccc::cuda_utils::details::throw_error(errorCode, #EXP,     \
-                                                     __FILE__, __LINE__); \
-        }                                                                 \
-    } while (false)
+  do {                                                                    \
+    cudaError_t errorCode = EXP;                                          \
+    if (errorCode != cudaSuccess) {                                       \
+      traccc::cuda_utils::details::throw_error(errorCode, #EXP, __FILE__, \
+                                               __LINE__);                 \
+    }                                                                     \
+  } while (false)
 
 namespace traccc::cuda_utils::details {
 

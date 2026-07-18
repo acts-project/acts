@@ -16,7 +16,6 @@ import time
 
 from traccc_bench_tools import parse_profile, types, build, profile, benchmark
 
-
 ALL_COMPUTE_CAPABILITIES = [
     "50",
     "52",

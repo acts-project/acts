@@ -15,15 +15,13 @@
 namespace traccc::alpaka::details {
 
 Queue& get_queue(queue& q) {
-
-    assert(q.alpakaQueue() != nullptr);
-    return *(reinterpret_cast<Queue*>(q.alpakaQueue()));
+  assert(q.alpakaQueue() != nullptr);
+  return *(reinterpret_cast<Queue*>(q.alpakaQueue()));
 }
 
 const Queue& get_queue(const queue& q) {
-
-    assert(q.alpakaQueue() != nullptr);
-    return *(reinterpret_cast<const Queue*>(q.alpakaQueue()));
+  assert(q.alpakaQueue() != nullptr);
+  return *(reinterpret_cast<const Queue*>(q.alpakaQueue()));
 }
 
 }  // namespace traccc::alpaka::details

@@ -21,72 +21,66 @@ void propagator_test(
     vecmem::data::jagged_vector_view<detail::step_data<test_algebra>>&
         steps_data,
     detray::sycl::queue_wrapper queue) {
+  unsigned int localSize = 64;
+  unsigned int globalSize = tracks_data.size();
 
-    unsigned int localSize = 64;
-    unsigned int globalSize = tracks_data.size();
+  const auto num = (globalSize + localSize - 1) / localSize;
+  const auto ndrange = ::sycl::nd_range<1>{::sycl::range<1>(num * localSize),
+                                           ::sycl::range<1>(localSize)};
 
-    const auto num = (globalSize + localSize - 1) / localSize;
-    const auto ndrange = ::sycl::nd_range<1>{::sycl::range<1>(num * localSize),
-                                             ::sycl::range<1>(localSize)};
+  reinterpret_cast<::sycl::queue*>(queue.queue())
+      ->submit([&](::sycl::handler& h) {
+        h.parallel_for(ndrange, [det_data, cfg, field_data, tracks_data,
+                                 steps_data](::sycl::nd_item<1> item) {
+          using detector_device_t =
+              detector<typename detector_t::metadata, device_container_types>;
 
-    reinterpret_cast<::sycl::queue*>(queue.queue())
-        ->submit([&](::sycl::handler& h) {
-            h.parallel_for(ndrange, [det_data, cfg, field_data, tracks_data,
-                                     steps_data](::sycl::nd_item<1> item) {
-                using detector_device_t =
-                    detector<typename detector_t::metadata,
-                             device_container_types>;
+          static_assert(std::is_same_v<typename detector_t::view_type,
+                                       typename detector_device_t::view_type>,
+                        "Host and device detector views do not match");
 
-                static_assert(
-                    std::is_same_v<typename detector_t::view_type,
-                                   typename detector_device_t::view_type>,
-                    "Host and device detector views do not match");
+          detector_device_t dev_det(det_data);
 
-                detector_device_t dev_det(det_data);
+          vecmem::device_vector<test_track> tracks(tracks_data);
+          vecmem::jagged_device_vector<detail::step_data<test_algebra>> steps(
+              steps_data);
 
-                vecmem::device_vector<test_track> tracks(tracks_data);
-                vecmem::jagged_device_vector<detail::step_data<test_algebra>>
-                    steps(steps_data);
+          unsigned int gid = item.get_global_linear_id();
 
-                unsigned int gid = item.get_global_linear_id();
+          if (gid >= tracks.size()) {
+            return;
+          }
 
-                if (gid >= tracks.size()) {
-                    return;
-                }
+          auto stepr = rk_stepper_t<covfie::field_view<bfield_bknd_t>>{};
+          auto nav = navigator_t<detector_device_t>{};
 
-                auto stepr = rk_stepper_t<covfie::field_view<bfield_bknd_t>>{};
-                auto nav = navigator_t<detector_device_t>{};
+          // Create propagator
+          using propagator_device_t =
+              propagator<decltype(stepr), decltype(nav), actor_chain_device_t>;
+          propagator_device_t p{cfg};
 
-                // Create propagator
-                using propagator_device_t =
-                    propagator<decltype(stepr), decltype(nav),
-                               actor_chain_device_t>;
-                propagator_device_t p{cfg};
+          // Create actor states
+          step_tracer_device_t::state tracer_state(steps.at(gid));
+          pathlimit_aborter_t::state aborter_state{cfg.stepping.path_limit};
+          actor::parameter_updater_state<test_algebra> updater_state{cfg};
+          actor::pointwise_material_interactor<test_algebra>::state
+              interactor_state{};
 
-                // Create actor states
-                step_tracer_device_t::state tracer_state(steps.at(gid));
-                pathlimit_aborter_t::state aborter_state{
-                    cfg.stepping.path_limit};
-                actor::parameter_updater_state<test_algebra> updater_state{cfg};
-                actor::pointwise_material_interactor<test_algebra>::state
-                    interactor_state{};
+          // Create the actor states
+          auto actor_states = ::detray::tie(tracer_state, aborter_state,
+                                            updater_state, interactor_state);
+          // Create the propagator state
+          typename propagator_device_t::state state(tracks[gid], field_data,
+                                                    dev_det);
 
-                // Create the actor states
-                auto actor_states =
-                    ::detray::tie(tracer_state, aborter_state, updater_state,
-                                  interactor_state);
-                // Create the propagator state
-                typename propagator_device_t::state state(tracks[gid],
-                                                          field_data, dev_det);
+          state.stepping()
+              .template set_constraint<step::constraint::e_accuracy>(
+                  cfg.stepping.step_constraint);
 
-                state.stepping()
-                    .template set_constraint<step::constraint::e_accuracy>(
-                        cfg.stepping.step_constraint);
-
-                p.propagate(state, actor_states);
-            });
-        })
-        .wait_and_throw();
+          p.propagate(state, actor_states);
+        });
+      })
+      .wait_and_throw();
 }
 
 /// Explicit instantiation for a constant magnetic field

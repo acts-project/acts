@@ -26,10 +26,8 @@ __global__ void estimate_track_params(
     edm::spacepoint_collection::const_view spacepoints,
     edm::seed_collection::const_view seeds, const bfield_t bfield,
     bound_track_parameters_collection_types::view params_view) {
-
-    device::estimate_track_params(details::global_index1(), config,
-                                  measurements, spacepoints, seeds, bfield,
-                                  params_view);
+  device::estimate_track_params(details::global_index1(), config, measurements,
+                                spacepoints, seeds, bfield, params_view);
 }
 
 }  // namespace kernels
@@ -44,18 +42,16 @@ seed_parameter_estimation_algorithm::seed_parameter_estimation_algorithm(
 
 void seed_parameter_estimation_algorithm::estimate_seed_params_kernel(
     const struct estimate_seed_params_kernel_payload& payload) const {
-
-    const unsigned int n_threads = warp_size() * 4;
-    const unsigned int n_blocks = (payload.n_seeds + n_threads - 1) / n_threads;
-    magnetic_field_visitor<bfield_type_list<scalar>>(
-        payload.bfield,
-        [&]<typename bfield_view_t>(const bfield_view_t& bfield) {
-            kernels::estimate_track_params<<<n_blocks, n_threads, 0,
-                                             details::get_stream(stream())>>>(
-                payload.config, payload.measurements, payload.spacepoints,
-                payload.seeds, bfield, payload.params);
-        });
-    TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+  const unsigned int n_threads = warp_size() * 4;
+  const unsigned int n_blocks = (payload.n_seeds + n_threads - 1) / n_threads;
+  magnetic_field_visitor<bfield_type_list<scalar>>(
+      payload.bfield, [&]<typename bfield_view_t>(const bfield_view_t& bfield) {
+        kernels::estimate_track_params<<<n_blocks, n_threads, 0,
+                                         details::get_stream(stream())>>>(
+            payload.config, payload.measurements, payload.spacepoints,
+            payload.seeds, bfield, payload.params);
+      });
+  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
 }  // namespace traccc::cuda

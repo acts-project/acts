@@ -28,68 +28,63 @@ namespace kernels {
 
 /// Alpaka kernel for running @c traccc::device::ccl_kernel
 struct ccl_kernel {
+  template <typename TAcc>
+  ALPAKA_FN_ACC void operator()(
+      TAcc const& acc, const clustering_config cfg,
+      const edm::silicon_cell_collection::const_view cells_view,
+      const detector_design_description::const_view det_descr_view,
+      const detector_conditions_description::const_view det_cond_view,
+      vecmem::data::vector_view<device::details::fallback_index_t>
+          f_backup_view,
+      vecmem::data::vector_view<device::details::fallback_index_t>
+          gf_backup_view,
+      vecmem::data::vector_view<unsigned char> adjc_backup_view,
+      vecmem::data::vector_view<device::details::fallback_index_t>
+          adjv_backup_view,
+      uint32_t* backup_mutex_ptr,
+      vecmem::data::vector_view<unsigned int> disjoint_set_view,
+      vecmem::data::vector_view<unsigned int> cluster_size_view,
+      edm::measurement_collection::view measurements_view) const {
+    details::thread_id1 thread_id(acc);
 
-    template <typename TAcc>
-    ALPAKA_FN_ACC void operator()(
-        TAcc const& acc, const clustering_config cfg,
-        const edm::silicon_cell_collection::const_view cells_view,
-        const detector_design_description::const_view det_descr_view,
-        const detector_conditions_description::const_view det_cond_view,
-        vecmem::data::vector_view<device::details::fallback_index_t>
-            f_backup_view,
-        vecmem::data::vector_view<device::details::fallback_index_t>
-            gf_backup_view,
-        vecmem::data::vector_view<unsigned char> adjc_backup_view,
-        vecmem::data::vector_view<device::details::fallback_index_t>
-            adjv_backup_view,
-        uint32_t* backup_mutex_ptr,
-        vecmem::data::vector_view<unsigned int> disjoint_set_view,
-        vecmem::data::vector_view<unsigned int> cluster_size_view,
-        edm::measurement_collection::view measurements_view) const {
+    auto& partition_start =
+        ::alpaka::declareSharedVar<std::size_t, __COUNTER__>(acc);
+    auto& partition_end =
+        ::alpaka::declareSharedVar<std::size_t, __COUNTER__>(acc);
+    auto& outi = ::alpaka::declareSharedVar<std::size_t, __COUNTER__>(acc);
 
-        details::thread_id1 thread_id(acc);
+    device::details::index_t* const shared_v =
+        ::alpaka::getDynSharedMem<device::details::index_t>(acc);
+    vecmem::data::vector_view<device::details::index_t> f_view{
+        cfg.max_partition_size(), shared_v};
+    vecmem::data::vector_view<device::details::index_t> gf_view{
+        cfg.max_partition_size(), shared_v + cfg.max_partition_size()};
 
-        auto& partition_start =
-            ::alpaka::declareSharedVar<std::size_t, __COUNTER__>(acc);
-        auto& partition_end =
-            ::alpaka::declareSharedVar<std::size_t, __COUNTER__>(acc);
-        auto& outi = ::alpaka::declareSharedVar<std::size_t, __COUNTER__>(acc);
+    vecmem::device_atomic_ref<uint32_t> backup_mutex(*backup_mutex_ptr);
 
-        device::details::index_t* const shared_v =
-            ::alpaka::getDynSharedMem<device::details::index_t>(acc);
-        vecmem::data::vector_view<device::details::index_t> f_view{
-            cfg.max_partition_size(), shared_v};
-        vecmem::data::vector_view<device::details::index_t> gf_view{
-            cfg.max_partition_size(), shared_v + cfg.max_partition_size()};
+    alpaka::barrier<TAcc> barry_r(&acc);
 
-        vecmem::device_atomic_ref<uint32_t> backup_mutex(*backup_mutex_ptr);
-
-        alpaka::barrier<TAcc> barry_r(&acc);
-
-        device::ccl_kernel(cfg, thread_id, cells_view, det_descr_view,
-                           det_cond_view, partition_start, partition_end, outi,
-                           f_view, gf_view, f_backup_view, gf_backup_view,
-                           adjc_backup_view, adjv_backup_view, backup_mutex,
-                           disjoint_set_view, cluster_size_view, barry_r,
-                           measurements_view);
-    }
+    device::ccl_kernel(
+        cfg, thread_id, cells_view, det_descr_view, det_cond_view,
+        partition_start, partition_end, outi, f_view, gf_view, f_backup_view,
+        gf_backup_view, adjc_backup_view, adjv_backup_view, backup_mutex,
+        disjoint_set_view, cluster_size_view, barry_r, measurements_view);
+  }
 
 };  // struct ccl_kernel
 
 /// Alpaka kernel for running @c traccc::device::reify_cluster_data
 struct reify_cluster_data {
-
-    template <typename TAcc>
-    ALPAKA_FN_ACC void operator()(
-        TAcc const& acc,
-        vecmem::data::vector_view<const unsigned int> disjoint_set_view,
-        vecmem::data::vector_view<const unsigned int> permutation_map_view,
-        traccc::edm::silicon_cluster_collection::view cluster_view) const {
-
-        device::reify_cluster_data(details::thread_id1{acc}.getGlobalThreadId(),
-                                   disjoint_set_view, permutation_map_view,
-                                   cluster_view);
-    }
+  template <typename TAcc>
+  ALPAKA_FN_ACC void operator()(
+      TAcc const& acc,
+      vecmem::data::vector_view<const unsigned int> disjoint_set_view,
+      vecmem::data::vector_view<const unsigned int> permutation_map_view,
+      traccc::edm::silicon_cluster_collection::view cluster_view) const {
+    device::reify_cluster_data(details::thread_id1{acc}.getGlobalThreadId(),
+                               disjoint_set_view, permutation_map_view,
+                               cluster_view);
+  }
 
 };  // struct reify_cluster_data
 
@@ -104,44 +99,40 @@ clusterization_algorithm::clusterization_algorithm(
 
 bool clusterization_algorithm::input_is_contiguous(
     const edm::silicon_cell_collection::const_view&) const {
-
-    // TODO: implement sanity checks for the input data in Alpaka
-    return true;
+  // TODO: implement sanity checks for the input data in Alpaka
+  return true;
 }
 
 bool clusterization_algorithm::input_is_sorted(
     const edm::silicon_cell_collection::const_view&) const {
-
-    // TODO: implement sanity checks for the input data in Alpaka
-    return true;
+  // TODO: implement sanity checks for the input data in Alpaka
+  return true;
 }
 
 void clusterization_algorithm::sort_cells_kernel(
     const unsigned int, const edm::silicon_cell_collection::const_view&,
     edm::silicon_cell_collection::view&,
     vecmem::data::vector_view<unsigned int>&, const bool) const {
-
-    throw std::runtime_error(
-        "Cell sorting is not yet implemented for the Alpaka backend.");
+  throw std::runtime_error(
+      "Cell sorting is not yet implemented for the Alpaka backend.");
 }
 
 void clusterization_algorithm::ccl_kernel(
     const ccl_kernel_payload& payload) const {
-
-    Idx num_blocks =
-        (payload.n_cells + (payload.config.target_partition_size()) - 1) /
-        payload.config.target_partition_size();
-    static_assert(::alpaka::isMultiThreadAcc<Acc>,
-                  "Clustering algorithm must be compiled for an accelerator "
-                  "with support for multi-thread blocks.");
-    auto workDiv =
-        makeWorkDiv<Acc>(num_blocks, payload.config.threads_per_partition);
-    ::alpaka::exec<Acc>(
-        details::get_queue(queue()), workDiv, kernels::ccl_kernel{},
-        payload.config, payload.cells, payload.det_descr, payload.det_cond,
-        payload.f_backup, payload.gf_backup, payload.adjc_backup,
-        payload.adjv_backup, payload.backup_mutex, payload.disjoint_set,
-        payload.cluster_sizes, payload.measurements);
+  Idx num_blocks =
+      (payload.n_cells + (payload.config.target_partition_size()) - 1) /
+      payload.config.target_partition_size();
+  static_assert(::alpaka::isMultiThreadAcc<Acc>,
+                "Clustering algorithm must be compiled for an accelerator "
+                "with support for multi-thread blocks.");
+  auto workDiv =
+      makeWorkDiv<Acc>(num_blocks, payload.config.threads_per_partition);
+  ::alpaka::exec<Acc>(
+      details::get_queue(queue()), workDiv, kernels::ccl_kernel{},
+      payload.config, payload.cells, payload.det_descr, payload.det_cond,
+      payload.f_backup, payload.gf_backup, payload.adjc_backup,
+      payload.adjv_backup, payload.backup_mutex, payload.disjoint_set,
+      payload.cluster_sizes, payload.measurements);
 }
 
 void clusterization_algorithm::cluster_maker_kernel(
@@ -150,19 +141,18 @@ void clusterization_algorithm::cluster_maker_kernel(
     edm::silicon_cluster_collection::view& cluster_data,
     const vecmem::data::vector_view<const unsigned int>& permutation_map_view)
     const {
-
-    const unsigned int num_threads = warp_size() * 16u;
-    const unsigned int num_blocks = (num_cells + num_threads - 1) / num_threads;
-    static_assert(::alpaka::isMultiThreadAcc<Acc>,
-                  "Clustering algorithm must be compiled for an accelerator "
-                  "with support for multi-thread blocks.");
-    auto workDiv = makeWorkDiv<Acc>(num_blocks, num_threads);
-    ::alpaka::exec<Acc>(details::get_queue(queue()), workDiv,
-                        kernels::reify_cluster_data{}, disjoint_set,
-                        permutation_map_view, cluster_data);
-    // The base class destroys the input buffers right after this call, so
-    // the kernel must finish before returning.
-    queue().synchronize();
+  const unsigned int num_threads = warp_size() * 16u;
+  const unsigned int num_blocks = (num_cells + num_threads - 1) / num_threads;
+  static_assert(::alpaka::isMultiThreadAcc<Acc>,
+                "Clustering algorithm must be compiled for an accelerator "
+                "with support for multi-thread blocks.");
+  auto workDiv = makeWorkDiv<Acc>(num_blocks, num_threads);
+  ::alpaka::exec<Acc>(details::get_queue(queue()), workDiv,
+                      kernels::reify_cluster_data{}, disjoint_set,
+                      permutation_map_view, cluster_data);
+  // The base class destroys the input buffers right after this call, so
+  // the kernel must finish before returning.
+  queue().synchronize();
 }
 
 }  // namespace traccc::alpaka
@@ -172,16 +162,15 @@ namespace alpaka::trait {
 
 template <typename TAcc>
 struct BlockSharedMemDynSizeBytes<traccc::alpaka::kernels::ccl_kernel, TAcc> {
-    template <typename TVec, typename... TArgs>
-    ALPAKA_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(
-        traccc::alpaka::kernels::ccl_kernel const& /* kernel */,
-        TVec const& /* blockThreadExtent */, TVec const& /* threadElemExtent */,
-        const traccc::clustering_config config, TArgs const&... /* args */
-        ) -> std::size_t {
-        return static_cast<std::size_t>(
-            2 * config.max_partition_size() *
-            sizeof(traccc::device::details::index_t));
-    }
+  template <typename TVec, typename... TArgs>
+  ALPAKA_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(
+      traccc::alpaka::kernels::ccl_kernel const& /* kernel */,
+      TVec const& /* blockThreadExtent */, TVec const& /* threadElemExtent */,
+      const traccc::clustering_config config, TArgs const&... /* args */
+      ) -> std::size_t {
+    return static_cast<std::size_t>(2 * config.max_partition_size() *
+                                    sizeof(traccc::device::details::index_t));
+  }
 };
 
 }  // namespace alpaka::trait

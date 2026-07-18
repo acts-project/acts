@@ -16,17 +16,17 @@ namespace traccc::details {
 ///
 template <typename CTYPE, typename NCTYPE>
 struct is_same_nc {
-    static constexpr bool value = false;
+  static constexpr bool value = false;
 };
 
 template <typename TYPE>
 struct is_same_nc<TYPE, TYPE> {
-    static constexpr bool value = true;
+  static constexpr bool value = true;
 };
 
 template <typename TYPE>
 struct is_same_nc<const TYPE, TYPE> {
-    static constexpr bool value = true;
+  static constexpr bool value = true;
 };
 
 }  // namespace traccc::details

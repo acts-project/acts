@@ -37,37 +37,36 @@ class combinatorial_kalman_filter_algorithm
           const edm::measurement_collection::const_view&,
           const bound_track_parameters_collection_types::const_view&)>,
       public messaging {
+ public:
+  /// Configuration type
+  using config_type = finding_config;
 
-    public:
-    /// Configuration type
-    using config_type = finding_config;
+  /// Constructor with the algorithm's configuration
+  explicit combinatorial_kalman_filter_algorithm(
+      const config_type& config, vecmem::memory_resource& mr,
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
 
-    /// Constructor with the algorithm's configuration
-    explicit combinatorial_kalman_filter_algorithm(
-        const config_type& config, vecmem::memory_resource& mr,
-        std::unique_ptr<const Logger> logger = getDummyLogger().clone());
+  /// Execute the algorithm
+  ///
+  /// @param det          The detector object
+  /// @param bfield       The magnetic field object
+  /// @param measurements All measurements in an event
+  /// @param seeds        All seeds in an event to start the track finding
+  ///                     with
+  ///
+  /// @return A container of the found track candidates
+  ///
+  output_type operator()(
+      const host_detector& det, const magnetic_field& bfield,
+      const edm::measurement_collection::const_view& measurements,
+      const bound_track_parameters_collection_types::const_view& seeds)
+      const override;
 
-    /// Execute the algorithm
-    ///
-    /// @param det          The detector object
-    /// @param bfield       The magnetic field object
-    /// @param measurements All measurements in an event
-    /// @param seeds        All seeds in an event to start the track finding
-    ///                     with
-    ///
-    /// @return A container of the found track candidates
-    ///
-    output_type operator()(
-        const host_detector& det, const magnetic_field& bfield,
-        const edm::measurement_collection::const_view& measurements,
-        const bound_track_parameters_collection_types::const_view& seeds)
-        const override;
-
-    private:
-    /// Algorithm configuration
-    config_type m_config;
-    /// Memory resource
-    std::reference_wrapper<vecmem::memory_resource> m_mr;
+ private:
+  /// Algorithm configuration
+  config_type m_config;
+  /// Memory resource
+  std::reference_wrapper<vecmem::memory_resource> m_mr;
 
 };  // class combinatorial_kalman_filter_algorithm
 

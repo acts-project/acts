@@ -20,13 +20,13 @@ namespace traccc::device {
 TRACCC_HOST_DEVICE inline uint64_t encode_insertion_mutex(const bool locked,
                                                           const uint32_t size,
                                                           const float max) {
-    // Assert that the MSB of the size is zero
-    assert(size <= 0x7FFFFFFF);
+  // Assert that the MSB of the size is zero
+  assert(size <= 0x7FFFFFFF);
 
-    const uint32_t hi = size | (locked ? 0x80000000 : 0x0);
-    const uint32_t lo = std::bit_cast<uint32_t>(max);
+  const uint32_t hi = size | (locked ? 0x80000000 : 0x0);
+  const uint32_t lo = std::bit_cast<uint32_t>(max);
 
-    return (static_cast<uint64_t>(hi) << 32) | lo;
+  return (static_cast<uint64_t>(hi) << 32) | lo;
 }
 
 /**
@@ -34,10 +34,10 @@ TRACCC_HOST_DEVICE inline uint64_t encode_insertion_mutex(const bool locked,
  */
 TRACCC_HOST_DEVICE inline std::tuple<bool, uint32_t, float>
 decode_insertion_mutex(const uint64_t val) {
-    const uint32_t hi = static_cast<uint32_t>(val >> 32);
-    const uint32_t lo = val & 0xFFFFFFFF;
+  const uint32_t hi = static_cast<uint32_t>(val >> 32);
+  const uint32_t lo = val & 0xFFFFFFFF;
 
-    return {static_cast<bool>(hi & 0x80000000), (hi & 0x7FFFFFFF),
-            std::bit_cast<float>(lo)};
+  return {static_cast<bool>(hi & 0x80000000), (hi & 0x7FFFFFFF),
+          std::bit_cast<float>(lo)};
 }
 }  // namespace traccc::device

@@ -35,77 +35,77 @@ namespace traccc::device {
  */
 template <typename Mutex>
 class unique_lock {
-    public:
-    using mutex_type = Mutex;
+ public:
+  using mutex_type = Mutex;
 
-    /**
-     * @brief Construct a unique lock without locking.
-     */
-    TRACCC_HOST_DEVICE
-    unique_lock(mutex_type& m, std::defer_lock_t);
+  /**
+   * @brief Construct a unique lock without locking.
+   */
+  TRACCC_HOST_DEVICE
+  unique_lock(mutex_type& m, std::defer_lock_t);
 
-    /**
-     * @brief Construct a unique lock, attempting to lock it.
-     *
-     * @warning This function returning does _not_ guarantee that the lock has
-     * been acquired.
-     *
-     * @note Despite the warnings about acquiring locks in lockstep
-     * architectures, calling this function across multiple threads is safe as
-     * it is a non-blocking lock, e.g. it will fail for all but at most one
-     * thread.
-     */
-    TRACCC_HOST_DEVICE
-    unique_lock(mutex_type& m, std::try_to_lock_t);
+  /**
+   * @brief Construct a unique lock, attempting to lock it.
+   *
+   * @warning This function returning does _not_ guarantee that the lock has
+   * been acquired.
+   *
+   * @note Despite the warnings about acquiring locks in lockstep
+   * architectures, calling this function across multiple threads is safe as
+   * it is a non-blocking lock, e.g. it will fail for all but at most one
+   * thread.
+   */
+  TRACCC_HOST_DEVICE
+  unique_lock(mutex_type& m, std::try_to_lock_t);
 
-    /**
-     * @brief Construct a unique lock which was previously locked.
-     */
-    TRACCC_HOST_DEVICE
-    unique_lock(mutex_type& m, std::adopt_lock_t);
+  /**
+   * @brief Construct a unique lock which was previously locked.
+   */
+  TRACCC_HOST_DEVICE
+  unique_lock(mutex_type& m, std::adopt_lock_t);
 
-    /**
-     * @brief Destroy a lock, freeing the underlying mutex.
-     */
-    TRACCC_HOST_DEVICE
-    ~unique_lock();
+  /**
+   * @brief Destroy a lock, freeing the underlying mutex.
+   */
+  TRACCC_HOST_DEVICE
+  ~unique_lock();
 
-    /**
-     * @brief Lock the lock, blocking until the operation succeeds.
-     *
-     * @warning On lockstep architectures, calling this method on more than a
-     * single thread in a group will result in deadlock.
-     */
-    TRACCC_HOST_DEVICE
-    void lock();
+  /**
+   * @brief Lock the lock, blocking until the operation succeeds.
+   *
+   * @warning On lockstep architectures, calling this method on more than a
+   * single thread in a group will result in deadlock.
+   */
+  TRACCC_HOST_DEVICE
+  void lock();
 
-    /**
-     * @brief Try to lock the lock without blocking.
-     *
-     * @note Calling this method from multiple threads in the same block is
-     * safe.
-     */
-    TRACCC_HOST_DEVICE
-    bool try_lock();
+  /**
+   * @brief Try to lock the lock without blocking.
+   *
+   * @note Calling this method from multiple threads in the same block is
+   * safe.
+   */
+  TRACCC_HOST_DEVICE
+  bool try_lock();
 
-    /**
-     * @brief Explicitly unlock the underlying lock.
-     *
-     * @warning Calling this method on a lock which has not been acquired
-     * constitutes undefined behaviour.
-     */
-    TRACCC_HOST_DEVICE
-    void unlock();
+  /**
+   * @brief Explicitly unlock the underlying lock.
+   *
+   * @warning Calling this method on a lock which has not been acquired
+   * constitutes undefined behaviour.
+   */
+  TRACCC_HOST_DEVICE
+  void unlock();
 
-    /**
-     * @brief Check if the lock is locked by this object.
-     */
-    TRACCC_HOST_DEVICE
-    bool owns_lock() const;
+  /**
+   * @brief Check if the lock is locked by this object.
+   */
+  TRACCC_HOST_DEVICE
+  bool owns_lock() const;
 
-    private:
-    mutex_type* m_mutex_ptr = nullptr;
-    bool m_owns_lock;
+ private:
+  mutex_type* m_mutex_ptr = nullptr;
+  bool m_owns_lock;
 };
 }  // namespace traccc::device
 

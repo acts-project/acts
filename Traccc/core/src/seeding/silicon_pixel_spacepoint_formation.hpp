@@ -32,31 +32,30 @@ edm::spacepoint_collection::host silicon_pixel_spacepoint_formation(
     const detector_t& det,
     const edm::measurement_collection::const_view& measurements_view,
     vecmem::memory_resource& mr) {
+  // Create a device container for the input.
+  const typename edm::measurement_collection::const_device measurements{
+      measurements_view};
 
-    // Create a device container for the input.
-    const typename edm::measurement_collection::const_device measurements{
-        measurements_view};
+  // Create the result container.
+  edm::spacepoint_collection::host result(mr);
+  result.reserve(measurements.size());
 
-    // Create the result container.
-    edm::spacepoint_collection::host result(mr);
-    result.reserve(measurements.size());
-
-    // Set up each spacepoint in the result container.
-    for (unsigned int i = 0; i < measurements.size(); ++i) {
-        const edm::measurement meas = measurements.at(i);
-        if (traccc::details::is_valid_measurement(meas)) {
-            const std::size_t sp_index = result.size();
-            result.resize(sp_index + 1u);
-            edm::spacepoint sp = result.at(sp_index);
-            traccc::details::fill_pixel_spacepoint(sp, det, meas);
-            sp.measurement_index_1() = i;
-            sp.measurement_index_2() =
-                edm::spacepoint_collection::host::INVALID_MEASUREMENT_INDEX;
-        }
+  // Set up each spacepoint in the result container.
+  for (unsigned int i = 0; i < measurements.size(); ++i) {
+    const edm::measurement meas = measurements.at(i);
+    if (traccc::details::is_valid_measurement(meas)) {
+      const std::size_t sp_index = result.size();
+      result.resize(sp_index + 1u);
+      edm::spacepoint sp = result.at(sp_index);
+      traccc::details::fill_pixel_spacepoint(sp, det, meas);
+      sp.measurement_index_1() = i;
+      sp.measurement_index_2() =
+          edm::spacepoint_collection::host::INVALID_MEASUREMENT_INDEX;
     }
+  }
 
-    // Return the created container.
-    return result;
+  // Return the created container.
+  return result;
 }
 
 }  // namespace traccc::host::details

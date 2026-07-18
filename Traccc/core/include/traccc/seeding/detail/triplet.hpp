@@ -18,38 +18,36 @@ namespace traccc {
 
 /// Item: triplets of middle-bottom-top
 struct triplet {
-    // bottom spacepoint location in internal spacepoint container
-    sp_location sp1;
-    // middle spacepoint location in internal spacepoint container
-    sp_location sp2;
-    // top spacepoint location in internal spacepoint container
-    sp_location sp3;
-    // curvtaure of circle estimated from triplet
-    scalar curvature;
-    // weight of triplet
-    scalar weight;
-    // z origin of triplet
-    scalar z_vertex;
+  // bottom spacepoint location in internal spacepoint container
+  sp_location sp1;
+  // middle spacepoint location in internal spacepoint container
+  sp_location sp2;
+  // top spacepoint location in internal spacepoint container
+  sp_location sp3;
+  // curvtaure of circle estimated from triplet
+  scalar curvature;
+  // weight of triplet
+  scalar weight;
+  // z origin of triplet
+  scalar z_vertex;
 };
 
 inline TRACCC_HOST_DEVICE bool operator==(const triplet& lhs,
                                           const triplet& rhs) {
-    return (lhs.sp1.bin_idx == rhs.sp1.bin_idx &&
-            lhs.sp1.sp_idx == rhs.sp1.sp_idx &&
-            lhs.sp2.bin_idx == rhs.sp2.bin_idx &&
-            lhs.sp2.sp_idx == rhs.sp2.sp_idx &&
-            lhs.sp3.bin_idx == rhs.sp3.bin_idx &&
-            lhs.sp3.sp_idx == rhs.sp3.sp_idx);
+  return (
+      lhs.sp1.bin_idx == rhs.sp1.bin_idx && lhs.sp1.sp_idx == rhs.sp1.sp_idx &&
+      lhs.sp2.bin_idx == rhs.sp2.bin_idx && lhs.sp2.sp_idx == rhs.sp2.sp_idx &&
+      lhs.sp3.bin_idx == rhs.sp3.bin_idx && lhs.sp3.sp_idx == rhs.sp3.sp_idx);
 }
 
 inline TRACCC_HOST_DEVICE bool operator!=(const triplet& lhs,
                                           const triplet& rhs) {
-    return !(lhs == rhs);
+  return !(lhs == rhs);
 }
 
 inline TRACCC_HOST_DEVICE bool operator<(const triplet& lhs,
                                          const triplet& rhs) {
-    return lhs.weight < rhs.weight;
+  return lhs.weight < rhs.weight;
 }
 
 /// Declare all triplet collection types

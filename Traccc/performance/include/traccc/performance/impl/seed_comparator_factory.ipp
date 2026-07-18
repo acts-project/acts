@@ -20,28 +20,26 @@ namespace traccc::details {
 /// @c traccc::edm::seed
 template <typename T>
 class comparator_factory<edm::seed<T>> {
+ public:
+  /// Constructor with all necessary arguments
+  comparator_factory(
+      const edm::spacepoint_collection::const_view& ref_spacepoints,
+      const edm::spacepoint_collection::const_view& test_spacepoints)
+      : m_ref_spacepoints(ref_spacepoints),
+        m_test_spacepoints(test_spacepoints) {}
 
-    public:
-    /// Constructor with all necessary arguments
-    comparator_factory(
-        const edm::spacepoint_collection::const_view& ref_spacepoints,
-        const edm::spacepoint_collection::const_view& test_spacepoints)
-        : m_ref_spacepoints(ref_spacepoints),
-          m_test_spacepoints(test_spacepoints) {}
+  /// Instantiate an instance of a comparator object
+  is_same_object<edm::seed<T>> make_comparator(
+      const edm::seed<T>& ref, scalar unc = float_epsilon) const {
+    return is_same_object<edm::seed<T>>(m_ref_spacepoints, m_test_spacepoints,
+                                        ref, unc);
+  }
 
-    /// Instantiate an instance of a comparator object
-    is_same_object<edm::seed<T>> make_comparator(
-        const edm::seed<T>& ref, scalar unc = float_epsilon) const {
-
-        return is_same_object<edm::seed<T>>(m_ref_spacepoints,
-                                            m_test_spacepoints, ref, unc);
-    }
-
-    private:
-    /// Spacepoint container for the reference seeds
-    const edm::spacepoint_collection::const_view m_ref_spacepoints;
-    /// Spacepoint container for the test seeds
-    const edm::spacepoint_collection::const_view m_test_spacepoints;
+ private:
+  /// Spacepoint container for the reference seeds
+  const edm::spacepoint_collection::const_view m_ref_spacepoints;
+  /// Spacepoint container for the test seeds
+  const edm::spacepoint_collection::const_view m_test_spacepoints;
 
 };  // class comparator_factory
 

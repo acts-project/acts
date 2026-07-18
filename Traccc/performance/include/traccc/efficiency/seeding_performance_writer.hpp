@@ -35,50 +35,48 @@ struct seeding_performance_writer_data;
 }  // namespace details
 
 class seeding_performance_writer : public messaging {
+ public:
+  /// Configuration for the tool
+  struct config {
+    /// Output filename.
+    std::string file_path = "performance_track_seeding.root";
+    /// Output file mode
+    std::string file_mode = "RECREATE";
 
-    public:
-    /// Configuration for the tool
-    struct config {
+    /// Plot tool configurations.
+    std::map<std::string, plot_helpers::binning> var_binning = {
+        {"Eta", plot_helpers::binning("#eta", 40, -4.f, 4.f)},
+        {"Phi", plot_helpers::binning("#phi", 100, -3.15f, 3.15f)},
+        {"Pt", plot_helpers::binning("p_{T} [GeV/c]", 40, 0.f, 100.f)},
+        {"Num", plot_helpers::binning("N", 30, -0.5f, 29.5f)}};
 
-        /// Output filename.
-        std::string file_path = "performance_track_seeding.root";
-        /// Output file mode
-        std::string file_mode = "RECREATE";
+    /// Cut values
+    truth_matching_config truth_config;
+    seed_matching_config seed_truth_config;
+  };
 
-        /// Plot tool configurations.
-        std::map<std::string, plot_helpers::binning> var_binning = {
-            {"Eta", plot_helpers::binning("#eta", 40, -4.f, 4.f)},
-            {"Phi", plot_helpers::binning("#phi", 100, -3.15f, 3.15f)},
-            {"Pt", plot_helpers::binning("p_{T} [GeV/c]", 40, 0.f, 100.f)},
-            {"Num", plot_helpers::binning("N", 30, -0.5f, 29.5f)}};
+  /// Construct from configuration and log level.
+  /// @param cfg The configuration
+  ///
+  seeding_performance_writer(const config& cfg,
+                             std::unique_ptr<const traccc::Logger> logger);
 
-        /// Cut values
-        truth_matching_config truth_config;
-        seed_matching_config seed_truth_config;
-    };
+  /// Destructor
+  ~seeding_performance_writer();
 
-    /// Construct from configuration and log level.
-    /// @param cfg The configuration
-    ///
-    seeding_performance_writer(const config& cfg,
-                               std::unique_ptr<const traccc::Logger> logger);
+  void write(const edm::seed_collection::const_view& seeds_view,
+             const edm::spacepoint_collection::const_view& spacepoints_view,
+             const edm::measurement_collection::const_view& measurements_view,
+             const event_data& evt_data);
 
-    /// Destructor
-    ~seeding_performance_writer();
+  void finalize();
 
-    void write(const edm::seed_collection::const_view& seeds_view,
-               const edm::spacepoint_collection::const_view& spacepoints_view,
-               const edm::measurement_collection::const_view& measurements_view,
-               const event_data& evt_data);
+ private:
+  /// Configuration for the tool
+  config m_cfg;
 
-    void finalize();
-
-    private:
-    /// Configuration for the tool
-    config m_cfg;
-
-    /// Opaque data members for the class
-    std::unique_ptr<details::seeding_performance_writer_data> m_data;
+  /// Opaque data members for the class
+  std::unique_ptr<details::seeding_performance_writer_data> m_data;
 
 };  // class seeding_performance_writer
 

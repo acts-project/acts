@@ -5,10 +5,10 @@
 # Mozilla Public License Version 2.0
 
 # Project include(s).
-include( traccc-compiler-options-cpp )
+include(traccc-compiler-options-cpp)
 
 # Look for OpenMP.
-find_package( OpenMP COMPONENTS CXX )
+find_package(OpenMP COMPONENTS CXX)
 
 # Set up the "build" of the traccc::io library.
 traccc_add_library( traccc_io io TYPE SHARED
@@ -83,12 +83,16 @@ traccc_add_library( traccc_io io TYPE SHARED
   "src/obj/write_spacepoints.cpp"
   "src/obj/write_tracks.hpp"
   "src/obj/write_tracks.cpp"
-  )
-target_link_libraries( traccc_io
-  PUBLIC vecmem::core traccc::core Acts::Core
-  PRIVATE detray::core detray::io Acts::PluginJson )
-target_compile_definitions( traccc_io
-  PRIVATE TRACCC_TEST_DATA_DIR="${CMAKE_SOURCE_DIR}/data" )
-if( OpenMP_CXX_FOUND )
-  target_link_libraries( traccc_io PRIVATE OpenMP::OpenMP_CXX )
+)
+target_link_libraries(
+    traccc_io
+    PUBLIC vecmem::core traccc::core Acts::Core
+    PRIVATE detray::core detray::io Acts::PluginJson
+)
+target_compile_definitions(
+    traccc_io
+    PRIVATE TRACCC_TEST_DATA_DIR="${CMAKE_SOURCE_DIR}/data"
+)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(traccc_io PRIVATE OpenMP::OpenMP_CXX)
 endif()

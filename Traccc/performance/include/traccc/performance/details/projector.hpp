@@ -26,16 +26,16 @@ namespace traccc::details {
 ///
 template <typename TYPE>
 struct projector {
-    static constexpr bool exists = false;
+  static constexpr bool exists = false;
 };
 
 template <detray::concepts::algebra algebra_t>
 struct projector<traccc::bound_track_parameters<algebra_t>> {
-    static constexpr bool exists = true;
+  static constexpr bool exists = true;
 
-    float operator()(const traccc::bound_track_parameters<algebra_t>& i) {
-        return static_cast<float>(i.phi());
-    }
+  float operator()(const traccc::bound_track_parameters<algebra_t>& i) {
+    return static_cast<float>(i.phi());
+  }
 };
 
 }  // namespace traccc::details
