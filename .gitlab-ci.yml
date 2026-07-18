@@ -670,22 +670,3 @@ traccc_test_sycl_intel:
     ONEAPI_DEVICE_SELECTOR: opencl:*
   dependencies:
     - traccc_build_sycl_intel
-
-traccc_build_sycl_nvidia:
-  <<: *traccc_build_job
-  image: ghcr.io/acts-project/ubuntu2404_cuda_oneapi:82
-  variables:
-    TRACCC_BUILD_TYPE: SYCL
-    TRACCC_BUILD_PRESET: sycl-fp32
-    TRACCC_SYCL_FLAGS: -fsycl -fsycl-targets=nvidia_gpu_sm_75 -Wno-unknown-cuda-version -Wno-deprecated-declarations
-    TRACCC_CXX_FLAGS: -Wno-deprecated-declarations
-    TRACCC_CMAKE_ARGS: -DTRACCC_BUILD_CUDA=FALSE -DACTS_ENABLE_CUDA=OFF -DVECMEM_BUILD_SYCL_LIBRARY=ON
-
-traccc_test_sycl_nvidia:
-  <<: *traccc_nvidia_test_job
-  image: ghcr.io/acts-project/ubuntu2404_cuda_oneapi:82
-  variables:
-    TRACCC_BUILD_TYPE: SYCL
-    ONEAPI_DEVICE_SELECTOR: cuda:*
-  dependencies:
-    - traccc_build_sycl_nvidia
