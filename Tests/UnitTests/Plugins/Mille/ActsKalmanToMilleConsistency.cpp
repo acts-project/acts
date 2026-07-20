@@ -151,15 +151,15 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanToMille) {
   // unconstrained.
 
   // helper to implement the comparison
-  auto covCompatible = [&](const Acts::DynamicMatrix& m1,
-                           const Acts::DynamicMatrix& m2) {
+  auto covCompatible = [&](const Acts::DynamicMatrix& test,
+                           const Acts::DynamicMatrix& ref) {
     constexpr int paramSize = 6;
     constexpr int rangeToCompare = 5;
-    for (Eigen::Index block = 0; block < m1.rows() / paramSize; ++block) {
-      auto block1 = m1.block(paramSize * block, paramSize * block,
-                             rangeToCompare, rangeToCompare);
-      auto block2 = m2.block(paramSize * block, paramSize * block,
-                             rangeToCompare, rangeToCompare);
+    for (Eigen::Index block = 0; block < test.rows() / paramSize; ++block) {
+      auto block1 = test.block(paramSize * block, paramSize * block,
+                               rangeToCompare, rangeToCompare);
+      auto block2 = ref.block(paramSize * block, paramSize * block,
+                              rangeToCompare, rangeToCompare);
 
       // compare absolute difference, expressed as multiple of the parameter
       // uncertainties
@@ -168,8 +168,9 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanToMille) {
                    block2.diagonal().array().sqrt().matrix().transpose())
                       .array();
 
-      if (pull.abs().maxCoeff() > 1.e-5)
+      if (pull.abs().maxCoeff() > 1.e-5) {
         return false;
+      }
     }
     return true;
   };
