@@ -787,7 +787,7 @@ def test_track_finding_python_only(tmp_path, generic_detector_config):
             srcdir / "Examples/Configs/generic-pixel-sstrips-lstrips-spacepoints.json"
         )
 
-        s, perfWriter = runTrackFindingPythonOnly(
+        s, perfWriterFinder, perfWriterFitter = runTrackFindingPythonOnly(
             trackingGeometry=generic_detector_config.trackingGeometry,
             field=field,
             digiConfigFile=generic_detector_config.digiConfigFile,
@@ -798,8 +798,8 @@ def test_track_finding_python_only(tmp_path, generic_detector_config):
         )
         s.run()
 
-        histograms = perfWriter.histograms()
-        assert len(histograms) > 0, "no performance histograms were produced"
+        assert len(perfWriterFinder.histograms()) > 0, "no finder histograms produced"
+        assert len(perfWriterFitter.histograms()) > 0, "no fitter histograms produced"
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
