@@ -146,15 +146,42 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanToMille) {
                     alignState.alignmentToResidualDerivative);
 
   // for the track parameter covariance, we only compare the regularised version
-  // (differences expected in poorly constrained parameters. Also increase the
-  // tolerance a bit.
-  BOOST_CHECK(millePedeState.trackParametersCovariance.isApprox(
-      ActsPlugins::ActsToMille::regulariseCovariance(
-          alignState.trackParametersCovariance),
-      1.e-6));
+  // (differences expected in poorly constrained parameters). Also increase the
+  // tolerance a bit. Skip the time, which is known to be completely
+  // unconstrained.
+
+  // helper to implement the comparison
+  auto covCompatible = [&](const Acts::DynamicMatrix& m1,
+                           const Acts::DynamicMatrix& m2) {
+    constexpr int paramSize = 6;
+    constexpr int rangeToCompare = 5;
+    for (Eigen::Index block = 0; block < m1.rows() / paramSize; ++block) {
+      auto block1 = m1.block(paramSize * block, paramSize * block,
+                             rangeToCompare, rangeToCompare);
+      auto block2 = m2.block(paramSize * block, paramSize * block,
+                             rangeToCompare, rangeToCompare);
+
+      // compare absolute difference, expressed as multiple of the parameter
+      // uncertainties
+      auto pull = (block1 - block2).array() /
+                  (block1.diagonal().array().sqrt().matrix() *
+                   block2.diagonal().array().sqrt().matrix().transpose())
+                      .array();
+
+      if (pull.abs().maxCoeff() > 1.e-5)
+        return false;
+    }
+    return true;
+  };
+
+  BOOST_CHECK(covCompatible(ActsPlugins::ActsToMille::regulariseCovariance(
+                                alignState.trackParametersCovariance),
+                            millePedeState.trackParametersCovariance));
 
   // for anything derived from the TP covariance, we can also only ask for
   // approximate equivalence as a result.
+  // Here, the role of the minor / non-measured dimensions is smaller
+  // and we can go back to the built-in isApprox.
   BOOST_CHECK(millePedeState.residualCovariance.isApprox(
       alignState.residualCovariance, 1.e-6));
   BOOST_CHECK(millePedeState.alignmentToChi2Derivative.isApprox(
