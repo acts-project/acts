@@ -25,7 +25,7 @@ if ! [[ $mode = @(all|kf|gsf|gx2f|refit_kf|refit_gsf|fullchains|simulation|gx2f_
 fi
 
 outdir=${2:-physmon}
-# number of concurrent histcmp comparison processes
+# number of histcmp worker processes per comparison
 num_jobs=${3:-1}
 mkdir -p $outdir
 mkdir -p $outdir/data
@@ -34,12 +34,6 @@ mkdir -p $outdir/logs
 
 refdir=CI/physmon/reference
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  )
-
-# Skip the raw 2D/3D res_*/pull_* scatter histograms (vs eta, pT, eta-phi,
-# eta-pT) in histcmp: their projections are redundant with the 1D res_*/
-# pull_* histograms.
-res_pull_params="d0|phi|qop|qopt|qopt_rel|t|theta|z0"
-res_pull_2d3d_filter="! ^(res|pull)_(${res_pull_params})_vs_(eta|pT|eta_phi|eta_pT)$"
 
 # File to accumulate the histcmp results
 histcmp_results=$outdir/histcmp_results.csv
@@ -179,30 +173,14 @@ fi
 echo "::endgroup::"
 
 
-# The histcmp comparisons are independent of each other and are run in a pool
-# of up to $num_jobs background processes. Each job writes its output and exit
-# code to $comparison_jobs_dir/<index>/ and the results are replayed in
-# submission order by finish_comparisons.
-comparison_jobs_dir=$outdir/comparison_jobs
-rm -rf $comparison_jobs_dir
-mkdir -p $comparison_jobs_dir
-comparison_job_index=0
-comparison_job_labels=()
-comparison_job_titles=()
-comparison_job_html=()
-
-function wait_for_job_slot() {
-    while [ "$(jobs -rp | wc -l)" -ge "$num_jobs" ]; do
-        sleep 0.2
-    done
-}
-
 function run_histcmp() {
-    local a=$1
-    local b=$2
-    local title=$3
-    local html_path=$4
+    a=$1
+    b=$2
+    title=$3
+    html_path=$4
     shift 4
+
+    echo "::group::Comparing $a vs. $b"
 
     if [ ! -f "$a" ]; then
         echo "::error::histcmp failed: File $a does not exist"
@@ -214,57 +192,32 @@ function run_histcmp() {
         ec=1
     fi
 
-    local jobdir=$comparison_jobs_dir/$comparison_job_index
-    mkdir -p $jobdir
-    comparison_job_labels[$comparison_job_index]="$a vs. $b"
-    comparison_job_titles[$comparison_job_index]="$title"
-    comparison_job_html[$comparison_job_index]="$html_path"
-    comparison_job_index=$(($comparison_job_index + 1))
-
     # histcmp only creates this directory when a plot directory is configured
     mkdir -p $(dirname $outdir/html/$html_path)
 
-    wait_for_job_slot
-    (
-        start=$(date +%s)
-        rc=0
-        run histcmp $a $b \
-            --label-reference=reference \
-            --label-monitored=monitored \
-            --title="$title" \
-            -o $outdir/html/$html_path \
-            "$@" || rc=$?
-        echo "histcmp took $(($(date +%s) - $start)) seconds"
-        echo $rc > $jobdir/ec
-    ) > $jobdir/log 2>&1 &
-}
+    start=$(date +%s)
+    # scatter renders 3D histograms much faster than the default voxel
+    # renderer at every histogram size
+    run histcmp $a $b \
+        --label-reference=reference \
+        --label-monitored=monitored \
+        --title="$title" \
+        --jobs $num_jobs \
+        --renderer-3d scatter \
+        -o $outdir/html/$html_path \
+        "$@"
 
-function finish_comparisons() {
-    wait
+    this_ec=$?
+    ec=$(($ec | $this_ec))
+    echo "histcmp took $(($(date +%s) - $start)) seconds"
 
-    local i
-    for ((i = 0; i < $comparison_job_index; i++)); do
-        local jobdir=$comparison_jobs_dir/$i
-        local title=${comparison_job_titles[$i]}
-        local html_path=${comparison_job_html[$i]}
+    if [ $this_ec -ne 0 ]; then
+        echo "::error::histcmp failed: ec=$this_ec"
+    fi
 
-        echo "::group::Comparing ${comparison_job_labels[$i]}"
+    echo "\"${title}\",html/${html_path},${this_ec}" >> $histcmp_results
 
-        cat $jobdir/log
-
-        this_ec=$(cat $jobdir/ec 2> /dev/null || echo 1)
-        ec=$(($ec | $this_ec))
-
-        if [ $this_ec -ne 0 ]; then
-            echo "::error::histcmp failed: ec=$this_ec"
-        fi
-
-        echo "\"${title}\",html/${html_path},${this_ec}" >> $histcmp_results
-
-        echo "::endgroup::"
-    done
-
-    rm -rf $comparison_jobs_dir
+    echo "::endgroup::"
 }
 
 function trackfinding() {
@@ -463,8 +416,7 @@ if [[ "$mode" == "all" || "$mode" == "kf" ]]; then
         $refdir/trackfitting_kf/performance_trackfitting.root \
         "Truth tracking (KF)" \
         trackfitting_kf/performance_trackfitting.html \
-        --config CI/physmon/config/trackfitting_kf.yml \
-        -f "$res_pull_2d3d_filter"
+        --config CI/physmon/config/trackfitting_kf.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
@@ -473,8 +425,7 @@ if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
         $refdir/trackfitting_gsf/performance_trackfitting.root \
         "Truth tracking (GSF)" \
         trackfitting_gsf/performance_trackfitting.html \
-        --config CI/physmon/config/trackfitting_gsf.yml \
-        -f "$res_pull_2d3d_filter"
+        --config CI/physmon/config/trackfitting_gsf.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
@@ -483,8 +434,7 @@ if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
         $refdir/trackfitting_gx2f/performance_trackfitting.root \
         "Truth tracking (GX2F)" \
         trackfitting_gx2f/performance_trackfitting.html \
-        --config CI/physmon/config/trackfitting_gx2f.yml \
-        -f "$res_pull_2d3d_filter"
+        --config CI/physmon/config/trackfitting_gx2f.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "refit_kf" ]]; then
@@ -493,8 +443,7 @@ if [[ "$mode" == "all" || "$mode" == "refit_kf" ]]; then
         $refdir/trackrefitting_kf/performance_trackrefitting.root \
         "Truth tracking (KF refit)" \
         trackrefitting_kf/performance_trackrefitting.html \
-        --config CI/physmon/config/trackfitting_kf.yml \
-        -f "$res_pull_2d3d_filter"
+        --config CI/physmon/config/trackfitting_kf.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "refit_gsf" ]]; then
@@ -503,8 +452,7 @@ if [[ "$mode" == "all" || "$mode" == "refit_gsf" ]]; then
         $refdir/trackrefitting_gsf/performance_trackrefitting.root \
         "Truth tracking (GSF refit)" \
         trackrefitting_gsf/performance_trackrefitting.html \
-        --config CI/physmon/config/trackfitting_gsf.yml \
-        -f "$res_pull_2d3d_filter"
+        --config CI/physmon/config/trackfitting_gsf.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
@@ -528,11 +476,8 @@ if [[ "$mode" == "all" || "$mode" == "gx2f_vs_kf" ]]; then
         trackfitting_gx2f_vs_kf/performance_trackfitting.html \
         --config CI/physmon/config/info_only.yml \
         --label-reference=KF \
-        --label-monitored=GX2F \
-        -f "$res_pull_2d3d_filter"
+        --label-monitored=GX2F
 fi
-
-finish_comparisons
 
 run python3 CI/physmon/summary.py $histcmp_results \
   --md $outdir/summary.md \
