@@ -11,9 +11,8 @@
 #include "traccc/examples/sycl/full_chain_algorithm.hpp"
 
 int main(int argc, char* argv[]) {
+  // Execute the throughput test.
 
-    // Execute the throughput test.
-
-    return traccc::throughput_mt<traccc::sycl::full_chain_algorithm>(
-        "Multi-threaded SYCL GPU throughput tests", argc, argv);
+  return traccc::throughput_mt<traccc::sycl::full_chain_algorithm>(
+      "Multi-threaded SYCL GPU throughput tests", argc, argv);
 }

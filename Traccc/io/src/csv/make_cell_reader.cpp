@@ -11,10 +11,9 @@
 namespace traccc::io::csv {
 
 dfe::NamedTupleCsvReader<cell> make_cell_reader(std::string_view filename) {
-
-    return {filename.data(),
-            {"geometry_id", "measurement_id", "cannel0", "channel1",
-             "timestamp", "value"}};
+  return {filename.data(),
+          {"geometry_id", "measurement_id", "cannel0", "channel1", "timestamp",
+           "value"}};
 }
 
 }  // namespace traccc::io::csv

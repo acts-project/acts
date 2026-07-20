@@ -27,43 +27,41 @@ namespace traccc {
 /// algorithm.
 ///
 struct kalman_step_aborter : public detray::base_actor {
+  /// The state of the aborter
+  struct state {
+    /// Maximum step count that a track can take to reach the next surface
+    unsigned int max_steps = 100u;
+    /// The current step count
+    unsigned int step = 0u;
+  };
 
-    /// The state of the aborter
-    struct state {
-        /// Maximum step count that a track can take to reach the next surface
-        unsigned int max_steps = 100u;
-        /// The current step count
-        unsigned int step = 0u;
-    };
+  /// The operator to be called by the propagator
+  ///
+  /// @tparam propagator_state_t The type of the propagator state
+  /// @param abrt_state The state of the aborter
+  /// @param prop_state The state of the propagator
+  ///
+  template <typename propagator_state_t>
+  TRACCC_HOST_DEVICE void operator()(state& abrt_state,
+                                     propagator_state_t& prop_state) const {
+    // Convenience reference to the navigation state.
+    auto& navigation = prop_state.navigation();
 
-    /// The operator to be called by the propagator
-    ///
-    /// @tparam propagator_state_t The type of the propagator state
-    /// @param abrt_state The state of the aborter
-    /// @param prop_state The state of the propagator
-    ///
-    template <typename propagator_state_t>
-    TRACCC_HOST_DEVICE void operator()(state& abrt_state,
-                                       propagator_state_t& prop_state) const {
+    TRACCC_VERBOSE_HOST_DEVICE("Check Kalman step aborter...");
 
-        // Convenience reference to the navigation state.
-        auto& navigation = prop_state.navigation();
-
-        TRACCC_VERBOSE_HOST_DEVICE("Check Kalman step aborter...");
-
-        // Reset the step count if the track is on a sensitive surface.
-        if (navigation.is_on_sensitive()) {
-            abrt_state.step = 0u;
-        }
-
-        // Abort if the step count exceeds the maximum allowed
-        if (++(abrt_state.step) > abrt_state.max_steps) {
-            navigation.abort(
-                "Kalman Fitter: Maximum number of steps to reach next "
-                "sensitive surface exceeded");
-            prop_state.heartbeat(false);
-        }
+    // Reset the step count if the track is on a sensitive surface.
+    if (navigation.is_on_sensitive()) {
+      abrt_state.step = 0u;
     }
+
+    // Abort if the step count exceeds the maximum allowed
+    if (++(abrt_state.step) > abrt_state.max_steps) {
+      navigation.abort(
+          "Kalman Fitter: Maximum number of steps to reach next "
+          "sensitive surface exceeded");
+      prop_state.heartbeat(false);
+    }
+  }
 
 };  // struct kalman_step_aborter
 

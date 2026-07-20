@@ -21,20 +21,20 @@ namespace traccc::device {
 /// (Global Event Data) Payload for the @c traccc::device::gbts_fill_path_store
 /// function
 struct gbts_fill_path_store_payload {
-    /// Number of terminus edges
-    unsigned int nTerminusEdges;
-    /// Maximum number of neighbours retained per edge
-    unsigned int max_num_neighbours;
-    /// Total number of paths
-    unsigned int nPaths;
-    /// In/out: per-path (edge index, parent path-store index or -1) entries
-    vecmem::data::vector_view<int2> path_store;
-    /// Compacted graph (read for per-edge neighbour lookup)
-    vecmem::data::vector_view<const unsigned int> output_graph;
-    /// Per-edge CCA level array
-    vecmem::data::vector_view<const unsigned char> levels;
-    /// In/out: global atomic write cursor into path_store
-    unsigned int* nPathStoreSizeCounter;
+  /// Number of terminus edges
+  unsigned int nTerminusEdges;
+  /// Maximum number of neighbours retained per edge
+  unsigned int max_num_neighbours;
+  /// Total number of paths
+  unsigned int nPaths;
+  /// In/out: per-path (edge index, parent path-store index or -1) entries
+  vecmem::data::vector_view<int2> path_store;
+  /// Compacted graph (read for per-edge neighbour lookup)
+  vecmem::data::vector_view<const unsigned int> output_graph;
+  /// Per-edge CCA level array
+  vecmem::data::vector_view<const unsigned char> levels;
+  /// In/out: global atomic write cursor into path_store
+  unsigned int* nPathStoreSizeCounter;
 };
 
 /// (Shared Event Data) Payload for the @c traccc::device::gbts_fill_path_store
@@ -43,10 +43,10 @@ struct gbts_fill_path_store_payload {
 /// Shared-memory scratch for gbts_fill_path_store: the block-local stack of
 /// live paths being walked and its running length.
 struct gbts_fill_path_store_shared_payload {
-    /// Shared-mem frontier of in-flight paths
-    vecmem::data::vector_view<traccc::uint2> live_paths;
-    /// Shared-mem frontier size
-    int& n_live_paths;
+  /// Shared-mem frontier of in-flight paths
+  vecmem::data::vector_view<traccc::uint2> live_paths;
+  /// Shared-mem frontier size
+  int& n_live_paths;
 };
 
 /// @brief Walk each terminus edge backwards along live levels, growing the path

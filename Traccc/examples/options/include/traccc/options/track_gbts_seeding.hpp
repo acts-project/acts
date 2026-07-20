@@ -20,29 +20,28 @@ namespace traccc::opts {
 /// Option(s) for multi-threaded code execution
 class track_gbts_seeding : public interface,
                            public config_provider<gbts_seedfinder_config> {
+ public:
+  /// @name Options
+  /// @{
+  bool useGBTS = false;
+  std::string config_dir = "DEFAULT";
 
-    public:
-    /// @name Options
-    /// @{
-    bool useGBTS = false;
-    std::string config_dir = "DEFAULT";
+  /// @}
+  // algorithm config
+  float min_pt = 900;
+  gbts_seedfinder_config gbts_config;
+  explicit operator gbts_seedfinder_config() const override;
 
-    /// @}
-    // algorithm config
-    float min_pt = 900;
-    gbts_seedfinder_config gbts_config;
-    explicit operator gbts_seedfinder_config() const override;
+  /// Constructor
+  track_gbts_seeding();
 
-    /// Constructor
-    track_gbts_seeding();
+  /// Read/process the command line options
+  ///
+  /// @param vm The command line options to interpret/read
+  ///
+  void read(const boost::program_options::variables_map& vm) override;
 
-    /// Read/process the command line options
-    ///
-    /// @param vm The command line options to interpret/read
-    ///
-    void read(const boost::program_options::variables_map& vm) override;
-
-    std::unique_ptr<configuration_printable> as_printable() const override;
+  std::unique_ptr<configuration_printable> as_printable() const override;
 };
 
 }  // namespace traccc::opts

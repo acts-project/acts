@@ -27,32 +27,32 @@ namespace traccc::device {
 /// eta/phi bin indices are computed, and the (eta, phi) histogram is
 /// bumped, all in a single pass.
 struct gbts_bin_spacepoints_payload {
-    /// Number of spacepoints in the event
-    unsigned int nSp;
-    /// Number of phi bins per eta slice
-    unsigned int nPhiBins;
-    /// Output: per-spacepoint (x, y, z, r) bin parameters, layer-ordered
-    vecmem::data::vector_view<float4> sp_params;
-    /// Input: reduced (x, y, z, r) per spacepoint from
-    /// gbts_count_spacepoints_by_layer
-    vecmem::data::vector_view<const float4> reducedSP;
-    /// In/out: per-layer running write cursors (decremented as each SP lands)
-    vecmem::data::vector_view<unsigned int> layerCounts;
-    /// GBTS layer assignment for each spacepoint
-    vecmem::data::vector_view<const unsigned short> spacepointsLayer;
-    /// Output: layer-ordered index back to the original spacepoint slot
-    vecmem::data::vector_view<unsigned int> original_sp_idx;
-    /// Per-layer (first eta bin, number of eta bins) pair
-    vecmem::data::vector_view<const std::pair<unsigned int, unsigned int>>
-        layer_info;
-    /// Per-layer geometry pair used to compute eta (e.g. (rmin, zmax))
-    vecmem::data::vector_view<const std::pair<float, float>> layer_geo;
-    /// Output: global eta-bin index assigned to each node
-    vecmem::data::vector_view<unsigned int> node_eta_index;
-    /// Output: phi-bin index assigned to each node
-    vecmem::data::vector_view<unsigned int> node_phi_index;
-    /// Output: flat (eta, phi) histogram, atomically incremented per node
-    vecmem::data::vector_view<unsigned int> eta_phi_histo;
+  /// Number of spacepoints in the event
+  unsigned int nSp;
+  /// Number of phi bins per eta slice
+  unsigned int nPhiBins;
+  /// Output: per-spacepoint (x, y, z, r) bin parameters, layer-ordered
+  vecmem::data::vector_view<float4> sp_params;
+  /// Input: reduced (x, y, z, r) per spacepoint from
+  /// gbts_count_spacepoints_by_layer
+  vecmem::data::vector_view<const float4> reducedSP;
+  /// In/out: per-layer running write cursors (decremented as each SP lands)
+  vecmem::data::vector_view<unsigned int> layerCounts;
+  /// GBTS layer assignment for each spacepoint
+  vecmem::data::vector_view<const unsigned short> spacepointsLayer;
+  /// Output: layer-ordered index back to the original spacepoint slot
+  vecmem::data::vector_view<unsigned int> original_sp_idx;
+  /// Per-layer (first eta bin, number of eta bins) pair
+  vecmem::data::vector_view<const std::pair<unsigned int, unsigned int>>
+      layer_info;
+  /// Per-layer geometry pair used to compute eta (e.g. (rmin, zmax))
+  vecmem::data::vector_view<const std::pair<float, float>> layer_geo;
+  /// Output: global eta-bin index assigned to each node
+  vecmem::data::vector_view<unsigned int> node_eta_index;
+  /// Output: phi-bin index assigned to each node
+  vecmem::data::vector_view<unsigned int> node_phi_index;
+  /// Output: flat (eta, phi) histogram, atomically incremented per node
+  vecmem::data::vector_view<unsigned int> eta_phi_histo;
 };
 
 /// @brief Per-spacepoint binning kernel: atomically claim a layer-ordered slot,

@@ -33,28 +33,27 @@ class measurement_sorting_algorithm
     : public algorithm<edm::measurement_collection::host(
           const edm::measurement_collection::const_view&)>,
       public messaging {
+ public:
+  /// Constructor
+  ///
+  /// @param mr The memory resource to use for the algorithm
+  /// @param logger The logger to use for the algorithm
+  ///
+  measurement_sorting_algorithm(
+      vecmem::memory_resource& mr,
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
 
-    public:
-    /// Constructor
-    ///
-    /// @param mr The memory resource to use for the algorithm
-    /// @param logger The logger to use for the algorithm
-    ///
-    measurement_sorting_algorithm(
-        vecmem::memory_resource& mr,
-        std::unique_ptr<const Logger> logger = getDummyLogger().clone());
+  /// Callable operator performing the sorting on a container
+  ///
+  /// @param measurements The measurements to sort
+  ///
+  [[nodiscard]] output_type operator()(
+      const edm::measurement_collection::const_view& measurements)
+      const override;
 
-    /// Callable operator performing the sorting on a container
-    ///
-    /// @param measurements The measurements to sort
-    ///
-    [[nodiscard]] output_type operator()(
-        const edm::measurement_collection::const_view& measurements)
-        const override;
-
-    private:
-    /// The memory resource to use
-    std::reference_wrapper<vecmem::memory_resource> m_mr;
+ private:
+  /// The memory resource to use
+  std::reference_wrapper<vecmem::memory_resource> m_mr;
 
 };  // class measurement_sorting_algorithm
 

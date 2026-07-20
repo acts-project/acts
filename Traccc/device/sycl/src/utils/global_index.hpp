@@ -17,20 +17,17 @@ namespace traccc::sycl::details {
 
 /// Function creating a global index in a 1D SYCL kernel
 inline device::global_index_t global_index(const ::sycl::nd_item<1>& item) {
-
-    return static_cast<device::global_index_t>(item.get_global_linear_id());
+  return static_cast<device::global_index_t>(item.get_global_linear_id());
 }
 
 /// Function creating a global index in a 2D SYCL kernel
 inline device::global_index_t global_index(const ::sycl::nd_item<2>& item) {
-
-    return static_cast<device::global_index_t>(item.get_global_linear_id());
+  return static_cast<device::global_index_t>(item.get_global_linear_id());
 }
 
 /// Function creating a global index in a 3D SYCL kernel
 inline device::global_index_t global_index(const ::sycl::nd_item<3>& item) {
-
-    return static_cast<device::global_index_t>(item.get_global_linear_id());
+  return static_cast<device::global_index_t>(item.get_global_linear_id());
 }
 
 }  // namespace traccc::sycl::details

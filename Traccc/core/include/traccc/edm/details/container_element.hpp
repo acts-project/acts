@@ -26,28 +26,27 @@ namespace traccc {
  */
 template <typename header_reference_t, typename vector_reference_t>
 struct container_element {
+  /// Header reference type
+  using header_reference = header_reference_t;
+  /// Vector reference type
+  using vector_reference = vector_reference_t;
 
-    /// Header reference type
-    using header_reference = header_reference_t;
-    /// Vector reference type
-    using vector_reference = vector_reference_t;
+  /**
+   * @brief Construct a new container element view.
+   *
+   * This constructor is extremely trivial, as it simply takes a reference
+   * to a header, a reference to a vector, and saves them in this object's
+   * internal state.
+   *
+   * @param[in] h The header object reference.
+   * @param[in] v The vector object reference.
+   */
+  TRACCC_HOST_DEVICE
+  container_element(header_reference h, vector_reference v)
+      : header(h), items(v) {}
 
-    /**
-     * @brief Construct a new container element view.
-     *
-     * This constructor is extremely trivial, as it simply takes a reference
-     * to a header, a reference to a vector, and saves them in this object's
-     * internal state.
-     *
-     * @param[in] h The header object reference.
-     * @param[in] v The vector object reference.
-     */
-    TRACCC_HOST_DEVICE
-    container_element(header_reference h, vector_reference v)
-        : header(h), items(v) {}
-
-    header_reference header;
-    vector_reference items;
+  header_reference header;
+  vector_reference items;
 };  // struct container_element
 
 }  // namespace traccc

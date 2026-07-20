@@ -23,25 +23,24 @@ namespace traccc::performance {
 /// sharing timing info will lead to incrementing the total time for that name
 ///
 class timer {
+ public:
+  /// Start time measurement
+  /// @param timer_name name to be printed out identifying what is measured
+  /// @param t_info shared_ptr to timing_info where to store timings
+  timer(const std::string_view timer_name, timing_info& t_info);
 
-    public:
-    /// Start time measurement
-    /// @param timer_name name to be printed out identifying what is measured
-    /// @param t_info shared_ptr to timing_info where to store timings
-    timer(const std::string_view timer_name, timing_info& t_info);
+  /// End time measurement
+  ~timer();
 
-    /// End time measurement
-    ~timer();
+ private:
+  /// Start time (measured at construct time)
+  std::chrono::high_resolution_clock::time_point m_start;
 
-    private:
-    /// Start time (measured at construct time)
-    std::chrono::high_resolution_clock::time_point m_start;
+  /// Name of measurement
+  std::string m_name;
 
-    /// Name of measurement
-    std::string m_name;
-
-    /// Shared ptr to timing info where to store elapsed time
-    timing_info& m_timing_info;
+  /// Shared ptr to timing info where to store elapsed time
+  timing_info& m_timing_info;
 };  // class timer
 
 }  // namespace traccc::performance

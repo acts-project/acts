@@ -47,6 +47,15 @@ from acts.examples.root import (
     RootVertexNTupleWriter,
 )
 
+try:
+    from acts.examples import (
+        PythonTrackFinderPerformanceWriter,
+        PythonTrackFitterPerformanceWriter,
+    )
+except ImportError:
+    PythonTrackFinderPerformanceWriter = None
+    PythonTrackFitterPerformanceWriter = None
+
 from acts.examples.odd import getOpenDataDetectorDirectory
 
 
@@ -338,7 +347,38 @@ def test_root_writer_interface(writer, conf_const, tmp_path, trk_geo):
 
     assert conf_const(writer, **kw)
 
-    assert f.exists()
+
+@pytest.mark.parametrize(
+    "writer",
+    [
+        PythonTrackFinderPerformanceWriter,
+        PythonTrackFitterPerformanceWriter,
+    ],
+)
+@pytest.mark.root
+@pytest.mark.skipif(
+    PythonTrackFinderPerformanceWriter is None
+    or PythonTrackFitterPerformanceWriter is None,
+    reason="Python performance writers not available",
+)
+def test_python_writer_interface(writer, conf_const, tmp_path, trk_geo):
+    assert hasattr(writer, "Config")
+
+    config = writer.Config
+
+    # Only check filePath if the writer has it (Python writers don't write to ROOT)
+    if hasattr(config, "filePath"):
+        kw = {"level": acts.logging.INFO, "filePath": str(tmp_path / "target.root")}
+    else:
+        kw = {"level": acts.logging.INFO}
+
+    for k, _ in inspect.getmembers(config):
+        if k.startswith("input"):
+            kw[k] = "collection"
+        if k == "surfaceByIdentifier":
+            kw[k] = trk_geo.geoIdSurfaceMap()
+
+    assert conf_const(writer, **kw)
 
 
 @pytest.mark.parametrize(

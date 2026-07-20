@@ -21,29 +21,29 @@ namespace traccc::device {
 /// (Global Event Data) Payload for the @c
 /// traccc::device::gbts_match_graph_edges function
 struct gbts_match_graph_edges_payload {
-    /// Number of edges to match
-    unsigned int nEdges;
-    /// Maximum number of neighbours retained per edge
-    unsigned int nMaxNei;
-    /// Edge-matching pair cuts
-    traccc::gbts_match_graph_edges_params gbts_match_graph_edges_params;
-    /// Packed per-edge [exp_eta, curv, phi_z, phi_w], from
-    /// gbts_make_graph_edges
-    vecmem::data::vector_view<const float4> edge_params;
-    /// (src, dst) node indices per edge
-    vecmem::data::vector_view<const uint2> edge_nodes;
-    /// Per-node prefix sum of incoming edges (used to locate candidates)
-    vecmem::data::vector_view<const unsigned int> num_outgoing_edges;
-    /// Per-edge slot in its destination node's incoming-edge list
-    vecmem::data::vector_view<const unsigned int> edge_links;
-    /// Output: number of accepted neighbours per edge (0..nMaxNei)
-    vecmem::data::vector_view<unsigned char> num_neighbours;
-    /// Output: neighbour edge indices, nMaxNei entries per edge (flat)
-    vecmem::data::vector_view<unsigned int> neighbours;
-    /// Output: per-edge "kept" flag, later compacted into a re-index
-    vecmem::data::vector_view<int> reIndexer;
-    /// In/out: global atomic counter of total accepted connections
-    unsigned int* nConnectionsCounter;
+  /// Number of edges to match
+  unsigned int nEdges;
+  /// Maximum number of neighbours retained per edge
+  unsigned int nMaxNei;
+  /// Edge-matching pair cuts
+  traccc::gbts_match_graph_edges_params gbts_match_graph_edges_params;
+  /// Packed per-edge [exp_eta, curv, phi_z, phi_w], from
+  /// gbts_make_graph_edges
+  vecmem::data::vector_view<const float4> edge_params;
+  /// (src, dst) node indices per edge
+  vecmem::data::vector_view<const uint2> edge_nodes;
+  /// Per-node prefix sum of incoming edges (used to locate candidates)
+  vecmem::data::vector_view<const unsigned int> num_outgoing_edges;
+  /// Per-edge slot in its destination node's incoming-edge list
+  vecmem::data::vector_view<const unsigned int> edge_links;
+  /// Output: number of accepted neighbours per edge (0..nMaxNei)
+  vecmem::data::vector_view<unsigned char> num_neighbours;
+  /// Output: neighbour edge indices, nMaxNei entries per edge (flat)
+  vecmem::data::vector_view<unsigned int> neighbours;
+  /// Output: per-edge "kept" flag, later compacted into a re-index
+  vecmem::data::vector_view<int> reIndexer;
+  /// In/out: global atomic counter of total accepted connections
+  unsigned int* nConnectionsCounter;
 };
 
 /// @brief For each edge, find compatible neighbour edges sharing its outer

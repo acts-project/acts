@@ -28,34 +28,33 @@ namespace traccc::host {
 class seeding_algorithm : public algorithm<edm::seed_collection::host(
                               const edm::spacepoint_collection::const_view&)>,
                           public messaging {
+ public:
+  /// Constructor for the seed finding algorithm
+  ///
+  /// @param finder_config The configuration for the seed finder
+  /// @param grid_config The configuration for the spacepoint grid
+  /// @param filter_config The configuration for the seed filter
+  /// @param mr The memory resource to use
+  ///
+  seeding_algorithm(
+      const seedfinder_config& finder_config,
+      const spacepoint_grid_config& grid_config,
+      const seedfilter_config& filter_config, vecmem::memory_resource& mr,
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
 
-    public:
-    /// Constructor for the seed finding algorithm
-    ///
-    /// @param finder_config The configuration for the seed finder
-    /// @param grid_config The configuration for the spacepoint grid
-    /// @param filter_config The configuration for the seed filter
-    /// @param mr The memory resource to use
-    ///
-    seeding_algorithm(
-        const seedfinder_config& finder_config,
-        const spacepoint_grid_config& grid_config,
-        const seedfilter_config& filter_config, vecmem::memory_resource& mr,
-        std::unique_ptr<const Logger> logger = getDummyLogger().clone());
+  /// Operator executing the algorithm.
+  ///
+  /// @param spacepoints All spacepoints in the event
+  /// @return The track seeds reconstructed from the spacepoints
+  ///
+  output_type operator()(
+      const edm::spacepoint_collection::const_view& spacepoints) const override;
 
-    /// Operator executing the algorithm.
-    ///
-    /// @param spacepoints All spacepoints in the event
-    /// @return The track seeds reconstructed from the spacepoints
-    ///
-    output_type operator()(const edm::spacepoint_collection::const_view&
-                               spacepoints) const override;
-
-    private:
-    /// Tool performing the spacepoint binning
-    details::spacepoint_binning m_binning;
-    /// Tool performing the seed finding
-    details::seed_finding m_finding;
+ private:
+  /// Tool performing the spacepoint binning
+  details::spacepoint_binning m_binning;
+  /// Tool performing the seed finding
+  details::seed_finding m_finding;
 
 };  // class seeding_algorithm
 

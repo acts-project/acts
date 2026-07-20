@@ -16,9 +16,9 @@ namespace traccc::opts {
  */
 template <typename Config>
 class config_provider {
-    public:
-    using config_type = Config;
+ public:
+  using config_type = Config;
 
-    virtual operator config_type() const = 0;
+  virtual operator config_type() const = 0;
 };
 }  // namespace traccc::opts

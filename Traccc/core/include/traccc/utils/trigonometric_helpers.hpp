@@ -22,26 +22,26 @@ TRACCC_HOST_DEVICE
 constexpr traccc::scalar wrap_periodic(traccc::scalar value,
                                        traccc::scalar start,
                                        traccc::scalar range) {
-    // only wrap if really necessary
-    const traccc::scalar diff{value - start};
-    return ((0 <= diff) && (diff < range))
-               ? value
-               : (value - range * math::floor(diff / range));
+  // only wrap if really necessary
+  const traccc::scalar diff{value - start};
+  return ((0 <= diff) && (diff < range))
+             ? value
+             : (value - range * math::floor(diff / range));
 }
 
 /// Calculate the equivalent angle in the [-pi, pi) range.
 TRACCC_HOST_DEVICE
 constexpr traccc::scalar wrap_phi(traccc::scalar phi) {
-    constexpr traccc::scalar PI{traccc::constant<traccc::scalar>::pi};
-    constexpr traccc::scalar TWOPI{2.f * traccc::constant<traccc::scalar>::pi};
-    return wrap_periodic(phi, -PI, TWOPI);
+  constexpr traccc::scalar PI{traccc::constant<traccc::scalar>::pi};
+  constexpr traccc::scalar TWOPI{2.f * traccc::constant<traccc::scalar>::pi};
+  return wrap_periodic(phi, -PI, TWOPI);
 }
 
 /// Calculate the equivalent angle in the [0, 2*pi) range.
 TRACCC_HOST_DEVICE
 constexpr traccc::scalar wrap_theta(traccc::scalar theta) {
-    constexpr traccc::scalar TWOPI{2.f * traccc::constant<traccc::scalar>::pi};
-    return wrap_periodic(theta, 0.f, TWOPI);
+  constexpr traccc::scalar TWOPI{2.f * traccc::constant<traccc::scalar>::pi};
+  return wrap_periodic(theta, 0.f, TWOPI);
 }
 
 /// Ensure both phi and theta direction angles are within the allowed range.
@@ -62,22 +62,22 @@ constexpr traccc::scalar wrap_theta(traccc::scalar theta) {
 /// within its nominal range.
 constexpr std::pair<traccc::scalar, traccc::scalar> wrap_phi_theta(
     traccc::scalar phi, traccc::scalar theta) {
-    constexpr traccc::scalar PI{traccc::constant<traccc::scalar>::pi};
-    constexpr traccc::scalar TWOPI{2.f * traccc::constant<traccc::scalar>::pi};
+  constexpr traccc::scalar PI{traccc::constant<traccc::scalar>::pi};
+  constexpr traccc::scalar TWOPI{2.f * traccc::constant<traccc::scalar>::pi};
 
-    // wrap to [0,2pi). while the nominal range of theta is [0,pi], it is
-    // periodic, i.e. describes identical positions, in the full [0,2pi) range.
-    // moving it first to the periodic range simplifies further steps as the
-    // possible range of theta becomes fixed.
-    theta = wrap_theta(theta);
-    if (PI < theta) {
-        // theta is in the second half of the great circle and outside its
-        // nominal range. need to change both phi and theta to be within range.
-        phi += PI;
-        theta = TWOPI - theta;
-    }
+  // wrap to [0,2pi). while the nominal range of theta is [0,pi], it is
+  // periodic, i.e. describes identical positions, in the full [0,2pi) range.
+  // moving it first to the periodic range simplifies further steps as the
+  // possible range of theta becomes fixed.
+  theta = wrap_theta(theta);
+  if (PI < theta) {
+    // theta is in the second half of the great circle and outside its
+    // nominal range. need to change both phi and theta to be within range.
+    phi += PI;
+    theta = TWOPI - theta;
+  }
 
-    return {wrap_phi(phi), theta};
+  return {wrap_phi(phi), theta};
 }
 
 }  // namespace traccc::detail
