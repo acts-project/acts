@@ -40,3 +40,4 @@ Examples/Algorithms/TrackFindingGnn/** @benjaminhuth
 pyproject.toml @benjaminhuth
 **/*Gsf* @benjaminhuth
 **/*GaussianSumFitter* @benjaminhuth
+Traccc/** @stephenswat
