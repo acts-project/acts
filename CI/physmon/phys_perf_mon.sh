@@ -196,11 +196,14 @@ function run_histcmp() {
     mkdir -p $(dirname $outdir/html/$html_path)
 
     start=$(date +%s)
+    # scatter renders 3D histograms much faster than the default voxel
+    # renderer at every histogram size
     run histcmp $a $b \
         --label-reference=reference \
         --label-monitored=monitored \
         --title="$title" \
         --jobs $num_jobs \
+        --renderer-3d scatter \
         -o $outdir/html/$html_path \
         "$@"
 
