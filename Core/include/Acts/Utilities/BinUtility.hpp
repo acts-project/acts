@@ -122,6 +122,7 @@ class BinUtility {
   /// Create from a DirectedProtoAxis
   ///
   /// @param dpAxis the DirectedProtoAxis to be used
+  [[deprecated("Use BinUtility(const IAxis&) with a directed axis instead")]]
   explicit BinUtility(const DirectedProtoAxis& dpAxis)
       : m_binningData(),
         m_transform(Transform3::Identity()),

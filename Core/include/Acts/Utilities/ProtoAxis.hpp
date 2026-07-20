@@ -126,7 +126,8 @@ class ProtoAxis {
 ///
 /// @return an IGrid unique ptr and hence transfers ownership
 template <typename payload_t>
-std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a) {
+[[deprecated("Use makeGrid(const IAxis&) instead")]] std::unique_ptr<IGrid>
+makeGrid(const ProtoAxis& a) {
   if (a.isAutorange()) {
     throw std::invalid_argument(
         "ProtoAxis::makeGrid: Auto-range of the proto axis is not (yet) "
@@ -145,7 +146,9 @@ std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a) {
 ///
 /// @return an IGrid unique ptr and hence transfers ownership
 template <typename payload_t>
-std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a, const ProtoAxis& b) {
+[[deprecated(
+    "Use makeGrid(const IAxis&, const IAxis&) instead")]] std::unique_ptr<IGrid>
+makeGrid(const ProtoAxis& a, const ProtoAxis& b) {
   if (a.isAutorange() || b.isAutorange()) {
     throw std::invalid_argument(
         "ProtoAxis::makeGrid: Auto-range of the proto axis is not (yet) "

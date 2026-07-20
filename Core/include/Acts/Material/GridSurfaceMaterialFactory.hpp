@@ -124,7 +124,7 @@ create2D(
 ///
 /// @return a unique pointer to the surface material
 template <typename material_accessor_t>
-std::unique_ptr<
+[[deprecated("Use create1D(const IAxis&, ...) instead")]] std::unique_ptr<
     IGridSurfaceMaterial<typename material_accessor_t::grid_value_type>>
 create1D(
     const ProtoAxis& pAxis, material_accessor_t&& materialAccessor,
@@ -148,15 +148,16 @@ create1D(
 ///
 /// @return a unique pointer to the surface material
 template <typename material_accessor_t>
-std::unique_ptr<
-    IGridSurfaceMaterial<typename material_accessor_t::grid_value_type>>
-create2D(
-    const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
-    material_accessor_t&& materialAccessor,
-    GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
-    GridAccess::GlobalToGridLocal2DimDelegate globalToGridLocal,
-    const std::vector<
-        std::vector<typename material_accessor_t::grid_value_type>>& payload) {
+[[deprecated("Use create2D(const IAxis&, const IAxis&, ...) instead")]] std::
+    unique_ptr<
+        IGridSurfaceMaterial<typename material_accessor_t::grid_value_type>>
+    create2D(const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
+             material_accessor_t&& materialAccessor,
+             GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
+             GridAccess::GlobalToGridLocal2DimDelegate globalToGridLocal,
+             const std::vector<
+                 std::vector<typename material_accessor_t::grid_value_type>>&
+                 payload) {
   return create2D(pAxis0.getAxis(), pAxis1.getAxis(),
                   std::forward<material_accessor_t>(materialAccessor),
                   std::move(boundToGridLocal), std::move(globalToGridLocal),
@@ -260,11 +261,12 @@ create(const IAxis& axis0, const IAxis& axis1,
 /// @param boundToGridLocal the delegate from bound to grid local frame
 /// @param globalToGridLocal the delegate from global into grid local frame
 /// @param payload the grid payload (material slab / indices)
-std::unique_ptr<IGridSurfaceMaterial<MaterialSlab>> create(
-    const ProtoAxis& pAxis, GridMaterialAccessor&& materialAccessor,
-    GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal,
-    GridAccess::GlobalToGridLocal1DimDelegate globalToGridLocal,
-    const std::vector<MaterialSlab>& payload);
+[[deprecated("Use create(const IAxis&, ...) instead")]] std::unique_ptr<
+    IGridSurfaceMaterial<MaterialSlab>>
+create(const ProtoAxis& pAxis, GridMaterialAccessor&& materialAccessor,
+       GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal,
+       GridAccess::GlobalToGridLocal1DimDelegate globalToGridLocal,
+       const std::vector<MaterialSlab>& payload);
 
 /// The resolved functions to reduce compile time template bloat
 /// - IndexedMaterial 1D
@@ -273,7 +275,8 @@ std::unique_ptr<IGridSurfaceMaterial<MaterialSlab>> create(
 /// @param boundToGridLocal the delegate from bound to grid local frame
 /// @param globalToGridLocal the delegate from global into grid local frame
 /// @param payload the grid payload (material slab / indices)
-std::unique_ptr<IGridSurfaceMaterial<IndexedMaterialAccessor::grid_value_type>>
+[[deprecated("Use create(const IAxis&, ...) instead")]] std::unique_ptr<
+    IGridSurfaceMaterial<IndexedMaterialAccessor::grid_value_type>>
 create(const ProtoAxis& pAxis, IndexedMaterialAccessor&& materialAccessor,
        GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal,
        GridAccess::GlobalToGridLocal1DimDelegate globalToGridLocal,
@@ -286,7 +289,7 @@ create(const ProtoAxis& pAxis, IndexedMaterialAccessor&& materialAccessor,
 /// @param boundToGridLocal the delegate from bound to grid local frame
 /// @param globalToGridLocal the delegate from global into grid local frame
 /// @param payload the grid payload (material slab / indices)
-std::unique_ptr<
+[[deprecated("Use create(const IAxis&, ...) instead")]] std::unique_ptr<
     IGridSurfaceMaterial<GloballyIndexedMaterialAccessor::grid_value_type>>
 create(const ProtoAxis& pAxis,
        GloballyIndexedMaterialAccessor&& materialAccessor,
@@ -303,12 +306,13 @@ create(const ProtoAxis& pAxis,
 /// @param boundToGridLocal the delegate from bound to grid local frame
 /// @param globalToGridLocal the delegate from global into grid local frame
 /// @param payload the grid payload (material slab / indices)
-std::unique_ptr<IGridSurfaceMaterial<MaterialSlab>> create(
-    const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
-    GridMaterialAccessor&& materialAccessor,
-    GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
-    GridAccess::GlobalToGridLocal2DimDelegate globalToGridLocal,
-    const std::vector<std::vector<MaterialSlab>>& payload);
+[[deprecated("Use create(const IAxis&, const IAxis&, ...) instead")]] std::
+    unique_ptr<IGridSurfaceMaterial<MaterialSlab>>
+    create(const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
+           GridMaterialAccessor&& materialAccessor,
+           GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
+           GridAccess::GlobalToGridLocal2DimDelegate globalToGridLocal,
+           const std::vector<std::vector<MaterialSlab>>& payload);
 
 /// The resolved functions to reduce compile time template bloat
 /// - IndexedMaterial 2D
@@ -318,13 +322,14 @@ std::unique_ptr<IGridSurfaceMaterial<MaterialSlab>> create(
 /// @param boundToGridLocal the delegate from bound to grid local frame
 /// @param globalToGridLocal the delegate from global into grid local frame
 /// @param payload the grid payload (material slab / indices)
-std::unique_ptr<IGridSurfaceMaterial<IndexedMaterialAccessor::grid_value_type>>
-create(const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
-       IndexedMaterialAccessor&& materialAccessor,
-       GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
-       GridAccess::GlobalToGridLocal2DimDelegate globalToGridLocal,
-       const std::vector<std::vector<IndexedMaterialAccessor::grid_value_type>>&
-           payload);
+[[deprecated("Use create(const IAxis&, const IAxis&, ...) instead")]] std::
+    unique_ptr<IGridSurfaceMaterial<IndexedMaterialAccessor::grid_value_type>>
+    create(const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
+           IndexedMaterialAccessor&& materialAccessor,
+           GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
+           GridAccess::GlobalToGridLocal2DimDelegate globalToGridLocal,
+           const std::vector<
+               std::vector<IndexedMaterialAccessor::grid_value_type>>& payload);
 
 /// The resolved functions to reduce compile time template bloat
 /// - GloballyIndexedMaterial 2D
@@ -334,13 +339,14 @@ create(const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
 /// @param boundToGridLocal the delegate from bound to grid local frame
 /// @param globalToGridLocal the delegate from global into grid local frame
 /// @param payload the grid payload (material slab / indices)
-std::unique_ptr<
-    IGridSurfaceMaterial<GloballyIndexedMaterialAccessor::grid_value_type>>
-create(const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
-       GloballyIndexedMaterialAccessor&& materialAccessor,
-       GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
-       GridAccess::GlobalToGridLocal2DimDelegate globalToGridLocal,
-       const std::vector<
-           std::vector<GloballyIndexedMaterialAccessor::grid_value_type>>&
-           payload);
+[[deprecated("Use create(const IAxis&, const IAxis&, ...) instead")]] std::
+    unique_ptr<
+        IGridSurfaceMaterial<GloballyIndexedMaterialAccessor::grid_value_type>>
+    create(const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
+           GloballyIndexedMaterialAccessor&& materialAccessor,
+           GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
+           GridAccess::GlobalToGridLocal2DimDelegate globalToGridLocal,
+           const std::vector<
+               std::vector<GloballyIndexedMaterialAccessor::grid_value_type>>&
+               payload);
 }  // namespace Acts::GridSurfaceMaterialFactory

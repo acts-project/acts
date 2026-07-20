@@ -12,6 +12,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/IMultiAxis.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
@@ -143,7 +144,10 @@ BOOST_AUTO_TEST_CASE(BinUtility_from_ProtoAxis) {
   using enum AxisBoundaryType;
 
   DirectedProtoAxis epabX(AxisX, Bound, 0.0, 1.0, 10);
+  // The single axis constructor is deprecated but still covered here
+  ACTS_PUSH_IGNORE_DEPRECATED()
   BinUtility buX(epabX);
+  ACTS_POP_IGNORE_DEPRECATED()
   BOOST_CHECK_EQUAL(buX.bins(), std::size_t{10});
   BOOST_CHECK_EQUAL(buX.dimensions(), std::size_t{1});
 
