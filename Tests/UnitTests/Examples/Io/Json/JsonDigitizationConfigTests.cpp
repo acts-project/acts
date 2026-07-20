@@ -13,7 +13,8 @@
 #include "Acts/EventData/detail/GenerateParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/IMultiAxis.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
@@ -115,11 +116,11 @@ BOOST_AUTO_TEST_CASE(GaussianSmearing) {
       DigiConfigConverter("digitization-configuration").fromJson(djson);
   BoundParametersSmearer<RandomEngine, 1u> s;
 
-  for (auto& el : digiConfig) {
-    for (auto& smearing : el.smearingDigiConfig.params) {
+  for (auto &el : digiConfig) {
+    for (auto &smearing : el.smearingDigiConfig.params) {
       // check if the forcePositiveValue parameter is successfully parsed
       BOOST_CHECK(smearing.forcePositiveValues);
-      const auto* gauss =
+      const auto *gauss =
           smearing.smearFunction.target<const Digitization::Gauss>();
       BOOST_REQUIRE(gauss != nullptr);
       CHECK_CLOSE_REL(gauss->sigma, 0.05, 1e-12);
@@ -156,13 +157,11 @@ BOOST_AUTO_TEST_CASE(DigitizationConfigRoundTrip) {
 
   GeometricConfig gdc;
 
-  std::vector<DirectedProtoAxis> segmentation;
-  segmentation.emplace_back(AxisDirection::AxisX, AxisBoundaryType::Open, -8.4,
-                            8.4, 336);
-  segmentation.emplace_back(AxisDirection::AxisY, AxisBoundaryType::Open, -36,
-                            36, 1280);
-
-  gdc.segmentation = segmentation;
+  gdc.segmentation = IMultiAxis::create(
+      *IAxis::createEquidistant(AxisBoundaryType::Open, -8.4, 8.4, 336,
+                                AxisDirection::AxisX),
+      *IAxis::createEquidistant(AxisBoundaryType::Open, -36, 36, 1280,
+                                AxisDirection::AxisY));
   gdc.threshold = 0.01;
   gdc.thickness = 0.15;
   gdc.indices = {eBoundLoc0, eBoundLoc1};
@@ -186,8 +185,21 @@ BOOST_AUTO_TEST_CASE(DigitizationConfigRoundTrip) {
   DigiComponentsConfig dcTest(dcJsonIn);
   BOOST_CHECK(dcTest.geometricDigiConfig.indices ==
               dcRef.geometricDigiConfig.indices);
-  BOOST_CHECK_EQUAL(dcTest.geometricDigiConfig.segmentation.size(),
-                    dcRef.geometricDigiConfig.segmentation.size());
+  BOOST_REQUIRE(dcTest.geometricDigiConfig.segmentation != nullptr);
+  const Acts::IMultiAxis &segRef = *dcRef.geometricDigiConfig.segmentation;
+  const Acts::IMultiAxis &segTest = *dcTest.geometricDigiConfig.segmentation;
+  BOOST_REQUIRE_EQUAL(segTest.getNAxes(), segRef.getNAxes());
+  // The JSON format stores the axis boundaries in single precision, so the
+  // boundaries can only be compared with a matching tolerance
+  for (std::size_t i = 0; i < segRef.getNAxes(); ++i) {
+    const Acts::IAxis &axisRef = segRef.getAxis(i);
+    const Acts::IAxis &axisTest = segTest.getAxis(i);
+    BOOST_CHECK(axisTest.getDirection() == axisRef.getDirection());
+    BOOST_CHECK(axisTest.getBoundaryType() == axisRef.getBoundaryType());
+    BOOST_CHECK_EQUAL(axisTest.getNBins(), axisRef.getNBins());
+    CHECK_CLOSE_REL(axisTest.getMin(), axisRef.getMin(), 1e-6);
+    CHECK_CLOSE_REL(axisTest.getMax(), axisRef.getMax(), 1e-6);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

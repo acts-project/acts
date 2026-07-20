@@ -15,12 +15,17 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/IMultiAxis.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
 #include <algorithm>
 #include <cmath>
+#include <memory>
+#include <stdexcept>
+#include <vector>
 
 namespace ActsExamples {
 
@@ -29,6 +34,21 @@ namespace {
 /// @note This does not really compare if the configs are equal, therefore
 /// it is no operator==. The contained std::function types cannot really
 /// be checked for equality.
+bool segmentationMaybeEqual(const std::shared_ptr<const Acts::IMultiAxis> &a,
+                            const std::shared_ptr<const Acts::IMultiAxis> &b) {
+  if (a == b) {
+    return true;
+  }
+  if (a == nullptr || b == nullptr) {
+    return false;
+  }
+  // The axis equality does not cover the axis directions
+  return *a == *b &&
+         std::ranges::equal(*a, *b, [](const auto &aa, const auto &ba) {
+           return aa.getDirection() == ba.getDirection();
+         });
+}
+
 bool digiConfigMaybeEqual(DigiComponentsConfig &a, DigiComponentsConfig &b) {
   // Check smearing config
   for (const auto &[as, bs] :
@@ -43,7 +63,8 @@ bool digiConfigMaybeEqual(DigiComponentsConfig &a, DigiComponentsConfig &b) {
   // Check geometric config
   const auto &ag = a.geometricDigiConfig;
   const auto &bg = b.geometricDigiConfig;
-  return (ag.indices == bg.indices && ag.segmentation == bg.segmentation &&
+  return (ag.indices == bg.indices &&
+          segmentationMaybeEqual(ag.segmentation, bg.segmentation) &&
           ag.thickness == bg.thickness && ag.threshold == bg.threshold &&
           ag.digital == bg.digital);
 }
@@ -81,88 +102,92 @@ void DigitizationConfigurator::operator()(const Acts::Surface *surface) {
 
     const auto &inputSegmentation =
         dInputConfig->geometricDigiConfig.segmentation;
-    std::vector<Acts::DirectedProtoAxis> outputSegmentation;
+    if (inputSegmentation == nullptr) {
+      throw std::invalid_argument(
+          "DigitizationConfigurator: geometric digitization configured "
+          "without a segmentation");
+    }
+    std::vector<std::unique_ptr<const Acts::IAxis>> outputAxes;
 
     switch (sBounds.type()) {
       // The module is a rectangle module
       case Acts::SurfaceBounds::eRectangle: {
-        if (inputSegmentation.at(0).getAxisDirection() ==
+        if (inputSegmentation->getAxis(0).getDirection() ==
             Acts::AxisDirection::AxisX) {
           const double minX = boundValues[Acts::RectangleBounds::eMinX];
           const double maxX = boundValues[Acts::RectangleBounds::eMaxX];
 
-          const unsigned int nBins =
-              inputSegmentation.at(0).getAxis().getNBins();
+          const unsigned int nBins = inputSegmentation->getAxis(0).getNBins();
 
-          outputSegmentation.emplace_back(Acts::AxisDirection::AxisX,
-                                          Acts::AxisBoundaryType::Open, minX,
-                                          maxX, nBins);
+          outputAxes.push_back(Acts::IAxis::createEquidistant(
+              Acts::AxisBoundaryType::Open, minX, maxX, nBins,
+              Acts::AxisDirection::AxisX));
         }
-        if (inputSegmentation.at(0).getAxisDirection() ==
+        if (inputSegmentation->getAxis(0).getDirection() ==
                 Acts::AxisDirection::AxisY ||
-            inputSegmentation.size() == 2) {
-          const unsigned int accessBin = inputSegmentation.size() == 2 ? 1 : 0;
+            inputSegmentation->getNAxes() == 2) {
+          const unsigned int accessBin =
+              inputSegmentation->getNAxes() == 2 ? 1 : 0;
 
           const double minY = boundValues[Acts::RectangleBounds::eMinY];
           const double maxY = boundValues[Acts::RectangleBounds::eMaxY];
 
           const unsigned int nBins =
-              inputSegmentation.at(accessBin).getAxis().getNBins();
+              inputSegmentation->getAxis(accessBin).getNBins();
 
-          outputSegmentation.emplace_back(Acts::AxisDirection::AxisY,
-                                          Acts::AxisBoundaryType::Open, minY,
-                                          maxY, nBins);
+          outputAxes.push_back(Acts::IAxis::createEquidistant(
+              Acts::AxisBoundaryType::Open, minY, maxY, nBins,
+              Acts::AxisDirection::AxisY));
         }
       } break;
 
       // The module is a trapezoid module
       case Acts::SurfaceBounds::eTrapezoid: {
-        if (inputSegmentation.at(0).getAxisDirection() ==
+        if (inputSegmentation->getAxis(0).getDirection() ==
             Acts::AxisDirection::AxisX) {
           const double maxX =
               std::max(boundValues[Acts::TrapezoidBounds::eHalfLengthXnegY],
                        boundValues[Acts::TrapezoidBounds::eHalfLengthXposY]);
 
-          const unsigned int nBins =
-              inputSegmentation.at(0).getAxis().getNBins();
+          const unsigned int nBins = inputSegmentation->getAxis(0).getNBins();
 
-          outputSegmentation.emplace_back(Acts::AxisDirection::AxisX,
-                                          Acts::AxisBoundaryType::Open, -maxX,
-                                          maxX, nBins);
+          outputAxes.push_back(Acts::IAxis::createEquidistant(
+              Acts::AxisBoundaryType::Open, -maxX, maxX, nBins,
+              Acts::AxisDirection::AxisX));
         }
-        if (inputSegmentation.at(0).getAxisDirection() ==
+        if (inputSegmentation->getAxis(0).getDirection() ==
                 Acts::AxisDirection::AxisY ||
-            inputSegmentation.size() == 2) {
-          const unsigned int accessBin = inputSegmentation.size() == 2 ? 1 : 0;
+            inputSegmentation->getNAxes() == 2) {
+          const unsigned int accessBin =
+              inputSegmentation->getNAxes() == 2 ? 1 : 0;
 
           const double maxY = boundValues[Acts::TrapezoidBounds::eHalfLengthY];
 
           const unsigned int nBins =
-              inputSegmentation.at(accessBin).getAxis().getNBins();
+              inputSegmentation->getAxis(accessBin).getNBins();
 
-          outputSegmentation.emplace_back(Acts::AxisDirection::AxisY,
-                                          Acts::AxisBoundaryType::Open, -maxY,
-                                          maxY, nBins);
+          outputAxes.push_back(Acts::IAxis::createEquidistant(
+              Acts::AxisBoundaryType::Open, -maxY, maxY, nBins,
+              Acts::AxisDirection::AxisY));
         }
       } break;
 
       // The module is an annulus module
       case Acts::SurfaceBounds::eAnnulus: {
-        if (inputSegmentation.at(0).getAxisDirection() ==
+        if (inputSegmentation->getAxis(0).getDirection() ==
             Acts::AxisDirection::AxisR) {
           const double minR = boundValues[Acts::AnnulusBounds::eMinR];
           const double maxR = boundValues[Acts::AnnulusBounds::eMaxR];
 
-          const unsigned int nBins =
-              inputSegmentation.at(0).getAxis().getNBins();
+          const unsigned int nBins = inputSegmentation->getAxis(0).getNBins();
 
-          outputSegmentation.emplace_back(Acts::AxisDirection::AxisR,
-                                          Acts::AxisBoundaryType::Open, minR,
-                                          maxR, nBins);
+          outputAxes.push_back(Acts::IAxis::createEquidistant(
+              Acts::AxisBoundaryType::Open, minR, maxR, nBins,
+              Acts::AxisDirection::AxisR));
         }
-        if (inputSegmentation.at(0).getAxisDirection() ==
+        if (inputSegmentation->getAxis(0).getDirection() ==
                 Acts::AxisDirection::AxisPhi ||
-            inputSegmentation.size() == 2) {
+            inputSegmentation->getNAxes() == 2) {
           const double averagePhi =
               boundValues[Acts::AnnulusBounds::eAveragePhi];
           const double minPhi =
@@ -170,12 +195,11 @@ void DigitizationConfigurator::operator()(const Acts::Surface *surface) {
           const double maxPhi =
               averagePhi + boundValues[Acts::AnnulusBounds::eMaxPhiRel];
 
-          const unsigned int nBins =
-              inputSegmentation.at(0).getAxis().getNBins();
+          const unsigned int nBins = inputSegmentation->getAxis(0).getNBins();
 
-          outputSegmentation.emplace_back(Acts::AxisDirection::AxisPhi,
-                                          Acts::AxisBoundaryType::Open, minPhi,
-                                          maxPhi, nBins);
+          outputAxes.push_back(Acts::IAxis::createEquidistant(
+              Acts::AxisBoundaryType::Open, minPhi, maxPhi, nBins,
+              Acts::AxisDirection::AxisPhi));
         }
       } break;
 
@@ -184,19 +208,19 @@ void DigitizationConfigurator::operator()(const Acts::Surface *surface) {
         const double minR = boundValues[Acts::DiscTrapezoidBounds::eMinR];
         const double maxR = boundValues[Acts::DiscTrapezoidBounds::eMaxR];
 
-        if (inputSegmentation.at(0).getAxisDirection() ==
+        if (inputSegmentation->getAxis(0).getDirection() ==
             Acts::AxisDirection::AxisR) {
-          const unsigned int nBins =
-              inputSegmentation.at(0).getAxis().getNBins();
+          const unsigned int nBins = inputSegmentation->getAxis(0).getNBins();
 
-          outputSegmentation.emplace_back(Acts::AxisDirection::AxisR,
-                                          Acts::AxisBoundaryType::Open, minR,
-                                          maxR, nBins);
+          outputAxes.push_back(Acts::IAxis::createEquidistant(
+              Acts::AxisBoundaryType::Open, minR, maxR, nBins,
+              Acts::AxisDirection::AxisR));
         }
-        if (inputSegmentation.at(0).getAxisDirection() ==
+        if (inputSegmentation->getAxis(0).getDirection() ==
                 Acts::AxisDirection::AxisPhi ||
-            inputSegmentation.size() == 2) {
-          const unsigned int accessBin = inputSegmentation.size() == 2 ? 1 : 0;
+            inputSegmentation->getNAxes() == 2) {
+          const unsigned int accessBin =
+              inputSegmentation->getNAxes() == 2 ? 1 : 0;
 
           const double hxMinR =
               boundValues[Acts::DiscTrapezoidBounds::eHalfLengthXminR];
@@ -210,31 +234,31 @@ void DigitizationConfigurator::operator()(const Acts::Surface *surface) {
           const double alpha = std::max(alphaMinR, alphaMaxR);
 
           const unsigned int nBins =
-              inputSegmentation.at(accessBin).getAxis().getNBins();
+              inputSegmentation->getAxis(accessBin).getNBins();
 
-          outputSegmentation.emplace_back(
-              Acts::AxisDirection::AxisPhi, Acts::AxisBoundaryType::Open,
-              averagePhi - alpha, averagePhi + alpha, nBins);
+          outputAxes.push_back(Acts::IAxis::createEquidistant(
+              Acts::AxisBoundaryType::Open, averagePhi - alpha,
+              averagePhi + alpha, nBins, Acts::AxisDirection::AxisPhi));
         }
       } break;
 
       case Acts::SurfaceBounds::eDisc: {
-        if (inputSegmentation.at(0).getAxisDirection() ==
+        if (inputSegmentation->getAxis(0).getDirection() ==
             Acts::AxisDirection::AxisR) {
           const double minR = boundValues[Acts::RadialBounds::eMinR];
           const double maxR = boundValues[Acts::RadialBounds::eMaxR];
 
-          const unsigned int nBins =
-              inputSegmentation.at(0).getAxis().getNBins();
+          const unsigned int nBins = inputSegmentation->getAxis(0).getNBins();
 
-          outputSegmentation.emplace_back(Acts::AxisDirection::AxisR,
-                                          Acts::AxisBoundaryType::Open, minR,
-                                          maxR, nBins);
+          outputAxes.push_back(Acts::IAxis::createEquidistant(
+              Acts::AxisBoundaryType::Open, minR, maxR, nBins,
+              Acts::AxisDirection::AxisR));
         }
-        if (inputSegmentation.at(0).getAxisDirection() ==
+        if (inputSegmentation->getAxis(0).getDirection() ==
                 Acts::AxisDirection::AxisPhi ||
-            inputSegmentation.size() == 2) {
-          const unsigned int accessBin = inputSegmentation.size() == 2 ? 1 : 0;
+            inputSegmentation->getNAxes() == 2) {
+          const unsigned int accessBin =
+              inputSegmentation->getNAxes() == 2 ? 1 : 0;
 
           const double averagePhi =
               boundValues[Acts::RadialBounds::eAveragePhi];
@@ -244,11 +268,11 @@ void DigitizationConfigurator::operator()(const Acts::Surface *surface) {
           const double maxPhi = averagePhi + halfPhiSector;
 
           const unsigned int nBins =
-              inputSegmentation.at(accessBin).getAxis().getNBins();
+              inputSegmentation->getAxis(accessBin).getNBins();
 
-          outputSegmentation.emplace_back(Acts::AxisDirection::AxisPhi,
-                                          Acts::AxisBoundaryType::Open, minPhi,
-                                          maxPhi, nBins);
+          outputAxes.push_back(Acts::IAxis::createEquidistant(
+              Acts::AxisBoundaryType::Open, minPhi, maxPhi, nBins,
+              Acts::AxisDirection::AxisPhi));
         }
       } break;
 
@@ -257,7 +281,13 @@ void DigitizationConfigurator::operator()(const Acts::Surface *surface) {
     }
 
     // Set the adapted segmentation class
-    dOutputConfig.geometricDigiConfig.segmentation = outputSegmentation;
+    if (outputAxes.size() == 1) {
+      dOutputConfig.geometricDigiConfig.segmentation =
+          Acts::IMultiAxis::create(*outputAxes[0]);
+    } else if (outputAxes.size() == 2) {
+      dOutputConfig.geometricDigiConfig.segmentation =
+          Acts::IMultiAxis::create(*outputAxes[0], *outputAxes[1]);
+    }
   }
 
   // Compactify the output map where possible

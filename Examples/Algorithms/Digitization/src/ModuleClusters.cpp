@@ -288,10 +288,11 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) const {
     b1min = std::min(b1min, b1);
     b1max = std::max(b1max, b1);
 
-    const double p0 = m_segmentation[0].binCenter(b0);
-    const double w0 = m_segmentation[0].binWidth(b0);
-    const double p1 = m_segmentation[1].binCenter(b1);
-    const double w1 = m_segmentation[1].binWidth(b1);
+    // Cell bins are zero-based while the axis bin indices start at one
+    const double p0 = m_segmentation->getAxis(0).getBinCenter(b0 + 1);
+    const double w0 = m_segmentation->getAxis(0).getBinWidth(b0 + 1);
+    const double p1 = m_segmentation->getAxis(1).getBinCenter(b1 + 1);
+    const double w1 = m_segmentation->getAxis(1).getBinWidth(b1 + 1);
 
     pos += Acts::Vector2(weights.at(i) * p0, weights.at(i) * p1);
     // Assume uniform distribution to compute error

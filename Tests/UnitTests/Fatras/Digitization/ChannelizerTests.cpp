@@ -11,10 +11,12 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/IMultiAxis.hpp"
 #include "ActsFatras/Digitization/Channelizer.hpp"
 #include "ActsFatras/Digitization/SurfaceMask.hpp"
 
+#include <memory>
 #include <numeric>
 
 using namespace Acts;
@@ -23,7 +25,7 @@ using namespace ActsFatras;
 
 struct Helper {
   std::shared_ptr<Surface> surface;
-  std::vector<DirectedProtoAxis> segmentation;
+  std::shared_ptr<const IMultiAxis> segmentation;
 
   GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
   double thickness = 125_um;
@@ -39,10 +41,11 @@ struct Helper {
     float min = -200_um;
     float max = 200_um;
     int bins = static_cast<int>((max - min) / pitchSize);
-    segmentation.emplace_back(AxisDirection::AxisX, AxisBoundaryType::Open, min,
-                              max, bins);
-    segmentation.emplace_back(AxisDirection::AxisY, AxisBoundaryType::Open, min,
-                              max, bins);
+    const auto axisX = IAxis::createEquidistant(
+        AxisBoundaryType::Open, min, max, bins, AxisDirection::AxisX);
+    const auto axisY = IAxis::createEquidistant(
+        AxisBoundaryType::Open, min, max, bins, AxisDirection::AxisY);
+    segmentation = IMultiAxis::create(*axisX, *axisY);
   }
 
   auto channelize(const Vector3 &pos3, const Vector3 &dir3) const {
@@ -52,7 +55,7 @@ struct Helper {
     mom4.segment<3>(eMom0) = dir3;
     ActsFatras::Hit hit({}, {}, pos4, mom4, mom4);
     auto res = channelizer.channelize(hit, *surface, gctx, driftDir,
-                                      segmentation, thickness);
+                                      *segmentation, thickness);
     BOOST_REQUIRE(res.ok());
     return *res;
   }

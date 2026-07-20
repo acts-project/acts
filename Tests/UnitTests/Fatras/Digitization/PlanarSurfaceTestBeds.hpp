@@ -17,9 +17,11 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/IMultiAxis.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
 
+#include <memory>
 #include <numbers>
 #include <tuple>
 #include <vector>
@@ -32,7 +34,7 @@ using Randomizer = std::function<Acts::Vector2(double, double)>;
 
 using PlanarTestBed =
     std::tuple<std::string, std::shared_ptr<const Acts::Surface>,
-               std::vector<Acts::DirectedProtoAxis>, Randomizer>;
+               std::shared_ptr<const Acts::IMultiAxis>, Randomizer>;
 
 /// Helper struct to create a testbed for Digitization steps
 struct PlanarSurfaceTestBeds {
@@ -45,17 +47,23 @@ struct PlanarSurfaceTestBeds {
   std::vector<PlanarTestBed> operator()(double rScale) const {
     double irScale = (2. - rScale);
 
+    auto makeSegmentation = [](std::unique_ptr<Acts::IAxis> axis0,
+                               std::unique_ptr<Acts::IAxis> axis1)
+        -> std::shared_ptr<const Acts::IMultiAxis> {
+      return Acts::IMultiAxis::create(*axis0, *axis1);
+    };
+
     // Pixel test in Rectangle
     double xhalf = 3.;
     double yhalf = 6.5;
     auto rectangle = std::make_shared<Acts::RectangleBounds>(xhalf, yhalf);
     auto rSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
         Acts::Transform3::Identity(), rectangle);
-    std::vector<Acts::DirectedProtoAxis> pixelated;
-    pixelated.emplace_back(Acts::AxisDirection::AxisX,
-                           Acts::AxisBoundaryType::Open, -xhalf, xhalf, 15);
-    pixelated.emplace_back(Acts::AxisDirection::AxisY,
-                           Acts::AxisBoundaryType::Open, -yhalf, yhalf, 26);
+    auto pixelated = makeSegmentation(
+        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Open, -xhalf,
+                                       xhalf, 15, Acts::AxisDirection::AxisX),
+        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Open, -yhalf,
+                                       yhalf, 26, Acts::AxisDirection::AxisY));
     RectangleRandom rRandom(xhalf * rScale, yhalf * rScale);
 
     // Cartesian strip test in Trapezoid
@@ -66,12 +74,12 @@ struct PlanarSurfaceTestBeds {
         std::make_shared<Acts::TrapezoidBounds>(xhalfminy, xhalfmaxy, yhalf);
     auto tSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
         Acts::Transform3::Identity(), trapezoid);
-    std::vector<Acts::DirectedProtoAxis> stripsX;
-    stripsX.emplace_back(Acts::AxisDirection::AxisX,
-                         Acts::AxisBoundaryType::Open, -xhalfmaxy, xhalfmaxy,
-                         35);
-    stripsX.emplace_back(Acts::AxisDirection::AxisY,
-                         Acts::AxisBoundaryType::Open, -yhalf, yhalf, 1);
+    auto stripsX = makeSegmentation(
+        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Open, -xhalfmaxy,
+                                       xhalfmaxy, 35,
+                                       Acts::AxisDirection::AxisX),
+        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Open, -yhalf,
+                                       yhalf, 1, Acts::AxisDirection::AxisY));
     TrapezoidRandom tRandom(xhalfminy * rScale, xhalfmaxy * rScale,
                             yhalf * rScale);
 
@@ -87,12 +95,12 @@ struct PlanarSurfaceTestBeds {
         std::make_shared<Acts::DiscTrapezoidBounds>(xmin, xmax, rmin, rmax);
     auto dtSurface = Acts::Surface::makeShared<Acts::DiscSurface>(
         Acts::Transform3::Identity(), discTrapezoid);
-    std::vector<Acts::DirectedProtoAxis> stripsPhi;
-    stripsPhi.emplace_back(Acts::AxisDirection::AxisR,
-                           Acts::AxisBoundaryType::Open, rmin, rmax, 1);
-    stripsPhi.emplace_back(
-        Acts::AxisDirection::AxisPhi, Acts::AxisBoundaryType::Open,
-        std::numbers::pi / 2. - alpha, std::numbers::pi / 2. + alpha, 25);
+    auto stripsPhi = makeSegmentation(
+        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Open, rmin, rmax,
+                                       1, Acts::AxisDirection::AxisR),
+        Acts::IAxis::createEquidistant(
+            Acts::AxisBoundaryType::Open, std::numbers::pi / 2. - alpha,
+            std::numbers::pi / 2. + alpha, 25, Acts::AxisDirection::AxisPhi));
     TrapezoidRandom dtRandom(xmin * rScale, xmax * rScale, rmin * irScale,
                              ymax * rScale);
 
@@ -101,13 +109,14 @@ struct PlanarSurfaceTestBeds {
         rmin, rmax, std::numbers::pi / 4., std::numbers::pi / 2.);
     auto dSurface = Acts::Surface::makeShared<Acts::DiscSurface>(
         Acts::Transform3::Identity(), discRadial);
-    std::vector<Acts::DirectedProtoAxis> rphiseg;
-    rphiseg.emplace_back(Acts::AxisDirection::AxisR,
-                         Acts::AxisBoundaryType::Open, rmin, rmax, 10);
-    rphiseg.emplace_back(Acts::AxisDirection::AxisPhi,
-                         Acts::AxisBoundaryType::Open,
-                         (std::numbers::pi / 2. - std::numbers::pi / 4.),
-                         (std::numbers::pi / 2. + std::numbers::pi / 4.), 20);
+    auto rphiseg = makeSegmentation(
+        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Open, rmin, rmax,
+                                       10, Acts::AxisDirection::AxisR),
+        Acts::IAxis::createEquidistant(
+            Acts::AxisBoundaryType::Open,
+            (std::numbers::pi / 2. - std::numbers::pi / 4.),
+            (std::numbers::pi / 2. + std::numbers::pi / 4.), 20,
+            Acts::AxisDirection::AxisPhi));
 
     DiscRandom dRandom(
         rmin * irScale, rmax * rScale,
@@ -134,11 +143,12 @@ struct PlanarSurfaceTestBeds {
       rmax = std::max(rmax, r);
     });
 
-    std::vector<Acts::DirectedProtoAxis> stripsPhiA;
-    stripsPhiA.emplace_back(Acts::AxisDirection::AxisR,
-                            Acts::AxisBoundaryType::Open, rmin, rmax, 1);
-    stripsPhiA.emplace_back(Acts::AxisDirection::AxisPhi,
-                            Acts::AxisBoundaryType::Open, phimin, phimax, 12);
+    auto stripsPhiA = makeSegmentation(
+        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Open, rmin, rmax,
+                                       1, Acts::AxisDirection::AxisR),
+        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Open, phimin,
+                                       phimax, 12,
+                                       Acts::AxisDirection::AxisPhi));
     AnnulusRandom aRandom(rmin * irScale, rmax * rScale, phimin * rScale,
                           phimax * rScale, aorigin.x(), aorigin.y());
 

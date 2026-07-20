@@ -10,14 +10,13 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <array>
 #include <utility>
 #include <vector>
 
 namespace Acts {
-class BinUtility;
+class IMultiAxis;
 class Surface;
 }  // namespace Acts
 
@@ -97,10 +96,10 @@ struct Segmentizer {
   /// @param segment The surface segment (cartesian coordinates)
   ///
   /// @return a vector of ChannelSegment objects
-  std::vector<ChannelSegment> segments(
-      const Acts::GeometryContext& geoCtx, const Acts::Surface& surface,
-      const std::vector<Acts::DirectedProtoAxis>& segmentation,
-      const Segment2D& segment) const;
+  std::vector<ChannelSegment> segments(const Acts::GeometryContext& geoCtx,
+                                       const Acts::Surface& surface,
+                                       const Acts::IMultiAxis& segmentation,
+                                       const Segment2D& segment) const;
 };
 
 }  // namespace ActsFatras

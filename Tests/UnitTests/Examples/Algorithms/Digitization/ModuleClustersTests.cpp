@@ -9,13 +9,15 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/IMultiAxis.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 #include "ActsFatras/Digitization/Segmentizer.hpp"
 
 #include <algorithm>
 #include <iterator>
+#include <memory>
 
 using namespace Acts;
 using namespace ActsFatras;
@@ -23,11 +25,20 @@ using namespace ActsExamples;
 
 namespace ActsTests {
 
-DigitizedParameters makeDigitizationParameters(
-    const Vector2 &position, const Vector2 &variance,
-    const std::vector<DirectedProtoAxis> &segmentation) {
-  const std::size_t binX = segmentation[0].bin(position.x());
-  const std::size_t binY = segmentation[1].bin(position.y());
+std::shared_ptr<const IMultiAxis> makeSegmentation() {
+  const auto axisX = IAxis::createEquidistant(AxisBoundaryType::Open, -10.0,
+                                              10.0, 20, AxisDirection::AxisX);
+  const auto axisY = IAxis::createEquidistant(AxisBoundaryType::Open, -10.0,
+                                              10.0, 20, AxisDirection::AxisY);
+  return IMultiAxis::create(*axisX, *axisY);
+}
+
+DigitizedParameters makeDigitizationParameters(const Vector2 &position,
+                                               const Vector2 &variance,
+                                               const IMultiAxis &segmentation) {
+  // Cell bins are zero-based while the axis bin indices start at one
+  const std::size_t binX = segmentation.getAxis(0).getBin(position.x()) - 1;
+  const std::size_t binY = segmentation.getAxis(1).getBin(position.y()) - 1;
   const Segmentizer::Bin2D bin = {
       static_cast<Segmentizer::Bin2D::value_type>(binX),
       static_cast<Segmentizer::Bin2D::value_type>(binY)};
@@ -51,7 +62,7 @@ DigitizedParameters makeDigitizationParameters(
 
 DigitizedParameters makeDigitizationParametersWithTime(
     const Vector2 &position, const Vector2 &variance, double time,
-    double timeVariance, const std::vector<DirectedProtoAxis> &segmentation) {
+    double timeVariance, const IMultiAxis &segmentation) {
   DigitizedParameters params =
       makeDigitizationParameters(position, variance, segmentation);
   params.indices.push_back(eBoundTime);
@@ -62,11 +73,7 @@ DigitizedParameters makeDigitizationParametersWithTime(
 
 auto testDigitizedParametersWithTwoClusters(bool merge, const Vector2 &firstHit,
                                             const Vector2 &secondHit) {
-  std::vector<DirectedProtoAxis> segmentation;
-  segmentation.emplace_back(AxisDirection::AxisX, AxisBoundaryType::Open, -10.0,
-                            10.0, 20);
-  segmentation.emplace_back(AxisDirection::AxisY, AxisBoundaryType::Open, -10.0,
-                            10.0, 20);
+  std::shared_ptr<const IMultiAxis> segmentation = makeSegmentation();
   std::vector<Acts::BoundIndices> boundIndices = {eBoundLoc0, eBoundLoc1};
   double nsigma = 1;
   bool commonCorner = true;
@@ -74,10 +81,10 @@ auto testDigitizedParametersWithTwoClusters(bool merge, const Vector2 &firstHit,
   ModuleClusters moduleClusters(segmentation, boundIndices, merge, nsigma,
                                 commonCorner);
 
-  moduleClusters.add(makeDigitizationParameters(firstHit, {1, 1}, segmentation),
-                     0);
   moduleClusters.add(
-      makeDigitizationParameters(secondHit, {1, 1}, segmentation), 1);
+      makeDigitizationParameters(firstHit, {1, 1}, *segmentation), 0);
+  moduleClusters.add(
+      makeDigitizationParameters(secondHit, {1, 1}, *segmentation), 1);
 
   return moduleClusters.digitizedParameters();
 }
@@ -87,11 +94,7 @@ auto testDigitizedParametersWithTwoTimedClusters(bool merge,
                                                  double firstTime,
                                                  const Vector2 &secondHit,
                                                  double secondTime) {
-  std::vector<DirectedProtoAxis> segmentation;
-  segmentation.emplace_back(AxisDirection::AxisX, AxisBoundaryType::Open, -10.0,
-                            10.0, 20);
-  segmentation.emplace_back(AxisDirection::AxisY, AxisBoundaryType::Open, -10.0,
-                            10.0, 20);
+  std::shared_ptr<const IMultiAxis> segmentation = makeSegmentation();
   std::vector<Acts::BoundIndices> boundIndices = {eBoundLoc0, eBoundLoc1};
   double nsigma = 1;
   bool commonCorner = true;
@@ -100,10 +103,10 @@ auto testDigitizedParametersWithTwoTimedClusters(bool merge,
                                 commonCorner);
 
   moduleClusters.add(makeDigitizationParametersWithTime(
-                         firstHit, {1, 1}, firstTime, 1, segmentation),
+                         firstHit, {1, 1}, firstTime, 1, *segmentation),
                      0);
   moduleClusters.add(makeDigitizationParametersWithTime(
-                         secondHit, {1, 1}, secondTime, 1, segmentation),
+                         secondHit, {1, 1}, secondTime, 1, *segmentation),
                      1);
 
   return moduleClusters.digitizedParameters();

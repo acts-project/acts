@@ -25,7 +25,8 @@ std::vector<double> GeometricConfig::variances(
     } else {
       // Pitch size ofer / sqrt(12) as error instead
       const std::size_t ictr = cmins[i] + csizes[i] / 2;
-      var = std::pow(segmentation.at(bIndex).binWidth(ictr), 2) / 12.0;
+      var = std::pow(segmentation->getAxis(bIndex).getBinWidth(ictr + 1), 2) /
+            12.0;
     }
     rVariances.push_back(var);
   }

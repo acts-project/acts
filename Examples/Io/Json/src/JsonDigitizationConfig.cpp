@@ -12,7 +12,8 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/IMultiAxis.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
@@ -20,6 +21,7 @@
 
 #include <cstddef>
 #include <fstream>
+#include <memory>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -135,8 +137,22 @@ void ActsExamples::to_json(nlohmann::json& j, const GeometricConfig& gdc) {
   }
   j["indices"] = indices;
   Acts::BinUtility segmentation;
-  for (const Acts::DirectedProtoAxis& axis : gdc.segmentation) {
-    segmentation += Acts::BinUtility(axis);
+  if (gdc.segmentation != nullptr) {
+    for (const Acts::IAxis& axis : *gdc.segmentation) {
+      const Acts::AxisDirection axisDir = axis.getDirection().value();
+      const Acts::BinningOption bOption =
+          axis.getBoundaryType() == Acts::AxisBoundaryType::Closed
+              ? Acts::closed
+              : Acts::open;
+      if (axis.isEquidistant()) {
+        segmentation += Acts::BinUtility(axis.getNBins(), axis.getMin(),
+                                         axis.getMax(), bOption, axisDir);
+      } else {
+        const std::vector<double> edges = axis.getBinEdges();
+        std::vector<float> floatEdges(edges.begin(), edges.end());
+        segmentation += Acts::BinUtility(floatEdges, bOption, axisDir);
+      }
+    }
   }
   j["segmentation"] = segmentation;
   j["thickness"] = gdc.thickness;
@@ -153,6 +169,7 @@ void ActsExamples::from_json(const nlohmann::json& j, GeometricConfig& gdc) {
   }
   Acts::BinUtility segmentation;
   from_json(j["segmentation"], segmentation);
+  std::vector<std::unique_ptr<Acts::IAxis>> axes;
   for (const Acts::BinningData& binData : segmentation.binningData()) {
     const Acts::AxisDirection axisDir = binData.binvalue;
     const Acts::AxisType axisType = binData.type == Acts::equidistant
@@ -162,13 +179,21 @@ void ActsExamples::from_json(const nlohmann::json& j, GeometricConfig& gdc) {
                                               ? Acts::AxisBoundaryType::Open
                                               : Acts::AxisBoundaryType::Closed;
     if (axisType == Acts::AxisType::Equidistant) {
-      gdc.segmentation.emplace_back(axisDir, abType, binData.min, binData.max,
-                                    binData.bins());
+      axes.push_back(Acts::IAxis::createEquidistant(
+          abType, binData.min, binData.max, binData.bins(), axisDir));
     } else {
       const std::vector<double> edges(binData.boundaries().begin(),
                                       binData.boundaries().end());
-      gdc.segmentation.emplace_back(axisDir, abType, edges);
+      axes.push_back(Acts::IAxis::createVariable(abType, edges, axisDir));
     }
+  }
+  if (axes.size() == 1) {
+    gdc.segmentation = Acts::IMultiAxis::create(*axes[0]);
+  } else if (axes.size() == 2) {
+    gdc.segmentation = Acts::IMultiAxis::create(*axes[0], *axes[1]);
+  } else if (!axes.empty()) {
+    throw std::invalid_argument(
+        "GeometricConfig: only 1D and 2D segmentations are supported");
   }
   gdc.thickness = j["thickness"];
   gdc.threshold = j["threshold"];

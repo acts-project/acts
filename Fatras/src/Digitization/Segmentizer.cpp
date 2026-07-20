@@ -10,6 +10,7 @@
 
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
+#include "Acts/Utilities/IMultiAxis.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
@@ -21,13 +22,15 @@ namespace ActsFatras {
 
 std::vector<Segmentizer::ChannelSegment> Segmentizer::segments(
     const Acts::GeometryContext& geoCtx, const Acts::Surface& surface,
-    const std::vector<Acts::DirectedProtoAxis>& segmentation,
-    const Segment2D& segment) const {
+    const Acts::IMultiAxis& segmentation, const Segment2D& segment) const {
   // Return if the segmentation is not two-dimensional
   // (strips need to have one bin along the strip)
-  if (segmentation.size() != 2) {
+  if (segmentation.getNAxes() != 2) {
     return {};
   }
+
+  const Acts::IAxis& axis0 = segmentation.getAxis(0);
+  const Acts::IAxis& axis1 = segmentation.getAxis(1);
 
   // Start and end point
   const Acts::Vector2& start = segment[0];
@@ -45,10 +48,10 @@ std::vector<Segmentizer::ChannelSegment> Segmentizer::segments(
     // unrolled readout frame (rPhi, z). Either way the cell boundaries are
     // axis-aligned straight lines and the stepping algorithm is identical.
     // Get the segmentation and convert it to lines & arcs
-    bstart = {static_cast<unsigned int>(segmentation.at(0).bin(start[0]) - 1),
-              static_cast<unsigned int>(segmentation.at(1).bin(start[1]) - 1)};
-    bend = {static_cast<unsigned int>(segmentation.at(0).bin(end[0]) - 1),
-            static_cast<unsigned int>(segmentation.at(1).bin(end[1]) - 1)};
+    bstart = {static_cast<unsigned int>(axis0.getBin(start[0]) - 1),
+              static_cast<unsigned int>(axis1.getBin(start[1]) - 1)};
+    bend = {static_cast<unsigned int>(axis0.getBin(end[0]) - 1),
+            static_cast<unsigned int>(axis1.getBin(end[1]) - 1)};
     // Fast single channel exit
     if (bstart == bend) {
       return {ChannelSegment(bstart, {start, end}, segment2d.norm())};
@@ -58,7 +61,7 @@ std::vector<Segmentizer::ChannelSegment> Segmentizer::segments(
       const double k = segment2d.y() / segment2d.x();
       const double d = start.y() - k * start.x();
 
-      const std::vector<double> xboundaries = segmentation.at(0).binEdges();
+      const std::vector<double> xboundaries = axis0.getBinEdges();
       const std::span<const double> xbbounds(
           xboundaries.begin() + std::min(bstart[0], bend[0]) + 1,
           xboundaries.begin() + std::max(bstart[0], bend[0]) + 1);
@@ -71,7 +74,7 @@ std::vector<Segmentizer::ChannelSegment> Segmentizer::segments(
     if (bstart[1] != bend[1]) {
       const double k = segment2d.x() / segment2d.y();
       const double d = start.x() - k * start.y();
-      const std::vector<double> yboundaries = segmentation.at(1).binEdges();
+      const std::vector<double> yboundaries = axis1.getBinEdges();
       const std::span<const double> ybbounds(
           yboundaries.begin() + std::min(bstart[1], bend[1]) + 1,
           yboundaries.begin() + std::max(bstart[1], bend[1]) + 1);
@@ -88,10 +91,10 @@ std::vector<Segmentizer::ChannelSegment> Segmentizer::segments(
                              Acts::VectorHelpers::phi(end));
 
     // Get the segmentation and convert it to lines & arcs
-    bstart = {static_cast<unsigned int>(segmentation.at(0).bin(pstart[0]) - 1),
-              static_cast<unsigned int>(segmentation.at(1).bin(pstart[1]) - 1)};
-    bend = {static_cast<unsigned int>(segmentation.at(0).bin(pend[0]) - 1),
-            static_cast<unsigned int>(segmentation.at(1).bin(pend[1]) - 1)};
+    bstart = {static_cast<unsigned int>(axis0.getBin(pstart[0]) - 1),
+              static_cast<unsigned int>(axis1.getBin(pstart[1]) - 1)};
+    bend = {static_cast<unsigned int>(axis0.getBin(pend[0]) - 1),
+            static_cast<unsigned int>(axis1.getBin(pend[1]) - 1)};
 
     // Fast single channel exit
     if (bstart == bend) {
@@ -103,7 +106,7 @@ std::vector<Segmentizer::ChannelSegment> Segmentizer::segments(
 
     // The radial boundaries
     if (bstart[0] != bend[0]) {
-      const std::vector<double> rboundaries = segmentation.at(0).binEdges();
+      const std::vector<double> rboundaries = axis0.getBinEdges();
       const std::span<const double> rbbounds(
           rboundaries.begin() + std::min(bstart[0], bend[0]) + 1,
           rboundaries.begin() + std::max(bstart[0], bend[0]) + 1);
@@ -122,7 +125,7 @@ std::vector<Segmentizer::ChannelSegment> Segmentizer::segments(
       const double referenceR =
           surface.referencePositionValue(geoCtx, Acts::AxisDirection::AxisR);
       const Acts::Vector2 origin = {0., 0.};
-      const std::vector<double> phiboundaries = segmentation.at(1).binEdges();
+      const std::vector<double> phiboundaries = axis1.getBinEdges();
       const std::span<const double> phibbounds(
           phiboundaries.begin() + std::min(bstart[1], bend[1]) + 1,
           phiboundaries.begin() + std::max(bstart[1], bend[1]) + 1);
