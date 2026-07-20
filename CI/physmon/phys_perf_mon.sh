@@ -25,7 +25,7 @@ if ! [[ $mode = @(all|kf|gsf|gx2f|refit_kf|refit_gsf|fullchains|simulation|gx2f_
 fi
 
 outdir=${2:-physmon}
-# number of histcmp worker processes per comparison
+# number of concurrent histcmp comparison processes
 num_jobs=${3:-1}
 mkdir -p $outdir
 mkdir -p $outdir/data
@@ -173,14 +173,32 @@ fi
 echo "::endgroup::"
 
 
-function run_histcmp() {
-    a=$1
-    b=$2
-    title=$3
-    html_path=$4
-    shift 4
+# The histcmp comparisons are independent of each other and are run in a pool
+# of up to $num_jobs background processes. Each job writes its output and exit
+# code to $comparison_jobs_dir/<index>/ and the results are replayed in
+# submission order by finish_comparisons. On the few-core CI runners this
+# packs better than histcmp's internal --jobs pool because it also overlaps
+# the per-invocation startup and report generation.
+comparison_jobs_dir=$outdir/comparison_jobs
+rm -rf $comparison_jobs_dir
+mkdir -p $comparison_jobs_dir
+comparison_job_index=0
+comparison_job_labels=()
+comparison_job_titles=()
+comparison_job_html=()
 
-    echo "::group::Comparing $a vs. $b"
+function wait_for_job_slot() {
+    while [ "$(jobs -rp | wc -l)" -ge "$num_jobs" ]; do
+        sleep 0.2
+    done
+}
+
+function run_histcmp() {
+    local a=$1
+    local b=$2
+    local title=$3
+    local html_path=$4
+    shift 4
 
     if [ ! -f "$a" ]; then
         echo "::error::histcmp failed: File $a does not exist"
@@ -192,32 +210,60 @@ function run_histcmp() {
         ec=1
     fi
 
+    local jobdir=$comparison_jobs_dir/$comparison_job_index
+    mkdir -p $jobdir
+    comparison_job_labels[$comparison_job_index]="$a vs. $b"
+    comparison_job_titles[$comparison_job_index]="$title"
+    comparison_job_html[$comparison_job_index]="$html_path"
+    comparison_job_index=$(($comparison_job_index + 1))
+
     # histcmp only creates this directory when a plot directory is configured
     mkdir -p $(dirname $outdir/html/$html_path)
 
-    start=$(date +%s)
-    # scatter renders 3D histograms much faster than the default voxel
-    # renderer at every histogram size
-    run histcmp $a $b \
-        --label-reference=reference \
-        --label-monitored=monitored \
-        --title="$title" \
-        --jobs $num_jobs \
-        --renderer-3d scatter \
-        -o $outdir/html/$html_path \
-        "$@"
+    wait_for_job_slot
+    (
+        start=$(date +%s)
+        rc=0
+        # scatter renders 3D histograms much faster than the default voxel
+        # renderer at every histogram size
+        run histcmp $a $b \
+            --label-reference=reference \
+            --label-monitored=monitored \
+            --title="$title" \
+            --renderer-3d scatter \
+            -o $outdir/html/$html_path \
+            "$@" || rc=$?
+        echo "histcmp took $(($(date +%s) - $start)) seconds"
+        echo $rc > $jobdir/ec
+    ) > $jobdir/log 2>&1 &
+}
 
-    this_ec=$?
-    ec=$(($ec | $this_ec))
-    echo "histcmp took $(($(date +%s) - $start)) seconds"
+function finish_comparisons() {
+    wait
 
-    if [ $this_ec -ne 0 ]; then
-        echo "::error::histcmp failed: ec=$this_ec"
-    fi
+    local i
+    for ((i = 0; i < $comparison_job_index; i++)); do
+        local jobdir=$comparison_jobs_dir/$i
+        local title=${comparison_job_titles[$i]}
+        local html_path=${comparison_job_html[$i]}
 
-    echo "\"${title}\",html/${html_path},${this_ec}" >> $histcmp_results
+        echo "::group::Comparing ${comparison_job_labels[$i]}"
 
-    echo "::endgroup::"
+        cat $jobdir/log
+
+        this_ec=$(cat $jobdir/ec 2> /dev/null || echo 1)
+        ec=$(($ec | $this_ec))
+
+        if [ $this_ec -ne 0 ]; then
+            echo "::error::histcmp failed: ec=$this_ec"
+        fi
+
+        echo "\"${title}\",html/${html_path},${this_ec}" >> $histcmp_results
+
+        echo "::endgroup::"
+    done
+
+    rm -rf $comparison_jobs_dir
 }
 
 function trackfinding() {
@@ -478,6 +524,8 @@ if [[ "$mode" == "all" || "$mode" == "gx2f_vs_kf" ]]; then
         --label-reference=KF \
         --label-monitored=GX2F
 fi
+
+finish_comparisons
 
 run python3 CI/physmon/summary.py $histcmp_results \
   --md $outdir/summary.md \
