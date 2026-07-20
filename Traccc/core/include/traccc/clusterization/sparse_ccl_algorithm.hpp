@@ -32,36 +32,35 @@ class sparse_ccl_algorithm
           const edm::silicon_cell_collection::const_view&,
           const detector_conditions_description::const_view& det_cond_view)>,
       public messaging {
+ public:
+  /// Constructor for component_connection
+  ///
+  /// @param mr is the memory resource
+  ///
+  sparse_ccl_algorithm(
+      vecmem::memory_resource& mr,
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
 
-    public:
-    /// Constructor for component_connection
-    ///
-    /// @param mr is the memory resource
-    ///
-    sparse_ccl_algorithm(
-        vecmem::memory_resource& mr,
-        std::unique_ptr<const Logger> logger = getDummyLogger().clone());
+  /// @name Operator(s) to use in host code
+  /// @{
 
-    /// @name Operator(s) to use in host code
-    /// @{
+  /// Callable operator for the connected component labelling
+  ///
+  /// @param cells_view Collection of input cells sorted by module
+  /// @param det_cond_view Collection of detector conditions
+  ///
+  /// @return a cluster container
+  ///
+  output_type operator()(
+      const edm::silicon_cell_collection::const_view& cells_view,
+      const detector_conditions_description::const_view& det_cond_view)
+      const override;
 
-    /// Callable operator for the connected component labelling
-    ///
-    /// @param cells_view Collection of input cells sorted by module
-    /// @param det_cond_view Collection of detector conditions
-    ///
-    /// @return a cluster container
-    ///
-    output_type operator()(
-        const edm::silicon_cell_collection::const_view& cells_view,
-        const detector_conditions_description::const_view& det_cond_view)
-        const override;
+  /// @}
 
-    /// @}
-
-    private:
-    /// The memory resource used by the algorithm
-    std::reference_wrapper<vecmem::memory_resource> m_mr;
+ private:
+  /// The memory resource used by the algorithm
+  std::reference_wrapper<vecmem::memory_resource> m_mr;
 };  // class sparse_ccl_algorithm
 
 }  // namespace traccc::host

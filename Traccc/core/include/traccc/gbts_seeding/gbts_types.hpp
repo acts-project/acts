@@ -20,19 +20,19 @@ namespace traccc {
 // Minimal fixed-size vector storage types, and constructors for them.
 // ---------------------------------------------------------------------------
 struct TRACCC_ALIGN(8) float2 {
-    float x, y;
+  float x, y;
 };
 struct TRACCC_ALIGN(16) float4 {
-    float x, y, z, w;
+  float x, y, z, w;
 };
 struct TRACCC_ALIGN(8) int2 {
-    int x, y;
+  int x, y;
 };
 struct TRACCC_ALIGN(8) uint2 {
-    unsigned int x, y;
+  unsigned int x, y;
 };
 struct TRACCC_ALIGN(4) short2 {
-    short x, y;
+  short x, y;
 };
 
 namespace device {

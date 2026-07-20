@@ -18,7 +18,6 @@ import re
 import traccc_bench_tools.parse_profile
 import traccc_bench_tools.types
 
-
 log = logging.getLogger("traccc_cut_optimiser")
 
 

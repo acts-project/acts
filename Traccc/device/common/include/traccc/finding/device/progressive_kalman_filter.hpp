@@ -27,44 +27,44 @@ namespace traccc::device {
 /// (Event Data) Payload for the @c traccc::device::progressive_kalman_filter
 /// function
 struct progressive_kalman_filter_payload {
-    using algebra_t = default_algebra;
-    using scalar_t = detray::dscalar<algebra_t>;
+  using algebra_t = default_algebra;
+  using scalar_t = detray::dscalar<algebra_t>;
 
-    /**
-     * @brief View object to the vector of bound track parameters
-     */
-    bound_track_parameters_collection_types::view seeds_view;
+  /**
+   * @brief View object to the vector of bound track parameters
+   */
+  bound_track_parameters_collection_types::view seeds_view;
 
-    /**
-     * @brief View object to the vector of input measurements
-     *
-     * @warning Measurements on the same surface must be adjacent
-     */
-    edm::measurement_collection::const_view measurements_view;
+  /**
+   * @brief View object to the vector of input measurements
+   *
+   * @warning Measurements on the same surface must be adjacent
+   */
+  edm::measurement_collection::const_view measurements_view;
 
-    /**
-     * @brief View object to the vector of measurement index ranges per surface
-     */
-    vecmem::data::vector_view<unsigned int> measurement_ranges_view;
+  /**
+   * @brief View object to the vector of measurement index ranges per surface
+   */
+  vecmem::data::vector_view<unsigned int> measurement_ranges_view;
 
-    /**
-     * @brief View object to the collected track statistic data
-     */
-    vecmem::data::vector_view<track_stats<scalar_t>> track_stats_view;
+  /**
+   * @brief View object to the collected track statistic data
+   */
+  vecmem::data::vector_view<track_stats<scalar_t>> track_stats_view;
 
-    /**
-     * @brief View object to the collected track state data
-     */
-    vecmem::data::vector_view<track_state_candidate> track_cand_view;
-    vecmem::data::vector_view<filtered_track_state_candidate<algebra_t>>
-        filtered_track_cand_view;
-    vecmem::data::vector_view<full_track_state_candidate<algebra_t>>
-        full_track_cand_view;
+  /**
+   * @brief View object to the collected track state data
+   */
+  vecmem::data::vector_view<track_state_candidate> track_cand_view;
+  vecmem::data::vector_view<filtered_track_state_candidate<algebra_t>>
+      filtered_track_cand_view;
+  vecmem::data::vector_view<full_track_state_candidate<algebra_t>>
+      full_track_cand_view;
 
-    /**
-     * @brief View object to the vector of track candidates
-     */
-    edm::track_container<algebra_t>::view tracks_view;
+  /**
+   * @brief View object to the vector of track candidates
+   */
+  edm::track_container<algebra_t>::view tracks_view;
 };
 
 /// Function that runs Kalman filter based track following

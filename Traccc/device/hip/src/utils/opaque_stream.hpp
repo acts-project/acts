@@ -18,16 +18,15 @@ namespace traccc::hip::details {
 /// provide any nice interface.
 ///
 struct opaque_stream {
+  /// Default constructor
+  opaque_stream(int device);
+  /// Destructor
+  ~opaque_stream();
 
-    /// Default constructor
-    opaque_stream(int device);
-    /// Destructor
-    ~opaque_stream();
-
-    /// Device that the stream is associated to
-    int m_device;
-    /// Stream managed by the object
-    hipStream_t m_stream;
+  /// Device that the stream is associated to
+  int m_device;
+  /// Stream managed by the object
+  hipStream_t m_stream;
 
 };  // class opaque_stream
 

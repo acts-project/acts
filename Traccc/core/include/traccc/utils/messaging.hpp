@@ -13,18 +13,18 @@
 
 namespace traccc {
 class messaging {
-    public:
-    explicit messaging(std::unique_ptr<const Logger> ilogger)
-        : m_logger(std::move(ilogger)) {}
+ public:
+  explicit messaging(std::unique_ptr<const Logger> ilogger)
+      : m_logger(std::move(ilogger)) {}
 
-    messaging() = delete;
+  messaging() = delete;
 
-    const Logger& logger() const {
-        assert(m_logger.get() != nullptr);
-        return *m_logger;
-    }
+  const Logger& logger() const {
+    assert(m_logger.get() != nullptr);
+    return *m_logger;
+  }
 
-    private:
-    std::unique_ptr<const Logger> m_logger;
+ private:
+  std::unique_ptr<const Logger> m_logger;
 };
 }  // namespace traccc

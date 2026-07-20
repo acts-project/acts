@@ -17,6 +17,7 @@
 
 // VecMem include(s).
 #include <optional>
+
 #include <vecmem/memory/host_memory_resource.hpp>
 
 // GTest include(s).
@@ -37,37 +38,35 @@ cca_function_t f =
     -> std::pair<std::map<traccc::geometry_id,
                           traccc::edm::measurement_collection::host>,
                  std::optional<traccc::edm::silicon_cluster_collection::host>> {
-    std::map<traccc::geometry_id, traccc::edm::measurement_collection::host>
-        result;
+  std::map<traccc::geometry_id, traccc::edm::measurement_collection::host>
+      result;
 
-    const traccc::edm::silicon_cell_collection::const_data cells_data =
-        vecmem::get_data(cells);
-    const traccc::detector_design_description::const_data det_desc_data =
-        vecmem::get_data(det_desc);
-    const traccc::detector_conditions_description::const_data det_cond_data =
-        vecmem::get_data(det_cond);
-    const auto clusters = cc(cells_data, det_cond_data);
-    const auto clusters_data = vecmem::get_data(clusters);
-    auto measurements =
-        mc(cells_data, clusters_data, det_desc_data, det_cond_data);
+  const traccc::edm::silicon_cell_collection::const_data cells_data =
+      vecmem::get_data(cells);
+  const traccc::detector_design_description::const_data det_desc_data =
+      vecmem::get_data(det_desc);
+  const traccc::detector_conditions_description::const_data det_cond_data =
+      vecmem::get_data(det_cond);
+  const auto clusters = cc(cells_data, det_cond_data);
+  const auto clusters_data = vecmem::get_data(clusters);
+  auto measurements =
+      mc(cells_data, clusters_data, det_desc_data, det_cond_data);
 
-    for (std::size_t i = 0; i < measurements.size(); i++) {
-        if (result.contains(measurements.at(i).surface_link().value()) ==
-            false) {
-            result.insert(
-                {measurements.at(i).surface_link().value(),
-                 traccc::edm::measurement_collection::host{resource}});
-        }
-        result.at(measurements.at(i).surface_link().value())
-            .push_back(measurements.at(i));
+  for (std::size_t i = 0; i < measurements.size(); i++) {
+    if (result.contains(measurements.at(i).surface_link().value()) == false) {
+      result.insert({measurements.at(i).surface_link().value(),
+                     traccc::edm::measurement_collection::host{resource}});
     }
+    result.at(measurements.at(i).surface_link().value())
+        .push_back(measurements.at(i));
+  }
 
-    return {std::move(result), std::nullopt};
+  return {std::move(result), std::nullopt};
 };
 }  // namespace
 
 TEST_P(ConnectedComponentAnalysisTests, Run) {
-    test_connected_component_analysis(GetParam());
+  test_connected_component_analysis(GetParam());
 }
 
 INSTANTIATE_TEST_SUITE_P(

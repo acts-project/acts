@@ -11,6 +11,7 @@
 
 // Acts includes
 #include <Acts/Geometry/GeometryHierarchyMap.hpp>
+
 #include <cstdint>
 #include <unordered_map>
 #include <vector>
@@ -19,7 +20,7 @@ namespace traccc {
 
 /// Type describing the conditions configuration of a detector module
 struct conditions_data_config {
-    vector2 shift{0.f, 0.f};
+  vector2 shift{0.f, 0.f};
 };
 
 using conditions_config = Acts::GeometryHierarchyMap<conditions_data_config>;

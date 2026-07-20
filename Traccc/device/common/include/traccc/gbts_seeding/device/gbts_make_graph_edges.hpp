@@ -22,31 +22,31 @@ namespace traccc::device {
 /// (Global Event Data) Payload for the @c traccc::device::gbts_make_graph_edges
 /// function
 struct gbts_make_graph_edges_payload {
-    /// Number of bin-pair tasks (also the CUDA block count)
-    unsigned int nUsedBinPairs;
-    /// Upper bound on the number of edges to write
-    unsigned int nMaxEdges;
-    /// Number of phi bins per eta slice
-    unsigned int nPhiBins;
-    /// Per-bin-pair (begin1, end1, begin2, end2) node ranges, flat
-    vecmem::data::vector_view<const unsigned int> bin_pair_views;
-    /// Per-bin-pair max delta-phi window for edge candidates
-    vecmem::data::vector_view<const float> bin_pair_dphi;
-    /// Per-node (tau_min, tau_max, r, z)
-    vecmem::data::vector_view<const float4> node_params;
-    /// Per-node phi
-    vecmem::data::vector_view<const float> node_phi;
-    /// Edge-making geometric / kinematic cuts
-    traccc::gbts_make_graph_edges_params gbts_make_graph_edges_params;
-    /// In/out: global atomic counter for the next edge slot to write
-    unsigned int* nEdgesCounter;
-    /// Output: (src, dst) node indices per edge
-    vecmem::data::vector_view<uint2> edge_nodes;
-    /// Output: packed per-edge [exp(-eta), curv, phi_z, phi_w] used by
-    /// matching
-    vecmem::data::vector_view<float4> edge_params;
-    /// Output: per-destination-node incoming-edge count (atomic)
-    vecmem::data::vector_view<unsigned int> num_outgoing_edges;
+  /// Number of bin-pair tasks (also the CUDA block count)
+  unsigned int nUsedBinPairs;
+  /// Upper bound on the number of edges to write
+  unsigned int nMaxEdges;
+  /// Number of phi bins per eta slice
+  unsigned int nPhiBins;
+  /// Per-bin-pair (begin1, end1, begin2, end2) node ranges, flat
+  vecmem::data::vector_view<const unsigned int> bin_pair_views;
+  /// Per-bin-pair max delta-phi window for edge candidates
+  vecmem::data::vector_view<const float> bin_pair_dphi;
+  /// Per-node (tau_min, tau_max, r, z)
+  vecmem::data::vector_view<const float4> node_params;
+  /// Per-node phi
+  vecmem::data::vector_view<const float> node_phi;
+  /// Edge-making geometric / kinematic cuts
+  traccc::gbts_make_graph_edges_params gbts_make_graph_edges_params;
+  /// In/out: global atomic counter for the next edge slot to write
+  unsigned int* nEdgesCounter;
+  /// Output: (src, dst) node indices per edge
+  vecmem::data::vector_view<uint2> edge_nodes;
+  /// Output: packed per-edge [exp(-eta), curv, phi_z, phi_w] used by
+  /// matching
+  vecmem::data::vector_view<float4> edge_params;
+  /// Output: per-destination-node incoming-edge count (atomic)
+  vecmem::data::vector_view<unsigned int> num_outgoing_edges;
 };
 
 /// (Shared Event Data) Payload for the @c traccc::device::gbts_make_graph_edges
@@ -55,10 +55,10 @@ struct gbts_make_graph_edges_payload {
 /// Shared-memory scratch for gbts_make_graph_edges: a block-local copy of the
 /// current node1 chunk (phi values and packed node params).
 struct gbts_make_graph_edges_shared_payload {
-    /// Shared-mem cache: phi / node
-    vecmem::data::vector_view<float> phi;
-    /// Shared-mem cache: (tau_min, tau_max, r, z) float4 / node
-    vecmem::data::vector_view<float4> node_pack;
+  /// Shared-mem cache: phi / node
+  vecmem::data::vector_view<float> phi;
+  /// Shared-mem cache: (tau_min, tau_max, r, z) float4 / node
+  vecmem::data::vector_view<float4> node_pack;
 };
 
 /// @brief Create candidate edges between node pairs in compatible (eta, phi)

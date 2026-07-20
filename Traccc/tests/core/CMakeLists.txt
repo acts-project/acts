@@ -12,12 +12,11 @@ traccc_add_test(core
    "test_subspace.cpp"
    "particle.cpp"
    LINK_LIBRARIES GTest::gtest_main traccc_tests_common
-   traccc::core traccc::io)
+   traccc::core traccc::io
+)
 
-if( TRACCC_USE_ROOT )
-   find_package( ROOT COMPONENTS Core RIO Hist REQUIRED )
-   target_link_libraries( traccc_test_core
-      PRIVATE ROOT::Core )
-   target_compile_definitions( traccc_test_core
-      PRIVATE TRACCC_HAVE_ROOT )
+if(TRACCC_USE_ROOT)
+    find_package(ROOT COMPONENTS Core RIO Hist REQUIRED)
+    target_link_libraries(traccc_test_core PRIVATE ROOT::Core)
+    target_compile_definitions(traccc_test_core PRIVATE TRACCC_HAVE_ROOT)
 endif()

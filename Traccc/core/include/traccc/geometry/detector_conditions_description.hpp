@@ -28,65 +28,64 @@ namespace traccc {
 ///
 template <typename BASE>
 class detector_conditions_description_interface : public BASE {
+ public:
+  /// Inherit the base class's constructor(s)
+  using BASE::BASE;
 
-    public:
-    /// Inherit the base class's constructor(s)
-    using BASE::BASE;
+  /// @name Detector segmentation information
+  /// @{
 
-    /// @name Detector segmentation information
-    /// @{
+  /// The identifier of the module's design
+  ///
+  ///
+  /// @return A (const) vector of @c int objects
+  ///
+  TRACCC_HOST_DEVICE
+  auto& module_to_design_id() { return BASE::template get<0>(); }
+  /// The identifier of the detector module's surface (const)
+  ///
+  /// Can be used to look up the module in a @c detray::detector object.
+  ///
+  /// @return A (const) vector of @c detray::geometry::identifier objects
+  ///
+  TRACCC_HOST_DEVICE
+  const auto& module_to_design_id() const { return BASE::template get<0>(); }
 
-    /// The identifier of the module's design
-    ///
-    ///
-    /// @return A (const) vector of @c int objects
-    ///
-    TRACCC_HOST_DEVICE
-    auto& module_to_design_id() { return BASE::template get<0>(); }
-    /// The identifier of the detector module's surface (const)
-    ///
-    /// Can be used to look up the module in a @c detray::detector object.
-    ///
-    /// @return A (const) vector of @c detray::geometry::identifier objects
-    ///
-    TRACCC_HOST_DEVICE
-    const auto& module_to_design_id() const { return BASE::template get<0>(); }
+  TRACCC_HOST_DEVICE
+  auto& geometry_id() { return BASE::template get<1>(); }
+  /// The identifier of the detector module's surface (const)
+  ///
+  /// Can be used to look up the module in a @c detray::detector object.
+  ///
+  /// @return A (const) vector of @c detray::geometry::identifier objects
+  ///
+  TRACCC_HOST_DEVICE
+  const auto& geometry_id() const { return BASE::template get<1>(); }
 
-    TRACCC_HOST_DEVICE
-    auto& geometry_id() { return BASE::template get<1>(); }
-    /// The identifier of the detector module's surface (const)
-    ///
-    /// Can be used to look up the module in a @c detray::detector object.
-    ///
-    /// @return A (const) vector of @c detray::geometry::identifier objects
-    ///
-    TRACCC_HOST_DEVICE
-    const auto& geometry_id() const { return BASE::template get<1>(); }
+  TRACCC_HOST_DEVICE
+  auto& acts_geometry_id() { return BASE::template get<2>(); }
+  /// The identifier of the detector module's surface (const)
+  ///
+  /// Can be used to look up the module in a @c detray::detector object.
+  ///
+  /// @return A (const) vector of @c detray::geometry::identifier objects
+  ///
+  TRACCC_HOST_DEVICE
+  const auto& acts_geometry_id() const { return BASE::template get<2>(); }
 
-    TRACCC_HOST_DEVICE
-    auto& acts_geometry_id() { return BASE::template get<2>(); }
-    /// The identifier of the detector module's surface (const)
-    ///
-    /// Can be used to look up the module in a @c detray::detector object.
-    ///
-    /// @return A (const) vector of @c detray::geometry::identifier objects
-    ///
-    TRACCC_HOST_DEVICE
-    const auto& acts_geometry_id() const { return BASE::template get<2>(); }
+  /// The local translation vector to model e.g. Lorentz shifts
+  ///
+  /// @return A vector by which to translate the measurement in the local
+  /// coordinate frame.
+  ///
+  /// @{
+  TRACCC_HOST_DEVICE
+  auto& measurement_translation() { return BASE::template get<3>(); }
 
-    /// The local translation vector to model e.g. Lorentz shifts
-    ///
-    /// @return A vector by which to translate the measurement in the local
-    /// coordinate frame.
-    ///
-    /// @{
-    TRACCC_HOST_DEVICE
-    auto& measurement_translation() { return BASE::template get<3>(); }
-
-    TRACCC_HOST_DEVICE
-    const auto& measurement_translation() const {
-        return BASE::template get<3>();
-    }
+  TRACCC_HOST_DEVICE
+  const auto& measurement_translation() const {
+    return BASE::template get<3>();
+  }
 
 };  // class silicon_detector_description_interface
 

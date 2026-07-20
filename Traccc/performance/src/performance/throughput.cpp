@@ -18,17 +18,15 @@ namespace traccc::performance {
 throughput::throughput(std::size_t events, const timing_info& ti,
                        std::string_view timer_name)
     : m_timer_name(timer_name) {
-
-    auto totalTime = ti.get_time(timer_name);
-    m_perEvent = (totalTime / static_cast<double>(events)).count() * 1e-6;
-    m_perSecond = 1000. / m_perEvent;
+  auto totalTime = ti.get_time(timer_name);
+  m_perEvent = (totalTime / static_cast<double>(events)).count() * 1e-6;
+  m_perSecond = 1000. / m_perEvent;
 }
 
 std::ostream& operator<<(std::ostream& out, const throughput& thr) {
-
-    out << std::setw(30) << std::right << thr.m_timer_name << "  "
-        << thr.m_perEvent << " ms/event, " << thr.m_perSecond << " events/s";
-    return out;
+  out << std::setw(30) << std::right << thr.m_timer_name << "  "
+      << thr.m_perEvent << " ms/event, " << thr.m_perSecond << " events/s";
+  return out;
 }
 
 }  // namespace traccc::performance

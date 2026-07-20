@@ -20,25 +20,24 @@ namespace traccc::sycl {
 /// Holding on to data that all SYCL algorithms make use of.
 ///
 class algorithm_base {
+ public:
+  /// Constructor for the algorithm base
+  ///
+  /// @param queue Queue to be used by the algorithm
+  ///
+  algorithm_base(queue_wrapper& queue);
 
-    public:
-    /// Constructor for the algorithm base
-    ///
-    /// @param queue Queue to be used by the algorithm
-    ///
-    algorithm_base(queue_wrapper& queue);
+  /// Access the queue of the algorithm
+  queue_wrapper& queue() const;
 
-    /// Access the queue of the algorithm
-    queue_wrapper& queue() const;
+  /// Get the preferred warp (sub-group) size of the device being used
+  unsigned int warp_size() const;
 
-    /// Get the preferred warp (sub-group) size of the device being used
-    unsigned int warp_size() const;
-
-    private:
-    /// The SYCL queue to use
-    std::reference_wrapper<queue_wrapper> m_queue;
-    /// Preferred warp (sub-group) size of the device being used
-    unsigned int m_warp_size;
+ private:
+  /// The SYCL queue to use
+  std::reference_wrapper<queue_wrapper> m_queue;
+  /// Preferred warp (sub-group) size of the device being used
+  unsigned int m_warp_size;
 
 };  // class algorithm_base
 

@@ -22,11 +22,10 @@ namespace traccc::device {
 /// (Event Data) Payload for the @c traccc::device::sort_tracks_per_measurement
 /// function
 struct sort_tracks_per_measurement_payload {
-
-    /**
-     * @brief View object to the tracks per measurement
-     */
-    vecmem::data::jagged_vector_view<unsigned int> tracks_per_measurement_view;
+  /**
+   * @brief View object to the tracks per measurement
+   */
+  vecmem::data::jagged_vector_view<unsigned int> tracks_per_measurement_view;
 };
 
 }  // namespace traccc::device
