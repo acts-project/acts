@@ -514,6 +514,26 @@ BOOST_AUTO_TEST_CASE(AxisJsonConverterVariableBound) {
   BOOST_CHECK(read->getBinEdges() == edges);
 }
 
+BOOST_AUTO_TEST_CASE(AxisJsonConverterDirection) {
+  // The axis direction is round-tripped when present ...
+  auto axis = IAxis::createEquidistant(AxisBoundaryType::Bound, -5., 5., 10,
+                                       AxisDirection::AxisZ);
+  nlohmann::json j = AxisJsonConverter::toJson(*axis);
+  BOOST_CHECK(j.contains("direction"));
+  auto read = AxisJsonConverter::fromJson(j);
+  BOOST_REQUIRE(read != nullptr);
+  BOOST_CHECK(read->getDirection() == AxisDirection::AxisZ);
+
+  // ... and stays absent when not set
+  auto axisNoDir =
+      IAxis::createEquidistant(AxisBoundaryType::Bound, -5., 5., 10);
+  nlohmann::json jNoDir = AxisJsonConverter::toJson(*axisNoDir);
+  BOOST_CHECK(!jNoDir.contains("direction"));
+  auto readNoDir = AxisJsonConverter::fromJson(jNoDir);
+  BOOST_REQUIRE(readNoDir != nullptr);
+  BOOST_CHECK(!readNoDir->getDirection().has_value());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

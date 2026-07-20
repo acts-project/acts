@@ -13,6 +13,7 @@
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/IMultiAxis.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <algorithm>
@@ -92,6 +93,30 @@ class BinUtility {
       : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
     m_binningData.emplace_back(opt, value, bValues);
+  }
+
+  /// Create from a type-erased axis carrying its axis direction
+  ///
+  /// @param axis the axis to be used, its direction must be set
+  explicit BinUtility(const IAxis& axis)
+      : m_binningData(),
+        m_transform(Transform3::Identity()),
+        m_itransform(Transform3::Identity()) {
+    m_binningData.reserve(3);
+    m_binningData.emplace_back(axis);
+  }
+
+  /// Create from a multi-axis, with the axes carrying their axis directions
+  ///
+  /// @param axes the multi-axis to be used, the axis directions must be set
+  explicit BinUtility(const IMultiAxis& axes)
+      : m_binningData(),
+        m_transform(Transform3::Identity()),
+        m_itransform(Transform3::Identity()) {
+    m_binningData.reserve(3);
+    for (const IAxis& axis : axes) {
+      m_binningData.emplace_back(axis);
+    }
   }
 
   /// Create from a DirectedProtoAxis

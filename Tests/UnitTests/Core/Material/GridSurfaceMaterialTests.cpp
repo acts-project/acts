@@ -13,6 +13,7 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
+#include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
@@ -149,7 +150,7 @@ BOOST_AUTO_TEST_CASE(GridMaterial1D) {
       Material::fromMolarDensity(31.0, 32.0, 33.0, 34.0, 35.0), 4.0);
 
   // Bound, equidistant axis
-  ProtoAxis pAxisX(AxisBoundaryType::Bound, 0.0, 5.0, 5);
+  auto axisX = IAxis::createEquidistant(AxisBoundaryType::Bound, 0.0, 5.0, 5);
 
   auto localX = std::make_unique<const LocalAccessX>();
   GridAccess::BoundToGridLocal1DimDelegate bToX;
@@ -159,7 +160,7 @@ BOOST_AUTO_TEST_CASE(GridMaterial1D) {
   GridAccess::GlobalToGridLocal1DimDelegate gToX;
   gToX.connect<&GlobalAccessX::g2X>(std::move(globalX));
 
-  auto ismX = GridSurfaceMaterialFactory::create(pAxisX, GridMaterialAccessor{},
+  auto ismX = GridSurfaceMaterialFactory::create(*axisX, GridMaterialAccessor{},
                                                  std::move(bToX),
                                                  std::move(gToX), material);
 
@@ -258,8 +259,8 @@ BOOST_AUTO_TEST_CASE(GridMaterial2D) {
   BOOST_CHECK(material2x3[1][1].material().X0() == 12.);
   BOOST_CHECK(material2x3[1][2].material().X0() == 22.);
 
-  ProtoAxis pAxisX(AxisBoundaryType::Bound, -1.0, 1.0, 2);
-  ProtoAxis pAxisY(AxisBoundaryType::Bound, -1.5, 1.5, 3);
+  auto axisX = IAxis::createEquidistant(AxisBoundaryType::Bound, -1.0, 1.0, 2);
+  auto axisY = IAxis::createEquidistant(AxisBoundaryType::Bound, -1.5, 1.5, 3);
 
   std::vector<std::vector<MaterialSlab>> materialXY = material2x3;
 
@@ -272,7 +273,7 @@ BOOST_AUTO_TEST_CASE(GridMaterial2D) {
   gToXY.connect<&GlobalAccessXY::g2XY>(std::move(globalXY));
 
   auto ismXY = GridSurfaceMaterialFactory::create(
-      pAxisX, pAxisY, GridMaterialAccessor{}, std::move(bToXY),
+      *axisX, *axisY, GridMaterialAccessor{}, std::move(bToXY),
       std::move(gToXY), materialXY);
 
   BOOST_CHECK(ismXY != nullptr);
