@@ -36,7 +36,7 @@ mark_as_advanced(ACTS_NLOHMANN_JSON_SOURCE)
 # translate version string to the historical Mille release naming convention
 string(REPLACE "." "-" _acts_mille_release_string ${_acts_mille_version})
 set(ACTS_MILLE_SOURCE
-    "URL;https://gitlab.desy.de/millepede/mille/-/archive/V${_acts_mille_release_string}/mille-V${_acts_mille_release_string}.tar.gz;URL_HASH;SHA256=00efaa82631482f3ead7bec548a09a80938c08950f84cdbc2e7bb47de9186228"
+    "URL;https://github.com/millepede-project/mille/archive/refs/tags/V${_acts_mille_release_string}.tar.gz;URL_HASH;SHA256=2dec8402201938c7b2d7680db30aff19fd06dd06a420dbde45f57de2ce50d2ff"
     CACHE STRING
     "Source to take Mille from"
 )
@@ -45,7 +45,7 @@ mark_as_advanced(ACTS_MILLE_SOURCE)
 # translate version string to the historical GBL release naming convention
 string(REPLACE "." "-" _acts_gbl_release_string ${_acts_gbl_version})
 set(ACTS_GBL_SOURCE
-    "URL;https://gitlab.desy.de/millepede/general-broken-lines/-/archive/V${_acts_gbl_release_string}/general-broken-lines-V${_acts_gbl_release_string}.tar.gz;URL_HASH;SHA256=d6090b1515dc33cd9532f1470e2038b7794258fbb8a411fa8a6e4520e933241b"
+    "URL;https://github.com/GeneralBrokenLines/GeneralBrokenLines/archive/refs/tags/V${_acts_gbl_release_string}.tar.gz;URL_HASH;SHA256=d3e574b1838a9d28d52ce0b206c73ec8dc57e5a3b81257571e39556d0d18bb82"
     CACHE STRING
     "Source to take General Broken Lines (GBL) from"
 )
@@ -53,7 +53,7 @@ mark_as_advanced(ACTS_GBL_SOURCE)
 # translate version string to the historical Millepede release naming convention
 string(REPLACE "." "-" _acts_mp2_release_string ${_acts_mp2_version})
 set(ACTS_MP2_SOURCE
-    "URL;https://gitlab.desy.de/millepede/millepede-ii/-/archive/V${_acts_mp2_release_string}/millepede-ii-V${_acts_mp2_release_string}.tar.gz;URL_HASH;SHA256=c567c8f486194c1edf9e04c53c15f22635120be13e1de19c428f2eb088ae3222"
+    "URL;https://github.com/millepede-project/millepede-ii/archive/refs/tags/V${_acts_mp2_release_string}.tar.gz;URL_HASH;SHA256=037bbfcd3aca2d6497a5609f35bc4a96258d285290996468241dcedd9aa9d172"
     CACHE STRING
     "Source to take Millepede-II from"
 )
