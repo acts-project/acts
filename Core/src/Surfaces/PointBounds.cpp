@@ -27,7 +27,7 @@ void PointBounds::checkConsistency() noexcept(false) {
 }
 
 bool PointBounds::inside(const Vector2& lposition) const {
-  double r = get(eR);
+  const double r = get(eR);
   return lposition.squaredNorm() <= r * r;
 }
 
@@ -37,8 +37,8 @@ Vector2 PointBounds::closestPoint(const Vector2& lposition,
   // The bounds are a disc of radius R; the closest point on the boundary
   // circle is the radial projection of the local position. For a position at
   // the origin any boundary point is equidistant, pick (R, 0).
-  double r = get(eR);
-  double norm = lposition.norm();
+  const double r = get(eR);
+  const double norm = lposition.norm();
   if (norm == 0.) {
     return Vector2(r, 0.);
   }

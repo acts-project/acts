@@ -77,11 +77,6 @@ class PointSurface : public Surface {
   explicit PointSurface(const Transform3& transform,
                         std::shared_ptr<const PointBounds> pbounds = nullptr);
 
-  /// Copy constructor
-  ///
-  /// @param other The source surface for copying
-  PointSurface(const PointSurface& other);
-
   /// Copy constructor - with shift
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -91,11 +86,19 @@ class PointSurface : public Surface {
                const Transform3& shift);
 
  public:
+  /// Copy constructor
+  ///
+  /// @param other The source surface for copying
+  PointSurface(const PointSurface& other) noexcept = default;
+
   /// Assignment operator
   ///
   /// @param other is the source surface for copying
   /// @return Reference to this PointSurface after assignment
-  PointSurface& operator=(const PointSurface& other);
+  PointSurface& operator=(const PointSurface& other) noexcept = default;
+
+  /// Destructor
+  ~PointSurface() noexcept override = default;
 
   /// Return the surface type
   /// @return Surface type identifier for point surfaces

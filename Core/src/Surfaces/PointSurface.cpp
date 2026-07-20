@@ -33,12 +33,12 @@ namespace {
 /// Columns are (U, V, T) with T the (normalized) direction, U built from global
 /// Z (falling back to global X when the direction is (anti-)parallel to Z).
 RotationMatrix3 pointReferenceFrame(const Vector3& direction) {
-  Vector3 T = direction.normalized();
-  bool standard =
+  const Vector3 T = direction.normalized();
+  const bool standard =
       std::abs(T.dot(Vector3::UnitZ())) < s_curvilinearProjTolerance;
   Vector3 U = (standard ? Vector3::UnitZ() : Vector3::UnitX()).cross(T);
   U.normalize();
-  Vector3 V = T.cross(U);
+  const Vector3 V = T.cross(U);
 
   RotationMatrix3 rframe;
   rframe << U, V, T;
@@ -57,20 +57,9 @@ PointSurface::PointSurface(const Transform3& transform,
                            std::shared_ptr<const PointBounds> pbounds)
     : Surface(transform), m_bounds(std::move(pbounds)) {}
 
-PointSurface::PointSurface(const PointSurface& other)
-    : GeometryObject{}, Surface(other), m_bounds(other.m_bounds) {}
-
 PointSurface::PointSurface(const GeometryContext& gctx,
                            const PointSurface& other, const Transform3& shift)
     : GeometryObject{}, Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
-
-PointSurface& PointSurface::operator=(const PointSurface& other) {
-  if (this != &other) {
-    Surface::operator=(other);
-    m_bounds = other.m_bounds;
-  }
-  return *this;
-}
 
 Vector3 PointSurface::normal(const GeometryContext& /*gctx*/,
                              const Vector3& /*pos*/,
@@ -92,7 +81,7 @@ RotationMatrix3 PointSurface::referenceFrame(const GeometryContext& /*gctx*/,
 Vector3 PointSurface::localToGlobal(const GeometryContext& gctx,
                                     const Vector2& lposition,
                                     const Vector3& direction) const {
-  RotationMatrix3 rframe = pointReferenceFrame(direction);
+  const RotationMatrix3 rframe = pointReferenceFrame(direction);
   return center(gctx) + lposition[0] * rframe.col(0) +
          lposition[1] * rframe.col(1);
 }
@@ -102,8 +91,9 @@ Result<Vector2> PointSurface::globalToLocal(const GeometryContext& gctx,
                                             const Vector3& direction,
                                             double tolerance) const {
   // Bring the global position into the measurement frame relative to the point.
-  Vector3 localPosition = referenceFrame(gctx, position, direction).inverse() *
-                          (position - center(gctx));
+  const Vector3 localPosition =
+      referenceFrame(gctx, position, direction).inverse() *
+      (position - center(gctx));
 
   // `localPosition.z()` is the distance along the direction. It must vanish for
   // `position` to be the point of closest approach (i.e. on the measurement
@@ -120,24 +110,25 @@ MultiIntersection3D PointSurface::intersect(
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
   // The point (center) and the track ray (position, direction)
-  Vector3 pc = center(gctx);
+  const Vector3 pc = center(gctx);
 
   // Path length along the track to the point of closest approach. Since the
   // measurement plane normal equals the track direction there is always a
   // unique crossing, hence no degeneracy check is needed.
-  double u = (pc - position).dot(direction);
+  const double u = (pc - position).dot(direction);
 
   IntersectionStatus status = std::abs(u) > std::abs(tolerance)
                                   ? IntersectionStatus::reachable
                                   : IntersectionStatus::onSurface;
-  Vector3 result = position + u * direction;
+  const Vector3 result = position + u * direction;
 
   // Evaluate the boundary check if requested. m_bounds == nullptr means an
   // unbounded point surface, which skips the check.
-  if (m_bounds && !boundaryTolerance.isInfinite()) {
-    RotationMatrix3 rframe = pointReferenceFrame(direction);
-    Vector3 vecLocal = result - pc;
-    Vector2 local(vecLocal.dot(rframe.col(0)), vecLocal.dot(rframe.col(1)));
+  if (m_bounds != nullptr && !boundaryTolerance.isInfinite()) {
+    const RotationMatrix3 rframe = pointReferenceFrame(direction);
+    const Vector3 vecLocal = result - pc;
+    const Vector2 local(vecLocal.dot(rframe.col(0)),
+                        vecLocal.dot(rframe.col(1)));
     if (!m_bounds->inside(local, boundaryTolerance)) {
       status = IntersectionStatus::unreachable;
     }
@@ -151,16 +142,16 @@ BoundToFreeMatrix PointSurface::boundToFreeJacobian(
     const Vector3& direction) const {
   assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
-  RotationMatrix3 rframe = referenceFrame(gctx, position, direction);
-  Vector3 U = rframe.col(0);
-  Vector3 V = rframe.col(1);
-  Vector3 T = rframe.col(2);
+  const RotationMatrix3 rframe = referenceFrame(gctx, position, direction);
+  const Vector3 U = rframe.col(0);
+  const Vector3 V = rframe.col(1);
+  const Vector3 T = rframe.col(2);
 
   // The local (x, y) position on the measurement plane
-  Vector2 local = *globalToLocal(gctx, position, direction,
-                                 std::numeric_limits<double>::max());
-  double loc0 = local.x();
-  double loc1 = local.y();
+  const Vector2 local = *globalToLocal(gctx, position, direction,
+                                       std::numeric_limits<double>::max());
+  const double loc0 = local.x();
+  const double loc1 = local.y();
 
   // Start from the generic jacobian (correct local, direction, time, q/p
   // blocks) and add the position/angle coupling that arises because the
@@ -182,8 +173,8 @@ BoundToFreeMatrix PointSurface::boundToFreeJacobian(
   // standard (Z-based) branch; near direction parallel to Z the frame uses the
   // X-based fall-back and this correction is only approximate (as with the
   // documented forward-eta limitation of the LineSurface).
-  double cosTheta = direction.z();
-  double sinTheta = VectorHelpers::perp(direction);
+  const double cosTheta = direction.z();
+  const double sinTheta = VectorHelpers::perp(direction);
 
   jacToGlobal.block<3, 1>(eFreePos0, eBoundPhi) =
       loc0 * (cosTheta * V - sinTheta * T) - loc1 * cosTheta * U;
@@ -241,7 +232,7 @@ double PointSurface::pathCorrection(const GeometryContext& /*gctx*/,
 }
 
 const SurfaceBounds& PointSurface::bounds() const {
-  if (m_bounds) {
+  if (m_bounds != nullptr) {
     return *m_bounds;
   }
   return s_noBounds;
@@ -269,7 +260,7 @@ Polyhedron PointSurface::polyhedronRepresentation(
   std::vector<Polyhedron::FaceType> triangularMesh;
 
   const Transform3& ctransform = localToGlobalTransform(gctx);
-  double d = 1.;
+  const double d = 1.;
   vertices.push_back(ctransform * Vector3(-d, 0., 0.));
   vertices.push_back(ctransform * Vector3(d, 0., 0.));
   vertices.push_back(ctransform * Vector3(0., -d, 0.));
