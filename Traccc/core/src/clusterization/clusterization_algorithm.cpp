@@ -21,11 +21,9 @@ clusterization_algorithm::output_type clusterization_algorithm::operator()(
     const edm::silicon_cell_collection::const_view& cells_view,
     const detector_design_description::const_view& dmd_view,
     const detector_conditions_description::const_view& dcd_view) const {
-
-    const sparse_ccl_algorithm::output_type clusters =
-        m_cc(cells_view, dcd_view);
-    const auto clusters_data = vecmem::get_data(clusters);
-    return m_mc(cells_view, clusters_data, dmd_view, dcd_view);
+  const sparse_ccl_algorithm::output_type clusters = m_cc(cells_view, dcd_view);
+  const auto clusters_data = vecmem::get_data(clusters);
+  return m_mc(cells_view, clusters_data, dmd_view, dcd_view);
 }
 
 }  // namespace traccc::host

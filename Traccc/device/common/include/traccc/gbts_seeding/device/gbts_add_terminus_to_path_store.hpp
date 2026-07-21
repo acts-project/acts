@@ -20,13 +20,13 @@ namespace traccc::device {
 /// (Global Event Data) Payload for the @c
 /// traccc::device::gbts_add_terminus_to_path_store function
 struct gbts_add_terminus_to_path_store_payload {
-    /// Number of edges in the compacted graph
-    unsigned int nConnectedEdges;
-    /// Output: per-path (edge index, parent path-store index or -1)
-    /// entries; terminus rows occupy the first nTerminusEdges slots
-    vecmem::data::vector_view<int2> path_store;
-    /// Per-edge longest-outgoing-path summary from CCA
-    vecmem::data::vector_view<const short2> outgoing_paths;
+  /// Number of edges in the compacted graph
+  unsigned int nConnectedEdges;
+  /// Output: per-path (edge index, parent path-store index or -1)
+  /// entries; terminus rows occupy the first nTerminusEdges slots
+  vecmem::data::vector_view<int2> path_store;
+  /// Per-edge longest-outgoing-path summary from CCA
+  vecmem::data::vector_view<const short2> outgoing_paths;
 };
 
 /// @brief Seed the path store with one entry per terminus edge.

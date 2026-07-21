@@ -21,30 +21,30 @@ namespace traccc::device {
 /// (Global Event Data) Payload for the @c traccc::device::gbts_sort_nodes
 /// function
 struct gbts_sort_nodes_payload {
-    /// Total number of GBTS nodes
-    unsigned int nNodes;
-    /// Number of phi bins per eta slice
-    unsigned int nPhiBins;
-    /// Layer-ordered (x, y, z, r) per spacepoint
-    vecmem::data::vector_view<const float4> sp_params;
-    /// Eta-bin index per node
-    vecmem::data::vector_view<const unsigned int> node_eta_index;
-    /// Phi-bin index per node
-    vecmem::data::vector_view<const unsigned int> node_phi_index;
-    /// In/out: per-(eta, phi) write cursor (atomically advanced)
-    vecmem::data::vector_view<unsigned int> phi_cusums;
-    /// Output: per-node (tau_min, tau_max, r, z), written in sorted order
-    vecmem::data::vector_view<float4> node_params;
-    /// Output: per-node phi, written in sorted order
-    vecmem::data::vector_view<float> node_phi;
-    /// Output: per-sorted-slot original layer-ordered spacepoint index
-    vecmem::data::vector_view<unsigned int> node_index;
-    /// Map from layer-ordered SP index to the original SP slot
-    vecmem::data::vector_view<const unsigned int> original_sp_idx;
-    /// Optional tau lookup table (used iff gbts_sort_nodes_params.useTauLUT)
-    vecmem::data::vector_view<const float> tau_lut;
-    /// Tau-prediction cuts read by @c device::gbts_sort_nodes
-    traccc::gbts_sort_nodes_params gbts_sort_nodes_params;
+  /// Total number of GBTS nodes
+  unsigned int nNodes;
+  /// Number of phi bins per eta slice
+  unsigned int nPhiBins;
+  /// Layer-ordered (x, y, z, r) per spacepoint
+  vecmem::data::vector_view<const float4> sp_params;
+  /// Eta-bin index per node
+  vecmem::data::vector_view<const unsigned int> node_eta_index;
+  /// Phi-bin index per node
+  vecmem::data::vector_view<const unsigned int> node_phi_index;
+  /// In/out: per-(eta, phi) write cursor (atomically advanced)
+  vecmem::data::vector_view<unsigned int> phi_cusums;
+  /// Output: per-node (tau_min, tau_max, r, z), written in sorted order
+  vecmem::data::vector_view<float4> node_params;
+  /// Output: per-node phi, written in sorted order
+  vecmem::data::vector_view<float> node_phi;
+  /// Output: per-sorted-slot original layer-ordered spacepoint index
+  vecmem::data::vector_view<unsigned int> node_index;
+  /// Map from layer-ordered SP index to the original SP slot
+  vecmem::data::vector_view<const unsigned int> original_sp_idx;
+  /// Optional tau lookup table (used iff gbts_sort_nodes_params.useTauLUT)
+  vecmem::data::vector_view<const float> tau_lut;
+  /// Tau-prediction cuts read by @c device::gbts_sort_nodes
+  traccc::gbts_sort_nodes_params gbts_sort_nodes_params;
 };
 
 /// @brief Scatter nodes into (eta, phi)-sorted slots and pack their geometry

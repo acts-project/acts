@@ -19,12 +19,12 @@ namespace traccc::device {
 /// (Global Event Data) Payload for the @c traccc::device::gbts_reindex_edges
 /// function
 struct gbts_reindex_edges_payload {
-    /// Number of original edges
-    unsigned int nEdges;
-    /// In/out: per-edge "kept" flag in, compact new index out
-    vecmem::data::vector_view<int> reIndexer;
-    /// In/out: global atomic counter of edges that survived re-indexing
-    unsigned int* nConnectedEdgesCounter;
+  /// Number of original edges
+  unsigned int nEdges;
+  /// In/out: per-edge "kept" flag in, compact new index out
+  vecmem::data::vector_view<int> reIndexer;
+  /// In/out: global atomic counter of edges that survived re-indexing
+  unsigned int* nConnectedEdgesCounter;
 };
 
 /// @brief Replace the per-edge "kept" flag with its compacted index.

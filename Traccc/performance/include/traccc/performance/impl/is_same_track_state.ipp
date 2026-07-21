@@ -22,63 +22,55 @@ namespace traccc::details {
 /// @c traccc::edm::track_state_collection
 template <typename T>
 class is_same_object<edm::track_state<T>> {
+ public:
+  /// Constructor with a reference object, and an allowed uncertainty
+  is_same_object(const edm::measurement_collection::const_view& ref_meas,
+                 const edm::measurement_collection::const_view& test_meas,
+                 const edm::track_state<T>& ref, scalar unc = float_epsilon)
+      : m_ref_meas(ref_meas), m_test_meas(test_meas), m_ref(ref), m_unc(unc) {}
 
-    public:
-    /// Constructor with a reference object, and an allowed uncertainty
-    is_same_object(const edm::measurement_collection::const_view& ref_meas,
-                   const edm::measurement_collection::const_view& test_meas,
-                   const edm::track_state<T>& ref, scalar unc = float_epsilon)
-        : m_ref_meas(ref_meas),
-          m_test_meas(test_meas),
-          m_ref(ref),
-          m_unc(unc) {}
-
-    /// Specialised implementation for @c traccc::edm::track_state<T>
-    bool operator()(const edm::track_state<T>& obj) const {
-
-        // Compare the state words.
-        if (obj.state() != m_ref.state()) {
-            return false;
-        }
-        // Compare the chi2 values.
-        if (!is_same_scalar(obj.filtered_chi2(), m_ref.filtered_chi2(),
-                            m_unc) ||
-            !is_same_scalar(obj.smoothed_chi2(), m_ref.smoothed_chi2(),
-                            m_unc) ||
-            !is_same_scalar(obj.backward_chi2(), m_ref.backward_chi2(),
-                            m_unc)) {
-            return false;
-        }
-        // Compare the fitted parameters.
-        if (!is_same_object<bound_track_parameters<>>(
-                m_ref.filtered_params(), m_unc)(obj.filtered_params()) ||
-            !is_same_object<bound_track_parameters<>>(
-                m_ref.smoothed_params(), m_unc)(obj.smoothed_params())) {
-            return false;
-        }
-        // Compare the measurements that they point at.
-        const edm::measurement_collection::const_device ref_meas{m_ref_meas};
-        const edm::measurement_collection::const_device test_meas{m_test_meas};
-        if (!is_same_object<
-                edm::measurement_collection::const_device::const_proxy_type>(
-                ref_meas.at(m_ref.measurement_index()),
-                m_unc)(test_meas.at(obj.measurement_index()))) {
-            return false;
-        }
-
-        // If we got here, the two track states are the same.
-        return true;
+  /// Specialised implementation for @c traccc::edm::track_state<T>
+  bool operator()(const edm::track_state<T>& obj) const {
+    // Compare the state words.
+    if (obj.state() != m_ref.state()) {
+      return false;
+    }
+    // Compare the chi2 values.
+    if (!is_same_scalar(obj.filtered_chi2(), m_ref.filtered_chi2(), m_unc) ||
+        !is_same_scalar(obj.smoothed_chi2(), m_ref.smoothed_chi2(), m_unc) ||
+        !is_same_scalar(obj.backward_chi2(), m_ref.backward_chi2(), m_unc)) {
+      return false;
+    }
+    // Compare the fitted parameters.
+    if (!is_same_object<bound_track_parameters<>>(
+            m_ref.filtered_params(), m_unc)(obj.filtered_params()) ||
+        !is_same_object<bound_track_parameters<>>(
+            m_ref.smoothed_params(), m_unc)(obj.smoothed_params())) {
+      return false;
+    }
+    // Compare the measurements that they point at.
+    const edm::measurement_collection::const_device ref_meas{m_ref_meas};
+    const edm::measurement_collection::const_device test_meas{m_test_meas};
+    if (!is_same_object<
+            edm::measurement_collection::const_device::const_proxy_type>(
+            ref_meas.at(m_ref.measurement_index()),
+            m_unc)(test_meas.at(obj.measurement_index()))) {
+      return false;
     }
 
-    private:
-    /// Measurements for the reference object
-    const edm::measurement_collection::const_view m_ref_meas;
-    /// Measurements for the test object
-    const edm::measurement_collection::const_view m_test_meas;
-    /// The reference object
-    const edm::track_state<T> m_ref;
-    /// The uncertainty
-    scalar m_unc;
+    // If we got here, the two track states are the same.
+    return true;
+  }
+
+ private:
+  /// Measurements for the reference object
+  const edm::measurement_collection::const_view m_ref_meas;
+  /// Measurements for the test object
+  const edm::measurement_collection::const_view m_test_meas;
+  /// The reference object
+  const edm::track_state<T> m_ref;
+  /// The uncertainty
+  scalar m_unc;
 
 };  // class is_same_object<edm::track_state<T>>
 

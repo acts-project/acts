@@ -37,34 +37,33 @@ class measurement_creation_algorithm
           const detector_design_description::const_view &,
           const detector_conditions_description::const_view &)>,
       public messaging {
+ public:
+  /// Measurement_creation algorithm constructor
+  ///
+  /// @param mr The memory resource to use in the algorithm
+  ///
+  measurement_creation_algorithm(
+      vecmem::memory_resource &mr,
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
 
-    public:
-    /// Measurement_creation algorithm constructor
-    ///
-    /// @param mr The memory resource to use in the algorithm
-    ///
-    measurement_creation_algorithm(
-        vecmem::memory_resource &mr,
-        std::unique_ptr<const Logger> logger = getDummyLogger().clone());
+  /// Callable operator for the connected component, based on one single
+  /// module
+  ///
+  /// @param cells_view    Cells that were clusterized
+  /// @param clusters_view Clusters to turn into measurements
+  /// @param dd_view       The detector description
+  /// @return The reconstructed measurement collection
+  ///
+  output_type operator()(
+      const edm::silicon_cell_collection::const_view &cells_view,
+      const edm::silicon_cluster_collection::const_view &clusters_view,
+      const detector_design_description::const_view &dmd_view,
+      const detector_conditions_description::const_view &dcd_view)
+      const override;
 
-    /// Callable operator for the connected component, based on one single
-    /// module
-    ///
-    /// @param cells_view    Cells that were clusterized
-    /// @param clusters_view Clusters to turn into measurements
-    /// @param dd_view       The detector description
-    /// @return The reconstructed measurement collection
-    ///
-    output_type operator()(
-        const edm::silicon_cell_collection::const_view &cells_view,
-        const edm::silicon_cluster_collection::const_view &clusters_view,
-        const detector_design_description::const_view &dmd_view,
-        const detector_conditions_description::const_view &dcd_view)
-        const override;
-
-    private:
-    /// The memory resource used by the algorithm
-    std::reference_wrapper<vecmem::memory_resource> m_mr;
+ private:
+  /// The memory resource used by the algorithm
+  std::reference_wrapper<vecmem::memory_resource> m_mr;
 };  // class measurement_creation_algorithm
 
 }  // namespace traccc::host

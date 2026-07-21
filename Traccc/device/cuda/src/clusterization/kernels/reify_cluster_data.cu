@@ -17,9 +17,8 @@ __global__ void reify_cluster_data(
     vecmem::data::vector_view<const unsigned int> disjoint_set_view,
     vecmem::data::vector_view<const unsigned int> permutation_map_view,
     traccc::edm::silicon_cluster_collection::view cluster_view) {
-
-    device::reify_cluster_data(details::thread_id1{}.getGlobalThreadId(),
-                               disjoint_set_view, permutation_map_view,
-                               cluster_view);
+  device::reify_cluster_data(details::thread_id1{}.getGlobalThreadId(),
+                             disjoint_set_view, permutation_map_view,
+                             cluster_view);
 }
 }  // namespace traccc::cuda::kernels

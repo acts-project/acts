@@ -24,35 +24,35 @@ namespace traccc::device {
 /// (Global Event Data) Payload for the @c traccc::device::gbts_fit_segments
 /// function
 struct gbts_fit_segments_payload {
-    /// Upper bound on the number of paths (== path_store size minus
-    /// terminus prefix)
-    unsigned int nPaths;
-    /// Number of terminus edges (path-store offset for fittable paths)
-    unsigned int nTerminusEdges;
-    /// Maximum number of neighbours retained per edge
-    unsigned int max_num_neighbours;
-    /// Minimum number of edges a path must have to be fit
-    unsigned char minLevel;
-    /// Reduced (x, y, z, r) per original spacepoint
-    vecmem::data::vector_view<const float4> reducedSP;
-    /// Compacted graph from gbts_compress_graph
-    vecmem::data::vector_view<const unsigned int> output_graph;
-    /// Per-path (edge index, parent path-store index or -1) entries
-    vecmem::data::vector_view<const int2> path_store;
-    /// Output: per-accepted-path (path_store index, level) seed proposal
-    vecmem::data::vector_view<int2> seed_proposals;
-    /// In/out: per-edge highest-bidder seed proposal (packed 64-bit)
-    vecmem::data::vector_view<unsigned long long int> edge_bids;
-    /// Output: per-seed-proposal ambiguity tag (multi-bid resolution flag)
-    vecmem::data::vector_view<char> seed_ambiguity;
-    /// Read-only upper bound on path indices (set by earlier kernels)
-    unsigned int* nPathStoreSize;
-    /// In/out: global atomic counter of accepted seed proposals
-    unsigned int* nPropsCounter;
-    /// Curvature / pT / chi-squared cut parameters
-    traccc::gbts_fit_segments_params gbts_fit_segments_params;
-    /// Maximum |z0| at the beamline for extrapolation cuts
-    float max_z0;
+  /// Upper bound on the number of paths (== path_store size minus
+  /// terminus prefix)
+  unsigned int nPaths;
+  /// Number of terminus edges (path-store offset for fittable paths)
+  unsigned int nTerminusEdges;
+  /// Maximum number of neighbours retained per edge
+  unsigned int max_num_neighbours;
+  /// Minimum number of edges a path must have to be fit
+  unsigned char minLevel;
+  /// Reduced (x, y, z, r) per original spacepoint
+  vecmem::data::vector_view<const float4> reducedSP;
+  /// Compacted graph from gbts_compress_graph
+  vecmem::data::vector_view<const unsigned int> output_graph;
+  /// Per-path (edge index, parent path-store index or -1) entries
+  vecmem::data::vector_view<const int2> path_store;
+  /// Output: per-accepted-path (path_store index, level) seed proposal
+  vecmem::data::vector_view<int2> seed_proposals;
+  /// In/out: per-edge highest-bidder seed proposal (packed 64-bit)
+  vecmem::data::vector_view<unsigned long long int> edge_bids;
+  /// Output: per-seed-proposal ambiguity tag (multi-bid resolution flag)
+  vecmem::data::vector_view<char> seed_ambiguity;
+  /// Read-only upper bound on path indices (set by earlier kernels)
+  unsigned int* nPathStoreSize;
+  /// In/out: global atomic counter of accepted seed proposals
+  unsigned int* nPropsCounter;
+  /// Curvature / pT / chi-squared cut parameters
+  traccc::gbts_fit_segments_params gbts_fit_segments_params;
+  /// Maximum |z0| at the beamline for extrapolation cuts
+  float max_z0;
 };
 
 /// @brief Fit each candidate path and emit seed proposals that pass quality

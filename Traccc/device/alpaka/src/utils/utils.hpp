@@ -47,29 +47,29 @@ using Queue = ::alpaka::Queue<Acc, QueueType>;
 
 template <typename TAcc>
 consteval Idx getWarpSize() {
-    if constexpr (::alpaka::accMatchesTags<TAcc, ::alpaka::TagGpuCudaRt,
-                                           ::alpaka::TagGpuSyclIntel>) {
-        return 32;
-    }
-    if constexpr (::alpaka::accMatchesTags<TAcc, ::alpaka::TagGpuHipRt>) {
-        return 64;
-    } else {
-        return 4;
-    }
+  if constexpr (::alpaka::accMatchesTags<TAcc, ::alpaka::TagGpuCudaRt,
+                                         ::alpaka::TagGpuSyclIntel>) {
+    return 32;
+  }
+  if constexpr (::alpaka::accMatchesTags<TAcc, ::alpaka::TagGpuHipRt>) {
+    return 64;
+  } else {
+    return 4;
+  }
 }
 
 template <typename TAcc>
 inline WorkDiv makeWorkDiv(Idx blocks, Idx threadsOrElements) {
-    const Idx blocksPerGrid = std::max(Idx{1}, blocks);
-    if constexpr (::alpaka::isMultiThreadAcc<TAcc>) {
-        const Idx threadsPerBlock(threadsOrElements);
-        const Idx elementsPerThread = Idx{1};
-        return WorkDiv{blocksPerGrid, threadsPerBlock, elementsPerThread};
-    } else {
-        const Idx threadsPerBlock = Idx{1};
-        const Idx elementsPerThread(threadsOrElements);
-        return WorkDiv{blocksPerGrid, threadsPerBlock, elementsPerThread};
-    }
+  const Idx blocksPerGrid = std::max(Idx{1}, blocks);
+  if constexpr (::alpaka::isMultiThreadAcc<TAcc>) {
+    const Idx threadsPerBlock(threadsOrElements);
+    const Idx elementsPerThread = Idx{1};
+    return WorkDiv{blocksPerGrid, threadsPerBlock, elementsPerThread};
+  } else {
+    const Idx threadsPerBlock = Idx{1};
+    const Idx elementsPerThread(threadsOrElements);
+    return WorkDiv{blocksPerGrid, threadsPerBlock, elementsPerThread};
+  }
 }
 
 }  // namespace traccc::alpaka

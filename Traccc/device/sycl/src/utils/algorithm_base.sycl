@@ -23,13 +23,11 @@ algorithm_base::algorithm_base(queue_wrapper& queue)
               .at(0))) {}
 
 queue_wrapper& algorithm_base::queue() const {
-
-    return m_queue.get();
+  return m_queue.get();
 }
 
 unsigned int algorithm_base::warp_size() const {
-
-    return m_warp_size;
+  return m_warp_size;
 }
 
 }  // namespace traccc::sycl

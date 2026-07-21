@@ -14,10 +14,10 @@ namespace traccc {
 
 /// Format for an input or output file
 enum data_format : int {
-    csv = 0,     ///< Comma-separated values
-    binary = 1,  ///< Binary format
-    json = 2,    ///< JSON format
-    obj = 3,     ///< Wavefront OBJ format
+  csv = 0,     ///< Comma-separated values
+  binary = 1,  ///< Binary format
+  json = 2,    ///< JSON format
+  obj = 3,     ///< Wavefront OBJ format
 };
 
 /// Printout helper for @c traccc::data_format

@@ -39,6 +39,6 @@ struct reapply {};
 template <template <typename...> typename F1,
           template <typename...> typename F2, typename... Ts>
 struct reapply<F1, F2<Ts...>> {
-    using type = F1<Ts...>;
+  using type = F1<Ts...>;
 };
 }  // namespace traccc::details::functor

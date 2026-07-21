@@ -20,20 +20,19 @@ namespace traccc::opts {
 ///
 template <typename TYPE, std::size_t SIZE>
 class value_array : public std::array<TYPE, SIZE> {
-
-    public:
-    /// Helper function for normalizing the values in an array
-    ///
-    /// @param factor The factor to normalize by
-    /// @return The normalized array
-    ///
-    value_array& operator*=(TYPE factor);
-    /// Helper function for normalizing the values in an array
-    ///
-    /// @param factor The factor to normalize by
-    /// @return The normalized array
-    ///
-    value_array& operator/=(TYPE factor);
+ public:
+  /// Helper function for normalizing the values in an array
+  ///
+  /// @param factor The factor to normalize by
+  /// @return The normalized array
+  ///
+  value_array& operator*=(TYPE factor);
+  /// Helper function for normalizing the values in an array
+  ///
+  /// @param factor The factor to normalize by
+  /// @return The normalized array
+  ///
+  value_array& operator/=(TYPE factor);
 
 };  // class value_array
 

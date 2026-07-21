@@ -23,35 +23,34 @@ struct opaque_stream;
 /// not be directly exposed to the HIP header(s).
 ///
 class stream {
+ public:
+  /// Invalid/default device identifier
+  static constexpr int INVALID_DEVICE = -1;
 
-    public:
-    /// Invalid/default device identifier
-    static constexpr int INVALID_DEVICE = -1;
+  /// Construct a new stream (possibly for a specified device)
+  stream(int device = INVALID_DEVICE);
 
-    /// Construct a new stream (possibly for a specified device)
-    stream(int device = INVALID_DEVICE);
+  /// Move constructor
+  stream(stream&& parent) noexcept;
 
-    /// Move constructor
-    stream(stream&& parent) noexcept;
+  /// Destructor
+  ~stream();
 
-    /// Destructor
-    ~stream();
+  /// Move assignment
+  stream& operator=(stream&& rhs) noexcept;
 
-    /// Move assignment
-    stream& operator=(stream&& rhs) noexcept;
+  /// Device that the stream is associated to
+  int device() const;
 
-    /// Device that the stream is associated to
-    int device() const;
+  /// Access a typeless pointer to the managed @c hipStream_t object
+  void* hipStream() const;
 
-    /// Access a typeless pointer to the managed @c hipStream_t object
-    void* hipStream() const;
+  /// Wait for all queued tasks from the stream to complete
+  void synchronize() const;
 
-    /// Wait for all queued tasks from the stream to complete
-    void synchronize() const;
-
-    private:
-    /// Smart pointer to the managed @c hipStream_t object
-    std::unique_ptr<details::opaque_stream> m_stream;
+ private:
+  /// Smart pointer to the managed @c hipStream_t object
+  std::unique_ptr<details::opaque_stream> m_stream;
 
 };  // class stream
 

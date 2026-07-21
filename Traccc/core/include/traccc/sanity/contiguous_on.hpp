@@ -36,50 +36,50 @@ namespace traccc::host {
  * @return false Otherwise.
  */
 template <typename P, typename CONTAINER>
-    requires std::regular_invocable<P,
-                                    decltype(std::declval<CONTAINER>().at(0))> && std::semiregular<P>
+  requires std::regular_invocable<P,
+                                  decltype(std::declval<CONTAINER>().at(0))> &&
+           std::semiregular<P>
 bool is_contiguous_on(P&& projection, const CONTAINER& in) {
+  // Grab the number of elements in our container.
+  typename CONTAINER::size_type n = in.size();
 
-    // Grab the number of elements in our container.
-    typename CONTAINER::size_type n = in.size();
+  // Get the output type of the projection.
+  using projection_t =
+      std::invoke_result_t<P, decltype(std::declval<CONTAINER>().at(0))>;
 
-    // Get the output type of the projection.
-    using projection_t =
-        std::invoke_result_t<P, decltype(std::declval<CONTAINER>().at(0))>;
+  // Allocate memory for intermediate values and outputs, then set them up.
+  std::unique_ptr<projection_t[]> iout = std::make_unique<projection_t[]>(n);
+  std::size_t iout_size = 0;
 
-    // Allocate memory for intermediate values and outputs, then set them up.
-    std::unique_ptr<projection_t[]> iout = std::make_unique<projection_t[]>(n);
-    std::size_t iout_size = 0;
+  // Compress adjacent elements
+  for (std::size_t i = 0; i < n; ++i) {
+    if (i == 0) {
+      iout[iout_size++] =
+          projection(in.at(static_cast<typename CONTAINER::size_type>(i)));
+    } else {
+      projection_t v =
+          projection(in.at(static_cast<typename CONTAINER::size_type>(i)));
 
-    // Compress adjacent elements
-    for (std::size_t i = 0; i < n; ++i) {
-        if (i == 0) {
-            iout[iout_size++] = projection(
-                in.at(static_cast<typename CONTAINER::size_type>(i)));
-        } else {
-            projection_t v = projection(
-                in.at(static_cast<typename CONTAINER::size_type>(i)));
-
-            if (v != iout[iout_size - 1]) {
-                iout[iout_size++] = v;
-            }
-        }
+      if (v != iout[iout_size - 1]) {
+        iout[iout_size++] = v;
+      }
     }
+  }
 
-    // Check whether all elements are unique
-    std::unordered_set<projection_t> seen;
+  // Check whether all elements are unique
+  std::unordered_set<projection_t> seen;
 
-    for (std::size_t i = 0; i < iout_size; ++i) {
-        projection_t& v = iout[i];
+  for (std::size_t i = 0; i < iout_size; ++i) {
+    projection_t& v = iout[i];
 
-        if (seen.count(v) == 1) {
-            return false;
-        } else {
-            seen.insert(v);
-        }
+    if (seen.count(v) == 1) {
+      return false;
+    } else {
+      seen.insert(v);
     }
+  }
 
-    return true;
+  return true;
 }
 
 }  // namespace traccc::host

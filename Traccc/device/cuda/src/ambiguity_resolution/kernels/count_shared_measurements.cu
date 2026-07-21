@@ -21,34 +21,31 @@ namespace traccc::cuda::kernels {
 
 __global__ void count_shared_measurements(
     device::count_shared_measurements_payload payload) {
+  vecmem::device_vector<const unsigned int> accepted_ids(
+      payload.accepted_ids_view);
 
-    vecmem::device_vector<const unsigned int> accepted_ids(
-        payload.accepted_ids_view);
+  auto globalIndex = threadIdx.x + blockIdx.x * blockDim.x;
 
-    auto globalIndex = threadIdx.x + blockIdx.x * blockDim.x;
+  if (globalIndex >= accepted_ids.size()) {
+    return;
+  }
 
-    if (globalIndex >= accepted_ids.size()) {
-        return;
+  vecmem::jagged_device_vector<const measurement_id_type> meas_ids(
+      payload.meas_ids_view);
+  vecmem::device_vector<const unsigned int> meas_id_to_unique_id(
+      payload.meas_id_to_unique_id_view);
+  vecmem::device_vector<const unsigned int> n_accepted_tracks_per_measurement(
+      payload.n_accepted_tracks_per_measurement_view);
+  vecmem::device_vector<unsigned int> n_shared(payload.n_shared_view);
+
+  const unsigned int id = accepted_ids.at(globalIndex);
+
+  for (const auto& meas_id : meas_ids[id]) {
+    const auto unique_meas_idx = meas_id_to_unique_id.at(meas_id);
+
+    if (n_accepted_tracks_per_measurement.at(unique_meas_idx) > 1) {
+      vecmem::device_atomic_ref<unsigned int>(n_shared.at(id)).fetch_add(1u);
     }
-
-    vecmem::jagged_device_vector<const measurement_id_type> meas_ids(
-        payload.meas_ids_view);
-    vecmem::device_vector<const unsigned int> meas_id_to_unique_id(
-        payload.meas_id_to_unique_id_view);
-    vecmem::device_vector<const unsigned int> n_accepted_tracks_per_measurement(
-        payload.n_accepted_tracks_per_measurement_view);
-    vecmem::device_vector<unsigned int> n_shared(payload.n_shared_view);
-
-    const unsigned int id = accepted_ids.at(globalIndex);
-
-    for (const auto& meas_id : meas_ids[id]) {
-
-        const auto unique_meas_idx = meas_id_to_unique_id.at(meas_id);
-
-        if (n_accepted_tracks_per_measurement.at(unique_meas_idx) > 1) {
-            vecmem::device_atomic_ref<unsigned int>(n_shared.at(id))
-                .fetch_add(1u);
-        }
-    }
+  }
 }
 }  // namespace traccc::cuda::kernels

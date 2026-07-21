@@ -50,26 +50,25 @@ hipStream_t get_stream(const stream& str);
 /// more than one in the same scope.
 ///
 class select_device {
+ public:
+  /// Constructs the object, switching the current HIP device
+  /// to the requested number.
+  ///
+  /// @param device The HIP device number to switch to.
+  ///
+  select_device(int device);
 
-    public:
-    /// Constructs the object, switching the current HIP device
-    /// to the requested number.
-    ///
-    /// @param device The HIP device number to switch to.
-    ///
-    select_device(int device);
+  /// Deconstructs the object, returning to the device that was
+  /// selected before constructing this object.
+  ~select_device();
 
-    /// Deconstructs the object, returning to the device that was
-    /// selected before constructing this object.
-    ~select_device();
+  /// Return the identifier for the device being seleced
+  int device() const;
 
-    /// Return the identifier for the device being seleced
-    int device() const;
-
-    private:
-    /// The old device number, this is what we restore when the
-    /// object goes out of scope.
-    int m_device;
+ private:
+  /// The old device number, this is what we restore when the
+  /// object goes out of scope.
+  int m_device;
 };
 
 }  // namespace traccc::hip::details

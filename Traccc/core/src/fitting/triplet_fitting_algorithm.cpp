@@ -24,19 +24,18 @@ triplet_fitting_algorithm::output_type triplet_fitting_algorithm::operator()(
     const host_detector& det, const magnetic_field& field,
     const edm::track_container<default_algebra>::const_view& track_candidates)
     const {
+  // Perform the track fitting using the appropriate templated implementation.
+  return host_detector_magnetic_field_visitor<detector_type_list,
+                                              bfield_type_list<scalar>>(
+      det, field,
+      [&]<typename detector_t, typename bfield_view_t>(
+          const typename detector_t::host& detector,
+          const bfield_view_t bfield) {
+        traccc::triplet_fitter<typename detector_t::host, bfield_view_t> fitter{
+            detector, bfield, m_config};
 
-    // Perform the track fitting using the appropriate templated implementation.
-    return host_detector_magnetic_field_visitor<detector_type_list,
-                                                bfield_type_list<scalar>>(
-        det, field,
-        [&]<typename detector_t, typename bfield_view_t>(
-            const typename detector_t::host& detector,
-            const bfield_view_t bfield) {
-            traccc::triplet_fitter<typename detector_t::host, bfield_view_t>
-                fitter{detector, bfield, m_config};
-
-            return details::triplet_fitting<default_algebra>(
-                fitter, track_candidates, m_mr.get(), m_copy.get());
-        });
+        return details::triplet_fitting<default_algebra>(
+            fitter, track_candidates, m_mr.get(), m_copy.get());
+      });
 }
 }  // namespace traccc::host

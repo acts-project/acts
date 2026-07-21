@@ -10,12 +10,12 @@
 
 #if defined(__CUDA_ARCH__) && CUDART_VERSION >= 13000 && \
     !defined(__CUDACC_RDC__) && !defined(__CUDACC_DEBUG__)
-#define TRACCC_CUDA_SPILL_TO_SHARED_MEMORY        \
-    do {                                          \
-        asm(".pragma \"enable_smem_spilling\";"); \
-    } while (0)
+#define TRACCC_CUDA_SPILL_TO_SHARED_MEMORY    \
+  do {                                        \
+    asm(".pragma \"enable_smem_spilling\";"); \
+  } while (0)
 #else
 #define TRACCC_CUDA_SPILL_TO_SHARED_MEMORY \
-    do {                                   \
-    } while (0)
+  do {                                     \
+  } while (0)
 #endif

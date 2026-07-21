@@ -5,7 +5,9 @@
 # Mozilla Public License Version 2.0
 
 traccc_add_executable(convert_csv_bfield "convert_csv_bfield.cpp"
-    LINK_LIBRARIES traccc::core covfie::core Boost::program_options)
+    LINK_LIBRARIES traccc::core covfie::core Boost::program_options
+)
 
 traccc_add_executable(generate_constant_bfield "generate_constant_bfield.cpp"
-    LINK_LIBRARIES traccc::core covfie::core Boost::program_options)
+    LINK_LIBRARIES traccc::core covfie::core Boost::program_options
+)

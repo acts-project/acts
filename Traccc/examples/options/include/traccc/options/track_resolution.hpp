@@ -17,20 +17,19 @@ namespace traccc::opts {
 /// Configuration for track ambiguity resulution
 class track_resolution : public interface,
                          public config_provider<ambiguity_resolution_config> {
+ public:
+  /// Constructor
+  track_resolution();
 
-    public:
-    /// Constructor
-    track_resolution();
+  /// Configuration conversion operators
+  operator ambiguity_resolution_config() const override;
 
-    /// Configuration conversion operators
-    operator ambiguity_resolution_config() const override;
+  /// Configuration conversion operators
+  std::unique_ptr<configuration_printable> as_printable() const override;
 
-    /// Configuration conversion operators
-    std::unique_ptr<configuration_printable> as_printable() const override;
-
-    private:
-    /// The internal configuration
-    ambiguity_resolution_config m_config;
+ private:
+  /// The internal configuration
+  ambiguity_resolution_config m_config;
 };  // class track_resolution
 
 }  // namespace traccc::opts
