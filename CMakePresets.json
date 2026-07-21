@@ -224,6 +224,9 @@
                 "ACTS_BUILD_EXAMPLES": "ON",
                 "ACTS_BUILD_PLUGIN_ROOT": "OFF",
                 "ACTS_BUILD_PLUGIN_FPEMON": "ON",
+                "ACTS_BUILD_PLUGIN_ARROW": "ON",
+                "ACTS_ARROW_ISOLATED": "ON",
+                "ACTS_BUILD_EXAMPLES_PARQUET": "ON",
                 "ACTS_BUILD_EXAMPLES_ROOT": "OFF",
                 "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
                 "ACTS_USE_SYSTEM_PYBIND11": "ON"
