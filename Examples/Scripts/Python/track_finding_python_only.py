@@ -190,18 +190,29 @@ def runTrackFindingPythonOnly(
         )
     )
 
-    cfg = acts.examples.PythonTrackFinderPerformanceWriter.Config()
-    cfg.inputTracks = "fitted_tracks"
-    cfg.inputParticles = "particles"
-    cfg.inputTrackParticleMatching = "track_particle_matching"
-    cfg.inputParticleTrackMatching = "particle_track_matching"
-    cfg.inputParticleMeasurementsMap = "particle_measurements_map"
-    perfWriter = acts.examples.PythonTrackFinderPerformanceWriter(
-        cfg, acts.logging.INFO
+    # Add track finder performance writer
+    cfg_finder = acts.examples.PythonTrackFinderPerformanceWriter.Config()
+    cfg_finder.inputTracks = "fitted_tracks"
+    cfg_finder.inputParticles = "particles"
+    cfg_finder.inputTrackParticleMatching = "track_particle_matching"
+    cfg_finder.inputParticleTrackMatching = "particle_track_matching"
+    cfg_finder.inputParticleMeasurementsMap = "particle_measurements_map"
+    perfWriterFinder = acts.examples.PythonTrackFinderPerformanceWriter(
+        cfg_finder, acts.logging.INFO
     )
-    s.addWriter(perfWriter)
+    s.addWriter(perfWriterFinder)
 
-    return s, perfWriter
+    # Add track fitter performance writer
+    cfg_fitter = acts.examples.PythonTrackFitterPerformanceWriter.Config()
+    cfg_fitter.inputTracks = "fitted_tracks"
+    cfg_fitter.inputParticles = "particles"
+    cfg_fitter.inputTrackParticleMatching = "track_particle_matching"
+    perfWriterFitter = acts.examples.PythonTrackFitterPerformanceWriter(
+        cfg_fitter, acts.logging.INFO
+    )
+    s.addWriter(perfWriterFitter)
+
+    return s, perfWriterFinder, perfWriterFitter
 
 
 if __name__ == "__main__":
@@ -221,7 +232,7 @@ if __name__ == "__main__":
     outputDir = Path.cwd() / "output_track_finding_python_only"
     outputDir.mkdir(exist_ok=True)
 
-    s, perfWriter = runTrackFindingPythonOnly(
+    s, perfWriterFinder, perfWriterFitter = runTrackFindingPythonOnly(
         trackingGeometry=trackingGeometry,
         field=field,
         digiConfigFile=digiConfigFile,
@@ -231,7 +242,12 @@ if __name__ == "__main__":
     )
     s.run()
 
-    histograms = perfWriter.histograms()
+    histograms_finder = perfWriterFinder.histograms()
     print(
-        f"Retrieved {len(histograms)} performance histograms: {list(histograms.keys())}"
+        f"Retrieved {len(histograms_finder)} finder performance histograms: {list(histograms_finder.keys())}"
+    )
+
+    histograms_fitter = perfWriterFitter.histograms()
+    print(
+        f"Retrieved {len(histograms_fitter)} fitter performance histograms: {list(histograms_fitter.keys())}"
     )
