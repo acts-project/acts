@@ -830,7 +830,8 @@ def test_full_chain_odd_example(tmp_path):
             stderr=subprocess.STDOUT,
         )
     except subprocess.CalledProcessError as e:
-        print(e.output.decode("utf-8"))
+        if e.output is not None:
+            print(e.output.decode("utf-8"))
         raise
 
 
@@ -924,7 +925,8 @@ def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
             stderr=subprocess.STDOUT,
         )
     except subprocess.CalledProcessError as e:
-        print(e.output.decode("utf-8"))
+        if e.output is not None:
+            print(e.output.decode("utf-8"))
         raise
 
     rfp = tmp_path / output_dir / root_file
