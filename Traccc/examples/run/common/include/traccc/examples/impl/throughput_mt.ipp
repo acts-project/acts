@@ -46,6 +46,7 @@
 #include <vecmem/memory/host_memory_resource.hpp>
 
 // TBB include(s).
+#include <tbb/concurrent_queue.h>
 #include <tbb/global_control.h>
 #include <tbb/parallel_for.h>
 #include <tbb/task_arena.h>
@@ -169,10 +170,10 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
       fitting_opts);
   fitting_cfg.propagation = propagation_config;
 
-  // Set up the full-chain algorithm(s). One for each thread.
+  // Set up the full-chain algorithm(s). One for each concurrent event slot.
   std::vector<FULL_CHAIN_ALG> algs;
-  algs.reserve(threading_opts.threads + 1);
-  for (std::size_t i = 0; i < threading_opts.threads + 1; ++i) {
+  algs.reserve(threading_opts.concurrent_slots);
+  for (std::size_t i = 0; i < threading_opts.concurrent_slots; ++i) {
     algs.push_back({unpinned_host_mr, clustering_cfg, seedfinder_config,
                     spacepoint_grid_config, seedfilter_config, gbts_config,
                     track_params_estimation_config, finding_cfg, fitting_cfg,
@@ -180,20 +181,30 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
                     seeding_gbts_opts.useGBTS});
   }
 
+  // Set up and populate a queue with concurrent slot indices.
+  tbb::concurrent_bounded_queue<size_t> concurrent_slots;
+  concurrent_slots.set_capacity(
+      static_cast<typename decltype(concurrent_slots)::size_type>(
+          threading_opts.concurrent_slots));
+  for (std::size_t i = 0; i < threading_opts.concurrent_slots; ++i) {
+    concurrent_slots.push(i);
+  }
+
   // Set up a lambda that calls the correct function on the algorithms.
-  std::function<std::size_t(int, const edm::silicon_cell_collection::host&)>
+  std::function<std::size_t(std::size_t,
+                            const edm::silicon_cell_collection::host&)>
       process_event;
   if (throughput_opts.reco_stage == opts::throughput::stage::seeding) {
     process_event =
-        [&](int thread,
+        [&](std::size_t slot,
             const edm::silicon_cell_collection::host& cells) -> std::size_t {
-      return algs.at(static_cast<std::size_t>(thread)).seeding(cells).size();
+      return algs.at(slot).seeding(cells).size();
     };
   } else if (throughput_opts.reco_stage == opts::throughput::stage::full) {
     process_event =
-        [&](int thread,
+        [&](std::size_t slot,
             const edm::silicon_cell_collection::host& cells) -> std::size_t {
-      return algs.at(static_cast<std::size_t>(thread))(cells).size();
+      return algs.at(slot)(cells).size();
     };
   } else {
     throw std::invalid_argument("Unknown reconstruction stage");
@@ -239,12 +250,15 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
                                      : static_cast<std::size_t>(std::rand())) %
                                 input_opts.events;
 
+      // Get a free concurrent slot.
+      size_t slot = std::numeric_limits<size_t>::max();
+      concurrent_slots.pop(slot);
       // Launch the processing of the event.
-      arena.execute([&, event]() {
-        group.run([&, event]() {
-          rec_track_params.fetch_add(process_event(
-              tbb::this_task_arena::current_thread_index(), input[event]));
+      arena.execute([&, event, slot]() {
+        group.run([&, event, slot]() {
+          rec_track_params.fetch_add(process_event(slot, input[event]));
           progress_bar.tick();
+          concurrent_slots.push(slot);
         });
       });
     }
@@ -276,12 +290,15 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
                                      : static_cast<std::size_t>(std::rand())) %
                                 input_opts.events;
 
+      // Get a free concurrent slot.
+      size_t slot = std::numeric_limits<size_t>::max();
+      concurrent_slots.pop(slot);
       // Launch the processing of the event.
-      arena.execute([&, event]() {
-        group.run([&, event]() {
-          rec_track_params.fetch_add(process_event(
-              tbb::this_task_arena::current_thread_index(), input[event]));
+      arena.execute([&, event, slot]() {
+        group.run([&, event, slot]() {
+          rec_track_params.fetch_add(process_event(slot, input[event]));
           progress_bar.tick();
+          concurrent_slots.push(slot);
         });
       });
     }
