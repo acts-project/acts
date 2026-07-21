@@ -14,7 +14,7 @@ import acts.examples
 from acts import UnitConstants as u
 
 
-def runTrackFindingPythonOnly(
+def runPypiFindingFittingDemo(
     trackingGeometry,
     field,
     digiConfigFile,
@@ -226,10 +226,10 @@ if __name__ == "__main__":
         srcdir / "Examples/Configs/generic-pixel-sstrips-lstrips-spacepoints.json"
     )
 
-    outputDir = Path.cwd() / "output_track_finding_python_only"
+    outputDir = Path.cwd() / "output_pypi_finding_fitting_demo"
     outputDir.mkdir(exist_ok=True)
 
-    s, perfWriterFinder, perfWriterFitter = runTrackFindingPythonOnly(
+    s, perfWriterFinder, perfWriterFitter = runPypiFindingFittingDemo(
         trackingGeometry=trackingGeometry,
         field=field,
         digiConfigFile=digiConfigFile,
