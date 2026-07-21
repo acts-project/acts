@@ -5,8 +5,6 @@ from pathlib import Path
 from typing import Optional
 import acts
 import acts.examples
-import acts.tgeo
-from acts import root
 import warnings
 
 
@@ -76,6 +74,8 @@ def getOpenDataDetector(
             raise RuntimeError(msg)
 
     if materialDecorator is None:
+        import acts.root
+
         materialDecorator = acts.root.RootMaterialDecorator(
             fileName=str(odd_dir / "data/odd-material-maps.root"),
             level=customLogLevel(minLevel=acts.logging.WARNING),

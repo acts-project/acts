@@ -7,17 +7,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import os
 from pathlib import Path
-
-os.environ["ACTS_SEQUENCER_DISABLE_FPEMON"] = "1"
 
 import acts
 import acts.examples
 from acts import UnitConstants as u
 
 
-def runTrackFindingPythonOnly(
+def runPypiFindingFittingDemo(
     trackingGeometry,
     field,
     digiConfigFile,
@@ -229,10 +226,10 @@ if __name__ == "__main__":
         srcdir / "Examples/Configs/generic-pixel-sstrips-lstrips-spacepoints.json"
     )
 
-    outputDir = Path.cwd() / "output_track_finding_python_only"
+    outputDir = Path.cwd() / "output_pypi_finding_fitting_demo"
     outputDir.mkdir(exist_ok=True)
 
-    s, perfWriterFinder, perfWriterFitter = runTrackFindingPythonOnly(
+    s, perfWriterFinder, perfWriterFitter = runPypiFindingFittingDemo(
         trackingGeometry=trackingGeometry,
         field=field,
         digiConfigFile=digiConfigFile,
