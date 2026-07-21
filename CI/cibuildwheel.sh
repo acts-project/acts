@@ -19,7 +19,7 @@ CCACHE_DIR="${CCACHE_DIR:-$PWD/ccache}"
 export CCACHE_DIR
 export CIBW_MANYLINUX_X86_64_IMAGE="manylinux_2_34" # based on almalinux9
 export CIBW_SKIP="*-musllinux* *-manylinux_i686"
-SETUP_CMD="bash {package}/CI/dependencies/setup.sh -t v23.2.0 -d deps -e env.sh"
+SETUP_CMD="bash {package}/CI/dependencies/setup.sh -t v23.3.1 -d deps -e env.sh"
 export CIBW_BEFORE_ALL_LINUX="dnf install -y bc ccache && ${SETUP_CMD}"
 export CIBW_BEFORE_ALL_MACOS="brew install ninja ccache && ${SETUP_CMD}"
 export CIBW_ENVIRONMENT="GITHUB_TOKEN=${GITHUB_TOKEN:-}"

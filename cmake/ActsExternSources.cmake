@@ -36,7 +36,7 @@ mark_as_advanced(ACTS_NLOHMANN_JSON_SOURCE)
 # translate version string to the historical Mille release naming convention
 string(REPLACE "." "-" _acts_mille_release_string ${_acts_mille_version})
 set(ACTS_MILLE_SOURCE
-    "URL;https://gitlab.desy.de/millepede/mille/-/archive/V${_acts_mille_release_string}/mille-V${_acts_mille_release_string}.tar.gz;URL_HASH;SHA256=ae4bf37de8d835aa8adc2960bb795a2080233a4c8af3d4b55adf395e20df0f3e"
+    "URL;https://github.com/millepede-project/mille/archive/refs/tags/V${_acts_mille_release_string}.tar.gz;URL_HASH;SHA256=2dec8402201938c7b2d7680db30aff19fd06dd06a420dbde45f57de2ce50d2ff"
     CACHE STRING
     "Source to take Mille from"
 )
@@ -45,11 +45,19 @@ mark_as_advanced(ACTS_MILLE_SOURCE)
 # translate version string to the historical GBL release naming convention
 string(REPLACE "." "-" _acts_gbl_release_string ${_acts_gbl_version})
 set(ACTS_GBL_SOURCE
-    "URL;https://gitlab.desy.de/millepede/general-broken-lines/-/archive/V${_acts_gbl_release_string}/general-broken-lines-V${_acts_gbl_release_string}.tar.gz;URL_HASH;SHA256=e40401a77a828c81a9217d8df3201e7712ac86b4fd5058d526ae1e1f6664304f"
+    "URL;https://github.com/GeneralBrokenLines/GeneralBrokenLines/archive/refs/tags/V${_acts_gbl_release_string}.tar.gz;URL_HASH;SHA256=d3e574b1838a9d28d52ce0b206c73ec8dc57e5a3b81257571e39556d0d18bb82"
     CACHE STRING
     "Source to take General Broken Lines (GBL) from"
 )
 mark_as_advanced(ACTS_GBL_SOURCE)
+# translate version string to the historical Millepede release naming convention
+string(REPLACE "." "-" _acts_mp2_release_string ${_acts_mp2_version})
+set(ACTS_MP2_SOURCE
+    "URL;https://github.com/millepede-project/millepede-ii/archive/refs/tags/V${_acts_mp2_release_string}.tar.gz;URL_HASH;SHA256=037bbfcd3aca2d6497a5609f35bc4a96258d285290996468241dcedd9aa9d172"
+    CACHE STRING
+    "Source to take Millepede-II from"
+)
+mark_as_advanced(ACTS_MP2_SOURCE)
 
 set(ACTS_EIGEN3_SOURCE
     "URL;https://gitlab.com/libeigen/eigen/-/archive/${_acts_eigen3_version}/${_acts_eigen3_version}.tar.gz;URL_HASH;SHA256=ba6ef66ba2d319e0a871a267889411c550d4bdf5bc7c62f86c60276913f3f4ba"
