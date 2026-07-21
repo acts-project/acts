@@ -24,6 +24,9 @@ class threading : public interface {
   /// The number of threads to use for the data processing
   std::size_t threads = 1;
 
+  /// The number of events that can be processed concurrently
+  std::size_t concurrent_slots = 1;
+
   /// @}
 
   /// Constructor
