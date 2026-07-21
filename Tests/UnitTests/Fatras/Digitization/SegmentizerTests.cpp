@@ -51,9 +51,9 @@ BOOST_AUTO_TEST_CASE(SegmentizerCartesian) {
 
   // The segmentation
   const auto segmentation = IMultiAxis::create(
-      *IAxis::createEquidistant(AxisBoundaryType::Open, -1., 1., 20,
+      *IAxis::createEquidistant(AxisBoundaryType::Bound, -1., 1., 20,
                                 AxisDirection::AxisX),
-      *IAxis::createEquidistant(AxisBoundaryType::Open, -1., 1., 20,
+      *IAxis::createEquidistant(AxisBoundaryType::Bound, -1., 1., 20,
                                 AxisDirection::AxisY));
 
   Segmentizer cl;
@@ -97,9 +97,9 @@ BOOST_AUTO_TEST_CASE(SegmentizerPolarRadial) {
 
   // The segmentation
   const auto segmentation = IMultiAxis::create(
-      *IAxis::createEquidistant(AxisBoundaryType::Open, 5., 10., 2,
+      *IAxis::createEquidistant(AxisBoundaryType::Bound, 5., 10., 2,
                                 AxisDirection::AxisR),
-      *IAxis::createEquidistant(AxisBoundaryType::Open, -0.25, 0.25, 250,
+      *IAxis::createEquidistant(AxisBoundaryType::Bound, -0.25, 0.25, 250,
                                 AxisDirection::AxisPhi));
 
   Segmentizer cl;

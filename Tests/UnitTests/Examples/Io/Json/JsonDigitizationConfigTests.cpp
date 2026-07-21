@@ -158,9 +158,9 @@ BOOST_AUTO_TEST_CASE(DigitizationConfigRoundTrip) {
   GeometricConfig gdc;
 
   gdc.segmentation = IMultiAxis::create(
-      *IAxis::createEquidistant(AxisBoundaryType::Open, -8.4, 8.4, 336,
+      *IAxis::createEquidistant(AxisBoundaryType::Bound, -8.4, 8.4, 336,
                                 AxisDirection::AxisX),
-      *IAxis::createEquidistant(AxisBoundaryType::Open, -36, 36, 1280,
+      *IAxis::createEquidistant(AxisBoundaryType::Bound, -36, 36, 1280,
                                 AxisDirection::AxisY));
   gdc.threshold = 0.01;
   gdc.thickness = 0.15;

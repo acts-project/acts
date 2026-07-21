@@ -120,7 +120,7 @@ void DigitizationConfigurator::operator()(const Acts::Surface *surface) {
           const unsigned int nBins = inputSegmentation->getAxis(0).getNBins();
 
           outputAxes.push_back(Acts::IAxis::createEquidistant(
-              Acts::AxisBoundaryType::Open, minX, maxX, nBins,
+              Acts::AxisBoundaryType::Bound, minX, maxX, nBins,
               Acts::AxisDirection::AxisX));
         }
         if (inputSegmentation->getAxis(0).getDirection() ==
@@ -136,7 +136,7 @@ void DigitizationConfigurator::operator()(const Acts::Surface *surface) {
               inputSegmentation->getAxis(accessBin).getNBins();
 
           outputAxes.push_back(Acts::IAxis::createEquidistant(
-              Acts::AxisBoundaryType::Open, minY, maxY, nBins,
+              Acts::AxisBoundaryType::Bound, minY, maxY, nBins,
               Acts::AxisDirection::AxisY));
         }
       } break;
@@ -152,7 +152,7 @@ void DigitizationConfigurator::operator()(const Acts::Surface *surface) {
           const unsigned int nBins = inputSegmentation->getAxis(0).getNBins();
 
           outputAxes.push_back(Acts::IAxis::createEquidistant(
-              Acts::AxisBoundaryType::Open, -maxX, maxX, nBins,
+              Acts::AxisBoundaryType::Bound, -maxX, maxX, nBins,
               Acts::AxisDirection::AxisX));
         }
         if (inputSegmentation->getAxis(0).getDirection() ==
@@ -167,7 +167,7 @@ void DigitizationConfigurator::operator()(const Acts::Surface *surface) {
               inputSegmentation->getAxis(accessBin).getNBins();
 
           outputAxes.push_back(Acts::IAxis::createEquidistant(
-              Acts::AxisBoundaryType::Open, -maxY, maxY, nBins,
+              Acts::AxisBoundaryType::Bound, -maxY, maxY, nBins,
               Acts::AxisDirection::AxisY));
         }
       } break;
@@ -182,7 +182,7 @@ void DigitizationConfigurator::operator()(const Acts::Surface *surface) {
           const unsigned int nBins = inputSegmentation->getAxis(0).getNBins();
 
           outputAxes.push_back(Acts::IAxis::createEquidistant(
-              Acts::AxisBoundaryType::Open, minR, maxR, nBins,
+              Acts::AxisBoundaryType::Bound, minR, maxR, nBins,
               Acts::AxisDirection::AxisR));
         }
         if (inputSegmentation->getAxis(0).getDirection() ==
@@ -198,7 +198,7 @@ void DigitizationConfigurator::operator()(const Acts::Surface *surface) {
           const unsigned int nBins = inputSegmentation->getAxis(0).getNBins();
 
           outputAxes.push_back(Acts::IAxis::createEquidistant(
-              Acts::AxisBoundaryType::Open, minPhi, maxPhi, nBins,
+              Acts::AxisBoundaryType::Bound, minPhi, maxPhi, nBins,
               Acts::AxisDirection::AxisPhi));
         }
       } break;
@@ -213,7 +213,7 @@ void DigitizationConfigurator::operator()(const Acts::Surface *surface) {
           const unsigned int nBins = inputSegmentation->getAxis(0).getNBins();
 
           outputAxes.push_back(Acts::IAxis::createEquidistant(
-              Acts::AxisBoundaryType::Open, minR, maxR, nBins,
+              Acts::AxisBoundaryType::Bound, minR, maxR, nBins,
               Acts::AxisDirection::AxisR));
         }
         if (inputSegmentation->getAxis(0).getDirection() ==
@@ -237,7 +237,7 @@ void DigitizationConfigurator::operator()(const Acts::Surface *surface) {
               inputSegmentation->getAxis(accessBin).getNBins();
 
           outputAxes.push_back(Acts::IAxis::createEquidistant(
-              Acts::AxisBoundaryType::Open, averagePhi - alpha,
+              Acts::AxisBoundaryType::Bound, averagePhi - alpha,
               averagePhi + alpha, nBins, Acts::AxisDirection::AxisPhi));
         }
       } break;
@@ -251,7 +251,7 @@ void DigitizationConfigurator::operator()(const Acts::Surface *surface) {
           const unsigned int nBins = inputSegmentation->getAxis(0).getNBins();
 
           outputAxes.push_back(Acts::IAxis::createEquidistant(
-              Acts::AxisBoundaryType::Open, minR, maxR, nBins,
+              Acts::AxisBoundaryType::Bound, minR, maxR, nBins,
               Acts::AxisDirection::AxisR));
         }
         if (inputSegmentation->getAxis(0).getDirection() ==
@@ -271,7 +271,7 @@ void DigitizationConfigurator::operator()(const Acts::Surface *surface) {
               inputSegmentation->getAxis(accessBin).getNBins();
 
           outputAxes.push_back(Acts::IAxis::createEquidistant(
-              Acts::AxisBoundaryType::Open, minPhi, maxPhi, nBins,
+              Acts::AxisBoundaryType::Bound, minPhi, maxPhi, nBins,
               Acts::AxisDirection::AxisPhi));
         }
       } break;

@@ -176,7 +176,7 @@ void ActsExamples::from_json(const nlohmann::json& j, GeometricConfig& gdc) {
                                         ? Acts::AxisType::Equidistant
                                         : Acts::AxisType::Variable;
     const Acts::AxisBoundaryType abType = binData.option == Acts::open
-                                              ? Acts::AxisBoundaryType::Open
+                                              ? Acts::AxisBoundaryType::Bound
                                               : Acts::AxisBoundaryType::Closed;
     if (axisType == Acts::AxisType::Equidistant) {
       axes.push_back(Acts::IAxis::createEquidistant(

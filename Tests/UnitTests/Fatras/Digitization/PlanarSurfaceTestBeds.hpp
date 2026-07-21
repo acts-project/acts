@@ -60,9 +60,9 @@ struct PlanarSurfaceTestBeds {
     auto rSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
         Acts::Transform3::Identity(), rectangle);
     auto pixelated = makeSegmentation(
-        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Open, -xhalf,
+        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Bound, -xhalf,
                                        xhalf, 15, Acts::AxisDirection::AxisX),
-        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Open, -yhalf,
+        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Bound, -yhalf,
                                        yhalf, 26, Acts::AxisDirection::AxisY));
     RectangleRandom rRandom(xhalf * rScale, yhalf * rScale);
 
@@ -75,10 +75,10 @@ struct PlanarSurfaceTestBeds {
     auto tSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
         Acts::Transform3::Identity(), trapezoid);
     auto stripsX = makeSegmentation(
-        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Open, -xhalfmaxy,
-                                       xhalfmaxy, 35,
+        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Bound,
+                                       -xhalfmaxy, xhalfmaxy, 35,
                                        Acts::AxisDirection::AxisX),
-        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Open, -yhalf,
+        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Bound, -yhalf,
                                        yhalf, 1, Acts::AxisDirection::AxisY));
     TrapezoidRandom tRandom(xhalfminy * rScale, xhalfmaxy * rScale,
                             yhalf * rScale);
@@ -96,10 +96,10 @@ struct PlanarSurfaceTestBeds {
     auto dtSurface = Acts::Surface::makeShared<Acts::DiscSurface>(
         Acts::Transform3::Identity(), discTrapezoid);
     auto stripsPhi = makeSegmentation(
-        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Open, rmin, rmax,
-                                       1, Acts::AxisDirection::AxisR),
+        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Bound, rmin,
+                                       rmax, 1, Acts::AxisDirection::AxisR),
         Acts::IAxis::createEquidistant(
-            Acts::AxisBoundaryType::Open, std::numbers::pi / 2. - alpha,
+            Acts::AxisBoundaryType::Bound, std::numbers::pi / 2. - alpha,
             std::numbers::pi / 2. + alpha, 25, Acts::AxisDirection::AxisPhi));
     TrapezoidRandom dtRandom(xmin * rScale, xmax * rScale, rmin * irScale,
                              ymax * rScale);
@@ -110,10 +110,10 @@ struct PlanarSurfaceTestBeds {
     auto dSurface = Acts::Surface::makeShared<Acts::DiscSurface>(
         Acts::Transform3::Identity(), discRadial);
     auto rphiseg = makeSegmentation(
-        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Open, rmin, rmax,
-                                       10, Acts::AxisDirection::AxisR),
+        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Bound, rmin,
+                                       rmax, 10, Acts::AxisDirection::AxisR),
         Acts::IAxis::createEquidistant(
-            Acts::AxisBoundaryType::Open,
+            Acts::AxisBoundaryType::Bound,
             (std::numbers::pi / 2. - std::numbers::pi / 4.),
             (std::numbers::pi / 2. + std::numbers::pi / 4.), 20,
             Acts::AxisDirection::AxisPhi));
@@ -144,9 +144,9 @@ struct PlanarSurfaceTestBeds {
     });
 
     auto stripsPhiA = makeSegmentation(
-        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Open, rmin, rmax,
-                                       1, Acts::AxisDirection::AxisR),
-        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Open, phimin,
+        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Bound, rmin,
+                                       rmax, 1, Acts::AxisDirection::AxisR),
+        Acts::IAxis::createEquidistant(Acts::AxisBoundaryType::Bound, phimin,
                                        phimax, 12,
                                        Acts::AxisDirection::AxisPhi));
     AnnulusRandom aRandom(rmin * irScale, rmax * rScale, phimin * rScale,

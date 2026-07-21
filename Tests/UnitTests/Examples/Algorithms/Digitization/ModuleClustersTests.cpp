@@ -26,9 +26,9 @@ using namespace ActsExamples;
 namespace ActsTests {
 
 std::shared_ptr<const IMultiAxis> makeSegmentation() {
-  const auto axisX = IAxis::createEquidistant(AxisBoundaryType::Open, -10.0,
+  const auto axisX = IAxis::createEquidistant(AxisBoundaryType::Bound, -10.0,
                                               10.0, 20, AxisDirection::AxisX);
-  const auto axisY = IAxis::createEquidistant(AxisBoundaryType::Open, -10.0,
+  const auto axisY = IAxis::createEquidistant(AxisBoundaryType::Bound, -10.0,
                                               10.0, 20, AxisDirection::AxisY);
   return IMultiAxis::create(*axisX, *axisY);
 }

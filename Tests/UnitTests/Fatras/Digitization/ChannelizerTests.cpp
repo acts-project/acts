@@ -42,9 +42,9 @@ struct Helper {
     float max = 200_um;
     int bins = static_cast<int>((max - min) / pitchSize);
     const auto axisX = IAxis::createEquidistant(
-        AxisBoundaryType::Open, min, max, bins, AxisDirection::AxisX);
+        AxisBoundaryType::Bound, min, max, bins, AxisDirection::AxisX);
     const auto axisY = IAxis::createEquidistant(
-        AxisBoundaryType::Open, min, max, bins, AxisDirection::AxisY);
+        AxisBoundaryType::Bound, min, max, bins, AxisDirection::AxisY);
     segmentation = IMultiAxis::create(*axisX, *axisY);
   }
 
