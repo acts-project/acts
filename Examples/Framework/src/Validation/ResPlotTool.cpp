@@ -116,11 +116,6 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
 
   using enum Acts::BoundIndices;
 
-  // get the fitted parameter (at perigee surface) and its error
-  const Acts::BoundVector& trackParameters = fittedParamters.parameters();
-  const Acts::BoundMatrix& trackCovariance =
-      fittedParamters.covariance().value_or(Acts::BoundMatrix::Zero());
-
   // get the perigee surface
   const Acts::Surface& pSurface = fittedParamters.referenceSurface();
 
@@ -150,6 +145,21 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
   const double truthPhi = phi(truthParticle.direction());
   const double truthPt = truthParticle.transverseMomentum();
 
+  fill(truthParameters, truthEta, truthPhi, truthPt, truthParticle.charge(),
+       fittedParamters);
+}
+
+void ResPlotTool::fill(const Acts::BoundVector& truthParameters,
+                       double truthEta, double truthPhi, double truthPt,
+                       double truthCharge,
+                       const Acts::BoundTrackParameters& fittedParameters) {
+  using enum Acts::BoundIndices;
+
+  // get the fitted parameter and its error
+  const Acts::BoundVector& trackParameters = fittedParameters.parameters();
+  const Acts::BoundMatrix& trackCovariance =
+      fittedParameters.covariance().value_or(Acts::BoundMatrix::Zero());
+
   // fill the histograms for residual and pull
   for (unsigned int paramId = 0; paramId < Acts::eBoundSize; paramId++) {
     const std::string& parName = m_cfg.paramNames.at(paramId);
@@ -165,8 +175,8 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
 
   // `reco(q/pT)` and `true(pT/q) * reco(q/pT)` residual and pull
   {
-    const double truthQoverPt = truthParticle.charge() / truthPt;
-    const double truthPtOverAbsQ = truthPt / truthParticle.absoluteCharge();
+    const double truthQoverPt = truthCharge / truthPt;
+    const double truthPtOverAbsQ = truthPt / std::abs(truthCharge);
     const double recoQoverPt =
         trackParameters[eBoundQOverP] / std::sin(trackParameters[eBoundTheta]);
     const double residualQoverPt = recoQoverPt - truthQoverPt;

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Union, List
+from typing import Dict, Optional, Union, List
 from enum import Enum
 from collections import namedtuple
 
@@ -518,12 +518,12 @@ def addSeeding(
 
         tracks = f"{prefix}seed-tracks"
         s.addAlgorithm(
-            acts.examples.ProtoTracksToTracks(
+            acts.examples.SeedsToTracks(
                 level=logLevel,
-                inputProtoTracks=protoTracks,
+                inputSeeds=f"{prefix}estimatedseeds",
                 inputTrackParameters=f"{prefix}estimatedparameters",
-                inputMeasurements=f"{prefix}measurement_subset",
                 outputTracks=tracks,
+                trackingGeometry=trackingGeometry,
             )
         )
 
@@ -1401,6 +1401,99 @@ def addSeedPerformanceWriters(
             treeName="estimatedparams",
         )
     )
+
+
+def addTrackParameterPerformanceWriters(
+    sequence: acts.examples.Sequencer,
+    outputDirRoot: Union[Path, str],
+    tracks: str = "seed-tracks",
+    particles: str = "particles",
+    selections: Optional[Dict[str, list]] = None,
+    parameterType=None,
+    stateGeometrySelection: Optional[list] = None,
+    outputName: str = "trackparams",
+    logLevel: acts.logging.Level = None,
+    prefix: str = "",
+):
+    """Writes residual/pull performance output for track parameters on track
+    states, compared to the truth hits on the respective surface.
+
+    By default the best available parameters per state are compared (smoothed,
+    filtered, or predicted). For tracks produced by `SeedsToTracks` (see
+    `addSeeding`) this is the seed-estimated parameters stored as predicted on
+    the innermost track state; for fitted tracks this is the smoothed state.
+    Set `parameterType` to compare a specific one, e.g.
+    `acts.examples.root.TrackParameterType.unbiased`.
+
+    One writer is always added for all input tracks. In addition, per named
+    selection a `TrackSelectorAlgorithm` with geometry-based measurement
+    requirements plus a dedicated writer are added.
+
+    Parameters
+    ----------
+    selections : Optional[Dict[str, list]]
+        Mapping from selection name to a list of layer requirements. Each
+        requirement is a list of `acts.GeometryIdentifier` regions, or a tuple
+        `(regions, threshold)` requiring at least `threshold` measurements
+        within the regions (default 1). All requirements must be fulfilled.
+    parameterType : Optional[acts.examples.root.TrackParameterType]
+        Which track-state parameters to compare to truth (default: best
+        available, i.e. smoothed, filtered, or predicted).
+    stateGeometrySelection : Optional[list]
+        `acts.GeometryIdentifier` regions; if given, only track states within
+        these regions are compared to truth.
+    """
+    customLogLevel = acts.examples.defaultLogging(sequence, logLevel)
+    RootTrackParameterPerformanceWriter = acts.examples._tryImportRoot(
+        "RootTrackParameterPerformanceWriter"
+    )
+    outputDirRoot = Path(outputDirRoot)
+    if not outputDirRoot.exists():
+        outputDirRoot.mkdir()
+
+    def addWriter(inputTracks: str, name: Optional[str] = None):
+        suffix = f"_{name}" if name is not None else ""
+        sequence.addWriter(
+            RootTrackParameterPerformanceWriter(
+                level=customLogLevel(),
+                inputTracks=inputTracks,
+                inputParticles=particles,
+                inputSimHits="simhits",
+                inputMeasurementParticlesMap="measurement_particles_map",
+                inputMeasurementSimHitsMap="measurement_simhits_map",
+                filePath=str(
+                    outputDirRoot / f"performance_{prefix}{outputName}{suffix}.root"
+                ),
+                **acts.examples.defaultKWArgs(
+                    parameterType=parameterType,
+                    geometrySelection=stateGeometrySelection,
+                ),
+            )
+        )
+
+    addWriter(tracks)
+
+    for name, requirements in (selections or {}).items():
+        measurementCounter = acts.TrackSelector.MeasurementCounter()
+        for requirement in requirements:
+            if isinstance(requirement, tuple):
+                regions, threshold = requirement
+            else:
+                regions, threshold = requirement, 1
+            measurementCounter.addCounter(list(regions), threshold)
+
+        selectedTracks = f"{prefix}seed-tracks-{name}"
+        sequence.addAlgorithm(
+            acts.examples.TrackSelectorAlgorithm(
+                level=customLogLevel(),
+                inputTracks=tracks,
+                outputTracks=selectedTracks,
+                selectorConfig=acts.TrackSelector.Config(
+                    measurementCounter=measurementCounter,
+                ),
+            )
+        )
+        addWriter(selectedTracks, name)
 
 
 acts.examples.NamedTypeArgs(

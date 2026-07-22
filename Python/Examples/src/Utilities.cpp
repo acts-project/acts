@@ -12,6 +12,7 @@
 #include "ActsExamples/Utilities/ProtoTracksToSeeds.hpp"
 #include "ActsExamples/Utilities/ProtoTracksToTracks.hpp"
 #include "ActsExamples/Utilities/SeedsToProtoTracks.hpp"
+#include "ActsExamples/Utilities/SeedsToTracks.hpp"
 #include "ActsExamples/Utilities/TracksToParameters.hpp"
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 #include "ActsExamples/Utilities/TrajectoriesToProtoTracks.hpp"
@@ -40,6 +41,10 @@ void addUtilities(py::module& mex) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(SeedsToProtoTracks, mex, "SeedsToProtoTracks",
                                 inputSeeds, outputProtoTracks);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(SeedsToTracks, mex, "SeedsToTracks", inputSeeds,
+                                inputTrackParameters, outputTracks,
+                                trackingGeometry);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ProtoTracksToSeeds, mex, "ProtoTracksToSeeds",
                                 inputProtoTracks, inputSpacePoints, outputSeeds,

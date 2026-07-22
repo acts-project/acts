@@ -32,6 +32,7 @@
 #include "ActsExamples/Io/Root/RootTrackFinderNTupleWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFitterPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackParameterPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackSummaryReader.hpp"
@@ -121,6 +122,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
       py::class_<ResPlotTool::Config>(root, "ResPlotToolConfig")
           .def(py::init<>())
+          .def_readwrite("paramNames", &ResPlotTool::Config::paramNames)
           .def_readwrite("varBinning", &ResPlotTool::Config::varBinning);
 
       py::class_<TrackQualityPlotTool::Config>(root,
@@ -175,6 +177,25 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
         inputTrackParameters, inputProtoTracks, inputParticles, inputSimHits,
         inputMeasurementParticlesMap, inputMeasurementSimHitsMap, filePath,
         treeName, fileMode);
+
+    py::enum_<TrackParameterPerformanceCollector::ParameterType>(
+        root, "TrackParameterType")
+        .value("predicted",
+               TrackParameterPerformanceCollector::ParameterType::Predicted)
+        .value("filtered",
+               TrackParameterPerformanceCollector::ParameterType::Filtered)
+        .value("smoothed",
+               TrackParameterPerformanceCollector::ParameterType::Smoothed)
+        .value("unbiased",
+               TrackParameterPerformanceCollector::ParameterType::Unbiased);
+
+    ACTS_PYTHON_DECLARE_WRITER(
+        RootTrackParameterPerformanceWriter, root,
+        "RootTrackParameterPerformanceWriter", inputTracks, inputParticles,
+        inputSimHits, inputMeasurementParticlesMap, inputMeasurementSimHitsMap,
+        filePath, resPlotToolConfig, parameterType, geometrySelection,
+        fitMinEntries, fitSigmaRange, fitIterations,
+        warningThresholdFitFailureFraction);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootMaterialTrackWriter, root, "RootMaterialTrackWriter",

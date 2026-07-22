@@ -13,6 +13,7 @@ acts_add_library(
     src/RootSimHitReader.cpp
     src/RootSpacePointPerformanceWriter.cpp
     src/RootSpacePointWriter.cpp
+    src/RootTrackParameterPerformanceWriter.cpp
     src/RootTrackParameterWriter.cpp
     src/RootTrackStatesWriter.cpp
     src/RootTrackSummaryReader.cpp

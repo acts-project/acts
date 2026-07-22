@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -22,8 +23,7 @@ namespace ActsExamples {
 
 /// Tools to make hists to show residual, i.e. smoothed_parameter -
 /// truth_parameter, and pull, i.e. (smoothed_parameter -
-/// truth_parameter)/smoothed_paramter_error, of track parameters at perigee
-/// surface
+/// truth_parameter)/smoothed_paramter_error, of bound track parameters
 class ResPlotTool {
  public:
   using AxisVariant = Acts::Experimental::AxisVariant;
@@ -70,6 +70,19 @@ class ResPlotTool {
   void fill(const Acts::GeometryContext& gctx,
             const SimParticleState& truthParticle,
             const Acts::BoundTrackParameters& fittedParamters);
+
+  /// Fill from truth bound parameters on the reference surface of the fitted
+  /// parameters.
+  ///
+  /// @param truthParameters the truth bound parameters on the reference surface
+  /// @param truthEta the truth pseudorapidity
+  /// @param truthPhi the truth azimuthal angle
+  /// @param truthPt the truth transverse momentum
+  /// @param truthCharge the truth charge
+  /// @param fittedParameters the fitted parameters
+  void fill(const Acts::BoundVector& truthParameters, double truthEta,
+            double truthPhi, double truthPt, double truthCharge,
+            const Acts::BoundTrackParameters& fittedParameters);
 
   const std::map<std::string, Histogram1>& res() const { return m_res; }
   const std::map<std::string, Histogram2>& resVsEta() const {

@@ -28,8 +28,10 @@ acts_add_library(
     src/Validation/TrackClassification.cpp
     src/Validation/TrackFinderPerformanceCollector.cpp
     src/Validation/TrackFitterPerformanceCollector.cpp
+    src/Validation/TrackParameterPerformanceCollector.cpp
     src/Validation/TrackQualityPlotTool.cpp
     src/Validation/TrackSummaryPlotTool.cpp
+    src/Validation/TruthParametersOnSurface.cpp
     ACTS_INCLUDE_FOLDER include/ActsExamples
 )
 
