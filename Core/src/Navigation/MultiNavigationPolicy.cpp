@@ -73,7 +73,8 @@ void MultiNavigationPolicy::createState(
 
   // Push each child state onto the manager. They end up contiguously on the
   // stack and are recovered by index. Track whether any child pushed a real
-  // (non-default) state, which is the signal that this composite can invalidate.
+  // (non-default) state, which is the signal that this composite can
+  // invalidate.
   bool anyChildConstrained = false;
   for (const auto& policy : m_policyPtrs) {
     ACTS_VERBOSE("Creating child state for policy ");

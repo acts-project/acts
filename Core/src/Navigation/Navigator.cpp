@@ -533,8 +533,8 @@ NavigationTarget Navigator::getNextTargetGen3(State& state,
   if (!state.policyStateIsDefault) {
     auto policyState = state.policyStateManager.currentState();
     isValid = state.currentVolume->navigationPolicy()->isValid(
-        state.options.geoContext, {.position = position, .direction = direction},
-        policyState, logger());
+        state.options.geoContext,
+        {.position = position, .direction = direction}, policyState, logger());
   }
 
   ACTS_VERBOSE(volInfo(state) << "Current policy says navigation sequence is "
@@ -615,9 +615,9 @@ void Navigator::createPolicyState(State& state, const Vector3& position,
     return;
   }
 
-  policy.createState(
-      state.options.geoContext, {.position = position, .direction = direction},
-      state.policyStateManager, logger());
+  policy.createState(state.options.geoContext,
+                     {.position = position, .direction = direction},
+                     state.policyStateManager, logger());
 }
 
 void Navigator::resolveCandidates(State& state, const Vector3& position,

@@ -144,10 +144,10 @@ class Navigator final {
     NavigationPolicyStateManager policyStateManager;
 
     /// Whether the current volume's policy state carries no validity
-    /// constraint. Sourced from INavigationPolicy::isStateless() (probed once at
-    /// construction, fixed thereafter) and cached at each volume transition, so
-    /// the per-step checks read this local bool instead of chasing the policy
-    /// pointer or re-deriving defaultness from the type-erased state.
+    /// constraint. Sourced from INavigationPolicy::isStateless() (probed once
+    /// at construction, fixed thereafter) and cached at each volume transition,
+    /// so the per-step checks read this local bool instead of chasing the
+    /// policy pointer or re-deriving defaultness from the type-erased state.
     bool policyStateIsDefault = true;
 
     // Navigation on surface level
