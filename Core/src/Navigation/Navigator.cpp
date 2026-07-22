@@ -618,6 +618,10 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
 
   ACTS_VERBOSE(volInfo(state) << "Found " << state.stream.candidates().size()
                               << " navigation candidates.");
+  // Track whether anything is appended beyond the policy candidates. External
+  // and free surfaces may duplicate a surface a policy already added; the
+  // policies of a volume themselves are expected to add disjoint candidates.
+  const std::size_t nPolicyCandidates = state.stream.candidates().size();
   for (const Surface* surface : state.options.externalSurfaces) {
     const GeometryIdentifier geoId = surface->geometryId();
     // Don't add any surface which is not in the same volume (volume bits)
@@ -648,9 +652,11 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
       }
     };
   }
+  const bool candidatesAreUnique =
+      state.stream.candidates().size() == nPolicyCandidates;
   state.stream.initialize(state.options.geoContext, {position, direction},
                           BoundaryTolerance::None(),
-                          state.options.surfaceTolerance);
+                          state.options.surfaceTolerance, candidatesAreUnique);
 
   ACTS_VERBOSE(volInfo(state)
                << "Now " << state.stream.candidates().size()

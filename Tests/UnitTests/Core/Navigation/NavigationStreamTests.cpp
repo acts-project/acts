@@ -141,6 +141,18 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializePlanes) {
                                  {Vector3(0., 0., -100.), Vector3(0., 0., 1.)},
                                  BoundaryTolerance::Infinite()));
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 4u);
+
+  // (6) Even when the caller asserts uniqueness (skipping the
+  // pre-intersection de-duplication pass), a duplicate that slips through is
+  // still removed by the post-sort unique pass
+  nStream = nStreamTemplate;
+  BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 5u);
+  BOOST_CHECK(nStream.initialize(gContext,
+                                 {Vector3(0., 0., -100.), Vector3(0., 0., 1.)},
+                                 BoundaryTolerance::Infinite(),
+                                 s_onSurfaceTolerance,
+                                 /*candidatesAreUnique=*/true));
+  BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 4u);
 }
 
 BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {

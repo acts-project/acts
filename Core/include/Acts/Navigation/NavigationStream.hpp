@@ -113,6 +113,10 @@ class NavigationStream {
   /// @param queryPoint holds current position, direction, etc.
   /// @param cTolerance is the candidate search tolerance
   /// @param onSurfaceTolerance is the tolerance for on-surface intersections
+  /// @param candidatesAreUnique the caller guarantees that no surface was
+  ///        added more than once, so the pre-intersection de-duplication pass
+  ///        can be skipped. Candidates that intersect the same surface twice
+  ///        (multi-intersections) are still handled correctly.
   ///
   /// This method will first de-duplicate the candidates on basis of the surface
   /// pointer to make sure that the multi-intersections are handled correctly.
@@ -123,7 +127,8 @@ class NavigationStream {
   bool initialize(const GeometryContext& gctx,
                   const NavigationStream::QueryPoint& queryPoint,
                   const BoundaryTolerance& cTolerance,
-                  double onSurfaceTolerance = s_onSurfaceTolerance);
+                  double onSurfaceTolerance = s_onSurfaceTolerance,
+                  bool candidatesAreUnique = false);
 
   /// Convenience method to update a stream from a new query point,
   /// this could be called from navigation delegates that do not require
