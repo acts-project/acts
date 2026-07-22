@@ -128,20 +128,21 @@ Acts::HfOrigin HepMC3InputConverter::checkHfOrigin(
     visited.insert(part->id());
 
     int pdgCode = std::abs(part->pid());
+    auto hadType = Acts::ParticleIdHelper::hadronType(static_cast<Acts::PdgParticle>(pdgCode));
 
     // --- beauty PDG IDs ---
-    if (static_cast<Acts::HfOrigin>(pdgCode / 100) == Acts::HfOrigin::Bottom ||
-        static_cast<Acts::HfOrigin>(pdgCode / 1000) == Acts::HfOrigin::Bottom ||
+    if (hadType == Acts::HadronType::BottomMeson ||
+        hadType == Acts::HadronType::BottomBaryon || hadType == Acts::HadronType::BBbarMeson ||
         (m_cfg.searchUpToHfQuark &&
          static_cast<Acts::HfOrigin>(pdgCode) == Acts::HfOrigin::Bottom)) {
       return Acts::HfOrigin::Bottom;
     }
 
     // --- charm PDG IDs ---
-    if (static_cast<Acts::HfOrigin>(pdgCode / 100) == Acts::HfOrigin::Charm ||
-        static_cast<Acts::HfOrigin>(pdgCode / 1000) == Acts::HfOrigin::Charm ||
+    if (hadType == Acts::HadronType::CharmedMeson ||
+        hadType == Acts::HadronType::CharmedBaryon || hadType == Acts::HadronType::CCbarMeson ||
         (m_cfg.searchUpToHfQuark &&
-         static_cast<Acts::HfOrigin>(pdgCode / 100) == Acts::HfOrigin::Charm)) {
+         static_cast<Acts::HfOrigin>(pdgCode) == Acts::HfOrigin::Charm)) {
       // we do not return directly because
       // B -> D -> X should be tagged as from beauty and not charm
       isFromCharm = true;
