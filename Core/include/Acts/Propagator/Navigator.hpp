@@ -146,6 +146,12 @@ class Navigator final {
     /// Management of policy state allocation and deallocation
     NavigationPolicyStateManager policyStateManager;
 
+    /// Cached result of NavigationPolicyState::isDefault() for the current
+    /// volume's policy state. The top state can only change at volume
+    /// transitions (createState / reset), so the navigator computes this once
+    /// there instead of re-deriving it from the type-erased state every step.
+    bool policyStateIsDefault = true;
+
     // Navigation on surface level
     /// the vector of navigation surfaces to work through
     NavigationSurfaces navSurfaces = {};
@@ -247,6 +253,7 @@ class Navigator final {
       currentLayer = nullptr;
 
       policyStateManager.reset();
+      policyStateIsDefault = true;
     }
 
     /// Completely reset navigation state to initial conditions

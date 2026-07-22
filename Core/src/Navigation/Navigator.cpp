@@ -184,6 +184,8 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
       policy->createState(state.options.geoContext,
                           {.position = position, .direction = direction},
                           state.policyStateManager, logger());
+      state.policyStateIsDefault =
+          state.policyStateManager.currentState().isDefault();
     }
   }
   if (state.currentLayer != nullptr) {
@@ -255,6 +257,8 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
     policy->createState(state.options.geoContext,
                         {.position = position, .direction = direction},
                         state.policyStateManager, logger());
+    state.policyStateIsDefault =
+        state.policyStateManager.currentState().isDefault();
   }
 
   state.currentLayer =
@@ -285,12 +289,14 @@ bool Navigator::checkTargetValid(State& state, const Vector3& position,
 
   if (state.currentVolume != nullptr &&
       state.currentVolume->navigationPolicy() != nullptr) {
-    auto policyState = state.policyStateManager.currentState();
     // A default (EmptyState) policy state signals no validity constraint, so
-    // the sequence is valid without dispatching isValid().
-    if (policyState.isDefault()) {
+    // the sequence is valid without dispatching isValid(). The defaultness is
+    // cached in the navigator state since it only changes at volume
+    // transitions.
+    if (state.policyStateIsDefault) {
       return true;
     }
+    auto policyState = state.policyStateManager.currentState();
     ACTS_VERBOSE(volInfo(state) << "Checking policy validity for volume");
     return state.currentVolume->navigationPolicy()->isValid(
         state.options.geoContext,
@@ -361,6 +367,8 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
         policy->createState(state.options.geoContext,
                             {.position = position, .direction = direction},
                             state.policyStateManager, logger());
+        state.policyStateIsDefault =
+            state.policyStateManager.currentState().isDefault();
 
         // this is set only for the check target validity since gen3 does not
         // care
@@ -509,11 +517,13 @@ NavigationTarget Navigator::getNextTargetGen3(State& state,
     return NavigationTarget::None();
   }
 
-  auto policyState = state.policyStateManager.currentState();
   // Only consult isValid() when the policy state is non-default; a default
   // (EmptyState) state signals the resolved sequence cannot be invalidated.
+  // The defaultness is cached in the navigator state since it only changes at
+  // volume transitions.
   bool isValid = true;
-  if (!policyState.isDefault()) {
+  if (!state.policyStateIsDefault) {
+    auto policyState = state.policyStateManager.currentState();
     isValid = state.currentVolume->navigationPolicy()->isValid(
         state.options.geoContext, {.position = position, .direction = direction},
         policyState, logger());
