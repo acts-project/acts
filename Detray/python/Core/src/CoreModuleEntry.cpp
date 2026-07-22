@@ -42,6 +42,8 @@ namespace py = pybind11;
 
 namespace {
 
+using reader_config_t = detray::io::detector_reader_config;
+
 using algebra_t = detray::array<DETRAY_CUSTOM_SCALARTYPE>;
 using detector_t = detray::detector<detray::default_metadata<algebra_t>>;
 using volume_descriptor_t = detector_t::volume_type;
@@ -78,6 +80,31 @@ std::pair<detector_handle, detray::name_map> read_detector(
 
 PYBIND11_MODULE(DetrayPythonBindings, m) {
   m.doc() = "Detray core bindings";
+
+  py::class_<reader_config_t>(m, "DetectorReaderConfig")
+      .def(py::init<>())
+      .def_property_readonly("files", &reader_config_t::files, "Input files")
+      .def_property(
+          "do_check", [](const reader_config_t &c) { return c.do_check(); },
+          [](reader_config_t &c, bool v) { c.do_check(v); },
+          "Do detector consistency check")
+      .def_property(
+          "verbose_check",
+          [](const reader_config_t &c) { return c.verbose_check(); },
+          [](reader_config_t &c, bool v) { c.verbose_check(v); },
+          "Verbosity of the detector consistency check")
+      .def(
+          "add_file",
+          [](reader_config_t &c, const std::string &f) -> reader_config_t & {
+            return c.add_file(f);
+          },
+          py::arg("file_name"), py::return_value_policy::reference_internal,
+          "Add an input file")
+      .def("__repr__", [](const reader_config_t &c) {
+        std::ostringstream os;
+        os << c;
+        return os.str();
+      });
 
   py::class_<volume_descriptor_t>(m, "VolumeDescriptor");
   py::class_<surface_descriptor_t>(m, "SurfaceDescriptor");
