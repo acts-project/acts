@@ -545,7 +545,20 @@ NavigationTarget Navigator::getNextTargetGen3(State& state,
   } else {
     ++state.navCandidateIndex.value();
   }
-  if (state.navCandidateIndex.value() < state.navCandidates.size()) {
+
+  // The navigator works directly off the (path-length sorted) stream
+  // candidates; skip those outside the path-length window here at consumption
+  // instead of copying the accepted ones out during resolution.
+  const std::vector<NavigationTarget>& candidates = state.stream.candidates();
+  std::size_t& candidateIndex = state.navCandidateIndex.value();
+  while (candidateIndex < candidates.size() &&
+         !detail::checkPathLength(candidates[candidateIndex].pathLength(),
+                                  state.options.nearLimit,
+                                  state.navCandidatesFarLimit, logger())) {
+    ++candidateIndex;
+  }
+
+  if (candidateIndex < candidates.size()) {
     ACTS_VERBOSE(volInfo(state)
                  << "Target set to next candidate " << state.navCandidate());
     return state.navCandidate();
@@ -644,8 +657,6 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
                << " navigation candidates after initialization.\n"
                << state.stream.candidates());
 
-  state.navCandidates.clear();
-
   double farLimit = state.options.farLimit;
   // If the user has not provided the selection delegate, then
   // just apply a simple candidate pruning. Constrain the maximum
@@ -660,18 +671,10 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
     }
   }
 
-  for (auto& candidate : state.stream.candidates()) {
-    if (!detail::checkPathLength(candidate.intersection().pathLength(),
-                                 state.options.nearLimit, farLimit, logger())) {
-      continue;
-    }
-
-    state.navCandidates.emplace_back(candidate);
-  }
-
-  // Print the navigation candidates
-  ACTS_VERBOSE("Navigation candidates: " << state.navCandidates.size() << "\n"
-                                         << state.navCandidates);
+  // The candidates are consumed directly from the stream; the path-length
+  // window is applied lazily while advancing the candidate index, so record
+  // the far limit for this resolution.
+  state.navCandidatesFarLimit = farLimit;
 }
 
 void Navigator::resolveSurfaces(State& state, const Vector3& position,

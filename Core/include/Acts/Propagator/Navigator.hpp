@@ -22,6 +22,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <limits>
 #include <optional>
 #include <string>
 
@@ -88,10 +89,6 @@ class Navigator final {
   /// Type alias for navigation boundary candidates container
   using NavigationBoundaries =
       boost::container::small_vector<NavigationTarget, 4>;
-
-  /// Type alias for generic navigation candidates container
-  using NavigationCandidates =
-      boost::container::small_vector<NavigationTarget, 10>;
 
   /// Type alias for geometry version enumeration
   using GeometryVersion = TrackingGeometry::GeometryVersion;
@@ -170,11 +167,15 @@ class Navigator final {
     /// the current boundary index of the navigation state
     std::optional<std::size_t> navBoundaryIndex;
 
-    // Navigation candidates(portals and surfaces together)
-    /// the vector of navigation candidates to work through
-    NavigationCandidates navCandidates = {};
-    /// the current candidate index of the navigation state
+    // Navigation candidates (portals and surfaces together). The candidates
+    // live in `stream` (sorted by path length); the navigator works through
+    // them by index without copying them out.
+    /// the current candidate index into the stream's candidates
     std::optional<std::size_t> navCandidateIndex;
+    /// far limit applied to the stream candidates, set during candidate
+    /// resolution (options.farLimit, or tightened to the last portal when
+    /// free candidates were appended without a selector)
+    double navCandidatesFarLimit = std::numeric_limits<double>::max();
 
     /// Free candidates not part of the tracking geometry.
     //  They are stored as a pair of surface pointer
@@ -201,7 +202,7 @@ class Navigator final {
     /// Get reference to current navigation candidate
     /// @return Reference to current boundary intersection
     NavigationTarget& navCandidate() {
-      return navCandidates.at(navCandidateIndex.value());
+      return stream.candidates().at(navCandidateIndex.value());
     }
 
     /// Volume where the navigation started
@@ -247,7 +248,6 @@ class Navigator final {
       navLayerIndex.reset();
       navBoundaries.clear();
       navBoundaryIndex.reset();
-      navCandidates.clear();
       navCandidateIndex.reset();
 
       currentLayer = nullptr;
