@@ -16,6 +16,7 @@
 
 #include <cmath>
 #include <format>
+#include <stdexcept>
 
 namespace ActsExamples {
 
@@ -152,6 +153,13 @@ void ResPlotTool::fill(const Acts::BoundTrackParameters& truthParameters,
   using Acts::VectorHelpers::phi;
 
   using enum Acts::BoundIndices;
+
+  if (truthParameters.referenceSurface() !=
+      fittedParameters.referenceSurface()) {
+    throw std::invalid_argument(
+        "ResPlotTool: truth and fitted parameters are expressed on different "
+        "reference surfaces");
+  }
 
   // get the truth parameters and derived quantities
   const Acts::BoundVector& truthVector = truthParameters.parameters();
