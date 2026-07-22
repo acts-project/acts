@@ -285,13 +285,16 @@ bool Navigator::checkTargetValid(State& state, const Vector3& position,
 
   if (state.currentVolume != nullptr &&
       state.currentVolume->navigationPolicy() != nullptr) {
-    ACTS_VERBOSE(volInfo(state) << "Checking policy validity for volume");
-
     auto policyState = state.policyStateManager.currentState();
-    bool isValid = state.currentVolume->navigationPolicy()->isValid(
+    // A default (EmptyState) policy state signals no validity constraint, so
+    // the sequence is valid without dispatching isValid().
+    if (policyState.isDefault()) {
+      return true;
+    }
+    ACTS_VERBOSE(volInfo(state) << "Checking policy validity for volume");
+    return state.currentVolume->navigationPolicy()->isValid(
         state.options.geoContext,
         {.position = position, .direction = direction}, policyState, logger());
-    return isValid;
   }
 
   return true;
@@ -507,9 +510,14 @@ NavigationTarget Navigator::getNextTargetGen3(State& state,
   }
 
   auto policyState = state.policyStateManager.currentState();
-  bool isValid = state.currentVolume->navigationPolicy()->isValid(
-      state.options.geoContext, {.position = position, .direction = direction},
-      policyState, logger());
+  // Only consult isValid() when the policy state is non-default; a default
+  // (EmptyState) state signals the resolved sequence cannot be invalidated.
+  bool isValid = true;
+  if (!policyState.isDefault()) {
+    isValid = state.currentVolume->navigationPolicy()->isValid(
+        state.options.geoContext, {.position = position, .direction = direction},
+        policyState, logger());
+  }
 
   ACTS_VERBOSE(volInfo(state) << "Current policy says navigation sequence is "
                               << (isValid ? "VALID" : "INVALID"));

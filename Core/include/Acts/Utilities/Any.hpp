@@ -442,6 +442,16 @@ class AnyBase : public AnyBaseAll {
     return m_handler != nullptr ? m_handler->typeInfo : nullptr;
   }
 
+  /// Check whether the stored value is exactly of type @p T.
+  /// @tparam T The type to test for (raw type, no const/ref)
+  /// @return True if a value of type T is stored, false otherwise (incl. empty)
+  template <typename T>
+  bool is() const {
+    static_assert(std::is_same_v<T, std::decay_t<T>>,
+                  "Please pass the raw type, no const or ref");
+    return m_handler != nullptr && m_handler->typeHash == typeHash<T>();
+  }
+
   // The base accessors below are member templates on a dummy @c B defaulting to
   // @c Base. This keeps their return types (@c B& / @c B*) from being formed
   // when @c Base is @c void: the member template is only instantiated on use,

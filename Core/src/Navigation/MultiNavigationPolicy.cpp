@@ -42,17 +42,9 @@ void MultiNavigationPolicy::initializeCandidates(
     [[maybe_unused]] const GeometryContext& gctx,
     const NavigationArguments& args, NavigationPolicyState& state,
     AppendOnlyNavigationStream& stream, const Logger& logger) const {
-  const auto& thisState = state.as<State>();
-  if (thisState.childCount != m_delegates.size()) {
-    ACTS_ERROR("MultiNavigationPolicy initializeCandidates: number of states ("
-               << thisState.childCount << ") does not match number of policies ("
-               << m_delegates.size() << ").");
-    throw std::runtime_error(
-        "MultiNavigationPolicy initializeCandidates: inconsistent state size.");
-  }
-
-  // Child states were pushed contiguously below this state (see createState).
-  const std::size_t childBase = state.index() - thisState.childCount;
+  // Child states were pushed contiguously below this policy's own state (see
+  // createState); their count always equals the number of policies.
+  const std::size_t childBase = state.index() - m_delegates.size();
   for (std::size_t i = 0; i < m_delegates.size(); ++i) {
     NavigationPolicyState childState = state.atIndex(childBase + i);
     m_delegates[i](gctx, args, childState, stream, logger);
@@ -74,16 +66,26 @@ void MultiNavigationPolicy::createState(
                << m_policyPtrs.size() << " policies.");
 
   // Push each child state onto the manager. They end up contiguously on the
-  // stack, so this policy's own state only needs to remember how many there
-  // are; initializeCandidates()/isValid() recover them by index.
+  // stack and are recovered by index. Track whether any child pushed a real
+  // (non-default) state, which is the signal that this composite can invalidate.
+  bool anyChildConstrained = false;
   for (const auto& policy : m_policyPtrs) {
     ACTS_VERBOSE("Creating child state for policy ");
     policy->createState(gctx, args, stateManager, logger);
+    if (!stateManager.currentState().isDefault()) {
+      anyChildConstrained = true;
+    }
   }
 
-  // Important, push this policy's state at the end (above its children).
-  auto& thisState = stateManager.pushState<State>();
-  thisState.childCount = static_cast<std::uint32_t>(m_policyPtrs.size());
+  // Push this policy's own state on top of its children. Use the default
+  // EmptyState -- the "no validity constraint" sentinel -- unless some child
+  // can invalidate, in which case push the marker State so the navigator
+  // consults isValid() for this volume.
+  if (anyChildConstrained) {
+    stateManager.pushState<State>();
+  } else {
+    stateManager.pushState<EmptyState>();
+  }
 }
 
 void MultiNavigationPolicy::popState(NavigationPolicyStateManager& stateManager,
@@ -108,17 +110,9 @@ bool MultiNavigationPolicy::isValid(const GeometryContext& gctx,
   ACTS_VERBOSE("MultiNavigationPolicy isValid check, forward to "
                << m_policyPtrs.size() << " policies.");
 
-  const auto& thisState = state.as<State>();
-  if (thisState.childCount != m_policyPtrs.size()) {
-    ACTS_ERROR("MultiNavigationPolicy isValid: number of states ("
-               << thisState.childCount << ") does not match number of policies ("
-               << m_policyPtrs.size() << ").");
-    throw std::runtime_error(
-        "MultiNavigationPolicy isValid: inconsistent state size.");
-  }
-
-  // Child states were pushed contiguously below this state (see createState).
-  const std::size_t childBase = state.index() - thisState.childCount;
+  // Child states were pushed contiguously below this policy's own state (see
+  // createState); their count always equals the number of policies.
+  const std::size_t childBase = state.index() - m_policyPtrs.size();
   for (std::size_t i = 0; i < m_policyPtrs.size(); ++i) {
     NavigationPolicyState childState = state.atIndex(childBase + i);
     if (!m_policyPtrs[i]->isValid(gctx, args, childState, logger)) {

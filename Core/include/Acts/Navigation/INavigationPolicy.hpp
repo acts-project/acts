@@ -64,6 +64,16 @@ class NavigationPolicyState {
   /// @return True if the state is empty, false otherwise
   bool empty() const { return m_manager == nullptr; }
 
+  /// Whether this state is the default sentinel, i.e. either no state at all or
+  /// the @c INavigationPolicy::EmptyState pushed by policies that do not
+  /// override createState(). Such policies also use the default (always-true)
+  /// isValid(), so the navigator treats a default state as "no validity
+  /// constraint" and skips the per-step isValid() call. A policy with a
+  /// meaningful isValid() necessarily pushes a real state to check against, so
+  /// this signal cannot be forgotten.
+  /// @return True if this is the default/empty state
+  bool isDefault() const;
+
   /// Absolute index of this state within its manager's state stack.
   /// @return the stack index
   std::size_t index() const { return m_index; }
@@ -307,5 +317,13 @@ class INavigationPolicy {
     }
   }
 };
+
+inline bool NavigationPolicyState::isDefault() const {
+  if (empty()) {
+    return true;  // no state at all -> nothing to validate
+  }
+  const NavigationPolicyStateStorage& stored = payload();
+  return !stored || stored.is<INavigationPolicy::EmptyState>();
+}
 
 }  // namespace Acts

@@ -11,8 +11,6 @@
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
-#include <cstdint>
-
 namespace Acts {
 
 /// Combined navigation policy that calls all contained other navigation
@@ -57,16 +55,14 @@ class MultiNavigationPolicy final : public INavigationPolicy {
   void visit(const std::function<void(const INavigationPolicy&)>& visitor)
       const override;
 
-  /// State structure for MultiNavigationPolicy.
+  /// Marker state for MultiNavigationPolicy.
   ///
-  /// The child policy states are not stored here: createState() pushes them
-  /// onto the state manager immediately below this state, so they can be
-  /// addressed by index. Only their count is needed to recover that range.
-  struct State {
-    /// Number of contained child policy states, stored contiguously below this
-    /// state on the manager stack.
-    std::uint32_t childCount = 0;
-  };
+  /// Carries no data: the child policy states live contiguously on the manager
+  /// stack directly below this one and are addressed by count (which always
+  /// equals the number of contained policies). This marker is pushed instead of
+  /// the default @c EmptyState only when at least one child has a real state, so
+  /// that the navigator knows isValid() must be consulted for this volume.
+  struct State {};
 
   /// Check if all child policies are in a valid state
   /// @param gctx The geometry context
