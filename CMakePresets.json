@@ -106,6 +106,16 @@
             }
         },
         {
+            "name": "github-ci-fpe",
+            "displayName": "GitHub-CI FPE (minimal-debug RelWithDebInfo)",
+            "inherits": "github-ci",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_CXX_FLAGS_RELWITHDEBINFO": "-O2 -DNDEBUG -g1 -gz",
+                "CMAKE_C_FLAGS_RELWITHDEBINFO": "-O2 -DNDEBUG -g1 -gz"
+            }
+        },
+        {
             "name": "github-ci-coverage",
             "displayName": "GitHub-CI Coverage",
             "inherits": "github-ci",
