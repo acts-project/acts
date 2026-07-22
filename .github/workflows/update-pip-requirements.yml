@@ -24,7 +24,10 @@ jobs:
       # This branch will receive updates each time the workflow runs
       # It doesn't matter if it's deleted when merged, it'll be re-created
       BRANCH_NAME: auto-dependency-upgrades
-      PYTHON_VERSION: "3.14"
+      # Lowest Python version we need requirements.txt files to install on
+      # (cibuildwheel's oldest wheel target); newer environments (up to
+      # 3.14) can still install these since --python-version is a floor.
+      PYTHON_VERSION: "3.11"
     steps:
       # persisted credentials are required for the push step below
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0

@@ -27,8 +27,7 @@ export CIBW_ENVIRONMENT_PASS="CI"
 export CIBW_BEFORE_BUILD="ccache -z"
 export CIBW_ENVIRONMENT_LINUX="CMAKE_PREFIX_PATH=\$PWD/deps/venv:\$PWD/deps/view CCACHE_DIR=/host${CCACHE_DIR} LD_LIBRARY_PATH=\$PWD/deps/view/lib64:\$PWD/deps/view/lib:\$PWD/deps/venv/lib64:\$PWD/deps/venv/lib"
 export CIBW_ENVIRONMENT_MACOS="CMAKE_PREFIX_PATH=\$PWD/deps/venv:\$PWD/deps/view CCACHE_DIR=${CCACHE_DIR} MACOSX_DEPLOYMENT_TARGET=26.0"
-# requirements.txt is locked for a single Python version; recompile requirements.in per-wheel so it resolves against each interpreter (cp310-cp314).
-export CIBW_BEFORE_TEST="ccache -s && uv pip compile {package}/Python/Examples/tests/requirements.in | uv pip install -r -"
+export CIBW_BEFORE_TEST="ccache -s && uv pip install -r {package}/Python/Examples/tests/requirements.txt"
 export CIBW_TEST_COMMAND="pytest {package}/Python/Examples/tests -m pypi -v"
 # patchelf 0.17.2 (pinned in the manylinux image) corrupts auditwheel-vendored
 # libs (e.g. libzstd) it repairs, causing a segfault at import time. Force a

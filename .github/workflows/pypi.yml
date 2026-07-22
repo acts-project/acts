@@ -86,7 +86,7 @@ jobs:
         uses: ./acts/.github/actions/cibuildwheel_wrapper
         with:
           package-dir: acts
-          cibw-build: "cp311-* cp310-* cp312-* cp313-* cp314-*"
+          cibw-build: "cp311-* cp312-* cp313-* cp314-*"
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
