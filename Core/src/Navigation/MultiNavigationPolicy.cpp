@@ -42,19 +42,20 @@ void MultiNavigationPolicy::initializeCandidates(
     [[maybe_unused]] const GeometryContext& gctx,
     const NavigationArguments& args, NavigationPolicyState& state,
     AppendOnlyNavigationStream& stream, const Logger& logger) const {
-  auto& thisState = state.as<State>();
-  if (thisState.policyStates.size() != m_delegates.size()) {
+  const auto& thisState = state.as<State>();
+  if (thisState.childCount != m_delegates.size()) {
     ACTS_ERROR("MultiNavigationPolicy initializeCandidates: number of states ("
-               << thisState.policyStates.size()
-               << ") does not match number of policies (" << m_delegates.size()
-               << ").");
+               << thisState.childCount << ") does not match number of policies ("
+               << m_delegates.size() << ").");
     throw std::runtime_error(
         "MultiNavigationPolicy initializeCandidates: inconsistent state size.");
   }
 
-  for (auto [delegate, policyState] :
-       zip(m_delegates, thisState.policyStates)) {
-    delegate(gctx, args, policyState, stream, logger);
+  // Child states were pushed contiguously below this state (see createState).
+  const std::size_t childBase = state.index() - thisState.childCount;
+  for (std::size_t i = 0; i < m_delegates.size(); ++i) {
+    NavigationPolicyState childState = state.atIndex(childBase + i);
+    m_delegates[i](gctx, args, childState, stream, logger);
   }
 }
 
@@ -72,27 +73,17 @@ void MultiNavigationPolicy::createState(
   ACTS_VERBOSE("MultiNavigationPolicy createState, create states for "
                << m_policyPtrs.size() << " policies.");
 
-  // Push child states first, then at the end push this policy's state,
-  // containing the references
-
-  PolicyStateContainer states;
-  states.reserve(m_policyPtrs.size());
-
+  // Push each child state onto the manager. They end up contiguously on the
+  // stack, so this policy's own state only needs to remember how many there
+  // are; initializeCandidates()/isValid() recover them by index.
   for (const auto& policy : m_policyPtrs) {
     ACTS_VERBOSE("Creating child state for policy ");
     policy->createState(gctx, args, stateManager, logger);
-    states.emplace_back(stateManager.currentState());
   }
 
-  ACTS_VERBOSE(
-      "Created " << states.size()
-                 << " child states for MultiNavigationPolicy (of which "
-                 << std::ranges::count_if(
-                        states, [](const auto& s) { return !s.empty(); })
-                 << " are non-empty)");
-
-  // Important, push at the end
-  stateManager.pushState<State>(std::move(states));
+  // Important, push this policy's state at the end (above its children).
+  auto& thisState = stateManager.pushState<State>();
+  thisState.childCount = static_cast<std::uint32_t>(m_policyPtrs.size());
 }
 
 void MultiNavigationPolicy::popState(NavigationPolicyStateManager& stateManager,
@@ -117,18 +108,20 @@ bool MultiNavigationPolicy::isValid(const GeometryContext& gctx,
   ACTS_VERBOSE("MultiNavigationPolicy isValid check, forward to "
                << m_policyPtrs.size() << " policies.");
 
-  auto& thisState = state.as<State>();
-  if (thisState.policyStates.size() != m_policyPtrs.size()) {
+  const auto& thisState = state.as<State>();
+  if (thisState.childCount != m_policyPtrs.size()) {
     ACTS_ERROR("MultiNavigationPolicy isValid: number of states ("
-               << thisState.policyStates.size()
-               << ") does not match number of policies (" << m_policyPtrs.size()
-               << ").");
+               << thisState.childCount << ") does not match number of policies ("
+               << m_policyPtrs.size() << ").");
     throw std::runtime_error(
         "MultiNavigationPolicy isValid: inconsistent state size.");
   }
 
-  for (auto [policy, policyState] : zip(m_policyPtrs, thisState.policyStates)) {
-    if (!policy->isValid(gctx, args, policyState, logger)) {
+  // Child states were pushed contiguously below this state (see createState).
+  const std::size_t childBase = state.index() - thisState.childCount;
+  for (std::size_t i = 0; i < m_policyPtrs.size(); ++i) {
+    NavigationPolicyState childState = state.atIndex(childBase + i);
+    if (!m_policyPtrs[i]->isValid(gctx, args, childState, logger)) {
       return false;
     }
   }

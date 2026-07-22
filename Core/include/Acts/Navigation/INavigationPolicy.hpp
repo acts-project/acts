@@ -64,6 +64,19 @@ class NavigationPolicyState {
   /// @return True if the state is empty, false otherwise
   bool empty() const { return m_manager == nullptr; }
 
+  /// Absolute index of this state within its manager's state stack.
+  /// @return the stack index
+  std::size_t index() const { return m_index; }
+
+  /// Access another state managed by the same manager, by absolute stack index.
+  /// Composite policies use this to reach their child states, which are pushed
+  /// contiguously onto the stack directly below the composite's own state.
+  /// @param index absolute stack index of the state to access
+  /// @return wrapper for the state at @p index in the same manager
+  NavigationPolicyState atIndex(std::size_t index) const {
+    return NavigationPolicyState{*m_manager, index};
+  }
+
  private:
   NavigationPolicyState(NavigationPolicyStateManager& manager,
                         std::size_t index)
