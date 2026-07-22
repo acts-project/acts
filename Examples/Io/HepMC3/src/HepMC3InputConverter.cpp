@@ -132,7 +132,8 @@ Acts::HfOrigin HepMC3InputConverter::checkHfOrigin(
 
     // --- beauty PDG IDs ---
     if (hadType == Acts::HadronType::BottomMeson ||
-        hadType == Acts::HadronType::BottomBaryon || hadType == Acts::HadronType::BBbarMeson ||
+        hadType == Acts::HadronType::BottomBaryon ||
+        hadType == Acts::HadronType::BBbarMeson ||
         (m_cfg.searchUpToHfQuark &&
          static_cast<Acts::HfOrigin>(pdgCode) == Acts::HfOrigin::Bottom)) {
       return Acts::HfOrigin::Bottom;
@@ -140,7 +141,8 @@ Acts::HfOrigin HepMC3InputConverter::checkHfOrigin(
 
     // --- charm PDG IDs ---
     if (hadType == Acts::HadronType::CharmedMeson ||
-        hadType == Acts::HadronType::CharmedBaryon || hadType == Acts::HadronType::CCbarMeson ||
+        hadType == Acts::HadronType::CharmedBaryon ||
+        hadType == Acts::HadronType::CCbarMeson ||
         (m_cfg.searchUpToHfQuark &&
          static_cast<Acts::HfOrigin>(pdgCode) == Acts::HfOrigin::Charm)) {
       // we do not return directly because
