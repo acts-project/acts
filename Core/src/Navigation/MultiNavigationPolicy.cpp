@@ -43,10 +43,16 @@ void MultiNavigationPolicy::initializeCandidates(
     const NavigationArguments& args, NavigationPolicyState& state,
     AppendOnlyNavigationStream& stream, const Logger& logger) const {
   // Child states were pushed contiguously below this policy's own state (see
-  // createState); their count always equals the number of policies.
-  const std::size_t childBase = state.index() - m_delegates.size();
+  // createState); their count always equals the number of policies. When the
+  // navigator skipped state creation for a stateless volume, the state handle
+  // is the empty sentinel; the (equally stateless) children then receive
+  // empty handles too, which they by definition do not read.
+  const bool haveStates = !state.empty();
+  const std::size_t childBase =
+      haveStates ? state.index() - m_delegates.size() : 0;
   for (std::size_t i = 0; i < m_delegates.size(); ++i) {
-    NavigationPolicyState childState = state.atIndex(childBase + i);
+    NavigationPolicyState childState =
+        haveStates ? state.atIndex(childBase + i) : NavigationPolicyState{};
     m_delegates[i](gctx, args, childState, stream, logger);
   }
 }

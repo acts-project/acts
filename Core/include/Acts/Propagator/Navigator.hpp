@@ -412,6 +412,19 @@ class Navigator final {
   void resolveCandidates(State& state, const Vector3& position,
                          const Vector3& direction) const;
 
+  /// @brief Create the navigation policy state for the current volume
+  ///
+  /// Volumes whose navigation policy is known to push only default states
+  /// (probed at geometry construction) skip the state creation entirely; the
+  /// matching popState on volume exit is skipped under the same condition.
+  /// The caller must ensure the current volume has a navigation policy.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  void createPolicyState(State& state, const Vector3& position,
+                         const Vector3& direction) const;
+
   /// @brief Resolve compatible surfaces
   ///
   /// This function resolves the compatible surfaces for the navigation.

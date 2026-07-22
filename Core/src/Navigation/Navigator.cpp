@@ -23,6 +23,24 @@
 #include <sstream>
 
 namespace Acts {
+
+namespace {
+// In release builds, volumes whose navigation policy is known to push only
+// default states (probed at geometry construction) skip the policy-state
+// subsystem entirely. In debug builds the subsystem is always exercised so
+// the statelessness contract can be asserted against the observed state.
+#ifdef NDEBUG
+constexpr bool kSkipStatelessPolicyState = true;
+#else
+constexpr bool kSkipStatelessPolicyState = false;
+#endif
+
+// The caller must ensure the volume has a navigation policy.
+bool skipPolicyState(const TrackingVolume& volume) {
+  return kSkipStatelessPolicyState && volume.navigationPolicy()->isStateless();
+}
+}  // namespace
+
 std::ostream& operator<<(
     std::ostream& ostr,
     const std::span<const Acts::NavigationTarget>& candidates) {
@@ -177,15 +195,10 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
       return Result<void>::failure(NavigatorError::NotInsideExpectedVolume);
     }
 
-    if (const auto* policy = state.currentVolume->navigationPolicy();
-        policy != nullptr) {
+    if (state.currentVolume->navigationPolicy() != nullptr) {
       ACTS_VERBOSE(volInfo(state)
                    << "Creating initial navigation policy state for volume.");
-      policy->createState(state.options.geoContext,
-                          {.position = position, .direction = direction},
-                          state.policyStateManager, logger());
-      state.policyStateIsDefault =
-          state.policyStateManager.currentState().isDefault();
+      createPolicyState(state, position, direction);
     }
   }
   if (state.currentLayer != nullptr) {
@@ -254,11 +267,7 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
 
     ACTS_VERBOSE(volInfo(state) << "Creating navigation policy state for new "
                                    "volume after renavigation.");
-    policy->createState(state.options.geoContext,
-                        {.position = position, .direction = direction},
-                        state.policyStateManager, logger());
-    state.policyStateIsDefault =
-        state.policyStateManager.currentState().isDefault();
+    createPolicyState(state, position, direction);
   }
 
   state.currentLayer =
@@ -337,7 +346,10 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
       }
 
       if (state.currentVolume != nullptr &&
-          state.currentVolume->navigationPolicy() != nullptr) {
+          state.currentVolume->navigationPolicy() != nullptr &&
+          !skipPolicyState(*state.currentVolume)) {
+        // Skipped under exactly the same condition as the state creation on
+        // volume entry, so the stack stays balanced.
         ACTS_VERBOSE(volInfo(state)
                      << "Popping navigation policy state for volume on exit");
         state.currentVolume->navigationPolicy()->popState(
@@ -364,11 +376,7 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
         ACTS_VERBOSE(volInfo(state)
                      << "Creating navigation policy state for new "
                         "volume after portal transition.");
-        policy->createState(state.options.geoContext,
-                            {.position = position, .direction = direction},
-                            state.policyStateManager, logger());
-        state.policyStateIsDefault =
-            state.policyStateManager.currentState().isDefault();
+        createPolicyState(state, position, direction);
 
         // this is set only for the check target validity since gen3 does not
         // care
@@ -588,6 +596,27 @@ NavigationTarget Navigator::tryGetNextTarget(State& state,
 
     return getNextTargetGen3(state, position, direction);
   }
+}
+
+void Navigator::createPolicyState(State& state, const Vector3& position,
+                                  const Vector3& direction) const {
+  const TrackingVolume& volume = *state.currentVolume;
+  if (skipPolicyState(volume)) {
+    ACTS_VERBOSE(volInfo(state)
+                 << "Volume policy is stateless, skipping state creation.");
+    state.policyStateIsDefault = true;
+    return;
+  }
+  volume.navigationPolicy()->createState(
+      state.options.geoContext, {.position = position, .direction = direction},
+      state.policyStateManager, logger());
+  state.policyStateIsDefault =
+      state.policyStateManager.currentState().isDefault();
+  // The probed statelessness must be consistent with the observed state
+  // (contract: the defaultness of a policy's state does not depend on the
+  // geometry context or the navigation arguments).
+  assert(!volume.navigationPolicy()->isStateless() ||
+         state.policyStateIsDefault);
 }
 
 void Navigator::resolveCandidates(State& state, const Vector3& position,
