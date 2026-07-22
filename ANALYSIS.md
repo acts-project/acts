@@ -282,6 +282,58 @@ other two sub-points of item 1 were real.
      computed per context, so the cache must be gated on non-alignable surfaces — which is why it
      isn't cached today. ODD here is non-aligned, so effectively all surfaces would benefit.
 
+## Second pass
+
+After the first pass (gen3 at ~4.10 s / 39.19e9 instructions vs gen1 ~4.02 s / 37.60e9), a fresh
+`perf annotate` localized the remaining gen3-specific cost to four spots, each fixed and measured
+independently:
+
+1. **`AnyBase` zero-fill** — the default member initializer on the small buffer value-initialized
+   128 bytes on every `pushState` (`rep stos`, ~29 % of `createState` self time). Removed; the
+   buffer is only ever read through the handler. The default constructor became user-provided so
+   `const` AnyBase objects can still be default-initialized.
+2. **Per-step `isDefault()`** — paid a static-guard check plus a PLT call to
+   `typeHash<EmptyState>()` every step (~7 % of `getNextTargetGen3` self time). The defaultness
+   only changes at volume transitions, so the navigator now caches it as a bool in its state.
+   Together with (1): 39.19 → 39.09e9 instructions, wall ~4.10 → ~4.06 s.
+3. **Candidate copy-out** — `resolveCandidates` copied the path-length-filtered candidates into a
+   separate `small_vector` per rebuild. The navigator now consumes the (sorted) stream directly
+   and applies the near/far window lazily while advancing — identical acceptance in identical
+   order, no copy, no spill, and never-consumed candidates skip the filter. Wall ~4.06 →
+   ~3.94-4.00 s; instructions flat (the removed work was memory traffic).
+4. **Dedup pre-pass + `checkPathLength`** — the O(n²) pre-intersection dedup only matters when
+   external/free surfaces were appended, which the navigator knows; a defaulted
+   `candidatesAreUnique` hint on `NavigationStream::initialize` skips it (post-sort unique remains
+   as backstop, unit-tested). Independently, `detail::checkPathLength` was an out-of-line call
+   doing two comparisons plus up to four verbose-filter checks, hot in **both** gens; the fast
+   path is now inline with the verbose diagnostics out of line. Together: gen3 39.10 → 38.09e9
+   (−2.6 %), **gen1 37.60 → 36.94e9 (−1.7 %)** — the first shared win in this series.
+5. **Stateless-policy state skip** — the remaining `createState`/`popState` round-trip per volume
+   entry (virtual child dispatch + `EmptyState` pushes/pops) is pure overhead when no policy
+   carries state. Each `INavigationPolicy` now caches whether it pushes only default states,
+   probed once at the end of `Blueprint::construct` under a documented contract (state
+   *defaultness* must not depend on context/arguments — the type is part of the policy's
+   identity). The property lives on the policy, not the volume, so `TrackingVolume` gains no
+   member or API, and a policy attached later conservatively reports stateful until re-probed.
+   The navigator skips create and pop under the same immutable condition; debug builds always
+   exercise the subsystem and assert the contract. gen3 38.09 → 37.13e9 (−2.5 %), wall ~3.82 s,
+   15.2 → 14.2 malloc/prop.
+
+**Net after both passes** (100k ODD propagations, single thread):
+
+| | malloc/prop | instructions | wall |
+|------|------------|--------------|------|
+| gen1 (unchanged except 4.) | 13.2 | 36.93e9 | ~4.0 s |
+| gen3 before any work | 99.3 | — | ~4.55 s |
+| gen3 after pass 1 | 15.2 | 39.19e9 | ~4.10 s |
+| gen3 after pass 2 | **14.2** | **37.13e9** | **~3.82 s** |
+
+Gen3 went from ~14 % slower than gen1 to **faster in wall clock** and within 0.5 % in
+instructions. The remaining structural difference (gen3 re-intersects the volume candidate set on
+volume entry, dominated by the virtual `Surface::intersect` dispatch inside
+`NavigationStream::initialize`) is shared-shape work that gen1 pays in `compatibleSurfaces`
+instead.
+
 ## Method (for reproduction)
 
 A small driver runs the `PropagationAlgorithm` over a muon particle gun on the ODD built in
