@@ -188,7 +188,7 @@ jobs:
           lfs: true
           persist-credentials: false
 
-      - run: apt-get update && apt-get install -y time
+      - run: CI/dependencies/apt_mirror.sh && apt-get update && apt-get install -y time
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies

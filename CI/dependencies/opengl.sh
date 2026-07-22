@@ -23,6 +23,9 @@ echo "OS: $os"
 
 if [[ "$os" == *ubuntu* ]]; then
 
+  # No-op unless the runner fleet named a nearer mirror (see the script).
+  "$(dirname "${BASH_SOURCE[0]}")/apt_mirror.sh"
+
   ${SUDO} apt-get update
   ${SUDO} apt-get install -y libgl1-mesa-dev
 
