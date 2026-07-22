@@ -24,10 +24,22 @@ class Navigator;
 
 class NavigationPolicyStateManager;
 
+/// Small-buffer size (in bytes) for a type-erased navigation policy state.
+/// Sized so the largest policy state is stored inline, keeping the
+/// per-volume-entry pushState() on the navigation hot path free of heap
+/// allocations. A static_assert in pushState() guards against silent heap
+/// fallback: bump this value if a policy needs a larger state.
+static constexpr std::size_t kNavigationPolicyStateSbo = 128;
+
+/// Type-erased storage for a single navigation policy state, with small-buffer
+/// optimization so the common (small) states avoid heap allocation.
+using NavigationPolicyStateStorage = AnyBase<kNavigationPolicyStateSbo>;
+
 /// Wrapper class for a navigation policy state stored in the state manager.
 /// This class provides type-safe access to the underlying state through
-/// the `as<T>()` method. The state is stored as a type-erased std::any
-/// in the NavigationPolicyStateManager.
+/// the `as<T>()` method. The state is stored as a type-erased, small-buffer
+/// optimized value (@ref NavigationPolicyStateStorage) in the
+/// NavigationPolicyStateManager.
 class NavigationPolicyState {
  public:
   /// Cast the state to a specific type
@@ -35,7 +47,7 @@ class NavigationPolicyState {
   /// @return Reference to the state as type T
   template <typename T>
   T& as() {
-    return std::any_cast<T&>(payload());
+    return payload().as<T>();
   }
 
   /// Cast the state to a specific type (const version)
@@ -43,7 +55,7 @@ class NavigationPolicyState {
   /// @return Const reference to the state as type T
   template <typename T>
   const T& as() const {
-    return std::any_cast<T&>(payload());
+    return payload().as<T>();
   }
 
   NavigationPolicyState() = default;
@@ -57,8 +69,8 @@ class NavigationPolicyState {
                         std::size_t index)
       : m_manager(&manager), m_index(index) {}
 
-  std::any& payload();
-  const std::any& payload() const;
+  NavigationPolicyStateStorage& payload();
+  const NavigationPolicyStateStorage& payload() const;
 
   NavigationPolicyStateManager* m_manager = nullptr;
   std::size_t m_index = 0;
@@ -79,7 +91,20 @@ class NavigationPolicyStateManager {
   /// @return Reference to the newly created state
   template <typename T, typename... Args>
   T& pushState(Args&&... args) {
-    std::any& state = m_stateStack.emplace_back();
+    static_assert(
+        sizeof(T) <= kNavigationPolicyStateSbo,
+        "Navigation policy state does not fit the small buffer and would be "
+        "heap-allocated on the navigation hot path. Increase "
+        "kNavigationPolicyStateSbo to accommodate it.");
+    // Reserve a typical stack depth on first use only. This keeps the stack
+    // from reallocating during ordinary navigation, while not allocating at all
+    // for navigators that never push a state (e.g. the Gen1 navigator, which
+    // carries this manager but does not use it). Once cleared by reset() the
+    // capacity is retained, so this stays a no-op afterwards.
+    if (m_stateStack.empty()) {
+      m_stateStack.reserve(16);
+    }
+    NavigationPolicyStateStorage& state = m_stateStack.emplace_back();
     return state.emplace<T>(std::forward<Args>(args)...);
   }
 
@@ -111,10 +136,10 @@ class NavigationPolicyStateManager {
   friend class NavigationPolicyState;
 
   // We might want to extend this to a stack
-  std::vector<std::any> m_stateStack;
+  std::vector<NavigationPolicyStateStorage> m_stateStack;
 };
 
-inline std::any& NavigationPolicyState::payload() {
+inline NavigationPolicyStateStorage& NavigationPolicyState::payload() {
   if (m_manager == nullptr) {
     throw std::runtime_error(
         "NavigationPolicyState: Attempt to access empty payload");
@@ -122,7 +147,8 @@ inline std::any& NavigationPolicyState::payload() {
   return m_manager->m_stateStack.at(m_index);
 }
 
-inline const std::any& NavigationPolicyState::payload() const {
+inline const NavigationPolicyStateStorage& NavigationPolicyState::payload()
+    const {
   if (m_manager == nullptr) {
     throw std::runtime_error(
         "NavigationPolicyState: Attempt to access empty payload");

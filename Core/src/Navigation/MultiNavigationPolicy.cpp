@@ -75,7 +75,7 @@ void MultiNavigationPolicy::createState(
   // Push child states first, then at the end push this policy's state,
   // containing the references
 
-  std::vector<NavigationPolicyState> states;
+  PolicyStateContainer states;
   states.reserve(m_policyPtrs.size());
 
   for (const auto& policy : m_policyPtrs) {

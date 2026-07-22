@@ -11,6 +11,8 @@
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
+#include <boost/container/small_vector.hpp>
+
 namespace Acts {
 
 /// Combined navigation policy that calls all contained other navigation
@@ -55,11 +57,17 @@ class MultiNavigationPolicy final : public INavigationPolicy {
   void visit(const std::function<void(const INavigationPolicy&)>& visitor)
       const override;
 
+  /// Small-vector inline capacity for the per-policy child states. Volumes
+  /// typically combine only a handful of policies, so this avoids a heap
+  /// allocation for the common case.
+  using PolicyStateContainer =
+      boost::container::small_vector<NavigationPolicyState, 4>;
+
   /// State structure for MultiNavigationPolicy
   /// Holds the states for all contained child policies
   struct State {
-    /// Vector of navigation policy states, one for each child policy
-    std::vector<NavigationPolicyState> policyStates;
+    /// States for each child policy (inline storage for the common small count)
+    PolicyStateContainer policyStates;
   };
 
   /// Check if all child policies are in a valid state

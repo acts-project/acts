@@ -26,20 +26,36 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   const Vector3& direction = queryPoint.direction;
 
   // De-duplicate by surface pointer first, so each surface is intersected only
-  // once in this pass.
-  std::ranges::stable_sort(
-      m_candidates, [](const NavigationTarget& a, const NavigationTarget& b) {
-        return &a.surface() < &b.surface();
-      });
-  auto initialDuplicates = std::ranges::unique(
-      m_candidates.begin(), m_candidates.end(),
-      [](const NavigationTarget& a, const NavigationTarget& b) {
-        return &a.surface() == &b.surface();
-      });
-  m_candidates.erase(initialDuplicates.begin(), initialDuplicates.end());
+  // once in this pass, keeping the first occurrence (in insertion order). This
+  // reproduces the previous std::stable_sort + std::unique result (first-wins),
+  // but in place: it avoids the temporary buffer that std::stable_sort
+  // allocates on every call, which matters on this per-navigation hot path. The
+  // candidate count per volume is small, so the quadratic scan is cheap.
+  {
+    std::size_t writeIdx = 0;
+    for (std::size_t readIdx = 0; readIdx < m_candidates.size(); ++readIdx) {
+      const Surface* surface = &m_candidates[readIdx].surface();
+      bool alreadySeen = false;
+      for (std::size_t k = 0; k < writeIdx; ++k) {
+        if (&m_candidates[k].surface() == surface) {
+          alreadySeen = true;
+          break;
+        }
+      }
+      if (!alreadySeen) {
+        if (writeIdx != readIdx) {
+          m_candidates[writeIdx] = m_candidates[readIdx];
+        }
+        ++writeIdx;
+      }
+    }
+    m_candidates.erase(m_candidates.begin() + writeIdx, m_candidates.end());
+  }
 
-  // Collect additional candidates for the second valid intersection.
-  std::vector<NavigationTarget> additionalCandidates = {};
+  // Collect additional candidates for the second valid intersection. Reuse the
+  // member scratch buffer to avoid a heap allocation on every call.
+  std::vector<NavigationTarget>& additionalCandidates = m_additionalCandidates;
+  additionalCandidates.clear();
   for (auto& candidate : m_candidates) {
     // Get the surface from the object intersection
     const Surface& surface = candidate.surface();

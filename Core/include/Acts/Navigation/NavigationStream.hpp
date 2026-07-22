@@ -148,6 +148,12 @@ class NavigationStream {
   /// The candidates of this navigation stream
   std::vector<NavigationTarget> m_candidates;
 
+  /// Reusable scratch buffer for the second valid intersection of surfaces with
+  /// multiple intersections, filled during initialize(). Kept as a member so
+  /// its heap storage is reused across re-initializations instead of being
+  /// reallocated every call.
+  std::vector<NavigationTarget> m_additionalCandidates;
+
   /// The currently active candidate
   std::size_t m_currentIndex = 0u;
 };
