@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -75,13 +75,8 @@ class ResPlotTool {
   /// parameters.
   ///
   /// @param truthParameters the truth bound parameters on the reference surface
-  /// @param truthEta the truth pseudorapidity
-  /// @param truthPhi the truth azimuthal angle
-  /// @param truthPt the truth transverse momentum
-  /// @param truthCharge the truth charge
   /// @param fittedParameters the fitted parameters
-  void fill(const Acts::BoundVector& truthParameters, double truthEta,
-            double truthPhi, double truthPt, double truthCharge,
+  void fill(const Acts::BoundTrackParameters& truthParameters,
             const Acts::BoundTrackParameters& fittedParameters);
 
   const std::map<std::string, Histogram1>& res() const { return m_res; }

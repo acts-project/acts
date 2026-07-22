@@ -14,13 +14,12 @@
 
 namespace ActsExamples {
 
-std::optional<TruthParametersOnSurface> truthParametersOnSurface(
+std::optional<Acts::BoundTrackParameters> truthParametersOnSurface(
     const Acts::GeometryContext& gctx, const Acts::Surface& surface,
-    Index measurementIndex, double truthCharge, const SimHitContainer& simHits,
+    Index measurementIndex, const SimParticle& particle,
+    const SimHitContainer& simHits,
     const MeasurementSimHitsMap& measurementSimHitsMap,
     const Acts::Logger& logger) {
-  using Acts::VectorHelpers::eta;
-  using Acts::VectorHelpers::perp;
   using Acts::VectorHelpers::phi;
   using Acts::VectorHelpers::theta;
 
@@ -45,18 +44,17 @@ std::optional<TruthParametersOnSurface> truthParametersOnSurface(
   const auto& simHit0 = *simHits.nth(simHitIdx0);
   const auto momentum = simHit0.momentum4Before().segment<3>(Acts::eMom0);
 
-  TruthParametersOnSurface truth;
-  truth.params[eBoundLoc0] = truthLocal[Acts::ePos0];
-  truth.params[eBoundLoc1] = truthLocal[Acts::ePos1];
-  truth.params[eBoundPhi] = phi(truthUnitDir);
-  truth.params[eBoundTheta] = theta(truthUnitDir);
-  truth.params[eBoundQOverP] = truthCharge / momentum.norm();
-  truth.params[eBoundTime] = truthPos4[Acts::eTime];
-  truth.eta = eta(truthUnitDir);
-  truth.phi = truth.params[eBoundPhi];
-  truth.pt = perp(momentum);
-  truth.charge = static_cast<int>(truthCharge);
-  return truth;
+  Acts::BoundVector params = Acts::BoundVector::Zero();
+  params[eBoundLoc0] = truthLocal[Acts::ePos0];
+  params[eBoundLoc1] = truthLocal[Acts::ePos1];
+  params[eBoundPhi] = phi(truthUnitDir);
+  params[eBoundTheta] = theta(truthUnitDir);
+  params[eBoundQOverP] =
+      particle.hypothesis().qOverP(momentum.norm(), particle.charge());
+  params[eBoundTime] = truthPos4[Acts::eTime];
+
+  return Acts::BoundTrackParameters(surface.getSharedPtr(), params,
+                                    std::nullopt, particle.hypothesis());
 }
 
 }  // namespace ActsExamples

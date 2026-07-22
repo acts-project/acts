@@ -151,10 +151,10 @@ void TrackParameterPerformanceCollector::fill(
         continue;
       }
 
-      const std::optional<TruthParametersOnSurface> truth =
+      const std::optional<Acts::BoundTrackParameters> truth =
           truthParametersOnSurface(geoContext, surface, sourceLink->index(),
-                                   particle.charge(), simHits,
-                                   measurementSimHitsMap, logger());
+                                   particle, simHits, measurementSimHitsMap,
+                                   logger());
       if (!truth.has_value()) {
         continue;
       }
@@ -164,8 +164,7 @@ void TrackParameterPerformanceCollector::fill(
       const Acts::BoundTrackParameters parameters(
           surface.getSharedPtr(), stateParams->first, stateParams->second,
           track.particleHypothesis());
-      m_resPlotTool.fill(truth->params, truth->eta, truth->phi, truth->pt,
-                         truth->charge, parameters);
+      m_resPlotTool.fill(truth.value(), parameters);
     }
   }
 }

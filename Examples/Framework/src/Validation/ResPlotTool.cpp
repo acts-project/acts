@@ -140,20 +140,25 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
   truthParameters[eBoundQOverP] = truthParticle.qOverP();
   truthParameters[eBoundTime] = truthParticle.time();
 
-  // get the truth eta and pT
-  const double truthEta = eta(truthParticle.direction());
-  const double truthPhi = phi(truthParticle.direction());
-  const double truthPt = truthParticle.transverseMomentum();
-
-  fill(truthParameters, truthEta, truthPhi, truthPt, truthParticle.charge(),
-       fittedParamters);
+  const Acts::BoundTrackParameters truthBoundParameters(
+      pSurface.getSharedPtr(), truthParameters, std::nullopt,
+      truthParticle.hypothesis());
+  fill(truthBoundParameters, fittedParamters);
 }
 
-void ResPlotTool::fill(const Acts::BoundVector& truthParameters,
-                       double truthEta, double truthPhi, double truthPt,
-                       double truthCharge,
+void ResPlotTool::fill(const Acts::BoundTrackParameters& truthParameters,
                        const Acts::BoundTrackParameters& fittedParameters) {
+  using Acts::VectorHelpers::eta;
+  using Acts::VectorHelpers::phi;
+
   using enum Acts::BoundIndices;
+
+  // get the truth parameters and derived quantities
+  const Acts::BoundVector& truthVector = truthParameters.parameters();
+  const double truthEta = eta(truthParameters.direction());
+  const double truthPhi = phi(truthParameters.direction());
+  const double truthPt = truthParameters.transverseMomentum();
+  const double truthCharge = truthParameters.charge();
 
   // get the fitted parameter and its error
   const Acts::BoundVector& trackParameters = fittedParameters.parameters();
@@ -164,7 +169,7 @@ void ResPlotTool::fill(const Acts::BoundVector& truthParameters,
   for (unsigned int paramId = 0; paramId < Acts::eBoundSize; paramId++) {
     const std::string& parName = m_cfg.paramNames.at(paramId);
 
-    const double residual = trackParameters[paramId] - truthParameters[paramId];
+    const double residual = trackParameters[paramId] - truthVector[paramId];
     fillResidual(parName, residual, truthEta, truthPhi, truthPt);
 
     const double var = trackCovariance(paramId, paramId);
