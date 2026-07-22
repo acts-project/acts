@@ -9,51 +9,14 @@
 #include "ActsExamples/Validation/TrackParameterPerformanceCollector.hpp"
 
 #include "Acts/EventData/BoundTrackParameters.hpp"
-#include "Acts/Utilities/TrackHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
-#include "ActsExamples/Validation/TruthParametersOnSurface.hpp"
 
 #include <optional>
 #include <utility>
 #include <vector>
 
 namespace ActsExamples {
-
-namespace {
-
-/// Extract the configured parameters and covariance from a track state. If no
-/// parameter type is configured, the best available parameters are used.
-std::optional<std::pair<Acts::BoundVector, Acts::BoundMatrix>> stateParameters(
-    std::optional<TrackParameterPerformanceCollector::ParameterType>
-        parameterType,
-    const auto& state) {
-  using enum TrackParameterPerformanceCollector::ParameterType;
-
-  if (!parameterType.has_value()) {
-    if (!state.hasSmoothed() && !state.hasFiltered() && !state.hasPredicted()) {
-      return std::nullopt;
-    }
-    // best available parameters, i.e. smoothed, filtered, or predicted
-    return std::pair(state.parameters(), state.covariance());
-  }
-  if (parameterType == Predicted && state.hasPredicted()) {
-    return std::pair(state.predicted(), state.predictedCovariance());
-  }
-  if (parameterType == Filtered && state.hasFiltered()) {
-    return std::pair(state.filtered(), state.filteredCovariance());
-  }
-  if (parameterType == Smoothed && state.hasSmoothed()) {
-    return std::pair(state.smoothed(), state.smoothedCovariance());
-  }
-  if (parameterType == Unbiased && state.hasSmoothed() &&
-      state.hasProjector() && state.hasCalibrated()) {
-    return Acts::calculateUnbiasedParametersCovariance(state);
-  }
-  return std::nullopt;
-}
-
-}  // namespace
 
 ResPlotTool::Config
 TrackParameterPerformanceCollector::defaultResPlotToolConfig() {
@@ -140,8 +103,10 @@ void TrackParameterPerformanceCollector::fill(
         continue;
       }
 
-      const auto stateParams = stateParameters(m_cfg.parameterType, state);
-      if (!stateParams.has_value()) {
+      const std::optional<Acts::BoundTrackParameters> reco =
+          recoParametersOnSurface(state, m_cfg.parameterType,
+                                  track.particleHypothesis());
+      if (!reco.has_value()) {
         continue;
       }
 
@@ -161,10 +126,7 @@ void TrackParameterPerformanceCollector::fill(
 
       ++m_stats.nFilledStates;
 
-      const Acts::BoundTrackParameters parameters(
-          surface.getSharedPtr(), stateParams->first, stateParams->second,
-          track.particleHypothesis());
-      m_resPlotTool.fill(truth.value(), parameters);
+      m_resPlotTool.fill(truth.value(), reco.value());
     }
   }
 }

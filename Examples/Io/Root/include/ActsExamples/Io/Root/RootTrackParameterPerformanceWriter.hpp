@@ -58,8 +58,7 @@ class RootTrackParameterPerformanceWriter final
         TrackParameterPerformanceCollector::defaultResPlotToolConfig();
     /// The track-state parameters to compare to truth. If not set, the best
     /// available parameters are used (smoothed, filtered, or predicted).
-    std::optional<TrackParameterPerformanceCollector::ParameterType>
-        parameterType;
+    std::optional<TrackParameterType> parameterType;
     /// Optional geometry selection of track states. If non-empty, only track
     /// states within the given geometry hierarchy regions are used.
     std::vector<Acts::GeometryIdentifier> geometrySelection;

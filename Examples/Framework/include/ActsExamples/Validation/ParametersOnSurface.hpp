@@ -14,6 +14,7 @@
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 
 #include <optional>
@@ -23,6 +24,18 @@ class Surface;
 }
 
 namespace ActsExamples {
+
+/// The track-state parameters to extract.
+enum class TrackParameterType {
+  /// Parameters before the measurement update
+  Predicted,
+  /// Parameters after the measurement update
+  Filtered,
+  /// Smoothed parameters
+  Smoothed,
+  /// Smoothed parameters with the state's own measurement removed
+  Unbiased,
+};
 
 /// Compute the truth bound track parameters on a surface from the simulated
 /// hits associated to a measurement.
@@ -47,5 +60,19 @@ std::optional<Acts::BoundTrackParameters> truthParametersOnSurface(
     const SimHitContainer& simHits,
     const MeasurementSimHitsMap& measurementSimHitsMap,
     const Acts::Logger& logger);
+
+/// Extract the reconstructed bound track parameters on the reference surface
+/// of a track state.
+///
+/// @param state The track state to extract the parameters from
+/// @param parameterType The parameters to extract; if not set, the best
+///        available parameters are used (smoothed, filtered, or predicted)
+/// @param hypothesis The particle hypothesis for the parameters
+/// @return The bound track parameters with covariance, or nullopt if the
+///         track state has no reference surface or no matching parameters
+std::optional<Acts::BoundTrackParameters> recoParametersOnSurface(
+    const ConstTrackStateProxy& state,
+    std::optional<TrackParameterType> parameterType,
+    const Acts::ParticleHypothesis& hypothesis);
 
 }  // namespace ActsExamples

@@ -178,16 +178,11 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
         inputMeasurementParticlesMap, inputMeasurementSimHitsMap, filePath,
         treeName, fileMode);
 
-    py::enum_<TrackParameterPerformanceCollector::ParameterType>(
-        root, "TrackParameterType")
-        .value("predicted",
-               TrackParameterPerformanceCollector::ParameterType::Predicted)
-        .value("filtered",
-               TrackParameterPerformanceCollector::ParameterType::Filtered)
-        .value("smoothed",
-               TrackParameterPerformanceCollector::ParameterType::Smoothed)
-        .value("unbiased",
-               TrackParameterPerformanceCollector::ParameterType::Unbiased);
+    py::enum_<TrackParameterType>(root, "TrackParameterType")
+        .value("predicted", TrackParameterType::Predicted)
+        .value("filtered", TrackParameterType::Filtered)
+        .value("smoothed", TrackParameterType::Smoothed)
+        .value("unbiased", TrackParameterType::Unbiased);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackParameterPerformanceWriter, root,

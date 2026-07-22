@@ -6,11 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Validation/TruthParametersOnSurface.hpp"
+#include "ActsExamples/Validation/ParametersOnSurface.hpp"
 
+#include "Acts/Utilities/TrackHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
+
+#include <utility>
 
 namespace ActsExamples {
 
@@ -55,6 +58,51 @@ std::optional<Acts::BoundTrackParameters> truthParametersOnSurface(
 
   return Acts::BoundTrackParameters(surface.getSharedPtr(), params,
                                     std::nullopt, particle.hypothesis());
+}
+
+std::optional<Acts::BoundTrackParameters> recoParametersOnSurface(
+    const ConstTrackStateProxy& state,
+    std::optional<TrackParameterType> parameterType,
+    const Acts::ParticleHypothesis& hypothesis) {
+  using enum TrackParameterType;
+
+  if (!state.hasReferenceSurface()) {
+    return std::nullopt;
+  }
+
+  const auto stateParameters =
+      [&]() -> std::optional<std::pair<Acts::BoundVector, Acts::BoundMatrix>> {
+    if (!parameterType.has_value()) {
+      if (!state.hasSmoothed() && !state.hasFiltered() &&
+          !state.hasPredicted()) {
+        return std::nullopt;
+      }
+      // best available parameters, i.e. smoothed, filtered, or predicted
+      return std::pair(state.parameters(), state.covariance());
+    }
+    if (parameterType == Predicted && state.hasPredicted()) {
+      return std::pair(state.predicted(), state.predictedCovariance());
+    }
+    if (parameterType == Filtered && state.hasFiltered()) {
+      return std::pair(state.filtered(), state.filteredCovariance());
+    }
+    if (parameterType == Smoothed && state.hasSmoothed()) {
+      return std::pair(state.smoothed(), state.smoothedCovariance());
+    }
+    if (parameterType == Unbiased && state.hasSmoothed() &&
+        state.hasProjector() && state.hasCalibrated()) {
+      return Acts::calculateUnbiasedParametersCovariance(state);
+    }
+    return std::nullopt;
+  }();
+
+  if (!stateParameters.has_value()) {
+    return std::nullopt;
+  }
+
+  return Acts::BoundTrackParameters(state.referenceSurface().getSharedPtr(),
+                                    stateParameters->first,
+                                    stateParameters->second, hypothesis);
 }
 
 }  // namespace ActsExamples

@@ -16,6 +16,7 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
+#include "ActsExamples/Validation/ParametersOnSurface.hpp"
 #include "ActsExamples/Validation/ResPlotTool.hpp"
 
 #include <cstddef>
@@ -39,23 +40,11 @@ namespace ActsExamples {
 ///       calling fill(). This class applies no locking of its own.
 class TrackParameterPerformanceCollector {
  public:
-  /// Which track-state parameters to compare to truth.
-  enum class ParameterType {
-    /// Parameters before the measurement update
-    Predicted,
-    /// Parameters after the measurement update
-    Filtered,
-    /// Smoothed parameters
-    Smoothed,
-    /// Smoothed parameters with the state's own measurement removed
-    Unbiased,
-  };
-
   struct Config {
     ResPlotTool::Config resPlotToolConfig = defaultResPlotToolConfig();
     /// The track-state parameters to compare to truth. If not set, the best
     /// available parameters are used (smoothed, filtered, or predicted).
-    std::optional<ParameterType> parameterType;
+    std::optional<TrackParameterType> parameterType;
     /// Optional geometry selection of track states. If non-empty, only track
     /// states within the given geometry hierarchy regions are used.
     std::vector<Acts::GeometryIdentifier> geometrySelection;
