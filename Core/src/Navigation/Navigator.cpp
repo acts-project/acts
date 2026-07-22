@@ -205,8 +205,70 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
 
       return Result<void>::failure(NavigatorError::NotOnExpectedSurface);
     }
-  }
+    // navigation is started on a portal
+    if (m_geometryVersion == GeometryVersion::Gen3 &&
+        state.currentVolume != nullptr &&
+        state.currentSurface->geometryId().boundary() != 0) {
+      ACTS_VERBOSE(volInfo(state) << " Start surface is a portal");
+      for (const Portal& portal : state.currentVolume->portals()) {
+        if (portal.surface().geometryId() !=
+            state.currentSurface->geometryId()) {
+          continue;
+        }
 
+        auto res =
+            portal.resolveVolume(state.options.geoContext, position, direction);
+        if (!res.ok()) {
+          ACTS_ERROR(volInfo(state)
+                     << "Failed to resolve volume through portal: "
+                     << res.error().message());
+          return Result<void>::failure(NavigatorError::NotInsideExpectedVolume);
+        }
+        /// The portal does not change the volume
+        if (state.currentVolume == res.value()) {
+          return Result<void>::success();
+        }
+        // Pop the navigation state
+        if (state.currentVolume != nullptr &&
+            state.currentVolume->navigationPolicy() != nullptr) {
+          ACTS_VERBOSE(volInfo(state)
+                       << "Popping navigation policy state for volume on exit");
+          state.currentVolume->navigationPolicy()->popState(
+              state.policyStateManager, logger());
+        }
+        state.currentVolume = res.value();
+
+        // partial reset
+        state.resetAfterVolumeSwitch();
+
+        if (state.currentVolume != nullptr) {
+          ACTS_VERBOSE(volInfo(state) << "Volume updated.");
+
+          const auto* policy = state.currentVolume->navigationPolicy();
+
+          if (policy == nullptr) {
+            ACTS_ERROR(volInfo(state) << "No navigation policy for new volume, "
+                                         "this should not happen");
+            return Result<void>::failure(
+                NavigatorError::NotInsideExpectedVolume);
+          }
+
+          ACTS_VERBOSE(volInfo(state)
+                       << "Creating navigation policy state for new "
+                          "volume after portal transition.");
+          policy->createState(state.options.geoContext,
+                              {.position = position, .direction = direction},
+                              state.policyStateManager, logger());
+        } else {
+          ACTS_VERBOSE(
+              volInfo(state)
+              << "No more volume to progress to, stopping navigation.");
+          state.navigationBreak = true;
+        }
+        break;
+      }
+    }
+  }
   return Result<void>::success();
 }
 
@@ -565,7 +627,8 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
     ACTS_VERBOSE(volInfo(state) << "No volume to resolve candidates.");
     return;
   }
-  ACTS_VERBOSE(volInfo(state) << "Searching for compatible candidates.");
+  ACTS_VERBOSE(volInfo(state) << "Searching for compatible candidates."
+                              << direction.transpose());
 
   state.stream.reset();
   AppendOnlyNavigationStream appendOnly{state.stream};
@@ -586,7 +649,8 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
       state.options.geoContext, args, policyState, appendOnly, logger());
 
   ACTS_VERBOSE(volInfo(state) << "Found " << state.stream.candidates().size()
-                              << " navigation candidates.");
+                              << " navigation candidates.\n"
+                              << state.stream.candidates());
   for (const Surface* surface : state.options.externalSurfaces) {
     const GeometryIdentifier geoId = surface->geometryId();
     // Don't add any surface which is not in the same volume (volume bits)
