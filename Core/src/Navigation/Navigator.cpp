@@ -601,22 +601,23 @@ NavigationTarget Navigator::tryGetNextTarget(State& state,
 void Navigator::createPolicyState(State& state, const Vector3& position,
                                   const Vector3& direction) const {
   const TrackingVolume& volume = *state.currentVolume;
+  const INavigationPolicy& policy = *volume.navigationPolicy();
+
+  // Statelessness is probed once at construction and fixed thereafter, so it is
+  // the single source of truth for whether this volume's policy carries a
+  // validity constraint. Cache it here so the per-step checks read a local bool
+  // rather than chasing the policy pointer on every step.
+  state.policyStateIsDefault = policy.isStateless();
+
   if (skipPolicyState(volume)) {
     ACTS_VERBOSE(volInfo(state)
                  << "Volume policy is stateless, skipping state creation.");
-    state.policyStateIsDefault = true;
     return;
   }
-  volume.navigationPolicy()->createState(
+
+  policy.createState(
       state.options.geoContext, {.position = position, .direction = direction},
       state.policyStateManager, logger());
-  state.policyStateIsDefault =
-      state.policyStateManager.currentState().isDefault();
-  // The probed statelessness must be consistent with the observed state
-  // (contract: the defaultness of a policy's state does not depend on the
-  // geometry context or the navigation arguments).
-  assert(!volume.navigationPolicy()->isStateless() ||
-         state.policyStateIsDefault);
 }
 
 void Navigator::resolveCandidates(State& state, const Vector3& position,

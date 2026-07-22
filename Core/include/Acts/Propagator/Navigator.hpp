@@ -143,10 +143,11 @@ class Navigator final {
     /// Management of policy state allocation and deallocation
     NavigationPolicyStateManager policyStateManager;
 
-    /// Cached result of NavigationPolicyState::isDefault() for the current
-    /// volume's policy state. The top state can only change at volume
-    /// transitions (createState / reset), so the navigator computes this once
-    /// there instead of re-deriving it from the type-erased state every step.
+    /// Whether the current volume's policy state carries no validity
+    /// constraint. Sourced from INavigationPolicy::isStateless() (probed once at
+    /// construction, fixed thereafter) and cached at each volume transition, so
+    /// the per-step checks read this local bool instead of chasing the policy
+    /// pointer or re-deriving defaultness from the type-erased state.
     bool policyStateIsDefault = true;
 
     // Navigation on surface level

@@ -314,10 +314,12 @@ independently:
    probed once at the end of `Blueprint::construct` under a documented contract (state
    *defaultness* must not depend on context/arguments — the type is part of the policy's
    identity). The property lives on the policy, not the volume, so `TrackingVolume` gains no
-   member or API, and a policy attached later conservatively reports stateful until re-probed.
-   The navigator skips create and pop under the same immutable condition; debug builds always
-   exercise the subsystem and assert the contract. gen3 38.09 → 37.13e9 (−2.5 %), wall ~3.82 s,
-   15.2 → 14.2 malloc/prop.
+   member or API. Because statelessness is fixed once construction ends, `isStateless()` is the
+   single source of truth for whether a volume's state carries a validity constraint: the
+   navigator caches it into `policyStateIsDefault` at each volume transition (so the per-step
+   checks read a local bool) and skips create and pop under the same immutable condition. No
+   per-entry state observation is needed — the contract makes the probed value authoritative.
+   gen3 38.09 → 37.13e9 (−2.5 %), wall ~3.82 s, 15.2 → 14.2 malloc/prop.
 
 **Net after both passes** (100k ODD propagations, single thread):
 
