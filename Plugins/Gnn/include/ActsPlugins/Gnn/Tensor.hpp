@@ -237,5 +237,15 @@ template <Acts::Concepts::arithmetic T>
 Tensor<T> selectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
                      const ExecutionContext &execContext);
 
+/// Multiply each column of src with the corresponding scale value
+/// dst[r,n] = src[r,n] * scales[n]
+/// @param src Source tensor [R, N] in row-major layout
+/// @param scales Vector of scale factors of length N, same type as src
+/// @param execContext Device and stream for output allocation
+/// @return New tensor [R, N] in row-major layout containing scaled values
+template <Acts::Concepts::arithmetic T>
+Tensor<T> mulPerColumn(const Tensor<T> &src, const std::vector<T> &scales,
+                       const ExecutionContext &execContext);
+
 /// @}
 }  // namespace ActsPlugins

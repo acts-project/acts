@@ -17,6 +17,7 @@
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
 #include "ActsExamples/Validation/ResPlotTool.hpp"
+#include "ActsExamples/Validation/TrackFitterPerformanceCollector.hpp"
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
 #include <mutex>
@@ -89,12 +90,8 @@ class RootTrackFitterPerformanceWriter final
   /// Mutex used to protect multi-threaded writes.
   std::mutex m_writeMutex;
   TFile* m_outputFile{nullptr};
-  /// Plot tool for residuals and pulls.
-  ResPlotTool m_resPlotTool;
-  /// Plot tool for efficiency
-  EffPlotTool m_effPlotTool;
-  /// Plot tool for track hit info
-  TrackSummaryPlotTool m_trackSummaryPlotTool;
+  /// Collector holding all plot tools and per-event counters.
+  TrackFitterPerformanceCollector m_collector;
 };
 
 }  // namespace ActsExamples

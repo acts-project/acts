@@ -82,6 +82,10 @@ template <typename T>
 Tensor<T> cudaSelectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
                          const ExecutionContext &execContext);
 
+template <typename T>
+Tensor<T> cudaMulPerColumn(const Tensor<T> &src, const Tensor<T> &scales,
+                           const ExecutionContext &execContext);
+
 }  // namespace detail
 
 void sigmoid(Tensor<float> &tensor, std::optional<cudaStream_t> stream) {
@@ -266,6 +270,41 @@ Tensor<T> selectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
   return result;
 }
 
+template <Acts::Concepts::arithmetic T>
+Tensor<T> mulPerColumn(const Tensor<T> &src, const std::vector<T> &scales,
+                       const ExecutionContext &execContext) {
+  const auto rows = src.shape()[0];
+  const auto cols = src.shape()[1];
+  if (cols != static_cast<std::size_t>(scales.size())) {
+    throw std::invalid_argument("mulPerColumn: scales size must match cols");
+  }
+
+  if (execContext.device.type == Device::Type::eCUDA) {
+#ifdef ACTS_GNN_WITH_CUDA
+    // Move scales to device (as Tensor)
+    auto scalesTensor = Tensor<T>::Create({cols, 1ul}, execContext);
+    assert(execContext.stream.has_value());
+    ACTS_CUDA_CHECK(cudaMemcpyAsync(scalesTensor.data(), scales.data(),
+                                    cols * sizeof(T), cudaMemcpyHostToDevice,
+                                    *execContext.stream));
+    return detail::cudaMulPerColumn(src, scalesTensor, execContext);
+#else
+    throw std::runtime_error(
+        "Cannot apply feature scales on CUDA tensor, library was not compiled "
+        "with CUDA");
+#endif
+  }
+
+  auto result = Tensor<T>::Create({rows, cols}, execContext);
+  for (std::size_t r = 0; r < rows; ++r) {
+    const std::size_t base = r * cols;
+    for (std::size_t c = 0; c < cols; ++c) {
+      result.data()[base + c] = src.data()[base + c] * scales[c];
+    }
+  }
+  return result;
+}
+
 template Tensor<float> selectRows(const Tensor<float> &, const Tensor<bool> &,
                                   const ExecutionContext &);
 template Tensor<std::int64_t> selectRows(const Tensor<std::int64_t> &,
@@ -276,5 +315,11 @@ template Tensor<float> selectCols(const Tensor<float> &, const Tensor<bool> &,
 template Tensor<std::int64_t> selectCols(const Tensor<std::int64_t> &,
                                          const Tensor<bool> &,
                                          const ExecutionContext &);
+template Tensor<float> mulPerColumn(const Tensor<float> &,
+                                    const std::vector<float> &,
+                                    const ExecutionContext &);
+template Tensor<std::int64_t> mulPerColumn(const Tensor<std::int64_t> &,
+                                           const std::vector<std::int64_t> &,
+                                           const ExecutionContext &);
 
 }  // namespace ActsPlugins

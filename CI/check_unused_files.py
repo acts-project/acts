@@ -17,6 +17,8 @@ EXCLUDE_PATHS = (
     # CLI tools
     "Detray/tests/tools",
     "Detray/python/Core/tests",
+    # TODO: Remove the traccc part.
+    "Traccc",
     "git",
     "Python",
     "Scripts",

@@ -12,6 +12,21 @@ from acts._adapter import _patch_config
 
 _patch_config(ActsExamplesPythonBindings)
 
+
+def _tryImportRoot(*names: str):
+    """
+    Import `names` from `acts.examples.root`, raising a clear `RuntimeError`
+    if the ROOT plugin was not built into this ACTS installation.
+    """
+    try:
+        import acts.examples.root as _root
+    except ImportError as e:
+        raise RuntimeError("ROOT output requested but ROOT is not available") from e
+
+    objs = tuple(getattr(_root, name) for name in names)
+    return objs[0] if len(objs) == 1 else objs
+
+
 _propagators = []
 _concrete_propagators = []
 for stepper in ("Eigen", "Atlas", "StraightLine", "Sympy"):

@@ -16,6 +16,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 
+@pytest.mark.pypi
 def test_coexist_with_pyarrow():
     """Verify acts.examples.arrow and pyarrow can be loaded into the same
     Python process. Regression guard for the linker-isolation design: if
@@ -195,6 +196,7 @@ def _add_arrow_writer(
     )
 
 
+@pytest.mark.pypi
 def test_particle_gun_generated(tmp_path, ptcl_gun):
     """Particle gun → generated particles → Parquet."""
     from acts.arrow import particleSchema
@@ -214,6 +216,7 @@ def test_particle_gun_generated(tmp_path, ptcl_gun):
     )
 
 
+@pytest.mark.pypi
 def test_particle_gun_roundtrip(tmp_path, ptcl_gun):
     """Write sharded Parquet, then drive a second Sequencer off ParquetReader
     and check the reader exposes — and processes — the same number of events
@@ -274,6 +277,7 @@ def test_particle_gun_roundtrip(tmp_path, ptcl_gun):
     )
 
 
+@pytest.mark.pypi
 def test_particle_gun_roundtrip_parallel_cache(tmp_path, ptcl_gun):
     """Write a multi-shard Parquet dataset, then read it back with a
     multi-threaded Sequencer and shardCacheCapacity > 1. Exercises the
@@ -326,6 +330,7 @@ def test_particle_gun_roundtrip_parallel_cache(tmp_path, ptcl_gun):
     )
 
 
+@pytest.mark.pypi
 def test_particle_gun_fatras(tmp_path, fatras):
     """Particle gun + Fatras → both generated and simulated particles → Parquet."""
     nevents = 5
@@ -500,6 +505,7 @@ def _assert_simhits_parquet(
             )
 
 
+@pytest.mark.pypi
 def test_fatras_simhits_digitized(tmp_path, fatras):
     """Fatras + digitization → ArrowSimHitOutputConverter reads cluster
     positions → Parquet. The matched-hit x,y,z must be the precomputed cluster
@@ -513,6 +519,7 @@ def test_fatras_simhits_digitized(tmp_path, fatras):
     _assert_simhits_parquet(tmp_path / "simhits_arrow", nevents, expect_digitized=True)
 
 
+@pytest.mark.pypi
 def test_fatras_simhits_no_clusters_are_nan(tmp_path, fatras):
     """Without the cluster container and sim-hit→measurement map wired, the
     digitized x,y,z columns fall back to NaN while truth positions still
@@ -599,6 +606,7 @@ def test_pythia8_fatras(tmp_path, rng, trk_geo):
     _assert_particles_parquet(tmp_path / "particles_simulated_arrow", nevents)
 
 
+@pytest.mark.pypi
 def test_reader_schema_evolution_added_optional_column(tmp_path):
     """Read shards written without an optional column and verify the reader
     materializes it as null.
@@ -732,6 +740,7 @@ def test_reader_schema_evolution_added_optional_column(tmp_path):
     ), f"checker saw {TrackTableCheck.events_seen} events, expected {nevents}"
 
 
+@pytest.mark.pypi
 def test_python_alg_writes_arrow_table(tmp_path):
     """Smoke test for the write direction.
 
@@ -823,6 +832,7 @@ def test_python_alg_writes_arrow_table(tmp_path):
     ), f"consumer saw {TrackConsumer.events_seen} events, expected {nevents}"
 
 
+@pytest.mark.pypi
 def test_writer_rejects_missing_schema(tmp_path):
     """ParquetWriter requires an expected schema for every collection.
     Constructing one without one must fail at config time, not at run time.
@@ -838,6 +848,7 @@ def test_writer_rejects_missing_schema(tmp_path):
         )
 
 
+@pytest.mark.pypi
 def test_writer_aborts_on_per_event_schema_mismatch(tmp_path):
     """A pure-Python algorithm produces a table whose schema doesn't match
     the writer's declared expectedSchemas. The writer must abort the

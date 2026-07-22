@@ -9,9 +9,6 @@
 #pragma once
 
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
-
-#include <type_traits>
 
 namespace Acts {
 
@@ -91,31 +88,36 @@ class AnyGridView {
   /// @return The number of dimensions
   std::size_t dimensions() const { return m_grid->dimensions(); }
 
+  /// Get the multi-axis object for the grid
+  /// @return The multi-axis object for the grid
+  const IMultiAxis& multiAxisAny() const { return m_grid->multiAxisAny(); }
+
   /// @brief Get the center position of a bin for given indices
   /// @param indices The local bin indices
   /// @return The center position of the bin
   AnyPointType binCenter(const IGrid::AnyIndexType& indices) const {
-    return m_grid->binCenterAny(indices);
+    return multiAxisAny().getBinCenterAny(indices);
   }
 
   /// @brief Get the lower left edge position of a bin for given indices
   /// @param indices The local bin indices
   /// @return The lower left edge position of the bin
   AnyPointType lowerLeftBinEdge(const IGrid::AnyIndexType& indices) const {
-    return m_grid->lowerLeftBinEdgeAny(indices);
+    return multiAxisAny().getLowerLeftBinEdgeAny(indices);
   }
 
   /// @brief Get the upper right edge position of a bin for given indices
   /// @param indices The local bin indices
   /// @return The upper right edge position of the bin
   AnyPointType upperRightBinEdge(const IGrid::AnyIndexType& indices) const {
-    return m_grid->upperRightBinEdgeAny(indices);
+    return multiAxisAny().getUpperRightBinEdgeAny(indices);
   }
 
   /// @brief Get the number of bins along each axis
   /// @return Vector containing the number of bins for each axis
-  AnyIndexType numLocalBins() const { return m_grid->numLocalBinsAny(); }
+  AnyIndexType numLocalBins() const { return multiAxisAny().getNBinsAny(); }
 
+ private:
   /// @brief Check if the grid's value type matches the template parameter T
   /// @throws std::invalid_argument if there's a type mismatch
   void checkType() {
@@ -187,31 +189,36 @@ class AnyGridConstView {
   /// @return The number of dimensions
   std::size_t dimensions() const { return m_grid->dimensions(); }
 
+  /// Get the multi-axis object for the grid
+  /// @return The multi-axis object for the grid
+  const IMultiAxis& multiAxisAny() const { return m_grid->multiAxisAny(); }
+
   /// @brief Get the center position of a bin for given indices
   /// @param indices The local bin indices
   /// @return The center position of the bin
   AnyPointType binCenter(const IGrid::AnyIndexType& indices) const {
-    return m_grid->binCenterAny(indices);
+    return multiAxisAny().getBinCenterAny(indices);
   }
 
   /// @brief Get the lower left edge position of a bin for given indices
   /// @param indices The local bin indices
   /// @return The lower left edge position of the bin
   AnyPointType lowerLeftBinEdge(const IGrid::AnyIndexType& indices) const {
-    return m_grid->lowerLeftBinEdgeAny(indices);
+    return multiAxisAny().getLowerLeftBinEdgeAny(indices);
   }
 
   /// @brief Get the upper right edge position of a bin for given indices
   /// @param indices The local bin indices
   /// @return The upper right edge position of the bin
   AnyPointType upperRightBinEdge(const IGrid::AnyIndexType& indices) const {
-    return m_grid->upperRightBinEdgeAny(indices);
+    return multiAxisAny().getUpperRightBinEdgeAny(indices);
   }
 
   /// @brief Get the number of bins along each axis
   /// @return Vector containing the number of bins for each axis
-  AnyIndexType numLocalBins() const { return m_grid->numLocalBinsAny(); }
+  AnyIndexType numLocalBins() const { return multiAxisAny().getNBinsAny(); }
 
+ private:
   /// @brief Check if the grid's value type matches the template parameter T
   /// @throws std::invalid_argument if there's a type mismatch
   void checkType() {
