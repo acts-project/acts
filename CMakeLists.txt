@@ -67,7 +67,6 @@ option(ACTS_SETUP_COVFIE "If we want to set up covfie" OFF)
 option(ACTS_SETUP_DETRAY "If we want to set up detray" OFF)
 option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_SETUP_VECMEM "If we want to set up vecmem" OFF)
-option(ACTS_USE_SYSTEM_TRACCC "Use a system-provided traccc installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_USE_SYSTEM_LIBS} )
 option(ACTS_USE_SYSTEM_MODULEMAPGRAPH "Use a system installation of ModuleMapGraph" ${ACTS_USE_SYSTEM_LIBS})
@@ -158,6 +157,10 @@ option(ACTS_COMPILE_HEADERS "Generate targets to compile header files" ON)
 # NOTE: ordering is important here. dependencies must come before dependees
 include(ActsOptionHelpers)
 
+# snapshot the declared options now, before other machinery adds unrelated
+# ACTS_* cache variables, so the end-of-configure summary only lists real options
+acts_collect_option_names()
+
 # any examples component activates the general examples option
 set_option_if(
     ACTS_BUILD_EXAMPLES
@@ -179,8 +182,6 @@ set_option_if(
     OR
     ACTS_BUILD_EXAMPLES_PYTHIA8
     OR
-    ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
-    OR
     ACTS_BUILD_EXAMPLES_ROOT
 )
 # core plugins might be required by examples or depend on each other
@@ -200,14 +201,6 @@ set_option_if(
     ACTS_BUILD_EXAMPLES_ROOT
     OR
     ACTS_BUILD_PLUGIN_DD4HEP
-)
-set_option_if(
-    ACTS_BUILD_PLUGIN_IDENTIFICATION
-    ACTS_BUILD_PLUGIN_ROOT
-    OR
-    ACTS_BUILD_PLUGIN_EDM4HEP
-    OR
-    ACTS_BUILD_EXAMPLES
 )
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_EXAMPLES)
@@ -229,6 +222,14 @@ set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_TRACCC)
 set_option_if(ACTS_SETUP_DETRAY ACTS_BUILD_TRACCC)
 set_option_if(ACTS_SETUP_VECMEM ACTS_SETUP_DETRAY)
 set_option_if(ACTS_SETUP_COVFIE ACTS_SETUP_DETRAY)
+
+# DETRAY_SVG_DISPLAY steers whether Detray's SVG display is built, which pulls in
+# ActSVG. It is declared here (rather than only alongside the other Detray
+# options further below) because it is consulted earlier, when deciding whether
+# ActSVG needs to be set up.
+if(ACTS_SETUP_DETRAY)
+    option(DETRAY_SVG_DISPLAY "Build Detray SVG display (requires ActSVG)" TRUE)
+endif()
 
 # feature tests
 include(CheckCXXSourceCompiles)
@@ -446,15 +447,21 @@ if(ACTS_BUILD_PYTHON_BINDINGS)
         add_subdirectory(thirdparty/pybind11)
     endif()
 endif()
-# Set up ActSVG when explicitly requested via plugin build, or when Detray's
-# SVG display path is enabled in the superbuild.
-if(
-    ACTS_BUILD_PLUGIN_ACTSVG
-    OR (
-        ACTS_SETUP_DETRAY
-        AND (NOT DEFINED DETRAY_SVG_DISPLAY OR DETRAY_SVG_DISPLAY)
+# Set up ActSVG when explicitly requested via the plugin build, or when Detray's
+# SVG display path is enabled (Detray links ActSVG in that case). The reason is
+# computed explicitly so it is visible in the configure output why ActSVG is
+# being pulled in even without ACTS_BUILD_PLUGIN_ACTSVG.
+set(_acts_setup_actsvg OFF)
+if(ACTS_BUILD_PLUGIN_ACTSVG)
+    set(_acts_setup_actsvg ON)
+elseif(ACTS_SETUP_DETRAY AND DETRAY_SVG_DISPLAY)
+    set(_acts_setup_actsvg ON)
+    message(
+        STATUS
+        "Setting up ActSVG because Detray SVG display (DETRAY_SVG_DISPLAY) is enabled"
     )
-)
+endif()
+if(_acts_setup_actsvg)
     if(ACTS_USE_SYSTEM_ACTSVG)
         find_package(actsvg ${_acts_actsvg_version} REQUIRED CONFIG)
     else()
@@ -534,6 +541,11 @@ if(ACTS_BUILD_PLUGIN_ROOT)
     )
 endif()
 if(ACTS_BUILD_ANALYSIS_APPS)
+    # analysis apps link ROOT directly, not via the ACTS Root plugin
+    message(
+        STATUS
+        "ACTS_BUILD_ANALYSIS_APPS enabled: requiring ROOT (Geom, Graf)"
+    )
     find_package(
         ROOT
         ${_acts_root_version}
@@ -636,7 +648,8 @@ if(ACTS_SETUP_DETRAY)
     option(DETRAY_SETUP_ACTSVG "" FALSE)
     option(DETRAY_SETUP_COVFIE "" FALSE)
     option(DETRAY_SETUP_PYBIND11 "" FALSE)
-    option(DETRAY_SVG_DISPLAY "" TRUE)
+    # DETRAY_SVG_DISPLAY is declared earlier (before the ActSVG setup) so it can
+    # steer whether ActSVG is pulled in; it is intentionally not redeclared here.
     if(ACTS_BUILD_TRACCC)
         option(DETRAY_BUILD_TEST_UTILS "" TRUE)
         set(DETRAY_GENERATE_METADATA
@@ -778,3 +791,7 @@ add_subdirectory(docs)
 # create cmake configuration files and environment setup script
 include(ActsCreatePackageConfig)
 include(ActsCreateSetup)
+
+# print a consolidated summary of all ACTS options and their effective values,
+# including which ones were auto-enabled by dependencies (see ActsOptionHelpers)
+acts_print_options_summary()
