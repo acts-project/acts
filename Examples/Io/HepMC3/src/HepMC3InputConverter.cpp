@@ -129,7 +129,7 @@ Acts::HfOrigin HepMC3InputConverter::checkHfOrigin(
 
     int pdgCode = std::abs(part->pid());
     auto hadType = Acts::ParticleIdHelper::hadronType(
-      static_cast<Acts::PdgParticle>(pdgCode));
+        static_cast<Acts::PdgParticle>(pdgCode));
 
     // --- beauty PDG IDs ---
     if (hadType == Acts::HadronType::BottomMeson ||
