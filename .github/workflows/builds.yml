@@ -24,7 +24,7 @@ env:
 
 jobs:
   linux_ubuntu:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
     container: ghcr.io/acts-project/ubuntu2404:87
@@ -126,7 +126,7 @@ jobs:
           ctest --test-dir build-downstream --output-on-failure
 
   linux_examples_test:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
     container: ghcr.io/acts-project/ubuntu2404:87
@@ -171,7 +171,7 @@ jobs:
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
     container: ghcr.io/acts-project/ubuntu2404:87
@@ -253,6 +253,54 @@ jobs:
           git add -A
           git commit -m"update metrics"
           git push
+
+  # Mirror of the GitLab lcg_108/alma9/gcc15 leg, moved onto a husk slot. The
+  # `cvmfs` label is what routes it: it means the client is mounted on the slot
+  # and the listed repositories are bound into this container, not merely that
+  # some LCG toolchain is installed.
+  lcg_cvmfs:
+    runs-on: [self-hosted, linux, x64, husk-size-standard, cvmfs]
+    permissions:
+      contents: read
+    container: ghcr.io/acts-project/alma9-base:86
+    env:
+      INSTALL_DIR: ${{ github.workspace }}/install
+      ACTS_LOG_FAILURE_THRESHOLD: WARNING
+      LCG_VIEW: /cvmfs/sft.cern.ch/lcg/views/LCG_108/x86_64-el9-gcc15-opt
+
+    steps:
+      # Fail loudly here rather than with an opaque "no such file" out of
+      # setup.sh, so a mount problem is distinguishable from a bad view path.
+      - name: Check CVMFS
+        run: |
+          ls -l /cvmfs/
+          test -d /cvmfs/sft.cern.ch/lcg/views || { echo "sft.cern.ch not mounted"; exit 1; }
+          test -f "${LCG_VIEW}/setup.sh" || { echo "no such view: ${LCG_VIEW}"; exit 1; }
+
+      - name: Install git-lfs
+        run: dnf install -y git-lfs
+
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          lfs: true
+          persist-credentials: false
+
+      - name: Configure
+        run: >
+          source "${LCG_VIEW}/setup.sh" &&
+          cmake -B build -S .
+          --preset=gitlab-ci-lcg
+          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+
+      - name: Build
+        run: >
+          source "${LCG_VIEW}/setup.sh" &&
+          cmake --build build
+
+      - name: Unit tests
+        run: >
+          source "${LCG_VIEW}/setup.sh" &&
+          ctest --test-dir build -j$(nproc)
 
   linux_ubuntu_extra:
     runs-on: ubuntu-latest
