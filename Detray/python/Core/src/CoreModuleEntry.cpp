@@ -63,13 +63,10 @@ struct detector_handle {
   detector_t detector;
 };
 
-/// Read a detector (default metadata) from a JSON file.
+/// Read a detector (default metadata) as configured by @param cfg .
 std::pair<detector_handle, detray::name_map> read_detector(
-    const std::string &file_name) {
+    const reader_config_t &cfg) {
   auto mr = std::make_unique<vecmem::host_memory_resource>();
-
-  detray::io::detector_reader_config cfg{};
-  cfg.add_file(file_name);
 
   auto [det, names] = detray::io::read_detector<detector_t>(*mr, cfg);
 
@@ -264,6 +261,6 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
         return os.str();
       });
 
-  m.def("readDetector", &read_detector, py::arg("fileName"),
-        "Read a detector from a JSON file");
+  m.def("readDetector", &read_detector, py::arg("config"),
+        "Read a detector as configured by a DetectorReaderConfig");
 }
