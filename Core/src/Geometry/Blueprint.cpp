@@ -69,6 +69,7 @@ class BlueprintVisitor : public TrackingGeometryMutableVisitor {
     }
 
     for (auto &portal : volume.portals()) {
+      portal.surface().associatePortal(portal);
       if (portal.surface().geometryId() != GeometryIdentifier{}) {
         continue;
       }
