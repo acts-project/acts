@@ -26,94 +26,92 @@ using namespace detray;
 
 // Simple asynchronous handler function
 auto handle_async_error = [](::sycl::exception_list elist) {
-    for (auto& e : elist) {
-        try {
-            std::rethrow_exception(e);
-        } catch (::sycl::exception& e) {
-            DETRAY_FATAL_HOST("ASYNC EXCEPTION!!\n");
-            DETRAY_FATAL_HOST(e.what() << "\n");
-        }
+  for (auto& e : elist) {
+    try {
+      std::rethrow_exception(e);
+    } catch (::sycl::exception& e) {
+      DETRAY_FATAL_HOST("ASYNC EXCEPTION!!\n");
+      DETRAY_FATAL_HOST(e.what() << "\n");
     }
+  }
 };
 class SyclPropConstBFieldMng
     : public ::testing::TestWithParam<std::tuple<scalar, scalar, vector3>> {};
 
 TEST_P(SyclPropConstBFieldMng, propagator) {
+  // Creating SYCL queue object
+  ::sycl::queue q(handle_async_error);
+  DETRAY_VERBOSE_HOST("Running constant bfield propagation on device(mng mem): "
+                      << q.get_device().get_info<::sycl::info::device::name>()
+                      << "\n");
 
-    // Creating SYCL queue object
-    ::sycl::queue q(handle_async_error);
-    DETRAY_VERBOSE_HOST(
-        "Running constant bfield propagation on device(mng mem): "
-        << q.get_device().get_info<::sycl::info::device::name>() << "\n");
+  // VecMem memory resource(s)
+  vecmem::sycl::shared_memory_resource shared_mr;
 
-    // VecMem memory resource(s)
-    vecmem::sycl::shared_memory_resource shared_mr;
+  // Test configuration
+  propagator_test_config cfg{};
+  cfg.track_generator.phi_steps(20u).theta_steps(20u);
+  cfg.track_generator.p_tot(10.f * unit<scalar>::GeV);
+  cfg.track_generator.eta_range(-3.f, 3.f);
+  cfg.propagation.navigation.search_window = {3u, 3u};
+  // Configuration for non-z-aligned B-fields
+  cfg.propagation.navigation.intersection.overstep_tolerance =
+      std::get<0>(GetParam());
+  cfg.propagation.stepping.step_constraint = std::get<1>(GetParam());
 
-    // Test configuration
-    propagator_test_config cfg{};
-    cfg.track_generator.phi_steps(20u).theta_steps(20u);
-    cfg.track_generator.p_tot(10.f * unit<scalar>::GeV);
-    cfg.track_generator.eta_range(-3.f, 3.f);
-    cfg.propagation.navigation.search_window = {3u, 3u};
-    // Configuration for non-z-aligned B-fields
-    cfg.propagation.navigation.intersection.overstep_tolerance =
-        std::get<0>(GetParam());
-    cfg.propagation.stepping.step_constraint = std::get<1>(GetParam());
+  // Set the magnetic field
+  const vector3 B = std::get<2>(GetParam());
+  auto field = create_const_field<scalar>(B);
 
-    // Set the magnetic field
-    const vector3 B = std::get<2>(GetParam());
-    auto field = create_const_field<scalar>(B);
+  // Create the toy geometry
+  auto [det, names] = build_toy_detector<test_algebra>(shared_mr);
 
-    // Create the toy geometry
-    auto [det, names] = build_toy_detector<test_algebra>(shared_mr);
+  auto det_view = detray::get_data(det);
 
-    auto det_view = detray::get_data(det);
-
-    run_propagation_test<bfield::const_bknd_t<scalar>>(&shared_mr, &q, det, cfg,
-                                                       det_view, field);
+  run_propagation_test<bfield::const_bknd_t<scalar>>(&shared_mr, &q, det, cfg,
+                                                     det_view, field);
 }
 
 class SyclPropConstBFieldCpy
     : public ::testing::TestWithParam<std::tuple<scalar, scalar, vector3>> {};
 
 TEST_P(SyclPropConstBFieldCpy, propagator) {
+  // Creating SYCL queue object
+  ::sycl::queue q(handle_async_error);
+  DETRAY_VERBOSE_HOST("Running constant bfield propagation on device (cpy): "
+                      << q.get_device().get_info<::sycl::info::device::name>()
+                      << "\n");
 
-    // Creating SYCL queue object
-    ::sycl::queue q(handle_async_error);
-    DETRAY_VERBOSE_HOST("Running constant bfield propagation on device (cpy): "
-                        << q.get_device().get_info<::sycl::info::device::name>()
-                        << "\n");
+  // VecMem memory resource(s)
+  vecmem::host_memory_resource host_mr;
+  vecmem::sycl::shared_memory_resource shared_mr;
+  vecmem::sycl::device_memory_resource dev_mr;
 
-    // VecMem memory resource(s)
-    vecmem::host_memory_resource host_mr;
-    vecmem::sycl::shared_memory_resource shared_mr;
-    vecmem::sycl::device_memory_resource dev_mr;
+  vecmem::sycl::queue_wrapper q_wrapper(&q);
+  vecmem::sycl::copy sycl_cpy(q_wrapper);
 
-    vecmem::sycl::queue_wrapper q_wrapper(&q);
-    vecmem::sycl::copy sycl_cpy(q_wrapper);
+  // Test configuration
+  propagator_test_config cfg{};
+  cfg.track_generator.phi_steps(20u).theta_steps(20u);
+  cfg.track_generator.p_tot(10.f * unit<scalar>::GeV);
+  cfg.track_generator.eta_range(-3.f, 3.f);
+  cfg.propagation.navigation.search_window = {3u, 3u};
+  // Configuration for non-z-aligned B-fields
+  cfg.propagation.navigation.intersection.overstep_tolerance =
+      std::get<0>(GetParam());
+  cfg.propagation.stepping.step_constraint = std::get<1>(GetParam());
 
-    // Test configuration
-    propagator_test_config cfg{};
-    cfg.track_generator.phi_steps(20u).theta_steps(20u);
-    cfg.track_generator.p_tot(10.f * unit<scalar>::GeV);
-    cfg.track_generator.eta_range(-3.f, 3.f);
-    cfg.propagation.navigation.search_window = {3u, 3u};
-    // Configuration for non-z-aligned B-fields
-    cfg.propagation.navigation.intersection.overstep_tolerance =
-        std::get<0>(GetParam());
-    cfg.propagation.stepping.step_constraint = std::get<1>(GetParam());
+  // Set the magnetic field
+  const vector3 B = std::get<2>(GetParam());
+  auto field = create_const_field<scalar>(B);
 
-    // Set the magnetic field
-    const vector3 B = std::get<2>(GetParam());
-    auto field = create_const_field<scalar>(B);
+  // Create the toy geometry
+  auto [det, names] = build_toy_detector<test_algebra>(host_mr);
 
-    // Create the toy geometry
-    auto [det, names] = build_toy_detector<test_algebra>(host_mr);
+  auto det_buff = detray::get_buffer(det, dev_mr, sycl_cpy);
 
-    auto det_buff = detray::get_buffer(det, dev_mr, sycl_cpy);
-
-    run_propagation_test<bfield::const_bknd_t<scalar>>(
-        &shared_mr, &q, det, cfg, detray::get_data(det_buff), field);
+  run_propagation_test<bfield::const_bknd_t<scalar>>(
+      &shared_mr, &q, det, cfg, detray::get_data(det_buff), field);
 }
 
 INSTANTIATE_TEST_SUITE_P(

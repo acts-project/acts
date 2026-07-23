@@ -18,31 +18,29 @@ namespace traccc::details {
 /// @c traccc::is_same_object specialisation for @c traccc::measurement
 template <typename T>
 class is_same_object<edm::measurement<T>> {
+ public:
+  /// Constructor with a reference object, and an allowed uncertainty
+  is_same_object(const edm::measurement<T>& ref, scalar unc = float_epsilon)
+      : m_ref(ref), m_unc(unc) {}
 
-    public:
-    /// Constructor with a reference object, and an allowed uncertainty
-    is_same_object(const edm::measurement<T>& ref, scalar unc = float_epsilon)
-        : m_ref(ref), m_unc(unc) {}
+  /// Specialised implementation for @c traccc::measurement
+  bool operator()(const edm::measurement<T>& obj) const {
+    return ((obj.surface_link() == m_ref.surface_link()) &&
+            is_same_scalar(obj.local_position()[0], m_ref.local_position()[0],
+                           m_unc) &&
+            is_same_scalar(obj.local_position()[1], m_ref.local_position()[1],
+                           m_unc) &&
+            is_same_scalar(obj.local_variance()[0], m_ref.local_variance()[0],
+                           m_unc) &&
+            is_same_scalar(obj.local_variance()[1], m_ref.local_variance()[1],
+                           m_unc));
+  }
 
-    /// Specialised implementation for @c traccc::measurement
-    bool operator()(const edm::measurement<T>& obj) const {
-
-        return ((obj.surface_link() == m_ref.surface_link()) &&
-                is_same_scalar(obj.local_position()[0],
-                               m_ref.local_position()[0], m_unc) &&
-                is_same_scalar(obj.local_position()[1],
-                               m_ref.local_position()[1], m_unc) &&
-                is_same_scalar(obj.local_variance()[0],
-                               m_ref.local_variance()[0], m_unc) &&
-                is_same_scalar(obj.local_variance()[1],
-                               m_ref.local_variance()[1], m_unc));
-    }
-
-    private:
-    /// The reference object
-    const edm::measurement<T> m_ref;
-    /// The uncertainty
-    scalar m_unc;
+ private:
+  /// The reference object
+  const edm::measurement<T> m_ref;
+  /// The uncertainty
+  scalar m_unc;
 
 };  // class is_same_object<measurement>
 

@@ -65,15 +65,15 @@ using std::tan;
 template <typename T>
 TRACCC_HOST_DEVICE inline __attribute__((always_inline)) T div_ieee754(T x,
                                                                        T y) {
-    static_assert(std::is_same_v<T, double> || std::is_same_v<T, float>);
+  static_assert(std::is_same_v<T, double> || std::is_same_v<T, float>);
 #ifdef __CUDA_ARCH__
-    if constexpr (std::is_same_v<T, double>) {
-        return __ddiv_rn(x, y);
-    } else {
-        return __fdiv_rn(x, y);
-    }
+  if constexpr (std::is_same_v<T, double>) {
+    return __ddiv_rn(x, y);
+  } else {
+    return __fdiv_rn(x, y);
+  }
 #else
-    return x / y;
+  return x / y;
 #endif
 }
 }  // namespace traccc::math

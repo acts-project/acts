@@ -32,27 +32,26 @@ __global__ void ccl_kernel(
     unsigned int* backup_mutex_ptr,
     vecmem::data::vector_view<unsigned int> disjoint_set_view,
     vecmem::data::vector_view<unsigned int> cluster_size_view) {
+  __shared__ std::size_t partition_start, partition_end;
+  __shared__ std::size_t outi;
+  extern __shared__ device::details::index_t shared_v[];
+  vecmem::device_atomic_ref<unsigned int> backup_mutex(*backup_mutex_ptr);
 
-    __shared__ std::size_t partition_start, partition_end;
-    __shared__ std::size_t outi;
-    extern __shared__ device::details::index_t shared_v[];
-    vecmem::device_atomic_ref<unsigned int> backup_mutex(*backup_mutex_ptr);
+  using vector_size_t =
+      vecmem::data::vector_view<device::details::index_t>::size_type;
 
-    using vector_size_t =
-        vecmem::data::vector_view<device::details::index_t>::size_type;
+  vecmem::data::vector_view<device::details::index_t> f_view{
+      static_cast<vector_size_t>(cfg.max_partition_size()), shared_v};
+  vecmem::data::vector_view<device::details::index_t> gf_view{
+      static_cast<vector_size_t>(cfg.max_partition_size()),
+      shared_v + cfg.max_partition_size()};
+  traccc::cuda::barrier barry_r;
+  const details::thread_id1 thread_id;
 
-    vecmem::data::vector_view<device::details::index_t> f_view{
-        static_cast<vector_size_t>(cfg.max_partition_size()), shared_v};
-    vecmem::data::vector_view<device::details::index_t> gf_view{
-        static_cast<vector_size_t>(cfg.max_partition_size()),
-        shared_v + cfg.max_partition_size()};
-    traccc::cuda::barrier barry_r;
-    const details::thread_id1 thread_id;
-
-    device::ccl_kernel(cfg, thread_id, cells_view, det_desc_view, det_cond_view,
-                       partition_start, partition_end, outi, f_view, gf_view,
-                       f_backup_view, gf_backup_view, adjc_backup_view,
-                       adjv_backup_view, backup_mutex, disjoint_set_view,
-                       cluster_size_view, barry_r, measurements_view);
+  device::ccl_kernel(cfg, thread_id, cells_view, det_desc_view, det_cond_view,
+                     partition_start, partition_end, outi, f_view, gf_view,
+                     f_backup_view, gf_backup_view, adjc_backup_view,
+                     adjv_backup_view, backup_mutex, disjoint_set_view,
+                     cluster_size_view, barry_r, measurements_view);
 }
 }  // namespace traccc::cuda::kernels

@@ -20,11 +20,11 @@ namespace traccc::device {
 
 /// Payload for the @c device::update_tip_length_buffer function
 struct update_tip_length_buffer_payload {
-    vecmem::data::vector_view<const unsigned int> old_tip_length;
-    vecmem::data::vector_view<unsigned int> new_tip_length;
-    vecmem::data::vector_view<const unsigned int> measurement_votes;
-    vecmem::data::vector_view<unsigned int> tip_to_output_map;
-    float min_measurement_voting_fraction;
+  vecmem::data::vector_view<const unsigned int> old_tip_length;
+  vecmem::data::vector_view<unsigned int> new_tip_length;
+  vecmem::data::vector_view<const unsigned int> measurement_votes;
+  vecmem::data::vector_view<unsigned int> tip_to_output_map;
+  float min_measurement_voting_fraction;
 };
 
 TRACCC_HOST_DEVICE inline void update_tip_length_buffer(

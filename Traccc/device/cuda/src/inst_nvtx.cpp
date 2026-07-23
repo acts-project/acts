@@ -30,75 +30,75 @@
 #include <cxxabi.h>
 #endif
 
-#include <dlfcn.h>
-
 #include <cstring>
 #include <memory>
 #include <optional>
 #include <string>
 
+#include <dlfcn.h>
+
 #include "nvtx3/nvToolsExt.h"
 
 namespace {
 uint32_t __attribute__((no_instrument_function)) djb2(const std::string &str) {
-    uint32_t hash = 5381u;
+  uint32_t hash = 5381u;
 
-    for (auto &chr : str) {
-        hash = 33u * hash + static_cast<uint32_t>(chr);
-    }
+  for (auto &chr : str) {
+    hash = 33u * hash + static_cast<uint32_t>(chr);
+  }
 
-    return hash;
+  return hash;
 }
 
 void __attribute__((no_instrument_function)) nvtxRangePushWrapper(
     const std::optional<std::string> &name) {
-    nvtxEventAttributes_t eventAttrib;
-    std::memset(&eventAttrib, 0, sizeof(nvtxEventAttributes_t));
+  nvtxEventAttributes_t eventAttrib;
+  std::memset(&eventAttrib, 0, sizeof(nvtxEventAttributes_t));
 
-    eventAttrib.version = NVTX_VERSION;
-    eventAttrib.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE;
+  eventAttrib.version = NVTX_VERSION;
+  eventAttrib.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE;
 
-    if (name) {
-        eventAttrib.colorType = NVTX_COLOR_ARGB;
-        eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII;
-        eventAttrib.color = 0xFF000000 | (djb2(*name) & 0x00FFFFFF);
-        eventAttrib.message.ascii = name->c_str();
-    } else {
-        eventAttrib.colorType = NVTX_COLOR_UNKNOWN;
-        eventAttrib.messageType = NVTX_MESSAGE_UNKNOWN;
-    }
+  if (name) {
+    eventAttrib.colorType = NVTX_COLOR_ARGB;
+    eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII;
+    eventAttrib.color = 0xFF000000 | (djb2(*name) & 0x00FFFFFF);
+    eventAttrib.message.ascii = name->c_str();
+  } else {
+    eventAttrib.colorType = NVTX_COLOR_UNKNOWN;
+    eventAttrib.messageType = NVTX_MESSAGE_UNKNOWN;
+  }
 
-    nvtxRangePushEx(&eventAttrib);
+  nvtxRangePushEx(&eventAttrib);
 }
 }  // namespace
 
 extern "C" {
 void __attribute__((no_instrument_function)) __cyg_profile_func_enter(
     [[maybe_unused]] void *this_fn, void *) {
-    Dl_info this_fn_info;
+  Dl_info this_fn_info;
 
-    if (dladdr(this_fn, &this_fn_info)) {
+  if (dladdr(this_fn, &this_fn_info)) {
 #ifdef HAVE_CXXABI
-        int status = 0;
-        std::unique_ptr<char[]> fname(abi::__cxa_demangle(
-            this_fn_info.dli_sname, nullptr, nullptr, &status));
+    int status = 0;
+    std::unique_ptr<char[]> fname(
+        abi::__cxa_demangle(this_fn_info.dli_sname, nullptr, nullptr, &status));
 
-        if (status == 0 && fname) {
-            nvtxRangePushWrapper(fname.get());
-        } else {
-            nvtxRangePushWrapper({});
-        }
+    if (status == 0 && fname) {
+      nvtxRangePushWrapper(fname.get());
+    } else {
+      nvtxRangePushWrapper({});
+    }
 #else
-        nvtxRangePushWrapper(this_fn_info.dli_sname);
+    nvtxRangePushWrapper(this_fn_info.dli_sname);
 #endif
 
-    } else {
-        nvtxRangePushWrapper({});
-    }
+  } else {
+    nvtxRangePushWrapper({});
+  }
 }
 
 void __attribute__((no_instrument_function)) __cyg_profile_func_exit(void *,
                                                                      void *) {
-    nvtxRangePop();
+  nvtxRangePop();
 }
 }

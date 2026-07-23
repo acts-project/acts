@@ -17,14 +17,13 @@
 namespace traccc::opts {
 class seed_matching : public interface,
                       public config_provider<seed_matching_config> {
+ public:
+  float m_matching_ratio = 0.5f;
 
-    public:
-    float m_matching_ratio = 0.5f;
+  seed_matching();
 
-    seed_matching();
+  operator seed_matching_config() const override;
 
-    operator seed_matching_config() const override;
-
-    std::unique_ptr<configuration_printable> as_printable() const override;
+  std::unique_ptr<configuration_printable> as_printable() const override;
 };
 }  // namespace traccc::opts

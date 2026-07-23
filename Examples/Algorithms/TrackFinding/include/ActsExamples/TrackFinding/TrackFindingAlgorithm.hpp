@@ -45,8 +45,12 @@ class TrackFindingAlgorithm final : public IAlgorithm {
  public:
   /// Track finder function that takes input measurements, initial trackstate
   /// and track finder options and returns some track-finder-specific result.
+  /// The type-erased options carry the full (bremsstrahlung) configuration.
+  /// The plain single-component finder binds to its base slice, the
+  /// multi-component finder uses it whole; the runtime switch happens in the
+  /// algorithm.
   using TrackFinderOptions =
-      Acts::CombinatorialKalmanFilterOptions<TrackContainer>;
+      Acts::BremCombinatorialKalmanFilterOptions<TrackContainer>;
   using TrackFinderResult =
       Acts::Result<std::vector<TrackContainer::TrackProxy>>;
 
@@ -62,10 +66,13 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   };
 
   /// Create the track finder function implementation.
-  ///
-  /// The magnetic field is intentionally given by-value since the variant
-  /// contains shared_ptr anyway.
   static std::shared_ptr<TrackFinderFunction> makeTrackFinderFunction(
+      std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+      const Acts::Logger& logger);
+
+  /// Create the bremstrahlung track finder function implementation.
+  static std::shared_ptr<TrackFinderFunction> makeBremTrackFinderFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
       const Acts::Logger& logger);
@@ -88,6 +95,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
     /// Type erased track finder function.
     std::shared_ptr<TrackFinderFunction> findTracks;
+    /// Type erased track finder with brem recovery function.
+    std::shared_ptr<TrackFinderFunction> findTracksBrem;
     /// CKF measurement selector config
     Acts::MeasurementSelector::Config measurementSelectorCfg;
     /// Track selector config

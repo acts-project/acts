@@ -31,13 +31,13 @@ namespace traccc::tests {
  * sure to call `data_test::SetUp()` at the start of it.
  */
 class data_test : public ::testing::Test {
-    protected:
-    std::string data_directory;
+ protected:
+  std::string data_directory;
 
-    virtual void SetUp() override {
-        data_directory = traccc::io::data_directory();
-    }
+  virtual void SetUp() override {
+    data_directory = traccc::io::data_directory();
+  }
 
-    std::string get_datafile(std::string name) { return data_directory + name; }
+  std::string get_datafile(std::string name) { return data_directory + name; }
 };
 }  // namespace traccc::tests

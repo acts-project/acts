@@ -21,5 +21,6 @@ target_sources(
         GraphBasedTrackSeeder.cpp
         GbtsLayerConnection.cpp
         GbtsRoiDescriptor.cpp
+        GbtsTrainingTool.cpp
         HoughAccumulatorSection.cpp
 )

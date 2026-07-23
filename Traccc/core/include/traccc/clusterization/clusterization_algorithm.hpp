@@ -37,45 +37,44 @@ class clusterization_algorithm
           const detector_design_description::const_view&,
           const detector_conditions_description::const_view&)>,
       public messaging {
+ public:
+  using config_type = std::monostate;
 
-    public:
-    using config_type = std::monostate;
+  /// Clusterization algorithm constructor
+  ///
+  /// @param mr The memory resource to use for the result objects
+  ///
+  clusterization_algorithm(
+      vecmem::memory_resource& mr,
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
 
-    /// Clusterization algorithm constructor
-    ///
-    /// @param mr The memory resource to use for the result objects
-    ///
-    clusterization_algorithm(
-        vecmem::memory_resource& mr,
-        std::unique_ptr<const Logger> logger = getDummyLogger().clone());
+  /// Construct measurements for each detector module
+  ///
+  /// @param cells_view The cells for every detector module in the event
+  /// @param dmd_view The detector segmentation description
+  /// @param dcd_view The detector conditins description
+  /// @return The measurements reconstructed for every detector module
+  ///
+  output_type operator()(
+      const edm::silicon_cell_collection::const_view& cells_view,
+      const detector_design_description::const_view& dmd_view,
+      const detector_conditions_description::const_view& dcd_view)
+      const override;
 
-    /// Construct measurements for each detector module
-    ///
-    /// @param cells_view The cells for every detector module in the event
-    /// @param dmd_view The detector segmentation description
-    /// @param dcd_view The detector conditins description
-    /// @return The measurements reconstructed for every detector module
-    ///
-    output_type operator()(
-        const edm::silicon_cell_collection::const_view& cells_view,
-        const detector_design_description::const_view& dmd_view,
-        const detector_conditions_description::const_view& dcd_view)
-        const override;
+ private:
+  /// @name Sub-algorithms used by this algorithm
+  /// @{
 
-    private:
-    /// @name Sub-algorithms used by this algorithm
-    /// @{
+  /// Per-module cluster creation algorithm
+  sparse_ccl_algorithm m_cc;
 
-    /// Per-module cluster creation algorithm
-    sparse_ccl_algorithm m_cc;
+  /// Per-module measurement creation algorithm
+  measurement_creation_algorithm m_mc;
 
-    /// Per-module measurement creation algorithm
-    measurement_creation_algorithm m_mc;
+  /// @}
 
-    /// @}
-
-    /// Reference to the host-accessible memory resource
-    std::reference_wrapper<vecmem::memory_resource> m_mr;
+  /// Reference to the host-accessible memory resource
+  std::reference_wrapper<vecmem::memory_resource> m_mr;
 };  // class clusterization_algorithm
 
 }  // namespace traccc::host

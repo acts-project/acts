@@ -36,33 +36,32 @@ class measurement_sorting_algorithm
     : public algorithm<edm::measurement_collection::buffer(
           const edm::measurement_collection::const_view&)>,
       public messaging {
+ public:
+  /// Constructor for the algorithm
+  ///
+  /// @param copy The copy object to use in the algorithm
+  /// @param str The CUDA stream to schedule the measurement sorting in
+  ///
+  measurement_sorting_algorithm(
+      const traccc::memory_resource& mr, const vecmem::copy& copy,
+      const stream_wrapper& str,
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
 
-    public:
-    /// Constructor for the algorithm
-    ///
-    /// @param copy The copy object to use in the algorithm
-    /// @param str The CUDA stream to schedule the measurement sorting in
-    ///
-    measurement_sorting_algorithm(
-        const traccc::memory_resource& mr, const vecmem::copy& copy,
-        const stream_wrapper& str,
-        std::unique_ptr<const Logger> logger = getDummyLogger().clone());
+  /// Callable operator performing the sorting on a container
+  ///
+  /// @param measurements The measurements to sort
+  ///
+  [[nodiscard]] output_type operator()(
+      const edm::measurement_collection::const_view& measurements)
+      const override;
 
-    /// Callable operator performing the sorting on a container
-    ///
-    /// @param measurements The measurements to sort
-    ///
-    [[nodiscard]] output_type operator()(
-        const edm::measurement_collection::const_view& measurements)
-        const override;
-
-    private:
-    /// The memory resource(s) to use
-    traccc::memory_resource m_mr;
-    /// Copy object to use in the algorithm
-    std::reference_wrapper<const vecmem::copy> m_copy;
-    /// CUDA stream used by the algorithm
-    stream_wrapper m_stream;
+ private:
+  /// The memory resource(s) to use
+  traccc::memory_resource m_mr;
+  /// Copy object to use in the algorithm
+  std::reference_wrapper<const vecmem::copy> m_copy;
+  /// CUDA stream used by the algorithm
+  stream_wrapper m_stream;
 };  // class measurement_sorting_algorithm
 
 }  // namespace traccc::cuda

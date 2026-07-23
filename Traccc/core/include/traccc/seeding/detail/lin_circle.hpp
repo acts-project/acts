@@ -16,36 +16,36 @@ namespace traccc {
 
 /// Item: transformed coordinate of doublet of middle-bottom or middle-top
 struct lin_circle {
-    // z origin
-    scalar m_Zo;
-    // cotangent of pitch angle
-    scalar m_cotTheta;
-    // reciprocal of square of distance between two spacepoints
-    scalar m_iDeltaR;
-    // error term for sp-pair without correlation of middle space point
-    scalar m_Er;
-    // u component in transformed coordinate
-    scalar m_U;
-    // v component in transformed coordinate
-    scalar m_V;
+  // z origin
+  scalar m_Zo;
+  // cotangent of pitch angle
+  scalar m_cotTheta;
+  // reciprocal of square of distance between two spacepoints
+  scalar m_iDeltaR;
+  // error term for sp-pair without correlation of middle space point
+  scalar m_Er;
+  // u component in transformed coordinate
+  scalar m_U;
+  // v component in transformed coordinate
+  scalar m_V;
 
-    TRACCC_HOST_DEVICE
-    const scalar& Zo() const { return m_Zo; }
+  TRACCC_HOST_DEVICE
+  const scalar& Zo() const { return m_Zo; }
 
-    TRACCC_HOST_DEVICE
-    const scalar& cotTheta() const { return m_cotTheta; }
+  TRACCC_HOST_DEVICE
+  const scalar& cotTheta() const { return m_cotTheta; }
 
-    TRACCC_HOST_DEVICE
-    const scalar& iDeltaR() const { return m_iDeltaR; }
+  TRACCC_HOST_DEVICE
+  const scalar& iDeltaR() const { return m_iDeltaR; }
 
-    TRACCC_HOST_DEVICE
-    const scalar& Er() const { return m_Er; }
+  TRACCC_HOST_DEVICE
+  const scalar& Er() const { return m_Er; }
 
-    TRACCC_HOST_DEVICE
-    const scalar& U() const { return m_U; }
+  TRACCC_HOST_DEVICE
+  const scalar& U() const { return m_U; }
 
-    TRACCC_HOST_DEVICE
-    const scalar& V() const { return m_V; }
+  TRACCC_HOST_DEVICE
+  const scalar& V() const { return m_V; }
 };
 
 /// Declare all lin_circle collection types

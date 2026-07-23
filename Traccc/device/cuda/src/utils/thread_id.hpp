@@ -15,29 +15,29 @@ namespace traccc::cuda::details {
 
 /// A CUDA thread identifier type
 struct thread_id1 {
-    __device__ thread_id1() {}
+  __device__ thread_id1() {}
 
-    inline unsigned int __device__ getLocalThreadId() const {
-        return threadIdx.x;
-    }
+  inline unsigned int __device__ getLocalThreadId() const {
+    return threadIdx.x;
+  }
 
-    inline unsigned int __device__ getLocalThreadIdX() const {
-        return threadIdx.x;
-    }
+  inline unsigned int __device__ getLocalThreadIdX() const {
+    return threadIdx.x;
+  }
 
-    inline unsigned int __device__ getGlobalThreadId() const {
-        return threadIdx.x + blockIdx.x * blockDim.x;
-    }
+  inline unsigned int __device__ getGlobalThreadId() const {
+    return threadIdx.x + blockIdx.x * blockDim.x;
+  }
 
-    inline unsigned int __device__ getGlobalThreadIdX() const {
-        return threadIdx.x + blockIdx.x * blockDim.x;
-    }
+  inline unsigned int __device__ getGlobalThreadIdX() const {
+    return threadIdx.x + blockIdx.x * blockDim.x;
+  }
 
-    inline unsigned int __device__ getBlockIdX() const { return blockIdx.x; }
+  inline unsigned int __device__ getBlockIdX() const { return blockIdx.x; }
 
-    inline unsigned int __device__ getBlockDimX() const { return blockDim.x; }
+  inline unsigned int __device__ getBlockDimX() const { return blockDim.x; }
 
-    inline unsigned int __device__ getGridDimX() const { return gridDim.x; }
+  inline unsigned int __device__ getGridDimX() const { return gridDim.x; }
 
 };  // struct thread_id1
 

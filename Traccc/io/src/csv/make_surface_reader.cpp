@@ -12,10 +12,9 @@ namespace traccc::io::csv {
 
 dfe::NamedTupleCsvReader<surface> make_surface_reader(
     std::string_view filename) {
-
-    return {filename.data(),
-            {"geometry_id", "cx", "cy", "cz", "rot_xu", "rot_xv", "rot_xw",
-             "rot_zu", "rot_zv", "rot_zw"}};
+  return {filename.data(),
+          {"geometry_id", "cx", "cy", "cz", "rot_xu", "rot_xv", "rot_xw",
+           "rot_zu", "rot_zv", "rot_zw"}};
 }
 
 }  // namespace traccc::io::csv
