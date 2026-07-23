@@ -18,10 +18,10 @@ namespace Acts::Test {
 
 namespace {
 
-// Minimal valid configuration for the (phi, eta, r) grid. bFieldInZ = 0 makes the
-// constructor use maxPhiBins directly, so we do not need a physical helix sizing
-// for the phi axis in this unit test. Four eta bins: [-3,-1], [-1,0], [0,1], [1,3];
-// two r bins: [0,100], [100,200].
+// Minimal valid configuration for the (phi, eta, r) grid. bFieldInZ = 0 makes
+// the constructor use maxPhiBins directly, so we do not need a physical helix
+// sizing for the phi axis in this unit test. Four eta bins: [-3,-1], [-1,0],
+// [0,1], [1,3]; two r bins: [0,100], [100,200].
 Acts::Experimental::SphericalSpacePointGrid::Config makeConfig() {
   Acts::Experimental::SphericalSpacePointGrid::Config cfg;
   cfg.bFieldInZ = 0;
@@ -43,9 +43,9 @@ Acts::Experimental::SphericalSpacePointGrid::Config makeConfig() {
 
 BOOST_AUTO_TEST_SUITE(SphericalSpacePointGridTests)
 
-// The grid bins on cot(theta) = z / r = sinh(eta) and stores sinh(etaBinEdges) on
-// the axis, so a space point falls into exactly the eta bin it belongs to. We
-// exercise that by looking up by cot(theta) = sinh(eta).
+// The grid bins on cot(theta) = z / r = sinh(eta) and stores sinh(etaBinEdges)
+// on the axis, so a space point falls into exactly the eta bin it belongs to.
+// We exercise that by looking up by cot(theta) = sinh(eta).
 BOOST_AUTO_TEST_CASE(BinsByCotThetaMatchEta) {
   Acts::Experimental::SphericalSpacePointGrid grid(makeConfig());
 
@@ -89,8 +89,9 @@ BOOST_AUTO_TEST_CASE(OutOfAcceptanceHasNoBin) {
   BOOST_CHECK_EQUAL(grid.numberOfSpacePoints(), before);
 }
 
-// When etaBinEdges is empty the grid builds equidistant eta bins from etaMin/etaMax
-// with deltaEtaMax width (the default production path). It must still bin in eta.
+// When etaBinEdges is empty the grid builds equidistant eta bins from
+// etaMin/etaMax with deltaEtaMax width (the default production path). It must
+// still bin in eta.
 BOOST_AUTO_TEST_CASE(UniformEtaFallback) {
   auto cfg = makeConfig();
   cfg.etaBinEdges.clear();
@@ -104,8 +105,8 @@ BOOST_AUTO_TEST_CASE(UniformEtaFallback) {
               grid.binIndex(phi, std::sinh(2.f), r));
 }
 
-// Inserted space points land in the expected bins: two points in the same eta bin
-// share a bin, a third in a different eta bin is separate.
+// Inserted space points land in the expected bins: two points in the same eta
+// bin share a bin, a third in a different eta bin is separate.
 BOOST_AUTO_TEST_CASE(InsertPlacesInExpectedBins) {
   Acts::Experimental::SphericalSpacePointGrid grid(makeConfig());
 

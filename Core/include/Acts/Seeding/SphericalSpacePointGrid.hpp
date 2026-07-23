@@ -22,10 +22,11 @@ namespace Acts::Experimental {
 
 /// A spherical space point grid for seeding, binned in (phi, eta, r).
 ///
-/// A space point's eta bin is found from cot(theta) = z / r (a single division),
-/// matched against bin edges that are stored as sinh(eta). Since
+/// A space point's eta bin is found from cot(theta) = z / r (a single
+/// division), matched against bin edges that are stored as sinh(eta). Since
 /// cot(theta) = sinh(eta), comparing z / r against those edges
-/// places the point into exactly its eta bin, with no atan2 / tan / log / asinh.
+/// places the point into exactly its eta bin, with no atan2 / tan / log /
+/// asinh.
 class SphericalSpacePointGrid {
  public:
   /// Space point index type used in the grid.
@@ -130,7 +131,8 @@ class SphericalSpacePointGrid {
   /// @param r The radial distance of the space point from the origin
   /// @return The index of the bin in which the space point is located, or
   ///         `std::nullopt` if the space point is outside the grid bounds.
-  std::optional<std::size_t> binIndex(float phi, float cotTheta, float r) const {
+  std::optional<std::size_t> binIndex(float phi, float cotTheta,
+                                      float r) const {
     return binIndex(Vector3(phi, cotTheta, r));
   }
 
