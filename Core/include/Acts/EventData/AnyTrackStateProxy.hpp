@@ -926,6 +926,15 @@ class AnyTrackStateRange {
   Iterator m_begin;
 };
 
+/// Const range iterating from the tip inwards (reverse).
+using AnyConstReverseTrackStateRange = AnyTrackStateRange<true, true>;
+/// Mutable range iterating from the tip inwards (reverse).
+using AnyMutableReverseTrackStateRange = AnyTrackStateRange<true, false>;
+/// Const range iterating from the stem outwards (forward).
+using AnyConstTrackStateRange = AnyTrackStateRange<false, true>;
+/// Mutable range iterating from the stem outwards (forward).
+using AnyMutableTrackStateRange = AnyTrackStateRange<false, false>;
+
 }  // namespace detail_anytstate
 
 /// Type alias for a const track state proxy

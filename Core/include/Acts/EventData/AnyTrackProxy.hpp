@@ -554,11 +554,11 @@ class AnyTrackProxy : public TrackProxyCommon<AnyTrackProxy<read_only>,
   /// Get a range over the track states of this track, from the outside inwards.
   /// Compatible with range-based for loops. Const version.
   /// @return Track state range to iterate over
-  detail_anytstate::AnyTrackStateRange<true, true> trackStatesReversed() const {
+  detail_anytstate::AnyConstReverseTrackStateRange trackStatesReversed() const {
     if (this->tipIndex() == kTrackIndexInvalid) {
       return {};
     }
-    return detail_anytstate::AnyTrackStateRange<true, true>{
+    return detail_anytstate::AnyConstReverseTrackStateRange{
         outermostTrackState()};
   }
 
@@ -566,13 +566,13 @@ class AnyTrackProxy : public TrackProxyCommon<AnyTrackProxy<read_only>,
   /// Compatible with range-based for loops. Mutable version.
   /// @note Only available if the track proxy is not read-only
   /// @return Track state range to iterate over
-  detail_anytstate::AnyTrackStateRange<true, false> trackStatesReversed()
+  detail_anytstate::AnyMutableReverseTrackStateRange trackStatesReversed()
     requires(!ReadOnly)
   {
     if (this->tipIndex() == kTrackIndexInvalid) {
       return {};
     }
-    return detail_anytstate::AnyTrackStateRange<true, false>{
+    return detail_anytstate::AnyMutableReverseTrackStateRange{
         outermostTrackState()};
   }
 
@@ -581,12 +581,12 @@ class AnyTrackProxy : public TrackProxyCommon<AnyTrackProxy<read_only>,
   /// @warning This access direction is only possible if the track states are
   ///          **forward-linked**. The range is empty otherwise.
   /// @return Track state range to iterate over
-  detail_anytstate::AnyTrackStateRange<false, true> trackStates() const {
+  detail_anytstate::AnyConstTrackStateRange trackStates() const {
     std::optional<AnyConstTrackStateProxy> inner = innermostTrackState();
     if (!inner.has_value()) {
       return {};
     }
-    return detail_anytstate::AnyTrackStateRange<false, true>{*inner};
+    return detail_anytstate::AnyConstTrackStateRange{*inner};
   }
 
   /// Get a range over the track states of this track, from the inside outwards.
@@ -595,14 +595,14 @@ class AnyTrackProxy : public TrackProxyCommon<AnyTrackProxy<read_only>,
   /// @warning This access direction is only possible if the track states are
   ///          **forward-linked**. The range is empty otherwise.
   /// @return Track state range to iterate over
-  detail_anytstate::AnyTrackStateRange<false, false> trackStates()
+  detail_anytstate::AnyMutableTrackStateRange trackStates()
     requires(!ReadOnly)
   {
     std::optional<AnyMutableTrackStateProxy> inner = innermostTrackState();
     if (!inner.has_value()) {
       return {};
     }
-    return detail_anytstate::AnyTrackStateRange<false, false>{*inner};
+    return detail_anytstate::AnyMutableTrackStateRange{*inner};
   }
 
   /// Check if the track has a specific dynamic column
