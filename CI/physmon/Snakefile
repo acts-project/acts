@@ -55,9 +55,11 @@ RESTORE_JOB_ENV = (
     'export PYTHONPATH="${{_PHYSMON_JOB_PYTHONPATH-$PYTHONPATH}}"; '
 )
 
-# Thread budget for compute-heavy generator scripts. Setting this equal to the
-# whole snakemake budget means at most one heavy rule runs at a time but it
-# uses every available core; cheap rules (plot/histcmp/summary) and the three
+# Thread budget for compute-heavy rules. Setting this equal to the whole
+# snakemake budget means at most one heavy rule runs at a time but it uses
+# every available core: the generator scripts (via --threads) and histcmp
+# (via --jobs, which fans its per-item comparisons and plot rendering across a
+# ProcessPoolExecutor). Cheap rules (plot/summary) and the three
 # Geant4/Pythia8-bound generators (threads: 1) can fill the gaps in parallel.
 HEAVY_THREADS = workflow.cores
 
@@ -659,12 +661,14 @@ rule histcmp:
         witness = f"{OUTDIR}/witnesses/histcmp/{{rel}}.json",
     params:
         p = _histcmp_params,
+    threads: HEAVY_THREADS
     log:
         f"{OUTDIR}/logs/histcmp_{{rel}}.log",
     shell:
         WRAP + " --witness {output.witness} --step histcmp --log {log} "
         "--touches '{output}' -- "
         "histcmp {input.current} {input.reference} "
+        "--jobs {threads} "
         "--label-reference={params.p[label_ref]} "
         "--label-monitored={params.p[label_mon]} "
         "--title={params.p[title]:q} "
