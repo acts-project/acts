@@ -1,9 +1,3 @@
-if(NOT CMAKE_CUDA_COMPILER)
-    enable_cuda()
-endif()
-
-find_package(CUDAToolkit REQUIRED)
-
 acts_add_library(
     ExamplesCudaMuonSegmentFitting
     src/CudaMuonSpacePoint.cpp

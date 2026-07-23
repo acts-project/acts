@@ -209,16 +209,16 @@ class CudaMuonSpacePointPtr {
                         std::size_t index) noexcept;
 
   /// Accesses the proxy.
-  element_type* operator->() const noexcept { return &m_proxy; }
+  element_type* operator->() noexcept { return &m_proxy; }
 
   /// Dereferences the proxy.
-  element_type& operator*() const noexcept { return m_proxy; }
+  element_type& operator*() noexcept { return m_proxy; }
 
   /// Checks whether this pointer-like object is valid.
-  explicit operator bool() const noexcept { return m_valid; }
+  explicit operator bool() noexcept { return m_valid; }
 
  private:
-  mutable element_type m_proxy{};
+  element_type m_proxy{};
   bool m_valid = false;
 };
 

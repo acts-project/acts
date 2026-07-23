@@ -8,7 +8,7 @@
 
 #include "ActsExamples/EventData/CudaMuonSpacePoint.hpp"
 
-#include "ActsExamples/Utilities/CudaUtilities.hpp"
+#include "CudaUtilities.hpp"
 
 #include <stdexcept>
 #include <utility>
