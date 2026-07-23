@@ -126,6 +126,7 @@ jobs:
           ctest --test-dir build-downstream --output-on-failure
 
   linux_examples_test:
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -188,14 +189,15 @@ jobs:
           lfs: true
           persist-credentials: false
 
-      - run: apt-get update && apt-get install -y time
-
       - name: Install dependencies
         uses: ./.github/actions/dependencies
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           full_install: true
           env_file: .env
+
+      - name: Install snakemake
+        run: uv tool install 'snakemake>=9,<10'
 
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -208,9 +210,15 @@ jobs:
         shell: bash
         run: |
           git config --global safe.directory "$GITHUB_WORKSPACE"
+          # Snapshot the pristine linker/Python env BEFORE the ACTS runtime env
+          # is layered on. run_snakemake.sh runs the snakemake driver with this
+          # (its interpreter can't load the ABI-incompatible ROOT/dd4hep libs
+          # that segfault it), while wrap.sh hands the full ACTS env to the jobs.
+          export _PHYSMON_DRIVER_LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-}"
+          export _PHYSMON_DRIVER_PYTHONPATH="${PYTHONPATH:-}"
           source .env
           source build/this_acts_withdeps.sh
-          CI/physmon/phys_perf_mon.sh all physmon $(nproc)
+          CI/physmon/scripts/run_snakemake.sh -s CI/physmon/Snakefile --cores 4 -p all
 
       - name: Post step summary
         if: always()
@@ -224,37 +232,8 @@ jobs:
           name: physmon
           path: physmon
 
-  linux_physmon_perf_report:
-    needs: [linux_physmon]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - name: Install dependencies
-        run: pip3 install spyral-cli==1.1.2
-
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: physmon
-          path: physmon
-
-      - name: Store metrics
-        env:
-          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-        run: |
-          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
-          ssh-add - <<< "${{ secrets.RUNTIME_METRIC_DEPLOY_SSH_KEY }}"
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
-          git clone git@github.com:acts-project/runtime_metrics.git
-          spyral maxima runtime_metrics/metrics.csv physmon/memory/*.csv -e $(date +%Y-%m-%dT%H-%M-%S) -e ${GITHUB_REF_NAME} -e ${GITHUB_REF} -e ${GITHUB_SHA}
-          cd runtime_metrics
-          git add -A
-          git commit -m"update metrics"
-          git push
-
   linux_ubuntu_extra:
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -346,6 +325,7 @@ jobs:
         run: ctest --test-dir build-downstream --output-on-failure
 
   macos:
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: macos-26
     permissions:
       contents: read
@@ -640,6 +620,7 @@ jobs:
 
 
   linux_ubuntu_python_wheel:
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: ubuntu-latest
     permissions:
       contents: read

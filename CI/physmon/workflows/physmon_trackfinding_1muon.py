@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import tempfile
 from pathlib import Path
 import shutil
@@ -33,14 +34,32 @@ from physmon_common import makeSetup
 
 u = acts.UnitConstants
 
+# All variants supported by this script. Names are `SeedingAlgorithm` enum
+# member names so we can resolve them via `getattr(SeedingAlgorithm, name)`.
+# When `--variant` is given, exactly that one runs with outputs flat under
+# outdir (Snakemake's preferred shape — one variant per job, one outdir per
+# variant). When `--variant` is omitted, all variants run sequentially under
+# outdir/<name>/, useful for manual invocation outside snakemake.
+ALL_VARIANTS = ["TruthSmeared", "TruthEstimated", "GridTriplet", "OrthogonalTriplet"]
+
+_variant_parser = argparse.ArgumentParser(add_help=False)
+_variant_parser.add_argument("outdir")
+_variant_parser.add_argument(
+    "--variant",
+    choices=ALL_VARIANTS,
+    default=None,
+    help="If set, run only this seeding variant and write files directly under outdir.",
+)
+_variant_args, _ = _variant_parser.parse_known_args()
+
 setup = makeSetup()
 
 
-def run_ckf_tracking(label, seeding):
+def run_ckf_tracking(seeding, label=None):
     with tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(
             events=10000,
-            numThreads=-1,
+            numThreads=setup.threads,
             logLevel=acts.logging.INFO,
         )
 
@@ -164,6 +183,8 @@ def run_ckf_tracking(label, seeding):
 
         s.run()
 
+        dest_dir = setup.outdir / label if label is not None else setup.outdir
+        dest_dir.mkdir(parents=True, exist_ok=True)
         for file in (
             ["performance_seeding.root"]
             if seeding != SeedingAlgorithm.TruthSmeared
@@ -175,14 +196,11 @@ def run_ckf_tracking(label, seeding):
         ]:
             perf_file = tp / file
             assert perf_file.exists(), f"Performance file not found {perf_file}"
-            (setup.outdir / label).mkdir(parents=True, exist_ok=True)
-            shutil.copy(perf_file, setup.outdir / label / file)
+            shutil.copy(perf_file, dest_dir / file)
 
 
-for label, seeding in [
-    ("truth_smeared", SeedingAlgorithm.TruthSmeared),
-    ("truth_estimated", SeedingAlgorithm.TruthEstimated),
-    ("seeded", SeedingAlgorithm.GridTriplet),
-    ("orthogonal", SeedingAlgorithm.OrthogonalTriplet),
-]:
-    run_ckf_tracking(label, seeding)
+if _variant_args.variant is not None:
+    run_ckf_tracking(getattr(SeedingAlgorithm, _variant_args.variant), label=None)
+else:
+    for name in ALL_VARIANTS:
+        run_ckf_tracking(getattr(SeedingAlgorithm, name), label=name)
