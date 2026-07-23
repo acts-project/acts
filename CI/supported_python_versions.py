@@ -1,6 +1,6 @@
 #!/usr/bin/env -S uv run --script
 # /// script
-# requires-python = ">=3.9"
+# requires-python = ">=3.11"
 # dependencies = [
 #     "packaging",
 # ]
@@ -15,25 +15,17 @@
 #   CI/supported_python_versions.py --cibw     # CIBW_BUILD value, e.g. "cp311-* cp312-*"
 
 import argparse
-import re
 import sys
+import tomllib
 from pathlib import Path
 
 from packaging.specifiers import SpecifierSet
 
 
-def _read_requires_python() -> str:
-    pyproject = Path(__file__).resolve().parent.parent / "pyproject.toml"
-    text = pyproject.read_text()
-    m = re.search(r'^requires-python\s*=\s*"([^"]+)"', text, re.MULTILINE)
-    if not m:
-        print(f"Could not read requires-python from {pyproject}", file=sys.stderr)
-        sys.exit(1)
-    return m.group(1)
-
-
 def main() -> None:
-    raw = _read_requires_python()
+    pyproject = Path(__file__).resolve().parent.parent / "pyproject.toml"
+    with pyproject.open("rb") as f:
+        raw = tomllib.load(f)["project"]["requires-python"]
     spec = SpecifierSet(raw)
 
     parser = argparse.ArgumentParser()
