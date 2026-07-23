@@ -72,6 +72,7 @@ add_unittest(AnyGridView AnyGridViewTests.cpp)
 add_unittest(TransformComparator TransformComparatorTests.cpp)
 add_unittest(Table TableTests.cpp)
 add_unittest(TypeDispatcher TypeDispatcherTests.cpp)
+add_unittest(PairTypeDispatcher PairTypeDispatcherTests.cpp)
 
 add_unittest(Histogram HistogramTests.cpp)
 add_unittest(ProfileEfficiency ProfileEfficiencyTests.cpp)
