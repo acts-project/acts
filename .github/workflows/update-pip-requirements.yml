@@ -32,7 +32,7 @@ jobs:
       # `requires-python` in pyproject.toml so it is defined in exactly one place
       - name: Determine supported Python floor
         id: floor
-        run: echo "version=$(CI/python_versions.py --floor)" >> $GITHUB_OUTPUT
+        run: echo "version=$(CI/supported_python_versions.py --floor)" >> $GITHUB_OUTPUT
 
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
@@ -64,10 +64,6 @@ jobs:
 
             rm "$output_txt"
 
-            # --universal keeps environment markers instead of resolving them
-            # away, so a single lockfile installs correctly on every Python from
-            # $PYTHON_VERSION upwards. Without it the pins are only valid for the
-            # exact version they were compiled against.
             if [[ -f "$input_toml" ]]; then
               uv pip compile --universal --python-version "$PYTHON_VERSION" "$input_toml" -o "$output_txt"
             elif [[ -f "$input_in" ]]; then

@@ -1,13 +1,19 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.9"
+# dependencies = [
+#     "packaging",
+# ]
+# ///
 # Prints information about the Python versions Acts supports, derived from
 # `requires-python` in the top-level pyproject.toml so that the wheel metadata,
 # cibuildwheel target matrix and the floor used to compile the requirements.txt
 # lockfiles all share one definition.
 #
 # Usage:
-#   CI/python_versions.py --floor    # lowest version, e.g. 3.10
-#   CI/python_versions.py --list     # all 3.x versions, one per line
-#   CI/python_versions.py --list --sep " "  # space-separated
+#   CI/supported_python_versions.py --floor    # lowest version, e.g. 3.10
+#   CI/supported_python_versions.py --list     # all 3.x versions, one per line
+#   CI/supported_python_versions.py --list --sep " "  # space-separated
 
 import argparse
 import re
