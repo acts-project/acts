@@ -14,9 +14,17 @@
 
 namespace Acts::Experimental {
 
+namespace {
+
+float radiusProjection(const ConstSpacePointProxy& sp) {
+  return sp.zr()[1];
+}
+
+}  // namespace
+
 SphericalSpacePointGrid::SphericalSpacePointGrid(
     const Config& config, std::unique_ptr<const Logger> _logger)
-    : m_cfg(config), m_logger(std::move(_logger)) {
+    : GridBase(std::move(_logger)), m_cfg(config) {
   if (m_cfg.phiMin < -std::numbers::pi_v<float> ||
       m_cfg.phiMax > std::numbers::pi_v<float>) {
     throw std::runtime_error(
@@ -94,69 +102,18 @@ SphericalSpacePointGrid::SphericalSpacePointGrid(
 
   GridType grid(std::make_tuple(std::move(phiAxis), std::move(cotThetaAxis),
                                 std::move(rAxis)));
-  m_binnedGroup.emplace(std::move(grid), m_cfg.bottomBinFinder.value(),
-                        m_cfg.topBinFinder.value(), m_cfg.navigation);
-  m_grid = &m_binnedGroup->grid();
-}
-
-void SphericalSpacePointGrid::clear() {
-  for (std::size_t i = 0; i < grid().size(); ++i) {
-    BinType& bin = grid().at(i);
-    bin.clear();
-  }
-  m_counter = 0;
-}
-
-std::optional<std::size_t> SphericalSpacePointGrid::insert(
-    SpacePointIndex index, float phi, float cotTheta, float r) {
-  const std::optional<std::size_t> gridIndex = binIndex(phi, cotTheta, r);
-  if (gridIndex.has_value()) {
-    BinType& bin = grid().at(*gridIndex);
-    bin.push_back(index);
-    ++m_counter;
-  }
-  return gridIndex;
-}
-
-void SphericalSpacePointGrid::extend(
-    const SpacePointContainer::ConstRange& spacePoints) {
-  ACTS_VERBOSE("Inserting " << spacePoints.size()
-                            << " space points to the grid");
-
-  for (const ConstSpacePointProxy& sp : spacePoints) {
-    insert(sp);
-  }
+  initializeGrid(std::move(grid), m_cfg.bottomBinFinder.value(),
+                 m_cfg.topBinFinder.value(), m_cfg.navigation);
 }
 
 void SphericalSpacePointGrid::sortBinsByR(
     const SpacePointContainer& spacePoints) {
-  ACTS_VERBOSE("Sorting the grid");
-
-  for (std::size_t i = 0; i < grid().size(); ++i) {
-    BinType& bin = grid().at(i);
-    std::ranges::sort(bin, {}, [&](SpacePointIndex spIndex) {
-      return spacePoints[spIndex].zr()[1];
-    });
-  }
-
-  ACTS_VERBOSE(
-      "Number of space points inserted (within grid range): " << m_counter);
+  sortBinsBy(spacePoints, radiusProjection);
 }
 
 Range1D<float> SphericalSpacePointGrid::computeRadiusRange(
     const SpacePointContainer& spacePoints) const {
-  float minRange = std::numeric_limits<float>::max();
-  float maxRange = std::numeric_limits<float>::lowest();
-  for (const BinType& bin : grid()) {
-    if (bin.empty()) {
-      continue;
-    }
-    auto first = spacePoints[bin.front()];
-    auto last = spacePoints[bin.back()];
-    minRange = std::min(first.zr()[1], minRange);
-    maxRange = std::max(last.zr()[1], maxRange);
-  }
-  return {minRange, maxRange};
+  return computeRange(spacePoints, radiusProjection);
 }
 
 }  // namespace Acts::Experimental

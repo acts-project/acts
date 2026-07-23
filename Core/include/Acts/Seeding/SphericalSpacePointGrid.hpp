@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
-#include "Acts/Seeding/BinnedGroup.hpp"
+#include "Acts/Seeding/detail/SpacePointGridBase.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
@@ -27,24 +27,26 @@ namespace Acts::Experimental {
 /// cot(theta) = sinh(eta), comparing z / r against those edges
 /// places the point into exactly its eta bin, with no atan2 / tan / log /
 /// asinh.
-class SphericalSpacePointGrid {
+class SphericalSpacePointGrid
+    : public Acts::detail::SpacePointGridBase<
+          SphericalSpacePointGrid,
+          Grid<std::vector<std::uint32_t>,
+               Axis<AxisType::Equidistant, AxisBoundaryType::Closed>,
+               Axis<AxisType::Variable, AxisBoundaryType::Open>,
+               Axis<AxisType::Variable, AxisBoundaryType::Open>>> {
  public:
-  /// Space point index type used in the grid.
-  using SpacePointIndex = std::uint32_t;
-  /// Type alias for bin container holding space point indices
-  using BinType = std::vector<SpacePointIndex>;
   /// Type alias for phi axis with equidistant binning and closed boundaries
   using PhiAxisType = Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
-  /// Type alias for the middle (cot(theta)) axis with variable binning and open
-  /// boundaries. Edges are stored as sinh(eta) = cot(theta), so the binning is
-  /// configured in eta while space points are placed by z / r (see class doc).
+  /// Type alias for the middle (cot(theta)) axis with variable binning and
+  /// open boundaries. Edges are stored as sinh(eta) = cot(theta), so the
+  /// binning is configured in eta while space points are placed by z / r (see
+  /// class doc).
   using CotThetaAxisType = Axis<AxisType::Variable, AxisBoundaryType::Open>;
   /// Type alias for r axis with variable binning and open boundaries
   using RAxisType = Axis<AxisType::Variable, AxisBoundaryType::Open>;
-  /// Spherical space point grid type (phi, eta, r)
-  using GridType = Grid<BinType, PhiAxisType, CotThetaAxisType, RAxisType>;
-  /// Type alias for binned group over the spherical grid
-  using BinnedGroupType = BinnedGroup<GridType>;
+  /// Type alias for the CRTP base class
+  using GridBase =
+      Acts::detail::SpacePointGridBase<SphericalSpacePointGrid, GridType>;
 
   /// Configuration parameters for the spherical space point grid.
   struct Config {
@@ -108,22 +110,7 @@ class SphericalSpacePointGrid {
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("SphericalSpacePointGrid", Logging::Level::INFO));
 
-  /// Clear the grid and drop all state. The object will behave like a newly
-  /// constructed one.
-  void clear();
-
-  /// Get the bin index for a space point given its azimuthal angle,
-  /// cot(theta) = z / r, and radial distance.
-  /// @param position The position of the space point in (phi, cotTheta, r)
-  /// coordinates
-  /// @return The index of the bin in which the space point is located, or
-  ///         `std::nullopt` if the space point is outside the grid bounds.
-  std::optional<std::size_t> binIndex(const Vector3& position) const {
-    if (!grid().isInside(position)) {
-      return std::nullopt;
-    }
-    return grid().globalBinFromPosition(position);
-  }
+  using GridBase::binIndex;
   /// Get the bin index for a space point.
   /// @param phi The azimuthal angle of the space point in radians
   /// @param cotTheta cot(theta) = z / r, used to place the point in its eta bin
@@ -136,6 +123,7 @@ class SphericalSpacePointGrid {
     return binIndex(Vector3(phi, cotTheta, r));
   }
 
+  using GridBase::insert;
   /// Insert a space point into the grid.
   /// @param index The index of the space point to insert
   /// @param phi The azimuthal angle of the space point in radians
@@ -145,7 +133,9 @@ class SphericalSpacePointGrid {
   /// @return The index of the bin in which the space point was inserted, or
   ///         `std::nullopt` if the space point is outside the grid bounds.
   std::optional<std::size_t> insert(SpacePointIndex index, float phi,
-                                    float cotTheta, float r);
+                                    float cotTheta, float r) {
+    return insert(index, Vector3(phi, cotTheta, r));
+  }
   /// Insert a space point into the grid, binning it by cot(theta) = z / r
   /// (a single division; assumes r > 0); see the class documentation.
   /// @param sp The space point to insert
@@ -154,10 +144,6 @@ class SphericalSpacePointGrid {
   std::optional<std::size_t> insert(const ConstSpacePointProxy& sp) {
     return insert(sp.index(), sp.phi(), sp.z() / sp.r(), sp.r());
   }
-
-  /// Fill the grid with space points from the container.
-  /// @param spacePoints The space point container to fill the grid with
-  void extend(const SpacePointContainer::ConstRange& spacePoints);
 
   /// Sort the bins in the grid by the space point radius, which is required by
   /// some algorithms that operate on the grid.
@@ -172,45 +158,8 @@ class SphericalSpacePointGrid {
   Range1D<float> computeRadiusRange(
       const SpacePointContainer& spacePoints) const;
 
-  /// Mutable bin access by index.
-  /// @param index The index of the bin to access
-  /// @return Mutable reference to the bin at the specified index
-  BinType& at(std::size_t index) { return grid().at(index); }
-  /// Const bin access by index.
-  /// @param index The index of the bin to access
-  /// @return Const reference to the bin at the specified index
-  const BinType& at(std::size_t index) const { return grid().at(index); }
-
-  /// Mutable grid access.
-  /// @return Mutable reference to the grid
-  GridType& grid() { return *m_grid; }
-  /// Const grid access.
-  /// @return Const reference to the grid
-  const GridType& grid() const { return *m_grid; }
-
-  /// Access to the binned group.
-  /// @return Reference to the binned group
-  const BinnedGroupType& binnedGroup() const { return *m_binnedGroup; }
-
-  /// Get the number of space points in the grid.
-  /// @return The number of space points in the grid
-  std::size_t numberOfSpacePoints() const { return m_counter; }
-
-  /// Get the number of bins in the grid.
-  /// @return The number of bins in the grid
-  std::size_t numberOfBins() const { return grid().size(); }
-
  private:
   Config m_cfg;
-
-  std::unique_ptr<const Logger> m_logger;
-
-  GridType* m_grid{};
-  std::optional<BinnedGroupType> m_binnedGroup;
-
-  std::size_t m_counter{};
-
-  const Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace Acts::Experimental
