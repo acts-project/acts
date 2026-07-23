@@ -17,11 +17,6 @@
 
 #include <TEfficiency.h>
 #include <TFile.h>
-#include <TFitResult.h>
-#include <TFitResultPtr.h>
-#include <TH1.h>
-#include <TH2.h>
-#include <TH3.h>
 #include <TProfile.h>
 
 using ActsPlugins::toRoot;
@@ -35,8 +30,7 @@ RootTrackFitterPerformanceWriter::RootTrackFitterPerformanceWriter(
       m_collector(
           TrackFitterPerformanceCollector::Config{
               m_cfg.resPlotToolConfig, m_cfg.effPlotToolConfig,
-              m_cfg.trackSummaryPlotToolConfig, m_cfg.fitMinEntries,
-              m_cfg.fitSigmaRange, m_cfg.fitIterations},
+              m_cfg.trackSummaryPlotToolConfig},
           logger().clone()) {
   // trajectories collection name is already checked by base ctor
   if (m_cfg.inputParticles.empty()) {
@@ -75,67 +69,10 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
 
   m_outputFile->cd();
 
-  const auto& resPlotTool = m_collector.resPlotTool();
+  writeResPlots(m_collector.resPlotTool(), m_cfg.resPlotRefinement, logger());
+
   const auto& effPlotTool = m_collector.effPlotTool();
   const auto& trackSummaryPlotTool = m_collector.trackSummaryPlotTool();
-
-  // Helper lambda to write 2D histogram and extract mean/width profiles
-  const auto writeWithRefinement = [this](auto& hist,
-                                          const std::string& meanPrefix,
-                                          const std::string& widthPrefix) {
-    hist.Write();
-
-    // Get the histogram name and extract the suffix (e.g., "_d0_vs_eta")
-    const std::string baseName = hist.GetName();
-    const std::string suffix = baseName.substr(baseName.find('_'));
-
-    auto [meanHist, widthHist, fitFailureFraction] =
-        ActsPlugins::extractMeanWidthProfiles(
-            hist, meanPrefix + suffix, widthPrefix + suffix,
-            m_cfg.fitMinEntries, m_cfg.fitSigmaRange, m_cfg.fitIterations,
-            logger());
-    if (fitFailureFraction >= m_cfg.warningThresholdFitFailureFraction) {
-      ACTS_WARNING("Fit failures for " << baseName << ": "
-                                       << fitFailureFraction * 100 << "%");
-    }
-
-    meanHist->Write();
-    widthHist->Write();
-  };
-
-  // Write residual histograms
-  for (const auto& [name, hist] : resPlotTool.res()) {
-    toRoot(hist)->Write();
-  }
-  for (const auto& [name, hist] : resPlotTool.resVsEta()) {
-    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
-  }
-  for (const auto& [name, hist] : resPlotTool.resVsPt()) {
-    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
-  }
-  for (const auto& [name, hist] : resPlotTool.resVsEtaPhi()) {
-    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
-  }
-  for (const auto& [name, hist] : resPlotTool.resVsEtaPt()) {
-    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
-  }
-
-  // Write pull histograms
-  for (const auto& [name, hist] : resPlotTool.pull()) {
-    toRoot(hist)->Write();
-  }
-  for (const auto& [name, hist] : resPlotTool.pullVsEta()) {
-    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
-  }
-  for (const auto& [name, hist] : resPlotTool.pullVsPt()) {
-    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
-  }
-  for (const auto& [name, hist] : resPlotTool.pullVsEtaPhi()) {
-    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
-  }
-  for (const auto& [name, hist] : resPlotTool.pullVsEtaPt()) {
-    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
-  }
 
   // Write efficiency histograms
   for (const auto& [name, eff] : effPlotTool.efficiencies1D()) {

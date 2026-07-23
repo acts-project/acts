@@ -196,10 +196,6 @@ class PythonTrackFitterPerformanceWriter final
     ResPlotTool::Config resPlotToolConfig;
     EffPlotTool::Config effPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
-    /// Fit parameters.
-    int fitMinEntries = 10;
-    double fitSigmaRange = 3.0;
-    int fitIterations = 3;
   };
 
   PythonTrackFitterPerformanceWriter(Config cfg, Acts::Logging::Level lvl)
@@ -208,8 +204,7 @@ class PythonTrackFitterPerformanceWriter final
         m_collector(
             TrackFitterPerformanceCollector::Config{
                 m_cfg.resPlotToolConfig, m_cfg.effPlotToolConfig,
-                m_cfg.trackSummaryPlotToolConfig, m_cfg.fitMinEntries,
-                m_cfg.fitSigmaRange, m_cfg.fitIterations},
+                m_cfg.trackSummaryPlotToolConfig},
             logger().clone()) {
     if (m_cfg.inputParticles.empty()) {
       throw std::invalid_argument("Missing particles input collection");
@@ -347,8 +342,7 @@ void addPythonSpecific(py::module_& mex) {
     auto c = py::class_<Config>(w, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, inputTracks, inputParticles,
                        inputTrackParticleMatching, filePath, resPlotToolConfig,
-                       effPlotToolConfig, trackSummaryPlotToolConfig,
-                       fitMinEntries, fitSigmaRange, fitIterations);
+                       effPlotToolConfig, trackSummaryPlotToolConfig);
   }
 }
 

@@ -16,6 +16,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
+#include "ActsExamples/Io/Root/ResPlotWriting.hpp"
 #include "ActsExamples/Validation/ResPlotTool.hpp"
 #include "ActsExamples/Validation/TrackParameterPerformanceCollector.hpp"
 
@@ -47,8 +48,8 @@ class RootTrackParameterPerformanceWriter final
     std::string inputParticles;
     /// Input simulated hits collection.
     std::string inputSimHits;
-    /// Input measurement to particles map.
-    std::string inputMeasurementParticlesMap;
+    /// Input track-particle matching.
+    std::string inputTrackParticleMatching;
     /// Input measurement to simulated hits map.
     std::string inputMeasurementSimHitsMap;
     /// Output filename.
@@ -63,15 +64,8 @@ class RootTrackParameterPerformanceWriter final
     /// states within the given geometry hierarchy regions are used.
     std::vector<Acts::GeometryIdentifier> geometrySelection;
 
-    /// Minimum number of entries in a bin for it to be included in the
-    /// mean/width fit.
-    int fitMinEntries = 10;
-    /// The range in sigma for the iterative Gaussian fit
-    double fitSigmaRange = 3.0;
-    /// The maximum number of iterations for the iterative Gaussian fit
-    int fitIterations = 3;
-    /// Threshold for warning about fit failure fraction in profile extraction.
-    double warningThresholdFitFailureFraction = 0.55;
+    /// Mean/width profile extraction configuration for residuals/pulls.
+    ResPlotRefinementConfig resPlotRefinement;
   };
 
   /// Construct from configuration and log level.
@@ -96,8 +90,8 @@ class RootTrackParameterPerformanceWriter final
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
-  ReadDataHandle<MeasurementParticlesMap> m_inputMeasurementParticlesMap{
-      this, "InputMeasurementParticlesMap"};
+  ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
+      this, "InputTrackParticleMatching"};
   ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
       this, "InputMeasurementSimHitsMap"};
 

@@ -1453,13 +1453,27 @@ def addTrackParameterPerformanceWriters(
 
     def addWriter(inputTracks: str, name: Optional[str] = None):
         suffix = f"_{name}" if name is not None else ""
+        matching = f"{prefix}{outputName}{suffix}_particle_matching"
+        # matchingRatio 1.0 requires all measurements to stem from one particle
+        sequence.addAlgorithm(
+            acts.examples.TrackTruthMatcher(
+                level=customLogLevel(),
+                inputTracks=inputTracks,
+                inputParticles=particles,
+                inputMeasurementParticlesMap="measurement_particles_map",
+                outputTrackParticleMatching=matching,
+                outputParticleTrackMatching=f"{prefix}particle_{outputName}{suffix}_matching",
+                matchingRatio=1.0,
+                doubleMatching=False,
+            )
+        )
         sequence.addWriter(
             RootTrackParameterPerformanceWriter(
                 level=customLogLevel(),
                 inputTracks=inputTracks,
                 inputParticles=particles,
+                inputTrackParticleMatching=matching,
                 inputSimHits="simhits",
-                inputMeasurementParticlesMap="measurement_particles_map",
                 inputMeasurementSimHitsMap="measurement_simhits_map",
                 filePath=str(
                     outputDirRoot / f"performance_{prefix}{outputName}{suffix}.root"

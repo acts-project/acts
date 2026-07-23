@@ -125,6 +125,18 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
           .def_readwrite("paramNames", &ResPlotTool::Config::paramNames)
           .def_readwrite("varBinning", &ResPlotTool::Config::varBinning);
 
+      py::class_<ResPlotRefinementConfig>(root, "ResPlotRefinementConfig")
+          .def(py::init<>())
+          .def_readwrite("fitMinEntries",
+                         &ResPlotRefinementConfig::fitMinEntries)
+          .def_readwrite("fitSigmaRange",
+                         &ResPlotRefinementConfig::fitSigmaRange)
+          .def_readwrite("fitIterations",
+                         &ResPlotRefinementConfig::fitIterations)
+          .def_readwrite(
+              "warningThresholdFitFailureFraction",
+              &ResPlotRefinementConfig::warningThresholdFitFailureFraction);
+
       py::class_<TrackQualityPlotTool::Config>(root,
                                                "TrackQualityPlotToolConfig")
           .def(py::init<>())
@@ -165,12 +177,11 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
                                inputTrackParticleMatching, filePath, fileMode,
                                treeNameTracks, treeNameParticles);
 
-    ACTS_PYTHON_DECLARE_WRITER(
-        RootTrackFitterPerformanceWriter, root,
-        "RootTrackFitterPerformanceWriter", inputTracks, inputParticles,
-        inputTrackParticleMatching, filePath, resPlotToolConfig,
-        effPlotToolConfig, trackSummaryPlotToolConfig, fitMinEntries,
-        fitSigmaRange, fitIterations, warningThresholdFitFailureFraction);
+    ACTS_PYTHON_DECLARE_WRITER(RootTrackFitterPerformanceWriter, root,
+                               "RootTrackFitterPerformanceWriter", inputTracks,
+                               inputParticles, inputTrackParticleMatching,
+                               filePath, resPlotToolConfig, effPlotToolConfig,
+                               trackSummaryPlotToolConfig, resPlotRefinement);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackParameterWriter, root, "RootTrackParameterWriter",
@@ -187,10 +198,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackParameterPerformanceWriter, root,
         "RootTrackParameterPerformanceWriter", inputTracks, inputParticles,
-        inputSimHits, inputMeasurementParticlesMap, inputMeasurementSimHitsMap,
+        inputTrackParticleMatching, inputSimHits, inputMeasurementSimHitsMap,
         filePath, resPlotToolConfig, parameterType, geometrySelection,
-        fitMinEntries, fitSigmaRange, fitIterations,
-        warningThresholdFitFailureFraction);
+        resPlotRefinement);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootMaterialTrackWriter, root, "RootMaterialTrackWriter",

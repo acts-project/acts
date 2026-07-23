@@ -63,8 +63,8 @@ class TrackParameterPerformanceCollector {
   void fill(const Acts::GeometryContext& geoContext,
             const ConstTrackContainer& tracks,
             const SimParticleContainer& particles,
+            const TrackParticleMatching& trackParticleMatching,
             const SimHitContainer& simHits,
-            const MeasurementParticlesMap& measurementParticlesMap,
             const MeasurementSimHitsMap& measurementSimHitsMap);
 
   /// Summary count statistics accumulated across all filled events.

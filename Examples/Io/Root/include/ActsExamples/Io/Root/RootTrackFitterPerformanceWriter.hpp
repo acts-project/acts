@@ -15,6 +15,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
+#include "ActsExamples/Io/Root/ResPlotWriting.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
 #include "ActsExamples/Validation/ResPlotTool.hpp"
 #include "ActsExamples/Validation/TrackFitterPerformanceCollector.hpp"
@@ -53,15 +54,8 @@ class RootTrackFitterPerformanceWriter final
     EffPlotTool::Config effPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
 
-    /// Minimum number of entries in a bin for it to be included in the
-    /// mean/width fit.
-    int fitMinEntries = 10;
-    /// The range in sigma for the iterative Gaussian fit
-    double fitSigmaRange = 3.0;
-    /// The maximum number of iterations for the iterative Gaussian fit
-    int fitIterations = 3;
-    /// Threshold for warning about fit failure fraction in profile extraction.
-    double warningThresholdFitFailureFraction = 0.55;
+    /// Mean/width profile extraction configuration for residuals/pulls.
+    ResPlotRefinementConfig resPlotRefinement;
   };
 
   /// Construct from configuration and log level.

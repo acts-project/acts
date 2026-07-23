@@ -36,14 +36,6 @@ class TrackFitterPerformanceCollector {
     ResPlotTool::Config resPlotToolConfig;
     EffPlotTool::Config effPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
-
-    /// Minimum number of entries in a bin for it to be included in the
-    /// mean/width fit.
-    int fitMinEntries = 10;
-    /// The range in sigma for the iterative Gaussian fit
-    double fitSigmaRange = 3.0;
-    /// The maximum number of iterations for the iterative Gaussian fit
-    int fitIterations = 3;
   };
 
   TrackFitterPerformanceCollector(Config cfg,

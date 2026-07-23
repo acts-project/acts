@@ -10,7 +10,6 @@
 
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include <optional>
 #include <utility>
@@ -63,25 +62,25 @@ TrackParameterPerformanceCollector::TrackParameterPerformanceCollector(
 
 void TrackParameterPerformanceCollector::fill(
     const Acts::GeometryContext& geoContext, const ConstTrackContainer& tracks,
-    const SimParticleContainer& particles, const SimHitContainer& simHits,
-    const MeasurementParticlesMap& measurementParticlesMap,
+    const SimParticleContainer& particles,
+    const TrackParticleMatching& trackParticleMatching,
+    const SimHitContainer& simHits,
     const MeasurementSimHitsMap& measurementSimHitsMap) {
-  std::vector<ParticleHitCount> particleHitCounts;
-
   for (const auto& track : tracks) {
     ++m_stats.nTotalTracks;
 
-    // Require the track to stem from a single truth particle
-    identifyContributingParticles(measurementParticlesMap, track,
-                                  particleHitCounts);
-    if (particleHitCounts.size() != 1) {
-      ACTS_VERBOSE("No unique truth particle for track " << track.index());
+    // Get the truth-matched particle
+    const auto imatched = trackParticleMatching.find(track.index());
+    if (imatched == trackParticleMatching.end() ||
+        !imatched->second.particle.has_value()) {
+      ACTS_VERBOSE("No truth particle associated with track " << track.index());
       continue;
     }
+    const SimBarcode majorityParticleId = imatched->second.particle.value();
 
-    const auto ip = particles.find(particleHitCounts.front().particleId);
+    const auto ip = particles.find(majorityParticleId);
     if (ip == particles.end()) {
-      ACTS_DEBUG("Truth particle not found for track " << track.index());
+      ACTS_DEBUG("Majority particle not found for track " << track.index());
       continue;
     }
     const auto& particle = *ip;
