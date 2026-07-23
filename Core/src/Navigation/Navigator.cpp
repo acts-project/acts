@@ -600,6 +600,8 @@ NavigationTarget Navigator::tryGetNextTarget(State& state,
 
 void Navigator::createPolicyState(State& state, const Vector3& position,
                                   const Vector3& direction) const {
+  assert(state.currentVolume != nullptr && "currentVolume is nullptr");
+
   const TrackingVolume& volume = *state.currentVolume;
   const INavigationPolicy& policy = *volume.navigationPolicy();
 

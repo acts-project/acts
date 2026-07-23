@@ -286,12 +286,15 @@ class INavigationPolicy {
     stateManager.pushState<EmptyState>();
   }
 
-  /// Probe whether this policy pushes only default (empty) states and cache
-  /// the result, allowing the navigator to skip the per-volume-entry state
-  /// creation and the matching pop entirely for volumes with such policies.
-  /// This is called for all attached policies at the end of Gen3 geometry
-  /// construction; it must be called again should a policy be attached after
-  /// that (an unprobed policy conservatively reports stateful).
+  /// One-time initialization step that probes whether this policy pushes only
+  /// default (empty) states and caches the result (mutating @ref m_stateless),
+  /// allowing the navigator to skip the per-volume-entry state creation and the
+  /// matching pop entirely for volumes with such policies. This is an eager
+  /// initialization (deliberately not a lazy first-call latch): it is called
+  /// for all attached policies at the end of Gen3 geometry construction, once
+  /// every policy is in place. It must be called again should a policy be
+  /// attached after that point; an uninitialized policy conservatively reports
+  /// stateful via @ref isStateless, so skipping this step is always safe.
   ///
   /// @note This relies on the contract that the *defaultness* of the state a
   ///       navigation policy pushes does not depend on the geometry context
@@ -301,8 +304,8 @@ class INavigationPolicy {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param logger Logger for debug output
-  void probeStatelessness(const GeometryContext& gctx,
-                          const Logger& logger = getDummyLogger()) {
+  void initializeStatelessCache(const GeometryContext& gctx,
+                                const Logger& logger = getDummyLogger()) {
     m_stateless = false;
     // Create the policy state once into a scratch manager and observe whether
     // the result is the default sentinel. Per the contract above, the
@@ -316,7 +319,7 @@ class INavigationPolicy {
   }
 
   /// Whether this policy is known to push only default (empty) states, see
-  /// @ref probeStatelessness.
+  /// @ref initializeStatelessCache.
   /// @return true if the policy was probed and found stateless
   bool isStateless() const { return m_stateless; }
 
@@ -353,8 +356,8 @@ class INavigationPolicy {
 
  private:
   /// Whether this policy was probed and found to push only default states
-  /// (see probeStatelessness). Conservative default: an unprobed policy is
-  /// treated as stateful.
+  /// (see initializeStatelessCache). Conservative default: an unprobed
+  /// policy is treated as stateful.
   bool m_stateless = false;
 };
 
