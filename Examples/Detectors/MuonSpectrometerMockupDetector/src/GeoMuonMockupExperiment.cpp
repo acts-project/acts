@@ -168,9 +168,6 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
   using VolumeMap_t = ActsPlugins::GeoModelTree::VolumePublisher::VolumeMap_t;
   VolumeMap_t publishedVol{};
   for (const auto& [fpV, pubKey] : m_publisher->getPublishedFPV()) {
-	  ACTS_INFO("add volume to map");
-	  std::string ckey=std::any_cast<std::string>(pubKey);
-	  ACTS_INFO("key: "<<ckey);
     try {
       const std::string key = [](const auto& a) {
         if constexpr (std::is_same_v<std::remove_cvref_t<decltype(pubKey)>,

@@ -63,10 +63,6 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   for (auto& candidate : m_candidates) {
     // Get the surface from the object intersection
     const Surface& surface = candidate.surface();
-    // Check whether the surface already has been processed
-    if (!processed.insert(&surface).second) {
-      continue;
-    }
     // Intersect the surface
     auto multiIntersection = surface.intersect(gctx, position, direction,
                                                cTolerance, onSurfaceTolerance);
