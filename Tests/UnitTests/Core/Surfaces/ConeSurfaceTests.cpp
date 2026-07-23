@@ -26,6 +26,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
@@ -213,7 +214,11 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceEqualityOperators) {
   /// Test assignment
   auto assignedConeSurface =
       Surface::makeShared<ConeSurface>(Transform3::Identity(), 0.1, true);
+  // TODO: surface copy-assignment is deprecated; switch to a makeShared copy
+  // when it is removed (SonarCloud cpp:S3624).
+  ACTS_PUSH_IGNORE_DEPRECATED()
   *assignedConeSurface = *coneSurfaceObject;
+  ACTS_POP_IGNORE_DEPRECATED()
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedConeSurface == *coneSurfaceObject);
 }

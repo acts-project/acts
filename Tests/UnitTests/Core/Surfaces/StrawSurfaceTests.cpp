@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 
 #include <memory>
@@ -119,7 +120,11 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   /// Test assignment
   auto assignedStrawSurface =
       Surface::makeShared<StrawSurface>(Transform3::Identity(), 6.6, 33.33);
+  // TODO: surface copy-assignment is deprecated; switch to a makeShared copy
+  // when it is removed (SonarCloud cpp:S3624).
+  ACTS_PUSH_IGNORE_DEPRECATED()
   *assignedStrawSurface = *strawSurfaceObject;
+  ACTS_POP_IGNORE_DEPRECATED()
 
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedStrawSurface == *strawSurfaceObject);

@@ -28,6 +28,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -253,7 +254,11 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceEqualityOperators) {
   /// Test assignment
   auto assignedCylinderSurface =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 6.6, 5.4);
+  // TODO: surface copy-assignment is deprecated; switch to a makeShared copy
+  // when it is removed (SonarCloud cpp:S3624).
+  ACTS_PUSH_IGNORE_DEPRECATED()
   *assignedCylinderSurface = *cylinderSurfaceObject;
+  ACTS_POP_IGNORE_DEPRECATED()
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedCylinderSurface == *cylinderSurfaceObject);
 }

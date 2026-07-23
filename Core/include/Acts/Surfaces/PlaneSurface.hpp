@@ -77,6 +77,11 @@ class PlaneSurface : public RegularSurface {
   ///
   /// @param other The source PlaneSurface for assignment
   /// @return Reference to this PlaneSurface after assignment
+  // TODO: remove this copy-assignment operator; copy surfaces via
+  // Surface::makeShared<PlaneSurface>(other) instead (SonarCloud cpp:S3624).
+  [[deprecated(
+      "Surface copy-assignment is deprecated and will be removed; copy via "
+      "Surface::makeShared<PlaneSurface>(other) instead.")]]
   PlaneSurface& operator=(const PlaneSurface& other);
 
   // Use overloads from `RegularSurface`
