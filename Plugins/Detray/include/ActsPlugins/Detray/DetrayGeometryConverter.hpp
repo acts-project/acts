@@ -9,20 +9,15 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
 
 #include <memory>
 #include <string>
-#include <unordered_map>
 
 #include <detray/builders/detector_builder.hpp>
-#include <detray/geometry/identifier.hpp>
 #include <detray/io/backend/geometry_reader.hpp>
 #include <detray/io/backend/homogeneous_material_reader.hpp>
 #include <detray/io/backend/material_map_reader.hpp>
@@ -59,9 +54,8 @@ class DetrayGeometryConverter {
 
   /// @brief Combined result of a geometry conversion
   ///
-  /// Bundles the built detray detector together with the bookkeeping that
-  /// relates it back to the tracking geometry: the detray volume/surface name
-  /// map and the map from detray surface identifiers to the source surfaces.
+  /// Bundles the built detray detector together with the detray volume/surface
+  /// name map.
   /// @tparam metadata_t the detector metadata type
   template <typename metadata_t>
   struct DetrayGeometry {
@@ -70,16 +64,6 @@ class DetrayGeometryConverter {
 
     /// The detray volume and surface name map
     detray::name_map names;
-
-    /// Map from detray surface identifiers to the source surfaces for all
-    /// sensitive surfaces in the detector. The GeometryIdentifier can be
-    /// obtained from the surface via @c Surface::geometryId.
-    std::unordered_map<detray::geometry::identifier, const Acts::Surface*>
-        detrayToSurfaceMap;
-
-    /// The tracking geometry the detector was converted from, retained to keep
-    /// the surfaces referenced by @c detrayToSurfaceMap alive
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
 
   /// Constructor
@@ -110,15 +94,12 @@ class DetrayGeometryConverter {
   ///    configured DetrayPayloadConverter.
   /// 2. It builds a detray detector from the converted payloads using the
   ///    detray::detector_builder.
-  /// 3. It builds the map from detray surface identifiers back to the source
-  ///    surfaces.
   ///
-  /// @return The built detray detector together with its name map, the
-  ///     detray->surface map and the source tracking geometry.
+  /// @return The built detray detector together with its name map.
   template <typename metadata_t>
   DetrayGeometry<metadata_t> convert(
       vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
-      std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+      const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
       const std::string& detectorName = "") const {
     using detector_t = detray::detector<metadata_t>;
 
@@ -163,44 +144,11 @@ class DetrayGeometryConverter {
     DetrayGeometry<metadata_t> result{};
     result.detector =
         std::make_shared<detector_t>(detectorBuilder.build(mr, result.names));
-    result.detrayToSurfaceMap =
-        buildDetrayToSurfaceMap(*result.detector, *trackingGeometry);
-    result.trackingGeometry = std::move(trackingGeometry);
 
     return result;
   }
 
  private:
-  /// Build a mapping from detray surface identifiers to the source surfaces
-  /// for all sensitive surfaces in the detray detector.
-  /// @tparam detector_t the type of the detray detector
-  /// @param detrayDetector the detray detector to build the mapping for
-  /// @param trackingGeometry the geometry used to resolve the surfaces
-  /// @return a map from detray surface identifiers to the source surfaces
-  template <typename detector_t>
-  std::unordered_map<detray::geometry::identifier, const Acts::Surface*>
-  buildDetrayToSurfaceMap(
-      const detector_t& detrayDetector,
-      const Acts::TrackingGeometry& trackingGeometry) const {
-    std::unordered_map<detray::geometry::identifier, const Acts::Surface*>
-        detrayToSurfaceMap;
-
-    for (const auto& surface : detrayDetector.surfaces()) {
-      // surface.source is the GeometryIdentifier encoded as uint64
-      const Acts::GeometryIdentifier geometryId(surface.source);
-      const Acts::Surface* surfacePtr =
-          trackingGeometry.findSurface(geometryId);
-      if (surfacePtr == nullptr || !surfacePtr->isSensitive()) {
-        continue;  // skip portals and passives
-      }
-      detrayToSurfaceMap[surface.identifier()] = surfacePtr;
-    }
-
-    ACTS_INFO("Built detray→surface map with " << detrayToSurfaceMap.size()
-                                               << " sensitive surfaces");
-    return detrayToSurfaceMap;
-  }
-
   Config m_cfg;
 
   const Acts::Logger& logger() const { return *m_logger; }

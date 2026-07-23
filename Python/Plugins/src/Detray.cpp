@@ -19,7 +19,6 @@
 #include <detray/builders/detector_builder.hpp>
 #include <detray/detectors/default_metadata.hpp>
 #include <detray/detectors/odd_metadata.hpp>
-#include <detray/geometry/identifier.hpp>
 #include <detray/io/frontend/detector_reader.hpp>
 #include <detray/io/frontend/detector_reader_config.hpp>
 #include <detray/io/frontend/detector_writer.hpp>
@@ -71,25 +70,6 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
         return detray::io::read_detector<DetrayDetectorODD>(mr, cfg);
       },
       "mr"_a, "files"_a);
-
-  // Detray surface identifier (distinct from the ACTS GeometryIdentifier).
-  py::class_<detray::geometry::identifier>(detray, "DetrayGeometryIdentifier")
-      .def("value", &detray::geometry::identifier::value)
-      .def(
-          "__int__",
-          [](const detray::geometry::identifier& self) { return self.value(); })
-      .def("__eq__",
-           [](const detray::geometry::identifier& self,
-              const detray::geometry::identifier& other) {
-             return self == other;
-           })
-      .def("__hash__",
-           [](const detray::geometry::identifier& self) {
-             return static_cast<std::size_t>(self.value());
-           })
-      .def("__repr__", [](const detray::geometry::identifier& self) {
-        return "DetrayGeometryIdentifier(" + std::to_string(self.value()) + ")";
-      });
 
   // ── Payload converter ──────────────────────────────────────────────────
   auto payloadConverter = py::class_<DetrayPayloadConverter,
@@ -146,10 +126,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
       DetrayGeometryConverter::DetrayGeometry<DetrayMetaDataODD>;
   py::class_<DetrayGeometryODD>(geometryConverter, "DetrayGeometry")
       .def_readonly("detector", &DetrayGeometryODD::detector)
-      .def_readonly("names", &DetrayGeometryODD::names)
-      .def_readonly("detrayToSurfaceMap",
-                    &DetrayGeometryODD::detrayToSurfaceMap)
-      .def_readonly("trackingGeometry", &DetrayGeometryODD::trackingGeometry);
+      .def_readonly("names", &DetrayGeometryODD::names);
 
   geometryConverter
       .def(py::init([](DetrayGeometryConverter::Config config,
