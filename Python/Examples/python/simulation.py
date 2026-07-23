@@ -15,19 +15,6 @@ from acts.examples import (
 )
 import acts.examples.hepmc3
 
-# ROOT might not be available
-try:
-    from acts.examples.root import (
-        RootParticleWriter,
-        RootVertexWriter,
-        RootSimHitWriter,
-    )
-
-    ACTS_EXAMPLES_ROOT_AVAILABLE = True
-except ImportError:
-    ACTS_EXAMPLES_ROOT_AVAILABLE = False
-
-
 # Defaults (given as `None` here) use class defaults defined in
 # Examples/Algorithms/Generators/ActsExamples/Generators/ParametricParticleGenerator.hpp
 MomentumConfig = namedtuple(
@@ -241,9 +228,9 @@ def addParticleGun(
         )
 
     if outputDirRoot is not None:
-        assert (
-            ACTS_EXAMPLES_ROOT_AVAILABLE
-        ), "ROOT output requested but ROOT is not available"
+        RootParticleWriter, RootVertexWriter = acts.examples._tryImportRoot(
+            "RootParticleWriter", "RootVertexWriter"
+        )
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
@@ -430,9 +417,9 @@ def addPythia8(
         )
 
     if outputDirRoot is not None:
-        assert (
-            ACTS_EXAMPLES_ROOT_AVAILABLE
-        ), "ROOT output requested but ROOT is not available"
+        RootParticleWriter, RootVertexWriter = acts.examples._tryImportRoot(
+            "RootParticleWriter", "RootVertexWriter"
+        )
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
@@ -598,9 +585,9 @@ def addSimWriters(
         )
 
     if outputDirRoot is not None:
-        assert (
-            ACTS_EXAMPLES_ROOT_AVAILABLE
-        ), "ROOT output requested but ROOT is not available"
+        RootParticleWriter, RootSimHitWriter = acts.examples._tryImportRoot(
+            "RootParticleWriter", "RootSimHitWriter"
+        )
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()

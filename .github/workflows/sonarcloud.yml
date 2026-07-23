@@ -96,8 +96,8 @@ jobs:
       - name: Validate PR branch names
         if: github.event.workflow_run.event == 'pull_request'
         env:
-          HEAD_REF: ${{ fromJson(steps.get_pr_data.outputs.data).head.ref }}
-          BASE_REF: ${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
+          HEAD_REF: ${{ steps.get_pr_data.outputs.data != '' && fromJson(steps.get_pr_data.outputs.data).head.ref || '' }}
+          BASE_REF: ${{ steps.get_pr_data.outputs.data != '' && fromJson(steps.get_pr_data.outputs.data).base.ref || '' }}
         run: |
           # These values are attacker-controlled (the PR branch name) and are
           # passed to sonar-scanner as CLI arguments below. Reject anything that
@@ -127,7 +127,7 @@ jobs:
       - name: Recreate merge commit state
         if: github.event.workflow_run.event == 'pull_request'
         env:
-          PR_CLONE_URL: ${{ fromJson(steps.get_pr_data.outputs.data).head.repo.clone_url }}
+          PR_CLONE_URL: ${{ steps.get_pr_data.outputs.data != '' && fromJson(steps.get_pr_data.outputs.data).head.repo.clone_url || '' }}
           BASE_SHA: ${{ steps.pr_metadata.outputs.base_sha }}
           PR_SHA: ${{ steps.pr_metadata.outputs.pr_sha }}
           MERGE_SHA: ${{ steps.pr_metadata.outputs.merge_sha }}
