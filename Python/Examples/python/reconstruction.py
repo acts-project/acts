@@ -10,7 +10,7 @@ u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
     "SeedingAlgorithm",
-    "TruthSmeared TruthEstimated HoughTransform AdaptiveHoughTransform Gbts Hashing GridTriplet OrthogonalTriplet HashingPrototype",
+    "TruthSmeared TruthEstimated HoughTransform AdaptiveHoughTransform Gbts Hashing GridTriplet SphericalGridTriplet OrthogonalTriplet HashingPrototype",
 )
 
 TrackSmearingSigmas = namedtuple(
@@ -42,6 +42,7 @@ SeedFinderConfigArg = namedtuple(
         "deltaPhiMax",
         "interactionPointCut",
         "deltaZMax",
+        "deltaZMin",
         "maxPtScattering",
         "zBinEdges",
         "zBinsCustomLooping",
@@ -60,8 +61,11 @@ SeedFinderConfigArg = namedtuple(
         "collisionRegion",  # (min,max)
         "r",  # (min,max)
         "z",  # (min,max)
+        "eta",  # (min,max)
+        "deltaEtaMax",
+        "etaBinsCustomLooping",
     ],
-    defaults=[None] * 20 + [(None, None)] * 7,
+    defaults=[None] * 21 + [(None, None)] * 8 + [None] * 2,
 )
 SeedFinderOptionsArg = namedtuple(
     "SeedFinderOptions", ["beamPos", "bFieldInZ"], defaults=[(None, None), None]
@@ -95,8 +99,9 @@ SpacePointGridConfigArg = namedtuple(
         "deltaRMax",
         "maxPhiBins",
         "phi",  # (min,max)
+        "etaBinEdges",
     ],
-    defaults=[None] * 6 + [(None, None)] * 1,
+    defaults=[None] * 6 + [(None, None)] * 1 + [None],
 )
 
 SeedingAlgorithmConfigArg = namedtuple(
@@ -107,8 +112,10 @@ SeedingAlgorithmConfigArg = namedtuple(
         "zBinNeighborsBottom",
         "numPhiNeighbors",
         "useExtraCuts",
+        "etaBinNeighborsTop",
+        "etaBinNeighborsBottom",
     ],
-    defaults=[None] * 5,
+    defaults=[None] * 7,
 )
 
 TruthEstimatedSeedingAlgorithmConfigArg = namedtuple(
@@ -463,6 +470,19 @@ def addSeeding(
         elif seedingAlgorithm == SeedingAlgorithm.GridTriplet:
             logger.info("Using grid triplet seeding")
             seeds = addGridTripletSeeding(
+                s,
+                spacePoints,
+                seedingAlgorithmConfigArg,
+                seedFinderConfigArg,
+                seedFinderOptionsArg,
+                seedFilterConfigArg,
+                spacePointGridConfigArg,
+                logLevel,
+                outputSeeds=f"{prefix}seeds",
+            )
+        elif seedingAlgorithm == SeedingAlgorithm.SphericalGridTriplet:
+            logger.info("Using spherical grid triplet seeding")
+            seeds = addSphericalGridTripletSeeding(
                 s,
                 spacePoints,
                 seedingAlgorithmConfigArg,
@@ -967,6 +987,105 @@ def addGridTripletSeeding(
             deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
             deltaZMin=None,
             deltaZMax=None,
+            interactionPointCut=seedFinderConfigArg.interactionPointCut,
+            collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
+            collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
+            helixCutTolerance=None,
+            sigmaScattering=seedFinderConfigArg.sigmaScattering,
+            radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
+            toleranceParam=None,
+            deltaInvHelixDiameter=None,
+            compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
+            impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
+            zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
+            maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
+            compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
+            seedWeightIncrement=seedFilterConfigArg.seedWeightIncrement,
+            numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
+            seedConfirmation=seedFinderConfigArg.seedConfirmation,
+            centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
+            forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
+            maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
+            maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
+            useDeltaRinsteadOfTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
+            useExtraCuts=seedingAlgorithmConfigArg.useExtraCuts,
+        ),
+    )
+    sequence.addAlgorithm(seedingAlg)
+
+    return seedingAlg.config.outputSeeds
+
+
+def addSphericalGridTripletSeeding(
+    sequence: acts.examples.Sequencer,
+    spacePoints: str,
+    seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg,
+    seedFinderConfigArg: SeedFinderConfigArg,
+    seedFinderOptionsArg: SeedFinderOptionsArg,
+    seedFilterConfigArg: SeedFilterConfigArg,
+    spacePointGridConfigArg: SpacePointGridConfigArg,
+    logLevel: acts.logging.Level = None,
+    outputSeeds: str = "seeds",
+):
+    """adds spherical (phi, eta, R) grid triplet seeding
+    Identical to addGridTripletSeeding except the space-point grid bins on
+    pseudorapidity (via cot(theta) = z / r) instead of z.
+    """
+    logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+
+    seedingAlg = acts.examples.SphericalGridTripletSeedingAlgorithm(
+        level=logLevel,
+        inputSpacePoints=spacePoints,
+        outputSeeds=outputSeeds,
+        **acts.examples.defaultKWArgs(
+            bFieldInZ=seedFinderOptionsArg.bFieldInZ,
+            minPt=seedFinderConfigArg.minPt,
+            cotThetaMax=seedFinderConfigArg.cotThetaMax,
+            impactMax=seedFinderConfigArg.impactMax,
+            deltaRMin=seedFinderConfigArg.deltaR[0],
+            deltaRMax=seedFinderConfigArg.deltaR[1],
+            deltaRMinTop=(
+                seedFinderConfigArg.deltaR[0]
+                if seedFinderConfigArg.deltaRTopSP[0] is None
+                else seedFinderConfigArg.deltaRTopSP[0]
+            ),
+            deltaRMaxTop=(
+                seedFinderConfigArg.deltaR[1]
+                if seedFinderConfigArg.deltaRTopSP[1] is None
+                else seedFinderConfigArg.deltaRTopSP[1]
+            ),
+            deltaRMinBottom=(
+                seedFinderConfigArg.deltaR[0]
+                if seedFinderConfigArg.deltaRBottomSP[0] is None
+                else seedFinderConfigArg.deltaRBottomSP[0]
+            ),
+            deltaRMaxBottom=(
+                seedFinderConfigArg.deltaR[1]
+                if seedFinderConfigArg.deltaRBottomSP[1] is None
+                else seedFinderConfigArg.deltaRBottomSP[1]
+            ),
+            rMin=seedFinderConfigArg.r[0],
+            rMax=seedFinderConfigArg.r[1],
+            etaMin=seedFinderConfigArg.eta[0],
+            etaMax=seedFinderConfigArg.eta[1],
+            deltaEtaMax=seedFinderConfigArg.deltaEtaMax,
+            phiMin=spacePointGridConfigArg.phi[0],
+            phiMax=spacePointGridConfigArg.phi[1],
+            phiBinDeflectionCoverage=spacePointGridConfigArg.phiBinDeflectionCoverage,
+            maxPhiBins=spacePointGridConfigArg.maxPhiBins,
+            numPhiNeighbors=seedingAlgorithmConfigArg.numPhiNeighbors,
+            etaBinNeighborsTop=seedingAlgorithmConfigArg.etaBinNeighborsTop,
+            etaBinNeighborsBottom=seedingAlgorithmConfigArg.etaBinNeighborsBottom,
+            etaBinEdges=spacePointGridConfigArg.etaBinEdges,
+            etaBinsCustomLooping=seedFinderConfigArg.etaBinsCustomLooping,
+            rMinMiddle=seedFinderConfigArg.rMinMiddle,
+            rMaxMiddle=seedFinderConfigArg.rMaxMiddle,
+            useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
+            rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
+            deltaRMiddleMinSPRange=seedFinderConfigArg.deltaRMiddleSPRange[0],
+            deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
+            deltaZMin=seedFinderConfigArg.deltaZMin,
+            deltaZMax=seedFinderConfigArg.deltaZMax,
             interactionPointCut=seedFinderConfigArg.interactionPointCut,
             collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
             collisionRegionMax=seedFinderConfigArg.collisionRegion[1],

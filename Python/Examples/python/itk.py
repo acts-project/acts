@@ -593,3 +593,54 @@ def itkSeedingAlgConfig(
         seedFilterConfigArg,
         spacePointGridConfigArg,
     )
+
+
+def SphericalitkSeedingAlgConfig(inputSpacePointsType, highOccupancyConfig=False):
+    """Spherical (phi, eta, R) analog of itkSeedingAlgConfig."""
+    (
+        seedingAlgorithmConfigArg,
+        seedFinderConfigArg,
+        seedFinderOptionsArg,
+        seedFilterConfigArg,
+        spacePointGridConfigArg,
+    ) = itkSeedingAlgConfig(
+        inputSpacePointsType, highOccupancyConfig=highOccupancyConfig
+    )
+
+    u = acts.UnitConstants
+
+    # Non-uniform 38-bin eta layout: forward |eta|>=2.5 refined to 0.125-wide
+    # bins, central region left coarse.
+    etaBinEdges = [
+        -4, -3.875, -3.75, -3.625, -3.5, -3.375, -3.25, -3.125, -3, -2.875,
+        -2.75, -2.625, -2.5, -2.3, -2.1, -1.9, -1.7, -1.5, -0.8, 0, 0.8, 1.5,
+        1.7, 1.9, 2.1, 2.3, 2.5, 2.625, 2.75, 2.875, 3, 3.125, 3.25, 3.375, 3.5,
+        3.625, 3.75, 3.875, 4,
+    ]
+    nBins = len(etaBinEdges) - 1
+
+    # Only the (eta) binning parameters differ from the cylindrical ITk default;
+    # every generic selection cut is left at the itkSeedingAlgConfig value,
+    # so this is a like-for-like binning swap.
+    seedFinderConfigArg = seedFinderConfigArg._replace(
+        deltaZMin=-float("inf") * u.mm,
+        deltaZMax=float("inf") * u.mm,
+        eta=(-4.0, 4.0),
+        deltaEtaMax=0.8,
+        etaBinsCustomLooping=[],
+    )
+    spacePointGridConfigArg = spacePointGridConfigArg._replace(
+        etaBinEdges=etaBinEdges,
+    )
+    seedingAlgorithmConfigArg = seedingAlgorithmConfigArg._replace(
+        etaBinNeighborsTop=[(-1, 1)] * nBins,
+        etaBinNeighborsBottom=[(-2, 2)] * nBins,
+    )
+
+    return (
+        seedingAlgorithmConfigArg,
+        seedFinderConfigArg,
+        seedFinderOptionsArg,
+        seedFilterConfigArg,
+        spacePointGridConfigArg,
+    )

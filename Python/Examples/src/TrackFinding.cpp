@@ -10,6 +10,7 @@
 #include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/SphericalGridTripletSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/MeasurementFilterAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
@@ -61,6 +62,24 @@ void addTrackFinding(py::module& mex) {
       numSeedIncrement, seedConfirmation, centralSeedConfirmationRange,
       forwardSeedConfirmationRange, maxSeedsPerSpMConf,
       maxQualitySeedsPerSpMConf, useDeltaRinsteadOfTopRadius, useExtraCuts);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      SphericalGridTripletSeedingAlgorithm, mex,
+      "SphericalGridTripletSeedingAlgorithm", inputSpacePoints, outputSeeds,
+      bFieldInZ, minPt, cotThetaMax, impactMax, deltaRMin, deltaRMax,
+      deltaRMinTop, deltaRMaxTop, deltaRMinBottom, deltaRMaxBottom, rMin, rMax,
+      etaMin, etaMax, deltaEtaMax, phiMin, phiMax, phiBinDeflectionCoverage,
+      maxPhiBins, etaBinNeighborsTop, etaBinNeighborsBottom, numPhiNeighbors,
+      etaBinEdges, etaBinsCustomLooping, rMinMiddle, rMaxMiddle,
+      useVariableMiddleSPRange, rRangeMiddleSP, deltaRMiddleMinSPRange,
+      deltaRMiddleMaxSPRange, deltaZMin, deltaZMax, interactionPointCut,
+      collisionRegionMin, collisionRegionMax, helixCutTolerance, sigmaScattering,
+      radLengthPerSeed, toleranceParam, deltaInvHelixDiameter, compatSeedWeight,
+      impactWeightFactor, zOriginWeightFactor, maxSeedsPerSpM, compatSeedLimit,
+      seedWeightIncrement, numSeedIncrement, seedConfirmation,
+      centralSeedConfirmationRange, forwardSeedConfirmationRange,
+      maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf, useDeltaRinsteadOfTopRadius,
+      useExtraCuts);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       OrthogonalTripletSeedingAlgorithm, mex,
