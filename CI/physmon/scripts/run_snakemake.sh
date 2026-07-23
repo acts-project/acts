@@ -23,8 +23,14 @@
 set -euo pipefail
 
 # Full ACTS runtime env → handed to the jobs (see wrap.sh / the summary rule).
+# The workflow scripts (run from workflows/) import helper modules that live
+# outside the ACTS Python package: physmon_common from CI/physmon, and the
+# truth_tracking_* example drivers from Examples/Scripts/Python. Append both so
+# those imports resolve — appended last so they can never shadow the ACTS/ROOT
+# packages earlier on the path. Relative paths resolve since the jobs run from
+# the repo root (snakemake's working directory).
 export _PHYSMON_JOB_LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-}"
-export _PHYSMON_JOB_PYTHONPATH="${PYTHONPATH:-}"
+export _PHYSMON_JOB_PYTHONPATH="${PYTHONPATH:+$PYTHONPATH:}CI/physmon:Examples/Scripts/Python"
 
 snakemake_bin=$(command -v snakemake)
 # Interpreter from snakemake's shebang, so this works wherever it was installed
