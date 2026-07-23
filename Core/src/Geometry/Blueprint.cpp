@@ -156,7 +156,7 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   // TrackingGeometry at the end. The build/connect/finalize sequence below
   // mirrors what StaticBlueprintNode does for an ordinary enclosing volume,
   // minus registering itself with a parent (the world *is* the parent).
-  Volume &top = child.build(options, gctx, logger);
+  const Volume &top = child.build(options, gctx, logger);
 
   std::unique_ptr<TrackingVolume> world =
       PadBlueprintNode::padded(gctx, top, m_cfg.envelope, s_worldName, logger);

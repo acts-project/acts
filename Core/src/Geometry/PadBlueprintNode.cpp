@@ -115,7 +115,7 @@ Volume &PadBlueprintNode::build(const BlueprintOptions &options,
     throw std::invalid_argument("PadBlueprintNode must have exactly one child");
   }
 
-  Volume &inner = children().at(0).build(options, gctx, logger);
+  const Volume &inner = children().at(0).build(options, gctx, logger);
 
   m_volume = padded(gctx, inner, m_envelope, m_name, logger);
 
