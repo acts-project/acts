@@ -463,8 +463,8 @@ class NamedOutputDecorator final : public OutputDecorator {
   /// delegates the flushing of the whole message to its wrapped object.
   void flush(const Level& lvl, const std::string& input) override {
     std::ostringstream os;
-    os << std::left << std::setw(m_maxWidth) << m_name.substr(0, m_maxWidth - 3)
-       << input;
+    os << std::left << std::setw(static_cast<int>(m_maxWidth))
+       << m_name.substr(0, m_maxWidth - 3) << input;
     OutputDecorator::flush(lvl, os.str());
   }
 
