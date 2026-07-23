@@ -287,7 +287,7 @@ class INavigationPolicy {
   }
 
   /// One-time initialization step that probes whether this policy pushes only
-  /// default (empty) states and caches the result (mutating @ref m_stateless),
+  /// default (empty) states and caches the result (mutating internal state),
   /// allowing the navigator to skip the per-volume-entry state creation and the
   /// matching pop entirely for volumes with such policies. This is an eager
   /// initialization (deliberately not a lazy first-call latch): it is called
