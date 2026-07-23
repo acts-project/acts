@@ -289,9 +289,19 @@ jobs:
           lfs: true
           persist-credentials: false
 
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
       - name: Configure
         run: >
           source "${LCG_VIEW}/setup.sh" &&
+          ccache -z &&
           cmake -B build -S .
           --preset=gitlab-ci-lcg
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
@@ -300,6 +310,18 @@ jobs:
         run: >
           source "${LCG_VIEW}/setup.sh" &&
           cmake --build build
+
+      - name: ccache stats
+        run: >
+          source "${LCG_VIEW}/setup.sh" &&
+          ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
       - name: Unit tests
         run: >
