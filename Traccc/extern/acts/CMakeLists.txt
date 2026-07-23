@@ -21,7 +21,7 @@ set(TRACCC_ACTS_SOURCE
     "Source for Acts, when built as part of this project"
 )
 mark_as_advanced(TRACCC_ACTS_SOURCE)
-FetchContent_Declare(Acts SYSTEM ${TRACCC_ACTS_SOURCE})
+FetchContent_Declare(Acts ${TRACCC_ACTS_SOURCE})
 
 # Options used in the build of Acts.
 set(ACTS_SETUP_EIGEN3 TRUE CACHE BOOL "Set up Eigen in the Acts code")
