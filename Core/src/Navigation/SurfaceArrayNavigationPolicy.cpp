@@ -70,14 +70,14 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
       }
       if (binsR == 0) {
         binsR = std::max<std::size_t>(
-            1, std::llround(sac.determineBinCount(gctx, rawSurfaces,
-                                                  AxisDirection::AxisR) *
+            1, std::llround(static_cast<double>(sac.determineBinCount(
+                                gctx, rawSurfaces, AxisDirection::AxisR)) *
                             config.numberOfBinsFactor));
       }
       if (binsPhi == 0) {
         binsPhi = std::max<std::size_t>(
-            1, std::llround(sac.determineBinCount(gctx, rawSurfaces,
-                                                  AxisDirection::AxisPhi) *
+            1, std::llround(static_cast<double>(sac.determineBinCount(
+                                gctx, rawSurfaces, AxisDirection::AxisPhi)) *
                             config.numberOfBinsFactor));
       }
     }
@@ -117,14 +117,14 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
       }
       if (binsPhi == 0) {
         binsPhi = std::max<std::size_t>(
-            1, std::llround(sac.determineBinCount(gctx, rawSurfaces,
-                                                  AxisDirection::AxisPhi) *
+            1, std::llround(static_cast<double>(sac.determineBinCount(
+                                gctx, rawSurfaces, AxisDirection::AxisPhi)) *
                             config.numberOfBinsFactor));
       }
       if (binsZ == 0) {
         binsZ = std::max<std::size_t>(
-            1, std::llround(sac.determineBinCount(gctx, rawSurfaces,
-                                                  AxisDirection::AxisZ) *
+            1, std::llround(static_cast<double>(sac.determineBinCount(
+                                gctx, rawSurfaces, AxisDirection::AxisZ)) *
                             config.numberOfBinsFactor));
       }
     }
