@@ -553,6 +553,16 @@ def addSeeding(
                 prefix=prefix,
             )
 
+            addTrackParameterPerformanceWriter(
+                s,
+                outputDirRoot,
+                tracks=tracks,
+                particles=selectedParticles,
+                trackParticleMatching=f"{prefix}seed_particle_matching",
+                logLevel=logLevel,
+                prefix=prefix,
+            )
+
         if outputDirCsv is not None:
             outputDirCsv = Path(outputDirCsv)
 
@@ -1408,6 +1418,7 @@ def addTrackParameterPerformanceWriter(
     outputDirRoot: Union[Path, str],
     tracks: str = "seed-tracks",
     particles: str = "particles",
+    trackParticleMatching: str = "seed_particle_matching",
     selection: Optional[list] = None,
     parameterType=None,
     stateGeometrySelection: Optional[list] = None,
@@ -1427,6 +1438,10 @@ def addTrackParameterPerformanceWriter(
 
     Parameters
     ----------
+    trackParticleMatching : str
+        Input track-particle matching for the input tracks. Only used if no
+        selection is given; a selection changes the track indices, so a
+        dedicated `TrackTruthMatcher` is added for the selected tracks.
     selection : Optional[list]
         List of layer requirements applied to the input tracks with a
         `TrackSelectorAlgorithm` before writing. Each requirement is a list of
@@ -1470,26 +1485,29 @@ def addTrackParameterPerformanceWriter(
         )
         tracks = selectedTracks
 
-    matching = f"{prefix}{outputName}_particle_matching"
-    # matchingRatio 1.0 requires all measurements to stem from one particle
-    sequence.addAlgorithm(
-        acts.examples.TrackTruthMatcher(
-            level=customLogLevel(),
-            inputTracks=tracks,
-            inputParticles=particles,
-            inputMeasurementParticlesMap="measurement_particles_map",
-            outputTrackParticleMatching=matching,
-            outputParticleTrackMatching=f"{prefix}particle_{outputName}_matching",
-            matchingRatio=1.0,
-            doubleMatching=False,
+        # the selection changes the track indices, so a dedicated matching is
+        # needed for the selected tracks
+        trackParticleMatching = f"{prefix}{outputName}_particle_matching"
+        # matchingRatio 1.0 requires all measurements to stem from one particle
+        sequence.addAlgorithm(
+            acts.examples.TrackTruthMatcher(
+                level=customLogLevel(),
+                inputTracks=tracks,
+                inputParticles=particles,
+                inputMeasurementParticlesMap="measurement_particles_map",
+                outputTrackParticleMatching=trackParticleMatching,
+                outputParticleTrackMatching=f"{prefix}particle_{outputName}_matching",
+                matchingRatio=1.0,
+                doubleMatching=False,
+            )
         )
-    )
+
     sequence.addWriter(
         RootTrackParameterPerformanceWriter(
             level=customLogLevel(),
             inputTracks=tracks,
             inputParticles=particles,
-            inputTrackParticleMatching=matching,
+            inputTrackParticleMatching=trackParticleMatching,
             inputSimHits="simhits",
             inputMeasurementSimHitsMap="measurement_simhits_map",
             filePath=str(outputDirRoot / f"performance_{prefix}{outputName}.root"),
