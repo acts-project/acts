@@ -5,6 +5,7 @@ pytest-timeout
 uproot
 awkward
 pytest-xdist
+pytest-sugar
 pyyaml
 pyhepmc
 numpy

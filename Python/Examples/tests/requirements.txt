@@ -79,11 +79,14 @@ pytest==9.1.1
     #   -r Python/Examples/tests/requirements.in
     #   pytest-check
     #   pytest-repeat
+    #   pytest-sugar
     #   pytest-timeout
     #   pytest-xdist
 pytest-check==2.8.0
     # via -r Python/Examples/tests/requirements.in
 pytest-repeat==0.9.4
+    # via -r Python/Examples/tests/requirements.in
+pytest-sugar==1.1.1
     # via -r Python/Examples/tests/requirements.in
 pytest-timeout==2.4.0
     # via -r Python/Examples/tests/requirements.in
@@ -95,6 +98,8 @@ pyyaml==6.0.3
     # via -r Python/Examples/tests/requirements.in
 six==1.17.0
     # via python-dateutil
+termcolor==3.3.0
+    # via pytest-sugar
 uhi==1.1.1
     # via
     #   histoprint
