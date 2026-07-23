@@ -15,9 +15,8 @@
 
 #include <utility>
 
-namespace ActsExamples {
-
-std::optional<Acts::BoundTrackParameters> truthParametersOnSurface(
+std::optional<Acts::BoundTrackParameters>
+ActsExamples::truthParametersOnSurface(
     const Acts::GeometryContext& gctx, const Acts::Surface& surface,
     Index measurementIndex, const SimParticle& particle,
     const SimHitContainer& simHits,
@@ -60,7 +59,7 @@ std::optional<Acts::BoundTrackParameters> truthParametersOnSurface(
                                     std::nullopt, particle.hypothesis());
 }
 
-std::optional<Acts::BoundTrackParameters> recoParametersOnSurface(
+std::optional<Acts::BoundTrackParameters> ActsExamples::recoParametersOnSurface(
     const ConstTrackStateProxy& state,
     std::optional<TrackParameterType> parameterType,
     const Acts::ParticleHypothesis& hypothesis) {
@@ -104,5 +103,3 @@ std::optional<Acts::BoundTrackParameters> recoParametersOnSurface(
                                     stateParameters->first,
                                     stateParameters->second, hypothesis);
 }
-
-}  // namespace ActsExamples
