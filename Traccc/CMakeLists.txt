@@ -366,26 +366,12 @@ if(TRACCC_SETUP_COVFIE)
     endif()
 endif()
 
-# Set up Acts.
+# Set up Acts. Acts (and, transitively, Detray) is colocated in-tree and is the
+# single source of truth, so it is always built from that source rather than
+# picked up from an external installation.
 option(TRACCC_SETUP_ACTS "Set up the Acts target(s) explicitly" TRUE)
-if(TRACCC_USE_SYSTEM_LIBS OR TRACCC_USE_SPACK_LIBS)
-    set(TRACCC_USE_SYSTEM_ACTS_DEFAULT ON)
-else()
-    set(TRACCC_USE_SYSTEM_ACTS_DEFAULT OFF)
-endif()
-option(
-    TRACCC_USE_SYSTEM_ACTS
-    "Pick up an existing installation of Acts from the build environment"
-    ${TRACCC_USE_SYSTEM_ACTS_DEFAULT}
-)
-unset(TRACCC_USE_SYSTEM_ACTS_DEFAULT)
 if(TRACCC_SETUP_ACTS)
-    if(TRACCC_USE_SYSTEM_ACTS)
-        find_package(Acts REQUIRED COMPONENTS PluginJson)
-        find_package(detray REQUIRED)
-    else()
-        add_subdirectory(extern/acts)
-    endif()
+    add_subdirectory(extern/acts)
 endif()
 
 # Set up GoogleTest.
