@@ -333,23 +333,23 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   }
 
   GridIndex localBinsFromPosition2D(const GridPoint& point) const {
-    return detail::MultiAxisHelper::getMultiIndexFromPoint(point, m_axes);
+    return detail::MultiAxisHelper::getLocalBinsFromPoint(point, m_axes);
   }
 
   GridIndex localBinsFromGlobalBin2D(std::size_t globalBin) const {
-    return detail::MultiAxisHelper::getMultiIndexFromFlatIndex(globalBin,
-                                                               m_axes);
+    return detail::MultiAxisHelper::getLocalBinsFromGlobalBin(globalBin,
+                                                              m_axes);
   }
 
   std::size_t globalBinFromLocalBins2D(const GridIndex& localBins) const {
-    return detail::MultiAxisHelper::getFlatIndexFromMultiIndex(localBins,
-                                                               m_axes);
+    return detail::MultiAxisHelper::getGlobalBinFromLocalBins(localBins,
+                                                              m_axes);
   }
 
   std::size_t globalBinFromLocalBins3D(const GridIndex& localBins,
                                        std::uint8_t neighborDistance) const {
     const std::size_t globalGridBin =
-        detail::MultiAxisHelper::getFlatIndexFromMultiIndex(localBins, m_axes);
+        detail::MultiAxisHelper::getGlobalBinFromLocalBins(localBins, m_axes);
     return globalGridBin * (m_maxNeighborDistance + 1) + neighborDistance;
   }
 

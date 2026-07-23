@@ -465,10 +465,13 @@ struct MultiStepperTester {
 
     // Step forward now
     {
-      multi_stepper.step(multi_state, Direction::Forward(), nullptr);
+      BOOST_CHECK(
+          multi_stepper.step(multi_state, Direction::Forward(), nullptr).ok());
 
       // Single stepper
-      single_stepper.step(single_state, Direction::Forward(), nullptr);
+      BOOST_CHECK(
+          single_stepper.step(single_state, Direction::Forward(), nullptr)
+              .ok());
     }
 
     // Update surface status and check again
@@ -561,14 +564,17 @@ struct MultiStepperTester {
           multi_state, *right_surface, 0, Direction::Forward(),
           BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
           ConstrainedStep::Type::Navigator);
-      multi_stepper.step(multi_state, Direction::Forward(), nullptr);
+      BOOST_CHECK(
+          multi_stepper.step(multi_state, Direction::Forward(), nullptr).ok());
 
       // Single stepper
       single_stepper.updateSurfaceStatus(
           single_state, *right_surface, 0, Direction::Forward(),
           BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
           ConstrainedStep::Type::Navigator);
-      single_stepper.step(single_state, Direction::Forward(), nullptr);
+      BOOST_CHECK(
+          single_stepper.step(single_state, Direction::Forward(), nullptr)
+              .ok());
     }
 
     // Check component-wise bound-state

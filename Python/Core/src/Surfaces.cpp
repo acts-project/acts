@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/PointSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
@@ -92,6 +93,7 @@ void addSurfaces(py::module_& m) {
         .value("ConvexPolygon", SurfaceBounds::BoundsType::eConvexPolygon)
         .value("Annulus", SurfaceBounds::BoundsType::eAnnulus)
         .value("Boundless", SurfaceBounds::BoundsType::eBoundless)
+        .value("Point", SurfaceBounds::BoundsType::ePoint)
         .value("Other", SurfaceBounds::BoundsType::eOther);
   }
 
@@ -365,6 +367,15 @@ void addSurfaces(py::module_& m) {
                     [](const Vector3& vertex) {
                       return Surface::makeShared<PerigeeSurface>(vertex);
                     })
+        .def_static("createPoint",
+                    [](const Vector3& point) {
+                      return Surface::makeShared<PointSurface>(point);
+                    })
+        .def_static("createPoint",
+                    [](const Vector3& point, double maxDistance) {
+                      return Surface::makeShared<PointSurface>(point,
+                                                               maxDistance);
+                    })
         .def_static("createPlane",
                     [](const Transform3& transform,
                        const std::shared_ptr<const PlanarBounds>& bounds) {
@@ -395,6 +406,9 @@ void addSurfaces(py::module_& m) {
 
     py::class_<LineSurface, Surface, std::shared_ptr<LineSurface>>(
         m, "LineSurface");
+
+    py::class_<PointSurface, Surface, std::shared_ptr<PointSurface>>(
+        m, "PointSurface");
   }
 
   {
@@ -406,6 +420,7 @@ void addSurfaces(py::module_& m) {
         .value("Plane", Surface::SurfaceType::Plane)
         .value("Straw", Surface::SurfaceType::Straw)
         .value("Curvilinear", Surface::SurfaceType::Curvilinear)
+        .value("Point", Surface::SurfaceType::Point)
         .value("Other", Surface::SurfaceType::Other);
   }
 

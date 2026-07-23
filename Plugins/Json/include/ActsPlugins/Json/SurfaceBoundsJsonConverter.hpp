@@ -73,6 +73,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(
      {SurfaceBounds::BoundsType::eConvexPolygon, "ConvexPolygonBounds"},
      {SurfaceBounds::BoundsType::eAnnulus, "AnnulusBounds"},
      {SurfaceBounds::BoundsType::eBoundless, "Boundless"},
+     {SurfaceBounds::BoundsType::ePoint, "PointBounds"},
      {SurfaceBounds::BoundsType::eOther, "OtherBounds"}})
 
 /// @}
