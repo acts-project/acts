@@ -106,6 +106,16 @@
             }
         },
         {
+            "name": "github-ci-fpe",
+            "displayName": "GitHub-CI FPE (minimal-debug RelWithDebInfo)",
+            "inherits": "github-ci",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_CXX_FLAGS_RELWITHDEBINFO": "-O2 -DNDEBUG -g1 -gz",
+                "CMAKE_C_FLAGS_RELWITHDEBINFO": "-O2 -DNDEBUG -g1 -gz"
+            }
+        },
+        {
             "name": "github-ci-coverage",
             "displayName": "GitHub-CI Coverage",
             "inherits": "github-ci",
@@ -224,6 +234,9 @@
                 "ACTS_BUILD_EXAMPLES": "ON",
                 "ACTS_BUILD_PLUGIN_ROOT": "OFF",
                 "ACTS_BUILD_PLUGIN_FPEMON": "ON",
+                "ACTS_BUILD_PLUGIN_ARROW": "ON",
+                "ACTS_ARROW_ISOLATED": "ON",
+                "ACTS_BUILD_EXAMPLES_PARQUET": "ON",
                 "ACTS_BUILD_EXAMPLES_ROOT": "OFF",
                 "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
                 "ACTS_USE_SYSTEM_PYBIND11": "ON"

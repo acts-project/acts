@@ -6,22 +6,6 @@ from collections import namedtuple
 import acts
 import acts.examples
 
-# ROOT might not be available
-try:
-    from acts.examples.root import (
-        RootTrackFinderNTupleWriter,
-        RootTrackFinderPerformanceWriter,
-        RootTrackFitterPerformanceWriter,
-        RootTrackParameterWriter,
-        RootTrackStatesWriter,
-        RootTrackSummaryWriter,
-        RootVertexNTupleWriter,
-    )
-
-    ACTS_EXAMPLES_ROOT_AVAILABLE = True
-except ImportError:
-    ACTS_EXAMPLES_ROOT_AVAILABLE = False
-
 u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
@@ -1383,9 +1367,11 @@ def addSeedPerformanceWriters(
 ):
     """Writes seeding related performance output"""
     customLogLevel = acts.examples.defaultLogging(sequence, logLevel)
-    assert (
-        ACTS_EXAMPLES_ROOT_AVAILABLE
-    ), "ROOT output requested but ROOT is not available"
+    RootTrackFinderPerformanceWriter, RootTrackParameterWriter = (
+        acts.examples._tryImportRoot(
+            "RootTrackFinderPerformanceWriter", "RootTrackParameterWriter"
+        )
+    )
     outputDirRoot = Path(outputDirRoot)
     if not outputDirRoot.exists():
         outputDirRoot.mkdir()
@@ -1913,9 +1899,19 @@ def addTrackWriters(
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     if outputDirRoot is not None:
-        assert (
-            ACTS_EXAMPLES_ROOT_AVAILABLE
-        ), "ROOT output requested but ROOT is not available"
+        (
+            RootTrackSummaryWriter,
+            RootTrackStatesWriter,
+            RootTrackFitterPerformanceWriter,
+            RootTrackFinderPerformanceWriter,
+            RootTrackFinderNTupleWriter,
+        ) = acts.examples._tryImportRoot(
+            "RootTrackSummaryWriter",
+            "RootTrackStatesWriter",
+            "RootTrackFitterPerformanceWriter",
+            "RootTrackFinderPerformanceWriter",
+            "RootTrackFinderNTupleWriter",
+        )
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
@@ -2537,9 +2533,7 @@ def addVertexFitting(
         )
 
     if outputDirRoot is not None:
-        assert (
-            ACTS_EXAMPLES_ROOT_AVAILABLE
-        ), "ROOT output requested but ROOT is not available"
+        RootVertexNTupleWriter = acts.examples._tryImportRoot("RootVertexNTupleWriter")
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
@@ -2570,10 +2564,7 @@ def addHoughVertexFinding(
     inputSpacePoints: Optional[str] = "spacepoints",
     outputVertices: Optional[str] = "fittedHoughVertices",
 ) -> None:
-    from acts.examples import (
-        HoughVertexFinderAlgorithm,
-        RootVertexNTupleWriter,
-    )
+    from acts.examples import HoughVertexFinderAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -2589,9 +2580,7 @@ def addHoughVertexFinding(
     inputTruthVertices = "vertices_truth"
 
     if outputDirRoot is not None:
-        assert (
-            ACTS_EXAMPLES_ROOT_AVAILABLE
-        ), "ROOT output requested but ROOT is not available"
+        RootVertexNTupleWriter = acts.examples._tryImportRoot("RootVertexNTupleWriter")
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
