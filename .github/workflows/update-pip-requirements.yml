@@ -24,18 +24,20 @@ jobs:
       # This branch will receive updates each time the workflow runs
       # It doesn't matter if it's deleted when merged, it'll be re-created
       BRANCH_NAME: auto-dependency-upgrades
-      # Lowest Python version we need requirements.txt files to install on
-      # (cibuildwheel's oldest wheel target); newer environments (up to
-      # 3.14) can still install these since --python-version is a floor.
-      PYTHON_VERSION: "3.11"
     steps:
       # persisted credentials are required for the push step below
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
+      # Lowest Python version the lockfiles must install on, taken from
+      # `requires-python` in pyproject.toml so it is defined in exactly one place
+      - name: Determine supported Python floor
+        id: floor
+        run: echo "version=$(CI/python_versions.py --floor)" >> $GITHUB_OUTPUT
+
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ steps.floor.outputs.version }}
 
       - name: Install uv
         run: |
@@ -43,6 +45,8 @@ jobs:
           python -m pip install -U uv
 
       - name: Compile all requirements.txt
+        env:
+          PYTHON_VERSION: ${{ steps.floor.outputs.version }}
         run: |
           # Update this list after adding/removing requirements-files
           folder_list=(
@@ -60,10 +64,14 @@ jobs:
 
             rm "$output_txt"
 
+            # --universal keeps environment markers instead of resolving them
+            # away, so a single lockfile installs correctly on every Python from
+            # $PYTHON_VERSION upwards. Without it the pins are only valid for the
+            # exact version they were compiled against.
             if [[ -f "$input_toml" ]]; then
-              uv pip compile --python-version "$PYTHON_VERSION" "$input_toml" -o "$output_txt"
+              uv pip compile --universal --python-version "$PYTHON_VERSION" "$input_toml" -o "$output_txt"
             elif [[ -f "$input_in" ]]; then
-              uv pip compile --python-version "$PYTHON_VERSION" "$input_in" -o "$output_txt"
+              uv pip compile --universal --python-version "$PYTHON_VERSION" "$input_in" -o "$output_txt"
             else
               echo "No requirements.in or pyproject.toml in $folder."
             fi

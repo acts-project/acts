@@ -5,6 +5,10 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "pyacts"
 dynamic = ["version", "readme"]
+# Single source of truth for the Python versions Acts supports. Drives the
+# cibuildwheel target matrix and the floor that the checked-in requirements.txt
+# lockfiles are compiled against (see CI/python_versions.py).
+requires-python = ">=3.11,<3.15"
 license = "MPL-2.0"
 license-files = ["LICENSE"]
 

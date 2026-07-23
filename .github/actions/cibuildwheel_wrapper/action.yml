@@ -7,8 +7,11 @@ inputs:
     required: false
     default: '.'
   cibw-build:
-    description: 'Value for CIBW_BUILD, selecting which Python version(s) to build'
-    required: true
+    description: >-
+      Value for CIBW_BUILD, narrowing which Python version(s) to build. Leave
+      empty to build every version allowed by `requires-python` in pyproject.toml.
+    required: false
+    default: ''
   github-token:
     description: 'GitHub token forwarded to the build environment (used by setup.sh)'
     required: true
