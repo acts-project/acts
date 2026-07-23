@@ -167,7 +167,11 @@ jobs:
         run: |
           source .env
           source build/this_acts_withdeps.sh
-          pytest -rfExw -k "not gnn" -v -n4
+          # Bound xdist workers. The CI VM orchestrator can set
+          # PYTEST_XDIST_AUTO_NUM_WORKERS in the runner env to control this;
+          # the fallback keeps -nauto from running unbounded and OOM-killing.
+          export PYTEST_XDIST_AUTO_NUM_WORKERS="${PYTEST_XDIST_AUTO_NUM_WORKERS:-4}"
+          pytest -rfExw -k "not gnn" -v -nauto
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:
