@@ -13,6 +13,18 @@
 
 set -u
 
+# Restore the full ACTS runtime environment that run_snakemake.sh moved aside so
+# the snakemake driver could start (see scripts/run_snakemake.sh). The wrapped
+# generator/histcmp/plot command needs ROOT/dd4hep/acts on LD_LIBRARY_PATH and
+# their Python packages on PYTHONPATH. Absent (a bare `snakemake` invocation) →
+# leave the inherited environment untouched.
+if [ -n "${_PHYSMON_JOB_LD_LIBRARY_PATH+x}" ]; then
+    export LD_LIBRARY_PATH="$_PHYSMON_JOB_LD_LIBRARY_PATH"
+fi
+if [ -n "${_PHYSMON_JOB_PYTHONPATH+x}" ]; then
+    export PYTHONPATH="$_PHYSMON_JOB_PYTHONPATH"
+fi
+
 witness=""
 step=""
 log_path=""
