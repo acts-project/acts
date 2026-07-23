@@ -13,6 +13,9 @@
 #include "detray/io/frontend/detector_reader.hpp"
 #include "detray/io/frontend/detector_reader_config.hpp"
 
+// Detray propagation include(s)
+#include "detray/propagator/propagation_config.hpp"
+
 // Detray algebra plugin + detector metadata
 #include "algebra/array.hpp"
 #include "detray/definitions/algebra.hpp"
@@ -43,6 +46,17 @@ namespace py = pybind11;
 namespace {
 
 using reader_config_t = detray::io::detector_reader_config;
+using intersection_config_t = detray::intersection::config;
+using navigation_config_t = detray::navigation::config;
+using stepping_config_t = detray::stepping::config;
+using propagation_config_t = detray::propagation::config;
+
+template <typename T>
+std::string to_string(const T &obj) {
+  std::ostringstream os;
+  os << obj;
+  return os.str();
+}
 
 using algebra_t = detray::array<DETRAY_CUSTOM_SCALARTYPE>;
 using detector_t = detray::detector<detray::default_metadata<algebra_t>>;
@@ -97,11 +111,75 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
           },
           py::arg("file_name"), py::return_value_policy::reference_internal,
           "Add an input file")
-      .def("__repr__", [](const reader_config_t &c) {
-        std::ostringstream os;
-        os << c;
-        return os.str();
-      });
+      .def("__repr__", &to_string<reader_config_t>);
+
+  py::class_<intersection_config_t>(m, "IntersectionConfig")
+      .def(py::init<>())
+      .def_readwrite("min_mask_tolerance",
+                     &intersection_config_t::min_mask_tolerance,
+                     "Minimum mask tolerance")
+      .def_readwrite("max_mask_tolerance",
+                     &intersection_config_t::max_mask_tolerance,
+                     "Maximum mask tolerance")
+      .def_readwrite("mask_tolerance_scalor",
+                     &intersection_config_t::mask_tolerance_scalor,
+                     "Mask tolerance scale factor")
+      .def_readwrite("path_tolerance", &intersection_config_t::path_tolerance,
+                     "Tolerance to decide when a track is on a surface")
+      .def_readwrite("overstep_tolerance",
+                     &intersection_config_t::overstep_tolerance,
+                     "How far behind the track position to look for candidates")
+      .def("__repr__", &to_string<intersection_config_t>);
+
+  py::class_<navigation_config_t>(m, "NavigationConfig")
+      .def(py::init<>())
+      .def_readwrite("intersection", &navigation_config_t::intersection,
+                     "Intersection configuration")
+      .def_readwrite("search_window", &navigation_config_t::search_window,
+                     "Search window size for grid based acceleration structures")
+      .def_readwrite("accumulated_error",
+                     &navigation_config_t::accumulated_error,
+                     "Percentage of total track path to assume as accumulated error")
+      .def_readwrite("n_scattering_stddev",
+                     &navigation_config_t::n_scattering_stddev,
+                     "No. of standard deviations to assume to model the scattering noise")
+      .def_readwrite("estimate_scattering_noise",
+                     &navigation_config_t::estimate_scattering_noise,
+                     "Add adaptive mask tolerance to navigation")
+      .def("__repr__", &to_string<navigation_config_t>);
+
+  py::class_<stepping_config_t>(m, "SteppingConfig")
+      .def(py::init<>())
+      .def_readwrite("min_stepsize", &stepping_config_t::min_stepsize,
+                     "Minimum step size")
+      .def_readwrite("rk_error_tol", &stepping_config_t::rk_error_tol,
+                     "Runge-Kutta numeric error tolerance")
+      .def_readwrite("step_constraint", &stepping_config_t::step_constraint,
+                     "Step size constraint")
+      .def_readwrite("path_limit", &stepping_config_t::path_limit,
+                     "Maximum path length of track")
+      .def_readwrite("max_rk_updates", &stepping_config_t::max_rk_updates,
+                     "Maximum number of Runge-Kutta step trials")
+      .def_readwrite("use_mean_loss", &stepping_config_t::use_mean_loss,
+                     "Use mean energy loss (Bethe), otherwise use most probable energy loss (Landau)")
+      .def_readwrite("use_eloss_gradient",
+                     &stepping_config_t::use_eloss_gradient,
+                     "Use energy loss gradient in error propagation")
+      .def_readwrite("use_field_gradient",
+                     &stepping_config_t::use_field_gradient,
+                     "Use field gradient in error propagation")
+      .def_readwrite("do_covariance_transport",
+                     &stepping_config_t::do_covariance_transport,
+                     "Do covariance transport")
+      .def("__repr__", &to_string<stepping_config_t>);
+
+  py::class_<propagation_config_t>(m, "PropagationConfig")
+      .def(py::init<>())
+      .def_readwrite("navigation", &propagation_config_t::navigation,
+                     "Navigation configuration")
+      .def_readwrite("stepping", &propagation_config_t::stepping,
+                     "Stepping configuration")
+      .def("__repr__", &to_string<propagation_config_t>);
 
   py::class_<volume_descriptor_t>(m, "VolumeDescriptor");
   py::class_<surface_descriptor_t>(m, "SurfaceDescriptor");
@@ -255,11 +333,8 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
             return d.detector.accelerator_store();
           },
           py::return_value_policy::reference_internal, "Accelerator store")
-      .def("__repr__", [](const detector_handle &d) {
-        std::ostringstream os;
-        os << d.detector;
-        return os.str();
-      });
+      .def("__repr__",
+           [](const detector_handle &d) { return to_string(d.detector); });
 
   m.def("readDetector", &read_detector, py::arg("config"),
         "Read a detector as configured by a DetectorReaderConfig");
