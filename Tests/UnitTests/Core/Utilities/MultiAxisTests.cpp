@@ -949,9 +949,9 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
                   .collectVector()
                   .empty());  // overflow, makes no sense
   BOOST_CHECK(ma1Cl.getNeighborHoodIndices({1}, 1).collectVector() ==
-              (bins_t{10, 1, 2}));
+              (bins_t{9, 0, 1}));
   BOOST_CHECK(ma1Cl.getNeighborHoodIndices({5}, 1).collectVector() ==
-              (bins_t{4, 5, 6}));
+              (bins_t{3, 4, 5}));
 
   const Axis f(AxisClosed, 0.0, 1.0, 5u);
   const Axis e(AxisClosed, 0.0, 1.0, 5u);
@@ -959,31 +959,31 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   const MultiAxis ma2Cl(e, f);
 
   BOOST_CHECK(ma2Cl.getNeighborHoodIndices({3, 3}, 1).collectVector() ==
-              (bins_t{16, 17, 18, 23, 24, 25, 30, 31, 32}));
+              (bins_t{6, 7, 8, 11, 12, 13, 16, 17, 18}));
   BOOST_CHECK(ma2Cl.getNeighborHoodIndices({1, 1}, 1).collectVector() ==
-              (bins_t{40, 36, 37, 12, 8, 9, 19, 15, 16}));
+              (bins_t{24, 20, 21, 4, 0, 1, 9, 5, 6}));
   BOOST_CHECK(ma2Cl.getNeighborHoodIndices({1, 5}, 1).collectVector() ==
-              (bins_t{39, 40, 36, 11, 12, 8, 18, 19, 15}));
+              (bins_t{23, 24, 20, 3, 4, 0, 8, 9, 5}));
   BOOST_CHECK(ma2Cl.getNeighborHoodIndices({5, 1}, 1).collectVector() ==
-              (bins_t{33, 29, 30, 40, 36, 37, 12, 8, 9}));
+              (bins_t{19, 15, 16, 24, 20, 21, 4, 0, 1}));
   BOOST_CHECK(ma2Cl.getNeighborHoodIndices({5, 5}, 1).collectVector() ==
-              (bins_t{32, 33, 29, 39, 40, 36, 11, 12, 8}));
+              (bins_t{18, 19, 15, 23, 24, 20, 3, 4, 0}));
 
   BOOST_CHECK(ma2Cl.getNeighborHoodIndices({3, 3}, 2).collectVector() ==
-              (bins_t{8,  9,  10, 11, 12, 15, 16, 17, 18, 19, 22, 23, 24,
-                      25, 26, 29, 30, 31, 32, 33, 36, 37, 38, 39, 40}));
+              (bins_t{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12,
+                      13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}));
   BOOST_CHECK(ma2Cl.getNeighborHoodIndices({1, 1}, 2).collectVector() ==
-              (bins_t{32, 33, 29, 30, 31, 39, 40, 36, 37, 38, 11, 12, 8,
-                      9,  10, 18, 19, 15, 16, 17, 25, 26, 22, 23, 24}));
+              (bins_t{18, 19, 15, 16, 17, 23, 24, 20, 21, 22, 3,  4, 0,
+                      1,  2,  8,  9,  5,  6,  7,  13, 14, 10, 11, 12}));
   BOOST_CHECK(ma2Cl.getNeighborHoodIndices({1, 5}, 2).collectVector() ==
-              (bins_t{31, 32, 33, 29, 30, 38, 39, 40, 36, 37, 10, 11, 12,
-                      8,  9,  17, 18, 19, 15, 16, 24, 25, 26, 22, 23}));
+              (bins_t{17, 18, 19, 15, 16, 22, 23, 24, 20, 21, 2,  3, 4,
+                      0,  1,  7,  8,  9,  5,  6,  12, 13, 14, 10, 11}));
   BOOST_CHECK(ma2Cl.getNeighborHoodIndices({5, 1}, 2).collectVector() ==
-              (bins_t{25, 26, 22, 23, 24, 32, 33, 29, 30, 31, 39, 40, 36,
-                      37, 38, 11, 12, 8,  9,  10, 18, 19, 15, 16, 17}));
+              (bins_t{13, 14, 10, 11, 12, 18, 19, 15, 16, 17, 23, 24, 20,
+                      21, 22, 3,  4,  0,  1,  2,  8,  9,  5,  6,  7}));
   BOOST_CHECK(ma2Cl.getNeighborHoodIndices({5, 5}, 2).collectVector() ==
-              (bins_t{24, 25, 26, 22, 23, 31, 32, 33, 29, 30, 38, 39, 40,
-                      36, 37, 10, 11, 12, 8,  9,  17, 18, 19, 15, 16}));
+              (bins_t{12, 13, 14, 10, 11, 17, 18, 19, 15, 16, 22, 23, 24,
+                      20, 21, 2,  3,  4,  0,  1,  7,  8,  9,  5,  6}));
 
   std::array<std::pair<int, int>, 2> a2;
   a2.at(0) =
@@ -997,13 +997,13 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   auto returnedBinsVec =
       ma2Cl.getNeighborHoodIndices({3, 2}, a2).collectVector();
   returnedBins.insert(returnedBinsVec.begin(), returnedBinsVec.end());
-  std::set<std::size_t> expectedBins{{8, 9, 10, 11, 15, 16, 17, 18}};
+  std::set<std::size_t> expectedBins{{0, 1, 2, 3, 5, 6, 7, 8}};
   BOOST_CHECK(returnedBins == expectedBins);
 
   returnedBinsVec = ma2Cl.getNeighborHoodIndices({1, 5}, a2).collectVector();
   returnedBins.clear();
   returnedBins.insert(returnedBinsVec.begin(), returnedBinsVec.end());
-  expectedBins = {{29, 30, 32, 33, 36, 37, 39, 40}};
+  expectedBins = {{15, 16, 18, 19, 20, 21, 23, 24}};
   BOOST_CHECK(returnedBins == expectedBins);
 
   a2.at(0) = {-6, 7};
@@ -1011,7 +1011,7 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   returnedBinsVec = ma2Cl.getNeighborHoodIndices({1, 5}, a2).collectVector();
   returnedBins.clear();
   returnedBins.insert(returnedBinsVec.begin(), returnedBinsVec.end());
-  expectedBins = {{12, 19, 26, 33, 40}};
+  expectedBins = {{4, 9, 14, 19, 24}};
   BOOST_CHECK(returnedBins == expectedBins);
 
   // @TODO 3D test would be nice, but should essentially not be a problem if
@@ -1021,15 +1021,15 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   /*
    *       1   2    3    4    5
    *   |------------------------|
-   * 1 |  8 |  9 | 10 | 11 | 12 |
+   * 1 |  0 |  1 |  2 |  3 |  4 |
    *   |----|----|----|----|----|
-   * 2 | 15 | 16 | 17 | 18 | 19 |
+   * 2 |  5 |  6 |  7 |  8 |  9 |
    *   |----|----|----|----|----|
-   * 3 | 22 | 23 | 24 | 25 | 26 |
+   * 3 | 10 | 11 | 12 | 13 | 14 |
    *   |----|----|----|----|----|
-   * 4 | 29 | 30 | 31 | 32 | 33 |
+   * 4 | 15 | 16 | 17 | 18 | 19 |
    *   |----|----|----|----|----|
-   * 5 | 36 | 37 | 38 | 39 | 40 |
+   * 5 | 20 | 21 | 22 | 23 | 24 |
    *   |------------------------|
    */
   // clang-format on
@@ -1091,27 +1091,27 @@ BOOST_AUTO_TEST_CASE(closestPoints) {
   // 1D case
   CHECK_EQUAL_COLLECTIONS(
       ma1Cl.getClosestPointsIndices(Point1{0.52}).collectVector(),
-      (bins_t{6, 7}));
+      (bins_t{5, 6}));
   CHECK_EQUAL_COLLECTIONS(
       ma1Cl.getClosestPointsIndices(Point1{0.98}).collectVector(),
-      (bins_t{10, 1}));
+      (bins_t{9, 0}));
 
   // 2D case
   CHECK_EQUAL_COLLECTIONS(
       ma2Cl.getClosestPointsIndices(Point2{0.52, 0.08}).collectVector(),
-      (bins_t{43, 44, 50, 51}));
+      (bins_t{25, 26, 30, 31}));
   CHECK_EQUAL_COLLECTIONS(
       ma2Cl.getClosestPointsIndices(Point2{0.52, 0.68}).collectVector(),
-      (bins_t{46, 47, 53, 54}));
+      (bins_t{28, 29, 33, 34}));
   CHECK_EQUAL_COLLECTIONS(
       ma2Cl.getClosestPointsIndices(Point2{0.52, 0.88}).collectVector(),
-      (bins_t{47, 43, 54, 50}));
+      (bins_t{29, 25, 34, 30}));
   CHECK_EQUAL_COLLECTIONS(
       ma2Cl.getClosestPointsIndices(Point2{0.05, 0.08}).collectVector(),
-      (bins_t{8, 9, 15, 16}));
+      (bins_t{0, 1, 5, 6}));
   CHECK_EQUAL_COLLECTIONS(
       ma2Cl.getClosestPointsIndices(Point2{0.9, 0.95}).collectVector(),
-      (bins_t{75, 71, 12, 8}));
+      (bins_t{49, 45, 4, 0}));
 
   // @TODO: 3D checks would also be nice
 
@@ -1124,30 +1124,29 @@ BOOST_AUTO_TEST_CASE(closestPoints) {
   // 1D case
   CHECK_EQUAL_COLLECTIONS(
       ma1Op.getClosestPointsIndices(Point1{0.52}).collectVector(),
-      (bins_t{6, 7}));
+      (bins_t{5, 6}));
   CHECK_EQUAL_COLLECTIONS(
-      ma1Op.getClosestPointsIndices(Point1{0.98}).collectVector(),
-      (bins_t{10}));
+      ma1Op.getClosestPointsIndices(Point1{0.98}).collectVector(), (bins_t{9}));
   CHECK_EQUAL_COLLECTIONS(
       ma1Op.getClosestPointsIndices(Point1{0.88}).collectVector(),
-      (bins_t{9, 10}));
+      (bins_t{8, 9}));
 
   // 2D case
   CHECK_EQUAL_COLLECTIONS(
       ma2Op.getClosestPointsIndices(Point2{0.52, 0.08}).collectVector(),
-      (bins_t{43, 44, 50, 51}));
+      (bins_t{25, 26, 30, 31}));
   CHECK_EQUAL_COLLECTIONS(
       ma2Op.getClosestPointsIndices(Point2{0.52, 0.68}).collectVector(),
-      (bins_t{46, 47, 53, 54}));
+      (bins_t{28, 29, 33, 34}));
   CHECK_EQUAL_COLLECTIONS(
       ma2Op.getClosestPointsIndices(Point2{0.52, 0.88}).collectVector(),
-      (bins_t{47, 54}));
+      (bins_t{29, 34}));
   CHECK_EQUAL_COLLECTIONS(
       ma2Op.getClosestPointsIndices(Point2{0.05, 0.1}).collectVector(),
-      (bins_t{8, 9, 15, 16}));
+      (bins_t{0, 1, 5, 6}));
   CHECK_EQUAL_COLLECTIONS(
       ma2Op.getClosestPointsIndices(Point2{0.95, 0.95}).collectVector(),
-      (bins_t{75}));
+      (bins_t{49}));
 
   // @TODO: 3D checks would also be nice
 
@@ -1155,27 +1154,26 @@ BOOST_AUTO_TEST_CASE(closestPoints) {
   /*
    *       1    2    3    4    5
    *    |------------------------|
-   *  1 |  8 |  9 | 10 | 11 | 12 |
+   *  1 |  0 |  1 |  2 |  3 |  4 |
    *    |----|----|----|----|----|
-   *  2 | 15 | 16 | 17 | 18 | 19 |
+   *  2 |  5 |  6 |  7 |  8 |  9 |
    *    |----|----|----|----|----|
-   *  3 | 22 | 23 | 24 | 25 | 26 |
+   *  3 | 10 | 11 | 12 | 13 | 14 |
    *    |----|----|----|----|----|
-   *  4 | 29 | 30 | 31 | 32 | 33 |
+   *  4 | 15 | 16 | 17 | 18 | 19 |
    *    |----|----|----|----|----|
-   *  5 | 36 | 37 | 38 | 39 | 40 |
+   *  5 | 20 | 21 | 22 | 23 | 24 |
    *    |------------------------|
-   *  6 | 43 | 44 | 45 | 46 | 47 |
+   *  6 | 25 | 26 | 27 | 28 | 29 |
    *    |------------------------|
-   *  7 | 50 | 51 | 52 | 53 | 54 |
+   *  7 | 30 | 31 | 32 | 33 | 34 |
    *    |------------------------|
-   *  8 | 57 | 58 | 59 | 60 | 61 |
+   *  8 | 35 | 36 | 37 | 38 | 39 |
    *    |------------------------|
-   *  9 | 64 | 65 | 66 | 67 | 68 |
+   *  9 | 40 | 41 | 42 | 43 | 44 |
    *    |------------------------|
-   * 10 | 71 | 72 | 73 | 74 | 75 |
+   * 10 | 45 | 46 | 47 | 48 | 49 |
    *    |------------------------|
-   * 77   78   79   80   81   82   83
    */
   // clang-format on
 }

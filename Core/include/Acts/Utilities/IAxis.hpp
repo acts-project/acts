@@ -66,11 +66,23 @@ class IAxis {
   /// @return total number of bins (excluding under-/overflow bins)
   virtual std::size_t getNBins() const = 0;
 
+  /// Get total number of addressable bins
+  /// @return regular bins plus under-/overflow bins for an open axis
+  std::size_t getNTotalBins() const {
+    return getNBins() + (getBoundaryType() == AxisBoundaryType::Open ? 2u : 0u);
+  }
+
+  /// Get the local index of the first addressable bin
+  /// @return @c 0 for an open axis and @c 1 for a bound or closed axis
+  std::size_t getBinIndexOffset() const {
+    return getBoundaryType() == AxisBoundaryType::Open ? 0u : 1u;
+  }
+
   /// Get corresponding bin index for given coordinate
   /// @param  [in] x input coordinate
   /// @return index of bin containing the given value
-  /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
-  ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
+  /// @note Regular bin indices start at @c 1. Open axes use @c 0 and
+  ///       <tt>nBins + 1</tt> for their underflow and overflow bins.
   virtual std::size_t getBin(double x) const = 0;
 
   /// Check whether value is inside axis limits

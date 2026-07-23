@@ -103,8 +103,8 @@ class SurfaceArray {
                                             const Vector3& position,
                                             const Vector3& direction) const;
 
-  /// Get the size of the underlying grid structure including under/overflow
-  /// bins
+  /// Get the size of the underlying grid structure, including under/overflow
+  /// bins for open axes
   /// @return the size
   std::size_t size() const;
 
@@ -131,8 +131,8 @@ class SurfaceArray {
   /// Checks if global bin is valid
   /// @param bin the global bin index
   /// @return bool if the bin is valid
-  /// @note Valid means that the index points to a bin which is not a under
-  ///       or overflow bin or out of range in any axis.
+  /// @note Valid means that the index points to a bin which is not an underflow
+  ///       or overflow bin of an open axis, or out of range in any axis.
   bool isValidBin(std::size_t bin) const;
 
   /// The binning values described by this surface grid lookup. They are in

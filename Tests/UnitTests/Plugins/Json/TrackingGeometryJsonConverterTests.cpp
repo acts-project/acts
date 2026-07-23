@@ -260,10 +260,8 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
   auto gridLink = GridPortalLink::make(gridSurface, AxisDirection::AxisX,
                                        Axis{AxisBound, -2., 2., 2});
   AnyGridView<const TrackingVolume*> gridView(gridLink->grid());
-  gridView.atLocalBins({0u}) = rootPtr;
   gridView.atLocalBins({1u}) = childPtr;
   gridView.atLocalBins({2u}) = rootPtr;
-  gridView.atLocalBins({3u}) = childPtr;
 
   std::vector<TrivialPortalLink> artifacts;
   auto artifactSurface =
@@ -305,6 +303,19 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
     in >> encodedFromFile;
   }
 
+  auto& encodedGridBins =
+      encodedFromFile["portals"].at(2)["along_normal"]["bins"];
+  BOOST_REQUIRE_EQUAL(encodedGridBins.size(), 2u);
+
+  // Files produced before boundary-dependent grid storage contained unused
+  // underflow and overflow entries for bound axes.
+  auto legacyUnderflow = encodedGridBins.front();
+  legacyUnderflow["local"] = std::vector<std::size_t>{0u};
+  encodedGridBins.push_back(std::move(legacyUnderflow));
+  auto legacyOverflow = encodedGridBins.front();
+  legacyOverflow["local"] = std::vector<std::size_t>{3u};
+  encodedGridBins.push_back(std::move(legacyOverflow));
+
   auto decodedRoot = converter.trackingVolumeFromJson(gctx, encodedFromFile);
 
   BOOST_REQUIRE(decodedRoot != nullptr);
@@ -344,15 +355,11 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
   BOOST_CHECK_EQUAL(decodedGrid->artifactPortalLinks().size(), 1u);
 
   AnyGridConstView<const TrackingVolume*> decodedGridView(decodedGrid->grid());
-  BOOST_REQUIRE(decodedGridView.atLocalBins({0u}) != nullptr);
   BOOST_REQUIRE(decodedGridView.atLocalBins({1u}) != nullptr);
   BOOST_REQUIRE(decodedGridView.atLocalBins({2u}) != nullptr);
-  BOOST_REQUIRE(decodedGridView.atLocalBins({3u}) != nullptr);
 
-  BOOST_CHECK_EQUAL(decodedGridView.atLocalBins({0u})->volumeName(), "root");
   BOOST_CHECK_EQUAL(decodedGridView.atLocalBins({1u})->volumeName(), "child");
   BOOST_CHECK_EQUAL(decodedGridView.atLocalBins({2u})->volumeName(), "root");
-  BOOST_CHECK_EQUAL(decodedGridView.atLocalBins({3u})->volumeName(), "child");
 
   std::vector<Portal*> decodedChildPortals;
   for (auto& portal : decodedChildren.front()->portals()) {

@@ -22,10 +22,8 @@ namespace Acts {
 /// implements the @c IMultiAxisXD interface for the resulting grid. The grid
 /// dimension and the concrete axis types (binning and boundary types) are
 /// fixed at compile time, while the @c IMultiAxis base allows handling
-/// different multi-axes through a common pointer. The grid index conventions
-/// (per-axis local bin indices starting at @c 1, under-/overflow bins at @c 0
-/// and <tt>nBins + 1</tt>, and flattened global bin indices including those
-/// under-/overflow bins) are described on @c IMultiAxis.
+/// different multi-axes through a common pointer. The grid index conventions,
+/// including boundary-dependent exterior bins, are described on @c IMultiAxis.
 ///
 /// @tparam Axes parameter pack of concrete @c Axis types spanning the grid
 template <AxisConcept... Axes>
@@ -135,7 +133,8 @@ class MultiAxis : public IMultiAxisXD<sizeof...(Axes)> {
   /// the point is interpreted as being shifted by half a bin width along each
   /// axis.
   /// @param point coordinates to look up, one per axis
-  /// @return local bin indices along each axis (may be under-/overflow bins)
+  /// @return local bin indices along each axis (may be under-/overflow bins for
+  /// open axes)
   LocalBins getLocalBinsFromLowerLeftEdge(const Point& point) const {
     return detail::MultiAxisHelper::getLocalBinsFromLowerLeftEdge(
         point, m_axes.getAxesTuple());

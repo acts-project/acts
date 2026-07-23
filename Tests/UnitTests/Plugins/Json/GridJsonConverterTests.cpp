@@ -37,11 +37,11 @@ BOOST_AUTO_TEST_CASE(Grid1DSingleEntry) {
   using GridTypeEQB = typename EqBound::template grid_type<std::size_t>;
   GridTypeEQB eqBoundGrid(eqBound());
 
-  eqBoundGrid.at(1u) = 1u;
-  eqBoundGrid.at(2u) = 2u;
-  eqBoundGrid.at(3u) = 3u;
-  eqBoundGrid.at(4u) = 4u;
-  eqBoundGrid.at(5u) = 5u;
+  eqBoundGrid.atLocalBins({1u}) = 1u;
+  eqBoundGrid.atLocalBins({2u}) = 2u;
+  eqBoundGrid.atLocalBins({3u}) = 3u;
+  eqBoundGrid.atLocalBins({4u}) = 4u;
+  eqBoundGrid.atLocalBins({5u}) = 5u;
 
   auto p1 = typename GridTypeEQB::point_t{0.5};
   BOOST_CHECK_EQUAL(eqBoundGrid.atPosition(p1), 1u);
@@ -59,11 +59,11 @@ BOOST_AUTO_TEST_CASE(Grid1DSingleEntry) {
   auto eqBoundGridRead =
       GridJsonConverter::fromJson<EqBound, std::size_t>(eqBoundJson, eqBound);
 
-  BOOST_CHECK_EQUAL(eqBoundGridRead.at(1u), 1u);
-  BOOST_CHECK_EQUAL(eqBoundGridRead.at(2u), 2u);
-  BOOST_CHECK_EQUAL(eqBoundGridRead.at(3u), 3u);
-  BOOST_CHECK_EQUAL(eqBoundGridRead.at(4u), 4u);
-  BOOST_CHECK_EQUAL(eqBoundGridRead.at(5u), 5u);
+  BOOST_CHECK_EQUAL(eqBoundGridRead.atLocalBins({1u}), 1u);
+  BOOST_CHECK_EQUAL(eqBoundGridRead.atLocalBins({2u}), 2u);
+  BOOST_CHECK_EQUAL(eqBoundGridRead.atLocalBins({3u}), 3u);
+  BOOST_CHECK_EQUAL(eqBoundGridRead.atLocalBins({4u}), 4u);
+  BOOST_CHECK_EQUAL(eqBoundGridRead.atLocalBins({5u}), 5u);
 
   // Bound variable
   using VarBound = GridAxisGenerators::VarBound;
@@ -73,22 +73,22 @@ BOOST_AUTO_TEST_CASE(Grid1DSingleEntry) {
   using GridTypeEQV = typename VarBound::template grid_type<std::size_t>;
   GridTypeEQV varBoundGrid(varBound());
 
-  varBoundGrid.at(1u) = 1u;
-  varBoundGrid.at(2u) = 2u;
-  varBoundGrid.at(3u) = 3u;
-  varBoundGrid.at(4u) = 4u;
-  varBoundGrid.at(5u) = 5u;
+  varBoundGrid.atLocalBins({1u}) = 1u;
+  varBoundGrid.atLocalBins({2u}) = 2u;
+  varBoundGrid.atLocalBins({3u}) = 3u;
+  varBoundGrid.atLocalBins({4u}) = 4u;
+  varBoundGrid.atLocalBins({5u}) = 5u;
 
   nlohmann::json varBoundJson = GridJsonConverter::toJson(varBoundGrid);
 
   auto varBoundGridRead = GridJsonConverter::fromJson<VarBound, std::size_t>(
       varBoundJson, varBound);
 
-  BOOST_CHECK_EQUAL(varBoundGridRead.at(1u), 1u);
-  BOOST_CHECK_EQUAL(varBoundGridRead.at(2u), 2u);
-  BOOST_CHECK_EQUAL(varBoundGridRead.at(3u), 3u);
-  BOOST_CHECK_EQUAL(varBoundGridRead.at(4u), 4u);
-  BOOST_CHECK_EQUAL(varBoundGridRead.at(5u), 5u);
+  BOOST_CHECK_EQUAL(varBoundGridRead.atLocalBins({1u}), 1u);
+  BOOST_CHECK_EQUAL(varBoundGridRead.atLocalBins({2u}), 2u);
+  BOOST_CHECK_EQUAL(varBoundGridRead.atLocalBins({3u}), 3u);
+  BOOST_CHECK_EQUAL(varBoundGridRead.atLocalBins({4u}), 4u);
+  BOOST_CHECK_EQUAL(varBoundGridRead.atLocalBins({5u}), 5u);
 
   // Closed equidistant
   using EqClosed = GridAxisGenerators::EqClosed;
@@ -98,22 +98,22 @@ BOOST_AUTO_TEST_CASE(Grid1DSingleEntry) {
   using GridTypeEQC = typename EqClosed::template grid_type<std::size_t>;
   GridTypeEQC eqClosedGrid(eqClosed());
 
-  eqClosedGrid.at(1u) = 1u;
-  eqClosedGrid.at(2u) = 2u;
-  eqClosedGrid.at(3u) = 3u;
-  eqClosedGrid.at(4u) = 4u;
-  eqClosedGrid.at(5u) = 5u;
+  eqClosedGrid.atLocalBins({1u}) = 1u;
+  eqClosedGrid.atLocalBins({2u}) = 2u;
+  eqClosedGrid.atLocalBins({3u}) = 3u;
+  eqClosedGrid.atLocalBins({4u}) = 4u;
+  eqClosedGrid.atLocalBins({5u}) = 5u;
 
   nlohmann::json eqClosedJson = GridJsonConverter::toJson(eqClosedGrid);
 
   auto eqClosedGridRead = GridJsonConverter::fromJson<EqClosed, std::size_t>(
       eqClosedJson, eqClosed);
 
-  BOOST_CHECK_EQUAL(eqClosedGridRead.at(1u), 1u);
-  BOOST_CHECK_EQUAL(eqClosedGridRead.at(2u), 2u);
-  BOOST_CHECK_EQUAL(eqClosedGridRead.at(3u), 3u);
-  BOOST_CHECK_EQUAL(eqClosedGridRead.at(4u), 4u);
-  BOOST_CHECK_EQUAL(eqClosedGridRead.at(5u), 5u);
+  BOOST_CHECK_EQUAL(eqClosedGridRead.atLocalBins({1u}), 1u);
+  BOOST_CHECK_EQUAL(eqClosedGridRead.atLocalBins({2u}), 2u);
+  BOOST_CHECK_EQUAL(eqClosedGridRead.atLocalBins({3u}), 3u);
+  BOOST_CHECK_EQUAL(eqClosedGridRead.atLocalBins({4u}), 4u);
+  BOOST_CHECK_EQUAL(eqClosedGridRead.atLocalBins({5u}), 5u);
 }
 
 BOOST_AUTO_TEST_CASE(Grid1DArrayEntry) {
@@ -126,11 +126,11 @@ BOOST_AUTO_TEST_CASE(Grid1DArrayEntry) {
       typename EqBound::template grid_type<std::array<std::size_t, 2u>>;
   GridTypeEQB eqBoundGrid(eqBound());
 
-  eqBoundGrid.at(1u) = {1u, 1u};
-  eqBoundGrid.at(2u) = {2u, 2u};
-  eqBoundGrid.at(3u) = {3u, 3u};
-  eqBoundGrid.at(4u) = {4u, 4u};
-  eqBoundGrid.at(5u) = {5u, 5u};
+  eqBoundGrid.atLocalBins({1u}) = {1u, 1u};
+  eqBoundGrid.atLocalBins({2u}) = {2u, 2u};
+  eqBoundGrid.atLocalBins({3u}) = {3u, 3u};
+  eqBoundGrid.atLocalBins({4u}) = {4u, 4u};
+  eqBoundGrid.atLocalBins({5u}) = {5u, 5u};
 
   nlohmann::json eqBoundJson = GridJsonConverter::toJson(eqBoundGrid);
 
@@ -138,11 +138,16 @@ BOOST_AUTO_TEST_CASE(Grid1DArrayEntry) {
       GridJsonConverter::fromJson<EqBound, std::array<std::size_t, 2u>>(
           eqBoundJson, eqBound);
 
-  BOOST_CHECK((eqBoundGridRead.at(1u) == std::array<std::size_t, 2u>{1u, 1u}));
-  BOOST_CHECK((eqBoundGridRead.at(2u) == std::array<std::size_t, 2u>{2u, 2u}));
-  BOOST_CHECK((eqBoundGridRead.at(3u) == std::array<std::size_t, 2u>{3u, 3u}));
-  BOOST_CHECK((eqBoundGridRead.at(4u) == std::array<std::size_t, 2u>{4u, 4u}));
-  BOOST_CHECK((eqBoundGridRead.at(5u) == std::array<std::size_t, 2u>{5u, 5u}));
+  BOOST_CHECK((eqBoundGridRead.atLocalBins({1u}) ==
+               std::array<std::size_t, 2u>{1u, 1u}));
+  BOOST_CHECK((eqBoundGridRead.atLocalBins({2u}) ==
+               std::array<std::size_t, 2u>{2u, 2u}));
+  BOOST_CHECK((eqBoundGridRead.atLocalBins({3u}) ==
+               std::array<std::size_t, 2u>{3u, 3u}));
+  BOOST_CHECK((eqBoundGridRead.atLocalBins({4u}) ==
+               std::array<std::size_t, 2u>{4u, 4u}));
+  BOOST_CHECK((eqBoundGridRead.atLocalBins({5u}) ==
+               std::array<std::size_t, 2u>{5u, 5u}));
 }
 
 BOOST_AUTO_TEST_CASE(Grid2DSingleEntryBound) {
