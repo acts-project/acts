@@ -209,9 +209,15 @@ jobs:
         shell: bash
         run: |
           git config --global safe.directory "$GITHUB_WORKSPACE"
+          # Snapshot the pristine linker/Python env BEFORE the ACTS runtime env
+          # is layered on. run_snakemake.sh runs the snakemake driver with this
+          # (its interpreter can't load the ABI-incompatible ROOT/dd4hep libs
+          # that segfault it), while wrap.sh hands the full ACTS env to the jobs.
+          export _PHYSMON_DRIVER_LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-}"
+          export _PHYSMON_DRIVER_PYTHONPATH="${PYTHONPATH:-}"
           source .env
           source build/this_acts_withdeps.sh
-          snakemake -s CI/physmon/Snakefile --cores 4 -p all
+          CI/physmon/scripts/run_snakemake.sh -s CI/physmon/Snakefile --cores 4 -p all
 
       - name: Post step summary
         if: always()

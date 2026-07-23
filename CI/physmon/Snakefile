@@ -12,8 +12,15 @@
 # fails, the rest of the DAG still runs (on touched-empty stand-in files) and
 # the summary shows the full failure chain.
 #
-# Usage (from repo root):
-#   snakemake -s CI/physmon/Snakefile --cores N [target]
+# Usage (from repo root, after `source build/this_acts_withdeps.sh`):
+#   CI/physmon/scripts/run_snakemake.sh -s CI/physmon/Snakefile --cores N [target]
+#
+# Always launch via run_snakemake.sh rather than `snakemake` directly: the ACTS
+# runtime environment puts ROOT/dd4hep libraries on LD_LIBRARY_PATH (and their
+# Python packages on PYTHONPATH) that are ABI-incompatible with snakemake's
+# interpreter and segfault the snakemake process itself. The wrapper runs the
+# driver with those moved aside and hands the full environment back to the jobs
+# it launches (via wrap.sh and the summary rule).
 #
 # Targets:
 #   all              everything + summary  (default; fails non-zero if any comparison failed)
@@ -34,6 +41,19 @@ REFDIR             = "CI/physmon/reference"
 WORKFLOWS_DIR      = "CI/physmon/workflows"
 HISTCMP_CONFIG_DIR = "CI/physmon/config"
 WRAP               = "bash CI/physmon/scripts/wrap.sh"
+
+# run_snakemake.sh runs the snakemake driver with the ACTS runtime libraries
+# moved aside (they crash the interpreter) and stashes them in _PHYSMON_JOB_*.
+# wrap.sh restores them for the wrapped generator/histcmp/plot commands; rules
+# that shell out without wrap.sh (summary) must restore them too, since python3
+# resolves to the ACTS interpreter and needs its libraries. No-op for a bare
+# `snakemake` invocation where the vars are unset.
+# Braces are doubled: snakemake runs str.format() over the shell string, so
+# literal shell ${...} must be escaped as ${{...}}.
+RESTORE_JOB_ENV = (
+    'export LD_LIBRARY_PATH="${{_PHYSMON_JOB_LD_LIBRARY_PATH-$LD_LIBRARY_PATH}}"; '
+    'export PYTHONPATH="${{_PHYSMON_JOB_PYTHONPATH-$PYTHONPATH}}"; '
+)
 
 # Thread budget for compute-heavy generator scripts. Setting this equal to the
 # whole snakemake budget means at most one heavy rule runs at a time but it
@@ -720,5 +740,6 @@ rule summary:
         md      = f"{OUTDIR}/summary.md",
         html    = f"{OUTDIR}/summary.html",
     shell:
+        RESTORE_JOB_ENV +
         "python3 CI/physmon/summary.py {input.results} "
         "--md {output.md} --html {output.html}"
