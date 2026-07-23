@@ -1,0 +1,63 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// Generated from DetrayIoInstantiate.cpp.in by CMake — do not edit.
+//
+// Explicit instantiation of the heavy detray IO operations for a single
+// (metadata, array-algebra) detector. One such translation unit is compiled per
+// shipped metadata into the detray::detector_io_array library; consumers see
+// the matching `extern template` declarations via detector_io_array.hpp.
+
+// Project include(s)
+#include "detray/core/detector.hpp"
+#include "detray/definitions/algebra.hpp"
+#include "detray/detectors/@DETRAY_META@.hpp"
+#include "detray/io/frontend/definitions.hpp"
+#include "detray/io/frontend/detector_assembler.hpp"
+#include "detray/io/frontend/detector_reader.hpp"
+#include "detray/io/frontend/detector_writer.hpp"
+#include "detray/io/frontend/payloads.hpp"
+#include "detray/utils/consistency_checker.hpp"
+
+// Vecmem include(s)
+#include <vecmem/memory/memory_resource.hpp>
+
+// System include(s)
+#include <string_view>
+#include <utility>
+
+namespace detray {
+
+using io_detector_t = detector<@DETRAY_META@<array<float>>>;
+
+namespace io {
+
+template void write_detector<io_detector_t>(
+    io_detector_t&, const io_detector_t::name_map&, detector_writer_config&);
+
+template std::pair<io_detector_t, io_detector_t::name_map>
+read_detector<io_detector_t>(vecmem::memory_resource&,
+                             const detector_reader_config&);
+
+template io_detector_t assemble_detector<io_detector_t>(
+    vecmem::memory_resource&, const detector_payload&,
+    const detector_homogeneous_material_payload*,
+    detector_grids_payload<surface_material_payload, material_id>*,
+    const detector_grids_payload<std::size_t, accel_id>*, std::string_view,
+    io_detector_t::name_map&);
+
+}  // namespace io
+
+namespace detail {
+
+template bool check_consistency<io_detector_t>(const io_detector_t&, bool,
+                                               const io_detector_t::name_map&);
+
+}  // namespace detail
+
+}  // namespace detray

@@ -30,28 +30,21 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
+#include "ActsPlugins/Detray/DetrayGeometryConverter.hpp"
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
+#include <fstream>
 #include <memory>
 #include <numbers>
 
-#include <detray/io/backend/geometry_reader.hpp>
 #include <detray/io/backend/geometry_writer.hpp>
-#include <detray/io/backend/homogeneous_material_reader.hpp>
 #include <detray/io/backend/homogeneous_material_writer.hpp>
-#include <detray/io/backend/material_map_reader.hpp>
-#include <detray/io/backend/surface_grid_reader.hpp>
 #include <detray/io/frontend/definitions.hpp>
-#include <detray/io/frontend/detector_writer.hpp>
-#include <detray/io/frontend/detector_writer_config.hpp>
 #include <detray/io/frontend/payloads.hpp>
 #include <detray/io/json/json_io.hpp>
-#include <detray/plugins/svgtools/illustrator.hpp>
-#include <detray/plugins/svgtools/writer.hpp>
-#include <detray/utils/consistency_checker.hpp>
 #include <detray/utils/grid/concepts.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
@@ -715,72 +708,28 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
     ofs << out_json.dump(2) << std::endl;
   }
 
-  // Payloads DONE, let's actually build a detray detector from them.
+  // Payloads DONE, let's actually build a detray detector. We go through the
+  // geometry converter, whose heavy detector-building core is pre-instantiated
+  // in detray::detector_io_array for the Default metadata.
+  using DefaultMetadata = detray::default_metadata<detray::array<float>>;
+  DetrayGeometryConverter geoConverter(DetrayGeometryConverter::Config{
+      std::make_shared<DetrayPayloadConverter>(cfg)});
 
-  using detector_t =
-      detray::detector<detray::default_metadata<detray::array<double>>>;
+  auto detrayGeometry =
+      geoConverter.convert<DefaultMetadata>(mr, gctx, tGeometry);
 
-  // build detector
-  detray::detector_builder<detector_t::metadata> detectorBuilder{};
-  // (1) geometry
-  detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
-                                                        detector);
+  auto& detrayDetector = *detrayGeometry.detector;
+  const auto& detrayNames = detrayGeometry.names;
 
-  detray::io::homogeneous_material_reader::from_payload<detector_t>(
-      detectorBuilder, homogeneousMaterial);
-
-  detray::io::material_map_reader<std::integral_constant<std::size_t, 2>>::
-      from_payload<detector_t>(detectorBuilder, std::move(materialGrids));
-
-  detray::io::surface_grid_reader<detector_t::surface_type,
-                                  std::integral_constant<std::size_t, 0>,
-                                  std::integral_constant<std::size_t, 2>>::
-      from_payload<detector_t>(detectorBuilder, surfaceGrids);
-
-  detector_t detrayDetector(detectorBuilder.build(mr));
-
-  // Checks and print
+  // Consistency check (pre-instantiated in detray::detector_io_array).
   detray::detail::check_consistency(detrayDetector);
 
-  // Helper to convert std::map<unsigned int, std::string> to detray::name_map
-  auto toDetrayNameMap = [](const std::map<unsigned int, std::string>& src) {
-    detray::name_map result;
-    for (const auto& [idx, name] : src) {
-      result.emplace(static_cast<detray::dindex>(idx), name);
-    }
-    return result;
-  };
-
-  auto detrayNames = toDetrayNameMap(payloads.names);
-
-  detray::svgtools::illustrator illustrator(detrayDetector, detrayNames);
-  illustrator.hide_eta_lines(true);
-  illustrator.show_info(true);
-
-  const auto svg_zr = illustrator.draw_detector(actsvg::views::z_r{});
-  actsvg::style::stroke stroke_black = actsvg::style::stroke();
-  auto zr_axis = actsvg::draw::x_y_axes("axes", {-250, 250}, {-250, 250},
-                                        stroke_black, "z", "r");
-  detray::svgtools::write_svg(
-      "test_svgtools_detector_zr",
-      std::initializer_list<actsvg::svg::object>{zr_axis, svg_zr});
-
-  const auto svg_xy = illustrator.draw_detector(actsvg::views::x_y{});
-  auto xy_axis = actsvg::draw::x_y_axes("axes", {-250, 250}, {-250, 250},
-                                        stroke_black, "x", "y");
-  detray::svgtools::write_svg("test_svgtools_detector_xy", {
-                                                               xy_axis,
-                                                               svg_xy,
-                                                           });
-
-  auto writer_cfg = detray::io::detector_writer_config{}
-                        .format(detray::io::format::json)
-                        .replace_files(true);
-
-  // std::cout << detray::utils::print_detector(detrayDetector, payloads.names)
-  //           << std::endl;
-
-  detray::io::write_detector(detrayDetector, detrayNames, writer_cfg);
+  // Write the detector to JSON (pre-instantiated in detray::detector_io_array).
+  auto writerCfg = detray::io::detector_writer_config{}
+                       .format(detray::io::format::json)
+                       .path("")
+                       .replace_files(true);
+  detray::io::write_detector(detrayDetector, detrayNames, writerCfg);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -7,6 +7,12 @@ acts_add_library(
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
+# The heavy detray detector operations (detector assembly, consistency check,
+# JSON read/write) are explicitly instantiated for the closed set of shipped
+# metadata types inside detray itself (see detray::detector_io_array); this
+# plugin only links the pre-built symbols and sees the matching `extern
+# template` declarations via detray's detector_io_array.hpp.
+
 add_dependencies(ActsPluginDetray detray::core covfie::core vecmem::core)
 
 target_include_directories(
@@ -24,6 +30,7 @@ target_link_libraries(
         detray::core_array
         detray::io
         detray::detectors
+        detray::detector_io_array
         detray::svgtools
         detray::test_utils
         vecmem::core

@@ -82,3 +82,60 @@ if(NOT "${DETRAY_GENERATE_METADATA}" STREQUAL "")
         message(STATUS "Creating metadata: ${GENERATOR}")
     endforeach()
 endif()
+
+# ── Explicit IO instantiations for the array-algebra detectors ──────────────
+#
+# The heavy detray IO operations (write / read / consistency check / payload
+# assembly) are explicitly instantiated for the closed set of shipped metadata
+# types bound to the array algebra, one translation unit per metadata, so that
+# each `detector<meta<array>>` template tree is compiled exactly once here
+# instead of in every consumer. Consumers include detector_io_array.hpp for the
+# matching `extern template` declarations and link detray::detector_io_array.
+#
+# The metadata list mirrors DETRAY_IO_METADATA_FOR_EACH in
+# include/detray/detectors/detail/detector_io_instantiations.hpp.
+include(detray-compiler-options-cpp)
+
+set(_detray_io_instantiation_metadata
+    default_metadata
+    odd_metadata
+    toy_metadata
+    telescope_metadata
+    wire_chamber_metadata
+)
+
+set(_detray_io_instantiation_sources)
+foreach(META IN LISTS _detray_io_instantiation_metadata)
+    set(DETRAY_META ${META})
+    set(_generated
+        "${CMAKE_CURRENT_BINARY_DIR}/generated/DetrayIoInstantiate_${META}.cpp"
+    )
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/DetrayIoInstantiate.cpp.in"
+        "${_generated}"
+        @ONLY
+    )
+    list(APPEND _detray_io_instantiation_sources "${_generated}")
+endforeach()
+
+add_library(detray_detector_io_array STATIC ${_detray_io_instantiation_sources})
+add_library(detray::detector_io_array ALIAS detray_detector_io_array)
+set_target_properties(
+    detray_detector_io_array
+    PROPERTIES EXPORT_NAME detector_io_array
+)
+target_link_libraries(
+    detray_detector_io_array
+    PUBLIC
+        detray::detectors
+        detray::io
+        detray::core_array
+        detray::algebra_array
+        vecmem::core
+)
+add_dependencies(detray_detector_io_array detray_detectors)
+
+install(TARGETS detray_detector_io_array EXPORT detray-exports)
+
+unset(_detray_io_instantiation_metadata)
+unset(_detray_io_instantiation_sources)
