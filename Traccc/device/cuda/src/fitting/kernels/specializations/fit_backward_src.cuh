@@ -24,9 +24,8 @@ __global__ __launch_bounds__(128) void fit_backward(
         typename fitter_t::detector_type::const_view_type,
         typename fitter_t::bfield_type, typename fitter_t::surface_type>*
         tpayload) {
-
-    device::fit_backward<fitter_t>(details::global_index1(), cfg, payload,
-                                   *tpayload);
+  device::fit_backward<fitter_t>(details::global_index1(), cfg, payload,
+                                 *tpayload);
 }
 
 }  // namespace kernels
@@ -39,10 +38,9 @@ void fit_backward(const dim3& grid_size, const dim3& block_size,
                       typename fitter_t::detector_type::const_view_type,
                       typename fitter_t::bfield_type,
                       typename fitter_t::surface_type>* tpayload) {
-
-    kernels::fit_backward<fitter_t>
-        <<<grid_size, block_size, shared_mem_size, stream>>>(cfg, payload,
-                                                             tpayload);
+  kernels::fit_backward<fitter_t>
+      <<<grid_size, block_size, shared_mem_size, stream>>>(cfg, payload,
+                                                           tpayload);
 }
 
 }  // namespace traccc::cuda

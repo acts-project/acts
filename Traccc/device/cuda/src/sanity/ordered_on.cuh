@@ -28,21 +28,20 @@
 
 namespace traccc::cuda {
 namespace kernels {
-template <typename CONTAINER, std::semiregular R, typename VIEW>
-    requires std::regular_invocable<R,
-                                    decltype(std::declval<CONTAINER>().at(0)),
-                                    decltype(std::declval<CONTAINER>().at(0))>
+template <typename CONTAINER, typename R, typename VIEW>
+  requires std::regular_invocable<R, decltype(std::declval<CONTAINER>().at(0)),
+                                  decltype(std::declval<CONTAINER>().at(0))> &&
+           std::semiregular<R>
 __global__ void is_ordered_on_kernel(R relation, VIEW _in, bool* out) {
+  const device::global_index_t tid = details::global_index1();
 
-    const device::global_index_t tid = details::global_index1();
+  const CONTAINER in(_in);
 
-    const CONTAINER in(_in);
-
-    if (tid > 0 && tid < in.size()) {
-        if (!relation(in.at(tid - 1), in.at(tid))) {
-            *out = false;
-        }
+  if (tid > 0 && tid < in.size()) {
+    if (!relation(in.at(tid - 1), in.at(tid))) {
+      *out = false;
     }
+  }
 }
 }  // namespace kernels
 
@@ -70,51 +69,48 @@ __global__ void is_ordered_on_kernel(R relation, VIEW _in, bool* out) {
  * @return true If the container is ordered on `R`.
  * @return false Otherwise.
  */
-template <typename CONTAINER, std::semiregular R, typename VIEW>
-    requires std::regular_invocable<R,
-                                    decltype(std::declval<CONTAINER>().at(0)),
-                                    decltype(std::declval<CONTAINER>().at(0))>
+template <typename CONTAINER, typename R, typename VIEW>
+  requires std::regular_invocable<R, decltype(std::declval<CONTAINER>().at(0)),
+                                  decltype(std::declval<CONTAINER>().at(0))> &&
+           std::semiregular<R>
 bool is_ordered_on(R&& relation, vecmem::memory_resource& mr,
                    const vecmem::copy& copy, const stream_wrapper& stream,
                    const VIEW& view) {
+  // This should never be a performance-critical step, so we can keep the
+  // block size fixed.
+  constexpr int block_size = 512;
 
-    // This should never be a performance-critical step, so we can keep the
-    // block size fixed.
-    constexpr int block_size = 512;
+  cudaStream_t cuda_stream = details::get_stream(stream);
 
-    cudaStream_t cuda_stream = details::get_stream(stream);
+  // Grab the number of elements in our container.
+  const typename VIEW::size_type n = copy.get_size(view);
 
-    // Grab the number of elements in our container.
-    const typename VIEW::size_type n = copy.get_size(view);
+  // Exit early for empty containers.
+  if (n == 0) {
+    return true;
+  }
 
-    // Exit early for empty containers.
-    if (n == 0) {
-        return true;
-    }
+  // Initialize the output boolean.
+  vecmem::unique_alloc_ptr<bool> out = vecmem::make_unique_alloc<bool>(mr);
+  bool initial_out = true;
+  TRACCC_CUDA_ERROR_CHECK(cudaMemcpyAsync(out.get(), &initial_out, sizeof(bool),
+                                          cudaMemcpyHostToDevice, cuda_stream));
 
-    // Initialize the output boolean.
-    vecmem::unique_alloc_ptr<bool> out = vecmem::make_unique_alloc<bool>(mr);
-    bool initial_out = true;
-    TRACCC_CUDA_ERROR_CHECK(
-        cudaMemcpyAsync(out.get(), &initial_out, sizeof(bool),
-                        cudaMemcpyHostToDevice, cuda_stream));
+  // Launch the kernel which will write its result to the `out` boolean.
+  kernels::is_ordered_on_kernel<CONTAINER>
+      <<<(n + block_size - 1) / block_size, block_size, 0, cuda_stream>>>(
+          relation, view, out.get());
 
-    // Launch the kernel which will write its result to the `out` boolean.
-    kernels::is_ordered_on_kernel<CONTAINER>
-        <<<(n + block_size - 1) / block_size, block_size, 0, cuda_stream>>>(
-            relation, view, out.get());
+  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 
-    TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+  // Copy the output to host, then return it.
+  bool host_out;
 
-    // Copy the output to host, then return it.
-    bool host_out;
+  TRACCC_CUDA_ERROR_CHECK(cudaMemcpyAsync(&host_out, out.get(), sizeof(bool),
+                                          cudaMemcpyDeviceToHost, cuda_stream));
 
-    TRACCC_CUDA_ERROR_CHECK(cudaMemcpyAsync(&host_out, out.get(), sizeof(bool),
-                                            cudaMemcpyDeviceToHost,
-                                            cuda_stream));
+  stream.synchronize();
 
-    stream.synchronize();
-
-    return host_out;
+  return host_out;
 }
 }  // namespace traccc::cuda

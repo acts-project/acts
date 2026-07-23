@@ -13,16 +13,14 @@
 namespace traccc::cuda::details {
 
 unsigned int get_warp_size(int device) {
-
-    int warp_size = 0;
-    TRACCC_CUDA_ERROR_CHECK(
-        cudaDeviceGetAttribute(&warp_size, cudaDevAttrWarpSize, device));
-    return static_cast<unsigned int>(warp_size);
+  int warp_size = 0;
+  TRACCC_CUDA_ERROR_CHECK(
+      cudaDeviceGetAttribute(&warp_size, cudaDevAttrWarpSize, device));
+  return static_cast<unsigned int>(warp_size);
 }
 
 cudaStream_t get_stream(const stream_wrapper& stream) {
-
-    return static_cast<cudaStream_t>(stream.cudaStream());
+  return static_cast<cudaStream_t>(stream.cudaStream());
 }
 
 }  // namespace traccc::cuda::details

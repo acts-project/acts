@@ -5,7 +5,7 @@
 # Mozilla Public License Version 2.0
 
 # Project include(s).
-include( traccc-compiler-options-cpp )
+include(traccc-compiler-options-cpp)
 
 # Set up the "build" of the traccc::core library.
 traccc_add_library( traccc_core core TYPE SHARED
@@ -148,28 +148,42 @@ traccc_add_library( traccc_core core TYPE SHARED
   "include/traccc/ambiguity_resolution/greedy_ambiguity_resolution_algorithm.hpp"
   "src/ambiguity_resolution/greedy_ambiguity_resolution_algorithm.cpp"
   "include/traccc/ambiguity_resolution/legacy/greedy_ambiguity_resolution_algorithm.hpp"
-  "src/ambiguity_resolution/legacy/greedy_ambiguity_resolution_algorithm.cpp")
-target_link_libraries( traccc_core
-  PUBLIC vecmem::core covfie::core detray::core_array detray::detectors
-         Acts::Core )
+  "src/ambiguity_resolution/legacy/greedy_ambiguity_resolution_algorithm.cpp"
+)
+target_link_libraries(
+    traccc_core
+    PUBLIC
+        vecmem::core
+        covfie::core
+        detray::core_array
+        detray::detectors
+        Acts::Core
+)
 
 string(REPLACE ";" ", " TRACCC_DETECTOR_TYPES "${TRACCC_SUPPORTED_DETECTORS}")
 message(STATUS "Building with detector types: ${TRACCC_DETECTOR_TYPES}")
 configure_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/include/traccc/geometry/detector_type_list.hpp.in"
-  "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/include/traccc/geometry/detector_type_list.hpp"
-  @ONLY)
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/traccc/geometry/detector_type_list.hpp.in"
+    "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/include/traccc/geometry/detector_type_list.hpp"
+    @ONLY
+)
 
-target_include_directories(traccc_core
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/include> )
+target_include_directories(
+    traccc_core
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/include>
+)
 
 install(
-  DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/include/"
-  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}" )
+    DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/include/"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+)
 
 # Any client that wants to use traccc::core with nvcc, needs to use the
 # "--expt-relaxed-constexpr" flag. Otherwise nvcc has a tendency to generate
 # invalid code.
-target_compile_options(traccc_core
-  INTERFACE
-  $<$<AND:$<CUDA_COMPILER_ID:NVIDIA>,$<COMPILE_LANGUAGE:CUDA>>:--expt-relaxed-constexpr>)
+target_compile_options(
+    traccc_core
+    INTERFACE
+        $<$<AND:$<CUDA_COMPILER_ID:NVIDIA>,$<COMPILE_LANGUAGE:CUDA>>:--expt-relaxed-constexpr>
+)

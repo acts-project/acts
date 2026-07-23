@@ -17,26 +17,25 @@ namespace traccc::opts {
 
 /// Option(s) for multi-threaded code execution
 class threading : public interface {
+ public:
+  /// @name Options
+  /// @{
 
-    public:
-    /// @name Options
-    /// @{
+  /// The number of threads to use for the data processing
+  std::size_t threads = 1;
 
-    /// The number of threads to use for the data processing
-    std::size_t threads = 1;
+  /// @}
 
-    /// @}
+  /// Constructor
+  threading();
 
-    /// Constructor
-    threading();
+  /// Read/process the command line options
+  ///
+  /// @param vm The command line options to interpret/read
+  ///
+  void read(const boost::program_options::variables_map& vm) override;
 
-    /// Read/process the command line options
-    ///
-    /// @param vm The command line options to interpret/read
-    ///
-    void read(const boost::program_options::variables_map& vm) override;
-
-    std::unique_ptr<configuration_printable> as_printable() const override;
+  std::unique_ptr<configuration_printable> as_printable() const override;
 };  // struct threading
 
 }  // namespace traccc::opts

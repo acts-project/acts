@@ -11,6 +11,7 @@
 #include "ActsExamples/Io/Root/RootAthenaDumpWriter.hpp"
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
+#include "ActsExamples/Io/Root/RootFileHasher.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
@@ -41,6 +42,8 @@
 #include "ActsExamples/Root/MuonVisualization.hpp"
 #include "ActsExamples/Root/ScalingCalibrator.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
+
+#include <filesystem>
 
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
@@ -336,5 +339,16 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
           const MuonSegmentContainer&, const Acts::Logger&)>(
           visualizeMuonHoughMaxima);
     });
+  }
+
+  // Content hashing
+  {
+    root.def(
+        "hashRootFile", &ActsExamples::hashRootFile, "path"_a,
+        "orderInvariant"_a = true,
+        "Compute a hash of the numeric content of a ROOT file. Deterministic, "
+        "sensitive to content changes, and (by default) invariant under "
+        "reordering of tree entries. Not byte-compatible with the Python "
+        "hash_root helper.");
   }
 }

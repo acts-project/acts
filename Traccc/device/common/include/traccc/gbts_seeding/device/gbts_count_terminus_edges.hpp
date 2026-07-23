@@ -20,14 +20,14 @@ namespace traccc::device {
 /// (Global Event Data) Payload for the @c
 /// traccc::device::gbts_count_terminus_edges function
 struct gbts_count_terminus_edges_payload {
-    /// Number of edges in the compacted graph
-    unsigned int nConnectedEdges;
-    /// Per-edge longest-outgoing-path summary from CCA
-    vecmem::data::vector_view<short2> outgoing_paths;
-    /// Total number of paths reachable from any terminus edge
-    unsigned int* nPathsCounter;
-    /// Running size of the path store (initialised to nTerminusEdges)
-    unsigned int* nPathStoreSizeCounter;
+  /// Number of edges in the compacted graph
+  unsigned int nConnectedEdges;
+  /// Per-edge longest-outgoing-path summary from CCA
+  vecmem::data::vector_view<short2> outgoing_paths;
+  /// Total number of paths reachable from any terminus edge
+  unsigned int* nPathsCounter;
+  /// Running size of the path store (initialised to nTerminusEdges)
+  unsigned int* nPathStoreSizeCounter;
 };
 
 /// @brief Count terminus edges (those with no live outgoing path) and total

@@ -23,23 +23,23 @@ namespace traccc::device {
 /// (Global Event Data) Payload for the @c
 /// traccc::device::gbts_run_cca_iteration function
 struct gbts_run_cca_iteration_payload {
-    /// Number of edges in the compacted graph
-    unsigned int nConnectedEdges;
-    /// Maximum number of neighbours retained per edge
-    unsigned int max_num_neighbours;
-    /// Minimum path length required for an edge to be considered active
-    unsigned char minLevel;
-    /// Compacted graph from gbts_compress_graph
-    vecmem::data::vector_view<const unsigned int> output_graph;
-    /// In/out: per-edge level ping-pong buffer (2 * nConnectedEdges bytes)
-    vecmem::data::vector_view<unsigned char> levels;
-    /// In/out: per-edge active-flag (holds the next iter index, or -1
-    /// once the edge is no longer active).
-    vecmem::data::vector_view<char> active_edges;
-    /// Output: longest outgoing-path summary per edge (length, next-edge)
-    vecmem::data::vector_view<short2> outgoing_paths;
-    /// Iteration index (0-based)
-    unsigned char iter;
+  /// Number of edges in the compacted graph
+  unsigned int nConnectedEdges;
+  /// Maximum number of neighbours retained per edge
+  unsigned int max_num_neighbours;
+  /// Minimum path length required for an edge to be considered active
+  unsigned char minLevel;
+  /// Compacted graph from gbts_compress_graph
+  vecmem::data::vector_view<const unsigned int> output_graph;
+  /// In/out: per-edge level ping-pong buffer (2 * nConnectedEdges bytes)
+  vecmem::data::vector_view<unsigned char> levels;
+  /// In/out: per-edge active-flag (holds the next iter index, or -1
+  /// once the edge is no longer active).
+  vecmem::data::vector_view<char> active_edges;
+  /// Output: longest outgoing-path summary per edge (length, next-edge)
+  vecmem::data::vector_view<short2> outgoing_paths;
+  /// Iteration index (0-based)
+  unsigned char iter;
 };
 
 /// @brief One iteration of the cellular-automaton "longest path" relaxation.

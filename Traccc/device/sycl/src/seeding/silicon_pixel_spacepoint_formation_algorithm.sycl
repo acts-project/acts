@@ -30,35 +30,34 @@ silicon_pixel_spacepoint_formation_algorithm::
 
 void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
     const form_spacepoints_kernel_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+  detector_buffer_visitor<detector_type_list>(
+      payload.detector, [&]<typename detector_traits_t>(
+                            const typename detector_traits_t::view& det) {
+        // Put the detector view into device memory.
+        vecmem::data::vector_buffer<typename detector_traits_t::view>
+            device_det(1u, mr().main);
+        copy().setup(device_det)->ignore();
+        copy()(
+            vecmem::data::vector_view<const typename detector_traits_t::view>(
+                1u, &det),
+            device_det)
+            ->ignore();
 
-    ::sycl::queue& squeue = details::get_queue(queue());
-    squeue.throw_asynchronous();
-    detector_buffer_visitor<detector_type_list>(
-        payload.detector, [&]<typename detector_traits_t>(
-                              const typename detector_traits_t::view& det) {
-            // Put the detector view into device memory.
-            vecmem::data::vector_buffer<typename detector_traits_t::view>
-                device_det(1u, mr().main);
-            copy().setup(device_det)->ignore();
-            copy()(vecmem::data::vector_view<
-                       const typename detector_traits_t::view>(1u, &det),
-                   device_det)
-                ->ignore();
-
-            // Launch the kernel.
-            squeue.submit([&](::sycl::handler& h) {
-                h.parallel_for(details::calculate1DimNdRange(
-                                   payload.n_measurements, warp_size() * 8),
-                               [det_ptr = device_det.ptr(),
-                                measurements = payload.measurements,
-                                spacepoints = payload.spacepoints](
-                                   ::sycl::nd_item<1> item) {
-                                   device::form_spacepoints<detector_traits_t>(
-                                       details::global_index(item), *det_ptr,
-                                       measurements, spacepoints);
-                               });
-            });
+        // Launch the kernel.
+        squeue.submit([&](::sycl::handler& h) {
+          h.parallel_for(
+              details::calculate1DimNdRange(payload.n_measurements,
+                                            warp_size() * 8),
+              [det_ptr = device_det.ptr(), measurements = payload.measurements,
+               spacepoints = payload.spacepoints](::sycl::nd_item<1> item) {
+                device::form_spacepoints<detector_traits_t>(
+                    details::global_index(item), *det_ptr, measurements,
+                    spacepoints);
+              });
         });
+      });
 }
 
 }  // namespace traccc::sycl

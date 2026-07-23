@@ -14,8 +14,7 @@ namespace traccc::cuda::details {
 
 /// Function creating a global index in a 1D CUDA kernel
 __device__ inline device::global_index_t global_index1() {
-
-    return blockIdx.x * blockDim.x + threadIdx.x;
+  return blockIdx.x * blockDim.x + threadIdx.x;
 }
 
 }  // namespace traccc::cuda::details

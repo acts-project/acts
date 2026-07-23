@@ -50,51 +50,50 @@ auto transcribe_to_trace(const typename detector_t::geometry_context ctx,
                          const traccc::io::csv::particle& ptc,
                          const std::vector<traccc::io::csv::hit>& hits,
                          const std::size_t n_hits_for_particle = 10u) {
-    using intersection_t =
-        typename candidate_type<detector_t>::intersection_type;
+  using intersection_t = typename candidate_type<detector_t>::intersection_type;
 
-    detray::dvector<candidate_type<detector_t>> candidates{};
-    candidates.reserve(n_hits_for_particle);
+  detray::dvector<candidate_type<detector_t>> candidates{};
+  candidates.reserve(n_hits_for_particle);
 
-    // Fill the hits into the candidate trace
-    for (const auto& h : hits) {
-        if (h.particle_id != ptc.particle_id) {
-            continue;
-        }
-
-        // Rough estimate of path
-        const point3 pos{h.tx, h.ty, h.tz};
-        const vector3 mom{h.tpx, h.tpy, h.tpz};
-        const vector3 dir = vector::normalize(mom);
-        const scalar path{vector::norm(pos)};
-
-        // Corresponding surface
-        const detray::geometry::identifier geo_id{h.geometry_id};
-        const auto sf_desc = det.surfaces().at(geo_id.index());
-        const auto sf = detray::tracking_surface{det, geo_id};
-
-        // Build an intersection from the hit
-        using nav_link_t = typename intersection_t::nav_link_t;
-        auto loc_pos = sf.global_to_local(ctx, pos, dir);
-        intersection_t intr{sf_desc,
-                            path,
-                            static_cast<nav_link_t>(geo_id.volume()),
-                            detray::intersection::status::e_inside,
-                            true,
-                            loc_pos};
-
-        candidates.emplace_back(pos, dir, intr, ptc.q, vector::norm(mom));
+  // Fill the hits into the candidate trace
+  for (const auto& h : hits) {
+    if (h.particle_id != ptc.particle_id) {
+      continue;
     }
 
-    // Sort records by intersection distance to origin of the trajectory
-    auto sort_by_path = [&](const candidate_type<detector_t>& a,
-                            const candidate_type<detector_t>& b) -> bool {
-        return (a.intersection < b.intersection);
-    };
+    // Rough estimate of path
+    const point3 pos{h.tx, h.ty, h.tz};
+    const vector3 mom{h.tpx, h.tpy, h.tpz};
+    const vector3 dir = vector::normalize(mom);
+    const scalar path{vector::norm(pos)};
 
-    std::ranges::stable_sort(candidates, sort_by_path);
+    // Corresponding surface
+    const detray::geometry::identifier geo_id{h.geometry_id};
+    const auto sf_desc = det.surfaces().at(geo_id.index());
+    const auto sf = detray::tracking_surface{det, geo_id};
 
-    return candidates;
+    // Build an intersection from the hit
+    using nav_link_t = typename intersection_t::nav_link_t;
+    auto loc_pos = sf.global_to_local(ctx, pos, dir);
+    intersection_t intr{sf_desc,
+                        path,
+                        static_cast<nav_link_t>(geo_id.volume()),
+                        detray::intersection::status::e_inside,
+                        true,
+                        loc_pos};
+
+    candidates.emplace_back(pos, dir, intr, ptc.q, vector::norm(mom));
+  }
+
+  // Sort records by intersection distance to origin of the trajectory
+  auto sort_by_path = [&](const candidate_type<detector_t>& a,
+                          const candidate_type<detector_t>& b) -> bool {
+    return (a.intersection < b.intersection);
+  };
+
+  std::ranges::stable_sort(candidates, sort_by_path);
+
+  return candidates;
 }
 
 /// Transcribe the measurements for a particle to a candidate trace for the
@@ -115,55 +114,52 @@ auto transcribe_to_trace(
                    std::vector<edm::measurement_collection::host::object_type>>&
         ptc_to_meas_map,
     const std::size_t n_meas_for_particle = 10u) {
+  using intersection_t = typename candidate_type<detector_t>::intersection_type;
 
-    using intersection_t =
-        typename candidate_type<detector_t>::intersection_type;
+  vecmem::vector<candidate_type<detector_t>> candidates{};
+  candidates.reserve(n_meas_for_particle);
 
-    vecmem::vector<candidate_type<detector_t>> candidates{};
-    candidates.reserve(n_meas_for_particle);
+  // TODO: Not accurate for every measurement
+  const scalar p{vector::norm(ptc.momentum)};
+  const scalar q{ptc.charge};
 
-    // TODO: Not accurate for every measurement
-    const scalar p{vector::norm(ptc.momentum)};
-    const scalar q{ptc.charge};
+  // Fill the hits into the candidate trace
+  for (const auto& meas : ptc_to_meas_map.at(ptc)) {
+    // Corresponding surface
+    const detray::geometry::identifier geo_id{meas.surface_link()};
+    const auto sf_desc = det.surfaces().at(geo_id.index());
+    const auto sf = detray::tracking_surface{det, geo_id};
 
-    // Fill the hits into the candidate trace
-    for (const auto& meas : ptc_to_meas_map.at(ptc)) {
-        // Corresponding surface
-        const detray::geometry::identifier geo_id{meas.surface_link()};
-        const auto sf_desc = det.surfaces().at(geo_id.index());
-        const auto sf = detray::tracking_surface{det, geo_id};
+    // TODO: Use correct track direction at measurement for line sf.
+    const vector3 dir{vector::normalize(ptc.momentum)};
+    const point3 glob_pos{sf.local_to_global(ctx, meas.local_position(), dir)};
 
-        // TODO: Use correct track direction at measurement for line sf.
-        const vector3 dir{vector::normalize(ptc.momentum)};
-        const point3 glob_pos{
-            sf.local_to_global(ctx, meas.local_position(), dir)};
+    // Rough estimate of intersection distance from origin
+    const scalar path{vector::norm(glob_pos)};
 
-        // Rough estimate of intersection distance from origin
-        const scalar path{vector::norm(glob_pos)};
+    // Build an intersection
+    using nav_link_t = typename intersection_t::nav_link_type;
+    intersection_t intr{
+        sf_desc,
+        path,
+        {meas.local_position()[0], meas.local_position()[1], 0.f},
+        static_cast<nav_link_t>(geo_id.volume()),
+        detray::intersection::status::e_inside,
+        true};
 
-        // Build an intersection
-        using nav_link_t = typename intersection_t::nav_link_type;
-        intersection_t intr{
-            sf_desc,
-            path,
-            {meas.local_position()[0], meas.local_position()[1], 0.f},
-            static_cast<nav_link_t>(geo_id.volume()),
-            detray::intersection::status::e_inside,
-            true};
+    // TODO: Don't use initial particle momentum
+    candidates.emplace_back(glob_pos, dir, intr, q, p);
+  }
 
-        // TODO: Don't use initial particle momentum
-        candidates.emplace_back(glob_pos, dir, intr, q, p);
-    }
+  // Sort records by intersection distance to origin of the trajectory
+  auto sort_by_path = [&](const candidate_type<detector_t>& a,
+                          const candidate_type<detector_t>& b) -> bool {
+    return (a.intersection < b.intersection);
+  };
 
-    // Sort records by intersection distance to origin of the trajectory
-    auto sort_by_path = [&](const candidate_type<detector_t>& a,
-                            const candidate_type<detector_t>& b) -> bool {
-        return (a.intersection < b.intersection);
-    };
+  std::ranges::stable_sort(candidates, sort_by_path);
 
-    std::ranges::stable_sort(candidates, sort_by_path);
-
-    return candidates;
+  return candidates;
 }
 
 }  // namespace traccc::propagation_validator

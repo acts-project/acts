@@ -32,188 +32,187 @@ namespace traccc::edm {
 ///
 template <typename BASE>
 class track_state : public BASE {
+ public:
+  /// @name Functions inherited from the base class
+  /// @{
 
-    public:
-    /// @name Functions inherited from the base class
-    /// @{
+  /// Inherit the base class's constructor(s)
+  using BASE::BASE;
+  /// Inherit the base class's assignment operator(s).
+  using BASE::operator=;
 
-    /// Inherit the base class's constructor(s)
-    using BASE::BASE;
-    /// Inherit the base class's assignment operator(s).
-    using BASE::operator=;
+  /// @}
 
-    /// @}
+  /// @name Constants
+  /// @{
 
-    /// @name Constants
-    /// @{
+  /// @c is_hole bit in the state word
+  static constexpr std::uint8_t IS_HOLE_MASK = 0x01;
+  /// @c is_smoothed bit in the state word
+  static constexpr std::uint8_t IS_SMOOTHED_MASK = 0x02;
 
-    /// @c is_hole bit in the state word
-    static constexpr std::uint8_t IS_HOLE_MASK = 0x01;
-    /// @c is_smoothed bit in the state word
-    static constexpr std::uint8_t IS_SMOOTHED_MASK = 0x02;
+  /// @}
 
-    /// @}
+  /// @name Track State Information
+  /// @{
 
-    /// @name Track State Information
-    /// @{
+  /// The "state word" of the track (non-const)
+  ///
+  /// @return A (non-const) vector of unsigned integers
+  ///
+  TRACCC_HOST_DEVICE
+  auto& state() { return BASE::template get<0>(); }
+  /// The "state word" of the track (const)
+  ///
+  /// @return A (const) vector of unsigned integers
+  ///
+  TRACCC_HOST_DEVICE
+  const auto& state() const { return BASE::template get<0>(); }
 
-    /// The "state word" of the track (non-const)
-    ///
-    /// @return A (non-const) vector of unsigned integers
-    ///
-    TRACCC_HOST_DEVICE
-    auto& state() { return BASE::template get<0>(); }
-    /// The "state word" of the track (const)
-    ///
-    /// @return A (const) vector of unsigned integers
-    ///
-    TRACCC_HOST_DEVICE
-    const auto& state() const { return BASE::template get<0>(); }
+  /// Chi^2 of the fitered parameters (non-const)
+  ///
+  /// @return A (non-const) vector of scalar values
+  ///
+  TRACCC_HOST_DEVICE
+  auto& filtered_chi2() { return BASE::template get<1>(); }
+  /// Chi^2 of the filtered parameters (const)
+  ///
+  /// @return A (const) vector of scalar values
+  ///
+  TRACCC_HOST_DEVICE
+  const auto& filtered_chi2() const { return BASE::template get<1>(); }
 
-    /// Chi^2 of the fitered parameters (non-const)
-    ///
-    /// @return A (non-const) vector of scalar values
-    ///
-    TRACCC_HOST_DEVICE
-    auto& filtered_chi2() { return BASE::template get<1>(); }
-    /// Chi^2 of the filtered parameters (const)
-    ///
-    /// @return A (const) vector of scalar values
-    ///
-    TRACCC_HOST_DEVICE
-    const auto& filtered_chi2() const { return BASE::template get<1>(); }
+  /// Chi^2 of the smoothed parameters (non-const)
+  ///
+  /// @return A (non-const) vector of scalar values
+  ///
+  TRACCC_HOST_DEVICE
+  auto& smoothed_chi2() { return BASE::template get<2>(); }
+  /// Chi^2 of the smoothed parameters (const)
+  ///
+  /// @return A (const) vector of scalar values
+  ///
+  TRACCC_HOST_DEVICE
+  const auto& smoothed_chi2() const { return BASE::template get<2>(); }
 
-    /// Chi^2 of the smoothed parameters (non-const)
-    ///
-    /// @return A (non-const) vector of scalar values
-    ///
-    TRACCC_HOST_DEVICE
-    auto& smoothed_chi2() { return BASE::template get<2>(); }
-    /// Chi^2 of the smoothed parameters (const)
-    ///
-    /// @return A (const) vector of scalar values
-    ///
-    TRACCC_HOST_DEVICE
-    const auto& smoothed_chi2() const { return BASE::template get<2>(); }
+  /// Chi^2 of the backward parameters (non-const)
+  ///
+  /// @return A (non-const) vector of scalar values
+  ///
+  TRACCC_HOST_DEVICE
+  auto& backward_chi2() { return BASE::template get<3>(); }
+  /// Chi^2 of the backward parameters (const)
+  ///
+  /// @return A (const) vector of scalar values
+  ///
+  TRACCC_HOST_DEVICE
+  const auto& backward_chi2() const { return BASE::template get<3>(); }
 
-    /// Chi^2 of the backward parameters (non-const)
-    ///
-    /// @return A (non-const) vector of scalar values
-    ///
-    TRACCC_HOST_DEVICE
-    auto& backward_chi2() { return BASE::template get<3>(); }
-    /// Chi^2 of the backward parameters (const)
-    ///
-    /// @return A (const) vector of scalar values
-    ///
-    TRACCC_HOST_DEVICE
-    const auto& backward_chi2() const { return BASE::template get<3>(); }
+  /// The filtered parameters of the track on the surface (non-const)
+  ///
+  /// @return A (non-const) vector of bound track parameters
+  ///
+  TRACCC_HOST_DEVICE
+  auto& filtered_params() { return BASE::template get<4>(); }
+  /// The filtered parameters of the track on the surface (const)
+  ///
+  /// @return A (const) vector of bound track parameters
+  ///
+  TRACCC_HOST_DEVICE
+  const auto& filtered_params() const { return BASE::template get<4>(); }
 
-    /// The filtered parameters of the track on the surface (non-const)
-    ///
-    /// @return A (non-const) vector of bound track parameters
-    ///
-    TRACCC_HOST_DEVICE
-    auto& filtered_params() { return BASE::template get<4>(); }
-    /// The filtered parameters of the track on the surface (const)
-    ///
-    /// @return A (const) vector of bound track parameters
-    ///
-    TRACCC_HOST_DEVICE
-    const auto& filtered_params() const { return BASE::template get<4>(); }
+  /// The smoothed parameters of the track on the surface (non-const)
+  ///
+  /// @return A (non-const) vector of bound track parameters
+  ///
+  TRACCC_HOST_DEVICE
+  auto& smoothed_params() { return BASE::template get<5>(); }
+  /// The smoothed parameters of the track on the surface (const)
+  ///
+  /// @return A (const) vector of bound track parameters
+  ///
+  TRACCC_HOST_DEVICE
+  const auto& smoothed_params() const { return BASE::template get<5>(); }
 
-    /// The smoothed parameters of the track on the surface (non-const)
-    ///
-    /// @return A (non-const) vector of bound track parameters
-    ///
-    TRACCC_HOST_DEVICE
-    auto& smoothed_params() { return BASE::template get<5>(); }
-    /// The smoothed parameters of the track on the surface (const)
-    ///
-    /// @return A (const) vector of bound track parameters
-    ///
-    TRACCC_HOST_DEVICE
-    const auto& smoothed_params() const { return BASE::template get<5>(); }
+  /// The index of the track's measurement on the current surface (non-const)
+  ///
+  /// @return A (non-const) vector of unsigned integers
+  ///
+  TRACCC_HOST_DEVICE
+  auto& measurement_index() { return BASE::template get<6>(); }
+  /// The index of the track's measurement on the current surface (const)
+  ///
+  /// @return A (const) vector of unsigned integers
+  ///
+  TRACCC_HOST_DEVICE
+  const auto& measurement_index() const { return BASE::template get<6>(); }
 
-    /// The index of the track's measurement on the current surface (non-const)
-    ///
-    /// @return A (non-const) vector of unsigned integers
-    ///
-    TRACCC_HOST_DEVICE
-    auto& measurement_index() { return BASE::template get<6>(); }
-    /// The index of the track's measurement on the current surface (const)
-    ///
-    /// @return A (const) vector of unsigned integers
-    ///
-    TRACCC_HOST_DEVICE
-    const auto& measurement_index() const { return BASE::template get<6>(); }
+  /// @}
 
-    /// @}
+  /// @name Utility functions
+  /// @{
 
-    /// @name Utility functions
-    /// @{
+  /// Check if the track state is on a hole
+  ///
+  /// @note This function must only be used on proxy objects, not on
+  ///       containers!
+  ///
+  /// @return @c true if the track state is on a hole, @c false otherwise
+  ///
+  TRACCC_HOST_DEVICE
+  bool is_hole() const;
+  /// Set the track state to be on a hole
+  ///
+  /// @note This function must only be used on proxy objects, not on
+  ///       containers!
+  ///
+  /// @param value The value to set
+  ///
+  TRACCC_HOST_DEVICE
+  void set_hole(bool value = true);
 
-    /// Check if the track state is on a hole
-    ///
-    /// @note This function must only be used on proxy objects, not on
-    ///       containers!
-    ///
-    /// @return @c true if the track state is on a hole, @c false otherwise
-    ///
-    TRACCC_HOST_DEVICE
-    bool is_hole() const;
-    /// Set the track state to be on a hole
-    ///
-    /// @note This function must only be used on proxy objects, not on
-    ///       containers!
-    ///
-    /// @param value The value to set
-    ///
-    TRACCC_HOST_DEVICE
-    void set_hole(bool value = true);
+  /// Check if the track state is smoothed
+  ///
+  /// @note This function must only be used on proxy objects, not on
+  ///       containers!
+  ///
+  /// @return @c true if the track state is smoothed, @c false otherwise
+  ///
+  TRACCC_HOST_DEVICE
+  bool is_smoothed() const;
+  /// Set the track state to be smoothed
+  ///
+  /// @note This function must only be used on proxy objects, not on
+  ///       containers!
+  ///
+  /// @param value The value to set
+  ///
+  TRACCC_HOST_DEVICE
+  void set_smoothed(bool value = true);
 
-    /// Check if the track state is smoothed
-    ///
-    /// @note This function must only be used on proxy objects, not on
-    ///       containers!
-    ///
-    /// @return @c true if the track state is smoothed, @c false otherwise
-    ///
-    TRACCC_HOST_DEVICE
-    bool is_smoothed() const;
-    /// Set the track state to be smoothed
-    ///
-    /// @note This function must only be used on proxy objects, not on
-    ///       containers!
-    ///
-    /// @param value The value to set
-    ///
-    TRACCC_HOST_DEVICE
-    void set_smoothed(bool value = true);
+  /// @}
 
-    /// @}
-
-    private:
-    /// @returns a string stream that prints the track state details
-    TRACCC_HOST
-    friend std::ostream& operator<<(std::ostream& os, const track_state& s) {
-        os << "hole: " << std::boolalpha << s.is_hole() << std::endl;
-        os << "smoothed: " << s.is_smoothed() << std::noboolalpha << std::endl;
-        if (!s.is_hole()) {
-            os << "measurement index: " << s.measurement_index() << std::endl;
-        }
-
-        os << "filtered: chi2 (fw) = " << s.filtered_chi2()
-           << ", chi2 (bw) = " << s.backward_chi2() << "\n"
-           << s.filtered_params() << std::endl;
-
-        if (s.is_smoothed()) {
-            os << "smoothed: chi2 = " << s.smoothed_chi2() << "\n"
-               << s.smoothed_params() << std::endl;
-        }
-
-        return os;
+ private:
+  /// @returns a string stream that prints the track state details
+  TRACCC_HOST
+  friend std::ostream& operator<<(std::ostream& os, const track_state& s) {
+    os << "hole: " << std::boolalpha << s.is_hole() << std::endl;
+    os << "smoothed: " << s.is_smoothed() << std::noboolalpha << std::endl;
+    if (!s.is_hole()) {
+      os << "measurement index: " << s.measurement_index() << std::endl;
     }
+
+    os << "filtered: chi2 (fw) = " << s.filtered_chi2()
+       << ", chi2 (bw) = " << s.backward_chi2() << "\n"
+       << s.filtered_params() << std::endl;
+
+    if (s.is_smoothed()) {
+      os << "smoothed: chi2 = " << s.smoothed_chi2() << "\n"
+         << s.smoothed_params() << std::endl;
+    }
+
+    return os;
+  }
 
 };  // class track_state
 

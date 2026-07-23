@@ -42,18 +42,17 @@ class KalmanFittingToyDetectorTests
           std::array<scalar, 2u>, std::array<scalar, 2u>,
           std::array<scalar, 2u>, detray::pdg_particle<scalar>, unsigned int,
           unsigned int, bool>> {
+ public:
+  static constexpr std::array<scalar, 2u> smearing{
+      50.f * traccc::unit<scalar>::um, 50.f * traccc::unit<scalar>::um};
 
-    public:
-    static constexpr std::array<scalar, 2u> smearing{
-        50.f * traccc::unit<scalar>::um, 50.f * traccc::unit<scalar>::um};
-
-    static constexpr std::array<double, e_bound_size> stddevs = {
-        0.01 * traccc::unit<double>::mm,
-        0.01 * traccc::unit<double>::mm,
-        0.001,
-        0.001,
-        0.001 / traccc::unit<double>::GeV,
-        0.01 * traccc::unit<double>::ns};
+  static constexpr std::array<double, e_bound_size> stddevs = {
+      0.01 * traccc::unit<double>::mm,
+      0.01 * traccc::unit<double>::mm,
+      0.001,
+      0.001,
+      0.001 / traccc::unit<double>::GeV,
+      0.01 * traccc::unit<double>::ns};
 };
 
 }  // namespace traccc

@@ -41,77 +41,74 @@ class TripletFittingTelescopeTests
           std::array<scalar, 2u>, std::array<scalar, 2u>,
           std::array<scalar, 2u>, detray::pdg_particle<scalar>, unsigned int,
           unsigned int, bool, scalar, unsigned int, scalar, vector3>> {
+ public:
+  /// Plane alignment direction (aligned to x-axis)
+  static const inline detray::detail::ray<traccc::default_algebra> traj{
+      {0, 0, 0}, 0, {1, 0, 0}, -1};
 
-    public:
-    /// Plane alignment direction (aligned to x-axis)
-    static const inline detray::detail::ray<traccc::default_algebra> traj{
-        {0, 0, 0}, 0, {1, 0, 0}, -1};
+  /// Plane material and thickness
+  static const inline detray::silicon_tml<scalar> mat = {};
+  static constexpr scalar thickness = 0.5f * traccc::unit<scalar>::mm;
 
-    /// Plane material and thickness
-    static const inline detray::silicon_tml<scalar> mat = {};
-    static constexpr scalar thickness = 0.5f * traccc::unit<scalar>::mm;
+  // Rectangle mask for the telescope geometry
+  static constexpr detray::mask<detray::rectangle2D, traccc::default_algebra>
+      rectangle{0u, 100000.f, 100000.f};
 
-    // Rectangle mask for the telescope geometry
-    static constexpr detray::mask<detray::rectangle2D, traccc::default_algebra>
-        rectangle{0u, 100000.f, 100000.f};
+  /// Measurement smearing parameters
+  static constexpr std::array<scalar, 2u> smearing{
+      50 * traccc::unit<scalar>::um, 50 * traccc::unit<scalar>::um};
 
-    /// Measurement smearing parameters
-    static constexpr std::array<scalar, 2u> smearing{
-        50 * traccc::unit<scalar>::um, 50 * traccc::unit<scalar>::um};
+  /// Standard deviations for seed track parameters
+  static constexpr std::array<double, e_bound_size> stddevs = {
+      0.1 * traccc::unit<double>::mm,
+      0.1 * traccc::unit<double>::mm,
+      0.017,
+      0.017,
+      0.05 / traccc::unit<double>::GeV,
+      1. * traccc::unit<double>::ns};
 
-    /// Standard deviations for seed track parameters
-    static constexpr std::array<double, e_bound_size> stddevs = {
-        0.1 * traccc::unit<double>::mm,
-        0.1 * traccc::unit<double>::mm,
-        0.017,
-        0.017,
-        0.05 / traccc::unit<double>::GeV,
-        1. * traccc::unit<double>::ns};
+  void consistency_tests(
+      const edm::track_collection<default_algebra>::host::const_proxy_type&
+          track,
+      const edm::track_state_collection<default_algebra>::host&) const {
+    // The nubmer of track states is supposed be equal to the number
+    // of planes
+    ASSERT_EQ(track.constituent_links().size(), std::get<11>(GetParam()));
+  }
 
-    void consistency_tests(
-        const edm::track_collection<default_algebra>::host::const_proxy_type&
-            track,
-        const edm::track_state_collection<default_algebra>::host&) const {
+ protected:
+  virtual void SetUp() override {
+    vecmem::host_memory_resource host_mr;
 
-        // The nubmer of track states is supposed be equal to the number
-        // of planes
-        ASSERT_EQ(track.constituent_links().size(), std::get<11>(GetParam()));
+    const scalar offset = std::get<10>(GetParam());
+    const unsigned int n_planes = std::get<11>(GetParam());
+    const scalar spacing = std::get<12>(GetParam());
+
+    std::vector<scalar> plane_positions;
+    for (unsigned int i = 0; i < n_planes; i++) {
+      plane_positions.push_back(offset * unit<scalar>::mm +
+                                static_cast<scalar>(i) * spacing *
+                                    unit<scalar>::mm);
     }
 
-    protected:
-    virtual void SetUp() override {
+    detray::tel_det_config tel_cfg{rectangle};
+    tel_cfg.positions(plane_positions);
+    tel_cfg.module_material(mat);
+    tel_cfg.mat_thickness(thickness);
+    tel_cfg.pilot_track(traj);
+    tel_cfg.envelope(offset * 2.f);
 
-        vecmem::host_memory_resource host_mr;
+    // Create telescope detector
+    auto [det, name_map] = build_telescope_detector(host_mr, tel_cfg);
 
-        const scalar offset = std::get<10>(GetParam());
-        const unsigned int n_planes = std::get<11>(GetParam());
-        const scalar spacing = std::get<12>(GetParam());
-
-        std::vector<scalar> plane_positions;
-        for (unsigned int i = 0; i < n_planes; i++) {
-            plane_positions.push_back(offset * unit<scalar>::mm +
-                                      static_cast<scalar>(i) * spacing *
-                                          unit<scalar>::mm);
-        }
-
-        detray::tel_det_config tel_cfg{rectangle};
-        tel_cfg.positions(plane_positions);
-        tel_cfg.module_material(mat);
-        tel_cfg.mat_thickness(thickness);
-        tel_cfg.pilot_track(traj);
-        tel_cfg.envelope(offset * 2.f);
-
-        // Create telescope detector
-        auto [det, name_map] = build_telescope_detector(host_mr, tel_cfg);
-
-        // Write detector file
-        auto writer_cfg = detray::io::detector_writer_config{}
-                              .format(detray::io::format::json)
-                              .replace_files(true)
-                              .write_material(true)
-                              .path(std::get<0>(GetParam()));
-        detray::io::write_detector(det, name_map, writer_cfg);
-    }
+    // Write detector file
+    auto writer_cfg = detray::io::detector_writer_config{}
+                          .format(detray::io::format::json)
+                          .replace_files(true)
+                          .write_material(true)
+                          .path(std::get<0>(GetParam()));
+    detray::io::write_detector(det, name_map, writer_cfg);
+  }
 };
 
 }  // namespace traccc

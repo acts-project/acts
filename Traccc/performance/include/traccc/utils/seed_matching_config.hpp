@@ -12,7 +12,7 @@
 namespace traccc {
 
 struct seed_matching_config {
-    float matching_ratio = 0.5f;
+  float matching_ratio = 0.5f;
 };
 
 }  // namespace traccc

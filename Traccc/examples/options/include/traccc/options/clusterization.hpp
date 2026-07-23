@@ -20,20 +20,19 @@ class clusterization
     : public interface,
       public config_provider<clustering_config>,
       public config_provider<host::clusterization_algorithm::config_type> {
+ public:
+  /// Constructor
+  clusterization();
 
-    public:
-    /// Constructor
-    clusterization();
+  /// Configuration conversion
+  operator clustering_config() const override;
+  operator host::clusterization_algorithm::config_type() const override;
 
-    /// Configuration conversion
-    operator clustering_config() const override;
-    operator host::clusterization_algorithm::config_type() const override;
+  std::unique_ptr<configuration_printable> as_printable() const override;
 
-    std::unique_ptr<configuration_printable> as_printable() const override;
-
-    private:
-    /// Internal configuration object
-    clustering_config m_config;
+ private:
+  /// Internal configuration object
+  clustering_config m_config;
 };  // class clusterization
 
 }  // namespace traccc::opts
