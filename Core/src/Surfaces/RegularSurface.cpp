@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Portal.hpp"
 
 namespace Acts {
 
@@ -41,6 +42,13 @@ bool RegularSurface::isOnSurface(const GeometryContext& gctx,
     return false;
   }
   return bounds().inside(lpResult.value(), boundaryTolerance);
+}
+const Portal* RegularSurface::associatedPortal() const {
+  return m_portal;
+}
+
+void RegularSurface::associatePortal(const Portal& portal) {
+  m_portal = &portal;
 }
 
 }  // namespace Acts

@@ -130,6 +130,7 @@ class Portal {
   /// ```
   /// @param gctx The geometry context
   /// @param args The struct containing the arguments
+  [[deprecated("Constructor seems to be unused.. Will be removed soon")]]
   Portal(const GeometryContext& gctx, Arguments&& args);
 
   /// Fuse two portals together. Fusing is the combination of two portal links

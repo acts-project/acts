@@ -44,6 +44,7 @@ Portal::Portal(Direction direction, std::unique_ptr<PortalLinkBase> link) {
   }
 
   m_surface = link->surfacePtr();
+  m_surface->associatePortal(*this);
 
   if (direction == Direction::AlongNormal()) {
     m_alongNormal = std::move(link);
@@ -118,6 +119,7 @@ void Portal::setLink(const GeometryContext& gctx, Direction direction,
   if (other == nullptr) {
     // We don't have an existing surface, take the one we just got
     m_surface = target->surfacePtr();
+    m_surface->associatePortal(*this);
     return;
   }
 
@@ -125,6 +127,7 @@ void Portal::setLink(const GeometryContext& gctx, Direction direction,
     // new link has material: assign that to existing link
     m_surface = target->surfacePtr();
     other->setSurface(m_surface);
+    m_surface->associatePortal(*this);
   } else {
     // none have material, or the existing surface had material: assign the
     // existing surface by convention
