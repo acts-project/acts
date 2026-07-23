@@ -46,7 +46,6 @@ def configure(
             "Commit is not a child of %s; disabling Spack libraries",
             SPACK_LIBS_COMMIT[:8],
         )
-        config_args.append("-DTRACCC_USE_SYSTEM_ACTS=ON")
         config_args.append("-DTRACCC_USE_SYSTEM_TBB=ON")
 
     if git.is_parent_of(

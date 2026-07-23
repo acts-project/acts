@@ -6,28 +6,32 @@
 
 # CMake include(s).
 cmake_minimum_required(VERSION 3.25)
-include(FetchContent)
 
 # Tell the user what's happening.
 message(STATUS "Building Acts (including Detray) as part of the TRACCC project")
 
-# Declare where to get Acts from.
-set(TRACCC_ACTS_SOURCE
-    GIT_REPOSITORY
-    https://github.com/acts-project/acts.git
-    GIT_TAG
-    cda8b940cedfaa413931184587d6ac200e6198d0
-    CACHE STRING
-    "Source for Acts, when built as part of this project"
+# Acts is colocated in this repository: Traccc lives in-tree under the Acts
+# source, which is the single source of truth. Build against that copy directly
+# (the repository root, three levels up from here) rather than fetching an
+# upstream copy. The add_subdirectory() happens at the end of this file, once the
+# Acts/Detray build options below have been set.
+get_filename_component(
+    TRACCC_ACTS_SOURCE_DIR
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../.."
+    ABSOLUTE
 )
-mark_as_advanced(TRACCC_ACTS_SOURCE)
-FetchContent_Declare(Acts ${TRACCC_ACTS_SOURCE})
 
 # Options used in the build of Acts.
 set(ACTS_SETUP_EIGEN3 TRUE CACHE BOOL "Set up Eigen in the Acts code")
 set(ACTS_USE_SYSTEM_EIGEN3 FALSE CACHE BOOL "Build Eigen3 from source")
 set(ACTS_BUILD_PLUGIN_JSON TRUE CACHE BOOL "Build JSON plugin in Acts")
 set(ACTS_SETUP_DETRAY TRUE CACHE BOOL "Set up Detray in the Acts code")
+
+# Acts and Detray are in-tree, first-party code here, so build them with
+# warnings-as-errors (matching Acts' own CI). This catches warnings in their own
+# compilation -- not just those in headers pulled into traccc translation units,
+# which are already covered by dropping the -isystem treatment.
+set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
 
 # Set the detray log level
 set(DETRAY_SET_LOGGING
@@ -52,5 +56,10 @@ if(NOT ("itk_metadata" IN_LIST DETRAY_GENERATE_METADATA))
     list(APPEND DETRAY_GENERATE_METADATA "itk_metadata")
 endif()
 
-# Get it into the current directory.
-FetchContent_MakeAvailable(Acts)
+# Build the colocated Acts (and, transitively, Detray) as a subdirectory of this
+# build. An explicit binary dir is required because the source lives outside the
+# current directory tree.
+add_subdirectory(
+    "${TRACCC_ACTS_SOURCE_DIR}"
+    "${CMAKE_CURRENT_BINARY_DIR}/acts"
+)
