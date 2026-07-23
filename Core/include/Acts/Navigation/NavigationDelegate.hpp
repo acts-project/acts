@@ -20,7 +20,6 @@ class AppendOnlyNavigationStream;
 class NavigationPolicyState;
 class Logger;
 
-
 /// Struct that serves as the argument to the navigation delegate.
 /// It is not supposed to be used as an lvalue.
 struct NavigationArguments {
