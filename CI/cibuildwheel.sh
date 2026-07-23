@@ -3,15 +3,15 @@
 # CIBW_* configuration. All arguments are forwarded to cibuildwheel
 # unchanged (e.g. a package-dir positional, --only, --output-dir, ...).
 # Anything else is configured via environment variables: CIBW_BUILD narrows the
-# targets to build (defaults to every CPython allowed by `requires-python` in
-# pyproject.toml); GITHUB_TOKEN is forwarded into the build environment if set.
+# targets to build; GITHUB_TOKEN is forwarded into the build environment if set.
 set -euo pipefail
 
-# cibuildwheel filters the target list by `requires-python`, so the supported
-# Python range is declared once in pyproject.toml rather than repeated here.
-# Callers only set CIBW_BUILD to build a *subset* (e.g. a single-version smoke
-# test in PR CI).
-export CIBW_BUILD="${CIBW_BUILD:-cp3*-*}"
+# Callers must set CIBW_BUILD explicitly (e.g. via
+# `CI/supported_python_versions.py --cibw` for the full matrix, or a literal
+# glob like "cp313-*" for a single-version smoke test in PR CI). cibuildwheel
+# 3.4.1 errors out if CIBW_BUILD is unset/empty, so fail here too rather than
+# silently building nothing.
+: "${CIBW_BUILD:?CIBW_BUILD must be set}"
 
 CI="${CI:-true}"
 export CI

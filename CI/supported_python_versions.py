@@ -12,8 +12,7 @@
 #
 # Usage:
 #   CI/supported_python_versions.py --floor    # lowest version, e.g. 3.10
-#   CI/supported_python_versions.py --list     # all 3.x versions, one per line
-#   CI/supported_python_versions.py --list --sep " "  # space-separated
+#   CI/supported_python_versions.py --cibw     # CIBW_BUILD value, e.g. "cp311-* cp312-*"
 
 import argparse
 import re
@@ -39,8 +38,7 @@ def main() -> None:
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--floor", action="store_true")
-    parser.add_argument("--list", action="store_true")
-    parser.add_argument("--sep", default=None)
+    parser.add_argument("--cibw", action="store_true")
     args = parser.parse_args()
 
     all_versions = [f"3.{i}" for i in range(100)]
@@ -50,9 +48,9 @@ def main() -> None:
         print(versions[0])
         return
 
-    if args.list:
-        sep = args.sep if args.sep is not None else "\n"
-        print(sep.join(versions))
+    if args.cibw:
+        tags = ["cp" + v.replace(".", "") + "-*" for v in versions]
+        print(" ".join(tags))
         return
 
     parser.print_help()

@@ -81,12 +81,15 @@ jobs:
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
         run: cat build_version.txt
 
+      - name: Determine CIBW_BUILD
+        id: cibw
+        run: echo "build=$(acts/CI/supported_python_versions.py --cibw)" >> "$GITHUB_OUTPUT"
 
       - name: Build wheels
         uses: ./acts/.github/actions/cibuildwheel_wrapper
         with:
           package-dir: acts
-          # No cibw-build: build every Python allowed by `requires-python`
+          cibw-build: ${{ steps.cibw.outputs.build }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
