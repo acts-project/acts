@@ -14,7 +14,6 @@ on:
 env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_KEY_SUFFIX: r2
-  SETUP_CMD: "bash {package}/CI/dependencies/setup.sh -t v19.0.0 -d deps -e env.sh"
 
 permissions: {}
 
@@ -24,6 +23,7 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     permissions: {}
+    if: github.repository == 'acts-project/acts' || github.event_name != 'schedule'
     steps:
       - name: Set build version
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
@@ -35,7 +35,7 @@ jobs:
           name: build-version
           path: build_version.txt
 
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ github.event.inputs.acts_ref || 'main' }}
           path: acts
@@ -60,9 +60,7 @@ jobs:
       matrix:
         os:
          - ubuntu-latest
-        # - ubuntu-24.04-arm
-        # - macos-15-intel
-         - macos-latest
+         - macos-26
 
     steps:
       - name: Download source tarball
@@ -84,35 +82,15 @@ jobs:
         run: cat build_version.txt
 
 
-      - name: Restore ccache
-        id: ccache-restore
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
-
       - name: Build wheels
-        uses: pypa/cibuildwheel@8d2b08b68458a16aeb24b64e68a09ab1c8e82084 # v3.4.1
+        uses: ./acts/.github/actions/cibuildwheel_wrapper
         with:
           package-dir: acts
-        env:
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_34 # based on almalinux9
-          CIBW_BUILD: "cp311-* cp310-* cp312-* cp313-* cp314-*"
-          CIBW_SKIP: "*-musllinux* *-manylinux_i686"
-          CIBW_BEFORE_ALL_LINUX: dnf install -y bc ccache && ${{ env.SETUP_CMD }}
-          CIBW_BEFORE_ALL_MACOS: brew install ninja ccache && ${{ env.SETUP_CMD }}
-          CIBW_ENVIRONMENT: GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
-          CIBW_ENVIRONMENT_PASS: CI
-          CIBW_BEFORE_BUILD: ccache -z
-          CIBW_ENVIRONMENT_LINUX: CMAKE_PREFIX_PATH=$PWD/deps/venv:$PWD/deps/view CCACHE_DIR=/host/${{ env.CCACHE_DIR }}
-          CIBW_ENVIRONMENT_MACOS: CMAKE_PREFIX_PATH=$PWD/deps/venv:$PWD/deps/view MACOSX_DEPLOYMENT_TARGET=15.0
-          CIBW_BEFORE_TEST: ccache -s
-          CIBW_TEST_COMMAND: python {project}/acts/Examples/Scripts/Python/track_finding_python_only.py
+          cibw-build: "cp311-* cp310-* cp312-* cp313-* cp314-*"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.13"
 
@@ -131,13 +109,6 @@ jobs:
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
-
-      - name: Save ccache
-        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        if: always()
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
 
   upload_pypi_test:

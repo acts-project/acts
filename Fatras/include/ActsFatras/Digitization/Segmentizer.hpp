@@ -16,7 +16,7 @@
 #include <vector>
 
 namespace Acts {
-class BinUtility;
+class IMultiAxis;
 class Surface;
 }  // namespace Acts
 
@@ -98,7 +98,7 @@ struct Segmentizer {
   /// @return a vector of ChannelSegment objects
   std::vector<ChannelSegment> segments(const Acts::GeometryContext& geoCtx,
                                        const Acts::Surface& surface,
-                                       const Acts::BinUtility& segmentation,
+                                       const Acts::IMultiAxis& segmentation,
                                        const Segment2D& segment) const;
 };
 

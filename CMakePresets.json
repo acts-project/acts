@@ -33,6 +33,17 @@
             }
         },
         {
+            "name": "devcontainer",
+            "displayName": "Devcontainer",
+            "inherits": "dev",
+            "binaryDir": "build_devcontainer",
+            "cacheVariables": {
+                "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
+                "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
+                "ACTS_USE_SYSTEM_PYBIND11": "ON"
+            }
+        },
+        {
             "name": "perf",
             "displayName": "Performance",
             "inherits": "common",
@@ -70,6 +81,7 @@
                 "ACTS_BUILD_PLUGIN_ONNX": "OFF",
                 "ACTS_BUILD_PLUGIN_ROOT": "ON",
                 "ACTS_BUILD_PLUGIN_GBL": "OFF",
+                "ACTS_BUILD_PLUGIN_MILLE": "ON",
                 "ACTS_BUILD_EXAMPLES_EDM4HEP": "ON",
                 "ACTS_BUILD_EXAMPLES_PODIO": "ON",
                 "ACTS_BUILD_EXAMPLES_GNN": "OFF",
@@ -80,7 +92,9 @@
                 "ACTS_BUILD_EXAMPLES_FASTJET": "ON",
                 "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
                 "ACTS_USE_SYSTEM_PYBIND11": "ON",
-                "ACTS_USE_SYSTEM_GBL": "OFF"
+                "ACTS_USE_SYSTEM_GBL": "OFF",
+                "ACTS_USE_SYSTEM_MILLE": "ON",
+                "ACTS_USE_SYSTEM_MP2": "ON"
             }
         },
         {
@@ -89,6 +103,16 @@
             "inherits": "ci-common",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "github-ci-fpe",
+            "displayName": "GitHub-CI FPE (minimal-debug RelWithDebInfo)",
+            "inherits": "github-ci",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_CXX_FLAGS_RELWITHDEBINFO": "-O2 -DNDEBUG -g1 -gz",
+                "CMAKE_C_FLAGS_RELWITHDEBINFO": "-O2 -DNDEBUG -g1 -gz"
             }
         },
         {
@@ -140,6 +164,8 @@
                 "ACTS_BUILD_PLUGIN_ARROW": "OFF",
                 "ACTS_BUILD_EXAMPLES_PARQUET": "OFF",
                 "ACTS_USE_SYSTEM_GBL": "OFF",
+                "ACTS_USE_SYSTEM_MILLE": "OFF",
+                "ACTS_USE_SYSTEM_MP2": "OFF",
                 "ACTS_USE_SYSTEM_PYBIND11": "OFF"
             }
         },
@@ -208,6 +234,9 @@
                 "ACTS_BUILD_EXAMPLES": "ON",
                 "ACTS_BUILD_PLUGIN_ROOT": "OFF",
                 "ACTS_BUILD_PLUGIN_FPEMON": "ON",
+                "ACTS_BUILD_PLUGIN_ARROW": "ON",
+                "ACTS_ARROW_ISOLATED": "ON",
+                "ACTS_BUILD_EXAMPLES_PARQUET": "ON",
                 "ACTS_BUILD_EXAMPLES_ROOT": "OFF",
                 "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
                 "ACTS_USE_SYSTEM_PYBIND11": "ON"
