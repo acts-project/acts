@@ -203,8 +203,10 @@ FreeToPathMatrix PointSurface::freeToPathDerivative(
 AlignmentToPathMatrix PointSurface::alignmentToPathDerivative(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
+  static_cast<void>(gctx);
   static_cast<void>(position);
+
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // u = (c - position) . direction, so d u / d center = direction. A point has
   // no orientation, hence the rotation block is zero.
