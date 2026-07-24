@@ -17,10 +17,10 @@
 
 namespace Acts {
 
-BinnedSurfaceMaterial::BinnedSurfaceMaterial(const BinUtility& binUtility,
-                                             MaterialSlabVector materialVector,
-                                             double splitFactor,
-                                             MappingType mappingType)
+BinnedSurfaceMaterial::BinnedSurfaceMaterial(
+    const BinUtility& binUtility, MaterialSlabVector materialVector,
+    double splitFactor, std::vector<unsigned int> binCounts,
+    MappingType mappingType)
     : ISurfaceMaterial(splitFactor, mappingType), m_binUtility(binUtility) {
   if (binUtility.dimensions() != 1) {
     throw std::invalid_argument(
@@ -32,15 +32,17 @@ BinnedSurfaceMaterial::BinnedSurfaceMaterial(const BinUtility& binUtility,
         "number of provided material slabs.");
   }
   m_fullMaterial.push_back(std::move(materialVector));
+  m_binCounts.push_back(std::move(binCounts));
 }
 
-BinnedSurfaceMaterial::BinnedSurfaceMaterial(const BinUtility& binUtility,
-                                             MaterialSlabMatrix materialMatrix,
-                                             double splitFactor,
-                                             MappingType mappingType)
+BinnedSurfaceMaterial::BinnedSurfaceMaterial(
+    const BinUtility& binUtility, MaterialSlabMatrix materialMatrix,
+    double splitFactor, std::vector<std::vector<unsigned int>> binCounts,
+    MappingType mappingType)
     : ISurfaceMaterial(splitFactor, mappingType),
       m_binUtility(binUtility),
-      m_fullMaterial(std::move(materialMatrix)) {
+      m_fullMaterial(std::move(materialMatrix)),
+      m_binCounts(std::move(binCounts)) {
   if (binUtility.dimensions() != 1 && binUtility.dimensions() != 2) {
     throw std::invalid_argument(
         "BinnedSurfaceMaterial with material matrix only supports 1D and 2D "

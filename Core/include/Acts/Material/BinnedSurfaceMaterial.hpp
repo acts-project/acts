@@ -34,10 +34,12 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @param binUtility defines the binning structure on the surface (copied)
   /// @param materialVector is the vector of material slabs as recorded (moved)
   /// @param splitFactor is the pre/post splitting directive
+  /// @param binCounts is the vector of the bin counts recorded
   /// @param mappingType is the type of surface mapping associated to the surface
   BinnedSurfaceMaterial(const BinUtility& binUtility,
                         MaterialSlabVector materialVector,
                         double splitFactor = 0.,
+                        std::vector<unsigned int> binCounts = {},
                         MappingType mappingType = MappingType::Default);
 
   /// Explicit constructor with only full MaterialSlab,
@@ -46,10 +48,12 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @param binUtility defines the binning structure on the surface (copied)
   /// @param materialMatrix is the matrix of material slabs as recorded (moved)
   /// @param splitFactor is the pre/post splitting directive
+  /// @param binCounts is the matrix of the bin counts recorded
   /// @param mappingType is the type of surface mapping associated to the surface
   BinnedSurfaceMaterial(const BinUtility& binUtility,
                         MaterialSlabMatrix materialMatrix,
                         double splitFactor = 0.,
+                        std::vector<std::vector<unsigned int>> binCounts = {},
                         MappingType mappingType = MappingType::Default);
 
   /// Scale operation
@@ -65,6 +69,12 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @brief Retrieve the entire material slab matrix
   /// @return Reference to the complete matrix of material slabs
   const MaterialSlabMatrix& fullMaterial() const { return m_fullMaterial; }
+
+  /// @brief Retrieve the bin counts matrix of the mapped bins
+  /// @return Reference to the bin counts matrix of the map
+  const std::vector<std::vector<unsigned int>>& binCounts() const {
+    return m_binCounts;
+  }
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
   const MaterialSlab& materialSlab(const Vector2& lp) const final;
@@ -91,6 +101,9 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
 
   /// The five different MaterialSlab
   MaterialSlabMatrix m_fullMaterial;
+
+  // The bin counts of the mapped bins
+  std::vector<std::vector<unsigned int>> m_binCounts;
 };
 
 }  // namespace Acts

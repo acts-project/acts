@@ -160,7 +160,7 @@ Acts::BinnedSurfaceMaterialAccumulator::finalizeMaterial(
   // iterate over the map to call the total average
   for (auto& accMaterial : cState->accumulatedMaterial) {
     ACTS_DEBUG("Finalizing map for Surface " << accMaterial.first);
-    auto sMaterial = accMaterial.second.totalAverage();
+    auto sMaterial = accMaterial.second.totalAverage(m_cfg.recordBinCounts);
     sMaterials[accMaterial.first] = std::move(sMaterial);
   }
 
