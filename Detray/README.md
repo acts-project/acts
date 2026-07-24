@@ -21,7 +21,7 @@ CMake build procedures.
 
 ```shell
 git clone https://github.com/acts-project/acts.git
-cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -S Acts/Detray -B detray-build
+cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -S acts/Detray -B detray-build
 cmake --build detray-build
 ```
 
@@ -36,15 +36,15 @@ export DETRAY_BFIELD_FILE="${PWD}/odd-bfield_v0_9_0.cvf"
 
 A number of cmake preset configurations are provided and can be listed by:
 ```shell
-cmake -S Acts/Detray --list-presets
+cmake -S acts/Detray --list-presets
 ```
 For a developer build, the `detray-dev-fp32` and `detray-dev-fp64` configurations are available (`fp`: floating point precision):
 ```shell
-cmake -S Acts/Detray -B detray-build --preset detray-dev-fp32
+cmake -S acts/Detray -B detray-build --preset detray-dev-fp32
 ```
 The developer presets will build the components of detray that are most commonly used. The `prefetch` presets on the other hand will configure all possible dependencies, but not automatically trigger the build of the corresponding components. For example, in order to trigger the build of the unit tests with the `prefetch` preset, the corresponding option needs to be specified:
 ```shell
-cmake -S Acts/Detray -B detray-build --preset detray-prefetch-fp32 \
+cmake -S acts/Detray -B detray-build --preset detray-prefetch-fp32 \
 -DDETRAY_ARRAY_PLUGIN=ON -DDETRAY_BUILD_UNITTESTS=ON
 ```
 A full build, containing all components (e.g. tests and benchmarks), can be configured using the `detray-full-fp32` and `detray-full-fp64` presets.
@@ -83,9 +83,9 @@ extra navigation tracing information
 - Moving a detector to device
 - Host and device track propagation
 
-In order to define a custom detector geometry type (called a detector 'metadata'), please follow the instructions in `Acts/Detray/detectors/README.md`.
+In order to define a custom detector geometry type (called a detector 'metadata'), please follow the instructions in `acts/Detray/detectors/README.md`.
 
-Otherwise, the default detector metadata (`#include Acts/Detray/detectors/default_metadata.hpp`) can be used in most cases to define the detector type, however, incurring increased build times and likely also increased runtime of client algorithms.
+Otherwise, the default detector metadata (`#include <detray/detectors/default_metadata.hpp>`) can be used in most cases to define the detector type, however, incurring increased build times and likely also increased runtime of client algorithms.
 
 ## Detector Validation
 
@@ -93,7 +93,7 @@ Given a detray detector (and optionally also a grid and a material) json file, a
 ```shell
 detray-build/bin/detray_generate_toy_detector --write_material --write_grids
 ```
-All of the validation tools presented in the following can also be run as part of a corresponding [python script](https://github.com/acts-project/Acts/Detray/tests/tools/python) which takes the same arguments and will automatically create plots from the collected data. However, this requires Python 3, pandas, SciPy and NumPy, as well as Matplotlib to be available.
+All of the validation tools presented in the following can also be run as part of a corresponding [python script](https://github.com/acts-project/acts/tree/main/Detray/tests/tools/python) which takes the same arguments and will automatically create plots from the collected data. However, this requires Python 3, pandas, SciPy and NumPy, as well as Matplotlib to be available.
 
 The detector geometry can be visualized in SVG format with the following command:
 ```shell
