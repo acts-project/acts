@@ -18,8 +18,7 @@ void propagator_test(
     typename detector_t::view_type det_data, const propagation::config& cfg,
     covfie::field_view<bfield_bknd_t> field_data,
     vecmem::data::vector_view<test_track>& tracks_data,
-    vecmem::data::jagged_vector_view<detail::step_data<test_algebra>>&
-        steps_data,
+    vecmem::data::jagged_vector_view<step_record<test_algebra>>& steps_data,
     detray::sycl::queue_wrapper queue) {
   unsigned int localSize = 64;
   unsigned int globalSize = tracks_data.size();
@@ -42,7 +41,7 @@ void propagator_test(
           detector_device_t dev_det(det_data);
 
           vecmem::device_vector<test_track> tracks(tracks_data);
-          vecmem::jagged_device_vector<detail::step_data<test_algebra>> steps(
+          vecmem::jagged_device_vector<step_record<test_algebra>> steps(
               steps_data);
 
           unsigned int gid = item.get_global_linear_id();
@@ -91,7 +90,7 @@ propagator_test<bfield::const_bknd_t<dscalar<test_algebra>>,
     const propagation::config&,
     covfie::field_view<bfield::const_bknd_t<dscalar<test_algebra>>>,
     vecmem::data::vector_view<test_track>&,
-    vecmem::data::jagged_vector_view<detail::step_data<test_algebra>>&,
+    vecmem::data::jagged_vector_view<step_record<test_algebra>>&,
     detray::sycl::queue_wrapper);
 
 /// Explicit instantiation for an inhomogeneous magnetic field
@@ -100,7 +99,7 @@ propagator_test<bfield::const_bknd_t<dscalar<test_algebra>>,
    detector<toy_metadata<test_algebra>, host_container_types>::view_type, const
    propagation::config&, covfie::field_view<bfield::sycl::inhom_bknd_t>,
     vecmem::data::vector_view<test_track>&,
-    vecmem::data::jagged_vector_view<detail::step_data<test_algebra>>&,
+    vecmem::data::jagged_vector_view<step_record<test_algebra>>&,
     detray::sycl::queue_wrapper);*/
 
 }  // namespace detray

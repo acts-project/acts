@@ -133,10 +133,10 @@ struct intersection_initialize {
     }
   }
 
-  template <typename intersection_t>
+  template <typename intersection_t, typename... allocator_t>
   DETRAY_HOST_DEVICE void insert_sorted(
       const intersection_t &sfi,
-      std::vector<intersection_t> &intersections) const {
+      std::vector<intersection_t, allocator_t...> &intersections) const {
     auto itr_pos =
         detray::upper_bound(intersections.cbegin(), intersections.cend(), sfi);
 

@@ -26,13 +26,7 @@
 namespace traccc::propagation_validator {
 
 template <typename detector_t>
-using intersection_type =
-    detray::intersection2D<typename detector_t::surface_type,
-                           typename detector_t::algebra_type, true>;
-
-template <typename detector_t>
-using candidate_type =
-    detray::navigation::detail::candidate_record<intersection_type<detector_t>>;
+using candidate_type = detray::intersection_record<detector_t>;
 
 /// Transcribe the hits for a particle to a candidate trace for the detray
 /// propagation validation tools

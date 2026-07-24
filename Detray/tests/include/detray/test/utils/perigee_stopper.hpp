@@ -91,8 +91,11 @@ struct perigee_stopper : public base_actor {
     assert(actor_state.m_stopping_radius > 0.f);
     constexpr scalar_t max_hz{detail::invalid_value<scalar_t>()};
 
-    const mask<line_circular, algebra_t> perigee_mask{
-        actor_state.m_inner_vol_idx, actor_state.m_stopping_radius, max_hz};
+    using line_mask_t = mask<line_circular, algebra_t>;
+    const line_mask_t perigee_mask{
+        static_cast<typename line_mask_t::links_type>(
+            actor_state.m_inner_vol_idx),
+        actor_state.m_stopping_radius, max_hz};
 
     // The perigee is not linked to any detector surface
     constexpr typename detector_t::surface_type inv_sf{};

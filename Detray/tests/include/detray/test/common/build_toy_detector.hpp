@@ -118,6 +118,10 @@ struct toy_det_config {
   scalar_t m_portal_envelope{2.f * unit<scalar_t>::mm};
   /// Configuration for the homogeneous material generator
   hom_material_config<scalar_t> m_material_config{};
+  /// Build spatial grid acceleration structures (otherwise brute force search)
+  bool m_use_grids{true};
+  /// Put homogeneneous material on the sensitive surfaces
+  bool m_use_homogeneous_material{true};
   /// Put material maps on portals or use homogeneous material on modules
   bool m_use_material_maps{false};
   /// Configuration for the material map generator (beampipe)
@@ -163,6 +167,14 @@ struct toy_det_config {
   }
   constexpr toy_det_config &envelope(const scalar_t env) {
     m_portal_envelope = env;
+    return *this;
+  }
+  constexpr toy_det_config &use_grids(const bool b) {
+    m_use_grids = b;
+    return *this;
+  }
+  constexpr toy_det_config &use_homogeneous_material(const bool b) {
+    m_use_homogeneous_material = b;
     return *this;
   }
   constexpr toy_det_config &use_material_maps(const bool b) {
@@ -217,6 +229,10 @@ struct toy_det_config {
   }
   constexpr auto &material_config() { return m_material_config; }
   constexpr const auto &material_config() const { return m_material_config; }
+  constexpr bool use_grids() const { return m_use_grids; }
+  constexpr bool use_homogeneous_material() const {
+    return m_use_homogeneous_material;
+  }
   constexpr bool use_material_maps() const { return m_use_material_maps; }
   constexpr auto &beampipe_material_map() { return m_beampipe_map_cfg; }
   constexpr const auto &beampipe_material_map() const {
@@ -291,12 +307,14 @@ struct toy_det_config {
           << cfg.disc_material_map().thickness / detray::unit<scalar_t>::mm
           << " [mm]\n"
           << "    -> Material         : " << cfg.mapped_material() << "\n";
-    } else {
+    } else if (cfg.use_homogeneous_material()) {
       out << "  Homogeneous material \n"
           << "    -> Thickness        : "
           << cfg.module_mat_thickness() / detray::unit<scalar_t>::mm
           << " [mm]\n"
           << "    -> Material         : " << silicon_tml<scalar_t>() << "\n";
+    } else {
+      out << "  No material\n";
     }
 
     return out;
@@ -336,7 +354,7 @@ volume_builder_interface<detector_t> *decorate_material(
     vm_builder =
         det_builder.template decorate<material_map_builder<detector_t>>(
             v_builder);
-  } else {
+  } else if (cfg.use_homogeneous_material()) {
     // Build the volume with a homogeneous material description
     vm_builder =
         det_builder.template decorate<homogeneous_material_builder<detector_t>>(
@@ -350,7 +368,7 @@ volume_builder_interface<detector_t> *decorate_material(
   return vm_builder;
 }
 
-/// Helper method to decorate a surface factory with material
+/// Helper method to decorate a surface factory with material generators
 ///
 /// @param cfg config for the toy detector
 /// @param sf_factory surface factory that should be decorated with material
@@ -397,7 +415,7 @@ std::shared_ptr<surface_factory_interface<detector_t>> decorate_material(
 
     return mat_generator;
 
-  } else if (!cfg.use_material_maps() && is_module_factory) {
+  } else if (cfg.use_homogeneous_material() && is_module_factory) {
     // How to generate the specific material for every surface
     auto mat_generator =
         std::make_shared<homogeneous_material_generator<detector_t>>(
@@ -410,7 +428,7 @@ std::shared_ptr<surface_factory_interface<detector_t>> decorate_material(
   }
 }
 
-/// Add the cylinder and disc portals for a volume from explicit parameters
+/// Add the portals for a cylinder volume from explicit parameters
 ///
 /// @param v_builder the volume builder to add the portals to
 /// @param cfg config for the toy detector
@@ -729,8 +747,10 @@ inline auto add_barrel_detector(
 
       vm_builder->set_name("barrel_" + std::to_string(vol_idx));
 
-      // Add a cylinder grid to every barrel module layer
-      add_cylinder_grid(det_builder, cfg, vol_idx);
+      if (cfg.use_grids()) {
+        // Add a cylinder grid to every barrel module layer
+        add_cylinder_grid(det_builder, cfg, vol_idx);
+      }
     }
   }
 
@@ -923,8 +943,10 @@ inline auto add_endcap_detector(
 
       vm_builder->set_name("endcap_" + std::to_string(vol_idx));
 
-      // Add a disc grid to every endcap module layer
-      add_disc_grid(det_builder, cfg, vol_idx);
+      if (cfg.use_grids()) {
+        // Add a disc grid to every endcap module layer
+        add_disc_grid(det_builder, cfg, vol_idx);
+      }
     }
   }
   return volume_sizes;
