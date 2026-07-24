@@ -178,7 +178,37 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
     ACTS_VERBOSE(volInfo(state) << "Start layer resolved "
                                 << state.currentLayer->geometryId());
   }
-  if (state.currentSurface != nullptr) {
+
+  // navigation is started on a portal
+  if (const auto portalItr = m_surfPortalMap.find(state.currentSurface);
+      portalItr != m_surfPortalMap.end()) {
+    auto locPos = state.currentSurface->globalToLocal(
+        state.options.geoContext, position, direction,
+        state.options.surfaceTolerance);
+
+    if (!locPos.ok()) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Navigation does not start on the surface = "
+                   << state.currentSurface->geometryId()
+                   << " position = " << position.transpose()
+                   << " direction = " << direction.transpose());
+      return Result<void>::failure(NavigatorError::NotOnExpectedSurface);
+    }
+    if (state.currentSurface->insideBounds(*locPos,
+                                           BoundaryTolerance::None())) {
+      ACTS_VERBOSE(volInfo(state) << "Navigation starts on a portal "
+                                  << state.currentSurface->geometryId());
+      auto res = portalItr->second->resolveVolume(state.options.geoContext,
+                                                  position, direction);
+      if (!res.ok()) {
+        ACTS_ERROR(volInfo(state) << "Failed to resolve volume through portal: "
+                                  << res.error().message());
+        return Result<void>::failure(NavigatorError::NotInsideExpectedVolume);
+      }
+      // Update the current volume
+      state.currentVolume = res.value();
+    }
+  } else if (state.currentSurface != nullptr) {
     ACTS_VERBOSE(volInfo(state) << "Start surface resolved "
                                 << state.currentSurface->geometryId());
 
@@ -192,21 +222,6 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
                  << " direction = " << direction.transpose());
 
       return Result<void>::failure(NavigatorError::NotOnExpectedSurface);
-    }
-    // navigation is started on a portal
-    if (const auto portalItr = m_surfPortalMap.find(state.currentSurface);
-        portalItr != m_surfPortalMap.end()) {
-      ACTS_VERBOSE(volInfo(state) << " Navigation starts on a portal "
-                                  << state.currentSurface->geometryId());
-      auto res = portalItr->second->resolveVolume(state.options.geoContext,
-                                                  position, direction);
-      if (!res.ok()) {
-        ACTS_ERROR(volInfo(state) << "Failed to resolve volume through portal: "
-                                  << res.error().message());
-        return Result<void>::failure(NavigatorError::NotInsideExpectedVolume);
-      }
-      // Update the current volume
-      state.currentVolume = res.value();
     }
   }
 
