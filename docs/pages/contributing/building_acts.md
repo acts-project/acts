@@ -258,7 +258,6 @@ components.
 | ACTS_SETUP_DETRAY                 | If we want to set up detray<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
 | ACTS_USE_SYSTEM_VECMEM            | Use a system-provided vecmem<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
 | ACTS_SETUP_VECMEM                 | If we want to set up vecmem<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
-| ACTS_USE_SYSTEM_TRACCC            | Use a system-provided traccc<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
 | ACTS_USE_SYSTEM_NLOHMANN_JSON     | Use nlohmann::json provided by the<br>system instead of the bundled version<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                               |
 | ACTS_USE_SYSTEM_PYBIND11          | Use a system installation of pybind11<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                     |
 | ACTS_USE_SYSTEM_MODULEMAPGRAPH    | Use a system installation of<br>ModuleMapGraph<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                            |
@@ -324,6 +323,47 @@ components.
 
 All ACTS-specific options are disabled or empty by default and must be
 specifically requested.
+
+### Automatically enabled options
+
+Some options imply others. When you enable such an option, ACTS switches on the
+additional options it depends on automatically during configuration. This is
+reported at configure time (`Option '...' auto-enabled by: ...`) and in the
+option summary printed at the end of the configure step.
+
+The table below is generated from the `set_option_if` dependencies in the
+top-level `CMakeLists.txt` and lists, for each option, everything it
+transitively enables when it is the only option you switch on. Dependencies that
+require several options at once (e.g. `ACTS_ENABLE_CUDA`, which needs both
+`ACTS_GNN_ENABLE_MODULEMAP` and `ACTS_BUILD_PLUGIN_GNN`) are not shown here since
+no single option triggers them. Regenerate the table with:
+
+```console
+docs/cmake_option_dependencies.py --write docs/pages/contributing/building_acts.md
+```
+
+<!-- CMAKE_OPTS_DEPS_BEGIN -->
+| Enabling this option        | …also enables (transitively)                                                                                                                                                                     |
+|-----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ACTS_BUILD_EXAMPLES         | ACTS_BUILD_FATRAS, ACTS_BUILD_PLUGIN_FPEMON, ACTS_BUILD_PLUGIN_JSON                                                                                                                              |
+| ACTS_BUILD_EXAMPLES_DD4HEP  | ACTS_BUILD_EXAMPLES, ACTS_BUILD_FATRAS, ACTS_BUILD_PLUGIN_DD4HEP, ACTS_BUILD_PLUGIN_FPEMON, ACTS_BUILD_PLUGIN_JSON, ACTS_BUILD_PLUGIN_ROOT                                                       |
+| ACTS_BUILD_EXAMPLES_EDM4HEP | ACTS_BUILD_EXAMPLES, ACTS_BUILD_EXAMPLES_PODIO, ACTS_BUILD_FATRAS, ACTS_BUILD_PLUGIN_DD4HEP, ACTS_BUILD_PLUGIN_EDM4HEP, ACTS_BUILD_PLUGIN_FPEMON, ACTS_BUILD_PLUGIN_JSON, ACTS_BUILD_PLUGIN_ROOT |
+| ACTS_BUILD_EXAMPLES_FASTJET | ACTS_BUILD_EXAMPLES, ACTS_BUILD_FATRAS, ACTS_BUILD_PLUGIN_FPEMON, ACTS_BUILD_PLUGIN_JSON                                                                                                         |
+| ACTS_BUILD_EXAMPLES_GEANT4  | ACTS_BUILD_EXAMPLES, ACTS_BUILD_FATRAS, ACTS_BUILD_PLUGIN_FPEMON, ACTS_BUILD_PLUGIN_GEANT4, ACTS_BUILD_PLUGIN_JSON                                                                               |
+| ACTS_BUILD_EXAMPLES_GNN     | ACTS_BUILD_EXAMPLES, ACTS_BUILD_FATRAS, ACTS_BUILD_PLUGIN_FPEMON, ACTS_BUILD_PLUGIN_GNN, ACTS_BUILD_PLUGIN_JSON                                                                                  |
+| ACTS_BUILD_EXAMPLES_HASHING | ACTS_BUILD_EXAMPLES, ACTS_BUILD_FATRAS, ACTS_BUILD_PLUGIN_FPEMON, ACTS_BUILD_PLUGIN_JSON                                                                                                         |
+| ACTS_BUILD_EXAMPLES_PARQUET | ACTS_BUILD_EXAMPLES, ACTS_BUILD_FATRAS, ACTS_BUILD_PLUGIN_ARROW, ACTS_BUILD_PLUGIN_FPEMON, ACTS_BUILD_PLUGIN_JSON                                                                                |
+| ACTS_BUILD_EXAMPLES_PODIO   | ACTS_BUILD_EXAMPLES, ACTS_BUILD_FATRAS, ACTS_BUILD_PLUGIN_FPEMON, ACTS_BUILD_PLUGIN_JSON                                                                                                         |
+| ACTS_BUILD_EXAMPLES_PYTHIA8 | ACTS_BUILD_EXAMPLES, ACTS_BUILD_FATRAS, ACTS_BUILD_PLUGIN_FPEMON, ACTS_BUILD_PLUGIN_JSON                                                                                                         |
+| ACTS_BUILD_EXAMPLES_ROOT    | ACTS_BUILD_EXAMPLES, ACTS_BUILD_FATRAS, ACTS_BUILD_PLUGIN_FPEMON, ACTS_BUILD_PLUGIN_JSON, ACTS_BUILD_PLUGIN_ROOT                                                                                 |
+| ACTS_BUILD_ODD              | ACTS_BUILD_EXAMPLES, ACTS_BUILD_EXAMPLES_DD4HEP, ACTS_BUILD_FATRAS, ACTS_BUILD_PLUGIN_DD4HEP, ACTS_BUILD_PLUGIN_FPEMON, ACTS_BUILD_PLUGIN_JSON, ACTS_BUILD_PLUGIN_ROOT                           |
+| ACTS_BUILD_PLUGIN_DD4HEP    | ACTS_BUILD_PLUGIN_ROOT                                                                                                                                                                           |
+| ACTS_BUILD_PLUGIN_MILLE     | ACTS_BUILD_ALIGNMENT                                                                                                                                                                             |
+| ACTS_BUILD_PLUGIN_TRACCC    | ACTS_BUILD_PLUGIN_JSON, ACTS_BUILD_TRACCC, ACTS_SETUP_COVFIE, ACTS_SETUP_DETRAY, ACTS_SETUP_VECMEM                                                                                               |
+| ACTS_BUILD_PYTHON_WHEEL     | ACTS_BUILD_PYTHON_BINDINGS                                                                                                                                                                       |
+| ACTS_BUILD_TRACCC           | ACTS_BUILD_PLUGIN_JSON, ACTS_SETUP_COVFIE, ACTS_SETUP_DETRAY, ACTS_SETUP_VECMEM                                                                                                                  |
+| ACTS_SETUP_DETRAY           | ACTS_SETUP_COVFIE, ACTS_SETUP_VECMEM                                                                                                                                                             |
+<!-- CMAKE_OPTS_DEPS_END -->
 
 ACTS comes with a couple of CMakePresets which allow to collect and
 origanize common configuration workflows. On the surface the current

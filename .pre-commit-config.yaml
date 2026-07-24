@@ -83,6 +83,12 @@ repos:
       entry: docs/parse_cmake_options.py --write docs/pages/contributing/building_acts.md
       files: ^CMakeLists.txt$
 
+    - id: cmake_option_dependencies
+      name: cmake_option_dependencies
+      language: system
+      entry: docs/cmake_option_dependencies.py --write docs/pages/contributing/building_acts.md
+      files: ^CMakeLists.txt$
+
     - id: leftover_conflict_markers
       name: Leftover conflict markers
       language: system
