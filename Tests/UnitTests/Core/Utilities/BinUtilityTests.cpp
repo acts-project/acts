@@ -12,6 +12,9 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/IMultiAxis.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <array>
@@ -141,12 +144,31 @@ BOOST_AUTO_TEST_CASE(BinUtility_from_ProtoAxis) {
   using enum AxisBoundaryType;
 
   DirectedProtoAxis epabX(AxisX, Bound, 0.0, 1.0, 10);
+  // The single axis constructor is deprecated but still covered here
+  ACTS_PUSH_IGNORE_DEPRECATED()
   BinUtility buX(epabX);
+  ACTS_POP_IGNORE_DEPRECATED()
   BOOST_CHECK_EQUAL(buX.bins(), std::size_t{10});
   BOOST_CHECK_EQUAL(buX.dimensions(), std::size_t{1});
 
   DirectedProtoAxis epabY(AxisY, Bound, 0.0, 1.0, 10);
   BinUtility buXY({epabX, epabY});
+  BOOST_CHECK_EQUAL(buXY.bins(), std::size_t{100});
+  BOOST_CHECK_EQUAL(buXY.dimensions(), std::size_t{2});
+}
+
+BOOST_AUTO_TEST_CASE(BinUtility_from_IAxis) {
+  using enum AxisDirection;
+  using enum AxisBoundaryType;
+
+  auto axisX = IAxis::createEquidistant(Bound, 0.0, 1.0, 10, AxisX);
+  BinUtility buX(*axisX);
+  BOOST_CHECK_EQUAL(buX.bins(), std::size_t{10});
+  BOOST_CHECK_EQUAL(buX.dimensions(), std::size_t{1});
+
+  auto axisY = IAxis::createEquidistant(Bound, 0.0, 1.0, 10, AxisY);
+  auto multiAxis = IMultiAxis::create(*axisX, *axisY);
+  BinUtility buXY(*multiAxis);
   BOOST_CHECK_EQUAL(buXY.bins(), std::size_t{100});
   BOOST_CHECK_EQUAL(buXY.dimensions(), std::size_t{2});
 }
