@@ -26,6 +26,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import threading
 from pathlib import Path
 from typing import Annotated
 
@@ -47,6 +48,7 @@ app = typer.Typer(
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MANIFEST = REPO_ROOT / "CI" / "physmon" / "reference.sha256"
 DEFAULT_REFDIR = REPO_ROOT / "CI" / "physmon" / "reference"
+DOCS = "docs/pages/contributing/physmon.md"
 DEFAULT_REGISTRY = os.environ.get(
     "ACTS_PHYSMON_REGISTRY", "ghcr.io/acts-project/physmon-references"
 )
@@ -147,6 +149,76 @@ def split_registry(registry: str) -> tuple[str, str]:
     return host, name
 
 
+# Registry failures land on people who have never opened this file, so they get
+# an explanation of what to do rather than an httpx traceback.
+
+
+_reported: set[str] = set()
+_report_lock = threading.Lock()
+
+
+def abort(headline: str, *detail: str) -> typer.Exit:
+    """Print an explanation and return the exception to raise.
+
+    Downloads run concurrently, so a registry-wide problem hits every worker at
+    once. Print each explanation only the first time it comes up.
+    """
+    with _report_lock:
+        if headline in _reported:
+            return typer.Exit(1)
+        _reported.add(headline)
+        console.print(f"[red]{headline}[/red]")
+        for line in detail:
+            console.print(line)
+    return typer.Exit(1)
+
+
+def env_token() -> tuple[str | None, str | None]:
+    """The credential to use, and the variable it came from."""
+    for var in ("GITHUB_TOKEN", "ACTS_PHYSMON_TOKEN"):
+        value = os.environ.get(var)
+        if value:
+            return value, var
+    return None, None
+
+
+def auth_failure(host: str, name: str, status: int) -> typer.Exit:
+    _, var = env_token()
+    if var is None:
+        cause = f"{host} refused an anonymous pull; the package should be public."
+    else:
+        cause = f"The token in {var} was rejected."
+
+    return abort(
+        f"Cannot pull from {host}/{name} (HTTP {status})",
+        "",
+        cause,
+        "To pull with credentials, export a token with the 'read:packages' scope as",
+        "GITHUB_TOKEN or ACTS_PHYSMON_TOKEN. 'gh auth token' does not carry that scope",
+        "by default; add it with 'gh auth refresh --scopes read:packages'.",
+        f"See '{DOCS}'.",
+    )
+
+
+def missing_blob(host: str, name: str, digest: str) -> typer.Exit:
+    return abort(
+        f"{host}/{name} has no blob sha256:{digest}",
+        "",
+        "The manifest names a reference file that was never published. References have",
+        "to be uploaded before the manifest naming them is committed; see 'How do I",
+        f"update the reference files?' in '{DOCS}'.",
+    )
+
+
+def network_failure(host: str, exc: httpx.RequestError) -> typer.Exit:
+    return abort(
+        f"Could not reach {host}: {exc}",
+        "",
+        "The reference histograms are not committed, so physmon cannot run without them.",
+        "Set ACTS_PHYSMON_NO_FETCH=1 to use a reference directory you populated yourself.",
+    )
+
+
 def registry_token(client: httpx.Client, host: str, name: str) -> str:
     """Get a pull token.
 
@@ -154,16 +226,31 @@ def registry_token(client: httpx.Client, host: str, name: str) -> str:
     limited aggressively enough that CI trips over it, so use GITHUB_TOKEN when
     one is available.
     """
-    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("ACTS_PHYSMON_TOKEN")
+    token, _ = env_token()
     auth = ("x-access-token", token) if token else None
-    response = client.get(
-        f"https://{host}/token",
-        params={"service": host, "scope": f"repository:{name}:pull"},
-        auth=auth,
-        timeout=30,
-    )
-    response.raise_for_status()
-    return response.json()["token"]
+    try:
+        response = client.get(
+            f"https://{host}/token",
+            params={"service": host, "scope": f"repository:{name}:pull"},
+            auth=auth,
+            timeout=30,
+        )
+        response.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        status = exc.response.status_code
+        if status in (401, 403):
+            raise auth_failure(host, name, status) from None
+        raise abort(f"{host} returned HTTP {status} for a pull token") from None
+    except httpx.RequestError as exc:
+        raise network_failure(host, exc) from None
+
+    payload = response.json()
+    # The spec calls the field "token"; "access_token" is the OAuth2 spelling
+    # some registries answer with instead
+    bearer = payload.get("token") or payload.get("access_token")
+    if not bearer:
+        raise abort(f"{host} did not return a token: {payload!r}")
+    return bearer
 
 
 def cache_dir() -> Path:
@@ -185,11 +272,25 @@ def download_blob(
     handle, staged = tempfile.mkstemp(dir=dest.parent, prefix=f"{digest}.")
     tmp = Path(staged)
     try:
-        with client.stream("GET", url, timeout=300) as response:
-            response.raise_for_status()
+        try:
+            # fdopen owns the descriptor, so take it before anything can raise
             with os.fdopen(handle, "wb") as f:
-                for chunk in response.iter_bytes(CHUNK):
-                    f.write(chunk)
+                with client.stream("GET", url, timeout=300) as response:
+                    response.raise_for_status()
+                    for chunk in response.iter_bytes(CHUNK):
+                        f.write(chunk)
+        except httpx.HTTPStatusError as exc:
+            status = exc.response.status_code
+            # A token that the token endpoint handed out happily can still be
+            # refused here, when it does not carry the scope the blob needs
+            if status in (401, 403):
+                raise auth_failure(host, name, status) from None
+            if status == 404:
+                raise missing_blob(host, name, digest) from None
+            raise abort(f"Fetching sha256:{digest} failed with HTTP {status}") from None
+        except httpx.RequestError as exc:
+            raise network_failure(host, exc) from None
+
         got = sha256_file(tmp)
         if got != digest:
             console.print(f"[red]Digest mismatch: expected {digest}, got {got}[/red]")

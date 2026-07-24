@@ -40,11 +40,38 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  
 # from the registry. Set ACTS_PHYSMON_NO_FETCH=1 to run against a reference
 # directory you populated yourself.
 if [ -z "${ACTS_PHYSMON_NO_FETCH:-}" ]; then
+    if ! command -v uv > /dev/null; then
+        echo "::error::'uv' is needed to fetch the physmon reference files, but is not on PATH."
+        echo "Install it from https://docs.astral.sh/uv/, or populate $refdir"
+        echo "yourself and set ACTS_PHYSMON_NO_FETCH=1."
+        exit 1
+    fi
+
     echo "::group::Fetch physmon references"
+    # Handle the failure rather than letting set -e abort inside the group: on
+    # GitHub the error would end up folded into a collapsed section that nobody
+    # expands, and the run would stop without saying what was being fetched.
+    fetch_ec=0
     run uv run --no-project "${SCRIPT_DIR}/reference.py" pull \
         --manifest "$refmanifest" \
-        --reference-dir "$refdir"
+        --reference-dir "$refdir" || fetch_ec=$?
     echo "::endgroup::"
+
+    if [ $fetch_ec -ne 0 ]; then
+        echo "::error::Could not fetch the physmon reference files (exit $fetch_ec, details above)"
+        echo "The reference histograms are not committed, so there is nothing to compare"
+        echo "against without them. See docs/pages/contributing/physmon.md, or set"
+        echo "ACTS_PHYSMON_NO_FETCH=1 to run against $refdir as it is on disk."
+        exit $fetch_ec
+    fi
+else
+    echo "ACTS_PHYSMON_NO_FETCH is set: using $refdir as it is on disk"
+    if [ ! -d "$refdir" ]; then
+        echo "::error::$refdir does not exist, and fetching is disabled."
+        echo "Unset ACTS_PHYSMON_NO_FETCH to fetch the references from the registry,"
+        echo "or populate that directory yourself."
+        exit 1
+    fi
 fi
 
 # Ship the manifest with the artifact so an update can be reconstructed from the
