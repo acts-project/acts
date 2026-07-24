@@ -10,6 +10,7 @@
 
 #include <format>
 #include <functional>
+#include <stdexcept>
 #include <type_traits>
 #include <typeindex>
 #include <typeinfo>
@@ -25,6 +26,11 @@ namespace Acts {
 /// This class allows registering function pointers associated with specific
 /// derived types of a base class. When invoked with a base class reference,
 /// it will look up and call the appropriate registered function.
+///
+/// When no registered type matches the object, the call throws
+/// @c std::runtime_error (the historical behavior) unless a fall-through handler
+/// has been installed via @ref registerDefault, in which case that handler is
+/// invoked instead and the dispatcher can degrade gracefully.
 ///
 /// @tparam base_t The base class type that will be the first parameter
 /// @tparam signature_t The function signature (e.g., return_t(Args...))
@@ -112,6 +118,20 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
     return *this;
   }
 
+  /// Register a fall-through handler, invoked by @ref operator() when the object
+  /// matches none of the registered derived types. This replaces the default
+  /// handler, which throws @c std::runtime_error.
+  /// @param func The fall-through handler; must be non-empty
+  /// @return Reference to this dispatcher for chaining
+  self_type& registerDefault(function_type func) {
+    if (!func) {
+      throw std::invalid_argument(
+          "TypeDispatcher default handler must be valid");
+    }
+    m_defaultHandler = std::move(func);
+    return *this;
+  }
+
   /// Call the registered function for the given object's type
   /// @param obj The object to dispatch on
   /// @param args Additional arguments to pass to the function
@@ -130,6 +150,13 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
     }
 
     if (compatibleTypes.empty()) {
+      // No registered derived type matches: defer to the fall-through handler if
+      // one was registered via registerDefault(), otherwise throw (the historical
+      // behavior). Keeping the throw here (rather than in a default-constructed
+      // handler) avoids requiring a complete base_t at construction time.
+      if (m_defaultHandler) {
+        return m_defaultHandler(obj, std::forward<func_args_t>(args)...);
+      }
       throw std::runtime_error(
           std::format("No function registered for type: {}",
                       boost::core::demangle(typeid(obj).name())));
@@ -195,6 +222,11 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
 
  private:
   using cast_checker_type = std::function<bool(const base_t&)>;
+
+  /// Optional fall-through handler invoked when no registered derived type
+  /// matches. When empty (the default), such a call throws instead (see
+  /// operator()). Set via registerDefault().
+  function_type m_defaultHandler{};
 
   std::unordered_map<std::type_index, function_type> m_functions;
   std::unordered_map<std::type_index, cast_checker_type> m_castCheckers;
