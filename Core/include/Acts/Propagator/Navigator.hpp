@@ -22,6 +22,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <limits>
 #include <optional>
 #include <string>
 
@@ -89,10 +90,6 @@ class Navigator final {
   using NavigationBoundaries =
       boost::container::small_vector<NavigationTarget, 4>;
 
-  /// Type alias for generic navigation candidates container
-  using NavigationCandidates =
-      boost::container::small_vector<NavigationTarget, 10>;
-
   /// Type alias for geometry version enumeration
   using GeometryVersion = TrackingGeometry::GeometryVersion;
 
@@ -146,6 +143,13 @@ class Navigator final {
     /// Management of policy state allocation and deallocation
     NavigationPolicyStateManager policyStateManager;
 
+    /// Whether the current volume's policy state carries no validity
+    /// constraint. Sourced from INavigationPolicy::isStateless() (probed once
+    /// at construction, fixed thereafter) and cached at each volume transition,
+    /// so the per-step checks read this local bool instead of chasing the
+    /// policy pointer or re-deriving defaultness from the type-erased state.
+    bool policyStateIsDefault = true;
+
     // Navigation on surface level
     /// the vector of navigation surfaces to work through
     NavigationSurfaces navSurfaces = {};
@@ -164,11 +168,15 @@ class Navigator final {
     /// the current boundary index of the navigation state
     std::optional<std::size_t> navBoundaryIndex;
 
-    // Navigation candidates(portals and surfaces together)
-    /// the vector of navigation candidates to work through
-    NavigationCandidates navCandidates = {};
-    /// the current candidate index of the navigation state
+    // Navigation candidates (portals and surfaces together). The candidates
+    // live in `stream` (sorted by path length); the navigator works through
+    // them by index without copying them out.
+    /// the current candidate index into the stream's candidates
     std::optional<std::size_t> navCandidateIndex;
+    /// far limit applied to the stream candidates, set during candidate
+    /// resolution (options.farLimit, or tightened to the last portal when
+    /// free candidates were appended without a selector)
+    double navCandidatesFarLimit = std::numeric_limits<double>::max();
 
     /// Free candidates not part of the tracking geometry.
     //  They are stored as a pair of surface pointer
@@ -195,7 +203,7 @@ class Navigator final {
     /// Get reference to current navigation candidate
     /// @return Reference to current boundary intersection
     NavigationTarget& navCandidate() {
-      return navCandidates.at(navCandidateIndex.value());
+      return stream.candidates().at(navCandidateIndex.value());
     }
 
     /// Volume where the navigation started
@@ -241,12 +249,12 @@ class Navigator final {
       navLayerIndex.reset();
       navBoundaries.clear();
       navBoundaryIndex.reset();
-      navCandidates.clear();
       navCandidateIndex.reset();
 
       currentLayer = nullptr;
 
       policyStateManager.reset();
+      policyStateIsDefault = true;
     }
 
     /// Completely reset navigation state to initial conditions
@@ -403,6 +411,19 @@ class Navigator final {
   /// @param position The current position
   /// @param direction The current direction
   void resolveCandidates(State& state, const Vector3& position,
+                         const Vector3& direction) const;
+
+  /// @brief Create the navigation policy state for the current volume
+  ///
+  /// Volumes whose navigation policy is known to push only default states
+  /// (probed at geometry construction) skip the state creation entirely; the
+  /// matching popState on volume exit is skipped under the same condition.
+  /// The caller must ensure the current volume has a navigation policy.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  void createPolicyState(State& state, const Vector3& position,
                          const Vector3& direction) const;
 
   /// @brief Resolve compatible surfaces

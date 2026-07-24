@@ -213,6 +213,17 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   Acts::detail::AlignablePortalVisitor alignPortals{gctx, logger};
   world->apply(alignPortals);
 
+  // All navigation policies are attached at this point: initialize each one's
+  // statelessness cache (probing whether it pushes only default states) so the
+  // navigator can skip the per-volume-entry state creation for volumes with
+  // stateless policies.
+  world->apply([&](TrackingVolume &volume) {
+    if (INavigationPolicy *policy = volume.navigationPolicy();
+        policy != nullptr) {
+      policy->initializeStatelessCache(gctx, logger);
+    }
+  });
+
   return std::make_unique<TrackingGeometry>(
       std::shared_ptr<TrackingVolume>(autoSizingNode->releaseVolume()), nullptr,
       GeometryIdentifierHook{}, logger, false);
