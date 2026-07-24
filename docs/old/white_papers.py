@@ -259,9 +259,10 @@ async def pull(
 
                     status.update(f"\[{repo}] Downloading artifact...")
 
-                    with tempfile.TemporaryFile() as fh, tempfile.NamedTemporaryFile(
-                        suffix=".pdf"
-                    ) as pdf_fh:
+                    with (
+                        tempfile.TemporaryFile() as fh,
+                        tempfile.NamedTemporaryFile(suffix=".pdf") as pdf_fh,
+                    ):
                         await download_file(
                             session,
                             latest_artifact.archive_download_url,
