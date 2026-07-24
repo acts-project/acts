@@ -114,8 +114,6 @@ create2D(
   return ism;
 }
 
-ACTS_PUSH_IGNORE_DEPRECATED()
-
 /// Create and fill from a single proto axis
 ///
 /// @param pAxis the ProtoAxis
@@ -165,8 +163,6 @@ template <typename material_accessor_t>
                   std::move(boundToGridLocal), std::move(globalToGridLocal),
                   payload);
 }
-
-ACTS_POP_IGNORE_DEPRECATED()
 
 /// The resolved functions to reduce compile time template bloat
 ///  - GridMaterial 1D
@@ -257,8 +253,6 @@ create(const IAxis& axis0, const IAxis& axis1,
        const std::vector<
            std::vector<GloballyIndexedMaterialAccessor::grid_value_type>>&
            payload);
-
-ACTS_PUSH_IGNORE_DEPRECATED()
 
 /// The resolved functions to reduce compile time template bloat
 ///  - GridMaterial 1D
@@ -355,7 +349,4 @@ create(const ProtoAxis& pAxis,
            const std::vector<
                std::vector<GloballyIndexedMaterialAccessor::grid_value_type>>&
                payload);
-
-ACTS_POP_IGNORE_DEPRECATED()
-
 }  // namespace Acts::GridSurfaceMaterialFactory

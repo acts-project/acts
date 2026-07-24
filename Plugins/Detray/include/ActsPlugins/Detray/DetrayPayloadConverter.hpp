@@ -18,7 +18,6 @@
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
-#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeDispatcher.hpp"
 
@@ -128,18 +127,6 @@ class DetrayPayloadConverter {
       const Acts::ProtoSurfaceMaterialT<Acts::MultiAxisFactory>& material,
       const Acts::Surface& surface);
 
-  ACTS_PUSH_IGNORE_DEPRECATED()
-  /// Convert proto surface material with proto axes
-  /// @param material Proto surface material
-  /// @param surface Surface associated with the material
-  /// @return Detray surface material payload
-  static std::optional<DetraySurfaceMaterial>
-  convertProtoSurfaceMaterialProtoAxes(
-      const Acts::ProtoSurfaceMaterialT<std::vector<Acts::DirectedProtoAxis>>&
-          material,
-      const Acts::Surface& surface);
-  ACTS_POP_IGNORE_DEPRECATED()
-
   /// Convert surface array navigation policy
   /// @param policy Surface array navigation policy
   /// @param gctx Geometry context
@@ -240,12 +227,10 @@ class DetrayPayloadConverter {
     Acts::TypeDispatcher<Acts::ISurfaceMaterial,
                          std::optional<DetraySurfaceMaterial>(
                              const Acts::Surface& surface)>
-        convertSurfaceMaterial{convertHomogeneousSurfaceMaterial,
-                               convertBinnedSurfaceMaterial,
-                               convertGridSurfaceMaterial,
-                               convertProtoSurfaceMaterialAxisFactory,
-                               convertProtoSurfaceMaterialProtoAxes,
-                               convertProtoSurfaceMaterialBinUtility};
+        convertSurfaceMaterial{
+            convertHomogeneousSurfaceMaterial, convertBinnedSurfaceMaterial,
+            convertGridSurfaceMaterial, convertProtoSurfaceMaterialAxisFactory,
+            convertProtoSurfaceMaterialBinUtility};
   };
 
   /// Convert surface bounds to detray mask payload

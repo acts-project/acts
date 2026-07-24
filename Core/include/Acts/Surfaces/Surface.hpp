@@ -209,6 +209,10 @@ class Surface : public virtual GeometryObject,
   /// @return SurfaceBounds by reference
   virtual const SurfaceBounds& bounds() const = 0;
 
+  /// Local axes of the surface
+  /// @return An array of local axes directions
+  virtual std::array<AxisDirection, 2> localAxes() const = 0;
+
   /// Return the associated surface placement if there is any
   /// @return Pointer to the surface placement, can be nullptr
   const SurfacePlacementBase* surfacePlacement() const;
@@ -564,10 +568,6 @@ class Surface : public virtual GeometryObject,
   /// @return Reference to the output stream for chaining
   virtual std::ostream& toStreamImpl(const GeometryContext& gctx,
                                      std::ostream& sl) const;
-
-  /// Local axes of the surface
-  /// @return An array of local axes directions
-  virtual std::array<AxisDirection, 2> localAxes() const = 0;
 
   /// Transform surface local coordinates to material local coordinates
   /// @param surfaceLocal The local coordinates on the surface

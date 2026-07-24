@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 
@@ -119,8 +118,6 @@ class [[deprecated("Use AxisFactory instead")]] ProtoAxis {
   bool m_autorange = false;
 };
 
-ACTS_PUSH_IGNORE_DEPRECATED()
-
 /// @brief Helper method to create a 1D grid from a single proto axis
 ///
 /// @tparam payload_t the grid payloat type
@@ -225,15 +222,15 @@ DirectedProtoAxis : public ProtoAxis {
 /// @param os Output stream
 /// @param a Vector of ProtoAxis to output
 /// @return Reference to output stream
+[[deprecated("Use AxisFactory instead")]]
 std::ostream& operator<<(std::ostream& os, const std::vector<ProtoAxis>& a);
 
 /// Stream operator for vector of DirectedProtoAxis
 /// @param os Output stream
 /// @param a Vector of DirectedProtoAxis to output
 /// @return Reference to output stream
+[[deprecated("Use AxisFactory with an AxisDirection instead")]]
 std::ostream& operator<<(std::ostream& os,
                          const std::vector<DirectedProtoAxis>& a);
-
-ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace Acts

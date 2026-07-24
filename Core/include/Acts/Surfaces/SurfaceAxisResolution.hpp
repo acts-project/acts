@@ -19,17 +19,6 @@ namespace Acts {
 
 class Surface;
 
-/// @brief Get the canonical local axis directions of a surface, in order
-///
-/// - Cylinder: (rphi, z)
-/// - Disc with radial bounds: (r, phi)
-/// - Plane with rectangle or trapezoid bounds: (x, y)
-///
-/// @param surface the surface to inspect
-/// @throws std::invalid_argument for unsupported surface types
-/// @return the axis directions, in canonical order
-std::vector<AxisDirection> surfaceAxisDirections(const Surface& surface);
-
 /// @brief Get the range and boundary type of a surface along a given axis
 /// direction
 ///
@@ -48,8 +37,8 @@ AxisResolution surfaceAxisResolution(const Surface& surface,
 
 /// @brief Resolve a multi-dimensional binning description against a surface
 ///
-/// Each axis description is matched to one of the canonical axis directions
-/// of the surface (see @c surfaceAxisDirections ):
+/// Each axis description is matched to one of the canonical local axis
+/// directions of the surface (see @c Surface::localAxes ):
 ///
 /// - if no description carries a direction, they are matched positionally,
 ///   i.e. slot i binds to the i-th canonical direction

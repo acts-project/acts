@@ -119,7 +119,6 @@ class BinUtility {
     }
   }
 
-  ACTS_PUSH_IGNORE_DEPRECATED()
   /// Create from a DirectedProtoAxis
   ///
   /// @param dpAxis the DirectedProtoAxis to be used
@@ -145,7 +144,6 @@ class BinUtility {
       m_binningData.emplace_back(dpAxis);
     }
   }
-  ACTS_POP_IGNORE_DEPRECATED()
 
   /// Operator+= to make multidimensional BinUtility
   ///

@@ -246,7 +246,10 @@ std::string AxisFactory::toString() const {
   return ss.str();
 }
 
-std::ostream& operator<<(std::ostream& os, const AxisFactory& axisFactory) {
+}  // namespace Acts
+
+std::ostream& Acts::operator<<(std::ostream& os,
+                               const AxisFactory& axisFactory) {
   os << "AxisFactory: " << axisFactory.nBins() << " bins";
   if (axisFactory.m_direction.has_value()) {
     os << " in " << axisDirectionName(*axisFactory.m_direction);
@@ -267,5 +270,3 @@ std::ostream& operator<<(std::ostream& os, const AxisFactory& axisFactory) {
       axisFactory.m_variant);
   return os;
 }
-
-}  // namespace Acts

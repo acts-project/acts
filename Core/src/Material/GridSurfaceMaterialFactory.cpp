@@ -8,8 +8,6 @@
 
 #include "Acts/Material/GridSurfaceMaterialFactory.hpp"
 
-#include "Acts/Utilities/Diagnostics.hpp"
-
 std::unique_ptr<Acts::IGridSurfaceMaterial<Acts::MaterialSlab>>
 Acts::GridSurfaceMaterialFactory::create(
     const IAxis& axis, GridMaterialAccessor&& materialAccessor,
@@ -87,8 +85,6 @@ Acts::GridSurfaceMaterialFactory::create(
       std::move(globalToGridLocal), payload);
 }
 
-ACTS_PUSH_IGNORE_DEPRECATED()
-
 std::unique_ptr<Acts::IGridSurfaceMaterial<Acts::MaterialSlab>>
 Acts::GridSurfaceMaterialFactory::create(
     const ProtoAxis& pAxis, GridMaterialAccessor&& materialAccessor,
@@ -165,5 +161,3 @@ Acts::GridSurfaceMaterialFactory::create(
       pAxis0.getAxis(), pAxis1.getAxis(), std::move(materialAccessor),
       std::move(boundToGridLocal), std::move(globalToGridLocal), payload);
 }
-
-ACTS_POP_IGNORE_DEPRECATED()

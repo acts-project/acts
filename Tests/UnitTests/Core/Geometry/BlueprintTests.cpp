@@ -32,9 +32,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/AxisFactory.hpp"
-#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 
 #include <memory>
@@ -781,14 +779,6 @@ BOOST_AUTO_TEST_CASE(MaterialAxisValidation) {
     mat.configureFace(NegativeDisc, AxisFactory::DeferredEquidistant(5),
                       AxisFactory::DeferredEquidistant(10));
   }));
-
-  // The superseded DirectedProtoAxis interface converts to deferred axes
-  ACTS_PUSH_IGNORE_DEPRECATED()
-  BOOST_CHECK_NO_THROW(root.addMaterial("Material", [&](auto& mat) {
-    mat.configureFace(PositiveDisc, DirectedProtoAxis(AxisR, Bound, 5),
-                      DirectedProtoAxis(AxisPhi, Bound, 0., 1., 10));
-  }));
-  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 BOOST_AUTO_TEST_CASE(MaterialMixedVolumeTypes) {
