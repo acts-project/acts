@@ -32,18 +32,44 @@ struct GbtsLayerConnection {
   std::vector<std::int32_t> binTable;
 };
 
+/// Selects which subdetector connections are kept when parsing a GBTS layer
+/// connection file.
+enum class GbtsConnectionFilter {
+  /// Keep only pixel-to-pixel connections (default prompt configuration)
+  PixelOnly = 0,
+  /// Keep only strip-to-strip connections (default LRT configuration)
+  StripOnly = 1,
+  /// Keep all connections, including mixed pixel-strip ones
+  All = 2
+};
+
 /// Loader and container for GBTS layer connection data.
 struct GbtsLayerConnectionMap {
  public:
   /// Create a GbtsLayerConnectionMap from an input stream
   /// @param inStream Input stream containing the connection data
-  /// @param lrtMode Enable LRT (Large Radius Tracking) mode
+  /// @param filter Which subdetector connections to keep
+  /// @return A GbtsLayerConnectionMap instance populated with the data from the stream
+  static GbtsLayerConnectionMap fromStream(std::istream& inStream,
+                                           GbtsConnectionFilter filter);
+  /// Create a GbtsLayerConnectionMap from a file
+  /// @param inFile Input configuration file path
+  /// @param filter Which subdetector connections to keep
+  /// @return A GbtsLayerConnectionMap instance populated with the data from the file
+  static GbtsLayerConnectionMap fromFile(const std::string& inFile,
+                                         GbtsConnectionFilter filter);
+
+  /// Create a GbtsLayerConnectionMap from an input stream
+  /// @param inStream Input stream containing the connection data
+  /// @param lrtMode Enable LRT (Large Radius Tracking) mode: keeps only
+  ///        strip-strip connections instead of only pixel-pixel ones
   /// @return A GbtsLayerConnectionMap instance populated with the data from the stream
   static GbtsLayerConnectionMap fromStream(std::istream& inStream,
                                            bool lrtMode);
   /// Create a GbtsLayerConnectionMap from a file
   /// @param inFile Input configuration file path
-  /// @param lrtMode Enable LRT (Large Radius Tracking) mode
+  /// @param lrtMode Enable LRT (Large Radius Tracking) mode: keeps only
+  ///        strip-strip connections instead of only pixel-pixel ones
   /// @return A GbtsLayerConnectionMap instance populated with the data from the file
   static GbtsLayerConnectionMap fromFile(std::string& inFile, bool lrtMode);
 

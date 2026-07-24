@@ -165,6 +165,17 @@ std::uint32_t GbtsNodeStorage::numberOfNodes() const {
   return n;
 }
 
+float GbtsNodeStorage::minNodeRadius() const {
+  float rMin = std::numeric_limits<float>::max();
+
+  for (const auto& b : m_etaBins) {
+    if (!b.empty()) {
+      rMin = std::min(rMin, b.minRadius);
+    }
+  }
+  return rMin == std::numeric_limits<float>::max() ? 0.0f : rMin;
+}
+
 void GbtsNodeStorage::sortByPhi() {
   for (GbtsEtaBin& b : m_etaBins) {
     b.sortByPhi();
@@ -175,7 +186,12 @@ void GbtsNodeStorage::initializeNodes(const bool useMl) {
   for (GbtsEtaBin& b : m_etaBins) {
     b.initializeNodes();
     if (!b.vn.empty()) {
-      b.layerId = m_geometry->layerIdByIndex((b.vn.front())->layer);
+      const std::uint16_t layerIndex = (b.vn.front())->layer;
+      b.layerId = m_geometry->layerIdByIndex(layerIndex);
+      b.isBarrel =
+          m_geometry->layerByIndex(layerIndex).layerDescription().type ==
+          GbtsLayerType::Barrel;
+      b.layerDepth = m_geometry->layerDepthById(b.layerId);
     }
   }
 
