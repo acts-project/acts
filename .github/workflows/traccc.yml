@@ -39,16 +39,19 @@ jobs:
             options: --preset host-fp32
             run_tests: true
             enable_cuda: false
+            enable_hip: false
           - name: CPU
             container: ghcr.io/acts-project/ubuntu2404:87
             options: --preset host-fp64
             run_tests: false
             enable_cuda: false
+            enable_hip: false
           - name: CUDA
             container: ghcr.io/acts-project/ubuntu2404_cuda:87
             options: --preset cuda-fp32 -DTRACCC_BUILD_TESTING=FALSE
             run_tests: false
             enable_cuda: true
+            enable_hip: false
         build:
           - Release
           - Debug
@@ -77,6 +80,14 @@ jobs:
               enable_cuda: true
               enable_hip: false
             build: Release
+          - platform:
+              name: "ALPAKA_HIP"
+              container: ghcr.io/acts-project/ubuntu2404_rocm:88
+              options: --preset alpaka-fp32-hip -Dalpaka_DISABLE_VENDOR_RNG=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20
+              run_tests: false
+              enable_cuda: false
+              enable_hip: true
+            build: Release
     # Use BASH as the shell from the images.
     defaults:
       run:
@@ -102,6 +113,7 @@ jobs:
             -DTRACCC_SETUP_COVFIE=ON \
             -DTRACCC_SETUP_GOOGLETEST=ON \
             -DVECMEM_BUILD_CUDA_LIBRARY=${{ matrix.platform.enable_cuda && 'ON' || 'OFF' }} \
+            -DVECMEM_BUILD_HIP_LIBRARY=${{ matrix.platform.enable_hip && 'ON' || 'OFF' }} \
             -DVECMEM_BUILD_SYCL_LIBRARY=OFF \
             -DACTS_SETUP_VECMEM=OFF \
             -DACTS_SETUP_COVFIE=OFF \

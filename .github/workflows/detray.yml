@@ -145,6 +145,10 @@ jobs:
             CXX_STANDARD: "20"
             CONTAINER: "ghcr.io/acts-project/ubuntu2404_cuda:87"
             OPTIONS: -DDETRAY_BUILD_CUDA=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON
+          - NAME: "HIP-AMD"
+            CXX_STANDARD: "20"
+            CONTAINER: "ghcr.io/acts-project/ubuntu2404_rocm:88"
+            OPTIONS: -DCMAKE_PREFIX_PATH=/opt/rocm/lib/cmake/ -DCMAKE_HIP_PLATFORM=amd -DDETRAY_BUILD_HIP=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_BUILD_BENCHMARKS=OFF -DDETRAY_BUILD_INTEGRATIONTESTS=OFF
           #- NAME: "HIP-NVIDIA"
           #  CXX_STANDARD: "20"
           #  CONTAINER:
