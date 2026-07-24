@@ -591,7 +591,7 @@ class BinningData {
             : bin;
     return static_cast<std::size_t>(
         (bin <= static_cast<int>(bData.m_bins - 1))
-            ? bin
+            ? static_cast<std::size_t>(bin)
             : ((bData.option == open) ? (bData.m_bins - 1) : 0));
   }
 
