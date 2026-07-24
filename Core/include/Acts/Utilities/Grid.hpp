@@ -647,4 +647,40 @@ Grid(TypeTag<T> /*type*/, Axes&&... axes) -> Grid<T, Axes...>;
 template <typename T, class... Axes>
 Grid(TypeTag<T> /*type*/, Axes&... axes) -> Grid<T, Axes...>;
 
+/// @brief Helper method to create a 1D grid from a single type-erased axis
+///
+/// @tparam payload_t the grid payload type
+///
+/// @param a the axis
+///
+/// @return an IGrid unique ptr and hence transfers ownership
+template <typename payload_t>
+std::unique_ptr<IGrid> makeGrid(const IAxis& a) {
+  return a.visit(
+      [&]<typename AxisTypeA>(const AxisTypeA& axis) -> std::unique_ptr<IGrid> {
+        using GridType = Grid<payload_t, AxisTypeA>;
+        return std::make_unique<GridType>(axis);
+      });
+}
+
+/// @brief Helper method to create a 2D grid from two type-erased axes
+///
+/// @tparam payload_t the grid payload type
+///
+/// @param a the first axis
+/// @param b the second axis
+///
+/// @return an IGrid unique ptr and hence transfers ownership
+template <typename payload_t>
+std::unique_ptr<IGrid> makeGrid(const IAxis& a, const IAxis& b) {
+  return a.visit([&]<typename AxisTypeA>(
+                     const AxisTypeA& axisA) -> std::unique_ptr<IGrid> {
+    return b.visit([&]<typename AxisTypeB>(
+                       const AxisTypeB& axisB) -> std::unique_ptr<IGrid> {
+      using GridType = Grid<payload_t, AxisTypeA, AxisTypeB>;
+      return std::make_unique<GridType>(axisA, axisB);
+    });
+  });
+}
+
 }  // namespace Acts
