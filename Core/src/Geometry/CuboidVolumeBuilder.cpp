@@ -50,6 +50,7 @@ std::shared_ptr<const Surface> CuboidVolumeBuilder::buildSurface(
     surface->assignThickness(cfg.thickness);
   } else {
     surface = Surface::makeShared<PlaneSurface>(trafo, cfg.rBounds);
+    surface->assignIsSensitive(cfg.isSensitive);
   }
   surface->assignSurfaceMaterial(cfg.surMat);
   return surface;
