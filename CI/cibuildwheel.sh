@@ -2,16 +2,15 @@
 # Builds ACTS Python wheels via cibuildwheel with the project's standard
 # CIBW_* configuration. All arguments are forwarded to cibuildwheel
 # unchanged (e.g. a package-dir positional, --only, --output-dir, ...).
-# Anything else is configured via environment variables: CIBW_BUILD narrows the
-# targets to build; GITHUB_TOKEN is forwarded into the build environment if set.
+# Anything else is configured via environment variables: CIBW_BUILD selects
+# which target(s) to build and must be set by the caller; GITHUB_TOKEN is
+# forwarded into the build environment if set.
 set -euo pipefail
 
-# Callers must set CIBW_BUILD explicitly (e.g. via
-# `CI/supported_python_versions.py --cibw` for the full matrix, or a literal
-# glob like "cp313-*" for a single-version smoke test in PR CI). cibuildwheel
-# 3.4.1 errors out if CIBW_BUILD is unset/empty, so fail here too rather than
-# silently building nothing.
-: "${CIBW_BUILD:?CIBW_BUILD must be set}"
+if [[ -z "${CIBW_BUILD:-}" ]]; then
+  echo "CIBW_BUILD must be set" >&2
+  exit 1
+fi
 
 CI="${CI:-true}"
 export CI
@@ -19,8 +18,7 @@ export CI
 CCACHE_DIR="${CCACHE_DIR:-$PWD/ccache}"
 export CCACHE_DIR
 export CIBW_MANYLINUX_X86_64_IMAGE="manylinux_2_34" # based on almalinux9
-# cp3??t-* excludes the free-threaded builds, which are not supported yet.
-export CIBW_SKIP="*-musllinux* *-manylinux_i686 cp3??t-*"
+export CIBW_SKIP="*-musllinux* *-manylinux_i686"
 SETUP_CMD="bash {package}/CI/dependencies/setup.sh -t v23.3.1 -d deps -e env.sh"
 export CIBW_BEFORE_ALL_LINUX="dnf install -y bc ccache && ${SETUP_CMD}"
 export CIBW_BEFORE_ALL_MACOS="brew install ninja ccache && ${SETUP_CMD}"

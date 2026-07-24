@@ -8,7 +8,10 @@
 # Prints information about the Python versions Acts supports, derived from
 # `requires-python` in the top-level pyproject.toml so that the wheel metadata,
 # cibuildwheel target matrix and the floor used to compile the requirements.txt
-# lockfiles all share one definition.
+# lockfiles all share one definition. `requires-python` only declares the floor
+# (an upper bound there is discouraged by PyPA packaging guidance and would
+# break installs on every future Python release); the ceiling of versions we
+# actually build/test for is declared here instead, via PYTHON_CEILING below.
 #
 # Usage:
 #   CI/supported_python_versions.py --floor    # lowest version, e.g. 3.10
@@ -21,12 +24,16 @@ from pathlib import Path
 
 from packaging.specifiers import SpecifierSet
 
+# Highest Python version Acts is built and tested for. Bump when a new
+# CPython release has been validated.
+PYTHON_CEILING = "3.14"
+
 
 def main() -> None:
     pyproject = Path(__file__).resolve().parent.parent / "pyproject.toml"
     with pyproject.open("rb") as f:
         raw = tomllib.load(f)["project"]["requires-python"]
-    spec = SpecifierSet(raw)
+    spec = SpecifierSet(raw) & SpecifierSet(f"<={PYTHON_CEILING}")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--floor", action="store_true")
