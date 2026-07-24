@@ -224,448 +224,439 @@ jobs:
           name: physmon
           path: physmon
 
-  # ─────────────────────────────────────────────────────────────────────
-  # DISABLED for the husk smoke test. This spike migrates linux_ubuntu and
-  # nothing else; linux_examples_test and linux_physmon stay on GitHub-hosted
-  # runners so the artifact handoff off a husk slot is still exercised.
-  # Everything below neither runs on a husk slot nor consumes its output, so
-  # it is turned off to keep the spike cheap.
-  # Restore by uncommenting; nothing here was edited otherwise.
-  # ─────────────────────────────────────────────────────────────────────
-#   linux_physmon_perf_report:
-#     needs: [linux_physmon]
-#     runs-on: ubuntu-latest
-#     permissions:
-#       contents: read
-#     if: github.ref == 'refs/heads/main'
-#     steps:
-#       - name: Install dependencies
-#         run: pip3 install spyral-cli==1.1.2
-#
-#       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-#         with:
-#           name: physmon
-#           path: physmon
-#
-#       - name: Store metrics
-#         env:
-#           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-#         run: |
-#           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
-#           ssh-add - <<< "${{ secrets.RUNTIME_METRIC_DEPLOY_SSH_KEY }}"
-#           git config --global user.email "action@github.com"
-#           git config --global user.name "GitHub Action"
-#           git clone git@github.com:acts-project/runtime_metrics.git
-#           spyral maxima runtime_metrics/metrics.csv physmon/memory/*.csv -e $(date +%Y-%m-%dT%H-%M-%S) -e ${GITHUB_REF_NAME} -e ${GITHUB_REF} -e ${GITHUB_SHA}
-#           cd runtime_metrics
-#           git add -A
-#           git commit -m"update metrics"
-#           git push
-#
-#   linux_ubuntu_extra:
-#     runs-on: ubuntu-latest
-#     permissions:
-#       contents: read
-#     strategy:
-#       matrix:
-#         include:
-#           - image: ubuntu2404_clang22
-#             std: 23
-#             cxx: clang++-22
-#     container: ghcr.io/acts-project/${{ matrix.image }}:86
-#     env:
-#       INSTALL_DIR: ${{ github.workspace }}/install
-#       ACTS_LOG_FAILURE_THRESHOLD: WARNING
-#
-#     steps:
-#       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-#         with:
-#           lfs: true
-#           persist-credentials: false
-#
-#       - name: Install dependencies
-#         uses: ./.github/actions/dependencies
-#         with:
-#           compiler: ${{ matrix.cxx }}
-#           cxx_std: ${{ matrix.std }}
-#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#           env_file: .env
-#
-#       - name: Restore ccache
-#         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-#         id: ccache-restore
-#         with:
-#           path: ${{ env.CCACHE_DIR }}
-#           key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.image }}-${{ matrix.std }}-${{ matrix.cxx }}-${{ github.sha }}
-#           restore-keys: |
-#             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.image }}-${{ matrix.std }}-${{ matrix.cxx }}-
-#
-#       - name: Configure
-#         run: >
-#           ccache -z &&
-#           CI/dependencies/run.sh .env
-#           cmake -B build -S .
-#           --preset=github-ci
-#           -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
-#           -DCMAKE_CXX_STANDARD=${{ matrix.std }}
-#           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-#
-#       - name: Build
-#         run: cmake --build build
-#
-#       - name: ccache stats
-#         run: ccache -s
-#
-#       - name: Save ccache
-#         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-#         if: always()
-#         with:
-#           path: ${{ github.workspace }}/ccache
-#           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
-#
-#       - name: Unit tests
-#         run: >
-#           CI/dependencies/run.sh .env
-#           cmake --build build --target test
-#
-#       - name: Integration tests
-#         run: >
-#           CI/dependencies/run.sh .env
-#           cmake --build build --target integrationtests
-#
-#       - name: Install
-#         run: cmake --build build --target install
-#
-#       - name: Downstream configure
-#         run: >
-#           CI/dependencies/run.sh .env
-#           cmake -B build-downstream -S Tests/DownstreamProject
-#           -GNinja
-#           -DCMAKE_BUILD_TYPE=Release
-#           -DCMAKE_CXX_FLAGS=-Werror
-#           -DCMAKE_CXX_STANDARD=${{ matrix.std }}
-#           -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
-#           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
-#
-#       - name: Downstream build
-#         run: cmake --build build-downstream
-#
-#       - name: Downstream tests
-#         run: ctest --test-dir build-downstream --output-on-failure
-#
-#   macos:
-#     runs-on: macos-26
-#     permissions:
-#       contents: read
-#     env:
-#       INSTALL_DIR: ${{ github.workspace }}/install_acts
-#       ACTS_LOG_FAILURE_THRESHOLD: WARNING
-#
-#     steps:
-#       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-#         with:
-#           lfs: true
-#           persist-credentials: false
-#
-#       - name: Setup Xcode version
-#         uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
-#         with:
-#           xcode-version: "26.3.0"
-#
-#       - name: Install dependencies
-#         uses: ./.github/actions/dependencies
-#         with:
-#           compiler: clang++
-#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#           env_file: .env
-#
-#       - name: Restore ccache
-#         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-#         id: ccache-restore
-#         env:
-#           DYLD_LIBRARY_PATH: ""
-#         with:
-#           path: ${{ env.CCACHE_DIR }}
-#           key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-#           restore-keys: |
-#             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
-#
-#       - name: Configure
-#         run: >
-#           ccache -z &&
-#           CI/dependencies/run.sh .env
-#           cmake -B build -S .
-#           --preset=github-ci
-#           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-#
-#       - name: Build
-#         run: cmake --build build
-#
-#       - name: ccache stats
-#         run: ccache -s
-#
-#       - name: Save ccache
-#         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-#         if: always()
-#         with:
-#           path: ${{ github.workspace }}/ccache
-#           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
-#
-#       - name: Unit tests
-#         run: >
-#           CI/dependencies/run.sh .env
-#           cmake --build build --target test
-#
-#       - name: Integration tests
-#         run: >
-#           CI/dependencies/run.sh .env
-#           cmake --build build --target integrationtests
-#
-#       - name: Install
-#         run: cmake --build build --target install
-#
-#       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-#         with:
-#           name: acts-macos
-#           path: ${{ env.INSTALL_DIR }}
-#
-#       - name: Downstream configure
-#         run: >
-#           CI/dependencies/run.sh .env
-#           cmake -B build-downstream -S Tests/DownstreamProject
-#           -GNinja
-#           -DCMAKE_BUILD_TYPE=Release
-#           -DCMAKE_CXX_FLAGS=-Werror
-#           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
-#
-#       - name: Downstream build
-#         run: cmake --build build-downstream
-#
-#       - name: Downstream tests
-#         run: ctest --test-dir build-downstream --output-on-failure
-#
-#   external_eic-shell:
-#     runs-on: ubuntu-latest
-#     permissions:
-#       contents: read
-#     steps:
-#       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-#         with:
-#           path: acts
-#           persist-credentials: false
-#
-#       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-#         with:
-#           repository: eic/EICrecon
-#           path: EICrecon
-#           persist-credentials: false
-#
-#       - name: Setup CMVFS
-#         uses: cvmfs-contrib/github-action-cvmfs@10197e000cc0add8e54ac4fb73d3ed44e2de72b4 # v5.5
-#
-#       - name: Restore ccache
-#         id: ccache-restore
-#         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-#         with:
-#           path: ${{ env.CCACHE_DIR }}
-#           key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-#           restore-keys: |
-#             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
-#
-#       - name: Build ACTS
-#         id: build-acts
-#         uses: eic/docker-run-action@05c870b4c087fa65d5da3d7474a4b5e594a903d7 # v4.1
-#         continue-on-error: false
-#         with:
-#           image: "ghcr.io/eic/eic_ci_without_acts:nightly"
-#           options: -v ${{ github.workspace }}:/work -v ${{ env.CCACHE_DIR }}:/root/.cache/ccache
-#           shell: bash
-#           run: |
-#             for script in /.singularity.d/env/*.sh; do
-#               if [ -f "$script" ]; then
-#                 . "$script"
-#               fi
-#             done
-#             cd /work
-#             set -ue
-#
-#             pushd acts
-#             ccache -p | grep cache_dir
-#             ccache -z && \
-#             export CMAKE_INSTALL_PREFIX=/work/prefix
-#             export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-#             echo "::group::Acts configure phase"
-#             cmake -B build -S . \
-#               -GNinja \
-#               -DACTS_BUILD_EXAMPLES=ON \
-#               -DACTS_BUILD_FATRAS=ON \
-#               -DACTS_BUILD_PLUGIN_DD4HEP=ON
-#             echo "::endgroup::"
-#             echo "::group::Acts build phase"
-#             cmake --build build
-#             echo "::endgroup::"
-#             echo "::group::Acts install phase"
-#             cmake --install build
-#             echo "::endgroup::"
-#             popd
-#
-#       - name: Build EICrecon
-#         id: build-eicrecon
-#         uses: eic/docker-run-action@05c870b4c087fa65d5da3d7474a4b5e594a903d7 # v4.1
-#         continue-on-error: true
-#         with:
-#           image: "ghcr.io/eic/eic_ci_without_acts:nightly"
-#           options: -v ${{ github.workspace }}:/work -v ${{ env.CCACHE_DIR }}:/root/.cache/ccache
-#           shell: bash
-#           run: |
-#             for script in /.singularity.d/env/*.sh; do
-#               if [ -f "$script" ]; then
-#                 . "$script"
-#               fi
-#             done
-#             cd /work
-#             set -ue
-#             export CMAKE_INSTALL_PREFIX=/work/prefix
-#             export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-#             pushd EICrecon
-#             echo "::group::EICrecon configure phase"
-#             ccache -z && \
-#             cmake -B build -S . \
-#               -GNinja \
-#               -DActs_ROOT=$CMAKE_INSTALL_PREFIX
-#             echo "::endgroup::"
-#             echo "::group::EICrecon build phase"
-#             cmake --build build
-#             echo "::endgroup::"
-#             popd
-#
-#             ccache -s
-#
-#       - name: Create comment body header
-#         if: ${{ steps.build-eicrecon.outcome == 'failure' && github.event_name == 'pull_request' }}
-#         run: |
-#           cat >comment-50-external-failure.md <<EOF
-#           # ❗️: Downstream build failure
-#
-#           - eic-shell EICrecon (cc @acts-project/epic-contacts)
-#           EOF
-#
-#       - name: Upload Artifact
-#         if: ${{ steps.build-eicrecon.outcome == 'failure' && github.event_name == 'pull_request' }}
-#         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-#         with:
-#           name: comment-50-external-failure.md
-#           path: comment-50-external-failure.md
-#           retention-days: 5
-#
-#       - name: Save ccache
-#         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-#         if: always()
-#         with:
-#           path: ${{ github.workspace }}/ccache
-#           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
-#
-#   external_key4hep-nightlies:
-#     runs-on: ubuntu-latest
-#     permissions:
-#       contents: read
-#     steps:
-#       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-#         with:
-#           path: acts
-#           persist-credentials: false
-#       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-#         with:
-#           repository: key4hep/k4ActsTracking
-#           path: k4ActsTracking
-#           persist-credentials: false
-#       - name: Setup CVMFS
-#         uses: cvmfs-contrib/github-action-cvmfs@10197e000cc0add8e54ac4fb73d3ed44e2de72b4 # v5.5
-#
-#       - name: Build Key4hep dependents
-#         id: build
-#         uses: aidasoft/run-lcg-view@d8db17c61216548c9192889942d46ff2d7c3a3b6 # v6
-#         continue-on-error: true
-#         with:
-#           container: ubuntu2404
-#           view-path: /cvmfs/sw-nightlies.hsf.org/key4hep
-#           ccache-key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}
-#           run: |
-#             pushd acts
-#             ccache -z
-#             echo "::group::Configure Acts"
-#             cmake -B build -S . -GNinja \
-#               -DACTS_BUILD_PLUGIN_DD4HEP=ON \
-#               -DACTS_BUILD_PLUGIN_JSON=ON \
-#               -DACTS_USE_SYSTEM_NLOHMANN_JSON=ON \
-#               -DACTS_BUILD_PLUGIN_ROOT=ON \
-#               -DCMAKE_INSTALL_PREFIX=$(pwd)/install \
-#               -DCMAKE_CXX_STANDARD=20 \
-#               -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-#             echo "::endgroup::"
-#             echo "::group::Build and Install Acts"
-#             cmake --build build --target install
-#             k4_local_repo
-#             echo "::endgroup::"
-#             echo "::group::ccache statistics"
-#             ccache -s
-#             popd
-#
-#             pushd k4ActsTracking
-#             ccache -z
-#             echo "::group::Configure k4ActsTracking"
-#             cmake -B build -S . -GNinja \
-#               -DCMAKE_CXX_STANDARD=20 \
-#               -DCMAKE_INSTALL_PREFIX=$(pwd)/install \
-#               -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-#             echo "::endgroup::"
-#             echo "::group::Build k4ActsTracking"
-#             cmake --build build
-#             echo "::endgroup::"
-#             echo "::group::Test k4ActsTracking::"
-#             ctest --test-dir build -j$(nproc) --output-on-failure
-#             echo "::endgroup::"
-#             echo "::group::ccache statistics"
-#             ccache -s
-#             popd
-#
-#       - name: Create comment body
-#         if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
-#         run: |
-#           cat >comment-51-key4hep-external-failure.md <<EOF
-#           # ❗️: Downstream build failure
-#
-#             - Key4hep (cc @acts-project/key4hep-contacts)
-#           EOF
-#
-#       - name: Upload Artifact
-#         if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
-#         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-#         with:
-#           name: comment-51-key4hep-external-failure.md
-#           path: comment-51-key4hep-external-failure.md
-#           retention-days: 5
-#
-#
-#   linux_ubuntu_python_wheel:
-#     runs-on: ubuntu-latest
-#     permissions:
-#       contents: read
-#
-#     steps:
-#       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-#         with:
-#           persist-credentials: false
-#
-#       - name: Build wheel
-#         uses: ./.github/actions/cibuildwheel_wrapper
-#         with:
-#           package-dir: .
-#           cibw-build: "cp313-*"
-#           github-token: ${{ secrets.GITHUB_TOKEN }}
-#
-#       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-#         with:
-#           name: linux-ubuntu-wheel
-#           path: ./wheelhouse/*.whl
-#
+  linux_physmon_perf_report:
+    needs: [linux_physmon]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Install dependencies
+        run: pip3 install spyral-cli==1.1.2
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: physmon
+          path: physmon
+
+      - name: Store metrics
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+        run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          ssh-add - <<< "${{ secrets.RUNTIME_METRIC_DEPLOY_SSH_KEY }}"
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git clone git@github.com:acts-project/runtime_metrics.git
+          spyral maxima runtime_metrics/metrics.csv physmon/memory/*.csv -e $(date +%Y-%m-%dT%H-%M-%S) -e ${GITHUB_REF_NAME} -e ${GITHUB_REF} -e ${GITHUB_SHA}
+          cd runtime_metrics
+          git add -A
+          git commit -m"update metrics"
+          git push
+
+  linux_ubuntu_extra:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        include:
+          - image: ubuntu2404_clang22
+            std: 23
+            cxx: clang++-22
+    container: ghcr.io/acts-project/${{ matrix.image }}:86
+    env:
+      INSTALL_DIR: ${{ github.workspace }}/install
+      ACTS_LOG_FAILURE_THRESHOLD: WARNING
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          lfs: true
+          persist-credentials: false
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: ${{ matrix.cxx }}
+          cxx_std: ${{ matrix.std }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
+
+      - name: Restore ccache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: ccache-restore
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.image }}-${{ matrix.std }}-${{ matrix.cxx }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.image }}-${{ matrix.std }}-${{ matrix.cxx }}-
+
+      - name: Configure
+        run: >
+          ccache -z &&
+          CI/dependencies/run.sh .env
+          cmake -B build -S .
+          --preset=github-ci
+          -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+          -DCMAKE_CXX_STANDARD=${{ matrix.std }}
+          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+
+      - name: Build
+        run: cmake --build build
+
+      - name: ccache stats
+        run: ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+      - name: Unit tests
+        run: >
+          CI/dependencies/run.sh .env
+          cmake --build build --target test
+
+      - name: Integration tests
+        run: >
+          CI/dependencies/run.sh .env
+          cmake --build build --target integrationtests
+
+      - name: Install
+        run: cmake --build build --target install
+
+      - name: Downstream configure
+        run: >
+          CI/dependencies/run.sh .env
+          cmake -B build-downstream -S Tests/DownstreamProject
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_CXX_STANDARD=${{ matrix.std }}
+          -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+          -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+
+      - name: Downstream build
+        run: cmake --build build-downstream
+
+      - name: Downstream tests
+        run: ctest --test-dir build-downstream --output-on-failure
+
+  macos:
+    runs-on: macos-26
+    permissions:
+      contents: read
+    env:
+      INSTALL_DIR: ${{ github.workspace }}/install_acts
+      ACTS_LOG_FAILURE_THRESHOLD: WARNING
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          lfs: true
+          persist-credentials: false
+
+      - name: Setup Xcode version
+        uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        with:
+          xcode-version: "26.3.0"
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: clang++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
+
+      - name: Restore ccache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: ccache-restore
+        env:
+          DYLD_LIBRARY_PATH: ""
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Configure
+        run: >
+          ccache -z &&
+          CI/dependencies/run.sh .env
+          cmake -B build -S .
+          --preset=github-ci
+          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+
+      - name: Build
+        run: cmake --build build
+
+      - name: ccache stats
+        run: ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+      - name: Unit tests
+        run: >
+          CI/dependencies/run.sh .env
+          cmake --build build --target test
+
+      - name: Integration tests
+        run: >
+          CI/dependencies/run.sh .env
+          cmake --build build --target integrationtests
+
+      - name: Install
+        run: cmake --build build --target install
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: acts-macos
+          path: ${{ env.INSTALL_DIR }}
+
+      - name: Downstream configure
+        run: >
+          CI/dependencies/run.sh .env
+          cmake -B build-downstream -S Tests/DownstreamProject
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+
+      - name: Downstream build
+        run: cmake --build build-downstream
+
+      - name: Downstream tests
+        run: ctest --test-dir build-downstream --output-on-failure
+
+  external_eic-shell:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          path: acts
+          persist-credentials: false
+
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: eic/EICrecon
+          path: EICrecon
+          persist-credentials: false
+
+      - name: Setup CMVFS
+        uses: cvmfs-contrib/github-action-cvmfs@10197e000cc0add8e54ac4fb73d3ed44e2de72b4 # v5.5
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Build ACTS
+        id: build-acts
+        uses: eic/docker-run-action@05c870b4c087fa65d5da3d7474a4b5e594a903d7 # v4.1
+        continue-on-error: false
+        with:
+          image: "ghcr.io/eic/eic_ci_without_acts:nightly"
+          options: -v ${{ github.workspace }}:/work -v ${{ env.CCACHE_DIR }}:/root/.cache/ccache
+          shell: bash
+          run: |
+            for script in /.singularity.d/env/*.sh; do
+              if [ -f "$script" ]; then
+                . "$script"
+              fi
+            done
+            cd /work
+            set -ue
+
+            pushd acts
+            ccache -p | grep cache_dir
+            ccache -z && \
+            export CMAKE_INSTALL_PREFIX=/work/prefix
+            export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+            echo "::group::Acts configure phase"
+            cmake -B build -S . \
+              -GNinja \
+              -DACTS_BUILD_EXAMPLES=ON \
+              -DACTS_BUILD_FATRAS=ON \
+              -DACTS_BUILD_PLUGIN_DD4HEP=ON
+            echo "::endgroup::"
+            echo "::group::Acts build phase"
+            cmake --build build
+            echo "::endgroup::"
+            echo "::group::Acts install phase"
+            cmake --install build
+            echo "::endgroup::"
+            popd
+
+      - name: Build EICrecon
+        id: build-eicrecon
+        uses: eic/docker-run-action@05c870b4c087fa65d5da3d7474a4b5e594a903d7 # v4.1
+        continue-on-error: true
+        with:
+          image: "ghcr.io/eic/eic_ci_without_acts:nightly"
+          options: -v ${{ github.workspace }}:/work -v ${{ env.CCACHE_DIR }}:/root/.cache/ccache
+          shell: bash
+          run: |
+            for script in /.singularity.d/env/*.sh; do
+              if [ -f "$script" ]; then
+                . "$script"
+              fi
+            done
+            cd /work
+            set -ue
+            export CMAKE_INSTALL_PREFIX=/work/prefix
+            export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+            pushd EICrecon
+            echo "::group::EICrecon configure phase"
+            ccache -z && \
+            cmake -B build -S . \
+              -GNinja \
+              -DActs_ROOT=$CMAKE_INSTALL_PREFIX
+            echo "::endgroup::"
+            echo "::group::EICrecon build phase"
+            cmake --build build
+            echo "::endgroup::"
+            popd
+
+            ccache -s
+
+      - name: Create comment body header
+        if: ${{ steps.build-eicrecon.outcome == 'failure' && github.event_name == 'pull_request' }}
+        run: |
+          cat >comment-50-external-failure.md <<EOF
+          # ❗️: Downstream build failure
+
+          - eic-shell EICrecon (cc @acts-project/epic-contacts)
+          EOF
+
+      - name: Upload Artifact
+        if: ${{ steps.build-eicrecon.outcome == 'failure' && github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: comment-50-external-failure.md
+          path: comment-50-external-failure.md
+          retention-days: 5
+
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+  external_key4hep-nightlies:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          path: acts
+          persist-credentials: false
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: key4hep/k4ActsTracking
+          path: k4ActsTracking
+          persist-credentials: false
+      - name: Setup CVMFS
+        uses: cvmfs-contrib/github-action-cvmfs@10197e000cc0add8e54ac4fb73d3ed44e2de72b4 # v5.5
+
+      - name: Build Key4hep dependents
+        id: build
+        uses: aidasoft/run-lcg-view@d8db17c61216548c9192889942d46ff2d7c3a3b6 # v6
+        continue-on-error: true
+        with:
+          container: ubuntu2404
+          view-path: /cvmfs/sw-nightlies.hsf.org/key4hep
+          ccache-key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}
+          run: |
+            pushd acts
+            ccache -z
+            echo "::group::Configure Acts"
+            cmake -B build -S . -GNinja \
+              -DACTS_BUILD_PLUGIN_DD4HEP=ON \
+              -DACTS_BUILD_PLUGIN_JSON=ON \
+              -DACTS_USE_SYSTEM_NLOHMANN_JSON=ON \
+              -DACTS_BUILD_PLUGIN_ROOT=ON \
+              -DCMAKE_INSTALL_PREFIX=$(pwd)/install \
+              -DCMAKE_CXX_STANDARD=20 \
+              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+            echo "::endgroup::"
+            echo "::group::Build and Install Acts"
+            cmake --build build --target install
+            k4_local_repo
+            echo "::endgroup::"
+            echo "::group::ccache statistics"
+            ccache -s
+            popd
+
+            pushd k4ActsTracking
+            ccache -z
+            echo "::group::Configure k4ActsTracking"
+            cmake -B build -S . -GNinja \
+              -DCMAKE_CXX_STANDARD=20 \
+              -DCMAKE_INSTALL_PREFIX=$(pwd)/install \
+              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+            echo "::endgroup::"
+            echo "::group::Build k4ActsTracking"
+            cmake --build build
+            echo "::endgroup::"
+            echo "::group::Test k4ActsTracking::"
+            ctest --test-dir build -j$(nproc) --output-on-failure
+            echo "::endgroup::"
+            echo "::group::ccache statistics"
+            ccache -s
+            popd
+
+      - name: Create comment body
+        if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
+        run: |
+          cat >comment-51-key4hep-external-failure.md <<EOF
+          # ❗️: Downstream build failure
+
+            - Key4hep (cc @acts-project/key4hep-contacts)
+          EOF
+
+      - name: Upload Artifact
+        if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: comment-51-key4hep-external-failure.md
+          path: comment-51-key4hep-external-failure.md
+          retention-days: 5
+
+
+  linux_ubuntu_python_wheel:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Build wheel
+        uses: ./.github/actions/cibuildwheel_wrapper
+        with:
+          package-dir: .
+          cibw-build: "cp313-*"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: linux-ubuntu-wheel
+          path: ./wheelhouse/*.whl
