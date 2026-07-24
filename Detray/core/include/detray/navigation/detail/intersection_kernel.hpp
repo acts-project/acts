@@ -54,7 +54,6 @@ struct intersection_initialize {
       const intersection::config &cfg,
       const scalar_t external_mask_tolerance = 0.f) const {
     using mask_t = typename mask_group_t::value_type;
-    using mask_size_type = typename mask_group_t::size_type;
     using shape_t = typename mask_t::shape;
     using algebra_t = typename mask_t::algebra_type;
     using intersection_t = typename is_container_t::value_type;
@@ -70,7 +69,7 @@ struct intersection_initialize {
     typename decltype(intersector)::result_type result{};
 
     if constexpr (concepts::cylindrical<mask_t>) {
-      mask_size_type mask_idx{detail::invalid_value<mask_size_type>()};
+      dindex mask_idx{detail::invalid_value<dindex>()};
       if constexpr (concepts::interval<mask_range_t>) {
         mask_idx = mask_range.lower();
       } else {
@@ -208,7 +207,7 @@ struct intersection_update {
     typename decltype(intersector)::result_type result{};
 
     if constexpr (concepts::cylindrical<mask_t>) {
-      std::size_t mask_idx{detail::invalid_value<std::size_t>()};
+      dindex mask_idx{detail::invalid_value<dindex>()};
       if constexpr (concepts::interval<mask_range_t>) {
         mask_idx = mask_range.lower();
       } else {
@@ -216,12 +215,8 @@ struct intersection_update {
       }
       assert(mask_idx < mask_group.size());
 
-      // Some mask group containers (e.g. device vectors) index with a 32 bit
-      // size type, so narrow explicitly rather than implicitly on subscript.
-      const auto idx = static_cast<typename mask_group_t::size_type>(mask_idx);
-
-      result = intersector.point_of_intersection(traj, ctf, mask_group[idx],
-                                                 cfg.overstep_tolerance);
+      result = intersector.point_of_intersection(
+          traj, ctf, mask_group[mask_idx], cfg.overstep_tolerance);
     } else {
       result =
           intersector.point_of_intersection(traj, ctf, cfg.overstep_tolerance);
