@@ -23,10 +23,12 @@
 #include "ActsPodioEdm/MutableTrackerHitLocal.h"
 #include "ActsPodioEdm/TrackerHitLocal.h"
 
+#include <algorithm>
 #include <functional>
 #include <optional>
 #include <span>
 #include <stdexcept>
+#include <vector>
 
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/MutableSimTrackerHit.h>
@@ -34,6 +36,7 @@
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/Track.h>
 #include <edm4hep/TrackState.h>
+#include <edm4hep/TrackerHit.h>
 #include <edm4hep/Vector4f.h>
 #include <edm4hep/Vertex.h>
 #include <podio/podioVersion.h>
@@ -88,6 +91,16 @@ Parameters convertTrackParametersToEdm4hep(
 Acts::BoundTrackParameters convertTrackParametersFromEdm4hep(
     double Bz, const Parameters& params);
 
+/// Default tracker-hit lookup used by @ref writeTrack: never associates a hit,
+/// reproducing the historical behaviour where no tracker hits are written.
+struct NoTrackerHitLookup {
+  template <typename state_proxy_t>
+  std::optional<edm4hep::TrackerHit> operator()(const state_proxy_t& /*state*/
+  ) const {
+    return std::nullopt;
+  }
+};
+
 }  // namespace detail
 
 /// @addtogroup edm4hep_plugin
@@ -106,22 +119,58 @@ edm4hep::MCParticle getParticle(const edm4hep::SimTrackerHit& hit);
 void setParticle(edm4hep::MutableSimTrackerHit& hit,
                  const edm4hep::MCParticle& particle);
 
-/// Write an Acts track to EDM4hep format
+/// Callable returning the local magnetic field z-component (in Acts native
+/// units) at a given global position.
+///
+/// This is used by @ref writeTrack to support spatially varying magnetic
+/// fields: the LCIO/EDM4hep perigee parametrization (in particular the
+/// curvature @c omega) depends on the local field, so for a non-uniform field
+/// the conversion should use the field value at each track state's location
+/// rather than a single global constant.
+using LocalBzProvider = std::function<double(const Acts::Vector3& position)>;
+
+/// Write an Acts track to EDM4hep format, using a spatially varying field.
+///
+/// This is the general form of @ref writeTrack. In addition to the track
+/// summary quantities (chi2, ndf, number of holes) it writes one EDM4hep track
+/// state per measurement plus a dedicated @c AtIP state. The perigee
+/// conversion of each state evaluates the local field via @p bzAtPosition at
+/// the global position of that state, which makes this a drop-in replacement
+/// for bespoke ACTS->EDM4hep converters that rely on a
+/// @c Acts::MagneticFieldProvider (e.g. k4ActsTracking's @c ACTS2edm4hep_track).
+///
+/// @note Resolving tracker hits requires application-specific
+///       source-link/hit-container knowledge, so it is delegated to the
+///       optional @p hitLookup callback. It is invoked once per measurement
+///       track state (in the same order the states are written) with the Acts
+///       track state proxy, and should return the associated
+///       @c edm4hep::TrackerHit (any of the interfaced hit types) or
+///       @c std::nullopt. Returned hits are attached via @c addToTrackerHits.
+///
 /// @param gctx The geometry context
 /// @param track The Acts track to convert
 /// @param to The EDM4hep track to write to
-/// @param Bz The magnetic field z-component
+/// @param bzAtPosition Callable returning the local Bz at a global position
 /// @param logger The logger instance
-template <Acts::TrackProxyConcept track_proxy_t>
+/// @param hitLookup Optional callback mapping a measurement track state to its
+///                  EDM4hep tracker hit (defaults to writing no tracker hits)
+template <Acts::TrackProxyConcept track_proxy_t,
+          typename hit_lookup_t = detail::NoTrackerHitLookup>
 void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
-                edm4hep::MutableTrack to, double Bz,
-                const Acts::Logger& logger = Acts::getDummyLogger()) {
+                edm4hep::MutableTrack to, const LocalBzProvider& bzAtPosition,
+                const Acts::Logger& logger = Acts::getDummyLogger(),
+                const hit_lookup_t& hitLookup = {}) {
   ACTS_VERBOSE("Converting track to EDM4hep");
   to.setChi2(track.chi2());
   to.setNdf(track.nDoF());
+  to.setNholes(static_cast<std::int32_t>(track.nHoles()));
 
   std::vector<edm4hep::TrackState> outTrackStates;
   outTrackStates.reserve(track.nTrackStates());
+  // Tracker hits resolved for each measurement state, kept in parallel with
+  // outTrackStates so both can be emitted in the final order below.
+  std::vector<std::optional<edm4hep::TrackerHit>> outHits;
+  outHits.reserve(track.nTrackStates());
 
   auto setParameters = [](edm4hep::TrackState& trackState,
                           const detail::Parameters& params) {
@@ -145,12 +194,19 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
       continue;
     }
 
+    // Resolve the associated tracker hit for this measurement (if any). Stored
+    // in parallel with the track state and attached below in output order.
+    outHits.push_back(hitLookup(state));
+
     edm4hep::TrackState& trackState = outTrackStates.emplace_back();
     trackState.location = edm4hep::TrackState::AtOther;
 
     Acts::BoundTrackParameters params{state.referenceSurface().getSharedPtr(),
                                       state.parameters(), state.covariance(),
                                       track.particleHypothesis()};
+
+    // Evaluate the local field at the global position of this state
+    double Bz = bzAtPosition(params.position(gctx));
 
     // Convert to LCIO track parametrization expected by EDM4hep
     detail::Parameters converted =
@@ -172,20 +228,27 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
     trackState.referencePoint.z = static_cast<float>(center.z());
     ACTS_VERBOSE("- ref surface ctr: " << center.transpose());
   }
-  outTrackStates.front().location = edm4hep::TrackState::AtLastHit;
-  outTrackStates.back().location = edm4hep::TrackState::AtFirstHit;
+  // At this point the measurement states are ordered outside-in (last hit
+  // first, first hit last), following Acts' reverse track state iteration.
+  if (!outTrackStates.empty()) {
+    outTrackStates.front().location = edm4hep::TrackState::AtLastHit;
+    outTrackStates.back().location = edm4hep::TrackState::AtFirstHit;
+  }
 
-  // Add a track state that represents the IP parameters
-  auto& ipState = outTrackStates.emplace_back();
+  // Track state that represents the IP parameters
+  edm4hep::TrackState ipState;
 
   // Convert the track parameters at the IP
   Acts::BoundTrackParameters trackParams{
       track.referenceSurface().getSharedPtr(), track.parameters(),
       track.covariance(), track.particleHypothesis()};
 
+  // Evaluate the local field at the track reference (perigee) position
+  double ipBz = bzAtPosition(trackParams.position(gctx));
+
   // Convert to LCIO track parametrization expected by EDM4hep
   auto converted =
-      detail::convertTrackParametersToEdm4hep(gctx, Bz, trackParams);
+      detail::convertTrackParametersToEdm4hep(gctx, ipBz, trackParams);
   setParameters(ipState, converted);
   ipState.location = edm4hep::TrackState::AtIP;
   ACTS_VERBOSE("Writing track level quantities as IP track state");
@@ -206,9 +269,45 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
 
   ACTS_VERBOSE("- ref surface ctr: " << center.transpose());
 
-  for (const auto& trackState : outTrackStates) {
-    to.addToTrackStates(trackState);
+  // Emit track states following the EDM4hep/LCIO convention used by
+  // k4ActsTracking: the IP state first, then the measurement states ordered
+  // inside-out (first hit ... last hit). Reverse the outside-in buffers so the
+  // measurement states, and their tracker hits, come out in that order.
+  std::reverse(outTrackStates.begin(), outTrackStates.end());
+  std::reverse(outHits.begin(), outHits.end());
+
+  to.addToTrackStates(ipState);
+  for (std::size_t i = 0; i < outTrackStates.size(); ++i) {
+    to.addToTrackStates(outTrackStates[i]);
+    if (outHits[i].has_value()) {
+      to.addToTrackerHits(outHits[i].value());
+    }
   }
+}
+
+/// Write an Acts track to EDM4hep format, using a uniform magnetic field.
+///
+/// Convenience overload of @ref writeTrack for the common case of a constant
+/// solenoidal field. Delegates to the @ref LocalBzProvider form with a constant
+/// field lookup.
+///
+/// @param gctx The geometry context
+/// @param track The Acts track to convert
+/// @param to The EDM4hep track to write to
+/// @param Bz The (uniform) magnetic field z-component in Acts native units
+/// @param logger The logger instance
+/// @param hitLookup Optional callback mapping a measurement track state to its
+///                  EDM4hep tracker hit (defaults to writing no tracker hits)
+template <Acts::TrackProxyConcept track_proxy_t,
+          typename hit_lookup_t = detail::NoTrackerHitLookup>
+void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
+                edm4hep::MutableTrack to, double Bz,
+                const Acts::Logger& logger = Acts::getDummyLogger(),
+                const hit_lookup_t& hitLookup = {}) {
+  writeTrack(
+      gctx, std::move(track), to,
+      LocalBzProvider{[Bz](const Acts::Vector3& /*position*/) { return Bz; }},
+      logger, hitLookup);
 }
 
 /// Read an EDM4hep track into Acts format
@@ -250,10 +349,11 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
 
   ACTS_VERBOSE("Reading " << from.trackStates_size()
                           << " track states (including IP state)");
-  // We write the trackstates out outside in, need to reverse iterate to get the
-  // same order
-  for (std::size_t i = from.trackStates_size() - 1;
-       i <= from.trackStates_size(); i--) {
+  // Track states are written IP-first, followed by the measurement states
+  // ordered inside-out (first hit ... last hit). Iterate forward and skip the
+  // IP state so the reconstructed Acts track state order matches the input that
+  // was passed to writeTrack.
+  for (std::size_t i = 0; i < from.trackStates_size(); ++i) {
     auto trackState = from.getTrackStates(i);
     if (trackState.location == edm4hep::TrackState::AtIP) {
       ipState = trackState;
