@@ -32,6 +32,7 @@
 #include "ActsExamples/Io/Root/RootTrackFinderNTupleWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFitterPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackParameterPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackSummaryReader.hpp"
@@ -121,7 +122,20 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
       py::class_<ResPlotTool::Config>(root, "ResPlotToolConfig")
           .def(py::init<>())
+          .def_readwrite("paramNames", &ResPlotTool::Config::paramNames)
           .def_readwrite("varBinning", &ResPlotTool::Config::varBinning);
+
+      py::class_<ResPlotRefinementConfig>(root, "ResPlotRefinementConfig")
+          .def(py::init<>())
+          .def_readwrite("fitMinEntries",
+                         &ResPlotRefinementConfig::fitMinEntries)
+          .def_readwrite("fitSigmaRange",
+                         &ResPlotRefinementConfig::fitSigmaRange)
+          .def_readwrite("fitIterations",
+                         &ResPlotRefinementConfig::fitIterations)
+          .def_readwrite(
+              "warningThresholdFitFailureFraction",
+              &ResPlotRefinementConfig::warningThresholdFitFailureFraction);
 
       py::class_<TrackQualityPlotTool::Config>(root,
                                                "TrackQualityPlotToolConfig")
@@ -163,18 +177,30 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
                                inputTrackParticleMatching, filePath, fileMode,
                                treeNameTracks, treeNameParticles);
 
-    ACTS_PYTHON_DECLARE_WRITER(
-        RootTrackFitterPerformanceWriter, root,
-        "RootTrackFitterPerformanceWriter", inputTracks, inputParticles,
-        inputTrackParticleMatching, filePath, resPlotToolConfig,
-        effPlotToolConfig, trackSummaryPlotToolConfig, fitMinEntries,
-        fitSigmaRange, fitIterations, warningThresholdFitFailureFraction);
+    ACTS_PYTHON_DECLARE_WRITER(RootTrackFitterPerformanceWriter, root,
+                               "RootTrackFitterPerformanceWriter", inputTracks,
+                               inputParticles, inputTrackParticleMatching,
+                               filePath, resPlotToolConfig, effPlotToolConfig,
+                               trackSummaryPlotToolConfig, resPlotRefinement);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackParameterWriter, root, "RootTrackParameterWriter",
         inputTrackParameters, inputProtoTracks, inputParticles, inputSimHits,
         inputMeasurementParticlesMap, inputMeasurementSimHitsMap, filePath,
         treeName, fileMode);
+
+    py::enum_<TrackParameterType>(root, "TrackParameterType")
+        .value("predicted", TrackParameterType::Predicted)
+        .value("filtered", TrackParameterType::Filtered)
+        .value("smoothed", TrackParameterType::Smoothed)
+        .value("unbiased", TrackParameterType::Unbiased);
+
+    ACTS_PYTHON_DECLARE_WRITER(
+        RootTrackParameterPerformanceWriter, root,
+        "RootTrackParameterPerformanceWriter", inputTracks, inputParticles,
+        inputTrackParticleMatching, inputSimHits, inputMeasurementSimHitsMap,
+        filePath, resPlotToolConfig, parameterType, geometrySelection,
+        resPlotRefinement);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootMaterialTrackWriter, root, "RootMaterialTrackWriter",

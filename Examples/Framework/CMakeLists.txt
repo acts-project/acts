@@ -24,10 +24,12 @@ acts_add_library(
     src/Validation/DuplicationPlotTool.cpp
     src/Validation/EffPlotTool.cpp
     src/Validation/FakePlotTool.cpp
+    src/Validation/ParametersOnSurface.cpp
     src/Validation/ResPlotTool.cpp
     src/Validation/TrackClassification.cpp
     src/Validation/TrackFinderPerformanceCollector.cpp
     src/Validation/TrackFitterPerformanceCollector.cpp
+    src/Validation/TrackParameterPerformanceCollector.cpp
     src/Validation/TrackQualityPlotTool.cpp
     src/Validation/TrackSummaryPlotTool.cpp
     ACTS_INCLUDE_FOLDER include/ActsExamples

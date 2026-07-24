@@ -8,11 +8,13 @@ acts_add_library(
     src/RootParticleReader.cpp
     src/RootPropagationStepsWriter.cpp
     src/RootPropagationSummaryWriter.cpp
+    src/ResPlotWriting.cpp
     src/RootSeedWriter.cpp
     src/RootSimHitWriter.cpp
     src/RootSimHitReader.cpp
     src/RootSpacePointPerformanceWriter.cpp
     src/RootSpacePointWriter.cpp
+    src/RootTrackParameterPerformanceWriter.cpp
     src/RootTrackParameterWriter.cpp
     src/RootTrackStatesWriter.cpp
     src/RootTrackSummaryReader.cpp

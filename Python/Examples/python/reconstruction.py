@@ -544,12 +544,12 @@ def addSeeding(
 
         tracks = f"{prefix}seed-tracks"
         s.addAlgorithm(
-            acts.examples.ProtoTracksToTracks(
+            acts.examples.SeedsToTracks(
                 level=logLevel,
-                inputProtoTracks=protoTracks,
+                inputSeeds=f"{prefix}estimatedseeds",
                 inputTrackParameters=f"{prefix}estimatedparameters",
-                inputMeasurements=f"{prefix}measurement_subset",
                 outputTracks=tracks,
+                trackingGeometry=trackingGeometry,
             )
         )
 
@@ -576,6 +576,16 @@ def addSeeding(
                 inputParticles,
                 parEstimateAlg.config.outputTrackParameters,
                 logLevel,
+                prefix=prefix,
+            )
+
+            addTrackParameterPerformanceWriter(
+                s,
+                outputDirRoot,
+                tracks=tracks,
+                particles=selectedParticles,
+                trackParticleMatching=f"{prefix}seed_particle_matching",
+                logLevel=logLevel,
                 prefix=prefix,
             )
 
@@ -1425,6 +1435,112 @@ def addSeedPerformanceWriters(
             inputMeasurementSimHitsMap="measurement_simhits_map",
             filePath=str(outputDirRoot / f"{prefix}estimatedparams.root"),
             treeName="estimatedparams",
+        )
+    )
+
+
+def addTrackParameterPerformanceWriter(
+    sequence: acts.examples.Sequencer,
+    outputDirRoot: Union[Path, str],
+    tracks: str = "seed-tracks",
+    particles: str = "particles",
+    trackParticleMatching: str = "seed_particle_matching",
+    selection: Optional[list] = None,
+    parameterType=None,
+    stateGeometrySelection: Optional[list] = None,
+    outputName: str = "trackparams",
+    logLevel: acts.logging.Level = None,
+    prefix: str = "",
+):
+    """Writes residual/pull performance output for track parameters on track
+    states, compared to the truth hits on the respective surface.
+
+    By default the best available parameters per state are compared (smoothed,
+    filtered, or predicted). For tracks produced by `SeedsToTracks` (see
+    `addSeeding`) this is the seed-estimated parameters stored as predicted on
+    the innermost track state; for fitted tracks this is the smoothed state.
+    Set `parameterType` to compare a specific one, e.g.
+    `acts.examples.root.TrackParameterType.unbiased`.
+
+    Parameters
+    ----------
+    trackParticleMatching : str
+        Input track-particle matching for the input tracks. Only used if no
+        selection is given; a selection changes the track indices, so a
+        dedicated `TrackTruthMatcher` is added for the selected tracks.
+    selection : Optional[list]
+        List of layer requirements applied to the input tracks with a
+        `TrackSelectorAlgorithm` before writing. Each requirement is a list of
+        `acts.GeometryIdentifier` regions, or a tuple `(regions, threshold)`
+        requiring at least `threshold` measurements within the regions
+        (default 1). All requirements must be fulfilled.
+    parameterType : Optional[acts.examples.root.TrackParameterType]
+        Which track-state parameters to compare to truth (default: best
+        available, i.e. smoothed, filtered, or predicted).
+    stateGeometrySelection : Optional[list]
+        `acts.GeometryIdentifier` regions; if given, only track states within
+        these regions are compared to truth.
+    """
+    customLogLevel = acts.examples.defaultLogging(sequence, logLevel)
+    RootTrackParameterPerformanceWriter = acts.examples._tryImportRoot(
+        "RootTrackParameterPerformanceWriter"
+    )
+    outputDirRoot = Path(outputDirRoot)
+    if not outputDirRoot.exists():
+        outputDirRoot.mkdir()
+
+    if selection is not None:
+        measurementCounter = acts.TrackSelector.MeasurementCounter()
+        for requirement in selection:
+            if isinstance(requirement, tuple):
+                regions, threshold = requirement
+            else:
+                regions, threshold = requirement, 1
+            measurementCounter.addCounter(list(regions), threshold)
+
+        selectedTracks = f"{prefix}{outputName}-selected"
+        sequence.addAlgorithm(
+            acts.examples.TrackSelectorAlgorithm(
+                level=customLogLevel(),
+                inputTracks=tracks,
+                outputTracks=selectedTracks,
+                selectorConfig=acts.TrackSelector.Config(
+                    measurementCounter=measurementCounter,
+                ),
+            )
+        )
+        tracks = selectedTracks
+
+        # the selection changes the track indices, so a dedicated matching is
+        # needed for the selected tracks
+        trackParticleMatching = f"{prefix}{outputName}_particle_matching"
+        # matchingRatio 1.0 requires all measurements to stem from one particle
+        sequence.addAlgorithm(
+            acts.examples.TrackTruthMatcher(
+                level=customLogLevel(),
+                inputTracks=tracks,
+                inputParticles=particles,
+                inputMeasurementParticlesMap="measurement_particles_map",
+                outputTrackParticleMatching=trackParticleMatching,
+                outputParticleTrackMatching=f"{prefix}particle_{outputName}_matching",
+                matchingRatio=1.0,
+                doubleMatching=False,
+            )
+        )
+
+    sequence.addWriter(
+        RootTrackParameterPerformanceWriter(
+            level=customLogLevel(),
+            inputTracks=tracks,
+            inputParticles=particles,
+            inputTrackParticleMatching=trackParticleMatching,
+            inputSimHits="simhits",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
+            filePath=str(outputDirRoot / f"performance_{prefix}{outputName}.root"),
+            **acts.examples.defaultKWArgs(
+                parameterType=parameterType,
+                geometrySelection=stateGeometrySelection,
+            ),
         )
     )
 

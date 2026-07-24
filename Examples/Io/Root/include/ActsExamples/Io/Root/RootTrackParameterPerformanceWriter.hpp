@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
@@ -16,43 +17,52 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Io/Root/ResPlotWriting.hpp"
-#include "ActsExamples/Validation/EffPlotTool.hpp"
 #include "ActsExamples/Validation/ResPlotTool.hpp"
-#include "ActsExamples/Validation/TrackFitterPerformanceCollector.hpp"
-#include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
+#include "ActsExamples/Validation/TrackParameterPerformanceCollector.hpp"
 
 #include <mutex>
+#include <optional>
 #include <string>
+#include <vector>
 
 class TFile;
-class TTree;
 
 namespace ActsExamples {
 
-/// Write out the residual and pull of track parameters and efficiency.
+/// Write out the residual and pull of track parameters against the truth hit
+/// information on the reference surface.
 ///
-/// Efficiency here is the fraction of smoothed tracks compared to all tracks.
-///
-/// A common file can be provided for the writer to attach his TTree,
-/// this is done by setting the Config::rootFile pointer to an existing file
+/// This is intended for track parameters estimated from seeds, e.g. produced
+/// by `SeedsToTracks`, which are expressed on the surface of the innermost
+/// space point. The input tracks can be selected upstream, e.g. by layer with
+/// `TrackSelectorAlgorithm` and geometry-based measurement requirements.
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class RootTrackFitterPerformanceWriter final
+class RootTrackParameterPerformanceWriter final
     : public WriterT<ConstTrackContainer> {
  public:
   struct Config {
-    /// Input (fitted) track collection.
+    /// Input track collection holding the estimated track parameters.
     std::string inputTracks;
     /// Input particles collection.
     std::string inputParticles;
+    /// Input simulated hits collection.
+    std::string inputSimHits;
     /// Input track-particle matching.
     std::string inputTrackParticleMatching;
+    /// Input measurement to simulated hits map.
+    std::string inputMeasurementSimHitsMap;
     /// Output filename.
-    std::string filePath = "performance_track_fitter.root";
-    /// Plot tool configurations.
-    ResPlotTool::Config resPlotToolConfig;
-    EffPlotTool::Config effPlotToolConfig;
-    TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
+    std::string filePath = "performance_track_parameters.root";
+    /// Plot tool configuration.
+    ResPlotTool::Config resPlotToolConfig =
+        TrackParameterPerformanceCollector::defaultResPlotToolConfig();
+    /// The track-state parameters to compare to truth. If not set, the best
+    /// available parameters are used (smoothed, filtered, or predicted).
+    std::optional<TrackParameterType> parameterType;
+    /// Optional geometry selection of track states. If non-empty, only track
+    /// states within the given geometry hierarchy regions are used.
+    std::vector<Acts::GeometryIdentifier> geometrySelection;
 
     /// Mean/width profile extraction configuration for residuals/pulls.
     ResPlotRefinementConfig resPlotRefinement;
@@ -61,9 +71,10 @@ class RootTrackFitterPerformanceWriter final
   /// Construct from configuration and log level.
   /// @param config The configuration
   /// @param level The logger level
-  RootTrackFitterPerformanceWriter(Config config, Acts::Logging::Level level);
+  RootTrackParameterPerformanceWriter(Config config,
+                                      Acts::Logging::Level level);
 
-  ~RootTrackFitterPerformanceWriter() override;
+  ~RootTrackParameterPerformanceWriter() override;
 
   /// Finalize plots.
   ProcessCode finalize() override;
@@ -78,14 +89,17 @@ class RootTrackFitterPerformanceWriter final
   Config m_cfg;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
       this, "InputTrackParticleMatching"};
+  ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
+      this, "InputMeasurementSimHitsMap"};
 
   /// Mutex used to protect multi-threaded writes.
   std::mutex m_writeMutex;
   TFile* m_outputFile{nullptr};
-  /// Collector holding all plot tools and per-event counters.
-  TrackFitterPerformanceCollector m_collector;
+  /// Collector holding the plot tool and per-event counters.
+  TrackParameterPerformanceCollector m_collector;
 };
 
 }  // namespace ActsExamples

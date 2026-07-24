@@ -6,45 +6,48 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/RootTrackFitterPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackParameterPerformanceWriter.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsPlugins/Root/HistogramConverter.hpp"
 
 #include <stdexcept>
 #include <utility>
 
-#include <TEfficiency.h>
 #include <TFile.h>
-#include <TProfile.h>
-
-using ActsPlugins::toRoot;
 
 namespace ActsExamples {
 
-RootTrackFitterPerformanceWriter::RootTrackFitterPerformanceWriter(
-    RootTrackFitterPerformanceWriter::Config config, Acts::Logging::Level level)
-    : WriterT(config.inputTracks, "RootTrackFitterPerformanceWriter", level),
+RootTrackParameterPerformanceWriter::RootTrackParameterPerformanceWriter(
+    RootTrackParameterPerformanceWriter::Config config,
+    Acts::Logging::Level level)
+    : WriterT(config.inputTracks, "RootTrackParameterPerformanceWriter", level),
       m_cfg(std::move(config)),
       m_collector(
-          TrackFitterPerformanceCollector::Config{
-              m_cfg.resPlotToolConfig, m_cfg.effPlotToolConfig,
-              m_cfg.trackSummaryPlotToolConfig},
+          TrackParameterPerformanceCollector::Config{m_cfg.resPlotToolConfig,
+                                                     m_cfg.parameterType,
+                                                     m_cfg.geometrySelection},
           logger().clone()) {
-  // trajectories collection name is already checked by base ctor
+  // tracks collection name is already checked by base ctor
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
   }
+  if (m_cfg.inputSimHits.empty()) {
+    throw std::invalid_argument("Missing simulated hits input collection");
+  }
   if (m_cfg.inputTrackParticleMatching.empty()) {
     throw std::invalid_argument("Missing input track particles matching");
+  }
+  if (m_cfg.inputMeasurementSimHitsMap.empty()) {
+    throw std::invalid_argument("Missing input measurement simulated hits map");
   }
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
   m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
+  m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
 
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
@@ -56,11 +59,11 @@ RootTrackFitterPerformanceWriter::RootTrackFitterPerformanceWriter(
   }
 }
 
-RootTrackFitterPerformanceWriter::~RootTrackFitterPerformanceWriter() {
+RootTrackParameterPerformanceWriter::~RootTrackParameterPerformanceWriter() {
   delete m_outputFile;
 }
 
-ProcessCode RootTrackFitterPerformanceWriter::finalize() {
+ProcessCode RootTrackParameterPerformanceWriter::finalize() {
   if (m_outputFile == nullptr) {
     return ProcessCode::SUCCESS;
   }
@@ -71,47 +74,25 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
 
   writeResPlots(m_collector.resPlotTool(), m_cfg.resPlotRefinement, logger());
 
-  const auto& effPlotTool = m_collector.effPlotTool();
-  const auto& trackSummaryPlotTool = m_collector.trackSummaryPlotTool();
-
-  // Write efficiency histograms
-  for (const auto& [name, eff] : effPlotTool.efficiencies1D()) {
-    toRoot(eff)->Write();
-  }
-  for (const auto& [name, eff] : effPlotTool.efficiencies2D()) {
-    toRoot(eff)->Write();
-  }
-
-  for (const auto& eff : effPlotTool.trackEffVsEtaInPtRanges()) {
-    toRoot(eff)->Write();
-  }
-  for (const auto& eff : effPlotTool.trackEffVsPtInAbsEtaRanges()) {
-    toRoot(eff)->Write();
-  }
-
-  // Write track summary histograms
-  for (const auto& [name, prof] : trackSummaryPlotTool.profiles()) {
-    toRoot(prof)->Write();
-  }
-
   ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
 
-  if (m_outputFile != nullptr) {
-    m_outputFile->Close();
-  }
+  m_outputFile->Close();
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode RootTrackFitterPerformanceWriter::writeT(
+ProcessCode RootTrackParameterPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
   // Read truth input collections
   const auto& particles = m_inputParticles(ctx);
   const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
+  const auto& simHits = m_inputSimHits(ctx);
+  const auto& measurementSimHitsMap = m_inputMeasurementSimHitsMap(ctx);
 
   // Exclusive access to the histograms while filling
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
-  m_collector.fill(ctx.geoContext, tracks, particles, trackParticleMatching);
+  m_collector.fill(ctx.geoContext, tracks, particles, trackParticleMatching,
+                   simHits, measurementSimHitsMap);
 
   return ProcessCode::SUCCESS;
 }

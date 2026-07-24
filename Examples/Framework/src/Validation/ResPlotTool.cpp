@@ -16,6 +16,7 @@
 
 #include <cmath>
 #include <format>
+#include <stdexcept>
 
 namespace ActsExamples {
 
@@ -116,11 +117,6 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
 
   using enum Acts::BoundIndices;
 
-  // get the fitted parameter (at perigee surface) and its error
-  const Acts::BoundVector& trackParameters = fittedParamters.parameters();
-  const Acts::BoundMatrix& trackCovariance =
-      fittedParamters.covariance().value_or(Acts::BoundMatrix::Zero());
-
   // get the perigee surface
   const Acts::Surface& pSurface = fittedParamters.referenceSurface();
 
@@ -145,16 +141,43 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
   truthParameters[eBoundQOverP] = truthParticle.qOverP();
   truthParameters[eBoundTime] = truthParticle.time();
 
-  // get the truth eta and pT
-  const double truthEta = eta(truthParticle.direction());
-  const double truthPhi = phi(truthParticle.direction());
-  const double truthPt = truthParticle.transverseMomentum();
+  const Acts::BoundTrackParameters truthBoundParameters(
+      pSurface.getSharedPtr(), truthParameters, std::nullopt,
+      truthParticle.hypothesis());
+  fill(truthBoundParameters, fittedParamters);
+}
+
+void ResPlotTool::fill(const Acts::BoundTrackParameters& truthParameters,
+                       const Acts::BoundTrackParameters& fittedParameters) {
+  using Acts::VectorHelpers::eta;
+  using Acts::VectorHelpers::phi;
+
+  using enum Acts::BoundIndices;
+
+  if (truthParameters.referenceSurface() !=
+      fittedParameters.referenceSurface()) {
+    throw std::invalid_argument(
+        "ResPlotTool: truth and fitted parameters are expressed on different "
+        "reference surfaces");
+  }
+
+  // get the truth parameters and derived quantities
+  const Acts::BoundVector& truthVector = truthParameters.parameters();
+  const double truthEta = eta(truthParameters.direction());
+  const double truthPhi = phi(truthParameters.direction());
+  const double truthPt = truthParameters.transverseMomentum();
+  const double truthCharge = truthParameters.charge();
+
+  // get the fitted parameter and its error
+  const Acts::BoundVector& trackParameters = fittedParameters.parameters();
+  const Acts::BoundMatrix& trackCovariance =
+      fittedParameters.covariance().value_or(Acts::BoundMatrix::Zero());
 
   // fill the histograms for residual and pull
   for (unsigned int paramId = 0; paramId < Acts::eBoundSize; paramId++) {
     const std::string& parName = m_cfg.paramNames.at(paramId);
 
-    const double residual = trackParameters[paramId] - truthParameters[paramId];
+    const double residual = trackParameters[paramId] - truthVector[paramId];
     fillResidual(parName, residual, truthEta, truthPhi, truthPt);
 
     const double var = trackCovariance(paramId, paramId);
@@ -165,8 +188,8 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
 
   // `reco(q/pT)` and `true(pT/q) * reco(q/pT)` residual and pull
   {
-    const double truthQoverPt = truthParticle.charge() / truthPt;
-    const double truthPtOverAbsQ = truthPt / truthParticle.absoluteCharge();
+    const double truthQoverPt = truthCharge / truthPt;
+    const double truthPtOverAbsQ = truthPt / std::abs(truthCharge);
     const double recoQoverPt =
         trackParameters[eBoundQOverP] / std::sin(trackParameters[eBoundTheta]);
     const double residualQoverPt = recoQoverPt - truthQoverPt;
