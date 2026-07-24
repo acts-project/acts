@@ -128,9 +128,9 @@ struct gbts_make_graph_edges_params {
   //   = 0.299792458*2/(2*0.9) m^-1 = 0.333 m^-1 = 3.33e-4 mm^-1 (2 T, 0.9
   //   GeV).
   float max_Kappa_low_tau = 3.75e-4f;
-  float max_Kappa_high_tau = 3.75e-4f;
+  float max_Kappa_high_tau = 4.35e-4f;
   float max_Kappa_change_tau = 4.0f;
-  // conditions for looser edge-matching cuts (more material interaction)
+  // conditions to inflate edge-matching cuts
   float long_edge_dr = 50.0f;
   float long_edge_dz = 200.0f;
 };
@@ -142,7 +142,7 @@ struct gbts_match_graph_edges_params {
   // |curv_1 - curv_2| <= cut_dcurv_max  (curv = dphi/dr).
   float cut_dcurv_max = 0.001f;
   // |eta_1-eta_2| <= cut_deta_max.
-  float cut_deta_max = 0.01f;
+  float cut_deta_max = 0.007f;
   float deta_inflation = 0.003f;
   // tuning to tighten eta cut for high pT edges
   float less_scattering_curv = 1e-4;
