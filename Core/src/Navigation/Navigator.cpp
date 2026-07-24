@@ -38,6 +38,16 @@ Navigator::Navigator(Config cfg, std::shared_ptr<const Logger> _logger)
     throw std::invalid_argument("Navigator: No tracking geometry provided.");
   }
   m_geometryVersion = m_cfg.trackingGeometry->geometryVersion();
+
+  m_cfg.trackingGeometry->apply([this](const Portal& portal) {
+    auto [insert, ok] =
+        m_surfPortalMap.insert(std::make_pair(&portal.surface(), &portal));
+    if (!ok && &portal != insert->second) {
+      throw std::invalid_argument(
+          std::format("Navigator Surface: {:} used for multiple portals",
+                      portal.surface().geometryId()));
+    }
+  });
 }
 
 Navigator::State Navigator::makeState(const Options& options) const {
@@ -164,6 +174,57 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
   state.currentLayer = state.startLayer;
   state.currentSurface = state.startSurface;
 
+  if (state.currentLayer != nullptr) {
+    ACTS_VERBOSE(volInfo(state) << "Start layer resolved "
+                                << state.currentLayer->geometryId());
+  }
+
+  // navigation is started on a portal
+  if (const auto portalItr = m_surfPortalMap.find(state.currentSurface);
+      portalItr != m_surfPortalMap.end()) {
+    auto locPos = state.currentSurface->globalToLocal(
+        state.options.geoContext, position, direction,
+        state.options.surfaceTolerance);
+
+    if (!locPos.ok()) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Navigation does not start on the surface = "
+                   << state.currentSurface->geometryId()
+                   << " position = " << position.transpose()
+                   << " direction = " << direction.transpose());
+      return Result<void>::failure(NavigatorError::NotOnExpectedSurface);
+    }
+    if (state.currentSurface->insideBounds(*locPos,
+                                           BoundaryTolerance::None())) {
+      ACTS_VERBOSE(volInfo(state) << "Navigation starts on a portal "
+                                  << state.currentSurface->geometryId());
+      auto res = portalItr->second->resolveVolume(state.options.geoContext,
+                                                  position, direction);
+      if (!res.ok()) {
+        ACTS_ERROR(volInfo(state) << "Failed to resolve volume through portal: "
+                                  << res.error().message());
+        return Result<void>::failure(NavigatorError::NotInsideExpectedVolume);
+      }
+      // Update the current volume
+      state.currentVolume = res.value();
+    }
+  } else if (state.currentSurface != nullptr) {
+    ACTS_VERBOSE(volInfo(state) << "Start surface resolved "
+                                << state.currentSurface->geometryId());
+
+    if (!state.currentSurface->isOnSurface(
+            state.options.geoContext, position, direction,
+            BoundaryTolerance::Infinite(), state.options.surfaceTolerance)) {
+      ACTS_DEBUG(volInfo(state)
+                 << "We did not end up on the expected surface. surface = "
+                 << state.currentSurface->geometryId()
+                 << " position = " << position.transpose()
+                 << " direction = " << direction.transpose());
+
+      return Result<void>::failure(NavigatorError::NotOnExpectedSurface);
+    }
+  }
+
   if (state.currentVolume != nullptr) {
     ACTS_VERBOSE(volInfo(state) << "Start volume resolved "
                                 << state.currentVolume->geometryId());
@@ -186,27 +247,6 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
                           state.policyStateManager, logger());
     }
   }
-  if (state.currentLayer != nullptr) {
-    ACTS_VERBOSE(volInfo(state) << "Start layer resolved "
-                                << state.currentLayer->geometryId());
-  }
-  if (state.currentSurface != nullptr) {
-    ACTS_VERBOSE(volInfo(state) << "Start surface resolved "
-                                << state.currentSurface->geometryId());
-
-    if (!state.currentSurface->isOnSurface(
-            state.options.geoContext, position, direction,
-            BoundaryTolerance::Infinite(), state.options.surfaceTolerance)) {
-      ACTS_DEBUG(volInfo(state)
-                 << "We did not end up on the expected surface. surface = "
-                 << state.currentSurface->geometryId()
-                 << " position = " << position.transpose()
-                 << " direction = " << direction.transpose());
-
-      return Result<void>::failure(NavigatorError::NotOnExpectedSurface);
-    }
-  }
-
   return Result<void>::success();
 }
 
@@ -586,7 +626,8 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
       state.options.geoContext, args, policyState, appendOnly, logger());
 
   ACTS_VERBOSE(volInfo(state) << "Found " << state.stream.candidates().size()
-                              << " navigation candidates.");
+                              << " navigation candidates.\n"
+                              << state.stream.candidates());
   for (const Surface* surface : state.options.externalSurfaces) {
     const GeometryIdentifier geoId = surface->geometryId();
     // Don't add any surface which is not in the same volume (volume bits)
