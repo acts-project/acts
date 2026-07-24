@@ -11,17 +11,12 @@
 #include "Acts/Material/Material.hpp"
 
 #include <cmath>
+#include <map>
 
 Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
                                               const MaterialSlab& slab2) {
-  return combineSlabs(slab1, slab2.material(), slab2.thickness());
-}
-
-Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
-                                              const Material& material2,
-                                              float thickness2_) {
   const auto& mat1 = slab1.material();
-  const auto& mat2 = material2;
+  const auto& mat2 = slab2.material();
 
   // NOTE 2020-08-26 msmk
   // the following computations provide purely geometrical averages of the
@@ -36,10 +31,10 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
 
   // use double for (intermediate) computations to avoid precision loss
   const double thickness1 = static_cast<double>(slab1.thickness());
-  const double thickness2 = static_cast<double>(thickness2_);
+  const double thickness2 = static_cast<double>(slab2.thickness());
 
   if (thickness1 == 0) {
-    return MaterialSlab(material2, thickness2_);
+    return slab2;
   }
   if (thickness2 == 0) {
     return slab1;
@@ -51,7 +46,9 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   // if the two materials are the same there is no need for additional
   // computation
   if (mat1 == mat2) {
-    return {mat1, static_cast<float>(thickness)};
+    return MaterialSlab(mat1, static_cast<float>(thickness), slab1.elementZ(),
+                        slab1.elementFrac());
+    ;
   }
 
   // molar amount-of-substance assuming a unit area, i.e. volume = thickness*1*1
@@ -78,6 +75,11 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
 
   const float x0 = static_cast<float>(thickness / thicknessInX0);
   const float l0 = static_cast<float>(thickness / thicknessInL0);
+
+  const auto& vec1Z = slab1.elementZ();
+  const auto& vec1Frac = slab1.elementFrac();
+  const auto& vec2Z = slab2.elementZ();
+  const auto& vec2Frac = slab2.elementFrac();
 
   // assume two slabs of materials with N1,N2 atoms/molecules each with atomic
   // masses A1,A2 and nuclear charges. We have a total of N = N1 + N2
@@ -150,9 +152,32 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
         static_cast<float>(thicknessWeight1 * mat1.meanExcitationEnergy() +
                            thicknessWeight2 * mat2.meanExcitationEnergy());
   }
+  // combination logic for element fractions
+  std::vector<unsigned int> combinedZ;
+  std::vector<float> combinedFrac;
+  if (!vec1Z.empty() || !vec2Z.empty()) {
+    // works with materialSlabs that don't have the extra vectors
+    std::map<unsigned int, float> elementMap;
+    // just using thicknessWeight as the weighting for a placeholder
+    // Will update to appropriate weighting once that is figured out
+    for (std::size_t i = 0; i < vec1Z.size(); i++) {
+      elementMap[vec1Z[i]] +=
+          vec1Frac[i] * static_cast<float>(thicknessWeight1);
+    }
+    for (std::size_t i = 0; i < vec2Z.size(); i++) {
+      elementMap[vec2Z[i]] +=
+          vec2Frac[i] * static_cast<float>(thicknessWeight2);
+    }
 
-  return {
+    for (const auto& [elemz, frac] : elementMap) {
+      combinedZ.push_back(elemz);
+      combinedFrac.push_back(frac);
+    }
+  }
+
+  return MaterialSlab(
       Material::fromMolarDensity(x0, l0, ar, z, molarDensity,
                                  molarElectronDensity, meanExcitationEnergy),
-      static_cast<float>(thickness)};
+      static_cast<float>(thickness), std::move(combinedZ),
+      std::move(combinedFrac));
 }
