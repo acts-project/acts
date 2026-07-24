@@ -206,7 +206,7 @@ bool propagation_validation(
 
     // Copy the configured updater state for this track
     bw_state_tuples.push_back(
-        detray::make_tuple(stopper_state, interactor_state, updater_state));
+        detray::make_tuple(updater_state, interactor_state, stopper_state));
     bw_state_ref_tuples.push_back(setup_actor_states(bw_state_tuples.back()));
   }
 
