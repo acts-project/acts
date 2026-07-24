@@ -31,6 +31,7 @@ struct LayerBlueprintNodeImpl {
 
   Transform3 m_transform = Transform3::Identity();
   ExtentEnvelope m_envelope = ExtentEnvelope::Zero();
+  std::vector<TrackingVolume::PlacementOwnPtr> m_placements{};
   LayerType m_layerType = LayerType::Cylinder;
   std::array<bool, 3> m_useCenterOfGravity = {true, true, true};
 };
@@ -54,6 +55,10 @@ const detail::LayerBlueprintNodeImpl& LayerBlueprintNode::impl() const {
   return *m_impl;
 }
 
+void LayerBlueprintNode::retainPlacement(
+    TrackingVolume::PlacementOwnPtr placement) {
+  impl().m_placements.emplace_back(std::move(placement));
+}
 Volume& LayerBlueprintNode::build(const BlueprintOptions& options,
                                   const GeometryContext& gctx,
                                   const Logger& logger) {
@@ -89,7 +94,10 @@ Volume& LayerBlueprintNode::build(const BlueprintOptions& options,
   for (auto& surface : impl().m_surfaces) {
     m_volume->addSurface(surface);
   }
-
+  for (auto& placement : impl().m_placements) {
+    m_volume->retainPlacement(placement);
+  }
+  impl().m_placements.clear();
   return StaticBlueprintNode::build(options, gctx, logger);
 }
 

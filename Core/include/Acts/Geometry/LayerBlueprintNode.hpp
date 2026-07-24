@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
+#include "Acts/Utilities/OstreamFormatter.hpp"
 
 #include <memory>
 #include <ostream>
@@ -151,6 +152,12 @@ class LayerBlueprintNode final : public StaticBlueprintNode {
     return os;
   }
 
+  /// Pass the shared ownership of a geometry placement towards the tracking
+  /// volume later constructed by the node
+  /// @param placement Pointer to the placement to be managed by the
+  ///                   tracking volume
+  void retainPlacement(TrackingVolume::PlacementOwnPtr placement);
+
  private:
   /// @copydoc Acts::Experimental::BlueprintNode::addToGraphviz
   void addToGraphviz(std::ostream& os) const override;
@@ -169,3 +176,5 @@ class LayerBlueprintNode final : public StaticBlueprintNode {
 };
 
 }  // namespace Acts::Experimental
+
+ACTS_OSTREAM_FORMATTER(Acts::Experimental::LayerBlueprintNode::LayerType);
