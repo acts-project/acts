@@ -43,3 +43,7 @@ codegen/src/codegen.egg-info/
 
 # don't ignore CMake preset files
 !CMakePresets.json
+
+# physmon reference histograms are fetched by content hash, not committed.
+# See CI/physmon/reference.sha256 and CI/physmon/reference.py
+/CI/physmon/reference/

@@ -174,6 +174,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      # Reference histograms are pulled from ghcr.io by content hash. Anonymous
+      # GHCR reads are rate limited hard enough to break the job.
+      packages: read
     container: ghcr.io/acts-project/ubuntu2404:87
     needs: [linux_ubuntu]
     env:
@@ -206,6 +209,8 @@ jobs:
 
       - name: Physics performance checks
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global safe.directory "$GITHUB_WORKSPACE"
           source .env
