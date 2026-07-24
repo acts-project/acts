@@ -8,8 +8,10 @@
 
 #include "Acts/Material/GridSurfaceMaterialFactory.hpp"
 
-std::unique_ptr<Acts::IGridSurfaceMaterial<Acts::MaterialSlab>>
-Acts::GridSurfaceMaterialFactory::create(
+namespace Acts {
+
+std::unique_ptr<IGridSurfaceMaterial<MaterialSlab>>
+GridSurfaceMaterialFactory::create(
     const IAxis& axis, GridMaterialAccessor&& materialAccessor,
     GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal,
     GridAccess::GlobalToGridLocal1DimDelegate globalToGridLocal,
@@ -19,9 +21,8 @@ Acts::GridSurfaceMaterialFactory::create(
                                         std::move(globalToGridLocal), payload);
 }
 
-std::unique_ptr<
-    Acts::IGridSurfaceMaterial<Acts::IndexedMaterialAccessor::grid_value_type>>
-Acts::GridSurfaceMaterialFactory::create(
+std::unique_ptr<IGridSurfaceMaterial<IndexedMaterialAccessor::grid_value_type>>
+GridSurfaceMaterialFactory::create(
     const IAxis& axis, IndexedMaterialAccessor&& materialAccessor,
     GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal,
     GridAccess::GlobalToGridLocal1DimDelegate globalToGridLocal,
@@ -31,9 +32,9 @@ Acts::GridSurfaceMaterialFactory::create(
       std::move(globalToGridLocal), payload);
 }
 
-std::unique_ptr<Acts::IGridSurfaceMaterial<
-    Acts::GloballyIndexedMaterialAccessor::grid_value_type>>
-Acts::GridSurfaceMaterialFactory::create(
+std::unique_ptr<
+    IGridSurfaceMaterial<GloballyIndexedMaterialAccessor::grid_value_type>>
+GridSurfaceMaterialFactory::create(
     const IAxis& axis, GloballyIndexedMaterialAccessor&& materialAccessor,
     GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal,
     GridAccess::GlobalToGridLocal1DimDelegate globalToGridLocal,
@@ -44,8 +45,8 @@ Acts::GridSurfaceMaterialFactory::create(
       std::move(globalToGridLocal), payload);
 }
 
-std::unique_ptr<Acts::IGridSurfaceMaterial<Acts::MaterialSlab>>
-Acts::GridSurfaceMaterialFactory::create(
+std::unique_ptr<IGridSurfaceMaterial<MaterialSlab>>
+GridSurfaceMaterialFactory::create(
     const IAxis& axis0, const IAxis& axis1,
     GridMaterialAccessor&& materialAccessor,
     GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
@@ -56,9 +57,8 @@ Acts::GridSurfaceMaterialFactory::create(
       std::move(globalToGridLocal), payload);
 }
 
-std::unique_ptr<
-    Acts::IGridSurfaceMaterial<Acts::IndexedMaterialAccessor::grid_value_type>>
-Acts::GridSurfaceMaterialFactory::create(
+std::unique_ptr<IGridSurfaceMaterial<IndexedMaterialAccessor::grid_value_type>>
+GridSurfaceMaterialFactory::create(
     const IAxis& axis0, const IAxis& axis1,
     IndexedMaterialAccessor&& materialAccessor,
     GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
@@ -70,9 +70,9 @@ Acts::GridSurfaceMaterialFactory::create(
       std::move(globalToGridLocal), payload);
 }
 
-std::unique_ptr<Acts::IGridSurfaceMaterial<
-    Acts::GloballyIndexedMaterialAccessor::grid_value_type>>
-Acts::GridSurfaceMaterialFactory::create(
+std::unique_ptr<
+    IGridSurfaceMaterial<GloballyIndexedMaterialAccessor::grid_value_type>>
+GridSurfaceMaterialFactory::create(
     const IAxis& axis0, const IAxis& axis1,
     GloballyIndexedMaterialAccessor&& materialAccessor,
     GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
@@ -85,8 +85,8 @@ Acts::GridSurfaceMaterialFactory::create(
       std::move(globalToGridLocal), payload);
 }
 
-std::unique_ptr<Acts::IGridSurfaceMaterial<Acts::MaterialSlab>>
-Acts::GridSurfaceMaterialFactory::create(
+std::unique_ptr<IGridSurfaceMaterial<MaterialSlab>>
+GridSurfaceMaterialFactory::create(
     const ProtoAxis& pAxis, GridMaterialAccessor&& materialAccessor,
     GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal,
     GridAccess::GlobalToGridLocal1DimDelegate globalToGridLocal,
@@ -96,9 +96,8 @@ Acts::GridSurfaceMaterialFactory::create(
       std::move(globalToGridLocal), payload);
 }
 
-std::unique_ptr<
-    Acts::IGridSurfaceMaterial<Acts::IndexedMaterialAccessor::grid_value_type>>
-Acts::GridSurfaceMaterialFactory::create(
+std::unique_ptr<IGridSurfaceMaterial<IndexedMaterialAccessor::grid_value_type>>
+GridSurfaceMaterialFactory::create(
     const ProtoAxis& pAxis, IndexedMaterialAccessor&& materialAccessor,
     GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal,
     GridAccess::GlobalToGridLocal1DimDelegate globalToGridLocal,
@@ -108,9 +107,9 @@ Acts::GridSurfaceMaterialFactory::create(
       std::move(globalToGridLocal), payload);
 }
 
-std::unique_ptr<Acts::IGridSurfaceMaterial<
-    Acts::GloballyIndexedMaterialAccessor::grid_value_type>>
-Acts::GridSurfaceMaterialFactory::create(
+std::unique_ptr<
+    IGridSurfaceMaterial<GloballyIndexedMaterialAccessor::grid_value_type>>
+GridSurfaceMaterialFactory::create(
     const ProtoAxis& pAxis, GloballyIndexedMaterialAccessor&& materialAccessor,
     GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal,
     GridAccess::GlobalToGridLocal1DimDelegate globalToGridLocal,
@@ -121,8 +120,8 @@ Acts::GridSurfaceMaterialFactory::create(
       std::move(globalToGridLocal), payload);
 }
 
-std::unique_ptr<Acts::IGridSurfaceMaterial<Acts::MaterialSlab>>
-Acts::GridSurfaceMaterialFactory::create(
+std::unique_ptr<IGridSurfaceMaterial<MaterialSlab>>
+GridSurfaceMaterialFactory::create(
     const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
     GridMaterialAccessor&& materialAccessor,
     GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
@@ -133,9 +132,8 @@ Acts::GridSurfaceMaterialFactory::create(
       std::move(boundToGridLocal), std::move(globalToGridLocal), payload);
 }
 
-std::unique_ptr<
-    Acts::IGridSurfaceMaterial<Acts::IndexedMaterialAccessor::grid_value_type>>
-Acts::GridSurfaceMaterialFactory::create(
+std::unique_ptr<IGridSurfaceMaterial<IndexedMaterialAccessor::grid_value_type>>
+GridSurfaceMaterialFactory::create(
     const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
     IndexedMaterialAccessor&& materialAccessor,
     GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
@@ -147,9 +145,9 @@ Acts::GridSurfaceMaterialFactory::create(
       std::move(boundToGridLocal), std::move(globalToGridLocal), payload);
 }
 
-std::unique_ptr<Acts::IGridSurfaceMaterial<
-    Acts::GloballyIndexedMaterialAccessor::grid_value_type>>
-Acts::GridSurfaceMaterialFactory::create(
+std::unique_ptr<
+    IGridSurfaceMaterial<GloballyIndexedMaterialAccessor::grid_value_type>>
+GridSurfaceMaterialFactory::create(
     const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
     GloballyIndexedMaterialAccessor&& materialAccessor,
     GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
@@ -161,3 +159,5 @@ Acts::GridSurfaceMaterialFactory::create(
       pAxis0.getAxis(), pAxis1.getAxis(), std::move(materialAccessor),
       std::move(boundToGridLocal), std::move(globalToGridLocal), payload);
 }
+
+}  // namespace Acts
