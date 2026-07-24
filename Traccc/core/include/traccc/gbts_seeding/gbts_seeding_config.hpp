@@ -204,11 +204,11 @@ struct gbts_fit_segments_params {
   // Minimum-pT gate in the fit: reject if |X2| * inv_max_curvature > 1
   // inv_max_curvature = 1/curv_max = ~pT[MeV].
   float inv_max_curvature = 900.0f;
-	// factor to tighen inv_max_curvature when cutting after the fit is complete
-	float final_curv_cut_tighten = 1.5f;
-	//detector r and z bounds, used in seed quality calculation
-	float rmax = 350.0f;
-	float zmax = 3000.0f;
+  // factor to tighen inv_max_curvature when cutting after the fit is complete
+  float final_curv_cut_tighten = 1.5f;
+  // detector r and z bounds, used in seed quality calculation
+  float rmax = 350.0f;
+  float zmax = 3000.0f;
 
   // max_z0 is used from the graph_making to insure concistency
 };
