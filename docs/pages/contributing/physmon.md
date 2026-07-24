@@ -122,14 +122,29 @@ credentials to propose one.
 1. Confirm the physmon differences on your pull request are expected, and say so
    on the pull request so a maintainer can act on it.
 2. A maintainer runs the **Upload physmon references** workflow from the `main`
-   branch, passing the ID of the *Builds* run from your pull request. This
-   uploads the new histograms and reports the manifest to commit.
+   branch, passing your pull request number or URL. The workflow finds the
+   *Builds* run holding the physmon outputs of the pull request's head commit,
+   uploads the new histograms, and reports the manifest to commit. A *Builds*
+   run id works too, if a specific run is wanted.
 3. Commit that manifest as `CI/physmon/reference.sha256` and **push it** to your
    branch.
 
 The manifest is also attached to every physmon run as
 `reference-candidate.sha256` inside the `physmon` artifact, so you can see in
 advance exactly which entries an update would change.
+
+The same resolution is available locally, for a maintainer with write access to
+the registry:
+
+```console
+$ uv run --no-project CI/physmon/reference.py update 5736      # or the pull request URL
+```
+
+> [!note]
+> The references are taken from the pull request's **head commit**. If the
+> branch is pushed to after a physmon run, that run no longer describes the pull
+> request, and the upload waits for the new run rather than publishing stale
+> histograms.
 
 > [!note]
 > Step 3 must be a push, not a *Re-run jobs* on the existing run. Re-running

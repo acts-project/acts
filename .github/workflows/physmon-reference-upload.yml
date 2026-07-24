@@ -10,8 +10,8 @@ name: Upload physmon references
 on:
   workflow_dispatch:
     inputs:
-      run_id:
-        description: 'ID of the Builds run whose physmon artifact should be published'
+      target:
+        description: 'Pull request to publish references for: number, URL, or a Builds run id'
         required: true
         type: string
 
@@ -35,8 +35,10 @@ jobs:
       contents: read
       # Push the reference blobs to ghcr.io/acts-project/physmon-references
       packages: write
-      # Download the physmon artifact from the Builds run being published
+      # Find and download the physmon artifact of the Builds run being published
       actions: read
+      # Resolve a pull request to the run that carries its physmon outputs
+      pull-requests: read
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -59,19 +61,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          RUN_ID: ${{ inputs.run_id }}
+          TARGET: ${{ inputs.target }}
         run: |
-          uv run --no-project CI/physmon/reference.py update "$RUN_ID" \
+          uv run --no-project CI/physmon/reference.py update "$TARGET" \
             --output reference-candidate.sha256
 
       - name: Report the manifest to commit
         env:
-          RUN_ID: ${{ inputs.run_id }}
+          TARGET: ${{ inputs.target }}
         run: |
           {
             echo "## physmon reference update"
             echo
-            echo "Blobs for run \`${RUN_ID}\` are published."
+            echo "Blobs for \`${TARGET}\` are published (see the log for the run they came from)."
             echo "Commit this as \`CI/physmon/reference.sha256\` on the pull request"
             echo "branch, then push (a plain job re-run would reuse the old manifest)."
             echo

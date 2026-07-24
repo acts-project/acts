@@ -23,12 +23,13 @@ import csv
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
 import threading
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import httpx
 import typer
@@ -52,6 +53,11 @@ DOCS = "docs/pages/contributing/physmon.md"
 DEFAULT_REGISTRY = os.environ.get(
     "ACTS_PHYSMON_REGISTRY", "ghcr.io/acts-project/physmon-references"
 )
+
+# The workflow whose runs carry the physmon outputs, and the artifact it
+# attaches them as
+BUILDS_WORKFLOW = "builds.yml"
+ARTIFACT = "physmon"
 
 # Blobs are stored raw, so the layer digest is the SHA256 of the file itself.
 # Being explicit keeps oras from tarring the input.
@@ -413,6 +419,153 @@ def oras_push(registry: str, directory: Path, entries: dict[str, str]) -> str:
 
 
 # --------------------------------------------------------------------------- #
+# github
+# --------------------------------------------------------------------------- #
+
+# What identifies a physmon run to a person is the pull request, not the run id
+# buried in its checks tab, so accept either and work out the rest here rather
+# than in the workflow: the same resolution then applies when this is run by
+# hand.
+
+PR_URL = re.compile(r"github\.com/([^/\s]+/[^/\s]+)/pull/(\d+)")
+RUN_URL = re.compile(r"github\.com/([^/\s]+/[^/\s]+)/actions/runs/(\d+)")
+
+
+def gh(*args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(["gh", *args], capture_output=True, text=True, check=False)
+
+
+def gh_json(args: list[str], what: str) -> Any:
+    result = gh(*args)
+    if result.returncode != 0:
+        raise abort(f"Could not {what}", "", result.stderr.strip())
+    try:
+        return json.loads(result.stdout)
+    except json.JSONDecodeError:
+        raise abort(
+            f"Unexpected response while trying to {what}", "", result.stdout[:400]
+        )
+
+
+def classify(target: str, repo: str) -> tuple[str, int, str]:
+    """Work out whether a target names a pull request or a workflow run.
+
+    Returns the kind, the number, and the repository it belongs to, which a URL
+    can name explicitly.
+    """
+    target = target.strip()
+    if match := RUN_URL.search(target):
+        return "run", int(match.group(2)), match.group(1)
+    if match := PR_URL.search(target):
+        return "pr", int(match.group(2)), match.group(1)
+
+    if match := re.fullmatch(r"#?(\d+)", target):
+        number = int(match.group(1))
+        # Run ids are much larger than pull request numbers, but ask GitHub
+        # rather than lean on that: being wrong here publishes the wrong physics
+        if gh("api", f"repos/{repo}/pulls/{number}", "--silent").returncode == 0:
+            return "pr", number, repo
+        if gh("api", f"repos/{repo}/actions/runs/{number}", "--silent").returncode == 0:
+            return "run", number, repo
+        raise abort(
+            f"{number} is neither a pull request nor a workflow run in {repo}",
+            "",
+            "Pass --repo if it belongs to a different repository.",
+        )
+
+    raise abort(
+        f"Cannot make sense of {target!r}",
+        "",
+        "Expected a pull request number, a pull request URL, a Builds run id, or",
+        "a Builds run URL.",
+    )
+
+
+def artifact_of(repo: str, run_id: int) -> dict[str, Any] | None:
+    """The run's physmon artifact, if it has one that has not expired yet."""
+    payload = gh_json(
+        ["api", f"repos/{repo}/actions/runs/{run_id}/artifacts?per_page=100"],
+        f"list the artifacts of run {run_id}",
+    )
+    for artifact in payload.get("artifacts", []):
+        if artifact["name"] == ARTIFACT and not artifact["expired"]:
+            return artifact
+    return None
+
+
+def run_for_pr(repo: str, pr: int) -> int:
+    """The newest Builds run for the pull request head that still has outputs."""
+    info = gh_json(
+        ["api", f"repos/{repo}/pulls/{pr}"], f"look up pull request #{pr} in {repo}"
+    )
+    head = info["head"]["sha"]
+    console.print(
+        f"Pull request #{pr} ({info['title']}): head {head[:10]} on {info['head']['label']}"
+    )
+
+    runs = gh_json(
+        [
+            "api",
+            f"repos/{repo}/actions/workflows/{BUILDS_WORKFLOW}/runs"
+            f"?head_sha={head}&per_page=50",
+        ],
+        f"list the {BUILDS_WORKFLOW} runs for {head[:10]}",
+    )["workflow_runs"]
+
+    # A branch in the repository itself produces both a push and a pull_request
+    # run for the same commit, and a re-run adds more; any of them will do, so
+    # take the newest that still has the artifact
+    for run in sorted(runs, key=lambda r: r["created_at"], reverse=True):
+        if artifact_of(repo, run["id"]):
+            return run["id"]
+
+    if not runs:
+        raise abort(
+            f"No {BUILDS_WORKFLOW} run for the head commit of #{pr} ({head[:10]})",
+            "",
+            "The run may not have started yet. Note that the references come from",
+            "the head commit: if the branch was pushed to after the physmon run,",
+            "that run no longer describes the pull request.",
+        )
+    raise abort(
+        f"No run for #{pr} ({head[:10]}) has a '{ARTIFACT}' artifact",
+        "",
+        *(
+            f"  run {run['id']}: {run['status']}"
+            + (f", {run['conclusion']}" if run["conclusion"] else "")
+            for run in sorted(runs, key=lambda r: r["created_at"], reverse=True)
+        ),
+        "",
+        "The physmon job may still be running or have failed before uploading, or",
+        "the artifacts may have expired: GitHub keeps them only for a retention",
+        "period, after which the physmon job has to be re-run on the pull request.",
+    )
+
+
+def resolve_run(target: str, repo: str) -> tuple[int, str]:
+    """Turn what the user passed into a run id to publish."""
+    require("gh")
+    kind, number, repo = classify(target, repo)
+
+    if kind == "pr":
+        run_id = run_for_pr(repo, number)
+    else:
+        run_id = number
+        if artifact_of(repo, run_id) is None:
+            raise abort(
+                f"Run {run_id} has no '{ARTIFACT}' artifact",
+                "",
+                "Either the physmon job did not upload one, or the artifact has",
+                "expired and the run has to be repeated.",
+            )
+
+    console.print(
+        f"Publishing from run {run_id}: https://github.com/{repo}/actions/runs/{run_id}"
+    )
+    return run_id, repo
+
+
+# --------------------------------------------------------------------------- #
 # commands
 # --------------------------------------------------------------------------- #
 
@@ -559,8 +712,11 @@ def import_references(
 
 @app.command()
 def update(
-    run_id: Annotated[
-        str, typer.Argument(help="Builds run holding the physmon artifact")
+    target: Annotated[
+        str,
+        typer.Argument(
+            help="Pull request number or URL, or the id or URL of a Builds run"
+        ),
     ],
     repo: Annotated[
         str, typer.Option("--repo", help="Repository the run belongs to")
@@ -576,34 +732,31 @@ def update(
     ] = False,
 ) -> None:
     """Publish the references a physmon run implies, and print the new manifest."""
-    require("gh")
+    run_id, repo = resolve_run(target, repo)
 
     with tempfile.TemporaryDirectory() as tmp:
         artifact = Path(tmp) / "artifact"
         artifact.mkdir()
-        console.print(f"Downloading physmon artifact from run {run_id}")
+        console.print(f"Downloading the {ARTIFACT} artifact from run {run_id}")
         result = subprocess.run(
             [
                 "gh",
                 "run",
                 "download",
-                run_id,
+                str(run_id),
                 "--repo",
                 repo,
                 "--name",
-                "physmon",
+                ARTIFACT,
                 "--dir",
                 str(artifact),
             ],
             check=False,
         )
         if result.returncode != 0:
-            console.print(
-                f"[red]Could not download the 'physmon' artifact from run {run_id}. "
-                "GitHub deletes artifacts after a retention period, so the run may "
-                "need to be repeated.[/red]"
+            raise abort(
+                f"Could not download the '{ARTIFACT}' artifact from run {run_id}"
             )
-            raise typer.Exit(1)
 
         candidate_manifest = artifact / "reference-candidate.sha256"
         if not candidate_manifest.exists():
