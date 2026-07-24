@@ -34,3 +34,23 @@ install(
     FILES ${CMAKE_CURRENT_SOURCE_DIR}/detray/__init__.py
     DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}
 )
+
+if(NOT COMMAND acts_pybind_generate_stubs)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/ActsPybindStubs.cmake)
+endif()
+set(ACTS_GENERATE_PYTHON_STUBS ${DETRAY_GENERATE_PYTHON_STUBS})
+
+if(DETRAY_BUILD_PYTHON_BINDINGS)
+    add_subdirectory(Core)
+    add_subdirectory(Examples)
+endif()
+
+# Install the generated stub files alongside the package.
+if(DETRAY_GENERATE_PYTHON_STUBS)
+    install(
+        DIRECTORY ${_python_dir}/detray/
+        DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}
+        FILES_MATCHING
+        PATTERN "*.pyi"
+    )
+endif()
