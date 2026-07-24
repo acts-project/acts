@@ -277,7 +277,7 @@ bool kalman_filter_comparison(
   using parameter_updater_bw =
       detray::actor::parameter_updater<algebra_t, interactor, fit_actor_bw>;
   using actor_chain_bw_t =
-      detray::actor_chain<parameter_updater, perigee_stopper>;
+      detray::actor_chain<parameter_updater_bw, perigee_stopper>;
 
   // Reusable actor states
   parameter_updater_bw::state updater_state_bw{};
@@ -311,7 +311,7 @@ bool kalman_filter_comparison(
     fit_actor_state.do_precise_hole_count = true;
 
     state_tuple_bw.push_back(detray::make_tuple(
-        stopper_state, interactor_state, fit_actor_state, updater_state_bw));
+        updater_state_bw, interactor_state, fit_actor_state, stopper_state));
     state_ref_tuple_bw.push_back(setup_actor_states(state_tuple_bw.back()));
   }
 
