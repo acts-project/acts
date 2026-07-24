@@ -130,9 +130,9 @@ struct gbts_make_graph_edges_params {
   float max_Kappa_low_tau = 3.75e-4f;
   float max_Kappa_high_tau = 3.75e-4f;
   float max_Kappa_change_tau = 4.0f;
-	// conditions for looser edge-matching cuts (more material interaction)
-	float long_edge_dr = 50.0f;
-	float long_edge_dz = 200.0f;
+  // conditions for looser edge-matching cuts (more material interaction)
+  float long_edge_dr = 50.0f;
+  float long_edge_dz = 200.0f;
 };
 
 // Pair-matching cuts for device::gbts_match_graph_edges.
@@ -143,14 +143,15 @@ struct gbts_match_graph_edges_params {
   float cut_dcurv_max = 0.001f;
   // |eta_1-eta_2| <= cut_deta_max.
   float cut_deta_max = 0.01f;
-	float deta_inflation = 0.003f;
-	// tuning to tighten eta cut for high pT edges
-	float less_scattering_curv = 1e-4;
-	float much_less_scattering_curv = 3e-5f;
-	//deta_max *= 1.0f-high_pT_correction*((curv < less_scattering_curv) + (curv < much_less_scattering_curv))
-	float high_pT_correction = 0.2f;
-	// cut on dphi/dphi_max + dcurv/dcurv_max + deta/deta_max
-	float cut_ratio_sum_max = 1.3f;	
+  float deta_inflation = 0.003f;
+  // tuning to tighten eta cut for high pT edges
+  float less_scattering_curv = 1e-4;
+  float much_less_scattering_curv = 3e-5f;
+  // deta_max *= 1.0f-high_pT_correction*((curv < less_scattering_curv) + (curv
+  // < much_less_scattering_curv))
+  float high_pT_correction = 0.2f;
+  // cut on dphi/dphi_max + dcurv/dcurv_max + deta/deta_max
+  float cut_ratio_sum_max = 1.3f;
 };
 
 // Host-side dphi window used to compute bin_pair_dphi before launching

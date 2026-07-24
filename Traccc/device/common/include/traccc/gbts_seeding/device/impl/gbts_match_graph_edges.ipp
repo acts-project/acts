@@ -43,11 +43,16 @@ TRACCC_HOST_DEVICE inline void gbts_match_graph_edges(
   const float cut_dcurv_max =
       payload.gbts_match_graph_edges_params.cut_dcurv_max;
   const float cut_deta_max = payload.gbts_match_graph_edges_params.cut_deta_max;
-	const float cut_ratio_sum_max = payload.gbts_match_graph_edges_params.cut_ratio_sum_max;
-	const float deta_inflation = payload.gbts_match_graph_edges_params.deta_inflation;
-	const float less_scattering_curv = payload.gbts_match_graph_edges_params.less_scattering_curv;
-	const float much_less_scattering_curv = payload.gbts_match_graph_edges_params.much_less_scattering_curv;
-	const float high_pT_correction = payload.gbts_match_graph_edges_params.high_pT_correction;
+  const float cut_ratio_sum_max =
+      payload.gbts_match_graph_edges_params.cut_ratio_sum_max;
+  const float deta_inflation =
+      payload.gbts_match_graph_edges_params.deta_inflation;
+  const float less_scattering_curv =
+      payload.gbts_match_graph_edges_params.less_scattering_curv;
+  const float much_less_scattering_curv =
+      payload.gbts_match_graph_edges_params.much_less_scattering_curv;
+  const float high_pT_correction =
+      payload.gbts_match_graph_edges_params.high_pT_correction;
 
   const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
   const unsigned int blockDimX = thread_id.getBlockDimX();
@@ -65,11 +70,13 @@ TRACCC_HOST_DEVICE inline void gbts_match_graph_edges(
       continue;
     }
 
-		const std::pair<float4, bool> params1 = payload.edge_params_decoder.decode_edge_params(d_edge_params[globalIndex]);
-		// [exp_eta, curv, phi_z, phi_w], inflate cuts
-		
+    const std::pair<float4, bool> params1 =
+        payload.edge_params_decoder.decode_edge_params(
+            d_edge_params[globalIndex]);
+    // [exp_eta, curv, phi_z, phi_w], inflate cuts
+
     const float eta2 = params1.first.x;
-		const float Phi2 = params1.first.z;
+    const float Phi2 = params1.first.z;
     const float curv2 = params1.first.y;
 
     const unsigned int nei_pos = payload.nMaxNei * globalIndex;
@@ -84,30 +91,39 @@ TRACCC_HOST_DEVICE inline void gbts_match_graph_edges(
       }
       const unsigned int edge2_idx = d_edge_links[link_begin + k];
 
-			const std::pair<float4, bool> params2 = payload.edge_params_decoder.decode_edge_params(d_edge_params[edge2_idx]);
+      const std::pair<float4, bool> params2 =
+          payload.edge_params_decoder.decode_edge_params(
+              d_edge_params[edge2_idx]);
 
-			// adaptive eta cut based on edge length and curvature	
-			float deta_max = cut_deta_max+deta_inflation*(params2.second | params1.second);
-			float curv = 0.5f*math::fabs(curv2 + params2.first.y);
-			deta_max *= 1.0f-high_pT_correction*((curv < less_scattering_curv) + (curv < much_less_scattering_curv));	
-			float deta_cut_ratio = math::fabs(eta2-params2.first.x)/deta_max;
-			if (deta_cut_ratio > 1.0f) {  // bad match
-				continue;
+      // adaptive eta cut based on edge length and curvature
+      float deta_max =
+          cut_deta_max + deta_inflation * (params2.second | params1.second);
+      float curv = 0.5f * math::fabs(curv2 + params2.first.y);
+      deta_max *=
+          1.0f - high_pT_correction * ((curv < less_scattering_curv) +
+                                       (curv < much_less_scattering_curv));
+      float deta_cut_ratio = math::fabs(eta2 - params2.first.x) / deta_max;
+      if (deta_cut_ratio > 1.0f) {  // bad match
+        continue;
       }
-		
-			const float dPhi_cut_ratio = math::fabs(traccc::detail::wrap_phi(Phi2 - params2.first.w))/cut_dphi_max;
-			if (dPhi_cut_ratio > 1.0f) {
-				continue;
-			}
 
-			const float dcurv_cut_ratio = math::fabs(curv2 - params2.first.y)/cut_dcurv_max;
-			if (dcurv_cut_ratio > 1.0f) {
-				continue;
-			}
+      const float dPhi_cut_ratio =
+          math::fabs(traccc::detail::wrap_phi(Phi2 - params2.first.w)) /
+          cut_dphi_max;
+      if (dPhi_cut_ratio > 1.0f) {
+        continue;
+      }
 
-			if (deta_cut_ratio+dPhi_cut_ratio+dcurv_cut_ratio > cut_ratio_sum_max) {
-				continue;
-			}
+      const float dcurv_cut_ratio =
+          math::fabs(curv2 - params2.first.y) / cut_dcurv_max;
+      if (dcurv_cut_ratio > 1.0f) {
+        continue;
+      }
+
+      if (deta_cut_ratio + dPhi_cut_ratio + dcurv_cut_ratio >
+          cut_ratio_sum_max) {
+        continue;
+      }
 
       d_neighbours[nei_pos + num_nei] = edge2_idx;
       d_reIndexer[edge2_idx] = 1;

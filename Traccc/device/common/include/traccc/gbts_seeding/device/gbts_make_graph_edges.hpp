@@ -45,8 +45,8 @@ struct gbts_make_graph_edges_payload {
   /// Output: packed per-edge [eta, curv, phi_z, phi_w] used by
   /// matching
   vecmem::data::vector_view<short4> edge_params;
-	/// class for compressing edge params to short4
-	edge_params_converter edge_params_maker;
+  /// class for compressing edge params to short4
+  edge_params_converter edge_params_maker;
   /// Output: per-destination-node incoming-edge count (atomic)
   vecmem::data::vector_view<unsigned int> num_outgoing_edges;
 };
