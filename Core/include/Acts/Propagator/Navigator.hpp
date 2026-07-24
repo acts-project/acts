@@ -241,7 +241,6 @@ class Navigator final {
       navLayerIndex.reset();
       navBoundaries.clear();
       navBoundaryIndex.reset();
-      navCandidates.clear();
       navCandidateIndex.reset();
 
       currentLayer = nullptr;

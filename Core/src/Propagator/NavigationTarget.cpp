@@ -32,6 +32,8 @@ void NavigationTarget::print(std::ostream& ostr) const {
         }
       },
       m_target);
-  ostr << ", path length: " << pathLength();
+  ostr << ", path length: " << pathLength()
+       << ", reached: " << (isReached() ? "yes" : "no") << ", "
+       << boundaryTolerance();
 }
 }  // namespace Acts
