@@ -14,6 +14,61 @@ using namespace Acts;
 
 namespace ActsPlugins {
 
+std::vector<std::tuple<AxisFactory, std::size_t>>
+DD4hepBinningHelpers::convertAxisFactories(
+    const dd4hep::DetElement &dd4hepElement, const std::string &bname) {
+  std::vector<std::tuple<AxisFactory, std::size_t>> axisFactories;
+
+  for (const auto &[ab, axisDir] : allowedBinnings) {
+    auto type =
+        getParamOr<std::string>(bname + "_" + ab + "_type", dd4hepElement, "");
+    if (!type.empty()) {
+      // Equidistant or variable binning
+      AxisType aType =
+          type == "equidistant" ? AxisType::Equidistant : AxisType::Variable;
+      int nBins = getParamOr<int>(bname + "_" + ab + "_n", dd4hepElement, 0);
+      int nExpansion =
+          getParamOr<int>(bname + "_" + ab + "_exp", dd4hepElement, 0);
+      // Indicate auto-range checking
+      bool autoRange = getParamOr<bool>(bname + "_" + ab + "_autorange",
+                                        dd4hepElement, false);
+      if (aType == AxisType::Equidistant) {
+        if (autoRange) {
+          // Deferred binning: the consumer determines range and boundary type
+          axisFactories.emplace_back(
+              AxisFactory::DeferredEquidistant(nBins, axisDir), nExpansion);
+        } else {
+          // Equidistant binning
+          double minDefault =
+              axisDir == AxisDirection::AxisPhi ? -std::numbers::pi : 0.;
+          double maxDefault =
+              axisDir == AxisDirection::AxisPhi ? std::numbers::pi : 0.;
+          auto min = getParamOr<double>(bname + "_" + ab + "_min",
+                                        dd4hepElement, minDefault);
+          auto max = getParamOr<double>(bname + "_" + ab + "_max",
+                                        dd4hepElement, maxDefault);
+          axisFactories.emplace_back(
+              AxisFactory::Equidistant(AxisBoundaryType::Bound, min, max, nBins,
+                                       axisDir),
+              nExpansion);
+        }
+      } else {
+        // Variable binning
+        std::vector<double> edges;
+        for (int ib = 0; ib <= nBins; ++ib) {
+          edges.push_back(getParamOr<double>(
+              bname + "_" + ab + "_b" + std::to_string(ib), dd4hepElement, 0.));
+        }
+        axisFactories.emplace_back(
+            AxisFactory::Variable(AxisBoundaryType::Bound, std::move(edges),
+                                  axisDir),
+            nExpansion);
+      }
+    }
+  }
+  return axisFactories;
+}
+
 std::vector<std::tuple<DirectedProtoAxis, std::size_t>>
 DD4hepBinningHelpers::convertBinning(const dd4hep::DetElement &dd4hepElement,
                                      const std::string &bname) {

@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/AxisFactory.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
@@ -83,12 +84,26 @@ inline std::vector<Acts::AxisDirection> stringToAxisDirections(
 namespace DD4hepBinningHelpers {
 /// @ingroup dd4hep_plugin
 
+/// @brief This method converts the DD4hep binning into Acts axis descriptions
+///
+/// Auto-range binnings convert to deferred equidistant descriptions whose
+/// range (and boundary type) is determined by the consumer, explicit binnings
+/// convert to fully specified descriptions.
+///
+/// @param dd4hepElement the element which has a binning description attached
+/// @param bname the binning base name, e.g. surface_binning, material_binning
+///
+/// @return a vector of axis descriptions with their bin expansions
+std::vector<std::tuple<Acts::AxisFactory, std::size_t>> convertAxisFactories(
+    const dd4hep::DetElement &dd4hepElement, const std::string &bname);
+
 /// @brief This method converts the DD4hep binning into the Acts ProtoAxis
 ///
 /// @param dd4hepElement the element which has a binning description attached
 /// @param bname the binning base name, e.g. surface_binning, material_binning
 ///
 /// @return a vector of proto binning descriptions
+[[deprecated("Use convertAxisFactories instead")]]
 std::vector<std::tuple<Acts::DirectedProtoAxis, std::size_t>> convertBinning(
     const dd4hep::DetElement &dd4hepElement, const std::string &bname);
 
