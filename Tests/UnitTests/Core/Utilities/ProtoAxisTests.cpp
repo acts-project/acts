@@ -67,9 +67,7 @@ BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
   BOOST_CHECK(epabAssign.getAxis() == epab.getAxis());
 
   // Create a grid from a single proto axis
-  ACTS_PUSH_IGNORE_DEPRECATED()
   auto grid1D = Acts::makeGrid<double>(epab);
-  ACTS_POP_IGNORE_DEPRECATED()
   BOOST_CHECK(grid1D != nullptr);
   BOOST_CHECK_EQUAL(grid1D->axes().size(), 1);
   auto axis1D =
@@ -82,9 +80,7 @@ BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
   BOOST_CHECK_EQUAL(epao.getAxis().getBoundaryType(), Open);
 
   // Create a 2D grid from a two proto axes
-  ACTS_PUSH_IGNORE_DEPRECATED()
   auto grid2D = Acts::makeGrid<double>(epab, epao);
-  ACTS_POP_IGNORE_DEPRECATED()
   BOOST_CHECK(grid2D != nullptr);
   auto grid2Daxes = grid2D->axes();
   BOOST_CHECK_EQUAL(grid2Daxes.size(), 2);
@@ -143,16 +139,12 @@ BOOST_AUTO_TEST_CASE(AutorangeProtoAxis) {
   BOOST_CHECK(epaAssign.getAxis() == epa.getAxis());
 
   // Invalid 1D grid construction with autorange axis
-  ACTS_PUSH_IGNORE_DEPRECATED()
   BOOST_CHECK_THROW(Acts::makeGrid<double>(epa), std::invalid_argument);
-  ACTS_POP_IGNORE_DEPRECATED()
 
   // Invalid 2D grid construction with autorange axis
   Acts::ProtoAxis epao(Open, 0., 2.0, 10.);
-  ACTS_PUSH_IGNORE_DEPRECATED()
   BOOST_CHECK_THROW(Acts::makeGrid<double>(epao, epa), std::invalid_argument);
   BOOST_CHECK_THROW(Acts::makeGrid<double>(epa, epao), std::invalid_argument);
-  ACTS_POP_IGNORE_DEPRECATED()
 
   // Set the range now
   epa.setRange(0.0, 20.0);
@@ -160,14 +152,10 @@ BOOST_AUTO_TEST_CASE(AutorangeProtoAxis) {
   BOOST_CHECK_EQUAL(epa.getAxis().getBin(7.9), 4);
 
   // 1D Grid consstruction works now
-  ACTS_PUSH_IGNORE_DEPRECATED()
   BOOST_CHECK_NO_THROW(Acts::makeGrid<double>(epa));
-  ACTS_POP_IGNORE_DEPRECATED()
 
   // 2D Grid consstruction works now
-  ACTS_PUSH_IGNORE_DEPRECATED()
   BOOST_CHECK_NO_THROW(Acts::makeGrid<double>(epa, epao));
-  ACTS_POP_IGNORE_DEPRECATED()
 
   // Invalid setRange, min > max
   BOOST_CHECK_THROW(epa.setRange(20.0, 0.0), std::invalid_argument);
