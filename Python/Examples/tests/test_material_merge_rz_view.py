@@ -18,7 +18,6 @@ def _build_marker_geometry(gctx):
     MergedMaterialMarker instead of aborting.
     """
     bv = acts.AxisDirection
-    abt = acts.AxisBoundaryType
     base = acts.Transform3.Identity()
 
     root = acts.Blueprint(
@@ -29,8 +28,8 @@ def _build_marker_geometry(gctx):
     mat = stack.addMaterial("Material")
     mat.configureFace(
         acts.CylinderVolumeBounds.Face.OuterCylinder,
-        acts.DirectedProtoAxis(bv.AxisRPhi, abt.Bound, 20),
-        acts.DirectedProtoAxis(bv.AxisZ, abt.Bound, 20),
+        acts.AxisFactory.DeferredEquidistant(20, bv.AxisRPhi),
+        acts.AxisFactory.DeferredEquidistant(20, bv.AxisZ),
     )
     mat.addStaticVolume(
         base * acts.Translation3(acts.Vector3(0, 0, -200 * mm)),
