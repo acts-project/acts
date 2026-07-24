@@ -36,6 +36,9 @@ static inline int quant(double min, double max, unsigned nSteps, double val);
 static inline double unquant(double min, double max, unsigned nSteps, int step);
 template <typename T>
 static inline std::string to_string(std::vector<T> v);
+static inline HoughHist::index_t gridIndex(std::size_t y, std::size_t x) {
+  return {y + 1u, x + 1u};
+}
 
 thread_local std::vector<std::shared_ptr<HoughMeasurementStruct>>
     houghMeasurementStructs;
@@ -169,7 +172,8 @@ ProcessCode HoughTransformSeeder::execute(const AlgorithmContext& ctx) const {
         std::vector<std::vector<std::vector<Index>>> hitIndicesAll(
             m_cfg.nLayers);
         std::vector<std::size_t> nHitsPerLayer(m_cfg.nLayers);
-        for (auto measurementIndex : m_houghHist.atLocalBins({y, x}).second) {
+        for (auto measurementIndex :
+             m_houghHist.atLocalBins(gridIndex(y, x)).second) {
           HoughMeasurementStruct* meas =
               houghMeasurementStructs[measurementIndex].get();
           hitIndicesAll[meas->layer].push_back(meas->indices);
@@ -225,8 +229,8 @@ HoughHist HoughTransformSeeder::createLayerHoughHist(unsigned layer,
       // Update the houghHist
       for (unsigned y = y_bin_min; y < y_bin_max; y++) {
         for (unsigned x = xBins.first; x < xBins.second; x++) {
-          houghHist.atLocalBins({y, x}).first++;
-          houghHist.atLocalBins({y, x}).second.insert(index);
+          houghHist.atLocalBins(gridIndex(y, x)).first++;
+          houghHist.atLocalBins(gridIndex(y, x)).second.insert(index);
         }
       }
     }
@@ -243,11 +247,12 @@ HoughHist HoughTransformSeeder::createHoughHist(int subregion) const {
     HoughHist layerHoughHist = createLayerHoughHist(i, subregion);
     for (unsigned x = 0; x < m_cfg.houghHistSize_x; ++x) {
       for (unsigned y = 0; y < m_cfg.houghHistSize_y; ++y) {
-        if (layerHoughHist.atLocalBins({y, x}).first > 0) {
-          houghHist.atLocalBins({y, x}).first++;
-          houghHist.atLocalBins({y, x}).second.insert(
-              layerHoughHist.atLocalBins({y, x}).second.begin(),
-              layerHoughHist.atLocalBins({y, x}).second.end());
+        if (layerHoughHist.atLocalBins(gridIndex(y, x)).first > 0) {
+          houghHist.atLocalBins(gridIndex(y, x)).first++;
+          houghHist.atLocalBins(gridIndex(y, x))
+              .second.insert(
+                  layerHoughHist.atLocalBins(gridIndex(y, x)).second.begin(),
+                  layerHoughHist.atLocalBins(gridIndex(y, x)).second.end());
         }
       }
     }
@@ -264,7 +269,8 @@ bool HoughTransformSeeder::passThreshold(HoughHist const& houghHist, unsigned x,
     return false;
   }
   for (unsigned i = 0; i < m_cfg.threshold.size(); i++) {
-    if (houghHist.atLocalBins({y, x - width + i}).first < m_cfg.threshold[i]) {
+    if (houghHist.atLocalBins(gridIndex(y, x - width + i)).first <
+        m_cfg.threshold[i]) {
       return false;
     }
   }
@@ -279,18 +285,18 @@ bool HoughTransformSeeder::passThreshold(HoughHist const& houghHist, unsigned x,
           continue;
         }
         if (y + j < m_cfg.houghHistSize_y && x + i < m_cfg.houghHistSize_x) {
-          if (houghHist.atLocalBins({y + j, x + i}).first >
-              houghHist.atLocalBins({y, x}).first) {
+          if (houghHist.atLocalBins(gridIndex(y + j, x + i)).first >
+              houghHist.atLocalBins(gridIndex(y, x)).first) {
             return false;
           }
-          if (houghHist.atLocalBins({y + j, x + i}).first ==
-              houghHist.atLocalBins({y, x}).first) {
-            if (houghHist.atLocalBins({y + j, x + i}).second.size() >
-                houghHist.atLocalBins({y, x}).second.size()) {
+          if (houghHist.atLocalBins(gridIndex(y + j, x + i)).first ==
+              houghHist.atLocalBins(gridIndex(y, x)).first) {
+            if (houghHist.atLocalBins(gridIndex(y + j, x + i)).second.size() >
+                houghHist.atLocalBins(gridIndex(y, x)).second.size()) {
               return false;
             }
-            if (houghHist.atLocalBins({y + j, x + i}).second.size() ==
-                    houghHist.atLocalBins({y, x}).second.size() &&
+            if (houghHist.atLocalBins(gridIndex(y + j, x + i)).second.size() ==
+                    houghHist.atLocalBins(gridIndex(y, x)).second.size() &&
                 j <= 0 && i <= 0) {
               return false;  // favor bottom-left (low phi, low neg q/pt)
             }

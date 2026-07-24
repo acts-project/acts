@@ -203,7 +203,7 @@ class HoughPlane {
   std::span<const unsigned, std::dynamic_extent> layers(
       std::size_t xBin, std::size_t yBin) const {
     checkIndices(xBin, yBin);
-    return m_houghHist.atLocalBins({xBin, yBin}).getLayers();
+    return m_houghHist.atLocalBins(toGridIndex(xBin, yBin)).getLayers();
   }
 
   /// @brief get the (weighted) number of layers  with hits in one cell of the histogram
@@ -213,7 +213,7 @@ class HoughPlane {
   /// @throws out of range if indices are not within plane limits
   YieldType nLayers(std::size_t xBin, std::size_t yBin) const {
     checkIndices(xBin, yBin);
-    return m_houghHist.atLocalBins({xBin, yBin}).nLayers();
+    return m_houghHist.atLocalBins(toGridIndex(xBin, yBin)).nLayers();
   }
 
   /// @brief get the identifiers of all hits in one cell of the histogram
@@ -225,7 +225,7 @@ class HoughPlane {
   std::span<const identifier_t, std::dynamic_extent> hitIds(
       std::size_t xBin, std::size_t yBin) const {
     checkIndices(xBin, yBin);
-    return m_houghHist.atLocalBins({xBin, yBin}).getHits();
+    return m_houghHist.atLocalBins(toGridIndex(xBin, yBin)).getHits();
   }
   /// @brief get the identifiers of all hits in one cell of the histogram
   /// @param xBin: bin index in the first coordinate
@@ -236,7 +236,8 @@ class HoughPlane {
   std::unordered_set<const identifier_t> uniqueHitIds(std::size_t xBin,
                                                       std::size_t yBin) const {
     checkIndices(xBin, yBin);
-    const auto hits_span = m_houghHist.atLocalBins({xBin, yBin}).getHits();
+    const auto hits_span =
+        m_houghHist.atLocalBins(toGridIndex(xBin, yBin)).getHits();
     return std::unordered_set<identifier_t>(hits_span.begin(), hits_span.end());
   }
   /// @brief access the (weighted) number of hits in one cell of the histogram from bin's coordinates
@@ -246,7 +247,7 @@ class HoughPlane {
   /// @throws out of range if indices are not within plane limits
   YieldType nHits(std::size_t xBin, std::size_t yBin) const {
     checkIndices(xBin, yBin);
-    return m_houghHist.atLocalBins({xBin, yBin}).nHits();
+    return m_houghHist.atLocalBins(toGridIndex(xBin, yBin)).nHits();
   }
 
   /// @brief access the (weighted) number of hits in one cell of the histogram from globalBin index
@@ -280,14 +281,19 @@ class HoughPlane {
   /// @param globalBin Global bin index to convert to coordinates
   /// @return Local bin coordinates (x,y) corresponding to global bin index
   Index axisBins(std::size_t globalBin) const {
-    return m_houghHist.localBinsFromGlobalBin(globalBin);
+    Index index = m_houghHist.localBinsFromGlobalBin(globalBin);
+    --index[0];
+    --index[1];
+    return index;
   }
 
   /// @brief get the globalBin index given the coordinates of the bin
   /// @param indexBin Bin coordinates to convert to global index
   /// @return Global bin index corresponding to local bin coordinates
   std::size_t globalBin(Index indexBin) const {
-    return m_houghHist.globalBinFromLocalBins(indexBin);
+    checkIndices(indexBin[0], indexBin[1]);
+    return m_houghHist.globalBinFromLocalBins(
+        toGridIndex(indexBin[0], indexBin[1]));
   }
 
   /// @brief get the bin indices of the cell containing the largest number
@@ -337,6 +343,12 @@ class HoughPlane {
 
   HoughPlaneConfig m_cfg;  // the configuration object
   HoughHist m_houghHist;   // the histogram data object
+
+  /// Convert the zero-based Hough plane indices to the one-based local indices
+  /// used by bound grid axes.
+  static Index toGridIndex(std::size_t x, std::size_t y) {
+    return {x + 1u, y + 1u};
+  }
 
   /// @brief check if indices are are valid
   void checkIndices(std::size_t x, std::size_t y) const;

@@ -17,6 +17,7 @@
 
 #include <iostream>
 #include <numbers>
+#include <utility>
 
 namespace Acts {
 
@@ -297,19 +298,24 @@ void GridPortalLink::printContents(std::ostream& os) const {
   }
 
   AnyGridConstView<const TrackingVolume*> view(grid());
+  const auto localBinRange = [this](std::size_t axisIndex) {
+    const IAxis& axis = grid().axis(axisIndex);
+    const std::size_t begin = axis.getBinIndexOffset();
+    return std::pair{begin, begin + axis.getNTotalBins()};
+  };
 
   if (dim == 1) {
-    auto loc = grid().numLocalBinsAny();
+    const auto [begin, end] = localBinRange(0);
 
     if (flipped) {
-      os << lpad(loc1, 4) << " > " << lpad("i=0", 10) << " ";
-      for (std::size_t i = 1; i <= loc.at(0) + 1; i++) {
+      os << lpad(loc1, 4) << " > ";
+      for (std::size_t i = begin; i < end; ++i) {
         os << lpad("i=" + std::to_string(i), 13) + " ";
       }
       os << std::endl;
 
       os << std::string(4, ' ');
-      for (std::size_t i = 0; i <= loc.at(0) + 1; i++) {
+      for (std::size_t i = begin; i < end; ++i) {
         std::string name = "0x0";
         if (const auto* v = view.atLocalBins({i}); v != nullptr) {
           name = v->volumeName();
@@ -321,7 +327,7 @@ void GridPortalLink::printContents(std::ostream& os) const {
 
     } else {
       os << "v " << loc0 << std::endl;
-      for (std::size_t i = 0; i <= loc.at(0) + 1; i++) {
+      for (std::size_t i = begin; i < end; ++i) {
         os << "i=" << i << " ";
         std::string name = "0x0";
         if (const auto* v = view.atLocalBins({i}); v != nullptr) {
@@ -334,15 +340,16 @@ void GridPortalLink::printContents(std::ostream& os) const {
     }
 
   } else {
-    auto loc = grid().numLocalBinsAny();
-    os << rpad("v " + loc0 + "|" + loc1 + " >", 14) + "j=0 ";
-    for (std::size_t j = 1; j <= loc.at(1) + 1; j++) {
+    const auto [begin0, end0] = localBinRange(0);
+    const auto [begin1, end1] = localBinRange(1);
+    os << rpad("v " + loc0 + "|" + loc1 + " >", 14);
+    for (std::size_t j = begin1; j < end1; ++j) {
       os << lpad("j=" + std::to_string(j), 13) << " ";
     }
     os << std::endl;
-    for (std::size_t i = 0; i <= loc.at(0) + 1; i++) {
+    for (std::size_t i = begin0; i < end0; ++i) {
       os << "i=" << i << " ";
-      for (std::size_t j = 0; j <= loc.at(1) + 1; j++) {
+      for (std::size_t j = begin1; j < end1; ++j) {
         std::string name = "0x0";
         if (const auto* v = view.atLocalBins({i, j}); v != nullptr) {
           name = v->volumeName();
@@ -358,25 +365,29 @@ void GridPortalLink::printContents(std::ostream& os) const {
 void GridPortalLink::fillGrid1dTo2d(FillDirection dir,
                                     const GridPortalLink& grid1d,
                                     GridPortalLink& grid2d) {
-  const auto locSource = grid1d.grid().numLocalBinsAny();
-  const auto locDest = grid2d.grid().numLocalBinsAny();
   assert(grid1d.grid().dimensions() == 1);
   assert(grid2d.grid().dimensions() == 2);
-  assert(locSource.size() == 1);
-  assert(locDest.size() == 2);
 
   AnyGridConstView<const TrackingVolume*> sourceView(grid1d.grid());
   AnyGridView<const TrackingVolume*> destView(grid2d.grid());
 
-  for (std::size_t i = 0; i <= locSource[0] + 1; ++i) {
+  const IAxis& sourceAxis = grid1d.grid().axis(0);
+  const std::size_t sourceBegin = sourceAxis.getBinIndexOffset();
+  const std::size_t sourceEnd = sourceBegin + sourceAxis.getNTotalBins();
+  const std::size_t destAxisIndex = dir == FillDirection::loc1 ? 1u : 0u;
+  const IAxis& destAxis = grid2d.grid().axis(destAxisIndex);
+  const std::size_t destBegin = destAxis.getBinIndexOffset();
+  const std::size_t destEnd = destBegin + destAxis.getNTotalBins();
+
+  for (std::size_t i = sourceBegin; i < sourceEnd; ++i) {
     const TrackingVolume* source = sourceView.atLocalBins({i});
 
     if (dir == FillDirection::loc1) {
-      for (std::size_t j = 0; j <= locDest[1] + 1; ++j) {
+      for (std::size_t j = destBegin; j < destEnd; ++j) {
         destView.atLocalBins({i, j}) = source;
       }
     } else if (dir == FillDirection::loc0) {
-      for (std::size_t j = 0; j <= locDest[0] + 1; ++j) {
+      for (std::size_t j = destBegin; j < destEnd; ++j) {
         destView.atLocalBins({j, i}) = source;
       }
     }

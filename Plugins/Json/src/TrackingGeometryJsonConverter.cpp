@@ -48,6 +48,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <unordered_set>
+#include <utility>
 
 template <typename object_t, const char* kContext>
 struct Acts::TrackingGeometryJsonConverter::PointerToIdLookup {
@@ -498,12 +499,17 @@ nlohmann::json encodeGridPortalLink(
   }
 
   Acts::AnyGridConstView<const Acts::TrackingVolume*> view(link.grid());
-  const auto nBins = view.numLocalBins();
   const auto dim = view.dimensions();
+  const auto localBinRange = [&view](std::size_t axisIndex) {
+    const Acts::IAxis& axis = view.multiAxisAny().getAxis(axisIndex);
+    const std::size_t begin = axis.getBinIndexOffset();
+    return std::pair{begin, begin + axis.getNTotalBins()};
+  };
 
   jLink[kBinsKey] = nlohmann::json::array();
   if (dim == 1u) {
-    for (std::size_t i0 = 0u; i0 <= nBins.at(0) + 1u; ++i0) {
+    const auto [begin0, end0] = localBinRange(0);
+    for (std::size_t i0 = begin0; i0 < end0; ++i0) {
       nlohmann::json jBin;
       jBin[kLocalKey] = std::vector<std::size_t>{i0};
       if (const auto* target = view.atLocalBins({i0}); target == nullptr) {
@@ -514,8 +520,10 @@ nlohmann::json encodeGridPortalLink(
       jLink[kBinsKey].push_back(std::move(jBin));
     }
   } else if (dim == 2u) {
-    for (std::size_t i0 = 0u; i0 <= nBins.at(0) + 1u; ++i0) {
-      for (std::size_t i1 = 0u; i1 <= nBins.at(1) + 1u; ++i1) {
+    const auto [begin0, end0] = localBinRange(0);
+    const auto [begin1, end1] = localBinRange(1);
+    for (std::size_t i0 = begin0; i0 < end0; ++i0) {
+      for (std::size_t i1 = begin1; i1 < end1; ++i1) {
         nlohmann::json jBin;
         jBin[kLocalKey] = std::vector<std::size_t>{i0, i1};
         if (const auto* target = view.atLocalBins({i0, i1});
@@ -603,6 +611,22 @@ std::unique_ptr<Acts::PortalLinkBase> decodeGridPortalLink(
       throw std::invalid_argument("Grid bin dimensionality mismatch");
     }
     Acts::IGrid::AnyIndexType localIndices(local.begin(), local.end());
+
+    // Older files contain unused exterior entries for bound and closed axes.
+    // Ignore those entries now that the corresponding bins are not stored.
+    bool isAddressable = true;
+    for (std::size_t i = 0; i < dim; ++i) {
+      const Acts::IAxis& axis = *axes.at(i);
+      const std::size_t begin = axis.getBinIndexOffset();
+      const std::size_t end = begin + axis.getNTotalBins();
+      if (localIndices[i] < begin || localIndices[i] >= end) {
+        isAddressable = false;
+        break;
+      }
+    }
+    if (!isAddressable) {
+      continue;
+    }
 
     const Acts::TrackingVolume* target = nullptr;
     if (!jBin.at(kTargetVolumeIdKey).is_null()) {

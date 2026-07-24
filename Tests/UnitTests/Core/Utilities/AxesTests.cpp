@@ -25,6 +25,8 @@ BOOST_AUTO_TEST_CASE(equidistant_axis) {
 
   // general binning properties
   BOOST_CHECK_EQUAL(a.getNBins(), 10u);
+  BOOST_CHECK_EQUAL(a.getNTotalBins(), 12u);
+  BOOST_CHECK_EQUAL(a.getBinIndexOffset(), 0u);
   BOOST_CHECK_EQUAL(a.getMax(), 10.);
   BOOST_CHECK_EQUAL(a.getMin(), 0.);
   BOOST_CHECK_EQUAL(a.getBinWidth(), 1.);
@@ -104,6 +106,8 @@ BOOST_AUTO_TEST_CASE(variable_axis) {
 
   // general binning properties
   BOOST_CHECK_EQUAL(a.getNBins(), 4u);
+  BOOST_CHECK_EQUAL(a.getNTotalBins(), 6u);
+  BOOST_CHECK_EQUAL(a.getBinIndexOffset(), 0u);
   BOOST_CHECK_EQUAL(a.getMax(), 6.);
   BOOST_CHECK_EQUAL(a.getMin(), 0.);
 
@@ -149,14 +153,17 @@ BOOST_AUTO_TEST_CASE(variable_axis) {
   BOOST_CHECK(!a.isInside(12.));
 }
 
-BOOST_AUTO_TEST_CASE(open_axis) {
+BOOST_AUTO_TEST_CASE(bound_axis) {
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> a(0, 10, 10);
+
+  BOOST_CHECK_EQUAL(a.getNTotalBins(), 10u);
+  BOOST_CHECK_EQUAL(a.getBinIndexOffset(), 1u);
 
   // normal inside
   BOOST_CHECK_EQUAL(a.getBin(0.5), 1u);
   BOOST_CHECK_EQUAL(a.getBin(9.5), 10u);
 
-  // out of bounds, but is open
+  // out of bounds, but is bound
   // -> should clamp
   BOOST_CHECK_EQUAL(a.getBin(-0.5), 1u);
   BOOST_CHECK_EQUAL(a.getBin(10.5), 10u);
@@ -164,11 +171,14 @@ BOOST_AUTO_TEST_CASE(open_axis) {
   Axis<AxisType::Variable, AxisBoundaryType::Bound> b(
       {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
 
+  BOOST_CHECK_EQUAL(b.getNTotalBins(), 10u);
+  BOOST_CHECK_EQUAL(b.getBinIndexOffset(), 1u);
+
   // normal inside
   BOOST_CHECK_EQUAL(b.getBin(0.5), 1u);
   BOOST_CHECK_EQUAL(b.getBin(9.5), 10u);
 
-  // out of bounds, but is open
+  // out of bounds, but is bound
   // -> should clamp
   BOOST_CHECK_EQUAL(b.getBin(-0.5), 1u);
   BOOST_CHECK_EQUAL(b.getBin(10.5), 10u);
@@ -176,6 +186,9 @@ BOOST_AUTO_TEST_CASE(open_axis) {
 
 BOOST_AUTO_TEST_CASE(closed_axis) {
   Axis<AxisType::Equidistant, AxisBoundaryType::Closed> a(0, 10, 10);
+
+  BOOST_CHECK_EQUAL(a.getNTotalBins(), 10u);
+  BOOST_CHECK_EQUAL(a.getBinIndexOffset(), 1u);
 
   // normal inside
   BOOST_CHECK_EQUAL(a.getBin(0.5), 1u);
@@ -188,6 +201,9 @@ BOOST_AUTO_TEST_CASE(closed_axis) {
 
   Axis<AxisType::Variable, AxisBoundaryType::Closed> b(
       {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+
+  BOOST_CHECK_EQUAL(b.getNTotalBins(), 10u);
+  BOOST_CHECK_EQUAL(b.getBinIndexOffset(), 1u);
 
   // normal inside
   BOOST_CHECK_EQUAL(b.getBin(0.5), 1u);

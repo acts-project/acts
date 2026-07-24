@@ -69,7 +69,8 @@ struct SurfaceArray::ISurfaceGridLookup {
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction) const = 0;
 
-  /// Returns the total size of the grid (including under/overflow bins)
+  /// Returns the total size of the grid, including under/overflow bins for
+  /// open axes
   /// @return Size of the grid data structure
   virtual std::size_t size() const = 0;
 
@@ -90,8 +91,8 @@ struct SurfaceArray::ISurfaceGridLookup {
   /// Checks if global bin is valid
   /// @param bin the global bin index
   /// @return bool if the bin is valid
-  /// @note Valid means that the index points to a bin which is not a under
-  ///       or overflow bin or out of range in any axis.
+  /// @note Valid means that the index points to a bin which is not an underflow
+  ///       or overflow bin of an open axis, or out of range in any axis.
   virtual bool isValidBin(std::size_t bin) const = 0;
 
   /// The binning values described by this surface grid lookup. They are in
@@ -261,8 +262,8 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   }
 
   std::size_t size() const override {
-    const GridIndex nBins = numLocalBins2D();
-    return (nBins[0] + 2) * (nBins[1] + 2);
+    return std::get<0>(m_axes).getNTotalBins() *
+           std::get<1>(m_axes).getNTotalBins();
   }
 
   std::vector<AxisDirection> binningValues() const override {
@@ -390,7 +391,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
       const std::size_t current = queue.back();
       queue.pop_back();
 
-      // Skip overflow bins as they do not produce a valid bin center
+      // Skip exterior bins of open axes because they have no valid bin center
       if (!isValidBin(current)) {
         continue;
       }

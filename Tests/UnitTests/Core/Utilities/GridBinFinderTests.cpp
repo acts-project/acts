@@ -37,15 +37,15 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_boundTypes) {
 
   auto lowerClosedNeighbours = binFinder.findBins(lowerBound, gridClosed);
   BOOST_CHECK_EQUAL(lowerClosedNeighbours.size(), 3ul);
-  BOOST_CHECK_EQUAL(lowerClosedNeighbours[0ul], 10ul);
-  BOOST_CHECK_EQUAL(lowerClosedNeighbours[1ul], 1ul);
-  BOOST_CHECK_EQUAL(lowerClosedNeighbours[2ul], 2ul);
+  BOOST_CHECK_EQUAL(lowerClosedNeighbours[0ul], 9ul);
+  BOOST_CHECK_EQUAL(lowerClosedNeighbours[1ul], 0ul);
+  BOOST_CHECK_EQUAL(lowerClosedNeighbours[2ul], 1ul);
 
   auto upperClosedNeighbours = binFinder.findBins(upperBound, gridClosed);
   BOOST_CHECK_EQUAL(upperClosedNeighbours.size(), 3ul);
-  BOOST_CHECK_EQUAL(upperClosedNeighbours[0ul], 9ul);
-  BOOST_CHECK_EQUAL(upperClosedNeighbours[1ul], 10ul);
-  BOOST_CHECK_EQUAL(upperClosedNeighbours[2ul], 1ul);
+  BOOST_CHECK_EQUAL(upperClosedNeighbours[0ul], 8ul);
+  BOOST_CHECK_EQUAL(upperClosedNeighbours[1ul], 9ul);
+  BOOST_CHECK_EQUAL(upperClosedNeighbours[2ul], 0ul);
 
   // For Open Boundary [default]: out-of-bounds lookups resolve to dedicated
   // underflow and overflow bins.
@@ -70,13 +70,13 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_boundTypes) {
 
   auto lowerBoundNeighbours = binFinder.findBins(lowerBound, gridBound);
   BOOST_CHECK_EQUAL(lowerBoundNeighbours.size(), 2ul);
-  BOOST_CHECK_EQUAL(lowerBoundNeighbours[0ul], 1ul);
-  BOOST_CHECK_EQUAL(lowerBoundNeighbours[1ul], 2ul);
+  BOOST_CHECK_EQUAL(lowerBoundNeighbours[0ul], 0ul);
+  BOOST_CHECK_EQUAL(lowerBoundNeighbours[1ul], 1ul);
 
   auto upperBoundNeighbours = binFinder.findBins(upperBound, gridBound);
   BOOST_CHECK_EQUAL(upperBoundNeighbours.size(), 2ul);
-  BOOST_CHECK_EQUAL(upperBoundNeighbours[0ul], 9ul);
-  BOOST_CHECK_EQUAL(upperBoundNeighbours[1ul], 10ul);
+  BOOST_CHECK_EQUAL(upperBoundNeighbours[0ul], 8ul);
+  BOOST_CHECK_EQUAL(upperBoundNeighbours[1ul], 9ul);
 }
 
 BOOST_AUTO_TEST_CASE(grid_binfinder_constructor) {

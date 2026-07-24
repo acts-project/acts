@@ -21,7 +21,7 @@ class Grid;
 
 /// @class GridGlobalIterator
 /// Grid iterator using the global position. This iterates on all
-/// the bins in the grid, including under- and over-flows
+/// the bins in the grid, including under- and overflows where present
 /// @tparam T The type stored in the grid bins
 /// @tparam Axes ... The types of the axes in the grid
 template <typename T, class... Axes>
@@ -150,7 +150,7 @@ class GridGlobalIterator {
 
 /// @class GridLocalIterator
 /// Grid iterator using the local position. This iterates on all
-/// local bins in the grid, and can exclude under- and over-flows
+/// local bins in the grid, and can exclude under- and overflows where present
 /// Can also allow for custom navigation pattern along axes
 /// @tparam T The type stored in the grid bins
 /// @tparam Axes ... The types of the axes in the grid
@@ -274,7 +274,7 @@ class GridLocalIterator {
   /// if the iterator gets used after being invalidated
   detail::RefHolder<const Grid<T, Axes...>> m_grid{nullptr};
   /// @brief The maximum number of local bins in the grid. This does not include
-  /// under- and over-flow bins
+  /// under- and overflow bins
   std::array<std::size_t, DIM> m_numLocalBins{};
   /// @brief The current iteration position.
   ///
@@ -289,8 +289,8 @@ class GridLocalIterator {
   ///
   /// This allows users to define any custom iteration sequence in all the
   /// different axes of the grid. If nothing is defined by the user, then
-  /// a std::iota is used as the default starting with the 1ul bin (0ul) is
-  /// the under-flow in the axis
+  /// a std::iota is used as the default starting with bin 1ul. Bin 0ul is the
+  /// underflow bin for open axes and is not addressable for other axes.
   std::array<std::vector<std::size_t>, DIM> m_navigationIndex{};
 };
 

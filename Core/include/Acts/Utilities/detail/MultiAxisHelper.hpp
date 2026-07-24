@@ -33,18 +33,32 @@ class FlatNeighborHoodIndices {
  public:
   using size_type = std::size_t;
 
-  /// You can get the neighbor multi indices from
-  /// MultiAxisHelper::neighborHoodIndices and the number of bins in
-  /// each direction from MultiAxisHelper::getNBins.
+  /// Construct from the per-axis neighborhood and the corresponding axes.
+  /// @tparam Axes axis types defining the grid
+  /// @param neighborIndices local neighbor indices for each axis
+  /// @param axes actual axis objects spanning the grid
+  template <class... Axes>
   FlatNeighborHoodIndices(std::array<NeighborHoodIndices, DIM>& neighborIndices,
-                          const std::array<std::size_t, DIM>& nBinsArray)
+                          const std::tuple<Axes...>& axes)
       : m_localBins(neighborIndices) {
+    static_assert(sizeof...(Axes) == DIM);
+    m_binIndexOffsets = std::apply(
+        [](const auto&... axis) {
+          return std::array<std::size_t, DIM>{axis.getBinIndexOffset()...};
+        },
+        axes);
+    const auto nTotalBins = std::apply(
+        [](const auto&... axis) {
+          return std::array<std::size_t, DIM>{axis.getNTotalBins()...};
+        },
+        axes);
+
     if constexpr (DIM == 1) {
       return;
     } else {
       std::size_t flatStride = 1;
       for (long i = DIM - 2; i >= 0; --i) {
-        flatStride *= (nBinsArray[i + 1] + 2);
+        flatStride *= nTotalBins[i + 1];
         m_flatStride[i] = flatStride;
       }
     }
@@ -65,12 +79,14 @@ class FlatNeighborHoodIndices {
         : m_localBinsIter(std::move(multiIndicesIter)), m_parent(&parent) {}
 
     std::size_t operator*() const {
-      std::size_t globalBin = *m_localBinsIter[DIM - 1];
+      std::size_t globalBin =
+          *m_localBinsIter[DIM - 1] - m_parent->m_binIndexOffsets[DIM - 1];
       if constexpr (DIM == 1) {
         return globalBin;
       } else {
         for (std::size_t i = 0; i < DIM - 1; ++i) {
-          globalBin += m_parent->m_flatStride[i] * (*m_localBinsIter[i]);
+          globalBin += m_parent->m_flatStride[i] *
+                       (*m_localBinsIter[i] - m_parent->m_binIndexOffsets[i]);
         }
         return globalBin;
       }
@@ -155,6 +171,7 @@ class FlatNeighborHoodIndices {
 
  private:
   std::array<NeighborHoodIndices, DIM> m_localBins{};
+  std::array<std::size_t, DIM> m_binIndexOffsets{};
   std::array<std::size_t, DIM - 1> m_flatStride{};
 };
 
@@ -225,22 +242,21 @@ struct MultiAxisHelper {
   /// @return global index for bin defined by the local bin indices
   ///
   /// @pre All local bin indices must be a valid index for the corresponding
-  /// axis (including the under-/overflow bin for this axis).
+  /// axis (including under-/overflow bins when supported by this axis).
   template <class... Axes>
   static std::size_t getGlobalBinFromLocalBins(
       const std::array<std::size_t, sizeof...(Axes)>& localBins,
       const std::tuple<Axes...>& axes) {
     // The trailing axis is the fastest running index. The stride for axis i is
-    // the product of (nBins + 2) over all axes following it (the +2 accounts
-    // for the under-/overflow bins), accumulated by walking the axes in
-    // reverse.
+    // the product of the addressable bin counts over all following axes.
     std::size_t bin = 0;
     std::size_t area = 1;
-    forEachAxisReverse(std::index_sequence_for<Axes...>{},
-                       [&]<std::size_t i>() {
-                         bin += area * localBins[i];
-                         area *= std::get<i>(axes).getNBins() + 2;
-                       });
+    forEachAxisReverse(
+        std::index_sequence_for<Axes...>{}, [&]<std::size_t i>() {
+          const auto& axis = std::get<i>(axes);
+          bin += area * (localBins[i] - axis.getBinIndexOffset());
+          area *= axis.getNTotalBins();
+        });
     return bin;
   }
 
@@ -257,7 +273,7 @@ struct MultiAxisHelper {
   ///
   /// @pre The given @c Point type must represent a point in d (or higher)
   /// dimensions where d is the number of axis objects in the tuple.
-  /// @note This could be a under-/overflow bin along one or more axes.
+  /// @note This could be an under-/overflow bin along one or more open axes.
   template <class Point, class... Axes>
   static std::array<std::size_t, sizeof...(Axes)> getLocalBinsFromPoint(
       const Point& point, const std::tuple<Axes...>& axes) {
@@ -281,7 +297,7 @@ struct MultiAxisHelper {
   ///
   /// @pre The given @c Point type must represent a point in d (or higher)
   /// dimensions where d is dimensionality of the grid.
-  /// @note This could be a under-/overflow bin along one or more axes.
+  /// @note This could be an under-/overflow bin along one or more open axes.
   template <class Point, class... Axes>
   static std::array<std::size_t, sizeof...(Axes)> getLocalBinsFromLowerLeftEdge(
       const Point& point, const std::tuple<Axes...>& axes) {
@@ -308,7 +324,7 @@ struct MultiAxisHelper {
   /// @return array with local bin indices along each axis (in same order as
   /// given @c axes object)
   ///
-  /// @note Local bin indices can contain under-/overflow bins along any axis.
+  /// @note Local bin indices can contain under-/overflow bins along open axes.
   template <class... Axes>
   static std::array<std::size_t, sizeof...(Axes)> getLocalBinsFromGlobalBin(
       std::size_t bin, const std::tuple<Axes...>& axes) {
@@ -320,12 +336,12 @@ struct MultiAxisHelper {
     std::size_t area = 1;
     forEachAxisReverse(Seq{}, [&]<std::size_t i>() {
       strides[i] = area;
-      area *= std::get<i>(axes).getNBins() + 2;
+      area *= std::get<i>(axes).getNTotalBins();
     });
 
     std::array<std::size_t, sizeof...(Axes)> localBins{};
     forEachAxis(Seq{}, [&]<std::size_t i>() {
-      localBins[i] = bin / strides[i];
+      localBins[i] = bin / strides[i] + std::get<i>(axes).getBinIndexOffset();
       bin %= strides[i];
     });
     return localBins;
@@ -492,12 +508,12 @@ struct MultiAxisHelper {
   /// @return Sorted collection of global bin indices for all bins in
   /// the neighborhood
   ///
-  /// @note Over-/underflow bins are included in the neighborhood.
+  /// @note Over-/underflow bins of open axes are included in the neighborhood.
   /// @note The @c size parameter sets the range by how many units each local
   /// bin index is allowed to be varied. All local bin indices are
   /// varied independently, that is diagonal neighbors are included.
-  /// Ignoring the truncation of the neighborhood size reaching beyond
-  /// over-/underflow bins, the neighborhood is of size \f$2 \times
+  /// Ignoring truncation at the addressable range, the neighborhood is of
+  /// size \f$2 \times
   /// \text{size}+1\f$ along each dimension.
   /// @note The concrete bins which are returned depend on the WrappingTypes
   /// of the contained axes
@@ -514,11 +530,8 @@ struct MultiAxisHelper {
           std::get<i>(axes).neighborHoodIndices(localBins[i], sizes);
     });
 
-    // Query the number of bins
-    std::array<std::size_t, sizeof...(Axes)> nBinsArray = getNBins(axes);
-
     // Produce iterator of global indices
-    return FlatNeighborHoodIndices(neighborIndices, nBinsArray);
+    return FlatNeighborHoodIndices(neighborIndices, axes);
   }
 
   template <class... Axes>
@@ -539,12 +552,12 @@ struct MultiAxisHelper {
   /// @return Sorted collection of global bin indices for all bins in
   /// the neighborhood
   ///
-  /// @note Over-/underflow bins are included in the neighborhood.
+  /// @note Over-/underflow bins of open axes are included in the neighborhood.
   /// @note The @c size parameter sets the range by how many units each local
   /// bin index is allowed to be varied. All local bin indices are
   /// varied independently, that is diagonal neighbors are included.
-  /// Ignoring the truncation of the neighborhood size reaching beyond
-  /// over-/underflow bins, the neighborhood is of size \f$2 \times
+  /// Ignoring truncation at the addressable range, the neighborhood is of
+  /// size \f$2 \times
   /// \text{size}+1\f$ along each dimension.
   /// @note The concrete bins which are returned depend on the WrappingTypes
   /// of the contained axes
@@ -561,64 +574,59 @@ struct MultiAxisHelper {
           std::get<i>(axes).neighborHoodIndices(localBins[i], sizes[i]);
     });
 
-    // Query the number of bins
-    std::array<std::size_t, sizeof...(Axes)> nBinsArray = getNBins(axes);
-
     // Produce iterator of global indices
-    return FlatNeighborHoodIndices(neighborIndices, nBinsArray);
+    return FlatNeighborHoodIndices(neighborIndices, axes);
   }
 
-  /// get bin indices of all overflow and underflow bins
+  /// get bin indices of all overflow and underflow bins of open axes
   ///
   /// @tparam Axes parameter pack of axis types defining the grid
   /// @param axes actual axis objects spanning the grid
-  /// @return set of global bin indices for all over- and underflow bins
+  /// @return set of global bin indices for all over- and underflow bins of open
+  /// axes
   template <class... Axes>
   static std::set<std::size_t> exteriorBinIndices(
       const std::tuple<Axes...>& axes) {
     constexpr std::size_t DIM = sizeof...(Axes);
-    // getNBins excludes the under-/overflow bins; valid indices run 0..nBins+1.
-    const std::array<std::size_t, DIM> nBins = getNBins(axes);
-
+    const auto axisArray = getAxes(axes);
     std::set<std::size_t> combinations;
     std::array<std::size_t, DIM> localBins{};
-    const auto record = [&](std::size_t i0) {
-      localBins[0] = i0;
-      combinations.insert(getGlobalBinFromLocalBins(localBins, axes));
-    };
 
-    // The under-/overflow bins of axis 0 are exterior for any combination of
-    // the remaining axes. We only need to walk the interior bins of axis 0 when
-    // some other axis already sits on an exterior index. Run an odometer over
-    // axes 1..DIM-1 (over their full 0..nBins+1 range) and handle axis 0
-    // explicitly for each combination.
-    while (true) {
-      record(0);
-      record(nBins[0] + 1);
-
-      bool otherExterior = false;
-      for (std::size_t d = 1; d < DIM; ++d) {
-        if (localBins[d] == 0 || localBins[d] == nBins[d] + 1) {
-          otherExterior = true;
-          break;
-        }
-      }
-      if (otherExterior) {
-        for (std::size_t i = 1; i <= nBins[0]; ++i) {
-          record(i);
-        }
+    for (std::size_t exteriorAxis = 0; exteriorAxis < DIM; ++exteriorAxis) {
+      const IAxis& axis = *axisArray[exteriorAxis];
+      if (axis.getBoundaryType() != AxisBoundaryType::Open) {
+        continue;
       }
 
-      // Increment the odometer over axes 1..DIM-1; stop once it wraps around.
-      std::size_t d = 1;
-      for (; d < DIM; ++d) {
-        if (++localBins[d] <= nBins[d] + 1) {
-          break;
+      const std::array exteriorBins{std::size_t{0}, axis.getNBins() + 1u};
+      for (std::size_t exteriorBin : exteriorBins) {
+        for (std::size_t d = 0; d < DIM; ++d) {
+          localBins[d] = axisArray[d]->getBinIndexOffset();
         }
-        localBins[d] = 0;
-      }
-      if (d == DIM) {
-        break;
+        localBins[exteriorAxis] = exteriorBin;
+
+        while (true) {
+          combinations.insert(getGlobalBinFromLocalBins(localBins, axes));
+
+          bool advanced = false;
+          for (std::size_t d = DIM; d-- > 0;) {
+            if (d == exteriorAxis) {
+              continue;
+            }
+            const IAxis& currentAxis = *axisArray[d];
+            const std::size_t lastBin = currentAxis.getBinIndexOffset() +
+                                        currentAxis.getNTotalBins() - 1u;
+            if (localBins[d] < lastBin) {
+              ++localBins[d];
+              advanced = true;
+              break;
+            }
+            localBins[d] = currentAxis.getBinIndexOffset();
+          }
+          if (!advanced) {
+            break;
+          }
+        }
       }
     }
 

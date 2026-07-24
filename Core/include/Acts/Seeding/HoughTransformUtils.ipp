@@ -119,7 +119,7 @@ void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fillBin(
   m_touchedBins.insert(globalBin({binX, binY}));
 
   // add content to the cell
-  m_houghHist.atLocalBins({binX, binY}).fill(identifier, layer, w);
+  m_houghHist.atLocalBins(toGridIndex(binX, binY)).fill(identifier, layer, w);
   // and update our cached maxima
   YieldType layers = nLayers(binX, binY);
   YieldType hits = nHits(binX, binY);
