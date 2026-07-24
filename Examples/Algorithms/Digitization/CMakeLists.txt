@@ -1,7 +1,7 @@
 acts_add_library(
     ExamplesDigitization
     src/DigitizationAlgorithm.cpp
-    src/DigitizationConfig.cpp
+    src/GeometricConfig.cpp
     src/DigitizationCoordinatesConverter.cpp
     src/MeasurementCreation.cpp
     src/DigitizationConfigurator.cpp
