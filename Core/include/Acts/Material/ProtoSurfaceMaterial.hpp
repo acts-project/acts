@@ -12,6 +12,7 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/MultiAxisFactory.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <iosfwd>
@@ -129,11 +130,18 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
 /// A surface material implementation that uses BinUtility for binning
 using ProtoSurfaceMaterial = ProtoSurfaceMaterialT<Acts::BinUtility>;
 
-/// @brief Type alias for a prototype surface material using a grid of ProtoAxis
-/// A surface material implementation that uses a vector of ProtoAxis for
-/// grid-based binning
-using ProtoGridSurfaceMaterial =
-    ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>;
+/// @brief Type alias for a prototype surface material using a multi-axis
+/// binning description
+/// A surface material implementation that carries a MultiAxisFactory whose
+/// deferred axes are resolved against the surface during material mapping
+using ProtoGridSurfaceMaterial = ProtoSurfaceMaterialT<MultiAxisFactory>;
+
+/// @brief Type alias for the superseded prototype surface material based on
+/// a vector of DirectedProtoAxis
+using DirectedProtoAxisSurfaceMaterial
+    [[deprecated("Use ProtoGridSurfaceMaterial with a MultiAxisFactory "
+                 "instead")]] =
+        ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>;
 
 /// @}
 
