@@ -23,6 +23,7 @@ target_sources(
         RectangleBounds.cpp
         StrawSurface.cpp
         Surface.cpp
+        SurfaceAxisResolution.cpp
         SurfaceArray.cpp
         SurfaceBounds.cpp
         SurfaceError.cpp

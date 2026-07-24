@@ -118,14 +118,13 @@ class DetrayPayloadConverter {
       const Acts::ProtoSurfaceMaterialT<Acts::BinUtility>& material,
       const Acts::Surface& surface);
 
-  /// Convert proto surface material with proto axes
+  /// Convert proto surface material with a multi-axis binning description
   /// @param material Proto surface material
   /// @param surface Surface associated with the material
   /// @return Detray surface material payload
   static std::optional<DetraySurfaceMaterial>
-  convertProtoSurfaceMaterialProtoAxes(
-      const Acts::ProtoSurfaceMaterialT<std::vector<Acts::DirectedProtoAxis>>&
-          material,
+  convertProtoSurfaceMaterialAxisFactory(
+      const Acts::ProtoSurfaceMaterialT<Acts::MultiAxisFactory>& material,
       const Acts::Surface& surface);
 
   /// Convert surface array navigation policy
@@ -230,7 +229,7 @@ class DetrayPayloadConverter {
                              const Acts::Surface& surface)>
         convertSurfaceMaterial{
             convertHomogeneousSurfaceMaterial, convertBinnedSurfaceMaterial,
-            convertGridSurfaceMaterial, convertProtoSurfaceMaterialProtoAxes,
+            convertGridSurfaceMaterial, convertProtoSurfaceMaterialAxisFactory,
             convertProtoSurfaceMaterialBinUtility};
   };
 

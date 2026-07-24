@@ -21,7 +21,6 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include "./MaterialDesignator.hpp"
 
@@ -114,8 +113,8 @@ void MaterialDesignatorBlueprintNode::addToGraphviz(std::ostream& os) const {
 }
 
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
-    CylinderVolumeBounds::Face face, const DirectedProtoAxis& loc0,
-    const DirectedProtoAxis& loc1) {
+    CylinderVolumeBounds::Face face, const AxisFactory& loc0,
+    const AxisFactory& loc1) {
   impl().m_designator = detail::merge(
       impl().m_designator,
       detail::CylinderProtoDesignator(face, loc0, loc1, prefix()));
@@ -135,8 +134,8 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
 }
 
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
-    CuboidVolumeBounds::Face face, const DirectedProtoAxis& loc0,
-    const DirectedProtoAxis& loc1) {
+    CuboidVolumeBounds::Face face, const AxisFactory& loc0,
+    const AxisFactory& loc1) {
   impl().m_designator =
       detail::merge(impl().m_designator,
                     detail::CuboidProtoDesignator(face, loc0, loc1, prefix()));

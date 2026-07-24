@@ -175,13 +175,30 @@ class BinningData {
     }
   }
 
+  /// Constructor from a type-erased axis carrying its axis direction
+  ///
+  /// @param axis is the axis object, its direction must be set
+  ///
+  /// @throws std::invalid_argument if the axis has no direction
+  explicit BinningData(const IAxis& axis)
+      : BinningData(directionOf(axis), axis) {}
+
   /// Constructor from DirectedProtoAxis
   ///
   /// @param dpAxis is the ProtoAxis object
   ///
-  explicit BinningData(const DirectedProtoAxis& dpAxis)
-      : binvalue(dpAxis.getAxisDirection()), subBinningData(nullptr) {
-    const auto& axis = dpAxis.getAxis();
+  [[deprecated(
+      "Use BinningData(const IAxis&) with a directed axis "
+      "instead")]] explicit BinningData(const DirectedProtoAxis& dpAxis)
+      : BinningData(dpAxis.getAxisDirection(), dpAxis.getAxis()) {}
+
+  /// Constructor from an axis direction and a type-erased axis
+  ///
+  /// @param axisDir is the axis direction
+  /// @param axis is the axis object
+  ///
+  BinningData(AxisDirection axisDir, const IAxis& axis)
+      : binvalue(axisDir), subBinningData(nullptr) {
     type = axis.getType() == AxisType::Equidistant ? equidistant : arbitrary;
     option = axis.getBoundaryType() == AxisBoundaryType::Closed ? closed : open;
     min = static_cast<float>(axis.getMin());
@@ -480,6 +497,21 @@ class BinningData {
   }
 
  private:
+  /// helper method to require the direction of a type-erased axis
+  ///
+  /// @param axis is the axis object
+  ///
+  /// @throws std::invalid_argument if the axis has no direction
+  ///
+  /// @return the direction of the axis
+  static AxisDirection directionOf(const IAxis& axis) {
+    if (!axis.getDirection().has_value()) {
+      throw std::invalid_argument(
+          "BinningData: axis has no direction assigned");
+    }
+    return axis.getDirection().value();
+  }
+
   std::size_t m_bins{};             ///< number of bins
   std::vector<float> m_boundaries;  ///< vector of holding the bin boundaries
   std::size_t m_totalBins{};        ///< including potential substructure

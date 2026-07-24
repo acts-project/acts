@@ -8,10 +8,13 @@
 
 #include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/AxisFactory.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MultiAxisFactory.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
 #include <cmath>
@@ -22,6 +25,7 @@
 
 #include <boost/histogram.hpp>
 #include <pybind11/numpy.h>
+#include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -247,6 +251,37 @@ void addUtilities(py::module_& m) {
   }
 
   {
+    // Axis descriptions producing IAxis objects
+    py::class_<AxisFactory>(m, "AxisFactory")
+        .def_static("Equidistant", &AxisFactory::Equidistant, "boundaryType"_a,
+                    "min"_a, "max"_a, "nBins"_a, "direction"_a = std::nullopt)
+        .def_static("Variable", &AxisFactory::Variable, "boundaryType"_a,
+                    "edges"_a, "direction"_a = std::nullopt)
+        .def_static("DeferredEquidistant", &AxisFactory::DeferredEquidistant,
+                    "nBins"_a, "direction"_a = std::nullopt)
+        .def_static("DeferredVariable", &AxisFactory::DeferredVariable,
+                    "normalizedEdges"_a, "direction"_a = std::nullopt)
+        .def("withDirection", &AxisFactory::withDirection, "direction"_a)
+        .def("toDeferred", &AxisFactory::toDeferred)
+        .def_property_readonly("deferred", &AxisFactory::isDeferred)
+        .def_property_readonly("direction", &AxisFactory::direction)
+        .def_property_readonly("nBins", &AxisFactory::nBins)
+        .def(py::self == py::self)
+        .def("__repr__", &AxisFactory::toString);
+
+    py::class_<MultiAxisFactory>(m, "MultiAxisFactory")
+        .def(py::init<std::vector<AxisFactory>>(), "axisFactories"_a)
+        .def("__len__", &MultiAxisFactory::size)
+        .def("__getitem__",
+             [](const MultiAxisFactory& self, std::size_t i)
+                 -> const AxisFactory& { return self.axisFactory(i); })
+        .def_property_readonly("deferred", &MultiAxisFactory::isDeferred)
+        .def(py::self == py::self)
+        .def("__repr__", &MultiAxisFactory::toString);
+  }
+
+  {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     // Be able to construct a proto binning
     py::class_<ProtoAxis>(m, "ProtoAxis")
         .def(py::init<AxisBoundaryType, const std::vector<double>&>(),
@@ -264,6 +299,7 @@ void addUtilities(py::module_& m) {
              "bValue"_a, "bType"_a, "minE"_a, "maxE"_a, "nbins"_a)
         .def(py::init<AxisDirection, AxisBoundaryType, std::size_t>(),
              "bValue"_a, "bType"_a, "nbins"_a);
+    ACTS_POP_IGNORE_DEPRECATED()
   }
 
   {

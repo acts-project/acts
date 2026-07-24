@@ -21,6 +21,7 @@ namespace Acts::ProtoAxisHelpers {
 /// @brief Get the number of bins from a ProtoAxis
 /// @param axis DirectedProtoAxis object
 /// @return Number of bins in the axis
+[[deprecated("Unused and will be removed - use the IAxis interface instead")]]
 inline std::size_t binsOfProtoAxis(const Acts::DirectedProtoAxis& axis) {
   return axis.getAxis().getNBins();
 }
@@ -28,6 +29,7 @@ inline std::size_t binsOfProtoAxis(const Acts::DirectedProtoAxis& axis) {
 /// @brief Get the total number of bins from multiple ProtoAxes
 /// @param axes Span of DirectedProtoAxis objects
 /// @return Total number of bins across all axes
+[[deprecated("Unused and will be removed - use the IAxis interface instead")]]
 inline std::size_t totalBinsFromProtoAxes(
     std::span<const Acts::DirectedProtoAxis> axes) {
   if (axes.empty() || axes.size() > 3) {
@@ -44,6 +46,7 @@ inline std::size_t totalBinsFromProtoAxes(
 /// @param axes DirectedProtoAxis span
 /// @param ba Bin axis index
 /// @return Number of bins in the specified axis
+[[deprecated("Unused and will be removed - use the IAxis interface instead")]]
 inline std::size_t binsFromProtoAxes(
     std::span<const Acts::DirectedProtoAxis> axes, std::size_t ba) {
   if (axes.empty() || axes.size() > 3) {
@@ -59,6 +62,7 @@ inline std::size_t binsFromProtoAxes(
 /// @param axis DirectedProtoAxis object
 /// @param lp Local position vector
 /// @return Bin index corresponding to the local position
+[[deprecated("Unused and will be removed - use the IAxis interface instead")]]
 inline std::size_t binFromProtoAxis(const Acts::DirectedProtoAxis& axis,
                                     const Acts::Vector2& lp) {
   Acts::BinningData bd(axis);
@@ -69,6 +73,7 @@ inline std::size_t binFromProtoAxis(const Acts::DirectedProtoAxis& axis,
 /// @param axis DirectedProtoAxis object
 /// @param gp Global position vector
 /// @return Bin index corresponding to the global position
+[[deprecated("Unused and will be removed - use the IAxis interface instead")]]
 inline std::size_t binFromProtoAxis(const Acts::DirectedProtoAxis& axis,
                                     const Acts::Vector3& gp) {
   Acts::BinningData bd(axis);
@@ -79,6 +84,7 @@ inline std::size_t binFromProtoAxis(const Acts::DirectedProtoAxis& axis,
 /// @param axes Span of DirectedProtoAxis objects
 /// @param gp Global position vector
 /// @return Array of bin indices corresponding to the global position for each axis
+[[deprecated("Unused and will be removed - use the IAxis interface instead")]]
 inline std::array<std::size_t, 3> binTripleFromProtoAxes(
     std::span<const Acts::DirectedProtoAxis> axes, const Acts::Vector3& gp) {
   const Acts::Vector3& bPosition = gp;
@@ -107,6 +113,7 @@ inline std::array<std::size_t, 3> binTripleFromProtoAxes(
 /// @param axes DirectedProtoAxis span
 /// @param ba Bin axis index
 /// @return Maximum bin index in the specified axis
+[[deprecated("Unused and will be removed - use the IAxis interface instead")]]
 inline std::size_t maxBin(std::span<const Acts::DirectedProtoAxis> axes,
                           std::size_t ba = 0) {
   if (axes.empty() || axes.size() > 3) {

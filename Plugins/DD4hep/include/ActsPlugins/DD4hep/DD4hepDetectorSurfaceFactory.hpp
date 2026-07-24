@@ -11,8 +11,8 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AxisFactory.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsPlugins/Root/TGeoAxes.hpp"
 
 #include <tuple>
@@ -80,7 +80,7 @@ class DD4hepDetectorSurfaceFactory {
     /// matching and conversion statistics: materials
     std::size_t convertedMaterials = 0;
     /// The collected binnings
-    std::vector<std::tuple<Acts::DirectedProtoAxis, std::size_t>> binnings = {};
+    std::vector<std::tuple<Acts::AxisFactory, std::size_t>> binnings = {};
     /// Optionally provide an Extent object to measure the sensitives
     std::optional<Acts::Extent> sExtent = std::nullopt;
     /// Optionally provide an Extent object to measure the passive

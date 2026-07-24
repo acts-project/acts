@@ -7,11 +7,13 @@ target_sources(
         TrackHelpers.cpp
         Intersection.cpp
         IAxis.cpp
+        AxisFactory.cpp
         GraphViz.cpp
         ProtoAxis.cpp
         ScopedTimer.cpp
         TransformComparator.cpp
         Histogram.cpp
         IMultiAxis.cpp
+        MultiAxisFactory.cpp
         StringHelpers.cpp
 )

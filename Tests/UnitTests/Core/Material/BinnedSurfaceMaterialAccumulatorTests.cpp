@@ -16,9 +16,12 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AxisFactory.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MultiAxisFactory.hpp"
 
 #include <numbers>
 #include <utility>
@@ -214,6 +217,75 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
   BOOST_CHECK_THROW(bsma.accumulate(*state, tContext, {},
                                     {{invalidSurface.get(), 50 * d1, d1}}),
                     std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(ProtoGridResolutionTest) {
+  using enum AxisDirection;
+
+  // A full cylinder and a full disc carrying deferred binning descriptions
+  std::vector<std::shared_ptr<Surface>> surfaces = {
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), 20.0, 100.0),
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 30.0, 80.0)};
+
+  for (auto [is, surface] : enumerate(surfaces)) {
+    surface->assignGeometryId(GeometryIdentifier().withSensitive(is + 1));
+  }
+
+  // Cylinder: deferred equidistant binning in (rphi, z), given in swapped
+  // order to exercise the direction based re-ordering
+  surfaces[0u]->assignSurfaceMaterial(
+      std::make_shared<ProtoGridSurfaceMaterial>(
+          MultiAxisFactory({AxisFactory::DeferredEquidistant(10, AxisZ),
+                            AxisFactory::DeferredEquidistant(4, AxisRPhi)})));
+
+  // Disc: deferred variable binning in r, deferred equidistant binning in phi
+  surfaces[1u]->assignSurfaceMaterial(
+      std::make_shared<ProtoGridSurfaceMaterial>(
+          MultiAxisFactory({AxisFactory::DeferredVariable({0., 0.2, 1.}, AxisR),
+                            AxisFactory::DeferredEquidistant(8, AxisPhi)})));
+
+  BinnedSurfaceMaterialAccumulator::Config bsmaConfig;
+  bsmaConfig.materialSurfaces = {surfaces[0].get(), surfaces[1].get()};
+
+  BinnedSurfaceMaterialAccumulator bsma(
+      bsmaConfig,
+      getDefaultLogger("BinnedSurfaceMaterialAccumulator", Logging::VERBOSE));
+
+  auto state = bsma.createState(tContext);
+  auto cState =
+      static_cast<const BinnedSurfaceMaterialAccumulator::State*>(state.get());
+  BOOST_CHECK_EQUAL(cState->accumulatedMaterial.size(), 2u);
+
+  // Cylinder binning: rphi first (re-ordered), closed on the full azimuth
+  const auto& cylBinning =
+      cState->accumulatedMaterial.at(GeometryIdentifier().withSensitive(1))
+          .binUtility()
+          .binningData();
+  BOOST_CHECK_EQUAL(cylBinning.size(), 2u);
+  BOOST_CHECK_EQUAL(cylBinning[0].binvalue, AxisRPhi);
+  BOOST_CHECK_EQUAL(cylBinning[0].bins(), 4u);
+  BOOST_CHECK_EQUAL(cylBinning[0].option, closed);
+  BOOST_CHECK_CLOSE(cylBinning[0].max, 20. * std::numbers::pi, 1e-4);
+  BOOST_CHECK_EQUAL(cylBinning[1].binvalue, AxisZ);
+  BOOST_CHECK_EQUAL(cylBinning[1].bins(), 10u);
+  BOOST_CHECK_EQUAL(cylBinning[1].option, open);
+  BOOST_CHECK_EQUAL(cylBinning[1].min, -100.);
+  BOOST_CHECK_EQUAL(cylBinning[1].max, 100.);
+
+  // Disc binning: variable r edges scaled onto [30, 80], closed phi
+  const auto& discBinning =
+      cState->accumulatedMaterial.at(GeometryIdentifier().withSensitive(2))
+          .binUtility()
+          .binningData();
+  BOOST_CHECK_EQUAL(discBinning.size(), 2u);
+  BOOST_CHECK_EQUAL(discBinning[0].binvalue, AxisR);
+  BOOST_CHECK_EQUAL(discBinning[0].bins(), 2u);
+  BOOST_CHECK_EQUAL(discBinning[0].min, 30.);
+  BOOST_CHECK_EQUAL(discBinning[0].max, 80.);
+  BOOST_CHECK_CLOSE(discBinning[0].boundaries()[1], 40., 1e-4);
+  BOOST_CHECK_EQUAL(discBinning[1].binvalue, AxisPhi);
+  BOOST_CHECK_EQUAL(discBinning[1].bins(), 8u);
+  BOOST_CHECK_EQUAL(discBinning[1].option, closed);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
