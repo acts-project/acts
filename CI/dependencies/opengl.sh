@@ -23,7 +23,9 @@ echo "OS: $os"
 
 if [[ "$os" == *ubuntu* ]]; then
 
-  # No-op unless the runner fleet named a nearer mirror (see the script).
+  # Redundant under GitHub Actions, where .github/actions/dependencies applies the
+  # mirror up front; kept for entry points that call setup.sh directly and never
+  # see that action (GitLab CI). Idempotent, so the double call is free.
   "$(dirname "${BASH_SOURCE[0]}")/apt_mirror.sh"
 
   ${SUDO} apt-get update
