@@ -534,8 +534,10 @@ BOOST_AUTO_TEST_CASE(ConfinedVolumes) {
 
   auto vecCheckPlacement = std::make_unique<TrackingVolume>(
       Acts::Transform3::Identity(), outerBounds);
-  vecCheckPlacement->retainPlacements(innerPlacements);
-  BOOST_CHECK_EQUAL(vecCheckPlacement->ownedPlacements().size(),
+  for (auto& placement : innerPlacements) {
+    vecCheckPlacement->retainPlacement(placement);
+  }
+  BOOST_CHECK_EQUAL(vecCheckPlacement->placements().size(),
                     innerPlacements.size());
 
   BOOST_CHECK_EQUAL(
@@ -543,9 +545,7 @@ BOOST_AUTO_TEST_CASE(ConfinedVolumes) {
                           [](const auto& pl) { return pl.use_count() == 2; }),
       true);
 
-  /// Compile time check that we can also pass on a collection of unique ptr
-  std::vector<std::unique_ptr<AlignableVolumePlacement>> uniquePlacements{};
-  vecCheckPlacement->retainPlacements(std::move(uniquePlacements));
+  /// Compile time check that we can also pass on a unique ptr
   vecCheckPlacement->retainPlacement(
       std::unique_ptr<AlignableVolumePlacement>{});
 }

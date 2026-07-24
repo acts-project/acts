@@ -569,32 +569,13 @@ class TrackingVolume : public Volume {
   /// with the volume
   /// @param placement: Pointer to the placement to be managed by the
   ///                   tracking volume
-  template <typename Obj_t>
-  void retainPlacement(Obj_t placement)
-    requires(std::is_constructible_v<PlacementOwnPtr, Obj_t>)
-  {
+  void retainPlacement(PlacementOwnPtr placement) {
     m_placements.emplace_back(std::move(placement));
-  }
-  /// Convenience method to pass a container of (Volume / Surface)
-  /// placements to the tracking volume to retain ownership
-  /// @param placements: Container of volume placements to be hold
-  template <std::ranges::input_range Range>
-  void retainPlacements(Range&& placements) {
-    using value_type = std::ranges::range_value_t<Range>;
-    if constexpr (std::is_lvalue_reference_v<Range> ||
-                  std::is_copy_constructible_v<value_type>) {
-      m_placements.insert(m_placements.end(), placements.begin(),
-                          placements.end());
-    } else {
-      m_placements.insert(m_placements.end(),
-                          std::make_move_iterator(placements.begin()),
-                          std::make_move_iterator(placements.end()));
-    }
   }
 
   /// Returns the view on all the placements owned by the tracking volume
   /// @returns The const view on all the placements owned by this volume
-  std::span<const PlacementOwnPtr> ownedPlacements() const;
+  std::span<const PlacementOwnPtr> placements() const;
 
  private:
   void connectDenseBoundarySurfaces(
