@@ -113,13 +113,34 @@ void MaterialDesignatorBlueprintNode::addToGraphviz(std::ostream& os) const {
   BlueprintNode::addToGraphviz(os);
 }
 
+namespace {
+
+/// Convert a superseded DirectedProtoAxis binning description to a deferred
+/// AxisFactory. This reproduces the effective legacy semantics: only the
+/// binning structure was ever used, the configured range and boundary type
+/// were overwritten from the surface bounds during material mapping.
+AxisFactory toDeferredAxisFactory(const DirectedProtoAxis& dpAxis) {
+  return AxisFactory::FromAxis(dpAxis.getAxis())
+      .toDeferred()
+      .withDirection(dpAxis.getAxisDirection());
+}
+
+}  // namespace
+
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
-    CylinderVolumeBounds::Face face, const DirectedProtoAxis& loc0,
-    const DirectedProtoAxis& loc1) {
+    CylinderVolumeBounds::Face face, const AxisFactory& loc0,
+    const AxisFactory& loc1) {
   impl().m_designator = detail::merge(
       impl().m_designator,
       detail::CylinderProtoDesignator(face, loc0, loc1, prefix()));
   return *this;
+}
+
+MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
+    CylinderVolumeBounds::Face face, const DirectedProtoAxis& loc0,
+    const DirectedProtoAxis& loc1) {
+  return configureFace(face, toDeferredAxisFactory(loc0),
+                       toDeferredAxisFactory(loc1));
 }
 
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
@@ -135,12 +156,19 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
 }
 
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
-    CuboidVolumeBounds::Face face, const DirectedProtoAxis& loc0,
-    const DirectedProtoAxis& loc1) {
+    CuboidVolumeBounds::Face face, const AxisFactory& loc0,
+    const AxisFactory& loc1) {
   impl().m_designator =
       detail::merge(impl().m_designator,
                     detail::CuboidProtoDesignator(face, loc0, loc1, prefix()));
   return *this;
+}
+
+MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
+    CuboidVolumeBounds::Face face, const DirectedProtoAxis& loc0,
+    const DirectedProtoAxis& loc1) {
+  return configureFace(face, toDeferredAxisFactory(loc0),
+                       toDeferredAxisFactory(loc1));
 }
 
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(

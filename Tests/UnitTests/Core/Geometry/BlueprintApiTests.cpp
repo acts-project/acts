@@ -30,8 +30,8 @@
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AxisFactory.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
@@ -280,9 +280,13 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
     using enum CylinderVolumeBounds::Face;
 
     // Configure cylinder faces with proper binning
-    mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 20}, {AxisZ, Bound, 20});
-    mat.configureFace(NegativeDisc, {AxisR, Bound, 15}, {AxisPhi, Bound, 25});
-    mat.configureFace(PositiveDisc, {AxisR, Bound, 15}, {AxisPhi, Bound, 25});
+    mat.configureFace(OuterCylinder,
+                      AxisFactory::DeferredEquidistant(20, AxisRPhi),
+                      AxisFactory::DeferredEquidistant(20, AxisZ));
+    mat.configureFace(NegativeDisc, AxisFactory::DeferredEquidistant(15, AxisR),
+                      AxisFactory::DeferredEquidistant(25, AxisPhi));
+    mat.configureFace(PositiveDisc, AxisFactory::DeferredEquidistant(15, AxisR),
+                      AxisFactory::DeferredEquidistant(25, AxisPhi));
 
     mat.addCylinderContainer("Detector", AxisDirection::AxisR, [&](auto& det) {
       det.addCylinderContainer("Pixel", AxisDirection::AxisZ, [&](auto& cyl) {
@@ -427,24 +431,36 @@ BOOST_AUTO_TEST_CASE(NodeApiTestCuboid) {
   cfg.envelope[AxisDirection::AxisR] = {0_mm, 20_mm};
   auto root = std::make_unique<Blueprint>(cfg);
 
-  root->addMaterial("GlobalMaterial", [&](MaterialDesignatorBlueprintNode&
-                                              mat) {
-    using enum AxisDirection;
-    using enum AxisBoundaryType;
-    using enum CuboidVolumeBounds::Face;
+  root->addMaterial(
+      "GlobalMaterial", [&](MaterialDesignatorBlueprintNode& mat) {
+        using enum AxisDirection;
+        using enum AxisBoundaryType;
+        using enum CuboidVolumeBounds::Face;
 
-    // Configure valid axis combinations for each face type
-    mat.configureFace(NegativeXFace, {AxisX, Bound, 20}, {AxisY, Bound, 20});
-    mat.configureFace(PositiveXFace, {AxisX, Bound, 20}, {AxisY, Bound, 20});
-    mat.configureFace(NegativeYFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
-    mat.configureFace(PositiveYFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
-    mat.configureFace(NegativeZFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
-    mat.configureFace(PositiveZFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
+        // Configure valid axis combinations for each face type
+        mat.configureFace(NegativeXFace,
+                          AxisFactory::DeferredEquidistant(20, AxisX),
+                          AxisFactory::DeferredEquidistant(20, AxisY));
+        mat.configureFace(PositiveXFace,
+                          AxisFactory::DeferredEquidistant(20, AxisX),
+                          AxisFactory::DeferredEquidistant(20, AxisY));
+        mat.configureFace(NegativeYFace,
+                          AxisFactory::DeferredEquidistant(15, AxisX),
+                          AxisFactory::DeferredEquidistant(25, AxisY));
+        mat.configureFace(PositiveYFace,
+                          AxisFactory::DeferredEquidistant(15, AxisX),
+                          AxisFactory::DeferredEquidistant(25, AxisY));
+        mat.configureFace(NegativeZFace,
+                          AxisFactory::DeferredEquidistant(15, AxisX),
+                          AxisFactory::DeferredEquidistant(25, AxisY));
+        mat.configureFace(PositiveZFace,
+                          AxisFactory::DeferredEquidistant(15, AxisX),
+                          AxisFactory::DeferredEquidistant(25, AxisY));
 
-    mat.addStaticVolume(
-        base, std::make_shared<CuboidVolumeBounds>(100_mm, 100_mm, 100_mm),
-        "TestVolume");
-  });
+        mat.addStaticVolume(
+            base, std::make_shared<CuboidVolumeBounds>(100_mm, 100_mm, 100_mm),
+            "TestVolume");
+      });
 
   auto trackingGeometry = root->construct({}, gctx, *logger);
   BOOST_REQUIRE(trackingGeometry);
@@ -477,8 +493,9 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalThrows) {
     // First child: a static volume whose OuterCylinder face is given material.
     // This is the face that the parent z-stack will try to merge.
     stack.addMaterial("Material", [&](auto& mat) {
-      mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 20},
-                        {AxisZ, Bound, 20});
+      mat.configureFace(OuterCylinder,
+                        AxisFactory::DeferredEquidistant(20, AxisRPhi),
+                        AxisFactory::DeferredEquidistant(20, AxisZ));
       mat.addStaticVolume(
           base * Translation3{Vector3{0, 0, -200_mm}},
           std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm),
@@ -527,8 +544,9 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalKeepGoing) {
     using enum CylinderVolumeBounds::Face;
 
     stack.addMaterial("Material", [&](auto& mat) {
-      mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 20},
-                        {AxisZ, Bound, 20});
+      mat.configureFace(OuterCylinder,
+                        AxisFactory::DeferredEquidistant(20, AxisRPhi),
+                        AxisFactory::DeferredEquidistant(20, AxisZ));
       mat.addStaticVolume(
           base * Translation3{Vector3{0, 0, -200_mm}},
           std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm),
@@ -583,8 +601,9 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalKeepGoingSingleChildFalseWarning) {
     using enum CylinderVolumeBounds::Face;
 
     stack.addMaterial("Material", [&](auto& mat) {
-      mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 20},
-                        {AxisZ, Bound, 20});
+      mat.configureFace(OuterCylinder,
+                        AxisFactory::DeferredEquidistant(20, AxisRPhi),
+                        AxisFactory::DeferredEquidistant(20, AxisZ));
       mat.addStaticVolume(
           base, std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm),
           "VolumeA");
