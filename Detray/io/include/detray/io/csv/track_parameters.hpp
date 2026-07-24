@@ -32,7 +32,8 @@ struct free_track_parameters {
   double pz = 0.;
   double q = 0.;
 
-  DFE_NAMEDTUPLE(free_track_parameters, track_id, x, y, z, t, px, py, pz, q);
+  DETRAY_DFE_NAMEDTUPLE(free_track_parameters, track_id, x, y, z, t, px, py, pz,
+                        q);
 };
 
 /// Type to read the data of bound track parameters
@@ -46,7 +47,8 @@ struct bound_track_parameters {
   double qop = 0.;
   double t = 0.;
 
-  DFE_NAMEDTUPLE(bound_track_parameters, track_id, l0, l1, phi, theta, qop, t);
+  DETRAY_DFE_NAMEDTUPLE(bound_track_parameters, track_id, l0, l1, phi, theta,
+                        qop, t);
 };
 
 /// Read free track parameters from csv file

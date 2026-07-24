@@ -69,7 +69,7 @@ struct intersection_initialize {
     typename decltype(intersector)::result_type result{};
 
     if constexpr (concepts::cylindrical<mask_t>) {
-      std::size_t mask_idx{detail::invalid_value<std::size_t>()};
+      dindex mask_idx{detail::invalid_value<dindex>()};
       if constexpr (concepts::interval<mask_range_t>) {
         mask_idx = mask_range.lower();
       } else {
@@ -207,7 +207,7 @@ struct intersection_update {
     typename decltype(intersector)::result_type result{};
 
     if constexpr (concepts::cylindrical<mask_t>) {
-      std::size_t mask_idx{detail::invalid_value<std::size_t>()};
+      dindex mask_idx{detail::invalid_value<dindex>()};
       if constexpr (concepts::interval<mask_range_t>) {
         mask_idx = mask_range.lower();
       } else {
