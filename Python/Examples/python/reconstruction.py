@@ -1815,7 +1815,7 @@ def addCKFTracks(
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks=trackFinder.config.outputTracks,
-        inputParticles="particles_selected",
+        inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching=f"{prefix}ckf_track_particle_matching",
         outputParticleTrackMatching=f"{prefix}ckf_particle_track_matching",
@@ -2137,7 +2137,7 @@ def addGnn(
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks=convAlg.config.outputTracks,
-        inputParticles="particles_selected",
+        inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="gnn_track_particle_matching",
         outputParticleTrackMatching="gnn_particle_track_matching",
