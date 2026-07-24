@@ -236,14 +236,16 @@ ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
     // 2. The delta transform
     deltaAlignmentParam = alignResult.deltaAlignmentParameters.segment(
         Acts::eAlignmentSize * index, Acts::eAlignmentSize);
-    // The delta translation
-    Acts::Vector3 deltaCenter =
+    // Local translation along local x/y/z axes
+    const Acts::Vector3 deltaCenterLocal =
         deltaAlignmentParam.segment<3>(Acts::eAlignmentCenter0);
     // The delta Euler angles
     Acts::Vector3 deltaEulerAngles =
         deltaAlignmentParam.segment<3>(Acts::eAlignmentRotation0);
 
     // 3. The new transform
+    const Acts::RotationMatrix3& rotation = oldTransform.rotation();
+    const Acts::Vector3 deltaCenter = rotation * deltaCenterLocal;
     const Acts::Vector3 newCenter = oldCenter + deltaCenter;
     Acts::Transform3 newTransform = oldTransform;
     newTransform.translation() = newCenter;
