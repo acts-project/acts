@@ -11,8 +11,8 @@
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AxisFactory.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
 
 namespace Acts::Experimental {
 
@@ -20,8 +20,9 @@ namespace Acts::Experimental {
 /// @brief A class to build multiwire tracking volumes (e.g wire chambers)
 class MultiWireVolumeBuilder {
  public:
-  /// The axis configuration for the binning
-  using Binning = std::tuple<DirectedProtoAxis, std::size_t>;
+  /// The axis configuration for the binning: a fully specified equidistant
+  /// axis description with a direction, plus the bin expansion
+  using Binning = std::tuple<AxisFactory, std::size_t>;
   /// Configuration Struct
   struct Config {
     /// The name of the tracking volume
