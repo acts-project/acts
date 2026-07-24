@@ -123,6 +123,9 @@ struct do_push_back<N, list<Ts...>> {
 };
 template <typename L, typename N>
 using push_back = typename do_push_back<N, L>::type;
+
+template <typename L, typename N>
+using push_back_unique = std::conditional_t<contains<L, N>, L, push_back<L, N>>;
 /// @}
 
 /// Prepend a type

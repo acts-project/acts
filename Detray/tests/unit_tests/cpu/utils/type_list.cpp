@@ -56,6 +56,13 @@ GTEST_TEST(detray_utils, type_list) {
                                types::list<float, int, double, char>>,
                 "Failed to push back new type");
 
+  static_assert(std::is_same_v<types::push_back_unique<list, char>,
+                               types::list<float, int, double, char>>,
+                "Failed to push back unique new type");
+
+  static_assert(std::is_same_v<types::push_back_unique<list, int>, list>,
+                "Failed to preserve list for duplicate pushed back type");
+
   static_assert(std::is_same_v<types::push_front<list, char>,
                                types::list<char, float, int, double>>,
                 "Failed to push front new type");
