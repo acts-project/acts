@@ -118,6 +118,21 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
   state.startSurface = state.options.startSurface;
   state.targetSurface = state.options.targetSurface;
 
+  // Validate that the propagation state is consistent with the start surface
+  // before it is used to resolve the start volume
+  if (state.startSurface != nullptr &&
+      !state.startSurface->isOnSurface(state.options.geoContext, position,
+                                       direction, BoundaryTolerance::Infinite(),
+                                       state.options.surfaceTolerance)) {
+    ACTS_DEBUG(volInfo(state)
+               << "We did not end up on the expected surface. surface = "
+               << state.startSurface->geometryId()
+               << " position = " << position.transpose()
+               << " direction = " << direction.transpose());
+
+    return Result<void>::failure(NavigatorError::NotOnExpectedSurface);
+  }
+
   // @TODO: Implement fast initialization with Gen3. This requires the volume
   // lookup to work properly
 
@@ -132,7 +147,7 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
 
     state.startLayer = state.startSurface->associatedLayer();
     state.startVolume = state.startLayer->trackingVolume();
-  } else if (state.startVolume != nullptr) {
+  } else if (state.startVolume != nullptr && state.startSurface == nullptr) {
     ACTS_VERBOSE(
         volInfo(state)
         << "Fast start initialization through association from Volume.");
@@ -145,9 +160,13 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
                  << "Starting from position " << toString(position)
                  << " and direction " << toString(direction));
 
-    // current volume and layer search through global search
+    // Current volume and layer search through global search. If the start
+    // surface is a boundary between volumes, the position alone does not
+    // determine the start volume: the volume actually being entered depends
+    // on the direction, so the start surface is passed along as a hint.
     state.startVolume = m_cfg.trackingGeometry->lowestTrackingVolume(
-        state.options.geoContext, position);
+        state.options.geoContext, position, state.options.surfaceTolerance,
+        direction, state.startSurface);
 
     if (state.startVolume != nullptr) {
       state.startLayer = state.startVolume->associatedLayer(
@@ -193,18 +212,6 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
   if (state.currentSurface != nullptr) {
     ACTS_VERBOSE(volInfo(state) << "Start surface resolved "
                                 << state.currentSurface->geometryId());
-
-    if (!state.currentSurface->isOnSurface(
-            state.options.geoContext, position, direction,
-            BoundaryTolerance::Infinite(), state.options.surfaceTolerance)) {
-      ACTS_DEBUG(volInfo(state)
-                 << "We did not end up on the expected surface. surface = "
-                 << state.currentSurface->geometryId()
-                 << " position = " << position.transpose()
-                 << " direction = " << direction.transpose());
-
-      return Result<void>::failure(NavigatorError::NotOnExpectedSurface);
-    }
   }
 
   return Result<void>::success();

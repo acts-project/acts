@@ -8,7 +8,6 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
@@ -16,8 +15,10 @@
 #include "Acts/Geometry/TrackingGeometryVisitor.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <cassert>
 #include <cstddef>
 
 namespace Acts {
@@ -243,9 +244,76 @@ TrackingGeometry::TrackingGeometry(
 
 TrackingGeometry::~TrackingGeometry() = default;
 
+namespace {
+
+/// Resolve the volume a track on @p surface at @p position is entering,
+/// assuming it is currently associated with @p volume. If the surface is one
+/// of the boundary surfaces (Gen1) or portal surfaces (Gen3) of the volume,
+/// the volume on the far side along @p direction is returned, which can be
+/// `nullptr` if there is no volume in that direction (end of world).
+/// Otherwise the surface does not act as a boundary here and @p volume
+/// itself is returned.
+///
+/// The position is assumed to be on @p surface. A position inside the
+/// volume and on the plane of a matched boundary is within that boundary's
+/// bounds up to the lookup tolerance, since portals and boundary surfaces
+/// cover the volume faces. The exact bounds check can still fail for
+/// positions grazing a volume edge within the tolerance; in that case the
+/// boundary is not crossed here and the volume itself is returned.
+const TrackingVolume* resolveVolumeThroughBoundary(const GeometryContext& gctx,
+                                                   const TrackingVolume& volume,
+                                                   const Vector3& position,
+                                                   double tolerance,
+                                                   const Vector3& direction,
+                                                   const Surface& surface) {
+  auto isOnBoundary = [&]() {
+    return surface.isOnSurface(gctx, position, direction,
+                               BoundaryTolerance::None(), tolerance);
+  };
+
+  for (const Portal& portal : volume.portals()) {
+    if (&portal.surface() == &surface) {
+      if (!isOnBoundary()) {
+        return &volume;
+      }
+      auto resolved = portal.resolveVolume(gctx, position, direction);
+      if (!resolved.ok()) {
+        return &volume;
+      }
+      return resolved.value();
+    }
+  }
+
+  for (const auto& boundary : volume.boundarySurfaces()) {
+    if (&boundary->surfaceRepresentation() == &surface) {
+      if (!isOnBoundary()) {
+        return &volume;
+      }
+      return boundary->attachedVolume(gctx, position, direction);
+    }
+  }
+
+  return &volume;
+}
+
+}  // namespace
+
 const TrackingVolume* TrackingGeometry::lowestTrackingVolume(
-    const GeometryContext& gctx, const Vector3& gp) const {
-  return m_world->lowestTrackingVolume(gctx, gp, s_onSurfaceTolerance);
+    const GeometryContext& gctx, const Vector3& gp, double tolerance,
+    const std::optional<Vector3>& direction,
+    const Surface* associatedSurface) const {
+  const TrackingVolume* volume =
+      m_world->lowestTrackingVolume(gctx, gp, tolerance);
+  if (volume != nullptr && direction.has_value() &&
+      associatedSurface != nullptr) {
+    assert(associatedSurface->isOnSurface(gctx, gp, *direction,
+                                          BoundaryTolerance::Infinite(),
+                                          tolerance) &&
+           "The associated surface must contain the position");
+    volume = resolveVolumeThroughBoundary(gctx, *volume, gp, tolerance,
+                                          *direction, *associatedSurface);
+  }
+  return volume;
 }
 
 const TrackingVolume* TrackingGeometry::highestTrackingVolume() const {
