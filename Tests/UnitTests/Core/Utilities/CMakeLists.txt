@@ -1,6 +1,7 @@
 add_unittest(AlgebraHelpersTests AlgebraHelpersTests.cpp)
 add_unittest(AnnealingUtility AnnealingUtilityTests.cpp)
 add_unittest(Axes AxesTests.cpp)
+add_unittest(AxisFactory AxisFactoryTests.cpp)
 add_unittest(BFieldMapUtils BFieldMapUtilsTests.cpp)
 add_unittest(BinAdjustment BinAdjustmentTests.cpp)
 add_unittest(BinAdjustmentVolume BinAdjustmentVolumeTests.cpp)
