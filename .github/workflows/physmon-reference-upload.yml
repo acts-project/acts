@@ -1,0 +1,86 @@
+name: Upload physmon references
+
+# Publishes the reference histograms implied by a physmon run, so a pull request
+# whose physics changes are accepted can update `CI/physmon/reference.sha256`.
+#
+# Dispatch this from the *main* branch. The workflow file is taken from whichever
+# ref is selected, so running it against a pull request branch would execute that
+# branch's version of this workflow and of CI/physmon/reference.py with a
+# packages:write token.
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'ID of the Builds run whose physmon artifact should be published'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+# Two concurrent publishes of different runs would race to define what the
+# references are; serialise them.
+concurrency:
+  group: physmon-reference-upload
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    name: Publish reference blobs
+    # Dispatch is already gated on repository write access; this keeps the job
+    # from doing anything on forks that copy the workflow.
+    if: github.repository == 'acts-project/acts'
+    runs-on: ubuntu-slim
+    permissions:
+      contents: read
+      # Push the reference blobs to ghcr.io/acts-project/physmon-references
+      packages: write
+      # Download the physmon artifact from the Builds run being published
+      actions: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - uses: oras-project/setup-oras@1d808f7d7f6995cc68b7bf507bfe5c5446e1dc9d # v2.0.1
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+
+      - name: Log in to GHCR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          echo "$GITHUB_TOKEN" | oras login ghcr.io \
+            --username "$ACTOR" --password-stdin
+
+      - name: Publish references
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ inputs.run_id }}
+        run: |
+          uv run --no-project CI/physmon/reference.py update "$RUN_ID" \
+            --output reference-candidate.sha256
+
+      - name: Report the manifest to commit
+        env:
+          RUN_ID: ${{ inputs.run_id }}
+        run: |
+          {
+            echo "## physmon reference update"
+            echo
+            echo "Blobs for run \`${RUN_ID}\` are published."
+            echo "Commit this as \`CI/physmon/reference.sha256\` on the pull request"
+            echo "branch, then push (a plain job re-run would reuse the old manifest)."
+            echo
+            echo '```'
+            cat reference-candidate.sha256
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: reference-manifest
+          path: reference-candidate.sha256

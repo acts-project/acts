@@ -33,7 +33,23 @@ mkdir -p $outdir/html
 mkdir -p $outdir/logs
 
 refdir=CI/physmon/reference
+refmanifest=CI/physmon/reference.sha256
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  )
+
+# The reference histograms are not committed; they are fetched by content hash
+# from the registry. Set ACTS_PHYSMON_NO_FETCH=1 to run against a reference
+# directory you populated yourself.
+if [ -z "${ACTS_PHYSMON_NO_FETCH:-}" ]; then
+    echo "::group::Fetch physmon references"
+    run uv run --no-project "${SCRIPT_DIR}/reference.py" pull \
+        --manifest "$refmanifest" \
+        --reference-dir "$refdir"
+    echo "::endgroup::"
+fi
+
+# Ship the manifest with the artifact so an update can be reconstructed from the
+# run alone, without guessing which commit it came from
+cp "$refmanifest" "$outdir/reference.sha256"
 
 # File to accumulate the histcmp results
 histcmp_results=$outdir/histcmp_results.csv
@@ -215,7 +231,18 @@ function run_histcmp() {
         echo "::error::histcmp failed: ec=$this_ec"
     fi
 
-    echo "\"${title}\",html/${html_path},${this_ec}" >> $histcmp_results
+    # Record which reference file this comparison covers, and which output would
+    # replace it, so `reference.py candidate` can turn a failure into a manifest
+    # entry. Comparisons between two monitored outputs have no reference and
+    # leave both fields empty.
+    ref_path=""
+    monitored_path=""
+    if [[ "$b" == "$refdir/"* ]]; then
+        ref_path="${b#$refdir/}"
+        monitored_path="${a#$outdir/data/}"
+    fi
+
+    echo "\"${title}\",html/${html_path},${this_ec},${ref_path},${monitored_path}" >> $histcmp_results
 
     echo "::endgroup::"
 }
@@ -483,5 +510,14 @@ run python3 CI/physmon/summary.py $histcmp_results \
   --md $outdir/summary.md \
   --html $outdir/summary.html
 ec=$(($ec | $?))
+
+# The manifest that would apply if every failing comparison here were accepted.
+# Attached to the artifact so a maintainer can publish it without re-running
+# anything, and so the pull request has something to commit verbatim.
+run uv run --no-project "${SCRIPT_DIR}/reference.py" candidate \
+  --manifest "$refmanifest" \
+  --results $histcmp_results \
+  --data-dir $outdir/data \
+  --output $outdir/reference-candidate.sha256
 
 exit $ec
