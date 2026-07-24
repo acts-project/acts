@@ -262,7 +262,7 @@ def make_geometry():
     geoDir = getOpenDataDetectorDirectory()
 
     oddMaterialMap = geoDir / "data/odd-material-maps.root"
-    oddDigiConfig = actsDir / "Examples/Configs/odd-digi-smearing-config.json"
+    oddDigiConfig = actsDir / "Examples/Configs/odd-digi-geometric-config.json"
     oddSeedingSel = actsDir / "Examples/Configs/odd-seeding-config.json"
     oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 

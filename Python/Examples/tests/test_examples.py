@@ -1118,7 +1118,7 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
                 repo_root / "Examples/Configs/odd-strip-spacepoint-selection.json"
             ),
             digiConfigFile=str(
-                repo_root / "Examples/Configs/odd-digi-smearing-config.json"
+                repo_root / "Examples/Configs/odd-digi-geometric-config.json"
             ),
             outputDir=tmp_path,
             s=seq,
@@ -1169,7 +1169,7 @@ def test_gnn4itk_example(tmp_path, assert_root_hash, useEdgeLayerConnector):
     repo_root = Path(__file__).parent.parent.parent.parent
     odd_dir = getOpenDataDetectorDirectory()
 
-    digi_config = odd_dir / "config/odd-digi-smearing-config.json"
+    digi_config = odd_dir / "config/odd-digi-geometric-config.json"
     pixel_geo_selection = repo_root / "Examples/Configs/odd-seeding-config.json"
     strip_geo_selection = (
         repo_root / "Examples/Configs/odd-strip-spacepoint-selection.json"
@@ -1254,7 +1254,7 @@ def test_strip_space_points(detector_config, field, tmp_path, assert_root_hash):
     config_path = Path(__file__).parent.parent.parent.parent / "Examples" / "Configs"
 
     geo_selection = config_path / "odd-strip-spacepoint-selection.json"
-    digi_config_file = config_path / "odd-digi-smearing-config.json"
+    digi_config_file = config_path / "odd-digi-geometric-config.json"
 
     with detector_config.detector:
         createStripSpacePoints(
