@@ -109,7 +109,9 @@ def read_manifest(path: Path) -> dict[str, str]:
         except ValueError:
             console.print(f"[red]{path}:{lineno}: malformed line: {line!r}[/red]")
             raise typer.Exit(1)
-        digest = digest.lstrip("*")
+        # sha256sum marks binary mode with a '*' in front of the *file name*,
+        # separated from the digest by a single space
+        relpath = relpath.lstrip("*")
         if len(digest) != 64 or not all(c in "0123456789abcdef" for c in digest):
             console.print(f"[red]{path}:{lineno}: not a sha256: {digest!r}[/red]")
             raise typer.Exit(1)
