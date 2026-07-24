@@ -48,7 +48,7 @@ variables:
 
 build_gnn:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:88
   tags:
     - large
 
@@ -90,7 +90,7 @@ test_gnn_unittests:
   stage: test
   needs:
     - build_gnn
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:88
   tags:
     - docker-gpu-nvidia
 
@@ -114,7 +114,7 @@ test_gnn_python:
   stage: test
   needs:
     - build_gnn
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:88
   tags:
     - docker-gpu-nvidia
 
@@ -153,7 +153,7 @@ test_gnn_python:
 detray_build_cuda:
   tags: [docker]
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404_cuda:87
+  image: ghcr.io/acts-project/ubuntu2404_cuda:88
   cache:
    - !reference [.ccache_base, cache]
   artifacts:
@@ -181,7 +181,7 @@ detray_test_cuda:
     DETRAY_BFIELD_FILE: $CI_PROJECT_DIR/src/Detray/data/odd-bfield_v0_9_0.cvf
   stage: test
   tags: [docker-gpu-nvidia]
-  image: ghcr.io/acts-project/ubuntu2404_cuda:87
+  image: ghcr.io/acts-project/ubuntu2404_cuda:88
   needs:
     - detray_build_cuda
   only:
@@ -247,7 +247,7 @@ detray_test_cuda:
 
 traccc_build_cuda:
   <<: *traccc_build_job
-  image: ghcr.io/acts-project/ubuntu2404_cuda:87
+  image: ghcr.io/acts-project/ubuntu2404_cuda:88
   variables:
     TRACCC_BUILD_TYPE: CUDA
     TRACCC_BUILD_PRESET: cuda-fp32
@@ -259,7 +259,7 @@ traccc_build_cuda:
 
 traccc_test_cuda:
   <<: *traccc_nvidia_test_job
-  image: ghcr.io/acts-project/ubuntu2404_cuda:87
+  image: ghcr.io/acts-project/ubuntu2404_cuda:88
   variables:
     TRACCC_BUILD_TYPE: CUDA
     TRACCC_TEST_REGEX: "[Cc][Uu][Dd][Aa]"

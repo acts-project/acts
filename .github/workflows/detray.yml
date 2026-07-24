@@ -74,7 +74,7 @@ jobs:
         PLATFORM:
           - NAME: "HOST"
             CXX_STANDARD: "20"
-            CONTAINER: "ghcr.io/acts-project/ubuntu2404:87"
+            CONTAINER: "ghcr.io/acts-project/ubuntu2404:88"
             OPTIONS: -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_FASTOR_PLUGIN=OFF -DDETRAY_SMATRIX_PLUGIN=OFF -DDETRAY_VC_AOS_PLUGIN=OFF -DDETRAY_VC_SOA_PLUGIN=OFF
 
     # The system to run on.
@@ -143,7 +143,7 @@ jobs:
         PLATFORM:
           - NAME: "CUDA"
             CXX_STANDARD: "20"
-            CONTAINER: "ghcr.io/acts-project/ubuntu2404_cuda:87"
+            CONTAINER: "ghcr.io/acts-project/ubuntu2404_cuda:88"
             OPTIONS: -DDETRAY_BUILD_CUDA=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON
           - NAME: "HIP-AMD"
             CXX_STANDARD: "20"
