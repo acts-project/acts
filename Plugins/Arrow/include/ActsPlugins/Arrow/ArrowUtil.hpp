@@ -149,6 +149,10 @@ ACTS_ARROW_EXPORT std::shared_ptr<arrow::Schema> trackSchema();
 /// @c ArrowSimHitOutputConverter.
 ACTS_ARROW_EXPORT std::shared_ptr<arrow::Schema> simHitSchema();
 
+/// Schema for the per-event calorimeter-hit table emitted by
+/// @c ArrowCaloHitOutputConverter.
+ACTS_ARROW_EXPORT std::shared_ptr<arrow::Schema> caloHitSchema();
+
 /// Thin RAII wrapper around @c parquet::arrow::FileWriter that opens lazily
 /// on first write so the schema can be taken from the first event's table.
 /// Page index is enabled so the reader can locate the matching row's pages

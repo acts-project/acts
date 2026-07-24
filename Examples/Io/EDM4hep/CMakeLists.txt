@@ -3,6 +3,7 @@ acts_add_library(
     src/EDM4hepMeasurementInputConverter.cpp
     src/EDM4hepMeasurementOutputConverter.cpp
     src/EDM4hepMultiTrajectoryOutputConverter.cpp
+    src/EDM4hepCaloHitInputConverter.cpp
     src/EDM4hepSimInputConverter.cpp
     src/EDM4hepTrackOutputConverter.cpp
     src/EDM4hepTrackInputConverter.cpp

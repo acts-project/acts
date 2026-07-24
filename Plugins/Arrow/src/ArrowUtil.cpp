@@ -203,6 +203,22 @@ std::shared_ptr<arrow::Schema> simHitSchema() {
   });
 }
 
+std::shared_ptr<arrow::Schema> caloHitSchema() {
+  return arrow::schema({
+      arrow::field("detector", arrow::list(arrow::uint8()), false),
+      arrow::field("total_energy", arrow::list(arrow::float32()), false),
+      arrow::field("x", arrow::list(arrow::float32()), false),
+      arrow::field("y", arrow::list(arrow::float32()), false),
+      arrow::field("z", arrow::list(arrow::float32()), false),
+      arrow::field("contrib_particle_ids",
+                   arrow::list(arrow::list(arrow::uint64())), false),
+      arrow::field("contrib_energies",
+                   arrow::list(arrow::list(arrow::float32())), false),
+      arrow::field("contrib_times", arrow::list(arrow::list(arrow::float32())),
+                   false),
+  });
+}
+
 std::shared_ptr<arrow::Table> withEventId(
     const std::shared_ptr<arrow::Table>& table, std::uint64_t eventId) {
   if (table == nullptr) {
