@@ -158,6 +158,12 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param other Source surface for the assignment
   /// @return Reference to this surface after assignment
+  // TODO: remove this copy-assignment operator; copy surfaces via
+  // Surface::makeShared<T>(other) instead. Kept temporarily to avoid a breaking
+  // change (SonarCloud cpp:S3624).
+  [[deprecated(
+      "Surface copy-assignment is deprecated and will be removed; copy via "
+      "Surface::makeShared<T>(other) instead.")]]
   Surface& operator=(const Surface& other) noexcept = default;
 
   /// Comparison (equality) operator
