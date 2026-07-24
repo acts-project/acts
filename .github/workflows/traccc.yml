@@ -107,96 +107,34 @@ jobs:
         with:
           persist-credentials: false
       - name: Install dependencies
-        run: |
-          curl --retry 5 --retry-delay 10 --output deps.tar.zst https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.v6.tar.zst
-          tar -xf deps.tar.zst -C /usr/local --strip-components=1
-          rm deps.tar.zst
-      - name: Build nlohmann
-        run: |
-          curl -L --retry 5 --retry-delay 10 --output nlohmann.tar.gz https://github.com/nlohmann/json/archive/refs/tags/v3.11.3.tar.gz
-          tar -xzvf nlohmann.tar.gz
-          export CXX=g++
-          cmake \
-            -S json-3.11.3 \
-            -B /json_build/ \
-            -DJSON_BuildTests=OFF \
-            -DCMAKE_INSTALL_PREFIX=/json_install/ \
-            -DCMAKE_BUILD_TYPE=Release
-          cmake --build /json_build/ -- -j $(nproc)
-          cmake --install /json_build/
-      - name: Build covfie
-        run: |
-          curl -L --retry 5 --retry-delay 10 --output covfie.tar.gz https://github.com/acts-project/covfie/archive/refs/tags/v0.15.2.tar.gz
-          tar -xzvf covfie.tar.gz
-          export CXX=g++
-          cmake \
-            -S covfie-0.15.2 \
-            -B /covfie_build/ \
-            -DCMAKE_INSTALL_PREFIX=/covfie_install/
-          cmake --build /covfie_build/ -- -j $(nproc)
-          cmake --install /covfie_build/
-      - name: Build vecmem
-        run: |
-          source ${GITHUB_WORKSPACE}/Traccc/.github/ci_setup.sh ${{ matrix.platform.name }}
-          curl -L --retry 5 --retry-delay 10 --output vecmem.tar.gz https://github.com/acts-project/vecmem/archive/refs/tags/v1.25.0.tar.gz
-          tar -xzvf vecmem.tar.gz
-          export CXX=${SYCLCXX:-g++}
-          cmake \
-            -S vecmem-1.25.0/ \
-            -B /vecmem_build/ \
-            -DVECMEM_BUILD_CUDA_LIBRARY=${{ matrix.platform.enable_cuda && 'ON' || 'OFF' }} \
-            -DVECMEM_BUILD_SYCL_LIBRARY=${{ matrix.platform.enable_sycl && 'ON' || 'OFF' }} \
-            -DVECMEM_BUILD_HIP_LIBRARY=${{ matrix.platform.enable_hip && 'ON' || 'OFF' }} \
-            -DCMAKE_INSTALL_PREFIX=/vecmem_install/
-          cmake --build /vecmem_build/ -- -j $(nproc)
-          cmake --install /vecmem_build/
-          # vecmem ships FindHIPToolkit.cmake but does not install it, so
-          # downstream find_package(HIPToolkit) (e.g. traccc's alpaka HIP
-          # backend) cannot locate it. Copy it into the installed cmake dir,
-          # which vecmem-config.cmake adds to CMAKE_MODULE_PATH.
-          cp vecmem-1.25.0/cmake/FindHIPToolkit.cmake /vecmem_install/lib/cmake/vecmem-*/
-      - name: Build ACTS
-        run: |
-          source ${GITHUB_WORKSPACE}/Traccc/.github/ci_setup.sh ${{ matrix.platform.name }}
-          export CMAKE_PREFIX_PATH=/json_install/:/vecmem_install/:/covfie_install/:${CMAKE_PREFIX_PATH}
-          export CXX=g++
-          cmake \
-            -S ${GITHUB_WORKSPACE} \
-            -B /acts_build/ \
-            -DACTS_BUILD_PLUGIN_JSON=ON \
-            -DACTS_USE_SYSTEM_NLOHMANN_JSON=ON \
-            -DACTS_SETUP_DETRAY=ON \
-            -DACTS_USE_SYSTEM_COVFIE=ON \
-            -DACTS_USE_SYSTEM_VECMEM=ON \
-            -DDETRAY_USE_SYSTEM_GOOGLETEST=ON \
-            -DDETRAY_BUILD_TEST_UTILS=ON \
-            -DCMAKE_INSTALL_PREFIX=/acts_install/ \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DDETRAY_GENERATE_METADATA=itk_metadata \
-            -DDETRAY_SET_LOGGING=NONE \
-            -DDETRAY_BUILD_VALIDATION_TOOLS=ON \
-            -DACTS_ENABLE_CUDA=${{ matrix.platform.enable_cuda && 'ON' || 'OFF' }}
-          cmake --build /acts_build/ -- -j $(nproc)
-          cmake --install /acts_build/
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
       - name: Configure
         run: |
+          source ${GITHUB_WORKSPACE}/.env
           source ${GITHUB_WORKSPACE}/Traccc/.github/ci_setup.sh ${{ matrix.platform.name }}
-          export CMAKE_PREFIX_PATH=/json_install/:/vecmem_install/:/covfie_install/:/acts_install/:/opt/rocm/:${CMAKE_PREFIX_PATH}
           cmake \
             -DCMAKE_BUILD_TYPE=${{ matrix.build }} \
             ${{ matrix.platform.options }} \
-            -DTRACCC_USE_SYSTEM_ACTS=ON \
-            -DTRACCC_USE_SYSTEM_VECMEM=ON \
-            -DDETRAY_USE_SYSTEM_NLOHMANN=ON \
-            -DTRACCC_USE_SYSTEM_COVFIE=ON \
-            -DTRACCC_USE_SYSTEM_GOOGLETEST_DEFAULT=ON \
+            -DTRACCC_SETUP_VECMEM=ON \
+            -DTRACCC_SETUP_COVFIE=ON \
             -DTRACCC_SETUP_GOOGLETEST=ON \
+            -DVECMEM_BUILD_CUDA_LIBRARY=${{ matrix.platform.enable_cuda && 'ON' || 'OFF' }} \
+            -DVECMEM_BUILD_SYCL_LIBRARY=${{ matrix.platform.enable_sycl && 'ON' || 'OFF' }} \
+            -DACTS_SETUP_VECMEM=OFF \
+            -DACTS_SETUP_COVFIE=OFF \
+            -DACTS_ENABLE_CUDA=${{ matrix.platform.enable_cuda && 'ON' || 'OFF' }} \
+            -DDETRAY_SET_LOGGING=NONE \
             -DTRACCC_SUPPORTED_DETECTORS="default_detector;odd_detector;telescope_detector;toy_detector;itk_detector" \
             -DDETRAY_GENERATE_METADATA="itk_metadata" \
             -S ${GITHUB_WORKSPACE}/Traccc \
             -B build
       - name: Build
         run: |
+          source ${GITHUB_WORKSPACE}/.env
           source ${GITHUB_WORKSPACE}/Traccc/.github/ci_setup.sh ${{ matrix.platform.name }}
           cmake --build build -- -j $(nproc)
       - name: Download data files
@@ -205,6 +143,7 @@ jobs:
       - name: Test
         if: "matrix.platform.run_tests && matrix.build == 'Release'"
         run: |
+          source ${GITHUB_WORKSPACE}/.env
           cd build
           source ${GITHUB_WORKSPACE}/Traccc/.github/ci_setup.sh ${{ matrix.platform.name }}
           ctest --output-on-failure

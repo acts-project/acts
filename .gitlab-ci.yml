@@ -479,15 +479,17 @@ detray_test_sycl:
 
 # traccc GitLab CI workflows
 .traccc_base_template: &traccc_base_job
+  cache:
+    - !reference [.spack_cache, cache]
   before_script:
-    - apt install -y zstd
-    - curl --retry 5 --retry-delay 10 --output deps.tar.zst https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.v6.tar.zst
-    - tar -xf deps.tar.zst -C /usr/local --strip-components=1
-    - rm deps.tar.zst
     - git clone $CLONE_URL src
     - git -C src checkout $HEAD_SHA
+    - src/CI/dependencies/setup.sh -c g++ -e .env
+    - source .env
     - source ./src/Traccc/.github/ci_setup.sh ${TRACCC_BUILD_TYPE}
     - export CTEST_PARALLEL_LEVEL=2
+  after_script:
+    - !reference [.spack_cleanup, after_script]
 
 .traccc_build_template: &traccc_build_job
   <<: *traccc_base_job
@@ -498,7 +500,7 @@ detray_test_sycl:
       - build
   script:
     - SYCLFLAGS="${TRACCC_SYCL_FLAGS}" CXXFLAGS="${TRACCC_CXX_FLAGS}"
-      cmake -G Ninja --preset ${TRACCC_BUILD_PRESET} -DFETCHCONTENT_SOURCE_DIR_ACTS=src/ -DTRACCC_SETUP_VECMEM=ON -DTRACCC_SETUP_COVFIE=ON -DACTS_SETUP_VECMEM=OFF -DACTS_SETUP_COVFIE=OFF -DDETRAY_SET_LOGGING=NONE -DCMAKE_BUILD_TYPE=Release -DTRACCC_BUILD_EXAMPLES=FALSE ${TRACCC_CMAKE_ARGS}
+      cmake -G Ninja --preset ${TRACCC_BUILD_PRESET} -DTRACCC_SETUP_VECMEM=ON -DTRACCC_SETUP_COVFIE=ON -DACTS_SETUP_VECMEM=OFF -DACTS_SETUP_COVFIE=OFF -DDETRAY_SET_LOGGING=NONE -DCMAKE_BUILD_TYPE=Release -DTRACCC_BUILD_EXAMPLES=FALSE ${TRACCC_CMAKE_ARGS}
       -S src/Traccc -B build
     - cmake --build build --parallel 2
 
