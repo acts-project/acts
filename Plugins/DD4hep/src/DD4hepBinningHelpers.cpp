@@ -8,6 +8,8 @@
 
 #include "ActsPlugins/DD4hep/DD4hepBinningHelpers.hpp"
 
+#include "Acts/Utilities/Diagnostics.hpp"
+
 #include <numbers>
 
 using namespace Acts;
@@ -68,6 +70,8 @@ DD4hepBinningHelpers::convertAxisFactories(
   }
   return axisFactories;
 }
+
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 std::vector<std::tuple<DirectedProtoAxis, std::size_t>>
 DD4hepBinningHelpers::convertBinning(const dd4hep::DetElement &dd4hepElement,
@@ -132,5 +136,7 @@ DD4hepBinningHelpers::convertBinning(const dd4hep::DetElement &dd4hepElement,
   }
   return protoBinnings;
 }
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace ActsPlugins

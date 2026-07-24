@@ -19,6 +19,8 @@ namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
+ACTS_PUSH_IGNORE_DEPRECATED()
+
 BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
   using enum Acts::AxisBoundaryType;
   using enum Acts::AxisType;
@@ -265,6 +267,8 @@ BOOST_AUTO_TEST_CASE(DirectedProtoAxisOfAllSorts) {
   std::string oString = epab.toString();
   BOOST_CHECK_EQUAL(rString, oString);
 }
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 BOOST_AUTO_TEST_SUITE_END()
 

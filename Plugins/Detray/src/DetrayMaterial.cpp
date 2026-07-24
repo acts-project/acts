@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 
 #include <stdexcept>
@@ -127,12 +128,14 @@ DetrayPayloadConverter::convertProtoSurfaceMaterialAxisFactory(
   return std::nullopt;
 }
 
+ACTS_PUSH_IGNORE_DEPRECATED()
 std::optional<DetraySurfaceMaterial>
 DetrayPayloadConverter::convertProtoSurfaceMaterialProtoAxes(
     const ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>& /*material*/,
     const Surface& /*surface*/) {
   return std::nullopt;
 }
+ACTS_POP_IGNORE_DEPRECATED()
 
 DetrayUnsupportedMaterialException::DetrayUnsupportedMaterialException(
     std::string_view name)

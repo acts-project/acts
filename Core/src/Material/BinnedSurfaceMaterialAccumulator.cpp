@@ -76,7 +76,6 @@ Acts::BinnedSurfaceMaterialAccumulator::createState(
     ACTS_PUSH_IGNORE_DEPRECATED()
     auto legacyPsgm =
         dynamic_cast<const DirectedProtoAxisSurfaceMaterial*>(surfaceMaterial);
-    ACTS_POP_IGNORE_DEPRECATED()
     if (legacyPsgm != nullptr) {
       BinUtility binUtility(legacyPsgm->binning());
       // Screen output for Binned Surface material
@@ -91,6 +90,7 @@ Acts::BinnedSurfaceMaterialAccumulator::createState(
       // Material accumulation  is created for this
       continue;
     }
+    ACTS_POP_IGNORE_DEPRECATED()
     // Third attempt: binned material
     auto bmp = dynamic_cast<const BinnedSurfaceMaterial*>(surfaceMaterial);
     if (bmp != nullptr) {

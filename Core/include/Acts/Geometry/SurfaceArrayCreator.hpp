@@ -301,7 +301,7 @@ class SurfaceArrayCreator {
                                 AxisDirection aDir) const;
 
   /// SurfaceArrayCreator internal method
-  /// Creates a variable @c ProtoAxis from a vector of (unsorted) surfaces with
+  /// Creates a variable axis from a vector of (unsorted) surfaces with
   /// PlanarBounds
   /// It loops through the surfaces and finds out the needed information
   /// First the surfaces are sorted in the binning direction and the so called
@@ -319,16 +319,14 @@ class SurfaceArrayCreator {
   /// (currently possible: AxisPhi, AxisR, AxisZ)
   /// @param protoLayer Instance of @c ProtoLayer holding generic layer info
   /// @param transform is the (optional) additional transform applied
-  /// @return Instance of @c ProtoAxis containing determined properties
-  /// @note This only creates the @c ProtoAxis, this needs to be turned
-  ///       into an actual @c Axis object to be used
+  /// @return Type-erased @c IAxis containing the determined properties
   std::unique_ptr<const IAxis> createVariableAxis(
       const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
       AxisBoundaryType aBoundaryType, AxisDirection aDir,
       const ProtoLayer& protoLayer, Transform3& transform) const;
 
   /// SurfaceArrayCreator internal method
-  /// Creates a equidistant @c ProtoAxis when the extrema and the bin number
+  /// Creates a equidistant axis when the extrema and the bin number
   /// are known.
   /// It loops through the surfaces and finds out the needed information
   /// First the surfaces are sorted in the binning direction and the so called
@@ -347,9 +345,7 @@ class SurfaceArrayCreator {
   /// @param protoLayer Instance of @c ProtoLayer holding generic layer info
   /// @param transform is the (optional) additional transform applied
   /// @param nBins Number of bins to use, 0 means determine automatically
-  /// @return Instance of @c ProtoAxis containing determined properties
-  /// @note This only creates the @c ProtoAxis, this needs to be turned
-  ///       into an actual @c Axis object to be used
+  /// @return Type-erased @c IAxis containing the determined properties
   std::unique_ptr<const IAxis> createEquidistantAxis(
       const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
       AxisBoundaryType aBoundaryType, AxisDirection aDir,

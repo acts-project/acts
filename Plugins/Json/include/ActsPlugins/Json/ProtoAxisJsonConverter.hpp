@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsPlugins/Json/ActsJson.hpp"
 
@@ -17,6 +18,8 @@
 /// @ingroup json_plugin
 
 namespace Acts::ProtoAxisJsonConverter {
+
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 /// @addtogroup json_plugin
 /// @{
@@ -36,5 +39,7 @@ nlohmann::json toJson(const ProtoAxis& pa);
 Acts::ProtoAxis fromJson(const nlohmann::json& j);
 
 /// @}
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace Acts::ProtoAxisJsonConverter

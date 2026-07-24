@@ -115,6 +115,7 @@ void MaterialDesignatorBlueprintNode::addToGraphviz(std::ostream& os) const {
 
 namespace {
 
+ACTS_PUSH_IGNORE_DEPRECATED()
 /// Convert a superseded DirectedProtoAxis binning description to a deferred
 /// AxisFactory. This reproduces the effective legacy semantics: only the
 /// binning structure was ever used, the configured range and boundary type
@@ -124,6 +125,7 @@ AxisFactory toDeferredAxisFactory(const DirectedProtoAxis& dpAxis) {
       .toDeferred()
       .withDirection(dpAxis.getAxisDirection());
 }
+ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace
 
@@ -136,12 +138,14 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
   return *this;
 }
 
+ACTS_PUSH_IGNORE_DEPRECATED()
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
     CylinderVolumeBounds::Face face, const DirectedProtoAxis& loc0,
     const DirectedProtoAxis& loc1) {
   return configureFace(face, toDeferredAxisFactory(loc0),
                        toDeferredAxisFactory(loc1));
 }
+ACTS_POP_IGNORE_DEPRECATED()
 
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
     CylinderVolumeBounds::Face face,
@@ -164,12 +168,14 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
   return *this;
 }
 
+ACTS_PUSH_IGNORE_DEPRECATED()
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
     CuboidVolumeBounds::Face face, const DirectedProtoAxis& loc0,
     const DirectedProtoAxis& loc1) {
   return configureFace(face, toDeferredAxisFactory(loc0),
                        toDeferredAxisFactory(loc1));
 }
+ACTS_POP_IGNORE_DEPRECATED()
 
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
     CuboidVolumeBounds::Face face,
