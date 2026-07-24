@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Digitization/DigitizationConfig.hpp"
+#include "ActsExamples/Digitization/GeometricConfig.hpp"
 
 namespace ActsExamples {
 
@@ -14,17 +14,19 @@ std::vector<double> GeometricConfig::variances(
     const std::array<std::size_t, 2u>& csizes,
     const std::array<std::size_t, 2u>& cmins) const {
   std::vector<double> rVariances;
-  for (const auto& bIndex : indices) {
+  for (std::size_t i = 0; i < indices.size(); ++i) {
+    const auto& bIndex = indices[i];
     double var = 0.;
     if (varianceMap.contains(bIndex)) {
       // Try to find the variance for this cluster size
-      std::size_t lsize =
+      const std::size_t lsize =
           std::min(csizes[bIndex], varianceMap.at(bIndex).size());
       var = varianceMap.at(bIndex).at(lsize - 1);
     } else {
       // Pitch size ofer / sqrt(12) as error instead
-      std::size_t ictr = cmins[bIndex] + csizes[bIndex] / 2;
-      var = std::pow(segmentation.binningData()[bIndex].width(ictr), 2) / 12.0;
+      const std::size_t ictr = cmins[i] + csizes[i] / 2;
+      var = std::pow(segmentation->getAxis(bIndex).getBinWidth(ictr + 1), 2) /
+            12.0;
     }
     rVariances.push_back(var);
   }
