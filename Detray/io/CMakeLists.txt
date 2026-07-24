@@ -127,5 +127,8 @@ if(BUILD_TESTING AND DETRAY_BUILD_TESTING)
     )
 endif()
 
+# Compile all headers (including the ones under detail/) one-by-one.
+detray_compile_headers(io detray::io_array "include/detray/io/**/*.hpp")
+
 # Clean up.
 unset(_detray_io_public_headers)

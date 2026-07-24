@@ -178,6 +178,9 @@ if(BUILD_TESTING AND DETRAY_BUILD_TESTING)
     endif()
 endif()
 
+# Compile all headers (including the ones under detail/) one-by-one.
+detray_compile_headers(core detray::core_array "include/detray/**/*.hpp")
+
 # Clean up.
 unset(_detray_core_public_headers)
 unset(_detray_core_private_headers)
