@@ -11,6 +11,7 @@
 #include "Acts/Utilities/AxisFactory.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/MultiAxisFactory.hpp"
@@ -280,6 +281,7 @@ void addUtilities(py::module_& m) {
   }
 
   {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     // Be able to construct a proto binning
     py::class_<ProtoAxis>(m, "ProtoAxis")
         .def(py::init<AxisBoundaryType, const std::vector<double>&>(),
@@ -297,6 +299,7 @@ void addUtilities(py::module_& m) {
              "bValue"_a, "bType"_a, "minE"_a, "maxE"_a, "nbins"_a)
         .def(py::init<AxisDirection, AxisBoundaryType, std::size_t>(),
              "bValue"_a, "bType"_a, "nbins"_a);
+    ACTS_POP_IGNORE_DEPRECATED()
   }
 
   {

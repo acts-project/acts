@@ -93,6 +93,7 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
       CylinderVolumeBounds::Face face, const AxisFactory& loc0,
       const AxisFactory& loc1);
 
+  ACTS_PUSH_IGNORE_DEPRECATED()
   /// Configure the designator with a cylinder face and corresponding binning
   /// information.
   /// @note This method can be called multiple times to configure different faces.
@@ -106,6 +107,7 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   MaterialDesignatorBlueprintNode& configureFace(
       CylinderVolumeBounds::Face face, const DirectedProtoAxis& loc0,
       const DirectedProtoAxis& loc1);
+  ACTS_POP_IGNORE_DEPRECATED()
 
   /// Configure the designator with a cylinder face and a homogeneous surface
   /// material.
@@ -135,6 +137,7 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
                                                  const AxisFactory& loc0,
                                                  const AxisFactory& loc1);
 
+  ACTS_PUSH_IGNORE_DEPRECATED()
   /// Configure the designator with a cuboid face and corresponding binning
   /// information.
   /// @note This method can be called multiple times to configure different faces.
@@ -148,6 +151,7 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   MaterialDesignatorBlueprintNode& configureFace(CuboidVolumeBounds::Face face,
                                                  const DirectedProtoAxis& loc0,
                                                  const DirectedProtoAxis& loc1);
+  ACTS_POP_IGNORE_DEPRECATED()
 
   /// Configure the designator with a cuboid face and a homogeneous surface
   /// material.

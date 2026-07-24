@@ -119,6 +119,7 @@ class BinUtility {
     }
   }
 
+  ACTS_PUSH_IGNORE_DEPRECATED()
   /// Create from a DirectedProtoAxis
   ///
   /// @param dpAxis the DirectedProtoAxis to be used
@@ -134,6 +135,7 @@ class BinUtility {
   /// Create from several DirectedProtoAxis objects
   ///
   /// @param dpAxes the DirectedProtoAxis to be used with axis directions
+  [[deprecated("Use BinUtility(const IMultiAxis&) with directed axes instead")]]
   explicit BinUtility(const std::vector<DirectedProtoAxis>& dpAxes)
       : m_binningData(),
         m_transform(Transform3::Identity()),
@@ -143,6 +145,7 @@ class BinUtility {
       m_binningData.emplace_back(dpAxis);
     }
   }
+  ACTS_POP_IGNORE_DEPRECATED()
 
   /// Operator+= to make multidimensional BinUtility
   ///

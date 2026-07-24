@@ -136,12 +136,14 @@ using ProtoSurfaceMaterial = ProtoSurfaceMaterialT<Acts::BinUtility>;
 /// deferred axes are resolved against the surface during material mapping
 using ProtoGridSurfaceMaterial = ProtoSurfaceMaterialT<MultiAxisFactory>;
 
+ACTS_PUSH_IGNORE_DEPRECATED()
 /// @brief Type alias for the superseded prototype surface material based on
 /// a vector of DirectedProtoAxis
 using DirectedProtoAxisSurfaceMaterial
     [[deprecated("Use ProtoGridSurfaceMaterial with a MultiAxisFactory "
                  "instead")]] =
         ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>;
+ACTS_POP_IGNORE_DEPRECATED()
 
 /// @}
 
