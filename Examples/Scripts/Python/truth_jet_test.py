@@ -45,6 +45,9 @@ from acts.examples.reconstruction import (
     addKalmanTracks,
     addVertexFitting,
     VertexFinder,
+    addCKFTracks,
+    CkfConfig,
+    TrackSelectorConfig,
 )
 
 from acts.examples.root import (
@@ -137,6 +140,7 @@ def make_sequencer(
                 "Top:qqbar2ttbar=on",
                 "HadronLevel:Decay=off",
                 "StringFlav:probQQtoQ = 0.0",
+                # "WeakSingleBoson:ffbar2gmZ=on"
             ],
             # hardProcess=["WeakSingleBoson:ffbar2gmZ = on","SoftQCD:nonDiffractive=on","HardQCD:hardbbbar=on","HadronLevel:all = on"],
             # hardProcess=["Top:qqbar2ttbar=on", "HadronLevel:Decay = off","StringFlav:probQQtoQ = 0.0","ParticleDecays:limitTau0=off"],
@@ -203,25 +207,71 @@ def make_sequencer(
 
     reverseFilteringMomThreshold = 0 * u.GeV
 
-    addKalmanTracks(
-        s,
-        trackingGeometry,
-        field,
-        reverseFilteringMomThreshold,
-        logLevel=acts.logging.FATAL,
-    )
-
-    s.addAlgorithm(
-        acts.examples.TrackSelectorAlgorithm(
-            level=acts.logging.INFO,
-            inputTracks="tracks",
-            outputTracks="selected-tracks",
-            selectorConfig=acts.TrackSelector.Config(
-                minMeasurements=7,
-            ),
+    if args.kalmanTracking:
+        addKalmanTracks(
+            s,
+            trackingGeometry,
+            field,
+            reverseFilteringMomThreshold,
+            logLevel=acts.logging.FATAL,
         )
-    )
-    s.addWhiteboardAlias("tracks", "selected-tracks")
+        s.addAlgorithm(
+            acts.examples.TrackSelectorAlgorithm(
+                level=acts.logging.INFO,
+                inputTracks="tracks",
+                outputTracks="selected-tracks",
+                selectorConfig=acts.TrackSelector.Config(
+                    minMeasurements=7,
+                ),
+            )
+        )
+        s.addWhiteboardAlias("tracks", "selected-tracks")
+    else:
+        addCKFTracks(
+            s,
+            trackingGeometry,
+            field,
+            TrackSelectorConfig(
+                pt=(1.0 * u.GeV, None),
+                absEta=(None, 3.0),
+                loc0=(-4.0 * u.mm, 4.0 * u.mm),
+                nMeasurementsMin=7,
+                maxHoles=2,
+                maxOutliers=2,
+            ),
+            CkfConfig(
+                chi2CutOffMeasurement=15.0,
+                chi2CutOffOutlier=25.0,
+                numMeasurementsCutOff=2,
+                seedDeduplication=False,
+                stayOnSeed=False,
+                pixelVolumes=[16, 17, 18],
+                stripVolumes=[23, 24, 25],
+                maxPixelHoles=1,
+                maxStripHoles=2,
+                constrainToVolumes=[
+                    2,  # beam pipe
+                    32,
+                    4,  # beam pip gap
+                    16,
+                    17,
+                    18,  # pixel
+                    20,  # PST
+                    23,
+                    24,
+                    25,  # short strip
+                    26,
+                    8,  # long strip gap
+                    28,
+                    29,
+                    30,  # long strip
+                ],
+            ),
+            # outputDirRoot=outputDir if args.output_root else None,
+            # outputDirCsv=outputDir if args.output_csv else None,
+            writeCovMat=True,
+            logLevel=acts.logging.INFO,
+        )
 
     addVertexFitting(
         s,
@@ -240,7 +290,7 @@ def make_sequencer(
             outputJets="output_jets",
             jetPtMin=10 * u.GeV,
         ),
-        loglevel=acts.logging.INFO,
+        loglevel=acts.logging.DEBUG,
     )
 
     s.addWriter(
@@ -248,8 +298,8 @@ def make_sequencer(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",
-            inputJets="output_jets",
             writeJets=True,
+            inputJets="output_jets",
             inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "tracksummary_kf.root"),
         )
@@ -287,7 +337,7 @@ def job(index: int, events: int, skip: int, outputDir: Path, args):
             numThreads=1,
             logLevel=acts.logging.INFO,
             outputDir=str(job_out),
-            trackFpes=False,
+            # trackFpes=False,
         )
 
         detector, oddDigiConfig, oddSeedingSel, trackingGeometry, decorators = (
@@ -314,6 +364,7 @@ def main():
     parser.add_argument("--procs", type=int, default=1)
     parser.add_argument("--csv", action="store_true")
     parser.add_argument("--edm4hep", action="store_true")
+    parser.add_argument("--kalmanTracking", action="store_true", default=False)
     args = parser.parse_args()
 
     inputDir = Path.cwd() / "truth_jet_test_input"
@@ -333,7 +384,7 @@ def main():
             numThreads=args.threads,
             logLevel=acts.logging.INFO,
             outputDir=str(outputDir),
-            trackFpes=False,
+            # trackFpes=False,
         )
 
         detector, oddDigiConfig, oddSeedingSel, trackingGeometry, decorators = (
