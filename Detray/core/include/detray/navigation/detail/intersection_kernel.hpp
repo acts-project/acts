@@ -77,8 +77,12 @@ struct intersection_initialize {
       }
       assert(mask_idx < mask_group.size());
 
-      result = intersector.point_of_intersection(
-          traj, ctf, mask_group[mask_idx], cfg.overstep_tolerance);
+      // Some mask group containers (e.g. device vectors) index with a 32 bit
+      // size type, so narrow explicitly rather than implicitly on subscript.
+      const auto idx = static_cast<typename mask_group_t::size_type>(mask_idx);
+
+      result = intersector.point_of_intersection(traj, ctf, mask_group[idx],
+                                                 cfg.overstep_tolerance);
     } else {
       result =
           intersector.point_of_intersection(traj, ctf, cfg.overstep_tolerance);
@@ -215,8 +219,12 @@ struct intersection_update {
       }
       assert(mask_idx < mask_group.size());
 
-      result = intersector.point_of_intersection(
-          traj, ctf, mask_group[mask_idx], cfg.overstep_tolerance);
+      // Some mask group containers (e.g. device vectors) index with a 32 bit
+      // size type, so narrow explicitly rather than implicitly on subscript.
+      const auto idx = static_cast<typename mask_group_t::size_type>(mask_idx);
+
+      result = intersector.point_of_intersection(traj, ctf, mask_group[idx],
+                                                 cfg.overstep_tolerance);
     } else {
       result =
           intersector.point_of_intersection(traj, ctf, cfg.overstep_tolerance);
