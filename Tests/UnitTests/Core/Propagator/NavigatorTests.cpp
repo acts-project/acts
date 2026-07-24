@@ -19,6 +19,7 @@
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
@@ -33,6 +34,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+#include "ActsTests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
@@ -805,6 +807,133 @@ BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume) {
   navigator.handleSurfaceReached(state, position, direction, target.surface());
   // check that we end up in the expected volume (parent)
   BOOST_CHECK(state.currentVolume->volumeName() == "parent");
+}
+
+// Starting the navigation on a portal surface shared between two volumes:
+// the start volume has to be resolved through the portal along the
+// propagation direction, otherwise candidates in the entered volume are
+// missed.
+BOOST_AUTO_TEST_CASE(NavigationStartOnPortalGen3) {
+  auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
+
+  Experimental::Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisX] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisY] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  Experimental::Blueprint root{cfg};
+
+  root.addCuboidContainer("Stack", AxisDirection::AxisX, [&](auto& stack) {
+    stack.addStaticVolume(
+        Transform3{Translation3{Vector3{-100_mm, 0, 0}}},
+        std::make_shared<CuboidVolumeBounds>(100_mm, 100_mm, 100_mm),
+        "VolumeA");
+    stack.addStaticVolume(
+        Transform3{Translation3{Vector3{100_mm, 0, 0}}},
+        std::make_shared<CuboidVolumeBounds>(100_mm, 100_mm, 100_mm),
+        "VolumeB");
+  });
+
+  auto trackingGeometry = root.construct({}, tgContext, *logger);
+  BOOST_REQUIRE(trackingGeometry != nullptr);
+
+  const TrackingVolume* volumeA = nullptr;
+  const TrackingVolume* volumeB = nullptr;
+  trackingGeometry->apply([&](const TrackingVolume& volume) {
+    if (volume.volumeName() == "VolumeA") {
+      volumeA = &volume;
+    } else if (volume.volumeName() == "VolumeB") {
+      volumeB = &volume;
+    }
+  });
+  BOOST_REQUIRE(volumeA != nullptr);
+  BOOST_REQUIRE(volumeB != nullptr);
+
+  // The two volumes touch at x=0
+  const Vector3 position{0, 0, 0};
+
+  // Find the portal shared between the two volumes at the touching faces.
+  // Note that the merged lateral portals of the stack are also shared
+  // between the two volumes, so the position is needed to disambiguate.
+  const Portal* sharedPortal = nullptr;
+  for (const Portal& pa : volumeA->portals()) {
+    for (const Portal& pb : volumeB->portals()) {
+      if (&pa == &pb &&
+          pa.surface().isOnSurface(tgContext, position, Vector3::UnitX(),
+                                   BoundaryTolerance::None())) {
+        sharedPortal = &pa;
+      }
+    }
+  }
+  BOOST_REQUIRE(sharedPortal != nullptr);
+
+  Navigator::Config navCfg;
+  navCfg.trackingGeometry =
+      std::shared_ptr<const TrackingGeometry>(std::move(trackingGeometry));
+  Navigator navigator(navCfg, logger->clone("Navigator"));
+
+  auto initializeOnPortal =
+      [&](const Vector3& direction) -> const TrackingVolume* {
+    Navigator::Options options(tgContext);
+    options.startSurface = &sharedPortal->surface();
+    Navigator::State state = navigator.makeState(options);
+    Result<void> result =
+        navigator.initialize(state, position, direction, Direction::Forward());
+    BOOST_REQUIRE(result.ok());
+    return state.currentVolume;
+  };
+
+  // The start volume has to follow the propagation direction
+  BOOST_CHECK_EQUAL(initializeOnPortal(Vector3::UnitX()), volumeB);
+  BOOST_CHECK_EQUAL(initializeOnPortal(-Vector3::UnitX()), volumeA);
+}
+
+// Same as above for a Gen1 geometry: starting on a boundary surface glued
+// between two volumes
+BOOST_AUTO_TEST_CASE(NavigationStartOnBoundaryGen1) {
+  auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
+
+  CubicTrackingGeometry geometryBuilder{tgContext};
+  std::shared_ptr<const TrackingGeometry> trackingGeometry = geometryBuilder();
+
+  const TrackingVolume* volume1 =
+      trackingGeometry->lowestTrackingVolume(tgContext, Vector3{-1.5_m, 0, 0});
+  const TrackingVolume* volume2 =
+      trackingGeometry->lowestTrackingVolume(tgContext, Vector3{1.5_m, 0, 0});
+  BOOST_REQUIRE(volume1 != nullptr);
+  BOOST_REQUIRE(volume2 != nullptr);
+  BOOST_CHECK_EQUAL(volume1->volumeName(), "Volume 1");
+  BOOST_CHECK_EQUAL(volume2->volumeName(), "Volume 2");
+
+  // Find the glued boundary surface between the two volumes at x=0
+  const Vector3 position{0, 0, 0};
+  const Surface* boundarySurface = nullptr;
+  for (const auto& boundary : volume1->boundarySurfaces()) {
+    const Surface& surface = boundary->surfaceRepresentation();
+    if (surface.isOnSurface(tgContext, position, Vector3::UnitX(),
+                            BoundaryTolerance::None())) {
+      boundarySurface = &surface;
+    }
+  }
+  BOOST_REQUIRE(boundarySurface != nullptr);
+
+  Navigator::Config navCfg;
+  navCfg.trackingGeometry = trackingGeometry;
+  Navigator navigator(navCfg, logger->clone("Navigator"));
+
+  auto initializeOnBoundary =
+      [&](const Vector3& direction) -> const TrackingVolume* {
+    Navigator::Options options(tgContext);
+    options.startSurface = boundarySurface;
+    Navigator::State state = navigator.makeState(options);
+    Result<void> result =
+        navigator.initialize(state, position, direction, Direction::Forward());
+    BOOST_REQUIRE(result.ok());
+    return state.currentVolume;
+  };
+
+  // The start volume has to follow the propagation direction
+  BOOST_CHECK_EQUAL(initializeOnBoundary(Vector3::UnitX()), volume2);
+  BOOST_CHECK_EQUAL(initializeOnBoundary(-Vector3::UnitX()), volume1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

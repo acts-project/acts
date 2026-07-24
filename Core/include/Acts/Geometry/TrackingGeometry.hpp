@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometryVisitor.hpp"
@@ -19,6 +20,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -99,12 +101,32 @@ class TrackingGeometry {
 
   /// return the lowest tracking Volume
   ///
+  /// If a @p direction and an @p associatedSurface are provided and the
+  /// position lies on a boundary surface (Gen1) or portal surface (Gen3)
+  /// matching @p associatedSurface, the boundary ambiguity is resolved along
+  /// the direction: the volume being entered is returned. Otherwise the
+  /// surface hint is ignored and the lookup is purely position based.
+  ///
+  /// @pre If an @p associatedSurface is provided together with a
+  ///      @p direction, the position has to be on the surface within the
+  ///      given @p tolerance, ignoring the surface bounds.
+  ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param gp is the global position of the call
+  /// @param tolerance is the search tolerance for the volume lookup and the
+  ///        on-surface check of the associated surface
+  /// @param direction is the direction used to resolve the volume if the
+  ///        position is on a boundary between volumes
+  /// @param associatedSurface is the surface the position lies on, used to
+  ///        identify a boundary crossing
   ///
-  /// @return plain pointer to the lowest TrackingVolume
-  const TrackingVolume* lowestTrackingVolume(const GeometryContext& gctx,
-                                             const Vector3& gp) const;
+  /// @return plain pointer to the lowest TrackingVolume, `nullptr` if there
+  ///         is no volume at the position (or in the given direction)
+  const TrackingVolume* lowestTrackingVolume(
+      const GeometryContext& gctx, const Vector3& gp,
+      double tolerance = s_onSurfaceTolerance,
+      const std::optional<Vector3>& direction = std::nullopt,
+      const Surface* associatedSurface = nullptr) const;
 
   /// Forward the associated Layer information
   ///
