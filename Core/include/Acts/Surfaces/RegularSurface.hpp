@@ -12,10 +12,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
-class Portal;
-}
-
-namespace Acts {
 
 /// A physical surface which does not depend on the direction you look at it
 /// from. As such it narrows the interface of @c Surface and allows
@@ -119,18 +115,6 @@ class RegularSurface : public Surface {
       double tolerance = s_onSurfaceTolerance) const;
 
   using Surface::isOnSurface;
-
-  /// Return the pointer to the portal holding this surface
-  /// @return Pointer to the portal holding this surface (might be nullptr)
-  const Portal* associatedPortal() const;
-
-  /// Associate the surface with a portal. The method
-  /// is called at the portal's construction
-  /// @param portal: Reference to the portal holding this surface
-  void associatePortal(const Portal& portal);
-
- private:
-  const Portal* m_portal{nullptr};
 };
 
 }  // namespace Acts

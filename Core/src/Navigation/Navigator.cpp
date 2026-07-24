@@ -38,6 +38,15 @@ Navigator::Navigator(Config cfg, std::shared_ptr<const Logger> _logger)
     throw std::invalid_argument("Navigator: No tracking geometry provided.");
   }
   m_geometryVersion = m_cfg.trackingGeometry->geometryVersion();
+
+  m_cfg.trackingGeometry->apply([this](const Portal& portal) {
+    if (!m_surfPortalMap.insert(std::make_pair(&portal.surface(), &portal))
+             .second) {
+      throw std::invalid_argument(
+          std::format("Navigator Surface: {:} used for multiple portals",
+                      portal.surface().geometryId()));
+    }
+  });
 }
 
 Navigator::State Navigator::makeState(const Options& options) const {
@@ -184,14 +193,12 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
       return Result<void>::failure(NavigatorError::NotOnExpectedSurface);
     }
     // navigation is started on a portal
-    if (const auto* regularSurf =
-            dynamic_cast<const RegularSurface*>(state.currentSurface);
-        (regularSurf != nullptr &&
-         regularSurf->associatedPortal() != nullptr)) {
+    if (const auto portalItr = m_surfPortalMap.find(state.currentSurface);
+        portalItr != m_surfPortalMap.end()) {
       ACTS_VERBOSE(volInfo(state) << " Navigation starts on a portal "
                                   << state.currentSurface->geometryId());
-      auto res = regularSurf->associatedPortal()->resolveVolume(
-          state.options.geoContext, position, direction);
+      auto res = portalItr->second->resolveVolume(state.options.geoContext,
+                                                  position, direction);
       if (!res.ok()) {
         ACTS_ERROR(volInfo(state) << "Failed to resolve volume through portal: "
                                   << res.error().message());

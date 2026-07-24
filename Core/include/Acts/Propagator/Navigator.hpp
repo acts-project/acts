@@ -459,6 +459,8 @@ class Navigator final {
   TrackingGeometry::GeometryVersion m_geometryVersion{};
 
   std::shared_ptr<const Logger> m_logger;
+  /// Cache of the surfaces that are connected with portals
+  std::unordered_map<const Surface*, const Portal*> m_surfPortalMap{};
 };
 
 }  // namespace Acts
