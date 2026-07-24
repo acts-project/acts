@@ -124,6 +124,17 @@ enum class HadronType {
   Unknown = 12
 };
 
+/// Hadron heavy-flavour origin classification
+/// Bottom: decay product of a bottomed hadron (it can also be B->D->X),
+///         or particle originate in the fragmentation of a bottom quark
+///         depending on the searchUpToHfQuark flag
+/// Charm: decay product of a charmed hadron, or particle originate
+///        in the fragmentation of a charm quark depending
+///        on the searchUpToHfQuark flag
+/// None: no heavy-flavour origin, depending on the criterion regulated
+///       by the searchUpToHfQuark flag
+enum class HfOrigin : std::uint8_t { None = 0, Charm = 4, Bottom = 5 };
+
 /// Stream operator for HadronType
 /// @param os Output stream
 /// @param hadron The hadron type to output

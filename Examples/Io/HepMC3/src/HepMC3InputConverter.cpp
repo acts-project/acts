@@ -27,6 +27,8 @@
 #pragma clang diagnostic pop
 #endif
 
+#include <unordered_set>
+
 using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
@@ -104,6 +106,68 @@ std::string printListing(const auto& vertices, const auto& particles) {
   return ss.str();
 };
 }  // namespace
+
+Acts::HfOrigin HepMC3InputConverter::checkHfOrigin(
+    const std::shared_ptr<const HepMC3::GenParticle>& particleToCheck) const {
+  std::stack<std::shared_ptr<const HepMC3::GenParticle>> st;
+  std::unordered_set<int> visited;
+  st.push(particleToCheck);
+
+  bool isFromCharm{false};
+  while (!st.empty()) {
+    const auto& part = st.top();
+    st.pop();
+
+    if (!part) {
+      continue;
+    }
+
+    if (visited.count(part->id()) != 0u) {
+      continue;
+    }
+    visited.insert(part->id());
+
+    int pdgCode = std::abs(part->pid());
+    auto hadType = Acts::ParticleIdHelper::hadronType(
+        static_cast<Acts::PdgParticle>(pdgCode));
+
+    // --- beauty PDG IDs ---
+    if (hadType == Acts::HadronType::BottomMeson ||
+        hadType == Acts::HadronType::BottomBaryon ||
+        hadType == Acts::HadronType::BBbarMeson ||
+        (m_cfg.searchUpToHfQuark &&
+         static_cast<Acts::HfOrigin>(pdgCode) == Acts::HfOrigin::Bottom)) {
+      return Acts::HfOrigin::Bottom;
+    }
+
+    // --- charm PDG IDs ---
+    if (hadType == Acts::HadronType::CharmedMeson ||
+        hadType == Acts::HadronType::CharmedBaryon ||
+        hadType == Acts::HadronType::CCbarMeson ||
+        (m_cfg.searchUpToHfQuark &&
+         static_cast<Acts::HfOrigin>(pdgCode) == Acts::HfOrigin::Charm)) {
+      // we do not return directly because
+      // B -> D -> X should be tagged as from beauty and not charm
+      isFromCharm = true;
+    }
+
+    // go to parents
+    const auto& vtx = part->production_vertex();
+    if (!vtx) {
+      continue;
+    }
+
+    for (const auto& parent : vtx->particles_in()) {
+      st.push(parent);
+    }
+  }
+
+  if (isFromCharm) {
+    return Acts::HfOrigin::Charm;
+  }
+
+  return Acts::HfOrigin::None;
+}
 
 void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
                                         SimVertex& vertex,
@@ -194,6 +258,8 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
 
       SimParticle simParticle{particleId, pdg, charge, mass};
       simParticle.initialState().setPosition4(vertex.position4);
+      simParticle.setOrigParticleIdx(particle->id());
+      simParticle.setHfOrigin(checkHfOrigin(particle));
 
       const HepMC3::FourVector& genMomentum = particle->momentum();
       Acts::Vector3 momentum{genMomentum.px() * 1_GeV, genMomentum.py() * 1_GeV,

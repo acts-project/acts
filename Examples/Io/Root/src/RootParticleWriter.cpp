@@ -75,6 +75,8 @@ RootParticleWriter::RootParticleWriter(const RootParticleWriter::Config& cfg,
   m_outputTree->Branch("particle", &m_particle);
   m_outputTree->Branch("generation", &m_generation);
   m_outputTree->Branch("sub_particle", &m_subParticle);
+  m_outputTree->Branch("orig_part_idx", &m_origParticleIdx);
+  m_outputTree->Branch("hf_origin", &m_hfOrigin);
 
   if (m_cfg.writeHelixParameters) {
     m_outputTree->Branch("perigee_d0", &m_perigeeD0);
@@ -123,6 +125,8 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
   for (const auto& particle : particles) {
     m_particleHash.push_back(particle.particleId().hash());
     m_particleType.push_back(particle.pdg());
+    m_origParticleIdx.push_back(particle.origParticleIdx());
+    m_hfOrigin.push_back(static_cast<std::uint8_t>(particle.hfOrigin()));
     m_process.push_back(static_cast<std::uint32_t>(particle.process()));
     // position
     m_vx.push_back(Acts::clampValue<float>(particle.fourPosition().x() /
@@ -357,6 +361,9 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
     m_perigeeEta.clear();
     m_perigeePt.clear();
   }
+
+  m_origParticleIdx.clear();
+  m_hfOrigin.clear();
 
   return ProcessCode::SUCCESS;
 }
