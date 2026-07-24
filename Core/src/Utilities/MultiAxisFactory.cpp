@@ -103,8 +103,10 @@ std::string MultiAxisFactory::toString() const {
   return ss.str();
 }
 
-std::ostream& operator<<(std::ostream& os,
-                         const MultiAxisFactory& multiAxisFactory) {
+}  // namespace Acts
+
+std::ostream& Acts::operator<<(std::ostream& os,
+                               const MultiAxisFactory& multiAxisFactory) {
   os << "MultiAxisFactory: " << multiAxisFactory.size() << " axes [";
   for (std::size_t i = 0; i < multiAxisFactory.size(); ++i) {
     os << (i > 0 ? "; " : "") << multiAxisFactory.axisFactory(i);
@@ -112,5 +114,3 @@ std::ostream& operator<<(std::ostream& os,
   os << "]";
   return os;
 }
-
-}  // namespace Acts

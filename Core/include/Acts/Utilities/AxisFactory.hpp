@@ -301,4 +301,10 @@ class AxisFactory {
   std::optional<AxisDirection> m_direction;
 };
 
+/// Output stream operator
+/// @param os output stream
+/// @param axisFactory the description to be printed
+/// @return the output stream
+std::ostream& operator<<(std::ostream& os, const AxisFactory& axisFactory);
+
 }  // namespace Acts

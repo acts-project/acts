@@ -189,6 +189,13 @@ class MultiAxisFactoryXD : public MultiAxisFactory {
   }
 };
 
+/// Output stream operator
+/// @param os output stream
+/// @param multiAxisFactory the description to be printed
+/// @return the output stream
+std::ostream& operator<<(std::ostream& os,
+                         const MultiAxisFactory& multiAxisFactory);
+
 /// Type alias for a multi-axis description of dimension 1
 using MultiAxisFactory1D = MultiAxisFactoryXD<1>;
 /// Type alias for a multi-axis description of dimension 2

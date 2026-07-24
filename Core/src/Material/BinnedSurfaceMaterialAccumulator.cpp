@@ -15,7 +15,6 @@
 #include "Acts/Surfaces/SurfaceAxisResolution.hpp"
 #include "Acts/Utilities/BinAdjustment.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/Diagnostics.hpp"
 
 Acts::BinnedSurfaceMaterialAccumulator::BinnedSurfaceMaterialAccumulator(
     const Config& cfg, std::unique_ptr<const Logger> mlogger)
@@ -71,26 +70,6 @@ Acts::BinnedSurfaceMaterialAccumulator::createState(
       // Material accumulation  is created for this
       continue;
     }
-    // Transitional attempt from the superseded DirectedProtoAxis based proto
-    // grid material
-    ACTS_PUSH_IGNORE_DEPRECATED()
-    auto legacyPsgm =
-        dynamic_cast<const DirectedProtoAxisSurfaceMaterial*>(surfaceMaterial);
-    if (legacyPsgm != nullptr) {
-      BinUtility binUtility(legacyPsgm->binning());
-      // Screen output for Binned Surface material
-      ACTS_DEBUG("       - (proto) binning from legacy proto grid material is "
-                 << binUtility);
-      // Now adjust to surface type
-      binUtility = adjustBinUtility(binUtility, *surface, gctx);
-      // Screen output for Binned Surface material
-      ACTS_DEBUG("       - adjusted binning is " << binUtility);
-      state->accumulatedMaterial[geoID] =
-          AccumulatedSurfaceMaterial(binUtility);
-      // Material accumulation  is created for this
-      continue;
-    }
-    ACTS_POP_IGNORE_DEPRECATED()
     // Third attempt: binned material
     auto bmp = dynamic_cast<const BinnedSurfaceMaterial*>(surfaceMaterial);
     if (bmp != nullptr) {

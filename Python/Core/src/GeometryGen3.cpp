@@ -23,7 +23,6 @@
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -446,21 +445,6 @@ void addGeometryGen3(py::module_& m) {
                                  const AxisFactory&>(
                    &MaterialDesignatorBlueprintNode::configureFace),
                "face"_a, "loc0"_a, "loc1"_a);
-
-  ACTS_PUSH_IGNORE_DEPRECATED()
-  matNode
-      .def(
-          "configureFace",
-          py::overload_cast<CylinderVolumeBounds::Face,
-                            const DirectedProtoAxis&, const DirectedProtoAxis&>(
-              &MaterialDesignatorBlueprintNode::configureFace),
-          "face"_a, "loc0"_a, "loc1"_a)
-      .def("configureFace",
-           py::overload_cast<CuboidVolumeBounds::Face, const DirectedProtoAxis&,
-                             const DirectedProtoAxis&>(
-               &MaterialDesignatorBlueprintNode::configureFace),
-           "face"_a, "loc0"_a, "loc1"_a);
-  ACTS_POP_IGNORE_DEPRECATED()
 
   addContextManagerProtocol(matNode);
 

@@ -18,9 +18,9 @@
 #include <sstream>
 #include <stdexcept>
 
-namespace Acts {
-
 namespace {
+
+using namespace Acts;
 
 std::string unsupportedSurfaceMessage(const Surface& surface) {
   std::stringstream ss;
@@ -103,24 +103,8 @@ AxisResolution resolveTrapezoid(const TrapezoidBounds& pBounds,
 
 }  // namespace
 
-std::vector<AxisDirection> surfaceAxisDirections(const Surface& surface) {
-  using enum AxisDirection;
-  if (dynamic_cast<const CylinderBounds*>(&surface.bounds()) != nullptr) {
-    return {AxisRPhi, AxisZ};
-  }
-  if (dynamic_cast<const RadialBounds*>(&surface.bounds()) != nullptr) {
-    return {AxisR, AxisPhi};
-  }
-  if (surface.type() == Surface::Plane &&
-      (dynamic_cast<const RectangleBounds*>(&surface.bounds()) != nullptr ||
-       dynamic_cast<const TrapezoidBounds*>(&surface.bounds()) != nullptr)) {
-    return {AxisX, AxisY};
-  }
-  throw std::invalid_argument(unsupportedSurfaceMessage(surface));
-}
-
-AxisResolution surfaceAxisResolution(const Surface& surface,
-                                     AxisDirection aDir) {
+Acts::AxisResolution Acts::surfaceAxisResolution(const Surface& surface,
+                                                 AxisDirection aDir) {
   if (auto b = dynamic_cast<const CylinderBounds*>(&surface.bounds());
       b != nullptr) {
     return resolveCylinder(*b, aDir);
@@ -142,9 +126,9 @@ AxisResolution surfaceAxisResolution(const Surface& surface,
   throw std::invalid_argument(unsupportedSurfaceMessage(surface));
 }
 
-std::vector<std::unique_ptr<IAxis>> resolveAxes(
+std::vector<std::unique_ptr<Acts::IAxis>> Acts::resolveAxes(
     const MultiAxisFactory& multiAxisFactory, const Surface& surface) {
-  std::vector<AxisDirection> canonical = surfaceAxisDirections(surface);
+  std::array<AxisDirection, 2> canonical = surface.localAxes();
   std::size_t n = multiAxisFactory.size();
   if (n > canonical.size()) {
     throw std::invalid_argument(
@@ -197,5 +181,3 @@ std::vector<std::unique_ptr<IAxis>> resolveAxes(
   }
   return axes;
 }
-
-}  // namespace Acts

@@ -13,7 +13,6 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/AxisFactory.hpp"
 #include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
 
@@ -98,7 +97,6 @@ namespace DD4hepBinningHelpers {
 std::vector<std::tuple<Acts::AxisFactory, std::size_t>> convertAxisFactories(
     const dd4hep::DetElement &dd4hepElement, const std::string &bname);
 
-ACTS_PUSH_IGNORE_DEPRECATED()
 /// @brief This method converts the DD4hep binning into the Acts ProtoAxis
 ///
 /// @param dd4hepElement the element which has a binning description attached
@@ -108,7 +106,6 @@ ACTS_PUSH_IGNORE_DEPRECATED()
 [[deprecated("Use convertAxisFactories instead")]]
 std::vector<std::tuple<Acts::DirectedProtoAxis, std::size_t>> convertBinning(
     const dd4hep::DetElement &dd4hepElement, const std::string &bname);
-ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace DD4hepBinningHelpers
 /// @}

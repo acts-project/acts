@@ -22,6 +22,7 @@
 #include "Acts/Utilities/MultiAxisFactory.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
+#include <array>
 #include <numbers>
 #include <stdexcept>
 
@@ -38,9 +39,9 @@ BOOST_AUTO_TEST_CASE(SurfaceAxisResolutionCylinder) {
   // Full cylinder: phi-like axes are closed
   auto fullCylinder = Surface::makeShared<CylinderSurface>(
       Transform3::Identity(), std::make_shared<CylinderBounds>(25., 50.));
-  auto directions = surfaceAxisDirections(*fullCylinder);
-  std::vector<AxisDirection> expected = {AxisRPhi, AxisZ};
-  BOOST_CHECK(directions == expected);
+  std::array<AxisDirection, 2> expected = {AxisRPhi, AxisZ};
+  const Surface& cylinderRef = *fullCylinder;
+  BOOST_CHECK(cylinderRef.localAxes() == expected);
 
   auto rphi = surfaceAxisResolution(*fullCylinder, AxisRPhi);
   CHECK_CLOSE_ABS(rphi.min, -25. * std::numbers::pi, 1e-12);
@@ -74,8 +75,9 @@ BOOST_AUTO_TEST_CASE(SurfaceAxisResolutionDiscAndPlane) {
 
   auto disc = Surface::makeShared<DiscSurface>(
       Transform3::Identity(), std::make_shared<RadialBounds>(50., 75.));
-  std::vector<AxisDirection> expectedDisc = {AxisR, AxisPhi};
-  BOOST_CHECK(surfaceAxisDirections(*disc) == expectedDisc);
+  std::array<AxisDirection, 2> expectedDisc = {AxisR, AxisPhi};
+  const Surface& discRef = *disc;
+  BOOST_CHECK(discRef.localAxes() == expectedDisc);
   auto r = surfaceAxisResolution(*disc, AxisR);
   CHECK_CLOSE_ABS(r.min, 50., 1e-12);
   CHECK_CLOSE_ABS(r.max, 75., 1e-12);
@@ -84,8 +86,9 @@ BOOST_AUTO_TEST_CASE(SurfaceAxisResolutionDiscAndPlane) {
 
   auto rectangle = Surface::makeShared<PlaneSurface>(
       Transform3::Identity(), std::make_shared<RectangleBounds>(20., 30.));
-  std::vector<AxisDirection> expectedPlane = {AxisX, AxisY};
-  BOOST_CHECK(surfaceAxisDirections(*rectangle) == expectedPlane);
+  std::array<AxisDirection, 2> expectedPlane = {AxisX, AxisY};
+  const Surface& rectangleRef = *rectangle;
+  BOOST_CHECK(rectangleRef.localAxes() == expectedPlane);
   auto x = surfaceAxisResolution(*rectangle, AxisX);
   CHECK_CLOSE_ABS(x.min, -20., 1e-12);
   CHECK_CLOSE_ABS(x.max, 20., 1e-12);
@@ -102,9 +105,10 @@ BOOST_AUTO_TEST_CASE(SurfaceAxisResolutionDiscAndPlane) {
   // Unsupported surface
   auto straw =
       Surface::makeShared<StrawSurface>(Transform3::Identity(), 5., 100.);
-  BOOST_CHECK_THROW(surfaceAxisDirections(*straw), std::invalid_argument);
   BOOST_CHECK_THROW(surfaceAxisResolution(*straw, AxisZ),
                     std::invalid_argument);
+  MultiAxisFactory strawBinning({AxisFactory::DeferredEquidistant(4)});
+  BOOST_CHECK_THROW(resolveAxes(strawBinning, *straw), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(ResolveAxesAgainstSurface) {

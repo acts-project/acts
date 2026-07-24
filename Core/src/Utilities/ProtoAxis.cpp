@@ -8,13 +8,9 @@
 
 #include "Acts/Utilities/ProtoAxis.hpp"
 
-#include "Acts/Utilities/Diagnostics.hpp"
-
 #include <sstream>
 
 namespace Acts {
-
-ACTS_PUSH_IGNORE_DEPRECATED()
 
 ProtoAxis::ProtoAxis(AxisBoundaryType abType, const std::vector<double>& edges)
     : m_axis(IAxis::createVariable(abType, edges)) {}
@@ -169,7 +165,5 @@ std::ostream& operator<<(std::ostream& os,
   }
   return os;
 }
-
-ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace Acts
