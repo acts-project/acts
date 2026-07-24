@@ -147,13 +147,6 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
 
     state.startLayer = state.startSurface->associatedLayer();
     state.startVolume = state.startLayer->trackingVolume();
-  } else if (state.startVolume != nullptr && state.startSurface == nullptr) {
-    ACTS_VERBOSE(
-        volInfo(state)
-        << "Fast start initialization through association from Volume.");
-
-    state.startLayer =
-        state.startVolume->associatedLayer(state.options.geoContext, position);
   } else {
     ACTS_VERBOSE(volInfo(state) << "Slow start initialization through search.");
     ACTS_VERBOSE(volInfo(state)
