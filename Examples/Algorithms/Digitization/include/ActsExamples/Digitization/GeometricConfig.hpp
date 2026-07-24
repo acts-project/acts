@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/IMultiAxis.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
@@ -28,18 +28,16 @@ namespace ActsExamples {
 
 /// Configuration struct for geometric digitization
 ///
-/// If this is defined, then the geometric digitization
-/// will create clusters with cells.
-/// The BinUtility defines the segmentation and which parameters
-/// are defined by this.
-///
+/// If this is defined, then the geometric digitization will create clusters
+/// with cells. The multi-axis defines the segmentation and which
+/// parameters are defined by this.
 struct GeometricConfig {
   // The dimensions of the measurement
-  std::vector<Acts::BoundIndices> indices = {};
+  std::vector<Acts::BoundIndices> indices;
 
   /// The (multidimensional) binning definition for the segmentation of the
-  /// sensor
-  Acts::BinUtility segmentation;
+  /// sensor, with the axes carrying their respective axis direction
+  std::shared_ptr<const Acts::IMultiAxis> segmentation;
 
   /// The thickness of the sensor
   double thickness = 0.;

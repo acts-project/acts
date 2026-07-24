@@ -33,6 +33,11 @@ class AnyTrackStateProxy;
 
 namespace detail_anytstate {
 
+/// Type-erased range over the track states of a track (defined below, after
+/// AnyTrackStateProxy).
+template <bool reverse, bool read_only>
+class AnyTrackStateRange;
+
 class TrackStateHandlerConstBase {
  public:
   using ParametersMap =
@@ -519,7 +524,11 @@ class AnyTrackStateProxy
   /// @tparam track_state_proxy_t Proxy type satisfying the concept.
   /// @param ts Proxy that supplies the trajectory backend and index.
   template <TrackStateProxyConcept track_state_proxy_t>
-    requires(ReadOnly || !track_state_proxy_t::ReadOnly)
+    requires((ReadOnly || !track_state_proxy_t::ReadOnly) &&
+             !std::is_same_v<std::remove_cv_t<track_state_proxy_t>,
+                             AnyTrackStateProxy<true>> &&
+             !std::is_same_v<std::remove_cv_t<track_state_proxy_t>,
+                             AnyTrackStateProxy<false>>)
   explicit AnyTrackStateProxy(track_state_proxy_t& ts)
       : m_container(nullptr), m_index(ts.m_istate) {
     using trajectory_t = typename track_state_proxy_t::Trajectory;
@@ -784,6 +793,19 @@ class AnyTrackStateProxy
  private:
   template <bool>
   friend class AnyTrackStateProxy;
+  template <bool, bool>
+  friend class detail_anytstate::AnyTrackStateRange;
+
+  /// Create a sibling proxy pointing at a different state index within the
+  /// same trajectory container. Used by the track-state ranges to walk the
+  /// `previous()` / `next()` links.
+  /// @param idx The state index to point at.
+  /// @return A copy of this proxy rebound to @p idx.
+  AnyTrackStateProxy withIndex(TrackIndexType idx) const {
+    AnyTrackStateProxy copy(*this);
+    copy.m_index = idx;
+    return copy;
+  }
 
   const detail_anytstate::TrackStateHandlerConstBase* constHandler() const {
     return m_handler;
@@ -808,6 +830,112 @@ class AnyTrackStateProxy
   TrackIndexType m_index{};
   const detail_anytstate::TrackStateHandlerConstBase* m_handler{};
 };
+
+namespace detail_anytstate {
+
+/// Type-erased range over the track states of a track.
+///
+/// Mirrors @c detail_lt::TrackStateRange but yields type-erased
+/// @c AnyTrackStateProxy objects. The range walks the `previous()` links when
+/// @p reverse is true (outside-in) and the `next()` links otherwise
+/// (inside-out). A default-constructed range is empty.
+///
+/// @tparam reverse True to iterate from the tip inwards, false to iterate from
+///                 the stem outwards.
+/// @tparam read_only True for const access, false for mutable access.
+template <bool reverse, bool read_only>
+class AnyTrackStateRange {
+  using ProxyType = AnyTrackStateProxy<read_only>;
+
+ public:
+  /// Forward iterator over the track states. A `nullopt` proxy marks the
+  /// past-the-end iterator.
+  struct Iterator {
+    /// The track state the iterator currently points at, or `nullopt` for end.
+    std::optional<ProxyType> proxy;
+
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = ProxyType;
+    using difference_type = std::ptrdiff_t;
+    using pointer = void;
+    using reference = void;
+
+    /// Advance to the next track state along the link direction.
+    /// @return Reference to this iterator.
+    Iterator& operator++() {
+      if (!proxy) {
+        return *this;
+      }
+      if constexpr (reverse) {
+        if (proxy->hasPrevious()) {
+          proxy = proxy->withIndex(proxy->previous());
+        } else {
+          proxy = std::nullopt;
+        }
+      } else {
+        TrackIndexType next =
+            proxy->template component<TrackIndexType, hashString("next")>();
+        if (next != kTrackIndexInvalid) {
+          proxy = proxy->withIndex(next);
+        } else {
+          proxy = std::nullopt;
+        }
+      }
+      return *this;
+    }
+
+    /// Post-increment.
+    /// @return Copy of the iterator before advancing.
+    Iterator operator++(int) {
+      Iterator tmp(*this);
+      operator++();
+      return tmp;
+    }
+
+    /// Compare two iterators. Two iterators are equal if both are past-the-end
+    /// or both point at the same track state index.
+    /// @param other The iterator to compare against.
+    /// @return True if the iterators are equal.
+    bool operator==(const Iterator& other) const {
+      if (!proxy && !other.proxy) {
+        return true;
+      }
+      if (proxy && other.proxy) {
+        return proxy->index() == other.proxy->index();
+      }
+      return false;
+    }
+
+    /// Dereference to the current track state proxy.
+    /// @return The current track state proxy.
+    ProxyType operator*() const { return *proxy; }
+  };
+
+  /// Construct a range starting at @p begin.
+  /// @param begin The first track state of the range.
+  explicit AnyTrackStateRange(ProxyType begin) : m_begin{begin} {}
+  /// Construct an empty range.
+  AnyTrackStateRange() : m_begin{std::nullopt} {}
+
+  /// @return Iterator to the first track state.
+  Iterator begin() { return Iterator{m_begin}; }
+  /// @return Past-the-end iterator.
+  Iterator end() { return Iterator{std::nullopt}; }
+
+ private:
+  Iterator m_begin;
+};
+
+/// Const range iterating from the tip inwards (reverse).
+using AnyConstReverseTrackStateRange = AnyTrackStateRange<true, true>;
+/// Mutable range iterating from the tip inwards (reverse).
+using AnyMutableReverseTrackStateRange = AnyTrackStateRange<true, false>;
+/// Const range iterating from the stem outwards (forward).
+using AnyConstTrackStateRange = AnyTrackStateRange<false, true>;
+/// Mutable range iterating from the stem outwards (forward).
+using AnyMutableTrackStateRange = AnyTrackStateRange<false, false>;
+
+}  // namespace detail_anytstate
 
 /// Type alias for a const track state proxy
 using AnyConstTrackStateProxy = AnyTrackStateProxy<true>;
