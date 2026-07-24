@@ -65,7 +65,7 @@ auto makeFieldMap(const SolenoidBField& field) {
       if (i == 0 || j == 0 || i == nBinsR + 1 || j == nBinsZ + 1) {
         // under or overflow bin
       } else {
-        point_t lowerLeft = grid.lowerLeftBinEdge(index);
+        point_t lowerLeft = grid.multiAxis().getLowerLeftBinEdge(index);
         Vector2 B = grid.atLocalBins(index);
         ostr << i << ";" << j << ";" << lowerLeft[0] << ";" << lowerLeft[1];
         ostr << ";" << B[0] << ";" << B[1] << std::endl;

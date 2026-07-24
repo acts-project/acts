@@ -96,8 +96,8 @@ std::vector<Vector2> MultiLayerNavigationPolicy::generatePath(
     const Vector3& startPosition, const Vector3& direction) const {
   std::vector<Vector2> path;
 
-  auto maxXIndex = m_indexedGrid.grid.numLocalBins()[0];
-  auto maxYIndex = m_indexedGrid.grid.numLocalBins()[1];
+  auto maxXIndex = m_indexedGrid.grid.multiAxis().getNBins()[0];
+  auto maxYIndex = m_indexedGrid.grid.multiAxis().getNBins()[1];
   Vector3 unitDir = direction.normalized();
 
   // cast the starting position and direction to the correct axis
@@ -108,8 +108,9 @@ std::vector<Vector2> MultiLayerNavigationPolicy::generatePath(
                    VectorHelpers::cast(unitDir, m_indexedGrid.casts[1])};
 
   for (std::size_t i = 0; i < maxYIndex; i++) {
-    auto v1 = m_indexedGrid.grid.lowerLeftBinEdge({1, i + 1});
-    auto v2 = m_indexedGrid.grid.upperRightBinEdge({maxXIndex, i + 1});
+    auto v1 = m_indexedGrid.grid.multiAxis().getLowerLeftBinEdge({1, i + 1});
+    auto v2 =
+        m_indexedGrid.grid.multiAxis().getUpperRightBinEdge({maxXIndex, i + 1});
 
     auto intersection = Acts::detail::IntersectionHelper2D::intersectSegment(
         Vector2(v1[0], v1[1]), Vector2(v2[0], v2[1]), startPoint, startDir);

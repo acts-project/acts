@@ -541,7 +541,7 @@ class GridPortalLinkT : public GridPortalLink {
   /// Set the volume on all grid bins
   /// @param volume The volume to set
   void setVolume(TrackingVolume* volume) override {
-    auto loc = m_grid.numLocalBins();
+    auto loc = m_grid.multiAxis().getNBins();
     if constexpr (GridType::DIM == 1) {
       for (std::size_t i = 1; i <= loc[0]; i++) {
         m_grid.atLocalBins({i}) = volume;

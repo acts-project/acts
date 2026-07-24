@@ -498,7 +498,7 @@ nlohmann::json encodeGridPortalLink(
   }
 
   Acts::AnyGridConstView<const Acts::TrackingVolume*> view(link.grid());
-  const auto nBins = view.numLocalBins();
+  const auto nBins = view.multiAxisAny().getNBinsAny();
   const auto dim = view.dimensions();
 
   jLink[kBinsKey] = nlohmann::json::array();
