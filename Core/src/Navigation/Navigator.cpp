@@ -589,8 +589,7 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
     ACTS_VERBOSE(volInfo(state) << "No volume to resolve candidates.");
     return;
   }
-  ACTS_VERBOSE(volInfo(state) << "Searching for compatible candidates."
-                              << direction.transpose());
+  ACTS_VERBOSE(volInfo(state) << "Searching for compatible candidates.");
 
   state.stream.reset();
   AppendOnlyNavigationStream appendOnly{state.stream};
