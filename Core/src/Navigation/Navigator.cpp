@@ -40,8 +40,9 @@ Navigator::Navigator(Config cfg, std::shared_ptr<const Logger> _logger)
   m_geometryVersion = m_cfg.trackingGeometry->geometryVersion();
 
   m_cfg.trackingGeometry->apply([this](const Portal& portal) {
-    if (!m_surfPortalMap.insert(std::make_pair(&portal.surface(), &portal))
-             .second) {
+    auto [insert, ok] =
+        m_surfPortalMap.insert(std::make_pair(&portal.surface(), &portal));
+    if (!ok && &portal != insert->second) {
       throw std::invalid_argument(
           std::format("Navigator Surface: {:} used for multiple portals",
                       portal.surface().geometryId()));
