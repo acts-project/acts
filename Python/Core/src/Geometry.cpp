@@ -228,8 +228,12 @@ void addGeometry(py::module_& m) {
                 },
                 py::arg("visitor"), py::arg("restrictToSensitives") = true)
             .def("geoIdSurfaceMap", &TrackingGeometry::geoIdSurfaceMap)
-            .def("findPortal", &TrackingGeometry::findPortal, py::arg("tag"),
-                 py::return_value_policy::reference_internal)
+            .def(
+                "findPortal",
+                [](const TrackingGeometry& self, std::string_view tag) {
+                  return self.findPortal(tag);
+                },
+                py::return_value_policy::reference_internal)
             .def("findVolumeByName", &TrackingGeometry::findVolumeByName,
                  py::arg("name"), py::return_value_policy::reference_internal)
             .def("extractMaterialSurfaces",
