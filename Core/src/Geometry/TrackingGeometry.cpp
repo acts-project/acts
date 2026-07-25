@@ -308,6 +308,7 @@ const Portal* TrackingGeometry::findPortal(std::string_view tag) const {
   }
   return it->second;
 }
+
 const Portal* TrackingGeometry::findPortal(GeometryIdentifier id) const {
   auto itr = m_portalsById.find(id);
   return itr != m_portalsById.end() ? itr->second : nullptr;
