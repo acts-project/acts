@@ -107,7 +107,7 @@ bool gbts_seedfinder_config::setLinkingScheme(
   gbts_dphi_window_params.dphi_coeff_low_dr *= ptScale;
   gbts_make_graph_edges_params.max_Kappa_low_tau *= ptScale;
   gbts_make_graph_edges_params.max_Kappa_high_tau *= ptScale;
-  gbts_fit_segments_params.inv_max_curvature *= ptScale;
+  gbts_fit_segments_params.inv_max_curvature /= ptScale;
 
   // contianers sizes
   nLayers = static_cast<unsigned int>(layerInfo.type.size());

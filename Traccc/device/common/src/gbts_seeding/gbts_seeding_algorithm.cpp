@@ -220,7 +220,7 @@ auto gbts_seeding_algorithm::create_edges(
     unsigned int nNodesInBin1 = bin1_end - bin1_begin;
     unsigned int nNodesInBin2 = eta_bin_views[2 * binPair.second] -
                                 eta_bin_views[2 * binPair.second + 1];
-    if (nNodesInBin1 == 0 | nNodesInBin2 == 0) {
+    if ((nNodesInBin1 == 0) | (nNodesInBin2 == 0)) {
       continue;
     }
     if (bin1_begin > bin1_end) {
