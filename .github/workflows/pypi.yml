@@ -59,8 +59,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
-         # TEMP (diagnostics branch): macOS-only to iterate on the delocate
-         # libssl.3.dylib failure. Restore ubuntu-latest before merge.
+         - ubuntu-latest
          - macos-26
 
     steps:
