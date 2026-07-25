@@ -34,32 +34,30 @@ namespace kernels {
 ///
 template <typename CONTAINER, typename R, typename VIEW>
 struct is_ordered_on {
+  /// Constructor
+  is_ordered_on(R relation, VIEW view, bool* out)
+      : m_relation(relation), m_view(view), m_out(out) {}
 
-    /// Constructor
-    is_ordered_on(R relation, VIEW view, bool* out)
-        : m_relation(relation), m_view(view), m_out(out) {}
+  /// Execution operator for the kernel
+  void operator()(::sycl::nd_item<1> item) const {
+    std::size_t tid = item.get_global_linear_id();
 
-    /// Execution operator for the kernel
-    void operator()(::sycl::nd_item<1> item) const {
+    const CONTAINER in(m_view);
 
-        std::size_t tid = item.get_global_linear_id();
-
-        const CONTAINER in(m_view);
-
-        if (tid > 0 && tid < in.size()) {
-            if (!m_relation(in.at(static_cast<CONTAINER::size_type>(tid - 1)),
-                            in.at(static_cast<CONTAINER::size_type>(tid)))) {
-                *m_out = false;
-            }
-        }
+    if (tid > 0 && tid < in.size()) {
+      if (!m_relation(in.at(static_cast<CONTAINER::size_type>(tid - 1)),
+                      in.at(static_cast<CONTAINER::size_type>(tid)))) {
+        *m_out = false;
+      }
     }
+  }
 
-    /// The relation object to use
-    R m_relation;
-    /// View to the input container
-    VIEW m_view;
-    /// Output boolean
-    bool* m_out;
+  /// The relation object to use
+  R m_relation;
+  /// View to the input container
+  VIEW m_view;
+  /// Output boolean
+  bool* m_out;
 };
 
 }  // namespace kernels
@@ -88,50 +86,48 @@ struct is_ordered_on {
  * @return true If the container is ordered on `R`.
  * @return false Otherwise.
  */
-template <typename CONTAINER, std::semiregular R, typename VIEW>
-    requires std::regular_invocable<R,
-                                    decltype(std::declval<CONTAINER>().at(0)),
-                                    decltype(std::declval<CONTAINER>().at(0))>
+template <typename CONTAINER, typename R, typename VIEW>
+  requires std::regular_invocable<R, decltype(std::declval<CONTAINER>().at(0)),
+                                  decltype(std::declval<CONTAINER>().at(0))> &&
+           std::semiregular<R>
 bool is_ordered_on(R&& relation, vecmem::memory_resource& mr,
                    const vecmem::copy& copy, ::sycl::queue& queue,
                    const VIEW& view) {
+  // This should never be a performance-critical step, so we can keep the
+  // block size fixed.
+  constexpr int block_size = 512;
 
-    // This should never be a performance-critical step, so we can keep the
-    // block size fixed.
-    constexpr int block_size = 512;
+  // Grab the number of elements in our container.
+  const typename VIEW::size_type n = copy.get_size(view);
 
-    // Grab the number of elements in our container.
-    const typename VIEW::size_type n = copy.get_size(view);
+  // Exit early for empty containers.
+  if (n == 0) {
+    return true;
+  }
 
-    // Exit early for empty containers.
-    if (n == 0) {
-        return true;
-    }
+  // Initialize the output boolean.
+  vecmem::unique_alloc_ptr<bool> out = vecmem::make_unique_alloc<bool>(mr);
+  bool initial_out = true;
 
-    // Initialize the output boolean.
-    vecmem::unique_alloc_ptr<bool> out = vecmem::make_unique_alloc<bool>(mr);
-    bool initial_out = true;
+  ::sycl::event kernel1_memcpy1 =
+      queue.memcpy(out.get(), &initial_out, sizeof(bool));
 
-    ::sycl::event kernel1_memcpy1 =
-        queue.memcpy(out.get(), &initial_out, sizeof(bool));
+  ::sycl::nd_range<1> kernel_range{
+      ::sycl::range<1>(((n + block_size - 1) / block_size) * block_size),
+      ::sycl::range<1>(block_size)};
 
-    ::sycl::nd_range<1> kernel_range{
-        ::sycl::range<1>(((n + block_size - 1) / block_size) * block_size),
-        ::sycl::range<1>(block_size)};
+  ::sycl::event kernel1 = queue.submit([&](::sycl::handler& h) {
+    h.depends_on(kernel1_memcpy1);
+    h.parallel_for<kernels::is_ordered_on<CONTAINER, R, VIEW>>(
+        kernel_range,
+        kernels::is_ordered_on<CONTAINER, R, VIEW>(relation, view, out.get()));
+  });
 
-    ::sycl::event kernel1 = queue.submit([&](::sycl::handler& h) {
-        h.depends_on(kernel1_memcpy1);
-        h.parallel_for<kernels::is_ordered_on<CONTAINER, R, VIEW>>(
-            kernel_range, kernels::is_ordered_on<CONTAINER, R, VIEW>(
-                              relation, view, out.get()));
-    });
+  // Copy the output to host, then return it.
+  bool host_out;
 
-    // Copy the output to host, then return it.
-    bool host_out;
+  queue.memcpy(&host_out, out.get(), sizeof(bool), {kernel1}).wait_and_throw();
 
-    queue.memcpy(&host_out, out.get(), sizeof(bool), {kernel1})
-        .wait_and_throw();
-
-    return host_out;
+  return host_out;
 }
 }  // namespace traccc::sycl

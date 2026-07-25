@@ -105,7 +105,15 @@ void ParticleTrackingAction::PreUserTrackingAction(const G4Track* trackPtr) {
   }
 
   const SimParticleState fatrasParticle = convert(track, *barcode);
-  const SimParticle particle(fatrasParticle, fatrasParticle);
+  SimParticle particle(fatrasParticle, fatrasParticle);
+
+  // Record the parent particle so parentParticleId() is available downstream.
+  // Secondaries have their G4 parent registered in trackIdMapping; input
+  // primaries have parentId == 0 (not registered) and keep the default parent.
+  if (const auto pit = eventStore().trackIdMapping.find(track.GetParentID());
+      pit != eventStore().trackIdMapping.end()) {
+    particle.setParentParticleId(pit->second);
+  }
   const auto [it, success] = eventStore().particlesInitial.insert(particle);
 
   // Only register particle at the initial state AND if there is no particle ID
@@ -152,6 +160,8 @@ void ParticleTrackingAction::PostUserTrackingAction(const G4Track* trackPtr) {
   }
   SimParticle particle = *particleIt;
   particle.finalState() = convert(track, barcode);
+  // set parent id from the initial state so both states carry it consistently
+  particle.setParentParticleId(particle.parentParticleId());
 
   const auto [it, success] = eventStore().particlesSimulated.insert(particle);
 
@@ -173,7 +183,7 @@ SimParticleState ParticleTrackingAction::convert(const G4Track& track,
   const G4ThreeVector pPosition = convertLengthToActs * track.GetPosition();
   const G4double pTime = convertTimeToActs * track.GetGlobalTime();
   const G4ThreeVector pDirection = track.GetMomentumDirection();
-  const G4double p = convertEnergyToActs * track.GetKineticEnergy();
+  const G4double p = convertEnergyToActs * track.GetMomentum().mag();
 
   std::uint32_t numberOfHits = 0;
   if (const auto it = eventStore().particleHitCount.find(particleId);

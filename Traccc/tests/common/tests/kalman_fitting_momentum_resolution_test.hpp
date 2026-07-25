@@ -40,29 +40,28 @@ class KalmanFittingMomentumResolutionTests
           scalar, scalar, traccc::pdg_particle<scalar>, unsigned int,
           unsigned int, bool, scalar, unsigned int, scalar, vector3,
           detray::material<scalar>, std::array<scalar, 2u>>> {
+ public:
+  /// Plane thickness
+  static constexpr scalar thickness = 0.5f * traccc::unit<scalar>::mm;
 
-    public:
-    /// Plane thickness
-    static constexpr scalar thickness = 0.5f * traccc::unit<scalar>::mm;
+  /// Standard deviations for seed track parameters
+  std::array<double, e_bound_size> stddevs = {5. * traccc::unit<double>::mm,
+                                              5. * traccc::unit<double>::mm,
+                                              0.05,
+                                              0.05,
+                                              0.1 / traccc::unit<double>::GeV,
+                                              1. * traccc::unit<double>::ns};
 
-    /// Standard deviations for seed track parameters
-    std::array<double, e_bound_size> stddevs = {5. * traccc::unit<double>::mm,
-                                                5. * traccc::unit<double>::mm,
-                                                0.05,
-                                                0.05,
-                                                0.1 / traccc::unit<double>::GeV,
-                                                1. * traccc::unit<double>::ns};
+  void consistency_tests(
+      const edm::track_collection<default_algebra>::host::const_proxy_type&
+          track,
+      const edm::track_state_collection<default_algebra>::host& track_states)
+      const;
 
-    void consistency_tests(
-        const edm::track_collection<default_algebra>::host::const_proxy_type&
-            track,
-        const edm::track_state_collection<default_algebra>::host& track_states)
-        const;
+  void momentum_resolution_tests(std::string_view file_name) const;
 
-    void momentum_resolution_tests(std::string_view file_name) const;
-
-    protected:
-    virtual void SetUp() override;
+ protected:
+  virtual void SetUp() override;
 };
 
 }  // namespace traccc

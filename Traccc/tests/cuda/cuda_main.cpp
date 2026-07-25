@@ -10,16 +10,16 @@
 #include <gtest/gtest.h>
 
 int main(int argc, char** argv) {
-    testing::InitGoogleTest(&argc, argv);
+  testing::InitGoogleTest(&argc, argv);
 
-    int r = RUN_ALL_TESTS();
+  int r = RUN_ALL_TESTS();
 
-    cudaError_t cErr = cudaDeviceReset();
+  cudaError_t cErr = cudaDeviceReset();
 
-    if (cErr == cudaSuccess || cErr == cudaErrorNoDevice ||
-        cErr == cudaErrorInsufficientDriver) {
-        return r;
-    } else {
-        return static_cast<int>(cErr);
-    }
+  if (cErr == cudaSuccess || cErr == cudaErrorNoDevice ||
+      cErr == cudaErrorInsufficientDriver) {
+    return r;
+  } else {
+    return static_cast<int>(cErr);
+  }
 }

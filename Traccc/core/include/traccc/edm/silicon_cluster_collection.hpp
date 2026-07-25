@@ -22,26 +22,25 @@ namespace traccc::edm {
 ///
 template <typename BASE>
 class silicon_cluster : public BASE {
+ public:
+  /// Inherit the base class's constructor(s)
+  using BASE::BASE;
 
-    public:
-    /// Inherit the base class's constructor(s)
-    using BASE::BASE;
+  /// @name Cell Information
+  /// @{
 
-    /// @name Cell Information
-    /// @{
-
-    /// Indices of the silicon cells belonging to a cluster (non-const)
-    ///
-    /// @return A (non-const) jagged vector of <tt>unsigned int</tt> values
-    ///
-    TRACCC_HOST_DEVICE
-    auto& cell_indices() { return BASE::template get<0>(); }
-    /// Indices of the silicon cells belonging to a cluster (const)
-    ///
-    /// @return A (const) jagged vector of <tt>unsigned int</tt> values
-    ///
-    TRACCC_HOST_DEVICE
-    const auto& cell_indices() const { return BASE::template get<0>(); }
+  /// Indices of the silicon cells belonging to a cluster (non-const)
+  ///
+  /// @return A (non-const) jagged vector of <tt>unsigned int</tt> values
+  ///
+  TRACCC_HOST_DEVICE
+  auto& cell_indices() { return BASE::template get<0>(); }
+  /// Indices of the silicon cells belonging to a cluster (const)
+  ///
+  /// @return A (const) jagged vector of <tt>unsigned int</tt> values
+  ///
+  TRACCC_HOST_DEVICE
+  const auto& cell_indices() const { return BASE::template get<0>(); }
 
 };  // class silicon_cell_collection_interface
 

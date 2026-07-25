@@ -13,11 +13,11 @@ namespace traccc::sycl {
 queue_wrapper::queue_wrapper(void* queue) : m_queue(queue) {}
 
 void* queue_wrapper::queue() {
-    return m_queue;
+  return m_queue;
 }
 
 const void* queue_wrapper::queue() const {
-    return m_queue;
+  return m_queue;
 }
 
 }  // namespace traccc::sycl

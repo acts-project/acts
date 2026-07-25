@@ -10,7 +10,8 @@
 
 #include "Acts/Clusterization/Clusterization.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/IMultiAxis.hpp"
+#include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 
@@ -62,7 +63,7 @@ class ModuleClusters {
   /// @param nsigma compatibility window (in sigma) for merging non-geometric
   ///        parameters
   /// @param commonCorner whether cells touching only at a corner are connected
-  ModuleClusters(Acts::BinUtility segmentation,
+  ModuleClusters(std::shared_ptr<const Acts::IMultiAxis> segmentation,
                  std::vector<Acts::BoundIndices> geoIndices, bool merge,
                  double nsigma, bool commonCorner)
       : m_segmentation(std::move(segmentation)),
@@ -91,7 +92,7 @@ class ModuleClusters {
 
  private:
   /// Module segmentation used to position cells.
-  Acts::BinUtility m_segmentation;
+  std::shared_ptr<const Acts::IMultiAxis> m_segmentation;
   /// Bound indices resolved from the cell geometry.
   std::vector<Acts::BoundIndices> m_geoIndices;
   /// Accumulated values, holding cells before and clusters after merging.

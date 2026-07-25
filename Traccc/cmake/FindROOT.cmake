@@ -12,11 +12,13 @@
 #    not found.
 
 # Look for ROOTConfig.cmake.
-find_package( ROOT CONFIG QUIET )
+find_package(ROOT CONFIG QUIET)
 
 # Print a standard output about ROOT (not) having been found.
-include( FindPackageHandleStandardArgs )
-find_package_handle_standard_args( ROOT
-   FOUND_VAR ROOT_FOUND
-   REQUIRED_VARS ROOT_INCLUDE_DIRS ROOT_LIBRARY_DIR ROOT_BINDIR
-   VERSION_VAR ROOT_VERSION )
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(
+    ROOT
+    FOUND_VAR ROOT_FOUND
+    REQUIRED_VARS ROOT_INCLUDE_DIRS ROOT_LIBRARY_DIR ROOT_BINDIR
+    VERSION_VAR ROOT_VERSION
+)

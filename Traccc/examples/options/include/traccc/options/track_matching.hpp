@@ -17,15 +17,14 @@
 namespace traccc::opts {
 class track_matching : public interface,
                        public config_provider<track_matching_config> {
+ public:
+  float m_matching_ratio = 0.5f;
+  bool m_double_matching = true;
 
-    public:
-    float m_matching_ratio = 0.5f;
-    bool m_double_matching = true;
+  track_matching();
 
-    track_matching();
+  operator track_matching_config() const override;
 
-    operator track_matching_config() const override;
-
-    std::unique_ptr<configuration_printable> as_printable() const override;
+  std::unique_ptr<configuration_printable> as_printable() const override;
 };
 }  // namespace traccc::opts

@@ -9,7 +9,6 @@ import pathlib
 from traccc_bench_tools.parse_profile import parse_profile_ncu, parse_profile_csv
 from traccc_bench_tools import types
 
-
 log = logging.getLogger("traccc_parse_profile")
 
 

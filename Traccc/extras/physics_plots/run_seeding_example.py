@@ -5,7 +5,6 @@ import logging
 import os
 import traccc_physics_plots.run
 
-
 log = logging.getLogger("traccc_physics_plots.run_seeding_example")
 
 

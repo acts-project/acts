@@ -24,7 +24,7 @@ env:
 
 jobs:
   linux_ubuntu:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
     container: ghcr.io/acts-project/ubuntu2404:87
@@ -59,7 +59,7 @@ jobs:
           ccache -z &&
           CI/dependencies/run.sh .env
           cmake -B build -S .
-          --preset=github-ci
+          --preset=github-ci-fpe
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_PLUGIN_ONNX=ON
 
@@ -132,7 +132,10 @@ jobs:
     container: ghcr.io/acts-project/ubuntu2404:87
     needs: [linux_ubuntu]
     env:
-      ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
+      # Enforce FPE masking on the RelWithDebInfo (github-ci-fpe) build: source
+      # locations resolve, so the test_fpe.py masking tests run instead of being
+      # skipped. Replaces the FPE coverage previously unique to GitLab.
+      ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 1
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -171,8 +174,16 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      # Reference histograms are pulled from ghcr.io by content hash. Anonymous
+      # GHCR reads are rate limited hard enough to break the job.
+      packages: read
     container: ghcr.io/acts-project/ubuntu2404:87
     needs: [linux_ubuntu]
+    env:
+      # Enforce FPE masking on the RelWithDebInfo (github-ci-fpe) build, matching
+      # what GitLab's linux_physmon did. The full reconstruction must stay
+      # FPE-clean (auto-loaded source masks resolve at -g1).
+      ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 1
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -198,11 +209,13 @@ jobs:
 
       - name: Physics performance checks
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global safe.directory "$GITHUB_WORKSPACE"
           source .env
           source build/this_acts_withdeps.sh
-          CI/physmon/phys_perf_mon.sh all physmon
+          CI/physmon/phys_perf_mon.sh all physmon $(nproc)
 
       - name: Post step summary
         if: always()

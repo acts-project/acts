@@ -26,33 +26,33 @@ namespace traccc::device {
 
 /// (Event Data) Payload for the @c traccc::device::build_tracks function
 struct build_tracks_payload {
-    /**
-     * @brief View object to the vector of measurements
-     */
-    bound_track_parameters_collection_types::const_view seeds_view;
+  /**
+   * @brief View object to the vector of measurements
+   */
+  bound_track_parameters_collection_types::const_view seeds_view;
 
-    /**
-     * @brief View object to the vector of candidate links
-     */
-    vecmem::data::vector_view<const candidate_link> links_view;
+  /**
+   * @brief View object to the vector of candidate links
+   */
+  vecmem::data::vector_view<const candidate_link> links_view;
 
-    /**
-     * @brief View object to the vector of tips
-     */
-    vecmem::data::vector_view<const unsigned int> tips_view;
+  /**
+   * @brief View object to the vector of tips
+   */
+  vecmem::data::vector_view<const unsigned int> tips_view;
 
-    /**
-     * @brief View object to the vector of track candidates
-     */
-    edm::track_container<default_algebra>::view tracks_view;
+  /**
+   * @brief View object to the vector of track candidates
+   */
+  edm::track_container<default_algebra>::view tracks_view;
 
-    /**
-     * @brief Optional mapping from tip index to output index
-     */
-    vecmem::data::vector_view<const unsigned int> tip_to_output_map;
-    bound_matrix<default_algebra>* jacobian_ptr = nullptr;
-    bound_track_parameters_collection_types::view link_predicted_parameter_view;
-    bound_track_parameters_collection_types::view link_filtered_parameter_view;
+  /**
+   * @brief Optional mapping from tip index to output index
+   */
+  vecmem::data::vector_view<const unsigned int> tip_to_output_map;
+  bound_matrix<default_algebra>* jacobian_ptr = nullptr;
+  bound_track_parameters_collection_types::view link_predicted_parameter_view;
+  bound_track_parameters_collection_types::view link_filtered_parameter_view;
 };
 
 /// Function for building full tracks from the link container:

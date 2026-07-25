@@ -18,32 +18,31 @@ namespace traccc::device {
 /// (Event Data) Payload for the @c
 /// traccc::device::sort_updated_tracks function
 struct sort_updated_tracks_payload {
+  /**
+   * @brief View object to the vector of relative number of shared
+   * measurements
+   */
+  vecmem::data::vector_view<const traccc::scalar> rel_shared_view;
 
-    /**
-     * @brief View object to the vector of relative number of shared
-     * measurements
-     */
-    vecmem::data::vector_view<const traccc::scalar> rel_shared_view;
+  /**
+   * @brief View object to the vector of relative number of pvalues
+   */
+  vecmem::data::vector_view<const traccc::scalar> pvals_view;
 
-    /**
-     * @brief View object to the vector of relative number of pvalues
-     */
-    vecmem::data::vector_view<const traccc::scalar> pvals_view;
+  /**
+   * @brief Whether to terminate the calculation
+   */
+  int* terminate;
 
-    /**
-     * @brief Whether to terminate the calculation
-     */
-    int* terminate;
+  /**
+   * @brief The number of updated tracks
+   */
+  unsigned int* n_updated_tracks;
 
-    /**
-     * @brief The number of updated tracks
-     */
-    unsigned int* n_updated_tracks;
-
-    /**
-     * @brief View object to the updated track
-     */
-    vecmem::data::vector_view<unsigned int> updated_tracks_view;
+  /**
+   * @brief View object to the updated track
+   */
+  vecmem::data::vector_view<unsigned int> updated_tracks_view;
 };
 
 }  // namespace traccc::device

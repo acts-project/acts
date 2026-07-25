@@ -36,7 +36,7 @@ TrackFinderPerformanceCollector::TrackFinderPerformanceCollector(
   }
 }
 
-ProcessCode TrackFinderPerformanceCollector::fill(
+void TrackFinderPerformanceCollector::fill(
     const Acts::GeometryContext& geoContext, const ConstTrackContainer& tracks,
     const SimParticleContainer& particles,
     const TrackParticleMatching& trackParticleMatching,
@@ -177,8 +177,6 @@ ProcessCode TrackFinderPerformanceCollector::fill(
 
     m_stats.nTotalParticles += 1;
   }
-
-  return ProcessCode::SUCCESS;
 }
 
 void TrackFinderPerformanceCollector::logSummary() const {

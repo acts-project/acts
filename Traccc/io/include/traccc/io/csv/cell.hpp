@@ -16,19 +16,18 @@ namespace traccc::io::csv {
 
 /// Type used in reading CSV data into memory
 struct cell {
+  uint64_t geometry_id = 0;
+  uint64_t measurement_id = 0;
+  uint32_t channel0 = 0;
+  uint32_t channel1 = 0;
+  float timestamp = 0.f;
+  float value = 0.f;
 
-    uint64_t geometry_id = 0;
-    uint64_t measurement_id = 0;
-    uint32_t channel0 = 0;
-    uint32_t channel1 = 0;
-    float timestamp = 0.f;
-    float value = 0.f;
+  auto operator<=>(const cell& other) const = default;
 
-    auto operator<=>(const cell& other) const = default;
-
-    // geometry_id,measurement_id,channel0,channel1,timestamp,value
-    DFE_NAMEDTUPLE(cell, geometry_id, measurement_id, channel0, channel1,
-                   timestamp, value);
+  // geometry_id,measurement_id,channel0,channel1,timestamp,value
+  DFE_NAMEDTUPLE(cell, geometry_id, measurement_id, channel0, channel1,
+                 timestamp, value);
 };
 
 }  // namespace traccc::io::csv

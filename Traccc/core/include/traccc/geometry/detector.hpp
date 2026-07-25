@@ -46,10 +46,9 @@ namespace details {
 /// at this point.
 ///
 struct device_detector_container_types {
-
-    /// Vector type to use in device code
-    template <typename T>
-    using vector_type = vecmem::device_vector<std::add_const_t<T>>;
+  /// Vector type to use in device code
+  template <typename T>
+  using vector_type = vecmem::device_vector<std::add_const_t<T>>;
 
 };  // struct device_detector_container_types
 
@@ -58,31 +57,30 @@ struct device_detector_container_types {
 /// Base struct for the different detector types supported by the project.
 template <typename metadata_t>
 struct detector_traits {
+  /// Metadata type of the detector.
+  using metadata_type = metadata_t;
 
-    /// Metadata type of the detector.
-    using metadata_type = metadata_t;
+  /// Host type of the detector.
+  using host = detray::detector<metadata_type, detray::host_container_types>;
+  /// Device type of the detector.
+  using device =
+      detray::detector<metadata_type, details::device_detector_container_types>;
 
-    /// Host type of the detector.
-    using host = detray::detector<metadata_type, detray::host_container_types>;
-    /// Device type of the detector.
-    using device = detray::detector<metadata_type,
-                                    details::device_detector_container_types>;
+  /// Non-const view of the detector.
+  using view = typename host::const_view_type;
 
-    /// Non-const view of the detector.
-    using view = typename host::const_view_type;
-
-    /// Buffer for a detector's data.
-    using buffer = typename host::buffer_type;
+  /// Buffer for a detector's data.
+  using buffer = typename host::buffer_type;
 
 };  // struct default_detector
 
 template <typename T>
 concept is_detector_traits = requires {
-    typename T::metadata_type;
-    typename T::host;
-    typename T::device;
-    typename T::view;
-    typename T::buffer;
+  typename T::metadata_type;
+  typename T::host;
+  typename T::device;
+  typename T::view;
+  typename T::buffer;
 };
 
 /// Default detector (can contain any detector data)

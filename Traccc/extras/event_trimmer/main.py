@@ -4,7 +4,6 @@ import os
 import pandas
 import pathlib
 
-
 log = logging.getLogger("event_trimmer")
 
 
@@ -94,7 +93,9 @@ def main():
         destination_particles_final_file = args.output / (
             destination_event_prefix + "particles_final.csv"
         )
-        filtered_particles_final_df.to_csv(destination_particles_final_file, index=False)
+        filtered_particles_final_df.to_csv(
+            destination_particles_final_file, index=False
+        )
         log.info(
             "Wrote data for %d final output particles to %s",
             filtered_particles_final_df.shape[0],

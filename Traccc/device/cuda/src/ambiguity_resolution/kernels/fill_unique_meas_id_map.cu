@@ -17,20 +17,19 @@ namespace traccc::cuda::kernels {
 
 __global__ void fill_unique_meas_id_map(
     device::fill_unique_meas_id_map_payload payload) {
+  vecmem::device_vector<const measurement_id_type> unique_meas(
+      payload.unique_meas_view);
 
-    vecmem::device_vector<const measurement_id_type> unique_meas(
-        payload.unique_meas_view);
+  const auto globalIndex = details::global_index1();
+  if (globalIndex >= unique_meas.size()) {
+    return;
+  }
 
-    const auto globalIndex = details::global_index1();
-    if (globalIndex >= unique_meas.size()) {
-        return;
-    }
+  vecmem::device_vector<unsigned int> meas_id_to_unique_id(
+      payload.meas_id_to_unique_id_view);
 
-    vecmem::device_vector<unsigned int> meas_id_to_unique_id(
-        payload.meas_id_to_unique_id_view);
-
-    auto meas_id = unique_meas.at(globalIndex);
-    meas_id_to_unique_id.at(meas_id) = globalIndex;
+  auto meas_id = unique_meas.at(globalIndex);
+  meas_id_to_unique_id.at(meas_id) = globalIndex;
 }
 
 }  // namespace traccc::cuda::kernels

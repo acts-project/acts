@@ -14,8 +14,8 @@ namespace traccc::cuda {
 
 /// Storage method for inhomogeneous magnetic fields
 enum class magnetic_field_storage {
-    global_memory,  ///< Store the magnetic field in global device memory
-    texture_memory  ///< Store the magnetic field in texture device memory
+  global_memory,  ///< Store the magnetic field in global device memory
+  texture_memory  ///< Store the magnetic field in texture device memory
 };
 
 /// Create a magnetic field usable on the active CUDA device

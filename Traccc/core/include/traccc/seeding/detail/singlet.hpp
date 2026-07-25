@@ -14,20 +14,20 @@ namespace traccc {
 
 /// location of spacepoint in internal spacepoint container
 struct sp_location {
-    /// index of the bin of the spacepoint grid
-    unsigned int bin_idx;
-    /// index of the spacepoint in the bin
-    unsigned int sp_idx;
+  /// index of the bin of the spacepoint grid
+  unsigned int bin_idx;
+  /// index of the spacepoint in the bin
+  unsigned int sp_idx;
 };
 
 inline TRACCC_HOST_DEVICE bool operator==(const sp_location& lhs,
                                           const sp_location& rhs) {
-    return (lhs.bin_idx == rhs.bin_idx && lhs.sp_idx == rhs.sp_idx);
+  return (lhs.bin_idx == rhs.bin_idx && lhs.sp_idx == rhs.sp_idx);
 }
 
 inline TRACCC_HOST_DEVICE bool operator!=(const sp_location& lhs,
                                           const sp_location& rhs) {
-    return (lhs.bin_idx != rhs.bin_idx || lhs.sp_idx != rhs.sp_idx);
+  return (lhs.bin_idx != rhs.bin_idx || lhs.sp_idx != rhs.sp_idx);
 }
 
 }  // namespace traccc

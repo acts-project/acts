@@ -11,8 +11,7 @@
 #include "traccc/examples/cpu/full_chain_algorithm.hpp"
 
 int main(int argc, char* argv[]) {
-
-    // Execute the throughput test.
-    return traccc::throughput_st<traccc::full_chain_algorithm>(
-        "Single-threaded host-only throughput tests", argc, argv);
+  // Execute the throughput test.
+  return traccc::throughput_st<traccc::full_chain_algorithm>(
+      "Single-threaded host-only throughput tests", argc, argv);
 }

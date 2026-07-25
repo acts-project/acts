@@ -12,8 +12,7 @@ namespace traccc::io::csv {
 
 dfe::NamedTupleCsvReader<measurement_hit_id> make_measurement_hit_id_reader(
     std::string_view filename) {
-
-    return {filename.data(), {"measurement_id", "hit_id"}};
+  return {filename.data(), {"measurement_id", "hit_id"}};
 }
 
 }  // namespace traccc::io::csv

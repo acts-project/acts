@@ -17,8 +17,7 @@ namespace kernels {
 
 __global__ void condense_tracks(
     const __grid_constant__ device::condense_tracks_payload payload) {
-
-    device::condense_tracks(details::global_index1(), payload);
+  device::condense_tracks(details::global_index1(), payload);
 }
 
 }  // namespace kernels
@@ -26,8 +25,7 @@ __global__ void condense_tracks(
 void condense_tracks(const dim3& grid_size, const dim3& block_size,
                      std::size_t shared_mem_size, const cudaStream_t& stream,
                      const device::condense_tracks_payload& payload) {
-    kernels::
-        condense_tracks<<<grid_size, block_size, shared_mem_size, stream>>>(
-            payload);
+  kernels::condense_tracks<<<grid_size, block_size, shared_mem_size, stream>>>(
+      payload);
 }
 }  // namespace traccc::cuda

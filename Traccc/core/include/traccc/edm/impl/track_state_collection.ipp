@@ -11,34 +11,30 @@ namespace traccc::edm {
 
 template <typename BASE>
 TRACCC_HOST_DEVICE bool track_state<BASE>::is_hole() const {
-
-    return (state() & IS_HOLE_MASK);
+  return (state() & IS_HOLE_MASK);
 }
 
 template <typename BASE>
 TRACCC_HOST_DEVICE void track_state<BASE>::set_hole(bool value) {
-
-    if (value) {
-        state() |= IS_HOLE_MASK;
-    } else {
-        state() &= ~IS_HOLE_MASK;
-    }
+  if (value) {
+    state() |= IS_HOLE_MASK;
+  } else {
+    state() &= ~IS_HOLE_MASK;
+  }
 }
 
 template <typename BASE>
 TRACCC_HOST_DEVICE bool track_state<BASE>::is_smoothed() const {
-
-    return (state() & IS_SMOOTHED_MASK);
+  return (state() & IS_SMOOTHED_MASK);
 }
 
 template <typename BASE>
 TRACCC_HOST_DEVICE void track_state<BASE>::set_smoothed(bool value) {
-
-    if (value) {
-        state() |= IS_SMOOTHED_MASK;
-    } else {
-        state() &= ~IS_SMOOTHED_MASK;
-    }
+  if (value) {
+    state() |= IS_SMOOTHED_MASK;
+  } else {
+    state() &= ~IS_SMOOTHED_MASK;
+  }
 }
 
 }  // namespace traccc::edm

@@ -16,6 +16,7 @@
 #include <boost/test/unit_test_suite.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
@@ -993,6 +994,86 @@ BOOST_AUTO_TEST_CASE(ResizeGapMultiple) {
     BOOST_REQUIRE_NE(cylBounds, nullptr);
     BOOST_CHECK_EQUAL(cylBounds->get(CylinderVolumeBounds::eHalfLengthZ),
                       200.0);
+  }
+}
+
+// Regression test for the degenerate end-gap that surfaced as
+// "CaloEndCapDiscNegativeZ::Gap1 has nullptr portal for NegativeDisc".
+//
+// When a z-stack is resized such that one boundary coincides with the volume's
+// existing boundary only to within floating-point rounding (i.e. below
+// s_onSurfaceTolerance), ResizeStrategy::Gap must NOT mint a gap volume there:
+// the resulting near-zero-thickness gap has two coincident disc portals that
+// downstream navigation (CylinderNavigationPolicy) cannot resolve. The offset
+// used below (1e-6, well under s_onSurfaceTolerance = 1e-4) stands in for the
+// ~1e-13 mm rounding residue seen in the ATLAS calorimeter geometry.
+BOOST_AUTO_TEST_CASE(ResizeSubToleranceBoundaryNoDegenerateGap) {
+  const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
+
+  // Sub-tolerance boundary offset (well below s_onSurfaceTolerance = 1e-4).
+  const double subTol = 1e-6;
+
+  auto checkNoDegenerateGap = [&](const CylinderVolumeStack& stack) {
+    for (const auto& gap : stack.gaps()) {
+      const auto* cylBounds =
+          dynamic_cast<const CylinderVolumeBounds*>(&gap->volumeBounds());
+      BOOST_REQUIRE_NE(cylBounds, nullptr);
+      BOOST_CHECK_GT(cylBounds->get(CylinderVolumeBounds::eHalfLengthZ),
+                     s_onSurfaceTolerance);
+    }
+  };
+
+  // The -z edge coincides to within tolerance; the +z side genuinely expands.
+  // This is the exact configuration of the reported CaloEndCapDiscNegativeZ.
+  BOOST_TEST_CONTEXT("NegativeBoundaryCoincides") {
+    // Volume spans z in [-100, 100].
+    Volume vol{Transform3::Identity(),
+               std::make_shared<CylinderVolumeBounds>(70, 100, 100.0)};
+    std::vector<Volume*> volumes = {&vol};
+    CylinderVolumeStack stack(gctx, volumes, AxisDirection::AxisZ,
+                              VolumeAttachmentStrategy::Gap,
+                              VolumeResizeStrategy::Gap, *logger);
+    BOOST_CHECK(stack.gaps().empty());
+
+    // New extent: z in [-100 - subTol, 500]. The -z edge is a hair *below* the
+    // existing -100 edge purely from rounding; the +z edge is a real expansion.
+    const double newMinZ = -100.0 - subTol;
+    const double newMaxZ = 500.0;
+    const double newHlZ = (newMaxZ - newMinZ) / 2.0;
+    const double newMidZ = (newMaxZ + newMinZ) / 2.0;
+    stack.update(
+        gctx, std::make_shared<CylinderVolumeBounds>(70, 100, newHlZ),
+        Transform3::Identity() * Translation3{Vector3::UnitZ() * newMidZ},
+        *logger);
+
+    // Exactly one gap: the genuine one on the +z side. The sub-tolerance -z
+    // boundary must not have produced a (degenerate) gap.
+    BOOST_CHECK_EQUAL(stack.gaps().size(), 1);
+    checkNoDegenerateGap(stack);
+  }
+
+  // Mirror image: the +z edge coincides to within tolerance, real gap at -z.
+  BOOST_TEST_CONTEXT("PositiveBoundaryCoincides") {
+    Volume vol{Transform3::Identity(),
+               std::make_shared<CylinderVolumeBounds>(70, 100, 100.0)};
+    std::vector<Volume*> volumes = {&vol};
+    CylinderVolumeStack stack(gctx, volumes, AxisDirection::AxisZ,
+                              VolumeAttachmentStrategy::Gap,
+                              VolumeResizeStrategy::Gap, *logger);
+    BOOST_CHECK(stack.gaps().empty());
+
+    // New extent: z in [-500, 100 + subTol].
+    const double newMinZ = -500.0;
+    const double newMaxZ = 100.0 + subTol;
+    const double newHlZ = (newMaxZ - newMinZ) / 2.0;
+    const double newMidZ = (newMaxZ + newMinZ) / 2.0;
+    stack.update(
+        gctx, std::make_shared<CylinderVolumeBounds>(70, 100, newHlZ),
+        Transform3::Identity() * Translation3{Vector3::UnitZ() * newMidZ},
+        *logger);
+
+    BOOST_CHECK_EQUAL(stack.gaps().size(), 1);
+    checkNoDegenerateGap(stack);
   }
 }
 
@@ -2775,6 +2856,64 @@ BOOST_AUTO_TEST_CASE(RStackGapCreationWithUpdatedTransform) {
   BOOST_CHECK_EQUAL(vol1->center(gctx)[eZ], 10_mm);
   BOOST_CHECK_EQUAL(vol2->center(gctx)[eZ], 10_mm);
   BOOST_CHECK_EQUAL(gap1->center(gctx)[eZ], 10_mm);
+}
+
+// A change in the radial bounds that is smaller than the on-surface tolerance
+// must be treated as "no change" and must not spawn a spurious, near-zero
+// thickness gap volume. This is the r-direction analogue of the z-direction
+// reproduction (see ResizeReproduction2): the r-resize path currently compares
+// radii exactly instead of within tolerance, so it creates a degenerate gap
+// shell whose inner and outer radius are effectively identical.
+BOOST_AUTO_TEST_CASE(RStackGapCreationTolerance) {
+  const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
+  const double hlZ = 400_mm;
+  const double rMin = 100_mm;
+  const double rMax = 200_mm;
+
+  // Sub-tolerance perturbation of the radial bounds
+  const double eps = s_onSurfaceTolerance / 2.0;
+
+  BOOST_TEST_CONTEXT("Outer radius") {
+    auto bounds = std::make_shared<CylinderVolumeBounds>(rMin, rMax, hlZ);
+    auto vol = std::make_shared<Volume>(Transform3::Identity(), bounds);
+
+    std::vector<Volume*> volumes = {vol.get()};
+    CylinderVolumeStack cylStack(gctx, volumes, AxisDirection::AxisR,
+                                 VolumeAttachmentStrategy::Gap,
+                                 VolumeResizeStrategy::Gap, *logger);
+
+    BOOST_CHECK(cylStack.gaps().empty());
+
+    // Grow the outer radius by less than the tolerance
+    cylStack.update(
+        gctx, std::make_shared<CylinderVolumeBounds>(rMin, rMax + eps, hlZ),
+        std::nullopt, *logger);
+
+    // No gap volume should have been created for a sub-tolerance change
+    BOOST_CHECK(cylStack.gaps().empty());
+    BOOST_CHECK_EQUAL(volumes.size(), 1);
+  }
+
+  BOOST_TEST_CONTEXT("Inner radius") {
+    auto bounds = std::make_shared<CylinderVolumeBounds>(rMin, rMax, hlZ);
+    auto vol = std::make_shared<Volume>(Transform3::Identity(), bounds);
+
+    std::vector<Volume*> volumes = {vol.get()};
+    CylinderVolumeStack cylStack(gctx, volumes, AxisDirection::AxisR,
+                                 VolumeAttachmentStrategy::Gap,
+                                 VolumeResizeStrategy::Gap, *logger);
+
+    BOOST_CHECK(cylStack.gaps().empty());
+
+    // Extend the inner radius inward by less than the tolerance
+    cylStack.update(
+        gctx, std::make_shared<CylinderVolumeBounds>(rMin - eps, rMax, hlZ),
+        std::nullopt, *logger);
+
+    // No gap volume should have been created for a sub-tolerance change
+    BOOST_CHECK(cylStack.gaps().empty());
+    BOOST_CHECK_EQUAL(volumes.size(), 1);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -8,6 +8,7 @@
 #pragma once
 
 #include <string>
+
 #include <traccc/definitions/primitives.hpp>
 #include <traccc/edm/particle.hpp>
 
@@ -20,25 +21,25 @@ namespace traccc {
  * to be omitted from efficiency calculations.
  */
 struct track_filter {
-    /**
-     * @brief Return a human-readable name for this filtering method.
-     */
-    virtual std::string get_name() const = 0;
+  /**
+   * @brief Return a human-readable name for this filtering method.
+   */
+  virtual std::string get_name() const = 0;
 
-    /**
-     * @brief Determine whether a given particle is relevant to tracking.
-     *
-     * @param p The particle in question.
-     *
-     * @return true if the particle passes the cut.
-     * @return false if the particle does not pass the cut.
-     */
-    virtual bool operator()(const particle &p) const = 0;
+  /**
+   * @brief Determine whether a given particle is relevant to tracking.
+   *
+   * @param p The particle in question.
+   *
+   * @return true if the particle passes the cut.
+   * @return false if the particle does not pass the cut.
+   */
+  virtual bool operator()(const particle &p) const = 0;
 
-    /**
-     * @brief Default destructor
-     */
-    virtual ~track_filter() = default;
+  /**
+   * @brief Default destructor
+   */
+  virtual ~track_filter() = default;
 };
 
 /**
@@ -49,19 +50,19 @@ struct track_filter {
  * requires the particle to be charged.
  */
 struct simple_charged_eta_pt_cut : track_filter {
-    /**
-     * @brief Construct a new cut object.
-     *
-     * @param eta The maximum value for |η|
-     * @param pT The minimum value for pT
-     */
-    simple_charged_eta_pt_cut(scalar eta, scalar pT);
+  /**
+   * @brief Construct a new cut object.
+   *
+   * @param eta The maximum value for |η|
+   * @param pT The minimum value for pT
+   */
+  simple_charged_eta_pt_cut(scalar eta, scalar pT);
 
-    virtual std::string get_name() const override final;
+  virtual std::string get_name() const override final;
 
-    virtual bool operator()(const particle &) const override final;
+  virtual bool operator()(const particle &) const override final;
 
-    private:
-    scalar m_eta, m_pT;
+ private:
+  scalar m_eta, m_pT;
 };
 }  // namespace traccc

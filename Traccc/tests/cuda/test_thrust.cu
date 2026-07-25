@@ -34,73 +34,66 @@ vecmem::cuda::device_memory_resource device_resource;
 }  // namespace
 
 TEST(CUDAThrust, sort) {
+  vecmem::vector<unsigned int> host_vector{{3, 2, 1, 8, 4}, &host_resource};
 
-    vecmem::vector<unsigned int> host_vector{{3, 2, 1, 8, 4}, &host_resource};
+  auto host_buffer = vecmem::get_data(host_vector);
+  auto device_buffer = copy.to(vecmem::get_data(host_vector), device_resource,
+                               vecmem::copy::type::host_to_device);
 
-    auto host_buffer = vecmem::get_data(host_vector);
-    auto device_buffer = copy.to(vecmem::get_data(host_vector), device_resource,
-                                 vecmem::copy::type::host_to_device);
+  vecmem::device_vector<unsigned int> device_vector(device_buffer);
 
-    vecmem::device_vector<unsigned int> device_vector(device_buffer);
+  thrust::sort(thrust::device, device_vector.begin(), device_vector.end());
 
-    thrust::sort(thrust::device, device_vector.begin(), device_vector.end());
+  copy(device_buffer, host_buffer, vecmem::copy::type::device_to_host)->wait();
+  ;
 
-    copy(device_buffer, host_buffer, vecmem::copy::type::device_to_host)
-        ->wait();
-    ;
-
-    ASSERT_EQ(host_vector[0], 1);
-    ASSERT_EQ(host_vector[1], 2);
-    ASSERT_EQ(host_vector[2], 3);
-    ASSERT_EQ(host_vector[3], 4);
-    ASSERT_EQ(host_vector[4], 8);
+  ASSERT_EQ(host_vector[0], 1);
+  ASSERT_EQ(host_vector[1], 2);
+  ASSERT_EQ(host_vector[2], 3);
+  ASSERT_EQ(host_vector[3], 4);
+  ASSERT_EQ(host_vector[4], 8);
 }
 
 TEST(CUDAThrust, scan) {
+  vecmem::vector<unsigned int> host_vector{{3, 2, 1, 8, 4}, &host_resource};
 
-    vecmem::vector<unsigned int> host_vector{{3, 2, 1, 8, 4}, &host_resource};
+  auto host_buffer = vecmem::get_data(host_vector);
+  auto device_buffer = copy.to(vecmem::get_data(host_vector), device_resource,
+                               vecmem::copy::type::host_to_device);
 
-    auto host_buffer = vecmem::get_data(host_vector);
-    auto device_buffer = copy.to(vecmem::get_data(host_vector), device_resource,
-                                 vecmem::copy::type::host_to_device);
+  vecmem::device_vector<unsigned int> device_vector(device_buffer);
 
-    vecmem::device_vector<unsigned int> device_vector(device_buffer);
+  thrust::inclusive_scan(thrust::device, device_vector.begin(),
+                         device_vector.end(), device_vector.begin());
 
-    thrust::inclusive_scan(thrust::device, device_vector.begin(),
-                           device_vector.end(), device_vector.begin());
+  copy(device_buffer, host_buffer, vecmem::copy::type::device_to_host)->wait();
 
-    copy(device_buffer, host_buffer, vecmem::copy::type::device_to_host)
-        ->wait();
-
-    ASSERT_EQ(host_vector[0], 3);
-    ASSERT_EQ(host_vector[1], 5);
-    ASSERT_EQ(host_vector[2], 6);
-    ASSERT_EQ(host_vector[3], 14);
-    ASSERT_EQ(host_vector[4], 18);
+  ASSERT_EQ(host_vector[0], 3);
+  ASSERT_EQ(host_vector[1], 5);
+  ASSERT_EQ(host_vector[2], 6);
+  ASSERT_EQ(host_vector[3], 14);
+  ASSERT_EQ(host_vector[4], 18);
 }
 
 TEST(CUDAThrust, fill) {
+  vecmem::vector<unsigned int> host_vector{{1, 1, 1, 1, 1, 1, 1},
+                                           &host_resource};
 
-    vecmem::vector<unsigned int> host_vector{{1, 1, 1, 1, 1, 1, 1},
-                                             &host_resource};
+  auto host_buffer = vecmem::get_data(host_vector);
+  auto device_buffer = copy.to(vecmem::get_data(host_vector), device_resource,
+                               vecmem::copy::type::host_to_device);
 
-    auto host_buffer = vecmem::get_data(host_vector);
-    auto device_buffer = copy.to(vecmem::get_data(host_vector), device_resource,
-                                 vecmem::copy::type::host_to_device);
+  vecmem::device_vector<unsigned int> device_vector(device_buffer);
 
-    vecmem::device_vector<unsigned int> device_vector(device_buffer);
+  thrust::fill(thrust::device, device_vector.begin(), device_vector.end(), 112);
 
-    thrust::fill(thrust::device, device_vector.begin(), device_vector.end(),
-                 112);
+  copy(device_buffer, host_buffer, vecmem::copy::type::device_to_host)->wait();
 
-    copy(device_buffer, host_buffer, vecmem::copy::type::device_to_host)
-        ->wait();
-
-    ASSERT_EQ(host_vector[0], 112);
-    ASSERT_EQ(host_vector[1], 112);
-    ASSERT_EQ(host_vector[2], 112);
-    ASSERT_EQ(host_vector[3], 112);
-    ASSERT_EQ(host_vector[4], 112);
-    ASSERT_EQ(host_vector[5], 112);
-    ASSERT_EQ(host_vector[6], 112);
+  ASSERT_EQ(host_vector[0], 112);
+  ASSERT_EQ(host_vector[1], 112);
+  ASSERT_EQ(host_vector[2], 112);
+  ASSERT_EQ(host_vector[3], 112);
+  ASSERT_EQ(host_vector[4], 112);
+  ASSERT_EQ(host_vector[5], 112);
+  ASSERT_EQ(host_vector[6], 112);
 }

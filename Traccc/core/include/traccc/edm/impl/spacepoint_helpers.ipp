@@ -15,8 +15,7 @@ namespace traccc::edm {
 template <detray::concepts::algebra algebra_t, typename spacepoint_backend_t>
 TRACCC_HOST_DEVICE detray::dpoint3D<algebra_t> get_spacepoint_global(
     const edm::spacepoint<spacepoint_backend_t>& sp) {
-
-    return utils::to_dpoint3D<algebra_t>(sp.global());
+  return utils::to_dpoint3D<algebra_t>(sp.global());
 }
 
 }  // namespace traccc::edm

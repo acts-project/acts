@@ -32,6 +32,7 @@ acts_add_library(
     src/RootMuonSpacePointWriter.cpp
     src/RootMuonSpacePointReader.cpp
     src/RootMeasurementPerformanceWriter.cpp
+    src/RootFileHasher.cpp
 )
 target_include_directories(
     ActsExamplesIoRoot
@@ -49,6 +50,21 @@ target_link_libraries(
         Threads::Threads
     PRIVATE ROOT::Core ROOT::Hist ROOT::Tree ROOT::TreePlayer
 )
+
+# RootFileHasher prefers Boost.Hash2 (SHA-256), which is available from Boost
+# 1.86 onwards. On older Boost it falls back to ROOT's TMD5 (MD5).
+if(Boost_VERSION VERSION_GREATER_EQUAL "1.86.0")
+    target_compile_definitions(
+        ActsExamplesIoRoot
+        PRIVATE ACTS_ROOT_FILE_HASHER_USE_BOOST_HASH2
+    )
+    target_link_libraries(ActsExamplesIoRoot PRIVATE Boost::boost)
+else()
+    message(
+        WARNING
+        "Boost ${Boost_VERSION} < 1.86.0: RootFileHasher falls back to MD5 (ROOT TMD5) instead of SHA-256 (Boost.Hash2)."
+    )
+endif()
 
 root_generate_dictionary(
   ActsExamplesIoRootDict MODULE ActsExamplesIoRoot LINKDEF LinkDef.hpp

@@ -64,6 +64,9 @@ class TrackingGeometryJsonConverter {
 
     /// The number of white space characters used for indentation
     unsigned indentation{4};
+
+    /// Whether to write surface material information during serialization
+    bool writeMaterial{true};
   };
 
   /// Generic lookup from object pointer identity to serialized object ID.

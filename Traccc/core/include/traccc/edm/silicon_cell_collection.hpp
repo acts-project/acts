@@ -28,138 +28,137 @@ namespace traccc::edm {
 ///
 template <typename BASE>
 class silicon_cell : public BASE {
+ public:
+  /// @name Constructors
+  /// @{
 
-    public:
-    /// @name Constructors
-    /// @{
+  /// Inherit the base class's constructor(s)
+  using BASE::BASE;
+  /// Use a default copy constructor
+  silicon_cell(const silicon_cell& other) = default;
+  /// Use a default move constructor
+  silicon_cell(silicon_cell&& other) noexcept = default;
 
-    /// Inherit the base class's constructor(s)
-    using BASE::BASE;
-    /// Use a default copy constructor
-    silicon_cell(const silicon_cell& other) = default;
-    /// Use a default move constructor
-    silicon_cell(silicon_cell&& other) = default;
+  /// @}
 
-    /// @}
+  /// @name Cell Information
+  /// @{
 
-    /// @name Cell Information
-    /// @{
+  /// The first channel identifier / index of the cell / strip (non-const)
+  ///
+  /// @return A (non-const) vector of @c traccc::channel_id values
+  ///
+  TRACCC_HOST_DEVICE
+  auto& channel0() { return BASE::template get<0>(); }
+  /// The first channel identifier / index of the cell / strip (const)
+  ///
+  /// @return A (const) vector of @c traccc::channel_id values
+  ///
+  TRACCC_HOST_DEVICE
+  const auto& channel0() const { return BASE::template get<0>(); }
 
-    /// The first channel identifier / index of the cell / strip (non-const)
-    ///
-    /// @return A (non-const) vector of @c traccc::channel_id values
-    ///
-    TRACCC_HOST_DEVICE
-    auto& channel0() { return BASE::template get<0>(); }
-    /// The first channel identifier / index of the cell / strip (const)
-    ///
-    /// @return A (const) vector of @c traccc::channel_id values
-    ///
-    TRACCC_HOST_DEVICE
-    const auto& channel0() const { return BASE::template get<0>(); }
+  /// The second channel identifier / index of the cell / strip (non-const)
+  ///
+  /// @return A (non-const) vector of @c traccc::channel_id values
+  ///
+  TRACCC_HOST_DEVICE
+  auto& channel1() { return BASE::template get<1>(); }
+  /// The second channel identifier / index of the cell / strip (const)
+  ///
+  /// @return A (const) vector of @c traccc::channel_id values
+  ///
+  TRACCC_HOST_DEVICE
+  const auto& channel1() const { return BASE::template get<1>(); }
 
-    /// The second channel identifier / index of the cell / strip (non-const)
-    ///
-    /// @return A (non-const) vector of @c traccc::channel_id values
-    ///
-    TRACCC_HOST_DEVICE
-    auto& channel1() { return BASE::template get<1>(); }
-    /// The second channel identifier / index of the cell / strip (const)
-    ///
-    /// @return A (const) vector of @c traccc::channel_id values
-    ///
-    TRACCC_HOST_DEVICE
-    const auto& channel1() const { return BASE::template get<1>(); }
+  /// The "activation" of the cell / strip (non-const)
+  ///
+  /// @return A (non-const) vector of @c float values
+  ///
+  TRACCC_HOST_DEVICE
+  auto& activation() { return BASE::template get<2>(); }
+  /// The "activation" of the cell / strip (const)
+  ///
+  /// @return A (const) vector of @c float values
+  ///
+  TRACCC_HOST_DEVICE
+  const auto& activation() const { return BASE::template get<2>(); }
 
-    /// The "activation" of the cell / strip (non-const)
-    ///
-    /// @return A (non-const) vector of @c float values
-    ///
-    TRACCC_HOST_DEVICE
-    auto& activation() { return BASE::template get<2>(); }
-    /// The "activation" of the cell / strip (const)
-    ///
-    /// @return A (const) vector of @c float values
-    ///
-    TRACCC_HOST_DEVICE
-    const auto& activation() const { return BASE::template get<2>(); }
+  /// The time associated with the cell / strip (non-const)
+  ///
+  /// @return A (non-const) vector of @c float values
+  ///
+  TRACCC_HOST_DEVICE
+  auto& time() { return BASE::template get<3>(); }
+  /// The time associated with the cell / strip (const)
+  ///
+  /// @return A (const) vector of @c float values
+  ///
+  TRACCC_HOST_DEVICE
+  const auto& time() const { return BASE::template get<3>(); }
 
-    /// The time associated with the cell / strip (non-const)
-    ///
-    /// @return A (non-const) vector of @c float values
-    ///
-    TRACCC_HOST_DEVICE
-    auto& time() { return BASE::template get<3>(); }
-    /// The time associated with the cell / strip (const)
-    ///
-    /// @return A (const) vector of @c float values
-    ///
-    TRACCC_HOST_DEVICE
-    const auto& time() const { return BASE::template get<3>(); }
+  /// The index of the module that this cell belongs to (non-const)
+  ///
+  /// Used to look up the module in @c traccc::silicon_detector_description.
+  ///
+  /// @return A (non-const) vector of <tt>unsigned int</tt> values
+  ///
+  TRACCC_HOST_DEVICE
+  auto& module_index() { return BASE::template get<4>(); }
+  /// The index of the module that this cell belongs to (const)
+  ///
+  /// Used to look up the module in @c traccc::silicon_detector_description.
+  ///
+  /// @return A (const) vector of <tt>unsigned int</tt> values
+  ///
+  TRACCC_HOST_DEVICE
+  const auto& module_index() const { return BASE::template get<4>(); }
 
-    /// The index of the module that this cell belongs to (non-const)
-    ///
-    /// Used to look up the module in @c traccc::silicon_detector_description.
-    ///
-    /// @return A (non-const) vector of <tt>unsigned int</tt> values
-    ///
-    TRACCC_HOST_DEVICE
-    auto& module_index() { return BASE::template get<4>(); }
-    /// The index of the module that this cell belongs to (const)
-    ///
-    /// Used to look up the module in @c traccc::silicon_detector_description.
-    ///
-    /// @return A (const) vector of <tt>unsigned int</tt> values
-    ///
-    TRACCC_HOST_DEVICE
-    const auto& module_index() const { return BASE::template get<4>(); }
+  /// @}
 
-    /// @}
+  /// @name Utility functions
+  /// @{
 
-    /// @name Utility functions
-    /// @{
+  /// Assignment operator
+  ///
+  /// @param[in] other The object to assign from
+  /// @return A reference to this object
+  ///
+  TRACCC_HOST_DEVICE silicon_cell& operator=(const silicon_cell& other);
 
-    /// Assignment operator
-    ///
-    /// @param[in] other The object to assign from
-    /// @return A reference to this object
-    ///
-    TRACCC_HOST_DEVICE silicon_cell& operator=(const silicon_cell& other);
+  /// Assignment operator
+  ///
+  /// @param[in] other The object to assign from
+  /// @return A reference to this object
+  ///
+  template <typename T,
+            std::enable_if_t<!std::is_same_v<BASE, T>, bool> = false>
+  TRACCC_HOST_DEVICE silicon_cell& operator=(const silicon_cell<T>& other);
 
-    /// Assignment operator
-    ///
-    /// @param[in] other The object to assign from
-    /// @return A reference to this object
-    ///
-    template <typename T,
-              std::enable_if_t<!std::is_same_v<BASE, T>, bool> = false>
-    TRACCC_HOST_DEVICE silicon_cell& operator=(const silicon_cell<T>& other);
+  /// Equality operator
+  ///
+  /// @note This function must only be used on proxy objects, not on
+  ///       containers!
+  ///
+  /// @param[in] other The object to compare with
+  /// @return @c true if the objects are equal, @c false otherwise
+  ///
+  template <typename T>
+  TRACCC_HOST_DEVICE bool operator==(const silicon_cell<T>& other) const;
 
-    /// Equality operator
-    ///
-    /// @note This function must only be used on proxy objects, not on
-    ///       containers!
-    ///
-    /// @param[in] other The object to compare with
-    /// @return @c true if the objects are equal, @c false otherwise
-    ///
-    template <typename T>
-    TRACCC_HOST_DEVICE bool operator==(const silicon_cell<T>& other) const;
+  /// Comparison operator
+  ///
+  /// @note This function must only be used on proxy objects, not on
+  ///       containers!
+  ///
+  /// @param[in] other The object to compare with
+  /// @return A weak ordering object, describing the relation between the
+  ///         two objects
+  ///
+  template <typename T>
+  TRACCC_HOST_DEVICE std::weak_ordering operator<=>(
+      const silicon_cell<T>& other) const;
 
-    /// Comparison operator
-    ///
-    /// @note This function must only be used on proxy objects, not on
-    ///       containers!
-    ///
-    /// @param[in] other The object to compare with
-    /// @return A weak ordering object, describing the relation between the
-    ///         two objects
-    ///
-    template <typename T>
-    TRACCC_HOST_DEVICE std::weak_ordering operator<=>(
-        const silicon_cell<T>& other) const;
-
-    /// @}
+  /// @}
 
 };  // class silicon_cell_collection_interface
 

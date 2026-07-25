@@ -34,7 +34,7 @@ kiwisolver==1.5.0
     # via matplotlib
 markdown-it-py==4.2.0
     # via rich
-matplotlib==3.11.0
+matplotlib==3.11.1
     # via
     #   -r Examples/Scripts/requirements.in
     #   mplhep
@@ -92,7 +92,7 @@ shellingham==1.5.4
     # via typer
 six==1.17.0
     # via python-dateutil
-typer==0.26.8
+typer==0.27.0
     # via -r Examples/Scripts/requirements.in
 typing-extensions==4.16.0
     # via
@@ -107,5 +107,5 @@ uhi==1.1.1
     #   mplhep
 uproot==5.7.5
     # via -r Examples/Scripts/requirements.in
-xxhash==3.8.0
+xxhash==3.8.1
     # via uproot

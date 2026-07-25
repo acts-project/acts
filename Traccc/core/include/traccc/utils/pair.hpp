@@ -10,11 +10,11 @@
 namespace traccc {
 template <typename T1, typename T2>
 struct pair {
-    public:
-    using first_type = T1;
-    using second_type = T2;
+ public:
+  using first_type = T1;
+  using second_type = T2;
 
-    T1 first;
-    T2 second;
+  T1 first;
+  T2 second;
 };
 }  // namespace traccc
