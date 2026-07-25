@@ -94,7 +94,7 @@ Volume& LayerBlueprintNode::build(const BlueprintOptions& options,
   for (auto& surface : impl().m_surfaces) {
     m_volume->addSurface(surface);
   }
-  for (auto& placement : impl().m_placements) {
+  for (const auto& placement : impl().m_placements) {
     m_volume->retainPlacement(placement);
   }
   impl().m_placements.clear();
