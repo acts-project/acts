@@ -581,7 +581,7 @@ jobs:
 
       - name: Build Key4hep dependents
         id: build
-        uses: aidasoft/run-lcg-view@d8db17c61216548c9192889942d46ff2d7c3a3b6 # v6
+        uses: aidasoft/run-lcg-view@244e9064431262039252d1b2d5ae9751879f5485 # v6.0.1
         continue-on-error: true
         with:
           container: ubuntu2404
