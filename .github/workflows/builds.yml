@@ -24,7 +24,7 @@ env:
 
 jobs:
   linux_ubuntu:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
     container: ghcr.io/acts-project/ubuntu2404:87
