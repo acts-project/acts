@@ -12,8 +12,8 @@
 
 namespace Acts {
 
-bool detail::checkPathLength(double pathLength, double nearLimit,
-                             double farLimit, const Logger& logger) {
+void detail::printCheckPathLength(double pathLength, double nearLimit,
+                                  double farLimit, const Logger& logger) {
   // TODO why?
   const double tolerance = s_onSurfaceTolerance;
 
@@ -40,8 +40,6 @@ bool detail::checkPathLength(double pathLength, double nearLimit,
                    << tolerance << ")");
     }
   }
-
-  return accept;
 }
 
 }  // namespace Acts
