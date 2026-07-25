@@ -730,8 +730,8 @@ template <TrackStateProxyConcept track_state_proxy_t>
     "Use calculateUnbiasedParametersCovariance(const AnyConstTrackStateProxy&) "
     "instead; the templated form instantiates expensive Eigen code in every "
     "translation unit.")]]
-std::pair<BoundVector, BoundMatrix>
-calculateUnbiasedParametersCovariance(track_state_proxy_t trackState) {
+std::pair<BoundVector, BoundMatrix> calculateUnbiasedParametersCovariance(
+    track_state_proxy_t trackState) {
   if (!trackState.hasSmoothed()) {
     throw std::invalid_argument("track state has no smoothed parameters");
   }
@@ -773,7 +773,7 @@ calculateUnbiasedParametersCovariance(track_state_proxy_t trackState) {
 /// @param trackState the (type-erased) track state to calculate from
 /// @return a pair of the unbiased parameters and their covariance
 std::pair<BoundVector, BoundMatrix> calculateUnbiasedParametersCovariance(
-    const AnyConstTrackStateProxy& trackState);
+    const AnyConstTrackStateProxy &trackState);
 
 }  // namespace Acts
 

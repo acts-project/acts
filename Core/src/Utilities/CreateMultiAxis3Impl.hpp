@@ -23,7 +23,8 @@ std::unique_ptr<IMultiAxis3D> createMultiAxis3(const FirstAxis& first,
                           const Axis2& a2) -> std::unique_ptr<IMultiAxis3D> {
     return third.visit([&first, &a2]<AxisConcept Axis3>(
                            const Axis3& a3) -> std::unique_ptr<IMultiAxis3D> {
-      return std::make_unique<MultiAxis<FirstAxis, Axis2, Axis3>>(first, a2, a3);
+      return std::make_unique<MultiAxis<FirstAxis, Axis2, Axis3>>(first, a2,
+                                                                  a3);
     });
   });
 }

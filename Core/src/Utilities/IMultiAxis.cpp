@@ -41,11 +41,10 @@ std::unique_ptr<IMultiAxis3D> IMultiAxis::create(const IAxis& axis1,
   // (CreateMultiAxis3_*.cpp) to keep this TU's compiler memory bounded. The
   // helper is only declared here, so no MultiAxis instantiation happens in
   // this TU.
-  return axis1.visit(
-      [&axis2, &axis3]<AxisConcept Axis1>(
-          const Axis1& a1) -> std::unique_ptr<IMultiAxis3D> {
-        return detail::createMultiAxis3<Axis1>(a1, axis2, axis3);
-      });
+  return axis1.visit([&axis2, &axis3]<AxisConcept Axis1>(
+                         const Axis1& a1) -> std::unique_ptr<IMultiAxis3D> {
+    return detail::createMultiAxis3<Axis1>(a1, axis2, axis3);
+  });
 }
 
 }  // namespace Acts
