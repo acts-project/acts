@@ -22,8 +22,14 @@ export CIBW_SKIP="*-musllinux* *-manylinux_i686"
 SETUP_CMD="bash {package}/CI/dependencies/setup.sh -t v23.3.1 -d deps -e env.sh"
 export CIBW_BEFORE_ALL_LINUX="dnf install -y bc ccache && ${SETUP_CMD}"
 export CIBW_BEFORE_ALL_MACOS="brew install ninja ccache && ${SETUP_CMD}"
-export CIBW_ENVIRONMENT="GITHUB_TOKEN=${GITHUB_TOKEN:-}"
-export CIBW_ENVIRONMENT_PASS="CI"
+# GITHUB_TOKEN must be forwarded via CIBW_ENVIRONMENT_PASS, not CIBW_ENVIRONMENT:
+# the platform-specific CIBW_ENVIRONMENT_{LINUX,MACOS} below fully *replace*
+# CIBW_ENVIRONMENT (they are not merged), so a token set there would be dropped.
+# On macOS the build runs on the host and inherits GITHUB_TOKEN from the shell
+# regardless, but Linux builds run in a container where only *_PASS variables
+# cross the boundary, so without this the token is empty inside the container and
+# all GitHub/GHCR dependency fetches run unauthenticated.
+export CIBW_ENVIRONMENT_PASS="CI GITHUB_TOKEN"
 export CIBW_BEFORE_BUILD="ccache -z"
 export CIBW_ENVIRONMENT_LINUX="CMAKE_PREFIX_PATH=\$PWD/deps/venv:\$PWD/deps/view CCACHE_DIR=/host${CCACHE_DIR} LD_LIBRARY_PATH=\$PWD/deps/view/lib64:\$PWD/deps/view/lib:\$PWD/deps/venv/lib64:\$PWD/deps/venv/lib"
 export CIBW_ENVIRONMENT_MACOS="CMAKE_PREFIX_PATH=\$PWD/deps/venv:\$PWD/deps/view CCACHE_DIR=${CCACHE_DIR} MACOSX_DEPLOYMENT_TARGET=26.0"
