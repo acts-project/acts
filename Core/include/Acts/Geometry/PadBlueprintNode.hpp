@@ -45,9 +45,25 @@ class PadBlueprintNode final : public StaticBlueprintNode {
   Volume& build(const BlueprintOptions& options, const GeometryContext& gctx,
                 const Logger& logger = Acts::getDummyLogger()) override;
 
-  /// Get the tracking volume for this node.
-  /// @return Pointer to the tracking volume (may be nullptr)
-  TrackingVolume* trackingVolume() const;
+  /// Create a volume that encloses @p inner, enlarged by @p envelope.
+  /// The padded volume inherits the transform of @p inner, and its bounds are
+  /// expanded in the *local* frame of @p inner.
+  /// @note The envelope must be symmetric in every direction that the bounds
+  ///       cannot express asymmetrically (z for cylinders, all of x/y/z for
+  ///       cuboids), otherwise the padded volume could not stay centered on
+  ///       @p inner.
+  /// @param gctx The geometry context
+  /// @param inner The volume to enclose
+  /// @param envelope The envelope to add to the bounds of @p inner
+  /// @param name The name of the padded volume
+  /// @param logger The logger to use
+  /// @return The padded volume enclosing @p inner
+  /// @throws std::logic_error if @p inner has unsupported bounds, or if the
+  ///         envelope is asymmetric where it must not be
+  static std::unique_ptr<TrackingVolume> padded(
+      const GeometryContext& gctx, const Volume& inner,
+      const ExtentEnvelope& envelope, const std::string& name,
+      const Logger& logger = Acts::getDummyLogger());
 
  private:
   ExtentEnvelope m_envelope;
