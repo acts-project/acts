@@ -29,3 +29,12 @@ jobs:
           CIBW_BUILD: "cp311-*"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CCACHE_DIR: ${{ github.workspace }}/ccache
+          DIAG_OUTDIR: ${{ github.workspace }}/diag-out
+
+      - name: Upload diagnostics (un-repaired wheel + dep tree)
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: macos-diag
+          path: diag-out/
+          if-no-files-found: warn
