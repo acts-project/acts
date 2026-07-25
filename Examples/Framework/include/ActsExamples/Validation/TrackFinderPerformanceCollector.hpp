@@ -14,7 +14,6 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
-#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
 #include "ActsExamples/Validation/FakePlotTool.hpp"
@@ -52,12 +51,12 @@ class TrackFinderPerformanceCollector {
   /// Fill histograms for one event.
   ///
   /// @note The caller must ensure exclusive access (e.g. hold a mutex).
-  ProcessCode fill(const Acts::GeometryContext& geoContext,
-                   const ConstTrackContainer& tracks,
-                   const SimParticleContainer& particles,
-                   const TrackParticleMatching& trackParticleMatching,
-                   const ParticleTrackMatching& particleTrackMatching,
-                   const InverseMultimap<SimBarcode>& particleMeasurementsMap);
+  void fill(const Acts::GeometryContext& geoContext,
+            const ConstTrackContainer& tracks,
+            const SimParticleContainer& particles,
+            const TrackParticleMatching& trackParticleMatching,
+            const ParticleTrackMatching& particleTrackMatching,
+            const InverseMultimap<SimBarcode>& particleMeasurementsMap);
 
   /// Summary count statistics accumulated across all filled events.
   struct Stats {

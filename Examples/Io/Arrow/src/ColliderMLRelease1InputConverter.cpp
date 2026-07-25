@@ -25,6 +25,7 @@
 #include <numeric>
 #include <stdexcept>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -96,7 +97,6 @@ loadGeoIdMapFromCsv(const std::filesystem::path& path,
                              "' in '" + path.string() + "'");
   };
 
-  const std::size_t iExtra = findCol(srcPrefix + "_extra");
   const std::size_t iVolume = findCol(srcPrefix + "_volume");
   const std::size_t iLayer = findCol(srcPrefix + "_layer");
   const std::size_t iSensitive = findCol(srcPrefix + "_sensitive");
@@ -106,7 +106,6 @@ loadGeoIdMapFromCsv(const std::filesystem::path& path,
   while (reader.read(columns)) {
     auto key =
         Acts::GeometryIdentifier()
-            .withExtra(static_cast<std::uint32_t>(std::stoul(columns[iExtra])))
             .withVolume(
                 static_cast<std::uint32_t>(std::stoul(columns[iVolume])))
             .withLayer(static_cast<std::uint32_t>(std::stoul(columns[iLayer])))
@@ -273,6 +272,21 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
   const arrow::Table& hitsTable = *m_inputHits(ctx).table();
 
   // ------------------------------------------------------------------
+  // 0. Build set of particle_ids that have at least one hit (optional), so
+  //    the particle loop below can skip unreferenced particles without a
+  //    second pass.
+  // ------------------------------------------------------------------
+  std::unordered_set<std::uint64_t> particleIdsWithHits;
+  if (!m_cfg.keepParticlesWithoutHits) {
+    auto [hpOff, nHitsForFilter] = rowBounds(hitsTable, "particle_id");
+    auto hpidFilterArr =
+        colValues<arrow::UInt64Array>(hitsTable, "particle_id");
+    for (std::int64_t i = 0; i < nHitsForFilter; ++i) {
+      particleIdsWithHits.insert(hpidFilterArr->Value(hpOff + i));
+    }
+  }
+
+  // ------------------------------------------------------------------
   // 1. Parse particles table → SimParticleContainer + barcode index
   // ------------------------------------------------------------------
   auto [pOff, nParticles] = rowBounds(particleTable, "particle_id");
@@ -291,8 +305,9 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
       colValues<arrow::UInt16Array>(particleTable, "vertex_primary");
   auto primaryArr = colValues<arrow::BooleanArray>(particleTable, "primary");
 
-  // barcode vector indexed by ColliderML particle row-index
-  std::vector<SimBarcode> barcodes(static_cast<std::size_t>(nParticles));
+  // barcode map keyed by ColliderML particle_id, not row index (particle_ids
+  // are not 0-based consecutive row indices).
+  std::unordered_map<std::uint64_t, SimBarcode> cmlPidToActsBarcode;
 
   SimParticleContainer::sequence_type particleSeq;
   particleSeq.reserve(static_cast<std::size_t>(nParticles));
@@ -305,7 +320,13 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
                         .withVertexPrimary(vp)
                         .withParticle(static_cast<std::uint64_t>(i))
                         .withGeneration(isPrimary ? 0u : 1u);
-    barcodes[static_cast<std::size_t>(i)] = bc;
+    const std::uint64_t pid = pidArr->Value(pOff + i);
+    cmlPidToActsBarcode[pid] = bc;
+
+    if (!m_cfg.keepParticlesWithoutHits &&
+        particleIdsWithHits.count(pid) == 0) {
+      continue;
+    }
 
     const double mass = static_cast<double>(massArr->Value(pOff + i));
     const double charge = static_cast<double>(chargeArr->Value(pOff + i));
@@ -373,18 +394,12 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
     const std::uint8_t cmlVol = volArr->Value(hOff + i);
     const std::uint16_t cmlLay = layerArr->Value(hOff + i);
     const std::uint32_t cmlSurf = surfArr->Value(hOff + i);
-    const auto cmlKey = Acts::GeometryIdentifier()
-                            .withExtra(cmlDet)
-                            .withVolume(cmlVol)
-                            .withLayer(cmlLay)
-                            .withSensitive(cmlSurf);
-
-    const auto lookupKey = m_cfg.geoIdMapPath.empty()
-                               ? Acts::GeometryIdentifier()
-                                     .withVolume(cmlVol)
-                                     .withLayer(cmlLay)
-                                     .withSensitive(cmlSurf)
-                               : cmlKey;
+    // `detector` is not part of the lookup key: (volume, layer, sensitive)
+    // alone already uniquely identifies a sensitive surface.
+    const auto lookupKey = Acts::GeometryIdentifier()
+                               .withVolume(cmlVol)
+                               .withLayer(cmlLay)
+                               .withSensitive(cmlSurf);
     auto geoIt = m_geoIdMap.find(lookupKey);
     if (geoIt == m_geoIdMap.end()) {
       ACTS_ERROR("Hit " << i << " (det=" << +cmlDet << " vol=" << +cmlVol
@@ -395,10 +410,9 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
     const Acts::GeometryIdentifier geoId = geoIt->second;
 
     const std::uint64_t cmlPid = hpidArr->Value(hOff + i);
-    SimBarcode barcode{};
-    if (cmlPid < static_cast<std::uint64_t>(barcodes.size())) {
-      barcode = barcodes[static_cast<std::size_t>(cmlPid)];
-    }
+    auto bcIt = cmlPidToActsBarcode.find(cmlPid);
+    SimBarcode barcode =
+        (bcIt != cmlPidToActsBarcode.end()) ? bcIt->second : SimBarcode{};
 
     const double tx = txArr->Value(hOff + i);
     const double ty = tyArr->Value(hOff + i);

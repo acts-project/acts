@@ -9,7 +9,7 @@
 #include "ActsExamples/Vertexing/HoughVertexFinderAlgorithm.hpp"
 
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Vertexing/HoughVertexFinder2.hpp"
+#include "Acts/Vertexing/HoughVertexFinder.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
 
 #include <chrono>
@@ -35,13 +35,13 @@ ProcessCode HoughVertexFinderAlgorithm::execute(
   // retrieve input space points
   const SpacePointContainer& inputSpacePoints = m_inputSpacePoints(ctx);
 
-  Acts::HoughVertexFinder2::Config houghVtxCfg;
+  Acts::HoughVertexFinder::Config houghVtxCfg;
   houghVtxCfg.targetSPs = m_cfg.targetSPs;
   houghVtxCfg.minAbsEta = m_cfg.minAbsEta;
   houghVtxCfg.maxAbsEta = m_cfg.maxAbsEta;
   houghVtxCfg.minHits = m_cfg.minHits;
   houghVtxCfg.defVtxPosition = m_cfg.defVtxPosition;
-  Acts::HoughVertexFinder2 houghVertexFinder(houghVtxCfg);
+  Acts::HoughVertexFinder houghVertexFinder(houghVtxCfg);
 
   // find vertices and measure elapsed time
   auto t1 = std::chrono::high_resolution_clock::now();

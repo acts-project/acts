@@ -16,6 +16,9 @@ nlohmann::json Acts::AxisJsonConverter::toJson(const IAxis& ia) {
   nlohmann::json jAxis;
 
   jAxis["boundary_type"] = ia.getBoundaryType();
+  if (ia.getDirection().has_value()) {
+    jAxis["direction"] = ia.getDirection().value();
+  }
   // type, range, bins or boundaries
   if (ia.isEquidistant()) {
     jAxis["type"] = AxisType::Equidistant;
@@ -33,14 +36,20 @@ std::unique_ptr<Acts::IAxis> Acts::AxisJsonConverter::fromJson(
   Acts::AxisType axisType = jAxis.at("type");
   Acts::AxisBoundaryType boundaryType = jAxis.at("boundary_type");
 
+  std::optional<Acts::AxisDirection> direction = std::nullopt;
+  if (jAxis.contains("direction")) {
+    direction = jAxis.at("direction").get<Acts::AxisDirection>();
+  }
+
   if (axisType == Acts::AxisType::Equidistant) {
     std::array<double, 2u> range = jAxis.at("range");
-    return Acts::IAxis::createEquidistant(boundaryType, range.at(0),
-                                          range.at(1), jAxis.at("bins"));
+    return Acts::IAxis::createEquidistant(
+        boundaryType, range.at(0), range.at(1), jAxis.at("bins"), direction);
   }
 
   return Acts::IAxis::createVariable(
-      boundaryType, jAxis.at("boundaries").get<std::vector<double>>());
+      boundaryType, jAxis.at("boundaries").get<std::vector<double>>(),
+      direction);
 }
 
 namespace {

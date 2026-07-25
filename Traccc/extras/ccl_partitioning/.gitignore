@@ -1,0 +1,4 @@
+*.cabal
+*.lock
+*.csv
+.stack-work/

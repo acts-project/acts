@@ -175,14 +175,17 @@ class ACTS_ARROW_EXPORT ParquetFileWriter {
   std::unique_ptr<Impl> m_impl;
 };
 
-/// Reader for an @c arrow::dataset::FileSystemDataset of Parquet shard
-/// files. Discovers all @c *.parquet files under @p directory at
-/// construction, validates that each carries the @c event_id column, and
-/// answers per-event lookups via filter pushdown into the dataset scanner.
+/// Reader for a directory of Parquet shard files. Discovers all
+/// @c *.parquet files under @p directory at construction, reads their
+/// footers to build an event-id → shard index, and answers per-event
+/// lookups via an in-memory shard cache.
 ///
-/// File-level pruning via Parquet footer min/max statistics reduces a
-/// per-event lookup to opening exactly one fragment when shards own
-/// disjoint event-id ranges (the layout produced by @c ParquetWriter).
+/// On the first access to an event, the owning shard is read in full
+/// (decompressed into an @c arrow::Table) and stored in an LRU cache.
+/// Subsequent accesses to events in the same shard are served by an
+/// @c O(1) @c arrow::Table::Slice call with no I/O. Cache capacity is
+/// in units of shards; default 1 is optimal for sequential single-
+/// threaded processing. Set to @c numThreads for parallel runs.
 ///
 /// Optionally accepts a target schema: when supplied, the dataset is
 /// built with that schema instead of the inspected union, so fragments
@@ -190,12 +193,13 @@ class ACTS_ARROW_EXPORT ParquetFileWriter {
 /// (added-column schema evolution) and fragments carrying extra columns
 /// have them dropped. The supplied schema must NOT include the
 /// @c event_id column — the reader prepends it internally. When
-/// omitted, the dataset schema is inferred from the fragments.
+/// omitted, the schema is inferred from the first shard file.
 class ACTS_ARROW_EXPORT ParquetDatasetReader {
  public:
   explicit ParquetDatasetReader(
       std::filesystem::path directory,
-      const std::shared_ptr<arrow::Schema>& targetSchema = nullptr);
+      const std::shared_ptr<arrow::Schema>& targetSchema = nullptr,
+      std::size_t cacheCapacity = 1);
   ~ParquetDatasetReader();
 
   ParquetDatasetReader(const ParquetDatasetReader&) = delete;

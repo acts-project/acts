@@ -16,6 +16,8 @@ EXCLUDE_PATHS = (
     "Detray/detectors",
     # CLI tools
     "Detray/tests/tools",
+    # TODO: Remove the traccc part.
+    "Traccc",
     "git",
     "Python",
     "Scripts",
@@ -84,6 +86,8 @@ EXCLUDE_FILES = (
     # Python uv files
     "Detray/codegen/detray-sympy/uv.lock",
     "Detray/python/detray/uv.lock",
+    # TODO: remove after file is gone
+    "Core/include/Acts/Utilities/ProtoAxisHelpers.hpp",
 )
 SUFFIX_CPP = (
     ".hpp",

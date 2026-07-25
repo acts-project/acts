@@ -832,6 +832,8 @@ class KalmanFitter {
 
     calculateTrackQuantities(track);
 
+    track.linkForward();
+
     return track;
   }
 
