@@ -192,6 +192,7 @@ class GeometryIdMapVisitor : public TrackingGeometryVisitor {
     const auto& surface = portal.surface();
     checkIdentifier(surface, "portal");
     m_surfacesById.emplace(surface.geometryId(), &surface);
+    m_portalsById.emplace(surface.geometryId(), &portal);
 
     for (const auto& tag : portal.tags()) {
       auto [it, inserted] = m_portalsByTag.try_emplace(tag, &portal);
@@ -209,6 +210,7 @@ class GeometryIdMapVisitor : public TrackingGeometryVisitor {
 
   std::unordered_map<GeometryIdentifier, const TrackingVolume*> m_volumesById{};
   std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById{};
+  std::unordered_map<GeometryIdentifier, const Portal*> m_portalsById{};
   detail::PortalTagMap m_portalsByTag{};
 
   std::unordered_map<GeometryIdentifier, const GeometryObject*> m_objectsById{};
@@ -230,6 +232,7 @@ TrackingGeometry::TrackingGeometry(
   apply(mapVisitor);
   m_volumesById = std::move(mapVisitor.m_volumesById);
   m_surfacesById = std::move(mapVisitor.m_surfacesById);
+  m_portalsById = std::move(mapVisitor.m_portalsById);
   m_portalsByTag = std::move(mapVisitor.m_portalsByTag);
 
   ACTS_DEBUG("TrackingGeometry created with "
@@ -304,6 +307,10 @@ const Portal* TrackingGeometry::findPortal(std::string_view tag) const {
     return nullptr;
   }
   return it->second;
+}
+const Portal* TrackingGeometry::findPortal(GeometryIdentifier id) const {
+  auto itr = m_portalsById.find(id);
+  return itr != m_portalsById.end() ? itr->second : nullptr;
 }
 
 const std::unordered_map<GeometryIdentifier, const Surface*>&

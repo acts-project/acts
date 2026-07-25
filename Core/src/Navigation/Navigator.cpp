@@ -38,16 +38,6 @@ Navigator::Navigator(Config cfg, std::shared_ptr<const Logger> _logger)
     throw std::invalid_argument("Navigator: No tracking geometry provided.");
   }
   m_geometryVersion = m_cfg.trackingGeometry->geometryVersion();
-
-  m_cfg.trackingGeometry->apply([this](const Portal& portal) {
-    auto [insert, ok] =
-        m_surfPortalMap.insert(std::make_pair(&portal.surface(), &portal));
-    if (!ok && &portal != insert->second) {
-      throw std::invalid_argument(
-          std::format("Navigator Surface: {:} used for multiple portals",
-                      portal.surface().geometryId()));
-    }
-  });
 }
 
 Navigator::State Navigator::makeState(const Options& options) const {
@@ -179,9 +169,11 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
                                 << state.currentLayer->geometryId());
   }
 
-  // navigation is started on a portal
-  if (const auto portalItr = m_surfPortalMap.find(state.currentSurface);
-      portalItr != m_surfPortalMap.end()) {
+  // navigation started on a portal
+  if (const auto portal = m_cfg.trackingGeometry->findPortal(
+          state.currentSurface != nullptr ? state.currentSurface->geometryId()
+                                          : GeometryIdentifier{});
+      portal != nullptr) {
     auto locPos = state.currentSurface->globalToLocal(
         state.options.geoContext, position, direction,
         state.options.surfaceTolerance);
@@ -198,8 +190,8 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
                                            BoundaryTolerance::None())) {
       ACTS_VERBOSE(volInfo(state) << "Navigation starts on a portal "
                                   << state.currentSurface->geometryId());
-      auto res = portalItr->second->resolveVolume(state.options.geoContext,
-                                                  position, direction);
+      auto res =
+          portal->resolveVolume(state.options.geoContext, position, direction);
       if (!res.ok()) {
         ACTS_ERROR(volInfo(state) << "Failed to resolve volume through portal: "
                                   << res.error().message());

@@ -226,6 +226,12 @@ class TrackingGeometry {
   /// @retval pointer to the tagged portal otherwise.
   const Portal* findPortal(std::string_view tag) const;
 
+  /// Search for a portal  with the given identifier.
+  ///
+  /// @param id is the geometry identifier of the surface associated with the portal
+  /// @retval nullptr if no such portal exists
+  /// @retval pointer to the found portal otherwise
+  const Portal* findPortal(GeometryIdentifier id) const;
   /// Access to the GeometryIdentifier - Surface association map
   /// @return Const reference to the geometry ID to surface map
   const std::unordered_map<GeometryIdentifier, const Surface*>&
@@ -255,6 +261,7 @@ class TrackingGeometry {
   // lookup containers
   std::unordered_map<GeometryIdentifier, const TrackingVolume*> m_volumesById;
   std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById;
+  std::unordered_map<GeometryIdentifier, const Portal*> m_portalsById;
   detail::PortalTagMap m_portalsByTag;
 };
 
