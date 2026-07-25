@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -168,7 +169,8 @@ BOOST_AUTO_TEST_CASE(CalculateUnbiasedParametersCovariance) {
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
   auto ts = createTestTrackState(tc);
 
-  auto [params, cov] = calculateUnbiasedParametersCovariance(ts);
+  auto [params, cov] =
+      calculateUnbiasedParametersCovariance(AnyConstTrackStateProxy{ts});
 
   // reference found by running the code
   BoundVector refParams = BoundVector::Zero();
