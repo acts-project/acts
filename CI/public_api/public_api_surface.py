@@ -8,11 +8,11 @@ dependency headers or compile flags -- just the ``doxygen`` binary.
 
 Typical use (runs Doxygen itself, then reports):
 
-    CI/public_api_surface.py --run --json surface.json --markdown surface.md
+    CI/public_api/public_api_surface.py --run --json surface.json --markdown surface.md
 
 Or parse an existing XML tree:
 
-    CI/public_api_surface.py --xml <dir>/xml --markdown -
+    CI/public_api/public_api_surface.py --xml <dir>/xml --markdown -
 
 Writes a Markdown summary to ``$GITHUB_STEP_SUMMARY`` when that env var is set.
 """
@@ -29,7 +29,8 @@ import xml.etree.ElementTree as ET
 from collections import Counter, defaultdict
 from pathlib import Path
 
-DOXYFILE = "CI/public_api/Doxyfile"
+# Absolute so it resolves regardless of the caller's working directory.
+DOXYFILE = str(Path(__file__).resolve().parent / "Doxyfile")
 
 # Plugins deliberately left out of the public-API surface metric. (The
 # top-level Detray/ and Traccc/ build-integration folders live outside Plugins/

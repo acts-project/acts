@@ -123,7 +123,7 @@ jobs:
       - name: Self-test the surface tooling
         # Guards the classification logic and catches Doxygen output drift.
         run: |
-          CI/test_public_api_surface.py
+          CI/public_api/test_public_api_surface.py
           CI/test_check_deprecated_docs.py
       - name: Require @deprecated docs on [[deprecated]] declarations
         # Every [[deprecated]] attribute must carry a Doxygen @deprecated command
@@ -134,7 +134,7 @@ jobs:
           Core/include Plugins Fatras/include Alignment/include
       - name: Measure public API surface (this ref)
         run: >
-          CI/public_api_surface.py --run --roots-under .
+          CI/public_api/public_api_surface.py --run --roots-under .
           --json api-surface.json
           --markdown api-surface.md
           --summary
@@ -146,10 +146,10 @@ jobs:
           git worktree add --detach /tmp/base-tree "$BASE_SHA"
           # Base measured with THIS ref's Doxyfile/scripts, over the base tree.
           # No --summary here: it would duplicate the surface table.
-          CI/public_api_surface.py --run --roots-under /tmp/base-tree \
+          CI/public_api/public_api_surface.py --run --roots-under /tmp/base-tree \
             --json base-surface.json --markdown /dev/null
           # Report only for now; classification JSON drives the labeler job.
-          CI/public_api_diff.py \
+          CI/public_api/public_api_diff.py \
             --base base-surface.json --head api-surface.json \
             --json api-surface-diff.json --markdown /dev/null --summary --fail-on none
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

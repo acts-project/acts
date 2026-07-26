@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Diff two public-API-surface snapshots and classify the change.
 
-Consumes two JSON files from CI/public_api_surface.py. Each carries:
+Consumes two JSON files from CI/public_api/public_api_surface.py. Each carries:
   * ``symbols``   -- name-level keys for non-function entities
                      (types, concepts, aliases, variables, enums)
   * ``callables`` -- source-callable function/method signatures -> return type,
@@ -19,7 +19,7 @@ Classification (source-level API only; ABI is out of scope):
 Emits Markdown (for the PR/job summary) and a machine-readable JSON that a
 labeling job can act on. Optionally fails the job (``--fail-on``).
 
-    CI/public_api_diff.py --base base.json --head head.json \
+    CI/public_api/public_api_diff.py --base base.json --head head.json \
         --json classification.json --markdown - --fail-on none
 """
 

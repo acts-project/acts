@@ -7,7 +7,7 @@ Guards two things against silent breakage:
     headers with a known set of API differences -- this also catches a Doxygen
     upgrade quietly changing its XML.
 
-Run directly (``python3 CI/test_public_api_surface.py``): all ``test_*``
+Run directly (``python3 CI/public_api/test_public_api_surface.py``): all ``test_*``
 functions run; a non-zero exit means a failure. The e2e test is skipped when
 ``doxygen`` is not on PATH. Also collectable by pytest.
 """
@@ -122,7 +122,7 @@ def test_classify_no_change():
 
 def _measure(input_dir: Path) -> dict:
     out = Path(tempfile.mkdtemp(prefix="api-selftest-"))
-    pas.run_doxygen(repo=HERE.parent, out=out, input_dirs=[input_dir])
+    pas.run_doxygen(repo=HERE.parents[1], out=out, input_dirs=[input_dir])
     return pas.parse_xml(out / "xml")
 
 
@@ -130,7 +130,7 @@ def test_end_to_end_fixture():
     if not shutil.which("doxygen"):
         print("  (skipped: doxygen not on PATH)")
         return
-    data = HERE / "public_api" / "testdata"
+    data = HERE / "testdata"
     base = _measure(data / "base" / "Acts")
     head = _measure(data / "head" / "Acts")
     c = pad.classify(base, head)

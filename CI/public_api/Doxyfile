@@ -5,13 +5,13 @@
 # matches what is considered public API:
 #   * EXTRACT_ALL = NO        -> only *documented* entities count
 #   * detail / Experimental excluded by path and by symbol
-# Only XML is generated; CI/public_api_surface.py parses it into a report.
+# Only XML is generated; CI/public_api/public_api_surface.py parses it into a report.
 #
 # Run from the repository root:
 #   OUTPUT_DIRECTORY=<dir> doxygen CI/public_api/Doxyfile
 
 PROJECT_NAME           = "ACTS public API"
-# Caller sets DOXY_INPUT (CI/public_api_surface.py does this).
+# Caller sets DOXY_INPUT (CI/public_api/public_api_surface.py does this).
 INPUT                  = $(DOXY_INPUT)
 RECURSIVE              = YES
 FILE_PATTERNS          = *.hpp *.ipp
