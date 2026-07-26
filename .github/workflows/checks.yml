@@ -125,24 +125,24 @@ jobs:
           CI/public_api_surface.py --run
           --json api-surface.json
           --markdown api-surface.md
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: api-surface
-          path: |
-            api-surface.json
-            api-surface.md
-      - name: Diff against base and gate additions
+      - name: Diff public API surface against base
         if: github.event_name == 'pull_request'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          # A maintainer accepts public-API growth by applying this label.
-          ALLOW_ADDITIONS: ${{ contains(github.event.pull_request.labels.*.name, 'Public API') }}
         run: |
           git worktree add --detach /tmp/base-tree "$BASE_SHA"
           CI/public_api_surface.py --run \
             --input /tmp/base-tree/Core/include/Acts \
             --json base-surface.json --markdown /dev/null
+          # Report only for now; classification JSON drives the labeler job.
           CI/public_api_diff.py \
             --base base-surface.json --head api-surface.json \
-            --label-name "Public API" \
-            --allow-additions "$ALLOW_ADDITIONS"
+            --json api-surface-diff.json --markdown /dev/null --fail-on none
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: api-surface
+          if-no-files-found: ignore
+          path: |
+            api-surface.json
+            api-surface.md
+            api-surface-diff.json

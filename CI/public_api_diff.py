@@ -1,20 +1,26 @@
 #!/usr/bin/env python3
-"""Diff two public-API-surface snapshots and optionally gate on additions.
+"""Diff two public-API-surface snapshots and classify the change.
 
-Consumes two JSON files produced by CI/public_api_surface.py (each carries a
-``symbols`` list of stable per-symbol keys) and reports which public symbols a
-PR adds or removes.
+Consumes two JSON files from CI/public_api_surface.py. Each carries:
+  * ``symbols``   -- name-level keys for non-function entities
+                     (types, concepts, aliases, variables, enums)
+  * ``callables`` -- source-callable function/method signatures -> return type,
+                     with defaulted arguments already expanded into their
+                     shorter callable forms.
 
-Gate: adding public API grows the committed surface, so it requires explicit
-maintainer sign-off. If the head snapshot adds symbols and ``--allow-additions``
-is not set, this exits non-zero. A maintainer records approval by applying the
-designated label to the PR (the workflow maps the label to ``--allow-additions``).
+Classification (source-level API only; ABI is out of scope):
+  * ADDED    -- names/signatures present in head but not base
+                (new type, new overload, added *defaulted* argument, ...)
+  * BREAKING -- present in base but not head, or a changed return type:
+                removals, renames (old name gone), removing an argument,
+                adding a *non-defaulted* argument, or retyping a parameter
+                (all drop the old callable form), and return-type changes.
 
-Removals are breaking changes; they are reported but not gated here (use the
-existing "Breaking change" label / SemVer-major process).
+Emits Markdown (for the PR/job summary) and a machine-readable JSON that a
+labeling job can act on. Optionally fails the job (``--fail-on``).
 
     CI/public_api_diff.py --base base.json --head head.json \
-        --label-name "Public API" --allow-additions false
+        --json classification.json --markdown - --fail-on none
 """
 
 from __future__ import annotations
@@ -25,75 +31,121 @@ import os
 import sys
 from pathlib import Path
 
-
-def load_symbols(path: str) -> set[str]:
-    data = json.loads(Path(path).read_text())
-    return set(data.get("symbols", []))
+NONFUNC_PREFIXES = ("type ", "concept ", "aliases ", "variables ", "enums ")
 
 
-def fmt_list(title: str, items: list[str], cap: int = 60) -> list[str]:
-    lines = [f"<details><summary>{title} ({len(items)})</summary>", ""]
-    for s in items[:cap]:
-        lines.append(f"- `{s}`")
+def load(path: str) -> dict:
+    return json.loads(Path(path).read_text())
+
+
+def classify(base: dict, head: dict) -> dict:
+    # non-function, name-level entities
+    b_names = {s for s in base.get("symbols", []) if s.startswith(NONFUNC_PREFIXES)}
+    h_names = {s for s in head.get("symbols", []) if s.startswith(NONFUNC_PREFIXES)}
+    added_names = sorted(h_names - b_names)
+    removed_names = sorted(b_names - h_names)
+
+    # function/method callable signatures
+    b_call = base.get("callables", {})
+    h_call = head.get("callables", {})
+    b_keys, h_keys = set(b_call), set(h_call)
+    added_forms = sorted(h_keys - b_keys)
+    removed_forms = sorted(b_keys - h_keys)
+    ret_changed = sorted(
+        f"{k}: {b_call[k]} -> {h_call[k]}"
+        for k in (b_keys & h_keys) if b_call[k] != h_call[k]
+    )
+
+    added = added_names + added_forms
+    breaking = removed_names + removed_forms + ret_changed
+    return {
+        "added": added,
+        "breaking": breaking,
+        "added_names": added_names,
+        "added_signatures": added_forms,
+        "removed_names": removed_names,
+        "removed_signatures": removed_forms,
+        "return_type_changes": ret_changed,
+        "added_count": len(added),
+        "breaking_count": len(breaking),
+        "has_additions": bool(added),
+        "has_breaking": bool(breaking),
+    }
+
+
+def _details(title: str, items: list[str], cap: int = 60) -> list[str]:
+    out = [f"<details><summary>{title} ({len(items)})</summary>", ""]
+    out += [f"- `{s}`" for s in items[:cap]]
     if len(items) > cap:
-        lines.append(f"- … and {len(items) - cap} more")
-    lines += ["", "</details>"]
-    return lines
+        out.append(f"- … and {len(items) - cap} more")
+    return out + ["", "</details>"]
+
+
+def render_markdown(c: dict) -> str:
+    lines = ["## Public API surface diff", ""]
+    if not c["has_additions"] and not c["has_breaking"]:
+        return "\n".join(lines + ["No change to the public API surface. ✅", ""]) + "\n"
+
+    lines.append(f"**+{c['added_count']} added**, "
+                 f"**{c['breaking_count']} breaking**.")
+    lines.append("")
+    if c["has_breaking"]:
+        lines.append("### ⚠️ Breaking API changes (source-level)")
+        if c["removed_names"]:
+            lines += _details("Removed types / aliases / enums / variables", c["removed_names"])
+        if c["removed_signatures"]:
+            lines += _details("Removed or changed call signatures", c["removed_signatures"])
+        if c["return_type_changes"]:
+            lines += _details("Return-type changes", c["return_type_changes"])
+        lines.append("")
+    if c["has_additions"]:
+        lines.append("### ➕ Added public API")
+        if c["added_names"]:
+            lines += _details("New types / aliases / enums / variables / concepts", c["added_names"])
+        if c["added_signatures"]:
+            lines += _details("New call signatures (incl. defaulted-arg overloads)", c["added_signatures"])
+    return "\n".join(lines) + "\n"
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--base", required=True, help="base snapshot JSON")
-    ap.add_argument("--head", required=True, help="head snapshot JSON")
+    ap.add_argument("--base", required=True)
+    ap.add_argument("--head", required=True)
+    ap.add_argument("--json", help="write classification JSON here")
+    ap.add_argument("--markdown", help="write Markdown here ('-' for stdout)")
+    ap.add_argument("--fail-on", choices=["none", "additions", "breaking", "any"],
+                    default="none", help="exit non-zero when this category is present")
     ap.add_argument("--allow-additions", default="false",
-                    help="'true' to permit additions (maintainer label applied)")
-    ap.add_argument("--label-name", default="Public API",
-                    help="label name shown in the failure message")
-    ap.add_argument("--markdown", help="write Markdown report here ('-' for stdout)")
+                    help="'true' suppresses failure on additions (e.g. maintainer label present)")
     args = ap.parse_args()
 
-    allow = str(args.allow_additions).strip().lower() in ("true", "1", "yes")
-
-    base = load_symbols(args.base)
-    head = load_symbols(args.head)
-    added = sorted(head - base)
-    removed = sorted(base - head)
-
-    lines = ["## Public API surface diff", ""]
-    if not added and not removed:
-        lines.append("No change to the public API surface. ✅")
-    else:
-        lines.append(f"**+{len(added)}** added, **−{len(removed)}** removed "
-                     f"(net {len(added) - len(removed):+d}).")
-        lines.append("")
-        if added:
-            gate = ("✅ approved via label" if allow
-                    else f"⛔ needs the **{args.label_name}** label")
-            lines.append(f"Additions grow the committed public API — {gate}.")
-            lines += fmt_list("Added public symbols", added)
-        if removed:
-            lines.append("Removals are **breaking changes** "
-                         "(SemVer-major / `Breaking change` label).")
-            lines += fmt_list("Removed public symbols", removed)
-    md = "\n".join(lines) + "\n"
+    c = classify(load(args.base), load(args.head))
+    md = render_markdown(c)
 
     if args.markdown == "-" or args.markdown is None:
         print(md)
     elif args.markdown:
         Path(args.markdown).write_text(md)
+    if args.json:
+        Path(args.json).write_text(json.dumps(c, indent=2) + "\n")
 
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:
         with open(summary, "a") as fh:
             fh.write(md)
 
-    if added and not allow:
-        print(f"::error::This PR adds {len(added)} public API symbol(s). "
-              f"A maintainer must apply the '{args.label_name}' label to accept "
-              f"the enlarged public surface.", file=sys.stderr)
-        return 1
-    return 0
+    allow_add = str(args.allow_additions).strip().lower() in ("true", "1", "yes")
+    fail = False
+    if args.fail_on in ("breaking", "any") and c["has_breaking"]:
+        print(f"::error::This PR makes {c['breaking_count']} breaking public API "
+              f"change(s).", file=sys.stderr)
+        fail = True
+    if args.fail_on in ("additions", "any") and c["has_additions"] and not allow_add:
+        print(f"::error::This PR adds {c['added_count']} public API symbol(s); "
+              f"a maintainer must accept the enlarged surface.", file=sys.stderr)
+        fail = True
+    return 1 if fail else 0
 
 
 if __name__ == "__main__":

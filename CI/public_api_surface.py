@@ -64,12 +64,45 @@ def run_doxygen(repo: Path, out: Path, input_dir: Path) -> None:
     subprocess.run(["doxygen", DOXYFILE], cwd=repo, env=env, check=True)
 
 
+def _norm_type(el) -> str:
+    """Flatten a Doxygen <type>/<param><type> element to normalized text."""
+    if el is None:
+        return ""
+    return " ".join("".join(el.itertext()).split())
+
+
+def callable_forms(md, qualname: str) -> dict[str, str]:
+    """Expand a function memberdef into its source-callable signatures.
+
+    A parameter with a default value makes shorter calls valid too, so
+    ``f(A, B = d)`` yields both ``f(A)`` and ``f(A, B)``. Comparing these
+    expanded forms across two revisions makes *adding a defaulted argument*
+    non-breaking while *adding a non-defaulted argument* (or removing/retyping
+    one) shows up as a removed form. Maps form-key -> return type.
+    """
+    params = md.findall("param")
+    types = [_norm_type(p.find("type")) for p in params]
+    has_default = [p.find("defval") is not None for p in params]
+    required = len(types)
+    for i, d in enumerate(has_default):
+        if d:
+            required = i
+            break
+    ret = _norm_type(md.find("type"))
+    const = " const" if md.get("const") == "yes" else ""
+    forms = {}
+    for m in range(required, len(types) + 1):
+        forms[f"{qualname}({', '.join(types[:m])}){const}"] = ret
+    return forms
+
+
 def parse_xml(xml_dir: Path) -> dict:
     counts: Counter[str] = Counter()
     per_module: dict[str, Counter] = defaultdict(Counter)
     type_names: set[str] = set()
     ns_member_names: set[str] = set()
-    symbols: set[str] = set()  # stable per-symbol keys for diffing
+    symbols: set[str] = set()  # stable per-symbol keys for diffing (non-function)
+    callables: dict[str, str] = {}  # source-callable signature -> return type
     methods = 0
 
     for f in glob.glob(str(xml_dir / "*.xml")):
@@ -99,6 +132,8 @@ def parse_xml(xml_dir: Path) -> dict:
                 for md in cd.iter("memberdef"):
                     if md.get("kind") == "function" and md.get("prot") == "public":
                         methods += 1
+                        callables.update(
+                            callable_forms(md, f"{bare}::{md.findtext('name') or ''}"))
 
             elif kind == "concept":
                 # Doxygen >= 1.9.7 emits C++20 concepts as their own compound.
@@ -121,6 +156,8 @@ def parse_xml(xml_dir: Path) -> dict:
                     ns_member_names.add(full)
                     counts[bucket] += 1
                     symbols.add(f"{bucket} {full}")
+                    if mk == "function":
+                        callables.update(callable_forms(md, full))
                     mloc = md.find("location")
                     per_module[module_of(mloc.get("file") if mloc is not None else None)][bucket] += 1
 
@@ -131,6 +168,7 @@ def parse_xml(xml_dir: Path) -> dict:
         "public_methods": methods,
         "per_module": {m: dict(c) for m, c in per_module.items()},
         "symbols": sorted(symbols),
+        "callables": callables,
     }
 
 
