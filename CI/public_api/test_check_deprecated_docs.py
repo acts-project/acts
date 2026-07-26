@@ -6,7 +6,7 @@ up from a ``[[deprecated]]`` past declaration-prefix lines to the Doxygen block,
 and stopping at statement boundaries so an unrelated comment above is not
 mis-attributed.
 
-Run directly (``python3 CI/test_check_deprecated_docs.py``); non-zero exit on
+Run directly (``python3 CI/public_api/test_check_deprecated_docs.py``); non-zero exit on
 failure. Also collectable by pytest.
 """
 

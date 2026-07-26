@@ -23,9 +23,9 @@ run of comment lines found there is the entity's doc block. A violation is a
 ``[[deprecated]]`` whose doc block is missing or lacks an ``@deprecated``
 command (including the case of no doc block at all).
 
-    CI/check_deprecated_docs.py Core/include Plugins Fatras/include Alignment/include
-    CI/check_deprecated_docs.py --write-baseline CI/deprecated_docs_baseline.txt <roots...>
-    CI/check_deprecated_docs.py --baseline CI/deprecated_docs_baseline.txt <roots...>
+    CI/public_api/check_deprecated_docs.py Core/include Plugins Fatras/include Alignment/include
+    CI/public_api/check_deprecated_docs.py --write-baseline CI/public_api/deprecated_docs_baseline.txt <roots...>
+    CI/public_api/check_deprecated_docs.py --baseline CI/public_api/deprecated_docs_baseline.txt <roots...>
 """
 
 from __future__ import annotations

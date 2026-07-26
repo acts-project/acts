@@ -124,13 +124,13 @@ jobs:
         # Guards the classification logic and catches Doxygen output drift.
         run: |
           CI/public_api/test_public_api_surface.py
-          CI/test_check_deprecated_docs.py
+          CI/public_api/test_check_deprecated_docs.py
       - name: Require @deprecated docs on [[deprecated]] declarations
         # Every [[deprecated]] attribute must carry a Doxygen @deprecated command
         # so the deprecation is visible in the published docs, not just at
         # compile time. Dependency-free (no Doxygen needed).
         run: >
-          CI/check_deprecated_docs.py
+          CI/public_api/check_deprecated_docs.py
           Core/include Plugins Fatras/include Alignment/include
       - name: Measure public API surface (this ref)
         run: >
