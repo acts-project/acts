@@ -133,6 +133,8 @@ def main() -> int:
     ap.add_argument("--head", required=True)
     ap.add_argument("--json", help="write classification JSON here")
     ap.add_argument("--markdown", help="write Markdown here ('-' for stdout)")
+    ap.add_argument("--summary", action="store_true",
+                    help="also append the Markdown to $GITHUB_STEP_SUMMARY")
     ap.add_argument("--fail-on", choices=["none", "additions", "breaking", "any"],
                     default="none", help="exit non-zero when this category is present")
     ap.add_argument("--allow-additions", default="false",
@@ -150,7 +152,7 @@ def main() -> int:
         Path(args.json).write_text(json.dumps(c, indent=2) + "\n")
 
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
-    if summary:
+    if args.summary and summary:
         with open(summary, "a") as fh:
             fh.write(md)
 

@@ -98,7 +98,19 @@ def run_doxygen(repo: Path, out: Path, input_dirs: list[Path]) -> None:
     # Doxygen INPUT accepts a space-separated list of directories.
     doxy_input = " ".join(f'"{d}"' for d in input_dirs)
     env = dict(os.environ, DOXY_OUT=str(out), DOXY_INPUT=doxy_input)
-    subprocess.run(["doxygen", DOXYFILE], cwd=repo, env=env, check=True)
+    # Capture output: Doxygen emits many non-fatal cross-reference warnings
+    # (our config feeds only headers, so @ref links into the narrative docs do
+    # not resolve). They do not affect symbol extraction, so keep them out of
+    # the log unless Doxygen actually fails.
+    proc = subprocess.run(["doxygen", DOXYFILE], cwd=repo, env=env,
+                          capture_output=True, text=True)
+    if proc.returncode != 0:
+        sys.stderr.write(proc.stdout)
+        sys.stderr.write(proc.stderr)
+        raise subprocess.CalledProcessError(proc.returncode, "doxygen")
+    n = proc.stderr.count("warning:") + proc.stderr.count("error:")
+    if n:
+        print(f"(doxygen: {n} non-fatal diagnostics suppressed)", file=sys.stderr)
 
 
 def _norm_type(el) -> str:
@@ -264,6 +276,8 @@ def main() -> int:
     ap.add_argument("--xml", help="existing Doxygen XML dir to parse")
     ap.add_argument("--json", help="write report JSON here")
     ap.add_argument("--markdown", help="write Markdown here ('-' for stdout)")
+    ap.add_argument("--summary", action="store_true",
+                    help="also append the Markdown to $GITHUB_STEP_SUMMARY")
     args = ap.parse_args()
 
     repo = Path(args.repo).resolve()
@@ -324,7 +338,7 @@ def main() -> int:
         Path(args.markdown).write_text(md)
 
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
-    if summary:
+    if args.summary and summary:
         with open(summary, "a") as fh:
             fh.write(md)
 
