@@ -11,7 +11,8 @@
 #   OUTPUT_DIRECTORY=<dir> doxygen CI/public_api/Doxyfile
 
 PROJECT_NAME           = "ACTS public API"
-INPUT                  = Core/include/Acts
+# Caller sets DOXY_INPUT (CI/public_api_surface.py does this).
+INPUT                  = $(DOXY_INPUT)
 RECURSIVE              = YES
 FILE_PATTERNS          = *.hpp *.ipp
 

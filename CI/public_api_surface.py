@@ -58,9 +58,9 @@ def module_of(location: str | None) -> str:
     return "(root)"
 
 
-def run_doxygen(repo: Path, out: Path) -> None:
+def run_doxygen(repo: Path, out: Path, input_dir: Path) -> None:
     out.mkdir(parents=True, exist_ok=True)
-    env = dict(os.environ, DOXY_OUT=str(out))
+    env = dict(os.environ, DOXY_OUT=str(out), DOXY_INPUT=str(input_dir))
     subprocess.run(["doxygen", DOXYFILE], cwd=repo, env=env, check=True)
 
 
@@ -69,6 +69,7 @@ def parse_xml(xml_dir: Path) -> dict:
     per_module: dict[str, Counter] = defaultdict(Counter)
     type_names: set[str] = set()
     ns_member_names: set[str] = set()
+    symbols: set[str] = set()  # stable per-symbol keys for diffing
     methods = 0
 
     for f in glob.glob(str(xml_dir / "*.xml")):
@@ -93,6 +94,7 @@ def parse_xml(xml_dir: Path) -> dict:
                     type_names.add(bare)
                     counts["types"] += 1
                     per_module[module_of(locfile)]["types"] += 1
+                    symbols.add(f"type {bare}")
                 # public methods on this documented type
                 for md in cd.iter("memberdef"):
                     if md.get("kind") == "function" and md.get("prot") == "public":
@@ -104,6 +106,7 @@ def parse_xml(xml_dir: Path) -> dict:
                     ns_member_names.add(name)
                     counts["concepts"] += 1
                     per_module[module_of(locfile)]["concepts"] += 1
+                    symbols.add(f"concept {name}")
 
             elif kind == "namespace":
                 for md in cd.findall("sectiondef/memberdef"):
@@ -117,6 +120,7 @@ def parse_xml(xml_dir: Path) -> dict:
                         continue
                     ns_member_names.add(full)
                     counts[bucket] += 1
+                    symbols.add(f"{bucket} {full}")
                     mloc = md.find("location")
                     per_module[module_of(mloc.get("file") if mloc is not None else None)][bucket] += 1
 
@@ -126,6 +130,7 @@ def parse_xml(xml_dir: Path) -> dict:
         "total": total,
         "public_methods": methods,
         "per_module": {m: dict(c) for m, c in per_module.items()},
+        "symbols": sorted(symbols),
     }
 
 
@@ -162,6 +167,8 @@ def main() -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--repo", default=".", help="repository root")
     ap.add_argument("--run", action="store_true", help="run doxygen (else use --xml)")
+    ap.add_argument("--input", help="header root to measure "
+                    "(default <repo>/Core/include/Acts); use to point at another checkout")
     ap.add_argument("--xml", help="existing Doxygen XML dir to parse")
     ap.add_argument("--json", help="write report JSON here")
     ap.add_argument("--markdown", help="write Markdown here ('-' for stdout)")
@@ -178,8 +185,9 @@ def main() -> int:
 
     tmp = None
     if args.run:
+        input_dir = Path(args.input).resolve() if args.input else repo / INPUT_ROOT
         tmp = Path(tempfile.mkdtemp(prefix="acts-api-surface-"))
-        run_doxygen(repo, tmp)
+        run_doxygen(repo, tmp, input_dir)
         xml_dir = tmp / "xml"
     elif args.xml:
         xml_dir = Path(args.xml)

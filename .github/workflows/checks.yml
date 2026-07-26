@@ -109,6 +109,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0 # need the PR base commit for the surface diff
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: '3.14'
@@ -119,7 +120,7 @@ jobs:
           tar xf doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
           mv doxygen-${{ env.DOXYGEN_VERSION }}/bin/doxygen /usr/local/bin/doxygen
           doxygen --version
-      - name: Measure public API surface
+      - name: Measure public API surface (this ref)
         run: >
           CI/public_api_surface.py --run
           --json api-surface.json
@@ -130,3 +131,18 @@ jobs:
           path: |
             api-surface.json
             api-surface.md
+      - name: Diff against base and gate additions
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          # A maintainer accepts public-API growth by applying this label.
+          ALLOW_ADDITIONS: ${{ contains(github.event.pull_request.labels.*.name, 'Public API') }}
+        run: |
+          git worktree add --detach /tmp/base-tree "$BASE_SHA"
+          CI/public_api_surface.py --run \
+            --input /tmp/base-tree/Core/include/Acts \
+            --json base-surface.json --markdown /dev/null
+          CI/public_api_diff.py \
+            --base base-surface.json --head api-surface.json \
+            --label-name "Public API" \
+            --allow-additions "$ALLOW_ADDITIONS"
