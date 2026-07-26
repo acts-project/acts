@@ -120,6 +120,9 @@ jobs:
           tar xf doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
           mv doxygen-${{ env.DOXYGEN_VERSION }}/bin/doxygen /usr/local/bin/doxygen
           doxygen --version
+      - name: Self-test the surface tooling
+        # Guards the classification logic and catches Doxygen output drift.
+        run: CI/test_public_api_surface.py
       - name: Measure public API surface (this ref)
         run: >
           CI/public_api_surface.py --run --roots-under .
