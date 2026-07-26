@@ -92,8 +92,8 @@ TRACCC_HOST_DEVICE inline void gbts_check_edge_candidate(
         d_num_outgoing_edges[begin_bin1 + n1Idx])
         .fetch_add(1u);
     d_edge_nodes[nEdges] = uint2{globalIdx2, begin_bin1 + n1Idx};
-    bool inflate_matching_cuts =
-        (ap.long_edge_dz < math::fabs(dz)) || (ap.long_edge_dr < math::fabs(dr));
+    bool inflate_matching_cuts = (ap.long_edge_dz < math::fabs(dz)) ||
+                                 (ap.long_edge_dr < math::fabs(dr));
     d_edge_params[nEdges] = edge_params_maker.make_edge_params(
         eta, curv, phi2 + curv * r2, phi1 + curv * r1, inflate_matching_cuts);
     // edge params: (eta, curvature, extrapolated phi at node1,
