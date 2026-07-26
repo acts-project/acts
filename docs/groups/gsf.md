@@ -38,8 +38,10 @@ weight, a bound parameter vector and a bound covariance:
 > The GSF is substantially more expensive than the KF and is therefore only run
 > when a track is likely to be an electron — typically to re-fit a silicon track
 > that has been associated with an electromagnetic-calorimeter cluster
-> @cite Huth:2024. It is **not** a track-finding algorithm: the measurement
-> sequence is taken as given.
+> @cite Huth:2024. The GSF itself is a *fitter* — its measurement sequence is
+> taken as given — but the same Bethe–Heitler mixture machinery can also run
+> *inside* the CKF during track finding to recover electron tracks; see
+> @ref gsf-ckf-brem.
 
 ## Bethe–Heitler energy loss as a mixture {#gsf-bethe-heitler}
 
@@ -259,6 +261,34 @@ The payoff: against the KF, the 12-component GSF turns a heavily one-sided
 mean and variance) is visibly biased, which is what motivates the mixture in the
 first place.
 
+## Bremsstrahlung recovery in the CKF {#gsf-ckf-brem}
+
+The per-component Bethe–Heitler application of @ref gsf-bethe-heitler is not
+exclusive to the fitter. The @ref Acts::CombinatorialKalmanFilter can optionally
+run in a **bremsstrahlung-recovery** mode that reuses the same machinery to find
+electron tracks that a single-component filter would otherwise lose to a large,
+non-Gaussian energy loss.
+
+The mode is selected purely by the stepper type. When the CKF is built over a
+multi-component stepper (@ref Acts::MultiEigenStepperLoop) an `IsMultiStepper`
+trait is true and the filter compiles in a multi-component path via
+`if constexpr`; the plain single-component filter therefore carries no runtime
+cost, and the extra per-actor state is elided entirely with
+`[[no_unique_address]]`. On each material surface the track state is convoluted
+with the Bethe–Heitler mixture through the shared
+`Acts::detail::Gsf::applyBetheHeitler`, the mixture is reduced (through the same
+`mixtureReducer` delegate, now also part of the CKF extensions) and merged back
+to a single representation before the measurement update — the GSF's surface
+algorithm of @ref gsf-algorithm, embedded in the combinatorial search.
+
+The multi-component knobs (`maxComponents`, `weightCutoff`, `mergeMethod`,
+`betheHeitlerApprox`) live on @ref Acts::BremCombinatorialKalmanFilterOptions. The
+filter's `Options` alias resolves to that type *only* for a multi-stepper, so a
+single-component configuration cannot even name the multi-component parameters. In
+the examples, electron-hypothesis seeds are routed to a brem-enabled finder built
+over a `MultiStepperLoop`, using KL-distance reduction and the default
+Bethe–Heitler approximation, while all other seeds use the plain finder.
+
 ## Implementation pointers {#gsf-implementation}
 
 - Fitter and options: @ref Acts::GaussianSumFitter, @ref Acts::GsfOptions,
@@ -270,6 +300,8 @@ first place.
   @ref Acts::reduceMixtureLargestWeights.
 - Multi-component transport: @ref Acts::MultiEigenStepperLoop,
   @ref Acts::MultiStepperSurfaceReached.
+- Bremsstrahlung recovery in finding: @ref Acts::CombinatorialKalmanFilter,
+  @ref Acts::BremCombinatorialKalmanFilterOptions.
 - Shared material formalism (scattering / ionization): @ref kf_material_effects.
 
 The per-surface algorithm itself lives in the internal `Acts::detail::Gsf`
