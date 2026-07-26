@@ -98,11 +98,12 @@ TRACCC_HOST_DEVICE inline void gbts_match_graph_edges(
       // adaptive eta cut based on edge length and curvature
       float deta_max =
           cut_deta_max + deta_inflation * (params2.second || params1.second);
-      float curv = 0.5f * math::fabs(curv2 + params2.first.y);
-      deta_max *=
-          1.0f - high_pT_correction * ((curv < less_scattering_curv) +
-                                       (curv < much_less_scattering_curv));
-      float deta_cut_ratio = math::fabs(eta2 - params2.first.x) / deta_max;
+      const float curv = 0.5f * math::fabs(curv2 + params2.first.y);
+      const float corr = static_cast<float>((curv < less_scattering_curv) +
+                                            (curv < much_less_scattering_curv));
+      deta_max *= 1.0f - high_pT_correction * corr;
+      const float deta_cut_ratio =
+          math::fabs(eta2 - params2.first.x) / deta_max;
       if (deta_cut_ratio > 1.0f) {  // bad match
         continue;
       }
