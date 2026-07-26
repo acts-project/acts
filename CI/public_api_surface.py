@@ -51,9 +51,14 @@ def standard_roots(under: Path) -> list[Path]:
     plugins = under / "Plugins"
     if plugins.is_dir():
         for pdir in sorted(plugins.iterdir()):
-            if pdir.is_dir() and pdir.name not in EXCLUDED_PLUGINS and (pdir / "include").is_dir():
+            if (
+                pdir.is_dir()
+                and pdir.name not in EXCLUDED_PLUGINS
+                and (pdir / "include").is_dir()
+            ):
                 roots.append(pdir / "include")
     return roots
+
 
 # Doxygen memberdef 'kind' -> report bucket for namespace-scope members
 NS_MEMBER_BUCKET = {
@@ -102,8 +107,9 @@ def run_doxygen(repo: Path, out: Path, input_dirs: list[Path]) -> None:
     # (our config feeds only headers, so @ref links into the narrative docs do
     # not resolve). They do not affect symbol extraction, so keep them out of
     # the log unless Doxygen actually fails.
-    proc = subprocess.run(["doxygen", DOXYFILE], cwd=repo, env=env,
-                          capture_output=True, text=True)
+    proc = subprocess.run(
+        ["doxygen", DOXYFILE], cwd=repo, env=env, capture_output=True, text=True
+    )
     if proc.returncode != 0:
         sys.stderr.write(proc.stdout)
         sys.stderr.write(proc.stderr)
@@ -152,7 +158,7 @@ def parse_xml(xml_dir: Path) -> dict:
     ns_member_names: set[str] = set()
     symbols: set[str] = set()  # stable per-symbol keys for diffing (non-function)
     callables: dict[str, str] = {}  # source-callable signature -> return type
-    fields: dict[str, str] = {}     # public data member Class::name -> type
+    fields: dict[str, str] = {}  # public data member Class::name -> type
     methods = 0
 
     for f in glob.glob(str(xml_dir / "*.xml")):
@@ -185,7 +191,8 @@ def parse_xml(xml_dir: Path) -> dict:
                     if md.get("kind") == "function":
                         methods += 1
                         callables.update(
-                            callable_forms(md, f"{bare}::{md.findtext('name') or ''}"))
+                            callable_forms(md, f"{bare}::{md.findtext('name') or ''}")
+                        )
                     elif md.get("kind") == "variable":
                         mname = md.findtext("name") or ""
                         fields[f"{bare}::{mname}"] = _norm_type(md.find("type"))
@@ -214,7 +221,9 @@ def parse_xml(xml_dir: Path) -> dict:
                     if mk == "function":
                         callables.update(callable_forms(md, full))
                     mloc = md.find("location")
-                    per_module[module_of(mloc.get("file") if mloc is not None else None)][bucket] += 1
+                    per_module[
+                        module_of(mloc.get("file") if mloc is not None else None)
+                    ][bucket] += 1
 
     total = sum(counts.values())
     return {
@@ -235,15 +244,19 @@ BUCKET_ORDER = ["types", "free_functions", "aliases", "variables", "enums", "con
 def render_markdown(data: dict, doxy_version: str | None) -> str:
     c = data["counts"]
     lines = ["## ACTS public API surface", ""]
-    lines.append(f"**{data['total']}** documented public names in `Acts*::` "
-                 f"(excluding `detail` / `Experimental`), plus "
-                 f"**{data['public_methods']}** public methods and "
-                 f"**{data.get('public_fields', 0)}** public data members on "
-                 f"documented types.")
+    lines.append(
+        f"**{data['total']}** documented public names in `Acts*::` "
+        f"(excluding `detail` / `Experimental`), plus "
+        f"**{data['public_methods']}** public methods and "
+        f"**{data.get('public_fields', 0)}** public data members on "
+        f"documented types."
+    )
     scope = data.get("scope")
     if scope:
-        lines.append(f"\n_Scope: {scope}"
-                     + (f" via Doxygen {doxy_version}._" if doxy_version else "._"))
+        lines.append(
+            f"\n_Scope: {scope}"
+            + (f" via Doxygen {doxy_version}._" if doxy_version else "._")
+        )
     elif doxy_version:
         lines.append(f"\n_Doxygen {doxy_version}._")
     lines += ["", "| category | count |", "|---|---:|"]
@@ -252,9 +265,13 @@ def render_markdown(data: dict, doxy_version: str | None) -> str:
             lines.append(f"| {k.replace('_', ' ')} | {c[k]} |")
     lines.append(f"| **total** | **{data['total']}** |")
 
-    lines += ["", "<details><summary>By module</summary>", "",
-              "| module | total | " + " | ".join(BUCKET_ORDER) + " |",
-              "|---|---:|" + "|".join(["---:"] * len(BUCKET_ORDER)) + "|"]
+    lines += [
+        "",
+        "<details><summary>By module</summary>",
+        "",
+        "| module | total | " + " | ".join(BUCKET_ORDER) + " |",
+        "|---|---:|" + "|".join(["---:"] * len(BUCKET_ORDER)) + "|",
+    ]
     mods = sorted(data["per_module"].items(), key=lambda kv: -sum(kv[1].values()))
     for m, d in mods:
         row = [m, str(sum(d.values()))] + [str(d.get(k, 0)) for k in BUCKET_ORDER]
@@ -264,28 +281,37 @@ def render_markdown(data: dict, doxy_version: str | None) -> str:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--repo", default=".", help="repository root (has the Doxyfile)")
     ap.add_argument("--run", action="store_true", help="run doxygen (else use --xml)")
-    ap.add_argument("--input", nargs="+", metavar="DIR",
-                    help="explicit header root(s) to measure")
-    ap.add_argument("--roots-under", metavar="DIR",
-                    help="measure the standard component set (Core, Fatras, Alignment, "
-                    "and all plugins) resolved under DIR; use for another checkout")
+    ap.add_argument(
+        "--input", nargs="+", metavar="DIR", help="explicit header root(s) to measure"
+    )
+    ap.add_argument(
+        "--roots-under",
+        metavar="DIR",
+        help="measure the standard component set (Core, Fatras, Alignment, "
+        "and all plugins) resolved under DIR; use for another checkout",
+    )
     ap.add_argument("--xml", help="existing Doxygen XML dir to parse")
     ap.add_argument("--json", help="write report JSON here")
     ap.add_argument("--markdown", help="write Markdown here ('-' for stdout)")
-    ap.add_argument("--summary", action="store_true",
-                    help="also append the Markdown to $GITHUB_STEP_SUMMARY")
+    ap.add_argument(
+        "--summary",
+        action="store_true",
+        help="also append the Markdown to $GITHUB_STEP_SUMMARY",
+    )
     args = ap.parse_args()
 
     repo = Path(args.repo).resolve()
 
     doxy_version = None
     try:
-        doxy_version = subprocess.run(["doxygen", "--version"],
-                                      capture_output=True, text=True).stdout.split()[0]
+        doxy_version = subprocess.run(
+            ["doxygen", "--version"], capture_output=True, text=True
+        ).stdout.split()[0]
     except (FileNotFoundError, IndexError):
         pass
 
@@ -295,8 +321,9 @@ def main() -> int:
         if args.input:
             input_dirs = [Path(p).resolve() for p in args.input]
         else:
-            input_dirs = standard_roots(Path(args.roots_under).resolve()
-                                        if args.roots_under else repo)
+            input_dirs = standard_roots(
+                Path(args.roots_under).resolve() if args.roots_under else repo
+            )
         if not input_dirs:
             print("error: no header roots found to measure", file=sys.stderr)
             return 2
@@ -309,6 +336,7 @@ def main() -> int:
                 if comp in parts:
                     return comp
             return d.name
+
         scope = ", ".join(dict.fromkeys(component(d) for d in input_dirs))
         tmp = Path(tempfile.mkdtemp(prefix="acts-api-surface-"))
         run_doxygen(repo, tmp, input_dirs)
@@ -331,6 +359,7 @@ def main() -> int:
 
     if args.json:
         import json
+
         Path(args.json).write_text(json.dumps(data, indent=2) + "\n")
     if args.markdown == "-" or args.markdown is None:
         print(md)

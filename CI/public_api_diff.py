@@ -53,7 +53,8 @@ def classify(base: dict, head: dict) -> dict:
     removed_forms = sorted(b_keys - h_keys)
     ret_changed = sorted(
         f"{k}: {b_call[k]} -> {h_call[k]}"
-        for k in (b_keys & h_keys) if b_call[k] != h_call[k]
+        for k in (b_keys & h_keys)
+        if b_call[k] != h_call[k]
     )
 
     # public data members (fields): removal / retype is breaking, add is not
@@ -63,11 +64,14 @@ def classify(base: dict, head: dict) -> dict:
     removed_fields = sorted(set(b_fld) - set(h_fld))
     field_retyped = sorted(
         f"{k}: {b_fld[k]} -> {h_fld[k]}"
-        for k in (set(b_fld) & set(h_fld)) if b_fld[k] != h_fld[k]
+        for k in (set(b_fld) & set(h_fld))
+        if b_fld[k] != h_fld[k]
     )
 
     added = added_names + added_forms + added_fields
-    breaking = removed_names + removed_forms + ret_changed + removed_fields + field_retyped
+    breaking = (
+        removed_names + removed_forms + ret_changed + removed_fields + field_retyped
+    )
     return {
         "added": added,
         "breaking": breaking,
@@ -99,15 +103,20 @@ def render_markdown(c: dict) -> str:
     if not c["has_additions"] and not c["has_breaking"]:
         return "\n".join(lines + ["No change to the public API surface. ✅", ""]) + "\n"
 
-    lines.append(f"**+{c['added_count']} added**, "
-                 f"**{c['breaking_count']} breaking**.")
+    lines.append(
+        f"**+{c['added_count']} added**, " f"**{c['breaking_count']} breaking**."
+    )
     lines.append("")
     if c["has_breaking"]:
         lines.append("### ⚠️ Breaking API changes (source-level)")
         if c["removed_names"]:
-            lines += _details("Removed types / aliases / enums / variables", c["removed_names"])
+            lines += _details(
+                "Removed types / aliases / enums / variables", c["removed_names"]
+            )
         if c["removed_signatures"]:
-            lines += _details("Removed or changed call signatures", c["removed_signatures"])
+            lines += _details(
+                "Removed or changed call signatures", c["removed_signatures"]
+            )
         if c["return_type_changes"]:
             lines += _details("Return-type changes", c["return_type_changes"])
         if c.get("removed_fields"):
@@ -118,27 +127,43 @@ def render_markdown(c: dict) -> str:
     if c["has_additions"]:
         lines.append("### ➕ Added public API")
         if c["added_names"]:
-            lines += _details("New types / aliases / enums / variables / concepts", c["added_names"])
+            lines += _details(
+                "New types / aliases / enums / variables / concepts", c["added_names"]
+            )
         if c["added_signatures"]:
-            lines += _details("New call signatures (incl. defaulted-arg overloads)", c["added_signatures"])
+            lines += _details(
+                "New call signatures (incl. defaulted-arg overloads)",
+                c["added_signatures"],
+            )
         if c.get("added_fields"):
             lines += _details("New public data members", c["added_fields"])
     return "\n".join(lines) + "\n"
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--base", required=True)
     ap.add_argument("--head", required=True)
     ap.add_argument("--json", help="write classification JSON here")
     ap.add_argument("--markdown", help="write Markdown here ('-' for stdout)")
-    ap.add_argument("--summary", action="store_true",
-                    help="also append the Markdown to $GITHUB_STEP_SUMMARY")
-    ap.add_argument("--fail-on", choices=["none", "additions", "breaking", "any"],
-                    default="none", help="exit non-zero when this category is present")
-    ap.add_argument("--allow-additions", default="false",
-                    help="'true' suppresses failure on additions (e.g. maintainer label present)")
+    ap.add_argument(
+        "--summary",
+        action="store_true",
+        help="also append the Markdown to $GITHUB_STEP_SUMMARY",
+    )
+    ap.add_argument(
+        "--fail-on",
+        choices=["none", "additions", "breaking", "any"],
+        default="none",
+        help="exit non-zero when this category is present",
+    )
+    ap.add_argument(
+        "--allow-additions",
+        default="false",
+        help="'true' suppresses failure on additions (e.g. maintainer label present)",
+    )
     args = ap.parse_args()
 
     c = classify(load(args.base), load(args.head))
@@ -159,12 +184,18 @@ def main() -> int:
     allow_add = str(args.allow_additions).strip().lower() in ("true", "1", "yes")
     fail = False
     if args.fail_on in ("breaking", "any") and c["has_breaking"]:
-        print(f"::error::This PR makes {c['breaking_count']} breaking public API "
-              f"change(s).", file=sys.stderr)
+        print(
+            f"::error::This PR makes {c['breaking_count']} breaking public API "
+            f"change(s).",
+            file=sys.stderr,
+        )
         fail = True
     if args.fail_on in ("additions", "any") and c["has_additions"] and not allow_add:
-        print(f"::error::This PR adds {c['added_count']} public API symbol(s); "
-              f"a maintainer must accept the enlarged surface.", file=sys.stderr)
+        print(
+            f"::error::This PR adds {c['added_count']} public API symbol(s); "
+            f"a maintainer must accept the enlarged surface.",
+            file=sys.stderr,
+        )
         fail = True
     return 1 if fail else 0
 

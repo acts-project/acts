@@ -29,8 +29,8 @@ sys.path.insert(0, str(HERE))
 import public_api_surface as pas  # noqa: E402
 import public_api_diff as pad  # noqa: E402
 
-
 # --- pure unit tests -------------------------------------------------------
+
 
 def test_callable_forms_expands_defaulted_args():
     md = ET.fromstring(
@@ -41,7 +41,7 @@ def test_callable_forms_expands_defaulted_args():
         "</memberdef>"
     )
     forms = pas.callable_forms(md, "Acts::foo")
-    assert "Acts::foo(int)" in forms, forms          # shorter call still valid
+    assert "Acts::foo(int)" in forms, forms  # shorter call still valid
     assert "Acts::foo(int, double)" in forms, forms
 
 
@@ -55,7 +55,9 @@ def test_callable_forms_const_qualifier():
 
 def test_module_of_components():
     assert pas.module_of("/w/Core/include/Acts/Surfaces/Plane.hpp") == "Core/Surfaces"
-    assert pas.module_of("/w/Plugins/Json/include/ActsPlugins/Json/X.hpp") == "Plugin:Json"
+    assert (
+        pas.module_of("/w/Plugins/Json/include/ActsPlugins/Json/X.hpp") == "Plugin:Json"
+    )
     assert pas.module_of("/w/Fatras/include/ActsFatras/Y.hpp") == "Fatras"
     assert pas.module_of("/w/Alignment/include/ActsAlignment/Z.hpp") == "Alignment"
 
@@ -63,20 +65,27 @@ def test_module_of_components():
 def test_classify_additions_and_breaking():
     base = {
         "symbols": ["type Acts::Old", "type Acts::Keep"],
-        "callables": {"Acts::foo(int)": "void", "Acts::gone(double)": "void",
-                      "Acts::baz()": "int"},
+        "callables": {
+            "Acts::foo(int)": "void",
+            "Acts::gone(double)": "void",
+            "Acts::baz()": "int",
+        },
         "fields": {"Acts::S::a": "double", "Acts::S::gone": "int"},
     }
     head = {
         "symbols": ["type Acts::Keep", "type Acts::New"],
-        "callables": {"Acts::foo(int)": "void", "Acts::foo(int, double)": "void",
-                      "Acts::bar(int, double)": "void", "Acts::baz()": "long"},
+        "callables": {
+            "Acts::foo(int)": "void",
+            "Acts::foo(int, double)": "void",
+            "Acts::bar(int, double)": "void",
+            "Acts::baz()": "long",
+        },
         "fields": {"Acts::S::a": "float", "Acts::S::added": "bool"},
     }
     c = pad.classify(base, head)
     # additions
     assert "type Acts::New" in c["added_names"]
-    assert "Acts::foo(int, double)" in c["added_signatures"]   # defaulted-arg add
+    assert "Acts::foo(int, double)" in c["added_signatures"]  # defaulted-arg add
     assert "Acts::S::added" in c["added_fields"]
     # breaking
     assert "type Acts::Old" in c["removed_names"]
@@ -89,20 +98,27 @@ def test_classify_additions_and_breaking():
 
 def test_classify_defaulted_arg_is_not_breaking():
     base = {"symbols": [], "callables": {"Acts::f(int)": "void"}, "fields": {}}
-    head = {"symbols": [], "callables": {"Acts::f(int)": "void",
-                                         "Acts::f(int, double)": "void"}, "fields": {}}
+    head = {
+        "symbols": [],
+        "callables": {"Acts::f(int)": "void", "Acts::f(int, double)": "void"},
+        "fields": {},
+    }
     c = pad.classify(base, head)
     assert c["has_additions"] and not c["has_breaking"], c
 
 
 def test_classify_no_change():
-    snap = {"symbols": ["type Acts::A"], "callables": {"Acts::f()": "void"},
-            "fields": {"Acts::A::x": "int"}}
+    snap = {
+        "symbols": ["type Acts::A"],
+        "callables": {"Acts::f()": "void"},
+        "fields": {"Acts::A::x": "int"},
+    }
     c = pad.classify(snap, snap)
     assert not c["has_additions"] and not c["has_breaking"]
 
 
 # --- end-to-end fixture test ----------------------------------------------
+
 
 def _measure(input_dir: Path) -> dict:
     out = Path(tempfile.mkdtemp(prefix="api-selftest-"))
@@ -123,18 +139,23 @@ def test_end_to_end_fixture():
     assert "type Acts::NewThing" in c["added_names"], c
     assert "Acts::Demo::flag" in c["added_fields"], c
     assert any("Acts::Demo::doThing(int, int)" == s for s in c["added_signatures"]), c
-    assert any(s.startswith("Acts::compute(int, double)") for s in c["added_signatures"]), c
+    assert any(
+        s.startswith("Acts::compute(int, double)") for s in c["added_signatures"]
+    ), c
     # breaking
     assert any(s == "Acts::Demo::doThing(int)" for s in c["removed_signatures"]), c
-    assert any(s.startswith("Acts::Demo::oldFn(double)") for s in c["removed_signatures"]), c
+    assert any(
+        s.startswith("Acts::Demo::oldFn(double)") for s in c["removed_signatures"]
+    ), c
     assert any("Acts::Demo::tolerance" in s for s in c["field_type_changes"]), c
     # compute(int) must survive (defaulted arg) -> not a removal
     assert not any(s == "Acts::compute(int)" for s in c["removed_signatures"]), c
 
 
 def main() -> int:
-    tests = [v for k, v in sorted(globals().items())
-             if k.startswith("test_") and callable(v)]
+    tests = [
+        v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)
+    ]
     failed = 0
     for t in tests:
         try:

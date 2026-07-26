@@ -120,9 +120,9 @@ def find_violations(repo: Path, roots: list[str]) -> list[dict]:
                     {
                         "file": rel.as_posix(),
                         "line": idx + 1,
-                        "reason": "no-doc-block"
-                        if not has_doc
-                        else "no-deprecated-tag",
+                        "reason": (
+                            "no-doc-block" if not has_doc else "no-deprecated-tag"
+                        ),
                     }
                 )
     violations.sort(key=lambda v: (v["file"], v["line"]))
