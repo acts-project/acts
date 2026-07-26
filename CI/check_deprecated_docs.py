@@ -113,16 +113,16 @@ def find_violations(repo: Path, roots: list[str]) -> list[dict]:
                     continue
                 block = doc_block_for(lines, idx)
                 has_doc = block is not None and len(block) > 0
-                has_tag = has_doc and any(
-                    DEPRECATED_CMD_RE.search(bl) for bl in block
-                )
+                has_tag = has_doc and any(DEPRECATED_CMD_RE.search(bl) for bl in block)
                 if has_tag:
                     continue
                 violations.append(
                     {
                         "file": rel.as_posix(),
                         "line": idx + 1,
-                        "reason": "no-doc-block" if not has_doc else "no-deprecated-tag",
+                        "reason": "no-doc-block"
+                        if not has_doc
+                        else "no-deprecated-tag",
                     }
                 )
     violations.sort(key=lambda v: (v["file"], v["line"]))
@@ -164,9 +164,7 @@ def main() -> int:
     baseline: set[str] = set()
     if args.baseline and Path(args.baseline).exists():
         baseline = {
-            l.strip()
-            for l in Path(args.baseline).read_text().splitlines()
-            if l.strip()
+            l.strip() for l in Path(args.baseline).read_text().splitlines() if l.strip()
         }
 
     new = [v for v in violations if key(v) not in baseline]

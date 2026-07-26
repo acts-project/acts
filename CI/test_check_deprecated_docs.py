@@ -35,6 +35,7 @@ def _reasons(text: str) -> list[str]:
 
 # --- doc_block_for association ---------------------------------------------
 
+
 def test_paired_simple_block():
     text = (
         "/// Does a thing.\n"
