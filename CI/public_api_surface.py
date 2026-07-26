@@ -31,15 +31,17 @@ from pathlib import Path
 
 DOXYFILE = "CI/public_api/Doxyfile"
 
-# Plugins deliberately left out of the public-API surface metric.
-EXCLUDED_PLUGINS = {"Detray", "Traccc"}
+# Plugins deliberately left out of the public-API surface metric. (The
+# top-level Detray/ and Traccc/ build-integration folders live outside Plugins/
+# and are never scanned; the Detray *plugin* under Plugins/ is in scope.)
+EXCLUDED_PLUGINS: set[str] = set()
 
 
 def standard_roots(under: Path) -> list[Path]:
     """Header roots whose public API we track, resolved under `under`.
 
-    Core, Fatras and Alignment, plus every plugin except the excluded ones.
-    Examples/Detray/Traccc integrations are intentionally omitted.
+    Core, Fatras and Alignment, plus every plugin under Plugins/. The Examples
+    tree and the top-level Detray/Traccc integration folders are not included.
     """
     roots: list[Path] = []
     for rel in ("Core/include", "Fatras/include", "Alignment/include"):
@@ -258,7 +260,7 @@ def main() -> int:
                     help="explicit header root(s) to measure")
     ap.add_argument("--roots-under", metavar="DIR",
                     help="measure the standard component set (Core, Fatras, Alignment, "
-                    "plugins except Detray/Traccc) resolved under DIR; use for another checkout")
+                    "and all plugins) resolved under DIR; use for another checkout")
     ap.add_argument("--xml", help="existing Doxygen XML dir to parse")
     ap.add_argument("--json", help="write report JSON here")
     ap.add_argument("--markdown", help="write Markdown here ('-' for stdout)")
