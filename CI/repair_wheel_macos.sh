@@ -15,9 +15,10 @@
 #
 # Workaround: before delocation, repoint every spack library that references the
 # framework openssl at the spack openssl, so the whole graph resolves to a single
-# copy that delocate can vendor. The proper fix belongs in ci-dependencies (build
-# thrift/arrow against spack's openssl, or without openssl at all — ACTS Parquet
-# uses no TLS); this keeps the wheels building until then.
+# copy that delocate can vendor. Both are openssl 3.x, and ACTS' Parquet usage
+# does not touch TLS. The proper fix belongs in ci-dependencies (build
+# thrift/arrow against spack's openssl, or without openssl at all); this keeps
+# the wheels building until then, and becomes an automatic no-op once that lands.
 #
 # This modifies the spack store on the (ephemeral) CI runner. delocate re-signs
 # the copies it vendors into the wheel, so the invalidated store-lib signatures
@@ -28,37 +29,75 @@ wheel="$1"
 dest_dir="$2"
 archs="$3"
 
-fw_re='Python\.framework/.*/lib(ssl|crypto)\.3\.dylib'
+# Any framework-provided openssl, regardless of soversion.
+fw_re='/Library/Frameworks/Python\.framework/.*/lib(ssl|crypto)\.[0-9.]*dylib'
+
+delocate() {
+    if ! delocate-wheel --require-archs "$archs" -w "$dest_dir" -v "$wheel"; then
+        echo "::group::delocate failed — dependency tree"
+        delocate-listdeps --all --depending "$wheel" || true
+        echo "::endgroup::"
+        exit 1
+    fi
+}
 
 inspect_dir="$(mktemp -d)"
+trap 'rm -rf "$inspect_dir"' EXIT
 unzip -q "$wheel" -d "$inspect_dir"
 
-# Locate spack's openssl via the plugin that links it by absolute path.
-arrow_dylib="$(find "$inspect_dir" -name 'libActsPluginArrow.dylib' | head -1)"
-spack_ssl="$(otool -L "$arrow_dylib" 2>/dev/null \
-    | awk '/\/openssl-[^ ]*\/lib\/libssl\.3\.dylib /{print $1; exit}')"
+# Derive the spack store root from whatever absolute spack path the wheel's own
+# binaries link against. If the wheel does not reference spack at all there is
+# nothing to normalize.
+spack_root=""
+while IFS= read -r bin; do
+    ref="$(otool -L "$bin" 2>/dev/null | awk '/\/opt\/spack\//{print $1; exit}')" || true
+    if [ -n "${ref:-}" ]; then
+        spack_root="${ref%/opt/spack/*}"
+        break
+    fi
+done < <(find "$inspect_dir" \( -name '*.dylib' -o -name '*.so' \) -type f)
+
+if [ -z "$spack_root" ]; then
+    echo "wheel does not link the spack store; delocating as-is"
+    delocate
+    exit 0
+fi
+echo "spack root: ${spack_root}"
+
+# Locate spack's own openssl, which is the copy we consolidate onto.
+spack_ssl="$(find "${spack_root}/opt/spack" -path '*/openssl-*/lib/libssl.*.dylib' \
+    -type f 2>/dev/null | head -1)"
 if [ -z "${spack_ssl:-}" ]; then
-    echo "ERROR: could not locate spack libssl from ${arrow_dylib}; linkage:" >&2
-    otool -L "$arrow_dylib" >&2 || true
-    exit 1
+    echo "no spack openssl found; delocating as-is"
+    delocate
+    exit 0
 fi
 spack_ssl_dir="$(dirname "$spack_ssl")"
-spack_root="${spack_ssl_dir%/opt/spack/*}"
 echo "spack openssl dir: ${spack_ssl_dir}"
 
 echo "::group::Repoint framework openssl references to spack openssl"
-find "$spack_root" -name '*.dylib' -type f | while read -r lib; do
-    otool -L "$lib" 2>/dev/null | awk 'NR>1{print $1}' | grep -E "$fw_re" | while read -r fw; do
-        name="$(basename "$fw")"
-        echo "  ${lib}: ${fw} -> ${spack_ssl_dir}/${name}"
-        install_name_tool -change "$fw" "${spack_ssl_dir}/${name}" "$lib" || true
-    done
-done
+rewrote=0
+while IFS= read -r lib; do
+    # `|| true`: grep exits 1 for the (vast majority of) libraries with no
+    # framework reference, which would otherwise trip `set -e` under pipefail.
+    fw_refs="$(otool -L "$lib" 2>/dev/null | awk 'NR>1{print $1}' \
+        | grep -E "$fw_re" || true)"
+    [ -n "$fw_refs" ] || continue
+    while IFS= read -r fw; do
+        target="${spack_ssl_dir}/$(basename "$fw")"
+        if [ ! -f "$target" ]; then
+            echo "ERROR: ${lib} references ${fw}, but ${target} does not exist" >&2
+            exit 1
+        fi
+        echo "  ${lib}: ${fw} -> ${target}"
+        if ! install_name_tool -change "$fw" "$target" "$lib"; then
+            echo "ERROR: install_name_tool failed to rewrite ${lib}" >&2
+            exit 1
+        fi
+        rewrote=$((rewrote + 1))
+    done <<< "$fw_refs"
+done < <(find "${spack_root}/opt/spack" -name '*.dylib' -type f)
+echo "rewrote ${rewrote} framework openssl reference(s)"
 echo "::endgroup::"
 
-if ! delocate-wheel --require-archs "$archs" -w "$dest_dir" -v "$wheel"; then
-    echo "::group::delocate still failing — post-rewrite dependency tree"
-    delocate-listdeps --all --depending "$wheel" || true
-    echo "::endgroup::"
-    exit 1
-fi
+delocate
