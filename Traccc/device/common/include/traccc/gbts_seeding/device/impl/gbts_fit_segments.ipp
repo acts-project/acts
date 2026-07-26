@@ -311,13 +311,11 @@ TRACCC_HOST_DEVICE inline void gbts_fit_segments(
 
     // state1 is the final state
     //  can cut more strongly now the fit is done
-    if (fabsf(state1.m_X[2]) * fit_params.final_curv_cut_tighten *
-            fit_params.inv_max_curvature >
-        1.0f) {
+    if (math::fabs(state1.m_X[2]) * fit_params.final_curv_cut_tighten *
+            fit_params.inv_max_curvature > 1.0f) {
       return;
     }
-    // prefer seeds that reach to the outer edge of the detector for better high
-    // pT resoultion
+    // prefer seeds that reach to the outer edge of the detector for better resoultion at high pT
     if (math::fabs(state1.m_Y[1]) > fit_params.zmax / fit_params.rmax) {
       state1.m_J += fit_params.add_hit * math::fabs(node1.z) / fit_params.zmax;
     } else {

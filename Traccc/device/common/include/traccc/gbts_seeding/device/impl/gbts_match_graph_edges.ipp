@@ -97,7 +97,7 @@ TRACCC_HOST_DEVICE inline void gbts_match_graph_edges(
 
       // adaptive eta cut based on edge length and curvature
       float deta_max =
-          cut_deta_max + deta_inflation * (params2.second | params1.second);
+          cut_deta_max + deta_inflation * (params2.second || params1.second);
       float curv = 0.5f * math::fabs(curv2 + params2.first.y);
       deta_max *=
           1.0f - high_pT_correction * ((curv < less_scattering_curv) +
