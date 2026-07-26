@@ -145,7 +145,7 @@ struct gbts_match_graph_edges_params {
   float cut_deta_max = 0.007f;
   float deta_inflation = 0.003f;
   // tuning to tighten eta cut for high pT edges
-  float less_scattering_curv = 1e-4;
+  float less_scattering_curv = 1e-4f;
   float much_less_scattering_curv = 3e-5f;
   // deta_max *= 1.0f-high_pT_correction*((curv < less_scattering_curv) + (curv
   // < much_less_scattering_curv))
