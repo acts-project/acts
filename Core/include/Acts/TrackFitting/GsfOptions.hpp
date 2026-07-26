@@ -31,13 +31,18 @@ namespace Acts {
 enum class ComponentMergeMethod { eMean, eMaxWeight };
 //! [component merge method]
 
+/// Column names and types for the optional GSF track-container columns
 namespace GsfConstants {
+/// Track-container column name holding the final multi-component state
 constexpr std::string_view kFinalMultiComponentStateColumn =
     "gsf-final-multi-component-state";
+/// Type stored in the final multi-component-state column
 using FinalMultiComponentState =
     std::optional<MultiComponentBoundTrackParameters>;
+/// Track-container column name for the summed forward material @f$x/X_0@f$
 constexpr std::string_view kFwdSumMaterialXOverX0 =
     "gsf-fwd-sum-material-x-over-x0";
+/// Track-container column name for the maximum forward material @f$x/X_0@f$
 constexpr std::string_view kFwdMaxMaterialXOverX0 =
     "gsf-fwd-max-material-x-over-x0";
 }  // namespace GsfConstants
