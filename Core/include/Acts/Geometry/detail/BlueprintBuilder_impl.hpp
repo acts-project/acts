@@ -16,7 +16,7 @@
 #include "Acts/Geometry/BlueprintBuilder.hpp"
 #include "Acts/Utilities/FunctionComposition.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
 namespace detail {
 
@@ -195,12 +195,12 @@ ElementLayerAssembler<BackendT>::setAttachmentStrategy(
 
 template <detail::BlueprintBackend BackendT>
 void ElementLayerAssembler<BackendT>::addTo(
-    Acts::Experimental::BlueprintNode& node) const&& {
+    Acts::BlueprintNode& node) const&& {
   node.addChild(build());
 }
 
 template <detail::BlueprintBackend BackendT>
-std::shared_ptr<Acts::Experimental::ContainerBlueprintNode>
+std::shared_ptr<Acts::ContainerBlueprintNode>
 ElementLayerAssembler<BackendT>::build() const {
   const auto& logger = m_builder->logger();
 
@@ -245,15 +245,15 @@ ElementLayerAssembler<BackendT>::build() const {
     }
   }
 
-  std::shared_ptr<Acts::Experimental::ContainerBlueprintNode> node;
+  std::shared_ptr<Acts::ContainerBlueprintNode> node;
   if (m_layerType != LayerType::Plane) {
     const Acts::AxisDirection axisDir = m_layerType == LayerType::Cylinder
                                             ? Acts::AxisDirection::AxisR
                                             : Acts::AxisDirection::AxisZ;
-    node = std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
+    node = std::make_shared<Acts::CylinderContainerBlueprintNode>(
         containerName, axisDir);
   } else {
-    node = std::make_shared<Acts::Experimental::CuboidContainerBlueprintNode>(
+    node = std::make_shared<Acts::CuboidContainerBlueprintNode>(
         containerName, Acts::AxisDirection::AxisZ);
   }
 
@@ -344,12 +344,12 @@ SensorLayerAssembler<BackendT>::setAttachmentStrategy(
 
 template <detail::BlueprintBackend BackendT>
 void SensorLayerAssembler<BackendT>::addTo(
-    Acts::Experimental::BlueprintNode& node) const&& {
+    Acts::BlueprintNode& node) const&& {
   node.addChild(build());
 }
 
 template <detail::BlueprintBackend BackendT>
-std::shared_ptr<Acts::Experimental::ContainerBlueprintNode>
+std::shared_ptr<Acts::ContainerBlueprintNode>
 SensorLayerAssembler<BackendT>::build() const {
   using enum Acts::AxisDirection;
 
@@ -379,14 +379,14 @@ SensorLayerAssembler<BackendT>::build() const {
         "grouping, use BlueprintBuilder::layerFromSensors() instead.");
   }
 
-  std::shared_ptr<Acts::Experimental::ContainerBlueprintNode> node;
+  std::shared_ptr<Acts::ContainerBlueprintNode> node;
   if (m_layerType != LayerType::Plane) {
     const AxisDirection axisDir =
         m_layerType == LayerType::Cylinder ? AxisR : AxisZ;
-    node = std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
+    node = std::make_shared<Acts::CylinderContainerBlueprintNode>(
         m_containerName.value(), axisDir);
   } else {
-    node = std::make_shared<Acts::Experimental::CuboidContainerBlueprintNode>(
+    node = std::make_shared<Acts::CuboidContainerBlueprintNode>(
         m_containerName.value(), AxisZ);
   }
 
@@ -480,12 +480,12 @@ SensorLayer<BackendT>&& SensorLayer<BackendT>::setEnvelope(
 
 template <detail::BlueprintBackend BackendT>
 void SensorLayer<BackendT>::addTo(
-    Acts::Experimental::BlueprintNode& node) const&& {
+    Acts::BlueprintNode& node) const&& {
   node.addChild(build());
 }
 
 template <detail::BlueprintBackend BackendT>
-std::shared_ptr<Acts::Experimental::BlueprintNode>
+std::shared_ptr<Acts::BlueprintNode>
 SensorLayer<BackendT>::build() const {
   if (!m_layerType.has_value()) {
     throw std::runtime_error("Layer type not set in SensorLayer");
@@ -521,7 +521,7 @@ BarrelEndcapAssembler<BackendT>::BarrelEndcapAssembler(const Builder& builder)
 
 template <detail::BlueprintBackend BackendT>
 void BarrelEndcapAssembler<BackendT>::addTo(
-    Acts::Experimental::BlueprintNode& node) const&&
+    Acts::BlueprintNode& node) const&&
   requires(detail::HasBarrelEndcapClassifier<BackendT>)
 {
   node.addChild(build());
@@ -564,7 +564,7 @@ BarrelEndcapAssembler<BackendT>::setLayerFilter(const std::regex& pattern) && {
 }
 
 template <detail::BlueprintBackend BackendT>
-std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
+std::shared_ptr<Acts::CylinderContainerBlueprintNode>
 BarrelEndcapAssembler<BackendT>::build() const
   requires(detail::HasBarrelEndcapClassifier<BackendT>)
 {
@@ -612,7 +612,7 @@ BarrelEndcapAssembler<BackendT>::build() const
                      << assemblyName);
 
   auto node =
-      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
+      std::make_shared<Acts::CylinderContainerBlueprintNode>(
           assemblyName, Acts::AxisDirection::AxisZ);
 
   auto maybeAddAxes = [](const auto& axes) {
@@ -630,7 +630,7 @@ BarrelEndcapAssembler<BackendT>::build() const
   };
 
   auto addTo =
-      std::bind_front(&Acts::Experimental::BlueprintNode::addChild, node.get());
+      std::bind_front(&Acts::BlueprintNode::addChild, node.get());
 
   for (const auto& barrel : barrels) {
     auto compose = Acts::compose(addTo, std::bind_front(m_onContainer, barrel),
@@ -668,7 +668,7 @@ BlueprintBuilder<BackendT>::BlueprintBuilder(
       m_backend(cfg, *m_logger) {}
 
 template <detail::BlueprintBackend BackendT>
-std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
+std::shared_ptr<Acts::LayerBlueprintNode>
 BlueprintBuilder<BackendT>::makeLayer(const Element& layerElement,
                                       const LayerSpec& layerSpec) const {
   auto sensitives = resolveSensitives(layerElement);
@@ -823,14 +823,14 @@ BlueprintBuilder<BackendT>::findEndcapElements(const Element& assembly) const
 }
 
 template <detail::BlueprintBackend BackendT>
-std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
+std::shared_ptr<Acts::LayerBlueprintNode>
 BlueprintBuilder<BackendT>::makeLayer(const Element& parent,
                                       std::span<const Element> sensitives,
                                       const LayerSpec& layerSpec) const {
   const std::string nodeName =
       layerSpec.layerName.value_or(m_backend.nameOf(parent));
   auto node =
-      std::make_shared<Acts::Experimental::LayerBlueprintNode>(nodeName);
+      std::make_shared<Acts::LayerBlueprintNode>(nodeName);
   node->setSurfaces(m_backend.makeSurfaces(sensitives, layerSpec));
 
   if constexpr (detail::HasLayerTransformLookup<BackendT>) {
@@ -845,7 +845,7 @@ BlueprintBuilder<BackendT>::makeLayer(const Element& parent,
 }
 
 template <detail::BlueprintBackend BackendT>
-std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
+std::shared_ptr<Acts::LayerBlueprintNode>
 BlueprintBuilder<BackendT>::makeLayer(std::span<const Element> sensitives,
                                       const LayerSpec& layerSpec) const {
   if (!layerSpec.layerName.has_value() || layerSpec.layerName->empty()) {
@@ -854,7 +854,7 @@ BlueprintBuilder<BackendT>::makeLayer(std::span<const Element> sensitives,
         "layerSpec.layerName must be set");
   }
 
-  auto node = std::make_shared<Acts::Experimental::LayerBlueprintNode>(
+  auto node = std::make_shared<Acts::LayerBlueprintNode>(
       layerSpec.layerName.value());
   node->setSurfaces(m_backend.makeSurfaces(sensitives, layerSpec));
   return node;
@@ -877,4 +877,4 @@ BlueprintBuilder<BackendT>::resolveSensitives(const Element& detElement) const {
   return sensitives;
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

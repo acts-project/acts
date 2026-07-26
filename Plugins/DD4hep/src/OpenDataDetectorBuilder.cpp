@@ -40,7 +40,7 @@ auto makeLayerCustomizer(const BlueprintBuilder& builder, std::string det,
                          std::regex layerFilter) {
   return [&builder, det = std::move(det), layerFilter = std::move(layerFilter)](
              const std::optional<dd4hep::DetElement>& elem,
-             Acts::Experimental::LayerBlueprintNode& layer) {
+             Acts::LayerBlueprintNode& layer) {
     layer.setEnvelope(detail::kLayerEnvelope);
 
     const std::string elemName =
@@ -55,7 +55,7 @@ auto makeLayerCustomizer(const BlueprintBuilder& builder, std::string det,
     navCfg.envelope = detail::kLayerEnvelope;
 
     if (layer.layerType() ==
-        Acts::Experimental::LayerBlueprintNode::LayerType::Cylinder) {
+        Acts::LayerBlueprintNode::LayerType::Cylinder) {
       // Barrel layer
       navCfg.layerType = Cylinder;
       navCfg.bins = {
@@ -76,7 +76,7 @@ auto makeLayerCustomizer(const BlueprintBuilder& builder, std::string det,
 }
 
 void addDirectLayerSubsystem(const BlueprintBuilder& builder,
-                             Acts::Experimental::ContainerBlueprintNode& outer,
+                             Acts::ContainerBlueprintNode& outer,
                              std::string assembly, std::string det,
                              const std::regex& layerFilter) {
   const auto assemblyElement = builder.findDetElementByName(assembly);
@@ -90,7 +90,7 @@ void addDirectLayerSubsystem(const BlueprintBuilder& builder,
 
   const std::string assemblyName{builder.backend().nameOf(*assemblyElement)};
   auto containerNode =
-      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
+      std::make_shared<Acts::CylinderContainerBlueprintNode>(
           assemblyName, Acts::AxisDirection::AxisZ);
 
   auto layerCustomizer =
@@ -130,7 +130,7 @@ void addDirectLayerSubsystem(const BlueprintBuilder& builder,
 }
 
 void addBarrelEndcapSubsystem(const BlueprintBuilder& builder,
-                              Acts::Experimental::ContainerBlueprintNode& outer,
+                              Acts::ContainerBlueprintNode& outer,
                               std::string assembly, std::string det,
                               const std::regex& layerFilter) {
   const auto assemblyElement = builder.findDetElementByName(assembly);
@@ -145,7 +145,7 @@ void addBarrelEndcapSubsystem(const BlueprintBuilder& builder,
       .setLayerFilter(layerFilter)
       .onLayer(makeLayerCustomizer(builder, std::move(det), layerFilter))
       .onContainer(
-          [](const auto&, Acts::Experimental::ContainerBlueprintNode& node) {
+          [](const auto&, Acts::ContainerBlueprintNode& node) {
             node.setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
             node.setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
                                      Acts::VolumeResizeStrategy::Gap);
@@ -155,7 +155,7 @@ void addBarrelEndcapSubsystem(const BlueprintBuilder& builder,
 
 void addDirectLayerGroupedSubsystem(
     const BlueprintBuilder& builder,
-    Acts::Experimental::ContainerBlueprintNode& outer, std::string assembly,
+    Acts::ContainerBlueprintNode& outer, std::string assembly,
     std::string det, const std::regex& layerFilter) {
   const auto assemblyElement = builder.findDetElementByName(assembly);
   if (!assemblyElement.has_value()) {
@@ -168,7 +168,7 @@ void addDirectLayerGroupedSubsystem(
 
   const std::string assemblyName{builder.backend().nameOf(*assemblyElement)};
   auto containerNode =
-      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
+      std::make_shared<Acts::CylinderContainerBlueprintNode>(
           assemblyName, Acts::AxisDirection::AxisZ);
 
   auto layerCustomizer =
@@ -229,7 +229,6 @@ void addDirectLayerGroupedSubsystem(
 std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
     const dd4hep::Detector& detector, const Acts::GeometryContext& gctx,
     const Acts::Logger& logger) {
-  using namespace Acts::Experimental;
   using namespace Acts;
   using enum AxisDirection;
 
@@ -262,7 +261,6 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
 std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayer(
     const dd4hep::Detector& detector, const Acts::GeometryContext& gctx,
     const Acts::Logger& logger) {
-  using namespace Acts::Experimental;
   using namespace Acts;
   using enum AxisDirection;
 
@@ -295,7 +293,6 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayer(
 std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayerGrouped(
     const dd4hep::Detector& detector, const Acts::GeometryContext& gctx,
     const Acts::Logger& logger) {
-  using namespace Acts::Experimental;
   using namespace Acts;
   using enum AxisDirection;
 

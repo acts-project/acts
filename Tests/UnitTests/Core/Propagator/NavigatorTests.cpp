@@ -667,13 +667,13 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
 BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume) {
   auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
-  Experimental::Blueprint::Config cfg;
+  Blueprint::Config cfg;
   cfg.envelope = ExtentEnvelope{{
       .z = {20_mm, 20_mm},
       .r = {0_mm, 20_mm},
   }};
 
-  Experimental::Blueprint root{cfg};
+  Blueprint root{cfg};
 
   auto& cubcontainer =
       root.addCuboidContainer("CuboidContainer", AxisDirection::AxisZ);
@@ -697,7 +697,7 @@ BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume) {
   parentVol->assignGeometryId(GeometryIdentifier{}.withVolume(1));
   parentVol->addSurface(surface);
   auto parentNode =
-      std::make_shared<Experimental::StaticBlueprintNode>(std::move(parentVol));
+      std::make_shared<StaticBlueprintNode>(std::move(parentVol));
 
   // put two tracking volumes in the sides of the parent as children and a plane
   // surface in the middle of the parent volume
@@ -712,14 +712,14 @@ BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume) {
   childVol1->assignGeometryId(GeometryIdentifier{}.withVolume(2));
 
   auto childNode1 =
-      std::make_shared<Experimental::StaticBlueprintNode>(std::move(childVol1));
+      std::make_shared<StaticBlueprintNode>(std::move(childVol1));
 
   auto childVol2 =
       std::make_unique<TrackingVolume>(trf2, childBounds, "child2");
   childVol2->assignGeometryId(GeometryIdentifier{}.withVolume(3));
 
   auto childNode2 =
-      std::make_shared<Experimental::StaticBlueprintNode>(std::move(childVol2));
+      std::make_shared<StaticBlueprintNode>(std::move(childVol2));
 
   parentNode->addChild(childNode1);
   parentNode->addChild(childNode2);

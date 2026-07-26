@@ -143,7 +143,7 @@ std::optional<Acts::Transform3> DD4hepBackend::lookupLayerTransform(
   return std::nullopt;
 }
 
-std::shared_ptr<Acts::Experimental::StaticBlueprintNode>
+std::shared_ptr<Acts::StaticBlueprintNode>
 DD4hepBackend::makeBeampipe() const {
   std::optional<dd4hep::DetElement> beampipeElement = std::nullopt;
 
@@ -186,7 +186,7 @@ DD4hepBackend::makeBeampipe() const {
       bounds->get(Acts::CylinderBounds::eHalfLengthZ));
   auto volume = std::make_unique<Acts::TrackingVolume>(transform, volumeBounds,
                                                        beampipeElement->name());
-  return std::make_shared<Acts::Experimental::StaticBlueprintNode>(
+  return std::make_shared<Acts::StaticBlueprintNode>(
       std::move(volume));
 }
 
@@ -195,10 +195,10 @@ DD4hepBackend::makeBeampipe() const {
 // Explicit template instantiation for DD4hepBackend. Ensures all template
 // code is compiled in this TU; other TUs use extern template and link here.
 // Must be in ::Acts::Experimental (at global scope) to match the template defs.
-namespace Acts::Experimental {
+namespace Acts {
 template class BlueprintBuilder<ActsPlugins::DD4hep::DD4hepBackend>;
 template class ElementLayerAssembler<ActsPlugins::DD4hep::DD4hepBackend>;
 template class SensorLayerAssembler<ActsPlugins::DD4hep::DD4hepBackend>;
 template class SensorLayer<ActsPlugins::DD4hep::DD4hepBackend>;
 template class BarrelEndcapAssembler<ActsPlugins::DD4hep::DD4hepBackend>;
-}  // namespace Acts::Experimental
+}  // namespace Acts

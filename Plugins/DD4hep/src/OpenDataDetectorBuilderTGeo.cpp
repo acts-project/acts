@@ -121,7 +121,7 @@ auto makeTGeoLayerCustomizer(const BlueprintBuilder& builder,
                              const std::regex& layerFilter) {
   return [&builder, &binning, layerFilter](
              const std::optional<TGeoBlueprintBuilderBackend::Element>& elem,
-             Acts::Experimental::LayerBlueprintNode& layer) {
+             Acts::LayerBlueprintNode& layer) {
     layer.setEnvelope(detail::kLayerEnvelope);
 
     const std::string elemName =
@@ -136,7 +136,7 @@ auto makeTGeoLayerCustomizer(const BlueprintBuilder& builder,
     navCfg.envelope = detail::kLayerEnvelope;
     const bool isBarrelLayer =
         layer.layerType() ==
-        Acts::Experimental::LayerBlueprintNode::LayerType::Cylinder;
+        Acts::LayerBlueprintNode::LayerType::Cylinder;
     navCfg.layerType = isBarrelLayer ? Cylinder : Disc;
 
     const auto bins = binning.binsFor(isBarrelLayer, layerIdx);
@@ -149,7 +149,7 @@ auto makeTGeoLayerCustomizer(const BlueprintBuilder& builder,
   };
 }
 
-std::shared_ptr<Acts::Experimental::StaticBlueprintNode> makeTGeoBeampipeNode(
+std::shared_ptr<Acts::StaticBlueprintNode> makeTGeoBeampipeNode(
     const BlueprintBuilder& builder) {
   const auto beampipeElement =
       builder.findDetElementByName(std::string{kTGeoBeampipeName});
@@ -176,11 +176,11 @@ std::shared_ptr<Acts::Experimental::StaticBlueprintNode> makeTGeoBeampipeNode(
       bounds->get(Acts::CylinderBounds::eHalfLengthZ));
   auto volume = std::make_unique<Acts::TrackingVolume>(
       transform, volumeBounds, std::string{kTGeoBeampipeName});
-  return std::make_shared<Acts::Experimental::StaticBlueprintNode>(
+  return std::make_shared<Acts::StaticBlueprintNode>(
       std::move(volume));
 }
 
-void configureSubsystemNode(Acts::Experimental::ContainerBlueprintNode& node) {
+void configureSubsystemNode(Acts::ContainerBlueprintNode& node) {
   node.setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
   node.setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
                            Acts::VolumeResizeStrategy::Gap);
@@ -199,7 +199,7 @@ struct TGeoSubsystemSpec {
 };
 
 void addTGeoSubsystem(const BlueprintBuilder& builder,
-                      Acts::Experimental::BlueprintNode& parent,
+                      Acts::BlueprintNode& parent,
                       const TGeoSubsystemSpec& spec) {
   const auto assemblyElement =
       builder.findDetElementByName(std::string{spec.assembly});
@@ -227,7 +227,7 @@ void addTGeoSubsystem(const BlueprintBuilder& builder,
   }
 
   auto subsystemNode =
-      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
+      std::make_shared<Acts::CylinderContainerBlueprintNode>(
           builder.backend().nameOf(*assemblyElement),
           Acts::AxisDirection::AxisZ);
 
@@ -278,7 +278,6 @@ std::unique_ptr<Acts::TrackingGeometry>
 buildOpenDataDetectorBarrelEndcapViaTGeo(const TGeoNode& rootNode,
                                          const Acts::GeometryContext& gctx,
                                          const Acts::Logger& logger) {
-  using namespace Acts::Experimental;
   using namespace Acts;
   using enum AxisDirection;
 
