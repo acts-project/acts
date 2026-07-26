@@ -56,16 +56,29 @@ def classify(base: dict, head: dict) -> dict:
         for k in (b_keys & h_keys) if b_call[k] != h_call[k]
     )
 
-    added = added_names + added_forms
-    breaking = removed_names + removed_forms + ret_changed
+    # public data members (fields): removal / retype is breaking, add is not
+    b_fld = base.get("fields", {})
+    h_fld = head.get("fields", {})
+    added_fields = sorted(set(h_fld) - set(b_fld))
+    removed_fields = sorted(set(b_fld) - set(h_fld))
+    field_retyped = sorted(
+        f"{k}: {b_fld[k]} -> {h_fld[k]}"
+        for k in (set(b_fld) & set(h_fld)) if b_fld[k] != h_fld[k]
+    )
+
+    added = added_names + added_forms + added_fields
+    breaking = removed_names + removed_forms + ret_changed + removed_fields + field_retyped
     return {
         "added": added,
         "breaking": breaking,
         "added_names": added_names,
         "added_signatures": added_forms,
+        "added_fields": added_fields,
         "removed_names": removed_names,
         "removed_signatures": removed_forms,
         "return_type_changes": ret_changed,
+        "removed_fields": removed_fields,
+        "field_type_changes": field_retyped,
         "added_count": len(added),
         "breaking_count": len(breaking),
         "has_additions": bool(added),
@@ -97,6 +110,10 @@ def render_markdown(c: dict) -> str:
             lines += _details("Removed or changed call signatures", c["removed_signatures"])
         if c["return_type_changes"]:
             lines += _details("Return-type changes", c["return_type_changes"])
+        if c.get("removed_fields"):
+            lines += _details("Removed public data members", c["removed_fields"])
+        if c.get("field_type_changes"):
+            lines += _details("Retyped public data members", c["field_type_changes"])
         lines.append("")
     if c["has_additions"]:
         lines.append("### ➕ Added public API")
@@ -104,6 +121,8 @@ def render_markdown(c: dict) -> str:
             lines += _details("New types / aliases / enums / variables / concepts", c["added_names"])
         if c["added_signatures"]:
             lines += _details("New call signatures (incl. defaulted-arg overloads)", c["added_signatures"])
+        if c.get("added_fields"):
+            lines += _details("New public data members", c["added_fields"])
     return "\n".join(lines) + "\n"
 
 

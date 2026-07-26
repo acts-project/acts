@@ -122,7 +122,7 @@ jobs:
           doxygen --version
       - name: Measure public API surface (this ref)
         run: >
-          CI/public_api_surface.py --run
+          CI/public_api_surface.py --run --roots-under .
           --json api-surface.json
           --markdown api-surface.md
       - name: Diff public API surface against base
@@ -131,8 +131,8 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           git worktree add --detach /tmp/base-tree "$BASE_SHA"
-          CI/public_api_surface.py --run \
-            --input /tmp/base-tree/Core/include/Acts \
+          # Base measured with THIS ref's Doxyfile/scripts, over the base tree.
+          CI/public_api_surface.py --run --roots-under /tmp/base-tree \
             --json base-surface.json --markdown /dev/null
           # Report only for now; classification JSON drives the labeler job.
           CI/public_api_diff.py \

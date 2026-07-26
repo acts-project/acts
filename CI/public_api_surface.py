@@ -30,7 +30,28 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 DOXYFILE = "CI/public_api/Doxyfile"
-INPUT_ROOT = "Core/include/Acts"
+
+# Plugins deliberately left out of the public-API surface metric.
+EXCLUDED_PLUGINS = {"Detray", "Traccc"}
+
+
+def standard_roots(under: Path) -> list[Path]:
+    """Header roots whose public API we track, resolved under `under`.
+
+    Core, Fatras and Alignment, plus every plugin except the excluded ones.
+    Examples/Detray/Traccc integrations are intentionally omitted.
+    """
+    roots: list[Path] = []
+    for rel in ("Core/include", "Fatras/include", "Alignment/include"):
+        p = under / rel
+        if p.is_dir():
+            roots.append(p)
+    plugins = under / "Plugins"
+    if plugins.is_dir():
+        for pdir in sorted(plugins.iterdir()):
+            if pdir.is_dir() and pdir.name not in EXCLUDED_PLUGINS and (pdir / "include").is_dir():
+                roots.append(pdir / "include")
+    return roots
 
 # Doxygen memberdef 'kind' -> report bucket for namespace-scope members
 NS_MEMBER_BUCKET = {
@@ -47,20 +68,34 @@ def is_internal(name: str) -> bool:
 
 
 def module_of(location: str | None) -> str:
-    """Top-level module from a location like 'Core/include/Acts/Surfaces/X.hpp'."""
+    """Component (and Core sub-module) from a header location path.
+
+    e.g. '.../Core/include/Acts/Surfaces/X.hpp' -> 'Core/Surfaces',
+         '.../Plugins/Json/include/ActsPlugins/Json/Y.hpp' -> 'Plugin:Json',
+         '.../Fatras/include/ActsFatras/Z.hpp' -> 'Fatras'.
+    """
     if not location:
         return "?"
     parts = Path(location).as_posix().split("/")
-    if "Acts" in parts:
+    if "Plugins" in parts:
+        i = parts.index("Plugins")
+        if i + 1 < len(parts):
+            return "Plugin:" + parts[i + 1]
+    if "Fatras" in parts:
+        return "Fatras"
+    if "Alignment" in parts:
+        return "Alignment"
+    if "Acts" in parts:  # Core: '.../Core/include/Acts/<module>/file.hpp'
         i = parts.index("Acts")
-        if i + 1 < len(parts) - 1:  # something between Acts/ and the filename
-            return parts[i + 1]
-    return "(root)"
+        return f"Core/{parts[i + 1]}" if i + 1 < len(parts) - 1 else "Core"
+    return "?"
 
 
-def run_doxygen(repo: Path, out: Path, input_dir: Path) -> None:
+def run_doxygen(repo: Path, out: Path, input_dirs: list[Path]) -> None:
     out.mkdir(parents=True, exist_ok=True)
-    env = dict(os.environ, DOXY_OUT=str(out), DOXY_INPUT=str(input_dir))
+    # Doxygen INPUT accepts a space-separated list of directories.
+    doxy_input = " ".join(f'"{d}"' for d in input_dirs)
+    env = dict(os.environ, DOXY_OUT=str(out), DOXY_INPUT=doxy_input)
     subprocess.run(["doxygen", DOXYFILE], cwd=repo, env=env, check=True)
 
 
@@ -103,6 +138,7 @@ def parse_xml(xml_dir: Path) -> dict:
     ns_member_names: set[str] = set()
     symbols: set[str] = set()  # stable per-symbol keys for diffing (non-function)
     callables: dict[str, str] = {}  # source-callable signature -> return type
+    fields: dict[str, str] = {}     # public data member Class::name -> type
     methods = 0
 
     for f in glob.glob(str(xml_dir / "*.xml")):
@@ -128,12 +164,17 @@ def parse_xml(xml_dir: Path) -> dict:
                     counts["types"] += 1
                     per_module[module_of(locfile)]["types"] += 1
                     symbols.add(f"type {bare}")
-                # public methods on this documented type
+                # public methods and data members on this documented type
                 for md in cd.iter("memberdef"):
-                    if md.get("kind") == "function" and md.get("prot") == "public":
+                    if md.get("prot") != "public":
+                        continue
+                    if md.get("kind") == "function":
                         methods += 1
                         callables.update(
                             callable_forms(md, f"{bare}::{md.findtext('name') or ''}"))
+                    elif md.get("kind") == "variable":
+                        mname = md.findtext("name") or ""
+                        fields[f"{bare}::{mname}"] = _norm_type(md.find("type"))
 
             elif kind == "concept":
                 # Doxygen >= 1.9.7 emits C++20 concepts as their own compound.
@@ -166,9 +207,11 @@ def parse_xml(xml_dir: Path) -> dict:
         "counts": dict(counts),
         "total": total,
         "public_methods": methods,
+        "public_fields": len(fields),
         "per_module": {m: dict(c) for m, c in per_module.items()},
         "symbols": sorted(symbols),
         "callables": callables,
+        "fields": fields,
     }
 
 
@@ -178,11 +221,17 @@ BUCKET_ORDER = ["types", "free_functions", "aliases", "variables", "enums", "con
 def render_markdown(data: dict, doxy_version: str | None) -> str:
     c = data["counts"]
     lines = ["## ACTS public API surface", ""]
-    lines.append(f"**{data['total']}** documented public names in `Acts::` "
+    lines.append(f"**{data['total']}** documented public names in `Acts*::` "
                  f"(excluding `detail` / `Experimental`), plus "
-                 f"**{data['public_methods']}** public methods on documented types.")
-    if doxy_version:
-        lines.append(f"\n_Source: `Core/include/Acts` via Doxygen {doxy_version}._")
+                 f"**{data['public_methods']}** public methods and "
+                 f"**{data.get('public_fields', 0)}** public data members on "
+                 f"documented types.")
+    scope = data.get("scope")
+    if scope:
+        lines.append(f"\n_Scope: {scope}"
+                     + (f" via Doxygen {doxy_version}._" if doxy_version else "._"))
+    elif doxy_version:
+        lines.append(f"\n_Doxygen {doxy_version}._")
     lines += ["", "| category | count |", "|---|---:|"]
     for k in BUCKET_ORDER:
         if k in c:
@@ -203,10 +252,13 @@ def render_markdown(data: dict, doxy_version: str | None) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--repo", default=".", help="repository root")
+    ap.add_argument("--repo", default=".", help="repository root (has the Doxyfile)")
     ap.add_argument("--run", action="store_true", help="run doxygen (else use --xml)")
-    ap.add_argument("--input", help="header root to measure "
-                    "(default <repo>/Core/include/Acts); use to point at another checkout")
+    ap.add_argument("--input", nargs="+", metavar="DIR",
+                    help="explicit header root(s) to measure")
+    ap.add_argument("--roots-under", metavar="DIR",
+                    help="measure the standard component set (Core, Fatras, Alignment, "
+                    "plugins except Detray/Traccc) resolved under DIR; use for another checkout")
     ap.add_argument("--xml", help="existing Doxygen XML dir to parse")
     ap.add_argument("--json", help="write report JSON here")
     ap.add_argument("--markdown", help="write Markdown here ('-' for stdout)")
@@ -221,11 +273,29 @@ def main() -> int:
     except (FileNotFoundError, IndexError):
         pass
 
+    scope = None
     tmp = None
     if args.run:
-        input_dir = Path(args.input).resolve() if args.input else repo / INPUT_ROOT
+        if args.input:
+            input_dirs = [Path(p).resolve() for p in args.input]
+        else:
+            input_dirs = standard_roots(Path(args.roots_under).resolve()
+                                        if args.roots_under else repo)
+        if not input_dirs:
+            print("error: no header roots found to measure", file=sys.stderr)
+            return 2
+
+        def component(d: Path) -> str:
+            parts = d.parts
+            if "Plugins" in parts:
+                return "Plugin:" + parts[parts.index("Plugins") + 1]
+            for comp in ("Core", "Fatras", "Alignment"):
+                if comp in parts:
+                    return comp
+            return d.name
+        scope = ", ".join(dict.fromkeys(component(d) for d in input_dirs))
         tmp = Path(tempfile.mkdtemp(prefix="acts-api-surface-"))
-        run_doxygen(repo, tmp, input_dir)
+        run_doxygen(repo, tmp, input_dirs)
         xml_dir = tmp / "xml"
     elif args.xml:
         xml_dir = Path(args.xml)
@@ -239,6 +309,7 @@ def main() -> int:
 
     data = parse_xml(xml_dir)
     data["doxygen_version"] = doxy_version
+    data["scope"] = scope
 
     md = render_markdown(data, doxy_version)
 

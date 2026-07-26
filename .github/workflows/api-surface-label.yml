@@ -59,8 +59,8 @@ jobs:
           mv doxygen-${{ env.DOXYGEN_VERSION }}/bin/doxygen /usr/local/bin/doxygen
       - name: Measure and diff public API surface
         run: |
-          CI/public_api_surface.py --run --input Core/include/Acts     --json base.json --markdown /dev/null
-          CI/public_api_surface.py --run --input pr/Core/include/Acts  --json head.json --markdown /dev/null
+          CI/public_api_surface.py --run --roots-under .   --json base.json --markdown /dev/null
+          CI/public_api_surface.py --run --roots-under pr  --json head.json --markdown /dev/null
           CI/public_api_diff.py --base base.json --head head.json \
             --json api-surface-diff.json --markdown api-surface-diff.md --fail-on none
       - name: Apply labels and comment
