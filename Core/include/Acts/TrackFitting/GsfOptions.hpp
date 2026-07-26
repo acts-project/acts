@@ -27,7 +27,9 @@ namespace Acts {
 /// @enum ComponentMergeMethod
 ///
 /// Available reduction methods for the reduction of a Gaussian mixture
+//! [component merge method]
 enum class ComponentMergeMethod { eMean, eMaxWeight };
+//! [component merge method]
 
 namespace GsfConstants {
 constexpr std::string_view kFinalMultiComponentStateColumn =
@@ -61,8 +63,10 @@ struct GsfExtensions {
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 
   /// Type alias for component reducer delegate function
+  //! [mixture reducer]
   using ComponentReducer =
       Delegate<void(std::vector<GsfComponent> &, std::size_t, const Surface &)>;
+  //! [mixture reducer]
 
   /// The Calibrator is a dedicated calibration algorithm that allows
   /// to calibrate measurements using track information, this could be
