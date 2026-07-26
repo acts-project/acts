@@ -508,13 +508,13 @@ auto makeMultiLayerPolicy(const GeometryContext& gctx,
   Acts::Grid gridXY(Acts::Type<std::vector<std::size_t>>, std::move(axisX),
                     std::move(axisY));
 
-  MultiLayerNavigationPolicy::IndexedUpdatorType indexedGrid(
-      std::move(gridXY), {AxisX, AxisY});
+  MultiLayerNavigationPolicy::IndexedUpdatorType indexedGrid(std::move(gridXY),
+                                                             {AxisX, AxisY});
 
   MultiLayerNavigationPolicy::Config cfg;
   cfg.binExpansion = {1u, 1u};
   return MultiLayerNavigationPolicy(gctx, volume, logger, cfg,
-                                                  std::move(indexedGrid));
+                                    std::move(indexedGrid));
 }
 
 }  // namespace
@@ -553,8 +553,7 @@ BOOST_AUTO_TEST_CASE(MultiLayerNavigationPolicyRoundTrip) {
 
   auto policyPtr =
       conv.navigationPolicyFromJson(tContext, j, *tVolume, *tLogger);
-  auto& restored =
-      dynamic_cast<MultiLayerNavigationPolicy&>(*policyPtr);
+  auto& restored = dynamic_cast<MultiLayerNavigationPolicy&>(*policyPtr);
 
   const auto& origGrid = policy.indexedGrid().grid;
   const auto& restGrid = restored.indexedGrid().grid;

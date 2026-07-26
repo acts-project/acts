@@ -112,10 +112,10 @@ namespace Experimental {
 ///             namespace. Use @ref Acts::PortalDesignatorBlueprintNode instead.
 ///             This alias is kept for backward compatibility and will be
 ///             removed.
-using PortalDesignatorBlueprintNode [[deprecated(
-    "Acts::Experimental::PortalDesignatorBlueprintNode moved to "
-    "Acts::PortalDesignatorBlueprintNode")]] =
-    Acts::PortalDesignatorBlueprintNode;
+using PortalDesignatorBlueprintNode
+    [[deprecated("Acts::Experimental::PortalDesignatorBlueprintNode moved to "
+                 "Acts::PortalDesignatorBlueprintNode")]] =
+        Acts::PortalDesignatorBlueprintNode;
 }  // namespace Experimental
 
 }  // namespace Acts

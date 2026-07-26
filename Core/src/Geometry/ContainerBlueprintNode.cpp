@@ -41,9 +41,9 @@ const std::string& ContainerBlueprintNode::name() const {
   return m_name;
 }
 
-Volume& ContainerBlueprintNode::build(
-    const BlueprintOptions& options, const GeometryContext& gctx,
-    const Logger& logger) {
+Volume& ContainerBlueprintNode::build(const BlueprintOptions& options,
+                                      const GeometryContext& gctx,
+                                      const Logger& logger) {
   ACTS_DEBUG(prefix() << "container build (dir=" << m_direction << ")");
 
   if (m_stack != nullptr) {
@@ -69,9 +69,10 @@ Volume& ContainerBlueprintNode::build(
   return *m_stack;
 }
 
-void ContainerBlueprintNode::finalize(
-    const BlueprintOptions& options, const GeometryContext& gctx,
-    TrackingVolume& parent, const Logger& logger) {
+void ContainerBlueprintNode::finalize(const BlueprintOptions& options,
+                                      const GeometryContext& gctx,
+                                      TrackingVolume& parent,
+                                      const Logger& logger) {
   ACTS_DEBUG(prefix() << "Finalizing container");
 
   if (m_stack == nullptr) {

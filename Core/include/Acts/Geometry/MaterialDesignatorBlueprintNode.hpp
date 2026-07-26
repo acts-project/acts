@@ -156,10 +156,10 @@ namespace Experimental {
 ///             namespace. Use @ref Acts::MaterialDesignatorBlueprintNode
 ///             instead. This alias is kept for backward compatibility and will
 ///             be removed.
-using MaterialDesignatorBlueprintNode [[deprecated(
-    "Acts::Experimental::MaterialDesignatorBlueprintNode moved to "
-    "Acts::MaterialDesignatorBlueprintNode")]] =
-    Acts::MaterialDesignatorBlueprintNode;
+using MaterialDesignatorBlueprintNode
+    [[deprecated("Acts::Experimental::MaterialDesignatorBlueprintNode moved to "
+                 "Acts::MaterialDesignatorBlueprintNode")]] =
+        Acts::MaterialDesignatorBlueprintNode;
 }  // namespace Experimental
 
 }  // namespace Acts

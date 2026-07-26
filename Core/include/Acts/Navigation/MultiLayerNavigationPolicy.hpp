@@ -100,9 +100,10 @@ namespace Experimental {
 ///             namespace. Use @ref Acts::MultiLayerNavigationPolicy instead.
 ///             This alias is kept for backward compatibility and will be
 ///             removed.
-using MultiLayerNavigationPolicy [[deprecated(
-    "Acts::Experimental::MultiLayerNavigationPolicy moved to "
-    "Acts::MultiLayerNavigationPolicy")]] = Acts::MultiLayerNavigationPolicy;
+using MultiLayerNavigationPolicy
+    [[deprecated("Acts::Experimental::MultiLayerNavigationPolicy moved to "
+                 "Acts::MultiLayerNavigationPolicy")]] =
+        Acts::MultiLayerNavigationPolicy;
 }  // namespace Experimental
 
 }  // namespace Acts

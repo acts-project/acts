@@ -76,9 +76,9 @@ namespace Experimental {
 /// @deprecated The blueprint geometry moved out of the `Acts::Experimental`
 ///             namespace. Use @ref Acts::StaticBlueprintNode instead. This
 ///             alias is kept for backward compatibility and will be removed.
-using StaticBlueprintNode [[deprecated(
-    "Acts::Experimental::StaticBlueprintNode moved to "
-    "Acts::StaticBlueprintNode")]] = Acts::StaticBlueprintNode;
+using StaticBlueprintNode
+    [[deprecated("Acts::Experimental::StaticBlueprintNode moved to "
+                 "Acts::StaticBlueprintNode")]] = Acts::StaticBlueprintNode;
 }  // namespace Experimental
 
 }  // namespace Acts

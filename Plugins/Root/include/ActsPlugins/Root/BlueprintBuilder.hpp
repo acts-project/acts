@@ -196,8 +196,7 @@ class TGeoBlueprintBuilderBackend {
 };
 
 /// Blueprint builder specialization for the TGeo backend.
-using BlueprintBuilder =
-    Acts::BlueprintBuilder<TGeoBlueprintBuilderBackend>;
+using BlueprintBuilder = Acts::BlueprintBuilder<TGeoBlueprintBuilderBackend>;
 /// Element-layer assembler specialization for the TGeo backend.
 using ElementLayerAssembler =
     Acts::ElementLayerAssembler<TGeoBlueprintBuilderBackend>;
@@ -205,8 +204,7 @@ using ElementLayerAssembler =
 using SensorLayerAssembler =
     Acts::SensorLayerAssembler<TGeoBlueprintBuilderBackend>;
 /// Sensor-layer alias for the TGeo backend.
-using SensorLayer =
-    Acts::SensorLayer<TGeoBlueprintBuilderBackend>;
+using SensorLayer = Acts::SensorLayer<TGeoBlueprintBuilderBackend>;
 
 }  // namespace ActsPlugins
 

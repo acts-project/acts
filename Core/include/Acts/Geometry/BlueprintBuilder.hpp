@@ -440,8 +440,7 @@ class ElementLayerAssembler {
   ///         container name is resolvable, or if the container yields no
   ///         matching elements and @p emptyOk is `false`.
   /// @return Shared pointer to the fully assembled container node.
-  [[nodiscard]] std::shared_ptr<Acts::ContainerBlueprintNode>
-  build() const;
+  [[nodiscard]] std::shared_ptr<Acts::ContainerBlueprintNode> build() const;
 
   /// @brief Build the container node and attach it as a child of @p node.
   ///
@@ -829,8 +828,7 @@ class BarrelEndcapAssembler {
       std::conditional_t<detail::HasAxisDefinition<BackendT>,
                          typename BackendT::AxisDefinition, std::monostate>;
   /// The @ref ElementLayerAssembler specialisation for this backend.
-  using ElementLayerAssembler =
-      ::Acts::ElementLayerAssembler<BackendT>;
+  using ElementLayerAssembler = ::Acts::ElementLayerAssembler<BackendT>;
   /// Callback type that can replace or wrap a created container node.
   using ContainerCustomizer = detail::ContainerCustomizer<Element>;
 
@@ -1012,16 +1010,13 @@ class BlueprintBuilder {
       std::conditional_t<detail::HasAxisDefinition<Backend>,
                          typename Backend::AxisDefinition, std::monostate>;
   /// The @ref ElementLayerAssembler specialisation for this backend.
-  using ElementLayerAssembler =
-      ::Acts::ElementLayerAssembler<Backend>;
+  using ElementLayerAssembler = ::Acts::ElementLayerAssembler<Backend>;
   /// The @ref SensorLayerAssembler specialisation for this backend.
-  using SensorLayerAssembler =
-      ::Acts::SensorLayerAssembler<Backend>;
+  using SensorLayerAssembler = ::Acts::SensorLayerAssembler<Backend>;
   /// The @ref SensorLayer specialisation for this backend.
   using SensorLayer = ::Acts::SensorLayer<Backend>;
   /// The @ref BarrelEndcapAssembler specialisation for this backend.
-  using BarrelEndcapAssembler =
-      ::Acts::BarrelEndcapAssembler<Backend>;
+  using BarrelEndcapAssembler = ::Acts::BarrelEndcapAssembler<Backend>;
 
   /// @brief Construct a `BlueprintBuilder` from a backend configuration.
   ///
@@ -1193,21 +1188,24 @@ namespace Experimental {
 ///             These aliases are kept for backward compatibility and will be
 ///             removed.
 template <Acts::detail::BlueprintBackend BackendT>
-using ElementLayerAssembler [[deprecated(
-    "Acts::Experimental::ElementLayerAssembler moved to "
-    "Acts::ElementLayerAssembler")]] = Acts::ElementLayerAssembler<BackendT>;
+using ElementLayerAssembler
+    [[deprecated("Acts::Experimental::ElementLayerAssembler moved to "
+                 "Acts::ElementLayerAssembler")]] =
+        Acts::ElementLayerAssembler<BackendT>;
 template <Acts::detail::BlueprintBackend BackendT>
-using SensorLayerAssembler [[deprecated(
-    "Acts::Experimental::SensorLayerAssembler moved to "
-    "Acts::SensorLayerAssembler")]] = Acts::SensorLayerAssembler<BackendT>;
+using SensorLayerAssembler
+    [[deprecated("Acts::Experimental::SensorLayerAssembler moved to "
+                 "Acts::SensorLayerAssembler")]] =
+        Acts::SensorLayerAssembler<BackendT>;
 template <Acts::detail::BlueprintBackend BackendT>
-using SensorLayer
-    [[deprecated("Acts::Experimental::SensorLayer moved to Acts::SensorLayer")]] =
-        Acts::SensorLayer<BackendT>;
+using SensorLayer [[deprecated(
+    "Acts::Experimental::SensorLayer moved to Acts::SensorLayer")]] =
+    Acts::SensorLayer<BackendT>;
 template <Acts::detail::BlueprintBackend BackendT>
-using BarrelEndcapAssembler [[deprecated(
-    "Acts::Experimental::BarrelEndcapAssembler moved to "
-    "Acts::BarrelEndcapAssembler")]] = Acts::BarrelEndcapAssembler<BackendT>;
+using BarrelEndcapAssembler
+    [[deprecated("Acts::Experimental::BarrelEndcapAssembler moved to "
+                 "Acts::BarrelEndcapAssembler")]] =
+        Acts::BarrelEndcapAssembler<BackendT>;
 template <Acts::detail::BlueprintBackend BackendT>
 using BlueprintBuilder [[deprecated(
     "Acts::Experimental::BlueprintBuilder moved to Acts::BlueprintBuilder")]] =

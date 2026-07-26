@@ -194,8 +194,7 @@ ElementLayerAssembler<BackendT>::setAttachmentStrategy(
 }
 
 template <detail::BlueprintBackend BackendT>
-void ElementLayerAssembler<BackendT>::addTo(
-    Acts::BlueprintNode& node) const&& {
+void ElementLayerAssembler<BackendT>::addTo(Acts::BlueprintNode& node) const&& {
   node.addChild(build());
 }
 
@@ -250,8 +249,8 @@ ElementLayerAssembler<BackendT>::build() const {
     const Acts::AxisDirection axisDir = m_layerType == LayerType::Cylinder
                                             ? Acts::AxisDirection::AxisR
                                             : Acts::AxisDirection::AxisZ;
-    node = std::make_shared<Acts::CylinderContainerBlueprintNode>(
-        containerName, axisDir);
+    node = std::make_shared<Acts::CylinderContainerBlueprintNode>(containerName,
+                                                                  axisDir);
   } else {
     node = std::make_shared<Acts::CuboidContainerBlueprintNode>(
         containerName, Acts::AxisDirection::AxisZ);
@@ -343,8 +342,7 @@ SensorLayerAssembler<BackendT>::setAttachmentStrategy(
 }
 
 template <detail::BlueprintBackend BackendT>
-void SensorLayerAssembler<BackendT>::addTo(
-    Acts::BlueprintNode& node) const&& {
+void SensorLayerAssembler<BackendT>::addTo(Acts::BlueprintNode& node) const&& {
   node.addChild(build());
 }
 
@@ -479,14 +477,12 @@ SensorLayer<BackendT>&& SensorLayer<BackendT>::setEnvelope(
 }
 
 template <detail::BlueprintBackend BackendT>
-void SensorLayer<BackendT>::addTo(
-    Acts::BlueprintNode& node) const&& {
+void SensorLayer<BackendT>::addTo(Acts::BlueprintNode& node) const&& {
   node.addChild(build());
 }
 
 template <detail::BlueprintBackend BackendT>
-std::shared_ptr<Acts::BlueprintNode>
-SensorLayer<BackendT>::build() const {
+std::shared_ptr<Acts::BlueprintNode> SensorLayer<BackendT>::build() const {
   if (!m_layerType.has_value()) {
     throw std::runtime_error("Layer type not set in SensorLayer");
   }
@@ -520,8 +516,7 @@ BarrelEndcapAssembler<BackendT>::BarrelEndcapAssembler(const Builder& builder)
     : m_builder{&builder} {}
 
 template <detail::BlueprintBackend BackendT>
-void BarrelEndcapAssembler<BackendT>::addTo(
-    Acts::BlueprintNode& node) const&&
+void BarrelEndcapAssembler<BackendT>::addTo(Acts::BlueprintNode& node) const&&
   requires(detail::HasBarrelEndcapClassifier<BackendT>)
 {
   node.addChild(build());
@@ -611,9 +606,8 @@ BarrelEndcapAssembler<BackendT>::build() const
   ACTS_DEBUG("Have " << endcaps.size() << " endcap elements in assembly "
                      << assemblyName);
 
-  auto node =
-      std::make_shared<Acts::CylinderContainerBlueprintNode>(
-          assemblyName, Acts::AxisDirection::AxisZ);
+  auto node = std::make_shared<Acts::CylinderContainerBlueprintNode>(
+      assemblyName, Acts::AxisDirection::AxisZ);
 
   auto maybeAddAxes = [](const auto& axes) {
     return [&axes]<typename T>(T&& assembler) {
@@ -629,8 +623,7 @@ BarrelEndcapAssembler<BackendT>::build() const
     return std::forward<T>(assembler).build();
   };
 
-  auto addTo =
-      std::bind_front(&Acts::BlueprintNode::addChild, node.get());
+  auto addTo = std::bind_front(&Acts::BlueprintNode::addChild, node.get());
 
   for (const auto& barrel : barrels) {
     auto compose = Acts::compose(addTo, std::bind_front(m_onContainer, barrel),
@@ -668,9 +661,8 @@ BlueprintBuilder<BackendT>::BlueprintBuilder(
       m_backend(cfg, *m_logger) {}
 
 template <detail::BlueprintBackend BackendT>
-std::shared_ptr<Acts::LayerBlueprintNode>
-BlueprintBuilder<BackendT>::makeLayer(const Element& layerElement,
-                                      const LayerSpec& layerSpec) const {
+std::shared_ptr<Acts::LayerBlueprintNode> BlueprintBuilder<BackendT>::makeLayer(
+    const Element& layerElement, const LayerSpec& layerSpec) const {
   auto sensitives = resolveSensitives(layerElement);
   return makeLayer(layerElement, sensitives, layerSpec);
 }
@@ -823,14 +815,12 @@ BlueprintBuilder<BackendT>::findEndcapElements(const Element& assembly) const
 }
 
 template <detail::BlueprintBackend BackendT>
-std::shared_ptr<Acts::LayerBlueprintNode>
-BlueprintBuilder<BackendT>::makeLayer(const Element& parent,
-                                      std::span<const Element> sensitives,
-                                      const LayerSpec& layerSpec) const {
+std::shared_ptr<Acts::LayerBlueprintNode> BlueprintBuilder<BackendT>::makeLayer(
+    const Element& parent, std::span<const Element> sensitives,
+    const LayerSpec& layerSpec) const {
   const std::string nodeName =
       layerSpec.layerName.value_or(m_backend.nameOf(parent));
-  auto node =
-      std::make_shared<Acts::LayerBlueprintNode>(nodeName);
+  auto node = std::make_shared<Acts::LayerBlueprintNode>(nodeName);
   node->setSurfaces(m_backend.makeSurfaces(sensitives, layerSpec));
 
   if constexpr (detail::HasLayerTransformLookup<BackendT>) {
@@ -845,17 +835,16 @@ BlueprintBuilder<BackendT>::makeLayer(const Element& parent,
 }
 
 template <detail::BlueprintBackend BackendT>
-std::shared_ptr<Acts::LayerBlueprintNode>
-BlueprintBuilder<BackendT>::makeLayer(std::span<const Element> sensitives,
-                                      const LayerSpec& layerSpec) const {
+std::shared_ptr<Acts::LayerBlueprintNode> BlueprintBuilder<BackendT>::makeLayer(
+    std::span<const Element> sensitives, const LayerSpec& layerSpec) const {
   if (!layerSpec.layerName.has_value() || layerSpec.layerName->empty()) {
     throw std::runtime_error(
         "BlueprintBuilder::makeLayer(sensitives, layerSpec): "
         "layerSpec.layerName must be set");
   }
 
-  auto node = std::make_shared<Acts::LayerBlueprintNode>(
-      layerSpec.layerName.value());
+  auto node =
+      std::make_shared<Acts::LayerBlueprintNode>(layerSpec.layerName.value());
   node->setSurfaces(m_backend.makeSurfaces(sensitives, layerSpec));
   return node;
 }

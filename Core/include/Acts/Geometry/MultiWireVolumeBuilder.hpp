@@ -73,9 +73,10 @@ namespace Experimental {
 /// @deprecated The blueprint geometry moved out of the `Acts::Experimental`
 ///             namespace. Use @ref Acts::MultiWireVolumeBuilder instead. This
 ///             alias is kept for backward compatibility and will be removed.
-using MultiWireVolumeBuilder [[deprecated(
-    "Acts::Experimental::MultiWireVolumeBuilder moved to "
-    "Acts::MultiWireVolumeBuilder")]] = Acts::MultiWireVolumeBuilder;
+using MultiWireVolumeBuilder
+    [[deprecated("Acts::Experimental::MultiWireVolumeBuilder moved to "
+                 "Acts::MultiWireVolumeBuilder")]] =
+        Acts::MultiWireVolumeBuilder;
 }  // namespace Experimental
 
 }  // namespace Acts

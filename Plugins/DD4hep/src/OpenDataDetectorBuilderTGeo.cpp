@@ -135,8 +135,7 @@ auto makeTGeoLayerCustomizer(const BlueprintBuilder& builder,
     SrfArrayNavPol::Config navCfg;
     navCfg.envelope = detail::kLayerEnvelope;
     const bool isBarrelLayer =
-        layer.layerType() ==
-        Acts::LayerBlueprintNode::LayerType::Cylinder;
+        layer.layerType() == Acts::LayerBlueprintNode::LayerType::Cylinder;
     navCfg.layerType = isBarrelLayer ? Cylinder : Disc;
 
     const auto bins = binning.binsFor(isBarrelLayer, layerIdx);
@@ -176,8 +175,7 @@ std::shared_ptr<Acts::StaticBlueprintNode> makeTGeoBeampipeNode(
       bounds->get(Acts::CylinderBounds::eHalfLengthZ));
   auto volume = std::make_unique<Acts::TrackingVolume>(
       transform, volumeBounds, std::string{kTGeoBeampipeName});
-  return std::make_shared<Acts::StaticBlueprintNode>(
-      std::move(volume));
+  return std::make_shared<Acts::StaticBlueprintNode>(std::move(volume));
 }
 
 void configureSubsystemNode(Acts::ContainerBlueprintNode& node) {
@@ -226,10 +224,8 @@ void addTGeoSubsystem(const BlueprintBuilder& builder,
                                          spec.positiveEndcapName));
   }
 
-  auto subsystemNode =
-      std::make_shared<Acts::CylinderContainerBlueprintNode>(
-          builder.backend().nameOf(*assemblyElement),
-          Acts::AxisDirection::AxisZ);
+  auto subsystemNode = std::make_shared<Acts::CylinderContainerBlueprintNode>(
+      builder.backend().nameOf(*assemblyElement), Acts::AxisDirection::AxisZ);
 
   auto barrelNode = builder.layers()
                         .barrel()

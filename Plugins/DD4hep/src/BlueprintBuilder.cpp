@@ -143,8 +143,7 @@ std::optional<Acts::Transform3> DD4hepBackend::lookupLayerTransform(
   return std::nullopt;
 }
 
-std::shared_ptr<Acts::StaticBlueprintNode>
-DD4hepBackend::makeBeampipe() const {
+std::shared_ptr<Acts::StaticBlueprintNode> DD4hepBackend::makeBeampipe() const {
   std::optional<dd4hep::DetElement> beampipeElement = std::nullopt;
 
   visitSubtree(world(), [this,
@@ -186,8 +185,7 @@ DD4hepBackend::makeBeampipe() const {
       bounds->get(Acts::CylinderBounds::eHalfLengthZ));
   auto volume = std::make_unique<Acts::TrackingVolume>(transform, volumeBounds,
                                                        beampipeElement->name());
-  return std::make_shared<Acts::StaticBlueprintNode>(
-      std::move(volume));
+  return std::make_shared<Acts::StaticBlueprintNode>(std::move(volume));
 }
 
 }  // namespace ActsPlugins::DD4hep

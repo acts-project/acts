@@ -414,9 +414,8 @@ Gen3GenericDetectorBuilder::buildTrackingGeometry(
   return trackingGeometry;
 }
 
-void Gen3GenericDetectorBuilder::buildPixel(
-    Acts::BlueprintNode& parent,
-    const Acts::GeometryContext& gctx) {
+void Gen3GenericDetectorBuilder::buildPixel(Acts::BlueprintNode& parent,
+                                            const Acts::GeometryContext& gctx) {
   using enum Acts::AxisDirection;
   using namespace Acts;
   using namespace Acts::UnitLiterals;
@@ -530,8 +529,7 @@ void Gen3GenericDetectorBuilder::buildPixel(
 }
 
 void Gen3GenericDetectorBuilder::buildShortStrip(
-    Acts::BlueprintNode& parent,
-    const Acts::GeometryContext& gctx) {
+    Acts::BlueprintNode& parent, const Acts::GeometryContext& gctx) {
   using enum Acts::AxisDirection;
   using namespace Acts;
   using namespace Acts::UnitLiterals;
@@ -634,8 +632,7 @@ void Gen3GenericDetectorBuilder::buildShortStrip(
 }
 
 void Gen3GenericDetectorBuilder::buildLongStrip(
-    Acts::BlueprintNode& parent,
-    const Acts::GeometryContext& gctx) {
+    Acts::BlueprintNode& parent, const Acts::GeometryContext& gctx) {
   using enum Acts::AxisDirection;
   using namespace Acts;
   using namespace Acts::UnitLiterals;

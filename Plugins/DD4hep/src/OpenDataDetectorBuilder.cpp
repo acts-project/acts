@@ -54,8 +54,7 @@ auto makeLayerCustomizer(const BlueprintBuilder& builder, std::string det,
     SrfArrayNavPol::Config navCfg;
     navCfg.envelope = detail::kLayerEnvelope;
 
-    if (layer.layerType() ==
-        Acts::LayerBlueprintNode::LayerType::Cylinder) {
+    if (layer.layerType() == Acts::LayerBlueprintNode::LayerType::Cylinder) {
       // Barrel layer
       navCfg.layerType = Cylinder;
       navCfg.bins = {
@@ -89,9 +88,8 @@ void addDirectLayerSubsystem(const BlueprintBuilder& builder,
   auto endcaps = builder.findEndcapElements(*assemblyElement);
 
   const std::string assemblyName{builder.backend().nameOf(*assemblyElement)};
-  auto containerNode =
-      std::make_shared<Acts::CylinderContainerBlueprintNode>(
-          assemblyName, Acts::AxisDirection::AxisZ);
+  auto containerNode = std::make_shared<Acts::CylinderContainerBlueprintNode>(
+      assemblyName, Acts::AxisDirection::AxisZ);
 
   auto layerCustomizer =
       makeLayerCustomizer(builder, std::move(det), layerFilter);
@@ -144,19 +142,18 @@ void addBarrelEndcapSubsystem(const BlueprintBuilder& builder,
       .setSensorAxes("XYZ", "XZY")
       .setLayerFilter(layerFilter)
       .onLayer(makeLayerCustomizer(builder, std::move(det), layerFilter))
-      .onContainer(
-          [](const auto&, Acts::ContainerBlueprintNode& node) {
-            node.setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
-            node.setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
-                                     Acts::VolumeResizeStrategy::Gap);
-          })
+      .onContainer([](const auto&, Acts::ContainerBlueprintNode& node) {
+        node.setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
+        node.setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
+                                 Acts::VolumeResizeStrategy::Gap);
+      })
       .addTo(outer);
 }
 
-void addDirectLayerGroupedSubsystem(
-    const BlueprintBuilder& builder,
-    Acts::ContainerBlueprintNode& outer, std::string assembly,
-    std::string det, const std::regex& layerFilter) {
+void addDirectLayerGroupedSubsystem(const BlueprintBuilder& builder,
+                                    Acts::ContainerBlueprintNode& outer,
+                                    std::string assembly, std::string det,
+                                    const std::regex& layerFilter) {
   const auto assemblyElement = builder.findDetElementByName(assembly);
   if (!assemblyElement.has_value()) {
     throw std::runtime_error(
@@ -167,9 +164,8 @@ void addDirectLayerGroupedSubsystem(
   auto endcaps = builder.findEndcapElements(*assemblyElement);
 
   const std::string assemblyName{builder.backend().nameOf(*assemblyElement)};
-  auto containerNode =
-      std::make_shared<Acts::CylinderContainerBlueprintNode>(
-          assemblyName, Acts::AxisDirection::AxisZ);
+  auto containerNode = std::make_shared<Acts::CylinderContainerBlueprintNode>(
+      assemblyName, Acts::AxisDirection::AxisZ);
 
   auto layerCustomizer =
       makeLayerCustomizer(builder, std::move(det), layerFilter);

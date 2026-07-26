@@ -110,10 +110,10 @@ namespace Experimental {
 ///             namespace. Use @ref Acts::GeometryIdentifierBlueprintNode
 ///             instead. This alias is kept for backward compatibility and will
 ///             be removed.
-using GeometryIdentifierBlueprintNode [[deprecated(
-    "Acts::Experimental::GeometryIdentifierBlueprintNode moved to "
-    "Acts::GeometryIdentifierBlueprintNode")]] =
-    Acts::GeometryIdentifierBlueprintNode;
+using GeometryIdentifierBlueprintNode
+    [[deprecated("Acts::Experimental::GeometryIdentifierBlueprintNode moved to "
+                 "Acts::GeometryIdentifierBlueprintNode")]] =
+        Acts::GeometryIdentifierBlueprintNode;
 }  // namespace Experimental
 
 }  // namespace Acts

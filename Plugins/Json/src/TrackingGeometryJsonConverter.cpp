@@ -222,8 +222,7 @@ std::string getNavigationPolicyKind() {
     return "SurfaceArray";
   } else if (std::is_same_v<bounds_t, Acts::MultiNavigationPolicy>) {
     return "MultiNavigation";
-  } else if (std::is_same_v<bounds_t,
-                            Acts::MultiLayerNavigationPolicy>) {
+  } else if (std::is_same_v<bounds_t, Acts::MultiLayerNavigationPolicy>) {
     return "MultiLayerNavigation";
   } else if (std::is_same_v<bounds_t, Acts::CylinderNavigationPolicy>) {
     return "Cylinder";
@@ -378,15 +377,15 @@ std::unique_ptr<Acts::INavigationPolicy> decodeMultiLayerNavigationPolicy(
       range0[0], range0[1], bins0);
   Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound> axis1(
       range1[0], range1[1], bins1);
-  Acts::MultiLayerNavigationPolicy::GridType grid(
-      std::move(axis0), std::move(axis1));
+  Acts::MultiLayerNavigationPolicy::GridType grid(std::move(axis0),
+                                                  std::move(axis1));
 
   std::vector<Acts::AxisDirection> castsVec =
       encoded.at("casts").get<std::vector<Acts::AxisDirection>>();
   std::array<Acts::AxisDirection, 2> casts = {castsVec.at(0), castsVec.at(1)};
 
-  Acts::MultiLayerNavigationPolicy::IndexedUpdatorType
-      indexedGrid(std::move(grid), casts);
+  Acts::MultiLayerNavigationPolicy::IndexedUpdatorType indexedGrid(
+      std::move(grid), casts);
 
   Acts::MultiLayerNavigationPolicy::Config config;
   config.binExpansion =
@@ -841,9 +840,8 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
                     decodeSurfaceArrayNavigationPolicy)
       .registerKind(getNavigationPolicyKind<MultiNavigationPolicy>(),
                     decodeMultiNavigationPolicy)
-      .registerKind(
-          getNavigationPolicyKind<MultiLayerNavigationPolicy>(),
-          decodeMultiLayerNavigationPolicy)
+      .registerKind(getNavigationPolicyKind<MultiLayerNavigationPolicy>(),
+                    decodeMultiLayerNavigationPolicy)
       .registerKind(getNavigationPolicyKind<CylinderNavigationPolicy>(),
                     decodeCylinderNavigationPolicy);
 

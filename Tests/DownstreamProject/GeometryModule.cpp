@@ -39,8 +39,7 @@ std::unique_ptr<Acts::TrackingGeometry> buildGeometryModule(
   auto outerBounds = std::make_shared<CuboidVolumeBounds>(1000., 1000., 1000.);
   auto outerVol = std::make_unique<TrackingVolume>(Transform3::Identity(),
                                                    outerBounds, "Outer");
-  auto outerNode =
-      std::make_shared<StaticBlueprintNode>(std::move(outerVol));
+  auto outerNode = std::make_shared<StaticBlueprintNode>(std::move(outerVol));
   root.addChild(outerNode);
 
   auto trackingGeometry = root.construct({}, gctx, *logger.clone("Geometry"));

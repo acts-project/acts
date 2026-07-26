@@ -172,9 +172,9 @@ namespace Experimental {
 /// @deprecated The blueprint geometry moved out of the `Acts::Experimental`
 ///             namespace. Use @ref Acts::LayerBlueprintNode instead. This alias
 ///             is kept for backward compatibility and will be removed.
-using LayerBlueprintNode [[deprecated(
-    "Acts::Experimental::LayerBlueprintNode moved to "
-    "Acts::LayerBlueprintNode")]] = Acts::LayerBlueprintNode;
+using LayerBlueprintNode
+    [[deprecated("Acts::Experimental::LayerBlueprintNode moved to "
+                 "Acts::LayerBlueprintNode")]] = Acts::LayerBlueprintNode;
 }  // namespace Experimental
 
 }  // namespace Acts

@@ -173,13 +173,10 @@ class DD4hepBackend {
 };
 
 using BlueprintBuilder = Acts::BlueprintBuilder<DD4hepBackend>;
-using ElementLayerAssembler =
-    Acts::ElementLayerAssembler<DD4hepBackend>;
-using SensorLayerAssembler =
-    Acts::SensorLayerAssembler<DD4hepBackend>;
+using ElementLayerAssembler = Acts::ElementLayerAssembler<DD4hepBackend>;
+using SensorLayerAssembler = Acts::SensorLayerAssembler<DD4hepBackend>;
 using SensorLayer = Acts::SensorLayer<DD4hepBackend>;
-using BarrelEndcapAssembler =
-    Acts::BarrelEndcapAssembler<DD4hepBackend>;
+using BarrelEndcapAssembler = Acts::BarrelEndcapAssembler<DD4hepBackend>;
 
 }  // namespace ActsPlugins::DD4hep
 
