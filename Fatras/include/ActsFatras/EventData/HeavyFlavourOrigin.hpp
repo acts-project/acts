@@ -13,8 +13,6 @@
 
 namespace ActsFatras {
 
-/// Simulation outcome identifier.
-///
 /// Encodes hadron heavy-flavour origin classification
 /// the enum values correspond to the quark flavour numbering scheme (from PDG)
 /// Bottom: decay product of a bottomed hadron (it can also be B->D->X),
@@ -25,11 +23,15 @@ namespace ActsFatras {
 ///        on the searchUpToHfQuark flag
 /// None: no heavy-flavour origin, depending on the criterion regulated
 ///       by the searchUpToHfQuark flag
-enum class HeavyFlavourOrigin : std::uint8_t { None = 0, Charm = 4, Bottom = 5 };
+enum class HeavyFlavourOrigin : std::uint8_t {
+  None = 0,
+  Charm = 4,
+  Bottom = 5
+};
 
-/// Print simulation outcome to output stream
+/// Print heavy-flavour origin outcome to output stream
 /// @param os Output stream
-/// @param outcome Simulation outcome to print
+/// @param outcome Heavy-flavour origin outcome to print
 /// @return Output stream
 std::ostream &operator<<(std::ostream &os, HeavyFlavourOrigin outcome);
 
