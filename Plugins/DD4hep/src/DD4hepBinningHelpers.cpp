@@ -69,6 +69,10 @@ DD4hepBinningHelpers::convertAxisFactories(
   return axisFactories;
 }
 
+// Unlike the declaration, the definition of the deprecated converter does not
+// carry the deprecation attribute itself, so it needs the suppression
+ACTS_PUSH_IGNORE_DEPRECATED()
+
 std::vector<std::tuple<DirectedProtoAxis, std::size_t>>
 DD4hepBinningHelpers::convertBinning(const dd4hep::DetElement &dd4hepElement,
                                      const std::string &bname) {
@@ -132,5 +136,7 @@ DD4hepBinningHelpers::convertBinning(const dd4hep::DetElement &dd4hepElement,
   }
   return protoBinnings;
 }
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace ActsPlugins

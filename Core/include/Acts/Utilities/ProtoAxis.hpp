@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 
@@ -218,6 +219,11 @@ DirectedProtoAxis : public ProtoAxis {
   AxisDirection m_direction;
 };
 
+// A deprecated declaration suppresses the deprecation warnings of the types it
+// names directly, but not of the ones it only names as template arguments,
+// hence the explicit suppression around the vector overloads.
+ACTS_PUSH_IGNORE_DEPRECATED()
+
 /// Stream operator for vector of ProtoAxis
 /// @param os Output stream
 /// @param a Vector of ProtoAxis to output
@@ -232,5 +238,7 @@ std::ostream& operator<<(std::ostream& os, const std::vector<ProtoAxis>& a);
 [[deprecated("Use AxisFactory with an AxisDirection instead")]]
 std::ostream& operator<<(std::ostream& os,
                          const std::vector<DirectedProtoAxis>& a);
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace Acts

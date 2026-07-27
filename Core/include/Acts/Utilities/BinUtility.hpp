@@ -12,6 +12,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/IMultiAxis.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
@@ -128,9 +129,12 @@ class BinUtility {
         m_transform(Transform3::Identity()),
         m_itransform(Transform3::Identity()) {
     m_binningData.reserve(3);
-    m_binningData.emplace_back(dpAxis);
+    m_binningData.emplace_back(dpAxis.getAxisDirection(), dpAxis.getAxis());
   }
 
+  // A deprecated declaration suppresses the deprecation warnings of the types
+  // it names directly, but not of the ones it only names as template arguments
+  ACTS_PUSH_IGNORE_DEPRECATED()
   /// Create from several DirectedProtoAxis objects
   ///
   /// @param dpAxes the DirectedProtoAxis to be used with axis directions
@@ -141,9 +145,10 @@ class BinUtility {
         m_itransform(Transform3::Identity()) {
     m_binningData.reserve(3);
     for (const auto& dpAxis : dpAxes) {
-      m_binningData.emplace_back(dpAxis);
+      m_binningData.emplace_back(dpAxis.getAxisDirection(), dpAxis.getAxis());
     }
   }
+  ACTS_POP_IGNORE_DEPRECATED()
 
   /// Operator+= to make multidimensional BinUtility
   ///
