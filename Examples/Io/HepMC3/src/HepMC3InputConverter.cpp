@@ -14,6 +14,8 @@
 #include <HepMC3/GenParticle.h>
 #include <HepMC3/GenVertex.h>
 
+#include <unordered_set>
+
 // This is a hack to make HepMC3::Print::listing public
 // It's pretty evil but should have no side-effects
 #if defined(__clang__)
@@ -26,8 +28,6 @@
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif
-
-#include <unordered_set>
 
 using namespace Acts::UnitLiterals;
 
@@ -107,16 +107,16 @@ std::string printListing(const auto& vertices, const auto& particles) {
 };
 }  // namespace
 
-Acts::HfOrigin HepMC3InputConverter::checkHfOrigin(
+ActsFatras::HeavyFlavourOrigin HepMC3InputConverter::deriveHeavyFlavourOrigin(
     const std::shared_ptr<const HepMC3::GenParticle>& particleToCheck) const {
-  std::stack<std::shared_ptr<const HepMC3::GenParticle>> st;
+  std::vector<std::shared_ptr<const HepMC3::GenParticle>> part;
   std::unordered_set<int> visited;
-  st.push(particleToCheck);
+  st.push_back(particleToCheck);
 
   bool isFromCharm{false};
   while (!st.empty()) {
-    const auto& part = st.top();
-    st.pop();
+    const auto& part = st.back();
+    st.pop_back();
 
     if (!part) {
       continue;
@@ -136,8 +136,8 @@ Acts::HfOrigin HepMC3InputConverter::checkHfOrigin(
         hadType == Acts::HadronType::BottomBaryon ||
         hadType == Acts::HadronType::BBbarMeson ||
         (m_cfg.searchUpToHfQuark &&
-         static_cast<Acts::HfOrigin>(pdgCode) == Acts::HfOrigin::Bottom)) {
-      return Acts::HfOrigin::Bottom;
+         static_cast<ActsFatras::HeavyFlavourOrigin>(pdgCode) == ActsFatras::HeavyFlavourOrigin::Bottom)) {
+      return ActsFatras::HeavyFlavourOrigin::Bottom;
     }
 
     // --- charm PDG IDs ---
@@ -145,7 +145,7 @@ Acts::HfOrigin HepMC3InputConverter::checkHfOrigin(
         hadType == Acts::HadronType::CharmedBaryon ||
         hadType == Acts::HadronType::CCbarMeson ||
         (m_cfg.searchUpToHfQuark &&
-         static_cast<Acts::HfOrigin>(pdgCode) == Acts::HfOrigin::Charm)) {
+         static_cast<ActsFatras::HeavyFlavourOrigin>(pdgCode) == ActsFatras::HeavyFlavourOrigin::Charm)) {
       // we do not return directly because
       // B -> D -> X should be tagged as from beauty and not charm
       isFromCharm = true;
@@ -158,15 +158,15 @@ Acts::HfOrigin HepMC3InputConverter::checkHfOrigin(
     }
 
     for (const auto& parent : vtx->particles_in()) {
-      st.push(parent);
+      st.push_back(parent);
     }
   }
 
   if (isFromCharm) {
-    return Acts::HfOrigin::Charm;
+    return ActsFatras::HeavyFlavourOrigin::Charm;
   }
 
-  return Acts::HfOrigin::None;
+  return ActsFatras::HeavyFlavourOrigin::None;
 }
 
 void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
@@ -259,7 +259,7 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
       SimParticle simParticle{particleId, pdg, charge, mass};
       simParticle.initialState().setPosition4(vertex.position4);
       simParticle.setOrigParticleIdx(particle->id());
-      simParticle.setHfOrigin(checkHfOrigin(particle));
+      simParticle.setHeavyFlavourOrigin(deriveHeavyFlavourOrigin(particle));
 
       const HepMC3::FourVector& genMomentum = particle->momentum();
       Acts::Vector3 momentum{genMomentum.px() * 1_GeV, genMomentum.py() * 1_GeV,

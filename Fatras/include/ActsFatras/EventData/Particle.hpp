@@ -21,6 +21,7 @@
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/GenerationProcess.hpp"
 #include "ActsFatras/EventData/SimulationOutcome.hpp"
+#include "ActsFatras/EventData/HeavyFlavourOrigin.hpp"
 
 #include <cmath>
 #include <iosfwd>
@@ -126,7 +127,7 @@ class Particle {
   /// Set the particle HF origin (0->none, 4->charm, 5->beauty)
   /// @param orig particle HF origin (0->none, 4->charm, 5->beauty)
   /// @return Reference to this particle in HepMC file
-  Particle &setHfOrigin(Acts::HfOrigin orig) {
+  Particle &setHeavyFlavourOrigin(HeavyFlavourOrigin orig) {
     m_hfOrigin = orig;
     return *this;
   }
@@ -230,7 +231,7 @@ class Particle {
   std::uint32_t origParticleIdx() const { return m_origParticleIdx; }
   /// Particle HF origin (0->none, 4->charm, 5->beauty)
   /// @return The particle index
-  Acts::HfOrigin hfOrigin() const { return m_hfOrigin; }
+  HeavyFlavourOrigin heavyFlavourOrigin() const { return m_hfOrigin; }
   /// Which type of process generated this particle.
   /// @return The process type that generated this particle
   GenerationProcess process() const { return m_process; }
@@ -446,7 +447,7 @@ class Particle {
   /// particle index to match the HepMC file
   std::uint32_t m_origParticleIdx = 0;
   /// particle origin (0->LF, 4->charm, 5->beauty)
-  Acts::HfOrigin m_hfOrigin = Acts::HfOrigin::None;
+  HeavyFlavourOrigin m_hfOrigin = HeavyFlavourOrigin::None;
   /// Process type specifier.
   GenerationProcess m_process = GenerationProcess::eUndefined;
   /// PDG particle number.

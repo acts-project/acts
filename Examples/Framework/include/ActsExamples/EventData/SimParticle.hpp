@@ -11,6 +11,7 @@
 #include "ActsExamples/Utilities/GroupBy.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/EventData/SimulationOutcome.hpp"
+#include "ActsFatras/EventData/HeavyFlavourOrigin.hpp"
 
 #include <boost/container/flat_set.hpp>
 
@@ -117,10 +118,10 @@ class SimParticle final {
     finalState().setOrigParticleIdx(idx);
     return *this;
   }
-  /// Particle HF origin (0->none, 4->charm, 5->beauty)
-  SimParticle& setHfOrigin(Acts::HfOrigin origin) {
-    initialState().setHfOrigin(origin);
-    finalState().setHfOrigin(origin);
+  /// Particle heavy-flavour origin (0->none, 4->charm, 5->beauty)
+  SimParticle& setHeavyFlavourOrigin(ActsFatras::HeavyFlavourOrigin origin) {
+    initialState().setHeavyFlavourOrigin(origin);
+    finalState().setHeavyFlavourOrigin(origin);
     return *this;
   }
 
@@ -134,8 +135,10 @@ class SimParticle final {
   std::uint32_t origParticleIdx() const {
     return initialState().origParticleIdx();
   }
-  /// Particle HF origin (0->none, 4->charm, 5->beauty)
-  Acts::HfOrigin hfOrigin() const { return initialState().hfOrigin(); }
+  /// Particle heavy-flavour origin (0->none, 4->charm, 5->beauty)
+  ActsFatras::HeavyFlavourOrigin heavyFlavourOrigin() const {
+    return initialState().heavyFlavourOrigin();
+  }
   /// Which type of process generated this particle.
   ActsFatras::GenerationProcess process() const {
     return initialState().process();
