@@ -729,9 +729,10 @@ def test_hepmc3_writer_compression_consistency(tmp_path):
     out.parent.mkdir(parents=True, exist_ok=True)
 
     # Path says .gz (zlib) but config says bzip2 - should fail
-    with acts.logging.ScopedFailureThreshold(acts.logging.MAX), pytest.raises(
-        ValueError
-    ) as excinfo:
+    with (
+        acts.logging.ScopedFailureThreshold(acts.logging.MAX),
+        pytest.raises(ValueError) as excinfo,
+    ):
         HepMC3Writer(
             acts.logging.INFO,
             inputEvent="hepmc3_event",
@@ -803,9 +804,10 @@ def test_hepmc3_writer_root_compression_error(tmp_path):
     out = tmp_path / "out" / "events.root"
     out.parent.mkdir(parents=True, exist_ok=True)
 
-    with acts.logging.ScopedFailureThreshold(acts.logging.MAX), pytest.raises(
-        ValueError
-    ) as excinfo:
+    with (
+        acts.logging.ScopedFailureThreshold(acts.logging.MAX),
+        pytest.raises(ValueError) as excinfo,
+    ):
         HepMC3Writer(
             acts.logging.INFO,
             inputEvent="hepmc3_event",
