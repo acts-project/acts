@@ -14,6 +14,9 @@
 #include <alpaka/alpaka.hpp>
 #pragma GCC diagnostic pop
 
+// System include(s).
+#include <cstdint>
+
 namespace traccc::alpaka {
 
 using Dim = ::alpaka::DimInt<1>;

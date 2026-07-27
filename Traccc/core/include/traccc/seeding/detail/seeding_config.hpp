@@ -12,6 +12,9 @@
 #include "traccc/definitions/primitives.hpp"
 #include "traccc/definitions/qualifiers.hpp"
 
+// System include(s).
+#include <numbers>
+
 namespace traccc {
 
 struct seedfinder_config {

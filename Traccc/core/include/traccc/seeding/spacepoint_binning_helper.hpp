@@ -17,6 +17,9 @@
 // VecMem include(s).
 #include <vecmem/memory/memory_resource.hpp>
 
+// System include(s).
+#include <numbers>
+
 namespace traccc {
 
 inline std::pair<axis2::circular<>, axis2::regular<>> get_axes(
