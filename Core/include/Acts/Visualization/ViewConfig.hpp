@@ -11,6 +11,7 @@
 #include <array>
 #include <filesystem>
 #include <string_view>
+#include "Acts/Geometry/GeometryObject.hpp"
 
 
 namespace Acts {
@@ -162,5 +163,12 @@ static const ViewConfig s_viewVolume = {.color = {220, 220, 0}};
 static const ViewConfig s_viewGrid = {.color = {220, 0, 0}};
 /// View configuration for line visualization
 static const ViewConfig s_viewLine = {.color = {0, 0, 220}};
+
+
+ViewConfig defaultColoring(const GeometryObject&); 
+
+///std::map<int, Color> as argument later
+std::function<ViewConfig(const GeometryObject &)> makeDefaultColoringFunction();
+
 
 }  // namespace Acts

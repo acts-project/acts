@@ -9,13 +9,17 @@
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/PyVisualization.hpp"
+#include "Acts/Visualization/EventDataView3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
+#include "Acts/Geometry/GeometryObject.hpp"
 
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
+#include <pybind11/functional.h>
 
 namespace py = pybind11;
 using namespace Acts;
@@ -65,8 +69,46 @@ void addVisualization(py::module& m) {
       .def(py::init<unsigned int, double, std::string>(), py::arg("prec") = 4u,
            py::arg("scale") = 1.,  py::arg("projection"))
       .def_property_readonly("surfaces", &PyVisualization::surfaces)
-      .def_property_readonly("color", &PyVisualization::color);
+      .def_property_readonly("segments", &PyVisualization::segments)
+      .def_property_readonly("faceColors", [](const PyVisualization &self) {
+        const auto &colors = self.faceColors();
 
-  
+        py::array_t<double> arr({colors.size(), size_t(3)});
+        // one element in the array
+        auto r = arr.mutable_unchecked<2>(); // direct access of elements without internal checking of dimensions
+
+        for (size_t i = 0; i < colors.size(); ++i) {
+            r(i, 0) = colors[i].rgb[0];
+            r(i, 1) = colors[i].rgb[1];
+            r(i, 2) = colors[i].rgb[2];
+        }
+        return arr;
+      }
+    )
+    .def_property_readonly("lineColor", [](const PyVisualization &self){
+      const auto &colors = self.lineColors();
+
+      py::array_t<double> arr({colors.size(), size_t(3)});
+      auto r = arr.mutable_unchecked<2>();
+
+      for (size_t i = 0; i < colors.size(); i++) {
+          r(i, 0) = colors[i].rgb[0];
+          r(i, 1) = colors[i].rgb[1];
+          r(i, 2) = colors[i].rgb[2];
+        }
+      return arr;
+      }
+    );
+
+  py::class_<EventDataView3D>(m, "EventDataView3D")
+    .def_static("drawTrack",
+      [] (IVisualization3D& helper, const Acts::EventDataView3D::ConstTrackProxy& track){
+        EventDataView3D::drawTrack(helper, track,  GeometryContext::dangerouslyDefaultConstruct());
+      });
+
+  py::class_<GeometryObject>(m, "GeometryObject");
+  m.def("makeDefaultColoringFunction", &makeDefaultColoringFunction);
+  //m.def("defaultColoring", &defaultColoring);
+
 }
 }  // namespace ActsPython

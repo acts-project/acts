@@ -17,6 +17,10 @@
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
+#include "Acts/EventData/AnyTrackProxy.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 
 #include <array>
 #include <cmath>
@@ -306,6 +310,62 @@ struct EventDataView3D {
       }
       return true;
     });
+  }
+
+  /// Preliminary until .trackStates() in AnyTrackProxy is implemented 
+  using TrackContainer =
+      Acts::TrackContainer<Acts::VectorTrackContainer,
+                         Acts::VectorMultiTrajectory, std::shared_ptr>;
+
+  using ConstTrackContainer =
+      Acts::TrackContainer<Acts::ConstVectorTrackContainer,
+                         Acts::ConstVectorMultiTrajectory, std::shared_ptr>;
+
+  using TrackIndexType = TrackContainer::IndexType;
+
+  using TrackProxy = TrackContainer::TrackProxy;
+  using ConstTrackProxy = ConstTrackContainer::ConstTrackProxy;
+
+  using TrackStateProxy = TrackContainer::TrackStateProxy;
+  using ConstTrackStateProxy = ConstTrackContainer::ConstTrackStateProxy;
+
+  /// Helper method to draw a track from AnyTrackProxy
+  ///
+  /// @param helper [in, out] The visualization helper
+  /// @param track The track to be drawn
+  /// @param itrack the track index in the container
+  /// @param gctx The geometry context for which it is drawn
+  /// @param lineconfig The visualization options for the lines to be drawn
+
+  static void drawTrack(
+    IVisualization3D& helper, const ConstTrackProxy& track,
+      const GeometryContext& gctx =
+          GeometryContext::dangerouslyDefaultConstruct())
+  { 
+    ///auto track = trackcontainer.getTrack(itrack); /// Need to change this to tacke ConstTrackProxy directly
+    auto tparams = track.parameters();
+    auto tphi = tparams[eBoundPhi];
+    auto ttheta = tparams[eBoundTheta];
+    Vector2 tlocpos{tparams[eBoundLoc0], tparams[eBoundLoc1]};
+    Vector3 tlocdir{std::sin(ttheta)*std::cos(tphi), std::sin(ttheta)*std::sin(tphi), std::cos(ttheta)};
+
+    auto& rs = track.referenceSurface();
+    auto tglobpos = rs.localToGlobal(gctx, tlocpos, tlocdir);
+
+    auto previouspos = tglobpos; 
+    
+    for(auto ts : track.trackStatesReversed()){
+      auto params = ts.parameters();
+      auto phi = params[eBoundPhi];
+      auto theta = params[eBoundTheta];
+      Vector2 locpos{params[eBoundLoc0], params[eBoundLoc1]};
+      Vector3 locdir{std::sin(theta)*std::cos(phi), std::sin(theta)*std::sin(phi), std::cos(theta)};
+      auto& s = ts.referenceSurface();
+      auto currentpos = s.localToGlobal(gctx, locpos, locdir);
+
+      helper.line(previouspos, currentpos);
+      previouspos = currentpos;
+    }
   }
 };
 

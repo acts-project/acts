@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
+#include "Acts/Visualization/EventDataView3D.hpp"
 
 #include <filesystem>
 #include <map>
@@ -42,11 +43,37 @@ class PyVisualization : public IVisualization3D {
       : m_outputPrecision(prec), m_outputScalor(scale), m_projection(projection) {}
 
   /// @copydoc Acts::IVisualization3D::vertex()
-  void vertex(const Vector3& vtx, Color color = s_defaultColor) {}
+  void vertex(const Vector3& vtx, Color color = s_defaultColor) {
+    /// vertex in 2D, either rz- or xy-projection
+    m_vertexcolor = color;
+    if (m_projection == "rz"){
+      auto r = std::sqrt(vtx[0]*vtx[0] + vtx[1]*vtx[1]);
+      m_vertex = Vector2{vtx[2], r};
+    }
 
-  /// @copydoc Acts::IVisualization3D::line()
+    if (m_projection == "xy"){
+      m_vertex = Vector2{vtx[0], vtx[1]};
+    }
+  }
+
+
+
   void line(const Vector3& a, const Vector3& b,
-            Color color = s_defaultColor) {}
+            Color color = s_defaultColor)
+    {
+      m_linecolors.push_back(color);
+      if (m_projection == "rz"){
+        float ra = std::sqrt(a[0]*a[0] + a[1]*a[1]);
+        float rb = std::sqrt(b[0]*b[0] + b[1]*b[1]);
+        m_segments.emplace_back(Vector2{a[2], ra}, Vector2{b[2], rb}); 
+        
+      }
+      if (m_projection == "xy"){
+          m_segments.emplace_back(Vector2{a[0], a[1]}, Vector2{b[0], b[1]});   
+      }
+    }  
+
+    
 
   /// @copydoc Acts::IVisualization3D::face()
   void face(const std::vector<Vector3>& vtxs,
@@ -57,13 +84,17 @@ class PyVisualization : public IVisualization3D {
              const std::vector<FaceType>& faces,
              Color color = s_defaultColor )
     {
-      if (faces.size() > 1){
-        std::cout << "Surface consists of more than one face. Do nothing.\n";
-      }
+      //if (faces.size() > 1){
+      //  std::cout << "Surface consists of more than one face. Do nothing.\n";
+      //}
+
+      m_facecolors.push_back(color);
 
       // rz projection
       if (m_projection == "rz"){
         std::vector<std::array<double,2>> surface;
+        
+
         for(const auto& v : vtxs){
           float r = std::sqrt(v[0]*v[0] + v[1]*v[1]);
           surface.push_back({v[2], r});
@@ -71,6 +102,7 @@ class PyVisualization : public IVisualization3D {
           //std::cout << "(x,y,z)" << v[2] << ',' << r << std::endl; 
         }
         m_surfaces.push_back(surface);
+
       }
 
       if (m_projection == "xy"){
@@ -81,15 +113,33 @@ class PyVisualization : public IVisualization3D {
         }
         m_surfaces.push_back(surface);
       }
+
+      
     }
+  const Vector2 &vertex2D() const{
+        return m_vertex;
+  }
 
   const std::vector<std::vector<std::array<double, 2>>> &surfaces() const {
         return m_surfaces;
       }
 
-  const Color &color() const {
-        return s_defaultColor;
+  const std::vector<std::pair<Vector2, Vector2>> &segments() const {
+        return m_segments;
+      }
+
+  const std::vector<Color> &faceColors() const {
+        return m_facecolors;
   }
+
+  const std::vector<Color> &lineColors() const {
+        return m_linecolors;
+  }
+
+  const Color &vertexColor() const {
+        return m_vertexcolor;
+  }
+
 
     /// @copydoc Acts::IVisualization3D::write(const std::filesystem::path&) const
   void write(const std::filesystem::path& path) const {};
@@ -133,8 +183,13 @@ class PyVisualization : public IVisualization3D {
 
   std::vector<Object> m_objects;
 
+  Vector2 m_vertex;
   std::string m_projection;
   std::vector<std::vector<std::array<double,2>>> m_surfaces;
+  std::vector<std::pair<Vector2, Vector2>> m_segments;
+  std::vector<Color> m_facecolors;
+  Color m_vertexcolor;
+  std::vector<Color> m_linecolors;
 };
 
 }  // namespace Acts

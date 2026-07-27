@@ -6,6 +6,16 @@ from typing import Optional
 import acts
 import acts.examples
 
+import numpy as np
+import matplotlib.pyplot as plt
+import time
+
+from matplotlib.patches import Polygon, Circle
+from matplotlib.collections import PatchCollection, LineCollection
+
+from geometry import runGeometry
+import plot2D
+
 u = acts.UnitConstants
 
 
@@ -21,6 +31,7 @@ def runTruthTrackingKalman(
     reverseFilteringMomThreshold=0 * u.GeV,
     reverseFilteringCovarianceScaling=100.0,
     numParticles=1,
+    projection='xy',
     linkForward: bool = False,
     useJosephFormulation: bool = False,
     s: acts.examples.Sequencer = None,
@@ -52,17 +63,35 @@ def runTruthTrackingKalman(
         addKalmanTracks,
     )
 
-    s = s or acts.examples.Sequencer(
-        events=100, numThreads=-1, logLevel=acts.logging.INFO
-    )
 
+    s = s or acts.examples.Sequencer(
+        events=1, numThreads=-1, logLevel=acts.logging.INFO
+    )
+    
     for d in decorators:
         s.addContextDecorator(d)
 
     rnd = acts.examples.RandomNumbers(seed=42)
     outputDir = Path(outputDir)
 
-    logger = acts.getDefaultLogger("Truth tracking example", acts.logging.INFO)
+    logger = acts.getDefaultLogger("Truth tracking example", acts.logging.DEBUG)
+
+    #for ievt in range(numParticles):
+    ievt = 0
+    eventStore =acts.examples.WhiteBoard(name=f"EventStore#{ievt}", level=acts.logging.INFO)
+    ialg = 0
+    ithread = 0
+
+    context = acts.examples.AlgorithmContext(ialg, ievt, eventStore, ithread)
+    vis = acts.PyVisualization(projection=projection)
+    trackingGeometry.visualize(
+                vis,
+                context.geoContext,
+                portalViewConfig=acts.ViewConfig(visible=False),
+                sensitiveViewConfig=acts.ViewConfig(visible=True, color=acts.Color(255,0,0)),
+                viewConfig=acts.ViewConfig(visible=False),
+            )
+     
 
     if inputParticlePath is None:
         addParticleGun(
@@ -118,6 +147,7 @@ def runTruthTrackingKalman(
         field,
         digiConfigFile=digiConfigFile,
         rnd=rnd,
+        logLevel=acts.logging.DEBUG
     )
 
     addDigiParticleSelection(
@@ -162,6 +192,7 @@ def runTruthTrackingKalman(
         initialSigmaQoverPt=0.1 / u.GeV,
         initialSigmaPtRel=0.1,
         initialVarInflation=[1e0, 1e0, 1e0, 1e0, 1e0, 1e0],
+        logLevel=acts.logging.DEBUG
     )
 
     addKalmanTracks(
@@ -172,7 +203,28 @@ def runTruthTrackingKalman(
         reverseFilteringCovarianceScaling,
         linkForward=linkForward,
         useJosephFormulation=useJosephFormulation,
+        logLevel=acts.logging.DEBUG
     )
+
+    # add algorithm, that visualizes track
+    class TrackVisualizerAlg(acts.examples.IAlgorithm):
+        def __init__(self, name, level):
+            acts.examples.IAlgorithm.__init__(self, name, level)
+
+            self.tracks = acts.examples.ReadDataHandle(
+                self, acts.examples.ConstTrackContainer, "Tracks"
+            )
+            self.tracks.initialize("tracks")
+
+       
+        def execute(self, context):
+            tracks = self.tracks(context.eventStore)
+            for track in tracks:
+                acts.EventDataView3D.drawTrack(vis, track, color=red) # draw track not a free function
+
+            return acts.examples.ProcessCode.SUCCESS
+
+    s.addAlgorithm(TrackVisualizerAlg("TrackVisualizerAlg", acts.logging.DEBUG))
 
     s.addAlgorithm(
         acts.examples.TrackSelectorAlgorithm(
@@ -218,8 +270,10 @@ def runTruthTrackingKalman(
         )
     )
 
-    return s
+    s.run()
+    vis.plotTrack(projection=projection, linestyle='dashed', ax=ax) #outpath = "trackPlot.png")
 
+    
 
 if "__main__" == __name__:
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
@@ -227,9 +281,22 @@ if "__main__" == __name__:
     # ODD
     from acts.examples.odd import getOpenDataDetector
 
-    detector = getOpenDataDetector()
+    detectorGen3 = getOpenDataDetector(gen3=True)
+    trackingGeometryGen3 = detectorGen3.trackingGeometry()
+    decorators = detectorGen3.contextDecorators()
+
+    detector = getOpenDataDetector(gen3=False)
     trackingGeometry = detector.trackingGeometry()
     digiConfigFile = srcdir / "Examples/Configs/odd-digi-smearing-config.json"
+    
+    fig, ax = plt.subplots()
+
+    runGeometry(
+        trackingGeometryGen3, decorators, 
+        outputPy=True,
+        projection='rz', 
+        outputDir=Path.cwd()
+    )
 
     ## GenericDetector
     # detector = acts.examples.GenericDetector()
@@ -245,5 +312,10 @@ if "__main__" == __name__:
         trackingGeometry=trackingGeometry,
         field=field,
         digiConfigFile=digiConfigFile,
+        projection='rz',
         outputDir=Path.cwd(),
-    ).run()
+    )
+
+    plt.savefig("testRZ2.png")
+
+  
