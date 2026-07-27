@@ -1,3 +1,4 @@
+import contextlib
 import multiprocessing
 from pathlib import Path
 import sys
@@ -22,7 +23,7 @@ import pytest
 
 import acts
 import acts.examples
-from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import addParticleGun, EtaConfig, ParticleConfig
 
 try:
@@ -231,6 +232,10 @@ def trk_geo():
 DetectorConfig = namedtuple(
     "DetectorConfig",
     [
+        # Tests use this only to scope teardown (``with cfg.detector:``). The
+        # detectors below are shared for the whole session, so nothing should
+        # release them -- this is a no-op context manager and the real detector
+        # is kept alive in _detector_config_cache.
         "detector",
         "trackingGeometry",
         "decorators",
@@ -241,12 +246,37 @@ DetectorConfig = namedtuple(
 )
 
 
+_shared_detectors = {}
+
+
+def _shared_detector(key: str, factory):
+    """Build a detector once and reuse it for the rest of the session.
+
+    Constructing the ODD takes ~1s and permanently retains ~16MB: the Acts
+    detector elements are installed as extensions on the dd4hep DetElements
+    (see DD4hepLayerBuilder::createSensitiveSurface) and so outlive the
+    TrackingGeometry they were built for. The suite asks for a detector dozens
+    of times, which is where a large part of the pytest process footprint comes
+    from.
+
+    Sharing is safe: TrackingGeometry is handed out as
+    ``shared_ptr<const TrackingGeometry>`` and neither GenericDetector nor the
+    DD4hep detectors populate any context decorators. Note this also means one
+    dd4hep detector still backs exactly one TrackingGeometry, which the
+    DetElement extension mechanism requires -- it has a single slot per element
+    and throws on a second conversion.
+    """
+    if key not in _shared_detectors:
+        _shared_detectors[key] = factory()
+    return _shared_detectors[key]
+
+
 def _get_generic_detector_config(srcdir: Path) -> DetectorConfig:
-    detector = acts.examples.GenericDetector()
+    detector = _shared_detector("generic", acts.examples.GenericDetector)
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
     return DetectorConfig(
-        detector,
+        contextlib.nullcontext(),
         trackingGeometry,
         decorators,
         geometrySelection=(srcdir / "Examples/Configs/generic-seeding-config.json"),
@@ -259,15 +289,11 @@ def _get_odd_detector_config(srcdir: Path) -> DetectorConfig:
     if not helpers.dd4hepEnabled:
         pytest.skip("DD4hep not set up")
 
-    odd_dir = getOpenDataDetectorDirectory()
-    matDeco = acts.IMaterialDecorator.fromFile(
-        odd_dir / "data/odd-material-maps.root", level=acts.logging.INFO
-    )
-    detector = getOpenDataDetector(matDeco)
+    detector = _shared_detector("odd", getOpenDataDetector)
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
     return DetectorConfig(
-        detector,
+        contextlib.nullcontext(),
         trackingGeometry,
         decorators,
         digiConfigFile=(srcdir / "Examples/Configs/odd-digi-smearing-config.json"),
@@ -278,6 +304,26 @@ def _get_odd_detector_config(srcdir: Path) -> DetectorConfig:
 
 def _srcdir() -> Path:
     return Path(__file__).resolve().parent.parent.parent.parent
+
+
+@pytest.fixture
+def odd_detector():
+    """The shared session-lifetime default-configuration ODD (requires DD4hep).
+
+    Prefer this over calling getOpenDataDetector() in a test. Do not use it as
+    a context manager -- it is shared, so nothing may release it.
+    """
+    if not helpers.dd4hepEnabled:
+        pytest.skip("DD4hep not set up")
+    return _shared_detector("odd", getOpenDataDetector)
+
+
+@pytest.fixture
+def odd_detector_gen3():
+    """The shared session-lifetime default-configuration Gen3 ODD."""
+    if not helpers.dd4hepEnabled:
+        pytest.skip("DD4hep not set up")
+    return _shared_detector("odd-gen3", lambda: getOpenDataDetector(gen3=True))
 
 
 @pytest.fixture
