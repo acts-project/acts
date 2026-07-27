@@ -16,15 +16,16 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingGeometryError.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsTests/CommonHelpers/CubicTrackingGeometry.hpp"
 
 #include <memory>
-#include <optional>
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
@@ -106,29 +107,21 @@ BOOST_AUTO_TEST_CASE(BoundaryVolumeResolutionGen3) {
   const Surface& portalSurface = sharedPortal->surface();
 
   // The direction-aware lookup resolves the correct side of the boundary
-  BOOST_CHECK_EQUAL(trackingGeometry->lowestTrackingVolume(
-                        gctx, onBoundary, s_onSurfaceTolerance,
-                        Vector3::UnitX(), &portalSurface),
-                    volumeB);
-  BOOST_CHECK_EQUAL(trackingGeometry->lowestTrackingVolume(
-                        gctx, onBoundary, s_onSurfaceTolerance,
-                        -Vector3::UnitX(), &portalSurface),
-                    volumeA);
+  auto forward = trackingGeometry->resolveLowestTrackingVolume(
+      gctx, onBoundary, Vector3::UnitX(), portalSurface);
+  BOOST_REQUIRE(forward.ok());
+  BOOST_CHECK_EQUAL(*forward, volumeB);
+
+  auto backward = trackingGeometry->resolveLowestTrackingVolume(
+      gctx, onBoundary, -Vector3::UnitX(), portalSurface);
+  BOOST_REQUIRE(backward.ok());
+  BOOST_CHECK_EQUAL(*backward, volumeA);
+
   // Without direction and surface hint the lookup is position based and
   // returns one of the two adjacent volumes
   const TrackingVolume* plain =
       trackingGeometry->lowestTrackingVolume(gctx, onBoundary);
   BOOST_CHECK(plain == volumeA || plain == volumeB);
-  // A direction without a surface hint does not resolve the boundary
-  BOOST_CHECK_EQUAL(
-      trackingGeometry->lowestTrackingVolume(
-          gctx, onBoundary, s_onSurfaceTolerance, Vector3::UnitX()),
-      plain);
-  // A surface hint without a direction is ignored
-  BOOST_CHECK_EQUAL(
-      trackingGeometry->lowestTrackingVolume(
-          gctx, onBoundary, s_onSurfaceTolerance, std::nullopt, &portalSurface),
-      plain);
 }
 
 // Two glued Gen1 cuboid volumes sharing a boundary surface at x=0
@@ -166,14 +159,15 @@ BOOST_AUTO_TEST_CASE(BoundaryVolumeResolutionGen1) {
   BOOST_REQUIRE(boundarySurface != nullptr);
 
   // The direction-aware lookup resolves the correct side of the boundary
-  BOOST_CHECK_EQUAL(trackingGeometry->lowestTrackingVolume(
-                        gctx, onBoundary, s_onSurfaceTolerance,
-                        Vector3::UnitX(), boundarySurface),
-                    volume2);
-  BOOST_CHECK_EQUAL(trackingGeometry->lowestTrackingVolume(
-                        gctx, onBoundary, s_onSurfaceTolerance,
-                        -Vector3::UnitX(), boundarySurface),
-                    volume1);
+  auto forward = trackingGeometry->resolveLowestTrackingVolume(
+      gctx, onBoundary, Vector3::UnitX(), *boundarySurface);
+  BOOST_REQUIRE(forward.ok());
+  BOOST_CHECK_EQUAL(*forward, volume2);
+
+  auto backward = trackingGeometry->resolveLowestTrackingVolume(
+      gctx, onBoundary, -Vector3::UnitX(), *boundarySurface);
+  BOOST_REQUIRE(backward.ok());
+  BOOST_CHECK_EQUAL(*backward, volume1);
 
   // Outer boundary of volume 1 with nothing attached on the far side: this
   // is the end of the world
@@ -181,23 +175,71 @@ BOOST_AUTO_TEST_CASE(BoundaryVolumeResolutionGen1) {
   const Surface* outerSurface = findBoundarySurface(*volume1, onOuterBoundary);
   BOOST_REQUIRE(outerSurface != nullptr);
 
-  BOOST_CHECK_EQUAL(trackingGeometry->lowestTrackingVolume(
-                        gctx, onOuterBoundary, s_onSurfaceTolerance,
-                        -Vector3::UnitX(), outerSurface),
-                    nullptr);
+  auto outward = trackingGeometry->resolveLowestTrackingVolume(
+      gctx, onOuterBoundary, -Vector3::UnitX(), *outerSurface);
+  BOOST_REQUIRE(outward.ok());
+  BOOST_CHECK_EQUAL(*outward, nullptr);
+
   // Pointing back inside stays in the volume
-  BOOST_CHECK_EQUAL(trackingGeometry->lowestTrackingVolume(
-                        gctx, onOuterBoundary, s_onSurfaceTolerance,
-                        Vector3::UnitX(), outerSurface),
-                    volume1);
+  auto inward = trackingGeometry->resolveLowestTrackingVolume(
+      gctx, onOuterBoundary, Vector3::UnitX(), *outerSurface);
+  BOOST_REQUIRE(inward.ok());
+  BOOST_CHECK_EQUAL(*inward, volume1);
 
   // A position slightly off the boundary is resolved through it within the
   // given tolerance
   const Vector3 nearBoundary{0.01_mm, 0, 0};
+  auto nearResult = trackingGeometry->resolveLowestTrackingVolume(
+      gctx, nearBoundary, -Vector3::UnitX(), *boundarySurface, 0.1_mm);
+  BOOST_REQUIRE(nearResult.ok());
+  BOOST_CHECK_EQUAL(*nearResult, volume1);
+}
+
+// A position that is on the plane of a boundary surface of the resolved
+// volume, but outside of its bounds, cannot be resolved through the boundary
+BOOST_AUTO_TEST_CASE(BoundaryVolumeResolutionOffBounds) {
+  CubicTrackingGeometry geometryBuilder{gctx};
+  std::shared_ptr<const TrackingGeometry> trackingGeometry = geometryBuilder();
+  BOOST_REQUIRE(trackingGeometry != nullptr);
+
+  const TrackingVolume* volume1 =
+      trackingGeometry->lowestTrackingVolume(gctx, Vector3{-1.5_m, 0, 0});
+  BOOST_REQUIRE(volume1 != nullptr);
+
+  // The glued boundary surface between the two volumes at x=0 spans
+  // |y| < 0.5 m and |z| < 0.5 m
+  const Surface* boundarySurface = nullptr;
+  for (const auto& boundary : volume1->boundarySurfaces()) {
+    const Surface& surface = boundary->surfaceRepresentation();
+    if (surface.isOnSurface(gctx, Vector3::Zero(), Vector3::UnitX(),
+                            BoundaryTolerance::None())) {
+      boundarySurface = &surface;
+    }
+  }
+  BOOST_REQUIRE(boundarySurface != nullptr);
+
+  // Grazing the volume edge: within the lookup tolerance of the volume, but
+  // outside of the boundary surface bounds
+  const Vector3 offBounds{0, 0.5_m + 0.5_mm, 0};
+  const double tolerance = 1_mm;
+  BOOST_REQUIRE(trackingGeometry->lowestTrackingVolume(gctx, offBounds,
+                                                       tolerance) != nullptr);
+  BOOST_REQUIRE(!boundarySurface->isOnSurface(
+      gctx, offBounds, Vector3::UnitX(), BoundaryTolerance::None(), tolerance));
+
+  auto result = trackingGeometry->resolveLowestTrackingVolume(
+      gctx, offBounds, Vector3::UnitX(), *boundarySurface, tolerance);
+  BOOST_CHECK(!result.ok());
+  BOOST_CHECK(result.error() ==
+              TrackingGeometryError::PositionNotOnAssociatedSurface);
+
+  // The deprecated lookup swallows the failure and returns a null volume
+  ACTS_PUSH_IGNORE_DEPRECATED()
   BOOST_CHECK_EQUAL(
-      trackingGeometry->lowestTrackingVolume(
-          gctx, nearBoundary, 0.1_mm, -Vector3::UnitX(), boundarySurface),
-      volume1);
+      trackingGeometry->lowestTrackingVolume(gctx, offBounds, tolerance,
+                                             Vector3::UnitX(), boundarySurface),
+      nullptr);
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 BOOST_AUTO_TEST_SUITE_END()

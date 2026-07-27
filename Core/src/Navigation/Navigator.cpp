@@ -164,9 +164,28 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
     // surface is a boundary between volumes, the position alone does not
     // determine the start volume: the volume actually being entered depends
     // on the direction, so the start surface is passed along as a hint.
-    state.startVolume = m_cfg.trackingGeometry->lowestTrackingVolume(
-        state.options.geoContext, position, state.options.surfaceTolerance,
-        direction, state.startSurface);
+    if (state.startSurface != nullptr) {
+      auto resolved = m_cfg.trackingGeometry->resolveLowestTrackingVolume(
+          state.options.geoContext, position, direction, *state.startSurface,
+          state.options.surfaceTolerance);
+      if (!resolved.ok()) {
+        // The start surface bounds the volume at the position, but the
+        // position is outside of them, e.g. when grazing a volume edge within
+        // the surface tolerance.
+        ACTS_DEBUG(volInfo(state)
+                   << "Could not resolve the start volume through the start "
+                      "surface = "
+                   << state.startSurface->geometryId() << ": "
+                   << resolved.error().message());
+
+        state.navigationBreak = true;
+        return Result<void>::failure(resolved.error());
+      }
+      state.startVolume = *resolved;
+    } else {
+      state.startVolume = m_cfg.trackingGeometry->lowestTrackingVolume(
+          state.options.geoContext, position, state.options.surfaceTolerance);
+    }
 
     if (state.startVolume != nullptr) {
       state.startLayer = state.startVolume->associatedLayer(
