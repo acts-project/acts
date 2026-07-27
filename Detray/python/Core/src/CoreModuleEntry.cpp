@@ -32,6 +32,10 @@
 
 namespace py = pybind11;
 
+#define STRINGIFY(x) #x
+/// Expand macro and turn its value into a string.
+#define STRINGIFY_HELPER(x) STRINGIFY(x)
+
 namespace {
 
 using algebra_t = detray::array<DETRAY_CUSTOM_SCALARTYPE>;
@@ -62,7 +66,8 @@ std::pair<detector_handle, name_map_t> read_detector(
 PYBIND11_MODULE(DetrayPythonBindings, m) {
   m.doc() = "Detray core bindings";
 
-  py::class_<detector_handle>(m, "Detector")
+  py::class_<detector_handle>(
+      m, "DetectorDefaultMetadata" STRINGIFY_HELPER(DETRAY_CUSTOM_SCALARTYPE))
       .def(
           "n_volumes",
           [](const detector_handle &d) { return d.detector.volumes().size(); },
