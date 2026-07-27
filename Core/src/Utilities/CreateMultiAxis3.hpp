@@ -23,7 +23,7 @@ namespace Acts::detail {
 /// combinations). Instantiating all of them in a single translation unit is
 /// very expensive in compiler memory. This helper is explicitly instantiated
 /// per concrete first-axis type in dedicated translation units
-/// (@c CreateMultiAxis3_*.cpp) so that the combinatorial cost is spread across
+/// (@c CreateMultiAxis3*.cpp) so that the combinatorial cost is spread across
 /// several TUs instead of concentrated in one. The generated code and runtime
 /// behaviour are identical to a single-TU dispatch.
 ///

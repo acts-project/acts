@@ -38,7 +38,7 @@ std::unique_ptr<IMultiAxis3D> IMultiAxis::create(const IAxis& axis1,
                                                  const IAxis& axis3) {
   // The concrete first axis is resolved here; the (much larger) instantiation
   // of the remaining two axes lives in per-boundary-type translation units
-  // (CreateMultiAxis3_*.cpp) to keep this TU's compiler memory bounded. The
+  // (CreateMultiAxis3*.cpp) to keep this TU's compiler memory bounded. The
   // helper is only declared here, so no MultiAxis instantiation happens in
   // this TU.
   return axis1.visit([&axis2, &axis3]<AxisConcept Axis1>(

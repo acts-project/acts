@@ -16,8 +16,8 @@ target_sources(
         IMultiAxis.cpp
         QuaternionFromTwoVectorsDouble.cpp
         QuaternionFromTwoVectorsFloat.cpp
-        CreateMultiAxis3_Open.cpp
-        CreateMultiAxis3_Bound.cpp
-        CreateMultiAxis3_Closed.cpp
+        CreateMultiAxis3Open.cpp
+        CreateMultiAxis3Bound.cpp
+        CreateMultiAxis3Closed.cpp
         StringHelpers.cpp
 )
