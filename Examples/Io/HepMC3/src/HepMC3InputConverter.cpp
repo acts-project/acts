@@ -10,11 +10,11 @@
 
 #include "Acts/Utilities/ScopedTimer.hpp"
 
+#include <unordered_set>
+
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/GenParticle.h>
 #include <HepMC3/GenVertex.h>
-
-#include <unordered_set>
 
 // This is a hack to make HepMC3::Print::listing public
 // It's pretty evil but should have no side-effects
@@ -136,7 +136,8 @@ ActsFatras::HeavyFlavourOrigin HepMC3InputConverter::deriveHeavyFlavourOrigin(
         hadType == Acts::HadronType::BottomBaryon ||
         hadType == Acts::HadronType::BBbarMeson ||
         (m_cfg.searchUpToHfQuark &&
-         static_cast<ActsFatras::HeavyFlavourOrigin>(pdgCode) == ActsFatras::HeavyFlavourOrigin::Bottom)) {
+         static_cast<ActsFatras::HeavyFlavourOrigin>(pdgCode) ==
+            ActsFatras::HeavyFlavourOrigin::Bottom)) {
       return ActsFatras::HeavyFlavourOrigin::Bottom;
     }
 
@@ -145,7 +146,8 @@ ActsFatras::HeavyFlavourOrigin HepMC3InputConverter::deriveHeavyFlavourOrigin(
         hadType == Acts::HadronType::CharmedBaryon ||
         hadType == Acts::HadronType::CCbarMeson ||
         (m_cfg.searchUpToHfQuark &&
-         static_cast<ActsFatras::HeavyFlavourOrigin>(pdgCode) == ActsFatras::HeavyFlavourOrigin::Charm)) {
+         static_cast<ActsFatras::HeavyFlavourOrigin>(pdgCode) ==
+            ActsFatras::HeavyFlavourOrigin::Charm)) {
       // we do not return directly because
       // B -> D -> X should be tagged as from beauty and not charm
       isFromCharm = true;

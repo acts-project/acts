@@ -14,8 +14,8 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Root/RootUtility.hpp"
 #include "ActsFatras/EventData/GenerationProcess.hpp"
-#include "ActsFatras/EventData/SimulationOutcome.hpp"
 #include "ActsFatras/EventData/HeavyFlavourOrigin.hpp"
+#include "ActsFatras/EventData/SimulationOutcome.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -137,7 +137,8 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
                         .withSubParticle((*m_subParticle).at(i)));
 
     p.setOrigParticleIdx((*m_origParticleIdx).at(i));
-    p.setHeavyFlavourOrigin(static_cast<ActsFatras::HeavyFlavourOrigin>((*m_hfOrigin).at(i)));
+    p.setHeavyFlavourOrigin(
+        static_cast<ActsFatras::HeavyFlavourOrigin>((*m_hfOrigin).at(i)));
 
     SimParticleState& initialState = p.initialState();
 

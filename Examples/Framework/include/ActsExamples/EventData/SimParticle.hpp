@@ -9,9 +9,9 @@
 #pragma once
 
 #include "ActsExamples/Utilities/GroupBy.hpp"
+#include "ActsFatras/EventData/HeavyFlavourOrigin.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/EventData/SimulationOutcome.hpp"
-#include "ActsFatras/EventData/HeavyFlavourOrigin.hpp"
 
 #include <boost/container/flat_set.hpp>
 

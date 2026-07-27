@@ -20,8 +20,8 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/GenerationProcess.hpp"
-#include "ActsFatras/EventData/SimulationOutcome.hpp"
 #include "ActsFatras/EventData/HeavyFlavourOrigin.hpp"
+#include "ActsFatras/EventData/SimulationOutcome.hpp"
 
 #include <cmath>
 #include <iosfwd>
