@@ -6,27 +6,11 @@ from collections import namedtuple
 import acts
 import acts.examples
 
-# ROOT might not be available
-try:
-    from acts.examples.root import (
-        RootTrackFinderNTupleWriter,
-        RootTrackFinderPerformanceWriter,
-        RootTrackFitterPerformanceWriter,
-        RootTrackParameterWriter,
-        RootTrackStatesWriter,
-        RootTrackSummaryWriter,
-        RootVertexNTupleWriter,
-    )
-
-    ACTS_EXAMPLES_ROOT_AVAILABLE = True
-except ImportError:
-    ACTS_EXAMPLES_ROOT_AVAILABLE = False
-
 u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
     "SeedingAlgorithm",
-    "TruthSmeared TruthEstimated HoughTransform AdaptiveHoughTransform Gbts Hashing GridTriplet OrthogonalTriplet HashingPrototype",
+    "TruthSmeared TruthEstimated HoughTransform AdaptiveHoughTransform Gbts Hashing GridTriplet OrthogonalTriplet HashingPrototype PythonCallable",
 )
 
 TrackSmearingSigmas = namedtuple(
@@ -328,6 +312,8 @@ def addSeeding(
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
     prefix: str = "",
+    customSeeder: Optional[callable] = None,
+    customSeederConfig: Optional[dict] = None,
 ) -> None:
     """This function steers the seeding
     Parameters
@@ -381,6 +367,11 @@ def addSeeding(
         logging level to override setting given in `s`
     rnd : RandomNumbers, None
         random number generator. Only used by SeedingAlgorithm.TruthSmeared.
+    customSeeder : callable, None
+        A custom python function that implements the seeding algorithm. Used only when seedingAlgorithm is SeedingAlgorithm.PythonCallable.
+        It must accept s, spacePoints, outputSeeds, trackingGeometry, logLevel, and config as kwargs, and it must return the string key to the generated seeds collection.
+    customSeederConfig : dict, None
+        Configuration dictionary passed directly to the customSeeder function.
     """
 
     logLevel = acts.examples.defaultLogging(s, logLevel)()
@@ -502,6 +493,25 @@ def addSeeding(
                 logLevel,
                 outputSeeds=f"{prefix}seeds",
             )
+        elif seedingAlgorithm == SeedingAlgorithm.PythonCallable:
+            logger.info("Using custom PythonCallable seeding")
+            if customSeeder is None:
+                raise ValueError(
+                    "SeedingAlgorithm.PythonCallable requested customSeeder but it was None"
+                )
+
+            seeds = customSeeder(
+                s=s,
+                spacePoints=spacePoints,
+                outputSeeds=f"{prefix}seeds",
+                trackingGeometry=trackingGeometry,
+                logLevel=logLevel,
+                config=customSeederConfig or {},
+            )
+            if seeds is None:
+                raise RuntimeError(
+                    "customSeeder returned None; it must return the string key for the output seeds collection"
+                )
         else:
             logger.fatal("unknown seedingAlgorithm {}", seedingAlgorithm)
 
@@ -1383,9 +1393,11 @@ def addSeedPerformanceWriters(
 ):
     """Writes seeding related performance output"""
     customLogLevel = acts.examples.defaultLogging(sequence, logLevel)
-    assert (
-        ACTS_EXAMPLES_ROOT_AVAILABLE
-    ), "ROOT output requested but ROOT is not available"
+    RootTrackFinderPerformanceWriter, RootTrackParameterWriter = (
+        acts.examples._tryImportRoot(
+            "RootTrackFinderPerformanceWriter", "RootTrackParameterWriter"
+        )
+    )
     outputDirRoot = Path(outputDirRoot)
     if not outputDirRoot.exists():
         outputDirRoot.mkdir()
@@ -1913,9 +1925,19 @@ def addTrackWriters(
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     if outputDirRoot is not None:
-        assert (
-            ACTS_EXAMPLES_ROOT_AVAILABLE
-        ), "ROOT output requested but ROOT is not available"
+        (
+            RootTrackSummaryWriter,
+            RootTrackStatesWriter,
+            RootTrackFitterPerformanceWriter,
+            RootTrackFinderPerformanceWriter,
+            RootTrackFinderNTupleWriter,
+        ) = acts.examples._tryImportRoot(
+            "RootTrackSummaryWriter",
+            "RootTrackStatesWriter",
+            "RootTrackFitterPerformanceWriter",
+            "RootTrackFinderPerformanceWriter",
+            "RootTrackFinderNTupleWriter",
+        )
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
@@ -2537,9 +2559,7 @@ def addVertexFitting(
         )
 
     if outputDirRoot is not None:
-        assert (
-            ACTS_EXAMPLES_ROOT_AVAILABLE
-        ), "ROOT output requested but ROOT is not available"
+        RootVertexNTupleWriter = acts.examples._tryImportRoot("RootVertexNTupleWriter")
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
@@ -2570,10 +2590,7 @@ def addHoughVertexFinding(
     inputSpacePoints: Optional[str] = "spacepoints",
     outputVertices: Optional[str] = "fittedHoughVertices",
 ) -> None:
-    from acts.examples import (
-        HoughVertexFinderAlgorithm,
-        RootVertexNTupleWriter,
-    )
+    from acts.examples import HoughVertexFinderAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -2589,9 +2606,7 @@ def addHoughVertexFinding(
     inputTruthVertices = "vertices_truth"
 
     if outputDirRoot is not None:
-        assert (
-            ACTS_EXAMPLES_ROOT_AVAILABLE
-        ), "ROOT output requested but ROOT is not available"
+        RootVertexNTupleWriter = acts.examples._tryImportRoot("RootVertexNTupleWriter")
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()

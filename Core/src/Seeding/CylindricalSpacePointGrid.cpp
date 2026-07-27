@@ -8,7 +8,7 @@
 
 #include "Acts/Seeding/CylindricalSpacePointGrid.hpp"
 
-#include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Seeding/detail/SpacePointGridPhiBinning.hpp"
 
 namespace Acts {
 
@@ -36,83 +36,15 @@ CylindricalSpacePointGrid::CylindricalSpacePointGrid(
         "CylindricalSpacePointGrid: zMin is bigger than zMax");
   }
 
-  int phiBins = 0;
-  if (m_cfg.bFieldInZ == 0) {
-    // for no magnetic field, use the maximum number of phi bins
-    phiBins = m_cfg.maxPhiBins;
-    ACTS_VERBOSE(
-        "B-Field is 0 (z-coordinate), setting the number of bins in phi to "
-        << phiBins);
-  } else {
-    // calculate circle intersections of helix and max detector radius in mm.
-    // bFieldInZ is in (pT/radius) natively, no need for conversion
-    const float minHelixRadius = m_cfg.minPt / m_cfg.bFieldInZ;
-
-    // sanity check: if yOuter takes the square root of a negative number
-    if (minHelixRadius < m_cfg.rMax * 0.5) {
-      throw std::domain_error(
-          "The value of minHelixRadius cannot be smaller than rMax / 2. Please "
-          "check the m_cfguration of bFieldInZ and minPt");
-    }
-
-    // x = rMax^2 / (2 * minHelixRadius)
-    // y = cathetus(rMax, x)
-    // R / x = 2 * minHelixRadius / R
-    // outerAngle = x / y = x / sqrt(rMax^2 - x^2) = 1 / cath(rMax / x, 1)
-    //            = 1 / cath(2 * minHelixRadius / rMax, 1)
-    const float outerAngle =
-        std::atan(1.f / fastCathetus(2 * minHelixRadius / m_cfg.rMax, 1));
-    // intersection of helix and max detector radius minus maximum R distance
-    // from middle SP to top SP
-    float innerAngle = 0;
-    float rMin = m_cfg.rMax;
-    if (m_cfg.rMax > m_cfg.deltaRMax) {
-      const float innerCircleR = m_cfg.rMax - m_cfg.deltaRMax;
-      rMin = innerCircleR;
-      innerAngle =
-          std::atan(1.f / fastCathetus(2 * minHelixRadius / innerCircleR, 1));
-    }
-
-    // evaluating the azimutal deflection including the maximum impact
-    // parameter. A track with |d0| >= r cannot reach radius r, so the azimuthal
-    // deflection saturates at pi/2: clamp the asin arguments to [0, 1] so that
-    // impactMax >= (rMax - deltaRMax) falls back to coarse / full-2pi phi
-    // coverage instead of producing a NaN (and hence a zero phi-bin count and a
-    // "Invalid binning" exception).
-    const float sinInner = std::min(1.f, m_cfg.impactMax / rMin);
-    const float sinOuter = std::min(1.f, m_cfg.impactMax / m_cfg.rMax);
-    const float deltaAngleWithMaxD0 =
-        std::abs(std::asin(sinInner) - std::asin(sinOuter));
-
-    // evaluating delta Phi based on the inner and outer angle, and the azimutal
-    // deflection including the maximum impact parameter
-    // Divide by m_cfg.phiBinDeflectionCoverage since we combine
-    // m_cfg.phiBinDeflectionCoverage number of consecutive phi bins in the
-    // seed making step. So each individual bin should cover
-    // 1/m_cfg.phiBinDeflectionCoverage of the maximum expected azimutal
-    // deflection
-    const float deltaPhi = (outerAngle - innerAngle + deltaAngleWithMaxD0) /
-                           m_cfg.phiBinDeflectionCoverage;
-
-    // sanity check: if the delta phi is equal to or less than zero, we'll be
-    // creating an infinite or a negative number of bins, which would be bad!
-    if (deltaPhi <= 0.f) {
-      throw std::domain_error(
-          "Delta phi value is equal to or less than zero, leading to an "
-          "impossible number of bins (negative or infinite)");
-    }
-
-    // divide 2pi by angle delta to get number of phi-bins
-    // size is always 2pi even for regions of interest
-    phiBins = static_cast<int>(std::ceil(2 * std::numbers::pi / deltaPhi));
-    // need to scale the number of phi bins accordingly to the number of
-    // consecutive phi bins in the seed making step.
-    // Each individual bin should be approximately a fraction (depending on this
-    // number) of the maximum expected azimutal deflection.
-
-    // set protection for large number of bins, by default it is large
-    phiBins = std::min(phiBins, m_cfg.maxPhiBins);
-  }
+  const int phiBins = detail::computeSpacePointGridPhiBins(
+      {.minPt = m_cfg.minPt,
+       .bFieldInZ = m_cfg.bFieldInZ,
+       .rMax = m_cfg.rMax,
+       .deltaRMax = m_cfg.deltaRMax,
+       .impactMax = m_cfg.impactMax,
+       .phiBinDeflectionCoverage = m_cfg.phiBinDeflectionCoverage,
+       .maxPhiBins = m_cfg.maxPhiBins},
+      logger());
 
   PhiAxisType phiAxis(AxisClosed, m_cfg.phiMin, m_cfg.phiMax, phiBins);
 
