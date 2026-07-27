@@ -40,7 +40,6 @@ namespace {
 
 using algebra_t = detray::array<DETRAY_CUSTOM_SCALARTYPE>;
 using detector_t = detray::detector<detray::default_metadata<algebra_t>>;
-using name_map_t = detector_t::name_map;
 
 /// Owns a detector together with the memory resource its data lives in.
 struct detector_handle {
@@ -49,7 +48,7 @@ struct detector_handle {
 };
 
 /// Read a detector (default metadata) from a JSON file.
-std::pair<detector_handle, name_map_t> read_detector(
+std::pair<detector_handle, detray::name_map> read_detector(
     const std::string &file_name) {
   auto mr = std::make_unique<vecmem::host_memory_resource>();
 
@@ -76,7 +75,7 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
           "n_surfaces",
           [](const detector_handle &d) { return d.detector.surfaces().size(); },
           "Number of surfaces in the detector");
-  py::class_<name_map_t>(m, "NameMap");
+  py::class_<detray::name_map>(m, "NameMap");
 
   m.def("read_detector", &read_detector, py::arg("file_name"),
         "Read a detector from a JSON file");
