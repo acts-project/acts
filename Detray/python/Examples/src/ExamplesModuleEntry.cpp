@@ -63,9 +63,9 @@ void generate_toy_detector(unsigned int barrel_layers,
 PYBIND11_MODULE(DetrayExamplesPythonBindings, m) {
   m.doc() = "Detray example bindings";
 
-  m.def("generate_toy_detector", &generate_toy_detector,
-        py::arg("barrel_layers") = 4u, py::arg("endcap_layers") = 3u,
-        py::arg("material_use_maps") = false,
-        py::arg("output_dir") = "./toy_detector/",
+  m.def("generateToyDetector", &generate_toy_detector,
+        py::arg("barrelLayers") = 4u, py::arg("endcapLayers") = 3u,
+        py::arg("materialUseMaps") = false,
+        py::arg("outputDir") = "./toy_detector/",
         "Build a toy detector and write it to JSON files in output_dir");
 }

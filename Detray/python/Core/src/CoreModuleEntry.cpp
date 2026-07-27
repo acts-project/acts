@@ -77,6 +77,6 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
           "Number of surfaces in the detector");
   py::class_<detray::name_map>(m, "NameMap");
 
-  m.def("read_detector", &read_detector, py::arg("file_name"),
+  m.def("readDetector", &read_detector, py::arg("fileName"),
         "Read a detector from a JSON file");
 }
