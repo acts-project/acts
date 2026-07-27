@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "QuaternionFromTwoVectors.ipp"
-
 // GCC (>=12) emits a spurious -Wmaybe-uninitialized from inside Eigen's SVD
 // code used by setFromTwoVectors; suppress it for this translation unit.
 #if defined(__GNUC__) && !defined(__clang__) && __GNUC__ >= 12
@@ -15,10 +13,15 @@
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
 
+#include <Eigen/Dense>
+
 namespace Acts::detail {
 
-template Eigen::Quaternion<double> quaternionFromTwoVectors<double>(
-    const Eigen::Matrix<double, 3, 1>&, const Eigen::Matrix<double, 3, 1>&);
+Eigen::Quaternion<double> quaternionFromTwoVectors(
+    const Eigen::Matrix<double, 3, 1>& a,
+    const Eigen::Matrix<double, 3, 1>& b) {
+  return Eigen::Quaternion<double>().setFromTwoVectors(a, b);
+}
 
 }  // namespace Acts::detail
 

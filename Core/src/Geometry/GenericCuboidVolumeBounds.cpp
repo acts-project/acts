@@ -93,8 +93,7 @@ std::vector<OrientedSurface> GenericCuboidVolumeBounds::orientedSurfaces(
 
     // The quaternion is computed out-of-line (see QuaternionFromTwoVectors.hpp)
     // so the expensive Eigen JacobiSVD is not instantiated in this TU.
-    vol2srf = detail::quaternionFromTwoVectors<Transform3::Scalar>(
-        normal, Vector3::UnitZ());
+    vol2srf = detail::quaternionFromTwoVectors(normal, Vector3::UnitZ());
 
     vol2srf = vol2srf * Translation3(-ctrd);
 

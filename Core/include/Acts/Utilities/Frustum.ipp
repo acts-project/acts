@@ -51,7 +51,7 @@ Acts::Frustum<value_t, DIM, SIDES>::Frustum(const VertexType& origin,
   const VertexType lup = VertexType::UnitX();
 
   transform_type transform;
-  transform = detail::quaternionFromTwoVectors<value_type>(ldir, dir);
+  transform = detail::quaternionFromTwoVectors(ldir, dir);
 
   m_normals[0] = ldir;
 

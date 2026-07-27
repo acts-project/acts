@@ -23,12 +23,26 @@ namespace Acts::detail {
 /// means the SVD is instantiated once in the Acts core library instead of in
 /// every translation unit that needs it.
 ///
-/// @tparam T the scalar type (float or double)
 /// @param a the source vector
 /// @param b the target vector
 /// @return the quaternion rotating @p a onto @p b
-template <typename T>
-Eigen::Quaternion<T> quaternionFromTwoVectors(const Eigen::Matrix<T, 3, 1>& a,
-                                              const Eigen::Matrix<T, 3, 1>& b);
+Eigen::Quaternion<float> quaternionFromTwoVectors(
+    const Eigen::Matrix<float, 3, 1>& a, const Eigen::Matrix<float, 3, 1>& b);
+
+/// Compute the quaternion that rotates vector @p a onto vector @p b.
+///
+/// This wraps @c Eigen::Quaternion::setFromTwoVectors, whose implementation
+/// instantiates a (fixed-size) @c Eigen::JacobiSVD. That SVD instantiation is
+/// very expensive in compiler memory (~0.5 GB per translation unit). Declaring
+/// this helper here and providing the definition out-of-line (explicitly
+/// instantiated for @c float and @c double in QuaternionFromTwoVectors.cpp)
+/// means the SVD is instantiated once in the Acts core library instead of in
+/// every translation unit that needs it.
+///
+/// @param a the source vector
+/// @param b the target vector
+/// @return the quaternion rotating @p a onto @p b
+Eigen::Quaternion<double> quaternionFromTwoVectors(
+    const Eigen::Matrix<double, 3, 1>& a, const Eigen::Matrix<double, 3, 1>& b);
 
 }  // namespace Acts::detail
