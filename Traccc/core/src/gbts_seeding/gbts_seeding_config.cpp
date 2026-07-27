@@ -9,6 +9,8 @@
 
 #include <algorithm>
 #include <climits>
+#include <cstdint>
+#include <limits>
 #include <ranges>
 
 namespace traccc {
@@ -21,7 +23,7 @@ bool gbts_seedfinder_config::setLinkingScheme(
     const std::vector<std::pair<unsigned int, std::vector<unsigned int>>>&
         input_binTables,
     const device::gbts_layerInfo input_layerInfo,
-    std::vector<std::pair<std::uint64_t, short>>& detrayGeoIDBinning,
+    std::vector<std::pair<std::uint64_t, std::int16_t>>& detrayGeoIDBinning,
     const float minPt = 900.0f,
     std::unique_ptr<const traccc::Logger> callers_logger =
         getDummyLogger().clone()) {
@@ -41,15 +43,15 @@ bool gbts_seedfinder_config::setLinkingScheme(
 
   // bin by volume
   std::ranges::sort(detrayGeoIDBinning,
-                    [](const std::pair<std::uint64_t, short> a,
-                       const std::pair<std::uint64_t, short> b) {
+                    [](const std::pair<std::uint64_t, std::int16_t> a,
+                       const std::pair<std::uint64_t, std::int16_t> b) {
                       return a.first > b.first;
                     });
 
   unsigned int largest_volume_index =
       detray::geometry::identifier(detrayGeoIDBinning[0].first).volume();
-  auto current_volume = static_cast<short>(largest_volume_index);
-  if (largest_volume_index >= SHRT_MAX) {
+  auto current_volume = static_cast<std::int16_t>(largest_volume_index);
+  if (largest_volume_index >= std::numeric_limits<std::int16_t>::max()) {
     TRACCC_ERROR(
         "volume index to large to fit in type-short GBTS volume to layer "
         "map");
@@ -57,21 +59,22 @@ bool gbts_seedfinder_config::setLinkingScheme(
   }
 
   bool layerChange = false;
-  short current_layer = detrayGeoIDBinning[0].second;
+  std::int16_t current_layer = detrayGeoIDBinning[0].second;
 
   unsigned int split_volumes = 0;
-  std::vector<std::pair<short, unsigned int>> volumeToLayerMap_unordered;
+  std::vector<std::pair<std::int16_t, unsigned int>> volumeToLayerMap_unordered;
   detrayGeoIDBinning.push_back(
       std::make_pair(UINT_MAX, -1));  // end-of-vector element
   std::vector<std::pair<unsigned int, unsigned int>> surfacesInVolume;
-  for (std::pair<std::uint64_t, short> geoIDLayerPair : detrayGeoIDBinning) {
+  for (std::pair<std::uint64_t, std::int16_t> geoIDLayerPair :
+       detrayGeoIDBinning) {
     detray::geometry::identifier geo_id(geoIDLayerPair.first);
-    if (current_volume != static_cast<short>(geo_id.volume())) {
+    if (current_volume != static_cast<std::int16_t>(geo_id.volume())) {
       // reached the end of this volume so add it to the maps
-      short bin = current_layer;
+      std::int16_t bin = current_layer;
       if (layerChange) {
         split_volumes++;
-        bin = -1 * static_cast<short>(
+        bin = -1 * static_cast<std::int16_t>(
                        surfaceToLayerMap.size() +
                        1);  // start of this volume's surfaces in the map + 1
         for (std::pair<unsigned int, unsigned int> pair : surfacesInVolume)
@@ -81,7 +84,7 @@ bool gbts_seedfinder_config::setLinkingScheme(
           bin, current_volume));  // layerIdx if not split, begin-index in
                                   // the surface map otherwise
 
-      current_volume = static_cast<short>(geo_id.volume());
+      current_volume = static_cast<std::int16_t>(geo_id.volume());
       current_layer = geoIDLayerPair.second;
       layerChange = false;
       surfacesInVolume.clear();
@@ -97,8 +100,9 @@ bool gbts_seedfinder_config::setLinkingScheme(
   // make volume by layer map
   volumeToLayerMap.resize(largest_volume_index + 1);
   for (unsigned int i = 0; i < largest_volume_index + 1; ++i)
-    volumeToLayerMap.push_back(SHRT_MAX);
-  for (std::pair<short, unsigned int> vLpair : volumeToLayerMap_unordered)
+    volumeToLayerMap.push_back(std::numeric_limits<std::int16_t>::max());
+  for (std::pair<std::int16_t, unsigned int> vLpair :
+       volumeToLayerMap_unordered)
     volumeToLayerMap[vLpair.second] = vLpair.first;
   // scale cuts
   float ptScale = 900.0f / minPt;
@@ -127,7 +131,8 @@ bool gbts_seedfinder_config::setLinkingScheme(
   } else if (volumeToLayerMap.size() == 0) {
     TRACCC_ERROR("empty volume to layer map");
     return false;
-  } else if (surfaceToLayerMap.size() > SHRT_MAX) {
+  } else if (surfaceToLayerMap.size() >
+             std::numeric_limits<std::int16_t>::max()) {
     TRACCC_ERROR("surface to layer map is to large");
     return false;
   }

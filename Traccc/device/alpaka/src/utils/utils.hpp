@@ -9,6 +9,9 @@
 
 #include <alpaka/alpaka.hpp>
 
+// System include(s).
+#include <cstdint>
+
 namespace traccc::alpaka {
 
 using Dim = ::alpaka::DimInt<1>;

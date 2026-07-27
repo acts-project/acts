@@ -7,6 +7,10 @@
 
 #pragma once
 
+// System include(s).
+#include <cstdint>
+#include <utility>
+
 namespace traccc::cuda {
 /**
  * @brief Calculate the index of the current thread in the set of threads in
