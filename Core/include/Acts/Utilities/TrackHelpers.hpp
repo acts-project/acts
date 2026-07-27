@@ -732,8 +732,13 @@ template <TrackStateProxyConcept track_state_proxy_t>
     "translation unit.")]]
 std::pair<BoundVector, BoundMatrix> calculateUnbiasedParametersCovariance(
     track_state_proxy_t trackState) {
-  return calculateUnbiasedParametersCovariance(
-      AnyConstTrackStateProxy{trackState});
+  // Explicitly select the non-template overload taking a type-erased proxy.
+  // A plain call here would re-resolve to this very template (the wrapped
+  // AnyConstTrackStateProxy satisfies TrackStateProxyConcept and is an exact
+  // by-value match), causing infinite recursion and a self-deprecation error.
+  std::pair<BoundVector, BoundMatrix> (&impl)(const AnyConstTrackStateProxy &) =
+      calculateUnbiasedParametersCovariance;
+  return impl(AnyConstTrackStateProxy{trackState});
 }
 
 /// Calculate the unbiased track parameters and their covariance for a
