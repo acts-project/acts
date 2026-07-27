@@ -56,6 +56,10 @@ def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
         decorators=decorators,
         events=events,
         outputDir=tmp_path,
+        # Serialising the ODD material map is ~9s and ~640MB of JSON, and it is
+        # already covered by test_writer.py::test_json_material_writer. This
+        # test is about the per-event csv/json/obj outputs.
+        outputMaterialMap=False,
     )
 
     runGeometry(outputSurfacesJson=True, **kwargs)
@@ -84,9 +88,6 @@ def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
             with f.open() as fh:
                 data = json.load(fh)
                 assert data
-        material_file = tmp_path / "geometry-map.json"
-        assert material_file.exists()
-        assert material_file.stat().st_size > 200
 
 
 class CountingVisitor(acts.TrackingGeometryMutableVisitor):
