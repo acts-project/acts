@@ -11,7 +11,7 @@
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/MultiAxis.hpp"
 
-#include "CreateMultiAxis3.hpp"
+#include "detail/CreateMultiAxis3.hpp"
 
 namespace Acts {
 

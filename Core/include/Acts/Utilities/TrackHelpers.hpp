@@ -732,31 +732,8 @@ template <TrackStateProxyConcept track_state_proxy_t>
     "translation unit.")]]
 std::pair<BoundVector, BoundMatrix> calculateUnbiasedParametersCovariance(
     track_state_proxy_t trackState) {
-  if (!trackState.hasSmoothed()) {
-    throw std::invalid_argument("track state has no smoothed parameters");
-  }
-  if (!trackState.hasCalibrated()) {
-    throw std::invalid_argument("track state has no calibrated parameters");
-  }
-
-  return visit_measurement(
-      trackState.calibratedSize(),
-      [&]<std::size_t measdim>(std::integral_constant<std::size_t, measdim>) {
-        FixedBoundSubspaceHelper<measdim> subspaceHelper =
-            trackState.template projectorSubspaceHelper<measdim>();
-
-        // TODO use subspace helper for projection instead
-        auto H = subspaceHelper.projector();
-        auto s = trackState.smoothed();
-        auto C = trackState.smoothedCovariance();
-        auto m = trackState.template calibrated<measdim>();
-        auto V = trackState.template calibratedCovariance<measdim>();
-        auto K =
-            (C * H.transpose() * (H * C * H.transpose() - V).inverse()).eval();
-        BoundVector unbiasedParamsVec = s + K * (m - H * s);
-        BoundMatrix unbiasedParamsCov = C - K * H * C;
-        return std::make_pair(unbiasedParamsVec, unbiasedParamsCov);
-      });
+  return calculateUnbiasedParametersCovariance(
+      AnyConstTrackStateProxy{trackState});
 }
 
 /// Calculate the unbiased track parameters and their covariance for a

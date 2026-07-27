@@ -23,10 +23,36 @@ std::pair<BoundVector, BoundMatrix> calculateUnbiasedParametersCovariance(
   // Delegates to the deprecated templated implementation. This is the one
   // place it is meant to be instantiated, so silence the deprecation warning
   // for the internal call only.
-  ACTS_PUSH_IGNORE_DEPRECATED()
-  return calculateUnbiasedParametersCovariance<AnyConstTrackStateProxy>(
-      trackState);
-  ACTS_POP_IGNORE_DEPRECATED()
+  // ACTS_PUSH_IGNORE_DEPRECATED()
+  // return calculateUnbiasedParametersCovariance<AnyConstTrackStateProxy>(
+  //     trackState);
+  // ACTS_POP_IGNORE_DEPRECATED()
+
+  if (!trackState.hasSmoothed()) {
+    throw std::invalid_argument("track state has no smoothed parameters");
+  }
+  if (!trackState.hasCalibrated()) {
+    throw std::invalid_argument("track state has no calibrated parameters");
+  }
+
+  return visit_measurement(
+      trackState.calibratedSize(),
+      [&]<std::size_t measdim>(std::integral_constant<std::size_t, measdim>) {
+        FixedBoundSubspaceHelper<measdim> subspaceHelper =
+            trackState.template projectorSubspaceHelper<measdim>();
+
+        // TODO use subspace helper for projection instead
+        auto H = subspaceHelper.projector();
+        auto s = trackState.smoothed();
+        auto C = trackState.smoothedCovariance();
+        auto m = trackState.template calibrated<measdim>();
+        auto V = trackState.template calibratedCovariance<measdim>();
+        auto K =
+            (C * H.transpose() * (H * C * H.transpose() - V).inverse()).eval();
+        BoundVector unbiasedParamsVec = s + K * (m - H * s);
+        BoundMatrix unbiasedParamsCov = C - K * H * C;
+        return std::make_pair(unbiasedParamsVec, unbiasedParamsCov);
+      });
 }
 
 }  // namespace Acts

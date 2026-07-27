@@ -14,10 +14,10 @@ target_sources(
         TransformComparator.cpp
         Histogram.cpp
         IMultiAxis.cpp
-        QuaternionFromTwoVectorsDouble.cpp
-        QuaternionFromTwoVectorsFloat.cpp
-        CreateMultiAxis3Open.cpp
-        CreateMultiAxis3Bound.cpp
-        CreateMultiAxis3Closed.cpp
+        detail/QuaternionFromTwoVectorsDouble.cpp
+        detail/QuaternionFromTwoVectorsFloat.cpp
+        detail/CreateMultiAxis3Open.cpp
+        detail/CreateMultiAxis3Bound.cpp
+        detail/CreateMultiAxis3Closed.cpp
         StringHelpers.cpp
 )
