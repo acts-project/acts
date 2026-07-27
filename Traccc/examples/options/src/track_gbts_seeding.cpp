@@ -277,15 +277,15 @@ std::unique_ptr<configuration_printable> track_gbts_seeding::as_printable()
                   gbts_config.gbts_make_graph_edges_params.maxOuterRadius)));
 
   cat->add_child(std::make_unique<configuration_kv_pair>(
-      "edge matching dphi max ",
+      "edge matching delta phi max ",
       std::format("{:.5f} ",
                   gbts_config.gbts_match_graph_edges_params.cut_dphi_max)));
   cat->add_child(std::make_unique<configuration_kv_pair>(
-      "edge matching dcurv max ",
+      "edge matching delta curv max ",
       std::format("{:.5f} ",
                   gbts_config.gbts_match_graph_edges_params.cut_dcurv_max)));
   cat->add_child(std::make_unique<configuration_kv_pair>(
-      "edge matching deta max ",
+      "edge matching delta eta max ",
       std::format("{:.5f} ",
                   gbts_config.gbts_match_graph_edges_params.cut_deta_max)));
   cat->add_child(std::make_unique<configuration_kv_pair>(
