@@ -33,15 +33,15 @@ class CylindricalSpacePointGrid
                Axis<AxisType::Variable, AxisBoundaryType::Open>,
                Axis<AxisType::Variable, AxisBoundaryType::Open>>> {
  public:
-  /// Type alias for phi axis with equidistant binning and closed boundaries
-  using PhiAxisType = Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
-  /// Type alias for z axis with variable binning and open boundaries
-  using ZAxisType = Axis<AxisType::Variable, AxisBoundaryType::Open>;
-  /// Type alias for r axis with variable binning and open boundaries
-  using RAxisType = Axis<AxisType::Variable, AxisBoundaryType::Open>;
   /// Type alias for the CRTP base class
   using GridBase =
       detail::SpacePointGridBase<CylindricalSpacePointGrid, GridType>;
+  /// Type alias for the phi axis (equidistant binning, closed boundaries)
+  using PhiAxisType = GridBase::AxisTypeAt<0>;
+  /// Type alias for the z axis (variable binning, open boundaries)
+  using ZAxisType = GridBase::AxisTypeAt<1>;
+  /// Type alias for the r axis (variable binning, open boundaries)
+  using RAxisType = GridBase::AxisTypeAt<2>;
 
   /// Configuration parameters for the cylindrical space point grid.
   struct Config {

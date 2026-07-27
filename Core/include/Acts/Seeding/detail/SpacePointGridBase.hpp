@@ -19,6 +19,7 @@
 #include <limits>
 #include <memory>
 #include <optional>
+#include <tuple>
 #include <vector>
 
 namespace Acts::detail {
@@ -42,6 +43,13 @@ class SpacePointGridBase {
   using GridType = grid_t;
   /// Type alias for binned group over the grid
   using BinnedGroupType = BinnedGroup<GridType>;
+  /// Type of the grid axis along dimension @p index. Derived classes should
+  /// spell their named axis aliases in terms of this, so that they cannot
+  /// drift from the grid type.
+  /// @tparam index The grid dimension to query
+  template <std::size_t index>
+  using AxisTypeAt =
+      std::tuple_element_t<index, typename GridType::multi_axis_t::AxesTuple>;
 
   /// Clear the grid and drop all state. The object will behave like a newly
   /// constructed one.

@@ -14,14 +14,6 @@
 
 namespace Acts::Experimental {
 
-namespace {
-
-float radiusProjection(const ConstSpacePointProxy& sp) {
-  return sp.zr()[1];
-}
-
-}  // namespace
-
 SphericalSpacePointGrid::SphericalSpacePointGrid(
     const Config& config, std::unique_ptr<const Logger> _logger)
     : GridBase(std::move(_logger)), m_cfg(config) {
@@ -108,12 +100,14 @@ SphericalSpacePointGrid::SphericalSpacePointGrid(
 
 void SphericalSpacePointGrid::sortBinsByR(
     const SpacePointContainer& spacePoints) {
-  sortBinsBy(spacePoints, radiusProjection);
+  sortBinsBy(spacePoints,
+             [](const ConstSpacePointProxy& sp) { return sp.zr()[1]; });
 }
 
 Range1D<float> SphericalSpacePointGrid::computeRadiusRange(
     const SpacePointContainer& spacePoints) const {
-  return computeRange(spacePoints, radiusProjection);
+  return computeRange(
+      spacePoints, [](const ConstSpacePointProxy& sp) { return sp.zr()[1]; });
 }
 
 }  // namespace Acts::Experimental

@@ -35,18 +35,18 @@ class SphericalSpacePointGrid
                Axis<AxisType::Variable, AxisBoundaryType::Open>,
                Axis<AxisType::Variable, AxisBoundaryType::Open>>> {
  public:
-  /// Type alias for phi axis with equidistant binning and closed boundaries
-  using PhiAxisType = Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
+  /// Type alias for the CRTP base class
+  using GridBase =
+      Acts::detail::SpacePointGridBase<SphericalSpacePointGrid, GridType>;
+  /// Type alias for the phi axis (equidistant binning, closed boundaries)
+  using PhiAxisType = GridBase::AxisTypeAt<0>;
   /// Type alias for the middle (cot(theta)) axis with variable binning and
   /// open boundaries. Edges are stored as sinh(eta) = cot(theta), so the
   /// binning is configured in eta while space points are placed by z / r (see
   /// class doc).
-  using CotThetaAxisType = Axis<AxisType::Variable, AxisBoundaryType::Open>;
-  /// Type alias for r axis with variable binning and open boundaries
-  using RAxisType = Axis<AxisType::Variable, AxisBoundaryType::Open>;
-  /// Type alias for the CRTP base class
-  using GridBase =
-      Acts::detail::SpacePointGridBase<SphericalSpacePointGrid, GridType>;
+  using CotThetaAxisType = GridBase::AxisTypeAt<1>;
+  /// Type alias for the r axis (variable binning, open boundaries)
+  using RAxisType = GridBase::AxisTypeAt<2>;
 
   /// Configuration parameters for the spherical space point grid.
   struct Config {

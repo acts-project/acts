@@ -33,15 +33,15 @@ class CartesianSpacePointGrid
                Axis<AxisType::Equidistant, AxisBoundaryType::Open>,
                Axis<AxisType::Equidistant, AxisBoundaryType::Open>>> {
  public:
-  /// Type alias for x axis with equidistant binning and open boundaries
-  using XAxisType = Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
-  /// Type alias for y axis with equidistant binning and open boundaries
-  using YAxisType = Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
-  /// Type alias for z axis with equidistant binning and open boundaries
-  using ZAxisType = Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
   /// Type alias for the CRTP base class
   using GridBase =
       detail::SpacePointGridBase<CartesianSpacePointGrid, GridType>;
+  /// Type alias for the x axis (equidistant binning, open boundaries)
+  using XAxisType = GridBase::AxisTypeAt<0>;
+  /// Type alias for the y axis (equidistant binning, open boundaries)
+  using YAxisType = GridBase::AxisTypeAt<1>;
+  /// Type alias for the z axis (equidistant binning, open boundaries)
+  using ZAxisType = GridBase::AxisTypeAt<2>;
 
   /// Configuration parameters for the cartesian space point grid.
   struct Config {
