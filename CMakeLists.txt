@@ -73,7 +73,8 @@ option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_U
 option(ACTS_USE_SYSTEM_MODULEMAPGRAPH "Use a system installation of ModuleMapGraph" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
 option(ACTS_USE_SYSTEM_GBL "Use a system-provided General Broken Lines (GBL) from Mille" OFF)
-option(ACTS_USE_SYSTEM_MILLE "Use a system-provided Mille" ON)
+option(ACTS_USE_SYSTEM_MILLE "Use a system-provided Mille" ${ACTS_USE_SYSTEM_LIBS})
+option(ACTS_USE_SYSTEM_MP2 "Use a system-provided Millepede-2" ${ACTS_USE_SYSTEM_LIBS})
 
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ARROW "Build Apache Arrow/Parquet plugin" OFF)
@@ -90,7 +91,7 @@ option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEOMODEL "Build GeoModel plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TRACCC "Build Traccc plugin" OFF)
-option(ACTS_ENABLE_CUDA "Enable CUDA for the gnn/Traccc plugins" OFF)
+option(ACTS_ENABLE_CUDA "Enable CUDA for the gnn/Traccc/CudaMuonSegmentFitting plugins" OFF)
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GNN "Build the GNN plugin" OFF)
 option(ACTS_GNN_ENABLE_ONNX "Build the Onnx backend for the gnn plugin" OFF)
@@ -126,6 +127,7 @@ option(ACTS_BUILD_EXAMPLES_PARQUET "Build Arrow/Parquet-based code in the exampl
 option(ACTS_BUILD_EXAMPLES_PODIO "Build Podio-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_ROOT "Build modules based on ROOT I/O" OFF)
+option(ACTS_BUILD_EXAMPLES_CUDA_MUON_SEGMENT_FITTING "Build CUDA muon segment fitting example" OFF)
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
 # test related options
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
@@ -181,6 +183,8 @@ set_option_if(
     ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
     OR
     ACTS_BUILD_EXAMPLES_ROOT
+    OR
+    ACTS_BUILD_EXAMPLES_CUDA_MUON_SEGMENT_FITTING
 )
 # core plugins might be required by examples or depend on each other
 set_option_if(ACTS_BUILD_EXAMPLES_DD4HEP ACTS_BUILD_ODD)
@@ -190,6 +194,7 @@ set_option_if(
     OR
     ACTS_BUILD_EXAMPLES_EDM4HEP
 )
+set_option_if(ACTS_ENABLE_CUDA ACTS_BUILD_EXAMPLES_CUDA_MUON_SEGMENT_FITTING)
 set_option_if(ACTS_BUILD_PLUGIN_EDM4HEP ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_EXAMPLES_PODIO ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_PLUGIN_ARROW ACTS_BUILD_EXAMPLES_PARQUET)
@@ -314,8 +319,9 @@ set(_acts_podio_fallback_version 0.17.4) # if not found, will try this one
 set(_acts_doxygen_version 1.9.4)
 set(_acts_hepmc3_version 3.2.4)
 set(_acts_nlohmanjson_version 3.11.3)
-set(_acts_mille_version 01.00.00)
-set(_acts_gbl_version 04.00.04)
+set(_acts_gbl_version 04.00.05)
+set(_acts_mille_version 01.00.05)
+set(_acts_mp2_version 05.01.05)
 set(_acts_onnxruntime_version 1.12.0)
 set(_acts_geomodel_version 6.8.0)
 set(_acts_root_version 6.28.04) # first version with C++20 support
@@ -490,6 +496,11 @@ if(ACTS_BUILD_PLUGIN_MILLE)
     else()
         add_subdirectory(thirdparty/Mille)
     endif()
+    if(ACTS_USE_SYSTEM_MP2)
+        find_package(millepedeII ${_acts_mp2_version} REQUIRED CONFIG)
+    else()
+        add_subdirectory(thirdparty/Millepede-II)
+    endif()
 endif()
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
     find_package(GeoModelCore CONFIG)
@@ -535,10 +546,13 @@ if(ACTS_BUILD_ANALYSIS_APPS)
         COMPONENTS Geom Graf
     )
 endif()
+if(ACTS_ENABLE_CUDA)
+    find_package(CUDAToolkit REQUIRED)
+    enable_cuda()
+    message(STATUS "Build ACTS with CUDA")
+endif()
 if(ACTS_BUILD_PLUGIN_GNN)
     if(ACTS_ENABLE_CUDA)
-        find_package(CUDAToolkit REQUIRED)
-        enable_cuda()
         message(STATUS "Build GNN plugin with CUDA")
     else()
         message(STATUS "Build GNN plugin for CPU only")

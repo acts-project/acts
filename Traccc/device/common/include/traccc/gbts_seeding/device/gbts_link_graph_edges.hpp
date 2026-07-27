@@ -20,14 +20,14 @@ namespace traccc::device {
 /// (Global Event Data) Payload for the @c traccc::device::gbts_link_graph_edges
 /// function
 struct gbts_link_graph_edges_payload {
-    /// Number of edges produced earlier
-    unsigned int nEdges;
-    /// (src, dst) node indices per edge
-    vecmem::data::vector_view<const uint2> edge_nodes;
-    /// Output: per-edge slot in the per-node incoming-edge list
-    vecmem::data::vector_view<unsigned int> edge_links;
-    /// In/out: per-node prefix-sum / write cursor of incoming edges
-    vecmem::data::vector_view<unsigned int> num_outgoing_edges;
+  /// Number of edges produced earlier
+  unsigned int nEdges;
+  /// (src, dst) node indices per edge
+  vecmem::data::vector_view<const uint2> edge_nodes;
+  /// Output: per-edge slot in the per-node incoming-edge list
+  vecmem::data::vector_view<unsigned int> edge_links;
+  /// In/out: per-node prefix-sum / write cursor of incoming edges
+  vecmem::data::vector_view<unsigned int> num_outgoing_edges;
 };
 
 /// @brief Compute each edge's slot in its destination node's incoming-edge

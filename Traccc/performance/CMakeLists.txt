@@ -5,7 +5,7 @@
 # Mozilla Public License Version 2.0
 
 # Project include(s).
-include( traccc-compiler-options-cpp )
+include(traccc-compiler-options-cpp)
 
 # Set up the build of the traccc::performance library.
 traccc_add_library( traccc_performance performance TYPE SHARED
@@ -73,24 +73,34 @@ traccc_add_library( traccc_performance performance TYPE SHARED
    "include/traccc/performance/timing_info.hpp"
    "src/performance/timing_info.cpp"
    "include/traccc/performance/throughput.hpp"
-   "src/performance/throughput.cpp" )
-target_link_libraries( traccc_performance
-   PUBLIC traccc::core traccc::io covfie::core detray::test_utils detray::validation_utils)
+   "src/performance/throughput.cpp"
+)
+target_link_libraries(
+    traccc_performance
+    PUBLIC
+        traccc::core
+        traccc::io
+        covfie::core
+        detray::test_utils
+        detray::validation_utils
+)
 
 # Use ROOT in traccc::performance, if requested.
-if( TRACCC_USE_ROOT )
-   find_package( ROOT COMPONENTS Core RIO Hist REQUIRED )
-   target_link_libraries( traccc_performance
-      PRIVATE ROOT::Core ROOT::RIO ROOT::Hist )
-   target_compile_definitions( traccc_performance
-      PRIVATE TRACCC_HAVE_ROOT )
+if(TRACCC_USE_ROOT)
+    find_package(ROOT COMPONENTS Core RIO Hist REQUIRED)
+    target_link_libraries(
+        traccc_performance
+        PRIVATE ROOT::Core ROOT::RIO ROOT::Hist
+    )
+    target_compile_definitions(traccc_performance PRIVATE TRACCC_HAVE_ROOT)
 endif()
 
 # Use CUDA/NVTX in traccc::performance, if it's available.
-find_package( CUDAToolkit )
-if( CUDAToolkit_FOUND )
-   target_link_libraries( traccc_performance
-      PRIVATE CUDA::cudart ${CMAKE_DL_LIBS} )
-   target_compile_definitions( traccc_performance
-      PRIVATE TRACCC_HAVE_NVTX )
+find_package(CUDAToolkit)
+if(CUDAToolkit_FOUND)
+    target_link_libraries(
+        traccc_performance
+        PRIVATE CUDA::cudart ${CMAKE_DL_LIBS}
+    )
+    target_compile_definitions(traccc_performance PRIVATE TRACCC_HAVE_NVTX)
 endif()

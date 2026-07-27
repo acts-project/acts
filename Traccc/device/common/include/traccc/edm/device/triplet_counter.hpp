@@ -15,15 +15,14 @@ namespace traccc::device {
 
 /// Number of triplets for one specific middle spacepoint.
 struct triplet_counter_spM {
+  /// Middle spacepoint location in internal spacepoint container
+  sp_location spM;
 
-    /// Middle spacepoint location in internal spacepoint container
-    sp_location spM;
+  /// The number of triplets for this middle spacepoint
+  unsigned int m_nTriplets = 0;
 
-    /// The number of triplets for this middle spacepoint
-    unsigned int m_nTriplets = 0;
-
-    /// The position in which these triplets will be added
-    unsigned int posTriplets = 0;
+  /// The position in which these triplets will be added
+  unsigned int posTriplets = 0;
 
 };  // struct triplet_counter_spM
 
@@ -33,19 +32,18 @@ using triplet_counter_spM_collection_types =
 
 /// Number of triplets for one specific Mid-Bottom Doublet.
 struct triplet_counter {
+  /// Bottom spacepoint location in internal spacepoint container
+  sp_location spB;
 
-    /// Bottom spacepoint location in internal spacepoint container
-    sp_location spB;
+  using link_type = triplet_counter_spM_collection_types::device::size_type;
+  /// Link to the triplet counter per middle spacepoint
+  link_type spM_counter_link;
 
-    using link_type = triplet_counter_spM_collection_types::device::size_type;
-    /// Link to the triplet counter per middle spacepoint
-    link_type spM_counter_link;
+  /// The number of compatible triplets for this midbot doublet
+  unsigned int m_nTriplets = 0;
 
-    /// The number of compatible triplets for this midbot doublet
-    unsigned int m_nTriplets = 0;
-
-    /// The position in which these triplets will be added
-    unsigned int posTriplets = 0;
+  /// The position in which these triplets will be added
+  unsigned int posTriplets = 0;
 
 };  // struct triplet_counter
 

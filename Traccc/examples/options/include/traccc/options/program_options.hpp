@@ -23,19 +23,18 @@ namespace traccc::opts {
 
 /// Top-level propgram options for an executable
 class program_options {
+ public:
+  /// Constructor
+  program_options(
+      std::string_view description,
+      const std::vector<std::reference_wrapper<interface> >& options, int argc,
+      char* argv[],
+      std::unique_ptr<const traccc::Logger> ilogger =
+          traccc::getDummyLogger().clone());
 
-    public:
-    /// Constructor
-    program_options(
-        std::string_view description,
-        const std::vector<std::reference_wrapper<interface> >& options,
-        int argc, char* argv[],
-        std::unique_ptr<const traccc::Logger> ilogger =
-            traccc::getDummyLogger().clone());
-
-    private:
-    /// Description of all program options
-    boost::program_options::options_description m_desc;
+ private:
+  /// Description of all program options
+  boost::program_options::options_description m_desc;
 
 };  // class program_options
 

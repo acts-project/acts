@@ -24,52 +24,52 @@ namespace traccc::device {
 /// (Event Data) Payload for the @c traccc::device::propagate_to_next_surface
 /// function
 struct propagate_to_next_surface_payload {
-    /**
-     * @brief View object to the vector of track parameters
-     */
-    bound_track_parameters_collection_types::view params_view;
+  /**
+   * @brief View object to the vector of track parameters
+   */
+  bound_track_parameters_collection_types::view params_view;
 
-    /**
-     * @brief View object to the vector of track parameter liveness values
-     */
-    vecmem::data::vector_view<unsigned int> params_liveness_view;
+  /**
+   * @brief View object to the vector of track parameter liveness values
+   */
+  vecmem::data::vector_view<unsigned int> params_liveness_view;
 
-    /**
-     * @brief View object to the access order of parameters so they are sorted
-     */
-    vecmem::data::vector_view<const unsigned int> param_ids_view;
+  /**
+   * @brief View object to the access order of parameters so they are sorted
+   */
+  vecmem::data::vector_view<const unsigned int> param_ids_view;
 
-    /**
-     * @brief View object to the vector of candidate links
-     */
-    vecmem::data::vector_view<const candidate_link> links_view;
+  /**
+   * @brief View object to the vector of candidate links
+   */
+  vecmem::data::vector_view<const candidate_link> links_view;
 
-    /**
-     * @brief Index in the link vector at which the current step starts
-     */
-    const unsigned int prev_links_idx;
+  /**
+   * @brief Index in the link vector at which the current step starts
+   */
+  const unsigned int prev_links_idx;
 
-    /**
-     * @brief Current CKF step number
-     */
-    unsigned int step;
+  /**
+   * @brief Current CKF step number
+   */
+  unsigned int step;
 
-    /**
-     * @brief Total number of input track parameters
-     */
-    unsigned int n_in_params;
+  /**
+   * @brief Total number of input track parameters
+   */
+  unsigned int n_in_params;
 
-    /**
-     * @brief View object to the vector of tips
-     */
-    vecmem::data::vector_view<unsigned int> tips_view;
+  /**
+   * @brief View object to the vector of tips
+   */
+  vecmem::data::vector_view<unsigned int> tips_view;
 
-    /**
-     * @brief Vector to hold the number of track states per tip
-     */
-    vecmem::data::vector_view<unsigned int> tip_lengths_view;
+  /**
+   * @brief Vector to hold the number of track states per tip
+   */
+  vecmem::data::vector_view<unsigned int> tip_lengths_view;
 
-    vecmem::data::vector_view<bound_matrix<default_algebra> > tmp_jacobian_view;
+  vecmem::data::vector_view<bound_matrix<default_algebra> > tmp_jacobian_view;
 };
 
 /// Function for propagating the kalman-updated tracks to the next surface

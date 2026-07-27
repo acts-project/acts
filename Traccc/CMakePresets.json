@@ -1,179 +1,219 @@
 {
-   "version" : 3,
-   "configurePresets": [
-      {
-         "name" : "base-fp32",
-         "displayName" : "Base FP32 Configuration",
-         "warnings": {
-            "deprecated": true
-         },
-         "cacheVariables": {
-            "CMAKE_BUILD_TYPE"         : "RelWithDebInfo",
-            "TRACCC_BUILD_TESTING"     : "TRUE",
-            "TRACCC_BUILD_EXAMPLES"    : "TRUE",
-            "TRACCC_FAIL_ON_WARNINGS"  : "TRUE",
-            "TRACCC_USE_ROOT"          : "FALSE",
-            "TRACCC_CUSTOM_SCALARTYPE" : "float",
-            "DETRAY_GENERATE_METADATA" : "itk_metadata"
-         }
-      },
-      {
-         "name" : "base-fp64",
-         "displayName" : "Base FP64 Configuration",
-         "warnings": {
-            "deprecated": true
-         },
-         "cacheVariables": {
-            "CMAKE_BUILD_TYPE"         : "RelWithDebInfo",
-            "TRACCC_BUILD_TESTING"     : "TRUE",
-            "TRACCC_BUILD_EXAMPLES"    : "TRUE",
-            "TRACCC_FAIL_ON_WARNINGS"  : "TRUE",
-            "TRACCC_USE_ROOT"          : "FALSE",
-            "TRACCC_CUSTOM_SCALARTYPE" : "double",
-            "DETRAY_GENERATE_METADATA" : "itk_metadata"
-         }
-      },
-      {
-         "name" : "cuda-fp32",
-         "displayName" : "CUDA FP32 Code Development",
-         "inherits": ["base-fp32"],
-         "cacheVariables": {
-            "TRACCC_BUILD_CUDA_UTILS" : "TRUE",
-            "TRACCC_BUILD_CUDA" : "TRUE",
-            "VECMEM_BUILD_CUDA_LIBRARY" : "TRUE"
-         }
-      },
-      {
-         "name" : "cuda-fp64",
-         "displayName" : "CUDA FP64 Code Development",
-         "inherits": ["base-fp64"],
-         "cacheVariables": {
-            "TRACCC_BUILD_CUDA_UTILS" : "TRUE",
-            "TRACCC_BUILD_CUDA" : "TRUE",
-            "VECMEM_BUILD_CUDA_LIBRARY" : "TRUE"
-         }
-      },
-      {
-         "name" : "hip-fp32",
-         "displayName" : "HIP FP32 Code Development",
-         "inherits": ["base-fp32"],
-         "cacheVariables": {
-            "TRACCC_BUILD_HIP" : "TRUE",
-            "VECMEM_BUILD_HIP_LIBRARY" : "TRUE",
-            "TRACCC_SETUP_ROCTHRUST": "TRUE"
-         }
-      },
-      {
-         "name" : "hip-fp64",
-         "displayName" : "HIP FP64 Code Development",
-         "inherits": ["base-fp64"],
-         "cacheVariables": {
-            "TRACCC_BUILD_HIP" : "TRUE",
-            "VECMEM_BUILD_HIP_LIBRARY" : "TRUE",
-            "TRACCC_SETUP_ROCTHRUST": "TRUE"
-         }
-      },
-      {
-         "name" : "sycl-fp32",
-         "displayName" : "SYCL FP32 Code Development",
-         "inherits": ["base-fp32"],
-         "cacheVariables": {
-            "TRACCC_BUILD_SYCL_UTILS" : "TRUE",
-            "TRACCC_BUILD_SYCL" : "TRUE",
-            "VECMEM_BUILD_SYCL_LIBRARY" : "TRUE"
-         }
-      },
-      {
-         "name" : "sycl-fp64",
-         "displayName" : "SYCL FP64 Code Development",
-         "inherits": ["base-fp64"],
-         "cacheVariables": {
-            "TRACCC_BUILD_SYCL_UTILS" : "TRUE",
-            "TRACCC_BUILD_SYCL" : "TRUE",
-            "VECMEM_BUILD_SYCL_LIBRARY" : "TRUE"
-         }
-      },
-      {
-         "name" : "alpaka-fp32",
-         "displayName" : "Alpaka FP32 Code Development",
-         "inherits": ["base-fp32"],
-         "cacheVariables": {
-            "TRACCC_BUILD_ALPAKA" : "TRUE"
-         }
-      },
-      {
-         "name" : "alpaka-fp64",
-         "displayName" : "Alpaka FP64 Code Development",
-         "inherits": ["base-fp64"],
-         "cacheVariables": {
-            "TRACCC_BUILD_ALPAKA" : "TRUE"
-         }
-      },
-      {
-         "name" : "alpaka-fp32-cuda",
-         "displayName" : "Alpaka CUDA FP32 Code Development",
-         "inherits": ["alpaka-fp32", "cuda-fp32"],
-         "cacheVariables": {
-            "alpaka_ACC_GPU_CUDA_ENABLE" : "TRUE"
-         }
-      },
-      {
-         "name" : "alpaka-fp64-cuda",
-         "displayName" : "Alpaka CUDA FP64 Code Development",
-         "inherits": ["alpaka-fp64", "cuda-fp64"],
-         "cacheVariables": {
-            "alpaka_ACC_GPU_CUDA_ENABLE" : "TRUE"
-         }
-      },
-      {
-         "name": "alpaka-fp32-hip",
-         "displayName": "Alpaka HIP FP32 Code Development",
-         "inherits": ["alpaka-fp32"],
-         "cacheVariables": {
-            "alpaka_ACC_GPU_HIP_ENABLE" : "TRUE",
-            "TRACCC_BUILD_HIP": "ON",
-            "TRACCC_SETUP_ROCTHRUST": "ON"
-         }
-      },
-      {
-         "name": "alpaka-fp64-hip",
-         "displayName": "Alpaka HIP FP64 Code Development",
-         "inherits": ["alpaka-fp64"],
-         "cacheVariables": {
-            "alpaka_ACC_GPU_HIP_ENABLE" : "TRUE",
-            "TRACCC_BUILD_HIP": "ON",
-            "TRACCC_SETUP_ROCTHRUST": "ON"
-         }
-      },
-      {
-         "name" : "host-fp32",
-         "displayName": "Host FP32 Code Development",
-         "inherits": ["base-fp32"],
-         "cacheVariables": {
-            "TRACCC_USE_ROOT" : "TRUE",
-            "TRACCC_USE_SYSTEM_TBB" : "TRUE"
-         }
-      },
-      {
-         "name" : "host-fp64",
-         "displayName": "Host FP64 Code Development",
-         "inherits": ["base-fp64"],
-         "cacheVariables": {
-            "TRACCC_USE_ROOT" : "TRUE",
-            "TRACCC_USE_SYSTEM_TBB" : "TRUE"
-         }
-      },
-      {
-         "name" : "full-fp32",
-         "displayName": "Full FP32 Code Development",
-         "inherits": ["host-fp32", "cuda-fp32", "sycl-fp32", "alpaka-fp32",
-                      "hip-fp32"]
-      },
-      {
-         "name" : "full-fp64",
-         "displayName": "Full FP64 Code Development",
-         "inherits": ["host-fp64", "cuda-fp64", "sycl-fp64", "alpaka-fp64",
-                      "hip-fp64"]
-      }
-   ]
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "base-fp32",
+            "displayName": "Base FP32 Configuration",
+            "warnings": {
+                "deprecated": true
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "TRACCC_BUILD_TESTING": "TRUE",
+                "TRACCC_BUILD_EXAMPLES": "TRUE",
+                "TRACCC_FAIL_ON_WARNINGS": "TRUE",
+                "TRACCC_USE_ROOT": "FALSE",
+                "TRACCC_CUSTOM_SCALARTYPE": "float",
+                "DETRAY_GENERATE_METADATA": "itk_metadata"
+            }
+        },
+        {
+            "name": "base-fp64",
+            "displayName": "Base FP64 Configuration",
+            "warnings": {
+                "deprecated": true
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "TRACCC_BUILD_TESTING": "TRUE",
+                "TRACCC_BUILD_EXAMPLES": "TRUE",
+                "TRACCC_FAIL_ON_WARNINGS": "TRUE",
+                "TRACCC_USE_ROOT": "FALSE",
+                "TRACCC_CUSTOM_SCALARTYPE": "double",
+                "DETRAY_GENERATE_METADATA": "itk_metadata"
+            }
+        },
+        {
+            "name": "cuda-fp32",
+            "displayName": "CUDA FP32 Code Development",
+            "inherits": [
+                "base-fp32"
+            ],
+            "cacheVariables": {
+                "TRACCC_BUILD_CUDA_UTILS": "TRUE",
+                "TRACCC_BUILD_CUDA": "TRUE",
+                "VECMEM_BUILD_CUDA_LIBRARY": "TRUE"
+            }
+        },
+        {
+            "name": "cuda-fp64",
+            "displayName": "CUDA FP64 Code Development",
+            "inherits": [
+                "base-fp64"
+            ],
+            "cacheVariables": {
+                "TRACCC_BUILD_CUDA_UTILS": "TRUE",
+                "TRACCC_BUILD_CUDA": "TRUE",
+                "VECMEM_BUILD_CUDA_LIBRARY": "TRUE"
+            }
+        },
+        {
+            "name": "hip-fp32",
+            "displayName": "HIP FP32 Code Development",
+            "inherits": [
+                "base-fp32"
+            ],
+            "cacheVariables": {
+                "TRACCC_BUILD_HIP": "TRUE",
+                "VECMEM_BUILD_HIP_LIBRARY": "TRUE",
+                "TRACCC_SETUP_ROCTHRUST": "TRUE"
+            }
+        },
+        {
+            "name": "hip-fp64",
+            "displayName": "HIP FP64 Code Development",
+            "inherits": [
+                "base-fp64"
+            ],
+            "cacheVariables": {
+                "TRACCC_BUILD_HIP": "TRUE",
+                "VECMEM_BUILD_HIP_LIBRARY": "TRUE",
+                "TRACCC_SETUP_ROCTHRUST": "TRUE"
+            }
+        },
+        {
+            "name": "sycl-fp32",
+            "displayName": "SYCL FP32 Code Development",
+            "inherits": [
+                "base-fp32"
+            ],
+            "cacheVariables": {
+                "TRACCC_BUILD_SYCL_UTILS": "TRUE",
+                "TRACCC_BUILD_SYCL": "TRUE",
+                "VECMEM_BUILD_SYCL_LIBRARY": "TRUE"
+            }
+        },
+        {
+            "name": "sycl-fp64",
+            "displayName": "SYCL FP64 Code Development",
+            "inherits": [
+                "base-fp64"
+            ],
+            "cacheVariables": {
+                "TRACCC_BUILD_SYCL_UTILS": "TRUE",
+                "TRACCC_BUILD_SYCL": "TRUE",
+                "VECMEM_BUILD_SYCL_LIBRARY": "TRUE"
+            }
+        },
+        {
+            "name": "alpaka-fp32",
+            "displayName": "Alpaka FP32 Code Development",
+            "inherits": [
+                "base-fp32"
+            ],
+            "cacheVariables": {
+                "TRACCC_BUILD_ALPAKA": "TRUE"
+            }
+        },
+        {
+            "name": "alpaka-fp64",
+            "displayName": "Alpaka FP64 Code Development",
+            "inherits": [
+                "base-fp64"
+            ],
+            "cacheVariables": {
+                "TRACCC_BUILD_ALPAKA": "TRUE"
+            }
+        },
+        {
+            "name": "alpaka-fp32-cuda",
+            "displayName": "Alpaka CUDA FP32 Code Development",
+            "inherits": [
+                "alpaka-fp32",
+                "cuda-fp32"
+            ],
+            "cacheVariables": {
+                "alpaka_ACC_GPU_CUDA_ENABLE": "TRUE"
+            }
+        },
+        {
+            "name": "alpaka-fp64-cuda",
+            "displayName": "Alpaka CUDA FP64 Code Development",
+            "inherits": [
+                "alpaka-fp64",
+                "cuda-fp64"
+            ],
+            "cacheVariables": {
+                "alpaka_ACC_GPU_CUDA_ENABLE": "TRUE"
+            }
+        },
+        {
+            "name": "alpaka-fp32-hip",
+            "displayName": "Alpaka HIP FP32 Code Development",
+            "inherits": [
+                "alpaka-fp32"
+            ],
+            "cacheVariables": {
+                "alpaka_ACC_GPU_HIP_ENABLE": "TRUE",
+                "TRACCC_BUILD_HIP": "ON",
+                "TRACCC_SETUP_ROCTHRUST": "ON"
+            }
+        },
+        {
+            "name": "alpaka-fp64-hip",
+            "displayName": "Alpaka HIP FP64 Code Development",
+            "inherits": [
+                "alpaka-fp64"
+            ],
+            "cacheVariables": {
+                "alpaka_ACC_GPU_HIP_ENABLE": "TRUE",
+                "TRACCC_BUILD_HIP": "ON",
+                "TRACCC_SETUP_ROCTHRUST": "ON"
+            }
+        },
+        {
+            "name": "host-fp32",
+            "displayName": "Host FP32 Code Development",
+            "inherits": [
+                "base-fp32"
+            ],
+            "cacheVariables": {
+                "TRACCC_USE_ROOT": "TRUE",
+                "TRACCC_USE_SYSTEM_TBB": "TRUE"
+            }
+        },
+        {
+            "name": "host-fp64",
+            "displayName": "Host FP64 Code Development",
+            "inherits": [
+                "base-fp64"
+            ],
+            "cacheVariables": {
+                "TRACCC_USE_ROOT": "TRUE",
+                "TRACCC_USE_SYSTEM_TBB": "TRUE"
+            }
+        },
+        {
+            "name": "full-fp32",
+            "displayName": "Full FP32 Code Development",
+            "inherits": [
+                "host-fp32",
+                "cuda-fp32",
+                "sycl-fp32",
+                "alpaka-fp32",
+                "hip-fp32"
+            ]
+        },
+        {
+            "name": "full-fp64",
+            "displayName": "Full FP64 Code Development",
+            "inherits": [
+                "host-fp64",
+                "cuda-fp64",
+                "sycl-fp64",
+                "alpaka-fp64",
+                "hip-fp64"
+            ]
+        }
+    ]
 }

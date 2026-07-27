@@ -33,33 +33,32 @@ class silicon_pixel_spacepoint_formation_algorithm
           const host_detector&,
           const edm::measurement_collection::const_view&)>,
       public messaging {
+ public:
+  /// Output type
+  using output_type = edm::spacepoint_collection::host;
 
-    public:
-    /// Output type
-    using output_type = edm::spacepoint_collection::host;
+  /// Constructor for spacepoint_formation
+  ///
+  /// @param mr is the memory resource
+  ///
+  silicon_pixel_spacepoint_formation_algorithm(
+      vecmem::memory_resource& mr,
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
 
-    /// Constructor for spacepoint_formation
-    ///
-    /// @param mr is the memory resource
-    ///
-    silicon_pixel_spacepoint_formation_algorithm(
-        vecmem::memory_resource& mr,
-        std::unique_ptr<const Logger> logger = getDummyLogger().clone());
+  /// Construct spacepoints from 2D silicon pixel measurements
+  ///
+  /// @param det Detector object
+  /// @param measurements A collection of measurements
+  /// @return A spacepoint container, with one spacepoint for every
+  ///         silicon pixel measurement
+  ///
+  output_type operator()(const host_detector& det,
+                         const edm::measurement_collection::const_view&
+                             measurements) const override;
 
-    /// Construct spacepoints from 2D silicon pixel measurements
-    ///
-    /// @param det Detector object
-    /// @param measurements A collection of measurements
-    /// @return A spacepoint container, with one spacepoint for every
-    ///         silicon pixel measurement
-    ///
-    output_type operator()(const host_detector& det,
-                           const edm::measurement_collection::const_view&
-                               measurements) const override;
-
-    private:
-    /// Memory resource to use for the output container
-    std::reference_wrapper<vecmem::memory_resource> m_mr;
+ private:
+  /// Memory resource to use for the output container
+  std::reference_wrapper<vecmem::memory_resource> m_mr;
 };  // class silicon_pixel_spacepoint_formation_algorithm
 
 }  // namespace traccc::host

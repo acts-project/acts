@@ -5,7 +5,7 @@
 # Mozilla Public License Version 2.0
 
 # Project include(s).
-include( traccc-compiler-options-cpp )
+include(traccc-compiler-options-cpp)
 
 add_subdirectory(utils)
 add_subdirectory(options)

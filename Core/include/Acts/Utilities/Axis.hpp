@@ -223,7 +223,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   ///       bounds, that is \f$l <= x < u\f$ if the value @c x lies within a
   ///       bin with lower bound @c l and upper bound @c u.
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
-  ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
+  ///       while the index <tt>nBins + 1</tt> indicates the overflow bin.
   std::size_t getBin(double x) const final {
     return wrapBin(
         static_cast<int>(std::floor((x - getMin()) / getBinWidth()) + 1));
@@ -523,7 +523,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   ///       bounds, that is \f$l <= x < u\f$ if the value @c x lies within a
   ///       bin with lower bound @c l and upper bound @c u.
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
-  ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
+  ///       while the index <tt>nBins + 1</tt> indicates the overflow bin.
   std::size_t getBin(double x) const final {
     const auto it = std::ranges::upper_bound(m_binEdges, x);
     return wrapBin(

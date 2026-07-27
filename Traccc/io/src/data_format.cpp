@@ -14,25 +14,24 @@
 namespace traccc {
 
 std::ostream& operator<<(std::ostream& out, data_format format) {
-
-    switch (format) {
-        case data_format::csv:
-            out << "csv";
-            break;
-        case data_format::binary:
-            out << "binary";
-            break;
-        case data_format::json:
-            out << "json";
-            break;
-        case data_format::obj:
-            out << "wavefront obj";
-            break;
-        default:
-            out << "?!?unknown?!?";
-            break;
-    }
-    return out;
+  switch (format) {
+    case data_format::csv:
+      out << "csv";
+      break;
+    case data_format::binary:
+      out << "binary";
+      break;
+    case data_format::json:
+      out << "json";
+      break;
+    case data_format::obj:
+      out << "wavefront obj";
+      break;
+    default:
+      out << "?!?unknown?!?";
+      break;
+  }
+  return out;
 }
 
 }  // namespace traccc

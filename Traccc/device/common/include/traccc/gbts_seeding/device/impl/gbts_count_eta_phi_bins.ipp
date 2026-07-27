@@ -20,29 +20,27 @@ template <concepts::thread_id1 thread_id_t>
 TRACCC_HOST_DEVICE inline void gbts_count_eta_phi_bins(
     const thread_id_t& thread_id,
     const gbts_count_eta_phi_bins_payload& payload) {
+  const vecmem::device_vector<const unsigned int> d_histo(
+      payload.eta_phi_histo);
+  vecmem::device_vector<unsigned int> d_eta_node_counter(
+      payload.eta_node_counter);
+  vecmem::device_vector<unsigned int> d_phi_cusums(payload.phi_cusums);
 
-    const vecmem::device_vector<const unsigned int> d_histo(
-        payload.eta_phi_histo);
-    vecmem::device_vector<unsigned int> d_eta_node_counter(
-        payload.eta_node_counter);
-    vecmem::device_vector<unsigned int> d_phi_cusums(payload.phi_cusums);
+  const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
+  const unsigned int blockDimX = thread_id.getBlockDimX();
+  const unsigned int gridDimX = thread_id.getGridDimX();
 
-    const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
-    const unsigned int blockDimX = thread_id.getBlockDimX();
-    const unsigned int gridDimX = thread_id.getGridDimX();
+  for (unsigned int globalIndex = globalIdx; globalIndex < payload.nEtaBins;
+       globalIndex += blockDimX * gridDimX) {
+    const unsigned int offset = payload.nPhiBins * globalIndex;
 
-    for (unsigned int globalIndex = globalIdx; globalIndex < payload.nEtaBins;
-         globalIndex += blockDimX * gridDimX) {
-
-        const unsigned int offset = payload.nPhiBins * globalIndex;
-
-        unsigned int sum = 0;
-        for (unsigned int phiIdx = 0; phiIdx < payload.nPhiBins; phiIdx++) {
-            d_phi_cusums[offset + phiIdx] = sum;
-            sum += d_histo[offset + phiIdx];
-        }
-        d_eta_node_counter[globalIndex] = sum;
+    unsigned int sum = 0;
+    for (unsigned int phiIdx = 0; phiIdx < payload.nPhiBins; phiIdx++) {
+      d_phi_cusums[offset + phiIdx] = sum;
+      sum += d_histo[offset + phiIdx];
     }
+    d_eta_node_counter[globalIndex] = sum;
+  }
 }
 
 }  // namespace traccc::device

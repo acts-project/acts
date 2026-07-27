@@ -26,5 +26,4 @@ traccc_add_test(
     traccc_tests_common
 )
 
-set_target_properties( traccc_test_hip PROPERTIES
-   POSITION_INDEPENDENT_CODE TRUE )
+set_target_properties(traccc_test_hip PROPERTIES POSITION_INDEPENDENT_CODE TRUE)

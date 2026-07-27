@@ -20,24 +20,24 @@ namespace traccc::device {
 /// (Global Event Data) Payload for the @c traccc::device::gbts_compress_graph
 /// function
 struct gbts_compress_graph_payload {
-    /// Number of original (uncompressed) edges
-    unsigned int nEdges;
-    /// Maximum number of neighbours retained per edge
-    unsigned int nMaxNei;
-    /// Sorted-slot to original spacepoint index map
-    vecmem::data::vector_view<const unsigned int> orig_node_index;
-    /// (src, dst) node indices per edge
-    vecmem::data::vector_view<const uint2> edge_nodes;
-    /// Number of accepted neighbours per edge
-    vecmem::data::vector_view<const unsigned char> num_neighbours;
-    /// Neighbour edge indices per edge (nMaxNei per edge, flat)
-    vecmem::data::vector_view<const unsigned int> neighbours;
-    /// Old-edge to compacted-edge index map
-    vecmem::data::vector_view<const int> reIndexer;
-    /// Output: compacted graph in row-major layout; each edge owns a block
-    /// of edge_size = 2 + 1 + nMaxNei ints (node1, node2, nNei,
-    /// nei0..neiN-1).
-    vecmem::data::vector_view<unsigned int> output_graph;
+  /// Number of original (uncompressed) edges
+  unsigned int nEdges;
+  /// Maximum number of neighbours retained per edge
+  unsigned int nMaxNei;
+  /// Sorted-slot to original spacepoint index map
+  vecmem::data::vector_view<const unsigned int> orig_node_index;
+  /// (src, dst) node indices per edge
+  vecmem::data::vector_view<const uint2> edge_nodes;
+  /// Number of accepted neighbours per edge
+  vecmem::data::vector_view<const unsigned char> num_neighbours;
+  /// Neighbour edge indices per edge (nMaxNei per edge, flat)
+  vecmem::data::vector_view<const unsigned int> neighbours;
+  /// Old-edge to compacted-edge index map
+  vecmem::data::vector_view<const int> reIndexer;
+  /// Output: compacted graph in row-major layout; each edge owns a block
+  /// of edge_size = 2 + 1 + nMaxNei ints (node1, node2, nNei,
+  /// nei0..neiN-1).
+  vecmem::data::vector_view<unsigned int> output_graph;
 };
 
 /// @brief Pack kept edges into the compact "output graph" layout.

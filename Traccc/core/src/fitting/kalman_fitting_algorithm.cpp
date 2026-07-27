@@ -24,20 +24,19 @@ kalman_fitting_algorithm::output_type kalman_fitting_algorithm::operator()(
     const host_detector& det, const magnetic_field& bfield,
     const edm::track_container<default_algebra>::const_view& track_candidates)
     const {
-
-    // Perform the track fitting using the appropriate templated implementation.
-    return host_detector_magnetic_field_visitor<detector_type_list,
-                                                bfield_type_list<scalar>>(
-        det, bfield,
-        [&]<typename detector_t, typename bfield_view_t>(
-            const typename detector_t::host& detector,
-            const bfield_view_t field) {
-            traccc::details::kalman_fitter_t<typename detector_t::host,
-                                             bfield_view_t>
-                fitter{detector, field, m_config};
-            return details::kalman_fitting<default_algebra>(
-                fitter, track_candidates, m_mr.get(), m_copy.get());
-        });
+  // Perform the track fitting using the appropriate templated implementation.
+  return host_detector_magnetic_field_visitor<detector_type_list,
+                                              bfield_type_list<scalar>>(
+      det, bfield,
+      [&]<typename detector_t, typename bfield_view_t>(
+          const typename detector_t::host& detector,
+          const bfield_view_t field) {
+        traccc::details::kalman_fitter_t<typename detector_t::host,
+                                         bfield_view_t>
+            fitter{detector, field, m_config};
+        return details::kalman_fitting<default_algebra>(
+            fitter, track_candidates, m_mr.get(), m_copy.get());
+      });
 }
 
 }  // namespace traccc::host

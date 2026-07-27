@@ -23,20 +23,20 @@ namespace traccc::device {
 /// (Global Event Data) Payload for the @c
 /// traccc::device::gbts_rebid_seeds_for_edges function
 struct gbts_rebid_seeds_for_edges_payload {
-    /// Number of seed proposals
-    unsigned int nProps;
-    /// Per-path (edge index, parent path-store index or -1) entries
-    vecmem::data::vector_view<const int2> path_store;
-    /// Per-seed-proposal (path_store index, level)
-    vecmem::data::vector_view<int2> seed_proposals;
-    /// In/out: per-edge highest-bidder seed proposal (cleared on entry)
-    vecmem::data::vector_view<unsigned long long int> edge_bids;
-    /// In/out: per-seed-proposal ambiguity tag
-    vecmem::data::vector_view<char> seed_ambiguity;
-    /// In/out: global atomic counter of rejected proposals
-    unsigned int* nRejectedPropsCounter;
-    /// True on the first bidding round (folds the init pass)
-    bool first_round;
+  /// Number of seed proposals
+  unsigned int nProps;
+  /// Per-path (edge index, parent path-store index or -1) entries
+  vecmem::data::vector_view<const int2> path_store;
+  /// Per-seed-proposal (path_store index, level)
+  vecmem::data::vector_view<int2> seed_proposals;
+  /// In/out: per-edge highest-bidder seed proposal (cleared on entry)
+  vecmem::data::vector_view<unsigned long long int> edge_bids;
+  /// In/out: per-seed-proposal ambiguity tag
+  vecmem::data::vector_view<char> seed_ambiguity;
+  /// In/out: global atomic counter of rejected proposals
+  unsigned int* nRejectedPropsCounter;
+  /// True on the first bidding round (folds the init pass)
+  bool first_round;
 };
 
 /// @brief Have one surviving seed re-bid for every edge along its path.

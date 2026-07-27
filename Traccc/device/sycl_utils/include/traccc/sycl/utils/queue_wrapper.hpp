@@ -18,29 +18,28 @@ namespace traccc::sycl {
 /// queue of its own. It can only view a queue that is owned by "somebody else".
 ///
 class queue_wrapper {
+ public:
+  /// Wrap an existing @c sycl::queue object, without taking ownership
+  queue_wrapper(void* queue);
 
-    public:
-    /// Wrap an existing @c sycl::queue object, without taking ownership
-    queue_wrapper(void* queue);
+  /// Copy constructor
+  queue_wrapper(const queue_wrapper& parent) = default;
+  /// Move constructor
+  queue_wrapper(queue_wrapper&& parent) = default;
 
-    /// Copy constructor
-    queue_wrapper(const queue_wrapper& parent) = default;
-    /// Move constructor
-    queue_wrapper(queue_wrapper&& parent) = default;
+  /// Copy assignment
+  queue_wrapper& operator=(const queue_wrapper& rhs) = default;
+  /// Move assignment
+  queue_wrapper& operator=(queue_wrapper&& rhs) = default;
 
-    /// Copy assignment
-    queue_wrapper& operator=(const queue_wrapper& rhs) = default;
-    /// Move assignment
-    queue_wrapper& operator=(queue_wrapper&& rhs) = default;
+  /// Access a typeless pointer to the managed @c sycl::queue object
+  void* queue();
+  /// Access a typeless pointer to the managed @c sycl::queue object
+  const void* queue() const;
 
-    /// Access a typeless pointer to the managed @c sycl::queue object
-    void* queue();
-    /// Access a typeless pointer to the managed @c sycl::queue object
-    const void* queue() const;
-
-    private:
-    /// Bare pointer to the wrapped @c sycl::queue object
-    void* m_queue;
+ private:
+  /// Bare pointer to the wrapped @c sycl::queue object
+  void* m_queue;
 
 };  // class queue_wrapper
 

@@ -29,10 +29,9 @@ __global__ __launch_bounds__(128) void progressive_kalman_filter(
         typename propagator_t::detector_type::surface_type>
         surfaces_view,
     const __grid_constant__ device::progressive_kalman_filter_payload payload) {
-
-    device::progressive_kalman_filter<propagator_t>(details::global_index1(),
-                                                    cfg, det_data, field_data,
-                                                    surfaces_view, payload);
+  device::progressive_kalman_filter<propagator_t>(details::global_index1(), cfg,
+                                                  det_data, field_data,
+                                                  surfaces_view, payload);
 }
 
 }  // namespace kernels
@@ -46,9 +45,8 @@ void progressive_kalman_filter(
     const vecmem::data::jagged_vector_view<
         typename propagator_t::detector_type::surface_type>& surfaces_view,
     const device::progressive_kalman_filter_payload& payload) {
-
-    kernels::progressive_kalman_filter<propagator_t>
-        <<<grid_size, block_size, shared_mem_size, stream>>>(
-            cfg, det_data, field_data, surfaces_view, payload);
+  kernels::progressive_kalman_filter<propagator_t>
+      <<<grid_size, block_size, shared_mem_size, stream>>>(
+          cfg, det_data, field_data, surfaces_view, payload);
 }
 }  // namespace traccc::cuda

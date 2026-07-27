@@ -69,6 +69,21 @@ __global__ void gatherColsKernel(const std::size_t *indices, std::size_t nRows,
   }
 }
 
+/// Multiply each column of src with the corresponding scale value.
+/// dst[r,n] = src[r,n] * scales[n]
+/// This is one thread per element with col computed from the linear index.
+
+template <typename T>
+__global__ void mulPerColKernel(std::size_t total, std::size_t cols,
+                                const T *src, const T *scales, T *dst) {
+  std::size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx >= total) {
+    return;
+  }
+  const std::size_t col = idx % cols;
+  dst[idx] = src[idx] * scales[col];
+}
+
 }  // namespace
 
 namespace ActsPlugins::detail {
@@ -172,6 +187,28 @@ Tensor<T> cudaSelectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
   return result;
 }
 
+template <typename T>
+Tensor<T> cudaMulPerColumn(const Tensor<T> &src, const Tensor<T> &scales,
+                           const ExecutionContext &execContext) {
+  const auto rows = src.shape()[0];
+  const auto cols = src.shape()[1];
+  const auto total = rows * cols;
+  const auto stream = execContext.stream.value();
+
+  auto result = Tensor<T>::Create({rows, cols}, execContext);
+
+  if (total == 0) {
+    return result;
+  }
+
+  dim3 blockDim = 256;
+  dim3 gridDim = (total + blockDim.x - 1) / blockDim.x;
+  mulPerColKernel<<<gridDim, blockDim, 0, stream>>>(
+      total, cols, src.data(), scales.data(), result.data());
+  ACTS_CUDA_CHECK(cudaGetLastError());
+  return result;
+}
+
 template Tensor<float> cudaSelectRows(const Tensor<float> &,
                                       const Tensor<bool> &,
                                       const ExecutionContext &);
@@ -184,5 +221,11 @@ template Tensor<float> cudaSelectCols(const Tensor<float> &,
 template Tensor<std::int64_t> cudaSelectCols(const Tensor<std::int64_t> &,
                                              const Tensor<bool> &,
                                              const ExecutionContext &);
+template Tensor<float> cudaMulPerColumn(const Tensor<float> &,
+                                        const Tensor<float> &,
+                                        const ExecutionContext &);
+template Tensor<std::int64_t> cudaMulPerColumn(const Tensor<std::int64_t> &,
+                                               const Tensor<std::int64_t> &,
+                                               const ExecutionContext &);
 
 }  // namespace ActsPlugins::detail

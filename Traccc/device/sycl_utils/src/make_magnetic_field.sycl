@@ -46,22 +46,20 @@ static_assert(covfie::concepts::field_backend<inhom_bfield_backend_t<float>>,
 
 magnetic_field make_magnetic_field(const magnetic_field& bfield,
                                    queue_wrapper& queue) {
-
-    if (bfield.is<const_bfield_backend_t<scalar>>()) {
-        return magnetic_field{covfie::field<const_bfield_backend_t<scalar>>{
-            bfield.as_field<const_bfield_backend_t<scalar>>()}};
-    } else if (bfield.is<host::inhom_bfield_backend_t<scalar>>()) {
-        ::sycl::queue* sycl_queue = static_cast<::sycl::queue*>(queue.queue());
-        assert(sycl_queue != nullptr);
-        magnetic_field result{covfie::utility::sycl::copy_field_with_queue<
-            covfie::field<sycl::inhom_bfield_backend_t<scalar>>>(
-            bfield.as_field<host::inhom_bfield_backend_t<scalar>>(),
-            *sycl_queue)};
-        sycl_queue->wait_and_throw();
-        return result;
-    } else {
-        throw std::invalid_argument("Unsupported b-field type received");
-    }
+  if (bfield.is<const_bfield_backend_t<scalar>>()) {
+    return magnetic_field{covfie::field<const_bfield_backend_t<scalar>>{
+        bfield.as_field<const_bfield_backend_t<scalar>>()}};
+  } else if (bfield.is<host::inhom_bfield_backend_t<scalar>>()) {
+    ::sycl::queue* sycl_queue = static_cast<::sycl::queue*>(queue.queue());
+    assert(sycl_queue != nullptr);
+    magnetic_field result{covfie::utility::sycl::copy_field_with_queue<
+        covfie::field<sycl::inhom_bfield_backend_t<scalar>>>(
+        bfield.as_field<host::inhom_bfield_backend_t<scalar>>(), *sycl_queue)};
+    sycl_queue->wait_and_throw();
+    return result;
+  } else {
+    throw std::invalid_argument("Unsupported b-field type received");
+  }
 }
 
 }  // namespace traccc::sycl

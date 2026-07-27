@@ -27,8 +27,14 @@ class SurfaceArrayNavigationPolicy : public INavigationPolicy {
     /// The type of the layer
     LayerType layerType = LayerType::Cylinder;
     /// The number of bins in the local directions. The interpretation depends
-    /// on the layer type.
+    /// on the layer type. A value of 0 in either direction requests automatic
+    /// determination from the module layout (one bin per module), scaled by
+    /// @c numberOfBinsFactor.
     std::pair<std::size_t, std::size_t> bins;
+    /// Multiplier applied to auto-determined (0) bin counts. Values below one
+    /// coarsen the grid, values above one refine it. Finer grids return fewer
+    /// surfaces per neighbour query, cutting navigation candidate counts.
+    double numberOfBinsFactor = 1.0;
     /// Envelope added to the ProtoLayer extent when computing the surface-array
     /// lookup tolerance.
     ExtentEnvelope envelope = ExtentEnvelope::Zero();

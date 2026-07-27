@@ -893,7 +893,7 @@ Acts::TrackingGeometryJsonConverter::navigationPolicyFromJson(
 
 nlohmann::json Acts::TrackingGeometryJsonConverter::trackingVolumeToJson(
     const GeometryContext& gctx, const TrackingVolume& world,
-    const Options& /*options*/) const {
+    const Options& options) const {
   nlohmann::json encoded;
   encoded[kHeaderKey] = nlohmann::json::object();
   encoded[kHeaderKey][kVersionKey] = kFormatVersion;
@@ -923,8 +923,11 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::trackingVolumeToJson(
   encoded[kRootVolumeIdKey] = volumeIds.at(world);
 
   // Encode surfaces
+  const SurfaceJsonConverter::Options surfaceOptions{.writeMaterial =
+                                                         options.writeMaterial};
   for (const auto* surf : orderedSurfaces) {
-    nlohmann::json jSurface = SurfaceJsonConverter::toJson(gctx, *surf);
+    nlohmann::json jSurface =
+        SurfaceJsonConverter::toJson(gctx, *surf, surfaceOptions);
     jSurface[kSurfaceIdKey] = surfaceIds.at(*surf);
     encoded[kSurfacesKey].push_back(std::move(jSurface));
   }

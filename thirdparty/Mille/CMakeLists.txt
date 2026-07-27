@@ -6,7 +6,7 @@ include(FetchContent)
 # Tell the user what's happening.
 message(STATUS "Building Mille as part of the Acts project")
 
-# Declare where to get Eigen from.
+# Declare where to get Mille from.
 FetchContent_Declare(Mille SYSTEM ${ACTS_MILLE_SOURCE})
 
 # Now set up its build.

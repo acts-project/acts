@@ -52,12 +52,12 @@ struct bfield_tag_selector {};
 
 template <typename scalar_t>
 struct bfield_tag_selector<const_bfield_backend_t<scalar_t>> {
-    using type = const_bfield_kernel_tag;
+  using type = const_bfield_kernel_tag;
 };
 
 template <typename scalar_t>
 struct bfield_tag_selector<inhom_bfield_backend_t<scalar_t>> {
-    using type = inhom_bfield_kernel_tag;
+  using type = inhom_bfield_kernel_tag;
 };
 
 template <typename T>
@@ -72,7 +72,7 @@ struct bfield_tag_existance_validator {};
 
 template <typename... Ts>
 struct bfield_tag_existance_validator<std::tuple<Ts...>> {
-    static constexpr bool value = (bfield_tag_exists_for_backend<Ts> && ...);
+  static constexpr bool value = (bfield_tag_exists_for_backend<Ts> && ...);
 };
 
 static_assert(
