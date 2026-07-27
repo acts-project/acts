@@ -137,7 +137,7 @@ ActsFatras::HeavyFlavourOrigin HepMC3InputConverter::deriveHeavyFlavourOrigin(
         hadType == Acts::HadronType::BBbarMeson ||
         (m_cfg.searchUpToHfQuark &&
          static_cast<ActsFatras::HeavyFlavourOrigin>(pdgCode) ==
-            ActsFatras::HeavyFlavourOrigin::Bottom)) {
+             ActsFatras::HeavyFlavourOrigin::Bottom)) {
       return ActsFatras::HeavyFlavourOrigin::Bottom;
     }
 
@@ -147,7 +147,7 @@ ActsFatras::HeavyFlavourOrigin HepMC3InputConverter::deriveHeavyFlavourOrigin(
         hadType == Acts::HadronType::CCbarMeson ||
         (m_cfg.searchUpToHfQuark &&
          static_cast<ActsFatras::HeavyFlavourOrigin>(pdgCode) ==
-            ActsFatras::HeavyFlavourOrigin::Charm)) {
+             ActsFatras::HeavyFlavourOrigin::Charm)) {
       // we do not return directly because
       // B -> D -> X should be tagged as from beauty and not charm
       isFromCharm = true;
