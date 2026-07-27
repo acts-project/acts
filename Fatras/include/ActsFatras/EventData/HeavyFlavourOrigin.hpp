@@ -15,8 +15,8 @@ namespace ActsFatras {
 
 /// Simulation outcome identifier.
 ///
-/// Encodes the outcome of the particle after the simulation
-/// Hadron heavy-flavour origin classification
+/// Encodes hadron heavy-flavour origin classification
+/// the enum values correspond to the PDG codes for the quarks
 /// Bottom: decay product of a bottomed hadron (it can also be B->D->X),
 ///         or particle originate in the fragmentation of a bottom quark
 ///         depending on the searchUpToHfQuark flag
