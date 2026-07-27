@@ -13,6 +13,7 @@
 #include "Acts/Geometry/DiamondVolumeBounds.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Utilities/AxisFactory.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 namespace Acts {
 class HomogeneousSurfaceMaterial;
@@ -92,6 +93,20 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
       CylinderVolumeBounds::Face face, const AxisFactory& loc0,
       const AxisFactory& loc1);
 
+  /// Configure the designator with a cylinder face and corresponding binning
+  /// information.
+  /// @note This method can be called multiple times to configure different faces.
+  /// @param face The face of the cylinder to configure
+  /// @param loc0 The first binning configuration along local axis 0
+  /// @param loc1 The first binning configuration along local axis 1
+  /// @return The material designator node
+  /// @note If this node has previously been configured with a different volume
+  ///       shape, this will throw an exception.
+  [[deprecated("Use configureFace with deferred AxisFactory axes instead")]]
+  MaterialDesignatorBlueprintNode& configureFace(
+      CylinderVolumeBounds::Face face, const DirectedProtoAxis& loc0,
+      const DirectedProtoAxis& loc1);
+
   /// Configure the designator with a cylinder face and a homogeneous surface
   /// material.
   /// @param face The face of the cylinder to configure
@@ -119,6 +134,20 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   MaterialDesignatorBlueprintNode& configureFace(CuboidVolumeBounds::Face face,
                                                  const AxisFactory& loc0,
                                                  const AxisFactory& loc1);
+
+  /// Configure the designator with a cuboid face and corresponding binning
+  /// information.
+  /// @note This method can be called multiple times to configure different faces.
+  /// @param face The face of the cuboid to configure
+  /// @param loc0 The first binning configuration along local axis 0
+  /// @param loc1 The second binning configuration along local axis 1
+  /// @return The material designator node
+  /// @note If this node has previously been configured with a different volume
+  ///       shape, this will throw an exception.
+  [[deprecated("Use configureFace with deferred AxisFactory axes instead")]]
+  MaterialDesignatorBlueprintNode& configureFace(CuboidVolumeBounds::Face face,
+                                                 const DirectedProtoAxis& loc0,
+                                                 const DirectedProtoAxis& loc1);
 
   /// Configure the designator with a cuboid face and a homogeneous surface
   /// material.
