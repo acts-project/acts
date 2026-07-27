@@ -188,12 +188,20 @@ class GeometryIdMapVisitor : public TrackingGeometryVisitor {
     const auto& surface = boundary.surfaceRepresentation();
     checkIdentifier(surface, "boundary surface");
     m_surfacesById.emplace(surface.geometryId(), &surface);
+
+    // A glued boundary surface is shared between the adjacent volumes, so it
+    // is visited once per volume it bounds
+    m_boundariesBySurface.emplace(&surface, &boundary);
   }
 
   void visitPortal(const Portal& portal) override {
     const auto& surface = portal.surface();
     checkIdentifier(surface, "portal");
     m_surfacesById.emplace(surface.geometryId(), &surface);
+
+    // A fused portal is shared between the adjacent volumes, so it is visited
+    // once per volume it bounds
+    m_portalsBySurface.emplace(&surface, &portal);
 
     for (const auto& tag : portal.tags()) {
       auto [it, inserted] = m_portalsByTag.try_emplace(tag, &portal);
@@ -212,6 +220,8 @@ class GeometryIdMapVisitor : public TrackingGeometryVisitor {
   std::unordered_map<GeometryIdentifier, const TrackingVolume*> m_volumesById{};
   std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById{};
   detail::PortalTagMap m_portalsByTag{};
+  detail::PortalSurfaceMap m_portalsBySurface{};
+  detail::BoundarySurfaceMap m_boundariesBySurface{};
 
   std::unordered_map<GeometryIdentifier, const GeometryObject*> m_objectsById{};
 };
@@ -233,6 +243,8 @@ TrackingGeometry::TrackingGeometry(
   m_volumesById = std::move(mapVisitor.m_volumesById);
   m_surfacesById = std::move(mapVisitor.m_surfacesById);
   m_portalsByTag = std::move(mapVisitor.m_portalsByTag);
+  m_portalsBySurface = std::move(mapVisitor.m_portalsBySurface);
+  m_boundariesBySurface = std::move(mapVisitor.m_boundariesBySurface);
 
   ACTS_DEBUG("TrackingGeometry created with "
              << m_volumesById.size() << " volumes and " << m_surfacesById.size()
@@ -241,61 +253,11 @@ TrackingGeometry::TrackingGeometry(
   m_volumesById.rehash(0);
   m_surfacesById.rehash(0);
   m_portalsByTag.rehash(0);
+  m_portalsBySurface.rehash(0);
+  m_boundariesBySurface.rehash(0);
 }
 
 TrackingGeometry::~TrackingGeometry() = default;
-
-namespace {
-
-/// Resolve the volume a track on @p surface at @p position is entering,
-/// assuming it is currently associated with @p volume. If the surface is one
-/// of the boundary surfaces (Gen1) or portal surfaces (Gen3) of the volume,
-/// the volume on the far side along @p direction is returned, which can be
-/// `nullptr` if there is no volume in that direction (end of world).
-/// Otherwise the surface does not act as a boundary here and @p volume
-/// itself is returned.
-///
-/// The position is assumed to be on @p surface. A position inside the
-/// volume and on the plane of a matched boundary is within that boundary's
-/// bounds up to the lookup tolerance, since portals and boundary surfaces
-/// cover the volume faces. The exact bounds check can still fail for
-/// positions grazing a volume edge within the tolerance; this is reported as
-/// a @ref TrackingGeometryError::PositionNotOnAssociatedSurface failure.
-Result<const TrackingVolume*> resolveVolumeThroughBoundary(
-    const GeometryContext& gctx, const TrackingVolume& volume,
-    const Vector3& position, double tolerance, const Vector3& direction,
-    const Surface& surface) {
-  auto isOnBoundary = [&]() {
-    return surface.isOnSurface(gctx, position, direction,
-                               BoundaryTolerance::None(), tolerance);
-  };
-
-  for (const Portal& portal : volume.portals()) {
-    if (&portal.surface() == &surface) {
-      if (!isOnBoundary()) {
-        return TrackingGeometryError::PositionNotOnAssociatedSurface;
-      }
-      auto resolved = portal.resolveVolume(gctx, position, direction);
-      if (!resolved.ok()) {
-        return resolved.error();
-      }
-      return resolved.value();
-    }
-  }
-
-  for (const auto& boundary : volume.boundarySurfaces()) {
-    if (&boundary->surfaceRepresentation() == &surface) {
-      if (!isOnBoundary()) {
-        return TrackingGeometryError::PositionNotOnAssociatedSurface;
-      }
-      return boundary->attachedVolume(gctx, position, direction);
-    }
-  }
-
-  return &volume;
-}
-
-}  // namespace
 
 const TrackingVolume* TrackingGeometry::lowestTrackingVolume(
     const GeometryContext& gctx, const Vector3& gp, double tolerance) const {
@@ -313,8 +275,41 @@ Result<const TrackingVolume*> TrackingGeometry::resolveLowestTrackingVolume(
   if (volume == nullptr) {
     return nullptr;
   }
-  return resolveVolumeThroughBoundary(gctx, *volume, gp, tolerance, direction,
-                                      associatedSurface);
+
+  // If the surface acts as a boundary, the volume on the far side along the
+  // direction is entered, which can be `nullptr` if there is no volume in
+  // that direction (end of world). Boundary surfaces and portals are shared
+  // between the adjacent volumes, so the association does not depend on which
+  // side of the boundary the position based lookup returned.
+  //
+  // The position is on the plane of the surface by precondition. A position
+  // inside the volume is within the bounds of a boundary it lies on up to the
+  // lookup tolerance, since portals and boundary surfaces cover the volume
+  // faces. The exact bounds check can still fail for positions grazing a
+  // volume edge within the tolerance, which is reported as a failure.
+  auto isOnBoundary = [&]() {
+    return associatedSurface.isOnSurface(gctx, gp, direction,
+                                         BoundaryTolerance::None(), tolerance);
+  };
+
+  if (auto it = m_portalsBySurface.find(&associatedSurface);
+      it != m_portalsBySurface.end()) {
+    if (!isOnBoundary()) {
+      return TrackingGeometryError::PositionNotOnAssociatedSurface;
+    }
+    return it->second->resolveVolume(gctx, gp, direction);
+  }
+
+  if (auto it = m_boundariesBySurface.find(&associatedSurface);
+      it != m_boundariesBySurface.end()) {
+    if (!isOnBoundary()) {
+      return TrackingGeometryError::PositionNotOnAssociatedSurface;
+    }
+    return it->second->attachedVolume(gctx, gp, direction);
+  }
+
+  // The surface does not act as a boundary, the lookup is position based
+  return volume;
 }
 
 const TrackingVolume* TrackingGeometry::lowestTrackingVolume(

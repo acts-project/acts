@@ -53,6 +53,13 @@ struct TransparentStringHash {
 /// Map from portal tag to portal, with transparent string lookup.
 using PortalTagMap = std::unordered_map<std::string, const Portal*,
                                         TransparentStringHash, std::equal_to<>>;
+
+/// Map from surface to the portal (Gen3) it represents.
+using PortalSurfaceMap = std::unordered_map<const Surface*, const Portal*>;
+
+/// Map from surface to the boundary surface (Gen1) it represents.
+using BoundarySurfaceMap =
+    std::unordered_map<const Surface*, const BoundarySurfaceT<TrackingVolume>*>;
 }  // namespace detail
 
 // Forward declaration only, the implementation is hidden in the .cpp file.
@@ -120,11 +127,10 @@ class TrackingGeometry {
   /// return the lowest tracking Volume for a global position on a surface,
   /// resolving boundaries along the given direction
   ///
-  /// If the position lies on a boundary surface (Gen1) or portal surface
-  /// (Gen3) matching @p associatedSurface, the boundary ambiguity is resolved
-  /// along the direction: the volume being entered is returned. Otherwise the
-  /// surface does not act as a boundary here and the lookup is purely
-  /// position based.
+  /// If @p associatedSurface is a boundary surface (Gen1) or a portal surface
+  /// (Gen3), the boundary ambiguity is resolved along the direction: the
+  /// volume being entered is returned. Otherwise the surface does not act as
+  /// a boundary and the lookup is purely position based.
   ///
   /// @pre The position has to be on @p associatedSurface within the given
   ///      @p tolerance, ignoring the surface bounds.
@@ -141,10 +147,9 @@ class TrackingGeometry {
   /// @return plain pointer to the lowest TrackingVolume, `nullptr` if there
   ///         is no volume at the position (or in the given direction)
   /// @retval TrackingGeometryError::PositionNotOnAssociatedSurface if
-  ///         @p associatedSurface is a boundary surface or portal of the
-  ///         volume at the position, but the position is outside its bounds.
-  ///         This can happen for positions grazing a volume edge within the
-  ///         lookup tolerance.
+  ///         @p associatedSurface is a boundary surface or portal, but the
+  ///         position is outside of its bounds. This can happen for positions
+  ///         grazing a volume edge within the lookup tolerance.
   Result<const TrackingVolume*> resolveLowestTrackingVolume(
       const GeometryContext& gctx, const Vector3& gp, const Vector3& direction,
       const Surface& associatedSurface,
@@ -328,6 +333,11 @@ class TrackingGeometry {
   std::unordered_map<GeometryIdentifier, const TrackingVolume*> m_volumesById;
   std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById;
   detail::PortalTagMap m_portalsByTag;
+  // surface to portal / boundary surface association, built once at
+  // construction so that the boundary aware volume lookup does not have to
+  // scan the portals and boundary surfaces of a volume
+  detail::PortalSurfaceMap m_portalsBySurface;
+  detail::BoundarySurfaceMap m_boundariesBySurface;
 };
 
 }  // namespace Acts
