@@ -37,6 +37,7 @@ using GbtsNodeIndex = SpacePointIndex;
 /// Sentinel for an unset graph node index.
 static constexpr GbtsNodeIndex kGbtsNodeIndexInvalid = kSpacePointIndexInvalid;
 
+//! [gbts node params]
 /// Per-node parameters used while building the graph.
 ///
 /// All five values are read together in the innermost doublet loop, so they are
@@ -57,7 +58,9 @@ struct GbtsNodeParams final {
   /// Global z coordinate.
   float z{};
 };
+//! [gbts node params]
 
+//! [gbts node edge info]
 /// Per-node graph bookkeeping, written while the graph is built.
 ///
 /// The three fields are read together in the innermost doublet loop, so they
@@ -71,7 +74,9 @@ struct GbtsNodeEdgeInfo final {
   /// connected to the previously built graph.
   std::uint16_t isConnected{};
 };
+//! [gbts node edge info]
 
+//! [gbts eta bin info]
 /// Constant per-eta-bin data.
 struct GbtsEtaBinInfo final {
   /// Range of node indices belonging to this bin.
@@ -92,6 +97,7 @@ struct GbtsEtaBinInfo final {
   /// @return True if bin has no nodes
   bool empty() const { return nodes.first == nodes.second; }
 };
+//! [gbts eta bin info]
 
 /// Read-only view of the node attributes needed outside the graph builder.
 ///
@@ -104,6 +110,7 @@ struct GbtsNodeView final {
   std::span<const std::uint16_t> layers;
 };
 
+//! [gbts edge]
 /// Edge between two GBTS nodes with fit parameters.
 struct GbtsEdge final {
   GbtsEdge() = default;
@@ -147,6 +154,7 @@ struct GbtsEdge final {
   /// Global indices of the connected edges
   std::array<std::uint32_t, gbtsNumSegConns> vNei{};
 };
+//! [gbts edge]
 
 /// Storage for the GBTS graph nodes.
 ///
@@ -183,6 +191,7 @@ class GbtsNodeStorage final {
   GbtsNodeStorage(Config config, std::shared_ptr<const GbtsGeometry> geometry,
                   GbtsMlLookupTable mlLut);
 
+  //! [gbts insert]
   /// Insert a space point, deriving r and phi from the global position.
   /// @param index Index of the space point in the caller's own collection
   /// @param x Global x coordinate
@@ -196,6 +205,7 @@ class GbtsNodeStorage final {
                                       float z, std::uint32_t layerIndex,
                                       float clusterWidth = 0.f,
                                       float localPositionY = 0.f);
+  //! [gbts insert]
 
   /// Insert a space point for callers that already have r and phi.
   /// @param index Index of the space point in the caller's own collection
