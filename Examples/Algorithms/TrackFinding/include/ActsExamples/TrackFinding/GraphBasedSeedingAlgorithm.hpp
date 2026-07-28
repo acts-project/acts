@@ -114,11 +114,10 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// make the map between ACTS geometry ID's and GBTS geometry ID's
   std::map<ActsIDs, GbtsIDs> makeActsGbtsMap() const;
 
-  /// make the container that holds space points that have been given
-  /// all the variables needed for GBTS algorithm to run
-  Acts::SpacePointContainer makeSpContainer(
-      const SpacePointContainer &spacePoints,
-      std::map<ActsIDs, GbtsIDs> map) const;
+  /// Resolve the dense GBTS layer index for a space point, or nullopt if it is
+  /// not part of the GBTS geometry.
+  std::optional<std::uint32_t> gbtsLayerIndex(
+      const ConstSpacePointProxy &spacePoint) const;
 
   /// makes the geometry objects used by GBTS that correspond to the objects in
   /// the connection table for ease these are sometimes called "logical layers"
