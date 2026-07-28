@@ -14,10 +14,14 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsAlignment/Geometry/AlignableStructure.hpp"
+#include "ActsAlignment/Geometry/AlignmentHierarchy.hpp"
 #include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
 
 #include <limits>
 #include <map>
+#include <memory>
+#include <unordered_map>
 #include <vector>
 
 namespace ActsAlignment {
@@ -47,6 +51,7 @@ struct AlignmentOptions {
   /// @param fOptions The fit options
   /// @param aTransformUpdater The updater to update aligned transform
   /// @param aDetElements The alignable detector elements
+  /// @param aStructures The alignable structures (groups of surfaces)
   /// @param chi2CufOff The alignment chi2 tolerance
   /// @param deltaChi2CutOff The change of chi2 within a few iterations
   /// @param maxIters The alignment maximum iterations
@@ -58,10 +63,12 @@ struct AlignmentOptions {
       double chi2CutOff = 0.5,
       const std::pair<std::size_t, double>& deltaChi2CutOff = {5, 0.01},
       std::size_t maxIters = 5,
-      const std::map<unsigned int, AlignmentMask>& iterState = {})
+      const std::map<unsigned int, AlignmentMask>& iterState = {},
+      const std::vector<std::shared_ptr<AlignableStructure>>& aStructures = {})
       : fitOptions(fOptions),
         alignedTransformUpdater(aTransformUpdater),
         alignedDetElements(aDetElements),
+        alignedStructures(aStructures),
         averageChi2ONdfCutOff(chi2CutOff),
         deltaAverageChi2ONdfCutOff(deltaChi2CutOff),
         maxIterations(maxIters),
@@ -75,6 +82,9 @@ struct AlignmentOptions {
 
   // The detector elements to be aligned
   std::vector<Acts::SurfacePlacementBase*> alignedDetElements;
+
+  // The structures to be aligned
+  std::vector<std::shared_ptr<AlignableStructure>> alignedStructures;
 
   // The alignment tolerance to determine if the alignment is covered
   double averageChi2ONdfCutOff = 0.5;
@@ -161,6 +171,9 @@ struct Alignment {
   /// @param idxedAlignSurfaces The idxed surfaces to be aligned
   /// @param alignMask The alignment mask (same for all detector element for the
   /// moment)
+  /// @param hierarchy Optional hierarchy registry; forwarded to the alignment
+  /// state computation so that surfaces can be tagged with their owning
+  /// structure.
   ///
   /// @result The alignment state for a single track
   template <typename source_link_t, typename fit_options_t>
@@ -171,7 +184,8 @@ struct Alignment {
       const fit_options_t& fitOptions,
       const std::unordered_map<const Acts::Surface*, std::size_t>&
           idxedAlignSurfaces,
-      const AlignmentMask& alignMask) const;
+      const AlignmentMask& alignMask,
+      const AlignmentHierarchy* hierarchy = nullptr) const;
 
   /// @brief calculate the alignment parameters delta
   ///
@@ -186,13 +200,16 @@ struct Alignment {
   /// @param fitOptions The fit Options steering the fit
   /// @param alignResult [in, out] The aligned result
   /// @param alignMask The alignment mask (same for all measurements now)
+  /// @param hierarchy Optional hierarchy registry; when non-null, per-track
+  /// states are tagged with surface → structure ownership.
   template <typename trajectory_container_t,
             typename start_parameters_container_t, typename fit_options_t>
   void calculateAlignmentParameters(
       const trajectory_container_t& trajectoryCollection,
       const start_parameters_container_t& startParametersCollection,
       const fit_options_t& fitOptions, AlignmentResult& alignResult,
-      const AlignmentMask& alignMask = AlignmentMask::All) const;
+      const AlignmentMask& alignMask = AlignmentMask::All,
+      const AlignmentHierarchy* hierarchy = nullptr) const;
 
   /// @brief calculate the alignment parameters delta from a set of
   /// TrackAlignmentStates

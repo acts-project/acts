@@ -14,9 +14,14 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "ActsAlignment/Geometry/AlignmentHierarchy.hpp"
 #include "ActsAlignment/Kernel/AlignmentMask.hpp"
 
 #include <unordered_map>
+
+namespace ActsAlignment {
+class AlignableStructure;
+}  // namespace ActsAlignment
 
 namespace ActsAlignment::detail {
 
@@ -64,6 +69,12 @@ struct TrackAlignmentState {
   // alignable surfaces pool and those relevant with this track
   std::unordered_map<const Acts::Surface*, std::pair<std::size_t, std::size_t>>
       alignedSurfaces;
+
+  // Per-alignable-surface pointer to its owning AlignableStructure. Absent
+  // when the surface is a standalone floating module or no hierarchy is in
+  // use. Populated alongside @c alignedSurfaces.
+  std::unordered_map<const Acts::Surface*, const AlignableStructure*>
+      surfaceStructures;
 };
 
 /// Reset some columns of the alignment to bound derivative to zero if the
@@ -132,6 +143,10 @@ inline void finaliseTrackAlignState(TrackAlignmentState& alignState) {
 /// all smoothed track states including those non-measurement states. Selection
 /// of certain rows/columns for measurement states is needed.
 /// @param idxedAlignSurfaces The indexed surfaces to be aligned
+/// @param alignMask The alignment mask
+/// @param hierarchy Optional hierarchy registry; when non-null, each aligned
+///                  surface is tagged with its owning structure on the
+///                  returned state. No effect on derivatives at this step.
 ///
 /// @return The track alignment state containing fundamental alignment
 /// ingredients
@@ -144,7 +159,8 @@ TrackAlignmentState trackAlignmentState(
         globalTrackParamsCov,
     const std::unordered_map<const Acts::Surface*, std::size_t>&
         idxedAlignSurfaces,
-    const AlignmentMask& alignMask) {
+    const AlignmentMask& alignMask,
+    const AlignmentHierarchy* hierarchy = nullptr) {
   // Construct an alignment state
   TrackAlignmentState alignState;
 
@@ -180,6 +196,15 @@ TrackAlignmentState trackAlignmentState(
       isAlignable = true;
       // Remember the surface and its index
       alignState.alignedSurfaces[surface].first = it->second;
+      // Tag the surface with its owning structure (if any). The pointer is
+      // not consumed at this step; it is recorded for later derivative
+      // propagation to structure-level DoFs.
+      if (hierarchy != nullptr) {
+        if (auto* structure = hierarchy->structureFor(*surface);
+            structure != nullptr) {
+          alignState.surfaceStructures.emplace(surface, structure);
+        }
+      }
       nAlignSurfaces++;
     }
     // Remember the index of the state within the trajectory and whether it's

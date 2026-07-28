@@ -30,7 +30,8 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
     const fit_options_t& fitOptions,
     const std::unordered_map<const Acts::Surface*, std::size_t>&
         idxedAlignSurfaces,
-    const ActsAlignment::AlignmentMask& alignMask) const {
+    const ActsAlignment::AlignmentMask& alignMask,
+    const ActsAlignment::AlignmentHierarchy* hierarchy) const {
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
 
@@ -54,7 +55,7 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
   // Calculate the alignment state
   const auto alignState = detail::trackAlignmentState(
       gctx, tracks.trackStateContainer(), track.tipIndex(),
-      globalTrackParamsCov, idxedAlignSurfaces, alignMask);
+      globalTrackParamsCov, idxedAlignSurfaces, alignMask, hierarchy);
   if (alignState.alignmentDof == 0) {
     ACTS_VERBOSE("No alignment dof on track!");
     return AlignmentError::NoAlignmentDofOnTrack;
@@ -70,7 +71,8 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
     const start_parameters_container_t& startParametersCollection,
     const fit_options_t& fitOptions,
     ActsAlignment::AlignmentResult& alignResult,
-    const ActsAlignment::AlignmentMask& alignMask) const {
+    const ActsAlignment::AlignmentMask& alignMask,
+    const ActsAlignment::AlignmentHierarchy* hierarchy) const {
   // The number of trajectories must be equal to the number of starting
   // parameters
   assert(trajectoryCollection.size() == startParametersCollection.size());
@@ -94,7 +96,8 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
     // The result for one single track
     auto evaluateRes = evaluateTrackAlignmentState(
         fitOptions.geoContext, sourceLinks, sParameters,
-        fitOptionsWithRefSurface, alignResult.idxedAlignSurfaces, alignMask);
+        fitOptionsWithRefSurface, alignResult.idxedAlignSurfaces, alignMask,
+        hierarchy);
     if (!evaluateRes.ok()) {
       ACTS_DEBUG("Evaluation of alignment state for track " << iTraj
                                                             << " failed");
@@ -285,6 +288,45 @@ ActsAlignment::Alignment<fitter_t>::align(
   // Construct an AlignmentResult object
   AlignmentResult alignResult;
 
+  // Build the hierarchy registry and validate it. Mixed mode is supported:
+  // a detector element may float as a standalone module (i.e. not appear in
+  // any structure) and is then aligned at module level.
+  AlignmentHierarchy hierarchy(alignOptions.alignedStructures);
+  const auto validation = hierarchy.validate();
+  if (!validation.ok()) {
+    for (const auto* surface : validation.overlapping) {
+      ACTS_ERROR("Surface " << surface->geometryId()
+                            << " is assigned to multiple alignable structures");
+    }
+    return AlignmentError::HierarchyValidationFailure;
+  }
+
+  // No-overlap-across-levels: for every iteration, a DoF that is floating at
+  // structure level must not also float at module level on a child element.
+  // Otherwise the Hessian becomes singular along the correlated direction.
+  bool hadMaskConflicts = false;
+  for (unsigned int iIter = 0; iIter < alignOptions.maxIterations; ++iIter) {
+    AlignmentMask moduleMask = AlignmentMask::All;
+    auto iter_it = alignOptions.iterationState.find(iIter);
+    if (iter_it != alignOptions.iterationState.end()) {
+      moduleMask = iter_it->second;
+    }
+    const auto conflicts = hierarchy.detectMaskConflicts(
+        moduleMask, alignOptions.alignedDetElements);
+    for (const auto& c : conflicts) {
+      ACTS_ERROR("Detector element "
+                 << c.detElement
+                 << " (Surface ID: " << c.detElement->surface().geometryId()
+                 << ") has DoFs floating at both structure level (ID "
+                 << c.structure->geometryId()
+                 << ") and module level in iteration " << iIter);
+      hadMaskConflicts = true;
+    }
+  }
+  if (hadMaskConflicts) {
+    return AlignmentError::HierarchyValidationFailure;
+  }
+
   // Assign index to the alignable surface
   for (unsigned int iDetElement = 0;
        iDetElement < alignOptions.alignedDetElements.size(); iDetElement++) {
@@ -312,7 +354,7 @@ ActsAlignment::Alignment<fitter_t>::align(
     // Calculate the alignment parameters delta etc.
     calculateAlignmentParameters(
         trajectoryCollection, startParametersCollection,
-        alignOptions.fitOptions, alignResult, alignMask);
+        alignOptions.fitOptions, alignResult, alignMask, &hierarchy);
     // Screen out the information
     ACTS_INFO("iIter = " << iIter << ", total chi2 = " << alignResult.chi2
                          << ", total measurementDim = "
