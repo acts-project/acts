@@ -25,6 +25,7 @@
 
 // VecMem include(s).
 #include <vecmem/memory/unique_ptr.hpp>
+#include <vecmem/utils/abstract_event.hpp>
 #include <vecmem/utils/copy.hpp>
 
 // System include(s).
@@ -201,6 +202,11 @@ class clusterization_algorithm
       edm::silicon_cluster_collection::view& cluster_data,
       const vecmem::data::vector_view<const unsigned int>& permutation_map_view)
       const = 0;
+
+  /// Synchronize an event related to asynchronous operations
+  /// @param event The event to synchronize
+  ///
+  virtual void await(vecmem::abstract_event& event) const = 0;
 
   /// @}
 
