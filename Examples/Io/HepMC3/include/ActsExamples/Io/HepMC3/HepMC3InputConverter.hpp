@@ -69,7 +69,7 @@ class HepMC3InputConverter : public IAlgorithm {
   void convertHepMC3ToInternalEdm(const AlgorithmContext& ctx,
                                   const HepMC3::GenEvent& genEvent) const;
 
-  ActsFatras::HeavyFlavourOrigin deriveHeavyFlavourOrigin(
+  HeavyFlavourOrigin deriveHeavyFlavourOrigin(
       const std::shared_ptr<const HepMC3::GenParticle>& particleToCheck) const;
 
   void handleVertex(const HepMC3::GenVertex& genVertex, SimVertex& vertex,
