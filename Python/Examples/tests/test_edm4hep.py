@@ -428,9 +428,17 @@ def generate_input_test_edm4hep_simhit_reader(input, output, particle_type):
 
 
 # Session scoped fixture that uses a temp folder
-@pytest.fixture(scope="session", params=["mu-", "pi-"])
-def ddsim_input_session(request, tmp_path_factory):
-    particle_type = request.param
+@pytest.fixture(scope="session")
+def ddsim_input_session(tmp_path_factory):
+    # This used to be parametrized over ["mu-", "pi-"], but both params wrote to
+    # the same output_file and the second one hit the `if not exists()` guard
+    # below -- so ddsim only ever ran for mu- and the pi- tests re-ran against
+    # muon input. Nothing downstream asserts anything species-dependent (only
+    # event counts and collection names), so rather than pay for a second ddsim
+    # run to test the same code paths, generate one sample. Pions exercise more
+    # of the detector than muons: they shower hadronically and so populate the
+    # calorimeter collections the copy test checks for.
+    particle_type = "pi-"
 
     tmp_dir = tmp_path_factory.getbasetemp().parent
     output_file = Path(tmp_dir) / "output_edm4hep.root"
