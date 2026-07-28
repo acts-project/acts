@@ -109,7 +109,7 @@ std::string printListing(const auto& vertices, const auto& particles) {
 
 ActsFatras::HeavyFlavourOrigin HepMC3InputConverter::deriveHeavyFlavourOrigin(
     const std::shared_ptr<const HepMC3::GenParticle>& particleToCheck) const {
-  std::vector<std::shared_ptr<const HepMC3::GenParticle>> part;
+  std::vector<std::shared_ptr<const HepMC3::GenParticle>> st;
   std::unordered_set<int> visited;
   st.push_back(particleToCheck);
 
