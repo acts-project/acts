@@ -9,6 +9,7 @@
 
 // SYCL library include(s).
 #include "traccc/sycl/utils/algorithm_base.hpp"
+#include "traccc/sycl/utils/await.hpp"
 
 // Project include(s).
 #include "traccc/clusterization/device/clusterization_algorithm.hpp"
@@ -34,12 +35,19 @@ class clusterization_algorithm : public device::clusterization_algorithm,
   /// @param queue is a wrapper for the for the sycl queue for kernel
   ///              invocation
   /// @param config the clustering configuration
+  /// @param logger The logger instance to use for messaging
+  /// @param await_func The function used to synchronize events
+  ///
   clusterization_algorithm(
       const traccc::memory_resource& mr, const vecmem::copy& copy,
       queue_wrapper& queue, const config_type& config,
-      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone(),
+      await_function_type await_func = await_sync_event);
 
  private:
+  /// The function used to synchronize events.
+  await_function_type m_await_func;
+
   /// @name Function(s) inherited from the base class
   /// @{
 
@@ -78,6 +86,11 @@ class clusterization_algorithm : public device::clusterization_algorithm,
       edm::silicon_cluster_collection::view& cluster_data,
       const vecmem::data::vector_view<const unsigned int>& permutation_map_view)
       const override;
+
+  /// Synchronize an event related to asynchronous operations
+  /// @param event The event to synchronize
+  ///
+  void await(vecmem::abstract_event& event) const override;
 
   /// @}
 

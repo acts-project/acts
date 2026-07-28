@@ -42,9 +42,10 @@ class reify_cluster_data;
 clusterization_algorithm::clusterization_algorithm(
     const traccc::memory_resource& mr, const vecmem::copy& copy,
     queue_wrapper& queue, const config_type& config,
-    std::unique_ptr<const Logger> logger)
+    std::unique_ptr<const Logger> logger, await_function_type await_func)
     : device::clusterization_algorithm(mr, copy, config, std::move(logger)),
-      sycl::algorithm_base(queue) {}
+      sycl::algorithm_base(queue),
+      m_await_func(await_func) {}
 
 bool clusterization_algorithm::input_is_contiguous(
     const edm::silicon_cell_collection::const_view& cells) const {
@@ -152,6 +153,10 @@ void clusterization_algorithm::cluster_maker_kernel(
             });
       })
       .wait_and_throw();
+}
+
+void clusterization_algorithm::await(vecmem::abstract_event& event) const {
+  m_await_func(event, queue());
 }
 
 }  // namespace traccc::sycl
