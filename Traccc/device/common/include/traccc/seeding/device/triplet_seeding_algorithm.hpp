@@ -299,6 +299,11 @@ class triplet_seeding_algorithm
   virtual void select_seeds_kernel(
       const select_seeds_kernel_payload& payload) const = 0;
 
+  /// Synchronize an event related to asynchronous operations
+  /// @param event The event to synchronize
+  ///
+  virtual void await(vecmem::abstract_event& event) const = 0;
+
   /// @}
 
  private:

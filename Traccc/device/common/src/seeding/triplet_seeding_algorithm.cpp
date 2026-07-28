@@ -62,9 +62,9 @@ auto triplet_seeding_algorithm::operator()(
   edm::spacepoint_collection::const_view::size_type n_spacepoints = 0u;
   if (mr().host) {
     vecmem::async_size size = copy().get_size(spacepoints, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_spacepoints = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_spacepoints = size.unsafe_get();
   } else {
     n_spacepoints = copy().get_size(spacepoints);
   }
@@ -114,9 +114,9 @@ auto triplet_seeding_algorithm::operator()(
   if (mr().host) {
     vecmem::async_size size =
         copy().get_size(grid_prefix_sum_buffer, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_spacepoints = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_spacepoints = size.unsafe_get();
   } else {
     n_spacepoints = copy().get_size(grid_prefix_sum_buffer);
   }
@@ -147,9 +147,9 @@ auto triplet_seeding_algorithm::operator()(
   if (mr().host) {
     vecmem::async_size size =
         copy().get_size(doublet_counter_buffer, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_doublets = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_doublets = size.unsafe_get();
   } else {
     n_doublets = copy().get_size(doublet_counter_buffer);
   }
@@ -207,9 +207,9 @@ auto triplet_seeding_algorithm::operator()(
   if (mr().host) {
     vecmem::async_size size =
         copy().get_size(triplet_counter_midBot_buffer, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_midBotTriplets = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_midBotTriplets = size.unsafe_get();
   } else {
     n_midBotTriplets = copy().get_size(triplet_counter_midBot_buffer);
   }
