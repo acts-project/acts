@@ -6,6 +6,9 @@ This page is the canonical reference for the ACTS Examples material mapping chai
 It explains the end-to-end logic and points to the concrete scripts and tests that
 define current behavior.
 
+If you want to produce a map for your own detector rather than understand the
+chain, start at @ref material_mapping_howto instead.
+
 ## Overview
 
 Material mapping in the Examples pipeline is a three-step process:

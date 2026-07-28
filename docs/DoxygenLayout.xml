@@ -8,6 +8,12 @@
 
     <tab type="user" url="@ref tracking" visible="yes" title="Tracking in a nutshell"/>
 
+    <tab type="usergroup" title="Material mapping" url="[none]">
+      <tab type="user" url="@ref material_mapping_howto" visible="yes" title="How to map material for your detector"/>
+      <tab type="user" url="@ref material_mapping_workflow" visible="yes" title="Material mapping workflow"/>
+      <tab type="user" url="@ref material_mapping" visible="yes" title="Components and design"/>
+    </tab>
+
     <tab type="usergroup" title="Contribution" url="[none]">
       <tab type="user" url="@ref contribution_clang_tidy" visible="yes" title="Clang Tidy"/>
       <tab type="user" url="@ref howto_profiling" visible="yes" title="Profiling"/>

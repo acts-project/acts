@@ -59,3 +59,5 @@ Related components:
   geometry so that the mapped result can be compared against the Geant4 input.
 - @ref material_mapping_workflow documents the end-to-end Examples chain
   (recording, mapping, validation) and the scripts that drive it.
+- @ref material_mapping_howto is a practical, step-by-step guide to producing a
+  material map for your own detector.
