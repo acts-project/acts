@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/HepMC3/HepMC3InputConverter.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 
 #include "Acts/Utilities/ScopedTimer.hpp"
 
@@ -107,7 +108,7 @@ std::string printListing(const auto& vertices, const auto& particles) {
 };
 }  // namespace
 
-ActsFatras::HeavyFlavourOrigin HepMC3InputConverter::deriveHeavyFlavourOrigin(
+ActsExamples::HeavyFlavourOrigin HepMC3InputConverter::deriveHeavyFlavourOrigin(
     const std::shared_ptr<const HepMC3::GenParticle>& particleToCheck) const {
   std::vector<std::shared_ptr<const HepMC3::GenParticle>> st;
   std::unordered_set<int> visited;
@@ -136,9 +137,9 @@ ActsFatras::HeavyFlavourOrigin HepMC3InputConverter::deriveHeavyFlavourOrigin(
         hadType == Acts::HadronType::BottomBaryon ||
         hadType == Acts::HadronType::BBbarMeson ||
         (m_cfg.searchUpToHfQuark &&
-         static_cast<ActsFatras::HeavyFlavourOrigin>(pdgCode) ==
-             ActsFatras::HeavyFlavourOrigin::Bottom)) {
-      return ActsFatras::HeavyFlavourOrigin::Bottom;
+         static_cast<ActsExamples::HeavyFlavourOrigin>(pdgCode) ==
+             ActsExamples::HeavyFlavourOrigin::Bottom)) {
+      return ActsExamples::HeavyFlavourOrigin::Bottom;
     }
 
     // --- charm PDG IDs ---
@@ -146,8 +147,8 @@ ActsFatras::HeavyFlavourOrigin HepMC3InputConverter::deriveHeavyFlavourOrigin(
         hadType == Acts::HadronType::CharmedBaryon ||
         hadType == Acts::HadronType::CCbarMeson ||
         (m_cfg.searchUpToHfQuark &&
-         static_cast<ActsFatras::HeavyFlavourOrigin>(pdgCode) ==
-             ActsFatras::HeavyFlavourOrigin::Charm)) {
+         static_cast<ActsExamples::HeavyFlavourOrigin>(pdgCode) ==
+             ActsExamples::HeavyFlavourOrigin::Charm)) {
       // we do not return directly because
       // B -> D -> X should be tagged as from beauty and not charm
       isFromCharm = true;
@@ -165,10 +166,10 @@ ActsFatras::HeavyFlavourOrigin HepMC3InputConverter::deriveHeavyFlavourOrigin(
   }
 
   if (isFromCharm) {
-    return ActsFatras::HeavyFlavourOrigin::Charm;
+    return ActsExamples::HeavyFlavourOrigin::Charm;
   }
 
-  return ActsFatras::HeavyFlavourOrigin::None;
+  return ActsExamples::HeavyFlavourOrigin::None;
 }
 
 void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
