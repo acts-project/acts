@@ -140,8 +140,7 @@ class SimParticle final {
   }
   /// Particle heavy-flavour origin (0->none, 4->charm, 5->beauty)
   SimParticle& setHeavyFlavourOrigin(HeavyFlavourOrigin origin) {
-    initialState().setHeavyFlavourOrigin(origin);
-    finalState().setHeavyFlavourOrigin(origin);
+    m_hfOrigin = origin;
     return *this;
   }
 
