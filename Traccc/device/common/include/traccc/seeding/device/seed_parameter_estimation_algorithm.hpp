@@ -94,6 +94,11 @@ struct seed_parameter_estimation_algorithm
   virtual void estimate_seed_params_kernel(
       const struct estimate_seed_params_kernel_payload& payload) const = 0;
 
+  /// Synchronize an event related to asynchronous operations
+  /// @param event The event to synchronize
+  ///
+  virtual void await(vecmem::abstract_event& event) const = 0;
+
   /// @}
 
  private:
