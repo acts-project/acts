@@ -44,7 +44,7 @@
 'Changes Performance':
   - changed-files:
     - any-glob-to-any-file:
-      - CI/physmon/reference/**
+      - CI/physmon/reference.sha256
       - Python/Examples/tests/root_file_hashes.txt
 'Event Data Model':
   - changed-files:
