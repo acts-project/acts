@@ -184,6 +184,9 @@ ProcessCode RootTrackFinderPerformanceWriter::finalize() {
     }
 
     ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
+
+    m_outputFile->Close();
+    m_outputFile = nullptr;
   }
   return ProcessCode::SUCCESS;
 }

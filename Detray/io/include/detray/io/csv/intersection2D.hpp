@@ -38,9 +38,10 @@ struct intersection2D {
   int direction = 0;
   int status = 0;
 
-  DFE_NAMEDTUPLE(intersection2D, track_id, identifier, type, transform_index,
-                 mask_id, mask_index, material_id, material_index, loc_0, loc_1,
-                 path, volume_link, direction, status);
+  DETRAY_DFE_NAMEDTUPLE(intersection2D, track_id, identifier, type,
+                        transform_index, mask_id, mask_index, material_id,
+                        material_index, loc_0, loc_1, path, volume_link,
+                        direction, status);
 };
 
 /// Read intersections from csv file

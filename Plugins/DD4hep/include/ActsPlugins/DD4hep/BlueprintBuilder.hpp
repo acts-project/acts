@@ -116,7 +116,7 @@ class DD4hepBackend {
 
   /// Create a static beampipe blueprint node from the DD4hep world geometry.
   /// @return Shared pointer to the generated beampipe node.
-  std::shared_ptr<Acts::Experimental::StaticBlueprintNode> makeBeampipe() const;
+  std::shared_ptr<Acts::StaticBlueprintNode> makeBeampipe() const;
 
   /// Return the DD4hep world detector element.
   /// @return Root detector element of the DD4hep hierarchy.
@@ -172,24 +172,21 @@ class DD4hepBackend {
   const Acts::Logger* m_logger;
 };
 
-using BlueprintBuilder = Acts::Experimental::BlueprintBuilder<DD4hepBackend>;
-using ElementLayerAssembler =
-    Acts::Experimental::ElementLayerAssembler<DD4hepBackend>;
-using SensorLayerAssembler =
-    Acts::Experimental::SensorLayerAssembler<DD4hepBackend>;
-using SensorLayer = Acts::Experimental::SensorLayer<DD4hepBackend>;
-using BarrelEndcapAssembler =
-    Acts::Experimental::BarrelEndcapAssembler<DD4hepBackend>;
+using BlueprintBuilder = Acts::BlueprintBuilder<DD4hepBackend>;
+using ElementLayerAssembler = Acts::ElementLayerAssembler<DD4hepBackend>;
+using SensorLayerAssembler = Acts::SensorLayerAssembler<DD4hepBackend>;
+using SensorLayer = Acts::SensorLayer<DD4hepBackend>;
+using BarrelEndcapAssembler = Acts::BarrelEndcapAssembler<DD4hepBackend>;
 
 }  // namespace ActsPlugins::DD4hep
 
 // Explicit instantiation: suppress implicit instantiation in TUs that include
 // this header. Definitions are instantiated in BlueprintBuilder.cpp.
 // Placed at global scope so we open ::Acts::Experimental, not a nested Acts.
-namespace Acts::Experimental {
+namespace Acts {
 extern template class BlueprintBuilder<ActsPlugins::DD4hep::DD4hepBackend>;
 extern template class ElementLayerAssembler<ActsPlugins::DD4hep::DD4hepBackend>;
 extern template class SensorLayerAssembler<ActsPlugins::DD4hep::DD4hepBackend>;
 extern template class SensorLayer<ActsPlugins::DD4hep::DD4hepBackend>;
 extern template class BarrelEndcapAssembler<ActsPlugins::DD4hep::DD4hepBackend>;
-}  // namespace Acts::Experimental
+}  // namespace Acts

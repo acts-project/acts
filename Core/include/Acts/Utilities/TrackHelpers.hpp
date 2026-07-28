@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -716,35 +717,45 @@ double calculateSmoothedChi2(track_state_proxy_t trackState) {
 /// @tparam track_state_proxy_t the track state proxy type
 /// @param trackState the track state to calculate the unbiased parameters from
 /// @return a pair of the unbiased parameters and their covariance
+/// @deprecated Instantiating this template is very expensive in compiler memory
+///   (it expands the Eigen expression templates over all measurement
+///   dimensions) and it does so in every calling translation unit. Prefer the
+///   non-template overload taking a type-erased @c AnyConstTrackStateProxy,
+///   which is compiled once in the Acts core library:
+///   @code
+///   calculateUnbiasedParametersCovariance(Acts::AnyConstTrackStateProxy{state});
+///   @endcode
 template <TrackStateProxyConcept track_state_proxy_t>
+[[deprecated(
+    "Use calculateUnbiasedParametersCovariance(const AnyConstTrackStateProxy&) "
+    "instead; the templated form instantiates expensive Eigen code in every "
+    "translation unit.")]]
 std::pair<BoundVector, BoundMatrix> calculateUnbiasedParametersCovariance(
     track_state_proxy_t trackState) {
-  if (!trackState.hasSmoothed()) {
-    throw std::invalid_argument("track state has no smoothed parameters");
-  }
-  if (!trackState.hasCalibrated()) {
-    throw std::invalid_argument("track state has no calibrated parameters");
-  }
-
-  return visit_measurement(
-      trackState.calibratedSize(),
-      [&]<std::size_t measdim>(std::integral_constant<std::size_t, measdim>) {
-        FixedBoundSubspaceHelper<measdim> subspaceHelper =
-            trackState.template projectorSubspaceHelper<measdim>();
-
-        // TODO use subspace helper for projection instead
-        auto H = subspaceHelper.projector();
-        auto s = trackState.smoothed();
-        auto C = trackState.smoothedCovariance();
-        auto m = trackState.template calibrated<measdim>();
-        auto V = trackState.template calibratedCovariance<measdim>();
-        auto K =
-            (C * H.transpose() * (H * C * H.transpose() - V).inverse()).eval();
-        BoundVector unbiasedParamsVec = s + K * (m - H * s);
-        BoundMatrix unbiasedParamsCov = C - K * H * C;
-        return std::make_pair(unbiasedParamsVec, unbiasedParamsCov);
-      });
+  // Explicitly select the non-template overload taking a type-erased proxy.
+  // A plain call here would re-resolve to this very template (the wrapped
+  // AnyConstTrackStateProxy satisfies TrackStateProxyConcept and is an exact
+  // by-value match), causing infinite recursion and a self-deprecation error.
+  std::pair<BoundVector, BoundMatrix> (&impl)(const AnyConstTrackStateProxy &) =
+      calculateUnbiasedParametersCovariance;
+  return impl(AnyConstTrackStateProxy{trackState});
 }
+
+/// Calculate the unbiased track parameters and their covariance for a
+/// type-erased track state proxy. See the templated overload above for the
+/// underlying formula.
+///
+/// This is the preferred entry point. It is not a template, so the (very
+/// expensive) Eigen expression templates are instantiated exactly once, in the
+/// Acts core library (TrackHelpersUnbiased.cpp), instead of in every calling
+/// translation unit. Callers holding a concrete track state proxy wrap it:
+/// @code
+/// calculateUnbiasedParametersCovariance(Acts::AnyConstTrackStateProxy{state});
+/// @endcode
+/// @param trackState the (type-erased) track state to calculate from
+/// @return a pair of the unbiased parameters and their covariance
+std::pair<BoundVector, BoundMatrix> calculateUnbiasedParametersCovariance(
+    const AnyConstTrackStateProxy &trackState);
 
 }  // namespace Acts
 
