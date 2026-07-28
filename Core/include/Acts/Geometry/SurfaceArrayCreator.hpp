@@ -285,6 +285,17 @@ class SurfaceArrayCreator {
     m_logger = std::move(logger);
   }
 
+  /// Determine the number of bins for a binning direction from the number of
+  /// distinct module positions (i.e. one bin per module). Public so navigation
+  /// policies can size their surface-array grids relative to the module count.
+  /// @param gctx the geometry context
+  /// @param surfaces the surfaces to analyse
+  /// @param aDir the binning direction
+  /// @return the number of distinct module positions along @p aDir
+  std::size_t determineBinCount(const GeometryContext& gctx,
+                                const std::vector<const Surface*>& surfaces,
+                                AxisDirection aDir) const;
+
  private:
   /// configuration object
   Config m_cfg;
@@ -295,10 +306,6 @@ class SurfaceArrayCreator {
   std::vector<const Surface*> findKeySurfaces(
       const std::vector<const Surface*>& surfaces,
       const std::function<bool(const Surface*, const Surface*)>& equal) const;
-
-  std::size_t determineBinCount(const GeometryContext& gctx,
-                                const std::vector<const Surface*>& surfaces,
-                                AxisDirection aDir) const;
 
   /// SurfaceArrayCreator internal method
   /// Creates a variable @c ProtoAxis from a vector of (unsorted) surfaces with

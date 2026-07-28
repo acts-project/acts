@@ -52,11 +52,12 @@ hash_assertion_failures = []
 
 def _parse_hash_file(file: Path) -> Dict[str, str]:
     res = {}
-    for line in file.open():
-        if line.strip() == "" or line.strip().startswith("#"):
-            continue
-        key, h = line.strip().split(":", 1)
-        res[key.strip()] = h.strip()
+    with file.open() as f:
+        for line in f:
+            if line.strip() == "" or line.strip().startswith("#"):
+                continue
+            key, h = line.strip().split(":", 1)
+            res[key.strip()] = h.strip()
     return res
 
 
