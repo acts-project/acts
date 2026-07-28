@@ -23,6 +23,13 @@ Material mapping in the Examples pipeline is a three-step process:
    Propagate particles through the detector decorated with the produced map and
    record material tracks again for comparison against Geant4-based recording.
 
+Step 2 does not propagate or navigate through the geometry. It takes a flat list
+of material-carrying surfaces and assigns the recorded interactions to them by
+ray-surface intersection, which means it works the same way regardless of
+whether the tracking geometry was built with the Gen1 or the Gen3 (blueprint)
+construction. See @ref material_mapping for the Core-side components and the
+rationale.
+
 ## Scripts (ODD workflow)
 
 The following scripts implement the three stages:
@@ -55,9 +62,14 @@ python material_validation.py -n 1000 -t 1000 -m odd_material_map.root -o odd_ma
 
 - Reads recorded material tracks (`RootMaterialTrackReader`).
 - Collects mappable surfaces from tracking geometry
-  (`trackingGeometry.extractMaterialSurfaces()`).
+  (`trackingGeometry.extractMaterialSurfaces()`), which simply visits all
+  surfaces carrying material.
 - Builds assignment/accumulation components and performs averaging onto the
-  selected surfaces.
+  selected surfaces. The default components are
+  @ref Acts::IntersectionMaterialAssigner (assignment) and
+  @ref Acts::BinnedSurfaceMaterialAccumulator (accumulation), combined into an
+  @ref Acts::MaterialMapper. The surface list is the only geometry input the
+  mapper receives — it is handed to both components explicitly.
 - Writes mapped outputs using the chosen output stem:
   - `<stem>_map.root` and/or `<stem>_map.json`
   - `<stem>_mapped.root`
@@ -66,11 +78,14 @@ python material_validation.py -n 1000 -t 1000 -m odd_material_map.root -o odd_ma
 ### 3) Material validation (`material_validation.py`)
 
 - Decorates geometry from `--map`, then validates material response by producing
-  material tracks from mapped material.
+  material tracks from mapped material. By default this uses
+  @ref Acts::MaterialValidator with the same intersection-based assigner as the
+  mapping step, so it is likewise navigation-independent.
 - Writes `<output>.root` with collection `material_tracks` by default.
 - `-p` / `--propagate` enables an additional propagation/navigation-based
-  collection, written as `<output>_propagated.root`, useful to expose potential
-  navigation-related effects in material collection.
+  collection, written as `<output>_propagated.root`. This one *does* run a
+  propagator with a navigator, which is exactly the point: comparing it against
+  the default collection exposes material that the navigation would miss.
 
 ## Comparison example
 

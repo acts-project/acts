@@ -52,9 +52,13 @@ struct MaterialVolume {
 
 /// @brief SurfaceMaterialMapper
 ///
-/// This is the main feature tool to map material information
-/// from a 3D geometry onto the TrackingGeometry with its surface
-/// material description.
+/// This maps material information from a 3D geometry onto the TrackingGeometry
+/// with its surface material description, driven by a propagation through the
+/// geometry.
+///
+/// @deprecated Use @ref Acts::MaterialMapper instead, composed with an
+/// @ref Acts::IAssignmentFinder and an @ref Acts::ISurfaceMaterialAccumulator.
+/// See @ref material_mapping for the current, navigation-independent procedure.
 ///
 /// The process runs as such:
 ///
@@ -76,6 +80,7 @@ struct MaterialVolume {
 ///
 ///  4) Each 'hit' bin per event is counted and averaged at the end of the run
 ///
+/// @ingroup material_mapping
 class SurfaceMaterialMapper {
  public:
   /// Type alias for straight line propagator used in material mapping
