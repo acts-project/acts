@@ -112,12 +112,15 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
       py::class_<FakePlotTool::Config>(root, "FakePlotToolConfig")
           .def(py::init<>())
-          .def_readwrite("varBinning", &FakePlotTool::Config::varBinning);
+          .def_readwrite("varBinning", &FakePlotTool::Config::varBinning)
+          .def_readwrite("recoVarBinning",
+                         &FakePlotTool::Config::recoVarBinning);
 
       py::class_<DuplicationPlotTool::Config>(root, "DuplicationPlotToolConfig")
           .def(py::init<>())
-          .def_readwrite("varBinning",
-                         &DuplicationPlotTool::Config::varBinning);
+          .def_readwrite("varBinning", &DuplicationPlotTool::Config::varBinning)
+          .def_readwrite("recoVarBinning",
+                         &DuplicationPlotTool::Config::recoVarBinning);
 
       py::class_<ResPlotTool::Config>(root, "ResPlotToolConfig")
           .def(py::init<>())

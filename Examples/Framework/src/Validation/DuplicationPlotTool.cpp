@@ -54,15 +54,15 @@ DuplicationPlotTool::DuplicationPlotTool(const DuplicationPlotTool::Config& cfg,
   m_efficiencies.insert(
       {"duplicationRatio_vs_pT",
        Efficiency1("duplicationRatio_vs_pT", "Duplication ratio",
-                   std::array{m_cfg.varBinning.at("Pt")})});
+                   std::array{m_cfg.recoVarBinning.at("Pt")})});
   m_efficiencies.insert(
       {"duplicationRatio_vs_eta",
        Efficiency1("duplicationRatio_vs_eta", "Duplication ratio",
-                   std::array{m_cfg.varBinning.at("Eta")})});
+                   std::array{m_cfg.recoVarBinning.at("Eta")})});
   m_efficiencies.insert(
       {"duplicationRatio_vs_phi",
        Efficiency1("duplicationRatio_vs_phi", "Duplication ratio",
-                   std::array{m_cfg.varBinning.at("Phi")})});
+                   std::array{m_cfg.recoVarBinning.at("Phi")})});
 }
 
 void DuplicationPlotTool::fill(

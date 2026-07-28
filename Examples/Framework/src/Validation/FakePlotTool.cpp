@@ -65,14 +65,17 @@ FakePlotTool::FakePlotTool(const FakePlotTool::Config& cfg,
   std::string fakeRatioTitle = std::format("{} fake ratio", m_cfg.label);
 
   m_efficiencies.insert(
-      {"fakeRatio_vs_pT", Efficiency1("fakeRatio_vs_pT", fakeRatioTitle,
-                                      std::array{m_cfg.varBinning.at("Pt")})});
-  m_efficiencies.insert({"fakeRatio_vs_eta",
-                         Efficiency1("fakeRatio_vs_eta", fakeRatioTitle,
-                                     std::array{m_cfg.varBinning.at("Eta")})});
-  m_efficiencies.insert({"fakeRatio_vs_phi",
-                         Efficiency1("fakeRatio_vs_phi", fakeRatioTitle,
-                                     std::array{m_cfg.varBinning.at("Phi")})});
+      {"fakeRatio_vs_pT",
+       Efficiency1("fakeRatio_vs_pT", fakeRatioTitle,
+                   std::array{m_cfg.recoVarBinning.at("Pt")})});
+  m_efficiencies.insert(
+      {"fakeRatio_vs_eta",
+       Efficiency1("fakeRatio_vs_eta", fakeRatioTitle,
+                   std::array{m_cfg.recoVarBinning.at("Eta")})});
+  m_efficiencies.insert(
+      {"fakeRatio_vs_phi",
+       Efficiency1("fakeRatio_vs_phi", fakeRatioTitle,
+                   std::array{m_cfg.recoVarBinning.at("Phi")})});
 }
 
 void FakePlotTool::fill(const Acts::BoundTrackParameters& fittedParameters,
