@@ -9,6 +9,7 @@
 
 // Local include(s).
 #include "traccc/sycl/utils/algorithm_base.hpp"
+#include "traccc/sycl/utils/await.hpp"
 
 // Project include(s).
 #include "traccc/seeding/device/silicon_pixel_spacepoint_formation_algorithm.hpp"
@@ -31,13 +32,20 @@ class silicon_pixel_spacepoint_formation_algorithm
   ///             and host memory blocks
   /// @param queue The SYCL queue to use
   /// @param logger The logger instance to use
+  /// @param await_func The function used to synchronize events
   ///
   silicon_pixel_spacepoint_formation_algorithm(
       const traccc::memory_resource& mr, const vecmem::copy& copy,
       queue_wrapper& queue,
-      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone(),
+      await_function_type await_func = await_sync_event);
 
  private:
+  /// Synchronize an event related to asynchronous operations
+  /// @param event The event to synchronize
+  ///
+  await_function_type m_await_func;
+
   /// @name Function(s) inherited from
   /// @c traccc::device::silicon_pixel_spacepoint_formation_algorithm
   /// @{
@@ -48,6 +56,9 @@ class silicon_pixel_spacepoint_formation_algorithm
   ///
   void form_spacepoints_kernel(
       const form_spacepoints_kernel_payload& payload) const override;
+
+  /// Synchronize event
+  void await(vecmem::abstract_event& event) const override;
 
   /// @}
 

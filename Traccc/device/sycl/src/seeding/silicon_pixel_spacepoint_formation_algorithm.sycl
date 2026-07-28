@@ -23,10 +23,12 @@ namespace traccc::sycl {
 silicon_pixel_spacepoint_formation_algorithm::
     silicon_pixel_spacepoint_formation_algorithm(
         const traccc::memory_resource& mr, const vecmem::copy& copy,
-        queue_wrapper& queue, std::unique_ptr<const Logger> logger)
+        queue_wrapper& queue, std::unique_ptr<const Logger> logger,
+        await_function_type await_func)
     : device::silicon_pixel_spacepoint_formation_algorithm(mr, copy,
                                                            std::move(logger)),
-      sycl::algorithm_base(queue) {}
+      sycl::algorithm_base(queue),
+      m_await_func(await_func) {}
 
 void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
     const form_spacepoints_kernel_payload& payload) const {
@@ -58,6 +60,11 @@ void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
               });
         });
       });
+}
+
+void silicon_pixel_spacepoint_formation_algorithm::await(
+    vecmem::abstract_event& event) const {
+  m_await_func(event, queue());
 }
 
 }  // namespace traccc::sycl
