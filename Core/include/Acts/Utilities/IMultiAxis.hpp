@@ -265,14 +265,14 @@ class IMultiAxis {
     /// @param n the number of positions to advance
     /// @return a reference to the advanced iterator
     constexpr iterator& operator+=(difference_type n) noexcept {
-      m_index += n;
+      m_index += static_cast<std::size_t>(n);
       return *this;
     }
     /// Move the iterator back by @p n positions
     /// @param n the number of positions to move back
     /// @return a reference to the moved iterator
     constexpr iterator& operator-=(difference_type n) noexcept {
-      m_index -= n;
+      m_index -= static_cast<std::size_t>(n);
       return *this;
     }
 
@@ -297,7 +297,7 @@ class IMultiAxis {
 
     friend constexpr difference_type operator-(const iterator& lhs,
                                                const iterator& rhs) noexcept {
-      return lhs.m_index - rhs.m_index;
+      return static_cast<difference_type>(lhs.m_index - rhs.m_index);
     }
 
     friend constexpr auto operator<=>(const iterator& a,
