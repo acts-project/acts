@@ -116,7 +116,7 @@ ActsExamples::HeavyFlavourOrigin HepMC3InputConverter::deriveHeavyFlavourOrigin(
 
   bool isFromCharm{false};
   while (!st.empty()) {
-    const auto& part = st.back();
+    auto part = std::move(st.back());
     st.pop_back();
 
     if (!part) {
