@@ -213,11 +213,12 @@ triplet_seeding_algorithm::triplet_seeding_algorithm(
     const spacepoint_grid_config& grid_config,
     const seedfilter_config& filter_config, const traccc::memory_resource& mr,
     const vecmem::copy& copy, alpaka::queue& q,
-    std::unique_ptr<const Logger> logger)
+    std::unique_ptr<const Logger> logger, await_function_type await_func)
     : device::triplet_seeding_algorithm(finder_config, grid_config,
                                         filter_config, mr, copy,
                                         std::move(logger)),
-      alpaka::algorithm_base{q} {}
+      alpaka::algorithm_base{q},
+      m_await_func(await_func) {}
 
 void triplet_seeding_algorithm::count_grid_capacities_kernel(
     const count_grid_capacities_kernel_payload& payload) const {
@@ -319,6 +320,10 @@ void triplet_seeding_algorithm::select_seeds_kernel(
       kernels::select_seeds{}, payload.finder_config, payload.filter_config,
       payload.spacepoints, payload.grid, payload.spM_tc, payload.midBot_tc,
       payload.triplets, payload.seeds);
+}
+
+void triplet_seeding_algorithm::await(vecmem::abstract_event& event) const {
+  m_await_func(event, queue());
 }
 
 }  // namespace traccc::alpaka

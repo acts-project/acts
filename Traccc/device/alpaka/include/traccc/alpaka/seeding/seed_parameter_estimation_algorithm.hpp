@@ -9,6 +9,7 @@
 
 // Local include(s).
 #include "traccc/alpaka/utils/algorithm_base.hpp"
+#include "traccc/alpaka/utils/await.hpp"
 
 // Project include(s).
 #include "traccc/seeding/device/seed_parameter_estimation_algorithm.hpp"
@@ -28,14 +29,19 @@ struct seed_parameter_estimation_algorithm
   ///             and host memory blocks
   /// @param queue The Alpaka queue to work with
   /// @param logger The logger instance to use
+  /// @param await_func The function used to synchronize events
   ///
   seed_parameter_estimation_algorithm(
       const track_params_estimation_config& config,
       const traccc::memory_resource& mr, const vecmem::copy& copy,
       alpaka::queue& queue,
-      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone(),
+      await_function_type await_func = await_sync_event);
 
  private:
+  /// The function used to synchronize events.
+  await_function_type m_await_func;
+
   /// @name Function(s) inherited from
   /// @c traccc::device::seed_parameter_estimation_algorithm
   /// @{
@@ -46,6 +52,11 @@ struct seed_parameter_estimation_algorithm
   ///
   void estimate_seed_params_kernel(
       const struct estimate_seed_params_kernel_payload& payload) const override;
+
+  /// Synchronize an event related to asynchronous operations
+  /// @param event The event to synchronize
+  ///
+  void await(vecmem::abstract_event& event) const override;
 
   /// @}
 
