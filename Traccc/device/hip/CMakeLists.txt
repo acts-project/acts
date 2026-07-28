@@ -61,6 +61,8 @@ traccc_add_library( traccc_hip hip TYPE SHARED
    # Utility code.
    "include/traccc/hip/utils/algorithm_base.hpp"
    "src/utils/algorithm_base.cpp"
+   "include/traccc/hip/utils/await.hpp"
+   "src/utils/await.cpp"
    "src/utils/barrier.hpp"
    "src/utils/global_index.hpp"
    "src/utils/hip_error_handling.hpp"
