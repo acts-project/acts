@@ -17,8 +17,6 @@ namespace Acts {
 
 class GeometryContext;
 
-namespace Experimental {
-
 /// This class is the top-level entry point to build a tracking geometry using
 /// the blueprint building mechanism. It forms the root of a tree of nodes where
 /// each node performs a portion of the construction. This top-level class has
@@ -105,5 +103,13 @@ class Blueprint : public BlueprintNode {
   Config m_cfg;
 };
 
+namespace Experimental {
+/// @deprecated The blueprint geometry moved out of the `Acts::Experimental`
+///             namespace. Use @ref Acts::Blueprint instead. This alias is kept
+///             for backward compatibility and will be removed.
+using Blueprint
+    [[deprecated("Acts::Experimental::Blueprint moved to Acts::Blueprint")]] =
+        Acts::Blueprint;
 }  // namespace Experimental
+
 }  // namespace Acts

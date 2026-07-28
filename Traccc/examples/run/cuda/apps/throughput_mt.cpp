@@ -11,8 +11,7 @@
 #include "traccc/examples/cuda/full_chain_algorithm.hpp"
 
 int main(int argc, char* argv[]) {
-
-    // Execute the throughput test.
-    return traccc::throughput_mt<traccc::cuda::full_chain_algorithm>(
-        "Multi-threaded CUDA GPU throughput tests", argc, argv);
+  // Execute the throughput test.
+  return traccc::throughput_mt<traccc::cuda::full_chain_algorithm>(
+      "Multi-threaded CUDA GPU throughput tests", argc, argv);
 }

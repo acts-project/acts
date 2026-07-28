@@ -19,14 +19,14 @@ namespace traccc::device {
 /// (Global Event Data) Payload for the @c
 /// traccc::device::gbts_prefix_sum_eta_phi_bins function
 struct gbts_prefix_sum_eta_phi_bins_payload {
-    /// Number of eta bins
-    unsigned int nEtaBins;
-    /// Number of phi bins per eta slice
-    unsigned int nPhiBins;
-    /// Per-eta prefix-summed offsets into the global node array
-    vecmem::data::vector_view<const unsigned int> eta_node_counter;
-    /// In/out: per-eta phi prefix sums, made cumulative within each eta
-    vecmem::data::vector_view<unsigned int> phi_cusums;
+  /// Number of eta bins
+  unsigned int nEtaBins;
+  /// Number of phi bins per eta slice
+  unsigned int nPhiBins;
+  /// Per-eta prefix-summed offsets into the global node array
+  vecmem::data::vector_view<const unsigned int> eta_node_counter;
+  /// In/out: per-eta phi prefix sums, made cumulative within each eta
+  vecmem::data::vector_view<unsigned int> phi_cusums;
 };
 
 /// @brief Convert the per-(eta, phi) sums into cumulative offsets.

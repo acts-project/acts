@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -99,6 +98,11 @@ DigitizationAlgorithm::DigitizationAlgorithm(
 
     const auto& digiCfg = m_cfg.digitizationConfigs.valueAt(i);
     geoCfg = digiCfg.geometricDigiConfig;
+
+    if (!geoCfg.indices.empty() && geoCfg.segmentation == nullptr) {
+      throw std::invalid_argument(
+          "Geometric digitization requires a segmentation");
+    }
     // Copy so we can sort in-place
     SmearingConfig smCfg = digiCfg.smearingDigiConfig;
 
@@ -225,7 +229,7 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
               Acts::Vector3 driftDir = cfg.drift(simHit.position(), rng);
               auto channelsRes = m_channelizer.channelize(
                   simHit, *surfacePtr, ctx.geoContext, driftDir,
-                  cfg.segmentation, cfg.thickness);
+                  *cfg.segmentation, cfg.thickness);
               if (!channelsRes.ok() || channelsRes->empty()) {
                 ACTS_DEBUG(
                     "Geometric channelization did not work, skipping this "
@@ -356,8 +360,6 @@ DigitizedParameters DigitizationAlgorithm::localParameters(
     RandomEngine& rng) const {
   DigitizedParameters dParameters;
 
-  const auto& binningData = geoCfg.segmentation.binningData();
-
   // For digital readout, the weight needs to be split in x and y
   std::array<double, 2u> pos = {0., 0.};
   std::array<double, 2u> totalWeight = {0., 0.};
@@ -376,16 +378,19 @@ DigitizedParameters DigitizationAlgorithm::localParameters(
     if (charge > geoCfg.threshold) {
       double weight = geoCfg.digital ? 1. : charge;
       for (std::size_t ib = 0; ib < 2; ++ib) {
+        // Cell bins are zero-based while the axis bin indices start at one
+        const double binCenter =
+            geoCfg.segmentation->getAxis(ib).getBinCenter(bin[ib] + 1);
         if (geoCfg.digital && geoCfg.componentDigital) {
           // only fill component of this row/column if not yet filled
           if (!componentChannels[ib].contains(bin[ib])) {
             totalWeight[ib] += weight;
-            pos[ib] += weight * binningData[ib].center(bin[ib]);
+            pos[ib] += weight * binCenter;
             componentChannels[ib].insert(bin[ib]);
           }
         } else {
           totalWeight[ib] += weight;
-          pos[ib] += weight * binningData[ib].center(bin[ib]);
+          pos[ib] += weight * binCenter;
         }
         // min max channels
         bmin[ib] = std::min(bmin[ib], static_cast<std::size_t>(bin[ib]));

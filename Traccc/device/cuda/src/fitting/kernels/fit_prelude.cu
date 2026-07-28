@@ -17,8 +17,7 @@ namespace traccc::cuda {
 namespace kernels {
 
 __global__ void fit_prelude(const device::fit_prelude_payload payload) {
-
-    device::fit_prelude(details::global_index1(), payload);
+  device::fit_prelude(details::global_index1(), payload);
 }
 
 }  // namespace kernels
@@ -26,10 +25,9 @@ __global__ void fit_prelude(const device::fit_prelude_payload payload) {
 void fit_prelude(const dim3& grid_size, const dim3& block_size,
                  std::size_t shared_mem_size, const cudaStream_t& stream,
                  const device::fit_prelude_payload& payload) {
-
-    kernels::fit_prelude<<<grid_size, block_size, shared_mem_size, stream>>>(
-        payload);
-    TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+  kernels::fit_prelude<<<grid_size, block_size, shared_mem_size, stream>>>(
+      payload);
+  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
 }  // namespace traccc::cuda

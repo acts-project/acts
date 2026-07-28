@@ -10,7 +10,15 @@ traccc_add_library( traccc_simulation simulation TYPE INTERFACE
   "include/traccc/simulation/event_generators.hpp"
   "include/traccc/simulation/measurement_smearer.hpp"
   "include/traccc/simulation/simulator.hpp"
-  "include/traccc/simulation/smearing_writer.hpp" )
-target_link_libraries( traccc_simulation
-  INTERFACE traccc::core traccc::io detray::core detray::io
-            detray::test_common detray::test_utils )
+  "include/traccc/simulation/smearing_writer.hpp"
+)
+target_link_libraries(
+    traccc_simulation
+    INTERFACE
+        traccc::core
+        traccc::io
+        detray::core
+        detray::io
+        detray::test_common
+        detray::test_utils
+)

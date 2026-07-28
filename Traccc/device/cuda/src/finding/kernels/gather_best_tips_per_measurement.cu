@@ -16,9 +16,8 @@ __global__ void gather_best_tips_per_measurement(
     const __grid_constant__
         device::gather_best_tips_per_measurement_payload<default_algebra>
             payload) {
-
-    device::gather_best_tips_per_measurement(details::global_index1(),
-                                             barrier{}, payload);
+  device::gather_best_tips_per_measurement(details::global_index1(), barrier{},
+                                           payload);
 }
 
 }  // namespace traccc::cuda::kernels

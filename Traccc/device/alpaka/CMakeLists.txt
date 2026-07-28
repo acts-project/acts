@@ -5,22 +5,33 @@
 # Mozilla Public License Version 2.0
 
 # Project include(s).
-include( traccc-alpaka-functions )
-include( traccc-compiler-options-cpp )
+include(traccc-alpaka-functions)
+include(traccc-compiler-options-cpp)
 
-set(PUBLIC_LIBRARIES traccc::core traccc::device_common vecmem::core covfie::core)
+set(PUBLIC_LIBRARIES
+    traccc::core
+    traccc::device_common
+    vecmem::core
+    covfie::core
+)
 set(PRIVATE_LIBRARIES alpaka::alpaka)
 
 traccc_enable_language_alpaka()
 
 if(alpaka_ACC_GPU_CUDA_ENABLE)
-  list(APPEND PRIVATE_LIBRARIES CUDA::cudart vecmem::cuda traccc::cuda_utils covfie::cuda)
+    list(
+        APPEND PRIVATE_LIBRARIES
+        CUDA::cudart
+        vecmem::cuda
+        traccc::cuda_utils
+        covfie::cuda
+    )
 elseif(alpaka_ACC_GPU_HIP_ENABLE)
-  find_package( HIPToolkit REQUIRED )
-  list(APPEND PRIVATE_LIBRARIES HIP::hiprt vecmem::hip covfie::hip)
+    find_package(HIPToolkit REQUIRED)
+    list(APPEND PRIVATE_LIBRARIES HIP::hiprt vecmem::hip covfie::hip)
 elseif(alpaka_ACC_SYCL_ENABLE)
-  include( traccc-compiler-options-sycl )
-  list(APPEND PRIVATE_LIBRARIES vecmem::sycl traccc::sycl_utils covfie::sycl)
+    include(traccc-compiler-options-sycl)
+    list(APPEND PRIVATE_LIBRARIES vecmem::sycl traccc::sycl_utils covfie::sycl)
 endif()
 
 traccc_add_alpaka_library( traccc_alpaka alpaka TYPE SHARED
@@ -64,18 +75,24 @@ traccc_add_alpaka_library( traccc_alpaka alpaka TYPE SHARED
 
 # Set up Thrust specifically for the traccc::alpaka library.
 if(alpaka_ACC_GPU_CUDA_ENABLE)
-  thrust_create_target( traccc::cuda_thrust
+    thrust_create_target(traccc::cuda_thrust
     HOST CPP
-    DEVICE CUDA )
-  target_link_libraries(traccc::cuda_thrust INTERFACE CUDA::cudart)
-  list(APPEND PRIVATE_LIBRARIES traccc::cuda_thrust)
+    DEVICE CUDA
+    )
+    target_link_libraries(traccc::cuda_thrust INTERFACE CUDA::cudart)
+    list(APPEND PRIVATE_LIBRARIES traccc::cuda_thrust)
 elseif(alpaka_ACC_GPU_HIP_ENABLE)
-  list(APPEND PRIVATE_LIBRARIES roc::rocthrust)
+    list(APPEND PRIVATE_LIBRARIES roc::rocthrust)
 else()
-  thrust_create_target (traccc::alpaka_thrust
-    HOST CPP
-    DEVICE CPP )
-  list(APPEND PRIVATE_LIBRARIES traccc::alpaka_thrust)
+    thrust_create_target(traccc::alpaka_thrust
+      HOST CPP
+      DEVICE CPP
+    )
+    list(APPEND PRIVATE_LIBRARIES traccc::alpaka_thrust)
 endif()
 
-target_link_libraries(traccc_alpaka PUBLIC ${PUBLIC_LIBRARIES} PRIVATE ${PRIVATE_LIBRARIES})
+target_link_libraries(
+    traccc_alpaka
+    PUBLIC ${PUBLIC_LIBRARIES}
+    PRIVATE ${PRIVATE_LIBRARIES}
+)

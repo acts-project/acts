@@ -24,13 +24,13 @@ namespace traccc::device {
 /// Payload for the @c device::gather_best_tips_per_measurement function
 template <typename algebra_t>
 struct gather_best_tips_per_measurement_payload {
-    vecmem::data::vector_view<const unsigned int> tips;
-    vecmem::data::vector_view<const candidate_link> links;
-    edm::measurement_collection::const_view measurements;
-    vecmem::data::vector_view<unsigned long long int> insertion_mutex;
-    vecmem::data::vector_view<unsigned int> tip_index;
-    vecmem::data::vector_view<typename algebra_t::scalar> tip_pval;
-    unsigned int max_num_tracks_per_measurement;
+  vecmem::data::vector_view<const unsigned int> tips;
+  vecmem::data::vector_view<const candidate_link> links;
+  edm::measurement_collection::const_view measurements;
+  vecmem::data::vector_view<unsigned long long int> insertion_mutex;
+  vecmem::data::vector_view<unsigned int> tip_index;
+  vecmem::data::vector_view<typename algebra_t::scalar> tip_pval;
+  unsigned int max_num_tracks_per_measurement;
 };
 
 template <typename algebra_t, concepts::barrier barrier_t>

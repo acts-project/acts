@@ -21,13 +21,12 @@ silicon_pixel_spacepoint_formation_algorithm::output_type
 silicon_pixel_spacepoint_formation_algorithm::operator()(
     const host_detector& det,
     const edm::measurement_collection::const_view& meas) const {
-
-    return host_detector_visitor<detector_type_list>(
-        det, [&]<typename detector_traits_t>(
-                 const typename detector_traits_t::host& detector) {
-            return details::silicon_pixel_spacepoint_formation(detector, meas,
-                                                               m_mr);
-        });
+  return host_detector_visitor<detector_type_list>(
+      det, [&]<typename detector_traits_t>(
+               const typename detector_traits_t::host& detector) {
+        return details::silicon_pixel_spacepoint_formation(detector, meas,
+                                                           m_mr);
+      });
 }
 
 }  // namespace traccc::host

@@ -23,34 +23,33 @@ namespace traccc::cuda {
 class silicon_pixel_spacepoint_formation_algorithm
     : public device::silicon_pixel_spacepoint_formation_algorithm,
       public cuda::algorithm_base {
+ public:
+  /// Constructor for the spacepoint formation algorithm
+  ///
+  /// @param mr The memory resource(s) to use in the algorithm
+  /// @param copy The copy object to use for copying data between device
+  ///             and host memory blocks
+  /// @param str The CUDA stream to use
+  /// @param logger The logger instance to use
+  ///
+  silicon_pixel_spacepoint_formation_algorithm(
+      const traccc::memory_resource& mr, const vecmem::copy& copy,
+      const stream_wrapper& str,
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
 
-    public:
-    /// Constructor for the spacepoint formation algorithm
-    ///
-    /// @param mr The memory resource(s) to use in the algorithm
-    /// @param copy The copy object to use for copying data between device
-    ///             and host memory blocks
-    /// @param str The CUDA stream to use
-    /// @param logger The logger instance to use
-    ///
-    silicon_pixel_spacepoint_formation_algorithm(
-        const traccc::memory_resource& mr, const vecmem::copy& copy,
-        const stream_wrapper& str,
-        std::unique_ptr<const Logger> logger = getDummyLogger().clone());
+ private:
+  /// @name Function(s) inherited from
+  /// @c traccc::device::silicon_pixel_spacepoint_formation_algorithm
+  /// @{
 
-    private:
-    /// @name Function(s) inherited from
-    /// @c traccc::device::silicon_pixel_spacepoint_formation_algorithm
-    /// @{
+  /// Launch the spacepoint formation kernel
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  void form_spacepoints_kernel(
+      const form_spacepoints_kernel_payload& payload) const override;
 
-    /// Launch the spacepoint formation kernel
-    ///
-    /// @param payload The payload for the kernel
-    ///
-    void form_spacepoints_kernel(
-        const form_spacepoints_kernel_payload& payload) const override;
-
-    /// @}
+  /// @}
 
 };  // class silicon_pixel_spacepoint_formation_algorithm
 

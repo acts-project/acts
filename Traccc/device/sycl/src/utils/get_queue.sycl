@@ -14,15 +14,13 @@
 namespace traccc::sycl::details {
 
 ::sycl::queue& get_queue(traccc::sycl::queue_wrapper& queue) {
-
-    assert(queue.queue() != nullptr);
-    return *(reinterpret_cast<::sycl::queue*>(queue.queue()));
+  assert(queue.queue() != nullptr);
+  return *(reinterpret_cast<::sycl::queue*>(queue.queue()));
 }
 
 const ::sycl::queue& get_queue(const traccc::sycl::queue_wrapper& queue) {
-
-    assert(queue.queue() != nullptr);
-    return *(reinterpret_cast<const ::sycl::queue*>(queue.queue()));
+  assert(queue.queue() != nullptr);
+  return *(reinterpret_cast<const ::sycl::queue*>(queue.queue()));
 }
 
 }  // namespace traccc::sycl::details

@@ -15,10 +15,10 @@
 namespace traccc {
 
 struct [[maybe_unused]] cell_module_projection {
-    template <typename T>
-    TRACCC_HOST_DEVICE auto operator()(const edm::silicon_cell<T>& c) const {
-        return c.module_index();
-    }
+  template <typename T>
+  TRACCC_HOST_DEVICE auto operator()(const edm::silicon_cell<T>& c) const {
+    return c.module_index();
+  }
 };
 
 }  // namespace traccc

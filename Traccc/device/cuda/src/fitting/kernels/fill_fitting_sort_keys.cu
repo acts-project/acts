@@ -20,9 +20,8 @@ __global__ void fill_fitting_sort_keys(
     edm::track_collection<default_algebra>::const_view track_candidates_view,
     vecmem::data::vector_view<device::sort_key> keys_view,
     vecmem::data::vector_view<unsigned int> ids_view) {
-
-    device::fill_fitting_sort_keys(details::global_index1(),
-                                   track_candidates_view, keys_view, ids_view);
+  device::fill_fitting_sort_keys(details::global_index1(),
+                                 track_candidates_view, keys_view, ids_view);
 }
 
 }  // namespace kernels
@@ -32,10 +31,9 @@ void fill_fitting_sort_keys(
     edm::track_collection<default_algebra>::const_view track_candidates_view,
     vecmem::data::vector_view<device::sort_key> keys_view,
     vecmem::data::vector_view<unsigned int> ids_view) {
-
-    kernels::fill_fitting_sort_keys<<<grid_size, block_size, 0, stream>>>(
-        track_candidates_view, keys_view, ids_view);
-    TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+  kernels::fill_fitting_sort_keys<<<grid_size, block_size, 0, stream>>>(
+      track_candidates_view, keys_view, ids_view);
+  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
 }  // namespace traccc::cuda

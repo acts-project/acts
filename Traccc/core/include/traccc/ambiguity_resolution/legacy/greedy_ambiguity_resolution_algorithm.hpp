@@ -48,92 +48,90 @@ class greedy_ambiguity_resolution_algorithm
     : public algorithm<edm::track_container<default_algebra>::host(
           const edm::track_container<default_algebra>::host&)>,
       public messaging {
+ public:
+  struct config_t {
+    config_t() {}
 
-    public:
-    struct config_t {
+    /// Maximum amount of shared hits per track. One (1) means "no shared
+    /// hit allowed".
+    std::uint32_t maximum_shared_hits = 1;
 
-        config_t() {}
+    /// Maximum number of iterations.
+    std::uint32_t maximum_iterations = 1000000;
 
-        /// Maximum amount of shared hits per track. One (1) means "no shared
-        /// hit allowed".
-        std::uint32_t maximum_shared_hits = 1;
+    /// Minimum number of measurement to form a track.
+    std::size_t n_measurements_min = 3;
+  };
 
-        /// Maximum number of iterations.
-        std::uint32_t maximum_iterations = 1000000;
+  struct state_t {
+    std::size_t number_of_tracks{};
 
-        /// Minimum number of measurement to form a track.
-        std::size_t n_measurements_min = 3;
-    };
-
-    struct state_t {
-        std::size_t number_of_tracks{};
-
-        /// For this whole comment section, track_index refers to the index of a
-        /// track in the initial input container.
-        ///
-        /// There is no (track_id) in this algorithm, only (track_index).
-
-        /// Associates each track_index with the track's p-value
-        std::vector<traccc::scalar> track_pval;
-
-        /// Associates each track_index to the track's (measurement_id)s list
-        std::vector<std::vector<std::size_t>> measurements_per_track;
-
-        /// Associates each measurement_id to a set of (track_index)es sharing
-        /// it
-        std::unordered_map<std::size_t, std::set<std::size_t>>
-            tracks_per_measurement;
-
-        /// Associates each track_index to its number of shared measurements
-        /// (among other tracks)
-        std::vector<std::size_t> shared_measurements_per_track;
-
-        /// Keeps the selected tracks indexes that have not (yet) been removed
-        /// by the algorithm
-        std::set<std::pair<std::size_t, std::size_t>> selected_tracks;
-    };
-
-    /// Constructor for the greedy ambiguity resolution algorithm
+    /// For this whole comment section, track_index refers to the index of a
+    /// track in the initial input container.
     ///
-    /// @param cfg  Configuration object
-    // greedy_ambiguity_resolution_algorithm(const config_type& cfg) :
-    // _config(cfg) {}
-    greedy_ambiguity_resolution_algorithm(
-        const config_t cfg, vecmem::memory_resource& mr,
-        std::unique_ptr<const Logger> logger = getDummyLogger().clone())
-        : messaging(std::move(logger)), _config{cfg}, m_mr{mr} {}
+    /// There is no (track_id) in this algorithm, only (track_index).
 
-    /// Run the algorithm
-    ///
-    /// @param track_states the container of the fitted track parameters
-    /// @return the container without ambiguous tracks
-    output_type operator()(const edm::track_container<default_algebra>::host&
-                               tracks) const override;
+    /// Associates each track_index with the track's p-value
+    std::vector<traccc::scalar> track_pval;
 
-    /// Get configuration
-    config_t& get_config() { return _config; }
+    /// Associates each track_index to the track's (measurement_id)s list
+    std::vector<std::vector<std::size_t>> measurements_per_track;
 
-    private:
-    /// Computes the initial state for the input data. This function accumulates
-    /// information that will later be used to accelerate the ambiguity
-    /// resolution.
-    ///
-    /// @param tracks The input track container
-    /// @param state An empty state object which is expected to be default
-    /// constructed.
-    void compute_initial_state(
-        const edm::track_container<default_algebra>::host& tracks,
-        state_t& state) const;
+    /// Associates each measurement_id to a set of (track_index)es sharing
+    /// it
+    std::unordered_map<std::size_t, std::set<std::size_t>>
+        tracks_per_measurement;
 
-    /// Updates the state iteratively by evicting one track after the other
-    /// until the final state conditions are met.
-    ///
-    /// @param state A state object that was previously filled by the
-    /// initialization.
-    void resolve(state_t& state) const;
+    /// Associates each track_index to its number of shared measurements
+    /// (among other tracks)
+    std::vector<std::size_t> shared_measurements_per_track;
 
-    config_t _config;
-    std::reference_wrapper<vecmem::memory_resource> m_mr;
+    /// Keeps the selected tracks indexes that have not (yet) been removed
+    /// by the algorithm
+    std::set<std::pair<std::size_t, std::size_t>> selected_tracks;
+  };
+
+  /// Constructor for the greedy ambiguity resolution algorithm
+  ///
+  /// @param cfg  Configuration object
+  // greedy_ambiguity_resolution_algorithm(const config_type& cfg) :
+  // _config(cfg) {}
+  greedy_ambiguity_resolution_algorithm(
+      const config_t cfg, vecmem::memory_resource& mr,
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone())
+      : messaging(std::move(logger)), _config{cfg}, m_mr{mr} {}
+
+  /// Run the algorithm
+  ///
+  /// @param track_states the container of the fitted track parameters
+  /// @return the container without ambiguous tracks
+  output_type operator()(
+      const edm::track_container<default_algebra>::host& tracks) const override;
+
+  /// Get configuration
+  config_t& get_config() { return _config; }
+
+ private:
+  /// Computes the initial state for the input data. This function accumulates
+  /// information that will later be used to accelerate the ambiguity
+  /// resolution.
+  ///
+  /// @param tracks The input track container
+  /// @param state An empty state object which is expected to be default
+  /// constructed.
+  void compute_initial_state(
+      const edm::track_container<default_algebra>::host& tracks,
+      state_t& state) const;
+
+  /// Updates the state iteratively by evicting one track after the other
+  /// until the final state conditions are met.
+  ///
+  /// @param state A state object that was previously filled by the
+  /// initialization.
+  void resolve(state_t& state) const;
+
+  config_t _config;
+  std::reference_wrapper<vecmem::memory_resource> m_mr;
 };
 
 }  // namespace traccc::legacy

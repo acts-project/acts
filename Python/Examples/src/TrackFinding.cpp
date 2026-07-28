@@ -138,6 +138,16 @@ void addTrackFinding(py::module& mex) {
               *Acts::getDefaultLogger("TrackFinding", level));
         });
 
+    alg.def_static(
+        "makeBremTrackFinderFunction",
+        [](std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+           std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+           Acts::Logging::Level level) {
+          return Alg::makeBremTrackFinderFunction(
+              std::move(trackingGeometry), std::move(magneticField),
+              *Acts::getDefaultLogger("TrackFindingBrem", level));
+        });
+
     py::class_<Alg::TrackFinderFunction,
                std::shared_ptr<Alg::TrackFinderFunction>>(
         alg, "TrackFinderFunction");
@@ -145,8 +155,8 @@ void addTrackFinding(py::module& mex) {
     ACTS_PYTHON_STRUCT(
         c, inputMeasurements, inputInitialTrackParameters, inputSeeds,
         outputTracks, trackingGeometry, magneticField, findTracks,
-        measurementSelectorCfg, trackSelectorCfg, maxSteps, twoWay,
-        reverseSearch, seedDeduplication, stayOnSeed, pixelVolumeIds,
+        findTracksBrem, measurementSelectorCfg, trackSelectorCfg, maxSteps,
+        twoWay, reverseSearch, seedDeduplication, stayOnSeed, pixelVolumeIds,
         stripVolumeIds, maxPixelHoles, maxStripHoles, trimTracks,
         useJosephFormulation, constrainToVolumeIds, endOfWorldVolumeIds);
   }

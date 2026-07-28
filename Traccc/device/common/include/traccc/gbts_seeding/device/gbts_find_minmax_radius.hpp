@@ -20,14 +20,14 @@ namespace traccc::device {
 /// (Global Event Data) Payload for the @c
 /// traccc::device::gbts_find_minmax_radius function
 struct gbts_find_minmax_radius_payload {
-    /// Number of eta bins
-    unsigned int nEtaBins;
-    /// Per-eta (begin, end) node range, as 2*nEtaBins flat ints
-    vecmem::data::vector_view<const unsigned int> eta_bin_views;
-    /// Per-node (tau_min, tau_max, r, z) (only r is read here)
-    vecmem::data::vector_view<const float4> node_params;
-    /// Output: per-eta (rmin, rmax) pair, flat (2*nEtaBins floats)
-    vecmem::data::vector_view<float> bin_rads;
+  /// Number of eta bins
+  unsigned int nEtaBins;
+  /// Per-eta (begin, end) node range, as 2*nEtaBins flat ints
+  vecmem::data::vector_view<const unsigned int> eta_bin_views;
+  /// Per-node (tau_min, tau_max, r, z) (only r is read here)
+  vecmem::data::vector_view<const float4> node_params;
+  /// Output: per-eta (rmin, rmax) pair, flat (2*nEtaBins floats)
+  vecmem::data::vector_view<float> bin_rads;
 };
 
 /// @brief Compute the per-eta-bin minimum and maximum radius.

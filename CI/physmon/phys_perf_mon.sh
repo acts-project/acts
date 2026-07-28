@@ -20,24 +20,63 @@ shopt -s extglob
 
 mode=${1:-all}
 if ! [[ $mode = @(all|kf|gsf|gx2f|refit_kf|refit_gsf|fullchains|simulation|gx2f_vs_kf) ]]; then
-    echo "Usage: $0 <all|kf|gsf|gx2f|refit_kf|refit_gsf|fullchains|simulation|gx2f_vs_kf> (outdir)"
+    echo "Usage: $0 <all|kf|gsf|gx2f|refit_kf|refit_gsf|fullchains|simulation|gx2f_vs_kf> (outdir) (num_jobs)"
     exit 1
 fi
 
 outdir=${2:-physmon}
+# number of histcmp worker processes per comparison
+num_jobs=${3:-1}
 mkdir -p $outdir
 mkdir -p $outdir/data
 mkdir -p $outdir/html
 mkdir -p $outdir/logs
 
 refdir=CI/physmon/reference
+refmanifest=CI/physmon/reference.sha256
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  )
 
-# Skip the raw 2D/3D res_*/pull_* scatter histograms (vs eta, pT, eta-phi,
-# eta-pT) in histcmp: their projections are redundant with the 1D res_*/
-# pull_* histograms.
-res_pull_params="d0|phi|qop|qopt|qopt_rel|t|theta|z0"
-res_pull_2d3d_filter="! ^(res|pull)_(${res_pull_params})_vs_(eta|pT|eta_phi|eta_pT)$"
+# The reference histograms are not committed; they are fetched by content hash
+# from the registry. Set ACTS_PHYSMON_NO_FETCH=1 to run against a reference
+# directory you populated yourself.
+if [ -z "${ACTS_PHYSMON_NO_FETCH:-}" ]; then
+    if ! command -v uv > /dev/null; then
+        echo "::error::'uv' is needed to fetch the physmon reference files, but is not on PATH."
+        echo "Install it from https://docs.astral.sh/uv/, or populate $refdir"
+        echo "yourself and set ACTS_PHYSMON_NO_FETCH=1."
+        exit 1
+    fi
+
+    echo "::group::Fetch physmon references"
+    # Handle the failure rather than letting set -e abort inside the group: on
+    # GitHub the error would end up folded into a collapsed section that nobody
+    # expands, and the run would stop without saying what was being fetched.
+    fetch_ec=0
+    run uv run --no-project "${SCRIPT_DIR}/reference.py" pull \
+        --manifest "$refmanifest" \
+        --reference-dir "$refdir" || fetch_ec=$?
+    echo "::endgroup::"
+
+    if [ $fetch_ec -ne 0 ]; then
+        echo "::error::Could not fetch the physmon reference files (exit $fetch_ec, details above)"
+        echo "The reference histograms are not committed, so there is nothing to compare"
+        echo "against without them. See docs/pages/contributing/physmon.md, or set"
+        echo "ACTS_PHYSMON_NO_FETCH=1 to run against $refdir as it is on disk."
+        exit $fetch_ec
+    fi
+else
+    echo "ACTS_PHYSMON_NO_FETCH is set: using $refdir as it is on disk"
+    if [ ! -d "$refdir" ]; then
+        echo "::error::$refdir does not exist, and fetching is disabled."
+        echo "Unset ACTS_PHYSMON_NO_FETCH to fetch the references from the registry,"
+        echo "or populate that directory yourself."
+        exit 1
+    fi
+fi
+
+# Ship the manifest with the artifact so an update can be reconstructed from the
+# run alone, without guessing which commit it came from
+cp "$refmanifest" "$outdir/reference.sha256"
 
 # File to accumulate the histcmp results
 histcmp_results=$outdir/histcmp_results.csv
@@ -182,8 +221,7 @@ function run_histcmp() {
     b=$2
     title=$3
     html_path=$4
-    plots_path=$5
-    shift 5
+    shift 4
 
     echo "::group::Comparing $a vs. $b"
 
@@ -197,22 +235,41 @@ function run_histcmp() {
         ec=1
     fi
 
+    # histcmp only creates this directory when a plot directory is configured
+    mkdir -p $(dirname $outdir/html/$html_path)
+
+    start=$(date +%s)
+    # scatter renders 3D histograms much faster than the default voxel
+    # renderer at every histogram size
     run histcmp $a $b \
         --label-reference=reference \
         --label-monitored=monitored \
         --title="$title" \
+        --jobs $num_jobs \
+        --renderer-3d scatter \
         -o $outdir/html/$html_path \
-        -p $outdir/html/$plots_path \
         "$@"
 
     this_ec=$?
     ec=$(($ec | $this_ec))
+    echo "histcmp took $(($(date +%s) - $start)) seconds"
 
     if [ $this_ec -ne 0 ]; then
         echo "::error::histcmp failed: ec=$this_ec"
     fi
 
-    echo "\"${title}\",html/${html_path},${this_ec}" >> $histcmp_results
+    # Record which reference file this comparison covers, and which output would
+    # replace it, so `reference.py candidate` can turn a failure into a manifest
+    # entry. Comparisons between two monitored outputs have no reference and
+    # leave both fields empty.
+    ref_path=""
+    monitored_path=""
+    if [[ "$b" == "$refdir/"* ]]; then
+        ref_path="${b#$refdir/}"
+        monitored_path="${a#$outdir/data/}"
+    fi
+
+    echo "\"${title}\",html/${html_path},${this_ec},${ref_path},${monitored_path}" >> $histcmp_results
 
     echo "::endgroup::"
 }
@@ -229,7 +286,6 @@ function trackfinding() {
             $refdir/$path/performance_seeding.root \
             "Seeding ${name}" \
             $path/performance_seeding.html \
-            $path/performance_seeding_plots \
             --config $default_config
     fi
 
@@ -238,7 +294,6 @@ function trackfinding() {
         $refdir/$path/performance_finding_ckf.root \
         "CKF finding performance | ${name}" \
         $path/performance_finding_ckf.html \
-        $path/performance_finding_ckf_plots \
         --config $default_config
 
     run_histcmp \
@@ -246,7 +301,6 @@ function trackfinding() {
         $refdir/$path/performance_fitting_ckf.root \
         "CKF fitting performance | ${name}" \
         $path/performance_fitting_ckf.html \
-        $path/performance_fitting_ckf_plots \
         --config $default_config
 
     # TODO remove
@@ -268,16 +322,14 @@ function trackfinding() {
         $outdir/data/$path/tracksummary_ckf_hist.root \
         $refdir/$path/tracksummary_ckf_hist.root \
         "CKF track summary | ${name}" \
-        $path/tracksummary_ckf.html \
-        $path/tracksummary_ckf_plots
+        $path/tracksummary_ckf.html
 
     if [ -f $refdir/$path/performance_finding_ckf_ambi.root ]; then
         run_histcmp \
             $outdir/data/$path/performance_finding_ckf_ambi.root \
             $refdir/$path/performance_finding_ckf_ambi.root \
             "Ambisolver finding performance | ${name}" \
-            $path/performance_finding_ckf_ambi.html \
-            $path/performance_finding_ckf_ambi
+            $path/performance_finding_ckf_ambi.html
     fi
 
     if [ -f $refdir/$path/performance_finding_ckf_ml_solver.root ]; then
@@ -285,8 +337,7 @@ function trackfinding() {
             $outdir/data/$path/performance_finding_ckf_ml_solver.root \
             $refdir/$path/performance_finding_ckf_ml_solver.root \
             "ML Ambisolver | ${name}" \
-            $path/performance_finding_ckf_ml_solver.html \
-            $path/performance_finding_ckf_ml_solver
+            $path/performance_finding_ckf_ml_solver.html
     fi
 }
 
@@ -311,8 +362,7 @@ function vertexing() {
             $outdir/data/$path/performance_vertexing_ivf_notime_hist.root \
             $refdir/$path/performance_vertexing_ivf_notime_hist.root \
             "IVF notime | ${name}" \
-            $path/performance_vertexing_ivf_notime.html \
-            $path/performance_vertexing_ivf_notime_plots
+            $path/performance_vertexing_ivf_notime.html
     fi
 
     run python3 Examples/Scripts/generic_plotter.py \
@@ -330,8 +380,7 @@ function vertexing() {
         $outdir/data/$path/performance_vertexing_amvf_gauss_notime_hist.root \
         $refdir/$path/performance_vertexing_amvf_gauss_notime_hist.root \
         "AMVF gauss notime | ${name}" \
-        $path/performance_vertexing_amvf_gauss_notime.html \
-        $path/performance_vertexing_amvf_gauss_notime_plots
+        $path/performance_vertexing_amvf_gauss_notime.html
 
     run python3 Examples/Scripts/generic_plotter.py \
         $outdir/data/$path/performance_vertexing_amvf_grid_time.root \
@@ -348,8 +397,7 @@ function vertexing() {
         $outdir/data/$path/performance_vertexing_amvf_grid_time_hist.root \
         $refdir/$path/performance_vertexing_amvf_grid_time_hist.root \
         "AMVF grid time | ${name}" \
-        $path/performance_vertexing_amvf_grid_time.html \
-        $path/performance_vertexing_amvf_grid_time_plots
+        $path/performance_vertexing_amvf_grid_time.html
 }
 
 function simulation() {
@@ -372,8 +420,7 @@ function simulation() {
         $outdir/data/simulation/particles_${suffix}_hist.root \
         $refdir/simulation/particles_${suffix}_hist.root \
         "Particles ${suffix}" \
-        simulation/particles_${suffix}.html \
-        simulation/particles_${suffix}_plots
+        simulation/particles_${suffix}.html
 }
 
 function generation() {
@@ -391,8 +438,7 @@ function generation() {
         $outdir/data/simulation/particles_ttbar_hist.root \
         $refdir/simulation/particles_ttbar_hist.root \
         "Particles ttbar" \
-        simulation/particles_ttbar.html \
-        simulation/particles_ttbar_plots
+        simulation/particles_ttbar.html
 
     run python3 Examples/Scripts/generic_plotter.py \
         $outdir/data/simulation/vertices_ttbar.root \
@@ -408,8 +454,7 @@ function generation() {
         $outdir/data/simulation/vertices_ttbar_hist.root \
         $refdir/simulation/vertices_ttbar_hist.root \
         "Vertices ttbar" \
-        simulation/vertices_ttbar.html \
-        simulation/vertices_ttbar_plots
+        simulation/vertices_ttbar.html
 }
 
 if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
@@ -425,9 +470,7 @@ if [[ "$mode" == "all" || "$mode" == "kf" ]]; then
         $refdir/trackfitting_kf/performance_trackfitting.root \
         "Truth tracking (KF)" \
         trackfitting_kf/performance_trackfitting.html \
-        trackfitting_kf/performance_trackfitting_plots \
-        --config CI/physmon/config/trackfitting_kf.yml \
-        -f "$res_pull_2d3d_filter"
+        --config CI/physmon/config/trackfitting_kf.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
@@ -436,9 +479,7 @@ if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
         $refdir/trackfitting_gsf/performance_trackfitting.root \
         "Truth tracking (GSF)" \
         trackfitting_gsf/performance_trackfitting.html \
-        trackfitting_gsf/performance_trackfitting_plots \
-        --config CI/physmon/config/trackfitting_gsf.yml \
-        -f "$res_pull_2d3d_filter"
+        --config CI/physmon/config/trackfitting_gsf.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
@@ -447,9 +488,7 @@ if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
         $refdir/trackfitting_gx2f/performance_trackfitting.root \
         "Truth tracking (GX2F)" \
         trackfitting_gx2f/performance_trackfitting.html \
-        trackfitting_gx2f/performance_trackfitting_plots \
-        --config CI/physmon/config/trackfitting_gx2f.yml \
-        -f "$res_pull_2d3d_filter"
+        --config CI/physmon/config/trackfitting_gx2f.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "refit_kf" ]]; then
@@ -458,9 +497,7 @@ if [[ "$mode" == "all" || "$mode" == "refit_kf" ]]; then
         $refdir/trackrefitting_kf/performance_trackrefitting.root \
         "Truth tracking (KF refit)" \
         trackrefitting_kf/performance_trackrefitting.html \
-        trackrefitting_kf/performance_trackrefitting_plots \
-        --config CI/physmon/config/trackfitting_kf.yml \
-        -f "$res_pull_2d3d_filter"
+        --config CI/physmon/config/trackfitting_kf.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "refit_gsf" ]]; then
@@ -469,9 +506,7 @@ if [[ "$mode" == "all" || "$mode" == "refit_gsf" ]]; then
         $refdir/trackrefitting_gsf/performance_trackrefitting.root \
         "Truth tracking (GSF refit)" \
         trackrefitting_gsf/performance_trackrefitting.html \
-        trackrefitting_gsf/performance_trackrefitting_plots \
-        --config CI/physmon/config/trackfitting_gsf.yml \
-        -f "$res_pull_2d3d_filter"
+        --config CI/physmon/config/trackfitting_gsf.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
@@ -493,16 +528,23 @@ if [[ "$mode" == "all" || "$mode" == "gx2f_vs_kf" ]]; then
         $outdir/data/trackfitting_gx2f_vs_kf/performance_trackfitting_kf.root \
         "Comparison - Truth tracking (GX2F vs KF)" \
         trackfitting_gx2f_vs_kf/performance_trackfitting.html \
-        trackfitting_gx2f_vs_kf/performance_trackfitting_plots \
         --config CI/physmon/config/info_only.yml \
         --label-reference=KF \
-        --label-monitored=GX2F \
-        -f "$res_pull_2d3d_filter"
+        --label-monitored=GX2F
 fi
 
 run python3 CI/physmon/summary.py $histcmp_results \
   --md $outdir/summary.md \
   --html $outdir/summary.html
 ec=$(($ec | $?))
+
+# The manifest that would apply if every failing comparison here were accepted.
+# Attached to the artifact so a maintainer can publish it without re-running
+# anything, and so the pull request has something to commit verbatim.
+run uv run --no-project "${SCRIPT_DIR}/reference.py" candidate \
+  --manifest "$refmanifest" \
+  --results $histcmp_results \
+  --data-dir $outdir/data \
+  --output $outdir/reference-candidate.sha256
 
 exit $ec

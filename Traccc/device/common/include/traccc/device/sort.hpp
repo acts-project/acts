@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cstdint>
+
 #include <vecmem/memory/device_atomic_ref.hpp>
 
 #include "traccc/definitions/qualifiers.hpp"
@@ -26,9 +27,9 @@ namespace traccc::device {
  */
 template <std::movable T>
 TRACCC_DEVICE void swap(T& a, T& b) {
-    T t = std::move(a);
-    a = std::move(b);
-    b = std::move(t);
+  T t = std::move(a);
+  a = std::move(b);
+  b = std::move(t);
 }
 
 /**
@@ -60,30 +61,29 @@ template <concepts::thread_id1 T, concepts::barrier B, std::movable K,
 TRACCC_DEVICE void blockOddEvenSort(const T& thread_id, const B& barrier,
                                     K* keys, uint32_t num_keys,
                                     C&& comparison) {
-    bool sorted;
+  bool sorted;
 
-    do {
-        sorted = true;
+  do {
+    sorted = true;
 
-        for (uint32_t j =
-                 2 * static_cast<uint32_t>(thread_id.getLocalThreadIdX()) + 1;
-             j < num_keys - 1; j += 2 * thread_id.getBlockDimX()) {
-            if (comparison(keys[j + 1], keys[j])) {
-                swap(keys[j + 1], keys[j]);
-                sorted = false;
-            }
-        }
+    for (uint32_t j =
+             2 * static_cast<uint32_t>(thread_id.getLocalThreadIdX()) + 1;
+         j < num_keys - 1; j += 2 * thread_id.getBlockDimX()) {
+      if (comparison(keys[j + 1], keys[j])) {
+        swap(keys[j + 1], keys[j]);
+        sorted = false;
+      }
+    }
 
-        barrier.blockBarrier();
+    barrier.blockBarrier();
 
-        for (uint32_t j =
-                 2 * static_cast<uint32_t>(thread_id.getLocalThreadIdX());
-             j < num_keys - 1; j += 2 * thread_id.getBlockDimX()) {
-            if (comparison(keys[j + 1], keys[j])) {
-                swap(keys[j + 1], keys[j]);
-                sorted = false;
-            }
-        }
-    } while (barrier.blockOr(!sorted));
+    for (uint32_t j = 2 * static_cast<uint32_t>(thread_id.getLocalThreadIdX());
+         j < num_keys - 1; j += 2 * thread_id.getBlockDimX()) {
+      if (comparison(keys[j + 1], keys[j])) {
+        swap(keys[j + 1], keys[j]);
+        sorted = false;
+      }
+    }
+  } while (barrier.blockOr(!sorted));
 }
 }  // namespace traccc::device

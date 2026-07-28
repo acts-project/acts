@@ -22,16 +22,15 @@ using timing_info_pair = std::pair<std::string, std::chrono::nanoseconds>;
 /// Struct for storing time measurements collected in timer class
 ///
 struct timing_info {
+  /// The low level data.
+  std::vector<timing_info_pair> data;
 
-    /// The low level data.
-    std::vector<timing_info_pair> data;
-
-    /// Get the time taken by a given component
-    ///
-    /// @param timer_name The name of the component
-    /// @return The time taken by the component in question
-    ///
-    std::chrono::nanoseconds get_time(std::string_view timer_name) const;
+  /// Get the time taken by a given component
+  ///
+  /// @param timer_name The name of the component
+  /// @return The time taken by the component in question
+  ///
+  std::chrono::nanoseconds get_time(std::string_view timer_name) const;
 
 };  // struct timing_info
 

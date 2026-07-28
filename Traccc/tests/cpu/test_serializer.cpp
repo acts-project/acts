@@ -21,34 +21,34 @@
 using namespace traccc;
 
 GTEST_TEST(traccc_grid2, serialize_deserialize) {
-    vecmem::host_memory_resource resource;
+  vecmem::host_memory_resource resource;
 
-    axis2::regular<> r6{6u, -3.f, 7.f, resource};
-    axis2::circular<> c12{12u, -3.f, 3.f, resource};
+  axis2::regular<> r6{6u, -3.f, 7.f, resource};
+  axis2::circular<> c12{12u, -3.f, 3.f, resource};
 
-    serializer2 ser2;
+  serializer2 ser2;
 
-    // Serializing
-    unsigned int test = ser2.serialize(r6, c12, 0u, 0u);
-    EXPECT_EQ(test, 0u);
-    test = ser2.serialize(r6, c12, 5u, 0u);
-    EXPECT_EQ(test, 5u);
-    test = ser2.serialize(r6, c12, 0u, 1u);
-    EXPECT_EQ(test, 6u);
-    test = ser2.serialize(r6, c12, 5u, 2u);
-    EXPECT_EQ(test, 17u);
+  // Serializing
+  unsigned int test = ser2.serialize(r6, c12, 0u, 0u);
+  EXPECT_EQ(test, 0u);
+  test = ser2.serialize(r6, c12, 5u, 0u);
+  EXPECT_EQ(test, 5u);
+  test = ser2.serialize(r6, c12, 0u, 1u);
+  EXPECT_EQ(test, 6u);
+  test = ser2.serialize(r6, c12, 5u, 2u);
+  EXPECT_EQ(test, 17u);
 
-    // Deserialize
-    std::array<unsigned int, 2> expected_array = {0u, 0u};
-    std::array<unsigned int, 2> test_array = ser2.deserialize(r6, c12, 0u);
-    EXPECT_EQ(test_array, expected_array);
-    expected_array = {5u, 0u};
-    test_array = ser2.deserialize(r6, c12, 5u);
-    EXPECT_EQ(test_array, expected_array);
-    expected_array = {0u, 1u};
-    test_array = ser2.deserialize(r6, c12, 6u);
-    EXPECT_EQ(test_array, expected_array);
-    expected_array = {5u, 2u};
-    test_array = ser2.deserialize(r6, c12, 17u);
-    EXPECT_EQ(test_array, expected_array);
+  // Deserialize
+  std::array<unsigned int, 2> expected_array = {0u, 0u};
+  std::array<unsigned int, 2> test_array = ser2.deserialize(r6, c12, 0u);
+  EXPECT_EQ(test_array, expected_array);
+  expected_array = {5u, 0u};
+  test_array = ser2.deserialize(r6, c12, 5u);
+  EXPECT_EQ(test_array, expected_array);
+  expected_array = {0u, 1u};
+  test_array = ser2.deserialize(r6, c12, 6u);
+  EXPECT_EQ(test_array, expected_array);
+  expected_array = {5u, 2u};
+  test_array = ser2.deserialize(r6, c12, 17u);
+  EXPECT_EQ(test_array, expected_array);
 }

@@ -90,7 +90,11 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
                     &TrackingGeometryJsonConverter::Config::defaultConfig);
 
     py::class_<TrackingGeometryJsonConverter::Options>(cls, "Options")
-        .def(py::init<>());
+        .def(py::init<>())
+        .def_readwrite("indentation",
+                       &TrackingGeometryJsonConverter::Options::indentation)
+        .def_readwrite("writeMaterial",
+                       &TrackingGeometryJsonConverter::Options::writeMaterial);
 
     cls.def(py::init([](TrackingGeometryJsonConverter::Config config,
                         Acts::Logging::Level level) {
@@ -115,7 +119,8 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
             [](const TrackingGeometryJsonConverter& self,
                const GeometryContext& gctx, const TrackingGeometry& geometry,
                const TrackingGeometryJsonConverter::Options& options) {
-              return self.toJson(gctx, geometry).dump(options.indentation);
+              return self.toJson(gctx, geometry, options)
+                  .dump(options.indentation);
             },
             py::arg("gctx"), py::arg("geometry"),
             py::arg("options") =

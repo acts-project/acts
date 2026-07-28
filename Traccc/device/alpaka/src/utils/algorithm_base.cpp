@@ -21,13 +21,11 @@ algorithm_base::algorithm_base(alpaka::queue& q)
           ::alpaka::getDev(details::get_queue(q))))) {}
 
 alpaka::queue& algorithm_base::queue() const {
-
-    return m_queue.get();
+  return m_queue.get();
 }
 
 unsigned int algorithm_base::warp_size() const {
-
-    return m_warp_size;
+  return m_warp_size;
 }
 
 }  // namespace traccc::alpaka

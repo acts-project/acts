@@ -16,13 +16,11 @@ algorithm_base::algorithm_base(hip::stream& str)
     : m_stream(str), m_warp_size(details::get_warp_size(str.device())) {}
 
 hip::stream& algorithm_base::stream() const {
-
-    return m_stream.get();
+  return m_stream.get();
 }
 
 unsigned int algorithm_base::warp_size() const {
-
-    return m_warp_size;
+  return m_warp_size;
 }
 
 }  // namespace traccc::hip

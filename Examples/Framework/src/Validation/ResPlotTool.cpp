@@ -166,14 +166,14 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
   // `reco(q/pT)` and `true(pT/q) * reco(q/pT)` residual and pull
   {
     const double truthQoverPt = truthParticle.charge() / truthPt;
-    const double truthPtOverQ = truthPt / truthParticle.charge();
+    const double truthPtOverAbsQ = truthPt / truthParticle.absoluteCharge();
     const double recoQoverPt =
         trackParameters[eBoundQOverP] / std::sin(trackParameters[eBoundTheta]);
     const double residualQoverPt = recoQoverPt - truthQoverPt;
     fillResidual(m_cfg.qOverPtName, residualQoverPt, truthEta, truthPhi,
                  truthPt);
 
-    const double residualRelQoverPt = truthPtOverQ * residualQoverPt;
+    const double residualRelQoverPt = truthPtOverAbsQ * residualQoverPt;
     fillResidual(m_cfg.relQoverPtName, residualRelQoverPt, truthEta, truthPhi,
                  truthPt);
 
@@ -186,7 +186,7 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
       return jacobian.transpose() * covariance * jacobian;
     }();
     const double covarianceRelQoverPt =
-        Acts::square(truthPtOverQ) * covarianceQoverPt;
+        Acts::square(truthPtOverAbsQ) * covarianceQoverPt;
 
     const double pullQoverPt =
         covarianceQoverPt > 0 ? residualQoverPt / std::sqrt(covarianceQoverPt)

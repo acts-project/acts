@@ -18,16 +18,16 @@ namespace traccc::opts {
 /// Options for logging
 class logging : public interface,
                 public config_provider<traccc::Logging::Level> {
-    public:
-    logging();
+ public:
+  logging();
 
-    virtual operator traccc::Logging::Level() const override;
+  virtual operator traccc::Logging::Level() const override;
 
-    std::unique_ptr<configuration_printable> as_printable() const override;
+  std::unique_ptr<configuration_printable> as_printable() const override;
 
-    private:
-    int m_verbosity_incr = 0;
-    int m_verbosity_decr = 0;
+ private:
+  int m_verbosity_incr = 0;
+  int m_verbosity_decr = 0;
 };  // class output_data
 
 }  // namespace traccc::opts

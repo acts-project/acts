@@ -7,8 +7,10 @@ target_sources(
         FastStrawLineFitter.cpp
         CompositeSpacePointLineSeeder.cpp
         detail/CandidatesForMiddleSp.cpp
+        detail/SpacePointGridPhiBinning.cpp
         BroadTripletSeedFilter.cpp
         CylindricalSpacePointGrid.cpp
+        SphericalSpacePointGrid.cpp
         CartesianSpacePointGrid.cpp
         CylindricalSpacePointKDTree.cpp
         DoubletSeedFinder.cpp
@@ -20,5 +22,6 @@ target_sources(
         GraphBasedTrackSeeder.cpp
         GbtsLayerConnection.cpp
         GbtsRoiDescriptor.cpp
+        GbtsTrainingTool.cpp
         HoughAccumulatorSection.cpp
 )

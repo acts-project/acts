@@ -17,9 +17,7 @@ namespace traccc::cuda::kernels {
 __global__ void fill_finding_propagation_sort_keys(
     const __grid_constant__ device::fill_finding_propagation_sort_keys_payload
         payload) {
-
-    device::fill_finding_propagation_sort_keys(details::global_index1(),
-                                               payload);
+  device::fill_finding_propagation_sort_keys(details::global_index1(), payload);
 }
 
 }  // namespace traccc::cuda::kernels

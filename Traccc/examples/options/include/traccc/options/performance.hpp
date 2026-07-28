@@ -14,20 +14,19 @@ namespace traccc::opts {
 
 /// Command line options used to configure performance measurements
 class performance : public interface {
+ public:
+  /// @name Options
+  /// @{
 
-    public:
-    /// @name Options
-    /// @{
+  /// Whether to run performance checks
+  bool run = false;
 
-    /// Whether to run performance checks
-    bool run = false;
+  /// @}
 
-    /// @}
+  /// Constructor
+  performance();
 
-    /// Constructor
-    performance();
-
-    std::unique_ptr<configuration_printable> as_printable() const override;
+  std::unique_ptr<configuration_printable> as_printable() const override;
 };  // struct performance
 
 }  // namespace traccc::opts

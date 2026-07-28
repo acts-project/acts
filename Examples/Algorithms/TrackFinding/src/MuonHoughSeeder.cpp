@@ -124,7 +124,7 @@ MuonHoughMaxContainer MuonHoughSeeder::constructEtaMaxima(
     const double y = sp.localPosition().y();
 
     axisRanges.yMin = std::min(axisRanges.yMin, y - m_cfg.etaPlaneMarginIcept);
-    axisRanges.yMax = std::min(axisRanges.yMax, y + m_cfg.etaPlaneMarginIcept);
+    axisRanges.yMax = std::max(axisRanges.yMax, y + m_cfg.etaPlaneMarginIcept);
   }
   /** Ranges are adapted. Now fill the hough plane */
   plane.reset();
@@ -201,10 +201,10 @@ MuonHoughMaxContainer MuonHoughSeeder::extendMaximaWithPhi(
       }
       ++nPhiHits;
       const double x = sp->localPosition().x();
-      axisRanges.yMax =
-          std::min(axisRanges.yMax, x + m_cfg.phiPlaneMarginIcept);
       axisRanges.yMin =
           std::min(axisRanges.yMin, x - m_cfg.phiPlaneMarginIcept);
+      axisRanges.yMax =
+          std::max(axisRanges.yMax, x + m_cfg.phiPlaneMarginIcept);
     }
     if (nPhiHits < 2) {
       outMaxima.emplace_back(std::move(etaMax));

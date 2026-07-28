@@ -46,7 +46,10 @@
 #include <utility>
 #include <vector>
 
-#define DFE_NAMEDTUPLE(name, ...)                                       \
+// NOTE: This macro is deliberately namespaced. Traccc carries its own copy of
+// the dfe-derived namedtuple macro, and a translation unit that includes both
+// headers would otherwise end up with whichever definition came last.
+#define DETRAY_DFE_NAMEDTUPLE(name, ...)                                \
   using Tuple = decltype(::std::make_tuple(__VA_ARGS__));               \
   static ::std::array<::std::string, ::std::tuple_size<Tuple>::value>   \
   names() {                                                             \

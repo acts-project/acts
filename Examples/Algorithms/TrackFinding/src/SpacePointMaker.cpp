@@ -424,9 +424,12 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
       const ConstVariableBoundMeasurementProxy measurement2 =
           measurements.getMeasurement(sourceLink2.index());
 
-      createStripSpacePoint(ctx.geoContext, surface1, surface2, measurement1,
-                            measurement2, sourceLink1, sourceLink2,
-                            spacePoints);
+      Acts::Result<void> spResult = createStripSpacePoint(
+          ctx.geoContext, surface1, surface2, measurement1, measurement2,
+          sourceLink1, sourceLink2, spacePoints);
+      if (!spResult.ok()) {
+        ACTS_DEBUG("Skipping strip space point: " << spResult.error());
+      }
     }
 
     ACTS_DEBUG("Built " << spacePoints.size() - nSpacePointsBefore
