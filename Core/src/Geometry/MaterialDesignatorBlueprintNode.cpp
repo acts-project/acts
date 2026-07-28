@@ -25,7 +25,7 @@
 
 #include "./MaterialDesignator.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
 namespace detail {
 class MaterialDesignatorBlueprintNodeImpl {
@@ -197,4 +197,4 @@ MaterialDesignatorBlueprintNode::impl() const {
 
 MaterialDesignatorBlueprintNode::~MaterialDesignatorBlueprintNode() = default;
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

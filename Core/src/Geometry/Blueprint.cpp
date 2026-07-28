@@ -30,7 +30,7 @@ const std::string s_rootName = "Root";
 const std::string s_worldName = "World";
 }  // namespace
 
-namespace Acts::Experimental {
+namespace Acts {
 
 ///@class BlueprintVisitor
 /// A class for visiting blueprint hierarchy and apply the geometry identifiers
@@ -234,4 +234,4 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
       GeometryIdentifierHook{}, logger, false);
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts
