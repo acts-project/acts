@@ -10,6 +10,7 @@ message(STATUS "Building detray CUDA command line tools")
 
 # Enable CUDA as a language.
 enable_language(CUDA)
+include(detray-compiler-options-cuda)
 
 include(CMakeFindDependencyMacro)
 

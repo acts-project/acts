@@ -1,3 +1,5 @@
+acts_apply_warning_flags(PROFILE acts LANGUAGES CXX)
+
 configure_file(
     ActsVersion.hpp.in
     ${CMAKE_CURRENT_BINARY_DIR}/include/Acts/ActsVersion.hpp

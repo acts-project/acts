@@ -1,3 +1,5 @@
+acts_apply_warning_flags(PROFILE acts LANGUAGES CXX)
+
 # plugins are manually ordered such that dependent plugins appear after their
 # dependencies in the component list.
 # independent plugins

@@ -9,13 +9,8 @@
 # Include the helper function(s).
 include(traccc-functions)
 
-# Warning flags for the AMD backend of the HIP compiler.
+# Math flags for the AMD backend of the HIP compiler.
 if("${CMAKE_HIP_PLATFORM}" STREQUAL "amd")
-    traccc_add_flag(CMAKE_HIP_FLAGS "-Wall")
-    traccc_add_flag(CMAKE_HIP_FLAGS "-Wextra")
-    traccc_add_flag(CMAKE_HIP_FLAGS "-Wshadow")
-    traccc_add_flag(CMAKE_HIP_FLAGS "-Wunused-local-typedefs")
-    traccc_add_flag(CMAKE_HIP_FLAGS "-pedantic")
     # Mirror nvcc's --use_fast_math for the AMD backend: allow unsafe
     # floating point optimisations, flush denormals to zero and use the fast
     # (not correctly rounded) fp32 division and square root. Deliberately not
@@ -34,11 +29,7 @@ if("${CMAKE_HIP_PLATFORM}" STREQUAL "nvidia")
     traccc_add_flag(CMAKE_HIP_FLAGS "--use_fast_math")
 endif()
 
-# Fail on warnings, if asked for that behaviour.
-if(TRACCC_FAIL_ON_WARNINGS)
-    if("${CMAKE_HIP_PLATFORM}" STREQUAL "amd")
-        traccc_add_flag(CMAKE_HIP_FLAGS "-Werror")
-    elseif("${CMAKE_HIP_PLATFORM}" STREQUAL "nvidia")
-        traccc_add_flag(CMAKE_HIP_FLAGS "-Werror all-warnings")
-    endif()
-endif()
+# Warnings and warnings-as-errors come from the shared ActsWarningFlags.cmake
+# module. CMake picks the right flag for the platform in use (`-Werror` on amd,
+# `-Werror all-warnings` on nvidia).
+acts_apply_warning_flags(PROFILE traccc LANGUAGES HIP)
