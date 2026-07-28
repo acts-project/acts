@@ -53,8 +53,8 @@ class HepMC3InputConverter : public IAlgorithm {
     /// If true, check the consistency of the generated event.
     bool checkConsistency = false;
 
-    /// Search up to quark in HF tagging
-    bool searchUpToHfQuark = false;
+    /// Search up to quark in heavy-flavour tagging
+    bool searchUpToHeavyFlavourQuark = false;
   };
 
   explicit HepMC3InputConverter(
