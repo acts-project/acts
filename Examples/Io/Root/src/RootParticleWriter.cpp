@@ -126,7 +126,8 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
     m_particleHash.push_back(particle.particleId().hash());
     m_particleType.push_back(particle.pdg());
     m_origParticleIdx.push_back(particle.origParticleIdx());
-    m_hfOrigin.push_back(static_cast<std::uint8_t>(particle.heavyFlavourOrigin()));
+    m_hfOrigin.push_back(
+        static_cast<std::uint8_t>(particle.heavyFlavourOrigin()));
     m_process.push_back(static_cast<std::uint32_t>(particle.process()));
     // position
     m_vx.push_back(Acts::clampValue<float>(particle.fourPosition().x() /

@@ -24,16 +24,16 @@ using SimParticleState = ::ActsFatras::Particle;
 /// Encodes hadron heavy-flavour origin classification
 /// the enum values correspond to the quark flavour numbering scheme (from PDG)
 enum class HeavyFlavourOrigin : std::uint8_t {
-/// None: no heavy-flavour origin, depending on the criterion regulated
-///       by the searchUpToHfQuark flag
+  /// None: no heavy-flavour origin, depending on the criterion regulated
+  ///       by the searchUpToHfQuark flag
   None = 0,
   /// Charm: decay product of a charmed hadron, or particle originate
-///        in the fragmentation of a charm quark depending
-///        on the searchUpToHfQuark flag
+  ///        in the fragmentation of a charm quark depending
+  ///        on the searchUpToHfQuark flag
   Charm = 4,
   /// Bottom: decay product of a bottomed hadron (it can also be B->D->X),
-///         or particle originate in the fragmentation of a bottom quark
-///         depending on the searchUpToHfQuark flag
+  ///         or particle originate in the fragmentation of a bottom quark
+  ///         depending on the searchUpToHfQuark flag
   Bottom = 5
 };
 

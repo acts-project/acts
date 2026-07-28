@@ -7,9 +7,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/HepMC3/HepMC3InputConverter.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
 
 #include "Acts/Utilities/ScopedTimer.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 
 #include <unordered_set>
 
