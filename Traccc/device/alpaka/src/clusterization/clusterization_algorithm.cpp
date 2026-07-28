@@ -93,9 +93,10 @@ struct reify_cluster_data {
 clusterization_algorithm::clusterization_algorithm(
     const traccc::memory_resource& mr, const vecmem::copy& copy,
     alpaka::queue& q, const config_type& config,
-    std::unique_ptr<const Logger> logger)
+    std::unique_ptr<const Logger> logger, await_function_type await_func)
     : device::clusterization_algorithm(mr, copy, config, std::move(logger)),
-      alpaka::algorithm_base(q) {}
+      alpaka::algorithm_base(q),
+      m_await_func(await_func) {}
 
 bool clusterization_algorithm::input_is_contiguous(
     const edm::silicon_cell_collection::const_view&) const {
@@ -153,6 +154,10 @@ void clusterization_algorithm::cluster_maker_kernel(
   // The base class destroys the input buffers right after this call, so
   // the kernel must finish before returning.
   queue().synchronize();
+}
+
+void clusterization_algorithm::await(vecmem::abstract_event& event) const {
+  m_await_func(event, queue());
 }
 
 }  // namespace traccc::alpaka

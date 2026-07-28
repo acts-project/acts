@@ -40,10 +40,12 @@ struct form_spacepoints {
 silicon_pixel_spacepoint_formation_algorithm::
     silicon_pixel_spacepoint_formation_algorithm(
         const traccc::memory_resource& mr, const vecmem::copy& copy,
-        alpaka::queue& q, std::unique_ptr<const Logger> logger)
+        alpaka::queue& q, std::unique_ptr<const Logger> logger,
+        await_function_type await_func)
     : device::silicon_pixel_spacepoint_formation_algorithm(mr, copy,
                                                            std::move(logger)),
-      alpaka::algorithm_base(q) {}
+      alpaka::algorithm_base(q),
+      m_await_func(await_func) {}
 
 void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
     const form_spacepoints_kernel_payload& payload) const {
@@ -68,6 +70,11 @@ void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
             kernels::form_spacepoints<detector_traits_t>{}, device_det.ptr(),
             payload.measurements, payload.spacepoints);
       });
+}
+
+void silicon_pixel_spacepoint_formation_algorithm::await(
+    vecmem::abstract_event& event) const {
+  m_await_func(event, queue());
 }
 
 }  // namespace traccc::alpaka
