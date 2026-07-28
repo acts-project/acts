@@ -445,8 +445,10 @@ def ddsim_input_session(request, tmp_path_factory):
             # succeeded. output_file lives above the per-run basetemp and so
             # outlives the session; a half-written file left by a crashed ddsim
             # would be picked up as valid input by every later run.
+            # Keep the .root suffix: ddsim picks the output format from the
+            # file extension and refuses anything it does not recognise.
             staging = output_file.with_name(
-                output_file.name + f".incomplete.{os.getpid()}"
+                f"{output_file.stem}.incomplete.{os.getpid()}{output_file.suffix}"
             )
             staging.unlink(missing_ok=True)
 
