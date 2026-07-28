@@ -393,7 +393,13 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
             }
           }
 
-          const float expEta = fastHypot(1, tau) - tau;
+          const float hypotTau = fastHypot(1, tau);
+          const float expEta = hypotTau - tau;
+          // (sqrt(1 + tau^2) - tau) * (sqrt(1 + tau^2) + tau) == 1, so the
+          // reciprocal of expEta is a sum rather than a division. It is also
+          // the better conditioned of the two forms: the subtraction loses
+          // precision for large tau, the addition does not.
+          const float invExpEta = hypotTau + tau;
 
           // match edge candidate against edges incoming to n2
           if (m_cfg.matchBeforeCreate &&
@@ -402,7 +408,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
             bool isGood = n2NumEdges <= 2;
 
             if (!isGood) {
-              const float uat1 = 1.0f / expEta;
+              const float uat1 = invExpEta;
 
               for (std::uint32_t n2InIdx = n2FirstEdge; n2InIdx < n2LastEdge;
                    ++n2InIdx) {
@@ -433,7 +439,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
             const std::uint32_t outEdgeIdx = nEdges;
 
-            const float uat2 = 1.f / expEta;
+            const float uat2 = invExpEta;
             const float phi2u = phi2 + dPhi2;
             const float curv2 = curv;
 
