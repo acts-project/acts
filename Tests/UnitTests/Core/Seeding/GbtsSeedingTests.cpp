@@ -210,8 +210,7 @@ Acts::SeedContainer runSeeding(const Acts::SpacePointContainer& spacePoints) {
   Acts::SeedContainer seeds;
   seeds.assignSpacePointContainer(spacePoints);
 
-  seeder.createSeeds(spacePoints, roi, isPixelLayer, kNumLayers, filter,
-                     options, seeds);
+  seeder.createSeeds(spacePoints, roi, isPixelLayer, filter, options, seeds);
 
   return seeds;
 }
