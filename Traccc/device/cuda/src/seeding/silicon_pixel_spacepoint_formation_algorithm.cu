@@ -53,10 +53,12 @@ __global__ void __launch_bounds__(1024, 1) form_spacepoints(
 silicon_pixel_spacepoint_formation_algorithm::
     silicon_pixel_spacepoint_formation_algorithm(
         const traccc::memory_resource& mr, const vecmem::copy& copy,
-        const stream_wrapper& str, std::unique_ptr<const Logger> logger)
+        const stream_wrapper& str, std::unique_ptr<const Logger> logger,
+        await_function_type await_func)
     : device::silicon_pixel_spacepoint_formation_algorithm(mr, copy,
                                                            std::move(logger)),
-      cuda::algorithm_base(str) {}
+      cuda::algorithm_base(str),
+      m_await_func(await_func) {}
 
 void silicon_pixel_spacepoint_formation_algorithm::count_spacepoints_kernel(
     const count_spacepoints_kernel_payload& payload) const {
@@ -99,4 +101,8 @@ void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
   stream().synchronize();
 }
 
+void silicon_pixel_spacepoint_formation_algorithm::await(
+    vecmem::abstract_event& event) const {
+  m_await_func(event, stream());
+}
 }  // namespace traccc::cuda
