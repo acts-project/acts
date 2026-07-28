@@ -136,7 +136,7 @@ ActsExamples::HeavyFlavourOrigin HepMC3InputConverter::deriveHeavyFlavourOrigin(
     if (hadType == Acts::HadronType::BottomMeson ||
         hadType == Acts::HadronType::BottomBaryon ||
         hadType == Acts::HadronType::BBbarMeson ||
-        (m_cfg.searchUpToHfQuark &&
+        (m_cfg.searchUpToHeavyFlavourQuark &&
          static_cast<ActsExamples::HeavyFlavourOrigin>(pdgCode) ==
              ActsExamples::HeavyFlavourOrigin::Bottom)) {
       return ActsExamples::HeavyFlavourOrigin::Bottom;
@@ -146,7 +146,7 @@ ActsExamples::HeavyFlavourOrigin HepMC3InputConverter::deriveHeavyFlavourOrigin(
     if (hadType == Acts::HadronType::CharmedMeson ||
         hadType == Acts::HadronType::CharmedBaryon ||
         hadType == Acts::HadronType::CCbarMeson ||
-        (m_cfg.searchUpToHfQuark &&
+        (m_cfg.searchUpToHeavyFlavourQuark &&
          static_cast<ActsExamples::HeavyFlavourOrigin>(pdgCode) ==
              ActsExamples::HeavyFlavourOrigin::Charm)) {
       // we do not return directly because
