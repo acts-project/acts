@@ -41,7 +41,7 @@ enum class HeavyFlavourOrigin : std::uint8_t {
 /// @param os Output stream
 /// @param outcome Heavy-flavour origin outcome to print
 /// @return Output stream
-std::ostream &operator<<(std::ostream &os, HeavyFlavourOrigin outcome);
+std::ostream& operator<<(std::ostream& os, HeavyFlavourOrigin outcome);
 class SimParticle final {
  public:
   /// Construct a default particle with invalid identity.
