@@ -36,8 +36,11 @@ install(
 )
 
 if(NOT COMMAND acts_pybind_generate_stubs)
+    # Put acts/cmake on the module path so the include(ActsEnsureUv) call inside ActsPybindStubs resolves.
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../cmake)
     include(${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/ActsPybindStubs.cmake)
 endif()
+
 set(ACTS_GENERATE_PYTHON_STUBS ${DETRAY_GENERATE_PYTHON_STUBS})
 
 if(DETRAY_BUILD_PYTHON_BINDINGS)
