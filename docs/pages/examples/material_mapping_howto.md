@@ -1,24 +1,45 @@
-@page material_mapping_howto How to map material for your detector
+@page material_mapping_howto Material mapping
 
-# How to map material for your detector
+@anchor material_mapping_workflow
+# Material mapping
 
-This page walks through producing a material map for a detector of your own. It
-assumes you already have the detector described both as an ACTS
+This page is the canonical reference for the ACTS Examples material mapping
+chain, and a step-by-step guide to producing a map for a detector of your own.
+It assumes you have the detector described both as an ACTS
 @ref Acts::TrackingGeometry and as a detailed simulation geometry that Geant4
 can navigate (typically DD4hep, which gives you both from one source).
 
-For the conceptual picture of what the mapping does, see @ref material_mapping.
-For the reference description of the Examples chain and the tests that guard it,
-see @ref material_mapping_workflow.
+For the conceptual picture — what the mapping does and why it is structured the
+way it is — see @ref material_mapping.
 
 The chain is:
 
 ```
-geometry  ──▶  choose surfaces  ──▶  record (Geant4)  ──▶  map  ──▶  use  ──▶  validate
+geometry  ──▶  designate surfaces  ──▶  record (Geant4)  ──▶  map  ──▶  use  ──▶  validate
 ```
 
 Only the designation step is detector-specific work, and it is the only step
-that differs between Gen1 and Gen3. The rest is running three scripts.
+that differs between Gen1 and Gen3. The rest is running three scripts:
+
+- Recording: `Examples/Scripts/Python/material_recording.py`
+- Mapping: `Examples/Scripts/Python/material_mapping.py`
+- Validation: `Examples/Scripts/Python/material_validation.py`
+
+End to end for the Open Data Detector, which already has its surfaces
+designated and so skips step 1:
+
+```console
+python material_recording.py -n 1000 -t 1000 -o odd_material_geant4
+python material_mapping.py -n 1000000 -i odd_material_geant4.root -o odd_material
+python material_validation.py -n 1000 -t 1000 -m odd_material_map.root -o odd_material_validated -p
+```
+
+> [!tip]
+> Run these from `Examples/Scripts/Python`, or prefix each with
+> `python Examples/Scripts/Python/<script>.py ...` from the repository root.
+
+The rest of this page walks through the same chain for a detector that does not
+have a map yet.
 
 ## Step 1: designate which surfaces carry material
 
@@ -257,6 +278,11 @@ root -l Examples/Scripts/MaterialMapping/Mat_map.C
 plots how far each interaction was moved to reach its assigned surface, which is
 the quickest way to spot material being attached to the wrong thing.
 
+What you are aiming for looks like this — Geant4, mapped, validated and
+propagated profiles of `t_X0` against `eta`, with a ratio panel:
+
+![Overlay and ratio for material profiles.](material/overlay_profile_ratio_v_eta_t_X0.png)
+
 ## Tuning
 
 Iterating on binning does **not** require re-recording. Edit `config-map.json`,
@@ -319,8 +345,18 @@ distances, and the veto/re-assignment hooks to correct specific surfaces.
 not mapping. The mapped material is fine; the navigator is not finding all of
 it.
 
-## Worked example
+## Worked example, and the tests that guard this
 
 `Python/Examples/tests/test_material_mapping.py` runs the whole chain against
-the ODD and is the most reliable executable reference. The ODD itself ships a
-finished map at `data/odd-material-maps.root`.
+the ODD and is the most reliable executable reference for it. The ODD itself
+ships a finished map at `data/odd-material-maps.root`.
+
+The chain is additionally guarded by tests in `Python/Examples/tests`:
+
+- `conftest.py` — the `material_recording_session` fixture generates reusable
+  Geant4 material tracks.
+- `test_examples.py` — `test_material_recording` and `test_material_mapping`.
+- `root_file_hashes.txt` — reference hashes for the workflow outputs.
+
+Those tests are the executable reference for expected output structure and for
+regression tracking. If this page and they disagree, they are right.

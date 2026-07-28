@@ -3,7 +3,7 @@
 @ingroup material
 
 Material mapping projects the material of a detailed simulation geometry (as
-recorded by Geant4, see @ref material_mapping_workflow) onto the surfaces of a
+recorded by Geant4, see @ref material_mapping_howto) onto the surfaces of a
 tracking geometry, so that track reconstruction can account for material effects
 without the detailed geometry being present.
 
@@ -68,7 +68,6 @@ Related components:
   turns candidates into final assignments, including vetoes and re-assignments.
 - @ref Acts::MaterialValidator re-records material from an already mapped
   geometry so that the mapped result can be compared against the Geant4 input.
-- @ref material_mapping_workflow documents the end-to-end Examples chain
-  (recording, mapping, validation) and the scripts that drive it.
-- @ref material_mapping_howto is a practical, step-by-step guide to producing a
-  material map for your own detector.
+- @ref material_mapping_howto documents the end-to-end Examples chain
+  (designation, recording, mapping, validation), the scripts that drive it, and
+  how to produce a map for your own detector.

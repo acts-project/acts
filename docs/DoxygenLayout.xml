@@ -9,8 +9,7 @@
     <tab type="user" url="@ref tracking" visible="yes" title="Tracking in a nutshell"/>
 
     <tab type="usergroup" title="Material mapping" url="[none]">
-      <tab type="user" url="@ref material_mapping_howto" visible="yes" title="How to map material for your detector"/>
-      <tab type="user" url="@ref material_mapping_workflow" visible="yes" title="Material mapping workflow"/>
+      <tab type="user" url="@ref material_mapping_howto" visible="yes" title="Mapping material for a detector"/>
       <tab type="user" url="@ref material_mapping" visible="yes" title="Components and design"/>
     </tab>
 
