@@ -29,7 +29,7 @@
 
 #include <boost/core/demangle.hpp>
 
-namespace Acts::Experimental::detail {
+namespace Acts::detail {
 
 /// Extract the shape name from a portal shell type name, e.g.
 /// "Acts::CuboidPortalShell" -> "Cuboid". Falls back to full demangled name if
@@ -181,4 +181,4 @@ inline void graphvizLabelTags(const PortalTagDesignatorVariant& d,
       d);
 }
 
-}  // namespace Acts::Experimental::detail
+}  // namespace Acts::detail
