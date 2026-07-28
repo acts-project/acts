@@ -36,6 +36,17 @@ navigation as a source of error: material that a navigator would have missed is
 still assigned. The cost is that every candidate surface is tested for every
 track, so the runtime scales with the number of candidates.
 
+What does differ between the two generations is how surfaces are *designated* as
+material-carrying in the first place. Gen1 annotates an already-built geometry
+through an @ref Acts::IMaterialDecorator, typically driven by an edited JSON
+geometry map. Gen3 designates during construction, via
+@ref Acts::MaterialDesignatorBlueprintNode in the blueprint tree, which attaches
+@ref Acts::ProtoGridSurfaceMaterial to selected volume faces;
+@ref Acts::Blueprint::construct does not apply a material decorator at all. Both
+end up as proto material on ordinary surfaces, which is why the mapping step
+that follows is identical. See @ref material_mapping_howto for the practical
+difference.
+
 **Propagation-based assignment.**
 @ref Acts::PropagatorMaterialAssigner runs a straight-line propagation through
 the geometry and collects the surfaces the navigator actually encounters. This
