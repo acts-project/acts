@@ -155,9 +155,7 @@ class SimParticle final {
     return initialState().origParticleIdx();
   }
   /// Particle heavy-flavour origin (0->none, 4->charm, 5->beauty)
-  HeavyFlavourOrigin heavyFlavourOrigin() const {
-    return m_hfOrigin;
-  }
+  HeavyFlavourOrigin heavyFlavourOrigin() const { return m_hfOrigin; }
   /// Which type of process generated this particle.
   ActsFatras::GenerationProcess process() const {
     return initialState().process();

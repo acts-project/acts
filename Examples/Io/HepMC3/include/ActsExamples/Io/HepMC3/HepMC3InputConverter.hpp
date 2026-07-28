@@ -13,7 +13,6 @@
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
-#include "ActsFatras/EventData/HeavyFlavourOrigin.hpp"
 
 #include <string>
 
