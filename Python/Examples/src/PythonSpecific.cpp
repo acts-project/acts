@@ -16,8 +16,8 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
+#include "ActsExamples/Validation/PatternPerformanceCollector.hpp"
 #include "ActsExamples/Validation/ResPlotTool.hpp"
-#include "ActsExamples/Validation/TrackFinderPerformanceCollector.hpp"
 #include "ActsExamples/Validation/TrackFitterPerformanceCollector.hpp"
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
@@ -37,9 +37,9 @@ using namespace ActsExamples;
 
 namespace {
 
-/// A ROOT-free writer that collects track-finder performance histograms and
-/// exposes them to Python via histograms() after s.run().
-class PythonTrackFinderPerformanceWriter final
+/// A ROOT-free writer that collects pattern-recognition performance histograms
+/// and exposes them to Python via histograms() after s.run().
+class PythonPatternPerformanceWriter final
     : public WriterT<ConstTrackContainer> {
  public:
   struct Config {
@@ -53,7 +53,9 @@ class PythonTrackFinderPerformanceWriter final
     std::string inputParticleTrackMatching;
     /// Input particle measurements map.
     std::string inputParticleMeasurementsMap;
-    /// Plot tool configurations (inlined from TrackFinderPerformanceCollector).
+    /// Label for histogram titles and names.
+    std::string label = "track";
+    /// Plot tool configurations (inlined from PatternPerformanceCollector).
     EffPlotTool::Config effPlotToolConfig;
     FakePlotTool::Config fakePlotToolConfig;
     DuplicationPlotTool::Config duplicationPlotToolConfig;
@@ -63,12 +65,12 @@ class PythonTrackFinderPerformanceWriter final
     std::map<std::string, std::set<int>> subDetectorTrackSummaryVolumes;
   };
 
-  PythonTrackFinderPerformanceWriter(Config cfg, Acts::Logging::Level lvl)
-      : WriterT(cfg.inputTracks, "PythonTrackFinderPerformanceWriter", lvl),
+  PythonPatternPerformanceWriter(Config cfg, Acts::Logging::Level lvl)
+      : WriterT(cfg.inputTracks, "PythonPatternPerformanceWriter", lvl),
         m_cfg(std::move(cfg)),
         m_collector(
-            TrackFinderPerformanceCollector::Config{
-                m_cfg.effPlotToolConfig, m_cfg.fakePlotToolConfig,
+            PatternPerformanceCollector::Config{
+                m_cfg.label, m_cfg.effPlotToolConfig, m_cfg.fakePlotToolConfig,
                 m_cfg.duplicationPlotToolConfig,
                 m_cfg.trackSummaryPlotToolConfig,
                 m_cfg.trackQualityPlotToolConfig,
@@ -165,7 +167,7 @@ class PythonTrackFinderPerformanceWriter final
 
   Config m_cfg;
   std::mutex m_writeMutex;
-  TrackFinderPerformanceCollector m_collector;
+  PatternPerformanceCollector m_collector;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
@@ -314,11 +316,11 @@ namespace ActsPython {
 
 void addPythonSpecific(py::module_& mex) {
   {
-    using Writer = PythonTrackFinderPerformanceWriter;
+    using Writer = PythonPatternPerformanceWriter;
     using Config = Writer::Config;
 
     auto w = py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
-                 mex, "PythonTrackFinderPerformanceWriter")
+                 mex, "PythonPatternPerformanceWriter")
                  .def(py::init<const Config&, Acts::Logging::Level>(),
                       py::arg("config"), py::arg("level"))
                  .def_property_readonly("config", &Writer::config)
@@ -327,7 +329,7 @@ void addPythonSpecific(py::module_& mex) {
     auto c = py::class_<Config>(w, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, inputTracks, inputParticles,
                        inputTrackParticleMatching, inputParticleTrackMatching,
-                       inputParticleMeasurementsMap, effPlotToolConfig,
+                       inputParticleMeasurementsMap, label, effPlotToolConfig,
                        fakePlotToolConfig, duplicationPlotToolConfig,
                        trackSummaryPlotToolConfig, trackQualityPlotToolConfig,
                        subDetectorTrackSummaryVolumes);

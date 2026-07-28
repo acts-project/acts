@@ -32,6 +32,7 @@ class FakePlotTool {
 
   /// @brief The nested configuration struct
   struct Config {
+    std::string label = "track";
     std::map<std::string, AxisVariant> varBinning = {
         {"Eta", BoostRegularAxis(40, -4, 4, "#eta")},
         {"Phi", BoostRegularAxis(100, -3.15, 3.15, "#phi")},

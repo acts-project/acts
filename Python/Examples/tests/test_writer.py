@@ -35,11 +35,11 @@ from acts.examples.json import (
 
 try:
     from acts.examples import (
-        PythonTrackFinderPerformanceWriter,
+        PythonPatternPerformanceWriter,
         PythonTrackFitterPerformanceWriter,
     )
 except ImportError:
-    PythonTrackFinderPerformanceWriter = None
+    PythonPatternPerformanceWriter = None
     PythonTrackFitterPerformanceWriter = None
 
 from acts.examples.odd import getOpenDataDetectorDirectory
@@ -350,13 +350,13 @@ def test_root_writer_interface(writer_name, conf_const, tmp_path, trk_geo):
 @pytest.mark.parametrize(
     "writer",
     [
-        PythonTrackFinderPerformanceWriter,
+        PythonPatternPerformanceWriter,
         PythonTrackFitterPerformanceWriter,
     ],
 )
 @pytest.mark.root
 @pytest.mark.skipif(
-    PythonTrackFinderPerformanceWriter is None
+    PythonPatternPerformanceWriter is None
     or PythonTrackFitterPerformanceWriter is None,
     reason="Python performance writers not available",
 )

@@ -22,6 +22,7 @@
 #include "ActsExamples/Io/Root/RootNuclearInteractionParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
+#include "ActsExamples/Io/Root/RootPatternPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationSummaryWriter.hpp"
 #include "ActsExamples/Io/Root/RootSeedWriter.hpp"
@@ -30,7 +31,6 @@
 #include "ActsExamples/Io/Root/RootSpacePointPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootSpacePointWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFinderNTupleWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFitterPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
@@ -289,13 +289,13 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
         treeName, fileMode, writeTrackInfo);
 
     ACTS_PYTHON_DECLARE_WRITER(
-        RootTrackFinderPerformanceWriter, root,
-        "RootTrackFinderPerformanceWriter", inputTracks, inputParticles,
-        inputTrackParticleMatching, inputParticleTrackMatching,
-        inputParticleMeasurementsMap, filePath, fileMode, effPlotToolConfig,
-        fakePlotToolConfig, duplicationPlotToolConfig,
-        trackSummaryPlotToolConfig, trackQualityPlotToolConfig,
-        subDetectorTrackSummaryVolumes, writeMatchingDetails);
+        RootPatternPerformanceWriter, root, "RootPatternPerformanceWriter",
+        inputTracks, inputParticles, inputTrackParticleMatching,
+        inputParticleTrackMatching, inputParticleMeasurementsMap, label,
+        filePath, fileMode, effPlotToolConfig, fakePlotToolConfig,
+        duplicationPlotToolConfig, trackSummaryPlotToolConfig,
+        trackQualityPlotToolConfig, subDetectorTrackSummaryVolumes,
+        writeMatchingDetails);
 
     ACTS_PYTHON_DECLARE_WRITER(RootNuclearInteractionParametersWriter, root,
                                "RootNuclearInteractionParametersWriter",

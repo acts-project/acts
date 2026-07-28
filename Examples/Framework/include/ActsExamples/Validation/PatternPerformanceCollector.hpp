@@ -27,13 +27,15 @@
 
 namespace ActsExamples {
 
-/// Collects track-finder performance histograms without any file I/O.
+/// Collects pattern-finder performance histograms without any file I/O.
 ///
 /// Fill histograms for each event via fill(). Caller is responsible for
 /// thread safety — this class applies no locking of its own.
-class TrackFinderPerformanceCollector {
+class PatternPerformanceCollector {
  public:
   struct Config {
+    /// Label used to customize histogram titles and names
+    std::string label = "track";
     EffPlotTool::Config effPlotToolConfig;
     FakePlotTool::Config fakePlotToolConfig;
     DuplicationPlotTool::Config duplicationPlotToolConfig;
@@ -45,8 +47,8 @@ class TrackFinderPerformanceCollector {
     std::map<std::string, std::set<int>> subDetectorTrackSummaryVolumes;
   };
 
-  TrackFinderPerformanceCollector(Config cfg,
-                                  std::unique_ptr<const Acts::Logger> logger);
+  PatternPerformanceCollector(Config cfg,
+                              std::unique_ptr<const Acts::Logger> logger);
 
   /// Fill histograms for one event.
   ///

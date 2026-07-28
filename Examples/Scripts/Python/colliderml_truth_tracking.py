@@ -40,7 +40,7 @@ def runColliderMLTruthTracking(
 
     Returns
     -------
-    (Sequencer, PythonTrackFinderPerformanceWriter)
+    (Sequencer, PythonPatternPerformanceWriter)
         Call s.run() on the sequencer, then access perf_writer.histograms().
     """
     from acts.examples.arrow import (

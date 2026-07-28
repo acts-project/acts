@@ -35,6 +35,7 @@ class EffPlotTool {
 
   /// @brief The nested configuration struct
   struct Config {
+    std::string label = "track";
     std::map<std::string, AxisVariant> varBinning = {
         {"Eta", BoostRegularAxis(40, -3.0, 3.0, "#eta")},
         {"Phi",
