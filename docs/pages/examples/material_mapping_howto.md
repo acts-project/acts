@@ -109,21 +109,7 @@ edit the blueprint code instead.
 @ref Acts::MaterialDesignatorBlueprintNode, which wraps exactly one child and
 marks up that child's volume faces as it is connected:
 
-```cpp
-root->addMaterial("GlobalMaterial", [&](auto& mat) {
-  using enum AxisDirection;
-  using enum AxisBoundaryType;
-  using enum CylinderVolumeBounds::Face;
-
-  mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 20}, {AxisZ, Bound, 20});
-  mat.configureFace(NegativeDisc,  {AxisR, Bound, 15},    {AxisPhi, Bound, 25});
-  mat.configureFace(PositiveDisc,  {AxisR, Bound, 15},    {AxisPhi, Bound, 25});
-
-  mat.addCylinderContainer("Detector", AxisDirection::AxisR, [&](auto& det) {
-    // ... the volume this material belongs to
-  });
-});
-```
+@snippet{trimleft} examples/material_designation.cpp Designate Proto Material
 
 The two-axis form of @ref Acts::MaterialDesignatorBlueprintNode::configureFace
 attaches a @ref Acts::ProtoGridSurfaceMaterial — a binning specification with no
@@ -134,16 +120,15 @@ run the mapping.
 
 There is a second form taking an @ref Acts::ISurfaceMaterial directly:
 
-```cpp
-detector.addMaterial("BeampipeMaterial", [&](auto& bpMat) {
-  bpMat.configureFace(OuterCylinder, asHomogeneous("Beam pipe", material));
-  bpMat.addStaticVolume(std::move(beampipe));
-});
-```
+@snippet{trimleft} examples/material_designation.cpp Designate Homogeneous Material
 
 That assigns real material immediately, so there is nothing to map — useful for
 a beam pipe or a support tube whose material you already know. `GenericDetector`
 uses this throughout (`Examples/Detectors/GenericDetector/src/GenericDetector.cpp`).
+
+Both snippets are taken from `docs/examples/material_designation.cpp`, which is
+compiled as part of the `docs-examples` target, so they cannot drift from the
+API.
 
 Faces are named per volume-bounds type: @ref Acts::CylinderVolumeBounds::Face
 (`OuterCylinder`, `InnerCylinder`, `PositiveDisc`, `NegativeDisc`),
@@ -215,10 +200,13 @@ python Examples/Scripts/Python/material_mapping.py \
 @ref Acts::ProtoSurfaceMaterial (a binning specification with no content yet) on
 every surface you enabled. **On a Gen3 geometry, omit `--matconfig`** — the
 blueprint already designated the surfaces, and the decorator would be ignored
-anyway. The script then reads those surfaces back out with
-`trackingGeometry.extractMaterialSurfaces()` and hands the resulting list to
-@ref Acts::IntersectionMaterialAssigner and
-@ref Acts::BinnedSurfaceMaterialAccumulator.
+anyway. The script then reads those surfaces back out:
+
+@snippet{trimleft} examples/test_material.py Extract Material Surfaces
+
+and hands the resulting list to @ref Acts::IntersectionMaterialAssigner and
+@ref Acts::BinnedSurfaceMaterialAccumulator. That list is the *only* geometry
+input the mapper gets, which is what makes it generation-agnostic.
 
 Outputs:
 
@@ -235,10 +223,10 @@ fraction means the material had nowhere to go — see
 
 ## Step 4: use the map
 
-```python
-decorator = acts.IMaterialDecorator.fromFile("mydet_material_map.root")
-detector = getMyDetector(materialDecorator=decorator)
-```
+@snippet{trimleft} examples/test_material.py Load Material Map
+
+Substitute your own detector and the map you just produced. This snippet comes
+from `docs/examples/test_material.py`, which runs as part of the pytest suite.
 
 `.json`, `.cbor` and `.root` are all accepted. This is exactly how the ODD picks
 up `data/odd-material-maps.root` by default.
