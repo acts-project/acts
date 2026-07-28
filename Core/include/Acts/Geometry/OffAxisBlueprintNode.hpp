@@ -48,13 +48,4 @@ class OffAxisBlueprintNode final : public StaticBlueprintNode {
   Transform3 m_axisTransform = Transform3::Identity();
 };
 
-namespace Experimental {
-/// @deprecated The blueprint geometry moved out of the `Acts::Experimental`
-///             namespace. Use @ref Acts::OffAxisBlueprintNode instead. This
-///             alias is kept for backward compatibility and will be removed.
-using OffAxisBlueprintNode
-    [[deprecated("Acts::Experimental::OffAxisBlueprintNode moved to "
-                 "Acts::OffAxisBlueprintNode")]] = Acts::OffAxisBlueprintNode;
-}  // namespace Experimental
-
 }  // namespace Acts
