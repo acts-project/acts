@@ -23,10 +23,12 @@ namespace traccc::sycl {
 seed_parameter_estimation_algorithm::seed_parameter_estimation_algorithm(
     const track_params_estimation_config& config,
     const traccc::memory_resource& mr, const vecmem::copy& copy,
-    queue_wrapper& queue, std::unique_ptr<const Logger> logger)
+    queue_wrapper& queue, std::unique_ptr<const Logger> logger,
+    await_function_type await_func)
     : device::seed_parameter_estimation_algorithm(config, mr, copy,
                                                   std::move(logger)),
-      sycl::algorithm_base(queue) {}
+      sycl::algorithm_base(queue),
+      m_await_func(await_func) {}
 
 void seed_parameter_estimation_algorithm::estimate_seed_params_kernel(
     const struct estimate_seed_params_kernel_payload& payload) const {
@@ -47,6 +49,11 @@ void seed_parameter_estimation_algorithm::estimate_seed_params_kernel(
               });
         });
       });
+}
+
+void seed_parameter_estimation_algorithm::await(
+    vecmem::abstract_event& event) const {
+  m_await_func(event, queue());
 }
 
 }  // namespace traccc::sycl
