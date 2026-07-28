@@ -441,18 +441,29 @@ def ddsim_input_session(request, tmp_path_factory):
         )
 
         if not output_file.exists():
+            # Write to a scratch path and only publish it once ddsim has
+            # succeeded. output_file lives above the per-run basetemp and so
+            # outlives the session; a half-written file left by a crashed ddsim
+            # would be picked up as valid input by every later run.
+            staging = output_file.with_name(
+                output_file.name + f".incomplete.{os.getpid()}"
+            )
+            staging.unlink(missing_ok=True)
+
             # explicitly ask for "spawn" as CI failures were observed with "fork"
             spawn_context = multiprocessing.get_context("spawn")
             p = spawn_context.Process(
                 target=generate_input_test_edm4hep_simhit_reader,
-                args=(odd_xml_file, output_file, particle_type),
+                args=(odd_xml_file, staging, particle_type),
             )
             p.start()
             p.join()
             if p.exitcode != 0:
+                staging.unlink(missing_ok=True)
                 raise RuntimeError("ddsim process failed")
 
-            assert output_file.exists()
+            assert staging.exists()
+            staging.rename(output_file)
 
     return output_file
 

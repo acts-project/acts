@@ -464,15 +464,25 @@ def material_recording_session(tmp_path_factory):
     with filelock.FileLock(str(d) + ".lock"):
 
         if not d.exists():
-            d.mkdir()
+            # Record into a scratch directory and only move it into place once
+            # the child has succeeded. `d` lives above the per-run basetemp and
+            # so outlives the session: publishing it up front means a failed
+            # recording leaves an empty directory that every later run happily
+            # reuses, turning a setup error into confusing assertion failures.
+            staging = d.with_name(d.name + f".incomplete.{os.getpid()}")
+            shutil.rmtree(staging, ignore_errors=True)
+            staging.mkdir(parents=True)
 
             # explicitly ask for "spawn" as CI failures were observed with "fork"
             spawn_context = multiprocessing.get_context("spawn")
-            p = spawn_context.Process(target=_do_material_recording, args=(d,))
+            p = spawn_context.Process(target=_do_material_recording, args=(staging,))
             p.start()
             p.join()
             if p.exitcode != 0:
+                shutil.rmtree(staging, ignore_errors=True)
                 raise RuntimeError("Failure to execute material recording")
+
+            staging.rename(d)
 
         return Path(d)
 
