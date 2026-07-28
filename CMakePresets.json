@@ -59,9 +59,11 @@
             "inherits": "common",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_COMPILE_WARNING_AS_ERROR": "ON",
                 "CMAKE_CXX_SCAN_FOR_MODULES": "OFF",
                 "CMAKE_FIND_FRAMEWORK": "LAST",
+                "ACTS_FAIL_ON_WARNINGS": "ON",
+                "DETRAY_FAIL_ON_WARNINGS": "ON",
+                "TRACCC_FAIL_ON_WARNINGS": "ON",
                 "ACTS_FORCE_ASSERTIONS": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
                 "ACTS_BUILD_BENCHMARKS": "ON",
@@ -122,7 +124,7 @@
             "inherits": "github-ci",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_CXX_FLAGS": "-Werror --coverage",
+                "CMAKE_CXX_FLAGS": "--coverage",
                 "CMAKE_CXX_FLAGS_DEBUG": "-O0 -g0",
                 "ACTS_BUILD_ODD": "OFF",
                 "ACTS_BUILD_PYTHON_BINDINGS": "OFF",
@@ -184,6 +186,7 @@
                 "CMAKE_CXX_FLAGS": "-w",
                 "CMAKE_CUDA_FLAGS": "-w",
                 "CMAKE_CUDA_ARCHITECTURES": "86",
+                "ACTS_ENABLE_WARNINGS": "OFF",
                 "TORCH_CUDA_ARCH_LIST": "8.6",
                 "ACTS_FORCE_ASSERTIONS": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
@@ -243,7 +246,7 @@
             "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_CXX_STANDARD": "20",
-                "CMAKE_COMPILE_WARNING_AS_ERROR": "ON",
+                "ACTS_FAIL_ON_WARNINGS": "ON",
                 "CMAKE_CXX_SCAN_FOR_MODULES": "OFF",
                 "CMAKE_FIND_FRAMEWORK": "LAST",
                 "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",

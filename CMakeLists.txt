@@ -57,6 +57,8 @@ endif()
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 set(ACTS_SOURCELINK_SBO_SIZE "" CACHE STRING "Customize the SBO size used by SourceLink")
 option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
+option(ACTS_ENABLE_WARNINGS "Apply the Acts warning flag set to Acts' own code" ON)
+option(ACTS_FAIL_ON_WARNINGS "Treat compiler warnings in Acts' own code as errors" OFF)
 # external library options
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
@@ -277,6 +279,7 @@ elseif(PROJECT_IS_TOP_LEVEL)
 endif()
 
 include(ActsCompilerOptions) # default compile options
+include(ActsWarningFlags) # warning flags, applied per-directory to our own code
 include(ActsComponentsHelpers) # handle components via add_..._if commands
 include(ActsStaticAnalysis)
 

@@ -7,6 +7,9 @@
 # Enable the HIP language.
 enable_language(HIP)
 
+# Project include(s).
+include(traccc-compiler-options-hip)
+
 find_package(HIPToolkit REQUIRED)
 
 traccc_add_test(

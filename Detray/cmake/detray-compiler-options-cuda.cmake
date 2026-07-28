@@ -38,16 +38,10 @@ if(PROJECT_IS_TOP_LEVEL)
     # build.
     detray_add_flag( CMAKE_CUDA_FLAGS_DEBUG "-G -src-in-ptx" )
     detray_add_flag( CMAKE_CUDA_FLAGS_RELWITHDEBINFO "-lineinfo -src-in-ptx" )
-
-    # Fail on warnings, if asked for that behaviour.
-    if(DETRAY_FAIL_ON_WARNINGS)
-        if(
-            ("${CUDAToolkit_VERSION}" VERSION_GREATER_EQUAL "10.2")
-            AND ("${CMAKE_CUDA_COMPILER_ID}" MATCHES "NVIDIA")
-        )
-            detray_add_flag( CMAKE_CUDA_FLAGS "-Werror all-warnings" )
-        elseif("${CMAKE_CUDA_COMPILER_ID}" MATCHES "Clang")
-            detray_add_flag( CMAKE_CUDA_FLAGS "-Werror" )
-        endif()
-    endif()
 endif()
+
+# Warnings and warnings-as-errors come from the shared module, and are applied
+# in the directory that includes this file -- regardless of whether detray is
+# the top level project. CMake itself picks the right flag for the compiler in
+# use (`-Werror all-warnings` for nvcc >= 10.2, `-Werror` for clang-cuda).
+acts_apply_warning_flags(PROFILE detray LANGUAGES CUDA)

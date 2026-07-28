@@ -1,3 +1,5 @@
+acts_apply_warning_flags(PROFILE acts LANGUAGES CXX)
+
 add_subdirectory(Algorithms)
 add_subdirectory(Detectors)
 add_subdirectory(Framework)
