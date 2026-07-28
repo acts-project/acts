@@ -23,7 +23,7 @@ std::string printCandidates(const std::vector<const Acts::Surface*>& surfaces) {
 }
 }  // namespace
 
-namespace Acts::Experimental {
+namespace Acts {
 
 MultiLayerNavigationPolicy::MultiLayerNavigationPolicy(
     const GeometryContext& gctx, const TrackingVolume& volume,
@@ -122,4 +122,4 @@ std::vector<Vector2> MultiLayerNavigationPolicy::generatePath(
   return path;
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

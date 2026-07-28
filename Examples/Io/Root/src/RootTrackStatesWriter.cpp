@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -507,7 +508,11 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         }
         if (ipar == eUnbiased && state.hasSmoothed() && state.hasProjector() &&
             state.hasCalibrated()) {
-          return Acts::calculateUnbiasedParametersCovariance(state);
+          // Use the type-erased overload so this translation unit does not
+          // instantiate the (very expensive) Eigen-heavy body; it is compiled
+          // once in the Acts core library instead.
+          return Acts::calculateUnbiasedParametersCovariance(
+              Acts::AnyConstTrackStateProxy{state});
         }
         return std::nullopt;
       };
