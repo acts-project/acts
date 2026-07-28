@@ -77,6 +77,11 @@ class silicon_pixel_spacepoint_formation_algorithm
   virtual void form_spacepoints_kernel(
       const form_spacepoints_kernel_payload& payload) const = 0;
 
+  /// Synchronize an event related to asynchronous operations
+  /// @param event The event to synchronize
+  ///
+  virtual void await(vecmem::abstract_event& event) const = 0;
+
   /// @}
 
 };  // class silicon_pixel_spacepoint_formation_algorithm
