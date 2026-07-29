@@ -63,10 +63,9 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
   detray.def(
       "readODD",
       [](vecmem::memory_resource& mr, const std::vector<std::string>& files) {
-        auto cfg = detray::io::detector_reader_config{}.do_check(false);
-        for (const auto& f : files) {
-          cfg.add_file(f);
-        }
+        detray::io::detector_reader_config cfg{};
+        cfg.do_check(false).add_files(files);
+
         return detray::io::read_detector<DetrayDetectorODD>(mr, cfg);
       },
       "mr"_a, "files"_a);

@@ -321,14 +321,14 @@ GTEST_TEST(io, json_surface_material_payload) {
 }
 
 /// This tests the json io for a material slab
-GTEST_TEST(io, json_detector_payload) {
-  detray::io::detector_payload d;
+GTEST_TEST(io, json_detector_geometry_payload) {
+  detray::io::detector_geometry_payload d;
   d.volumes = {detray::io::volume_payload{}, detray::io::volume_payload{}};
 
   nlohmann::ordered_json j;
   j["detector"] = d;
 
-  detray::io::detector_payload pd = j["detector"];
+  detray::io::detector_geometry_payload pd = j["detector"];
 
   EXPECT_EQ(d.volumes.size(), pd.volumes.size());
 }

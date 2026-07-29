@@ -46,6 +46,26 @@ struct detector_reader_config {
     m_files.push_back(file_name);
     return *this;
   }
+  detector_reader_config& add_files(
+      const std::vector<std::string>& file_names) {
+    m_files = file_names;
+    return *this;
+  }
+  detector_reader_config& add_files(std::vector<std::string>&& file_names) {
+    m_files = std::move(file_names);
+    return *this;
+  }
+  template <typename... Args>
+    requires(std::same_as<std::string, Args> || ...)
+  detector_reader_config& add_files(Args&&... file_names) {
+    m_files = std::vector<std::string>(std::forward<Args>(file_names)...);
+    return *this;
+  }
+  detector_reader_config& add_files(
+      std::initializer_list<std::string> file_names) {
+    m_files = std::vector<std::string>(file_names);
+    return *this;
+  }
   detector_reader_config& deduplicate(bool toggle) {
     m_builder_opts.deduplicate(toggle);
     return *this;
