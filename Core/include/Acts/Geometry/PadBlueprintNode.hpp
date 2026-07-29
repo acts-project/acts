@@ -21,6 +21,8 @@
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 
+#include <optional>
+
 namespace Acts {
 
 /// Wraps a single child blueprint node and pads it into a larger volume whose
@@ -30,13 +32,26 @@ namespace Acts {
 ///       tree building, but during geometry construction.
 /// It defers most of the functionality to @ref Acts::StaticBlueprintNode,
 /// and only implements the build phase to perform the padding.
+///
+/// By default the padded volume inherits the transform of its child, so it
+/// stays centered on the child. For cylinder children this node can instead
+/// build an @b axis-aligned envelope: given a reference axis transform, it
+/// re-centers the padded cylinder onto that axis and grows its radial bounds so
+/// the (possibly off-axis) child is still fully enclosed. This lets a displaced
+/// cylindrical subtree be dropped into a strictly co-axial
+/// @ref Acts::CylinderVolumeStack without weakening the stack's alignment
+/// checks.
 class PadBlueprintNode final : public StaticBlueprintNode {
  public:
   /// Main constructor for the padding node.
   /// @param name The name of the padded volume.
   /// @param envelope The envelope to apply to the child node's extent to create the padded volume.
-  explicit PadBlueprintNode(const std::string& name,
-                            const ExtentEnvelope& envelope);
+  /// @param axisTransform Optional reference axis. When set, a cylinder child is
+  ///        enclosed by an axis-aligned cylinder centered on this axis instead
+  ///        of one centered on the child itself.
+  explicit PadBlueprintNode(
+      const std::string& name, const ExtentEnvelope& envelope,
+      std::optional<Transform3> axisTransform = std::nullopt);
 
   ~PadBlueprintNode() override = default;
 
@@ -56,18 +71,35 @@ class PadBlueprintNode final : public StaticBlueprintNode {
   /// @param inner The volume to enclose
   /// @param envelope The envelope to add to the bounds of @p inner
   /// @param name The name of the padded volume
+  /// @param axisTransform Optional reference axis. When set (cylinder children
+  ///        only), the padded volume is an axis-aligned cylinder centered on
+  ///        this axis, with radial bounds grown by the child's radial offset so
+  ///        the child stays enclosed. When unset, the padded volume inherits
+  ///        the child's transform (default behavior).
   /// @param logger The logger to use
   /// @return The padded volume enclosing @p inner
-  /// @throws std::logic_error if @p inner has unsupported bounds, or if the
-  ///         envelope is asymmetric where it must not be
+  /// @throws std::logic_error if @p inner has unsupported bounds, if the
+  ///         envelope is asymmetric where it must not be, or if an axis-aligned
+  ///         envelope is requested for a non-cylinder or tilted child
   static std::unique_ptr<TrackingVolume> padded(
       const GeometryContext& gctx, const Volume& inner,
       const ExtentEnvelope& envelope, const std::string& name,
+      const std::optional<Transform3>& axisTransform = std::nullopt,
       const Logger& logger = Acts::getDummyLogger());
+
+  /// Set the reference axis transform used for axis-aligned enclosure.
+  /// @param axisTransform Transform of the reference axis frame
+  /// @return Reference to this node for chaining
+  PadBlueprintNode& setAxisTransform(const Transform3& axisTransform);
+
+  /// Get the reference axis transform, if one is configured.
+  /// @return The optional axis transform
+  const std::optional<Transform3>& axisTransform() const;
 
  private:
   ExtentEnvelope m_envelope;
   std::string m_name;
+  std::optional<Transform3> m_axisTransform;
 };
 
 namespace Experimental {
