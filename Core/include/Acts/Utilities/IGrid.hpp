@@ -73,6 +73,8 @@ class IGrid {
   /// Get the lower left edge of a bin for a given set of indices
   /// @param indices The indices to get the lower left edge of the bin for
   /// @return The lower left edge of the bin
+  /// @deprecated Use grid.multiAxisAny().getLowerLeftBinEdgeAny(indices)
+  ///             instead
   [[deprecated(
       "Use grid.multiAxisAny().getLowerLeftBinEdgeAny(indices) instead")]]
   virtual AnyPointType lowerLeftBinEdgeAny(const AnyIndexType& indices) const {
@@ -82,6 +84,8 @@ class IGrid {
   /// Get the upper right edge of a bin for a given set of indices
   /// @param indices The indices to get the upper right edge of the bin for
   /// @return The upper right edge of the bin
+  /// @deprecated Use grid.multiAxisAny().getUpperRightBinEdgeAny(indices)
+  ///             instead
   [[deprecated(
       "Use grid.multiAxisAny().getUpperRightBinEdgeAny(indices) instead")]]
   virtual AnyPointType upperRightBinEdgeAny(const AnyIndexType& indices) const {
@@ -91,6 +95,7 @@ class IGrid {
   /// Get the center of a bin for a given set of indices
   /// @param indices The indices to get the center of the bin for
   /// @return The center of the bin
+  /// @deprecated Use grid.multiAxisAny().getBinCenterAny(indices) instead
   [[deprecated("Use grid.multiAxisAny().getBinCenterAny(indices) instead")]]
   virtual AnyPointType binCenterAny(const AnyIndexType& indices) const {
     return multiAxisAny().getBinCenterAny(indices);
@@ -98,6 +103,7 @@ class IGrid {
 
   /// Get the number of local bins for a given set of indices
   /// @return The number of local bins
+  /// @deprecated Use grid.multiAxisAny().getNBinsAny() instead
   [[deprecated("Use grid.multiAxisAny().getNBinsAny() instead")]]
   virtual AnyIndexType numLocalBinsAny() const {
     return multiAxisAny().getNBinsAny();

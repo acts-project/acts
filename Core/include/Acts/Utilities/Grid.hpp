@@ -214,6 +214,7 @@ class Grid final : public IGrid {
   /// @pre The given @c Point type must represent a point in d (or higher)
   ///      dimensions where d is dimensionality of the grid. It must lie
   ///      within the grid range (i.e. not within a under-/overflow bin).
+  /// @deprecated Use grid.multiAxis().getClosestPointsIndices(point) instead
   template <class Point>
   [[deprecated("Use grid.multiAxis().getClosestPointsIndices(point) instead")]]
   detail::FlatNeighborHoodIndices<DIM> closestPointsIndices(
@@ -248,6 +249,7 @@ class Grid final : public IGrid {
   ///
   /// @pre All local bin indices must be a valid index for the corresponding
   ///      axis (excluding the under-/overflow bins for each axis).
+  /// @deprecated Use grid.multiAxis().getBinCenter(localBins) instead
   [[deprecated("Use grid.multiAxis().getBinCenter(localBins) instead")]]
   point_t binCenter(const index_t& localBins) const {
     return m_axes.getBinCenter(localBins);
@@ -264,6 +266,7 @@ class Grid final : public IGrid {
   /// @pre The given @c Point type must represent a point in d (or higher)
   ///      dimensions where d is dimensionality of the grid.
   /// @note This could be a under-/overflow bin along one or more axes.
+  /// @deprecated Use grid.multiAxis().getGlobalBinFromPoint(point) instead
   template <class Point>
   [[deprecated("Use grid.multiAxis().getGlobalBinFromPoint(point) instead")]]
   std::size_t globalBinFromPosition(const Point& point) const {
@@ -277,6 +280,8 @@ class Grid final : public IGrid {
   ///
   /// @pre All local bin indices must be a valid index for the corresponding
   ///      axis (including the under-/overflow bin for this axis).
+  /// @deprecated Use grid.multiAxis().getGlobalBinFromLocalBins(localBins)
+  ///             instead
   [[deprecated(
       "Use grid.multiAxis().getGlobalBinFromLocalBins(localBins) instead")]]
   std::size_t globalBinFromLocalBins(const index_t& localBins) const {
@@ -295,6 +300,8 @@ class Grid final : public IGrid {
   /// @pre The given @c Point type must represent a point in d (or higher)
   ///      dimensions where d is dimensionality of the grid.
   /// @note This could be a under-/overflow bin along one or more axes.
+  /// @deprecated Use grid.multiAxis().getGlobalBinFromLowerLeftEdge(point)
+  ///             instead
   template <class Point>
   [[deprecated(
       "Use grid.multiAxis().getGlobalBinFromLowerLeftEdge(point) instead")]]
@@ -314,6 +321,7 @@ class Grid final : public IGrid {
   /// @pre The given @c Point type must represent a point in d (or higher)
   ///      dimensions where d is dimensionality of the grid.
   /// @note This could be a under-/overflow bin along one or more axes.
+  /// @deprecated Use grid.multiAxis().getLocalBinsFromPoint(point) instead
   template <class Point>
   [[deprecated("Use grid.multiAxis().getLocalBinsFromPoint(point) instead")]]
   index_t localBinsFromPosition(const Point& point) const {
@@ -328,6 +336,7 @@ class Grid final : public IGrid {
   ///
   /// @note Local bin indices can contain under-/overflow bins along the
   ///       corresponding axis.
+  /// @deprecated Use grid.multiAxis().getLocalBinsFromGlobalBin(bin) instead
   [[deprecated("Use grid.multiAxis().getLocalBinsFromGlobalBin(bin) instead")]]
   index_t localBinsFromGlobalBin(std::size_t bin) const {
     return m_axes.getLocalBinsFromGlobalBin(bin);
@@ -346,6 +355,8 @@ class Grid final : public IGrid {
   /// @pre The given @c Point type must represent a point in d (or higher)
   ///      dimensions where d is dimensionality of the grid.
   /// @note This could be a under-/overflow bin along one or more axes.
+  /// @deprecated Use grid.multiAxis().getLocalBinsFromLowerLeftEdge(point)
+  ///             instead
   template <class Point>
   [[deprecated(
       "Use grid.multiAxis().getLocalBinsFromLowerLeftEdge(point) instead")]]
@@ -360,6 +371,7 @@ class Grid final : public IGrid {
   ///
   /// @pre @c localBins must only contain valid bin indices (excluding
   ///      underflow bins).
+  /// @deprecated Use grid.multiAxis().getLowerLeftBinEdge(localBins) instead
   [[deprecated("Use grid.multiAxis().getLowerLeftBinEdge(localBins) instead")]]
   point_t lowerLeftBinEdge(const index_t& localBins) const {
     return m_axes.getLowerLeftBinEdge(localBins);
@@ -372,6 +384,7 @@ class Grid final : public IGrid {
   ///
   /// @pre @c localBins must only contain valid bin indices (excluding
   ///      overflow bins).
+  /// @deprecated Use grid.multiAxis().getUpperRightBinEdge(localBins) instead
   [[deprecated("Use grid.multiAxis().getUpperRightBinEdge(localBins) instead")]]
   point_t upperRightBinEdge(const index_t& localBins) const {
     return m_axes.getUpperRightBinEdge(localBins);
@@ -380,6 +393,7 @@ class Grid final : public IGrid {
   /// get bin width along each specific axis
   ///
   /// @return array giving the bin width alonf all axes
+  /// @deprecated Use grid.multiAxis().getBinWidth({}) instead
   [[deprecated("Use grid.multiAxis().getBinWidth({}) instead")]]
   point_t binWidth() const {
     return m_axes.getBinWidth({});
@@ -390,6 +404,7 @@ class Grid final : public IGrid {
   /// @return array giving the number of bins along all axes
   ///
   /// @note Not including under- and overflow bins
+  /// @deprecated Use grid.multiAxis().getNBins() instead
   [[deprecated("Use grid.multiAxis().getNBins() instead")]]
   index_t numLocalBins() const {
     return m_axes.getNBins();
@@ -398,6 +413,7 @@ class Grid final : public IGrid {
   /// get the minimum value of all axes of one grid
   ///
   /// @return array returning the minima of all given axes
+  /// @deprecated Use grid.multiAxis().getMinPoint() instead
   [[deprecated("Use grid.multiAxis().getMinPoint() instead")]]
   point_t minPosition() const {
     return m_axes.getMinPoint();
@@ -406,6 +422,7 @@ class Grid final : public IGrid {
   /// get the maximum value of all axes of one grid
   ///
   /// @return array returning the maxima of all given axes
+  /// @deprecated Use grid.multiAxis().getMaxPoint() instead
   [[deprecated("Use grid.multiAxis().getMaxPoint() instead")]]
   point_t maxPosition() const {
     return m_axes.getMaxPoint();
@@ -488,6 +505,7 @@ class Grid final : public IGrid {
   /// @post If @c true is returned, the global bin containing the given point
   ///       is a valid bin, i.e. it is neither a underflow nor an overflow bin
   ///       along any axis.
+  /// @deprecated Use grid.multiAxis().isInside(position) instead
   template <class Point>
   [[deprecated("Use grid.multiAxis().isInside(position) instead")]]
   bool isInside(const Point& position) const {
@@ -509,6 +527,8 @@ class Grid final : public IGrid {
   ///       Ignoring the truncation of the neighborhood size reaching beyond
   ///       over-/underflow bins, the neighborhood is of size \f$2 \times
   ///       \text{size}+1\f$ along each dimension.
+  /// @deprecated Use grid.multiAxis().getNeighborHoodIndices(localBins, size)
+  ///             instead
   [[deprecated(
       "Use grid.multiAxis().getNeighborHoodIndices(localBins, size) instead")]]
   detail::FlatNeighborHoodIndices<DIM> neighborHoodIndices(
@@ -532,6 +552,8 @@ class Grid final : public IGrid {
   ///       Ignoring the truncation of the neighborhood size reaching beyond
   ///       over-/underflow bins, the neighborhood is of size \f$2 \times
   ///       \text{size}+1\f$ along each dimension.
+  /// @deprecated Use grid.multiAxis().getNeighborHoodIndices(localBins,
+  ///             sizePerAxis) instead
   [[deprecated(
       "Use grid.multiAxis().getNeighborHoodIndices(localBins, sizePerAxis) "
       "instead")]]
@@ -588,6 +610,7 @@ class Grid final : public IGrid {
 
   /// get the axes as a tuple
   /// @return Reference to the tuple containing all grid axes
+  /// @deprecated Use grid.multiAxis().getAxesTuple() instead
   [[deprecated("Use grid.multiAxis().getAxesTuple() instead")]]
   const std::tuple<Axes...>& axesTuple() const {
     return m_axes.getAxesTuple();
