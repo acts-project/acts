@@ -27,7 +27,15 @@ jobs:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
-    container: ghcr.io/acts-project/ubuntu2404:87
+    # Pulled through the CERN registry cache rather than ghcr.io directly. This
+    # is deliberately applied only to the husk jobs — the cache is worth using
+    # from inside CERN, and the jobs still on ubuntu-latest would gain nothing
+    # by routing their pulls through it. Do not "make this consistent" across
+    # the file without moving the job to husk first.
+    #
+    # CI/bump_versions.py understands the prefix (its docker_tag pattern makes
+    # `registry.cern.ch/` optional), so tags here still bump automatically.
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -362,7 +370,7 @@ jobs:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
-    container: ghcr.io/acts-project/ubuntu2404_gnn:87
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
 
     steps:
       # The image puts tooling the build shells out to in the sbin dirs, which
@@ -421,7 +429,7 @@ jobs:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
-    container: ghcr.io/acts-project/ubuntu2404_tensorrt:87
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_tensorrt:87
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -482,9 +490,14 @@ jobs:
     # rewrites tags it can see literally, which is how linux_ubuntu_extra's
     # templated image drifted a tag behind. Every leg is alma9 today anyway.
     #
+    # Spelling it out is not sufficient here, though: bump_versions.py's
+    # docker_tag pattern is `[a-z0-9_]+`, which excludes the hyphen, so
+    # `alma9-base` does not match it with or without the registry prefix. This
+    # tag has to be bumped by hand until that character class gains a `-`.
+    #
     # v88 is where expat-devel arrives, which the dev4 leg needs: that view's
     # Geant4 wants EXPAT >= 2.5.0 and the view neither ships nor exposes it.
-    container: ghcr.io/acts-project/alma9-base:88
+    container: registry.cern.ch/ghcr.io/acts-project/alma9-base:88
     continue-on-error: ${{ matrix.allow_failure }}
 
     strategy:
