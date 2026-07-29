@@ -14,6 +14,7 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -42,16 +43,31 @@ namespace ActsExamples {
 
 /// Convert ColliderML Arrow tables to ACTS EDM types.
 ///
-/// Reads two Arrow tables placed on the whiteboard by @c ParquetReader —
-/// one for particles and one for tracker hits — and emits any combination
-/// of @c SimParticleContainer, @c SimHitContainer, and
-/// @c MeasurementContainer depending on which output keys are non-empty.
+/// Reads Arrow tables placed on the whiteboard by @c ParquetReader — one
+/// each for particles, tracker hits, and (optionally) the dataset's own
+/// published tracks — and emits any combination of @c SimParticleContainer,
+/// @c SimHitContainer, @c MeasurementContainer, and @c ConstTrackContainer
+/// depending on which output keys are non-empty.
 ///
 /// Modes (controlled by which output keys are set in the config):
 ///   - Particles only:  set @c outputParticles, leave hits keys empty.
 ///   - + SimHits:       also set @c outputSimHits.
 ///   - + Measurements:  also set @c outputMeasurements; requires
 ///                      @c trackingGeometry and @c digiConfig.
+///   - + Tracks:        also set @c inputTracksTable/@c outputTracks;
+///                      requires @c outputMeasurements. Each published
+///                      track's @c hit_ids (row indices into the hits
+///                      table) are resolved to the measurements built from
+///                      those same hits in this call, and its perigee
+///                      parameters (d0,z0,phi,theta,qop) are placed on a
+///                      shared @c (0,0,0)-centered @c PerigeeSurface. Track
+///                      states carry only a source link (no calibrated
+///                      data). The dataset's own @c majority_particle_id is
+///                      not consumed — use @c TrackTruthMatcher against
+///                      this converter's own @c outputMeasParticlesMap for
+///                      truth matching, so published tracks are evaluated
+///                      with the same truth association as every other
+///                      reconstruction chain.
 ///
 /// @note SimHit momentum fields are zero-filled; ColliderML does not
 ///       record per-hit momentum.
@@ -62,6 +78,9 @@ class ACTS_ARROW_EXPORT ColliderMLRelease1InputConverter : public IAlgorithm {
     std::string inputParticlesTable;
     /// Whiteboard key for the tracker-hits Arrow table (from ParquetReader).
     std::string inputHitsTable;
+    /// Whiteboard key for the ColliderML tracks Arrow table (from
+    /// ParquetReader). Empty = skip track output entirely.
+    std::string inputTracksTable;
 
     /// Output key for @c SimParticleContainer. Empty = skip.
     std::string outputParticles;
@@ -69,6 +88,10 @@ class ACTS_ARROW_EXPORT ColliderMLRelease1InputConverter : public IAlgorithm {
     std::string outputSimHits;
     /// Output key for @c MeasurementContainer. Empty = skip.
     std::string outputMeasurements;
+    /// Output key for @c ConstTrackContainer built from the dataset's own
+    /// published tracks. Empty = skip. Requires @c outputMeasurements to
+    /// also be set (see class docs).
+    std::string outputTracks;
     /// Output key for @c ClusterContainer. Empty = skip.
     std::string outputClusters;
     /// Output key for @c MeasurementSubset covering all measurements (required
@@ -119,6 +142,13 @@ class ACTS_ARROW_EXPORT ColliderMLRelease1InputConverter : public IAlgorithm {
   /// ColliderML Release 1 dataset format.
   static ActsPlugins::ArrowUtil::ArrowSchemaHandle hitSchema();
 
+  /// Expected Arrow schema for the per-event published-track table in the
+  /// ColliderML Release 1 dataset format. Owned by this converter and kept
+  /// independent of @c ActsPlugins::ArrowUtil::trackSchema() (ACTS's own
+  /// internal track round-trip format), even though the two currently
+  /// happen to look similar.
+  static ActsPlugins::ArrowUtil::ArrowSchemaHandle tracksSchema();
+
   ColliderMLRelease1InputConverter(const Config& cfg,
                                    std::unique_ptr<const Acts::Logger> logger);
 
@@ -150,6 +180,8 @@ class ACTS_ARROW_EXPORT ColliderMLRelease1InputConverter : public IAlgorithm {
       this, "InputParticles"};
   ReadDataHandle<ActsPlugins::ArrowUtil::ArrowTable> m_inputHits{this,
                                                                  "InputHits"};
+  ReadDataHandle<ActsPlugins::ArrowUtil::ArrowTable> m_inputTracks{
+      this, "InputTracks"};
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
@@ -165,6 +197,7 @@ class ACTS_ARROW_EXPORT ColliderMLRelease1InputConverter : public IAlgorithm {
       this, "OutputMeasParticlesMap"};
   WriteDataHandle<ParticleMeasurementsMap> m_outputParticleMeasurementsMap{
       this, "OutputParticleMeasurementsMap"};
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
 
 }  // namespace ActsExamples
