@@ -215,9 +215,9 @@ Acts::Grid3D Acts::createGrid3D(
 Acts::MaterialGrid2D Acts::mapMaterialPoints(Acts::Grid2D& grid) {
   // Build material grid
   // Re-build the axes
-  Acts::Grid2D::point_t min = grid.minPosition();
-  Acts::Grid2D::point_t max = grid.maxPosition();
-  Acts::Grid2D::index_t nBins = grid.numLocalBins();
+  Acts::Grid2D::point_t min = grid.multiAxis().getMinPoint();
+  Acts::Grid2D::point_t max = grid.multiAxis().getMaxPoint();
+  Acts::Grid2D::index_t nBins = grid.multiAxis().getNBins();
 
   Acts::EAxis axis1(min[0], max[0], nBins[0]);
   Acts::EAxis axis2(min[1], max[1], nBins[1]);
@@ -234,9 +234,9 @@ Acts::MaterialGrid2D Acts::mapMaterialPoints(Acts::Grid2D& grid) {
 Acts::MaterialGrid3D Acts::mapMaterialPoints(Acts::Grid3D& grid) {
   // Build material grid
   // Re-build the axes
-  Acts::Grid3D::point_t min = grid.minPosition();
-  Acts::Grid3D::point_t max = grid.maxPosition();
-  Acts::Grid3D::index_t nBins = grid.numLocalBins();
+  Acts::Grid3D::point_t min = grid.multiAxis().getMinPoint();
+  Acts::Grid3D::point_t max = grid.multiAxis().getMaxPoint();
+  Acts::Grid3D::index_t nBins = grid.multiAxis().getNBins();
 
   Acts::EAxis axis1(min[0], max[0], nBins[0]);
   Acts::EAxis axis2(min[1], max[1], nBins[1]);
