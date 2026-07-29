@@ -28,14 +28,9 @@ void read_detector(traccc::host_detector& detector, vecmem::memory_resource& mr,
   // Set up the detector reader configuration.
   detray::io::detector_reader_config cfg;
   cfg.do_check(do_consistency_check);
-
-  cfg.add_file(traccc::io::get_absolute_path(geometry_file));
-  if (material_file.empty() == false) {
-    cfg.add_file(traccc::io::get_absolute_path(material_file));
-  }
-  if (grid_file.empty() == false) {
-    cfg.add_file(traccc::io::get_absolute_path(grid_file));
-  }
+  cfg.add_files(traccc::io::get_absolute_path(geometry_file),
+                traccc::io::get_absolute_path(material_file),
+                traccc::io::get_absolute_path(grid_file));
 
   // Read the detector.
   auto det = detray::io::read_detector<typename detector_t::host>(mr, cfg);
