@@ -42,25 +42,25 @@ FakePlotTool::FakePlotTool(const FakePlotTool::Config& cfg,
   std::string tm = std::format("nTruthMatched{}s", lt);
   std::string ft = std::format("nFake{}s", lt);
 
-  auto ins = [&](const std::string& stem, std::string_view var,
-                 const std::string& title) {
-    std::string name = std::format("{}_{}", stem, var);
-    m_histograms.emplace(
-        name, Histogram2(name, title,
-                         std::array{m_cfg.varBinning.at(std::string(var)),
-                                    m_cfg.varBinning.at("Num")}));
+  auto ins = [&](const std::string& stem, const std::string& nameSuffix,
+                 const std::string& axisKey, const std::string& title) {
+    std::string name = std::format("{}_{}", stem, nameSuffix);
+    m_histograms.emplace(name,
+                         Histogram2(name, title,
+                                    std::array{m_cfg.varBinning.at(axisKey),
+                                               m_cfg.varBinning.at("Num")}));
   };
 
   std::string recT = std::format("Number of reconstructed {} candidates", lp);
   std::string truT = std::format("Number of truth-matched {} candidates", lp);
   std::string fakT = std::format("Number of fake {} candidates", lp);
 
-  ins(rt, "vs_pT", recT);
-  ins(tm, "vs_pT", truT);
-  ins(ft, "vs_pT", fakT);
-  ins(rt, "vs_eta", recT);
-  ins(tm, "vs_eta", truT);
-  ins(ft, "vs_eta", fakT);
+  ins(rt, "vs_pT", "Pt", recT);
+  ins(tm, "vs_pT", "Pt", truT);
+  ins(ft, "vs_pT", "Pt", fakT);
+  ins(rt, "vs_eta", "Eta", recT);
+  ins(tm, "vs_eta", "Eta", truT);
+  ins(ft, "vs_eta", "Eta", fakT);
 
   std::string fakeRatioTitle = std::format("{} fake ratio", m_cfg.label);
 
