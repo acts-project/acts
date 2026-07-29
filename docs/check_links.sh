@@ -1,42 +1,64 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Documentation link checker, backed by lychee (https://lychee.cli.rs).
+#
+# Two modes, selected via LINKCHECK_CHECK_EXTERN:
+#   0 -> internal only: runs offline, checks that links between the built HTML
+#        files resolve (including cross-file #anchors). Fast and deterministic,
+#        used as the per-PR gate.
+#   1 -> external too: also checks that external URLs are reachable, with
+#        retries, on-disk caching and GitHub API handling to absorb transient
+#        upstream failures. Used by the scheduled sweep.
+#
+# The set of external URLs to skip is fetched from a shared ignore list
+# (acts-project/linkcheck-ignore) and passed to lychee as --exclude patterns.
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+LYCHEE_BIN="${LYCHEE_BIN:-lychee}"
 
 LINKCHECK_IGNORE_REPO="${LINKCHECK_IGNORE_REPO:-acts-project/linkcheck-ignore}"
 LINKCHECK_IGNORE_REF="${LINKCHECK_IGNORE_REF:-main}"
 LINKCHECK_IGNORE_PATH="${LINKCHECK_IGNORE_PATH:-data.json}"
 LINKCHECK_IGNORE_URL="${LINKCHECK_IGNORE_URL:-https://raw.githubusercontent.com/${LINKCHECK_IGNORE_REPO}/${LINKCHECK_IGNORE_REF}/${LINKCHECK_IGNORE_PATH}}"
 
-# First-pass crawl settings.
-LINKCHECK_THREADS="${LINKCHECK_THREADS:-4}"
-LINKCHECK_TIMEOUT="${LINKCHECK_TIMEOUT:-20}"
-
-# External link checking. Disable for fast, deterministic PR runs (internal
-# links only); enable for the scheduled sweep that validates external URLs.
+# Check external links too (1) or internal links only (0).
 LINKCHECK_CHECK_EXTERN="${LINKCHECK_CHECK_EXTERN:-1}"
 
-# Retry settings. Only the URLs that failed are retried, each re-checked in
-# isolation (no crawl) with an escalated timeout and reduced concurrency, so a
-# single slow or briefly-flaky external link does not fail the whole run. A
-# link is only reported as broken if it fails the initial pass AND every retry.
-LINKCHECK_RETRIES="${LINKCHECK_RETRIES:-0}"
-LINKCHECK_RETRY_TIMEOUT="${LINKCHECK_RETRY_TIMEOUT:-60}"
-LINKCHECK_RETRY_THREADS="${LINKCHECK_RETRY_THREADS:-1}"
-LINKCHECK_RETRY_DELAY="${LINKCHECK_RETRY_DELAY:-15}"
+# Directory holding the built HTML documentation.
+LINKCHECK_ROOT="${LINKCHECK_ROOT:-${REPO_ROOT}/build/docs/html}"
 
-# Optional: write the list of links that failed every attempt to this file (for
-# reporting, e.g. an issue body in the scheduled workflow).
+# External-check tuning (ignored in internal-only mode).
+LINKCHECK_TIMEOUT="${LINKCHECK_TIMEOUT:-20}"
+LINKCHECK_MAX_RETRIES="${LINKCHECK_MAX_RETRIES:-3}"
+LINKCHECK_RETRY_WAIT="${LINKCHECK_RETRY_WAIT:-2}"
+LINKCHECK_MAX_CONCURRENCY="${LINKCHECK_MAX_CONCURRENCY:-16}"
+# Treat timed-out requests as OK, so a single slow-but-alive site is not an
+# error (the main cause of transient false alarms).
+LINKCHECK_ACCEPT_TIMEOUTS="${LINKCHECK_ACCEPT_TIMEOUTS:-1}"
+# Extra status codes to accept as valid (comma separated), e.g. "429".
+LINKCHECK_ACCEPT="${LINKCHECK_ACCEPT:-}"
+# On-disk result cache (.lycheecache) to avoid re-hitting healthy links.
+LINKCHECK_CACHE="${LINKCHECK_CACHE:-0}"
+LINKCHECK_MAX_CACHE_AGE="${LINKCHECK_MAX_CACHE_AGE:-1d}"
+
+# Optional markdown report path (used as an issue body by the scheduled job).
 LINKCHECK_FAILURES_OUT="${LINKCHECK_FAILURES_OUT:-}"
 
-if [[ -n "${LINKCHECK_START_URL:-}" ]]; then
-  START_URL="${LINKCHECK_START_URL}"
-else
-  LINKCHECK_START_PATH="${LINKCHECK_START_PATH:-${REPO_ROOT}/build/docs/html/index.html}"
-  START_URL="${LINKCHECK_START_PATH}"
+if ! command -v "${LYCHEE_BIN}" >/dev/null 2>&1; then
+  echo "error: lychee binary '${LYCHEE_BIN}' not found on PATH" >&2
+  exit 127
 fi
 
+if [[ ! -d "${LINKCHECK_ROOT}" ]]; then
+  echo "error: documentation root '${LINKCHECK_ROOT}' does not exist" >&2
+  exit 1
+fi
+ROOT_ABS="$(cd "${LINKCHECK_ROOT}" && pwd)"
+
+# --- load the shared external-link ignore list -----------------------------
 if command -v gh >/dev/null 2>&1; then
   if IGNORE_JSON="$(
     gh api \
@@ -54,132 +76,67 @@ else
 fi
 jq -e 'type == "array" and all(.[]; type == "string")' <<<"${IGNORE_JSON}" >/dev/null
 mapfile -t IGNORE_PATTERNS < <(jq -r '.[]' <<<"${IGNORE_JSON}")
-
-IGNORE_ARGS=(--ignore-url='^mailto:')
-for pattern in "${IGNORE_PATTERNS[@]}"; do
-  IGNORE_ARGS+=(--ignore-url="${pattern}")
-done
-
 echo "Loaded ${#IGNORE_PATTERNS[@]} external link ignore patterns"
 
-EXTERN_ARGS=()
-if [[ "${LINKCHECK_CHECK_EXTERN}" == "1" ]]; then
-  EXTERN_ARGS+=(--check-extern)
-  echo "External link checking: ENABLED"
-else
-  echo "External link checking: DISABLED (internal links only)"
-fi
-
-WORKDIR="$(mktemp -d)"
-trap 'rm -rf "${WORKDIR}"' EXIT
-
-# Extract the checked URLs from a linkchecker 'failures' output file. Each line
-# has the form:  <count> "('<parent>', '<url>')"
-extract_failed_urls() {
-  local file="$1"
-  [[ -f "${file}" ]] || return 0
-  python3 - "${file}" <<'PY'
-import ast, sys
-seen = []
-for line in open(sys.argv[1], encoding="utf-8"):
-    line = line.strip()
-    if not line:
-        continue
-    rest = line[line.find(" ") + 1:].strip()
-    if rest.startswith('"') and rest.endswith('"'):
-        rest = rest[1:-1]
-    try:
-        tup = ast.literal_eval(rest)
-        url = tup[1] if isinstance(tup, tuple) and len(tup) > 1 else str(tup)
-    except Exception:
-        continue
-    if url not in seen:
-        seen.append(url)
-for u in seen:
-    print(u)
-PY
-}
-
-# Run linkchecker. Args: <failures_file> <timeout> <threads> <recursion|""> <urls...>
-run_linkchecker() {
-  local failures_file="$1"; shift
-  local timeout="$1"; shift
-  local threads="$1"; shift
-  local recursion="$1"; shift
-  rm -f "${failures_file}"
-  local rec_args=()
-  if [[ -n "${recursion}" ]]; then
-    rec_args=(--recursion-level="${recursion}")
-  fi
-  uvx --from LinkChecker linkchecker \
-    --config="${SCRIPT_DIR}/linkcheckerrc" \
-    "${EXTERN_ARGS[@]}" \
-    --threads="${threads}" \
-    --timeout="${timeout}" \
-    "${rec_args[@]}" \
-    --file-output="failures/utf-8/${failures_file}" \
-    "${IGNORE_ARGS[@]}" \
-    "$@"
-}
-
-FAILURES_FILE="${WORKDIR}/failures.txt"
-
-echo "==> Initial link check (timeout=${LINKCHECK_TIMEOUT}s, threads=${LINKCHECK_THREADS})"
-set +e
-run_linkchecker "${FAILURES_FILE}" "${LINKCHECK_TIMEOUT}" "${LINKCHECK_THREADS}" "" "${START_URL}"
-last_rc=$?
-set -e
-
-if [[ ${last_rc} -eq 0 ]]; then
-  echo "All links OK."
-  exit 0
-fi
-
-mapfile -t failed_urls < <(extract_failed_urls "${FAILURES_FILE}")
-echo "Initial check reported ${#failed_urls[@]} failing link(s)."
-
-if (( ${#failed_urls[@]} == 0 )); then
-  echo "Link check failed but no specific URLs could be parsed; not retrying."
-  exit 1
-fi
-
-round=0
-while (( round < LINKCHECK_RETRIES )) && (( ${#failed_urls[@]} > 0 )); do
-  round=$((round + 1))
-  echo "==> Retry ${round}/${LINKCHECK_RETRIES} for ${#failed_urls[@]} link(s) after ${LINKCHECK_RETRY_DELAY}s (timeout=${LINKCHECK_RETRY_TIMEOUT}s, threads=${LINKCHECK_RETRY_THREADS})"
-  printf '    %s\n' "${failed_urls[@]}"
-  sleep "${LINKCHECK_RETRY_DELAY}"
-
-  RETRY_FAILURES="${WORKDIR}/failures_retry_${round}.txt"
-  set +e
-  run_linkchecker "${RETRY_FAILURES}" "${LINKCHECK_RETRY_TIMEOUT}" "${LINKCHECK_RETRY_THREADS}" 0 "${failed_urls[@]}"
-  last_rc=$?
-  set -e
-
-  if [[ ${last_rc} -eq 0 ]]; then
-    echo "All previously-failing links recovered on retry ${round}."
-    failed_urls=()
-    break
-  fi
-
-  mapfile -t failed_urls < <(extract_failed_urls "${RETRY_FAILURES}")
-  echo "Retry ${round} still has ${#failed_urls[@]} failing link(s)."
-  if (( ${#failed_urls[@]} == 0 )); then
-    echo "Retry ${round} failed but no specific URLs could be parsed; stopping."
-    break
-  fi
+# lychee treats --exclude values as regular expressions matched against the URL.
+# mailto: links are excluded by lychee by default (opt in with --include-mail).
+EXCLUDE_ARGS=(--exclude '^https?://localhost')
+for pattern in "${IGNORE_PATTERNS[@]}"; do
+  EXCLUDE_ARGS+=(--exclude "${pattern}")
 done
 
-if [[ ${last_rc} -eq 0 ]]; then
-  echo "All links OK after retries."
-  exit 0
+# --- assemble the lychee invocation ----------------------------------------
+LYCHEE_ARGS=(--no-progress --root-dir "${ROOT_ABS}")
+
+if [[ "${LINKCHECK_CHECK_EXTERN}" == "1" ]]; then
+  echo "External link checking: ENABLED"
+  LYCHEE_ARGS+=(
+    --timeout "${LINKCHECK_TIMEOUT}"
+    --max-retries "${LINKCHECK_MAX_RETRIES}"
+    --retry-wait-time "${LINKCHECK_RETRY_WAIT}"
+    --max-concurrency "${LINKCHECK_MAX_CONCURRENCY}"
+  )
+  if [[ "${LINKCHECK_ACCEPT_TIMEOUTS}" == "1" ]]; then
+    LYCHEE_ARGS+=(--accept-timeouts)
+  fi
+  if [[ -n "${LINKCHECK_ACCEPT}" ]]; then
+    LYCHEE_ARGS+=(--accept "${LINKCHECK_ACCEPT}")
+  fi
+  if [[ "${LINKCHECK_CACHE}" == "1" ]]; then
+    LYCHEE_ARGS+=(--cache --max-cache-age "${LINKCHECK_MAX_CACHE_AGE}")
+  fi
+  # Use the GitHub API for github.com links to avoid anonymous rate limiting.
+  GH_API_TOKEN="${GITHUB_TOKEN:-${GH_TOKEN:-}}"
+  if [[ -n "${GH_API_TOKEN}" ]]; then
+    LYCHEE_ARGS+=(--github-token "${GH_API_TOKEN}")
+  fi
+else
+  echo "External link checking: DISABLED (internal links only)"
+  # Offline: only local files are checked; external URLs are skipped. Fragment
+  # checking validates cross-file #anchors between the built HTML pages.
+  LYCHEE_ARGS+=(--offline --include-fragments)
 fi
 
-echo "The following link(s) failed the initial check and every retry:"
-printf '  %s\n' "${failed_urls[@]}"
+# Write a markdown report for the console (on failure) and, if requested, for
+# use as a GitHub issue body.
+REPORT="${LINKCHECK_FAILURES_OUT:-$(mktemp)}"
+LYCHEE_ARGS+=(--format markdown --output "${REPORT}")
 
-if [[ -n "${LINKCHECK_FAILURES_OUT}" ]]; then
-  printf '%s\n' "${failed_urls[@]}" > "${LINKCHECK_FAILURES_OUT}"
+# Run from a stable cwd (not the docs root) so any on-disk cache (.lycheecache)
+# lands somewhere cacheable rather than in the ephemeral build output.
+echo "Running lychee over ${ROOT_ABS}"
+set +e
+"${LYCHEE_BIN}" "${LYCHEE_ARGS[@]}" "${EXCLUDE_ARGS[@]}" "${ROOT_ABS}/**/*.html"
+rc=$?
+set -e
+
+if [[ ${rc} -ne 0 ]]; then
+  echo "=== lychee report ==="
+  cat "${REPORT}" || true
+  echo "====================="
+  echo "Link check failed (lychee exit ${rc})."
+else
+  echo "All checked links OK."
 fi
 
-exit 1
+exit ${rc}
