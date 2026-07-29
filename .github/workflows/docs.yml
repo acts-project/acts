@@ -7,6 +7,10 @@ on:
       - main
       - 'release/**'
       - 'develop/**'
+  schedule:
+    # Daily external-link sweep at 04:17 UTC (see the external-linkcheck job)
+    - cron: '17 4 * * *'
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
@@ -51,7 +55,12 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
-      - name: Check documentation links
+      - name: Check internal documentation links
+        # Only internal links are checked here so this gate stays fast and
+        # deterministic. External URLs are validated by the scheduled
+        # external-linkcheck job, which retries transient failures.
+        env:
+          LINKCHECK_CHECK_EXTERN: "0"
         run: |
           docs/check_links.sh
 
@@ -108,3 +117,88 @@ jobs:
           repository: acts-project/acts-project.github.io
           event-type: deploy_docs
           client-payload: ${{ format('{{"source_repo":{0},"run_id":{1},"artifact_id":{2},"ref":{3},"ref_type":{4},"ref_name":{5},"sha":{6}}}', toJson(github.repository), toJson(github.run_id), toJson(steps.artifact-upload-step.outputs.artifact-id), toJson(github.ref), toJson(github.ref_type), toJson(github.ref_name), toJson(github.sha)) }}
+
+  external-linkcheck:
+    # Validate external URLs out of the PR critical path. Runs on a schedule
+    # (and on demand) against the docs built by the `docs` job, retrying failed
+    # links in isolation so a single slow or briefly-flaky site does not raise a
+    # false alarm. Genuinely broken links are reported as a GitHub issue.
+    needs: docs
+    if: >-
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+      && (github.event_name != 'schedule' || github.repository == 'acts-project/acts')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    env:
+      LINKCHECK_CHECK_EXTERN: "1"
+      # First pass: modest timeout, some concurrency.
+      LINKCHECK_TIMEOUT: "30"
+      LINKCHECK_THREADS: "4"
+      # Retries: only failed URLs, re-checked one at a time with a generous
+      # timeout, so a slow-but-alive link gets its full budget uncontended.
+      LINKCHECK_RETRIES: "3"
+      LINKCHECK_RETRY_TIMEOUT: "60"
+      LINKCHECK_RETRY_THREADS: "1"
+      LINKCHECK_RETRY_DELAY: "20"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+
+      - name: Download built documentation
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: acts-docs
+          path: build/docs/html
+
+      - name: Check external documentation links
+        id: linkcheck
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LINKCHECK_FAILURES_OUT: ${{ github.workspace }}/linkcheck-failures.txt
+        run: docs/check_links.sh
+
+      - name: Report broken links
+        if: failure() && steps.linkcheck.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          LABEL="broken-links"
+          TITLE="Broken documentation links detected"
+
+          {
+            echo "The scheduled documentation link check found link(s) that failed"
+            echo "the initial check and every retry:"
+            echo
+            echo '```'
+            if [[ -s linkcheck-failures.txt ]]; then
+              cat linkcheck-failures.txt
+            else
+              echo "(no per-URL detail captured; see the run log)"
+            fi
+            echo '```'
+            echo
+            echo "Run: ${RUN_URL}"
+            echo
+            echo "If a link is a false positive (e.g. a site that blocks automated"
+            echo "requests), add it to the ignore list:"
+            echo "https://github.com/acts-project/linkcheck-ignore"
+          } > issue-body.md
+
+          gh label create "$LABEL" --color B60205 --description "Broken links found by the docs link checker" --force || true
+
+          existing="$(gh issue list --state open --label "$LABEL" --json number --jq '.[0].number')"
+          if [[ -n "$existing" ]]; then
+            echo "Updating existing issue #$existing"
+            gh issue comment "$existing" --body-file issue-body.md
+          else
+            echo "Opening new issue"
+            gh issue create --title "$TITLE" --label "$LABEL" --body-file issue-body.md
+          fi
