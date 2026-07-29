@@ -59,6 +59,38 @@ struct detector_reader_config {
     m_files.push_back(file_name);
     return *this;
   }
+  /// Add detector component files to the input list.
+  /// @param file_names vector of input file paths
+  /// @return this configuration for chaining
+  detector_reader_config& add_files(
+      const std::vector<std::string>& file_names) {
+    m_files = file_names;
+    return *this;
+  }
+  /// Add detector component files to the input list.
+  /// @param file_names vector of input file paths
+  /// @return this configuration for chaining
+  detector_reader_config& add_files(std::vector<std::string>&& file_names) {
+    m_files = std::move(file_names);
+    return *this;
+  }
+  /// Add detector component files to the input list.
+  /// @param file_names parameter pack of input file paths
+  /// @return this configuration for chaining
+  template <typename... Args>
+    requires(std::same_as<std::string, Args> || ...)
+  detector_reader_config& add_files(Args&&... file_names) {
+    m_files = std::vector<std::string>(std::forward<Args>(file_names)...);
+    return *this;
+  }
+  /// Add detector component files to the input list.
+  /// @param file_names initializer list of input file paths
+  /// @return this configuration for chaining
+  detector_reader_config& add_files(
+      std::initializer_list<std::string> file_names) {
+    m_files = std::vector<std::string>(file_names);
+    return *this;
+  }
   /// Enable or disable deduplication in the volume builder.
   /// @param toggle whether duplicate components should be removed
   /// @return this configuration for chaining
