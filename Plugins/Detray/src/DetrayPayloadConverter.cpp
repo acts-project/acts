@@ -737,8 +737,8 @@ DetrayPayloadConverter::convertTrackingGeometry(
   }
 
   Payloads payloads;
-  payloads.detector = std::make_unique<detray::io::detector_payload>();
-  detray::io::detector_payload& detPayload = *payloads.detector;
+  payloads.detector = std::make_unique<detray::io::detector_geometry_payload>();
+  detray::io::detector_geometry_payload& detPayload = *payloads.detector;
 
   payloads.materialGrids = std::make_unique<detray::io::detector_grids_payload<
       detray::io::surface_material_payload, detray::io::material_id>>();
