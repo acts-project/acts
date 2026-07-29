@@ -28,14 +28,14 @@ namespace detray::io {
 
 /// @brief Tracking geometry writer backend
 ///
-/// Fills a @c detector_payload from a @c detector instance
+/// Fills a @c detector_geometry_payload from a @c detector instance
 class geometry_writer {
  public:
   /// Tag the writer as "geometry"
   static constexpr std::string_view tag = "geometry";
 
   /// Payload type that the reader processes
-  using payload_type = detector_payload;
+  using payload_type = detector_geometry_payload;
 
   /// Convert the header information into its payload
   template <typename detector_t>

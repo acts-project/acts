@@ -755,8 +755,8 @@ DetrayPayloadConverter::convertTrackingGeometry(
   }
 
   Payloads payloads;
-  payloads.detector = std::make_unique<detray::io::detector_payload>();
-  detray::io::detector_payload& detPayload = *payloads.detector;
+  payloads.detector = std::make_unique<detray::io::detector_geometry_payload>();
+  detray::io::detector_geometry_payload& detPayload = *payloads.detector;
 
   payloads.homogeneousMaterial =
       std::make_unique<detray::io::detector_homogeneous_material_payload>();

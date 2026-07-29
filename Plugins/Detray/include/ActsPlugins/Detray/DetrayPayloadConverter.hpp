@@ -31,7 +31,7 @@ using dindex = unsigned int;
 
 namespace io {
 
-struct detector_payload;
+struct detector_geometry_payload;
 struct transform_payload;
 struct mask_payload;
 struct surface_payload;
@@ -261,7 +261,7 @@ class DetrayPayloadConverter {
   /// @brief Container for all Detray payload outputs
   struct Payloads {
     /// Detector payload
-    std::unique_ptr<detray::io::detector_payload> detector;
+    std::unique_ptr<detray::io::detector_geometry_payload> detector;
 
     /// Homogeneous material payload
     std::unique_ptr<detray::io::detector_homogeneous_material_payload>
