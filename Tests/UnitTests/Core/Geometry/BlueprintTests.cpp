@@ -1438,13 +1438,14 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeNestedInContainer) {
                     padCyl.get(CylinderVolumeBounds::eHalfLengthZ) + 5_mm);
 }
 
-BOOST_AUTO_TEST_CASE(PadBlueprintNodeOffAxisCylinderBounds) {
+BOOST_AUTO_TEST_CASE(PadBlueprintNodeReferenceAxisBounds) {
   Blueprint::Config cfg;
   cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
   cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
 
   // Reference axis is the global z-axis; the child sits 50mm off it in x.
-  PadBlueprintNode pad("World", cfg.envelope, Transform3::Identity());
+  PadBlueprintNode pad("World", cfg.envelope);
+  pad.setReferenceAxis(Transform3::Identity());
 
   const double offsetX = 50_mm;
   auto child = std::make_unique<TrackingVolume>(
@@ -1480,13 +1481,14 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeOffAxisCylinderBounds) {
                     30_mm + 20_mm);
 }
 
-BOOST_AUTO_TEST_CASE(PadBlueprintNodeOffAxisRejectsCuboid) {
+BOOST_AUTO_TEST_CASE(PadBlueprintNodeReferenceAxisRejectsCuboid) {
   Blueprint::Config cfg;
   cfg.envelope[AxisDirection::AxisX] = {1_mm, 1_mm};
   cfg.envelope[AxisDirection::AxisY] = {1_mm, 1_mm};
   cfg.envelope[AxisDirection::AxisZ] = {1_mm, 1_mm};
 
-  PadBlueprintNode pad("World", cfg.envelope, Transform3::Identity());
+  PadBlueprintNode pad("World", cfg.envelope);
+  pad.setReferenceAxis(Transform3::Identity());
   pad.addStaticVolume(std::make_unique<TrackingVolume>(
       Transform3::Identity(),
       std::make_shared<CuboidVolumeBounds>(10_mm, 20_mm, 30_mm), "child"));
@@ -1495,7 +1497,7 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeOffAxisRejectsCuboid) {
   BOOST_CHECK_THROW(pad.build(options, gctx, *logger), std::logic_error);
 }
 
-BOOST_AUTO_TEST_CASE(PadBlueprintNodeOffAxisInCylinderHierarchy) {
+BOOST_AUTO_TEST_CASE(PadBlueprintNodeReferenceAxisInCylinderHierarchy) {
   Blueprint::Config cfg;
   cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
   cfg.envelope[AxisDirection::AxisR] = {2_mm, 20_mm};
@@ -1550,8 +1552,8 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeOffAxisInCylinderHierarchy) {
     ExtentEnvelope padEnvelope = ExtentEnvelope::Zero();
     padEnvelope[AxisDirection::AxisZ] = {2_mm, 2_mm};
     padEnvelope[AxisDirection::AxisR] = {2_mm, 2_mm};
-    auto pad = std::make_shared<PadBlueprintNode>("B0Envelope", padEnvelope,
-                                                  Transform3::Identity());
+    auto pad = std::make_shared<PadBlueprintNode>("B0Envelope", padEnvelope);
+    pad->setReferenceAxis(Transform3::Identity());
     pad->addCylinderContainer("B0", AxisDirection::AxisZ, [&](auto& b0) {
       b0.addStaticVolume(makeB0Layer(0));
       b0.addStaticVolume(makeB0Layer(1));
@@ -1585,6 +1587,76 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeOffAxisInCylinderHierarchy) {
     found++;
   }
   BOOST_CHECK_EQUAL(found, b0SensitiveSurfaces.size());
+}
+
+BOOST_AUTO_TEST_CASE(PadBlueprintNodeCenteredRejectsAsymmetricZ) {
+  // The default Centered mode cannot represent an asymmetric envelope in a
+  // symmetric direction, so it must throw rather than silently shifting.
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {10_mm, 40_mm};
+  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
+
+  PadBlueprintNode pad("World", cfg.envelope);
+  pad.addStaticVolume(std::make_unique<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 30_mm), "child"));
+
+  BlueprintOptions options;
+  BOOST_CHECK_THROW(pad.build(options, gctx, *logger), std::logic_error);
+}
+
+BOOST_AUTO_TEST_CASE(PadBlueprintNodeFitBoundsCylinder) {
+  // FitBounds allows an asymmetric z envelope; the enclosure shifts to the
+  // midpoint of the expanded extent instead of throwing.
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {10_mm, 40_mm};
+  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
+
+  PadBlueprintNode pad("World", cfg.envelope);
+  pad.setCentering(PadBlueprintNode::Centering::FitBounds);
+  pad.addStaticVolume(std::make_unique<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 30_mm), "child"));
+
+  BlueprintOptions options;
+  auto& world =
+      dynamic_cast<TrackingVolume&>(pad.build(options, gctx, *logger));
+
+  const auto& worldCyl =
+      dynamic_cast<const CylinderVolumeBounds&>(world.volumeBounds());
+  // halfZ = 30 + (10 + 40) / 2 = 55; center shifts by (40 - 10) / 2 = 15
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eHalfLengthZ), 55_mm);
+  BOOST_CHECK_CLOSE(world.center(gctx)[eZ], 15_mm, 1e-9);
+  // r is asymmetric even when Centered, so it is unchanged here
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMinR), 9_mm);
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMaxR), 22_mm);
+}
+
+BOOST_AUTO_TEST_CASE(PadBlueprintNodeFitBoundsCuboid) {
+  // FitBounds shifts a cuboid per axis by half the envelope asymmetry.
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisX] = {2_mm, 6_mm};
+  cfg.envelope[AxisDirection::AxisY] = {3_mm, 3_mm};
+  cfg.envelope[AxisDirection::AxisZ] = {0_mm, 0_mm};
+
+  PadBlueprintNode pad("World", cfg.envelope);
+  pad.setCentering(PadBlueprintNode::Centering::FitBounds);
+  pad.addStaticVolume(std::make_unique<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CuboidVolumeBounds>(10_mm, 20_mm, 30_mm), "child"));
+
+  BlueprintOptions options;
+  auto& world =
+      dynamic_cast<TrackingVolume&>(pad.build(options, gctx, *logger));
+
+  const auto& worldBox =
+      dynamic_cast<const CuboidVolumeBounds&>(world.volumeBounds());
+  BOOST_CHECK_EQUAL(worldBox.get(CuboidVolumeBounds::eHalfLengthX), 14_mm);
+  BOOST_CHECK_EQUAL(worldBox.get(CuboidVolumeBounds::eHalfLengthY), 23_mm);
+  BOOST_CHECK_EQUAL(worldBox.get(CuboidVolumeBounds::eHalfLengthZ), 30_mm);
+  BOOST_CHECK_CLOSE(world.center(gctx)[eX], 2_mm, 1e-9);
+  BOOST_CHECK_SMALL(world.center(gctx)[eY], 1e-9);
+  BOOST_CHECK_SMALL(world.center(gctx)[eZ], 1e-9);
 }
 
 BOOST_AUTO_TEST_SUITE_END();
