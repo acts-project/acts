@@ -146,7 +146,8 @@ inline void from_json(const nlohmann::ordered_json& j, volume_payload& v) {
   }
 }
 
-inline void to_json(nlohmann::ordered_json& j, const detector_payload& d) {
+inline void to_json(nlohmann::ordered_json& j,
+                    const detector_geometry_payload& d) {
   if (!d.volumes.empty()) {
     nlohmann::ordered_json jvolumes;
     for (const auto& v : d.volumes) {
@@ -159,7 +160,8 @@ inline void to_json(nlohmann::ordered_json& j, const detector_payload& d) {
   }
 }
 
-inline void from_json(const nlohmann::ordered_json& j, detector_payload& d) {
+inline void from_json(const nlohmann::ordered_json& j,
+                      detector_geometry_payload& d) {
   if (j.find("volumes") != j.end()) {
     for (const auto& jvolume : j["volumes"]) {
       d.volumes.push_back(jvolume);
