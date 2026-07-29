@@ -58,6 +58,35 @@ std::string to_string(const T &obj) {
   return os.str();
 }
 
+/// Bind @p Container , a read-only vector with elements type @p Element.
+template <typename Container, typename Element>
+void bind_const_vector(py::module_ &m, const char *name) {
+  py::class_<Container>(m, name)
+      .def("__len__", [](const Container &c) { return c.size(); })
+      .def(
+          "__getitem__",
+          [](const Container &c, py::ssize_t i) -> const Element & {
+            const auto n = static_cast<py::ssize_t>(c.size());
+            if (i < 0) {
+              i += n;
+            }
+            if (i < 0 || i >= n) {
+              throw py::index_error();
+            }
+            return c[static_cast<std::size_t>(i)];
+          },
+          py::arg("index"), py::return_value_policy::reference_internal,
+          "Element at a given index")
+      .def(
+          "__iter__",
+          [](const Container &c) {
+            return py::make_iterator<py::return_value_policy::reference_internal,
+                                     decltype(c.begin()), decltype(c.end()),
+                                     const Element &>(c.begin(), c.end());
+          },
+          py::keep_alive<0, 1>(), "Iterate over the elements");
+}
+
 using algebra_t = detray::array<DETRAY_CUSTOM_SCALARTYPE>;
 using detector_t = detray::detector<detray::default_metadata<algebra_t>>;
 using volume_descriptor_t = detector_t::volume_type;
@@ -88,6 +117,12 @@ std::pair<detector_handle, detray::name_map> read_detector(
 }
 
 }  // namespace
+
+// Treat the detector's volume/portal containers as opaque so that returning
+// them by reference exposes the live storage instead of copying it into a
+// Python list (the default for std::vector via pybind11/stl.h).
+PYBIND11_MAKE_OPAQUE(volume_container_t)
+PYBIND11_MAKE_OPAQUE(surface_container_t)
 
 PYBIND11_MODULE(DetrayPythonBindings, m) {
   m.doc() = "Detray core bindings";
@@ -183,35 +218,9 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
 
   py::class_<volume_descriptor_t>(m, "VolumeDescriptor");
   py::class_<surface_descriptor_t>(m, "SurfaceDescriptor");
-  py::class_<surface_store_t>(m, "SurfaceStore")
-      .def("__len__", [](const surface_store_t &s) { return s.size(); })
-      .def(
-          "empty", [](const surface_store_t &s) { return s.empty(); },
-          "Whether the collection has no surfaces")
-      .def(
-          "__getitem__",
-          [](const surface_store_t &s,
-             py::ssize_t i) -> const surface_descriptor_t & {
-            const auto n = static_cast<py::ssize_t>(s.size());
-            if (i < 0) {
-              i += n;
-            }
-            if (i < 0 || i >= n) {
-              throw py::index_error();
-            }
-            return s[static_cast<std::size_t>(i)];
-          },
-          py::arg("index"), py::return_value_policy::reference_internal,
-          "Surface at a given index")
-      .def(
-          "__iter__",
-          [](const surface_store_t &s) {
-            return py::make_iterator<
-                py::return_value_policy::reference_internal,
-                decltype(s.begin()), decltype(s.end()),
-                const surface_descriptor_t &>(s.begin(), s.end());
-          },
-          py::keep_alive<0, 1>(), "Iterate over the surfaces");
+  bind_const_vector<surface_store_t, surface_descriptor_t>(m, "SurfaceStore");
+  bind_const_vector<volume_container_t, volume_descriptor_t>(m, "VolumeContainer");
+  bind_const_vector<surface_container_t, surface_descriptor_t>(m, "SurfaceContainer");
   py::class_<geometry_context_t>(m, "GeometryContext");
   py::class_<transform_store_t>(m, "TransformStore");
   py::class_<mask_store_t>(m, "MaskStore");
@@ -283,7 +292,6 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
           py::arg("names"), "Detector name")
       .def_property_readonly(
           "volumes",
-          // Converts to list[VolumeDescriptor].
           [](const detector_handle &d) -> const volume_container_t & {
             return d.detector.volumes();
           },
@@ -294,21 +302,12 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
             return d.detector.surfaces();
           },
           py::return_value_policy::reference_internal, "All surfaces")
-      .def(
-          "surface",
-          [](const detector_handle &d,
-             detray::dindex index) -> const surface_descriptor_t & {
-            return d.detector.surface(index);
-          },
-          py::arg("index"), py::return_value_policy::reference_internal,
-          "Surface by index")
       .def_property_readonly(
           "portals",
-          // Converts to list[SurfaceDescriptor].
           [](const detector_handle &d) -> const surface_container_t & {
             return d.detector.portals();
           },
-          "All portals")
+          py::return_value_policy::reference_internal, "All portals")
       .def_property_readonly(
           "transformStore",
           [](const detector_handle &d) -> const transform_store_t & {
