@@ -32,7 +32,13 @@ rules:
      - "main"
      - "develop/*"
     paths:
+     # Both spellings deliberately. The same `Detray/*` pattern was silently
+     # matching only the top level of Detray/ in .gitlab-ci.yml, and merge
+     # sentinel's glob engine is not documented here, so which of the two is
+     # the recursive one cannot be assumed. Listing both is correct under
+     # either reading; the redundant one simply never matches anything extra.
      - "Detray/*"
+     - "Detray/**/*"
      - ".github/workflows/detray.yml"
     required_pattern:
      - "Detray / *"
