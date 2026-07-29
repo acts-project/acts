@@ -577,33 +577,14 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
 
       // hit_ids is list<list<uint32>> (per-event outer list of per-track
       // inner lists) -- one level deeper than rowBounds()/colValues<>()
-      // handle, so unwrap it directly.
-      auto hitIdsCol = tracksTable.GetColumnByName("hit_ids");
-      if (!hitIdsCol) {
-        throw std::runtime_error(
-            "ColliderMLRelease1InputConverter: missing column 'hit_ids'");
-      }
-      auto outerHitIds =
-          std::dynamic_pointer_cast<arrow::ListArray>(hitIdsCol->chunk(0));
-      if (!outerHitIds) {
-        throw std::runtime_error(
-            "ColliderMLRelease1InputConverter: column 'hit_ids' is not a "
-            "list array (expected nested layout)");
-      }
+      // handle, so unwrap it directly. Schema validation already guarantees
+      // the column and its nested layout, so no defensive checks here.
+      auto outerHitIds = std::dynamic_pointer_cast<arrow::ListArray>(
+          tracksTable.GetColumnByName("hit_ids")->chunk(0));
       auto innerHitIds =
           std::dynamic_pointer_cast<arrow::ListArray>(outerHitIds->values());
-      if (!innerHitIds) {
-        throw std::runtime_error(
-            "ColliderMLRelease1InputConverter: column 'hit_ids' does not "
-            "have the expected list<list<uint32>> layout");
-      }
       auto hitIdValues =
           std::dynamic_pointer_cast<arrow::UInt32Array>(innerHitIds->values());
-      if (!hitIdValues) {
-        throw std::runtime_error(
-            "ColliderMLRelease1InputConverter: 'hit_ids' inner values are "
-            "not uint32");
-      }
       const std::int64_t hitIdsTrkOff = outerHitIds->value_offset(0);
 
       auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
@@ -635,30 +616,38 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
         const std::int64_t hitOff = innerHitIds->value_offset(hitListIdx);
         const std::int64_t nTrackHits = innerHitIds->value_length(hitListIdx);
 
-        std::uint32_t nAppended = 0;
         for (std::int64_t k = 0; k < nTrackHits; ++k) {
           const auto hitRowIdx =
               static_cast<std::int32_t>(hitIdValues->Value(hitOff + k));
           auto measIt = hitIndexToMeas.find(hitRowIdx);
           if (measIt == hitIndexToMeas.end()) {
-            ACTS_DEBUG("Published track " << j << " hit row " << hitRowIdx
+            ACTS_ERROR("Published track " << j << " hit row " << hitRowIdx
                                           << " has no corresponding "
-                                             "measurement; skipping");
-            continue;
+                                             "measurement");
+            return ProcessCode::ABORT;
           }
           ConstVariableBoundMeasurementProxy measurement =
               storedMeasurements.getMeasurement(measIt->second);
+          const Acts::Surface* hitSurface =
+              m_cfg.trackingGeometry->findSurface(measurement.geometryId());
+          if (hitSurface == nullptr) {
+            ACTS_ERROR("Published track " << j << " hit row " << hitRowIdx
+                                          << " geoId "
+                                          << measurement.geometryId()
+                                          << " not found in tracking geometry");
+            return ProcessCode::ABORT;
+          }
           IndexSourceLink sourceLink(measurement.geometryId(), measIt->second);
 
           auto trackStateProxy =
               track.appendTrackState(Acts::TrackStatePropMask::None);
           trackStateProxy.typeFlags().setIsMeasurement();
+          trackStateProxy.setReferenceSurface(hitSurface->getSharedPtr());
           trackStateProxy.setUncalibratedSourceLink(
               Acts::SourceLink(sourceLink));
-          ++nAppended;
         }
 
-        track.nMeasurements() = nAppended;
+        track.nMeasurements() = static_cast<std::uint32_t>(nTrackHits);
         track.nHoles() = 0;
         track.nOutliers() = 0;
       }

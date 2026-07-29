@@ -358,23 +358,8 @@ def test_colliderml_truth_tracking(tmp_path, colliderml_fatras_sample, reco_geo)
         _run()
 
 
-@pytest.fixture(scope="session")
-def colliderml_tracks_dataset(colliderml_fatras_sample):
-    """Hand-written ColliderML-format published-tracks dataset, derived from
-    the FATRAS fixture's already-written hits (one track per event,
-    referencing the event's first hit if any)."""
-    inputDir, sample = colliderml_fatras_sample
-    hits_dir = inputDir / f"{sample}_tracker_hits" / "data" / f"{sample}_tracker_hits"
-    tracks_dir = inputDir / f"{sample}_tracks" / "data" / f"{sample}_tracks"
-
-    n_hits_by_event = _read_event_hit_counts(hits_dir, _N_EVENTS)
-    _write_colliderml_tracks_dataset(tracks_dir, n_hits_by_event, _N_EVENTS)
-
-    return inputDir, sample, tracks_dir, n_hits_by_event
-
-
 @pytest.mark.pypi
-def test_colliderml_track_reading(colliderml_tracks_dataset):
+def test_colliderml_track_reading(colliderml_fatras_sample):
     """Read the published-tracks table via
     ColliderMLRelease1InputConverter(inputTracksTable=..., outputTracks=...)
     and verify the resulting ConstTrackContainer: every track carries a
@@ -386,9 +371,13 @@ def test_colliderml_track_reading(colliderml_tracks_dataset):
     from acts.examples.arrow import ColliderMLRelease1InputConverter, ParquetReader
     from acts.examples.odd import getOpenDataDetector
 
-    inputDir, sample, tracks_dir, n_hits_by_event = colliderml_tracks_dataset
+    inputDir, sample = colliderml_fatras_sample
     particles_dir = inputDir / f"{sample}_particles" / "data" / f"{sample}_particles"
     hits_dir = inputDir / f"{sample}_tracker_hits" / "data" / f"{sample}_tracker_hits"
+    tracks_dir = inputDir / f"{sample}_tracks" / "data" / f"{sample}_tracks"
+
+    n_hits_by_event = _read_event_hit_counts(hits_dir, _N_EVENTS)
+    _write_colliderml_tracks_dataset(tracks_dir, n_hits_by_event, _N_EVENTS)
 
     odd_dir = acts.examples.odd.getOpenDataDetectorDirectory()
     matDeco = acts.IMaterialDecorator.fromFile(
