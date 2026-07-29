@@ -116,7 +116,7 @@ ActsExamples::HeavyFlavourOrigin HepMC3InputConverter::deriveHeavyFlavourOrigin(
 
   bool isFromCharm{false};
   while (!st.empty()) {
-    auto part = std::move(st.back());
+    const std::shared_ptr<const HepMC3::GenParticle> part = st.back();
     st.pop_back();
 
     if (!part) {
