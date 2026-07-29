@@ -795,7 +795,7 @@ class KalmanFitter {
     auto propagatorState = m_propagator.makeState(propagatorOptions);
 
     auto propagatorInitResult =
-        m_propagator.initialize(propagatorState, sParameters);
+        m_propagator.initialize(propagatorState, sParameters, nullptr);
     if (!propagatorInitResult.ok()) {
       ACTS_DEBUG("Propagation initialization failed: "
                  << propagatorInitResult.error());

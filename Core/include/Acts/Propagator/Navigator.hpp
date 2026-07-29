@@ -15,6 +15,7 @@
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
+#include "Acts/Propagator/NavigatorInitializeArguments.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -257,7 +258,11 @@ class Navigator final {
       policyStateIsDefault = true;
     }
 
-    /// Completely reset navigation state to initial conditions
+    /// Reset navigation state for renavigating within the same navigation run
+    ///
+    /// @note This keeps the start and target information, which actors rely on
+    ///       for the whole run. Use @c resetForInitialization to start a new
+    ///       navigation run.
     void resetForRenavigation() {
       resetAfterVolumeSwitch();
 
@@ -274,6 +279,20 @@ class Navigator final {
                             });
 
       stream.reset();
+    }
+
+    /// Completely reset navigation state for a new navigation run
+    ///
+    /// In contrast to @c resetForRenavigation this also drops the start and
+    /// target information, so nothing of the previous run can leak into the
+    /// next one.
+    void resetForInitialization() {
+      resetForRenavigation();
+
+      startVolume = nullptr;
+      startLayer = nullptr;
+      startSurface = nullptr;
+      targetSurface = nullptr;
     }
   };
 
@@ -327,17 +346,16 @@ class Navigator final {
 
   /// @brief Initialize the navigator state
   ///
-  /// This function initializes the navigator state for a new propagation.
+  /// This function initializes the navigator state for a new propagation. All
+  /// inputs which are specific to this navigation run are passed here, so a
+  /// state can be reused for another run without carrying anything over.
   ///
   /// @param state The navigation state
-  /// @param position The start position
-  /// @param direction The start direction
-  /// @param propagationDirection The propagation direction
+  /// @param args The initialization arguments of this navigation run
   ///
   /// @return Indication if the initialization was successful
-  [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
-                                        const Vector3& direction,
-                                        Direction propagationDirection) const;
+  [[nodiscard]] Result<void> initialize(
+      State& state, const NavigatorInitializeArguments& args) const;
 
   /// @brief Get the next target surface
   ///

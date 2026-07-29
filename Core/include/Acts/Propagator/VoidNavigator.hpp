@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
+#include "Acts/Propagator/NavigatorInitializeArguments.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -103,8 +104,7 @@ class VoidNavigator {
   /// Initializes the void navigator (always succeeds and does nothing)
   /// @return Always successful result since no initialization is needed
   [[nodiscard]] Result<void> initialize(
-      State& /*state*/, const Vector3& /*position*/,
-      const Vector3& /*direction*/, Direction /*propagationDirection*/) const {
+      State& /*state*/, const NavigatorInitializeArguments& /*args*/) const {
     return Result<void>::success();
   }
 

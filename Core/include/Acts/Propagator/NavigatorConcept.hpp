@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Propagator/NavigatorInitializeArguments.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <concepts>
@@ -27,7 +28,8 @@ concept NavigatorConcept = requires {
 
   requires requires(const Navigator& n, const Options& o, State& s,
                     const Surface& sf, const Vector3& position,
-                    const Vector3& direction, Direction propagationDirection) {
+                    const Vector3& direction,
+                    const NavigatorInitializeArguments& args) {
     { n.makeState(o) } -> std::same_as<State>;
     { n.currentSurface(s) } -> std::same_as<const Surface*>;
     { n.currentVolume(s) } -> std::same_as<const TrackingVolume*>;
@@ -36,9 +38,7 @@ concept NavigatorConcept = requires {
     { n.targetSurface(s) } -> std::same_as<const Surface*>;
     { n.endOfWorldReached(s) } -> std::same_as<bool>;
     { n.navigationBreak(s) } -> std::same_as<bool>;
-    {
-      n.initialize(s, position, direction, propagationDirection)
-    } -> std::same_as<Result<void>>;
+    { n.initialize(s, args) } -> std::same_as<Result<void>>;
     { n.nextTarget(s, position, direction) } -> std::same_as<NavigationTarget>;
     { n.checkTargetValid(s, position, direction) } -> std::same_as<bool>;
     {

@@ -95,10 +95,10 @@ bool Navigator::navigationBreak(const State& state) const {
   return state.navigationBreak;
 }
 
-Result<void> Navigator::initialize(State& state, const Vector3& position,
-                                   const Vector3& direction,
-                                   Direction propagationDirection) const {
-  static_cast<void>(propagationDirection);
+Result<void> Navigator::initialize(
+    State& state, const NavigatorInitializeArguments& args) const {
+  const Vector3& position = args.position;
+  const Vector3& direction = args.direction;
 
   ACTS_VERBOSE(volInfo(state) << "Initialization.");
 
@@ -116,7 +116,7 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
   ACTS_VERBOSE(volInfo(state) << "Geometry version is: "
                               << printGeometryVersion(m_geometryVersion));
 
-  state.resetForRenavigation();
+  state.resetForInitialization();
 
   if (m_geometryVersion == GeometryVersion::Gen3) {
     // Empirical pre-allocation of candidates for the next navigation
@@ -133,11 +133,17 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
     }
   }
 
-  state.startSurface = state.options.startSurface;
-  state.targetSurface = state.options.targetSurface;
+  state.startSurface = args.startSurface;
+  state.targetSurface = args.targetSurface;
 
   // @TODO: Implement fast initialization with Gen3. This requires the volume
   // lookup to work properly
+
+  // The start information is resolved into locals and only assigned to the
+  // state at the end, so that nothing left over from a previous run of this
+  // state can leak into the resolution.
+  const TrackingVolume* startVolume = args.startVolume;
+  const Layer* startLayer = nullptr;
 
   // Fast Navigation initialization for start condition:
   // - short-cut through object association, saves navigation in the
@@ -148,15 +154,15 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
         volInfo(state)
         << "Fast start initialization through association from Surface.");
 
-    state.startLayer = state.startSurface->associatedLayer();
-    state.startVolume = state.startLayer->trackingVolume();
-  } else if (state.startVolume != nullptr) {
+    startLayer = state.startSurface->associatedLayer();
+    startVolume = startLayer->trackingVolume();
+  } else if (startVolume != nullptr) {
     ACTS_VERBOSE(
         volInfo(state)
         << "Fast start initialization through association from Volume.");
 
-    state.startLayer =
-        state.startVolume->associatedLayer(state.options.geoContext, position);
+    startLayer =
+        startVolume->associatedLayer(state.options.geoContext, position);
   } else {
     ACTS_VERBOSE(volInfo(state) << "Slow start initialization through search.");
     ACTS_VERBOSE(volInfo(state)
@@ -164,12 +170,12 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
                  << " and direction " << toString(direction));
 
     // current volume and layer search through global search
-    state.startVolume = m_cfg.trackingGeometry->lowestTrackingVolume(
+    startVolume = m_cfg.trackingGeometry->lowestTrackingVolume(
         state.options.geoContext, position);
 
-    if (state.startVolume != nullptr) {
-      state.startLayer = state.startVolume->associatedLayer(
-          state.options.geoContext, position);
+    if (startVolume != nullptr) {
+      startLayer =
+          startVolume->associatedLayer(state.options.geoContext, position);
     } else {
       ACTS_DEBUG(volInfo(state)
                  << "No start volume resolved. Nothing left to do.");
@@ -177,6 +183,9 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
       return Result<void>::failure(NavigatorError::NoStartVolume);
     }
   }
+
+  state.startVolume = startVolume;
+  state.startLayer = startLayer;
 
   state.currentVolume = state.startVolume;
   state.currentLayer = state.startLayer;
