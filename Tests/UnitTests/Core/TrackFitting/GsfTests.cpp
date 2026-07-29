@@ -207,6 +207,43 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
                                     false, false);
 }
 
+// The smoothed parameters are only allocated where the backward pass computes
+// them. Check that this covers every measurement state and that no state is
+// left with allocated but unwritten parameters.
+BOOST_AUTO_TEST_CASE(SmoothedParametersOnMeasurementStates) {
+  TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
+
+  auto multi_pars = makeParameters();
+  auto measurements =
+      createMeasurements(tester.simPropagator, tester.geoCtx, tester.magCtx,
+                         multi_pars, tester.resolutions, rng);
+  auto sourceLinks = tester.prepareSourceLinks(measurements.sourceLinks);
+  auto options = makeDefaultGsfOptions();
+
+  auto res = gsfZero.fit(sourceLinks.begin(), sourceLinks.end(), multi_pars,
+                         options, tracks);
+  BOOST_REQUIRE(res.ok());
+
+  std::size_t nMeasurementStates = 0;
+  for (const auto ts : res->trackStatesReversed()) {
+    if (!ts.typeFlags().isMeasurement()) {
+      // non-measurement states never receive smoothed parameters
+      BOOST_CHECK(!ts.hasSmoothed());
+      continue;
+    }
+
+    ++nMeasurementStates;
+
+    BOOST_CHECK(ts.hasSmoothed());
+    BOOST_CHECK(ts.smoothed().allFinite());
+    BOOST_CHECK(ts.smoothedCovariance().allFinite());
+    // the best available parameters must be the smoothed ones
+    BOOST_CHECK_EQUAL(ts.parameters().data(), ts.smoothed().data());
+  }
+
+  BOOST_CHECK_EQUAL(nMeasurementStates, sourceLinks.size());
+}
+
 BOOST_AUTO_TEST_CASE(WithFinalMultiComponentState) {
   TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
   using namespace GsfConstants;

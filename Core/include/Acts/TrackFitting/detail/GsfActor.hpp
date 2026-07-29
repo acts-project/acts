@@ -575,11 +575,14 @@ struct GsfActor {
       const auto firstCmpProxy =
           tmpStates.traj.getTrackState(tmpStates.tips.front());
 
+      // The smoothed parameters are deliberately not allocated here: they are
+      // only added in the backward pass which computes them, so that nobody
+      // can observe allocated but uninitialized smoothed parameters via
+      // `parameters()`.
       auto combinedStateMask = TrackStatePropMask::Predicted;
       if (type.isMeasurement()) {
-        combinedStateMask |= TrackStatePropMask::Calibrated |
-                             TrackStatePropMask::Filtered |
-                             TrackStatePropMask::Smoothed;
+        combinedStateMask |=
+            TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered;
       } else if (type.isOutlier()) {
         combinedStateMask |= TrackStatePropMask::Calibrated;
       }
@@ -608,11 +611,6 @@ struct GsfActor {
             surface, m_cfg.mergeMethod);
         combinedState.filtered() = fltMean;
         combinedState.filteredCovariance() = fltCov;
-
-        // place sentinel values for smoothed parameters for now. they will be
-        // filled in the backward pass
-        combinedState.smoothed() = BoundVector::Constant(-2);
-        combinedState.smoothedCovariance() = BoundMatrix::Constant(-2);
       } else {
         combinedState.shareFrom(TrackStatePropMask::Predicted,
                                 TrackStatePropMask::Filtered);
@@ -629,12 +627,19 @@ struct GsfActor {
 
             result.surfacesVisitedBwdAgain.push_back(&surface);
 
-            if (trackState.hasSmoothed()) {
+            // Only measurement states receive smoothed parameters. Note that
+            // the last measurement state of the forward pass already shares
+            // its smoothed parameters with its filtered ones and is skipped
+            // by the actor as an already visited surface, so it is never
+            // reached here.
+            if (trackState.typeFlags().isMeasurement()) {
               const auto [smtMean, smtCov] = mergeGaussianMixture(
                   tmpStates.tips,
                   FltProjector{tmpStates.traj, tmpStates.weights}, surface,
                   m_cfg.mergeMethod);
 
+              // Allocate the smoothed parameters right before they are written
+              trackState.addComponents(TrackStatePropMask::Smoothed);
               trackState.smoothed() = smtMean;
               trackState.smoothedCovariance() = smtCov;
             }
