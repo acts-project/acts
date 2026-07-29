@@ -182,7 +182,7 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
     // surface is a boundary between volumes, the position alone does not
     // determine the start volume: the volume actually being entered depends
     // on the direction, so the start surface is passed along as a hint.
-    auto resolved = m_cfg.trackingGeometry->resolveLowestTrackingVolume(
+    const auto resolved = m_cfg.trackingGeometry->resolveLowestTrackingVolume(
         state.options.geoContext, position, direction, state.startSurface,
         state.options.surfaceTolerance);
     if (!resolved.ok()) {
