@@ -65,10 +65,10 @@ class SpacePointGridBase {
   /// @return The index of the bin in which the space point is located, or
   ///         `std::nullopt` if the space point is outside the grid bounds.
   std::optional<std::size_t> binIndex(const Vector3& position) const {
-    if (!grid().isInside(position)) {
+    if (!grid().multiAxis().isInside(position)) {
       return std::nullopt;
     }
-    return grid().globalBinFromPosition(position);
+    return grid().multiAxis().getGlobalBinFromPoint(position);
   }
 
   /// Insert a space point into the grid.
