@@ -56,11 +56,11 @@ BOOST_AUTO_TEST_SUITE(GeometrySuite)
 // position on the shared portal surface is ambiguous between the two
 // volumes; the direction resolves the ambiguity.
 BOOST_AUTO_TEST_CASE(BoundaryVolumeResolutionGen3) {
-  Experimental::Blueprint::Config cfg;
+  Blueprint::Config cfg;
   cfg.envelope[AxisDirection::AxisX] = {20_mm, 20_mm};
   cfg.envelope[AxisDirection::AxisY] = {20_mm, 20_mm};
   cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
-  Experimental::Blueprint root{cfg};
+  Blueprint root{cfg};
 
   root.addCuboidContainer("Stack", AxisDirection::AxisX, [&](auto& stack) {
     stack.addStaticVolume(

@@ -813,11 +813,11 @@ BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume) {
 BOOST_AUTO_TEST_CASE(NavigationStartOnPortalGen3) {
   auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
-  Experimental::Blueprint::Config cfg;
+  Blueprint::Config cfg;
   cfg.envelope[AxisDirection::AxisX] = {20_mm, 20_mm};
   cfg.envelope[AxisDirection::AxisY] = {20_mm, 20_mm};
   cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
-  Experimental::Blueprint root{cfg};
+  Blueprint root{cfg};
 
   root.addCuboidContainer("Stack", AxisDirection::AxisX, [&](auto& stack) {
     stack.addStaticVolume(
