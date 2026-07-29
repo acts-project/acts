@@ -1436,6 +1436,10 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeReferenceAxisBounds) {
 }
 
 BOOST_AUTO_TEST_CASE(PadBlueprintNodeReferenceAxisRejectsCuboid) {
+  // The rejection path logs at ERROR before throwing; allow that under the
+  // compile-time log failure threshold used in CI.
+  Logging::ScopedFailureThreshold threshold{Logging::Level::FATAL};
+
   Blueprint::Config cfg;
   cfg.envelope[AxisDirection::AxisX] = {1_mm, 1_mm};
   cfg.envelope[AxisDirection::AxisY] = {1_mm, 1_mm};
@@ -1546,6 +1550,9 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeReferenceAxisInCylinderHierarchy) {
 BOOST_AUTO_TEST_CASE(PadBlueprintNodeCenteredRejectsAsymmetricZ) {
   // The default Centered mode cannot represent an asymmetric envelope in a
   // symmetric direction, so it must throw rather than silently shifting.
+  // The rejection path logs at ERROR before throwing.
+  Logging::ScopedFailureThreshold threshold{Logging::Level::FATAL};
+
   Blueprint::Config cfg;
   cfg.envelope[AxisDirection::AxisZ] = {10_mm, 40_mm};
   cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
