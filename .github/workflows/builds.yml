@@ -27,14 +27,8 @@ jobs:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
-    # Pulled through the CERN registry cache rather than ghcr.io directly. This
-    # is deliberately applied only to the husk jobs — the cache is worth using
-    # from inside CERN, and the jobs still on ubuntu-latest would gain nothing
-    # by routing their pulls through it. Do not "make this consistent" across
-    # the file without moving the job to husk first.
-    #
-    # CI/bump_versions.py understands the prefix (its docker_tag pattern makes
-    # `registry.cern.ch/` optional), so tags here still bump automatically.
+    # registry.cern.ch is a pull-through cache for ghcr.io. Husk jobs only —
+    # the ubuntu-latest jobs run outside CERN and gain nothing from it.
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
@@ -277,9 +271,7 @@ jobs:
           - image: ubuntu2404_clang22
             std: 23
             cxx: clang++-22
-    # Tag is templated, so CI/bump_versions.py cannot see it and it drifts. It
-    # is now the only clang22 build in the project — GitLab's duplicate, which
-    # was on 87, is gone — so it is bumped by hand here.
+    # Templated tag, so CI/bump_versions.py cannot see it; bumped by hand.
     container: ghcr.io/acts-project/${{ matrix.image }}:87
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
@@ -362,9 +354,8 @@ jobs:
         run: ctest --test-dir build-downstream --output-on-failure
 
   # ─────────────────────────────────────────────────────────────────────
-  # GNN builds, migrated from GitLab CI. Only the two that need neither a GPU
-  # nor to hand an artifact to a GPU job live here; `build_gnn` and the
-  # `test_gnn_*` jobs it feeds stay on GitLab until a GPU pool exists.
+  # GNN builds, migrated from GitLab CI. `build_gnn` and the `test_gnn_*` jobs
+  # it feeds stay on GitLab until a GPU pool exists.
   # ─────────────────────────────────────────────────────────────────────
   gnn_cpu:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
@@ -373,8 +364,7 @@ jobs:
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
 
     steps:
-      # The image puts tooling the build shells out to in the sbin dirs, which
-      # are not on a non-login PATH. GitLab did this with a bare `export`.
+      # The image keeps build tooling in the sbin dirs, off a non-login PATH.
       - name: Fix up PATH
         run: |
           echo "/usr/local/sbin" >> $GITHUB_PATH
@@ -401,8 +391,6 @@ jobs:
           restore-keys: |
             ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
-      # Deliberately minimal: no examples, no CUDA, no module map. The point is
-      # to keep the CPU-only GNN code compiling, not to duplicate `build_gnn`.
       - name: Configure
         run: >
           ccache -z &&
@@ -452,8 +440,6 @@ jobs:
           restore-keys: |
             ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
-      # Compiles the TensorRT backend against nvinfer. CUDA is enabled, but only
-      # nvcc is exercised — nothing here dispatches to a device.
       - name: Configure
         run: >
           ccache -z &&
@@ -490,10 +476,8 @@ jobs:
     # rewrites tags it can see literally, which is how linux_ubuntu_extra's
     # templated image drifted a tag behind. Every leg is alma9 today anyway.
     #
-    # Spelling it out is not sufficient here, though: bump_versions.py's
-    # docker_tag pattern is `[a-z0-9_]+`, which excludes the hyphen, so
-    # `alma9-base` does not match it with or without the registry prefix. This
-    # tag has to be bumped by hand until that character class gains a `-`.
+    # Not sufficient here though: bump_versions.py's pattern is `[a-z0-9_]+`,
+    # which excludes the hyphen, so `alma9-base` never matches. Bump by hand.
     #
     # v88 is where expat-devel arrives, which the dev4 leg needs: that view's
     # Geant4 wants EXPAT >= 2.5.0 and the view neither ships nor exposes it.

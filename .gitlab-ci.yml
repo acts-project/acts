@@ -43,8 +43,8 @@ variables:
     - rm -rf spack/.git spack/opt spack/var/spack/cache
     - find spack -type f -name "*.pyc" -delete || true
 
-# The CPU-only GNN build lives in .github/workflows/builds.yml (job `gnn_cpu`).
-# Only jobs that need a GPU, or that hand an artifact to one, remain here.
+# Only GPU jobs and their artifact producers remain here. build_gnn_cpu moved
+# to .github/workflows/builds.yml as `gnn_cpu`.
 
 build_gnn:
   stage: build
@@ -143,12 +143,8 @@ test_gnn_python:
   after_script:
    - !reference [.spack_cleanup, after_script]
 
-# The TensorRT GNN build lives in .github/workflows/builds.yml (job
-# `gnn_tensorrt`). It needs no GPU and feeds nothing here.
-
-# The clang22 / C++23 build is gone: .github/workflows/builds.yml
-# (`linux_ubuntu_extra`) already ran the identical matrix leg, so this was a
-# duplicate rather than a mirror.
+# build_gnn_tensorrt moved to builds.yml as `gnn_tensorrt`.
+# linux_ubuntu_2404_clang22 dropped: builds.yml `linux_ubuntu_extra` duplicated it.
 
 # The LCG job matrix lives in .github/workflows/builds.yml (job `lcg`); it runs
 # on self-hosted runners carrying the `cvmfs` label.
@@ -165,12 +161,8 @@ detray_build_cuda:
       - build
   only:
     changes:
-      # `Detray/**/*`, not `Detray/*`: GitLab evaluates these globs through
-      # Ruby's File.fnmatch with FNM_PATHNAME, under which `*` does not cross a
-      # `/`. `Detray/*` therefore matched only files sitting directly in
-      # Detray/, and skipped this job for changes to Detray/core, Detray/tests
-      # and so on — i.e. for nearly every real detray change. `**/` matches zero
-      # or more directories, so this covers both depths.
+      # Not `Detray/*`: GitLab globs via fnmatch FNM_PATHNAME, where `*` does
+      # not cross a `/`, so that matched only the top level of Detray/.
       - Detray/**/*
       - .gitlab-ci.yml
   script:
@@ -194,8 +186,7 @@ detray_test_cuda:
     - detray_build_cuda
   only:
     changes:
-      # See detray_build_cuda: must stay identical, or the test job is filtered
-      # out while the build it depends on runs (or vice versa).
+      # Must stay identical to detray_build_cuda.
       - Detray/**/*
       - .gitlab-ci.yml
   script:
@@ -207,9 +198,7 @@ detray_test_cuda:
     - ctest --output-on-failure -R ".*cuda.*"
     - find bin -type f -name "*cuda" -not -name "*text*" -exec {} \;
 
-# The detray SYCL build/test pair is retired. It never ran on an accelerator
-# (ONEAPI_DEVICE_SELECTOR pinned it to "*:cpu"), and the SYCL code paths are no
-# longer built or tested anywhere.
+# detray SYCL build/test dropped along with all other SYCL coverage.
 
 # traccc GitLab CI workflows
 .traccc_base_template: &traccc_base_job
@@ -261,6 +250,4 @@ traccc_test_cuda:
   dependencies:
     - traccc_build_cuda
 
-# The traccc SYCL Intel build/test pair is retired along with the rest of the
-# SYCL coverage. It also never used an accelerator: ONEAPI_DEVICE_SELECTOR
-# pinned it to the OpenCL CPU device.
+# traccc SYCL Intel build/test dropped along with all other SYCL coverage.
