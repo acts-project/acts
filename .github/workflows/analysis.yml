@@ -31,7 +31,7 @@ permissions:
 
 jobs:
   build_debug:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
     container: ghcr.io/acts-project/ubuntu2404:87
     steps:
 

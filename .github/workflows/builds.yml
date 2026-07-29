@@ -128,7 +128,7 @@ jobs:
           ctest --test-dir build-downstream --output-on-failure
 
   linux_examples_test:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
     container: ghcr.io/acts-project/ubuntu2404:87
@@ -173,7 +173,7 @@ jobs:
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
       # Reference histograms are pulled from ghcr.io by content hash. Anonymous
@@ -192,6 +192,10 @@ jobs:
         with:
           lfs: true
           persist-credentials: false
+
+      # Needed before this job's own apt-get: on a husk slot the upstream Ubuntu
+      # archive is slow enough for one package to cost minutes. No-op elsewhere.
+      - uses: ./.github/actions/apt_mirror
 
       - run: apt-get update && apt-get install -y time
 
@@ -262,7 +266,7 @@ jobs:
           git push
 
   linux_ubuntu_extra:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
     strategy:
@@ -826,11 +830,29 @@ jobs:
           path: ${{ github.workspace }}/ccache
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
+  # Builds against the key4hep nightly view straight out of the job container:
+  # the `cvmfs` label binds the repositories in, so no client setup is needed
+  # and no second container has to be spawned to reach them.
   external_key4hep-nightlies:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, husk-size-standard, cvmfs]
     permissions:
       contents: read
+    # Ubuntu 24.04 to match what the view is built against; ours rather than
+    # aidasoft's so CI/bump_versions.py keeps the tag current.
+    container: ghcr.io/acts-project/ubuntu2404:87
+    env:
+      KEY4HEP_VIEW: /cvmfs/sw-nightlies.hsf.org/key4hep
+      # Every run compiles a fresh checkout, so ctime/mtime differ even where
+      # the content does not.
+      CCACHE_SLOPPINESS: include_file_ctime,include_file_mtime
     steps:
+      # Keeps a missing mount distinguishable from a broken nightly view.
+      - name: Check CVMFS
+        run: |
+          ls -l /cvmfs/
+          test -f "${KEY4HEP_VIEW}/setup.sh" ||
+            { echo "no key4hep view at ${KEY4HEP_VIEW} (is sw-nightlies.hsf.org in the cvmfs label?)"; exit 1; }
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: acts
@@ -840,55 +862,67 @@ jobs:
           repository: key4hep/k4ActsTracking
           path: k4ActsTracking
           persist-credentials: false
-      - name: Setup CVMFS
-        uses: cvmfs-contrib/github-action-cvmfs@10197e000cc0add8e54ac4fb73d3ed44e2de72b4 # v5.5
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
       - name: Build Key4hep dependents
         id: build
-        uses: aidasoft/run-lcg-view@244e9064431262039252d1b2d5ae9751879f5485 # v6.0.1
         continue-on-error: true
-        with:
-          container: ubuntu2404
-          view-path: /cvmfs/sw-nightlies.hsf.org/key4hep
-          ccache-key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}
-          run: |
-            pushd acts
-            ccache -z
-            echo "::group::Configure Acts"
-            cmake -B build -S . -GNinja \
-              -DACTS_BUILD_PLUGIN_DD4HEP=ON \
-              -DACTS_BUILD_PLUGIN_JSON=ON \
-              -DACTS_USE_SYSTEM_NLOHMANN_JSON=ON \
-              -DACTS_BUILD_PLUGIN_ROOT=ON \
-              -DCMAKE_INSTALL_PREFIX=$(pwd)/install \
-              -DCMAKE_CXX_STANDARD=20 \
-              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-            echo "::endgroup::"
-            echo "::group::Build and Install Acts"
-            cmake --build build --target install
-            k4_local_repo
-            echo "::endgroup::"
-            echo "::group::ccache statistics"
-            ccache -s
-            popd
+        shell: bash
+        run: |
+          source "${KEY4HEP_VIEW}/setup.sh"
 
-            pushd k4ActsTracking
-            ccache -z
-            echo "::group::Configure k4ActsTracking"
-            cmake -B build -S . -GNinja \
-              -DCMAKE_CXX_STANDARD=20 \
-              -DCMAKE_INSTALL_PREFIX=$(pwd)/install \
-              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-            echo "::endgroup::"
-            echo "::group::Build k4ActsTracking"
-            cmake --build build
-            echo "::endgroup::"
-            echo "::group::Test k4ActsTracking::"
-            ctest --test-dir build -j$(nproc) --output-on-failure
-            echo "::endgroup::"
-            echo "::group::ccache statistics"
-            ccache -s
-            popd
+          pushd acts
+          ccache -z
+          echo "::group::Configure Acts"
+          cmake -B build -S . -GNinja \
+            -DACTS_BUILD_PLUGIN_DD4HEP=ON \
+            -DACTS_BUILD_PLUGIN_JSON=ON \
+            -DACTS_USE_SYSTEM_NLOHMANN_JSON=ON \
+            -DACTS_BUILD_PLUGIN_ROOT=ON \
+            -DCMAKE_INSTALL_PREFIX="$(pwd)/install" \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          echo "::endgroup::"
+          echo "::group::Build and Install Acts"
+          cmake --build build --target install
+          k4_local_repo
+          echo "::endgroup::"
+          echo "::group::ccache statistics"
+          ccache -s
+          popd
+
+          pushd k4ActsTracking
+          ccache -z
+          echo "::group::Configure k4ActsTracking"
+          cmake -B build -S . -GNinja \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_INSTALL_PREFIX="$(pwd)/install" \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          echo "::endgroup::"
+          echo "::group::Build k4ActsTracking"
+          cmake --build build
+          echo "::endgroup::"
+          echo "::group::Test k4ActsTracking::"
+          ctest --test-dir build -j"$(nproc)" --output-on-failure
+          echo "::endgroup::"
+          echo "::group::ccache statistics"
+          ccache -s
+          popd
+
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always()
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
       - name: Create comment body
         if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
