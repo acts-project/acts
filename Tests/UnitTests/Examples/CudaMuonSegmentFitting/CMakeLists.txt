@@ -1,0 +1,2 @@
+set(unittest_extra_libraries ActsExamplesCudaMuonSegmentFitting)
+add_unittest(CudaMuonSpacePoint CudaMuonSpacePointTests.cpp)

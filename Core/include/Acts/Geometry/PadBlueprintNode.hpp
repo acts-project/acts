@@ -21,14 +21,14 @@
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// Wraps a single child blueprint node and pads it into a larger volume whose
 /// dimensions are evaluated at construction time using the child's extent plus
 /// a configurable envelope.
 /// @note This node can only have a single child. This is not an error during
 ///       tree building, but during geometry construction.
-/// It defers most of the functionality to @ref Acts::Experimental::StaticBlueprintNode,
+/// It defers most of the functionality to @ref Acts::StaticBlueprintNode,
 /// and only implements the build phase to perform the padding.
 class PadBlueprintNode final : public StaticBlueprintNode {
  public:
@@ -45,13 +45,38 @@ class PadBlueprintNode final : public StaticBlueprintNode {
   Volume& build(const BlueprintOptions& options, const GeometryContext& gctx,
                 const Logger& logger = Acts::getDummyLogger()) override;
 
-  /// Get the tracking volume for this node.
-  /// @return Pointer to the tracking volume (may be nullptr)
-  TrackingVolume* trackingVolume() const;
+  /// Create a volume that encloses @p inner, enlarged by @p envelope.
+  /// The padded volume inherits the transform of @p inner, and its bounds are
+  /// expanded in the *local* frame of @p inner.
+  /// @note The envelope must be symmetric in every direction that the bounds
+  ///       cannot express asymmetrically (z for cylinders, all of x/y/z for
+  ///       cuboids), otherwise the padded volume could not stay centered on
+  ///       @p inner.
+  /// @param gctx The geometry context
+  /// @param inner The volume to enclose
+  /// @param envelope The envelope to add to the bounds of @p inner
+  /// @param name The name of the padded volume
+  /// @param logger The logger to use
+  /// @return The padded volume enclosing @p inner
+  /// @throws std::logic_error if @p inner has unsupported bounds, or if the
+  ///         envelope is asymmetric where it must not be
+  static std::unique_ptr<TrackingVolume> padded(
+      const GeometryContext& gctx, const Volume& inner,
+      const ExtentEnvelope& envelope, const std::string& name,
+      const Logger& logger = Acts::getDummyLogger());
 
  private:
   ExtentEnvelope m_envelope;
   std::string m_name;
 };
 
-}  // namespace Acts::Experimental
+namespace Experimental {
+/// @deprecated The blueprint geometry moved out of the `Acts::Experimental`
+///             namespace. Use @ref Acts::PadBlueprintNode instead. This alias
+///             is kept for backward compatibility and will be removed.
+using PadBlueprintNode [[deprecated(
+    "Acts::Experimental::PadBlueprintNode moved to Acts::PadBlueprintNode")]] =
+    Acts::PadBlueprintNode;
+}  // namespace Experimental
+
+}  // namespace Acts

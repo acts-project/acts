@@ -38,6 +38,11 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    # First, so every apt-get in this job — including any the caller runs after
+    # this action — benefits, not just the one inside opengl.sh late in setup.sh.
+    - name: Apt mirror
+      uses: ./.github/actions/apt_mirror
+
     - name: Setup Python version
       uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:

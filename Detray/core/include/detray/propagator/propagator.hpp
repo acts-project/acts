@@ -325,10 +325,24 @@ struct propagator {
 
         // Take the step
         DETRAY_VERBOSE_HOST("Calling stepper...");
+        // GCC reports 'propagator' as maybe-uninitialized here once this call
+        // is inlined at -O3. It is a false positive: m_cfg is bound in the
+        // constructor's init list and m_stepper/m_navigator have default member
+        // initializers, so the object is always fully initialized. The pragma
+        // has to sit here, at the diagnostic's own location, rather than in the
+        // including header -- that way it applies no matter which header first
+        // pulls this file into a translation unit.
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
         propagation.heartbeat(propagation.heartbeat() &&
                               m_stepper.step(navigation(), stepping,
                                              m_cfg.stepping, reset_stepsize,
                                              vol_mat_ptr));
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
         // Reduce navigation trust level according to stepper update
         DETRAY_VERBOSE_HOST("-> Evaluate stepper navigation policy:");

@@ -20,7 +20,7 @@
 
 #include <ostream>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 namespace {
 bool hasDescendent(const BlueprintNode& descendent,
@@ -205,4 +205,4 @@ void BlueprintNode::addToGraphviz(std::ostream& os) const {
   }
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

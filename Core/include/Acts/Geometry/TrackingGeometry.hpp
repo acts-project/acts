@@ -296,7 +296,7 @@ class TrackingGeometry {
   const Surface* findSurface(GeometryIdentifier id) const;
 
   /// Search for a portal that was tagged with the given label during the
-  /// blueprint construction (see @ref Acts::Experimental::PortalDesignatorBlueprintNode).
+  /// blueprint construction (see @ref Acts::PortalDesignatorBlueprintNode).
   ///
   /// @param tag the tag assigned to the portal
   /// @retval nullptr if no portal carries the tag
