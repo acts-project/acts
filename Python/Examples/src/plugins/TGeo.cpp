@@ -33,14 +33,14 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsTGeo, tgeo) {
         .def_readwrite("upper", &Options::Interval::upper);
 
     auto c = py::class_<TGeoDetector::Config>(d, "Config").def(py::init<>());
-    
+
     c.def_property("jsonFile", nullptr,
                    [](TGeoDetector::Config& cfg, const std::string& file) {
                      cfg.readJson(file);
                    });
 
     c.def("readJson", &TGeoDetector::Config::readJson);
-    
+
     py::enum_<TGeoDetector::Config::SubVolume>(c, "SubVolume")
         .value("Negative", TGeoDetector::Config::SubVolume::Negative)
         .value("Central", TGeoDetector::Config::SubVolume::Central)
