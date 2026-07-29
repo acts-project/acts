@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022-2024 CERN for the benefit of the ACTS project
+ * (c) 2022-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -20,6 +20,14 @@ class threading : public interface {
  public:
   /// @name Options
   /// @{
+
+  enum class await_strategy {
+    sync_event,  ///< Synchronous waiting for an event to complete
+    callback     ///< Suspension with a callback function
+  };
+
+  /// The strategy to use for awaiting for asynchronous operations to complete
+  await_strategy await_mode = await_strategy::sync_event;
 
   /// The number of threads to use for the data processing
   std::size_t threads = 1;

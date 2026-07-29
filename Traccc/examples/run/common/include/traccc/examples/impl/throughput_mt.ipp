@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022-2025 CERN for the benefit of the ACTS project
+ * (c) 2022-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -8,6 +8,7 @@
 #pragma once
 
 // Local include(s).
+#include "traccc/examples/await_strategy.hpp"
 #include "traccc/examples/make_magnetic_field.hpp"
 
 // Project include(s)
@@ -170,6 +171,12 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
       fitting_opts);
   fitting_cfg.propagation = propagation_config;
 
+  // Determine the await strategy to use.
+  await_strategy await_mode = await_strategy::sync_event;
+  if (threading_opts.await_mode == opts::threading::await_strategy::callback) {
+    await_mode = await_strategy::callback;
+  }
+
   // Set up the full-chain algorithm(s). One for each concurrent event slot.
   std::vector<FULL_CHAIN_ALG> algs;
   algs.reserve(threading_opts.concurrent_slots);
@@ -178,7 +185,7 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
                     spacepoint_grid_config, seedfilter_config, gbts_config,
                     track_params_estimation_config, finding_cfg, fitting_cfg,
                     det_descr, det_cond, field, &detector, logger().clone(),
-                    seeding_gbts_opts.useGBTS});
+                    seeding_gbts_opts.useGBTS, await_mode});
   }
 
   // Set up and populate a queue with concurrent slot indices.
