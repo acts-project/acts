@@ -735,19 +735,20 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   // build detector
   detray::detector_builder<detector_t::metadata> detectorBuilder{};
   // (1) geometry
-  detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
-                                                        detector);
+  detray::io::geometry_reader<detector_t>{}.from_payload(detectorBuilder,
+                                                         detector);
 
-  detray::io::homogeneous_material_reader::from_payload<detector_t>(
+  detray::io::homogeneous_material_reader<detector_t>{}.from_payload(
       detectorBuilder, homogeneousMaterial);
 
-  detray::io::material_map_reader<std::integral_constant<std::size_t, 2>>::
-      from_payload<detector_t>(detectorBuilder, std::move(materialGrids));
+  detray::io::material_map_reader<detector_t,
+                                  std::integral_constant<std::size_t, 2>>{}
+      .from_payload(detectorBuilder, std::move(materialGrids));
 
-  detray::io::surface_grid_reader<detector_t::surface_type,
+  detray::io::surface_grid_reader<detector_t,
                                   std::integral_constant<std::size_t, 0>,
-                                  std::integral_constant<std::size_t, 2>>::
-      from_payload<detector_t>(detectorBuilder, surfaceGrids);
+                                  std::integral_constant<std::size_t, 2>>{}
+      .from_payload(detectorBuilder, surfaceGrids);
 
   detector_t detrayDetector(detectorBuilder.build(mr));
 

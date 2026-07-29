@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/name_map.hpp"
 #include "detray/definitions/geometry.hpp"
 #include "detray/definitions/grid_axis.hpp"
 #include "detray/io/frontend/definitions.hpp"
@@ -323,10 +324,38 @@ struct detector_grids_payload {
 /// @}
 
 /// @brief A payload for a detector geometry
-struct detector_payload {
+struct detector_geometry_payload {
   std::vector<volume_payload> volumes = {};
   /// Volume acceleration structure
   std::optional<grid_payload<std::size_t, io::accel_id>> volume_grid;
+};
+
+/// Detector intermediate data representation
+struct detector_payload {
+  /// Types of detector component payloads
+  /// @{
+  using geometry_payload_type = detector_geometry_payload;
+  using volume_grids_payload_type =
+      detector_grids_payload<std::size_t, io::accel_id>;
+  using surface_grids_payload_type =
+      detector_grids_payload<std::size_t, io::accel_id>;
+  using homogeneous_material_payload_type =
+      detector_homogeneous_material_payload;
+  using material_maps_payload_type =
+      detector_grids_payload<surface_material_payload, io::material_id>;
+  /// @}
+
+  /// Required detector component: geometry
+  geometry_payload_type geometry{};
+  /// Optional detector components: volume and surface acceleration structures
+  /// and material
+  std::optional<volume_grids_payload_type> volume_grids;
+  std::optional<surface_grids_payload_type> surface_grids;
+  std::optional<homogeneous_material_payload_type> homogeneous_material;
+  std::optional<material_maps_payload_type> material_maps;
+
+  /// Contains the detector and volume names mapped to volume indices
+  detray::name_map names{};
 };
 
 }  // namespace detray::io

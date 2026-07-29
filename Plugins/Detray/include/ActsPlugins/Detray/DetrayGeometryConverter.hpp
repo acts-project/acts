@@ -117,8 +117,8 @@ class DetrayGeometryConverter {
     // ── Build detray detector from payloads ───────────────────────────────
     detray::detector_builder<metadata_t> detectorBuilder{};
 
-    detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
-                                                          *payloads.detector);
+    detray::io::geometry_reader<detector_t>{}.from_payload(detectorBuilder,
+                                                           *payloads.detector);
 
     if (m_cfg.convertMaterial) {
       if (!payloads.homogeneousMaterial) {
@@ -160,17 +160,16 @@ class DetrayGeometryConverter {
         }
       }
 
-      detray::io::material_map_reader<std::integral_constant<std::size_t, 2>>::
-          from_payload<detector_t>(detectorBuilder,
-                                   std::move(*payloads.materialGrids));
+      detray::io::material_map_reader<detector_t,
+                                      std::integral_constant<std::size_t, 2>>::
+          from_payload(detectorBuilder, std::move(*payloads.materialGrids));
     }
 
     if (m_cfg.convertSurfaceGrids) {
-      detray::io::surface_grid_reader<typename detector_t::surface_type,
+      detray::io::surface_grid_reader<detector_t,
                                       std::integral_constant<std::size_t, 0>,
-                                      std::integral_constant<std::size_t, 2>>::
-          template from_payload<detector_t>(detectorBuilder,
-                                            *payloads.surfaceGrids);
+                                      std::integral_constant<std::size_t, 2>>{}
+          .template from_payload(detectorBuilder, *payloads.surfaceGrids);
     }
 
     if (!detectorName.empty()) {
