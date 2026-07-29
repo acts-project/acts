@@ -29,20 +29,37 @@ void requireSymmetric(const std::array<double, 2> &env, AxisDirection direction,
   throw std::logic_error(ss.str());
 }
 
+/// Result of growing a symmetric half-length by a per-side envelope.
+struct AxialGrowth {
+  double halfLength;   ///< new half-length
+  double centerShift;  ///< shift of the volume center relative to the child
+};
+
+/// Grow a symmetric half-length by a per-side envelope @p env = {low, high}.
+/// In @ref PadBlueprintNode::Centering::Centered mode the envelope must be
+/// symmetric, so the center does not move; in @ref
+/// PadBlueprintNode::Centering::FitBounds mode an asymmetric envelope shifts
+/// the center to the midpoint of the expanded extent.
+AxialGrowth growAxial(double halfLength, const std::array<double, 2> &env,
+                      PadBlueprintNode::Centering centering,
+                      AxisDirection direction, const Logger &logger) {
+  if (centering == PadBlueprintNode::Centering::Centered) {
+    requireSymmetric(env, direction, logger);
+  }
+  return {halfLength + 0.5 * (env[0] + env[1]), 0.5 * (env[1] - env[0])};
+}
+
 }  // namespace
 
 PadBlueprintNode::PadBlueprintNode(const std::string &name,
-                                   const ExtentEnvelope &envelope,
-                                   std::optional<Transform3> axisTransform)
-    : StaticBlueprintNode(nullptr),
-      m_envelope(envelope),
-      m_name(name),
-      m_axisTransform(std::move(axisTransform)) {}
+                                   const ExtentEnvelope &envelope)
+    : StaticBlueprintNode(nullptr), m_envelope(envelope), m_name(name) {}
 
 std::unique_ptr<TrackingVolume> PadBlueprintNode::padded(
     const GeometryContext &gctx, const Volume &inner,
     const ExtentEnvelope &envelope, const std::string &name,
-    const std::optional<Transform3> &axisTransform, const Logger &logger) {
+    const std::optional<Transform3> &referenceAxis, Centering centering,
+    const Logger &logger) {
   using enum AxisDirection;
 
   const auto &bounds = inner.volumeBounds();
@@ -53,8 +70,8 @@ std::unique_ptr<TrackingVolume> PadBlueprintNode::padded(
   ACTS_DEBUG("Padding volume: " << ss.str() << "\n" << childGlobal.matrix());
 
   std::shared_ptr<VolumeBounds> newBounds;
-  // By default the padded volume is centered on the child. An axis-aligned
-  // enclosure overrides this to sit on the reference axis instead.
+  // By default the padded volume is anchored on the child. Asymmetric axial
+  // growth (FitBounds) and reference-axis alignment shift it as needed below.
   Transform3 volumeTransform = childGlobal;
 
   if (const auto *cyl = dynamic_cast<const CylinderVolumeBounds *>(&bounds);
@@ -64,17 +81,23 @@ std::unique_ptr<TrackingVolume> PadBlueprintNode::padded(
 
     const auto &zEnv = envelope[AxisZ];
     const auto &rEnv = envelope[AxisR];
-    requireSymmetric(zEnv, AxisZ, logger);
 
     // Make a copy that we'll modify
     auto cylBounds = std::make_shared<CylinderVolumeBounds>(*cyl);
 
-    if (axisTransform.has_value()) {
-      // Axis-aligned enclosure: express the child in the reference axis frame,
-      // recenter the envelope onto the axis, and grow the radial bounds so the
-      // displaced child stays fully enclosed.
+    // Axial growth is shared between both frames and may shift the z center.
+    const auto [halfLengthZ, zShift] =
+        growAxial(cylBounds->get(eHalfLengthZ), zEnv, centering, AxisZ, logger);
+
+    double minR = 0.;
+    double maxR = 0.;
+
+    if (referenceAxis.has_value()) {
+      // Reference-axis enclosure: express the child in the axis frame, recenter
+      // transversely onto the axis, and grow the radial bounds so the displaced
+      // child stays fully enclosed.
       const Transform3 childInAxisFrame =
-          axisTransform->inverse() * childGlobal;
+          referenceAxis->inverse() * childGlobal;
 
       // The child cylinder axis must stay parallel to the reference axis,
       // otherwise it cannot be represented as an axis-aligned cylinder.
@@ -83,7 +106,7 @@ std::unique_ptr<TrackingVolume> PadBlueprintNode::padded(
           std::abs(childInAxisFrame.rotation().col(eY)[eZ]) >= tolerance) {
         ACTS_ERROR("Pad child cylinder tilts relative to the reference axis");
         throw std::logic_error(
-            "PadBlueprintNode axis-aligned child tilts relative to the "
+            "PadBlueprintNode reference-axis child tilts relative to the "
             "reference axis");
       }
 
@@ -94,70 +117,72 @@ std::unique_ptr<TrackingVolume> PadBlueprintNode::padded(
       // Nearest child material to the axis: the offset either pushes the inner
       // hole outward (offset < minR), the outer edge toward the axis
       // (offset > maxR), or the annulus straddles the axis (result 0).
-      const double minR = std::max(
+      minR = std::max(
           0.0, std::max(childMinR - radialOffset, radialOffset - childMaxR) -
                    rEnv[0]);
-      const double maxR = childMaxR + radialOffset + rEnv[1];
+      maxR = childMaxR + radialOffset + rEnv[1];
 
-      cylBounds->set({
-          {eHalfLengthZ, cylBounds->get(eHalfLengthZ) + zEnv[0]},
-          {eMinR, minR},
-          {eMaxR, maxR},
-      });
-
-      // Drop the transverse offset so the envelope sits on the reference axis,
-      // keeping the child's longitudinal position and orientation.
+      // Drop the transverse offset and apply the axial shift in the axis frame.
       Transform3 envelopeInAxisFrame = childInAxisFrame;
       envelopeInAxisFrame.translation()[eX] = 0.0;
       envelopeInAxisFrame.translation()[eY] = 0.0;
-      volumeTransform = axisTransform.value() * envelopeInAxisFrame;
+      envelopeInAxisFrame.translation()[eZ] += zShift;
+      volumeTransform = referenceAxis.value() * envelopeInAxisFrame;
 
-      ACTS_DEBUG("Applied axis-aligned envelope to cylinder: Z="
-                 << zEnv[0] << ", Rmin=" << minR << ", Rmax=" << maxR
-                 << " around child offset " << radialOffset);
+      ACTS_DEBUG("Applied reference-axis envelope to cylinder: Rmin="
+                 << minR << ", Rmax=" << maxR << " around child offset "
+                 << radialOffset);
     } else {
-      cylBounds->set({
-          {eHalfLengthZ, cylBounds->get(eHalfLengthZ) + zEnv[0]},
-          {eMinR, std::max(0.0, cylBounds->get(eMinR) - rEnv[0])},
-          {eMaxR, cylBounds->get(eMaxR) + rEnv[1]},
-      });
+      minR = std::max(0.0, cylBounds->get(eMinR) - rEnv[0]);
+      maxR = cylBounds->get(eMaxR) + rEnv[1];
+      volumeTransform = childGlobal * Translation3{Vector3{0., 0., zShift}};
 
-      ACTS_DEBUG("Applied envelope to cylinder: Z="
-                 << zEnv[0] << ", Rmin=" << rEnv[0] << ", Rmax=" << rEnv[1]);
+      ACTS_DEBUG("Applied envelope to cylinder: Rmin=" << rEnv[0]
+                                                       << ", Rmax=" << rEnv[1]);
     }
+
+    cylBounds->set({
+        {eHalfLengthZ, halfLengthZ},
+        {eMinR, minR},
+        {eMaxR, maxR},
+    });
     newBounds = std::move(cylBounds);
 
   } else if (const auto *box =
                  dynamic_cast<const CuboidVolumeBounds *>(&bounds);
              box != nullptr) {
-    if (axisTransform.has_value()) {
-      ACTS_ERROR("Axis-aligned padding is only supported for cylinder volumes");
+    if (referenceAxis.has_value()) {
+      ACTS_ERROR(
+          "Reference-axis padding is only supported for cylinder volumes");
       throw std::logic_error(
-          "PadBlueprintNode axis-aligned padding requires a cylinder child");
+          "PadBlueprintNode reference-axis padding requires a cylinder child");
     }
 
     ACTS_VERBOSE("Expanding cuboid bounds");
     using enum CuboidVolumeBounds::BoundValues;
 
-    // A cuboid is centered on its transform in every direction, so *all* of
-    // the envelopes have to be symmetric.
-    const auto &xEnv = envelope[AxisX];
-    const auto &yEnv = envelope[AxisY];
-    const auto &zEnv = envelope[AxisZ];
-    requireSymmetric(xEnv, AxisX, logger);
-    requireSymmetric(yEnv, AxisY, logger);
-    requireSymmetric(zEnv, AxisZ, logger);
-
     // Make a copy that we'll modify
     auto boxBounds = std::make_shared<CuboidVolumeBounds>(*box);
-    boxBounds->set({
-        {eHalfLengthX, boxBounds->get(eHalfLengthX) + xEnv[0]},
-        {eHalfLengthY, boxBounds->get(eHalfLengthY) + yEnv[0]},
-        {eHalfLengthZ, boxBounds->get(eHalfLengthZ) + zEnv[0]},
-    });
 
-    ACTS_DEBUG("Applied envelope to cuboid: X=" << xEnv[0] << ", Y=" << yEnv[0]
-                                                << ", Z=" << zEnv[0]);
+    const auto [halfX, xShift] =
+        growAxial(boxBounds->get(eHalfLengthX), envelope[AxisX], centering,
+                  AxisX, logger);
+    const auto [halfY, yShift] =
+        growAxial(boxBounds->get(eHalfLengthY), envelope[AxisY], centering,
+                  AxisY, logger);
+    const auto [halfZ, zShift] =
+        growAxial(boxBounds->get(eHalfLengthZ), envelope[AxisZ], centering,
+                  AxisZ, logger);
+
+    boxBounds->set({
+        {eHalfLengthX, halfX},
+        {eHalfLengthY, halfY},
+        {eHalfLengthZ, halfZ},
+    });
+    volumeTransform =
+        childGlobal * Translation3{Vector3{xShift, yShift, zShift}};
+
+    ACTS_DEBUG("Applied envelope to cuboid");
     newBounds = std::move(boxBounds);
 
   } else {
@@ -180,19 +205,43 @@ Volume &PadBlueprintNode::build(const BlueprintOptions &options,
 
   const Volume &inner = children().at(0).build(options, gctx, logger);
 
-  m_volume = padded(gctx, inner, m_envelope, m_name, m_axisTransform, logger);
+  m_volume = padded(gctx, inner, m_envelope, m_name, m_referenceAxis,
+                    m_centering, logger);
 
   return *m_volume;
 }
 
-PadBlueprintNode &PadBlueprintNode::setAxisTransform(
-    const Transform3 &axisTransform) {
-  m_axisTransform = axisTransform;
+PadBlueprintNode &PadBlueprintNode::setEnvelope(
+    const ExtentEnvelope &envelope) {
+  m_envelope = envelope;
   return *this;
 }
 
-const std::optional<Transform3> &PadBlueprintNode::axisTransform() const {
-  return m_axisTransform;
+const ExtentEnvelope &PadBlueprintNode::envelope() const {
+  return m_envelope;
+}
+
+PadBlueprintNode &PadBlueprintNode::setReferenceAxis(const Transform3 &axis) {
+  m_referenceAxis = axis;
+  return *this;
+}
+
+PadBlueprintNode &PadBlueprintNode::clearReferenceAxis() {
+  m_referenceAxis.reset();
+  return *this;
+}
+
+const std::optional<Transform3> &PadBlueprintNode::referenceAxis() const {
+  return m_referenceAxis;
+}
+
+PadBlueprintNode &PadBlueprintNode::setCentering(Centering centering) {
+  m_centering = centering;
+  return *this;
+}
+
+PadBlueprintNode::Centering PadBlueprintNode::centering() const {
+  return m_centering;
 }
 
 }  // namespace Acts
