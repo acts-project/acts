@@ -58,8 +58,8 @@ struct find_tracks_shared_payload {
 /// @param[in] thread_id          A thread identifier object
 /// @param[in] barrier            A block-wide barrier
 /// @param[in] cfg                Track finding config object
-/// @param[in] det_data           View object to the tracking detector
-///                               description
+/// @param[in] det_data_ptr       Pointer to the tracking detector, built once
+///                               in global memory rather than in every thread
 /// @param[inout] payload         The global memory payload
 /// @param[inout] shared_payload  The shared memory payload
 ///
@@ -67,7 +67,7 @@ template <typename detector_t, concepts::thread_id1 thread_id_t,
           concepts::barrier barrier_t>
 TRACCC_HOST_DEVICE inline void find_tracks(
     const thread_id_t& thread_id, const barrier_t& barrier,
-    const finding_config& cfg, typename detector_t::const_view_type det_data,
+    const finding_config& cfg, const detector_t* det_data_ptr,
     const find_tracks_payload& payload,
     const find_tracks_shared_payload& shared_payload);
 

@@ -61,6 +61,8 @@ auto combinatorial_kalman_filter_algorithm::operator()(
 
   const finding_config& cfg = m_data->m_config;
 
+  const move_only_any device_detector = create_device_detector(det);
+
   /*****************************************************************
    * Measurement Operations
    *****************************************************************/
@@ -359,7 +361,7 @@ auto combinatorial_kalman_filter_algorithm::operator()(
 
         // Launch the track finding kernel.
         find_tracks_kernel(
-            n_in_params, cfg, det,
+            n_in_params, cfg, det, device_detector,
             {.measurements_view = measurements_view,
              .in_params_view = in_params_buffer,
              .in_params_liveness_view = param_liveness_buffer,
@@ -497,7 +499,7 @@ auto combinatorial_kalman_filter_algorithm::operator()(
         }
 
         propagate_to_next_surface_kernel(
-            n_candidates, cfg, det, bfield,
+            n_candidates, cfg, det, device_detector, bfield,
             {.params_view = in_params_buffer,
              .params_liveness_view = param_liveness_buffer,
              .param_ids_view = param_ids_buffer,
@@ -663,6 +665,8 @@ auto combinatorial_kalman_filter_algorithm::operator()(
                  "progressive filter!"
               << std::endl;
   }
+
+  synchronize();
 
   return track_candidates_buffer;
 }
