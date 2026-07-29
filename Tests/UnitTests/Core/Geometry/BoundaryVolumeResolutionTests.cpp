@@ -16,16 +16,16 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Geometry/TrackingGeometryError.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsTests/CommonHelpers/CubicTrackingGeometry.hpp"
 
 #include <memory>
+#include <optional>
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
@@ -108,20 +108,20 @@ BOOST_AUTO_TEST_CASE(BoundaryVolumeResolutionGen3) {
 
   // The direction-aware lookup resolves the correct side of the boundary
   auto forward = trackingGeometry->resolveLowestTrackingVolume(
-      gctx, onBoundary, Vector3::UnitX(), portalSurface);
+      gctx, onBoundary, Vector3::UnitX(), &portalSurface);
   BOOST_REQUIRE(forward.ok());
   BOOST_CHECK_EQUAL(*forward, volumeB);
 
   auto backward = trackingGeometry->resolveLowestTrackingVolume(
-      gctx, onBoundary, -Vector3::UnitX(), portalSurface);
+      gctx, onBoundary, -Vector3::UnitX(), &portalSurface);
   BOOST_REQUIRE(backward.ok());
   BOOST_CHECK_EQUAL(*backward, volumeA);
 
   // Without direction and surface hint the lookup is position based and
   // returns one of the two adjacent volumes
-  const TrackingVolume* plain =
-      trackingGeometry->lowestTrackingVolume(gctx, onBoundary);
-  BOOST_CHECK(plain == volumeA || plain == volumeB);
+  auto plain = trackingGeometry->resolveLowestTrackingVolume(gctx, onBoundary);
+  BOOST_REQUIRE(plain.ok());
+  BOOST_CHECK(*plain == volumeA || *plain == volumeB);
 }
 
 // Two glued Gen1 cuboid volumes sharing a boundary surface at x=0
@@ -133,9 +133,11 @@ BOOST_AUTO_TEST_CASE(BoundaryVolumeResolutionGen1) {
               TrackingGeometry::GeometryVersion::Gen1);
 
   const TrackingVolume* volume1 =
-      trackingGeometry->lowestTrackingVolume(gctx, Vector3{-1.5_m, 0, 0});
+      trackingGeometry->resolveLowestTrackingVolume(gctx, Vector3{-1.5_m, 0, 0})
+          .value();
   const TrackingVolume* volume2 =
-      trackingGeometry->lowestTrackingVolume(gctx, Vector3{1.5_m, 0, 0});
+      trackingGeometry->resolveLowestTrackingVolume(gctx, Vector3{1.5_m, 0, 0})
+          .value();
   BOOST_REQUIRE(volume1 != nullptr);
   BOOST_REQUIRE(volume2 != nullptr);
   BOOST_CHECK_EQUAL(volume1->volumeName(), "Volume 1");
@@ -160,12 +162,12 @@ BOOST_AUTO_TEST_CASE(BoundaryVolumeResolutionGen1) {
 
   // The direction-aware lookup resolves the correct side of the boundary
   auto forward = trackingGeometry->resolveLowestTrackingVolume(
-      gctx, onBoundary, Vector3::UnitX(), *boundarySurface);
+      gctx, onBoundary, Vector3::UnitX(), boundarySurface);
   BOOST_REQUIRE(forward.ok());
   BOOST_CHECK_EQUAL(*forward, volume2);
 
   auto backward = trackingGeometry->resolveLowestTrackingVolume(
-      gctx, onBoundary, -Vector3::UnitX(), *boundarySurface);
+      gctx, onBoundary, -Vector3::UnitX(), boundarySurface);
   BOOST_REQUIRE(backward.ok());
   BOOST_CHECK_EQUAL(*backward, volume1);
 
@@ -176,13 +178,13 @@ BOOST_AUTO_TEST_CASE(BoundaryVolumeResolutionGen1) {
   BOOST_REQUIRE(outerSurface != nullptr);
 
   auto outward = trackingGeometry->resolveLowestTrackingVolume(
-      gctx, onOuterBoundary, -Vector3::UnitX(), *outerSurface);
+      gctx, onOuterBoundary, -Vector3::UnitX(), outerSurface);
   BOOST_REQUIRE(outward.ok());
   BOOST_CHECK_EQUAL(*outward, nullptr);
 
   // Pointing back inside stays in the volume
   auto inward = trackingGeometry->resolveLowestTrackingVolume(
-      gctx, onOuterBoundary, Vector3::UnitX(), *outerSurface);
+      gctx, onOuterBoundary, Vector3::UnitX(), outerSurface);
   BOOST_REQUIRE(inward.ok());
   BOOST_CHECK_EQUAL(*inward, volume1);
 
@@ -190,7 +192,7 @@ BOOST_AUTO_TEST_CASE(BoundaryVolumeResolutionGen1) {
   // given tolerance
   const Vector3 nearBoundary{0.01_mm, 0, 0};
   auto nearResult = trackingGeometry->resolveLowestTrackingVolume(
-      gctx, nearBoundary, -Vector3::UnitX(), *boundarySurface, 0.1_mm);
+      gctx, nearBoundary, -Vector3::UnitX(), boundarySurface, 0.1_mm);
   BOOST_REQUIRE(nearResult.ok());
   BOOST_CHECK_EQUAL(*nearResult, volume1);
 }
@@ -203,7 +205,8 @@ BOOST_AUTO_TEST_CASE(BoundaryVolumeResolutionOffBounds) {
   BOOST_REQUIRE(trackingGeometry != nullptr);
 
   const TrackingVolume* volume1 =
-      trackingGeometry->lowestTrackingVolume(gctx, Vector3{-1.5_m, 0, 0});
+      trackingGeometry->resolveLowestTrackingVolume(gctx, Vector3{-1.5_m, 0, 0})
+          .value();
   BOOST_REQUIRE(volume1 != nullptr);
 
   // The glued boundary surface between the two volumes at x=0 spans
@@ -222,24 +225,17 @@ BOOST_AUTO_TEST_CASE(BoundaryVolumeResolutionOffBounds) {
   // outside of the boundary surface bounds
   const Vector3 offBounds{0, 0.5_m + 0.5_mm, 0};
   const double tolerance = 1_mm;
-  BOOST_REQUIRE(trackingGeometry->lowestTrackingVolume(gctx, offBounds,
-                                                       tolerance) != nullptr);
+  BOOST_REQUIRE(trackingGeometry
+                    ->resolveLowestTrackingVolume(gctx, offBounds, std::nullopt,
+                                                  nullptr, tolerance)
+                    .value() != nullptr);
   BOOST_REQUIRE(!boundarySurface->isOnSurface(
       gctx, offBounds, Vector3::UnitX(), BoundaryTolerance::None(), tolerance));
 
   auto result = trackingGeometry->resolveLowestTrackingVolume(
-      gctx, offBounds, Vector3::UnitX(), *boundarySurface, tolerance);
+      gctx, offBounds, Vector3::UnitX(), boundarySurface, tolerance);
   BOOST_CHECK(!result.ok());
-  BOOST_CHECK(result.error() ==
-              TrackingGeometryError::PositionNotOnAssociatedSurface);
-
-  // The deprecated lookup swallows the failure and returns a null volume
-  ACTS_PUSH_IGNORE_DEPRECATED()
-  BOOST_CHECK_EQUAL(
-      trackingGeometry->lowestTrackingVolume(gctx, offBounds, tolerance,
-                                             Vector3::UnitX(), boundarySurface),
-      nullptr);
-  ACTS_POP_IGNORE_DEPRECATED()
+  BOOST_CHECK(result.error() == SurfaceError::GlobalPositionNotOnSurface);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

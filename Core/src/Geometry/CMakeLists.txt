@@ -32,7 +32,6 @@ target_sources(
         SurfaceArrayCreator.cpp
         TrackingGeometry.cpp
         TrackingGeometryBuilder.cpp
-        TrackingGeometryError.cpp
         TrackingVolume.cpp
         TrackingVolumeArrayCreator.cpp
         TrapezoidVolumeBounds.cpp

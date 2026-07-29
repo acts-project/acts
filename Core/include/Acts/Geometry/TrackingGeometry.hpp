@@ -107,33 +107,19 @@ class TrackingGeometry {
   /// @return shared pointer to the world volume
   std::shared_ptr<const TrackingVolume> highestTrackingVolumePtr() const;
 
-  /// return the lowest tracking Volume for a global position
+  /// resolve the lowest tracking Volume for a global position
   ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gp is the global position of the call
-  /// @param tolerance is the search tolerance for the volume lookup
+  /// Without a @p direction and @p associatedSurface the lookup is purely
+  /// position based, and which of the adjacent volumes is returned for a
+  /// position on a boundary between volumes is unspecified.
   ///
-  /// @return plain pointer to the lowest TrackingVolume, `nullptr` if there
-  ///         is no volume at the position
+  /// If @p associatedSurface is given and is a boundary surface (Gen1) or a
+  /// portal surface (Gen3), the boundary ambiguity is resolved along
+  /// @p direction: the volume being entered is returned. Otherwise the surface
+  /// does not act as a boundary and the lookup is position based as above.
   ///
-  /// @note If the position lies on a boundary between volumes, which of the
-  ///       adjacent volumes is returned is unspecified. Use
-  ///       @ref resolveLowestTrackingVolume to resolve the ambiguity along a
-  ///       direction.
-  const TrackingVolume* lowestTrackingVolume(
-      const GeometryContext& gctx, const Vector3& gp,
-      double tolerance = s_onSurfaceTolerance) const;
-
-  /// return the lowest tracking Volume for a global position on a surface,
-  /// resolving boundaries along the given direction
-  ///
-  /// If @p associatedSurface is a boundary surface (Gen1) or a portal surface
-  /// (Gen3), the boundary ambiguity is resolved along the direction: the
-  /// volume being entered is returned. Otherwise the surface does not act as
-  /// a boundary and the lookup is purely position based.
-  ///
-  /// @pre The position has to be on @p associatedSurface within the given
-  ///      @p tolerance, ignoring the surface bounds.
+  /// @pre If @p associatedSurface is given, the position has to be on it
+  ///      within the given @p tolerance, ignoring the surface bounds.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param gp is the global position of the call
@@ -146,42 +132,30 @@ class TrackingGeometry {
   ///
   /// @return plain pointer to the lowest TrackingVolume, `nullptr` if there
   ///         is no volume at the position (or in the given direction)
-  /// @retval TrackingGeometryError::PositionNotOnAssociatedSurface if
+  /// @retval SurfaceError::GlobalPositionNotOnSurface if
   ///         @p associatedSurface is a boundary surface or portal, but the
   ///         position is outside of its bounds. This can happen for positions
   ///         grazing a volume edge within the lookup tolerance.
   Result<const TrackingVolume*> resolveLowestTrackingVolume(
-      const GeometryContext& gctx, const Vector3& gp, const Vector3& direction,
-      const Surface& associatedSurface,
+      const GeometryContext& gctx, const Vector3& gp,
+      const std::optional<Vector3>& direction = std::nullopt,
+      const Surface* associatedSurface = nullptr,
       double tolerance = s_onSurfaceTolerance) const;
 
-  /// return the lowest tracking Volume
+  /// return the lowest tracking Volume for a global position
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param gp is the global position of the call
-  /// @param tolerance is the search tolerance for the volume lookup and the
-  ///        on-surface check of the associated surface
-  /// @param direction is the direction used to resolve the volume if the
-  ///        position is on a boundary between volumes
-  /// @param associatedSurface is the surface the position lies on, used to
-  ///        identify a boundary crossing
   ///
   /// @return plain pointer to the lowest TrackingVolume, `nullptr` if there
-  ///         is no volume at the position (or in the given direction) or if
-  ///         the boundary resolution failed
+  ///         is no volume at the position
   ///
-  /// @deprecated Use lowestTrackingVolume(gctx, gp, tolerance) for the
-  ///             position based lookup or resolveLowestTrackingVolume for the
-  ///             boundary aware lookup, which reports failures instead of
-  ///             returning `nullptr`.
+  /// @deprecated Use @ref resolveLowestTrackingVolume instead, which can
+  ///             resolve boundaries along a direction and reports failures
+  ///             instead of returning `nullptr`.
   [[deprecated(
-      "Use lowestTrackingVolume(gctx, gp, tolerance) or "
-      "resolveLowestTrackingVolume(gctx, gp, direction, associatedSurface, "
-      "tolerance) instead")]] const TrackingVolume*
-  lowestTrackingVolume(const GeometryContext& gctx, const Vector3& gp,
-                       double tolerance,
-                       const std::optional<Vector3>& direction,
-                       const Surface* associatedSurface) const;
+      "Use resolveLowestTrackingVolume instead")]] const TrackingVolume*
+  lowestTrackingVolume(const GeometryContext& gctx, const Vector3& gp) const;
 
   /// Forward the associated Layer information
   ///

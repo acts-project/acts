@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     const Surface* startSurf = beamline.get();
     position = startSurf->center(tgContext);
     const TrackingVolume* startVol =
-        tGeometry->lowestTrackingVolume(tgContext, position);
+        tGeometry->resolveLowestTrackingVolume(tgContext, position).value();
     const Layer* startLay = startVol->associatedLayer(tgContext, position);
     state.options.startSurface = startSurf;
     state.options.targetSurface = startSurf;
@@ -226,7 +226,8 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     ACTS_INFO("    a) Initialise without additional information");
     state = navigator.makeState(options);
     position = Vector3::Zero();
-    startVol = tGeometry->lowestTrackingVolume(tgContext, position);
+    startVol =
+        tGeometry->resolveLowestTrackingVolume(tgContext, position).value();
     startLay = startVol->associatedLayer(tgContext, position);
     BOOST_CHECK(
         navigator.initialize(state, position, direction, Direction::Forward())
@@ -893,9 +894,13 @@ BOOST_AUTO_TEST_CASE(NavigationStartOnBoundaryGen1) {
   std::shared_ptr<const TrackingGeometry> trackingGeometry = geometryBuilder();
 
   const TrackingVolume* volume1 =
-      trackingGeometry->lowestTrackingVolume(tgContext, Vector3{-1.5_m, 0, 0});
+      trackingGeometry
+          ->resolveLowestTrackingVolume(tgContext, Vector3{-1.5_m, 0, 0})
+          .value();
   const TrackingVolume* volume2 =
-      trackingGeometry->lowestTrackingVolume(tgContext, Vector3{1.5_m, 0, 0});
+      trackingGeometry
+          ->resolveLowestTrackingVolume(tgContext, Vector3{1.5_m, 0, 0})
+          .value();
   BOOST_REQUIRE(volume1 != nullptr);
   BOOST_REQUIRE(volume2 != nullptr);
   BOOST_CHECK_EQUAL(volume1->volumeName(), "Volume 1");
