@@ -243,9 +243,14 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     BOOST_CHECK(testNavigatorStatePointers(state, startVol, startLay, startSurf,
                                            startSurf, startVol, nullptr));
 
-    ACTS_INFO("    c) Initialise having a start volume");
+    ACTS_INFO("    c) Initialise ignoring a stale start volume");
     state = navigator.makeState(options);
-    state.startVolume = startVol;
+    // A start volume left over from a previous navigation must not be reused:
+    // the volume is looked up from the position instead
+    const TrackingVolume* staleVol =
+        tGeometry->lowestTrackingVolume(tgContext, Vector3(50., 0., 0.));
+    BOOST_REQUIRE_NE(staleVol, startVol);
+    state.startVolume = staleVol;
     BOOST_CHECK(
         navigator.initialize(state, position, direction, Direction::Forward())
             .ok());
