@@ -22,13 +22,15 @@ namespace detray::io {
 /// @brief Surface grid reader backend
 ///
 /// Fills a @c detector_builder from a surface @c detector_grids_payload
-template <class surface_descriptor_t,
+template <typename detector_t,
           typename CAP = std::integral_constant<std::size_t, 9>,
           typename DIM = std::integral_constant<std::size_t, 2>>
 class surface_grid_reader
-    : public detail::grid_reader<surface_descriptor_t, grid_builder, CAP, DIM> {
+    : public detail::grid_reader<detector_t, typename detector_t::surface_type,
+                                 grid_builder, CAP, DIM> {
   using grid_reader_t =
-      detail::grid_reader<surface_descriptor_t, grid_builder, CAP, DIM>;
+      detail::grid_reader<detector_t, typename detector_t::surface_type,
+                          grid_builder, CAP, DIM>;
   using base_type = grid_reader_t;
 
  public:
@@ -43,13 +45,20 @@ class surface_grid_reader
 
   /// Convert the detector grids @param grids_data from their IO
   /// payload
-  template <typename detector_t>
-  static void from_payload(detector_builder<typename detector_t::metadata,
-                                            volume_builder> &det_builder,
-                           const payload_type &grids_data) {
+  void read_from_payload(detector_builder<typename detector_t::metadata,
+                                          volume_builder>& det_builder,
+                         const detector_payload& det_data) const override {
     DETRAY_VERBOSE_HOST("Reading payload object...");
 
-    grid_reader_t::template from_payload<detector_t>(det_builder, grids_data);
+    if (!det_data.surface_grids.has_value()) {
+      std::string err_str{"No data in surface grids payload"};
+      DETRAY_FATAL_HOST(err_str);
+      throw std::invalid_argument(err_str);
+    }
+
+    const payload_type& grids_data = *det_data.surface_grids;
+
+    grid_reader_t::from_payload(det_builder, grids_data);
   }
 };
 

@@ -18,6 +18,7 @@
 #include "detray/io/backend/detail/basic_converter.hpp"
 #include "detray/io/backend/detail/type_info.hpp"
 #include "detray/io/frontend/payloads.hpp"
+#include "detray/io/frontend/reader_interface.hpp"
 #include "detray/material/material.hpp"
 
 // System include(s)
@@ -30,7 +31,8 @@ namespace detray::io {
 /// @brief Homogeneous material reader backend
 ///
 /// Fills a @c detector_builder from a @c detector_homogeneous_material_payload
-class homogeneous_material_reader {
+template <typename detector_t>
+class homogeneous_material_reader final : public reader_interface<detector_t> {
   /// IO material ids do not need to coincide with the detector ids,
   /// they are shared with ACTS
   using material_type = io::material_id;
@@ -42,16 +44,22 @@ class homogeneous_material_reader {
   /// Payload type that the reader processes
   using payload_type = detector_homogeneous_material_payload;
 
-  /// Convert the detector material @param det_mat_data from its IO
-  /// payload
-  template <class detector_t>
-  static void from_payload(detector_builder<typename detector_t::metadata,
-                                            volume_builder>& det_builder,
-                           const payload_type& det_mat_data) {
+  /// Convert the detector material int @param det_data from its IO payload
+  void read_from_payload(detector_builder<typename detector_t::metadata,
+                                          volume_builder>& det_builder,
+                         const detector_payload& det_data) const override {
     DETRAY_VERBOSE_HOST("Reading payload object...");
 
     using scalar_t = dscalar<typename detector_t::algebra_type>;
     using mat_id = typename detector_t::material::id;
+
+    if (!det_data.homogeneous_material.has_value()) {
+      std::string err_str{"No data in homogeneous material payload"};
+      DETRAY_FATAL_HOST(err_str);
+      throw std::invalid_argument(err_str);
+    }
+
+    const payload_type& det_mat_data = *det_data.homogeneous_material;
 
     DETRAY_DEBUG_HOST("Converting material for " << det_mat_data.volumes.size()
                                                  << " volumes");

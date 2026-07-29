@@ -204,15 +204,15 @@ GTEST_TEST(io, json_toy_geometry) {
   auto file_name = geo_writer.write(
       toy_det, names, std::ios::out | std::ios::binary | std::ios::trunc);
 
-  // Empty volume name map to be filled
-  typename detector_t::name_map volume_name_map{};
-  volume_name_map.set_detector_name("toy_detector");
-
   // Read the detector back in
+  io::detector_payload payload{};
+  payload.names.set_detector_name("toy_detector");
+  io::json_input_converter{}.convert_to_payload(file_name, payload);
+
   detector_builder<metadata_t> toy_builder;
-  io::json_converter<detector_t, io::geometry_reader> geo_reader;
-  geo_reader.read(toy_builder, file_name);
-  auto det = toy_builder.build(host_mr, volume_name_map);
+  io::geometry_reader<detector_t>{}.read_from_payload(toy_builder, payload);
+
+  auto det = toy_builder.build(host_mr, payload.names);
 
   // @TODO: Will only work again after IO can perform data deduplication
   // EXPECT_TRUE(toy_detector_test(det, volume_name_map));
@@ -220,11 +220,10 @@ GTEST_TEST(io, json_toy_geometry) {
   // Read the toy detector into the default detector type
   using default_metadata_t = test::default_metadata;
   detector_builder<default_metadata_t> comp_builder;
-  io::json_converter<detector<default_metadata_t>, io::geometry_reader>
-      comp_geo_reader;
-  comp_geo_reader.read(comp_builder, file_name);
-  volume_name_map.clear_names();
-  auto comp_det = comp_builder.build(host_mr, volume_name_map);
+  io::geometry_reader<detector<default_metadata_t>>{}.read_from_payload(
+      comp_builder, payload);
+  payload.names.clear_names();
+  auto comp_det = comp_builder.build(host_mr, payload.names);
 
   using mask_id = detector<default_metadata_t>::masks::id;
   const auto& masks = comp_det.mask_store();

@@ -16,6 +16,7 @@
 #include "detray/io/backend/detail/basic_converter.hpp"
 #include "detray/io/backend/detail/type_info.hpp"
 #include "detray/io/frontend/payloads.hpp"
+#include "detray/io/frontend/reader_interface.hpp"
 
 // System include(s)
 #include <algorithm>
@@ -42,7 +43,8 @@ namespace detray::io {
 /// @brief Tracking geometry reader backend
 ///
 /// Fills a @c detector_builder from a @c detector_geometry_payload
-class geometry_reader {
+template <typename detector_t>
+class geometry_reader final : public reader_interface<detector_t> {
   /// IO shape ids do not need to coincide with the detector mask ids,
   /// they are shared with ACTS
   using io_shape_id = io::shape_id;
@@ -52,13 +54,12 @@ class geometry_reader {
   static constexpr std::string_view tag = "geometry";
 
   /// Payload type that the reader processes
-  using payload_type = detector_payload;
+  using payload_type = detector_geometry_payload;
 
   /// Convert a detector @param det from its io payload @param det_data
-  template <class detector_t>
-  static void from_payload(detector_builder<typename detector_t::metadata,
-                                            volume_builder>& det_builder,
-                           const payload_type& det_data) {
+  void read_from_payload(detector_builder<typename detector_t::metadata,
+                                          volume_builder>& det_builder,
+                         const detector_payload& det_data) const override {
     DETRAY_VERBOSE_HOST("Reading payload object...");
 
     // Can hold all types of surface fatory needed for the detector
@@ -74,10 +75,18 @@ class geometry_reader {
         (types::contains<shape_registry_t, io::detail::unknown_type> &&
          types::size<shape_registry_t> > 1));
 
-    DETRAY_DEBUG_HOST("Have " << det_data.volumes.size() << " input volumes");
+    const payload_type& geo_data = det_data.geometry;
+
+    if (geo_data.volumes.empty()) {
+      std::string err_str{"No data in geometry payload"};
+      DETRAY_FATAL_HOST(err_str);
+      throw std::invalid_argument(err_str);
+    }
+
+    DETRAY_DEBUG_HOST("Have " << geo_data.volumes.size() << " input volumes");
 
     // Convert the volumes one-by-one
-    for (const auto& vol_data : det_data.volumes) {
+    for (const auto& vol_data : geo_data.volumes) {
       // Get a generic volume builder first and decorate it later
       DETRAY_DEBUG_HOST("Configuring detector builder with new volume '"
                         << vol_data.name << "' of type " << vol_data.type);
@@ -89,8 +98,7 @@ class geometry_reader {
       DETRAY_DEBUG_HOST("Volume placement for " << vol_data.name << " is\n"
                                                 << vol_data.transform);
       // Volume placement
-      vbuilder->add_volume_placement(
-          from_payload<detector_t>(vol_data.transform));
+      vbuilder->add_volume_placement(from_payload(vol_data.transform));
 
       // Prepare the surface factories (one per shape and surface type)
       std::map<io_shape_id, sf_factory_ptr_t> pt_factories;
@@ -124,8 +132,7 @@ class geometry_reader {
         if (auto search = factories.find(key); search == factories.end()) {
           DETRAY_DEBUG_HOST(
               "Creating new surface factory for shape id: " << key);
-          factories[key] =
-              std::move(init_factory<shape_registry_t, detector_t>(shape_id));
+          factories[key] = std::move(init_factory<shape_registry_t>(shape_id));
         }
 
         DETRAY_DEBUG_HOST("-> Surface #" << sf_idx << " is " << sf_data.type);
@@ -138,7 +145,7 @@ class geometry_reader {
                           << DETRAY_LOG_VECTOR(sf_data.transform.tr) << "]");
 
         // Add the data to the factory
-        factories.at(key)->push_back(from_payload<detector_t>(sf_data));
+        factories.at(key)->push_back(from_payload(sf_data));
       }
 
       // Add all portals and surfaces to the volume
@@ -160,7 +167,6 @@ class geometry_reader {
   }
 
   /// @returns a surface transform from its io payload @param trf_data
-  template <class detector_t>
   static typename detector_t::transform3_type from_payload(
       const transform_payload& trf_data) {
     using algebra_t = typename detector_t::algebra_type;
@@ -185,7 +191,6 @@ class geometry_reader {
 
   /// @returns surface data for a surface factory from a surface io payload
   /// @param trf_data
-  template <class detector_t>
   static surface_data<detector_t> from_payload(const surface_payload& sf_data) {
     using nav_link_t = typename detector_t::surface_type::navigation_link;
     using scalar_t = dscalar<typename detector_t::algebra_type>;
@@ -202,7 +207,7 @@ class geometry_reader {
     // will be ignored
     // @TODO: Remove this for cylinders again once 2 solution intersection
     // work
-    auto trf = from_payload<detector_t>(sf_data.transform);
+    auto trf = from_payload(sf_data.transform);
     if (sf_data.masks.front().shape == io_shape_id::portal_cylinder2 ||
         sf_data.masks.front().shape == io_shape_id::cylinder2) {
       const auto z_shift{static_cast<scalar_t>(trf.translation()[2])};
@@ -243,7 +248,7 @@ class geometry_reader {
   /// payload
   ///
   /// @return the corresponding surface factory.
-  template <typename shape_registry_t, typename detector_t, std::size_t I = 0u>
+  template <typename shape_registry_t, std::size_t I = 0u>
   static std::shared_ptr<surface_factory_interface<detector_t>> init_factory(
       const io_shape_id shape_id) {
     // Get the next mask shape type
@@ -258,7 +263,7 @@ class geometry_reader {
     }
     // Test next shape id
     if constexpr (I < types::size<shape_registry_t> - 1u) {
-      return init_factory<shape_registry_t, detector_t, I + 1>(shape_id);
+      return init_factory<shape_registry_t, I + 1>(shape_id);
     } else {
       std::string err_str{
           "Given shape id could not be matched to a mask type: " +
