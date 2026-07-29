@@ -837,9 +837,10 @@ jobs:
     runs-on: [self-hosted, linux, x64, husk-size-standard, cvmfs]
     permissions:
       contents: read
-    # Ubuntu 24.04 to match what the view is built against; ours rather than
-    # aidasoft's so CI/bump_versions.py keeps the tag current.
-    container: ghcr.io/acts-project/ubuntu2404:87
+    # AlmaLinux 9, same image as the LCG legs: the nightly stack is built for
+    # almalinux9 as well as ubuntu24 and setup.sh picks the flavour matching the
+    # container, so this is the one the CERN side of the user base runs.
+    container: ghcr.io/acts-project/alma9-base:88
     env:
       KEY4HEP_VIEW: /cvmfs/sw-nightlies.hsf.org/key4hep
       # Every run compiles a fresh checkout, so ctime/mtime differ even where
@@ -852,6 +853,11 @@ jobs:
           ls -l /cvmfs/
           test -f "${KEY4HEP_VIEW}/setup.sh" ||
             { echo "no key4hep view at ${KEY4HEP_VIEW} (is sw-nightlies.hsf.org in the cvmfs label?)"; exit 1; }
+
+      # The image does not carry ccache, and the stack cannot be relied on for
+      # it either: key4hep's own build images install it at the image level.
+      - name: Install ccache
+        run: dnf install -y ccache
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
