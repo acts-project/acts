@@ -27,6 +27,12 @@ LINKCHECK_IGNORE_URL="${LINKCHECK_IGNORE_URL:-https://raw.githubusercontent.com/
 # Check external links too (1) or internal links only (0).
 LINKCHECK_CHECK_EXTERN="${LINKCHECK_CHECK_EXTERN:-1}"
 
+# Check #fragments/anchors (1) in addition to target files (0). Off by default:
+# the docs tree is Doxygen-generated, and Doxygen's own member-list pages link
+# to detail anchors that only exist for members with a detailed description, so
+# fragment checking produces false failures we cannot fix.
+LINKCHECK_FRAGMENTS="${LINKCHECK_FRAGMENTS:-0}"
+
 # Directory holding the built HTML documentation.
 LINKCHECK_ROOT="${LINKCHECK_ROOT:-${REPO_ROOT}/build/docs/html}"
 
@@ -112,9 +118,13 @@ if [[ "${LINKCHECK_CHECK_EXTERN}" == "1" ]]; then
   fi
 else
   echo "External link checking: DISABLED (internal links only)"
-  # Offline: only local files are checked; external URLs are skipped. Fragment
-  # checking validates cross-file #anchors between the built HTML pages.
-  LYCHEE_ARGS+=(--offline --include-fragments)
+  # Offline: only local files are checked; external URLs are skipped.
+  LYCHEE_ARGS+=(--offline)
+fi
+
+# Anchor/fragment checking is opt-in (see LINKCHECK_FRAGMENTS above).
+if [[ "${LINKCHECK_FRAGMENTS}" == "1" ]]; then
+  LYCHEE_ARGS+=(--include-fragments)
 fi
 
 # Write a markdown report for the console (on failure) and, if requested, for
