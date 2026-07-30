@@ -156,8 +156,8 @@
             }
         },
         {
-            "name": "gitlab-ci-lcg",
-            "displayName": "GitLab-CI LCG",
+            "name": "github-ci-lcg",
+            "displayName": "GitHub-CI LCG",
             "inherits": "ci-common",
             "cacheVariables": {
                 "ACTS_BUILD_PLUGIN_GEOMODEL": "OFF",

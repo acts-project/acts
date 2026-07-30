@@ -299,7 +299,7 @@ void GridPortalLink::printContents(std::ostream& os) const {
   AnyGridConstView<const TrackingVolume*> view(grid());
 
   if (dim == 1) {
-    auto loc = grid().numLocalBinsAny();
+    auto loc = grid().multiAxisAny().getNBinsAny();
 
     if (flipped) {
       os << lpad(loc1, 4) << " > " << lpad("i=0", 10) << " ";
@@ -334,7 +334,7 @@ void GridPortalLink::printContents(std::ostream& os) const {
     }
 
   } else {
-    auto loc = grid().numLocalBinsAny();
+    auto loc = grid().multiAxisAny().getNBinsAny();
     os << rpad("v " + loc0 + "|" + loc1 + " >", 14) + "j=0 ";
     for (std::size_t j = 1; j <= loc.at(1) + 1; j++) {
       os << lpad("j=" + std::to_string(j), 13) << " ";
@@ -358,8 +358,8 @@ void GridPortalLink::printContents(std::ostream& os) const {
 void GridPortalLink::fillGrid1dTo2d(FillDirection dir,
                                     const GridPortalLink& grid1d,
                                     GridPortalLink& grid2d) {
-  const auto locSource = grid1d.grid().numLocalBinsAny();
-  const auto locDest = grid2d.grid().numLocalBinsAny();
+  const auto locSource = grid1d.grid().multiAxisAny().getNBinsAny();
+  const auto locDest = grid2d.grid().multiAxisAny().getNBinsAny();
   assert(grid1d.grid().dimensions() == 1);
   assert(grid2d.grid().dimensions() == 2);
   assert(locSource.size() == 1);

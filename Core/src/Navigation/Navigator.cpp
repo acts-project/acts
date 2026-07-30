@@ -157,7 +157,8 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
   // Fast Navigation initialization for start condition:
   // - short-cut through object association, saves navigation in the
   // - geometry and volume tree search for the lowest volume
-  if (state.startSurface != nullptr &&
+  using enum TrackingGeometry::GeometryVersion;
+  if (m_geometryVersion == Gen1 && state.startSurface != nullptr &&
       state.startSurface->associatedLayer() != nullptr) {
     ACTS_VERBOSE(
         volInfo(state)
@@ -165,7 +166,8 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
 
     state.startLayer = state.startSurface->associatedLayer();
     state.startVolume = state.startLayer->trackingVolume();
-  } else if (state.startVolume != nullptr && state.startSurface == nullptr) {
+  } else if (m_geometryVersion == Gen1 && state.startVolume != nullptr &&
+             state.startSurface == nullptr) {
     ACTS_VERBOSE(
         volInfo(state)
         << "Fast start initialization through association from Volume.");
