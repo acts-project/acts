@@ -47,8 +47,9 @@ pytestmark = [
 ]
 
 
+@pytest.mark.root
 @pytest.mark.parametrize("reco_geo", ["gen1", "gen3"])
-def test_colliderml_truth_tracking(tmp_path, reco_geo):
+def test_colliderml_truth_tracking(tmp_path, reco_geo, assert_root_hash):
     """Read a small real ColliderML (ttbar, PU0) sample and run truth-seeded
     KF tracking on it.
 
@@ -64,6 +65,15 @@ def test_colliderml_truth_tracking(tmp_path, reco_geo):
     sample cannot reproduce. Also verifies that the dataset's own published
     tracks are read and converted (hit_ids resolved against measurements
     built from the same hits table).
+
+    For gen1 only, also writes track-finder performance histograms (overall
+    efficiency, fake rate, duplication rate, ...) to a ROOT file and checks
+    its hash against Python/Examples/tests/root_file_hashes.txt.
+
+    NOTE: gen3's seeding config (Examples/Configs/odd-seeding-config.json)
+    hardcodes gen1 volume/layer IDs, so gen3 currently produces zero seeds on
+    real ColliderML data -- a pre-existing gap unrelated to this test, so the
+    ROOT performance check is skipped for gen3 for now (tracked separately).
     """
     from acts.examples.odd import getOpenDataDetector
     from generate_geoid_map import generate_geoid_map
@@ -103,6 +113,22 @@ def test_colliderml_truth_tracking(tmp_path, reco_geo):
         "colliderml_tracks", name="check_colliderml_tracks", level=acts.logging.WARNING
     )
 
+    perfFile = tmp_path / "performance_colliderml_truth_tracking.root"
+    perfWriter = None
+    if reco_geo == "gen1":
+        RootTrackFinderPerformanceWriter = acts.examples._tryImportRoot(
+            "RootTrackFinderPerformanceWriter"
+        )
+        perfWriter = RootTrackFinderPerformanceWriter(
+            level=acts.logging.WARNING,
+            inputTracks="tracks",
+            inputParticles="particles",
+            inputTrackParticleMatching="track_particle_matching",
+            inputParticleTrackMatching="particle_track_matching",
+            inputParticleMeasurementsMap="particle_measurements_map",
+            filePath=str(perfFile),
+        )
+
     def _run():
         s = runColliderMLTruthTracking(
             trackingGeometry=trackingGeometry,
@@ -117,6 +143,8 @@ def test_colliderml_truth_tracking(tmp_path, reco_geo):
             sample=_SAMPLE,
         )
         s.addAlgorithm(check_alg)
+        if perfWriter is not None:
+            s.addWriter(perfWriter)
         s.run()
 
     if ctx is not None:
@@ -126,3 +154,6 @@ def test_colliderml_truth_tracking(tmp_path, reco_geo):
         _run()
 
     assert check_alg.events_seen > 0
+
+    if reco_geo == "gen1":
+        assert_root_hash("performance_colliderml_truth_tracking.root", perfFile)
