@@ -2,23 +2,39 @@
 # Repair wrapper for the macOS PyPI wheels, invoked as
 # CIBW_REPAIR_WHEEL_COMMAND_MACOS with: $1 = wheel, $2 = dest_dir, $3 = archs.
 #
-# Root cause (diagnosed with delocate-listdeps --all --depending):
+# Root cause (diagnosed with delocate-listdeps --all --depending, and confirmed
+# against spack's thrift package.py and thrift's own build/cmake/
+# DefineOptions.cmake):
 #   * libActsPluginArrow.dylib (static Arrow) links spack's openssl:
 #       .../spack/opt/spack/.../openssl-<hash>/lib/libssl.3.dylib
-#   * spack's libthrift (an Arrow dependency) links the python.org framework's
-#     openssl instead:
+#   * spack's libthrift (an Arrow dependency) concretizes `~openssl` (its spack
+#     "openssl" variant is off, so spack never wires in spack's openssl for
+#     it). But thrift builds with build_system=cmake, and unlike thrift's
+#     AutotoolsBuilder, its CMakeBuilder.cmake_args() never passes
+#     -DWITH_OPENSSL. Thrift's own DefineOptions.cmake then runs a bare
+#     find_package(OpenSSL) regardless of the variant and auto-links whatever
+#     it finds on the runner's default search path — the python.org
+#     framework's copy:
 #       /Library/Frameworks/Python.framework/Versions/<X>/lib/libssl.3.dylib
 # delocate then sees two different libssl.3.dylib (and libcrypto.3.dylib) with
 # the same basename and aborts:
 #   DelocationError: Already planning to copy library with same basename as:
 #   libssl.3.dylib
 #
-# Workaround: before delocation, repoint every spack library that references the
-# framework openssl at the spack openssl, so the whole graph resolves to a single
-# copy that delocate can vendor. Both are openssl 3.x, and ACTS' Parquet usage
-# does not touch TLS. The proper fix belongs in ci-dependencies (build
-# thrift/arrow against spack's openssl, or without openssl at all); this keeps
-# the wheels building until then, and becomes an automatic no-op once that lands.
+# Workaround: before delocation, repoint libthrift's framework openssl
+# references at spack's openssl, so the graph resolves to a single copy that
+# delocate can vendor. Both are openssl 3.x, and ACTS' Parquet usage does not
+# touch TLS. Scoped to libthrift specifically — the only known offender —
+# rather than scanning/mutating the whole spack store, to keep this local.
+#
+# How long this is needed: until thrift's spack package (spack/spack-packages,
+# repos/spack_repo/builtin/packages/thrift/package.py) wires its "openssl"
+# variant into CMakeBuilder.cmake_args() the way it already does for
+# AutotoolsBuilder — a one-line upstream fix
+# (self.define_from_variant("WITH_OPENSSL", "openssl")). Once that lands and
+# ci-dependencies picks up the updated spack-packages, thrift stops linking the
+# framework openssl and the rewrite below finds nothing to do on its own; the
+# script can then be deleted.
 #
 # This modifies the spack store on the (ephemeral) CI runner. delocate re-signs
 # the copies it vendors into the wheel, so the invalidated store-lib signatures
@@ -75,29 +91,39 @@ fi
 spack_ssl_dir="$(dirname "$spack_ssl")"
 echo "spack openssl dir: ${spack_ssl_dir}"
 
-echo "::group::Repoint framework openssl references to spack openssl"
+# libthrift is the only known offender (see root cause above); scope the
+# rewrite to it instead of scanning/mutating the whole spack store.
+libthrift="$(find "${spack_root}/opt/spack" -name 'libthrift*.dylib' \
+    -type f 2>/dev/null | head -1)"
+if [ -z "${libthrift:-}" ]; then
+    echo "no libthrift in spack store; delocating as-is"
+    delocate
+    exit 0
+fi
+
+echo "::group::Repoint libthrift's framework openssl references to spack openssl"
+# `|| true`: grep exits 1 when there is no framework reference (the expected
+# steady state once the upstream thrift package is fixed), which would
+# otherwise trip `set -e` under pipefail.
+fw_refs="$(otool -L "$libthrift" 2>/dev/null | awk 'NR>1{print $1}' \
+    | grep -E "$fw_re" || true)"
 rewrote=0
-while IFS= read -r lib; do
-    # `|| true`: grep exits 1 for the (vast majority of) libraries with no
-    # framework reference, which would otherwise trip `set -e` under pipefail.
-    fw_refs="$(otool -L "$lib" 2>/dev/null | awk 'NR>1{print $1}' \
-        | grep -E "$fw_re" || true)"
-    [ -n "$fw_refs" ] || continue
+if [ -n "$fw_refs" ]; then
     while IFS= read -r fw; do
         target="${spack_ssl_dir}/$(basename "$fw")"
         if [ ! -f "$target" ]; then
-            echo "ERROR: ${lib} references ${fw}, but ${target} does not exist" >&2
+            echo "ERROR: ${libthrift} references ${fw}, but ${target} does not exist" >&2
             exit 1
         fi
-        echo "  ${lib}: ${fw} -> ${target}"
-        if ! install_name_tool -change "$fw" "$target" "$lib"; then
-            echo "ERROR: install_name_tool failed to rewrite ${lib}" >&2
+        echo "  ${libthrift}: ${fw} -> ${target}"
+        if ! install_name_tool -change "$fw" "$target" "$libthrift"; then
+            echo "ERROR: install_name_tool failed to rewrite ${libthrift}" >&2
             exit 1
         fi
         rewrote=$((rewrote + 1))
     done <<< "$fw_refs"
-done < <(find "${spack_root}/opt/spack" -name '*.dylib' -type f)
-echo "rewrote ${rewrote} framework openssl reference(s)"
+fi
+echo "rewrote ${rewrote} framework openssl reference(s) in libthrift"
 echo "::endgroup::"
 
 delocate
