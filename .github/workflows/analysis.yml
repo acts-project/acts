@@ -13,7 +13,7 @@ on:
       - "docs/**"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 env:
@@ -41,8 +41,9 @@ permissions:
 
 jobs:
   build_debug:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:87
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
+    # Pull-through cache, as for the husk jobs in builds.yml.
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
     steps:
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
