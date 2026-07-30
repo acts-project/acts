@@ -249,53 +249,48 @@ class Propagator final
 
   /// @brief Builds the propagator state object
   ///
-  /// This function creates the propagator state object from the initial track
-  /// parameters and the propagation options.
+  /// This function creates the propagator state object from the propagation
+  /// options. Only the types of the aborters are needed here, since they
+  /// determine the type of the state. The target surface itself is a per-run
+  /// input and is handed to @c initialize instead.
   ///
   /// @tparam propagator_options_t Type of the propagator options
+  /// @tparam target_aborter_t The target aborter type to be added, or
+  ///         @c NoTargetAborter if the propagation has no target surface
   /// @tparam path_aborter_t The path aborter type to be added
   ///
   /// @param [in] options Propagation options
   ///
   /// @return Propagator state object
   template <typename propagator_options_t,
+            typename target_aborter_t = NoTargetAborter,
             typename path_aborter_t = PathLimitReached>
   auto makeState(const propagator_options_t& options) const;
 
-  /// @brief Builds the propagator state object
-  ///
-  /// This function creates the propagator state object from the initial track
-  /// parameters, the target surface, and the propagation options.
-  ///
-  /// @tparam propagator_options_t Type of the propagator options
-  /// @tparam target_aborter_t The target aborter type to be added
-  /// @tparam path_aborter_t The path aborter type to be added
-  ///
-  /// @param [in] target Target surface of to propagate to
-  /// @param [in] options Propagation options
-  ///
-  /// @return Propagator state object
-  template <typename propagator_options_t,
-            typename target_aborter_t = SurfaceReached,
-            typename path_aborter_t = PathLimitReached>
-  auto makeState(const Surface& target,
-                 const propagator_options_t& options) const;
-
   /// @brief Initialize the propagator state
   ///
-  /// This function initializes the propagator state for a new propagation.
+  /// This function initializes the propagator state for a new propagation. The
+  /// target surface is handed over here rather than at state construction, so
+  /// that it reaches both the navigator and the target aborter from a single
+  /// place.
   ///
   /// @tparam propagator_state_t Type of the propagator state object
+  /// @tparam target_aborter_t The target aborter type the state was built
+  ///         with, or @c NoTargetAborter if there is none
   /// @tparam path_aborter_t The path aborter type to be added
   ///
   /// @param [in,out] state The propagator state object
   /// @param [in] start Initial track parameters to propagate
+  /// @param [in] target Surface to propagate to, or nullptr if the propagation
+  ///             has no target surface
   ///
   /// @return Indication if the initialization was successful
   template <typename propagator_state_t,
+            typename target_aborter_t = NoTargetAborter,
             typename path_aborter_t = PathLimitReached>
   [[nodiscard]] Result<void> initialize(propagator_state_t& state,
-                                        const BoundParameters& start) const;
+                                        const BoundParameters& start,
+                                        const Surface* target) const;
 
   /// @brief Propagate track parameters
   ///

@@ -335,8 +335,10 @@ BOOST_AUTO_TEST_CASE(AlternatingInvalidPolicy_StraightLine) {
   Vector3 position{-900_mm, 0, 0};
   Vector3 direction = Vector3::UnitX();
 
-  Result<void> result =
-      navigator.initialize(state, position, direction, Direction::Forward());
+  Result<void> result = navigator.initialize(
+      state, {.position = position,
+              .direction = direction,
+              .propagationDirection = Direction::Forward()});
   BOOST_REQUIRE(result.ok());
   BOOST_REQUIRE(state.currentVolume != nullptr);
 

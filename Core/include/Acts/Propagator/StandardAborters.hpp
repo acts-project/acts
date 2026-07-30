@@ -61,6 +61,11 @@ struct PathLimitReached {
   }
 };
 
+/// Tag type marking that a propagation has no target surface, and therefore no
+/// target aborter is added to the actor list. Used in place of a target aborter
+/// type when building a propagator state.
+struct NoTargetAborter {};
+
 /// This is the condition that the Surface has been reached it then triggers a
 /// propagation abort
 struct SurfaceReached {

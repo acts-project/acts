@@ -15,6 +15,7 @@
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
+#include "Acts/Propagator/NavigatorInitializeArguments.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -257,7 +258,11 @@ class Navigator final {
       policyStateIsDefault = true;
     }
 
-    /// Completely reset navigation state to initial conditions
+    /// Reset navigation state for renavigating within the same navigation run
+    ///
+    /// @note This keeps the start and target information, which actors rely on
+    ///       for the whole run. Use @c resetForInitialization to start a new
+    ///       navigation run.
     void resetForRenavigation() {
       resetAfterVolumeSwitch();
 
@@ -274,6 +279,20 @@ class Navigator final {
                             });
 
       stream.reset();
+    }
+
+    /// Completely reset navigation state for a new navigation run
+    ///
+    /// In contrast to @c resetForRenavigation this also drops the start and
+    /// target information, so nothing of the previous run can leak into the
+    /// next one.
+    void resetForInitialization() {
+      resetForRenavigation();
+
+      startVolume = nullptr;
+      startLayer = nullptr;
+      startSurface = nullptr;
+      targetSurface = nullptr;
     }
   };
 
@@ -327,17 +346,16 @@ class Navigator final {
 
   /// @brief Initialize the navigator state
   ///
-  /// This function initializes the navigator state for a new propagation.
+  /// This function initializes the navigator state for a new propagation. All
+  /// inputs which are specific to this navigation run are passed here, so a
+  /// state can be reused for another run without carrying anything over.
   ///
   /// @param state The navigation state
-  /// @param position The start position
-  /// @param direction The start direction
-  /// @param propagationDirection The propagation direction
+  /// @param args The initialization arguments of this navigation run
   ///
   /// @return Indication if the initialization was successful
-  [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
-                                        const Vector3& direction,
-                                        Direction propagationDirection) const;
+  [[nodiscard]] Result<void> initialize(
+      State& state, const NavigatorInitializeArguments& args) const;
 
   /// @brief Get the next target surface
   ///
@@ -413,17 +431,19 @@ class Navigator final {
   void resolveCandidates(State& state, const Vector3& position,
                          const Vector3& direction) const;
 
-  /// @brief Create the navigation policy state for the current volume
+  /// @brief Create the navigation policy state for the given volume
   ///
   /// Volumes whose navigation policy is known to push only default states
   /// (probed at geometry construction) skip the state creation entirely; the
   /// matching popState on volume exit is skipped under the same condition.
-  /// The caller must ensure the current volume has a navigation policy.
+  /// The caller must ensure the volume has a navigation policy.
   ///
   /// @param state The navigation state
+  /// @param volume The volume to create the policy state for
   /// @param position The current position
   /// @param direction The current direction
-  void createPolicyState(State& state, const Vector3& position,
+  void createPolicyState(State& state, const TrackingVolume& volume,
+                         const Vector3& position,
                          const Vector3& direction) const;
 
   /// @brief Resolve compatible surfaces
@@ -471,6 +491,16 @@ class Navigator final {
   /// @param state The state containing current volume info
   /// @return String with volume name for logging
   std::string volInfo(const State& state) const;
+
+  /// @brief Get volume info string for logging
+  ///
+  /// Used where the volume is not (yet) reflected in the navigation state,
+  /// e.g. while the start information is still being resolved into locals in
+  /// @c initialize.
+  ///
+  /// @param volume The volume to report on, may be nullptr
+  /// @return String with volume name for logging
+  std::string volInfo(const TrackingVolume* volume) const;
 
   const Logger& logger() const { return *m_logger; }
 

@@ -487,11 +487,12 @@ class CombinatorialKalmanFilter {
 
       // Reset the navigation state
       // Set targetSurface to nullptr for forward filtering
-      state.navigation.options.startSurface = &currentState.referenceSurface();
-      state.navigation.options.targetSurface = nullptr;
       auto navInitRes = navigator.initialize(
-          state.navigation, stepper.position(state.stepping),
-          stepper.direction(state.stepping), state.options.direction);
+          state.navigation, {.position = stepper.position(state.stepping),
+                             .direction = stepper.direction(state.stepping),
+                             .propagationDirection = state.options.direction,
+                             .startSurface = &currentState.referenceSurface(),
+                             .targetSurface = nullptr});
       if (!navInitRes.ok()) {
         ACTS_DEBUG("Navigation initialization failed: " << navInitRes.error());
         return navInitRes.error();
@@ -1189,15 +1190,14 @@ class CombinatorialKalmanFilter {
     }
 
     auto propState =
-        m_propagator
-            .template makeState<PropagatorOptions, StubPathLimitReached>(
-                propOptions);
+        m_propagator.template makeState<PropagatorOptions, NoTargetAborter,
+                                        StubPathLimitReached>(propOptions);
 
     if constexpr (!IsMultiStepper) {
       const auto initResult =
-          m_propagator
-              .template initialize<decltype(propState), StubPathLimitReached>(
-                  propState, initialParameters);
+          m_propagator.template initialize<decltype(propState), NoTargetAborter,
+                                           StubPathLimitReached>(
+              propState, initialParameters, nullptr);
       if (!initResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: " << initResult.error());
         return initResult.error();
@@ -1209,9 +1209,9 @@ class CombinatorialKalmanFilter {
           initialParameters.particleHypothesis());
 
       const auto initResult =
-          m_propagator
-              .template initialize<decltype(propState), StubPathLimitReached>(
-                  propState, multiBoundInitialParameters);
+          m_propagator.template initialize<decltype(propState), NoTargetAborter,
+                                           StubPathLimitReached>(
+              propState, multiBoundInitialParameters, nullptr);
       if (!initResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: " << initResult.error());
         return initResult.error();
