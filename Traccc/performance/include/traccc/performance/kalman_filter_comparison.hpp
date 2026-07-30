@@ -46,7 +46,7 @@ bool kalman_filter_comparison(
     const traccc::default_detector::host& det,
     const traccc::default_detector::host::name_map& names,
     const traccc::magnetic_field& bfield,
-    const detray::propagation_validation_config& cfg,
+    const detray::propagation_validation_config<float>& cfg,
     const traccc::seed_generator<traccc::default_detector::host>::config&
         smearing_cfg,
     std::unique_ptr<const traccc::Logger> ilogger,

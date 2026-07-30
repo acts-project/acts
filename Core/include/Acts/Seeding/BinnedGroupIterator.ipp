@@ -50,7 +50,7 @@ BinnedGroupIterator<grid_t>::operator*() const {
   /// with the middle candidate And we know this is not an empty bin
   std::array<std::size_t, DIM> localPosition = m_gridItr.localBinsIndices();
   std::size_t global_index =
-      m_group->grid().globalBinFromLocalBins(localPosition);
+      m_group->grid().multiAxis().getGlobalBinFromLocalBins(localPosition);
 
   /// Get the neighbouring bins
   boost::container::small_vector<std::size_t, ipow(3, DIM)> bottoms =
