@@ -37,7 +37,7 @@ struct FitResult {
 std::optional<FitResult> iterativeGaussFit(TH1& hist, double sigmaRange,
                                            int iterations,
                                            const Acts::Logger& logger) {
-  TFitResultPtr result = hist.Fit("gaus", "SQ0", nullptr);
+  TFitResultPtr result = hist.Fit("gaus", "LSQ0", nullptr);
   if (result.Get() == nullptr) {
     ACTS_DEBUG("Failed to fit initial Gaussian: fit returned null pointer");
     return std::nullopt;
@@ -54,7 +54,7 @@ std::optional<FitResult> iterativeGaussFit(TH1& hist, double sigmaRange,
     const double xmin = mean - sigmaRange * sigma;
     const double xmax = mean + sigmaRange * sigma;
 
-    result = hist.Fit("gaus", "SRQ0", nullptr, xmin, xmax);
+    result = hist.Fit("gaus", "LSRQ0", nullptr, xmin, xmax);
     if (result.Get() == nullptr) {
       ACTS_DEBUG("Failed to fit iteration "
                  << i << " Gaussian: fit returned null pointer");
