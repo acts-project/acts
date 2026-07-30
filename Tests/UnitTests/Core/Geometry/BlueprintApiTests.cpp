@@ -129,7 +129,8 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
   std::mt19937 rng{static_cast<unsigned int>(run)};
   std::uniform_real_distribution<> dist{0.01, 0.99};
 
-  const auto* volume = trackingGeometry.lowestTrackingVolume(gctx, position);
+  const auto* volume =
+      trackingGeometry.resolveLowestTrackingVolume(gctx, position).value();
   BOOST_REQUIRE_NE(volume, nullptr);
   ACTS_VERBOSE(volume->volumeName());
 
