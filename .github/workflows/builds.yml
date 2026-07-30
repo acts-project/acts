@@ -27,6 +27,10 @@ jobs:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
+      # Authenticated GHCR reads: the spack buildcache is pulled from
+      # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
+      # so reads fall back to the anonymous (heavily rate limited) bucket.
+      packages: read
     # registry.cern.ch is a pull-through cache for ghcr.io. Husk jobs only —
     # the ubuntu-latest jobs run outside CERN and gain nothing from it.
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
@@ -131,6 +135,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      # Authenticated GHCR reads: the spack buildcache is pulled from
+      # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
+      # so reads fall back to the anonymous (heavily rate limited) bucket.
+      packages: read
     container: ghcr.io/acts-project/ubuntu2404:87
     needs: [linux_ubuntu]
     env:
@@ -265,6 +273,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      # Authenticated GHCR reads: the spack buildcache is pulled from
+      # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
+      # so reads fall back to the anonymous (heavily rate limited) bucket.
+      packages: read
     strategy:
       matrix:
         include:
@@ -361,6 +373,10 @@ jobs:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
+      # Authenticated GHCR reads: the spack buildcache is pulled from
+      # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
+      # so reads fall back to the anonymous (heavily rate limited) bucket.
+      packages: read
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
 
     steps:
@@ -417,6 +433,10 @@ jobs:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
+      # Authenticated GHCR reads: the spack buildcache is pulled from
+      # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
+      # so reads fall back to the anonymous (heavily rate limited) bucket.
+      packages: read
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_tensorrt:87
 
     steps:
@@ -618,6 +638,10 @@ jobs:
     runs-on: macos-26
     permissions:
       contents: read
+      # Authenticated GHCR reads: the spack buildcache is pulled from
+      # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
+      # so reads fall back to the anonymous (heavily rate limited) bucket.
+      packages: read
     env:
       INSTALL_DIR: ${{ github.workspace }}/install_acts
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
