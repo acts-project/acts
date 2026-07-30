@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import os
 from pathlib import Path
 from typing import Optional
 
@@ -21,39 +20,6 @@ u = acts.UnitConstants
 
 _srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-# Environment variable pointing at a directory of ColliderML sample
-# directories, laid out as
-#   <COLLIDERML_DATA>/<sample>_particles/data/<sample>_particles/*.parquet
-#   <COLLIDERML_DATA>/<sample>_tracker_hits/data/<sample>_tracker_hits/*.parquet
-#   <COLLIDERML_DATA>/<sample>_tracks/data/<sample>_tracks/*.parquet
-# This matches both the full ColliderML-Release-1 HuggingFace dataset layout
-# and the small CI sample shards produced for testing.
-COLLIDERML_DATA_ENV_VAR = "COLLIDERML_DATA"
-
-
-def resolveColliderMLSampleDirs(
-    sample: str, dataDir: Optional[Path] = None
-) -> tuple[Path, Path, Path]:
-    """Resolve the particles/hits/tracks directories for a ColliderML sample.
-
-    If `dataDir` is not given, falls back to the `COLLIDERML_DATA`
-    environment variable. The tracks directory is the dataset's own
-    published tracks (not all samples ship these).
-    """
-    if dataDir is None:
-        envValue = os.environ.get(COLLIDERML_DATA_ENV_VAR)
-        if envValue is None:
-            raise RuntimeError(
-                f"No data directory given and {COLLIDERML_DATA_ENV_VAR} "
-                "environment variable is not set"
-            )
-        dataDir = Path(envValue)
-
-    particlesDir = dataDir / f"{sample}_particles" / "data" / f"{sample}_particles"
-    hitsDir = dataDir / f"{sample}_tracker_hits" / "data" / f"{sample}_tracker_hits"
-    tracksDir = dataDir / f"{sample}_tracks" / "data" / f"{sample}_tracks"
-    return particlesDir, hitsDir, tracksDir
-
 
 def runColliderMLTruthTracking(
     trackingGeometry: acts.TrackingGeometry,
@@ -68,7 +34,6 @@ def runColliderMLTruthTracking(
     decorators=[],
     events: Optional[int] = None,
     numThreads: int = 1,
-    sample: str = "ttbar_pu200",
     s: Optional[acts.examples.Sequencer] = None,
 ):
     """Set up a ColliderML truth-tracking sequencer and return it with the performance writer.
@@ -211,40 +176,22 @@ if __name__ == "__main__":
         "--particlesDir",
         "-p",
         type=Path,
-        default=None,
-        help="ColliderML particles directory (overrides --data-dir/--sample)",
+        required=True,
+        help="ColliderML particles directory",
     )
     parser.add_argument(
         "--hitsDir",
         "-m",
         type=Path,
-        default=None,
-        help="ColliderML hits directory (overrides --data-dir/--sample)",
+        required=True,
+        help="ColliderML hits directory",
     )
     parser.add_argument(
         "--tracksDir",
         "-t",
         type=Path,
         default=None,
-        help=(
-            "ColliderML published-tracks directory (overrides "
-            "--data-dir/--sample). Optional: not all samples ship these."
-        ),
-    )
-    parser.add_argument(
-        "--data-dir",
-        type=Path,
-        default=None,
-        help=(
-            "Base ColliderML data directory containing per-sample "
-            f"subdirectories. Defaults to the {COLLIDERML_DATA_ENV_VAR} "
-            "environment variable. Ignored if --particlesDir/--hitsDir are set."
-        ),
-    )
-    parser.add_argument(
-        "--sample",
-        default="ttbar_pu200",
-        help="ColliderML sample name, e.g. ttbar_pu0 (default: ttbar_pu200)",
+        help="ColliderML published-tracks directory. Optional: not all samples ship these.",
     )
     parser.add_argument(
         "--output",
@@ -269,20 +216,6 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    if args.particlesDir is not None and args.hitsDir is not None:
-        particlesDir, hitsDir = args.particlesDir, args.hitsDir
-        tracksDir = args.tracksDir
-    else:
-        particlesDir, hitsDir, resolvedTracksDir = resolveColliderMLSampleDirs(
-            args.sample, args.data_dir
-        )
-        if args.tracksDir is not None:
-            tracksDir = args.tracksDir
-        elif resolvedTracksDir.exists():
-            tracksDir = resolvedTracksDir
-        else:
-            tracksDir = None
-
     detector = getOpenDataDetector()
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
@@ -292,12 +225,11 @@ if __name__ == "__main__":
         trackingGeometry=trackingGeometry,
         field=field,
         outputDir=args.output,
-        particlesDir=particlesDir,
-        hitsDir=hitsDir,
-        tracksDir=tracksDir,
+        particlesDir=args.particlesDir,
+        hitsDir=args.hitsDir,
+        tracksDir=args.tracksDir,
         decorators=decorators,
         events=args.events,
         numThreads=args.jobs,
-        sample=args.sample,
     )
     s.run()

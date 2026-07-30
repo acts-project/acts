@@ -13,26 +13,23 @@ from helpers import arrowEnabled, dd4hepEnabled, AssertCollectionExistsAlg
 _srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
 sys.path.insert(0, str(_srcdir / "Examples/Scripts/Python"))
-from colliderml_truth_tracking import (
-    COLLIDERML_DATA_ENV_VAR,
-    resolveColliderMLSampleDirs,
-    runColliderMLTruthTracking,
-)
+from colliderml_truth_tracking import runColliderMLTruthTracking
 
+_COLLIDERML_DATA_ENV_VAR = "COLLIDERML_DATA"
 _SAMPLE = "ttbar_pu0"
 
-_colliderml_data_dir = os.environ.get(COLLIDERML_DATA_ENV_VAR)
-_particlesDir, _hitsDir, _tracksDir = (
-    resolveColliderMLSampleDirs(_SAMPLE, Path(_colliderml_data_dir))
-    if _colliderml_data_dir is not None
-    else (None, None, None)
-)
-_colliderml_data_available = (
-    _particlesDir is not None
-    and _particlesDir.exists()
-    and _hitsDir.exists()
-    and _tracksDir.exists()
-)
+_colliderml_data_dir = os.environ.get(_COLLIDERML_DATA_ENV_VAR)
+if _colliderml_data_dir is not None:
+    _dataDir = Path(_colliderml_data_dir)
+    _particlesDir = _dataDir / f"{_SAMPLE}_particles" / "data" / f"{_SAMPLE}_particles"
+    _hitsDir = _dataDir / f"{_SAMPLE}_tracker_hits" / "data" / f"{_SAMPLE}_tracker_hits"
+    _tracksDir = _dataDir / f"{_SAMPLE}_tracks" / "data" / f"{_SAMPLE}_tracks"
+    _colliderml_data_available = (
+        _particlesDir.exists() and _hitsDir.exists() and _tracksDir.exists()
+    )
+else:
+    _particlesDir = _hitsDir = _tracksDir = None
+    _colliderml_data_available = False
 
 pytestmark = [
     pytest.mark.skipif(not arrowEnabled, reason="Arrow/Parquet bindings not built"),
@@ -40,7 +37,7 @@ pytestmark = [
     pytest.mark.skipif(
         not _colliderml_data_available,
         reason=(
-            f"ColliderML CI sample not found; set {COLLIDERML_DATA_ENV_VAR} to a "
+            f"ColliderML CI sample not found; set {_COLLIDERML_DATA_ENV_VAR} to a "
             f"directory containing the '{_SAMPLE}' sample"
         ),
     ),
@@ -51,29 +48,13 @@ pytestmark = [
 @pytest.mark.parametrize("reco_geo", ["gen1", "gen3"])
 def test_colliderml_truth_tracking(tmp_path, reco_geo, assert_root_hash):
     """Read a small real ColliderML (ttbar, PU0) sample and run truth-seeded
-    KF tracking on it.
+    KF tracking on it, for both gen1 (no geo-id map needed) and gen3 (geo-id
+    map generated on the fly) reconstruction geometries. Also checks that the
+    dataset's own published tracks are read and converted.
 
-    Parametrized on the reconstruction geometry:
-      gen1 — same Gen1 ODD used to build the ColliderML dataset; no geo-id
-             map needed.
-      gen3 — Gen3 ODD; geo-id map and digi config generated on the fly.
-
-    Verifies that the ColliderML reader pipeline (ParquetReader +
-    ColliderMLRelease1InputConverter + TruthEstimated seeding + KF) runs
-    without error on real detector data, exercising the correlations
-    between particles, hits, and geometry that a synthetic/FATRAS-generated
-    sample cannot reproduce. Also verifies that the dataset's own published
-    tracks are read and converted (hit_ids resolved against measurements
-    built from the same hits table).
-
-    For gen1 only, also writes track-finder performance histograms (overall
-    efficiency, fake rate, duplication rate, ...) to a ROOT file and checks
-    its hash against Python/Examples/tests/root_file_hashes.txt.
-
-    NOTE: gen3's seeding config (Examples/Configs/odd-seeding-config.json)
-    hardcodes gen1 volume/layer IDs, so gen3 currently produces zero seeds on
-    real ColliderML data -- a pre-existing gap unrelated to this test, so the
-    ROOT performance check is skipped for gen3 for now (tracked separately).
+    gen3's seeding config hardcodes gen1 volume/layer IDs, so it currently
+    produces zero seeds on real data; the ROOT performance check is skipped
+    for gen3 until that's fixed.
     """
     from acts.examples.odd import getOpenDataDetector
     from generate_geoid_map import generate_geoid_map
@@ -140,7 +121,6 @@ def test_colliderml_truth_tracking(tmp_path, reco_geo, assert_root_hash):
             geoIdMapPath=geoid_map_path if reco_geo == "gen3" else None,
             decorators=decorators,
             numThreads=1,
-            sample=_SAMPLE,
         )
         s.addAlgorithm(check_alg)
         if perfWriter is not None:
