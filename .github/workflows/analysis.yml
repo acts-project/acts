@@ -19,6 +19,10 @@ concurrency:
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
+  # Sized for the github-ci-coverage build, which carries no debug info and
+  # skips Examples plus the vendored Detray/Traccc trees. Watch `ccache -s`:
+  # if the cache runs at ~100% of this it is evicting mid-build and the hit
+  # rate collapses, which is what a too-small ceiling looks like.
   CCACHE_MAXSIZE: 1G
   CCACHE_KEY_SUFFIX: r2
   ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -26,6 +30,12 @@ env:
 # NOTE this only builds core unittests to reduce the output size. if we
 #      found a way to have Github actions not fail regularly with this job
 #      all unit tests should be reactivated.
+#
+# NOTE the unit tests are what generate coverage for the large header-only
+#      template surface in Core/include, since that code is only instantiated
+#      in test TUs. Tests/ is filtered out of the report itself but must stay
+#      instrumented, or that coverage disappears. See the github-ci-coverage
+#      preset description for what is deliberately left out and why.
 permissions:
   contents: read
 

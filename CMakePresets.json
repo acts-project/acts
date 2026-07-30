@@ -118,6 +118,7 @@
         {
             "name": "github-ci-coverage",
             "displayName": "GitHub-CI Coverage",
+            "description": "Coverage build for the build_debug job. Carries no debug info: gcovr/gcov read .gcno and .gcda, never DWARF, so -g would only inflate the ccache footprint. Set the debug level through CMAKE_CXX_FLAGS_DEBUG rather than CMAKE_CXX_FLAGS, or the per-config flags will silently override it. Examples and the vendored Detray/Traccc trees are not built at all: nothing here executes them, and CI/test_coverage.py filters them out of the report, so instrumenting them only produces .gcno with no matching .gcda, which gcovr then counts as uncovered. Note that ACTS_BUILD_PLUGIN_TRACCC=OFF also drops Plugins/Detray and Plugins/Covfie, whose coverage was previously reported; that loss is accepted deliberately in exchange for the build time and cache savings.",
             "inherits": "github-ci",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
@@ -126,6 +127,8 @@
                 "CMAKE_C_FLAGS_DEBUG": "-O0 -g0",
                 "ACTS_BUILD_ODD": "OFF",
                 "ACTS_BUILD_PYTHON_BINDINGS": "OFF",
+                "ACTS_BUILD_EXAMPLES": "OFF",
+                "ACTS_BUILD_PLUGIN_TRACCC": "OFF",
                 "ACTS_BUILD_EXAMPLES_DD4HEP": "OFF",
                 "ACTS_BUILD_EXAMPLES_ROOT": "OFF",
                 "ACTS_BUILD_EXAMPLES_UNITTESTS": "OFF",
