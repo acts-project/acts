@@ -1,3 +1,4 @@
+import contextlib
 import os
 import sys
 from pathlib import Path
@@ -15,10 +16,9 @@ _srcdir = Path(__file__).resolve().parent.parent.parent.parent
 sys.path.insert(0, str(_srcdir / "Examples/Scripts/Python"))
 from colliderml_truth_tracking import runColliderMLTruthTracking
 
-_COLLIDERML_DATA_ENV_VAR = "COLLIDERML_DATA"
 _SAMPLE = "ttbar_pu0"
 
-_colliderml_data_dir = os.environ.get(_COLLIDERML_DATA_ENV_VAR)
+_colliderml_data_dir = os.environ.get("COLLIDERML_DATA")
 if _colliderml_data_dir is not None:
     _dataDir = Path(_colliderml_data_dir)
     _particlesDir = _dataDir / f"{_SAMPLE}_particles" / "data" / f"{_SAMPLE}_particles"
@@ -37,7 +37,7 @@ pytestmark = [
     pytest.mark.skipif(
         not _colliderml_data_available,
         reason=(
-            f"ColliderML CI sample not found; set {_COLLIDERML_DATA_ENV_VAR} to a "
+            f"ColliderML CI sample not found; set COLLIDERML_DATA to a "
             f"directory containing the '{_SAMPLE}' sample"
         ),
     ),
@@ -110,7 +110,7 @@ def test_colliderml_truth_tracking(tmp_path, reco_geo, assert_root_hash):
             filePath=str(perfFile),
         )
 
-    def _run():
+    with ctx if ctx is not None else contextlib.nullcontext():
         s = runColliderMLTruthTracking(
             trackingGeometry=trackingGeometry,
             field=field,
@@ -126,12 +126,6 @@ def test_colliderml_truth_tracking(tmp_path, reco_geo, assert_root_hash):
         if perfWriter is not None:
             s.addWriter(perfWriter)
         s.run()
-
-    if ctx is not None:
-        with ctx:
-            _run()
-    else:
-        _run()
 
     assert check_alg.events_seen > 0
 
