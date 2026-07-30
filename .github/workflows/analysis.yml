@@ -38,6 +38,10 @@ env:
 #      preset description for what is deliberately left out and why.
 permissions:
   contents: read
+  # Authenticated GHCR reads: the spack buildcache is pulled from ghcr.io.
+  # Without this scope GITHUB_TOKEN has no packages access, so reads fall back
+  # to the anonymous (heavily rate limited) bucket.
+  packages: read
 
 jobs:
   build_debug:
