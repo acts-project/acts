@@ -138,6 +138,7 @@ jobs:
       # locations resolve, so the test_fpe.py masking tests run instead of being
       # skipped. Replaces the FPE coverage previously unique to GitLab.
       ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 1
+      COLLIDERML_DATA: ${{ github.workspace }}/ci_colliderml
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -158,6 +159,9 @@ jobs:
 
       - name: Unpack build
         run: mkdir build && tar xf build.tar.gz -C build
+
+      - name: Download ColliderML CI sample
+        run: CI/dependencies/download_colliderml.sh
 
       - name: Python level tests
         shell: bash
