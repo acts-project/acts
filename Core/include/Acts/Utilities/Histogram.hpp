@@ -89,6 +89,24 @@ class Histogram {
     std::apply([this](auto... v) { m_hist(v...); }, std::tuple_cat(values));
   }
 
+  /// Set the content of a single bin, discarding whatever was there before
+  ///
+  /// @param indices Zero-based bin index per axis, excluding under-/overflow
+  /// @param content The content to store
+  /// @remark Indices must be in `[0, axis.size())` for every axis
+  void setBinContent(const std::array<int, Dim>& indices, double content) {
+    std::apply([&](auto... i) { m_hist.at(i...) = content; }, indices);
+  }
+
+  /// Get the content of a single bin
+  ///
+  /// @param indices Zero-based bin index per axis, excluding under-/overflow
+  /// @return The bin content
+  /// @remark Indices must be in `[0, axis.size())` for every axis
+  double binContent(const std::array<int, Dim>& indices) const {
+    return std::apply([&](auto... i) { return m_hist.at(i...); }, indices);
+  }
+
   /// Get histogram name
   /// @return The histogram name
   const std::string& name() const { return m_name; }
@@ -266,12 +284,16 @@ using Efficiency2 = Efficiency<2>;
 ///
 /// @param hist2d The 2D histogram to project
 /// @return A 1D histogram containing the projection
+/// @note Unlike ROOT's `TH2::ProjectionX`, the sum runs over the under- and
+///       overflow bins of the Y axis as well.
 Histogram1 projectionX(const Histogram2& hist2d);
 
 /// Project a 2D histogram onto the Y axis (axis 1)
 ///
 /// @param hist2d The 2D histogram to project
 /// @return A 1D histogram containing the projection
+/// @note Unlike ROOT's `TH2::ProjectionY`, the sum runs over the under- and
+///       overflow bins of the X axis as well.
 Histogram1 projectionY(const Histogram2& hist2d);
 
 /// Extract bin edges from an AxisVariant

@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Histogram.hpp"
 
+#include <array>
 #include <vector>
 
 using namespace Acts;
@@ -146,7 +147,146 @@ BOOST_AUTO_TEST_CASE(Histogram1D_EmptyHistogram) {
   }
 }
 
-// Projection tests removed - projections are not yet implemented for
-// multi-dimensional Histogram class
+BOOST_AUTO_TEST_CASE(Histogram_SetAndGetBinContent) {
+  auto axis = AxisVariant(BoostRegularAxis(4, 0.0, 4.0, "x"));
+  Histogram1 hist("set_get", "Set/Get", {axis});
+
+  hist.setBinContent({2}, 17.5);
+  BOOST_CHECK_CLOSE(hist.binContent({2}), 17.5, 1e-10);
+
+  // Setting must overwrite, not accumulate
+  hist.setBinContent({2}, 3.0);
+  BOOST_CHECK_CLOSE(hist.binContent({2}), 3.0, 1e-10);
+
+  // A fill and an explicit set must be visible through the same accessor
+  hist.fill({0.5});
+  BOOST_CHECK_CLOSE(hist.binContent({0}), 1.0, 1e-10);
+
+  // Untouched bins stay empty
+  BOOST_CHECK_EQUAL(hist.binContent({1}), 0.0);
+  BOOST_CHECK_EQUAL(hist.binContent({3}), 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(Histogram2D_SetAndGetBinContent) {
+  auto xAxis = AxisVariant(BoostRegularAxis(3, 0.0, 3.0, "x"));
+  auto yAxis = AxisVariant(BoostRegularAxis(2, 0.0, 2.0, "y"));
+  Histogram2 hist("set_get_2d", "Set/Get 2D", {xAxis, yAxis});
+
+  hist.setBinContent({2, 1}, 7.0);
+  BOOST_CHECK_CLOSE(hist.binContent({2, 1}), 7.0, 1e-10);
+  BOOST_CHECK_EQUAL(hist.binContent({0, 0}), 0.0);
+}
+
+// Regression test: projectionX/Y used to build the projected axis but never
+// copy the bin contents, so they returned an empty histogram.
+BOOST_AUTO_TEST_CASE(Histogram2D_ProjectionX_CopiesContents) {
+  // Asymmetric binning so an axis mix-up cannot pass unnoticed
+  std::vector<double> xEdges = {0.0, 1.0, 3.0, 5.0};
+  std::vector<double> yEdges = {-2.0, -1.0, 0.0, 1.0, 2.0};
+  auto xAxis = AxisVariant(BoostVariableAxis(xEdges, "eta"));
+  auto yAxis = AxisVariant(BoostVariableAxis(yEdges, "res"));
+  Histogram2 hist("res_vs_eta", "Residual vs Eta", {xAxis, yAxis});
+
+  // Known pattern: content[xBin][yBin]
+  const std::array<std::array<double, 4>, 3> pattern = {
+      {{1, 2, 0, 3}, {0, 4, 5, 0}, {6, 0, 0, 7}}};
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      hist.setBinContent({i, j}, pattern[i][j]);
+    }
+  }
+
+  const Histogram1 projX = projectionX(hist);
+  BOOST_CHECK_EQUAL(projX.histogram().axis(0).size(), 3);
+
+  double total = 0;
+  for (int i = 0; i < 3; ++i) {
+    // Projection onto X sums over the Y bins of each X column
+    double expected = 0;
+    for (int j = 0; j < 4; ++j) {
+      expected += pattern[i][j];
+    }
+    BOOST_CHECK_CLOSE(projX.binContent({i}), expected, 1e-10);
+    total += projX.binContent({i});
+  }
+
+  // The bug produced an all-zero histogram, so guard the integral explicitly
+  BOOST_CHECK_CLOSE(total, 28.0, 1e-10);
+}
+
+BOOST_AUTO_TEST_CASE(Histogram2D_ProjectionY_CopiesContents) {
+  std::vector<double> xEdges = {0.0, 1.0, 3.0, 5.0};
+  std::vector<double> yEdges = {-2.0, -1.0, 0.0, 1.0, 2.0};
+  auto xAxis = AxisVariant(BoostVariableAxis(xEdges, "eta"));
+  auto yAxis = AxisVariant(BoostVariableAxis(yEdges, "res"));
+  Histogram2 hist("res_vs_eta", "Residual vs Eta", {xAxis, yAxis});
+
+  const std::array<std::array<double, 4>, 3> pattern = {
+      {{1, 2, 0, 3}, {0, 4, 5, 0}, {6, 0, 0, 7}}};
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      hist.setBinContent({i, j}, pattern[i][j]);
+    }
+  }
+
+  const Histogram1 projY = projectionY(hist);
+  BOOST_CHECK_EQUAL(projY.histogram().axis(0).size(), 4);
+
+  double total = 0;
+  for (int j = 0; j < 4; ++j) {
+    // Projection onto Y sums over the X bins of each Y row
+    double expected = 0;
+    for (int i = 0; i < 3; ++i) {
+      expected += pattern[i][j];
+    }
+    BOOST_CHECK_CLOSE(projY.binContent({j}), expected, 1e-10);
+    total += projY.binContent({j});
+  }
+
+  BOOST_CHECK_CLOSE(total, 28.0, 1e-10);
+}
+
+BOOST_AUTO_TEST_CASE(Histogram2D_Projection_PreservesAxis) {
+  std::vector<double> xEdges = {0.0, 1.0, 3.0, 5.0};
+  std::vector<double> yEdges = {-2.0, -1.0, 0.0, 1.0, 2.0};
+  auto xAxis = AxisVariant(BoostVariableAxis(xEdges, "eta"));
+  auto yAxis = AxisVariant(BoostVariableAxis(yEdges, "res"));
+  Histogram2 hist("res_vs_eta", "Residual vs Eta", {xAxis, yAxis});
+
+  const Histogram1 projX = projectionX(hist);
+  BOOST_CHECK_EQUAL(projX.name(), "res_vs_eta_projX");
+  BOOST_CHECK_EQUAL(projX.title(), "Residual vs Eta projection X");
+  BOOST_CHECK_EQUAL(projX.histogram().axis(0).metadata(), "eta");
+  BOOST_CHECK(extractBinEdges(projX.histogram().axis(0)) == xEdges);
+
+  const Histogram1 projY = projectionY(hist);
+  BOOST_CHECK_EQUAL(projY.name(), "res_vs_eta_projY");
+  BOOST_CHECK_EQUAL(projY.title(), "Residual vs Eta projection Y");
+  BOOST_CHECK_EQUAL(projY.histogram().axis(0).metadata(), "res");
+  BOOST_CHECK(extractBinEdges(projY.histogram().axis(0)) == yEdges);
+}
+
+BOOST_AUTO_TEST_CASE(Histogram2D_Projection_IncludesFlowBins) {
+  // boost::histogram::algorithm::project sums over the flow bins of the
+  // reduced axis, unlike ROOT's TH2::ProjectionX/Y. Pin that behaviour down so
+  // a future change to the projection helpers cannot alter it silently.
+  auto xAxis = AxisVariant(BoostRegularAxis(2, 0.0, 2.0, "x"));
+  auto yAxis = AxisVariant(BoostRegularAxis(2, 0.0, 2.0, "y"));
+  Histogram2 hist("flow", "Flow", {xAxis, yAxis});
+
+  hist.fill({0.5, 0.5});   // both in range
+  hist.fill({0.5, 99.0});  // Y overflow, X bin 0
+  hist.fill({-5.0, 0.5});  // X underflow, Y bin 0
+
+  const Histogram1 projX = projectionX(hist);
+  // X bin 0 picks up the in-range entry *and* the Y-overflow entry
+  BOOST_CHECK_CLOSE(projX.binContent({0}), 2.0, 1e-10);
+  BOOST_CHECK_EQUAL(projX.binContent({1}), 0.0);
+
+  const Histogram1 projY = projectionY(hist);
+  // Y bin 0 picks up the in-range entry *and* the X-underflow entry
+  BOOST_CHECK_CLOSE(projY.binContent({0}), 2.0, 1e-10);
+  BOOST_CHECK_EQUAL(projY.binContent({1}), 0.0);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

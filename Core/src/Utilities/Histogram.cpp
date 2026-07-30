@@ -13,27 +13,39 @@
 
 namespace Acts::Experimental {
 
+namespace {
+
+/// Wrap an already projected boost histogram into a Histogram1, carrying over
+/// both the axis (including its metadata) and the bin contents.
+Histogram1 wrapProjection(const BoostHist& projected, std::string name,
+                          std::string title) {
+  std::array<AxisVariant, 1> axes = {projected.axis(0)};
+  Histogram1 result(std::move(name), std::move(title), axes);
+
+  for (int i = 0; i < projected.axis(0).size(); ++i) {
+    result.setBinContent({i}, projected.at(i));
+  }
+
+  return result;
+}
+
+}  // namespace
+
 // Projection free functions
 Histogram1 projectionX(const Histogram2& hist2d) {
-  auto projectedHist = boost::histogram::algorithm::project(
+  const BoostHist projectedHist = boost::histogram::algorithm::project(
       hist2d.histogram(), std::integral_constant<unsigned, 0>{});
 
-  // Extract single axis from projected histogram
-  std::array<AxisVariant, 1> axes = {projectedHist.axis(0)};
-
-  return Histogram1(hist2d.name() + "_projX", hist2d.title() + " projection X",
-                    axes);
+  return wrapProjection(projectedHist, hist2d.name() + "_projX",
+                        hist2d.title() + " projection X");
 }
 
 Histogram1 projectionY(const Histogram2& hist2d) {
-  auto projectedHist = boost::histogram::algorithm::project(
+  const BoostHist projectedHist = boost::histogram::algorithm::project(
       hist2d.histogram(), std::integral_constant<unsigned, 1>{});
 
-  // Extract single axis from projected histogram
-  std::array<AxisVariant, 1> axes = {projectedHist.axis(0)};
-
-  return Histogram1(hist2d.name() + "_projY", hist2d.title() + " projection Y",
-                    axes);
+  return wrapProjection(projectedHist, hist2d.name() + "_projY",
+                        hist2d.title() + " projection Y");
 }
 
 std::vector<double> extractBinEdges(const AxisVariant& axis) {
