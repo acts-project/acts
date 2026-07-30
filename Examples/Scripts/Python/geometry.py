@@ -69,9 +69,6 @@ def runGeometry(
             trackingGeometry.visualize(
                 vis,
                 context.geoContext
-                #portalViewConfig=acts.ViewConfig(visible=False),
-                #sensitiveViewConfig=acts.ViewConfig(visible=True, color=acts.Color(255,0,0)),
-                #viewConfig=acts.ViewConfig(visible=False),
             )
             
             vis.plot(projection=projection)
@@ -122,9 +119,9 @@ if "__main__" == __name__:
     detector = getOpenDataDetector(gen3=True)
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
-    #print(Path.cwd())
+   
     fig, ax = plt.subplots()
-    runGeometry(trackingGeometry, decorators, projection='rz',outputDir=Path.cwd())
+    runGeometry(trackingGeometry, decorators, projection='rz')
     plt.savefig("geoDefault_rz")
     dt = time.time() - start
     print(dt)

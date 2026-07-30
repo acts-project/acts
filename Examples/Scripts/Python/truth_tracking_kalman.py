@@ -31,7 +31,7 @@ def runTruthTrackingKalman(
     reverseFilteringMomThreshold=0 * u.GeV,
     reverseFilteringCovarianceScaling=100.0,
     numParticles=1,
-    projection='xy',
+    projection='rz',
     linkForward: bool = False,
     useJosephFormulation: bool = False,
     s: acts.examples.Sequencer = None,
@@ -83,13 +83,10 @@ def runTruthTrackingKalman(
     ithread = 0
 
     context = acts.examples.AlgorithmContext(ialg, ievt, eventStore, ithread)
-    vis = acts.PyVisualization(projection=projection)
+    vis = acts.PyVisualization()
     trackingGeometry.visualize(
                 vis,
                 context.geoContext,
-                portalViewConfig=acts.ViewConfig(visible=False),
-                sensitiveViewConfig=acts.ViewConfig(visible=True, color=acts.Color(255,0,0)),
-                viewConfig=acts.ViewConfig(visible=False),
             )
      
 
@@ -220,7 +217,7 @@ def runTruthTrackingKalman(
         def execute(self, context):
             tracks = self.tracks(context.eventStore)
             for track in tracks:
-                acts.EventDataView3D.drawTrack(vis, track, color=red) # draw track not a free function
+                acts.EventDataView3D.drawTrack(vis, track) # draw track not a free function
 
             return acts.examples.ProcessCode.SUCCESS
 
@@ -271,7 +268,7 @@ def runTruthTrackingKalman(
     )
 
     s.run()
-    vis.plotTrack(projection=projection, linestyle='dashed', ax=ax) #outpath = "trackPlot.png")
+    vis.plot(projection=projection) 
 
     
 
@@ -281,22 +278,10 @@ if "__main__" == __name__:
     # ODD
     from acts.examples.odd import getOpenDataDetector
 
-    detectorGen3 = getOpenDataDetector(gen3=True)
-    trackingGeometryGen3 = detectorGen3.trackingGeometry()
-    decorators = detectorGen3.contextDecorators()
-
-    detector = getOpenDataDetector(gen3=False)
+    detector = getOpenDataDetector(gen3=True)
     trackingGeometry = detector.trackingGeometry()
-    digiConfigFile = srcdir / "Examples/Configs/odd-digi-smearing-config.json"
-    
-    fig, ax = plt.subplots()
-
-    runGeometry(
-        trackingGeometryGen3, decorators, 
-        outputPy=True,
-        projection='rz', 
-        outputDir=Path.cwd()
-    )
+    decorators = detector.contextDecorators()
+    digiConfigFile = srcdir / "Examples/Configs/odd-digi-smearing-config-gen3.json"
 
     ## GenericDetector
     # detector = acts.examples.GenericDetector()
@@ -312,10 +297,9 @@ if "__main__" == __name__:
         trackingGeometry=trackingGeometry,
         field=field,
         digiConfigFile=digiConfigFile,
-        projection='rz',
+        projection='xy',
         outputDir=Path.cwd(),
     )
 
-    plt.savefig("testRZ2.png")
-
+    plt.savefig("geo_track.png")
   

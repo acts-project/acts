@@ -66,8 +66,8 @@ void addVisualization(py::module& m) {
           py::arg("name"));
 
   py::class_<PyVisualization, IVisualization3D>(m, "PyVisualization")
-      .def(py::init<unsigned int, double, std::string>(), py::arg("prec") = 4u,
-           py::arg("scale") = 1.,  py::arg("projection"))
+      .def(py::init<unsigned int, double>(), py::arg("prec") = 4u,
+           py::arg("scale") = 1)
       .def_property_readonly("surfaces", &PyVisualization::surfaces)
       .def_property_readonly("segments", &PyVisualization::segments)
       .def_property_readonly("faceColors", [](const PyVisualization &self) {
@@ -98,7 +98,8 @@ void addVisualization(py::module& m) {
         }
       return arr;
       }
-    );
+    )
+    .def_property_readonly("lineThickness", &PyVisualization::lineThickness);
 
   py::class_<EventDataView3D>(m, "EventDataView3D")
     .def_static("drawTrack",

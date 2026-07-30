@@ -40,20 +40,13 @@ class PyVisualization : public IVisualization3D {
   /// @param prec The output precision with std::setprecision
   /// @param scale An (optional) scaling for the writing out
   explicit PyVisualization(unsigned int prec = 4, double scale = 1., std::string projection = "rz")
-      : m_outputPrecision(prec), m_outputScalor(scale), m_projection(projection) {}
+      : m_outputPrecision(prec), m_outputScalor(scale){}
 
   /// @copydoc Acts::IVisualization3D::vertex()
   void vertex(const Vector3& vtx, Color color = s_defaultColor) {
     /// vertex in 2D, either rz- or xy-projection
     m_vertexcolor = color;
-    if (m_projection == "rz"){
-      auto r = std::sqrt(vtx[0]*vtx[0] + vtx[1]*vtx[1]);
-      m_vertex = Vector2{vtx[2], r};
-    }
-
-    if (m_projection == "xy"){
-      m_vertex = Vector2{vtx[0], vtx[1]};
-    }
+    m_vertex = Vector3{vtx[0], vtx[1], vtx[2]};
   }
 
 
@@ -62,16 +55,23 @@ class PyVisualization : public IVisualization3D {
             Color color = s_defaultColor)
     {
       m_linecolors.push_back(color);
-      if (m_projection == "rz"){
-        float ra = std::sqrt(a[0]*a[0] + a[1]*a[1]);
-        float rb = std::sqrt(b[0]*b[0] + b[1]*b[1]);
-        m_segments.emplace_back(Vector2{a[2], ra}, Vector2{b[2], rb}); 
-        
-      }
-      if (m_projection == "xy"){
-          m_segments.emplace_back(Vector2{a[0], a[1]}, Vector2{b[0], b[1]});   
-      }
+      std::vector<std::array<double,3>> segment;
+      segment.push_back({a[0], a[1], a[2]});
+      segment.push_back({b[0], b[1], b[2]});
+      m_segments.push_back(segment);   
     }  
+
+    // overload to allow for lineThickness argument to be accepted
+    void line(const Vector3& a, const Vector3& b,  const double lineThickness,
+            Color color = s_defaultColor)
+    {
+      m_linecolors.push_back(color);
+      m_linethickness.push_back(lineThickness);
+      std::vector<std::array<double,3>> segment;
+      segment.push_back({a[0], a[1], a[2]});
+      segment.push_back({b[0], b[1], b[2]});
+      m_segments.push_back(segment);      
+    } 
 
     
 
@@ -84,47 +84,24 @@ class PyVisualization : public IVisualization3D {
              const std::vector<FaceType>& faces,
              Color color = s_defaultColor )
     {
-      //if (faces.size() > 1){
-      //  std::cout << "Surface consists of more than one face. Do nothing.\n";
-      //}
-
       m_facecolors.push_back(color);
-
-      // rz projection
-      if (m_projection == "rz"){
-        std::vector<std::array<double,2>> surface;
-        
-
-        for(const auto& v : vtxs){
-          float r = std::sqrt(v[0]*v[0] + v[1]*v[1]);
-          surface.push_back({v[2], r});
-          //std::cout << "(x,y,z)" << v[0] << v[1] << v[2] << "r=" << r << std::endl; 
-          //std::cout << "(x,y,z)" << v[2] << ',' << r << std::endl; 
+      std::vector<std::array<double,3>> surface;
+      for(const auto& v : vtxs){
+          surface.push_back({v[0], v[1], v[2]});
         }
         m_surfaces.push_back(surface);
-
-      }
-
-      if (m_projection == "xy"){
-        std::vector<std::array<double,2>> surface;
-        for(const auto& v : vtxs){
-          surface.push_back({v[0], v[1]});
-          //std::cout << "(x,y,z)" << v[0] << v[1] << v[2]<< std::endl; 
-        }
-        m_surfaces.push_back(surface);
-      }
-
-      
     }
-  const Vector2 &vertex2D() const{
+
+
+  const Vector3 &vertex3D() const{
         return m_vertex;
   }
 
-  const std::vector<std::vector<std::array<double, 2>>> &surfaces() const {
+  const std::vector<std::vector<std::array<double, 3>>> &surfaces() const {
         return m_surfaces;
       }
 
-  const std::vector<std::pair<Vector2, Vector2>> &segments() const {
+  const std::vector<std::vector<std::array<double,3>>> &segments() const {
         return m_segments;
       }
 
@@ -134,6 +111,10 @@ class PyVisualization : public IVisualization3D {
 
   const std::vector<Color> &lineColors() const {
         return m_linecolors;
+  }
+
+  const std::vector<double> &lineThickness() const {
+        return m_linethickness;
   }
 
   const Color &vertexColor() const {
@@ -183,13 +164,14 @@ class PyVisualization : public IVisualization3D {
 
   std::vector<Object> m_objects;
 
-  Vector2 m_vertex;
+  Vector3 m_vertex;
   std::string m_projection;
-  std::vector<std::vector<std::array<double,2>>> m_surfaces;
-  std::vector<std::pair<Vector2, Vector2>> m_segments;
+  std::vector<std::vector<std::array<double,3>>> m_surfaces;
+  std::vector<std::vector<std::array<double,3>>> m_segments;
   std::vector<Color> m_facecolors;
   Color m_vertexcolor;
   std::vector<Color> m_linecolors;
+  std::vector<double> m_linethickness;
 };
 
 }  // namespace Acts
