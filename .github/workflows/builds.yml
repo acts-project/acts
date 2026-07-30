@@ -27,7 +27,9 @@ jobs:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
-    container: ghcr.io/acts-project/ubuntu2404:87
+    # registry.cern.ch is a pull-through cache for ghcr.io. Husk jobs only —
+    # the ubuntu-latest jobs run outside CERN and gain nothing from it.
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -269,7 +271,8 @@ jobs:
           - image: ubuntu2404_clang22
             std: 23
             cxx: clang++-22
-    container: ghcr.io/acts-project/${{ matrix.image }}:86
+    # Templated tag, so CI/bump_versions.py cannot see it; bumped by hand.
+    container: ghcr.io/acts-project/${{ matrix.image }}:87
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -349,6 +352,267 @@ jobs:
 
       - name: Downstream tests
         run: ctest --test-dir build-downstream --output-on-failure
+
+  # ─────────────────────────────────────────────────────────────────────
+  # GNN builds, migrated from GitLab CI. `build_gnn` and the `test_gnn_*` jobs
+  # it feeds stay on GitLab until a GPU pool exists.
+  # ─────────────────────────────────────────────────────────────────────
+  gnn_cpu:
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
+    permissions:
+      contents: read
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
+
+    steps:
+      # The image keeps build tooling in the sbin dirs, off a non-login PATH.
+      - name: Fix up PATH
+        run: |
+          echo "/usr/local/sbin" >> $GITHUB_PATH
+          echo "/usr/sbin" >> $GITHUB_PATH
+          echo "/sbin" >> $GITHUB_PATH
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Configure
+        run: >
+          ccache -z &&
+          CI/dependencies/run.sh .env
+          cmake -B build -S .
+          --preset=gitlab-ci-gnn
+          -DACTS_ENABLE_CUDA=OFF
+          -DACTS_GNN_ENABLE_MODULEMAP=OFF
+
+      - name: Build
+        run: cmake --build build
+
+      - name: ccache stats
+        run: ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always()
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+  gnn_tensorrt:
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
+    permissions:
+      contents: read
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_tensorrt:87
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Configure
+        run: >
+          ccache -z &&
+          CI/dependencies/run.sh .env
+          cmake -B build -S .
+          --preset=gitlab-ci-tensorrt
+
+      - name: Build
+        run: cmake --build build
+
+      - name: ccache stats
+        run: ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always()
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+  # ─────────────────────────────────────────────────────────────────────
+  # LCG builds, migrated from GitLab CI. They ask for the `cvmfs` label on top
+  # of the usual husk selectors: the label means the CVMFS client is mounted on
+  # the slot and the repositories are bound into the job container, not merely
+  # that some LCG toolchain happens to be installed. Without it the job would
+  # start and then fail on a missing /cvmfs.
+  # ─────────────────────────────────────────────────────────────────────
+  lcg:
+    name: lcg_${{ matrix.tag }}
+    runs-on: [self-hosted, linux, x64, husk-size-standard, cvmfs]
+    permissions:
+      contents: read
+    # Spelled out rather than built from a matrix field: CI/bump_versions.py only
+    # rewrites tags it can see literally, which is how linux_ubuntu_extra's
+    # templated image drifted a tag behind. Every leg is alma9 today anyway.
+    #
+    # Not sufficient here though: bump_versions.py's pattern is `[a-z0-9_]+`,
+    # which excludes the hyphen, so `alma9-base` never matches. Bump by hand.
+    #
+    # v88 is where expat-devel arrives, which the dev4 leg needs: that view's
+    # Geant4 wants EXPAT >= 2.5.0 and the view neither ships nor exposes it.
+    container: registry.cern.ch/ghcr.io/acts-project/alma9-base:88
+    continue-on-error: ${{ matrix.allow_failure }}
+
+    strategy:
+      # A view that breaks must not cancel the others: knowing *which*
+      # LCG/compiler combinations are affected is the point of the matrix.
+      fail-fast: false
+      matrix:
+        include:
+          - tag: 108_alma9_gcc15
+            platform: el9
+            compiler: gcc15
+            repo: sft.cern.ch
+            view: LCG_108
+            tests: false
+            allow_failure: false
+
+          - tag: 109_alma9_gcc15
+            platform: el9
+            compiler: gcc15
+            repo: sft.cern.ch
+            view: LCG_109
+            tests: true
+            allow_failure: false
+
+          - tag: 109_alma9_clang19
+            platform: el9
+            compiler: clang19
+            repo: sft.cern.ch
+            view: LCG_109
+            tests: true
+            allow_failure: false
+
+          - tag: dev4_alma9_gcc15
+            platform: el9
+            compiler: gcc15
+            repo: sft-nightlies.cern.ch
+            view: dev4/latest
+            tests: false
+            # Nightly views break frequently and are not release-blocking.
+            allow_failure: true
+
+    env:
+      INSTALL_DIR: ${{ github.workspace }}/install
+      ACTS_LOG_FAILURE_THRESHOLD: WARNING
+      # force off even if it is CI mode. Quoted so YAML 1.1 does not fold it
+      # into a boolean before the test helper gets to read the string.
+      ROOT_HASH_CHECKS: "off"
+      LCG_REPO: ${{ matrix.repo }}
+      LCG_VIEW: /cvmfs/${{ matrix.repo }}/lcg/views/${{ matrix.view }}/x86_64-${{ matrix.platform }}-${{ matrix.compiler }}-opt
+
+    steps:
+      # Fail loudly here rather than with an opaque "no such file" out of
+      # setup.sh, so a mount problem is distinguishable from a bad view path.
+      - name: Check CVMFS
+        run: |
+          ls -l /cvmfs/
+          test -d "/cvmfs/${LCG_REPO}/lcg/views" || { echo "${LCG_REPO} not mounted"; exit 1; }
+          test -f "${LCG_VIEW}/setup.sh" || { echo "no such view: ${LCG_VIEW}"; exit 1; }
+
+      # LCG's Geant4 reads its datasets from the geant4.cern.ch repo, which is a
+      # separate mount from the LCG view. Without it every G4-backed test aborts
+      # (SIGABRT) deep into the run; assert it up front so a fleet that forgets
+      # to mount it fails in seconds with a clear message instead. Only the test
+      # legs consume the datasets, so a build-only leg does not need this.
+      - name: Check Geant4 datasets on CVMFS
+        if: matrix.tests
+        run: >
+          test -d /cvmfs/geant4.cern.ch/share/data ||
+          { echo "geant4.cern.ch not mounted: LCG Geant4 datasets unavailable (add it to the cvmfs label)"; exit 1; }
+
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.tag }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.tag }}-
+
+      - name: Configure
+        run: >
+          source "${LCG_VIEW}/setup.sh" &&
+          ccache -z &&
+          cmake -B build -S .
+          --preset=github-ci-lcg
+          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+
+      - name: Build
+        run: >
+          source "${LCG_VIEW}/setup.sh" &&
+          cmake --build build
+
+      - name: ccache stats
+        run: >
+          source "${LCG_VIEW}/setup.sh" &&
+          ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+      - name: Unit tests
+        if: matrix.tests
+        run: >
+          source "${LCG_VIEW}/setup.sh" &&
+          ctest --test-dir build -j$(nproc)
+
+      - name: Install
+        if: matrix.tests
+        # Redirected: the install file list is long and drowns the log.
+        run: >
+          source "${LCG_VIEW}/setup.sh" &&
+          cmake --install build > install.log
+
+      - name: Python level tests
+        if: matrix.tests
+        shell: bash
+        run: |
+          source "${LCG_VIEW}/setup.sh"
+          source build/this_acts_withdeps.sh
+          python3 -m pip install -r Python/Examples/tests/requirements.txt
+          # plotting tests with mplhep fail because an ancient mplhep version in
+          # LCG overrides the mplhep version in our venv
+          pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
 
   macos:
     runs-on: macos-26

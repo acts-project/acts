@@ -128,8 +128,7 @@ class DetrayConcretePropagator : public PropagatorInterface {
       using DMaterialTracer =
           detray::material_validator::material_tracer<float, vecmem::vector>;
       using DObjectTracer = detray::navigation::object_tracer<
-          DIntersection, detray::dvector,
-          detray::navigation::status::e_on_object,
+          detector_t, detray::dvector, detray::navigation::status::e_on_object,
           detray::navigation::status::e_on_portal>;
       using DInspector = detray::aggregate_inspector<DObjectTracer>;
 
@@ -206,7 +205,7 @@ class DetrayConcretePropagator : public PropagatorInterface {
     }
 
     // Retrieve the material information
-    const auto& detrayMaterial = materialTracerState.get_material_record();
+    const auto& detrayMaterial = materialTracerState.get_track_material();
     recordedMaterial.materialInX0 = detrayMaterial.sX0;
     recordedMaterial.materialInL0 = detrayMaterial.sL0;
   }
