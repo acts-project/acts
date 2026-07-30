@@ -29,7 +29,7 @@
 
 #include <boost/core/demangle.hpp>
 
-namespace Acts::Experimental::detail {
+namespace Acts::detail {
 
 const std::regex kPortalShellRegex{R"((\w+)PortalShell$)"};
 
@@ -312,4 +312,4 @@ inline void graphvizLabel(const Designator& d, std::ostream& os) {
       d);
 }
 
-}  // namespace Acts::Experimental::detail
+}  // namespace Acts::detail

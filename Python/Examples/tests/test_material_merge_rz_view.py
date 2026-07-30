@@ -76,19 +76,15 @@ def test_rz_view_with_markers(tmp_path):
 # material-on-merged-face clash), which would otherwise trip the test harness'
 # ACTS_LOG_FAILURE_THRESHOLD.
 @acts.with_log_threshold(acts.logging.FATAL)
-def test_rz_view_odd_gen3(tmp_path):
+def test_rz_view_odd_gen3(tmp_path, odd_detector_gen3):
     pytest.importorskip("matplotlib")
-    from acts.examples.odd import getOpenDataDetector
     from acts.json import TrackingGeometryJsonConverter
 
     gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
 
-    with getOpenDataDetector(gen3=True) as detector:
-        trackingGeometry = detector.trackingGeometry()
-        json_path = tmp_path / "odd-geometry.json"
-        json_path.write_text(
-            TrackingGeometryJsonConverter().toJson(gctx, trackingGeometry)
-        )
+    trackingGeometry = odd_detector_gen3.trackingGeometry()
+    json_path = tmp_path / "odd-geometry.json"
+    json_path.write_text(TrackingGeometryJsonConverter().toJson(gctx, trackingGeometry))
 
     out = tmp_path / "odd_rz.svg"
     volumes, markers = mrz.run(json_path, out)

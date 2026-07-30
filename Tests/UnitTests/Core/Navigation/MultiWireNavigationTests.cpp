@@ -24,7 +24,6 @@
 #include <vector>
 
 using namespace Acts;
-using namespace Acts::Experimental;
 using namespace Acts::detail;
 
 auto tContext = GeometryContext::dangerouslyDefaultConstruct();

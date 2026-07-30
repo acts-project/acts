@@ -223,16 +223,16 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
 /// This adds the geometry building bindings for the Gen3 geometry
 /// @param m the module to add the bindings to
 void addGeometryGen3(py::module_& m) {
-  using Experimental::Blueprint;
-  using Experimental::BlueprintNode;
-  using Experimental::BlueprintOptions;
-  using Experimental::CuboidContainerBlueprintNode;
-  using Experimental::CylinderContainerBlueprintNode;
-  using Experimental::GeometryIdentifierBlueprintNode;
-  using Experimental::LayerBlueprintNode;
-  using Experimental::MaterialDesignatorBlueprintNode;
-  using Experimental::PortalDesignatorBlueprintNode;
-  using Experimental::StaticBlueprintNode;
+  using Acts::Blueprint;
+  using Acts::BlueprintNode;
+  using Acts::BlueprintOptions;
+  using Acts::CuboidContainerBlueprintNode;
+  using Acts::CylinderContainerBlueprintNode;
+  using Acts::GeometryIdentifierBlueprintNode;
+  using Acts::LayerBlueprintNode;
+  using Acts::MaterialDesignatorBlueprintNode;
+  using Acts::PortalDesignatorBlueprintNode;
+  using Acts::StaticBlueprintNode;
 
   py::class_<Portal>(m, "Portal")
       .def_property_readonly(

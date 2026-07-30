@@ -167,7 +167,7 @@ class DetrayPayloadConverter {
   /// @param logger Logger instance
   /// @return Detray surface grid payload
   static std::optional<DetraySurfaceGrid> convertMultiLayerNavigationPolicy(
-      const Acts::Experimental::MultiLayerNavigationPolicy& policy,
+      const Acts::MultiLayerNavigationPolicy& policy,
       const Acts::GeometryContext& gctx,
       const SurfaceLookupFunction& surfaceLookup, const Acts::Logger& logger);
 

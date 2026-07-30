@@ -21,14 +21,14 @@
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// Wraps a single child blueprint node and pads it into a larger volume whose
 /// dimensions are evaluated at construction time using the child's extent plus
 /// a configurable envelope.
 /// @note This node can only have a single child. This is not an error during
 ///       tree building, but during geometry construction.
-/// It defers most of the functionality to @ref Acts::Experimental::StaticBlueprintNode,
+/// It defers most of the functionality to @ref Acts::StaticBlueprintNode,
 /// and only implements the build phase to perform the padding.
 class PadBlueprintNode final : public StaticBlueprintNode {
  public:
@@ -70,4 +70,13 @@ class PadBlueprintNode final : public StaticBlueprintNode {
   std::string m_name;
 };
 
-}  // namespace Acts::Experimental
+namespace Experimental {
+/// @deprecated The blueprint geometry moved out of the `Acts::Experimental`
+///             namespace. Use @ref Acts::PadBlueprintNode instead. This alias
+///             is kept for backward compatibility and will be removed.
+using PadBlueprintNode [[deprecated(
+    "Acts::Experimental::PadBlueprintNode moved to Acts::PadBlueprintNode")]] =
+    Acts::PadBlueprintNode;
+}  // namespace Experimental
+
+}  // namespace Acts

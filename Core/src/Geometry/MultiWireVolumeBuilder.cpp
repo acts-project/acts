@@ -18,7 +18,7 @@
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
 MultiWireVolumeBuilder::MultiWireVolumeBuilder(
     const Config& config, std::unique_ptr<const Logger> logger)
@@ -135,4 +135,4 @@ MultiWireVolumeBuilder::createNavigationPolicyFactory() const {
   return factory;
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts
