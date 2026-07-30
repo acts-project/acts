@@ -17,8 +17,6 @@
 namespace Acts {
 class HomogeneousSurfaceMaterial;
 
-namespace Experimental {
-
 namespace detail {
 class MaterialDesignatorBlueprintNodeImpl;
 }
@@ -153,5 +151,15 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   std::unique_ptr<detail::MaterialDesignatorBlueprintNodeImpl> m_impl;
 };
 
+namespace Experimental {
+/// @deprecated The blueprint geometry moved out of the `Acts::Experimental`
+///             namespace. Use @ref Acts::MaterialDesignatorBlueprintNode
+///             instead. This alias is kept for backward compatibility and will
+///             be removed.
+using MaterialDesignatorBlueprintNode
+    [[deprecated("Acts::Experimental::MaterialDesignatorBlueprintNode moved to "
+                 "Acts::MaterialDesignatorBlueprintNode")]] =
+        Acts::MaterialDesignatorBlueprintNode;
 }  // namespace Experimental
+
 }  // namespace Acts

@@ -30,7 +30,6 @@ from acts.examples import (
     Sequencer,
     GenericDetector,
 )
-from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
 
@@ -137,10 +136,6 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_geant4(tmp_path, assert_root_hash):
     # This test literally only ensures that the geant 4 example can run without erroring out
-
-    # just to make sure it can build the odd
-    with getOpenDataDetector():
-        pass
 
     csv = tmp_path / "csv"
     csv.mkdir()
@@ -808,10 +803,6 @@ def test_pypi_finding_fitting_demo(tmp_path, generic_detector_config):
 def test_full_chain_odd_example(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
 
-    # just to make sure it can build the odd
-    with getOpenDataDetector():
-        pass
-
     script = (
         Path(__file__).parent.parent.parent.parent
         / "Examples"
@@ -841,10 +832,6 @@ def test_full_chain_odd_example(tmp_path):
 @pytest.mark.slow
 def test_full_chain_odd_example_pythia_geant4(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
-
-    # just to make sure it can build the odd
-    with getOpenDataDetector():
-        pass
 
     script = (
         Path(__file__).parent.parent.parent.parent
@@ -895,10 +882,6 @@ def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
     root_file = "performance_finding_ambiML.root"
     output_dir = "odd_output"
     assert not (tmp_path / root_file).exists()
-
-    # just to make sure it can build the odd
-    with getOpenDataDetector():
-        pass
 
     script = (
         Path(__file__).parent.parent.parent.parent

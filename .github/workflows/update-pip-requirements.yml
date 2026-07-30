@@ -26,7 +26,13 @@ jobs:
       BRANCH_NAME: auto-dependency-upgrades
     steps:
       # persisted credentials are required for the push step below
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Lowest Python version the lockfiles must install on, taken from
+      # `requires-python` in pyproject.toml so it is defined in exactly one place
+      - name: Determine supported Python floor
+        id: floor
+        run: echo "version=$(CI/supported_python_versions.py --floor)" >> $GITHUB_OUTPUT
 
       # Lowest Python version the lockfiles must install on, taken from
       # `requires-python` in pyproject.toml so it is defined in exactly one place

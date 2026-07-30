@@ -425,14 +425,14 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
 
   auto worldSolidDim = lcdd->worldVolume().solid().dimensions();  // better way?
 
-  Experimental::Blueprint::Config cfg;
+  Blueprint::Config cfg;
   // Is the following correct?
   cfg.envelope[AxisX] = {worldSolidDim[0], worldSolidDim[0]};
   cfg.envelope[AxisY] = {worldSolidDim[1], worldSolidDim[1]};
   cfg.envelope[AxisZ] = {worldSolidDim[2], worldSolidDim[2]};
   // cfg.envelope[AxisR] = {0_mm, worldSolidDim[1]};
 
-  auto blueprint = std::make_unique<Experimental::Blueprint>(cfg);
+  auto blueprint = std::make_unique<Blueprint>(cfg);
   auto& cylinder = blueprint->addCylinderContainer("Detector", AxisR);
 
   // ------- Add Beam Pipe to Blueprint -------
@@ -510,7 +510,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
     }
 
     for (const auto& [ilayer, surfaces] : layers) {
-      Experimental::BlueprintNode* lparent = nullptr;
+      BlueprintNode* lparent = nullptr;
 
       // Outermost layer can't have material, because it will get merged
       // with the outer cylinder shell of the endcap cylinders

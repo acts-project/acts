@@ -12,7 +12,6 @@
 #include "Acts/Geometry/CuboidVolumeStack.hpp"
 #include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
-#include "Acts/Geometry/PadBlueprintNode.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 
@@ -20,7 +19,7 @@
 #include <string>
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 ContainerBlueprintNode::ContainerBlueprintNode(
     const std::string& name, AxisDirection axis,
@@ -42,9 +41,9 @@ const std::string& ContainerBlueprintNode::name() const {
   return m_name;
 }
 
-Volume& ContainerBlueprintNode::build(
-    const Experimental::BlueprintOptions& options, const GeometryContext& gctx,
-    const Logger& logger) {
+Volume& ContainerBlueprintNode::build(const BlueprintOptions& options,
+                                      const GeometryContext& gctx,
+                                      const Logger& logger) {
   ACTS_DEBUG(prefix() << "container build (dir=" << m_direction << ")");
 
   if (m_stack != nullptr) {
@@ -53,20 +52,11 @@ Volume& ContainerBlueprintNode::build(
   }
 
   for (auto& child : children()) {
-    Volume& built = child.build(options, gctx, logger);
-    Volume* volume = &built;
-    if (auto* pad = dynamic_cast<PadBlueprintNode*>(&child); pad != nullptr) {
-      // PadBlueprintNode::build() intentionally returns the *unpadded* child
-      // volume (padding is only reflected in trackingVolume()). Containers
-      // must size themselves using the padded volume, or the padding is
-      // silently lost for every ancestor except the implicit root node,
-      // which Blueprint::construct() special-cases via trackingVolume().
-      volume = pad->trackingVolume();
-    }
-    m_childVolumes.push_back(volume);
+    Volume& volume = child.build(options, gctx, logger);
+    m_childVolumes.push_back(&volume);
     // We need to remember which volume we got from which child, so we can
     // assemble a crrect portal shell later
-    m_volumeToNode[volume] = &child;
+    m_volumeToNode[&volume] = &child;
   }
   ACTS_VERBOSE(prefix() << "-> Collected " << m_childVolumes.size()
                         << " child volumes");
@@ -79,9 +69,10 @@ Volume& ContainerBlueprintNode::build(
   return *m_stack;
 }
 
-void ContainerBlueprintNode::finalize(
-    const Experimental::BlueprintOptions& options, const GeometryContext& gctx,
-    TrackingVolume& parent, const Logger& logger) {
+void ContainerBlueprintNode::finalize(const BlueprintOptions& options,
+                                      const GeometryContext& gctx,
+                                      TrackingVolume& parent,
+                                      const Logger& logger) {
   ACTS_DEBUG(prefix() << "Finalizing container");
 
   if (m_stack == nullptr) {
@@ -179,7 +170,7 @@ void ContainerBlueprintNode::addToGraphviz(std::ostream& os) const {
 
 template <typename BaseShell, typename SingleShell>
 std::vector<BaseShell*> ContainerBlueprintNode::collectChildShells(
-    const Experimental::BlueprintOptions& options, const GeometryContext& gctx,
+    const BlueprintOptions& options, const GeometryContext& gctx,
     VolumeStack& stack, const std::string& prefix, const Logger& logger) {
   std::vector<BaseShell*> shells;
   ACTS_DEBUG(prefix << "Have " << m_childVolumes.size() << " child volumes");
@@ -227,7 +218,7 @@ std::vector<BaseShell*> ContainerBlueprintNode::collectChildShells(
 
 template <typename BaseShell, typename SingleShell, typename ShellStack>
 PortalShellBase& ContainerBlueprintNode::connectImpl(
-    const Experimental::BlueprintOptions& options, const GeometryContext& gctx,
+    const BlueprintOptions& options, const GeometryContext& gctx,
     VolumeStack* stack, const std::string& prefix, const Logger& logger) {
   ACTS_DEBUG(prefix << "Container connect");
   if (stack == nullptr) {
@@ -313,7 +304,7 @@ PortalShellBase& ContainerBlueprintNode::connectImpl(
 }
 
 PortalShellBase& CylinderContainerBlueprintNode::connect(
-    const Experimental::BlueprintOptions& options, const GeometryContext& gctx,
+    const BlueprintOptions& options, const GeometryContext& gctx,
     const Logger& logger) {
   return connectImpl<CylinderPortalShell, SingleCylinderPortalShell,
                      CylinderStackPortalShell>(options, gctx, m_stack.get(),
@@ -333,7 +324,7 @@ std::unique_ptr<VolumeStack> CylinderContainerBlueprintNode::makeStack(
 }
 
 PortalShellBase& CuboidContainerBlueprintNode::connect(
-    const Experimental::BlueprintOptions& options, const GeometryContext& gctx,
+    const BlueprintOptions& options, const GeometryContext& gctx,
     const Logger& logger) {
   return connectImpl<CuboidPortalShell, SingleCuboidPortalShell,
                      CuboidStackPortalShell>(options, gctx, m_stack.get(),
@@ -352,4 +343,4 @@ std::unique_ptr<VolumeStack> CuboidContainerBlueprintNode::makeStack(
                                              m_resizeStrategies.first, logger);
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts
