@@ -288,7 +288,7 @@ inline auto makeTrackStateCreator(const source_link_accessor_t& slAccessor,
   trackStateCreator.sourceLinkAccessor
       .template connect<&source_link_accessor_t::range>(&slAccessor);
   trackStateCreator.calibrator.template connect<
-      &testSourceLinkCalibrator<TrackStateContainerBackend>>();
+      &testSourceLinkCalibratorStrict<TrackStateContainerBackend>>();
   trackStateCreator.measurementSelector.template connect<
       &MeasurementSelector::select<TrackStateContainerBackend>>(&measSel);
   return trackStateCreator;

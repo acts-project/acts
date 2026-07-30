@@ -64,6 +64,7 @@ The following cmake options are available and can also be specified explicitly f
 | DETRAY_BUILD_CLI_TOOLS  | Build the detray command line tools | OFF |
 | DETRAY_BUILD_TUTORIALS  | Build the examples of detray | OFF |
 | DETRAY_BUILD_PYTHON_BINDINGS  | Build python bindings for all enabled components | OFF |
+| DETRAY_GENERATE_PYTHON_STUBS  | Generate Python stub files for Python bindings | OFF |
 | DETRAY_CUSTOM_SCALARTYPE | Floating point precision | float |
 | DETRAY_GENERATE_METADATA | List of metadata generator scripts (separated by semicolon) | empty |
 | DETRAY_EIGEN_PLUGIN | Build Eigen math plugin | OFF |
