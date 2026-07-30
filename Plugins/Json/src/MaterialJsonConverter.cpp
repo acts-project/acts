@@ -640,9 +640,9 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
     std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
     Acts::Grid2D grid = createGrid2D(bUtility, transfoGlobalToLocal);
 
-    Acts::Grid2D::point_t min = grid.minPosition();
-    Acts::Grid2D::point_t max = grid.maxPosition();
-    Acts::Grid2D::index_t nBins = grid.numLocalBins();
+    Acts::Grid2D::point_t min = grid.multiAxis().getMinPoint();
+    Acts::Grid2D::point_t max = grid.multiAxis().getMaxPoint();
+    Acts::Grid2D::index_t nBins = grid.multiAxis().getNBins();
 
     Acts::EAxis axis1(min[0], max[0], nBins[0]);
     Acts::EAxis axis2(min[1], max[1], nBins[1]);
@@ -664,9 +664,9 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
     std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;
     Acts::Grid3D grid = createGrid3D(bUtility, transfoGlobalToLocal);
 
-    Acts::Grid3D::point_t min = grid.minPosition();
-    Acts::Grid3D::point_t max = grid.maxPosition();
-    Acts::Grid3D::index_t nBins = grid.numLocalBins();
+    Acts::Grid3D::point_t min = grid.multiAxis().getMinPoint();
+    Acts::Grid3D::point_t max = grid.multiAxis().getMaxPoint();
+    Acts::Grid3D::index_t nBins = grid.multiAxis().getNBins();
 
     Acts::EAxis axis1(min[0], max[0], nBins[0]);
     Acts::EAxis axis2(min[1], max[1], nBins[1]);
