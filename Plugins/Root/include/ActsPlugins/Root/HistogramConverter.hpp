@@ -86,6 +86,26 @@ std::unique_ptr<TEfficiency> toRoot(
 /// @param iterations The maximum number of iterations for the iterative Gaussian fit
 /// @param logger Logger for debug messages
 /// @return pair of unique pointers to the mean and width TH1F histograms and a fit failure fraction
+/// Convert an Acts 1D value histogram to a ROOT TH1F
+///
+/// Transfers the per-bin values as bin contents and the per-bin errors as bin
+/// errors.
+///
+/// @param boostHist The Acts value histogram to convert
+/// @return A ROOT TH1F with the same binning, contents and errors
+std::unique_ptr<TH1F> toRoot(
+    const Acts::Experimental::ValueHistogram1& boostHist);
+
+/// Convert an Acts 2D value histogram to a ROOT TH2F
+///
+/// Transfers the per-bin values as bin contents and the per-bin errors as bin
+/// errors.
+///
+/// @param boostHist The Acts value histogram to convert
+/// @return A ROOT TH2F with the same binning, contents and errors
+std::unique_ptr<TH2F> toRoot(
+    const Acts::Experimental::ValueHistogram2& boostHist);
+
 std::tuple<std::unique_ptr<TH1F>, std::unique_ptr<TH1F>, double>
 extractMeanWidthProfiles(const TH2F& hist2d, const std::string& meanName,
                          const std::string& widthName, int minEntriesForFit = 5,

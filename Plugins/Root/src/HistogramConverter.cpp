@@ -179,6 +179,51 @@ std::unique_ptr<TH3F> ActsPlugins::toRoot(const Histogram3& boostHist) {
   return rootHist;
 }
 
+std::unique_ptr<TH1F> ActsPlugins::toRoot(const ValueHistogram1& boostHist) {
+  const auto& axis = boostHist.histogram().axis(0);
+
+  std::vector<double> edges = extractBinEdges(axis);
+
+  auto rootHist = std::make_unique<TH1F>(boostHist.name().c_str(),
+                                         boostHist.title().c_str(), axis.size(),
+                                         edges.data());
+
+  // ROOT bin numbering starts at 1 (bin 0 is underflow)
+  for (int i = 0; i < axis.size(); ++i) {
+    rootHist->SetBinContent(i + 1, boostHist.value({i}));
+    rootHist->SetBinError(i + 1, boostHist.error({i}));
+  }
+
+  rootHist->GetXaxis()->SetTitle(axis.metadata().c_str());
+
+  return rootHist;
+}
+
+std::unique_ptr<TH2F> ActsPlugins::toRoot(const ValueHistogram2& boostHist) {
+  const auto& xAxis = boostHist.histogram().axis(0);
+  const auto& yAxis = boostHist.histogram().axis(1);
+
+  std::vector<double> xEdges = extractBinEdges(xAxis);
+  std::vector<double> yEdges = extractBinEdges(yAxis);
+
+  auto rootHist = std::make_unique<TH2F>(
+      boostHist.name().c_str(), boostHist.title().c_str(), xAxis.size(),
+      xEdges.data(), yAxis.size(), yEdges.data());
+
+  // ROOT bin numbering starts at 1 (bin 0 is underflow)
+  for (int i = 0; i < xAxis.size(); ++i) {
+    for (int j = 0; j < yAxis.size(); ++j) {
+      rootHist->SetBinContent(i + 1, j + 1, boostHist.value({i, j}));
+      rootHist->SetBinError(i + 1, j + 1, boostHist.error({i, j}));
+    }
+  }
+
+  rootHist->GetXaxis()->SetTitle(xAxis.metadata().c_str());
+  rootHist->GetYaxis()->SetTitle(yAxis.metadata().c_str());
+
+  return rootHist;
+}
+
 std::unique_ptr<TProfile> ActsPlugins::toRoot(
     const ProfileHistogram1& boostProfile) {
   const auto& bh = boostProfile.histogram();
