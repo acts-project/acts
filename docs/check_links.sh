@@ -65,21 +65,10 @@ fi
 ROOT_ABS="$(cd "${LINKCHECK_ROOT}" && pwd)"
 
 # --- load the shared external-link ignore list -----------------------------
-if command -v gh >/dev/null 2>&1; then
-  if IGNORE_JSON="$(
-    gh api \
-      -H "Accept: application/vnd.github.raw" \
-      "/repos/${LINKCHECK_IGNORE_REPO}/contents/${LINKCHECK_IGNORE_PATH}?ref=${LINKCHECK_IGNORE_REF}" \
-      2>/dev/null
-  )"; then
-    echo "Loaded ignore list via gh api from ${LINKCHECK_IGNORE_REPO}@${LINKCHECK_IGNORE_REF}:${LINKCHECK_IGNORE_PATH}"
-  else
-    echo "gh api failed, falling back to curl from ${LINKCHECK_IGNORE_URL}"
-    IGNORE_JSON="$(curl -fsSL "${LINKCHECK_IGNORE_URL}")"
-  fi
-else
-  IGNORE_JSON="$(curl -fsSL "${LINKCHECK_IGNORE_URL}")"
-fi
+# The ignore list is a public raw file, so a plain curl is enough (and, unlike
+# an unauthenticated `gh api` call, is not subject to the API rate limit).
+echo "Loading ignore list from ${LINKCHECK_IGNORE_URL}"
+IGNORE_JSON="$(curl -fsSL "${LINKCHECK_IGNORE_URL}")"
 jq -e 'type == "array" and all(.[]; type == "string")' <<<"${IGNORE_JSON}" >/dev/null
 mapfile -t IGNORE_PATTERNS < <(jq -r '.[]' <<<"${IGNORE_JSON}")
 echo "Loaded ${#IGNORE_PATTERNS[@]} external link ignore patterns"
