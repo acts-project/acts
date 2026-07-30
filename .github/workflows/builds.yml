@@ -27,7 +27,9 @@ jobs:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
-    container: ghcr.io/acts-project/ubuntu2404:87
+    # registry.cern.ch is a pull-through cache for ghcr.io. Husk jobs only —
+    # the ubuntu-latest jobs run outside CERN and gain nothing from it.
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -269,7 +271,8 @@ jobs:
           - image: ubuntu2404_clang22
             std: 23
             cxx: clang++-22
-    container: ghcr.io/acts-project/${{ matrix.image }}:86
+    # Templated tag, so CI/bump_versions.py cannot see it; bumped by hand.
+    container: ghcr.io/acts-project/${{ matrix.image }}:87
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -351,6 +354,113 @@ jobs:
         run: ctest --test-dir build-downstream --output-on-failure
 
   # ─────────────────────────────────────────────────────────────────────
+  # GNN builds, migrated from GitLab CI. `build_gnn` and the `test_gnn_*` jobs
+  # it feeds stay on GitLab until a GPU pool exists.
+  # ─────────────────────────────────────────────────────────────────────
+  gnn_cpu:
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
+    permissions:
+      contents: read
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
+
+    steps:
+      # The image keeps build tooling in the sbin dirs, off a non-login PATH.
+      - name: Fix up PATH
+        run: |
+          echo "/usr/local/sbin" >> $GITHUB_PATH
+          echo "/usr/sbin" >> $GITHUB_PATH
+          echo "/sbin" >> $GITHUB_PATH
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Configure
+        run: >
+          ccache -z &&
+          CI/dependencies/run.sh .env
+          cmake -B build -S .
+          --preset=gitlab-ci-gnn
+          -DACTS_ENABLE_CUDA=OFF
+          -DACTS_GNN_ENABLE_MODULEMAP=OFF
+
+      - name: Build
+        run: cmake --build build
+
+      - name: ccache stats
+        run: ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always()
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+  gnn_tensorrt:
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
+    permissions:
+      contents: read
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_tensorrt:87
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Configure
+        run: >
+          ccache -z &&
+          CI/dependencies/run.sh .env
+          cmake -B build -S .
+          --preset=gitlab-ci-tensorrt
+
+      - name: Build
+        run: cmake --build build
+
+      - name: ccache stats
+        run: ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always()
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+  # ─────────────────────────────────────────────────────────────────────
   # LCG builds, migrated from GitLab CI. They ask for the `cvmfs` label on top
   # of the usual husk selectors: the label means the CVMFS client is mounted on
   # the slot and the repositories are bound into the job container, not merely
@@ -366,9 +476,12 @@ jobs:
     # rewrites tags it can see literally, which is how linux_ubuntu_extra's
     # templated image drifted a tag behind. Every leg is alma9 today anyway.
     #
+    # Not sufficient here though: bump_versions.py's pattern is `[a-z0-9_]+`,
+    # which excludes the hyphen, so `alma9-base` never matches. Bump by hand.
+    #
     # v88 is where expat-devel arrives, which the dev4 leg needs: that view's
     # Geant4 wants EXPAT >= 2.5.0 and the view neither ships nor exposes it.
-    container: ghcr.io/acts-project/alma9-base:88
+    container: registry.cern.ch/ghcr.io/acts-project/alma9-base:88
     continue-on-error: ${{ matrix.allow_failure }}
 
     strategy:
