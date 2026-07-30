@@ -378,10 +378,14 @@ struct GsfActor {
       const auto& singleStepper = cmp.singleStepper(stepper);
 
       // Add a <mask> TrackState entry multi trajectory. This allocates storage
-      // for all components, which we will set later.
-      TrackStatePropMask mask =
-          TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
-          TrackStatePropMask::Jacobian | TrackStatePropMask::Calibrated;
+      // for all components, which we will set later. The filtered parameters
+      // are deliberately not allocated here: they are only added once the
+      // Kalman update is about to write them, so that the calibrator and the
+      // outlier finder cannot observe allocated but uninitialized filtered
+      // parameters via `parameters()`.
+      TrackStatePropMask mask = TrackStatePropMask::Predicted |
+                                TrackStatePropMask::Jacobian |
+                                TrackStatePropMask::Calibrated;
       typename traj_t::TrackStateProxy trackStateProxy =
           tmpStates.traj.makeTrackState(mask, kTrackIndexInvalid);
       typename traj_t::ConstTrackStateProxy trackStateProxyConst{
@@ -415,6 +419,8 @@ struct GsfActor {
                                   sourceLink, trackStateProxy);
 
       if (!m_cfg.extensions.outlierFinder(trackStateProxyConst)) {
+        // Allocate the filtered parameters right before they are written
+        trackStateProxy.addComponents(TrackStatePropMask::Filtered);
         // Run Kalman update
         auto updateRes = m_cfg.extensions.updater(state.geoContext,
                                                   trackStateProxy, logger());

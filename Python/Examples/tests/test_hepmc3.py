@@ -129,6 +129,14 @@ main_formats = pytest.mark.parametrize(
     "format,compression", main_formats, ids=main_format_ids
 )
 
+# Standing up a Pythia8 generator costs ~10s and is entirely independent of the
+# output format, so fanning the Pythia8 writer test over every compression mode
+# buys nothing the particle-gun tests above don't already cover. Keep the
+# uncompressed hepmc3 case: it is the one the pyhepmc content check reads back.
+single_format = pytest.mark.parametrize(
+    "format,compression", [("hepmc3", cm.none)], ids=["hepmc3-uncompressed"]
+)
+
 
 @all_formats
 def test_hemc3_writer(tmp_path, rng, compression, format):
@@ -390,7 +398,7 @@ def test_hepmc3_writer_not_in_order(common_evgen, tmp_path):
         ), "Event numbers are different"
 
 
-@main_formats
+@single_format
 def test_hepmc3_writer_pythia8(tmp_path, rng, compression, format):
     from acts.examples.hepmc3 import (
         HepMC3Writer,
