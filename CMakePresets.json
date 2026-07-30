@@ -201,6 +201,21 @@
             }
         },
         {
+            "name": "github-ci-gnn-cpu",
+            "displayName": "GitHub-CI Gnn CPU-only",
+            "inherits": "gitlab-ci-gnn",
+            "cacheVariables": {
+                "ACTS_ENABLE_CUDA": "OFF",
+                "ACTS_GNN_ENABLE_MODULEMAP": "OFF",
+                "ACTS_BUILD_ODD": "OFF",
+                "ACTS_BUILD_EXAMPLES_DD4HEP": "OFF",
+                "ACTS_BUILD_EXAMPLES_ROOT": "OFF",
+                "ACTS_BUILD_INTEGRATIONTESTS": "OFF",
+                "ACTS_BUILD_CORE_UNITTESTS": "OFF",
+                "ACTS_BUILD_EXAMPLES_UNITTESTS": "OFF"
+            }
+        },
+        {
             "name": "gitlab-ci-tensorrt",
             "displayName": "GitLab-CI Tensorrt",
             "generator": "Ninja",
