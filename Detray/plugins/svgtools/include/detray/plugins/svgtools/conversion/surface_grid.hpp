@@ -92,21 +92,7 @@ struct bin_association_getter {
 
           // Get all the bin entries and calculate the loc index
           std::vector<std::size_t> entries;
-
-          DETRAY_DEBUG_HOST("-> Bin association: ");
-          if constexpr (is_cyl) {
-            DETRAY_DEBUG_HOST("--> Bin idx ["
-                              << j << ", " << i
-                              << "], Bin center: " << bin_center);
-          } else {
-            DETRAY_DEBUG_HOST("--> Bin idx ["
-                              << i << ", " << j
-                              << "], Bin center: " << bin_center);
-          }
           for (const auto& sf_desc : grid.search(bin_center, search_window)) {
-            DETRAY_DEBUG_HOST(
-                "--> Surface: " << vol_desc.to_local_sf_index(sf_desc.index()));
-
             // actsvg expects the sensitive surfaces to be numbered
             // starting from zero (per volume)
             entries.push_back(vol_desc.to_local_sf_index(sf_desc.index()));

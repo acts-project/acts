@@ -43,38 +43,8 @@ variables:
     - rm -rf spack/.git spack/opt spack/var/spack/cache
     - find spack -type f -name "*.pyc" -delete || true
 
-build_gnn_cpu:
-  stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
-  tags:
-    - large
-
-  cache:
-   - !reference [.ccache_base, cache]
-   - !reference [.spack_cache, cache]
-
-  script:
-    - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
-    - git clone $CLONE_URL src
-    - cd src
-    - git checkout $HEAD_SHA
-    - CI/dependencies/setup.sh -c g++ -e .env
-    - source .env
-    - cd ..
-    - mkdir build
-    # Here we only do a minimal build without examples to save resources
-    - >
-      cmake -B build -S src
-      --preset=gitlab-ci-gnn
-      -DACTS_ENABLE_CUDA=OFF
-      -DACTS_GNN_ENABLE_MODULEMAP=OFF
-
-    - ccache -z
-    - cmake --build build -- -j8
-    - ccache -s
-
-  after_script:
-   - !reference [.spack_cleanup, after_script]
+# Only GPU jobs and their artifact producers remain here. build_gnn_cpu moved
+# to .github/workflows/builds.yml as `gnn_cpu`.
 
 build_gnn:
   stage: build
@@ -173,97 +143,8 @@ test_gnn_python:
   after_script:
    - !reference [.spack_cleanup, after_script]
 
-build_gnn_tensorrt:
-  stage: build
-  image: ghcr.io/acts-project/ubuntu2404_tensorrt:87
-
-  cache:
-    - !reference [.spack_cache, cache]
-    - !reference [.ccache_base, cache]
-
-  script:
-    - git clone $CLONE_URL src
-    - cd src
-    - git checkout $HEAD_SHA
-    - CI/dependencies/setup.sh -c g++ -e .env
-    - source .env
-    - cd ..
-    - mkdir build
-    - >
-      cmake -B build -S src --preset gitlab-ci-tensorrt
-    - ccache -z
-    - cmake --build build -- -j8
-    - ccache -s
-
-  after_script:
-   - !reference [.spack_cleanup, after_script]
-
-###############################
-### UBUNTU EXTRA JOB MATRIX ###
-###############################
-
-.linux_ubuntu_extra:
-  variables:
-    INSTALL_DIR: ${CI_PROJECT_DIR}/install
-
-  stage: build
-
-  cache:
-   - !reference [.ccache_base, cache]
-   - !reference [.spack_cache, cache]
-
-  script:
-    - git clone $CLONE_URL src
-
-    - cd src
-    - git checkout $HEAD_SHA
-    - CI/dependencies/setup.sh -c ${CXX} -e .env
-    - source .env
-
-    - cd ..
-    - mkdir build
-    - >
-      cmake -B build -S src
-      --preset=gitlab-ci
-      -DCMAKE_CXX_STANDARD=${CXXSTD}
-      -DCMAKE_CXX_COMPILER=${CXX}
-
-    - ccache -z
-    - cmake --build build -- -j8
-    - ccache -s
-
-    - ctest --test-dir build -j$(nproc)
-    - cmake --build build --target integrationtests
-
-    # Install main project
-    - cmake --install build > install.log
-
-    # Downstream configure
-    - >
-      cmake -B build-downstream -S src/Tests/DownstreamProject
-      -GNinja
-      -DCMAKE_BUILD_TYPE=Release
-      -DCMAKE_CXX_FLAGS=-Werror
-      -DCMAKE_CXX_STANDARD=${CXXSTD}
-      -DCMAKE_CXX_COMPILER=${CXX}
-      -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
-
-    # Downstream build
-    - cmake --build build-downstream
-
-    # Downstream tests
-    - ctest --test-dir build-downstream --output-on-failure
-
-  after_script:
-   - !reference [.spack_cleanup, after_script]
-
-linux_ubuntu_2404_clang22:
-  extends: .linux_ubuntu_extra
-  variables:
-    CXX: clang++-22
-    CXXSTD: 23
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang22:87
-
+# build_gnn_tensorrt moved to builds.yml as `gnn_tensorrt`.
+# linux_ubuntu_2404_clang22 dropped: builds.yml `linux_ubuntu_extra` duplicated it.
 
 # The LCG job matrix lives in .github/workflows/builds.yml (job `lcg`); it runs
 # on self-hosted runners carrying the `cvmfs` label.
@@ -280,7 +161,9 @@ detray_build_cuda:
       - build
   only:
     changes:
-      - Detray/*
+      # Not `Detray/*`: GitLab globs via fnmatch FNM_PATHNAME, where `*` does
+      # not cross a `/`, so that matched only the top level of Detray/.
+      - Detray/**/*
       - .gitlab-ci.yml
   script:
       - git clone $CLONE_URL src
@@ -303,7 +186,8 @@ detray_test_cuda:
     - detray_build_cuda
   only:
     changes:
-      - Detray/*
+      # Must stay identical to detray_build_cuda.
+      - Detray/**/*
       - .gitlab-ci.yml
   script:
     - git clone $CLONE_URL src
@@ -314,51 +198,7 @@ detray_test_cuda:
     - ctest --output-on-failure -R ".*cuda.*"
     - find bin -type f -name "*cuda" -not -name "*text*" -exec {} \;
 
-detray_build_sycl:
-  tags: [docker-gpu-nvidia]
-  stage: build
-  image: "ghcr.io/acts-project/ubuntu2404_oneapi:87"
-  cache:
-   - !reference [.ccache_base, cache]
-  artifacts:
-    paths:
-      - build
-  only:
-    changes:
-      - Detray/*
-      - .gitlab-ci.yml
-  script:
-      - git clone $CLONE_URL src
-      - git -C src checkout $HEAD_SHA
-      - source src/Detray/CI/ci_setup.sh SYCL
-      - >
-        cmake --preset detray-gitlab-sycl-ci -S src/Detray -B build
-        -DCMAKE_BUILD_TYPE=Release
-      - ccache -z
-      - cmake --build build -- -j 2
-      - ccache -s
-
-detray_test_sycl:
-  stage: test
-  tags: [docker-gpu-nvidia]
-  image: "ghcr.io/acts-project/ubuntu2404_oneapi:87"
-  needs:
-    - detray_build_sycl
-  variables:
-    ONEAPI_DEVICE_SELECTOR: "*:cpu"
-  only:
-    changes:
-      - Detray/*
-      - .gitlab-ci.yml
-  script:
-    - git clone $CLONE_URL src
-    - git -C src checkout $HEAD_SHA
-    - source src/Detray/CI/ci_setup.sh SYCL
-    - cd build
-    - nvidia-smi
-    - sycl-ls
-    - ctest --output-on-failure -R ".*sycl.*"
-    - find bin -type f -name "*sycl" -not -name "*text*" -exec {} \;
+# detray SYCL build/test dropped along with all other SYCL coverage.
 
 # traccc GitLab CI workflows
 .traccc_base_template: &traccc_base_job
@@ -380,7 +220,7 @@ detray_test_sycl:
     paths:
       - build
   script:
-    - SYCLFLAGS="${TRACCC_SYCL_FLAGS}" CXXFLAGS="${TRACCC_CXX_FLAGS}"
+    - CXXFLAGS="${TRACCC_CXX_FLAGS}"
       cmake -G Ninja --preset ${TRACCC_BUILD_PRESET} -DTRACCC_SETUP_VECMEM=ON -DTRACCC_SETUP_COVFIE=ON -DACTS_SETUP_VECMEM=OFF -DACTS_SETUP_COVFIE=OFF -DDETRAY_SET_LOGGING=NONE -DCMAKE_BUILD_TYPE=Release -DTRACCC_BUILD_EXAMPLES=FALSE ${TRACCC_CMAKE_ARGS}
       -S src/Traccc -B build
     - cmake --build build --parallel 2
@@ -391,14 +231,6 @@ detray_test_sycl:
   stage: test
   script:
     - nvidia-smi
-    - ./src/Traccc/data/traccc_data_get_files.sh
-    - ctest --output-on-failure --test-dir build/ -R "${TRACCC_BUILD_TYPE}"
-
-.traccc_intel_test_template: &traccc_intel_test_job
-  <<: *traccc_base_job
-  tags: [docker-gpu-nvidia]
-  stage: test
-  script:
     - ./src/Traccc/data/traccc_data_get_files.sh
     - ctest --output-on-failure --test-dir build/ -R "${TRACCC_BUILD_TYPE}"
 
@@ -418,20 +250,4 @@ traccc_test_cuda:
   dependencies:
     - traccc_build_cuda
 
-traccc_build_sycl_intel:
-  <<: *traccc_build_job
-  image: ghcr.io/acts-project/ubuntu2404_oneapi:87
-  variables:
-    TRACCC_BUILD_TYPE: SYCL
-    TRACCC_BUILD_PRESET: sycl-fp32
-    TRACCC_SYCL_FLAGS: -fsycl -fsycl-targets=spir64
-    TRACCC_CMAKE_ARGS: -DTRACCC_BUILD_CUDA=FALSE -DACTS_ENABLE_CUDA=OFF -DVECMEM_BUILD_SYCL_LIBRARY=ON
-
-traccc_test_sycl_intel:
-  <<: *traccc_intel_test_job
-  image: ghcr.io/acts-project/ubuntu2404_oneapi:87
-  variables:
-    TRACCC_BUILD_TYPE: SYCL
-    ONEAPI_DEVICE_SELECTOR: opencl:*
-  dependencies:
-    - traccc_build_sycl_intel
+# traccc SYCL Intel build/test dropped along with all other SYCL coverage.
