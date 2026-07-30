@@ -34,12 +34,6 @@ jobs:
         id: floor
         run: echo "version=$(CI/supported_python_versions.py --floor)" >> $GITHUB_OUTPUT
 
-      # Lowest Python version the lockfiles must install on, taken from
-      # `requires-python` in pyproject.toml so it is defined in exactly one place
-      - name: Determine supported Python floor
-        id: floor
-        run: echo "version=$(CI/supported_python_versions.py --floor)" >> $GITHUB_OUTPUT
-
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
