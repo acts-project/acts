@@ -26,7 +26,7 @@ BinnedGroup<grid_t>::BinnedGroup(
       m_bins(std::move(navigation)) {
   /// If navigation is not defined for all axes, then we default that to a
   /// std::iota from 1ul
-  std::array<std::size_t, DIM> numLocBins = m_grid.numLocalBins();
+  std::array<std::size_t, DIM> numLocBins = m_grid.multiAxis().getNBins();
   for (std::size_t i(0ul); i < DIM; ++i) {
     if (!m_bins[i].empty()) {
       continue;
@@ -57,7 +57,7 @@ BinnedGroup<grid_t>::BinnedGroup(
 
   /// If navigation is not defined for all axes, then we default that to a
   /// std::iota from 1ul
-  std::array<std::size_t, DIM> numLocBins = m_grid.numLocalBins();
+  std::array<std::size_t, DIM> numLocBins = m_grid.multiAxis().getNBins();
   for (std::size_t i(0ul); i < DIM; ++i) {
     if (!m_bins[i].empty()) {
       continue;
