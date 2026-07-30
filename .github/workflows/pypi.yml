@@ -10,11 +10,6 @@ on:
         description: 'Acts ref to build (e.g. v39.3.0) — leave empty to trigger a nightly build'
         required: false
         type: string
-  # TEMPORARY (this branch only, revert before merge): run as a PR check to
-  # validate the narrowed CI/repair_wheel_macos.sh against a real cibuildwheel
-  # build. This only affects PR #5742's own checks — the trigger only exists on
-  # this branch's commits, not on main, so it can't fire for any other PR.
-  pull_request:
 
 env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
@@ -42,10 +37,7 @@ jobs:
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # TEMPORARY: `|| github.event.pull_request.head.sha` makes the
-          # pull_request trigger above build this PR's own commit instead of
-          # main; revert alongside the trigger.
-          ref: ${{ github.event.inputs.acts_ref || github.event.pull_request.head.sha || 'main' }}
+          ref: ${{ github.event.inputs.acts_ref || 'main' }}
           path: acts
           persist-credentials: false
 
@@ -67,9 +59,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
-         # TEMPORARY (this branch only): macOS-only to validate
-         # CI/repair_wheel_macos.sh without spending time on the unaffected
-         # Linux build. Restore ubuntu-latest before merge.
+         - ubuntu-latest
          - macos-26
 
     steps:
@@ -96,14 +86,7 @@ jobs:
 
       - name: Determine CIBW_BUILD
         id: cibw
-        # TEMPORARY: single Python version on pull_request to keep this PR's
-        # validation build fast; full matrix otherwise. Revert before merge.
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "build=cp311-*" >> "$GITHUB_OUTPUT"
-          else
-            echo "build=$(acts/CI/supported_python_versions.py --cibw)" >> "$GITHUB_OUTPUT"
-          fi
+        run: echo "build=$(acts/CI/supported_python_versions.py --cibw)" >> "$GITHUB_OUTPUT"
 
       - name: Build wheels
         uses: ./acts/.github/actions/cibuildwheel_wrapper
@@ -136,10 +119,7 @@ jobs:
 
   upload_pypi_test:
     needs: build_wheels
-    # TEMPORARY: explicitly excludes pull_request (added above) so the
-    # diagnostic PR-check build never attempts a test-PyPI publish. Revert
-    # alongside the pull_request trigger.
-    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.acts_ref == '')
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
     environment:
       name: testpypi
       url: https://test.pypi.org/project/pyacts
