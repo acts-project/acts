@@ -124,7 +124,6 @@
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_CXX_FLAGS": "-Werror --coverage",
                 "CMAKE_CXX_FLAGS_DEBUG": "-O0 -g0",
-                "CMAKE_C_FLAGS_DEBUG": "-O0 -g0",
                 "ACTS_BUILD_ODD": "OFF",
                 "ACTS_BUILD_PYTHON_BINDINGS": "OFF",
                 "ACTS_BUILD_EXAMPLES": "OFF",
