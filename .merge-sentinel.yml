@@ -32,7 +32,10 @@ rules:
      - "main"
      - "develop/*"
     paths:
+     # Both spellings: the glob engine here is undocumented, so which one is
+     # recursive cannot be assumed.
      - "Detray/*"
+     - "Detray/**/*"
      - ".github/workflows/detray.yml"
     required_pattern:
      - "Detray / *"

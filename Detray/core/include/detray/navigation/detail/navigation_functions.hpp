@@ -185,10 +185,19 @@ DETRAY_HOST_DEVICE DETRAY_INLINE constexpr void update_status(
 /// @param cfg the navigation configuration
 /// @param ctx the geometry context
 template <typename track_t, typename navigation_state_t, typename context_t>
-DETRAY_HOST_DEVICE DETRAY_INLINE constexpr void local_navigation(
-    const track_t &track, navigation_state_t &navigation,
-    const navigation::config &cfg, const context_t &ctx,
-    const bool resolve_overstepping = true) {
+DETRAY_HOST_DEVICE
+// Not inlining this function gives NVIDIA GPUs more opportunities to
+// reconverge threads when this (very large) function is called.
+#if defined(__CUDACC__)
+    DETRAY_NO_INLINE
+#else
+    DETRAY_INLINE
+#endif
+    constexpr void local_navigation(const track_t &track,
+                                    navigation_state_t &navigation,
+                                    const navigation::config &cfg,
+                                    const context_t &ctx,
+                                    const bool resolve_overstepping = true) {
   DETRAY_VERBOSE_HOST_DEVICE("-> (Re-)initialize detector volume (idx: %d)",
                              navigation.volume());
 
