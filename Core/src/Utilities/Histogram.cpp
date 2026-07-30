@@ -8,7 +8,9 @@
 
 #include "Acts/Utilities/Histogram.hpp"
 
+#include <array>
 #include <cassert>
+#include <string>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -46,6 +48,41 @@ Histogram1 projectionY(const Histogram2& hist2d) {
 
   return wrapProjection(projectedHist, hist2d.name() + "_projY",
                         hist2d.title() + " projection Y");
+}
+
+Histogram1 sliceLastAxis(const Histogram2& hist2d, int xBin) {
+  const auto& lastAxis = hist2d.histogram().axis(1);
+  assert(xBin >= 0 && xBin < hist2d.histogram().axis(0).size() &&
+         "x bin index out of range");
+
+  std::array<AxisVariant, 1> axes = {lastAxis};
+  Histogram1 slice(hist2d.name() + "_slice_" + std::to_string(xBin),
+                   hist2d.title(), axes);
+
+  for (int j = 0; j < lastAxis.size(); ++j) {
+    slice.setBinContent({j}, hist2d.binContent({xBin, j}));
+  }
+
+  return slice;
+}
+
+Histogram1 sliceLastAxis(const Histogram3& hist3d, int xBin, int yBin) {
+  const auto& lastAxis = hist3d.histogram().axis(2);
+  assert(xBin >= 0 && xBin < hist3d.histogram().axis(0).size() &&
+         "x bin index out of range");
+  assert(yBin >= 0 && yBin < hist3d.histogram().axis(1).size() &&
+         "y bin index out of range");
+
+  std::array<AxisVariant, 1> axes = {lastAxis};
+  Histogram1 slice(hist3d.name() + "_slice_" + std::to_string(xBin) + "_" +
+                       std::to_string(yBin),
+                   hist3d.title(), axes);
+
+  for (int k = 0; k < lastAxis.size(); ++k) {
+    slice.setBinContent({k}, hist3d.binContent({xBin, yBin, k}));
+  }
+
+  return slice;
 }
 
 std::vector<double> extractBinEdges(const AxisVariant& axis) {

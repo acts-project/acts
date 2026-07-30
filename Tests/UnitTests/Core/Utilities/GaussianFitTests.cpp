@@ -11,7 +11,9 @@
 #include "Acts/Utilities/GaussianFit.hpp"
 #include "Acts/Utilities/Histogram.hpp"
 
+#include <array>
 #include <cmath>
+#include <functional>
 #include <random>
 #include <vector>
 
@@ -377,6 +379,185 @@ BOOST_AUTO_TEST_CASE(VariableBinning_IsSupported) {
   BOOST_REQUIRE(result.has_value());
   BOOST_CHECK(std::isfinite(result->mean));
   BOOST_CHECK_GT(result->sigma, 0.0);
+}
+
+namespace {
+
+/// Residual-vs-eta style 2D histogram whose width grows with eta.
+/// Bin i of the eta axis gets `entries` samples from N(0, sigmaOf(i)).
+Histogram2 residualVsEta(int nEtaBins, std::size_t entries,
+                         const std::function<double(int)>& sigmaOf,
+                         std::uint32_t seed) {
+  auto etaAxis =
+      AxisVariant(BoostRegularAxis(nEtaBins, 0.0, nEtaBins * 1.0, "eta"));
+  auto resAxis = AxisVariant(BoostRegularAxis(80, -10.0, 10.0, "res"));
+  Histogram2 hist("res_vs_eta", "Residual vs Eta", {etaAxis, resAxis});
+
+  std::mt19937 generator(seed);
+  for (int i = 0; i < nEtaBins; ++i) {
+    const double etaValue = i + 0.5;
+    std::normal_distribution<double> distribution(0.0, sigmaOf(i));
+    for (std::size_t n = 0; n < entries; ++n) {
+      hist.fill({etaValue, distribution(generator)});
+    }
+  }
+
+  return hist;
+}
+
+}  // namespace
+
+BOOST_AUTO_TEST_CASE(Profiles2D_RecoverPerBinWidth) {
+  const int nEtaBins = 5;
+  const auto sigmaOf = [](int i) { return 0.5 + 0.25 * i; };
+  const Histogram2 hist = residualVsEta(nEtaBins, 20000, sigmaOf, 5555);
+
+  const auto profiles =
+      extractMeanWidthProfiles(hist, "resmean_d0_vs_eta", "reswidth_d0_vs_eta");
+
+  BOOST_CHECK_EQUAL(profiles.mean.name(), "resmean_d0_vs_eta");
+  BOOST_CHECK_EQUAL(profiles.width.name(), "reswidth_d0_vs_eta");
+  BOOST_CHECK_EQUAL(profiles.mean.title(), "Residual vs Eta mean");
+  BOOST_CHECK_EQUAL(profiles.width.title(), "Residual vs Eta width");
+  BOOST_CHECK_EQUAL(profiles.fitFailureFraction, 0.0);
+
+  // The output axis must be the input's first axis
+  BOOST_CHECK_EQUAL(profiles.mean.histogram().axis(0).size(), nEtaBins);
+  BOOST_CHECK_EQUAL(profiles.mean.histogram().axis(0).metadata(), "eta");
+
+  for (int i = 0; i < nEtaBins; ++i) {
+    BOOST_CHECK_LT(std::abs(profiles.mean.value({i})),
+                   4 * profiles.mean.error({i}));
+    BOOST_CHECK_LT(std::abs(profiles.width.value({i}) - sigmaOf(i)),
+                   4 * profiles.width.error({i}));
+    BOOST_CHECK_GT(profiles.mean.error({i}), 0.0);
+    BOOST_CHECK_GT(profiles.width.error({i}), 0.0);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(Profiles2D_SkipsSparseSlicesWithoutCountingFailures) {
+  auto etaAxis = AxisVariant(BoostRegularAxis(4, 0.0, 4.0, "eta"));
+  auto resAxis = AxisVariant(BoostRegularAxis(40, -5.0, 5.0, "res"));
+  Histogram2 hist("res_vs_eta", "Residual vs Eta", {etaAxis, resAxis});
+
+  // Bin 0 well populated, bin 1 has three entries, bins 2 and 3 empty
+  std::mt19937 generator(1717);
+  std::normal_distribution<double> distribution(0.0, 1.0);
+  for (int n = 0; n < 5000; ++n) {
+    hist.fill({0.5, distribution(generator)});
+  }
+  hist.fill({1.5, -0.2});
+  hist.fill({1.5, 0.0});
+  hist.fill({1.5, 0.3});
+
+  const auto profiles = extractMeanWidthProfiles(hist, "mean", "width",
+                                                 /*minEntriesForFit=*/10);
+
+  // Only bin 0 clears the threshold and is filled
+  BOOST_CHECK_GT(profiles.width.value({0}), 0.0);
+  for (int i = 1; i < 4; ++i) {
+    BOOST_CHECK_EQUAL(profiles.mean.value({i}), 0.0);
+    BOOST_CHECK_EQUAL(profiles.width.value({i}), 0.0);
+  }
+
+  // Slices below the entry threshold are skipped, not failed
+  BOOST_CHECK_EQUAL(profiles.fitFailureFraction, 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(Profiles2D_CountsGenuineFailures) {
+  auto etaAxis = AxisVariant(BoostRegularAxis(4, 0.0, 4.0, "eta"));
+  auto resAxis = AxisVariant(BoostRegularAxis(40, -5.0, 5.0, "res"));
+  Histogram2 hist("res_vs_eta", "Residual vs Eta", {etaAxis, resAxis});
+
+  // Two slices with plenty of entries but all of them in a single bin, so the
+  // fit is attempted and must fail
+  hist.setBinContent({0, 20}, 500.0);
+  hist.setBinContent({1, 20}, 500.0);
+
+  const auto profiles = extractMeanWidthProfiles(hist, "mean", "width",
+                                                 /*minEntriesForFit=*/10);
+
+  // Two failures out of four bins on the first axis
+  BOOST_CHECK_CLOSE(profiles.fitFailureFraction, 0.5, 1e-10);
+  BOOST_CHECK_EQUAL(profiles.mean.value({0}), 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(Profiles2D_VariableBinning) {
+  std::vector<double> etaEdges = {0.0, 0.5, 1.5, 3.0};
+  auto etaAxis = AxisVariant(BoostVariableAxis(etaEdges, "eta"));
+  auto resAxis = AxisVariant(BoostRegularAxis(60, -6.0, 6.0, "res"));
+  Histogram2 hist("res_vs_eta", "Residual vs Eta", {etaAxis, resAxis});
+
+  std::mt19937 generator(2727);
+  std::normal_distribution<double> distribution(0.25, 0.8);
+  const std::array<double, 3> etaValues = {0.25, 1.0, 2.0};
+  for (const double etaValue : etaValues) {
+    for (int n = 0; n < 10000; ++n) {
+      hist.fill({etaValue, distribution(generator)});
+    }
+  }
+
+  const auto profiles = extractMeanWidthProfiles(hist, "mean", "width");
+
+  BOOST_CHECK(extractBinEdges(profiles.mean.histogram().axis(0)) == etaEdges);
+  BOOST_CHECK_EQUAL(profiles.fitFailureFraction, 0.0);
+  for (int i = 0; i < 3; ++i) {
+    BOOST_CHECK_CLOSE(profiles.mean.value({i}), 0.25, 10.0);
+    BOOST_CHECK_CLOSE(profiles.width.value({i}), 0.8, 10.0);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(Profiles3D_RecoverPerBinWidth) {
+  const int nEta = 2;
+  const int nPt = 3;
+  auto etaAxis = AxisVariant(BoostRegularAxis(nEta, 0.0, 2.0, "eta"));
+  auto ptAxis = AxisVariant(BoostRegularAxis(nPt, 0.0, 3.0, "pt"));
+  auto resAxis = AxisVariant(BoostRegularAxis(80, -10.0, 10.0, "res"));
+  Histogram3 hist("res_vs_eta_pt", "Residual", {etaAxis, ptAxis, resAxis});
+
+  const auto sigmaOf = [](int i, int j) { return 0.5 + 0.3 * i + 0.2 * j; };
+
+  std::mt19937 generator(3939);
+  for (int i = 0; i < nEta; ++i) {
+    for (int j = 0; j < nPt; ++j) {
+      std::normal_distribution<double> distribution(0.0, sigmaOf(i, j));
+      for (int n = 0; n < 20000; ++n) {
+        hist.fill({i + 0.5, j + 0.5, distribution(generator)});
+      }
+    }
+  }
+
+  const auto profiles = extractMeanWidthProfiles(hist, "mean", "width");
+
+  // The output keeps the first two axes
+  BOOST_CHECK_EQUAL(profiles.width.histogram().axis(0).size(), nEta);
+  BOOST_CHECK_EQUAL(profiles.width.histogram().axis(1).size(), nPt);
+  BOOST_CHECK_EQUAL(profiles.width.histogram().axis(0).metadata(), "eta");
+  BOOST_CHECK_EQUAL(profiles.width.histogram().axis(1).metadata(), "pt");
+  BOOST_CHECK_EQUAL(profiles.fitFailureFraction, 0.0);
+
+  for (int i = 0; i < nEta; ++i) {
+    for (int j = 0; j < nPt; ++j) {
+      BOOST_CHECK_LT(std::abs(profiles.width.value({i, j}) - sigmaOf(i, j)),
+                     4 * profiles.width.error({i, j}));
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(Profiles3D_FailureFractionUsesBothAxes) {
+  auto etaAxis = AxisVariant(BoostRegularAxis(2, 0.0, 2.0, "eta"));
+  auto ptAxis = AxisVariant(BoostRegularAxis(2, 0.0, 2.0, "pt"));
+  auto resAxis = AxisVariant(BoostRegularAxis(40, -5.0, 5.0, "res"));
+  Histogram3 hist("res", "Residual", {etaAxis, ptAxis, resAxis});
+
+  // One of the four (eta, pt) cells is populated but unfittable
+  hist.setBinContent({0, 0, 20}, 500.0);
+
+  const auto profiles = extractMeanWidthProfiles(hist, "mean", "width",
+                                                 /*minEntriesForFit=*/10);
+
+  // One failure out of 2 x 2 cells
+  BOOST_CHECK_CLOSE(profiles.fitFailureFraction, 0.25, 1e-10);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -289,4 +289,145 @@ BOOST_AUTO_TEST_CASE(Histogram2D_Projection_IncludesFlowBins) {
   BOOST_CHECK_EQUAL(projY.binContent({1}), 0.0);
 }
 
+BOOST_AUTO_TEST_CASE(SliceLastAxis_2D) {
+  // Asymmetric binning so swapping the axes cannot pass
+  std::vector<double> xEdges = {0.0, 1.0, 3.0, 5.0};
+  std::vector<double> yEdges = {-2.0, -1.0, 0.0, 1.0, 2.0};
+  auto xAxis = AxisVariant(BoostVariableAxis(xEdges, "eta"));
+  auto yAxis = AxisVariant(BoostVariableAxis(yEdges, "res"));
+  Histogram2 hist("res_vs_eta", "Residual vs Eta", {xAxis, yAxis});
+
+  const std::array<std::array<double, 4>, 3> pattern = {
+      {{1, 2, 0, 3}, {0, 4, 5, 0}, {6, 0, 0, 7}}};
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      hist.setBinContent({i, j}, pattern[i][j]);
+    }
+  }
+
+  for (int i = 0; i < 3; ++i) {
+    const Histogram1 slice = sliceLastAxis(hist, i);
+
+    // The slice spans the last axis and inherits its binning and metadata
+    BOOST_CHECK_EQUAL(slice.histogram().axis(0).size(), 4);
+    BOOST_CHECK_EQUAL(slice.histogram().axis(0).metadata(), "res");
+    BOOST_CHECK(extractBinEdges(slice.histogram().axis(0)) == yEdges);
+
+    for (int j = 0; j < 4; ++j) {
+      BOOST_CHECK_CLOSE(slice.binContent({j}), pattern[i][j], 1e-10);
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(SliceLastAxis_2D_IsNotAProjection) {
+  // A slice must see one column only. Guard against an implementation that
+  // accidentally sums over the sliced axis, which is what a naive
+  // reduce()+project() does because slice() defaults to folding out-of-range
+  // content into the flow bins.
+  auto xAxis = AxisVariant(BoostRegularAxis(3, 0.0, 3.0, "x"));
+  auto yAxis = AxisVariant(BoostRegularAxis(2, 0.0, 2.0, "y"));
+  Histogram2 hist("noproj", "No projection", {xAxis, yAxis});
+
+  hist.setBinContent({0, 0}, 1.0);
+  hist.setBinContent({1, 0}, 10.0);
+  hist.setBinContent({2, 1}, 100.0);
+  // Content outside the x range must not leak in either
+  hist.fill({-5.0, 0.5});
+  hist.fill({99.0, 0.5});
+
+  const Histogram1 slice0 = sliceLastAxis(hist, 0);
+  BOOST_CHECK_CLOSE(slice0.binContent({0}), 1.0, 1e-10);
+  BOOST_CHECK_EQUAL(slice0.binContent({1}), 0.0);
+
+  const Histogram1 slice2 = sliceLastAxis(hist, 2);
+  BOOST_CHECK_EQUAL(slice2.binContent({0}), 0.0);
+  BOOST_CHECK_CLOSE(slice2.binContent({1}), 100.0, 1e-10);
+}
+
+BOOST_AUTO_TEST_CASE(SliceLastAxis_3D) {
+  auto xAxis = AxisVariant(BoostRegularAxis(2, 0.0, 2.0, "eta"));
+  auto yAxis = AxisVariant(BoostRegularAxis(3, 0.0, 3.0, "pt"));
+  auto zAxis = AxisVariant(BoostRegularAxis(4, -2.0, 2.0, "res"));
+  Histogram3 hist("res_vs_eta_pt", "Residual", {xAxis, yAxis, zAxis});
+
+  // Distinct value per (i, j, k) so any index mix-up shows up
+  const auto encode = [](int i, int j, int k) {
+    return 100.0 * i + 10.0 * j + k + 1;
+  };
+  for (int i = 0; i < 2; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      for (int k = 0; k < 4; ++k) {
+        hist.setBinContent({i, j, k}, encode(i, j, k));
+      }
+    }
+  }
+
+  for (int i = 0; i < 2; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      const Histogram1 slice = sliceLastAxis(hist, i, j);
+      BOOST_CHECK_EQUAL(slice.histogram().axis(0).size(), 4);
+      BOOST_CHECK_EQUAL(slice.histogram().axis(0).metadata(), "res");
+      for (int k = 0; k < 4; ++k) {
+        BOOST_CHECK_CLOSE(slice.binContent({k}), encode(i, j, k), 1e-10);
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(ValueHistogram1D_SetAndGet) {
+  auto axis = AxisVariant(BoostRegularAxis(5, 0.0, 5.0, "eta"));
+  ValueHistogram1 hist("mean", "Mean", {axis});
+
+  BOOST_CHECK_EQUAL(hist.name(), "mean");
+  BOOST_CHECK_EQUAL(hist.title(), "Mean");
+  BOOST_CHECK_EQUAL(ValueHistogram1::rank(), 1u);
+
+  // Untouched bins read back as zero value and zero error
+  BOOST_CHECK_EQUAL(hist.value({0}), 0.0);
+  BOOST_CHECK_EQUAL(hist.error({0}), 0.0);
+
+  hist.setBin({2}, -1.25, 0.5);
+  BOOST_CHECK_CLOSE(hist.value({2}), -1.25, 1e-10);
+  BOOST_CHECK_CLOSE(hist.error({2}), 0.5, 1e-10);
+
+  // Setting overwrites rather than accumulates
+  hist.setBin({2}, 3.0, 0.25);
+  BOOST_CHECK_CLOSE(hist.value({2}), 3.0, 1e-10);
+  BOOST_CHECK_CLOSE(hist.error({2}), 0.25, 1e-10);
+
+  // Neighbours stay untouched
+  BOOST_CHECK_EQUAL(hist.value({1}), 0.0);
+  BOOST_CHECK_EQUAL(hist.error({3}), 0.0);
+
+  // The axis is carried through for converters
+  BOOST_CHECK_EQUAL(hist.histogram().axis(0).size(), 5);
+  BOOST_CHECK_EQUAL(hist.histogram().axis(0).metadata(), "eta");
+}
+
+BOOST_AUTO_TEST_CASE(ValueHistogram2D_SetAndGet) {
+  std::vector<double> xEdges = {0.0, 1.0, 3.0};
+  auto xAxis = AxisVariant(BoostVariableAxis(xEdges, "eta"));
+  auto yAxis = AxisVariant(BoostRegularAxis(3, 0.0, 3.0, "pt"));
+  ValueHistogram2 hist("width", "Width", {xAxis, yAxis});
+
+  BOOST_CHECK_EQUAL(ValueHistogram2::rank(), 2u);
+
+  hist.setBin({1, 2}, 0.75, 0.1);
+  BOOST_CHECK_CLOSE(hist.value({1, 2}), 0.75, 1e-10);
+  BOOST_CHECK_CLOSE(hist.error({1, 2}), 0.1, 1e-10);
+  BOOST_CHECK_EQUAL(hist.value({0, 0}), 0.0);
+
+  BOOST_CHECK(extractBinEdges(hist.histogram().axis(0)) == xEdges);
+  BOOST_CHECK_EQUAL(hist.histogram().axis(1).metadata(), "pt");
+}
+
+BOOST_AUTO_TEST_CASE(ValueHistogram_ZeroErrorIsAllowed) {
+  auto axis = AxisVariant(BoostRegularAxis(2, 0.0, 2.0, "x"));
+  ValueHistogram1 hist("zero", "Zero", {axis});
+
+  hist.setBin({0}, 5.0, 0.0);
+  BOOST_CHECK_CLOSE(hist.value({0}), 5.0, 1e-10);
+  BOOST_CHECK_EQUAL(hist.error({0}), 0.0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

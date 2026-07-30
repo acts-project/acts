@@ -392,4 +392,101 @@ std::optional<GaussianFitResult> iterativeGaussianFit(const Histogram1& hist,
   return result;
 }
 
+namespace {
+
+/// Total content of a 1D histogram's in-range bins
+///
+/// Stands in for ROOT's `TH1::GetEntries()` on a projection, which likewise
+/// amounts to the summed bin contents.
+double sliceEntries(const Histogram1& slice) {
+  const auto& axis = slice.histogram().axis(0);
+
+  double entries = 0;
+  for (int i = 0; i < axis.size(); ++i) {
+    entries += slice.binContent({i});
+  }
+
+  return entries;
+}
+
+}  // namespace
+
+MeanWidthProfiles1 extractMeanWidthProfiles(const Histogram2& hist2d,
+                                            const std::string& meanName,
+                                            const std::string& widthName,
+                                            int minEntriesForFit,
+                                            double sigmaRange, int iterations,
+                                            const Logger& logger) {
+  const auto& xAxis = hist2d.histogram().axis(0);
+  const std::array<AxisVariant, 1> axes = {xAxis};
+
+  MeanWidthProfiles1 profiles{
+      ValueHistogram1(meanName, hist2d.title() + " mean", axes),
+      ValueHistogram1(widthName, hist2d.title() + " width", axes), 0.0};
+
+  int fitFailures = 0;
+  for (int i = 0; i < xAxis.size(); ++i) {
+    const Histogram1 slice = sliceLastAxis(hist2d, i);
+    if (sliceEntries(slice) < minEntriesForFit) {
+      continue;
+    }
+
+    const std::optional<GaussianFitResult> fit =
+        iterativeGaussianFit(slice, sigmaRange, iterations, logger);
+    if (!fit.has_value()) {
+      ++fitFailures;
+      continue;
+    }
+
+    profiles.mean.setBin({i}, fit->mean, fit->meanError);
+    profiles.width.setBin({i}, fit->sigma, fit->sigmaError);
+  }
+
+  profiles.fitFailureFraction =
+      (xAxis.size() > 0) ? static_cast<double>(fitFailures) / xAxis.size() : 0;
+
+  return profiles;
+}
+
+MeanWidthProfiles2 extractMeanWidthProfiles(const Histogram3& hist3d,
+                                            const std::string& meanName,
+                                            const std::string& widthName,
+                                            int minEntriesForFit,
+                                            double sigmaRange, int iterations,
+                                            const Logger& logger) {
+  const auto& xAxis = hist3d.histogram().axis(0);
+  const auto& yAxis = hist3d.histogram().axis(1);
+  const std::array<AxisVariant, 2> axes = {xAxis, yAxis};
+
+  MeanWidthProfiles2 profiles{
+      ValueHistogram2(meanName, hist3d.title() + " mean", axes),
+      ValueHistogram2(widthName, hist3d.title() + " width", axes), 0.0};
+
+  int fitFailures = 0;
+  for (int i = 0; i < xAxis.size(); ++i) {
+    for (int j = 0; j < yAxis.size(); ++j) {
+      const Histogram1 slice = sliceLastAxis(hist3d, i, j);
+      if (sliceEntries(slice) < minEntriesForFit) {
+        continue;
+      }
+
+      const std::optional<GaussianFitResult> fit =
+          iterativeGaussianFit(slice, sigmaRange, iterations, logger);
+      if (!fit.has_value()) {
+        ++fitFailures;
+        continue;
+      }
+
+      profiles.mean.setBin({i, j}, fit->mean, fit->meanError);
+      profiles.width.setBin({i, j}, fit->sigma, fit->sigmaError);
+    }
+  }
+
+  const int totalBins = xAxis.size() * yAxis.size();
+  profiles.fitFailureFraction =
+      (totalBins > 0) ? static_cast<double>(fitFailures) / totalBins : 0;
+
+  return profiles;
+}
+
 }  // namespace Acts::Experimental

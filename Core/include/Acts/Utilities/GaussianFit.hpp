@@ -12,6 +12,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <optional>
+#include <string>
 
 namespace Acts::Experimental {
 
@@ -78,6 +79,69 @@ std::optional<GaussianFitResult> gaussianFit(const Histogram1& hist,
 /// @return The fit result, or `std::nullopt` if any iteration failed
 std::optional<GaussianFitResult> iterativeGaussianFit(
     const Histogram1& hist, double sigmaRange, int iterations,
+    const Logger& logger = getDummyLogger());
+
+/// @brief Mean and width profiles extracted from a 2D histogram
+struct MeanWidthProfiles1 {
+  /// Fitted mean per bin of the first axis
+  ValueHistogram1 mean;
+  /// Fitted width (sigma) per bin of the first axis
+  ValueHistogram1 width;
+  /// Fraction of bins where a fit was attempted but failed
+  double fitFailureFraction{};
+};
+
+/// @brief Mean and width profiles extracted from a 3D histogram
+struct MeanWidthProfiles2 {
+  /// Fitted mean per bin of the first two axes
+  ValueHistogram2 mean;
+  /// Fitted width (sigma) per bin of the first two axes
+  ValueHistogram2 width;
+  /// Fraction of bins where a fit was attempted but failed
+  double fitFailureFraction{};
+};
+
+/// Fit a Gaussian to every slice of a 2D histogram along its last axis
+///
+/// For each bin of the first axis, the distribution along the second axis is
+/// fitted with @c iterativeGaussianFit and the resulting mean and sigma are
+/// stored, with their uncertainties, in the corresponding output bin.
+///
+/// @param hist2d The 2D histogram to profile
+/// @param meanName Name for the mean output histogram
+/// @param widthName Name for the width output histogram
+/// @param minEntriesForFit Slices with fewer entries are skipped
+/// @param sigmaRange Half-width of the iterative refit range, in fitted sigmas
+/// @param iterations Number of fits per slice, including the unrestricted one
+/// @param logger Logger for diagnostics on failed fits
+/// @return The mean and width profiles and the fit failure fraction
+/// @note Skipped slices leave their output bins empty and do not count towards
+///       @c fitFailureFraction, which reports only genuine fit failures.
+MeanWidthProfiles1 extractMeanWidthProfiles(
+    const Histogram2& hist2d, const std::string& meanName,
+    const std::string& widthName, int minEntriesForFit = 5,
+    double sigmaRange = 3.0, int iterations = 3,
+    const Logger& logger = getDummyLogger());
+
+/// Fit a Gaussian to every slice of a 3D histogram along its last axis
+///
+/// For each bin of the first two axes, the distribution along the third axis is
+/// fitted with @c iterativeGaussianFit.
+///
+/// @param hist3d The 3D histogram to profile
+/// @param meanName Name for the mean output histogram
+/// @param widthName Name for the width output histogram
+/// @param minEntriesForFit Slices with fewer entries are skipped
+/// @param sigmaRange Half-width of the iterative refit range, in fitted sigmas
+/// @param iterations Number of fits per slice, including the unrestricted one
+/// @param logger Logger for diagnostics on failed fits
+/// @return The mean and width profiles and the fit failure fraction
+/// @note See @c extractMeanWidthProfiles(const Histogram2&, ...) for how
+///       skipped slices are accounted for.
+MeanWidthProfiles2 extractMeanWidthProfiles(
+    const Histogram3& hist3d, const std::string& meanName,
+    const std::string& widthName, int minEntriesForFit = 5,
+    double sigmaRange = 3.0, int iterations = 3,
     const Logger& logger = getDummyLogger());
 
 }  // namespace Acts::Experimental

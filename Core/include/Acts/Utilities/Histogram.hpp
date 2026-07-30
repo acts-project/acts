@@ -44,6 +44,15 @@ using BoostHist = decltype(boost::histogram::make_histogram(
 using BoostProfileHist = decltype(boost::histogram::make_profile(
     std::declval<std::vector<AxisVariant>>()));
 
+/// @brief Underlying Boost type for ValueHistogram
+///
+/// Uses a weighted-sum accumulator so that every bin carries a value and a
+/// variance, i.e. a content and an error.
+using BoostWeightedHist = decltype(boost::histogram::make_histogram_with(
+    boost::histogram::dense_storage<
+        boost::histogram::accumulators::weighted_sum<double>>(),
+    std::declval<std::vector<AxisVariant>>()));
+
 /// @brief Multi-dimensional histogram wrapper using boost::histogram for data collection
 ///
 /// This class wraps boost::histogram to provide a ROOT-independent histogram
@@ -280,6 +289,95 @@ using Efficiency1 = Efficiency<1>;
 /// 2D efficiency histogram
 using Efficiency2 = Efficiency<2>;
 
+/// @brief Histogram of derived per-bin values with uncertainties
+///
+/// Where @c Histogram accumulates fills, this holds a value and an error that
+/// are computed and then written per bin - for example the mean and width
+/// extracted from a Gaussian fit to each slice of a residual histogram. It is
+/// the ROOT-independent equivalent of a @c TH1 populated through
+/// @c SetBinContent and @c SetBinError.
+///
+/// @tparam Dim Number of dimensions
+template <std::size_t Dim>
+class ValueHistogram {
+ public:
+  /// Construct a value histogram from axes, with all bins empty
+  ///
+  /// @param name Histogram name (for identification and output)
+  /// @param title Histogram title (for plotting)
+  /// @param axes Array of axes with binning and metadata
+  ValueHistogram(std::string name, std::string title,
+                 const std::array<AxisVariant, Dim>& axes)
+      : m_name(std::move(name)),
+        m_title(std::move(title)),
+        m_hist(boost::histogram::make_histogram_with(
+            boost::histogram::dense_storage<
+                boost::histogram::accumulators::weighted_sum<double>>(),
+            std::vector<AxisVariant>(axes.begin(), axes.end()))) {}
+
+  /// Set the value and error of a single bin
+  ///
+  /// @param indices Zero-based bin index per axis, excluding under-/overflow
+  /// @param value The bin value
+  /// @param error The uncertainty on @p value
+  /// @remark Indices must be in `[0, axis.size())` for every axis
+  void setBin(const std::array<int, Dim>& indices, double value, double error) {
+    std::apply(
+        [&](auto... i) {
+          m_hist.at(i...) =
+              boost::histogram::accumulators::weighted_sum<double>(
+                  value, error * error);
+        },
+        indices);
+  }
+
+  /// Get the value of a single bin
+  ///
+  /// @param indices Zero-based bin index per axis, excluding under-/overflow
+  /// @return The bin value
+  double value(const std::array<int, Dim>& indices) const {
+    return std::apply([&](auto... i) { return m_hist.at(i...).value(); },
+                      indices);
+  }
+
+  /// Get the error of a single bin
+  ///
+  /// @param indices Zero-based bin index per axis, excluding under-/overflow
+  /// @return The uncertainty on the bin value
+  double error(const std::array<int, Dim>& indices) const {
+    return std::apply(
+        [&](auto... i) { return std::sqrt(m_hist.at(i...).variance()); },
+        indices);
+  }
+
+  /// Get histogram name
+  /// @return The histogram name
+  const std::string& name() const { return m_name; }
+
+  /// Get histogram title
+  /// @return The histogram title
+  const std::string& title() const { return m_title; }
+
+  /// Get number of dimensions (compile-time constant)
+  /// @return The number of dimensions
+  static constexpr std::size_t rank() { return Dim; }
+
+  /// Direct access to boost::histogram (for converters and tests)
+  /// @return The underlying boost histogram
+  const BoostWeightedHist& histogram() const { return m_hist; }
+
+ private:
+  std::string m_name;
+  std::string m_title;
+
+  BoostWeightedHist m_hist;
+};
+
+/// Type aliases for common dimensions
+using ValueHistogram1 = ValueHistogram<1>;
+/// 2D value histogram
+using ValueHistogram2 = ValueHistogram<2>;
+
 /// Project a 2D histogram onto the X axis (axis 0)
 ///
 /// @param hist2d The 2D histogram to project
@@ -295,6 +393,28 @@ Histogram1 projectionX(const Histogram2& hist2d);
 /// @note Unlike ROOT's `TH2::ProjectionY`, the sum runs over the under- and
 ///       overflow bins of the X axis as well.
 Histogram1 projectionY(const Histogram2& hist2d);
+
+/// Extract the distribution along the last axis at a fixed bin of the first
+///
+/// Equivalent to ROOT's `TH2::ProjectionY(name, xBin + 1, xBin + 1)`.
+///
+/// @param hist2d The 2D histogram to slice
+/// @param xBin Zero-based bin index on the first axis
+/// @return A 1D histogram over the second axis
+/// @remark @p xBin must be in `[0, axis(0).size())`
+Histogram1 sliceLastAxis(const Histogram2& hist2d, int xBin);
+
+/// Extract the distribution along the last axis at fixed bins of the first two
+///
+/// Equivalent to ROOT's
+/// `TH3::ProjectionZ(name, xBin + 1, xBin + 1, yBin + 1, yBin + 1)`.
+///
+/// @param hist3d The 3D histogram to slice
+/// @param xBin Zero-based bin index on the first axis
+/// @param yBin Zero-based bin index on the second axis
+/// @return A 1D histogram over the third axis
+/// @remark @p xBin and @p yBin must be in range for their respective axes
+Histogram1 sliceLastAxis(const Histogram3& hist3d, int xBin, int yBin);
 
 /// Extract bin edges from an AxisVariant
 ///
