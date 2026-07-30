@@ -796,6 +796,8 @@ class CombinatorialKalmanFilter {
           // Increment number of outliers
           newBranch.nOutliers()++;
         } else if (typeFlags.isMeasurement()) {
+          // Allocate the filtered parameters right before they are written
+          trackState.addComponents(PM::Filtered);
           // Kalman update
           const auto updateRes = kalmanUpdate(state, stepper, trackState);
           if (!updateRes.ok()) {
@@ -1008,9 +1010,9 @@ class CombinatorialKalmanFilter {
           auto& singleState = cmp.singleState(state).stepping;
           const auto& singleStepper = cmp.singleStepper(stepper);
 
-          TrackStatePropMask mask =
-              TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
-              TrackStatePropMask::Jacobian | TrackStatePropMask::Calibrated;
+          TrackStatePropMask mask = TrackStatePropMask::Predicted |
+                                    TrackStatePropMask::Jacobian |
+                                    TrackStatePropMask::Calibrated;
           TrackStateProxy trackStateProxy =
               temporaryStates.traj.makeTrackState(mask, kTrackIndexInvalid);
 
@@ -1036,6 +1038,9 @@ class CombinatorialKalmanFilter {
               trackState.effectiveCalibrated();
           trackStateProxy.effectiveCalibratedCovariance() =
               trackState.effectiveCalibratedCovariance();
+
+          // Allocate the filtered parameters right before they are written
+          trackStateProxy.addComponents(TrackStatePropMask::Filtered);
 
           const auto updateRes = extensions.updater(
               state.geoContext, trackStateProxy, *updaterLogger);
