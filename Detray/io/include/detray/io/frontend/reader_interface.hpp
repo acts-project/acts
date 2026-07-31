@@ -35,12 +35,12 @@ class reader_interface {
 
   /// Returns the string tag that describes the type of reader, which is also
   /// present in data file headers to match the IO data
-  // virtual std::string tag() = 0;
+  virtual std::string_view tag() const = 0;
 
   /// Reads the respective detector component from file. Since the detector
   /// does not keep the volume names, the name map is also passed and
   /// filled.
-  virtual void read_from_payload(
+  virtual void from_payload(
       detector_builder<typename detector_t::metadata, volume_builder>&,
       const detector_payload&) const = 0;
 };
@@ -52,18 +52,15 @@ class input_converter_interface {
   virtual ~input_converter_interface() = default;
 
   /// Reads the respective detector component from an input data source.
-  virtual void convert_to_payload(const std::any, detector_payload&) = 0;
+  virtual void to_payload(const std::any, detector_payload&) = 0;
 };
 
 /// @brief Abstract base class for detray detector component file readers
 class input_file_converter_interface : public input_converter_interface {
  public:
   /// Constructor setting a file extension
-  input_file_converter_interface(const std::string& ext)
+  explicit input_file_converter_interface(const std::string& ext)
       : m_file_extension{ext} {};
-
-  /// Default destructor
-  virtual ~input_file_converter_interface() = default;
 
   std::string_view file_extension() const { return m_file_extension; }
 
@@ -71,8 +68,17 @@ class input_file_converter_interface : public input_converter_interface {
   virtual void from_file(io::file_handle&, detector_payload&) = 0;
 
   /// Reads the respective detector component from file.
-  void convert_to_payload(const std::any input_data,
-                          detector_payload& payload) override {
+  void to_payload(const std::any input_data,
+                  detector_payload& payload) override {
+    const std::string file_name = get_file_name(input_data);
+    io::file_handle file{file_name, std::ios_base::in | std::ios_base::binary};
+
+    from_file(file, payload);
+  };
+
+ private:
+  /// @returns the file name that was passed as type-erased @param input_data
+  std::string get_file_name(const std::any& input_data) {
     // Read input data from file
     std::string file_name{""};
     try {
@@ -85,12 +91,9 @@ class input_file_converter_interface : public input_converter_interface {
       throw std::bad_any_cast(e);
     }
 
-    io::file_handle file{file_name, std::ios_base::in | std::ios_base::binary};
+    return file_name;
+  }
 
-    from_file(file, payload);
-  };
-
- private:
   /// Extension that matches the file format of the respective reader
   std::string m_file_extension;
 };

@@ -39,8 +39,8 @@ class homogeneous_material_writer {
 
   /// Convert the header information into its payload
   template <class detector_t>
-  static homogeneous_material_header_payload header_to_payload(
-      const detector_t& det, const std::string_view det_name) {
+  static homogeneous_material_header_payload to_header_payload(
+      const detector_t& det) {
     homogeneous_material_header_payload header_data;
 
     using algebra_t = typename detector_t::algebra_type;
@@ -64,23 +64,19 @@ class homogeneous_material_writer {
       return count;
     };
 
-    header_data.common = detail::basic_converter::to_payload(det_name, tag);
-
     const auto& materials = det.material_store();
 
-    header_data.sub_header.emplace();
-    auto& mat_sub_header = header_data.sub_header.value();
     if constexpr (detray::concepts::has_material_slabs<detector_t>) {
-      mat_sub_header.n_slabs =
+      header_data.n_slabs =
           materials.template size<detector_t::material::id::e_material_slab>();
-      mat_sub_header.n_slab_surfaces =
+      header_data.n_slab_surfaces =
           count_surface_with_material_type(material_id_t::slab);
     }
-    mat_sub_header.n_rods = 0u;
+    header_data.n_rods = 0u;
     if constexpr (detray::concepts::has_material_rods<detector_t>) {
-      mat_sub_header.n_rods =
+      header_data.n_rods =
           materials.template size<detector_t::material::id::e_material_rod>();
-      mat_sub_header.n_rod_surfaces =
+      header_data.n_rod_surfaces =
           count_surface_with_material_type(material_id_t::rod);
     }
 

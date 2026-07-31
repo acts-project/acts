@@ -23,21 +23,12 @@
 namespace detray::io {
 
 inline void to_json(nlohmann::ordered_json& j, const grid_header_payload& h) {
-  j["common"] = h.common;
-
-  if (h.sub_header.has_value()) {
-    const auto& grid_sub_header = h.sub_header.value();
-    j["grid_count"] = grid_sub_header.n_grids;
-  }
+  j["grid_count"] = h.n_grids;
 }
 
 inline void from_json(const nlohmann::ordered_json& j, grid_header_payload& h) {
-  h.common = j["common"];
-
   if (j.find("grid_count") != j.end()) {
-    h.sub_header.emplace();
-    auto& grid_sub_header = h.sub_header.value();
-    grid_sub_header.n_grids = j["grid_count"];
+    h.n_grids = j["grid_count"];
   }
 }
 
