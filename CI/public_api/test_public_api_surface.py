@@ -62,6 +62,21 @@ def test_module_of_components():
     assert pas.module_of("/w/Alignment/include/ActsAlignment/Z.hpp") == "Alignment"
 
 
+def test_sanitize_strips_bidi_and_zero_width_chars():
+    # U+202E right-to-left override, U+200B zero-width space: neither is
+    # visible whitespace, so a crafted C++20 Unicode identifier could smuggle
+    # either into a report without this stripping them.
+    assert pas._sanitize("Acts::Foo‮​") == "Acts::Foo"
+
+
+def test_name_and_norm_type_sanitize_extracted_text():
+    md = ET.fromstring(
+        "<memberdef><name>size‮</name>" "<type>Acts::Bar​*</type></memberdef>"
+    )
+    assert pas._name(md, "name") == "size"
+    assert pas._norm_type(md.find("type")) == "Acts::Bar*"
+
+
 def test_classify_additions_and_breaking():
     base = {
         "symbols": ["type Acts::Old", "type Acts::Keep"],
