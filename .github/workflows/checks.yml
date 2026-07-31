@@ -98,3 +98,65 @@ jobs:
       - name: Check
         run: >
           CI/check_unused_files.py
+
+  api_surface:
+    runs-on: ubuntu-latest
+    env:
+      # Keep in sync with the docs job (.github/workflows/docs.yml)
+      DOXYGEN_VERSION: "1.15.0"
+      DOXYGEN_HASH: "0ec2e5b2c3cd82b7106d19cb42d8466450730b8cb7a9e85af712be38bf4523a1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0 # need the PR base commit for the surface diff
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.14'
+      - name: Install doxygen
+        run: |
+          curl -SL https://acts.web.cern.ch/ci/doxygen/doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz -o doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
+          echo "${{ env.DOXYGEN_HASH }}  doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz" | sha256sum -c -
+          tar xf doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
+          mv doxygen-${{ env.DOXYGEN_VERSION }}/bin/doxygen /usr/local/bin/doxygen
+          doxygen --version
+      - name: Self-test the surface tooling
+        # Guards the classification logic and catches Doxygen output drift.
+        run: |
+          CI/public_api/test_public_api_surface.py
+          CI/public_api/test_check_deprecated_docs.py
+      - name: Require @deprecated docs on [[deprecated]] declarations
+        # Every [[deprecated]] attribute must carry a Doxygen @deprecated command
+        # so the deprecation is visible in the published docs, not just at
+        # compile time. Dependency-free (no Doxygen needed).
+        run: >
+          CI/public_api/check_deprecated_docs.py
+          Core/include Plugins Fatras/include Alignment/include
+      - name: Measure public API surface (this ref)
+        run: >
+          CI/public_api/public_api_surface.py --run --roots-under .
+          --json api-surface.json
+          --markdown api-surface.md
+          --summary
+      - name: Diff public API surface against base
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git worktree add --detach /tmp/base-tree "$BASE_SHA"
+          # Base measured with THIS ref's Doxyfile/scripts, over the base tree.
+          # No --summary here: it would duplicate the surface table.
+          CI/public_api/public_api_surface.py --run --roots-under /tmp/base-tree \
+            --json base-surface.json --markdown /dev/null
+          # Report only for now; classification JSON drives the labeler job.
+          CI/public_api/public_api_diff.py \
+            --base base-surface.json --head api-surface.json \
+            --json api-surface-diff.json --markdown /dev/null --summary --fail-on none
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: api-surface
+          if-no-files-found: ignore
+          path: |
+            api-surface.json
+            api-surface.md
+            api-surface-diff.json
