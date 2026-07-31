@@ -758,11 +758,6 @@ DetrayPayloadConverter::convertTrackingGeometry(
   payloads.detector = std::make_unique<detray::io::detector_payload>();
   detray::io::detector_payload& detPayload = *payloads.detector;
 
-  payloads.homogeneousMaterial =
-      std::make_unique<detray::io::detector_homogeneous_material_payload>();
-  detray::io::detector_homogeneous_material_payload& dthmPayload =
-      *payloads.homogeneousMaterial;
-
   payloads.materialGrids = std::make_unique<detray::io::detector_grids_payload<
       detray::io::surface_material_payload, detray::io::material_id>>();
 
@@ -854,7 +849,12 @@ DetrayPayloadConverter::convertTrackingGeometry(
       // NOTE: Currently, it'll always be populated by at least the homogeneous
       // NOTE: Volume association is internal to
       // `detray::io::material_volume_payload`
-      dthmPayload.volumes.emplace_back(std::move(homogeneous));
+      if (!payloads.homogeneousMaterial) {
+        payloads.homogeneousMaterial = std::make_unique<
+            detray::io::detector_homogeneous_material_payload>();
+      }
+      payloads.homogeneousMaterial->volumes.emplace_back(
+          std::move(homogeneous));
     }
 
     ACTS_DEBUG("Volume " << volume.volumeName()
@@ -937,7 +937,10 @@ DetrayPayloadConverter::convertTrackingGeometry(
     }
   }
 
-  {
+  if (payloads.homogeneousMaterial) {
+    ACTS_DEBUG("Adjusting homogeneous material entries after swapping");
+    auto& dthmPayload = *payloads.homogeneousMaterial;
+
     // Possibly swap homogeneous material entries in vector if they both exist
     auto find = [](std::size_t id) {
       return [id](const auto& vol) { return vol.volume_link.link == id; };
@@ -966,6 +969,8 @@ DetrayPayloadConverter::convertTrackingGeometry(
         mat.volume_link.link = beampipeIdx;
       }
     }
+  } else {
+    ACTS_DEBUG("No homogeneous material payload to adjust after swapping");
   }
 
   {
