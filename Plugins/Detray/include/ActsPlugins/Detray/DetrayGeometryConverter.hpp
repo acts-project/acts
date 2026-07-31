@@ -128,14 +128,15 @@ class DetrayGeometryConverter {
         ACTS_DEBUG("Found homogeneous material payload with "
                    << materialVolumes.size() << " volumes");
 
-        auto hasMaterialType = [&materialVolumes](detray::io::material_id type) {
-          return std::ranges::any_of(
-              materialVolumes, [type](const auto& volume) {
-                return std::ranges::any_of(
-                    volume.surface_mat,
-                    [type](const auto& sm) { return sm.type == type; });
-              });
-        };
+        auto hasMaterialType =
+            [&materialVolumes](detray::io::material_id type) {
+              return std::ranges::any_of(
+                  materialVolumes, [type](const auto& volume) {
+                    return std::ranges::any_of(
+                        volume.surface_mat,
+                        [type](const auto& sm) { return sm.type == type; });
+                  });
+            };
 
         if (hasMaterialType(detray::io::material_id::slab) &&
             !detray::concepts::has_material_slabs<detector_t>) {
