@@ -179,6 +179,85 @@ GTEST_TEST(detray_builders, decorator_homogeneous_material_builder) {
   }
 }
 
+/// Integration test: homogeneous material on a sparse subset of surfaces
+///
+/// Regression test: the material factory used to index its own data by
+/// (surface index - smallest surface index), which silently assumed that the
+/// surfaces carrying material form a contiguous block. For material on a
+/// non-contiguous set of surfaces that index ran past the end of the factory's
+/// material vector, so only detectors where every surface carried material
+/// could be built.
+GTEST_TEST(detray_builders, homogeneous_material_on_sparse_surfaces) {
+  using transform3 = typename detector_t::transform3_type;
+  using material_id = typename detector_t::material::id;
+
+  using rectangle_factory = surface_factory<detector_t, rectangle2D>;
+  using mat_factory_t = homogeneous_material_factory<detector_t>;
+
+  vecmem::host_memory_resource host_mr;
+  detector_t d(host_mr);
+  auto geo_ctx = typename detector_t::geometry_context{};
+
+  auto vbuilder =
+      std::make_unique<volume_builder<detector_t>>(volume_id::e_cylinder);
+  auto mat_builder =
+      homogeneous_material_builder<detector_t>{std::move(vbuilder)};
+
+  // Five sensitive surfaces, none of which carry material yet
+  constexpr std::size_t n_surfaces{5u};
+
+  auto rect_factory = std::make_shared<rectangle_factory>();
+  typename rectangle_factory::sf_data_collection rect_sf_data;
+  for (std::size_t i = 0u; i < n_surfaces; ++i) {
+    rect_sf_data.emplace_back(
+        surface_id::e_sensitive,
+        transform3(point3{0.f, 0.f, -10.f * static_cast<scalar>(i)}), 0u,
+        std::vector<scalar>{10.f, 8.f});
+  }
+  rect_factory->push_back(std::move(rect_sf_data));
+  mat_builder.add_surfaces(rect_factory, geo_ctx);
+
+  // Attach material to surfaces 1 and 4 only: there is a gap in between, the
+  // block does not start at the first surface and the material is passed in
+  // with explicit surface indices
+  auto mat_factory = std::make_shared<mat_factory_t>();
+  mat_factory->add_material(material_id::e_material_slab,
+                            {1.f * unit<scalar>::mm, silicon<scalar>(), 1u});
+  mat_factory->add_material(material_id::e_material_slab,
+                            {2.f * unit<scalar>::mm, tungsten<scalar>(), 4u});
+  mat_builder.add_surfaces(mat_factory, geo_ctx);
+
+  mat_builder.build(d);
+
+  // One slab per material entry: the gaps must not be padded with filler
+  EXPECT_EQ(d.surfaces().size(), n_surfaces);
+  EXPECT_EQ(d.material_store().template size<material_id::e_material_slab>(),
+            2u);
+
+  const auto &slabs =
+      d.material_store().template get<material_id::e_material_slab>();
+
+  for (const auto [idx, sf_desc] : detray::views::enumerate(d.surfaces())) {
+    const auto &mat_link = sf_desc.material();
+
+    if (idx == 1u || idx == 4u) {
+      ASSERT_EQ(mat_link.id(), material_id::e_material_slab);
+
+      const auto &slab = slabs.at(mat_link.index());
+      if (idx == 1u) {
+        EXPECT_EQ(slab.get_material(), silicon<scalar>());
+        EXPECT_NEAR(slab.thickness(), 1.f * unit<scalar>::mm, tol);
+      } else {
+        EXPECT_EQ(slab.get_material(), tungsten<scalar>());
+        EXPECT_NEAR(slab.thickness(), 2.f * unit<scalar>::mm, tol);
+      }
+    } else {
+      // Surfaces that were not given material must not have any
+      EXPECT_NE(mat_link.id(), material_id::e_material_slab);
+    }
+  }
+}
+
 /// Integration test to build an empty cuboid volume with material
 GTEST_TEST(detray_builders, detector_builder_with_material) {
   using namespace detray;

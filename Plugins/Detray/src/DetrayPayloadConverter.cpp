@@ -498,17 +498,6 @@ void DetrayPayloadConverter::handlePortal(
   }
 }
 
-namespace {
-
-constexpr static detray::io::surface_material_payload s_dummyMaterialSlab{
-    .type = detray::io::material_id::slab,
-    .index_in_coll = std::numeric_limits<std::size_t>::max(),
-    .thickness = 42,
-    .mat = {42, 42, 42, 42, 42, 42, 42},
-};
-
-}  // namespace
-
 std::pair<std::vector<detray::io::grid_payload<
               detray::io::surface_material_payload, detray::io::material_id>>,
           detray::io::material_volume_payload>
@@ -523,18 +512,6 @@ DetrayPayloadConverter::convertMaterial(
   detray::io::material_volume_payload homogeneous;
   homogeneous.volume_link.link = volPayload.index.link;
 
-  // @HACK: Detray does not like homoegeneous material only on SOME surfaces.
-  ACTS_INFO("Adding dummy material slabs to homogeneous collection for "
-            << volPayload.surfaces.size()
-            << " surfaces (detray "
-               "hack)");
-  for (const auto& surface : volPayload.surfaces) {
-    auto& slabPayload =
-        homogeneous.surface_mat.emplace_back(s_dummyMaterialSlab);
-    slabPayload.index_in_coll = surface.index_in_coll.value();
-    slabPayload.surface.link = surface.index_in_coll.value();
-  }
-
   std::map<std::size_t, const ISurfaceMaterial*> srfIdxToMaterial;
 
   auto assignMaterial = [&](const ISurfaceMaterial* material,
@@ -542,27 +519,32 @@ DetrayPayloadConverter::convertMaterial(
                             std::size_t srfIdx, const Surface& surface) {
     auto handleHomogeneous =
         [&](const detray::io::surface_material_payload& slab) {
-          // Given the pseudo slabs from before, we need to either update an
-          // existing slab or create a new one.
-
+          // A surface can be visited more than once (e.g. through decomposed
+          // portal links), so update an existing entry instead of duplicating.
+          //
+          // `index_in_coll` is deliberately left unset: it is the position in
+          // the detector's material collection, and forcing it to the surface
+          // index would make detray size that collection to the largest
+          // surface index and default-fill the gaps with invalid material.
+          // Leaving it unset packs the collection in payload order instead.
           auto it = std::ranges::find_if(
               homogeneous.surface_mat, [srfIdx](const auto& matslab) {
                 return matslab.surface.link == srfIdx;
               });
 
           if (it != homogeneous.surface_mat.end()) {
-            ACTS_VERBOSE("Adding slab to homogeneous material for surface "
+            ACTS_VERBOSE("Updating slab in homogeneous material for surface "
                          << srfIdx);
             auto& targetSlab = *it;
             targetSlab = slab;
-            targetSlab.index_in_coll = srfIdx;
+            targetSlab.index_in_coll.reset();
             targetSlab.surface.link = srfIdx;
           } else {
-            ACTS_VERBOSE("Updating slab in homogeneous material for surface "
+            ACTS_VERBOSE("Adding slab to homogeneous material for surface "
                          << srfIdx);
-            homogeneous.surface_mat.emplace_back(slab);
-            homogeneous.surface_mat.back().index_in_coll = srfIdx;
-            homogeneous.surface_mat.back().surface.link = srfIdx;
+            auto& newSlab = homogeneous.surface_mat.emplace_back(slab);
+            newSlab.index_in_coll.reset();
+            newSlab.surface.link = srfIdx;
           }
 
           auto sit = srfIdxToMaterial.find(srfIdx);
