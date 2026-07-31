@@ -12,6 +12,7 @@
 #include "detray/builders/volume_builder_interface.hpp"
 
 // System include(s)
+#include <initializer_list>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -81,14 +82,6 @@ struct detector_reader_config {
     requires(std::same_as<std::string, Args> || ...)
   detector_reader_config& add_files(Args&&... file_names) {
     m_files = std::vector<std::string>(std::forward<Args>(file_names)...);
-    return *this;
-  }
-  /// Add detector component files to the input list.
-  /// @param file_names initializer list of input file paths
-  /// @return this configuration for chaining
-  detector_reader_config& add_files(
-      std::initializer_list<std::string> file_names) {
-    m_files = std::vector<std::string>(file_names);
     return *this;
   }
   /// Enable or disable deduplication in the volume builder.
