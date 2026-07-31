@@ -57,7 +57,7 @@ FitterTester tester;
 GsfExtensions<VectorMultiTrajectory> getExtensions() {
   GsfExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
-      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+      .connect<&testSourceLinkCalibratorStrict<VectorMultiTrajectory>>();
   extensions.updater
       .connect<&GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
           &kfUpdater);

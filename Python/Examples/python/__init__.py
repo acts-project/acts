@@ -434,7 +434,18 @@ class Sequencer(ActsExamplesPythonBindings._Sequencer):
 
         cls._autoFpeMasks = []
 
-        for root, _, files in os.walk(srcdir):
+        for root, dirs, files in os.walk(srcdir):
+            # Every Sequencer-owning process pays for this walk, so keep it off
+            # the parts of a working tree that can never hold a MARK comment:
+            # build trees, vendored sources and anything hidden (.git, and the
+            # nested worktrees/venvs developers keep in the checkout).
+            dirs[:] = [
+                d
+                for d in dirs
+                if not d.startswith(".")
+                and d != "thirdparty"
+                and not d.startswith("build")
+            ]
             root = Path(root)
             for f in files:
                 if (
@@ -446,7 +457,13 @@ class Sequencer(ActsExamplesPythonBindings._Sequencer):
                 f = root / f
                 #  print(f)
                 with f.open("r") as fh:
-                    lines = fh.readlines()
+                    contents = fh.read()
+                # Cheap reject: only a handful of files in the tree carry a
+                # MARK comment, and the per-line regexes below are what makes
+                # the scan expensive.
+                if "MARK:" not in contents:
+                    continue
+                lines = contents.splitlines(keepends=True)
                 for i, line in enumerate(lines):
                     if m := re.match(r".*\/\/ ?MARK: ?(fpeMask\(.*)$", line):
                         exp = m.group(1)

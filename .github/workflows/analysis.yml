@@ -13,26 +13,41 @@ on:
       - "docs/**"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
-  CCACHE_MAXSIZE: 1.25G
+  # Sized for the github-ci-coverage build, which carries no debug info and
+  # skips Examples plus the vendored Detray/Traccc trees. Watch `ccache -s`:
+  # if the cache runs at ~100% of this it is evicting mid-build and the hit
+  # rate collapses, which is what a too-small ceiling looks like.
+  CCACHE_MAXSIZE: 1G
   CCACHE_KEY_SUFFIX: r2
   ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
 # NOTE this only builds core unittests to reduce the output size. if we
 #      found a way to have Github actions not fail regularly with this job
 #      all unit tests should be reactivated.
+#
+# NOTE the unit tests are what generate coverage for the large header-only
+#      template surface in Core/include, since that code is only instantiated
+#      in test TUs. Tests/ is filtered out of the report itself but must stay
+#      instrumented, or that coverage disappears. See the github-ci-coverage
+#      preset description for what is deliberately left out and why.
 permissions:
   contents: read
+  # Authenticated GHCR reads: the spack buildcache is pulled from ghcr.io.
+  # Without this scope GITHUB_TOKEN has no packages access, so reads fall back
+  # to the anonymous (heavily rate limited) bucket.
+  packages: read
 
 jobs:
   build_debug:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:87
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
+    # Pull-through cache, as for the husk jobs in builds.yml.
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
     steps:
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
