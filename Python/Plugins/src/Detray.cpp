@@ -66,7 +66,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
         detray::io::detector_reader_config cfg{};
         cfg.do_check(false).add_files(files);
 
-        return detray::io::read_detector<DetrayDetectorODD>(mr, cfg);
+        return detray::io::read_detector_json<DetrayDetectorODD>(mr, cfg);
       },
       "mr"_a, "files"_a);
 

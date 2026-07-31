@@ -11,6 +11,7 @@
 // Project include(s)
 #include "detray/builders/detector_builder.hpp"
 #include "detray/io/backend/concepts.hpp"
+#include "detray/io/backend/detail/basic_converter.hpp"
 #include "detray/io/frontend/reader_interface.hpp"
 #include "detray/io/frontend/writer_interface.hpp"
 #include "detray/io/json/json.hpp"
@@ -25,59 +26,29 @@
 
 namespace detray::io {
 
-/// @brief Function that reads the common header part of a file in json format
-inline common_header_payload deserialize_json_header(io::file_handle& file) {
-  // Read json file
-  nlohmann::json in_json;
-  std::cout << "Deserializing header" << std::endl;
-  *file >> in_json;
-
-  // Reads the header from file
-  header_payload<> h = in_json["header"];
-
-  // Need only the common part here
-  const common_header_payload& header = h.common;
-
-  if (header.tag < io::detail::minimal_io_version) {
-    DETRAY_WARN_HOST("File was generated with a different detray version");
-  }
-
-  return header;
-}
-
-/// @brief Function that reads the common header part of a file in json format
-inline common_header_payload deserialize_json_header(
-    const std::string& file_name) {
-  // Open input file
-  io::file_handle file{file_name, std::ios_base::in | std::ios_base::binary};
-
-  return deserialize_json_header(file);
-}
-
-/// @brief Class that adds json functionality to backend reader types.
+/// @brief Class that reads json data from file and converts it to a detector
+/// payload (single component per file)
 ///
-/// Assemble the json readers from the backend reader types, which handle the
-/// volume builders, and this class, which provides the payload data from the
-/// json stream. It also includes the respective @c to_json and @c from_json
-/// functions for the payloads ("json_serializers").
+/// This class provides the payload data from the json stream and adds it to the
+/// sub-payload of the detector component that is tagged in the file
 ///
-/// @note The resulting reader types will fulfill @c reader_interface
+/// @note The class fulfills the @c input_file_converter_interface and
+/// can be added to the @c detector_components_converter
 class json_input_converter final : public input_file_converter_interface {
  public:
   /// Set json file extension
   json_input_converter() : input_file_converter_interface(".json") {}
 
-  /// Writes the geometry to file with a given name
+  /// Reads json detector data from @param file and adds it to a detector
+  /// @param payload object
   void from_file(io::file_handle& file, detector_payload& payload) override {
     // Reads the data from file and returns the corresponding io payloads
     nlohmann::json in_json;
     *file >> in_json;
 
     // Peek at the header to determine the kind of payload is in the file
-    header_payload<> h = in_json["header"];
-
-    // Need only the common part here
-    const common_header_payload& header = h.common;
+    payload.header = in_json["header"];
+    const header_payload& header = payload.header;
 
     if (header.tag < io::detail::minimal_io_version) {
       DETRAY_WARN_HOST("File was generated with a different detray version");
@@ -147,7 +118,10 @@ class json_converter<detector_t, backend_t> final
 
     // Write some general information
     nlohmann::ordered_json out_json;
-    out_json["header"] = io_backend::header_to_payload(det, det_name);
+    out_json["header"] = io_backend::to_header_payload(det);
+    out_json["header"]["common"] =
+        io::detail::basic_converter::to_header_payload(
+            det_name, std::string(io_backend::tag));
 
     // Write the detector data into the json stream by using the
     // conversion functions defined in "detray/io/json/json_io.hpp"
