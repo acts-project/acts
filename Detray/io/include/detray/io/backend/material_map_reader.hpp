@@ -46,13 +46,16 @@ class material_map_reader final : public reader_interface<detector_t> {
   using bin_index_type = axis::multi_bin<dim>;
 
   /// Tag the reader as "material_maps"
-  static constexpr std::string_view tag = "material_maps";
+  static constexpr std::string_view s_tag = "material_maps";
+
+  /// @returns the tag of the reader: "material_maps"
+  std::string_view tag() const override { return s_tag; }
 
   /// Convert the material grids @param grids_data from their IO
   /// payload
-  void read_from_payload(detector_builder<typename detector_t::metadata,
-                                          volume_builder> &det_builder,
-                         const detector_payload &det_data) const override {
+  void from_payload(detector_builder<typename detector_t::metadata,
+                                     volume_builder> &det_builder,
+                    const detector_payload &det_data) const override {
     DETRAY_VERBOSE_HOST("Reading payload object...");
 
     using scalar_t = dscalar<typename detector_t::algebra_type>;
@@ -118,7 +121,8 @@ class material_map_reader final : public reader_interface<detector_t> {
                             << (dim == 2 ? "surface" : "volume") << " = "
                             << grid_data.owner_link.link);
 
-        mat_id map_id = from_payload<mat_registry_t>(grid_data.grid_link.type);
+        mat_id map_id =
+            from_payload_impl<mat_registry_t>(grid_data.grid_link.type);
         DETRAY_VERBOSE_HOST("-> Type id: " << map_id);
 
         DETRAY_VERBOSE_HOST("-> Reading axis bins: Dims = " << dim);
@@ -161,7 +165,8 @@ class material_map_reader final : public reader_interface<detector_t> {
           // Add the material slab per bin
           for (const auto &slab_data : bin_data.content) {
             mat_data.append(
-                material_reader_t::template from_payload<scalar_t>(slab_data));
+                material_reader_t::template from_payload_impl<scalar_t>(
+                    slab_data));
           }
         }
 
@@ -183,7 +188,7 @@ class material_map_reader final : public reader_interface<detector_t> {
  private:
   /// Get the detector material id from the payload material type id
   template <typename mat_registry_t, std::size_t I = 0u>
-  static typename detector_t::material::id from_payload(
+  static typename detector_t::material::id from_payload_impl(
       io::material_id type_id) {
     // Get the next mask shape type
     using frame_t = types::at<mat_registry_t, I>;
@@ -207,7 +212,7 @@ class material_map_reader final : public reader_interface<detector_t> {
     }
     // Test next material type id
     if constexpr (I < types::size<mat_registry_t> - 1u) {
-      return from_payload<mat_registry_t, I + 1u>(type_id);
+      return from_payload_impl<mat_registry_t, I + 1u>(type_id);
     } else {
       return detector_t::material::id::e_none;
     }

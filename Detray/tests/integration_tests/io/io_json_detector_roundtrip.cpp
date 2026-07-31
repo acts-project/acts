@@ -14,8 +14,8 @@
 // Detray IO include(s)
 #include "detray/io/backend/geometry_reader.hpp"
 #include "detray/io/backend/geometry_writer.hpp"
-#include "detray/io/frontend/detector_reader.hpp"
 #include "detray/io/frontend/detector_writer.hpp"
+#include "detray/io/json/detector_reader.hpp"
 #include "detray/io/json/json_converter.hpp"
 
 // Detray test include(s)
@@ -104,7 +104,8 @@ auto test_detector_json_io(
     reader_cfg.add_file(name);
   }
 
-  auto [det2, names2] = io::read_detector<detector_t, CAP>(host_mr, reader_cfg);
+  auto [det2, names2] =
+      io::read_detector_json<detector_t, CAP>(host_mr, reader_cfg);
 
   // Write the result to a different set of files
   writer_cfg.replace_files(false);
@@ -206,11 +207,11 @@ GTEST_TEST(io, json_toy_geometry) {
 
   // Read the detector back in
   io::detector_payload payload{};
-  payload.names.set_detector_name("toy_detector");
-  io::json_input_converter{}.convert_to_payload(file_name, payload);
+  // payload.names.set_detector_name("toy_detector");
+  io::json_input_converter{}.to_payload(file_name, payload);
 
   detector_builder<metadata_t> toy_builder;
-  io::geometry_reader<detector_t>{}.read_from_payload(toy_builder, payload);
+  io::geometry_reader<detector_t>{}.from_payload(toy_builder, payload);
 
   auto det = toy_builder.build(host_mr, payload.names);
 
@@ -220,8 +221,8 @@ GTEST_TEST(io, json_toy_geometry) {
   // Read the toy detector into the default detector type
   using default_metadata_t = test::default_metadata;
   detector_builder<default_metadata_t> comp_builder;
-  io::geometry_reader<detector<default_metadata_t>>{}.read_from_payload(
-      comp_builder, payload);
+  io::geometry_reader<detector<default_metadata_t>>{}.from_payload(comp_builder,
+                                                                   payload);
   payload.names.clear_names();
   auto comp_det = comp_builder.build(host_mr, payload.names);
 

@@ -9,6 +9,7 @@
 #pragma once
 
 // System include(s)
+#include <initializer_list>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -44,12 +45,6 @@ struct detector_reader_config {
   }
   detector_reader_config& add_files(std::vector<std::string>&& file_names) {
     m_files = std::move(file_names);
-    return *this;
-  }
-  template <typename... Args>
-    requires(std::same_as<std::string, Args> || ...)
-  detector_reader_config& add_files(Args&&... file_names) {
-    m_files = std::vector<std::string>(std::forward<Args>(file_names)...);
     return *this;
   }
   detector_reader_config& add_files(

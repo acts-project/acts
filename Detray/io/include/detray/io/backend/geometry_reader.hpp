@@ -51,15 +51,18 @@ class geometry_reader final : public reader_interface<detector_t> {
 
  public:
   /// Tag the reader as "geometry"
-  static constexpr std::string_view tag = "geometry";
+  static constexpr std::string_view s_tag = "geometry";
 
   /// Payload type that the reader processes
   using payload_type = detector_geometry_payload;
 
+  /// @returns the tag of the reader: "geometry"
+  std::string_view tag() const override { return s_tag; }
+
   /// Convert a detector @param det from its io payload @param det_data
-  void read_from_payload(detector_builder<typename detector_t::metadata,
-                                          volume_builder>& det_builder,
-                         const detector_payload& det_data) const override {
+  void from_payload(detector_builder<typename detector_t::metadata,
+                                     volume_builder>& det_builder,
+                    const detector_payload& det_data) const override {
     DETRAY_VERBOSE_HOST("Reading payload object...");
 
     // Can hold all types of surface fatory needed for the detector
@@ -98,7 +101,7 @@ class geometry_reader final : public reader_interface<detector_t> {
       DETRAY_DEBUG_HOST("Volume placement for " << vol_data.name << " is\n"
                                                 << vol_data.transform);
       // Volume placement
-      vbuilder->add_volume_placement(from_payload(vol_data.transform));
+      vbuilder->add_volume_placement(from_payload_impl(vol_data.transform));
 
       // Prepare the surface factories (one per shape and surface type)
       std::map<io_shape_id, sf_factory_ptr_t> pt_factories;
@@ -145,7 +148,7 @@ class geometry_reader final : public reader_interface<detector_t> {
                           << DETRAY_LOG_VECTOR(sf_data.transform.tr) << "]");
 
         // Add the data to the factory
-        factories.at(key)->push_back(from_payload(sf_data));
+        factories.at(key)->push_back(from_payload_impl(sf_data));
       }
 
       // Add all portals and surfaces to the volume
@@ -167,7 +170,7 @@ class geometry_reader final : public reader_interface<detector_t> {
   }
 
   /// @returns a surface transform from its io payload @param trf_data
-  static typename detector_t::transform3_type from_payload(
+  static typename detector_t::transform3_type from_payload_impl(
       const transform_payload& trf_data) {
     using algebra_t = typename detector_t::algebra_type;
     using scalar_t = dscalar<algebra_t>;
@@ -191,7 +194,8 @@ class geometry_reader final : public reader_interface<detector_t> {
 
   /// @returns surface data for a surface factory from a surface io payload
   /// @param trf_data
-  static surface_data<detector_t> from_payload(const surface_payload& sf_data) {
+  static surface_data<detector_t> from_payload_impl(
+      const surface_payload& sf_data) {
     using nav_link_t = typename detector_t::surface_type::navigation_link;
     using scalar_t = dscalar<typename detector_t::algebra_type>;
 
@@ -207,7 +211,7 @@ class geometry_reader final : public reader_interface<detector_t> {
     // will be ignored
     // @TODO: Remove this for cylinders again once 2 solution intersection
     // work
-    auto trf = from_payload(sf_data.transform);
+    auto trf = from_payload_impl(sf_data.transform);
     if (sf_data.masks.front().shape == io_shape_id::portal_cylinder2 ||
         sf_data.masks.front().shape == io_shape_id::cylinder2) {
       const auto z_shift{static_cast<scalar_t>(trf.translation()[2])};

@@ -12,6 +12,7 @@
 #include "detray/builders/bin_fillers.hpp"
 #include "detray/builders/detector_builder.hpp"
 #include "detray/builders/grid_factory.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/indexing.hpp"
 #include "detray/io/backend/detail/basic_converter.hpp"
 #include "detray/io/backend/detail/type_info.hpp"
@@ -57,7 +58,7 @@ class grid_reader : public reader_interface<detector_t> {
  public:
   /// Convert the detector grids @param grids_data from their IO payload
   template <typename content_t, typename grid_id_t>
-  static void from_payload(
+  static void from_payload_impl(
       detector_builder<typename detector_t::metadata, volume_builder>
           &det_builder,
       const detector_grids_payload<content_t, grid_id_t> &grids_data) {
@@ -100,8 +101,8 @@ class grid_reader : public reader_interface<detector_t> {
         }
 
         // Don't start at zero, since that is the brute force method
-        from_payload(bounds, binnings, std::make_pair(i + 1, grid_data),
-                     det_builder);
+        from_payload_impl(bounds, binnings, std::make_pair(i + 1, grid_data),
+                          det_builder);
       }
     }
   }
@@ -117,9 +118,9 @@ class grid_reader : public reader_interface<detector_t> {
   /// @param binning_ids runtime queue of binning type ids (read from file)
   template <typename bounds_ts = types::list<>,
             typename binning_ts = types::list<>, typename... Ts>
-  static void from_payload(std::queue<axis::bounds> &bound_ids,
-                           std::queue<axis::binning> &binning_ids,
-                           Ts &&...data) {
+  static void from_payload_impl(std::queue<axis::bounds> &bound_ids,
+                                std::queue<axis::binning> &binning_ids,
+                                Ts &&...data) {
     DETRAY_VERBOSE_HOST(
         "Resolve bounds for axes: " << DETRAY_TYPENAME(bounds_ts));
 
@@ -130,8 +131,8 @@ class grid_reader : public reader_interface<detector_t> {
     // Base case: If the bounds types are filled, continue with the binnings
     if constexpr (n_bounds_types == dim) {
       DETRAY_VERBOSE_HOST("=> Bounds assembled -> proceeding to binning ids");
-      return from_payload<bounds_ts, binning_ts>(binning_ids,
-                                                 std::forward<Ts>(data)...);
+      return from_payload_impl<bounds_ts, binning_ts>(
+          binning_ids, std::forward<Ts>(data)...);
     } else if (!bound_ids.empty()) {
       // The axis label, e.g. x, y or z by number
       constexpr auto lb{static_cast<label>(n_bounds_types)};
@@ -148,17 +149,17 @@ class grid_reader : public reader_interface<detector_t> {
       switch (first_id) {
         case bounds::e_closed: {
           using new_bounds_ts = types::push_back<bounds_ts, closed<lb>>;
-          return from_payload<new_bounds_ts, binning_ts>(
+          return from_payload_impl<new_bounds_ts, binning_ts>(
               bound_ids, binning_ids, std::forward<Ts>(data)...);
         }
         case bounds::e_open: {
           using new_bounds_ts = types::push_back<bounds_ts, open<lb>>;
-          return from_payload<new_bounds_ts, binning_ts>(
+          return from_payload_impl<new_bounds_ts, binning_ts>(
               bound_ids, binning_ids, std::forward<Ts>(data)...);
         }
         case bounds::e_circular: {
           using new_bounds_ts = types::push_back<bounds_ts, circular<lb>>;
-          return from_payload<new_bounds_ts, binning_ts>(
+          return from_payload_impl<new_bounds_ts, binning_ts>(
               bound_ids, binning_ids, std::forward<Ts>(data)...);
         }
         // Test some edge cases
@@ -184,8 +185,8 @@ class grid_reader : public reader_interface<detector_t> {
   /// @param binning_ids runtime queue of binning type ids (read from file)
   template <typename bounds_ts, typename binning_ts, typename... Ts>
     requires(types::size<bounds_ts> == dim)
-  static void from_payload(std::queue<axis::binning> &binning_ids,
-                           Ts &&...data) {
+  static void from_payload_impl(std::queue<axis::binning> &binning_ids,
+                                Ts &&...data) {
     DETRAY_VERBOSE_HOST(
         "Resolve binning ids for axes: " << DETRAY_TYPENAME(binning_ts));
 
@@ -200,7 +201,8 @@ class grid_reader : public reader_interface<detector_t> {
       DETRAY_VERBOSE_HOST("=> Binning assembled -> proceeding to coord. frame");
       std::stringstream os;
 
-      return from_payload<bounds_ts, binning_ts>(std::forward<Ts>(data)...);
+      return from_payload_impl<bounds_ts, binning_ts>(
+          std::forward<Ts>(data)...);
     } else if (!binning_ids.empty()) {
       const auto first_id{binning_ids.front()};
       binning_ids.pop();
@@ -211,13 +213,13 @@ class grid_reader : public reader_interface<detector_t> {
         case binning::e_regular: {
           using new_binning_ts =
               types::push_back<binning_ts, regular_binning_t>;
-          return from_payload<bounds_ts, new_binning_ts>(
+          return from_payload_impl<bounds_ts, new_binning_ts>(
               binning_ids, std::forward<Ts>(data)...);
         }
         case binning::e_irregular: {
           using new_binning_ts =
               types::push_back<binning_ts, irregular_binning_t>;
-          return from_payload<bounds_ts, new_binning_ts>(
+          return from_payload_impl<bounds_ts, new_binning_ts>(
               binning_ids, std::forward<Ts>(data)...);
         }
         // Test some edge cases
@@ -243,7 +245,7 @@ class grid_reader : public reader_interface<detector_t> {
   /// @param det_builder gather the grid data and build the final volume
   template <typename bounds_ts, typename binning_ts, typename content_t>
     requires(types::size<bounds_ts> == dim) && (types::size<binning_ts> == dim)
-  static void from_payload(
+  static void from_payload_impl(
       const std::pair<dindex, grid_payload<content_t>> &grid_data,
       detector_builder<typename detector_t::metadata, volume_builder>
           &det_builder) {
@@ -281,29 +283,29 @@ class grid_reader : public reader_interface<detector_t> {
         case io::accel_id::cartesian2_grid: {
           DETRAY_VERBOSE_HOST(
               "-> Frame type: " << DETRAY_TYPENAME(cartesian2D<algebra_t>));
-          return from_payload<cartesian2D<algebra_t>>(grid_data, det_builder,
-                                                      bounds, binnings);
+          return from_payload_impl<cartesian2D<algebra_t>>(
+              grid_data, det_builder, bounds, binnings);
         }
         // ring/disc, annulus grids
         case io::accel_id::polar2_grid: {
           DETRAY_VERBOSE_HOST(
               "-> Frame type: " << DETRAY_TYPENAME(polar2D<algebra_t>));
-          return from_payload<polar2D<algebra_t>>(grid_data, det_builder,
-                                                  bounds, binnings);
+          return from_payload_impl<polar2D<algebra_t>>(grid_data, det_builder,
+                                                       bounds, binnings);
         }
         // 2D concentric cylinder grid
         case io::accel_id::concentric_cylinder2_grid: {
           DETRAY_VERBOSE_HOST("-> Frame type: " << DETRAY_TYPENAME(
                                   concentric_cylindrical2D<algebra_t>));
-          return from_payload<concentric_cylindrical2D<algebra_t>>(
+          return from_payload_impl<concentric_cylindrical2D<algebra_t>>(
               grid_data, det_builder, bounds, binnings);
         }
         // 2D cylinder grid
         case io::accel_id::cylinder2_grid: {
           DETRAY_VERBOSE_HOST(
               "-> Frame type: " << DETRAY_TYPENAME(cylindrical2D<algebra_t>));
-          return from_payload<cylindrical2D<algebra_t>>(grid_data, det_builder,
-                                                        bounds, binnings);
+          return from_payload_impl<cylindrical2D<algebra_t>>(
+              grid_data, det_builder, bounds, binnings);
         }
         default: {
           print_error(grid_data.second.grid_link.type);
@@ -316,15 +318,15 @@ class grid_reader : public reader_interface<detector_t> {
         case io::accel_id::cuboid3_grid: {
           DETRAY_VERBOSE_HOST(
               "-> Frame type: " << DETRAY_TYPENAME(cartesian3D<algebra_t>));
-          return from_payload<cartesian3D<algebra_t>>(grid_data, det_builder,
-                                                      bounds, binnings);
+          return from_payload_impl<cartesian3D<algebra_t>>(
+              grid_data, det_builder, bounds, binnings);
         }
         // 3D cylinder grid
         case io::accel_id::cylinder3_grid: {
           DETRAY_VERBOSE_HOST(
               "-> Frame type: " << DETRAY_TYPENAME(cylindrical3D<algebra_t>));
-          return from_payload<cylindrical3D<algebra_t>>(grid_data, det_builder,
-                                                        bounds, binnings);
+          return from_payload_impl<cylindrical3D<algebra_t>>(
+              grid_data, det_builder, bounds, binnings);
         }
         default: {
           print_error(grid_data.second.grid_link.type);
@@ -342,7 +344,7 @@ class grid_reader : public reader_interface<detector_t> {
   template <typename local_frame_t, typename content_t, typename... bounds_ts,
             typename... binning_ts>
     requires(sizeof...(bounds_ts) == dim) && (sizeof...(binning_ts) == dim)
-  static void from_payload(
+  static void from_payload_impl(
       const std::pair<dindex, grid_payload<content_t>> &grid_idx_and_data,
       detector_builder<typename detector_t::metadata, volume_builder>
           &det_builder,
@@ -512,11 +514,11 @@ class grid_reader : public reader_interface<detector_t> {
                         << "\n\ngrid_t = " << DETRAY_TYPENAME(grid_t)
                         << "\n\nType should be registered within one of the "
                            "detector stores:");
-      if constexpr (concepts::has_surface_grids<detector_t>) {
+      if constexpr (detray::concepts::has_surface_grids<detector_t>) {
         DETRAY_FATAL_HOST("\n\nDetector accel. store = "
                           << DETRAY_TYPENAME(typename detector_t::accel));
       }
-      if constexpr (concepts::has_material_maps<detector_t>) {
+      if constexpr (detray::concepts::has_material_maps<detector_t>) {
         DETRAY_FATAL_HOST("\n\nDetector material store = "
                           << DETRAY_TYPENAME(typename detector_t::material));
       }

@@ -82,8 +82,8 @@ TEST_P(CkfToyDetectorTests, Run) {
       (path / "toy_detector_homogeneous_material.json").native());
 
   auto [io_det, names] =
-      detray::io::read_detector<traccc::default_detector::host>(host_mr,
-                                                                reader_cfg);
+      detray::io::read_detector_json<traccc::default_detector::host>(
+          host_mr, reader_cfg);
   traccc::host_detector host_detector{};
   host_detector.template set<
       traccc::detector_traits<traccc::default_detector::host::metadata>>(

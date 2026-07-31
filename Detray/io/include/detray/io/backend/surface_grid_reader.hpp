@@ -35,7 +35,7 @@ class surface_grid_reader
 
  public:
   /// Tag the reader as "surface_grids"
-  static constexpr std::string_view tag = "surface_grids";
+  static constexpr std::string_view s_tag = "surface_grids";
 
   /// Payload type that the reader processes
   using payload_type = detector_grids_payload<std::size_t, io::accel_id>;
@@ -43,11 +43,14 @@ class surface_grid_reader
   /// Same constructors for this class as for base_type
   using base_type::base_type;
 
+  /// @returns the tag of the reader: "homogeneous_material"
+  std::string_view tag() const override { return s_tag; }
+
   /// Convert the detector grids @param grids_data from their IO
   /// payload
-  void read_from_payload(detector_builder<typename detector_t::metadata,
-                                          volume_builder>& det_builder,
-                         const detector_payload& det_data) const override {
+  void from_payload(detector_builder<typename detector_t::metadata,
+                                     volume_builder>& det_builder,
+                    const detector_payload& det_data) const override {
     DETRAY_VERBOSE_HOST("Reading payload object...");
 
     if (!det_data.surface_grids.has_value()) {
@@ -58,7 +61,7 @@ class surface_grid_reader
 
     const payload_type& grids_data = *det_data.surface_grids;
 
-    grid_reader_t::from_payload(det_builder, grids_data);
+    grid_reader_t::from_payload_impl(det_builder, grids_data);
   }
 };
 
