@@ -685,11 +685,12 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   // Write payloads to JSON directly
 
   {
-    detray::io::geo_header_payload header_data;
+    detray::io::geometry_header_payload header_data =
+        geometry_writer::to_header_payload(payloads.names.at(0));
     header_data.common = detray::io::detail::basic_converter::to_payload(
         payloads.names.at(0), detray::io::geometry_writer::tag);
-    header_data.sub_header.emplace();
-    auto& geo_sub_header = header_data.sub_header.value();
+    header_data.geometry.emplace();
+    auto& geo_sub_header = header_data.geometry.value();
     geo_sub_header.n_volumes = detector.volumes.size();
     geo_sub_header.n_surfaces = 0;
     for (const auto& volume : detector.volumes) {
@@ -708,15 +709,15 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
     detray::io::homogeneous_material_header_payload header_data;
     header_data.common = detray::io::detail::basic_converter::to_payload(
         payloads.names.at(0), detray::io::homogeneous_material_writer::tag);
-    header_data.sub_header.emplace();
-    header_data.sub_header->n_rods = 0;
-    header_data.sub_header->n_slabs = 0;
+    header_data.homogeneous_material.emplace();
+    header_data.homogeneous_material->n_rods = 0;
+    header_data.homogeneous_material->n_slabs = 0;
 
     for (const auto& hVol : homogeneousMaterial.volumes) {
       if (!hVol.surface_mat.empty()) {
-        header_data.sub_header->n_rods += hVol.surface_mat.size();
+        header_data.homogeneous_material->n_rods += hVol.surface_mat.size();
       }
-      header_data.sub_header->n_slabs += hVol.surface_mat.size();
+      header_data.homogeneous_material->n_slabs += hVol.surface_mat.size();
     }
 
     nlohmann::ordered_json out_json;

@@ -33,17 +33,9 @@ class grid_writer {
  public:
   /// Convert the header information into its payload
   template <typename grid_store_t>
-  static grid_header_payload header_to_payload(
-      const std::string_view writer_tag, const grid_store_t& store,
-      const std::string_view det_name) {
+  static grid_header_payload to_header_payload(const grid_store_t& store) {
     grid_header_payload header_data;
-
-    header_data.common =
-        detail::basic_converter::to_payload(det_name, writer_tag);
-
-    header_data.sub_header.emplace();
-    auto& grid_sub_header = header_data.sub_header.value();
-    grid_sub_header.n_grids = detray::n_grids(store);
+    header_data.n_grids = detray::n_grids(store);
 
     return header_data;
   }

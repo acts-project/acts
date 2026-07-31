@@ -124,22 +124,26 @@ void read_json_dd(traccc::detector_design_description::host& det_desc,
   // Construct a (temporary) Detray detector object from the geometry
   // configuration file.
   vecmem::host_memory_resource mr;
-  traccc::host_detector detector;
-  traccc::io::read_detector(detector, mr, geometry_file);
+
+  // Set up the detector reader configuration for the optional components
+  detray::io::detector_reader_config cfg;
+  cfg.do_check(false).add_file(geometry_file);
+  const auto [det, names] = detray::io::read_detector_json(mr, cfg);
 
   // TODO: Implement detector visitor!
-  // Peek at the header to determine the kind of detector that is needed
-  const auto header = detray::io::detail::deserialize_json_header(
-      traccc::io::get_absolute_path(geometry_file));
-
-  if (header.detector == "Cylindrical detector from DD4hep blueprint") {
+  traccc::host_detector detector;
+  std::string_view det_name{names.get_detector_name()};
+  if (det_name == "Cylindrical detector from DD4hep blueprint") {
+    detector.set<traccc::odd_detector>(std::move(det));
     read_json_dd_impl<traccc::odd_detector>(det_desc, det_cond, detector, digi,
                                             cond);
-  } else if (header.detector == "detray_detector") {
+  } else if (det_name == "detray_detector") {
+    detector.set<traccc::itk_detector>(std::move(det));
     read_json_dd_impl<traccc::itk_detector>(det_desc, det_cond, detector, digi,
                                             cond);
   } else {
     // TODO: Warning here
+    detector.set<traccc::default_detector>(std::move(det));
     read_json_dd_impl<traccc::default_detector>(det_desc, det_cond, detector,
                                                 digi, cond);
   }

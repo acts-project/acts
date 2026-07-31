@@ -39,15 +39,18 @@ class homogeneous_material_reader final : public reader_interface<detector_t> {
 
  public:
   /// Tag the reader as "homogeneous material"
-  static constexpr std::string_view tag = "homogeneous_material";
+  static constexpr std::string_view s_tag = "homogeneous_material";
 
   /// Payload type that the reader processes
   using payload_type = detector_homogeneous_material_payload;
 
+  /// @returns the tag of the reader: "homogeneous_material"
+  std::string_view tag() const override { return s_tag; }
+
   /// Convert the detector material int @param det_data from its IO payload
-  void read_from_payload(detector_builder<typename detector_t::metadata,
-                                          volume_builder>& det_builder,
-                         const detector_payload& det_data) const override {
+  void from_payload(detector_builder<typename detector_t::metadata,
+                                     volume_builder>& det_builder,
+                    const detector_payload& det_data) const override {
     DETRAY_VERBOSE_HOST("Reading payload object...");
 
     using scalar_t = dscalar<typename detector_t::algebra_type>;
@@ -116,8 +119,8 @@ class homogeneous_material_reader final : public reader_interface<detector_t> {
 
         DETRAY_DEBUG_HOST("-> Surface link is: " << mat_idx);
 
-        mat_factory->add_material(mat_type, from_payload<scalar_t>(mat_data),
-                                  mat_idx);
+        mat_factory->add_material(
+            mat_type, from_payload_impl<scalar_t>(mat_data), mat_idx);
       }
 
       // Add the material to the volume
@@ -129,16 +132,16 @@ class homogeneous_material_reader final : public reader_interface<detector_t> {
   /// @returns material data for a material factory from a slab io payload
   /// @param slab_data
   template <detray::concepts::scalar scalar_t>
-  static material_data<scalar_t> from_payload(
+  static material_data<scalar_t> from_payload_impl(
       const surface_material_payload& slab_data) {
     return {static_cast<scalar_t>(slab_data.thickness),
-            from_payload<scalar_t>(slab_data.mat),
+            from_payload_impl<scalar_t>(slab_data.mat),
             detail::basic_converter::from_payload(slab_data.surface)};
   }
 
   /// @returns the material from its IO payload @param mat_data
   template <detray::concepts::scalar scalar_t>
-  static auto from_payload(const material_param_payload& mat_data) {
+  static auto from_payload_impl(const material_param_payload& mat_data) {
     return material<scalar_t>{
         static_cast<scalar_t>(mat_data.params[0]),
         static_cast<scalar_t>(mat_data.params[1]),
