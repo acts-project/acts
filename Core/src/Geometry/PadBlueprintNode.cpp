@@ -12,7 +12,7 @@
 #include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/Extent.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
 namespace {
 
@@ -122,4 +122,4 @@ Volume &PadBlueprintNode::build(const BlueprintOptions &options,
   return *m_volume;
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

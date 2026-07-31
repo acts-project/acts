@@ -1,0 +1,122 @@
+name: API surface label
+
+# Classifies a PR's effect on the public API surface and labels it accordingly:
+#   * additions                     -> ADDED_LABEL
+#   * source-level breaking changes -> BREAKING_LABEL
+# Both labels are owned by this bot and kept in sync (added when the condition
+# holds, removed when it no longer does). A sticky comment lists the symbols.
+# The labels are created automatically on first use; pre-create them if you want
+# specific colors/descriptions.
+#
+# The Checks workflow's api_surface job (plain `pull_request`, no secrets)
+# extracts the raw base/head API-surface JSON -- a PR fully controls that
+# job, so this workflow never trusts its artifact for anything beyond the
+# raw symbol data. The diff/classification and the Markdown that becomes the
+# sticky comment are produced here instead, from CI/public_api/public_api_diff.py
+# checked out fresh from the base branch, which is why it's safe to hold
+# `pull-requests: write` in this job.
+#
+# The PR/issue number to act on is resolved via the API from
+# `workflow_run.head_repository`/`head_branch` (as report.yml already does
+# for physmon) -- those come from the Actions platform itself, not from that
+# artifact. Do NOT resolve it from `head_sha` instead: that commit is often
+# no longer any PR's tip by the time this asynchronous job runs (a
+# subsequent push moved it on), so a commit-keyed lookup routinely comes up
+# empty; branch name doesn't have that race.
+
+on:
+  workflow_run: # zizmor: ignore[dangerous-triggers]
+    workflows: [Checks]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+jobs:
+  api_surface_label:
+    # Checks also runs on plain `push`, which has no PR to label.
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      ADDED_LABEL: "Public API"
+      BREAKING_LABEL: "API breaking"
+    steps:
+      - name: Resolve PR number
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_TARGET_REPO: ${{ github.repository }}
+          PR_BRANCH: |-
+            ${{
+              (github.event.workflow_run.head_repository.owner.login != github.event.workflow_run.repository.owner.login)
+                && format('{0}:{1}', github.event.workflow_run.head_repository.owner.login, github.event.workflow_run.head_branch)
+                || github.event.workflow_run.head_branch
+            }}
+        run: |
+          gh pr view --repo "${PR_TARGET_REPO}" "${PR_BRANCH}" \
+            --json number --jq '"number=\(.number)"' \
+            >> "$GITHUB_OUTPUT"
+
+      # Trusted base checkout: only public_api_diff.py is used from here,
+      # always the base branch's own copy (workflow_run resolves the default
+      # ref) -- a PR can't tamper with the classification logic or the
+      # Markdown template that becomes the sticky comment.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: api-surface
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Diff public API surface
+        run: |
+          CI/public_api/public_api_diff.py --base base-surface.json --head api-surface.json \
+            --json api-surface-diff.json --markdown api-surface-diff.md --fail-on none
+
+      - name: Apply labels and comment
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          ISSUE_NUMBER: ${{ steps.pr.outputs.number }}
+        with:
+          script: |
+            const fs = require('fs');
+            const issue_number = parseInt(process.env.ISSUE_NUMBER, 10);
+            const cls = JSON.parse(fs.readFileSync('api-surface-diff.json', 'utf8'));
+            const body = fs.readFileSync('api-surface-diff.md', 'utf8');
+            const { owner, repo } = context.repo;
+
+            const current = (await github.rest.issues.listLabelsOnIssue(
+              { owner, repo, issue_number })).data.map(l => l.name);
+
+            // Both labels are bot-owned -> keep in sync with the classification.
+            const sync = async (name, wanted) => {
+              const has = current.includes(name);
+              if (wanted && !has)
+                await github.rest.issues.addLabels({ owner, repo, issue_number, labels: [name] });
+              else if (!wanted && has)
+                await github.rest.issues.removeLabel({ owner, repo, issue_number, name })
+                  .catch(() => {});
+            };
+            await sync(process.env.ADDED_LABEL, cls.has_additions);
+            await sync(process.env.BREAKING_LABEL, cls.has_breaking);
+
+            // Sticky comment.
+            const marker = '<!-- api-surface-diff -->';
+            const full = marker + '\n' + body;
+            const comments = await github.paginate(github.rest.issues.listComments,
+              { owner, repo, issue_number });
+            const existing = comments.find(c => c.body && c.body.includes(marker));
+            if (existing)
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body: full });
+            else
+              await github.rest.issues.createComment({ owner, repo, issue_number, body: full });

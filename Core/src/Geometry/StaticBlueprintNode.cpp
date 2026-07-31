@@ -14,7 +14,7 @@
 #include "Acts/Utilities/GraphViz.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
 StaticBlueprintNode::StaticBlueprintNode(std::unique_ptr<TrackingVolume> volume)
     : m_volume(std::move(volume)) {}
@@ -156,4 +156,4 @@ void StaticBlueprintNode::addToGraphviz(std::ostream& os) const {
   BlueprintNode::addToGraphviz(os);
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

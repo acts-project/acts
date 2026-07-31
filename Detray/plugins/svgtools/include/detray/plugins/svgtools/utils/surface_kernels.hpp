@@ -50,15 +50,16 @@ struct link_start_getter {
  private:
   // Calculates the link starting location of the remaining shapes.
   template <typename mask_t, concepts::transform3D transform3_t>
-  auto inline link_start(const mask_t& mask,
-                         const transform3_t& transform) const {
+  typename mask_t::point3_type inline link_start(
+      const mask_t& mask, const transform3_t& transform) const {
     return transform.point_to_global(mask.centroid());
   }
 
   // Calculates the (optimal) link starting point for rings.
   template <concepts::transform3D transform3_t, concepts::algebra algebra_t>
-  auto inline link_start(const detray::mask<detray::ring2D, algebra_t>& mask,
-                         const transform3_t& transform) const {
+  dpoint3D<algebra_t> inline link_start(
+      const detray::mask<detray::ring2D, algebra_t>& mask,
+      const transform3_t& transform) const {
     using shape_t = detray::ring2D;
     using mask_t = detray::mask<shape_t, algebra_t>;
     using point3_t = typename mask_t::point3_type;
@@ -73,8 +74,9 @@ struct link_start_getter {
 
   // Calculates the (optimal) link starting point for annuluses.
   template <concepts::transform3D transform3_t, concepts::algebra algebra_t>
-  auto inline link_start(const detray::mask<detray::annulus2D, algebra_t>& mask,
-                         const transform3_t& transform) const {
+  dpoint3D<algebra_t> inline link_start(
+      const detray::mask<detray::annulus2D, algebra_t>& mask,
+      const transform3_t& transform) const {
     using shape_t = detray::annulus2D;
     using mask_t = detray::mask<shape_t, algebra_t>;
     using point3_t = typename mask_t::point3_type;
@@ -88,7 +90,7 @@ struct link_start_getter {
 
   // Calculates the (optimal) link starting point for concentric cylinders
   template <concepts::transform3D transform3_t, concepts::algebra algebra_t>
-  auto inline link_start(
+  dpoint3D<algebra_t> inline link_start(
       const detray::mask<concentric_cylinder2D, algebra_t>& mask,
       const transform3_t& transform) const {
     using mask_t = detray::mask<concentric_cylinder2D, algebra_t>;
@@ -105,8 +107,9 @@ struct link_start_getter {
 
   // Calculates the (optimal) link starting point for cylinders (2D).
   template <concepts::transform3D transform3_t, concepts::algebra algebra_t>
-  auto inline link_start(const detray::mask<cylinder2D, algebra_t>& mask,
-                         const transform3_t& transform) const {
+  dpoint3D<algebra_t> inline link_start(
+      const detray::mask<cylinder2D, algebra_t>& mask,
+      const transform3_t& transform) const {
     using mask_t = detray::mask<cylinder2D, algebra_t>;
     using point3_t = typename mask_t::point3_type;
     using scalar_t = typename mask_t::scalar_type;
@@ -121,7 +124,7 @@ struct link_start_getter {
 
   // Calculates the (optimal) link starting point for cylinders (3D).
   template <concepts::transform3D transform3_t, concepts::algebra algebra_t>
-  auto inline link_start(
+  dpoint3D<algebra_t> inline link_start(
       const detray::mask<detray::cylinder3D, algebra_t>& mask,
       const transform3_t& transform) const {
     using shape_t = detray::cylinder3D;
@@ -145,7 +148,7 @@ struct link_end_getter {
   template <typename mask_group_t, concepts::index index_t, typename detector_t,
             concepts::point3D point3_t, concepts::vector3D vector3_t,
             concepts::scalar scalar_t>
-  DETRAY_HOST inline auto operator()(
+  DETRAY_HOST inline vector3_t operator()(
       const mask_group_t& mask_group, const index_t& index,
       const detector_t& detector,
       const detray::tracking_volume<detector_t>& volume,
@@ -160,7 +163,7 @@ struct link_end_getter {
   template <typename mask_group_t, concepts::interval idx_range_t,
             typename detector_t, concepts::point3D point3_t,
             concepts::vector3D vector3_t, concepts::scalar scalar_t>
-  DETRAY_HOST inline auto operator()(
+  DETRAY_HOST inline vector3_t operator()(
       const mask_group_t& mask_group, const idx_range_t& idx_range,
       const detector_t& detector,
       const detray::tracking_volume<detector_t>& volume,
@@ -177,10 +180,11 @@ struct link_end_getter {
   /// @brief Calculates the direction of the link for remaining shapes.
   template <typename detector_t, typename mask_t, concepts::point3D point3_t,
             concepts::vector3D vector3_t>
-  inline auto link_dir(const mask_t& /*mask*/, const detector_t& /*detector*/,
-                       const detray::tracking_volume<detector_t>& volume,
-                       const point3_t& surface_point,
-                       const vector3_t& surface_normal) const {
+  inline vector3_t link_dir(const mask_t& /*mask*/,
+                            const detector_t& /*detector*/,
+                            const detray::tracking_volume<detector_t>& volume,
+                            const point3_t& surface_point,
+                            const vector3_t& surface_normal) const {
     const auto dir = volume.center() - surface_point;
     const auto dot_prod = vector::dot(dir, surface_normal);
 
@@ -195,7 +199,7 @@ struct link_end_getter {
             concepts::vector3D vector3_t, typename shape_t>
     requires std::is_same_v<shape_t, cylinder2D> ||
              std::is_same_v<shape_t, concentric_cylinder2D>
-  inline auto link_dir(
+  inline vector3_t link_dir(
       const detray::mask<shape_t, typename detector_t::algebra_type>& mask,
       const detector_t& detector,
       const detray::tracking_volume<detector_t>& volume,
@@ -212,7 +216,7 @@ struct link_end_getter {
         }
       }
     }
-    return -1.f * surface_normal;
+    return vector3_t{-1.f * surface_normal};
   }
 };
 
