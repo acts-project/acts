@@ -1,0 +1,100 @@
+name: API surface label
+
+# Classifies a PR's effect on the public API surface and labels it accordingly:
+#   * additions                     -> ADDED_LABEL
+#   * source-level breaking changes -> BREAKING_LABEL
+# Both labels are owned by this bot and kept in sync (added when the condition
+# holds, removed when it no longer does). A sticky comment lists the symbols.
+# The labels are created automatically on first use; pre-create them if you want
+# specific colors/descriptions.
+#
+# pull_request_target is required so labels can be applied to fork PRs. The job
+# only *parses* the PR's header text with a trusted Doxygen; it never builds or
+# executes untrusted PR code. NOTE: pull_request_target always runs the copy of
+# this workflow on the base branch, so changes here only take effect once merged.
+
+on:
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  api_surface_label:
+    runs-on: ubuntu-latest
+    env:
+      # Keep in sync with the docs job (.github/workflows/docs.yml)
+      DOXYGEN_VERSION: "1.15.0"
+      DOXYGEN_HASH: "0ec2e5b2c3cd82b7106d19cb42d8466450730b8cb7a9e85af712be38bf4523a1"
+      ADDED_LABEL: "Public API"
+      BREAKING_LABEL: "API breaking"
+    steps:
+      # Trusted base checkout: the scripts and Doxyfile come from here.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # PR head as data only (never built or executed).
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: pr
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.14'
+      - name: Install doxygen
+        run: |
+          curl -SL https://acts.web.cern.ch/ci/doxygen/doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz -o doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
+          echo "${{ env.DOXYGEN_HASH }}  doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz" | sha256sum -c -
+          tar xf doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
+          mv doxygen-${{ env.DOXYGEN_VERSION }}/bin/doxygen /usr/local/bin/doxygen
+      - name: Measure and diff public API surface
+        run: |
+          CI/public_api/public_api_surface.py --run --roots-under .   --json base.json --markdown /dev/null
+          CI/public_api/public_api_surface.py --run --roots-under pr  --json head.json --markdown /dev/null
+          CI/public_api/public_api_diff.py --base base.json --head head.json \
+            --json api-surface-diff.json --markdown api-surface-diff.md --fail-on none
+      - name: Apply labels and comment
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            const cls = JSON.parse(fs.readFileSync('api-surface-diff.json', 'utf8'));
+            const body = fs.readFileSync('api-surface-diff.md', 'utf8');
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+
+            const current = (await github.rest.issues.listLabelsOnIssue(
+              { owner, repo, issue_number })).data.map(l => l.name);
+
+            // Both labels are bot-owned -> keep in sync with the classification.
+            const sync = async (name, wanted) => {
+              const has = current.includes(name);
+              if (wanted && !has)
+                await github.rest.issues.addLabels({ owner, repo, issue_number, labels: [name] });
+              else if (!wanted && has)
+                await github.rest.issues.removeLabel({ owner, repo, issue_number, name })
+                  .catch(() => {});
+            };
+            await sync(process.env.ADDED_LABEL, cls.has_additions);
+            await sync(process.env.BREAKING_LABEL, cls.has_breaking);
+
+            // Sticky comment.
+            const marker = '<!-- api-surface-diff -->';
+            const full = marker + '\n' + body;
+            const comments = await github.paginate(github.rest.issues.listComments,
+              { owner, repo, issue_number });
+            const existing = comments.find(c => c.body && c.body.includes(marker));
+            if (existing)
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body: full });
+            else
+              await github.rest.issues.createComment({ owner, repo, issue_number, body: full });
