@@ -603,6 +603,7 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   auto payloads = converter.convertTrackingGeometry(gctx, *tGeometry);
 
   const auto& detector = *payloads.detector;
+  BOOST_REQUIRE_NE(payloads.homogeneousMaterial, nullptr);
   const auto& homogeneousMaterial = *payloads.homogeneousMaterial;
   auto& materialGrids = *payloads.materialGrids;
   const auto& surfaceGrids = *payloads.surfaceGrids;
