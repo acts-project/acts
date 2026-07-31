@@ -25,6 +25,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import unicodedata
 import xml.etree.ElementTree as ET
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -120,11 +121,25 @@ def run_doxygen(repo: Path, out: Path, input_dirs: list[Path]) -> None:
         print(f"(doxygen: {n} non-fatal diagnostics suppressed)", file=sys.stderr)
 
 
+# C++20 permits Unicode identifiers, so a crafted symbol/type name could
+# otherwise smuggle bidi-override or zero-width characters into the report
+# (Trojan-Source-style visual spoofing) even though every value is rendered
+# into a Markdown code span. Strip format (Cf) and control (Cc) code points
+# from any text pulled out of Doxygen's XML before it is used as a key or
+# rendered.
+def _sanitize(text: str) -> str:
+    return "".join(c for c in text if unicodedata.category(c) not in ("Cf", "Cc"))
+
+
+def _name(el, tag: str) -> str:
+    return _sanitize(el.findtext(tag) or "")
+
+
 def _norm_type(el) -> str:
     """Flatten a Doxygen <type>/<param><type> element to normalized text."""
     if el is None:
         return ""
-    return " ".join("".join(el.itertext()).split())
+    return _sanitize(" ".join("".join(el.itertext()).split()))
 
 
 def callable_forms(md, qualname: str) -> dict[str, str]:
@@ -172,7 +187,7 @@ def parse_xml(xml_dir: Path) -> dict:
             continue
         for cd in root.findall("compounddef"):
             kind = cd.get("kind")
-            name = cd.findtext("compoundname") or ""
+            name = _name(cd, "compoundname")
             if not name.startswith("Acts") or is_internal(name):
                 continue
             loc = cd.find("location")
@@ -192,10 +207,10 @@ def parse_xml(xml_dir: Path) -> dict:
                     if md.get("kind") == "function":
                         methods += 1
                         callables.update(
-                            callable_forms(md, f"{bare}::{md.findtext('name') or ''}")
+                            callable_forms(md, f"{bare}::{_name(md, 'name')}")
                         )
                     elif md.get("kind") == "variable":
-                        mname = md.findtext("name") or ""
+                        mname = _name(md, "name")
                         fields[f"{bare}::{mname}"] = _norm_type(md.find("type"))
 
             elif kind == "concept":
@@ -212,7 +227,7 @@ def parse_xml(xml_dir: Path) -> dict:
                     bucket = NS_MEMBER_BUCKET.get(mk)
                     if not bucket:
                         continue
-                    mname = md.findtext("name") or ""
+                    mname = _name(md, "name")
                     full = f"{name}::{mname}"
                     if full in ns_member_names:
                         continue
