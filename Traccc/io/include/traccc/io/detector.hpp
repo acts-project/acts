@@ -13,9 +13,9 @@
 // clang-format on
 
 // Detray include(s).
-#include <detray/io/frontend/detector_reader.hpp>
 #include <detray/io/frontend/detector_reader_config.hpp>
 #include <detray/io/frontend/detector_writer.hpp>
+#include <detray/io/json/detector_reader.hpp>
 
 // clang-format off
 #include <detray/utils/quiet_log_end.hpp>

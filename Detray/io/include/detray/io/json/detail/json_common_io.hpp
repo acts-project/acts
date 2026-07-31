@@ -14,30 +14,18 @@
 
 namespace detray::io {
 
-inline void to_json(nlohmann::ordered_json& j, const common_header_payload& h) {
+inline void to_json(nlohmann::ordered_json& j, const header_payload& h) {
   j["version"] = h.version;
   j["detector"] = h.detector;
   j["date"] = h.date;
   j["tag"] = h.tag;
 }
 
-inline void from_json(const nlohmann::ordered_json& j,
-                      common_header_payload& h) {
-  h.version = j["version"];
-  h.detector = j["detector"];
-  h.date = j["date"];
-  h.tag = j["tag"];
-}
-
-inline void to_json(nlohmann::ordered_json& j, const header_payload<bool>& h) {
-  j["common"] = h.common;
-  // Do write the optional subheader here, but in the dedicated serializers
-}
-
-inline void from_json(const nlohmann::ordered_json& j,
-                      header_payload<bool>& h) {
-  h.common = j["common"];
-  // Do not look at the optional subheader here
+inline void from_json(const nlohmann::ordered_json& j, header_payload& h) {
+  h.version = j["common"]["version"];
+  h.detector = j["common"]["detector"];
+  h.date = j["common"]["date"];
+  h.tag = j["common"]["tag"];
 }
 
 /// Data links IO

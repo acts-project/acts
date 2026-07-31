@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
 
   // Read the detector.
   auto [io_det, names] =
-      detray::io::read_detector<detector_t>(host_mr, reader_cfg);
+      detray::io::read_detector_json<detector_t>(host_mr, reader_cfg);
 
   traccc::host_detector host_det{};
   host_det.template set<traccc::detector_traits<typename detector_t::metadata>>(

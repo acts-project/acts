@@ -79,7 +79,7 @@ TEST_P(KalmanFittingTelescopeTests, Run) {
   reader_cfg.add_files(path + "telescope_detector_geometry.json",
                        path + "telescope_detector_homogeneous_material.json");
   auto [host_det, names] =
-      detray::io::read_detector<host_detector_type>(mng_mr, reader_cfg);
+      detray::io::read_detector_json<host_detector_type>(mng_mr, reader_cfg);
 
   traccc::host_detector polymorphic_detector;
   polymorphic_detector.set<detector_traits>(std::move(host_det));

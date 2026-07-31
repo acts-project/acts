@@ -36,7 +36,7 @@ TEST(event_data, acts_odd) {
   reader_cfg.add_file(traccc::io::data_directory() + det_file);
 
   auto [host_det, names] =
-      detray::io::read_detector<host_detector_type>(resource, reader_cfg);
+      detray::io::read_detector_json<host_detector_type>(resource, reader_cfg);
 
   traccc::host_detector polymorphic_detector;
   polymorphic_detector.set<traccc::default_detector>(std::move(host_det));
@@ -102,7 +102,7 @@ TEST(event_data, mock_data) {
   reader_cfg.add_file(traccc::io::data_directory() + det_file);
 
   auto [host_det, names] =
-      detray::io::read_detector<host_detector_type>(resource, reader_cfg);
+      detray::io::read_detector_json<host_detector_type>(resource, reader_cfg);
 
   traccc::host_detector polymorphic_detector;
   polymorphic_detector.set<traccc::default_detector>(std::move(host_det));
