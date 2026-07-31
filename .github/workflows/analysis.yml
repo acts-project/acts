@@ -16,13 +16,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
-# ccache is saved from `main` only. A PR-written cache is scoped to that PR
-# alone, yet still counts against the shared 10 GB and evicts `main`'s entries,
-# which every branch can read. PRs restore, they don't publish.
+# ccache is saved from `main` only: a PR-written cache is readable by that PR
+# alone, but still evicts `main`'s entries from the shared 10 GB.
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
-  # Deliberately above the 500M the other workflows use.
   # Sized for the github-ci-coverage build, which carries no debug info and
   # skips Examples plus the vendored Detray/Traccc trees. Watch `ccache -s`:
   # if the cache runs at ~100% of this it is evicting mid-build and the hit
@@ -109,7 +107,7 @@ jobs:
       - name: ccache stats
         run: ccache -s
 
-      # Before the tests: their failure shouldn't cost us the compiled objects.
+      # Before the tests: a failure there shouldn't cost us the objects.
       - name: Save ccache
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: always() && github.ref == 'refs/heads/main'
