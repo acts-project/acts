@@ -16,6 +16,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
+# ccache is saved from `main` only: a PR-written cache is readable by that PR
+# alone, but still evicts `main`'s entries from the shared 10 GB.
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
@@ -86,8 +88,9 @@ jobs:
           name: PR_metadata
           path: PR_metadata.json
 
-      - name: Cache build
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
@@ -103,6 +106,15 @@ jobs:
         run: cmake --build build
       - name: ccache stats
         run: ccache -s
+
+      # Before the tests: a failure there shouldn't cost us the objects.
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always() && github.ref == 'refs/heads/main'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
       - name: Unit tests
         run: >
           CI/dependencies/run.sh .env
