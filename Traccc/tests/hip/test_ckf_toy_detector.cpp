@@ -70,7 +70,8 @@ TEST_P(CkfToyDetectorTests, Run) {
       .do_check(true);
 
   auto [io_det, names] =
-      detray::io::read_detector<traccc::default_detector>(host_mr, reader_cfg);
+      detray::io::read_detector_json<traccc::default_detector>(host_mr,
+                                                               reader_cfg);
   traccc::host_detector detector{};
   detector.template set<traccc::default_detector>(std::move(io_det));
 

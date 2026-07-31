@@ -85,7 +85,7 @@ TEST_P(KF_integration_test_toy_detector, toy_detector) {
   }
 
   auto [io_det, names] =
-      detray::io::read_detector<detector_t>(host_mr, reader_cfg);
+      detray::io::read_detector_json<detector_t>(host_mr, reader_cfg);
   traccc::host_detector host_det{};
   host_det.template set<detector_t>(std::move(io_det));
   const auto& det = host_det.template as<detector_t>();

@@ -161,15 +161,15 @@ class DetrayGeometryConverter {
       }
 
       detray::io::material_map_reader<detector_t,
-                                      std::integral_constant<std::size_t, 2>>::
-          from_payload(detectorBuilder, std::move(*payloads.materialGrids));
+                                      std::integral_constant<std::size_t, 2>>{}
+          .from_payload(detectorBuilder, std::move(*payloads.materialGrids));
     }
 
     if (m_cfg.convertSurfaceGrids) {
       detray::io::surface_grid_reader<detector_t,
                                       std::integral_constant<std::size_t, 0>,
                                       std::integral_constant<std::size_t, 2>>{}
-          .template from_payload(detectorBuilder, *payloads.surfaceGrids);
+          .from_payload(detectorBuilder, *payloads.surfaceGrids);
     }
 
     if (!detectorName.empty()) {
