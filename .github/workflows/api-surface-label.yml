@@ -8,19 +8,26 @@ name: API surface label
 # The labels are created automatically on first use; pre-create them if you want
 # specific colors/descriptions.
 #
-# The actual measurement (which needs to check out fork PR code) happens in
-# the unprivileged api-surface-report.yml (plain `pull_request`). This
-# workflow only reacts to that one finishing, downloads its diff artifact,
-# and applies labels/comments -- it never checks out or executes PR content,
-# so it's safe to hold `pull-requests: write` here.
+# The Checks workflow's api_surface job (plain `pull_request`, no secrets)
+# extracts the raw base/head API-surface JSON -- a PR fully controls that
+# job, so this workflow never trusts its artifact for anything beyond the
+# raw symbol data. The diff/classification and the Markdown that becomes the
+# sticky comment are produced here instead, from CI/public_api/public_api_diff.py
+# checked out fresh from the base branch, which is why it's safe to hold
+# `pull-requests: write` in this job.
+#
+# The PR/issue number to act on is resolved from `workflow_run.head_sha`,
+# which comes from the Actions platform itself, not from that artifact --
+# never substitute an artifact-supplied value for that.
 
 on:
   workflow_run: # zizmor: ignore[dangerous-triggers]
-    workflows: [API surface report]
+    workflows: [Checks]
     types: [completed]
 
 permissions:
   actions: read
+  contents: read
   pull-requests: write
 
 concurrency:
@@ -29,24 +36,54 @@ concurrency:
 
 jobs:
   api_surface_label:
-    if: github.event.workflow_run.conclusion == 'success'
+    # Checks also runs on plain `push`, which has no PR to label.
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request'
     runs-on: ubuntu-latest
     env:
       ADDED_LABEL: "Public API"
       BREAKING_LABEL: "API breaking"
     steps:
+      - name: Resolve PR number from the trusted head sha
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          number=$(gh api "repos/${{ github.repository }}/commits/${HEAD_SHA}/pulls" --jq '.[0].number')
+          if [ -z "$number" ] || [ "$number" = "null" ]; then
+            echo "::error::No PR found for head_sha ${HEAD_SHA}"
+            exit 1
+          fi
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+
+      # Trusted base checkout: only public_api_diff.py is used from here,
+      # always the base branch's own copy (workflow_run resolves the default
+      # ref) -- a PR can't tamper with the classification logic or the
+      # Markdown template that becomes the sticky comment.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: api-surface-diff
+          name: api-surface
           repository: ${{ github.repository }}
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ github.token }}
+
+      - name: Diff public API surface
+        run: |
+          CI/public_api/public_api_diff.py --base base-surface.json --head api-surface.json \
+            --json api-surface-diff.json --markdown api-surface-diff.md --fail-on none
+
       - name: Apply labels and comment
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          ISSUE_NUMBER: ${{ steps.pr.outputs.number }}
         with:
           script: |
             const fs = require('fs');
-            const issue_number = parseInt(fs.readFileSync('pr-number.txt', 'utf8').trim(), 10);
+            const issue_number = parseInt(process.env.ISSUE_NUMBER, 10);
             const cls = JSON.parse(fs.readFileSync('api-surface-diff.json', 'utf8'));
             const body = fs.readFileSync('api-surface-diff.md', 'utf8');
             const { owner, repo } = context.repo;

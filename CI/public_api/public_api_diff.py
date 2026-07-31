@@ -29,6 +29,7 @@ import argparse
 import json
 import os
 import sys
+import unicodedata
 from pathlib import Path
 
 NONFUNC_PREFIXES = ("type ", "concept ", "aliases ", "variables ", "enums ")
@@ -38,7 +39,30 @@ def load(path: str) -> dict:
     return json.loads(Path(path).read_text())
 
 
+# The JSON consumed here is produced by an unprivileged job a PR fully
+# controls (see api-surface-report.yml's header comment): a PR could skip
+# public_api_surface.py's own extraction entirely and hand-craft this JSON,
+# so a crafted C++20 Unicode identifier could carry bidi-override /
+# zero-width characters into the Markdown this script renders. This is the
+# one script guaranteed to run from a trusted (base-branch) checkout, so
+# strip them here too rather than relying on the producer.
+def _sanitize(text: str) -> str:
+    return "".join(c for c in text if unicodedata.category(c) not in ("Cf", "Cc"))
+
+
+def _sanitize_snapshot(d: dict) -> dict:
+    return {
+        "symbols": [_sanitize(s) for s in d.get("symbols", [])],
+        "callables": {
+            _sanitize(k): _sanitize(v) for k, v in d.get("callables", {}).items()
+        },
+        "fields": {_sanitize(k): _sanitize(v) for k, v in d.get("fields", {}).items()},
+    }
+
+
 def classify(base: dict, head: dict) -> dict:
+    base = _sanitize_snapshot(base)
+    head = _sanitize_snapshot(head)
     # non-function, name-level entities
     b_names = {s for s in base.get("symbols", []) if s.startswith(NONFUNC_PREFIXES)}
     h_names = {s for s in head.get("symbols", []) if s.startswith(NONFUNC_PREFIXES)}
