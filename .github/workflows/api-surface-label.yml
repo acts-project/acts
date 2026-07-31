@@ -16,9 +16,13 @@ name: API surface label
 # checked out fresh from the base branch, which is why it's safe to hold
 # `pull-requests: write` in this job.
 #
-# The PR/issue number to act on is resolved from `workflow_run.head_sha`,
-# which comes from the Actions platform itself, not from that artifact --
-# never substitute an artifact-supplied value for that.
+# The PR/issue number to act on is resolved via the API from
+# `workflow_run.head_repository`/`head_branch` (as report.yml already does
+# for physmon) -- those come from the Actions platform itself, not from that
+# artifact. Do NOT resolve it from `head_sha` instead: that commit is often
+# no longer any PR's tip by the time this asynchronous job runs (a
+# subsequent push moved it on), so a commit-keyed lookup routinely comes up
+# empty; branch name doesn't have that race.
 
 on:
   workflow_run: # zizmor: ignore[dangerous-triggers]
@@ -43,18 +47,21 @@ jobs:
       ADDED_LABEL: "Public API"
       BREAKING_LABEL: "API breaking"
     steps:
-      - name: Resolve PR number from the trusted head sha
+      - name: Resolve PR number
         id: pr
         env:
           GH_TOKEN: ${{ github.token }}
-          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          PR_TARGET_REPO: ${{ github.repository }}
+          PR_BRANCH: |-
+            ${{
+              (github.event.workflow_run.head_repository.owner.login != github.event.workflow_run.repository.owner.login)
+                && format('{0}:{1}', github.event.workflow_run.head_repository.owner.login, github.event.workflow_run.head_branch)
+                || github.event.workflow_run.head_branch
+            }}
         run: |
-          number=$(gh api "repos/${{ github.repository }}/commits/${HEAD_SHA}/pulls" --jq '.[0].number')
-          if [ -z "$number" ] || [ "$number" = "null" ]; then
-            echo "::error::No PR found for head_sha ${HEAD_SHA}"
-            exit 1
-          fi
-          echo "number=$number" >> "$GITHUB_OUTPUT"
+          gh pr view --repo "${PR_TARGET_REPO}" "${PR_BRANCH}" \
+            --json number --jq '"number=\(.number)"' \
+            >> "$GITHUB_OUTPUT"
 
       # Trusted base checkout: only public_api_diff.py is used from here,
       # always the base branch's own copy (workflow_run resolves the default
