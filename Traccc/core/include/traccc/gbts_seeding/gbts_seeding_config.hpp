@@ -8,6 +8,7 @@
 #pragma once
 
 // System include(s)
+#include <climits>
 #include <memory>
 
 // Project include(s).
