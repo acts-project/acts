@@ -13,6 +13,7 @@
 #include "traccc/definitions/qualifiers.hpp"  // TRACCC_HOST_DEVICE, TRACCC_ALIGN
 
 // System include(s).
+#include <climits>
 #include <cmath>
 
 namespace traccc {
