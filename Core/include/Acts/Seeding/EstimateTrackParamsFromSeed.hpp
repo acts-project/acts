@@ -46,6 +46,8 @@ namespace Acts {
 /// @param bField is the magnetic field vector
 ///
 /// @return the free parameters
+/// @deprecated Use the version of estimateTrackParamsFromSeed with time
+///             information instead.
 [[deprecated(
     "Use the version of estimateTrackParamsFromSeed with time information "
     "instead.")]]
@@ -84,6 +86,8 @@ FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, double t0,
 /// @param bField is the magnetic field vector
 ///
 /// @return the free parameters
+/// @deprecated The broadly templated versions of estimateTrackParamsFromSeed
+///             will be removed in the future.
 template <std::ranges::range space_point_range_t>
 [[deprecated(
     "The broadly templated versions of estimateTrackParamsFromSeed will be "
@@ -143,6 +147,8 @@ Result<BoundVector> estimateTrackParamsFromSeed(
 /// @param bField is the magnetic field vector
 ///
 /// @return bound parameters
+/// @deprecated The broadly templated versions of estimateTrackParamsFromSeed
+///             will be removed in the future.
 template <std::ranges::range space_point_range_t>
 [[deprecated(
     "The broadly templated versions of estimateTrackParamsFromSeed will be "
