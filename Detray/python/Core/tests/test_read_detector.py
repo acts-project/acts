@@ -13,7 +13,7 @@ def test_generate_and_read_detector():
     geometry_file = os.path.join(out_dir, "toy_detector_geometry.json")
     assert os.path.exists(geometry_file)
 
-    reader_config = detray.core.DetectorReaderConfig().add_file(geometry_file)
+    reader_config = detray.core.DetectorReaderConfig().addFile(geometry_file)
 
     detector, names = detray.core.readDetector(reader_config)
     assert isinstance(names, detray.core.NameMap)

@@ -131,37 +131,37 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
       .def(py::init<>())
       .def_property_readonly("files", &reader_config_t::files, "Input files")
       .def_property(
-          "do_check", [](const reader_config_t &c) { return c.do_check(); },
+          "doCheck", [](const reader_config_t &c) { return c.do_check(); },
           [](reader_config_t &c, bool v) { c.do_check(v); },
           "Do detector consistency check")
       .def_property(
-          "verbose_check",
+          "verboseCheck",
           [](const reader_config_t &c) { return c.verbose_check(); },
           [](reader_config_t &c, bool v) { c.verbose_check(v); },
           "Verbosity of the detector consistency check")
       .def(
-          "add_file",
+          "addFile",
           [](reader_config_t &c, const std::string &f) -> reader_config_t & {
             return c.add_file(f);
           },
-          py::arg("file_name"), py::return_value_policy::reference_internal,
+          py::arg("fileName"), py::return_value_policy::reference_internal,
           "Add an input file")
       .def("__repr__", &to_string<reader_config_t>);
 
   py::class_<intersection_config_t>(m, "IntersectionConfig")
       .def(py::init<>())
-      .def_readwrite("min_mask_tolerance",
+      .def_readwrite("minMaskTolerance",
                      &intersection_config_t::min_mask_tolerance,
                      "Minimum mask tolerance")
-      .def_readwrite("max_mask_tolerance",
+      .def_readwrite("maxMaskTolerance",
                      &intersection_config_t::max_mask_tolerance,
                      "Maximum mask tolerance")
-      .def_readwrite("mask_tolerance_scalor",
+      .def_readwrite("maskToleranceScalor",
                      &intersection_config_t::mask_tolerance_scalor,
                      "Mask tolerance scale factor")
-      .def_readwrite("path_tolerance", &intersection_config_t::path_tolerance,
+      .def_readwrite("pathTolerance", &intersection_config_t::path_tolerance,
                      "Tolerance to decide when a track is on a surface")
-      .def_readwrite("overstep_tolerance",
+      .def_readwrite("overstepTolerance",
                      &intersection_config_t::overstep_tolerance,
                      "How far behind the track position to look for candidates")
       .def("__repr__", &to_string<intersection_config_t>);
@@ -170,40 +170,40 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
       .def(py::init<>())
       .def_readwrite("intersection", &navigation_config_t::intersection,
                      "Intersection configuration")
-      .def_readwrite("search_window", &navigation_config_t::search_window,
+      .def_readwrite("searchWindow", &navigation_config_t::search_window,
                      "Search window size for grid based acceleration structures")
-      .def_readwrite("accumulated_error",
+      .def_readwrite("accumulatedError",
                      &navigation_config_t::accumulated_error,
                      "Percentage of total track path to assume as accumulated error")
-      .def_readwrite("n_scattering_stddev",
+      .def_readwrite("nScatteringStddev",
                      &navigation_config_t::n_scattering_stddev,
                      "No. of standard deviations to assume to model the scattering noise")
-      .def_readwrite("estimate_scattering_noise",
+      .def_readwrite("estimateScatteringNoise",
                      &navigation_config_t::estimate_scattering_noise,
                      "Add adaptive mask tolerance to navigation")
       .def("__repr__", &to_string<navigation_config_t>);
 
   py::class_<stepping_config_t>(m, "SteppingConfig")
       .def(py::init<>())
-      .def_readwrite("min_stepsize", &stepping_config_t::min_stepsize,
+      .def_readwrite("minStepsize", &stepping_config_t::min_stepsize,
                      "Minimum step size")
-      .def_readwrite("rk_error_tol", &stepping_config_t::rk_error_tol,
+      .def_readwrite("rkErrorTol", &stepping_config_t::rk_error_tol,
                      "Runge-Kutta numeric error tolerance")
-      .def_readwrite("step_constraint", &stepping_config_t::step_constraint,
+      .def_readwrite("stepConstraint", &stepping_config_t::step_constraint,
                      "Step size constraint")
-      .def_readwrite("path_limit", &stepping_config_t::path_limit,
+      .def_readwrite("pathLimit", &stepping_config_t::path_limit,
                      "Maximum path length of track")
-      .def_readwrite("max_rk_updates", &stepping_config_t::max_rk_updates,
+      .def_readwrite("maxRkUpdates", &stepping_config_t::max_rk_updates,
                      "Maximum number of Runge-Kutta step trials")
-      .def_readwrite("use_mean_loss", &stepping_config_t::use_mean_loss,
+      .def_readwrite("useMeanLoss", &stepping_config_t::use_mean_loss,
                      "Use mean energy loss (Bethe), otherwise use most probable energy loss (Landau)")
-      .def_readwrite("use_eloss_gradient",
+      .def_readwrite("useElossGradient",
                      &stepping_config_t::use_eloss_gradient,
                      "Use energy loss gradient in error propagation")
-      .def_readwrite("use_field_gradient",
+      .def_readwrite("useFieldGradient",
                      &stepping_config_t::use_field_gradient,
                      "Use field gradient in error propagation")
-      .def_readwrite("do_covariance_transport",
+      .def_readwrite("doCovarianceTransport",
                      &stepping_config_t::do_covariance_transport,
                      "Do covariance transport")
       .def("__repr__", &to_string<stepping_config_t>);
@@ -229,7 +229,7 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
   py::class_<detray::name_map>(m, "NameMap")
       .def(py::init<>())
       .def_property(
-          "detector_name",
+          "detectorName",
           [](const detray::name_map &n) { return n.get_detector_name(); },
           [](detray::name_map &n, std::string_view name) {
             n.set_detector_name(name);
@@ -276,10 +276,10 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
           },
           py::arg("name"), "Volume index at a volume name")
       .def("clear", &detray::name_map::clear, "Clear detector and volume names")
-      .def("clear_names", &detray::name_map::clear_names,
+      .def("clearNames", &detray::name_map::clear_names,
            "Clear volume names, keep the detector name")
       .def("__repr__", [](const detray::name_map &n) {
-        return "NameMap(detector_name='" + n.get_detector_name() + "')";
+        return "NameMap(detectorName='" + n.get_detector_name() + "')";
       });
 
   py::class_<detector_handle>(

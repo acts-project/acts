@@ -70,12 +70,12 @@ def fill_reader_config(args, config):
     if not args.geometry_file:
         raise ValueError("Please specify a geometry input file!")
 
-    config.add_file(args.geometry_file)
+    config.addFile(args.geometry_file)
 
     if args.material_file:
-        config.add_file(args.material_file)
+        config.addFile(args.material_file)
 
     if args.grid_file:
-        config.add_file(args.grid_file)
+        config.addFile(args.grid_file)
 
     return config
