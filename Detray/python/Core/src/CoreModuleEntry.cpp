@@ -80,9 +80,10 @@ void bind_const_vector(py::module_ &m, const char *name) {
       .def(
           "__iter__",
           [](const Container &c) {
-            return py::make_iterator<py::return_value_policy::reference_internal,
-                                     decltype(c.begin()), decltype(c.end()),
-                                     const Element &>(c.begin(), c.end());
+            return py::make_iterator<
+                py::return_value_policy::reference_internal,
+                decltype(c.begin()), decltype(c.end()), const Element &>(
+                c.begin(), c.end());
           },
           py::keep_alive<0, 1>(), "Iterate over the elements");
 }
@@ -170,14 +171,15 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
       .def(py::init<>())
       .def_readwrite("intersection", &navigation_config_t::intersection,
                      "Intersection configuration")
-      .def_readwrite("searchWindow", &navigation_config_t::search_window,
-                     "Search window size for grid based acceleration structures")
-      .def_readwrite("accumulatedError",
-                     &navigation_config_t::accumulated_error,
-                     "Percentage of total track path to assume as accumulated error")
-      .def_readwrite("nScatteringStddev",
-                     &navigation_config_t::n_scattering_stddev,
-                     "No. of standard deviations to assume to model the scattering noise")
+      .def_readwrite(
+          "searchWindow", &navigation_config_t::search_window,
+          "Search window size for grid based acceleration structures")
+      .def_readwrite(
+          "accumulatedError", &navigation_config_t::accumulated_error,
+          "Percentage of total track path to assume as accumulated error")
+      .def_readwrite(
+          "nScatteringStddev", &navigation_config_t::n_scattering_stddev,
+          "No. of standard deviations to assume to model the scattering noise")
       .def_readwrite("estimateScatteringNoise",
                      &navigation_config_t::estimate_scattering_noise,
                      "Add adaptive mask tolerance to navigation")
@@ -196,12 +198,11 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
       .def_readwrite("maxRkUpdates", &stepping_config_t::max_rk_updates,
                      "Maximum number of Runge-Kutta step trials")
       .def_readwrite("useMeanLoss", &stepping_config_t::use_mean_loss,
-                     "Use mean energy loss (Bethe), otherwise use most probable energy loss (Landau)")
-      .def_readwrite("useElossGradient",
-                     &stepping_config_t::use_eloss_gradient,
+                     "Use mean energy loss (Bethe), otherwise use most "
+                     "probable energy loss (Landau)")
+      .def_readwrite("useElossGradient", &stepping_config_t::use_eloss_gradient,
                      "Use energy loss gradient in error propagation")
-      .def_readwrite("useFieldGradient",
-                     &stepping_config_t::use_field_gradient,
+      .def_readwrite("useFieldGradient", &stepping_config_t::use_field_gradient,
                      "Use field gradient in error propagation")
       .def_readwrite("doCovarianceTransport",
                      &stepping_config_t::do_covariance_transport,
@@ -219,8 +220,10 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
   py::class_<volume_descriptor_t>(m, "VolumeDescriptor");
   py::class_<surface_descriptor_t>(m, "SurfaceDescriptor");
   bind_const_vector<surface_store_t, surface_descriptor_t>(m, "SurfaceStore");
-  bind_const_vector<volume_container_t, volume_descriptor_t>(m, "VolumeContainer");
-  bind_const_vector<surface_container_t, surface_descriptor_t>(m, "SurfaceContainer");
+  bind_const_vector<volume_container_t, volume_descriptor_t>(m,
+                                                             "VolumeContainer");
+  bind_const_vector<surface_container_t, surface_descriptor_t>(
+      m, "SurfaceContainer");
   py::class_<geometry_context_t>(m, "GeometryContext");
   py::class_<transform_store_t>(m, "TransformStore");
   py::class_<mask_store_t>(m, "MaskStore");
@@ -235,7 +238,8 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
             n.set_detector_name(name);
           },
           "Name of the detector")
-      .def("empty", &detray::name_map::empty, "Whether no volume names are mapped")
+      .def("empty", &detray::name_map::empty,
+           "Whether no volume names are mapped")
       .def(
           "__contains__",
           [](const detray::name_map &n, detray::dindex index) {
@@ -250,9 +254,8 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
           py::arg("name"), "Whether a volume name is mapped")
       .def(
           "__setitem__",
-          [](detray::name_map &n, detray::dindex index, const std::string &name) {
-            n.emplace(index, name);
-          },
+          [](detray::name_map &n, detray::dindex index,
+             const std::string &name) { n.emplace(index, name); },
           py::arg("index"), py::arg("name"), "Map a volume index to a name")
       .def(
           "__getitem__",
