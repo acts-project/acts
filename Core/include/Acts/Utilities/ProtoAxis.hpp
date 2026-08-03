@@ -125,6 +125,7 @@ class ProtoAxis {
 /// @param a the proto axis
 ///
 /// @return an IGrid unique ptr and hence transfers ownership
+/// @deprecated Use makeGrid(const IAxis&) instead
 template <typename payload_t>
 [[deprecated("Use makeGrid(const IAxis&) instead")]] std::unique_ptr<IGrid>
 makeGrid(const ProtoAxis& a) {
@@ -145,6 +146,7 @@ makeGrid(const ProtoAxis& a) {
 /// @param b the second proto axis
 ///
 /// @return an IGrid unique ptr and hence transfers ownership
+/// @deprecated Use makeGrid(const IAxis&, const IAxis&) instead
 template <typename payload_t>
 [[deprecated(
     "Use makeGrid(const IAxis&, const IAxis&) instead")]] std::unique_ptr<IGrid>
