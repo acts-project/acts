@@ -35,7 +35,7 @@ struct config {
   /// Number of standard deviations to assume to model the scattering noise
   int n_scattering_stddev{3};
   /// Add adaptive mask tolerance to navigation
-  bool estimate_scattering_noise{true};
+  bool estimate_scattering_noise{false};
 
   /// Print the navigation configuration
   DETRAY_HOST
