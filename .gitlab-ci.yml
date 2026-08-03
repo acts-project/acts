@@ -292,6 +292,8 @@ cmsf_build_cuda:
   script:
     - git clone $CLONE_URL src
     - git -C src checkout $HEAD_SHA
+    - apt-get update
+    - apt-get install -y bc
     - cd src
     - CI/dependencies/setup.sh -c g++ -e .env
     - source .env
@@ -328,6 +330,8 @@ cmsf_test_cuda:
     - nvidia-smi
     - git clone $CLONE_URL src
     - git -C src checkout $HEAD_SHA
+    - apt-get update
+    - apt-get install -y bc
     - cd src
     - CI/dependencies/setup.sh -c g++ -e .env
     - source .env
