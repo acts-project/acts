@@ -93,12 +93,6 @@ void VectorMultiTrajectory::addTrackStateComponents_impl(
 
   IndexData& p = m_index[istate];
 
-  // Whether a component is present is decided by its index, not by `allocMask`:
-  // `shareFrom_impl` assigns an index without owning storage and `unset_impl`
-  // drops an index without releasing it, so the two can disagree. Sharing a
-  // component and then adding it must not silently replace the shared index.
-  // `allocMask` only tracks storage owned by this track state, which is what
-  // `statistics()` reports.
   PropMask allocated = PropMask::None;
 
   assert(m_params.size() == m_cov.size());
