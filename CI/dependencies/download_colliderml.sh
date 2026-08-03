@@ -17,7 +17,7 @@ function download {
   tarname=$(basename "$URL")
   curl -SL "$URL" -o "$tarname"
   echo "$HASH $tarname" | sha256sum -c
-  tar -xf "$tarname"
+  tar --no-same-owner -xf "$tarname"
 }
 
 mkdir -p "${COLLIDERML_DATA}"
