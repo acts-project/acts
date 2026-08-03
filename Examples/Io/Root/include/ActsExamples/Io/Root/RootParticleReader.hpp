@@ -112,6 +112,8 @@ class RootParticleReader : public IReader {
   BranchVector<std::uint32_t> m_particle;
   BranchVector<std::uint32_t> m_generation;
   BranchVector<std::uint32_t> m_subParticle;
+  BranchVector<std::uint32_t> m_origParticleIdx;
+  BranchVector<std::uint8_t> m_hfOrigin;
 
   BranchVector<float> m_eLoss;
   BranchVector<float> m_pathInX0;

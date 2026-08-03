@@ -273,6 +273,7 @@ def addPythia8(
     writeHepMC3: Optional[Path] = None,
     printListing: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
+    searchUpToHeavyFlavourQuark: bool = False,
 ) -> None:
     """This function steers the particle generation using Pythia8
 
@@ -302,6 +303,8 @@ def addPythia8(
         write directly from Pythia8 into HepMC3
     printPythiaEventListing
         None or "short" or "long"
+    searchUpToHeavyFlavourQuark: bool
+        Search up to the quark in HF tagging
     """
 
     import acts
@@ -385,6 +388,7 @@ def addPythia8(
         outputParticles="particles_generated",
         outputVertices="vertices_generated",
         printListing=printListing,
+        searchUpToHeavyFlavourQuark=searchUpToHeavyFlavourQuark,
     )
     s.addAlgorithm(hepmc3Converter)
     s.addWhiteboardAlias("particles", hepmc3Converter.config.outputParticles)
