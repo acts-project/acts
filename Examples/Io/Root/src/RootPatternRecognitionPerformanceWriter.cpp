@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/RootPatternPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/RootPatternRecognitionPerformanceWriter.hpp"
 
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsPlugins/Root/HistogramConverter.hpp"
@@ -37,12 +37,14 @@ void writeTrackSummaryPlots(const TrackSummaryPlotTool& tool) {
 
 }  // namespace
 
-RootPatternPerformanceWriter::RootPatternPerformanceWriter(
-    RootPatternPerformanceWriter::Config cfg, Acts::Logging::Level lvl)
-    : WriterT(cfg.inputTracks, "RootPatternPerformanceWriter", lvl),
+RootPatternRecognitionPerformanceWriter::
+    RootPatternRecognitionPerformanceWriter(
+        RootPatternRecognitionPerformanceWriter::Config cfg,
+        Acts::Logging::Level lvl)
+    : WriterT(cfg.inputTracks, "RootPatternRecognitionPerformanceWriter", lvl),
       m_cfg(std::move(cfg)),
       m_collector(
-          PatternPerformanceCollector::Config{
+          PatternRecognitionPerformanceCollector::Config{
               m_cfg.label, m_cfg.effPlotToolConfig, m_cfg.fakePlotToolConfig,
               m_cfg.duplicationPlotToolConfig, m_cfg.trackSummaryPlotToolConfig,
               m_cfg.trackQualityPlotToolConfig,
@@ -94,13 +96,14 @@ RootPatternPerformanceWriter::RootPatternPerformanceWriter(
   }
 }
 
-RootPatternPerformanceWriter::~RootPatternPerformanceWriter() {
+RootPatternRecognitionPerformanceWriter::
+    ~RootPatternRecognitionPerformanceWriter() {
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ProcessCode RootPatternPerformanceWriter::finalize() {
+ProcessCode RootPatternRecognitionPerformanceWriter::finalize() {
   m_collector.logSummary();
 
   auto writeFloat = [&](float f, const char* name) {
@@ -194,7 +197,7 @@ ProcessCode RootPatternPerformanceWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode RootPatternPerformanceWriter::writeT(
+ProcessCode RootPatternRecognitionPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
   // Read truth input collections
   const auto& particles = m_inputParticles(ctx);

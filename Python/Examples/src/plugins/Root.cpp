@@ -22,7 +22,7 @@
 #include "ActsExamples/Io/Root/RootNuclearInteractionParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
-#include "ActsExamples/Io/Root/RootPatternPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/RootPatternRecognitionPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationSummaryWriter.hpp"
 #include "ActsExamples/Io/Root/RootSeedWriter.hpp"
@@ -292,13 +292,13 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
         treeName, fileMode, writeTrackInfo);
 
     ACTS_PYTHON_DECLARE_WRITER(
-        RootPatternPerformanceWriter, root, "RootPatternPerformanceWriter",
-        inputTracks, inputParticles, inputTrackParticleMatching,
-        inputParticleTrackMatching, inputParticleMeasurementsMap, label,
-        filePath, fileMode, effPlotToolConfig, fakePlotToolConfig,
-        duplicationPlotToolConfig, trackSummaryPlotToolConfig,
-        trackQualityPlotToolConfig, subDetectorTrackSummaryVolumes,
-        writeMatchingDetails);
+        RootPatternRecognitionPerformanceWriter, root,
+        "RootPatternRecognitionPerformanceWriter", inputTracks, inputParticles,
+        inputTrackParticleMatching, inputParticleTrackMatching,
+        inputParticleMeasurementsMap, label, filePath, fileMode,
+        effPlotToolConfig, fakePlotToolConfig, duplicationPlotToolConfig,
+        trackSummaryPlotToolConfig, trackQualityPlotToolConfig,
+        subDetectorTrackSummaryVolumes, writeMatchingDetails);
 
     ACTS_PYTHON_DECLARE_WRITER(RootNuclearInteractionParametersWriter, root,
                                "RootNuclearInteractionParametersWriter",

@@ -31,7 +31,7 @@ namespace ActsExamples {
 ///
 /// Fill histograms for each event via fill(). Caller is responsible for
 /// thread safety — this class applies no locking of its own.
-class PatternPerformanceCollector {
+class PatternRecognitionPerformanceCollector {
  public:
   struct Config {
     /// Label used to customize histogram titles and names
@@ -47,8 +47,8 @@ class PatternPerformanceCollector {
     std::map<std::string, std::set<int>> subDetectorTrackSummaryVolumes;
   };
 
-  PatternPerformanceCollector(Config cfg,
-                              std::unique_ptr<const Acts::Logger> logger);
+  PatternRecognitionPerformanceCollector(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger);
 
   /// Fill histograms for one event.
   ///

@@ -26,7 +26,7 @@ acts_add_library(
     src/Validation/FakePlotTool.cpp
     src/Validation/ResPlotTool.cpp
     src/Validation/TrackClassification.cpp
-    src/Validation/PatternPerformanceCollector.cpp
+    src/Validation/PatternRecognitionPerformanceCollector.cpp
     src/Validation/TrackFitterPerformanceCollector.cpp
     src/Validation/TrackQualityPlotTool.cpp
     src/Validation/TrackSummaryPlotTool.cpp

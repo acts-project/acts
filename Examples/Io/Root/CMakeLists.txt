@@ -25,7 +25,7 @@ acts_add_library(
     src/RootAthenaDumpWriter.cpp
     src/RootNuclearInteractionParametersWriter.cpp
     src/detail/NuclearInteractionParametrisation.cpp
-    src/RootPatternPerformanceWriter.cpp
+    src/RootPatternRecognitionPerformanceWriter.cpp
     src/RootTrackFinderNTupleWriter.cpp
     src/RootTrackFitterPerformanceWriter.cpp
     src/RootVertexNTupleWriter.cpp

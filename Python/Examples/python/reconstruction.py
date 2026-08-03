@@ -1393,9 +1393,9 @@ def addSeedPerformanceWriters(
 ):
     """Writes seeding related performance output"""
     customLogLevel = acts.examples.defaultLogging(sequence, logLevel)
-    RootPatternPerformanceWriter, RootTrackParameterWriter = (
+    RootPatternRecognitionPerformanceWriter, RootTrackParameterWriter = (
         acts.examples._tryImportRoot(
-            "RootPatternPerformanceWriter", "RootTrackParameterWriter"
+            "RootPatternRecognitionPerformanceWriter", "RootTrackParameterWriter"
         )
     )
     outputDirRoot = Path(outputDirRoot)
@@ -1403,7 +1403,7 @@ def addSeedPerformanceWriters(
         outputDirRoot.mkdir()
 
     sequence.addWriter(
-        RootPatternPerformanceWriter(
+        RootPatternRecognitionPerformanceWriter(
             level=customLogLevel(),
             inputTracks=tracks,
             inputParticles=selectedParticles,
@@ -1931,13 +1931,13 @@ def addTrackWriters(
             RootTrackSummaryWriter,
             RootTrackStatesWriter,
             RootTrackFitterPerformanceWriter,
-            RootPatternPerformanceWriter,
+            RootPatternRecognitionPerformanceWriter,
             RootTrackFinderNTupleWriter,
         ) = acts.examples._tryImportRoot(
             "RootTrackSummaryWriter",
             "RootTrackStatesWriter",
             "RootTrackFitterPerformanceWriter",
-            "RootPatternPerformanceWriter",
+            "RootPatternRecognitionPerformanceWriter",
             "RootTrackFinderNTupleWriter",
         )
         outputDirRoot = Path(outputDirRoot)
@@ -1980,7 +1980,7 @@ def addTrackWriters(
             s.addWriter(trackFitterPerformanceWriter)
 
         if writeFinderPerformance:
-            trackFinderPerfWriter = RootPatternPerformanceWriter(
+            trackFinderPerfWriter = RootPatternRecognitionPerformanceWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
                 inputParticles="particles_selected",

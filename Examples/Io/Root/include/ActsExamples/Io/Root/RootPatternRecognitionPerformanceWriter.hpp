@@ -17,7 +17,7 @@
 #include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
 #include "ActsExamples/Validation/FakePlotTool.hpp"
-#include "ActsExamples/Validation/PatternPerformanceCollector.hpp"
+#include "ActsExamples/Validation/PatternRecognitionPerformanceCollector.hpp"
 #include "ActsExamples/Validation/TrackQualityPlotTool.hpp"
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
@@ -41,7 +41,8 @@ namespace ActsExamples {
 /// done by setting the Config::rootFile pointer to an existing file.
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class RootPatternPerformanceWriter final : public WriterT<ConstTrackContainer> {
+class RootPatternRecognitionPerformanceWriter final
+    : public WriterT<ConstTrackContainer> {
  public:
   struct Config {
     /// Input (found) tracks collection.
@@ -77,8 +78,8 @@ class RootPatternPerformanceWriter final : public WriterT<ConstTrackContainer> {
   };
 
   /// Construct from configuration and log level.
-  RootPatternPerformanceWriter(Config cfg, Acts::Logging::Level lvl);
-  ~RootPatternPerformanceWriter() override;
+  RootPatternRecognitionPerformanceWriter(Config cfg, Acts::Logging::Level lvl);
+  ~RootPatternRecognitionPerformanceWriter() override;
 
   /// Finalize plots.
   ProcessCode finalize() override;
@@ -95,7 +96,7 @@ class RootPatternPerformanceWriter final : public WriterT<ConstTrackContainer> {
   std::mutex m_writeMutex;
   TFile* m_outputFile{nullptr};
   /// Collector holding all plot tools and per-event counters.
-  PatternPerformanceCollector m_collector;
+  PatternRecognitionPerformanceCollector m_collector;
 
   /// For optional output of the matching details
   TTree* m_matchingTree{nullptr};

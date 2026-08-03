@@ -15,13 +15,13 @@ _patch_config(ActsExamplesPythonBindings)
 import warnings
 
 
-class PythonTrackFinderPerformanceWriter(PythonPatternPerformanceWriter):
-    """Deprecated alias for :class:`PythonPatternPerformanceWriter`."""
+class PythonTrackFinderPerformanceWriter(PythonPatternRecognitionPerformanceWriter):
+    """Deprecated alias for :class:`PythonPatternRecognitionPerformanceWriter`."""
 
     def __init__(self, *args, **kwargs):
         warnings.warn(
             "PythonTrackFinderPerformanceWriter is deprecated, "
-            "use PythonPatternPerformanceWriter instead",
+            "use PythonPatternRecognitionPerformanceWriter instead",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -37,13 +37,15 @@ def _setupRootAliases(root_module):
         return
     _rootAliasesSetup = True
 
-    class RootTrackFinderPerformanceWriter(root_module.RootPatternPerformanceWriter):
-        """Deprecated alias for :class:`RootPatternPerformanceWriter`."""
+    class RootTrackFinderPerformanceWriter(
+        root_module.RootPatternRecognitionPerformanceWriter
+    ):
+        """Deprecated alias for :class:`RootPatternRecognitionPerformanceWriter`."""
 
         def __init__(self, *args, **kwargs):
             warnings.warn(
                 "RootTrackFinderPerformanceWriter is deprecated, "
-                "use RootPatternPerformanceWriter instead",
+                "use RootPatternRecognitionPerformanceWriter instead",
                 DeprecationWarning,
                 stacklevel=2,
             )

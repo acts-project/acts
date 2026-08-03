@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Validation/PatternPerformanceCollector.hpp"
+#include "ActsExamples/Validation/PatternRecognitionPerformanceCollector.hpp"
 
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -17,7 +17,7 @@
 
 namespace ActsExamples {
 
-PatternPerformanceCollector::PatternPerformanceCollector(
+PatternRecognitionPerformanceCollector::PatternRecognitionPerformanceCollector(
     Config cfg, std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(std::move(cfg)),
       m_logger(std::move(logger)),
@@ -49,7 +49,7 @@ PatternPerformanceCollector::PatternPerformanceCollector(
   }
 }
 
-void PatternPerformanceCollector::fill(
+void PatternRecognitionPerformanceCollector::fill(
     const Acts::GeometryContext& geoContext, const ConstTrackContainer& tracks,
     const SimParticleContainer& particles,
     const TrackParticleMatching& trackParticleMatching,
@@ -194,7 +194,7 @@ void PatternPerformanceCollector::fill(
   }
 }
 
-void PatternPerformanceCollector::logSummary() const {
+void PatternRecognitionPerformanceCollector::logSummary() const {
   std::string labelPlural = std::format("{}s", m_cfg.label);
 
   const Acts::Logger& log = *m_logger;

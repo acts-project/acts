@@ -16,7 +16,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
-#include "ActsExamples/Validation/PatternPerformanceCollector.hpp"
+#include "ActsExamples/Validation/PatternRecognitionPerformanceCollector.hpp"
 #include "ActsExamples/Validation/ResPlotTool.hpp"
 #include "ActsExamples/Validation/TrackFitterPerformanceCollector.hpp"
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
@@ -39,7 +39,7 @@ namespace {
 
 /// A ROOT-free writer that collects pattern-recognition performance histograms
 /// and exposes them to Python via histograms() after s.run().
-class PythonPatternPerformanceWriter final
+class PythonPatternRecognitionPerformanceWriter final
     : public WriterT<ConstTrackContainer> {
  public:
   struct Config {
@@ -55,7 +55,8 @@ class PythonPatternPerformanceWriter final
     std::string inputParticleMeasurementsMap;
     /// Label for histogram titles and names.
     std::string label = "track";
-    /// Plot tool configurations (inlined from PatternPerformanceCollector).
+    /// Plot tool configurations (inlined from
+    /// PatternRecognitionPerformanceCollector).
     EffPlotTool::Config effPlotToolConfig;
     FakePlotTool::Config fakePlotToolConfig;
     DuplicationPlotTool::Config duplicationPlotToolConfig;
@@ -65,11 +66,13 @@ class PythonPatternPerformanceWriter final
     std::map<std::string, std::set<int>> subDetectorTrackSummaryVolumes;
   };
 
-  PythonPatternPerformanceWriter(Config cfg, Acts::Logging::Level lvl)
-      : WriterT(cfg.inputTracks, "PythonPatternPerformanceWriter", lvl),
+  PythonPatternRecognitionPerformanceWriter(Config cfg,
+                                            Acts::Logging::Level lvl)
+      : WriterT(cfg.inputTracks, "PythonPatternRecognitionPerformanceWriter",
+                lvl),
         m_cfg(std::move(cfg)),
         m_collector(
-            PatternPerformanceCollector::Config{
+            PatternRecognitionPerformanceCollector::Config{
                 m_cfg.label, m_cfg.effPlotToolConfig, m_cfg.fakePlotToolConfig,
                 m_cfg.duplicationPlotToolConfig,
                 m_cfg.trackSummaryPlotToolConfig,
@@ -167,7 +170,7 @@ class PythonPatternPerformanceWriter final
 
   Config m_cfg;
   std::mutex m_writeMutex;
-  PatternPerformanceCollector m_collector;
+  PatternRecognitionPerformanceCollector m_collector;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
@@ -316,11 +319,11 @@ namespace ActsPython {
 
 void addPythonSpecific(py::module_& mex) {
   {
-    using Writer = PythonPatternPerformanceWriter;
+    using Writer = PythonPatternRecognitionPerformanceWriter;
     using Config = Writer::Config;
 
     auto w = py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
-                 mex, "PythonPatternPerformanceWriter")
+                 mex, "PythonPatternRecognitionPerformanceWriter")
                  .def(py::init<const Config&, Acts::Logging::Level>(),
                       py::arg("config"), py::arg("level"))
                  .def_property_readonly("config", &Writer::config)
