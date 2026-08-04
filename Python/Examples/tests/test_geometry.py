@@ -8,7 +8,6 @@ import json
 
 from helpers import dd4hepEnabled
 
-
 @pytest.mark.parametrize(
     "detectorFactory,aligned,nobj",
     [
@@ -35,6 +34,8 @@ from helpers import dd4hepEnabled
         "odd",
     ],
 )
+
+
 @pytest.mark.slow
 def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
     detector = detectorFactory()
@@ -266,23 +267,23 @@ def test_odd_gen3_json_roundtrip(tmp_path, odd_detector_gen3):
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.odd
-def test_geometry_python_visualization(tmp_path):
+def test_geometry_python_visualization(tmp_path, odd_detector_gen3):
     from geometry import runGeometry
     from matplotlib.collections import PatchCollection
 
-    with getOpenDataDetector(gen3=True) as detector:
-            trackingGeometry = detector.trackingGeometry()
+    detector = odd_detector_gen3
+    trackingGeometry = detector.trackingGeometry()
 
-            runGeometry(
-            trackingGeometry=trackingGeometry,
-            decorators=detector.contextDecorators(),
-            outputDir= tmp_path,
-            events=1,
-            projection='xy',
-            outputPy=True,
-            outputCsv=False,
-            outputSurfacesJson=False,
-            serializeGeometryJson=False,)
+    runGeometry(
+        trackingGeometry=trackingGeometry,
+        decorators=detector.contextDecorators(),
+        outputDir= tmp_path,
+        events=1,
+        projection='xy',
+        outputPy=True,
+        outputCsv=False,
+        outputSurfacesJson=False,
+        serializeGeometryJson=False,)
 
     ax = plt.gca()
     assert any(isinstance(c, PatchCollection) for c in ax.collections)

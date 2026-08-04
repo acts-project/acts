@@ -2,17 +2,10 @@
 
 import os
 import json
-import numpy as np
-import matplotlib.pyplot as plt
-import time
-
-from matplotlib.patches import Polygon, Circle
-from matplotlib.collections import PatchCollection, LineCollection
-from pathlib import Path
 
 import acts
 import acts.examples
-import plot2D
+
 from acts.json import MaterialMapJsonConverter, TrackingGeometryJsonConverter
 from acts.examples.odd import getOpenDataDetector
 from acts.examples import (
@@ -37,9 +30,9 @@ def runGeometry(
     events=1,
     projection='xy',
     outputPy=True,
-    outputCsv=False,
-    outputSurfacesJson=False,
-    serializeGeometryJson=False,
+    outputCsv=True,
+    outputSurfacesJson=True,
+    serializeGeometryJson=True,
 ):
     for ievt in range(events):
         eventStore = WhiteBoard(name=f"EventStore#{ievt}", level=acts.logging.INFO)
@@ -65,7 +58,7 @@ def runGeometry(
             writer.write(context)
 
         if outputPy:
-            vis = acts.PyVisualization(projection=projection)
+            vis = acts.VisualizationBuffer(projection=projection)
             trackingGeometry.visualize(
                 vis,
                 context.geoContext
@@ -114,17 +107,14 @@ def runGeometry(
 
 
 if "__main__" == __name__:
-    start = time.time()
     #detector = acts.examples.GenericDetector()
     detector = getOpenDataDetector(gen3=True)
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
    
-    fig, ax = plt.subplots()
+    import matplotlib.pyplot as plt
     runGeometry(trackingGeometry, decorators, projection='rz')
     plt.savefig("geoDefault_rz")
-    dt = time.time() - start
-    print(dt)
     # Uncomment if you want to create the geometry id mapping for DD4hep
     # dd4hepIdGeoIdMap = acts.examples.dd4hep.createDD4hepIdGeoIdMap(trackingGeometry)
     # dd4hepIdGeoIdValueMap = {}

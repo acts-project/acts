@@ -76,3 +76,33 @@ void Acts::EventDataView3D::drawCovarianceAngular(
   Polyhedron coneHedron(cone, facesCone, triangularMeshCone);
   GeometryView3D::drawPolyhedron(helper, coneHedron, coneViewConfig);
 }
+
+void Acts::EventDataView3D::drawTrack(
+    IVisualization3D& helper, const AnyConstTrackProxy& track,
+      const GeometryContext& gctx)
+  { 
+    ///auto track = trackcontainer.getTrack(itrack); /// Need to change this to tacke ConstTrackProxy directly
+    auto tparams = track.parameters();
+    auto tphi = tparams[eBoundPhi];
+    auto ttheta = tparams[eBoundTheta];
+    Vector2 tlocpos{tparams[eBoundLoc0], tparams[eBoundLoc1]};
+    Vector3 tlocdir{std::sin(ttheta)*std::cos(tphi), std::sin(ttheta)*std::sin(tphi), std::cos(ttheta)};
+
+    auto& rs = track.referenceSurface();
+    auto tglobpos = rs.localToGlobal(gctx, tlocpos, tlocdir);
+
+    auto previouspos = tglobpos; 
+    
+    for(auto ts : track.trackStatesReversed()){
+      auto params = ts.parameters();
+      auto phi = params[eBoundPhi];
+      auto theta = params[eBoundTheta];
+      Vector2 locpos{params[eBoundLoc0], params[eBoundLoc1]};
+      Vector3 locdir{std::sin(theta)*std::cos(phi), std::sin(theta)*std::sin(phi), std::cos(theta)};
+      auto& s = ts.referenceSurface();
+      auto currentpos = s.localToGlobal(gctx, locpos, locdir);
+
+      helper.line(previouspos, currentpos);
+      previouspos = currentpos;
+    }
+  }

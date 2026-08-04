@@ -164,7 +164,6 @@ void Volume::visualize(IVisualization3D& helper, const GeometryContext& gctx,
   auto bSurfaces =
       volumeBounds().orientedSurfaces(localToGlobalTransform(gctx));
   for (const auto& bs : bSurfaces) {
-
     bs.surface->visualize(helper, gctx, viewConfig);
   }
 }

@@ -245,9 +245,9 @@ void addGeometry(py::module_& m) {
                 (&TrackingGeometry::visualize, py::const_),
                 py::arg("helper"), py::arg("gctx"))
             .def("visualize",
-                py::overload_cast<IVisualization3D&, const GeometryContext&, std::function<ViewConfig(const GeometryObject&)>>
+                py::overload_cast<IVisualization3D&, const GeometryContext&, const ViewConfigFunc&>
                 (&TrackingGeometry::visualize, py::const_),
-                py::arg("helper"), py::arg("gctx"), py::arg("viewConfig"));
+                py::arg("helper"), py::arg("gctx"), py::arg("viewConfigFactory"));
                  
 
     using apply_ptr_t =

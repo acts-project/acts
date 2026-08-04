@@ -167,8 +167,9 @@ static const ViewConfig s_viewLine = {.color = {0, 0, 220}};
 
 ViewConfig defaultColoring(const GeometryObject&); 
 
+using ViewConfigFunc = std::function<ViewConfig(const GeometryObject&)>;
 ///std::map<int, Color> as argument later
-std::function<ViewConfig(const GeometryObject &)> makeDefaultColoringFunction();
+ViewConfigFunc viewConfigFactory();
 
 
 }  // namespace Acts

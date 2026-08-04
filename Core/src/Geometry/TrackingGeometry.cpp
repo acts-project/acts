@@ -313,13 +313,8 @@ TrackingGeometry::geoIdSurfaceMap() const {
 
 void TrackingGeometry::visualize(IVisualization3D& helper,
                                  const GeometryContext& gctx,
-                                 //const ViewConfig& viewConfig,
-                                 //const ViewConfig& portalViewConfig,
-                                 //const ViewConfig& sensitiveViewConfig
-                                 const std::function<ViewConfig(const GeometryObject &)> coloringFunction) const {
-  //highestTrackingVolume()->visualize(helper, gctx, viewConfig, portalViewConfig,
-  //                                   sensitiveViewConfig);
-  highestTrackingVolume()->visualize(helper, gctx, coloringFunction);
+                                 const ViewConfigFunc& viewConfigFactory) const {
+  highestTrackingVolume()->visualize(helper, gctx, viewConfigFactory);
 }
 
 void TrackingGeometry::apply(TrackingGeometryVisitor& visitor) const {

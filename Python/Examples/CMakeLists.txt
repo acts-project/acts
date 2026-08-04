@@ -10,6 +10,7 @@ set(py_files
     itk.py
     odd.py
     uproot.py
+    visualization.py
 )
 
 # Macro to add example bindings conditionally

@@ -8,12 +8,16 @@
 
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
-#include "Acts/Visualization/PyVisualization.hpp"
+#include "Acts/Visualization/VisualizationBuffer.hpp"
 #include "Acts/Visualization/EventDataView3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
+#include "Acts/EventData/AnyTrackProxy.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
+
+#include <array>
+#include <span>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
@@ -25,6 +29,25 @@ namespace py = pybind11;
 using namespace Acts;
 
 namespace ActsPython {
+
+py::array_t<int> colorsToNumpy(std::span<const Color> colors, const py::object& base){
+ 
+  std::vector<py::size_t> shape{
+    static_cast<py::size_t>(colors.size()), 3
+  };
+
+  std::vector<py::size_t> strides{
+    static_cast<py::size_t>(sizeof(Color)),
+    static_cast<py::size_t>(sizeof(int))
+  };
+
+  return py::array_t<int>(
+    shape,
+    strides,
+    colors.data()->rgb.data(),
+    base
+  );
+}
 
 /// @brief Add visualization bindings to the given module.
 /// @param m    The module to add the bindings to.
@@ -65,50 +88,30 @@ void addVisualization(py::module& m) {
           },
           py::arg("name"));
 
-  py::class_<PyVisualization, IVisualization3D>(m, "PyVisualization")
+  py::class_<VisualizationBuffer, IVisualization3D>(m, "VisualizationBuffer")
       .def(py::init<unsigned int, double>(), py::arg("prec") = 4u,
            py::arg("scale") = 1)
-      .def_property_readonly("surfaces", &PyVisualization::surfaces)
-      .def_property_readonly("segments", &PyVisualization::segments)
-      .def_property_readonly("faceColors", [](const PyVisualization &self) {
-        const auto &colors = self.faceColors();
-
-        py::array_t<double> arr({colors.size(), size_t(3)});
-        // one element in the array
-        auto r = arr.mutable_unchecked<2>(); // direct access of elements without internal checking of dimensions
-
-        for (size_t i = 0; i < colors.size(); ++i) {
-            r(i, 0) = colors[i].rgb[0];
-            r(i, 1) = colors[i].rgb[1];
-            r(i, 2) = colors[i].rgb[2];
-        }
-        return arr;
+      .def_property_readonly("surfaces", &VisualizationBuffer::surfaces)
+      .def_property_readonly("segments", &VisualizationBuffer::segments)
+      .def_property_readonly("vertices", &VisualizationBuffer::vertices3D)
+      .def_property_readonly("faceColors", [](const VisualizationBuffer &self) {
+        return colorsToNumpy(std::span(self.faceColors()), py::cast(&self));
       }
     )
-    .def_property_readonly("lineColor", [](const PyVisualization &self){
-      const auto &colors = self.lineColors();
-
-      py::array_t<double> arr({colors.size(), size_t(3)});
-      auto r = arr.mutable_unchecked<2>();
-
-      for (size_t i = 0; i < colors.size(); i++) {
-          r(i, 0) = colors[i].rgb[0];
-          r(i, 1) = colors[i].rgb[1];
-          r(i, 2) = colors[i].rgb[2];
-        }
-      return arr;
+    .def_property_readonly("lineColor", [](const VisualizationBuffer &self){
+      return colorsToNumpy(std::span(self.lineColors()), py::cast(&self));
       }
     )
-    .def_property_readonly("lineThickness", &PyVisualization::lineThickness);
+    .def_property_readonly("lineThickness", &VisualizationBuffer::lineThickness);
 
   py::class_<EventDataView3D>(m, "EventDataView3D")
     .def_static("drawTrack",
-      [] (IVisualization3D& helper, const Acts::EventDataView3D::ConstTrackProxy& track){
+      [] (IVisualization3D& helper, const AnyConstTrackProxy& track){
         EventDataView3D::drawTrack(helper, track,  GeometryContext::dangerouslyDefaultConstruct());
       });
 
   py::class_<GeometryObject>(m, "GeometryObject");
-  m.def("makeDefaultColoringFunction", &makeDefaultColoringFunction);
+  m.def("viewConfigFactory()", &viewConfigFactory);
   //m.def("defaultColoring", &defaultColoring);
 
 }

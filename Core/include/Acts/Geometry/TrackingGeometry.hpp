@@ -238,11 +238,11 @@ class TrackingGeometry {
   /// @param portalViewConfig View config for portals
   /// @param sensitiveViewConfig View configuration for sensitive surfaces
   void visualize(IVisualization3D& helper, const GeometryContext& gctx,
-                 std::function<ViewConfig(const GeometryObject &)> viewConfig) const;
+                 const ViewConfigFunc& viewConfig) const;
 
   /// overload method to handle default value
   void visualize(IVisualization3D& helper, const GeometryContext& gctx) const{
-    visualize(helper, gctx, makeDefaultColoringFunction());
+    visualize(helper, gctx, viewConfigFactory());
   }
   /// Which *type* of geometry this represents: Gen1 or Gen3
   enum class GeometryVersion { Gen1, Gen3 };

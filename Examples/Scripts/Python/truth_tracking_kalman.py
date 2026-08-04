@@ -6,16 +6,6 @@ from typing import Optional
 import acts
 import acts.examples
 
-import numpy as np
-import matplotlib.pyplot as plt
-import time
-
-from matplotlib.patches import Polygon, Circle
-from matplotlib.collections import PatchCollection, LineCollection
-
-from geometry import runGeometry
-import plot2D
-
 u = acts.UnitConstants
 
 
@@ -24,6 +14,7 @@ def runTruthTrackingKalman(
     field: acts.MagneticFieldProvider,
     digiConfigFile: Path,
     outputDir: Path,
+    pyVis = True,
     inputParticlePath: Optional[Path] = None,
     inputHitsPath: Optional[Path] = None,
     decorators=[],
@@ -63,6 +54,10 @@ def runTruthTrackingKalman(
         addKalmanTracks,
     )
 
+    from acts.examples.visualization import (
+            TrackVisualizerAlg,
+            PyVisualization2D
+        )
 
     s = s or acts.examples.Sequencer(
         events=1, numThreads=-1, logLevel=acts.logging.INFO
@@ -74,7 +69,7 @@ def runTruthTrackingKalman(
     rnd = acts.examples.RandomNumbers(seed=42)
     outputDir = Path(outputDir)
 
-    logger = acts.getDefaultLogger("Truth tracking example", acts.logging.DEBUG)
+    logger = acts.getDefaultLogger("Truth tracking example", acts.logging.INFO)
 
     #for ievt in range(numParticles):
     ievt = 0
@@ -82,13 +77,13 @@ def runTruthTrackingKalman(
     ialg = 0
     ithread = 0
 
-    context = acts.examples.AlgorithmContext(ialg, ievt, eventStore, ithread)
-    vis = acts.PyVisualization()
-    trackingGeometry.visualize(
-                vis,
-                context.geoContext,
-            )
-     
+    if pyVis:
+        context = acts.examples.AlgorithmContext(ialg, ievt, eventStore, ithread)
+        vis = PyVisualization2D()
+        trackingGeometry.visualize(
+                    vis,
+                    context.geoContext,
+                )
 
     if inputParticlePath is None:
         addParticleGun(
@@ -189,7 +184,7 @@ def runTruthTrackingKalman(
         initialSigmaQoverPt=0.1 / u.GeV,
         initialSigmaPtRel=0.1,
         initialVarInflation=[1e0, 1e0, 1e0, 1e0, 1e0, 1e0],
-        logLevel=acts.logging.DEBUG
+        logLevel=acts.logging.INFO
     )
 
     addKalmanTracks(
@@ -200,28 +195,10 @@ def runTruthTrackingKalman(
         reverseFilteringCovarianceScaling,
         linkForward=linkForward,
         useJosephFormulation=useJosephFormulation,
-        logLevel=acts.logging.DEBUG
+        logLevel=acts.logging.INFO
     )
 
-    # add algorithm, that visualizes track
-    class TrackVisualizerAlg(acts.examples.IAlgorithm):
-        def __init__(self, name, level):
-            acts.examples.IAlgorithm.__init__(self, name, level)
-
-            self.tracks = acts.examples.ReadDataHandle(
-                self, acts.examples.ConstTrackContainer, "Tracks"
-            )
-            self.tracks.initialize("tracks")
-
-       
-        def execute(self, context):
-            tracks = self.tracks(context.eventStore)
-            for track in tracks:
-                acts.EventDataView3D.drawTrack(vis, track) # draw track not a free function
-
-            return acts.examples.ProcessCode.SUCCESS
-
-    s.addAlgorithm(TrackVisualizerAlg("TrackVisualizerAlg", acts.logging.DEBUG))
+    s.addAlgorithm(TrackVisualizerAlg("TrackVisualizerAlg", acts.logging.INFO, vis))
 
     s.addAlgorithm(
         acts.examples.TrackSelectorAlgorithm(
@@ -269,7 +246,6 @@ def runTruthTrackingKalman(
 
     s.run()
     vis.plot(projection=projection) 
-
     
 
 if "__main__" == __name__:
@@ -290,9 +266,19 @@ if "__main__" == __name__:
     #     srcdir
     #     / "Examples/Configs/generic-digi-smearing-config.json"
     # )
+    import matplotlib
+    import matplotlib.ft2font
+    import sys
+    import acts
+
+    print("Python:", sys.version)
+    print("Matplotlib:", matplotlib.__version__)
+    print("FreeType:", matplotlib.ft2font.__freetype_version__)
+    print("ACTS:", acts.__version__)
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots()
     runTruthTrackingKalman(
         trackingGeometry=trackingGeometry,
         field=field,
@@ -301,5 +287,5 @@ if "__main__" == __name__:
         outputDir=Path.cwd(),
     )
 
-    plt.savefig("geo_track.png")
+    plt.savefig("review_test.png")
   

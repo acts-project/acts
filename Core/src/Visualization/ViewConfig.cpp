@@ -25,7 +25,7 @@ ViewConfig defaultColoring(const GeometryObject& geoObj) {
     }
 } 
 
-std::function<ViewConfig(const GeometryObject &)> makeDefaultColoringFunction() {
+ViewConfigFunc viewConfigFactory() {
 return defaultColoring;
 }
 

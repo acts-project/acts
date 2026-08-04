@@ -602,17 +602,17 @@ void TrackingVolume::addSurface(std::shared_ptr<Surface> surface) {
 
 void TrackingVolume::visualize(IVisualization3D& helper,
                                const GeometryContext& gctx,
-                               const std::function<ViewConfig(const GeometryObject &)> coloringFunction) const {
+                               const ViewConfigFunc& viewConfigFactory) const {
   helper.object(volumeName());
   {
-    auto viewConfig = coloringFunction(*this);
+    auto viewConfig = viewConfigFactory(*this);
     Volume::visualize(helper, gctx, viewConfig);
   }
 
   if (!surfaces().empty()) {
     helper.object(volumeName() + "_sensitives");
     for (const auto& surface : surfaces()) {
-      auto viewConfig = coloringFunction(surface);
+      auto viewConfig = viewConfigFactory(surface);
       surface.visualize(helper, gctx, viewConfig);
     }
   }
@@ -620,13 +620,13 @@ void TrackingVolume::visualize(IVisualization3D& helper,
   if (!portals().empty()) {
     helper.object(volumeName() + "_portals");
     for (const auto& portal : portals()) {
-      auto viewConfig = coloringFunction(portal.surface());
+      auto viewConfig = viewConfigFactory(portal.surface());
       portal.surface().visualize(helper, gctx, viewConfig);
     }
   }
 
   for (const auto& child : volumes()) {
-    child.visualize(helper, gctx, coloringFunction);
+    child.visualize(helper, gctx, viewConfigFactory);
   }
 }
 

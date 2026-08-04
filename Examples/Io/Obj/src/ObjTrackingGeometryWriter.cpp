@@ -49,7 +49,7 @@ void ObjTrackingGeometryWriter::write(const AlgorithmContext& context,
 
   if (gen3) {
     ACTS_VERBOSE(">>Obj: Gen3 geometry detected, using Gen3 visualization");
-    tVolume.visualize(objVis, context.geoContext, Acts::makeDefaultColoringFunction());
+    tVolume.visualize(objVis, context.geoContext, Acts::viewConfigFactory());
     objVis.write(m_cfg.outputDir / "geometry");
   } else {
     ACTS_VERBOSE(">>Obj: Gen1 geometry detected, using Gen1 visualization");
