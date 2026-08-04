@@ -79,18 +79,22 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
   const auto& effPlotTool = m_collector.effPlotTool();
   const auto& trackSummaryPlotTool = m_collector.trackSummaryPlotTool();
 
+  // The fit runs on the boost histogram, so it needs no ROOT.
+  const Acts::Experimental::GaussianHistogramFit gaussianFit;
+
   // Helper lambda to write a histogram and the mean/width profiles fitted from
-  // it. The fit runs on the boost histogram, so it needs no ROOT.
-  const auto writeWithRefinement = [this](const auto& hist,
-                                          const std::string& meanPrefix,
-                                          const std::string& widthPrefix) {
+  // it.
+  const auto writeWithRefinement = [this, &gaussianFit](
+                                       const auto& hist,
+                                       const std::string& meanPrefix,
+                                       const std::string& widthPrefix) {
     toRoot(hist)->Write();
 
     // Extract the suffix from the histogram name (e.g., "_d0_vs_eta")
     const std::string& baseName = hist.name();
     const std::string suffix = baseName.substr(baseName.find('_'));
 
-    const auto profiles = Acts::Experimental::extractMeanWidthProfiles(
+    const auto profiles = gaussianFit.extractMeanWidthProfiles(
         hist, meanPrefix + suffix, widthPrefix + suffix, m_cfg.fitMinEntries,
         m_cfg.fitSigmaRange, m_cfg.fitIterations, logger());
     if (profiles.fitFailureFraction >=

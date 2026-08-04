@@ -15,6 +15,7 @@ target_sources(
         Histogram.cpp
         GaussianFit.cpp
         IMultiAxis.cpp
+        detail/NumericalMinimizationError.cpp
         detail/QuaternionFromTwoVectorsDouble.cpp
         detail/QuaternionFromTwoVectorsFloat.cpp
         detail/CreateMultiAxis3Open.cpp

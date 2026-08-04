@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(NelderMead_Quadratic1D) {
   };
 
   const auto result = nelderMead<1>(objective, Vector<1>{0.0}, Vector<1>{1.0});
-  BOOST_REQUIRE(result.has_value());
+  BOOST_REQUIRE(result.ok());
   CHECK_CLOSE_ABS((*result)(0), minimum(0), 1e-6);
 }
 
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(NelderMead_Quadratic2D) {
 
   const auto result =
       nelderMead<2>(objective, Vector<2>{0.0, 0.0}, Vector<2>{1.0, 1.0});
-  BOOST_REQUIRE(result.has_value());
+  BOOST_REQUIRE(result.ok());
   CHECK_CLOSE_ABS((*result)(0), minimum(0), 1e-6);
   CHECK_CLOSE_ABS((*result)(1), minimum(1), 1e-6);
 }
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(NelderMead_Quadratic3D) {
 
   const auto result = nelderMead<3>(objective, Vector<3>{0.0, 0.0, 0.0},
                                     Vector<3>{1.0, 1.0, 1.0});
-  BOOST_REQUIRE(result.has_value());
+  BOOST_REQUIRE(result.ok());
   CHECK_CLOSE_ABS((*result)(0), minimum(0), 1e-6);
   CHECK_CLOSE_ABS((*result)(1), minimum(1), 1e-6);
   CHECK_CLOSE_ABS((*result)(2), minimum(2), 1e-6);
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(NelderMead_Rosenbrock2D) {
 
   const auto result =
       nelderMead<2>(objective, Vector<2>{-1.0, 1.0}, Vector<2>{0.5, 0.5});
-  BOOST_REQUIRE(result.has_value());
+  BOOST_REQUIRE(result.ok());
   CHECK_CLOSE_ABS((*result)(0), 1.0, 1e-3);
   CHECK_CLOSE_ABS((*result)(1), 1.0, 1e-3);
 }
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(NelderMead_AllInfinite_Fails) {
 
   const auto result =
       nelderMead<2>(objective, Vector<2>{0.0, 0.0}, Vector<2>{1.0, 1.0});
-  BOOST_CHECK(!result.has_value());
+  BOOST_CHECK(!result.ok());
 }
 
 BOOST_AUTO_TEST_CASE(NumericalCovariance_Quadratic2D) {
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(NumericalCovariance_Quadratic2D) {
 
   const auto covariance = numericalCovariance<2>(objective, Vector<2>{0.0, 0.0},
                                                  Vector<2>{0.1 * a, 0.1 * b});
-  BOOST_REQUIRE(covariance.has_value());
+  BOOST_REQUIRE(covariance.ok());
   CHECK_CLOSE_REL((*covariance)(0, 0), a * a, 1e-6);
   CHECK_CLOSE_REL((*covariance)(1, 1), b * b, 1e-6);
   CHECK_CLOSE_ABS((*covariance)(0, 1), 0.0, 1e-9);
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(NumericalCovariance_NotAMinimum_Fails) {
 
   const auto covariance = numericalCovariance<2>(objective, Vector<2>{0.0, 0.0},
                                                  Vector<2>{0.1, 0.1});
-  BOOST_CHECK(!covariance.has_value());
+  BOOST_CHECK(!covariance.ok());
 }
 
 BOOST_AUTO_TEST_CASE(NumericalCovariance_NonPositiveStep_Fails) {
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(NumericalCovariance_NonPositiveStep_Fails) {
 
   const auto covariance = numericalCovariance<2>(objective, Vector<2>{0.0, 0.0},
                                                  Vector<2>{0.1, 0.0});
-  BOOST_CHECK(!covariance.has_value());
+  BOOST_CHECK(!covariance.ok());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

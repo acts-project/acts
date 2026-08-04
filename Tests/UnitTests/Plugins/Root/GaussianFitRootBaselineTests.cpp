@@ -14,10 +14,10 @@
 // very same histogram.
 //
 // The reference is `TH1::Fit("gaus", "LSQ0")`, i.e. ROOT's *likelihood* fit.
-// Note that `ActsPlugins::extractMeanWidthProfiles` still uses "SQ0", the
-// chi-square default; switching it to "LSQ0" is a separate change. Until that
-// lands, comparing through that entry point would compare two different
-// objectives, so the reference fit is driven directly here.
+// Note that `ActsPlugins::RootHistogramFit` still uses "SQ0", the chi-square
+// default; switching it to "LSQ0" is a separate change. Until that lands,
+// comparing through that entry point would compare two different objectives,
+// so the reference fit is driven directly here.
 
 #include <boost/test/unit_test.hpp>
 
@@ -42,6 +42,8 @@ using namespace Acts::Experimental;
 using ActsPlugins::toRoot;
 
 namespace {
+
+const GaussianHistogramFit fit;
 
 /// A named histogram to fit with both implementations
 struct Scenario {
@@ -264,7 +266,7 @@ BOOST_AUTO_TEST_CASE(SingleFit_AgreesWithRoot) {
     BOOST_TEST_CONTEXT("scenario " << scenario.name) {
       const auto rootHist = toRoot(scenario.hist);
       const auto reference = rootFit(*rootHist);
-      const auto ours = gaussianFit(scenario.hist);
+      const auto ours = fit.fit(scenario.hist);
 
       // Every scenario is populated well enough for both to succeed. Requiring
       // it outright rather than skipping keeps the comparison from silently
@@ -292,8 +294,7 @@ BOOST_AUTO_TEST_CASE(IterativeFit_AgreesWithRoot) {
       const auto rootHist = toRoot(scenario.hist);
       const auto reference =
           rootIterativeFit(*rootHist, sigmaRange, iterations);
-      const auto ours =
-          iterativeGaussianFit(scenario.hist, sigmaRange, iterations);
+      const auto ours = fit.iterativeFit(scenario.hist, sigmaRange, iterations);
 
       BOOST_REQUIRE_MESSAGE(reference.has_value(), "ROOT failed to fit");
       BOOST_REQUIRE_MESSAGE(ours.has_value(), "Core failed to fit");
@@ -328,7 +329,7 @@ BOOST_AUTO_TEST_CASE(RestrictedRange_AgreesWithRoot) {
       BOOST_REQUIRE(result.Get() != nullptr);
       BOOST_REQUIRE_EQUAL(result->Status() % 1000, 0);
 
-      const auto ours = gaussianFit(hist, xMin, xMax);
+      const auto ours = fit.fit(hist, xMin, xMax);
       BOOST_REQUIRE(ours.has_value());
 
       checkAgrees("mean", ours->mean, result->Parameter(1), result->ParError(1),
@@ -346,16 +347,16 @@ BOOST_AUTO_TEST_CASE(DegenerateInputs_NeitherSucceedsWrongly) {
   auto axis = AxisVariant(BoostRegularAxis(20, -5.0, 5.0, "x"));
 
   Histogram1 empty("empty", "empty", {axis});
-  BOOST_CHECK(!gaussianFit(empty).has_value());
+  BOOST_CHECK(!fit.fit(empty).has_value());
 
   Histogram1 spike("spike", "spike", {axis});
   spike.setBinContent({10}, 500.0);
-  BOOST_CHECK(!gaussianFit(spike).has_value());
+  BOOST_CHECK(!fit.fit(spike).has_value());
 
   Histogram1 two("two", "two", {axis});
   two.setBinContent({9}, 100.0);
   two.setBinContent({10}, 120.0);
-  BOOST_CHECK(!gaussianFit(two).has_value());
+  BOOST_CHECK(!fit.fit(two).has_value());
 }
 
 BOOST_AUTO_TEST_CASE(ValueHistogram1D_ConvertsWithErrors) {

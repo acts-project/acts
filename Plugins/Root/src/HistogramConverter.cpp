@@ -9,13 +9,9 @@
 #include "ActsPlugins/Root/HistogramConverter.hpp"
 
 #include <cstddef>
-#include <cstdlib>
-#include <format>
-#include <optional>
 #include <vector>
 
 #include <TEfficiency.h>
-#include <TFitResult.h>
 #include <TGraphAsymmErrors.h>
 #include <TH1F.h>
 #include <TH2F.h>
@@ -24,56 +20,6 @@
 #include <boost/histogram/accumulators/weighted_sum.hpp>
 
 using namespace Acts::Experimental;
-
-namespace {
-
-struct FitResult {
-  double mean;
-  double sigma;
-  double meanError;
-  double sigmaError;
-};
-
-std::optional<FitResult> iterativeGaussFit(TH1& hist, double sigmaRange,
-                                           int iterations,
-                                           const Acts::Logger& logger) {
-  TFitResultPtr result = hist.Fit("gaus", "SQ0", nullptr);
-  if (result.Get() == nullptr) {
-    ACTS_DEBUG("Failed to fit initial Gaussian: fit returned null pointer");
-    return std::nullopt;
-  }
-  if (result->Status() % 1000 != 0) {
-    ACTS_DEBUG("Failed to fit initial Gaussian: status " << result->Status());
-    return std::nullopt;
-  }
-
-  double mean = result->Parameter(1);
-  double sigma = result->Parameter(2);
-
-  for (int i = 0; i < iterations - 1; ++i) {
-    const double xmin = mean - sigmaRange * sigma;
-    const double xmax = mean + sigmaRange * sigma;
-
-    result = hist.Fit("gaus", "SRQ0", nullptr, xmin, xmax);
-    if (result.Get() == nullptr) {
-      ACTS_DEBUG("Failed to fit iteration "
-                 << i << " Gaussian: fit returned null pointer");
-      return std::nullopt;
-    }
-    if (result->Status() % 1000 != 0) {
-      ACTS_DEBUG("Failed to fit iteration " << i << " Gaussian: status "
-                                            << result->Status());
-      return std::nullopt;
-    }
-
-    mean = result->Parameter(1);
-    sigma = result->Parameter(2);
-  }
-
-  return FitResult{mean, sigma, result->ParError(1), result->ParError(2)};
-}
-
-}  // namespace
 
 std::unique_ptr<TH1F> ActsPlugins::toRoot(const Histogram1& boostHist) {
   const auto& bh = boostHist.histogram();
@@ -393,134 +339,4 @@ std::unique_ptr<TEfficiency> ActsPlugins::toRoot(const Efficiency2& boostEff) {
   rootEff->SetTitle(boostEff.title().c_str());
 
   return rootEff;
-}
-
-std::tuple<std::unique_ptr<TH1F>, std::unique_ptr<TH1F>, double>
-ActsPlugins::extractMeanWidthProfiles(
-    const TH2F& hist2d, const std::string& meanName,
-    const std::string& widthName, const int minEntriesForFit,
-    const double sigmaRange, const int iterations, const Acts::Logger& logger) {
-  const int nBinsX = hist2d.GetNbinsX();
-
-  // Create mean and width histograms with same X binning as the 2D histogram
-  auto meanHist = std::make_unique<TH1F>(
-      meanName.c_str(), (std::string(hist2d.GetTitle()) + " mean").c_str(),
-      nBinsX, hist2d.GetXaxis()->GetXmin(), hist2d.GetXaxis()->GetXmax());
-  auto widthHist = std::make_unique<TH1F>(
-      widthName.c_str(), (std::string(hist2d.GetTitle()) + " width").c_str(),
-      nBinsX, hist2d.GetXaxis()->GetXmin(), hist2d.GetXaxis()->GetXmax());
-
-  // Copy X axis bin edges for variable binning
-  if (hist2d.GetXaxis()->GetXbins()->GetSize() > 0) {
-    meanHist->SetBins(nBinsX, hist2d.GetXaxis()->GetXbins()->GetArray());
-    widthHist->SetBins(nBinsX, hist2d.GetXaxis()->GetXbins()->GetArray());
-  }
-
-  // Project each X bin and extract mean/width via Gaussian fit
-  int fitFailures = 0;
-  for (int i = 1; i <= nBinsX; ++i) {
-    const auto proj = std::unique_ptr<TH1D>(hist2d.ProjectionY(
-        std::format("{}_projy_bin_{}", hist2d.GetName(), i).c_str(), i, i));
-
-    if (proj->GetEntries() < minEntriesForFit) {
-      continue;
-    }
-
-    const std::optional<FitResult> fitResult =
-        iterativeGaussFit(*proj, sigmaRange, iterations, logger);
-    if (!fitResult.has_value()) {
-      ++fitFailures;
-      continue;
-    }
-
-    // Fill mean
-    meanHist->SetBinContent(i, fitResult.value().mean);
-    meanHist->SetBinError(i, fitResult.value().meanError);
-
-    // Fill width (sigma)
-    widthHist->SetBinContent(i, fitResult.value().sigma);
-    widthHist->SetBinError(i, fitResult.value().sigmaError);
-  }
-  const double fitFailureFraction =
-      (nBinsX > 0) ? static_cast<double>(fitFailures) / nBinsX : 0;
-
-  meanHist->GetXaxis()->SetTitle(hist2d.GetXaxis()->GetTitle());
-  meanHist->GetYaxis()->SetTitle(hist2d.GetYaxis()->GetTitle());
-
-  widthHist->GetXaxis()->SetTitle(hist2d.GetXaxis()->GetTitle());
-  widthHist->GetYaxis()->SetTitle(hist2d.GetYaxis()->GetTitle());
-
-  return {std::move(meanHist), std::move(widthHist), fitFailureFraction};
-}
-
-std::tuple<std::unique_ptr<TH2F>, std::unique_ptr<TH2F>, double>
-ActsPlugins::extractMeanWidthProfiles(
-    const TH3F& hist3d, const std::string& meanName,
-    const std::string& widthName, const int minEntriesForFit,
-    const double sigmaRange, const int iterations, const Acts::Logger& logger) {
-  const int nBinsX = hist3d.GetNbinsX();
-  const int nBinsY = hist3d.GetNbinsY();
-
-  // Create output histograms with same XY binning as input
-  auto meanHist = std::make_unique<TH2F>(
-      meanName.c_str(), (std::string(hist3d.GetTitle()) + " mean").c_str(),
-      nBinsX, hist3d.GetXaxis()->GetXmin(), hist3d.GetXaxis()->GetXmax(),
-      nBinsY, hist3d.GetYaxis()->GetXmin(), hist3d.GetYaxis()->GetXmax());
-
-  auto widthHist = std::make_unique<TH2F>(
-      widthName.c_str(), (std::string(hist3d.GetTitle()) + " width").c_str(),
-      nBinsX, hist3d.GetXaxis()->GetXmin(), hist3d.GetXaxis()->GetXmax(),
-      nBinsY, hist3d.GetYaxis()->GetXmin(), hist3d.GetYaxis()->GetXmax());
-
-  // Copy X and Y axis bin edges for variable binning
-  if (hist3d.GetXaxis()->GetXbins()->GetSize() > 0 ||
-      hist3d.GetYaxis()->GetXbins()->GetSize() > 0) {
-    meanHist->SetBins(nBinsX, hist3d.GetXaxis()->GetXbins()->GetArray(), nBinsY,
-                      hist3d.GetYaxis()->GetXbins()->GetArray());
-    widthHist->SetBins(nBinsX, hist3d.GetXaxis()->GetXbins()->GetArray(),
-                       nBinsY, hist3d.GetYaxis()->GetXbins()->GetArray());
-  }
-
-  // Loop over all (X,Y) bins
-  int fitFailures = 0;
-  for (int i = 1; i <= nBinsX; ++i) {
-    for (int j = 1; j <= nBinsY; ++j) {
-      const auto proj = std::unique_ptr<TH1D>(hist3d.ProjectionZ(
-          std::format("{}_projz_bin_{}_{}", hist3d.GetName(), i, j).c_str(), i,
-          i, j, j));
-
-      if (proj->GetEntries() < minEntriesForFit) {
-        continue;
-      }
-
-      const std::optional<FitResult> fitResult =
-          iterativeGaussFit(*proj, sigmaRange, iterations, logger);
-      if (!fitResult.has_value()) {
-        ++fitFailures;
-        continue;
-      }
-
-      // Fill mean
-      meanHist->SetBinContent(i, j, fitResult.value().mean);
-      meanHist->SetBinError(i, j, fitResult.value().meanError);
-
-      // Fill width (sigma)
-      widthHist->SetBinContent(i, j, fitResult.value().sigma);
-      widthHist->SetBinError(i, j, fitResult.value().sigmaError);
-    }
-  }
-  const double fitFailureFraction =
-      (nBinsX * nBinsY > 0)
-          ? static_cast<double>(fitFailures) / (nBinsX * nBinsY)
-          : 0;
-
-  meanHist->GetXaxis()->SetTitle(hist3d.GetXaxis()->GetTitle());
-  meanHist->GetYaxis()->SetTitle(hist3d.GetYaxis()->GetTitle());
-  meanHist->GetZaxis()->SetTitle(hist3d.GetZaxis()->GetTitle());
-
-  widthHist->GetXaxis()->SetTitle(hist3d.GetXaxis()->GetTitle());
-  widthHist->GetYaxis()->SetTitle(hist3d.GetYaxis()->GetTitle());
-  widthHist->GetZaxis()->SetTitle(hist3d.GetZaxis()->GetTitle());
-
-  return {std::move(meanHist), std::move(widthHist), fitFailureFraction};
 }
