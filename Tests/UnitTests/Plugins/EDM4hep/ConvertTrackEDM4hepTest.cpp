@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
 
   for (const auto& track : tracks) {
     auto to = edm4hepTracks.create();
-    EDM4hepUtil::writeTrack(gctx, track, to, Bz, *logger);
+    EDM4hepUtil::writeTrack(gctx, track, to, Bz, {}, *logger);
   }
 
   BOOST_CHECK_EQUAL(edm4hepTracks.size(), tracks.size());

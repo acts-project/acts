@@ -145,16 +145,16 @@ using TrackerHitLookup = std::function<std::optional<edm4hep::TrackerHit>(
 /// @param track The Acts track to convert
 /// @param to The EDM4hep track to write to
 /// @param magneticField The magnetic field provider, evaluated at each state
-/// @param logger The logger instance
 /// @param hitLookup Optional callback mapping a measurement track state to its
 ///                  EDM4hep tracker hit (defaults to writing no tracker hits)
+/// @param logger The logger instance
 template <Acts::TrackProxyConcept track_proxy_t>
 void writeTrack(const Acts::GeometryContext& gctx,
                 const Acts::MagneticFieldContext& mctx, track_proxy_t track,
                 edm4hep::MutableTrack to,
                 const Acts::MagneticFieldProvider& magneticField,
-                const Acts::Logger& logger = Acts::getDummyLogger(),
-                const TrackerHitLookup& hitLookup = {}) {
+                const TrackerHitLookup& hitLookup = {},
+                const Acts::Logger& logger = Acts::getDummyLogger()) {
   ACTS_VERBOSE("Converting track to EDM4hep");
   to.setChi2(track.chi2());
   to.setNdf(track.nDoF());
@@ -306,18 +306,18 @@ void writeTrack(const Acts::GeometryContext& gctx,
 /// @param track The Acts track to convert
 /// @param to The EDM4hep track to write to
 /// @param Bz The (uniform) magnetic field z-component in Acts native units
-/// @param logger The logger instance
 /// @param hitLookup Optional callback mapping a measurement track state to its
 ///                  EDM4hep tracker hit (defaults to writing no tracker hits)
+/// @param logger The logger instance
 template <Acts::TrackProxyConcept track_proxy_t>
 void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
                 edm4hep::MutableTrack to, double Bz,
-                const Acts::Logger& logger = Acts::getDummyLogger(),
-                const TrackerHitLookup& hitLookup = {}) {
+                const TrackerHitLookup& hitLookup = {},
+                const Acts::Logger& logger = Acts::getDummyLogger()) {
   Acts::ConstantBField magneticField{Acts::Vector3{0, 0, Bz}};
   Acts::MagneticFieldContext mctx{};
-  writeTrack(gctx, mctx, std::move(track), to, magneticField, logger,
-             hitLookup);
+  writeTrack(gctx, mctx, std::move(track), to, magneticField, hitLookup,
+             logger);
 }
 
 /// Read an EDM4hep track into Acts format
