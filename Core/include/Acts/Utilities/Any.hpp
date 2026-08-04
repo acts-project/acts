@@ -110,6 +110,11 @@ static _AnyAllocationReporter s_reporter;
   } while (0)
 static constexpr bool kAnyNoexcept = true;
 #endif
+
+/// Throws @c std::bad_any_cast. Defined out of line in Any.cpp so the throw
+/// stays out of the accessors and does not stop them from being inlined.
+[[noreturn]] void throwBadAnyCast();
+
 }  // namespace detail
 
 /// @addtogroup utilities
@@ -237,7 +242,7 @@ class AnyBase : public AnyBaseAll {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
     if (!holds<T>()) {
-      throwBadAnyCast();
+      detail::throwBadAnyCast();
     }
 
     _ACTS_ANY_VERBOSE("Get as "
@@ -255,7 +260,7 @@ class AnyBase : public AnyBaseAll {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
     if (!holds<T>()) {
-      throwBadAnyCast();
+      detail::throwBadAnyCast();
     }
 
     _ACTS_ANY_VERBOSE("Get as "
@@ -301,7 +306,7 @@ class AnyBase : public AnyBaseAll {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
     if (!holds<T>()) {
-      throwBadAnyCast();
+      detail::throwBadAnyCast();
     }
     T* ptr = std::bit_cast<T*>(dataPtrFor<T>());
     T value = std::move(*ptr);
@@ -418,8 +423,7 @@ class AnyBase : public AnyBaseAll {
 
     // At this point they can't be equal and nullptr, so it's safe to
     // dereference
-    if (m_handler == other.m_handler &&
-        m_handler->typeHash == other.m_handler->typeHash) {
+    if (m_handler == other.m_handler) {
       // same type, but checked before they're not both nullptr
       move(std::move(other));
     } else {
@@ -528,19 +532,14 @@ class AnyBase : public AnyBaseAll {
 
  private:
   // The handler is a per-type singleton, so a pointer comparison settles the
-  // common case. The hash comparison covers handlers duplicated across shared
-  // objects, where the pointers differ but the type does not.
+  // common case. The @c type_info comparison covers handlers duplicated across
+  // shared objects, where the pointers differ but the type does not.
   template <typename T>
   bool holds() const {
     if (m_handler == makeHandler<T>()) [[likely]] {
       return true;
     }
-    return m_handler != nullptr && m_handler->typeHash == typeHash<T>();
-  }
-
-  // Cold and out-of-line to keep the accessors inlinable.
-  [[noreturn]] [[gnu::noinline, gnu::cold]] static void throwBadAnyCast() {
-    throw std::bad_any_cast{};
+    return m_handler != nullptr && *m_handler->typeInfo == typeid(T);
   }
 
   // T is known statically here, so unlike dataPtr() this needs no load of
@@ -595,7 +594,6 @@ class AnyBase : public AnyBaseAll {
     void* (*copyConstruct)(const void* from, void* to) = nullptr;
     void (*copy)(const void* from, void* to) = nullptr;
     bool heapAllocated{false};
-    std::uint64_t typeHash{0};
     const std::type_info* typeInfo{nullptr};
   };
 
@@ -637,7 +635,6 @@ class AnyBase : public AnyBaseAll {
       };
     }
 
-    h.typeHash = typeHash<T>();
     h.typeInfo = &typeid(T);
 
     return h;
@@ -648,6 +645,25 @@ class AnyBase : public AnyBaseAll {
     static_assert(!std::is_base_of_v<AnyBaseAll, std::decay_t<T>>,
                   "Cannot wrap Any in Any");
     static constexpr Handler static_handler = makeHandlerValue<T>();
+
+#if defined(_ACTS_ANY_ENABLE_DEBUG)
+    // Reporting has to happen here rather than in makeHandlerValue, which is
+    // constant evaluated. Only compiled in when debug output is enabled, so it
+    // does not put a guard variable on the hot path.
+    [[maybe_unused]] static const bool reported = []() {
+      const Handler& h = static_handler;
+      _ACTS_ANY_DEBUG("Type: " << typeid(T).name());
+      _ACTS_ANY_DEBUG(" -> destroy: " << h.destroy);
+      _ACTS_ANY_DEBUG(" -> moveConstruct: " << h.moveConstruct);
+      _ACTS_ANY_DEBUG(" -> move: " << h.move);
+      _ACTS_ANY_DEBUG(" -> copyConstruct: " << h.copyConstruct);
+      _ACTS_ANY_DEBUG(" -> copy: " << h.copy);
+      _ACTS_ANY_DEBUG(
+          " -> heapAllocated: " << (h.heapAllocated ? "yes" : "no"));
+      return true;
+    }();
+#endif
+
     return &static_handler;
   }
 
