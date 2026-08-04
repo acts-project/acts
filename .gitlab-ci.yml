@@ -219,11 +219,18 @@ detray_test_cuda:
   artifacts:
     paths:
       - build
+    exclude:
+      # Only the test binaries and the libraries they load are consumed
+      # downstream. Note build/_deps must stay: vecmem is pulled in via
+      # FetchContent and its shared libraries live there at runtime.
+      - build/**/*.o
+    expire_in: 6 hours
   script:
     - CXXFLAGS="${TRACCC_CXX_FLAGS}"
       cmake -G Ninja --preset ${TRACCC_BUILD_PRESET} -DTRACCC_SETUP_VECMEM=ON -DTRACCC_SETUP_COVFIE=ON -DACTS_SETUP_VECMEM=OFF -DACTS_SETUP_COVFIE=OFF -DDETRAY_SET_LOGGING=NONE -DCMAKE_BUILD_TYPE=Release -DTRACCC_BUILD_EXAMPLES=FALSE ${TRACCC_CMAKE_ARGS}
       -S src/Traccc -B build
-    - cmake --build build --parallel 2
+    # Build only the test binary the paired test job runs, not everything.
+    - cmake --build build --parallel 2 --target ${TRACCC_BUILD_TARGET}
 
 .traccc_nvidia_test_template: &traccc_nvidia_test_job
   <<: *traccc_base_job
@@ -232,7 +239,9 @@ detray_test_cuda:
   script:
     - nvidia-smi
     - ./src/Traccc/data/traccc_data_get_files.sh
-    - ctest --output-on-failure --test-dir build/ -R "${TRACCC_BUILD_TYPE}"
+    # ctest -R is case-sensitive, so the regex must spell out both cases or
+    # it silently skips the lowercase-named GPU tests (e.g. grids_cuda.*).
+    - ctest --output-on-failure --test-dir build/ -R "${TRACCC_TEST_REGEX}"
 
 traccc_build_cuda:
   <<: *traccc_build_job
@@ -240,13 +249,18 @@ traccc_build_cuda:
   variables:
     TRACCC_BUILD_TYPE: CUDA
     TRACCC_BUILD_PRESET: cuda-fp32
+    TRACCC_BUILD_TARGET: traccc_test_cuda
+    # device/cuda generates 13 nvcc translation units per detector type, so
+    # build only the two the CUDA tests instantiate. The full matrix is still
+    # compiled by the GitHub CUDA-Release and cuda-fp64 jobs.
+    TRACCC_CMAKE_ARGS: "-DTRACCC_SUPPORTED_DETECTORS=default_detector;telescope_detector"
 
 traccc_test_cuda:
   <<: *traccc_nvidia_test_job
   image: ghcr.io/acts-project/ubuntu2404_cuda:87
   variables:
     TRACCC_BUILD_TYPE: CUDA
-    TRACCC_CMAKE_ARGS: -DACTS_ENABLE_CUDA=ON -DVECMEM_BUILD_CUDA_LIBRARY=ON
+    TRACCC_TEST_REGEX: "[Cc][Uu][Dd][Aa]"
   dependencies:
     - traccc_build_cuda
 

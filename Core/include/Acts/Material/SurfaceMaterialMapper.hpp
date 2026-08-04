@@ -136,6 +136,8 @@ class SurfaceMaterialMapper {
   /// @param cfg Configuration struct
   /// @param propagator The straight line propagator
   /// @param slogger The logger
+  /// @deprecated Material mapping with propagation is deprecated. Use
+  ///             MaterialMapper instead.
   [[deprecated(
       "Material mapping with propagation is deprecated. Use MaterialMapper "
       "instead.")]]

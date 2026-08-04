@@ -190,7 +190,8 @@ BOOST_AUTO_TEST_CASE(CylinderLayerSvg) {
   CylindricalTrackingGeometry cGeometry(tgContext);
   auto tGeometry = cGeometry();
   auto pixelVolume =
-      tGeometry->lowestTrackingVolume(tgContext, Vector3(50., 0., 0.));
+      tGeometry->resolveLowestTrackingVolume(tgContext, Vector3(50., 0., 0.))
+          .value();
   if (pixelVolume != nullptr && pixelVolume->confinedLayers() != nullptr) {
     auto layers = pixelVolume->confinedLayers()->arrayObjects();
     std::size_t il = 0;

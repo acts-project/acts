@@ -83,3 +83,5 @@ exclude:
   - outgoing_particles_particle
   - outgoing_particles_generation
   - outgoing_particles_sub_particle
+  - orig_part_idx
+  - hf_origin
