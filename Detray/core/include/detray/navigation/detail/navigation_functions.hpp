@@ -202,7 +202,7 @@ DETRAY_HOST_DEVICE
                                     ? cfg.intersection.overstep_tolerance
                                     : -cfg.intersection.path_tolerance;
 
-  using detector_t = std::decay_t<decltype(det)>;
+  using detector_t = typename navigation_state_t::detector_type;
   using algebra_t = typename detector_t::algebra_type;
   using scalar_t = dscalar<algebra_t>;
 
