@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/GaussianFitResult.hpp"
+#include "Acts/Utilities/GaussianFit.hpp"
 #include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Result.hpp"
 

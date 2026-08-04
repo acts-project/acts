@@ -24,6 +24,7 @@
 #include "Acts/Utilities/GaussianFit.hpp"
 #include "Acts/Utilities/GaussianFitError.hpp"
 #include "Acts/Utilities/Histogram.hpp"
+#include "Acts/Utilities/IterativeFit.hpp"
 #include "ActsPlugins/Root/HistogramConverter.hpp"
 #include "ActsPlugins/Root/RootHistogramFit.hpp"
 

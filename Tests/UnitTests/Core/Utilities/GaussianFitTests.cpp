@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/GaussianFit.hpp"
 #include "Acts/Utilities/Histogram.hpp"
+#include "Acts/Utilities/IterativeFit.hpp"
 
 #include <array>
 #include <cmath>

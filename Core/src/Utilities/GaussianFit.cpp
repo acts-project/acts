@@ -141,9 +141,8 @@ std::optional<std::array<double, 2>> initialGuess(const FitBins& bins) {
 /// @param relativeStep Initial simplex step, relative to the seed sigma
 /// @return The minimising `(mean, sigma)`, or the minimiser's error if the
 ///         search did not converge within the iteration cap
-Result<std::array<double, 2>, Acts::detail::NumericalMinimizationError>
-minimise(const FitBins& bins, double meanSeed, double sigmaSeed,
-         double relativeStep) {
+Result<std::array<double, 2>> minimise(const FitBins& bins, double meanSeed,
+                                       double sigmaSeed, double relativeStep) {
   const auto objective = [&bins](const Vector<2>& p) {
     return negLogLikelihood(bins, p(0), std::exp(p(1)));
   };
@@ -154,9 +153,7 @@ minimise(const FitBins& bins, double meanSeed, double sigmaSeed,
   const Result<Vector<2>, Acts::detail::NumericalMinimizationError> optimum =
       Acts::detail::nelderMead<2>(objective, start, steps);
   if (!optimum.ok()) {
-    return Result<
-        std::array<double, 2>,
-        Acts::detail::NumericalMinimizationError>::failure(optimum.error());
+    return Result<std::array<double, 2>>::failure(optimum.error());
   }
 
   return std::array<double, 2>{(*optimum)(0), std::exp((*optimum)(1))};
@@ -174,9 +171,9 @@ minimise(const FitBins& bins, double meanSeed, double sigmaSeed,
 ///                     parameter uncertainty
 /// @return `(meanError, sigmaError)`, or the minimiser's error if the
 ///         curvature is not that of a genuine minimum
-Result<std::array<double, 2>, Acts::detail::NumericalMinimizationError>
-parameterErrors(const FitBins& bins, double mean, double sigma,
-                double relativeStep) {
+Result<std::array<double, 2>> parameterErrors(const FitBins& bins, double mean,
+                                              double sigma,
+                                              double relativeStep) {
   const auto objective = [&bins](const Vector<2>& p) {
     return negLogLikelihood(bins, p(0), p(1));
   };
@@ -190,17 +187,14 @@ parameterErrors(const FitBins& bins, double mean, double sigma,
   const auto covariance =
       Acts::detail::numericalCovariance<2>(objective, point, steps);
   if (!covariance.ok()) {
-    return Result<
-        std::array<double, 2>,
-        Acts::detail::NumericalMinimizationError>::failure(covariance.error());
+    return Result<std::array<double, 2>>::failure(covariance.error());
   }
 
   const double varMean = (*covariance)(0, 0);
   const double varSigma = (*covariance)(1, 1);
   if (!(varMean > 0) || !(varSigma > 0)) {
-    return Result<std::array<double, 2>,
-                  Acts::detail::NumericalMinimizationError>::
-        failure(Acts::detail::NumericalMinimizationError::NotPositiveDefinite);
+    return Result<std::array<double, 2>>::failure(
+        Acts::detail::NumericalMinimizationError::NotPositiveDefinite);
   }
 
   return std::array<double, 2>{std::sqrt(varMean), std::sqrt(varSigma)};

@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/GaussianFit.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/IterativeFit.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsPlugins/Root/HistogramConverter.hpp"
 
