@@ -236,14 +236,14 @@ class AnyBase : public AnyBaseAll {
   T& as() {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
-      throw std::bad_any_cast{};
+    if (!holds<T>()) {
+      throwBadAnyCast();
     }
 
     _ACTS_ANY_VERBOSE("Get as "
                       << (m_handler->heapAllocated ? "heap" : "local"));
 
-    return *std::bit_cast<T*>(dataPtr());
+    return *std::bit_cast<T*>(dataPtrFor<T>());
   }
 
   /// Get const reference to stored value of specified type
@@ -254,14 +254,14 @@ class AnyBase : public AnyBaseAll {
   const T& as() const {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
-      throw std::bad_any_cast{};
+    if (!holds<T>()) {
+      throwBadAnyCast();
     }
 
     _ACTS_ANY_VERBOSE("Get as "
                       << (m_handler->heapAllocated ? "heap" : "local"));
 
-    return *std::bit_cast<const T*>(dataPtr());
+    return *std::bit_cast<const T*>(dataPtrFor<T>());
   }
 
   /// Get pointer to stored value of specified type
@@ -272,10 +272,10 @@ class AnyBase : public AnyBaseAll {
   T* asPtr() {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
+    if (!holds<T>()) {
       return nullptr;
     }
-    return std::bit_cast<T*>(dataPtr());
+    return std::bit_cast<T*>(dataPtrFor<T>());
   }
 
   /// Get const pointer to stored value of specified type
@@ -286,10 +286,10 @@ class AnyBase : public AnyBaseAll {
   const T* asPtr() const {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
+    if (!holds<T>()) {
       return nullptr;
     }
-    return std::bit_cast<const T*>(dataPtr());
+    return std::bit_cast<const T*>(dataPtrFor<T>());
   }
 
   /// Move the stored value out. Leaves this Any empty.
@@ -300,10 +300,10 @@ class AnyBase : public AnyBaseAll {
   T take() {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
-      throw std::bad_any_cast{};
+    if (!holds<T>()) {
+      throwBadAnyCast();
     }
-    T* ptr = std::bit_cast<T*>(dataPtr());
+    T* ptr = std::bit_cast<T*>(dataPtrFor<T>());
     T value = std::move(*ptr);
     destroy();
     return value;
@@ -452,7 +452,7 @@ class AnyBase : public AnyBaseAll {
   bool is() const {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    return m_handler != nullptr && m_handler->typeHash == typeHash<T>();
+    return holds<T>();
   }
 
   // The base accessors below are member templates on a dummy @c B defaulting to
@@ -527,6 +527,42 @@ class AnyBase : public AnyBaseAll {
   }
 
  private:
+  // The handler is a per-type singleton, so a pointer comparison settles the
+  // common case. The hash comparison covers handlers duplicated across shared
+  // objects, where the pointers differ but the type does not.
+  template <typename T>
+  bool holds() const {
+    if (m_handler == makeHandler<T>()) [[likely]] {
+      return true;
+    }
+    return m_handler != nullptr && m_handler->typeHash == typeHash<T>();
+  }
+
+  // Cold and out-of-line to keep the accessors inlinable.
+  [[noreturn]] [[gnu::noinline, gnu::cold]] static void throwBadAnyCast() {
+    throw std::bad_any_cast{};
+  }
+
+  // T is known statically here, so unlike dataPtr() this needs no load of
+  // m_handler->heapAllocated and no branch on it.
+  template <typename T>
+  void* dataPtrFor() {
+    if constexpr (heapAllocated<T>()) {
+      return *std::bit_cast<void**>(m_data.data());
+    } else {
+      return std::bit_cast<void*>(m_data.data());
+    }
+  }
+
+  template <typename T>
+  const void* dataPtrFor() const {
+    if constexpr (heapAllocated<T>()) {
+      return *std::bit_cast<void* const*>(m_data.data());
+    } else {
+      return std::bit_cast<const void*>(m_data.data());
+    }
+  }
+
   void* dataPtr() {
     if (m_handler->heapAllocated) {
       return *std::bit_cast<void**>(m_data.data());
@@ -563,60 +599,55 @@ class AnyBase : public AnyBaseAll {
     const std::type_info* typeInfo{nullptr};
   };
 
+  // Constant so that the singleton below is constant-initialized and needs no
+  // thread-safe-static guard.
+  template <typename T>
+  static constexpr Handler makeHandlerValue() {
+    Handler h;
+    h.heapAllocated = heapAllocated<T>();
+    if constexpr (!std::is_trivially_destructible_v<T> || heapAllocated<T>()) {
+      h.destroy = &destroyImpl<T>;
+    }
+    if constexpr (!heapAllocated<T>() &&
+                  !std::is_trivially_move_constructible_v<T>) {
+      h.moveConstruct = &moveConstructImpl<T>;
+    }
+    if constexpr (!heapAllocated<T>() &&
+                  !std::is_trivially_move_assignable_v<T>) {
+      h.move = &moveImpl<T>;
+    }
+    if constexpr (std::is_copy_constructible_v<T> &&
+                  (!std::is_trivially_copy_constructible_v<T> ||
+                   heapAllocated<T>())) {
+      h.copyConstruct = &copyConstructImpl<T>;
+    }
+
+    if constexpr (std::is_copy_assignable_v<T> &&
+                  (!std::is_trivially_copy_assignable_v<T> ||
+                   heapAllocated<T>())) {
+      h.copy = &copyImpl<T>;
+    }
+
+    if constexpr (!std::is_void_v<Base>) {
+      h.upcast = [](void* p) -> Base* {
+        return static_cast<Base*>(static_cast<T*>(p));
+      };
+      h.upcastConst = [](const void* p) -> const Base* {
+        return static_cast<const Base*>(static_cast<const T*>(p));
+      };
+    }
+
+    h.typeHash = typeHash<T>();
+    h.typeInfo = &typeid(T);
+
+    return h;
+  }
+
   template <typename T>
   static const Handler* makeHandler() {
     static_assert(!std::is_base_of_v<AnyBaseAll, std::decay_t<T>>,
                   "Cannot wrap Any in Any");
-    static const Handler static_handler = []() {
-      Handler h;
-      h.heapAllocated = heapAllocated<T>();
-      if constexpr (!std::is_trivially_destructible_v<T> ||
-                    heapAllocated<T>()) {
-        h.destroy = &destroyImpl<T>;
-      }
-      if constexpr (!heapAllocated<T>() &&
-                    !std::is_trivially_move_constructible_v<T>) {
-        h.moveConstruct = &moveConstructImpl<T>;
-      }
-      if constexpr (!heapAllocated<T>() &&
-                    !std::is_trivially_move_assignable_v<T>) {
-        h.move = &moveImpl<T>;
-      }
-      if constexpr (std::is_copy_constructible_v<T> &&
-                    (!std::is_trivially_copy_constructible_v<T> ||
-                     heapAllocated<T>())) {
-        h.copyConstruct = &copyConstructImpl<T>;
-      }
-
-      if constexpr (std::is_copy_assignable_v<T> &&
-                    (!std::is_trivially_copy_assignable_v<T> ||
-                     heapAllocated<T>())) {
-        h.copy = &copyImpl<T>;
-      }
-
-      if constexpr (!std::is_void_v<Base>) {
-        h.upcast = [](void* p) -> Base* {
-          return static_cast<Base*>(static_cast<T*>(p));
-        };
-        h.upcastConst = [](const void* p) -> const Base* {
-          return static_cast<const Base*>(static_cast<const T*>(p));
-        };
-      }
-
-      h.typeHash = typeHash<T>();
-      h.typeInfo = &typeid(T);
-
-      _ACTS_ANY_DEBUG("Type: " << typeid(T).name());
-      _ACTS_ANY_DEBUG(" -> destroy: " << h.destroy);
-      _ACTS_ANY_DEBUG(" -> moveConstruct: " << h.moveConstruct);
-      _ACTS_ANY_DEBUG(" -> move: " << h.move);
-      _ACTS_ANY_DEBUG(" -> copyConstruct: " << h.copyConstruct);
-      _ACTS_ANY_DEBUG(" -> copy: " << h.copy);
-      _ACTS_ANY_DEBUG(
-          " -> heapAllocated: " << (h.heapAllocated ? "yes" : "no"));
-
-      return h;
-    }();
+    static constexpr Handler static_handler = makeHandlerValue<T>();
     return &static_handler;
   }
 
