@@ -33,4 +33,5 @@ traccc_add_test(cpu
     LINK_LIBRARIES GTest::gtest_main vecmem::core
     traccc_tests_common traccc::core traccc::io traccc::performance
     traccc::simulation detray::core detray::io detray::test_common
-    detray::validation_utils covfie::core )
+    detray::validation_utils covfie::core
+)

@@ -21,25 +21,24 @@ namespace traccc::alpaka {
 /// Holding on to data that all Alpaka algorithms make use of.
 ///
 class algorithm_base {
+ public:
+  /// Constructor
+  ///
+  /// @param q The Alpaka queue to perform the operations in
+  ///
+  explicit algorithm_base(alpaka::queue& q);
 
-    public:
-    /// Constructor
-    ///
-    /// @param q The Alpaka queue to perform the operations in
-    ///
-    explicit algorithm_base(alpaka::queue& q);
+  /// Get the Alpaka queue of the algorithm
+  alpaka::queue& queue() const;
 
-    /// Get the Alpaka queue of the algorithm
-    alpaka::queue& queue() const;
+  /// Get the preferred warp size of the device being used
+  unsigned int warp_size() const;
 
-    /// Get the preferred warp size of the device being used
-    unsigned int warp_size() const;
-
-    private:
-    /// The Alpaka queue to use
-    std::reference_wrapper<alpaka::queue> m_queue;
-    /// Preferred warp size of the device being used
-    unsigned int m_warp_size;
+ private:
+  /// The Alpaka queue to use
+  std::reference_wrapper<alpaka::queue> m_queue;
+  /// Preferred warp size of the device being used
+  unsigned int m_warp_size;
 
 };  // class algorithm_base
 

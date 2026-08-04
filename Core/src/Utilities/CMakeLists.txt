@@ -5,6 +5,7 @@ target_sources(
         AxisDefinitions.cpp
         Logger.cpp
         TrackHelpers.cpp
+        TrackHelpersUnbiased.cpp
         Intersection.cpp
         IAxis.cpp
         GraphViz.cpp
@@ -12,5 +13,11 @@ target_sources(
         ScopedTimer.cpp
         TransformComparator.cpp
         Histogram.cpp
+        IMultiAxis.cpp
+        detail/QuaternionFromTwoVectorsDouble.cpp
+        detail/QuaternionFromTwoVectorsFloat.cpp
+        detail/CreateMultiAxis3Open.cpp
+        detail/CreateMultiAxis3Bound.cpp
+        detail/CreateMultiAxis3Closed.cpp
         StringHelpers.cpp
 )

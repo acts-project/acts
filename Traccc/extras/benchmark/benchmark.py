@@ -16,7 +16,6 @@ import time
 
 from traccc_bench_tools import parse_profile, types, build, profile, benchmark
 
-
 log = logging.getLogger("traccc_benchmark")
 
 

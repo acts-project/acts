@@ -15,15 +15,14 @@ namespace traccc {
 
 /// Configuration struct for ambiguity resolution
 struct ambiguity_resolution_config {
+  /// Minimum number of measurement to form a track.
+  unsigned int min_meas_per_track = 3;
 
-    /// Minimum number of measurement to form a track.
-    unsigned int min_meas_per_track = 3;
+  /// Max iteration to remove the bad tracks
+  unsigned int max_iterations = std::numeric_limits<unsigned int>::max();
 
-    /// Max iteration to remove the bad tracks
-    unsigned int max_iterations = std::numeric_limits<unsigned int>::max();
-
-    /// Max shared measurements to break the iteration
-    unsigned int max_shared_meas = 1;
+  /// Max shared measurements to break the iteration
+  unsigned int max_shared_meas = 1;
 };
 
 }  // namespace traccc

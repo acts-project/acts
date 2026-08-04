@@ -24,43 +24,42 @@ void read_spacepoints(
     const traccc::detector_design_description::host* det_desc,
     const traccc::detector_conditions_description::host* det_cond,
     data_format format) {
-
-    switch (format) {
-        case data_format::csv: {
-            read_spacepoints(
-                spacepoints, measurements,
-                get_absolute_path((std::filesystem::path(directory) /
-                                   std::filesystem::path(
-                                       get_event_filename(event, "-hits.csv")))
-                                      .native()),
-                get_absolute_path((std::filesystem::path(directory) /
-                                   std::filesystem::path(get_event_filename(
-                                       event, "-measurements.csv")))
-                                      .native()),
-                get_absolute_path((std::filesystem::path(directory) /
-                                   std::filesystem::path(get_event_filename(
-                                       event, "-measurement-simhit-map.csv")))
-                                      .native()),
-                detector, det_desc, det_cond, format);
-            break;
-        }
-        case data_format::binary: {
-            read_spacepoints(
-                spacepoints, measurements,
-                get_absolute_path((std::filesystem::path(directory) /
-                                   std::filesystem::path(
-                                       get_event_filename(event, "-hits.dat")))
-                                      .native()),
-                get_absolute_path((std::filesystem::path(directory) /
-                                   std::filesystem::path(get_event_filename(
-                                       event, "-measurements.dat")))
-                                      .native()),
-                "", detector, det_desc, det_cond, format);
-            break;
-        }
-        default:
-            throw std::invalid_argument("Unsupported data format");
+  switch (format) {
+    case data_format::csv: {
+      read_spacepoints(
+          spacepoints, measurements,
+          get_absolute_path(
+              (std::filesystem::path(directory) /
+               std::filesystem::path(get_event_filename(event, "-hits.csv")))
+                  .native()),
+          get_absolute_path((std::filesystem::path(directory) /
+                             std::filesystem::path(get_event_filename(
+                                 event, "-measurements.csv")))
+                                .native()),
+          get_absolute_path((std::filesystem::path(directory) /
+                             std::filesystem::path(get_event_filename(
+                                 event, "-measurement-simhit-map.csv")))
+                                .native()),
+          detector, det_desc, det_cond, format);
+      break;
     }
+    case data_format::binary: {
+      read_spacepoints(
+          spacepoints, measurements,
+          get_absolute_path(
+              (std::filesystem::path(directory) /
+               std::filesystem::path(get_event_filename(event, "-hits.dat")))
+                  .native()),
+          get_absolute_path((std::filesystem::path(directory) /
+                             std::filesystem::path(get_event_filename(
+                                 event, "-measurements.dat")))
+                                .native()),
+          "", detector, det_desc, det_cond, format);
+      break;
+    }
+    default:
+      throw std::invalid_argument("Unsupported data format");
+  }
 }
 
 void read_spacepoints(
@@ -72,20 +71,19 @@ void read_spacepoints(
     const traccc::detector_design_description::host* det_desc,
     const traccc::detector_conditions_description::host* det_cond,
     data_format format) {
-
-    switch (format) {
-        case data_format::csv:
-            csv::read_spacepoints(spacepoints, measurements, hit_filename,
-                                  meas_filename, meas_hit_map_filename,
-                                  detector, det_desc, det_cond);
-            break;
-        case data_format::binary:
-            details::read_binary_soa(spacepoints, hit_filename);
-            details::read_binary_soa(measurements, meas_filename);
-            break;
-        default:
-            throw std::invalid_argument("Unsupported data format");
-    }
+  switch (format) {
+    case data_format::csv:
+      csv::read_spacepoints(spacepoints, measurements, hit_filename,
+                            meas_filename, meas_hit_map_filename, detector,
+                            det_desc, det_cond);
+      break;
+    case data_format::binary:
+      details::read_binary_soa(spacepoints, hit_filename);
+      details::read_binary_soa(measurements, meas_filename);
+      break;
+    default:
+      throw std::invalid_argument("Unsupported data format");
+  }
 }
 
 }  // namespace traccc::io

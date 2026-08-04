@@ -23,32 +23,32 @@ namespace traccc::device {
 
 /// (Shared Event Data) Payload for the @c traccc::device::find_tracks function
 struct find_tracks_shared_payload {
-    /**
-     * @brief Shared-memory value indicating the final number of track
-     * parameters to write to permanent storage.
-     */
-    unsigned int& shared_num_out_params;
+  /**
+   * @brief Shared-memory value indicating the final number of track
+   * parameters to write to permanent storage.
+   */
+  unsigned int& shared_num_out_params;
 
-    /**
-     * @brief Shared-memory array with mutexes for the insertionof parameters.
-     *
-     * @note Length is always exactly the block size.
-     */
-    unsigned long long int* shared_insertion_mutex;
+  /**
+   * @brief Shared-memory array with mutexes for the insertionof parameters.
+   *
+   * @note Length is always exactly the block size.
+   */
+  unsigned long long int* shared_insertion_mutex;
 
-    /**
-     * @brief Shared-memory vector of measurement candidats with ID and
-     * original track parameter identifier
-     *
-     * @note Length is always twice the block size
-     */
-    std::pair<unsigned int, unsigned int>* shared_candidates;
+  /**
+   * @brief Shared-memory vector of measurement candidats with ID and
+   * original track parameter identifier
+   *
+   * @note Length is always twice the block size
+   */
+  std::pair<unsigned int, unsigned int>* shared_candidates;
 
-    /**
-     * @brief Shared-memory atomic variable to track the size of
-     * \ref shared_candidates
-     */
-    unsigned int& shared_candidates_size;
+  /**
+   * @brief Shared-memory atomic variable to track the size of
+   * \ref shared_candidates
+   */
+  unsigned int& shared_candidates_size;
 };
 
 /// Function for combinatorial finding.

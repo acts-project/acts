@@ -11,15 +11,14 @@ namespace traccc::device {
 
 /// Total number of doublets and triplets found in seeding
 struct seeding_global_counter {
+  /// The total number of middle-bottom doublets
+  unsigned int m_nMidBot;
 
-    /// The total number of middle-bottom doublets
-    unsigned int m_nMidBot;
+  /// The total number of middle-top doublets
+  unsigned int m_nMidTop;
 
-    /// The total number of middle-top doublets
-    unsigned int m_nMidTop;
-
-    /// The total number of triplets
-    unsigned int m_nTriplets;
+  /// The total number of triplets
+  unsigned int m_nTriplets;
 
 };  // struct seeding_global_counter
 

@@ -8,44 +8,53 @@
 @PACKAGE_INIT@
 
 # Remember the options that traccc was built with.
-set( TRACCC_BUILD_CUDA     @TRACCC_BUILD_CUDA@ )
-set( TRACCC_BUILD_HIP      @TRACCC_BUILD_HIP@ )
-set( TRACCC_BUILD_SYCL     @TRACCC_BUILD_SYCL@ )
-set( TRACCC_BUILD_ALPAKA   @TRACCC_BUILD_ALPAKA@ )
-set( TRACCC_BUILD_EXAMPLES @TRACCC_BUILD_EXAMPLES@ )
-set( TRACCC_USE_ROOT       @TRACCC_USE_ROOT@ )
-set( TRACCC_BUILD_IO       @TRACCC_BUILD_IO@ )
+set(TRACCC_BUILD_CUDA @TRACCC_BUILD_CUDA@)
+set(TRACCC_BUILD_HIP @TRACCC_BUILD_HIP@)
+set(TRACCC_BUILD_SYCL @TRACCC_BUILD_SYCL@)
+set(TRACCC_BUILD_ALPAKA @TRACCC_BUILD_ALPAKA@)
+set(TRACCC_BUILD_EXAMPLES @TRACCC_BUILD_EXAMPLES@)
+set(TRACCC_USE_ROOT @TRACCC_USE_ROOT@)
+set(TRACCC_BUILD_IO @TRACCC_BUILD_IO@)
 
 # Set up some simple variables for using the package.
-set( traccc_VERSION "@PROJECT_VERSION@" )
-set_and_check( traccc_INCLUDE_DIR "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@" )
-set_and_check( traccc_LIBRARY_DIR "@PACKAGE_CMAKE_INSTALL_LIBDIR@" )
-set_and_check( traccc_CMAKE_DIR   "@PACKAGE_CMAKE_INSTALL_CMAKEDIR@" )
+set(traccc_VERSION "@PROJECT_VERSION@")
+set_and_check(traccc_INCLUDE_DIR "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@")
+set_and_check(traccc_LIBRARY_DIR "@PACKAGE_CMAKE_INSTALL_LIBDIR@")
+set_and_check(traccc_CMAKE_DIR "@PACKAGE_CMAKE_INSTALL_CMAKEDIR@")
 
 # Make the "traccc modules" visible to CMake.
-list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}" )
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
 
 # Find all packages that traccc needs to function.
-include( CMakeFindDependencyMacro )
-find_dependency( Acts COMPONENTS Core )
-find_dependency( Thrust )
-if( TRACCC_BUILD_ALPAKA )
-   find_dependency( alpaka )
+include(CMakeFindDependencyMacro)
+find_dependency(Acts COMPONENTS Core)
+find_dependency(Thrust)
+if(TRACCC_BUILD_ALPAKA)
+    find_dependency(alpaka)
 endif()
-find_dependency( vecmem )
-find_dependency( detray )
-if( TRACCC_BUILD_EXAMPLES )
-   find_dependency( Boost COMPONENTS program_options )
-   if( TRACCC_USE_ROOT )
-      find_dependency( ROOT COMPONENTS Core RIO Tree Hist )
-   endif()
+find_dependency(vecmem)
+find_dependency(detray)
+if(TRACCC_BUILD_EXAMPLES)
+    find_dependency(Boost COMPONENTS program_options)
+    if(TRACCC_USE_ROOT)
+        find_dependency(
+            ROOT
+            COMPONENTS
+            Core
+            RIO
+            Tree
+            Hist
+        )
+    endif()
 endif()
 
 # Include the file listing all the imported targets and options.
-include( "${traccc_CMAKE_DIR}/traccc-config-targets.cmake" )
+include("${traccc_CMAKE_DIR}/traccc-config-targets.cmake")
 
 # Print a standard information message about the package being found.
-include( FindPackageHandleStandardArgs )
-find_package_handle_standard_args( traccc REQUIRED_VARS
-   CMAKE_CURRENT_LIST_FILE
-   VERSION_VAR traccc_VERSION )
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(
+    traccc
+    REQUIRED_VARS CMAKE_CURRENT_LIST_FILE
+    VERSION_VAR traccc_VERSION
+)

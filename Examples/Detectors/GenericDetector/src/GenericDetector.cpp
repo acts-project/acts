@@ -331,13 +331,13 @@ class Gen3GenericDetectorBuilder : public GenericDetectorBuilder {
       const Acts::GeometryContext& gctx,
       std::optional<std::filesystem::path> graphvizFile);
 
-  void buildPixel(Acts::Experimental::BlueprintNode& parent,
+  void buildPixel(Acts::BlueprintNode& parent,
                   const Acts::GeometryContext& gctx);
 
-  void buildShortStrip(Acts::Experimental::BlueprintNode& parent,
+  void buildShortStrip(Acts::BlueprintNode& parent,
                        const Acts::GeometryContext& gctx);
 
-  void buildLongStrip(Acts::Experimental::BlueprintNode& parent,
+  void buildLongStrip(Acts::BlueprintNode& parent,
                       const Acts::GeometryContext& gctx);
 
   static std::shared_ptr<const Acts::HomogeneousSurfaceMaterial> asHomogeneous(
@@ -371,7 +371,7 @@ Gen3GenericDetectorBuilder::buildTrackingGeometry(
     std::optional<std::filesystem::path> graphvizFile) {
   using enum Acts::AxisDirection;
   using namespace Acts::UnitLiterals;
-  using namespace Acts::Experimental;
+  using namespace Acts;
   using enum Acts::AxisBoundaryType;
   using enum Acts::CylinderVolumeBounds::Face;
   ACTS_INFO("GenericDetector construction in  Gen3 mode");
@@ -414,11 +414,10 @@ Gen3GenericDetectorBuilder::buildTrackingGeometry(
   return trackingGeometry;
 }
 
-void Gen3GenericDetectorBuilder::buildPixel(
-    Acts::Experimental::BlueprintNode& parent,
-    const Acts::GeometryContext& gctx) {
+void Gen3GenericDetectorBuilder::buildPixel(Acts::BlueprintNode& parent,
+                                            const Acts::GeometryContext& gctx) {
   using enum Acts::AxisDirection;
-  using namespace Acts::Experimental;
+  using namespace Acts;
   using namespace Acts::UnitLiterals;
   using enum Acts::CylinderVolumeBounds::Face;
   using AttachmentStrategy = Acts::VolumeAttachmentStrategy;
@@ -530,10 +529,9 @@ void Gen3GenericDetectorBuilder::buildPixel(
 }
 
 void Gen3GenericDetectorBuilder::buildShortStrip(
-    Acts::Experimental::BlueprintNode& parent,
-    const Acts::GeometryContext& gctx) {
+    Acts::BlueprintNode& parent, const Acts::GeometryContext& gctx) {
   using enum Acts::AxisDirection;
-  using namespace Acts::Experimental;
+  using namespace Acts;
   using namespace Acts::UnitLiterals;
   using enum Acts::CylinderVolumeBounds::Face;
   using AttachmentStrategy = Acts::VolumeAttachmentStrategy;
@@ -634,10 +632,9 @@ void Gen3GenericDetectorBuilder::buildShortStrip(
 }
 
 void Gen3GenericDetectorBuilder::buildLongStrip(
-    Acts::Experimental::BlueprintNode& parent,
-    const Acts::GeometryContext& gctx) {
+    Acts::BlueprintNode& parent, const Acts::GeometryContext& gctx) {
   using enum Acts::AxisDirection;
-  using namespace Acts::Experimental;
+  using namespace Acts;
   using namespace Acts::UnitLiterals;
   using enum Acts::CylinderVolumeBounds::Face;
   using AttachmentStrategy = Acts::VolumeAttachmentStrategy;

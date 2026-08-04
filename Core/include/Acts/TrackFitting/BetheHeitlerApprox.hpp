@@ -187,6 +187,7 @@ class PolynomialBetheHeitlerApprox : public BetheHeitlerApprox {
   /// @param clampToRange whether to clamp the input x/x0 to the allowed range
   /// @param noChangeLimit limit below which no change is applied
   /// @param singleGaussianLimit limit below which a single Gaussian is used
+  /// @deprecated Use constructor taking std::vector<RangeData> instead
   [[deprecated("Use constructor taking std::vector<RangeData> instead")]]
   PolynomialBetheHeitlerApprox(const Data &lowData, const Data &highData,
                                bool lowTransform, bool highTransform,

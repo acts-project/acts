@@ -41,50 +41,48 @@ namespace detail {
 template <typename scalar_t>
 TRACCC_HOST_DEVICE inline traccc::pdg_particle<scalar_t>
 particle_from_pdg_number(const int pdg_num) {
+  switch (pdg_num) {
+    case 11:
+      return detray::electron<scalar_t>();
+    case -11:
+      return detray::positron<scalar_t>();
+    case 13:
+      return detray::muon<scalar_t>();
+    case -13:
+      return detray::antimuon<scalar_t>();
+    case 211:
+      return detray::pion_plus<scalar_t>();
+    case -211:
+      return detray::pion_minus<scalar_t>();
+  }
 
-    switch (pdg_num) {
-        case 11:
-            return detray::electron<scalar_t>();
-        case -11:
-            return detray::positron<scalar_t>();
-        case 13:
-            return detray::muon<scalar_t>();
-        case -13:
-            return detray::antimuon<scalar_t>();
-        case 211:
-            return detray::pion_plus<scalar_t>();
-        case -211:
-            return detray::pion_minus<scalar_t>();
-    }
-
-    // TODO: Replace with `detray::invalid` in the future
-    return traccc::pdg_particle<scalar_t>(0, 0.f, 0.f);
+  // TODO: Replace with `detray::invalid` in the future
+  return traccc::pdg_particle<scalar_t>(0, 0.f, 0.f);
 }
 
 // Apply the charge operator to return the antimatter
 template <typename scalar_t>
 TRACCC_HOST_DEVICE inline traccc::pdg_particle<scalar_t> charge_conjugation(
     const traccc::pdg_particle<scalar_t>& ptc) {
+  const auto pdg_num = ptc.pdg_num();
 
-    const auto pdg_num = ptc.pdg_num();
+  switch (pdg_num) {
+    case 11:
+      return detray::positron<scalar_t>();
+    case -11:
+      return detray::electron<scalar_t>();
+    case 13:
+      return detray::antimuon<scalar_t>();
+    case -13:
+      return detray::muon<scalar_t>();
+    case 211:
+      return detray::pion_minus<scalar_t>();
+    case -211:
+      return detray::pion_plus<scalar_t>();
+  }
 
-    switch (pdg_num) {
-        case 11:
-            return detray::positron<scalar_t>();
-        case -11:
-            return detray::electron<scalar_t>();
-        case 13:
-            return detray::antimuon<scalar_t>();
-        case -13:
-            return detray::muon<scalar_t>();
-        case 211:
-            return detray::pion_minus<scalar_t>();
-        case -211:
-            return detray::pion_plus<scalar_t>();
-    }
-
-    // TODO: Replace with `detray::invalid` in the future
-    return traccc::pdg_particle<scalar_t>(0, 0.f, 0.f);
+  // TODO: Replace with `detray::invalid` in the future
+  return traccc::pdg_particle<scalar_t>(0, 0.f, 0.f);
 }
 
 // Return the consistent particle type based on the particle hypothesis and the
@@ -94,12 +92,11 @@ TRACCC_HOST_DEVICE inline traccc::pdg_particle<scalar_t>
 correct_particle_hypothesis(
     const traccc::pdg_particle<scalar_t>& ptc_hypothesis,
     const bound_track_parameters<>& params) {
-
-    if (ptc_hypothesis.charge() * params.qop() > 0.f) {
-        return ptc_hypothesis;
-    } else {
-        return charge_conjugation(ptc_hypothesis);
-    }
+  if (ptc_hypothesis.charge() * params.qop() > 0.f) {
+    return ptc_hypothesis;
+  } else {
+    return charge_conjugation(ptc_hypothesis);
+  }
 }
 
 template <typename scalar_t>
@@ -107,12 +104,11 @@ TRACCC_HOST_DEVICE inline traccc::pdg_particle<scalar_t>
 correct_particle_hypothesis(
     const traccc::pdg_particle<scalar_t>& ptc_hypothesis,
     const free_track_parameters<>& params) {
-
-    if (ptc_hypothesis.charge() * params.qop() > 0.f) {
-        return ptc_hypothesis;
-    } else {
-        return charge_conjugation(ptc_hypothesis);
-    }
+  if (ptc_hypothesis.charge() * params.qop() > 0.f) {
+    return ptc_hypothesis;
+  } else {
+    return charge_conjugation(ptc_hypothesis);
+  }
 }
 
 }  // namespace detail

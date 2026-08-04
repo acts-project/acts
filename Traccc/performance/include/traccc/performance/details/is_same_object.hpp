@@ -25,17 +25,16 @@ namespace traccc::details {
 ///
 template <typename T>
 class is_same_object {
+ public:
+  /// Constructor with a reference object, and an allowed uncertainty
+  is_same_object(const T& ref, scalar /*unc*/ = float_epsilon);
 
-    public:
-    /// Constructor with a reference object, and an allowed uncertainty
-    is_same_object(const T& ref, scalar /*unc*/ = float_epsilon);
+  /// Default implementation relying on @c operator== for the given type
+  bool operator()(const T& obj) const;
 
-    /// Default implementation relying on @c operator== for the given type
-    bool operator()(const T& obj) const;
-
-    private:
-    /// The reference object
-    std::reference_wrapper<const T> m_ref;
+ private:
+  /// The reference object
+  std::reference_wrapper<const T> m_ref;
 
 };  // class is_same_object
 

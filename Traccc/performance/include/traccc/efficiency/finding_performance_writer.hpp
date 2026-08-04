@@ -34,59 +34,57 @@ struct finding_performance_writer_data;
 }  // namespace details
 
 class finding_performance_writer : public messaging {
+ public:
+  /// Configuration for the tool
+  struct config {
+    // Algorithm name, for ROOT display
+    std::string algorithm_name = "finding";
+    /// Output filename.
+    std::string file_path = "performance_track_finding.root";
+    /// Output file mode
+    std::string file_mode = "RECREATE";
 
-    public:
-    /// Configuration for the tool
-    struct config {
+    /// Plot tool configurations.
+    std::map<std::string, plot_helpers::binning> var_binning = {
+        {"Eta", plot_helpers::binning("#eta", 40, -4.f, 4.f)},
+        {"Phi", plot_helpers::binning("#phi", 100, -3.15f, 3.15f)},
+        {"Pt", plot_helpers::binning("p_{T} [GeV/c]", 40, 0.f, 100.f)},
+        {"Num", plot_helpers::binning("N", 30, -0.5f, 29.5f)}};
 
-        // Algorithm name, for ROOT display
-        std::string algorithm_name = "finding";
-        /// Output filename.
-        std::string file_path = "performance_track_finding.root";
-        /// Output file mode
-        std::string file_mode = "RECREATE";
+    truth_matching_config truth_config;
+    track_matching_config track_truth_config;
 
-        /// Plot tool configurations.
-        std::map<std::string, plot_helpers::binning> var_binning = {
-            {"Eta", plot_helpers::binning("#eta", 40, -4.f, 4.f)},
-            {"Phi", plot_helpers::binning("#phi", 100, -3.15f, 3.15f)},
-            {"Pt", plot_helpers::binning("p_{T} [GeV/c]", 40, 0.f, 100.f)},
-            {"Num", plot_helpers::binning("N", 30, -0.5f, 29.5f)}};
+    bool require_fit = false;
 
-        truth_matching_config truth_config;
-        track_matching_config track_truth_config;
+    stat_plot_tool_config stat_config{};
+  };
 
-        bool require_fit = false;
+  /// Construct from configuration and log level.
+  /// @param cfg The configuration
+  ///
+  finding_performance_writer(const config& cfg,
+                             std::unique_ptr<const traccc::Logger> logger);
 
-        stat_plot_tool_config stat_config{};
-    };
+  /// Destructor
+  ~finding_performance_writer();
 
-    /// Construct from configuration and log level.
-    /// @param cfg The configuration
-    ///
-    finding_performance_writer(const config& cfg,
-                               std::unique_ptr<const traccc::Logger> logger);
+  void write(
+      const edm::track_container<default_algebra>::const_view& track_view,
+      const event_data& evt_data);
 
-    /// Destructor
-    ~finding_performance_writer();
+  void finalize();
 
-    void write(
-        const edm::track_container<default_algebra>::const_view& track_view,
-        const event_data& evt_data);
+ private:
+  /// Configuration for the tool
+  config m_cfg;
 
-    void finalize();
+  /// Opaque data members for the class
+  std::unique_ptr<details::finding_performance_writer_data> m_data;
 
-    private:
-    /// Configuration for the tool
-    config m_cfg;
-
-    /// Opaque data members for the class
-    std::unique_ptr<details::finding_performance_writer_data> m_data;
-
-    /// Common method to both track finding and ambiguity resolution
-    void write_common(
-        const std::vector<std::vector<event_data::measurement_proxy>>& tracks,
-        const event_data& evt_data);
+  /// Common method to both track finding and ambiguity resolution
+  void write_common(
+      const std::vector<std::vector<event_data::measurement_proxy>>& tracks,
+      const event_data& evt_data);
 
 };  // class finding_performance_writer
 

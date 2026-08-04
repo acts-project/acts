@@ -15,25 +15,23 @@
 namespace {
 
 inline traccc::scalar wrap_to_pi(traccc::scalar phi) {
+  // Make sure that we only use the precision necessary.
+  static constexpr traccc::scalar PI = std::numbers::pi_v<traccc::scalar>;
+  static constexpr traccc::scalar TWOPI = 2.f * PI;
 
-    // Make sure that we only use the precision necessary.
-    static constexpr traccc::scalar PI = std::numbers::pi_v<traccc::scalar>;
-    static constexpr traccc::scalar TWOPI = 2.f * PI;
-
-    // Bring the value within bounds.
-    while (phi > PI) {
-        phi -= TWOPI;
-    }
-    while (phi < -PI) {
-        phi += TWOPI;
-    }
-    return phi;
+  // Bring the value within bounds.
+  while (phi > PI) {
+    phi -= TWOPI;
+  }
+  while (phi < -PI) {
+    phi += TWOPI;
+  }
+  return phi;
 }
 
 inline traccc::scalar angle_mean(traccc::scalar lhs, traccc::scalar rhs) {
-
-    const traccc::scalar diff = wrap_to_pi(lhs - rhs);
-    return wrap_to_pi(rhs + 0.5f * diff);
+  const traccc::scalar diff = wrap_to_pi(lhs - rhs);
+  return wrap_to_pi(rhs + 0.5f * diff);
 }
 
 }  // namespace
@@ -41,9 +39,8 @@ inline traccc::scalar angle_mean(traccc::scalar lhs, traccc::scalar rhs) {
 namespace traccc::details {
 
 bool is_same_angle(scalar lhs, scalar rhs, scalar unc) {
-
-    return (std::abs(wrap_to_pi(lhs - rhs)) <=
-            (unc * std::abs(angle_mean(lhs, rhs))));
+  return (std::abs(wrap_to_pi(lhs - rhs)) <=
+          (unc * std::abs(angle_mean(lhs, rhs))));
 }
 
 }  // namespace traccc::details

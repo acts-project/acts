@@ -11,8 +11,7 @@
 namespace traccc {
 
 magnetic_field construct_const_bfield(const vector3& v) {
-
-    return construct_const_bfield(v[0], v[1], v[2]);
+  return construct_const_bfield(v[0], v[1], v[2]);
 }
 
 }  // namespace traccc

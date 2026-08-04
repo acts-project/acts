@@ -5,7 +5,7 @@
 # Mozilla Public License Version 2.0
 
 # Project include(s).
-include( traccc-compiler-options-cpp )
+include(traccc-compiler-options-cpp)
 
 # Declare the traccc::device_common library.
 traccc_add_library( traccc_device_common device_common
@@ -143,6 +143,5 @@ traccc_add_library( traccc_device_common device_common
    "include/traccc/fitting/device/impl/fill_fitting_sort_keys.ipp"
    "include/traccc/fitting/device/kalman_fitting_algorithm.hpp"
    "src/fitting/kalman_fitting_algorithm.cpp"
-   )
-target_link_libraries( traccc_device_common
-   PUBLIC traccc::core vecmem::core )
+)
+target_link_libraries(traccc_device_common PUBLIC traccc::core vecmem::core)

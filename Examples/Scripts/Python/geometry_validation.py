@@ -122,24 +122,33 @@ def main():
         if args.input != "":
             files = glob.glob(args.input.rstrip("/") + "/*.json")
             print(">>> Reading detray geometry from", args.input, "->", files)
-            detrayGeometry, detrayNames = acts.detray.readODD(__pmr, files)
+            detrayDetector, detrayNames = acts.detray.readODD(__pmr, files)
         else:
-            detrayGeometry, detrayNames = acts.detray.convertODD(
-                __pmr,
-                gContext,
-                trackingGeometry,
-                beampipeVolumeName="BeamPipe",
-                detectorName="odd",
-                logLevel=logLevel,
+            payloadConfig = acts.detray.DetrayPayloadConverter.Config()
+            payloadConfig.beampipeVolume = trackingGeometry.findVolumeByName("BeamPipe")
+            payloadConverter = acts.detray.DetrayPayloadConverter(
+                payloadConfig, logLevel
+            )
+
+            converterConfig = acts.detray.DetrayGeometryConverter.Config()
+            converterConfig.payloadConverter = payloadConverter
+            converter = acts.detray.DetrayGeometryConverter(converterConfig, logLevel)
+
+            detrayGeometry = converter.convert(
+                __pmr, gContext, trackingGeometry, detectorName="odd"
+            )
+            detrayDetector, detrayNames = (
+                detrayGeometry.detector,
+                detrayGeometry.names,
             )
 
         if args.detray_consistency_check:
-            detrayGeometry.checkConsistency()
+            detrayDetector.checkConsistency()
 
         if args.output_json:
             print(">>> Outputting the detray geometry to json file ...")
             detray_out = prfx + "detray/"
-            detrayGeometry.writeToJson(detrayNames, detray_out)
+            detrayDetector.writeToJson(detrayNames, detray_out)
             print(">>> Written to", detray_out)
 
     elif args.geo_mode == "geant4":

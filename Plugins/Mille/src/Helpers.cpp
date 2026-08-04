@@ -10,8 +10,8 @@
 
 #include <iostream>
 
-#include <Eigen/src/Core/Matrix.h>
-#include <Eigen/src/Eigenvalues/SelfAdjointEigenSolver.h>
+#include <Eigen/Core>
+#include <Eigen/Eigenvalues>
 
 namespace ActsPlugins::ActsToMille {
 

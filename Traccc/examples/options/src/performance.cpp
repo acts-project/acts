@@ -16,18 +16,17 @@
 namespace traccc::opts {
 
 performance::performance() : interface("Performance Measurement Options") {
-
-    m_desc.add_options()("check-performance",
-                         boost::program_options::bool_switch(&run),
-                         "Run performance checks");
+  m_desc.add_options()("check-performance",
+                       boost::program_options::bool_switch(&run),
+                       "Run performance checks");
 }
 
 std::unique_ptr<configuration_printable> performance::as_printable() const {
-    auto cat = std::make_unique<configuration_category>(m_description);
+  auto cat = std::make_unique<configuration_category>(m_description);
 
-    cat->add_child(std::make_unique<configuration_kv_pair>(
-        "Run performance checks", std::format("{}", run)));
+  cat->add_child(std::make_unique<configuration_kv_pair>(
+      "Run performance checks", std::format("{}", run)));
 
-    return cat;
+  return cat;
 }
 }  // namespace traccc::opts

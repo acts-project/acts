@@ -26,25 +26,24 @@ __global__ void find_tracks(
     const __grid_constant__ finding_config cfg,
     const __grid_constant__ typename detector_t::const_view_type det,
     const __grid_constant__ device::find_tracks_payload payload) {
+  __shared__ unsigned int shared_num_out_params;
+  __shared__ unsigned int shared_candidates_size;
+  extern __shared__ unsigned long long int s[];
+  unsigned long long int* shared_insertion_mutex = s;
+  std::pair<unsigned int, unsigned int>* shared_candidates =
+      reinterpret_cast<std::pair<unsigned int, unsigned int>*>(
+          &shared_insertion_mutex[blockDim.x]);
 
-    __shared__ unsigned int shared_num_out_params;
-    __shared__ unsigned int shared_candidates_size;
-    extern __shared__ unsigned long long int s[];
-    unsigned long long int* shared_insertion_mutex = s;
-    std::pair<unsigned int, unsigned int>* shared_candidates =
-        reinterpret_cast<std::pair<unsigned int, unsigned int>*>(
-            &shared_insertion_mutex[blockDim.x]);
+  cuda::barrier barrier;
+  details::thread_id1 thread_id;
 
-    cuda::barrier barrier;
-    details::thread_id1 thread_id;
-
-    device::find_tracks<detector_t>(
-        thread_id, barrier, cfg, det, payload,
-        device::find_tracks_shared_payload{
-            .shared_num_out_params = shared_num_out_params,
-            .shared_insertion_mutex = shared_insertion_mutex,
-            .shared_candidates = shared_candidates,
-            .shared_candidates_size = shared_candidates_size});
+  device::find_tracks<detector_t>(
+      thread_id, barrier, cfg, det, payload,
+      device::find_tracks_shared_payload{
+          .shared_num_out_params = shared_num_out_params,
+          .shared_insertion_mutex = shared_insertion_mutex,
+          .shared_candidates = shared_candidates,
+          .shared_candidates_size = shared_candidates_size});
 }
 
 }  // namespace kernels
@@ -55,8 +54,7 @@ void find_tracks(const dim3& grid_size, const dim3& block_size,
                  const finding_config& cfg,
                  const typename detector_t::const_view_type& det,
                  const device::find_tracks_payload& payload) {
-
-    kernels::find_tracks<detector_t>
-        <<<grid_size, block_size, shared_mem_size, stream>>>(cfg, det, payload);
+  kernels::find_tracks<detector_t>
+      <<<grid_size, block_size, shared_mem_size, stream>>>(cfg, det, payload);
 }
 }  // namespace traccc::cuda

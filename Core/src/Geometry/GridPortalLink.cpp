@@ -14,7 +14,6 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/Grid.hpp"
 
 #include <iostream>
 #include <numbers>
@@ -149,16 +148,16 @@ void GridPortalLink::checkConsistency(const IGrid& grid,
     }
   };
 
-  if (grid.axes().size() == 1) {
-    const IAxis& axisLoc0 = *grid.axes().front();
+  if (grid.dimensions() == 1) {
+    const IAxis& axisLoc0 = grid.multiAxisAny().getAxis(0);
     if (direction == AxisDirection::AxisRPhi) {
       checkRPhi(axisLoc0);
     } else {
       checkZ(axisLoc0);
     }
   } else {  // DIM == 2
-    const auto& axisLoc0 = *grid.axes().front();
-    const auto& axisLoc1 = *grid.axes().back();
+    const auto& axisLoc0 = grid.multiAxisAny().getAxis(0);
+    const auto& axisLoc1 = grid.multiAxisAny().getAxis(1);
     checkRPhi(axisLoc0);
     checkZ(axisLoc1);
   }
@@ -213,16 +212,16 @@ void GridPortalLink::checkConsistency(const IGrid& grid,
     }
   };
 
-  if (grid.axes().size() == 1) {
-    const IAxis& axisLoc0 = *grid.axes().front();
+  if (grid.dimensions() == 1) {
+    const IAxis& axisLoc0 = grid.multiAxisAny().getAxis(0);
     if (direction == AxisDirection::AxisR) {
       checkR(axisLoc0);
     } else {
       checkPhi(axisLoc0);
     }
   } else {  // DIM == 2
-    const auto& axisLoc0 = *grid.axes().front();
-    const auto& axisLoc1 = *grid.axes().back();
+    const auto& axisLoc0 = grid.multiAxisAny().getAxis(0);
+    const auto& axisLoc1 = grid.multiAxisAny().getAxis(1);
     checkR(axisLoc0);
     checkPhi(axisLoc1);
   }
@@ -252,19 +251,19 @@ void GridPortalLink::checkConsistency(const IGrid& grid,
     }
   };
 
-  if (grid.axes().size() == 1) {
-    const IAxis& axisLoc0 = *grid.axes().front();
+  if (grid.dimensions() == 1) {
+    const IAxis& axisLoc0 = grid.multiAxisAny().getAxis(0);
     check(axisLoc0, direction);
   } else {  // DIM == 2
-    const auto& axisLoc0 = *grid.axes().front();
-    const auto& axisLoc1 = *grid.axes().back();
+    const auto& axisLoc0 = grid.multiAxisAny().getAxis(0);
+    const auto& axisLoc1 = grid.multiAxisAny().getAxis(1);
     check(axisLoc0, AxisDirection::AxisX);
     check(axisLoc1, AxisDirection::AxisY);
   }
 }
 
 void GridPortalLink::printContents(std::ostream& os) const {
-  std::size_t dim = grid().axes().size();
+  std::size_t dim = grid().dimensions();
   os << "----- GRID " << dim << "d -----" << std::endl;
   os << grid() << " along " << direction() << std::endl;
 
@@ -300,7 +299,7 @@ void GridPortalLink::printContents(std::ostream& os) const {
   AnyGridConstView<const TrackingVolume*> view(grid());
 
   if (dim == 1) {
-    auto loc = grid().numLocalBinsAny();
+    auto loc = grid().multiAxisAny().getNBinsAny();
 
     if (flipped) {
       os << lpad(loc1, 4) << " > " << lpad("i=0", 10) << " ";
@@ -335,7 +334,7 @@ void GridPortalLink::printContents(std::ostream& os) const {
     }
 
   } else {
-    auto loc = grid().numLocalBinsAny();
+    auto loc = grid().multiAxisAny().getNBinsAny();
     os << rpad("v " + loc0 + "|" + loc1 + " >", 14) + "j=0 ";
     for (std::size_t j = 1; j <= loc.at(1) + 1; j++) {
       os << lpad("j=" + std::to_string(j), 13) << " ";
@@ -359,8 +358,8 @@ void GridPortalLink::printContents(std::ostream& os) const {
 void GridPortalLink::fillGrid1dTo2d(FillDirection dir,
                                     const GridPortalLink& grid1d,
                                     GridPortalLink& grid2d) {
-  const auto locSource = grid1d.grid().numLocalBinsAny();
-  const auto locDest = grid2d.grid().numLocalBinsAny();
+  const auto locSource = grid1d.grid().multiAxisAny().getNBinsAny();
+  const auto locDest = grid2d.grid().multiAxisAny().getNBinsAny();
   assert(grid1d.grid().dimensions() == 1);
   assert(grid2d.grid().dimensions() == 2);
   assert(locSource.size() == 1);

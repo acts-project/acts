@@ -20,7 +20,6 @@
 #include "Acts/Geometry/detail/AlignablePortalVisitor.hpp"
 #include "Acts/Geometry/detail/BoundDeduplicator.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
-#include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -28,9 +27,10 @@
 
 namespace {
 const std::string s_rootName = "Root";
-}
+const std::string s_worldName = "World";
+}  // namespace
 
-namespace Acts::Experimental {
+namespace Acts {
 
 ///@class BlueprintVisitor
 /// A class for visiting blueprint hierarchy and apply the geometry identifiers
@@ -147,34 +147,39 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
     throw std::logic_error("Root node must have exactly one child");
   }
 
-  auto child = childPtr()[0];
-  clearChildren();
+  BlueprintNode &child = children().at(0);
 
   ACTS_DEBUG(prefix() << "Executing building on tree");
 
-  auto autoSizingNode = std::make_shared<Acts::Experimental::PadBlueprintNode>(
-      "World", m_cfg.envelope);
+  // The world volume is not represented by a node in the tree: we size it here
+  // from the built subtree, and own it directly until it is handed to the
+  // TrackingGeometry at the end. The build/connect/finalize sequence below
+  // mirrors what StaticBlueprintNode does for an ordinary enclosing volume,
+  // minus registering itself with a parent (the world *is* the parent).
+  const Volume &top = child.build(options, gctx, logger);
 
-  autoSizingNode->addChild(std::move(child));
-
-  autoSizingNode->build(options, gctx, logger);
-
-  auto world = autoSizingNode->trackingVolume();
+  std::unique_ptr<TrackingVolume> world =
+      PadBlueprintNode::padded(gctx, top, m_cfg.envelope, s_worldName, logger);
 
   ACTS_DEBUG(prefix() << "New root volume bounds are: "
                       << world->volumeBounds());
 
-  world->setNavigationPolicy(std::make_unique<Acts::TryAllNavigationPolicy>(
-      gctx, *world, logger, Acts::TryAllNavigationPolicy::Config{}));
-
-  autoSizingNode->connect(options, gctx, logger);
+  // Register the world on the outside of the child's shell, then produce the
+  // world's own (outermost) portals.
+  child.connect(options, gctx, logger).fill(*world);
+  std::unique_ptr<PortalShellBase> worldShell =
+      PortalShellBase::makeSingle(gctx, *world);
 
   if (m_cfg.boundDeduplication) {
     ACTS_DEBUG("Deduplicate equivalent bounds");
     detail::BoundDeduplicator deduplicator{};
     world->apply(deduplicator);
   }
-  autoSizingNode->finalize(options, gctx, *world, logger);
+
+  child.finalize(options, gctx, *world, logger);
+  worldShell->applyToVolume();
+  world->setNavigationPolicy(
+      options.defaultNavigationPolicyFactory->build(gctx, *world, logger));
 
   std::set<std::string, std::less<>> volumeNames;
   std::array<const TrackingVolume *, GeometryIdentifier::getMaxVolume()>
@@ -213,9 +218,20 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   Acts::detail::AlignablePortalVisitor alignPortals{gctx, logger};
   world->apply(alignPortals);
 
+  // All navigation policies are attached at this point: initialize each one's
+  // statelessness cache (probing whether it pushes only default states) so the
+  // navigator can skip the per-volume-entry state creation for volumes with
+  // stateless policies.
+  world->apply([&](TrackingVolume &volume) {
+    if (INavigationPolicy *policy = volume.navigationPolicy();
+        policy != nullptr) {
+      policy->initializeStatelessCache(gctx, logger);
+    }
+  });
+
   return std::make_unique<TrackingGeometry>(
-      std::shared_ptr<TrackingVolume>(autoSizingNode->releaseVolume()), nullptr,
+      std::shared_ptr<TrackingVolume>(std::move(world)), nullptr,
       GeometryIdentifierHook{}, logger, false);
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

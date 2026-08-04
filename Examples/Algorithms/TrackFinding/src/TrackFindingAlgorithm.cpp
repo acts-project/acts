@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
@@ -26,7 +27,9 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFinding/TrackStateCreator.hpp"
+#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/HashCombine.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -344,6 +347,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   extensions.createTrackStates
       .template connect<&TrackStateCreatorType ::createTrackStates>(
           &trackStateCreator);
+  extensions.mixtureReducer.connect<&Acts::reduceMixtureWithKLDistance>();
 
   Acts::PropagatorPlainOptions firstPropOptions(ctx.geoContext,
                                                 ctx.magFieldContext);
@@ -366,12 +370,16 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                   firstPropOptions);
 
   firstOptions.targetSurface = m_cfg.reverseSearch ? pSurface.get() : nullptr;
+  firstOptions.betheHeitlerApprox =
+      std::make_shared<Acts::AtlasBetheHeitlerApprox>(
+          Acts::makeDefaultBetheHeitlerApprox());
 
   TrackFinderOptions secondOptions(ctx.geoContext, ctx.magFieldContext,
                                    ctx.calibContext, extensions,
                                    secondPropOptions);
   secondOptions.targetSurface = m_cfg.reverseSearch ? nullptr : pSurface.get();
   secondOptions.skipPrePropagationUpdate = true;
+  secondOptions.betheHeitlerApprox = firstOptions.betheHeitlerApprox;
 
   using Extrapolator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
   using ExtrapolatorOptions = Extrapolator::template Options<
@@ -480,9 +488,16 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     ACTS_VERBOSE("Processing seed " << iSeed << " with initial parameters "
                                     << firstInitialParameters);
 
+    const TrackFinderFunction& findTracks =
+        (m_cfg.findTracksBrem == nullptr ||
+         firstInitialParameters.particleHypothesis() !=
+             Acts::ParticleHypothesis::electron())
+            ? *m_cfg.findTracks
+            : *m_cfg.findTracksBrem;
+
     auto firstRootBranch = tracksTemp.makeTrack();
-    auto firstResult = (*m_cfg.findTracks)(firstInitialParameters, firstOptions,
-                                           tracksTemp, firstRootBranch);
+    auto firstResult = findTracks(firstInitialParameters, firstOptions,
+                                  tracksTemp, firstRootBranch);
     nSeed++;
 
     if (!firstResult.ok()) {
@@ -550,9 +565,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
           auto secondRootBranch = tracksTemp.makeTrack();
           secondRootBranch.copyFromWithoutStates(trackCandidate);
-          auto secondResult =
-              (*m_cfg.findTracks)(secondInitialParameters, secondOptions,
-                                  tracksTemp, secondRootBranch);
+          auto secondResult = findTracks(secondInitialParameters, secondOptions,
+                                         tracksTemp, secondRootBranch);
 
           if (!secondResult.ok()) {
             ACTS_WARNING("Second track finding failed for seed "

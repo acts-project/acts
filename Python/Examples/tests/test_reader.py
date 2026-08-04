@@ -17,18 +17,13 @@ from acts.examples import (
     CsvSimHitReader,
     Sequencer,
 )
-from acts.examples.root import (
-    RootParticleWriter,
-    RootParticleReader,
-    RootMaterialTrackReader,
-    RootTrackSummaryReader,
-)
-
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 
 @pytest.mark.root
 def test_root_particle_reader(tmp_path, conf_const, ptcl_gun):
+    from acts.examples.root import RootParticleWriter, RootParticleReader
+
     # need to write out some particles first
     s = Sequencer(numThreads=1, events=10, logLevel=acts.logging.WARNING)
     _, h3conv = ptcl_gun(s)
@@ -114,11 +109,14 @@ def test_csv_particle_reader(tmp_path, conf_const, ptcl_gun):
 
 
 @pytest.mark.parametrize(
-    "reader",
-    [RootParticleReader, RootTrackSummaryReader],
+    "reader_name",
+    ["RootParticleReader", "RootTrackSummaryReader"],
 )
 @pytest.mark.root
-def test_root_reader_interface(reader, conf_const, tmp_path):
+def test_root_reader_interface(reader_name, conf_const, tmp_path):
+    import acts.examples.root
+
+    reader = getattr(acts.examples.root, reader_name)
     assert hasattr(reader, "Config")
 
     config = reader.Config
@@ -135,6 +133,8 @@ def test_root_reader_interface(reader, conf_const, tmp_path):
 @pytest.mark.odd
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 def test_root_material_track_reader(material_recording):
+    from acts.examples.root import RootMaterialTrackReader
+
     input_tracks = material_recording / "geant4_material_tracks.root"
     assert input_tracks.exists()
 
@@ -267,6 +267,8 @@ def test_csv_simhits_reader(tmp_path, fatras, conf_const):
 
 @pytest.mark.root
 def test_buffered_reader(tmp_path, conf_const, ptcl_gun):
+    from acts.examples.root import RootParticleWriter, RootParticleReader
+
     # Test the buffered reader with the ROOT particle reader
     # need to write out some particles first
     eventsInBuffer = 5

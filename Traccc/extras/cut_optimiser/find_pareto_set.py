@@ -3,7 +3,6 @@ import csv
 import logging
 import pathlib
 
-
 log = logging.getLogger("find_pareto_set")
 
 

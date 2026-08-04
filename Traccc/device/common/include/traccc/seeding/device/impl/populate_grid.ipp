@@ -18,39 +18,35 @@ inline void populate_grid(
     const edm::spacepoint_collection::const_view& spacepoints_view,
     details::spacepoint_grid_types::view grid_view,
     vecmem::data::vector_view<prefix_sum_element_t> grid_prefix_sum_view) {
+  // Check if anything needs to be done.
+  const edm::spacepoint_collection::const_device spacepoints(spacepoints_view);
+  if (globalIndex >= spacepoints.size()) {
+    return;
+  }
+  const edm::spacepoint_collection::const_device::const_proxy_type sp =
+      spacepoints.at(globalIndex);
 
-    // Check if anything needs to be done.
-    const edm::spacepoint_collection::const_device spacepoints(
-        spacepoints_view);
-    if (globalIndex >= spacepoints.size()) {
-        return;
-    }
-    const edm::spacepoint_collection::const_device::const_proxy_type sp =
-        spacepoints.at(globalIndex);
+  /// Check out if the spacepoint can be used for seeding.
+  if (is_valid_sp(config, sp)) {
+    // Set up the spacepoint grid object(s).
+    details::spacepoint_grid_types::device grid(grid_view);
+    const details::spacepoint_grid_types::device::axis_p0_type& phi_axis =
+        grid.axis_p0();
+    const details::spacepoint_grid_types::device::axis_p1_type& z_axis =
+        grid.axis_p1();
 
-    /// Check out if the spacepoint can be used for seeding.
-    if (is_valid_sp(config, sp)) {
+    // Find the grid bin that the spacepoint belongs to.
+    const unsigned int bin_index =
+        phi_axis.bin(sp.phi()) + phi_axis.bins() * z_axis.bin(sp.z());
 
-        // Set up the spacepoint grid object(s).
-        details::spacepoint_grid_types::device grid(grid_view);
-        const details::spacepoint_grid_types::device::axis_p0_type& phi_axis =
-            grid.axis_p0();
-        const details::spacepoint_grid_types::device::axis_p1_type& z_axis =
-            grid.axis_p1();
+    // Add the spacepoint's index to the grid.
+    const unsigned int sp_index = grid.bin(bin_index).push_back(globalIndex);
 
-        // Find the grid bin that the spacepoint belongs to.
-        const unsigned int bin_index =
-            phi_axis.bin(sp.phi()) + phi_axis.bins() * z_axis.bin(sp.z());
-
-        // Add the spacepoint's index to the grid.
-        const unsigned int sp_index =
-            grid.bin(bin_index).push_back(globalIndex);
-
-        // Add a prefix sum element for the spacepoint.
-        vecmem::device_vector<prefix_sum_element_t> grid_prefix_sum(
-            grid_prefix_sum_view);
-        grid_prefix_sum.push_back({bin_index, sp_index});
-    }
+    // Add a prefix sum element for the spacepoint.
+    vecmem::device_vector<prefix_sum_element_t> grid_prefix_sum(
+        grid_prefix_sum_view);
+    grid_prefix_sum.push_back({bin_index, sp_index});
+  }
 }
 
 }  // namespace traccc::device

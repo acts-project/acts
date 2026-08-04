@@ -17,11 +17,10 @@ namespace traccc {
 
 template <typename scalar_t>
 magnetic_field construct_const_bfield(scalar_t x, scalar_t y, scalar_t z) {
-
-    return magnetic_field{::covfie::field<const_bfield_backend_t<scalar_t>>{
-        ::covfie::make_parameter_pack(
-            typename const_bfield_backend_t<scalar_t>::configuration_t{x, y,
-                                                                       z})}};
+  return magnetic_field{::covfie::field<const_bfield_backend_t<scalar_t>>{
+      ::covfie::make_parameter_pack(
+          typename const_bfield_backend_t<scalar_t>::configuration_t{x, y,
+                                                                     z})}};
 }
 
 }  // namespace traccc

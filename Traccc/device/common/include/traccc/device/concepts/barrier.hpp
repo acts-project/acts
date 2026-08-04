@@ -19,33 +19,33 @@ namespace traccc::device::concepts {
  */
 template <typename T>
 concept barrier = requires(T& b) {
+  /*
+   * Check for the general, nulary barrier function which simply synchronizes
+   * threads without return value.
+   */
+  { b.blockBarrier() } -> std::same_as<void>;
+
+  /*
+   * Check for the unary boolean-argument synchronization functions.
+   */
+  requires requires(bool p) {
     /*
-     * Check for the general, nulary barrier function which simply synchronizes
-     * threads without return value.
+     * `blockOr` should return true iff one or more of the threads in the
+     * block issues the call with a truthful argument.
      */
-    { b.blockBarrier() } -> std::same_as<void>;
+    { b.blockOr(p) } -> std::same_as<bool>;
 
     /*
-     * Check for the unary boolean-argument synchronization functions.
+     * `blockAnd` should return true iff all of the threads in the block
+     * issue the call with a truthful argument.
      */
-    requires requires(bool p) {
-        /*
-         * `blockOr` should return true iff one or more of the threads in the
-         * block issues the call with a truthful argument.
-         */
-        { b.blockOr(p) } -> std::same_as<bool>;
+    { b.blockAnd(p) } -> std::same_as<bool>;
 
-        /*
-         * `blockAnd` should return true iff all of the threads in the block
-         * issue the call with a truthful argument.
-         */
-        { b.blockAnd(p) } -> std::same_as<bool>;
-
-        /*
-         * `blockCount` should return the number of threads subject to the
-         * barrier that issued the call with a truthful argument.
-         */
-        { b.blockCount(p) } -> std::integral;
-    };
+    /*
+     * `blockCount` should return the number of threads subject to the
+     * barrier that issued the call with a truthful argument.
+     */
+    { b.blockCount(p) } -> std::integral;
+  };
 };
 }  // namespace traccc::device::concepts
