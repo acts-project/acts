@@ -58,7 +58,7 @@ class RootPatternRecognitionPerformanceWriter final
     /// Label for histogram titles and ROOT object names.
     std::string label = "track";
     /// Output filename.
-    std::string filePath = "performance_track.root";
+    std::string filePath = "performance_pattern_recognition.root";
     /// Output filemode
     std::string fileMode = "RECREATE";
 
