@@ -27,7 +27,7 @@ namespace detail {
 /// @param numLocalBins Number of local bins per axis
 /// @throw std::invalid_argument if an entry is out of range or repeated
 template <std::size_t DIM>
-void validateAndCompleteNavigation(
+void validateAndCompleteNavigationArray(
     std::array<std::vector<std::size_t>, DIM>& navigation,
     const std::array<std::size_t, DIM>& numLocalBins) {
   for (std::size_t i(0ul); i < DIM; ++i) {
@@ -73,8 +73,8 @@ BinnedGroup<grid_t>::BinnedGroup(
       m_bottomBinFinder(&bottomFinder),
       m_topBinFinder(&topFinder),
       m_bins(std::move(navigation)) {
-  detail::validateAndCompleteNavigation<DIM>(m_bins,
-                                             m_grid.multiAxis().getNBins());
+  detail::validateAndCompleteNavigationArray<DIM>(
+      m_bins, m_grid.multiAxis().getNBins());
 }
 
 template <typename grid_t>
@@ -96,8 +96,8 @@ BinnedGroup<grid_t>::BinnedGroup(
         "correspond to the number of global bins in the grid.");
   }
 
-  detail::validateAndCompleteNavigation<DIM>(m_bins,
-                                             m_grid.multiAxis().getNBins());
+  detail::validateAndCompleteNavigationArray<DIM>(
+      m_bins, m_grid.multiAxis().getNBins());
 }
 
 template <typename grid_t>
