@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
@@ -94,16 +95,6 @@ Parameters convertTrackParametersToEdm4hep(
 Acts::BoundTrackParameters convertTrackParametersFromEdm4hep(
     double Bz, const Parameters& params);
 
-/// Default tracker-hit lookup used by @ref writeTrack: never associates a hit,
-/// reproducing the historical behaviour where no tracker hits are written.
-struct NoTrackerHitLookup {
-  template <typename state_proxy_t>
-  std::optional<edm4hep::TrackerHit> operator()(const state_proxy_t& /*state*/
-  ) const {
-    return std::nullopt;
-  }
-};
-
 }  // namespace detail
 
 /// @addtogroup edm4hep_plugin
@@ -122,6 +113,17 @@ edm4hep::MCParticle getParticle(const edm4hep::SimTrackerHit& hit);
 void setParticle(edm4hep::MutableSimTrackerHit& hit,
                  const edm4hep::MCParticle& particle);
 
+/// Callback resolving the EDM4hep tracker hit associated with a measurement
+/// track state.
+///
+/// It is invoked by @ref writeTrack once per measurement track state and
+/// should return the associated @c edm4hep::TrackerHit (any of the interfaced
+/// hit types) or @c std::nullopt if there is none. The track state is passed
+/// type-erased, so this is a plain callable independent of the trajectory
+/// backend. An empty callback means no tracker hits are written.
+using TrackerHitLookup = std::function<std::optional<edm4hep::TrackerHit>(
+    const Acts::AnyConstTrackStateProxy& state)>;
+
 /// Write an Acts track to EDM4hep format, using a magnetic field provider.
 ///
 /// This is the general form of @ref writeTrack. In addition to the track
@@ -135,10 +137,8 @@ void setParticle(edm4hep::MutableSimTrackerHit& hit,
 /// @note Resolving tracker hits requires application-specific
 ///       source-link/hit-container knowledge, so it is delegated to the
 ///       optional @p hitLookup callback. It is invoked once per measurement
-///       track state (in the same order the states are written) with the Acts
-///       track state proxy, and should return the associated
-///       @c edm4hep::TrackerHit (any of the interfaced hit types) or
-///       @c std::nullopt. Returned hits are attached via @c addToTrackerHits.
+///       track state, in the same order the states are written. Returned hits
+///       are attached via @c addToTrackerHits.
 ///
 /// @param gctx The geometry context
 /// @param mctx The magnetic field context
@@ -148,14 +148,13 @@ void setParticle(edm4hep::MutableSimTrackerHit& hit,
 /// @param logger The logger instance
 /// @param hitLookup Optional callback mapping a measurement track state to its
 ///                  EDM4hep tracker hit (defaults to writing no tracker hits)
-template <Acts::TrackProxyConcept track_proxy_t,
-          typename hit_lookup_t = detail::NoTrackerHitLookup>
+template <Acts::TrackProxyConcept track_proxy_t>
 void writeTrack(const Acts::GeometryContext& gctx,
                 const Acts::MagneticFieldContext& mctx, track_proxy_t track,
                 edm4hep::MutableTrack to,
                 const Acts::MagneticFieldProvider& magneticField,
                 const Acts::Logger& logger = Acts::getDummyLogger(),
-                const hit_lookup_t& hitLookup = {}) {
+                const TrackerHitLookup& hitLookup = {}) {
   ACTS_VERBOSE("Converting track to EDM4hep");
   to.setChi2(track.chi2());
   to.setNdf(track.nDoF());
@@ -197,14 +196,18 @@ void writeTrack(const Acts::GeometryContext& gctx,
 
   ACTS_VERBOSE("Converting " << track.nTrackStates() << " track states");
 
-  for (const auto& state : track.trackStatesReversed()) {
+  for (auto state : track.trackStatesReversed()) {
     if (!state.typeFlags().isMeasurement()) {
       continue;
     }
 
     // Resolve the associated tracker hit for this measurement (if any). Stored
     // in parallel with the track state and attached below in output order.
-    outHits.push_back(hitLookup(state));
+    std::optional<edm4hep::TrackerHit> hit;
+    if (hitLookup) {
+      hit = hitLookup(Acts::AnyConstTrackStateProxy{state});
+    }
+    outHits.push_back(hit);
 
     edm4hep::TrackState& trackState = outTrackStates.emplace_back();
     trackState.location = edm4hep::TrackState::AtOther;
@@ -306,12 +309,11 @@ void writeTrack(const Acts::GeometryContext& gctx,
 /// @param logger The logger instance
 /// @param hitLookup Optional callback mapping a measurement track state to its
 ///                  EDM4hep tracker hit (defaults to writing no tracker hits)
-template <Acts::TrackProxyConcept track_proxy_t,
-          typename hit_lookup_t = detail::NoTrackerHitLookup>
+template <Acts::TrackProxyConcept track_proxy_t>
 void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
                 edm4hep::MutableTrack to, double Bz,
                 const Acts::Logger& logger = Acts::getDummyLogger(),
-                const hit_lookup_t& hitLookup = {}) {
+                const TrackerHitLookup& hitLookup = {}) {
   Acts::ConstantBField magneticField{Acts::Vector3{0, 0, Bz}};
   Acts::MagneticFieldContext mctx{};
   writeTrack(gctx, mctx, std::move(track), to, magneticField, logger,
