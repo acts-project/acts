@@ -266,18 +266,10 @@ if "__main__" == __name__:
     #     srcdir
     #     / "Examples/Configs/generic-digi-smearing-config.json"
     # )
-    import matplotlib
-    import matplotlib.ft2font
-    import sys
-    import acts
-
-    print("Python:", sys.version)
-    print("Matplotlib:", matplotlib.__version__)
-    print("FreeType:", matplotlib.ft2font.__freetype_version__)
-    print("ACTS:", acts.__version__)
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
     import matplotlib.pyplot as plt
+
     fig, ax = plt.subplots()
     runTruthTrackingKalman(
         trackingGeometry=trackingGeometry,

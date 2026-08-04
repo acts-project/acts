@@ -72,6 +72,9 @@ class PyVisualization2D(acts.VisualizationBuffer):
 
         ax.set_xlabel(proj2D[0])
         ax.set_ylabel(proj2D[1])
+        ax.ticklabel_format(useOffset=False, style="plain")
+        ax.set_xticks(np.linspace(-1000, 1000, 5))
+        ax.set_yticks(np.linspace(-1000, 1000, 5))
 
         ax.add_collection(poly_collection)
 
@@ -93,8 +96,5 @@ class PyVisualization2D(acts.VisualizationBuffer):
             line_collection.set_color(self.lineColor/255)
             ax.add_collection(line_collection)
 
-        ax.set_xlabel("")
-        ax.set_ylabel("")
-
-        ax.set_xticks([])
-        ax.set_yticks([])
+        ax.relim()
+        ax.autoscale_view()
