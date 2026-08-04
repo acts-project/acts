@@ -8,6 +8,9 @@
 
 #include "Acts/Utilities/GaussianFit.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/detail/NumericalMinimization.hpp"
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -21,10 +24,6 @@ namespace {
 /// Minimum number of populated bins. The underlying model has three
 /// parameters (amplitude, mean, sigma), so fewer bins cannot constrain it.
 constexpr std::size_t s_minNonEmptyBins = 3;
-
-/// Iteration cap for the simplex search; a well behaved 2D problem converges
-/// in far fewer steps, so hitting this means something is wrong.
-constexpr std::size_t s_maxSimplexIterations = 2000;
 
 /// The bins entering a single fit, flattened out of the histogram
 struct FitBins {
@@ -139,127 +138,27 @@ std::optional<std::array<double, 2>> initialGuess(const FitBins& bins) {
 /// Nelder-Mead simplex search over `(mean, log sigma)`
 ///
 /// The log parametrisation keeps sigma positive without a barrier term and
-/// makes the simplex scale free. Two parameters means a three-vertex simplex,
-/// which is cheap enough that the tolerance can be set very tight.
+/// makes the simplex scale free.
 ///
 /// @return The minimising `(mean, sigma)`, or `std::nullopt` if the search did
 ///         not converge within the iteration cap
 std::optional<std::array<double, 2>> minimise(const FitBins& bins,
                                               double meanSeed,
                                               double sigmaSeed) {
-  // Standard Nelder-Mead coefficients
-  constexpr double reflection = 1.0;
-  constexpr double expansion = 2.0;
-  constexpr double contraction = 0.5;
-  constexpr double shrink = 0.5;
-
-  using Point = std::array<double, 2>;
-  const auto evaluate = [&bins](const Point& p) {
-    return negLogLikelihood(bins, p[0], std::exp(p[1]));
+  const auto objective = [&bins](const Vector<2>& p) {
+    return negLogLikelihood(bins, p(0), std::exp(p(1)));
   };
 
-  // Initial simplex: displace each coordinate on its own natural scale
-  const double logSigmaSeed = std::log(sigmaSeed);
-  std::array<Point, 3> simplex = {
-      Point{meanSeed, logSigmaSeed},
-      Point{meanSeed + 0.1 * sigmaSeed, logSigmaSeed},
-      Point{meanSeed, logSigmaSeed + 0.1}};
-  std::array<double, 3> values = {evaluate(simplex[0]), evaluate(simplex[1]),
-                                  evaluate(simplex[2])};
-  if (std::ranges::none_of(values, [](double v) { return std::isfinite(v); })) {
+  const Vector<2> start{meanSeed, std::log(sigmaSeed)};
+  const Vector<2> steps{0.1 * sigmaSeed, 0.1};
+
+  const std::optional<Vector<2>> optimum =
+      Acts::detail::nelderMead<2>(objective, start, steps);
+  if (!optimum.has_value()) {
     return std::nullopt;
   }
 
-  const auto sortSimplex = [&simplex, &values]() {
-    std::array<std::size_t, 3> order = {0, 1, 2};
-    std::ranges::sort(order, [&values](std::size_t a, std::size_t b) {
-      return values[a] < values[b];
-    });
-    const std::array<Point, 3> sortedSimplex = {
-        simplex[order[0]], simplex[order[1]], simplex[order[2]]};
-    const std::array<double, 3> sortedValues = {
-        values[order[0]], values[order[1]], values[order[2]]};
-    simplex = sortedSimplex;
-    values = sortedValues;
-  };
-
-  for (std::size_t iteration = 0; iteration < s_maxSimplexIterations;
-       ++iteration) {
-    sortSimplex();
-
-    // Converged once the simplex is tiny both in objective and in parameters.
-    // Requiring both avoids stopping early on a flat stretch.
-    const double valueSpread = std::abs(values[2] - values[0]);
-    double parameterSpread = 0;
-    for (std::size_t v = 1; v < simplex.size(); ++v) {
-      for (std::size_t d = 0; d < 2; ++d) {
-        parameterSpread =
-            std::max(parameterSpread, std::abs(simplex[v][d] - simplex[0][d]));
-      }
-    }
-    const double scale = std::max(1.0, std::abs(values[0]));
-    if (valueSpread < 1e-12 * scale && parameterSpread < 1e-10) {
-      return Point{simplex[0][0], std::exp(simplex[0][1])};
-    }
-
-    // Centroid of all but the worst vertex
-    Point centroid = {0, 0};
-    for (std::size_t v = 0; v + 1 < simplex.size(); ++v) {
-      for (std::size_t d = 0; d < 2; ++d) {
-        centroid[d] += simplex[v][d] / (simplex.size() - 1);
-      }
-    }
-
-    const auto along = [&centroid, &simplex](double factor) {
-      Point p{};
-      for (std::size_t d = 0; d < 2; ++d) {
-        p[d] = centroid[d] + factor * (centroid[d] - simplex.back()[d]);
-      }
-      return p;
-    };
-
-    const Point reflected = along(reflection);
-    const double reflectedValue = evaluate(reflected);
-
-    if (reflectedValue < values[0]) {
-      // Better than the best so far: try to push further in that direction
-      const Point expanded = along(expansion);
-      const double expandedValue = evaluate(expanded);
-      if (expandedValue < reflectedValue) {
-        simplex.back() = expanded;
-        values.back() = expandedValue;
-      } else {
-        simplex.back() = reflected;
-        values.back() = reflectedValue;
-      }
-      continue;
-    }
-
-    if (reflectedValue < values[1]) {
-      simplex.back() = reflected;
-      values.back() = reflectedValue;
-      continue;
-    }
-
-    const Point contracted = along(-contraction);
-    const double contractedValue = evaluate(contracted);
-    if (contractedValue < values.back()) {
-      simplex.back() = contracted;
-      values.back() = contractedValue;
-      continue;
-    }
-
-    // Nothing helped: pull every vertex towards the best one
-    for (std::size_t v = 1; v < simplex.size(); ++v) {
-      for (std::size_t d = 0; d < 2; ++d) {
-        simplex[v][d] =
-            simplex[0][d] + shrink * (simplex[v][d] - simplex[0][d]);
-      }
-      values[v] = evaluate(simplex[v]);
-    }
-  }
-
-  return std::nullopt;
+  return std::array<double, 2>{(*optimum)(0), std::exp((*optimum)(1))};
 }
 
 /// Parameter uncertainties from the curvature of the profiled likelihood
@@ -275,45 +174,25 @@ std::optional<std::array<double, 2>> minimise(const FitBins& bins,
 std::optional<std::array<double, 2>> parameterErrors(const FitBins& bins,
                                                      double mean,
                                                      double sigma) {
+  const auto objective = [&bins](const Vector<2>& p) {
+    return negLogLikelihood(bins, p(0), p(1));
+  };
+
   // Step a tenth of the asymptotic uncertainty: large enough to lift the second
   // difference well clear of floating point noise, small enough to stay inside
   // the quadratic region around the minimum
-  const double meanStep = 0.1 * sigma / std::sqrt(bins.total);
-  const double sigmaStep = 0.1 * sigma / std::sqrt(2 * bins.total);
-  if (!(meanStep > 0) || !(sigmaStep > 0)) {
+  const Vector<2> point{mean, sigma};
+  const Vector<2> steps{0.1 * sigma / std::sqrt(bins.total),
+                        0.1 * sigma / std::sqrt(2 * bins.total)};
+
+  const std::optional<SquareMatrix<2>> covariance =
+      Acts::detail::numericalCovariance<2>(objective, point, steps);
+  if (!covariance.has_value()) {
     return std::nullopt;
   }
 
-  const auto f = [&bins](double m, double s) {
-    return negLogLikelihood(bins, m, s);
-  };
-
-  const double centre = f(mean, sigma);
-  const double dMeanPlus = f(mean + meanStep, sigma);
-  const double dMeanMinus = f(mean - meanStep, sigma);
-  const double dSigmaPlus = f(mean, sigma + sigmaStep);
-  const double dSigmaMinus = f(mean, sigma - sigmaStep);
-
-  const double hMeanMean =
-      (dMeanPlus - 2 * centre + dMeanMinus) / (meanStep * meanStep);
-  const double hSigmaSigma =
-      (dSigmaPlus - 2 * centre + dSigmaMinus) / (sigmaStep * sigmaStep);
-  const double hMixed = (f(mean + meanStep, sigma + sigmaStep) -
-                         f(mean + meanStep, sigma - sigmaStep) -
-                         f(mean - meanStep, sigma + sigmaStep) +
-                         f(mean - meanStep, sigma - sigmaStep)) /
-                        (4 * meanStep * sigmaStep);
-
-  const double determinant = hMeanMean * hSigmaSigma - hMixed * hMixed;
-  if (!std::isfinite(determinant) || determinant <= 0 || hMeanMean <= 0 ||
-      hSigmaSigma <= 0) {
-    // Not a positive definite Hessian, so not a minimum we can put errors on
-    return std::nullopt;
-  }
-
-  // Inverse of a symmetric 2x2 matrix
-  const double varMean = hSigmaSigma / determinant;
-  const double varSigma = hMeanMean / determinant;
+  const double varMean = (*covariance)(0, 0);
+  const double varSigma = (*covariance)(1, 1);
   if (!(varMean > 0) || !(varSigma > 0)) {
     return std::nullopt;
   }
@@ -390,103 +269,6 @@ std::optional<GaussianFitResult> iterativeGaussianFit(const Histogram1& hist,
   }
 
   return result;
-}
-
-namespace {
-
-/// Total content of a 1D histogram's in-range bins
-///
-/// Stands in for ROOT's `TH1::GetEntries()` on a projection, which likewise
-/// amounts to the summed bin contents.
-double sliceEntries(const Histogram1& slice) {
-  const auto& axis = slice.histogram().axis(0);
-
-  double entries = 0;
-  for (int i = 0; i < axis.size(); ++i) {
-    entries += slice.binContent({i});
-  }
-
-  return entries;
-}
-
-}  // namespace
-
-MeanWidthProfiles1 extractMeanWidthProfiles(const Histogram2& hist2d,
-                                            const std::string& meanName,
-                                            const std::string& widthName,
-                                            int minEntriesForFit,
-                                            double sigmaRange, int iterations,
-                                            const Logger& logger) {
-  const auto& xAxis = hist2d.histogram().axis(0);
-  const std::array<AxisVariant, 1> axes = {xAxis};
-
-  MeanWidthProfiles1 profiles{
-      ValueHistogram1(meanName, hist2d.title() + " mean", axes),
-      ValueHistogram1(widthName, hist2d.title() + " width", axes), 0.0};
-
-  int fitFailures = 0;
-  for (int i = 0; i < xAxis.size(); ++i) {
-    const Histogram1 slice = sliceLastAxis(hist2d, i);
-    if (sliceEntries(slice) < minEntriesForFit) {
-      continue;
-    }
-
-    const std::optional<GaussianFitResult> fit =
-        iterativeGaussianFit(slice, sigmaRange, iterations, logger);
-    if (!fit.has_value()) {
-      ++fitFailures;
-      continue;
-    }
-
-    profiles.mean.setBin({i}, fit->mean, fit->meanError);
-    profiles.width.setBin({i}, fit->sigma, fit->sigmaError);
-  }
-
-  profiles.fitFailureFraction =
-      (xAxis.size() > 0) ? static_cast<double>(fitFailures) / xAxis.size() : 0;
-
-  return profiles;
-}
-
-MeanWidthProfiles2 extractMeanWidthProfiles(const Histogram3& hist3d,
-                                            const std::string& meanName,
-                                            const std::string& widthName,
-                                            int minEntriesForFit,
-                                            double sigmaRange, int iterations,
-                                            const Logger& logger) {
-  const auto& xAxis = hist3d.histogram().axis(0);
-  const auto& yAxis = hist3d.histogram().axis(1);
-  const std::array<AxisVariant, 2> axes = {xAxis, yAxis};
-
-  MeanWidthProfiles2 profiles{
-      ValueHistogram2(meanName, hist3d.title() + " mean", axes),
-      ValueHistogram2(widthName, hist3d.title() + " width", axes), 0.0};
-
-  int fitFailures = 0;
-  for (int i = 0; i < xAxis.size(); ++i) {
-    for (int j = 0; j < yAxis.size(); ++j) {
-      const Histogram1 slice = sliceLastAxis(hist3d, i, j);
-      if (sliceEntries(slice) < minEntriesForFit) {
-        continue;
-      }
-
-      const std::optional<GaussianFitResult> fit =
-          iterativeGaussianFit(slice, sigmaRange, iterations, logger);
-      if (!fit.has_value()) {
-        ++fitFailures;
-        continue;
-      }
-
-      profiles.mean.setBin({i, j}, fit->mean, fit->meanError);
-      profiles.width.setBin({i, j}, fit->sigma, fit->sigmaError);
-    }
-  }
-
-  const int totalBins = xAxis.size() * yAxis.size();
-  profiles.fitFailureFraction =
-      (totalBins > 0) ? static_cast<double>(fitFailures) / totalBins : 0;
-
-  return profiles;
 }
 
 }  // namespace Acts::Experimental
