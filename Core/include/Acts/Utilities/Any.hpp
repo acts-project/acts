@@ -675,6 +675,14 @@ class AnyBase : public AnyBaseAll {
   template <typename T, typename... Args>
   T* constructValue(Args&&... args) {
     if constexpr (!heapAllocated<T>()) {
+      if constexpr (std::is_empty_v<T>) {
+        // An empty object occupies one byte of the buffer that its constructor
+        // never writes. Write it before the object's lifetime starts, so the
+        // trivial copy/move paths, which copy the buffer as a fixed-size
+        // block, do not read a buffer that was never written at all. Nothing
+        // is emitted for types that carry state.
+        m_data[0] = std::byte{0};
+      }
       // construct into local buffer
       auto* ptr = new (m_data.data()) T(std::forward<Args>(args)...);
       _ACTS_ANY_VERBOSE("Construct local (this="
