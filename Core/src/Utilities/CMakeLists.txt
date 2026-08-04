@@ -10,7 +10,7 @@ target_sources(
         IAxis.cpp
         AxisSpec.cpp
         GraphViz.cpp
-        HashedString.cpp
+        Any.cpp
         ProtoAxis.cpp
         ScopedTimer.cpp
         TransformComparator.cpp
