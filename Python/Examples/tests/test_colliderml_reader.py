@@ -1,5 +1,4 @@
 import contextlib
-import os
 import sys
 from pathlib import Path
 
@@ -8,6 +7,7 @@ import pytest
 import acts
 import acts.examples
 from acts import UnitConstants as u
+from acts.examples.dataset import getColliderMLObjectDirectory
 
 from helpers import arrowEnabled, dd4hepEnabled, AssertCollectionExistsAlg
 
@@ -16,19 +16,14 @@ _srcdir = Path(__file__).resolve().parent.parent.parent.parent
 sys.path.insert(0, str(_srcdir / "Examples/Scripts/Python"))
 from colliderml_truth_tracking import runColliderMLTruthTracking
 
-_SAMPLE = "ttbar_pu0"
+_CHANNEL = "ttbar"
+_PILEUP = "pu0"
 
-_colliderml_data_dir = os.environ.get("COLLIDERML_DATA")
-if _colliderml_data_dir is not None:
-    _dataDir = Path(_colliderml_data_dir)
-    _particlesDir = _dataDir / f"{_SAMPLE}_particles" / "data" / f"{_SAMPLE}_particles"
-    _hitsDir = _dataDir / f"{_SAMPLE}_tracker_hits" / "data" / f"{_SAMPLE}_tracker_hits"
-    _tracksDir = _dataDir / f"{_SAMPLE}_tracks" / "data" / f"{_SAMPLE}_tracks"
-    _colliderml_data_available = (
-        _particlesDir.exists() and _hitsDir.exists() and _tracksDir.exists()
-    )
-else:
-    _particlesDir = _hitsDir = _tracksDir = None
+try:
+    for _object in ("particles", "tracker_hits", "tracks"):
+        getColliderMLObjectDirectory(_object, channel=_CHANNEL, pileup=_PILEUP)
+    _colliderml_data_available = True
+except RuntimeError:
     _colliderml_data_available = False
 
 pytestmark = [
@@ -37,8 +32,8 @@ pytestmark = [
     pytest.mark.skipif(
         not _colliderml_data_available,
         reason=(
-            f"ColliderML CI sample not found; set COLLIDERML_DATA to a "
-            f"directory containing the '{_SAMPLE}' sample"
+            f"ColliderML CI sample not found; set COLLIDERML_DATA_DIR to a "
+            f"directory containing the '{_CHANNEL}_{_PILEUP}' sample"
         ),
     ),
 ]
@@ -115,9 +110,8 @@ def test_colliderml_truth_tracking(tmp_path, reco_geo, assert_root_hash):
             trackingGeometry=trackingGeometry,
             field=field,
             outputDir=tmp_path,
-            particlesDir=_particlesDir,
-            hitsDir=_hitsDir,
-            tracksDir=_tracksDir,
+            channel=_CHANNEL,
+            pileup=_PILEUP,
             geoIdMapPath=geoid_map_path if reco_geo == "gen3" else None,
             decorators=decorators,
             numThreads=1,

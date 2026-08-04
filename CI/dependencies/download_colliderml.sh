@@ -4,9 +4,9 @@ set -e
 set -u
 set -o pipefail
 
-# Assert COLLIDERML_DATA environment variable is set
-if [[ -z "${COLLIDERML_DATA+x}" ]]; then
-  echo "Error: COLLIDERML_DATA environment variable is not set"
+# Assert COLLIDERML_DATA_DIR environment variable is set
+if [[ -z "${COLLIDERML_DATA_DIR+x}" ]]; then
+  echo "Error: COLLIDERML_DATA_DIR environment variable is not set"
   exit 1
 fi
 
@@ -20,8 +20,8 @@ function download {
   tar --no-same-owner -xf "$tarname"
 }
 
-mkdir -p "${COLLIDERML_DATA}"
-cd "${COLLIDERML_DATA}"
+mkdir -p "${COLLIDERML_DATA_DIR}"
+cd "${COLLIDERML_DATA_DIR}"
 
 download \
   https://acts.web.cern.ch/ci/colliderml_ttbar_pu0_ci_sample_v1.tar \
