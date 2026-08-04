@@ -16,6 +16,9 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -119,25 +122,15 @@ edm4hep::MCParticle getParticle(const edm4hep::SimTrackerHit& hit);
 void setParticle(edm4hep::MutableSimTrackerHit& hit,
                  const edm4hep::MCParticle& particle);
 
-/// Callable returning the local magnetic field z-component (in Acts native
-/// units) at a given global position.
-///
-/// This is used by @ref writeTrack to support spatially varying magnetic
-/// fields: the LCIO/EDM4hep perigee parametrization (in particular the
-/// curvature @c omega) depends on the local field, so for a non-uniform field
-/// the conversion should use the field value at each track state's location
-/// rather than a single global constant.
-using LocalBzProvider = std::function<double(const Acts::Vector3& position)>;
-
-/// Write an Acts track to EDM4hep format, using a spatially varying field.
+/// Write an Acts track to EDM4hep format, using a magnetic field provider.
 ///
 /// This is the general form of @ref writeTrack. In addition to the track
 /// summary quantities (chi2, ndf, number of holes) it writes one EDM4hep track
 /// state per measurement plus a dedicated @c AtIP state. The perigee
-/// conversion of each state evaluates the local field via @p bzAtPosition at
-/// the global position of that state, which makes this a drop-in replacement
-/// for bespoke ACTS->EDM4hep converters that rely on a
-/// @c Acts::MagneticFieldProvider (e.g. k4ActsTracking's @c ACTS2edm4hep_track).
+/// conversion of each state evaluates the local field via @p magneticField at
+/// the global position of that state, which supports spatially varying fields
+/// and makes this a drop-in replacement for bespoke ACTS->EDM4hep converters
+/// (e.g. k4ActsTracking's @c ACTS2edm4hep_track).
 ///
 /// @note Resolving tracker hits requires application-specific
 ///       source-link/hit-container knowledge, so it is delegated to the
@@ -148,22 +141,37 @@ using LocalBzProvider = std::function<double(const Acts::Vector3& position)>;
 ///       @c std::nullopt. Returned hits are attached via @c addToTrackerHits.
 ///
 /// @param gctx The geometry context
+/// @param mctx The magnetic field context
 /// @param track The Acts track to convert
 /// @param to The EDM4hep track to write to
-/// @param bzAtPosition Callable returning the local Bz at a global position
+/// @param magneticField The magnetic field provider, evaluated at each state
 /// @param logger The logger instance
 /// @param hitLookup Optional callback mapping a measurement track state to its
 ///                  EDM4hep tracker hit (defaults to writing no tracker hits)
 template <Acts::TrackProxyConcept track_proxy_t,
           typename hit_lookup_t = detail::NoTrackerHitLookup>
-void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
-                edm4hep::MutableTrack to, const LocalBzProvider& bzAtPosition,
+void writeTrack(const Acts::GeometryContext& gctx,
+                const Acts::MagneticFieldContext& mctx, track_proxy_t track,
+                edm4hep::MutableTrack to,
+                const Acts::MagneticFieldProvider& magneticField,
                 const Acts::Logger& logger = Acts::getDummyLogger(),
                 const hit_lookup_t& hitLookup = {}) {
   ACTS_VERBOSE("Converting track to EDM4hep");
   to.setChi2(track.chi2());
   to.setNdf(track.nDoF());
   to.setNholes(static_cast<std::int32_t>(track.nHoles()));
+
+  auto fieldCache = magneticField.makeCache(mctx);
+  auto bzAtPosition = [&](const Acts::Vector3& position) {
+    auto field = magneticField.getField(position, fieldCache);
+    if (!field.ok()) {
+      ACTS_ERROR("Magnetic field lookup failed at "
+                 << position.transpose() << ": " << field.error().message());
+      throw std::runtime_error{"Magnetic field lookup failed: " +
+                               field.error().message()};
+    }
+    return (*field).z();
+  };
 
   std::vector<edm4hep::TrackState> outTrackStates;
   outTrackStates.reserve(track.nTrackStates());
@@ -288,8 +296,8 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
 /// Write an Acts track to EDM4hep format, using a uniform magnetic field.
 ///
 /// Convenience overload of @ref writeTrack for the common case of a constant
-/// solenoidal field. Delegates to the @ref LocalBzProvider form with a constant
-/// field lookup.
+/// solenoidal field. Delegates to the @c Acts::MagneticFieldProvider form with
+/// an @c Acts::ConstantBField.
 ///
 /// @param gctx The geometry context
 /// @param track The Acts track to convert
@@ -304,10 +312,10 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
                 edm4hep::MutableTrack to, double Bz,
                 const Acts::Logger& logger = Acts::getDummyLogger(),
                 const hit_lookup_t& hitLookup = {}) {
-  writeTrack(
-      gctx, std::move(track), to,
-      LocalBzProvider{[Bz](const Acts::Vector3& /*position*/) { return Bz; }},
-      logger, hitLookup);
+  Acts::ConstantBField magneticField{Acts::Vector3{0, 0, Bz}};
+  Acts::MagneticFieldContext mctx{};
+  writeTrack(gctx, mctx, std::move(track), to, magneticField, logger,
+             hitLookup);
 }
 
 /// Read an EDM4hep track into Acts format
