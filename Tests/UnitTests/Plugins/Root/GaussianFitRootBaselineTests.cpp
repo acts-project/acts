@@ -22,8 +22,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/GaussianFit.hpp"
+#include "Acts/Utilities/GaussianFitError.hpp"
 #include "Acts/Utilities/Histogram.hpp"
 #include "ActsPlugins/Root/HistogramConverter.hpp"
+#include "ActsPlugins/Root/RootHistogramFit.hpp"
 
 #include <cmath>
 #include <optional>
@@ -272,7 +274,7 @@ BOOST_AUTO_TEST_CASE(SingleFit_AgreesWithRoot) {
       // it outright rather than skipping keeps the comparison from silently
       // becoming a no-op if one side starts failing.
       BOOST_REQUIRE_MESSAGE(reference.has_value(), "ROOT failed to fit");
-      BOOST_REQUIRE_MESSAGE(ours.has_value(), "Core failed to fit");
+      BOOST_REQUIRE_MESSAGE(ours.ok(), "Core failed to fit");
 
       checkAgrees("mean", ours->mean, reference->mean, reference->meanError,
                   1e-3, 0.05);
@@ -294,10 +296,11 @@ BOOST_AUTO_TEST_CASE(IterativeFit_AgreesWithRoot) {
       const auto rootHist = toRoot(scenario.hist);
       const auto reference =
           rootIterativeFit(*rootHist, sigmaRange, iterations);
-      const auto ours = fit.iterativeFit(scenario.hist, sigmaRange, iterations);
+      const auto ours =
+          iterativeFit(fit, scenario.hist, sigmaRange, iterations);
 
       BOOST_REQUIRE_MESSAGE(reference.has_value(), "ROOT failed to fit");
-      BOOST_REQUIRE_MESSAGE(ours.has_value(), "Core failed to fit");
+      BOOST_REQUIRE_MESSAGE(ours.ok(), "Core failed to fit");
 
       // Looser than the single fit: a small difference in the first iteration
       // shifts the refit window, which compounds over iterations
@@ -330,7 +333,7 @@ BOOST_AUTO_TEST_CASE(RestrictedRange_AgreesWithRoot) {
       BOOST_REQUIRE_EQUAL(result->Status() % 1000, 0);
 
       const auto ours = fit.fit(hist, xMin, xMax);
-      BOOST_REQUIRE(ours.has_value());
+      BOOST_REQUIRE(ours.ok());
 
       checkAgrees("mean", ours->mean, result->Parameter(1), result->ParError(1),
                   1e-3, 0.05);
@@ -347,16 +350,51 @@ BOOST_AUTO_TEST_CASE(DegenerateInputs_NeitherSucceedsWrongly) {
   auto axis = AxisVariant(BoostRegularAxis(20, -5.0, 5.0, "x"));
 
   Histogram1 empty("empty", "empty", {axis});
-  BOOST_CHECK(!fit.fit(empty).has_value());
+  const auto emptyResult = fit.fit(empty);
+  BOOST_CHECK(!emptyResult.ok());
+  BOOST_CHECK_EQUAL(emptyResult.error(), GaussianFitError::EmptyRange);
 
   Histogram1 spike("spike", "spike", {axis});
   spike.setBinContent({10}, 500.0);
-  BOOST_CHECK(!fit.fit(spike).has_value());
+  const auto spikeResult = fit.fit(spike);
+  BOOST_CHECK(!spikeResult.ok());
+  BOOST_CHECK_EQUAL(spikeResult.error(), GaussianFitError::TooFewNonEmptyBins);
 
   Histogram1 two("two", "two", {axis});
   two.setBinContent({9}, 100.0);
   two.setBinContent({10}, 120.0);
-  BOOST_CHECK(!fit.fit(two).has_value());
+  const auto twoResult = fit.fit(two);
+  BOOST_CHECK(!twoResult.ok());
+  BOOST_CHECK_EQUAL(twoResult.error(), GaussianFitError::TooFewNonEmptyBins);
+}
+
+// `ActsPlugins::RootHistogramFit` satisfies
+// `Acts::Experimental::GaussianFitter` and is otherwise uncalled in the
+// codebase, so this is the only place proving that the generic profile
+// extraction really does work with a second, ROOT-backed fitter and not just
+// with `GaussianHistogramFit`.
+BOOST_AUTO_TEST_CASE(ExtractMeanWidthProfiles_WorksWithRootFitter) {
+  const int nEtaBins = 3;
+  auto etaAxis = AxisVariant(BoostRegularAxis(nEtaBins, 0.0, 3.0, "eta"));
+  auto resAxis = AxisVariant(BoostRegularAxis(80, -10.0, 10.0, "res"));
+  Histogram2 hist("res_vs_eta", "Residual vs Eta", {etaAxis, resAxis});
+
+  std::mt19937 generator(4242);
+  for (int i = 0; i < nEtaBins; ++i) {
+    std::normal_distribution<double> distribution(0.0, 0.5 + 0.3 * i);
+    for (int n = 0; n < 20000; ++n) {
+      hist.fill({i + 0.5, distribution(generator)});
+    }
+  }
+
+  const ActsPlugins::RootHistogramFit rootFitter;
+  const auto profiles = Acts::Experimental::extractMeanWidthProfiles(
+      rootFitter, hist, "mean", "width");
+
+  BOOST_CHECK_EQUAL(profiles.fitFailureFraction, 0.0);
+  for (int i = 0; i < nEtaBins; ++i) {
+    BOOST_CHECK_CLOSE(profiles.width.value({i}), 0.5 + 0.3 * i, 5.0);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(ValueHistogram1D_ConvertsWithErrors) {

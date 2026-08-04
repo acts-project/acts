@@ -9,12 +9,14 @@
 #include "Acts/Utilities/GaussianFit.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/GaussianFitError.hpp"
 #include "Acts/Utilities/detail/NumericalMinimization.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <limits>
+#include <optional>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -137,11 +139,11 @@ std::optional<std::array<double, 2>> initialGuess(const FitBins& bins) {
 /// makes the simplex scale free.
 ///
 /// @param relativeStep Initial simplex step, relative to the seed sigma
-/// @return The minimising `(mean, sigma)`, or `std::nullopt` if the search did
-///         not converge within the iteration cap
-std::optional<std::array<double, 2>> minimise(const FitBins& bins,
-                                              double meanSeed, double sigmaSeed,
-                                              double relativeStep) {
+/// @return The minimising `(mean, sigma)`, or the minimiser's error if the
+///         search did not converge within the iteration cap
+Result<std::array<double, 2>, Acts::detail::NumericalMinimizationError>
+minimise(const FitBins& bins, double meanSeed, double sigmaSeed,
+         double relativeStep) {
   const auto objective = [&bins](const Vector<2>& p) {
     return negLogLikelihood(bins, p(0), std::exp(p(1)));
   };
@@ -152,7 +154,9 @@ std::optional<std::array<double, 2>> minimise(const FitBins& bins,
   const Result<Vector<2>, Acts::detail::NumericalMinimizationError> optimum =
       Acts::detail::nelderMead<2>(objective, start, steps);
   if (!optimum.ok()) {
-    return std::nullopt;
+    return Result<
+        std::array<double, 2>,
+        Acts::detail::NumericalMinimizationError>::failure(optimum.error());
   }
 
   return std::array<double, 2>{(*optimum)(0), std::exp((*optimum)(1))};
@@ -168,11 +172,11 @@ std::optional<std::array<double, 2>> minimise(const FitBins& bins,
 ///
 /// @param relativeStep Finite-difference step, relative to the asymptotic
 ///                     parameter uncertainty
-/// @return `(meanError, sigmaError)`, or `std::nullopt` if the curvature is not
-///         that of a genuine minimum
-std::optional<std::array<double, 2>> parameterErrors(const FitBins& bins,
-                                                     double mean, double sigma,
-                                                     double relativeStep) {
+/// @return `(meanError, sigmaError)`, or the minimiser's error if the
+///         curvature is not that of a genuine minimum
+Result<std::array<double, 2>, Acts::detail::NumericalMinimizationError>
+parameterErrors(const FitBins& bins, double mean, double sigma,
+                double relativeStep) {
   const auto objective = [&bins](const Vector<2>& p) {
     return negLogLikelihood(bins, p(0), p(1));
   };
@@ -186,45 +190,53 @@ std::optional<std::array<double, 2>> parameterErrors(const FitBins& bins,
   const auto covariance =
       Acts::detail::numericalCovariance<2>(objective, point, steps);
   if (!covariance.ok()) {
-    return std::nullopt;
+    return Result<
+        std::array<double, 2>,
+        Acts::detail::NumericalMinimizationError>::failure(covariance.error());
   }
 
   const double varMean = (*covariance)(0, 0);
   const double varSigma = (*covariance)(1, 1);
   if (!(varMean > 0) || !(varSigma > 0)) {
-    return std::nullopt;
+    return Result<std::array<double, 2>,
+                  Acts::detail::NumericalMinimizationError>::
+        failure(Acts::detail::NumericalMinimizationError::NotPositiveDefinite);
   }
 
   return std::array<double, 2>{std::sqrt(varMean), std::sqrt(varSigma)};
 }
 
-std::optional<GaussianFitResult> fitBins(
-    const FitBins& bins, const GaussianHistogramFitConfig& config) {
-  if (bins.total <= 0 || bins.nonEmpty < config.minNonEmptyBins) {
-    return std::nullopt;
+Result<GaussianFitResult> fitBins(const FitBins& bins,
+                                  const GaussianHistogramFit::Config& config) {
+  if (bins.total <= 0) {
+    return Result<GaussianFitResult>::failure(GaussianFitError::EmptyRange);
+  }
+  if (bins.nonEmpty < config.minNonEmptyBins) {
+    return Result<GaussianFitResult>::failure(
+        GaussianFitError::TooFewNonEmptyBins);
   }
 
   const std::optional<std::array<double, 2>> seed = initialGuess(bins);
   if (!seed.has_value()) {
-    return std::nullopt;
+    return Result<GaussianFitResult>::failure(GaussianFitError::NoValidSeed);
   }
 
-  const std::optional<std::array<double, 2>> optimum =
+  const auto optimum =
       minimise(bins, (*seed)[0], (*seed)[1], config.relativeStep);
-  if (!optimum.has_value()) {
-    return std::nullopt;
+  if (!optimum.ok()) {
+    return Result<GaussianFitResult>::failure(optimum.error());
   }
 
   const double mean = (*optimum)[0];
   const double sigma = (*optimum)[1];
   if (!std::isfinite(mean) || !std::isfinite(sigma) || sigma <= 0) {
-    return std::nullopt;
+    return Result<GaussianFitResult>::failure(
+        GaussianFitError::NonFiniteParameters);
   }
 
-  const std::optional<std::array<double, 2>> errors =
-      parameterErrors(bins, mean, sigma, config.relativeStep);
-  if (!errors.has_value()) {
-    return std::nullopt;
+  const auto errors = parameterErrors(bins, mean, sigma, config.relativeStep);
+  if (!errors.ok()) {
+    return Result<GaussianFitResult>::failure(errors.error());
   }
 
   return GaussianFitResult{mean, sigma, (*errors)[0], (*errors)[1]};
@@ -232,23 +244,16 @@ std::optional<GaussianFitResult> fitBins(
 
 }  // namespace
 
-std::optional<GaussianFitResult> GaussianHistogramFit::fit(
+Result<GaussianFitResult> GaussianHistogramFit::fit(
     const Histogram1& hist) const {
   const double infinity = std::numeric_limits<double>::infinity();
   return fitBins(selectBins(hist, -infinity, infinity), m_config);
 }
 
-std::optional<GaussianFitResult> GaussianHistogramFit::fit(
-    const Histogram1& hist, double xMin, double xMax) const {
+Result<GaussianFitResult> GaussianHistogramFit::fit(const Histogram1& hist,
+                                                    double xMin,
+                                                    double xMax) const {
   return fitBins(selectBins(hist, xMin, xMax), m_config);
-}
-
-std::optional<GaussianFitResult> GaussianHistogramFit::iterativeFit(
-    const Histogram1& hist, double sigmaRange, int iterations,
-    const Logger& logger) const {
-  return Acts::detail::iterativeGaussianFit(
-      [&](double xMin, double xMax) { return fit(hist, xMin, xMax); },
-      sigmaRange, iterations, logger, hist.name());
 }
 
 }  // namespace Acts::Experimental

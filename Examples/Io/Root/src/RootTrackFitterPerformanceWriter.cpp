@@ -84,29 +84,29 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
 
   // Helper lambda to write a histogram and the mean/width profiles fitted from
   // it.
-  const auto writeWithRefinement = [this, &gaussianFit](
-                                       const auto& hist,
-                                       const std::string& meanPrefix,
-                                       const std::string& widthPrefix) {
-    toRoot(hist)->Write();
+  const auto writeWithRefinement =
+      [this, &gaussianFit](const auto& hist, const std::string& meanPrefix,
+                           const std::string& widthPrefix) {
+        toRoot(hist)->Write();
 
-    // Extract the suffix from the histogram name (e.g., "_d0_vs_eta")
-    const std::string& baseName = hist.name();
-    const std::string suffix = baseName.substr(baseName.find('_'));
+        // Extract the suffix from the histogram name (e.g., "_d0_vs_eta")
+        const std::string& baseName = hist.name();
+        const std::string suffix = baseName.substr(baseName.find('_'));
 
-    const auto profiles = gaussianFit.extractMeanWidthProfiles(
-        hist, meanPrefix + suffix, widthPrefix + suffix, m_cfg.fitMinEntries,
-        m_cfg.fitSigmaRange, m_cfg.fitIterations, logger());
-    if (profiles.fitFailureFraction >=
-        m_cfg.warningThresholdFitFailureFraction) {
-      ACTS_WARNING("Fit failures for " << baseName << ": "
-                                       << profiles.fitFailureFraction * 100
-                                       << "%");
-    }
+        const auto profiles = Acts::Experimental::extractMeanWidthProfiles(
+            gaussianFit, hist, meanPrefix + suffix, widthPrefix + suffix,
+            m_cfg.fitMinEntries, m_cfg.fitSigmaRange, m_cfg.fitIterations,
+            logger());
+        if (profiles.fitFailureFraction >=
+            m_cfg.warningThresholdFitFailureFraction) {
+          ACTS_WARNING("Fit failures for " << baseName << ": "
+                                           << profiles.fitFailureFraction * 100
+                                           << "%");
+        }
 
-    toRoot(profiles.mean)->Write();
-    toRoot(profiles.width)->Write();
-  };
+        toRoot(profiles.mean)->Write();
+        toRoot(profiles.width)->Write();
+      };
 
   // Write residual histograms
   for (const auto& [name, hist] : resPlotTool.res()) {

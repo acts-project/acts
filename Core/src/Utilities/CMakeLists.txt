@@ -14,6 +14,7 @@ target_sources(
         TransformComparator.cpp
         Histogram.cpp
         GaussianFit.cpp
+        GaussianFitError.cpp
         IMultiAxis.cpp
         detail/NumericalMinimizationError.cpp
         detail/QuaternionFromTwoVectorsDouble.cpp

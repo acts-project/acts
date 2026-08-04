@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(ExactGaussian_RecoversParameters) {
   }
 
   const auto result = fit.fit(hist);
-  BOOST_REQUIRE(result.has_value());
+  BOOST_REQUIRE(result.ok());
   BOOST_CHECK_CLOSE(result->mean, trueMean, 0.01);
   BOOST_CHECK_CLOSE(result->sigma, trueSigma, 0.01);
   BOOST_CHECK_GT(result->meanError, 0.0);
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(HighStatistics_RecoversTruth) {
       sampleGaussian(100000, trueMean, trueSigma, 100, -8.0, 8.0, 12345);
 
   const auto result = fit.fit(hist);
-  BOOST_REQUIRE(result.has_value());
+  BOOST_REQUIRE(result.ok());
 
   // With 1e5 entries the statistical uncertainties are tiny, so require the
   // truth within a few of the reported errors
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(LowStatistics_StillFits) {
   const auto hist = sampleGaussian(60, 0.0, 1.0, 20, -5.0, 5.0, 777);
 
   const auto result = fit.fit(hist);
-  BOOST_REQUIRE(result.has_value());
+  BOOST_REQUIRE(result.ok());
   BOOST_CHECK_LT(std::abs(result->mean), 4 * result->meanError);
   BOOST_CHECK_LT(std::abs(result->sigma - 1.0), 4 * result->sigmaError);
 }
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(SparseHistogram_EmptyBinsAreInformative) {
   const auto hist = sampleGaussian(80, 0.5, 0.4, 200, -5.0, 5.0, 4242);
 
   const auto result = fit.fit(hist);
-  BOOST_REQUIRE(result.has_value());
+  BOOST_REQUIRE(result.ok());
   BOOST_CHECK_LT(std::abs(result->mean - 0.5), 4 * result->meanError);
   BOOST_CHECK_LT(std::abs(result->sigma - 0.4), 4 * result->sigmaError);
 }
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(Pulls_AreStandardNormal) {
         sampleGaussian(entriesPerToy, trueMean, trueSigma, 60, -6.0, 6.0,
                        static_cast<std::uint32_t>(1000 + toy));
     const auto result = fit.fit(hist);
-    if (!result.has_value()) {
+    if (!result.ok()) {
       continue;
     }
     ++successes;
@@ -182,12 +182,12 @@ BOOST_AUTO_TEST_CASE(RestrictedRange_SelectsByBinCentre) {
 
   // Range covering only the central four bin centres (3.5, 4.5, 5.5, 6.5)
   const auto restricted = fit.fit(hist, 3.0, 7.0);
-  BOOST_REQUIRE(restricted.has_value());
+  BOOST_REQUIRE(restricted.ok());
   BOOST_CHECK_CLOSE(restricted->mean, 5.0, 15.0);
 
   // The full fit sees the flat pedestal too and must give a wider sigma
   const auto full = fit.fit(hist);
-  BOOST_REQUIRE(full.has_value());
+  BOOST_REQUIRE(full.ok());
   BOOST_CHECK_GT(full->sigma, restricted->sigma);
 }
 
@@ -209,10 +209,10 @@ BOOST_AUTO_TEST_CASE(IterativeFit_NarrowsOntoCore) {
   }
 
   const auto single = fit.fit(hist);
-  BOOST_REQUIRE(single.has_value());
+  BOOST_REQUIRE(single.ok());
 
-  const auto iterated = fit.iterativeFit(hist, 2.0, 4);
-  BOOST_REQUIRE(iterated.has_value());
+  const auto iterated = iterativeFit(fit, hist, 2.0, 4);
+  BOOST_REQUIRE(iterated.ok());
 
   BOOST_CHECK_LT(std::abs(iterated->sigma - 1.0),
                  std::abs(single->sigma - 1.0));
@@ -223,17 +223,17 @@ BOOST_AUTO_TEST_CASE(IterativeFit_SingleIterationMatchesPlainFit) {
   const auto hist = sampleGaussian(5000, 0.1, 0.9, 50, -5.0, 5.0, 31337);
 
   const auto plain = fit.fit(hist);
-  BOOST_REQUIRE(plain.has_value());
+  BOOST_REQUIRE(plain.ok());
 
   // iterations == 1 means only the unrestricted fit runs
-  const auto once = fit.iterativeFit(hist, 3.0, 1);
-  BOOST_REQUIRE(once.has_value());
+  const auto once = iterativeFit(fit, hist, 3.0, 1);
+  BOOST_REQUIRE(once.ok());
   BOOST_CHECK_CLOSE(once->mean, plain->mean, 1e-9);
   BOOST_CHECK_CLOSE(once->sigma, plain->sigma, 1e-9);
 
   // Values below 1 must not run fewer than the initial fit either
-  const auto zero = fit.iterativeFit(hist, 3.0, 0);
-  BOOST_REQUIRE(zero.has_value());
+  const auto zero = iterativeFit(fit, hist, 3.0, 0);
+  BOOST_REQUIRE(zero.ok());
   BOOST_CHECK_CLOSE(zero->mean, plain->mean, 1e-9);
 }
 
@@ -241,8 +241,8 @@ BOOST_AUTO_TEST_CASE(Degenerate_EmptyHistogram) {
   auto axis = AxisVariant(BoostRegularAxis(20, -5.0, 5.0, "x"));
   const Histogram1 hist("empty", "Empty", {axis});
 
-  BOOST_CHECK(!fit.fit(hist).has_value());
-  BOOST_CHECK(!fit.iterativeFit(hist, 3.0, 3).has_value());
+  BOOST_CHECK(!fit.fit(hist).ok());
+  BOOST_CHECK(!iterativeFit(fit, hist, 3.0, 3).ok());
 }
 
 BOOST_AUTO_TEST_CASE(Degenerate_SingleFilledBin) {
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(Degenerate_SingleFilledBin) {
   hist.setBinContent({10}, 500.0);
 
   // One bin cannot constrain three parameters; sigma would run to zero
-  BOOST_CHECK(!fit.fit(hist).has_value());
+  BOOST_CHECK(!fit.fit(hist).ok());
 }
 
 BOOST_AUTO_TEST_CASE(Degenerate_TwoFilledBins) {
@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(Degenerate_TwoFilledBins) {
   hist.setBinContent({10}, 120.0);
 
   // Still fewer populated bins than free parameters
-  BOOST_CHECK(!fit.fit(hist).has_value());
+  BOOST_CHECK(!fit.fit(hist).ok());
 }
 
 BOOST_AUTO_TEST_CASE(Degenerate_ThreeFilledBinsSucceed) {
@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(Degenerate_ThreeFilledBinsSucceed) {
 
   // Exactly at the limit, this must work rather than fail
   const auto result = fit.fit(hist);
-  BOOST_REQUIRE(result.has_value());
+  BOOST_REQUIRE(result.ok());
   BOOST_CHECK(std::isfinite(result->mean));
   BOOST_CHECK_GT(result->sigma, 0.0);
 }
@@ -283,17 +283,17 @@ BOOST_AUTO_TEST_CASE(Degenerate_SingleBinHistogram) {
   Histogram1 hist("onebin", "One bin", {axis});
   hist.setBinContent({0}, 1000.0);
 
-  BOOST_CHECK(!fit.fit(hist).has_value());
+  BOOST_CHECK(!fit.fit(hist).ok());
 }
 
 BOOST_AUTO_TEST_CASE(Degenerate_RangeExcludesEverything) {
   const auto hist = sampleGaussian(5000, 0.0, 1.0, 50, -5.0, 5.0, 5150);
 
   // A range far outside the axis selects no bins at all
-  BOOST_CHECK(!fit.fit(hist, 100.0, 200.0).has_value());
+  BOOST_CHECK(!fit.fit(hist, 100.0, 200.0).ok());
 
   // A range narrower than a single bin selects at most one bin
-  BOOST_CHECK(!fit.fit(hist, 0.01, 0.02).has_value());
+  BOOST_CHECK(!fit.fit(hist, 0.01, 0.02).ok());
 }
 
 BOOST_AUTO_TEST_CASE(Degenerate_CollapsingIterationRange) {
@@ -301,8 +301,8 @@ BOOST_AUTO_TEST_CASE(Degenerate_CollapsingIterationRange) {
 
   // A tiny sigmaRange collapses the refit window below one bin width, so the
   // iteration must fail cleanly rather than return nonsense
-  const auto result = fit.iterativeFit(hist, 1e-6, 3);
-  BOOST_CHECK(!result.has_value());
+  const auto result = iterativeFit(fit, hist, 1e-6, 3);
+  BOOST_CHECK(!result.ok());
 }
 
 namespace {
@@ -332,11 +332,11 @@ BOOST_AUTO_TEST_CASE(ModerateOutlier_IsShakenOffByIterating) {
   const Histogram1 hist = coreWithOutlier(200.0);
 
   const auto single = fit.fit(hist);
-  BOOST_REQUIRE(single.has_value());
+  BOOST_REQUIRE(single.ok());
   BOOST_CHECK_GT(single->sigma, 4.0);
 
-  const auto iterated = fit.iterativeFit(hist, 3.0, 4);
-  BOOST_REQUIRE(iterated.has_value());
+  const auto iterated = iterativeFit(fit, hist, 3.0, 4);
+  BOOST_REQUIRE(iterated.ok());
   BOOST_CHECK_CLOSE(iterated->sigma, 1.0, 15.0);
 }
 
@@ -349,8 +349,8 @@ BOOST_AUTO_TEST_CASE(ExtremeOutlier_StaysFinite) {
   // rather than diverging or returning NaN.
   const Histogram1 hist = coreWithOutlier(3000.0);
 
-  for (const auto& result : {fit.fit(hist), fit.iterativeFit(hist, 3.0, 4)}) {
-    BOOST_REQUIRE(result.has_value());
+  const auto checkDegradesGracefully = [](const auto& result) {
+    BOOST_REQUIRE(result.ok());
     BOOST_CHECK(std::isfinite(result->mean));
     BOOST_CHECK(std::isfinite(result->sigma));
     BOOST_CHECK_GT(result->sigma, 0.0);
@@ -358,7 +358,9 @@ BOOST_AUTO_TEST_CASE(ExtremeOutlier_StaysFinite) {
     BOOST_CHECK_GT(result->meanError, 0.0);
     BOOST_CHECK(std::isfinite(result->sigmaError));
     BOOST_CHECK_GT(result->sigmaError, 0.0);
-  }
+  };
+  checkDegradesGracefully(fit.fit(hist));
+  checkDegradesGracefully(iterativeFit(fit, hist, 3.0, 4));
 }
 
 BOOST_AUTO_TEST_CASE(VariableBinning_IsSupported) {
@@ -379,7 +381,7 @@ BOOST_AUTO_TEST_CASE(VariableBinning_IsSupported) {
   }
 
   const auto result = fit.fit(hist);
-  BOOST_REQUIRE(result.has_value());
+  BOOST_REQUIRE(result.ok());
   BOOST_CHECK(std::isfinite(result->mean));
   BOOST_CHECK_GT(result->sigma, 0.0);
 }
@@ -415,8 +417,8 @@ BOOST_AUTO_TEST_CASE(Profiles2D_RecoverPerBinWidth) {
   const auto sigmaOf = [](int i) { return 0.5 + 0.25 * i; };
   const Histogram2 hist = residualVsEta(nEtaBins, 20000, sigmaOf, 5555);
 
-  const auto profiles = fit.extractMeanWidthProfiles(hist, "resmean_d0_vs_eta",
-                                                     "reswidth_d0_vs_eta");
+  const auto profiles = extractMeanWidthProfiles(fit, hist, "resmean_d0_vs_eta",
+                                                 "reswidth_d0_vs_eta");
 
   BOOST_CHECK_EQUAL(profiles.mean.name(), "resmean_d0_vs_eta");
   BOOST_CHECK_EQUAL(profiles.width.name(), "reswidth_d0_vs_eta");
@@ -453,8 +455,8 @@ BOOST_AUTO_TEST_CASE(Profiles2D_SkipsSparseSlicesWithoutCountingFailures) {
   hist.fill({1.5, 0.0});
   hist.fill({1.5, 0.3});
 
-  const auto profiles = fit.extractMeanWidthProfiles(hist, "mean", "width",
-                                                     /*minEntriesForFit=*/10);
+  const auto profiles = extractMeanWidthProfiles(fit, hist, "mean", "width",
+                                                 /*minEntriesForFit=*/10);
 
   // Only bin 0 clears the threshold and is filled
   BOOST_CHECK_GT(profiles.width.value({0}), 0.0);
@@ -477,8 +479,8 @@ BOOST_AUTO_TEST_CASE(Profiles2D_CountsGenuineFailures) {
   hist.setBinContent({0, 20}, 500.0);
   hist.setBinContent({1, 20}, 500.0);
 
-  const auto profiles = fit.extractMeanWidthProfiles(hist, "mean", "width",
-                                                     /*minEntriesForFit=*/10);
+  const auto profiles = extractMeanWidthProfiles(fit, hist, "mean", "width",
+                                                 /*minEntriesForFit=*/10);
 
   // Two failures out of four bins on the first axis
   BOOST_CHECK_CLOSE(profiles.fitFailureFraction, 0.5, 1e-10);
@@ -500,7 +502,7 @@ BOOST_AUTO_TEST_CASE(Profiles2D_VariableBinning) {
     }
   }
 
-  const auto profiles = fit.extractMeanWidthProfiles(hist, "mean", "width");
+  const auto profiles = extractMeanWidthProfiles(fit, hist, "mean", "width");
 
   BOOST_CHECK(extractBinEdges(profiles.mean.histogram().axis(0)) == etaEdges);
   BOOST_CHECK_EQUAL(profiles.fitFailureFraction, 0.0);
@@ -530,7 +532,7 @@ BOOST_AUTO_TEST_CASE(Profiles3D_RecoverPerBinWidth) {
     }
   }
 
-  const auto profiles = fit.extractMeanWidthProfiles(hist, "mean", "width");
+  const auto profiles = extractMeanWidthProfiles(fit, hist, "mean", "width");
 
   // The output keeps the first two axes
   BOOST_CHECK_EQUAL(profiles.width.histogram().axis(0).size(), nEta);
@@ -556,8 +558,8 @@ BOOST_AUTO_TEST_CASE(Profiles3D_FailureFractionUsesBothAxes) {
   // One of the four (eta, pt) cells is populated but unfittable
   hist.setBinContent({0, 0, 20}, 500.0);
 
-  const auto profiles = fit.extractMeanWidthProfiles(hist, "mean", "width",
-                                                     /*minEntriesForFit=*/10);
+  const auto profiles = extractMeanWidthProfiles(fit, hist, "mean", "width",
+                                                 /*minEntriesForFit=*/10);
 
   // One failure out of 2 x 2 cells
   BOOST_CHECK_CLOSE(profiles.fitFailureFraction, 0.25, 1e-10);
