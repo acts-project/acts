@@ -11,6 +11,7 @@
 #include <csignal>
 #include <cstddef>
 #include <cstdint>
+#include <source_location>
 #include <string_view>
 #include <typeinfo>
 
@@ -76,14 +77,23 @@ constexpr HashedString operator""_hash(char const* s, std::size_t count) {
 
 }  // namespace HashedStringLiteral
 
-/// Hash for a type. Since it's not possible to hash a type at compile-time,
-/// this function returns a runtime hash but caches it in a static variable.
+namespace detail {
+// Per-type unique string. GCC and Clang both put the template arguments into
+// the function name, so this needs no compiler-specific macro. Checked in
+// HashedString.cpp.
+template <typename T>
+constexpr std::string_view typeIdentity() {
+  return std::source_location::current().function_name();
+}
+}  // namespace detail
+
+/// Compile-time hash for a type. Only ever compares type identity within one
+/// process, so the value itself carries no meaning.
 /// @tparam T Type to hash
 /// @return Hashed string representation
 template <typename T>
-std::uint64_t typeHash() {
-  const static std::uint64_t value = detail::fnv1a_64(typeid(T).name());
-  return value;
+constexpr std::uint64_t typeHash() {
+  return detail::fnv1a_64(detail::typeIdentity<T>());
 }
 
 }  // namespace Acts

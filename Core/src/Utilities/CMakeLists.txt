@@ -9,6 +9,7 @@ target_sources(
         Intersection.cpp
         IAxis.cpp
         GraphViz.cpp
+        HashedString.cpp
         ProtoAxis.cpp
         ScopedTimer.cpp
         TransformComparator.cpp
