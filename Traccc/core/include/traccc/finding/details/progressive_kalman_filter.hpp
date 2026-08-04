@@ -71,9 +71,7 @@ progressive_kalman_filter(
       measurements_view};
 
   // Create detray propagator
-  auto prop_cfg{cfg.propagation};
-  prop_cfg.navigation.estimate_scattering_noise = false;
-  propagator_t propagator(prop_cfg);
+  propagator_t propagator(cfg.propagation);
 
   TRACCC_INFO_HOST("Seed: " << seed_idx);
   // Add the information also to the clog stream
@@ -107,7 +105,7 @@ progressive_kalman_filter(
       momentum_aborter_state{};
   // Track parameter transporter
   typename detray::actor::parameter_updater_state<algebra_t> updater_state{
-      prop_cfg, seed};
+      cfg.propagation, seed};
   // Material interactor
   typename detray::actor::pointwise_material_interactor<algebra_t>::state
       interactor_state;
