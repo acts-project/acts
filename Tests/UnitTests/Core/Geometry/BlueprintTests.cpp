@@ -306,17 +306,16 @@ BOOST_AUTO_TEST_CASE(OffAxisWrapperInCylinderHierarchy) {
     for (std::size_t i = 0; i < nModules; ++i) {
       const double phi = 2. * std::numbers::pi * static_cast<double>(i) /
                          static_cast<double>(nModules);
-      Transform3 moduleTransform =
-          Transform3::Identity() *
-          Translation3{Vector3{offsetX, 0., z}} *
-          AngleAxis3{phi, Vector3::UnitZ()} *
-          Translation3{Vector3::UnitX() * moduleR} *
-          AngleAxis3{90_degree, Vector3::UnitY()} *
-          AngleAxis3{90_degree, Vector3::UnitZ()};
+      Transform3 moduleTransform = Transform3::Identity() *
+                                   Translation3{Vector3{offsetX, 0., z}} *
+                                   AngleAxis3{phi, Vector3::UnitZ()} *
+                                   Translation3{Vector3::UnitX() * moduleR} *
+                                   AngleAxis3{90_degree, Vector3::UnitY()} *
+                                   AngleAxis3{90_degree, Vector3::UnitZ()};
 
-      auto& element = elements.emplace_back(
-          std::make_unique<DetectorElementStub>(moduleTransform, moduleBounds,
-                                                0.));
+      auto& element =
+          elements.emplace_back(std::make_unique<DetectorElementStub>(
+              moduleTransform, moduleBounds, 0.));
       element->surface().assignSurfacePlacement(*element);
       auto surface = element->surface().getSharedPtr();
       layerVolume->addSurface(surface);
@@ -327,10 +326,10 @@ BOOST_AUTO_TEST_CASE(OffAxisWrapperInCylinderHierarchy) {
   };
 
   root->addCylinderContainer("Detector", AxisDirection::AxisZ, [&](auto& det) {
-    det.addStaticVolume(Transform3::Identity(),
-                        std::make_shared<CylinderVolumeBounds>(20_mm, 400_mm,
-                                                               1000_mm),
-                        "MainTracker");
+    det.addStaticVolume(
+        Transform3::Identity(),
+        std::make_shared<CylinderVolumeBounds>(20_mm, 400_mm, 1000_mm),
+        "MainTracker");
 
     det.addOffAxisContainer("B0Envelope", Transform3::Identity(),
                             [&](auto& offAxis) {

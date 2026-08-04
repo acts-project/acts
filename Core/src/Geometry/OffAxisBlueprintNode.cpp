@@ -50,7 +50,8 @@ Volume& OffAxisBlueprintNode::build(const BlueprintOptions& options,
   constexpr auto tolerance = s_onSurfaceTolerance;
   if (std::abs(childInAxisFrame.rotation().col(eX)[eZ]) >= tolerance ||
       std::abs(childInAxisFrame.rotation().col(eY)[eZ]) >= tolerance) {
-    ACTS_ERROR(prefix() << "Child volume rotation tilts relative to axis frame");
+    ACTS_ERROR(
+        prefix() << "Child volume rotation tilts relative to axis frame");
     throw std::invalid_argument(
         "OffAxisBlueprintNode child rotation tilts relative to axis frame");
   }
@@ -61,8 +62,7 @@ Volume& OffAxisBlueprintNode::build(const BlueprintOptions& options,
   const double childMaxR = childBounds->get(CylinderVolumeBounds::eMaxR);
   const double minR = std::max(
       0., std::max(childMinR - radialOffset, radialOffset - childMaxR));
-  const double maxR =
-      childMaxR + radialOffset;
+  const double maxR = childMaxR + radialOffset;
   const double halfLengthZ =
       childBounds->get(CylinderVolumeBounds::eHalfLengthZ);
 

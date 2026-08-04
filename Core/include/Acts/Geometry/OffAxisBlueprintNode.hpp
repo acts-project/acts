@@ -24,8 +24,7 @@ class OffAxisBlueprintNode final : public StaticBlueprintNode {
   /// @param name Name of the wrapper volume
   /// @param axisTransform Reference transform of the co-axial parent axis
   explicit OffAxisBlueprintNode(
-      std::string_view name,
-      Transform3 axisTransform = Transform3::Identity());
+      std::string_view name, Transform3 axisTransform = Transform3::Identity());
 
   /// @copydoc BlueprintNode::name
   const std::string& name() const override;
