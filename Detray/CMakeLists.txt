@@ -119,6 +119,11 @@ option(
     "Build python bindings for all enabled components"
     OFF
 )
+option(
+    DETRAY_GENERATE_PYTHON_STUBS
+    "Generate Python stub files (.pyi) using pybind11-stubgen"
+    OFF
+)
 
 # Test and benchmark suite
 include(CTest)

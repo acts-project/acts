@@ -8,6 +8,7 @@
 #pragma once
 
 // System include(s)
+#include <climits>
 #include <memory>
 
 // Project include(s).
@@ -127,12 +128,12 @@ struct gbts_make_graph_edges_params {
   //   max_Kappa = curv_max = kappa/2 = c*q*B/(2*pT)
   //   = 0.299792458*2/(2*0.9) m^-1 = 0.333 m^-1 = 3.33e-4 mm^-1 (2 T, 0.9
   //   GeV).
-  float max_Kappa = 3.75e-4f;
-  // Max transverse impact parameter, per curvature regime:
-  //   d0 = r1*r2*(|curv| - max_Kappa) <= {low,high}_Kappa_d0  (mm).
-  // 0 = prompt tracks only (no d0 allowance beyond the pT cut).
-  float low_Kappa_d0 = 0.00f;
-  float high_Kappa_d0 = 0.0f;
+  float max_Kappa_low_tau = 3.75e-4f;
+  float max_Kappa_high_tau = 4.35e-4f;
+  float max_Kappa_change_tau = 4.0f;
+  // conditions to inflate edge-matching cuts
+  float long_edge_dr = 50.0f;
+  float long_edge_dz = 200.0f;
 };
 
 // Pair-matching cuts for device::gbts_match_graph_edges.
@@ -141,8 +142,17 @@ struct gbts_match_graph_edges_params {
   float cut_dphi_max = 0.012f;
   // |curv_1 - curv_2| <= cut_dcurv_max  (curv = dphi/dr).
   float cut_dcurv_max = 0.001f;
-  // |tau_2/tau_1 - 1| <= cut_tau_ratio_max (~1%).
-  float cut_tau_ratio_max = 0.01f;
+  // |eta_1-eta_2| <= cut_deta_max.
+  float cut_deta_max = 0.007f;
+  float deta_inflation = 0.003f;
+  // tuning to tighten eta cut for high pT edges
+  float less_scattering_curv = 1e-4f;
+  float much_less_scattering_curv = 3e-5f;
+  // deta_max *= 1.0f-high_pT_correction*((curv < less_scattering_curv) + (curv
+  // < much_less_scattering_curv))
+  float high_pT_correction = 0.2f;
+  // cut on dphi/dphi_max + dcurv/dcurv_max + deta/deta_max
+  float cut_ratio_sum_max = 1.3f;
 };
 
 // Host-side dphi window used to compute bin_pair_dphi before launching
@@ -195,6 +205,11 @@ struct gbts_fit_segments_params {
   // Minimum-pT gate in the fit: reject if |X2| * inv_max_curvature > 1
   // inv_max_curvature = 1/curv_max = ~pT[MeV].
   float inv_max_curvature = 900.0f;
+  // factor to tighen inv_max_curvature when cutting after the fit is complete
+  float final_curv_cut_tighten = 1.5f;
+  // detector r and z bounds, used in seed quality calculation
+  float rmax = 350.0f;
+  float zmax = 3000.0f;
 
   // max_z0 is used from the graph_making to insure concistency
 };
@@ -204,10 +219,10 @@ struct gbts_convert_seeds_params {
   // sample multiple triplets when forming seeds to hedge against outliers.
   bool use_dropout = true;
   // Curvature thresholds (1/m) for the dropout logic.
-  // dcurv = kappa = c*q*B/pT, so 0.007 = ~86GeV
-  float dropout_dcurv_m = 0.007f;
-  // 0.03 = ~20 GeV,
+  // curv of 0.03 = pT of ~10 GeV in a 2T field, curv = c*q*B/(2*pT)
   float force_dropout_max_curv_m = 0.03f;
+  // dcurv = dkappa between two triplets, outlier if > dropout_dcurv_m
+  float dropout_dcurv_m = 0.007f;
   // Fraction of shared hits above which a seed loses a bid (~1/2). Tuning.
   float best_hit_frac = 0.49f;
   // Region switch for "tight" bidding:

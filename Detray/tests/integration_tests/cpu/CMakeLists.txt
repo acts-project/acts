@@ -28,13 +28,14 @@ macro(detray_add_cpu_test algebra)
        "builders/volume_builder.cpp"
        "material/material_interaction.cpp"
        "propagator/backward_propagation.cpp"
+       "propagator/propagation_validation.cpp"
        "propagator/covariance_transport.cpp"
        "propagator/guided_navigator.cpp"
        "propagator/propagation_caching_navigator.cpp"
        "propagator/propagation_direct_navigator.cpp"
        "utils/type_registry.cpp"
        LINK_LIBRARIES GTest::gtest GTest::gtest_main detray::core_${algebra}
-                      vecmem::core detray::test_framework detray::test_common detray::test_utils
+                      vecmem::core detray::test_framework detray::test_common detray::validation_utils detray::test_utils
     )
 
     # Run integration tests only after unit tests passed
