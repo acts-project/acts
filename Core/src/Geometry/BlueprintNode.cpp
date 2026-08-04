@@ -119,7 +119,7 @@ OffAxisBlueprintNode& BlueprintNode::addOffAxisContainer(
     const std::string& name, const Transform3& axisTransform,
     const std::function<void(OffAxisBlueprintNode& offAxis)>& callback) {
   auto offAxis =
-      std::make_shared<OffAxisBlueprintNode>(name, std::move(axisTransform));
+      std::make_shared<OffAxisBlueprintNode>(name, axisTransform);
   addChild(offAxis);
   if (callback) {
     callback(*offAxis);
