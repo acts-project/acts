@@ -25,30 +25,42 @@ struct GaussianHistogramFitResult {
   double sigmaError{};
 };
 
-/// Fit a Gaussian to a 1D histogram by maximising the Poisson likelihood
-///
-/// The model is @f$ \mu_i = A \exp(-(x_i - m)^2 / (2 s^2)) @f$ with @f$ x_i @f$
-/// the bin centre, compared directly against the bin content. This mirrors
-/// ROOT's predefined `"gaus"` under `TH1::Fit(..., "L")`: no bin-width factor
-/// and no integration of the model over the bin. See @c ActsPlugin::RootHistogramFit
+/// Fit a Gaussian to a 1D histogram, with the model
+/// @f$ \mu_i = A \exp(-(x_i - m)^2 / (2 s^2)) @f$, @f$ x_i @f$ the bin centre,
+/// compared directly against the bin content: no bin-width factor and no
+/// integration of the model over the bin. See @c ActsPlugin::RootHistogramFit
 /// for a ROOT-backed fit with the same interface.
 ///
-/// The amplitude @f$ A @f$ is not searched over. For fixed @f$ (m, s) @f$ its
-/// maximum-likelihood value is @f$ \hat{A} = N / \sum_i g_i @f$, which reduces
-/// the problem to two parameters and makes it markedly more robust. Up to a
-/// constant the minimised objective is
-/// @f[
-///   F(m, s) = N \log \sum_i g_i + \frac{1}{2} \sum_i n_i z_i^2, \quad
-///   z_i = \frac{x_i - m}{s}, \quad g_i = e^{-z_i^2 / 2}.
-/// @f]
+/// Two objectives are available, selected via @c Config::objective:
 ///
-/// Unlike a least-squares fit, empty bins carry information here (through
-/// @f$ \sum_i g_i @f$), which is what makes the likelihood the better choice
-/// for sparse histograms and histograms with outliers.
+/// - @c Objective::ChiSquare (the default) mirrors ROOT's predefined
+///   `"gaus"` under `TH1::Fit(..., "SQ0")`: a least-squares fit with bin
+///   variance @f$ n_i @f$, i.e. Poisson counting errors. Bins with
+///   @f$ n_i = 0 @f$ have zero error in this convention and are dropped from
+///   the sum entirely, so empty bins carry no information.
+/// - @c Objective::PoissonLikelihood mirrors `TH1::Fit(..., "LSQ0")`: a
+///   Poisson maximum-likelihood fit. Empty bins do carry information here,
+///   which makes it the better choice for sparse histograms and histograms
+///   with outliers.
+///
+/// In both cases the amplitude @f$ A @f$ is not searched over; for fixed
+/// @f$ (m, s) @f$ it has a closed form (see the objective-specific comments
+/// in the implementation), which reduces the search to two parameters and
+/// makes it markedly more robust.
 class GaussianHistogramFit {
  public:
+  /// The objective minimised by @c fit
+  enum class Objective {
+    /// Least squares with Poisson counting errors; drops empty bins
+    ChiSquare,
+    /// Poisson maximum likelihood; empty bins are informative
+    PoissonLikelihood,
+  };
+
   /// Configuration for @c GaussianHistogramFit
   struct Config {
+    /// The objective to minimise
+    Objective objective = Objective::ChiSquare;
     /// Minimum number of populated bins entering a single fit. The
     /// underlying model has three parameters (amplitude, mean, sigma), so
     /// fewer bins cannot constrain it.

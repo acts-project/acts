@@ -101,6 +101,44 @@ double negLogLikelihood(const FitBins& bins, double mean, double sigma) {
   return std::isfinite(value) ? value : std::numeric_limits<double>::infinity();
 }
 
+/// Chi-square with the amplitude profiled out, up to a constant
+///
+/// Evaluates `sum_i (n_i - A g_i)^2 / n_i` at the profiled amplitude
+/// `A_hat = S1 / S2`, `S1 = sum_i g_i`, `S2 = sum_i g_i^2 / n_i`, both sums
+/// running only over bins with `n_i > 0` -- ROOT's `"gaus"` under `"SQ0"`
+/// assigns those bins zero error (`GetBinError = sqrt(content)`) and drops
+/// them from the sum. Substituting `A_hat` gives
+/// `chi2_min(m, s) = N_included - S1^2 / S2`, `N_included` the summed content
+/// of the included bins.
+double chiSquare(const FitBins& bins, double mean, double sigma) {
+  if (!(sigma > 0) || !std::isfinite(mean)) {
+    return std::numeric_limits<double>::infinity();
+  }
+
+  double includedTotal = 0;
+  double s1 = 0;
+  double s2 = 0;
+  for (std::size_t i = 0; i < bins.centres.size(); ++i) {
+    const double count = bins.counts[i];
+    if (count <= 0) {
+      continue;
+    }
+    const double z = (bins.centres[i] - mean) / sigma;
+    const double g = std::exp(-0.5 * z * z);
+    includedTotal += count;
+    s1 += g;
+    s2 += g * g / count;
+  }
+
+  // s2 == 0 means every included bin's model value underflowed to zero, i.e.
+  // the trial Gaussian sits far from all data. The profiled amplitude is then
+  // effectively zero and the chi-square is just the included total, not the
+  // ill-defined S1^2 / 0.
+  const double value = includedTotal - (s2 > 0 ? s1 * s1 / s2 : 0.0);
+
+  return std::isfinite(value) ? value : std::numeric_limits<double>::infinity();
+}
+
 /// Starting values for the search, following ROOT's `H1InitGaus`: the
 /// count-weighted mean and RMS of the selected bins.
 ///
@@ -133,6 +171,18 @@ std::optional<std::array<double, 2>> initialGuess(const FitBins& bins) {
   return std::array<double, 2>{mean, sigma};
 }
 
+/// Dispatch to the objective selected by @c GaussianHistogramFit::Config
+double objectiveValue(GaussianHistogramFit::Objective which,
+                      const FitBins& bins, double mean, double sigma) {
+  switch (which) {
+    case GaussianHistogramFit::Objective::ChiSquare:
+      return chiSquare(bins, mean, sigma);
+    case GaussianHistogramFit::Objective::PoissonLikelihood:
+      return negLogLikelihood(bins, mean, sigma);
+  }
+  return std::numeric_limits<double>::infinity();
+}
+
 /// Nelder-Mead simplex search over `(mean, log sigma)`
 ///
 /// The log parametrisation keeps sigma positive without a barrier term and
@@ -141,10 +191,11 @@ std::optional<std::array<double, 2>> initialGuess(const FitBins& bins) {
 /// @param relativeStep Initial simplex step, relative to the seed sigma
 /// @return The minimising `(mean, sigma)`, or the minimiser's error if the
 ///         search did not converge within the iteration cap
-Result<std::array<double, 2>> minimise(const FitBins& bins, double meanSeed,
+Result<std::array<double, 2>> minimise(GaussianHistogramFit::Objective which,
+                                       const FitBins& bins, double meanSeed,
                                        double sigmaSeed, double relativeStep) {
-  const auto objective = [&bins](const Vector<2>& p) {
-    return negLogLikelihood(bins, p(0), std::exp(p(1)));
+  const auto objective = [&bins, which](const Vector<2>& p) {
+    return objectiveValue(which, bins, p(0), std::exp(p(1)));
   };
 
   const Vector<2> start{meanSeed, std::log(sigmaSeed)};
@@ -159,24 +210,29 @@ Result<std::array<double, 2>> minimise(const FitBins& bins, double meanSeed,
   return std::array<double, 2>{(*optimum)(0), std::exp((*optimum)(1))};
 }
 
-/// Parameter uncertainties from the curvature of the profiled likelihood
+/// Parameter uncertainties from the curvature of the profiled objective
 ///
-/// The covariance is the inverse Hessian of the negative log-likelihood. Taking
-/// it from the amplitude-profiled objective is legitimate: the inverse Hessian
-/// of a profile likelihood equals the corresponding block of the full
-/// three-parameter covariance matrix, so these are directly comparable to
-/// ROOT's `ParError` for mean and sigma.
+/// The covariance is the inverse Hessian of the objective, scaled by MINUIT's
+/// `UP` convention: `UP = 1` for a chi-square but `UP = 0.5` for a negative
+/// log-likelihood, so the covariance is `2 H^-1` for @c ChiSquare and `H^-1`
+/// for @c PoissonLikelihood. Taking it from the amplitude-profiled objective
+/// is legitimate either way: the inverse Hessian of a profile objective
+/// equals the corresponding block of the full three-parameter covariance
+/// matrix, so these are directly comparable to ROOT's `ParError` for mean and
+/// sigma.
 ///
 /// @param relativeStep Finite-difference step, relative to the asymptotic
 ///                     parameter uncertainty
 /// @return `(meanError, sigmaError)`, or the minimiser's error if the
 ///         curvature is not that of a genuine minimum
-Result<std::array<double, 2>> parameterErrors(const FitBins& bins, double mean,
-                                              double sigma,
-                                              double relativeStep) {
-  const auto objective = [&bins](const Vector<2>& p) {
-    return negLogLikelihood(bins, p(0), p(1));
+Result<std::array<double, 2>> parameterErrors(
+    GaussianHistogramFit::Objective which, const FitBins& bins, double mean,
+    double sigma, double relativeStep) {
+  const auto objective = [&bins, which](const Vector<2>& p) {
+    return objectiveValue(which, bins, p(0), p(1));
   };
+  const double covarianceScale =
+      (which == GaussianHistogramFit::Objective::ChiSquare) ? 2.0 : 1.0;
 
   // Large enough to lift the second difference well clear of floating point
   // noise, small enough to stay inside the quadratic region around the minimum
@@ -190,8 +246,8 @@ Result<std::array<double, 2>> parameterErrors(const FitBins& bins, double mean,
     return Result<std::array<double, 2>>::failure(covariance.error());
   }
 
-  const double varMean = (*covariance)(0, 0);
-  const double varSigma = (*covariance)(1, 1);
+  const double varMean = covarianceScale * (*covariance)(0, 0);
+  const double varSigma = covarianceScale * (*covariance)(1, 1);
   if (!(varMean > 0) || !(varSigma > 0)) {
     return Result<std::array<double, 2>>::failure(
         Acts::detail::NumericalMinimizationError::NotPositiveDefinite);
@@ -217,8 +273,8 @@ Result<GaussianHistogramFitResult> fitBins(
         GaussianHistogramFitError::NoValidSeed);
   }
 
-  const auto optimum =
-      minimise(bins, (*seed)[0], (*seed)[1], config.relativeStep);
+  const auto optimum = minimise(config.objective, bins, (*seed)[0], (*seed)[1],
+                                config.relativeStep);
   if (!optimum.ok()) {
     return Result<GaussianHistogramFitResult>::failure(optimum.error());
   }
@@ -230,7 +286,8 @@ Result<GaussianHistogramFitResult> fitBins(
         GaussianHistogramFitError::NonFiniteParameters);
   }
 
-  const auto errors = parameterErrors(bins, mean, sigma, config.relativeStep);
+  const auto errors =
+      parameterErrors(config.objective, bins, mean, sigma, config.relativeStep);
   if (!errors.ok()) {
     return Result<GaussianHistogramFitResult>::failure(errors.error());
   }
