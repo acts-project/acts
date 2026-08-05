@@ -60,7 +60,7 @@ def runTruthTrackingKalman(
         )
 
     s = s or acts.examples.Sequencer(
-        events=1, numThreads=-1, logLevel=acts.logging.INFO
+        events=100, numThreads=-1, logLevel=acts.logging.INFO
     )
     
     for d in decorators:
@@ -71,14 +71,8 @@ def runTruthTrackingKalman(
 
     logger = acts.getDefaultLogger("Truth tracking example", acts.logging.INFO)
 
-    #for ievt in range(numParticles):
-    ievt = 0
-    eventStore =acts.examples.WhiteBoard(name=f"EventStore#{ievt}", level=acts.logging.INFO)
-    ialg = 0
-    ithread = 0
-
     if pyVis:
-        context = acts.examples.AlgorithmContext(ialg, ievt, eventStore, ithread)
+        context = acts.GeometryContext.dangerouslyDefaultConstruct()
         vis = PyVisualization2D()
         trackingGeometry.visualize(
                     vis,
@@ -199,7 +193,7 @@ def runTruthTrackingKalman(
     )
 
     if pyVis:
-    	s.addAlgorithm(TrackVisualizerAlg("TrackVisualizerAlg", acts.logging.INFO, vis))
+        s.addAlgorithm(TrackVisualizerAlg("TrackVisualizerAlg", acts.logging.INFO, vis))
 
     s.addAlgorithm(
         acts.examples.TrackSelectorAlgorithm(
@@ -247,7 +241,7 @@ def runTruthTrackingKalman(
 
     s.run()
     if pyVis:
-    	vis.plot(projection=projection) 
+        vis.plot(projection=projection) 
     
 
 if "__main__" == __name__:
@@ -270,9 +264,7 @@ if "__main__" == __name__:
     # )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-    import matplotlib.pyplot as plt
 
-    fig, ax = plt.subplots()
     runTruthTrackingKalman(
         trackingGeometry=trackingGeometry,
         field=field,
@@ -281,5 +273,4 @@ if "__main__" == __name__:
         outputDir=Path.cwd(),
     )
 
-    plt.savefig("review_test.png")
   

@@ -241,13 +241,8 @@ void addGeometry(py::module_& m) {
             .def_property_readonly("highestTrackingVolume",
                                    &TrackingGeometry::highestTrackingVolumePtr)
             .def("visualize",
-                py::overload_cast<IVisualization3D&, const GeometryContext&>
-                (&TrackingGeometry::visualize, py::const_),
-                py::arg("helper"), py::arg("gctx"))
-            .def("visualize",
-                py::overload_cast<IVisualization3D&, const GeometryContext&, const ViewConfigFunc&>
-                (&TrackingGeometry::visualize, py::const_),
-                py::arg("helper"), py::arg("gctx"), py::arg("viewConfigFactory"));
+                &TrackingGeometry::visualize,
+                py::arg("helper"), py::arg("gctx"), py::arg("func") = viewConfigFactory());
                  
 
     using apply_ptr_t =

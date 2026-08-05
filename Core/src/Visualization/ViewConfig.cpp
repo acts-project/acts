@@ -8,7 +8,7 @@
 
 namespace Acts {
 
-ViewConfig defaultColoring(const GeometryObject& geoObj) {
+ViewConfig defaultGeometryColoring(const GeometryObject& geoObj) {
      if (geoObj.geometryId().boundary() != 0)
     {
         return ViewConfig{.color = {255, 165, 0}};
@@ -26,7 +26,7 @@ ViewConfig defaultColoring(const GeometryObject& geoObj) {
 } 
 
 ViewConfigFunc viewConfigFactory() {
-return defaultColoring;
+return defaultGeometryColoring;
 }
 
 }

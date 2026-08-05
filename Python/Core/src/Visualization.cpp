@@ -112,7 +112,6 @@ void addVisualization(py::module& m) {
 
   py::class_<GeometryObject>(m, "GeometryObject");
   m.def("viewConfigFactory()", &viewConfigFactory);
-  //m.def("defaultColoring", &defaultColoring);
 
 }
 }  // namespace ActsPython

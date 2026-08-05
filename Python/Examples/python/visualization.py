@@ -44,7 +44,11 @@ class TrackVisualizerAlg(acts.examples.IAlgorithm):
 
 class PyVisualization2D(acts.VisualizationBuffer):
 
-    def plot(self, projection, linewidth=None, linestyle = None, ax=None):
+    def plot(self, projection, filename = "truth_tracking_kalman_visualization.png",
+              linewidth=None, linestyle = None, ax=None):
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+
         if linewidth == None:
             width = 1
         else: 
@@ -98,3 +102,4 @@ class PyVisualization2D(acts.VisualizationBuffer):
 
         ax.relim()
         ax.autoscale_view()
+        plt.savefig(filename)

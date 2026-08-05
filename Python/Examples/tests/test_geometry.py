@@ -7,7 +7,6 @@ from acts.examples.odd import getOpenDataDetector
 import json
 
 from helpers import dd4hepEnabled
-
 @pytest.mark.parametrize(
     "detectorFactory,aligned,nobj",
     [
@@ -34,7 +33,6 @@ from helpers import dd4hepEnabled
         "odd",
     ],
 )
-
 
 @pytest.mark.slow
 def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):

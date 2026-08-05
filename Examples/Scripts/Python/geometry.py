@@ -28,8 +28,10 @@ def runGeometry(
     outputDir: Path,
     events=1,
     projection='xy',
+    outputObj=True,
     outputPy=True,
     outputCsv=True,
+    outputMaterialMap=True,
     outputSurfacesJson=True,
     serializeGeometryJson=True,
 ):
@@ -56,6 +58,9 @@ def runGeometry(
             )
             writer.write(context)
 
+        if outputObj and ievt == 0:
+            vis = acts.ObjVisualization3D()
+            vis.write(outputDir / "obj" / "geometry.obj")
         if outputPy:
             vis = acts.VisualizationBuffer(projection=projection)
             trackingGeometry.visualize(
