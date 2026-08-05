@@ -36,7 +36,7 @@ def runGNN4ITk(
     events: int = 1,
     bufferEvents: int | None = None,
     useEdgeLayerConnector: bool = False,
-    trackBuilder: str = "junctionRemoval",
+    trackBuilder: str = "junctionremoval",
     edgeClassifierCut: float | None = None,
     logLevel=acts.logging.INFO,
 ):
@@ -54,7 +54,7 @@ def runGNN4ITk(
         outputDir: Output directory for performance files
         events: Number of events to process
         useEdgeLayerConnector: Use EdgeLayerConnector instead of CudaTrackBuilding
-        trackBuilder: Track builder to run: junctionRemoval, edgeLayerConnector, or dwalk
+        trackBuilder: Track builder to run: junctionremoval, edgelayerconnector, or dwalk
         edgeClassifierCut: Optional edge classifier cut. Defaults to 0.01 for D-WALK and
                            0.5 for the other builders.
         logLevel: Logging level
@@ -131,14 +131,9 @@ def runGNN4ITk(
     graphConstructor = ModuleMapCuda(**moduleMapConfig)
 
     if useEdgeLayerConnector:
-        trackBuilder = "edgeLayerConnector"
-    trackBuilder = {
-        "junctionremoval": "junctionRemoval",
-        "edgeLayerConnector": "edgeLayerConnector",
-        "edgelayerconnector": "edgeLayerConnector",
-        "dwalk": "dwalk",
-    }.get(trackBuilder, trackBuilder)
-    if trackBuilder not in {"junctionRemoval", "edgeLayerConnector", "dwalk"}:
+        trackBuilder = "edgelayerconnector"
+    trackBuilder = trackBuilder.lower()
+    if trackBuilder not in {"junctionremoval", "edgelayerconnector", "dwalk"}:
         raise ValueError(f"Unsupported track builder: {trackBuilder}")
 
     defaultEdgeClassifierCut = 0.01 if trackBuilder == "dwalk" else 0.5
@@ -171,7 +166,7 @@ def runGNN4ITk(
         raise ValueError(f"Unsupported model format: {gnnModel.suffix}")
 
     # Stage 3: Track building
-    if trackBuilder == "edgeLayerConnector":
+    if trackBuilder == "edgelayerconnector":
         trackBuilderObj = EdgeLayerConnector(
             level=logLevel,
             blockSize=512,
@@ -280,8 +275,8 @@ if __name__ == "__main__":
     )
     argparser.add_argument(
         "--trackBuilder",
-        choices=["junctionRemoval", "edgeLayerConnector", "dwalk"],
-        default="junctionRemoval",
+        choices=["junctionremoval", "edgelayerconnector", "dwalk"],
+        default="junctionremoval",
         help="Track builder to use for graph segmentation",
     )
     argparser.add_argument(

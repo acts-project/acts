@@ -14,7 +14,6 @@
 #include <cstdint>
 
 #include <thrust/execution_policy.h>
-#include <thrust/reduce.h>
 #include <thrust/scan.h>
 #include <thrust/sort.h>
 
@@ -248,14 +247,21 @@ TLabel connectedComponentsCuda(std::size_t nEdges, const TEdges *sourceEdges,
   makeLabelMask<<<gridDim, blockDim, 0, stream>>>(nNodes, labels, tmpMemory);
   ACTS_CUDA_CHECK(cudaGetLastError());
 
-  TLabel nLabels = thrust::reduce(thrust::device.on(stream), tmpMemory,
-                                  tmpMemory + nNodes, TLabel{0});
+  TLabel lastLabelMask;
+  ACTS_CUDA_CHECK(cudaMemcpyAsync(&lastLabelMask, &tmpMemory[nNodes - 1],
+                                  sizeof(TLabel), cudaMemcpyDeviceToHost,
+                                  stream));
 
   // Exclusive prefix sum on the label mask
   // 0 1 2 3 4 5
   // 0 1 1 1 2 2
   thrust::exclusive_scan(thrust::device.on(stream), tmpMemory,
                          tmpMemory + nNodes, tmpMemory);
+
+  TLabel nLabels;
+  ACTS_CUDA_CHECK(cudaMemcpyAsync(&nLabels, &tmpMemory[nNodes - 1],
+                                  sizeof(TLabel), cudaMemcpyDeviceToHost,
+                                  stream));
 
   // Remap edge labels with values in prefix sum
   // 0 -> 0, 3 -> 1, 5 -> 2
@@ -265,7 +271,7 @@ TLabel connectedComponentsCuda(std::size_t nEdges, const TEdges *sourceEdges,
   ACTS_CUDA_CHECK(cudaFreeAsync(tmpMemory, stream));
   ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
-  return nLabels;
+  return nLabels + lastLabelMask;
 }
 
 /// Kernel to compute the bounds for each label in the labels array.
