@@ -446,9 +446,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   }
 }
 
-/// Puts material on the layer approach surfaces, which is what makes them
-/// material-only surfaces for the CKF. Sensitive surfaces get material too, as
-/// in a real detector.
+/// Puts material on the layer approach and sensitive surfaces
 class ApproachMaterialDecorator final : public IMaterialDecorator {
  public:
   void decorate(Surface& surface) const override {
@@ -466,9 +464,8 @@ class ApproachMaterialDecorator final : public IMaterialDecorator {
           MaterialSlab(makeSilicon(), 5_mm));
 };
 
-// Telescope along x. The sensitive surfaces carry measurements; the layer
-// approach surfaces are the material-only surfaces. `CubicTrackingGeometry`
-// has no material-only surfaces, so it cannot exercise that branch of the CKF.
+/// Telescope along x whose layer approach surfaces are material-only surfaces,
+/// which `CubicTrackingGeometry` does not have
 struct MaterialTelescope {
   static constexpr std::size_t nSensitive = 4u;
 
@@ -531,7 +528,7 @@ struct MaterialTelescope {
   }
 };
 
-/// Fixture running the CKF over `MaterialTelescope` with a single track.
+/// Fixture running the CKF over `MaterialTelescope` with a single track
 struct MaterialFixture {
   using StraightPropagator = Fixture::StraightPropagator;
   using ConstantFieldStepper = Fixture::ConstantFieldStepper;
@@ -607,33 +604,31 @@ struct MaterialFixture {
         &KalmanUpdater::operator()<TrackStateContainerBackend>>(&kfUpdater);
     return extensions;
   }
+
+  /// Run the CKF once and return the container holding the single found track
+  TrackContainer find(bool recordMaterialStates) {
+    auto options = CombinatorialKalmanFilterOptions(
+        geoCtx, magCtx, calCtx, getExtensions(),
+        PropagatorPlainOptions(geoCtx, magCtx));
+    options.recordMaterialStates = recordMaterialStates;
+
+    TestSourceLinkAccessor slAccessor;
+    slAccessor.container = &sourceLinks;
+    auto trackStateCreator = makeTrackStateCreator(slAccessor, measSel);
+    options.extensions.createTrackStates
+        .template connect<&decltype(trackStateCreator)::createTrackStates>(
+            &trackStateCreator);
+
+    TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+    auto res = ckf.findTracks(startParameters, options, tc);
+    BOOST_REQUIRE(res.ok());
+    BOOST_REQUIRE_EQUAL(tc.size(), 1u);
+    return tc;
+  }
 };
 
-/// Run the CKF once and return the container holding the single found track.
-static TrackContainer findWithMaterialStates(MaterialFixture& f,
-                                             bool recordMaterialStates) {
-  auto options = CombinatorialKalmanFilterOptions(
-      f.geoCtx, f.magCtx, f.calCtx, f.getExtensions(),
-      PropagatorPlainOptions(f.geoCtx, f.magCtx));
-  options.recordMaterialStates = recordMaterialStates;
-
-  MaterialFixture::TestSourceLinkAccessor slAccessor;
-  slAccessor.container = &f.sourceLinks;
-  auto trackStateCreator = makeTrackStateCreator(slAccessor, f.measSel);
-  options.extensions.createTrackStates
-      .template connect<&decltype(trackStateCreator)::createTrackStates>(
-          &trackStateCreator);
-
-  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
-  auto res = f.ckf.findTracks(f.startParameters, options, tc);
-  BOOST_REQUIRE(res.ok());
-  BOOST_REQUIRE_EQUAL(tc.size(), 1u);
-  return tc;
-}
-
 /// Product of the stored jacobians up to the last measurement, which is the
-/// last surface both runs have in common. With material states recorded the
-/// track additionally ends on a trailing material surface.
+/// last surface both runs have in common
 static BoundMatrix jacobianToLastMeasurement(const auto& track) {
   std::vector<BoundMatrix> jacobians;
   bool seenMeasurement = false;
@@ -676,7 +671,7 @@ BOOST_AUTO_TEST_CASE(MaterialTelescopeGeometry) {
 
 BOOST_AUTO_TEST_CASE(MaterialStatesRecordedByDefault) {
   MaterialFixture f;
-  auto tc = findWithMaterialStates(f, true);
+  auto tc = f.find(true);
   const auto track = tc.getTrack(0);
 
   BOOST_CHECK_EQUAL(track.nMeasurements(), MaterialTelescope::nSensitive);
@@ -691,7 +686,6 @@ BOOST_AUTO_TEST_CASE(MaterialStatesRecordedByDefault) {
       ++nMaterialOnly;
     }
   }
-  // the material-only surfaces the track crosses must actually be recorded
   BOOST_CHECK_GT(nMaterialOnly, 0u);
   BOOST_CHECK_EQUAL(track.nTrackStates(),
                     MaterialTelescope::nSensitive + nMaterialOnly);
@@ -699,7 +693,7 @@ BOOST_AUTO_TEST_CASE(MaterialStatesRecordedByDefault) {
 
 BOOST_AUTO_TEST_CASE(MaterialStatesSkipped) {
   MaterialFixture f;
-  auto tc = findWithMaterialStates(f, false);
+  auto tc = f.find(false);
   const auto track = tc.getTrack(0);
 
   BOOST_CHECK_EQUAL(track.nMeasurements(), MaterialTelescope::nSensitive);
@@ -713,12 +707,12 @@ BOOST_AUTO_TEST_CASE(MaterialStatesSkipped) {
 }
 
 // The transport must be the same whether or not the surfaces in between were
-// recorded. This is what the jacobian folding is for.
+// recorded
 BOOST_AUTO_TEST_CASE(MaterialStatesSkippedPreserveJacobianChain) {
   MaterialFixture fRecorded;
   MaterialFixture fSkipped;
-  auto tcRecorded = findWithMaterialStates(fRecorded, true);
-  auto tcSkipped = findWithMaterialStates(fSkipped, false);
+  auto tcRecorded = fRecorded.find(true);
+  auto tcSkipped = fSkipped.find(false);
 
   const BoundMatrix recorded =
       jacobianToLastMeasurement(tcRecorded.getTrack(0));
@@ -727,13 +721,13 @@ BOOST_AUTO_TEST_CASE(MaterialStatesSkippedPreserveJacobianChain) {
   CHECK_CLOSE_ABS(recorded, skipped, 1e-6);
 }
 
-// Smoothing at the measurement surfaces must be unaffected, for both smoothers.
+// Smoothing at the measurement surfaces must be unaffected
 BOOST_AUTO_TEST_CASE(MaterialStatesSkippedSmoothingAgrees) {
   auto check = [](auto smoother) {
     MaterialFixture fRecorded;
     MaterialFixture fSkipped;
-    auto tcRecorded = findWithMaterialStates(fRecorded, true);
-    auto tcSkipped = findWithMaterialStates(fSkipped, false);
+    auto tcRecorded = fRecorded.find(true);
+    auto tcSkipped = fSkipped.find(false);
 
     auto trackRecorded = tcRecorded.getTrack(0);
     auto trackSkipped = tcSkipped.getTrack(0);
@@ -746,7 +740,7 @@ BOOST_AUTO_TEST_CASE(MaterialStatesSkippedSmoothingAgrees) {
                               smoother)
                       .ok());
 
-    // compare the measurement states, which are the only ones both tracks have
+    // only the measurement states exist in both tracks
     struct Smoothed {
       GeometryIdentifier geoId{};
       BoundVector parameters = BoundVector::Zero();

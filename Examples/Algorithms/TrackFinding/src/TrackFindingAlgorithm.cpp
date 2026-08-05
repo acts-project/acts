@@ -383,6 +383,12 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   secondOptions.recordMaterialStates = m_cfg.recordMaterialStates;
   secondOptions.betheHeitlerApprox = firstOptions.betheHeitlerApprox;
 
+  // the brem finder cannot skip material states, so it gets its own options
+  TrackFinderOptions firstBremOptions = firstOptions;
+  firstBremOptions.recordMaterialStates = true;
+  TrackFinderOptions secondBremOptions = secondOptions;
+  secondBremOptions.recordMaterialStates = true;
+
   using Extrapolator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
   using ExtrapolatorOptions = Extrapolator::template Options<
       Acts::ActorList<Acts::MaterialInteractor, Acts::EndOfWorldReached>>;
@@ -490,15 +496,18 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     ACTS_VERBOSE("Processing seed " << iSeed << " with initial parameters "
                                     << firstInitialParameters);
 
+    const bool useBrem = m_cfg.findTracksBrem != nullptr &&
+                         firstInitialParameters.particleHypothesis() ==
+                             Acts::ParticleHypothesis::electron();
     const TrackFinderFunction& findTracks =
-        (m_cfg.findTracksBrem == nullptr ||
-         firstInitialParameters.particleHypothesis() !=
-             Acts::ParticleHypothesis::electron())
-            ? *m_cfg.findTracks
-            : *m_cfg.findTracksBrem;
+        useBrem ? *m_cfg.findTracksBrem : *m_cfg.findTracks;
+    const TrackFinderOptions& firstFindOptions =
+        useBrem ? firstBremOptions : firstOptions;
+    const TrackFinderOptions& secondFindOptions =
+        useBrem ? secondBremOptions : secondOptions;
 
     auto firstRootBranch = tracksTemp.makeTrack();
-    auto firstResult = findTracks(firstInitialParameters, firstOptions,
+    auto firstResult = findTracks(firstInitialParameters, firstFindOptions,
                                   tracksTemp, firstRootBranch);
     nSeed++;
 
@@ -567,8 +576,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
           auto secondRootBranch = tracksTemp.makeTrack();
           secondRootBranch.copyFromWithoutStates(trackCandidate);
-          auto secondResult = findTracks(secondInitialParameters, secondOptions,
-                                         tracksTemp, secondRootBranch);
+          auto secondResult =
+              findTracks(secondInitialParameters, secondFindOptions, tracksTemp,
+                         secondRootBranch);
 
           if (!secondResult.ok()) {
             ACTS_WARNING("Second track finding failed for seed "

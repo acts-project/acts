@@ -36,6 +36,7 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <stdexcept>
 #include <type_traits>
 
 namespace Acts {
@@ -110,10 +111,10 @@ struct CombinatorialKalmanFilterOptions {
   bool skipPrePropagationUpdate = false;
 
   /// Whether to record track states on material-only (non-sensitive) surfaces.
-  /// Material effects are applied either way, only the record is dropped, and
-  /// the jacobian of a skipped surface is folded into the next recorded state.
+  /// Material effects are applied either way, only the record is dropped.
   /// @note Keep enabled if the surfaces themselves are needed, e.g. for a refit
-  ///       with the `DirectNavigator`. Ignored with a multi-component stepper.
+  ///       with the `DirectNavigator`. Must stay enabled with a
+  ///       multi-component stepper.
   bool recordMaterialStates = true;
 };
 
@@ -173,8 +174,8 @@ struct CombinatorialKalmanFilterResult {
   /// Track state candidates buffer which can be used by the track state creator
   std::vector<TrackStateProxy> trackStateCandidates;
 
-  /// Product of the transport jacobians of skipped material surfaces, folded
-  /// into the next recorded track state to keep the jacobian chain intact.
+  /// Transport jacobians of skipped material surfaces, folded into the next
+  /// recorded track state to keep the jacobian chain intact
   BoundMatrix accumulatedJacobian = BoundMatrix::Identity();
 
   /// Indicator if track finding has been done
@@ -266,7 +267,6 @@ class CombinatorialKalmanFilter {
     /// Skip the pre propagation call. This effectively skips the first surface
     bool skipPrePropagationUpdate = false;
 
-    /// Whether to record track states on material-only surfaces.
     /// @see CombinatorialKalmanFilterOptions::recordMaterialStates
     bool recordMaterialStates = true;
 
@@ -595,15 +595,15 @@ class CombinatorialKalmanFilter {
 
       if constexpr (!IsMultiStepper) {
         if (isMaterialOnly && !recordMaterialStates) {
+          ACTS_VERBOSE("Skip material track state on surface "
+                       << surface.geometryId());
+
           // keep the jacobian segment the transport above just closed
           result.accumulatedJacobian =
               state.stepping.jacobian * result.accumulatedJacobian;
 
-          ACTS_VERBOSE("Skip material track state on surface "
-                       << surface.geometryId());
-
-          // must return: the branch tip still points at an earlier surface and
-          // the stepper update below would move the propagation back to it
+          // apply the post material effects and return early, skipping the
+          // track state creation below
           return performMaterialInteraction(
               state, stepper, surface,
               detail::determineMaterialUpdateMode(
@@ -645,8 +645,7 @@ class CombinatorialKalmanFilter {
 
       if constexpr (!IsMultiStepper) {
         if (!recordMaterialStates) {
-          // prepend the skipped surfaces; every downstream writer takes the
-          // jacobian from this tuple
+          // prepend the jacobians of the surfaces skipped since the last state
           std::get<1>(boundState) =
               std::get<1>(boundState) * result.accumulatedJacobian;
           result.accumulatedJacobian = BoundMatrix::Identity();
@@ -1208,11 +1207,11 @@ class CombinatorialKalmanFilter {
     combKalmanActor.skipPrePropagationUpdate =
         tfOptions.skipPrePropagationUpdate;
     if constexpr (IsMultiStepper) {
-      // No single transport jacobian to fold with a multi stepper
+      // there is no single transport jacobian to fold into the next state
       if (!tfOptions.recordMaterialStates) {
-        ACTS_WARNING(
-            "recordMaterialStates is not supported with a multi-component "
-            "stepper and will be ignored");
+        throw std::invalid_argument(
+            "recordMaterialStates cannot be disabled with a multi-component "
+            "stepper");
       }
     } else {
       combKalmanActor.recordMaterialStates = tfOptions.recordMaterialStates;
