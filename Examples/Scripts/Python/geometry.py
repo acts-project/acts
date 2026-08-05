@@ -5,7 +5,6 @@ import json
 
 import acts
 import acts.examples
-
 from acts.json import MaterialMapJsonConverter, TrackingGeometryJsonConverter
 from acts.examples.odd import getOpenDataDetector
 from acts.examples import (
