@@ -56,7 +56,7 @@ def runColliderMLTruthTracking(
 
     Returns
     -------
-    (Sequencer, PythonTrackFinderPerformanceWriter)
+    (Sequencer, PythonPatternRecognitionPerformanceWriter)
         Call s.run() on the sequencer, then access perf_writer.histograms().
     """
     outputDir = Path(outputDir)
