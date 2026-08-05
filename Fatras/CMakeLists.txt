@@ -16,6 +16,7 @@ acts_add_library(
     src/Synthetic/EventCsvWriter.cpp
     src/Synthetic/EventGenerator.cpp
     src/Synthetic/SeedingTruth.cpp
+    src/Synthetic/TrackingGeometryLayout.cpp
     src/Synthetic/detail/ParticlePropagator.cpp
     src/Synthetic/detail/PrimaryGenerator.cpp
     src/Synthetic/detail/Propagation.cpp
