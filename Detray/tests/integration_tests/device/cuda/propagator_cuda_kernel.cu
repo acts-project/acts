@@ -19,8 +19,7 @@ __global__ void propagator_test_kernel(
     typename detector_t::view_type det_data, const propagation::config cfg,
     covfie::field_view<bfield_bknd_t> field_data,
     vecmem::data::vector_view<test_track> tracks_data,
-    vecmem::data::jagged_vector_view<detail::step_data<test_algebra>>
-        steps_data) {
+    vecmem::data::jagged_vector_view<step_record<test_algebra>> steps_data) {
   int gid = threadIdx.x + blockIdx.x * blockDim.x;
   using detector_device_t =
       detector<typename detector_t::metadata, device_container_types>;
@@ -31,8 +30,7 @@ __global__ void propagator_test_kernel(
 
   detector_device_t det(det_data);
   vecmem::device_vector<test_track> tracks(tracks_data);
-  vecmem::jagged_device_vector<detail::step_data<test_algebra>> steps(
-      steps_data);
+  vecmem::jagged_device_vector<step_record<test_algebra>> steps(steps_data);
 
   if (gid >= tracks.size()) {
     return;
@@ -75,8 +73,7 @@ void propagator_test(
     typename detector_t::view_type det_view, const propagation::config& cfg,
     covfie::field_view<bfield_bknd_t> field_data,
     vecmem::data::vector_view<test_track>& tracks_data,
-    vecmem::data::jagged_vector_view<detail::step_data<test_algebra>>&
-        step_data) {
+    vecmem::data::jagged_vector_view<step_record<test_algebra>>& step_data) {
   constexpr int thread_dim = 2 * WARP_SIZE;
   int block_dim = tracks_data.size() / thread_dim + 1;
 
@@ -97,7 +94,7 @@ propagator_test<bfield::const_bknd_t<dscalar<test_algebra>>,
     const propagation::config&,
     covfie::field_view<bfield::const_bknd_t<dscalar<test_algebra>>>,
     vecmem::data::vector_view<test_track>&,
-    vecmem::data::jagged_vector_view<detail::step_data<test_algebra>>&);
+    vecmem::data::jagged_vector_view<step_record<test_algebra>>&);
 
 /// Explicit instantiation for an inhomogeneous magnetic field
 template void
@@ -107,6 +104,6 @@ propagator_test<bfield::cuda::inhom_bknd_t<dscalar<test_algebra>>,
     const propagation::config&,
     covfie::field_view<bfield::cuda::inhom_bknd_t<dscalar<test_algebra>>>,
     vecmem::data::vector_view<test_track>&,
-    vecmem::data::jagged_vector_view<detail::step_data<test_algebra>>&);
+    vecmem::data::jagged_vector_view<step_record<test_algebra>>&);
 
 }  // namespace detray

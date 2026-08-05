@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.19)
 
 # LCG sets CPATH, which gets treated like -I by the compiler. We want to ignore
 # warnings from libraries, by unsetting it here, it gets processed by the usual
@@ -73,7 +73,8 @@ option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_U
 option(ACTS_USE_SYSTEM_MODULEMAPGRAPH "Use a system installation of ModuleMapGraph" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
 option(ACTS_USE_SYSTEM_GBL "Use a system-provided General Broken Lines (GBL) from Mille" OFF)
-option(ACTS_USE_SYSTEM_MILLE "Use a system-provided Mille" ON)
+option(ACTS_USE_SYSTEM_MILLE "Use a system-provided Mille" ${ACTS_USE_SYSTEM_LIBS})
+option(ACTS_USE_SYSTEM_MP2 "Use a system-provided Millepede-2" ${ACTS_USE_SYSTEM_LIBS})
 
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ARROW "Build Apache Arrow/Parquet plugin" OFF)
@@ -90,7 +91,7 @@ option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEOMODEL "Build GeoModel plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TRACCC "Build Traccc plugin" OFF)
-option(ACTS_ENABLE_CUDA "Enable CUDA for the gnn/Traccc plugins" OFF)
+option(ACTS_ENABLE_CUDA "Enable CUDA for the gnn/Traccc/CudaMuonSegmentFitting plugins" OFF)
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GNN "Build the GNN plugin" OFF)
 option(ACTS_GNN_ENABLE_ONNX "Build the Onnx backend for the gnn plugin" OFF)
@@ -126,17 +127,19 @@ option(ACTS_BUILD_EXAMPLES_PARQUET "Build Arrow/Parquet-based code in the exampl
 option(ACTS_BUILD_EXAMPLES_PODIO "Build Podio-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_ROOT "Build modules based on ROOT I/O" OFF)
+option(ACTS_BUILD_EXAMPLES_CUDA_MUON_SEGMENT_FITTING "Build CUDA muon segment fitting example" OFF)
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
 # test related options
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
 option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
+option(ACTS_BUILD_CORE_UNITTESTS "Build Core unit tests" ON) # only relevant if ACTS_BUILD_UNITTESTS is ON
 if(ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES)
   set(_default_examples_unit_tests ON)
 else()
   set(_default_examples_unit_tests OFF)
 endif()
-option(ACTS_BUILD_EXAMPLES_UNITTESTS "Build unit tests" ${_default_examples_unit_tests}) # default: ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES
+option(ACTS_BUILD_EXAMPLES_UNITTESTS "Build Examples unit tests" ${_default_examples_unit_tests}) # default: ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES
 option(ACTS_RUN_CLANG_TIDY "Run clang-tidy static analysis" OFF)
 # other options
 option(ACTS_BUILD_DOCS "Build documentation" OFF)
@@ -181,6 +184,8 @@ set_option_if(
     ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
     OR
     ACTS_BUILD_EXAMPLES_ROOT
+    OR
+    ACTS_BUILD_EXAMPLES_CUDA_MUON_SEGMENT_FITTING
 )
 # core plugins might be required by examples or depend on each other
 set_option_if(ACTS_BUILD_EXAMPLES_DD4HEP ACTS_BUILD_ODD)
@@ -190,6 +195,7 @@ set_option_if(
     OR
     ACTS_BUILD_EXAMPLES_EDM4HEP
 )
+set_option_if(ACTS_ENABLE_CUDA ACTS_BUILD_EXAMPLES_CUDA_MUON_SEGMENT_FITTING)
 set_option_if(ACTS_BUILD_PLUGIN_EDM4HEP ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_EXAMPLES_PODIO ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_PLUGIN_ARROW ACTS_BUILD_EXAMPLES_PARQUET)
@@ -214,7 +220,6 @@ set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_EXAMPLES_FASTJET)
 set_option_if(ACTS_BUILD_PLUGIN_GNN ACTS_BUILD_EXAMPLES_GNN)
 set_option_if(ACTS_BUILD_PLUGIN_FPEMON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_PLUGIN_TRACCC)
-set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(
     ACTS_ENABLE_CUDA
     ACTS_GNN_ENABLE_MODULEMAP
@@ -229,7 +234,6 @@ set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_TRACCC)
 set_option_if(ACTS_SETUP_DETRAY ACTS_BUILD_TRACCC)
 set_option_if(ACTS_SETUP_VECMEM ACTS_SETUP_DETRAY)
 set_option_if(ACTS_SETUP_COVFIE ACTS_SETUP_DETRAY)
-set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_SETUP_DETRAY)
 
 # feature tests
 include(CheckCXXSourceCompiles)
@@ -316,8 +320,9 @@ set(_acts_podio_fallback_version 0.17.4) # if not found, will try this one
 set(_acts_doxygen_version 1.9.4)
 set(_acts_hepmc3_version 3.2.4)
 set(_acts_nlohmanjson_version 3.11.3)
-set(_acts_mille_version 01.00.00)
-set(_acts_gbl_version 04.00.04)
+set(_acts_gbl_version 04.00.05)
+set(_acts_mille_version 01.00.05)
+set(_acts_mp2_version 05.01.05)
 set(_acts_onnxruntime_version 1.12.0)
 set(_acts_geomodel_version 6.8.0)
 set(_acts_root_version 6.28.04) # first version with C++20 support
@@ -446,7 +451,15 @@ if(ACTS_BUILD_PYTHON_BINDINGS)
         add_subdirectory(thirdparty/pybind11)
     endif()
 endif()
-if(ACTS_BUILD_PLUGIN_ACTSVG)
+# Set up ActSVG when explicitly requested via plugin build, or when Detray's
+# SVG display path is enabled in the superbuild.
+if(
+    ACTS_BUILD_PLUGIN_ACTSVG
+    OR (
+        ACTS_SETUP_DETRAY
+        AND (NOT DEFINED DETRAY_SVG_DISPLAY OR DETRAY_SVG_DISPLAY)
+    )
+)
     if(ACTS_USE_SYSTEM_ACTSVG)
         find_package(actsvg ${_acts_actsvg_version} REQUIRED CONFIG)
     else()
@@ -483,6 +496,11 @@ if(ACTS_BUILD_PLUGIN_MILLE)
         find_package(Mille ${_acts_mille_version} REQUIRED CONFIG)
     else()
         add_subdirectory(thirdparty/Mille)
+    endif()
+    if(ACTS_USE_SYSTEM_MP2)
+        find_package(millepedeII ${_acts_mp2_version} REQUIRED CONFIG)
+    else()
+        add_subdirectory(thirdparty/Millepede-II)
     endif()
 endif()
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
@@ -529,10 +547,13 @@ if(ACTS_BUILD_ANALYSIS_APPS)
         COMPONENTS Geom Graf
     )
 endif()
+if(ACTS_ENABLE_CUDA)
+    find_package(CUDAToolkit REQUIRED)
+    enable_cuda()
+    message(STATUS "Build ACTS with CUDA")
+endif()
 if(ACTS_BUILD_PLUGIN_GNN)
     if(ACTS_ENABLE_CUDA)
-        find_package(CUDAToolkit REQUIRED)
-        enable_cuda()
         message(STATUS "Build GNN plugin with CUDA")
     else()
         message(STATUS "Build GNN plugin for CPU only")
@@ -595,8 +616,12 @@ endif()
 if(ACTS_SETUP_VECMEM)
     if(ACTS_USE_SYSTEM_VECMEM)
         find_package(vecmem ${_acts_vecmem_version} REQUIRED)
-    else()
+    elseif(NOT TARGET vecmem::core)
         add_subdirectory(thirdparty/vecmem)
+        list(PREPEND CMAKE_MODULE_PATH "${VECMEM_LANGUAGE_DIR}")
+        list(PREPEND CMAKE_MODULE_PATH "${VECMEM_LANGUAGE_DIR}/sycl")
+        # Make the "VecMem language code" available for the whole project.
+        include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
     endif()
     # Make the "VecMem language code" available for the whole project.
     list(APPEND CMAKE_MODULE_PATH "${VECMEM_LANGUAGE_DIR}")
@@ -618,6 +643,7 @@ if(ACTS_SETUP_DETRAY)
     option(DETRAY_SETUP_EIGEN3 "" FALSE)
     option(DETRAY_SETUP_ACTSVG "" FALSE)
     option(DETRAY_SETUP_COVFIE "" FALSE)
+    option(DETRAY_SETUP_PYBIND11 "" FALSE)
     option(DETRAY_SVG_DISPLAY "" TRUE)
     if(ACTS_BUILD_TRACCC)
         option(DETRAY_BUILD_TEST_UTILS "" TRUE)
@@ -637,6 +663,19 @@ if(ACTS_BUILD_TRACCC)
     option(TRACCC_USE_ROOT "" FALSE)
     option(TRACCC_SETUP_ACTS "" FALSE)
     option(TRACCC_SETUP_VECMEM "" FALSE)
+    option(TRACCC_SETUP_EIGEN3 "" FALSE)
+    option(TRACCC_SETUP_THRUST "" TRUE)
+    option(TRACCC_SETUP_COVFIE "" FALSE)
+    option(TRACCC_SETUP_DETRAY "" FALSE)
+    option(TRACCC_BUILD_CUDA "" ${ACTS_ENABLE_CUDA})
+    option(TRACCC_SETUP_TBB "" FALSE)
+    option(TRACCC_BUILD_IO "" TRUE)
+    option(TRACCC_BUILD_PERFORMANCE "" FALSE)
+    option(TRACCC_BUILD_SIMULATION "" FALSE)
+    option(TRACCC_BUILD_TESTING "" FALSE)
+    option(TRACCC_BUILD_EXAMPLES "" FALSE)
+    option(TRACCC_BUILD_BENCHMARKS "" FALSE)
+
     find_package(TBB ${_acts_tbb_version} CONFIG)
     if(NOT TBB_FOUND)
         set(TRACCC_SETUP_TBB TRUE CACHE BOOL "")
@@ -644,13 +683,7 @@ if(ACTS_BUILD_TRACCC)
         set(TRACCC_SETUP_TBB FALSE CACHE BOOL "")
     endif()
 
-    # traccc also depends on vecmem and covfie, but those plugins should always
-    # be enabled if traccc is.
-    if(ACTS_USE_SYSTEM_TRACCC)
-        find_package(traccc ${_acts_traccc_version} REQUIRED CONFIG)
-    else()
-        add_subdirectory(thirdparty/traccc)
-    endif()
+    add_subdirectory(Traccc)
 endif()
 
 # examples dependencies

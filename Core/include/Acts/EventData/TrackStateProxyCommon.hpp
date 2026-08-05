@@ -375,6 +375,10 @@ class TrackStateProxyCommon {
   }
 
   /// Compute the property mask describing which components are present.
+  /// @note This reports which components have *storage allocated*, not which
+  ///       ones hold a meaningful value. The fitters shipped with ACTS
+  ///       allocate a parameter component immediately before writing it, so
+  ///       during fitting the mask grows as the track state is filled.
   /// @return Bit mask of available properties.
   TrackStatePropMask getMask() const {
     using PM = TrackStatePropMask;
@@ -398,6 +402,11 @@ class TrackStateProxyCommon {
   }
 
   /// Access the best available parameters (smoothed, filtered, or predicted).
+  /// @note "Available" means allocated. The fitters shipped with ACTS allocate
+  ///       a parameter component immediately before writing it, so this
+  ///       returns the best parameters that have actually been computed so
+  ///       far. In particular, inside a calibrator this is the predicted
+  ///       state, since filtering has not happened yet.
   /// @return Bound parameter map for the state.
   ConstParametersMap parameters() const {
     if (hasSmoothed()) {
@@ -409,6 +418,7 @@ class TrackStateProxyCommon {
   }
 
   /// Access the best available covariance (smoothed, filtered, or predicted).
+  /// @note "Available" means allocated, see @ref parameters.
   /// @return Bound covariance map for the state.
   ConstCovarianceMap covariance() const {
     if (hasSmoothed()) {

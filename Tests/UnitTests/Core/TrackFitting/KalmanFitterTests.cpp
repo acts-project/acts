@@ -83,7 +83,7 @@ std::default_random_engine rng(42);
 auto makeDefaultKalmanFitterOptions() {
   KalmanFitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
-      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+      .connect<&testSourceLinkCalibratorStrict<VectorMultiTrajectory>>();
   extensions.updater.connect<&KalmanUpdater::operator()<VectorMultiTrajectory>>(
       &kfUpdater);
   extensions.smoother
@@ -97,7 +97,58 @@ auto makeDefaultKalmanFitterOptions() {
       PropagatorPlainOptions(tester.geoCtx, tester.magCtx));
 }
 
+/// Checks that the calibrator is never handed a track state whose "best
+/// available" parameters have not been computed yet, see
+/// https://github.com/acts-project/acts/issues/5777
+struct CalibratorContractChecker {
+  mutable std::size_t nCalls = 0;
+
+  template <typename trajectory_t>
+  void operator()(const GeometryContext& gctx, const CalibrationContext& cctx,
+                  const SourceLink& sourceLink,
+                  typename trajectory_t::TrackStateProxy trackState) const {
+    // filtering and smoothing have not happened yet, so the corresponding
+    // components must not be allocated
+    BOOST_CHECK(!trackState.hasFiltered());
+    BOOST_CHECK(!trackState.hasSmoothed());
+    // consequently the best available parameters are the predicted ones. we
+    // compare the storage addresses to make sure no copy is involved
+    BOOST_REQUIRE(trackState.hasPredicted());
+    BOOST_CHECK_EQUAL(trackState.parameters().data(),
+                      trackState.predicted().data());
+    BOOST_CHECK_EQUAL(trackState.covariance().data(),
+                      trackState.predictedCovariance().data());
+    BOOST_CHECK(trackState.parameters().allFinite());
+    BOOST_CHECK(trackState.covariance().allFinite());
+
+    ++nCalls;
+
+    testSourceLinkCalibrator<trajectory_t>(gctx, cctx, sourceLink, trackState);
+  }
+};
+
 BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
+
+// The calibrator must see valid parameters. Before
+// https://github.com/acts-project/acts/issues/5777 the filtered parameters
+// were allocated up front, so `parameters()` returned uninitialized memory.
+BOOST_AUTO_TEST_CASE(CalibratorSeesValidParameters) {
+  auto start = makeParameters();
+  auto kfOptions = makeDefaultKalmanFitterOptions();
+
+  CalibratorContractChecker checker;
+  kfOptions.extensions.calibrator
+      .connect<&CalibratorContractChecker::operator()<VectorMultiTrajectory>>(
+          &checker);
+
+  bool expected_reversed = false;
+  bool expected_smoothed = true;
+  tester.test_ZeroFieldNoSurfaceForward(kfZero, kfOptions, start, rng,
+                                        expected_reversed, expected_smoothed,
+                                        true);
+
+  BOOST_CHECK_GT(checker.nCalls, 0u);
+}
 
 BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   auto start = makeParameters();

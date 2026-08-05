@@ -9,17 +9,11 @@
 #include "ActsExamples/Io/Root/RootTrackFitterPerformanceWriter.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsPlugins/Root/HistogramConverter.hpp"
 
-#include <cstddef>
-#include <ostream>
 #include <stdexcept>
 #include <utility>
-#include <vector>
 
 #include <TEfficiency.h>
 #include <TFile.h>
@@ -30,8 +24,6 @@
 #include <TH3.h>
 #include <TProfile.h>
 
-using Acts::VectorHelpers::eta;
-using Acts::VectorHelpers::phi;
 using ActsPlugins::toRoot;
 
 namespace ActsExamples {
@@ -40,9 +32,12 @@ RootTrackFitterPerformanceWriter::RootTrackFitterPerformanceWriter(
     RootTrackFitterPerformanceWriter::Config config, Acts::Logging::Level level)
     : WriterT(config.inputTracks, "RootTrackFitterPerformanceWriter", level),
       m_cfg(std::move(config)),
-      m_resPlotTool(m_cfg.resPlotToolConfig, level),
-      m_effPlotTool(m_cfg.effPlotToolConfig, level),
-      m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig, level) {
+      m_collector(
+          TrackFitterPerformanceCollector::Config{
+              m_cfg.resPlotToolConfig, m_cfg.effPlotToolConfig,
+              m_cfg.trackSummaryPlotToolConfig, m_cfg.fitMinEntries,
+              m_cfg.fitSigmaRange, m_cfg.fitIterations},
+          logger().clone()) {
   // trajectories collection name is already checked by base ctor
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
@@ -76,7 +71,13 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
     return ProcessCode::SUCCESS;
   }
 
+  m_collector.logSummary();
+
   m_outputFile->cd();
+
+  const auto& resPlotTool = m_collector.resPlotTool();
+  const auto& effPlotTool = m_collector.effPlotTool();
+  const auto& trackSummaryPlotTool = m_collector.trackSummaryPlotTool();
 
   // Helper lambda to write 2D histogram and extract mean/width profiles
   const auto writeWithRefinement = [this](auto& hist,
@@ -103,56 +104,56 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
   };
 
   // Write residual histograms
-  for (const auto& [name, hist] : m_resPlotTool.res()) {
+  for (const auto& [name, hist] : resPlotTool.res()) {
     toRoot(hist)->Write();
   }
-  for (const auto& [name, hist] : m_resPlotTool.resVsEta()) {
+  for (const auto& [name, hist] : resPlotTool.resVsEta()) {
     writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
   }
-  for (const auto& [name, hist] : m_resPlotTool.resVsPt()) {
+  for (const auto& [name, hist] : resPlotTool.resVsPt()) {
     writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
   }
-  for (const auto& [name, hist] : m_resPlotTool.resVsEtaPhi()) {
+  for (const auto& [name, hist] : resPlotTool.resVsEtaPhi()) {
     writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
   }
-  for (const auto& [name, hist] : m_resPlotTool.resVsEtaPt()) {
+  for (const auto& [name, hist] : resPlotTool.resVsEtaPt()) {
     writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
   }
 
   // Write pull histograms
-  for (const auto& [name, hist] : m_resPlotTool.pull()) {
+  for (const auto& [name, hist] : resPlotTool.pull()) {
     toRoot(hist)->Write();
   }
-  for (const auto& [name, hist] : m_resPlotTool.pullVsEta()) {
+  for (const auto& [name, hist] : resPlotTool.pullVsEta()) {
     writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
   }
-  for (const auto& [name, hist] : m_resPlotTool.pullVsPt()) {
+  for (const auto& [name, hist] : resPlotTool.pullVsPt()) {
     writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
   }
-  for (const auto& [name, hist] : m_resPlotTool.pullVsEtaPhi()) {
+  for (const auto& [name, hist] : resPlotTool.pullVsEtaPhi()) {
     writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
   }
-  for (const auto& [name, hist] : m_resPlotTool.pullVsEtaPt()) {
+  for (const auto& [name, hist] : resPlotTool.pullVsEtaPt()) {
     writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
   }
 
   // Write efficiency histograms
-  for (const auto& [name, eff] : m_effPlotTool.efficiencies1D()) {
+  for (const auto& [name, eff] : effPlotTool.efficiencies1D()) {
     toRoot(eff)->Write();
   }
-  for (const auto& [name, eff] : m_effPlotTool.efficiencies2D()) {
+  for (const auto& [name, eff] : effPlotTool.efficiencies2D()) {
     toRoot(eff)->Write();
   }
 
-  for (const auto& eff : m_effPlotTool.trackEffVsEtaInPtRanges()) {
+  for (const auto& eff : effPlotTool.trackEffVsEtaInPtRanges()) {
     toRoot(eff)->Write();
   }
-  for (const auto& eff : m_effPlotTool.trackEffVsPtInAbsEtaRanges()) {
+  for (const auto& eff : effPlotTool.trackEffVsPtInAbsEtaRanges()) {
     toRoot(eff)->Write();
   }
 
   // Write track summary histograms
-  for (const auto& [name, prof] : m_trackSummaryPlotTool.profiles()) {
+  for (const auto& [name, prof] : trackSummaryPlotTool.profiles()) {
     toRoot(prof)->Write();
   }
 
@@ -170,87 +171,10 @@ ProcessCode RootTrackFitterPerformanceWriter::writeT(
   const auto& particles = m_inputParticles(ctx);
   const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
 
-  // Truth particles with corresponding reconstructed tracks
-  std::vector<SimBarcode> reconParticleIds;
-  reconParticleIds.reserve(particles.size());
-  // For each particle within a track, how many hits did it contribute
-  std::vector<ParticleHitCount> particleHitCounts;
-
-  // Exclusive access to the tree while writing
+  // Exclusive access to the histograms while filling
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
-  // Loop over all tracks
-  for (const auto& track : tracks) {
-    // Select reco track with fitted parameters
-    if (!track.hasReferenceSurface()) {
-      ACTS_WARNING("No fitted track parameters.");
-      continue;
-    }
-    Acts::BoundTrackParameters fittedParameters =
-        track.createParametersAtReference();
-
-    // Get the truth-matched particle
-    auto imatched = trackParticleMatching.find(track.index());
-    if (imatched == trackParticleMatching.end()) {
-      ACTS_DEBUG("No truth particle associated with this track, index = "
-                 << track.index() << " tip index = " << track.tipIndex());
-      continue;
-    }
-    const auto& particleMatch = imatched->second;
-
-    if (!particleMatch.particle.has_value()) {
-      ACTS_DEBUG("No truth particle associated with this track.");
-      continue;
-    }
-
-    // Get the barcode of the majority truth particle
-    SimBarcode majorityParticleId = particleMatch.particle.value();
-
-    // Find the truth particle via the barcode
-    auto ip = particles.find(majorityParticleId);
-    if (ip == particles.end()) {
-      ACTS_DEBUG("Majority particle not found in the particles collection.");
-      continue;
-    }
-
-    // Record this majority particle ID of this trajectory
-    reconParticleIds.push_back(ip->particleId());
-    // Fill the residual plots
-    m_resPlotTool.fill(ctx.geoContext, ip->initialState(), fittedParameters);
-    // Fill the trajectory summary info
-    m_trackSummaryPlotTool.fill(fittedParameters, track.nTrackStates(),
-                                track.nMeasurements(), track.nOutliers(),
-                                track.nHoles(), track.nSharedHits());
-  }
-
-  // Fill the efficiency, defined as the ratio between number of tracks with
-  // fitted parameter and total truth tracks (assumes one truth particle has
-  // one truth track)
-  for (const auto& particle : particles) {
-    bool isReconstructed = false;
-    // Check if the particle has been reconstructed
-    if (Acts::rangeContainsValue(reconParticleIds, particle.particleId())) {
-      isReconstructed = true;
-    }
-    // Loop over all the other truth particle and find the distance to the
-    // closest one
-    double minDeltaR = -1;
-    for (const auto& closeParticle : particles) {
-      if (closeParticle.particleId() == particle.particleId()) {
-        continue;
-      }
-      double p_phi = phi(particle.direction());
-      double p_eta = eta(particle.direction());
-      double c_phi = phi(closeParticle.direction());
-      double c_eta = eta(closeParticle.direction());
-      double distance = sqrt(pow(p_phi - c_phi, 2) + pow(p_eta - c_eta, 2));
-      if (minDeltaR == -1 || distance < minDeltaR) {
-        minDeltaR = distance;
-      }
-    }
-    m_effPlotTool.fill(ctx.geoContext, particle.initialState(), minDeltaR,
-                       isReconstructed);
-  }
+  m_collector.fill(ctx.geoContext, tracks, particles, trackParticleMatching);
 
   return ProcessCode::SUCCESS;
 }

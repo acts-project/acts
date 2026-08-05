@@ -51,7 +51,6 @@
 namespace ActsTests {
 
 using namespace Acts;
-using namespace Experimental;
 using namespace UnitLiterals;
 using enum CylinderVolumeBounds::Face;
 using enum AxisDirection;
@@ -369,7 +368,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
   }
   BOOST_CHECK(sharedPortalPreserved);
 
-  auto decodedGeometry = converter.fromJson(gctx, encodedFromFile);
+  auto decodedGeometry = converter.fromJson(gctx, jsonPath);
   BOOST_REQUIRE(decodedGeometry != nullptr);
   BOOST_REQUIRE(decodedGeometry->highestTrackingVolume() != nullptr);
   BOOST_CHECK_EQUAL(decodedGeometry->highestTrackingVolume()->volumeName(),
@@ -408,21 +407,14 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
   TrackingGeometryJsonConverter converter;
   nlohmann::json encoded = converter.toJson(gctx, *sourceGeometry);
   // TemporaryDirectory tmpDir{};
-  auto jsonPath = "tracking_geometry_roundtrip.json";
+  std::string jsonPath = "tracking_geometry_roundtrip.json";
   {
     std::ofstream out(jsonPath);
     BOOST_REQUIRE(out.good());
     out << encoded.dump(2);
   }
 
-  nlohmann::json encodedFromFile;
-  {
-    std::ifstream in(jsonPath);
-    BOOST_REQUIRE(in.good());
-    in >> encodedFromFile;
-  }
-
-  auto decodedGeometry = converter.fromJson(gctx, encodedFromFile);
+  auto decodedGeometry = converter.fromJson(gctx, jsonPath);
 
   const auto* htvSource = sourceGeometry->highestTrackingVolume();
   const auto* htvDecoded = decodedGeometry->highestTrackingVolume();
@@ -516,13 +508,13 @@ auto makeMultiLayerPolicy(const GeometryContext& gctx,
   Acts::Grid gridXY(Acts::Type<std::vector<std::size_t>>, std::move(axisX),
                     std::move(axisY));
 
-  Experimental::MultiLayerNavigationPolicy::IndexedUpdatorType indexedGrid(
-      std::move(gridXY), {AxisX, AxisY});
+  MultiLayerNavigationPolicy::IndexedUpdatorType indexedGrid(std::move(gridXY),
+                                                             {AxisX, AxisY});
 
-  Experimental::MultiLayerNavigationPolicy::Config cfg;
+  MultiLayerNavigationPolicy::Config cfg;
   cfg.binExpansion = {1u, 1u};
-  return Experimental::MultiLayerNavigationPolicy(gctx, volume, logger, cfg,
-                                                  std::move(indexedGrid));
+  return MultiLayerNavigationPolicy(gctx, volume, logger, cfg,
+                                    std::move(indexedGrid));
 }
 
 }  // namespace
@@ -561,8 +553,7 @@ BOOST_AUTO_TEST_CASE(MultiLayerNavigationPolicyRoundTrip) {
 
   auto policyPtr =
       conv.navigationPolicyFromJson(tContext, j, *tVolume, *tLogger);
-  auto& restored =
-      dynamic_cast<Experimental::MultiLayerNavigationPolicy&>(*policyPtr);
+  auto& restored = dynamic_cast<MultiLayerNavigationPolicy&>(*policyPtr);
 
   const auto& origGrid = policy.indexedGrid().grid;
   const auto& restGrid = restored.indexedGrid().grid;

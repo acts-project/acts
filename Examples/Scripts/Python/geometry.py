@@ -31,6 +31,7 @@ def runGeometry(
     outputObj=True,
     outputCsv=True,
     outputSurfacesJson=True,
+    outputMaterialMap=True,
     serializeGeometryJson=False,
 ):
     for ievt in range(events):
@@ -56,7 +57,10 @@ def runGeometry(
             )
             writer.write(context)
 
-        if outputObj:
+        # The obj and material map outputs go to a single, event-independent
+        # file each, so writing them once (on the first event) is enough --
+        # every further event would only overwrite the same file.
+        if outputObj and ievt == 0:
             vis = acts.ObjVisualization3D()
             trackingGeometry.visualize(
                 vis,
@@ -79,24 +83,25 @@ def runGeometry(
             )
             writer.write(context)
 
-            jmConverterCfg = MaterialMapJsonConverter.Config(
-                processSensitives=True,
-                processApproaches=True,
-                processRepresenting=True,
-                processBoundaries=True,
-                processVolumes=True,
-                processNonMaterial=True,
-                context=context.geoContext,
-            )
+            if outputMaterialMap and ievt == 0:
+                jmConverterCfg = MaterialMapJsonConverter.Config(
+                    processSensitives=True,
+                    processApproaches=True,
+                    processRepresenting=True,
+                    processBoundaries=True,
+                    processVolumes=True,
+                    processNonMaterial=True,
+                    context=context.geoContext,
+                )
 
-            jmw = JsonMaterialWriter(
-                level=acts.logging.VERBOSE,
-                converterCfg=jmConverterCfg,
-                fileName=str(outputDir / "geometry-map"),
-                writeFormat=JsonFormat.Json,
-            )
+                jmw = JsonMaterialWriter(
+                    level=acts.logging.VERBOSE,
+                    converterCfg=jmConverterCfg,
+                    fileName=str(outputDir / "geometry-map"),
+                    writeFormat=JsonFormat.Json,
+                )
 
-            jmw.write(trackingGeometry)
+                jmw.write(trackingGeometry)
 
         if serializeGeometryJson:
             converter = TrackingGeometryJsonConverter(level=acts.logging.INFO)

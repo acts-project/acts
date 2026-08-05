@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
+#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <iomanip>
@@ -186,8 +187,8 @@ bool Surface::operator==(const Surface& other) const {
 
 std::ostream& Surface::toStreamImpl(const GeometryContext& gctx,
                                     std::ostream& sl) const {
-  sl << std::setiosflags(std::ios::fixed);
-  sl << std::setprecision(4);
+  detail::OstreamStateGuard guard{sl};
+  sl << std::fixed << std::setprecision(4);
   sl << name() << std::endl;
   const Vector3& sfcenter = center(gctx);
   sl << "     Center position  (x, y, z) = (" << sfcenter.x() << ", "
@@ -204,7 +205,6 @@ std::ostream& Surface::toStreamImpl(const GeometryContext& gctx,
   sl << "                           colZ = (" << rotZ(0) << ", " << rotZ(1)
      << ", " << rotZ(2) << ")" << std::endl;
   sl << "     Bounds  : " << bounds();
-  sl << std::setprecision(-1);
   return sl;
 }
 

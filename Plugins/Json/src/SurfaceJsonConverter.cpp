@@ -22,6 +22,8 @@
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/PointBounds.hpp"
+#include "Acts/Surfaces/PointSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
@@ -61,6 +63,8 @@ std::string getSurfaceBoundsKind() {
     return "Cone";
   } else if (std::is_same_v<bounds_t, Acts::LineBounds>) {
     return "Line";
+  } else if (std::is_same_v<bounds_t, Acts::PointBounds>) {
+    return "Point";
   } else if (std::is_same_v<bounds_t, Acts::ConvexPolygonBoundsBase>) {
     // Single kind for every Acts::ConvexPolygonBounds<N> specialization
     // (including PolygonDynamic), routed via the abstract base class so the
@@ -92,6 +96,8 @@ std::string getSurfaceKind() {
     return "Straw";
   } else if (std::is_same_v<surface_t, Acts::PerigeeSurface>) {
     return "Perigee";
+  } else if (std::is_same_v<surface_t, Acts::PointSurface>) {
+    return "Point";
   } else {
     throw std::invalid_argument("Unknown surface kind");
   }
@@ -211,6 +217,7 @@ Acts::SurfaceJsonConverter::Config::defaultConfig() {
   cfg.surfaceEncoder.registerFunction(surfaceToJsonT<ConeSurface>);
   cfg.surfaceEncoder.registerFunction(surfaceToJsonT<StrawSurface>);
   cfg.surfaceEncoder.registerFunction(surfaceToJsonT<PerigeeSurface>);
+  cfg.surfaceEncoder.registerFunction(surfaceToJsonT<PointSurface>);
 
   cfg.surfaceBoundsEncoder.registerFunction(
       surfaceBoundsToJsonT<EllipseBounds>);
@@ -229,6 +236,7 @@ Acts::SurfaceJsonConverter::Config::defaultConfig() {
       surfaceBoundsToJsonT<CylinderBounds>);
   cfg.surfaceBoundsEncoder.registerFunction(surfaceBoundsToJsonT<ConeBounds>);
   cfg.surfaceBoundsEncoder.registerFunction(surfaceBoundsToJsonT<LineBounds>);
+  cfg.surfaceBoundsEncoder.registerFunction(surfaceBoundsToJsonT<PointBounds>);
   cfg.surfaceBoundsEncoder.registerFunction(
       surfaceBoundsToJsonT<InfiniteBounds>);
   // ConvexPolygonBounds is templated on the vertex count N. Registering the
@@ -312,6 +320,13 @@ Acts::SurfaceJsonConverter::Config::defaultConfig() {
   cfg.surfaceDecoder.registerKind(
       getSurfaceKind<PerigeeSurface>() + getSurfaceBoundsKind<InfiniteBounds>(),
       surfaceFromJsonT<PerigeeSurface>);
+
+  cfg.surfaceDecoder.registerKind(
+      getSurfaceKind<PointSurface>() + getSurfaceBoundsKind<PointBounds>(),
+      surfaceFromJsonT<PointSurface, PointBounds>);
+  cfg.surfaceDecoder.registerKind(
+      getSurfaceKind<PointSurface>() + getSurfaceBoundsKind<InfiniteBounds>(),
+      surfaceFromJsonT<PointSurface>);
   return cfg;
 }
 

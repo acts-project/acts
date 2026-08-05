@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/EventData/SpacePointProxy2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
+#include "Acts/EventData/SpacePointProxy.hpp"
 #include "Acts/EventData/Types.hpp"
 
 class TChain;
@@ -27,40 +27,40 @@ class RootSpacePointIo {
   /// @param ttree the TTree to write to
   /// @param spacePoints the space points to write
   void connectForWrite(TTree& ttree,
-                       const Acts::SpacePointContainer2& spacePoints);
+                       const Acts::SpacePointContainer& spacePoints);
 
   /// @brief sets the branch connection for reading from a file
   ///
   /// @param tchain the TChain to read from
   /// @param spacePoints the space points to read into
   void connectForRead(TChain& tchain,
-                      const Acts::SpacePointContainer2& spacePoints);
+                      const Acts::SpacePointContainer& spacePoints);
 
   /// @brief Write a space point to the tree
   /// @note the caller has to do the TTree::Fill() after this call
   ///
   /// @param spacePoint the space point to write
-  void write(const Acts::ConstSpacePointProxy2& spacePoint);
+  void write(const Acts::ConstSpacePointProxy& spacePoint);
 
   /// @brief Write the space points to the tree
   ///
   /// @param spacePoints the space points to write
   /// @param ttree the TTree to write to
-  void write(const Acts::SpacePointContainer2& spacePoints, TTree& ttree);
+  void write(const Acts::SpacePointContainer& spacePoints, TTree& ttree);
 
   /// @brief Read a space point from the tree
   /// @note the caller has to do the TChain::GetEntry() before this call
   ///
   /// @param spacePoint the space point to read into
   /// @param index the original index of the space point in the ROOT file
-  void read(Acts::MutableSpacePointProxy2& spacePoint,
-            Acts::SpacePointIndex2 index);
+  void read(Acts::MutableSpacePointProxy& spacePoint,
+            Acts::SpacePointIndex index);
 
   /// @brief Read the space points from the tree
   ///
   /// @param tchain the TChain to read from
   /// @param spacePoints the space points to read into
-  void read(TChain& tchain, Acts::SpacePointContainer2& spacePoints);
+  void read(TChain& tchain, Acts::SpacePointContainer& spacePoints);
 
  private:
   float m_x = 0;

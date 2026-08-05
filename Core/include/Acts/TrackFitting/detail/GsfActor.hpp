@@ -202,7 +202,14 @@ struct GsfActor {
       // No hole before first measurement
       if (result.processedStates > 0 && surface.isSensitive()) {
         TemporaryStates tmpStates;
-        noMeasurementUpdate(state, stepper, surface, result, tmpStates, true);
+        Result<void> res = noMeasurementUpdate(state, stepper, surface, result,
+                                               tmpStates, true);
+        if (!res.ok()) {
+          if (m_cfg.abortOnError) {
+            std::abort();
+          }
+          return res.error();
+        }
       }
       return Result<void>::success();
     }
@@ -287,11 +294,25 @@ struct GsfActor {
       std::vector<GsfComponent>& componentCache = result.componentCache;
       componentCache.clear();
 
-      convoluteComponents(
-          state, stepper, tmpStates, *m_cfg.bethe_heitler_approx,
-          result.betheHeitlerCache, m_cfg.weightCutoff, componentCache,
-          result.nInvalidBetheHeitler.tmp(), result.maxPathXOverX0.tmp(),
-          result.sumPathXOverX0.tmp(), logger());
+      double pathXOverX0 = 0.0;
+      for (const TrackIndexType idx : tmpStates.tips) {
+        auto proxy = tmpStates.traj.getTrackState(idx);
+
+        const BoundTrackParameters bound(
+            surface.getSharedPtr(), proxy.filtered(),
+            proxy.filteredCovariance(),
+            stepper.particleHypothesis(state.stepping));
+
+        pathXOverX0 += applyBetheHeitler(
+            state.options.geoContext, surface, state.options.direction, bound,
+            tmpStates.weights.at(idx), *m_cfg.bethe_heitler_approx,
+            result.betheHeitlerCache, m_cfg.weightCutoff, componentCache,
+            result.nInvalidBetheHeitler.tmp(), result.maxPathXOverX0.tmp(),
+            logger());
+      }
+      // Store average material seen by the components
+      // Should not be too broadly distributed
+      result.sumPathXOverX0.tmp() += pathXOverX0 / tmpStates.tips.size();
 
       if (componentCache.empty()) {
         ACTS_WARNING(
@@ -357,10 +378,14 @@ struct GsfActor {
       const auto& singleStepper = cmp.singleStepper(stepper);
 
       // Add a <mask> TrackState entry multi trajectory. This allocates storage
-      // for all components, which we will set later.
-      TrackStatePropMask mask =
-          TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
-          TrackStatePropMask::Jacobian | TrackStatePropMask::Calibrated;
+      // for all components, which we will set later. The filtered parameters
+      // are deliberately not allocated here: they are only added once the
+      // Kalman update is about to write them, so that the calibrator and the
+      // outlier finder cannot observe allocated but uninitialized filtered
+      // parameters via `parameters()`.
+      TrackStatePropMask mask = TrackStatePropMask::Predicted |
+                                TrackStatePropMask::Jacobian |
+                                TrackStatePropMask::Calibrated;
       typename traj_t::TrackStateProxy trackStateProxy =
           tmpStates.traj.makeTrackState(mask, kTrackIndexInvalid);
       typename traj_t::ConstTrackStateProxy trackStateProxyConst{
@@ -394,6 +419,8 @@ struct GsfActor {
                                   sourceLink, trackStateProxy);
 
       if (!m_cfg.extensions.outlierFinder(trackStateProxyConst)) {
+        // Allocate the filtered parameters right before they are written
+        trackStateProxy.addComponents(TrackStatePropMask::Filtered);
         // Run Kalman update
         auto updateRes = m_cfg.extensions.updater(state.geoContext,
                                                   trackStateProxy, logger());

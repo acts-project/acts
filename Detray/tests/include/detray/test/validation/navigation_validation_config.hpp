@@ -45,6 +45,8 @@ struct navigation_validation_config
   navigation::direction m_nav_dir{navigation::direction::e_forward};
   /// Collect only the sensitive intersections for comparison
   bool m_collect_sensitives_only{false};
+  /// Toggle SVG display
+  bool m_display_svg{false};
   /// Drop an SVG only if navigation missed a surface
   bool m_display_only_missed{false};
   /// Whether to stop execution at the first error
@@ -73,6 +75,7 @@ struct navigation_validation_config
   pdg_particle<scalar_type> ptc_hypothesis() const { return m_ptc_hypo; }
   navigation::direction navigation_direction() const { return m_nav_dir; }
   bool collect_sensitives_only() const { return m_collect_sensitives_only; }
+  bool display_svg() const { return m_display_svg; }
   bool display_only_missed() const { return m_display_only_missed; }
   bool fail_on_diff() const { return m_fail_on_diff; }
   bool verbose() const { return m_verbose; }
@@ -108,6 +111,10 @@ struct navigation_validation_config
   navigation_validation_config &collect_sensitives_only(
       const bool only_sensitives) {
     m_collect_sensitives_only = only_sensitives;
+    return *this;
+  }
+  navigation_validation_config &display_svg(const bool do_display) {
+    m_display_svg = do_display;
     return *this;
   }
   navigation_validation_config &display_only_missed(const bool only_missed) {

@@ -6,6 +6,7 @@ from pathlib import Path
 
 import acts
 import acts.examples
+import acts.examples.root
 
 from acts.examples.simulation import (
     addParticleGun,

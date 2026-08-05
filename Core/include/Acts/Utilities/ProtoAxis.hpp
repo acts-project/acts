@@ -125,19 +125,17 @@ class ProtoAxis {
 /// @param a the proto axis
 ///
 /// @return an IGrid unique ptr and hence transfers ownership
+/// @deprecated Use makeGrid(const IAxis&) instead
 template <typename payload_t>
-std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a) {
+[[deprecated("Use makeGrid(const IAxis&) instead")]] std::unique_ptr<IGrid>
+makeGrid(const ProtoAxis& a) {
   if (a.isAutorange()) {
     throw std::invalid_argument(
         "ProtoAxis::makeGrid: Auto-range of the proto axis is not (yet) "
         "resolved, call setRange() first.");
   }
 
-  return a.getAxis().visit(
-      [&]<typename AxisTypeA>(const AxisTypeA& axis) -> std::unique_ptr<IGrid> {
-        using GridType = Grid<payload_t, AxisTypeA>;
-        return std::make_unique<GridType>(axis);
-      });
+  return makeGrid<payload_t>(a.getAxis());
 }
 
 /// @brief Helper method to create a 2D grid from a two proto axes
@@ -148,22 +146,18 @@ std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a) {
 /// @param b the second proto axis
 ///
 /// @return an IGrid unique ptr and hence transfers ownership
+/// @deprecated Use makeGrid(const IAxis&, const IAxis&) instead
 template <typename payload_t>
-std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a, const ProtoAxis& b) {
+[[deprecated(
+    "Use makeGrid(const IAxis&, const IAxis&) instead")]] std::unique_ptr<IGrid>
+makeGrid(const ProtoAxis& a, const ProtoAxis& b) {
   if (a.isAutorange() || b.isAutorange()) {
     throw std::invalid_argument(
         "ProtoAxis::makeGrid: Auto-range of the proto axis is not (yet) "
         "resolved, call setRange() first.");
   }
 
-  return a.getAxis().visit([&]<typename AxisTypeA>(const AxisTypeA& axisA)
-                               -> std::unique_ptr<IGrid> {
-    return b.getAxis().visit([&]<typename AxisTypeB>(const AxisTypeB& axisB)
-                                 -> std::unique_ptr<IGrid> {
-      using GridType = Grid<payload_t, AxisTypeA, AxisTypeB>;
-      return std::make_unique<GridType>(axisA, axisB);
-    });
-  });
+  return makeGrid<payload_t>(a.getAxis(), b.getAxis());
 }
 
 /// A Directed proto axis

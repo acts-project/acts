@@ -30,7 +30,6 @@ from acts.examples import (
     Sequencer,
     GenericDetector,
 )
-from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
 
@@ -137,10 +136,6 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_geant4(tmp_path, assert_root_hash):
     # This test literally only ensures that the geant 4 example can run without erroring out
-
-    # just to make sure it can build the odd
-    with getOpenDataDetector():
-        pass
 
     csv = tmp_path / "csv"
     csv.mkdir()
@@ -576,13 +571,32 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
             ],
         ),
         pytest.param(
+            (ACTS_DIR / "Examples/Configs" / "odd-digi-smearing-config-notime.json"),
+            marks=[
+                pytest.mark.odd,
+            ],
+        ),
+        pytest.param(
             (ACTS_DIR / "Examples/Configs" / "odd-digi-geometric-config.json"),
             marks=[
                 pytest.mark.odd,
             ],
         ),
+        pytest.param(
+            (ACTS_DIR / "Examples/Configs" / "odd-digi-geometric-config-notime.json"),
+            marks=[
+                pytest.mark.odd,
+            ],
+        ),
     ],
-    ids=["smeared", "geometric", "odd-smeared", "odd-geometric"],
+    ids=[
+        "generic-smeared",
+        "generic-geometric",
+        "odd-smeared",
+        "odd-smeared-notime",
+        "odd-geometric",
+        "odd-geometric-notime",
+    ],
 )
 def test_digitization_example_input_parsing(digi_config_file):
     from acts.examples.json import readDigiConfigFromJson
@@ -751,15 +765,43 @@ def test_ckf_tracks_example(
     assert all([f.stat().st_size > 300 for f in csv.iterdir()])
 
 
+@pytest.mark.pypi
+def test_pypi_finding_fitting_demo(tmp_path, generic_detector_config):
+    """Pytest wrapper for pypi_finding_fitting_demo.py, the script used as
+    the cibuildwheel wheel smoke test. Exercises particle gun -> Fatras ->
+    digitization -> pure-Python proto-tracking/fitting -> truth matching
+    -> performance histograms, using only what's in the wheel (no ROOT).
+    """
+    srcdir = Path(__file__).resolve().parent.parent.parent.parent
+
+    with generic_detector_config.detector:
+        from pypi_finding_fitting_demo import runPypiFindingFittingDemo
+
+        field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
+        geoSelectionConfigFile = (
+            srcdir / "Examples/Configs/generic-pixel-sstrips-lstrips-spacepoints.json"
+        )
+
+        s, perfWriterFinder, perfWriterFitter = runPypiFindingFittingDemo(
+            trackingGeometry=generic_detector_config.trackingGeometry,
+            field=field,
+            digiConfigFile=generic_detector_config.digiConfigFile,
+            geoSelectionConfigFile=geoSelectionConfigFile,
+            outputDir=tmp_path,
+            decorators=generic_detector_config.decorators,
+            s=Sequencer(events=1, numThreads=1, logLevel=acts.logging.INFO),
+        )
+        s.run()
+
+        assert len(perfWriterFinder.histograms()) > 0, "no finder histograms produced"
+        assert len(perfWriterFitter.histograms()) > 0, "no fitter histograms produced"
+
+
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.odd
 @pytest.mark.slow
 def test_full_chain_odd_example(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
-
-    # just to make sure it can build the odd
-    with getOpenDataDetector():
-        pass
 
     script = (
         Path(__file__).parent.parent.parent.parent
@@ -779,7 +821,8 @@ def test_full_chain_odd_example(tmp_path):
             stderr=subprocess.STDOUT,
         )
     except subprocess.CalledProcessError as e:
-        print(e.output.decode("utf-8"))
+        if e.output is not None:
+            print(e.output.decode("utf-8"))
         raise
 
 
@@ -789,10 +832,6 @@ def test_full_chain_odd_example(tmp_path):
 @pytest.mark.slow
 def test_full_chain_odd_example_pythia_geant4(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
-
-    # just to make sure it can build the odd
-    with getOpenDataDetector():
-        pass
 
     script = (
         Path(__file__).parent.parent.parent.parent
@@ -844,10 +883,6 @@ def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
     output_dir = "odd_output"
     assert not (tmp_path / root_file).exists()
 
-    # just to make sure it can build the odd
-    with getOpenDataDetector():
-        pass
-
     script = (
         Path(__file__).parent.parent.parent.parent
         / "Examples"
@@ -873,7 +908,8 @@ def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
             stderr=subprocess.STDOUT,
         )
     except subprocess.CalledProcessError as e:
-        print(e.output.decode("utf-8"))
+        if e.output is not None:
+            print(e.output.decode("utf-8"))
         raise
 
     rfp = tmp_path / output_dir / root_file

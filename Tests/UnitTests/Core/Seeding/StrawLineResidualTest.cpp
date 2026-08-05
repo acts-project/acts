@@ -65,14 +65,11 @@ bool isPositiveDefinite(const SquareMatrix<N>& mat) {
       }
     }
   }
-  Eigen::EigenSolver<Acts::SquareMatrix<N>> eigenDecomp{mat};
-  for (const auto lambda : eigenDecomp.eigenvalues()) {
-    if (Acts::abs(lambda.imag()) > Acts::s_epsilon ||
-        lambda.real() < Acts::s_epsilon) {
-      return false;
-    }
-  }
-  return true;
+  // The matrix is symmetric (checked above), so it is positive definite iff its
+  // Cholesky (LLT) decomposition succeeds. This is the canonical positive
+  // definiteness test and far cheaper to compile than the general
+  // Eigen::EigenSolver.
+  return Eigen::LLT<Acts::SquareMatrix<N>>{mat}.info() == Eigen::Success;
 }
 
 std::string whiteSpaces(const std::size_t n, const char s = '#') {

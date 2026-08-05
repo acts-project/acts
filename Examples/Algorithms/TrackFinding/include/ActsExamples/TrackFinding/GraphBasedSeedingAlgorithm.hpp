@@ -10,11 +10,11 @@
 
 #pragma once
 
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Seeding2/GbtsGeometry.hpp"
-#include "Acts/Seeding2/GbtsTrackingFilter.hpp"
-#include "Acts/Seeding2/GraphBasedTrackSeeder.hpp"
+#include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsTrackingFilter.hpp"
+#include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
@@ -116,7 +116,7 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
 
   /// make the container that holds space points that have been given
   /// all the variables needed for GBTS algorithm to run
-  Acts::SpacePointContainer2 makeSpContainer(
+  Acts::SpacePointContainer makeSpContainer(
       const SpacePointContainer &spacePoints,
       std::map<ActsIDs, GbtsIDs> map) const;
 

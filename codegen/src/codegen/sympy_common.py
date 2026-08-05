@@ -38,18 +38,49 @@ def find_by_name(name_exprs, name):
     )
 
 
+# Matrix-element access strategies. A strategy is a callable
+# ``(printer, MatrixElement) -> str`` that renders how a single matrix entry is
+# accessed in the generated C++. This is the one genuine point of divergence
+# between the ACTS and detray backends, so it is made pluggable here while the
+# rest of the printer (and all of the symbolic machinery below) stays shared.
+
+
+def flat_index_accessor(printer, expr):
+    """ACTS dialect: flat column-major buffer indexing ``var[i + j*rows]``."""
+    from sympy.printing.precedence import PRECEDENCE
+
+    return "{}[{}]".format(
+        printer.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True),
+        expr.i + expr.j * expr.parent.shape[0],
+    )
+
+
+def getter_element_accessor(printer, expr):
+    """detray dialect: algebra-abstracted ``getter::element<i, j>(var)``."""
+    from sympy.printing.precedence import PRECEDENCE
+
+    var = printer.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True)
+    # HACK: This is for the 8x1 path-to-free matrix.
+    if expr.parent.shape[1] == 1 and expr.parent.shape[0] <= 3:
+        return "getter::element<{idx}>({var})".format(var=var, idx=expr.i)
+    return "getter::element<{idx1}, {idx2}>({var})".format(
+        var=var, idx1=expr.i, idx2=expr.j
+    )
+
+
 class MyCXXCodePrinter(CXX17CodePrinter):
+    def __init__(self, *args, element_accessor=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Default to the ACTS flat-index dialect so existing ACTS generators
+        # are byte-for-byte unaffected.
+        self._element_accessor = element_accessor or flat_index_accessor
+
     def _traverse_matrix_indices(self, mat):
         rows, cols = mat.shape
         return ((i, j) for j in range(cols) for i in range(rows))
 
     def _print_MatrixElement(self, expr):
-        from sympy.printing.precedence import PRECEDENCE
-
-        return "{}[{}]".format(
-            self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True),
-            expr.i + expr.j * expr.parent.shape[0],
-        )
+        return self._element_accessor(self, expr)
 
     def _print_Pow(self, expr):
         from sympy.core.numbers import equal_valued, Float
@@ -66,7 +97,15 @@ class MyCXXCodePrinter(CXX17CodePrinter):
         return super()._print_Pow(expr)
 
 
+class MyCXXCodePrinterWithoutKnownAssignment(MyCXXCodePrinter):
+    def _print_Assignment(self, expr):
+        if expr.rhs == 0 or expr.rhs == 1:
+            return ""
+        return super()._print_Assignment(expr)
+
+
 cxx_printer = MyCXXCodePrinter()
+cxx_printer_wo_known = MyCXXCodePrinterWithoutKnownAssignment()
 
 
 def inflate_expr(name_expr):

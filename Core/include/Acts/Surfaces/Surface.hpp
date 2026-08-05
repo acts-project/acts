@@ -23,6 +23,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/CloneablePtr.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/OstreamFormatter.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
@@ -69,13 +70,14 @@ class Surface : public virtual GeometryObject,
     Plane = 4,
     Straw = 5,
     Curvilinear = 6,
-    Other = 7
+    Point = 7,
+    Other = 8
   };
 
   /// Helper strings for screen output
   static constexpr std::array<std::string_view, Surface::SurfaceType::Other + 1>
-      s_surfaceTypeNames = {"Cone",  "Cylinder", "Disc",        "Perigee",
-                            "Plane", "Straw",    "Curvilinear", "Other"};
+      s_surfaceTypeNames = {"Cone",  "Cylinder",    "Disc",  "Perigee", "Plane",
+                            "Straw", "Curvilinear", "Point", "Other"};
 
   friend std::ostream& operator<<(std::ostream& os, SurfaceType type);
 
@@ -617,3 +619,5 @@ class Surface : public virtual GeometryObject,
 };
 
 }  // namespace Acts
+
+ACTS_OSTREAM_FORMATTER(Acts::Surface::SurfaceType);

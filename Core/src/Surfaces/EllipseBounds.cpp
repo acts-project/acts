@@ -11,6 +11,7 @@
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <iomanip>
@@ -78,14 +79,13 @@ Vector2 EllipseBounds::center() const {
 }
 
 std::ostream& EllipseBounds::toStream(std::ostream& sl) const {
-  sl << std::setiosflags(std::ios::fixed);
-  sl << std::setprecision(7);
+  detail::OstreamStateGuard guard{sl};
+  sl << std::fixed << std::setprecision(7);
   sl << "Acts::EllipseBounds:  (innerRadius0, outerRadius0, innerRadius1, "
         "outerRadius1, hPhiSector, averagePhi) = ";
   sl << "(" << get(eInnerRx) << ", " << get(eInnerRy) << ", " << get(eOuterRx)
      << ", " << get(eOuterRy) << ", " << get(eAveragePhi) << ", "
      << get(eHalfPhiSector) << ", " << get(eAveragePhi) << ")";
-  sl << std::setprecision(-1);
   return sl;
 }
 

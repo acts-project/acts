@@ -16,12 +16,16 @@
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
+#include <filesystem>
+#include <iostream>
 #include <memory>
 #include <string>
 
 #include <nlohmann/json.hpp>
+#include <pybind11/complex.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -85,6 +89,13 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
         .def_static("defaultConfig",
                     &TrackingGeometryJsonConverter::Config::defaultConfig);
 
+    py::class_<TrackingGeometryJsonConverter::Options>(cls, "Options")
+        .def(py::init<>())
+        .def_readwrite("indentation",
+                       &TrackingGeometryJsonConverter::Options::indentation)
+        .def_readwrite("writeMaterial",
+                       &TrackingGeometryJsonConverter::Options::writeMaterial);
+
     cls.def(py::init([](TrackingGeometryJsonConverter::Config config,
                         Acts::Logging::Level level) {
               return std::make_unique<TrackingGeometryJsonConverter>(
@@ -106,16 +117,17 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
         .def(
             "toJson",
             [](const TrackingGeometryJsonConverter& self,
-               const GeometryContext& gctx, const TrackingGeometry& geometry) {
-              return self.toJson(gctx, geometry).dump();
+               const GeometryContext& gctx, const TrackingGeometry& geometry,
+               const TrackingGeometryJsonConverter::Options& options) {
+              return self.toJson(gctx, geometry, options)
+                  .dump(options.indentation);
             },
-            py::arg("gctx"), py::arg("geometry"))
-        .def(
-            "fromJson",
-            [](const TrackingGeometryJsonConverter& self,
-               const GeometryContext& gctx, const std::string& encoded) {
-              return self.fromJson(gctx, nlohmann::json::parse(encoded));
-            },
-            py::arg("gctx"), py::arg("encoded"));
+            py::arg("gctx"), py::arg("geometry"),
+            py::arg("options") =
+                TrackingGeometryJsonConverter::Options::defaultOptions())
+        .def("fromJson", &TrackingGeometryJsonConverter::fromJson,
+             py::arg("gctx"), py::arg("jsonPath"),
+             py::arg("options") =
+                 TrackingGeometryJsonConverter::Options::defaultOptions());
   }
 }

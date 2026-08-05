@@ -53,7 +53,7 @@ ProcessCode CsvSimHitWriter::writeT(const AlgorithmContext& ctx,
     const Acts::Vector4& momentum4Before = simHit.momentum4Before();
 
     simhit.geometry_id = simHit.geometryId().value();
-    const auto particleID = simHit.particleId().asVector();
+    const auto particleID = simHit.particleId().asArray();
     simhit.particle_id_pv = particleID[0];
     simhit.particle_id_sv = particleID[1];
     simhit.particle_id_part = particleID[2];

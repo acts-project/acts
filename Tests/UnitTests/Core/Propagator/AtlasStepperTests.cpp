@@ -382,7 +382,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   state.covTransport = true;
 
   // ensure step does not result in an error
-  stepper.step(state, Direction::Backward(), nullptr);
+  BOOST_CHECK(stepper.step(state, Direction::Backward(), nullptr).ok());
 
   // Construct the parameters
   Vector3 newPos(1.5, -2.5, 3.5);
