@@ -29,7 +29,11 @@ propagator-based simulation above cannot provide.
 It is deliberately coarse in its physics and is meant for throughput and
 combinatorics studies rather than physics performance. Its *geometry* is not:
 every disc holds its own rings and every barrel cylinder its own half-length, so
-a real endcap is described as the staggered discs and rings it is.
+the ITk pixel endcap is described as the seventy-five staggered discs and
+ninety-five rings it is. A real detector that ACTS can build needs no
+description written by hand at all - `makeDescriptionFromTrackingGeometry`
+reduces its `Acts::TrackingGeometry` to the same form, rings included, which is
+where the ODD description comes from.
 
 An event configuration is fitted against a full simulation of one detector *and*
 one layout of it, so the two belong together. `docs/groups/fatras.md` documents
