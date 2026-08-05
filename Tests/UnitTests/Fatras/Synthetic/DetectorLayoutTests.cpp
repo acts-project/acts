@@ -422,8 +422,10 @@ BOOST_AUTO_TEST_CASE(SurfaceExtentSpansLayersAndMaterial) {
 /// What every shipped description has to satisfy: the layout accounts for each
 /// of its surfaces and rings, and the beam pipe is passive and in front.
 BOOST_AUTO_TEST_CASE(ShippedLayouts) {
-  const std::array descriptions{std::pair{genericDetectorPixelDescription(),
-                                          makeGenericDetectorPixelLayout()}};
+  const std::array descriptions{
+      std::pair{itkPixelDescription(), makeItkPixelLayout()},
+      std::pair{genericDetectorPixelDescription(),
+                makeGenericDetectorPixelLayout()}};
 
   for (const auto& [description, layout] : descriptions) {
     std::size_t rings = 0;
@@ -445,6 +447,40 @@ BOOST_AUTO_TEST_CASE(ShippedLayouts) {
     BOOST_CHECK_LT(layout.surfaces[0].refCoord,
                    description.barrelRadii.front());
   }
+}
+
+/// The ITk has no description in this repository to compare against, so what is
+/// checked is that the layout has the structure the ITk geometry has, with the
+/// numbers taken from the same source as the description itself.
+BOOST_AUTO_TEST_CASE(ItkPixelStructure) {
+  const BarrelEndcapDescription description = itkPixelDescription();
+
+  // seventy-five discs per side carrying ninety-five rings, eighteen of them
+  // sharing a disc with another
+  BOOST_CHECK_EQUAL(description.discs.size(), 75u);
+  std::size_t rings = 0;
+  std::size_t shared = 0;
+  for (const DiscDescription& disc : description.discs) {
+    rings += disc.rings.size();
+    shared += disc.rings.size() > 1 ? 1 : 0;
+  }
+  BOOST_CHECK_EQUAL(rings, 95u);
+  BOOST_CHECK_EQUAL(shared, 18u);
+
+  // the outer barrel layers reach further along z than the inner ones, beyond
+  // which they continue as inclined rings rather than as barrel
+  BOOST_CHECK_LT(description.barrelHalfLengthsZ[1],
+                 description.barrelHalfLengthsZ[2]);
+  // a ring is one module deep, so it covers a small part of the radial range
+  for (const DiscDescription& disc : description.discs) {
+    for (const RingBounds& ring : disc.rings) {
+      BOOST_CHECK_LT(ring.rMax - ring.rMin, 45.f);
+    }
+  }
+  // and the first disc starts inside the outer barrel, being the inclined
+  // continuation of the inner layers
+  BOOST_CHECK_LT(description.discs.front().absZ,
+                 description.barrelHalfLengthsZ.back());
 }
 
 /// A shipped description can be taken, modified and rebuilt: finer modules and

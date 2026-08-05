@@ -392,6 +392,14 @@ void updateSurfaceExtents(DetectorLayout& layout);
 /// @return the layout
 DetectorLayout makeLayout(const BarrelEndcapDescription& description);
 
+/// A coarse stand-in for the ATLAS ITk pixel detector.
+/// @return the description of the ITk-like pixel layout
+BarrelEndcapDescription itkPixelDescription();
+
+/// Build a stand-in for the ATLAS ITk pixel detector.
+/// @return the ITk-like pixel layout
+DetectorLayout makeItkPixelLayout();
+
 /// A coarse stand-in for the ACTS Generic detector's pixel system.
 /// @return the description of the generic pixel layout
 BarrelEndcapDescription genericDetectorPixelDescription();

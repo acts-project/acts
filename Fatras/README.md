@@ -29,8 +29,10 @@ propagator-based simulation above cannot provide.
 It is deliberately coarse in its physics and is meant for throughput and
 combinatorics studies rather than physics performance. Its *geometry* is not:
 every disc holds its own rings and every barrel cylinder its own half-length, so
-a real endcap is described as the staggered discs and rings it is.
+the ITk pixel endcap is described as the seventy-five staggered discs and
+ninety-five rings it is.
 
 An event configuration is fitted against a full simulation of one detector *and*
-one layout of it, so the two belong together. `docs/groups/fatras.md` documents
-what such a fit reproduces and what it cannot.
+one layout of it, so a layout should be used with the configuration of the same
+name. `docs/groups/fatras.md` documents what such a fit reproduces and what it
+cannot.

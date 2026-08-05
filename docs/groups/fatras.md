@@ -35,13 +35,13 @@ restriction is on the *shape* alone -- every cylinder has its own half-length an
 every disc its own rings -- so an endcap can be described as the staggered discs
 and rings it is.
 
-- @ref ActsFatras::Synthetic::DetectorLayoutBuilder builds one from scratch; a
-  description of the ACTS Generic pixels ships with it.
+- @ref ActsFatras::Synthetic::DetectorLayoutBuilder builds one from scratch;
+  descriptions of the ATLAS ITk and ACTS Generic pixels ship with it.
 - @ref ActsFatras::Synthetic::PassiveSurfaceDescription adds the supports and
   services a layer is carried on, which produce secondaries like any material.
 - @ref ActsFatras::Synthetic::SurfaceMaterial bands a surface along the
   coordinate it extends in, so a ring is told from the support beside it. The
-  shipped layout carries what the detector's own material map reports.
+  shipped layouts carry what the detector's own material map reports.
 
 ### Event content
 
@@ -68,18 +68,34 @@ the layers it has already crossed, bounded by
 of the enclosing tracker. Neutral long-lived particles decaying near the beam
 line are the only secondaries produced away from a surface.
 
-### Configuration
+### Tuned configurations
 
 The detector enters the beam spot, the resolution and both yields, so a
-configuration belongs to a layout: positions and material are read off the
-detector description and the overlaps and secondary kinematics measured on a
-full simulation of it, leaving the yields, the spectrum and the beam spot to be
-fitted. The defaults of @ref ActsFatras::Synthetic::EventConfig belong to no
-detector in particular.
+configuration belongs to a layout. @ref ActsFatras::Synthetic::EventConfig ships
+@ref ActsFatras::Synthetic::EventConfig::itkPixelTtbarPu200, fitted against a
+GNN4ITk Athena dump. Positions and material are read off the detector
+description and the overlaps and secondary kinematics measured on the reference;
+only the yields, the spectrum and the beam spot are fitted.
 
-Counting secondaries to fit against takes care -- a full simulation records one
-only above a truth-link threshold, and two thirds of the real ones fall below
-it. Compare non-primary space points rather than particle counts.
+It is fitted on one half of its sample and checked on the other. On the
+held-out half, per event and normalised to the reference:
+
+| | ITk |
+| --- | --- |
+| space points | 0.99 |
+| &nbsp;&nbsp;primary, inside the generated acceptance | 0.97 |
+| &nbsp;&nbsp;primary, outside it | 1.03 |
+| &nbsp;&nbsp;non-primary | 1.00 |
+| primaries / event | 0.98 |
+| mean primary hits | 0.99 |
+| mean secondary hits | 0.97 |
+
+Known to be off: the spectrum is over-produced below the 100 MeV the reference
+stops recording at.
+
+Counting secondaries takes care -- a full simulation records one only above a
+truth-link threshold, and two thirds of the real ones fall below it. Compare
+non-primary space points rather than particle counts.
 
 ## Barcode identifiers {#fatras_barcode_identifiers}
 

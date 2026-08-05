@@ -237,9 +237,8 @@ struct SimulationConfig {
 };
 
 /// Steering for the synthetic event: what is made, what the detector does to
-/// it, and the few settings both halves share. The defaults belong to no
-/// detector in particular; a configuration should be fitted against the one it
-/// is used with.
+/// it, and the few settings both halves share. The detector enters several of
+/// these, so prefer a preset over the defaults.
 struct EventConfig {
   /// The particles of the event, before any detector
   GenerationConfig generation;
@@ -258,6 +257,19 @@ struct EventConfig {
   /// @return the mass
   /// @throws std::invalid_argument if the core library has no mass for it
   float particleMass() const;
+
+  /// @name Tuned configurations
+  ///
+  /// One per layout, fitted against a full simulation of that detector. Each
+  /// spells out every field, so that a change to a default cannot retune one.
+  ///
+  /// @{
+
+  /// Configuration for an ITk-like ttbar event at a pile-up of 200.
+  /// @return the configuration
+  static EventConfig itkPixelTtbarPu200();
+
+  /// @}
 };
 
 }  // namespace ActsFatras::Synthetic
