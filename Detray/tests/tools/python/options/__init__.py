@@ -9,4 +9,5 @@ from .propagation_options import propagation_options, fill_propagation_config
 from .track_generator_options import (
     random_track_generator_options,
     uniform_track_generator_options,
+    fill_track_generator_config,
 )
