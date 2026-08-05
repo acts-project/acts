@@ -51,6 +51,17 @@ be built whole or a system at a time.
   the interaction point it is built on, positions being quoted as absolute `z`,
   so a symmetric detector is written once and an asymmetric one can still be
   spelled out.
+- @ref ActsFatras::Synthetic::makeDescriptionFromTrackingGeometry reduces a real
+  @ref Acts::TrackingGeometry to one of these, which is where the shipped ODD
+  description comes from. Two z planes covering the same radii are one ring whose
+  modules alternate rather than two, which
+  @ref ActsFatras::Synthetic::TrackingGeometryLayoutOptions::maxRingOverlap
+  separates. A geometry says which volume a surface is in and not much else, so
+  that is what its subsystems are called unless
+  @ref ActsFatras::Synthetic::TrackingGeometryLayoutOptions::subsystemName groups
+  them into the systems the caller knows them as. Each side is described on its
+  own rather than mirrored: this is a measurement of a detector that is only
+  nearly symmetric.
 - @ref ActsFatras::Synthetic::PassiveSurfaceDescription adds the supports and
   services a layer is carried on, which produce secondaries like any material.
   The beam pipe is one of these and belongs to the detector rather than to any
