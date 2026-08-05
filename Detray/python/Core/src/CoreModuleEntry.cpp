@@ -16,6 +16,9 @@
 // Detray propagation include(s)
 #include "detray/propagator/propagation_config.hpp"
 
+// Detray event generator include(s)
+#include "detray/test/common/event_generator/uniform_track_generator_config.hpp"
+
 // Detray algebra plugin + detector metadata
 #include "algebra/array.hpp"
 #include "detray/definitions/algebra.hpp"
@@ -29,12 +32,15 @@
 #include <pybind11/stl.h>
 
 // System include(s)
+#include <array>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <utility>
 
 namespace py = pybind11;
@@ -50,6 +56,9 @@ using intersection_config_t = detray::intersection::config;
 using navigation_config_t = detray::navigation::config;
 using stepping_config_t = detray::stepping::config;
 using propagation_config_t = detray::propagation::config;
+using scalar_t = DETRAY_CUSTOM_SCALARTYPE;
+using track_generator_config_t =
+    detray::uniform_track_generator_config<scalar_t>;
 
 template <typename T>
 std::string to_string(const T &obj) {
@@ -88,7 +97,7 @@ void bind_const_vector(py::module_ &m, const char *name) {
           py::keep_alive<0, 1>(), "Iterate over the elements");
 }
 
-using algebra_t = detray::array<DETRAY_CUSTOM_SCALARTYPE>;
+using algebra_t = detray::array<scalar_t>;
 using detector_t = detray::detector<detray::default_metadata<algebra_t>>;
 using volume_descriptor_t = detector_t::volume_type;
 using volume_container_t = detector_t::volume_container;
@@ -217,6 +226,120 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
                      "Stepping configuration")
       .def("__repr__", &to_string<propagation_config_t>);
 
+  py::class_<track_generator_config_t>(m, "TrackGeneratorConfig")
+      .def(py::init<>())
+      .def_property(
+          "seed", [](const track_generator_config_t &c) { return c.seed(); },
+          [](track_generator_config_t &c, std::uint64_t s) { c.seed(s); },
+          "Monte-Carlo seed")
+      .def(
+          "nTracks",
+          [](const track_generator_config_t &c) { return c.n_tracks(); },
+          "Total number of tracks")
+      .def_property(
+          "phiRange",
+          [](const track_generator_config_t &c) {
+            const auto r = c.phi_range();
+            return std::make_pair(r[0], r[1]);
+          },
+          [](track_generator_config_t &c,
+             const std::pair<scalar_t, scalar_t> &r) {
+            c.phi_range(r.first, r.second);
+          },
+          "Phi range (min, max) (native rad)")
+      .def_property(
+          "thetaRange",
+          [](const track_generator_config_t &c) {
+            const auto r = c.theta_range();
+            return std::make_pair(r[0], r[1]);
+          },
+          [](track_generator_config_t &c,
+             const std::pair<scalar_t, scalar_t> &r) {
+            c.theta_range(r.first, r.second);
+          },
+          "Theta range (min, max) (native rad)")
+      .def_property(
+          "etaRange",
+          [](const track_generator_config_t &c) {
+            const auto r = c.eta_range();
+            return std::make_pair(r[0], r[1]);
+          },
+          [](track_generator_config_t &c,
+             const std::pair<scalar_t, scalar_t> &r) {
+            c.eta_range(r.first, r.second);
+          },
+          "Eta range (min, max)")
+      .def_property(
+          "phiSteps",
+          [](const track_generator_config_t &c) { return c.phi_steps(); },
+          [](track_generator_config_t &c, std::size_t n) { c.phi_steps(n); },
+          "Number of phi steps")
+      .def_property(
+          "thetaSteps",
+          [](const track_generator_config_t &c) { return c.theta_steps(); },
+          [](track_generator_config_t &c, std::size_t n) { c.theta_steps(n); },
+          "Number of theta steps")
+      .def_property(
+          "etaSteps",
+          [](const track_generator_config_t &c) { return c.eta_steps(); },
+          [](track_generator_config_t &c, std::size_t n) { c.eta_steps(n); },
+          "Number of eta steps")
+      .def_property(
+          "uniformEta",
+          [](const track_generator_config_t &c) { return c.uniform_eta(); },
+          [](track_generator_config_t &c, bool b) { c.uniform_eta(b); },
+          "Whether to step uniformly in eta")
+      .def_property(
+          "origin",
+          [](const track_generator_config_t &c) {
+            const auto &o = c.origin();
+            return std::make_tuple(o[0], o[1], o[2]);
+          },
+          [](track_generator_config_t &c,
+             const std::tuple<scalar_t, scalar_t, scalar_t> &o) {
+            c.origin(std::get<0>(o), std::get<1>(o), std::get<2>(o));
+          },
+          "Track origin")
+      .def(
+          "pT",
+          [](track_generator_config_t &c,
+             scalar_t p) -> track_generator_config_t & { return c.p_T(p); },
+          py::arg("p"), py::return_value_policy::reference,
+          "Set the transverse momentum magnitude")
+      .def(
+          "pTot",
+          [](track_generator_config_t &c,
+             scalar_t p) -> track_generator_config_t & { return c.p_tot(p); },
+          py::arg("p"), py::return_value_policy::reference,
+          "Set the total momentum magnitude")
+      .def(
+          "momRange",
+          [](const track_generator_config_t &c) {
+            const auto r = c.mom_range();
+            return std::make_pair(r[0], r[1]);
+          },
+          "Momentum range")
+      .def_property(
+          "randomizeCharge",
+          [](const track_generator_config_t &c) {
+            return c.randomize_charge();
+          },
+          [](track_generator_config_t &c, bool b) { c.randomize_charge(b); },
+          "Randomly flip the charge sign")
+      .def_property(
+          "time", [](const track_generator_config_t &c) { return c.time(); },
+          [](track_generator_config_t &c, scalar_t t) { c.time(t); },
+          "Track time")
+      .def_property(
+          "charge",
+          [](const track_generator_config_t &c) { return c.charge(); },
+          [](track_generator_config_t &c, scalar_t q) { c.charge(q); },
+          "Track charge")
+      .def(
+          "isPT", [](const track_generator_config_t &c) { return c.is_pT(); },
+          "Whether the momentum magnitude is interpreted as transverse")
+      .def("__repr__", &to_string<track_generator_config_t>);
+
   py::class_<volume_descriptor_t>(m, "VolumeDescriptor");
   py::class_<surface_descriptor_t>(m, "SurfaceDescriptor");
   bind_const_vector<surface_store_t, surface_descriptor_t>(m, "SurfaceStore");
@@ -286,7 +409,7 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
       });
 
   py::class_<detector_handle>(
-      m, "DetectorDefaultMetadata" STRINGIFY_HELPER(DETRAY_CUSTOM_SCALARTYPE))
+      m, "DetectorDefaultMetadata" STRINGIFY_HELPER(scalar_t))
       .def(
           "name",
           [](const detector_handle &d, const detray::name_map &names) {
