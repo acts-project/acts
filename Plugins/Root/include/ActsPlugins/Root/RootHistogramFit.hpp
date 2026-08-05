@@ -12,6 +12,8 @@
 #include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <string>
+
 namespace ActsPlugins {
 
 /// Fit a Gaussian to a histogram via ROOT's `TH1::Fit`
@@ -19,12 +21,33 @@ namespace ActsPlugins {
 /// Satisfies `Acts::Experimental::GaussianHistogramFitter`, so it can be used
 /// with `Acts::Experimental::iterativeFit` and
 /// `Acts::Experimental::extractMeanWidthProfiles` in place of
-/// `Acts::Experimental::GaussianHistogramFit`, backed by ROOT's own
-/// least-squares `"gaus"` fitter instead of Core's Poisson-likelihood
-/// optimiser.
+/// `Acts::Experimental::GaussianHistogramFit`, backed by ROOT's own `"gaus"`
+/// fitter instead of Core's optimiser.
 class RootHistogramFit {
  public:
+  /// Configuration for @c RootHistogramFit
+  struct Config {
+    /// `TH1::Fit` option string, applied to both @c fit overloads. Must keep
+    /// `"S"` (return a `TFitResult`, which the implementation reads) and
+    /// `"0"` (do not draw); `"Q"` is strongly recommended to suppress ROOT's
+    /// fit printout. The ranged overload adds `"R"` itself.
+    ///
+    /// Defaults to `"SQ0"`, ROOT's least-squares fit -- the counterpart of
+    /// `Acts::Experimental::GaussianHistogramFit::Objective::ChiSquare`. Use
+    /// `"LSQ0"` for the likelihood fit, the counterpart of
+    /// `Objective::PoissonLikelihood`.
+    std::string fitOptions = "SQ0";
+  };
+
   RootHistogramFit() = default;
+
+  /// Construct with the given configuration
+  /// @param config The fit configuration
+  explicit RootHistogramFit(Config config) : m_config(std::move(config)) {}
+
+  /// The fit configuration
+  /// @return The configuration this instance was constructed with
+  const Config& config() const { return m_config; }
 
   /// Fit a Gaussian to a histogram
   ///
@@ -42,6 +65,9 @@ class RootHistogramFit {
   Acts::Result<Acts::Experimental::GaussianHistogramFitResult> fit(
       const Acts::Experimental::Histogram1& hist, double xMin,
       double xMax) const;
+
+ private:
+  Config m_config{};
 };
 
 }  // namespace ActsPlugins

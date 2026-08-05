@@ -24,7 +24,8 @@ namespace ActsPlugins {
 Acts::Result<GaussianHistogramFitResult> RootHistogramFit::fit(
     const Acts::Experimental::Histogram1& hist) const {
   const std::unique_ptr<TH1F> rootHist = toRoot(hist);
-  const TFitResultPtr result = rootHist->Fit("gaus", "SQ0", nullptr);
+  const TFitResultPtr result =
+      rootHist->Fit("gaus", m_config.fitOptions.c_str(), nullptr);
   if (result.Get() == nullptr || result->Status() % 1000 != 0) {
     return Acts::Result<GaussianHistogramFitResult>::failure(
         GaussianHistogramFitError::FitFailed);
@@ -38,8 +39,8 @@ Acts::Result<GaussianHistogramFitResult> RootHistogramFit::fit(
     const Acts::Experimental::Histogram1& hist, double xMin,
     double xMax) const {
   const std::unique_ptr<TH1F> rootHist = toRoot(hist);
-  const TFitResultPtr result =
-      rootHist->Fit("gaus", "SRQ0", nullptr, xMin, xMax);
+  const TFitResultPtr result = rootHist->Fit(
+      "gaus", (m_config.fitOptions + "R").c_str(), nullptr, xMin, xMax);
   if (result.Get() == nullptr || result->Status() % 1000 != 0) {
     return Acts::Result<GaussianHistogramFitResult>::failure(
         GaussianHistogramFitError::FitFailed);
