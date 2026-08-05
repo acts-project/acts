@@ -36,7 +36,7 @@ every disc its own rings -- so an endcap can be described as the staggered discs
 and rings it is.
 
 - @ref ActsFatras::Synthetic::DetectorLayoutBuilder builds one from scratch;
-  descriptions of the ATLAS ITk and ACTS Generic pixels ship with it.
+  descriptions of the ATLAS ITk, ODD and ACTS Generic pixels ship with it.
 - @ref ActsFatras::Synthetic::PassiveSurfaceDescription adds the supports and
   services a layer is carried on, which produce secondaries like any material.
 - @ref ActsFatras::Synthetic::SurfaceMaterial bands a surface along the
@@ -73,25 +73,28 @@ line are the only secondaries produced away from a surface.
 The detector enters the beam spot, the resolution and both yields, so a
 configuration belongs to a layout. @ref ActsFatras::Synthetic::EventConfig ships
 @ref ActsFatras::Synthetic::EventConfig::itkPixelTtbarPu200, fitted against a
-GNN4ITk Athena dump. Positions and material are read off the detector
-description and the overlaps and secondary kinematics measured on the reference;
-only the yields, the spectrum and the beam spot are fitted.
+GNN4ITk Athena dump, and
+@ref ActsFatras::Synthetic::EventConfig::openDataDetectorTtbarPu200 against
+ColliderML. Positions and material are read off the detector description and the
+overlaps and secondary kinematics measured on the reference; only the yields, the
+spectrum and the beam spot are fitted.
 
-It is fitted on one half of its sample and checked on the other. On the
+Each is fitted on one half of its sample and checked on the other. On the
 held-out half, per event and normalised to the reference:
 
-| | ITk |
-| --- | --- |
-| space points | 0.99 |
-| &nbsp;&nbsp;primary, inside the generated acceptance | 0.97 |
-| &nbsp;&nbsp;primary, outside it | 1.03 |
-| &nbsp;&nbsp;non-primary | 1.00 |
-| primaries / event | 0.98 |
-| mean primary hits | 0.99 |
-| mean secondary hits | 0.97 |
+| | ITk | ODD |
+| --- | --- | --- |
+| space points | 0.99 | 0.99 |
+| &nbsp;&nbsp;primary, inside the generated acceptance | 0.97 | 1.02 |
+| &nbsp;&nbsp;primary, outside it | 1.03 | 1.16 |
+| &nbsp;&nbsp;non-primary | 1.00 | 0.95 |
+| primaries / event | 0.98 | 1.00 |
+| mean primary hits | 0.99 | 1.02 |
+| mean secondary hits | 0.97 | 1.10 |
 
-Known to be off: the spectrum is over-produced below the 100 MeV the reference
-stops recording at.
+Known to be off: the ODD's secondary momentum runs a fifth high and its `|d0|`
+reach short, its forward production is short beyond `|z| = 900`, and the spectrum
+is over-produced below the 100 MeV the references stop recording at.
 
 Counting secondaries takes care -- a full simulation records one only above a
 truth-link threshold, and two thirds of the real ones fall below it. Compare

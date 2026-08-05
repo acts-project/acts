@@ -1113,9 +1113,221 @@ Synthetic::DetectorLayout Synthetic::makeItkPixelLayout() {
 }
 
 Synthetic::BarrelEndcapDescription
+Synthetic::openDataDetectorPixelDescription() {
+  // Read off the pixel volumes of the geometry ACTS builds for the ODD, and
+  // kept here so that the preset works without DD4hep. Positions are of the
+  // sensitive silicon rather than of the layers the ODD declares.
+  BarrelEndcapDescription description;
+  // Beryllium beam pipe at 23.6 to 24.4 mm. It sits in a volume of its own that
+  // the pixel selector excludes, so the reduction is told to add it.
+  description.beamPipeRadius = 24.f;
+  // The carbon fibre cylinder each barrel layer is carried on, transcribed
+  // from `OpenDataPixels.xml`: an ACTS geometry keeps material for its layers
+  // alone. All four share a stave of 14 modules 72 mm long.
+  description.barrelRadii = {32.21f, 68.21f, 114.2f, 170.2f};
+  description.barrelHalfLengthsZ = {507.2f, 507.2f, 507.2f, 507.2f};
+  description.barrelMaterials = {
+      {BandComposition{14.59f, 6.5f, 0.02114f, 5.012f},
+       {491.8f, 512.2f},
+       {298.9f, 237.8f},
+       {810.2f, 793.2f}},
+      {BandComposition{13.64f, 6.3f, 0.02486f, 5.086f},
+       {491.8f, 502.f, 512.2f},
+       {368.6f, 411.5f, 326.4f},
+       {868.7f, 1804.f, 1833.f}},
+      {BandComposition{14.17f, 6.4f, 0.02198f, 4.679f},
+       {276.6f, 481.5f, 491.8f, 502.f, 512.2f},
+       {320.4f, 290.f, 367.8f, 256.4f, 183.4f},
+       {806.f, 786.8f, 822.8f, 1100.f, 1346.f}},
+      {BandComposition{14.74f, 6.5f, 0.01995f, 4.093f},
+       {235.6f, 338.1f, 348.3f, 399.6f, 481.5f, 491.8f, 502.f, 512.2f},
+       {294.2f, 261.5f, 208.9f, 247.3f, 199.6f, 136.3f, 102.4f, 114.5f},
+       {719.8f, 697.3f, 667.2f, 690.9f, 649.8f, 570.7f, 640.4f, 921.f}},
+  };
+  description.beamPipeMaterial = {
+      BandComposition{9.046f, 4.1f, 0.07136f, 0.1641f},
+      {800.2f, 4001.f},
+      {71.03f, 0.f},
+      {80.26f, 0.f}};
+  // Services, whose extent matters as much as their amount: a tube grazed at
+  // cosh(eta) is worth ten times its thickness forward.
+  description.passiveSurfaces = {
+      {SurfaceShape::Disc,
+       559.f,
+       29.9f,
+       190.f,
+       {BandComposition{26.91f, 8.1f, 0.006668f, 1.739f},
+        {29.9f, 33.1f, 36.3f, 42.7f, 74.7f, 77.9f, 81.1f, 122.8f, 126.f, 129.2f,
+         132.4f, 183.6f, 186.8f, 190.f},
+        {0.f, 0.f, 1181.f, 6.9f, 0.f, 30.94f, 25.52f, 0.f, 350.9f, 32.03f,
+         42.11f, 0.f, 124.8f, 43.37f},
+        {0.f, 0.f, 5737.f, 48.06f, 0.f, 137.3f, 107.4f, 0.f, 1777.f, 182.2f,
+         211.5f, 0.f, 929.9f, 264.f}}},
+      {SurfaceShape::Disc,
+       1950.f,
+       40.f,
+       189.f,
+       {BandComposition{22.96f, 8.3f, 0.007943f, 10.24f},
+        {40.f, 69.8f, 135.4f, 138.3f, 141.3f, 144.3f, 162.2f, 165.2f, 177.1f,
+         180.1f, 183.f, 189.f},
+        {0.f, 0.f, 287.6f, 17.44f, 6.03f, 7.9f, 287.6f, 47.42f, 296.8f, 29.97f,
+         7.76f, 12.99f},
+        {0.f, 0.f, 521.8f, 139.8f, 58.04f, 73.59f, 521.8f, 273.8f, 538.6f,
+         208.2f, 72.56f, 108.f}}},
+  };
+  // left unsplit as in the ITk layout above; the real detector has fourteen
+  // modules along z
+  description.barrelModules = 1;
+  // Measured on the ColliderML reference through its surface identifiers: a
+  // crossing above a GeV leaves 1.24 clusters, flat across the detector.
+  description.barrelOverlapProbabilities = {0.24f, 0.24f, 0.24f, 0.24f};
+  description.discOverlapProbability = 0.24f;
+  description.barrelOverlapOffset = 1.65f;
+  description.discOverlapOffset = 1.2f;
+  // the ODD's short and long strips, out to the solenoid
+  description.escapeRadius = 1100.f;
+  description.escapeHalfZ = 3000.f;
+  // Seven layers per side, each *two* rings rather than one disc: they leave
+  // no radial gap, and the stagger in z is all the structure buys here.
+  description.discs = {
+      {616.2f,
+       {{42.85f, 111.f}},
+       {BandComposition{12.83f, 6.3f, 0.02915f, 1.608f},
+        {32.f, 35.f, 47.2f, 50.2f, 68.4f, 71.5f, 86.6f, 89.7f, 92.7f, 120.f,
+         123.1f, 144.3f, 147.4f, 168.6f, 171.6f, 174.7f, 177.7f, 183.8f},
+        {0.f, 0.f, 207.5f, 90.89f, 193.1f, 113.5f, 195.3f, 97.54f, 123.f,
+         186.2f, 112.6f, 190.3f, 109.1f, 191.2f, 93.16f, 187.2f, 783.5f, 0.f},
+        {0.f, 0.f, 389.6f, 289.4f, 373.3f, 318.9f, 374.9f, 301.2f, 327.9f,
+         364.3f, 315.9f, 369.7f, 312.1f, 371.4f, 294.3f, 390.9f, 1422.f, 0.f}}},
+      {623.2f,
+       {{105.5f, 173.8f}},
+       {BandComposition{12.83f, 6.3f, 0.02915f, 1.608f},
+        {32.f, 35.f, 47.2f, 50.2f, 68.4f, 71.5f, 86.6f, 89.7f, 92.7f, 120.f,
+         123.1f, 144.3f, 147.4f, 168.6f, 171.6f, 174.7f, 177.7f, 183.8f},
+        {0.f, 0.f, 207.5f, 90.89f, 193.1f, 113.5f, 195.3f, 97.54f, 123.f,
+         186.2f, 112.6f, 190.3f, 109.1f, 191.2f, 93.16f, 187.2f, 783.5f, 0.f},
+        {0.f, 0.f, 389.6f, 289.4f, 373.3f, 318.9f, 374.9f, 301.2f, 327.9f,
+         364.3f, 315.9f, 369.7f, 312.1f, 371.4f, 294.3f, 390.9f, 1422.f, 0.f}}},
+      {716.2f,
+       {{42.85f, 111.f}},
+       {BandComposition{12.81f, 6.3f, 0.02928f, 1.604f},
+        {32.f, 35.f, 47.2f, 50.2f, 68.4f, 71.5f, 86.6f, 89.7f, 92.7f, 120.f,
+         123.1f, 144.3f, 147.4f, 168.6f, 171.6f, 174.7f, 177.7f, 183.8f},
+        {0.f, 0.f, 206.6f, 87.77f, 189.6f, 113.5f, 194.8f, 102.4f, 116.8f,
+         185.5f, 110.4f, 190.3f, 111.3f, 192.1f, 107.f, 224.4f, 791.2f, 0.f},
+        {0.f, 0.f, 388.1f, 284.8f, 370.9f, 318.3f, 374.f, 306.5f, 321.5f,
+         363.2f, 312.8f, 370.f, 313.3f, 372.7f, 315.9f, 407.7f, 1436.f, 0.f}}},
+      {723.2f,
+       {{105.5f, 173.8f}},
+       {BandComposition{12.81f, 6.3f, 0.02928f, 1.604f},
+        {32.f, 35.f, 47.2f, 50.2f, 68.4f, 71.5f, 86.6f, 89.7f, 92.7f, 120.f,
+         123.1f, 144.3f, 147.4f, 168.6f, 171.6f, 174.7f, 177.7f, 183.8f},
+        {0.f, 0.f, 206.6f, 87.77f, 189.6f, 113.5f, 194.8f, 102.4f, 116.8f,
+         185.5f, 110.4f, 190.3f, 111.3f, 192.1f, 107.f, 224.4f, 791.2f, 0.f},
+        {0.f, 0.f, 388.1f, 284.8f, 370.9f, 318.3f, 374.f, 306.5f, 321.5f,
+         363.2f, 312.8f, 370.f, 313.3f, 372.7f, 315.9f, 407.7f, 1436.f, 0.f}}},
+      {836.2f,
+       {{42.85f, 111.f}},
+       {BandComposition{12.83f, 6.3f, 0.02919f, 1.607f},
+        {32.f, 35.f, 47.2f, 50.2f, 68.4f, 71.5f, 86.6f, 92.7f, 120.f, 123.1f,
+         144.3f, 147.4f, 168.6f, 171.6f, 174.7f, 177.7f, 183.8f},
+        {0.f, 0.f, 206.2f, 86.92f, 187.7f, 114.3f, 195.2f, 106.2f, 186.7f,
+         107.2f, 190.f, 113.6f, 192.8f, 106.3f, 224.f, 672.9f, 0.f},
+        {0.f, 0.f, 387.7f, 284.1f, 370.5f, 319.5f, 374.7f, 311.1f, 365.4f,
+         309.9f, 369.4f, 316.7f, 373.9f, 309.f, 407.7f, 1221.f, 0.f}}},
+      {843.2f,
+       {{105.5f, 173.8f}},
+       {BandComposition{12.83f, 6.3f, 0.02919f, 1.607f},
+        {32.f, 35.f, 47.2f, 50.2f, 68.4f, 71.5f, 86.6f, 92.7f, 120.f, 123.1f,
+         144.3f, 147.4f, 168.6f, 171.6f, 174.7f, 177.7f, 183.8f},
+        {0.f, 0.f, 206.2f, 86.92f, 187.7f, 114.3f, 195.2f, 106.2f, 186.7f,
+         107.2f, 190.f, 113.6f, 192.8f, 106.3f, 224.f, 672.9f, 0.f},
+        {0.f, 0.f, 387.7f, 284.1f, 370.5f, 319.5f, 374.7f, 311.1f, 365.4f,
+         309.9f, 369.4f, 316.7f, 373.9f, 309.f, 407.7f, 1221.f, 0.f}}},
+      {976.2f,
+       {{42.85f, 111.f}},
+       {BandComposition{12.83f, 6.3f, 0.02916f, 1.602f},
+        {32.f, 35.f, 47.2f, 50.2f, 53.2f, 68.4f, 71.5f, 86.6f, 92.7f, 120.f,
+         123.1f, 144.3f, 147.4f, 168.6f, 171.6f, 174.7f, 177.7f, 183.8f},
+        {0.f, 0.f, 205.5f, 87.01f, 150.9f, 194.5f, 114.3f, 194.7f, 106.8f,
+         185.4f, 101.9f, 191.8f, 113.5f, 194.1f, 109.4f, 228.4f, 680.8f, 0.f},
+        {0.f, 0.f, 386.6f, 283.7f, 346.8f, 373.4f, 318.9f, 373.6f, 311.1f,
+         363.f, 303.6f, 372.9f, 316.1f, 376.2f, 311.8f, 417.1f, 1235.f, 0.f}}},
+      {983.2f,
+       {{105.5f, 173.8f}},
+       {BandComposition{12.83f, 6.3f, 0.02916f, 1.602f},
+        {32.f, 35.f, 47.2f, 50.2f, 53.2f, 68.4f, 71.5f, 86.6f, 92.7f, 120.f,
+         123.1f, 144.3f, 147.4f, 168.6f, 171.6f, 174.7f, 177.7f, 183.8f},
+        {0.f, 0.f, 205.5f, 87.01f, 150.9f, 194.5f, 114.3f, 194.7f, 106.8f,
+         185.4f, 101.9f, 191.8f, 113.5f, 194.1f, 109.4f, 228.4f, 680.8f, 0.f},
+        {0.f, 0.f, 386.6f, 283.7f, 346.8f, 373.4f, 318.9f, 373.6f, 311.1f,
+         363.f, 303.6f, 372.9f, 316.1f, 376.2f, 311.8f, 417.1f, 1235.f, 0.f}}},
+      {1116.f,
+       {{42.85f, 111.f}},
+       {BandComposition{12.88f, 6.3f, 0.02887f, 1.479f},
+        {32.f, 41.1f, 47.2f, 50.2f, 53.2f, 68.4f, 71.5f, 86.6f, 92.7f, 120.f,
+         123.1f, 144.3f, 147.4f, 168.6f, 171.6f, 174.7f, 177.7f, 183.8f},
+        {0.f, 0.f, 174.4f, 81.57f, 130.6f, 179.6f, 105.4f, 179.7f, 95.56f,
+         171.5f, 92.2f, 174.5f, 108.f, 177.1f, 102.1f, 202.5f, 733.8f, 0.f},
+        {0.f, 0.f, 338.5f, 263.9f, 313.6f, 344.9f, 294.3f, 345.f, 283.9f,
+         335.4f, 278.2f, 339.5f, 300.9f, 343.6f, 289.6f, 371.2f, 1332.f, 0.f}}},
+      {1123.f,
+       {{105.5f, 173.8f}},
+       {BandComposition{12.88f, 6.3f, 0.02887f, 1.479f},
+        {32.f, 41.1f, 47.2f, 50.2f, 53.2f, 68.4f, 71.5f, 86.6f, 92.7f, 120.f,
+         123.1f, 144.3f, 147.4f, 168.6f, 171.6f, 174.7f, 177.7f, 183.8f},
+        {0.f, 0.f, 174.4f, 81.57f, 130.6f, 179.6f, 105.4f, 179.7f, 95.56f,
+         171.5f, 92.2f, 174.5f, 108.f, 177.1f, 102.1f, 202.5f, 733.8f, 0.f},
+        {0.f, 0.f, 338.5f, 263.9f, 313.6f, 344.9f, 294.3f, 345.f, 283.9f,
+         335.4f, 278.2f, 339.5f, 300.9f, 343.6f, 289.6f, 371.2f, 1332.f, 0.f}}},
+      {1316.f,
+       {{42.85f, 111.f}},
+       {BandComposition{12.92f, 6.4f, 0.02867f, 1.353f},
+        {32.f, 47.2f, 50.2f, 53.2f, 68.4f, 71.5f, 86.6f, 92.7f, 120.f, 123.1f,
+         144.3f, 147.4f, 168.6f, 171.6f, 174.7f, 177.7f, 183.8f},
+        {0.f, 0.f, 74.11f, 116.6f, 164.3f, 96.68f, 164.4f, 91.73f, 155.4f,
+         78.5f, 159.5f, 95.35f, 161.1f, 93.83f, 185.2f, 661.5f, 0.f},
+        {0.f, 0.f, 240.5f, 285.2f, 315.5f, 269.5f, 315.6f, 264.4f, 306.1f,
+         247.5f, 310.4f, 266.f, 312.7f, 264.6f, 339.5f, 1200.f, 0.f}}},
+      {1323.f,
+       {{105.5f, 173.8f}},
+       {BandComposition{12.92f, 6.4f, 0.02867f, 1.353f},
+        {32.f, 47.2f, 50.2f, 53.2f, 68.4f, 71.5f, 86.6f, 92.7f, 120.f, 123.1f,
+         144.3f, 147.4f, 168.6f, 171.6f, 174.7f, 177.7f, 183.8f},
+        {0.f, 0.f, 74.11f, 116.6f, 164.3f, 96.68f, 164.4f, 91.73f, 155.4f,
+         78.5f, 159.5f, 95.35f, 161.1f, 93.83f, 185.2f, 661.5f, 0.f},
+        {0.f, 0.f, 240.5f, 285.2f, 315.5f, 269.5f, 315.6f, 264.4f, 306.1f,
+         247.5f, 310.4f, 266.f, 312.7f, 264.6f, 339.5f, 1200.f, 0.f}}},
+      {1516.f,
+       {{42.85f, 111.f}},
+       {BandComposition{12.76f, 6.3f, 0.02962f, 1.294f},
+        {32.f, 56.3f, 68.4f, 71.5f, 86.6f, 92.7f, 120.f, 123.1f, 144.3f, 147.4f,
+         150.4f, 168.6f, 171.6f, 174.7f, 177.7f, 183.8f},
+        {0.f, 0.f, 157.2f, 92.64f, 157.2f, 84.66f, 147.f, 72.21f, 154.9f, 90.9f,
+         29.35f, 154.3f, 90.32f, 175.f, 696.5f, 0.f},
+        {0.f, 0.f, 301.8f, 257.9f, 301.8f, 249.6f, 292.6f, 232.9f, 301.2f,
+         254.4f, 53.95f, 299.4f, 253.9f, 322.4f, 1264.f, 0.f}}},
+      {1523.f,
+       {{105.5f, 173.8f}},
+       {BandComposition{12.76f, 6.3f, 0.02962f, 1.294f},
+        {32.f, 56.3f, 68.4f, 71.5f, 86.6f, 92.7f, 120.f, 123.1f, 144.3f, 147.4f,
+         150.4f, 168.6f, 171.6f, 174.7f, 177.7f, 183.8f},
+        {0.f, 0.f, 157.2f, 92.64f, 157.2f, 84.66f, 147.f, 72.21f, 154.9f, 90.9f,
+         29.35f, 154.3f, 90.32f, 175.f, 696.5f, 0.f},
+        {0.f, 0.f, 301.8f, 257.9f, 301.8f, 249.6f, 292.6f, 232.9f, 301.2f,
+         254.4f, 53.95f, 299.4f, 253.9f, 322.4f, 1264.f, 0.f}}},
+  };
+  return description;
+}
+
+Synthetic::DetectorLayout Synthetic::makeOpenDataDetectorPixelLayout() {
+  return makeLayout(openDataDetectorPixelDescription());
+}
+
+Synthetic::BarrelEndcapDescription
 Synthetic::genericDetectorPixelDescription() {
-  // Read off the built `ActsExamples::GenericDetector`. Its sensors sit at the
-  // nominal layer radii, so no offset is taken off them.
+  // Read off the built `ActsExamples::GenericDetector` as above. Its sensors
+  // sit at the nominal layer radii, unlike the ODD's.
   BarrelEndcapDescription description;
   // kBeamPipeRadius in GenericDetectorBuilder.hpp
   description.beamPipeRadius = 19.f;

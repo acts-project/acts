@@ -424,6 +424,8 @@ BOOST_AUTO_TEST_CASE(SurfaceExtentSpansLayersAndMaterial) {
 BOOST_AUTO_TEST_CASE(ShippedLayouts) {
   const std::array descriptions{
       std::pair{itkPixelDescription(), makeItkPixelLayout()},
+      std::pair{openDataDetectorPixelDescription(),
+                makeOpenDataDetectorPixelLayout()},
       std::pair{genericDetectorPixelDescription(),
                 makeGenericDetectorPixelLayout()}};
 
@@ -481,6 +483,40 @@ BOOST_AUTO_TEST_CASE(ItkPixelStructure) {
   // continuation of the inner layers
   BOOST_CHECK_LT(description.discs.front().absZ,
                  description.barrelHalfLengthsZ.back());
+}
+
+/// Structure only. That these numbers are the real ODD's needs the built
+/// geometry, and so is checked from python where DD4hep is available.
+BOOST_AUTO_TEST_CASE(OpenDataDetectorPixelStructure) {
+  const BarrelEndcapDescription description =
+      openDataDetectorPixelDescription();
+  const BarrelEndcapDescription itk = itkPixelDescription();
+
+  // the ODD pixel detector is smaller than the ITk one in both directions
+  BOOST_CHECK_LT(description.barrelRadii.back(), itk.barrelRadii.back());
+  BOOST_CHECK_LT(description.discs.back().absZ, itk.discs.back().absZ);
+  // but its barrel reaches further along z, so its discs start further out
+  BOOST_CHECK_GT(description.barrelHalfLengthsZ.back(),
+                 itk.barrelHalfLengthsZ.back());
+  BOOST_CHECK_GT(description.discs.front().absZ, itk.discs.front().absZ);
+
+  // Seven endcap layers per side, each two staggered single-ring discs rather
+  // than one disc of two rings, with consecutive discs alternating between the
+  // inner and the outer ring.
+  BOOST_CHECK_EQUAL(description.discs.size(), 14u);
+  for (std::size_t d = 0; d < description.discs.size(); ++d) {
+    BOOST_REQUIRE_EQUAL(description.discs[d].rings.size(), 1u);
+    const RingBounds& ring = description.discs[d].rings.front();
+    if (d % 2 == 0) {
+      BOOST_CHECK_LT(ring.rMin, 50.f);
+    } else {
+      BOOST_CHECK_GT(ring.rMin, 100.f);
+    }
+  }
+  // Unlike the ITk's, the two rings of a layer leave no radial gap: they
+  // overlap, which is the module overlap of the real detector.
+  BOOST_CHECK_GT(description.discs[0].rings.front().rMax,
+                 description.discs[1].rings.front().rMin);
 }
 
 /// A shipped description can be taken, modified and rebuilt: finer modules and

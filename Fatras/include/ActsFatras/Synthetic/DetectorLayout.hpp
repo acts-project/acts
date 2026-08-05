@@ -400,6 +400,14 @@ BarrelEndcapDescription itkPixelDescription();
 /// @return the ITk-like pixel layout
 DetectorLayout makeItkPixelLayout();
 
+/// A coarse stand-in for the Open Data Detector pixel detector.
+/// @return the description of the ODD-like pixel layout
+BarrelEndcapDescription openDataDetectorPixelDescription();
+
+/// Build a stand-in for the Open Data Detector pixel detector.
+/// @return the ODD-like pixel layout
+DetectorLayout makeOpenDataDetectorPixelLayout();
+
 /// A coarse stand-in for the ACTS Generic detector's pixel system.
 /// @return the description of the generic pixel layout
 BarrelEndcapDescription genericDetectorPixelDescription();

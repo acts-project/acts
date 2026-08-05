@@ -269,6 +269,10 @@ struct EventConfig {
   /// @return the configuration
   static EventConfig itkPixelTtbarPu200();
 
+  /// Configuration for an Open Data Detector ttbar event at a pile-up of 200.
+  /// @return the configuration
+  static EventConfig openDataDetectorTtbarPu200();
+
   /// @}
 };
 
