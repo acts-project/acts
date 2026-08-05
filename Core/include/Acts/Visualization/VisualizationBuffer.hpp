@@ -114,7 +114,6 @@ class VisualizationBuffer : public IVisualization3D {
   double m_outputScalor = 1.;
   
   std::vector<Vector3> m_vertices;
-  std::string m_projection;
   std::vector<std::vector<Vector3>> m_surfaces;
   std::vector<std::vector<Vector3>> m_segments;
   std::vector<Color> m_facecolors;
