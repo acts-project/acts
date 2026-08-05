@@ -8,7 +8,7 @@
 
 #include "ActsPlugins/Root/RootHistogramFit.hpp"
 
-#include "Acts/Utilities/GaussianFitError.hpp"
+#include "Acts/Utilities/GaussianHistogramFitError.hpp"
 #include "ActsPlugins/Root/HistogramConverter.hpp"
 
 #include <memory>
@@ -16,37 +16,37 @@
 #include <TFitResult.h>
 #include <TH1.h>
 
-using Acts::Experimental::GaussianFitError;
-using Acts::Experimental::GaussianFitResult;
+using Acts::Experimental::GaussianHistogramFitError;
+using Acts::Experimental::GaussianHistogramFitResult;
 
 namespace ActsPlugins {
 
-Acts::Result<GaussianFitResult> RootHistogramFit::fit(
+Acts::Result<GaussianHistogramFitResult> RootHistogramFit::fit(
     const Acts::Experimental::Histogram1& hist) const {
   const std::unique_ptr<TH1F> rootHist = toRoot(hist);
   const TFitResultPtr result = rootHist->Fit("gaus", "SQ0", nullptr);
   if (result.Get() == nullptr || result->Status() % 1000 != 0) {
-    return Acts::Result<GaussianFitResult>::failure(
-        GaussianFitError::FitFailed);
+    return Acts::Result<GaussianHistogramFitResult>::failure(
+        GaussianHistogramFitError::FitFailed);
   }
 
-  return GaussianFitResult{result->Parameter(1), result->Parameter(2),
-                           result->ParError(1), result->ParError(2)};
+  return GaussianHistogramFitResult{result->Parameter(1), result->Parameter(2),
+                                    result->ParError(1), result->ParError(2)};
 }
 
-Acts::Result<GaussianFitResult> RootHistogramFit::fit(
+Acts::Result<GaussianHistogramFitResult> RootHistogramFit::fit(
     const Acts::Experimental::Histogram1& hist, double xMin,
     double xMax) const {
   const std::unique_ptr<TH1F> rootHist = toRoot(hist);
   const TFitResultPtr result =
       rootHist->Fit("gaus", "SRQ0", nullptr, xMin, xMax);
   if (result.Get() == nullptr || result->Status() % 1000 != 0) {
-    return Acts::Result<GaussianFitResult>::failure(
-        GaussianFitError::FitFailed);
+    return Acts::Result<GaussianHistogramFitResult>::failure(
+        GaussianHistogramFitError::FitFailed);
   }
 
-  return GaussianFitResult{result->Parameter(1), result->Parameter(2),
-                           result->ParError(1), result->ParError(2)};
+  return GaussianHistogramFitResult{result->Parameter(1), result->Parameter(2),
+                                    result->ParError(1), result->ParError(2)};
 }
 
 }  // namespace ActsPlugins

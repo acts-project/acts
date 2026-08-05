@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Utilities/GaussianFit.hpp"
+#include "Acts/Utilities/GaussianHistogramFit.hpp"
 #include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/IterativeFit.hpp"
 
@@ -41,7 +41,7 @@ Histogram1 sampleGaussian(std::size_t count, double mean, double sigma,
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(GaussianFitSuite)
+BOOST_AUTO_TEST_SUITE(GaussianHistogramFitSuite)
 
 namespace {
 const GaussianHistogramFit fit;

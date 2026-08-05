@@ -78,9 +78,9 @@ void sortSimplex(std::array<Vector<N>, N + 1>& simplex,
 ///         within the iteration cap or no vertex ever evaluated to a finite
 ///         value
 template <int N, ScalarObjective<N> Callable>
-Result<Vector<N>, NumericalMinimizationError> nelderMead(
-    const Callable& objective, const Vector<N>& start, const Vector<N>& steps,
-    const NelderMeadOptions& options = {}) {
+Result<Vector<N>> nelderMead(const Callable& objective, const Vector<N>& start,
+                             const Vector<N>& steps,
+                             const NelderMeadOptions& options = {}) {
   // Standard Nelder-Mead coefficients
   constexpr double reflection = 1.0;
   constexpr double expansion = 2.0;
@@ -102,7 +102,7 @@ Result<Vector<N>, NumericalMinimizationError> nelderMead(
     values[v] = objective(simplex[v]);
   }
   if (std::ranges::none_of(values, [](double v) { return std::isfinite(v); })) {
-    return Result<Vector<N>, NumericalMinimizationError>::failure(
+    return Result<Vector<N>>::failure(
         NumericalMinimizationError::NoFiniteVertex);
   }
 
@@ -122,7 +122,7 @@ Result<Vector<N>, NumericalMinimizationError> nelderMead(
     const double scale = std::max(1.0, std::abs(values[0]));
     if (valueSpread < options.valueTolerance * scale &&
         parameterSpread < options.parameterTolerance) {
-      return Result<Vector<N>, NumericalMinimizationError>::success(simplex[0]);
+      return Result<Vector<N>>::success(simplex[0]);
     }
 
     // Centroid of all but the worst vertex
@@ -176,8 +176,7 @@ Result<Vector<N>, NumericalMinimizationError> nelderMead(
     }
   }
 
-  return Result<Vector<N>, NumericalMinimizationError>::failure(
-      NumericalMinimizationError::DidNotConverge);
+  return Result<Vector<N>>::failure(NumericalMinimizationError::DidNotConverge);
 }
 
 /// Covariance from the inverse of a finite-difference Hessian at @p point
@@ -189,11 +188,12 @@ Result<Vector<N>, NumericalMinimizationError> nelderMead(
 /// @return The inverse Hessian, or an error if it is not positive definite,
 ///         i.e. @p point is not a genuine minimum
 template <int N, ScalarObjective<N> Callable>
-Result<SquareMatrix<N>, NumericalMinimizationError> numericalCovariance(
-    const Callable& objective, const Vector<N>& point, const Vector<N>& steps) {
+Result<SquareMatrix<N>> numericalCovariance(const Callable& objective,
+                                            const Vector<N>& point,
+                                            const Vector<N>& steps) {
   for (int i = 0; i < N; ++i) {
     if (!(steps(i) > 0)) {
-      return Result<SquareMatrix<N>, NumericalMinimizationError>::failure(
+      return Result<SquareMatrix<N>>::failure(
           NumericalMinimizationError::InvalidStep);
     }
   }
@@ -233,25 +233,24 @@ Result<SquareMatrix<N>, NumericalMinimizationError> numericalCovariance(
   }
 
   if (!hessian.allFinite()) {
-    return Result<SquareMatrix<N>, NumericalMinimizationError>::failure(
+    return Result<SquareMatrix<N>>::failure(
         NumericalMinimizationError::NotPositiveDefinite);
   }
 
   const Eigen::LLT<SquareMatrix<N>> llt(hessian);
   if (llt.info() != Eigen::Success) {
     // Not positive definite, so not a minimum we can put errors on
-    return Result<SquareMatrix<N>, NumericalMinimizationError>::failure(
+    return Result<SquareMatrix<N>>::failure(
         NumericalMinimizationError::NotPositiveDefinite);
   }
 
   const SquareMatrix<N> covariance = llt.solve(SquareMatrix<N>::Identity());
   if (!covariance.allFinite()) {
-    return Result<SquareMatrix<N>, NumericalMinimizationError>::failure(
+    return Result<SquareMatrix<N>>::failure(
         NumericalMinimizationError::NotPositiveDefinite);
   }
 
-  return Result<SquareMatrix<N>, NumericalMinimizationError>::success(
-      covariance);
+  return Result<SquareMatrix<N>>::success(covariance);
 }
 
 }  // namespace Acts::detail

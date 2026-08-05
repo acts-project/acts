@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/GaussianFit.hpp"
+#include "Acts/Utilities/GaussianHistogramFit.hpp"
 #include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -16,8 +16,8 @@ namespace ActsPlugins {
 
 /// Fit a Gaussian to a histogram via ROOT's `TH1::Fit`
 ///
-/// Satisfies `Acts::Experimental::GaussianFitter`, so it can be used with
-/// `Acts::Experimental::iterativeFit` and
+/// Satisfies `Acts::Experimental::GaussianHistogramFitter`, so it can be used
+/// with `Acts::Experimental::iterativeFit` and
 /// `Acts::Experimental::extractMeanWidthProfiles` in place of
 /// `Acts::Experimental::GaussianHistogramFit`, backed by ROOT's own
 /// least-squares `"gaus"` fitter instead of Core's Poisson-likelihood
@@ -30,7 +30,7 @@ class RootHistogramFit {
   ///
   /// @param hist The histogram to fit
   /// @return The fit result, or an error if the fit could not be performed
-  Acts::Result<Acts::Experimental::GaussianFitResult> fit(
+  Acts::Result<Acts::Experimental::GaussianHistogramFitResult> fit(
       const Acts::Experimental::Histogram1& hist) const;
 
   /// Fit a Gaussian to the bins of a histogram whose centre lies in a range
@@ -39,7 +39,7 @@ class RootHistogramFit {
   /// @param xMin Lower end of the fit range (inclusive)
   /// @param xMax Upper end of the fit range (inclusive)
   /// @return The fit result, or an error if the fit could not be performed
-  Acts::Result<Acts::Experimental::GaussianFitResult> fit(
+  Acts::Result<Acts::Experimental::GaussianHistogramFitResult> fit(
       const Acts::Experimental::Histogram1& hist, double xMin,
       double xMax) const;
 };

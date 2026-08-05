@@ -14,7 +14,7 @@
 namespace Acts::Experimental {
 
 /// @brief Outcome of a Gaussian fit to a 1D histogram
-struct GaussianFitResult {
+struct GaussianHistogramFitResult {
   /// Fitted mean of the Gaussian
   double mean{};
   /// Fitted standard deviation of the Gaussian
@@ -76,7 +76,7 @@ class GaussianHistogramFit {
   /// @param hist The histogram to fit
   /// @return The fit result, or an error if the fit could not be performed
   /// @note Under- and overflow bins are ignored.
-  Result<GaussianFitResult> fit(const Histogram1& hist) const;
+  Result<GaussianHistogramFitResult> fit(const Histogram1& hist) const;
 
   /// Fit a Gaussian to the bins of a 1D histogram whose centre lies in a range
   ///
@@ -87,8 +87,8 @@ class GaussianHistogramFit {
   /// @remark Bin selection is by bin centre on a closed interval, matching how
   ///         ROOT restricts a fit range.
   /// @note See @c fit(const Histogram1&) for the fitted model.
-  Result<GaussianFitResult> fit(const Histogram1& hist, double xMin,
-                                double xMax) const;
+  Result<GaussianHistogramFitResult> fit(const Histogram1& hist, double xMin,
+                                         double xMax) const;
 
  private:
   Config m_config{};

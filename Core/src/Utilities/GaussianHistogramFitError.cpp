@@ -6,33 +6,35 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Utilities/GaussianFitError.hpp"
+#include "Acts/Utilities/GaussianHistogramFitError.hpp"
 
 #include <string>
 
 namespace {
 
-class GaussianFitErrorCategory : public std::error_category {
+class GaussianHistogramFitErrorCategory : public std::error_category {
  public:
   // Return a short descriptive name for the category.
-  const char* name() const noexcept final { return "GaussianFitError"; }
+  const char* name() const noexcept final {
+    return "GaussianHistogramFitError";
+  }
 
   // Return what each enum means in text.
   std::string message(int c) const final {
-    using Acts::Experimental::GaussianFitError;
+    using Acts::Experimental::GaussianHistogramFitError;
 
-    switch (static_cast<GaussianFitError>(c)) {
-      case GaussianFitError::EmptyRange:
+    switch (static_cast<GaussianHistogramFitError>(c)) {
+      case GaussianHistogramFitError::EmptyRange:
         return "No bins in the fit range, or their contents summed to zero "
                "or less";
-      case GaussianFitError::TooFewNonEmptyBins:
+      case GaussianHistogramFitError::TooFewNonEmptyBins:
         return "Fewer populated bins than the fitter's configured minimum";
-      case GaussianFitError::NoValidSeed:
+      case GaussianHistogramFitError::NoValidSeed:
         return "The initial mean/sigma guess could not be formed";
-      case GaussianFitError::NonFiniteParameters:
+      case GaussianHistogramFitError::NonFiniteParameters:
         return "The minimiser returned a non-finite mean or a non-positive "
                "sigma";
-      case GaussianFitError::FitFailed:
+      case GaussianHistogramFitError::FitFailed:
         return "The underlying fitter reported failure";
       default:
         return "unknown";
@@ -43,7 +45,7 @@ class GaussianFitErrorCategory : public std::error_category {
 }  // namespace
 
 std::error_code Acts::Experimental::make_error_code(
-    Acts::Experimental::GaussianFitError e) {
-  static GaussianFitErrorCategory c;
+    Acts::Experimental::GaussianHistogramFitError e) {
+  static GaussianHistogramFitErrorCategory c;
   return {static_cast<int>(e), c};
 }

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/GaussianFit.hpp"
+#include "Acts/Utilities/GaussianHistogramFit.hpp"
 #include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -47,10 +47,12 @@ using MeanWidthProfiles2 = MeanWidthProfiles<2>;
 /// written once, generically, against this concept; see @c iterativeFit and
 /// @c extractMeanWidthProfiles below.
 template <typename F>
-concept GaussianFitter = requires(const F& fitter, const Histogram1& hist,
-                                  double xMin, double xMax) {
-  { fitter.fit(hist) } -> std::same_as<Result<GaussianFitResult>>;
-  { fitter.fit(hist, xMin, xMax) } -> std::same_as<Result<GaussianFitResult>>;
+concept GaussianHistogramFitter = requires(
+    const F& fitter, const Histogram1& hist, double xMin, double xMax) {
+  { fitter.fit(hist) } -> std::same_as<Result<GaussianHistogramFitResult>>;
+  {
+    fitter.fit(hist, xMin, xMax)
+  } -> std::same_as<Result<GaussianHistogramFitResult>>;
 };
 
 /// Fit a Gaussian repeatedly, narrowing the fit range around the peak
@@ -66,11 +68,11 @@ concept GaussianFitter = requires(const F& fitter, const Histogram1& hist,
 ///                   one; values below 1 are treated as 1
 /// @param logger Logger for diagnostics on failed iterations
 /// @return The fit result, or an error if any iteration failed
-template <GaussianFitter Fitter>
-Result<GaussianFitResult> iterativeFit(
+template <GaussianHistogramFitter Fitter>
+Result<GaussianHistogramFitResult> iterativeFit(
     const Fitter& fitter, const Histogram1& hist, double sigmaRange,
     int iterations, const Logger& logger = getDummyLogger()) {
-  Result<GaussianFitResult> result = fitter.fit(hist);
+  Result<GaussianHistogramFitResult> result = fitter.fit(hist);
   if (!result.ok()) {
     ACTS_DEBUG("Failed to fit initial Gaussian to '"
                << hist.name() << "': " << result.error().message());
@@ -81,7 +83,8 @@ Result<GaussianFitResult> iterativeFit(
     const double xMin = result->mean - sigmaRange * result->sigma;
     const double xMax = result->mean + sigmaRange * result->sigma;
 
-    Result<GaussianFitResult> restricted = fitter.fit(hist, xMin, xMax);
+    Result<GaussianHistogramFitResult> restricted =
+        fitter.fit(hist, xMin, xMax);
     if (!restricted.ok()) {
       ACTS_DEBUG("Failed to fit iteration "
                  << i << " Gaussian to '" << hist.name()
@@ -113,7 +116,7 @@ Result<GaussianFitResult> iterativeFit(
 /// @return The mean and width profiles and the fit failure fraction
 /// @note Skipped slices leave their output bins empty and do not count towards
 ///       @c fitFailureFraction, which reports only genuine fit failures.
-template <std::size_t Dim, GaussianFitter Fitter>
+template <std::size_t Dim, GaussianHistogramFitter Fitter>
 MeanWidthProfiles<Dim - 1> extractMeanWidthProfiles(
     const Fitter& fitter, const Histogram<Dim>& hist,
     const std::string& meanName, const std::string& widthName,
@@ -156,7 +159,7 @@ MeanWidthProfiles<Dim - 1> extractMeanWidthProfiles(
       continue;
     }
 
-    const Result<GaussianFitResult> result =
+    const Result<GaussianHistogramFitResult> result =
         iterativeFit(fitter, slice, sigmaRange, iterations, logger);
     if (!result.ok()) {
       ++fitFailures;

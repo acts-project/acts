@@ -8,7 +8,7 @@
 
 #include "ActsExamples/Io/Root/RootTrackFitterPerformanceWriter.hpp"
 
-#include "Acts/Utilities/GaussianFit.hpp"
+#include "Acts/Utilities/GaussianHistogramFit.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IterativeFit.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"

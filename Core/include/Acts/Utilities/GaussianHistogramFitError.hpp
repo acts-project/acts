@@ -15,7 +15,7 @@ namespace Acts::Experimental {
 
 /// Error codes for a single Gaussian fit to a histogram
 /// @ingroup errors
-enum class GaussianFitError {
+enum class GaussianHistogramFitError {
   // ensure all values are non-zero
   /// No bins in the fit range, or their contents summed to zero or less
   EmptyRange = 1,
@@ -29,16 +29,16 @@ enum class GaussianFitError {
   FitFailed,
 };
 
-/// Create error code from GaussianFitError
+/// Create error code from GaussianHistogramFitError
 /// @param e The error code enum value
 /// @return Standard error code
-std::error_code make_error_code(GaussianFitError e);
+std::error_code make_error_code(GaussianHistogramFitError e);
 
 }  // namespace Acts::Experimental
 
 namespace std {
 // register with STL
 template <>
-struct is_error_code_enum<Acts::Experimental::GaussianFitError>
+struct is_error_code_enum<Acts::Experimental::GaussianHistogramFitError>
     : std::true_type {};
 }  // namespace std

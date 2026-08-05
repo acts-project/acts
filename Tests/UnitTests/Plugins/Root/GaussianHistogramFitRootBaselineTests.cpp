@@ -9,9 +9,9 @@
 // Validates the ROOT-free Gaussian fit in Core against ROOT itself.
 //
 // ROOT is the reference for this algorithm, so the point of these tests is not
-// that Core's fit is sane in isolation (GaussianFitTests.cpp covers that
-// without ROOT) but that it agrees with what ROOT would have produced on the
-// very same histogram.
+// that Core's fit is sane in isolation (GaussianHistogramFitTests.cpp covers
+// that without ROOT) but that it agrees with what ROOT would have produced on
+// the very same histogram.
 //
 // The reference is `TH1::Fit("gaus", "LSQ0")`, i.e. ROOT's *likelihood* fit.
 // Note that `ActsPlugins::RootHistogramFit` still uses "SQ0", the chi-square
@@ -21,8 +21,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Utilities/GaussianFit.hpp"
-#include "Acts/Utilities/GaussianFitError.hpp"
+#include "Acts/Utilities/GaussianHistogramFit.hpp"
+#include "Acts/Utilities/GaussianHistogramFitError.hpp"
 #include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/IterativeFit.hpp"
 #include "ActsPlugins/Root/HistogramConverter.hpp"
@@ -154,20 +154,21 @@ std::vector<Scenario> scenarios() {
 }
 
 /// ROOT reference: a single likelihood fit over the full range
-std::optional<GaussianFitResult> rootFit(TH1& hist) {
+std::optional<GaussianHistogramFitResult> rootFit(TH1& hist) {
   TFitResultPtr result = hist.Fit("gaus", "LSQ0", nullptr);
   if (result.Get() == nullptr || result->Status() % 1000 != 0) {
     return std::nullopt;
   }
 
-  return GaussianFitResult{result->Parameter(1), result->Parameter(2),
-                           result->ParError(1), result->ParError(2)};
+  return GaussianHistogramFitResult{result->Parameter(1), result->Parameter(2),
+                                    result->ParError(1), result->ParError(2)};
 }
 
 /// ROOT reference: the same iterative narrowing that `iterativeGaussianFit`
 /// performs, driven through ROOT
-std::optional<GaussianFitResult> rootIterativeFit(TH1& hist, double sigmaRange,
-                                                  int iterations) {
+std::optional<GaussianHistogramFitResult> rootIterativeFit(TH1& hist,
+                                                           double sigmaRange,
+                                                           int iterations) {
   TFitResultPtr result = hist.Fit("gaus", "LSQ0", nullptr);
   if (result.Get() == nullptr || result->Status() % 1000 != 0) {
     return std::nullopt;
@@ -189,8 +190,8 @@ std::optional<GaussianFitResult> rootIterativeFit(TH1& hist, double sigmaRange,
     sigma = result->Parameter(2);
   }
 
-  return GaussianFitResult{mean, sigma, result->ParError(1),
-                           result->ParError(2)};
+  return GaussianHistogramFitResult{mean, sigma, result->ParError(1),
+                                    result->ParError(2)};
 }
 
 /// Require agreement to `relativeTolerance`, or to a fraction of the fitted
@@ -227,7 +228,7 @@ void checkRelative(const std::string& what, double ours, double reference,
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(GaussianFitRootBaselineSuite)
+BOOST_AUTO_TEST_SUITE(GaussianHistogramFitRootBaselineSuite)
 
 // Confirms the modelling convention Core assumes: ROOT's "gaus" amplitude is
 // compared directly against the bin content, with no bin-width factor and no
@@ -353,25 +354,27 @@ BOOST_AUTO_TEST_CASE(DegenerateInputs_NeitherSucceedsWrongly) {
   Histogram1 empty("empty", "empty", {axis});
   const auto emptyResult = fit.fit(empty);
   BOOST_CHECK(!emptyResult.ok());
-  BOOST_CHECK_EQUAL(emptyResult.error(), GaussianFitError::EmptyRange);
+  BOOST_CHECK_EQUAL(emptyResult.error(), GaussianHistogramFitError::EmptyRange);
 
   Histogram1 spike("spike", "spike", {axis});
   spike.setBinContent({10}, 500.0);
   const auto spikeResult = fit.fit(spike);
   BOOST_CHECK(!spikeResult.ok());
-  BOOST_CHECK_EQUAL(spikeResult.error(), GaussianFitError::TooFewNonEmptyBins);
+  BOOST_CHECK_EQUAL(spikeResult.error(),
+                    GaussianHistogramFitError::TooFewNonEmptyBins);
 
   Histogram1 two("two", "two", {axis});
   two.setBinContent({9}, 100.0);
   two.setBinContent({10}, 120.0);
   const auto twoResult = fit.fit(two);
   BOOST_CHECK(!twoResult.ok());
-  BOOST_CHECK_EQUAL(twoResult.error(), GaussianFitError::TooFewNonEmptyBins);
+  BOOST_CHECK_EQUAL(twoResult.error(),
+                    GaussianHistogramFitError::TooFewNonEmptyBins);
 }
 
 // `ActsPlugins::RootHistogramFit` satisfies
-// `Acts::Experimental::GaussianFitter` and is otherwise uncalled in the
-// codebase, so this is the only place proving that the generic profile
+// `Acts::Experimental::GaussianHistogramFitter` and is otherwise uncalled in
+// the codebase, so this is the only place proving that the generic profile
 // extraction really does work with a second, ROOT-backed fitter and not just
 // with `GaussianHistogramFit`.
 BOOST_AUTO_TEST_CASE(ExtractMeanWidthProfiles_WorksWithRootFitter) {

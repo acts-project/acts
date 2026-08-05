@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Utilities/GaussianFit.hpp"
+#include "Acts/Utilities/GaussianHistogramFit.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/GaussianFitError.hpp"
+#include "Acts/Utilities/GaussianHistogramFitError.hpp"
 #include "Acts/Utilities/detail/NumericalMinimization.hpp"
 
 #include <algorithm>
@@ -150,7 +150,7 @@ Result<std::array<double, 2>> minimise(const FitBins& bins, double meanSeed,
   const Vector<2> start{meanSeed, std::log(sigmaSeed)};
   const Vector<2> steps{relativeStep * sigmaSeed, relativeStep};
 
-  const Result<Vector<2>, Acts::detail::NumericalMinimizationError> optimum =
+  const Result<Vector<2>> optimum =
       Acts::detail::nelderMead<2>(objective, start, steps);
   if (!optimum.ok()) {
     return Result<std::array<double, 2>>::failure(optimum.error());
@@ -200,53 +200,54 @@ Result<std::array<double, 2>> parameterErrors(const FitBins& bins, double mean,
   return std::array<double, 2>{std::sqrt(varMean), std::sqrt(varSigma)};
 }
 
-Result<GaussianFitResult> fitBins(const FitBins& bins,
-                                  const GaussianHistogramFit::Config& config) {
+Result<GaussianHistogramFitResult> fitBins(
+    const FitBins& bins, const GaussianHistogramFit::Config& config) {
   if (bins.total <= 0) {
-    return Result<GaussianFitResult>::failure(GaussianFitError::EmptyRange);
+    return Result<GaussianHistogramFitResult>::failure(
+        GaussianHistogramFitError::EmptyRange);
   }
   if (bins.nonEmpty < config.minNonEmptyBins) {
-    return Result<GaussianFitResult>::failure(
-        GaussianFitError::TooFewNonEmptyBins);
+    return Result<GaussianHistogramFitResult>::failure(
+        GaussianHistogramFitError::TooFewNonEmptyBins);
   }
 
   const std::optional<std::array<double, 2>> seed = initialGuess(bins);
   if (!seed.has_value()) {
-    return Result<GaussianFitResult>::failure(GaussianFitError::NoValidSeed);
+    return Result<GaussianHistogramFitResult>::failure(
+        GaussianHistogramFitError::NoValidSeed);
   }
 
   const auto optimum =
       minimise(bins, (*seed)[0], (*seed)[1], config.relativeStep);
   if (!optimum.ok()) {
-    return Result<GaussianFitResult>::failure(optimum.error());
+    return Result<GaussianHistogramFitResult>::failure(optimum.error());
   }
 
   const double mean = (*optimum)[0];
   const double sigma = (*optimum)[1];
   if (!std::isfinite(mean) || !std::isfinite(sigma) || sigma <= 0) {
-    return Result<GaussianFitResult>::failure(
-        GaussianFitError::NonFiniteParameters);
+    return Result<GaussianHistogramFitResult>::failure(
+        GaussianHistogramFitError::NonFiniteParameters);
   }
 
   const auto errors = parameterErrors(bins, mean, sigma, config.relativeStep);
   if (!errors.ok()) {
-    return Result<GaussianFitResult>::failure(errors.error());
+    return Result<GaussianHistogramFitResult>::failure(errors.error());
   }
 
-  return GaussianFitResult{mean, sigma, (*errors)[0], (*errors)[1]};
+  return GaussianHistogramFitResult{mean, sigma, (*errors)[0], (*errors)[1]};
 }
 
 }  // namespace
 
-Result<GaussianFitResult> GaussianHistogramFit::fit(
+Result<GaussianHistogramFitResult> GaussianHistogramFit::fit(
     const Histogram1& hist) const {
   const double infinity = std::numeric_limits<double>::infinity();
   return fitBins(selectBins(hist, -infinity, infinity), m_config);
 }
 
-Result<GaussianFitResult> GaussianHistogramFit::fit(const Histogram1& hist,
-                                                    double xMin,
-                                                    double xMax) const {
+Result<GaussianHistogramFitResult> GaussianHistogramFit::fit(
+    const Histogram1& hist, double xMin, double xMax) const {
   return fitBins(selectBins(hist, xMin, xMax), m_config);
 }
 
