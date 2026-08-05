@@ -219,10 +219,10 @@ struct gbts_convert_seeds_params {
   // sample multiple triplets when forming seeds to hedge against outliers.
   bool use_dropout = true;
   // Curvature thresholds (1/m) for the dropout logic.
-  // dcurv = kappa = c*q*B/pT, so 0.007 = ~86GeV
-  float dropout_dcurv_m = 0.007f;
-  // 0.03 = ~20 GeV,
+  // curv of 0.03 = pT of ~10 GeV in a 2T field, curv = c*q*B/(2*pT)
   float force_dropout_max_curv_m = 0.03f;
+  // dcurv = dkappa between two triplets, outlier if > dropout_dcurv_m
+  float dropout_dcurv_m = 0.007f;
   // Fraction of shared hits above which a seed loses a bid (~1/2). Tuning.
   float best_hit_frac = 0.49f;
   // Region switch for "tight" bidding:
