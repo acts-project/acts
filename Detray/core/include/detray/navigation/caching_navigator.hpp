@@ -21,6 +21,7 @@
 #include "detray/navigation/navigation_config.hpp"
 #include "detray/navigation/navigation_state.hpp"
 #include "detray/navigation/navigator_base.hpp"
+#include "detray/tracks/ray.hpp"
 #include "detray/utils/logging.hpp"
 
 namespace detray {
@@ -242,7 +243,14 @@ class caching_navigator
     const auto &det = navigation.detector();
     constexpr bool is_init{true};
 
+    using algebra_t = typename detector_t::algebra_type;
+
     assert(navigation.trust_level() != navigation::trust_level::e_full);
+
+    // Tangential to the track direction
+    const detray::detail::ray<algebra_t> tangential{
+        track.pos(),
+        static_cast<scalar_t>(navigation.direction()) * track.dir()};
 
     // Update only the current candidate and the corresponding next target
     // - do this only when the navigation state is still coherent
@@ -250,9 +258,9 @@ class caching_navigator
       DETRAY_VERBOSE_HOST_DEVICE("Called 'update()' - high trust");
 
       // Update next candidate: If not reachable, 'high trust' is broken
-      if (!navigation::update_candidate(
-              navigation.direction(), navigation.target(), track, det,
-              cfg.intersection, navigation.external_tol(), ctx)) {
+      if (!navigation::update_candidate(navigation.target(), tangential, det,
+                                        cfg.intersection,
+                                        navigation.external_tol(), ctx)) {
         DETRAY_VERBOSE_HOST_DEVICE(
             "-> Candidate not reachable! High trust broken:");
 
@@ -282,9 +290,9 @@ class caching_navigator
         // Else (if full trust): Track is on non-portal surface and
         // cache is not exhausted. Ready the next target
         if (navigation.trust_level() == navigation::trust_level::e_full &&
-            navigation::update_candidate(
-                navigation.direction(), navigation.target(), track, det,
-                cfg.intersection, navigation.external_tol(), ctx)) {
+            navigation::update_candidate(navigation.target(), tangential, det,
+                                         cfg.intersection,
+                                         navigation.external_tol(), ctx)) {
           DETRAY_VERBOSE_HOST_DEVICE(
               "-> On non-portal surface (idx %d) and next candidate "
               "in cache is reachable",
@@ -309,8 +317,8 @@ class caching_navigator
 
       for (auto &candidate : navigation) {
         // Disregard this candidate if it is not reachable
-        if (!navigation::update_candidate(navigation.direction(), candidate,
-                                          track, det, cfg.intersection,
+        if (!navigation::update_candidate(candidate, tangential, det,
+                                          cfg.intersection,
                                           navigation.external_tol(), ctx)) {
           // Forcefully set dist to numeric max for sorting
           candidate.set_path(std::numeric_limits<scalar_t>::max());
