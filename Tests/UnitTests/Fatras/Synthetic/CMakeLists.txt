@@ -1,0 +1,6 @@
+set(unittest_extra_libraries Acts::Fatras)
+
+add_unittest(FatrasSyntheticDetectorLayout DetectorLayoutTests.cpp)
+add_unittest(FatrasSyntheticEventGenerator EventGeneratorTests.cpp)
+add_unittest(FatrasSyntheticHelix HelixTests.cpp)
+add_unittest(FatrasSyntheticPropagation PropagationTests.cpp)
