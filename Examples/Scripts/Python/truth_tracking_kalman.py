@@ -246,7 +246,8 @@ def runTruthTrackingKalman(
     )
 
     s.run()
-    vis.plot(projection=projection) 
+    if pyVis:
+    	vis.plot(projection=projection) 
     
 
 if "__main__" == __name__:
