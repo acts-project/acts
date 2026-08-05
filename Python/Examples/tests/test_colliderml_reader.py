@@ -92,10 +92,10 @@ def test_colliderml_truth_tracking(tmp_path, reco_geo, assert_root_hash):
     perfFile = tmp_path / "performance_colliderml_truth_tracking.root"
     perfWriter = None
     if reco_geo == "gen1":
-        RootTrackFinderPerformanceWriter = acts.examples._tryImportRoot(
-            "RootTrackFinderPerformanceWriter"
+        RootPatternRecognitionPerformanceWriter = acts.examples._tryImportRoot(
+            "RootPatternRecognitionPerformanceWriter"
         )
-        perfWriter = RootTrackFinderPerformanceWriter(
+        perfWriter = RootPatternRecognitionPerformanceWriter(
             level=acts.logging.WARNING,
             inputTracks="tracks",
             inputParticles="particles",
