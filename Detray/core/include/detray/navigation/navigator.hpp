@@ -19,6 +19,7 @@
 #include "detray/navigation/navigation_config.hpp"
 #include "detray/navigation/navigation_state.hpp"
 #include "detray/navigation/navigator_base.hpp"
+#include "detray/tracks/ray.hpp"
 #include "detray/utils/logging.hpp"
 
 namespace detray {
@@ -155,7 +156,14 @@ class navigator : public navigator_base<
     const auto &det = navigation.detector();
     constexpr bool is_init{true};
 
+    using algebra_t = typename detector_t::algebra_type;
+
     assert(navigation.trust_level() != navigation::trust_level::e_full);
+
+    // Tangential to the track direction
+    const detray::detail::ray<algebra_t> tangential{
+        track.pos(),
+        static_cast<scalar_t>(navigation.direction()) * track.dir()};
 
     // Update only the current candidate and the corresponding
     // - do this only when the navigation state is still coherent
@@ -163,9 +171,9 @@ class navigator : public navigator_base<
       DETRAY_VERBOSE_HOST_DEVICE("Called 'update()' - high trust");
 
       // Update next candidate: If not reachable, 'high trust' is broken
-      if (!navigation::update_candidate(
-              navigation.direction(), navigation.target(), track, det,
-              cfg.intersection, navigation.external_tol(), ctx)) {
+      if (!navigation::update_candidate(navigation.target(), tangential, det,
+                                        cfg.intersection,
+                                        navigation.external_tol(), ctx)) {
         navigation.status(navigation::status::e_unknown);
         // This will run into the fair trust case below.
         navigation.set_fair_trust();
