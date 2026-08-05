@@ -37,3 +37,25 @@ add_benchmark(Stepper StepperBenchmark.cpp)
 add_benchmark(SourceLink SourceLinkBenchmark.cpp)
 add_benchmark(TrackEdm TrackEdmBenchmark.cpp)
 add_benchmark(GsfComponentReduction GsfComponentReductionBenchmark.cpp)
+add_benchmark(
+    SyntheticEventGeneration
+    SyntheticEventGenerationBenchmark.cpp
+)
+add_benchmark(GbtsSeeding GbtsSeedingBenchmark.cpp)
+add_benchmark(GridTripletSeeding GridTripletSeedingBenchmark.cpp)
+add_benchmark(
+    OrthogonalTripletSeeding
+    OrthogonalTripletSeedingBenchmark.cpp
+)
+
+# the synthetic event generator lives in Fatras; the root CMakeLists makes sure
+# ACTS_BUILD_FATRAS is on whenever benchmarks are built
+foreach(
+    _bench
+    SyntheticEventGeneration
+    GbtsSeeding
+    GridTripletSeeding
+    OrthogonalTripletSeeding
+)
+    target_link_libraries(ActsBenchmark${_bench} PRIVATE Acts::Fatras)
+endforeach()
