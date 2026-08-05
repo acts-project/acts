@@ -37,6 +37,12 @@ and rings it is.
 
 - @ref ActsFatras::Synthetic::DetectorLayoutBuilder builds one from scratch;
   descriptions of the ATLAS ITk, ODD and ACTS Generic pixels ship with it.
+- @ref ActsFatras::Synthetic::makeLayoutFromTrackingGeometry reduces a real
+  @ref Acts::TrackingGeometry to that skeleton, which is where the shipped ODD
+  and Generic descriptions come from. Two z planes covering the same radii are
+  one ring whose modules alternate rather than two, which
+  @ref ActsFatras::Synthetic::TrackingGeometryLayoutOptions::maxRingOverlap
+  separates.
 - @ref ActsFatras::Synthetic::PassiveSurfaceDescription adds the supports and
   services a layer is carried on, which produce secondaries like any material.
 - @ref ActsFatras::Synthetic::SurfaceMaterial bands a surface along the

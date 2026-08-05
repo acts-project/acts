@@ -30,7 +30,10 @@ It is deliberately coarse in its physics and is meant for throughput and
 combinatorics studies rather than physics performance. Its *geometry* is not:
 every disc holds its own rings and every barrel cylinder its own half-length, so
 the ITk pixel endcap is described as the seventy-five staggered discs and
-ninety-five rings it is.
+ninety-five rings it is. A real detector that ACTS can build needs no
+description written by hand at all - `makeLayoutFromTrackingGeometry` reduces
+its `Acts::TrackingGeometry` to the same form, rings included, which is where
+the ODD and Generic descriptions come from.
 
 An event configuration is fitted against a full simulation of one detector *and*
 one layout of it, so a layout should be used with the configuration of the same
