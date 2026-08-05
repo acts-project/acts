@@ -198,7 +198,8 @@ def runTruthTrackingKalman(
         logLevel=acts.logging.INFO
     )
 
-    s.addAlgorithm(TrackVisualizerAlg("TrackVisualizerAlg", acts.logging.INFO, vis))
+    if pyVis:
+    	s.addAlgorithm(TrackVisualizerAlg("TrackVisualizerAlg", acts.logging.INFO, vis))
 
     s.addAlgorithm(
         acts.examples.TrackSelectorAlgorithm(
