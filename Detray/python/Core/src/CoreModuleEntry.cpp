@@ -19,6 +19,9 @@
 // Detray event generator include(s)
 #include "detray/test/common/event_generator/uniform_track_generator_config.hpp"
 
+// Detray test include(s)
+#include "detray/test/validation/material_validation_config.hpp"
+
 // Detray algebra plugin + detector metadata
 #include "algebra/array.hpp"
 #include "detray/definitions/algebra.hpp"
@@ -26,6 +29,7 @@
 
 // Vecmem include(s)
 #include <vecmem/memory/host_memory_resource.hpp>
+#include <vecmem/memory/memory_resource.hpp>
 
 // Pybind11 include(s)
 #include <pybind11/pybind11.h>
@@ -109,6 +113,8 @@ using transform_store_t = detector_t::transform_container;
 using mask_store_t = detector_t::mask_container;
 using material_store_t = detector_t::material_container;
 using accelerator_store_t = detector_t::accelerator_container;
+using material_validation_config_t =
+    detray::test::material_validation_config<algebra_t>;
 
 /// Owns a detector together with the memory resource its data lives in.
 struct detector_handle {
@@ -339,6 +345,64 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
           "isPT", [](const track_generator_config_t &c) { return c.is_pT(); },
           "Whether the momentum magnitude is interpreted as transverse")
       .def("__repr__", &to_string<track_generator_config_t>);
+
+  py::class_<vecmem::memory_resource>(m, "MemoryResource");
+
+  py::class_<material_validation_config_t>(m, "MaterialValidationConfig")
+      .def(py::init<>())
+      .def_property(
+          "name",
+          [](const material_validation_config_t &c) { return c.name(); },
+          [](material_validation_config_t &c, const std::string &n) {
+            c.name(n);
+          },
+          "Name of the test")
+      .def_property(
+          "deviceMr",
+          [](const material_validation_config_t &c) { return c.device_mr(); },
+          [](material_validation_config_t &c, vecmem::memory_resource *mr) {
+            c.device_mr(mr);
+          },
+          py::return_value_policy::reference,
+          "Memory resource for the device allocations")
+      .def_property(
+          "materialFile",
+          [](const material_validation_config_t &c) {
+            return c.material_file();
+          },
+          [](material_validation_config_t &c, const std::string &f) {
+            c.material_file(f);
+          },
+          "Name of the output file with the navigation material traces")
+      .def_property(
+          "nTracks",
+          [](const material_validation_config_t &c) { return c.n_tracks(); },
+          [](material_validation_config_t &c, std::size_t n) { c.n_tracks(n); },
+          "Maximal number of test tracks to run")
+      .def_property(
+          "relativeError",
+          [](const material_validation_config_t &c) {
+            return c.relative_error();
+          },
+          [](material_validation_config_t &c, scalar_t re) {
+            c.relative_error(re);
+          },
+          "Allowed relative discrepancy between truth and navigation material")
+      .def_property(
+          "tol", [](const material_validation_config_t &c) { return c.tol(); },
+          [](material_validation_config_t &c, scalar_t t) { c.tol(t); },
+          "Tolerance to compare two floating point values")
+      .def_property(
+          "propagation",
+          [](material_validation_config_t &c) -> propagation_config_t & {
+            return c.propagation();
+          },
+          [](material_validation_config_t &c, const propagation_config_t &v) {
+            c.propagation() = v;
+          },
+          py::return_value_policy::reference_internal,
+          "Propagation configuration")
+      .def("__repr__", &to_string<material_validation_config_t>);
 
   py::class_<volume_descriptor_t>(m, "VolumeDescriptor");
   py::class_<surface_descriptor_t>(m, "SurfaceDescriptor");
