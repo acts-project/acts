@@ -125,25 +125,36 @@ void read_json_dd(traccc::detector_design_description::host& det_desc,
   // configuration file.
   vecmem::host_memory_resource mr;
 
+  //
+  // TODO: Remove and reuse existing detector (for compiletime and runtime
+  // performance)
+  //
   // Set up the detector reader configuration for the optional components
-  detray::io::detector_reader_config cfg;
-  cfg.do_check(false).add_file(geometry_file);
-  const auto [det, names] = detray::io::read_detector_json(mr, cfg);
+  const auto cfg = detray::io::detector_reader_config{}.do_check(false);
+  detray::io::detector_payload payload{};
+  detray::io::convert_json_to_payload(
+      payload, {traccc::io::get_absolute_path(geometry_file)});
 
   // TODO: Implement detector visitor!
   traccc::host_detector detector;
-  std::string_view det_name{names.get_detector_name()};
+  std::string_view det_name{payload.names.get_detector_name()};
   if (det_name == "Cylindrical detector from DD4hep blueprint") {
-    detector.set<traccc::odd_detector>(std::move(det));
+    auto det =
+        detray::io::read_detector<traccc::odd_detector::host>(mr, cfg, payload);
+    detector.set<traccc::odd_detector>(std::move(det.first));
     read_json_dd_impl<traccc::odd_detector>(det_desc, det_cond, detector, digi,
                                             cond);
   } else if (det_name == "detray_detector") {
-    detector.set<traccc::itk_detector>(std::move(det));
+    auto det =
+        detray::io::read_detector<traccc::itk_detector::host>(mr, cfg, payload);
+    detector.set<traccc::itk_detector>(std::move(det.first));
     read_json_dd_impl<traccc::itk_detector>(det_desc, det_cond, detector, digi,
                                             cond);
   } else {
     // TODO: Warning here
-    detector.set<traccc::default_detector>(std::move(det));
+    auto det = detray::io::read_detector<traccc::default_detector::host>(
+        mr, cfg, payload);
+    detector.set<traccc::default_detector>(std::move(det.first));
     read_json_dd_impl<traccc::default_detector>(det_desc, det_cond, detector,
                                                 digi, cond);
   }

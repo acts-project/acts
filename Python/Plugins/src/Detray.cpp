@@ -16,13 +16,11 @@
 #include <memory>
 #include <string>
 
-#include <detray/builders/detector_builder.hpp>
-#include <detray/detectors/default_metadata.hpp>
 #include <detray/detectors/odd_metadata.hpp>
-#include <detray/io/frontend/detector_reader.hpp>
 #include <detray/io/frontend/detector_reader_config.hpp>
 #include <detray/io/frontend/detector_writer.hpp>
 #include <detray/io/frontend/detector_writer_config.hpp>
+#include <detray/io/json/detector_reader.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <vecmem/memory/host_memory_resource.hpp>
