@@ -31,6 +31,7 @@ using dindex = unsigned int;
 
 namespace io {
 
+struct detector_payload;
 struct detector_geometry_payload;
 struct transform_payload;
 struct mask_payload;
@@ -42,11 +43,11 @@ struct detector_homogeneous_material_payload;
 
 template <typename, typename>
 struct grid_payload;
-enum class material_id : unsigned int;
 
 template <typename, typename>
 struct detector_grids_payload;
 
+enum class material_id : unsigned int;
 enum class accel_id : unsigned int;
 
 }  // namespace io
@@ -258,34 +259,11 @@ class DetrayPayloadConverter {
       const Acts::GeometryContext& gctx,
       const Acts::TrackingVolume& volume) const;
 
-  /// @brief Container for all Detray payload outputs
-  struct Payloads {
-    /// Detector payload
-    std::unique_ptr<detray::io::detector_geometry_payload> detector;
-
-    /// Homogeneous material payload
-    std::unique_ptr<detray::io::detector_homogeneous_material_payload>
-        homogeneousMaterial;
-
-    /// Material grids payload
-    std::unique_ptr<detray::io::detector_grids_payload<
-        detray::io::surface_material_payload, detray::io::material_id>>
-        materialGrids;
-
-    /// Surface grids payload
-    std::unique_ptr<
-        detray::io::detector_grids_payload<std::size_t, detray::io::accel_id>>
-        surfaceGrids;
-
-    /// Volume and surface names
-    std::map<detray::dindex, std::string> names;
-  };
-
   /// Convert tracking geometry
   /// @param gctx Geometry context
   /// @param geometry Tracking geometry to convert
   /// @return Detray payloads
-  Payloads convertTrackingGeometry(
+  detray::io::detector_payload convertTrackingGeometry(
       const Acts::GeometryContext& gctx,
       const Acts::TrackingGeometry& geometry) const;
 

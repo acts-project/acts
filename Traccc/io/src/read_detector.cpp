@@ -38,13 +38,14 @@ void read_detector(traccc::host_detector& detector, vecmem::memory_resource& mr,
 namespace traccc::io {
 
 void read_detector(host_detector& detector, vecmem::memory_resource& mr,
-                   const std::string_view& geometry_file,
-                   const std::string_view& material_file,
-                   const std::string_view& grid_file,
+                   std::string_view geometry_file,
+                   std::string_view material_file, std::string_view grid_file,
                    const bool do_consistency_check = true) {
   detray::io::detector_payload payload{};
-  detray::io::convert_json_to_payload(payload, geometry_file, material_file,
-                                      grid_file);
+  detray::io::convert_json_to_payload(
+      payload, {traccc::io::get_absolute_path(geometry_file),
+                traccc::io::get_absolute_path(material_file),
+                traccc::io::get_absolute_path(grid_file)});
 
   // Set up the detector reader configuration for the optional components
   detray::io::detector_reader_config cfg;
