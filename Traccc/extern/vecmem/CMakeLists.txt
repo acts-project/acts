@@ -11,6 +11,9 @@ include(FetchContent)
 # Tell the user what's happening.
 message(STATUS "Building VecMem as part of the TRACCC project")
 
+# Disregard the global C++ flags, to avoid any unhelpful warnings.
+set(CMAKE_CXX_FLAGS)
+
 # Declare where to get VecMem from.
 set(TRACCC_VECMEM_SOURCE
     "URL;https://github.com/acts-project/vecmem/archive/refs/tags/v1.25.0.tar.gz;URL_MD5;31c1c2db4273b47f021798ea9de31733"
