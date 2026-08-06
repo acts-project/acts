@@ -183,7 +183,6 @@ using LayerBlueprintNode
     [[deprecated("Acts::Experimental::LayerBlueprintNode moved to "
                  "Acts::LayerBlueprintNode")]] = Acts::LayerBlueprintNode;
 }  // namespace Experimental
-
-  
-ACTS_OSTREAM_FORMATTER(Acts::LayerBlueprintNode::LayerType);
 }  // namespace Acts
+
+ACTS_OSTREAM_FORMATTER(Acts::LayerBlueprintNode::LayerType);
