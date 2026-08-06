@@ -10,17 +10,17 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/AnyTrackProxy.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
-#include "Acts/EventData/AnyTrackProxy.hpp"
-#include "Acts/EventData/TrackContainer.hpp"
-#include "Acts/EventData/VectorMultiTrajectory.hpp"
-#include "Acts/EventData/VectorTrackContainer.hpp"
 
 #include <array>
 #include <cmath>
@@ -319,11 +319,10 @@ struct EventDataView3D {
   /// @param itrack the track index in the container
   /// @param gctx The geometry context for which it is drawn
   /// @param lineconfig The visualization options for the lines to be drawn
-  static void drawTrack(
-    IVisualization3D& helper, const AnyConstTrackProxy& track,
-      const GeometryContext& gctx =
-          GeometryContext::dangerouslyDefaultConstruct());
-
+  static void drawTrack(IVisualization3D& helper,
+                        const AnyConstTrackProxy& track,
+                        const GeometryContext& gctx =
+                            GeometryContext::dangerouslyDefaultConstruct());
 };
 
 }  // namespace Acts

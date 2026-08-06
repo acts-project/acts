@@ -14,7 +14,7 @@ def runTruthTrackingKalman(
     field: acts.MagneticFieldProvider,
     digiConfigFile: Path,
     outputDir: Path,
-    pyVis = True,
+    pyVis=True,
     inputParticlePath: Optional[Path] = None,
     inputHitsPath: Optional[Path] = None,
     decorators=[],
@@ -22,7 +22,7 @@ def runTruthTrackingKalman(
     reverseFilteringMomThreshold=0 * u.GeV,
     reverseFilteringCovarianceScaling=100.0,
     numParticles=1,
-    projection='rz',
+    projection="rz",
     linkForward: bool = False,
     useJosephFormulation: bool = False,
     s: acts.examples.Sequencer = None,
@@ -54,15 +54,12 @@ def runTruthTrackingKalman(
         addKalmanTracks,
     )
 
-    from acts.examples.visualization import (
-            TrackVisualizerAlg,
-            PyVisualization2D
-        )
+    from acts.examples.visualization import TrackVisualizerAlg, PyVisualization2D
 
     s = s or acts.examples.Sequencer(
         events=100, numThreads=-1, logLevel=acts.logging.INFO
     )
-    
+
     for d in decorators:
         s.addContextDecorator(d)
 
@@ -75,9 +72,9 @@ def runTruthTrackingKalman(
         context = acts.GeometryContext.dangerouslyDefaultConstruct()
         vis = PyVisualization2D()
         trackingGeometry.visualize(
-                    vis,
-                    context.geoContext,
-                )
+            vis,
+            context.geoContext,
+        )
 
     if inputParticlePath is None:
         addParticleGun(
@@ -133,7 +130,7 @@ def runTruthTrackingKalman(
         field,
         digiConfigFile=digiConfigFile,
         rnd=rnd,
-        logLevel=acts.logging.DEBUG
+        logLevel=acts.logging.DEBUG,
     )
 
     addDigiParticleSelection(
@@ -178,7 +175,7 @@ def runTruthTrackingKalman(
         initialSigmaQoverPt=0.1 / u.GeV,
         initialSigmaPtRel=0.1,
         initialVarInflation=[1e0, 1e0, 1e0, 1e0, 1e0, 1e0],
-        logLevel=acts.logging.INFO
+        logLevel=acts.logging.INFO,
     )
 
     addKalmanTracks(
@@ -189,7 +186,7 @@ def runTruthTrackingKalman(
         reverseFilteringCovarianceScaling,
         linkForward=linkForward,
         useJosephFormulation=useJosephFormulation,
-        logLevel=acts.logging.INFO
+        logLevel=acts.logging.INFO,
     )
 
     if pyVis:
@@ -241,8 +238,10 @@ def runTruthTrackingKalman(
 
     s.run()
     if pyVis:
-        vis.plot(projection=projection) 
-    
+        vis.plot(
+            projection=projection, filename="truth_tracking_kalman_visualization.png"
+        )
+
 
 if "__main__" == __name__:
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
@@ -269,8 +268,6 @@ if "__main__" == __name__:
         trackingGeometry=trackingGeometry,
         field=field,
         digiConfigFile=digiConfigFile,
-        projection='xy',
+        projection="xy",
         outputDir=Path.cwd(),
     )
-
-  
