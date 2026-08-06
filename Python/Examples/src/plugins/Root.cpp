@@ -104,8 +104,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
     ACTS_PYTHON_DECLARE_READER(
         RootMeasurementReader, root, "RootMeasurementReader",
-        outputMeasurements, outputMeasurementParticlesMap, outputClusters,
-        filePath, treeName);
+        outputMeasurements, outputMeasurementSubset,
+        outputMeasurementParticlesMap, outputClusters, filePath, treeName);
   }
 
   // Output

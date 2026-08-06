@@ -50,6 +50,12 @@ class RootMeasurementReader final : public IReader {
   struct Config {
     /// Output measurement collection.
     std::string outputMeasurements;
+    /// Output measurement subset covering all measurements (optional).
+    /// @note Most reconstruction algorithms (e.g. space point building, CKF)
+    ///   consume a @c MeasurementSubset rather than the raw
+    ///   @c MeasurementContainer, so this is typically needed to feed the
+    ///   read-back measurements into a reconstruction chain.
+    std::string outputMeasurementSubset;
     /// Output measurement to particle collection (optional).
     std::string outputMeasurementParticlesMap;
     /// Output cluster collection (optional).
@@ -116,6 +122,8 @@ class RootMeasurementReader final : public IReader {
 
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};
+  WriteDataHandle<MeasurementSubset> m_outputMeasurementSubset{
+      this, "OutputMeasurementSubset"};
   WriteDataHandle<MeasurementParticlesMap> m_outputMeasurementParticlesMap{
       this, "OutputMeasurementParticlesMap"};
   WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};

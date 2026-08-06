@@ -17,6 +17,7 @@
 #include "ActsPlugins/Root/RootMeasurementIo.hpp"
 
 #include <algorithm>
+#include <numeric>
 #include <stdexcept>
 
 #include <TChain.h>
@@ -37,6 +38,7 @@ RootMeasurementReader::RootMeasurementReader(
   }
 
   m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+  m_outputMeasurementSubset.maybeInitialize(m_cfg.outputMeasurementSubset);
   m_outputMeasurementParticlesMap.maybeInitialize(
       m_cfg.outputMeasurementParticlesMap);
   m_outputClusters.maybeInitialize(m_cfg.outputClusters);
@@ -183,7 +185,17 @@ ProcessCode RootMeasurementReader::read(const AlgorithmContext& ctx) {
   ACTS_DEBUG("Read " << measurements.size() << " measurements for event "
                      << ctx.eventNumber);
 
-  m_outputMeasurements(ctx, std::move(measurements));
+  const auto& storedMeasurements =
+      m_outputMeasurements(ctx, std::move(measurements));
+
+  if (m_outputMeasurementSubset.isInitialized()) {
+    // Build the full subset: all measurements, indices in original space.
+    std::vector<MeasurementContainer::Index> allIndices(
+        storedMeasurements.size());
+    std::iota(allIndices.begin(), allIndices.end(), Index{0});
+    m_outputMeasurementSubset(
+        ctx, MeasurementSubset(storedMeasurements, std::move(allIndices)));
+  }
   if (m_outputMeasurementParticlesMap.isInitialized()) {
     m_outputMeasurementParticlesMap(ctx, std::move(measurementParticlesMap));
   }
