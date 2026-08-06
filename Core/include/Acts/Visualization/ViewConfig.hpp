@@ -170,7 +170,8 @@ ViewConfig defaultGeometryColoring(const GeometryObject&);
 /// Function that takes a GeometryObject as an input and outputs a ViewConfig
 /// This allows to use custom functions for determining the colour of GeometryObjects
 using ViewConfigFunc = std::function<ViewConfig(const GeometryObject&)>;
-ViewConfigFunc viewConfigFactory();
+
+ViewConfigFunc defaultViewConfigFactory();
 
 
 }  // namespace Acts
