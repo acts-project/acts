@@ -508,11 +508,11 @@ void addEventData(py::module& mex) {
   py::implicitly_convertible<ConstTrackProxy, Acts::AnyConstTrackProxy>();
 
   py::classh<Acts::AnyMutableTrackStateProxy>(mex, "AnyMutableTrackStateProxy")
-    .def(py::init<TrackStateProxy>());
+    .def(py::init<TrackStateProxy &>());
   py::implicitly_convertible<TrackStateProxy, Acts::AnyMutableTrackStateProxy>();
 
   py::classh<Acts::AnyConstTrackStateProxy>(mex, "AnyConstTrackState")
-    .def(py::init<ConstTrackStateProxy>());
+    .def(py::init<ConstTrackStateProxy &>());
   py::implicitly_convertible<ConstTrackStateProxy, Acts::AnyConstTrackStateProxy>();  
 
   // bind measurements
