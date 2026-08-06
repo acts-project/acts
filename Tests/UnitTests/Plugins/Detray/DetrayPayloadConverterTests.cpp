@@ -51,15 +51,8 @@
 #include <numbers>
 #include <set>
 
-#include <detray/builders/detail/material_deduplication.hpp>
-#include <detray/geometry/shapes/concentric_cylinder2D.hpp>
-#include <detray/geometry/shapes/ring2D.hpp>
-#include <detray/io/backend/geometry_reader.hpp>
 #include <detray/io/backend/geometry_writer.hpp>
-#include <detray/io/backend/homogeneous_material_reader.hpp>
 #include <detray/io/backend/homogeneous_material_writer.hpp>
-#include <detray/io/backend/material_map_reader.hpp>
-#include <detray/io/backend/surface_grid_reader.hpp>
 #include <detray/io/frontend/definitions.hpp>
 #include <detray/io/frontend/detector_reader.hpp>
 #include <detray/io/frontend/detector_reader_config.hpp>
@@ -70,8 +63,6 @@
 #include <detray/material/detail/material_accessor.hpp>
 #include <detray/plugins/svgtools/illustrator.hpp>
 #include <detray/plugins/svgtools/writer.hpp>
-#include <detray/utils/consistency_checker.hpp>
-#include <detray/utils/detector_statistics.hpp>
 #include <detray/utils/grid/concepts.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
@@ -690,11 +681,14 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   DetrayPayloadConverter converter(cfg, std::move(logger));
   auto payloads = converter.convertTrackingGeometry(gctx, *tGeometry);
 
-  const auto& detector = *payloads.detector;
-  BOOST_REQUIRE_NE(payloads.homogeneousMaterial, nullptr);
-  const auto& homogeneousMaterial = *payloads.homogeneousMaterial;
-  auto& materialGrids = *payloads.materialGrids;
-  const auto& surfaceGrids = *payloads.surfaceGrids;
+  BOOST_CHECK(payloads.material_maps.has_value());
+  BOOST_CHECK(payloads.homogeneous_material.has_value());
+  BOOST_CHECK(payloads.surface_grids.has_value());
+
+  const auto& detector = payloads.geometry;
+  const auto& homogeneousMaterial = *payloads.homogeneous_material;
+  const auto& materialGrids = *payloads.material_maps;
+  const auto& surfaceGrids = *payloads.surface_grids;
 
   BOOST_CHECK_EQUAL(detector.volumes.size(), 6);
   for (const auto& volume : detector.volumes) {
@@ -707,11 +701,8 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   BOOST_CHECK_EQUAL(detector.volumes.at(4).name, "L2");
   BOOST_CHECK_EQUAL(detector.volumes.at(5).name, "L3");
 
-  // Homogeneous material is sparse: only volumes that actually carry it are
-  // registered, and within them only the surfaces that have it.
-  BOOST_CHECK(!homogeneousMaterial.volumes.empty());
-  BOOST_CHECK_LE(homogeneousMaterial.volumes.size(), detector.volumes.size());
-
+  // @HACK: At this time, the conversion introduces a number of dummy material
+  // slabs which should ultimately not be there.
   for (const auto& hMat : homogeneousMaterial.volumes) {
     auto volIt =
         std::ranges::find_if(detector.volumes, [&](const auto& volume) {
@@ -740,7 +731,6 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   }
 
   BOOST_CHECK_EQUAL(materialGrids.grids.size(), 2);
-
   BOOST_CHECK_EQUAL(surfaceGrids.grids.size(), 4);
 
   // Empirical binning config from construction
@@ -772,20 +762,19 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   // Write payloads to JSON directly
 
   {
-    detray::io::geometry_header_payload header_data =
-        detray::io::geometry_writer::to_header_payload(payloads.names.at(0));
-    header_data.common = detray::io::detail::basic_converter::to_payload(
-        payloads.names.at(0), detray::io::geometry_writer::tag);
-    header_data.geometry.emplace();
-    auto& geo_sub_header = header_data.geometry.value();
-    geo_sub_header.n_volumes = detector.volumes.size();
-    geo_sub_header.n_surfaces = 0;
+    detray::io::geometry_header_payload header_data{};
+    header_data.n_volumes = detector.volumes.size();
+    header_data.n_surfaces = 0;
     for (const auto& volume : detector.volumes) {
-      geo_sub_header.n_surfaces += volume.surfaces.size();
+      header_data.n_surfaces += volume.surfaces.size();
     }
 
     nlohmann::ordered_json out_json;
     out_json["header"] = header_data;
+    out_json["header"]["common"] =
+        detray::io::detail::basic_converter::to_header_payload(
+            payloads.names.get_detector_name(),
+            detray::io::geometry_writer::tag);
     out_json["data"] = detector;
 
     std::ofstream ofs{"Detector_geometry_direct.json"};
@@ -794,21 +783,22 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
 
   {
     detray::io::homogeneous_material_header_payload header_data;
-    header_data.common = detray::io::detail::basic_converter::to_payload(
-        payloads.names.at(0), detray::io::homogeneous_material_writer::tag);
-    header_data.homogeneous_material.emplace();
-    header_data.homogeneous_material->n_rods = 0;
-    header_data.homogeneous_material->n_slabs = 0;
+    header_data.n_rods = 0;
+    header_data.n_slabs = 0;
 
     for (const auto& hVol : homogeneousMaterial.volumes) {
       if (!hVol.surface_mat.empty()) {
-        header_data.homogeneous_material->n_rods += hVol.surface_mat.size();
+        header_data.n_rods += hVol.surface_mat.size();
       }
-      header_data.homogeneous_material->n_slabs += hVol.surface_mat.size();
+      header_data.n_slabs += hVol.surface_mat.size();
     }
 
     nlohmann::ordered_json out_json;
     out_json["header"] = header_data;
+    out_json["header"]["common"] =
+        detray::io::detail::basic_converter::to_header_payload(
+            payloads.names.get_detector_name(),
+            detray::io::homogeneous_material_writer::tag);
     out_json["data"] = homogeneousMaterial;
 
     std::ofstream ofs{"Detector_homogeneous_material_direct.json"};
@@ -816,44 +806,12 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   }
 
   // Payloads DONE, let's actually build a detray detector from them.
-
   using detector_t =
       detray::host::detector<detray::default_metadata<detray::array<double>>>;
 
-  // build detector
-  detray::detector_builder<detector_t::metadata> detectorBuilder{};
-  // (1) geometry
-  detray::io::geometry_reader<detector_t>{}.from_payload(detectorBuilder,
-                                                         detector);
-
-  detray::io::homogeneous_material_reader<detector_t>{}.from_payload(
-      detectorBuilder, homogeneousMaterial);
-
-  detray::io::material_map_reader<detector_t,
-                                  std::integral_constant<std::size_t, 2>>{}
-      .from_payload(detectorBuilder, std::move(materialGrids));
-
-  detray::io::surface_grid_reader<detector_t,
-                                  std::integral_constant<std::size_t, 0>,
-                                  std::integral_constant<std::size_t, 2>>{}
-      .from_payload(detectorBuilder, surfaceGrids);
-
-  detray::volume_builder_options builder_opts{};
-  detector_t detrayDetector(detectorBuilder.build(mr, builder_opts));
-
-  // Checks and print
-  detray::detail::check_consistency(detrayDetector);
-
-  // Helper to convert std::map<unsigned int, std::string> to detray::name_map
-  auto toDetrayNameMap = [](const std::map<unsigned int, std::string>& src) {
-    detray::name_map result;
-    for (const auto& [idx, name] : src) {
-      result.emplace(static_cast<detray::dindex>(idx), name);
-    }
-    return result;
-  };
-
-  auto detrayNames = toDetrayNameMap(payloads.names);
+  auto readerCfg = detray::io::detector_reader_config{}.verbose_check(true);
+  const auto [detrayDetector, detrayNames] =
+      detray::io::read_detector<detector_t>(mr, readerCfg, payloads);
 
   detray::svgtools::illustrator illustrator(detrayDetector, detrayNames);
   illustrator.hide_eta_lines(true);

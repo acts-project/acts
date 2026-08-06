@@ -18,9 +18,10 @@ namespace detray::io {
 ///
 /// @param[out] payload payload containing detector data (all components)
 /// @param[in] file_names a number of input file names
-void convert_json_to_payload(detray::io::detector_payload& payload,
-                             std::initializer_list<std::string> file_names) {
-  detray::io::convert_to_payload<json_input_converter>(payload, {file_names});
+inline void convert_json_to_payload(
+    detray::io::detector_payload& payload,
+    std::initializer_list<std::string_view> file_names) {
+  detray::io::convert_to_payload<json_input_converter>(payload, file_names);
 }
 
 /// @brief Read and build the detector completely from json files.

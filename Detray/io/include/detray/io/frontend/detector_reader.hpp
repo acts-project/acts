@@ -103,8 +103,10 @@ void convert_to_payload(detray::io::detector_payload& payload,
 
 template <typename... input_converter_ts>
 void convert_to_payload(detray::io::detector_payload& payload,
-                        std::initializer_list<std::string> file_names) {
-  detray::io::convert_to_payload<input_converter_ts...>(payload, {file_names});
+                        std::initializer_list<std::string_view> file_names) {
+  detray::io::convert_to_payload<input_converter_ts...>(
+      payload,
+      std::vector<std::string>(std::begin(file_names), std::end(file_names)));
 }
 /// @}
 
