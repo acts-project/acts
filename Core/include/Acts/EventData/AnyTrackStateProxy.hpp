@@ -529,7 +529,7 @@ class AnyTrackStateProxy
                              AnyTrackStateProxy<true>> &&
              !std::is_same_v<std::remove_cv_t<track_state_proxy_t>,
                              AnyTrackStateProxy<false>>)
-  explicit AnyTrackStateProxy(track_state_proxy_t & ts)
+  explicit AnyTrackStateProxy(track_state_proxy_t& ts)
       : m_container(nullptr), m_index(ts.m_istate) {
     using trajectory_t = typename track_state_proxy_t::Trajectory;
     auto* containerPtr = ts.rawTrajectoryPtr();
