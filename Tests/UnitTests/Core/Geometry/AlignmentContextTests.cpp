@@ -451,7 +451,6 @@ BOOST_AUTO_TEST_CASE(ConfinedVolumes) {
   std::vector<std::shared_ptr<AlignableVolumePlacement>> innerPlacements{};
 
   const AlignmentContext gctx{};
-  using namespace Acts::Experimental;
 
   constexpr double hX = 10._cm;
   constexpr double hY = 20._cm;

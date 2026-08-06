@@ -15,7 +15,7 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
 namespace detail {
 struct LayerBlueprintNodeImpl {
@@ -231,4 +231,4 @@ void LayerBlueprintNode::addToGraphviz(std::ostream& os) const {
   BlueprintNode::addToGraphviz(os);
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

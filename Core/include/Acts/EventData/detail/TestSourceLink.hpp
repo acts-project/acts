@@ -136,4 +136,34 @@ void testSourceLinkCalibrator(
   }
 }
 
+/// Same as @ref testSourceLinkCalibrator, but additionally checks that the
+/// fitter does not expose unwritten parameters to the calibrator.
+///
+/// Filtering has not happened yet when the calibrator runs, so the filtered
+/// component must not be allocated. Otherwise `parameters()` and
+/// `covariance()` would hand out uninitialized memory, see
+/// https://github.com/acts-project/acts/issues/5777
+///
+/// @note This deliberately does not check `hasSmoothed`: the GX2F keeps its
+///       current parameter estimate in the smoothed component and writes it
+///       before calling the calibrator.
+///
+/// @param gctx Geometry context, forwarded
+/// @param cctx Calibration context, forwarded
+/// @param sourceLink The source link to calibrate
+/// @param trackState TrackState to calibrate
+template <typename trajectory_t>
+void testSourceLinkCalibratorStrict(
+    const GeometryContext& gctx, const CalibrationContext& cctx,
+    const SourceLink& sourceLink,
+    typename trajectory_t::TrackStateProxy trackState) {
+  if (trackState.hasFiltered()) {
+    throw std::runtime_error(
+        "calibrator was called on a track state which already has filtered "
+        "parameters allocated");
+  }
+
+  testSourceLinkCalibrator<trajectory_t>(gctx, cctx, sourceLink, trackState);
+}
+
 }  // namespace Acts::detail::Test

@@ -6,11 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/RootTrackFinderPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/RootPatternRecognitionPerformanceWriter.hpp"
 
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsPlugins/Root/HistogramConverter.hpp"
 
+#include <format>
 #include <stdexcept>
 
 #include <TEfficiency.h>
@@ -36,13 +37,15 @@ void writeTrackSummaryPlots(const TrackSummaryPlotTool& tool) {
 
 }  // namespace
 
-RootTrackFinderPerformanceWriter::RootTrackFinderPerformanceWriter(
-    RootTrackFinderPerformanceWriter::Config cfg, Acts::Logging::Level lvl)
-    : WriterT(cfg.inputTracks, "RootTrackFinderPerformanceWriter", lvl),
+RootPatternRecognitionPerformanceWriter::
+    RootPatternRecognitionPerformanceWriter(
+        RootPatternRecognitionPerformanceWriter::Config cfg,
+        Acts::Logging::Level lvl)
+    : WriterT(cfg.inputTracks, "RootPatternRecognitionPerformanceWriter", lvl),
       m_cfg(std::move(cfg)),
       m_collector(
-          TrackFinderPerformanceCollector::Config{
-              m_cfg.effPlotToolConfig, m_cfg.fakePlotToolConfig,
+          PatternRecognitionPerformanceCollector::Config{
+              m_cfg.label, m_cfg.effPlotToolConfig, m_cfg.fakePlotToolConfig,
               m_cfg.duplicationPlotToolConfig, m_cfg.trackSummaryPlotToolConfig,
               m_cfg.trackQualityPlotToolConfig,
               m_cfg.subDetectorTrackSummaryVolumes},
@@ -93,13 +96,14 @@ RootTrackFinderPerformanceWriter::RootTrackFinderPerformanceWriter(
   }
 }
 
-RootTrackFinderPerformanceWriter::~RootTrackFinderPerformanceWriter() {
+RootPatternRecognitionPerformanceWriter::
+    ~RootPatternRecognitionPerformanceWriter() {
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ProcessCode RootTrackFinderPerformanceWriter::finalize() {
+ProcessCode RootPatternRecognitionPerformanceWriter::finalize() {
   m_collector.logSummary();
 
   auto writeFloat = [&](float f, const char* name) {
@@ -107,6 +111,8 @@ ProcessCode RootTrackFinderPerformanceWriter::finalize() {
     v[0] = f;
     m_outputFile->WriteObject(&v, name);
   };
+
+  std::string labelPlural = std::format("{}s", m_cfg.label);
 
   if (m_outputFile != nullptr) {
     m_outputFile->cd();
@@ -159,11 +165,10 @@ ProcessCode RootTrackFinderPerformanceWriter::finalize() {
 
     // Write summary scalars derived from the collector's accumulated counts.
     const auto s = m_collector.stats();
-    float eff_tracks =
-        static_cast<float>(s.nTotalMatchedTracks) / s.nTotalTracks;
-    float fakeRatio_tracks =
+    float eff_val = static_cast<float>(s.nTotalMatchedTracks) / s.nTotalTracks;
+    float fakeRatio_val =
         static_cast<float>(s.nTotalFakeTracks) / s.nTotalTracks;
-    float duplicationRatio_tracks =
+    float duplicationRatio_val =
         static_cast<float>(s.nTotalDuplicateTracks) / s.nTotalTracks;
     float eff_particle =
         static_cast<float>(s.nTotalMatchedParticles) / s.nTotalParticles;
@@ -172,9 +177,10 @@ ProcessCode RootTrackFinderPerformanceWriter::finalize() {
     float duplicationRatio_particle =
         static_cast<float>(s.nTotalDuplicateParticles) / s.nTotalParticles;
 
-    writeFloat(eff_tracks, "eff_tracks");
-    writeFloat(fakeRatio_tracks, "fakeratio_tracks");
-    writeFloat(duplicationRatio_tracks, "duplicateratio_tracks");
+    writeFloat(eff_val, std::format("eff_{}", labelPlural).c_str());
+    writeFloat(fakeRatio_val, std::format("fakeratio_{}", labelPlural).c_str());
+    writeFloat(duplicationRatio_val,
+               std::format("duplicateratio_{}", labelPlural).c_str());
     writeFloat(eff_particle, "eff_particles");
     writeFloat(fakeRatio_particle, "fakeratio_particles");
     writeFloat(duplicationRatio_particle, "duplicateratio_particles");
@@ -184,11 +190,14 @@ ProcessCode RootTrackFinderPerformanceWriter::finalize() {
     }
 
     ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
+
+    m_outputFile->Close();
+    m_outputFile = nullptr;
   }
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode RootTrackFinderPerformanceWriter::writeT(
+ProcessCode RootPatternRecognitionPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
   // Read truth input collections
   const auto& particles = m_inputParticles(ctx);

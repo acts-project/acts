@@ -41,13 +41,13 @@
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-using Experimental::Blueprint;
-using Experimental::BlueprintNode;
-using Experimental::BlueprintOptions;
-using Experimental::LayerBlueprintNode;
-using Experimental::MaterialDesignatorBlueprintNode;
-using Experimental::PadBlueprintNode;
-using Experimental::StaticBlueprintNode;
+using Acts::Blueprint;
+using Acts::BlueprintNode;
+using Acts::BlueprintOptions;
+using Acts::LayerBlueprintNode;
+using Acts::MaterialDesignatorBlueprintNode;
+using Acts::PadBlueprintNode;
+using Acts::StaticBlueprintNode;
 
 namespace ActsTests {
 

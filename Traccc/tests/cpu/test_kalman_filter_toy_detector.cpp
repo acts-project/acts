@@ -138,7 +138,7 @@ TEST_P(KF_integration_test_toy_detector, toy_detector) {
   sim.run();
 
   // Configure the test
-  detray::propagation_validation_config test_cfg{};
+  detray::propagation_validation_config<float> test_cfg{};
   traccc::seed_generator<detector_t>::config smearing_cfg{};
 
   // General config

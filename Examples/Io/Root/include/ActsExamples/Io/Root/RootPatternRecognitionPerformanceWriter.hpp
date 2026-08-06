@@ -17,7 +17,7 @@
 #include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
 #include "ActsExamples/Validation/FakePlotTool.hpp"
-#include "ActsExamples/Validation/TrackFinderPerformanceCollector.hpp"
+#include "ActsExamples/Validation/PatternRecognitionPerformanceCollector.hpp"
 #include "ActsExamples/Validation/TrackQualityPlotTool.hpp"
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
@@ -30,16 +30,18 @@ class TTree;
 
 namespace ActsExamples {
 
-/// Write out the performance of CombinatorialKalmanFilter (CKF), e.g. track
+/// Write out the pattern recognition performance, e.g. track
 /// efficiency, fake rate/ratio etc.
 ///
-/// @TODO: add duplication plots
+/// The label config parameter allows customization of histogram titles
+/// and ROOT object names for different use cases (e.g. "track" for
+/// track finding, "seed" for seeding, "prototrack" for prototracks).
 ///
 /// A common file can be provided for the writer to attach his TTree, this is
 /// done by setting the Config::rootFile pointer to an existing file.
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class RootTrackFinderPerformanceWriter final
+class RootPatternRecognitionPerformanceWriter final
     : public WriterT<ConstTrackContainer> {
  public:
   struct Config {
@@ -53,8 +55,10 @@ class RootTrackFinderPerformanceWriter final
     std::string inputParticleTrackMatching;
     /// Input particle measurements map.
     std::string inputParticleMeasurementsMap;
+    /// Label for histogram titles and ROOT object names.
+    std::string label = "track";
     /// Output filename.
-    std::string filePath = "performance_ckf.root";
+    std::string filePath = "performance_pattern_recognition.root";
     /// Output filemode
     std::string fileMode = "RECREATE";
 
@@ -74,8 +78,8 @@ class RootTrackFinderPerformanceWriter final
   };
 
   /// Construct from configuration and log level.
-  RootTrackFinderPerformanceWriter(Config cfg, Acts::Logging::Level lvl);
-  ~RootTrackFinderPerformanceWriter() override;
+  RootPatternRecognitionPerformanceWriter(Config cfg, Acts::Logging::Level lvl);
+  ~RootPatternRecognitionPerformanceWriter() override;
 
   /// Finalize plots.
   ProcessCode finalize() override;
@@ -92,7 +96,7 @@ class RootTrackFinderPerformanceWriter final
   std::mutex m_writeMutex;
   TFile* m_outputFile{nullptr};
   /// Collector holding all plot tools and per-event counters.
-  TrackFinderPerformanceCollector m_collector;
+  PatternRecognitionPerformanceCollector m_collector;
 
   /// For optional output of the matching details
   TTree* m_matchingTree{nullptr};
