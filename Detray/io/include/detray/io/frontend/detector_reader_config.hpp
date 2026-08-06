@@ -56,8 +56,8 @@ struct detector_reader_config {
   /// Add a detector component file to the input list.
   /// @param file_name path to a detector data file
   /// @return this configuration for chaining
-  detector_reader_config& add_file(const std::string& file_name) {
-    m_files.push_back(file_name);
+  detector_reader_config& add_file(std::string_view file_name) {
+    m_files.push_back(std::string{file_name});
     return *this;
   }
   /// Add detector component files to the input list.
@@ -65,23 +65,36 @@ struct detector_reader_config {
   /// @return this configuration for chaining
   detector_reader_config& add_files(
       const std::vector<std::string>& file_names) {
-    m_files = file_names;
+    m_files.reserve(m_files.size() + file_names.size());
+    m_files.insert(std::end(m_files), std::begin(file_names),
+                   std::end(file_names));
+    return *this;
+  }
+  detector_reader_config& add_files(
+      const std::vector<std::string_view>& file_names) {
+    m_files.reserve(m_files.size() + file_names.size());
+    m_files.insert(std::end(m_files), std::begin(file_names),
+                   std::end(file_names));
     return *this;
   }
   /// Add detector component files to the input list.
   /// @param file_names vector of input file paths
   /// @return this configuration for chaining
   detector_reader_config& add_files(std::vector<std::string>&& file_names) {
-    m_files = std::move(file_names);
+    m_files.reserve(m_files.size() + file_names.size());
+    m_files.insert(std::end(m_files),
+                   std::make_move_iterator(std::begin(file_names)),
+                   std::make_move_iterator(std::end(file_names)));
     return *this;
   }
   /// Add detector component files to the input list.
   /// @param file_names parameter pack of input file paths
   /// @return this configuration for chaining
-  template <typename... Args>
-    requires(std::same_as<std::string, Args> || ...)
-  detector_reader_config& add_files(Args&&... file_names) {
-    m_files = std::vector<std::string>(std::forward<Args>(file_names)...);
+  detector_reader_config& add_files(
+      std::initializer_list<std::string> file_names) {
+    m_files.reserve(m_files.size() + file_names.size());
+    m_files.insert(std::end(m_files), std::begin(file_names),
+                   std::end(file_names));
     return *this;
   }
   /// Enable or disable deduplication in the volume builder.

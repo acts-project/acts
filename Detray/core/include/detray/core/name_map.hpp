@@ -38,6 +38,12 @@ struct name_map {
     return index_to_name.empty();
   }
 
+  /// @returns the number of elements in the name map
+  DETRAY_HOST std::size_t size() const {
+    assert(index_to_name.size() == name_to_index.size());
+    return index_to_name.size();
+  }
+
   /// @param idx Volume index to look up.
   /// @returns whether the name map contains a given volume index
   DETRAY_HOST bool contains(dindex idx) const {
