@@ -12,6 +12,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsPlugins/Root/RootMeasurementIo.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsTests/CommonHelpers/TemporaryDirectory.hpp"
 
 #include <filesystem>
@@ -74,6 +75,44 @@ BOOST_AUTO_TEST_CASE(RootMeasurementIoTestsWrite) {
   BOOST_REQUIRE(readTree != nullptr);
 
   BOOST_CHECK_EQUAL(readTree->GetEntries(), 1);
+
+  // Now read the entry back through the accessor interface
+  std::vector<BoundIndices> readRecoIndices = {eBoundLoc0, eBoundLoc1};
+  std::vector<BoundIndices> readClusterIndices = {eBoundLoc0, eBoundLoc1};
+  RootMeasurementIo::Config readCfg{readRecoIndices, readClusterIndices};
+  RootMeasurementIo readAccessor(readCfg);
+  readAccessor.connectForRead(*readTree);
+
+  readTree->GetEntry(0);
+
+  BOOST_CHECK_EQUAL(readAccessor.eventNr(), 1);
+  BOOST_CHECK_EQUAL(readAccessor.geometryId(), geoId);
+
+  auto [values, variances, subspaceIndex] = readAccessor.boundMeasurement();
+  BOOST_REQUIRE_EQUAL(values.size(), 2u);
+  BOOST_REQUIRE_EQUAL(variances.size(), 2u);
+  BOOST_REQUIRE_EQUAL(subspaceIndex.size(), 2u);
+  CHECK_CLOSE_ABS(values[0], 0.11, 1e-5);
+  CHECK_CLOSE_ABS(values[1], 0.22, 1e-5);
+  CHECK_CLOSE_ABS(variances[0], 0.01, 1e-5);
+  CHECK_CLOSE_ABS(variances[1], 0.02, 1e-5);
+  BOOST_CHECK_EQUAL(subspaceIndex[0], static_cast<unsigned int>(eBoundLoc0));
+  BOOST_CHECK_EQUAL(subspaceIndex[1], static_cast<unsigned int>(eBoundLoc1));
+
+  auto readGlobalPosition = readAccessor.globalPosition();
+  CHECK_CLOSE_ABS(readGlobalPosition, Vector3(1.0, 2.0, 3.0), 1e-5);
+
+  auto readChannels = readAccessor.clusterChannels();
+  BOOST_REQUIRE_EQUAL(readChannels.size(), 3u);
+  BOOST_CHECK(readChannels[0] == std::make_tuple(1, 2, 0.5f));
+  BOOST_CHECK(readChannels[1] == std::make_tuple(2, 3, 1.5f));
+  BOOST_CHECK(readChannels[2] == std::make_tuple(3, 4, 2.5f));
+
+  auto readClusterSize = readAccessor.clusterSize();
+  BOOST_CHECK_EQUAL(readClusterSize[0], 3);
+  BOOST_CHECK_EQUAL(readClusterSize[1], 3);
+
+  rFile->Close();
 }
 
 BOOST_AUTO_TEST_CASE(RootMeasurementIoExceptions) {

@@ -48,6 +48,49 @@ class RootMeasurementIo {
   /// @param measurementTree the TTree to write the measurement track to
   void connectForWrite(TTree& measurementTree);
 
+  /// @brief sets the branch connection for reading from a file
+  ///
+  /// @param measurementTree the TTree to read the measurement track from
+  void connectForRead(TTree& measurementTree);
+
+  /// The event number of the currently loaded entry
+  ///
+  /// @note Only valid after connectForRead() and TTree::GetEntry()
+  int eventNr() const { return m_measurementPayload.eventNr; }
+
+  /// The geometry identifier of the currently loaded entry
+  ///
+  /// @note Only valid after connectForRead() and TTree::GetEntry()
+  Acts::GeometryIdentifier geometryId() const;
+
+  /// Reconstruct the bound measurement values, variances and subspace
+  /// indices of the currently loaded entry. Since only the values for the
+  /// dimensions that are actually part of the measurement are filled on
+  /// write (the rest stay NaN), the subspace indices are recovered from the
+  /// configured @c recoIndices by checking for non-NaN entries.
+  ///
+  /// @note Only valid after connectForRead() and TTree::GetEntry()
+  ///
+  /// @return a tuple of measurement values, variances and subspace indices
+  std::tuple<std::vector<double>, std::vector<double>,
+             std::vector<unsigned int>>
+  boundMeasurement() const;
+
+  /// The global position of the currently loaded entry (if available)
+  ///
+  /// @note Only valid after connectForRead() and TTree::GetEntry()
+  Acts::Vector3 globalPosition() const;
+
+  /// The cluster channels of the currently loaded entry (if available)
+  ///
+  /// @note Only valid after connectForRead() and TTree::GetEntry()
+  std::vector<std::tuple<int, int, float>> clusterChannels() const;
+
+  /// The cluster size in loc0/loc1 of the currently loaded entry
+  ///
+  /// @note Only valid after connectForRead() and TTree::GetEntry()
+  std::array<int, 2> clusterSize() const { return m_clusterPayload.clusterSize; }
+
   /// Convenience function to register identification
   ///
   /// @param evnt The event number

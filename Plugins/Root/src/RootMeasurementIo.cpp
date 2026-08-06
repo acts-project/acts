@@ -12,6 +12,8 @@
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <cmath>
+
 #include <TTree.h>
 
 using namespace Acts;
@@ -74,6 +76,114 @@ void ActsPlugins::RootMeasurementIo::connectForWrite(TTree& measurementTree) {
                            &m_measurementPayload.pull[ib]);
   }
   clear();
+}
+
+void ActsPlugins::RootMeasurementIo::connectForRead(TTree& measurementTree) {
+  measurementTree.SetBranchAddress("event_nr", &m_measurementPayload.eventNr);
+  measurementTree.SetBranchAddress("volume_id", &m_measurementPayload.volumeID);
+  measurementTree.SetBranchAddress("layer_id", &m_measurementPayload.layerID);
+  measurementTree.SetBranchAddress("surface_id", &m_measurementPayload.surfaceID);
+  measurementTree.SetBranchAddress("extra_id", &m_measurementPayload.extraID);
+
+  for (auto ib : m_cfg.recoIndices) {
+    measurementTree.SetBranchAddress(("rec_" + bNames[ib]).c_str(),
+                                     &m_measurementPayload.recBound[ib]);
+  }
+  for (auto ib : m_cfg.recoIndices) {
+    measurementTree.SetBranchAddress(("var_" + bNames[ib]).c_str(),
+                                     &m_measurementPayload.varBound[ib]);
+  }
+
+  measurementTree.SetBranchAddress("rec_gx", &m_measurementPayload.recGx);
+  measurementTree.SetBranchAddress("rec_gy", &m_measurementPayload.recGy);
+  measurementTree.SetBranchAddress("rec_gz", &m_measurementPayload.recGz);
+
+  measurementTree.SetBranchAddress("clus_size", &m_clusterPayload.nch);
+  measurementTree.SetBranchAddress("channel_value", &m_clusterPayload.chValue);
+  // Both are allocated, but only relevant ones are set
+  for (auto ib : m_cfg.clusterIndices) {
+    if (static_cast<unsigned int>(ib) < 2) {
+      measurementTree.SetBranchAddress(("channel_" + bNames[ib]).c_str(),
+                                       &m_clusterPayload.chId[ib]);
+      measurementTree.SetBranchAddress(("clus_size_" + bNames[ib]).c_str(),
+                                       &m_clusterPayload.clusterSize[ib]);
+    }
+  }
+
+  for (unsigned int ib = 0; ib < eBoundSize; ++ib) {
+    measurementTree.SetBranchAddress(("true_" + bNames[ib]).c_str(),
+                                     &m_measurementPayload.trueBound[ib]);
+  }
+  measurementTree.SetBranchAddress("true_x", &m_measurementPayload.trueGx);
+  measurementTree.SetBranchAddress("true_y", &m_measurementPayload.trueGy);
+  measurementTree.SetBranchAddress("true_z", &m_measurementPayload.trueGz);
+  measurementTree.SetBranchAddress("true_incident_phi",
+                                   &m_measurementPayload.incidentPhi);
+  measurementTree.SetBranchAddress("true_incident_theta",
+                                   &m_measurementPayload.incidentTheta);
+
+  for (auto ib : m_cfg.recoIndices) {
+    measurementTree.SetBranchAddress(("residual_" + bNames[ib]).c_str(),
+                                     &m_measurementPayload.residual[ib]);
+  }
+  for (auto ib : m_cfg.recoIndices) {
+    measurementTree.SetBranchAddress(("pull_" + bNames[ib]).c_str(),
+                                     &m_measurementPayload.pull[ib]);
+  }
+}
+
+GeometryIdentifier ActsPlugins::RootMeasurementIo::geometryId() const {
+  return GeometryIdentifier()
+      .withVolume(static_cast<GeometryIdentifier::Value>(
+          m_measurementPayload.volumeID))
+      .withLayer(
+          static_cast<GeometryIdentifier::Value>(m_measurementPayload.layerID))
+      .withSensitive(static_cast<GeometryIdentifier::Value>(
+          m_measurementPayload.surfaceID))
+      .withExtra(
+          static_cast<GeometryIdentifier::Value>(m_measurementPayload.extraID));
+}
+
+std::tuple<std::vector<double>, std::vector<double>, std::vector<unsigned int>>
+ActsPlugins::RootMeasurementIo::boundMeasurement() const {
+  std::vector<double> values;
+  std::vector<double> variances;
+  std::vector<unsigned int> subspaceIndex;
+
+  for (auto ib : m_cfg.recoIndices) {
+    float value = m_measurementPayload.recBound[ib];
+    if (std::isnan(value)) {
+      continue;
+    }
+    values.push_back(static_cast<double>(value));
+    variances.push_back(
+        static_cast<double>(m_measurementPayload.varBound[ib]));
+    subspaceIndex.push_back(static_cast<unsigned int>(ib));
+  }
+
+  return {values, variances, subspaceIndex};
+}
+
+Vector3 ActsPlugins::RootMeasurementIo::globalPosition() const {
+  return {m_measurementPayload.recGx, m_measurementPayload.recGy,
+          m_measurementPayload.recGz};
+}
+
+std::vector<std::tuple<int, int, float>>
+ActsPlugins::RootMeasurementIo::clusterChannels() const {
+  std::vector<std::tuple<int, int, float>> channels;
+  if (m_clusterPayload.nch <= 0) {
+    return channels;
+  }
+  channels.reserve(m_clusterPayload.chValue.size());
+  for (std::size_t i = 0; i < m_clusterPayload.chValue.size(); ++i) {
+    int ch0 =
+        i < m_clusterPayload.chId[0].size() ? m_clusterPayload.chId[0][i] : 0;
+    int ch1 =
+        i < m_clusterPayload.chId[1].size() ? m_clusterPayload.chId[1][i] : 0;
+    channels.emplace_back(ch0, ch1, m_clusterPayload.chValue[i]);
+  }
+  return channels;
 }
 
 void ActsPlugins::RootMeasurementIo::fillIdentification(

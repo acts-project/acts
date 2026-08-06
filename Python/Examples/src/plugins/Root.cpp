@@ -16,6 +16,7 @@
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 #include "ActsExamples/Io/Root/RootMeasurementPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/RootMeasurementReader.hpp"
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 #include "ActsExamples/Io/Root/RootMuonSpacePointReader.hpp"
 #include "ActsExamples/Io/Root/RootMuonSpacePointWriter.hpp"
@@ -100,6 +101,11 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
     ACTS_PYTHON_DECLARE_READER(RootSimHitReader, root, "RootSimHitReader",
                                treeName, filePath, outputSimHits);
+
+    ACTS_PYTHON_DECLARE_READER(
+        RootMeasurementReader, root, "RootMeasurementReader",
+        outputMeasurements, outputMeasurementParticlesMap, outputClusters,
+        filePath, treeName);
   }
 
   // Output
