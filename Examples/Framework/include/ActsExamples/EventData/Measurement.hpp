@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/MeasurementConcept.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -21,6 +22,7 @@
 
 #include <cstddef>
 #include <iterator>
+#include <span>
 #include <type_traits>
 #include <unordered_set>
 #include <vector>
@@ -463,7 +465,15 @@ class VariableMeasurementProxy
   }
 
   /// @brief Get the subspace indices of the measurement
-  /// @return The subspace indices
+  /// @return The subspace indices, exactly `size()` of them
+  std::span<const SubspaceIndex> subspaceIndices() const {
+    return {container().m_subspaceIndices.data() +
+                container().m_entries.at(index()).subspaceIndexOffset,
+            this->size()};
+  }
+
+  /// @brief Get the subspace index vector of the measurement
+  /// @return The subspace index vector
   SubspaceVectorMap subspaceIndexVector() const {
     const auto size = static_cast<Eigen::Index>(this->size());
     return SubspaceVectorMap{
@@ -587,5 +597,12 @@ class MeasurementSubset
 
   MeasurementContainer::OrderedIndices m_orderedIndices;
 };
+
+// The proxies are handed to track finding as calibrated measurements, so they
+// have to satisfy the contract it expects. The fixed size ones additionally
+// let it skip the runtime dispatch on the measurement dimension.
+static_assert(Acts::MeasurementConcept<ConstVariableBoundMeasurementProxy>);
+static_assert(
+    Acts::StaticMeasurementConcept<ConstFixedBoundMeasurementProxy<2>>);
 
 }  // namespace ActsExamples

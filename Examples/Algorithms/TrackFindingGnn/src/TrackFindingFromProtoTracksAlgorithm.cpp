@@ -9,11 +9,11 @@
 #include "ActsExamples/TrackFindingGnn/TrackFindingFromProtoTracksAlgorithm.hpp"
 
 #include "Acts/EventData/ProxyAccessor.hpp"
-#include "Acts/TrackFinding/TrackStateCreatorBase.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/TrackFinding/TrackStateCreator.hpp"
 
 #include <algorithm>
 #include <ranges>
@@ -31,12 +31,8 @@ using namespace ActsExamples;
 /// falling back to all measurements on surfaces the proto track does not
 /// touch.
 class ProtoTrackStateCreator final
-    : public Acts::MeasurementSelectorTrackStateCreatorBase<
-          ProtoTrackStateCreator, ActsExamples::TrackContainer> {
+    : public ActsExamples::TrackStateCreatorBase<ProtoTrackStateCreator> {
  public:
-  using Base = Acts::MeasurementSelectorTrackStateCreatorBase<
-      ProtoTrackStateCreator, ActsExamples::TrackContainer>;
-  using State = typename Base::State;
   using Container = GeometryIdMultiset<IndexSourceLink>;
 
   std::unique_ptr<const Logger> loggerPtr;
@@ -64,24 +60,9 @@ class ProtoTrackStateCreator final
     return std::ranges::subrange(begin, end);
   }
 
-  SourceLink sourceLink(const State& /*state*/,
-                        const IndexSourceLink& measurement) const {
-    return SourceLink{measurement};
-  }
-
-  CalibratedBoundMeasurement calibrate(
+  ConstVariableBoundMeasurementProxy calibrate(
       const State& /*state*/, const IndexSourceLink& measurement) const {
-    const ConstVariableBoundMeasurementProxy proxy =
-        measurements->getMeasurement(measurement.index());
-
-    return visit_measurement(
-        proxy.size(),
-        [&]<std::size_t kSize>(std::integral_constant<std::size_t, kSize>) {
-          const auto fixed =
-              static_cast<ConstFixedBoundMeasurementProxy<kSize>>(proxy);
-          return CalibratedBoundMeasurement{
-              fixed.parameters(), fixed.covariance(), fixed.subspaceIndices()};
-        });
+    return measurements->getMeasurement(measurement.index());
   }
 };
 
@@ -122,8 +103,7 @@ ProcessCode TrackFindingFromProtoTracksAlgorithm::execute(
   ProtoTrackStateCreator trackStateCreator;
   trackStateCreator.loggerPtr = logger().clone("TrackStateCreator");
   trackStateCreator.measurements = &measurements;
-  trackStateCreator.measurementSelector =
-      MeasurementSelector(m_cfg.measurementSelectorCfg);
+  trackStateCreator.cuts = m_cfg.trackStateSelection;
 
   CombinatorialKalmanFilterExtensions<TrackContainer> extensions;
   extensions.updater.connect<&GainMatrixUpdater::operator()<

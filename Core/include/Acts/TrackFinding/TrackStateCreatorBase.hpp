@@ -9,23 +9,21 @@
 #pragma once
 
 #include "Acts/EventData/BoundTrackParameters.hpp"
-#include "Acts/EventData/CalibratedBoundMeasurement.hpp"
+#include "Acts/EventData/MeasurementConcept.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterExtensions.hpp"
-#include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <algorithm>
 #include <cassert>
 #include <cstddef>
-#include <limits>
 #include <optional>
 #include <ranges>
 
@@ -35,6 +33,33 @@ namespace Acts {
 
 /// @addtogroup track_finding
 /// @{
+
+/// Write a calibrated measurement into a track state.
+///
+/// @note This passes exactly `measurement.size()` subspace indices. The
+///       projector is serialized including its unused slots, so passing a
+///       padded range here would not be equivalent.
+///
+/// @tparam measurement_t the calibrated measurement type
+/// @tparam track_state_proxy_t the track state proxy type
+///
+/// @param measurement the calibrated measurement
+/// @param trackState the track state to write to
+template <MeasurementConcept measurement_t, typename track_state_proxy_t>
+void fillTrackStateCalibrated(const measurement_t& measurement,
+                              track_state_proxy_t trackState) {
+  if constexpr (StaticMeasurementConcept<measurement_t>) {
+    trackState.allocateCalibrated(measurement.parameters().eval(),
+                                  measurement.covariance().eval());
+  } else {
+    visit_measurement(
+        measurement.parameters(), measurement.covariance(), measurement.size(),
+        [&trackState](const auto& parameters, const auto& covariance) {
+          trackState.allocateCalibrated(parameters.eval(), covariance.eval());
+        });
+  }
+  trackState.setProjectorSubspaceIndices(measurement.subspaceIndices());
+}
 
 /// Everything a @ref TrackStateCreatorBase customization point needs to know
 /// about the surface it is currently working on.
@@ -67,10 +92,6 @@ struct TrackStateCreatorState {
   /// A logger for messages
   const Logger* logger{};
 
-  /// The selection cuts for this surface.
-  /// @note only valid from `computeChi2` onwards
-  MeasurementSelector::Cuts cuts{};
-
   /// The track state on this surface which owns the predicted parameters and
   /// the jacobian. All further track states on the same surface share them.
   std::optional<TrackStateProxy> firstTrackState{};
@@ -100,22 +121,38 @@ struct TrackStateCreatorState {
   double pathLength() const { return std::get<2>(*boundState); }
 };
 
+/// A measurement which was selected to become a track state on a surface.
+///
+/// @tparam measurement_t whatever the creator calls a measurement
+template <typename measurement_t>
+struct TrackStateCandidate {
+  /// The selected measurement
+  measurement_t measurement;
+  /// Its compatibility with the predicted parameters, written to the track
+  /// state as is. Zero if the selection does not compute one.
+  double chi2{};
+  /// Whether the track state is to be flagged as an outlier
+  bool isOutlier{false};
+};
+
 /// CRTP base for the creation of track states in the combinatorial Kalman
 /// filter.
 ///
-/// In contrast to @ref TrackStateCreator, which creates a temporary track
-/// state for every measurement on a surface just to select a few of them, this
-/// computes the compatibility chi2 directly from whatever the derived class
-/// calls a measurement, and only materializes track states for the selected
-/// ones. Measurements never have to pass through the track EDM.
+/// The derived class selects on whatever it calls a measurement, and only the
+/// selected ones are materialized as track states. Measurements never have to
+/// pass through the track EDM, which is what the classic creator had to do to
+/// run its selection.
+///
+/// This class only provides the mechanism, i.e. correctly populating the track
+/// EDM. It does not impose a selection; that is what `selectMeasurements` is
+/// for.
 ///
 /// The derived class has to provide
 /// - `measurementRange(state)`: the measurements associated to `state.surface`
 /// - `sourceLink(state, measurement)`: the uncalibrated source link
-/// - `calibrate(state, measurement)`: an @ref CalibratedBoundMeasurement
+/// - `calibrate(state, measurement)`: a @ref MeasurementConcept value
 ///
-/// and may override any of the defaulted customization points below. The
-/// defaults reproduce the selection implemented by @ref MeasurementSelector.
+/// and may override any of the defaulted customization points below.
 ///
 /// @note This is expected to be connected to
 ///       @ref CombinatorialKalmanFilterExtensions::trackStateCreator.
@@ -134,10 +171,19 @@ class TrackStateCreatorBase {
   using TrackStateProxy = typename track_container_t::TrackStateProxy;
   /// Type alias for the per surface state object
   using State = TrackStateCreatorState<track_container_t>;
-  /// Type alias for the selection cuts
-  using Cuts = MeasurementSelector::Cuts;
   /// Type alias for the result of the track state creation
   using TrackStatesResult = Result<CkfTypes::BranchVector<TrackIndexType>>;
+
+  /// Expected maximum number of measurements considered on a single surface.
+  /// Exceeding this only costs a dynamic allocation of the candidate buffer.
+  static constexpr std::size_t kMaxCandidatesPerSurface = 16;
+
+  /// The buffer a selection fills with the measurements it selected
+  /// @tparam measurement_t whatever the creator calls a measurement
+  template <typename measurement_t>
+  using Candidates =
+      boost::container::small_vector<TrackStateCandidate<measurement_t>,
+                                     kMaxCandidatesPerSurface>;
 
   /// Extend the trajectory onto the given surface.
   ///
@@ -149,8 +195,8 @@ class TrackStateCreatorBase {
   /// @param trajectory The trajectory to be extended
   /// @param logger A logger for messages
   ///
-  /// @return the indices of the newly created track states, ordered by
-  ///         ascending chi2, or an error. An empty list means that no
+  /// @return the indices of the newly created track states, in the order the
+  ///         selection produced them, or an error. An empty list means that no
   ///         compatible measurement was found and the caller is expected to
   ///         create a hole.
   TrackStatesResult createTrackStates(const GeometryContext& gctx,
@@ -172,187 +218,104 @@ class TrackStateCreatorBase {
     CkfTypes::BranchVector<TrackIndexType> trackStates;
 
     auto range = derived().measurementRange(state);
-    // Note this has to happen before the cuts are resolved. Resolving cuts can
-    // fail for surfaces which are not covered by the configuration, and a
-    // surface without measurements must not turn that into an error.
+    // Note this has to happen before the selection is consulted. Resolving
+    // cuts can fail for surfaces which are not covered by the configuration,
+    // and a surface without measurements must not turn that into an error.
     if (std::ranges::empty(range)) {
       ACTS_VERBOSE("No measurements on surface " << surface.geometryId());
       return trackStates;
     }
 
-    Result<Cuts> cutsResult = derived().selectionCuts(state);
-    if (!cutsResult.ok()) {
-      ACTS_DEBUG("Could not resolve selection cuts for surface "
-                 << surface.geometryId() << ": "
-                 << cutsResult.error().message());
-      return cutsResult.error();
-    }
-    state.cuts = *cutsResult;
-    if (state.cuts.numMeasurements == 0ul) {
-      return CombinatorialKalmanFilterError::MeasurementSelectionFailed;
-    }
-
     using Measurement = std::ranges::range_value_t<decltype(range)>;
-    struct Candidate {
-      Measurement measurement;
-      double chi2{};
-    };
-    boost::container::small_vector<Candidate, s_maxCandidatesPerSurface>
-        candidates;
+    Candidates<Measurement> candidates;
 
-    if (derived().hasMeasurementPreselection(state)) {
-      for (const Measurement& measurement : range) {
-        if (derived().preselectMeasurement(state, measurement)) {
-          candidates.push_back({measurement, 0.});
-        }
-      }
-    }
-    // If the preselection is inactive, or rejected every measurement on this
-    // surface, fall back to considering all of them.
-    if (candidates.empty()) {
-      for (const Measurement& measurement : range) {
-        candidates.push_back({measurement, 0.});
-      }
+    if (Result<void> selection =
+            derived().selectMeasurements(state, range, candidates);
+        !selection.ok()) {
+      return selection.error();
     }
 
-    // Compute the chi2 of every candidate and sort those which do not satisfy
-    // the chi2 cut to the back. When done `passedCandidates` is the number of
-    // candidates at the front which do satisfy it.
-    double minChi2 = std::numeric_limits<double>::max();
-    std::size_t minIndex = std::numeric_limits<std::size_t>::max();
-    std::size_t passedCandidates = 0ul;
-    for (std::size_t i = 0ul; i < candidates.size(); ++i) {
-      const double chi2 =
-          derived().computeChi2(state, candidates[i].measurement);
-      candidates[i].chi2 = chi2;
-
-      if (chi2 < minChi2) {
-        minChi2 = chi2;
-        minIndex = i;
-      }
-
-      if (chi2 >= state.cuts.chi2Measurement) {
-        continue;
-      }
-
-      if (passedCandidates != i) {
-        std::swap(candidates[passedCandidates], candidates[i]);
-        if (minIndex == i) {
-          minIndex = passedCandidates;
-        }
-      }
-      ++passedCandidates;
-    }
-
-    // Handle if there are no measurements below the chi2 cut off
-    if (passedCandidates == 0ul) {
-      if (minChi2 < state.cuts.chi2Outlier) {
-        ACTS_VERBOSE(
-            "No measurement candidate. Create an outlier measurement chi2="
-            << minChi2);
-        trackStates.push_back(createTrackState(state,
-                                               candidates[minIndex].measurement,
-                                               minChi2, /*isOutlier=*/true));
-      } else {
-        ACTS_VERBOSE("No measurement candidate. Create none chi2=" << minChi2);
-      }
-      return trackStates;
-    }
-
-    if (passedCandidates == 1ul) {
-      // single candidate, no sorting necessary
-      ACTS_VERBOSE("Creating only 1 track state chi2=" << minChi2);
-      trackStates.push_back(createTrackState(state,
-                                             candidates[minIndex].measurement,
-                                             minChi2, /*isOutlier=*/false));
-      return trackStates;
-    }
-
-    std::sort(
-        candidates.begin(), candidates.begin() + passedCandidates,
-        [](const Candidate& a, const Candidate& b) { return a.chi2 < b.chi2; });
-
-    const std::size_t selected =
-        std::min(state.cuts.numMeasurements, passedCandidates);
-    ACTS_VERBOSE("Number of selected measurements: "
-                 << passedCandidates
-                 << ", max: " << state.cuts.numMeasurements);
-
-    trackStates.reserve(selected);
-    for (std::size_t i = 0ul; i < selected; ++i) {
-      trackStates.push_back(createTrackState(state, candidates[i].measurement,
-                                             candidates[i].chi2,
-                                             /*isOutlier=*/false));
+    trackStates.reserve(candidates.size());
+    for (const TrackStateCandidate<Measurement>& candidate : candidates) {
+      trackStates.push_back(derived().createTrackState(state, candidate));
     }
     return trackStates;
   }
 
- protected:
-  /// Expected maximum number of measurements on a single surface. Exceeding
-  /// this only costs a dynamic allocation of the candidate buffer.
-  static constexpr std::size_t s_maxCandidatesPerSurface = 16;
-
-  /// The selection cuts to apply on this surface.
+  /// Pick the measurements which are to become track states on this surface.
+  ///
+  /// This is the main customization point. Implementations append to
+  /// @p candidates in the order the track states are to be created in, which
+  /// for the combinatorial Kalman filter should be the most compatible one
+  /// first. An empty result means that the caller creates a hole.
   ///
   /// @note This is only called when the surface has measurements.
   ///
+  /// @tparam range_t the measurement range type
+  /// @tparam candidates_t the candidate buffer type
+  ///
   /// @param state the state of the current surface
-  /// @return fully permissive cuts
-  Result<Cuts> selectionCuts(const State& state) const {
+  /// @param range the measurements on the current surface
+  /// @param candidates the buffer to append the selected measurements to
+  ///
+  /// @return success, i.e. the default takes all measurements
+  template <typename range_t, typename candidates_t>
+  Result<void> selectMeasurements(const State& state, range_t&& range,
+                                  candidates_t& candidates) const {
     static_cast<void>(state);
 
-    return Cuts{std::numeric_limits<std::size_t>::max(),
-                std::numeric_limits<double>::infinity(),
-                -std::numeric_limits<double>::infinity()};
+    for (const auto& measurement : range) {
+      candidates.push_back({measurement, 0., false});
+    }
+    return Result<void>::success();
   }
 
-  /// Whether @ref preselectMeasurement should be consulted on this surface.
+  /// Local chi2 contribution of a calibrated measurement with respect to the
+  /// predicted bound parameters on this surface.
+  ///
+  /// This is what a selection is expected to cut on. It is a customization
+  /// point so that a derived class which knows more about its measurements can
+  /// compute the compatibility differently, e.g. accounting for a non Gaussian
+  /// measurement model.
+  ///
+  /// The default reads the measurement through @ref MeasurementConcept, which
+  /// hands out Eigen maps into the original storage, so nothing is copied. If
+  /// the measurement dimension is known at compile time the Eigen operations
+  /// are statically sized; otherwise the runtime dimension is dispatched onto
+  /// a statically sized instantiation first. Either way Eigen never allocates.
+  ///
+  /// @tparam measurement_t the calibrated measurement type
   ///
   /// @param state the state of the current surface
-  /// @return false, i.e. no preselection
-  bool hasMeasurementPreselection(const State& state) const {
-    static_cast<void>(state);
-
-    return false;
-  }
-
-  /// Cheap filter applied before any measurement is calibrated.
+  /// @param measurement the calibrated measurement
   ///
-  /// @note If this rejects every measurement on the surface it is ignored and
-  ///       all measurements are considered.
-  ///
-  /// @param state the state of the current surface
-  /// @param measurement the measurement to check
-  /// @return true, i.e. accept everything
-  template <typename measurement_t>
-  bool preselectMeasurement(const State& state,
-                            const measurement_t& measurement) const {
-    static_cast<void>(state);
-    static_cast<void>(measurement);
-
-    return true;
-  }
-
-  /// The chi2 of a measurement with respect to the predicted parameters.
-  ///
-  /// Override this together with @ref fillCalibrated to select on something
-  /// cheaper than the full calibration.
-  ///
-  /// @param state the state of the current surface
-  /// @param measurement the measurement to evaluate
   /// @return the local chi2 contribution
-  template <typename measurement_t>
-  double computeChi2(const State& state,
-                     const measurement_t& measurement) const {
-    const CalibratedBoundMeasurement calibrated =
-        derived().calibrate(state, measurement);
-    return calculatePredictedChi2(
-        calibrated.parametersData(), calibrated.covarianceData(),
-        state.predicted(), state.predictedCovariance(),
-        calibrated.paddedSubspaceIndices(), calibrated.size());
+  template <MeasurementConcept measurement_t>
+  double calculatePredictedChi2(const State& state,
+                                const measurement_t& measurement) const {
+    if constexpr (StaticMeasurementConcept<measurement_t>) {
+      return predictedChi2(measurement.parameters(), measurement.covariance(),
+                           measurement.subspaceIndices(), state.predicted(),
+                           state.predictedCovariance());
+    } else {
+      return visit_measurement(
+          measurement.parameters(), measurement.covariance(),
+          measurement.size(),
+          [&measurement, &state](const auto& calibrated,
+                                 const auto& calibratedCovariance) {
+            return predictedChi2(
+                calibrated, calibratedCovariance, measurement.subspaceIndices(),
+                state.predicted(), state.predictedCovariance());
+          });
+    }
   }
 
   /// Write the calibrated measurement into a selected track state.
+  ///
+  /// Override this together with the selection to calibrate lazily, i.e. to
+  /// select on something cheaper than the full calibration.
+  ///
+  /// @tparam measurement_t whatever the creator calls a measurement
   ///
   /// @param state the state of the current surface
   /// @param measurement the selected measurement
@@ -360,20 +323,21 @@ class TrackStateCreatorBase {
   template <typename measurement_t>
   void fillCalibrated(const State& state, const measurement_t& measurement,
                       TrackStateProxy trackState) const {
-    derived().calibrate(state, measurement).fill(trackState);
+    fillTrackStateCalibrated(derived().calibrate(state, measurement),
+                             trackState);
   }
 
   /// Create and fill a single track state for a selected measurement.
   ///
+  /// @tparam measurement_t whatever the creator calls a measurement
+  ///
   /// @param state the state of the current surface
-  /// @param measurement the selected measurement
-  /// @param chi2 the chi2 of the measurement
-  /// @param isOutlier whether the measurement is to be flagged as an outlier
+  /// @param candidate the selected measurement
+  ///
   /// @return the index of the new track state
   template <typename measurement_t>
-  TrackIndexType createTrackState(State& state,
-                                  const measurement_t& measurement, double chi2,
-                                  bool isOutlier) const {
+  TrackIndexType createTrackState(
+      State& state, const TrackStateCandidate<measurement_t>& candidate) const {
     using PM = TrackStatePropMask;
 
     const bool isFirst = !state.firstTrackState.has_value();
@@ -406,12 +370,12 @@ class TrackStateCreatorBase {
     }
 
     trackState.pathLength() = state.pathLength();
-    trackState.chi2() = chi2;
+    trackState.chi2() = candidate.chi2;
     trackState.setReferenceSurface(
         boundParams.referenceSurface().getSharedPtr());
     trackState.setUncalibratedSourceLink(
-        derived().sourceLink(state, measurement));
-    derived().fillCalibrated(state, measurement, trackState);
+        derived().sourceLink(state, candidate.measurement));
+    derived().fillCalibrated(state, candidate.measurement, trackState);
 
     auto typeFlags = trackState.typeFlags();
     typeFlags.setHasParameters();
@@ -419,46 +383,64 @@ class TrackStateCreatorBase {
     if (trackState.referenceSurface().hasMaterial()) {
       typeFlags.setHasMaterial();
     }
-    if (isOutlier) {
+    if (candidate.isOutlier) {
       typeFlags.setIsOutlier();
     }
 
     return trackState.index();
   }
 
- private:
+ protected:
+  /// Access to the concrete creator
+  /// @return the concrete creator
   const derived_t& derived() const {
     return static_cast<const derived_t&>(*this);
   }
-};
 
-/// A @ref TrackStateCreatorBase which sources its selection cuts from an
-/// @ref MeasurementSelector, i.e. reproduces the geometry and eta binned cut
-/// lookup of the classic track state creator.
-///
-/// @tparam derived_t the concrete creator, see CRTP
-/// @tparam track_container_t the track container used by the track finder
-template <typename derived_t, typename track_container_t>
-class MeasurementSelectorTrackStateCreatorBase
-    : public TrackStateCreatorBase<derived_t, track_container_t> {
- public:
-  /// Type alias for the CRTP base
-  using Base = TrackStateCreatorBase<derived_t, track_container_t>;
-  /// Type alias for the per surface state object
-  using State = typename Base::State;
-  /// Type alias for the selection cuts
-  using Cuts = typename Base::Cuts;
-
-  /// The selector providing the geometry and eta binned cuts
-  MeasurementSelector measurementSelector;
-
-  /// Resolve the cuts for the current surface.
+  /// The Eigen math behind @ref calculatePredictedChi2, with the measurement
+  /// dimension known at compile time.
   ///
-  /// @param state the state of the current surface
-  /// @return the cuts or an error if the surface is not covered
-  Result<Cuts> selectionCuts(const State& state) const {
-    return measurementSelector.getCuts(state.surface->geometryId(),
-                                       state.predicted()[eBoundTheta]);
+  /// Exposed so that an override of @ref calculatePredictedChi2 can still
+  /// reuse it after unpacking its measurement differently.
+  ///
+  /// @tparam calibrated_t the measured values type
+  /// @tparam calibrated_covariance_t the measurement covariance type
+  /// @tparam index_range_t the subspace index range type
+  ///
+  /// @param calibrated the measured values
+  /// @param calibratedCovariance the covariance of the measured values
+  /// @param subspaceIndices the bound indices the measurement constrains,
+  ///        exactly as many as the measurement dimension
+  /// @param predicted the predicted bound parameters
+  /// @param predictedCovariance the predicted bound parameters covariance
+  ///
+  /// @return the local chi2 contribution
+  template <typename calibrated_t, typename calibrated_covariance_t,
+            std::ranges::sized_range index_range_t>
+  static double predictedChi2(
+      const Eigen::MatrixBase<calibrated_t>& calibrated,
+      const Eigen::MatrixBase<calibrated_covariance_t>& calibratedCovariance,
+      const index_range_t& subspaceIndices,
+      Eigen::Ref<const BoundVector> predicted,
+      Eigen::Ref<const BoundMatrix> predictedCovariance) {
+    constexpr int kMeasurementSize = calibrated_t::RowsAtCompileTime;
+    static_assert(kMeasurementSize != Eigen::Dynamic,
+                  "Measurement dimension must be known at compile time");
+
+    const FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
+        subspaceIndices);
+
+    // Get the residuals
+    Vector<kMeasurementSize> res =
+        calibrated - subspaceHelper.projectVector(predicted);
+
+    // Get the chi2
+    return (res.transpose() *
+            (calibratedCovariance +
+             subspaceHelper.projectMatrix(predictedCovariance))
+                .inverse() *
+            res)
+        .eval()(0, 0);
   }
 };
 

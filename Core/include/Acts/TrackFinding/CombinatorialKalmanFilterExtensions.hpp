@@ -93,12 +93,11 @@ struct CombinatorialKalmanFilterExtensions {
           traj_t& trajectory, const Logger& logger)>;
 
   /// The delegate to create new track states.
-  /// @note a reference implementation can be found in @ref TrackStateCreator
-  ///   which makes uses of @ref MeasurementSelector and SourceLinkAccessor
   /// @deprecated Connect @ref trackStateCreator instead. This variant only
-  ///   exists because it hands out a scratch buffer for temporary track
-  ///   states, which a creator that does not push all measurements through the
-  ///   track EDM has no use for.
+  ///   exists so that clients with their own implementation of this signature
+  ///   keep working; it hands out a scratch buffer for temporary track states,
+  ///   which a creator that does not push all measurements through the track
+  ///   EDM has no use for. No implementation of it ships with ACTS anymore.
   TrackStateCreator createTrackStates;
 
   /// @brief Delegate the extension of the trajectory onto the given surface to
@@ -123,8 +122,8 @@ struct CombinatorialKalmanFilterExtensions {
           traj_t& trajectory, const Logger& logger)>;
 
   /// The delegate to create new track states.
-  /// @note a reference implementation can be found in @ref TrackStateCreatorBase
-  /// @note takes precedence over @ref createTrackStates when both are connected
+  /// @note derive from @ref TrackStateCreatorBase to implement one
+  /// @note exactly one of this and @ref createTrackStates has to be connected
   TrackStateCreatorDelegate trackStateCreator;
 
   // The following options are only relevant if a multi stepper is used

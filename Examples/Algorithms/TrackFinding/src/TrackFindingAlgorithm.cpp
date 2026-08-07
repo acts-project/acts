@@ -26,7 +26,6 @@
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/TrackFinding/TrackStateCreatorBase.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
@@ -41,6 +40,7 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/TrackFinding/TrackStateCreator.hpp"
 
 #include <algorithm>
 #include <functional>
@@ -68,16 +68,11 @@ namespace ActsExamples {
 
 namespace {
 
-/// Creates track states directly from the measurement container, i.e. without
-/// pushing every measurement on a surface through the track EDM first.
+/// Creates track states for the measurements on a surface, restricted to the
+/// current seed when seed deduplication is on.
 class TrackStateCreator final
-    : public Acts::MeasurementSelectorTrackStateCreatorBase<TrackStateCreator,
-                                                            TrackContainer> {
+    : public TrackStateCreatorBase<TrackStateCreator> {
  public:
-  using Base = Acts::MeasurementSelectorTrackStateCreatorBase<TrackStateCreator,
-                                                              TrackContainer>;
-  using State = typename Base::State;
-
   const MeasurementSubset* measurements = nullptr;
 
   /// Resolve the seed to measurement indices once, so the per measurement
@@ -101,26 +96,11 @@ class TrackStateCreator final
     return std::ranges::subrange(begin, end);
   }
 
-  Acts::SourceLink sourceLink(const State& /*state*/,
-                              const IndexSourceLink& measurement) const {
-    return Acts::SourceLink{measurement};
-  }
-
-  Acts::CalibratedBoundMeasurement calibrate(
+  ConstVariableBoundMeasurementProxy calibrate(
       const State& /*state*/, const IndexSourceLink& measurement) const {
     // note this has to be `getMeasurement`, which takes an index into the
     // underlying container, and not `at`, which takes a position in the subset
-    const ConstVariableBoundMeasurementProxy proxy =
-        measurements->getMeasurement(measurement.index());
-
-    return Acts::visit_measurement(
-        proxy.size(),
-        [&]<std::size_t kSize>(std::integral_constant<std::size_t, kSize>) {
-          const auto fixed =
-              static_cast<ConstFixedBoundMeasurementProxy<kSize>>(proxy);
-          return Acts::CalibratedBoundMeasurement{
-              fixed.parameters(), fixed.covariance(), fixed.subspaceIndices()};
-        });
+    return measurements->getMeasurement(measurement.index());
   }
 
   bool hasMeasurementPreselection(const State& /*state*/) const {
@@ -340,8 +320,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   TrackStateCreator trackStateCreator;
   trackStateCreator.measurements = &measurements;
-  trackStateCreator.measurementSelector =
-      Acts::MeasurementSelector(m_cfg.measurementSelectorCfg);
+  trackStateCreator.cuts = m_cfg.trackStateSelection;
 
   Extensions extensions;
   extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<

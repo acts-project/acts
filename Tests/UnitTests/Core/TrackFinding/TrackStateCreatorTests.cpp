@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/BoundTrackParameters.hpp"
-#include "Acts/EventData/CalibratedBoundMeasurement.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -21,13 +20,17 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
-#include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFinding/TrackStateCreatorBase.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TrackHelpers.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
+#include <limits>
+#include <optional>
 #include <ranges>
 #include <vector>
 
@@ -51,19 +54,42 @@ struct TestMeasurement {
   std::size_t id{};
 };
 
+/// The calibrated form of a @ref TestMeasurement, i.e. about the smallest
+/// thing satisfying @ref Acts::MeasurementConcept. Its dimension is known at
+/// compile time, so the creator never dispatches on it at runtime.
+struct CalibratedTestMeasurement {
+  Vector<1> params;
+  SquareMatrix<1> cov;
+  std::array<std::uint8_t, 1> indices{eBoundLoc0};
+
+  static constexpr std::size_t size() { return 1; }
+  const std::array<std::uint8_t, 1>& subspaceIndices() const { return indices; }
+  const Vector<1>& parameters() const { return params; }
+  const SquareMatrix<1>& covariance() const { return cov; }
+};
+
+static_assert(StaticMeasurementConcept<CalibratedTestMeasurement>,
+              "The test measurement should be usable without a runtime "
+              "dispatch on its dimension");
+
 /// Minimal creator over a flat list of `TestMeasurement`.
 struct TestCreator final
-    : public MeasurementSelectorTrackStateCreatorBase<TestCreator,
-                                                      TrackContainer> {
-  using Base =
-      MeasurementSelectorTrackStateCreatorBase<TestCreator, TrackContainer>;
+    : public TrackStateCreatorBase<TestCreator, TrackContainer> {
+  using Base = TrackStateCreatorBase<TestCreator, TrackContainer>;
   using State = typename Base::State;
 
   std::vector<TestMeasurement> measurements;
   /// Only measurements with these ids pass the preselection
   std::vector<std::size_t> preselected;
 
-  mutable std::size_t nSelectionCuts{0};
+  /// Cuts the selection below applies
+  std::size_t numMeasurements = 1;
+  double chi2Measurement = std::numeric_limits<double>::max();
+  double chi2Outlier = std::numeric_limits<double>::max();
+  /// If set, the selection fails with this error
+  std::optional<CombinatorialKalmanFilterError> selectionError;
+
+  mutable std::size_t nSelectMeasurements{0};
   /// Ids of the measurements which were calibrated, in order. Note that a
   /// selected measurement is calibrated twice by default, once to get its
   /// chi2 and once to fill the track state.
@@ -71,11 +97,6 @@ struct TestCreator final
 
   auto measurementRange(const State& /*state*/) const {
     return std::ranges::subrange(measurements.begin(), measurements.end());
-  }
-
-  Result<Cuts> selectionCuts(const State& state) const {
-    ++nSelectionCuts;
-    return Base::selectionCuts(state);
   }
 
   bool hasMeasurementPreselection(const State& /*state*/) const {
@@ -92,13 +113,71 @@ struct TestCreator final
     return SourceLink{measurement.id};
   }
 
-  CalibratedBoundMeasurement calibrate(
+  CalibratedTestMeasurement calibrate(
       const State& /*state*/, const TestMeasurement& measurement) const {
     calibrated.push_back(measurement.id);
-    return CalibratedBoundMeasurement{
+    return CalibratedTestMeasurement{
         Vector<1>{measurement.value},
         SquareMatrix<1>{SquareMatrix<1>::Constant(measurement.variance)},
-        std::array<std::uint8_t, 1>{eBoundLoc0}};
+        {static_cast<std::uint8_t>(eBoundLoc0)}};
+  }
+
+  /// The chi2 policy the shipped creators use: nothing below the measurement
+  /// cut means a single outlier if it is below the outlier cut, otherwise
+  /// nothing at all; measurements and outliers are never mixed.
+  template <typename range_t, typename candidates_t>
+  Result<void> selectMeasurements(const State& state, range_t&& range,
+                                  candidates_t& candidates) const {
+    ++nSelectMeasurements;
+
+    if (selectionError.has_value()) {
+      return *selectionError;
+    }
+    if (numMeasurements == 0) {
+      return CombinatorialKalmanFilterError::MeasurementSelectionFailed;
+    }
+
+    if (hasMeasurementPreselection(state)) {
+      for (const TestMeasurement& measurement : range) {
+        if (preselectMeasurement(state, measurement)) {
+          candidates.push_back({measurement, 0., false});
+        }
+      }
+    }
+    if (candidates.empty()) {
+      for (const TestMeasurement& measurement : range) {
+        candidates.push_back({measurement, 0., false});
+      }
+    }
+
+    for (auto& candidate : candidates) {
+      candidate.chi2 = calculatePredictedChi2(
+          state, calibrate(state, candidate.measurement));
+    }
+
+    const auto best = std::ranges::min_element(
+        candidates, {}, [](const auto& candidate) { return candidate.chi2; });
+    const bool isOutlier = best->chi2 >= chi2Measurement;
+    if (isOutlier) {
+      const auto selected = *best;
+      candidates.clear();
+      if (selected.chi2 < chi2Outlier) {
+        candidates.push_back({selected.measurement, selected.chi2, true});
+      }
+      return Result<void>::success();
+    }
+
+    candidates.erase(std::remove_if(candidates.begin(), candidates.end(),
+                                    [this](const auto& candidate) {
+                                      return candidate.chi2 >= chi2Measurement;
+                                    }),
+                     candidates.end());
+    std::ranges::sort(candidates, {},
+                      [](const auto& candidate) { return candidate.chi2; });
+    candidates.erase(
+        candidates.begin() + std::min(numMeasurements, candidates.size()),
+        candidates.end());
+    return Result<void>::success();
   }
 };
 
@@ -124,8 +203,9 @@ struct Fixture {
 
   void setCuts(std::size_t numMeasurements, double chi2Measurement,
                double chi2Outlier) {
-    creator.measurementSelector = MeasurementSelector(MeasurementSelectorCuts{
-        {}, {chi2Measurement}, {numMeasurements}, {chi2Outlier}});
+    creator.numMeasurements = numMeasurements;
+    creator.chi2Measurement = chi2Measurement;
+    creator.chi2Outlier = chi2Outlier;
   }
 
   Result<CkfTypes::BranchVector<TrackIndexType>> run() {
@@ -150,16 +230,16 @@ BOOST_AUTO_TEST_CASE(NoMeasurementsCreatesNothing) {
   BOOST_REQUIRE(result.ok());
   BOOST_CHECK(result->empty());
   BOOST_CHECK_EQUAL(f.trajectory.size(), 0u);
-  BOOST_CHECK_EQUAL(f.creator.nSelectionCuts, 0u);
+  BOOST_CHECK_EQUAL(f.creator.nSelectMeasurements, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(UnconfiguredSurfaceFails) {
+/// A selection which cannot make up its mind must abort the track finding
+/// rather than silently turn the surface into a hole.
+BOOST_AUTO_TEST_CASE(SelectionErrorIsPropagated) {
   Fixture f;
   f.creator.measurements = {{0., 1., 0u}};
-  // configuration which does not cover the surface geometry id
-  f.creator.measurementSelector =
-      MeasurementSelector(MeasurementSelector::Config{
-          {GeometryIdentifier().withVolume(7), MeasurementSelectorCuts{}}});
+  f.creator.selectionError =
+      CombinatorialKalmanFilterError::MeasurementSelectionFailed;
 
   auto result = f.run();
 
@@ -363,9 +443,10 @@ BOOST_AUTO_TEST_CASE(PreselectionRejectingAllFallsBackToAll) {
               f.creator.calibrated.end());
 }
 
-/// The chi2 the creator selects on has to be the one `MeasurementSelector`
-/// would have computed, otherwise the selection silently drifts.
-BOOST_AUTO_TEST_CASE(Chi2MatchesMeasurementSelector) {
+/// The chi2 the creator selects on has to be the same quantity that is
+/// computed from a filled track state, otherwise the selection silently
+/// drifts away from the rest of the track EDM.
+BOOST_AUTO_TEST_CASE(Chi2MatchesTrackStateBasedCalculation) {
   Fixture f;
   // deliberately a value whose chi2 is not exactly representable
   f.creator.measurements = {{1.3, 2.7, 0u}};
@@ -376,7 +457,8 @@ BOOST_AUTO_TEST_CASE(Chi2MatchesMeasurementSelector) {
   BOOST_REQUIRE_EQUAL(result->size(), 1u);
   const auto trackState = f.trajectory.getTrackState(result->front());
 
-  // build the equivalent track state by hand and run the shared helper on it
+  // build the equivalent track state by hand and run the independent track
+  // state based implementation on it
   VectorMultiTrajectory reference;
   auto referenceState = reference.makeTrackState(
       TrackStatePropMask::Predicted | TrackStatePropMask::Calibrated);
@@ -387,12 +469,7 @@ BOOST_AUTO_TEST_CASE(Chi2MatchesMeasurementSelector) {
   referenceState.setProjectorSubspaceIndices(
       std::array<std::uint8_t, 1>{eBoundLoc0});
 
-  const double expected = calculatePredictedChi2(
-      referenceState.effectiveCalibrated().data(),
-      referenceState.effectiveCalibratedCovariance().data(),
-      referenceState.predicted(), referenceState.predictedCovariance(),
-      referenceState.projectorSubspaceIndices(),
-      referenceState.calibratedSize());
+  const double expected = Acts::calculatePredictedChi2(referenceState);
 
   // `chi2` is stored as float, so this is the exact round trip
   BOOST_CHECK_EQUAL(trackState.chi2(), static_cast<float>(expected));
