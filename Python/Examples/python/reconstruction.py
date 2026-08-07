@@ -544,12 +544,12 @@ def addSeeding(
 
         tracks = f"{prefix}seed-tracks"
         s.addAlgorithm(
-            acts.examples.ProtoTracksToTracks(
+            acts.examples.SeedsToTracks(
                 level=logLevel,
-                inputProtoTracks=protoTracks,
+                inputSeeds=f"{prefix}estimatedseeds",
                 inputTrackParameters=f"{prefix}estimatedparameters",
-                inputMeasurements=f"{prefix}measurement_subset",
                 outputTracks=tracks,
+                trackingGeometry=trackingGeometry,
             )
         )
 
