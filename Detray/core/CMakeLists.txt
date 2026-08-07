@@ -14,6 +14,7 @@ file(
     GLOB _detray_core_public_headers
     RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
     "include/detray/algebra/common/*.hpp"
+    "include/detray/algebra/common/ksm/*.hpp"
     "include/detray/algebra/generic/*.hpp"
     "include/detray/algebra/utils/*.hpp"
     "include/detray/builders/*.hpp"
@@ -39,6 +40,7 @@ file(
     GLOB _detray_core_private_headers
     "include/detray/*/detail/*.hpp"
     "include/detray/*/*/detail/*.hpp"
+    "include/detray/*/*/*/detail/*.hpp"
 )
 detray_add_library( detray_core core
    ${_detray_core_public_headers} ${_detray_core_private_headers}
