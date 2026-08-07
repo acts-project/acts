@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsExamples/Validation/IterativeFit.hpp"
 
 #include <utility>
 
@@ -119,6 +120,64 @@ void TrackFitterPerformanceCollector::logSummary() const {
         static_cast<double>(m_stats.nTotalMatchedTracks) / m_stats.nTotalTracks;
     ACTS_INFO("Track efficiency: " << efficiency * 100 << "%");
   }
+}
+
+template <std::size_t Dim>
+void TrackFitterPerformanceCollector::addFittedProfiles(
+    const std::map<std::string, Acts::Experimental::Histogram<Dim>>& histMap,
+    const std::string& meanPrefix, const std::string& widthPrefix,
+    std::vector<Acts::Experimental::ValueHistogram<Dim - 1>>& out) const {
+  for (const auto& [name, hist] : histMap) {
+    // Extract the suffix from the histogram name (e.g., "_d0_vs_eta")
+    const std::string& baseName = hist.name();
+    const std::string suffix = baseName.substr(baseName.find('_'));
+
+    auto profiles = extractMeanWidthProfiles(
+        m_cfg.fitFunction, hist, meanPrefix + suffix, widthPrefix + suffix,
+        m_cfg.fitMinEntries, m_cfg.fitSigmaRange, m_cfg.fitIterations,
+        logger());
+    if (profiles.fitFailureFraction >=
+        m_cfg.warningThresholdFitFailureFraction) {
+      ACTS_WARNING("Fit failures for " << baseName << ": "
+                                       << profiles.fitFailureFraction * 100
+                                       << "%");
+    }
+
+    out.push_back(std::move(profiles.mean));
+    out.push_back(std::move(profiles.width));
+  }
+}
+
+TrackFitterPerformanceCollector::FittedProfiles
+TrackFitterPerformanceCollector::fitProfiles() const {
+  FittedProfiles profiles;
+
+  if (!m_cfg.fitFunction) {
+    ACTS_WARNING(
+        "No fit function configured; skipping mean/width profile "
+        "extraction");
+    return profiles;
+  }
+
+  addFittedProfiles<2>(m_resPlotTool.resVsEta(), "resmean", "reswidth",
+                       profiles.profiles1);
+  addFittedProfiles<2>(m_resPlotTool.resVsPt(), "resmean", "reswidth",
+                       profiles.profiles1);
+  addFittedProfiles<3>(m_resPlotTool.resVsEtaPhi(), "resmean", "reswidth",
+                       profiles.profiles2);
+  addFittedProfiles<3>(m_resPlotTool.resVsEtaPt(), "resmean", "reswidth",
+                       profiles.profiles2);
+
+  addFittedProfiles<2>(m_resPlotTool.pullVsEta(), "pullmean", "pullwidth",
+                       profiles.profiles1);
+  addFittedProfiles<2>(m_resPlotTool.pullVsPt(), "pullmean", "pullwidth",
+                       profiles.profiles1);
+  addFittedProfiles<3>(m_resPlotTool.pullVsEtaPhi(), "pullmean", "pullwidth",
+                       profiles.profiles2);
+  addFittedProfiles<3>(m_resPlotTool.pullVsEtaPt(), "pullmean", "pullwidth",
+                       profiles.profiles2);
+
+  return profiles;
 }
 
 }  // namespace ActsExamples
