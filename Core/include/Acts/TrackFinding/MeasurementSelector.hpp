@@ -26,6 +26,28 @@
 
 namespace Acts {
 
+/// Local chi2 contribution of a calibrated measurement with respect to
+/// predicted bound track parameters.
+///
+/// The calibrated data is passed as raw pointers into an overallocated buffer
+/// so that the Eigen operations can be performed with compile time sizes and
+/// no dynamic memory allocation is needed.
+///
+/// @param calibrated pointer to @p calibratedSize contiguous measurement values
+/// @param calibratedCovariance pointer to the contiguous measurement covariance
+/// @param predicted the predicted bound parameters
+/// @param predictedCovariance the predicted bound parameters covariance
+/// @param projector the subspace indices of the measurement
+/// @param calibratedSize the dimension of the measurement
+///
+/// @return the local chi2 contribution
+double calculatePredictedChi2(const double* calibrated,
+                              const double* calibratedCovariance,
+                              Eigen::Ref<const BoundVector> predicted,
+                              Eigen::Ref<const BoundMatrix> predictedCovariance,
+                              BoundSubspaceIndices projector,
+                              unsigned int calibratedSize);
+
 /// Selection cuts for associating measurements with predicted track
 /// parameters on a surface.
 ///
@@ -92,6 +114,25 @@ class MeasurementSelector {
   select(std::vector<typename traj_t::TrackStateProxy>& candidates,
          bool& isOutlier, const Logger& logger) const;
 
+  /// The selection cuts resolved for one surface and one polar angle.
+  struct Cuts {
+    /// Maximum number of associated measurements on this surface
+    std::size_t numMeasurements{};
+    /// Maximum local chi2 contribution to classify as measurement
+    double chi2Measurement{};
+    /// Maximum local chi2 contribution to classify as outlier
+    double chi2Outlier{};
+  };
+
+  /// Resolve the selection cuts for a surface and a polar angle.
+  ///
+  /// @param geoID the geometry identifier of the surface
+  /// @param theta the polar angle of the predicted parameters
+  ///
+  /// @return the cuts or `MeasurementSelectionFailed` if the geometry
+  ///         identifier is not covered by the configuration
+  Result<Cuts> getCuts(const GeometryIdentifier& geoID, double theta) const;
+
  private:
   struct InternalCutBin {
     double maxTheta{};
@@ -102,23 +143,9 @@ class MeasurementSelector {
   using InternalCutBins = std::vector<InternalCutBin>;
   using InternalConfig = Acts::GeometryHierarchyMap<InternalCutBins>;
 
-  struct Cuts {
-    std::size_t numMeasurements{};
-    double chi2Measurement{};
-    double chi2Outlier{};
-  };
-
   static InternalCutBins convertCutBins(const MeasurementSelectorCuts& config);
 
   static Cuts getCutsByTheta(const InternalCutBins& config, double theta);
-  Result<Cuts> getCuts(const GeometryIdentifier& geoID, double theta) const;
-
-  double calculateChi2(
-      const double* fullCalibrated, const double* fullCalibratedCovariance,
-      TrackStateTraits<kMeasurementSizeMax, false>::Parameters predicted,
-      TrackStateTraits<kMeasurementSizeMax, false>::Covariance
-          predictedCovariance,
-      BoundSubspaceIndices projector, unsigned int calibratedSize) const;
 
   InternalConfig m_config;
 };

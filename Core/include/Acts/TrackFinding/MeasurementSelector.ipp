@@ -63,7 +63,7 @@ MeasurementSelector::select(
     // with compile time size. That way the Eigen math operations are
     // still done with compile time size and no dynamic memory allocation
     // is needed.
-    double chi2 = calculateChi2(
+    double chi2 = calculatePredictedChi2(
         trackState.effectiveCalibrated().data(),
         trackState.effectiveCalibratedCovariance().data(),
         trackState.predicted(), trackState.predictedCovariance(),
