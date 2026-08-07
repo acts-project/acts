@@ -27,7 +27,8 @@ struct GbtsEdgeState final {
 
   /// Initialize from edge
   /// @param pS Edge to initialize from
-  void initialize(const GbtsEdge& pS);
+  /// @param nodeView View of the node positions and layers
+  void initialize(const GbtsEdge& pS, const GbtsNodeView& nodeView);
 
   /// Initialization flag
   bool initialized{false};
@@ -113,11 +114,12 @@ class GbtsTrackingFilter final {
 
   /// Follow track starting from edge
   /// @param state Tracking filter state
+  /// @param nodeView View of the node positions and layers
   /// @param sb Edge storage
   /// @param pS Starting edge
   /// @return Final edge state after following the track
-  GbtsEdgeState followTrack(State& state, std::vector<GbtsEdge>& sb,
-                            GbtsEdge& pS) const;
+  GbtsEdgeState followTrack(State& state, const GbtsNodeView& nodeView,
+                            std::vector<GbtsEdge>& sb, GbtsEdge& pS) const;
 
  private:
   /// Configuration for the tracking filter.
@@ -128,17 +130,21 @@ class GbtsTrackingFilter final {
 
   /// Propagate edge state
   /// @param state Tracking filter state
+  /// @param nodeView View of the node positions and layers
   /// @param sb Edge storage
   /// @param pS Edge to propagate from
   /// @param ts Edge state to update
-  void propagate(State& state, std::vector<GbtsEdge>& sb, GbtsEdge& pS,
+  void propagate(State& state, const GbtsNodeView& nodeView,
+                 std::vector<GbtsEdge>& sb, GbtsEdge& pS,
                  GbtsEdgeState& ts) const;
 
   /// Update edge state with edge
+  /// @param nodeView View of the node positions and layers
   /// @param pS Edge to update with
   /// @param ts Edge state to update
   /// @return Success flag
-  bool update(const GbtsEdge& pS, GbtsEdgeState& ts) const;
+  bool update(const GbtsNodeView& nodeView, const GbtsEdge& pS,
+              GbtsEdgeState& ts) const;
 
   /// Get layer type from layer index
   /// @param layerIndex Layer index
