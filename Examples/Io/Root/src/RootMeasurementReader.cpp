@@ -41,6 +41,8 @@ RootMeasurementReader::RootMeasurementReader(
   m_outputMeasurementSubset.maybeInitialize(m_cfg.outputMeasurementSubset);
   m_outputMeasurementParticlesMap.maybeInitialize(
       m_cfg.outputMeasurementParticlesMap);
+  m_outputParticleMeasurementsMap.maybeInitialize(
+      m_cfg.outputParticleMeasurementsMap);
   m_outputClusters.maybeInitialize(m_cfg.outputClusters);
 
   m_inputChain = std::make_unique<TChain>(m_cfg.treeName.c_str());
@@ -146,7 +148,8 @@ ProcessCode RootMeasurementReader::read(const AlgorithmContext& ctx) {
       auto measurement = createMeasurement(measurements, geoId, dParams);
       const auto measurementIndex = static_cast<Index>(measurement.index());
 
-      if (m_outputMeasurementParticlesMap.isInitialized()) {
+      if (m_outputMeasurementParticlesMap.isInitialized() ||
+          m_outputParticleMeasurementsMap.isInitialized()) {
         for (std::size_t i = 0; i < m_particleVertexPrimary->size(); ++i) {
           auto barcode =
               SimBarcode()
@@ -196,6 +199,10 @@ ProcessCode RootMeasurementReader::read(const AlgorithmContext& ctx) {
     std::iota(allIndices.begin(), allIndices.end(), Index{0});
     m_outputMeasurementSubset(
         ctx, MeasurementSubset(storedMeasurements, std::move(allIndices)));
+  }
+  if (m_outputParticleMeasurementsMap.isInitialized()) {
+    m_outputParticleMeasurementsMap(
+        ctx, invertIndexMultimap(measurementParticlesMap));
   }
   if (m_outputMeasurementParticlesMap.isInitialized()) {
     m_outputMeasurementParticlesMap(ctx, std::move(measurementParticlesMap));

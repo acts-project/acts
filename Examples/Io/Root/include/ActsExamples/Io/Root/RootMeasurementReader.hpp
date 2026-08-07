@@ -59,6 +59,9 @@ class RootMeasurementReader final : public IReader {
     std::string outputMeasurementSubset;
     /// Output measurement to particle collection (optional).
     std::string outputMeasurementParticlesMap;
+    /// Output particle to measurement collection, the inverse of
+    /// @c outputMeasurementParticlesMap (optional).
+    std::string outputParticleMeasurementsMap;
     /// Output cluster collection (optional).
     std::string outputClusters;
 
@@ -132,6 +135,8 @@ class RootMeasurementReader final : public IReader {
       this, "OutputMeasurementSubset"};
   WriteDataHandle<MeasurementParticlesMap> m_outputMeasurementParticlesMap{
       this, "OutputMeasurementParticlesMap"};
+  WriteDataHandle<ParticleMeasurementsMap> m_outputParticleMeasurementsMap{
+      this, "OutputParticleMeasurementsMap"};
   WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};
 };
 
