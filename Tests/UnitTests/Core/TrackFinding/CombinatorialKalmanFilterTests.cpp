@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -32,26 +31,27 @@
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
-#include "Acts/TrackFinding/MeasurementSelector.hpp"
-#include "Acts/TrackFinding/TrackStateCreator.hpp"
 #include "Acts/TrackFinding/TrackStateCreatorBase.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
-#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsTests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/MeasurementsCreator.hpp"
 
+#include <array>
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <limits>
 #include <memory>
 #include <random>
 #include <ranges>
+#include <span>
+#include <stdexcept>
 #include <string>
 #include <system_error>
 #include <unordered_map>
@@ -61,8 +61,6 @@
 using namespace Acts;
 using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
-
-namespace bdata = boost::unit_test::data;
 
 namespace ActsTests {
 
@@ -98,52 +96,6 @@ struct Detector {
       : store(geoCtx), geometry(store()) {}
 };
 
-/// The map(-like) container accessor
-template <typename container_t>
-struct TestContainerAccessor {
-  using Container = container_t;
-  using Key = typename container_t::key_type;
-  using Value = typename container_t::mapped_type;
-
-  /// This iterator adapter is needed to have the deref operator return a single
-  /// source link instead of the map pair <GeometryIdentifier,SourceLink>
-  struct Iterator {
-    using BaseIterator = typename container_t::const_iterator;
-
-    using iterator_category = typename BaseIterator::iterator_category;
-    using value_type = typename BaseIterator::value_type;
-    using difference_type = typename BaseIterator::difference_type;
-    using pointer = typename BaseIterator::pointer;
-    using reference = typename BaseIterator::reference;
-
-    Iterator& operator++() {
-      ++m_iterator;
-      return *this;
-    }
-
-    bool operator==(const Iterator& other) const {
-      return m_iterator == other.m_iterator;
-    }
-
-    SourceLink operator*() const {
-      const auto& sl = m_iterator->second;
-      return SourceLink{sl};
-    }
-
-    BaseIterator m_iterator;
-  };
-
-  // pointer to the container
-  const Container* container = nullptr;
-
-  // get the range of elements with requested key
-  std::pair<Iterator, Iterator> range(const Surface& surface) const {
-    assert(container != nullptr);
-    auto [begin, end] = container->equal_range(surface.geometryId());
-    return {Iterator{begin}, Iterator{end}};
-  }
-};
-
 struct Fixture {
   using StraightPropagator = Propagator<StraightLineStepper, Navigator>;
   using ConstantFieldStepper = EigenStepper<>;
@@ -155,7 +107,6 @@ struct Fixture {
       CombinatorialKalmanFilter<ConstantFieldPropagator, TrackContainer>;
   using TestSourceLinkContainer =
       std::unordered_multimap<GeometryIdentifier, TestSourceLink>;
-  using TestSourceLinkAccessor = TestContainerAccessor<TestSourceLinkContainer>;
   using TestCombinatorialKalmanFilterOptions =
       CombinatorialKalmanFilterOptions<TrackContainer>;
 
@@ -177,14 +128,6 @@ struct Fixture {
 
   // CKF implementation to be tested
   TestCombinatorialKalmanFilter ckf;
-  // configuration for the measurement selector
-  MeasurementSelector::Config measurementSelectorCfg = {
-      // global default: no chi2 cut, only one measurement per surface
-      {GeometryIdentifier(), {{}, {std::numeric_limits<double>::max()}, {1u}}},
-  };
-
-  MeasurementSelector measSel{measurementSelectorCfg};
-
   CombinatorialKalmanFilterExtensions<TrackContainer> getExtensions() const {
     CombinatorialKalmanFilterExtensions<TrackContainer> extensions;
     extensions.updater.template connect<
@@ -280,37 +223,58 @@ struct Fixture {
   }
 };
 
-// set up composable track state creator from these components:
-//  - source link accessor,
-//  - measurement selector
-//  - track  state candidate creator
-// This is the deprecated creator, kept here so the parity test below can show
-// that `TrackStateCreatorBase` reproduces it exactly.
-ACTS_PUSH_IGNORE_DEPRECATED()
-template <typename source_link_accessor_t>
-inline auto makeTrackStateCreator(const source_link_accessor_t& slAccessor,
-                                  const MeasurementSelector& measSel) {
-  using TrackStateCreatorType =
-      TrackStateCreator<typename source_link_accessor_t::Iterator,
-                        TrackContainer>;
-  TrackStateCreatorType trackStateCreator;
-  trackStateCreator.sourceLinkAccessor
-      .template connect<&source_link_accessor_t::range>(&slAccessor);
-  trackStateCreator.calibrator.template connect<
-      &testSourceLinkCalibratorStrict<TrackStateContainerBackend>>();
-  trackStateCreator.measurementSelector.template connect<
-      &MeasurementSelector::select<TrackStateContainerBackend>>(&measSel);
-  return trackStateCreator;
-}
-ACTS_POP_IGNORE_DEPRECATED()
+/// A calibrated measurement reading straight out of a @ref TestSourceLink,
+/// which stores its values inline in a 2d buffer. Its dimension is only known
+/// at runtime, i.e. this exercises the dynamically sized side of
+/// @ref Acts::MeasurementConcept.
+class CalibratedTestSourceLink {
+ public:
+  explicit CalibratedTestSourceLink(const TestSourceLink& sourceLink)
+      : m_sourceLink(&sourceLink) {
+    for (const BoundIndices index : sourceLink.indices) {
+      if (index == eBoundSize) {
+        break;
+      }
+      m_indices[m_size] = static_cast<std::uint8_t>(index);
+      ++m_size;
+    }
+    if (m_size == 0) {
+      throw std::runtime_error(
+          "Tried to extract measurement from invalid TestSourceLink");
+    }
+  }
+
+  std::size_t size() const { return m_size; }
+
+  std::span<const std::uint8_t> subspaceIndices() const {
+    return {m_indices.data(), m_size};
+  }
+
+  Eigen::Map<const Eigen::VectorXd> parameters() const {
+    return {m_sourceLink->parameters.data(), static_cast<Eigen::Index>(m_size)};
+  }
+
+  Eigen::Map<const Eigen::MatrixXd> covariance() const {
+    return {m_sourceLink->covariance.data(), static_cast<Eigen::Index>(m_size),
+            static_cast<Eigen::Index>(m_size)};
+  }
+
+ private:
+  const TestSourceLink* m_sourceLink{};
+  std::size_t m_size{0};
+  std::array<std::uint8_t, 2> m_indices{};
+};
+
+static_assert(MeasurementConcept<CalibratedTestSourceLink> &&
+                  !StaticMeasurementConcept<CalibratedTestSourceLink>,
+              "The calibrated test source link should exercise the runtime "
+              "dispatch on the measurement dimension");
 
 /// The same thing built on @ref TrackStateCreatorBase, i.e. without pushing
 /// every measurement through the track EDM first.
 struct TestTrackStateCreator final
-    : public MeasurementSelectorTrackStateCreatorBase<TestTrackStateCreator,
-                                                      TrackContainer> {
-  using Base = MeasurementSelectorTrackStateCreatorBase<TestTrackStateCreator,
-                                                        TrackContainer>;
+    : public TrackStateCreatorBase<TestTrackStateCreator, TrackContainer> {
+  using Base = TrackStateCreatorBase<TestTrackStateCreator, TrackContainer>;
   using State = typename Base::State;
 
   const Fixture::TestSourceLinkContainer* container = nullptr;
@@ -326,40 +290,60 @@ struct TestTrackStateCreator final
     return SourceLink{measurement};
   }
 
-  CalibratedBoundMeasurement calibrate(
-      const State& /*state*/, const TestSourceLink& measurement) const {
-    // `TestSourceLink` stores the measurement inline, always in a 2d buffer
-    if (measurement.indices[1] != eBoundSize) {
-      return CalibratedBoundMeasurement{
-          measurement.parameters, measurement.covariance,
-          std::array{static_cast<std::uint8_t>(measurement.indices[0]),
-                     static_cast<std::uint8_t>(measurement.indices[1])}};
-    }
-    if (measurement.indices[0] != eBoundSize) {
-      return CalibratedBoundMeasurement{
-          Vector<1>{measurement.parameters.head<1>()},
-          SquareMatrix<1>{measurement.covariance.topLeftCorner<1, 1>()},
-          std::array{static_cast<std::uint8_t>(measurement.indices[0])}};
-    }
-    throw std::runtime_error(
-        "Tried to extract measurement from invalid TestSourceLink");
+  CalibratedTestSourceLink calibrate(const State& /*state*/,
+                                     const TestSourceLink& measurement) const {
+    return CalibratedTestSourceLink{measurement};
   }
+
+  /// Same policy as the legacy creator, but selecting on the measurements
+  /// directly instead of on temporary track states.
+  template <typename range_t, typename candidates_t>
+  Result<void> selectMeasurements(const State& state, range_t&& range,
+                                  candidates_t& candidates) const {
+    for (const TestSourceLink& measurement : range) {
+      candidates.push_back(
+          {measurement,
+           calculatePredictedChi2(state, calibrate(state, measurement)),
+           false});
+    }
+
+    const auto best = std::ranges::min_element(
+        candidates, {}, [](const auto& candidate) { return candidate.chi2; });
+    if (best == candidates.end()) {
+      return Result<void>::success();
+    }
+
+    const bool isOutlier = best->chi2 >= chi2Measurement;
+    if (isOutlier && best->chi2 >= chi2Outlier) {
+      candidates.clear();
+      return Result<void>::success();
+    }
+    if (isOutlier || numMeasurements == 1) {
+      const auto selected = *best;
+      candidates.clear();
+      candidates.push_back({selected.measurement, selected.chi2, isOutlier});
+      return Result<void>::success();
+    }
+
+    candidates.erase(std::remove_if(candidates.begin(), candidates.end(),
+                                    [this](const auto& candidate) {
+                                      return candidate.chi2 >= chi2Measurement;
+                                    }),
+                     candidates.end());
+    std::ranges::sort(candidates, {},
+                      [](const auto& candidate) { return candidate.chi2; });
+    candidates.erase(
+        candidates.begin() + std::min(numMeasurements, candidates.size()),
+        candidates.end());
+    return Result<void>::success();
+  }
+
+  std::size_t numMeasurements = 1;
+  double chi2Measurement = std::numeric_limits<double>::max();
+  double chi2Outlier = std::numeric_limits<double>::max();
 };
 
 }  // namespace ActsTests
-
-namespace Acts {
-
-// somehow this is not automatically instantiated
-template Result<std::pair<
-    std::vector<
-        ActsTests::TrackStateContainerBackend::TrackStateProxy>::iterator,
-    std::vector<
-        ActsTests::TrackStateContainerBackend::TrackStateProxy>::iterator>>
-MeasurementSelector::select<ActsTests::TrackStateContainerBackend>(
-    std::vector<ActsTests::TrackStateContainerBackend::TrackStateProxy>&, bool&,
-    const Logger&) const;
-}  // namespace Acts
 
 namespace ActsTests {
 
@@ -378,7 +362,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
 
   TestTrackStateCreator trackStateCreator;
   trackStateCreator.container = &f.sourceLinks;
-  trackStateCreator.measurementSelector = f.measSel;
 
   options.extensions.trackStateCreator
       .template connect<&TestTrackStateCreator::createTrackStates>(
@@ -438,7 +421,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
 
   TestTrackStateCreator trackStateCreator;
   trackStateCreator.container = &f.sourceLinks;
-  trackStateCreator.measurementSelector = f.measSel;
 
   options.extensions.trackStateCreator
       .template connect<&TestTrackStateCreator::createTrackStates>(
@@ -482,158 +464,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
     BOOST_CHECK_EQUAL(numHits, f.detector.numMeasurements);
     BOOST_CHECK_EQUAL(nummismatchedHits, 0u);
   }
-}
-
-namespace {
-
-/// Compare two track states which are expected to be bit identical.
-void checkTrackStatesEqual(const TrackContainer::ConstTrackStateProxy& a,
-                           const TrackContainer::ConstTrackStateProxy& b) {
-  BOOST_TEST_CONTEXT("track state " << a.index() << " vs " << b.index()) {
-    BOOST_CHECK_EQUAL(a.typeFlags().raw(), b.typeFlags().raw());
-    BOOST_CHECK_EQUAL(a.pathLength(), b.pathLength());
-    BOOST_CHECK_EQUAL(a.chi2(), b.chi2());
-
-    BOOST_REQUIRE_EQUAL(a.hasReferenceSurface(), b.hasReferenceSurface());
-    if (a.hasReferenceSurface()) {
-      BOOST_CHECK_EQUAL(a.referenceSurface().geometryId(),
-                        b.referenceSurface().geometryId());
-    }
-
-    BOOST_REQUIRE_EQUAL(a.hasPredicted(), b.hasPredicted());
-    if (a.hasPredicted()) {
-      BOOST_CHECK_EQUAL(a.predicted(), b.predicted());
-      BOOST_CHECK_EQUAL(a.predictedCovariance(), b.predictedCovariance());
-    }
-    BOOST_REQUIRE_EQUAL(a.hasFiltered(), b.hasFiltered());
-    if (a.hasFiltered()) {
-      BOOST_CHECK_EQUAL(a.filtered(), b.filtered());
-      BOOST_CHECK_EQUAL(a.filteredCovariance(), b.filteredCovariance());
-    }
-    BOOST_REQUIRE_EQUAL(a.hasSmoothed(), b.hasSmoothed());
-    if (a.hasSmoothed()) {
-      BOOST_CHECK_EQUAL(a.smoothed(), b.smoothed());
-      BOOST_CHECK_EQUAL(a.smoothedCovariance(), b.smoothedCovariance());
-    }
-    BOOST_REQUIRE_EQUAL(a.hasJacobian(), b.hasJacobian());
-    if (a.hasJacobian()) {
-      BOOST_CHECK_EQUAL(a.jacobian(), b.jacobian());
-    }
-
-    BOOST_REQUIRE_EQUAL(a.hasCalibrated(), b.hasCalibrated());
-    if (a.hasCalibrated()) {
-      BOOST_REQUIRE_EQUAL(a.calibratedSize(), b.calibratedSize());
-      BOOST_CHECK_EQUAL(a.effectiveCalibrated(), b.effectiveCalibrated());
-      BOOST_CHECK_EQUAL(a.effectiveCalibratedCovariance(),
-                        b.effectiveCalibratedCovariance());
-      // the projector is serialized including its unused slots, so this also
-      // catches a difference in how the subspace indices were padded
-      BOOST_CHECK(a.projectorSubspaceIndices() == b.projectorSubspaceIndices());
-    }
-
-    BOOST_REQUIRE_EQUAL(a.hasUncalibratedSourceLink(),
-                        b.hasUncalibratedSourceLink());
-    if (a.hasUncalibratedSourceLink()) {
-      BOOST_CHECK(a.getUncalibratedSourceLink().get<TestSourceLink>() ==
-                  b.getUncalibratedSourceLink().get<TestSourceLink>());
-    }
-  }
-}
-
-}  // namespace
-
-/// The CRTP track state creator has to produce exactly the same tracks as the
-/// classic one, which is what allows it to be rolled out without changing any
-/// physics performance.
-BOOST_DATA_TEST_CASE(LegacyVsCrtpCreatorParity,
-                     bdata::make(std::vector<double>{0_T, 2_T}), bz) {
-  Fixture f(bz);
-
-  // cuts which let branches, outliers and holes all happen
-  const MeasurementSelector::Config selectorCfg = {
-      {GeometryIdentifier(), {{}, {30.}, {2u}, {100.}}},
-  };
-  const MeasurementSelector selector{selectorCfg};
-
-  Fixture::TestSourceLinkAccessor slAccessor;
-  slAccessor.container = &f.sourceLinks;
-
-  auto legacyCreator = makeTrackStateCreator(slAccessor, selector);
-
-  TestTrackStateCreator crtpCreator;
-  crtpCreator.container = &f.sourceLinks;
-  crtpCreator.measurementSelector = selector;
-
-  auto runCkf = [&](auto&& connectCreator) {
-    TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
-    auto options = f.makeCkfOptions();
-    options.propagatorPlainOptions.direction = Direction::Forward();
-    connectCreator(options.extensions);
-    for (std::size_t trackId = 0u; trackId < f.startParameters.size();
-         ++trackId) {
-      auto res = f.ckf.findTracks(f.startParameters.at(trackId), options, tc);
-      BOOST_REQUIRE(res.ok());
-    }
-    return tc;
-  };
-
-  TrackContainer tcLegacy = runCkf([&](auto& extensions) {
-    extensions.createTrackStates
-        .template connect<&decltype(legacyCreator)::createTrackStates>(
-            &legacyCreator);
-  });
-  TrackContainer tcCrtp = runCkf([&](auto& extensions) {
-    extensions.trackStateCreator
-        .template connect<&TestTrackStateCreator::createTrackStates>(
-            &crtpCreator);
-  });
-
-  BOOST_REQUIRE_EQUAL(tcLegacy.size(), tcCrtp.size());
-  BOOST_REQUIRE_GT(tcLegacy.size(), 0u);
-
-  for (std::size_t i = 0u; i < tcLegacy.size(); ++i) {
-    BOOST_TEST_CONTEXT("track " << i) {
-      const auto legacy = tcLegacy.getTrack(i);
-      const auto crtp = tcCrtp.getTrack(i);
-
-      BOOST_CHECK_EQUAL(legacy.nTrackStates(), crtp.nTrackStates());
-      BOOST_CHECK_EQUAL(legacy.nMeasurements(), crtp.nMeasurements());
-      BOOST_CHECK_EQUAL(legacy.nOutliers(), crtp.nOutliers());
-      BOOST_CHECK_EQUAL(legacy.nHoles(), crtp.nHoles());
-      BOOST_CHECK_EQUAL(legacy.nDoF(), crtp.nDoF());
-      BOOST_CHECK_EQUAL(legacy.chi2(), crtp.chi2());
-      BOOST_CHECK_EQUAL(legacy.parameters(), crtp.parameters());
-      BOOST_CHECK_EQUAL(legacy.covariance(), crtp.covariance());
-
-      // the track state indices differ by construction, the classic creator
-      // leaves its temporaries in the trajectory, so compare by traversal
-      auto legacyStates = legacy.trackStatesReversed();
-      auto crtpStates = crtp.trackStatesReversed();
-      auto legacyIt = legacyStates.begin();
-      auto crtpIt = crtpStates.begin();
-      for (; legacyIt != legacyStates.end() && crtpIt != crtpStates.end();
-           ++legacyIt, ++crtpIt) {
-        checkTrackStatesEqual(*legacyIt, *crtpIt);
-      }
-      BOOST_CHECK(legacyIt == legacyStates.end());
-      BOOST_CHECK(crtpIt == crtpStates.end());
-    }
-  }
-
-  // guard against the comparison above going vacuous. With bz = 0 this covers
-  // measurements, holes and branching, with bz = 2T the outlier path.
-  std::size_t nMeasurements = 0u;
-  std::size_t nOutliers = 0u;
-  for (std::size_t i = 0u; i < tcCrtp.size(); ++i) {
-    const auto track = tcCrtp.getTrack(i);
-    nMeasurements += track.nMeasurements();
-    nOutliers += track.nOutliers();
-  }
-  BOOST_CHECK_GT(nMeasurements + nOutliers, 0u);
-
-  // the whole point of the exercise: fewer track states are materialized
-  BOOST_CHECK_LT(tcCrtp.trackStateContainer().size(),
-                 tcLegacy.trackStateContainer().size());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

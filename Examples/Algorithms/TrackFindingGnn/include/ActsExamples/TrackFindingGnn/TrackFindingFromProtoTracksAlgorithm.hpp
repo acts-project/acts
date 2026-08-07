@@ -12,7 +12,6 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/Zip.hpp"
@@ -49,8 +48,8 @@ class TrackFindingFromProtoTracksAlgorithm final : public IAlgorithm {
     /// Output tracks collection.
     std::string outputTracks;
 
-    /// CKF measurement selector config
-    Acts::MeasurementSelector::Config measurementSelectorCfg;
+    /// Cuts applied when extending a track onto a surface
+    TrackStateSelectionCuts trackStateSelection;
 
     /// CKF function
     std::shared_ptr<TrackFindingAlgorithm::TrackFinderFunction> findTracks;

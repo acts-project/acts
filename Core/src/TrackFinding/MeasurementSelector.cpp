@@ -16,12 +16,15 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <numbers>
 #include <span>
 #include <stdexcept>
 
 namespace Acts {
+
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 MeasurementSelector::MeasurementSelector()
     : MeasurementSelector({{GeometryIdentifier(), MeasurementSelectorCuts{}}}) {
@@ -79,12 +82,12 @@ MeasurementSelector::InternalCutBins MeasurementSelector::convertCutBins(
   return cutBins;
 }
 
-double calculatePredictedChi2(const double* fullCalibrated,
-                              const double* fullCalibratedCovariance,
-                              Eigen::Ref<const BoundVector> predicted,
-                              Eigen::Ref<const BoundMatrix> predictedCovariance,
-                              BoundSubspaceIndices projector,
-                              unsigned int calibratedSize) {
+double MeasurementSelector::calculateChi2(
+    const double* fullCalibrated, const double* fullCalibratedCovariance,
+    TrackStateTraits<kMeasurementSizeMax, false>::Parameters predicted,
+    TrackStateTraits<kMeasurementSizeMax, false>::Covariance
+        predictedCovariance,
+    BoundSubspaceIndices projector, unsigned int calibratedSize) const {
   return visit_measurement(
       calibratedSize,
       [&fullCalibrated, &fullCalibratedCovariance, &predicted,
@@ -144,5 +147,7 @@ Result<MeasurementSelector::Cuts> MeasurementSelector::getCuts(
   }
   return getCutsByTheta(*cuts, theta);
 }
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace Acts

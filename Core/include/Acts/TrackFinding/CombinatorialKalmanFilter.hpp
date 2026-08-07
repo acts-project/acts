@@ -1155,6 +1155,13 @@ class CombinatorialKalmanFilter {
           "Connect either `extensions.trackStateCreator` or the deprecated "
           "`extensions.createTrackStates`.");
     }
+    if (tfOptions.extensions.trackStateCreator.connected() &&
+        tfOptions.extensions.createTrackStates.connected()) {
+      throw std::invalid_argument(
+          "CombinatorialKalmanFilter: two track state creators connected. "
+          "Connect either `extensions.trackStateCreator` or the deprecated "
+          "`extensions.createTrackStates`, not both.");
+    }
 
     // Create the ActorList
     using CombinatorialKalmanFilterActor = Actor;
