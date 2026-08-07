@@ -4,6 +4,7 @@ acts_add_library(
     src/SeedsToProtoTracks.cpp
     src/TrajectoriesToProtoTracks.cpp
     src/TrackSelectorAlgorithm.cpp
+    src/TrackExtrapolationAlgorithm.cpp
     src/TracksToTrajectories.cpp
     src/ProtoTracksToTracks.cpp
     src/TracksToParameters.cpp
