@@ -19,10 +19,6 @@ traccc_add_library( traccc_hip hip TYPE SHARED
    # Utility code.
    "include/traccc/hip/utils/algorithm_base.hpp"
    "src/utils/algorithm_base.cpp"
-   "include/traccc/hip/utils/stream.hpp"
-   "src/utils/stream.cpp"
-   "src/utils/opaque_stream.hpp"
-   "src/utils/opaque_stream.cpp"
    "src/utils/hip_error_handling.hpp"
    "src/utils/hip_error_handling.cpp"
    "src/utils/utils.hpp"
@@ -37,6 +33,6 @@ traccc_add_library( traccc_hip hip TYPE SHARED
 )
 target_link_libraries(
     traccc_hip
-    PUBLIC traccc::core vecmem::core
+    PUBLIC traccc::core traccc::hip_utils vecmem::core
     PRIVATE HIP::hiprt traccc::device_common
 )
