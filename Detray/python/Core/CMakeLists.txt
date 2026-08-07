@@ -18,7 +18,6 @@ target_link_libraries(
         detray::core_array
         detray::io
         detray::detectors
-        detray::test_common
         vecmem::core
         covfie::core
 )

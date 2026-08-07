@@ -16,12 +16,6 @@
 // Detray propagation include(s)
 #include "detray/propagator/propagation_config.hpp"
 
-// Detray event generator include(s)
-#include "detray/test/common/event_generator/uniform_track_generator_config.hpp"
-
-// Detray test include(s)
-#include "detray/test/validation/material_validation_config.hpp"
-
 // Detray algebra plugin + detector metadata
 #include "algebra/array.hpp"
 #include "detray/definitions/algebra.hpp"
@@ -29,7 +23,6 @@
 
 // Vecmem include(s)
 #include <vecmem/memory/host_memory_resource.hpp>
-#include <vecmem/memory/memory_resource.hpp>
 
 // Pybind11 include(s)
 #include <pybind11/pybind11.h>
@@ -38,13 +31,11 @@
 // System include(s)
 #include <array>
 #include <cstddef>
-#include <cstdint>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <tuple>
 #include <utility>
 
 namespace py = pybind11;
@@ -61,8 +52,6 @@ using navigation_config_t = detray::navigation::config;
 using stepping_config_t = detray::stepping::config;
 using propagation_config_t = detray::propagation::config;
 using scalar_t = DETRAY_CUSTOM_SCALARTYPE;
-using track_generator_config_t =
-    detray::uniform_track_generator_config<scalar_t>;
 
 template <typename T>
 std::string to_string(const T &obj) {
@@ -113,8 +102,6 @@ using transform_store_t = detector_t::transform_container;
 using mask_store_t = detector_t::mask_container;
 using material_store_t = detector_t::material_container;
 using accelerator_store_t = detector_t::accelerator_container;
-using material_validation_config_t =
-    detray::test::material_validation_config<algebra_t>;
 
 /// Owns a detector together with the memory resource its data lives in.
 struct detector_handle {
@@ -231,178 +218,6 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
       .def_readwrite("stepping", &propagation_config_t::stepping,
                      "Stepping configuration")
       .def("__repr__", &to_string<propagation_config_t>);
-
-  py::class_<track_generator_config_t>(m, "TrackGeneratorConfig")
-      .def(py::init<>())
-      .def_property(
-          "seed", [](const track_generator_config_t &c) { return c.seed(); },
-          [](track_generator_config_t &c, std::uint64_t s) { c.seed(s); },
-          "Monte-Carlo seed")
-      .def(
-          "nTracks",
-          [](const track_generator_config_t &c) { return c.n_tracks(); },
-          "Total number of tracks")
-      .def_property(
-          "phiRange",
-          [](const track_generator_config_t &c) {
-            const auto r = c.phi_range();
-            return std::make_pair(r[0], r[1]);
-          },
-          [](track_generator_config_t &c,
-             const std::pair<scalar_t, scalar_t> &r) {
-            c.phi_range(r.first, r.second);
-          },
-          "Phi range (min, max) (native rad)")
-      .def_property(
-          "thetaRange",
-          [](const track_generator_config_t &c) {
-            const auto r = c.theta_range();
-            return std::make_pair(r[0], r[1]);
-          },
-          [](track_generator_config_t &c,
-             const std::pair<scalar_t, scalar_t> &r) {
-            c.theta_range(r.first, r.second);
-          },
-          "Theta range (min, max) (native rad)")
-      .def_property(
-          "etaRange",
-          [](const track_generator_config_t &c) {
-            const auto r = c.eta_range();
-            return std::make_pair(r[0], r[1]);
-          },
-          [](track_generator_config_t &c,
-             const std::pair<scalar_t, scalar_t> &r) {
-            c.eta_range(r.first, r.second);
-          },
-          "Eta range (min, max)")
-      .def_property(
-          "phiSteps",
-          [](const track_generator_config_t &c) { return c.phi_steps(); },
-          [](track_generator_config_t &c, std::size_t n) { c.phi_steps(n); },
-          "Number of phi steps")
-      .def_property(
-          "thetaSteps",
-          [](const track_generator_config_t &c) { return c.theta_steps(); },
-          [](track_generator_config_t &c, std::size_t n) { c.theta_steps(n); },
-          "Number of theta steps")
-      .def_property(
-          "etaSteps",
-          [](const track_generator_config_t &c) { return c.eta_steps(); },
-          [](track_generator_config_t &c, std::size_t n) { c.eta_steps(n); },
-          "Number of eta steps")
-      .def_property(
-          "uniformEta",
-          [](const track_generator_config_t &c) { return c.uniform_eta(); },
-          [](track_generator_config_t &c, bool b) { c.uniform_eta(b); },
-          "Whether to step uniformly in eta")
-      .def_property(
-          "origin",
-          [](const track_generator_config_t &c) {
-            const auto &o = c.origin();
-            return std::make_tuple(o[0], o[1], o[2]);
-          },
-          [](track_generator_config_t &c,
-             const std::tuple<scalar_t, scalar_t, scalar_t> &o) {
-            c.origin(std::get<0>(o), std::get<1>(o), std::get<2>(o));
-          },
-          "Track origin")
-      .def(
-          "pT",
-          [](track_generator_config_t &c,
-             scalar_t p) -> track_generator_config_t & { return c.p_T(p); },
-          py::arg("p"), py::return_value_policy::reference,
-          "Set the transverse momentum magnitude")
-      .def(
-          "pTot",
-          [](track_generator_config_t &c,
-             scalar_t p) -> track_generator_config_t & { return c.p_tot(p); },
-          py::arg("p"), py::return_value_policy::reference,
-          "Set the total momentum magnitude")
-      .def(
-          "momRange",
-          [](const track_generator_config_t &c) {
-            const auto r = c.mom_range();
-            return std::make_pair(r[0], r[1]);
-          },
-          "Momentum range")
-      .def_property(
-          "randomizeCharge",
-          [](const track_generator_config_t &c) {
-            return c.randomize_charge();
-          },
-          [](track_generator_config_t &c, bool b) { c.randomize_charge(b); },
-          "Randomly flip the charge sign")
-      .def_property(
-          "time", [](const track_generator_config_t &c) { return c.time(); },
-          [](track_generator_config_t &c, scalar_t t) { c.time(t); },
-          "Track time")
-      .def_property(
-          "charge",
-          [](const track_generator_config_t &c) { return c.charge(); },
-          [](track_generator_config_t &c, scalar_t q) { c.charge(q); },
-          "Track charge")
-      .def(
-          "isPT", [](const track_generator_config_t &c) { return c.is_pT(); },
-          "Whether the momentum magnitude is interpreted as transverse")
-      .def("__repr__", &to_string<track_generator_config_t>);
-
-  py::class_<vecmem::memory_resource>(m, "MemoryResource");
-
-  py::class_<material_validation_config_t>(m, "MaterialValidationConfig")
-      .def(py::init<>())
-      .def_property(
-          "name",
-          [](const material_validation_config_t &c) { return c.name(); },
-          [](material_validation_config_t &c, const std::string &n) {
-            c.name(n);
-          },
-          "Name of the test")
-      .def_property(
-          "deviceMr",
-          [](const material_validation_config_t &c) { return c.device_mr(); },
-          [](material_validation_config_t &c, vecmem::memory_resource *mr) {
-            c.device_mr(mr);
-          },
-          py::return_value_policy::reference,
-          "Memory resource for the device allocations")
-      .def_property(
-          "materialFile",
-          [](const material_validation_config_t &c) {
-            return c.material_file();
-          },
-          [](material_validation_config_t &c, const std::string &f) {
-            c.material_file(f);
-          },
-          "Name of the output file with the navigation material traces")
-      .def_property(
-          "nTracks",
-          [](const material_validation_config_t &c) { return c.n_tracks(); },
-          [](material_validation_config_t &c, std::size_t n) { c.n_tracks(n); },
-          "Maximal number of test tracks to run")
-      .def_property(
-          "relativeError",
-          [](const material_validation_config_t &c) {
-            return c.relative_error();
-          },
-          [](material_validation_config_t &c, scalar_t re) {
-            c.relative_error(re);
-          },
-          "Allowed relative discrepancy between truth and navigation material")
-      .def_property(
-          "tol", [](const material_validation_config_t &c) { return c.tol(); },
-          [](material_validation_config_t &c, scalar_t t) { c.tol(t); },
-          "Tolerance to compare two floating point values")
-      .def_property(
-          "propagation",
-          [](material_validation_config_t &c) -> propagation_config_t & {
-            return c.propagation();
-          },
-          [](material_validation_config_t &c, const propagation_config_t &v) {
-            c.propagation() = v;
-          },
-          py::return_value_policy::reference_internal,
-          "Propagation configuration")
-      .def("__repr__", &to_string<material_validation_config_t>);
 
   py::class_<volume_descriptor_t>(m, "VolumeDescriptor");
   py::class_<surface_descriptor_t>(m, "SurfaceDescriptor");
