@@ -265,3 +265,76 @@ traccc_test_cuda:
     - traccc_build_cuda
 
 # traccc SYCL Intel build/test dropped along with all other SYCL coverage.
+
+# CudaMuonSegmentFitting gitlab CI workflows
+cmsf_build_cuda:
+  stage: build
+  tags: [docker]
+  image: ghcr.io/acts-project/ubuntu2404_cuda:87
+
+  cache:
+    - !reference [.ccache_base, cache]
+    - !reference [.spack_cache, cache]
+
+  artifacts:
+    paths:
+      - build/
+    exclude:
+      - build/**/*.o
+    expire_in: 6 hours
+
+  only:
+    changes:
+      - Examples/CudaMuonSegmentFitting/**/*
+      - Tests/UnitTests/Examples/CudaMuonSegmentFitting/**/*
+      - .gitlab-ci.yml
+
+  script:
+    - git clone $CLONE_URL src
+    - git -C src checkout $HEAD_SHA
+    - cd src
+    - CI/dependencies/setup.sh -c g++ -e .env
+    - source .env
+    - cd ..
+    - >
+      cmake -B build -S src --preset=gitlab-ci -DACTS_ENABLE_CUDA=ON -DACTS_BUILD_EXAMPLES=ON -DACTS_BUILD_EXAMPLES_CUDA_MUON_SEGMENT_FITTING=ON
+    - ccache -z
+    - cmake --build build --target ActsUnitTestCudaMuonSpacePoint --parallel 2
+    - ccache -s
+
+  after_script:
+    - !reference [.spack_cleanup, after_script]
+
+
+cmsf_test_cuda:
+  stage: test
+  tags: [docker-gpu-nvidia]
+  image: ghcr.io/acts-project/ubuntu2404_cuda:87
+
+  needs:
+    - job: cmsf_build_cuda
+      artifacts: true
+
+  cache:
+    - !reference [.spack_cache, cache]
+
+  only:
+    changes:
+      - Examples/CudaMuonSegmentFitting/**/*
+      - Tests/UnitTests/Examples/CudaMuonSegmentFitting/**/*
+      - .gitlab-ci.yml
+
+  script:
+    - nvidia-smi
+    - git clone $CLONE_URL src
+    - git -C src checkout $HEAD_SHA
+    - cd src
+    - CI/dependencies/setup.sh -c g++ -e .env
+    - source .env
+    - cd ..
+    - >
+      ctest --test-dir build --output-on-failure --no-tests=error -R "CudaMuonSpacePoint"
+
+  after_script:
+    - !reference [.spack_cleanup, after_script]
+>>>>>>> 36e071a8b (feat: CudaMuonSegmentFitter added to CI build and unit test added to CI)
