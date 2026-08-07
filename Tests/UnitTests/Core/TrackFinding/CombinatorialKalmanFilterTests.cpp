@@ -279,6 +279,11 @@ struct TestTrackStateCreator final
 
   const Fixture::TestSourceLinkContainer* container = nullptr;
 
+  /// Cuts the selection below applies
+  std::size_t numMeasurements = 1;
+  double chi2Measurement = std::numeric_limits<double>::max();
+  double chi2Outlier = std::numeric_limits<double>::max();
+
   auto measurementRange(const State& state) const {
     assert(container != nullptr);
     auto [begin, end] = container->equal_range(state.surface->geometryId());
@@ -337,10 +342,6 @@ struct TestTrackStateCreator final
         candidates.end());
     return Result<void>::success();
   }
-
-  std::size_t numMeasurements = 1;
-  double chi2Measurement = std::numeric_limits<double>::max();
-  double chi2Outlier = std::numeric_limits<double>::max();
 };
 
 }  // namespace ActsTests

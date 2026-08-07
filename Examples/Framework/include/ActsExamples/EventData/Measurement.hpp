@@ -599,8 +599,7 @@ class MeasurementSubset
 };
 
 // The proxies are handed to track finding as calibrated measurements, so they
-// have to satisfy the contract it expects. The fixed size ones additionally
-// let it skip the runtime dispatch on the measurement dimension.
+// have to satisfy the contract it expects.
 static_assert(Acts::MeasurementConcept<ConstVariableBoundMeasurementProxy>);
 static_assert(
     Acts::StaticMeasurementConcept<ConstFixedBoundMeasurementProxy<2>>);

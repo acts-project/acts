@@ -21,6 +21,7 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/TrackStateCreator.hpp"
 
 #include <string>
 #include <vector>

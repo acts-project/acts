@@ -36,9 +36,8 @@ namespace Acts {
 
 /// Write a calibrated measurement into a track state.
 ///
-/// @note This passes exactly `measurement.size()` subspace indices. The
-///       projector is serialized including its unused slots, so passing a
-///       padded range here would not be equivalent.
+/// @note The projector is serialized including its unused slots, so the
+///       subspace indices have to be exactly `size()` and not padded.
 ///
 /// @tparam measurement_t the calibrated measurement type
 /// @tparam track_state_proxy_t the track state proxy type
@@ -64,9 +63,8 @@ void fillTrackStateCalibrated(const measurement_t& measurement,
 /// Everything a @ref TrackStateCreatorBase customization point needs to know
 /// about the surface it is currently working on.
 ///
-/// This deliberately does not depend on the concrete creator type, so that
-/// derived classes can implement their customization points as plain,
-/// non-template member functions taking a `const State&`.
+/// This does not depend on the concrete creator type, so that customization
+/// points can be plain, non-template member functions.
 ///
 /// @tparam track_container_t the track container used by the track finder
 template <typename track_container_t>
@@ -139,15 +137,11 @@ struct TrackStateCandidate {
 /// filter.
 ///
 /// The derived class selects on whatever it calls a measurement, and only the
-/// selected ones are materialized as track states. Measurements never have to
-/// pass through the track EDM, which is what the classic creator had to do to
-/// run its selection.
+/// selected ones are materialized as track states, so measurements never have
+/// to pass through the track EDM just to be selected on.
 ///
 /// This class only provides the mechanism, i.e. correctly populating the track
-/// EDM. It does not impose a selection; that is what `selectMeasurements` is
-/// for.
-///
-/// The derived class has to provide
+/// EDM. The derived class has to provide
 /// - `measurementRange(state)`: the measurements associated to `state.surface`
 /// - `sourceLink(state, measurement)`: the uncalibrated source link
 /// - `calibrate(state, measurement)`: a @ref MeasurementConcept value
@@ -218,9 +212,8 @@ class TrackStateCreatorBase {
     CkfTypes::BranchVector<TrackIndexType> trackStates;
 
     auto range = derived().measurementRange(state);
-    // Note this has to happen before the selection is consulted. Resolving
-    // cuts can fail for surfaces which are not covered by the configuration,
-    // and a surface without measurements must not turn that into an error.
+    // Bail out before the selection is consulted, so that an ordinary surface
+    // without measurements can never turn into a selection error.
     if (std::ranges::empty(range)) {
       ACTS_VERBOSE("No measurements on surface " << surface.geometryId());
       return trackStates;
@@ -278,11 +271,9 @@ class TrackStateCreatorBase {
   /// compute the compatibility differently, e.g. accounting for a non Gaussian
   /// measurement model.
   ///
-  /// The default reads the measurement through @ref MeasurementConcept, which
-  /// hands out Eigen maps into the original storage, so nothing is copied. If
-  /// the measurement dimension is known at compile time the Eigen operations
-  /// are statically sized; otherwise the runtime dimension is dispatched onto
-  /// a statically sized instantiation first. Either way Eigen never allocates.
+  /// The default reads the measurement in place, dispatching a dimension which
+  /// is only known at runtime onto a statically sized instantiation, so that
+  /// nothing is copied and Eigen never allocates.
   ///
   /// @tparam measurement_t the calibrated measurement type
   ///
@@ -342,11 +333,9 @@ class TrackStateCreatorBase {
 
     const bool isFirst = !state.firstTrackState.has_value();
 
-    // The filtered parameters are deliberately not allocated here. Outliers
-    // never get separate filtered parameters, and for measurements the caller
-    // allocates them right before the Kalman update writes them, so that
-    // nobody can observe allocated but uninitialized filtered parameters via
-    // `parameters()`.
+    // The filtered parameters are deliberately left unallocated. Outliers
+    // never get their own, and the caller allocates them right before the
+    // Kalman update writes them.
     PM mask = PM::Calibrated;
     if (isFirst) {
       mask |= PM::Predicted | PM::Jacobian;
@@ -355,12 +344,9 @@ class TrackStateCreatorBase {
     TrackStateProxy trackState =
         state.trajectory->makeTrackState(mask, state.prevTip);
 
-    const BoundTrackParameters& boundParams = state.boundParameters();
     if (isFirst) {
-      trackState.predicted() = boundParams.parameters();
-      if (boundParams.covariance().has_value()) {
-        trackState.predictedCovariance() = *boundParams.covariance();
-      }
+      trackState.predicted() = state.predicted();
+      trackState.predictedCovariance() = state.predictedCovariance();
       trackState.jacobian() = state.jacobian();
       state.firstTrackState = trackState;
     } else {
@@ -372,7 +358,7 @@ class TrackStateCreatorBase {
     trackState.pathLength() = state.pathLength();
     trackState.chi2() = candidate.chi2;
     trackState.setReferenceSurface(
-        boundParams.referenceSurface().getSharedPtr());
+        state.boundParameters().referenceSurface().getSharedPtr());
     trackState.setUncalibratedSourceLink(
         derived().sourceLink(state, candidate.measurement));
     derived().fillCalibrated(state, candidate.measurement, trackState);
@@ -430,16 +416,14 @@ class TrackStateCreatorBase {
     const FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
         subspaceIndices);
 
-    // Get the residuals
-    Vector<kMeasurementSize> res =
+    const Vector<kMeasurementSize> residuals =
         calibrated - subspaceHelper.projectVector(predicted);
 
-    // Get the chi2
-    return (res.transpose() *
+    return (residuals.transpose() *
             (calibratedCovariance +
              subspaceHelper.projectMatrix(predictedCovariance))
                 .inverse() *
-            res)
+            residuals)
         .eval()(0, 0);
   }
 };
