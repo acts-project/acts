@@ -16,6 +16,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsPlugins/Root/detail/RootBranchPtr.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -114,11 +115,16 @@ class RootMeasurementReader final : public IReader {
   /// the measurement (de)serialization helper
   std::unique_ptr<ActsPlugins::RootMeasurementIo> m_measurementIo;
 
-  std::vector<std::uint32_t> m_particleVertexPrimary;
-  std::vector<std::uint32_t> m_particleVertexSecondary;
-  std::vector<std::uint32_t> m_particleParticle;
-  std::vector<std::uint32_t> m_particleGeneration;
-  std::vector<std::uint32_t> m_particleSubParticle;
+  // ROOT (in particular TChain) requires the address of a pointer to bind
+  // std::vector<T> branches for reading.
+  template <typename T>
+  using BranchVector = RootBranchPtr<std::vector<T>>;
+
+  BranchVector<std::uint32_t> m_particleVertexPrimary;
+  BranchVector<std::uint32_t> m_particleVertexSecondary;
+  BranchVector<std::uint32_t> m_particleParticle;
+  BranchVector<std::uint32_t> m_particleGeneration;
+  BranchVector<std::uint32_t> m_particleSubParticle;
 
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};

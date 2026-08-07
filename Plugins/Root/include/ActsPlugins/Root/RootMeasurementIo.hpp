@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "ActsPlugins/Root/detail/RootBranchPtr.hpp"
 
 #include <array>
 #include <tuple>
@@ -172,8 +173,10 @@ class RootMeasurementIo {
     // Cluster information
     int nch = 0;
     std::array<int, 2> clusterSize = {0, 0};
-    std::array<std::vector<int>, 2> chId;
-    std::vector<float> chValue = {};
+    // ROOT (in particular TChain) requires the address of a pointer to bind
+    // std::vector<T> branches for reading, so these are owned indirectly.
+    std::array<ActsExamples::RootBranchPtr<std::vector<int>>, 2> chId;
+    ActsExamples::RootBranchPtr<std::vector<float>> chValue;
   };
 
   MeasurementPayload m_measurementPayload;

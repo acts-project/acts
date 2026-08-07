@@ -44,12 +44,12 @@ void ActsPlugins::RootMeasurementIo::connectForWrite(TTree& measurementTree) {
   measurementTree.Branch("rec_gz", &m_measurementPayload.recGz);
 
   measurementTree.Branch("clus_size", &m_clusterPayload.nch);
-  measurementTree.Branch("channel_value", &m_clusterPayload.chValue);
+  measurementTree.Branch("channel_value", &m_clusterPayload.chValue.get());
   // Both are allocated, but only relevant ones are set
   for (auto ib : m_cfg.clusterIndices) {
     if (static_cast<unsigned int>(ib) < 2) {
       measurementTree.Branch(("channel_" + bNames[ib]).c_str(),
-                             &m_clusterPayload.chId[ib]);
+                             &m_clusterPayload.chId[ib].get());
       measurementTree.Branch(("clus_size_" + bNames[ib]).c_str(),
                              &m_clusterPayload.clusterSize[ib]);
     }
@@ -99,12 +99,13 @@ void ActsPlugins::RootMeasurementIo::connectForRead(TTree& measurementTree) {
   measurementTree.SetBranchAddress("rec_gz", &m_measurementPayload.recGz);
 
   measurementTree.SetBranchAddress("clus_size", &m_clusterPayload.nch);
-  measurementTree.SetBranchAddress("channel_value", &m_clusterPayload.chValue);
+  measurementTree.SetBranchAddress("channel_value",
+                                   &m_clusterPayload.chValue.get());
   // Both are allocated, but only relevant ones are set
   for (auto ib : m_cfg.clusterIndices) {
     if (static_cast<unsigned int>(ib) < 2) {
       measurementTree.SetBranchAddress(("channel_" + bNames[ib]).c_str(),
-                                       &m_clusterPayload.chId[ib]);
+                                       &m_clusterPayload.chId[ib].get());
       measurementTree.SetBranchAddress(("clus_size_" + bNames[ib]).c_str(),
                                        &m_clusterPayload.clusterSize[ib]);
     }
@@ -175,13 +176,15 @@ ActsPlugins::RootMeasurementIo::clusterChannels() const {
   if (m_clusterPayload.nch <= 0) {
     return channels;
   }
-  channels.reserve(m_clusterPayload.chValue.size());
-  for (std::size_t i = 0; i < m_clusterPayload.chValue.size(); ++i) {
-    int ch0 =
-        i < m_clusterPayload.chId[0].size() ? m_clusterPayload.chId[0][i] : 0;
-    int ch1 =
-        i < m_clusterPayload.chId[1].size() ? m_clusterPayload.chId[1][i] : 0;
-    channels.emplace_back(ch0, ch1, m_clusterPayload.chValue[i]);
+  const auto& chId0 = *m_clusterPayload.chId[0];
+  const auto& chId1 = *m_clusterPayload.chId[1];
+  const auto& chValue = *m_clusterPayload.chValue;
+
+  channels.reserve(chValue.size());
+  for (std::size_t i = 0; i < chValue.size(); ++i) {
+    int ch0 = i < chId0.size() ? chId0[i] : 0;
+    int ch1 = i < chId1.size() ? chId1[i] : 0;
+    channels.emplace_back(ch0, ch1, chValue[i]);
   }
   return channels;
 }
@@ -248,13 +251,13 @@ void ActsPlugins::RootMeasurementIo::fillCluster(
     return;
   }
   for (auto [ch0, ch1, chv] : channels) {
-    m_clusterPayload.chId[0].push_back(ch0);
-    m_clusterPayload.chId[1].push_back(ch1);
-    m_clusterPayload.chValue.push_back(chv);
+    m_clusterPayload.chId[0]->push_back(ch0);
+    m_clusterPayload.chId[1]->push_back(ch1);
+    m_clusterPayload.chValue->push_back(chv);
   }
   // Calculate cluster size in 0 and 1 direction
-  auto [min0, max0] = std::ranges::minmax_element(m_clusterPayload.chId[0]);
-  auto [min1, max1] = std::ranges::minmax_element(m_clusterPayload.chId[1]);
+  auto [min0, max0] = std::ranges::minmax_element(*m_clusterPayload.chId[0]);
+  auto [min1, max1] = std::ranges::minmax_element(*m_clusterPayload.chId[1]);
   m_clusterPayload.clusterSize[0] = (*max0 - *min0 + 1);
   m_clusterPayload.clusterSize[1] = (*max1 - *min1 + 1);
 }
@@ -280,7 +283,10 @@ void ActsPlugins::RootMeasurementIo::clear() {
   m_clusterPayload.nch = 0;
   m_clusterPayload.clusterSize[0] = 0;
   m_clusterPayload.clusterSize[1] = 0;
-  m_clusterPayload.chId[0].clear();
-  m_clusterPayload.chId[1].clear();
-  m_clusterPayload.chValue.clear();
+  m_clusterPayload.chId[0].allocate();
+  m_clusterPayload.chId[1].allocate();
+  m_clusterPayload.chValue.allocate();
+  m_clusterPayload.chId[0]->clear();
+  m_clusterPayload.chId[1]->clear();
+  m_clusterPayload.chValue->clear();
 }

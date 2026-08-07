@@ -55,14 +55,15 @@ RootMeasurementReader::RootMeasurementReader(
   m_measurementIo->connectForRead(*m_inputChain);
 
   m_inputChain->SetBranchAddress("particles_vertex_primary",
-                                 &m_particleVertexPrimary);
+                                 &m_particleVertexPrimary.get());
   m_inputChain->SetBranchAddress("particles_vertex_secondary",
-                                 &m_particleVertexSecondary);
-  m_inputChain->SetBranchAddress("particles_particle", &m_particleParticle);
+                                 &m_particleVertexSecondary.get());
+  m_inputChain->SetBranchAddress("particles_particle",
+                                 &m_particleParticle.get());
   m_inputChain->SetBranchAddress("particles_generation",
-                                 &m_particleGeneration);
+                                 &m_particleGeneration.get());
   m_inputChain->SetBranchAddress("particles_sub_particle",
-                                 &m_particleSubParticle);
+                                 &m_particleSubParticle.get());
 
   // Because each measurement is stored in a single entry in the root file, we
   // need to scan the file first for the positions of the events in the file
@@ -146,20 +147,20 @@ ProcessCode RootMeasurementReader::read(const AlgorithmContext& ctx) {
       const auto measurementIndex = static_cast<Index>(measurement.index());
 
       if (m_outputMeasurementParticlesMap.isInitialized()) {
-        for (std::size_t i = 0; i < m_particleVertexPrimary.size(); ++i) {
+        for (std::size_t i = 0; i < m_particleVertexPrimary->size(); ++i) {
           auto barcode =
               SimBarcode()
                   .withVertexPrimary(static_cast<SimBarcode::PrimaryVertexId>(
-                      m_particleVertexPrimary[i]))
+                      m_particleVertexPrimary->at(i)))
                   .withVertexSecondary(
                       static_cast<SimBarcode::SecondaryVertexId>(
-                          m_particleVertexSecondary[i]))
+                          m_particleVertexSecondary->at(i)))
                   .withParticle(static_cast<SimBarcode::ParticleId>(
-                      m_particleParticle[i]))
+                      m_particleParticle->at(i)))
                   .withGeneration(static_cast<SimBarcode::GenerationId>(
-                      m_particleGeneration[i]))
+                      m_particleGeneration->at(i)))
                   .withSubParticle(static_cast<SimBarcode::SubParticleId>(
-                      m_particleSubParticle[i]));
+                      m_particleSubParticle->at(i)));
           measurementParticlesMap.emplace(measurementIndex, barcode);
         }
       }
