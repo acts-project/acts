@@ -43,9 +43,9 @@
 using namespace Acts;
 using namespace UnitLiterals;
 
-using Experimental::Blueprint;
-using Experimental::LayerBlueprintNode;
-using Experimental::MaterialDesignatorBlueprintNode;
+using Acts::Blueprint;
+using Acts::LayerBlueprintNode;
+using Acts::MaterialDesignatorBlueprintNode;
 
 namespace ActsTests {
 
@@ -129,7 +129,8 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
   std::mt19937 rng{static_cast<unsigned int>(run)};
   std::uniform_real_distribution<> dist{0.01, 0.99};
 
-  const auto* volume = trackingGeometry.lowestTrackingVolume(gctx, position);
+  const auto* volume =
+      trackingGeometry.resolveLowestTrackingVolume(gctx, position).value();
   BOOST_REQUIRE_NE(volume, nullptr);
   ACTS_VERBOSE(volume->volumeName());
 
@@ -541,7 +542,7 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalKeepGoing) {
         "VolumeB");
   });
 
-  Experimental::BlueprintOptions options;
+  BlueprintOptions options;
   options.keepGoingOnMaterialMergeFailure = true;
 
   std::unique_ptr<const TrackingGeometry> trackingGeometry;
@@ -594,7 +595,7 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalKeepGoingSingleChildFalseWarning) {
   // Use strict mode (keepGoingOnMaterialMergeFailure = false by default).
   // The single-child stack must not be mistaken for a real merge, so no
   // exception should be thrown.
-  Experimental::BlueprintOptions options;
+  BlueprintOptions options;
 
   std::unique_ptr<const TrackingGeometry> trackingGeometry;
   BOOST_REQUIRE_NO_THROW(trackingGeometry =
@@ -617,7 +618,7 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalKeepGoingSingleChildFalseWarning) {
 // Tag the fused face between two z-stacked volumes and look the portal back up
 // from the final geometry. The tagged portal is shared by both volumes.
 BOOST_AUTO_TEST_CASE(PortalTagLookup) {
-  using Experimental::PortalDesignatorBlueprintNode;
+  using Acts::PortalDesignatorBlueprintNode;
   Transform3 base{Transform3::Identity()};
 
   Blueprint::Config cfg;
@@ -681,7 +682,7 @@ BOOST_AUTO_TEST_CASE(PortalTagLookup) {
 // Tagging two distinct (non-fused) portals with the same label must be detected
 // as a collision when the geometry is closed.
 BOOST_AUTO_TEST_CASE(PortalTagDuplicateThrows) {
-  using Experimental::PortalDesignatorBlueprintNode;
+  using Acts::PortalDesignatorBlueprintNode;
   Transform3 base{Transform3::Identity()};
 
   Blueprint::Config cfg;
@@ -719,7 +720,7 @@ BOOST_AUTO_TEST_CASE(PortalTagDuplicateThrows) {
 // Same as PortalTagLookup, but for a cuboid x-stack: VolumeA's PositiveXFace is
 // fused with VolumeB's NegativeXFace.
 BOOST_AUTO_TEST_CASE(PortalTagLookupCuboid) {
-  using Experimental::PortalDesignatorBlueprintNode;
+  using Acts::PortalDesignatorBlueprintNode;
   Transform3 base{Transform3::Identity()};
 
   Blueprint::Config cfg;

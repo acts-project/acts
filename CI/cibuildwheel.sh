@@ -22,8 +22,7 @@ export CIBW_SKIP="*-musllinux* *-manylinux_i686"
 SETUP_CMD="bash {package}/CI/dependencies/setup.sh -t v23.3.1 -d deps -e env.sh"
 export CIBW_BEFORE_ALL_LINUX="dnf install -y bc ccache && ${SETUP_CMD}"
 export CIBW_BEFORE_ALL_MACOS="brew install ninja ccache && ${SETUP_CMD}"
-export CIBW_ENVIRONMENT="GITHUB_TOKEN=${GITHUB_TOKEN:-}"
-export CIBW_ENVIRONMENT_PASS="CI"
+export CIBW_ENVIRONMENT_PASS="CI GITHUB_TOKEN"
 export CIBW_BEFORE_BUILD="ccache -z"
 export CIBW_ENVIRONMENT_LINUX="CMAKE_PREFIX_PATH=\$PWD/deps/venv:\$PWD/deps/view CCACHE_DIR=/host${CCACHE_DIR} LD_LIBRARY_PATH=\$PWD/deps/view/lib64:\$PWD/deps/view/lib:\$PWD/deps/venv/lib64:\$PWD/deps/venv/lib"
 export CIBW_ENVIRONMENT_MACOS="CMAKE_PREFIX_PATH=\$PWD/deps/venv:\$PWD/deps/view CCACHE_DIR=${CCACHE_DIR} MACOSX_DEPLOYMENT_TARGET=26.0"
@@ -33,5 +32,9 @@ export CIBW_TEST_COMMAND="pytest {package}/Python/Examples/tests -m pypi -v"
 # libs (e.g. libzstd) it repairs, causing a segfault at import time. Force a
 # newer patchelf until manylinux ships a stable release with the fix.
 export CIBW_REPAIR_WHEEL_COMMAND_LINUX="pipx install --force --pip-args='--pre' patchelf==0.19.0.0rc1 && auditwheel repair -w {dest_dir} {wheel}"
+# spack's thrift links the python.org framework's openssl while Arrow links
+# spack's own, giving delocate two different libssl.3.dylib to vendor. The
+# wrapper collapses them onto spack's copy first; see the script for details.
+export CIBW_REPAIR_WHEEL_COMMAND_MACOS="bash {package}/CI/repair_wheel_macos.sh {wheel} {dest_dir} {delocate_archs}"
 
 uv tool run cibuildwheel==3.4.1 "$@"

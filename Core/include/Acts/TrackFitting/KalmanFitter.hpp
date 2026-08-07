@@ -473,10 +473,14 @@ class KalmanFitter {
           return materialInteractionPreRes.error();
         }
 
-        // Create a track state with the desired components
-        TrackStatePropMask mask =
-            TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
-            TrackStatePropMask::Jacobian | TrackStatePropMask::Calibrated;
+        // Create a track state with the desired components. Note that the
+        // filtered parameters are deliberately not allocated here: they are
+        // only added once the Kalman update is about to write them, so that
+        // the calibrator and the outlier finder cannot observe allocated but
+        // uninitialized filtered parameters via `parameters()`.
+        TrackStatePropMask mask = TrackStatePropMask::Predicted |
+                                  TrackStatePropMask::Jacobian |
+                                  TrackStatePropMask::Calibrated;
         typename traj_t::TrackStateProxy trackStateProxy =
             result.fittedStates->makeTrackState(mask, result.lastTrackIndex);
 
@@ -522,6 +526,8 @@ class KalmanFitter {
         // - update the stepping state.
         // Else, just tag it as an outlier
         if (!extensions.outlierFinder(trackStateProxyConst)) {
+          // Allocate the filtered parameters right before they are written
+          trackStateProxy.addComponents(TrackStatePropMask::Filtered);
           // Run Kalman update
           auto updateRes =
               extensions.updater(state.geoContext, trackStateProxy, logger());

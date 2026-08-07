@@ -196,21 +196,19 @@ class TGeoBlueprintBuilderBackend {
 };
 
 /// Blueprint builder specialization for the TGeo backend.
-using BlueprintBuilder =
-    Acts::Experimental::BlueprintBuilder<TGeoBlueprintBuilderBackend>;
+using BlueprintBuilder = Acts::BlueprintBuilder<TGeoBlueprintBuilderBackend>;
 /// Element-layer assembler specialization for the TGeo backend.
 using ElementLayerAssembler =
-    Acts::Experimental::ElementLayerAssembler<TGeoBlueprintBuilderBackend>;
+    Acts::ElementLayerAssembler<TGeoBlueprintBuilderBackend>;
 /// Sensor-layer assembler specialization for the TGeo backend.
 using SensorLayerAssembler =
-    Acts::Experimental::SensorLayerAssembler<TGeoBlueprintBuilderBackend>;
+    Acts::SensorLayerAssembler<TGeoBlueprintBuilderBackend>;
 /// Sensor-layer alias for the TGeo backend.
-using SensorLayer =
-    Acts::Experimental::SensorLayer<TGeoBlueprintBuilderBackend>;
+using SensorLayer = Acts::SensorLayer<TGeoBlueprintBuilderBackend>;
 
 }  // namespace ActsPlugins
 
-namespace Acts::Experimental {
+namespace Acts {
 extern template class BlueprintBuilder<
     ActsPlugins::TGeoBlueprintBuilderBackend>;
 extern template class ElementLayerAssembler<
@@ -218,4 +216,4 @@ extern template class ElementLayerAssembler<
 extern template class SensorLayerAssembler<
     ActsPlugins::TGeoBlueprintBuilderBackend>;
 extern template class SensorLayer<ActsPlugins::TGeoBlueprintBuilderBackend>;
-}  // namespace Acts::Experimental
+}  // namespace Acts

@@ -29,7 +29,7 @@
 
 #include <boost/core/demangle.hpp>
 
-namespace Acts::Experimental::detail {
+namespace Acts::detail {
 
 /// Extract the shape name from a portal shell type name, e.g.
 /// "Acts::CuboidPortalShell" -> "Cuboid". Falls back to full demangled name if
@@ -55,6 +55,7 @@ class PortalTagDesignator {
  public:
   using Face = face_enum_t;
   using ShellType = shell_type_t;
+  using TagVector = std::vector<std::pair<Face, std::string>>;
 
   PortalTagDesignator(Face face, std::string label, const std::string& prefix) {
     validateDuplicate(face, prefix);
@@ -97,12 +98,16 @@ class PortalTagDesignator {
   }
 
   PortalTagDesignator merged(const PortalTagDesignator& other) const {
-    PortalTagDesignator result = *this;
-    std::ranges::copy(other.m_tags, std::back_inserter(result.m_tags));
-    return result;
+    TagVector tags;
+    tags.reserve(m_tags.size() + other.m_tags.size());
+    tags.insert(tags.end(), m_tags.begin(), m_tags.end());
+    tags.insert(tags.end(), other.m_tags.begin(), other.m_tags.end());
+    return PortalTagDesignator(std::move(tags));
   }
 
  private:
+  explicit PortalTagDesignator(TagVector tags) : m_tags(std::move(tags)) {}
+
   void validateDuplicate(Face face, const std::string& prefix) {
     if (std::ranges::find_if(m_tags, [&](const auto& entry) {
           return entry.first == face;
@@ -113,7 +118,7 @@ class PortalTagDesignator {
     }
   }
 
-  std::vector<std::pair<Face, std::string>> m_tags;
+  TagVector m_tags;
 };
 
 using CylinderPortalTagDesignator =
@@ -181,4 +186,4 @@ inline void graphvizLabelTags(const PortalTagDesignatorVariant& d,
       d);
 }
 
-}  // namespace Acts::Experimental::detail
+}  // namespace Acts::detail
