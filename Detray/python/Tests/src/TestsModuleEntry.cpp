@@ -179,8 +179,6 @@ PYBIND11_MODULE(DetrayTestsPythonBindings, m) {
           "Whether the momentum magnitude is interpreted as transverse")
       .def("__repr__", &to_string<track_generator_config_t>);
 
-  py::class_<vecmem::memory_resource>(m, "MemoryResource");
-
   py::class_<material_validation_config_t>(m, "MaterialValidationConfig")
       .def(py::init<>())
       .def_property(

@@ -23,6 +23,7 @@
 
 // Vecmem include(s)
 #include <vecmem/memory/host_memory_resource.hpp>
+#include <vecmem/memory/memory_resource.hpp>
 
 // Pybind11 include(s)
 #include <pybind11/pybind11.h>
@@ -103,20 +104,10 @@ using mask_store_t = detector_t::mask_container;
 using material_store_t = detector_t::material_container;
 using accelerator_store_t = detector_t::accelerator_container;
 
-/// Owns a detector together with the memory resource its data lives in.
-struct detector_handle {
-  std::unique_ptr<vecmem::host_memory_resource> memory_resource;
-  detector_t detector;
-};
-
-/// Read a detector (default metadata) as configured by @param cfg .
-std::pair<detector_handle, detray::name_map> read_detector(
-    const reader_config_t &cfg) {
-  auto mr = std::make_unique<vecmem::host_memory_resource>();
-
-  auto [det, names] = detray::io::read_detector<detector_t>(*mr, cfg);
-
-  return {detector_handle{std::move(mr), std::move(det)}, std::move(names)};
+/// Read a detector (default metadata) into @p mr as configured by @p cfg .
+std::pair<detector_t, detray::name_map> read_detector(
+    vecmem::memory_resource &mr, const reader_config_t &cfg) {
+  return detray::io::read_detector<detector_t>(mr, cfg);
 }
 
 }  // namespace
@@ -287,59 +278,68 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
         return "NameMap(detectorName='" + n.get_detector_name() + "')";
       });
 
-  py::class_<detector_handle>(
-      m, "DetectorDefaultMetadata" STRINGIFY_HELPER(scalar_t))
+  py::class_<vecmem::memory_resource, std::shared_ptr<vecmem::memory_resource>>(
+      m, "MemoryResource");
+  py::class_<vecmem::host_memory_resource, vecmem::memory_resource,
+             std::shared_ptr<vecmem::host_memory_resource>>(
+      m, "HostMemoryResource")
+      .def(py::init<>());
+
+  py::class_<detector_t>(m,
+                         "DetectorDefaultMetadata" STRINGIFY_HELPER(scalar_t))
       .def(
           "name",
-          [](const detector_handle &d, const detray::name_map &names) {
-            return d.detector.name(names);
+          [](const detector_t &d, const detray::name_map &names) {
+            return d.name(names);
           },
           py::arg("names"), "Detector name")
       .def_property_readonly(
           "volumes",
-          [](const detector_handle &d) -> const volume_container_t & {
-            return d.detector.volumes();
+          [](const detector_t &d) -> const volume_container_t & {
+            return d.volumes();
           },
           py::return_value_policy::reference_internal, "All volumes")
       .def_property_readonly(
           "surfaces",
-          [](const detector_handle &d) -> const surface_store_t & {
-            return d.detector.surfaces();
+          [](const detector_t &d) -> const surface_store_t & {
+            return d.surfaces();
           },
           py::return_value_policy::reference_internal, "All surfaces")
       .def_property_readonly(
           "portals",
-          [](const detector_handle &d) -> const surface_container_t & {
-            return d.detector.portals();
+          [](const detector_t &d) -> const surface_container_t & {
+            return d.portals();
           },
           py::return_value_policy::reference_internal, "All portals")
       .def_property_readonly(
           "transformStore",
-          [](const detector_handle &d) -> const transform_store_t & {
-            return d.detector.transform_store();
+          [](const detector_t &d) -> const transform_store_t & {
+            return d.transform_store();
           },
           py::return_value_policy::reference_internal, "Transform store")
       .def_property_readonly(
           "maskStore",
-          [](const detector_handle &d) -> const mask_store_t & {
-            return d.detector.mask_store();
+          [](const detector_t &d) -> const mask_store_t & {
+            return d.mask_store();
           },
           py::return_value_policy::reference_internal, "Mask store")
       .def_property_readonly(
           "materialStore",
-          [](const detector_handle &d) -> const material_store_t & {
-            return d.detector.material_store();
+          [](const detector_t &d) -> const material_store_t & {
+            return d.material_store();
           },
           py::return_value_policy::reference_internal, "Material store")
       .def_property_readonly(
           "acceleratorStore",
-          [](const detector_handle &d) -> const accelerator_store_t & {
-            return d.detector.accelerator_store();
+          [](const detector_t &d) -> const accelerator_store_t & {
+            return d.accelerator_store();
           },
           py::return_value_policy::reference_internal, "Accelerator store")
-      .def("__repr__",
-           [](const detector_handle &d) { return to_string(d.detector); });
+      .def("__repr__", [](const detector_t &d) { return to_string(d); });
 
-  m.def("readDetector", &read_detector, py::arg("config"),
-        "Read a detector as configured by a DetectorReaderConfig");
+  m.def("readDetector", &read_detector, py::arg("memoryResource"),
+        py::arg("config"),
+        "Read a detector into the given memory resource as configured by a "
+        "DetectorReaderConfig. The caller must keep the memory resource alive "
+        "for as long as the returned detector is used");
 }
