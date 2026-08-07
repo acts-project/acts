@@ -36,6 +36,7 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <stdexcept>
 #include <type_traits>
 
 namespace Acts {
@@ -616,10 +617,16 @@ class CombinatorialKalmanFilter {
         // extend trajectory with measurements associated to the current surface
         // which may create extra trajectory branches if more than one
         // measurement is selected.
-        tsRes = extensions.createTrackStates(
-            state.geoContext, *calibrationContextPtr, surface, boundState,
-            prevTip, result.trackStateCandidates, *result.trackStates,
-            logger());
+        if (extensions.trackStateCreator.connected()) {
+          tsRes = extensions.trackStateCreator(
+              state.geoContext, *calibrationContextPtr, surface, boundState,
+              prevTip, *result.trackStates, logger());
+        } else {
+          tsRes = extensions.createTrackStates(
+              state.geoContext, *calibrationContextPtr, surface, boundState,
+              prevTip, result.trackStateCandidates, *result.trackStates,
+              logger());
+        }
       }
 
       if (tsRes.ok() && !(*tsRes).empty()) {
@@ -1141,6 +1148,14 @@ class CombinatorialKalmanFilter {
   Result<std::vector<TrackProxy>> findTracks(
       const BoundTrackParameters& initialParameters, const Options& tfOptions,
       track_container_t& trackContainer, TrackProxy rootBranch) const {
+    if (!tfOptions.extensions.trackStateCreator.connected() &&
+        !tfOptions.extensions.createTrackStates.connected()) {
+      throw std::invalid_argument(
+          "CombinatorialKalmanFilter: no track state creator connected. "
+          "Connect either `extensions.trackStateCreator` or the deprecated "
+          "`extensions.createTrackStates`.");
+    }
+
     // Create the ActorList
     using CombinatorialKalmanFilterActor = Actor;
     using Actors = ActorList<CombinatorialKalmanFilterActor>;

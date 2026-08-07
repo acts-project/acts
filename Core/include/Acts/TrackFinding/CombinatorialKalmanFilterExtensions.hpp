@@ -95,7 +95,37 @@ struct CombinatorialKalmanFilterExtensions {
   /// The delegate to create new track states.
   /// @note a reference implementation can be found in @ref TrackStateCreator
   ///   which makes uses of @ref MeasurementSelector and SourceLinkAccessor
+  /// @deprecated Connect @ref trackStateCreator instead. This variant only
+  ///   exists because it hands out a scratch buffer for temporary track
+  ///   states, which a creator that does not push all measurements through the
+  ///   track EDM has no use for.
   TrackStateCreator createTrackStates;
+
+  /// @brief Delegate the extension of the trajectory onto the given surface to
+  ///        an external unit.
+  ///
+  /// Same contract as @ref TrackStateCreator, but without the scratch buffer
+  /// for temporary track states.
+  ///
+  /// @param geoContext The current geometry context
+  /// @param calibrationContext pointer to the current calibration context
+  /// @param surface the surface at which new track states are to be created
+  /// @param boundState the current bound state of the trajectory
+  /// @param prevTip Index pointing at previous trajectory state (i.e. tip)
+  /// @param trajectory the trajectory to which the new states are to be added
+  /// @param logger a logger for messages
+  /// @return indices of new track states which extend the trajectory given by prevTip
+  using TrackStateCreatorDelegate =
+      Delegate<Result<CkfTypes::BranchVector<TrackIndexType>>(
+          const GeometryContext& geoContext,
+          const CalibrationContext& calibrationContext, const Surface& surface,
+          const CkfTypes::BoundState& boundState, TrackIndexType prevTip,
+          traj_t& trajectory, const Logger& logger)>;
+
+  /// The delegate to create new track states.
+  /// @note a reference implementation can be found in @ref TrackStateCreatorBase
+  /// @note takes precedence over @ref createTrackStates when both are connected
+  TrackStateCreatorDelegate trackStateCreator;
 
   // The following options are only relevant if a multi stepper is used
 
