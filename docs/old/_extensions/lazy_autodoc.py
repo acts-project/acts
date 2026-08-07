@@ -76,6 +76,7 @@ def run() -> None:
         "ActsPlugins::Geant4PhysicalVolumeSelectors::NameSelector",
         "ActsPlugins::Geant4PhysicalVolumeSelectors::PositionSelector",
         "Acts::OrientedSurface",
+        "Acts::TrackStateCreator",
     }
 
     role_instances["class"] |= {
