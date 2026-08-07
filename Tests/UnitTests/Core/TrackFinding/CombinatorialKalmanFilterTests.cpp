@@ -46,6 +46,7 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/MbfSmoother.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -296,6 +297,9 @@ struct Fixture {
 //  - source link accessor,
 //  - measurement selector
 //  - track  state candidate creator
+// This is the deprecated creator, kept here so the parity test below can show
+// that `TrackStateCreatorBase` reproduces it exactly.
+ACTS_PUSH_IGNORE_DEPRECATED()
 template <typename source_link_accessor_t>
 inline auto makeTrackStateCreator(const source_link_accessor_t& slAccessor,
                                   const MeasurementSelector& measSel) {
@@ -311,6 +315,7 @@ inline auto makeTrackStateCreator(const source_link_accessor_t& slAccessor,
       &MeasurementSelector::select<TrackStateContainerBackend>>(&measSel);
   return trackStateCreator;
 }
+ACTS_POP_IGNORE_DEPRECATED()
 
 /// The same thing built on @ref TrackStateCreatorBase, i.e. without pushing
 /// every measurement through the track EDM first.
