@@ -34,9 +34,7 @@ def add_itk_types(md: metadata):
     md.add_sensitive(Shape.ANNULUS)
 
     # Add default types for silicon trackers (cylindrical detector shape)
-    add_silicon_tracker_defaults(
-        metadata=md, use_mat_maps=True, use_homogeneous_mat=True
-    )
+    add_silicon_tracker_defaults(metadata=md, use_mat_maps=True)
 
     logger.info("Done")
 
