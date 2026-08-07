@@ -88,8 +88,9 @@ void BM_INTERSECT_ALL(benchmark::State &state) {
         const auto sf = geometry::surface{d, sf_desc};
         sf.template visit_mask<
             detail::intersection_initialize<ray_intersector>>(
-            intersections, detail::ray(track), sf_desc, transforms, geo_context,
-            intr_cfg, external_mask_tol);
+            intersections, detail::ray(track), sf_desc,
+            transforms.at(sf_desc.transform(), geo_context), intr_cfg,
+            external_mask_tol);
 
         ++n_surfaces;
       }

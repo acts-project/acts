@@ -82,8 +82,8 @@ struct brute_force_scan {
       DETRAY_DEBUG_HOST("Intersecting sf: " << sf.identifier());
 
       sf.template visit_mask<intersection_kernel_t>(
-          intersections, traj, sf_desc, trf_store, ctx, intr_cfg,
-          external_mask_tol);
+          intersections, traj, sf_desc, trf_store.at(sf_desc.transform(), ctx),
+          intr_cfg, external_mask_tol);
 
       // Candidate is invalid if it lies in the opposite direction
       const std::size_t n_records{intersection_trace.size()};

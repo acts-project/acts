@@ -31,35 +31,30 @@ struct intersection_initialize {
   /// @tparam is_container_t is the intersection container type
   /// @tparam traj_t is the input trajectory type (e.g. ray or helix)
   /// @tparam surface_t is the input surface type
-  /// @tparam transform_container_t is the input transform store type
+  /// @tparam transform_t is the input transform type
   ///
   /// @param mask_group is the input mask group
   /// @param is_container is the intersection container to be filled
   /// @param traj is the input trajectory
   /// @param surface is the input surface
-  /// @param contextual_transforms is the input transform container
+  /// @param ctf is the contextual transform of the surface
   /// @param mask_tolerance is the tolerance for mask size
   /// @param overstep_tol negative cutoff for the path
   ///
   /// @return the number of valid intersections
   template <typename mask_group_t, typename mask_range_t,
             typename is_container_t, typename traj_t, typename surface_t,
-            typename transform_container_t, concepts::scalar scalar_t>
+            typename transform_t, concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE inline void operator()(
       const mask_group_t &mask_group, const mask_range_t &mask_range,
       is_container_t &is_container, const traj_t &traj,
-      const surface_t &sf_desc,
-      const transform_container_t &contextual_transforms,
-      const typename transform_container_t::context_type &ctx,
+      const surface_t &sf_desc, const transform_t &ctf,
       const intersection::config &cfg,
       const scalar_t external_mask_tolerance = 0.f) const {
     using mask_t = typename mask_group_t::value_type;
     using shape_t = typename mask_t::shape;
     using algebra_t = typename mask_t::algebra_type;
     using intersection_t = typename is_container_t::value_type;
-
-    // Find the point of intersection with the underlying geometry
-    const auto &ctf = contextual_transforms.at(sf_desc.transform(), ctx);
 
     constexpr intersector_t<shape_t, algebra_t, intersection_t::contains_pos()>
         intersector{};
@@ -171,34 +166,29 @@ struct intersection_update {
   /// unrolling
   /// @tparam traj_t is the input trajectory type (e.g. ray or helix)
   /// @tparam surface_t is the input surface type
-  /// @tparam transform_container_t is the input transform store type
+  /// @tparam transform_t is the input transform type
   ///
   /// @param mask_group is the input mask group
   /// @param mask_range is the range of masks in the group that belong to the
   ///                   surface
   /// @param traj is the input trajectory
   /// @param surface is the input surface
-  /// @param contextual_transforms is the input transform container
+  /// @param ctf is the contextual transform of the surface
   /// @param mask_tolerance is the tolerance for mask size
   /// @param overstep_tol negative cutoff for the path
   ///
   /// @return the intersection
   template <typename mask_group_t, typename mask_range_t, typename traj_t,
-            typename intersection_t, typename transform_container_t,
+            typename intersection_t, typename transform_t,
             concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE inline bool operator()(
       const mask_group_t &mask_group, const mask_range_t &mask_range,
-      const traj_t &traj, intersection_t &sfi,
-      const transform_container_t &contextual_transforms,
-      const typename transform_container_t::context_type &ctx,
+      const traj_t &traj, intersection_t &sfi, const transform_t &ctf,
       const intersection::config &cfg,
       const scalar_t external_mask_tolerance = 0.f) const {
     using mask_t = typename mask_group_t::value_type;
     using shape_t = typename mask_t::shape;
     using algebra_t = typename mask_t::algebra_type;
-
-    // Find the point of intersection with the underlying geometry
-    const auto &ctf = contextual_transforms.at(sfi.surface().transform(), ctx);
 
     constexpr intersector_t<shape_t, algebra_t, intersection_t::contains_pos()>
         intersector{};
