@@ -35,8 +35,7 @@ ACTS_PUSH_IGNORE_DEPRECATED()
 /// The default configuration only takes the best matching measurement without a
 /// cut on the local chi2.
 ///
-/// @deprecated Goes away together with @ref MeasurementSelector. The geometry
-///   and eta binning here is not used by anything ACTS ships; a creator
+/// @deprecated Goes away together with @ref MeasurementSelector. A creator
 ///   derived from @ref TrackStateCreatorBase carries whatever cuts its
 ///   selection needs.
 struct [[deprecated(

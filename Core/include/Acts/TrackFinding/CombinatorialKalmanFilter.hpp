@@ -1197,19 +1197,12 @@ class CombinatorialKalmanFilter {
   Result<std::vector<TrackProxy>> findTracks(
       const BoundTrackParameters& initialParameters, const Options& tfOptions,
       track_container_t& trackContainer, TrackProxy rootBranch) const {
-    if (!tfOptions.extensions.trackStateCreator.connected() &&
-        !tfOptions.extensions.createTrackStates.connected()) {
-      throw std::invalid_argument(
-          "CombinatorialKalmanFilter: no track state creator connected. "
-          "Connect either `extensions.trackStateCreator` or the deprecated "
-          "`extensions.createTrackStates`.");
-    }
-    if (tfOptions.extensions.trackStateCreator.connected() &&
+    if (tfOptions.extensions.trackStateCreator.connected() ==
         tfOptions.extensions.createTrackStates.connected()) {
       throw std::invalid_argument(
-          "CombinatorialKalmanFilter: two track state creators connected. "
-          "Connect either `extensions.trackStateCreator` or the deprecated "
-          "`extensions.createTrackStates`, not both.");
+          "CombinatorialKalmanFilter: exactly one of "
+          "`extensions.trackStateCreator` and the deprecated "
+          "`extensions.createTrackStates` has to be connected");
     }
 
     // Create the ActorList

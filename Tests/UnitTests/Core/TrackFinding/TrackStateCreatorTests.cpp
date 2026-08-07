@@ -15,7 +15,6 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -35,15 +34,12 @@
 #include <vector>
 
 using namespace Acts;
-using namespace Acts::UnitLiterals;
 
 namespace ActsTests {
 
 using TrackContainer =
     TrackContainer<VectorTrackContainer, VectorMultiTrajectory,
                    detail::ValueHolder>;
-using TrackStateContainerBackend =
-    typename TrackContainer::TrackStateContainerBackend;
 
 namespace {
 

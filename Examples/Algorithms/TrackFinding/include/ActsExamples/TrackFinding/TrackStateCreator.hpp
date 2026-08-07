@@ -8,13 +8,11 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/TrackFinding/TrackStateCreatorBase.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 
 #include <algorithm>
@@ -39,11 +37,11 @@ struct TrackStateSelectionCuts {
 /// Creates track states directly from the measurement container, i.e. without
 /// pushing every measurement on a surface through the track EDM first.
 ///
-/// This carries the selection, which is the local chi2 with respect to the
-/// predicted parameters cut on @ref TrackStateSelectionCuts. The derived class
-/// says which measurements are on the current surface via `measurementRange`
-/// and hands out the calibrated form of one via `calibrate`; those are the
-/// only places the concrete measurement container shows up.
+/// This carries the selection, which cuts the local chi2 with respect to the
+/// predicted parameters on @ref TrackStateSelectionCuts. The derived class only
+/// has to say which measurements are on the current surface, via
+/// `measurementRange`, and hand out the calibrated form of one, via
+/// `calibrate`.
 ///
 /// @tparam derived_t the concrete creator, see CRTP
 template <typename derived_t>
@@ -54,8 +52,6 @@ class TrackStateCreatorBase
   using Base = Acts::TrackStateCreatorBase<derived_t, TrackContainer>;
   /// Type alias for the per surface state object
   using State = typename Base::State;
-  /// Type alias for the track state proxy
-  using TrackStateProxy = typename Base::TrackStateProxy;
 
   /// The selection cuts
   TrackStateSelectionCuts cuts;
@@ -162,7 +158,6 @@ class TrackStateCreatorBase
       ++passedCandidates;
     }
 
-    // Handle if there are no measurements below the chi2 cut off
     if (passedCandidates == 0ul) {
       if (minChi2 < cuts.chi2CutOffOutlier) {
         ACTS_VERBOSE(
@@ -197,11 +192,11 @@ class TrackStateCreatorBase
     return Acts::Result<void>::success();
   }
 
- private:
-  const derived_t& derived() const {
-    return static_cast<const derived_t&>(*this);
-  }
+ protected:
+  // the base is dependent, so pull this in for unqualified lookup
+  using Base::derived;
 
+ private:
   /// Reduce the candidates to the single one at @p index.
   template <typename candidates_t>
   static void keepOnly(candidates_t& candidates, std::size_t index) {

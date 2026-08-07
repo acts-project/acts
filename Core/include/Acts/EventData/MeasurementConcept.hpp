@@ -39,13 +39,10 @@ using MeasurementCovarianceType =
 ///
 /// This is the contract between a track finder and whatever the client uses to
 /// represent a calibrated measurement. It is deliberately minimal so that
-/// existing measurement proxies satisfy it without a copy, and so that clients
-/// are free to return their own type.
+/// existing measurement proxies satisfy it without a copy.
 ///
-/// The dimension may be known at compile time or only at runtime; see
-/// @ref MeasurementSizeAtCompileTime and @ref StaticMeasurementConcept. Note
-/// that @ref subspaceIndices must yield exactly @c size() entries, not a padded
-/// range.
+/// The dimension may be known at compile time or only at runtime, see
+/// @ref StaticMeasurementConcept.
 ///
 /// @tparam T the measurement like type
 template <typename T>
@@ -79,8 +76,7 @@ constexpr int MeasurementSizeAtCompileTime =
 /// A @ref MeasurementConcept whose dimension is known at compile time.
 ///
 /// Algorithms can use this to skip the runtime dispatch over the measurement
-/// dimension, which is what makes it worthwhile for a client to hand out a
-/// fixed size measurement type in the first place.
+/// dimension.
 ///
 /// @tparam measurement_t the measurement type
 template <typename measurement_t>

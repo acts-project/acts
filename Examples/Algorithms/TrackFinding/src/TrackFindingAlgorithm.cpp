@@ -69,7 +69,7 @@ namespace ActsExamples {
 namespace {
 
 /// Creates track states for the measurements on a surface, restricted to the
-/// current seed when seed deduplication is on.
+/// current seed when `stayOnSeed` is set.
 class TrackStateCreator final
     : public TrackStateCreatorBase<TrackStateCreator> {
  public:
