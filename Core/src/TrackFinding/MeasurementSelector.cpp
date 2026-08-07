@@ -79,12 +79,12 @@ MeasurementSelector::InternalCutBins MeasurementSelector::convertCutBins(
   return cutBins;
 }
 
-double MeasurementSelector::calculateChi2(
-    const double* fullCalibrated, const double* fullCalibratedCovariance,
-    TrackStateTraits<kMeasurementSizeMax, false>::Parameters predicted,
-    TrackStateTraits<kMeasurementSizeMax, false>::Covariance
-        predictedCovariance,
-    BoundSubspaceIndices projector, unsigned int calibratedSize) const {
+double calculatePredictedChi2(const double* fullCalibrated,
+                              const double* fullCalibratedCovariance,
+                              Eigen::Ref<const BoundVector> predicted,
+                              Eigen::Ref<const BoundMatrix> predictedCovariance,
+                              BoundSubspaceIndices projector,
+                              unsigned int calibratedSize) {
   return visit_measurement(
       calibratedSize,
       [&fullCalibrated, &fullCalibratedCovariance, &predicted,
