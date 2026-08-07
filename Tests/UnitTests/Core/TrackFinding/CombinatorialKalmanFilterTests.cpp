@@ -376,13 +376,12 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
       CurvilinearSurface(Vector3{-3_m, 0., 0.}, Vector3{1., 0., 0})
           .planeSurface();
 
-  Fixture::TestSourceLinkAccessor slAccessor;
-  slAccessor.container = &f.sourceLinks;
+  TestTrackStateCreator trackStateCreator;
+  trackStateCreator.container = &f.sourceLinks;
+  trackStateCreator.measurementSelector = f.measSel;
 
-  auto trackStateCreator = makeTrackStateCreator(slAccessor, f.measSel);
-
-  options.extensions.createTrackStates
-      .template connect<&decltype(trackStateCreator)::createTrackStates>(
+  options.extensions.trackStateCreator
+      .template connect<&TestTrackStateCreator::createTrackStates>(
           &trackStateCreator);
 
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
@@ -437,12 +436,12 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
       CurvilinearSurface(Vector3{3_m, 0., 0.}, Vector3{1., 0., 0})
           .planeSurface();
 
-  Fixture::TestSourceLinkAccessor slAccessor;
-  slAccessor.container = &f.sourceLinks;
+  TestTrackStateCreator trackStateCreator;
+  trackStateCreator.container = &f.sourceLinks;
+  trackStateCreator.measurementSelector = f.measSel;
 
-  auto trackStateCreator = makeTrackStateCreator(slAccessor, f.measSel);
-  options.extensions.createTrackStates
-      .template connect<&decltype(trackStateCreator)::createTrackStates>(
+  options.extensions.trackStateCreator
+      .template connect<&TestTrackStateCreator::createTrackStates>(
           &trackStateCreator);
 
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
