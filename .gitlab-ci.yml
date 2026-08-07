@@ -341,4 +341,3 @@ cmsf_test_cuda:
 
   after_script:
     - !reference [.spack_cleanup, after_script]
->>>>>>> 36e071a8b (feat: CudaMuonSegmentFitter added to CI build and unit test added to CI)
