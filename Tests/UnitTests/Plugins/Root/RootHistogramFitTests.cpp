@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(SingleFit_RecoversKnownParameters) {
   const Histogram1 hist =
       sampled("single", 100000, 0.0, 1.0, 100, -8.0, 8.0, 101);
 
-  const auto result = fitter.fit(hist);
+  const auto result = fitter(hist);
   BOOST_REQUIRE(result.has_value());
 
   const auto& [mean, sigma, meanError, sigmaError] = *result;
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(RestrictedRange_Works) {
   const Histogram1 hist =
       sampled("restricted", 30000, 0.4, 1.2, 80, -8.0, 8.0, 202);
 
-  const auto result = fitter.fit(hist, RootHistogramFit::Range{-2.6, 3.4});
+  const auto result = fitter(hist, RootHistogramFit::Range{-2.6, 3.4});
   BOOST_REQUIRE(result.has_value());
 
   const auto& [mean, sigma, meanError, sigmaError] = *result;
@@ -84,11 +84,11 @@ BOOST_AUTO_TEST_CASE(DegenerateInputs_Fail) {
   auto axis = AxisVariant(BoostRegularAxis(20, -5.0, 5.0, "x"));
 
   Histogram1 empty("empty", "empty", {axis});
-  BOOST_CHECK(!fitter.fit(empty).has_value());
+  BOOST_CHECK(!fitter(empty).has_value());
 
   Histogram1 spike("spike", "spike", {axis});
   spike.setBinContent({10}, 500.0);
-  BOOST_CHECK(!fitter.fit(spike).has_value());
+  BOOST_CHECK(!fitter(spike).has_value());
 }
 
 BOOST_AUTO_TEST_CASE(ValueHistogram1D_ConvertsWithErrors) {

@@ -24,7 +24,7 @@ acts_add_library(
     src/Validation/DuplicationPlotTool.cpp
     src/Validation/EffPlotTool.cpp
     src/Validation/FakePlotTool.cpp
-    src/Validation/IterativeFit.cpp
+    src/Validation/HistogramFit.cpp
     src/Validation/ResPlotTool.cpp
     src/Validation/TrackClassification.cpp
     src/Validation/PatternRecognitionPerformanceCollector.cpp

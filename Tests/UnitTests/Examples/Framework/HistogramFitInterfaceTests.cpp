@@ -16,7 +16,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/Histogram.hpp"
-#include "ActsExamples/Validation/IterativeFit.hpp"
+#include "ActsExamples/Validation/HistogramFit.hpp"
 #include "ActsPlugins/Root/RootHistogramFit.hpp"
 
 #include <cmath>
@@ -30,11 +30,7 @@ using namespace ActsExamples;
 
 namespace {
 
-const ActsPlugins::RootHistogramFit rootFitter;
-const HistogramFitFunction rootFn = [](const Histogram1& hist,
-                                       std::optional<HistogramFitRange> range) {
-  return rootFitter.fit(hist, range);
-};
+const HistogramFitFunction rootFn = ActsPlugins::RootHistogramFit();
 
 /// Sample `count` entries from N(mean, sigma) into a fresh histogram
 Histogram1 sampled(const std::string& name, std::size_t count, double mean,

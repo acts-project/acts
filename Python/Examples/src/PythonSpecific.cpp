@@ -202,9 +202,8 @@ class PythonTrackFitterPerformanceWriter final
     ResPlotTool::Config resPlotToolConfig;
     EffPlotTool::Config effPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
-    /// The Gaussian fit backend, e.g. makeRootHistogramFitFunction() or any
-    /// Python callable with the matching signature. Required: there is no
-    /// sensible default.
+    /// The Gaussian fit backend, a Python callable with the matching
+    /// signature. Required: there is no sensible default.
     HistogramFitFunction fitFunction;
     /// Fit parameters.
     int fitMinEntries = 10;

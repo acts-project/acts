@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "ActsExamples/Validation/IterativeFit.hpp"
 
 #include <utility>
 
