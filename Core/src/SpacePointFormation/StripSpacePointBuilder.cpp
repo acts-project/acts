@@ -294,22 +294,17 @@ Vector2 StripSpacePointBuilder::computeVarianceZR(const GeometryContext& gctx,
                                                   const double localCov1,
                                                   const double localCov2,
                                                   const double theta) {
-  // strip1 measures the precision direction of surface1 and strip2 one turned
-  // by theta against it. Inverting the information matrix of the two,
-  //
-  //   J = n1 n1^T / localCov1 + n2 n2^T / localCov2,
-  //   n1 = (1, 0), n2 = (cos(theta), sin(theta)),
-  //
-  // leaves the precision direction at localCov1 -- strip2 adds nothing there,
-  // it only fixes where along strip1 the crossing sits, to 1/sin(theta) of a
-  // strip pitch.
+  // Invert the information matrix of the two measurements, strip1 along (1, 0)
+  // and strip2 along (cos(theta), sin(theta)). Strip2 adds nothing to the
+  // precision direction, it only fixes where along strip1 the crossing sits,
+  // to 1/sin(theta) of a pitch
   const double sinTheta = std::sin(theta);
   const double cosTheta = std::cos(theta);
   const double varAlongStrip =
       (localCov2 + localCov1 * cosTheta * cosTheta) / (sinTheta * sinTheta);
 
-  // The two are correlated by -localCov1 * cot(theta), up to the sense in
-  // which strip2 is turned, which an unsigned @p theta does not carry.
+  // Dropping a correlation of -localCov1 * cot(theta), whose sense an unsigned
+  // theta does not carry
   const SquareMatrix2 localCov = Vector2(localCov1, varAlongStrip).asDiagonal();
 
   return PixelSpacePointBuilder::computeVarianceZR(gctx, surface1, spacePoint,

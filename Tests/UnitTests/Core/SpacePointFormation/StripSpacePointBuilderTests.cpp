@@ -45,9 +45,8 @@ std::shared_ptr<PlaneSurface> makePlane(const Vector3& center,
       transform, std::make_shared<RectangleBounds>(50_mm, 50_mm));
 }
 
-/// The variances the crossing of two strips has along the precision direction
-/// of the first and along its strips, by inverting the information matrix of
-/// the two one-dimensional measurements.
+/// The two local variances of a strip crossing, from the information matrix of
+/// the two measurements built and inverted here
 Vector2 referenceVariances(const double theta) {
   const Vector2 n1(1, 0);
   const Vector2 n2(std::cos(theta), std::sin(theta));
@@ -56,9 +55,8 @@ Vector2 referenceVariances(const double theta) {
   return information.inverse().diagonal();
 }
 
-/// A barrel module at a fixed radius, with @p loc0 either along z or along
-/// r-phi. Only the direction along z reaches `varianceZ`, so pointing one and
-/// then the other at it reads the two local variances out one at a time.
+/// A barrel module, whose only direction reaching `varianceZ` is the one
+/// along z: pointing loc0 and then loc1 at it reads the two out one at a time
 Vector2 varianceZR(const bool precisionAlongZ, const double theta) {
   const double phi = 0.4;
   const double r = 400_mm;
@@ -79,8 +77,8 @@ constexpr std::array<double, 3> testAngles{std::numbers::pi / 2, 0.4, 40e-3};
 
 BOOST_AUTO_TEST_SUITE(StripSpacePointBuilderTests)
 
-/// The second strip adds no information along the precision direction of the
-/// first, which therefore keeps its own variance whatever the stereo angle.
+/// Strip2 adds nothing along the precision direction of strip1, which keeps
+/// its own variance whatever the stereo angle
 BOOST_AUTO_TEST_CASE(PrecisionDirection) {
   for (const double theta : testAngles) {
     BOOST_TEST_CONTEXT("theta = " << theta) {
@@ -91,9 +89,8 @@ BOOST_AUTO_TEST_CASE(PrecisionDirection) {
   }
 }
 
-/// Along the strips the crossing is only located to 1 / sin(theta) of a strip
-/// pitch, so this direction is the one that degrades as the two become
-/// parallel.
+/// Along the strips the crossing is located to 1 / sin(theta) of a pitch, so
+/// this direction degrades as the two become parallel
 BOOST_AUTO_TEST_CASE(AlongStripDirection) {
   for (const double theta : testAngles) {
     BOOST_TEST_CONTEXT("theta = " << theta) {
@@ -103,14 +100,14 @@ BOOST_AUTO_TEST_CASE(AlongStripDirection) {
   }
 }
 
-/// Orthogonal strips measure the two local directions independently.
+/// Orthogonal strips measure the two local directions independently
 BOOST_AUTO_TEST_CASE(OrthogonalStrips) {
   const double theta = std::numbers::pi / 2;
   BOOST_CHECK_CLOSE(varianceZR(true, theta)[0], var1, 1e-6);
   BOOST_CHECK_CLOSE(varianceZR(false, theta)[0], var2, 1e-6);
 }
 
-/// A barrel module carries no radial information either way.
+/// A barrel module carries no radial information either way
 BOOST_AUTO_TEST_CASE(NoRadialVariance) {
   BOOST_CHECK_SMALL(varianceZR(true, 40e-3)[1], 1e-12);
   BOOST_CHECK_SMALL(varianceZR(false, 40e-3)[1], 1e-12);

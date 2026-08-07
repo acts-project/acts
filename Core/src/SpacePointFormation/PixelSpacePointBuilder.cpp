@@ -25,8 +25,7 @@ Vector2 PixelSpacePointBuilder::computeVarianceZR(
   //
   //       dz/dz = 1
   //           r = sqrt(x² + y²)
-  //   dr/d{x,y} = (1 / (2 * sqrt(x² + y²))) * 2 * {x,y}
-  //             = {x,y} / r
+  //   dr/d{x,y} = {x,y} / r
   //
   const double x = spacePoint.x();
   const double y = spacePoint.y();

@@ -51,8 +51,7 @@ SquareMatrix2 localCov() {
   return cov;
 }
 
-/// The variance the Jacobian is supposed to reproduce, obtained by pushing the
-/// local axes through r = hypot(x, y) and z numerically
+/// The same variance from a numerically differentiated Jacobian
 Vector2 numericVarianceZR(const PlaneSurface& surface, const Vector3& position,
                           const SquareMatrix2& cov) {
   const SquareMatrix3 rot =
@@ -76,8 +75,7 @@ Vector2 numericVarianceZR(const PlaneSurface& surface, const Vector3& position,
 
 BOOST_AUTO_TEST_SUITE(PixelSpacePointBuilderTests)
 
-/// A barrel module measures r-phi and z; its radial extent carries no
-/// information, so all of the variance has to land in z.
+/// A barrel module measures r-phi and z, so all of the variance lands in z
 BOOST_AUTO_TEST_CASE(BarrelModule) {
   const double phi = 0.3;
   const double r = 120_mm;
@@ -93,9 +91,8 @@ BOOST_AUTO_TEST_CASE(BarrelModule) {
   BOOST_CHECK_SMALL(varZR[1], 1e-12);
 }
 
-/// An endcap module measures r and r-phi, so all of the variance has to land
-/// in r and none in z. This is what pins the scale of the r Jacobian: a factor
-/// f in dr/d{x,y} shows up as f² here.
+/// An endcap module measures r and r-phi, so all of the variance lands in r.
+/// This pins the scale of the r Jacobian: a factor f in dr/d{x,y} shows as f²
 BOOST_AUTO_TEST_CASE(EndcapModule) {
   const double phi = -1.1;
   const double r = 250_mm;
@@ -111,8 +108,7 @@ BOOST_AUTO_TEST_CASE(EndcapModule) {
   BOOST_CHECK_CLOSE(varZR[1], sigmaLoc0 * sigmaLoc0, 1e-6);
 }
 
-/// A module inclined against both, where neither component is zero and the
-/// two local directions mix into r.
+/// A module inclined against both, where the local directions mix into r
 BOOST_AUTO_TEST_CASE(InclinedModuleAgainstNumericJacobian) {
   const double phi = 0.7;
   const double r = 180_mm;
@@ -120,8 +116,7 @@ BOOST_AUTO_TEST_CASE(InclinedModuleAgainstNumericJacobian) {
   const Vector3 radial(std::cos(phi), std::sin(phi), 0);
   const Vector3 rPhi(-std::sin(phi), std::cos(phi), 0);
 
-  // tilt the module by 30 degrees about the r-phi direction and rotate its
-  // measurement directions by 20 degrees within the module plane
+  // tilt out of the transverse plane, then rotate within the module plane
   const double tilt = 30 * std::numbers::pi / 180;
   const double skew = 20 * std::numbers::pi / 180;
   const Vector3 tilted =
