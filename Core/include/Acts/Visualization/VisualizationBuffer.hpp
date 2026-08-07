@@ -81,9 +81,7 @@ class VisualizationBuffer : public IVisualization3D {
 
   /// Start a new object context with a name
   /// @param name The name of the object
-  void object(const std::string&) {
-    throw std::logic_error("object() is not supported for this type");
-  }
+  void object(const std::string&) {}
 
   const std::vector<Vector3>& vertices3D() const { return m_vertices; }
 

@@ -73,7 +73,7 @@ def runTruthTrackingKalman(
         vis = PyVisualization2D()
         trackingGeometry.visualize(
             vis,
-            context.geoContext,
+            context,
         )
 
     if inputParticlePath is None:
