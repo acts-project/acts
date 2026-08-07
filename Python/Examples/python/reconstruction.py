@@ -1930,13 +1930,13 @@ def addTrackWriters(
         (
             RootTrackSummaryWriter,
             RootTrackStatesWriter,
-            RootTrackFitterPerformanceWriter,
+            RootTrackParameterPerformanceWriter,
             RootPatternRecognitionPerformanceWriter,
             RootTrackFinderNTupleWriter,
         ) = acts.examples._tryImportRoot(
             "RootTrackSummaryWriter",
             "RootTrackStatesWriter",
-            "RootTrackFitterPerformanceWriter",
+            "RootTrackParameterPerformanceWriter",
             "RootPatternRecognitionPerformanceWriter",
             "RootTrackFinderNTupleWriter",
         )
@@ -1970,14 +1970,14 @@ def addTrackWriters(
             s.addWriter(trackStatesWriter)
 
         if writeFitterPerformance:
-            trackFitterPerformanceWriter = RootTrackFitterPerformanceWriter(
+            trackParameterPerformanceWriter = RootTrackParameterPerformanceWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
                 inputParticles="particles_selected",
                 inputTrackParticleMatching="track_particle_matching",
                 filePath=str(outputDirRoot / f"performance_fitting_{name}.root"),
             )
-            s.addWriter(trackFitterPerformanceWriter)
+            s.addWriter(trackParameterPerformanceWriter)
 
         if writeFinderPerformance:
             trackFinderPerfWriter = RootPatternRecognitionPerformanceWriter(
