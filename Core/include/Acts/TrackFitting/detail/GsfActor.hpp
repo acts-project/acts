@@ -575,11 +575,12 @@ struct GsfActor {
       const auto firstCmpProxy =
           tmpStates.traj.getTrackState(tmpStates.tips.front());
 
+      // Smoothed parameters are not allocated here but in the backward pass
+      // that computes them, so they are never left uninitialized
       auto combinedStateMask = TrackStatePropMask::Predicted;
       if (type.isMeasurement()) {
-        combinedStateMask |= TrackStatePropMask::Calibrated |
-                             TrackStatePropMask::Filtered |
-                             TrackStatePropMask::Smoothed;
+        combinedStateMask |=
+            TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered;
       } else if (type.isOutlier()) {
         combinedStateMask |= TrackStatePropMask::Calibrated;
       }
@@ -608,11 +609,6 @@ struct GsfActor {
             surface, m_cfg.mergeMethod);
         combinedState.filtered() = fltMean;
         combinedState.filteredCovariance() = fltCov;
-
-        // place sentinel values for smoothed parameters for now. they will be
-        // filled in the backward pass
-        combinedState.smoothed() = BoundVector::Constant(-2);
-        combinedState.smoothedCovariance() = BoundMatrix::Constant(-2);
       } else {
         combinedState.shareFrom(TrackStatePropMask::Predicted,
                                 TrackStatePropMask::Filtered);
@@ -629,12 +625,15 @@ struct GsfActor {
 
             result.surfacesVisitedBwdAgain.push_back(&surface);
 
-            if (trackState.hasSmoothed()) {
+            // The last forward measurement state already shares smoothed with
+            // filtered and is skipped as an already visited surface
+            if (trackState.typeFlags().isMeasurement()) {
               const auto [smtMean, smtCov] = mergeGaussianMixture(
                   tmpStates.tips,
                   FltProjector{tmpStates.traj, tmpStates.weights}, surface,
                   m_cfg.mergeMethod);
 
+              trackState.addComponents(TrackStatePropMask::Smoothed);
               trackState.smoothed() = smtMean;
               trackState.smoothedCovariance() = smtCov;
             }
