@@ -84,7 +84,7 @@ struct propagate_to_next_surface_payload {
 /// @param[in] det_data           View object to the tracking detector
 ///                               description
 /// @param[in] field_data         View object to the magnetic field
-/// @param[inout] payload      The function call payload
+/// @param[in,out] payload      The function call payload
 ///
 template <typename propagator_t, typename bfield_t>
 TRACCC_HOST_DEVICE inline void propagate_to_next_surface(

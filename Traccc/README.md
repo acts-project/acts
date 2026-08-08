@@ -256,7 +256,7 @@ cmake --build traccc-build/
    --material-file=geometries/odd/odd-detray_material_detray.json \
    --grid-file=geometries/odd/odd-detray_surface_grids_detray.json \
    --digitization-file=geometries/odd/odd-digi-geometric-config.json \
-   --conditions-file=geomteries/odd/odd-digi-geometric-config.json \
+   --conditions-file=geometries/odd/odd-digi-geometric-config.json \
    --use-acts-geom-source --input-directory=odd/geant4_10muon_10GeV/ \
    --input-events=10
 
@@ -305,7 +305,7 @@ There are three types of partial reconstruction chain users can operate: `seedin
 | `truth_finding_example` |                |         | ✅            | ✅            |
 | `truth_fitting_example` |                |         |               | ✅            |
 
-The dirft chamber will not produce meaningful results with `seeding_example` as the current seeding algorithm is only designed for 2D measurement objects. Truth finding works OK in general but the combinatoric explosion can occur for a few unlucky events, leading to poor pull value distributions. The followings are example commands:
+The drift chamber will not produce meaningful results with `seeding_example` as the current seeding algorithm is only designed for 2D measurement objects. Truth finding works OK in general but the combinatoric explosion can occur for a few unlucky events, leading to poor pull value distributions. The following are example commands:
 
 ```sh
 # Run cuda seeding example for toy geometry

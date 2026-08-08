@@ -124,7 +124,7 @@ class device_container
   }
 
   /**
-   * @breif Get number of items of jagged vector
+   * @brief Get number of items of jagged vector
    */
   TRACCC_HOST_DEVICE
   typename base_type::size_type total_size() const {

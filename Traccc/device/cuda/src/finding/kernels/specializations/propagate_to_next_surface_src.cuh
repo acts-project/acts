@@ -25,7 +25,7 @@ __global__ __launch_bounds__(128) void propagate_to_next_surface(
     typename propagator_t::detector_type::const_view_type det_data,
     const __grid_constant__ bfield_t field_data,
     const __grid_constant__ device::propagate_to_next_surface_payload payload) {
-  // TODO: Reenable this this additional checks for compilation with the ABI
+  // TODO: Re-enable this this additional checks for compilation with the ABI
   // enabled.
   // TRACCC_CUDA_SPILL_TO_SHARED_MEMORY;
 

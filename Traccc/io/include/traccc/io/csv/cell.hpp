@@ -16,10 +16,10 @@ namespace traccc::io::csv {
 
 /// Type used in reading CSV data into memory
 struct cell {
-  uint64_t geometry_id = 0;
-  uint64_t measurement_id = 0;
-  uint32_t channel0 = 0;
-  uint32_t channel1 = 0;
+  std::uint64_t geometry_id = 0;
+  std::uint64_t measurement_id = 0;
+  std::uint32_t channel0 = 0;
+  std::uint32_t channel1 = 0;
   float timestamp = 0.f;
   float value = 0.f;
 

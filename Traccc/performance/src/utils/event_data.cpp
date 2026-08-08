@@ -317,7 +317,7 @@ void event_data::fill_cca_result(
   }
 
   for (auto const& [ms, cluster] : found_meas_to_cluster_map) {
-    std::map<uint64_t, std::size_t> meas_counts;
+    std::map<std::uint64_t, std::size_t> meas_counts;
 
     // Cells from CCL
     for (const auto& cell1 : cluster) {

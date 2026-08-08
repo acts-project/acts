@@ -73,7 +73,7 @@ class KalmanFittingWireChamberTests
       const edm::track_collection<default_algebra>::host::const_proxy_type&
           track,
       const edm::track_state_collection<default_algebra>::host&) const {
-    // The nubmer of track states is supposed be greater than or
+    // The number of track states is supposed be greater than or
     // equal to the number of layers
     ASSERT_GE(track.constituent_links().size(), n_wire_layers);
   }

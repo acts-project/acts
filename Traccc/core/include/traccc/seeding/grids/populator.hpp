@@ -33,7 +33,7 @@ namespace traccc {
  *
  * @tparam value_t the type of a single stored object
  *
- * @note bare_value and store_value are identicial in this case
+ * @note bare_value and store_value are identical in this case
  **/
 template <template <typename...> class vector_t = vecmem::vector,
           template <typename...> class jagged_vector_t = vecmem::jagged_vector,
@@ -199,7 +199,7 @@ struct complete_populator {
  * @tparam kSORT the sorting directive
  * @tparam value_t the type of a single stored object
  *
- * @note bare_value and store_value are identicial in this case
+ * @note bare_value and store_value are identical in this case
  **/
 template <template <typename...> class vector_t = vecmem::vector,
           template <typename...> class jagged_vector_t = vecmem::jagged_vector,

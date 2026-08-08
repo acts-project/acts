@@ -158,24 +158,24 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
                        (diff_code == 0);
     }
     float quality = static_cast<float>(prop.x);
-    // use one seed from a consistant pair/set + the inconsistant one
+    // use one seed from a consistent pair/set + the inconsistent one
     // sample spacepoints from tracklet to create seeds
-    // include 1st order unless either 2 or 3 are consitant with the other
+    // include 1st order unless either 2 or 3 are consistent with the other
     // and 1
     if (((diff_code != 3) & (diff_code != 6)) | force_dropout) {
       seeds_device.push_back({seed.nodes[seed.size - 1],
                               seed.nodes[(seed.size - 1) / 2 + 1],
                               seed.nodes[0], quality});
     }
-    // include 2nd order if it consistant with 1 and 3 or only 1 and 3 are
-    // consistant
+    // include 2nd order if it consistent with 1 and 3 or only 1 and 3 are
+    // consistent
     if ((diff_code == 1) | (diff_code == 6)) {
       seeds_device.push_back({seed.nodes[seed.size - 1],
                               seed.nodes[(seed.size - 1) / 2], seed.nodes[0],
                               quality});
     }
-    // include 3rd order if it is consistant with 1 and 2 or only 1 and 2
-    // are consistant or if only 2 and 3 are consistant
+    // include 3rd order if it is consistent with 1 and 2 or only 1 and 2
+    // are consistent or if only 2 and 3 are consistent
     if ((diff_code == 2) | (diff_code == 3) | (diff_code == 4) |
         force_dropout) {
       seeds_device.push_back({seed.nodes[seed.size - 2],

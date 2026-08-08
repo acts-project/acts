@@ -121,13 +121,13 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
   }
 
   // Output stats
-  uint64_t n_spacepoints = 0;
-  uint64_t n_seeds = 0;
-  uint64_t n_seeds_cuda = 0;
-  uint64_t n_found_tracks = 0;
-  uint64_t n_found_tracks_cuda = 0;
-  uint64_t n_fitted_tracks = 0;
-  uint64_t n_fitted_tracks_cuda = 0;
+  std::uint64_t n_spacepoints = 0;
+  std::uint64_t n_seeds = 0;
+  std::uint64_t n_seeds_cuda = 0;
+  std::uint64_t n_found_tracks = 0;
+  std::uint64_t n_found_tracks_cuda = 0;
+  std::uint64_t n_fitted_tracks = 0;
+  std::uint64_t n_fitted_tracks_cuda = 0;
 
   /*****************************
    * Build a geometry

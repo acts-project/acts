@@ -74,7 +74,7 @@ TRACCC_HOST_DEVICE inline void ccl_kernel(
     vecmem::data::vector_view<details::fallback_index_t> gf_backup_view,
     vecmem::data::vector_view<unsigned char> adjc_backup_view,
     vecmem::data::vector_view<details::fallback_index_t> adjv_backup_view,
-    vecmem::device_atomic_ref<uint32_t> backup_mutex,
+    vecmem::device_atomic_ref<std::uint32_t> backup_mutex,
     vecmem::data::vector_view<unsigned int> disjoint_set_view,
     vecmem::data::vector_view<unsigned int> cluster_size_view,
     const barrier_t& barrier,

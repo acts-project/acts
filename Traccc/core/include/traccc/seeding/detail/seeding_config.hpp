@@ -12,6 +12,9 @@
 #include "traccc/definitions/primitives.hpp"
 #include "traccc/definitions/qualifiers.hpp"
 
+// System include(s).
+#include <numbers>
+
 namespace traccc {
 
 struct seedfinder_config {
@@ -30,8 +33,8 @@ struct seedfinder_config {
   // limiting location of collision region in z
   float collisionRegionMin = -250 * unit<float>::mm;
   float collisionRegionMax = +250 * unit<float>::mm;
-  float phiMin = static_cast<float>(-M_PI);
-  float phiMax = static_cast<float>(M_PI);
+  float phiMin = -std::numbers::pi_v<float>;
+  float phiMax = std::numbers::pi_v<float>;
 
   // Seed Cuts
   // lower cutoff for seeds in MeV
@@ -97,7 +100,7 @@ struct seedfinder_config {
   float pT2perRadius = 0;
 
   // Multiplicator for the number of phi-bins. The minimum number of phi-bins
-  // depends on min_pt, magnetic field: 2*M_PI/(minPT particle
+  // depends on min_pt, magnetic field: 2*pi/(minPT particle
   // phi-deflection). phiBinDeflectionCoverage is a multiplier for this
   // number. If numPhiNeighbors (in the configuration of the BinFinders) is
   // configured to return 1 neighbor on either side of the current phi-bin
@@ -107,8 +110,8 @@ struct seedfinder_config {
   std::array<unsigned int, 2> neighbor_scope{1, 1};
 
   TRACCC_HOST_DEVICE
-  size_t get_num_rbins() const {
-    return static_cast<size_t>(rMax + vector::norm(beamPos));
+  std::size_t get_num_rbins() const {
+    return static_cast<std::size_t>(rMax + vector::norm(beamPos));
   }
 
   TRACCC_HOST_DEVICE
@@ -173,11 +176,11 @@ struct spacepoint_grid_config {
   // impact parameter in mm
   float impactMax;
   // minimum phi value for phiAxis construction
-  float phiMin = static_cast<float>(-M_PI);
+  float phiMin = -std::numbers::pi_v<float>;
   // maximum phi value for phiAxis construction
-  float phiMax = static_cast<float>(M_PI);
+  float phiMax = std::numbers::pi_v<float>;
   // Multiplicator for the number of phi-bins. The minimum number of phi-bins
-  // depends on min_pt, magnetic field: 2*M_PI/(minPT particle
+  // depends on min_pt, magnetic field: 2*pi/(minPT particle
   // phi-deflection). phiBinDeflectionCoverage is a multiplier for this
   // number. If numPhiNeighbors (in the configuration of the BinFinders) is
   // configured to return 1 neighbor on either side of the current phi-bin
@@ -199,7 +202,7 @@ struct seedfilter_config {
   float deltaRMin = 5.f * unit<float>::mm;
   // how often do you want to increase the weight of a seed for finding a
   // compatible seed?
-  size_t compatSeedLimit = 2;
+  std::size_t compatSeedLimit = 2;
 
   // seed weight increase
   float good_spB_min_radius = 150.f * unit<float>::mm;

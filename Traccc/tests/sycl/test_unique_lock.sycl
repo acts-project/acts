@@ -26,16 +26,16 @@ TEST(SYCLUniqueLock, MassAdditionKernelTryLock) {
   vecmem::sycl::device_memory_resource device_mr{&queue};
   vecmem::sycl::shared_memory_resource shared_mr{&queue};
 
-  vecmem::unique_alloc_ptr<uint32_t> out =
-      vecmem::make_unique_alloc<uint32_t>(shared_mr);
-  vecmem::unique_alloc_ptr<uint32_t> lock =
-      vecmem::make_unique_alloc<uint32_t>(device_mr);
+  vecmem::unique_alloc_ptr<std::uint32_t> out =
+      vecmem::make_unique_alloc<std::uint32_t>(shared_mr);
+  vecmem::unique_alloc_ptr<std::uint32_t> lock =
+      vecmem::make_unique_alloc<std::uint32_t>(device_mr);
 
-  queue.memset(lock.get(), 0, sizeof(uint32_t)).wait_and_throw();
-  queue.memset(out.get(), 0, sizeof(uint32_t)).wait_and_throw();
+  queue.memset(lock.get(), 0, sizeof(std::uint32_t)).wait_and_throw();
+  queue.memset(out.get(), 0, sizeof(std::uint32_t)).wait_and_throw();
 
-  uint32_t n_blocks = 262144;
-  uint32_t n_threads = 32;
+  std::uint32_t n_blocks = 262144;
+  std::uint32_t n_threads = 32;
 
   ::sycl::nd_range test_range(::sycl::range<1>(n_blocks * n_threads),
                               ::sycl::range<1>(n_threads));
@@ -53,7 +53,7 @@ TEST(SYCLUniqueLock, MassAdditionKernelTryLock) {
                   lock.lock();
                 }
 
-                uint32_t tmp = *out;
+                std::uint32_t tmp = *out;
                 tmp += 1;
                 *out = tmp;
               }
@@ -69,16 +69,16 @@ TEST(SYCLUniqueLock, MassAdditionKernelDeferLock) {
   vecmem::sycl::device_memory_resource device_mr{&queue};
   vecmem::sycl::shared_memory_resource shared_mr{&queue};
 
-  vecmem::unique_alloc_ptr<uint32_t> out =
-      vecmem::make_unique_alloc<uint32_t>(shared_mr);
-  vecmem::unique_alloc_ptr<uint32_t> lock =
-      vecmem::make_unique_alloc<uint32_t>(device_mr);
+  vecmem::unique_alloc_ptr<std::uint32_t> out =
+      vecmem::make_unique_alloc<std::uint32_t>(shared_mr);
+  vecmem::unique_alloc_ptr<std::uint32_t> lock =
+      vecmem::make_unique_alloc<std::uint32_t>(device_mr);
 
-  queue.memset(lock.get(), 0, sizeof(uint32_t)).wait_and_throw();
-  queue.memset(out.get(), 0, sizeof(uint32_t)).wait_and_throw();
+  queue.memset(lock.get(), 0, sizeof(std::uint32_t)).wait_and_throw();
+  queue.memset(out.get(), 0, sizeof(std::uint32_t)).wait_and_throw();
 
-  uint32_t n_blocks = 262144;
-  uint32_t n_threads = 32;
+  std::uint32_t n_blocks = 262144;
+  std::uint32_t n_threads = 32;
 
   ::sycl::nd_range test_range(::sycl::range<1>(n_blocks * n_threads),
                               ::sycl::range<1>(n_threads));
@@ -93,7 +93,7 @@ TEST(SYCLUniqueLock, MassAdditionKernelDeferLock) {
               if (item.get_local_id()[0] == 0) {
                 lock.lock();
 
-                uint32_t tmp = *out;
+                std::uint32_t tmp = *out;
                 tmp += 1;
                 *out = tmp;
               }
@@ -109,16 +109,16 @@ TEST(SYCLUniqueLock, MassAdditionKernelAdoptLock) {
   vecmem::sycl::device_memory_resource device_mr{&queue};
   vecmem::sycl::shared_memory_resource shared_mr{&queue};
 
-  vecmem::unique_alloc_ptr<uint32_t> out =
-      vecmem::make_unique_alloc<uint32_t>(shared_mr);
-  vecmem::unique_alloc_ptr<uint32_t> lock =
-      vecmem::make_unique_alloc<uint32_t>(device_mr);
+  vecmem::unique_alloc_ptr<std::uint32_t> out =
+      vecmem::make_unique_alloc<std::uint32_t>(shared_mr);
+  vecmem::unique_alloc_ptr<std::uint32_t> lock =
+      vecmem::make_unique_alloc<std::uint32_t>(device_mr);
 
-  queue.memset(lock.get(), 0, sizeof(uint32_t)).wait_and_throw();
-  queue.memset(out.get(), 0, sizeof(uint32_t)).wait_and_throw();
+  queue.memset(lock.get(), 0, sizeof(std::uint32_t)).wait_and_throw();
+  queue.memset(out.get(), 0, sizeof(std::uint32_t)).wait_and_throw();
 
-  uint32_t n_blocks = 262144;
-  uint32_t n_threads = 32;
+  std::uint32_t n_blocks = 262144;
+  std::uint32_t n_threads = 32;
 
   ::sycl::nd_range test_range(::sycl::range<1>(n_blocks * n_threads),
                               ::sycl::range<1>(n_threads));
@@ -133,7 +133,7 @@ TEST(SYCLUniqueLock, MassAdditionKernelAdoptLock) {
                 m.lock();
                 traccc::device::unique_lock lock(m, std::adopt_lock);
 
-                uint32_t tmp = *out;
+                std::uint32_t tmp = *out;
                 tmp += 1;
                 *out = tmp;
               }

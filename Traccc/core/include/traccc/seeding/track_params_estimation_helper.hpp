@@ -65,7 +65,7 @@ inline TRACCC_HOST_DEVICE void seed_to_bound_param_vector(
   // Define a new coordinate frame with its origin at the bottom space
   // point, z axis long the magnetic field direction and y axis
   // perpendicular to vector from the bottom to middle space point.
-  // Hence, the projection of the middle space point on the tranverse
+  // Hence, the projection of the middle space point on the transverse
   // plane will be located at the x axis of the new frame.
   vector3 relVec = sp_global_positions[1] - sp_global_positions[0];
   vector3 newZAxis = vector::normalize(bfield);
