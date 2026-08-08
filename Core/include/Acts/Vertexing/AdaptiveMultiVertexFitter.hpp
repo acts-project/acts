@@ -161,6 +161,11 @@ class AdaptiveMultiVertexFitter {
       Config cfg, std::unique_ptr<const Logger> logger = getDefaultLogger(
                       "AdaptiveMultiVertexFitter", Logging::INFO));
 
+  /// Move constructor
+  /// @param other The fitter to move from
+  AdaptiveMultiVertexFitter(AdaptiveMultiVertexFitter&& other) noexcept =
+      default;
+
   /// @brief Adds a new vertex to an existing multi-vertex fit.
   /// 1. The 3D impact parameters are calculated for all tracks associated
   /// with newVertex.
