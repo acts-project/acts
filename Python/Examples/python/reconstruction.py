@@ -309,6 +309,7 @@ def addSeeding(
     selectedParticles: str = "particles_selected",
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
+    trackParameterPerformance: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
     prefix: str = "",
@@ -363,6 +364,10 @@ def addSeeding(
         selected particles name in the WhiteBoard
     outputDirRoot : Path|str, path, None
         the output folder for ROOT output, None triggers no output
+    trackParameterPerformance : bool, False
+        additionally write residual/pull performance of the seed-estimated
+        track parameters at the perigee, see
+        `addTrackParameterPerformanceWriter`
     logLevel : acts.logging.Level, None
         logging level to override setting given in `s`
     rnd : RandomNumbers, None
@@ -544,12 +549,12 @@ def addSeeding(
 
         tracks = f"{prefix}seed-tracks"
         s.addAlgorithm(
-            acts.examples.ProtoTracksToTracks(
+            acts.examples.SeedsToTracks(
                 level=logLevel,
-                inputProtoTracks=protoTracks,
+                inputSeeds=f"{prefix}estimatedseeds",
                 inputTrackParameters=f"{prefix}estimatedparameters",
-                inputMeasurements=f"{prefix}measurement_subset",
                 outputTracks=tracks,
+                trackingGeometry=trackingGeometry,
             )
         )
 
@@ -578,6 +583,19 @@ def addSeeding(
                 logLevel,
                 prefix=prefix,
             )
+
+            if trackParameterPerformance:
+                addTrackParameterPerformanceWriter(
+                    s,
+                    outputDirRoot,
+                    tracks=tracks,
+                    particles=selectedParticles,
+                    trackingGeometry=trackingGeometry,
+                    field=field,
+                    outputName="seedparams",
+                    logLevel=logLevel,
+                    prefix=prefix,
+                )
 
         if outputDirCsv is not None:
             outputDirCsv = Path(outputDirCsv)
@@ -1430,6 +1448,88 @@ def addSeedPerformanceWriters(
     )
 
 
+def addTrackParameterPerformanceWriter(
+    sequence: acts.examples.Sequencer,
+    outputDirRoot: Union[Path, str],
+    tracks: str,
+    particles: str,
+    trackingGeometry: acts.TrackingGeometry,
+    field: acts.MagneticFieldProvider,
+    targetSurface: Optional[acts.Surface] = None,
+    strategy=None,
+    outputName: str = "trackparams",
+    logLevel: acts.logging.Level = None,
+    prefix: str = "",
+):
+    """Writes residual/pull performance of the track parameters at a common surface.
+
+    The tracks are first extrapolated to `targetSurface`, a perigee at the
+    origin by default. That is what makes the comparison meaningful for seed
+    estimates: they sit on the bottom space point's sensor, where expressing
+    the truth particle means intersecting it on a straight line and ignoring
+    the bending in between.
+
+    Parameters
+    ----------
+    strategy : Optional[acts.examples.TrackExtrapolationStrategy]
+        Which track state to start from, `first` by default. Seed tracks only
+        carry parameters on their innermost state, so `firstOrLast` must not be
+        used on them.
+    """
+    customLogLevel = acts.examples.defaultLogging(sequence, logLevel)
+    RootTrackParameterPerformanceWriter = acts.examples._tryImportRoot(
+        "RootTrackParameterPerformanceWriter"
+    )
+
+    outputDirRoot = Path(outputDirRoot)
+    if not outputDirRoot.exists():
+        outputDirRoot.mkdir()
+
+    if targetSurface is None:
+        targetSurface = acts.Surface.createPerigee(acts.Vector3(0, 0, 0))
+    if strategy is None:
+        strategy = acts.examples.TrackExtrapolationStrategy.first
+
+    extrapolatedTracks = f"{prefix}{outputName}-tracks"
+    sequence.addAlgorithm(
+        acts.examples.TrackExtrapolationAlgorithm(
+            level=customLogLevel(),
+            inputTracks=tracks,
+            outputTracks=extrapolatedTracks,
+            targetSurface=targetSurface,
+            trackingGeometry=trackingGeometry,
+            magneticField=field,
+            strategy=strategy,
+        )
+    )
+
+    # the extrapolation drops the tracks it could not move, which changes the
+    # track indices, so the matching has to be redone
+    trackParticleMatching = f"{prefix}{outputName}_particle_matching"
+    sequence.addAlgorithm(
+        acts.examples.TrackTruthMatcher(
+            level=customLogLevel(),
+            inputTracks=extrapolatedTracks,
+            inputParticles=particles,
+            inputMeasurementParticlesMap="measurement_particles_map",
+            outputTrackParticleMatching=trackParticleMatching,
+            outputParticleTrackMatching=f"{prefix}particle_{outputName}_matching",
+            matchingRatio=1.0,
+            doubleMatching=False,
+        )
+    )
+
+    sequence.addWriter(
+        RootTrackParameterPerformanceWriter(
+            level=customLogLevel(),
+            inputTracks=extrapolatedTracks,
+            inputParticles=particles,
+            inputTrackParticleMatching=trackParticleMatching,
+            filePath=str(outputDirRoot / f"performance_{prefix}{outputName}.root"),
+        )
+    )
+
+
 acts.examples.NamedTypeArgs(
     config=SeedFilterMLDBScanConfig,
 )
@@ -1930,13 +2030,13 @@ def addTrackWriters(
         (
             RootTrackSummaryWriter,
             RootTrackStatesWriter,
-            RootTrackFitterPerformanceWriter,
+            RootTrackParameterPerformanceWriter,
             RootPatternRecognitionPerformanceWriter,
             RootTrackFinderNTupleWriter,
         ) = acts.examples._tryImportRoot(
             "RootTrackSummaryWriter",
             "RootTrackStatesWriter",
-            "RootTrackFitterPerformanceWriter",
+            "RootTrackParameterPerformanceWriter",
             "RootPatternRecognitionPerformanceWriter",
             "RootTrackFinderNTupleWriter",
         )
@@ -1970,14 +2070,14 @@ def addTrackWriters(
             s.addWriter(trackStatesWriter)
 
         if writeFitterPerformance:
-            trackFitterPerformanceWriter = RootTrackFitterPerformanceWriter(
+            trackParameterPerformanceWriter = RootTrackParameterPerformanceWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
                 inputParticles="particles_selected",
                 inputTrackParticleMatching="track_particle_matching",
                 filePath=str(outputDirRoot / f"performance_fitting_{name}.root"),
             )
-            s.addWriter(trackFitterPerformanceWriter)
+            s.addWriter(trackParameterPerformanceWriter)
 
         if writeFinderPerformance:
             trackFinderPerfWriter = RootPatternRecognitionPerformanceWriter(
