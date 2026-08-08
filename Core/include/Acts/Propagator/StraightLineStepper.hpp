@@ -391,7 +391,7 @@ class StraightLineStepper final {
   /// @note no check is done if the position is actually on the surface
   /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
   ///
-  void transportCovarianceToBound(
+  Result<void> transportCovarianceToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const;

@@ -902,8 +902,11 @@ class Gx2Fitter {
         ACTS_DEBUG("    The surface contains a measurement.");
 
         // Transport the covariance to the surface
-        stepper.transportCovarianceToBound(state.stepping, *surface,
-                                           freeToBoundCorrection);
+        Result<void> transportRes = stepper.transportCovarianceToBound(
+            state.stepping, *surface, freeToBoundCorrection);
+        if (!transportRes.ok()) {
+          return transportRes.error();
+        }
 
         // TODO generalize the update of the currentTrackIndex
         auto& fittedStates = *result.fittedStates;
@@ -1004,8 +1007,11 @@ class Gx2Fitter {
             "a hole.");
 
         // Transport the covariance to the surface
-        stepper.transportCovarianceToBound(state.stepping, *surface,
-                                           freeToBoundCorrection);
+        Result<void> transportRes = stepper.transportCovarianceToBound(
+            state.stepping, *surface, freeToBoundCorrection);
+        if (!transportRes.ok()) {
+          return transportRes.error();
+        }
 
         // TODO generalize the update of the currentTrackIndex
         auto& fittedStates = *result.fittedStates;

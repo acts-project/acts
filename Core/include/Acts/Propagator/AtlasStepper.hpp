@@ -568,7 +568,11 @@ class AtlasStepper {
     // The transport of the covariance
     std::optional<Covariance> covOpt = std::nullopt;
     if (state.covTransport && transportCov) {
-      transportCovarianceToBound(state, surface, freeToBoundCorrection);
+      Result<void> transportRes =
+          transportCovarianceToBound(state, surface, freeToBoundCorrection);
+      if (!transportRes.ok()) {
+        return transportRes.error();
+      }
     }
     if (state.cov != Covariance::Zero()) {
       covOpt = state.cov;
@@ -988,7 +992,7 @@ class AtlasStepper {
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded to
-  void transportCovarianceToBound(
+  Result<void> transportCovarianceToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& /*freeToBoundCorrection*/ =
           FreeToBoundCorrection(false)) const {
@@ -1210,6 +1214,8 @@ class AtlasStepper {
     Eigen::Map<Eigen::Matrix<double, eBoundSize, eBoundSize, Eigen::RowMajor>>
         J(state.jacobian);
     state.cov = J * (*state.covariance) * J.transpose();
+
+    return Result<void>::success();
   }
 
   /// Perform the actual step on the state
