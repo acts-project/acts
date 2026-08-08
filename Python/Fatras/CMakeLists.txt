@@ -3,6 +3,8 @@ file(MAKE_DIRECTORY ${_python_dir})
 file(MAKE_DIRECTORY ${_python_dir}/acts)
 
 pybind11_add_module(ActsFatrasPythonBindings src/Fatras.cpp)
+
+target_sources(ActsFatrasPythonBindings PRIVATE src/Synthetic.cpp)
 install(
     TARGETS ActsFatrasPythonBindings
     DESTINATION ${_acts_python_install_dir}

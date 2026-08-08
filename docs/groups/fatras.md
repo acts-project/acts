@@ -14,6 +14,98 @@ Bethe-Bloch energy loss, Bethe-Heitler energy loss, and photon conversion. Since
 it operates on tracking surfaces rather than a full volumetric detector model,
 it is faster than a detailed Geant4 simulation but also less complete.
 
+## Synthetic space point events {#fatras_synthetic_events}
+
+@ref ActsFatras::Synthetic is a second, much smaller fast simulation that shares
+none of the machinery above. It fills an @ref Acts::SpacePointContainer directly
+-- no @ref Acts::TrackingGeometry, no @ref Acts::Propagator, no input data -- and
+makes an ATLAS-like pile-up of 200 in tens of milliseconds. It answers one
+question cheaply: what does a seeder see on a busy event? Space points carry the
+layer and the particle they came from, so that needs no truth matching.
+
+It is deliberately coarse: a tool for throughput and combinatorics studies rather
+than for physics performance.
+
+### Geometry
+
+A @ref ActsFatras::Synthetic::DetectorLayout is cylinders at fixed `r` and discs
+at fixed `z`, as plain structs, so a helix crosses every surface in closed form.
+Nothing is resolved in azimuth and a crossing leaves at most one hit. The
+restriction is on the *shape* alone -- every cylinder has its own half-length and
+every disc its own rings -- so an endcap can be described as the staggered discs
+and rings it is.
+
+- @ref ActsFatras::Synthetic::DetectorLayoutBuilder builds one from scratch;
+  descriptions of the ATLAS ITk, ODD and ACTS Generic pixels ship with it.
+- @ref ActsFatras::Synthetic::makeLayoutFromTrackingGeometry reduces a real
+  @ref Acts::TrackingGeometry to that skeleton, which is where the shipped ODD
+  and Generic descriptions come from. Two z planes covering the same radii are
+  one ring whose modules alternate rather than two, which
+  @ref ActsFatras::Synthetic::TrackingGeometryLayoutOptions::maxRingOverlap
+  separates.
+- @ref ActsFatras::Synthetic::PassiveSurfaceDescription adds the supports and
+  services a layer is carried on, which produce secondaries like any material.
+- @ref ActsFatras::Synthetic::SurfaceMaterial bands a surface along the
+  coordinate it extends in, so a ring is told from the support beside it. The
+  shipped layouts carry what the detector's own material map reports.
+
+### Event content
+
+@ref ActsFatras::Synthetic::EventGenerator draws the primaries -- a rapidity
+plateau with a Fermi edge, Gaussian in `z0` and `d0`, with a Hagedorn spectrum
+-- then walks each track through the layout and makes what it makes.
+
+What a crossing does, each switchable in @ref ActsFatras::Synthetic::EventConfig:
+
+- **Secondaries**, at the material the surface carries times the path length
+  through it and nothing fitted on top. Electrons count per `X0` and nuclear
+  products per `L0`, in three channels: a radial electron, a forward cascade
+  product, and an isotropic evaporation product.
+- **Stubs**, where a daughter is too soft to leave the surface that made it.
+- **Multiple scattering and energy loss**, which displace a hit and leave the
+  trajectory alone. This is what gives a seed the spread a seeder cuts on. A
+  track that cannot pay for the surface in front of it ranges out.
+- **Module overlaps**, adjacent modules alternating in depth so that a track
+  through their common edge is measured twice.
+
+A track is followed past its outermost point, so a soft one curls back through
+the layers it has already crossed, bounded by
+@ref ActsFatras::Synthetic::PropagationConfig::maxTurns and by the escape bounds
+of the enclosing tracker. Neutral long-lived particles decaying near the beam
+line are the only secondaries produced away from a surface.
+
+### Tuned configurations
+
+The detector enters the beam spot, the resolution and both yields, so a
+configuration belongs to a layout. @ref ActsFatras::Synthetic::EventConfig ships
+@ref ActsFatras::Synthetic::EventConfig::itkPixelTtbarPu200, fitted against a
+GNN4ITk Athena dump, and
+@ref ActsFatras::Synthetic::EventConfig::openDataDetectorTtbarPu200 against
+ColliderML. Positions and material are read off the detector description and the
+overlaps and secondary kinematics measured on the reference; only the yields, the
+spectrum and the beam spot are fitted.
+
+Each is fitted on one half of its sample and checked on the other. On the
+held-out half, per event and normalised to the reference:
+
+| | ITk | ODD |
+| --- | --- | --- |
+| space points | 0.99 | 0.99 |
+| &nbsp;&nbsp;primary, inside the generated acceptance | 0.97 | 1.02 |
+| &nbsp;&nbsp;primary, outside it | 1.03 | 1.16 |
+| &nbsp;&nbsp;non-primary | 1.00 | 0.95 |
+| primaries / event | 0.98 | 1.00 |
+| mean primary hits | 0.99 | 1.02 |
+| mean secondary hits | 0.97 | 1.10 |
+
+Known to be off: the ODD's secondary momentum runs a fifth high and its `|d0|`
+reach short, its forward production is short beyond `|z| = 900`, and the spectrum
+is over-produced below the 100 MeV the references stop recording at.
+
+Counting secondaries takes care -- a full simulation records one only above a
+truth-link threshold, and two thirds of the real ones fall below it. Compare
+non-primary space points rather than particle counts.
+
 ## Barcode identifiers {#fatras_barcode_identifiers}
 
 Fatras labels simulated particles and hits with @ref ActsFatras::Barcode. A

@@ -11,6 +11,16 @@ acts_add_library(
     src/Kernel/SimulationError.cpp
     src/Physics/BetheHeitler.cpp
     src/Physics/StandardInteractions.cpp
+    src/Synthetic/DetectorLayout.cpp
+    src/Synthetic/EventConfig.cpp
+    src/Synthetic/EventCsvWriter.cpp
+    src/Synthetic/EventGenerator.cpp
+    src/Synthetic/SeedingTruth.cpp
+    src/Synthetic/TrackingGeometryLayout.cpp
+    src/Synthetic/detail/ParticlePropagator.cpp
+    src/Synthetic/detail/PrimaryGenerator.cpp
+    src/Synthetic/detail/Propagation.cpp
+    src/Synthetic/detail/Sampling.cpp
     src/Utilities/LandauDistribution.cpp
     ACTS_INCLUDE_FOLDER include/ActsFatras
 )
