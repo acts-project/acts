@@ -12,6 +12,7 @@
 #include "ActsExamples/Utilities/ProtoTracksToSeeds.hpp"
 #include "ActsExamples/Utilities/ProtoTracksToTracks.hpp"
 #include "ActsExamples/Utilities/SeedsToProtoTracks.hpp"
+#include "ActsExamples/Utilities/TrackExtrapolationAlgorithm.hpp"
 #include "ActsExamples/Utilities/TracksToParameters.hpp"
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 #include "ActsExamples/Utilities/TrajectoriesToProtoTracks.hpp"
@@ -44,6 +45,16 @@ void addUtilities(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(ProtoTracksToSeeds, mex, "ProtoTracksToSeeds",
                                 inputProtoTracks, inputSpacePoints, outputSeeds,
                                 outputProtoTracks);
+
+  py::enum_<Acts::TrackExtrapolationStrategy>(mex, "TrackExtrapolationStrategy")
+      .value("first", Acts::TrackExtrapolationStrategy::first)
+      .value("last", Acts::TrackExtrapolationStrategy::last)
+      .value("firstOrLast", Acts::TrackExtrapolationStrategy::firstOrLast);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(TrackExtrapolationAlgorithm, mex,
+                                "TrackExtrapolationAlgorithm", inputTracks,
+                                outputTracks, targetSurface, trackingGeometry,
+                                magneticField, strategy);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       MeasurementMapSelector, mex, "MeasurementMapSelector", inputMeasurements,
