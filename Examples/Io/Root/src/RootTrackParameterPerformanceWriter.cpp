@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/RootTrackFitterPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackParameterPerformanceWriter.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -28,12 +28,13 @@ using ActsPlugins::toRoot;
 
 namespace ActsExamples {
 
-RootTrackFitterPerformanceWriter::RootTrackFitterPerformanceWriter(
-    RootTrackFitterPerformanceWriter::Config config, Acts::Logging::Level level)
-    : WriterT(config.inputTracks, "RootTrackFitterPerformanceWriter", level),
+RootTrackParameterPerformanceWriter::RootTrackParameterPerformanceWriter(
+    RootTrackParameterPerformanceWriter::Config config,
+    Acts::Logging::Level level)
+    : WriterT(config.inputTracks, "RootTrackParameterPerformanceWriter", level),
       m_cfg(std::move(config)),
       m_collector(
-          TrackFitterPerformanceCollector::Config{
+          TrackParameterPerformanceCollector::Config{
               m_cfg.resPlotToolConfig, m_cfg.effPlotToolConfig,
               m_cfg.trackSummaryPlotToolConfig, m_cfg.fitMinEntries,
               m_cfg.fitSigmaRange, m_cfg.fitIterations},
@@ -62,11 +63,11 @@ RootTrackFitterPerformanceWriter::RootTrackFitterPerformanceWriter(
   }
 }
 
-RootTrackFitterPerformanceWriter::~RootTrackFitterPerformanceWriter() {
+RootTrackParameterPerformanceWriter::~RootTrackParameterPerformanceWriter() {
   delete m_outputFile;
 }
 
-ProcessCode RootTrackFitterPerformanceWriter::finalize() {
+ProcessCode RootTrackParameterPerformanceWriter::finalize() {
   if (m_outputFile == nullptr) {
     return ProcessCode::SUCCESS;
   }
@@ -165,7 +166,7 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode RootTrackFitterPerformanceWriter::writeT(
+ProcessCode RootTrackParameterPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
   // Read truth input collections
   const auto& particles = m_inputParticles(ctx);

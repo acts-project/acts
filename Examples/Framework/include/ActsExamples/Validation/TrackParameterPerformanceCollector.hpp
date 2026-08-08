@@ -23,14 +23,15 @@
 
 namespace ActsExamples {
 
-/// Collects track-fitter performance histograms without any file I/O.
+/// Collects performance histograms of the track parameters at the track
+/// reference surface, without any file I/O.
 ///
 /// Collects residual/pull histograms, efficiency plots, and track summary
 /// information for track fitting performance evaluation.
 ///
 /// @note The caller must ensure exclusive access (e.g. hold a mutex) when
 ///       calling fill(). This class applies no locking of its own.
-class TrackFitterPerformanceCollector {
+class TrackParameterPerformanceCollector {
  public:
   struct Config {
     ResPlotTool::Config resPlotToolConfig;
@@ -46,8 +47,8 @@ class TrackFitterPerformanceCollector {
     int fitIterations = 3;
   };
 
-  TrackFitterPerformanceCollector(Config cfg,
-                                  std::unique_ptr<const Acts::Logger> logger);
+  TrackParameterPerformanceCollector(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger);
 
   /// Fill histograms for one event.
   ///
