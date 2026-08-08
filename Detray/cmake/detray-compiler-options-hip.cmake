@@ -16,17 +16,6 @@ if(PROJECT_IS_TOP_LEVEL)
 
     set(CMAKE_HIP_ARCHITECTURES gfx1031)
 
-    # Basic flags for all build modes.
-    if(
-        ("${CMAKE_HIP_PLATFORM}" STREQUAL "hcc")
-        OR ("${CMAKE_HIP_PLATFORM}" STREQUAL "amd")
-    )
-        detray_add_flag( CMAKE_HIP_FLAGS "-Wall" )
-        detray_add_flag( CMAKE_HIP_FLAGS "-Wextra" )
-        detray_add_flag( CMAKE_HIP_FLAGS "-Wshadow" )
-        detray_add_flag( CMAKE_HIP_FLAGS "-Wunused-local-typedefs" )
-        detray_add_flag( CMAKE_HIP_FLAGS "-pedantic" )
-    endif()
     # Generate debug symbols for the device code as well in a debug build.
     if(
         ("${CMAKE_HIP_PLATFORM}" STREQUAL "nvcc")
@@ -35,19 +24,9 @@ if(PROJECT_IS_TOP_LEVEL)
         detray_add_flag( CMAKE_HIP_FLAGS_DEBUG "-G" )
         detray_add_flag( CMAKE_HIP_FLAGS "--expt-relaxed-constexpr" )
     endif()
-
-    # Fail on warnings, if asked for that behaviour.
-    if(DETRAY_FAIL_ON_WARNINGS)
-        if(
-            ("${CMAKE_HIP_PLATFORM}" STREQUAL "hcc")
-            OR ("${CMAKE_HIP_PLATFORM}" STREQUAL "amd")
-        )
-            detray_add_flag( CMAKE_HIP_FLAGS "-Werror" )
-        elseif(
-            ("${CMAKE_HIP_PLATFORM}" STREQUAL "nvcc")
-            OR ("${CMAKE_HIP_PLATFORM}" STREQUAL "nvidia")
-        )
-            detray_add_flag( CMAKE_HIP_FLAGS "-Werror all-warnings" )
-        endif()
-    endif()
 endif()
+
+# Warnings and warnings-as-errors come from the shared module. CMake picks the
+# right flag for the platform in use (`-Werror` on amd, `-Werror all-warnings`
+# on nvidia).
+acts_apply_warning_flags(PROFILE detray LANGUAGES HIP)

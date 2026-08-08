@@ -26,6 +26,8 @@ if(ACTS_BUILD_DOCS)
     set_target_properties(docs PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endif()
 
+acts_apply_warning_flags(PROFILE acts LANGUAGES CXX)
+
 # Additional target example build that is off by default but can be build
 # without the rest of the documentation
 add_library(docs-examples SHARED)

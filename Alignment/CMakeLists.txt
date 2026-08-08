@@ -1,3 +1,5 @@
+acts_apply_warning_flags(PROFILE acts LANGUAGES CXX)
+
 acts_add_library(
     Alignment
     SHARED

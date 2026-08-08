@@ -12,6 +12,7 @@ enable_language(CUDA)
 
 # Project include(s).
 include(traccc-compiler-options-cpp)
+include(traccc-compiler-options-cuda)
 
 # Set up the build of the traccc::cuda_utils library.
 traccc_add_library( traccc_cuda_utils cuda_utils TYPE SHARED

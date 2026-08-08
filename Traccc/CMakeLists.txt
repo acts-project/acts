@@ -70,6 +70,26 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(traccc-functions)
 
+# The compiler warning policy is shared with the enclosing Acts monorepo, which
+# is the single source of truth for it. It is included by absolute path rather
+# than through CMAKE_MODULE_PATH, so that Acts' Find<Package>.cmake modules do
+# not shadow the ones used here.
+get_filename_component(
+    _traccc_acts_cmake_dir
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake"
+    ABSOLUTE
+)
+if(NOT EXISTS "${_traccc_acts_cmake_dir}/ActsWarningFlags.cmake")
+    message(
+        FATAL_ERROR
+        "Could not find the shared warning flag module at "
+        "${_traccc_acts_cmake_dir}/ActsWarningFlags.cmake. Traccc has to be "
+        "built from within an Acts monorepo checkout."
+    )
+endif()
+include("${_traccc_acts_cmake_dir}/ActsWarningFlags.cmake")
+unset(_traccc_acts_cmake_dir)
+
 # Temporary setting for the traccc::scalar type, until it can be removed.
 set(TRACCC_CUSTOM_SCALARTYPE
     "float"
@@ -413,6 +433,10 @@ option(
     "Use instrument functions to enable fine grained profiling"
     FALSE
 )
+
+# Everything above this point is dependency setup, which must not be built with
+# our warning flags. Everything below is traccc's own code.
+acts_apply_warning_flags(PROFILE traccc LANGUAGES CXX)
 
 # Build the traccc code.
 add_subdirectory(core)
