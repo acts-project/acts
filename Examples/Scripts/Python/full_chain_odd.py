@@ -232,6 +232,29 @@ if args.edm4hep:
     )
     s.addAlgorithm(edm4hepReader)
 
+    if args.output_parquet:
+        _cc = acts.examples.edm4hep.CaloCollectionDetectorCodes
+        s.addAlgorithm(
+            acts.examples.edm4hep.EDM4hepCaloHitInputConverter(
+                level=acts.logging.INFO,
+                inputFrame="events",
+                inputCaloHitCollections=[
+                    "ECalBarrelCollection",
+                    "ECalEndcapCollection",
+                    "HCalBarrelCollection",
+                    "HCalEndcapCollection",
+                ],
+                inputMCParticleMap="mcparticle_index_map",
+                outputCaloHits="calohits",
+                caloDetectorCodesByCollectionName={
+                    "ECalBarrelCollection": _cc.barrel(10),
+                    "ECalEndcapCollection": _cc.endcap(9, 11),
+                    "HCalBarrelCollection": _cc.barrel(13),
+                    "HCalEndcapCollection": _cc.endcap(12, 14),
+                },
+            )
+        )
+
     s.addWhiteboardAlias("particles", edm4hepReader.config.outputParticlesSimulation)
 
     addSimParticleSelection(
@@ -475,11 +498,13 @@ if args.output_parquet:
             particleSchema,
             simHitSchema,
             trackSchema,
+            caloHitSchema,
         )
         from acts.examples.arrow import (
             ArrowParticleOutputConverter,
             ArrowSimHitOutputConverter,
             ArrowTrackOutputConverter,
+            ArrowCaloHitOutputConverter,
             makeVolumeIdDetectorResolver,
             ParquetWriter,
         )
@@ -537,6 +562,16 @@ if args.output_parquet:
         )
         s.addAlgorithm(arrTrackConv)
 
+    # Calo cells live on the input edm4hep frame; the converter is only wired
+    # up above when --edm4hep is given.
+    if args.edm4hep:
+        arrHitConv = ArrowCaloHitOutputConverter(
+            level=acts.logging.INFO,
+            inputCaloHits="calohits",
+            outputTable="calohits_arrow",
+        )
+        s.addAlgorithm(arrHitConv)
+
     s.addWriter(
         ParquetWriter(
             level=acts.logging.INFO,
@@ -544,11 +579,13 @@ if args.output_parquet:
             collections={
                 arrSimHitConv.config.outputTable: "simhits",
                 arrTrackConv.config.outputTable: "tracks",
+                arrHitConv.config.outputTable: "calohits",
                 arrParticleConv.config.outputTable: "particles",
             },
             expectedSchemas={
                 arrSimHitConv.config.outputTable: simHitSchema(),
                 arrTrackConv.config.outputTable: trackSchema(),
+                arrHitConv.config.outputTable: caloHitSchema(),
                 arrParticleConv.config.outputTable: particleSchema(),
             },
         )
