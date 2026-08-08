@@ -33,6 +33,7 @@
 #include <vector>
 
 #include <boost/algorithm/string/join.hpp>
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -241,9 +242,7 @@ void addGeometry(py::module_& m) {
             .def_property_readonly("highestTrackingVolume",
                                    &TrackingGeometry::highestTrackingVolumePtr)
             .def("visualize", &TrackingGeometry::visualize, py::arg("helper"),
-                 py::arg("gctx"), py::arg("viewConfig") = s_viewVolume,
-                 py::arg("portalViewConfig") = s_viewPortal,
-                 py::arg("sensitiveViewConfig") = s_viewSensitive);
+                 py::arg("gctx"), py::arg("func") = viewConfigFactory());
 
     using apply_ptr_t =
         void (TrackingGeometry::*)(TrackingGeometryMutableVisitor&);

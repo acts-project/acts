@@ -124,20 +124,11 @@ def runPypiFindingFittingDemo(
         def __init__(self, name, level):
             acts.examples.IAlgorithm.__init__(self, name, level)
 
-            self.prototracks = acts.examples.ReadDataHandle(
-                self, acts.examples.ProtoTrackContainer, "Prototracks"
-            )
-            self.prototracks.initialize("prototracks")
-
-            self.tracks = acts.examples.WriteDataHandle(
+            self.tracks = acts.examples.ReadDataHandle(
                 self, acts.examples.ConstTrackContainer, "Tracks"
             )
             self.tracks.initialize("fitted_tracks")
 
-            self.spacepoints = acts.examples.ReadDataHandle(
-                self, acts.SpacePointContainer, "Spacepoints"
-            )
-            self.spacepoints.initialize("spacepoints")
 
         def execute(self, context):
             prototracks = self.prototracks(context.eventStore)

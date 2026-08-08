@@ -390,11 +390,8 @@ TrackingGeometry::geoIdSurfaceMap() const {
 
 void TrackingGeometry::visualize(IVisualization3D& helper,
                                  const GeometryContext& gctx,
-                                 const ViewConfig& viewConfig,
-                                 const ViewConfig& portalViewConfig,
-                                 const ViewConfig& sensitiveViewConfig) const {
-  highestTrackingVolume()->visualize(helper, gctx, viewConfig, portalViewConfig,
-                                     sensitiveViewConfig);
+                                 const ViewConfigFunc& viewConfigFactory) const {
+  highestTrackingVolume()->visualize(helper, gctx, viewConfigFactory);
 }
 
 void TrackingGeometry::apply(TrackingGeometryVisitor& visitor) const {
