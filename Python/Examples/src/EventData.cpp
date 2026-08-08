@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/AnyTrackProxy.hpp"
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -496,6 +498,24 @@ void addEventData(py::module& mex) {
             std::make_shared<Acts::ConstVectorMultiTrajectory>(
                 std::move(self.trackStateContainer()))};
       });
+
+  py::classh<Acts::AnyMutableTrackProxy>(mex, "AnyMutableTrackProxy")
+      .def(py::init<TrackProxy>());
+  py::implicitly_convertible<TrackProxy, Acts::AnyMutableTrackProxy>();
+
+  py::classh<Acts::AnyConstTrackProxy>(mex, "AnyConstTrackProxy")
+      .def(py::init<ConstTrackProxy>());
+  py::implicitly_convertible<ConstTrackProxy, Acts::AnyConstTrackProxy>();
+
+  py::classh<Acts::AnyMutableTrackStateProxy>(mex, "AnyMutableTrackStateProxy")
+      .def(py::init<TrackStateProxy&>());
+  py::implicitly_convertible<TrackStateProxy,
+                             Acts::AnyMutableTrackStateProxy>();
+
+  py::classh<Acts::AnyConstTrackStateProxy>(mex, "AnyConstTrackState")
+      .def(py::init<ConstTrackStateProxy&>());
+  py::implicitly_convertible<ConstTrackStateProxy,
+                             Acts::AnyConstTrackStateProxy>();
 
   // bind measurements
   // The measurement proxy is bound as a ProxyTether (see ProxyTether.hpp). The
