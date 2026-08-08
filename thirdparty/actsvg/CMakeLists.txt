@@ -22,6 +22,8 @@ set(ACTSVG_BUILD_PYTHON_BINDINGS
     "Build python bindings for actsvg if ACTS python bindings are enabled"
 )
 
+set(ACTSVG_USE_SYSTEM_PYBIND11 ON CACHE BOOL "Use pybind11 set up by ACTS")
+
 set(ACTSVG_BUILD_WEB ON CACHE BOOL "Build the web plugin of ACTSVG")
 
 # Now set up its build.
