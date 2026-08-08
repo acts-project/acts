@@ -53,6 +53,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
+      - name: Check ActSVG reconfiguration
+        run: |
+          CI/dependencies/run.sh .env cmake -B build-actsvg-reconfigure -S . \
+            -GNinja \
+            -DACTS_BUILD_PLUGIN_ACTSVG=ON
+          CI/dependencies/run.sh .env cmake -B build-actsvg-reconfigure -S . \
+            -GNinja \
+            -DACTS_BUILD_PLUGIN_ACTSVG=ON
+
       - name: Restore ccache
         id: ccache-restore
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
