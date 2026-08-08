@@ -37,10 +37,8 @@ class surface_grid_writer : public detail::grid_writer {
 
   /// Convert the header information into its payload
   template <typename detector_t>
-  static auto header_to_payload(const detector_t& det,
-                                const std::string_view det_name) {
-    return grid_writer_t::header_to_payload(tag, det.accelerator_store(),
-                                            det_name);
+  static auto to_header_payload(const detector_t& det) {
+    return grid_writer_t::to_header_payload(det.accelerator_store());
   }
 
   /// Convert the grid collections of a detector @param det into their io

@@ -14,7 +14,7 @@
 #include "detray/utils/type_list.hpp"
 
 // Detray IO include(s)
-#include "detray/io/frontend/detector_reader.hpp"
+#include "detray/io/json/detector_reader.hpp"
 
 // Detray benchmark include(s)
 #include "detray/benchmarks/cpu/propagation_benchmark.hpp"
@@ -129,7 +129,7 @@ int main(int argc, char** argv) {
   reader_cfg.do_check(true);
 
   const auto [det, names] =
-      detray::io::read_detector<detector_t>(host_mr, reader_cfg);
+      detray::io::read_detector_json<detector_t>(host_mr, reader_cfg);
   const std::string& det_name = det.name(names);
 
   // Generate the track samples

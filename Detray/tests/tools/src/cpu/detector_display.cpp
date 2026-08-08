@@ -12,7 +12,7 @@
 #include "detray/navigation/volume_graph.hpp"
 
 // Detray IO include(s)
-#include "detray/io/frontend/detector_reader.hpp"
+#include "detray/io/json/detector_reader.hpp"
 #include "detray/io/utils/create_path.hpp"
 
 // Detray plugin include(s)
@@ -129,7 +129,7 @@ int main(int argc, char** argv) {
   vecmem::host_memory_resource host_mr;
 
   const auto [det, names] =
-      detray::io::read_detector<detector_t>(host_mr, reader_cfg);
+      detray::io::read_detector_json<detector_t>(host_mr, reader_cfg);
 
   // Style settings for the Illustrator
   const unsigned int font_size{vm["font_size"].as<unsigned int>()};

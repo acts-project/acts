@@ -17,11 +17,8 @@
 #include <memory>
 #include <string>
 
-#include <detray/builders/detector_builder.hpp>
-#include <detray/io/backend/geometry_reader.hpp>
-#include <detray/io/backend/homogeneous_material_reader.hpp>
-#include <detray/io/backend/material_map_reader.hpp>
-#include <detray/io/backend/surface_grid_reader.hpp>
+#include <detray/io/frontend/detector_reader.hpp>
+#include <detray/io/frontend/detector_reader_config.hpp>
 #include <vecmem/memory/memory_resource.hpp>
 
 namespace ActsPlugins {
@@ -112,38 +109,18 @@ class DetrayGeometryConverter {
     auto payloads = m_cfg.payloadConverter->convertTrackingGeometry(
         gctx, *trackingGeometry);
 
-    // ── Build detray detector from payloads ───────────────────────────────
-    detray::detector_builder<metadata_t> detectorBuilder{};
-
-    detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
-                                                          *payloads.detector);
-
-    if (m_cfg.convertMaterial) {
-      detray::io::homogeneous_material_reader::from_payload<detector_t>(
-          detectorBuilder, *payloads.homogeneousMaterial);
-
-      detray::io::material_map_reader<std::integral_constant<std::size_t, 2>>::
-          from_payload<detector_t>(detectorBuilder,
-                                   std::move(*payloads.materialGrids));
-    }
-
-    if (m_cfg.convertSurfaceGrids) {
-      detray::io::surface_grid_reader<typename detector_t::surface_type,
-                                      std::integral_constant<std::size_t, 0>,
-                                      std::integral_constant<std::size_t, 2>>::
-          template from_payload<detector_t>(detectorBuilder,
-                                            *payloads.surfaceGrids);
-    }
-
     if (!detectorName.empty()) {
-      detectorBuilder.set_name(detectorName);
-    } else if (payloads.names.contains(0)) {
-      detectorBuilder.set_name(payloads.names.at(0));
+      payloads.names.set_detector_name(detectorName);
     }
+
+    // ── Build detray detector from payloads ───────────────────────────────
+    auto readerCfg = detray::io::detector_reader_config{}.do_check(true);
+    const auto [detector, names] =
+        detray::io::read_detector<detector_t>(mr, readerCfg, payloads);
 
     DetrayGeometry<metadata_t> result{};
-    result.detector =
-        std::make_shared<detector_t>(detectorBuilder.build(mr, result.names));
+    result.detector = std::make_shared<detector_t>(std::move(detector));
+    result.names = std::move(names);
 
     return result;
   }
