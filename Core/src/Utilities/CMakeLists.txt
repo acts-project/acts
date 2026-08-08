@@ -13,7 +13,10 @@ target_sources(
         ScopedTimer.cpp
         TransformComparator.cpp
         Histogram.cpp
+        GaussianHistogramFit.cpp
+        GaussianHistogramFitError.cpp
         IMultiAxis.cpp
+        detail/NumericalMinimizationError.cpp
         detail/QuaternionFromTwoVectorsDouble.cpp
         detail/QuaternionFromTwoVectorsFloat.cpp
         detail/CreateMultiAxis3Open.cpp
