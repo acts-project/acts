@@ -24,6 +24,13 @@ namespace Acts {
 
 class Surface;
 
+/// @brief Assignment of recorded material interactions to assignment candidates
+///
+/// This turns the candidates found by an @ref Acts::IAssignmentFinder into the
+/// final per-surface assignments, applying global and local vetoes and optional
+/// re-assignments along the way.
+///
+/// @ingroup material_mapping
 namespace MaterialInteractionAssignment {
 
 /// The result struct of the assignment run
