@@ -13,7 +13,9 @@ def test_generate_and_read_detector():
     geometry_file = os.path.join(out_dir, "toy_detector_geometry.json")
     assert os.path.exists(geometry_file)
 
-    detector, names = detray.core.readDetector(geometry_file)
+    reader_config = detray.core.DetectorReaderConfig().addFile(geometry_file)
+
+    detector, names = detray.core.readDetector(reader_config)
     assert isinstance(names, detray.core.NameMap)
-    assert detector.n_volumes() == 22
-    assert detector.n_surfaces() == 3230
+    assert len(detector.volumes) == 22
+    assert len(detector.surfaces) == 3230

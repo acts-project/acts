@@ -8,6 +8,8 @@
 
 import argparse
 
+from utils import units
+
 # ------------------------------------------------------------------------------
 # Options parsing
 # ------------------------------------------------------------------------------
@@ -140,3 +142,71 @@ def propagation_options():
     )
 
     return parser
+
+
+""" Fill a detray propagation config from the parsed commandline options """
+
+
+def fill_propagation_config(args, config):
+
+    # Configure the navigator
+    navigation = config.navigation
+    intersection = navigation.intersection
+
+    if args.search_window is not None:
+        if len(args.search_window) != 2:
+            raise ValueError(
+                "Incorrect surface grid search window. Please provide two integer distances."
+            )
+        navigation.searchWindow = [args.search_window[0], args.search_window[1]]
+
+    if args.min_mask_tol is not None:
+        intersection.minMaskTolerance = args.min_mask_tol * units.mm
+    if args.max_mask_tol is not None:
+        intersection.maxMaskTolerance = args.max_mask_tol * units.mm
+    if args.mask_tol_scalor is not None:
+        intersection.maskToleranceScalor = args.mask_tol_scalor
+    if args.overstep_tol is not None:
+        intersection.overstepTolerance = args.overstep_tol * units.um
+    if args.path_tol is not None:
+        intersection.pathTolerance = args.path_tol * units.um
+
+    if args.estimate_scattering_noise:
+        navigation.estimateScatteringNoise = True
+
+        if args.n_scattering_stddev is not None:
+            navigation.nScatteringStddev = args.n_scattering_stddev
+        if args.accumulated_error is not None:
+            navigation.accumulatedError = args.accumulated_error
+    else:
+        navigation.estimateScatteringNoise = False
+
+        if args.n_scattering_stddev is not None:
+            raise ValueError(
+                "Option 'n_scattering_stddev' cannot not be configured unless 'estimate_scattering_noise' is activated"
+            )
+        if args.accumulated_error is not None:
+            raise ValueError(
+                "Option 'accumulated_error' cannot not be configured unless 'estimate_scattering_noise' is activated"
+            )
+
+    # Configure the stepper
+    stepping = config.stepping
+
+    if args.min_step_size is not None:
+        stepping.minStepsize = args.min_step_size * units.mm
+    if args.max_step_size is not None:
+        stepping.stepConstraint = args.max_step_size * units.mm
+    if args.rk_error_tol is not None:
+        stepping.rkErrorTol = args.rk_error_tol * units.mm
+    if args.path_limit is not None:
+        stepping.pathLimit = args.path_limit * units.m
+    stepping.doCovarianceTransport = args.covariance_transport is True
+    if args.bethe_energy_loss is not None:
+        stepping.useMeanLoss = args.bethe_energy_loss
+    if args.energy_loss_grad is not None:
+        stepping.useElossGradient = args.energy_loss_grad
+    if args.bfield_grad is not None:
+        stepping.useFieldGradient = args.bfield_grad
+
+    return config

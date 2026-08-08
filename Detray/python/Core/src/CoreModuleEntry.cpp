@@ -13,6 +13,12 @@
 #include "detray/io/frontend/detector_reader.hpp"
 #include "detray/io/frontend/detector_reader_config.hpp"
 
+// Detray propagation include(s)
+#include "detray/propagator/propagation_config.hpp"
+
+// Detray event generator include(s)
+#include "detray/test/common/event_generator/uniform_track_generator_config.hpp"
+
 // Detray algebra plugin + detector metadata
 #include "algebra/array.hpp"
 #include "detray/definitions/algebra.hpp"
@@ -26,8 +32,15 @@
 #include <pybind11/stl.h>
 
 // System include(s)
+#include <array>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
+#include <sstream>
+#include <stdexcept>
 #include <string>
+#include <string_view>
+#include <tuple>
 #include <utility>
 
 namespace py = pybind11;
@@ -38,8 +51,64 @@ namespace py = pybind11;
 
 namespace {
 
-using algebra_t = detray::array<DETRAY_CUSTOM_SCALARTYPE>;
+using reader_config_t = detray::io::detector_reader_config;
+using intersection_config_t = detray::intersection::config;
+using navigation_config_t = detray::navigation::config;
+using stepping_config_t = detray::stepping::config;
+using propagation_config_t = detray::propagation::config;
+using scalar_t = DETRAY_CUSTOM_SCALARTYPE;
+using track_generator_config_t =
+    detray::uniform_track_generator_config<scalar_t>;
+
+template <typename T>
+std::string to_string(const T &obj) {
+  std::ostringstream os;
+  os << obj;
+  return os.str();
+}
+
+/// Bind @p Container , a read-only vector with elements type @p Element.
+template <typename Container, typename Element>
+void bind_const_vector(py::module_ &m, const char *name) {
+  py::class_<Container>(m, name)
+      .def("__len__", [](const Container &c) { return c.size(); })
+      .def(
+          "__getitem__",
+          [](const Container &c, py::ssize_t i) -> const Element & {
+            const auto n = static_cast<py::ssize_t>(c.size());
+            if (i < 0) {
+              i += n;
+            }
+            if (i < 0 || i >= n) {
+              throw py::index_error();
+            }
+            return c[static_cast<std::size_t>(i)];
+          },
+          py::arg("index"), py::return_value_policy::reference_internal,
+          "Element at a given index")
+      .def(
+          "__iter__",
+          [](const Container &c) {
+            return py::make_iterator<
+                py::return_value_policy::reference_internal,
+                decltype(c.begin()), decltype(c.end()), const Element &>(
+                c.begin(), c.end());
+          },
+          py::keep_alive<0, 1>(), "Iterate over the elements");
+}
+
+using algebra_t = detray::array<scalar_t>;
 using detector_t = detray::detector<detray::default_metadata<algebra_t>>;
+using volume_descriptor_t = detector_t::volume_type;
+using volume_container_t = detector_t::volume_container;
+using surface_descriptor_t = detector_t::surface_type;
+using surface_store_t = detector_t::surface_lookup_container;
+using surface_container_t = detector_t::surface_container;
+using geometry_context_t = detector_t::geometry_context;
+using transform_store_t = detector_t::transform_container;
+using mask_store_t = detector_t::mask_container;
+using material_store_t = detector_t::material_container;
+using accelerator_store_t = detector_t::accelerator_container;
 
 /// Owns a detector together with the memory resource its data lives in.
 struct detector_handle {
@@ -47,13 +116,10 @@ struct detector_handle {
   detector_t detector;
 };
 
-/// Read a detector (default metadata) from a JSON file.
+/// Read a detector (default metadata) as configured by @param cfg .
 std::pair<detector_handle, detray::name_map> read_detector(
-    const std::string &file_name) {
+    const reader_config_t &cfg) {
   auto mr = std::make_unique<vecmem::host_memory_resource>();
-
-  detray::io::detector_reader_config cfg{};
-  cfg.add_file(file_name);
 
   auto [det, names] = detray::io::read_detector<detector_t>(*mr, cfg);
 
@@ -62,21 +128,339 @@ std::pair<detector_handle, detray::name_map> read_detector(
 
 }  // namespace
 
+// Treat the detector's volume/portal containers as opaque so that returning
+// them by reference exposes the live storage instead of copying it into a
+// Python list (the default for std::vector via pybind11/stl.h).
+PYBIND11_MAKE_OPAQUE(volume_container_t)
+PYBIND11_MAKE_OPAQUE(surface_container_t)
+
 PYBIND11_MODULE(DetrayPythonBindings, m) {
   m.doc() = "Detray core bindings";
 
-  py::class_<detector_handle>(
-      m, "DetectorDefaultMetadata" STRINGIFY_HELPER(DETRAY_CUSTOM_SCALARTYPE))
+  py::class_<reader_config_t>(m, "DetectorReaderConfig")
+      .def(py::init<>())
+      .def_property_readonly("files", &reader_config_t::files, "Input files")
+      .def_property(
+          "doCheck", [](const reader_config_t &c) { return c.do_check(); },
+          [](reader_config_t &c, bool v) { c.do_check(v); },
+          "Do detector consistency check")
+      .def_property(
+          "verboseCheck",
+          [](const reader_config_t &c) { return c.verbose_check(); },
+          [](reader_config_t &c, bool v) { c.verbose_check(v); },
+          "Verbosity of the detector consistency check")
       .def(
-          "n_volumes",
-          [](const detector_handle &d) { return d.detector.volumes().size(); },
-          "Number of volumes in the detector")
-      .def(
-          "n_surfaces",
-          [](const detector_handle &d) { return d.detector.surfaces().size(); },
-          "Number of surfaces in the detector");
-  py::class_<detray::name_map>(m, "NameMap");
+          "addFile",
+          [](reader_config_t &c, const std::string &f) -> reader_config_t & {
+            return c.add_file(f);
+          },
+          py::arg("fileName"), py::return_value_policy::reference_internal,
+          "Add an input file")
+      .def("__repr__", &to_string<reader_config_t>);
 
-  m.def("readDetector", &read_detector, py::arg("fileName"),
-        "Read a detector from a JSON file");
+  py::class_<intersection_config_t>(m, "IntersectionConfig")
+      .def(py::init<>())
+      .def_readwrite("minMaskTolerance",
+                     &intersection_config_t::min_mask_tolerance,
+                     "Minimum mask tolerance")
+      .def_readwrite("maxMaskTolerance",
+                     &intersection_config_t::max_mask_tolerance,
+                     "Maximum mask tolerance")
+      .def_readwrite("maskToleranceScalor",
+                     &intersection_config_t::mask_tolerance_scalor,
+                     "Mask tolerance scale factor")
+      .def_readwrite("pathTolerance", &intersection_config_t::path_tolerance,
+                     "Tolerance to decide when a track is on a surface")
+      .def_readwrite("overstepTolerance",
+                     &intersection_config_t::overstep_tolerance,
+                     "How far behind the track position to look for candidates")
+      .def("__repr__", &to_string<intersection_config_t>);
+
+  py::class_<navigation_config_t>(m, "NavigationConfig")
+      .def(py::init<>())
+      .def_readwrite("intersection", &navigation_config_t::intersection,
+                     "Intersection configuration")
+      .def_readwrite(
+          "searchWindow", &navigation_config_t::search_window,
+          "Search window size for grid based acceleration structures")
+      .def_readwrite(
+          "accumulatedError", &navigation_config_t::accumulated_error,
+          "Percentage of total track path to assume as accumulated error")
+      .def_readwrite(
+          "nScatteringStddev", &navigation_config_t::n_scattering_stddev,
+          "No. of standard deviations to assume to model the scattering noise")
+      .def_readwrite("estimateScatteringNoise",
+                     &navigation_config_t::estimate_scattering_noise,
+                     "Add adaptive mask tolerance to navigation")
+      .def("__repr__", &to_string<navigation_config_t>);
+
+  py::class_<stepping_config_t>(m, "SteppingConfig")
+      .def(py::init<>())
+      .def_readwrite("minStepsize", &stepping_config_t::min_stepsize,
+                     "Minimum step size")
+      .def_readwrite("rkErrorTol", &stepping_config_t::rk_error_tol,
+                     "Runge-Kutta numeric error tolerance")
+      .def_readwrite("stepConstraint", &stepping_config_t::step_constraint,
+                     "Step size constraint")
+      .def_readwrite("pathLimit", &stepping_config_t::path_limit,
+                     "Maximum path length of track")
+      .def_readwrite("maxRkUpdates", &stepping_config_t::max_rk_updates,
+                     "Maximum number of Runge-Kutta step trials")
+      .def_readwrite("useMeanLoss", &stepping_config_t::use_mean_loss,
+                     "Use mean energy loss (Bethe), otherwise use most "
+                     "probable energy loss (Landau)")
+      .def_readwrite("useElossGradient", &stepping_config_t::use_eloss_gradient,
+                     "Use energy loss gradient in error propagation")
+      .def_readwrite("useFieldGradient", &stepping_config_t::use_field_gradient,
+                     "Use field gradient in error propagation")
+      .def_readwrite("doCovarianceTransport",
+                     &stepping_config_t::do_covariance_transport,
+                     "Do covariance transport")
+      .def("__repr__", &to_string<stepping_config_t>);
+
+  py::class_<propagation_config_t>(m, "PropagationConfig")
+      .def(py::init<>())
+      .def_readwrite("navigation", &propagation_config_t::navigation,
+                     "Navigation configuration")
+      .def_readwrite("stepping", &propagation_config_t::stepping,
+                     "Stepping configuration")
+      .def("__repr__", &to_string<propagation_config_t>);
+
+  py::class_<track_generator_config_t>(m, "TrackGeneratorConfig")
+      .def(py::init<>())
+      .def_property(
+          "seed", [](const track_generator_config_t &c) { return c.seed(); },
+          [](track_generator_config_t &c, std::uint64_t s) { c.seed(s); },
+          "Monte-Carlo seed")
+      .def(
+          "nTracks",
+          [](const track_generator_config_t &c) { return c.n_tracks(); },
+          "Total number of tracks")
+      .def_property(
+          "phiRange",
+          [](const track_generator_config_t &c) {
+            const auto r = c.phi_range();
+            return std::make_pair(r[0], r[1]);
+          },
+          [](track_generator_config_t &c,
+             const std::pair<scalar_t, scalar_t> &r) {
+            c.phi_range(r.first, r.second);
+          },
+          "Phi range (min, max) (native rad)")
+      .def_property(
+          "thetaRange",
+          [](const track_generator_config_t &c) {
+            const auto r = c.theta_range();
+            return std::make_pair(r[0], r[1]);
+          },
+          [](track_generator_config_t &c,
+             const std::pair<scalar_t, scalar_t> &r) {
+            c.theta_range(r.first, r.second);
+          },
+          "Theta range (min, max) (native rad)")
+      .def_property(
+          "etaRange",
+          [](const track_generator_config_t &c) {
+            const auto r = c.eta_range();
+            return std::make_pair(r[0], r[1]);
+          },
+          [](track_generator_config_t &c,
+             const std::pair<scalar_t, scalar_t> &r) {
+            c.eta_range(r.first, r.second);
+          },
+          "Eta range (min, max)")
+      .def_property(
+          "phiSteps",
+          [](const track_generator_config_t &c) { return c.phi_steps(); },
+          [](track_generator_config_t &c, std::size_t n) { c.phi_steps(n); },
+          "Number of phi steps")
+      .def_property(
+          "thetaSteps",
+          [](const track_generator_config_t &c) { return c.theta_steps(); },
+          [](track_generator_config_t &c, std::size_t n) { c.theta_steps(n); },
+          "Number of theta steps")
+      .def_property(
+          "etaSteps",
+          [](const track_generator_config_t &c) { return c.eta_steps(); },
+          [](track_generator_config_t &c, std::size_t n) { c.eta_steps(n); },
+          "Number of eta steps")
+      .def_property(
+          "uniformEta",
+          [](const track_generator_config_t &c) { return c.uniform_eta(); },
+          [](track_generator_config_t &c, bool b) { c.uniform_eta(b); },
+          "Whether to step uniformly in eta")
+      .def_property(
+          "origin",
+          [](const track_generator_config_t &c) {
+            const auto &o = c.origin();
+            return std::make_tuple(o[0], o[1], o[2]);
+          },
+          [](track_generator_config_t &c,
+             const std::tuple<scalar_t, scalar_t, scalar_t> &o) {
+            c.origin(std::get<0>(o), std::get<1>(o), std::get<2>(o));
+          },
+          "Track origin")
+      .def(
+          "pT",
+          [](track_generator_config_t &c,
+             scalar_t p) -> track_generator_config_t & { return c.p_T(p); },
+          py::arg("p"), py::return_value_policy::reference,
+          "Set the transverse momentum magnitude")
+      .def(
+          "pTot",
+          [](track_generator_config_t &c,
+             scalar_t p) -> track_generator_config_t & { return c.p_tot(p); },
+          py::arg("p"), py::return_value_policy::reference,
+          "Set the total momentum magnitude")
+      .def(
+          "momRange",
+          [](const track_generator_config_t &c) {
+            const auto r = c.mom_range();
+            return std::make_pair(r[0], r[1]);
+          },
+          "Momentum range")
+      .def_property(
+          "randomizeCharge",
+          [](const track_generator_config_t &c) {
+            return c.randomize_charge();
+          },
+          [](track_generator_config_t &c, bool b) { c.randomize_charge(b); },
+          "Randomly flip the charge sign")
+      .def_property(
+          "time", [](const track_generator_config_t &c) { return c.time(); },
+          [](track_generator_config_t &c, scalar_t t) { c.time(t); },
+          "Track time")
+      .def_property(
+          "charge",
+          [](const track_generator_config_t &c) { return c.charge(); },
+          [](track_generator_config_t &c, scalar_t q) { c.charge(q); },
+          "Track charge")
+      .def(
+          "isPT", [](const track_generator_config_t &c) { return c.is_pT(); },
+          "Whether the momentum magnitude is interpreted as transverse")
+      .def("__repr__", &to_string<track_generator_config_t>);
+
+  py::class_<volume_descriptor_t>(m, "VolumeDescriptor");
+  py::class_<surface_descriptor_t>(m, "SurfaceDescriptor");
+  bind_const_vector<surface_store_t, surface_descriptor_t>(m, "SurfaceStore");
+  bind_const_vector<volume_container_t, volume_descriptor_t>(m,
+                                                             "VolumeContainer");
+  bind_const_vector<surface_container_t, surface_descriptor_t>(
+      m, "SurfaceContainer");
+  py::class_<geometry_context_t>(m, "GeometryContext");
+  py::class_<transform_store_t>(m, "TransformStore");
+  py::class_<mask_store_t>(m, "MaskStore");
+  py::class_<material_store_t>(m, "MaterialStore");
+  py::class_<accelerator_store_t>(m, "AcceleratorStore");
+  py::class_<detray::name_map>(m, "NameMap")
+      .def(py::init<>())
+      .def_property(
+          "detectorName",
+          [](const detray::name_map &n) { return n.get_detector_name(); },
+          [](detray::name_map &n, std::string_view name) {
+            n.set_detector_name(name);
+          },
+          "Name of the detector")
+      .def("empty", &detray::name_map::empty,
+           "Whether no volume names are mapped")
+      .def(
+          "__contains__",
+          [](const detray::name_map &n, detray::dindex index) {
+            return n.contains(index);
+          },
+          py::arg("index"), "Whether a volume index is mapped")
+      .def(
+          "__contains__",
+          [](const detray::name_map &n, std::string_view name) {
+            return n.contains(name);
+          },
+          py::arg("name"), "Whether a volume name is mapped")
+      .def(
+          "__setitem__",
+          [](detray::name_map &n, detray::dindex index,
+             const std::string &name) { n.emplace(index, name); },
+          py::arg("index"), py::arg("name"), "Map a volume index to a name")
+      .def(
+          "__getitem__",
+          [](const detray::name_map &n, detray::dindex index) -> std::string {
+            try {
+              return n.at(index);
+            } catch (const std::out_of_range &) {
+              throw py::key_error(std::to_string(index));
+            }
+          },
+          py::arg("index"), "Volume name at a volume index")
+      .def(
+          "__getitem__",
+          [](const detray::name_map &n,
+             std::string_view name) -> detray::dindex {
+            try {
+              return n.at(name);
+            } catch (const std::out_of_range &) {
+              throw py::key_error(std::string{name});
+            }
+          },
+          py::arg("name"), "Volume index at a volume name")
+      .def("clear", &detray::name_map::clear, "Clear detector and volume names")
+      .def("clearNames", &detray::name_map::clear_names,
+           "Clear volume names, keep the detector name")
+      .def("__repr__", [](const detray::name_map &n) {
+        return "NameMap(detectorName='" + n.get_detector_name() + "')";
+      });
+
+  py::class_<detector_handle>(
+      m, "DetectorDefaultMetadata" STRINGIFY_HELPER(scalar_t))
+      .def(
+          "name",
+          [](const detector_handle &d, const detray::name_map &names) {
+            return d.detector.name(names);
+          },
+          py::arg("names"), "Detector name")
+      .def_property_readonly(
+          "volumes",
+          [](const detector_handle &d) -> const volume_container_t & {
+            return d.detector.volumes();
+          },
+          py::return_value_policy::reference_internal, "All volumes")
+      .def_property_readonly(
+          "surfaces",
+          [](const detector_handle &d) -> const surface_store_t & {
+            return d.detector.surfaces();
+          },
+          py::return_value_policy::reference_internal, "All surfaces")
+      .def_property_readonly(
+          "portals",
+          [](const detector_handle &d) -> const surface_container_t & {
+            return d.detector.portals();
+          },
+          py::return_value_policy::reference_internal, "All portals")
+      .def_property_readonly(
+          "transformStore",
+          [](const detector_handle &d) -> const transform_store_t & {
+            return d.detector.transform_store();
+          },
+          py::return_value_policy::reference_internal, "Transform store")
+      .def_property_readonly(
+          "maskStore",
+          [](const detector_handle &d) -> const mask_store_t & {
+            return d.detector.mask_store();
+          },
+          py::return_value_policy::reference_internal, "Mask store")
+      .def_property_readonly(
+          "materialStore",
+          [](const detector_handle &d) -> const material_store_t & {
+            return d.detector.material_store();
+          },
+          py::return_value_policy::reference_internal, "Material store")
+      .def_property_readonly(
+          "acceleratorStore",
+          [](const detector_handle &d) -> const accelerator_store_t & {
+            return d.detector.accelerator_store();
+          },
+          py::return_value_policy::reference_internal, "Accelerator store")
+      .def("__repr__",
+           [](const detector_handle &d) { return to_string(d.detector); });
+
+  m.def("readDetector", &read_detector, py::arg("config"),
+        "Read a detector as configured by a DetectorReaderConfig");
 }
