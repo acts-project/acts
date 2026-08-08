@@ -9,6 +9,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 
 #include <iomanip>
@@ -34,7 +35,9 @@ PerigeeSurface::PerigeeSurface(const GeometryContext& gctx,
 
 PerigeeSurface& PerigeeSurface::operator=(const PerigeeSurface& other) {
   if (this != &other) {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     LineSurface::operator=(other);
+    ACTS_POP_IGNORE_DEPRECATED()
   }
   return *this;
 }

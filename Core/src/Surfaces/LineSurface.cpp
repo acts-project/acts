@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
@@ -48,7 +49,9 @@ LineSurface::LineSurface(const GeometryContext& gctx, const LineSurface& other,
 
 LineSurface& LineSurface::operator=(const LineSurface& other) {
   if (this != &other) {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     Surface::operator=(other);
+    ACTS_POP_IGNORE_DEPRECATED()
     m_bounds = other.m_bounds;
   }
   return *this;

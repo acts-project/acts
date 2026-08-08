@@ -95,6 +95,11 @@ class CylinderSurface : public RegularSurface {
   ///
   /// @param other is the source cylinder for the copy
   /// @return Reference to this CylinderSurface after assignment
+  // TODO: remove this copy-assignment operator; copy surfaces via
+  // Surface::makeShared<CylinderSurface>(other) instead (SonarCloud cpp:S3624).
+  [[deprecated(
+      "Surface copy-assignment is deprecated and will be removed; copy via "
+      "Surface::makeShared<CylinderSurface>(other) instead.")]]
   CylinderSurface& operator=(const CylinderSurface& other);
 
   /// The binning position method - is overloaded for r-type binning
