@@ -79,6 +79,7 @@ if(ACTS_ENABLE_CUDA)
         ActsPluginGnn
         PRIVATE
             src/CudaTrackBuilding.cu
+            src/DWalkTrackBuilding.cu
             src/JunctionRemoval.cu
             src/Tensor.cu
             src/Stages.cu
