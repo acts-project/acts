@@ -11,14 +11,14 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsPlugins/Root/HistogramConverter.hpp"
+#include "ActsPlugins/Root/RootHistogramFit.hpp"
 
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 #include <TEfficiency.h>
 #include <TFile.h>
-#include <TFitResult.h>
-#include <TFitResultPtr.h>
 #include <TH1.h>
 #include <TH2.h>
 #include <TH3.h>
@@ -35,8 +35,9 @@ RootTrackFitterPerformanceWriter::RootTrackFitterPerformanceWriter(
       m_collector(
           TrackFitterPerformanceCollector::Config{
               m_cfg.resPlotToolConfig, m_cfg.effPlotToolConfig,
-              m_cfg.trackSummaryPlotToolConfig, m_cfg.fitMinEntries,
-              m_cfg.fitSigmaRange, m_cfg.fitIterations},
+              m_cfg.trackSummaryPlotToolConfig, ActsPlugins::RootHistogramFit(),
+              m_cfg.fitMinEntries, m_cfg.fitSigmaRange, m_cfg.fitIterations,
+              m_cfg.warningThresholdFitFailureFraction},
           logger().clone()) {
   // trajectories collection name is already checked by base ctor
   if (m_cfg.inputParticles.empty()) {
@@ -79,45 +80,21 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
   const auto& effPlotTool = m_collector.effPlotTool();
   const auto& trackSummaryPlotTool = m_collector.trackSummaryPlotTool();
 
-  // Helper lambda to write 2D histogram and extract mean/width profiles
-  const auto writeWithRefinement = [this](auto& hist,
-                                          const std::string& meanPrefix,
-                                          const std::string& widthPrefix) {
-    hist.Write();
-
-    // Get the histogram name and extract the suffix (e.g., "_d0_vs_eta")
-    const std::string baseName = hist.GetName();
-    const std::string suffix = baseName.substr(baseName.find('_'));
-
-    auto [meanHist, widthHist, fitFailureFraction] =
-        ActsPlugins::extractMeanWidthProfiles(
-            hist, meanPrefix + suffix, widthPrefix + suffix,
-            m_cfg.fitMinEntries, m_cfg.fitSigmaRange, m_cfg.fitIterations,
-            logger());
-    if (fitFailureFraction >= m_cfg.warningThresholdFitFailureFraction) {
-      ACTS_WARNING("Fit failures for " << baseName << ": "
-                                       << fitFailureFraction * 100 << "%");
-    }
-
-    meanHist->Write();
-    widthHist->Write();
-  };
-
   // Write residual histograms
   for (const auto& [name, hist] : resPlotTool.res()) {
     toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : resPlotTool.resVsEta()) {
-    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
+    toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : resPlotTool.resVsPt()) {
-    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
+    toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : resPlotTool.resVsEtaPhi()) {
-    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
+    toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : resPlotTool.resVsEtaPt()) {
-    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
+    toRoot(hist)->Write();
   }
 
   // Write pull histograms
@@ -125,16 +102,25 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
     toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : resPlotTool.pullVsEta()) {
-    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
+    toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : resPlotTool.pullVsPt()) {
-    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
+    toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : resPlotTool.pullVsEtaPhi()) {
-    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
+    toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : resPlotTool.pullVsEtaPt()) {
-    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
+    toRoot(hist)->Write();
+  }
+
+  // Write the fitted mean/width profiles
+  const auto profiles = m_collector.fitProfiles();
+  for (const auto& profile : profiles.profiles1) {
+    toRoot(profile)->Write();
+  }
+  for (const auto& profile : profiles.profiles2) {
+    toRoot(profile)->Write();
   }
 
   // Write efficiency histograms

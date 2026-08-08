@@ -430,10 +430,14 @@ void addEventData(py::module& mex) {
   mex.attr("kTrackIndexInvalid") = Acts::kTrackIndexInvalid;
 
   py::class_<IndexSourceLink>(mex, "IndexSourceLink")
+      .def(py::init<Acts::GeometryIdentifier, Index>(), py::arg("geometryId"),
+           py::arg("index"))
       .def("FromSourceLink",
            [](Acts::SourceLink const& sl) { return sl.get<IndexSourceLink>(); })
       .def("index", &IndexSourceLink::index)
-      .def("geometryId", &IndexSourceLink::geometryId);
+      .def("geometryId", &IndexSourceLink::geometryId)
+      .def("toSourceLink",
+           [](const IndexSourceLink& self) { return Acts::SourceLink{self}; });
 
   py::class_<TrackProxy>(mex, "TrackProxy")
       .def_property(
