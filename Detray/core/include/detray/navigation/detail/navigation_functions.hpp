@@ -39,12 +39,14 @@ struct candidate_search {
   ///                        @c mask_tol
   /// @param overstep_tol how far behind the track pos to look for
   /// candidates
-  template <typename traj_t, typename detector_t, typename navigation_state_t>
+  template <typename traj_t, typename detector_t, typename navigation_state_t,
+            typename scalar_t>
   DETRAY_HOST_DEVICE constexpr void operator()(
       const typename detector_t::surface_type &sf_descr, const detector_t &det,
       const typename detector_t::geometry_context &ctx,
       const traj_t &tangential, navigation_state_t &nav_state,
-      const intersection::config &inter_cfg) const {
+      const intersection::config &inter_cfg,
+      const scalar_t external_mask_tolerance = 0.f) const {
     const auto sf = detray::geometry::surface{det, sf_descr};
 
     DETRAY_DEBUG_HOST("--> Testing surface:\n" << sf);
@@ -53,17 +55,20 @@ struct candidate_search {
     // @c nav_state.insert()
     sf.template visit_mask<
         detray::detail::intersection_initialize<ray_intersector>>(
-        nav_state, tangential, sf_descr, det.transform_store(), ctx, inter_cfg,
-        nav_state.external_tol());
+        nav_state, tangential, sf_descr,
+        det.transform_store().at(sf_descr.transform(), ctx), inter_cfg,
+        external_mask_tolerance);
   }
 
   /// Test the volume links
-  template <typename traj_t, typename detector_t, typename navigation_state_t>
+  template <typename traj_t, typename detector_t, typename navigation_state_t,
+            typename scalar_t>
   DETRAY_HOST_DEVICE void operator()(
       const dindex & /*vol_idx*/, const detector_t & /*det*/,
       const typename detector_t::geometry_context & /*ctx*/,
       const traj_t & /*tangential*/, navigation_state_t & /*nav_state*/,
-      const intersection::config & /*inter_cfg*/) const {
+      const intersection::config & /*inter_cfg*/,
+      const scalar_t /*external_mask_tolerance*/ = 0.f) const {
     // Do not search for daughter volumes
   }
 };
@@ -102,7 +107,8 @@ DETRAY_HOST_DEVICE DETRAY_INLINE constexpr bool update_candidate(
   // the track
   return sf.template visit_mask<
       detray::detail::intersection_update<ray_intersector>>(
-      tangential, candidate, det.transform_store(), ctx, cfg,
+      tangential, candidate,
+      det.transform_store().at(candidate.surface().transform(), ctx), cfg,
       external_mask_tolerance);
 }
 
@@ -213,8 +219,8 @@ DETRAY_HOST_DEVICE
   using volume_t = typename detector_t::volume_type;
   volume.template visit_neighborhood<volume_t::object_id::e_all,
                                      candidate_search>(
-      track, cfg.search_window, ctx, det, ctx, tangential, navigation,
-      intr_cfg);
+      track, cfg.search_window, ctx, det, ctx, tangential, navigation, intr_cfg,
+      navigation.external_tol());
 
   // Determine overall state of the navigation after updating the cache
   navigation::update_status(navigation, cfg);

@@ -44,22 +44,17 @@ struct intersection_initialize {
   /// @return the number of valid intersections
   template <typename mask_group_t, typename mask_range_t,
             typename is_container_t, typename traj_t, typename surface_t,
-            typename transform_container_t, concepts::scalar scalar_t>
+            typename transform_t, concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE inline void operator()(
       const mask_group_t &mask_group, const mask_range_t &mask_range,
       is_container_t &is_container, const traj_t &traj,
-      const surface_t &sf_desc,
-      const transform_container_t &contextual_transforms,
-      const typename transform_container_t::context_type &ctx,
+      const surface_t &sf_desc, const transform_t &ctf,
       const intersection::config &cfg,
       const scalar_t external_mask_tolerance = 0.f) const {
     using mask_t = typename mask_group_t::value_type;
     using shape_t = typename mask_t::shape;
     using algebra_t = typename mask_t::algebra_type;
     using intersection_t = typename is_container_t::value_type;
-
-    // Find the point of intersection with the underlying geometry
-    const auto &ctf = contextual_transforms.at(sf_desc.transform(), ctx);
 
     constexpr intersector_t<shape_t, algebra_t, intersection_t::contains_pos()>
         intersector{};
@@ -184,21 +179,16 @@ struct intersection_update {
   ///
   /// @return the intersection
   template <typename mask_group_t, typename mask_range_t, typename traj_t,
-            typename intersection_t, typename transform_container_t,
+            typename intersection_t, typename transform_t,
             concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE inline bool operator()(
       const mask_group_t &mask_group, const mask_range_t &mask_range,
-      const traj_t &traj, intersection_t &sfi,
-      const transform_container_t &contextual_transforms,
-      const typename transform_container_t::context_type &ctx,
+      const traj_t &traj, intersection_t &sfi, const transform_t &ctf,
       const intersection::config &cfg,
       const scalar_t external_mask_tolerance = 0.f) const {
     using mask_t = typename mask_group_t::value_type;
     using shape_t = typename mask_t::shape;
     using algebra_t = typename mask_t::algebra_type;
-
-    // Find the point of intersection with the underlying geometry
-    const auto &ctf = contextual_transforms.at(sfi.surface().transform(), ctx);
 
     constexpr intersector_t<shape_t, algebra_t, intersection_t::contains_pos()>
         intersector{};
