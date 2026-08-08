@@ -11,6 +11,9 @@ include(FetchContent)
 # Tell the user what's happening.
 message(STATUS "Building Alpaka as part of the TRACCC project")
 
+# Disregard the global C++ flags, to avoid any unhelpful warnings.
+set(CMAKE_CXX_FLAGS)
+
 # Declare where to get Alpaka from.
 set(TRACCC_ALPAKA_SOURCE
     "URL;https://github.com/alpaka-group/alpaka/archive/refs/tags/2.0.0.tar.gz;URL_MD5;7ed1ad266408cdb51f0f12f9e6712cc9"
