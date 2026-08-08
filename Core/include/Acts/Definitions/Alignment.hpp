@@ -20,7 +20,7 @@ namespace Acts {
 /// implicit conversion to an integer. The enum value are thus visible directly
 /// in `namespace Acts` and are prefixed to avoid naming collisions.
 enum AlignmentIndices : unsigned int {
-  // Center of geometry object in global 3D cartesian coordinates
+  // Translation along the local x/y/z axis of the geometry object (length)
   eAlignmentCenter0 = 0u,
   eAlignmentCenter1 = eAlignmentCenter0 + 1u,
   eAlignmentCenter2 = eAlignmentCenter0 + 2u,
