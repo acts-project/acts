@@ -17,7 +17,7 @@
 #include "traccc/clusterization/device/tags.hpp"
 #include "traccc/geometry/detector_design_description.hpp"
 #include "traccc/hip/clusterization/clusterization_algorithm.hpp"
-#include "traccc/hip/utils/stream.hpp"
+#include "traccc/hip/utils/stream_wrapper.hpp"
 
 namespace {
 vecmem::host_memory_resource host_mr;
@@ -32,7 +32,8 @@ cca_function_t get_f_with(traccc::clustering_config cfg) {
     std::map<traccc::geometry_id, traccc::edm::measurement_collection::host>
         geom_to_meas_map;
 
-    traccc::hip::stream stream;
+    vecmem::hip::stream_wrapper vecmem_stream;
+    traccc::hip::stream_wrapper stream{vecmem_stream.stream()};
     vecmem::hip::device_memory_resource device_mr;
     vecmem::hip::async_copy copy{stream.hipStream()};
 
