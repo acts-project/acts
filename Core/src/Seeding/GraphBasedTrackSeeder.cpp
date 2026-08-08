@@ -29,7 +29,9 @@ GraphBasedTrackSeeder::DerivedConfig::DerivedConfig(const Config& config)
 
 GraphBasedTrackSeeder::Options::Options(float bFieldInZ_)
     : bFieldInZ(bFieldInZ_) {
-  ptCoeff = 0.5f * bFieldInZ * Acts::UnitConstants::m;
+  // kappa = B/pT in 1/mm with B in GeV/(e*mm) and pT in GeV; the
+  // position-azimuth slope dphi/dr of a prompt track is kappa/2
+  ptCoeff = 0.5f * bFieldInZ;
 }
 
 GraphBasedTrackSeeder::GraphBasedTrackSeeder(
@@ -91,7 +93,25 @@ void GraphBasedTrackSeeder::createSeeds(
 
   nodeStorage.initializeNodes(m_cfg.useMl);
 
-  nodeStorage.generatePhiIndexing(1.5f * m_cfg.phiSliceWidth);
+  // the phi wrap-around duplication margin must cover the widest sliding
+  // window used during graph building, otherwise doublets are lost near
+  // phi = +/-pi. For displaced (LRT) tracks the window is widened by the
+  // position-azimuth swing asin(d0/r1) - asin(d0/r2) (see buildTheGraph),
+  // which can far exceed the nominal margin of 1.5 phi slice widths.
+  float phiIndexingRange = 1.5f * m_cfg.phiSliceWidth;
+
+  if (m_cfg.lrtMode) {
+    const float ptScale = 0.9f / m_cfg.minPt;
+    const float maxBaseWindow =
+        0.015f + 2.2e-4f * ptScale * m_cfg.maxOuterRadius;
+    const float rMin = std::max(nodeStorage.minNodeRadius(), 1.0f);
+    const float maxD0Window = std::asin(std::min(1.0f, m_cfg.d0Max / rMin));
+    phiIndexingRange =
+        std::max(phiIndexingRange, std::min(std::numbers::pi_v<float> - 0.01f,
+                                            maxBaseWindow + maxD0Window));
+  }
+
+  nodeStorage.generatePhiIndexing(phiIndexingRange);
 
   std::vector<GbtsEdge> edgeStorage;
 
@@ -217,6 +237,13 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
   const float maxCurv = options.ptCoeff / tripletPtMin;
 
+  const bool lrt = m_cfg.lrtMode;
+  const float d0Max2 = m_cfg.d0Max * m_cfg.d0Max;
+
+  // must stay consistent with the chain-length requirement applied in
+  // extractSeedsFromTheGraph
+  const std::uint32_t minLevel = lrt ? 2 : 3;
+
   float maxKappaHighEta =
       m_cfg.lrtMode ? 1.0f * maxCurv : std::sqrt(0.8f) * maxCurv;
   float maxKappaLowEta =
@@ -239,6 +266,14 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
   std::uint32_t nEdges = 0;
 
+  // per-call cut accounting for inefficiency debugging (reported at DEBUG)
+  struct CutStats {
+    std::uint64_t candidates{}, rejIsolated{}, rejDeltaR{}, rejTauAbs{},
+        rejTauRange{}, rejZ0Mask{}, rejZ0{}, rejZOuter{}, rejKappa{},
+        rejPrecut{}, rejMaxEdges{}, neiPairs{}, rejNeiFull{}, rejTauRatio{},
+        rejDPhi{}, rejDCurv{}, rejTriplet{};
+  } cutStats;
+
   // scale factor to get indexes of binned beamspot
   // assuming 16-bit z0 bitmask
 
@@ -257,7 +292,29 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
     const std::uint32_t layerId1 = B1.layerId;
 
-    const bool isBarrel1 = (layerId1 / 10000) == 8;
+    const bool isBarrel1 = B1.isBarrel;
+
+    // gates for the entry-layer graph pruning optimizations. For prompt
+    // seeding these follow the original hardcoded ITk pixel-barrel layer
+    // numbering; in LRT mode the match gate is derived from the connection
+    // graph so that it also applies to strip-only (or any other)
+    // configurations.
+    //
+    // The isolated-node skip and the z0-bitmask veto require the outer node
+    // to have a CONFIRMED outward continuation (an edge that itself found a
+    // neighbour, i.e. two more hits beyond the candidate doublet). That is
+    // only a valid requirement when minLevel >= 3: with minLevel == 2 a bare
+    // triplet is a valid seed and its middle node is never confirmed, so
+    // these vetoes must stay off in LRT mode.
+    const bool entryLayerGate = !lrt && (layerId1 == 80000);
+    // the match gate only requires an EXISTING tau-compatible continuation
+    // edge, which any chain of length >= minLevel provides, so it is valid on
+    // layers close enough to the inside that a chain starting there cannot
+    // reach the minimum level without an outward continuation
+    const bool matchBeforeCreateGate =
+        m_cfg.matchBeforeCreate &&
+        (lrt ? (B1.layerDepth < minLevel - 1)
+             : (layerId1 == 80000 || layerId1 == 81000));
 
     // prepare a sliding window for each bin2 in the group
 
@@ -295,6 +352,17 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
         }
       }
 
+      if (lrt) {
+        // displaced tracks: the position azimuth of the hits swings by up to
+        // asin(d0/r1) - asin(d0/r2) between the two radii on top of the
+        // curvature-driven rotation the nominal window is tuned for
+        const float sinInner =
+            std::min(1.0f, m_cfg.d0Max / std::max(rb1, 1.0f));
+        const float sinOuter =
+            std::min(1.0f, m_cfg.d0Max / std::max(rb2, 1.0f));
+        deltaPhi += std::max(0.0f, std::asin(sinInner) - std::asin(sinOuter));
+      }
+
       phiSlidingWindow[winIdx].bin = &B2;
       phiSlidingWindow[winIdx].hasNodes = true;
       phiSlidingWindow[winIdx].deltaPhi = deltaPhi;
@@ -319,6 +387,16 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
       const float r1 = n1pars[3];
       const float z1 = n1pars[4];
 
+      // arc-length chord factor ingredients for a track with impact
+      // parameter up to d0Max, used by the displaced-aware cut widenings
+      float sD0n1 = 0.0f;
+      float asinD0n1 = 0.0f;
+
+      if (lrt) {
+        sD0n1 = std::sqrt(std::max(r1 * r1 - d0Max2, 0.0f));
+        asinD0n1 = std::asin(std::min(1.0f, m_cfg.d0Max / std::max(r1, 1.0f)));
+      }
+
       // the intermediate loop over sliding windows
       for (auto& slw : phiSlidingWindow) {
         if (!slw.hasNodes) {
@@ -329,7 +407,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
         const std::uint32_t lk2 = B2.layerId;
 
-        const bool isBarrel2 = (lk2 / 10000) == 8;
+        const bool isBarrel2 = B2.isBarrel;
 
         const float deltaPhi = slw.deltaPhi;
 
@@ -357,8 +435,11 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
           const std::uint16_t nodeInfo = B2.vIsConnected[n2Idx];
 
+          ++cutStats.candidates;
+
           // skip isolated nodes as their incoming edges lead to nowhere
-          if ((layerId1 == 80000) && (nodeInfo == 0)) {
+          if (entryLayerGate && (nodeInfo == 0)) {
+            ++cutStats.rejIsolated;
             continue;
           }
 
@@ -373,6 +454,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
           const float dr = r2 - r1;
 
           if (dr < m_cfg.minDeltaRadius) {
+            ++cutStats.rejDeltaR;
             continue;
           }
 
@@ -382,39 +464,38 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
           const float tau = dz / dr;
           const float ftau = std::fabs(tau);
           if (ftau > 36.0f) {
+            ++cutStats.rejTauAbs;
             continue;
           }
 
-          if (ftau < n1pars[0]) {
-            continue;
-          }
-          if (ftau > n1pars[1]) {
-            continue;
-          }
-
-          if (ftau < n2pars[0]) {
-            continue;
-          }
-          if (ftau > n2pars[1]) {
+          if (ftau < n1pars[0] || ftau > n1pars[1] || ftau < n2pars[0] ||
+              ftau > n2pars[1]) {
+            ++cutStats.rejTauRange;
             continue;
           }
 
           const float z0 = z1 - r1 * tau;
 
-          if (layerId1 == 80000) {  // check against non-empty z0 histogram
+          if (entryLayerGate) {  // check against non-empty z0 histogram
             if (!checkZ0BitMask(nodeInfo, z0, m_cfg.minZ0, z0HistoCoeff)) {
+              ++cutStats.rejZ0Mask;
               continue;
             }
           }
 
           if (m_cfg.doubletFilterRZ) {
             if (z0 < m_cfg.minZ0 || z0 > m_cfg.maxZ0) {
+              ++cutStats.rejZ0;
+              ACTS_VERBOSE("rej z0: z0=" << z0 << " r1=" << r1 << " z1=" << z1
+                                         << " r2=" << r2 << " z2=" << z2
+                                         << " tau=" << tau);
               continue;
             }
 
             const float zOuter = z0 + m_cfg.maxOuterRadius * tau;
 
             if (zOuter < cutZMinU || zOuter > cutZMaxU) {
+              ++cutStats.rejZOuter;
               continue;
             }
           }
@@ -422,21 +503,46 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
           const float curv = (phi2 - phi1) / dr;
           const float absCurv = std::abs(curv);
 
-          if (ftau < 4.0f) {  // eta = 2.1
-            if (absCurv > maxKappaLowEta) {
+          // eta = 2.1 boundary between the two kappa cuts
+          const float maxKappa =
+              (ftau < 4.0f) ? maxKappaLowEta : maxKappaHighEta;
+
+          if (absCurv > maxKappa) {
+            if (!lrt) {
+              ++cutStats.rejKappa;
               continue;
             }
-          } else {
-            if (absCurv > maxKappaHighEta) {
+            // displaced tracks: the position-azimuth slope picks up a
+            // geometric term (asin(d0/r1) - asin(d0/r2))/dr on top of the
+            // curvature term kappa/2 the nominal cut bounds
+            const float d0Kappa =
+                (asinD0n1 -
+                 std::asin(std::min(1.0f, m_cfg.d0Max / std::max(r2, 1.0f)))) /
+                dr;
+            if (absCurv > maxKappa + std::abs(d0Kappa)) {
+              ++cutStats.rejKappa;
+              ACTS_VERBOSE("rej kappa: absCurv="
+                           << absCurv << " maxKappa=" << maxKappa
+                           << " d0Kappa=" << d0Kappa << " r1=" << r1
+                           << " r2=" << r2);
               continue;
             }
           }
 
           const float expEta = fastHypot(1, tau) - tau;
 
+          // ds/dr chord factor of this segment for a track with impact
+          // parameter d0Max; tau = dz/dr of a displaced track scales with it,
+          // so it bounds the geometric tau variation between segments
+          float dsdrD0 = 1.0f;
+
+          if (lrt) {
+            const float sD0n2 = std::sqrt(std::max(r2 * r2 - d0Max2, 0.0f));
+            dsdrD0 = std::max((sD0n2 - sD0n1) / dr, 1e-3f);
+          }
+
           // match edge candidate against edges incoming to n2
-          if (m_cfg.matchBeforeCreate &&
-              (layerId1 == 80000 || layerId1 == 81000)) {
+          if (matchBeforeCreateGate) {
             // we must have enough incoming edges to decide
             bool isGood = n2NumEdges <= 2;
 
@@ -445,10 +551,17 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
               for (std::uint32_t n2InIdx = n2FirstEdge; n2InIdx < n2LastEdge;
                    ++n2InIdx) {
-                const float tau2 = edgeStorage.at(n2InIdx).p[0];
-                const float tauRatio = tau2 * uat1 - 1.0f;
+                const GbtsEdge& inEdge = edgeStorage.at(n2InIdx);
+                const float tauRatio = inEdge.p[0] * uat1 - 1.0f;
 
-                if (std::abs(tauRatio) > m_cfg.tauRatioPrecut) {  // bad match
+                // widen the acceptance by the geometric tau variation of a
+                // displaced track between the two segments
+                float precut = m_cfg.tauRatioPrecut;
+                if (lrt) {
+                  precut += std::max(dsdrD0 / inEdge.dsdrD0 - 1.0f, 0.0f);
+                }
+
+                if (std::abs(tauRatio) > precut) {  // bad match
                   continue;
                 }
                 isGood = true;  // good match found
@@ -457,6 +570,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
             }
 
             if (!isGood) {  // no match found, skip creating [n1 <- n2] edge
+              ++cutStats.rejPrecut;
               continue;
             }
           }
@@ -464,9 +578,13 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
           const float dPhi2 = curv * r2;
           const float dPhi1 = curv * r1;
 
+          if (nEdges >= m_cfg.nMaxEdges) {
+            ++cutStats.rejMaxEdges;
+          }
+
           if (nEdges < m_cfg.nMaxEdges) {
             edgeStorage.emplace_back(B1.vn[n1Idx], B2.vn[n2Idx], expEta, curv,
-                                     phi1 + dPhi1);
+                                     phi1 + dPhi1, dsdrD0);
 
             ++numCreatedEdges;
 
@@ -481,22 +599,31 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
                  ++inEdgeIdx) {
               GbtsEdge* pS = &(edgeStorage.at(inEdgeIdx));
 
+              ++cutStats.neiPairs;
+
               if (pS->nNei >= gbtsNumSegConns) {
+                ++cutStats.rejNeiFull;
                 continue;
               }
 
               const std::uint32_t lk3 =
                   m_geometry->layerIdByIndex(pS->n2->layer);
 
-              const bool isBarrel3 = (lk3 / 10000) == 8;
+              const bool isBarrel3 = m_geometry->layerByIndex(pS->n2->layer)
+                                         .layerDescription()
+                                         .type == GbtsLayerType::Barrel;
 
               const float absTauRatio = std::abs(pS->p[0] * uat2 - 1.0f);
               float addTauRatioCorr = 0;
 
               if (m_cfg.useAdaptiveCuts) {
                 if (isBarrel1 && isBarrel2 && isBarrel3) {
+                  // consecutive barrel layer IDs differ by 1000 in the ITk
+                  // pixel numbering and by 1 in the ITk strip numbering
+                  const std::uint32_t d32 = lk3 - lk2;
+                  const std::uint32_t d21 = lk2 - layerId1;
                   const bool noGap =
-                      ((lk3 - lk2) == 1000) && ((lk2 - layerId1) == 1000);
+                      (d32 == 1000 && d21 == 1000) || (d32 == 1 && d21 == 1);
 
                   // assume more scattering due to the layer in between
                   if (!noGap) {
@@ -509,8 +636,21 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
                   }
                 }
               }
+
+              if (lrt) {
+                // geometric tau variation between the two segments for a
+                // track with impact parameter up to d0Max: the inner segment
+                // always has the larger ds/dr chord factor
+                addTauRatioCorr += std::max(dsdrD0 / pS->dsdrD0 - 1.0f, 0.0f);
+              }
+
               // bad match
               if (absTauRatio > m_cfg.tauRatioCut + addTauRatioCorr) {
+                ++cutStats.rejTauRatio;
+                ACTS_VERBOSE("rej tauRatio: absTauRatio="
+                             << absTauRatio << " cut="
+                             << m_cfg.tauRatioCut + addTauRatioCorr
+                             << " r1=" << r1 << " r2=" << r2 << " lk3=" << lk3);
                 continue;
               }
 
@@ -523,12 +663,46 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
               }
 
               if (std::abs(dPhi) > m_cfg.cutDPhiMax) {
-                continue;
+                // displaced tracks: both direction estimates anchor at the
+                // shared node, so their difference for a track with impact
+                // parameter d0 is (c12 - c23) * r2 with
+                // c_ab = (asin(d0/r_b) - asin(d0/r_a)) / (r_b - r_a), the
+                // position-azimuth chord slope of each segment. Widen the
+                // acceptance by that bound evaluated at d0Max, computed only
+                // for candidates in the marginal band.
+                bool reject = true;
+
+                if (lrt) {
+                  const float r3 = pS->n2->r;
+                  const float dr23 = r3 - r2;
+
+                  if (dr23 > 1.0f) {
+                    const float a2 =
+                        std::asin(std::min(1.0f, m_cfg.d0Max / r2));
+                    const float a3 =
+                        std::asin(std::min(1.0f, m_cfg.d0Max / r3));
+                    const float c12 = (a2 - asinD0n1) / dr;
+                    const float c23 = (a3 - a2) / dr23;
+                    const float dPhiD0 = std::abs((c12 - c23) * r2);
+
+                    reject = std::abs(dPhi) > m_cfg.cutDPhiMax + dPhiD0;
+                  }
+                }
+
+                if (reject) {
+                  ++cutStats.rejDPhi;
+                  ACTS_VERBOSE("rej dPhi: dPhi=" << dPhi << " r1=" << r1
+                                                 << " r2=" << r2);
+                  continue;
+                }
               }
 
               const float dcurv = curv2 - pS->p[1];
 
               if (dcurv < -m_cfg.cutDCurvMax || dcurv > m_cfg.cutDCurvMax) {
+                ++cutStats.rejDCurv;
+                ACTS_VERBOSE("rej dCurv: dcurv=" << dcurv << " r1=" << r1
+                                                 << " r2=" << r2);
                 continue;
               }
 
@@ -539,9 +713,13 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
                   const std::array<const GbtsNode*, 3> candidateTriplet = {
                       B1.vn[n1Idx], B2.vn[n2Idx], pS->n2};
 
-                  if (!validateTriplet(candidateTriplet, tripletPtMin,
-                                       absTauRatio, m_cfg.tauRatioCut,
-                                       options)) {
+                  if (!validateTriplet(
+                          candidateTriplet, tripletPtMin, absTauRatio,
+                          m_cfg.tauRatioCut + addTauRatioCorr, options)) {
+                    ++cutStats.rejTriplet;
+                    ACTS_VERBOSE("rej triplet: absTauRatio="
+                                 << absTauRatio << " r1=" << r1 << " r2=" << r2
+                                 << " r3=" << pS->n2->r);
                     continue;
                   }
                 }
@@ -552,12 +730,16 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
               isConnected = true;  // there is at least one good match
 
-              // edge confirmed - update z0 histogram
+              // edge confirmed - update z0 histogram. The bin index is only
+              // guaranteed to be in range when doubletFilterRZ restricted z0
+              // to [minZ0, maxZ0], so it must be checked here
+              const std::int32_t z0BinIndex =
+                  static_cast<std::int32_t>(z0HistoCoeff * (z0 - m_cfg.minZ0));
 
-              const std::uint32_t z0BinIndex =
-                  static_cast<std::uint32_t>(z0HistoCoeff * (z0 - m_cfg.minZ0));
-
-              ++z0Histo[z0BinIndex];
+              if (z0BinIndex >= 0 &&
+                  z0BinIndex < static_cast<std::int32_t>(zBins)) {
+                ++z0Histo[z0BinIndex];
+              }
 
               nConnections++;
             }
@@ -592,6 +774,26 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
         "Maximum number of graph edges exceeded - possible efficiency loss "
         << nEdges);
   }
+  ACTS_DEBUG("GBTS graph cuts: candidates="
+             << cutStats.candidates << " rejIsolated=" << cutStats.rejIsolated
+             << " rejDeltaR=" << cutStats.rejDeltaR
+             << " rejTauAbs=" << cutStats.rejTauAbs
+             << " rejTauRange=" << cutStats.rejTauRange
+             << " rejZ0Mask=" << cutStats.rejZ0Mask
+             << " rejZ0=" << cutStats.rejZ0
+             << " rejZOuter=" << cutStats.rejZOuter
+             << " rejKappa=" << cutStats.rejKappa
+             << " rejPrecut=" << cutStats.rejPrecut
+             << " rejMaxEdges=" << cutStats.rejMaxEdges
+             << " edges=" << nEdges);
+  ACTS_DEBUG("GBTS edge matching: neiPairs="
+             << cutStats.neiPairs << " rejNeiFull=" << cutStats.rejNeiFull
+             << " rejTauRatio=" << cutStats.rejTauRatio
+             << " rejDPhi=" << cutStats.rejDPhi
+             << " rejDCurv=" << cutStats.rejDCurv
+             << " rejTriplet=" << cutStats.rejTriplet
+             << " connections=" << nConnections);
+
   return std::make_pair(nEdges, nConnections);
 }
 
@@ -719,6 +921,21 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
   std::ranges::sort(vChainHeads, std::ranges::greater{},
                     [](const GbtsEdge* e) { return e->level; });
 
+  if (logger().doPrint(Acts::Logging::DEBUG)) {
+    std::array<std::uint32_t, 9> levelCount{};
+    for (std::uint32_t edgeIndex = 0; edgeIndex < nEdges; ++edgeIndex) {
+      const int lvl = std::clamp<int>(edgeStorage[edgeIndex].level, 0, 8);
+      ++levelCount[lvl];
+    }
+    ACTS_DEBUG("GBTS extract: maxLevel="
+               << maxLevel << " chainHeads=" << vChainHeads.size()
+               << " edge levels: L1=" << levelCount[1]
+               << " L2=" << levelCount[2] << " L3=" << levelCount[3]
+               << " L4=" << levelCount[4]
+               << " L5+=" << levelCount[5] + levelCount[6] + levelCount[7] +
+                                 levelCount[8]);
+  }
+
   // backtracking
 
   std::vector<SeedCandidateProperties> vSeedCandidates;
@@ -731,6 +948,10 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
   std::uint32_t seedCounter = 0;
 
+  std::uint32_t nFollowed = 0;
+  std::uint32_t nNotInitialized = 0;
+  std::uint32_t nShortChains = 0;
+
   GbtsTrackingFilter::State filterState{};
 
   for (GbtsEdge* pS : vChainHeads) {
@@ -738,9 +959,12 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
       continue;
     }
 
+    ++nFollowed;
+
     GbtsEdgeState rs = filter.followTrack(filterState, edgeStorage, *pS);
 
     if (!rs.initialized) {
+      ++nNotInitialized;
       continue;
     }
 
@@ -750,15 +974,18 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     if (m_cfg.lrtMode || !m_cfg.addTriplets) {
       if (chainLength < minLevel) {
+        ++nShortChains;
         continue;
       }
     } else {
       if (seedAbsEta > m_cfg.maxAbsEtaAddTripelts) {
         if (chainLength < minLevel) {
+          ++nShortChains;
           continue;
         }
       } else {
         if (chainLength < static_cast<std::uint32_t>(minLevel) - 1u) {
+          ++nShortChains;
           continue;
         }
       }
@@ -848,6 +1075,17 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     ++seedCounter;
   }
+
+  ACTS_DEBUG("GBTS chains: followed="
+             << nFollowed << " notInitialized=" << nNotInitialized
+             << " tooShort=" << nShortChains
+             << " candidates=" << vSeedCandidates.size());
+  ACTS_DEBUG("GBTS filter: updates="
+             << filterState.nUpdates << " rejChi2X=" << filterState.nRejChi2X
+             << " rejChi2Y=" << filterState.nRejChi2Y
+             << " rejCurv=" << filterState.nRejCurv
+             << " rejZ0=" << filterState.nRejZ0
+             << " stateOverflow=" << filterState.nStateOverflow);
 
   // clone removal code goes below ...
 
@@ -974,7 +1212,7 @@ bool GraphBasedTrackSeeder::checkZ0BitMask(const std::uint16_t z0BitMask,
 
   // check adjacent bins as well
 
-  const float z0Resolution = 2.5;
+  const float z0Resolution = m_cfg.z0HistoResolution;
 
   const float dzm = dz - z0Resolution;
 

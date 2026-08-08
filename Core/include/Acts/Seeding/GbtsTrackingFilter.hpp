@@ -91,6 +91,20 @@ class GbtsTrackingFilter final {
     float maxCurvature = 1e-3f / Acts::UnitConstants::mm;
     /// Maximum longitudinal impact parameter.
     float maxZ0 = 170.0 * Acts::UnitConstants::mm;
+
+    /// Initial covariance of the transverse state (y, dy/dx, d2y/dx2).
+    std::array<float, 3> initCovX = {0.25f, 0.001f, 0.001f};
+    /// Initial covariance of the longitudinal state (z, dz/dr). The dz/dr
+    /// term acts as a prior on how much the r-z slope may vary along the
+    /// chain; the default is tuned for prompt tracks.
+    std::array<float, 2> initCovY = {1.5f, 0.001f};
+
+    /// Maximum transverse impact parameter assumed for the seeded tracks.
+    /// When positive, an additional r-z slope process noise is added at each
+    /// filter step to account for the geometric variation of dz/dr along a
+    /// displaced trajectory (dz/dr scales with ds/dr = r/sqrt(r^2-d0^2)).
+    /// Leave at 0 for prompt configurations (no extra noise).
+    float d0Max = 0.0f * Acts::UnitConstants::mm;
   };
 
   /// State for the tracking filter, containing edge states and a global
@@ -104,6 +118,19 @@ class GbtsTrackingFilter final {
 
     /// Global state counter
     std::uint32_t globalStateCounter{0};
+
+    /// debug counters, accumulated across followTrack calls
+    std::uint32_t nUpdates{0};
+    /// Updates rejected by the transverse chi2 gate
+    std::uint32_t nRejChi2X{0};
+    /// Updates rejected by the longitudinal chi2 gate
+    std::uint32_t nRejChi2Y{0};
+    /// Updates rejected by the curvature cut
+    std::uint32_t nRejCurv{0};
+    /// Updates rejected by the z0 cut
+    std::uint32_t nRejZ0{0};
+    /// Propagations dropped because the state store was exhausted
+    std::uint32_t nStateOverflow{0};
   };
 
   /// @param config Configuration for seed finder
@@ -135,10 +162,11 @@ class GbtsTrackingFilter final {
                  GbtsEdgeState& ts) const;
 
   /// Update edge state with edge
+  /// @param state Tracking filter state (for the debug counters)
   /// @param pS Edge to update with
   /// @param ts Edge state to update
   /// @return Success flag
-  bool update(const GbtsEdge& pS, GbtsEdgeState& ts) const;
+  bool update(State& state, const GbtsEdge& pS, GbtsEdgeState& ts) const;
 
   /// Get layer type from layer index
   /// @param layerIndex Layer index

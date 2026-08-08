@@ -99,6 +99,17 @@ class GraphBasedTrackSeeder {
     /// Minimum z0 value, set as optionl as if in pixel mode,
     /// The value is picked from the ROI
     float maxZ0 = 600;
+    /// z0 range at the beamline used to prune eta-bin pair connectivity when
+    /// constructing the GbtsGeometry. These values are not consumed by the
+    /// seeder itself: callers must forward them to the GbtsGeometry
+    /// constructor. Widen for displaced-track (LRT) seeding — the r-z chord
+    /// of a large-d0 track extrapolates far outside the luminous region.
+    float connectionZ0Min = -168.0f;
+    /// Maximum connectivity z0 at the beamline (see connectionZ0Min)
+    float connectionZ0Max = 168.0f;
+    /// Assumed z0 resolution when accepting adjacent bins of the z0 bitmask
+    /// histogram used for edge pruning on the entry layer
+    float z0HistoResolution = 2.5f;
     /// When old tunings are used, this defines the minimum phi window used
     float minDeltaPhi = 0.001f;
     /// Maximum radius of pixel detector
@@ -139,8 +150,9 @@ class GraphBasedTrackSeeder {
     /// units of GeV/(e*mm).
     float bFieldInZ{};
 
-    /// Transverse momentum coefficient (~0.3*B/2 - assumes nominal field of
-    /// 2*T).
+    /// Transverse momentum coefficient 0.5*bFieldInZ in units of
+    /// GeV/(e*mm): the position-azimuth slope dphi/dr of a prompt track is
+    /// kappa/2 = 0.5*B/pT, so ptCoeff/pT[GeV] bounds |dphi/dr| in 1/mm.
     double ptCoeff{};
   };
 

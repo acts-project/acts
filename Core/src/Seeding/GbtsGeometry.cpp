@@ -312,11 +312,46 @@ std::int32_t GbtsLayer::getEtaBin(const float zh, const float rh) const {
 
 GbtsGeometry::GbtsGeometry(
     const std::vector<GbtsLayerDescription>& layerDescriptions,
-    const GbtsLayerConnectionMap& layerConnections)
+    const GbtsLayerConnectionMap& layerConnections, const float connectionZ0Min,
+    const float connectionZ0Max)
     : m_etaBinWidth(layerConnections.etaBinWidth) {
-  // TODO configurable z0 range
-  const float minZ0 = -168.0f;
-  const float maxZ0 = 168.0f;
+  const float minZ0 = connectionZ0Min;
+  const float maxZ0 = connectionZ0Max;
+
+  // derive the per-layer "inward depth" from the connection map:
+  // 0 for entry layers (never the outer/src element of a connection, i.e. the
+  // innermost layers of this seeding graph), otherwise 1 + the maximum depth
+  // of the inner layers they connect to. Computed as a fixed point so that
+  // layer-skipping connections and any accidental cycles are handled safely.
+  for (const auto& [stage, vConn] : layerConnections.connectionMap) {
+    for (const auto& connection : vConn) {
+      m_layerDepth.try_emplace(connection->src, 0);
+      m_layerDepth.try_emplace(connection->dst, 0);
+    }
+  }
+
+  const std::size_t maxDepthPasses = m_layerDepth.size() + 1;
+
+  for (std::size_t pass = 0; pass < maxDepthPasses; ++pass) {
+    bool changed = false;
+
+    for (const auto& [stage, vConn] : layerConnections.connectionMap) {
+      for (const auto& connection : vConn) {
+        // src is the outer layer of the pair, dst the inner one
+        const std::uint32_t candidate = m_layerDepth.at(connection->dst) + 1;
+
+        if (std::uint32_t& depth = m_layerDepth.at(connection->src);
+            depth < candidate) {
+          depth = candidate;
+          changed = true;
+        }
+      }
+    }
+
+    if (!changed) {
+      break;
+    }
+  }
 
   for (const GbtsLayerDescription& layer : layerDescriptions) {
     const GbtsLayer& pL = createLayer(layer, m_nEtaBins);
