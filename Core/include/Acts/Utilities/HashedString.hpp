@@ -78,6 +78,8 @@ constexpr HashedString operator""_hash(char const* s, std::size_t count) {
 
 /// Hash for a type. Since it's not possible to hash a type at compile-time,
 /// this function returns a runtime hash but caches it in a static variable.
+/// The hash is derived from the mangled name, which is fixed by the Itanium
+/// ABI and therefore identical between GCC and Clang.
 /// @tparam T Type to hash
 /// @return Hashed string representation
 template <typename T>

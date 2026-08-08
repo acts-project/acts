@@ -6,12 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsTests/CommonHelpers/BenchmarkTools.hpp"
 
+#include <cstdint>
 #include <iostream>
 #include <type_traits>
+#include <vector>
 
 using namespace Acts;
 using namespace ActsTests;
@@ -92,6 +95,42 @@ int main(int /*argc*/, char** /*argv[]*/) {
       },
       inputs);
   std::cout << copyMoveConstructSourceLink << std::endl;
+
+  // The track finding unpacks a source link for every measurement candidate,
+  // in the calibrator, the measurement selector and the surface accessor.
+  std::cout << "Unpack source link with get<T>" << std::endl;
+  auto unpackGet = microBenchmark(
+      [&](const SourceLink& input) {
+        return input.get<BenchmarkSourceLink>().index();
+      },
+      inputs);
+  std::cout << unpackGet << std::endl;
+
+  std::cout << "Unpack source link with getPtr<T>" << std::endl;
+  auto unpackGetPtr = microBenchmark(
+      [&](const SourceLink& input) {
+        return input.getPtr<BenchmarkSourceLink>()->index();
+      },
+      inputs);
+  std::cout << unpackGetPtr << std::endl;
+
+  std::cout << "Unpack geometry id from source link" << std::endl;
+  auto unpackGeometryId = microBenchmark(
+      [&](const SourceLink& input) {
+        return input.get<BenchmarkSourceLink>().geometryId();
+      },
+      inputs);
+  std::cout << unpackGeometryId << std::endl;
+
+  // Shape of the track finding inner loop: wrap, then immediately unpack.
+  std::cout << "Construct and unpack source link" << std::endl;
+  auto constructAndUnpack = microBenchmark(
+      [&]() {
+        SourceLink sl{bsl};
+        return sl.get<BenchmarkSourceLink>().index();
+      },
+      n);
+  std::cout << constructAndUnpack << std::endl;
 
   std::cout << "Optional assignment" << std::endl;
   auto opt_assignment = microBenchmark(
