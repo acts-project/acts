@@ -91,7 +91,11 @@ class MaterialSlab {
   ///
   /// @param material  is the material description
   /// @param thickness is the thickness of the material
-  MaterialSlab(const Material& material, float thickness);
+  /// @param elementZ is the Z values of elements present
+  /// @param elementFrac is the fractions of those elements
+  MaterialSlab(const Material& material, float thickness,
+               std::vector<unsigned int> elementZ = {},
+               std::vector<float> elementFrac = {});
 
   /// Scale the material thickness by the given factor.
   /// @param scale Factor by which to scale the thickness
@@ -113,12 +117,20 @@ class MaterialSlab {
   /// Return the nuclear interaction length fraction.
   /// @return Thickness as a fraction of nuclear interaction length
   constexpr float thicknessInL0() const { return m_thicknessInL0; }
+  /// Return the atomic number of list of elements present
+  /// @return the atomic numbers of elements present
+  const std::vector<unsigned int>& elementZ() const { return m_elementZ; }
+  /// Return fraction of each element present
+  /// @return the fractions of the elements present
+  const std::vector<float>& elementFrac() const { return m_elementFrac; }
 
  private:
   Material m_material;
   float m_thickness = 0.0f;
   float m_thicknessInX0 = 0.0f;
   float m_thicknessInL0 = 0.0f;
+  std::vector<unsigned int> m_elementZ = {};
+  std::vector<float> m_elementFrac = {};
 
   static constexpr auto eps = 2 * std::numeric_limits<float>::epsilon();
 
