@@ -20,6 +20,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
+#include "Acts/Geometry/OffAxisBlueprintNode.hpp"
 #include "Acts/Geometry/PadBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -279,6 +280,90 @@ BOOST_AUTO_TEST_CASE(CylinderContainer) {
     BOOST_CHECK_EQUAL(gapCyl.get(CylinderVolumeBounds::eMaxR), 20_mm);
     BOOST_CHECK_EQUAL(gapCyl.get(CylinderVolumeBounds::eHalfLengthZ), 6_mm);
   }
+}
+
+BOOST_AUTO_TEST_CASE(OffAxisWrapperInCylinderHierarchy) {
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {2_mm, 20_mm};
+  auto root = std::make_unique<Blueprint>(cfg);
+
+  std::vector<std::unique_ptr<SurfacePlacementBase>> elements;
+  std::vector<std::shared_ptr<Surface>> b0SensitiveSurfaces;
+
+  auto makeB0Layer = [&](std::size_t layer) -> std::unique_ptr<TrackingVolume> {
+    const double offsetX = -160_mm;
+    const double z = 6250_mm + layer * 100_mm;
+    const auto bounds =
+        std::make_shared<CylinderVolumeBounds>(35_mm, 150_mm, 20_mm);
+    auto layerVolume = std::make_unique<TrackingVolume>(
+        Transform3::Identity() * Translation3{Vector3{offsetX, 0., z}}, bounds,
+        "B0Layer" + std::to_string(layer));
+
+    const std::size_t nModules = 6;
+    const double moduleR = 90_mm;
+    const auto moduleBounds = std::make_shared<RectangleBounds>(8_mm, 15_mm);
+    for (std::size_t i = 0; i < nModules; ++i) {
+      const double phi = 2. * std::numbers::pi * static_cast<double>(i) /
+                         static_cast<double>(nModules);
+      Transform3 moduleTransform = Transform3::Identity() *
+                                   Translation3{Vector3{offsetX, 0., z}} *
+                                   AngleAxis3{phi, Vector3::UnitZ()} *
+                                   Translation3{Vector3::UnitX() * moduleR} *
+                                   AngleAxis3{90_degree, Vector3::UnitY()} *
+                                   AngleAxis3{90_degree, Vector3::UnitZ()};
+
+      auto& element =
+          elements.emplace_back(std::make_unique<DetectorElementStub>(
+              moduleTransform, moduleBounds, 0.));
+      element->surface().assignSurfacePlacement(*element);
+      auto surface = element->surface().getSharedPtr();
+      layerVolume->addSurface(surface);
+      b0SensitiveSurfaces.push_back(std::move(surface));
+    }
+
+    return layerVolume;
+  };
+
+  root->addCylinderContainer("Detector", AxisDirection::AxisZ, [&](auto& det) {
+    det.addStaticVolume(
+        Transform3::Identity(),
+        std::make_shared<CylinderVolumeBounds>(20_mm, 400_mm, 1000_mm),
+        "MainTracker");
+
+    det.addOffAxisContainer("B0Envelope", Transform3::Identity(),
+                            [&](auto& offAxis) {
+                              offAxis.addCylinderContainer(
+                                  "B0", AxisDirection::AxisZ, [&](auto& b0) {
+                                    b0.addStaticVolume(makeB0Layer(0));
+                                    b0.addStaticVolume(makeB0Layer(1));
+                                  });
+                            });
+  });
+
+  auto trackingGeometry = root->construct({}, gctx, *logger);
+  BOOST_REQUIRE(trackingGeometry != nullptr);
+  BOOST_CHECK(trackingGeometry->geometryVersion() ==
+              TrackingGeometry::GeometryVersion::Gen3);
+
+  const auto* envelope = trackingGeometry->findVolumeByName("B0Envelope");
+  BOOST_REQUIRE(envelope != nullptr);
+  BOOST_CHECK_SMALL(envelope->center(gctx)[eX], 1e-9);
+  BOOST_CHECK_SMALL(envelope->center(gctx)[eY], 1e-9);
+
+  const auto* b0Layer0 = trackingGeometry->findVolumeByName("B0Layer0");
+  BOOST_REQUIRE(b0Layer0 != nullptr);
+  BOOST_CHECK_CLOSE(b0Layer0->center(gctx)[eX], -160_mm, 1e-8);
+
+  std::size_t found = 0;
+  for (const auto& surface : b0SensitiveSurfaces) {
+    const auto id = surface->geometryId();
+    BOOST_CHECK_NE(id.sensitive(), 0u);
+    const auto* lookup = trackingGeometry->findSurface(id);
+    BOOST_REQUIRE(lookup != nullptr);
+    found++;
+  }
+  BOOST_CHECK_EQUAL(found, b0SensitiveSurfaces.size());
 }
 
 BOOST_AUTO_TEST_CASE(Confined) {

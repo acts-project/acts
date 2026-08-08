@@ -53,6 +53,7 @@ target_sources(
         BlueprintNode.cpp
         Blueprint.cpp
         BlueprintOptions.cpp
+        OffAxisBlueprintNode.cpp
         StaticBlueprintNode.cpp
         LayerBlueprintNode.cpp
         PadBlueprintNode.cpp
