@@ -87,6 +87,15 @@ class detector_conditions_description_interface : public BASE {
     return BASE::template get<3>();
   }
 
+  /// A user-provided data, primarily intended to store an original ID of the
+  /// surface
+  /// @return A non-const unsigned integer
+  TRACCC_HOST_DEVICE
+  auto& user_data() { return BASE::template get<4>(); }
+  /// @return A const unsigned integer
+  TRACCC_HOST_DEVICE
+  const auto& user_data() const { return BASE::template get<4>(); }
+
 };  // class silicon_detector_description_interface
 
 /// SoA container describing module to design map and conditions
@@ -95,6 +104,9 @@ using detector_conditions_description = vecmem::edm::container<
     detector_conditions_description_interface,
     vecmem::edm::type::vector<unsigned int>,
     vecmem::edm::type::vector<detray::geometry::identifier>,
-    vecmem::edm::type::vector<geometry_id>, vecmem::edm::type::vector<vector2>>;
+    vecmem::edm::type::vector<geometry_id>, vecmem::edm::type::vector<vector2>
+    // userdata
+    , vecmem::edm::type::vector<unsigned int>
+    >;
 
 }  // namespace traccc
