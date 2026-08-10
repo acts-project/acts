@@ -17,6 +17,7 @@
 
 // Detray test include(s)
 #include "detray/test/cpu/material_scan.hpp"
+#include "detray/test/framework/test_configuration.hpp"
 #include "detray/test/validation/material_validation_config.hpp"
 
 // Detray algebra plugin + detector metadata
@@ -49,6 +50,7 @@ using track_generator_config_t =
     detray::uniform_track_generator_config<scalar_t>;
 using material_validation_config_t =
     detray::test::material_validation_config<algebra_t>;
+using base_config_t = detray::test::configuration<scalar_t>;
 
 template <typename T>
 std::string to_string(const T &obj) {
@@ -176,7 +178,24 @@ PYBIND11_MODULE(DetrayTestsPythonBindings, m) {
           "Whether the momentum magnitude is interpreted as transverse")
       .def("__repr__", &to_string<track_generator_config_t>);
 
-  py::class_<material_validation_config_t>(m, "MaterialValidationConfig")
+  py::class_<base_config_t>(m, "TestConfig")
+      .def_property(
+          "tol", [](const base_config_t &c) { return c.tol(); },
+          [](base_config_t &c, scalar_t t) { c.tol(t); },
+          "Tolerance to compare two floating point values")
+      .def_property(
+          "propagation",
+          [](base_config_t &c) -> propagation_config_t & {
+            return c.propagation();
+          },
+          [](base_config_t &c, const propagation_config_t &v) {
+            c.propagation() = v;
+          },
+          py::return_value_policy::reference_internal,
+          "Propagation configuration");
+
+  py::class_<material_validation_config_t, base_config_t>(
+      m, "MaterialValidationConfig")
       .def(py::init<>())
       .def_property(
           "name",
@@ -208,23 +227,9 @@ PYBIND11_MODULE(DetrayTestsPythonBindings, m) {
             c.relative_error(re);
           },
           "Allowed relative discrepancy between truth and navigation material")
-      .def_property(
-          "tol", [](const material_validation_config_t &c) { return c.tol(); },
-          [](material_validation_config_t &c, scalar_t t) { c.tol(t); },
-          "Tolerance to compare two floating point values")
-      .def_property(
-          "propagation",
-          [](material_validation_config_t &c) -> propagation_config_t & {
-            return c.propagation();
-          },
-          [](material_validation_config_t &c, const propagation_config_t &v) {
-            c.propagation() = v;
-          },
-          py::return_value_policy::reference_internal,
-          "Propagation configuration")
       .def("__repr__", &to_string<material_validation_config_t>);
 
-  py::class_<material_scan_config_t>(m, "MaterialScanConfig")
+  py::class_<material_scan_config_t, base_config_t>(m, "MaterialScanConfig")
       .def(py::init<>())
       .def_property(
           "name", [](const material_scan_config_t &c) { return c.name(); },
@@ -257,19 +262,5 @@ PYBIND11_MODULE(DetrayTestsPythonBindings, m) {
           },
           py::return_value_policy::reference_internal,
           "Track generator configuration")
-      .def_property(
-          "tol", [](const material_scan_config_t &c) { return c.tol(); },
-          [](material_scan_config_t &c, scalar_t t) { c.tol(t); },
-          "Tolerance to compare two floating point values")
-      .def_property(
-          "propagation",
-          [](material_scan_config_t &c) -> propagation_config_t & {
-            return c.propagation();
-          },
-          [](material_scan_config_t &c, const propagation_config_t &v) {
-            c.propagation() = v;
-          },
-          py::return_value_policy::reference_internal,
-          "Propagation configuration")
       .def("__repr__", &to_string<material_scan_config_t>);
 }
