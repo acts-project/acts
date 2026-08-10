@@ -29,9 +29,9 @@ class TrackSummaryPlotTool {
   /// @brief The nested configuration struct
   struct Config {
     std::map<std::string, AxisVariant> varBinning = {
-        {"Eta", BoostRegularAxis(40, -4, 4, "#eta")},
-        {"Phi", BoostRegularAxis(100, -3.15, 3.15, "#phi")},
-        {"Pt", BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
+        {"Eta", BoostRegularAxis(40, -4, 4, "reco #eta")},
+        {"Phi", BoostRegularAxis(100, -3.15, 3.15, "reco #phi")},
+        {"Pt", BoostRegularAxis(40, 0, 100, "reco p_{T} [GeV/c]")},
         {"Num", BoostRegularAxis(30, -0.5, 29.5, "N")}};
     /// Optional prefix for histogram names
     std::string prefix;
