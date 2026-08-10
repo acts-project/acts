@@ -8,10 +8,7 @@
 #pragma once
 
 // Local include(s).
-#include "traccc/hip/utils/stream.hpp"
-
-// System include(s).
-#include <functional>
+#include "traccc/hip/utils/stream_wrapper.hpp"
 
 namespace traccc::hip {
 
@@ -25,16 +22,16 @@ class algorithm_base {
   ///
   /// @param str The HIP stream to perform all operations on
   ///
-  explicit algorithm_base(hip::stream& str);
+  explicit algorithm_base(const stream_wrapper& str);
 
   /// Get the HIP stream of the algorithm
-  hip::stream& stream() const;
+  const stream_wrapper& stream() const;
   /// Get the warp size of the GPU being used
   unsigned int warp_size() const;
 
  private:
   /// The HIP stream to use
-  std::reference_wrapper<hip::stream> m_stream;
+  stream_wrapper m_stream;
   /// Warp size of the GPU being used
   unsigned int m_warp_size;
 
