@@ -10,6 +10,7 @@
 #include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
@@ -29,6 +30,7 @@
 // ProtoTrackContainer, which would break py::cast<std::unique_ptr<T>> needed
 // by WhiteBoardRegistry. The full specialization takes priority over stl.h's
 // partial specialization regardless of include order.
+PYBIND11_MAKE_OPAQUE(ActsExamples::ClusterContainer)
 PYBIND11_MAKE_OPAQUE(ActsExamples::ProtoTrackContainer)
 // MeasurementSimHitsMap == SimHitMeasurementsMap at the C++ level (both are
 // flat_multimap<std::uint32_t, std::uint32_t>), so only one MAKE_OPAQUE is
@@ -427,11 +429,34 @@ void addEventData(py::module& mex) {
           mex, "ProtoTrackContainer");
   WhiteBoardRegistry::registerClass(protoTrackContainer);
 
+  py::class_<Cluster>(mex, "Cluster")
+      .def(py::init<>())
+      .def_readwrite("sizeLoc0", &Cluster::sizeLoc0)
+      .def_readwrite("sizeLoc1", &Cluster::sizeLoc1)
+      .def_readwrite("globalPosition", &Cluster::globalPosition)
+      .def_readwrite("localDirection", &Cluster::localDirection)
+      .def_readwrite("lengthDirection", &Cluster::lengthDirection)
+      .def_readwrite("localEta", &Cluster::localEta)
+      .def_readwrite("localPhi", &Cluster::localPhi)
+      .def_readwrite("globalEta", &Cluster::globalEta)
+      .def_readwrite("globalPhi", &Cluster::globalPhi)
+      .def_readwrite("etaAngle", &Cluster::etaAngle)
+      .def_readwrite("phiAngle", &Cluster::phiAngle)
+      .def("sumActivations", &Cluster::sumActivations);
+
+  auto clusterContainer = py::bind_vector<ClusterContainer, py::smart_holder>(
+      mex, "ClusterContainer");
+  WhiteBoardRegistry::registerClass(clusterContainer);
+
   mex.attr("kTrackIndexInvalid") = Acts::kTrackIndexInvalid;
 
   py::class_<IndexSourceLink>(mex, "IndexSourceLink")
+      .def(py::init<Acts::GeometryIdentifier, Index>(), py::arg("geometryId"),
+           py::arg("index"))
       .def("FromSourceLink",
            [](Acts::SourceLink const& sl) { return sl.get<IndexSourceLink>(); })
+      .def("toSourceLink",
+           [](const IndexSourceLink& self) { return Acts::SourceLink(self); })
       .def("index", &IndexSourceLink::index)
       .def("geometryId", &IndexSourceLink::geometryId);
 
