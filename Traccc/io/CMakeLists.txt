@@ -1,14 +1,11 @@
 # TRACCC library, part of the ACTS project (R&D line)
 #
-# (c) 2021-2025 CERN for the benefit of the ACTS project
+# (c) 2021-2026 CERN for the benefit of the ACTS project
 #
 # Mozilla Public License Version 2.0
 
 # Project include(s).
 include(traccc-compiler-options-cpp)
-
-# Look for OpenMP.
-find_package(OpenMP COMPONENTS CXX)
 
 # Set up the "build" of the traccc::io library.
 traccc_add_library( traccc_io io TYPE SHARED
@@ -93,6 +90,3 @@ target_compile_definitions(
     traccc_io
     PRIVATE TRACCC_TEST_DATA_DIR="${CMAKE_SOURCE_DIR}/data"
 )
-if(OpenMP_CXX_FOUND)
-    target_link_libraries(traccc_io PRIVATE OpenMP::OpenMP_CXX)
-endif()

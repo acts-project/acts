@@ -6,6 +6,7 @@ from typing import Optional
 import acts
 import acts.examples
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
+from acts.examples.dataset import addColliderML
 from acts.examples.simulation import (
     addDigiParticleSelection,
     ParticleSelectorConfig,
@@ -25,29 +26,39 @@ def runColliderMLTruthTracking(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     outputDir: Path,
-    particlesDir: Path,
-    hitsDir: Path,
+    channel: str = "ttbar",
+    pileup: str = "pu0",
+    dataDir: Optional[Path] = None,
+    particlesDir: Optional[Path] = None,
+    hitsDir: Optional[Path] = None,
+    tracksDir: Optional[Path] = None,
+    readTracks: bool = True,
     geoIdMapPath: Optional[Path] = None,
     geoIdMapSourcePrefix: str = "gen1",
     geoIdMapTargetPrefix: str = "gen3",
     decorators=[],
-    events: int = 10,
+    events: Optional[int] = None,
     numThreads: int = 1,
-    sample: str = "ttbar_pu200",
     s: Optional[acts.examples.Sequencer] = None,
 ):
     """Set up a ColliderML truth-tracking sequencer and return it with the performance writer.
 
+    By default, the sample is located automatically from `channel`/`pileup`
+    via `acts.examples.dataset.getColliderMLObjectDirectory` (which in turn
+    honors `$COLLIDERML_DATA_DIR`, falling back to `~/.cache/colliderml` --
+    the same cache used by the `colliderml` Python library). Pass
+    `particlesDir`/`hitsDir`/`tracksDir` explicitly to bypass this resolution.
+
+    If `readTracks` is True (default), the dataset's own published tracks are
+    also read and converted to a `ConstTrackContainer` on the whiteboard under
+    "colliderml_tracks" -- distinct from "tracks", which holds this script's
+    own truth-seeded KF tracks.
+
     Returns
     -------
-    (Sequencer, PythonTrackFinderPerformanceWriter)
+    (Sequencer, PythonPatternRecognitionPerformanceWriter)
         Call s.run() on the sequencer, then access perf_writer.histograms().
     """
-    from acts.examples.arrow import (
-        ColliderMLRelease1InputConverter,
-        ParquetReader,
-    )
-
     outputDir = Path(outputDir)
     outputDir.mkdir(parents=True, exist_ok=True)
 
@@ -64,39 +75,21 @@ def runColliderMLTruthTracking(
 
     rnd = acts.examples.RandomNumbers(seed=42)
 
-    s.addReader(
-        ParquetReader(
-            level=acts.logging.INFO,
-            collections={
-                "cml_particles": str(particlesDir),
-                "cml_hits": str(hitsDir),
-            },
-            expectedSchemas={
-                "cml_particles": ColliderMLRelease1InputConverter.particleSchema(),
-                "cml_hits": ColliderMLRelease1InputConverter.hitSchema(),
-            },
-        )
-    )
-
-    converter_kwargs = dict(
-        level=acts.logging.INFO,
-        inputParticlesTable="cml_particles",
-        inputHitsTable="cml_hits",
-        outputParticles="particles",
-        outputSimHits="simhits",
-        outputMeasurements="measurements",
-        outputMeasurementSubset="measurement_subset",
-        outputMeasSimHitsMap="measurement_simhits_map",
-        outputMeasParticlesMap="measurement_particles_map",
-        outputParticleMeasurementsMap="particle_measurements_map",
+    addColliderML(
+        s,
         trackingGeometry=trackingGeometry,
+        channel=channel,
+        pileup=pileup,
+        dataDir=dataDir,
+        particlesDir=particlesDir,
+        hitsDir=hitsDir,
+        tracksDir=tracksDir,
+        readTracks=readTracks,
+        geoIdMapPath=geoIdMapPath,
+        geoIdMapSourcePrefix=geoIdMapSourcePrefix,
+        geoIdMapTargetPrefix=geoIdMapTargetPrefix,
+        logLevel=acts.logging.INFO,
     )
-    if geoIdMapPath is not None:
-        converter_kwargs["geoIdMapPath"] = geoIdMapPath
-        converter_kwargs["geoIdMapSourcePrefix"] = geoIdMapSourcePrefix
-        converter_kwargs["geoIdMapTargetPrefix"] = geoIdMapTargetPrefix
-
-    s.addAlgorithm(ColliderMLRelease1InputConverter(**converter_kwargs))
 
     s.addWhiteboardAlias("particles_simulated_selected", "particles")
     addDigiParticleSelection(
@@ -159,18 +152,49 @@ if __name__ == "__main__":
         description="ColliderML truth-tracking Kalman filter demo on ttbar PU200."
     )
     parser.add_argument(
+        "--channel",
+        type=str,
+        default="ttbar",
+        help="ColliderML physics channel (default: ttbar)",
+    )
+    parser.add_argument(
+        "--pileup",
+        type=str,
+        default="pu0",
+        help="ColliderML pileup token, e.g. pu0 or pu200 (default: pu0)",
+    )
+    parser.add_argument(
+        "--dataDir",
+        type=Path,
+        default=None,
+        help="ColliderML cache directory (default: $COLLIDERML_DATA_DIR or ~/.cache/colliderml)",
+    )
+    parser.add_argument(
         "--particlesDir",
         "-p",
         type=Path,
-        required=True,
-        help="ColliderML particles directory",
+        default=None,
+        help="Explicit ColliderML particles directory (overrides --channel/--pileup/--dataDir)",
     )
     parser.add_argument(
         "--hitsDir",
         "-m",
         type=Path,
-        required=True,
-        help="ColliderML hits directory",
+        default=None,
+        help="Explicit ColliderML hits directory (overrides --channel/--pileup/--dataDir)",
+    )
+    parser.add_argument(
+        "--tracksDir",
+        "-t",
+        type=Path,
+        default=None,
+        help="Explicit ColliderML published-tracks directory (overrides --channel/--pileup/--dataDir)",
+    )
+    parser.add_argument(
+        "--no-tracks",
+        dest="readTracks",
+        action="store_false",
+        help="Don't read the dataset's own published tracks. Not all samples ship these.",
     )
     parser.add_argument(
         "--output",
@@ -183,8 +207,8 @@ if __name__ == "__main__":
         "--events",
         "-n",
         type=int,
-        default=10,
-        help="Number of events (default: 10)",
+        default=None,
+        help="Number of events (default: all available events in the dataset)",
     )
     parser.add_argument(
         "-j",
@@ -204,8 +228,13 @@ if __name__ == "__main__":
         trackingGeometry=trackingGeometry,
         field=field,
         outputDir=args.output,
+        channel=args.channel,
+        pileup=args.pileup,
+        dataDir=args.dataDir,
         particlesDir=args.particlesDir,
         hitsDir=args.hitsDir,
+        tracksDir=args.tracksDir,
+        readTracks=args.readTracks,
         decorators=decorators,
         events=args.events,
         numThreads=args.jobs,
