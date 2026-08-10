@@ -99,6 +99,7 @@ macro(detray_add_cpu_test algebra)
        "navigation/caching_navigator.cpp"
        "propagator/actor_chain.cpp"
        "propagator/covariance_transport.cpp"
+       "propagator/full_jacobian.cpp"
        "propagator/jacobian_cartesian.cpp"
        "propagator/jacobian_cylindrical.cpp"
        "propagator/jacobian_line.cpp"
