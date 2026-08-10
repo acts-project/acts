@@ -17,13 +17,19 @@
 
 // Detray test include(s)
 #include "detray/test/cpu/material_scan.hpp"
+#include "detray/test/cpu/material_validation.hpp"
+#include "detray/test/framework/register_checks.hpp"
 #include "detray/test/framework/test_configuration.hpp"
+#include "detray/test/framework/whiteboard.hpp"
 #include "detray/test/validation/material_validation_config.hpp"
 
 // Detray algebra plugin + detector metadata
 #include "algebra/array.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/detectors/default_metadata.hpp"
+
+// GTest include(s)
+#include <gtest/gtest.h>
 
 // Pybind11 include(s)
 #include <pybind11/pybind11.h>
@@ -32,7 +38,10 @@
 // System include(s)
 #include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -57,6 +66,37 @@ std::string to_string(const T &obj) {
   std::ostringstream os;
   os << obj;
   return os.str();
+}
+
+/// Run gtest for checks registered in @p register_checks_fn
+///
+/// Since the gtest state is global, this implementation can be run only once.
+int run_gtest(const std::function<void()> &register_checks_fn) {
+  static bool already_run = false;
+  if (already_run) {
+    throw std::runtime_error("gtest can only be run once per process");
+  }
+  already_run = true;
+
+  ::testing::InitGoogleTest();
+  register_checks_fn();
+  return RUN_ALL_TESTS();
+}
+
+/// Run the CPU material validation for the given detector.
+int run_material_validation(const detector_t &det,
+                            const detray::name_map &names,
+                            const material_scan_config_t &scan_cfg,
+                            const material_validation_config_t &val_cfg) {
+  detector_t::geometry_context ctx{};
+  auto wb = std::make_shared<detray::test::whiteboard>();
+
+  return run_gtest([&] {
+    detray::test::register_checks<detray::test::material_scan>(
+        det, names, scan_cfg, ctx, wb);
+    detray::test::register_checks<detray::test::material_validation>(
+        det, names, val_cfg, ctx, wb);
+  });
 }
 
 }  // namespace
@@ -263,4 +303,8 @@ PYBIND11_MODULE(DetrayTestsPythonBindings, m) {
           py::return_value_policy::reference_internal,
           "Track generator configuration")
       .def("__repr__", &to_string<material_scan_config_t>);
+
+  m.def("runMaterialValidation", &run_material_validation, py::arg("detector"),
+        py::arg("names"), py::arg("scanConfig"), py::arg("validationConfig"),
+        "Run the CPU material validation for the given detector.");
 }
