@@ -192,4 +192,90 @@ static_assert(transport_jacobian_substructure<false>::num_variables == 25u);
 static_assert(transport_jacobian_substructure<true>::num_variables == 43u);
 /// @}
 
+/// @brief Substructures of the factors the full Jacobian is assembled from.
+///
+/// @c update_full_jacobian is the product
+/// @c f2b * (p2f * f2p + I) * transport * b2f, and each factor is sparse in a
+/// way that is fixed by the track parametrisation, and in two cases by the
+/// surface's local frame.
+///
+/// Two of these are frame dependent. @c get_derivative_dpos_dangle returns the
+/// zero matrix for cartesian2D, polar2D, cylindrical2D and
+/// concentric_cylindrical2D, and only line2D gives it a value; likewise only
+/// line2D's @c path_derivative sets the direction terms. Both are expressed
+/// here as template parameters rather than as separate generated variants.
+/// @{
+
+/// Bound-to-free, 8x6. Rows are the free parameters, columns the bound ones.
+template <bool has_dpos_dangle>
+struct bound_to_free_substructure_type;
+
+template <>
+struct bound_to_free_substructure_type<true> {
+  using type =
+      substructure<row<variable, variable, variable, variable, zero, zero>,
+                   row<variable, variable, variable, variable, zero, zero>,
+                   row<variable, variable, variable, variable, zero, zero>,
+                   row<zero, zero, zero, zero, zero, one>,
+                   row<zero, zero, variable, variable, zero, zero>,
+                   row<zero, zero, variable, variable, zero, zero>,
+                   row<zero, zero, zero, variable, zero, zero>,
+                   row<zero, zero, zero, zero, one, zero>>::canonical_type;
+};
+
+template <>
+struct bound_to_free_substructure_type<false> {
+  using type =
+      substructure<row<variable, variable, zero, zero, zero, zero>,
+                   row<variable, variable, zero, zero, zero, zero>,
+                   row<variable, variable, zero, zero, zero, zero>,
+                   row<zero, zero, zero, zero, zero, one>,
+                   row<zero, zero, variable, variable, zero, zero>,
+                   row<zero, zero, variable, variable, zero, zero>,
+                   row<zero, zero, zero, variable, zero, zero>,
+                   row<zero, zero, zero, zero, one, zero>>::canonical_type;
+};
+
+template <bool has_dpos_dangle>
+using bound_to_free_substructure =
+    typename bound_to_free_substructure_type<has_dpos_dangle>::type;
+
+/// Free-to-bound, 6x8. Frame independent: @c dangle_ddir has a structural zero
+/// at (0, 2) because d(phi)/d(n_z) vanishes.
+using free_to_bound_substructure = substructure<
+    row<variable, variable, variable, zero, zero, zero, zero, zero>,
+    row<variable, variable, variable, zero, zero, zero, zero, zero>,
+    row<zero, zero, zero, zero, variable, variable, zero, zero>,
+    row<zero, zero, zero, zero, variable, variable, variable, zero>,
+    row<zero, zero, zero, zero, zero, zero, zero, one>,
+    row<zero, zero, zero, one, zero, zero, zero, zero>>::canonical_type;
+
+/// Path-to-free, 8x1. Free time does not depend on the path length.
+using path_to_free_substructure =
+    substructure<row<variable>, row<variable>, row<variable>, row<zero>,
+                 row<variable>, row<variable>, row<variable>,
+                 row<variable>>::canonical_type;
+
+/// Free-to-path, 1x8. Free time and q/p never contribute; the direction terms
+/// only do for line frames.
+template <bool has_direction_terms>
+struct free_to_path_substructure_type;
+
+template <>
+struct free_to_path_substructure_type<true> {
+  using type = substructure<row<variable, variable, variable, zero, variable,
+                                variable, variable, zero>>::canonical_type;
+};
+
+template <>
+struct free_to_path_substructure_type<false> {
+  using type = substructure<row<variable, variable, variable, zero, zero, zero,
+                                zero, zero>>::canonical_type;
+};
+
+template <bool has_direction_terms>
+using free_to_path_substructure =
+    typename free_to_path_substructure_type<has_direction_terms>::type;
+/// @}
+
 }  // namespace detray::ksm

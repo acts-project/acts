@@ -46,6 +46,19 @@ struct jacobian<polar2D<algebra_t>> {
       free_to_bound_jacobian_submatrix<algebra_type>;
   /// @}
 
+  /// @name Structural facts about this frame's Jacobian contributions
+  ///
+  /// The local position does not depend on the track direction, so
+  /// d(pos)/d(angle) is the zero matrix, and the path derivative only picks up
+  /// the position terms.
+  /// @{
+  /// Whether @c get_derivative_dpos_dangle can be non-zero.
+  static constexpr bool has_dpos_dangle = false;
+  /// Whether @c path_derivative sets the direction terms as well as the
+  /// position ones.
+  static constexpr bool path_derivative_has_direction_terms = false;
+  /// @}
+
   DETRAY_HOST_DEVICE
   static constexpr rotation_matrix reference_frame(
       const transform3_type &trf3, const point3_type & /*pos*/,

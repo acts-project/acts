@@ -16,7 +16,7 @@
 #include "detray/propagator/base_actor.hpp"
 #include "detray/propagator/composite_actor.hpp"
 #include "detray/propagator/detail/codegen/covariance_transport.hpp"
-#include "detray/propagator/detail/codegen/full_jacobian.hpp"
+#include "detray/propagator/detail/full_jacobian.hpp"
 #include "detray/propagator/detail/jacobian_engine.hpp"
 #include "detray/propagator/detail/noise_estimation.hpp"
 #include "detray/propagator/propagation_config.hpp"
@@ -279,6 +279,27 @@ struct parameter_transporter : base_actor {
       return detail::jacobian_engine<algebra_t>::
           template bound_to_free_jacobian_submatrix_dpos_dloc<frame_t>(
               trf3, params.pos(), params.dir());
+    }
+  };
+
+  /// @returns whether this frame can give d(pos)/d(angle) a value. Only the
+  /// line frames do, so for every other surface that block of the
+  /// bound-to-free Jacobian is structurally zero.
+  struct frame_has_dpos_dangle_visitor {
+    template <typename frame_t>
+    DETRAY_HOST_DEVICE constexpr bool operator()(
+        const frame_t& /*frame*/) const {
+      return detail::jacobian<frame_t>::has_dpos_dangle;
+    }
+  };
+
+  /// @returns whether this frame's path derivative sets the direction terms as
+  /// well as the position ones. Again only the line frames.
+  struct frame_path_has_direction_terms_visitor {
+    template <typename frame_t>
+    DETRAY_HOST_DEVICE constexpr bool operator()(
+        const frame_t& /*frame*/) const {
+      return detail::jacobian<frame_t>::path_derivative_has_direction_terms;
     }
   };
 
@@ -553,25 +574,37 @@ struct parameter_transporter : base_actor {
     const dmatrix<algebra_t, 2, 3> f2b_dangle_ddir = detail::jacobian_engine<
         algebra_t>::free_to_bound_jacobian_submatrix_dangle_ddir(dest_glob_dir);
 
-    // Finally, we can use our Sympy-generated full Jacobian computation
-    // and return its result.
-    bound_matrix_type full_jacobian;
+    // Finally, assemble the product. Which of the factors' zeros are there
+    // depends on the two surfaces' local frames, and those are only known at
+    // run time -- so select the specialisation here and let each instantiation
+    // carry its zeros in the types. Note that the transport Jacobian needs no
+    // such choice: it brings its own substructure with it, so the field
+    // gradient no longer has to be branched on here.
+    const bool dep_has_dpos_dangle =
+        types::visit<frame_registry_t, frame_has_dpos_dangle_visitor>(
+            dep_sf.shape_id());
+    const bool dest_path_has_direction_terms =
+        types::visit<frame_registry_t, frame_path_has_direction_terms_visitor>(
+            dest_sf.shape_id());
 
-    if constexpr (std::decay_t<propagator_state_t>::stepper_uses_gradient) {
-      detail::update_full_jacobian_with_gradient_impl(
-          stepping.internal_transport_jacobian(), b2f_dpos_dloc,
-          b2f_ddir_dangle, b2f_dpos_dangle, path_to_free_derivative,
-          free_to_path_derivative, f2b_dloc_dpos, f2b_dangle_ddir,
-          full_jacobian);
-    } else {
-      detail::update_full_jacobian_without_gradient_impl(
-          stepping.internal_transport_jacobian(), b2f_dpos_dloc,
-          b2f_ddir_dangle, b2f_dpos_dangle, path_to_free_derivative,
-          free_to_path_derivative, f2b_dloc_dpos, f2b_dangle_ddir,
-          full_jacobian);
+    const auto assemble = [&](auto dpos_dangle, auto path_direction_terms) {
+      return detail::update_full_jacobian<decltype(dpos_dangle)::value,
+                                          decltype(path_direction_terms)::value,
+                                          algebra_t>(
+                 stepping.internal_transport_jacobian(), b2f_dpos_dloc,
+                 b2f_ddir_dangle, b2f_dpos_dangle, path_to_free_derivative,
+                 free_to_path_derivative, f2b_dloc_dpos, f2b_dangle_ddir)
+          .template to_dense<algebra_t>();
+    };
+
+    if (dep_has_dpos_dangle) {
+      return dest_path_has_direction_terms
+                 ? assemble(std::true_type{}, std::true_type{})
+                 : assemble(std::true_type{}, std::false_type{});
     }
-
-    return full_jacobian;
+    return dest_path_has_direction_terms
+               ? assemble(std::false_type{}, std::true_type{})
+               : assemble(std::false_type{}, std::false_type{});
   }
 };
 

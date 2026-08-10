@@ -1468,6 +1468,32 @@ DETRAY_HOST_DEVICE decltype(auto) element_of(const src_t &src) {
   }
 }
 
+/// Copy one element of @p src into cell (DstRow, DstCol) of @p dst.
+///
+/// A copied region will in general overlap cells the substructure declares
+/// structural -- the direction/angle blocks of the bound-to-free Jacobian, for
+/// instance, have a zero in the corner. Such a cell has no storage, so the
+/// value cannot be written; instead the source has to agree with what the
+/// substructure already fixes there, which is checked in debug builds. This is
+/// the same discipline @c matrix::from_dense applies at its boundary.
+template <std::size_t DstRow, std::size_t DstCol, std::size_t SrcRow,
+          std::size_t SrcCol, typename dst_t, typename src_t>
+DETRAY_HOST_DEVICE void copy_one_element(dst_t &dst, const src_t &src) {
+  using value_t =
+      typename dst_t::canonical_substructure_type::template value_at<DstRow,
+                                                                     DstCol>;
+  using scalar_t = typename dst_t::scalar_type;
+
+  [[maybe_unused]] const auto value =
+      static_cast<scalar_t>(element_of<SrcRow, SrcCol>(src));
+
+  if constexpr (checks::is_index_variable<value_t>) {
+    dst.template at<DstRow, DstCol>() = value;
+  } else {
+    assert((value == static_cast<scalar_t>(value_t::value)));
+  }
+}
+
 }  // namespace detail
 
 /// Copy every element of @p src into @p dst, placing the top-left corner of
@@ -1475,10 +1501,9 @@ DETRAY_HOST_DEVICE decltype(auto) element_of(const src_t &src) {
 ///
 /// This is deliberately not a block assignment. A block would have to be a
 /// view over storage that a substructure need not lay out contiguously, and
-/// need not keep at all. Copying element by element sidesteps that, and every
-/// write goes through the compile-time accessor -- so overlapping a cell the
-/// substructure declares structural is a compile error rather than a value
-/// silently discarded.
+/// need not keep at all. Copying element by element sidesteps that: free cells
+/// are written, and cells the substructure fixes are checked against the
+/// source rather than silently overwritten or discarded.
 ///
 /// @p src may be a dense matrix or a vector; a vector is taken as one column.
 template <std::size_t RowOffset, std::size_t ColOffset, typename substructure_t,
@@ -1496,10 +1521,9 @@ DETRAY_HOST_DEVICE void copy_elements_into(
                 "the copied elements do not fit the destination");
 
   [&dst, &src]<std::size_t... Ks>(std::index_sequence<Ks...>) {
-    ((dst.template at<RowOffset + Ks / src_columns,
-                      ColOffset + Ks % src_columns>() =
-          static_cast<scalar_t>(
-              detail::element_of<Ks / src_columns, Ks % src_columns>(src))),
+    (detail::copy_one_element<RowOffset + Ks / src_columns,
+                              ColOffset + Ks % src_columns, Ks / src_columns,
+                              Ks % src_columns>(dst, src),
      ...);
   }(std::make_index_sequence<src_rows * src_columns>{});
 }

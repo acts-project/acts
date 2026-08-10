@@ -96,13 +96,6 @@ detray_add_codegen_header(
     SCRIPT gen_transport_covariance_to_bound_impl.py
     OUTPUT detray/propagator/detail/codegen/covariance_transport.hpp
 )
-detray_add_codegen_header(
-    TARGET detray_core
-    CODEGEN_DIR ${_detray_codegen_dir}
-    ACTS_CODEGEN_PKG ${_acts_codegen_pkg}
-    SCRIPT gen_full_jacobian.py
-    OUTPUT detray/propagator/detail/codegen/full_jacobian.hpp
-)
 
 unset(_detray_codegen_dir)
 unset(_acts_codegen_pkg)
