@@ -257,6 +257,11 @@ struct parameter_transporter : base_actor {
   using bound_track_parameters_type = bound_track_parameters<algebra_t>;
   // Bound matrix type (bound covariance)
   using bound_matrix_type = bound_matrix<algebra_t>;
+  // The full Jacobian in its known substructure: 25 of its 36 cells are free.
+  // Every specialisation of update_full_jacobian produces this type, so the
+  // frame the Jacobian was assembled for is not visible to the caller.
+  using ksm_full_jacobian_type =
+      ksm::matrix<ksm::full_jacobian_substructure<true>, dscalar<algebra_t>>;
   /// @}
 
   /// Use the parameter updater state
@@ -382,33 +387,29 @@ struct parameter_transporter : base_actor {
       DETRAY_DEBUG_HOST("Actor: Departure bound param.: " << departure_params);
 
       // Transport the covariance
-      const bound_matrix<algebra_t> propagation_step_jacobian =
+      const ksm_full_jacobian_type propagation_step_jacobian =
           get_full_jacobian(propagation, departure_params);
 
       // Update the full Jacobian, if required
       if (math::fabs(stepping.path_length()) > 0.f) {
         if (updater_state.has_full_jacobian()) {
-          // Both factors carry the substructure of the generated full
-          // Jacobian, and it survives the product, so the accumulator keeps
-          // it over every step. Going through it lets the multiplication skip
-          // the structurally zero terms: 225 flops rather than the 396 of a
-          // dense 6x6 product.
-          // Whether the volume carries material is a runtime property, so
-          // take the substructure that holds either way. The no-material
-          // variant is more structured still, and worth selecting statically
-          // for a detector that is known not to have volume material.
-          using ksm_jacobian_t =
-              ksm::matrix<ksm::full_jacobian_substructure<true>,
-                          dscalar<algebra_t>>;
-
-          const auto step_jac = ksm_jacobian_t::template from_dense<algebra_t>(
-              propagation_step_jacobian);
+          // The step Jacobian already carries its substructure, and the
+          // substructure is closed under multiplication, so the accumulator
+          // keeps it over every step. The product skips the structurally zero
+          // terms: 225 flops rather than the 396 of a dense 6x6 product.
+          //
+          // Only the accumulator has to be converted, because it is owned by
+          // the caller and stored dense. The substructure taken for it is the
+          // one that holds whether or not the volume carries material; the
+          // no-material variant is more structured still, and worth selecting
+          // statically for a detector known to have none.
           const auto accumulated =
-              ksm_jacobian_t::template from_dense<algebra_t>(
+              ksm_full_jacobian_type::template from_dense<algebra_t>(
                   updater_state.full_jacobian());
 
           updater_state.set_full_jacobian(
-              (step_jac * accumulated).template to_dense<algebra_t>());
+              (propagation_step_jacobian * accumulated)
+                  .template to_dense<algebra_t>());
         }
 
         // Reset transport Jacobian to identity matrix
@@ -448,7 +449,7 @@ struct parameter_transporter : base_actor {
 
   /// @returns the full Jacobian between departure and destination surfaces
   template <typename propagator_state_t>
-  DETRAY_HOST_DEVICE constexpr bound_matrix_type get_full_jacobian(
+  DETRAY_HOST_DEVICE constexpr ksm_full_jacobian_type get_full_jacobian(
       propagator_state_t& propagation,
       const bound_track_parameters_type& departure_params) const {
     // Map the surface shapes of the detector down to the common frames
@@ -591,10 +592,9 @@ struct parameter_transporter : base_actor {
       return detail::update_full_jacobian<decltype(dpos_dangle)::value,
                                           decltype(path_direction_terms)::value,
                                           algebra_t>(
-                 stepping.internal_transport_jacobian(), b2f_dpos_dloc,
-                 b2f_ddir_dangle, b2f_dpos_dangle, path_to_free_derivative,
-                 free_to_path_derivative, f2b_dloc_dpos, f2b_dangle_ddir)
-          .template to_dense<algebra_t>();
+          stepping.internal_transport_jacobian(), b2f_dpos_dloc,
+          b2f_ddir_dangle, b2f_dpos_dangle, path_to_free_derivative,
+          free_to_path_derivative, f2b_dloc_dpos, f2b_dangle_ddir);
     };
 
     if (dep_has_dpos_dangle) {

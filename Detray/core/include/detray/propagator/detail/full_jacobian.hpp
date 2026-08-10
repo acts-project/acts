@@ -78,7 +78,21 @@ DETRAY_HOST_DEVICE auto update_full_jacobian(
 
   const auto d_plus_i = p2f * f2p + identity_t{};
 
-  return (f2b * d_plus_i) * (transport_jacobian * b2f);
+  const auto result = (f2b * d_plus_i) * (transport_jacobian * b2f);
+
+  // Every specialisation has to agree on the result type: the frame-dependent
+  // zeros make the product cheaper, but they do not survive into the result,
+  // so all four instantiations are interchangeable to the caller. That is what
+  // lets get_full_jacobian pick one at run time and still have a single return
+  // type -- and what lets the accumulated Jacobian keep the same substructure.
+  static_assert(
+      std::is_same_v<
+          std::decay_t<decltype(result)>,
+          ksm::matrix<ksm::full_jacobian_substructure<true>, scalar_t>>,
+      "the assembled full Jacobian does not have the substructure declared in "
+      "known_substructure_matrix_types.hpp");
+
+  return result;
 }
 
 }  // namespace detray::detail
