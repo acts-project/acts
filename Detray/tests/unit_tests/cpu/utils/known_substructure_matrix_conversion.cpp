@@ -8,6 +8,7 @@
 
 // Project include(s).
 #include "detray/utils/known_substructure_matrix.hpp"
+#include "detray/utils/known_substructure_matrix_types.hpp"
 
 // Test include(s).
 #include "detray/test/cpu/algebra_fixture.hpp"
@@ -38,16 +39,13 @@ using ksm::substructure;
 using ksm::variable;
 using ksm::zero;
 
-/// The substructure of the full Jacobian, transcribed from the assertions that
-/// @c transport_covariance_to_bound_impl already emits: 25 free values, two
-/// structural ones and nine structural zeros.
-using j_full = substructure<
-    row<variable, variable, variable, variable, variable, zero>,
-    row<variable, variable, variable, variable, variable, zero>,
-    row<variable, variable, variable, variable, variable, zero>,
-    row<variable, variable, variable, variable, variable, zero>,
-    row<zero, zero, zero, zero, one, zero>,
-    row<variable, variable, variable, variable, variable, one>>::canonical_type;
+/// The full Jacobian as detray actually computes it, so that the conversions
+/// are exercised against a real substructure rather than an invented one. The
+/// variant that assumes volume material is the weaker of the two and is what
+/// parameter_transporter uses: 25 free values, one structural one and ten
+/// structural zeros.
+using j_full = ksm::full_jacobian_substructure<true>;
+static_assert(j_full::num_variables == 25u);
 
 /// Mirrored cells name the same variable, so they share one stored value. This
 /// is what exercises the shared-cell branch of @c from_dense.
@@ -94,12 +92,13 @@ TEST_F(detray_algebra, ksm_to_dense_materialises_structure) {
   static_assert(
       std::is_same_v<std::decay_t<decltype(d)>, dmatrix<algebra_t, 6, 6>>);
 
-  // The two structural ones ...
-  EXPECT_EQ((getter::element<4, 4>(d)), scalar{1});
+  // The single structural one, on the time diagonal ...
   EXPECT_EQ((getter::element<5, 5>(d)), scalar{1});
-  // ... and a sample of the nine structural zeros.
+  // ... and a sample of the ten structural zeros: the time column above the
+  // diagonal, and the time row beside it.
   EXPECT_EQ((getter::element<0, 5>(d)), scalar{0});
-  EXPECT_EQ((getter::element<4, 0>(d)), scalar{0});
+  EXPECT_EQ((getter::element<4, 5>(d)), scalar{0});
+  EXPECT_EQ((getter::element<5, 0>(d)), scalar{0});
 
   // Every cell, structural or not, must read back what the ksm matrix says.
   for_each_cell<j_full>([&d, &m]<std::size_t I, std::size_t J>() {
