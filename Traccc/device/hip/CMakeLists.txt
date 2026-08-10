@@ -35,9 +35,11 @@ traccc_add_library( traccc_hip hip TYPE SHARED
    "src/clusterization/kernels/ccl_kernel.hip"
    "src/clusterization/kernels/reify_cluster_data.hpp"
    "src/clusterization/kernels/reify_cluster_data.hip"
+   "include/traccc/hip/clusterization/measurement_sorting_algorithm.hpp"
+   "src/clusterization/measurement_sorting_algorithm.hip"
 )
 target_link_libraries(
     traccc_hip
     PUBLIC traccc::core traccc::hip_utils vecmem::core
-    PRIVATE HIP::hiprt traccc::device_common
+    PRIVATE HIP::hiprt roc::rocthrust traccc::device_common
 )
