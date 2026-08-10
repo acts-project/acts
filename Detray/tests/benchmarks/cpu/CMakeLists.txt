@@ -12,9 +12,6 @@ message(STATUS "Building detray host benchmarks")
 option(DETRAY_BENCHMARK_MULTITHREAD "Enable multithreaded benchmarks" OFF)
 option(DETRAY_BENCHMARK_PRINTOUTS "Enable printouts in the benchmarks" OFF)
 
-# Look for openMP, which is used for the CPU propagation benchmark
-find_package(OpenMP)
-
 # Macro setting up the CPU benchmarks for a specific algebra plugin.
 macro(detray_add_cpu_benchmark algebra)
     message(STATUS "Building 'detray::benchmark_cpu_${algebra}' component")
@@ -72,13 +69,6 @@ macro(detray_add_cpu_benchmark algebra)
         detray_benchmark_cpu_propagation_${algebra}
         PRIVATE "-march=native" "-ftree-vectorize"
     )
-
-    if(OpenMP_CXX_FOUND)
-        target_link_libraries(
-            detray_benchmark_cpu_propagation_${algebra}
-            PRIVATE OpenMP::OpenMP_CXX
-        )
-    endif()
 endmacro()
 
 # Build the array benchmark.
