@@ -76,8 +76,11 @@ void checkStrictlyIncreasing(const std::vector<double>& edges,
 }  // namespace
 
 AxisFactory::AxisFactory(Variant variant,
+                         std::optional<AxisBoundaryType> boundaryType,
                          std::optional<AxisDirection> direction)
-    : m_variant(std::move(variant)), m_direction(direction) {}
+    : m_variant(std::move(variant)),
+      m_boundaryType(boundaryType),
+      m_direction(direction) {}
 
 AxisFactory AxisFactory::Equidistant(
     std::size_t nBins, std::optional<double> min, std::optional<double> max,
@@ -90,7 +93,7 @@ AxisFactory AxisFactory::Equidistant(
     throw std::invalid_argument(
         "AxisFactory::Equidistant: at least one bin is required");
   }
-  return AxisFactory(EquidistantParams{nBins, min, max, boundaryType},
+  return AxisFactory(EquidistantParams{nBins, min, max}, boundaryType,
                      direction);
 }
 
@@ -104,7 +107,7 @@ AxisFactory AxisFactory::Variable(std::vector<double> edges,
                                   std::optional<AxisBoundaryType> boundaryType,
                                   std::optional<AxisDirection> direction) {
   checkStrictlyIncreasing(edges, "AxisFactory::Variable");
-  return AxisFactory(VariableParams{std::move(edges), boundaryType}, direction);
+  return AxisFactory(VariableParams{std::move(edges)}, boundaryType, direction);
 }
 
 AxisFactory AxisFactory::DeferredVariable(
@@ -116,9 +119,8 @@ AxisFactory AxisFactory::DeferredVariable(
     throw std::invalid_argument(
         "AxisFactory::DeferredVariable: edges must be normalized to [0, 1]");
   }
-  return AxisFactory(
-      DeferredVariableParams{std::move(normalizedEdges), boundaryType},
-      direction);
+  return AxisFactory(DeferredVariableParams{std::move(normalizedEdges)},
+                     boundaryType, direction);
 }
 
 AxisFactory AxisFactory::FromAxis(const IAxis& axis) {
@@ -131,15 +133,14 @@ AxisFactory AxisFactory::FromAxis(const IAxis& axis) {
 }
 
 AxisFactory AxisFactory::withDirection(AxisDirection direction) const {
-  return AxisFactory(m_variant, direction);
+  return AxisFactory(m_variant, m_boundaryType, direction);
 }
 
 AxisFactory AxisFactory::toDeferred() const {
   return std::visit(
       [this]<typename T>(const T& params) -> AxisFactory {
         if constexpr (std::is_same_v<T, EquidistantParams>) {
-          return AxisFactory(EquidistantParams{params.nBins, std::nullopt,
-                                               std::nullopt, std::nullopt},
+          return AxisFactory(EquidistantParams{params.nBins}, std::nullopt,
                              m_direction);
         } else if constexpr (std::is_same_v<T, VariableParams>) {
           std::vector<double> normalizedEdges = params.edges;
@@ -151,20 +152,18 @@ AxisFactory AxisFactory::toDeferred() const {
           // Force exact endpoints against floating point round-off
           normalizedEdges.front() = 0.;
           normalizedEdges.back() = 1.;
-          return AxisFactory(
-              DeferredVariableParams{std::move(normalizedEdges), std::nullopt},
-              m_direction);
+          return AxisFactory(DeferredVariableParams{std::move(normalizedEdges)},
+                             std::nullopt, m_direction);
         } else {
-          return AxisFactory(
-              DeferredVariableParams{params.normalizedEdges, std::nullopt},
-              m_direction);
+          return AxisFactory(DeferredVariableParams{params.normalizedEdges},
+                             std::nullopt, m_direction);
         }
       },
       m_variant);
 }
 
 bool AxisFactory::isDeferred() const {
-  if (!boundaryType().has_value()) {
+  if (!m_boundaryType.has_value()) {
     return true;
   }
   if (std::holds_alternative<DeferredVariableParams>(m_variant)) {
@@ -194,8 +193,7 @@ std::optional<AxisDirection> AxisFactory::direction() const {
 }
 
 std::optional<AxisBoundaryType> AxisFactory::boundaryType() const {
-  return std::visit([](const auto& params) { return params.boundaryType; },
-                    m_variant);
+  return m_boundaryType;
 }
 
 std::size_t AxisFactory::nBins() const {
@@ -225,21 +223,15 @@ const AxisFactory::DeferredVariableParams& AxisFactory::asDeferredVariable()
   return std::get<DeferredVariableParams>(m_variant);
 }
 
-std::unique_ptr<IAxis> AxisFactory::buildAxis() const {
-  return buildAxis(Options{});
-}
-
 std::unique_ptr<IAxis> AxisFactory::buildAxis(const Options& options) const {
+  AxisBoundaryType boundaryType = requireProperty(
+      mergeProperty(m_boundaryType, options.boundaryType, "boundary type"),
+      "boundary type");
   std::optional<AxisDirection> direction =
       mergeProperty(m_direction, options.direction, "direction");
 
   return std::visit(
       [&]<typename T>(const T& params) -> std::unique_ptr<IAxis> {
-        AxisBoundaryType boundaryType = requireProperty(
-            mergeProperty(params.boundaryType, options.boundaryType,
-                          "boundary type"),
-            "boundary type");
-
         // For absolute edges the range is implied by them, so merging only
         // validates a supplied one
         std::optional<double> min =
@@ -288,13 +280,13 @@ std::string AxisFactory::toString() const {
         } else {
           ss << " within deferred range";
         }
-        if (params.boundaryType.has_value()) {
-          ss << ", " << *params.boundaryType;
-        } else {
-          ss << ", deferred boundary type";
-        }
       },
       m_variant);
+  if (m_boundaryType.has_value()) {
+    ss << ", " << *m_boundaryType;
+  } else {
+    ss << ", deferred boundary type";
+  }
   return ss.str();
 }
 

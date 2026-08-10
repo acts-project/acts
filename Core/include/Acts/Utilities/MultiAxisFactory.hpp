@@ -36,9 +36,9 @@ class Surface;
 /// storage order.
 class MultiAxisFactory {
  public:
-  /// Non-owning view onto the consumer supplied inputs, one
-  /// @c AxisFactory::Options per axis, in axis order
-  using OptionsView = std::span<const AxisFactory::Options>;
+  /// Consumer supplied inputs, one @c AxisFactory::Options per axis, in axis
+  /// order
+  using Options = std::vector<AxisFactory::Options>;
 
   /// Construct from one axis description per dimension
   /// @param axisFactories the axis descriptions, in axis order
@@ -72,44 +72,31 @@ class MultiAxisFactory {
   const AxisFactory& axisFactory(std::size_t i) const;
 
   /// Get all axis descriptions
-  /// @return const reference to the axis descriptions, in axis order
-  const std::vector<AxisFactory>& axisFactories() const;
+  /// @return view onto the axis descriptions, in axis order
+  std::span<const AxisFactory> axisFactories() const;
 
   /// Check if any of the contained descriptions is deferred, i.e. requires
   /// consumer supplied options to produce axes
   /// @return true if any axis description is deferred
   bool isDeferred() const;
 
-  /// Build the axes from fully specified descriptions
-  /// @throws std::domain_error if any description is deferred
-  /// @return the created axes, in axis order
-  std::vector<std::unique_ptr<IAxis>> buildAxes() const;
-
-  /// Build the axes from deferred descriptions with the consumer supplied
-  /// ranges, boundary types and directions
-  /// @param options one option set per axis, in axis order
-  /// @throws std::domain_error if any description is fully specified
-  /// @throws std::invalid_argument if the number of option sets does not
-  ///         match the number of axes, or a direction mismatches
-  /// @return the created axes, in axis order
-  std::vector<std::unique_ptr<IAxis>> buildAxes(OptionsView options) const;
-
-  /// Build a multi-axis from fully specified descriptions
-  /// @throws std::domain_error if any description is deferred or the
+  /// Build a multi-axis, one option set per axis or none at all
+  /// @param options one option set per axis, in axis order, or empty
+  /// @throws std::domain_error if a property is given by neither side, or the
   ///         dimension exceeds the supported maximum of 3
+  /// @throws std::invalid_argument if the number of option sets is neither
+  ///         zero nor the number of axes, or a property mismatches
   /// @return the created multi-axis
-  std::unique_ptr<IMultiAxis> buildMultiAxis() const;
+  std::unique_ptr<IMultiAxis> buildMultiAxis(const Options& options = {}) const;
 
-  /// Build a multi-axis from deferred descriptions with the consumer supplied
-  /// ranges, boundary types and directions
-  /// @param options one option set per axis, in axis order
-  /// @throws std::domain_error if any description is fully specified or the
-  ///         dimension exceeds the supported maximum of 3
-  /// @throws std::invalid_argument if the number of option sets does not
-  ///         match the number of axes, or a direction mismatches
+ protected:
+  /// Build a multi-axis from a view onto the option sets
+  /// @param options one option set per axis, in axis order, or empty
   /// @return the created multi-axis
-  std::unique_ptr<IMultiAxis> buildMultiAxis(OptionsView options) const;
+  std::unique_ptr<IMultiAxis> buildMultiAxisImpl(
+      std::span<const AxisFactory::Options> options) const;
 
+ public:
   /// Get a string representation of this description
   /// @return the string representation
   std::string toString() const;
@@ -131,12 +118,6 @@ class MultiAxisFactory {
   }
 
  private:
-  /// Assemble a multi-axis from already built axes
-  /// @param axes the axes, in axis order
-  /// @return the created multi-axis
-  static std::unique_ptr<IMultiAxis> makeMultiAxis(
-      const std::vector<std::unique_ptr<IAxis>>& axes);
-
   std::vector<AxisFactory> m_axisFactories;
 };
 
@@ -159,25 +140,18 @@ class MultiAxisFactoryXD : public MultiAxisFactory {
             std::make_move_iterator(axisFactories.begin()),
             std::make_move_iterator(axisFactories.end()))) {}
 
-  /// Make the type-erased base overloads visible next to the ones below
-  using MultiAxisFactory::buildMultiAxis;
+  /// Consumer supplied inputs, one @c AxisFactory::Options per axis, in axis
+  /// order; an all-default set leaves every property to the description
+  using Options = std::array<AxisFactory::Options, DIM>;
 
-  /// Build a multi-axis from fully specified descriptions
-  /// @throws std::domain_error if any description is deferred
-  /// @return the created multi-axis of dimension @c DIM
-  std::unique_ptr<IMultiAxisXD<DIM>> buildMultiAxis() const {
-    return downcast(MultiAxisFactory::buildMultiAxis());
-  }
-
-  /// Build a multi-axis from deferred descriptions with the consumer supplied
-  /// ranges, boundary types and directions
+  /// Build a multi-axis, one option set per axis
   /// @param options one option set per axis, in axis order
-  /// @throws std::domain_error if any description is fully specified
-  /// @throws std::invalid_argument if a direction mismatches
+  /// @throws std::domain_error if a property is given by neither side
+  /// @throws std::invalid_argument if a property mismatches
   /// @return the created multi-axis of dimension @c DIM
   std::unique_ptr<IMultiAxisXD<DIM>> buildMultiAxis(
-      const std::array<AxisFactory::Options, DIM>& options) const {
-    return downcast(MultiAxisFactory::buildMultiAxis(options));
+      const Options& options = {}) const {
+    return downcast(buildMultiAxisImpl(options));
   }
 
  private:

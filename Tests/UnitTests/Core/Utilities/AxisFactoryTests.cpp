@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(AxisFactoryEquidistant) {
   BOOST_CHECK(af.asEquidistant().max == 10.);
   BOOST_CHECK_THROW(af.asVariable(), std::bad_variant_access);
 
-  auto axis = af.buildAxis();
+  auto axis = af.buildAxis({});
   BOOST_CHECK(axis->isEquidistant());
   BOOST_CHECK_EQUAL(axis->getBoundaryType(), Bound);
   BOOST_CHECK_EQUAL(axis->getNBins(), 5);
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(AxisFactoryVariable) {
   BOOST_CHECK(af.boundaryType() == Open);
   BOOST_CHECK_EQUAL(af.nBins(), 3);
 
-  auto axis = af.buildAxis();
+  auto axis = af.buildAxis({});
   BOOST_CHECK(axis->isVariable());
   BOOST_CHECK_EQUAL(axis->getBoundaryType(), Open);
   std::vector<double> expectedEdges = {0., 1., 4., 10.};
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(AxisFactoryVariable) {
   // A variable axis without a boundary type takes it from the consumer
   AxisFactory afOpen = AxisFactory::Variable({0., 1., 4., 10.});
   BOOST_CHECK(afOpen.isDeferred());
-  BOOST_CHECK_THROW(afOpen.buildAxis(), std::domain_error);
+  BOOST_CHECK_THROW(afOpen.buildAxis({}), std::domain_error);
   BOOST_CHECK_EQUAL(
       afOpen.buildAxis({.boundaryType = Bound})->getBoundaryType(), Bound);
 
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(AxisFactoryDeferredEquidistant) {
   BOOST_CHECK_EQUAL(af.asEquidistant().nBins, 20);
 
   // A deferred description cannot be built without the missing properties
-  BOOST_CHECK_THROW(af.buildAxis(), std::domain_error);
+  BOOST_CHECK_THROW(af.buildAxis({}), std::domain_error);
   BOOST_CHECK_THROW(af.buildAxis({.min = -2., .max = 2.}), std::domain_error);
 
   auto axis = af.buildAxis({.min = -2., .max = 2., .boundaryType = Closed});
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(AxisFactoryDeferredVariable) {
   BOOST_CHECK_EQUAL(af.nBins(), 3);
 
   BOOST_CHECK(af.isDeferredVariable());
-  BOOST_CHECK_THROW(af.buildAxis(), std::domain_error);
+  BOOST_CHECK_THROW(af.buildAxis({}), std::domain_error);
 
   // Edges are scaled affinely onto the supplied range
   auto axis = af.buildAxis({.min = 10., .max = 30., .boundaryType = Bound});
@@ -171,13 +171,13 @@ BOOST_AUTO_TEST_CASE(AxisFactoryFromAxis) {
   BOOST_CHECK(af.isEquidistant());
   BOOST_CHECK(af.direction() == Acts::AxisDirection::AxisZ);
   // Round trip
-  BOOST_CHECK(*af.buildAxis() == *eqAxis);
+  BOOST_CHECK(*af.buildAxis({}) == *eqAxis);
 
   auto varAxis = Acts::IAxis::createVariable(Closed, {0., 2., 3.});
   AxisFactory afVar = AxisFactory::FromAxis(*varAxis);
   BOOST_CHECK(afVar.isVariable());
   BOOST_CHECK(!afVar.direction().has_value());
-  BOOST_CHECK(*afVar.buildAxis() == *varAxis);
+  BOOST_CHECK(*afVar.buildAxis({}) == *varAxis);
 }
 
 BOOST_AUTO_TEST_CASE(AxisFactoryDirectionHandling) {
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(AxisFactoryDirectionHandling) {
   BOOST_CHECK_THROW(afFull.buildAxis({.direction = AxisY}),
                     std::invalid_argument);
   BOOST_CHECK(afFull.buildAxis({.direction = AxisX})->getDirection() == AxisX);
-  BOOST_CHECK(afFull.buildAxis()->getDirection() == AxisX);
+  BOOST_CHECK(afFull.buildAxis({})->getDirection() == AxisX);
 }
 
 BOOST_AUTO_TEST_CASE(AxisFactoryToDeferred) {

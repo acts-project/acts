@@ -161,7 +161,7 @@ const AxisFactory& MultiAxisFactory::axisFactory(std::size_t i) const {
   return m_axisFactories.at(i);
 }
 
-const std::vector<AxisFactory>& MultiAxisFactory::axisFactories() const {
+std::span<const AxisFactory> MultiAxisFactory::axisFactories() const {
   return m_axisFactories;
 }
 
@@ -170,40 +170,25 @@ bool MultiAxisFactory::isDeferred() const {
       m_axisFactories, [](const AxisFactory& af) { return af.isDeferred(); });
 }
 
-std::vector<std::unique_ptr<IAxis>> MultiAxisFactory::buildAxes() const {
-  std::vector<std::unique_ptr<IAxis>> axes;
-  axes.reserve(size());
-  for (const AxisFactory& af : m_axisFactories) {
-    axes.push_back(af.buildAxis());
-  }
-  return axes;
+std::unique_ptr<IMultiAxis> MultiAxisFactory::buildMultiAxis(
+    const Options& options) const {
+  return buildMultiAxisImpl(options);
 }
 
-std::vector<std::unique_ptr<IAxis>> MultiAxisFactory::buildAxes(
-    OptionsView options) const {
-  if (options.size() != size()) {
+std::unique_ptr<IMultiAxis> MultiAxisFactory::buildMultiAxisImpl(
+    std::span<const AxisFactory::Options> options) const {
+  if (!options.empty() && options.size() != size()) {
     throw std::invalid_argument(
-        "MultiAxisFactory: one option set per axis is required");
+        "MultiAxisFactory: either one option set per axis or none at all");
   }
+
   std::vector<std::unique_ptr<IAxis>> axes;
   axes.reserve(size());
   for (std::size_t i = 0; i < size(); ++i) {
-    axes.push_back(m_axisFactories[i].buildAxis(options[i]));
+    axes.push_back(m_axisFactories[i].buildAxis(
+        options.empty() ? AxisFactory::Options{} : options[i]));
   }
-  return axes;
-}
 
-std::unique_ptr<IMultiAxis> MultiAxisFactory::buildMultiAxis() const {
-  return makeMultiAxis(buildAxes());
-}
-
-std::unique_ptr<IMultiAxis> MultiAxisFactory::buildMultiAxis(
-    OptionsView options) const {
-  return makeMultiAxis(buildAxes(options));
-}
-
-std::unique_ptr<IMultiAxis> MultiAxisFactory::makeMultiAxis(
-    const std::vector<std::unique_ptr<IAxis>>& axes) {
   switch (axes.size()) {
     case 1:
       return IMultiAxis::create(*axes[0]);
@@ -229,8 +214,7 @@ std::string MultiAxisFactory::toString() const {
 
 std::unique_ptr<IMultiAxis2D> resolveMultiAxis(
     const MultiAxisFactory2D& multiAxisFactory, const Surface& surface) {
-  const std::vector<AxisFactory>& axisFactories =
-      multiAxisFactory.axisFactories();
+  std::span<const AxisFactory> axisFactories = multiAxisFactory.axisFactories();
   std::array<AxisDirection, 2> canonical = surface.localAxes();
 
   const std::size_t nDirected = std::ranges::count_if(

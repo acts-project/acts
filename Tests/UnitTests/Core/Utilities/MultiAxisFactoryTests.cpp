@@ -22,6 +22,7 @@
 #include "Acts/Utilities/MultiAxisFactory.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
+#include <array>
 #include <numbers>
 #include <optional>
 #include <stdexcept>
@@ -43,13 +44,10 @@ BOOST_AUTO_TEST_CASE(MultiAxisFactoryBasics) {
   BOOST_CHECK_EQUAL(maf.axisFactory(1).nBins(), 2);
   BOOST_CHECK_THROW(maf.axisFactory(2), std::out_of_range);
 
-  auto axes = maf.buildAxes();
-  BOOST_CHECK_EQUAL(axes.size(), 2);
-  BOOST_CHECK(axes[0]->isEquidistant());
-  BOOST_CHECK(axes[1]->isVariable());
-
   auto multiAxis = maf.buildMultiAxis();
   BOOST_CHECK_EQUAL(multiAxis->getNAxes(), 2);
+  BOOST_CHECK(multiAxis->getAxis(0).isEquidistant());
+  BOOST_CHECK(multiAxis->getAxis(1).isVariable());
   BOOST_CHECK_EQUAL(multiAxis->getAxis(0).getNBins(), 10);
   BOOST_CHECK_EQUAL(multiAxis->getAxis(1).getNBins(), 2);
 
@@ -60,7 +58,7 @@ BOOST_AUTO_TEST_CASE(MultiAxisFactoryBasics) {
   MultiAxisFactory mixed({AxisFactory::Equidistant(10, 0., 1., Bound),
                           AxisFactory::DeferredEquidistant(5)});
   BOOST_CHECK(mixed.isDeferred());
-  BOOST_CHECK_THROW(mixed.buildAxes(), std::domain_error);
+  BOOST_CHECK_THROW(mixed.buildMultiAxis(), std::domain_error);
 }
 
 BOOST_AUTO_TEST_CASE(MultiAxisFactoryDeferredResolution) {
@@ -71,33 +69,34 @@ BOOST_AUTO_TEST_CASE(MultiAxisFactoryDeferredResolution) {
       {AxisFactory::DeferredEquidistant(4, AxisRPhi),
        AxisFactory::DeferredVariable({0., 0.5, 1.}, std::nullopt, AxisZ)});
   BOOST_CHECK(maf.isDeferred());
-  BOOST_CHECK_THROW(maf.buildAxes(), std::domain_error);
+  BOOST_CHECK_THROW(maf.buildMultiAxis(), std::domain_error);
 
-  std::vector<AxisFactory::Options> options = {{-3., 3., Closed, AxisRPhi},
-                                               {-10., 10., Bound, AxisZ}};
-  auto axes = maf.buildAxes(options);
-  BOOST_CHECK_EQUAL(axes.size(), 2);
-  BOOST_CHECK_EQUAL(axes[0]->getBoundaryType(), Closed);
-  BOOST_CHECK_EQUAL(axes[0]->getNBins(), 4);
-  BOOST_CHECK(axes[0]->getDirection() == AxisRPhi);
-  BOOST_CHECK_EQUAL(axes[1]->getBoundaryType(), Bound);
-  CHECK_CLOSE_ABS(axes[1]->getBinEdges()[1], 0., 1e-15);
-  BOOST_CHECK(axes[1]->getDirection() == AxisZ);
+  MultiAxisFactory::Options options = {
+      {.min = -3., .max = 3., .boundaryType = Closed, .direction = AxisRPhi},
+      {.min = -10., .max = 10., .boundaryType = Bound, .direction = AxisZ}};
+  auto axes = maf.buildMultiAxis(options);
+  BOOST_CHECK_EQUAL(axes->getNAxes(), 2);
+  BOOST_CHECK_EQUAL(axes->getAxis(0).getBoundaryType(), Closed);
+  BOOST_CHECK_EQUAL(axes->getAxis(0).getNBins(), 4);
+  BOOST_CHECK(axes->getAxis(0).getDirection() == AxisRPhi);
+  BOOST_CHECK_EQUAL(axes->getAxis(1).getBoundaryType(), Bound);
+  CHECK_CLOSE_ABS(axes->getAxis(1).getBinEdges()[1], 0., 1e-15);
+  BOOST_CHECK(axes->getAxis(1).getDirection() == AxisZ);
 
   // Directions are validated per axis
-  std::vector<AxisFactory::Options> swapped = {
-      {.min = -3., .max = 3., .boundaryType = Closed, .direction = AxisZ},
-      {.min = -10., .max = 10., .boundaryType = Bound, .direction = AxisRPhi}};
-  BOOST_CHECK_THROW(maf.buildAxes(swapped), std::invalid_argument);
+  BOOST_CHECK_THROW(
+      maf.buildMultiAxis(
+          {{.min = -3., .max = 3., .boundaryType = Closed, .direction = AxisZ},
+           {.min = -10.,
+            .max = 10.,
+            .boundaryType = Bound,
+            .direction = AxisRPhi}}),
+      std::invalid_argument);
 
   // Sizes have to match
-  std::vector<AxisFactory::Options> tooFew = {
-      {.min = 0., .max = 1., .boundaryType = Bound}};
-  BOOST_CHECK_THROW(maf.buildAxes(tooFew), std::invalid_argument);
-
-  auto multiAxis = maf.buildMultiAxis(options);
-  BOOST_CHECK_EQUAL(multiAxis->getNAxes(), 2);
-  BOOST_CHECK_EQUAL(multiAxis->getAxis(0).getBoundaryType(), Closed);
+  BOOST_CHECK_THROW(
+      maf.buildMultiAxis({{.min = 0., .max = 1., .boundaryType = Bound}}),
+      std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(MultiAxisFactoryXDApi) {

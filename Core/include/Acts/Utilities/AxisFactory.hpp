@@ -20,6 +20,24 @@
 
 namespace Acts {
 
+/// @brief Axis properties supplied by the consumer of an @c AxisFactory at
+/// build time
+///
+/// Each property fills in the corresponding one of the description if that is
+/// unset, and validates it otherwise. Spelled @c AxisFactory::Options at the
+/// use sites; it only lives at namespace scope so that it is complete where
+/// @c AxisFactory::buildAxis defaults it.
+struct AxisFactoryOptions {
+  /// Minimum edge of the axis
+  std::optional<double> min = std::nullopt;
+  /// Maximum edge of the axis
+  std::optional<double> max = std::nullopt;
+  /// Boundary type of the axis
+  std::optional<AxisBoundaryType> boundaryType = std::nullopt;
+  /// Direction of the axis
+  std::optional<AxisDirection> direction = std::nullopt;
+};
+
 /// @brief Variant-like description of an axis that builds @c IAxis objects
 ///
 /// Every property except the binning structure itself is optional. What the
@@ -34,31 +52,17 @@ namespace Acts {
 /// property that neither side gives is an error.
 class AxisFactory {
  public:
-  /// @brief Axis properties supplied by the consumer at build time
-  ///
-  /// Each property fills in the corresponding one of the description if that
-  /// is unset, and validates it otherwise.
-  struct Options {
-    /// Minimum edge of the axis
-    std::optional<double> min;
-    /// Maximum edge of the axis
-    std::optional<double> max;
-    /// Boundary type of the axis
-    std::optional<AxisBoundaryType> boundaryType;
-    /// Direction of the axis
-    std::optional<AxisDirection> direction;
-  };
+  /// Axis properties supplied by the consumer at build time
+  using Options = AxisFactoryOptions;
 
   /// Parameters for an equidistant axis
   struct EquidistantParams {
     /// Number of bins
-    std::size_t nBins{};
+    std::size_t nBins = 0;
     /// Minimum edge of the axis
-    std::optional<double> min;
+    std::optional<double> min = std::nullopt;
     /// Maximum edge of the axis
-    std::optional<double> max;
-    /// Boundary type of the axis
-    std::optional<AxisBoundaryType> boundaryType;
+    std::optional<double> max = std::nullopt;
 
     /// Check if two parameter sets are equal, required for comparing the
     /// enclosing description
@@ -73,8 +77,6 @@ class AxisFactory {
   struct VariableParams {
     /// Bin edges, strictly increasing
     std::vector<double> edges;
-    /// Boundary type of the axis
-    std::optional<AxisBoundaryType> boundaryType;
 
     /// Check if two parameter sets are equal, required for comparing the
     /// enclosing description
@@ -91,8 +93,6 @@ class AxisFactory {
     /// Relative bin edges, strictly increasing, with first value 0 and last
     /// value 1
     std::vector<double> normalizedEdges;
-    /// Boundary type of the axis
-    std::optional<AxisBoundaryType> boundaryType;
 
     /// Check if two parameter sets are equal, required for comparing the
     /// enclosing description
@@ -110,8 +110,11 @@ class AxisFactory {
 
   /// Construct from variant
   /// @param variant the alternative to hold
+  /// @param boundaryType the optional axis boundary type
   /// @param direction the optional axis direction
-  explicit AxisFactory(Variant variant, std::optional<AxisDirection> direction);
+  explicit AxisFactory(Variant variant,
+                       std::optional<AxisBoundaryType> boundaryType,
+                       std::optional<AxisDirection> direction);
 
  public:
   /// Equidistant axis; every property but the number of bins may be left to
@@ -225,11 +228,6 @@ class AxisFactory {
   /// @return reference to the deferred variable parameters
   const DeferredVariableParams& asDeferredVariable() const;
 
-  /// Build the axis from a description that leaves nothing open
-  /// @throws std::domain_error if a property is missing
-  /// @return the created axis
-  std::unique_ptr<IAxis> buildAxis() const;
-
   /// Build the axis, filling in the properties the description leaves open
   /// and validating the ones it fixes
   /// @param options the properties supplied by the consumer
@@ -237,7 +235,7 @@ class AxisFactory {
   /// @throws std::invalid_argument if a property is given by both sides with
   ///         different values, or the resulting range is invalid
   /// @return the created axis
-  std::unique_ptr<IAxis> buildAxis(const Options& options) const;
+  std::unique_ptr<IAxis> buildAxis(const Options& options = {}) const;
 
   /// Get a string representation of this description
   /// @return the string representation
@@ -261,6 +259,7 @@ class AxisFactory {
 
  private:
   Variant m_variant;
+  std::optional<AxisBoundaryType> m_boundaryType;
   std::optional<AxisDirection> m_direction;
 };
 
