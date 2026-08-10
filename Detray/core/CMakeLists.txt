@@ -110,13 +110,6 @@ detray_add_codegen_header(
     SCRIPT gen_update_rk_transport_jacobian_impl.py
     OUTPUT detray/propagator/detail/codegen/update_rk_transport_jacobian.hpp
 )
-detray_add_codegen_header(
-    TARGET detray_core
-    CODEGEN_DIR ${_detray_codegen_dir}
-    ACTS_CODEGEN_PKG ${_acts_codegen_pkg}
-    SCRIPT gen_transport_jacobian_types.py
-    OUTPUT detray/propagator/detail/codegen/transport_jacobian.hpp
-)
 
 unset(_detray_codegen_dir)
 unset(_acts_codegen_pkg)

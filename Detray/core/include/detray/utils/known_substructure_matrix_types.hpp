@@ -108,4 +108,88 @@ static_assert(
     "under multiplication: an accumulated Jacobian would not keep it");
 /// @}
 
+/// @brief Substructure of the RK transport Jacobian.
+///
+/// The 8x8 free-to-free Jacobian the Runge-Kutta stepper accumulates. Both the
+/// step matrix D and the running Jacobian carry it, and it is the structure
+/// that @c gen_transport_jacobian_types.py generates a bespoke storage type
+/// for. Free time is untouched by the step, so its row is a unit vector; the
+/// position rows couple to position only when the stepper follows the spatial
+/// gradient of the magnetic field.
+///
+///     has_field_gradient = false            has_field_gradient = true
+///     [ 1  0  0  0 | v  v  v | v ]          [ v  v  v  0 | v  v  v | v ]
+///     [ 0  1  0  0 | v  v  v | v ]          [ v  v  v  0 | v  v  v | v ]
+///     [ 0  0  1  0 | v  v  v | v ]          [ v  v  v  0 | v  v  v | v ]
+///     [ 0  0  0  1 | 0  0  0 | 0 ]          [ 0  0  0  1 | 0  0  0 | 0 ]
+///     [ 0  0  0  0 | v  v  v | v ]          [ v  v  v  0 | v  v  v | v ]
+///     [ 0  0  0  0 | v  v  v | v ]          [ v  v  v  0 | v  v  v | v ]
+///     [ 0  0  0  0 | v  v  v | v ]          [ v  v  v  0 | v  v  v | v ]
+///     [ 0  0  0  0 | 0  0  0 | v ]          [ 0  0  0  0 | 0  0  0 | v ]
+///
+///           25 of 64 free                         43 of 64 free
+/// @{
+template <bool has_field_gradient>
+struct transport_jacobian_substructure_type;
+
+/// No field gradient: the position block stays the identity it started as.
+template <>
+struct transport_jacobian_substructure_type<false> {
+  using type = substructure<
+      row<one, zero, zero, zero, variable, variable, variable, variable>,
+      row<zero, one, zero, zero, variable, variable, variable, variable>,
+      row<zero, zero, one, zero, variable, variable, variable, variable>,
+      row<zero, zero, zero, one, zero, zero, zero, zero>,
+      row<zero, zero, zero, zero, variable, variable, variable, variable>,
+      row<zero, zero, zero, zero, variable, variable, variable, variable>,
+      row<zero, zero, zero, zero, variable, variable, variable, variable>,
+      row<zero, zero, zero, zero, zero, zero, zero, variable>>::canonical_type;
+};
+
+/// Field gradient followed: position and direction pick up d/d(position).
+template <>
+struct transport_jacobian_substructure_type<true> {
+  using type = substructure<
+      row<variable, variable, variable, zero, variable, variable, variable,
+          variable>,
+      row<variable, variable, variable, zero, variable, variable, variable,
+          variable>,
+      row<variable, variable, variable, zero, variable, variable, variable,
+          variable>,
+      row<zero, zero, zero, one, zero, zero, zero, zero>,
+      row<variable, variable, variable, zero, variable, variable, variable,
+          variable>,
+      row<variable, variable, variable, zero, variable, variable, variable,
+          variable>,
+      row<variable, variable, variable, zero, variable, variable, variable,
+          variable>,
+      row<zero, zero, zero, zero, zero, zero, zero, variable>>::canonical_type;
+};
+
+template <bool has_field_gradient>
+using transport_jacobian_substructure =
+    typename transport_jacobian_substructure_type<has_field_gradient>::type;
+/// @}
+
+/// Closed under multiplication, so the Jacobian the stepper accumulates step
+/// by step keeps its structure rather than degrading to dense.
+/// @{
+static_assert(
+    std::is_same_v<transport_jacobian_substructure<false>::multiplication_type<
+                       transport_jacobian_substructure<false>>,
+                   transport_jacobian_substructure<false>>,
+    "the transport Jacobian substructure without field gradient is not closed "
+    "under multiplication: the accumulated Jacobian would not keep it");
+
+static_assert(
+    std::is_same_v<transport_jacobian_substructure<true>::multiplication_type<
+                       transport_jacobian_substructure<true>>,
+                   transport_jacobian_substructure<true>>,
+    "the transport Jacobian substructure with field gradient is not closed "
+    "under multiplication: the accumulated Jacobian would not keep it");
+
+static_assert(transport_jacobian_substructure<false>::num_variables == 25u);
+static_assert(transport_jacobian_substructure<true>::num_variables == 43u);
+/// @}
+
 }  // namespace detray::ksm
