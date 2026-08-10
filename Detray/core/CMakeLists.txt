@@ -100,10 +100,6 @@ detray_add_codegen_header(
     TARGET detray_core
     KEY Detray/core/detray/propagator/detail/codegen/update_rk_transport_jacobian.hpp
 )
-detray_add_codegen_header(
-    TARGET detray_core
-    KEY Detray/core/detray/propagator/detail/codegen/transport_jacobian.hpp
-)
 
 # Set up the libraries that use specific algebra plugins.
 detray_add_library( detray_core_array core_array )

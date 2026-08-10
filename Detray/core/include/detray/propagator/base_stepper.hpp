@@ -18,7 +18,6 @@
 #include "detray/propagator/constrained_step.hpp"
 #include "detray/propagator/detail/print_stepper_state.hpp"
 #include "detray/propagator/stepping_config.hpp"
-#include "detray/propagator/transport_jacobian.hpp"
 #include "detray/tracks/tracks.hpp"
 #include "detray/utils/curvilinear_frame.hpp"
 #include "detray/utils/logging.hpp"
@@ -72,7 +71,10 @@ class base_stepper {
       // HACK: When the overload resolution for the transport Jacobian
       // type is resolved, turn this into a default member
       // initialization.
-      if constexpr (concepts::transport_jacobian<internal_jacobian_type>) {
+      // A structured Jacobian brings its own identity: matrix::identity
+      // writes the diagonal through runtime indices, which a compile-time
+      // addressed matrix cannot offer.
+      if constexpr (requires { internal_jacobian_type::identity(); }) {
         m_jac_transport = internal_jacobian_type::identity();
       } else {
         m_jac_transport = matrix::identity<internal_jacobian_type>();
@@ -98,7 +100,10 @@ class base_stepper {
       // HACK: When the overload resolution for the transport Jacobian
       // type is resolved, turn this into a default member
       // initialization.
-      if constexpr (concepts::transport_jacobian<internal_jacobian_type>) {
+      // A structured Jacobian brings its own identity: matrix::identity
+      // writes the diagonal through runtime indices, which a compile-time
+      // addressed matrix cannot offer.
+      if constexpr (requires { internal_jacobian_type::identity(); }) {
         m_jac_transport = internal_jacobian_type::identity();
       } else {
         m_jac_transport = matrix::identity<internal_jacobian_type>();
@@ -186,7 +191,7 @@ class base_stepper {
     inline free_matrix_type transport_jacobian() const
       requires(!std::same_as<free_matrix_type, internal_jacobian_type>)
     {
-      return m_jac_transport.operator dmatrix<algebra_t, 8, 8>();
+      return m_jac_transport.template to_dense<algebra_t>();
     }
 
     /// @returns the current transport Jacbian - const
@@ -222,7 +227,10 @@ class base_stepper {
     inline void reset_transport_jacobian() {
       // HACK: When the overload resolution for the transport Jacobian
       // type is resolved, remove this conditional logic.
-      if constexpr (concepts::transport_jacobian<internal_jacobian_type>) {
+      // A structured Jacobian brings its own identity: matrix::identity
+      // writes the diagonal through runtime indices, which a compile-time
+      // addressed matrix cannot offer.
+      if constexpr (requires { internal_jacobian_type::identity(); }) {
         m_jac_transport = internal_jacobian_type::identity();
       } else {
         m_jac_transport = matrix::identity<internal_jacobian_type>();
