@@ -22,6 +22,8 @@
 
 namespace Acts::Experimental {
 
+using namespace detail;
+
 GraphBasedTrackSeeder::DerivedConfig::DerivedConfig(const Config& config)
     : Config(config) {
   phiSliceWidth = 2 * std::numbers::pi_v<float> / config.nMaxPhiSlice;

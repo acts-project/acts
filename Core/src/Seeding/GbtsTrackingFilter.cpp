@@ -14,7 +14,7 @@
 #include <cmath>
 #include <iostream>
 
-namespace Acts::Experimental {
+namespace Acts::Experimental::detail {
 
 void GbtsEdgeState::initialize(const GbtsEdge& pS,
                                const GbtsNodeView& nodeView) {
@@ -63,6 +63,12 @@ void GbtsEdgeState::initialize(const GbtsEdge& pS,
   cy[1][1] = 0.001f;
 }
 
+}  // namespace Acts::Experimental::detail
+
+namespace Acts::Experimental {
+
+using namespace detail;
+
 GbtsTrackingFilter::GbtsTrackingFilter(
     const Config& config, const std::shared_ptr<const GbtsGeometry>& geometry)
     : m_cfg(config), m_geometry(geometry) {}
@@ -106,7 +112,7 @@ GbtsEdgeState GbtsTrackingFilter::followTrack(State& state,
 void GbtsTrackingFilter::propagate(State& state, const GbtsNodeView& nodeView,
                                    std::vector<GbtsEdge>& sb, GbtsEdge& pS,
                                    GbtsEdgeState& ts) const {
-  if (state.globalStateCounter >= kGbtsMaxEdgeStates) {
+  if (state.globalStateCounter >= detail::kGbtsMaxEdgeStates) {
     return;
   }
 
@@ -147,7 +153,7 @@ void GbtsTrackingFilter::propagate(State& state, const GbtsNodeView& nodeView,
   // the end of chain
   if (lCont.empty()) {
     // store in the vector
-    if (state.globalStateCounter < kGbtsMaxEdgeStates) {
+    if (state.globalStateCounter < detail::kGbtsMaxEdgeStates) {
       if (state.stateVec.empty()) {
         // add the first segment state
         GbtsEdgeState* p = &state.stateStore[state.globalStateCounter];

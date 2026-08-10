@@ -11,10 +11,10 @@
 #include "Acts/EventData/SpacePointColumnProxy.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/Types.hpp"
+#include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 
 #include <array>
 #include <cstdint>
-#include <limits>
 #include <memory>
 #include <optional>
 #include <span>
@@ -22,8 +22,7 @@
 
 namespace Acts::Experimental {
 
-/// Maximum number of neighbouring edges recorded per graph edge
-static constexpr std::uint32_t kGbtsMaxEdgeNeighbours = 6;
+class GraphBasedTrackSeeder;
 
 /// Number of values per row of the machine learning lookup table: the cluster
 /// width the row is keyed on, followed by two pairs of tau bounds.
@@ -34,164 +33,6 @@ class GbtsGeometry;
 /// Machine learning lookup table for Gbts seeding
 using GbtsMlLookupTable =
     std::vector<std::array<float, kGbtsMlLookupTableColumns>>;
-
-/// Index of a graph node inside GbtsNodeStorage. Nodes are stored ordered by
-/// (eta bin, phi), so all nodes of an eta bin form a contiguous range.
-using GbtsNodeIndex = SpacePointIndex;
-
-/// Sentinel for an unset graph node index.
-static constexpr GbtsNodeIndex kGbtsNodeIndexInvalid = kSpacePointIndexInvalid;
-
-/// Per-node parameters used while building the graph.
-///
-/// All five values are read together in the innermost doublet loop, so they sit
-/// in one record rather than in separate arrays.
-struct GbtsNodeParams final {
-  /// Minimum accepted |cot(theta)|. The infinite defaults mean "do not cut on
-  /// tau"; only the machine learning lookup table narrows them.
-  float minTau{-std::numeric_limits<float>::infinity()};
-  /// Maximum accepted |cot(theta)|. See @ref minTau.
-  float maxTau{std::numeric_limits<float>::infinity()};
-  /// Azimuthal angle in the xy plane.
-  float phi{};
-  /// Transverse distance from the beamline.
-  float r{};
-  /// Global z coordinate.
-  float z{};
-};
-
-/// Per-node graph bookkeeping, written while the graph is built.
-///
-/// The three fields are read together in the innermost doublet loop, so they
-/// sit in one record rather than in separate arrays.
-struct GbtsNodeEdgeInfo final {
-  /// Index of the first incoming graph edge attached to the node.
-  std::uint32_t firstEdge{};
-  /// Total number of incoming graph edges attached to the node.
-  std::uint16_t numEdges{};
-  /// z0 histogram bitmask. Non-zero marks the node's outer neighbourhood as
-  /// connected to the previously built graph.
-  std::uint16_t isConnected{};
-};
-
-/// Constant per-eta-bin data.
-struct GbtsEtaBinInfo final {
-  /// Range of node indices belonging to this bin.
-  SpacePointIndexRange nodes{0, 0};
-
-  /// (phi, node index) pairs covering this bin, with duplicated entries shifted
-  /// by +-2pi at the wrap-around so the phi sliding window never has to wrap.
-  std::vector<std::pair<float, GbtsNodeIndex>> phiNodes;
-
-  /// Minimum radius in bin
-  float minRadius{};
-  /// Maximum radius in bin
-  float maxRadius{};
-  /// GBTS layer ID for this bin
-  std::uint32_t layerId{0};
-
-  /// Check if bin is empty
-  /// @return True if bin has no nodes
-  bool empty() const { return nodes.first == nodes.second; }
-};
-
-class GbtsNodeProxy;
-
-/// Read-only view of the node attributes needed outside the graph builder.
-///
-/// Positions are packed as (x, y, z, r) because every consumer reads them
-/// together. Index it to get a GbtsNodeProxy with named accessors.
-struct GbtsNodeView final {
-  /// Packed (x, y, z, r) per node.
-  std::span<const std::array<float, 4>> positions;
-  /// Dense layer index per node.
-  std::span<const std::uint16_t> layers;
-
-  /// Handle on a single node.
-  /// @param index Index of the node
-  /// @return Proxy for the node
-  GbtsNodeProxy operator[](GbtsNodeIndex index) const;
-};
-
-/// Read-only handle on a single graph node.
-///
-/// Cheap to copy and meant to be created at the point of use. The view it
-/// refers to has to outlive it.
-class GbtsNodeProxy final {
- public:
-  /// @param view View of the node positions and layers
-  /// @param index Index of the node
-  GbtsNodeProxy(const GbtsNodeView& view, GbtsNodeIndex index)
-      : m_view(&view), m_index(index) {}
-
-  /// @return Index of the node
-  GbtsNodeIndex index() const { return m_index; }
-  /// @return Global x coordinate
-  float x() const { return position()[0]; }
-  /// @return Global y coordinate
-  float y() const { return position()[1]; }
-  /// @return Global z coordinate
-  float z() const { return position()[2]; }
-  /// @return Transverse distance from the beamline
-  float r() const { return position()[3]; }
-  /// @return Dense layer index
-  std::uint16_t layer() const { return m_view->layers[m_index]; }
-
- private:
-  const std::array<float, 4>& position() const {
-    return m_view->positions[m_index];
-  }
-
-  const GbtsNodeView* m_view{};
-  GbtsNodeIndex m_index{kGbtsNodeIndexInvalid};
-};
-
-inline GbtsNodeProxy GbtsNodeView::operator[](GbtsNodeIndex index) const {
-  return GbtsNodeProxy(*this, index);
-}
-
-/// Edge between two GBTS nodes with fit parameters.
-struct GbtsEdge final {
-  GbtsEdge() = default;
-
-  /// Constructor
-  /// @param n1_ Inner node index
-  /// @param n2_ Outer node index
-  /// @param n2LayerId_ GBTS layer ID of the outer node
-  /// @param p1_ First fit parameter
-  /// @param p2_ Second fit parameter
-  /// @param p3_ Third fit parameter
-  GbtsEdge(GbtsNodeIndex n1_, GbtsNodeIndex n2_, std::uint32_t n2LayerId_,
-           float p1_, float p2_, float p3_)
-      : n1{n1_},
-        n2{n2_},
-        level{1},
-        next{1},
-        p{p1_, p2_, p3_},
-        n2LayerId{n2LayerId_} {}
-
-  /// Inner node of the edge
-  GbtsNodeIndex n1{kGbtsNodeIndexInvalid};
-  /// Outer node of the edge
-  GbtsNodeIndex n2{kGbtsNodeIndexInvalid};
-
-  /// Level in the graph hierarchy
-  std::int8_t level{-1};
-  /// Index of next edge
-  std::int8_t next{-1};
-
-  /// Number of neighbor edges
-  std::uint8_t nNei{0};
-  /// Fit parameters
-  std::array<float, 3> p{};
-
-  /// GBTS layer ID of the outer node. Cached next to the fit parameters so the
-  /// innermost neighbour loop does not have to chase the node.
-  std::uint32_t n2LayerId{0};
-
-  /// Global indices of the connected edges
-  std::array<std::uint32_t, kGbtsMaxEdgeNeighbours> vNei{};
-};
 
 /// Storage for the GBTS graph nodes.
 ///
@@ -292,37 +133,6 @@ class GbtsNodeStorage final {
   /// @return Total number of nodes
   std::uint32_t numberOfNodes() const { return m_nodes.size(); }
 
-  /// Get eta bin info by index
-  /// @param idx Eta bin index
-  /// @return Reference to the eta bin info
-  const GbtsEtaBinInfo& etaBin(std::uint32_t idx) const {
-    return m_etaBins.at(idx < m_etaBins.size() ? idx : idx - 1);
-  }
-
-  /// Read-only view of the node positions and layers
-  /// @return Node view
-  GbtsNodeView nodeView() const {
-    return GbtsNodeView{m_nodes.xyzrColumn().data(), m_layers};
-  }
-
-  /// Per-node graph parameters, indexed by node index
-  /// @return Span over the node parameters
-  std::span<const GbtsNodeParams> nodeParams() const {
-    return m_paramsColumn->data();
-  }
-
-  /// Per-node graph bookkeeping, indexed by node index
-  /// @return Mutable span over the node edge info
-  std::span<GbtsNodeEdgeInfo> nodeEdgeInfo() {
-    return m_edgeInfoColumn->data();
-  }
-
-  /// Per-node graph bookkeeping, indexed by node index
-  /// @return Span over the node edge info
-  std::span<const GbtsNodeEdgeInfo> nodeEdgeInfo() const {
-    return m_edgeInfoColumn->data();
-  }
-
   /// Map a node index back to the index the caller used when inserting it.
   /// @param node Node index
   /// @return The caller's space point index
@@ -331,6 +141,41 @@ class GbtsNodeStorage final {
   }
 
  private:
+  // The graph representation is an implementation detail shared only with the
+  // seeder that walks it.
+  friend class GraphBasedTrackSeeder;
+
+  /// Get eta bin info by index
+  /// @param idx Eta bin index
+  /// @return Reference to the eta bin info
+  const detail::GbtsEtaBinInfo& etaBin(std::uint32_t idx) const {
+    return m_etaBins.at(idx < m_etaBins.size() ? idx : idx - 1);
+  }
+
+  /// Read-only view of the node positions and layers
+  /// @return Node view
+  detail::GbtsNodeView nodeView() const {
+    return detail::GbtsNodeView{m_nodes.xyzrColumn().data(), m_layers};
+  }
+
+  /// Per-node graph parameters, indexed by node index
+  /// @return Span over the node parameters
+  std::span<const detail::GbtsNodeParams> nodeParams() const {
+    return m_paramsColumn->data();
+  }
+
+  /// Per-node graph bookkeeping, indexed by node index
+  /// @return Mutable span over the node edge info
+  std::span<detail::GbtsNodeEdgeInfo> nodeEdgeInfo() {
+    return m_edgeInfoColumn->data();
+  }
+
+  /// Per-node graph bookkeeping, indexed by node index
+  /// @return Span over the node edge info
+  std::span<const detail::GbtsNodeEdgeInfo> nodeEdgeInfo() const {
+    return m_edgeInfoColumn->data();
+  }
+
   /// A node as recorded by `insert`, before sorting.
   struct StagedNode {
     SpacePointIndex spacePointIndex{};
@@ -353,7 +198,8 @@ class GbtsNodeStorage final {
   /// Narrow a node's tau window using the machine learning lookup table.
   /// @param staged The staged node
   /// @param params The node parameters to narrow
-  void applyMlTauCuts(const StagedNode& staged, GbtsNodeParams& params) const;
+  void applyMlTauCuts(const StagedNode& staged,
+                      detail::GbtsNodeParams& params) const;
 
   /// Build the wrap-around aware phi indexing for every bin.
   /// @param dphi Width of the phi margin duplicated at the wrap-around
@@ -369,14 +215,15 @@ class GbtsNodeStorage final {
   /// (x, y, z, r) position, plus the derived data as dynamic columns.
   SpacePointContainer m_nodes;
 
-  std::optional<MutableSpacePointColumnProxy<GbtsNodeParams>> m_paramsColumn;
-  std::optional<MutableSpacePointColumnProxy<GbtsNodeEdgeInfo>>
+  std::optional<MutableSpacePointColumnProxy<detail::GbtsNodeParams>>
+      m_paramsColumn;
+  std::optional<MutableSpacePointColumnProxy<detail::GbtsNodeEdgeInfo>>
       m_edgeInfoColumn;
 
   /// Dense layer index per node, in node order.
   std::vector<std::uint16_t> m_layers;
 
-  std::vector<GbtsEtaBinInfo> m_etaBins;
+  std::vector<detail::GbtsEtaBinInfo> m_etaBins;
 
   /// Nodes as inserted, before sorting.
   std::vector<StagedNode> m_staged;

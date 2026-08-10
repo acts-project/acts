@@ -19,6 +19,8 @@
 
 namespace Acts::Experimental {
 
+using namespace detail;
+
 GbtsNodeStorage::GbtsNodeStorage(Config config,
                                  std::shared_ptr<const GbtsGeometry> geometry,
                                  GbtsMlLookupTable mlLut)

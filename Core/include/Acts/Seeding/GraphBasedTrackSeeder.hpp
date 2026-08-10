@@ -153,53 +153,6 @@ class GraphBasedTrackSeeder {
     double ptCoeff{};
   };
 
-  /// candidate seed metadata produced by the GBTS algorithm.
-  struct SeedCandidateProperties {
-    /// @param quality Seed quality score
-    /// @param clone Clone flag
-    /// @param sps Vector of graph node indices
-    /// @param splitFlag used to flag if seed needs to be split in two
-    SeedCandidateProperties(float quality, std::int32_t clone,
-                            std::vector<GbtsNodeIndex> sps,
-                            std::uint32_t splitFlag)
-        : seedQuality(quality),
-          isClone(clone),
-          nodes(std::move(sps)),
-          forSeedSplitting(splitFlag) {}
-
-    /// Seed quality score.
-    float seedQuality{};
-    /// Clone flag.
-    std::int32_t isClone{};
-    /// Graph node indices.
-    std::vector<GbtsNodeIndex> nodes;
-    /// Flag for seed splitting.
-    std::uint32_t forSeedSplitting{};
-  };
-
-  /// Output seed metadata
-  struct OutputSeedProperties {
-    /// @param quality Seed quality score
-    /// @param sps Vector of space point indices in the seed
-    OutputSeedProperties(float quality, std::vector<std::uint32_t> sps)
-        : seedQuality(quality), spacePoints(std::move(sps)) {}
-
-    /// Quality of seed.
-    float seedQuality{};
-    /// Index of spacepoints in seed.
-    std::vector<std::uint32_t> spacePoints;
-  };
-
-  /// Sliding window in phi used to define range used for edge creation
-  struct SlidingWindow {
-    /// sliding window position
-    std::uint32_t firstIt{};
-    /// window half-width;
-    float deltaPhi{};
-    /// associated eta bin, null while the window is inactive
-    const GbtsEtaBinInfo* etaBin{};
-  };
-
   /// @param config Configuration for the seed finder
   /// @param geometry GBTS geometry
   /// @param logger Logging instance
@@ -245,6 +198,52 @@ class GraphBasedTrackSeeder {
                    SeedContainer& outputSeeds) const;
 
  private:
+  /// candidate seed metadata produced by the GBTS algorithm.
+  struct SeedCandidateProperties {
+    /// @param quality Seed quality score
+    /// @param clone Clone flag
+    /// @param sps Vector of graph node indices
+    /// @param splitFlag used to flag if seed needs to be split in two
+    SeedCandidateProperties(float quality, std::int32_t clone,
+                            std::vector<GbtsNodeIndex> sps,
+                            std::uint32_t splitFlag)
+        : seedQuality(quality),
+          isClone(clone),
+          nodes(std::move(sps)),
+          forSeedSplitting(splitFlag) {}
+
+    /// Seed quality score.
+    float seedQuality{};
+    /// Clone flag.
+    std::int32_t isClone{};
+    /// Graph node indices.
+    std::vector<GbtsNodeIndex> nodes;
+    /// Flag for seed splitting.
+    std::uint32_t forSeedSplitting{};
+  };
+
+  /// Output seed metadata
+  struct OutputSeedProperties {
+    /// @param quality Seed quality score
+    /// @param sps Vector of space point indices in the seed
+    OutputSeedProperties(float quality, std::vector<std::uint32_t> sps)
+        : seedQuality(quality), spacePoints(std::move(sps)) {}
+
+    /// Quality of seed.
+    float seedQuality{};
+    /// Index of spacepoints in seed.
+    std::vector<std::uint32_t> spacePoints;
+  };
+
+  /// Sliding window in phi used to define range used for edge creation
+  struct SlidingWindow {
+    /// sliding window position
+    std::uint32_t firstIt{};
+    /// window half-width;
+    float deltaPhi{};
+    /// associated eta bin, null while the window is inactive
+    const detail::GbtsEtaBinInfo* etaBin{};
+  };
   DerivedConfig m_cfg;
 
   std::shared_ptr<const GbtsGeometry> m_geometry;
@@ -269,14 +268,14 @@ class GraphBasedTrackSeeder {
   /// @return Pair of edge count and maximum level
   std::pair<std::int32_t, std::int32_t> buildTheGraph(
       const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
-      std::vector<GbtsEdge>& edgeStorage, const Options& options) const;
+      std::vector<detail::GbtsEdge>& edgeStorage, const Options& options) const;
 
   /// Run connected component analysis on the graph.
   /// @param nEdges Number of edges in the graph
   /// @param edgeStorage Storage containing graph edges
   /// @return Number of connected components found
   std::int32_t runCCA(std::uint32_t nEdges,
-                      std::vector<GbtsEdge>& edgeStorage) const;
+                      std::vector<detail::GbtsEdge>& edgeStorage) const;
 
   /// Extract seed candidates from the graph.
   /// @param maxLevel Maximum level in the graph
@@ -287,7 +286,7 @@ class GraphBasedTrackSeeder {
   /// @param filter Tracking filter to be applied
   void extractSeedsFromTheGraph(std::uint32_t maxLevel, std::uint32_t nEdges,
                                 const GbtsNodeStorage& nodeStorage,
-                                std::vector<GbtsEdge>& edgeStorage,
+                                std::vector<detail::GbtsEdge>& edgeStorage,
                                 std::vector<OutputSeedProperties>& vOutputSeeds,
                                 const GbtsTrackingFilter& filter) const;
 
@@ -305,7 +304,7 @@ class GraphBasedTrackSeeder {
   /// @param nodeView View of the node positions and layers
   /// @param nodes The three graph nodes, innermost first
   /// @return The estimated inverse radius
-  float estimateCurvature(const GbtsNodeView& nodeView,
+  float estimateCurvature(const detail::GbtsNodeView& nodeView,
                           const std::array<GbtsNodeIndex, 3>& nodes) const;
 
   /// Check a triplet against the pT and d0 cuts.
@@ -316,7 +315,7 @@ class GraphBasedTrackSeeder {
   /// @param tauRatioCut Tau ratio cut threshold
   /// @param options Event based options such as magnetic field strength
   /// @return Whether the triplet is accepted
-  bool validateTriplet(const GbtsNodeView& nodeView,
+  bool validateTriplet(const detail::GbtsNodeView& nodeView,
                        const std::array<GbtsNodeIndex, 3>& candidateTriplet,
                        float tripletMinPt, float tauRatio, float tauRatioCut,
                        const Options& options) const;
