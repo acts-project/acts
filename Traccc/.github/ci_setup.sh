@@ -26,3 +26,7 @@ if [[ "${PLATFORM_NAME}" == *"SYCL"* ]]; then
       export CPATH=${OLD_CPATH}
    fi
 fi
+
+if [[ "${PLATFORM_NAME}" == *"HIP"* ]]; then
+  export CXX=`which clang++`
+fi
