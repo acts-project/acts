@@ -1060,17 +1060,28 @@ struct matrix {
   /// Debug builds therefore check the claim at the one place it can be
   /// checked -- this boundary. Every constant cell must hold its compile-time
   /// value, and cells that share a variable must agree with one another. This
-  /// is the same discipline the sympy-generated
-  /// @c transport_covariance_to_bound_impl already applies to the full
-  /// Jacobian, where it opens with eleven such assertions.
+  /// Checking a structural claim at the one place it can be checked -- the
+  /// boundary where a dense matrix enters -- is the same discipline the
+  /// sympy-generated code used to apply, opening with an assertion per
+  /// structural cell.
+  ///
+  /// @tparam check_shared_cells whether cells that share storage must agree.
+  /// True is the right default: a disagreement means the dense matrix is not
+  /// the matrix the substructure claims, and one of the two values would be
+  /// dropped with nobody the wiser. Pass false where the sharing is a
+  /// statement about the model rather than about the bits -- a covariance is
+  /// symmetric by definition, but a structure-blind transport leaves it
+  /// symmetric only to rounding, and then the first of each pair is taken.
+  /// Structural constants are checked either way.
   ///
   /// @note See @c to_dense on keeping conversions at the edges of a
   /// computation rather than between the operations inside one.
-  template <concepts::algebra algebra_t>
+  template <concepts::algebra algebra_t, bool check_shared_cells = true>
   DETRAY_HOST_DEVICE static matrix from_dense(
       const dmatrix<algebra_t, rows, columns> &m) {
     matrix rv{};
-    rv.from_dense_cells(m, std::make_index_sequence<rows * columns>{});
+    rv.template from_dense_cells<check_shared_cells>(
+        m, std::make_index_sequence<rows * columns>{});
     return rv;
   }
 
@@ -1296,7 +1307,8 @@ struct matrix {
   /// Take cell (I, J) of the dense matrix @p m: store it if the substructure
   /// declares it a free value, otherwise check it against what the
   /// substructure promises, since there is nowhere to put a differing value.
-  template <std::size_t I, std::size_t J, typename dense_t>
+  template <bool check_shared_cells, std::size_t I, std::size_t J,
+            typename dense_t>
   DETRAY_HOST_DEVICE void from_dense_cell([[maybe_unused]] const dense_t &m) {
     using value_t =
         typename canonical_substructure_type::template value_at<I, J>;
@@ -1309,7 +1321,7 @@ struct matrix {
       if constexpr (first_occurrence == I * columns + J) {
         this->template at<I, J>() =
             static_cast<scalar_t>(getter::element<I, J>(m));
-      } else {
+      } else if constexpr (check_shared_cells) {
         // Shares storage with an earlier cell. The substructure promises the
         // two are the same value -- a dense input where they differ is not the
         // matrix it claims to be, and one of the two would be dropped.
@@ -1326,10 +1338,10 @@ struct matrix {
 
   /// Cells are visited in flat order, so the first occurrence of a shared
   /// variable is always stored before the cells that have to agree with it.
-  template <typename dense_t, std::size_t... Ks>
+  template <bool check_shared_cells, typename dense_t, std::size_t... Ks>
   DETRAY_HOST_DEVICE void from_dense_cells(const dense_t &m,
                                            std::index_sequence<Ks...>) {
-    (from_dense_cell<Ks / columns, Ks % columns>(m), ...);
+    (from_dense_cell<check_shared_cells, Ks / columns, Ks % columns>(m), ...);
   }
 
   template <std::size_t I, std::size_t J, typename OtherSub, std::size_t K>

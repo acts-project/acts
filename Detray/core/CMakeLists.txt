@@ -77,29 +77,6 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}>
 )
 
-# Generate the propagator codegen headers from the shared ACTS sympy codegen
-# core instead of committing them. detray is built here via add_subdirectory
-# from ACTS, so acts_code_generation is already available; when detray is
-# configured standalone inside the ACTS tree, pull the ACTS cmake infra in by
-# relative path (../../cmake -> acts/cmake, ../../codegen -> acts/codegen).
-if(NOT COMMAND acts_code_generation)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/ActsCodegen.cmake)
-endif()
-
-set(_detray_codegen_dir ${CMAKE_CURRENT_SOURCE_DIR}/../codegen/detray-sympy)
-set(_acts_codegen_pkg ${CMAKE_CURRENT_SOURCE_DIR}/../../codegen)
-
-detray_add_codegen_header(
-    TARGET detray_core
-    CODEGEN_DIR ${_detray_codegen_dir}
-    ACTS_CODEGEN_PKG ${_acts_codegen_pkg}
-    SCRIPT gen_transport_covariance_to_bound_impl.py
-    OUTPUT detray/propagator/detail/codegen/covariance_transport.hpp
-)
-
-unset(_detray_codegen_dir)
-unset(_acts_codegen_pkg)
-
 # Set up the libraries that use specific algebra plugins.
 detray_add_library( detray_core_array core_array )
 target_link_libraries(

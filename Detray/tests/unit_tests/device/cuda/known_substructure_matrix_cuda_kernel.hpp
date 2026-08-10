@@ -27,9 +27,9 @@ using ksm::substructure;
 using ksm::variable;
 using ksm::zero;
 
-/// The substructure of the full Jacobian, taken from the assertions that
-/// transport_covariance_to_bound_impl already emits: 25 free values, two
-/// structural ones, nine structural zeros.
+/// A 6x6 with a mix of free, structurally-zero and structurally-one cells,
+/// shaped like the full Jacobian. Fixture data for the device test rather than
+/// a claim about any particular matrix detray computes.
 using j_full = substructure<
     row<variable, variable, variable, variable, variable, zero>,
     row<variable, variable, variable, variable, variable, zero>,

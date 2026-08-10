@@ -327,7 +327,7 @@ inline auto record_propagation(
 
         const bound_matrix<algebra_t> old_cov = last_bound.covariance();
         bound_matrix<algebra_t> &new_cov = last_bound.covariance();
-        detray::detail::transport_covariance_to_bound_impl(
+        detray::detail::transport_covariance_to_bound<algebra_t>(
             old_cov, propagation_step_jacobian, new_cov);
 
         // Get the bound parameters at the destination surface

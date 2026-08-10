@@ -15,7 +15,7 @@
 #include "detray/geometry/tracking_surface.hpp"
 #include "detray/propagator/base_actor.hpp"
 #include "detray/propagator/composite_actor.hpp"
-#include "detray/propagator/detail/codegen/covariance_transport.hpp"
+#include "detray/propagator/detail/covariance_transport.hpp"
 #include "detray/propagator/detail/full_jacobian.hpp"
 #include "detray/propagator/detail/jacobian_engine.hpp"
 #include "detray/propagator/detail/noise_estimation.hpp"
@@ -420,7 +420,7 @@ struct parameter_transporter : base_actor {
       const bound_matrix_type old_cov = departure_params.covariance();
       bound_matrix_type& new_cov = departure_params.covariance();
 
-      detray::detail::transport_covariance_to_bound_impl(
+      detray::detail::transport_covariance_to_bound<algebra_t>(
           old_cov, propagation_step_jacobian, new_cov);
     } else {
       DETRAY_VERBOSE_HOST_DEVICE(

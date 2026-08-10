@@ -19,5 +19,3 @@ uvrun() {
         --with "${ACTS_CODEGEN}" \
         python "$@"
 }
-
-uvrun gen_transport_covariance_to_bound_impl.py ../../core/include/detray/propagator/detail/codegen/covariance_transport.hpp
