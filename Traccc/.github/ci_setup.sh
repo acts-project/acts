@@ -28,5 +28,6 @@ if [[ "${PLATFORM_NAME}" == *"SYCL"* ]]; then
 fi
 
 if [[ "${PLATFORM_NAME}" == *"HIP"* ]]; then
+  export CC=`which clang`
   export CXX=`which clang++`
 fi
