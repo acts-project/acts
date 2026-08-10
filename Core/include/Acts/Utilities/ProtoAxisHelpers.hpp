@@ -19,9 +19,8 @@
 
 namespace Acts::ProtoAxisHelpers {
 
-// The helpers are deprecated themselves, but that only suppresses the
-// deprecation warnings of the types they name directly, neither of the ones
-// they name as template arguments nor of the ones their bodies use
+// A deprecated declaration only silences directly named types, not the ones it
+// names as template arguments or uses in its body
 ACTS_PUSH_IGNORE_DEPRECATED()
 
 /// @brief Get the number of bins from a ProtoAxis

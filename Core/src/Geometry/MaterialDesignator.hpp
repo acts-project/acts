@@ -142,11 +142,13 @@ class ProtoDesignator {
   AxisFactory validateAxis(const AxisFactory& axisFactory,
                            AxisDirection expected, Face face,
                            const std::string& prefix) const {
-    if (!axisFactory.isDeferred()) {
+    // A description equals its own deferred counterpart exactly when it fixes
+    // nothing but the binning structure
+    if (axisFactory.toDeferred() != axisFactory) {
       throw std::invalid_argument(
           prefix +
-          "Material binning must use deferred axes, the range is determined "
-          "from the surface bounds");
+          "Material binning must leave range and boundary type to the "
+          "surface, they are determined from its bounds");
     }
     if (axisFactory.direction().has_value() &&
         axisFactory.direction() != expected) {

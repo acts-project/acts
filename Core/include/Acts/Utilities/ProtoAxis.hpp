@@ -26,6 +26,8 @@ namespace Acts {
 ///
 /// In addition to a simple axis definitions, it holds also a description
 /// of the axis direction.
+///
+/// @deprecated Use AxisFactory instead
 class [[deprecated("Use AxisFactory instead")]] ProtoAxis {
  public:
   /// Convenience constructors - for variable binning
@@ -162,6 +164,8 @@ makeGrid(const ProtoAxis& a, const ProtoAxis& b) {
 }
 
 /// A Directed proto axis
+///
+/// @deprecated Use AxisFactory with an AxisDirection instead
 struct [[deprecated("Use AxisFactory with an AxisDirection instead")]]
 DirectedProtoAxis : public ProtoAxis {
  public:
@@ -221,15 +225,15 @@ DirectedProtoAxis : public ProtoAxis {
   AxisDirection m_direction;
 };
 
-// A deprecated declaration suppresses the deprecation warnings of the types it
-// names directly, but not of the ones it only names as template arguments,
-// hence the explicit suppression around the vector overloads.
+// A deprecated declaration only silences directly named types, not the ones it
+// names as template arguments
 ACTS_PUSH_IGNORE_DEPRECATED()
 
 /// Stream operator for vector of ProtoAxis
 /// @param os Output stream
 /// @param a Vector of ProtoAxis to output
 /// @return Reference to output stream
+/// @deprecated Use AxisFactory instead
 [[deprecated("Use AxisFactory instead")]]
 std::ostream& operator<<(std::ostream& os, const std::vector<ProtoAxis>& a);
 
@@ -237,6 +241,7 @@ std::ostream& operator<<(std::ostream& os, const std::vector<ProtoAxis>& a);
 /// @param os Output stream
 /// @param a Vector of DirectedProtoAxis to output
 /// @return Reference to output stream
+/// @deprecated Use AxisFactory with an AxisDirection instead
 [[deprecated("Use AxisFactory with an AxisDirection instead")]]
 std::ostream& operator<<(std::ostream& os,
                          const std::vector<DirectedProtoAxis>& a);

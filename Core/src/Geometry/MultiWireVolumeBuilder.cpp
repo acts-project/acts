@@ -94,11 +94,12 @@ MultiWireVolumeBuilder::createNavigationPolicyFactory() const {
   const auto& paramsA = axisFactoryA.asEquidistant();
   const auto& paramsB = axisFactoryB.asEquidistant();
 
+  // isDeferred() above guarantees the ranges are set
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisA(
-      paramsA.min, paramsA.max, paramsA.nBins);
+      *paramsA.min, *paramsA.max, paramsA.nBins);
 
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisB(
-      paramsB.min, paramsB.max, paramsB.nBins);
+      *paramsB.min, *paramsB.max, paramsB.nBins);
 
   Grid<std::vector<std::size_t>, decltype(axisA), decltype(axisB)> grid(axisA,
                                                                         axisB);

@@ -98,8 +98,8 @@ namespace DD4hepBinningHelpers {
 std::vector<std::tuple<Acts::AxisFactory, std::size_t>> convertAxisFactories(
     const dd4hep::DetElement &dd4hepElement, const std::string &bname);
 
-// A deprecated declaration suppresses the deprecation warnings of the types it
-// names directly, but not of the ones it only names as template arguments
+// A deprecated declaration only silences directly named types, not the ones it
+// names as template arguments
 ACTS_PUSH_IGNORE_DEPRECATED()
 /// @brief This method converts the DD4hep binning into the Acts ProtoAxis
 ///
@@ -107,6 +107,7 @@ ACTS_PUSH_IGNORE_DEPRECATED()
 /// @param bname the binning base name, e.g. surface_binning, material_binning
 ///
 /// @return a vector of proto binning descriptions
+/// @deprecated Use convertAxisFactories instead
 [[deprecated("Use convertAxisFactories instead")]]
 std::vector<std::tuple<Acts::DirectedProtoAxis, std::size_t>> convertBinning(
     const dd4hep::DetElement &dd4hepElement, const std::string &bname);

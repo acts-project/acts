@@ -27,14 +27,20 @@ BOOST_AUTO_TEST_CASE(AxisFactoryJsonRoundTrip) {
   using enum AxisDirection;
 
   std::vector<AxisFactory> descriptions = {
-      AxisFactory::Equidistant(Bound, 0., 10., 5),
-      AxisFactory::Equidistant(Closed, -3., 3., 12, AxisPhi),
-      AxisFactory::Variable(Open, {0., 1., 4., 10.}),
-      AxisFactory::Variable(Bound, {-1., 0., 2.}, AxisZ),
+      AxisFactory::Equidistant(5, 0., 10., Bound),
+      AxisFactory::Equidistant(12, -3., 3., Closed, AxisPhi),
+      AxisFactory::Variable({0., 1., 4., 10.}, Open),
+      AxisFactory::Variable({-1., 0., 2.}, Bound, AxisZ),
       AxisFactory::DeferredEquidistant(20),
       AxisFactory::DeferredEquidistant(8, AxisRPhi),
       AxisFactory::DeferredVariable({0., 0.1, 0.5, 1.}),
-      AxisFactory::DeferredVariable({0., 0.25, 1.}, AxisR)};
+      AxisFactory::DeferredVariable({0., 0.25, 1.}, std::nullopt, AxisR),
+      // Partially specified: a range without a boundary type and the other
+      // way round
+      AxisFactory::Equidistant(6, 0., 1.),
+      AxisFactory::Equidistant(6, std::nullopt, std::nullopt, Bound),
+      AxisFactory::Variable({0., 1., 2.}),
+      AxisFactory::DeferredVariable({0., 0.5, 1.}, Closed)};
 
   for (const AxisFactory& axisFactory : descriptions) {
     nlohmann::json j = AxisFactoryJsonConverter::toJson(axisFactory);
@@ -59,8 +65,9 @@ BOOST_AUTO_TEST_CASE(MultiAxisFactoryJsonRoundTrip) {
   nlohmann::json j1 = MultiAxisFactoryJsonConverter::toJson(oneD);
   BOOST_CHECK(MultiAxisFactoryJsonConverter::fromJson(j1) == oneD);
 
-  MultiAxisFactory twoD({AxisFactory::DeferredEquidistant(4, AxisRPhi),
-                         AxisFactory::DeferredVariable({0., 0.5, 1.}, AxisZ)});
+  MultiAxisFactory twoD(
+      {AxisFactory::DeferredEquidistant(4, AxisRPhi),
+       AxisFactory::DeferredVariable({0., 0.5, 1.}, std::nullopt, AxisZ)});
   nlohmann::json j2 = MultiAxisFactoryJsonConverter::toJson(twoD);
   BOOST_CHECK_EQUAL(j2.size(), 2u);
   BOOST_CHECK(MultiAxisFactoryJsonConverter::fromJson(j2) == twoD);

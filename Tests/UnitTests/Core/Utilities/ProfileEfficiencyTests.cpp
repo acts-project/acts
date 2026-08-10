@@ -17,9 +17,9 @@ using namespace Acts::Experimental;
 BOOST_AUTO_TEST_SUITE(ProfileEfficiencySuite)
 
 BOOST_AUTO_TEST_CASE(ProfileHistogram_BasicFill) {
-  AxisFactory protoAxis =
-      AxisFactory::Equidistant(AxisBoundaryType::Bound, 0.0, 10.0, 10);
-  auto xAxis = BoostVariableAxis(protoAxis.toAxis()->getBinEdges(), "x");
+  AxisFactory axisFactory =
+      AxisFactory::Equidistant(10, 0.0, 10.0, AxisBoundaryType::Bound);
+  auto xAxis = BoostVariableAxis(axisFactory.buildAxis()->getBinEdges(), "x");
   ProfileHistogram1 profile("test_prof", "Test Profile", {xAxis}, "y value");
 
   BOOST_CHECK_EQUAL(profile.name(), "test_prof");
@@ -44,9 +44,9 @@ BOOST_AUTO_TEST_CASE(ProfileHistogram_BasicFill) {
 }
 
 BOOST_AUTO_TEST_CASE(ProfileHistogram_MultipleBins) {
-  AxisFactory protoAxis =
-      AxisFactory::Equidistant(AxisBoundaryType::Bound, -2.5, 2.5, 5);
-  auto xAxis = BoostVariableAxis(protoAxis.toAxis()->getBinEdges(), "eta");
+  AxisFactory axisFactory =
+      AxisFactory::Equidistant(5, -2.5, 2.5, AxisBoundaryType::Bound);
+  auto xAxis = BoostVariableAxis(axisFactory.buildAxis()->getBinEdges(), "eta");
   ProfileHistogram1 profile("res_vs_eta", "Residual vs Eta", {xAxis},
                             "residual");
 
@@ -74,10 +74,10 @@ BOOST_AUTO_TEST_CASE(ProfileHistogram_MultipleBins) {
 }
 
 BOOST_AUTO_TEST_CASE(Efficiency1D_BasicFill) {
-  AxisFactory protoAxis =
-      AxisFactory::Equidistant(AxisBoundaryType::Bound, -3.0, 3.0, 10);
-  auto axis =
-      AxisVariant(BoostVariableAxis(protoAxis.toAxis()->getBinEdges(), "eta"));
+  AxisFactory axisFactory =
+      AxisFactory::Equidistant(10, -3.0, 3.0, AxisBoundaryType::Bound);
+  auto axis = AxisVariant(
+      BoostVariableAxis(axisFactory.buildAxis()->getBinEdges(), "eta"));
   Efficiency1 eff("eff_vs_eta", "Efficiency vs Eta", {axis});
 
   BOOST_CHECK_EQUAL(eff.name(), "eff_vs_eta");
@@ -102,10 +102,10 @@ BOOST_AUTO_TEST_CASE(Efficiency1D_BasicFill) {
 }
 
 BOOST_AUTO_TEST_CASE(Efficiency1D_MultipleBins) {
-  AxisFactory protoAxis =
-      AxisFactory::Equidistant(AxisBoundaryType::Bound, 0.0, 5.0, 5);
-  auto axis =
-      AxisVariant(BoostVariableAxis(protoAxis.toAxis()->getBinEdges(), "pt"));
+  AxisFactory axisFactory =
+      AxisFactory::Equidistant(5, 0.0, 5.0, AxisBoundaryType::Bound);
+  auto axis = AxisVariant(
+      BoostVariableAxis(axisFactory.buildAxis()->getBinEdges(), "pt"));
   Efficiency1 eff("eff_vs_pt", "Efficiency vs pT", {axis});
 
   // Bin 0: 50% efficiency
@@ -145,14 +145,14 @@ BOOST_AUTO_TEST_CASE(Efficiency1D_MultipleBins) {
 }
 
 BOOST_AUTO_TEST_CASE(Efficiency2D_BasicFill) {
-  AxisFactory protoX =
-      AxisFactory::Equidistant(AxisBoundaryType::Bound, -2.5, 2.5, 5);
-  AxisFactory protoY =
-      AxisFactory::Equidistant(AxisBoundaryType::Bound, 0.0, 5.0, 5);
-  auto xAxis =
-      AxisVariant(BoostVariableAxis(protoX.toAxis()->getBinEdges(), "eta"));
-  auto yAxis =
-      AxisVariant(BoostVariableAxis(protoY.toAxis()->getBinEdges(), "pt"));
+  AxisFactory axisFactoryX =
+      AxisFactory::Equidistant(5, -2.5, 2.5, AxisBoundaryType::Bound);
+  AxisFactory axisFactoryY =
+      AxisFactory::Equidistant(5, 0.0, 5.0, AxisBoundaryType::Bound);
+  auto xAxis = AxisVariant(
+      BoostVariableAxis(axisFactoryX.buildAxis()->getBinEdges(), "eta"));
+  auto yAxis = AxisVariant(
+      BoostVariableAxis(axisFactoryY.buildAxis()->getBinEdges(), "pt"));
   Efficiency2 eff("eff_vs_eta_pt", "Efficiency vs Eta and pT", {xAxis, yAxis});
 
   BOOST_CHECK_EQUAL(eff.name(), "eff_vs_eta_pt");

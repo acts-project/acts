@@ -25,6 +25,7 @@ namespace Acts::ProtoAxisJsonConverter {
 ///
 /// @param pa the proto axis to be written out
 /// @return JSON object representing the proto axis
+/// @deprecated Use AxisFactoryJsonConverter with an AxisFactory instead
 [[deprecated("Use AxisFactoryJsonConverter with an AxisFactory instead")]]
 nlohmann::json toJson(const ProtoAxis& pa);
 
@@ -32,6 +33,7 @@ nlohmann::json toJson(const ProtoAxis& pa);
 ///
 /// @param j the json object to be read from
 /// @return ProtoAxis created from the JSON object
+/// @deprecated Use AxisFactoryJsonConverter with an AxisFactory instead
 [[deprecated("Use AxisFactoryJsonConverter with an AxisFactory instead")]]
 Acts::ProtoAxis fromJson(const nlohmann::json& j);
 

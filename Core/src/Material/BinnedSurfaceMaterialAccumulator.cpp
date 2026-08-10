@@ -12,9 +12,9 @@
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceAxisResolution.hpp"
 #include "Acts/Utilities/BinAdjustment.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/MultiAxisFactory.hpp"
 
 Acts::BinnedSurfaceMaterialAccumulator::BinnedSurfaceMaterialAccumulator(
     const Config& cfg, std::unique_ptr<const Logger> mlogger)
@@ -60,9 +60,7 @@ Acts::BinnedSurfaceMaterialAccumulator::createState(
                  << psgm->binning());
       // Resolve the deferred binning against the surface bounds
       BinUtility binUtility(surface->localToGlobalTransform(gctx));
-      for (const auto& axis : resolveAxes(psgm->binning(), *surface)) {
-        binUtility += BinUtility(BinningData(*axis));
-      }
+      binUtility += BinUtility(*resolveMultiAxis(psgm->binning(), *surface));
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - resolved binning is " << binUtility);
       state->accumulatedMaterial[geoID] =

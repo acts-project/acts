@@ -133,9 +133,9 @@ using ProtoSurfaceMaterial = ProtoSurfaceMaterialT<Acts::BinUtility>;
 
 /// @brief Type alias for a prototype surface material using a multi-axis
 /// binning description
-/// A surface material implementation that carries a MultiAxisFactory whose
+/// A surface material implementation that carries a MultiAxisFactory2D whose
 /// deferred axes are resolved against the surface during material mapping
-using ProtoGridSurfaceMaterial = ProtoSurfaceMaterialT<MultiAxisFactory>;
+using ProtoGridSurfaceMaterial = ProtoSurfaceMaterialT<MultiAxisFactory2D>;
 
 /// @}
 

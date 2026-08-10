@@ -47,9 +47,10 @@ DD4hepBinningHelpers::convertAxisFactories(
                                         dd4hepElement, minDefault);
           auto max = getParamOr<double>(bname + "_" + ab + "_max",
                                         dd4hepElement, maxDefault);
+          // The boundary type is not expressible in DD4hep, the consumer
+          // determines it from the surface
           axisFactories.emplace_back(
-              AxisFactory::Equidistant(AxisBoundaryType::Bound, min, max, nBins,
-                                       axisDir),
+              AxisFactory::Equidistant(nBins, min, max, std::nullopt, axisDir),
               nExpansion);
         }
       } else {
@@ -60,8 +61,7 @@ DD4hepBinningHelpers::convertAxisFactories(
               bname + "_" + ab + "_b" + std::to_string(ib), dd4hepElement, 0.));
         }
         axisFactories.emplace_back(
-            AxisFactory::Variable(AxisBoundaryType::Bound, std::move(edges),
-                                  axisDir),
+            AxisFactory::Variable(std::move(edges), std::nullopt, axisDir),
             nExpansion);
       }
     }
@@ -69,8 +69,8 @@ DD4hepBinningHelpers::convertAxisFactories(
   return axisFactories;
 }
 
-// Unlike the declaration, the definition of the deprecated converter does not
-// carry the deprecation attribute itself, so it needs the suppression
+// The definition does not carry the deprecation attribute, so it needs the
+// suppression
 ACTS_PUSH_IGNORE_DEPRECATED()
 
 std::vector<std::tuple<DirectedProtoAxis, std::size_t>>

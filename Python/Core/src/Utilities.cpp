@@ -253,19 +253,24 @@ void addUtilities(py::module_& m) {
   {
     // Axis descriptions producing IAxis objects
     py::class_<AxisFactory>(m, "AxisFactory")
-        .def_static("Equidistant", &AxisFactory::Equidistant, "boundaryType"_a,
-                    "min"_a, "max"_a, "nBins"_a, "direction"_a = std::nullopt)
-        .def_static("Variable", &AxisFactory::Variable, "boundaryType"_a,
-                    "edges"_a, "direction"_a = std::nullopt)
+        .def_static("Equidistant", &AxisFactory::Equidistant, "nBins"_a,
+                    "min"_a = std::nullopt, "max"_a = std::nullopt,
+                    "boundaryType"_a = std::nullopt,
+                    "direction"_a = std::nullopt)
+        .def_static("Variable", &AxisFactory::Variable, "edges"_a,
+                    "boundaryType"_a = std::nullopt,
+                    "direction"_a = std::nullopt)
         .def_static("DeferredEquidistant", &AxisFactory::DeferredEquidistant,
                     "nBins"_a, "direction"_a = std::nullopt)
         .def_static("DeferredVariable", &AxisFactory::DeferredVariable,
-                    "normalizedEdges"_a, "direction"_a = std::nullopt)
+                    "normalizedEdges"_a, "boundaryType"_a = std::nullopt,
+                    "direction"_a = std::nullopt)
         .def("withDirection", &AxisFactory::withDirection, "direction"_a)
         .def("toDeferred", &AxisFactory::toDeferred)
         .def_property_readonly("deferred", &AxisFactory::isDeferred)
         .def_property_readonly("direction", &AxisFactory::direction)
         .def_property_readonly("nBins", &AxisFactory::nBins)
+        .def_property_readonly("boundaryType", &AxisFactory::boundaryType)
         .def(py::self == py::self)
         .def("__repr__", &AxisFactory::toString);
 

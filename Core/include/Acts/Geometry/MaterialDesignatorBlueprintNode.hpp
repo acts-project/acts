@@ -100,6 +100,7 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   /// @return The material designator node
   /// @note If this node has previously been configured with a different volume
   ///       shape, this will throw an exception.
+  /// @deprecated Use configureFace with deferred AxisFactory axes instead
   [[deprecated("Use configureFace with deferred AxisFactory axes instead")]]
   MaterialDesignatorBlueprintNode& configureFace(
       CylinderVolumeBounds::Face face, const DirectedProtoAxis& loc0,
@@ -142,6 +143,7 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   /// @return The material designator node
   /// @note If this node has previously been configured with a different volume
   ///       shape, this will throw an exception.
+  /// @deprecated Use configureFace with deferred AxisFactory axes instead
   [[deprecated("Use configureFace with deferred AxisFactory axes instead")]]
   MaterialDesignatorBlueprintNode& configureFace(CuboidVolumeBounds::Face face,
                                                  const DirectedProtoAxis& loc0,

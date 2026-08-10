@@ -87,11 +87,11 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   mwCfg.name = "MultiWireVolume";
   mwCfg.mlSurfaces = strawSurfaces;
   mwCfg.binning = {
-      {AxisFactory::Equidistant(AxisBoundaryType::Bound, -vBounds[0],
-                                vBounds[0], nSurfacesX, AxisDirection::AxisX),
+      {AxisFactory::Equidistant(nSurfacesX, -vBounds[0], vBounds[0],
+                                AxisBoundaryType::Bound, AxisDirection::AxisX),
        1u},
-      {AxisFactory::Equidistant(AxisBoundaryType::Bound, -vBounds[2],
-                                vBounds[2], nSurfacesY, AxisDirection::AxisY),
+      {AxisFactory::Equidistant(nSurfacesY, -vBounds[2], vBounds[2],
+                                AxisBoundaryType::Bound, AxisDirection::AxisY),
        0u}};
   auto boundsPtr = std::make_shared<Acts::TrapezoidVolumeBounds>(
       vBounds[0], vBounds[1], vBounds[2], vBounds[3]);

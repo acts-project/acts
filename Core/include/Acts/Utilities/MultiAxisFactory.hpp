@@ -12,33 +12,53 @@
 #include "Acts/Utilities/IMultiAxis.hpp"
 
 #include <array>
-#include <iosfwd>
 #include <memory>
+#include <ostream>
 #include <span>
 #include <string>
 #include <vector>
 
 namespace Acts {
 
-/// @brief Description of a multi-dimensional binning that produces the axes
-/// of a grid
+class Surface;
+
+/// @brief Description of a multi-dimensional binning that builds the axes of
+/// a grid
 ///
-/// This class bundles one @c AxisFactory per grid dimension. Analogous to the
-/// @c IMultiAxis / @c IMultiAxisXD split, the dimension is only known at
-/// runtime through this base class, while the dimension-aware API is exposed
-/// by the derived @c MultiAxisFactoryXD template. Unlike @c IMultiAxis the
-/// class is value-semantic: the axis descriptions are stored in this base
-/// class, so it can be held by value e.g. in configuration objects.
+/// Bundles one @c AxisFactory per grid dimension, mirroring the
+/// @c IMultiAxis / @c IMultiAxisXD split: the dimension is known at runtime
+/// here and at compile time in the derived @c MultiAxisFactoryXD . Unlike
+/// @c IMultiAxis this is a value type and can be held by configuration
+/// objects.
 ///
-/// The resolution API mirrors @c AxisFactory : fully specified descriptions
-/// resolve without input, deferred descriptions require one @c AxisResolution
-/// per axis, supplied positionally in storage order.
+/// The build API mirrors @c AxisFactory : fully specified descriptions build
+/// without input, deferred ones need one @c AxisFactory::Options per axis, in
+/// storage order.
 class MultiAxisFactory {
  public:
+  /// Non-owning view onto the consumer supplied inputs, one
+  /// @c AxisFactory::Options per axis, in axis order
+  using OptionsView = std::span<const AxisFactory::Options>;
+
   /// Construct from one axis description per dimension
   /// @param axisFactories the axis descriptions, in axis order
   /// @throws std::invalid_argument if no axis description is given
   explicit MultiAxisFactory(std::vector<AxisFactory> axisFactories);
+
+  /// Copy constructor
+  /// @param other the description to copy from
+  MultiAxisFactory(const MultiAxisFactory& other) = default;
+  /// Move constructor
+  /// @param other the description to move from
+  MultiAxisFactory(MultiAxisFactory&& other) noexcept = default;
+  /// Copy assignment
+  /// @param other the description to copy from
+  /// @return reference to this
+  MultiAxisFactory& operator=(const MultiAxisFactory& other) = default;
+  /// Move assignment
+  /// @param other the description to move from
+  /// @return reference to this
+  MultiAxisFactory& operator=(MultiAxisFactory&& other) noexcept = default;
 
   virtual ~MultiAxisFactory() = default;
 
@@ -56,49 +76,39 @@ class MultiAxisFactory {
   const std::vector<AxisFactory>& axisFactories() const;
 
   /// Check if any of the contained descriptions is deferred, i.e. requires
-  /// consumer supplied resolutions to produce axes
+  /// consumer supplied options to produce axes
   /// @return true if any axis description is deferred
   bool isDeferred() const;
 
-  /// Produce the axes from fully specified descriptions
+  /// Build the axes from fully specified descriptions
   /// @throws std::domain_error if any description is deferred
   /// @return the created axes, in axis order
-  std::vector<std::unique_ptr<IAxis>> toAxes() const;
+  std::vector<std::unique_ptr<IAxis>> buildAxes() const;
 
-  /// Produce the axes from deferred descriptions with the consumer supplied
-  /// ranges and boundary types
-  /// @param resolutions one range and boundary type per axis, in axis order
-  /// @param directions optionally one caller expected direction per axis, in
-  ///        axis order; if given, each has to agree with the corresponding
-  ///        stored direction
+  /// Build the axes from deferred descriptions with the consumer supplied
+  /// ranges, boundary types and directions
+  /// @param options one option set per axis, in axis order
   /// @throws std::domain_error if any description is fully specified
-  /// @throws std::invalid_argument if the number of resolutions or directions
-  ///         does not match the number of axes, or a direction mismatches
+  /// @throws std::invalid_argument if the number of option sets does not
+  ///         match the number of axes, or a direction mismatches
   /// @return the created axes, in axis order
-  std::vector<std::unique_ptr<IAxis>> toAxes(
-      std::span<const AxisResolution> resolutions,
-      std::span<const AxisDirection> directions = {}) const;
+  std::vector<std::unique_ptr<IAxis>> buildAxes(OptionsView options) const;
 
-  /// Produce a multi-axis from fully specified descriptions
+  /// Build a multi-axis from fully specified descriptions
   /// @throws std::domain_error if any description is deferred or the
   ///         dimension exceeds the supported maximum of 3
   /// @return the created multi-axis
-  std::unique_ptr<IMultiAxis> toMultiAxis() const;
+  std::unique_ptr<IMultiAxis> buildMultiAxis() const;
 
-  /// Produce a multi-axis from deferred descriptions with the consumer
-  /// supplied ranges and boundary types
-  /// @param resolutions one range and boundary type per axis, in axis order
-  /// @param directions optionally one caller expected direction per axis, in
-  ///        axis order; if given, each has to agree with the corresponding
-  ///        stored direction
+  /// Build a multi-axis from deferred descriptions with the consumer supplied
+  /// ranges, boundary types and directions
+  /// @param options one option set per axis, in axis order
   /// @throws std::domain_error if any description is fully specified or the
   ///         dimension exceeds the supported maximum of 3
-  /// @throws std::invalid_argument if the number of resolutions or directions
-  ///         does not match the number of axes, or a direction mismatches
+  /// @throws std::invalid_argument if the number of option sets does not
+  ///         match the number of axes, or a direction mismatches
   /// @return the created multi-axis
-  std::unique_ptr<IMultiAxis> toMultiAxis(
-      std::span<const AxisResolution> resolutions,
-      std::span<const AxisDirection> directions = {}) const;
+  std::unique_ptr<IMultiAxis> buildMultiAxis(OptionsView options) const;
 
   /// Get a string representation of this description
   /// @return the string representation
@@ -109,19 +119,19 @@ class MultiAxisFactory {
   /// @param rhs second description
   /// @return true if all axis descriptions are equal
   friend bool operator==(const MultiAxisFactory& lhs,
-                         const MultiAxisFactory& rhs) {
-    return lhs.m_axisFactories == rhs.m_axisFactories;
-  }
+                         const MultiAxisFactory& rhs) = default;
 
   /// Output stream operator
   /// @param os output stream
   /// @param multiAxisFactory the description to be printed
   /// @return the output stream
   friend std::ostream& operator<<(std::ostream& os,
-                                  const MultiAxisFactory& multiAxisFactory);
+                                  const MultiAxisFactory& multiAxisFactory) {
+    return os << multiAxisFactory.toString();
+  }
 
  private:
-  /// Create a multi-axis from already produced axes
+  /// Assemble a multi-axis from already built axes
   /// @param axes the axes, in axis order
   /// @return the created multi-axis
   static std::unique_ptr<IMultiAxis> makeMultiAxis(
@@ -130,12 +140,10 @@ class MultiAxisFactory {
   std::vector<AxisFactory> m_axisFactories;
 };
 
-/// @brief Multi-dimensional binning description of a fixed, compile-time
-/// dimension
+/// @brief Multi-dimensional binning description of a compile-time dimension
 ///
-/// On top of the runtime-dimension @c MultiAxisFactory API this adds a
-/// statically sized construction and resolution API, mirroring the relation
-/// between @c IMultiAxis and @c IMultiAxisXD.
+/// Adds a statically sized construction and build API on top of
+/// @c MultiAxisFactory , mirroring @c IMultiAxis and @c IMultiAxisXD .
 ///
 /// @tparam DIM number of axes (dimension of the grid)
 template <std::size_t DIM>
@@ -151,26 +159,25 @@ class MultiAxisFactoryXD : public MultiAxisFactory {
             std::make_move_iterator(axisFactories.begin()),
             std::make_move_iterator(axisFactories.end()))) {}
 
-  /// Produce a multi-axis from fully specified descriptions
+  /// Make the type-erased base overloads visible next to the ones below
+  using MultiAxisFactory::buildMultiAxis;
+
+  /// Build a multi-axis from fully specified descriptions
   /// @throws std::domain_error if any description is deferred
   /// @return the created multi-axis of dimension @c DIM
-  std::unique_ptr<IMultiAxisXD<DIM>> toMultiAxis() const {
-    return downcast(MultiAxisFactory::toMultiAxis());
+  std::unique_ptr<IMultiAxisXD<DIM>> buildMultiAxis() const {
+    return downcast(MultiAxisFactory::buildMultiAxis());
   }
 
-  /// Produce a multi-axis from deferred descriptions with the consumer
-  /// supplied ranges and boundary types
-  /// @param resolutions one range and boundary type per axis, in axis order
-  /// @param directions optionally one caller expected direction per axis, in
-  ///        axis order; if given, each has to agree with the corresponding
-  ///        stored direction
+  /// Build a multi-axis from deferred descriptions with the consumer supplied
+  /// ranges, boundary types and directions
+  /// @param options one option set per axis, in axis order
   /// @throws std::domain_error if any description is fully specified
   /// @throws std::invalid_argument if a direction mismatches
   /// @return the created multi-axis of dimension @c DIM
-  std::unique_ptr<IMultiAxisXD<DIM>> toMultiAxis(
-      const std::array<AxisResolution, DIM>& resolutions,
-      std::span<const AxisDirection> directions = {}) const {
-    return downcast(MultiAxisFactory::toMultiAxis(resolutions, directions));
+  std::unique_ptr<IMultiAxisXD<DIM>> buildMultiAxis(
+      const std::array<AxisFactory::Options, DIM>& options) const {
+    return downcast(MultiAxisFactory::buildMultiAxis(options));
   }
 
  private:
@@ -189,16 +196,28 @@ class MultiAxisFactoryXD : public MultiAxisFactory {
   }
 };
 
-/// Output stream operator
-/// @param os output stream
-/// @param multiAxisFactory the description to be printed
-/// @return the output stream
-std::ostream& operator<<(std::ostream& os,
-                         const MultiAxisFactory& multiAxisFactory);
-
 /// Type alias for a multi-axis description of dimension 1
 using MultiAxisFactory1D = MultiAxisFactoryXD<1>;
 /// Type alias for a multi-axis description of dimension 2
 using MultiAxisFactory2D = MultiAxisFactoryXD<2>;
+
+/// @brief Build the multi-axis of a surface binning against that surface
+///
+/// A surface spans two local coordinates, so the binning is strictly
+/// two-dimensional; use a single bin in one direction to bin along the other
+/// only. Both descriptions are matched to the canonical local axis directions
+/// of the surface (see @c Surface::localAxes ), either positionally if
+/// neither carries a direction, or by direction if both do. Mixing the two is
+/// rejected. The axes are returned in canonical direction order.
+///
+/// @param multiAxisFactory the binning description to build from
+/// @param surface the surface to resolve the ranges against
+/// @throws std::invalid_argument if the directions cannot be matched or the
+///         surface is unsupported
+/// @throws std::domain_error if any description is fully specified instead
+///         of deferred
+/// @return the created multi-axis, in canonical direction order
+std::unique_ptr<IMultiAxis2D> resolveMultiAxis(
+    const MultiAxisFactory2D& multiAxisFactory, const Surface& surface);
 
 }  // namespace Acts

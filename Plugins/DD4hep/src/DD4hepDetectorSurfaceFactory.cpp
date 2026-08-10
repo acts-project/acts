@@ -156,8 +156,7 @@ void DD4hepDetectorSurfaceFactory::attachSurfaceMaterial(
     ACTS_VERBOSE(" - proto material binning for passive surface found.");
     auto materialBinning = DD4hepBinningHelpers::convertAxisFactories(
         dd4hepElement, prefix + "_proto_material_binning");
-    // Material binning is deferred: the range and boundary type are
-    // determined from the surface during material mapping
+    // Deferred binning: the range is taken from the surface during mapping
     // TODO the collected binning is not yet attached to the surface
     std::vector<AxisFactory> pmBinning = {};
     for (const auto& [axisFactory, bins] : materialBinning) {

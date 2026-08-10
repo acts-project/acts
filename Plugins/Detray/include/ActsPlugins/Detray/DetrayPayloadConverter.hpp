@@ -124,7 +124,7 @@ class DetrayPayloadConverter {
   /// @return Detray surface material payload
   static std::optional<DetraySurfaceMaterial>
   convertProtoSurfaceMaterialAxisFactory(
-      const Acts::ProtoSurfaceMaterialT<Acts::MultiAxisFactory>& material,
+      const Acts::ProtoSurfaceMaterialT<Acts::MultiAxisFactory2D>& material,
       const Acts::Surface& surface);
 
   /// Convert surface array navigation policy

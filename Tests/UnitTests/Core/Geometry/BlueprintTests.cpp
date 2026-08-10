@@ -771,7 +771,7 @@ BOOST_AUTO_TEST_CASE(MaterialAxisValidation) {
                        [&](auto& mat) {
                          mat.configureFace(
                              NegativeDisc,
-                             AxisFactory::Equidistant(Bound, 0., 1., 5, AxisR),
+                             AxisFactory::Equidistant(5, 0., 1., Bound, AxisR),
                              AxisFactory::DeferredEquidistant(10, AxisPhi));
                        }),
       std::invalid_argument);

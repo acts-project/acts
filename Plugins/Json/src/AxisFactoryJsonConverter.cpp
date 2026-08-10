@@ -19,60 +19,69 @@
 nlohmann::json Acts::AxisFactoryJsonConverter::toJson(
     const AxisFactory& axisFactory) {
   nlohmann::json j;
-  if (axisFactory.direction().has_value()) {
-    j["direction"] = axisFactory.direction().value();
-  }
-  if (axisFactory.isDeferred()) {
-    if (axisFactory.isEquidistant()) {
-      j["type"] = "deferred-equidistant";
-      j["bins"] = axisFactory.asDeferredEquidistant().nBins;
-    } else {
-      j["type"] = "deferred-variable";
-      j["normalized_edges"] = axisFactory.asDeferredVariable().normalizedEdges;
-    }
-    return j;
-  }
+
+  std::optional<double> min;
+  std::optional<double> max;
   if (axisFactory.isEquidistant()) {
     const auto& params = axisFactory.asEquidistant();
     j["type"] = "equidistant";
-    j["boundary_type"] = params.boundaryType;
-    j["range"] = std::array<double, 2u>({params.min, params.max});
     j["bins"] = params.nBins;
+    min = params.min;
+    max = params.max;
+  } else if (axisFactory.isDeferredVariable()) {
+    j["type"] = "deferred-variable";
+    j["normalized_boundaries"] =
+        axisFactory.asDeferredVariable().normalizedEdges;
   } else {
     const auto& params = axisFactory.asVariable();
     j["type"] = "variable";
-    j["boundary_type"] = params.boundaryType;
     j["boundaries"] = params.edges;
+  }
+
+  // Only the properties the description fixes are written out
+  if (min.has_value() && max.has_value()) {
+    j["range"] = std::array<double, 2u>({*min, *max});
+  }
+  if (axisFactory.boundaryType().has_value()) {
+    j["boundary_type"] = *axisFactory.boundaryType();
+  }
+  if (axisFactory.direction().has_value()) {
+    j["direction"] = *axisFactory.direction();
   }
   return j;
 }
 
 Acts::AxisFactory Acts::AxisFactoryJsonConverter::fromJson(
     const nlohmann::json& j) {
-  std::optional<AxisDirection> direction = std::nullopt;
+  std::optional<AxisBoundaryType> boundaryType;
+  if (j.contains("boundary_type")) {
+    boundaryType = j.at("boundary_type").get<AxisBoundaryType>();
+  }
+  std::optional<AxisDirection> direction;
   if (j.contains("direction")) {
     direction = j.at("direction").get<AxisDirection>();
   }
 
   std::string type = j.at("type").get<std::string>();
-  if (type == "deferred-equidistant") {
-    return AxisFactory::DeferredEquidistant(j.at("bins").get<std::size_t>(),
-                                            direction);
+  if (type == "equidistant") {
+    std::optional<double> min;
+    std::optional<double> max;
+    if (j.contains("range")) {
+      std::array<double, 2u> range = j.at("range");
+      min = range.at(0);
+      max = range.at(1);
+    }
+    return AxisFactory::Equidistant(j.at("bins").get<std::size_t>(), min, max,
+                                    boundaryType, direction);
+  }
+  if (type == "variable") {
+    return AxisFactory::Variable(j.at("boundaries").get<std::vector<double>>(),
+                                 boundaryType, direction);
   }
   if (type == "deferred-variable") {
     return AxisFactory::DeferredVariable(
-        j.at("normalized_edges").get<std::vector<double>>(), direction);
-  }
-  if (type == "equidistant") {
-    auto boundaryType = j.at("boundary_type").get<AxisBoundaryType>();
-    std::array<double, 2u> range = j.at("range");
-    return AxisFactory::Equidistant(boundaryType, range.at(0), range.at(1),
-                                    j.at("bins").get<std::size_t>(), direction);
-  }
-  if (type == "variable") {
-    auto boundaryType = j.at("boundary_type").get<AxisBoundaryType>();
-    return AxisFactory::Variable(
-        boundaryType, j.at("boundaries").get<std::vector<double>>(), direction);
+        j.at("normalized_boundaries").get<std::vector<double>>(), boundaryType,
+        direction);
   }
   throw std::invalid_argument(
       "AxisFactoryJsonConverter: unknown axis description type '" + type + "'");

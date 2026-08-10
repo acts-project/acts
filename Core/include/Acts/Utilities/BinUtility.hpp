@@ -133,12 +133,13 @@ class BinUtility {
     m_binningData.emplace_back(dpAxis.getAxisDirection(), dpAxis.getAxis());
   }
 
-  // A deprecated declaration suppresses the deprecation warnings of the types
-  // it names directly, but not of the ones it only names as template arguments
+  // A deprecated declaration only silences directly named types, not the ones
+  // it names as template arguments
   ACTS_PUSH_IGNORE_DEPRECATED()
   /// Create from several DirectedProtoAxis objects
   ///
   /// @param dpAxes the DirectedProtoAxis to be used with axis directions
+  /// @deprecated Use BinUtility(const IMultiAxis&) with directed axes instead
   [[deprecated("Use BinUtility(const IMultiAxis&) with directed axes instead")]]
   explicit BinUtility(const std::vector<DirectedProtoAxis>& dpAxes)
       : m_binningData(),

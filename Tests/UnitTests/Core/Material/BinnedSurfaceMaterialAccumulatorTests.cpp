@@ -235,14 +235,14 @@ BOOST_AUTO_TEST_CASE(ProtoGridResolutionTest) {
   // order to exercise the direction based re-ordering
   surfaces[0u]->assignSurfaceMaterial(
       std::make_shared<ProtoGridSurfaceMaterial>(
-          MultiAxisFactory({AxisFactory::DeferredEquidistant(10, AxisZ),
-                            AxisFactory::DeferredEquidistant(4, AxisRPhi)})));
+          MultiAxisFactory2D({AxisFactory::DeferredEquidistant(10, AxisZ),
+                              AxisFactory::DeferredEquidistant(4, AxisRPhi)})));
 
   // Disc: deferred variable binning in r, deferred equidistant binning in phi
   surfaces[1u]->assignSurfaceMaterial(
-      std::make_shared<ProtoGridSurfaceMaterial>(
-          MultiAxisFactory({AxisFactory::DeferredVariable({0., 0.2, 1.}, AxisR),
-                            AxisFactory::DeferredEquidistant(8, AxisPhi)})));
+      std::make_shared<ProtoGridSurfaceMaterial>(MultiAxisFactory2D(
+          {AxisFactory::DeferredVariable({0., 0.2, 1.}, std::nullopt, AxisR),
+           AxisFactory::DeferredEquidistant(8, AxisPhi)})));
 
   BinnedSurfaceMaterialAccumulator::Config bsmaConfig;
   bsmaConfig.materialSurfaces = {surfaces[0].get(), surfaces[1].get()};
