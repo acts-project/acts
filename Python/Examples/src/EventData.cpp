@@ -26,8 +26,8 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-// Prevent stl.h's list_caster-based type_caster<std::vector<T>> from matching
-// ProtoTrackContainer, which would break py::cast<std::unique_ptr<T>> needed
+// Prevent stl.h's list_caster-based type_caster<std::vector<T>> from matching,
+// which would break py::cast<std::unique_ptr<T>> needed
 // by WhiteBoardRegistry. The full specialization takes priority over stl.h's
 // partial specialization regardless of include order.
 PYBIND11_MAKE_OPAQUE(ActsExamples::ClusterContainer)
