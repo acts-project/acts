@@ -89,7 +89,8 @@ void GraphBasedTrackSeeder::createSeeds(
 
   nodeStorage.sortByPhi();
 
-  nodeStorage.initializeNodes(m_cfg.useMl);
+  nodeStorage.initializeNodes(m_cfg.useMl, m_cfg.moduleHalfLengthY,
+                              m_cfg.moduleEdgeTolerance);
 
   nodeStorage.generatePhiIndexing(1.5f * m_cfg.phiSliceWidth);
 
@@ -381,7 +382,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
           const float dz = z2 - z1;
           const float tau = dz / dr;
           const float ftau = std::fabs(tau);
-          if (ftau > 36.0f) {
+          if (ftau > m_cfg.maxAbsTau) {
             continue;
           }
 
