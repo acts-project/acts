@@ -24,9 +24,6 @@
 #include "detray/definitions/algebra.hpp"
 #include "detray/detectors/default_metadata.hpp"
 
-// Vecmem include(s)
-#include <vecmem/memory/memory_resource.hpp>
-
 // Pybind11 include(s)
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -188,14 +185,6 @@ PYBIND11_MODULE(DetrayTestsPythonBindings, m) {
             c.name(n);
           },
           "Name of the test")
-      .def_property(
-          "deviceMr",
-          [](const material_validation_config_t &c) { return c.device_mr(); },
-          [](material_validation_config_t &c, vecmem::memory_resource *mr) {
-            c.device_mr(mr);
-          },
-          py::return_value_policy::reference,
-          "Memory resource for the device allocations")
       .def_property(
           "materialFile",
           [](const material_validation_config_t &c) {
