@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(Histogram1D_UniformBinning) {
 
   // Verify count in bin containing 5.0
   auto binIndex = bh.axis(0).index(5.0);
-  double binContent = bh.at(binIndex);
+  double binContent = bh.at(binIndex).value();
   BOOST_CHECK_CLOSE(binContent, 2.0, 1e-10);
 }
 
@@ -54,13 +54,13 @@ BOOST_AUTO_TEST_CASE(Histogram1D_VariableBinning) {
   // Verify the value is in the correct bin
   auto binIndex = bh.axis(0).index(2.0);
   BOOST_CHECK_EQUAL(binIndex, 1);
-  double binContent = bh.at(binIndex);
+  double binContent = bh.at(binIndex).value();
   BOOST_CHECK_CLOSE(binContent, 1.0, 1e-10);
 
   // Verify other bins are empty
   for (int i = 0; i < bh.axis(0).size(); ++i) {
     if (i != binIndex) {
-      double content = bh.at(i);
+      double content = bh.at(i).value();
       BOOST_CHECK_EQUAL(content, 0.0);
     }
   }
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(Histogram2D_FillAndAccess) {
   const auto& bh = hist.histogram();
   auto xIdx = bh.axis(0).index(5.0);
   auto yIdx = bh.axis(1).index(2.0);
-  double binContent = bh.at(xIdx, yIdx);
+  double binContent = bh.at(xIdx, yIdx).value();
   BOOST_CHECK_CLOSE(binContent, 1.0, 1e-10);
 }
 
@@ -104,13 +104,13 @@ BOOST_AUTO_TEST_CASE(Histogram2D_VariableBinning) {
   // Verify first filled bin (2.0, 0.5) - filled twice
   auto xIdx1 = bh.axis(0).index(2.0);
   auto yIdx1 = bh.axis(1).index(0.5);
-  double binContent1 = bh.at(xIdx1, yIdx1);
+  double binContent1 = bh.at(xIdx1, yIdx1).value();
   BOOST_CHECK_CLOSE(binContent1, 2.0, 1e-10);
 
   // Verify second filled bin (0.5, -1.5) - filled once
   auto xIdx2 = bh.axis(0).index(0.5);
   auto yIdx2 = bh.axis(1).index(-1.5);
-  double binContent2 = bh.at(xIdx2, yIdx2);
+  double binContent2 = bh.at(xIdx2, yIdx2).value();
   BOOST_CHECK_CLOSE(binContent2, 1.0, 1e-10);
 }
 
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(Histogram1D_UnderflowOverflow) {
   // boost::histogram has underflow/overflow bins by default
   // Regular bins: 0..9, underflow: -1, overflow: 10
   auto inRangeIdx = bh.axis(0).index(5.0);
-  double binContent = bh.at(inRangeIdx);
+  double binContent = bh.at(inRangeIdx).value();
   BOOST_CHECK_CLOSE(binContent, 1.0, 1e-10);
 
   // Note: accessing underflow/overflow requires special handling
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(Histogram1D_EmptyHistogram) {
 
   const auto& bh = hist.histogram();
   for (int i = 0; i < bh.axis(0).size(); ++i) {
-    double content = bh.at(i);
+    double content = bh.at(i).value();
     BOOST_CHECK_EQUAL(content, 0.0);
   }
 }
@@ -374,60 +374,88 @@ BOOST_AUTO_TEST_CASE(SliceLastAxis_3D) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(ValueHistogram1D_SetAndGet) {
+BOOST_AUTO_TEST_CASE(Histogram1D_SetBinWithError) {
   auto axis = AxisVariant(BoostRegularAxis(5, 0.0, 5.0, "eta"));
-  ValueHistogram1 hist("mean", "Mean", {axis});
+  Histogram1 hist("mean", "Mean", {axis});
 
-  BOOST_CHECK_EQUAL(hist.name(), "mean");
-  BOOST_CHECK_EQUAL(hist.title(), "Mean");
-  BOOST_CHECK_EQUAL(ValueHistogram1::rank(), 1u);
-
-  // Untouched bins read back as zero value and zero error
-  BOOST_CHECK_EQUAL(hist.value({0}), 0.0);
-  BOOST_CHECK_EQUAL(hist.error({0}), 0.0);
+  // Untouched bins read back as zero content and zero error
+  BOOST_CHECK_EQUAL(hist.binContent({0}), 0.0);
+  BOOST_CHECK_EQUAL(hist.binError({0}), 0.0);
 
   hist.setBin({2}, -1.25, 0.5);
-  BOOST_CHECK_CLOSE(hist.value({2}), -1.25, 1e-10);
-  BOOST_CHECK_CLOSE(hist.error({2}), 0.5, 1e-10);
+  BOOST_CHECK_CLOSE(hist.binContent({2}), -1.25, 1e-10);
+  BOOST_CHECK_CLOSE(hist.binError({2}), 0.5, 1e-10);
 
   // Setting overwrites rather than accumulates
   hist.setBin({2}, 3.0, 0.25);
-  BOOST_CHECK_CLOSE(hist.value({2}), 3.0, 1e-10);
-  BOOST_CHECK_CLOSE(hist.error({2}), 0.25, 1e-10);
+  BOOST_CHECK_CLOSE(hist.binContent({2}), 3.0, 1e-10);
+  BOOST_CHECK_CLOSE(hist.binError({2}), 0.25, 1e-10);
 
   // Neighbours stay untouched
-  BOOST_CHECK_EQUAL(hist.value({1}), 0.0);
-  BOOST_CHECK_EQUAL(hist.error({3}), 0.0);
+  BOOST_CHECK_EQUAL(hist.binContent({1}), 0.0);
+  BOOST_CHECK_EQUAL(hist.binError({3}), 0.0);
 
   // The axis is carried through for converters
   BOOST_CHECK_EQUAL(hist.histogram().axis(0).size(), 5);
   BOOST_CHECK_EQUAL(hist.histogram().axis(0).metadata(), "eta");
 }
 
-BOOST_AUTO_TEST_CASE(ValueHistogram2D_SetAndGet) {
+BOOST_AUTO_TEST_CASE(Histogram2D_SetBinWithError) {
   std::vector<double> xEdges = {0.0, 1.0, 3.0};
   auto xAxis = AxisVariant(BoostVariableAxis(xEdges, "eta"));
   auto yAxis = AxisVariant(BoostRegularAxis(3, 0.0, 3.0, "pt"));
-  ValueHistogram2 hist("width", "Width", {xAxis, yAxis});
-
-  BOOST_CHECK_EQUAL(ValueHistogram2::rank(), 2u);
+  Histogram2 hist("width", "Width", {xAxis, yAxis});
 
   hist.setBin({1, 2}, 0.75, 0.1);
-  BOOST_CHECK_CLOSE(hist.value({1, 2}), 0.75, 1e-10);
-  BOOST_CHECK_CLOSE(hist.error({1, 2}), 0.1, 1e-10);
-  BOOST_CHECK_EQUAL(hist.value({0, 0}), 0.0);
+  BOOST_CHECK_CLOSE(hist.binContent({1, 2}), 0.75, 1e-10);
+  BOOST_CHECK_CLOSE(hist.binError({1, 2}), 0.1, 1e-10);
+  BOOST_CHECK_EQUAL(hist.binContent({0, 0}), 0.0);
 
   BOOST_CHECK(extractBinEdges(hist.histogram().axis(0)) == xEdges);
   BOOST_CHECK_EQUAL(hist.histogram().axis(1).metadata(), "pt");
 }
 
-BOOST_AUTO_TEST_CASE(ValueHistogram_ZeroErrorIsAllowed) {
+BOOST_AUTO_TEST_CASE(Histogram_ZeroErrorIsAllowed) {
   auto axis = AxisVariant(BoostRegularAxis(2, 0.0, 2.0, "x"));
-  ValueHistogram1 hist("zero", "Zero", {axis});
+  Histogram1 hist("zero", "Zero", {axis});
 
   hist.setBin({0}, 5.0, 0.0);
-  BOOST_CHECK_CLOSE(hist.value({0}), 5.0, 1e-10);
-  BOOST_CHECK_EQUAL(hist.error({0}), 0.0);
+  BOOST_CHECK_CLOSE(hist.binContent({0}), 5.0, 1e-10);
+  BOOST_CHECK_EQUAL(hist.binError({0}), 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(Histogram_Fill_GivesSqrtNError) {
+  // A plain fill() should give the usual counting-statistics error, matching
+  // what ROOT's TH1::Fill (with Sumw2 enabled) would report.
+  auto axis = AxisVariant(BoostRegularAxis(4, 0.0, 4.0, "x"));
+  Histogram1 hist("counts", "Counts", {axis});
+
+  for (int i = 0; i < 9; ++i) {
+    hist.fill({0.5});
+  }
+
+  BOOST_CHECK_CLOSE(hist.binContent({0}), 9.0, 1e-10);
+  BOOST_CHECK_CLOSE(hist.binError({0}), 3.0, 1e-10);
+  BOOST_CHECK_EQUAL(hist.binContent({1}), 0.0);
+  BOOST_CHECK_EQUAL(hist.binError({1}), 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(SliceLastAxis_PropagatesErrors) {
+  auto xAxis = AxisVariant(BoostRegularAxis(2, 0.0, 2.0, "eta"));
+  auto yAxis = AxisVariant(BoostRegularAxis(3, 0.0, 3.0, "res"));
+  Histogram2 hist("res_vs_eta", "Residual vs Eta", {xAxis, yAxis});
+
+  hist.setBin({0, 0}, 1.0, 0.1);
+  hist.setBin({0, 1}, 2.0, 0.2);
+  hist.setBin({0, 2}, 3.0, 0.3);
+
+  const Histogram1 slice = sliceLastAxis(hist, 0);
+  BOOST_CHECK_CLOSE(slice.binContent({0}), 1.0, 1e-10);
+  BOOST_CHECK_CLOSE(slice.binError({0}), 0.1, 1e-10);
+  BOOST_CHECK_CLOSE(slice.binContent({1}), 2.0, 1e-10);
+  BOOST_CHECK_CLOSE(slice.binError({1}), 0.2, 1e-10);
+  BOOST_CHECK_CLOSE(slice.binContent({2}), 3.0, 1e-10);
+  BOOST_CHECK_CLOSE(slice.binError({2}), 0.3, 1e-10);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

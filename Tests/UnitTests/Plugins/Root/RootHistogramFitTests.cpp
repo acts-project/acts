@@ -91,10 +91,10 @@ BOOST_AUTO_TEST_CASE(DegenerateInputs_Fail) {
   BOOST_CHECK(!fitter(spike).has_value());
 }
 
-BOOST_AUTO_TEST_CASE(ValueHistogram1D_ConvertsWithErrors) {
+BOOST_AUTO_TEST_CASE(Histogram1D_ConvertsWithErrors) {
   std::vector<double> edges = {0.0, 1.0, 3.0, 7.0};
   auto axis = AxisVariant(BoostVariableAxis(edges, "eta"));
-  ValueHistogram1 hist("resmean_d0_vs_eta", "Mean", {axis});
+  Histogram1 hist("resmean_d0_vs_eta", "Mean", {axis});
 
   hist.setBin({0}, 1.5, 0.25);
   hist.setBin({1}, -2.5, 0.5);
@@ -119,10 +119,10 @@ BOOST_AUTO_TEST_CASE(ValueHistogram1D_ConvertsWithErrors) {
   BOOST_CHECK_CLOSE(rootHist->GetXaxis()->GetBinUpEdge(3), 7.0, 1e-6);
 }
 
-BOOST_AUTO_TEST_CASE(ValueHistogram2D_ConvertsWithErrors) {
+BOOST_AUTO_TEST_CASE(Histogram2D_ConvertsWithErrors) {
   auto xAxis = AxisVariant(BoostRegularAxis(2, 0.0, 2.0, "eta"));
   auto yAxis = AxisVariant(BoostRegularAxis(3, 0.0, 3.0, "pt"));
-  ValueHistogram2 hist("reswidth_d0_vs_eta_pt", "Width", {xAxis, yAxis});
+  Histogram2 hist("reswidth_d0_vs_eta_pt", "Width", {xAxis, yAxis});
 
   hist.setBin({1, 2}, 0.75, 0.1);
 

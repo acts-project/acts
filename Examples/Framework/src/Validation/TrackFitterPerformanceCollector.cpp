@@ -125,7 +125,7 @@ template <std::size_t Dim>
 void TrackFitterPerformanceCollector::addFittedProfiles(
     const std::map<std::string, Acts::Experimental::Histogram<Dim>>& histMap,
     const std::string& meanPrefix, const std::string& widthPrefix,
-    std::vector<Acts::Experimental::ValueHistogram<Dim - 1>>& out) const {
+    std::vector<Acts::Experimental::Histogram<Dim - 1>>& out) const {
   for (const auto& [name, hist] : histMap) {
     // Extract the suffix from the histogram name (e.g., "_d0_vs_eta")
     const std::string& baseName = hist.name();

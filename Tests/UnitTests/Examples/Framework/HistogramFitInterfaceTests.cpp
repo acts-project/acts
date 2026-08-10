@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(ExtractMeanWidthProfiles_WorksWithRootFitter) {
 
   BOOST_CHECK_EQUAL(profiles.fitFailureFraction, 0.0);
   for (int i = 0; i < nEtaBins; ++i) {
-    BOOST_CHECK_CLOSE(profiles.width.value({i}), 0.5 + 0.3 * i, 5.0);
+    BOOST_CHECK_CLOSE(profiles.width.binContent({i}), 0.5 + 0.3 * i, 5.0);
   }
 }
 

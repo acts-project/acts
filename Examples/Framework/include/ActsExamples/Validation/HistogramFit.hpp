@@ -9,31 +9,23 @@
 #pragma once
 
 #include "Acts/Utilities/Histogram.hpp"
+#include "Acts/Utilities/HistogramFit.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
-#include <functional>
 #include <optional>
 #include <string>
-#include <tuple>
-#include <utility>
 
 namespace ActsExamples {
 
-/// @brief Outcome of a Gaussian fit to a 1D histogram: `(mean, sigma,
-///        meanError, sigmaError)`
-using HistogramFitResult = std::tuple<double, double, double, double>;
+/// @c Acts::Experimental::HistogramFitResult, re-exported for convenience
+using HistogramFitResult = Acts::Experimental::HistogramFitResult;
 
-/// @brief Fit range `[xMin, xMax]`, closed, selected by bin centre
-using HistogramFitRange = std::pair<double, double>;
+/// @c Acts::Experimental::HistogramFitRange, re-exported for convenience
+using HistogramFitRange = Acts::Experimental::HistogramFitRange;
 
-/// A single Gaussian fit to a 1D histogram, optionally restricted to a range
-///
-/// Any backend -- @c ActsExamples::gaussianHistogramFit, a callable
-/// `ActsPlugins::RootHistogramFit`, or a Python callable -- can be adapted to
-/// this signature.
-using HistogramFitFunction = std::function<std::optional<HistogramFitResult>(
-    const Acts::Experimental::Histogram1&, std::optional<HistogramFitRange>)>;
+/// @c Acts::Experimental::HistogramFitFunction, re-exported for convenience
+using HistogramFitFunction = Acts::Experimental::HistogramFitFunction;
 
 /// @brief Mean and width profiles extracted from a histogram of dimension
 ///        @c Dim + 1
@@ -42,9 +34,9 @@ using HistogramFitFunction = std::function<std::optional<HistogramFitResult>(
 template <std::size_t Dim>
 struct MeanWidthProfiles {
   /// Fitted mean per bin of the outer axes
-  Acts::Experimental::ValueHistogram<Dim> mean;
+  Acts::Experimental::Histogram<Dim> mean;
   /// Fitted width (sigma) per bin of the outer axes
-  Acts::Experimental::ValueHistogram<Dim> width;
+  Acts::Experimental::Histogram<Dim> width;
   /// Fraction of bins where a fit was attempted but failed
   double fitFailureFraction{};
 };
@@ -109,10 +101,10 @@ MeanWidthProfiles<Dim - 1> extractMeanWidthProfiles(
   }
 
   MeanWidthProfiles<OuterDim> profiles{
-      Acts::Experimental::ValueHistogram<OuterDim>(
-          meanName, hist.title() + " mean", axes),
-      Acts::Experimental::ValueHistogram<OuterDim>(
-          widthName, hist.title() + " width", axes),
+      Acts::Experimental::Histogram<OuterDim>(meanName, hist.title() + " mean",
+                                              axes),
+      Acts::Experimental::Histogram<OuterDim>(widthName,
+                                              hist.title() + " width", axes),
       0.0};
 
   // Unravel a flat outer index into per-axis indices, last outer axis
