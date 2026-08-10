@@ -55,10 +55,12 @@ std::optional<double> minOf(const AxisFactory::VariableParams& params) {
 std::optional<double> maxOf(const AxisFactory::VariableParams& params) {
   return params.edges.back();
 }
-std::optional<double> minOf(const AxisFactory::DeferredVariableParams&) {
+std::optional<double> minOf(
+    const AxisFactory::DeferredVariableParams& /*params*/) {
   return std::nullopt;
 }
-std::optional<double> maxOf(const AxisFactory::DeferredVariableParams&) {
+std::optional<double> maxOf(
+    const AxisFactory::DeferredVariableParams& /*params*/) {
   return std::nullopt;
 }
 
