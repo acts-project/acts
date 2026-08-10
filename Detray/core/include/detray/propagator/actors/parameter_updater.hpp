@@ -21,6 +21,8 @@
 #include "detray/propagator/detail/noise_estimation.hpp"
 #include "detray/propagator/propagation_config.hpp"
 #include "detray/utils/curvilinear_frame.hpp"
+#include "detray/utils/known_substructure_matrix.hpp"
+#include "detray/utils/known_substructure_matrix_types.hpp"
 #include "detray/utils/logging.hpp"
 #include "detray/utils/type_registry.hpp"
 
@@ -365,8 +367,27 @@ struct parameter_transporter : base_actor {
       // Update the full Jacobian, if required
       if (math::fabs(stepping.path_length()) > 0.f) {
         if (updater_state.has_full_jacobian()) {
-          updater_state.set_full_jacobian(propagation_step_jacobian *
-                                          updater_state.full_jacobian());
+          // Both factors carry the substructure of the generated full
+          // Jacobian, and it survives the product, so the accumulator keeps
+          // it over every step. Going through it lets the multiplication skip
+          // the structurally zero terms: 225 flops rather than the 396 of a
+          // dense 6x6 product.
+          // Whether the volume carries material is a runtime property, so
+          // take the substructure that holds either way. The no-material
+          // variant is more structured still, and worth selecting statically
+          // for a detector that is known not to have volume material.
+          using ksm_jacobian_t =
+              ksm::matrix<ksm::full_jacobian_substructure<true>,
+                          dscalar<algebra_t>>;
+
+          const auto step_jac = ksm_jacobian_t::template from_dense<algebra_t>(
+              propagation_step_jacobian);
+          const auto accumulated =
+              ksm_jacobian_t::template from_dense<algebra_t>(
+                  updater_state.full_jacobian());
+
+          updater_state.set_full_jacobian(
+              (step_jac * accumulated).template to_dense<algebra_t>());
         }
 
         // Reset transport Jacobian to identity matrix
