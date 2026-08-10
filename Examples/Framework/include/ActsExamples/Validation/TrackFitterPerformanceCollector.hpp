@@ -15,6 +15,7 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
+#include "ActsExamples/Validation/GaussianHistogramFit.hpp"
 #include "ActsExamples/Validation/HistogramFit.hpp"
 #include "ActsExamples/Validation/ResPlotTool.hpp"
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
@@ -31,8 +32,8 @@ namespace ActsExamples {
 /// Collects residual/pull histograms, efficiency plots, and track summary
 /// information for track fitting performance evaluation. The Gaussian fit
 /// backend is supplied by the caller via @c Config::fitFunction, so this
-/// collector is agnostic to whether it runs ROOT's `TH1::Fit`, a Python
-/// callable, or some other implementation.
+/// collector is agnostic to whether it runs Core's own fit, ROOT's `TH1::Fit`,
+/// or a Python callable.
 ///
 /// @note The caller must ensure exclusive access (e.g. hold a mutex) when
 ///       calling fill(). This class applies no locking of its own.
@@ -43,11 +44,12 @@ class TrackFitterPerformanceCollector {
     EffPlotTool::Config effPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
 
-    /// The Gaussian fit backend used by @c fitProfiles, e.g.
-    /// @c ActsPlugins::RootHistogramFit or a Python callable. Defaults to an
-    /// empty function; if left unset, @c fitProfiles logs a warning and
-    /// returns no profiles instead of fitting.
-    HistogramFitFunction fitFunction;
+    /// The Gaussian fit backend used by @c fitProfiles. Defaults to Core's
+    /// own ROOT-free @c gaussianHistogramFit; pass e.g.
+    /// @c ActsPlugins::RootHistogramFit or a Python callable instead to use a
+    /// different backend. If explicitly cleared, @c fitProfiles logs a
+    /// warning and returns no profiles instead of fitting.
+    HistogramFitFunction fitFunction = &gaussianHistogramFit;
 
     /// Minimum number of entries in a bin for it to be included in the
     /// mean/width fit.

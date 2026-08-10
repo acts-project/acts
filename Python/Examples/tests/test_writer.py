@@ -377,9 +377,7 @@ def test_python_writer_interface(writer, conf_const, tmp_path, trk_geo):
         if k == "surfaceByIdentifier":
             kw[k] = trk_geo.geoIdSurfaceMap()
         if k == "fitFunction":
-            import acts.examples.root as acts_root
-
-            kw[k] = acts_root.makeRootHistogramFitFunction()
+            kw[k] = acts.examples.gaussianHistogramFit
 
     assert conf_const(writer, **kw)
 

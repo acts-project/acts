@@ -1,14 +1,15 @@
-"""Equivalence test for two Gaussian resolution-fit backends: ROOT's
-`TH1::Fit` and a scipy `curve_fit` callable. A Python `IAlgorithm` writes a
-fixed set of synthetic tracks/particles/measurement-particle-map straight to
-the whiteboard -- no detector, no digitization -- with the fitted d0 residual
-drawn from an engineered distribution (uniform, pure Gaussian, Gaussian with
-outliers). The real `TrackTruthMatcher` algorithm then computes the
-track-particle matching from that input, exactly as it would in a full
-reconstruction chain, rather than a test fabricating the matching decision
-itself. Two `PythonTrackFitterPerformanceWriter`s attached to the same
-whiteboard keys, differing only in `fitFunction`, then see bit-identical
-histograms and only the fit itself can differ.
+"""Equivalence test for the three Gaussian resolution-fit backends: ROOT's
+`TH1::Fit`, Core's own `gaussianHistogramFit`, and a scipy `curve_fit`
+callable. A Python `IAlgorithm` writes a fixed set of synthetic
+tracks/particles/measurement-particle-map straight to the whiteboard -- no
+detector, no digitization -- with the fitted d0 residual drawn from an
+engineered distribution (uniform, pure Gaussian, Gaussian with outliers). The
+real `TrackTruthMatcher` algorithm then computes the track-particle matching
+from that input, exactly as it would in a full reconstruction chain, rather
+than a test fabricating the matching decision itself. Three
+`PythonTrackFitterPerformanceWriter`s attached to the same whiteboard keys,
+differing only in `fitFunction`, then see bit-identical histograms and only
+the fit itself can differ.
 """
 
 import numpy as np
@@ -46,9 +47,9 @@ def _scipy_gaussian_fit(hist, rng):
     """A ROOT-free Python fit backend using scipy.optimize.curve_fit.
 
     Matches ActsExamples::HistogramFitFunction's signature. Drops empty bins
-    rather than weighting them at sigma=1, mirroring ROOT's "SQ0", which
-    gives zero-content bins zero error and drops them from the least-squares
-    sum.
+    rather than weighting them at sigma=1, mirroring ROOT's "SQ0" / Core's
+    gaussianHistogramFit, both of which give zero-content bins zero error and
+    drop them from the least-squares sum.
     """
     from scipy.optimize import curve_fit
 
@@ -203,7 +204,7 @@ def _small_res_plot_config():
 
 def _run_backends(sampler, nTracks, seed):
     """Run the synthetic algorithm + the real TrackTruthMatcher once, score
-    the result with both fit backends, and return
+    the result with all three fit backends, and return
     `{backend: histogram_dict}`.
     """
     s = acts.examples.Sequencer(events=1, numThreads=1, logLevel=acts.logging.WARNING)
@@ -224,6 +225,7 @@ def _run_backends(sampler, nTracks, seed):
     writers = {}
     for backend, fitFn in [
         ("root", acts_root.makeRootHistogramFitFunction()),
+        ("cpp", acts.examples.gaussianHistogramFit),
         ("scipy", _scipy_gaussian_fit),
     ]:
         cfg = acts.examples.PythonTrackFitterPerformanceWriter.Config(
@@ -282,19 +284,23 @@ def _assert_backend_agrees(histograms, key, backend, rtol, atol):
 # against run-to-run float noise without masking a real regression). resmean
 # additionally gets a small absolute floor: it is a residual mean genuinely
 # close to zero, so its relative diff is dominated by near-zero-denominator
-# bins and is not a meaningful check on its own.
+# bins and is not a meaningful check on its own -- the same caveat recorded
+# for real reconstruction data in PROGRESS.md.
 _RTOL = 1e-3
 _MEAN_ATOL = 1e-3
 
 # "uniform" has no reswidth/resmean tolerance at all: fitting a Gaussian to a
-# flat-top distribution has no unique best fit, so MINUIT/curve_fit
+# flat-top distribution has no unique best fit, so LM/MINUIT/curve_fit
 # legitimately settle at different points on a much flatter chi-square
 # surface. Confirmed empirically that the disagreement is highly sample- and
 # seed-dependent -- from a few percent up to several hundred percent for the
 # exact same generative distribution -- so no fixed numeric tolerance would
-# be both meaningful and stable. "uniform" is therefore a pure
-# existence/sanity check: every backend must still produce a finite,
-# positive-sigma fit, just not one that has to agree with the others.
+# be both meaningful and stable. This is the same class of divergence as the
+# "variable_bins" scenario excluded entirely (not given a loose tolerance)
+# from Tests/UnitTests/Examples/Framework/GaussianHistogramFitRootBaselineTests.cpp.
+# "uniform" is therefore a pure existence/sanity check: every backend must
+# still produce a finite, positive-sigma fit, just not one that has to agree
+# with the others.
 _SCENARIOS = {
     "uniform": lambda rng: rng.uniform(-0.05, 0.05),
     "gaussian": lambda rng: rng.normal(0.0, 0.02),
@@ -321,7 +327,7 @@ def test_fit_backends_agree(scenario):
         # Existence/sanity only (see the tolerance note above): a backend
         # is allowed to decline this ill-conditioned fit outright, but
         # whichever ones report a result must be well-formed.
-        for backend in ["root", "scipy"]:
+        for backend in ["root", "cpp", "scipy"]:
             hist = histograms[backend].get("reswidth_d0_vs_eta")
             assert hist is not None
             errs = np.asarray(hist.errors())
@@ -331,9 +337,10 @@ def test_fit_backends_agree(scenario):
             assert np.all(vals[fitted] > 0)
         return
 
-    _assert_backend_agrees(
-        histograms, "reswidth_d0_vs_eta", "scipy", rtol=_RTOL, atol=0.0
-    )
-    _assert_backend_agrees(
-        histograms, "resmean_d0_vs_eta", "scipy", rtol=_RTOL, atol=_MEAN_ATOL
-    )
+    for backend in ["cpp", "scipy"]:
+        _assert_backend_agrees(
+            histograms, "reswidth_d0_vs_eta", backend, rtol=_RTOL, atol=0.0
+        )
+        _assert_backend_agrees(
+            histograms, "resmean_d0_vs_eta", backend, rtol=_RTOL, atol=_MEAN_ATOL
+        )

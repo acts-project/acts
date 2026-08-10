@@ -16,6 +16,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
+#include "ActsExamples/Validation/GaussianHistogramFit.hpp"
 #include "ActsExamples/Validation/PatternRecognitionPerformanceCollector.hpp"
 #include "ActsExamples/Validation/ResPlotTool.hpp"
 #include "ActsExamples/Validation/TrackFitterPerformanceCollector.hpp"
@@ -202,10 +203,10 @@ class PythonTrackFitterPerformanceWriter final
     ResPlotTool::Config resPlotToolConfig;
     EffPlotTool::Config effPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
-    /// The Gaussian fit backend, e.g. makeRootHistogramFitFunction() or any
-    /// Python callable with the matching signature. Required: there is no
-    /// sensible default.
-    HistogramFitFunction fitFunction;
+    /// The Gaussian fit backend. Defaults to Core's own ROOT-free
+    /// gaussianHistogramFit(); pass e.g. makeRootHistogramFitFunction() or
+    /// any Python callable with the matching signature instead.
+    HistogramFitFunction fitFunction = &gaussianHistogramFit;
     /// Fit parameters.
     int fitMinEntries = 10;
     double fitSigmaRange = 3.0;
@@ -374,6 +375,9 @@ void addPythonSpecific(py::module_& mex) {
                        fitFunction, fitMinEntries, fitSigmaRange, fitIterations,
                        warningThresholdFitFailureFraction);
   }
+
+  mex.def("gaussianHistogramFit", &gaussianHistogramFit, py::arg("hist"),
+          py::arg("range") = std::nullopt);
 }
 
 }  // namespace ActsPython

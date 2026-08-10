@@ -4,4 +4,5 @@ set(unittest_extra_libraries
     ActsPluginRoot
 )
 add_unittest(DataHandle DataHandleTest.cpp)
-add_unittest(HistogramFitInterface HistogramFitInterfaceTests.cpp)
+add_unittest(GaussianHistogramFit GaussianHistogramFitTests.cpp)
+add_unittest(GaussianHistogramFitRootBaseline GaussianHistogramFitRootBaselineTests.cpp)
