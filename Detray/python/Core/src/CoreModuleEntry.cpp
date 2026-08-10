@@ -105,9 +105,17 @@ using material_store_t = detector_t::material_container;
 using accelerator_store_t = detector_t::accelerator_container;
 
 /// Read a detector (default metadata) into @p mr as configured by @p cfg .
-std::pair<detector_t, detray::name_map> read_detector(
-    vecmem::memory_resource &mr, const reader_config_t &cfg) {
-  return detray::io::read_detector<detector_t>(mr, cfg);
+///
+/// The memory resource object is automatically kept alive at least as long as
+/// the returned detector object.
+std::pair<py::object, detray::name_map> read_detector(
+    std::shared_ptr<vecmem::memory_resource> mr, const reader_config_t &cfg) {
+  auto [det, names] = detray::io::read_detector<detector_t>(*mr, cfg);
+
+  py::object detector = py::cast(std::move(det));
+  py::detail::keep_alive_impl(detector, py::cast(std::move(mr)));
+
+  return {std::move(detector), std::move(names)};
 }
 
 }  // namespace
@@ -340,6 +348,6 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
   m.def("readDetector", &read_detector, py::arg("memoryResource"),
         py::arg("config"),
         "Read a detector into the given memory resource as configured by a "
-        "DetectorReaderConfig. The caller must keep the memory resource alive "
-        "for as long as the returned detector is used");
+        "DetectorReaderConfig. The returned detector keeps the memory resource "
+        "alive for as long as it is used");
 }
