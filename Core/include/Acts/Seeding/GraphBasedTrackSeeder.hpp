@@ -87,6 +87,9 @@ class GraphBasedTrackSeeder {
     std::uint32_t nMaxEdges = 2000000;
     /// Minimum delta radius between layers.
     float minDeltaRadius = 2.0 * Acts::UnitConstants::mm;
+    /// Largest |cot(theta)| accepted for a doublet. The default corresponds to
+    /// |eta| of about 4.3, beyond the acceptance of any current tracker.
+    float maxAbsTau = 36.0f;
     /// Maximum d0 impact parameter when validating edge connection triplet
     float d0Max = 3.0 * UnitConstants::mm;
     /// Maximum difference in allowed tangent between candidate edge connection
@@ -116,6 +119,12 @@ class GraphBasedTrackSeeder {
     // GbtsDataStorage options
     /// Maximum endcap cluster width.
     float maxEndcapClusterWidth = 0.35 * Acts::UnitConstants::mm;
+    /// Half-length in local y of a pixel module, against which the distance of
+    /// a cluster to the module edge is measured.
+    float moduleHalfLengthY = 10.0 * Acts::UnitConstants::mm;
+    /// Distance to the module edge below which a cluster may be shortened, and
+    /// the machine learning lookup table's edge tau bounds are used instead.
+    float moduleEdgeTolerance = 0.3 * Acts::UnitConstants::mm;
   };
 
   /// Derived configuration struct that contains calculated parameters based on

@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <limits>
 #include <numbers>
 #include <utility>
 
@@ -62,9 +63,14 @@ void GbtsEtaBin::initializeNodes() {
   vNumEdges.resize(vn.size(), 0);
   vIsConnected.resize(vn.size(), 0);
 
+  // The tau window is only ever compared against, never used in arithmetic, so
+  // the infinite bounds mean "do not cut on tau" exactly. Only the machine
+  // learning lookup table narrows them.
   std::ranges::transform(
       vn.begin(), vn.end(), params.begin(), [](const GbtsNode* pN) {
-        return std::array<float, 5>{-100.0, 100.0, pN->phi, pN->r, pN->z};
+        return std::array<float, 5>{-std::numeric_limits<float>::infinity(),
+                                    std::numeric_limits<float>::infinity(),
+                                    pN->phi, pN->r, pN->z};
       });
 
   const auto [minIter, maxIter] = std::ranges::minmax_element(
@@ -171,7 +177,9 @@ void GbtsNodeStorage::sortByPhi() {
   }
 }
 
-void GbtsNodeStorage::initializeNodes(const bool useMl) {
+void GbtsNodeStorage::initializeNodes(const bool useMl,
+                                      const float moduleHalfLengthY,
+                                      const float moduleEdgeTolerance) {
   for (GbtsEtaBin& b : m_etaBins) {
     b.initializeNodes();
     if (!b.vn.empty()) {
@@ -232,25 +240,18 @@ void GbtsNodeStorage::initializeNodes(const bool useMl) {
 
         const std::array<float, 5> lutBin = m_mlLut[lutBinIdx];
 
-        const float dist2border = 10.0f - std::abs(locPosY);
+        const float dist2border = moduleHalfLengthY - std::abs(locPosY);
 
-        float minTau = -100.0f;
-        float maxTau = 100.0f;
+        // close to the edge the cluster may be shortened, which the lookup
+        // table covers with a separate pair of bounds
+        const bool nearEdge = dist2border <= moduleEdgeTolerance;
 
-        if (dist2border > 0.3f) {
-          // far enough from the edge
-          minTau = lutBin[1];
-          maxTau = lutBin[2];
-        } else {
-          // possible cluster shortening at a module edge
-          minTau = lutBin[3];
-          maxTau = lutBin[4];
-        }
+        const float minTau = nearEdge ? lutBin[3] : lutBin[1];
+        float maxTau = nearEdge ? lutBin[4] : lutBin[2];
 
         if (maxTau < 0) {
-          // insufficient training data
-          // use "no-cut" default
-          maxTau = 100.0f;
+          // insufficient training data, do not cut on tau
+          maxTau = std::numeric_limits<float>::infinity();
         }
 
         B.params[nIdx][0] = minTau;

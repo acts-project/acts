@@ -122,7 +122,11 @@ class GbtsNodeStorage final {
   void sortByPhi();
   /// Initialize node attributes
   /// @param useMl Use machine learning features
-  void initializeNodes(bool useMl);
+  /// @param moduleHalfLengthY Half-length in local y of a pixel module
+  /// @param moduleEdgeTolerance Distance to the module edge below which a
+  ///        cluster may be shortened
+  void initializeNodes(bool useMl, float moduleHalfLengthY,
+                       float moduleEdgeTolerance);
   /// Generate phi indexing
   /// @param dphi Phi bin width
   void generatePhiIndexing(float dphi);
