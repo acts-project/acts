@@ -361,15 +361,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
   {
     root.def(
         "makeRootHistogramFitFunction",
-        [](const std::string& fitOptions)
-            -> ActsExamples::HistogramFitFunction {
-          const ActsPlugins::RootHistogramFit fitter{
+        [](const std::string& fitOptions) -> ActsExamples::HistogramFitFunction {
+          return ActsPlugins::RootHistogramFit{
               ActsPlugins::RootHistogramFit::Config{fitOptions}};
-          return
-              [fitter](const Acts::Experimental::Histogram1& hist,
-                       std::optional<ActsExamples::HistogramFitRange> range) {
-                return fitter.fit(hist, range);
-              };
         },
         py::arg("fitOptions") = "SQ0");
   }

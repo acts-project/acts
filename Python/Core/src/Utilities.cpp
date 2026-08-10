@@ -70,24 +70,6 @@ static void bindHistogram(py::module_& m) {
 }
 
 template <std::size_t Dim>
-static void bindValueHistogram(py::module_& m) {
-  using H = ValueHistogram<Dim>;
-  py::classh<H>(m, ("ValueHistogram" + std::to_string(Dim)).c_str())
-      .def_property_readonly("name", &H::name)
-      .def_property_readonly("title", &H::title)
-      .def_property_readonly("rank", [](const H&) { return Dim; })
-      .def("values",
-           [](const H& h) {
-             return copyBins(h.histogram(),
-                             [](auto& x) { return (*x).value(); });
-           })
-      .def("errors", [](const H& h) {
-        return copyBins(h.histogram(),
-                        [](auto& x) { return std::sqrt((*x).variance()); });
-      });
-}
-
-template <std::size_t Dim>
 static void bindEfficiency(py::module_& m) {
   using E = Efficiency<Dim>;
   py::classh<E>(m, ("Efficiency" + std::to_string(Dim)).c_str())
@@ -339,8 +321,13 @@ void addUtilities(py::module_& m) {
               return h.axis(i);
             },
             "i"_a)
-        .def("values", [](const BoostHist& h) {
-          return copyBins(h, [](auto& x) { return static_cast<double>(*x); });
+        .def("values",
+             [](const BoostHist& h) {
+               return copyBins(h, [](auto& x) { return (*x).value(); });
+             })
+        .def("errors", [](const BoostHist& h) {
+          return copyBins(h,
+                          [](auto& x) { return std::sqrt((*x).variance()); });
         });
 
     // Profile histogram (BoostProfileHist — means/variances as numpy arrays)
@@ -372,9 +359,6 @@ void addUtilities(py::module_& m) {
     bindHistogram<1>(m);
     bindHistogram<2>(m);
     bindHistogram<3>(m);
-
-    bindValueHistogram<1>(m);
-    bindValueHistogram<2>(m);
 
     {
       using P = ProfileHistogram<1>;

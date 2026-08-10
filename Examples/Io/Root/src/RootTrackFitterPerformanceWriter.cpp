@@ -28,20 +28,6 @@ using ActsPlugins::toRoot;
 
 namespace ActsExamples {
 
-namespace {
-
-/// Adapt a fresh `ActsPlugins::RootHistogramFit` (ROOT's `TH1::Fit`, default
-/// options match Core's chi-square default) to `HistogramFitFunction`.
-HistogramFitFunction makeRootHistogramFitFunction() {
-  return [fitter = ActsPlugins::RootHistogramFit()](
-             const Acts::Experimental::Histogram1& hist,
-             std::optional<HistogramFitRange> range) {
-    return fitter.fit(hist, range);
-  };
-}
-
-}  // namespace
-
 RootTrackFitterPerformanceWriter::RootTrackFitterPerformanceWriter(
     RootTrackFitterPerformanceWriter::Config config, Acts::Logging::Level level)
     : WriterT(config.inputTracks, "RootTrackFitterPerformanceWriter", level),
@@ -49,7 +35,7 @@ RootTrackFitterPerformanceWriter::RootTrackFitterPerformanceWriter(
       m_collector(
           TrackFitterPerformanceCollector::Config{
               m_cfg.resPlotToolConfig, m_cfg.effPlotToolConfig,
-              m_cfg.trackSummaryPlotToolConfig, makeRootHistogramFitFunction(),
+              m_cfg.trackSummaryPlotToolConfig, ActsPlugins::RootHistogramFit(),
               m_cfg.fitMinEntries, m_cfg.fitSigmaRange, m_cfg.fitIterations,
               m_cfg.warningThresholdFitFailureFraction},
           logger().clone()) {

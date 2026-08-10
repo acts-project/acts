@@ -21,7 +21,7 @@
 
 #include "Acts/Utilities/Histogram.hpp"
 #include "ActsExamples/Validation/GaussianHistogramFit.hpp"
-#include "ActsExamples/Validation/IterativeFit.hpp"
+#include "ActsExamples/Validation/HistogramFit.hpp"
 #include "ActsPlugins/Root/HistogramConverter.hpp"
 #include "ActsPlugins/Root/RootHistogramFit.hpp"
 
@@ -48,10 +48,7 @@ namespace {
 
 const ActsPlugins::RootHistogramFit rootFitter;
 const HistogramFitFunction coreFn = &gaussianHistogramFit;
-const HistogramFitFunction rootFn = [](const Histogram1& hist,
-                                       std::optional<HistogramFitRange> range) {
-  return rootFitter.fit(hist, range);
-};
+const HistogramFitFunction rootFn = rootFitter;
 
 /// Tolerances for the single, unrestricted fit: see `checkAgrees` below
 constexpr double singleRelativeTolerance = 1e-3;
@@ -250,7 +247,7 @@ BOOST_AUTO_TEST_CASE(SingleFit_AgreesWithRoot) {
       continue;
     }
     BOOST_TEST_CONTEXT("scenario " << scenario.name) {
-      const auto reference = rootFitter.fit(scenario.hist);
+      const auto reference = rootFitter(scenario.hist);
       const auto ours = gaussianHistogramFit(scenario.hist);
 
       // Every scenario is populated well enough for both to succeed.
@@ -315,7 +312,7 @@ BOOST_AUTO_TEST_CASE(RestrictedRange_AgreesWithRoot) {
       const double xMax = 0.4 + halfWidth;
       const HistogramFitRange range{xMin, xMax};
 
-      const auto reference = rootFitter.fit(hist, range);
+      const auto reference = rootFitter(hist, range);
       BOOST_REQUIRE(reference.has_value());
 
       const auto ours = gaussianHistogramFit(hist, range);
@@ -374,14 +371,14 @@ BOOST_AUTO_TEST_CASE(ExtractMeanWidthProfiles_WorksWithRootFitter) {
 
   BOOST_CHECK_EQUAL(profiles.fitFailureFraction, 0.0);
   for (int i = 0; i < nEtaBins; ++i) {
-    BOOST_CHECK_CLOSE(profiles.width.value({i}), 0.5 + 0.3 * i, 5.0);
+    BOOST_CHECK_CLOSE(profiles.width.binContent({i}), 0.5 + 0.3 * i, 5.0);
   }
 }
 
-BOOST_AUTO_TEST_CASE(ValueHistogram1D_ConvertsWithErrors) {
+BOOST_AUTO_TEST_CASE(Histogram1D_ConvertsWithErrors) {
   std::vector<double> edges = {0.0, 1.0, 3.0, 7.0};
   auto axis = AxisVariant(BoostVariableAxis(edges, "eta"));
-  ValueHistogram1 hist("resmean_d0_vs_eta", "Mean", {axis});
+  Histogram1 hist("resmean_d0_vs_eta", "Mean", {axis});
 
   hist.setBin({0}, 1.5, 0.25);
   hist.setBin({1}, -2.5, 0.5);
@@ -406,10 +403,10 @@ BOOST_AUTO_TEST_CASE(ValueHistogram1D_ConvertsWithErrors) {
   BOOST_CHECK_CLOSE(rootHist->GetXaxis()->GetBinUpEdge(3), 7.0, 1e-6);
 }
 
-BOOST_AUTO_TEST_CASE(ValueHistogram2D_ConvertsWithErrors) {
+BOOST_AUTO_TEST_CASE(Histogram2D_ConvertsWithErrors) {
   auto xAxis = AxisVariant(BoostRegularAxis(2, 0.0, 2.0, "eta"));
   auto yAxis = AxisVariant(BoostRegularAxis(3, 0.0, 3.0, "pt"));
-  ValueHistogram2 hist("reswidth_d0_vs_eta_pt", "Width", {xAxis, yAxis});
+  Histogram2 hist("reswidth_d0_vs_eta_pt", "Width", {xAxis, yAxis});
 
   hist.setBin({1, 2}, 0.75, 0.1);
 

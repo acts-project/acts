@@ -75,24 +75,4 @@ std::unique_ptr<TEfficiency> toRoot(
 std::unique_ptr<TEfficiency> toRoot(
     const Acts::Experimental::Efficiency2& boostEff);
 
-/// Convert an Acts 1D value histogram to a ROOT TH1F
-///
-/// Transfers the per-bin values as bin contents and the per-bin errors as bin
-/// errors.
-///
-/// @param boostHist The Acts value histogram to convert
-/// @return A ROOT TH1F with the same binning, contents and errors
-std::unique_ptr<TH1F> toRoot(
-    const Acts::Experimental::ValueHistogram1& boostHist);
-
-/// Convert an Acts 2D value histogram to a ROOT TH2F
-///
-/// Transfers the per-bin values as bin contents and the per-bin errors as bin
-/// errors.
-///
-/// @param boostHist The Acts value histogram to convert
-/// @return A ROOT TH2F with the same binning, contents and errors
-std::unique_ptr<TH2F> toRoot(
-    const Acts::Experimental::ValueHistogram2& boostHist);
-
 }  // namespace ActsPlugins

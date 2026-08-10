@@ -17,7 +17,7 @@
 
 namespace ActsPlugins {
 
-std::optional<RootHistogramFit::Result> RootHistogramFit::fit(
+std::optional<RootHistogramFit::Result> RootHistogramFit::operator()(
     const Acts::Experimental::Histogram1& hist,
     std::optional<Range> range) const {
   const std::unique_ptr<TH1F> rootHist = toRoot(hist);

@@ -10,7 +10,7 @@
 
 #include "Acts/Utilities/Histogram.hpp"
 #include "ActsExamples/Validation/GaussianHistogramFit.hpp"
-#include "ActsExamples/Validation/IterativeFit.hpp"
+#include "ActsExamples/Validation/HistogramFit.hpp"
 
 #include <array>
 #include <cmath>

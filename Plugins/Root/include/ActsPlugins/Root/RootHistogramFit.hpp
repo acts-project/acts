@@ -9,23 +9,19 @@
 #pragma once
 
 #include "Acts/Utilities/Histogram.hpp"
+#include "Acts/Utilities/HistogramFit.hpp"
 
 #include <optional>
 #include <string>
-#include <tuple>
 #include <utility>
 
 namespace ActsPlugins {
 
 /// Fit a Gaussian to a histogram via ROOT's `TH1::Fit`
 ///
-/// @c fit's signature -- `(mean, sigma, meanError, sigmaError)` wrapped in
-/// `std::optional`, `std::nullopt` on failure, an optional `(xMin, xMax)`
-/// range -- matches `ActsExamples::HistogramFitFunction` exactly, so a
-/// `RootHistogramFit` needs no adapter beyond a capturing lambda for the
-/// member-function call. The types are spelled out here as plain
-/// `std::tuple`/`std::pair` rather than shared with `ActsExamples`, since
-/// this plugin must not depend on Examples.
+/// `operator()`'s signature matches `Acts::Experimental::HistogramFitFunction`
+/// exactly, so a `RootHistogramFit` instance can be used directly as one with
+/// no adapter.
 class RootHistogramFit {
  public:
   /// Configuration for @c RootHistogramFit
@@ -41,10 +37,10 @@ class RootHistogramFit {
     std::string fitOptions = "SQ0";
   };
 
-  /// @c (mean, sigma, meanError, sigmaError)
-  using Result = std::tuple<double, double, double, double>;
-  /// Fit range `[xMin, xMax]`, closed, selected by bin centre
-  using Range = std::pair<double, double>;
+  /// @c Acts::Experimental::HistogramFitResult, re-exported for convenience
+  using Result = Acts::Experimental::HistogramFitResult;
+  /// @c Acts::Experimental::HistogramFitRange, re-exported for convenience
+  using Range = Acts::Experimental::HistogramFitRange;
 
   RootHistogramFit() = default;
 
@@ -63,8 +59,9 @@ class RootHistogramFit {
   ///              range->second]` enter the fit
   /// @return `(mean, sigma, meanError, sigmaError)`, or `std::nullopt` if the
   ///         fit could not be performed
-  std::optional<Result> fit(const Acts::Experimental::Histogram1& hist,
-                            std::optional<Range> range = std::nullopt) const;
+  std::optional<Result> operator()(
+      const Acts::Experimental::Histogram1& hist,
+      std::optional<Range> range = std::nullopt) const;
 
  private:
   Config m_config{};

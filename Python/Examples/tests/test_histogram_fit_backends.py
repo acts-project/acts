@@ -248,7 +248,7 @@ def _run_backends(sampler, nTracks, seed):
 def _fitted_bins(histograms, key, backend):
     """`(rootVals, otherVals, both)` for `key`, restricted with a boolean mask
     to bins where both ROOT and `backend` succeeded (an unfitted
-    ValueHistogram bin is default-constructed at error == 0, which a genuine
+    Histogram bin is default-constructed at error == 0, which a genuine
     fitted width never is).
     """
     root = histograms["root"].get(key)

@@ -25,7 +25,8 @@ Histogram1 wrapProjection(const BoostHist& projected, std::string name,
   Histogram1 result(std::move(name), std::move(title), axes);
 
   for (int i = 0; i < projected.axis(0).size(); ++i) {
-    result.setBinContent({i}, projected.at(i));
+    const auto& bin = projected.at(i);
+    result.setBin({i}, bin.value(), std::sqrt(bin.variance()));
   }
 
   return result;

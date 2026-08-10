@@ -8,6 +8,7 @@
 
 #include "ActsPlugins/Root/HistogramConverter.hpp"
 
+#include <cmath>
 #include <cstddef>
 #include <vector>
 
@@ -32,15 +33,14 @@ std::unique_ptr<TH1F> ActsPlugins::toRoot(const Histogram1& boostHist) {
   auto rootHist = std::make_unique<TH1F>(boostHist.name().c_str(),
                                          boostHist.title().c_str(), axis.size(),
                                          edges.data());
+  rootHist->Sumw2();
 
-  // Copy bin contents from boost to ROOT
+  // Copy bin contents and errors from boost to ROOT
   for (auto&& x : boost::histogram::indexed(bh)) {
-    // Dereference to get bin content
-    double content = *x;
-
     // ROOT bin numbering starts at 1 (bin 0 is underflow)
     int rootBinIndex = x.index(0) + 1;
-    rootHist->SetBinContent(rootBinIndex, content);
+    rootHist->SetBinContent(rootBinIndex, (*x).value());
+    rootHist->SetBinError(rootBinIndex, std::sqrt((*x).variance()));
   }
 
   // Set axis titles from axis metadata
@@ -64,17 +64,16 @@ std::unique_ptr<TH2F> ActsPlugins::toRoot(const Histogram2& boostHist) {
   auto rootHist = std::make_unique<TH2F>(
       boostHist.name().c_str(), boostHist.title().c_str(), xAxis.size(),
       xEdges.data(), yAxis.size(), yEdges.data());
+  rootHist->Sumw2();
 
-  // Copy bin contents from boost to ROOT
+  // Copy bin contents and errors from boost to ROOT
   for (auto&& x : boost::histogram::indexed(bh)) {
-    // Dereference to get bin content
-    double content = *x;
-
     // ROOT bin numbering starts at 1 (bin 0 is underflow)
     // indexed() gives us 0-based bin indices for each axis
     int rootXBin = x.index(0) + 1;
     int rootYBin = x.index(1) + 1;
-    rootHist->SetBinContent(rootXBin, rootYBin, content);
+    rootHist->SetBinContent(rootXBin, rootYBin, (*x).value());
+    rootHist->SetBinError(rootXBin, rootYBin, std::sqrt((*x).variance()));
   }
 
   // Set axis titles from axis metadata
@@ -103,69 +102,24 @@ std::unique_ptr<TH3F> ActsPlugins::toRoot(const Histogram3& boostHist) {
   auto rootHist = std::make_unique<TH3F>(
       boostHist.name().c_str(), boostHist.title().c_str(), xAxis.size(),
       xEdges.data(), yAxis.size(), yEdges.data(), zAxis.size(), zEdges.data());
+  rootHist->Sumw2();
 
-  // Copy bin contents from boost to ROOT
+  // Copy bin contents and errors from boost to ROOT
   for (auto&& x : boost::histogram::indexed(bh)) {
-    // Dereference to get bin content
-    double content = *x;
-
     // ROOT bin numbering starts at 1 (bin 0 is underflow)
     // indexed() gives us 0-based bin indices for each axis
     int rootXBin = x.index(0) + 1;
     int rootYBin = x.index(1) + 1;
     int rootZBin = x.index(2) + 1;
-    rootHist->SetBinContent(rootXBin, rootYBin, rootZBin, content);
+    rootHist->SetBinContent(rootXBin, rootYBin, rootZBin, (*x).value());
+    rootHist->SetBinError(rootXBin, rootYBin, rootZBin,
+                          std::sqrt((*x).variance()));
   }
 
   // Set axis titles from axis metadata
   rootHist->GetXaxis()->SetTitle(xAxis.metadata().c_str());
   rootHist->GetYaxis()->SetTitle(yAxis.metadata().c_str());
   rootHist->GetZaxis()->SetTitle(zAxis.metadata().c_str());
-
-  return rootHist;
-}
-
-std::unique_ptr<TH1F> ActsPlugins::toRoot(const ValueHistogram1& boostHist) {
-  const auto& axis = boostHist.histogram().axis(0);
-
-  std::vector<double> edges = extractBinEdges(axis);
-
-  auto rootHist = std::make_unique<TH1F>(boostHist.name().c_str(),
-                                         boostHist.title().c_str(), axis.size(),
-                                         edges.data());
-
-  // ROOT bin numbering starts at 1 (bin 0 is underflow)
-  for (int i = 0; i < axis.size(); ++i) {
-    rootHist->SetBinContent(i + 1, boostHist.value({i}));
-    rootHist->SetBinError(i + 1, boostHist.error({i}));
-  }
-
-  rootHist->GetXaxis()->SetTitle(axis.metadata().c_str());
-
-  return rootHist;
-}
-
-std::unique_ptr<TH2F> ActsPlugins::toRoot(const ValueHistogram2& boostHist) {
-  const auto& xAxis = boostHist.histogram().axis(0);
-  const auto& yAxis = boostHist.histogram().axis(1);
-
-  std::vector<double> xEdges = extractBinEdges(xAxis);
-  std::vector<double> yEdges = extractBinEdges(yAxis);
-
-  auto rootHist = std::make_unique<TH2F>(
-      boostHist.name().c_str(), boostHist.title().c_str(), xAxis.size(),
-      xEdges.data(), yAxis.size(), yEdges.data());
-
-  // ROOT bin numbering starts at 1 (bin 0 is underflow)
-  for (int i = 0; i < xAxis.size(); ++i) {
-    for (int j = 0; j < yAxis.size(); ++j) {
-      rootHist->SetBinContent(i + 1, j + 1, boostHist.value({i, j}));
-      rootHist->SetBinError(i + 1, j + 1, boostHist.error({i, j}));
-    }
-  }
-
-  rootHist->GetXaxis()->SetTitle(xAxis.metadata().c_str());
-  rootHist->GetYaxis()->SetTitle(yAxis.metadata().c_str());
 
   return rootHist;
 }
@@ -264,8 +218,8 @@ std::unique_ptr<TEfficiency> ActsPlugins::toRoot(const Efficiency1& boostEff) {
 
   // Fill histograms with counts
   for (int i = 0; i < axis.size(); ++i) {
-    auto acceptedCount = static_cast<double>(accepted.at(i));
-    auto totalCount = static_cast<double>(total.at(i));
+    double acceptedCount = accepted.at(i).value();
+    double totalCount = total.at(i).value();
 
     acceptedHist->SetBinContent(i + 1, acceptedCount);
     totalHist->SetBinContent(i + 1, totalCount);
@@ -312,8 +266,8 @@ std::unique_ptr<TEfficiency> ActsPlugins::toRoot(const Efficiency2& boostEff) {
   // Fill histograms with counts
   for (int i = 0; i < xAxis.size(); ++i) {
     for (int j = 0; j < yAxis.size(); ++j) {
-      auto acceptedCount = static_cast<double>(accepted.at(i, j));
-      auto totalCount = total.at(i, j);
+      double acceptedCount = accepted.at(i, j).value();
+      double totalCount = total.at(i, j).value();
 
       acceptedHist->SetBinContent(i + 1, j + 1, acceptedCount);
       totalHist->SetBinContent(i + 1, j + 1, totalCount);

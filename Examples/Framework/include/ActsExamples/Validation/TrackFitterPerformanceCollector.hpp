@@ -106,8 +106,8 @@ class TrackFitterPerformanceCollector {
   /// @c profiles2 the 3D (vs. eta-phi, vs. eta-pT) ones. Each profile carries
   /// its own name, e.g. `"resmean_d0_vs_eta"` / `"reswidth_d0_vs_eta"`.
   struct FittedProfiles {
-    std::vector<Acts::Experimental::ValueHistogram1> profiles1;
-    std::vector<Acts::Experimental::ValueHistogram2> profiles2;
+    std::vector<Acts::Experimental::Histogram1> profiles1;
+    std::vector<Acts::Experimental::Histogram2> profiles2;
   };
 
   /// Fit every residual/pull profile histogram with @c Config::fitFunction.
@@ -127,7 +127,7 @@ class TrackFitterPerformanceCollector {
   void addFittedProfiles(
       const std::map<std::string, Acts::Experimental::Histogram<Dim>>& histMap,
       const std::string& meanPrefix, const std::string& widthPrefix,
-      std::vector<Acts::Experimental::ValueHistogram<Dim - 1>>& out) const;
+      std::vector<Acts::Experimental::Histogram<Dim - 1>>& out) const;
 
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
