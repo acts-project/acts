@@ -42,7 +42,7 @@ using MeasurementCovarianceType =
 /// existing measurement proxies satisfy it without a copy.
 ///
 /// The dimension may be known at compile time or only at runtime, see
-/// @ref StaticMeasurementConcept.
+/// @ref Acts::StaticMeasurementConcept.
 ///
 /// @tparam T the measurement like type
 template <typename T>
@@ -73,7 +73,7 @@ template <MeasurementConcept measurement_t>
 constexpr int MeasurementSizeAtCompileTime =
     detail::MeasurementParametersType<measurement_t>::RowsAtCompileTime;
 
-/// A @ref MeasurementConcept whose dimension is known at compile time.
+/// A @ref Acts::MeasurementConcept whose dimension is known at compile time.
 ///
 /// Algorithms can use this to skip the runtime dispatch over the measurement
 /// dimension.

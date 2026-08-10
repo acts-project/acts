@@ -144,7 +144,7 @@ struct TrackStateCandidate {
 /// EDM. The derived class has to provide
 /// - `measurementRange(state)`: the measurements associated to `state.surface`
 /// - `sourceLink(state, measurement)`: the uncalibrated source link
-/// - `calibrate(state, measurement)`: a @ref MeasurementConcept value
+/// - `calibrate(state, measurement)`: a @ref Acts::MeasurementConcept value
 ///
 /// and may override any of the defaulted customization points below.
 ///
@@ -407,8 +407,8 @@ class TrackStateCreatorBase {
       const Eigen::MatrixBase<calibrated_t>& calibrated,
       const Eigen::MatrixBase<calibrated_covariance_t>& calibratedCovariance,
       const index_range_t& subspaceIndices,
-      Eigen::Ref<const BoundVector> predicted,
-      Eigen::Ref<const BoundMatrix> predictedCovariance) {
+      const Eigen::Ref<const BoundVector>& predicted,
+      const Eigen::Ref<const BoundMatrix>& predictedCovariance) {
     constexpr int kMeasurementSize = calibrated_t::RowsAtCompileTime;
     static_assert(kMeasurementSize != Eigen::Dynamic,
                   "Measurement dimension must be known at compile time");
