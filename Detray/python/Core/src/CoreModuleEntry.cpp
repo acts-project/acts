@@ -252,8 +252,8 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
       m, "HostMemoryResource")
       .def(py::init<>());
 
-  py::class_<detector_t>(m,
-                         "DetectorDefaultMetadata" STRINGIFY_HELPER(scalar_t))
+  py::class_<detector_t>(
+      m, "DetectorDefaultMetadata" STRINGIFY_HELPER(DETRAY_CUSTOM_SCALARTYPE))
       .def(
           "name",
           [](const detector_t &d, const detray::name_map &names) {
