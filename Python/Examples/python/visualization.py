@@ -49,7 +49,7 @@ class TrackVisualizerAlg(acts.examples.IAlgorithm):
 
 class PyVisualization2D(acts.VisualizationBuffer):
 
-    def plot(self, projection, filename, linewidth=None, linestyle=None, ax=None):
+    def plot(self, projection, filename, linewidth=None, linestyle=None):
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
@@ -82,10 +82,6 @@ class PyVisualization2D(acts.VisualizationBuffer):
         ]  # face = [[x1,y1], [x2,y2],...]
         poly_collection = PatchCollection(poly_patches, alpha=0.5)
         poly_collection.set_facecolor(self.faceColors / 255)
-
-        # Plotting part
-        if ax is None:
-            ax = plt.gca()
 
         ax.set_xlabel(proj2D[0])
         ax.set_ylabel(proj2D[1])

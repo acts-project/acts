@@ -32,12 +32,10 @@ namespace ActsPython {
 
 py::array_t<int> colorsToNumpy(std::span<const Color> colors,
                                const py::object& base) {
-  std::vector<py::std::size_t> shape{
-      static_cast<py::std::size_t>(colors.size()), 3};
+  std::vector<py::ssize_t> shape{static_cast<py::ssize_t>(colors.size()), 3};
 
-  std::vector<py::std::size_t> strides{
-      static_cast<py::std::size_t>(sizeof(Color)),
-      static_cast<py::std::size_t>(sizeof(int))};
+  std::vector<py::ssize_t> strides{static_cast<py::ssize_t>(sizeof(Color)),
+                                   static_cast<py::ssize_t>(sizeof(int))};
 
   return py::array_t<int>(shape, strides, colors.data()->rgb.data(), base);
 }

@@ -27,7 +27,7 @@ def runGeometry(
     decorators,
     outputDir: Path,
     events=1,
-    projection='xy',
+    projection="xy",
     outputObj=True,
     outputPy=True,
     outputCsv=True,
@@ -63,13 +63,9 @@ def runGeometry(
             vis.write(outputDir / "obj" / "geometry.obj")
         if outputPy:
             vis = acts.VisualizationBuffer(projection=projection)
-            trackingGeometry.visualize(
-                vis,
-                context.geoContext
-            )
-            
-            vis.plot(projection=projection)
-           
+            trackingGeometry.visualize(vis, context.geoContext)
+
+            vis.plot(projection=projection, filename="geometry.png")
 
         if outputSurfacesJson:
             # if not os.path.isdir(outputDir / "json"):
@@ -111,14 +107,12 @@ def runGeometry(
 
 
 if "__main__" == __name__:
-    #detector = acts.examples.GenericDetector()
+    # detector = acts.examples.GenericDetector()
     detector = getOpenDataDetector(gen3=True)
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
-   
-    import matplotlib.pyplot as plt
-    runGeometry(trackingGeometry, decorators, projection='rz')
-    plt.savefig("geoDefault_rz")
+
+    runGeometry(trackingGeometry, decorators, projection="rz")
     # Uncomment if you want to create the geometry id mapping for DD4hep
     # dd4hepIdGeoIdMap = acts.examples.dd4hep.createDD4hepIdGeoIdMap(trackingGeometry)
     # dd4hepIdGeoIdValueMap = {}
