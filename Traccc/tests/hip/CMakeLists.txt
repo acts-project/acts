@@ -7,16 +7,21 @@
 # Enable the HIP language.
 enable_language(HIP)
 
-find_package(HIPToolkit REQUIRED)
+add_library(traccc_test_hip_device STATIC test_thrust.hip)
+target_link_libraries(
+    traccc_test_hip_device
+    PRIVATE roc::rocthrust GTest::gtest vecmem::core vecmem::hip
+)
+set_target_properties(
+    traccc_test_hip_device
+    PROPERTIES POSITION_INDEPENDENT_CODE TRUE
+)
 
 traccc_add_test(
     hip
     # Define the sources for the test.
-    test_thrust.hip
     test_cca.cpp
     LINK_LIBRARIES
-    HIP::hiprt
-    roc::rocthrust
     GTest::gtest_main
     vecmem::core
     vecmem::hip
@@ -25,6 +30,7 @@ traccc_add_test(
     traccc::hip_utils
     traccc::hip
     traccc_tests_common
+    traccc_test_hip_device
 )
 
 set_target_properties(traccc_test_hip PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
