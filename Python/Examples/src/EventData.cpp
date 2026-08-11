@@ -458,7 +458,9 @@ void addEventData(py::module& mex) {
       .def("toSourceLink",
            [](const IndexSourceLink& self) { return Acts::SourceLink(self); })
       .def("index", &IndexSourceLink::index)
-      .def("geometryId", &IndexSourceLink::geometryId);
+      .def("geometryId", &IndexSourceLink::geometryId)
+      .def("toSourceLink",
+           [](const IndexSourceLink& self) { return Acts::SourceLink{self}; });
 
   py::class_<TrackProxy>(mex, "TrackProxy")
       .def_property(

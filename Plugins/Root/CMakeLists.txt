@@ -14,6 +14,7 @@ acts_add_library(
     src/TGeoPrimitivesHelper.cpp
     src/TGeoSurfaceConverter.cpp
     src/HistogramConverter.cpp
+    src/RootHistogramFit.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
