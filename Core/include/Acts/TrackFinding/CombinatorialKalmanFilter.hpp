@@ -604,10 +604,15 @@ class CombinatorialKalmanFilter {
 
           // apply the post material effects and return early, skipping the
           // track state creation below
-          return performMaterialInteraction(
+          const Result<void> materialPostRes = performMaterialInteraction(
               state, stepper, surface,
               detail::determineMaterialUpdateMode(
                   state, navigator, MaterialUpdateMode::PostUpdate));
+          if (!materialPostRes.ok()) {
+            ACTS_DEBUG("Material interaction failed during post-update: "
+                       << materialPostRes.error().message());
+          }
+          return materialPostRes;
         }
       }
 
