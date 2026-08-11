@@ -18,8 +18,8 @@
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/AxisFactory.hpp"
-#include "Acts/Utilities/MultiAxisFactory.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
+#include "Acts/Utilities/MultiAxisSpec.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <array>
@@ -33,16 +33,16 @@ namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
-BOOST_AUTO_TEST_CASE(MultiAxisFactoryBasics) {
+BOOST_AUTO_TEST_CASE(MultiAxisSpecBasics) {
   using enum Acts::AxisBoundaryType;
 
-  MultiAxisFactory maf({AxisFactory::Equidistant(10, 0., 1., Bound),
-                        AxisFactory::Variable({0., 1., 3.}, Open)});
+  MultiAxisSpec maf({AxisSpec::Equidistant(10, 0., 1., Bound),
+                     AxisSpec::Variable({0., 1., 3.}, Open)});
   BOOST_CHECK_EQUAL(maf.size(), 2);
   BOOST_CHECK(!maf.isDeferred());
-  BOOST_CHECK_EQUAL(maf.axisFactory(0).nBins(), 10);
-  BOOST_CHECK_EQUAL(maf.axisFactory(1).nBins(), 2);
-  BOOST_CHECK_THROW(maf.axisFactory(2), std::out_of_range);
+  BOOST_CHECK_EQUAL(maf.axisSpec(0).nBins(), 10);
+  BOOST_CHECK_EQUAL(maf.axisSpec(1).nBins(), 2);
+  BOOST_CHECK_THROW(maf.axisSpec(2), std::out_of_range);
 
   auto multiAxis = maf.buildMultiAxis();
   BOOST_CHECK_EQUAL(multiAxis->getNAxes(), 2);
@@ -52,26 +52,26 @@ BOOST_AUTO_TEST_CASE(MultiAxisFactoryBasics) {
   BOOST_CHECK_EQUAL(multiAxis->getAxis(1).getNBins(), 2);
 
   // Empty construction is invalid
-  BOOST_CHECK_THROW(MultiAxisFactory({}), std::invalid_argument);
+  BOOST_CHECK_THROW(MultiAxisSpec({}), std::invalid_argument);
 
   // Mixed with a deferred axis: full resolution is required for all axes
-  MultiAxisFactory mixed({AxisFactory::Equidistant(10, 0., 1., Bound),
-                          AxisFactory::DeferredEquidistant(5)});
+  MultiAxisSpec mixed({AxisSpec::Equidistant(10, 0., 1., Bound),
+                       AxisSpec::DeferredEquidistant(5)});
   BOOST_CHECK(mixed.isDeferred());
   BOOST_CHECK_THROW(mixed.buildMultiAxis(), std::domain_error);
 }
 
-BOOST_AUTO_TEST_CASE(MultiAxisFactoryDeferredResolution) {
+BOOST_AUTO_TEST_CASE(MultiAxisSpecDeferredResolution) {
   using enum Acts::AxisBoundaryType;
   using enum Acts::AxisDirection;
 
-  MultiAxisFactory maf(
-      {AxisFactory::DeferredEquidistant(4, AxisRPhi),
-       AxisFactory::DeferredVariable({0., 0.5, 1.}, std::nullopt, AxisZ)});
+  MultiAxisSpec maf(
+      {AxisSpec::DeferredEquidistant(4, AxisRPhi),
+       AxisSpec::DeferredVariable({0., 0.5, 1.}, std::nullopt, AxisZ)});
   BOOST_CHECK(maf.isDeferred());
   BOOST_CHECK_THROW(maf.buildMultiAxis(), std::domain_error);
 
-  MultiAxisFactory::Options options = {
+  MultiAxisSpec::Options options = {
       {.min = -3., .max = 3., .boundaryType = Closed, .direction = AxisRPhi},
       {.min = -10., .max = 10., .boundaryType = Bound, .direction = AxisZ}};
   auto axes = maf.buildMultiAxis(options);
@@ -99,41 +99,41 @@ BOOST_AUTO_TEST_CASE(MultiAxisFactoryDeferredResolution) {
       std::invalid_argument);
 }
 
-BOOST_AUTO_TEST_CASE(MultiAxisFactoryXDApi) {
+BOOST_AUTO_TEST_CASE(MultiAxisSpecXDApi) {
   using enum Acts::AxisBoundaryType;
 
-  Acts::MultiAxisFactory1D maf1D({AxisFactory::DeferredEquidistant(8)});
+  Acts::MultiAxisSpec1D maf1D({AxisSpec::DeferredEquidistant(8)});
   BOOST_CHECK_EQUAL(maf1D.size(), 1);
   std::unique_ptr<Acts::IMultiAxis1D> ma1D = maf1D.buildMultiAxis(
-      {AxisFactory::Options{.min = 0., .max = 4., .boundaryType = Bound}});
+      {AxisSpec::Options{.min = 0., .max = 4., .boundaryType = Bound}});
   BOOST_CHECK_EQUAL(ma1D->getNAxes(), 1);
   BOOST_CHECK_EQUAL(ma1D->getAxis(0).getNBins(), 8);
 
-  Acts::MultiAxisFactory2D maf2D({AxisFactory::Equidistant(2, 0., 1., Bound),
-                                  AxisFactory::Equidistant(3, 0., 1., Bound)});
+  Acts::MultiAxisSpec2D maf2D({AxisSpec::Equidistant(2, 0., 1., Bound),
+                               AxisSpec::Equidistant(3, 0., 1., Bound)});
   std::unique_ptr<Acts::IMultiAxis2D> ma2D = maf2D.buildMultiAxis();
   BOOST_CHECK_EQUAL(ma2D->getNAxes(), 2);
   BOOST_CHECK_EQUAL(ma2D->getNTotalBins(), 6);
 
   // The XD types remain usable through the runtime-dimension base
-  const MultiAxisFactory& base = maf2D;
+  const MultiAxisSpec& base = maf2D;
   BOOST_CHECK_EQUAL(base.buildMultiAxis()->getNAxes(), 2);
 }
 
-BOOST_AUTO_TEST_CASE(MultiAxisFactoryEqualityAndStreams) {
+BOOST_AUTO_TEST_CASE(MultiAxisSpecEqualityAndStreams) {
   using enum Acts::AxisBoundaryType;
 
-  MultiAxisFactory a({AxisFactory::DeferredEquidistant(4),
-                      AxisFactory::DeferredEquidistant(5)});
-  MultiAxisFactory b({AxisFactory::DeferredEquidistant(4),
-                      AxisFactory::DeferredEquidistant(5)});
-  MultiAxisFactory c({AxisFactory::DeferredEquidistant(4)});
+  MultiAxisSpec a(
+      {AxisSpec::DeferredEquidistant(4), AxisSpec::DeferredEquidistant(5)});
+  MultiAxisSpec b(
+      {AxisSpec::DeferredEquidistant(4), AxisSpec::DeferredEquidistant(5)});
+  MultiAxisSpec c({AxisSpec::DeferredEquidistant(4)});
   BOOST_CHECK(a == b);
   BOOST_CHECK(a != c);
 
   BOOST_CHECK_EQUAL(
       c.toString(),
-      "MultiAxisFactory: 1 axes [AxisFactory: 4 bins, equidistant within "
+      "MultiAxisSpec: 1 axes [AxisSpec: 4 bins, equidistant within "
       "deferred range, deferred boundary type]");
 }
 
@@ -145,8 +145,8 @@ BOOST_AUTO_TEST_CASE(ResolveMultiAxisAgainstSurface) {
       Transform3::Identity(), std::make_shared<CylinderBounds>(30., 100.));
 
   // Positional matching without directions
-  MultiAxisFactory2D positional({AxisFactory::DeferredEquidistant(10),
-                                 AxisFactory::DeferredEquidistant(20)});
+  MultiAxisSpec2D positional(
+      {AxisSpec::DeferredEquidistant(10), AxisSpec::DeferredEquidistant(20)});
   auto axes = resolveMultiAxis(positional, *cylinder);
   BOOST_CHECK_EQUAL(axes->getNAxes(), 2);
   BOOST_CHECK(axes->getAxis(0).getDirection() == AxisRPhi);
@@ -157,15 +157,15 @@ BOOST_AUTO_TEST_CASE(ResolveMultiAxisAgainstSurface) {
   CHECK_CLOSE_ABS(axes->getAxis(1).getMin(), -100., 1e-12);
 
   // Directed matching in canonical order
-  MultiAxisFactory2D directed({AxisFactory::DeferredEquidistant(10, AxisRPhi),
-                               AxisFactory::DeferredEquidistant(20, AxisZ)});
+  MultiAxisSpec2D directed({AxisSpec::DeferredEquidistant(10, AxisRPhi),
+                            AxisSpec::DeferredEquidistant(20, AxisZ)});
   auto directedAxes = resolveMultiAxis(directed, *cylinder);
   BOOST_CHECK_EQUAL(directedAxes->getAxis(0).getNBins(), 10);
   BOOST_CHECK_EQUAL(directedAxes->getAxis(1).getNBins(), 20);
 
   // Swapped order is re-ordered to match the surface
-  MultiAxisFactory2D swapped({AxisFactory::DeferredEquidistant(20, AxisZ),
-                              AxisFactory::DeferredEquidistant(10, AxisRPhi)});
+  MultiAxisSpec2D swapped({AxisSpec::DeferredEquidistant(20, AxisZ),
+                           AxisSpec::DeferredEquidistant(10, AxisRPhi)});
   auto reordered = resolveMultiAxis(swapped, *cylinder);
   BOOST_CHECK(reordered->getAxis(0).getDirection() == AxisRPhi);
   BOOST_CHECK_EQUAL(reordered->getAxis(0).getNBins(), 10);
@@ -174,17 +174,17 @@ BOOST_AUTO_TEST_CASE(ResolveMultiAxisAgainstSurface) {
 
   // Binning along a single direction is a 2D binning with one bin in the
   // other direction
-  MultiAxisFactory2D oneD({AxisFactory::DeferredEquidistant(1, AxisRPhi),
-                           AxisFactory::DeferredEquidistant(8, AxisZ)});
+  MultiAxisSpec2D oneD({AxisSpec::DeferredEquidistant(1, AxisRPhi),
+                        AxisSpec::DeferredEquidistant(8, AxisZ)});
   auto oneDAxes = resolveMultiAxis(oneD, *cylinder);
   BOOST_CHECK_EQUAL(oneDAxes->getNAxes(), 2);
   BOOST_CHECK_EQUAL(oneDAxes->getAxis(0).getNBins(), 1);
   BOOST_CHECK_EQUAL(oneDAxes->getAxis(1).getNBins(), 8);
 
   // Deferred variable binning is scaled onto the surface range
-  MultiAxisFactory2D variable(
-      {AxisFactory::DeferredEquidistant(1, AxisRPhi),
-       AxisFactory::DeferredVariable({0., 0.25, 1.}, std::nullopt, AxisZ)});
+  MultiAxisSpec2D variable(
+      {AxisSpec::DeferredEquidistant(1, AxisRPhi),
+       AxisSpec::DeferredVariable({0., 0.25, 1.}, std::nullopt, AxisZ)});
   auto variableAxes = resolveMultiAxis(variable, *cylinder);
   auto edges = variableAxes->getAxis(1).getBinEdges();
   CHECK_CLOSE_ABS(edges[0], -100., 1e-12);
@@ -192,33 +192,33 @@ BOOST_AUTO_TEST_CASE(ResolveMultiAxisAgainstSurface) {
   CHECK_CLOSE_ABS(edges[2], 100., 1e-12);
 
   // Mismatching directions are rejected
-  MultiAxisFactory2D wrongDirs({AxisFactory::DeferredEquidistant(10, AxisR),
-                                AxisFactory::DeferredEquidistant(20, AxisPhi)});
+  MultiAxisSpec2D wrongDirs({AxisSpec::DeferredEquidistant(10, AxisR),
+                             AxisSpec::DeferredEquidistant(20, AxisPhi)});
   BOOST_CHECK_THROW(resolveMultiAxis(wrongDirs, *cylinder),
                     std::invalid_argument);
 
   // Duplicate directions are rejected
-  MultiAxisFactory2D duplicate({AxisFactory::DeferredEquidistant(10, AxisZ),
-                                AxisFactory::DeferredEquidistant(20, AxisZ)});
+  MultiAxisSpec2D duplicate({AxisSpec::DeferredEquidistant(10, AxisZ),
+                             AxisSpec::DeferredEquidistant(20, AxisZ)});
   BOOST_CHECK_THROW(resolveMultiAxis(duplicate, *cylinder),
                     std::invalid_argument);
 
   // Mixed directed and undirected axes are rejected
-  MultiAxisFactory2D mixed({AxisFactory::DeferredEquidistant(10, AxisRPhi),
-                            AxisFactory::DeferredEquidistant(20)});
+  MultiAxisSpec2D mixed({AxisSpec::DeferredEquidistant(10, AxisRPhi),
+                         AxisSpec::DeferredEquidistant(20)});
   BOOST_CHECK_THROW(resolveMultiAxis(mixed, *cylinder), std::invalid_argument);
 
   // Unsupported surface
   auto straw =
       Surface::makeShared<StrawSurface>(Transform3::Identity(), 5., 100.);
-  MultiAxisFactory2D strawBinning({AxisFactory::DeferredEquidistant(4),
-                                   AxisFactory::DeferredEquidistant(4)});
+  MultiAxisSpec2D strawBinning(
+      {AxisSpec::DeferredEquidistant(4), AxisSpec::DeferredEquidistant(4)});
   BOOST_CHECK_THROW(resolveMultiAxis(strawBinning, *straw),
                     std::invalid_argument);
 
-  // A description that fixes what the surface dictates has to agree with it
-  MultiAxisFactory2D full({AxisFactory::Equidistant(10, 0., 1., Bound),
-                           AxisFactory::DeferredEquidistant(20)});
+  // A spec that fixes what the surface dictates has to agree with it
+  MultiAxisSpec2D full({AxisSpec::Equidistant(10, 0., 1., Bound),
+                        AxisSpec::DeferredEquidistant(20)});
   BOOST_CHECK_THROW(resolveMultiAxis(full, *cylinder), std::invalid_argument);
 }
 
@@ -227,8 +227,8 @@ BOOST_AUTO_TEST_CASE(ResolveMultiAxisSurfaceRanges) {
   using enum AxisDirection;
 
   // Undirected axes bind positionally to the canonical surface directions
-  MultiAxisFactory2D binning({AxisFactory::DeferredEquidistant(1),
-                              AxisFactory::DeferredEquidistant(1)});
+  MultiAxisSpec2D binning(
+      {AxisSpec::DeferredEquidistant(1), AxisSpec::DeferredEquidistant(1)});
 
   // Disc: bound in r, closed in phi over the full azimuth
   auto disc = Surface::makeShared<DiscSurface>(

@@ -458,8 +458,8 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
       mat.configureFace(
           OuterCylinder,
           // Where do these 20-s come from? (here and on the next line)
-          AxisFactory::DeferredEquidistant(20, AxisRPhi),
-          AxisFactory::DeferredEquidistant(20, AxisZ));
+          AxisSpec::DeferredEquidistant(20, AxisRPhi),
+          AxisSpec::DeferredEquidistant(20, AxisZ));
       mat.addStaticVolume(beamPipeTransform,
                           std::make_shared<CylinderVolumeBounds>(
                               0, beamPipeRMax, beamPipeHalfZ),
@@ -474,8 +474,8 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
 
   cylinder.addMaterial("Pixel_Material", [&](auto& mat) {
     mat.configureFace(OuterCylinder,
-                      AxisFactory::DeferredEquidistant(20, AxisRPhi),
-                      AxisFactory::DeferredEquidistant(20, AxisZ));
+                      AxisSpec::DeferredEquidistant(20, AxisRPhi),
+                      AxisSpec::DeferredEquidistant(20, AxisZ));
     auto& pixelContainer = mat.addCylinderContainer("Pixel", AxisZ);
 
     // Add barrel container
@@ -545,8 +545,8 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
         auto& lmat = barrel.addMaterial(
             std::format("Pixel_Barrel_L{}_Material", ilayer));
         lmat.configureFace(OuterCylinder,
-                           AxisFactory::DeferredEquidistant(40, AxisRPhi),
-                           AxisFactory::DeferredEquidistant(20, AxisZ));
+                           AxisSpec::DeferredEquidistant(40, AxisRPhi),
+                           AxisSpec::DeferredEquidistant(20, AxisZ));
         lparent = &lmat;
       } else {
         lparent = &barrel;
@@ -646,8 +646,8 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
         if (key < mergedLayers.size() - 1) {
           ec.addMaterial(layerName + "_Material", [&](auto& lmat) {
             lmat.configureFace(ecid < 0 ? NegativeDisc : PositiveDisc,
-                               AxisFactory::DeferredEquidistant(40, AxisR),
-                               AxisFactory::DeferredEquidistant(40, AxisPhi));
+                               AxisSpec::DeferredEquidistant(40, AxisR),
+                               AxisSpec::DeferredEquidistant(40, AxisPhi));
             addLayer(lmat);
           });
         } else {

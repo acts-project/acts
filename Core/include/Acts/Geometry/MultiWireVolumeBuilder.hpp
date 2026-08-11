@@ -11,7 +11,7 @@
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/AxisFactory.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
@@ -21,8 +21,8 @@ namespace Acts {
 class MultiWireVolumeBuilder {
  public:
   /// The axis configuration for the binning: a fully specified equidistant
-  /// axis description with a direction, plus the bin expansion
-  using Binning = std::tuple<AxisFactory, std::size_t>;
+  /// axis spec with a direction, plus the bin expansion
+  using Binning = std::tuple<AxisSpec, std::size_t>;
   /// Configuration Struct
   struct Config {
     /// The name of the tracking volume

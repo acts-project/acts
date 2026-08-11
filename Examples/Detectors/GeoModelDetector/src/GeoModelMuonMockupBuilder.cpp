@@ -333,11 +333,11 @@ GeoModelMuonMockupBuilder::buildChildChamber(
     }
     double tubeR = lineBounds->get(LineBounds::eR);
     mwCfg.binning = {
-        {Acts::AxisFactory::Equidistant(
+        {Acts::AxisSpec::Equidistant(
              static_cast<std::size_t>(std::lround(1. * halfY / tubeR)), -halfY,
              halfY, Acts::AxisBoundaryType::Bound, Acts::AxisDirection::AxisY),
          2},
-        {Acts::AxisFactory::Equidistant(
+        {Acts::AxisSpec::Equidistant(
              static_cast<std::size_t>(std::lround(1. * halfZ / tubeR)), -halfZ,
              halfZ, Acts::AxisBoundaryType::Bound, Acts::AxisDirection::AxisZ),
          1}};

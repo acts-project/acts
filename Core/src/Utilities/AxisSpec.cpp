@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Utilities/AxisFactory.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
 
 #include <algorithm>
 #include <ostream>
@@ -20,15 +20,15 @@ namespace {
 /// Take the value from whichever side gives it, requiring both to agree if
 /// both do
 template <typename T>
-std::optional<T> mergeProperty(const std::optional<T>& described,
+std::optional<T> mergeProperty(const std::optional<T>& specified,
                                const std::optional<T>& supplied,
                                const std::string& what) {
-  if (described.has_value() && supplied.has_value() &&
-      *described != *supplied) {
-    throw std::invalid_argument("AxisFactory: the described axis " + what +
+  if (specified.has_value() && supplied.has_value() &&
+      *specified != *supplied) {
+    throw std::invalid_argument("AxisSpec: the specified axis " + what +
                                 " does not match the one supplied");
   }
-  return described.has_value() ? described : supplied;
+  return specified.has_value() ? specified : supplied;
 }
 
 /// Unwrap a property that has to be known by now
@@ -36,31 +36,31 @@ template <typename T>
 const T& requireProperty(const std::optional<T>& value,
                          const std::string& what) {
   if (!value.has_value()) {
-    throw std::domain_error("AxisFactory: the axis " + what +
-                            " is neither described nor supplied");
+    throw std::domain_error("AxisSpec: the axis " + what +
+                            " is neither specified nor supplied");
   }
   return *value;
 }
 
-/// Range of a description, unset where it is left to the consumer
-std::optional<double> minOf(const AxisFactory::EquidistantParams& params) {
+/// Range of a spec, unset where it is left to the consumer
+std::optional<double> minOf(const AxisSpec::EquidistantParams& params) {
   return params.min;
 }
-std::optional<double> maxOf(const AxisFactory::EquidistantParams& params) {
+std::optional<double> maxOf(const AxisSpec::EquidistantParams& params) {
   return params.max;
 }
-std::optional<double> minOf(const AxisFactory::VariableParams& params) {
+std::optional<double> minOf(const AxisSpec::VariableParams& params) {
   return params.edges.front();
 }
-std::optional<double> maxOf(const AxisFactory::VariableParams& params) {
+std::optional<double> maxOf(const AxisSpec::VariableParams& params) {
   return params.edges.back();
 }
 std::optional<double> minOf(
-    const AxisFactory::DeferredVariableParams& /*params*/) {
+    const AxisSpec::DeferredVariableParams& /*params*/) {
   return std::nullopt;
 }
 std::optional<double> maxOf(
-    const AxisFactory::DeferredVariableParams& /*params*/) {
+    const AxisSpec::DeferredVariableParams& /*params*/) {
   return std::nullopt;
 }
 
@@ -77,55 +77,54 @@ void checkStrictlyIncreasing(const std::vector<double>& edges,
 
 }  // namespace
 
-AxisFactory::AxisFactory(Variant variant,
-                         std::optional<AxisBoundaryType> boundaryType,
-                         std::optional<AxisDirection> direction)
+AxisSpec::AxisSpec(Variant variant,
+                   std::optional<AxisBoundaryType> boundaryType,
+                   std::optional<AxisDirection> direction)
     : m_variant(std::move(variant)),
       m_boundaryType(boundaryType),
       m_direction(direction) {}
 
-AxisFactory AxisFactory::Equidistant(
-    std::size_t nBins, std::optional<double> min, std::optional<double> max,
-    std::optional<AxisBoundaryType> boundaryType,
-    std::optional<AxisDirection> direction) {
+AxisSpec AxisSpec::Equidistant(std::size_t nBins, std::optional<double> min,
+                               std::optional<double> max,
+                               std::optional<AxisBoundaryType> boundaryType,
+                               std::optional<AxisDirection> direction) {
   if (min.has_value() && max.has_value() && *min >= *max) {
-    throw std::invalid_argument("AxisFactory::Equidistant: min must be < max");
+    throw std::invalid_argument("AxisSpec::Equidistant: min must be < max");
   }
   if (nBins == 0) {
     throw std::invalid_argument(
-        "AxisFactory::Equidistant: at least one bin is required");
+        "AxisSpec::Equidistant: at least one bin is required");
   }
-  return AxisFactory(EquidistantParams{nBins, min, max}, boundaryType,
-                     direction);
+  return AxisSpec(EquidistantParams{nBins, min, max}, boundaryType, direction);
 }
 
-AxisFactory AxisFactory::DeferredEquidistant(
-    std::size_t nBins, std::optional<AxisDirection> direction) {
+AxisSpec AxisSpec::DeferredEquidistant(std::size_t nBins,
+                                       std::optional<AxisDirection> direction) {
   return Equidistant(nBins, std::nullopt, std::nullopt, std::nullopt,
                      direction);
 }
 
-AxisFactory AxisFactory::Variable(std::vector<double> edges,
-                                  std::optional<AxisBoundaryType> boundaryType,
-                                  std::optional<AxisDirection> direction) {
-  checkStrictlyIncreasing(edges, "AxisFactory::Variable");
-  return AxisFactory(VariableParams{std::move(edges)}, boundaryType, direction);
+AxisSpec AxisSpec::Variable(std::vector<double> edges,
+                            std::optional<AxisBoundaryType> boundaryType,
+                            std::optional<AxisDirection> direction) {
+  checkStrictlyIncreasing(edges, "AxisSpec::Variable");
+  return AxisSpec(VariableParams{std::move(edges)}, boundaryType, direction);
 }
 
-AxisFactory AxisFactory::DeferredVariable(
+AxisSpec AxisSpec::DeferredVariable(
     std::vector<double> normalizedEdges,
     std::optional<AxisBoundaryType> boundaryType,
     std::optional<AxisDirection> direction) {
-  checkStrictlyIncreasing(normalizedEdges, "AxisFactory::DeferredVariable");
+  checkStrictlyIncreasing(normalizedEdges, "AxisSpec::DeferredVariable");
   if (normalizedEdges.front() != 0. || normalizedEdges.back() != 1.) {
     throw std::invalid_argument(
-        "AxisFactory::DeferredVariable: edges must be normalized to [0, 1]");
+        "AxisSpec::DeferredVariable: edges must be normalized to [0, 1]");
   }
-  return AxisFactory(DeferredVariableParams{std::move(normalizedEdges)},
-                     boundaryType, direction);
+  return AxisSpec(DeferredVariableParams{std::move(normalizedEdges)},
+                  boundaryType, direction);
 }
 
-AxisFactory AxisFactory::FromAxis(const IAxis& axis) {
+AxisSpec AxisSpec::FromAxis(const IAxis& axis) {
   if (axis.getType() == AxisType::Equidistant) {
     return Equidistant(axis.getNBins(), axis.getMin(), axis.getMax(),
                        axis.getBoundaryType(), axis.getDirection());
@@ -134,16 +133,16 @@ AxisFactory AxisFactory::FromAxis(const IAxis& axis) {
                   axis.getDirection());
 }
 
-AxisFactory AxisFactory::withDirection(AxisDirection direction) const {
-  return AxisFactory(m_variant, m_boundaryType, direction);
+AxisSpec AxisSpec::withDirection(AxisDirection direction) const {
+  return AxisSpec(m_variant, m_boundaryType, direction);
 }
 
-AxisFactory AxisFactory::toDeferred() const {
+AxisSpec AxisSpec::toDeferred() const {
   return std::visit(
-      [this]<typename T>(const T& params) -> AxisFactory {
+      [this]<typename T>(const T& params) -> AxisSpec {
         if constexpr (std::is_same_v<T, EquidistantParams>) {
-          return AxisFactory(EquidistantParams{params.nBins}, std::nullopt,
-                             m_direction);
+          return AxisSpec(EquidistantParams{params.nBins}, std::nullopt,
+                          m_direction);
         } else if constexpr (std::is_same_v<T, VariableParams>) {
           std::vector<double> normalizedEdges = params.edges;
           double min = normalizedEdges.front();
@@ -154,17 +153,17 @@ AxisFactory AxisFactory::toDeferred() const {
           // Force exact endpoints against floating point round-off
           normalizedEdges.front() = 0.;
           normalizedEdges.back() = 1.;
-          return AxisFactory(DeferredVariableParams{std::move(normalizedEdges)},
-                             std::nullopt, m_direction);
+          return AxisSpec(DeferredVariableParams{std::move(normalizedEdges)},
+                          std::nullopt, m_direction);
         } else {
-          return AxisFactory(DeferredVariableParams{params.normalizedEdges},
-                             std::nullopt, m_direction);
+          return AxisSpec(DeferredVariableParams{params.normalizedEdges},
+                          std::nullopt, m_direction);
         }
       },
       m_variant);
 }
 
-bool AxisFactory::isDeferred() const {
+bool AxisSpec::isDeferred() const {
   if (!m_boundaryType.has_value()) {
     return true;
   }
@@ -178,27 +177,27 @@ bool AxisFactory::isDeferred() const {
   return false;
 }
 
-bool AxisFactory::isEquidistant() const {
+bool AxisSpec::isEquidistant() const {
   return std::holds_alternative<EquidistantParams>(m_variant);
 }
 
-bool AxisFactory::isVariable() const {
+bool AxisSpec::isVariable() const {
   return !isEquidistant();
 }
 
-bool AxisFactory::isDeferredVariable() const {
+bool AxisSpec::isDeferredVariable() const {
   return std::holds_alternative<DeferredVariableParams>(m_variant);
 }
 
-std::optional<AxisDirection> AxisFactory::direction() const {
+std::optional<AxisDirection> AxisSpec::direction() const {
   return m_direction;
 }
 
-std::optional<AxisBoundaryType> AxisFactory::boundaryType() const {
+std::optional<AxisBoundaryType> AxisSpec::boundaryType() const {
   return m_boundaryType;
 }
 
-std::size_t AxisFactory::nBins() const {
+std::size_t AxisSpec::nBins() const {
   return std::visit(
       []<typename T>(const T& params) -> std::size_t {
         if constexpr (std::is_same_v<T, EquidistantParams>) {
@@ -212,20 +211,19 @@ std::size_t AxisFactory::nBins() const {
       m_variant);
 }
 
-const AxisFactory::EquidistantParams& AxisFactory::asEquidistant() const {
+const AxisSpec::EquidistantParams& AxisSpec::asEquidistant() const {
   return std::get<EquidistantParams>(m_variant);
 }
 
-const AxisFactory::VariableParams& AxisFactory::asVariable() const {
+const AxisSpec::VariableParams& AxisSpec::asVariable() const {
   return std::get<VariableParams>(m_variant);
 }
 
-const AxisFactory::DeferredVariableParams& AxisFactory::asDeferredVariable()
-    const {
+const AxisSpec::DeferredVariableParams& AxisSpec::asDeferredVariable() const {
   return std::get<DeferredVariableParams>(m_variant);
 }
 
-std::unique_ptr<IAxis> AxisFactory::buildAxis(const Options& options) const {
+std::unique_ptr<IAxis> AxisSpec::buildAxis(const Options& options) const {
   AxisBoundaryType boundaryType = requireProperty(
       mergeProperty(m_boundaryType, options.boundaryType, "boundary type"),
       "boundary type");
@@ -248,7 +246,7 @@ std::unique_ptr<IAxis> AxisFactory::buildAxis(const Options& options) const {
           double maxValue = requireProperty(max, "maximum");
           if (minValue >= maxValue) {
             throw std::invalid_argument(
-                "AxisFactory::buildAxis: min must be < max");
+                "AxisSpec::buildAxis: min must be < max");
           }
 
           if constexpr (std::is_same_v<T, EquidistantParams>) {
@@ -266,9 +264,9 @@ std::unique_ptr<IAxis> AxisFactory::buildAxis(const Options& options) const {
       m_variant);
 }
 
-std::string AxisFactory::toString() const {
+std::string AxisSpec::toString() const {
   std::stringstream ss;
-  ss << "AxisFactory: " << nBins() << " bins";
+  ss << "AxisSpec: " << nBins() << " bins";
   if (m_direction.has_value()) {
     ss << " in " << axisDirectionName(*m_direction);
   }

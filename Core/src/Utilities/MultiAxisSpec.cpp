@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Utilities/MultiAxisFactory.hpp"
+#include "Acts/Utilities/MultiAxisSpec.hpp"
 
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -31,8 +31,8 @@ std::string unsupportedSurfaceMessage(const Surface& surface) {
   return ss.str();
 }
 
-AxisFactory::Options resolveCylinder(const CylinderBounds& cBounds,
-                                     AxisDirection aDir) {
+AxisSpec::Options resolveCylinder(const CylinderBounds& cBounds,
+                                  AxisDirection aDir) {
   using enum AxisDirection;
 
   double r = cBounds.get(CylinderBounds::eR);
@@ -59,8 +59,7 @@ AxisFactory::Options resolveCylinder(const CylinderBounds& cBounds,
   }
 }
 
-AxisFactory::Options resolveDisc(const RadialBounds& rBounds,
-                                 AxisDirection aDir) {
+AxisSpec::Options resolveDisc(const RadialBounds& rBounds, AxisDirection aDir) {
   using enum AxisBoundaryType;
 
   double avgPhi = rBounds.get(RadialBounds::eAveragePhi);
@@ -80,8 +79,8 @@ AxisFactory::Options resolveDisc(const RadialBounds& rBounds,
   }
 }
 
-AxisFactory::Options resolveRectangle(const RectangleBounds& pBounds,
-                                      AxisDirection aDir) {
+AxisSpec::Options resolveRectangle(const RectangleBounds& pBounds,
+                                   AxisDirection aDir) {
   using enum AxisBoundaryType;
 
   switch (aDir) {
@@ -99,8 +98,8 @@ AxisFactory::Options resolveRectangle(const RectangleBounds& pBounds,
   }
 }
 
-AxisFactory::Options resolveTrapezoid(const TrapezoidBounds& pBounds,
-                                      AxisDirection aDir) {
+AxisSpec::Options resolveTrapezoid(const TrapezoidBounds& pBounds,
+                                   AxisDirection aDir) {
   using enum AxisBoundaryType;
 
   switch (aDir) {
@@ -119,10 +118,10 @@ AxisFactory::Options resolveTrapezoid(const TrapezoidBounds& pBounds,
   }
 }
 
-AxisFactory::Options resolveAxisOptions(const Surface& surface,
-                                        AxisDirection aDir) {
+AxisSpec::Options resolveAxisOptions(const Surface& surface,
+                                     AxisDirection aDir) {
   const SurfaceBounds& bounds = surface.bounds();
-  AxisFactory::Options options = [&]() -> AxisFactory::Options {
+  AxisSpec::Options options = [&]() -> AxisSpec::Options {
     switch (bounds.type()) {
       case SurfaceBounds::eCylinder:
         return resolveCylinder(static_cast<const CylinderBounds&>(bounds),
@@ -145,48 +144,48 @@ AxisFactory::Options resolveAxisOptions(const Surface& surface,
 
 }  // namespace
 
-MultiAxisFactory::MultiAxisFactory(std::vector<AxisFactory> axisFactories)
-    : m_axisFactories(std::move(axisFactories)) {
-  if (m_axisFactories.empty()) {
+MultiAxisSpec::MultiAxisSpec(std::vector<AxisSpec> axisSpecs)
+    : m_axisSpecs(std::move(axisSpecs)) {
+  if (m_axisSpecs.empty()) {
     throw std::invalid_argument(
-        "MultiAxisFactory: at least one axis description is required");
+        "MultiAxisSpec: at least one axis spec is required");
   }
 }
 
-std::size_t MultiAxisFactory::size() const {
-  return m_axisFactories.size();
+std::size_t MultiAxisSpec::size() const {
+  return m_axisSpecs.size();
 }
 
-const AxisFactory& MultiAxisFactory::axisFactory(std::size_t i) const {
-  return m_axisFactories.at(i);
+const AxisSpec& MultiAxisSpec::axisSpec(std::size_t i) const {
+  return m_axisSpecs.at(i);
 }
 
-std::span<const AxisFactory> MultiAxisFactory::axisFactories() const {
-  return m_axisFactories;
+std::span<const AxisSpec> MultiAxisSpec::axisSpecs() const {
+  return m_axisSpecs;
 }
 
-bool MultiAxisFactory::isDeferred() const {
+bool MultiAxisSpec::isDeferred() const {
   return std::ranges::any_of(
-      m_axisFactories, [](const AxisFactory& af) { return af.isDeferred(); });
+      m_axisSpecs, [](const AxisSpec& af) { return af.isDeferred(); });
 }
 
-std::unique_ptr<IMultiAxis> MultiAxisFactory::buildMultiAxis(
+std::unique_ptr<IMultiAxis> MultiAxisSpec::buildMultiAxis(
     const Options& options) const {
   return buildMultiAxisImpl(options);
 }
 
-std::unique_ptr<IMultiAxis> MultiAxisFactory::buildMultiAxisImpl(
-    std::span<const AxisFactory::Options> options) const {
+std::unique_ptr<IMultiAxis> MultiAxisSpec::buildMultiAxisImpl(
+    std::span<const AxisSpec::Options> options) const {
   if (!options.empty() && options.size() != size()) {
     throw std::invalid_argument(
-        "MultiAxisFactory: either one option set per axis or none at all");
+        "MultiAxisSpec: either one option set per axis or none at all");
   }
 
   std::vector<std::unique_ptr<IAxis>> axes;
   axes.reserve(size());
   for (std::size_t i = 0; i < size(); ++i) {
-    axes.push_back(m_axisFactories[i].buildAxis(
-        options.empty() ? AxisFactory::Options{} : options[i]));
+    axes.push_back(m_axisSpecs[i].buildAxis(
+        options.empty() ? AxisSpec::Options{} : options[i]));
   }
 
   switch (axes.size()) {
@@ -198,47 +197,46 @@ std::unique_ptr<IMultiAxis> MultiAxisFactory::buildMultiAxisImpl(
       return IMultiAxis::create(*axes[0], *axes[1], *axes[2]);
     default:
       throw std::domain_error(
-          "MultiAxisFactory: multi-axes support at most 3 dimensions");
+          "MultiAxisSpec: multi-axes support at most 3 dimensions");
   }
 }
 
-std::string MultiAxisFactory::toString() const {
+std::string MultiAxisSpec::toString() const {
   std::stringstream ss;
-  ss << "MultiAxisFactory: " << size() << " axes [";
+  ss << "MultiAxisSpec: " << size() << " axes [";
   for (std::size_t i = 0; i < size(); ++i) {
-    ss << (i > 0 ? "; " : "") << axisFactory(i);
+    ss << (i > 0 ? "; " : "") << axisSpec(i);
   }
   ss << "]";
   return ss.str();
 }
 
 std::unique_ptr<IMultiAxis2D> resolveMultiAxis(
-    const MultiAxisFactory2D& multiAxisFactory, const Surface& surface) {
-  std::span<const AxisFactory> axisFactories = multiAxisFactory.axisFactories();
+    const MultiAxisSpec2D& multiAxisSpec, const Surface& surface) {
+  std::span<const AxisSpec> axisSpecs = multiAxisSpec.axisSpecs();
   std::array<AxisDirection, 2> canonical = surface.localAxes();
 
   const std::size_t nDirected = std::ranges::count_if(
-      axisFactories,
-      [](const AxisFactory& af) { return af.direction().has_value(); });
+      axisSpecs, [](const AxisSpec& af) { return af.direction().has_value(); });
   if (nDirected == 1) {
     throw std::invalid_argument(
         "resolveMultiAxis: either both or neither of the axes must carry a "
         "direction");
   }
 
-  // Bind each canonical direction to its description, positionally without
+  // Bind each canonical direction to its spec, positionally without
   // stored directions and by direction otherwise
-  std::array<const AxisFactory*, 2> slots{};
+  std::array<const AxisSpec*, 2> slots{};
   for (std::size_t i = 0; i < canonical.size(); ++i) {
     if (nDirected == 0) {
-      slots[i] = &axisFactories[i];
+      slots[i] = &axisSpecs[i];
       continue;
     }
     AxisDirection aDir = canonical[i];
-    auto it = std::ranges::find_if(
-        axisFactories,
-        [aDir](const AxisFactory& af) { return af.direction() == aDir; });
-    if (it == axisFactories.end()) {
+    auto it = std::ranges::find_if(axisSpecs, [aDir](const AxisSpec& af) {
+      return af.direction() == aDir;
+    });
+    if (it == axisSpecs.end()) {
       std::stringstream ss;
       ss << "resolveMultiAxis: binning directions do not match the surface "
             "axes ("

@@ -8,14 +8,14 @@ target_sources(
         TrackHelpersUnbiased.cpp
         Intersection.cpp
         IAxis.cpp
-        AxisFactory.cpp
+        AxisSpec.cpp
         GraphViz.cpp
         ProtoAxis.cpp
         ScopedTimer.cpp
         TransformComparator.cpp
         Histogram.cpp
         IMultiAxis.cpp
-        MultiAxisFactory.cpp
+        MultiAxisSpec.cpp
         detail/QuaternionFromTwoVectorsDouble.cpp
         detail/QuaternionFromTwoVectorsFloat.cpp
         detail/CreateMultiAxis3Open.cpp

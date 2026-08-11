@@ -8,13 +8,13 @@
 
 #include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/AxisFactory.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/MultiAxisFactory.hpp"
+#include "Acts/Utilities/MultiAxisSpec.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
 #include <cmath>
@@ -251,38 +251,39 @@ void addUtilities(py::module_& m) {
   }
 
   {
-    // Axis descriptions producing IAxis objects
-    py::class_<AxisFactory>(m, "AxisFactory")
-        .def_static("Equidistant", &AxisFactory::Equidistant, "nBins"_a,
+    // Axis specs producing IAxis objects
+    py::class_<AxisSpec>(m, "AxisSpec")
+        .def_static("Equidistant", &AxisSpec::Equidistant, "nBins"_a,
                     "min"_a = std::nullopt, "max"_a = std::nullopt,
                     "boundaryType"_a = std::nullopt,
                     "direction"_a = std::nullopt)
-        .def_static("Variable", &AxisFactory::Variable, "edges"_a,
+        .def_static("Variable", &AxisSpec::Variable, "edges"_a,
                     "boundaryType"_a = std::nullopt,
                     "direction"_a = std::nullopt)
-        .def_static("DeferredEquidistant", &AxisFactory::DeferredEquidistant,
+        .def_static("DeferredEquidistant", &AxisSpec::DeferredEquidistant,
                     "nBins"_a, "direction"_a = std::nullopt)
-        .def_static("DeferredVariable", &AxisFactory::DeferredVariable,
+        .def_static("DeferredVariable", &AxisSpec::DeferredVariable,
                     "normalizedEdges"_a, "boundaryType"_a = std::nullopt,
                     "direction"_a = std::nullopt)
-        .def("withDirection", &AxisFactory::withDirection, "direction"_a)
-        .def("toDeferred", &AxisFactory::toDeferred)
-        .def_property_readonly("deferred", &AxisFactory::isDeferred)
-        .def_property_readonly("direction", &AxisFactory::direction)
-        .def_property_readonly("nBins", &AxisFactory::nBins)
-        .def_property_readonly("boundaryType", &AxisFactory::boundaryType)
+        .def("withDirection", &AxisSpec::withDirection, "direction"_a)
+        .def("toDeferred", &AxisSpec::toDeferred)
+        .def_property_readonly("deferred", &AxisSpec::isDeferred)
+        .def_property_readonly("direction", &AxisSpec::direction)
+        .def_property_readonly("nBins", &AxisSpec::nBins)
+        .def_property_readonly("boundaryType", &AxisSpec::boundaryType)
         .def(py::self == py::self)
-        .def("__repr__", &AxisFactory::toString);
+        .def("__repr__", &AxisSpec::toString);
 
-    py::class_<MultiAxisFactory>(m, "MultiAxisFactory")
-        .def(py::init<std::vector<AxisFactory>>(), "axisFactories"_a)
-        .def("__len__", &MultiAxisFactory::size)
+    py::class_<MultiAxisSpec>(m, "MultiAxisSpec")
+        .def(py::init<std::vector<AxisSpec>>(), "axisSpecs"_a)
+        .def("__len__", &MultiAxisSpec::size)
         .def("__getitem__",
-             [](const MultiAxisFactory& self, std::size_t i)
-                 -> const AxisFactory& { return self.axisFactory(i); })
-        .def_property_readonly("deferred", &MultiAxisFactory::isDeferred)
+             [](const MultiAxisSpec& self, std::size_t i) -> const AxisSpec& {
+               return self.axisSpec(i);
+             })
+        .def_property_readonly("deferred", &MultiAxisSpec::isDeferred)
         .def(py::self == py::self)
-        .def("__repr__", &MultiAxisFactory::toString);
+        .def("__repr__", &MultiAxisSpec::toString);
   }
 
   {

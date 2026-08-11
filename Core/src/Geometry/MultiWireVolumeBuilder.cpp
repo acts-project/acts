@@ -72,27 +72,27 @@ MultiWireVolumeBuilder::createNavigationPolicyFactory() const {
     throw ::std::invalid_argument(
         "MultiWireStructureBuilder: Invalid binning provided");
   }
-  auto [axisFactoryA, expansionA] = m_config.binning.at(0);
-  auto [axisFactoryB, expansionB] = m_config.binning.at(1);
+  auto [axisSpecA, expansionA] = m_config.binning.at(0);
+  auto [axisSpecB, expansionB] = m_config.binning.at(1);
 
   // Binning needs to be fully specified and equidistant, with a direction
-  if (axisFactoryA.isDeferred() || axisFactoryB.isDeferred()) {
+  if (axisSpecA.isDeferred() || axisSpecB.isDeferred()) {
     throw std::runtime_error(
         "MultiWireVolumeBuilder: Binning axes need a fully specified range");
   }
-  if (!axisFactoryA.isEquidistant() || !axisFactoryB.isEquidistant()) {
+  if (!axisSpecA.isEquidistant() || !axisSpecB.isEquidistant()) {
     throw std::runtime_error(
         "MultiWireVolumeBuilder: Binning axes need to be equidistant");
   }
-  if (!axisFactoryA.direction().has_value() ||
-      !axisFactoryB.direction().has_value()) {
+  if (!axisSpecA.direction().has_value() ||
+      !axisSpecB.direction().has_value()) {
     throw std::runtime_error(
         "MultiWireVolumeBuilder: Binning axes need a direction");
   }
 
   // Create the grid from the axis
-  const auto& paramsA = axisFactoryA.asEquidistant();
-  const auto& paramsB = axisFactoryB.asEquidistant();
+  const auto& paramsA = axisSpecA.asEquidistant();
+  const auto& paramsB = axisSpecB.asEquidistant();
 
   // isDeferred() above guarantees the ranges are set
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisA(
@@ -109,12 +109,12 @@ MultiWireVolumeBuilder::createNavigationPolicyFactory() const {
   auto indexedGrid =
       placement == nullptr
           ? IndexGrid<decltype(grid)>{std::move(grid),
-                                      {*axisFactoryA.direction(),
-                                       *axisFactoryB.direction()},
+                                      {*axisSpecA.direction(),
+                                       *axisSpecB.direction()},
                                       m_config.transform.inverse()}
           : IndexGrid<decltype(grid)>{
                 std::move(grid),
-                {*axisFactoryA.direction(), *axisFactoryB.direction()},
+                {*axisSpecA.direction(), *axisSpecB.direction()},
                 [placement](const GeometryContext& gctx) -> const Transform3& {
                   return placement->globalToLocalTransform(gctx);
                 }};

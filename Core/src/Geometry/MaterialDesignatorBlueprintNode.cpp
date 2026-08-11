@@ -117,12 +117,12 @@ void MaterialDesignatorBlueprintNode::addToGraphviz(std::ostream& os) const {
 namespace {
 
 ACTS_PUSH_IGNORE_DEPRECATED()
-/// Convert a superseded DirectedProtoAxis binning description to a deferred
-/// AxisFactory. This reproduces the effective legacy semantics: only the
+/// Convert a superseded DirectedProtoAxis binning spec to a deferred
+/// AxisSpec. This reproduces the effective legacy semantics: only the
 /// binning structure was ever used, the configured range and boundary type
 /// were overwritten from the surface bounds during material mapping.
-AxisFactory toDeferredAxisFactory(const DirectedProtoAxis& dpAxis) {
-  return AxisFactory::FromAxis(dpAxis.getAxis())
+AxisSpec toDeferredAxisSpec(const DirectedProtoAxis& dpAxis) {
+  return AxisSpec::FromAxis(dpAxis.getAxis())
       .toDeferred()
       .withDirection(dpAxis.getAxisDirection());
 }
@@ -131,8 +131,8 @@ ACTS_POP_IGNORE_DEPRECATED()
 }  // namespace
 
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
-    CylinderVolumeBounds::Face face, const AxisFactory& loc0,
-    const AxisFactory& loc1) {
+    CylinderVolumeBounds::Face face, const AxisSpec& loc0,
+    const AxisSpec& loc1) {
   impl().m_designator = detail::merge(
       impl().m_designator,
       detail::CylinderProtoDesignator(face, loc0, loc1, prefix()));
@@ -143,8 +143,8 @@ ACTS_PUSH_IGNORE_DEPRECATED()
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
     CylinderVolumeBounds::Face face, const DirectedProtoAxis& loc0,
     const DirectedProtoAxis& loc1) {
-  return configureFace(face, toDeferredAxisFactory(loc0),
-                       toDeferredAxisFactory(loc1));
+  return configureFace(face, toDeferredAxisSpec(loc0),
+                       toDeferredAxisSpec(loc1));
 }
 ACTS_POP_IGNORE_DEPRECATED()
 
@@ -161,8 +161,7 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
 }
 
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
-    CuboidVolumeBounds::Face face, const AxisFactory& loc0,
-    const AxisFactory& loc1) {
+    CuboidVolumeBounds::Face face, const AxisSpec& loc0, const AxisSpec& loc1) {
   impl().m_designator =
       detail::merge(impl().m_designator,
                     detail::CuboidProtoDesignator(face, loc0, loc1, prefix()));
@@ -173,8 +172,8 @@ ACTS_PUSH_IGNORE_DEPRECATED()
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
     CuboidVolumeBounds::Face face, const DirectedProtoAxis& loc0,
     const DirectedProtoAxis& loc1) {
-  return configureFace(face, toDeferredAxisFactory(loc0),
-                       toDeferredAxisFactory(loc1));
+  return configureFace(face, toDeferredAxisSpec(loc0),
+                       toDeferredAxisSpec(loc1));
 }
 ACTS_POP_IGNORE_DEPRECATED()
 

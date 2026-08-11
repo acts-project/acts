@@ -18,10 +18,10 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/AxisFactory.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/MultiAxisFactory.hpp"
+#include "Acts/Utilities/MultiAxisSpec.hpp"
 
 #include <numbers>
 #include <utility>
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
 BOOST_AUTO_TEST_CASE(ProtoGridResolutionTest) {
   using enum AxisDirection;
 
-  // A full cylinder and a full disc carrying deferred binning descriptions
+  // A full cylinder and a full disc carrying deferred binning specs
   std::vector<std::shared_ptr<Surface>> surfaces = {
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 20.0, 100.0),
       Surface::makeShared<DiscSurface>(Transform3::Identity(), 30.0, 80.0)};
@@ -235,14 +235,14 @@ BOOST_AUTO_TEST_CASE(ProtoGridResolutionTest) {
   // order to exercise the direction based re-ordering
   surfaces[0u]->assignSurfaceMaterial(
       std::make_shared<ProtoGridSurfaceMaterial>(
-          MultiAxisFactory2D({AxisFactory::DeferredEquidistant(10, AxisZ),
-                              AxisFactory::DeferredEquidistant(4, AxisRPhi)})));
+          MultiAxisSpec2D({AxisSpec::DeferredEquidistant(10, AxisZ),
+                           AxisSpec::DeferredEquidistant(4, AxisRPhi)})));
 
   // Disc: deferred variable binning in r, deferred equidistant binning in phi
   surfaces[1u]->assignSurfaceMaterial(
-      std::make_shared<ProtoGridSurfaceMaterial>(MultiAxisFactory2D(
-          {AxisFactory::DeferredVariable({0., 0.2, 1.}, std::nullopt, AxisR),
-           AxisFactory::DeferredEquidistant(8, AxisPhi)})));
+      std::make_shared<ProtoGridSurfaceMaterial>(MultiAxisSpec2D(
+          {AxisSpec::DeferredVariable({0., 0.2, 1.}, std::nullopt, AxisR),
+           AxisSpec::DeferredEquidistant(8, AxisPhi)})));
 
   BinnedSurfaceMaterialAccumulator::Config bsmaConfig;
   bsmaConfig.materialSurfaces = {surfaces[0].get(), surfaces[1].get()};

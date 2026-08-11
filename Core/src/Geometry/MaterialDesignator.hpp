@@ -18,8 +18,8 @@
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
-#include "Acts/Utilities/AxisFactory.hpp"
-#include "Acts/Utilities/MultiAxisFactory.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
+#include "Acts/Utilities/MultiAxisSpec.hpp"
 
 #include <format>
 #include <regex>
@@ -51,14 +51,13 @@ class ProtoDesignator {
   using Face = face_enum_t;
   using ShellType = shell_type_t;
 
-  ProtoDesignator(Face face, const AxisFactory& loc0, const AxisFactory& loc1,
+  ProtoDesignator(Face face, const AxisSpec& loc0, const AxisSpec& loc1,
                   const std::string& prefix) {
     auto [expected0, expected1] = expectedDirections(face, prefix);
     validateDuplicate(face, prefix);
     m_binning.emplace_back(
-        face,
-        MultiAxisFactory2D({validateAxis(loc0, expected0, face, prefix),
-                            validateAxis(loc1, expected1, face, prefix)}));
+        face, MultiAxisSpec2D({validateAxis(loc0, expected0, face, prefix),
+                               validateAxis(loc1, expected1, face, prefix)}));
   }
 
   std::string label() const {
@@ -98,9 +97,9 @@ class ProtoDesignator {
     for (const auto& [face, binning] : m_binning) {
       os << "<br/> at: " << face;
       for (std::size_t i = 0; i < binning.size(); ++i) {
-        const AxisFactory& axisFactory = binning.axisFactory(i);
-        os << (i == 0 ? ": " : ", ") << *axisFactory.direction() << "="
-           << axisFactory.nBins();
+        const AxisSpec& axisSpec = binning.axisSpec(i);
+        os << (i == 0 ? ": " : ", ") << *axisSpec.direction() << "="
+           << axisSpec.nBins();
       }
     }
   }
@@ -139,26 +138,24 @@ class ProtoDesignator {
     }
   }
 
-  AxisFactory validateAxis(const AxisFactory& axisFactory,
-                           AxisDirection expected, Face face,
-                           const std::string& prefix) const {
-    // A description equals its own deferred counterpart exactly when it fixes
+  AxisSpec validateAxis(const AxisSpec& axisSpec, AxisDirection expected,
+                        Face face, const std::string& prefix) const {
+    // A spec equals its own deferred counterpart exactly when it fixes
     // nothing but the binning structure
-    if (axisFactory.toDeferred() != axisFactory) {
+    if (axisSpec.toDeferred() != axisSpec) {
       throw std::invalid_argument(
           prefix +
           "Material binning must leave range and boundary type to the "
           "surface, they are determined from its bounds");
     }
-    if (axisFactory.direction().has_value() &&
-        axisFactory.direction() != expected) {
+    if (axisSpec.direction().has_value() && axisSpec.direction() != expected) {
       std::stringstream ss;
       ss << prefix << "Face " << face << " must be binned along "
          << axisDirectionName(expected) << ", got "
-         << axisDirectionName(*axisFactory.direction());
+         << axisDirectionName(*axisSpec.direction());
       throw std::invalid_argument(ss.str());
     }
-    return axisFactory.withDirection(expected);
+    return axisSpec.withDirection(expected);
   }
 
   void validateDuplicate(Face face, const std::string& prefix) {
@@ -171,7 +168,7 @@ class ProtoDesignator {
     }
   }
 
-  std::vector<std::tuple<Face, MultiAxisFactory2D>> m_binning;
+  std::vector<std::tuple<Face, MultiAxisSpec2D>> m_binning;
 };
 
 using CylinderProtoDesignator =

@@ -14,10 +14,10 @@ using namespace Acts;
 
 namespace ActsPlugins {
 
-std::vector<std::tuple<AxisFactory, std::size_t>>
-DD4hepBinningHelpers::convertAxisFactories(
-    const dd4hep::DetElement &dd4hepElement, const std::string &bname) {
-  std::vector<std::tuple<AxisFactory, std::size_t>> axisFactories;
+std::vector<std::tuple<AxisSpec, std::size_t>>
+DD4hepBinningHelpers::convertAxisSpecs(const dd4hep::DetElement &dd4hepElement,
+                                       const std::string &bname) {
+  std::vector<std::tuple<AxisSpec, std::size_t>> axisSpecs;
 
   for (const auto &[ab, axisDir] : allowedBinnings) {
     auto type =
@@ -35,8 +35,8 @@ DD4hepBinningHelpers::convertAxisFactories(
       if (aType == AxisType::Equidistant) {
         if (autoRange) {
           // Deferred binning: the consumer determines range and boundary type
-          axisFactories.emplace_back(
-              AxisFactory::DeferredEquidistant(nBins, axisDir), nExpansion);
+          axisSpecs.emplace_back(AxisSpec::DeferredEquidistant(nBins, axisDir),
+                                 nExpansion);
         } else {
           // Equidistant binning
           double minDefault =
@@ -49,8 +49,8 @@ DD4hepBinningHelpers::convertAxisFactories(
                                         dd4hepElement, maxDefault);
           // The boundary type is not expressible in DD4hep, the consumer
           // determines it from the surface
-          axisFactories.emplace_back(
-              AxisFactory::Equidistant(nBins, min, max, std::nullopt, axisDir),
+          axisSpecs.emplace_back(
+              AxisSpec::Equidistant(nBins, min, max, std::nullopt, axisDir),
               nExpansion);
         }
       } else {
@@ -60,13 +60,13 @@ DD4hepBinningHelpers::convertAxisFactories(
           edges.push_back(getParamOr<double>(
               bname + "_" + ab + "_b" + std::to_string(ib), dd4hepElement, 0.));
         }
-        axisFactories.emplace_back(
-            AxisFactory::Variable(std::move(edges), std::nullopt, axisDir),
+        axisSpecs.emplace_back(
+            AxisSpec::Variable(std::move(edges), std::nullopt, axisDir),
             nExpansion);
       }
     }
   }
-  return axisFactories;
+  return axisSpecs;
 }
 
 // The definition does not carry the deprecation attribute, so it needs the

@@ -28,8 +28,8 @@ def _build_marker_geometry(gctx):
     mat = stack.addMaterial("Material")
     mat.configureFace(
         acts.CylinderVolumeBounds.Face.OuterCylinder,
-        acts.AxisFactory.DeferredEquidistant(20, bv.AxisRPhi),
-        acts.AxisFactory.DeferredEquidistant(20, bv.AxisZ),
+        acts.AxisSpec.DeferredEquidistant(20, bv.AxisRPhi),
+        acts.AxisSpec.DeferredEquidistant(20, bv.AxisZ),
     )
     mat.addStaticVolume(
         base * acts.Translation3(acts.Vector3(0, 0, -200 * mm)),

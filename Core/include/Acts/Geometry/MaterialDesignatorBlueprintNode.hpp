@@ -12,7 +12,7 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/DiamondVolumeBounds.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
-#include "Acts/Utilities/AxisFactory.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
 namespace Acts {
@@ -82,14 +82,14 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   ///       mapping. Axis directions are optional and validated against the
   ///       face (discs bin in (r, phi), cylinders in (rphi, z)).
   /// @param face The face of the cylinder to configure
-  /// @param loc0 The binning description along local axis 0
-  /// @param loc1 The binning description along local axis 1
+  /// @param loc0 The binning spec along local axis 0
+  /// @param loc1 The binning spec along local axis 1
   /// @return The material designator node
   /// @note If this node has previously been configured with a different volume
   ///       shape, this will throw an exception.
   MaterialDesignatorBlueprintNode& configureFace(
-      CylinderVolumeBounds::Face face, const AxisFactory& loc0,
-      const AxisFactory& loc1);
+      CylinderVolumeBounds::Face face, const AxisSpec& loc0,
+      const AxisSpec& loc1);
 
   /// Configure the designator with a cylinder face and corresponding binning
   /// information.
@@ -100,8 +100,8 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   /// @return The material designator node
   /// @note If this node has previously been configured with a different volume
   ///       shape, this will throw an exception.
-  /// @deprecated Use configureFace with deferred AxisFactory axes instead
-  [[deprecated("Use configureFace with deferred AxisFactory axes instead")]]
+  /// @deprecated Use configureFace with deferred AxisSpec axes instead
+  [[deprecated("Use configureFace with deferred AxisSpec axes instead")]]
   MaterialDesignatorBlueprintNode& configureFace(
       CylinderVolumeBounds::Face face, const DirectedProtoAxis& loc0,
       const DirectedProtoAxis& loc1);
@@ -125,14 +125,14 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   ///       mapping. Axis directions are optional and validated against the
   ///       face (cuboid faces bin in (x, y)).
   /// @param face The face of the cuboid to configure
-  /// @param loc0 The binning description along local axis 0
-  /// @param loc1 The binning description along local axis 1
+  /// @param loc0 The binning spec along local axis 0
+  /// @param loc1 The binning spec along local axis 1
   /// @return The material designator node
   /// @note If this node has previously been configured with a different volume
   ///       shape, this will throw an exception.
   MaterialDesignatorBlueprintNode& configureFace(CuboidVolumeBounds::Face face,
-                                                 const AxisFactory& loc0,
-                                                 const AxisFactory& loc1);
+                                                 const AxisSpec& loc0,
+                                                 const AxisSpec& loc1);
 
   /// Configure the designator with a cuboid face and corresponding binning
   /// information.
@@ -143,8 +143,8 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   /// @return The material designator node
   /// @note If this node has previously been configured with a different volume
   ///       shape, this will throw an exception.
-  /// @deprecated Use configureFace with deferred AxisFactory axes instead
-  [[deprecated("Use configureFace with deferred AxisFactory axes instead")]]
+  /// @deprecated Use configureFace with deferred AxisSpec axes instead
+  [[deprecated("Use configureFace with deferred AxisSpec axes instead")]]
   MaterialDesignatorBlueprintNode& configureFace(CuboidVolumeBounds::Face face,
                                                  const DirectedProtoAxis& loc0,
                                                  const DirectedProtoAxis& loc1);

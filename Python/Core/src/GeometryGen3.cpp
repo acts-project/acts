@@ -432,21 +432,20 @@ void addGeometryGen3(py::module_& m) {
       },
       py::arg("name"), py::arg("direction"));
 
-  auto matNode =
-      py::class_<MaterialDesignatorBlueprintNode, BlueprintNode,
-                 std::shared_ptr<MaterialDesignatorBlueprintNode>>(
-          m, "MaterialDesignatorBlueprintNode")
-          .def(py::init<const std::string&>(), "name"_a)
-          .def("configureFace",
-               py::overload_cast<CylinderVolumeBounds::Face, const AxisFactory&,
-                                 const AxisFactory&>(
-                   &MaterialDesignatorBlueprintNode::configureFace),
-               "face"_a, "loc0"_a, "loc1"_a)
-          .def("configureFace",
-               py::overload_cast<CuboidVolumeBounds::Face, const AxisFactory&,
-                                 const AxisFactory&>(
-                   &MaterialDesignatorBlueprintNode::configureFace),
-               "face"_a, "loc0"_a, "loc1"_a);
+  auto matNode = py::class_<MaterialDesignatorBlueprintNode, BlueprintNode,
+                            std::shared_ptr<MaterialDesignatorBlueprintNode>>(
+                     m, "MaterialDesignatorBlueprintNode")
+                     .def(py::init<const std::string&>(), "name"_a)
+                     .def("configureFace",
+                          py::overload_cast<CylinderVolumeBounds::Face,
+                                            const AxisSpec&, const AxisSpec&>(
+                              &MaterialDesignatorBlueprintNode::configureFace),
+                          "face"_a, "loc0"_a, "loc1"_a)
+                     .def("configureFace",
+                          py::overload_cast<CuboidVolumeBounds::Face,
+                                            const AxisSpec&, const AxisSpec&>(
+                              &MaterialDesignatorBlueprintNode::configureFace),
+                          "face"_a, "loc0"_a, "loc1"_a);
 
   ACTS_PUSH_IGNORE_DEPRECATED()
   matNode

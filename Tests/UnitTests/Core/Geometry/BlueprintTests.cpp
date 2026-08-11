@@ -31,7 +31,7 @@
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/AxisFactory.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
 #include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
@@ -632,13 +632,13 @@ BOOST_AUTO_TEST_CASE(MaterialTesting) {
   using enum AxisBoundaryType;
 
   root.addMaterial("Material", [&](auto& mat) {
-    mat.configureFace(NegativeDisc, AxisFactory::DeferredEquidistant(5, AxisR),
-                      AxisFactory::DeferredEquidistant(10, AxisPhi));
-    mat.configureFace(PositiveDisc, AxisFactory::DeferredEquidistant(15, AxisR),
-                      AxisFactory::DeferredEquidistant(20, AxisPhi));
+    mat.configureFace(NegativeDisc, AxisSpec::DeferredEquidistant(5, AxisR),
+                      AxisSpec::DeferredEquidistant(10, AxisPhi));
+    mat.configureFace(PositiveDisc, AxisSpec::DeferredEquidistant(15, AxisR),
+                      AxisSpec::DeferredEquidistant(20, AxisPhi));
     mat.configureFace(OuterCylinder,
-                      AxisFactory::DeferredEquidistant(25, AxisRPhi),
-                      AxisFactory::DeferredEquidistant(30, AxisZ));
+                      AxisSpec::DeferredEquidistant(25, AxisRPhi),
+                      AxisSpec::DeferredEquidistant(30, AxisZ));
 
     mat.addStaticVolume(std::move(cyl));
   });
@@ -666,10 +666,10 @@ BOOST_AUTO_TEST_CASE(MaterialTesting) {
   const auto& posDiscMat =
       dynamic_cast<const ProtoGridSurfaceMaterial&>(*posDisc);
 
-  BOOST_CHECK_EQUAL(negDiscMat.binning().axisFactory(0).nBins(), 5);
-  BOOST_CHECK_EQUAL(negDiscMat.binning().axisFactory(1).nBins(), 10);
-  BOOST_CHECK_EQUAL(posDiscMat.binning().axisFactory(0).nBins(), 15);
-  BOOST_CHECK_EQUAL(posDiscMat.binning().axisFactory(1).nBins(), 20);
+  BOOST_CHECK_EQUAL(negDiscMat.binning().axisSpec(0).nBins(), 5);
+  BOOST_CHECK_EQUAL(negDiscMat.binning().axisSpec(1).nBins(), 10);
+  BOOST_CHECK_EQUAL(posDiscMat.binning().axisSpec(0).nBins(), 15);
+  BOOST_CHECK_EQUAL(posDiscMat.binning().axisSpec(1).nBins(), 20);
 
   // Check outer cylinder material
   const auto* outerCyl = child.portals()
@@ -679,8 +679,8 @@ BOOST_AUTO_TEST_CASE(MaterialTesting) {
   BOOST_REQUIRE_NE(outerCyl, nullptr);
   const auto& outerCylMat =
       dynamic_cast<const ProtoGridSurfaceMaterial&>(*outerCyl);
-  BOOST_CHECK_EQUAL(outerCylMat.binning().axisFactory(0).nBins(), 25);
-  BOOST_CHECK_EQUAL(outerCylMat.binning().axisFactory(1).nBins(), 30);
+  BOOST_CHECK_EQUAL(outerCylMat.binning().axisSpec(0).nBins(), 25);
+  BOOST_CHECK_EQUAL(outerCylMat.binning().axisSpec(1).nBins(), 30);
 
   // Check that other faces have no material
   for (std::size_t i = 0; i < child.portals().size(); i++) {
@@ -708,8 +708,8 @@ BOOST_AUTO_TEST_CASE(MaterialInvalidAxisDirections) {
                        [&](auto& mat) {
                          mat.configureFace(
                              CylinderVolumeBounds::Face::NegativeDisc,
-                             AxisFactory::DeferredEquidistant(5, AxisZ),
-                             AxisFactory::DeferredEquidistant(10, AxisPhi));
+                             AxisSpec::DeferredEquidistant(5, AxisZ),
+                             AxisSpec::DeferredEquidistant(10, AxisPhi));
                        }),
       std::invalid_argument);
 
@@ -718,8 +718,8 @@ BOOST_AUTO_TEST_CASE(MaterialInvalidAxisDirections) {
                        [&](auto& mat) {
                          mat.configureFace(
                              CylinderVolumeBounds::Face::OuterCylinder,
-                             AxisFactory::DeferredEquidistant(5, AxisR),
-                             AxisFactory::DeferredEquidistant(10, AxisR));
+                             AxisSpec::DeferredEquidistant(5, AxisR),
+                             AxisSpec::DeferredEquidistant(10, AxisR));
                        }),
       std::invalid_argument);
 
@@ -729,8 +729,8 @@ BOOST_AUTO_TEST_CASE(MaterialInvalidAxisDirections) {
                        [&](auto& mat) {
                          mat.configureFace(
                              CuboidVolumeBounds::Face::NegativeXFace,
-                             AxisFactory::DeferredEquidistant(5, AxisX),
-                             AxisFactory::DeferredEquidistant(10, AxisZ));
+                             AxisSpec::DeferredEquidistant(5, AxisX),
+                             AxisSpec::DeferredEquidistant(10, AxisZ));
                        }),
       std::invalid_argument);
 
@@ -739,8 +739,8 @@ BOOST_AUTO_TEST_CASE(MaterialInvalidAxisDirections) {
                        [&](auto& mat) {
                          mat.configureFace(
                              CuboidVolumeBounds::Face::PositiveYFace,
-                             AxisFactory::DeferredEquidistant(5, AxisY),
-                             AxisFactory::DeferredEquidistant(10, AxisX));
+                             AxisSpec::DeferredEquidistant(5, AxisY),
+                             AxisSpec::DeferredEquidistant(10, AxisX));
                        }),
       std::invalid_argument);
 
@@ -749,8 +749,8 @@ BOOST_AUTO_TEST_CASE(MaterialInvalidAxisDirections) {
                        [&](auto& mat) {
                          mat.configureFace(
                              CuboidVolumeBounds::Face::NegativeZFace,
-                             AxisFactory::DeferredEquidistant(5, AxisZ),
-                             AxisFactory::DeferredEquidistant(10, AxisY));
+                             AxisSpec::DeferredEquidistant(5, AxisZ),
+                             AxisSpec::DeferredEquidistant(10, AxisY));
                        }),
       std::invalid_argument);
 }
@@ -771,15 +771,15 @@ BOOST_AUTO_TEST_CASE(MaterialAxisValidation) {
                        [&](auto& mat) {
                          mat.configureFace(
                              NegativeDisc,
-                             AxisFactory::Equidistant(5, 0., 1., Bound, AxisR),
-                             AxisFactory::DeferredEquidistant(10, AxisPhi));
+                             AxisSpec::Equidistant(5, 0., 1., Bound, AxisR),
+                             AxisSpec::DeferredEquidistant(10, AxisPhi));
                        }),
       std::invalid_argument);
 
   // Axes without directions are accepted, the directions follow from the face
   BOOST_CHECK_NO_THROW(root.addMaterial("Material", [&](auto& mat) {
-    mat.configureFace(NegativeDisc, AxisFactory::DeferredEquidistant(5),
-                      AxisFactory::DeferredEquidistant(10));
+    mat.configureFace(NegativeDisc, AxisSpec::DeferredEquidistant(5),
+                      AxisSpec::DeferredEquidistant(10));
   }));
 
   // The superseded DirectedProtoAxis interface converts to deferred axes
@@ -806,11 +806,11 @@ BOOST_AUTO_TEST_CASE(MaterialMixedVolumeTypes) {
           "Material",
           [&](auto& mat) {
             mat.configureFace(CylinderVolumeBounds::Face::NegativeDisc,
-                              AxisFactory::DeferredEquidistant(5, AxisR),
-                              AxisFactory::DeferredEquidistant(10, AxisPhi));
+                              AxisSpec::DeferredEquidistant(5, AxisR),
+                              AxisSpec::DeferredEquidistant(10, AxisPhi));
             mat.configureFace(CuboidVolumeBounds::Face::NegativeXFace,
-                              AxisFactory::DeferredEquidistant(5, AxisX),
-                              AxisFactory::DeferredEquidistant(10, AxisY));
+                              AxisSpec::DeferredEquidistant(5, AxisX),
+                              AxisSpec::DeferredEquidistant(10, AxisY));
           }),
       std::runtime_error);
 
@@ -820,11 +820,11 @@ BOOST_AUTO_TEST_CASE(MaterialMixedVolumeTypes) {
           "Material",
           [&](auto& mat) {
             mat.configureFace(CuboidVolumeBounds::Face::NegativeXFace,
-                              AxisFactory::DeferredEquidistant(5, AxisX),
-                              AxisFactory::DeferredEquidistant(10, AxisY));
+                              AxisSpec::DeferredEquidistant(5, AxisX),
+                              AxisSpec::DeferredEquidistant(10, AxisY));
             mat.configureFace(CylinderVolumeBounds::Face::NegativeDisc,
-                              AxisFactory::DeferredEquidistant(5, AxisR),
-                              AxisFactory::DeferredEquidistant(10, AxisPhi));
+                              AxisSpec::DeferredEquidistant(5, AxisR),
+                              AxisSpec::DeferredEquidistant(10, AxisPhi));
           }),
       std::runtime_error);
 }
@@ -849,18 +849,18 @@ BOOST_AUTO_TEST_CASE(MaterialCuboid) {
   auto mat = std::make_shared<MaterialDesignatorBlueprintNode>("Material");
 
   // Configure material for different faces with different binning
-  mat->configureFace(NegativeXFace, AxisFactory::DeferredEquidistant(5, AxisX),
-                     AxisFactory::DeferredEquidistant(10, AxisY));
-  mat->configureFace(PositiveXFace, AxisFactory::DeferredEquidistant(15, AxisX),
-                     AxisFactory::DeferredEquidistant(20, AxisY));
-  mat->configureFace(NegativeYFace, AxisFactory::DeferredEquidistant(25, AxisX),
-                     AxisFactory::DeferredEquidistant(30, AxisY));
-  mat->configureFace(PositiveYFace, AxisFactory::DeferredEquidistant(35, AxisX),
-                     AxisFactory::DeferredEquidistant(40, AxisY));
-  mat->configureFace(NegativeZFace, AxisFactory::DeferredEquidistant(45, AxisX),
-                     AxisFactory::DeferredEquidistant(50, AxisY));
-  mat->configureFace(PositiveZFace, AxisFactory::DeferredEquidistant(55, AxisX),
-                     AxisFactory::DeferredEquidistant(60, AxisY));
+  mat->configureFace(NegativeXFace, AxisSpec::DeferredEquidistant(5, AxisX),
+                     AxisSpec::DeferredEquidistant(10, AxisY));
+  mat->configureFace(PositiveXFace, AxisSpec::DeferredEquidistant(15, AxisX),
+                     AxisSpec::DeferredEquidistant(20, AxisY));
+  mat->configureFace(NegativeYFace, AxisSpec::DeferredEquidistant(25, AxisX),
+                     AxisSpec::DeferredEquidistant(30, AxisY));
+  mat->configureFace(PositiveYFace, AxisSpec::DeferredEquidistant(35, AxisX),
+                     AxisSpec::DeferredEquidistant(40, AxisY));
+  mat->configureFace(NegativeZFace, AxisSpec::DeferredEquidistant(45, AxisX),
+                     AxisSpec::DeferredEquidistant(50, AxisY));
+  mat->configureFace(PositiveZFace, AxisSpec::DeferredEquidistant(55, AxisX),
+                     AxisSpec::DeferredEquidistant(60, AxisY));
 
   mat->addChild(std::make_shared<StaticBlueprintNode>(std::move(cuboid)));
 
@@ -886,28 +886,28 @@ BOOST_AUTO_TEST_CASE(MaterialCuboid) {
     CuboidVolumeBounds::Face face = static_cast<CuboidVolumeBounds::Face>(i);
     switch (face) {
       case NegativeXFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().axisFactory(0).nBins(), 5);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().axisFactory(1).nBins(), 10);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(0).nBins(), 5);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(1).nBins(), 10);
         break;
       case PositiveXFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().axisFactory(0).nBins(), 15);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().axisFactory(1).nBins(), 20);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(0).nBins(), 15);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(1).nBins(), 20);
         break;
       case NegativeYFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().axisFactory(0).nBins(), 25);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().axisFactory(1).nBins(), 30);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(0).nBins(), 25);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(1).nBins(), 30);
         break;
       case PositiveYFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().axisFactory(0).nBins(), 35);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().axisFactory(1).nBins(), 40);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(0).nBins(), 35);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(1).nBins(), 40);
         break;
       case NegativeZFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().axisFactory(0).nBins(), 45);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().axisFactory(1).nBins(), 50);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(0).nBins(), 45);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(1).nBins(), 50);
         break;
       case PositiveZFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().axisFactory(0).nBins(), 55);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().axisFactory(1).nBins(), 60);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(0).nBins(), 55);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(1).nBins(), 60);
         break;
     }
   }
