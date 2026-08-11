@@ -321,8 +321,13 @@ void addUtilities(py::module_& m) {
               return h.axis(i);
             },
             "i"_a)
-        .def("values", [](const BoostHist& h) {
-          return copyBins(h, [](auto& x) { return static_cast<double>(*x); });
+        .def("values",
+             [](const BoostHist& h) {
+               return copyBins(h, [](auto& x) { return (*x).value(); });
+             })
+        .def("errors", [](const BoostHist& h) {
+          return copyBins(h,
+                          [](auto& x) { return std::sqrt((*x).variance()); });
         });
 
     // Profile histogram (BoostProfileHist — means/variances as numpy arrays)

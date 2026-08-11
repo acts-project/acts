@@ -16,6 +16,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
+#include "ActsExamples/Validation/GaussianHistogramFit.hpp"
 #include "ActsExamples/Validation/PatternRecognitionPerformanceCollector.hpp"
 #include "ActsExamples/Validation/ResPlotTool.hpp"
 #include "ActsExamples/Validation/TrackFitterPerformanceCollector.hpp"
@@ -26,6 +27,7 @@
 #include <stdexcept>
 #include <string>
 
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -201,10 +203,15 @@ class PythonTrackFitterPerformanceWriter final
     ResPlotTool::Config resPlotToolConfig;
     EffPlotTool::Config effPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
+    /// The Gaussian fit backend. Defaults to Core's own ROOT-free
+    /// gaussianHistogramFit(); pass e.g. makeRootHistogramFitFunction() or
+    /// any Python callable with the matching signature instead.
+    HistogramFitFunction fitFunction = &gaussianHistogramFit;
     /// Fit parameters.
     int fitMinEntries = 10;
     double fitSigmaRange = 3.0;
     int fitIterations = 3;
+    double warningThresholdFitFailureFraction = 0.55;
   };
 
   PythonTrackFitterPerformanceWriter(Config cfg, Acts::Logging::Level lvl)
@@ -213,8 +220,9 @@ class PythonTrackFitterPerformanceWriter final
         m_collector(
             TrackFitterPerformanceCollector::Config{
                 m_cfg.resPlotToolConfig, m_cfg.effPlotToolConfig,
-                m_cfg.trackSummaryPlotToolConfig, m_cfg.fitMinEntries,
-                m_cfg.fitSigmaRange, m_cfg.fitIterations},
+                m_cfg.trackSummaryPlotToolConfig, m_cfg.fitFunction,
+                m_cfg.fitMinEntries, m_cfg.fitSigmaRange, m_cfg.fitIterations,
+                m_cfg.warningThresholdFitFailureFraction},
             logger().clone()) {
     if (m_cfg.inputParticles.empty()) {
       throw std::invalid_argument("Missing particles input collection");
@@ -292,6 +300,17 @@ class PythonTrackFitterPerformanceWriter final
       d[py::str(name)] = py::cast(prof, py::return_value_policy::copy);
     }
 
+    // Fitted mean/width profiles
+    const auto fittedProfiles = coll.fitProfiles();
+    for (const auto& profile : fittedProfiles.profiles1) {
+      d[py::str(profile.name())] =
+          py::cast(profile, py::return_value_policy::copy);
+    }
+    for (const auto& profile : fittedProfiles.profiles2) {
+      d[py::str(profile.name())] =
+          py::cast(profile, py::return_value_policy::copy);
+    }
+
     return d;
   }
 
@@ -353,8 +372,12 @@ void addPythonSpecific(py::module_& mex) {
     ACTS_PYTHON_STRUCT(c, inputTracks, inputParticles,
                        inputTrackParticleMatching, filePath, resPlotToolConfig,
                        effPlotToolConfig, trackSummaryPlotToolConfig,
-                       fitMinEntries, fitSigmaRange, fitIterations);
+                       fitFunction, fitMinEntries, fitSigmaRange, fitIterations,
+                       warningThresholdFitFailureFraction);
   }
+
+  mex.def("gaussianHistogramFit", &gaussianHistogramFit, py::arg("hist"),
+          py::arg("range") = std::nullopt);
 }
 
 }  // namespace ActsPython
