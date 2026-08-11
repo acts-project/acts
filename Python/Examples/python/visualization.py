@@ -22,6 +22,19 @@ def computeProjection(char, vector3):
         return vector3[2]
     elif char == "r":
         return np.sqrt(vector3[0] ** 2 + vector3[1] ** 2)
+    elif char == "phi":
+        x = vector3[0]
+        y = vector3[1]
+        r = np.sqrt(x**2 + y**2)
+        alpha = np.arccos(abs(x) / r)
+        if x >= 0 and y >= 0:
+            return alpha
+        elif x >= 0 and y < 0:
+            return alpha + np.pi / 2
+        elif x < 0 and y < 0:
+            return alpha + np.pi
+        else:
+            return alpha + 3 / 2 * np.pi
     else:
         print("Not a valid projection")
 
@@ -49,7 +62,7 @@ class TrackVisualizerAlg(acts.examples.IAlgorithm):
 
 class PyVisualization2D(acts.VisualizationBuffer):
 
-    def plot(self, projection, filename, linewidth=None, linestyle=None, ax=None):
+    def plot(self, projection, filename, linewidth=None, linestyle=None, **kwargs):
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
@@ -69,12 +82,53 @@ class PyVisualization2D(acts.VisualizationBuffer):
         if len(proj2D) > 2:
             print("Only 2D projection supported")
 
+        # Applying optional ranges for plots
+        surfaces = self.surfaces
+        for k, val in kwargs.items():
+            condition = lambda x: val[0] <= x <= val[1]
+
+            # x range
+            if k == "x":
+                surfaces = [
+                    surface
+                    for surface in surfaces
+                    if any(condition(v[0]) for v in surface)
+                ]
+
+            if k == "y":
+                surfaces = [
+                    surface
+                    for surface in surfaces
+                    if any(condition(v[1]) for v in surface)
+                ]
+
+            if k == "z":
+                surfaces = [
+                    surface
+                    for surface in surfaces
+                    if any(condition(v[2]) for v in surface)
+                ]
+
+            if k == "r":
+                surfaces = [
+                    surface
+                    for surface in surfaces
+                    if any(condition(np.sqrt(v[0] ** 2 + v[1] ** 2)) for v in surface)
+                ]
+
+            if k == "phi":
+                surfaces = [
+                    surface
+                    for surface in surfaces
+                    if any(condition(computeProjection("phi", v)) for v in surface)
+                ]
+
         surfaces2D = [
             [
                 [computeProjection(proj2D[0], v), computeProjection(proj2D[1], v)]
                 for v in surface
             ]
-            for surface in self.surfaces
+            for surface in surfaces
         ]
 
         poly_patches = [
@@ -82,11 +136,9 @@ class PyVisualization2D(acts.VisualizationBuffer):
         ]  # face = [[x1,y1], [x2,y2],...]
         poly_collection = PatchCollection(poly_patches, alpha=0.5)
         poly_collection.set_facecolor(self.faceColors / 255)
+        poly_collection.set_edgecolor("black")
 
         # Plotting part
-        if ax is None:
-            ax = plt.gca()
-
         ax.set_xlabel(proj2D[0])
         ax.set_ylabel(proj2D[1])
         ax.ticklabel_format(useOffset=False, style="plain")

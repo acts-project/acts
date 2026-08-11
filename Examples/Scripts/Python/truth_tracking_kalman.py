@@ -238,8 +238,13 @@ def runTruthTrackingKalman(
 
     s.run()
     if pyVis:
+        import numpy as np
+
         vis.plot(
-            projection=projection, filename="truth_tracking_kalman_visualization.png"
+            projection=projection,
+            filename="truth_tracking_kalman_visualization_phiRange2.png",
+            phi=[0, (3 / 2) * np.pi],
+            z=[0, 500],
         )
 
 
