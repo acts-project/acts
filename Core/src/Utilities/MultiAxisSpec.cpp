@@ -224,13 +224,11 @@ std::unique_ptr<IMultiAxis2D> resolveMultiAxis(
         "direction");
   }
 
-  // Bind each canonical direction to its spec, positionally without
-  // stored directions and by direction otherwise
-  std::array<const AxisSpec*, 2> slots{};
-  for (std::size_t i = 0; i < canonical.size(); ++i) {
+  // Bind a canonical direction to its spec, positionally without stored
+  // directions and by direction otherwise
+  auto slot = [&](std::size_t i) -> const AxisSpec& {
     if (nDirected == 0) {
-      slots[i] = &axisSpecs[i];
-      continue;
+      return axisSpecs[i];
     }
     AxisDirection aDir = canonical[i];
     auto it = std::ranges::find_if(axisSpecs, [aDir](const AxisSpec& af) {
@@ -244,12 +242,12 @@ std::unique_ptr<IMultiAxis2D> resolveMultiAxis(
          << axisDirectionName(canonical[1]) << ")";
       throw std::invalid_argument(ss.str());
     }
-    slots[i] = std::to_address(it);
-  }
+    return *it;
+  };
 
   return IMultiAxis::create(
-      *slots[0]->buildAxis(resolveAxisOptions(surface, canonical[0])),
-      *slots[1]->buildAxis(resolveAxisOptions(surface, canonical[1])));
+      *slot(0).buildAxis(resolveAxisOptions(surface, canonical[0])),
+      *slot(1).buildAxis(resolveAxisOptions(surface, canonical[1])));
 }
 
 }  // namespace Acts
