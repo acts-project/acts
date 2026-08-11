@@ -65,7 +65,7 @@ auto bindFlatMultimap(py::module& m, const char* name) {
                         return self.find(key) != self.end();
                       })
                  .def(
-                     "values_for",
+                     "valuesFor",
                      [](const Map& self, const typename Map::key_type& key) {
                        auto [first, last] = self.equal_range(key);
                        std::vector<typename Map::mapped_type> result;
@@ -453,8 +453,9 @@ void addEventData(py::module& mex) {
   py::class_<IndexSourceLink>(mex, "IndexSourceLink")
       .def(py::init<Acts::GeometryIdentifier, Index>(), py::arg("geometryId"),
            py::arg("index"))
-      .def("FromSourceLink",
-           [](Acts::SourceLink const& sl) { return sl.get<IndexSourceLink>(); })
+      .def_static(
+          "fromSourceLink",
+          [](Acts::SourceLink const& sl) { return sl.get<IndexSourceLink>(); })
       .def("toSourceLink",
            [](const IndexSourceLink& self) { return Acts::SourceLink(self); })
       .def("index", &IndexSourceLink::index)
