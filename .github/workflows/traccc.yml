@@ -79,7 +79,7 @@ jobs:
             build: Release
           - platform:
               name: "ALPAKA_HIP"
-              container: ghcr.io/acts-project/ubuntu2404_rocm:89
+              container: ghcr.io/acts-project/ubuntu2404_rocm:sha-c82d872
               options: --preset alpaka-fp32 -Dalpaka_ACC_GPU_HIP_ENABLE=ON -DCMAKE_PREFIX_PATH=/opt/rocm/lib/cmake/ -Dalpaka_DISABLE_VENDOR_RNG=ON -DTRACCC_USE_ROOT=OFF -DTRACCC_SETUP_ROCTHRUST=ON -DTRACCC_BUILD_HIP=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20 -DDETRAY_BUILD_VALIDATION_TOOLS=ON
               run_tests: false
               enable_cuda: false
