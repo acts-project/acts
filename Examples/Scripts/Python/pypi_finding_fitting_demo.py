@@ -97,7 +97,7 @@ def runPypiFindingFittingDemo(
             track = acts.examples.ProtoTrack()
             for sp in sorted(spacepoints, key=lambda sp: sp.r):
                 for sl in sp.sourceLinks:
-                    isl = acts.examples.IndexSourceLink.FromSourceLink(sl)
+                    isl = acts.examples.IndexSourceLink.fromSourceLink(sl)
                     track.append(isl.index())
 
             prototracks = acts.examples.ProtoTrackContainer()
@@ -147,7 +147,7 @@ def runPypiFindingFittingDemo(
             measurement_to_sourcelink = {}
             for sp in spacepoints:
                 for sl in sp.sourceLinks:
-                    isl = acts.examples.IndexSourceLink.FromSourceLink(sl)
+                    isl = acts.examples.IndexSourceLink.fromSourceLink(sl)
                     meas_id = isl.index()
                     measurement_to_spacepoint[meas_id] = sp
                     measurement_to_sourcelink[meas_id] = sl
@@ -162,7 +162,7 @@ def runPypiFindingFittingDemo(
                 for meas_id in prototrack:
                     sp = measurement_to_spacepoint[meas_id]
                     sl = measurement_to_sourcelink[meas_id]
-                    isl = acts.examples.IndexSourceLink.FromSourceLink(sl)
+                    isl = acts.examples.IndexSourceLink.fromSourceLink(sl)
                     sf = surface_map[isl.geometryId()]
 
                     trackState = track.appendTrackState()
