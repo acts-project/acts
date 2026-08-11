@@ -44,7 +44,7 @@ def runTruthTrackingKalman(
         RootSimHitReader,
         RootTrackStatesWriter,
         RootTrackSummaryWriter,
-        RootTrackFitterPerformanceWriter,
+        RootTrackParameterPerformanceWriter,
     )
 
     from acts.examples.reconstruction import (
@@ -227,7 +227,7 @@ def runTruthTrackingKalman(
     )
 
     s.addWriter(
-        RootTrackFitterPerformanceWriter(
+        RootTrackParameterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",

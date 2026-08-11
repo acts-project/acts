@@ -17,7 +17,7 @@
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
 #include "ActsExamples/Validation/ResPlotTool.hpp"
-#include "ActsExamples/Validation/TrackFitterPerformanceCollector.hpp"
+#include "ActsExamples/Validation/TrackParameterPerformanceCollector.hpp"
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
 #include <mutex>
@@ -36,18 +36,18 @@ namespace ActsExamples {
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class RootTrackFitterPerformanceWriter final
+class RootTrackParameterPerformanceWriter final
     : public WriterT<ConstTrackContainer> {
  public:
   struct Config {
-    /// Input (fitted) track collection.
+    /// Input track collection.
     std::string inputTracks;
     /// Input particles collection.
     std::string inputParticles;
     /// Input track-particle matching.
     std::string inputTrackParticleMatching;
     /// Output filename.
-    std::string filePath = "performance_track_fitter.root";
+    std::string filePath = "performance_track_parameters.root";
     /// Plot tool configurations.
     ResPlotTool::Config resPlotToolConfig;
     EffPlotTool::Config effPlotToolConfig;
@@ -67,9 +67,10 @@ class RootTrackFitterPerformanceWriter final
   /// Construct from configuration and log level.
   /// @param config The configuration
   /// @param level The logger level
-  RootTrackFitterPerformanceWriter(Config config, Acts::Logging::Level level);
+  RootTrackParameterPerformanceWriter(Config config,
+                                      Acts::Logging::Level level);
 
-  ~RootTrackFitterPerformanceWriter() override;
+  ~RootTrackParameterPerformanceWriter() override;
 
   /// Finalize plots.
   ProcessCode finalize() override;
@@ -91,7 +92,7 @@ class RootTrackFitterPerformanceWriter final
   std::mutex m_writeMutex;
   TFile* m_outputFile{nullptr};
   /// Collector holding all plot tools and per-event counters.
-  TrackFitterPerformanceCollector m_collector;
+  TrackParameterPerformanceCollector m_collector;
 };
 
 }  // namespace ActsExamples
