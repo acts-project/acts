@@ -128,10 +128,10 @@ jobs:
           source ${GITHUB_WORKSPACE}/Traccc/.github/ci_setup.sh ${{ matrix.platform.name }}
           curl -L --retry 5 --retry-delay 10 --output vecmem.tar.gz https://github.com/acts-project/vecmem/archive/refs/tags/v1.25.0.tar.gz
           tar -xzvf vecmem.tar.gz
-          export CXX=g++
           cmake \
             -S vecmem-1.25.0/ \
             -B /vecmem_build/ \
+            -DCMAKE_CXX_COMPILER=${{ matrix.platform.enable_hip && `which clang++` || `which g++` }} \
             -DVECMEM_BUILD_CUDA_LIBRARY=${{ matrix.platform.enable_cuda && 'ON' || 'OFF' }} \
             -DVECMEM_BUILD_SYCL_LIBRARY=OFF \
             -DVECMEM_BUILD_HIP_LIBRARY=${{ matrix.platform.enable_hip && 'ON' || 'OFF' }} \
