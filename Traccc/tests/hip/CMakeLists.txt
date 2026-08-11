@@ -22,6 +22,7 @@ traccc_add_test(
     vecmem::hip
     traccc::core
     traccc::device_common
+    traccc::hip_utils
     traccc::hip
     traccc_tests_common
 )
