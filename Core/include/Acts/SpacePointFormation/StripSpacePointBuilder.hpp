@@ -33,7 +33,8 @@ struct ClusterPairingOptions final {
 
 /// @brief Collection of cosmic space point options
 struct CosmicOptions final {
-  /// Numerical tolerance for the calculation
+  /// Minimum squared sine of the angle between the two strips. Pairs below this
+  /// are too close to parallel for the closest approach to be well defined.
   double tolerance = 1e-6;
 };
 

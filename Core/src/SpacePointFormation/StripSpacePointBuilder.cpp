@@ -66,22 +66,30 @@ Result<Vector3> StripSpacePointBuilder::computeCosmicSpacePoint(
   // resolving lambda0 from the condition that |x-y| is the shortest distance
   // between two skew lines.
 
+  // Minimising |x - y|^2 over lambda0 and lambda1 gives
+  //   lambda0 * (q.q) - lambda1 * (q.r) = ac.q
+  //   lambda0 * (q.r) - lambda1 * (r.r) = ac.r
+  // with ac = c - a, which resolves to the lambda0 below.
+
   const Vector3 firstBtmToTop = stripEnds1.top - stripEnds1.bottom;
   const Vector3 secondBtmToTop = stripEnds2.top - stripEnds2.bottom;
 
   const Vector3 ac = stripEnds2.top - stripEnds1.top;
+  const double qq = firstBtmToTop.dot(firstBtmToTop);
+  const double rr = secondBtmToTop.dot(secondBtmToTop);
   const double qr = firstBtmToTop.dot(secondBtmToTop);
-  const double denom = firstBtmToTop.dot(firstBtmToTop) - qr * qr;
-  // Check for numerical stability
-  if (std::abs(denom) < options.tolerance) {
+
+  // By Lagrange's identity this is (q.q) * (r.r) * sin^2(angle between the
+  // strips), so the check below is on the opening angle of the two strips and
+  // is independent of their length. It is never negative.
+  const double denom = qq * rr - qr * qr;
+  if (denom < options.tolerance * qq * rr) {
     return Result<Vector3>::failure(
         SpacePointFormationError::CosmicToleranceNotMet);
   }
 
   const double lambda0 =
-      (ac.dot(secondBtmToTop) * qr -
-       ac.dot(firstBtmToTop) * secondBtmToTop.dot(secondBtmToTop)) /
-      denom;
+      (ac.dot(firstBtmToTop) * rr - ac.dot(secondBtmToTop) * qr) / denom;
   const Vector3 spacePoint = stripEnds1.top + lambda0 * firstBtmToTop;
   return Result<Vector3>::success(spacePoint);
 }
