@@ -748,13 +748,28 @@ def addSpacePointsMaking(
     stripGeoSelectionConfigFile: Union[Path, str],
     logLevel: acts.logging.Level = None,
     prefix: str = "",
+    stripVertex: acts.Vector3 = None,
+    stripLengthTolerance: float = None,
+    stripLengthGapTolerance: float = None,
 ):
     """adds space points making
     For parameters description see addSeeding
+
+    stripVertex, stripLengthTolerance and stripLengthGapTolerance configure the
+    strip space point formation; see Acts::StripSpacePointBuilder.
     """
     import acts.examples.json
 
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+    stripOptions = {
+        name: value
+        for name, value in (
+            ("stripVertex", stripVertex),
+            ("stripLengthTolerance", stripLengthTolerance),
+            ("stripLengthGapTolerance", stripLengthGapTolerance),
+        )
+        if value is not None
+    }
     spAlg = acts.examples.SpacePointMaker(
         level=logLevel,
         inputMeasurements=f"{prefix}measurement_subset",
@@ -768,6 +783,7 @@ def addSpacePointsMaking(
             if stripGeoSelectionConfigFile
             else []
         ),
+        **stripOptions,
     )
     sequence.addAlgorithm(spAlg)
     return spAlg.config.outputSpacePoints
