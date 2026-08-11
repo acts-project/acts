@@ -132,6 +132,7 @@ jobs:
           cmake \
             -S vecmem-1.25.0/ \
             -B /vecmem_build/ \
+            -DVECMEM_BUILD_TESTING=OFF \
             -DVECMEM_BUILD_CUDA_LIBRARY=${{ matrix.platform.enable_cuda && 'ON' || 'OFF' }} \
             -DVECMEM_BUILD_SYCL_LIBRARY=OFF \
             -DVECMEM_BUILD_HIP_LIBRARY=${{ matrix.platform.enable_hip && 'ON' || 'OFF' }} \
