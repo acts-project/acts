@@ -12,10 +12,9 @@ namespace traccc::io::csv {
 
 dfe::NamedTupleCsvReader<particle> make_particle_reader(
     std::string_view filename) {
-
-    return {filename.data(),
-            {"particle_id", "particle_type", "process", "vx", "vy", "vz", "vt",
-             "px", "py", "pz", "m", "q"}};
+  return {filename.data(),
+          {"particle_id", "particle_type", "process", "vx", "vy", "vz", "vt",
+           "px", "py", "pz", "m", "q"}};
 }
 
 }  // namespace traccc::io::csv

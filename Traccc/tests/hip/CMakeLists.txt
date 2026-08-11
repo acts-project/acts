@@ -22,9 +22,9 @@ traccc_add_test(
     vecmem::hip
     traccc::core
     traccc::device_common
+    traccc::hip_utils
     traccc::hip
     traccc_tests_common
 )
 
-set_target_properties( traccc_test_hip PROPERTIES
-   POSITION_INDEPENDENT_CODE TRUE )
+set_target_properties(traccc_test_hip PROPERTIES POSITION_INDEPENDENT_CODE TRUE)

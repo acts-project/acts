@@ -20,16 +20,16 @@ namespace traccc::device {
 /// (Global Event Data) Payload for the @c
 /// traccc::device::gbts_count_eta_phi_bins function
 struct gbts_count_eta_phi_bins_payload {
-    /// Number of eta bins
-    unsigned int nEtaBins;
-    /// Number of phi bins per eta slice
-    unsigned int nPhiBins;
-    /// (eta, phi) histogram of node counts
-    vecmem::data::vector_view<const unsigned int> eta_phi_histo;
-    /// Output: per-eta total node count (sum over phi)
-    vecmem::data::vector_view<unsigned int> eta_node_counter;
-    /// Output: per-eta phi prefix-sum scratch (in/out for the next kernel)
-    vecmem::data::vector_view<unsigned int> phi_cusums;
+  /// Number of eta bins
+  unsigned int nEtaBins;
+  /// Number of phi bins per eta slice
+  unsigned int nPhiBins;
+  /// (eta, phi) histogram of node counts
+  vecmem::data::vector_view<const unsigned int> eta_phi_histo;
+  /// Output: per-eta total node count (sum over phi)
+  vecmem::data::vector_view<unsigned int> eta_node_counter;
+  /// Output: per-eta phi prefix-sum scratch (in/out for the next kernel)
+  vecmem::data::vector_view<unsigned int> phi_cusums;
 };
 
 /// @brief Sum the (eta, phi) histogram across phi for each eta bin.

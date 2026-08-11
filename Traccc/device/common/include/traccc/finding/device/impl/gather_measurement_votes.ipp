@@ -18,30 +18,28 @@ namespace traccc::device {
 
 TRACCC_HOST_DEVICE inline void gather_measurement_votes(
     global_index_t thread_id, const gather_measurement_votes_payload& payload) {
+  const unsigned int measurement_idx =
+      thread_id / payload.max_num_tracks_per_measurement;
+  const unsigned int tip_idx =
+      thread_id % payload.max_num_tracks_per_measurement;
 
-    const unsigned int measurement_idx =
-        thread_id / payload.max_num_tracks_per_measurement;
-    const unsigned int tip_idx =
-        thread_id % payload.max_num_tracks_per_measurement;
+  const vecmem::device_vector<const unsigned long long int> insertion_mutex(
+      payload.insertion_mutex);
+  const vecmem::device_vector<const unsigned int> tip_index(payload.tip_index);
+  vecmem::device_vector<unsigned int> votes_per_tip(payload.votes_per_tip);
 
-    const vecmem::device_vector<const unsigned long long int> insertion_mutex(
-        payload.insertion_mutex);
-    const vecmem::device_vector<const unsigned int> tip_index(
-        payload.tip_index);
-    vecmem::device_vector<unsigned int> votes_per_tip(payload.votes_per_tip);
+  if (measurement_idx >= insertion_mutex.size()) {
+    return;
+  }
 
-    if (measurement_idx >= insertion_mutex.size()) {
-        return;
-    }
+  auto [locked, size, worst] =
+      decode_insertion_mutex(insertion_mutex.at(measurement_idx));
 
-    auto [locked, size, worst] =
-        decode_insertion_mutex(insertion_mutex.at(measurement_idx));
-
-    if (tip_idx < size) {
-        vecmem::device_atomic_ref<unsigned int>(
-            votes_per_tip.at(tip_index.at(thread_id)))
-            .fetch_add(1u);
-    }
+  if (tip_idx < size) {
+    vecmem::device_atomic_ref<unsigned int>(
+        votes_per_tip.at(tip_index.at(thread_id)))
+        .fetch_add(1u);
+  }
 }
 
 }  // namespace traccc::device

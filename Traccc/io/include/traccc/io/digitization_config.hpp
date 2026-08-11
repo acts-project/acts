@@ -11,6 +11,7 @@
 
 // Acts includes
 #include <Acts/Geometry/GeometryHierarchyMap.hpp>
+
 #include <cstdint>
 #include <unordered_map>
 #include <vector>
@@ -19,8 +20,8 @@ namespace traccc {
 
 /// Type describing the digitization configuration of a detector module
 struct module_digitization_config {
-    std::vector<std::vector<float>> bin_edges;
-    unsigned char dimensions = 2;
+  std::vector<std::vector<float>> bin_edges;
+  unsigned char dimensions = 2;
 };
 
 /// Type describing the digitization configuration for the whole detector

@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022-2025 CERN for the benefit of the ACTS project
+ * (c) 2022-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -8,7 +8,7 @@
 #pragma once
 
 // Local include(s).
-#include "traccc/hip/utils/stream.hpp"
+#include "traccc/hip/utils/stream_wrapper.hpp"
 
 // HIP include(s).
 #include <hip/hip_runtime_api.h>
@@ -34,7 +34,7 @@ int get_device();
 unsigned int get_warp_size(int device);
 
 /// Get concrete @c hipStream_t object out of our wrapper
-hipStream_t get_stream(const stream& str);
+hipStream_t get_stream(const stream_wrapper& str);
 
 /// Class with RAII mechanism for selecting a HIP device.
 ///
@@ -50,26 +50,25 @@ hipStream_t get_stream(const stream& str);
 /// more than one in the same scope.
 ///
 class select_device {
+ public:
+  /// Constructs the object, switching the current HIP device
+  /// to the requested number.
+  ///
+  /// @param device The HIP device number to switch to.
+  ///
+  select_device(int device);
 
-    public:
-    /// Constructs the object, switching the current HIP device
-    /// to the requested number.
-    ///
-    /// @param device The HIP device number to switch to.
-    ///
-    select_device(int device);
+  /// Deconstructs the object, returning to the device that was
+  /// selected before constructing this object.
+  ~select_device();
 
-    /// Deconstructs the object, returning to the device that was
-    /// selected before constructing this object.
-    ~select_device();
+  /// Return the identifier for the device being seleced
+  int device() const;
 
-    /// Return the identifier for the device being seleced
-    int device() const;
-
-    private:
-    /// The old device number, this is what we restore when the
-    /// object goes out of scope.
-    int m_device;
+ private:
+  /// The old device number, this is what we restore when the
+  /// object goes out of scope.
+  int m_device;
 };
 
 }  // namespace traccc::hip::details

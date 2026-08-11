@@ -118,12 +118,15 @@ def fetch_github(base_url: str, cache_dir: Optional[Path], cache_limit: int) -> 
     headers = {}
     token = os.environ.get("GITHUB_TOKEN")
 
-    # Only add auth header if we have retries left
-    if token is not None and token != "" and remaining_retries.get() > 0:
+    # Always authenticate when a token is available. Anonymous requests are
+    # subject to GitHub's much lower unauthenticated rate limit, so dropping the
+    # token on any attempt makes rate-limit failures *more* likely, not less.
+    if token:
         headers["Authorization"] = f"Bearer {token}"
 
     print(f"Remaining retries: {remaining_retries.get()} for {base_url}")
-    print(headers)
+    # Avoid printing the header values, which would leak the token into CI logs.
+    print(f"Authenticated: {'Authorization' in headers}")
 
     with contextlib.ExitStack() as stack:
         if cache_dir is not None:

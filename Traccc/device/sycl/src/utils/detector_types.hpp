@@ -28,27 +28,27 @@ struct detector_tag_selector {};
 
 template <>
 struct detector_tag_selector<traccc::default_detector> {
-    using type = default_detector_kernel_tag;
+  using type = default_detector_kernel_tag;
 };
 
 template <>
 struct detector_tag_selector<traccc::toy_detector> {
-    using type = toy_detector_kernel_tag;
+  using type = toy_detector_kernel_tag;
 };
 
 template <>
 struct detector_tag_selector<traccc::telescope_detector> {
-    using type = telescope_detector_kernel_tag;
+  using type = telescope_detector_kernel_tag;
 };
 
 template <>
 struct detector_tag_selector<traccc::odd_detector> {
-    using type = odd_detector_kernel_tag;
+  using type = odd_detector_kernel_tag;
 };
 
 template <>
 struct detector_tag_selector<traccc::itk_detector> {
-    using type = itk_detector_kernel_tag;
+  using type = itk_detector_kernel_tag;
 };
 
 template <typename T>
@@ -63,7 +63,7 @@ struct detector_tag_existance_validator {};
 
 template <typename... Ts>
 struct detector_tag_existance_validator<std::tuple<Ts...>> {
-    static constexpr bool value = (detector_tag_exists_for_backend<Ts> && ...);
+  static constexpr bool value = (detector_tag_exists_for_backend<Ts> && ...);
 };
 
 static_assert(

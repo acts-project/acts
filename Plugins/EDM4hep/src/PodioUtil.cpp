@@ -23,6 +23,8 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/PointBounds.hpp"
+#include "Acts/Surfaces/PointSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -200,6 +202,22 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
       throw_assert(surface.boundsType == B::eBoundless,
                    "Unexpected bounds type");
       result = Surface::makeShared<PlaneSurface>(transform);
+      break;
+
+    case T::Point:
+      switch (surface.boundsType) {
+        default:
+          throw std::runtime_error{"Invalid bounds type encountered"};
+
+        case B::eBoundless:
+          result = Surface::makeShared<PointSurface>(transform);
+          break;
+
+        case B::ePoint:
+          result = Surface::makeShared<PointSurface>(
+              transform, createBounds<PointBounds>(surface));
+          break;
+      }
       break;
   }
 

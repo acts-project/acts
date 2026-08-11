@@ -13,7 +13,7 @@ namespace ActsFatras {
 Acts::Result<std::vector<Segmentizer::ChannelSegment>> Channelizer::channelize(
     const Hit& hit, const Acts::Surface& surface,
     const Acts::GeometryContext& gctx, const Acts::Vector3& driftDir,
-    const Acts::BinUtility& segmentation, double thickness,
+    const Acts::IMultiAxis& segmentation, double thickness,
     double minRelPerpDrift) const {
   // Drifted surface and scalor 2D to 3D segment
   // SurfaceDrift handles the surface-type-specific local frame internally

@@ -42,18 +42,18 @@ full_chain_algorithm::full_chain_algorithm(
       m_det_descr(det_descr),
       m_device_det_descr(
           [&]() {
-              // number of elements in the detector design description
-              std::vector<unsigned int> sizes(det_descr.size());
-              for (std::size_t i = 0; i < det_descr.size(); ++i) {
-                  auto this_design = det_descr.at(i);
-                  // now for each element, set the size to the largest size of
-                  // that element across all modules
-                  sizes[i] = std::max(static_cast<unsigned int>(
-                                          ((this_design.bin_edges_x()).size())),
-                                      static_cast<unsigned int>((
-                                          (this_design.bin_edges_y()).size())));
-              }
-              return sizes;
+            // number of elements in the detector design description
+            std::vector<unsigned int> sizes(det_descr.size());
+            for (std::size_t i = 0; i < det_descr.size(); ++i) {
+              auto this_design = det_descr.at(i);
+              // now for each element, set the size to the largest size of
+              // that element across all modules
+              sizes[i] = std::max(static_cast<unsigned int>(
+                                      ((this_design.bin_edges_x()).size())),
+                                  static_cast<unsigned int>(
+                                      ((this_design.bin_edges_y()).size())));
+            }
+            return sizes;
           }(),
           m_cached_device_mr, &m_cached_pinned_host_mr,
           vecmem::data::buffer_type::resizable),
@@ -96,27 +96,26 @@ full_chain_algorithm::full_chain_algorithm(
       m_finding_config(finding_config),
       m_fitting_config(fitting_config),
       usingGBTS(useGBTS) {
+  if (usingGBTS) {
+    std::cout << "GBTS not implemented for alpaka, this will run with "
+                 "triplet seeding"
+              << std::endl;
+  }
+  std::cout << traccc::alpaka::get_device_info() << std::endl;
 
-    if (usingGBTS) {
-        std::cout << "GBTS not implemented for alpaka, this will run with "
-                     "triplet seeding"
-                  << std::endl;
-    }
-    std::cout << traccc::alpaka::get_device_info() << std::endl;
-
-    // Copy the detector (description) to the device.
-    m_vecmem_objects.async_copy().setup(m_device_det_descr)->wait();
-    m_vecmem_objects
-        .async_copy()(::vecmem::get_data(m_det_descr.get()), m_device_det_descr)
-        ->wait();
-    m_vecmem_objects
-        .async_copy()(::vecmem::get_data(m_det_cond.get()), m_device_det_cond)
-        ->wait();
-    if (m_detector != nullptr) {
-        m_device_detector = traccc::buffer_from_host_detector(
-            *m_detector, m_vecmem_objects.device_mr(),
-            m_vecmem_objects.async_copy());
-    }
+  // Copy the detector (description) to the device.
+  m_vecmem_objects.async_copy().setup(m_device_det_descr)->wait();
+  m_vecmem_objects
+      .async_copy()(::vecmem::get_data(m_det_descr.get()), m_device_det_descr)
+      ->wait();
+  m_vecmem_objects
+      .async_copy()(::vecmem::get_data(m_det_cond.get()), m_device_det_cond)
+      ->wait();
+  if (m_detector != nullptr) {
+    m_device_detector = traccc::buffer_from_host_detector(
+        *m_detector, m_vecmem_objects.device_mr(),
+        m_vecmem_objects.async_copy());
+  }
 }
 
 full_chain_algorithm::full_chain_algorithm(const full_chain_algorithm& parent)
@@ -131,19 +130,18 @@ full_chain_algorithm::full_chain_algorithm(const full_chain_algorithm& parent)
       m_det_descr(parent.m_det_descr),
       m_device_det_descr(
           [&]() {
-              // number of elements in the detector design description
-              std::vector<unsigned int> sizes(parent.m_det_descr.get().size());
-              for (std::size_t i = 0; i < parent.m_det_descr.get().size();
-                   ++i) {
-                  auto this_design = parent.m_det_descr.get().at(i);
-                  // now for each element, set the size to the largest size of
-                  // that element across all modules
-                  sizes[i] = std::max(static_cast<unsigned int>(
-                                          ((this_design.bin_edges_x()).size())),
-                                      static_cast<unsigned int>((
-                                          (this_design.bin_edges_y()).size())));
-              }
-              return sizes;
+            // number of elements in the detector design description
+            std::vector<unsigned int> sizes(parent.m_det_descr.get().size());
+            for (std::size_t i = 0; i < parent.m_det_descr.get().size(); ++i) {
+              auto this_design = parent.m_det_descr.get().at(i);
+              // now for each element, set the size to the largest size of
+              // that element across all modules
+              sizes[i] = std::max(static_cast<unsigned int>(
+                                      ((this_design.bin_edges_x()).size())),
+                                  static_cast<unsigned int>(
+                                      ((this_design.bin_edges_y()).size())));
+            }
+            return sizes;
           }(),
           m_cached_device_mr, &m_cached_pinned_host_mr,
           vecmem::data::buffer_type::resizable),
@@ -189,126 +187,119 @@ full_chain_algorithm::full_chain_algorithm(const full_chain_algorithm& parent)
       m_finding_config(parent.m_finding_config),
       m_fitting_config(parent.m_fitting_config),
       usingGBTS(parent.usingGBTS) {
-
-    // Copy the detector (description) to the device.
-    m_vecmem_objects.async_copy().setup(m_device_det_descr)->wait();
-    m_vecmem_objects
-        .async_copy()(::vecmem::get_data(m_det_descr.get()), m_device_det_descr)
-        ->wait();
-    m_vecmem_objects
-        .async_copy()(::vecmem::get_data(m_det_cond.get()), m_device_det_cond)
-        ->wait();
-    if (m_detector != nullptr) {
-        m_device_detector = traccc::buffer_from_host_detector(
-            *m_detector, m_vecmem_objects.device_mr(),
-            m_vecmem_objects.async_copy());
-    }
+  // Copy the detector (description) to the device.
+  m_vecmem_objects.async_copy().setup(m_device_det_descr)->wait();
+  m_vecmem_objects
+      .async_copy()(::vecmem::get_data(m_det_descr.get()), m_device_det_descr)
+      ->wait();
+  m_vecmem_objects
+      .async_copy()(::vecmem::get_data(m_det_cond.get()), m_device_det_cond)
+      ->wait();
+  if (m_detector != nullptr) {
+    m_device_detector = traccc::buffer_from_host_detector(
+        *m_detector, m_vecmem_objects.device_mr(),
+        m_vecmem_objects.async_copy());
+  }
 }
 
 full_chain_algorithm::~full_chain_algorithm() = default;
 
 full_chain_algorithm::output_type full_chain_algorithm::operator()(
     const edm::silicon_cell_collection::host& cells) const {
+  // Create device copy of input collections
+  edm::silicon_cell_collection::buffer cells_buffer(
+      static_cast<unsigned int>(cells.size()), m_cached_device_mr);
+  m_vecmem_objects.async_copy()(::vecmem::get_data(cells), cells_buffer)
+      ->ignore();
 
-    // Create device copy of input collections
-    edm::silicon_cell_collection::buffer cells_buffer(
-        static_cast<unsigned int>(cells.size()), m_cached_device_mr);
-    m_vecmem_objects.async_copy()(::vecmem::get_data(cells), cells_buffer)
-        ->ignore();
+  // Run the clusterization (asynchronously).
+  const auto unsorted_measurements =
+      m_clusterization(cells_buffer, m_device_det_descr, m_device_det_cond);
+  const measurement_sorting_algorithm::output_type measurements =
+      m_measurement_sorting(unsorted_measurements);
 
-    // Run the clusterization (asynchronously).
-    const auto unsorted_measurements =
-        m_clusterization(cells_buffer, m_device_det_descr, m_device_det_cond);
-    const measurement_sorting_algorithm::output_type measurements =
-        m_measurement_sorting(unsorted_measurements);
+  // If we have a Detray detector, run the track finding and fitting.
+  if (m_detector != nullptr) {
+    // Run the seed-finding (asynchronously).
+    const spacepoint_formation_algorithm::output_type spacepoints =
+        m_spacepoint_formation(m_device_detector, measurements);
+    const seed_parameter_estimation_algorithm::output_type track_params =
+        m_track_parameter_estimation(m_field, measurements, spacepoints,
+                                     m_seeding(spacepoints));
 
-    // If we have a Detray detector, run the track finding and fitting.
-    if (m_detector != nullptr) {
+    // Run the track finding (asynchronously).
+    const finding_algorithm::output_type track_candidates =
+        m_finding(m_device_detector, m_field, measurements, track_params);
 
-        // Run the seed-finding (asynchronously).
-        const spacepoint_formation_algorithm::output_type spacepoints =
-            m_spacepoint_formation(m_device_detector, measurements);
-        const seed_parameter_estimation_algorithm::output_type track_params =
-            m_track_parameter_estimation(m_field, measurements, spacepoints,
-                                         m_seeding(spacepoints));
+    // Run the track fitting (asynchronously).
+    const fitting_algorithm::output_type track_states =
+        m_fitting(m_device_detector, m_field, track_candidates);
 
-        // Run the track finding (asynchronously).
-        const finding_algorithm::output_type track_candidates =
-            m_finding(m_device_detector, m_field, measurements, track_params);
+    // Copy a limited amount of result data back to the host.
+    const auto host_tracks = m_vecmem_objects.async_copy().to(
+        track_states.tracks, m_cached_pinned_host_mr, nullptr,
+        ::vecmem::copy::type::device_to_host);
+    output_type result{m_host_mr};
+    ::vecmem::copy host_copy;
+    host_copy(host_tracks, result)->wait();
+    return result;
 
-        // Run the track fitting (asynchronously).
-        const fitting_algorithm::output_type track_states =
-            m_fitting(m_device_detector, m_field, track_candidates);
+  }
+  // If not, copy the track parameters back to the host, and return a dummy
+  // object.
+  else {
+    // Copy the measurements back to the host.
+    edm::measurement_collection::host measurements_host(m_host_mr);
+    m_vecmem_objects.async_copy()(measurements, measurements_host)->wait();
 
-        // Copy a limited amount of result data back to the host.
-        const auto host_tracks = m_vecmem_objects.async_copy().to(
-            track_states.tracks, m_cached_pinned_host_mr, nullptr,
-            ::vecmem::copy::type::device_to_host);
-        output_type result{m_host_mr};
-        ::vecmem::copy host_copy;
-        host_copy(host_tracks, result)->wait();
-        return result;
-
-    }
-    // If not, copy the track parameters back to the host, and return a dummy
-    // object.
-    else {
-
-        // Copy the measurements back to the host.
-        edm::measurement_collection::host measurements_host(m_host_mr);
-        m_vecmem_objects.async_copy()(measurements, measurements_host)->wait();
-
-        // Return an empty object.
-        return output_type{m_host_mr};
-    }
+    // Return an empty object.
+    return output_type{m_host_mr};
+  }
 }
 
 bound_track_parameters_collection_types::host full_chain_algorithm::seeding(
     const edm::silicon_cell_collection::host& cells) const {
+  // Create device copy of input collections
+  edm::silicon_cell_collection::buffer cells_buffer(
+      static_cast<unsigned int>(cells.size()), m_cached_device_mr);
+  m_vecmem_objects.async_copy()(::vecmem::get_data(cells), cells_buffer)
+      ->ignore();
 
-    // Create device copy of input collections
-    edm::silicon_cell_collection::buffer cells_buffer(
-        static_cast<unsigned int>(cells.size()), m_cached_device_mr);
-    m_vecmem_objects.async_copy()(::vecmem::get_data(cells), cells_buffer)
-        ->ignore();
+  // Run the clusterization (asynchronously).
+  const auto unsorted_measurements =
+      m_clusterization(cells_buffer, m_device_det_descr, m_device_det_cond);
+  const measurement_sorting_algorithm::output_type measurements =
+      m_measurement_sorting(unsorted_measurements);
 
-    // Run the clusterization (asynchronously).
-    const auto unsorted_measurements =
-        m_clusterization(cells_buffer, m_device_det_descr, m_device_det_cond);
-    const measurement_sorting_algorithm::output_type measurements =
-        m_measurement_sorting(unsorted_measurements);
+  // If we have a Detray detector, run the track finding and fitting.
+  if (m_detector != nullptr) {
+    // Run the seed-finding (asynchronously).
+    const spacepoint_formation_algorithm::output_type spacepoints =
+        m_spacepoint_formation(m_device_detector, measurements);
+    const seed_parameter_estimation_algorithm::output_type track_params =
+        m_track_parameter_estimation(m_field, measurements, spacepoints,
+                                     m_seeding(spacepoints));
 
-    // If we have a Detray detector, run the track finding and fitting.
-    if (m_detector != nullptr) {
+    // Copy a limited amount of result data back to the host.
+    const auto host_seeds =
+        m_vecmem_objects.async_copy().to(track_params, m_cached_pinned_host_mr,
+                                         ::vecmem::copy::type::device_to_host);
+    bound_track_parameters_collection_types::host result{&m_host_mr};
+    ::vecmem::copy host_copy;
+    host_copy(host_seeds, result)->wait();
+    return result;
 
-        // Run the seed-finding (asynchronously).
-        const spacepoint_formation_algorithm::output_type spacepoints =
-            m_spacepoint_formation(m_device_detector, measurements);
-        const seed_parameter_estimation_algorithm::output_type track_params =
-            m_track_parameter_estimation(m_field, measurements, spacepoints,
-                                         m_seeding(spacepoints));
+  }
+  // If not, copy the track parameters back to the host, and return a dummy
+  // object.
+  else {
+    // Copy the measurements back to the host.
+    edm::measurement_collection::host measurements_host(m_host_mr);
+    m_vecmem_objects.async_copy()(measurements, measurements_host)->wait();
 
-        // Copy a limited amount of result data back to the host.
-        const auto host_seeds = m_vecmem_objects.async_copy().to(
-            track_params, m_cached_pinned_host_mr,
-            ::vecmem::copy::type::device_to_host);
-        bound_track_parameters_collection_types::host result{&m_host_mr};
-        ::vecmem::copy host_copy;
-        host_copy(host_seeds, result)->wait();
-        return result;
-
-    }
-    // If not, copy the track parameters back to the host, and return a dummy
-    // object.
-    else {
-
-        // Copy the measurements back to the host.
-        edm::measurement_collection::host measurements_host(m_host_mr);
-        m_vecmem_objects.async_copy()(measurements, measurements_host)->wait();
-
-        // Return an empty object.
-        return {};
-    }
+    // Return an empty object.
+    return {};
+  }
 }
 
 }  // namespace traccc::alpaka

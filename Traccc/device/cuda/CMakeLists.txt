@@ -5,17 +5,17 @@
 # Mozilla Public License Version 2.0
 
 # Enable CUDA as a language.
-enable_language( CUDA )
+enable_language(CUDA)
 
 # CMake 3.26 is the first to support C++20 in CUDA.
-cmake_minimum_required( VERSION 3.26 )
+cmake_minimum_required(VERSION 3.26)
 
 # Find the CUDA toolkit
-find_package( CUDAToolkit REQUIRED )
+find_package(CUDAToolkit REQUIRED)
 
 # Project include(s).
-include( traccc-compiler-options-cpp )
-include( traccc-compiler-options-cuda )
+include(traccc-compiler-options-cpp)
+include(traccc-compiler-options-cuda)
 
 # Set up the build of the traccc::cuda library.
 traccc_add_library( traccc_cuda cuda TYPE SHARED
@@ -109,46 +109,61 @@ traccc_add_library( traccc_cuda cuda TYPE SHARED
 )
 
 function(traccc_add_cuda_specialization TEMPLATE_FILE)
-  cmake_parse_arguments(ARG "" "DETECTOR_NAME;BFIELD_NAME" "" ${ARGN})
+    cmake_parse_arguments(ARG "" "DETECTOR_NAME;BFIELD_NAME" "" ${ARGN})
 
-  set(DETECTOR_NAME "${ARG_DETECTOR_NAME}")
-  set(BFIELD_NAME "${ARG_BFIELD_NAME}")
+    set(DETECTOR_NAME "${ARG_DETECTOR_NAME}")
+    set(BFIELD_NAME "${ARG_BFIELD_NAME}")
 
-  set(FNAME_POSTFIX "")
-  if(NOT "${DETECTOR_NAME}" STREQUAL "")
-    string(APPEND FNAME_POSTFIX ".${DETECTOR_NAME}")
-  endif()
-  if(NOT "${BFIELD_NAME}" STREQUAL "")
-    string(APPEND FNAME_POSTFIX ".${BFIELD_NAME}")
-  endif()
-  string(REPLACE "<scalar>" "" FNAME_POSTFIX "${FNAME_POSTFIX}")
+    set(FNAME_POSTFIX "")
+    if(NOT "${DETECTOR_NAME}" STREQUAL "")
+        string(APPEND FNAME_POSTFIX ".${DETECTOR_NAME}")
+    endif()
+    if(NOT "${BFIELD_NAME}" STREQUAL "")
+        string(APPEND FNAME_POSTFIX ".${BFIELD_NAME}")
+    endif()
+    string(REPLACE "<scalar>" "" FNAME_POSTFIX "${FNAME_POSTFIX}")
 
-  configure_file("${TEMPLATE_FILE}" "${TEMPLATE_FILE}${FNAME_POSTFIX}.cu" @ONLY)
-  target_sources(traccc_cuda PRIVATE
-    "${CMAKE_CURRENT_BINARY_DIR}/${TEMPLATE_FILE}${FNAME_POSTFIX}.cu")
+    configure_file(
+        "${TEMPLATE_FILE}"
+        "${TEMPLATE_FILE}${FNAME_POSTFIX}.cu"
+        @ONLY
+    )
+    target_sources(
+        traccc_cuda
+        PRIVATE
+            "${CMAKE_CURRENT_BINARY_DIR}/${TEMPLATE_FILE}${FNAME_POSTFIX}.cu"
+    )
 endfunction()
 
 # Generate specializations for the kernels.
 foreach(DETECTOR_NAME ${TRACCC_SUPPORTED_DETECTORS})
-  traccc_add_cuda_specialization(
-    "src/finding/kernels/specializations/find_tracks.cu.in"
-    DETECTOR_NAME "${DETECTOR_NAME}")
-  foreach(BFIELD_NAME "const_bfield_backend_t<scalar>"
-                      "inhom_global_bfield_backend_t<scalar>"
-                      "inhom_texture_bfield_backend_t")
     traccc_add_cuda_specialization(
-      "src/finding/kernels/specializations/progressive_kalman_filter.cu.in"
-      DETECTOR_NAME "${DETECTOR_NAME}" BFIELD_NAME "${BFIELD_NAME}")
-    traccc_add_cuda_specialization(
-      "src/finding/kernels/specializations/propagate_to_next_surface.cu.in"
-      DETECTOR_NAME "${DETECTOR_NAME}" BFIELD_NAME "${BFIELD_NAME}")
-    traccc_add_cuda_specialization(
-      "src/fitting/kernels/specializations/fit_forward.cu.in"
-      DETECTOR_NAME "${DETECTOR_NAME}" BFIELD_NAME "${BFIELD_NAME}")
-    traccc_add_cuda_specialization(
-      "src/fitting/kernels/specializations/fit_backward.cu.in"
-      DETECTOR_NAME "${DETECTOR_NAME}" BFIELD_NAME "${BFIELD_NAME}")
-  endforeach()
+      "src/finding/kernels/specializations/find_tracks.cu.in"
+      DETECTOR_NAME "${DETECTOR_NAME}"
+    )
+    foreach(
+        BFIELD_NAME
+        "const_bfield_backend_t<scalar>"
+        "inhom_global_bfield_backend_t<scalar>"
+        "inhom_texture_bfield_backend_t"
+    )
+        traccc_add_cuda_specialization(
+          "src/finding/kernels/specializations/progressive_kalman_filter.cu.in"
+          DETECTOR_NAME "${DETECTOR_NAME}" BFIELD_NAME "${BFIELD_NAME}"
+        )
+        traccc_add_cuda_specialization(
+          "src/finding/kernels/specializations/propagate_to_next_surface.cu.in"
+          DETECTOR_NAME "${DETECTOR_NAME}" BFIELD_NAME "${BFIELD_NAME}"
+        )
+        traccc_add_cuda_specialization(
+          "src/fitting/kernels/specializations/fit_forward.cu.in"
+          DETECTOR_NAME "${DETECTOR_NAME}" BFIELD_NAME "${BFIELD_NAME}"
+        )
+        traccc_add_cuda_specialization(
+          "src/fitting/kernels/specializations/fit_backward.cu.in"
+          DETECTOR_NAME "${DETECTOR_NAME}" BFIELD_NAME "${BFIELD_NAME}"
+        )
+    endforeach()
 endforeach()
 
 if(TRACCC_ENABLE_NVTX_PROFILING)
@@ -160,8 +175,7 @@ if(TRACCC_ENABLE_NVTX_PROFILING)
 
     set_target_properties(
         nvtx_instrumentation
-        PROPERTIES
-        POSITION_INDEPENDENT_CODE ON
+        PROPERTIES POSITION_INDEPENDENT_CODE ON
     )
 
     target_link_libraries(
@@ -171,33 +185,34 @@ if(TRACCC_ENABLE_NVTX_PROFILING)
 
     target_compile_options(
         traccc_cuda
-        PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-finstrument-functions;-Xcompiler=-finstrument-functions-exclude-file-list=nvtx3/>
-        $<$<COMPILE_LANGUAGE:CXX>:-finstrument-functions;-finstrument-functions-exclude-file-list=nvtx3/>)
-
-    target_link_libraries(
-        traccc_cuda
         PRIVATE
-        nvtx_instrumentation
+            $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-finstrument-functions;-Xcompiler=-finstrument-functions-exclude-file-list=nvtx3/>
+            $<$<COMPILE_LANGUAGE:CXX>:-finstrument-functions;-finstrument-functions-exclude-file-list=nvtx3/>
     )
+
+    target_link_libraries(traccc_cuda PRIVATE nvtx_instrumentation)
 endif()
 
-target_link_libraries( traccc_cuda
-  PUBLIC traccc::core traccc::cuda_utils detray::core vecmem::core
-  PRIVATE CUDA::cudart traccc::device_common vecmem::cuda covfie::cuda )
-target_include_directories( traccc_cuda
-  PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}" )
+target_link_libraries(
+    traccc_cuda
+    PUBLIC traccc::core traccc::cuda_utils detray::core vecmem::core
+    PRIVATE CUDA::cudart traccc::device_common vecmem::cuda covfie::cuda
+)
+target_include_directories(traccc_cuda PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 
 # Set up Thrust specifically for the traccc::cuda library.
 thrust_create_target( traccc::cuda_thrust
   HOST CPP
-  DEVICE CUDA )
-target_link_libraries( traccc::cuda_thrust INTERFACE CUDA::cudart )
-target_link_libraries( traccc_cuda PRIVATE traccc::cuda_thrust )
+  DEVICE CUDA
+)
+target_link_libraries(traccc::cuda_thrust INTERFACE CUDA::cudart)
+target_link_libraries(traccc_cuda PRIVATE traccc::cuda_thrust)
 
 # For CUDA 11 turn on separable compilation. This is necessary for using
 # Thrust 2.1.0.
-if( ( "${CMAKE_CUDA_COMPILER_ID}" STREQUAL "NVIDIA" ) AND
-    ( "${CMAKE_CUDA_COMPILER_VERSION}" VERSION_LESS "12.0" ) )
-  set_target_properties( traccc_cuda PROPERTIES
-    CUDA_SEPARABLE_COMPILATION ON )
+if(
+    ("${CMAKE_CUDA_COMPILER_ID}" STREQUAL "NVIDIA")
+    AND ("${CMAKE_CUDA_COMPILER_VERSION}" VERSION_LESS "12.0")
+)
+    set_target_properties(traccc_cuda PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 endif()

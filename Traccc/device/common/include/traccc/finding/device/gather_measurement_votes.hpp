@@ -20,10 +20,10 @@ namespace traccc::device {
 
 /// Payload structure for the @c device::gather_measurement_votes function
 struct gather_measurement_votes_payload {
-    vecmem::data::vector_view<const unsigned long long int> insertion_mutex;
-    vecmem::data::vector_view<const unsigned int> tip_index;
-    vecmem::data::vector_view<unsigned int> votes_per_tip;
-    unsigned int max_num_tracks_per_measurement;
+  vecmem::data::vector_view<const unsigned long long int> insertion_mutex;
+  vecmem::data::vector_view<const unsigned int> tip_index;
+  vecmem::data::vector_view<unsigned int> votes_per_tip;
+  unsigned int max_num_tracks_per_measurement;
 };
 
 TRACCC_HOST_DEVICE inline void gather_measurement_votes(

@@ -13,8 +13,12 @@
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 
+#include <algorithm>
+#include <cmath>
+
 #include "G4Box.hh"
 #include "G4LogicalVolume.hh"
+#include "G4Material.hh"
 #include "G4NistManager.hh"
 #include "G4PVPlacement.hh"
 #include "G4RunManager.hh"
@@ -27,7 +31,7 @@ TelescopeG4DetectorConstruction::TelescopeG4DetectorConstruction(
     const Geant4ConstructionOptions& options)
     : m_cfg(cfg), m_options(options) {
   throw_assert(cfg.surfaceType == static_cast<int>(TelescopeSurfaceType::Plane),
-               "only plan is supported right now");
+               "only plane is supported right now");
 }
 
 G4VPhysicalVolume* TelescopeG4DetectorConstruction::Construct() {
@@ -35,38 +39,43 @@ G4VPhysicalVolume* TelescopeG4DetectorConstruction::Construct() {
     return m_world;
   }
 
-  G4double center =
-      (m_cfg.positions.back() + m_cfg.positions.front()) * 0.5 * mm;
-  G4double length = (m_cfg.positions.back() - m_cfg.positions.front()) * mm;
+  // Option to switch on/off checking of volumes overlaps
+  constexpr G4bool checkOverlaps = true;
+
+  // Keeps nested volumes from sharing surfaces
+  constexpr G4double margin = 1 * mm;
+
+  // The positions need not be sorted
+  const auto [minPosition, maxPosition] = std::ranges::minmax(m_cfg.positions);
+
+  // Extent of the layer stack along the telescope axis
+  const G4double stackCenter = (minPosition + maxPosition) * 0.5 * mm;
+  const G4double stackLength = (maxPosition - minPosition) * mm;
+
+  // `bounds` are half lengths, matching the `Acts::RectangleBounds` that
+  // `buildTelescopeDetector` gives the sensitive surfaces
+  const G4double layerHalfX = m_cfg.bounds[0] * mm;
+  const G4double layerHalfY = m_cfg.bounds[1] * mm;
+  const G4double layerHalfZ = m_cfg.thickness * 0.5 * mm;
+
+  const G4double envHalfX = layerHalfX + margin;
+  const G4double envHalfY = layerHalfY + margin;
+  const G4double envHalfZ = stackLength * 0.5 + layerHalfZ + margin;
 
   // Get nist material manager
   G4NistManager* nist = G4NistManager::Instance();
 
-  // World
-  //
-  G4double worldSize =
-      std::max({std::abs(m_cfg.offsets[0]) + m_cfg.bounds[0] * 0.5,
-                std::abs(m_cfg.offsets[1]) + m_cfg.bounds[1] * 0.5,
-                m_cfg.positions.back() + m_cfg.thickness});
-
-  // Envelope parameters
-  //
-  G4double envSizeX = m_cfg.bounds[0] * mm;
-  G4double envSizeY = m_cfg.bounds[1] * mm;
-  G4double envSizeZ = length + m_cfg.thickness * mm;
-
-  // Option to switch on/off checking of volumes overlaps
-  //
-  G4bool checkOverlaps = true;
-
-  // Materials
+  // `SensitiveSurfaceMapper` keys on the silicon material name
   G4Material* galactic = nist->FindOrBuildMaterial("G4_Galactic");
-  G4Material* silicon =
-      new G4Material("Silicon", 14, 28.0855 * g / mole, 2.329 * g / cm3);
+  G4Material* silicon = G4Material::GetMaterial("Silicon", false);
+  if (silicon == nullptr) {
+    silicon =
+        new G4Material("Silicon", 14, 28.0855 * g / mole, 2.329 * g / cm3);
+  }
 
-  // Construct the rotation
-  // This assumes the binValue is AxisDirection::AxisX, AxisDirection::AxisY or
-  // AxisDirection::AxisZ. No reset is necessary in case of AxisDirection::AxisZ
+  // Orientation of the envelope in the world, assuming binValue is AxisX,
+  // AxisY or AxisZ. `G4PVPlacement` takes the rotation of the mother relative
+  // to the daughter frame, i.e. the inverse of that orientation.
   G4RotationMatrix* rotation = nullptr;
   if (static_cast<Acts::AxisDirection>(m_cfg.binValue) ==
       Acts::AxisDirection::AxisX) {
@@ -76,9 +85,24 @@ G4VPhysicalVolume* TelescopeG4DetectorConstruction::Construct() {
     rotation = new G4RotationMatrix({1, 0, 0}, {0, 0, 1}, {0, -1, 0});
   }
 
+  // The envelope center in the world frame
+  G4ThreeVector envCenter(m_cfg.offsets[0] * mm, m_cfg.offsets[1] * mm,
+                          stackCenter);
+  if (rotation != nullptr) {
+    envCenter = rotation->inverse() * envCenter;
+  }
+
+  // The world has to contain the envelope in any orientation
+  const G4double worldHalfSize =
+      envCenter.mag() +
+      std::sqrt(envHalfX * envHalfX + envHalfY * envHalfY +
+                envHalfZ * envHalfZ) +
+      margin;
+
   // World
   //
-  G4Box* solidWorld = new G4Box("World Solid", worldSize, worldSize, worldSize);
+  G4Box* solidWorld =
+      new G4Box("World Solid", worldHalfSize, worldHalfSize, worldHalfSize);
 
   G4LogicalVolume* logicWorld =
       new G4LogicalVolume(solidWorld, galactic, "World Logic");
@@ -92,50 +116,31 @@ G4VPhysicalVolume* TelescopeG4DetectorConstruction::Construct() {
                               0,                // copy number
                               checkOverlaps);   // overlaps checking
 
-  // Envelope 1
+  // Envelope
   //
-  G4Box* solidEnv =
-      new G4Box("Envelope Solid",                                 // its name
-                0.5 * envSizeX, 0.5 * envSizeY, 0.5 * envSizeZ);  // its size
+  G4Box* solidEnv = new G4Box("Envelope Solid",               // its name
+                              envHalfX, envHalfY, envHalfZ);  // its size
 
-  G4LogicalVolume* logicEnv1 =
-      new G4LogicalVolume(solidEnv,              // its solid
-                          galactic,              // its material
-                          "Envelope #1 Logic");  // its name
+  G4LogicalVolume* logicEnv =
+      new G4LogicalVolume(solidEnv,           // its solid
+                          galactic,           // its material
+                          "Envelope Logic");  // its name
 
-  G4VPhysicalVolume* physEnv1 =
-      new G4PVPlacement(rotation,            // rotation
-                        G4ThreeVector(),     // at detector center
-                        logicEnv1,           // its logical volume
-                        "Envelope #1 Phys",  // its name
-                        logicWorld,          // its mother volume
-                        false,               // no boolean operation
-                        0,                   // copy number
-                        checkOverlaps);      // overlaps checking
-
-  // Envelope 2
-  //
-  G4LogicalVolume* logicEnv2 =
-      new G4LogicalVolume(solidEnv,              // its solid
-                          galactic,              // its material
-                          "Envelope #2 Logic");  // its name
-
-  G4VPhysicalVolume* physEnv2 = new G4PVPlacement(
-      nullptr,  // no rotation
-      G4ThreeVector(m_cfg.offsets[0] * mm, m_cfg.offsets[1] * mm,
-                    center),  // at detector center
-      "Envelope #2 Phys",     // its name
-      logicEnv2,              // its logical volume
-      physEnv1,               // its mother volume
-      false,                  // no boolean operation
-      0,                      // copy number
-      checkOverlaps);         // overlaps checking
+  G4VPhysicalVolume* physEnv =
+      new G4PVPlacement(rotation,         // rotation
+                        envCenter,        // at the center of the stack
+                        logicEnv,         // its logical volume
+                        "Envelope Phys",  // its name
+                        logicWorld,       // its mother volume
+                        false,            // no boolean operation
+                        0,                // copy number
+                        checkOverlaps);   // overlaps checking
 
   // Layer
   //
 
-  G4Box* solidLayer = new G4Box("Layer Solid", 0.5 * m_cfg.bounds[0],
-                                0.5 * m_cfg.bounds[1], 0.5 * m_cfg.thickness);
+  G4Box* solidLayer =
+      new G4Box("Layer Solid", layerHalfX, layerHalfY, layerHalfZ);
 
   G4LogicalVolume* logicLayer = new G4LogicalVolume(solidLayer,  // its solid
                                                     silicon,     // its material
@@ -143,14 +148,14 @@ G4VPhysicalVolume* TelescopeG4DetectorConstruction::Construct() {
 
   for (std::size_t i = 0; i < m_cfg.positions.size(); ++i) {
     new G4PVPlacement(
-        nullptr,                                                // no rotation
-        G4ThreeVector(0, 0, m_cfg.positions[i] * mm - center),  // at position
-        "Layer #" + std::to_string(i) + " Phys",                // its name
-        logicLayer,      // its logical volume
-        physEnv2,        // its mother volume
-        false,           // no boolean operation
-        0,               // copy number
-        checkOverlaps);  // overlaps checking
+        nullptr,  // no rotation
+        G4ThreeVector(0, 0, m_cfg.positions[i] * mm - stackCenter),  // position
+        "Layer #" + std::to_string(i) + " Phys",                     // its name
+        logicLayer,             // its logical volume
+        physEnv,                // its mother volume
+        false,                  // no boolean operation
+        static_cast<G4int>(i),  // copy number
+        checkOverlaps);         // overlaps checking
   }
 
   // Create regions

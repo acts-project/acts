@@ -22,27 +22,27 @@ namespace traccc::device {
 /// (Event Data) Payload for the @c
 /// traccc::device::fill_finding_propagation_sort_keys function
 struct fill_finding_propagation_sort_keys_payload {
-    /**
-     * @brief View object to the vector of bound track parameters
-     */
-    bound_track_parameters_collection_types::const_view params_view;
+  /**
+   * @brief View object to the vector of bound track parameters
+   */
+  bound_track_parameters_collection_types::const_view params_view;
 
-    /**
-     * @brief View object to the vector of boolean-like integers describing the
-     * liveness of each parameter
-     */
-    vecmem::data::vector_view<const unsigned int> param_liveness_view;
+  /**
+   * @brief View object to the vector of boolean-like integers describing the
+   * liveness of each parameter
+   */
+  vecmem::data::vector_view<const unsigned int> param_liveness_view;
 
-    /**
-     * @brief View object to the vector of sort keys
-     */
-    vecmem::data::vector_view<device::sort_key> keys_view;
+  /**
+   * @brief View object to the vector of sort keys
+   */
+  vecmem::data::vector_view<device::sort_key> keys_view;
 
-    /**
-     * @brief View object to the vector of parameter indices, which is the
-     * output to the algorithm
-     */
-    vecmem::data::vector_view<unsigned int> ids_view;
+  /**
+   * @brief View object to the vector of parameter indices, which is the
+   * output to the algorithm
+   */
+  vecmem::data::vector_view<unsigned int> ids_view;
 };
 
 /// Function used for fill key container

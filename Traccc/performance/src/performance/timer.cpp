@@ -26,28 +26,28 @@ timer::timer(const std::string_view timer_name, timing_info& t_info)
       m_name(timer_name),
       m_timing_info(t_info) {
 #ifdef TRACCC_HAVE_NVTX
-    nvtxRangePushA(timer_name.data());
+  nvtxRangePushA(timer_name.data());
 #endif  // TRACCC_HAVE_NVTX
 }
 
 /// End time measurement
 timer::~timer() {
 #ifdef TRACCC_HAVE_NVTX
-    nvtxRangePop();
+  nvtxRangePop();
 #endif  // TRACCC_HAVE_NVTX
-    const auto end = std::chrono::high_resolution_clock::now();
-    const std::chrono::nanoseconds totalTime = end - m_start;
-    const auto pos =
-        std::find_if(m_timing_info.data.begin(), m_timing_info.data.end(),
-                     [&name = m_name](const timing_info_pair& element) {
-                         return element.first == name;
-                     });
+  const auto end = std::chrono::high_resolution_clock::now();
+  const std::chrono::nanoseconds totalTime = end - m_start;
+  const auto pos =
+      std::find_if(m_timing_info.data.begin(), m_timing_info.data.end(),
+                   [&name = m_name](const timing_info_pair& element) {
+                     return element.first == name;
+                   });
 
-    if (pos == m_timing_info.data.end()) {
-        m_timing_info.data.push_back({m_name, totalTime});
-    } else {
-        pos->second += totalTime;
-    }
+  if (pos == m_timing_info.data.end()) {
+    m_timing_info.data.push_back({m_name, totalTime});
+  } else {
+    pos->second += totalTime;
+  }
 }
 
 }  // namespace traccc::performance

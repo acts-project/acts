@@ -36,9 +36,10 @@ runs:
         CIBW_BUILD: ${{ inputs.cibw-build }}
         GITHUB_TOKEN: ${{ inputs.github-token }}
 
+    # `main` only; see the note in .github/workflows/builds.yml.
     - name: Save ccache
       uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-      if: always()
+      if: always() && github.ref == 'refs/heads/main'
       with:
         path: ${{ env.CCACHE_DIR }}
         key: ${{ steps.ccache-restore.outputs.cache-primary-key }}

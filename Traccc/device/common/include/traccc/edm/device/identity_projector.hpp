@@ -18,12 +18,11 @@ namespace traccc::device {
 /// originally designed for AoS collections.
 ///
 struct identity_projector {
-
-    /// Return the input value unchanged
-    template <typename T>
-    TRACCC_HOST_DEVICE constexpr T operator()(const T& value) const noexcept {
-        return value;
-    }
+  /// Return the input value unchanged
+  template <typename T>
+  TRACCC_HOST_DEVICE constexpr T operator()(const T& value) const noexcept {
+    return value;
+  }
 
 };  // struct identity_projector
 

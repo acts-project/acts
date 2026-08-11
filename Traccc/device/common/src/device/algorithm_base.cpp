@@ -15,13 +15,11 @@ algorithm_base::algorithm_base(const memory_resource& mr,
     : m_mr{mr}, m_copy{copy} {}
 
 const memory_resource& algorithm_base::mr() const {
-
-    return m_mr;
+  return m_mr;
 }
 
 const vecmem::copy& algorithm_base::copy() const {
-
-    return m_copy.get();
+  return m_copy.get();
 }
 
 }  // namespace traccc::device

@@ -69,7 +69,7 @@ struct intersection_initialize {
     typename decltype(intersector)::result_type result{};
 
     if constexpr (concepts::cylindrical<mask_t>) {
-      std::size_t mask_idx{detail::invalid_value<std::size_t>()};
+      dindex mask_idx{detail::invalid_value<dindex>()};
       if constexpr (concepts::interval<mask_range_t>) {
         mask_idx = mask_range.lower();
       } else {
@@ -133,10 +133,10 @@ struct intersection_initialize {
     }
   }
 
-  template <typename intersection_t>
+  template <typename intersection_t, typename... allocator_t>
   DETRAY_HOST_DEVICE void insert_sorted(
       const intersection_t &sfi,
-      std::vector<intersection_t> &intersections) const {
+      std::vector<intersection_t, allocator_t...> &intersections) const {
     auto itr_pos =
         detray::upper_bound(intersections.cbegin(), intersections.cend(), sfi);
 
@@ -207,7 +207,7 @@ struct intersection_update {
     typename decltype(intersector)::result_type result{};
 
     if constexpr (concepts::cylindrical<mask_t>) {
-      std::size_t mask_idx{detail::invalid_value<std::size_t>()};
+      dindex mask_idx{detail::invalid_value<dindex>()};
       if constexpr (concepts::interval<mask_range_t>) {
         mask_idx = mask_range.lower();
       } else {

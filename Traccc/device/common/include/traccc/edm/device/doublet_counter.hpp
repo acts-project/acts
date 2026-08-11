@@ -15,21 +15,20 @@ namespace traccc::device {
 
 /// Number of doublets for one specific middle spacepoint.
 struct doublet_counter {
+  /// Index of the middle spacepoint.
+  sp_location m_spM;
 
-    /// Index of the middle spacepoint.
-    sp_location m_spM;
+  /// The number of compatible middle-bottom doublets
+  unsigned int m_nMidBot = 0;
 
-    /// The number of compatible middle-bottom doublets
-    unsigned int m_nMidBot = 0;
+  /// The number of compatible middle-top doublets
+  unsigned int m_nMidTop = 0;
 
-    /// The number of compatible middle-top doublets
-    unsigned int m_nMidTop = 0;
+  /// The position in which these middle-bottom doublets will be added
+  unsigned int m_posMidBot = 0;
 
-    /// The position in which these middle-bottom doublets will be added
-    unsigned int m_posMidBot = 0;
-
-    /// The position in which these middle-top doublets will be added
-    unsigned int m_posMidTop = 0;
+  /// The position in which these middle-top doublets will be added
+  unsigned int m_posMidTop = 0;
 
 };  // struct doublet_counter
 

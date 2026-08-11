@@ -11,10 +11,9 @@
 namespace traccc::io::csv {
 
 dfe::NamedTupleCsvReader<hit> make_hit_reader(std::string_view filename) {
-
-    return {filename.data(),
-            {"particle_id", "geometry_id", "tx", "ty", "tz", "tt", "tpx", "tpy",
-             "tpz", "te", "deltapx", "deltapy", "deltapz", "deltae", "index"}};
+  return {filename.data(),
+          {"particle_id", "geometry_id", "tx", "ty", "tz", "tt", "tpx", "tpy",
+           "tpz", "te", "deltapx", "deltapy", "deltapz", "deltae", "index"}};
 }
 
 }  // namespace traccc::io::csv

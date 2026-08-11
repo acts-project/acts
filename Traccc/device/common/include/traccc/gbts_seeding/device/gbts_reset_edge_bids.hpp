@@ -20,19 +20,19 @@ namespace traccc::device {
 /// (Global Event Data) Payload for the @c traccc::device::gbts_reset_edge_bids
 /// function
 struct gbts_reset_edge_bids_payload {
-    /// Number of seed proposals
-    unsigned int nProps;
-    /// Per-path (edge index, parent path-store index or -1) entries
-    vecmem::data::vector_view<const int2> path_store;
-    /// In/out: per-seed-proposal (path_store index, level)
-    vecmem::data::vector_view<int2> seed_proposals;
-    /// In/out: per-edge highest-bidder seed proposal (cleared between
-    /// rounds)
-    vecmem::data::vector_view<unsigned long long int> edge_bids;
-    /// In/out: per-seed-proposal ambiguity tag
-    vecmem::data::vector_view<char> seed_ambiguity;
-    /// In/out: global atomic counter of rejected proposals
-    unsigned int* nRejectedPropsCounter;
+  /// Number of seed proposals
+  unsigned int nProps;
+  /// Per-path (edge index, parent path-store index or -1) entries
+  vecmem::data::vector_view<const int2> path_store;
+  /// In/out: per-seed-proposal (path_store index, level)
+  vecmem::data::vector_view<int2> seed_proposals;
+  /// In/out: per-edge highest-bidder seed proposal (cleared between
+  /// rounds)
+  vecmem::data::vector_view<unsigned long long int> edge_bids;
+  /// In/out: per-seed-proposal ambiguity tag
+  vecmem::data::vector_view<char> seed_ambiguity;
+  /// In/out: global atomic counter of rejected proposals
+  unsigned int* nRejectedPropsCounter;
 };
 
 /// @brief Mark a losing seed proposal against the current edge bids.

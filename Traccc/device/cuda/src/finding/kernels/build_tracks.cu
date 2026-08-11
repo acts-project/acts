@@ -21,7 +21,6 @@ __global__ void build_tracks(
     const __grid_constant__ bool run_mbf,
     const __grid_constant__ measurement_selector::config calib_cfg,
     const __grid_constant__ device::build_tracks_payload payload) {
-
-    device::build_tracks(details::global_index1(), run_mbf, calib_cfg, payload);
+  device::build_tracks(details::global_index1(), run_mbf, calib_cfg, payload);
 }
 }  // namespace traccc::cuda::kernels

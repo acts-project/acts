@@ -12,9 +12,9 @@
 namespace traccc {
 
 struct track_matching_config {
-    float matching_ratio = 0.5f;
+  float matching_ratio = 0.5f;
 
-    bool double_matching = true;
+  bool double_matching = true;
 };
 
 }  // namespace traccc

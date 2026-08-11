@@ -11,9 +11,9 @@ namespace traccc::details {
 
 /// Type of a space point
 enum class spacepoint_type : int {
-    bottom = 0,  //< The referenced type is a "bottom" spacepoint
-    middle = 1,  //< The referenced type is a "middle" spacepoint
-    top = 2      //< The referenced type is a "top" spacepoint
+  bottom = 0,  //< The referenced type is a "bottom" spacepoint
+  middle = 1,  //< The referenced type is a "middle" spacepoint
+  top = 2      //< The referenced type is a "top" spacepoint
 };
 
 }  // namespace traccc::details

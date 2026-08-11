@@ -19,26 +19,25 @@ namespace traccc::device {
 /// (Event Data) Payload for the @c traccc::device::fill_track_candidates
 /// function
 struct fill_track_candidates_payload {
+  /**
+   * @brief View object to the input track candidates
+   */
+  edm::track_container<default_algebra>::const_view tracks_view;
 
-    /**
-     * @brief View object to the input track candidates
-     */
-    edm::track_container<default_algebra>::const_view tracks_view;
+  /**
+   * @brief The number of accepted tracks
+   */
+  unsigned int n_accepted;
 
-    /**
-     * @brief The number of accepted tracks
-     */
-    unsigned int n_accepted;
+  /**
+   * @brief View object to the sorted ids
+   */
+  vecmem::data::vector_view<const unsigned int> sorted_ids_view;
 
-    /**
-     * @brief View object to the sorted ids
-     */
-    vecmem::data::vector_view<const unsigned int> sorted_ids_view;
-
-    /**
-     * @brief View object to the output track candidates
-     */
-    edm::track_container<default_algebra>::view res_tracks_view;
+  /**
+   * @brief View object to the output track candidates
+   */
+  edm::track_container<default_algebra>::view res_tracks_view;
 };
 
 }  // namespace traccc::device

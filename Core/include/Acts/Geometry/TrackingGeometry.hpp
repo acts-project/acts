@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometryVisitor.hpp"
@@ -16,9 +17,11 @@
 #include "Acts/Geometry/TrackingVolumeVisitorConcept.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -50,6 +53,13 @@ struct TransparentStringHash {
 /// Map from portal tag to portal, with transparent string lookup.
 using PortalTagMap = std::unordered_map<std::string, const Portal*,
                                         TransparentStringHash, std::equal_to<>>;
+
+/// Map from surface to the portal (Gen3) it represents.
+using PortalSurfaceMap = std::unordered_map<const Surface*, const Portal*>;
+
+/// Map from surface to the boundary surface (Gen1) it represents.
+using BoundarySurfaceMap =
+    std::unordered_map<const Surface*, const BoundarySurfaceT<TrackingVolume>*>;
 }  // namespace detail
 
 // Forward declaration only, the implementation is hidden in the .cpp file.
@@ -97,14 +107,55 @@ class TrackingGeometry {
   /// @return shared pointer to the world volume
   std::shared_ptr<const TrackingVolume> highestTrackingVolumePtr() const;
 
-  /// return the lowest tracking Volume
+  /// resolve the lowest tracking Volume for a global position
+  ///
+  /// Without a @p direction and @p associatedSurface the lookup is purely
+  /// position based, and which of the adjacent volumes is returned for a
+  /// position on a boundary between volumes is unspecified.
+  ///
+  /// If @p associatedSurface is given and is a boundary surface (Gen1) or a
+  /// portal surface (Gen3), the boundary ambiguity is resolved along
+  /// @p direction: the volume being entered is returned. Otherwise the surface
+  /// does not act as a boundary and the lookup is position based as above.
+  ///
+  /// @pre If @p associatedSurface is given, the position has to be on it
+  ///      within the given @p tolerance, ignoring the surface bounds.
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param gp is the global position of the call
+  /// @param direction is the direction used to resolve the volume if the
+  ///        position is on a boundary between volumes
+  /// @param associatedSurface is the surface the position lies on, used to
+  ///        identify a boundary crossing
+  /// @param tolerance is the search tolerance for the volume lookup and the
+  ///        on-surface check of the associated surface
+  ///
+  /// @return plain pointer to the lowest TrackingVolume, `nullptr` if there
+  ///         is no volume at the position (or in the given direction)
+  /// @retval SurfaceError::GlobalPositionNotOnSurface if
+  ///         @p associatedSurface is a boundary surface or portal, but the
+  ///         position is outside of its bounds. This can happen for positions
+  ///         grazing a volume edge within the lookup tolerance.
+  Result<const TrackingVolume*> resolveLowestTrackingVolume(
+      const GeometryContext& gctx, const Vector3& gp,
+      const std::optional<Vector3>& direction = std::nullopt,
+      const Surface* associatedSurface = nullptr,
+      double tolerance = s_onSurfaceTolerance) const;
+
+  /// return the lowest tracking Volume for a global position
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param gp is the global position of the call
   ///
-  /// @return plain pointer to the lowest TrackingVolume
-  const TrackingVolume* lowestTrackingVolume(const GeometryContext& gctx,
-                                             const Vector3& gp) const;
+  /// @return plain pointer to the lowest TrackingVolume, `nullptr` if there
+  ///         is no volume at the position
+  ///
+  /// @deprecated Use @ref resolveLowestTrackingVolume instead, which can
+  ///             resolve boundaries along a direction and reports failures
+  ///             instead of returning `nullptr`.
+  [[deprecated(
+      "Use resolveLowestTrackingVolume instead")]] const TrackingVolume*
+  lowestTrackingVolume(const GeometryContext& gctx, const Vector3& gp) const;
 
   /// Forward the associated Layer information
   ///
@@ -219,7 +270,7 @@ class TrackingGeometry {
   const Surface* findSurface(GeometryIdentifier id) const;
 
   /// Search for a portal that was tagged with the given label during the
-  /// blueprint construction (see @ref Acts::Experimental::PortalDesignatorBlueprintNode).
+  /// blueprint construction (see @ref Acts::PortalDesignatorBlueprintNode).
   ///
   /// @param tag the tag assigned to the portal
   /// @retval nullptr if no portal carries the tag
@@ -256,6 +307,11 @@ class TrackingGeometry {
   std::unordered_map<GeometryIdentifier, const TrackingVolume*> m_volumesById;
   std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById;
   detail::PortalTagMap m_portalsByTag;
+  // surface to portal / boundary surface association, built once at
+  // construction so that the boundary aware volume lookup does not have to
+  // scan the portals and boundary surfaces of a volume
+  detail::PortalSurfaceMap m_portalsBySurface;
+  detail::BoundarySurfaceMap m_boundariesBySurface;
 };
 
 }  // namespace Acts

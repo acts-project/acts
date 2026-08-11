@@ -16,20 +16,20 @@ namespace traccc::device {
 
 /// Triplets of bottom, middle and top spacepoints
 struct device_triplet {
-    // top spacepoint location in internal spacepoint container
-    unsigned int spB, spM, spT;
+  // top spacepoint location in internal spacepoint container
+  unsigned int spB, spM, spT;
 
-    using link_type = device::triplet_counter_collection_types::host::size_type;
-    /// Link to triplet counter where the middle and bottom spacepoints are
-    /// stored
-    link_type counter_link;
+  using link_type = device::triplet_counter_collection_types::host::size_type;
+  /// Link to triplet counter where the middle and bottom spacepoints are
+  /// stored
+  link_type counter_link;
 
-    /// curvature of circle estimated from triplet
-    scalar curvature;
-    /// weight of triplet
-    scalar weight;
-    /// z origin of triplet
-    scalar z_vertex;
+  /// curvature of circle estimated from triplet
+  scalar curvature;
+  /// weight of triplet
+  scalar weight;
+  /// z origin of triplet
+  scalar z_vertex;
 };
 
 /// Declare all device triplet collection types

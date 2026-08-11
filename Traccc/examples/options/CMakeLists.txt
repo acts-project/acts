@@ -52,11 +52,8 @@ traccc_add_library( traccc_options options TYPE SHARED
   "src/track_seeding.cpp"
   "src/track_gbts_seeding.cpp"
   "src/truth_finding.cpp"
-  )
-target_link_libraries( traccc_options
-   PUBLIC
-      Boost::program_options
-      traccc::io
-      traccc::performance
-      traccc::utils
+)
+target_link_libraries(
+    traccc_options
+    PUBLIC Boost::program_options traccc::io traccc::performance traccc::utils
 )
