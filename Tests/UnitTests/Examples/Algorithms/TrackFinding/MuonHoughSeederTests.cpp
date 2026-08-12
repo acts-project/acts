@@ -53,9 +53,22 @@ ActsExamples::MuonSpacePoint::MuonId makeMdtEtaId(std::uint8_t layer,
   return id;
 }
 
+ActsExamples::MuonSpacePoint::MuonId makeRpcPhiId(std::uint8_t layer,
+                                                  std::uint16_t channel) {
+  using MuonId = ActsExamples::MuonSpacePoint::MuonId;
+
+  MuonId id{};
+  id.setChamber(MuonId::StationName::BIL, MuonId::DetSide::A, 1u,
+                MuonId::TechField::Rpc);
+  id.setLayAndCh(layer, channel);
+  id.setCoordFlags(false, true, false);
+
+  return id;
+}
+
 /// @brief Prepare example MuonSpaceContainer with one bucket based on test case from HoughTransformUtilsTests.cpp
 ActsExamples::MuonSpacePointContainer makeDriftCircleSpacePoints(
-    double localX = 0.0) {
+    bool addPhiHits = false) {
   constexpr double uncert = 0.3;
 
   const std::array<DriftCircle, 6> driftCircles{
@@ -82,12 +95,26 @@ ActsExamples::MuonSpacePointContainer makeDriftCircleSpacePoints(
     sp.setId(makeMdtEtaId(static_cast<std::uint8_t>(i + 1u),
                           static_cast<std::uint16_t>(i + 1u)));
 
-    sp.defineCoordinates(Acts::Vector3{localX, dc.y, dc.z},
+    sp.defineCoordinates(Acts::Vector3{0.0, dc.y, dc.z},
                          Acts::Vector3::UnitX(), Acts::Vector3::UnitY());
 
     sp.setRadius(dc.rDrift);
     sp.setTime(0.0);
     sp.setCovariance(0.0, dc.rDriftError * dc.rDriftError, 0.0);
+  }
+
+  if (addPhiHits) {
+    for (std::size_t i = 0; i < 2u; ++i) {
+      ActsExamples::MuonSpacePoint& sp = bucket.emplace_back();
+      sp.setGeometryId(Acts::GeometryIdentifier{driftCircles.size() + i + 1u});
+      sp.setId(makeRpcPhiId(static_cast<std::uint8_t>(i + 1u),
+                            static_cast<std::uint16_t>(i + 1u)));
+      sp.defineCoordinates(
+          Acts::Vector3{2.0 * Acts::UnitConstants::mm, 0.0,
+                        static_cast<double>(i) * Acts::UnitConstants::m},
+          Acts::Vector3::UnitX(), Acts::Vector3::UnitY());
+      sp.setCovariance(std::pow(0.1 * Acts::UnitConstants::mm, 2), 0.0, 0.0);
+    }
   }
 
   return spacePoints;
@@ -194,8 +221,7 @@ BOOST_AUTO_TEST_CASE(muon_hough_seeder_drift_circle_sanity_phi_disabled) {
   ActsExamples::WriteDataHandle<ActsExamples::MuonSpacePointContainer>
       spacePointHandle{&seeder, "TestInputSpacePoints"};
   spacePointHandle.initialize(cfg.inSpacePoints);
-  spacePointHandle(ctx,
-                   makeDriftCircleSpacePoints(2.0 * Acts::UnitConstants::m));
+  spacePointHandle(ctx, makeDriftCircleSpacePoints(true));
 
   BOOST_REQUIRE(seeder.execute(ctx) == ActsExamples::ProcessCode::SUCCESS);
 
