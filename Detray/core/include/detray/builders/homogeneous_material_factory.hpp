@@ -330,13 +330,13 @@ class homogeneous_material_factory final
 
     // Add the material to the surfaces that the data links against.
     //
-    // The n-th entries of @c m_indices, @c m_materials, @c m_thickness and
+    // The i-th entries of @c m_indices, @c m_materials, @c m_thickness and
     // @c m_links all describe the same material instance, so the factory data
     // is indexed by the position in that sequence, while @c m_indices holds
     // the index of the surface the material belongs to. The surfaces that
     // carry material therefore do not have to be contiguous in the volume.
-    for (const auto [n, i] : detray::views::enumerate(m_indices)) {
-      auto &sf_desc = surfaces.at(static_cast<dindex>(i));
+    for (const auto [i, sf_idx] : detray::views::enumerate(m_indices)) {
+      auto &sf_desc = surfaces.at(static_cast<dindex>(sf_idx));
 
       if (sf_desc.material().id() < detector_t::material::id::e_none) {
         DETRAY_WARN_HOST("Surface descriptor already has a material link:"
@@ -345,37 +345,37 @@ class homogeneous_material_factory final
         continue;
       }
 
-      const material<scalar_type> &mat = m_materials.at(n);
-      scalar_type t = m_thickness.at(n);
+      const material<scalar_type> &mat = m_materials.at(i);
+      scalar_type t = m_thickness.at(i);
 
-      DETRAY_DEBUG_HOST("-> Adding: n=" << n << ", sf_index=" << i
+      DETRAY_DEBUG_HOST("-> Adding: i=" << i << ", sf_index=" << sf_idx
                                         << ", sf=" << sf_desc);
       DETRAY_DEBUG_HOST("           mat=" << mat << " thickness=" << t);
 
       dindex mat_idx{0u};
 
       if constexpr (concepts::has_material_slabs<detector_t>) {
-        if (m_links.at(n).first == material_id::e_material_slab) {
+        if (m_links.at(i).first == material_id::e_material_slab) {
           auto &mat_coll =
               materials.template get<material_id::e_material_slab>();
 
           material_slab<scalar_type> mat_slab{mat, t};
           mat_idx = this->insert_in_container(mat_coll, mat_slab,
-                                              m_links.at(n).second);
+                                              m_links.at(i).second);
         }
       }
       if constexpr (concepts::has_material_rods<detector_t>) {
-        if (m_links.at(n).first == material_id::e_material_rod) {
+        if (m_links.at(i).first == material_id::e_material_rod) {
           auto &mat_coll =
               materials.template get<material_id::e_material_rod>();
 
           material_rod<scalar_type> mat_rod{mat, t};
           mat_idx = this->insert_in_container(mat_coll, mat_rod,
-                                              m_links.at(n).second);
+                                              m_links.at(i).second);
         }
       }
       DETRAY_DEBUG_HOST("-> After insert: mat_idx=" << mat_idx);
-      link_t new_link{m_links.at(n).first, mat_idx};
+      link_t new_link{m_links.at(i).first, mat_idx};
 
       DETRAY_DEBUG_HOST("-> Existing link: " << sf_desc.material());
       DETRAY_DEBUG_HOST("-> Setting new link: " << new_link);
