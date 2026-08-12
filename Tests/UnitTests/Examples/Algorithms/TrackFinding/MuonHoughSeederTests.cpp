@@ -95,8 +95,8 @@ ActsExamples::MuonSpacePointContainer makeDriftCircleSpacePoints(
     sp.setId(makeMdtEtaId(static_cast<std::uint8_t>(i + 1u),
                           static_cast<std::uint16_t>(i + 1u)));
 
-    sp.defineCoordinates(Acts::Vector3{0.0, dc.y, dc.z},
-                         Acts::Vector3::UnitX(), Acts::Vector3::UnitY());
+    sp.defineCoordinates(Acts::Vector3{0.0, dc.y, dc.z}, Acts::Vector3::UnitX(),
+                         Acts::Vector3::UnitY());
 
     sp.setRadius(dc.rDrift);
     sp.setTime(0.0);
