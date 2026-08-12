@@ -39,9 +39,10 @@ class TrackVisualizerAlg(acts.examples.IAlgorithm):
 
     def execute(self, context):
         tracks = self.tracks(context.eventStore)
+        print(f"Event {context.eventNumber}: {len(tracks)} tracks")
         for track in tracks:
             acts.EventDataView3D.drawTrack(
-                self._vis, track
+                self._vis, track, context.geoContext
             )  # draw track not a free function
 
         return acts.examples.ProcessCode.SUCCESS
@@ -108,6 +109,7 @@ class PyVisualization2D(acts.VisualizationBuffer):
                 )
 
         # Check if there is a track to be drawn
+        print(len(self.segments))
         if len(self.segments) != 0:
             line_segments = [
                 [
