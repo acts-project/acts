@@ -303,8 +303,7 @@ SeedContainer runSeeding(const ToyDetector& detector,
   SeedContainer seeds;
   seeds.assignSpacePointContainer(spacePoints);
 
-  seeder.createSeeds(spacePoints, roi, isPixelLayer, numLayers, filter, options,
-                     seeds);
+  seeder.createSeeds(spacePoints, roi, isPixelLayer, filter, options, seeds);
 
   return seeds;
 }
