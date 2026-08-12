@@ -212,7 +212,7 @@ void GbtsNodeStorage::applyTauCuts(const StagedNode& staged,
     return;
   }
 
-  const GbtsTauLookupTable::value_type& lutBin = m_tauLut[lutBinIdx];
+  const GbtsTauBounds& bounds = m_tauLut[lutBinIdx];
 
   // close to the edge the cluster may be shortened, which the lookup table
   // covers with a separate pair of bounds
@@ -220,8 +220,8 @@ void GbtsNodeStorage::applyTauCuts(const StagedNode& staged,
       m_cfg.moduleHalfLengthY - std::abs(staged.localPositionY);
   const bool nearEdge = dist2border <= m_cfg.moduleEdgeTolerance;
 
-  params.minTau = nearEdge ? lutBin[3] : lutBin[1];
-  params.maxTau = nearEdge ? lutBin[4] : lutBin[2];
+  params.minTau = nearEdge ? bounds.minTauNearEdge : bounds.minTau;
+  params.maxTau = nearEdge ? bounds.maxTauNearEdge : bounds.maxTau;
 
   if (params.maxTau < 0) {
     // insufficient training data, do not cut on tau

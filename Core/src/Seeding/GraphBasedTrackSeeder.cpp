@@ -133,13 +133,13 @@ GbtsTauLookupTable GraphBasedTrackSeeder::parseTauLookupTable(
   GbtsTauLookupTable tauLut;
   tauLut.reserve(100);
 
-  float clWidth{};
-  float min1{};
-  float max1{};
-  float min2{};
-  float max2{};
-  while (ifs >> clWidth >> min1 >> max1 >> min2 >> max2) {
-    tauLut.push_back({clWidth, min1, max1, min2, max2});
+  // per line: cluster width, then the bulk and the near-edge tau bounds. The
+  // width only labels the row, the table is indexed by it.
+  float clusterWidth{};
+  GbtsTauBounds bounds;
+  while (ifs >> clusterWidth >> bounds.minTau >> bounds.maxTau >>
+         bounds.minTauNearEdge >> bounds.maxTauNearEdge) {
+    tauLut.push_back(bounds);
   }
 
   if (!ifs.eof()) {
