@@ -181,15 +181,6 @@ def fill_propagation_config(args, config):
     else:
         navigation.estimateScatteringNoise = False
 
-        if args.n_scattering_stddev is not None:
-            raise ValueError(
-                "Option 'n_scattering_stddev' cannot not be configured unless 'estimate_scattering_noise' is activated"
-            )
-        if args.accumulated_error is not None:
-            raise ValueError(
-                "Option 'accumulated_error' cannot not be configured unless 'estimate_scattering_noise' is activated"
-            )
-
     # Configure the stepper
     stepping = config.stepping
 
