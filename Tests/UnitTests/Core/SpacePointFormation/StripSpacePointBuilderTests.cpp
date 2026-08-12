@@ -38,17 +38,17 @@ BOOST_AUTO_TEST_SUITE(StripSpacePointBuilderSuite)
 BOOST_AUTO_TEST_CASE(CosmicOrthogonalUnitStrips) {
   const StripSpacePointBuilder::StripEnds strip1{Vector3(0, 0, 0),
                                                  Vector3(-1, 0, 0)};
-  const StripSpacePointBuilder::StripEnds strip2{Vector3(0.5, 0.5, 1),
-                                                 Vector3(0.5, -0.5, 1)};
+  const StripSpacePointBuilder::StripEnds strip2{Vector3(-0.5, 0.5, 1),
+                                                 Vector3(-0.5, -0.5, 1)};
 
   const StripSpacePointBuilder::CosmicOptions options;
   const auto result =
       StripSpacePointBuilder::computeCosmicSpacePoint(strip1, strip2, options);
 
   BOOST_REQUIRE(result.ok());
-  // The second strip runs along y at x = 0.5, so the closest point on the
-  // first strip is at x = 0.5.
-  CHECK_CLOSE_ABS(*result, Vector3(0.5, 0, 0), 1e-9);
+  // The second strip runs along y at x = -0.5, so the closest point on the
+  // first strip is at x = -0.5.
+  CHECK_CLOSE_ABS(*result, Vector3(-0.5, 0, 0), 1e-9);
 }
 
 /// The closest approach is defined by the connecting vector being perpendicular
@@ -86,8 +86,8 @@ BOOST_AUTO_TEST_CASE(CosmicPerpendicularityRealisticStereoPair) {
 BOOST_AUTO_TEST_CASE(CosmicScaleInvariance) {
   const StripSpacePointBuilder::StripEnds strip1{Vector3(0, 0, 0),
                                                  Vector3(-1, 0, 0)};
-  const StripSpacePointBuilder::StripEnds strip2{Vector3(0.5, 0.5, 1),
-                                                 Vector3(0.5, -0.5, 1)};
+  const StripSpacePointBuilder::StripEnds strip2{Vector3(-0.5, 0.5, 1),
+                                                 Vector3(-0.5, -0.5, 1)};
 
   constexpr double scale = 50;
   const StripSpacePointBuilder::StripEnds scaled1{scale * strip1.top,
@@ -123,6 +123,84 @@ BOOST_AUTO_TEST_CASE(CosmicCrossingStrips) {
   BOOST_REQUIRE(onSecond.ok());
   CHECK_CLOSE_ABS(*onFirst, Vector3(0, 0, 0), 1e-9);
   CHECK_CLOSE_ABS(*onSecond, Vector3(0, 0, 2_mm), 1e-9);
+}
+
+/// A crossing beyond the end of the first strip is not a valid space point.
+BOOST_AUTO_TEST_CASE(CosmicCrossingOffFirstStripRejected) {
+  const StripSpacePointBuilder::StripEnds strip1{Vector3(0, 0, 0),
+                                                 Vector3(-1, 0, 0)};
+  // The strips cross at x = 0.5, half a strip length past the top end
+  const StripSpacePointBuilder::StripEnds strip2{Vector3(0.5, 0.5, 1),
+                                                 Vector3(0.5, -0.5, 1)};
+
+  const StripSpacePointBuilder::CosmicOptions options;
+  const auto result =
+      StripSpacePointBuilder::computeCosmicSpacePoint(strip1, strip2, options);
+
+  BOOST_REQUIRE(!result.ok());
+  BOOST_CHECK(result.error() == SpacePointFormationError::OutsideLimits);
+}
+
+/// The crossing has to lie on the second strip as well, even though the space
+/// point is reported on the first one.
+BOOST_AUTO_TEST_CASE(CosmicCrossingOffSecondStripRejected) {
+  const StripSpacePointBuilder::StripEnds strip1 =
+      makeStrip(Vector3(0, 0, 0), Vector3(1, 0, 0), 50_mm);
+  // Crosses the first strip at its centre, but far off its own ends
+  const StripSpacePointBuilder::StripEnds strip2 =
+      makeStrip(Vector3(0, 100_mm, 1_mm), Vector3(0, 1, 0), 50_mm);
+
+  const StripSpacePointBuilder::CosmicOptions options;
+  const auto result =
+      StripSpacePointBuilder::computeCosmicSpacePoint(strip1, strip2, options);
+
+  BOOST_REQUIRE(!result.ok());
+  BOOST_CHECK(result.error() == SpacePointFormationError::OutsideLimits);
+}
+
+/// The tolerance is a fraction of the strip length, so a crossing just past the
+/// end is still accepted while a larger overshoot is not.
+BOOST_AUTO_TEST_CASE(CosmicStripLengthTolerance) {
+  const StripSpacePointBuilder::CosmicOptions options;
+  const double halfLength = 25_mm;
+
+  const StripSpacePointBuilder::StripEnds strip1 =
+      makeStrip(Vector3(0, 0, 0), Vector3(1, 0, 0), 2 * halfLength);
+
+  // Overshoots of half and twice the tolerance
+  for (const double overshoot :
+       {0.5 * options.stripLengthTolerance, 2 * options.stripLengthTolerance}) {
+    const double x = (1 + overshoot) * halfLength;
+    const StripSpacePointBuilder::StripEnds strip2 =
+        makeStrip(Vector3(x, 0, 1_mm), Vector3(0, 1, 0), 50_mm);
+
+    const auto result = StripSpacePointBuilder::computeCosmicSpacePoint(
+        strip1, strip2, options);
+
+    if (overshoot < options.stripLengthTolerance) {
+      BOOST_REQUIRE(result.ok());
+      CHECK_CLOSE_ABS(*result, Vector3(x, 0, 0), 1e-9);
+    } else {
+      BOOST_REQUIRE(!result.ok());
+      BOOST_CHECK(result.error() == SpacePointFormationError::OutsideLimits);
+    }
+  }
+}
+
+/// A degenerate strip of zero length has no direction to cross with.
+BOOST_AUTO_TEST_CASE(CosmicZeroLengthStripRejected) {
+  const StripSpacePointBuilder::StripEnds strip1{Vector3(0, 0, 0),
+                                                 Vector3(0, 0, 0)};
+  const StripSpacePointBuilder::StripEnds strip2 =
+      makeStrip(Vector3(0, 0, 1_mm), Vector3(0, 1, 0), 50_mm);
+
+  const StripSpacePointBuilder::CosmicOptions options;
+  const auto result =
+      StripSpacePointBuilder::computeCosmicSpacePoint(strip1, strip2, options);
+
+  BOOST_REQUIRE(!result.ok());
+  BOOST_CHECK(result.error() ==
+              SpacePointFormationError::CosmicToleranceNotMet);
 }
 
 /// Parallel strips have no well defined closest approach and are rejected,

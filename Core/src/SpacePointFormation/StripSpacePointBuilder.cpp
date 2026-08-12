@@ -14,6 +14,8 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <cmath>
+
 namespace Acts {
 
 Result<double> StripSpacePointBuilder::computeClusterPairDistance(
@@ -69,7 +71,7 @@ Result<Vector3> StripSpacePointBuilder::computeCosmicSpacePoint(
   // Minimising |x - y|^2 over lambda0 and lambda1 gives
   //   lambda0 * (q.q) - lambda1 * (q.r) = ac.q
   //   lambda0 * (q.r) - lambda1 * (r.r) = ac.r
-  // with ac = c - a, which resolves to the lambda0 below.
+  // with ac = c - a, which resolves to the lambdas below.
 
   const Vector3 firstBtmToTop = stripEnds1.top - stripEnds1.bottom;
   const Vector3 secondBtmToTop = stripEnds2.top - stripEnds2.bottom;
@@ -78,18 +80,31 @@ Result<Vector3> StripSpacePointBuilder::computeCosmicSpacePoint(
   const double qq = firstBtmToTop.dot(firstBtmToTop);
   const double rr = secondBtmToTop.dot(secondBtmToTop);
   const double qr = firstBtmToTop.dot(secondBtmToTop);
+  const double acq = ac.dot(firstBtmToTop);
+  const double acr = ac.dot(secondBtmToTop);
 
   // By Lagrange's identity this is (q.q) * (r.r) * sin^2(angle between the
   // strips), so the check below is on the opening angle of the two strips and
-  // is independent of their length. It is never negative.
+  // is independent of their length. It is never negative, and zero for a strip
+  // of zero length.
   const double denom = qq * rr - qr * qr;
-  if (denom < options.tolerance * qq * rr) {
+  if (denom <= options.tolerance * qq * rr) {
     return Result<Vector3>::failure(
         SpacePointFormationError::CosmicToleranceNotMet);
   }
 
-  const double lambda0 =
-      (ac.dot(firstBtmToTop) * rr - ac.dot(secondBtmToTop) * qr) / denom;
+  const double lambda0 = (acq * rr - acr * qr) / denom;
+  const double lambda1 = (acq * qr - acr * qq) / denom;
+
+  // The crossing has to lie on both strips. This is the stereo matching
+  // condition and the only compatibility test available without a vertex.
+  // `2 * lambda + 1` centres the on-strip range (-1, 0), so the tolerance is a
+  // fraction of the strip length as in the constrained formation.
+  const double limit = 1 + options.stripLengthTolerance;
+  if (std::abs(2 * lambda0 + 1) > limit || std::abs(2 * lambda1 + 1) > limit) {
+    return Result<Vector3>::failure(SpacePointFormationError::OutsideLimits);
+  }
+
   const Vector3 spacePoint = stripEnds1.top + lambda0 * firstBtmToTop;
   return Result<Vector3>::success(spacePoint);
 }
