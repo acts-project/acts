@@ -103,7 +103,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsTGeo, tgeo) {
     // dispatch on identity to the matching *native* C++ function pointer, so
     // the assignment never round-trips through Python.
     c.def_property(
-        "detectorElementFactory", nullptr,
+        "detectorElementFactory",
+        [](const TGeoDetector::Config&) { return py::none(); },
         [tgeo](TGeoDetector::Config& cfg, const py::object& factory) {
           if (factory.is(tgeo.attr("alignedTGeoDetectorElementFactory"))) {
             cfg.detectorElementFactory = alignedTGeoDetectorElementFactory;
