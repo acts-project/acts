@@ -16,8 +16,8 @@
 
 namespace Acts::Experimental::detail {
 
-void GbtsEdgeState::initialize(const GbtsEdge& pS,
-                               const GbtsNodeView& nodeView) {
+void detail::GbtsEdgeState::initialize(const detail::GbtsEdge& pS,
+                                       const detail::GbtsNodeView& nodeView) {
   initialized = true;
 
   j = 0;
@@ -25,8 +25,8 @@ void GbtsEdgeState::initialize(const GbtsEdge& pS,
 
   // n2->n1
 
-  const GbtsNodeProxy n1 = nodeView[pS.n1];
-  const GbtsNodeProxy n2 = nodeView[pS.n2];
+  const detail::GbtsNodeProxy n1 = nodeView[pS.n1];
+  const detail::GbtsNodeProxy n2 = nodeView[pS.n2];
 
   const float dx = n1.x() - n2.x();
   const float dy = n1.y() - n2.y();
@@ -67,26 +67,24 @@ void GbtsEdgeState::initialize(const GbtsEdge& pS,
 
 namespace Acts::Experimental {
 
-using namespace detail;
-
 GbtsTrackingFilter::GbtsTrackingFilter(
     const Config& config, const std::shared_ptr<const GbtsGeometry>& geometry)
     : m_cfg(config), m_geometry(geometry) {}
 
-GbtsEdgeState GbtsTrackingFilter::followTrack(State& state,
-                                              const GbtsNodeView& nodeView,
-                                              std::vector<GbtsEdge>& sb,
-                                              GbtsEdge& pS) const {
+detail::GbtsEdgeState GbtsTrackingFilter::followTrack(
+    State& state, const detail::GbtsNodeView& nodeView,
+    std::vector<detail::GbtsEdge>& sb, detail::GbtsEdge& pS) const {
   if (pS.level == -1) {
     // already collected
-    return GbtsEdgeState(false);
+    return detail::GbtsEdgeState(false);
   }
 
   state.globalStateCounter = 0;
 
   // create track state
 
-  GbtsEdgeState& pInitState = state.stateStore[state.globalStateCounter];
+  detail::GbtsEdgeState& pInitState =
+      state.stateStore[state.globalStateCounter];
   ++state.globalStateCounter;
 
   pInitState.initialize(pS, nodeView);
@@ -98,25 +96,27 @@ GbtsEdgeState GbtsTrackingFilter::followTrack(State& state,
   propagate(state, nodeView, sb, pS, pInitState);
 
   if (state.stateVec.empty()) {
-    return GbtsEdgeState(false);
+    return detail::GbtsEdgeState(false);
   }
 
   std::ranges::sort(state.stateVec, std::ranges::greater{},
-                    [](const GbtsEdgeState* s) { return s->j; });
+                    [](const detail::GbtsEdgeState* s) { return s->j; });
 
   state.globalStateCounter = 0;
 
   return *state.stateVec.front();
 }
 
-void GbtsTrackingFilter::propagate(State& state, const GbtsNodeView& nodeView,
-                                   std::vector<GbtsEdge>& sb, GbtsEdge& pS,
-                                   GbtsEdgeState& ts) const {
-  if (state.globalStateCounter >= kGbtsMaxEdgeStates) {
+void GbtsTrackingFilter::propagate(State& state,
+                                   const detail::GbtsNodeView& nodeView,
+                                   std::vector<detail::GbtsEdge>& sb,
+                                   detail::GbtsEdge& pS,
+                                   detail::GbtsEdgeState& ts) const {
+  if (state.globalStateCounter >= detail::kGbtsMaxEdgeStates) {
     return;
   }
 
-  GbtsEdgeState& newTs = state.stateStore[state.globalStateCounter];
+  detail::GbtsEdgeState& newTs = state.stateStore[state.globalStateCounter];
   ++state.globalStateCounter;
   newTs = ts;
 
@@ -132,13 +132,13 @@ void GbtsTrackingFilter::propagate(State& state, const GbtsNodeView& nodeView,
 
   const std::int32_t level = pS.level;
 
-  std::vector<GbtsEdge*> lCont;
+  std::vector<detail::GbtsEdge*> lCont;
 
   // loop over the neighbours of this segment
   for (std::uint32_t nIdx = 0; nIdx < pS.nNei; ++nIdx) {
     const std::uint32_t nextSegmentIdx = pS.vNei[nIdx];
 
-    GbtsEdge& pN = sb[nextSegmentIdx];
+    detail::GbtsEdge& pN = sb[nextSegmentIdx];
 
     if (pN.level == -1) {
       // already collected
@@ -153,10 +153,10 @@ void GbtsTrackingFilter::propagate(State& state, const GbtsNodeView& nodeView,
   // the end of chain
   if (lCont.empty()) {
     // store in the vector
-    if (state.globalStateCounter < kGbtsMaxEdgeStates) {
+    if (state.globalStateCounter < detail::kGbtsMaxEdgeStates) {
       if (state.stateVec.empty()) {
         // add the first segment state
-        GbtsEdgeState* p = &state.stateStore[state.globalStateCounter];
+        detail::GbtsEdgeState* p = &state.stateStore[state.globalStateCounter];
         ++state.globalStateCounter;
         *p = newTs;
         state.stateVec.push_back(p);
@@ -164,7 +164,8 @@ void GbtsTrackingFilter::propagate(State& state, const GbtsNodeView& nodeView,
         // compare with the best and add
         const float bestSoFar = state.stateVec.front()->j;
         if (newTs.j > bestSoFar) {
-          GbtsEdgeState* p = &state.stateStore[state.globalStateCounter];
+          detail::GbtsEdgeState* p =
+              &state.stateStore[state.globalStateCounter];
           ++state.globalStateCounter;
           *p = newTs;
           state.stateVec.push_back(p);
@@ -173,15 +174,16 @@ void GbtsTrackingFilter::propagate(State& state, const GbtsNodeView& nodeView,
     }
   } else {
     // branching
-    for (GbtsEdge* sIt : lCont) {
+    for (detail::GbtsEdge* sIt : lCont) {
       // recursive call
       propagate(state, nodeView, sb, *sIt, newTs);
     }
   }
 }
 
-bool GbtsTrackingFilter::update(const GbtsNodeView& nodeView,
-                                const GbtsEdge& pS, GbtsEdgeState& ts) const {
+bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
+                                const detail::GbtsEdge& pS,
+                                detail::GbtsEdgeState& ts) const {
   if (ts.cx[2][2] < 0 || ts.cx[1][1] < 0 || ts.cx[0][0] < 0) {
     std::cout << "Negative cov_x" << std::endl;
   }
@@ -195,8 +197,8 @@ bool GbtsTrackingFilter::update(const GbtsNodeView& nodeView,
   const float tau2 = ts.y[1] * ts.y[1];
   const float invSin2 = 1 + tau2;
 
-  const GbtsNodeProxy n1 = nodeView[pS.n1];
-  const GbtsNodeProxy n2 = nodeView[pS.n2];
+  const detail::GbtsNodeProxy n1 = nodeView[pS.n1];
+  const detail::GbtsNodeProxy n2 = nodeView[pS.n2];
 
   const GbtsLayerType layerType1 = getLayerType(n2.layer());
 

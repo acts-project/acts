@@ -8,15 +8,9 @@
 
 #pragma once
 
-#include "Acts/EventData/Types.hpp"
-
 #include <cstdint>
 
 namespace Acts::Experimental {
-
-/// Index of a graph node inside GbtsNodeStorage. Nodes are stored ordered by
-/// (eta bin, phi), so all nodes of an eta bin form a contiguous range.
-using GbtsNodeIndex = SpacePointIndex;
 
 /// GBTS layer types
 enum class GbtsLayerType { Barrel = 0, Endcap = 1 };

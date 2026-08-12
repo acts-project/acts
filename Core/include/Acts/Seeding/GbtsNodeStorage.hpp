@@ -11,7 +11,7 @@
 #include "Acts/EventData/SpacePointColumnProxy.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Seeding/GbtsTypes.hpp"
+#include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 
 #include <cstdint>
@@ -109,7 +109,7 @@ class GbtsNodeStorage final {
   /// Map a node index back to the index the caller used when inserting it.
   /// @param node Node index
   /// @return The caller's space point index
-  SpacePointIndex spacePointIndex(GbtsNodeIndex node) const {
+  SpacePointIndex spacePointIndex(SpacePointIndex node) const {
     return m_nodes.copiedFromIndexColumn()[node];
   }
 

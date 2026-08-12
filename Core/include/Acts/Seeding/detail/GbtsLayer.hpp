@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Seeding/GbtsTypes.hpp"
+#include "Acts/Seeding/GbtsLayerDescription.hpp"
 
 #include <cstdint>
 #include <vector>

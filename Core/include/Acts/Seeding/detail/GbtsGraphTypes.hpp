@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Seeding/GbtsTypes.hpp"
+#include "Acts/Seeding/GbtsLayerDescription.hpp"
 
 #include <array>
 #include <cstdint>
@@ -19,9 +19,6 @@
 #include <vector>
 
 namespace Acts::Experimental::detail {
-
-/// Sentinel for an unset graph node index.
-static constexpr GbtsNodeIndex kGbtsNodeIndexInvalid = kSpacePointIndexInvalid;
 
 /// Accepted |cot(theta)| range for one cluster width bin. A cluster near the
 /// module edge may be shortened, hence the second pair.
@@ -81,7 +78,7 @@ struct GbtsEtaBinInfo final {
 
   /// (phi, node index) pairs covering this bin, with duplicated entries shifted
   /// by +-2pi at the wrap-around so the phi sliding window never has to wrap.
-  std::vector<std::pair<float, GbtsNodeIndex>> phiNodes;
+  std::vector<std::pair<float, SpacePointIndex>> phiNodes;
 
   float minRadius{};
   float maxRadius{};
@@ -107,7 +104,7 @@ struct GbtsNodeView final {
   /// Handle on a single node.
   /// @param index Index of the node
   /// @return Proxy for the node
-  GbtsNodeProxy operator[](GbtsNodeIndex index) const;
+  GbtsNodeProxy operator[](SpacePointIndex index) const;
 };
 
 /// Read-only handle on a single graph node.
@@ -118,11 +115,11 @@ class GbtsNodeProxy final {
  public:
   /// @param view View of the node positions and layers
   /// @param index Index of the node
-  GbtsNodeProxy(const GbtsNodeView& view, GbtsNodeIndex index)
+  GbtsNodeProxy(const GbtsNodeView& view, SpacePointIndex index)
       : m_view(&view), m_index(index) {}
 
   /// @return Index of the node
-  GbtsNodeIndex index() const { return m_index; }
+  SpacePointIndex index() const { return m_index; }
   /// @return Global x coordinate
   float x() const { return position()[0]; }
   /// @return Global y coordinate
@@ -140,10 +137,10 @@ class GbtsNodeProxy final {
   }
 
   const GbtsNodeView* m_view{};
-  GbtsNodeIndex m_index{kGbtsNodeIndexInvalid};
+  SpacePointIndex m_index{kSpacePointIndexInvalid};
 };
 
-inline GbtsNodeProxy GbtsNodeView::operator[](GbtsNodeIndex index) const {
+inline GbtsNodeProxy GbtsNodeView::operator[](SpacePointIndex index) const {
   return GbtsNodeProxy(*this, index);
 }
 
@@ -158,7 +155,7 @@ struct GbtsEdge final {
   /// @param p1_ First fit parameter
   /// @param p2_ Second fit parameter
   /// @param p3_ Third fit parameter
-  GbtsEdge(GbtsNodeIndex n1_, GbtsNodeIndex n2_, std::uint32_t n2LayerId_,
+  GbtsEdge(SpacePointIndex n1_, SpacePointIndex n2_, std::uint32_t n2LayerId_,
            float p1_, float p2_, float p3_)
       : n1{n1_},
         n2{n2_},
@@ -168,9 +165,9 @@ struct GbtsEdge final {
         n2LayerId{n2LayerId_} {}
 
   /// Inner node of the edge
-  GbtsNodeIndex n1{kGbtsNodeIndexInvalid};
+  SpacePointIndex n1{kSpacePointIndexInvalid};
   /// Outer node of the edge
-  GbtsNodeIndex n2{kGbtsNodeIndexInvalid};
+  SpacePointIndex n2{kSpacePointIndexInvalid};
 
   std::int8_t level{-1};
   std::int8_t next{-1};

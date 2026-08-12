@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
-#include "Acts/Seeding/GbtsTypes.hpp"
+#include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/detail/GbtsLayer.hpp"
 
 #include <cstdint>

@@ -83,7 +83,7 @@ class GbtsTrainingAlgorithm final : public IAlgorithm {
   ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
       this, "MeasurementSimHitsMap"};
   /// mutex used for thread safety
-  mutable std::mutex m_gbtsTrainingToolMutex;
+  mutable std::mutex m_gbtsLayerConnectionToolMutex;
   /// layer connection tool from core
   mutable std::optional<Acts::Experimental::GbtsLayerConnectionTool>
       m_layerConnectionTool;

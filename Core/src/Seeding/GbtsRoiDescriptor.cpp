@@ -12,23 +12,12 @@
 
 namespace Acts::Experimental {
 
-GbtsRoiDescriptor::GbtsRoiDescriptor(double eta, double etaMin, double etaMax,
-                                     double phi, double phiMin, double phiMax,
-                                     double z, double zMin, double zMax)
-    : m_phi(phi),
-      m_eta(eta),
-      m_z(z),
-      m_phiMin(phiMin),
-      m_phiMax(phiMax),
-      m_etaMin(etaMin),
-      m_etaMax(etaMax),
-      m_zMin(zMin),
-      m_zMax(zMax) {
-  const float drdzMin = std::tan(2 * std::atan(std::exp(-m_etaMin)));
-  const float drdzMax = std::tan(2 * std::atan(std::exp(-m_etaMax)));
-
-  m_dzdrMin = 1 / drdzMin;
-  m_dzdrMax = 1 / drdzMax;
+GbtsRoiDescriptor::GbtsRoiDescriptor(double etaMin, double etaMax, double zMin,
+                                     double zMax)
+    : m_zMin(zMin), m_zMax(zMax) {
+  // cot(2 * atan(exp(-eta))) is sinh(eta)
+  m_dzdrMin = std::sinh(etaMin);
+  m_dzdrMax = std::sinh(etaMax);
 }
 
 }  // namespace Acts::Experimental

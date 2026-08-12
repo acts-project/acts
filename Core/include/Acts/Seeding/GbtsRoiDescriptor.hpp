@@ -10,33 +10,18 @@
 
 namespace Acts::Experimental {
 
-/// GBTS region-of-interest descriptor with eta/phi/zed bounds.
+/// GBTS region of interest, as the eta and z bounds the seeder cuts on.
+///
+/// The eta bounds are only kept as the dz/dr gradients they imply. There is no
+/// phi range: the seeder searches the full azimuth.
 class GbtsRoiDescriptor {
  public:
-  /// @param eta eta of RoI
-  /// @param etaMin eta at rear  of RoI
+  /// @param etaMin eta at rear of RoI
   /// @param etaMax eta at front of RoI
-  /// @param phi phi of RoI
-  /// @param phiMin minimum phi of RoI
-  /// @param phiMax maximum phi of RoI
-  /// @param z z of RoI
-  /// @param zMin z at rear  of RoI
+  /// @param zMin z at rear of RoI
   /// @param zMax z at front of RoI
-  GbtsRoiDescriptor(double eta, double etaMin, double etaMax, double phi,
-                    double phiMin, double phiMax, double z = 0, double zMin = 0,
+  GbtsRoiDescriptor(double etaMin, double etaMax, double zMin = 0,
                     double zMax = 0);
-
-  // Methods to retrieve data members
-
-  /// Get phi coordinate of RoI center
-  /// @return Phi coordinate
-  double phi() const { return m_phi; }
-  /// Get eta coordinate of RoI center
-  /// @return Eta coordinate
-  double eta() const { return m_eta; }
-  /// Get z coordinate of RoI center
-  /// @return Z coordinate
-  double z() const { return m_z; }
 
   /// Get z at the most backward end of the RoI
   /// @return Z at rear
@@ -45,21 +30,6 @@ class GbtsRoiDescriptor {
   /// @return Z at front
   double zMax() const { return m_zMax; }
 
-  /// Gets eta at zMin
-  /// @return Eta at rear
-  double etaMin() const { return m_etaMin; }
-  /// Gets eta at zMax
-  /// @return Eta at front
-  double etaMax() const { return m_etaMax; }
-
-  /// Gets phiMinus
-  /// @return Minimum phi
-  double phiMin() const { return m_phiMin; }
-  /// Gets phiPlus
-  /// @return Maximum phi
-  double phiMax() const { return m_phiMax; }
-
-  // return the gradients
   /// Get dz/dr at the rear of the RoI
   /// @return Gradient dzdr at rear
   double dzdrMin() const { return m_dzdrMin; }
@@ -68,16 +38,6 @@ class GbtsRoiDescriptor {
   double dzdrMax() const { return m_dzdrMax; }
 
  private:
-  float m_phi{};  //!< phi of RoI center
-  float m_eta{};  //!< eta of RoI center
-  float m_z{};    //!< z of RoI center
-
-  float m_phiMin{};  //!< most negative RoI in azimuthal
-  float m_phiMax{};  //!< most positive RoI in azimuthal
-
-  float m_etaMin{};  //!< eta of RoI at zMax
-  float m_etaMax{};  //!< eta of RoI at zMin
-
   float m_zMin{};  //!< z position at most negative position along the beamline
   float m_zMax{};  //!< z position at most positive position along the beamline
 

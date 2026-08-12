@@ -300,8 +300,7 @@ SeederSetup makeSeeder(const ToyDetector& detector) {
           getDefaultLogger("GbtsTest", Logging::Level::WARNING)),
       .filter = Experimental::GbtsTrackingFilter(
           Experimental::GbtsTrackingFilter::Config{}, geometry),
-      .roi = Experimental::GbtsRoiDescriptor(0, -4.5, 4.5, 0, -std::numbers::pi,
-                                             std::numbers::pi, 0, -kBarrelHalfZ,
+      .roi = Experimental::GbtsRoiDescriptor(-4.5, 4.5, -kBarrelHalfZ,
                                              kBarrelHalfZ),
       .options = Experimental::GraphBasedTrackSeeder::Options(2_T),
       .isPixelLayer = std::vector<bool>(numLayers, true)};

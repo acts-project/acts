@@ -12,10 +12,10 @@
 #include "Acts/EventData/SeedContainer.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/GbtsNodeStorage.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
-#include "Acts/Seeding/GbtsTypes.hpp"
 #include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -207,7 +207,7 @@ class GraphBasedTrackSeeder {
     /// @param sps Vector of graph node indices
     /// @param splitFlag used to flag if seed needs to be split in two
     SeedCandidateProperties(float quality, std::int32_t clone,
-                            std::vector<GbtsNodeIndex> sps,
+                            std::vector<SpacePointIndex> sps,
                             std::uint32_t splitFlag)
         : seedQuality(quality),
           isClone(clone),
@@ -219,7 +219,7 @@ class GraphBasedTrackSeeder {
     /// Clone flag.
     std::int32_t isClone{};
     /// Graph node indices.
-    std::vector<GbtsNodeIndex> nodes;
+    std::vector<SpacePointIndex> nodes;
     /// Flag for seed splitting.
     std::uint32_t forSeedSplitting{};
   };
@@ -308,7 +308,7 @@ class GraphBasedTrackSeeder {
   /// @param nodes The three graph nodes, innermost first
   /// @return The estimated inverse radius
   float estimateCurvature(const detail::GbtsNodeView& nodeView,
-                          const std::array<GbtsNodeIndex, 3>& nodes) const;
+                          const std::array<SpacePointIndex, 3>& nodes) const;
 
   /// Check a triplet against the pT and d0 cuts.
   /// @param nodeView View of the node positions and layers
@@ -319,7 +319,7 @@ class GraphBasedTrackSeeder {
   /// @param options Event based options such as magnetic field strength
   /// @return Whether the triplet is accepted
   bool validateTriplet(const detail::GbtsNodeView& nodeView,
-                       const std::array<GbtsNodeIndex, 3>& candidateTriplet,
+                       const std::array<SpacePointIndex, 3>& candidateTriplet,
                        float tripletMinPt, float tauRatio, float tauRatioCut,
                        const Options& options) const;
 };
