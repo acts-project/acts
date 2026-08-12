@@ -96,7 +96,7 @@ def __main__():
     parser.add_argument(
         "--material_tol",
         "-mt",
-        help=("Tolerance for material comparisons [%]"),
+        help=("Tolerance for material comparisons [%%]"),
         default=1,
         type=float,
     )
