@@ -24,6 +24,8 @@ enum class SeedSpacePointSelection {
   InnermostTriplet,
   /// The innermost, the middle and the outermost layer.
   SpreadTriplet,
+  /// Every space point.
+  All,
 };
 
 /// Pick the space points that seed a candidate track. The triplet selections go

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -22,6 +23,8 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <array>
+#include <cstddef>
+#include <functional>
 #include <memory>
 #include <string>
 
@@ -39,6 +42,16 @@ namespace ActsExamples {
 /// only those proto tracks with track parameters estimated.
 class TrackParamsEstimationAlgorithm final : public IAlgorithm {
  public:
+  /// Relative weight of a space point at a global position in the helix fit.
+  /// Only ratios matter.
+  using SpacePointWeight = std::function<double(const Acts::Vector3&)>;
+
+  /// Weight a space point by `1 / r^exponent`.
+  ///
+  /// @param exponent the power of the radius to divide by
+  /// @return the weight function
+  static SpacePointWeight inverseRadiusPowerWeight(double exponent);
+
   struct Config {
     /// Input seeds collection.
     std::string inputSeeds;
@@ -68,6 +81,11 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     /// selection cannot be made are skipped.
     SeedSpacePointSelection spacePointSelection =
         SeedSpacePointSelection::FirstThree;
+    /// Geometric refinement iterations of the circle fit. Only used with more
+    /// than three space points.
+    std::size_t geometricRefineIterations = 0;
+    /// Optional space point weight. Unset weights every point the same.
+    SpacePointWeight spacePointWeight;
 
     /// Initial sigmas for the track parameters.
     std::array<double, 6> initialSigmas = {

@@ -72,6 +72,8 @@ std::vector<SpacePointIndex> selectSeedSpacePoints(
       }
       return {perLayer.front(), perLayer[perLayer.size() / 2], perLayer.back()};
     }
+    case SeedSpacePointSelection::All:
+      return {candidates.begin(), candidates.end()};
   }
 
   return {};
