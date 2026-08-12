@@ -99,11 +99,11 @@ void addVisualization(py::module& m) {
                              &VisualizationBuffer::lineThickness);
 
   py::class_<EventDataView3D>(m, "EventDataView3D")
-      .def_static("drawTrack", [](IVisualization3D& helper,
-                                  const AnyConstTrackProxy& track) {
-        EventDataView3D::drawTrack(
-            helper, track, GeometryContext::dangerouslyDefaultConstruct());
-      });
+      .def_static("drawTrack",
+                  [](IVisualization3D& helper, const AnyConstTrackProxy& track,
+                     const GeometryContext& gctx) {
+                    EventDataView3D::drawTrack(helper, track, gctx);
+                  });
 
   py::class_<GeometryObject>(m, "GeometryObject");
   m.def("default_geometry_coloring", &defaultGeometryColoring);
