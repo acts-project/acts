@@ -33,31 +33,13 @@ class GbtsGeometry;
 /// the derived per-node data in dynamic columns on that container.
 class GbtsNodeStorage final {
  public:
-  /// Configuration for node loading.
-  struct Config {
-    /// Per-layer flag marking pixel layers. Indexed by dense layer index.
-    std::vector<bool> isPixelLayer;
-    /// Cut on the pixel cluster width: wide endcap clusters and the tau
-    /// lookup table.
-    bool useClusterWidthCuts = false;
-    /// Maximum endcap cluster width, applied to pixel endcap nodes when
-    /// the cluster width cuts are enabled.
-    float maxEndcapClusterWidth = 0.35f;
-    /// Half-length in local y of a pixel module, against which the distance of
-    /// a cluster to the module edge is measured.
-    float moduleHalfLengthY = 10.f;
-    /// Distance to the module edge below which a cluster may be shortened,
-    /// which the tau lookup table covers with its own bounds.
-    float moduleEdgeTolerance = 0.3f;
-    /// Width of the phi slice used to build the phi indexing.
-    float phiSliceWidth = 0.f;
-  };
-
-  /// @param config Node loading configuration
-  /// @param geometry Shared pointer to GBTS geometry
-  /// @param tauLut Per-cluster-width tau bounds
-  GbtsNodeStorage(Config config, std::shared_ptr<const GbtsGeometry> geometry,
-                  GbtsTauLookupTable tauLut);
+  /// Filled storage is not relocatable: the column proxies point into the
+  /// space point container held by value.
+  GbtsNodeStorage(const GbtsNodeStorage&) = delete;
+  GbtsNodeStorage(GbtsNodeStorage&&) = delete;
+  GbtsNodeStorage& operator=(const GbtsNodeStorage&) = delete;
+  GbtsNodeStorage& operator=(GbtsNodeStorage&&) = delete;
+  ~GbtsNodeStorage() = default;
 
   /// Insert a space point, deriving r and phi from the global position.
   /// @param index Index of the space point in the caller's own collection
@@ -132,9 +114,33 @@ class GbtsNodeStorage final {
   }
 
  private:
-  // The graph representation is an implementation detail shared only with the
-  // seeder that walks it.
+  // Only the seeder builds one and walks the graph inside it.
   friend class GraphBasedTrackSeeder;
+
+  /// Configuration for node loading.
+  struct Config {
+    /// Per-layer flag marking pixel layers. Indexed by dense layer index.
+    std::vector<bool> isPixelLayer;
+    /// Enable the cluster width cuts: wide endcap rejection and tau narrowing.
+    bool useClusterWidthCuts = false;
+    /// Maximum endcap cluster width, applied to pixel endcap nodes when
+    /// the cluster width cuts are enabled.
+    float maxEndcapClusterWidth = 0.35f;
+    /// Half-length in local y of a pixel module, against which the distance of
+    /// a cluster to the module edge is measured.
+    float moduleHalfLengthY = 10.f;
+    /// Distance to the module edge below which a cluster may be shortened,
+    /// which switches to the tau lookup table's near-edge bounds.
+    float moduleEdgeTolerance = 0.3f;
+    /// Width of the phi slice used to build the phi indexing.
+    float phiSliceWidth = 0.f;
+  };
+
+  /// @param config Node loading configuration
+  /// @param geometry Shared pointer to GBTS geometry
+  /// @param tauLut Per-cluster-width tau bounds
+  GbtsNodeStorage(Config config, std::shared_ptr<const GbtsGeometry> geometry,
+                  detail::GbtsTauLookupTable tauLut);
 
   /// Get eta bin info by index
   /// @param idx Eta bin index
@@ -200,7 +206,7 @@ class GbtsNodeStorage final {
 
   std::shared_ptr<const GbtsGeometry> m_geometry;
 
-  GbtsTauLookupTable m_tauLut;
+  detail::GbtsTauLookupTable m_tauLut;
 
   /// Nodes ordered by (eta bin, phi). Carries the caller's index and the packed
   /// (x, y, z, r) position, plus the derived data as dynamic columns.

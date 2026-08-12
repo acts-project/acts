@@ -112,7 +112,7 @@ GbtsEdgeState GbtsTrackingFilter::followTrack(State& state,
 void GbtsTrackingFilter::propagate(State& state, const GbtsNodeView& nodeView,
                                    std::vector<GbtsEdge>& sb, GbtsEdge& pS,
                                    GbtsEdgeState& ts) const {
-  if (state.globalStateCounter >= detail::kGbtsMaxEdgeStates) {
+  if (state.globalStateCounter >= kGbtsMaxEdgeStates) {
     return;
   }
 
@@ -153,7 +153,7 @@ void GbtsTrackingFilter::propagate(State& state, const GbtsNodeView& nodeView,
   // the end of chain
   if (lCont.empty()) {
     // store in the vector
-    if (state.globalStateCounter < detail::kGbtsMaxEdgeStates) {
+    if (state.globalStateCounter < kGbtsMaxEdgeStates) {
       if (state.stateVec.empty()) {
         // add the first segment state
         GbtsEdgeState* p = &state.stateStore[state.globalStateCounter];

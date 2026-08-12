@@ -30,30 +30,20 @@ struct GbtsEdgeState final {
   /// @param nodeView View of the node positions and layers
   void initialize(const GbtsEdge& pS, const GbtsNodeView& nodeView);
 
-  /// Initialization flag
   bool initialized{false};
 
   /// Score for comparison
   float j{};
 
-  /// Vector of edges in the track
   std::vector<GbtsEdge*> vs;
 
-  /// State vector X
   std::array<float, 3> x{};
-  /// State vector Y
   std::array<float, 2> y{};
-  /// Covariance matrix for X
   std::array<std::array<float, 3>, 3> cx{};
-  /// Covariance matrix for Y
   std::array<std::array<float, 2>, 2> cy{};
-  /// Reference x coordinate
   float refX{};
-  /// Reference y coordinate
   float refY{};
-  /// Cosine of rotation angle
   float c{};
-  /// Sine of rotation angle
   float s{};
 };
 
@@ -62,13 +52,10 @@ static constexpr std::uint32_t kGbtsMaxEdgeStates = 2500;
 
 /// State for the tracking filter, containing edge states and a global counter.
 struct GbtsFilterState final {
-  /// State vector
   std::vector<GbtsEdgeState*> stateVec;
 
-  /// State storage array
   std::array<GbtsEdgeState, kGbtsMaxEdgeStates> stateStore{};
 
-  /// Global state counter
   std::uint32_t globalStateCounter{0};
 };
 

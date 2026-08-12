@@ -23,7 +23,7 @@ using namespace detail;
 
 GbtsNodeStorage::GbtsNodeStorage(Config config,
                                  std::shared_ptr<const GbtsGeometry> geometry,
-                                 GbtsTauLookupTable tauLut)
+                                 detail::GbtsTauLookupTable tauLut)
     : m_cfg(std::move(config)),
       m_geometry(std::move(geometry)),
       m_tauLut(std::move(tauLut)),
@@ -47,12 +47,11 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
     const SpacePointIndex index, const float x, const float y, const float z,
     const float r, const float phi, const std::uint32_t layerIndex,
     const float clusterWidth, const float localPositionY) {
-  const detail::GbtsLayer& layer = m_geometry->layerByIndex(layerIndex);
+  const GbtsLayer& layer = m_geometry->layerByIndex(layerIndex);
 
   const bool isBarrel = layer.layerDescription().type == GbtsLayerType::Barrel;
 
-  // Pixel endcap nodes with a wide cluster are dropped when the machine
-  // learning features are in use.
+  // wide pixel endcap clusters are dropped when the width cuts are on
   if (m_cfg.useClusterWidthCuts && !isBarrel &&
       clusterWidth > m_cfg.maxEndcapClusterWidth &&
       layerIndex < m_cfg.isPixelLayer.size() &&
@@ -193,7 +192,7 @@ void GbtsNodeStorage::finalize() {
 
 void GbtsNodeStorage::applyTauCuts(const StagedNode& staged,
                                    GbtsNodeParams& params) const {
-  const detail::GbtsLayer& layer = m_geometry->layerByIndex(staged.layer);
+  const GbtsLayer& layer = m_geometry->layerByIndex(staged.layer);
 
   // skip strips volumes: layers in range [1200X-1400X]
   if (layer.layerDescription().id < 20000) {

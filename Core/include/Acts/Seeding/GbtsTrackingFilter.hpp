@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsTypes.hpp"
 #include "Acts/Seeding/detail/GbtsFilterTypes.hpp"
 
 #include <cstdint>
@@ -18,6 +18,7 @@
 
 namespace Acts::Experimental {
 
+class GbtsGeometry;
 class GraphBasedTrackSeeder;
 
 /// Tracking filter operating on the GBTS edge graph.
@@ -60,12 +61,9 @@ class GbtsTrackingFilter final {
                      const std::shared_ptr<const GbtsGeometry>& geometry);
 
  private:
-  // The edge graph is an implementation detail shared only with the seeder
-  // that walks it.
+  // Only the seeder walks the edge graph.
   friend class GraphBasedTrackSeeder;
 
-  /// State for the tracking filter, containing edge states and a global
-  /// counter.
   using State = detail::GbtsFilterState;
 
   /// Follow track starting from edge

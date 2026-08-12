@@ -116,7 +116,7 @@ void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
   }
 }
 
-GbtsTauLookupTable GraphBasedTrackSeeder::parseTauLookupTable(
+detail::GbtsTauLookupTable GraphBasedTrackSeeder::parseTauLookupTable(
     const std::string& lutInputFile) {
   if (!m_cfg.useClusterWidthCuts) {
     return {};
@@ -127,14 +127,14 @@ GbtsTauLookupTable GraphBasedTrackSeeder::parseTauLookupTable(
 
   std::ifstream ifs(std::string(lutInputFile).c_str());
   if (!ifs.is_open()) {
-    throw std::runtime_error("Failed to open LUT file");
+    throw std::runtime_error("Failed to open tau lookup table file");
   }
 
   GbtsTauLookupTable tauLut;
   tauLut.reserve(100);
 
-  // per line: cluster width, then the bulk and the near-edge tau bounds. The
-  // width only labels the row, the table is indexed by it.
+  // per line: cluster width, bulk tau bounds, near-edge tau bounds. The width
+  // is dropped - rows are located by index, never searched.
   float clusterWidth{};
   GbtsTauBounds bounds;
   while (ifs >> clusterWidth >> bounds.minTau >> bounds.maxTau >>

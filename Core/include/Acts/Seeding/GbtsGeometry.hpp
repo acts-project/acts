@@ -10,7 +10,7 @@
 
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsTypes.hpp"
-#include "Acts/Seeding/detail/GbtsGeometryTypes.hpp"
+#include "Acts/Seeding/detail/GbtsLayer.hpp"
 
 #include <cstdint>
 #include <map>

@@ -15,9 +15,13 @@
 #include "Acts/Seeding/GbtsNodeStorage.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
+#include "Acts/Seeding/GbtsTypes.hpp"
+#include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <array>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <string>
 #include <utility>
@@ -30,7 +34,6 @@ class GraphBasedTrackSeeder {
  public:
   /// Configuration struct for the GBTS seeding algorithm.
   struct Config {
-    // GbtsSeedingAlgorithm options
     /// Enable beam spot correction.
     bool beamSpotCorrection = false;
 
@@ -42,11 +45,9 @@ class GraphBasedTrackSeeder {
     /// Look-up table input file path.
     std::string lutInputFile;
 
-    // SeedFinderGbts option
     /// Enable Large Radius Tracking mode.
     bool lrtMode = false;
-    /// Cut on the pixel cluster width: wide endcap clusters and the tau
-    /// lookup table.
+    /// Enable the cluster width cuts: wide endcap rejection and tau narrowing.
     bool useClusterWidthCuts = false;
     /// Match seeds before creating them.
     bool matchBeforeCreate = false;
@@ -249,7 +250,7 @@ class GraphBasedTrackSeeder {
 
   std::shared_ptr<const GbtsGeometry> m_geometry;
 
-  GbtsTauLookupTable m_tauLut;
+  detail::GbtsTauLookupTable m_tauLut;
 
   std::unique_ptr<const Acts::Logger> m_logger =
       Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
@@ -259,7 +260,8 @@ class GraphBasedTrackSeeder {
   /// Parse the tau lookup table from file.
   /// @param lutInputFile Path to the lookup table input file
   /// @return Parsed tau lookup table
-  GbtsTauLookupTable parseTauLookupTable(const std::string& lutInputFile);
+  detail::GbtsTauLookupTable parseTauLookupTable(
+      const std::string& lutInputFile);
 
   /// Build doublet graph from nodes.
   /// @param roi Region of interest descriptor

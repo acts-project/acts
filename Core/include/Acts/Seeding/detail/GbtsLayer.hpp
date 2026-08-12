@@ -55,35 +55,22 @@ class GbtsLayer final {
                           std::uint32_t b2, float minZ0, float maxZ0) const;
 
  private:
-  /// Layer description
   GbtsLayerDescription m_layerDescription;
 
-  /// Eta-bin indices
   std::vector<std::int32_t> m_bins;
-  /// Minimum radius per bin
   std::vector<float> m_minRadius;
-  /// Maximum radius per bin
   std::vector<float> m_maxRadius;
-  /// Minimum bin coordinate
   std::vector<float> m_minBinCoord;
-  /// Maximum bin coordinate
   std::vector<float> m_maxBinCoord;
 
-  /// Minimum eta
   float m_minEta{};
-  /// Maximum eta
   float m_maxEta{};
-  /// Eta bin
+  /// Width of one eta bin.
   float m_etaBin{};
-  /// First radius coordinate
   float m_r1{};
-  /// First z coordinate
   float m_z1{};
-  /// Second radius coordinate
   float m_r2{};
-  /// Second z coordinate
   float m_z2{};
-  /// Number of bins
   std::uint32_t m_nBins{};
 };
 

@@ -315,11 +315,12 @@ std::int32_t GbtsLayer::getEtaBin(const float zh, const float rh) const {
 
 namespace Acts::Experimental {
 
-// Bin-to-bin connections, keyed by bin. The pair holds the outgoing and the
-// incoming bins the key connects to.
+namespace {
+// key: bin. value: (outgoing, incoming) bins it connects to.
 using BinConnections =
     std::unordered_map<std::uint32_t, std::pair<std::vector<std::uint32_t>,
                                                 std::vector<std::uint32_t>>>;
+}  // namespace
 
 GbtsGeometry::GbtsGeometry(
     const std::vector<GbtsLayerDescription>& layerDescriptions,
