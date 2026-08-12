@@ -236,11 +236,11 @@ def runTruthTrackingKalman(
         )
     )
 
-    s.run()
     if pyVis:
         vis.plot(
             projection=projection, filename="truth_tracking_kalman_visualization.png"
         )
+    return s
 
 
 if "__main__" == __name__:
@@ -264,10 +264,12 @@ if "__main__" == __name__:
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runTruthTrackingKalman(
+    s = runTruthTrackingKalman(
         trackingGeometry=trackingGeometry,
         field=field,
         digiConfigFile=digiConfigFile,
         projection="xy",
         outputDir=Path.cwd(),
     )
+
+    s.run()

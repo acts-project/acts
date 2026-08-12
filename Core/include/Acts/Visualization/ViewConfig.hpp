@@ -164,15 +164,13 @@ static const ViewConfig s_viewGrid = {.color = {220, 0, 0}};
 /// View configuration for line visualization
 static const ViewConfig s_viewLine = {.color = {0, 0, 220}};
 
-/// Default ViewConfigFactory which colors sensitive surfaces green and
-/// boundaries orange
-ViewConfig defaultGeometryColoring(const GeometryObject&);
-
 /// Function that takes a GeometryObject as an input and outputs a ViewConfig
 /// This allows to use custom functions for determining the colour of
 /// GeometryObjects
 using ViewConfigFunc = std::function<ViewConfig(const GeometryObject&)>;
 
-ViewConfigFunc viewConfigFactory();
+/// Default ViewConfigFactory which colors sensitive surfaces green and
+/// boundaries orange
+ViewConfig defaultGeometryColoring(const GeometryObject&);
 
 }  // namespace Acts

@@ -238,7 +238,7 @@ class TrackingGeometry {
   /// @param portalViewConfig View config for portals
   /// @param sensitiveViewConfig View configuration for sensitive surfaces
   void visualize(IVisualization3D& helper, const GeometryContext& gctx,
-                 const ViewConfigFunc& func = viewConfigFactory()) const;
+                 const ViewConfigFunc& func = defaultGeometryColoring) const;
 
   /// Which *type* of geometry this represents: Gen1 or Gen3
   enum class GeometryVersion { Gen1, Gen3 };

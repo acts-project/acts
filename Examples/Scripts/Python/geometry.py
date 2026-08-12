@@ -2,6 +2,7 @@
 
 import os
 import json
+from pathlib import Path
 
 import acts
 import acts.examples
@@ -108,7 +109,7 @@ def runGeometry(
 
 if "__main__" == __name__:
     # detector = acts.examples.GenericDetector()
-    detector = getOpenDataDetector(gen3=True)
+    detector = getOpenDataDetector()
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
 

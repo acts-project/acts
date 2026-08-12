@@ -30,8 +30,4 @@ ViewConfig defaultGeometryColoring(const GeometryObject& geoObj) {
   }
 }
 
-ViewConfigFunc viewConfigFactory() {
-  return defaultGeometryColoring;
-}
-
 }  // namespace Acts
