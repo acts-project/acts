@@ -236,10 +236,13 @@ def runTruthTrackingKalman(
         )
     )
 
+    s.run()
+
     if pyVis:
         vis.plot(
             projection=projection, filename="truth_tracking_kalman_visualization.png"
         )
+
     return s
 
 
@@ -271,5 +274,3 @@ if "__main__" == __name__:
         projection="xy",
         outputDir=Path.cwd(),
     )
-
-    s.run()
