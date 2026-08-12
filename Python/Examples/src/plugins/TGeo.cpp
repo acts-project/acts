@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "ActsExamples/TGeoDetector/AlignedTGeoDetectorElement.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
