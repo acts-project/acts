@@ -96,23 +96,34 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
 
   IndexSourceLink::SurfaceAccessor surfaceAccessor{*m_cfg.trackingGeometry};
 
+  const SpacePointContainer& spacePoints = seeds.spacePointContainer();
+
+  // reused across seeds by the space point selection
+  std::vector<SpacePointIndex> candidates;
+
   // Loop over all found seeds to estimate track parameters
   for (std::size_t iseed = 0; iseed < seeds.size(); ++iseed) {
     const auto& seed = seeds[iseed];
     if (seed.spacePoints().size() < 3) {
       ACTS_WARNING("Seed " << iseed << " has less than 3 space points, skip");
       continue;
-    } else if (seed.spacePoints().size() > 3) {
-      ACTS_DEBUG(
-          "Seed "
-          << iseed
-          << " has more than 3 space points, only the first 3 will be used");
+    }
+
+    candidates.clear();
+    for (const ConstSpacePointProxy& sp : seed.spacePoints()) {
+      candidates.push_back(sp.index());
+    }
+    const std::vector<SpacePointIndex> selected = selectSeedSpacePoints(
+        spacePoints, candidates, m_cfg.spacePointSelection);
+    if (selected.size() < 3) {
+      ACTS_DEBUG("Seed " << iseed << " has no space point selection, skip");
+      continue;
     }
 
     // Get the bottom space point and its reference surface
-    const ConstSpacePointProxy bottomSp = seed.spacePoints()[0];
-    const ConstSpacePointProxy middleSp = seed.spacePoints()[1];
-    const ConstSpacePointProxy topSp = seed.spacePoints()[2];
+    const ConstSpacePointProxy bottomSp = spacePoints.at(selected[0]);
+    const ConstSpacePointProxy middleSp = spacePoints.at(selected[1]);
+    const ConstSpacePointProxy topSp = spacePoints.at(selected[2]);
     if (bottomSp.sourceLinks().empty()) {
       ACTS_WARNING("Missing source link in the space point");
       continue;
