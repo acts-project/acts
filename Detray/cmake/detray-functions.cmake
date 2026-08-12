@@ -112,6 +112,41 @@ function(detray_test_public_headers library)
     endforeach()
 endfunction(detray_test_public_headers)
 
+# Helper function to set up a target that compiles detray's headers one-by-one.
+#
+# This is a thin wrapper around ACTS' `acts_compile_headers`, which is only
+# available when detray is built as part of the ACTS build. In a standalone
+# detray build this is a no-op.
+#
+# Unlike `detray_test_public_headers` this covers the `detail/` headers as
+# well, and produces a single (EXCLUDE_FROM_ALL) library per component rather
+# than one executable per header. It also gives tools like clangd the compiler
+# flags for every header.
+#
+# Note that the detray headers only compile when an algebra plugin is present,
+# so `link` should name one of the algebra-specific targets (e.g.
+# `detray::core_array`) rather than the plugin-less `detray::core`.
+#
+# Usage: detray_compile_headers( core detray::core_array
+#                                include/detray/**/*.hpp )
+#
+function(detray_compile_headers name link)
+    if(NOT COMMAND acts_compile_headers)
+        return()
+    endif()
+
+    if(NOT TARGET ${link})
+        return()
+    endif()
+
+    acts_compile_headers(
+        ${name}
+        NAME detray_${name}_HEADERS
+        LINK ${link}
+        GLOB ${ARGN}
+    )
+endfunction(detray_compile_headers)
+
 # Helper function for setting up the detray executables.
 #
 # The detray executables are *not* installed with the project, as they are only

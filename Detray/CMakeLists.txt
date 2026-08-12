@@ -55,6 +55,26 @@ set(DETRAY_PYTHON_INSTALL_DIR "python/detray")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(detray-functions)
 
+# The compiler warning policy is shared with the enclosing Acts monorepo, which
+# is the single source of truth for it. It is included by absolute path rather
+# than through CMAKE_MODULE_PATH, so that Acts' Find<Package>.cmake modules do
+# not shadow the ones used here.
+get_filename_component(
+    _detray_acts_cmake_dir
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake"
+    ABSOLUTE
+)
+if(NOT EXISTS "${_detray_acts_cmake_dir}/ActsWarningFlags.cmake")
+    message(
+        FATAL_ERROR
+        "Could not find the shared warning flag module at "
+        "${_detray_acts_cmake_dir}/ActsWarningFlags.cmake. Detray has to be "
+        "built from within an Acts monorepo checkout."
+    )
+endif()
+include("${_detray_acts_cmake_dir}/ActsWarningFlags.cmake")
+unset(_detray_acts_cmake_dir)
+
 #
 # Define build options
 #
@@ -508,6 +528,10 @@ endif()
 #
 # Set up all of the libraries of the project.
 #
+
+# Everything above this point is dependency setup, which must not be built with
+# our warning flags. Everything below is detray's own code.
+acts_apply_warning_flags(PROFILE detray LANGUAGES CXX)
 
 add_subdirectory(core)
 add_subdirectory(detectors)

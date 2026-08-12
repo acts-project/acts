@@ -19,12 +19,6 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
     traccc_add_flag( CMAKE_CUDA_FLAGS "-Xcompiler /Zc:__cplusplus" )
 endif()
 
-if("${CMAKE_CUDA_COMPILER_ID}" MATCHES "NVIDIA")
-    traccc_add_flag( CMAKE_CUDA_FLAGS "-Wall" )
-    traccc_add_flag( CMAKE_CUDA_FLAGS "-Wextra" )
-    traccc_add_flag( CMAKE_CUDA_FLAGS "-Wconversion" )
-endif()
-
 # Allow to use functions in device code that are constexpr, even if they are
 # not marked with __device__.
 traccc_add_flag( CMAKE_CUDA_FLAGS "--use_fast_math" )
@@ -51,14 +45,8 @@ endif()
 # profilers have access to line data.
 traccc_add_flag( CMAKE_CUDA_FLAGS_RELWITHDEBINFO "-lineinfo" )
 
-# Fail on warnings, if asked for that behaviour.
-if(TRACCC_FAIL_ON_WARNINGS)
-    if(
-        ("${CUDAToolkit_VERSION}" VERSION_GREATER_EQUAL "10.2")
-        AND ("${CMAKE_CUDA_COMPILER_ID}" MATCHES "NVIDIA")
-    )
-        traccc_add_flag( CMAKE_CUDA_FLAGS "-Werror all-warnings" )
-    elseif("${CMAKE_CUDA_COMPILER_ID}" MATCHES "Clang")
-        traccc_add_flag( CMAKE_CUDA_FLAGS "-Werror" )
-    endif()
-endif()
+# Warnings and warnings-as-errors come from the shared ActsWarningFlags.cmake
+# module, and are applied to the directory that includes this file. CMake picks
+# the right flag for the compiler in use (`-Werror all-warnings` for
+# nvcc >= 10.2, `-Werror` for clang-cuda).
+acts_apply_warning_flags(PROFILE traccc LANGUAGES CUDA)

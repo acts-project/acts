@@ -150,7 +150,7 @@ docker search --list-tags ghcr.io/acts-project/ubuntu2404
 The following command then downloads a stable tag of the `ubuntu2404` image:
 
 ```console
-docker pull ghcr.io/acts-project/ubuntu2404:87
+docker pull ghcr.io/acts-project/ubuntu2404:88
 ```
 
 This should print the image id as part of the output. You can also find out the
@@ -251,6 +251,8 @@ components.
 | ACTS_PARAMETER_DEFINITIONS_HEADER             | Use a different (track) parameter<br>definitions header<br> type: `filepath`, default: `""`                                                                                                                                        |
 | ACTS_SOURCELINK_SBO_SIZE                      | Customize the SBO size used by<br>SourceLink<br> type: `string`, default: `""`                                                                                                                                                     |
 | ACTS_FORCE_ASSERTIONS                         | Force assertions regardless of build<br>type<br> type: `bool`, default: `OFF`                                                                                                                                                      |
+| ACTS_ENABLE_WARNINGS                          | Apply the Acts warning flag set to Acts'<br>own code<br> type: `bool`, default: `ON`                                                                                                                                               |
+| ACTS_FAIL_ON_WARNINGS                         | Treat compiler warnings in Acts' own<br>code as errors<br> type: `bool`, default: `OFF`                                                                                                                                            |
 | ACTS_USE_SYSTEM_LIBS                          | Use system libraries by default<br> type: `bool`, default: `OFF`                                                                                                                                                                   |
 | ACTS_USE_SYSTEM_ACTSVG                        | Use the ActSVG system library<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                             |
 | ACTS_USE_SYSTEM_COVFIE                        | Use a system-provided covfie<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
