@@ -83,9 +83,7 @@ if "__main__" == __name__:
         action="store_true",
         help="Flag toggling that the input is a CSV directory",
     )
-    p.add_argument(
-        "--nEvents", default=100, help="Number of events to run", type=int
-    )
+    p.add_argument("--nEvents", default=100, help="Number of events to run", type=int)
     p.add_argument(
         "--eta-only",
         action="store_true",
@@ -94,8 +92,6 @@ if "__main__" == __name__:
 
     args = p.parse_args()
     if args.isCSV:
-        runHoughFromCsv(
-            inDir=args.input, nEvents=args.nEvents, etaOnly=args.eta_only
-        )
+        runHoughFromCsv(inDir=args.input, nEvents=args.nEvents, etaOnly=args.eta_only)
     else:
         runHoughFromRoot(args.input, nEvents=args.nEvents)

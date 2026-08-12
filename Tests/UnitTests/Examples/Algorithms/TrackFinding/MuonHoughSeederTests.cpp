@@ -206,9 +206,9 @@ BOOST_AUTO_TEST_CASE(muon_hough_seeder_drift_circle_sanity_phi_disabled) {
   const ActsExamples::MuonHoughMaxContainer& maxima = outputHandle(ctx);
 
   BOOST_REQUIRE_GT(maxima.size(), 0u);
-  BOOST_CHECK(std::all_of(maxima.begin(), maxima.end(), [](const auto& maximum) {
-    return maximum.interceptX() == 0.0;
-  }));
+  BOOST_CHECK(std::all_of(
+      maxima.begin(), maxima.end(),
+      [](const auto& maximum) { return maximum.interceptX() == 0.0; }));
 
   bool foundExpectedMaximum = false;
 
