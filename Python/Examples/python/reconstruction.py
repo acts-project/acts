@@ -115,8 +115,9 @@ TruthEstimatedSeedingAlgorithmConfigArg = namedtuple(
     "TruthSeederConfig",
     [
         "deltaR",  # (min,max)
+        "truthSeedSpacePoints",  # acts.examples.TruthSeedSpacePointSelection
     ],
-    defaults=[(None, None)],
+    defaults=[(None, None), None],
 )
 
 TrackSelectorConfig = namedtuple(
@@ -735,6 +736,7 @@ def addTruthEstimatedSeeding(
         **acts.examples.defaultKWArgs(
             deltaRMin=TruthEstimatedSeedingAlgorithmConfigArg.deltaR[0],
             deltaRMax=TruthEstimatedSeedingAlgorithmConfigArg.deltaR[1],
+            spacePointSelection=TruthEstimatedSeedingAlgorithmConfigArg.truthSeedSpacePoints,
             particleHypothesis=particleHypothesis,
         ),
     )
