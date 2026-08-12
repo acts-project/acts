@@ -38,10 +38,6 @@ class GbtsRoiDescriptor {
   /// @return Z coordinate
   double z() const { return m_z; }
 
-  /// these quantities probably don't need to be used any more
-  /// - they are implemented here only because we had them in
-  ///   the original legacy interface
-
   /// Get z at the most backward end of the RoI
   /// @return Z at rear
   double zMin() const { return m_zMin; }
@@ -71,20 +67,6 @@ class GbtsRoiDescriptor {
   /// @return Gradient dzdr at front
   double dzdrMax() const { return m_dzdrMax; }
 
-  /// Get dr/dz at the rear of the RoI
-  /// @return Gradient drdz at rear
-  double drdzMin() const { return m_drdzMin; }
-  /// Get dr/dz at the front of the RoI
-  /// @return Gradient drdz at front
-  double drdzMax() const { return m_drdzMax; }
-
-  /// Get z at the most backward end of the RoI at outer radius
-  /// @return Z at rear outer radius
-  double zOuterMin() const { return m_zOuterMin; }
-  /// Get z at the most forward end of the RoI at outer radius
-  /// @return Z at front outer radius
-  double zOuterMax() const { return m_zOuterMax; }
-
  private:
   float m_phi{};  //!< phi of RoI center
   float m_eta{};  //!< eta of RoI center
@@ -101,12 +83,6 @@ class GbtsRoiDescriptor {
 
   float m_dzdrMin{};  //!<  dz/dr at the rear of the RoI
   float m_dzdrMax{};  //!<  dz/dr at the front of the RoI
-
-  float m_drdzMin{};  //!<  dr/dz at the rear of the RoI
-  float m_drdzMax{};  //!<  dr/dz at the front of the RoI
-
-  float m_zOuterMin{};  //!< z at rear of RoI at the outer radius ( = 1100 mm)
-  float m_zOuterMax{};  //!< z at front of RoI at the outer radius ( = 1100 mm)
 };
 
 }  // namespace Acts::Experimental

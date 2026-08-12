@@ -271,8 +271,17 @@ SpacePointContainer makeSpacePoints(const ToyDetector& detector,
   return container;
 }
 
-SeedContainer runSeeding(const ToyDetector& detector,
-                         const SpacePointContainer& spacePoints) {
+/// The seeder and everything it needs, for one toy detector.
+struct SeederSetup {
+  std::shared_ptr<Experimental::GbtsGeometry> geometry;
+  Experimental::GraphBasedTrackSeeder seeder;
+  Experimental::GbtsTrackingFilter filter;
+  Experimental::GbtsRoiDescriptor roi;
+  Experimental::GraphBasedTrackSeeder::Options options;
+  std::vector<bool> isPixelLayer;
+};
+
+SeederSetup makeSeeder(const ToyDetector& detector) {
   auto geometry = makeGeometry(detector);
 
   const auto numLayers = static_cast<std::uint32_t>(detector.layers.size());
@@ -285,25 +294,29 @@ SeedContainer runSeeding(const ToyDetector& detector,
   // the toy setup has no ML lookup table and no cluster widths
   config.useMl = false;
 
-  const Experimental::GraphBasedTrackSeeder seeder(
-      Experimental::GraphBasedTrackSeeder::DerivedConfig(config), geometry,
-      getDefaultLogger("GbtsTest", Logging::Level::WARNING));
+  return SeederSetup{
+      geometry,
+      Experimental::GraphBasedTrackSeeder(
+          Experimental::GraphBasedTrackSeeder::DerivedConfig(config), geometry,
+          getDefaultLogger("GbtsTest", Logging::Level::WARNING)),
+      Experimental::GbtsTrackingFilter(
+          Experimental::GbtsTrackingFilter::Config{}, geometry),
+      Experimental::GbtsRoiDescriptor(0, -4.5, 4.5, 0, -std::numbers::pi,
+                                      std::numbers::pi, 0, -kBarrelHalfZ,
+                                      kBarrelHalfZ),
+      Experimental::GraphBasedTrackSeeder::Options(2_T),
+      std::vector<bool>(numLayers, true)};
+}
 
-  const Experimental::GbtsTrackingFilter filter(
-      Experimental::GbtsTrackingFilter::Config{}, geometry);
-
-  const Experimental::GbtsRoiDescriptor roi(0, -4.5, 4.5, 0, -std::numbers::pi,
-                                            std::numbers::pi, 0, -kBarrelHalfZ,
-                                            kBarrelHalfZ);
-
-  const Experimental::GraphBasedTrackSeeder::Options options(2_T);
-
-  const std::vector<bool> isPixelLayer(numLayers, true);
+SeedContainer runSeeding(const ToyDetector& detector,
+                         const SpacePointContainer& spacePoints) {
+  const SeederSetup setup = makeSeeder(detector);
 
   SeedContainer seeds;
   seeds.assignSpacePointContainer(spacePoints);
 
-  seeder.createSeeds(spacePoints, roi, isPixelLayer, filter, options, seeds);
+  setup.seeder.createSeeds(spacePoints, setup.roi, setup.isPixelLayer,
+                           setup.filter, setup.options, seeds);
 
   return seeds;
 }
@@ -406,6 +419,48 @@ BOOST_AUTO_TEST_CASE(BarrelInputIsWellFormed) {
     BOOST_CHECK_LT(sp.extra(layerColumn), detector.layers.size());
     BOOST_CHECK_LE(std::abs(sp.z()), kBarrelHalfZ);
   }
+}
+
+// Filling the node storage from a caller's own EDM has to give the same seeds
+// as the overload that fills it from a space point container.
+BOOST_AUTO_TEST_CASE(SeedsFromCallerFilledNodeStorage) {
+  const ToyDetector detector = barrelDetector();
+  const std::vector<Track> tracks = makeSparseTracks();
+  const SpacePointContainer spacePoints = makeSpacePoints(detector, tracks);
+
+  const SeederSetup setup = makeSeeder(detector);
+
+  Experimental::GbtsNodeStorage storage =
+      setup.seeder.makeNodeStorage(setup.isPixelLayer);
+
+  auto layerColumn = spacePoints.column<std::uint32_t>("layerId");
+  for (const auto& sp : spacePoints) {
+    const std::optional<std::uint32_t> bin = storage.insert(
+        sp.index(), sp.x(), sp.y(), sp.z(), sp.extra(layerColumn));
+    BOOST_CHECK(bin.has_value());
+  }
+  storage.finalize();
+
+  BOOST_CHECK_EQUAL(storage.numberOfNodes(), spacePoints.size());
+
+  // finalize reorders by (eta bin, phi), so this has to be a permutation
+  std::vector<SpacePointIndex> mapped;
+  for (std::uint32_t node = 0; node < storage.numberOfNodes(); ++node) {
+    mapped.push_back(storage.spacePointIndex(node));
+  }
+  std::ranges::sort(mapped);
+  BOOST_CHECK(std::ranges::adjacent_find(mapped) == mapped.end());
+  BOOST_CHECK_EQUAL(mapped.front(), 0u);
+  BOOST_CHECK_EQUAL(mapped.back(), spacePoints.size() - 1);
+
+  SeedContainer seeds;
+  seeds.assignSpacePointContainer(spacePoints);
+  setup.seeder.createSeeds(storage, setup.roi, setup.filter, setup.options,
+                           seeds);
+
+  checkOneSeedPerTrack(seeds, spacePoints, tracks);
+  BOOST_CHECK_EQUAL(formatSeeds(seeds),
+                    formatSeeds(runSeeding(detector, spacePoints)));
 }
 
 // One seed per track, all four hits, in radial order.

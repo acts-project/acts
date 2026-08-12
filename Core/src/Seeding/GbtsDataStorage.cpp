@@ -47,7 +47,7 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
     const SpacePointIndex index, const float x, const float y, const float z,
     const float r, const float phi, const std::uint32_t layerIndex,
     const float clusterWidth, const float localPositionY) {
-  const GbtsLayer& layer = m_geometry->layerByIndex(layerIndex);
+  const detail::GbtsLayer& layer = m_geometry->layerByIndex(layerIndex);
 
   const bool isBarrel = layer.layerDescription().type == GbtsLayerType::Barrel;
 
@@ -192,7 +192,7 @@ void GbtsNodeStorage::finalize() {
 
 void GbtsNodeStorage::applyMlTauCuts(const StagedNode& staged,
                                      GbtsNodeParams& params) const {
-  const GbtsLayer& layer = m_geometry->layerByIndex(staged.layer);
+  const detail::GbtsLayer& layer = m_geometry->layerByIndex(staged.layer);
 
   // skip strips volumes: layers in range [1200X-1400X]
   if (layer.layerDescription().id < 20000) {

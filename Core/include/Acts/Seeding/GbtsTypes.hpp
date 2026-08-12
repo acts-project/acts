@@ -10,6 +10,8 @@
 
 #include "Acts/EventData/Types.hpp"
 
+#include <cstdint>
+
 namespace Acts::Experimental {
 
 /// Index of a graph node inside GbtsNodeStorage. Nodes are stored ordered by
@@ -18,5 +20,22 @@ using GbtsNodeIndex = SpacePointIndex;
 
 /// Sentinel for an unset graph node index.
 static constexpr GbtsNodeIndex kGbtsNodeIndexInvalid = kSpacePointIndexInvalid;
+
+/// GBTS layer types
+enum class GbtsLayerType { Barrel = 0, Endcap = 1 };
+
+/// Lightweight layer description for GBTS geometry.
+struct GbtsLayerDescription final {
+  /// Combined subdetector ID.
+  std::int32_t id{};
+  /// Layer type (barrel or endcap).
+  GbtsLayerType type{};
+  /// Reference coordinate (z for barrel, r for endcap).
+  float refCoord{};
+  /// Minimum boundary coordinate.
+  float minBound{};
+  /// Maximum boundary coordinate.
+  float maxBound{};
+};
 
 }  // namespace Acts::Experimental

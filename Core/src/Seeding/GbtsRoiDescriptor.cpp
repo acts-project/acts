@@ -24,11 +24,11 @@ GbtsRoiDescriptor::GbtsRoiDescriptor(double eta, double etaMin, double etaMax,
       m_etaMax(etaMax),
       m_zMin(zMin),
       m_zMax(zMax) {
-  m_drdzMin = std::tan(2 * std::atan(std::exp(-m_etaMin)));
-  m_drdzMax = std::tan(2 * std::atan(std::exp(-m_etaMax)));
+  const float drdzMin = std::tan(2 * std::atan(std::exp(-m_etaMin)));
+  const float drdzMax = std::tan(2 * std::atan(std::exp(-m_etaMax)));
 
-  m_dzdrMin = 1 / m_drdzMin;
-  m_dzdrMax = 1 / m_drdzMax;
+  m_dzdrMin = 1 / drdzMin;
+  m_dzdrMax = 1 / drdzMax;
 }
 
 }  // namespace Acts::Experimental
