@@ -32,6 +32,10 @@ jobs:
     permissions:
       contents: read
     strategy:
+      # A broken leg must not cancel the others: which of them is affected is
+      # the useful part of the signal, and the CUDA-Release leg feeds the
+      # artifact `cuda-test` below consumes.
+      fail-fast: false
       matrix:
         platform:
           - name: CPU
@@ -295,5 +299,8 @@ jobs:
 
       # ctest -R is case-sensitive, so the regex spells out both cases: the
       # lowercase-named GPU tests (grids_cuda.*) are otherwise skipped silently.
+      # --no-tests=error for the same reason: the whole job is a `-R` filter, and
+      # ctest's default is to report success on an empty set, so a regex that
+      # stops matching would leave the job green having run nothing.
       - name: Test
-        run: ctest --test-dir build --output-on-failure -R "[Cc][Uu][Dd][Aa]"
+        run: ctest --test-dir build --output-on-failure --no-tests=error -R "[Cc][Uu][Dd][Aa]"

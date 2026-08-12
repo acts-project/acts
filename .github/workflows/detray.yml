@@ -140,7 +140,7 @@ jobs:
       run: |
         cd build
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
-        ctest -R detray_unit_test_. -E "._eigen|._fastor|._vc_aos" --output-on-failure
+        ctest -R detray_unit_test_. -E "._eigen|._fastor|._vc_aos" --output-on-failure --no-tests=error
 
   # Containerised build jobs. Debug compile checks only -- nothing here is
   # executed. CUDA has its own build/test pair below.
@@ -364,8 +364,11 @@ jobs:
     - name: Download data files
       run: ${GITHUB_WORKSPACE}/Detray/data/detray_data_get_files.sh
 
+    # --no-tests=error because the whole job is a `-R` filter: if an upstream
+    # rename stops the regex matching, ctest's default is to report success on
+    # an empty set and the job goes green having run nothing.
     - name: Test
-      run: ctest --test-dir build --output-on-failure -R ".*cuda.*"
+      run: ctest --test-dir build --output-on-failure --no-tests=error -R ".*cuda.*"
 
     # Some CUDA binaries are not registered with ctest, so run them directly.
     # A loop rather than `find -exec`: find reports its own exit status, not

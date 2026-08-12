@@ -418,6 +418,8 @@ jobs:
               - 'Tests/CommonHelpers/**'
               - 'Tests/UnitTests/Fatras/**'
               - 'Tests/UnitTests/Plugins/**'
+              # Defines the add_unittest macro the tests are registered with
+              - 'Tests/UnitTests/CMakeLists.txt'
               # Build system: also the only way the list above can go stale
               - 'CMakeLists.txt'
               - 'CMakePresets.json'
@@ -431,13 +433,19 @@ jobs:
             cuda_muon:
               # ActsUnitTestCudaMuonSpacePoint is the only target built. It
               # links Acts::TestsCommonHelpers and
-              # ActsExamplesCudaMuonSegmentFitting -> Acts::ExamplesFramework
-              # -> Core, which is the whole closure.
+              # ActsExamplesCudaMuonSegmentFitting -> Acts::ExamplesFramework,
+              # which is PUBLIC Acts::Fatras + Acts::PluginFpeMonitoring
+              # (Examples/Framework/CMakeLists.txt:42) -> Core. That is the
+              # whole closure.
               - 'Core/**'
+              - 'Fatras/**'
+              - 'Plugins/FpeMonitoring/**'
               - 'Examples/Framework/**'
               - 'Examples/CudaMuonSegmentFitting/**'
               - 'Tests/CommonHelpers/**'
               - 'Tests/UnitTests/Examples/CudaMuonSegmentFitting/**'
+              # Defines the add_unittest macro the test is registered with
+              - 'Tests/UnitTests/CMakeLists.txt'
               # Build system: also the only way the list above can go stale
               - 'CMakeLists.txt'
               - 'CMakePresets.json'
