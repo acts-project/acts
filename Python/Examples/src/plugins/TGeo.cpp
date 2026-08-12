@@ -12,7 +12,6 @@
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
-#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -90,11 +89,31 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsTGeo, tgeo) {
                        fileName, buildBeamPipe, beamPipeRadius,
                        beamPipeHalflengthZ, beamPipeLayerThickness,
                        beamPipeEnvelopeR, layerEnvelopeR, unitScalor,
-                       materialDecorator, volumes, detectorElementFactory);
-
-    patchKwargsConstructor(c);
+                       materialDecorator, volumes);
 
     tgeo.def("alignedTGeoDetectorElementFactory",
             &alignedTGeoDetectorElementFactory);
+
+    // `detectorElementFactory` is a std::function taking ROOT types
+    // (TGeoNode, TGeoMatrix) that have no pybind11 caster. Exposing it as an
+    // ordinary read-write std::function property would make pybind11 wrap
+    // whatever is assigned in a generic Python call-back trampoline, which
+    // then fails at call time because those ROOT arguments cannot be
+    // converted to Python objects. Instead take the raw Python object and
+    // dispatch on identity to the matching *native* C++ function pointer, so
+    // the assignment never round-trips through Python.
+    c.def_property(
+        "detectorElementFactory", nullptr,
+        [tgeo](TGeoDetector::Config& cfg, const py::object& factory) {
+          if (factory.is(tgeo.attr("alignedTGeoDetectorElementFactory"))) {
+            cfg.detectorElementFactory = alignedTGeoDetectorElementFactory;
+          } else if (!factory.is_none()) {
+            throw py::value_error(
+                "detectorElementFactory only accepts "
+                "acts.examples.tgeo.alignedTGeoDetectorElementFactory");
+          }
+        });
+
+    patchKwargsConstructor(c);
   }
 }
