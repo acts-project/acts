@@ -6,10 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "ActsExamples/TGeoDetector/AlignedTGeoDetectorElement.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -87,8 +89,11 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsTGeo, tgeo) {
                        fileName, buildBeamPipe, beamPipeRadius,
                        beamPipeHalflengthZ, beamPipeLayerThickness,
                        beamPipeEnvelopeR, layerEnvelopeR, unitScalor,
-                       materialDecorator, volumes);
+                       materialDecorator, volumes, detectorElementFactory);
 
     patchKwargsConstructor(c);
+
+    tgeo.def("alignedTGeoDetectorElementFactory",
+            &alignedTGeoDetectorElementFactory);
   }
 }
