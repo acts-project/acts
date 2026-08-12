@@ -78,7 +78,7 @@ def propagation_options():
     parser.add_argument(
         "--accumulated_error",
         "-aerr",
-        help=("Positional error with path length [%]"),
+        help=("Positional error with path length [%%]"),
         default=0.0001,
         type=float,
     )
