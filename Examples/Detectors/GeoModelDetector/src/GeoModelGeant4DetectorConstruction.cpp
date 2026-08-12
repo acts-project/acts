@@ -15,8 +15,17 @@
 #include <G4PVPlacement.hh>
 #include <G4ThreeVector.hh>
 #include <G4VPhysicalVolume.hh>
-#include <GeoModel2G4/ExtParameterisedVolumeBuilder.h>
 #include <GeoModelKernel/GeoFullPhysVol.h>
+
+// GeoModel 6.31 merged `ExtParameterisedVolumeBuilder` into the (previously
+// abstract) `VolumeBuilder` base class and dropped the derived header.
+#if __has_include(<GeoModel2G4/ExtParameterisedVolumeBuilder.h>)
+#include <GeoModel2G4/ExtParameterisedVolumeBuilder.h>
+using GeoModelVolumeBuilder = ExtParameterisedVolumeBuilder;
+#else
+#include <GeoModel2G4/VolumeBuilder.h>
+using GeoModelVolumeBuilder = VolumeBuilder;
+#endif
 
 namespace ActsExamples {
 
@@ -35,7 +44,7 @@ GeoModelGeant4DetectorConstruction::GeoModelGeant4DetectorConstruction(
 
 G4VPhysicalVolume* GeoModelGeant4DetectorConstruction::Construct() {
   if (m_g4World == nullptr) {
-    ExtParameterisedVolumeBuilder builder(m_geoModelTree.worldVolumeName);
+    GeoModelVolumeBuilder builder(m_geoModelTree.worldVolumeName);
     G4LogicalVolume* g4WorldLog = builder.Build(m_geoModelTree.worldVolume);
     m_g4World =
         new G4PVPlacement(nullptr, G4ThreeVector(), g4WorldLog,
