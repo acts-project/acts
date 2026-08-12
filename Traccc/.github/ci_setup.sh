@@ -26,3 +26,13 @@ if [[ "${PLATFORM_NAME}" == *"SYCL"* ]]; then
       export CPATH=${OLD_CPATH}
    fi
 fi
+
+# Set up the correct environment for the HIP tests. The dependency setup
+# overwrites CMAKE_PREFIX_PATH with the Spack view, so ROCm has to be put back
+# on it for find_package(hip)/find_package(rocthrust) to succeed.
+if [[ "${PLATFORM_NAME}" == *"HIP"* ]]; then
+   if [ -d "/opt/rocm" ]; then
+      export PATH="/opt/rocm/bin:${PATH}"
+      export CMAKE_PREFIX_PATH="/opt/rocm:${CMAKE_PREFIX_PATH}"
+   fi
+fi
