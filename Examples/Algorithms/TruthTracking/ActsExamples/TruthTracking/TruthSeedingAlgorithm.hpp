@@ -26,6 +26,19 @@
 
 namespace ActsExamples {
 
+/// Which of the space points on a truth track end up in its seed.
+enum class TruthSeedSpacePointSelection {
+  /// The triplet with the largest deltaR(bottom, middle) * deltaR(middle, top)
+  /// among those passing the deltaR and deltaZ cuts.
+  MaxScoreTriplet,
+  /// The three innermost space points in track order.
+  InnermostTriplet,
+  /// The first, the middle and the last space point in track order.
+  SpreadTriplet,
+  /// Every space point on the track.
+  All,
+};
+
 /// Construct track seeds from particles.
 class TruthSeedingAlgorithm final : public IAlgorithm {
  public:
@@ -52,6 +65,11 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
 
     /// Optional particle hypothesis override.
     std::optional<Acts::ParticleHypothesis> particleHypothesis = std::nullopt;
+
+    /// Which space points of the track make up the seed. The deltaR and deltaZ
+    /// cuts below only apply to `MaxScoreTriplet`.
+    TruthSeedSpacePointSelection spacePointSelection =
+        TruthSeedSpacePointSelection::MaxScoreTriplet;
 
     /// Minimum deltaR between space points in a seed
     float deltaRMin = 10 * Acts::UnitConstants::mm;
@@ -81,6 +99,15 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
+
+  /// Pick the space points that make up the seed out of the ones on the track.
+  ///
+  /// @param spacePoints is the event space point container
+  /// @param spacePointsOnTrack is the track's space points, in track order
+  /// @return the seed's space points, empty if no seed could be formed
+  std::vector<SpacePointIndex> selectSeedSpacePoints(
+      const SpacePointContainer& spacePoints,
+      const std::vector<SpacePointIndex>& spacePointsOnTrack) const;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<ParticleMeasurementsMap> m_inputParticleMeasurementsMap{

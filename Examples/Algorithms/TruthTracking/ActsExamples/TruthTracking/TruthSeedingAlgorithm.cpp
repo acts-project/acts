@@ -163,75 +163,21 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
       continue;
     }
 
-    // Loop over the found space points to find the seed with the maximum score.
-    // The score is defined as the product of the deltaR of the bottom-middle
-    // and middle-top space point pairs to favor separation between both pairs.
-    bool seedFound = false;
-    std::array<SpacePointIndex, 3> bestSPIndices{};
-    float maxScore = std::numeric_limits<float>::min();
-    for (std::size_t ib = 0; ib < spacePointsOnTrack.size() - 2; ++ib) {
-      ConstSpacePointProxy b = spacePoints.at(spacePointsOnTrack[ib]);
-
-      for (std::size_t im = ib + 1; im < spacePointsOnTrack.size() - 1; ++im) {
-        ConstSpacePointProxy m = spacePoints.at(spacePointsOnTrack[im]);
-
-        const float bmDeltaR = m.r() - b.r();
-        const float bmAbsDeltaZ = std::abs(m.z() - b.z());
-        if (bmDeltaR < 0) {
-          ACTS_WARNING(
-              "Space points are not sorted in r. Difference middle-bottom: "
-              << bmDeltaR);
-          continue;
-        }
-        if (bmDeltaR < m_cfg.deltaRMin || bmDeltaR > m_cfg.deltaRMax) {
-          continue;
-        }
-        if (bmAbsDeltaZ < m_cfg.absDeltaZMin ||
-            bmAbsDeltaZ > m_cfg.absDeltaZMax) {
-          continue;
-        }
-
-        for (std::size_t it = im + 1; it < spacePointsOnTrack.size(); ++it) {
-          ConstSpacePointProxy t = spacePoints.at(spacePointsOnTrack[it]);
-
-          const float mtDeltaR = t.r() - m.r();
-          const float mtAbsDeltaZ = std::abs(t.z() - m.z());
-          if (mtDeltaR < 0) {
-            ACTS_WARNING(
-                "Space points are not sorted in r. Difference top-middle: "
-                << mtDeltaR);
-            continue;
-          }
-          if (mtDeltaR < m_cfg.deltaRMin || mtDeltaR > m_cfg.deltaRMax) {
-            continue;
-          }
-          if (mtAbsDeltaZ < m_cfg.absDeltaZMin ||
-              mtAbsDeltaZ > m_cfg.absDeltaZMax) {
-            continue;
-          }
-
-          const float score = bmDeltaR * mtDeltaR;
-
-          if (score > maxScore) {
-            seedFound = true;
-            bestSPIndices = {b.index(), m.index(), t.index()};
-            maxScore = score;
-          }
-        }
-      }
+    const std::vector<SpacePointIndex> seedSpacePoints =
+        selectSeedSpacePoints(spacePoints, spacePointsOnTrack);
+    if (seedSpacePoints.empty()) {
+      continue;
     }
 
-    if (seedFound) {
-      auto seed = seeds.createSeed();
-      seed.assignSpacePointIndices(bestSPIndices);
+    auto seed = seeds.createSeed();
+    seed.assignSpacePointIndices(seedSpacePoints);
 
-      Acts::ParticleHypothesis hypothesis =
-          m_cfg.particleHypothesis.value_or(particle.hypothesis());
+    Acts::ParticleHypothesis hypothesis =
+        m_cfg.particleHypothesis.value_or(particle.hypothesis());
 
-      seededParticles.insert(particle);
-      tracks.emplace_back(std::move(track));
-      particleHypotheses.emplace_back(hypothesis);
-    }
+    seededParticles.insert(particle);
+    tracks.emplace_back(std::move(track));
+    particleHypotheses.emplace_back(hypothesis);
   }
 
   ACTS_VERBOSE("Found " << seeds.size() << " seeds");
@@ -244,6 +190,117 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
   }
 
   return ProcessCode::SUCCESS;
+}
+
+std::vector<SpacePointIndex> TruthSeedingAlgorithm::selectSeedSpacePoints(
+    const SpacePointContainer& spacePoints,
+    const std::vector<SpacePointIndex>& spacePointsOnTrack) const {
+  // The triplet selections pick layers, not space points: neighbouring modules
+  // of a layer overlap, so a track can leave two space points at the same
+  // radius, and a triplet holding both is close to degenerate.
+  const auto onePerLayer = [&]() {
+    std::vector<SpacePointIndex> perLayer;
+    std::vector<Acts::GeometryIdentifier> layers;
+    for (const SpacePointIndex index : spacePointsOnTrack) {
+      const ConstSpacePointProxy sp = spacePoints.at(index);
+      if (sp.sourceLinks().empty()) {
+        continue;
+      }
+      const Acts::GeometryIdentifier layer =
+          sp.sourceLinks()[0].get<IndexSourceLink>().geometryId().withSensitive(
+              0);
+      if (Acts::rangeContainsValue(layers, layer)) {
+        continue;
+      }
+      layers.push_back(layer);
+      perLayer.push_back(index);
+    }
+    return perLayer;
+  };
+
+  switch (m_cfg.spacePointSelection) {
+    case TruthSeedSpacePointSelection::InnermostTriplet: {
+      const std::vector<SpacePointIndex> perLayer = onePerLayer();
+      if (perLayer.size() < 3) {
+        return {};
+      }
+      return {perLayer.begin(), perLayer.begin() + 3};
+    }
+    case TruthSeedSpacePointSelection::SpreadTriplet: {
+      const std::vector<SpacePointIndex> perLayer = onePerLayer();
+      if (perLayer.size() < 3) {
+        return {};
+      }
+      return {perLayer.front(), perLayer[perLayer.size() / 2], perLayer.back()};
+    }
+    case TruthSeedSpacePointSelection::All:
+      return spacePointsOnTrack;
+    case TruthSeedSpacePointSelection::MaxScoreTriplet:
+      break;
+  }
+
+  // Loop over the found space points to find the seed with the maximum score.
+  // The score is defined as the product of the deltaR of the bottom-middle
+  // and middle-top space point pairs to favor separation between both pairs.
+  bool seedFound = false;
+  std::array<SpacePointIndex, 3> bestSPIndices{};
+  float maxScore = std::numeric_limits<float>::min();
+  for (std::size_t ib = 0; ib < spacePointsOnTrack.size() - 2; ++ib) {
+    ConstSpacePointProxy b = spacePoints.at(spacePointsOnTrack[ib]);
+
+    for (std::size_t im = ib + 1; im < spacePointsOnTrack.size() - 1; ++im) {
+      ConstSpacePointProxy m = spacePoints.at(spacePointsOnTrack[im]);
+
+      const float bmDeltaR = m.r() - b.r();
+      const float bmAbsDeltaZ = std::abs(m.z() - b.z());
+      if (bmDeltaR < 0) {
+        ACTS_WARNING(
+            "Space points are not sorted in r. Difference middle-bottom: "
+            << bmDeltaR);
+        continue;
+      }
+      if (bmDeltaR < m_cfg.deltaRMin || bmDeltaR > m_cfg.deltaRMax) {
+        continue;
+      }
+      if (bmAbsDeltaZ < m_cfg.absDeltaZMin ||
+          bmAbsDeltaZ > m_cfg.absDeltaZMax) {
+        continue;
+      }
+
+      for (std::size_t it = im + 1; it < spacePointsOnTrack.size(); ++it) {
+        ConstSpacePointProxy t = spacePoints.at(spacePointsOnTrack[it]);
+
+        const float mtDeltaR = t.r() - m.r();
+        const float mtAbsDeltaZ = std::abs(t.z() - m.z());
+        if (mtDeltaR < 0) {
+          ACTS_WARNING(
+              "Space points are not sorted in r. Difference top-middle: "
+              << mtDeltaR);
+          continue;
+        }
+        if (mtDeltaR < m_cfg.deltaRMin || mtDeltaR > m_cfg.deltaRMax) {
+          continue;
+        }
+        if (mtAbsDeltaZ < m_cfg.absDeltaZMin ||
+            mtAbsDeltaZ > m_cfg.absDeltaZMax) {
+          continue;
+        }
+
+        const float score = bmDeltaR * mtDeltaR;
+
+        if (score > maxScore) {
+          seedFound = true;
+          bestSPIndices = {b.index(), m.index(), t.index()};
+          maxScore = score;
+        }
+      }
+    }
+  }
+
+  if (!seedFound) {
+    return {};
+  }
+  return {bestSPIndices.begin(), bestSPIndices.end()};
 }
 
 }  // namespace ActsExamples

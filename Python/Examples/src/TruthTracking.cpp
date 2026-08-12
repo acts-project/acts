@@ -135,12 +135,18 @@ void addTruthTracking(py::module& mex) {
                                 inputTracks, outputTracks, dropCovariance,
                                 covScale, killTime);
 
+  py::enum_<TruthSeedSpacePointSelection>(mex, "TruthSeedSpacePointSelection")
+      .value("MaxScoreTriplet", TruthSeedSpacePointSelection::MaxScoreTriplet)
+      .value("InnermostTriplet", TruthSeedSpacePointSelection::InnermostTriplet)
+      .value("SpreadTriplet", TruthSeedSpacePointSelection::SpreadTriplet)
+      .value("All", TruthSeedSpacePointSelection::All);
+
   ACTS_PYTHON_DECLARE_ALGORITHM(
       TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm", inputParticles,
       inputParticleMeasurementsMap, inputSimHits, inputMeasurementSimHitsMap,
       inputSpacePoints, outputParticles, outputSeeds, outputProtoTracks,
-      outputParticleHypotheses, particleHypothesis, deltaRMin, deltaRMax,
-      absDeltaZMin, absDeltaZMax);
+      outputParticleHypotheses, particleHypothesis, spacePointSelection,
+      deltaRMin, deltaRMax, absDeltaZMin, absDeltaZMax);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(HitSelector, mex, "HitSelector", inputHits,
                                 inputParticlesSelected, outputHits, minX, maxX,
