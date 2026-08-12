@@ -20,6 +20,7 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
@@ -53,7 +54,8 @@ ActsExamples::MuonSpacePoint::MuonId makeMdtEtaId(std::uint8_t layer,
 }
 
 /// @brief Prepare example MuonSpaceContainer with one bucket based on test case from HoughTransformUtilsTests.cpp
-ActsExamples::MuonSpacePointContainer makeDriftCircleSpacePoints() {
+ActsExamples::MuonSpacePointContainer makeDriftCircleSpacePoints(
+    double localX = 0.0) {
   constexpr double uncert = 0.3;
 
   const std::array<DriftCircle, 6> driftCircles{
@@ -80,8 +82,8 @@ ActsExamples::MuonSpacePointContainer makeDriftCircleSpacePoints() {
     sp.setId(makeMdtEtaId(static_cast<std::uint8_t>(i + 1u),
                           static_cast<std::uint16_t>(i + 1u)));
 
-    sp.defineCoordinates(Acts::Vector3{0.0, dc.y, dc.z}, Acts::Vector3::UnitX(),
-                         Acts::Vector3::UnitY());
+    sp.defineCoordinates(Acts::Vector3{localX, dc.y, dc.z},
+                         Acts::Vector3::UnitX(), Acts::Vector3::UnitY());
 
     sp.setRadius(dc.rDrift);
     sp.setTime(0.0);
@@ -112,8 +114,8 @@ BOOST_AUTO_TEST_CASE(muon_hough_seeder_drift_circle_sanity) {
   cfg.nBinsTanPhi = 10;
   cfg.nBinsX0 = 10;
 
-  cfg.etaPlaneMarginIcept = 2.0 * Acts::UnitConstants::m;
-  cfg.phiPlaneMarginIcept = 2.0 * Acts::UnitConstants::m;
+  cfg.etaPlaneMarginIcept = 10.0 * Acts::UnitConstants::cm;
+  cfg.phiPlaneMarginIcept = 10.0 * Acts::UnitConstants::cm;
 
   cfg.dumpVisualization = false;
 
@@ -137,6 +139,76 @@ BOOST_AUTO_TEST_CASE(muon_hough_seeder_drift_circle_sanity) {
   const ActsExamples::MuonHoughMaxContainer& maxima = outputHandle(ctx);
 
   BOOST_REQUIRE_GT(maxima.size(), 0u);
+
+  bool foundExpectedMaximum = false;
+
+  double foundTanBeta = std::numeric_limits<double>::quiet_NaN();
+  double foundInterceptY = std::numeric_limits<double>::quiet_NaN();
+  for (const ActsExamples::MuonHoughMaximum& maximum : maxima) {
+    const double tanTheta = maximum.tanBeta();
+    const double interceptY = maximum.interceptY();
+
+    if (std::abs(tanTheta - trueTanTheta) < 0.02 &&
+        std::abs(interceptY - trueInterceptY) < 20.0) {
+      foundExpectedMaximum = true;
+      foundTanBeta = tanTheta;
+      foundInterceptY = interceptY;
+      break;
+    }
+  }
+
+  /// Result acquired: -0.041608695652173948 -421.93644749999976
+  BOOST_TEST_MESSAGE("Maximum coordinates (tanBeta, interceptY): "
+                     << foundTanBeta << " " << foundInterceptY
+                     << " truth: " << trueTanTheta << " " << trueInterceptY);
+  BOOST_CHECK(foundExpectedMaximum);
+}
+
+BOOST_AUTO_TEST_CASE(muon_hough_seeder_drift_circle_sanity_phi_disabled) {
+  // Truth from the original HoughTransformUtils unit test.
+  constexpr double trueTanTheta = -0.0401472 / 0.994974;
+  constexpr double trueInterceptY = -422.612;
+
+  ActsExamples::MuonHoughSeeder::Config cfg{};
+  cfg.inSpacePoints = "MuonSpacePoints";
+  cfg.inTruthSegments =
+      "TruthSegments";  // this is required even if empty in ctx
+  cfg.outHoughMax = "MuonHoughMaxima";
+
+  cfg.nBinsTanTheta = 1000;
+  cfg.nBinsY0 = 1000;
+
+  cfg.extendWithPhi = false;
+
+  cfg.etaPlaneMarginIcept = 10.0 * Acts::UnitConstants::cm;
+  cfg.phiPlaneMarginIcept = 10.0 * Acts::UnitConstants::cm;
+
+  cfg.dumpVisualization = false;
+
+  ActsExamples::MuonHoughSeeder seeder{
+      cfg, Acts::getDefaultLogger("MuonHoughSeederTest", Acts::Logging::INFO)};
+
+  ActsExamples::WhiteBoard eventStore{};
+  ActsExamples::AlgorithmContext ctx{0, 0, eventStore, 0};
+
+  ActsExamples::WriteDataHandle<ActsExamples::MuonSpacePointContainer>
+      spacePointHandle{&seeder, "TestInputSpacePoints"};
+  spacePointHandle.initialize(cfg.inSpacePoints);
+  spacePointHandle(ctx,
+                   makeDriftCircleSpacePoints(2.0 * Acts::UnitConstants::m));
+
+  BOOST_REQUIRE(seeder.execute(ctx) == ActsExamples::ProcessCode::SUCCESS);
+
+  ActsExamples::ReadDataHandle<ActsExamples::MuonHoughMaxContainer>
+      outputHandle{&seeder, "TestOutputHoughMaxima"};
+  outputHandle.initialize(cfg.outHoughMax);
+
+  const ActsExamples::MuonHoughMaxContainer& maxima = outputHandle(ctx);
+
+  BOOST_REQUIRE_GT(maxima.size(), 0u);
+  BOOST_CHECK(std::all_of(maxima.begin(), maxima.end(), [](const auto& maximum) {
+    return maximum.interceptX() == 0.0;
+  }));
 
   bool foundExpectedMaximum = false;
 
