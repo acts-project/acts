@@ -54,7 +54,7 @@ class TrackVisualizerAlg(acts.examples.IAlgorithm):
         tracks = self.tracks(context.eventStore)
         for track in tracks:
             acts.EventDataView3D.drawTrack(
-                self._vis, track
+                self._vis, track, context.geoContext
             )  # draw track not a free function
 
         return acts.examples.ProcessCode.SUCCESS
