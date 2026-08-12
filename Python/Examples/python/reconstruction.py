@@ -1459,6 +1459,7 @@ def addTrackParameterPerformanceWriter(
     field: acts.MagneticFieldProvider,
     targetSurface: Optional[acts.Surface] = None,
     strategy=None,
+    resPlotToolConfig=None,
     outputName: str = "trackparams",
     logLevel: acts.logging.Level = None,
     prefix: str = "",
@@ -1477,6 +1478,9 @@ def addTrackParameterPerformanceWriter(
         Which track state to start from, `first` by default. Seed tracks only
         carry parameters on their innermost state, so `firstOrLast` must not be
         used on them.
+    resPlotToolConfig : Optional[acts.examples.root.ResPlotToolConfig]
+        Residual and pull binning. The defaults are cut for fitted tracks, so a
+        seed estimate usually needs wider residual axes.
     """
     customLogLevel = acts.examples.defaultLogging(sequence, logLevel)
     RootTrackParameterPerformanceWriter = acts.examples._tryImportRoot(
@@ -1528,6 +1532,9 @@ def addTrackParameterPerformanceWriter(
             inputParticles=particles,
             inputTrackParticleMatching=trackParticleMatching,
             filePath=str(outputDirRoot / f"performance_{prefix}{outputName}.root"),
+            **acts.examples.defaultKWArgs(
+                resPlotToolConfig=resPlotToolConfig,
+            ),
         )
     )
 
