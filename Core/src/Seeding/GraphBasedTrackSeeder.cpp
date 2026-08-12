@@ -40,20 +40,20 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
     : m_cfg(config),
       m_geometry(std::move(geometry)),
       m_logger(std::move(logger)) {
-  m_mlLut = parseGbtsMlLookupTable(m_cfg.lutInputFile);
+  m_tauLut = parseTauLookupTable(m_cfg.lutInputFile);
 }
 
 GbtsNodeStorage GraphBasedTrackSeeder::makeNodeStorage(
     const std::vector<bool>& isPixelLayer) const {
   GbtsNodeStorage::Config config;
   config.isPixelLayer = isPixelLayer;
-  config.useMl = m_cfg.useMl;
+  config.useClusterWidthCuts = m_cfg.useClusterWidthCuts;
   config.maxEndcapClusterWidth = m_cfg.maxEndcapClusterWidth;
   config.moduleHalfLengthY = m_cfg.moduleHalfLengthY;
   config.moduleEdgeTolerance = m_cfg.moduleEdgeTolerance;
   config.phiSliceWidth = m_cfg.phiSliceWidth;
 
-  return GbtsNodeStorage(std::move(config), m_geometry, m_mlLut);
+  return GbtsNodeStorage(std::move(config), m_geometry, m_tauLut);
 }
 
 void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer& spacePoints,
@@ -116,13 +116,13 @@ void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
   }
 }
 
-GbtsMlLookupTable GraphBasedTrackSeeder::parseGbtsMlLookupTable(
+GbtsTauLookupTable GraphBasedTrackSeeder::parseTauLookupTable(
     const std::string& lutInputFile) {
-  if (!m_cfg.useMl) {
+  if (!m_cfg.useClusterWidthCuts) {
     return {};
   }
   if (lutInputFile.empty()) {
-    throw std::runtime_error("Cannot find ML predictor LUT file");
+    throw std::runtime_error("Cannot find tau lookup table file");
   }
 
   std::ifstream ifs(std::string(lutInputFile).c_str());
@@ -130,8 +130,8 @@ GbtsMlLookupTable GraphBasedTrackSeeder::parseGbtsMlLookupTable(
     throw std::runtime_error("Failed to open LUT file");
   }
 
-  GbtsMlLookupTable mlLut;
-  mlLut.reserve(100);
+  GbtsTauLookupTable tauLut;
+  tauLut.reserve(100);
 
   float clWidth{};
   float min1{};
@@ -139,7 +139,7 @@ GbtsMlLookupTable GraphBasedTrackSeeder::parseGbtsMlLookupTable(
   float min2{};
   float max2{};
   while (ifs >> clWidth >> min1 >> max1 >> min2 >> max2) {
-    mlLut.push_back({clWidth, min1, max1, min2, max2});
+    tauLut.push_back({clWidth, min1, max1, min2, max2});
   }
 
   if (!ifs.eof()) {
@@ -147,7 +147,7 @@ GbtsMlLookupTable GraphBasedTrackSeeder::parseGbtsMlLookupTable(
     throw std::runtime_error("Stopped reading LUT file due to parse error");
   }
 
-  return mlLut;
+  return tauLut;
 }
 
 std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(

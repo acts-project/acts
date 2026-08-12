@@ -418,7 +418,7 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("connectorInputFile: " << cfg1.connectorInputFile);
   ACTS_DEBUG("lutInputFile: " << cfg1.lutInputFile);
   ACTS_DEBUG("lrtMode: " << cfg1.lrtMode);
-  ACTS_DEBUG("useMl: " << cfg1.useMl);
+  ACTS_DEBUG("useClusterWidthCuts: " << cfg1.useClusterWidthCuts);
   ACTS_DEBUG("matchBeforeCreate: " << cfg1.matchBeforeCreate);
   ACTS_DEBUG("useOldTunings: " << cfg1.useOldTunings);
   ACTS_DEBUG("tauRatioCut: " << cfg1.tauRatioCut);

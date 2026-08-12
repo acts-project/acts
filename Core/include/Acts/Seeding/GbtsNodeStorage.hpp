@@ -11,9 +11,9 @@
 #include "Acts/EventData/SpacePointColumnProxy.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/Types.hpp"
+#include "Acts/Seeding/GbtsTypes.hpp"
 #include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 
-#include <array>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -23,16 +23,7 @@
 namespace Acts::Experimental {
 
 class GraphBasedTrackSeeder;
-
-/// Number of values per row of the machine learning lookup table: the cluster
-/// width the row is keyed on, followed by two pairs of tau bounds.
-static constexpr std::size_t kGbtsMlLookupTableColumns = 5;
-
 class GbtsGeometry;
-
-/// Machine learning lookup table for Gbts seeding
-using GbtsMlLookupTable =
-    std::vector<std::array<float, kGbtsMlLookupTableColumns>>;
 
 /// Storage for the GBTS graph nodes.
 ///
@@ -46,17 +37,17 @@ class GbtsNodeStorage final {
   struct Config {
     /// Per-layer flag marking pixel layers. Indexed by dense layer index.
     std::vector<bool> isPixelLayer;
-    /// Use machine learning features (cluster width based tau cuts).
-    bool useMl = false;
+    /// Cut on the pixel cluster width: wide endcap clusters and the tau
+    /// lookup table.
+    bool useClusterWidthCuts = false;
     /// Maximum endcap cluster width, applied to pixel endcap nodes when
-    /// machine learning features are enabled.
+    /// the cluster width cuts are enabled.
     float maxEndcapClusterWidth = 0.35f;
     /// Half-length in local y of a pixel module, against which the distance of
     /// a cluster to the module edge is measured.
     float moduleHalfLengthY = 10.f;
-    /// Distance to the module edge below which a cluster may be shortened. The
-    /// machine learning lookup table carries a separate pair of tau bounds for
-    /// that case.
+    /// Distance to the module edge below which a cluster may be shortened,
+    /// which the tau lookup table covers with its own bounds.
     float moduleEdgeTolerance = 0.3f;
     /// Width of the phi slice used to build the phi indexing.
     float phiSliceWidth = 0.f;
@@ -64,9 +55,9 @@ class GbtsNodeStorage final {
 
   /// @param config Node loading configuration
   /// @param geometry Shared pointer to GBTS geometry
-  /// @param mlLut Machine learning lookup table
+  /// @param tauLut Per-cluster-width tau bounds
   GbtsNodeStorage(Config config, std::shared_ptr<const GbtsGeometry> geometry,
-                  GbtsMlLookupTable mlLut);
+                  GbtsTauLookupTable tauLut);
 
   /// Insert a space point, deriving r and phi from the global position.
   /// @param index Index of the space point in the caller's own collection
@@ -195,11 +186,11 @@ class GbtsNodeStorage final {
   std::vector<std::uint32_t> sortBinByPhi(
       const std::vector<std::uint32_t>& staged) const;
 
-  /// Narrow a node's tau window using the machine learning lookup table.
+  /// Narrow a node's tau window using the tau lookup table.
   /// @param staged The staged node
   /// @param params The node parameters to narrow
-  void applyMlTauCuts(const StagedNode& staged,
-                      detail::GbtsNodeParams& params) const;
+  void applyTauCuts(const StagedNode& staged,
+                    detail::GbtsNodeParams& params) const;
 
   /// Build the wrap-around aware phi indexing for every bin.
   /// @param dphi Width of the phi margin duplicated at the wrap-around
@@ -209,7 +200,7 @@ class GbtsNodeStorage final {
 
   std::shared_ptr<const GbtsGeometry> m_geometry;
 
-  GbtsMlLookupTable m_mlLut;
+  GbtsTauLookupTable m_tauLut;
 
   /// Nodes ordered by (eta bin, phi). Carries the caller's index and the packed
   /// (x, y, z, r) position, plus the derived data as dynamic columns.

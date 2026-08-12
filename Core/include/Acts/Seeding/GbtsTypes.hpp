@@ -10,7 +10,10 @@
 
 #include "Acts/EventData/Types.hpp"
 
+#include <array>
+#include <cstddef>
 #include <cstdint>
+#include <vector>
 
 namespace Acts::Experimental {
 
@@ -37,5 +40,14 @@ struct GbtsLayerDescription final {
   /// Maximum boundary coordinate.
   float maxBound{};
 };
+
+/// Number of values per row of the tau lookup table: the cluster width the row
+/// is keyed on, followed by two pairs of tau bounds.
+static constexpr std::size_t kGbtsTauLookupTableColumns = 5;
+
+/// Per-cluster-width tau bounds, one row per 0.05 mm of cluster width. The
+/// bounds are trained offline; the seeder only reads the table back.
+using GbtsTauLookupTable =
+    std::vector<std::array<float, kGbtsTauLookupTableColumns>>;
 
 }  // namespace Acts::Experimental

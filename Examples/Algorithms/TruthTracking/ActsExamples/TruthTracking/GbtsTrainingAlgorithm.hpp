@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Seeding/GbtsTrainingTool.hpp"
+#include "Acts/Seeding/GbtsLayerConnectionTool.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"

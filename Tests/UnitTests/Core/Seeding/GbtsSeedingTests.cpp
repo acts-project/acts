@@ -292,7 +292,7 @@ SeederSetup makeSeeder(const ToyDetector& detector) {
   config.maxZ0 = kBarrelHalfZ;
   config.maxOuterRadius = detector.maxOuterRadius;
   // the toy setup has no ML lookup table and no cluster widths
-  config.useMl = false;
+  config.useClusterWidthCuts = false;
 
   return SeederSetup{
       geometry,

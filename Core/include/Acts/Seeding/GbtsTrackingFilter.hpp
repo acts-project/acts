@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
-#include "Acts/Seeding/detail/GbtsEdgeState.hpp"
+#include "Acts/Seeding/detail/GbtsFilterTypes.hpp"
 
 #include <cstdint>
 #include <memory>

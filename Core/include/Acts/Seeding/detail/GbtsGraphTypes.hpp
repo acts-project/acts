@@ -29,7 +29,7 @@ static constexpr std::uint32_t kGbtsMaxEdgeNeighbours = 6;
 /// in one record rather than in separate arrays.
 struct GbtsNodeParams final {
   /// Minimum accepted |cot(theta)|. The infinite defaults mean "do not cut on
-  /// tau"; only the machine learning lookup table narrows them.
+  /// tau"; only the tau lookup table narrows them.
   float minTau{-std::numeric_limits<float>::infinity()};
   /// Maximum accepted |cot(theta)|. See @ref minTau.
   float maxTau{std::numeric_limits<float>::infinity()};

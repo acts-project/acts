@@ -11,8 +11,8 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SeedContainer.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
-#include "Acts/Seeding/GbtsDataStorage.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsNodeStorage.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -45,8 +45,9 @@ class GraphBasedTrackSeeder {
     // SeedFinderGbts option
     /// Enable Large Radius Tracking mode.
     bool lrtMode = false;
-    /// Use machine learning features (e.g., cluster width).
-    bool useMl = false;
+    /// Cut on the pixel cluster width: wide endcap clusters and the tau
+    /// lookup table.
+    bool useClusterWidthCuts = false;
     /// Match seeds before creating them.
     bool matchBeforeCreate = false;
     /// Use legacy tuning parameters.
@@ -116,14 +117,14 @@ class GraphBasedTrackSeeder {
     float maxSeedSplitEta = 0.6;
     /// Max allowed curvature for seed self consistency check.
     float maxInvRadDiff = 0.7e-2 / UnitConstants::m;
-    // GbtsDataStorage options
+    // GbtsNodeStorage options
     /// Maximum endcap cluster width.
     float maxEndcapClusterWidth = 0.35 * Acts::UnitConstants::mm;
     /// Half-length in local y of a pixel module, against which the distance of
     /// a cluster to the module edge is measured.
     float moduleHalfLengthY = 10.0 * Acts::UnitConstants::mm;
-    /// Distance to the module edge below which a cluster may be shortened, and
-    /// the machine learning lookup table's edge tau bounds are used instead.
+    /// Distance to the module edge below which a cluster may be shortened,
+    /// which switches to the tau lookup table's near-edge bounds.
     float moduleEdgeTolerance = 0.3 * Acts::UnitConstants::mm;
   };
 
@@ -248,17 +249,17 @@ class GraphBasedTrackSeeder {
 
   std::shared_ptr<const GbtsGeometry> m_geometry;
 
-  GbtsMlLookupTable m_mlLut;
+  GbtsTauLookupTable m_tauLut;
 
   std::unique_ptr<const Acts::Logger> m_logger =
       Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
 
   const Acts::Logger& logger() const { return *m_logger; }
 
-  /// Parse machine learning lookup table from file.
+  /// Parse the tau lookup table from file.
   /// @param lutInputFile Path to the lookup table input file
-  /// @return Parsed machine learning lookup table
-  GbtsMlLookupTable parseGbtsMlLookupTable(const std::string& lutInputFile);
+  /// @return Parsed tau lookup table
+  GbtsTauLookupTable parseTauLookupTable(const std::string& lutInputFile);
 
   /// Build doublet graph from nodes.
   /// @param roi Region of interest descriptor

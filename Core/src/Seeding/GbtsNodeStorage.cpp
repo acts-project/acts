@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding/GbtsDataStorage.hpp"
+#include "Acts/Seeding/GbtsNodeStorage.hpp"
 
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
@@ -23,10 +23,10 @@ using namespace detail;
 
 GbtsNodeStorage::GbtsNodeStorage(Config config,
                                  std::shared_ptr<const GbtsGeometry> geometry,
-                                 GbtsMlLookupTable mlLut)
+                                 GbtsTauLookupTable tauLut)
     : m_cfg(std::move(config)),
       m_geometry(std::move(geometry)),
-      m_mlLut(std::move(mlLut)),
+      m_tauLut(std::move(tauLut)),
       m_nodes(SpacePointColumns::CopiedFromIndex |
               SpacePointColumns::PackedXYZR) {
   m_etaBins.resize(m_geometry->numBins());
@@ -53,7 +53,8 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
 
   // Pixel endcap nodes with a wide cluster are dropped when the machine
   // learning features are in use.
-  if (m_cfg.useMl && !isBarrel && clusterWidth > m_cfg.maxEndcapClusterWidth &&
+  if (m_cfg.useClusterWidthCuts && !isBarrel &&
+      clusterWidth > m_cfg.maxEndcapClusterWidth &&
       layerIndex < m_cfg.isPixelLayer.size() &&
       m_cfg.isPixelLayer[layerIndex]) {
     return std::nullopt;
@@ -177,8 +178,8 @@ void GbtsNodeStorage::finalize() {
 
     // minTau and maxTau keep their "do not cut" defaults unless the lookup
     // table narrows them
-    if (m_cfg.useMl) {
-      applyMlTauCuts(staged, params[node]);
+    if (m_cfg.useClusterWidthCuts) {
+      applyTauCuts(staged, params[node]);
     }
   }
 
@@ -190,8 +191,8 @@ void GbtsNodeStorage::finalize() {
   m_stagedPerBin.shrink_to_fit();
 }
 
-void GbtsNodeStorage::applyMlTauCuts(const StagedNode& staged,
-                                     GbtsNodeParams& params) const {
+void GbtsNodeStorage::applyTauCuts(const StagedNode& staged,
+                                   GbtsNodeParams& params) const {
   const detail::GbtsLayer& layer = m_geometry->layerByIndex(staged.layer);
 
   // skip strips volumes: layers in range [1200X-1400X]
@@ -206,11 +207,12 @@ void GbtsNodeStorage::applyMlTauCuts(const StagedNode& staged,
   const auto lutBinIdx =
       static_cast<std::int32_t>(std::floor(20 * staged.clusterWidth)) - 1;
 
-  if (lutBinIdx < 0 || lutBinIdx >= static_cast<std::int32_t>(m_mlLut.size())) {
+  if (lutBinIdx < 0 ||
+      lutBinIdx >= static_cast<std::int32_t>(m_tauLut.size())) {
     return;
   }
 
-  const GbtsMlLookupTable::value_type& lutBin = m_mlLut[lutBinIdx];
+  const GbtsTauLookupTable::value_type& lutBin = m_tauLut[lutBinIdx];
 
   // close to the edge the cluster may be shortened, which the lookup table
   // covers with a separate pair of bounds
