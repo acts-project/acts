@@ -29,9 +29,10 @@ jobs:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
-      # Authenticated GHCR reads: the spack buildcache is pulled from
-      # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
-      # so reads fall back to the anonymous (heavily rate limited) bucket.
+      # Fallback GHCR auth: these jobs read the spack buildcache through
+      # registry.cern.ch, but with no mirror configured the read goes to
+      # ghcr.io, and without this scope it lands in the anonymous (heavily
+      # rate limited) bucket.
       packages: read
     # registry.cern.ch is a pull-through cache for ghcr.io. Husk jobs only —
     # the ubuntu-latest jobs run outside CERN and gain nothing from it.
@@ -137,9 +138,10 @@ jobs:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
-      # Authenticated GHCR reads: the spack buildcache is pulled from
-      # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
-      # so reads fall back to the anonymous (heavily rate limited) bucket.
+      # Fallback GHCR auth: these jobs read the spack buildcache through
+      # registry.cern.ch, but with no mirror configured the read goes to
+      # ghcr.io, and without this scope it lands in the anonymous (heavily
+      # rate limited) bucket.
       packages: read
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
     needs: [linux_ubuntu]
@@ -282,9 +284,10 @@ jobs:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
-      # Authenticated GHCR reads: the spack buildcache is pulled from
-      # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
-      # so reads fall back to the anonymous (heavily rate limited) bucket.
+      # Fallback GHCR auth: these jobs read the spack buildcache through
+      # registry.cern.ch, but with no mirror configured the read goes to
+      # ghcr.io, and without this scope it lands in the anonymous (heavily
+      # rate limited) bucket.
       packages: read
     strategy:
       matrix:
@@ -473,9 +476,10 @@ jobs:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
-      # Authenticated GHCR reads: the spack buildcache is pulled from
-      # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
-      # so reads fall back to the anonymous (heavily rate limited) bucket.
+      # Fallback GHCR auth: these jobs read the spack buildcache through
+      # registry.cern.ch, but with no mirror configured the read goes to
+      # ghcr.io, and without this scope it lands in the anonymous (heavily
+      # rate limited) bucket.
       packages: read
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
 
@@ -639,9 +643,10 @@ jobs:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
-      # Authenticated GHCR reads: the spack buildcache is pulled from
-      # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
-      # so reads fall back to the anonymous (heavily rate limited) bucket.
+      # Fallback GHCR auth: these jobs read the spack buildcache through
+      # registry.cern.ch, but with no mirror configured the read goes to
+      # ghcr.io, and without this scope it lands in the anonymous (heavily
+      # rate limited) bucket.
       packages: read
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_tensorrt:87
 
@@ -698,9 +703,10 @@ jobs:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
-      # Authenticated GHCR reads: the spack buildcache is pulled from
-      # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
-      # so reads fall back to the anonymous (heavily rate limited) bucket.
+      # Fallback GHCR auth: these jobs read the spack buildcache through
+      # registry.cern.ch, but with no mirror configured the read goes to
+      # ghcr.io, and without this scope it lands in the anonymous (heavily
+      # rate limited) bucket.
       packages: read
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_cuda:87
 

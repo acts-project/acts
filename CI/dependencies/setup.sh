@@ -274,10 +274,23 @@ if [ -n "${CI:-}" ]; then
   start_section "Add buildcache mirror"
   mirror_name="acts-spack-buildcache"
   mirror_url="oci://ghcr.io/acts-project/spack-buildcache"
-  if [ -n "${GITLAB_CI:-}" ]; then
-  # Use CERN mirror for non-Github Actions
+
+  # The buildcache is published to ghcr.io, but a job that sits next to a
+  # pull-through cache should read from that instead: it is nearer, and it keeps
+  # the job out of GHCR's rate limits — which spack does not surface as a network
+  # error but as a spec simply having no binary, the failure mode
+  # TRANSIENT_ERROR_PATTERNS above exists to paper over.
+  #
+  # Which cache is near — if any — depends on where the job runs, and this script
+  # cannot know that, so the caller names it. .github/actions/dependencies sets
+  # ACTS_SPACK_BUILDCACHE_MIRROR for the self-hosted fleet. GitLab CI never goes
+  # through that action, so its default stays here.
+  if [ -n "${ACTS_SPACK_BUILDCACHE_MIRROR:-}" ]; then
+    mirror_url="${ACTS_SPACK_BUILDCACHE_MIRROR}"
+  elif [ -n "${GITLAB_CI:-}" ]; then
     mirror_url="oci://registry.cern.ch/ghcr.io/acts-project/spack-buildcache"
   fi
+  echo "Buildcache mirror: ${mirror_url}"
 
   # Check if this buildcache is already configured
   if ! spack mirror list | grep -q ${mirror_name}; then
@@ -390,6 +403,11 @@ end_section
 
 start_section "Prepare python environment"
 "${view_dir}/bin/python3" -m venv --system-site-packages "$venv_dir"
+# NOTE: pip, not uv, on purpose. The venv is deliberately --system-site-packages
+# so that the packages the spack view already provides (numpy and everything
+# built against it) are reused rather than replaced. pip honours that and skips
+# them; uv ignores system site-packages entirely and installs its own PyPI wheel
+# over the top, which silently swaps out the spack-built stack.
 retry_transient "${venv_dir}/bin/python3" -m pip install pyyaml jinja2
 if [ "${full_install:-false}" == "true" ]; then
   retry_transient "${venv_dir}/bin/python3" -m pip install -r "${SCRIPT_DIR}/../../Python/Examples/tests/requirements.txt"

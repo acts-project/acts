@@ -33,6 +33,13 @@ inputs:
   env_file:
     description: 'Where to generate the environment file'
     required: true
+  buildcache_mirror:
+    description: >-
+      OCI URL of the spack buildcache to pull binaries from. Empty means "decide
+      from where this job is running": the CERN pull-through cache on the
+      self-hosted fleet, ghcr.io on GitHub-hosted runners.
+    required: false
+    default: ''
 
 
 runs:
@@ -43,7 +50,25 @@ runs:
     - name: Apt mirror
       uses: ./.github/actions/apt_mirror
 
+    # Spack is a Python program, so every image we can possibly run on already
+    # ships a usable python3 -- and nothing downstream uses the interpreter this
+    # action leaves behind (setup.sh builds a venv from the spack view and puts
+    # it first on PATH, then unsets the variables setup-python exports). So only
+    # pay for setup-python on the images that would otherwise be stuck.
+    - name: Check for a usable Python
+      id: system-python
+      shell: bash
+      run: |
+        if command -v python3 > /dev/null \
+          && python3 -c 'import sys; sys.exit(sys.version_info < (3, 9))'; then
+          echo "found=true" >> "$GITHUB_OUTPUT"
+          python3 --version
+        else
+          echo "found=false" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Setup Python version
+      if: steps.system-python.outputs.found != 'true'
       uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
         python-version: "3.12"
@@ -57,39 +82,44 @@ runs:
       run: |
         brew install ninja ccache
 
+    # Cached in place rather than via a staging directory: `~` and the workspace
+    # are separate mounts in a container job, so staging meant copying the whole
+    # tree on save and again on restore (~12 s a job) for no gain.
     - name: Restore cache
       id: cache-restore
       uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
-        path: spack_cache
-        key: spack-r4-${{ inputs.spack_version }}-${{ inputs.spack_repo_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
-
-    - name: Extract cached Spack
-      if: steps.cache-restore.outputs.cache-hit == 'true'
-      shell: bash
-      run: |
-        mv spack_cache/spack .
-        mv spack_cache/.spack ~
+        path: |
+          spack
+          ~/.spack
+        key: spack-r5-${{ inputs.spack_version }}-${{ inputs.spack_repo_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
 
     - name: Setup Spack from scratch
       if: steps.cache-restore.outputs.cache-hit != 'true'
       shell: bash
       env:
         SPACK_VERSION: ${{ inputs.spack_version }}
+        SPACK_REPO_VERSION: ${{ inputs.spack_repo_version }}
       run: |
         CI/dependencies/setup_spack.sh ${PWD}/spack
+        # Pin the builtin package repo *before* anything clones it. Spack clones
+        # it shallow (depth 2) the first time only, and clones the pinned commit
+        # directly when the config already names one, so this lands the cache on
+        # the right commit in ~4 s. The other order -- clone the branch tip (what
+        # `spack list` does), then move to the commit -- makes spack unshallow the
+        # entire repo, and because the cache was built without the pin that is
+        # what every single job was paying, ~50 s each, on a cache *hit*.
+        spack/bin/spack repo update builtin --commit "${SPACK_REPO_VERSION}"
         spack/bin/spack list > /dev/null
         rm -rf spack/.git
-        mkdir spack_cache
-        cp -RP spack spack_cache/
-        cp -RP ~/.spack spack_cache/
 
     - name: Save cache
       if: steps.cache-restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: |
-          spack_cache
+          spack
+          ~/.spack
         key: ${{ steps.cache-restore.outputs.cache-primary-key }}
 
     - name: Install dependencies
@@ -102,6 +132,17 @@ runs:
         ENV_FILE: ${{ inputs.env_file }}
         FULL_INSTALL: ${{ inputs.full_install }}
         COMPILER: ${{ inputs.compiler }}
+        # The self-hosted fleet runs at CERN, where registry.cern.ch proxies
+        # ghcr.io — the same proxy these jobs already pull their container image
+        # through. Reading the buildcache from it too is what the GitLab jobs did
+        # before they moved here; the check they used (GITLAB_CI) went dead with
+        # .gitlab-ci.yml, which quietly put the CERN runners back on ghcr.io.
+        #
+        # Resolved here, from the `runner.environment` context, rather than inside
+        # setup.sh: the context is evaluated on the host and is always right,
+        # whereas a container job only gets the variables the runner chooses to
+        # inject. GitHub-hosted runners keep ghcr.io, which is nearest to them.
+        ACTS_SPACK_BUILDCACHE_MIRROR: ${{ inputs.buildcache_mirror || (runner.environment == 'self-hosted' && 'oci://registry.cern.ch/ghcr.io/acts-project/spack-buildcache' || '') }}
       run: |
         args="-e $ENV_FILE"
         if [ "$FULL_INSTALL" == "true" ]; then
