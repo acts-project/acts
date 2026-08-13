@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
+#include "Acts/Propagator/detail/SympyCovarianceEngine.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -47,6 +48,12 @@ struct LoopComponentProxyBase {
 
   explicit LoopComponentProxyBase(component_t& c) : cmp(c) {}
 
+  /// Whether the stepper keeps a separate free-to-free transport jacobian.
+  /// Steppers that instead transport the bound-to-free jacobian itself (see
+  /// SympyStepper) do not, and need a different covariance engine entry point.
+  static constexpr bool hasFreeTransport =
+      requires(component_t& c) { c.state.jacTransport; };
+
   // These are the const accessors, which are shared between the mutable
   // ComponentProxy and the ConstComponentProxy
   const auto& state() const { return cmp.state; }
@@ -55,7 +62,6 @@ struct LoopComponentProxyBase {
   auto pathAccumulated() const { return cmp.state.pathAccumulated; }
   const auto& pars() const { return cmp.state.pars; }
   const auto& derivative() const { return cmp.state.derivative; }
-  const auto& jacTransport() const { return cmp.state.jacTransport; }
   const auto& cov() const { return cmp.state.cov; }
   const auto& jacobian() const { return cmp.state.jacobian; }
   const auto& jacToGlobal() const { return cmp.state.jacToGlobal; }
@@ -96,7 +102,6 @@ struct LoopComponentProxy
   using Base::derivative;
   using Base::jacobian;
   using Base::jacToGlobal;
-  using Base::jacTransport;
   using Base::pars;
   using Base::pathAccumulated;
   using Base::singleState;
@@ -119,7 +124,15 @@ struct LoopComponentProxy
   auto& pathAccumulated() { return cmp.state.pathAccumulated; }
   auto& pars() { return cmp.state.pars; }
   auto& derivative() { return cmp.state.derivative; }
-  auto& jacTransport() { return cmp.state.jacTransport; }
+
+  /// Reset the accumulated transport, whatever its representation.  Steppers
+  /// that transport the bound-to-free jacobian directly have no separate
+  /// free-to-free jacobian to reset; theirs is set by the caller instead.
+  void resetJacTransport() {
+    if constexpr (Base::hasFreeTransport) {
+      cmp.state.jacTransport = FreeMatrix::Identity();
+    }
+  }
   auto& cov() { return cmp.state.cov; }
   auto& jacobian() { return cmp.state.jacobian; }
   auto& jacToGlobal() { return cmp.state.jacToGlobal; }
@@ -137,11 +150,20 @@ struct LoopComponentProxy
   Result<typename SingleStepper::BoundState> boundState(
       const Surface& surface, bool transportCov,
       const FreeToBoundCorrection& freeToBoundCorrection) {
-    return detail::boundState(
-        all_state.options.geoContext, surface, cov(), jacobian(),
-        jacTransport(), derivative(), jacToGlobal(), std::nullopt, pars(),
-        all_state.particleHypothesis, all_state.covTransport && transportCov,
-        cmp.state.pathAccumulated, freeToBoundCorrection);
+    if constexpr (Base::hasFreeTransport) {
+      return detail::boundState(
+          all_state.options.geoContext, surface, cov(), jacobian(),
+          cmp.state.jacTransport, derivative(), jacToGlobal(), std::nullopt,
+          pars(), all_state.particleHypothesis,
+          all_state.covTransport && transportCov, cmp.state.pathAccumulated,
+          freeToBoundCorrection);
+    } else {
+      return detail::sympy::boundState(
+          all_state.options.geoContext, surface, cov(), jacobian(),
+          derivative(), jacToGlobal(), std::nullopt, pars(),
+          all_state.particleHypothesis, all_state.covTransport && transportCov,
+          cmp.state.pathAccumulated, freeToBoundCorrection);
+    }
   }
 
   void update(const FreeVector& freeParams, const BoundVector& boundParams,

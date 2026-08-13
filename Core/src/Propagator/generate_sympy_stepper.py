@@ -133,219 +133,307 @@ def rk4_subexpr(f, x, y, ydot, h):
     )
 
 
-def rk4_fullexpr(f, x, y, ydot, h):
-    k1 = name_expr("k1", f(1, x, y, ydot))
-    x2 = name_expr("x2", x + h / 2)
-    y2 = name_expr("y2", y + h / 2 * ydot + h**2 / 8 * k1.expr)
-    ydot2 = name_expr("ydot2", ydot + h / 2 * k1.expr)
-
-    k2 = name_expr("k2", f(2, x2.expr, y2.expr, ydot2.expr))
-    ydot3 = name_expr("ydot3", ydot + h / 2 * k2.expr)
-
-    k3 = name_expr("k3", f(3, x2.expr, y2.expr, ydot3.expr))
-    x3 = name_expr("x3", x + h)
-    y3 = name_expr("y3", y + h * ydot + h**2 / 2 * k3.expr)
-    ydot4 = name_expr("ydot4", ydot + h * k3.expr)
-
-    k4 = name_expr("k4", f(4, x3.expr, y3.expr, ydot4.expr))
-
-    new_y = name_expr("new_y", y + h * ydot + h**2 / 6 * (k1.expr + k2.expr + k3.expr))
-    new_ydot = name_expr(
-        "new_ydot", ydot + h / 6 * (k1.expr + 2 * (k2.expr + k3.expr) + k4.expr)
-    )
-
-    return (new_y, new_ydot), (k1, k2, k3, k4), (x2, y2, ydot2, ydot3, x3, y3, ydot4)
+def _ex(x):
+    """Explicit matrix view of a MatrixSymbol (or pass through)."""
+    return x.as_explicit() if hasattr(x, "as_explicit") else x
 
 
-def rk4_vacuum_fullexpr2():
-    def f(x, y, ydot):
-        d = ydot[0:3, 0]
-        return d.cross(l * B)
+class _Builder:
+    """Collects named expressions and can resolve them back to closed form.
 
-    def decorator(i, ydotdot):
-        if i == 1:
-            return ydotdot.subs(B, B1)
-        if i in [2, 3]:
-            return ydotdot.subs(B, B2)
-        if i == 4:
-            return ydotdot.subs(B, B3)
+    The closed form is only needed for the self checks: the ATLAS recursion
+    below reuses a handful of already computed quantities as derivative terms,
+    and every one of those shortcuts is verified against what the plain chain
+    rule produces before it is allowed into the generated code.
+    """
 
-    (
-        (new_y, new_ydot),
-        (dydyydot, dydotdyydot),
-        (k1, k2, k3, k4),
-        (x2, y2, ydot2, ydot3, x3, y3, ydot4),
-    ) = rk4_fullexpr(f, s, p, d, h, decorator)
+    def __init__(self):
+        self.name_exprs = []
+        self._by_name = {}
 
-    p2 = name_expr("p2", y2.expr[0:3, 0])
-    p3 = name_expr("p3", y3.expr[0:3, 0])
-    new_p = name_expr("new_p", new_y.expr[0:3, 0])
-    new_d_tmp = name_expr("new_d_tmp", new_ydot.expr[0:3, 0])
-    new_d = name_expr("new_d", new_d_tmp.expr / new_d_tmp.expr.norm())
-    err = name_expr(
-        "err",
-        h**2
-        * (k1.expr[0:3, 0] - k2.expr[0:3, 0] - k3.expr[0:3, 0] + k4.expr[0:3, 0]).norm(
-            1
+    def add(self, name, expr):
+        if isinstance(expr, Matrix):
+            expr = ImmutableMatrix(expr)
+        ne = name_expr(name, expr)
+        self.name_exprs.append(ne)
+        self._by_name[ne.name] = ne.expr
+        return ne
+
+    def resolve(self, expr):
+        subs = list(self._by_name.items())
+        for _ in range(64):
+            new = expr.subs(subs)
+            if new == expr:
+                return sym.expand(new)
+            expr = new
+        raise RuntimeError("named expressions did not resolve")
+
+    def check_same(self, what, expr_a, expr_b):
+        diff = sym.simplify(sym.expand(self.resolve(expr_a) - self.resolve(expr_b)))
+        if any(e != 0 for e in diff):
+            raise AssertionError(f"{what}: shortcut does not match chain rule\n{diff}")
+
+
+# tangent seed for the direction: [ dd/dd | l * dd/dl ] = [ I | 0 ]
+class _Stages:
+    """The named quantities of one ATLAS-form RK4 step."""
+
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
+
+def _atlas_rk4_stages(b, taylor_norm):
+    """Build the value path of an ATLAS-form RK4 vacuum step.
+
+    ATLAS never evaluates the plain slopes k_i.  It carries the half-step
+    scaled field H = (h*l/2) * B, so every stage slope comes out as (h/2)*k_i
+    directly and no further scaling by h or l appears anywhere in the
+    recursion.
+    """
+    # (h*l/2) is ATLAS' PS2.
+    hl2 = b.add("hl2", h * l / 2)
+    S3 = b.add("S3", h / 3)
+    S4 = b.add("S4", h / 4)
+
+    H0 = b.add("H0", hl2.name * B1)
+    A0 = b.add("A0", d.cross(_ex(H0.name)))  # h/2 * k1
+    A2 = b.add("A2", _ex(A0.name) + d)  # d + h/2 * k1
+    A1 = b.add("A1", _ex(A2.name) + d)  # 2d + h/2 * k1
+    b.add("p2", p + S4.name * _ex(A1.name))
+
+    H1 = b.add("H1", hl2.name * B2)
+    A3 = b.add("A3", d + _ex(A2.name).cross(_ex(H1.name)))  # d + h/2 * k2
+    A4 = b.add("A4", d + _ex(A3.name).cross(_ex(H1.name)))  # d + h/2 * k3
+    A5 = b.add("A5", 2 * _ex(A4.name) - d)  # d + h * k3
+    b.add("p3", p + h * _ex(A4.name))
+
+    H2 = b.add("H2", hl2.name * B3)
+    A6 = b.add("A6", _ex(A5.name).cross(_ex(H2.name)))  # h/2 * k4
+
+    # (A1+A6)-(A3+A4) is h/2 * (k1-k2-k3+k4), hence the leading 2*|h|.
+    err_vec = (_ex(A1.name) + _ex(A6.name)) - (_ex(A3.name) + _ex(A4.name))
+    b.add("err", 2 * sym.Abs(h) * err_vec.norm(1))
+
+    b.add("new_p", p + S3.name * (_ex(A2.name) + _ex(A3.name) + _ex(A4.name)))
+
+    # An = 3 * (d + h/6*(k1 + 2k2 + 2k3 + k4)), three times the unnormalised
+    # new direction.
+    An = b.add("An", 2 * _ex(A3.name) + (_ex(A0.name) + _ex(A5.name) + _ex(A6.name)))
+
+    if taylor_norm:
+        # ATLAS replaces 1/|An| by its second order Taylor expansion around
+        # |An| = 3, which needs neither a square root nor a division.  RK4
+        # keeps |An| within ~1e-7 of 3, so the O(u^3) truncation error is far
+        # below double precision.
+        Dv = b.add("Dv", (An.name[0] ** 2 + An.name[1] ** 2) + (An.name[2] ** 2 - 9))
+        Dfac = b.add(
+            "Dfac",
+            sym.Rational(1, 3) - sym.Rational(1, 648) * Dv.name * (12 - Dv.name),
+        )
+        new_d = b.add("new_d", Dfac.name * _ex(An.name))
+    else:
+        inv_norm = b.add("inv_norm", 1 / _ex(An.name).norm())
+        new_d = b.add("new_d", inv_norm.name * _ex(An.name))
+
+    dtds = b.add("dtds", sym.sqrt(1 + m**2 / p_abs**2))
+    b.add("new_t", t + h * dtds.name)
+
+    Sl = b.add("Sl", 2 / h)  # undoes the h/2 scaling of A6 -> k4
+    b.add(
+        "path_derivatives",
+        Matrix.vstack(
+            _ex(new_d.name),
+            Matrix([dtds.name]),
+            Sl.name * _ex(A6.name),
+            Matrix([0]),
         ),
     )
 
-    dtds = name_expr("dtds", sym.sqrt(1 + m**2 / p_abs**2))
-    new_t = name_expr("new_t", t + h * dtds.expr)
-
-    path_derivatives = name_expr("path_derivatives", sym.zeros(8, 1))
-    path_derivatives.expr[0:3, 0] = new_d.expr
-    path_derivatives.expr[3, 0] = dtds.expr
-    path_derivatives.expr[4:7, 0] = k4.expr
-
-    D = sym.eye(8)
-    D[0:3, :] = new_p.expr.jacobian([p, t, d, l])
-    D[4:7, :] = new_d_tmp.expr.jacobian([p, t, d, l])
-    D[3, 7] = dt_dqop(dtds.expr)
-
-    J = MatrixSymbol("J", 8, 8).as_explicit().as_mutable()
-    for indices in np.ndindex(J.shape):
-        if D[indices] in [0, 1]:
-            J[indices] = D[indices]
-    J = ImmutableMatrix(J)
-
-    new_J = name_expr("new_J", D * J)
-
-    return [p2, p3, err, new_p, new_t, new_d, path_derivatives, new_J]
-
-
-def rk4_vacuum_fullexpr():
-    k1 = name_expr("k1", d.cross(l * B1))
-    p2 = name_expr("p2", p + h / 2 * d + h**2 / 8 * k1.expr)
-
-    k2 = name_expr("k2", (d + h / 2 * k1.expr).cross(l * B2))
-    k3 = name_expr("k3", (d + h / 2 * k2.expr).cross(l * B2))
-    p3 = name_expr("p3", p + h * d + h**2 / 2 * k3.expr)
-
-    k4 = name_expr("k4", (d + h * k3.expr).cross(l * B3))
-
-    err = name_expr("err", h**2 * (k1.expr - k2.expr - k3.expr + k4.expr).norm(1))
-
-    new_p = name_expr("new_p", p + h * d + h**2 / 6 * (k1.expr + k2.expr + k3.expr))
-    new_d_tmp = name_expr(
-        "new_d_tmp", d + h / 6 * (k1.expr + 2 * (k2.expr + k3.expr) + k4.expr)
-    )
-    new_d = name_expr("new_d", new_d_tmp.expr / new_d_tmp.expr.norm())
-
-    dtds = name_expr("dtds", sym.sqrt(1 + m**2 / p_abs**2))
-    new_t = name_expr("new_t", t + h * dtds.expr)
-
-    path_derivatives = name_expr("path_derivatives", sym.zeros(8, 1))
-    path_derivatives.expr[0:3, 0] = new_d.expr
-    path_derivatives.expr[3, 0] = dtds.expr
-    path_derivatives.expr[4:7, 0] = k4.expr
-
-    D = sym.eye(8)
-    D[0:3, :] = new_p.expr.jacobian([p, t, d, l])
-    D[4:7, :] = new_d_tmp.expr.jacobian([p, t, d, l])
-    D[3, 7] = dt_dqop(dtds.expr)
-
-    J = MatrixSymbol("J", 8, 8).as_explicit().as_mutable()
-    for indices in np.ndindex(J.shape):
-        if D[indices] in [0, 1]:
-            J[indices] = D[indices]
-    J = ImmutableMatrix(J)
-
-    new_J = name_expr("new_J", D * J)
-
-    return [p2, p3, err, new_p, new_t, new_d, path_derivatives, new_J]
-
-
-def rk4_vacuum_tunedexpr():
-    k1 = name_expr("k1", d.cross(l * B1))
-    p2 = name_expr("p2", p + h / 2 * d + h**2 / 8 * k1.name)
-
-    k2 = name_expr("k2", (d + h / 2 * k1.name).as_explicit().cross(l * B2))
-    k3 = name_expr("k3", (d + h / 2 * k2.name).as_explicit().cross(l * B2))
-    p3 = name_expr("p3", p + h * d + h**2 / 2 * k3.name)
-
-    k4 = name_expr("k4", (d + h * k3.name).as_explicit().cross(l * B3))
-
-    err = name_expr(
-        "err", h**2 * (k1.name - k2.name - k3.name + k4.name).as_explicit().norm(1)
+    return _Stages(
+        S3=S3,
+        H0=H0,
+        H1=H1,
+        H2=H2,
+        A0=A0,
+        A2=A2,
+        A3=A3,
+        A4=A4,
+        A5=A5,
+        A6=A6,
+        dtds=dtds,
     )
 
-    new_p = name_expr("new_p", p + h * d + h**2 / 6 * (k1.name + k2.name + k3.name))
-    new_d_tmp = name_expr(
-        "new_d_tmp", d + h / 6 * (k1.name + 2 * (k2.name + k3.name) + k4.name)
+
+def _field_contrib(b, what, stage, H, same_as, seed):
+    """The term a tangent picks up from H's own dependence on l.
+
+    H is linear in l, so `l * dH/dl == H` exactly; with the tangent's l part
+    scaled by l, this term is the H-linear part of the stage, which is already
+    available as a named quantity.  `same_as` encodes that identity and is
+    verified against the plain chain rule before use -- it is what keeps the
+    recursion free of any extra cross product.
+    """
+    contrib = stage.expr.jacobian(H.name) * seed
+    b.check_same(what, contrib[:, seed.cols - 1], same_as)
+    return Matrix.hstack(contrib[:, 0 : seed.cols - 1], same_as)
+
+
+# Entries of the bound-to-free jacobian that a vacuum step can change, as
+# (free row, bound column) with the ACTS orderings
+# rows    (pos0, pos1, pos2, time, dir0, dir1, dir2, qop)
+# columns (loc0, loc1, phi, theta, qop, time).
+#
+# loc0 and loc1 have no direction and no q/p component, and the time column is
+# exactly e_time, so those three columns cannot move: with zero direction and
+# zero q/p perturbation the step leaves the position rows alone as well.  That
+# is the same reduction the ATLAS stepper makes when it propagates only the
+# blocks at pVector[24], [32] and [40].  Within the live columns the q/p row
+# never changes because l' = l in vacuum, and the time row only moves for the
+# q/p column because dt/ds depends on q/p alone.
+_B2F_LIVE = (
+    [(i, 2) for i in (0, 1, 2, 4, 5, 6)]
+    + [(i, 3) for i in (0, 1, 2, 4, 5, 6)]
+    + [(i, 4) for i in (0, 1, 2, 3, 4, 5, 6)]
+)
+
+# A dense step additionally changes q/p itself, so the q/p row of the q/p
+# column moves too.
+_B2F_DENSE_LIVE = (
+    [(i, 2) for i in (0, 1, 2, 4, 5, 6)]
+    + [(i, 3) for i in (0, 1, 2, 4, 5, 6)]
+    + [(i, 4) for i in (0, 1, 2, 3, 4, 5, 6, 7)]
+)
+
+# Rows that are structurally zero on input, for the columns that are live at
+# all: neither a phi nor a theta perturbation changes the time or the q/p
+# coordinate, in vacuum or in matter.
+_B2F_ZERO_ROWS = {2: (3, 7), 3: (3, 7)}
+
+# bound parameter count -- M is 8 x _B2F_COLS, stored column major
+_B2F_COLS = 6
+
+
+def b2f_step_update(D, live):
+    """Apply a free-to-free step jacobian D to the bound-to-free jacobian M.
+
+    Only the live columns are touched, and the structurally zero rows are
+    dropped from the input so the products stay sparse.  This is the generic
+    fallback; the vacuum kernel instead folds the same operation into the RK
+    recursion, which is cheaper still because it never builds D.
+    """
+    M = MatrixSymbol("M", 8, 6)
+    out = []
+    for c in sorted({col for _, col in live}):
+        zero = _B2F_ZERO_ROWS.get(c, ())
+        v = Matrix([[0 if i in zero else M[i, c]] for i in range(8)])
+        new_v = D * v
+        out.extend([new_v[i, 0]] for i, col in live if col == c)
+    return Matrix(out)
+
+
+def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
+    """ATLAS-form RK4 vacuum step transporting the bound-to-free jacobian.
+
+    The free-to-free step jacobian D is never built.  Instead the columns of
+    the bound-to-free jacobian M are pushed through the very same RK recursion
+    as the track state itself -- which is why the code below mirrors the value
+    path line for line, exactly as ATLAS' d2A/d3A/d4A block mirrors its A0..A6
+    block.  That removes both the fourth tangent direction (a bound
+    parametrisation has two direction degrees of freedom, a free-to-free D
+    needs three) and the 8x8 composition.
+    """
+    b = _Builder()
+    st = _atlas_rk4_stages(b, taylor_norm)
+    H0, H1, H2 = st.H0, st.H1, st.H2
+    A0, A3, A4, A6 = st.A0, st.A3, st.A4, st.A6
+    S3, dtds = st.S3, st.dtds
+
+    M = MatrixSymbol("M", 8, 6)
+
+    def col(c, rows):
+        return Matrix([[M[i, c]] for i in rows])
+
+    def tangent(name, stage, contribs, field=None):
+        T = sym.zeros(3, 1) if field is None else field
+        for var, Tvar in contribs:
+            T = T + stage.expr.jacobian(var) * Tvar
+        return b.add(name, T)
+
+    def propagate(tag, c, scale):
+        """Push column `c` of M through the step.
+
+        `scale` is None for a column with no q/p component, which then needs
+        neither the field terms nor any rescaling.  For the q/p column the
+        direction part is carried multiplied by l -- exactly ATLAS' convention
+        for its pVector[40] block -- so that the term each stage picks up from
+        H's own l dependence is the stage itself rather than a fresh cross
+        product.  Unlike ATLAS we read the q/p row instead of assuming it is 1,
+        because a preceding dense step changes it.
+        """
+        if scale is None:
+            seed = col(c, (4, 5, 6))
+            fields = [None] * 4
+            pos_fac, dir_fac = S3.name, sym.Rational(1, 3)
+        else:
+            vl = M[7, c]
+            seed = _ex(b.add(f"u{tag}", l * col(c, (4, 5, 6))).name)
+            fields = [
+                _field_contrib(
+                    b, f"{tag}0", A0, H0, _ex(A0.name) * vl, _ex(H0.name) * vl
+                ),
+                _field_contrib(
+                    b, f"{tag}3", A3, H1, (_ex(A3.name) - d) * vl, _ex(H1.name) * vl
+                ),
+                _field_contrib(
+                    b, f"{tag}4", A4, H1, (_ex(A4.name) - d) * vl, _ex(H1.name) * vl
+                ),
+                _field_contrib(
+                    b, f"{tag}6", A6, H2, _ex(A6.name) * vl, _ex(H2.name) * vl
+                ),
+            ]
+            pos_fac, dir_fac = scale[0], scale[1]
+
+        v0 = tangent(f"{tag}0", A0, [(d, seed)], fields[0])
+        v2 = b.add(f"{tag}2", _ex(v0.name) + seed)
+        v3 = tangent(f"{tag}3", A3, [(d, seed), (st.A2.name, _ex(v2.name))], fields[1])
+        v4 = tangent(f"{tag}4", A4, [(d, seed), (A3.name, _ex(v3.name))], fields[2])
+        v5 = b.add(f"{tag}5", 2 * _ex(v4.name) - seed)
+        v6 = tangent(f"{tag}6", A6, [(st.A5.name, _ex(v5.name))], fields[3])
+
+        new_pos = col(c, (0, 1, 2)) + pos_fac * (
+            _ex(v2.name) + _ex(v3.name) + _ex(v4.name)
+        )
+        new_dir = dir_fac * (
+            _ex(v0.name) + 2 * _ex(v3.name) + _ex(v5.name) + _ex(v6.name)
+        )
+        return new_pos, new_dir
+
+    inv_l = b.add("inv_l", 1 / l)
+    S3_l = b.add("S3_l", S3.name * inv_l.name)
+    third_l = b.add("third_l", inv_l.name / 3)
+
+    phi_pos, phi_dir = propagate("Tp", 2, None)
+    the_pos, the_dir = propagate("Tt", 3, None)
+    qop_pos, qop_dir = propagate("Tq", 4, (S3_l.name, third_l.name))
+
+    # dt/ds depends on q/p only, so the time row moves for the q/p column alone.
+    dtdl = b.add("dtdl", dt_dqop(dtds.name))
+    new_time = M[3, 4] + dtdl.name * M[7, 4]
+
+    b.add(
+        "new_M",
+        Matrix.vstack(
+            phi_pos,
+            phi_dir,
+            the_pos,
+            the_dir,
+            qop_pos,
+            Matrix([new_time]),
+            qop_dir,
+        ),
     )
-    new_d = name_expr("new_d", new_d_tmp.name / new_d_tmp.name.as_explicit().norm())
 
-    dtds = name_expr("dtds", sym.sqrt(1 + m**2 / p_abs**2))
-    new_t = name_expr("new_t", t + h * dtds.name)
-
-    path_derivatives = name_expr("path_derivatives", sym.zeros(8, 1))
-    path_derivatives.expr[0:3, 0] = new_d.name.as_explicit()
-    path_derivatives.expr[3, 0] = dtds.name
-    path_derivatives.expr[4:7, 0] = k4.name.as_explicit()
-
-    dk1dTL = name_expr("dk1dTL", k1.expr.jacobian([d, l]))
-    dk2dTL = name_expr(
-        "dk2dTL", k2.expr.jacobian([d, l]) + k2.expr.jacobian(k1.name) * dk1dTL.expr
-    )
-    dk3dTL = name_expr(
-        "dk3dTL",
-        k3.expr.jacobian([d, l]) + k3.expr.jacobian(k2.name) * dk2dTL.name,
-    )
-    dk4dTL = name_expr(
-        "dk4dTL",
-        k4.expr.jacobian([d, l]) + k4.expr.jacobian(k3.name) * dk3dTL.name,
-    )
-
-    dFdTL = name_expr(
-        "dFdTL",
-        new_p.expr.as_explicit().jacobian([d, l])
-        + new_p.expr.as_explicit().jacobian(k1.name) * dk1dTL.expr
-        + new_p.expr.as_explicit().jacobian(k2.name) * dk2dTL.name
-        + new_p.expr.as_explicit().jacobian(k3.name) * dk3dTL.name,
-    )
-    dGdTL = name_expr(
-        "dGdTL",
-        new_d_tmp.expr.as_explicit().jacobian([d, l])
-        + new_d_tmp.expr.as_explicit().jacobian(k1.name) * dk1dTL.expr
-        + new_d_tmp.expr.as_explicit().jacobian(k2.name) * dk2dTL.name
-        + new_d_tmp.expr.as_explicit().jacobian(k3.name) * dk3dTL.name
-        + new_d_tmp.expr.as_explicit().jacobian(k4.name) * dk4dTL.name,
-    )
-
-    D = sym.eye(8)
-    D[0:3, 4:8] = dFdTL.name.as_explicit()
-    D[4:7, 4:8] = dGdTL.name.as_explicit()
-    D[3, 7] = dt_dqop(dtds.name)
-
-    J = Matrix(MatrixSymbol("J", 8, 8).as_explicit())
-    for indices in np.ndindex(J.shape):
-        if D[indices] in [0, 1]:
-            J[indices] = D[indices]
-    J = ImmutableMatrix(J)
-    new_J = name_expr("new_J", D * J)
-
-    return [
-        k1,
-        p2,
-        k2,
-        k3,
-        p3,
-        k4,
-        err,
-        new_p,
-        dtds,
-        new_t,
-        new_d_tmp,
-        new_d,
-        path_derivatives,
-        dk2dTL,
-        dk3dTL,
-        dk4dTL,
-        dFdTL,
-        dGdTL,
-        new_J,
-    ]
+    return b.name_exprs
 
 
 def rk4_dense_tunedexpr():
@@ -436,12 +524,12 @@ def rk4_dense_tunedexpr():
     D[0:4, 3:8] = dFdTL.name.as_explicit()
     D[4:8, 3:8] = dGdTL.name.as_explicit()
 
-    J = Matrix(MatrixSymbol("J", 8, 8).as_explicit())
-    for indices in np.ndindex(J.shape):
-        if D[indices] in [0, 1]:
-            J[indices] = D[indices]
-    J = ImmutableMatrix(J)
-    new_J = name_expr("new_J", D * J)
+    # Unlike the vacuum kernel this one does build D, because energy loss
+    # couples time and q/p into every stage and folding that into the RK
+    # recursion buys little on a path that is not hot.  It still applies D to
+    # the bound-to-free jacobian directly rather than to an 8x8 transport,
+    # which is also what removes the composition-order question entirely.
+    new_M = name_expr("new_M", b2f_step_update(D, _B2F_DENSE_LIVE))
 
     return [
         dtds,
@@ -473,11 +561,11 @@ def rk4_dense_tunedexpr():
         dk4dTL,
         dFdTL,
         dGdTL,
-        new_J,
+        new_M,
     ]
 
 
-def print_rk4_vacuum(name_exprs, run_cse=True):
+def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
     printer = cxx_printer
     outputs = [
         find_by_name(name_exprs, name)[0]
@@ -489,14 +577,21 @@ def print_rk4_vacuum(name_exprs, run_cse=True):
             "new_t",
             "new_d",
             "path_derivatives",
-            "new_J",
+            "new_M",
         ]
     ]
 
     lines = []
 
-    head = "template <typename T, typename GetB> Acts::Result<bool> rk4_vacuum(const T* p, const T* d, const T t, const T h, const T l, const T m, const T p_abs, GetB getB, T* err, const T errTol, T* new_p, T* new_t, T* new_d, T* path_derivatives, T* J) {"
-    lines.append(head)
+    lines.append(
+        "template <typename T, typename GetB>\n"
+        "Acts::Result<bool> rk4_vacuum(std::span<const T, 3> p,"
+        " std::span<const T, 3> d, const T t, const T h, const T l, const T m,"
+        " const T p_abs, GetB getB, T* err, const T errTol,"
+        " std::span<T, 3> new_p, T* new_t, std::span<T, 3> new_d,"
+        " std::span<T, 8> path_derivatives, std::span<T> M) {"
+    )
+    lines.append(f"  assert(M.empty() || M.size() == {_B2F_COLS * 8});")
 
     lines.append("  const auto B1res = getB(p);")
     lines.append(
@@ -506,26 +601,28 @@ def print_rk4_vacuum(name_exprs, run_cse=True):
 
     def pre_expr_hook(var):
         if str(var) == "p2":
-            return "T p2[3];"
+            return "std::array<T, 3> p2;"
         if str(var) == "p3":
-            return "T p3[3];"
-        if str(var) == "new_J":
-            return "T new_J[64];"
+            return "std::array<T, 3> p3;"
+        if str(var) == "new_M":
+            return f"std::array<T, {len(_B2F_LIVE)}> new_M;"
         return None
 
     def post_expr_hook(var):
         if str(var) == "p2":
-            return "const auto B2res = getB(p2);\n  if (!B2res.ok()) {\n    return Acts::Result<bool>::failure(B2res.error());\n  }\n  const auto B2 = *B2res;"
+            return "const auto B2res = getB(std::span<const T, 3>(p2));\n  if (!B2res.ok()) {\n    return Acts::Result<bool>::failure(B2res.error());\n  }\n  const auto B2 = *B2res;"
         if str(var) == "p3":
-            return "const auto B3res = getB(p3);\n  if (!B3res.ok()) {\n    return Acts::Result<bool>::failure(B3res.error());\n  }\n  const auto B3 = *B3res;"
+            return "const auto B3res = getB(std::span<const T, 3>(p3));\n  if (!B3res.ok()) {\n    return Acts::Result<bool>::failure(B3res.error());\n  }\n  const auto B3 = *B3res;"
         if str(var) == "err":
             return (
                 "if (*err > errTol) {\n  return Acts::Result<bool>::success(false);\n}"
             )
         if str(var) == "new_d":
-            return "if (J == nullptr) {\n  return Acts::Result<bool>::success(true);\n}"
-        if str(var) == "new_J":
-            return printer.doprint(Assignment(MatrixSymbol("J", 8, 8), var))
+            return "if (M.empty()) {\n  return Acts::Result<bool>::success(true);\n}"
+        if str(var) == "new_M":
+            return "\n".join(
+                f"M[{i + 8 * j}] = new_M[{k}];" for k, (i, j) in enumerate(_B2F_LIVE)
+            )
         return None
 
     code = my_expression_print(
@@ -561,14 +658,22 @@ def print_rk4_dense(name_exprs, run_cse=True):
             "new_d",
             "new_l",
             "path_derivatives",
-            "new_J",
+            "new_M",
         ]
     ]
 
     lines = []
 
-    head = "template <typename T, typename GetB, typename GetG> Acts::Result<bool> rk4_dense(const T* p, const T* d, const T t, const T h, const T l, const T m, const T q, const T p_abs, GetB getB, GetG getG, T* err, const T errTol, T* new_p, T* new_t, T* new_d, T* new_l, T* path_derivatives, T* J) {"
-    lines.append(head)
+    lines.append(
+        "template <typename T, typename GetB, typename GetG>\n"
+        "Acts::Result<bool> rk4_dense(std::span<const T, 3> p,"
+        " std::span<const T, 3> d, const T t, const T h, const T l, const T m,"
+        " const T q, const T p_abs, GetB getB, GetG getG, T* err,"
+        " const T errTol, std::span<T, 3> new_p, T* new_t,"
+        " std::span<T, 3> new_d, T* new_l, std::span<T, 8> path_derivatives,"
+        " std::span<T> M) {"
+    )
+    lines.append(f"  assert(M.empty() || M.size() == {_B2F_COLS * 8});")
 
     lines.append("  const auto B1res = getB(p);")
     lines.append(
@@ -579,38 +684,41 @@ def print_rk4_dense(name_exprs, run_cse=True):
 
     def pre_expr_hook(var):
         if str(var) == "p2":
-            return "T p2[3];"
+            return "std::array<T, 3> p2;"
         if str(var) == "p3":
-            return "T p3[3];"
+            return "std::array<T, 3> p3;"
         if str(var) == "l2":
             return "T l2[1];"
         if str(var) == "l3":
             return "T l3[1];"
         if str(var) == "l4":
             return "T l4[1];"
-        if str(var) == "new_J":
-            return "T new_J[64];"
+        if str(var) == "new_M":
+            return f"std::array<T, {len(_B2F_DENSE_LIVE)}> new_M;"
         return None
 
     def post_expr_hook(var):
         if str(var) == "p2":
-            return "const auto B2res = getB(p2);\n  if (!B2res.ok()) {\n    return Acts::Result<bool>::failure(B2res.error());\n  }\n  const auto B2 = *B2res;"
+            return "const auto B2res = getB(std::span<const T, 3>(p2));\n  if (!B2res.ok()) {\n    return Acts::Result<bool>::failure(B2res.error());\n  }\n  const auto B2 = *B2res;"
         if str(var) == "p3":
-            return "const auto B3res = getB(p3);\n  if (!B3res.ok()) {\n    return Acts::Result<bool>::failure(B3res.error());\n  }\n  const auto B3 = *B3res;"
+            return "const auto B3res = getB(std::span<const T, 3>(p3));\n  if (!B3res.ok()) {\n    return Acts::Result<bool>::failure(B3res.error());\n  }\n  const auto B3 = *B3res;"
         if str(var) == "l2":
-            return "const auto g2 = getG(p2, *l2);"
+            return "const auto g2 = getG(std::span<const T, 3>(p2), *l2);"
         if str(var) == "l3":
-            return "const auto g3 = getG(p2, *l3);"
+            return "const auto g3 = getG(std::span<const T, 3>(p2), *l3);"
         if str(var) == "l4":
-            return "const auto g4 = getG(p3, *l4);"
+            return "const auto g4 = getG(std::span<const T, 3>(p3), *l4);"
         if str(var) == "err":
             return (
                 "if (*err > errTol) {\n  return Acts::Result<bool>::success(false);\n}"
             )
         if str(var) == "new_d":
-            return "if (J == nullptr) {\n  return Acts::Result<bool>::success(true);\n}"
-        if str(var) == "new_J":
-            return printer.doprint(Assignment(MatrixSymbol("J", 8, 8), var))
+            return "if (M.empty()) {\n  return Acts::Result<bool>::success(true);\n}"
+        if str(var) == "new_M":
+            return "\n".join(
+                f"M[{i + 8 * j}] = new_M[{k}];"
+                for k, (i, j) in enumerate(_B2F_DENSE_LIVE)
+            )
         return None
 
     code = my_expression_print(
@@ -646,38 +754,27 @@ output.write("""
 
 #include "Acts/Utilities/Result.hpp"
 
+#include <array>
+#include <cassert>
 #include <cmath>
+#include <span>
 """.strip())
 
 output.write("\n\n")
 
-all_name_exprs = rk4_vacuum_tunedexpr()
-# all_name_exprs = rk4_vacuum_fullexpr()
-# all_name_exprs = rk4_vacuum_fullexpr2()
-
-# attempted manual CSE which turns out a bit slower
+# Against the free-to-free kernel this replaces (clang 17, -O2, arm64, timing
+# SympyStepper::step with chained steps): ~3-5% faster with covariance
+# transport, ~3-5% slower without.  The vacuum path is latency bound on the
+# serial chain between the three field lookups, so pre-scaling the field adds
+# one multiply to exactly that chain, which is what the no-covariance case pays.
 #
-# sub_name_exprs = [
-#     name_expr("hlB1", h * l * B1),
-#     name_expr("hlB2", h * l * B2),
-#     name_expr("hlB3", h * l * B3),
-#     name_expr("lB1", l * B1),
-#     name_expr("lB2", l * B2),
-#     name_expr("lB3", l * B3),
-#     name_expr("h2_2", h**2 / 2),
-#     name_expr("h_8", h / 8),
-#     name_expr("h_6", h / 6),
-#     name_expr("h_2", h / 2),
-# ]
-# all_name_exprs = [
-#     NamedExpr(name, my_subs(expr, sub_name_exprs)) for name, expr in all_name_exprs
-# ]
-# all_name_exprs.extend(sub_name_exprs)
+# Two knobs measured and left off: taylor_norm=True, ATLAS' sqrt-free direction
+# normalisation, trades a sqrt and a division for more multiplications at the
+# same speed; run_cse=True is within noise and obscures the correspondence to
+# the ATLAS code.
+all_name_exprs = rk4_vacuum_b2f_atlasexpr(taylor_norm=False)
 
-code = print_rk4_vacuum(
-    all_name_exprs,
-    run_cse=True,
-)
+code = print_rk4_vacuum_b2f(all_name_exprs)
 output.write(code + "\n")
 
 output.write("\n")

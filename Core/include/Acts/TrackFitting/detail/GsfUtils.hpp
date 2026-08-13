@@ -333,7 +333,7 @@ void updateStepper(propagator_state_t &state, const stepper_t &stepper,
     cmp.pathAccumulated() = state.stepping.pathAccumulated;
     cmp.jacobian() = BoundMatrix::Identity();
     cmp.derivative() = FreeVector::Zero();
-    cmp.jacTransport() = FreeMatrix::Identity();
+    cmp.resetJacTransport();
   }
 }
 
