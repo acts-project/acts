@@ -32,6 +32,10 @@ x86_64-slc6-gcc49-opt
 codegen/build/
 codegen/src/codegen.egg-info/
 
+# the shipped synthetic detector descriptions, their material and the
+# configurations fitted to them, which are data rather than output
+!Fatras/data/*.json
+
 # dont ignore hidden configs
 !.clang-format
 !.github

@@ -323,6 +323,88 @@ struct DetectorDescription {
   /// @}
 };
 
+/// Which of a subsystem's lists a described layer is in, the other half of
+/// naming it.
+enum class LayerKind {
+  /// A cylinder of one of its barrels
+  Barrel,
+  /// A disc of one of its endcaps
+  Endcap,
+  /// One of its supports or services
+  Passive,
+};
+
+/// Names one described layer of one subsystem, which is what material is keyed
+/// onto: it survives a layer being inserted in front of it and a subsystem
+/// being selected away, neither of which a position in a list does.
+struct LayerId {
+  /// The subsystem it belongs to, empty for a passive belonging to the detector
+  std::string subsystem;
+  /// Which of that subsystem's lists it is in
+  LayerKind kind{};
+  /// Which endcap of the subsystem, i.e. the sides that endcap is built on.
+  /// Only an endcap needs it: a subsystem's barrels share one numbering, and so
+  /// do its passives, while a positive-only and a negative-only endcap number
+  /// their discs independently.
+  EndcapPlacement placement{EndcapPlacement::Mirrored};
+  /// The index it answers to within that
+  std::uint32_t layer{};
+
+  /// @param other the identifier to compare against
+  /// @return whether they name the same layer
+  bool operator==(const LayerId& other) const = default;
+};
+
+/// What one layer of a detector is made of, away from the description of where
+/// that layer is.
+struct MaterialEntry {
+  /// The layer it belongs on
+  LayerId layer;
+  /// What a crossing of it meets
+  SurfaceMaterial material;
+};
+
+/// The material of a whole detector, keyed by the layers of its description, so
+/// that where the detector is and what it is made of are written down,
+/// generated and reviewed apart from each other.
+using MaterialDecoration = std::vector<MaterialEntry>;
+
+/// Write down every layer index a description leaves to the position of its
+/// layer in a list, so that what material keys onto is stated rather than
+/// derived twice.
+///
+/// Cylinders are numbered across all of a subsystem's barrels, discs per side
+/// of it across all of its endcaps, and passives within the list they are in.
+/// `makeLayout` does this itself; `decorate` and `extractMaterial` need it
+/// done, and do it.
+///
+/// @param description the detector to number in place
+/// @throws std::invalid_argument if two layers already claim one index
+void assignLayerIndices(DetectorDescription& description);
+
+/// Put material onto the layers a decoration names, replacing whatever they
+/// carried.
+///
+/// @param description the detector to decorate in place
+/// @param decoration what its layers are made of
+/// @throws std::invalid_argument if an entry names a layer the description does
+///         not have, which is what catches a material file left behind by a
+///         description that has been renumbered
+void decorate(DetectorDescription& description,
+              const MaterialDecoration& decoration);
+
+/// Take the material off a description, which is the inverse of `decorate` and
+/// how a detector read off a geometry is split into the two files it ships as.
+///
+/// @param description the detector to read
+/// @return the material of every layer of it that carries any
+MaterialDecoration extractMaterial(const DetectorDescription& description);
+
+/// Leave a description holding where its layers are and nothing about what they
+/// are made of.
+/// @param description the detector to strip in place
+void stripMaterial(DetectorDescription& description);
+
 /// Stands for "no surface" where an index into `DetectorLayout::surfaces` is
 /// optional.
 constexpr std::uint32_t kNoSurface = std::numeric_limits<std::uint32_t>::max();
@@ -519,9 +601,9 @@ void updateSurfaceExtents(DetectorLayout& layout);
 /// passives first, then subsystem by subsystem its passives, its barrels and
 /// its endcaps.
 ///
-/// @param description the detector to build
+/// @param original the detector to build
 /// @return the layout
-DetectorLayout makeLayout(const DetectorDescription& description);
+DetectorLayout makeLayout(const DetectorDescription& original);
 
 /// Keep only the named subsystems of a description, so that a detector held in
 /// one piece can be built a system at a time: the ITk pixels alone, or the
