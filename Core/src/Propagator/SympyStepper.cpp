@@ -172,6 +172,10 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
   }
   Vector3 lastField = *state.field;
 
+  // Read once: the kernel writes through spans that point into `state`, so a
+  // later read would be ordered behind all of its stores.
+  const double stepTolerance = state.options.stepTolerance;
+
   const auto calcStepSizeScaling = [&](const double errorEstimate_) -> double {
     // For details about these values see ATL-SOFT-PUB-2009-001
     constexpr double lower = 0.25;
@@ -179,7 +183,7 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
     // This is given by the order of the Runge-Kutta method
     constexpr double exponent = 0.25;
 
-    double x = state.options.stepTolerance / errorEstimate_;
+    double x = stepTolerance / errorEstimate_;
 
     if constexpr (exponent == 0.25) {
       // This is 3x faster than std::pow
@@ -212,16 +216,15 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
                                                state.jacToGlobal.size())
                            : std::span<double>();
     if (!state.options.doDense || material == nullptr) {
-      res = rk4_vacuum(startPos, startDir, t, h, qop, m, pabs,
-                       std::span<const double, 3>(state.field->data(), 3), getB,
-                       errorEstimate, 4 * state.options.stepTolerance, endPos,
-                       state.pars[eFreeTime], endDir,
-                       std::span<double, 3>(lastField.data(), 3), derivative,
-                       jac);
+      res = rk4_vacuum(
+          startPos, startDir, t, h, qop, m, pabs,
+          std::span<const double, 3>(state.field->data(), 3), getB,
+          errorEstimate, 4 * stepTolerance, endPos, state.pars[eFreeTime],
+          endDir, std::span<double, 3>(lastField.data(), 3), derivative, jac);
     } else {
       res = detail::sympyDenseStep(*this, state, *material, timeDirection, h,
-                                   4 * state.options.stepTolerance,
-                                   errorEstimate, lastField, jac);
+                                   4 * stepTolerance, errorEstimate, lastField,
+                                   jac);
     }
     if (!res.ok()) {
       return res.error();
