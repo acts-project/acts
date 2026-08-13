@@ -323,21 +323,54 @@ _B2F_ZERO_ROWS = {2: (3, 7), 3: (3, 7)}
 # bound parameter count -- M is 8 x _B2F_COLS, stored column major
 _B2F_COLS = 6
 
+# The q/p column of M is not stored as the plain bound-to-free jacobian.  Its
+# free rows are multiplied by q/p and divided by the column's own q/p row:
+#
+#     M[i, 4] = l * dFree_i/dl_0 / (dl/dl_0)     for i in 0..6
+#     M[7, 4] =     dl/dl_0                      unchanged
+#
+# Both factors are storage convention only, and together they are what makes
+# this column cost exactly what the ATLAS stepper's pVector[40] block costs:
+# the l makes the term each RK stage picks up from H's own l dependence equal
+# to the stage itself instead of a fresh cross product, and the normalisation
+# makes the coefficient of that term one instead of a load of the q/p row.
+# In vacuum both factors are constant across a step, so the invariant holds by
+# itself; rk4_dense changes both and restores it explicitly.  The stepper
+# converts to and from the plain jacobian where the covariance engine wants it.
+_B2F_QOP_COLUMN = 4
 
-def b2f_step_update(D, live):
+
+def b2f_step_update(D, live, l_in=None, l_out=None):
     """Apply a free-to-free step jacobian D to the bound-to-free jacobian M.
 
     Only the live columns are touched, and the structurally zero rows are
     dropped from the input so the products stay sparse.  This is the generic
     fallback; the vacuum kernel instead folds the same operation into the RK
     recursion, which is cheaper still because it never builds D.
+
+    The q/p column is stored scaled (see _B2F_QOP_SCALING).  A step that
+    changes q/p changes both factors of that scaling, so it is undone on the
+    way in, using the q/p the column was scaled with, and redone on the way
+    out with the new one.  Pass l_in and l_out to do that; leaving them None
+    treats every column as plain.
     """
     M = MatrixSymbol("M", 8, 6)
+    qop_col = _B2F_QOP_COLUMN
     out = []
     for c in sorted({col for _, col in live}):
         zero = _B2F_ZERO_ROWS.get(c, ())
         v = Matrix([[0 if i in zero else M[i, c]] for i in range(8)])
+        scaled = c == qop_col and l_in is not None
+        if scaled:
+            # stored = l_in * plain / plain[7], so plain = stored * stored[7] / l_in
+            f = v[7, 0] / l_in
+            v = Matrix([[v[i, 0] * f] if i < 7 else [v[i, 0]] for i in range(8)])
         new_v = D * v
+        if scaled:
+            g = l_out / new_v[7, 0]
+            new_v = Matrix(
+                [[new_v[i, 0] * g] if i < 7 else [new_v[i, 0]] for i in range(8)]
+            )
         out.extend([new_v[i, 0]] for i, col in live if col == c)
     return Matrix(out)
 
@@ -370,39 +403,43 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
             T = T + stage.expr.jacobian(var) * Tvar
         return b.add(name, T)
 
-    def propagate(tag, c, scale):
+    def propagate(tag, c, with_field):
         """Push column `c` of M through the step.
 
-        `scale` is None for a column with no q/p component, which then needs
-        neither the field terms nor any rescaling.  For the q/p column the
-        direction part is carried multiplied by l -- exactly ATLAS' convention
-        for its pVector[40] block -- so that the term each stage picks up from
-        H's own l dependence is the stage itself rather than a fresh cross
-        product.  Unlike ATLAS we read the q/p row instead of assuming it is 1,
-        because a preceding dense step changes it.
+        `with_field` is False for a column with no q/p component, which then
+        picks up nothing from H's own l dependence.
+
+        The q/p column is stored in the scaled form described at
+        _B2F_QOP_SCALING: its free rows carry a factor l and are divided by the
+        column's own q/p row.  Both factors are pure storage convention, but
+        together they are what makes this column cost exactly what the ATLAS
+        stepper's pVector[40] block costs.  The l turns the term each stage
+        picks up from H's l dependence into the stage itself rather than a
+        fresh cross product, and the normalisation makes the coefficient of
+        that term a literal one instead of a load of the q/p row.  Nothing is
+        assumed about the q/p row -- rk4_dense restores the invariant whenever
+        it changes it.
         """
-        if scale is None:
-            seed = col(c, (4, 5, 6))
+        seed = col(c, (4, 5, 6))
+        pos_fac, dir_fac = S3.name, third.name
+        if not with_field:
             fields = [None] * 4
-            pos_fac, dir_fac = S3.name, third.name
         else:
-            vl = M[7, c]
-            seed = _ex(b.add(f"u{tag}", l * col(c, (4, 5, 6))).name)
+            one = sym.Integer(1)
             fields = [
                 _field_contrib(
-                    b, f"{tag}0", A0, H0, _ex(A0.name) * vl, _ex(H0.name) * vl
+                    b, f"{tag}0", A0, H0, _ex(A0.name) * one, _ex(H0.name) * one
                 ),
                 _field_contrib(
-                    b, f"{tag}3", A3, H1, (_ex(A3.name) - d) * vl, _ex(H1.name) * vl
+                    b, f"{tag}3", A3, H1, (_ex(A3.name) - d) * one, _ex(H1.name) * one
                 ),
                 _field_contrib(
-                    b, f"{tag}4", A4, H1, (_ex(A4.name) - d) * vl, _ex(H1.name) * vl
+                    b, f"{tag}4", A4, H1, (_ex(A4.name) - d) * one, _ex(H1.name) * one
                 ),
                 _field_contrib(
-                    b, f"{tag}6", A6, H2, _ex(A6.name) * vl, _ex(H2.name) * vl
+                    b, f"{tag}6", A6, H2, _ex(A6.name) * one, _ex(H2.name) * one
                 ),
             ]
-            pos_fac, dir_fac = scale[0], scale[1]
 
         v0 = tangent(f"{tag}0", A0, [(d, seed)], fields[0])
         v2 = b.add(f"{tag}2", _ex(v0.name) + seed)
@@ -427,17 +464,17 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
     # distribute, so the scaling stays factored and no temporary is needed.
 
     third = b.add("third", sym.Rational(1, 3))
-    inv_l = b.add("inv_l", 1 / l)
-    S3_l = b.add("S3_l", S3.name * inv_l.name)
-    third_l = b.add("third_l", inv_l.name / 3)
 
-    phi_pos, phi_dir = propagate("Tp", 2, None)
-    the_pos, the_dir = propagate("Tt", 3, None)
-    qop_pos, qop_dir = propagate("Tq", 4, (S3_l.name, third_l.name))
+    phi_pos, phi_dir = propagate("Tp", 2, False)
+    the_pos, the_dir = propagate("Tt", 3, False)
+    qop_pos, qop_dir = propagate("Tq", 4, True)
 
     # dt/ds depends on q/p only, so the time row moves for the q/p column alone.
-    dtdl = b.add("dtdl", dt_dqop(dtds.name))
-    new_time = M[3, 4] + dtdl.name * M[7, 4]
+    # The l is the scaling the stored column carries; the division by the q/p
+    # row that goes with it has already cancelled, since the plain entry is
+    # d(t)/d(q/p) times that row.
+    dtdl = b.add("dtdl", l * dt_dqop(dtds.name))
+    new_time = M[3, 4] + dtdl.name
 
     b.add("new_Mp", Matrix.vstack(phi_pos, phi_dir))
     b.add("new_Mt", Matrix.vstack(the_pos, the_dir))
@@ -541,7 +578,7 @@ def rk4_dense_tunedexpr():
     # recursion buys little on a path that is not hot.  It still applies D to
     # the bound-to-free jacobian directly rather than to an 8x8 transport,
     # which is also what removes the composition-order question entirely.
-    new_M = name_expr("new_M", b2f_step_update(D, _B2F_DENSE_LIVE))
+    new_M = name_expr("new_M", b2f_step_update(D, _B2F_DENSE_LIVE, l, new_l.expr))
 
     return [
         dtds,

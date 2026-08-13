@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
+#include "Acts/Propagator/detail/SympyBoundToFreeScaling.hpp"
 #include "Acts/Propagator/detail/SympyCovarianceEngine.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -158,11 +159,23 @@ struct LoopComponentProxy
           all_state.covTransport && transportCov, cmp.state.pathAccumulated,
           freeToBoundCorrection);
     } else {
-      return detail::sympy::boundState(
+      // See SympyBoundToFreeScaling.hpp: while stepping, the q/p column is
+      // held scaled.  The engine wants the plain jacobian and reinitializes
+      // it for the new surface, so convert either side of the call.
+      const double qOverP = pars()[eFreeQOverP];
+      const bool transport = all_state.covTransport && transportCov;
+      if (transport) {
+        detail::sympy::fromScaledBoundToFree(jacToGlobal(), qOverP);
+      }
+      auto result = detail::sympy::boundState(
           all_state.options.geoContext, surface, cov(), jacobian(),
           derivative(), jacToGlobal(), std::nullopt, pars(),
-          all_state.particleHypothesis, all_state.covTransport && transportCov,
-          cmp.state.pathAccumulated, freeToBoundCorrection);
+          all_state.particleHypothesis, transport, cmp.state.pathAccumulated,
+          freeToBoundCorrection);
+      if (transport) {
+        detail::sympy::toScaledBoundToFree(jacToGlobal(), qOverP);
+      }
+      return result;
     }
   }
 
@@ -172,6 +185,12 @@ struct LoopComponentProxy
     cmp.state.cov = covariance;
     cmp.state.jacToGlobal =
         surface.boundToFreeJacobian(all_state.geoContext, boundParams);
+    if constexpr (!Base::hasFreeTransport) {
+      if (all_state.covTransport) {
+        detail::sympy::toScaledBoundToFree(cmp.state.jacToGlobal,
+                                           freeParams[eFreeQOverP]);
+      }
+    }
   }
 };
 
