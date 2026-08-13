@@ -230,10 +230,14 @@ BOOST_DATA_TEST_CASE(BoundToCartesianFourPositionMomentum,
 
   CHECK_CLOSE_OR_SMALL(pos4.segment<3>(ePos0), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(pos4[eTime], time, eps, eps);
-  CHECK_CLOSE_OR_SMALL(momentum, p * dir, eps, eps);
+  // "small" scales with p: rounding noise in near-zero components of dir
+  // (e.g. sin(pi) != 0 exactly) gets amplified by the momentum magnitude.
+  CHECK_CLOSE_OR_SMALL(momentum, p * dir, eps, p * eps);
 
-  // the propagated covariance must remain symmetric
-  CHECK_CLOSE_OR_SMALL(cov7, cov7.transpose(), eps, eps);
+  // the propagated covariance must remain symmetric; the absolute floor
+  // scales with the matrix magnitude for the same reason as above.
+  CHECK_CLOSE_OR_SMALL(cov7, cov7.transpose(),
+                       eps, cov7.cwiseAbs().maxCoeff() * eps);
 }
 
 BOOST_DATA_TEST_CASE(BoundToCartesianCovarianceConsistency,
