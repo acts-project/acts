@@ -729,15 +729,20 @@ BOOST_AUTO_TEST_CASE(GridSurfaceMaterialTests) {
   eqGrid.atPosition(Point{4.5}) = MaterialSlab::Vacuum(4.0);
 
   auto localX = std::make_unique<const LocalAccessX>();
-  GridSurfaceMaterial<EqGrid>::BoundToGridLocalDelegate bToX;
+  GridSurfaceMaterialT<EqGrid,
+                       GridMaterialAccessor>::BoundToGridLocalDelegate bToX;
   bToX.connect<&LocalAccessX::l2X>(std::move(localX));
 
   auto globalX = std::make_unique<const GlobalAccessX>();
-  GridSurfaceMaterial<EqGrid>::GlobalToGridLocalDelegate gToX;
+  GridSurfaceMaterialT<EqGrid,
+                       GridMaterialAccessor>::GlobalToGridLocalDelegate gToX;
   gToX.connect<&GlobalAccessX::g2X>(std::move(globalX));
 
-  GridSurfaceMaterial<EqGrid> gsm(std::move(eqGrid), GridMaterialAccessor{},
-                                  std::move(bToX), std::move(gToX));
+  auto gridMaterial =
+      std::make_unique<GridSurfaceMaterialT<EqGrid, GridMaterialAccessor>>(
+          std::move(eqGrid), GridMaterialAccessor{}, std::move(bToX),
+          std::move(gToX));
+  GridSurfaceMaterial gsm(std::move(gridMaterial));
 
   // Local access test
   Vector2 l0(0.5, 0.);
@@ -757,6 +762,11 @@ BOOST_AUTO_TEST_CASE(GridSurfaceMaterialTests) {
   BOOST_CHECK_EQUAL(ml2.thickness(), 2.);
   BOOST_CHECK_EQUAL(ml3.thickness(), 3.);
   BOOST_CHECK_EQUAL(ml4.thickness(), 4.);
+
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  const MaterialSlab& globalMaterial = gsm.materialSlab(Vector3(0.5, 0., 0.));
+  ACTS_POP_IGNORE_DEPRECATED()
+  BOOST_CHECK_EQUAL(globalMaterial.thickness(), 0.);
 
   // Now scale it - and access again
   gsm.scale(2.);
