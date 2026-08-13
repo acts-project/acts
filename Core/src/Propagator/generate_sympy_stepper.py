@@ -378,7 +378,7 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
         if scale is None:
             seed = col(c, (4, 5, 6))
             fields = [None] * 4
-            pos_fac, dir_fac = S3.name, sym.Rational(1, 3)
+            pos_fac, dir_fac = S3.name, third.name
         else:
             vl = M[7, c]
             seed = _ex(b.add(f"u{tag}", l * col(c, (4, 5, 6))).name)
@@ -413,6 +413,14 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
         )
         return new_pos, new_dir
 
+    # NOTE: dir_fac must be a Symbol, never a Number. sympy distributes a
+    # Number over an Add, so Rational(1,3) * (v0 + 2*v3 + v5 + v6) emits four
+    # multiplications per component where ATLAS' equivalent
+    # ((d2A0 + 2*d2A3) + (d2A5 + d2A6)) * (1./3.) uses two -- eighteen wasted
+    # multiplies once the three columns are counted. A Symbol does not
+    # distribute, so the scaling stays factored and no temporary is needed.
+
+    third = b.add("third", sym.Rational(1, 3))
     inv_l = b.add("inv_l", 1 / l)
     S3_l = b.add("S3_l", S3.name * inv_l.name)
     third_l = b.add("third_l", inv_l.name / 3)
