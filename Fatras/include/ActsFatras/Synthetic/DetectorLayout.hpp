@@ -523,6 +523,33 @@ void updateSurfaceExtents(DetectorLayout& layout);
 /// @return the layout
 DetectorLayout makeLayout(const DetectorDescription& description);
 
+/// Keep only the named subsystems of a description, so that a detector held in
+/// one piece can be built a system at a time: the ITk pixels alone, or the
+/// pixels and the strips together.
+///
+/// The detector's own passives are kept whichever subsystems are named -- the
+/// beam pipe is the only material in front of the innermost layer and dropping
+/// it would leave a pixel-only run with no secondaries there -- and so are the
+/// escape bounds, a track leaving the pixels still curling back through the
+/// strips.
+///
+/// @param description the detector to narrow
+/// @param names the subsystems to keep, in the order they are given
+/// @return the narrowed description
+/// @throws std::invalid_argument if a name is not one the description has, a
+///         typo being far more likely than a detector with a hole in it
+DetectorDescription selectSubsystems(const DetectorDescription& description,
+                                     std::span<const std::string> names);
+
+/// Build one detector out of several descriptions, appending their subsystems
+/// and their detector-level passives in the order given.
+///
+/// @param descriptions the descriptions to combine
+/// @return the combined description, with the widest escape bounds of any of
+///         them
+/// @throws std::invalid_argument if two of them name the same subsystem
+DetectorDescription merge(std::span<const DetectorDescription> descriptions);
+
 /// A coarse stand-in for the ACTS Generic detector's pixel system, and the one
 /// detector spelled out in C++ rather than read from file, so that the tests of
 /// the generator itself need no data.

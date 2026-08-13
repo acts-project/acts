@@ -64,6 +64,14 @@ be built whole or a system at a time.
   surface where a description would be in the way. A description of the ACTS
   Generic pixels ships in C++, and is the one detector that does.
 
+A detector is held whole and built in parts:
+@ref ActsFatras::Synthetic::selectSubsystems narrows it to the systems named,
+keeping the beam pipe and the containment of the whole tracker whichever they
+are, and @ref ActsFatras::Synthetic::merge puts descriptions back together, so a
+hand-written subsystem can be added to a shipped detector. A space point still
+says which system it came from afterwards, its layer carrying an index into
+@ref ActsFatras::Synthetic::DetectorLayout::subsystems.
+
 ### Event content
 
 @ref ActsFatras::Synthetic::EventGenerator draws the primaries -- a rapidity

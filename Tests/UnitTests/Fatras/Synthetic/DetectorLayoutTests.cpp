@@ -20,6 +20,7 @@
 #include <optional>
 #include <set>
 #include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -699,6 +700,145 @@ BOOST_AUTO_TEST_CASE(EndcapPlacementPicksTheSides) {
                                 .placement = EndcapPlacement::Positive,
                                 .maxBound = 600.f}};
   BOOST_CHECK_THROW(makeLayout(sidedCylinder), std::invalid_argument);
+}
+
+namespace {
+
+/// A detector of two subsystems behind a beam pipe, so that narrowing it and
+/// putting it back together have something to work on.
+DetectorDescription makeTwoSubsystemDescription() {
+  DetectorDescription description;
+  description.escapeRadius = 1000.f;
+  description.escapeHalfZ = 3050.f;
+  description.passives = {PassiveSurfaceDescription{
+      .shape = SurfaceShape::Cylinder, .refCoord = 25.f, .maxBound = 3000.f}};
+  description.subsystems = {
+      SubsystemDescription{
+          .name = "pixel",
+          .barrels = {BarrelDescription{
+              {CylinderDescription{.radius = 34.f, .halfLengthZ = 250.f},
+               CylinderDescription{.radius = 99.f, .halfLengthZ = 250.f}}}},
+          .endcaps = {EndcapDescription{
+              .discs = {DiscDescription{.absZ = 600.f,
+                                        .rings = {{30.f, 200.f}}}}}}},
+      SubsystemDescription{.name = "strip",
+                           .barrels = {BarrelDescription{{CylinderDescription{
+                               .radius = 300.f, .halfLengthZ = 700.f}}}},
+                           .passives = {PassiveSurfaceDescription{
+                               .shape = SurfaceShape::Cylinder,
+                               .refCoord = 280.f,
+                               .maxBound = 700.f}}}};
+  return description;
+}
+
+}  // namespace
+
+/// Narrowing a detector to some of its subsystems keeps what belongs to none of
+/// them: the beam pipe, which is the only material in front of the innermost
+/// layer, and the bounds of the tracker the selection sits inside.
+BOOST_AUTO_TEST_CASE(SelectSubsystemsKeepsWhatIsShared) {
+  const DetectorDescription whole = makeTwoSubsystemDescription();
+  const std::array<std::string, 1> pixelOnly{"pixel"};
+  const DetectorDescription pixels = selectSubsystems(whole, pixelOnly);
+
+  BOOST_REQUIRE_EQUAL(pixels.subsystems.size(), 1u);
+  BOOST_CHECK_EQUAL(pixels.subsystems.front().name, "pixel");
+  // the beam pipe survives, along with the containment of the whole tracker: a
+  // track leaving the pixels still curls back through the strips
+  BOOST_REQUIRE_EQUAL(pixels.passives.size(), 1u);
+  BOOST_CHECK_EQUAL(pixels.passives.front().refCoord, 25.f);
+  BOOST_CHECK_EQUAL(pixels.escapeRadius, whole.escapeRadius);
+  BOOST_CHECK_EQUAL(pixels.escapeHalfZ, whole.escapeHalfZ);
+
+  const DetectorLayout layout = makeLayout(pixels);
+  checkLayoutInvariants(layout);
+  BOOST_REQUIRE_EQUAL(layout.subsystems.size(), 1u);
+  BOOST_CHECK_EQUAL(layout.subsystems.front(), "pixel");
+  // the strip cylinder and its service are gone, the beam pipe is not
+  for (const DetectorSurface& surface : layout.surfaces) {
+    BOOST_CHECK_NE(surface.refCoord, 300.f);
+    BOOST_CHECK_NE(surface.refCoord, 280.f);
+  }
+  BOOST_CHECK_EQUAL(layout.surfaces.front().refCoord, 25.f);
+
+  // the order asked for is the order built, so a caller decides which
+  // subsystem's surfaces come first
+  const std::array<std::string, 2> reversed{"strip", "pixel"};
+  const DetectorDescription swapped = selectSubsystems(whole, reversed);
+  BOOST_REQUIRE_EQUAL(swapped.subsystems.size(), 2u);
+  BOOST_CHECK_EQUAL(swapped.subsystems[0].name, "strip");
+  BOOST_CHECK_EQUAL(swapped.subsystems[1].name, "pixel");
+}
+
+/// A name the detector does not have is a typo, not a detector with a hole in
+/// it, so it is refused rather than silently building less.
+BOOST_AUTO_TEST_CASE(SelectSubsystemsRejectsUnknownNames) {
+  const DetectorDescription whole = makeTwoSubsystemDescription();
+  const std::array<std::string, 1> misspelled{"pixels"};
+  BOOST_CHECK_THROW(selectSubsystems(whole, misspelled), std::invalid_argument);
+  const std::array<std::string, 2> twice{"pixel", "pixel"};
+  BOOST_CHECK_THROW(selectSubsystems(whole, twice), std::invalid_argument);
+  // and the message says what there is instead, the point of the throw being to
+  // be read
+  try {
+    selectSubsystems(whole, misspelled);
+  } catch (const std::invalid_argument& error) {
+    const std::string what = error.what();
+    BOOST_CHECK_NE(what.find("pixel, strip"), std::string::npos);
+  }
+}
+
+/// Two descriptions of one subsystem each build the same detector as one
+/// description of both, which is what lets a hand-written subsystem be added to
+/// a shipped one.
+BOOST_AUTO_TEST_CASE(MergeIsTheInverseOfSelect) {
+  const DetectorDescription whole = makeTwoSubsystemDescription();
+  const std::array<std::string, 1> pixelOnly{"pixel"};
+  const std::array<std::string, 1> stripOnly{"strip"};
+
+  // the beam pipe is in both halves, as it has to be for either to stand alone,
+  // so it is dropped from one of them before they are put back together
+  DetectorDescription pixels = selectSubsystems(whole, pixelOnly);
+  DetectorDescription strips = selectSubsystems(whole, stripOnly);
+  strips.passives.clear();
+
+  const std::array<DetectorDescription, 2> halves{pixels, strips};
+  const DetectorDescription merged = merge(halves);
+  BOOST_CHECK_EQUAL(merged.escapeRadius, whole.escapeRadius);
+  BOOST_CHECK_EQUAL(merged.escapeHalfZ, whole.escapeHalfZ);
+
+  const DetectorLayout fromMerge = makeLayout(merged);
+  const DetectorLayout fromWhole = makeLayout(whole);
+  checkLayoutInvariants(fromMerge);
+  BOOST_REQUIRE_EQUAL(fromMerge.surfaces.size(), fromWhole.surfaces.size());
+  BOOST_REQUIRE_EQUAL(fromMerge.layers.size(), fromWhole.layers.size());
+  BOOST_CHECK(fromMerge.subsystems == fromWhole.subsystems);
+  for (std::size_t s = 0; s < fromWhole.surfaces.size(); ++s) {
+    BOOST_CHECK_EQUAL(fromMerge.surfaces[s].refCoord,
+                      fromWhole.surfaces[s].refCoord);
+  }
+  for (std::size_t l = 0; l < fromWhole.layers.size(); ++l) {
+    BOOST_CHECK_EQUAL(fromMerge.layers[l].subsystem,
+                      fromWhole.layers[l].subsystem);
+    BOOST_CHECK_EQUAL(fromMerge.layers[l].layer, fromWhole.layers[l].layer);
+  }
+
+  // a name cannot say which subsystem it means if two of them answer to it
+  const std::array<DetectorDescription, 2> clashing{pixels, pixels};
+  BOOST_CHECK_THROW(merge(clashing), std::invalid_argument);
+  // the widest containment wins, being a property of the tracker rather than of
+  // any one description
+  DetectorDescription narrow = strips;
+  narrow.escapeRadius = 200.f;
+  narrow.escapeHalfZ = 800.f;
+  const std::array<DetectorDescription, 2> mixed{narrow, pixels};
+  BOOST_CHECK_EQUAL(merge(mixed).escapeRadius, whole.escapeRadius);
+  BOOST_CHECK_EQUAL(merge(mixed).escapeHalfZ, whole.escapeHalfZ);
+  // and merging a single narrow description leaves its bounds alone rather than
+  // widening them to a default
+  const std::array<DetectorDescription, 1> alone{narrow};
+  BOOST_CHECK_EQUAL(merge(alone).escapeRadius, 200.f);
+  BOOST_CHECK_EQUAL(merge(alone).escapeHalfZ, 800.f);
 }
 
 /// `uniformRings` tiles a radial range exactly, and `subdivideRings` splits

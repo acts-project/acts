@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <limits>
 #include <optional>
+#include <ranges>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -55,8 +56,15 @@ std::span<const SurfaceSide> placementSides(const EndcapPlacement placement) {
 /// @param names the names given out so far
 /// @param name the name to look for
 /// @return whether it is one of them
-bool holdsName(const std::vector<std::string>& names, const std::string& name) {
-  return std::ranges::find(names, name) != names.end();
+template <typename Names>
+bool holdsName(Names&& names, const std::string& name) {
+  return std::ranges::find(names, name) != std::ranges::end(names);
+}
+
+/// @param subsystems the subsystems to read the names off
+/// @return their names, for looking one up among them
+auto subsystemNames(const std::vector<SubsystemDescription>& subsystems) {
+  return subsystems | std::views::transform(&SubsystemDescription::name);
 }
 
 /// Pack a layer index and the side it sits on into one key, so that the indices
@@ -518,6 +526,70 @@ Synthetic::DetectorLayout Synthetic::makeLayout(
   updateSurfaceExtents(layout);
 
   return layout;
+}
+
+Synthetic::DetectorDescription Synthetic::selectSubsystems(
+    const DetectorDescription& description,
+    const std::span<const std::string> names) {
+  DetectorDescription selected;
+  // whatever is selected sits inside the same tracker and behind the same beam
+  // pipe as the whole detector does
+  selected.passives = description.passives;
+  selected.escapeRadius = description.escapeRadius;
+  selected.escapeHalfZ = description.escapeHalfZ;
+
+  selected.subsystems.reserve(names.size());
+  for (const std::string& name : names) {
+    const auto subsystem = std::ranges::find(description.subsystems, name,
+                                             &SubsystemDescription::name);
+    if (subsystem == description.subsystems.end()) {
+      std::string known;
+      for (const SubsystemDescription& candidate : description.subsystems) {
+        known += known.empty() ? "" : ", ";
+        known += candidate.name;
+      }
+      throw std::invalid_argument("selectSubsystems: the description has no '" +
+                                  name + "', only " +
+                                  (known.empty() ? "nothing at all" : known));
+    }
+    if (holdsName(subsystemNames(selected.subsystems), name)) {
+      throw std::invalid_argument("selectSubsystems: '" + name +
+                                  "' was asked for twice");
+    }
+    selected.subsystems.push_back(*subsystem);
+  }
+  return selected;
+}
+
+Synthetic::DetectorDescription Synthetic::merge(
+    const std::span<const DetectorDescription> descriptions) {
+  if (descriptions.empty()) {
+    return {};
+  }
+
+  DetectorDescription merged;
+  // The bound is on the tracker these sit inside rather than on any one of
+  // them, so it is taken from them rather than left at a default that could be
+  // wider than every input.
+  merged.escapeRadius = descriptions.front().escapeRadius;
+  merged.escapeHalfZ = descriptions.front().escapeHalfZ;
+
+  for (const DetectorDescription& description : descriptions) {
+    for (const SubsystemDescription& subsystem : description.subsystems) {
+      if (holdsName(subsystemNames(merged.subsystems), subsystem.name)) {
+        throw std::invalid_argument(
+            "merge: two of these detectors call a subsystem '" +
+            subsystem.name + "', and a name has to say which is which");
+      }
+      merged.subsystems.push_back(subsystem);
+    }
+    merged.passives.insert(merged.passives.end(), description.passives.begin(),
+                           description.passives.end());
+    merged.escapeRadius =
+        std::max(merged.escapeRadius, description.escapeRadius);
+    merged.escapeHalfZ = std::max(merged.escapeHalfZ, description.escapeHalfZ);
+  }
+  return merged;
 }
 
 Synthetic::DetectorDescription Synthetic::genericDetectorPixelDescription() {
