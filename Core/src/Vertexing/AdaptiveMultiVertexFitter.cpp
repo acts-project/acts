@@ -234,6 +234,60 @@ Result<void> AdaptiveMultiVertexFitter::addVtxToFit(
   return {};
 }
 
+Result<Vertex> AdaptiveMultiVertexFitter::fitSingle(
+    const std::vector<InputTrack>& trackVector,
+    const VertexingOptions& vertexingOptions,
+    IVertexFitter::Cache& anyCache) const {
+  if (trackVector.empty()) {
+    ACTS_ERROR("Empty track collection handed to fitSingle.");
+    return VertexingError::EmptyInput;
+  }
+
+  Cache& cache = anyCache.as<Cache>();
+
+  Vertex vtx(vertexingOptions.constraint.fullPosition());
+  if (vertexingOptions.constraint.fullCovariance() != SquareMatrix4::Zero()) {
+    vtx.setFullCovariance(vertexingOptions.constraint.fullCovariance());
+  } else {
+    // Without a constraint the fit starts from an essentially unconstrained
+    // vertex. The fitter requires a non-zero covariance to start from.
+    vtx.setFullCovariance(SquareMatrix4(SquareMatrix4::Identity() * 1e+8));
+  }
+
+  VertexFitProblem problem;
+  problem.vertices.push_back(&vtx);
+
+  VertexFitCandidate& candidate = problem.candidates[&vtx];
+  candidate.seedPosition = vtx.fullPosition();
+  if (vertexingOptions.useConstraintInFit) {
+    candidate.constraint = vertexingOptions.constraint;
+  }
+  candidate.trackLinks = trackVector;
+
+  for (const auto& trk : trackVector) {
+    problem.tracksAtVertices.emplace(
+        std::make_pair(trk, &vtx),
+        TrackAtVertex(m_cfg.extractParameters(trk), trk));
+  }
+  problem.addVertexToMultiMap(vtx);
+
+  auto res = fit(problem, vertexingOptions, cache);
+  if (!res.ok()) {
+    return res.error();
+  }
+
+  // Copy the fitted tracks back onto the returned vertex
+  std::vector<TrackAtVertex> tracksAtVertex;
+  tracksAtVertex.reserve(trackVector.size());
+  for (const auto& trk : candidate.trackLinks) {
+    tracksAtVertex.push_back(
+        problem.tracksAtVertices.at(std::make_pair(trk, &vtx)));
+  }
+  vtx.setTracksAtVertex(std::move(tracksAtVertex));
+
+  return vtx;
+}
+
 bool AdaptiveMultiVertexFitter::isAlreadyInList(
     Vertex* vtx, const std::vector<Vertex*>& vertices) const {
   return rangeContainsValue(vertices, vtx);
