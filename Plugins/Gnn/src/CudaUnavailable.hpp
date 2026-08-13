@@ -13,8 +13,8 @@
 namespace ActsPlugins::detail {
 
 /// Report that a CUDA-only code path was reached in a build configured without
-/// CUDA. Keeps each `#else` arm of `#ifdef ACTS_GNN_WITH_CUDA` to a single call
-/// against one always-compiled definition.
+/// CUDA. Shared by the no-CUDA implementations of the device entry points, so
+/// they read as one line each.
 ///
 /// @param operation what the caller was asked to do, phrased to follow
 ///        "Cannot ", e.g. "clone CUDA tensor"
