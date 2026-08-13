@@ -8,12 +8,11 @@
 
 #include "Acts/Propagator/SympyStepper.hpp"
 
-#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Material/Interactions.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/detail/SympyCovarianceEngine.hpp"
 #include "Acts/Propagator/detail/SympyJacobianEngine.hpp"
+#include "Acts/Propagator/detail/SympyStepperDenseStep.hpp"
 
 #include <cmath>
 #include <span>
@@ -173,31 +172,6 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
   }
   Vector3 lastField = *state.field;
 
-  // Only the cold dense path needs these.
-  const auto getG = [this, &state, material, m, timeDirection](
-                        std::span<const double, 3> p, double l) -> double {
-    const PdgParticle absPdg = particleHypothesis(state).absolutePdg();
-    const double absQ = std::abs(charge(state));
-    double newPabs = particleHypothesis(state).extractMomentum(l);
-    if (newPabs < state.options.dense.momentumCutOff) {
-      return 0.;
-    }
-
-    if (state.options.dense.meanEnergyLoss) {
-      return timeDirection *
-             computeEnergyLossMean(
-                 MaterialSlab(material->material({p[0], p[1], p[2]}),
-                              1.0f * UnitConstants::mm),
-                 absPdg, m, l, absQ);
-    } else {
-      return timeDirection *
-             computeEnergyLossMode(
-                 MaterialSlab(material->material({p[0], p[1], p[2]}),
-                              1.0f * UnitConstants::mm),
-                 absPdg, m, l, absQ);
-    }
-  };
-
   const auto calcStepSizeScaling = [&](const double errorEstimate_) -> double {
     // For details about these values see ATL-SOFT-PUB-2009-001
     constexpr double lower = 0.25;
@@ -245,12 +219,9 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
                        std::span<double, 3>(lastField.data(), 3), derivative,
                        jac);
     } else {
-      res = rk4_dense(
-          startPos, startDir, t, h, qop, m, charge(state), pabs,
-          std::span<const double, 3>(state.field->data(), 3), getB, getG,
-          errorEstimate, 4 * state.options.stepTolerance, endPos,
-          state.pars[eFreeTime], endDir, state.pars[eFreeQOverP],
-          std::span<double, 3>(lastField.data(), 3), derivative, jac);
+      res = detail::sympyDenseStep(*this, state, *material, timeDirection, h,
+                                   4 * state.options.stepTolerance,
+                                   errorEstimate, lastField, jac);
     }
     if (!res.ok()) {
       return res.error();
