@@ -56,6 +56,7 @@ void SympyStepper::initialize(State& state, const BoundVector& boundParams,
   state.statistics = StepperStatistics();
 
   state.pars = freeParams;
+  state.field.reset();
 
   // Init the jacobian matrix if needed
   state.covTransport = cov.has_value();
@@ -108,6 +109,7 @@ void SympyStepper::update(State& state, const FreeVector& freeParams,
                           const Covariance& covariance,
                           const Surface& surface) const {
   state.pars = freeParams;
+  state.field.reset();
   state.cov = covariance;
   state.jacToGlobal = surface.boundToFreeJacobian(
       state.options.geoContext, freeParams.template segment<3>(eFreePos0),
@@ -121,6 +123,7 @@ void SympyStepper::update(State& state, const Vector3& uposition,
   state.pars.template segment<3>(eFreeDir0) = udirection;
   state.pars[eFreeTime] = time;
   state.pars[eFreeQOverP] = qOverP;
+  state.field.reset();
 }
 
 void SympyStepper::transportCovarianceToCurvilinear(State& state) const {
@@ -160,6 +163,15 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
   const auto getB = [this, &state](std::span<const double, 3> p) {
     return getField(state, {p[0], p[1], p[2]});
   };
+
+  if (!state.field.has_value()) {
+    auto fieldRes = getField(state, pos);
+    if (!fieldRes.ok()) {
+      return fieldRes.error();
+    }
+    state.field = *fieldRes;
+  }
+  Vector3 lastField = *state.field;
 
   // Only the cold dense path needs these.
   const auto getG = [this, &state, material, m, timeDirection](
@@ -226,15 +238,19 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
                                                state.jacToGlobal.size())
                            : std::span<double>();
     if (!state.options.doDense || material == nullptr) {
-      res = rk4_vacuum(startPos, startDir, t, h, qop, m, pabs, getB,
+      res = rk4_vacuum(startPos, startDir, t, h, qop, m, pabs,
+                       std::span<const double, 3>(state.field->data(), 3), getB,
                        errorEstimate, 4 * state.options.stepTolerance, endPos,
-                       state.pars[eFreeTime], endDir, derivative, jac);
+                       state.pars[eFreeTime], endDir,
+                       std::span<double, 3>(lastField.data(), 3), derivative,
+                       jac);
     } else {
-      res =
-          rk4_dense(startPos, startDir, t, h, qop, m, charge(state), pabs, getB,
-                    getG, errorEstimate, 4 * state.options.stepTolerance,
-                    endPos, state.pars[eFreeTime], endDir,
-                    state.pars[eFreeQOverP], derivative, jac);
+      res = rk4_dense(
+          startPos, startDir, t, h, qop, m, charge(state), pabs,
+          std::span<const double, 3>(state.field->data(), 3), getB, getG,
+          errorEstimate, 4 * state.options.stepTolerance, endPos,
+          state.pars[eFreeTime], endDir, state.pars[eFreeQOverP],
+          std::span<double, 3>(lastField.data(), 3), derivative, jac);
     }
     if (!res.ok()) {
       return res.error();
@@ -265,6 +281,9 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
       return EigenStepperError::StepSizeAdjustmentFailed;
     }
   }
+
+  // O(h^3) away from the step end point, close enough to seed the next step
+  state.field = lastField;
 
   state.pathAccumulated += h;
   ++state.nSteps;
