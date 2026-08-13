@@ -148,6 +148,31 @@ Counting secondaries to fit against takes care -- a full simulation records one
 only above a truth-link threshold, and two thirds of the real ones fall below
 it. Compare non-primary space points rather than particle counts.
 
+### The ATLAS ITk pixels
+
+`itk-description.json` and `itk-material.json` are the ATLAS ITk pixel detector,
+transcribed from the ITKLayouts package because ACTS has no ITk geometry to
+reduce: every position is a constant in one of its `*Defines.gmx` files. Five
+stave layers, and an endcap of seventy-five discs per side carrying ninety-five
+rings, because that is what it is. `itk-ttbar-pu200.json` is the
+configuration fitted to it against a GNN4ITk Athena dump.
+
+It is fitted on one half of its sample and checked on the other. On the held-out
+half, per event and normalised to the reference:
+
+| | ITk |
+| --- | --- |
+| space points | 0.99 |
+| &nbsp;&nbsp;primary, inside the generated acceptance | 0.97 |
+| &nbsp;&nbsp;primary, outside it | 1.03 |
+| &nbsp;&nbsp;non-primary | 1.00 |
+| primaries / event | 0.98 |
+| mean primary hits | 0.99 |
+| mean secondary hits | 0.97 |
+
+Known to be off: the spectrum is over-produced below the 100 MeV the reference
+stops recording at.
+
 ## Barcode identifiers {#fatras_barcode_identifiers}
 
 Fatras labels simulated particles and hits with @ref ActsFatras::Barcode. A
