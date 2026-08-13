@@ -53,6 +53,98 @@ std::span<const SurfaceSide> placementSides(const EndcapPlacement placement) {
   return both;
 }
 
+/// @param side the side a disc sits on, which cannot be the barrel
+/// @return which of the two per-side counters is its own
+std::size_t sideOrdinal(const SurfaceSide side) {
+  return side == SurfaceSide::Positive ? 0u : 1u;
+}
+
+/// Visit every described layer of a detector with the identifier it answers to,
+/// numbering the ones that leave their index to their position in a list.
+///
+/// The one traversal there is, so that the numbering material keys onto is
+/// decided in a single place: cylinders across all of a subsystem's barrels,
+/// discs per side of it across all of its endcaps, passives within their own
+/// list.
+///
+/// @param description the detector to walk, const or not
+/// @param visit called with each layer's identifier and the layer itself
+template <typename Description, typename Visit>
+void walkLayers(Description&& description, Visit visit) {
+  const auto walkPassives = [&visit](const std::string& subsystem,
+                                     auto& passives) {
+    std::uint32_t ordinal = 0;
+    for (auto& passive : passives) {
+      visit(LayerId{subsystem, LayerKind::Passive, EndcapPlacement::Mirrored,
+                    passive.layer.value_or(ordinal)},
+            passive);
+      ++ordinal;
+    }
+  };
+
+  walkPassives(std::string{}, description.passives);
+  for (auto& subsystem : description.subsystems) {
+    walkPassives(subsystem.name, subsystem.passives);
+
+    std::uint32_t cylinders = 0;
+    for (auto& barrel : subsystem.barrels) {
+      for (auto& cylinder : barrel.cylinders) {
+        visit(LayerId{subsystem.name, LayerKind::Barrel,
+                      EndcapPlacement::Mirrored,
+                      cylinder.layer.value_or(cylinders)},
+              cylinder);
+        ++cylinders;
+      }
+    }
+
+    std::array<std::uint32_t, 2> discs{};
+    for (auto& endcap : subsystem.endcaps) {
+      const std::span<const SurfaceSide> sides =
+          placementSides(endcap.placement);
+      for (auto& disc : endcap.discs) {
+        const std::uint32_t ordinal = discs[sideOrdinal(sides.front())];
+        for (const SurfaceSide side : sides) {
+          // A mirrored disc is one description and has to answer to one index
+          // on both sides, so the two counters cannot have drifted apart. They
+          // can only have done so by mixing a one-sided endcap into a subsystem
+          // that also has a mirrored one, where the author has to say what they
+          // mean.
+          if (discs[sideOrdinal(side)] != ordinal) {
+            throw std::invalid_argument(
+                "assignLayerIndices: subsystem '" + subsystem.name +
+                "' has endcaps that number their discs differently on the two "
+                "sides; give the discs explicit layer indices");
+          }
+          ++discs[sideOrdinal(side)];
+        }
+        visit(LayerId{subsystem.name, LayerKind::Endcap, endcap.placement,
+                      disc.layer.value_or(ordinal)},
+              disc);
+      }
+    }
+  }
+}
+
+/// @param layer the layer to name
+/// @return what to call it in a message
+std::string describeLayer(const LayerId& layer) {
+  const std::string kind = layer.kind == LayerKind::Barrel   ? "barrel"
+                           : layer.kind == LayerKind::Endcap ? "endcap"
+                                                             : "passive";
+  const std::string placement =
+      layer.kind != LayerKind::Endcap                ? ""
+      : layer.placement == EndcapPlacement::Positive ? " positive"
+      : layer.placement == EndcapPlacement::Negative ? " negative"
+                                                     : " mirrored";
+  return (layer.subsystem.empty() ? "the detector's"
+                                  : "'" + layer.subsystem + "'")
+      .append(placement)
+      .append(" ")
+      .append(kind)
+      .append(" layer ")
+      .append(std::to_string(layer.layer));
+}
+
 /// @param names the names given out so far
 /// @param name the name to look for
 /// @return whether it is one of them
@@ -447,7 +539,14 @@ void Synthetic::updateSurfaceExtents(DetectorLayout& layout) {
 }
 
 Synthetic::DetectorLayout Synthetic::makeLayout(
-    const DetectorDescription& description) {
+    const DetectorDescription& original) {
+  // Numbered up front rather than left to the builder's counters, so that the
+  // index a layer is built with is the one its material is keyed by even where
+  // the two would count differently -- a mirrored endcap, whose one description
+  // becomes a disc on either side.
+  DetectorDescription description = original;
+  assignLayerIndices(description);
+
   DetectorLayoutBuilder builder;
 
   /// What a surface carries, recorded as it is added. Matching afterwards by
@@ -526,6 +625,61 @@ Synthetic::DetectorLayout Synthetic::makeLayout(
   updateSurfaceExtents(layout);
 
   return layout;
+}
+
+void Synthetic::assignLayerIndices(DetectorDescription& description) {
+  std::vector<LayerId> seen;
+  walkLayers(description, [&seen](const LayerId& id, auto& layer) {
+    if (std::ranges::find(seen, id) != seen.end()) {
+      throw std::invalid_argument("assignLayerIndices: two layers answer to " +
+                                  describeLayer(id) +
+                                  ", which leaves their material ambiguous");
+    }
+    seen.push_back(id);
+    layer.layer = id.layer;
+  });
+}
+
+void Synthetic::decorate(DetectorDescription& description,
+                         const MaterialDecoration& decoration) {
+  assignLayerIndices(description);
+  for (const MaterialEntry& entry : decoration) {
+    bool found = false;
+    walkLayers(description, [&](const LayerId& id, auto& layer) {
+      if (id == entry.layer) {
+        layer.material = entry.material;
+        found = true;
+      }
+    });
+    if (!found) {
+      throw std::invalid_argument(
+          "decorate: this detector has no " + describeLayer(entry.layer) +
+          "; the material belongs to a description that has since been "
+          "renumbered");
+    }
+  }
+}
+
+Synthetic::MaterialDecoration Synthetic::extractMaterial(
+    const DetectorDescription& description) {
+  DetectorDescription numbered = description;
+  assignLayerIndices(numbered);
+
+  MaterialDecoration decoration;
+  walkLayers(std::as_const(numbered),
+             [&decoration](const LayerId& id, const auto& layer) {
+               if (layer.material.bands.empty()) {
+                 return;
+               }
+               decoration.push_back(MaterialEntry{id, layer.material});
+             });
+  return decoration;
+}
+
+void Synthetic::stripMaterial(DetectorDescription& description) {
+  walkLayers(description, [](const LayerId& /*id*/, auto& layer) {
+    layer.material = SurfaceMaterial{};
+  });
 }
 
 Synthetic::DetectorDescription Synthetic::selectSubsystems(
