@@ -59,6 +59,9 @@ class GraphBasedTrackSeeder {
     /// if layer is missed in edge connecting
     bool useAdaptiveCuts = true;
     /// optionally add 3 sp seeds within a cirtain eta range
+    ///
+    /// @note Worth little until `maxAbsEtaAddTripelts` is opened past
+    ///       `edgeMaskMinEta`; matters most where there are few layers.
     bool addTriplets = false;
     /// Tau ratio cut threshold.
     float tauRatioCut = 0.007;
