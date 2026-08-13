@@ -5,3 +5,4 @@ add_unittest(
     DetectorDescriptionJsonConverterTests.cpp
 )
 add_unittest(FatrasSyntheticEventConfigJson EventConfigJsonConverterTests.cpp)
+add_unittest(FatrasSyntheticShippedDetectors ShippedDetectorsTests.cpp)
