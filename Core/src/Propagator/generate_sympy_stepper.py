@@ -158,11 +158,11 @@ def _atlas_rk4_stages(deriv, taylor_norm):
     """Build the value path of an ATLAS-form RK4 vacuum step.
 
     ATLAS carries a half-step bend vector, bend_i = (h*qop/2) * B_i, rather
-    than the plain slopes k_i.  Every stage slope then comes out as (h/2)*k_i
+    than the plain slopes k_i. Every stage slope then comes out as (h/2)*k_i
     directly, as a bare cross product, and neither h nor qop appears again
     anywhere in the recursion.
 
-    The stage names say which stage a quantity belongs to.  ATLAS' own names
+    The stage names say which stage a quantity belongs to. ATLAS' own names
     are positional; `docs/groups/sympy_codegen.md` maps the two onto each
     other (bend1..3 are H0..H2, and kick1/dir2/dir_half_sum/dir3/dir4/
     dir_end/kick4 are A0..A6).
@@ -269,8 +269,8 @@ def _atlas_rk4_stages(deriv, taylor_norm):
 def _field_contrib(deriv, what, stage, bend, same_as, seed):
     """The term a tangent picks up from the bend vector's dependence on q/p.
 
-    A bend vector is linear in q/p, so `qop * d(bend)/d(qop) == bend`, making
-    this the bend-linear part of the stage, which is already named.  `same_as`
+    A bend vector is linear in q/p, so `d(bend)/dlog|qop| == bend`, making this
+    the bend-linear part of the stage, which is already named. `same_as`
     encodes that identity and is checked against the plain chain rule before
     use.
     """
@@ -279,7 +279,7 @@ def _field_contrib(deriv, what, stage, bend, same_as, seed):
     return Matrix.hstack(contrib[:, 0 : seed.cols - 1], same_as)
 
 
-# The bound-to-free jacobian M, stored column major.  "hold" is never written,
+# The bound-to-free jacobian M, stored column major. "hold" is never written,
 # "step" is written by every step, "dense" only by a dense step.
 # fmt: off
 _B2F = StructuredMatrix("M", [
@@ -318,17 +318,42 @@ def _by_column(entries):
 
 _B2F_LIVE_COLUMNS = _by_column(_B2F_LIVE)
 
+# The q/p column of M differentiates by the log of the current q/p, not by the
+# starting q/p:
+#
+#     M[i, 4] = dFree_i/dlog|qop| = qop * (dFree_i/dqop_0) / (dqop/dqop_0)
+#     M[7, 4] = dqop/dqop_0, stored plain -- it converts between the two
+#
+# Exact, and the reason `_field_contrib` gets a bend vector back. A vacuum step
+# preserves it for free; rk4_dense moves q/p and restores it explicitly.
+_B2F_QOP_COLUMN = 4
 
-def b2f_step_update(D, live):
+
+def b2f_step_update(D, live, qop_in=None, qop_out=None):
     """Apply a free-to-free step jacobian D to the bound-to-free jacobian M.
 
     Only the live columns are touched, and the structural zeros of _B2F keep
-    the products sparse.  The vacuum kernel folds this into the RK recursion
+    the products sparse. The vacuum kernel folds this into the RK recursion
     instead, and never builds D at all.
+
+    A step that changes q/p changes what the q/p column differentiates by (see
+    _B2F_QOP_COLUMN); qop_in and qop_out convert it to the plain column and
+    back. None treats every column as plain.
     """
     out = []
     for c in sorted({col for _, col in live}):
-        new_v = D * _B2F.matrix[:, c]
+        v = _B2F.matrix[:, c]
+        scaled = c == _B2F_QOP_COLUMN and qop_in is not None
+        if scaled:
+            # plain[i] = stored[i] * row / qop_in, the row being stored plain
+            f = v[7, 0] / qop_in
+            v = Matrix([[v[i, 0] * f] if i < 7 else [v[i, 0]] for i in range(8)])
+        new_v = D * v
+        if scaled:
+            g = qop_out / new_v[7, 0]
+            new_v = Matrix(
+                [[new_v[i, 0] * g] if i < 7 else [new_v[i, 0]] for i in range(8)]
+            )
         out.extend([new_v[i, 0]] for i, col in live if col == c)
     return Matrix(out)
 
@@ -357,55 +382,54 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
             acc = acc + stage.expr.jacobian(var) * tangent_of_var
         return deriv.add(name, acc)
 
-    def propagate(tag, c, scale):
+    def propagate(tag, c, with_field):
         """Push column `c` of M through the step.
 
-        `scale` is None for a column with no q/p component.  The q/p column
-        carries its direction part scaled by q/p, ATLAS' pVector[40]
-        convention.
+        `with_field` is False for a column with no q/p component, which picks
+        up nothing from the bend vectors' own q/p dependence. The q/p column is
+        read in its stored form (see _B2F_QOP_COLUMN), where that dependence
+        contributes each bend vector unchanged and the term is the stage
+        itself.
         """
-        if scale is None:
-            seed = col(c, (4, 5, 6))
+        seed = col(c, (4, 5, 6))
+        pos_fac, dir_fac = h_third.name, third.name
+        if not with_field:
             fields = [None] * 4
-            pos_fac, dir_fac = h_third.name, third.name
         else:
-            seed_qop_row = M[7, c]
-            seed = explicit(deriv.add(f"{tag}_seed", qop * col(c, (4, 5, 6))).name)
             fields = [
                 _field_contrib(
                     deriv,
                     f"{tag}_kick1",
                     kick1,
                     bend1,
-                    explicit(kick1.name) * seed_qop_row,
-                    explicit(bend1.name) * seed_qop_row,
+                    explicit(kick1.name),
+                    explicit(bend1.name),
                 ),
                 _field_contrib(
                     deriv,
                     f"{tag}_dir3",
                     dir3,
                     bend2,
-                    (explicit(dir3.name) - direction) * seed_qop_row,
-                    explicit(bend2.name) * seed_qop_row,
+                    explicit(dir3.name) - direction,
+                    explicit(bend2.name),
                 ),
                 _field_contrib(
                     deriv,
                     f"{tag}_dir4",
                     dir4,
                     bend2,
-                    (explicit(dir4.name) - direction) * seed_qop_row,
-                    explicit(bend2.name) * seed_qop_row,
+                    explicit(dir4.name) - direction,
+                    explicit(bend2.name),
                 ),
                 _field_contrib(
                     deriv,
                     f"{tag}_kick4",
                     kick4,
                     bend3,
-                    explicit(kick4.name) * seed_qop_row,
-                    explicit(bend3.name) * seed_qop_row,
+                    explicit(kick4.name),
+                    explicit(bend3.name),
                 ),
             ]
-            pos_fac, dir_fac = scale[0], scale[1]
 
         tan_kick1 = tangent(f"{tag}_kick1", kick1, [(direction, seed)], fields[0])
         tan_dir2 = deriv.add(f"{tag}_dir2", explicit(tan_kick1.name) + seed)
@@ -444,17 +468,14 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
     # which emits one multiplication per term instead of one per component.
     third = deriv.add("third", sym.Rational(1, 3))
 
-    inv_qop = deriv.add("inv_qop", 1 / qop)
-    qop_pos_weight = deriv.add("qop_pos_weight", h_third.name * inv_qop.name)
-    qop_dir_weight = deriv.add("qop_dir_weight", inv_qop.name / 3)
+    phi_pos, phi_dir = propagate("dphi", 2, False)
+    the_pos, the_dir = propagate("dtheta", 3, False)
+    qop_pos, qop_dir = propagate("dqop", 4, True)
 
-    phi_pos, phi_dir = propagate("dphi", 2, None)
-    the_pos, the_dir = propagate("dtheta", 3, None)
-    qop_pos, qop_dir = propagate("dqop", 4, (qop_pos_weight.name, qop_dir_weight.name))
-
-    # dt/ds depends on q/p only
-    dt_dqop = deriv.add("dt_dqop", dtime_dqop(dtds.name))
-    new_time = M[3, 4] + dt_dqop.name * M[7, 4]
+    # dt/ds depends on q/p only: the time row moves for the q/p column alone,
+    # by d(h dt/ds)/dlog|qop|.
+    dt_dqop = deriv.add("dt_dqop", qop * dtime_dqop(dtds.name))
+    new_time = M[3, 4] + dt_dqop.name
 
     deriv.add(_b2f_column_name(2), Matrix.vstack(phi_pos, phi_dir))
     deriv.add(_b2f_column_name(3), Matrix.vstack(the_pos, the_dir))
@@ -562,8 +583,9 @@ def rk4_dense_tunedexpr():
     D[4:8, 3:8] = dydot_dfree.name.as_explicit()
 
     # Unlike the vacuum kernel this one builds D, because energy loss couples
-    # time and q/p into every stage.  D still applies to M, not to an 8x8.
-    new_M = name_expr("new_M", b2f_step_update(D, _B2F_DENSE_LIVE))
+    # time and q/p into every stage. D still applies to M, not to an 8x8, and a
+    # dense step changes q/p, so it restores the q/p column's convention too.
+    new_M = name_expr("new_M", b2f_step_update(D, _B2F_DENSE_LIVE, qop, new_qop.expr))
 
     return [
         dtds,

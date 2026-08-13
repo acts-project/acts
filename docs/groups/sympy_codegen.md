@@ -122,23 +122,73 @@ error estimate all fall out of these:
 
 ## Transporting the Jacobian
 
-The kernel is handed the bound-to-free Jacobian @f$M@f$ (8 rows of free
-parameters, 6 columns of bound ones) and updates it in place. It never forms
-the 8×8 free-to-free step Jacobian @f$D@f$ and multiplies. Instead each live
-column of @f$M@f$ is pushed through *the same recursion as the state*, which
-is why the tangent block mirrors the value block line for line — exactly as
-ATLAS' `d2A`/`d3A`/`d4A` block mirrors its `A0`..`A6` block. Only three
-columns move (@f$\phi@f$, @f$\theta@f$, @f$q/p@f$); the rest are structurally
-constant across a step and are declared as such in one table in the generator.
+The kernel is handed the bound-to-free Jacobian @f$M@f$ and updates it in place,
+never forming the 8×8 free-to-free step Jacobian @f$D@f$. Each live column is
+pushed through *the same recursion as the state*, which is why the tangent block
+mirrors the value block line for line — as ATLAS' `d2A`/`d3A`/`d4A` block
+mirrors its `A0`..`A6`.
 
-The @f$q/p@f$ column is stored scaled by @f$\lambda@f$ (ATLAS' `pVector[40]`
-convention). Because @f$\vec H@f$ is linear in @f$\lambda@f$, that scaling
-turns the term the column picks up from the field's own @f$\lambda@f$
-dependence into a stage quantity that is already computed, rather than a fresh
-cross product. That identity is the one step of the recursion that is not a
-plain application of the chain rule, so the generator resolves it back to
-closed form and compares it against the chain rule before emitting it
-(`Derivation.check_same`).
+Rows are the eight free parameters @f$x_i@f$ **now**, columns the six bound
+parameters @f$b_j@f$ **at the start surface**,
+@f$M_{ij} = \partial x_i / \partial b_j@f$:
+
+|  | @f$l_0@f$ | @f$l_1@f$ | @f$\phi@f$ | @f$\theta@f$ | @f$\lambda@f$ | @f$t@f$ |
+|---|---|---|---|---|---|---|
+| @f$\vec r@f$ *(3 rows)* | hold | hold | step | step | step | · |
+| @f$t@f$ | · | · | · | · | step | 1 |
+| @f$\vec T@f$ *(3 rows)* | · | · | step | step | step | · |
+| @f$\lambda@f$ | · | · | · | · | dense | · |
+
+`·` is a structural zero, `hold` an entry no step writes, `step` one every step
+writes, `dense` one only a dense step writes. The generator declares the
+sparsity in this one table and reads its index sets back off it.
+
+### The @f$q/p@f$ column
+
+Three columns move; @f$\lambda@f$ costs the most. The table says why twice:
+
+- **Down the column.** @f$\lambda@f$ reaches the recursion only through the bend
+  vector @f$\vec H = (h\lambda/2)\,\vec B@f$, so this is the only column with a
+  term from the field's own @f$\lambda@f$ dependence.
+- **Along the row.** Nothing but @f$\lambda_0@f$ can change @f$\lambda@f$, so
+  @f$M_{\lambda\lambda}@f$ alone is the whole chain rule between
+  @f$\partial/\partial\lambda_0@f$ and @f$\partial/\partial\lambda@f$.
+
+The row licenses a change of variable: store the column differentiated by
+@f$\log|\lambda|@f$ of the *current* @f$\lambda@f$, leaving
+@f$M_{\lambda\lambda}@f$ itself plain so the change stays reversible.
+
+@f[
+  M_{i\lambda} \;\equiv\; \frac{\partial x_i}{\partial \log|\lambda|}
+    \;=\; \lambda \, \frac{\partial x_i / \partial \lambda_0}
+                          {\partial \lambda / \partial \lambda_0} ,
+    \qquad i < 7 .
+@f]
+
+The division moves the variable to @f$\lambda@f$, the factor carries it on to
+@f$\log|\lambda|@f$; both exact. @f$\vec H@f$ is homogeneous of degree one in
+@f$\lambda@f$ and @f$\lambda\,\partial/\partial\lambda@f$ reads that degree off,
+so @f$\partial\vec H/\partial\log|\lambda| = \vec H@f$: each stage's field term
+is *the bend vector the value path already computed*, with a coefficient of one
+— no fresh cross product, no load of @f$M_{\lambda\lambda}@f$ to weight it by.
+It is the one identity in the recursion that does not come out of
+differentiating, so the generator forms the chain-rule product as well and
+checks the two agree (`Derivation.check_same`).
+
+Converting per step would cost what it saves, and is not needed: @f$\lambda@f$
+and @f$M_{\lambda\lambda}@f$ are constant across a vacuum step, so the recursion
+carries the stored form into itself. It is the form the stepper *state* holds,
+not a kernel internal, so `detail::sympy::toScaledBoundToFree` and its inverse
+sit at the surfaces where the covariance engine wants the plain Jacobian.
+`rk4_dense` moves @f$\lambda@f$ and converts both ways explicitly. The
+convention is singular at @f$\lambda = 0@f$, where the plain column already is.
+
+Nineteen multiplications and a division per step fall away: thirteen from the
+field terms no longer loading @f$M_{\lambda\lambda}@f$, six plus the division
+from the @f$\lambda@f$ scaling no longer being rebuilt. ATLAS' `pVector[40]` is
+the same idea carrying the @f$\lambda@f$ factor alone: having no dense material
+it may take @f$M_{\lambda\lambda} = 1@f$ throughout, and so never loads it
+either.
 
 ## Naming
 
@@ -162,7 +212,6 @@ the quantity is. The correspondence, for anyone reading the two side by side:
 | `new_dir_x3` | — | @f$3\times@f$ the unnormalised new direction |
 | `h_third`, `h_quarter`, `two_over_h` | `S3`, `S4`, `Sl` | @f$h/3@f$, @f$h/4@f$, @f$2/h@f$ |
 | `dphi_*`, `dtheta_*`, `dqop_*` | `d2A*`, `d3A*`, `d4A*` | the tangent of the correspondingly named stage, one set per live column |
-| `dqop_seed` | — | the @f$q/p@f$ column's direction part, scaled by @f$\lambda@f$ |
 | `M` | `pVector[8..55]` | bound-to-free Jacobian, column major |
 | `dEds`, `dEds1..4` | — | energy loss per unit path, per stage (@ref Acts::AtlasStepper has no material) |
 

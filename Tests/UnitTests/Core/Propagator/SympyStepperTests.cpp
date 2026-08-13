@@ -23,6 +23,7 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
+#include "Acts/Propagator/detail/SympyBoundToFreeScaling.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -451,9 +452,11 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_time_qop_derivative) {
     const double dqop = 1e-6 * qop;
 
     // The start is curvilinear, so the q/p column begins as e_qop and after
-    // one step its time row is d(t)/d(q/p).
-    const double dtdqop =
-        stepOnce(qop, particle).jacToGlobal(eFreeTime, eBoundQOverP);
+    // one step its time row is d(t)/d(q/p), once the storage scaling is undone.
+    SympyStepper::State state = stepOnce(qop, particle);
+    detail::sympy::fromScaledBoundToFree(state.jacToGlobal,
+                                         state.pars[eFreeQOverP]);
+    const double dtdqop = state.jacToGlobal(eFreeTime, eBoundQOverP);
     const double difference = (stepOnce(qop + dqop, particle).pars[eFreeTime] -
                                stepOnce(qop - dqop, particle).pars[eFreeTime]) /
                               (2 * dqop);
