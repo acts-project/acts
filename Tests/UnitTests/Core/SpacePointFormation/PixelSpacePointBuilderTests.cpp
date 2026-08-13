@@ -20,9 +20,10 @@
 #include <memory>
 #include <numbers>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 namespace {
 
@@ -73,7 +74,7 @@ Vector2 numericVarianceZR(const PlaneSurface& surface, const Vector3& position,
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(PixelSpacePointBuilderTests)
+BOOST_AUTO_TEST_SUITE(PixelSpacePointBuilderSuite)
 
 /// A barrel module measures r-phi and z, so all of the variance lands in z
 BOOST_AUTO_TEST_CASE(BarrelModule) {
@@ -136,4 +137,4 @@ BOOST_AUTO_TEST_CASE(InclinedModuleAgainstNumericJacobian) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

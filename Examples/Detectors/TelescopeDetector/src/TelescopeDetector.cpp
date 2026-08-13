@@ -32,6 +32,10 @@ TelescopeDetector::TelescopeDetector(const Config& cfg)
         "The minR should be smaller than the maxR for disc surface bounds.");
   }
 
+  if (m_cfg.positions.empty()) {
+    throw std::invalid_argument("At least one surface position is required.");
+  }
+
   if (m_cfg.positions.size() != m_cfg.stereos.size()) {
     throw std::invalid_argument(
         "The number of provided positions must match the number of "
@@ -62,6 +66,10 @@ TelescopeDetector::TelescopeDetector(const Config& cfg, NoBuildTag /*unused*/)
   if (m_cfg.surfaceType == 1 && m_cfg.bounds[0] >= m_cfg.bounds[1]) {
     throw std::invalid_argument(
         "The minR should be smaller than the maxR for disc surface bounds.");
+  }
+
+  if (m_cfg.positions.empty()) {
+    throw std::invalid_argument("At least one surface position is required.");
   }
 
   if (m_cfg.positions.size() != m_cfg.stereos.size()) {
