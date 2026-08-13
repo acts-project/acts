@@ -157,21 +157,36 @@ stave layers, and an endcap of seventy-five discs per side carrying ninety-five
 rings, because that is what it is. `itk-ttbar-pu200.json` is the
 configuration fitted to it against a GNN4ITk Athena dump.
 
-It is fitted on one half of its sample and checked on the other. On the held-out
-half, per event and normalised to the reference:
+### The Open Data Detector pixels
 
-| | ITk |
-| --- | --- |
-| space points | 0.99 |
-| &nbsp;&nbsp;primary, inside the generated acceptance | 0.97 |
-| &nbsp;&nbsp;primary, outside it | 1.03 |
-| &nbsp;&nbsp;non-primary | 1.00 |
-| primaries / event | 0.98 |
-| mean primary hits | 0.99 |
-| mean secondary hits | 0.97 |
+`odd-description.json` and `odd-material.json` are the ODD's pixel system, read
+off the tracking geometry ACTS builds for it rather than transcribed, which is
+also why they are kept as data: the configuration works without DD4hep on the
+machine. Four barrel layers and seven disc positions a side, each of which the
+reduction finds as the two z planes its modules alternate between, plus the two
+service discs it finds away from any layer -- one of them beyond the outermost
+disc entirely, and worth half a radiation length to a forward track.
+`odd-ttbar-pu200.json` is the configuration fitted to it against
+ColliderML.
 
-Known to be off: the spectrum is over-produced below the 100 MeV the reference
-stops recording at.
+### What the fits reproduce
+
+Each is fitted on one half of its sample and checked on the other. On the
+held-out half, per event and normalised to the reference:
+
+| | ITk | ODD |
+| --- | --- | --- |
+| space points | 0.99 | 0.99 |
+| &nbsp;&nbsp;primary, inside the generated acceptance | 0.97 | 1.02 |
+| &nbsp;&nbsp;primary, outside it | 1.03 | 1.16 |
+| &nbsp;&nbsp;non-primary | 1.00 | 0.95 |
+| primaries / event | 0.98 | 1.00 |
+| mean primary hits | 0.99 | 1.02 |
+| mean secondary hits | 0.97 | 1.10 |
+
+Known to be off: the ODD's secondary momentum runs a fifth high and its `|d0|`
+reach short, its forward production is short beyond `|z| = 900`, and the spectrum
+is over-produced below the 100 MeV the references stop recording at.
 
 ## Barcode identifiers {#fatras_barcode_identifiers}
 
