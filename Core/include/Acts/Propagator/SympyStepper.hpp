@@ -102,6 +102,12 @@ class SympyStepper final {
     /// The propagation derivative
     FreeVector derivative = FreeVector::Zero();
 
+    /// Magnetic field at the current position, carried over from the last
+    /// step's final sample so that a step needs two field lookups instead of
+    /// three.  Invalidated whenever the position is set from outside.
+    Vector3 field = Vector3::Zero();
+    bool fieldIsValid = false;
+
     /// Accumulated path length state
     double pathAccumulated = 0.;
 
