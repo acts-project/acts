@@ -11,6 +11,7 @@
 #include "Acts/Seeding/GbtsGeometry.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <memory>
 #include <utility>
@@ -274,17 +275,22 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
 
   const GbtsLayerType type = getLayerType(n1.layer());
 
+  // A stereo pair measures nothing like a pixel does: sharper across its
+  // strips and an order of magnitude coarser along them.
+  const bool isStrip = nodeView.strip(n1.index()) != nullptr;
+  const float sigmaX = isStrip ? m_cfg.sigmaXStrip : m_cfg.sigmaX;
+  const float sigmaY = isStrip ? m_cfg.sigmaYStrip : m_cfg.sigmaY;
+
   if (type == GbtsLayerType::Barrel) {
-    // barrel TODO: split into barrel Pixel and barrel SCT
-    sigma_rz = m_cfg.sigmaY * m_cfg.sigmaY;
+    sigma_rz = sigmaY * sigmaY;
   } else if (type == GbtsLayerType::Endcap) {
-    sigma_rz = m_cfg.sigmaY * ts.y[1];
+    sigma_rz = sigmaY * ts.y[1];
     sigma_rz = sigma_rz * sigma_rz;
   } else {
     throw std::runtime_error("invalid layer type");
   }
 
-  const float Dx = 1.0 / (Cx[0][0] + m_cfg.sigmaX * m_cfg.sigmaX);
+  const float Dx = 1.0 / (Cx[0][0] + sigmaX * sigmaX);
 
   const float Dy = 1.0 / (Cy[0][0] + sigma_rz);
 

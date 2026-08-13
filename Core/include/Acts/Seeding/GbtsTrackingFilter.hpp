@@ -37,6 +37,13 @@ class GbtsTrackingFilter final {
     /// Measurement uncertainty in y direction.
     float sigmaY = 0.25 * Acts::UnitConstants::mm;
 
+    /// The same for a node the stereo pair of a strip module made. Across the
+    /// strips a pair does better than one of them; along them it does an order
+    /// of magnitude worse, and no amount of knowing the direction changes that.
+    float sigmaXStrip = 0.03 * Acts::UnitConstants::mm;
+    /// @copydoc sigmaXStrip
+    float sigmaYStrip = 1.5 * Acts::UnitConstants::mm;
+
     /// Measurement weight in x direction.
     float weightX = 0.5;
     /// Measurement weight in y direction.

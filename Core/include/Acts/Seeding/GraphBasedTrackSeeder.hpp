@@ -109,6 +109,13 @@ class GraphBasedTrackSeeder {
     /// Maximum radius of pixel detector
     float maxOuterRadius = 550.0f;
 
+    /// Resolve a doublet's strip endpoints against its own direction before
+    /// cutting on them. Nothing is written back; the correction is the pair's.
+    bool calibrateStrips = true;
+    /// How far outside its strips a crossing may still be recovered, as a
+    /// multiple of the strip half-length.
+    float stripLengthTolerance = 1.1f;
+
     // Seed extraction options
     /// Minimum eta for edge masking.
     float edgeMaskMinEta = 1.5;
@@ -252,6 +259,8 @@ class GraphBasedTrackSeeder {
     float deltaPhi{};
     /// GBTS layer ID of the bin
     std::uint32_t layerId{};
+    /// whether the bin's layer is a pixel layer, hoisted out of the node loop
+    bool isPixel{true};
   };
   DerivedConfig m_cfg;
 

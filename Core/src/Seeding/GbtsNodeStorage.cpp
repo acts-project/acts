@@ -9,6 +9,7 @@
 #include "Acts/Seeding/GbtsNodeStorage.hpp"
 
 #include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/SpacePointFormation/detail/StripSpacePointCalibrationImpl.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <algorithm>
@@ -44,7 +45,8 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
 std::optional<std::uint32_t> GbtsNodeStorage::insert(
     const SpacePointIndex index, const float x, const float y, const float z,
     const float r, const float phi, const std::uint32_t layerIndex,
-    const float clusterWidth, const float localPositionY) {
+    const float clusterWidth, const float localPositionY,
+    const OuterStripSpacePointCalibrationDetails* strip) {
   const detail::GbtsLayer& layer = m_geometry->layerByIndex(layerIndex);
 
   const bool isBarrel = layer.layerDescription().type == GbtsLayerType::Barrel;
@@ -64,10 +66,22 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
 
   const auto bin = static_cast<std::uint32_t>(binIndex);
 
+  std::uint32_t stripIndex = detail::kNoStrip;
+  // A pair on a layer the configuration calls a pixel layer would never be
+  // read, the strip path being taken per bin rather than per node.
+  if (strip != nullptr && layerIndex < m_cfg.isPixelLayer.size() &&
+      !m_cfg.isPixelLayer[layerIndex]) {
+    stripIndex = static_cast<std::uint32_t>(m_strips.size());
+    // Derived once here rather than once per pair in the graph: it is six
+    // cross products and a node takes part in many pairs.
+    m_strips.push_back(
+        Acts::detail::deriveOuterStripSpacePointCalibrationDetails(*strip));
+  }
+
   m_stagedPerBin.at(bin).push_back(static_cast<std::uint32_t>(m_staged.size()));
-  m_staged.push_back(StagedNode{index, x, y, z, r, phi, clusterWidth,
-                                localPositionY,
-                                static_cast<std::uint16_t>(layerIndex)});
+  m_staged.push_back(
+      StagedNode{index, x, y, z, r, phi, clusterWidth, localPositionY,
+                 static_cast<std::uint16_t>(layerIndex), stripIndex});
 
   return bin;
 }
@@ -77,9 +91,11 @@ void GbtsNodeStorage::extend(
     const ConstSpacePointColumnProxy<std::uint32_t>& layerColumn,
     const ConstSpacePointColumnProxy<float>& clusterWidthColumn,
     const ConstSpacePointColumnProxy<float>& localPositionYColumn) {
+  const bool strips =
+      spacePoints.hasColumns(SpacePointColumns::StripCalibrationDetails);
   m_staged.reserve(m_staged.size() + spacePoints.size());
   for (const auto& sp : spacePoints) {
-    insert(sp, layerColumn, clusterWidthColumn, localPositionYColumn);
+    insert(sp, layerColumn, clusterWidthColumn, localPositionYColumn, strips);
   }
 }
 
@@ -154,8 +170,11 @@ void GbtsNodeStorage::finalize() {
     binInfo.nodes.second = m_nodes.size();
     binInfo.minRadius = minRadius;
     binInfo.maxRadius = maxRadius;
-    binInfo.layerId =
-        m_geometry->layerIdByIndex(m_staged[sorted.front()].layer);
+    const std::uint16_t layer = m_staged[sorted.front()].layer;
+    binInfo.layerId = m_geometry->layerIdByIndex(layer);
+    // constant over a bin, a bin belonging to one layer
+    binInfo.isPixel =
+        layer >= m_cfg.isPixelLayer.size() || m_cfg.isPixelLayer[layer];
   }
 
   // Created now that the container has its final size, so that each column is
@@ -165,9 +184,22 @@ void GbtsNodeStorage::finalize() {
   m_edgeInfoColumn.emplace(
       m_nodes.createColumn<detail::GbtsNodeEdgeInfo>("gbtsNodeEdgeInfo"));
 
+  // Reordered into node order, so that the pairs a bin reads sit together;
+  // left empty when nothing carries one, which is what `hasStrips` reports.
+  std::vector<OuterStripSpacePointCalibrationDetailsDerived> strips;
+  if (!m_strips.empty()) {
+    m_stripIndex.assign(nodeOrder.size(), detail::kNoStrip);
+    strips.reserve(m_strips.size());
+  }
+
   std::span<detail::GbtsNodeParams> params = m_paramsColumn->data();
   for (std::uint32_t node = 0; node < nodeOrder.size(); ++node) {
     const StagedNode& staged = m_staged[nodeOrder[node]];
+
+    if (staged.strip != detail::kNoStrip) {
+      m_stripIndex[node] = static_cast<std::uint32_t>(strips.size());
+      strips.push_back(m_strips[staged.strip]);
+    }
 
     params[node].phi = staged.phi;
     params[node].r = staged.r;
@@ -179,6 +211,8 @@ void GbtsNodeStorage::finalize() {
       applyTauCuts(staged, params[node]);
     }
   }
+
+  m_strips = std::move(strips);
 
   generatePhiIndexing(1.5f * m_cfg.phiSliceWidth);
 
