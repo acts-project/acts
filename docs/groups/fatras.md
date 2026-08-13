@@ -64,6 +64,44 @@ be built whole or a system at a time.
   surface where a description would be in the way. A description of the ACTS
   Generic pixels ships in C++, and is the one detector that does.
 
+### Descriptions as files
+
+A detector that no one writes by hand should not live in a translation unit, and
+none of these are written by hand: positions come off a geometry or an
+experiment's own layout package, material off a geometry's material maps, and the
+configuration out of a fit against a full simulation. `ActsFatrasJson` reads and
+writes all three, and `Fatras/data` is where the ones that ship live.
+
+They are three files rather than one, because they are generated from different
+inputs and either can be replaced without touching the other:
+
+- **The description** -- where the layers are -- via
+  @ref ActsFatras::Synthetic::readDetectorDescription.
+- **The material** -- what they are made of -- via
+  @ref ActsFatras::Synthetic::readMaterialDecoration and put on with
+  @ref ActsFatras::Synthetic::decorate, keyed by
+  @ref ActsFatras::Synthetic::LayerId: the subsystem, which of its lists the layer
+  is in, and the index it answers to. A key that names no layer throws, which is
+  what catches a material file left behind by a description that has been
+  renumbered. @ref ActsFatras::Synthetic::extractMaterial is the inverse and how
+  the two files are produced.
+- **The configuration** via @ref ActsFatras::Synthetic::readEventConfig. Every
+  field is required: a configuration is fitted as a whole, so a missing one
+  silently taking a default would retune the rest of it.
+
+The JSON follows the structs one for one. Two conventions in it are worth
+knowing: an infinite bound is the string `"inf"`, JSON having no number for one;
+and each of the six numbers a band of material is made of may be stated once for
+the whole surface or once per band, so a surface of one composition banded only in
+how much of it there is stays as short to read as it is to state.
+
+The ACTS Generic pixels ship as `generic-pixel-description.json` and
+`generic-pixel-material.json`, which say the same thing as
+@ref ActsFatras::Synthetic::genericDetectorPixelDescription and are checked
+against it -- the format is pinned against a detector that exists in both forms.
+
+### Composition
+
 A detector is held whole and built in parts:
 @ref ActsFatras::Synthetic::selectSubsystems narrows it to the systems named,
 keeping the beam pipe and the containment of the whole tracker whichever they
