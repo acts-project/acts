@@ -70,6 +70,10 @@ class GraphBasedTrackSeeder {
     /// correction applied to tau acceptance
     /// if a layer is missed during edge connecting
     float tauRatioCorr = 0.006;
+    /// The same for a triplet any of whose three nodes a strip module made,
+    /// whose two doublets resolved the shared node's along-strip coordinate
+    /// separately. Reaches nothing without a strip in the triplet.
+    float tauRatioCorrStrip = 0.f;
     /// the maximum allowed eta value in which
     /// three spacepoint seeds are passed through
     float maxAbsEtaAddTripelts = 1.5;

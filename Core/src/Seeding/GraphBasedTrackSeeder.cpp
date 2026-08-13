@@ -190,7 +190,8 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
   // the loosest tau ratio threshold the triplet matching can apply
   const float maxTauRatioCut =
-      m_cfg.tauRatioCut + (m_cfg.useAdaptiveCuts ? m_cfg.tauRatioCorr : 0.0f);
+      m_cfg.tauRatioCut + (m_cfg.useAdaptiveCuts ? m_cfg.tauRatioCorr : 0.0f) +
+      (nodeStorage.hasStrips() ? m_cfg.tauRatioCorrStrip : 0.0f);
 
   // the default sliding window along phi
   const float deltaPhi0 = 0.5f * m_cfg.phiSliceWidth;
@@ -555,6 +556,15 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
                   }
                 }
               }
+              // The two doublets sharing a strip node resolved it separately,
+              // so a triplet through a strip may disagree on tau by more. Any
+              // of the three: the outer two carry their end's error into tau.
+              if (m_cfg.tauRatioCorrStrip > 0.f &&
+                  (!isPixel1 || !isPixel2 ||
+                   nodeView.strip(pS->n2) != nullptr)) {
+                addTauRatioCorr += m_cfg.tauRatioCorrStrip;
+              }
+
               // bad match
               if (absTauRatio > m_cfg.tauRatioCut + addTauRatioCorr) {
                 continue;
