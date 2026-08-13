@@ -378,9 +378,14 @@ if [ "${full_install:-false}" == "true" ]; then
   checkpoint "Geant4 datasets download complete"
 fi
 geant4_dir=$(spack -e "${env_dir}" location -i geant4)
-# Prepare the folder for G4 data, and symlink it to where G4 will look for it
-mkdir -p "${geant4_dir}/share/Geant4"
-ln -s "${geant4_dir}/share/Geant4/data" "${view_dir}/share/Geant4/data"
+# Prepare the folder for G4 data, and symlink it to where G4 will look for it.
+# `data` itself, not just its parent: geant4.sh does `cd .../share/Geant4/data`
+# and only the full_install path above creates it. Without it the ln below has
+# no existing directory to resolve onto and writes a symlink at the target's own
+# path -- a self-reference that makes every later cd fail with ELOOP.
+mkdir -p "${geant4_dir}/share/Geant4/data"
+[ -e "${view_dir}/share/Geant4/data" ] ||
+  ln -s "${geant4_dir}/share/Geant4/data" "${view_dir}/share/Geant4/data"
 end_section
 
 start_section "Prepare python environment"
