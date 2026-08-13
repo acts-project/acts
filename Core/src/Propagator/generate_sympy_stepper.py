@@ -347,7 +347,7 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
         if scale is None:
             seed = col(c, (4, 5, 6))
             fields = [None] * 4
-            pos_fac, dir_fac = h_third.name, sym.Rational(1, 3)
+            pos_fac, dir_fac = h_third.name, third.name
         else:
             seed_qop_row = M[7, c]
             seed = explicit(deriv.add(f"{tag}_seed", qop * col(c, (4, 5, 6))).name)
@@ -419,6 +419,10 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
             + explicit(tan_kick4.name)
         )
         return new_pos, new_dir
+
+    # Must be a Symbol, not a Number: sympy distributes a Number over an Add,
+    # which emits one multiplication per term instead of one per component.
+    third = deriv.add("third", sym.Rational(1, 3))
 
     inv_qop = deriv.add("inv_qop", 1 / qop)
     qop_pos_weight = deriv.add("qop_pos_weight", h_third.name * inv_qop.name)
