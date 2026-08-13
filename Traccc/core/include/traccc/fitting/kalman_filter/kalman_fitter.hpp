@@ -7,11 +7,6 @@
 
 #pragma once
 
-// TODO: Unexpectedly appeared in device builds for the propagator in l.256
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic warning "-Wmaybe-uninitialized"
-#endif
-
 // Project include(s).
 #include "kalman_actor.hpp"
 #include "traccc/definitions/qualifiers.hpp"

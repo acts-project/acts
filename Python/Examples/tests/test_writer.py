@@ -33,28 +33,14 @@ from acts.examples.json import (
     JsonFormat,
 )
 
-from acts.examples.root import (
-    RootMaterialTrackWriter,
-    RootMaterialWriter,
-    RootMeasurementWriter,
-    RootPropagationStepsWriter,
-    RootParticleWriter,
-    RootSimHitWriter,
-    RootTrackParameterWriter,
-    RootTrackStatesWriter,
-    RootTrackSummaryWriter,
-    RootTrackFinderNTupleWriter,
-    RootVertexNTupleWriter,
-)
-
 try:
     from acts.examples import (
-        PythonTrackFinderPerformanceWriter,
-        PythonTrackFitterPerformanceWriter,
+        PythonPatternRecognitionPerformanceWriter,
+        PythonTrackParameterPerformanceWriter,
     )
 except ImportError:
-    PythonTrackFinderPerformanceWriter = None
-    PythonTrackFitterPerformanceWriter = None
+    PythonPatternRecognitionPerformanceWriter = None
+    PythonTrackParameterPerformanceWriter = None
 
 from acts.examples.odd import getOpenDataDetectorDirectory
 
@@ -127,6 +113,8 @@ def test_csv_particle_writer(tmp_path, conf_const, ptcl_gun):
 def test_root_prop_step_writer(
     tmp_path, trk_geo, conf_const, basic_prop_seq, assert_root_hash
 ):
+    from acts.examples.root import RootPropagationStepsWriter
+
     with pytest.raises(TypeError):
         RootPropagationStepsWriter()
 
@@ -152,6 +140,8 @@ def test_root_prop_step_writer(
 
 @pytest.mark.root
 def test_root_particle_writer(tmp_path, conf_const, ptcl_gun, assert_root_hash):
+    from acts.examples.root import RootParticleWriter
+
     s = Sequencer(numThreads=1, events=10)
     _, h3conv = ptcl_gun(s)
 
@@ -177,6 +167,8 @@ def test_root_particle_writer(tmp_path, conf_const, ptcl_gun, assert_root_hash):
 
 @pytest.mark.root
 def test_root_meas_writer(tmp_path, fatras, trk_geo, assert_root_hash):
+    from acts.examples.root import RootMeasurementWriter
+
     s = Sequencer(numThreads=1, events=10)
     evGen, simAlg, digiAlg = fatras(s)
 
@@ -202,6 +194,8 @@ def test_root_meas_writer(tmp_path, fatras, trk_geo, assert_root_hash):
 
 @pytest.mark.root
 def test_root_simhits_writer(tmp_path, fatras, conf_const, assert_root_hash):
+    from acts.examples.root import RootSimHitWriter
+
     s = Sequencer(numThreads=1, events=10)
     evGen, simAlg, digiAlg = fatras(s)
 
@@ -226,6 +220,8 @@ def test_root_simhits_writer(tmp_path, fatras, conf_const, assert_root_hash):
 
 @pytest.mark.root
 def test_root_tracksummary_writer(tmp_path, fatras, conf_const):
+    from acts.examples.root import RootTrackSummaryWriter
+
     detector = GenericDetector()
     trackingGeometry = detector.trackingGeometry()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
@@ -310,23 +306,26 @@ def test_csv_simhits_writer(tmp_path, fatras, conf_const):
 
 
 @pytest.mark.parametrize(
-    "writer",
+    "writer_name",
     [
-        RootPropagationStepsWriter,
-        RootParticleWriter,
-        RootTrackFinderNTupleWriter,
-        RootTrackParameterWriter,
-        RootMaterialTrackWriter,
-        RootMeasurementWriter,
-        RootMaterialWriter,
-        RootSimHitWriter,
-        RootTrackStatesWriter,
-        RootTrackSummaryWriter,
-        RootVertexNTupleWriter,
+        "RootPropagationStepsWriter",
+        "RootParticleWriter",
+        "RootTrackFinderNTupleWriter",
+        "RootTrackParameterWriter",
+        "RootMaterialTrackWriter",
+        "RootMeasurementWriter",
+        "RootMaterialWriter",
+        "RootSimHitWriter",
+        "RootTrackStatesWriter",
+        "RootTrackSummaryWriter",
+        "RootVertexNTupleWriter",
     ],
 )
 @pytest.mark.root
-def test_root_writer_interface(writer, conf_const, tmp_path, trk_geo):
+def test_root_writer_interface(writer_name, conf_const, tmp_path, trk_geo):
+    import acts.examples.root
+
+    writer = getattr(acts.examples.root, writer_name)
     assert hasattr(writer, "Config")
 
     config = writer.Config
@@ -351,14 +350,14 @@ def test_root_writer_interface(writer, conf_const, tmp_path, trk_geo):
 @pytest.mark.parametrize(
     "writer",
     [
-        PythonTrackFinderPerformanceWriter,
-        PythonTrackFitterPerformanceWriter,
+        PythonPatternRecognitionPerformanceWriter,
+        PythonTrackParameterPerformanceWriter,
     ],
 )
 @pytest.mark.root
 @pytest.mark.skipif(
-    PythonTrackFinderPerformanceWriter is None
-    or PythonTrackFitterPerformanceWriter is None,
+    PythonPatternRecognitionPerformanceWriter is None
+    or PythonTrackParameterPerformanceWriter is None,
     reason="Python performance writers not available",
 )
 def test_python_writer_interface(writer, conf_const, tmp_path, trk_geo):
@@ -415,23 +414,24 @@ def test_csv_writer_interface(writer, conf_const, tmp_path, trk_geo):
 @pytest.mark.root
 @pytest.mark.odd
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
-def test_root_material_writer(tmp_path, assert_root_hash):
-    from acts.examples.odd import getOpenDataDetector
+def test_root_material_writer(tmp_path, assert_root_hash, odd_detector):
+    from acts.examples.root import RootMaterialWriter
 
-    with getOpenDataDetector() as detector:
-        trackingGeometry = detector.trackingGeometry()
+    detector = odd_detector
 
-        out = tmp_path / "material.root"
+    trackingGeometry = detector.trackingGeometry()
 
-        assert not out.exists()
+    out = tmp_path / "material.root"
 
-        rmw = RootMaterialWriter(level=acts.logging.WARNING, filePath=str(out))
-        assert out.exists()
-        assert out.stat().st_size > 0 and out.stat().st_size < 500
-        rmw.write(trackingGeometry)
+    assert not out.exists()
 
-        assert out.stat().st_size > 1000
-        assert_root_hash(out.name, out)
+    rmw = RootMaterialWriter(level=acts.logging.WARNING, filePath=str(out))
+    assert out.exists()
+    assert out.stat().st_size > 0 and out.stat().st_size < 500
+    rmw.write(trackingGeometry)
+
+    assert out.stat().st_size > 1000
+    assert_root_hash(out.name, out)
 
 
 @pytest.mark.json

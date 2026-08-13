@@ -5,8 +5,6 @@ from pathlib import Path
 from typing import Optional
 import acts
 import acts.examples
-import acts.tgeo
-from acts import root
 import warnings
 
 
@@ -16,6 +14,29 @@ def getOpenDataDetectorDirectory():
         raise RuntimeError("ODD_PATH environment variable not set")
     odd_dir = Path(odd_dir)
     return odd_dir
+
+
+_defaultMaterialDecoratorCache = {}
+
+
+def _defaultMaterialDecorator(odd_dir: Path, customLogLevel):
+    """Default ODD material decorator, memoized per material map file.
+
+    Building one costs ~50MB that is not released when the decorator (or the
+    detector it decorated) goes away, so a process that constructs the ODD a
+    few dozen times -- the python test suite -- pays that every time. The
+    decorator is only read from during decoration, so one instance can back
+    any number of detectors.
+    """
+    import acts.root
+
+    fileName = str(odd_dir / "data/odd-material-maps.root")
+    if fileName not in _defaultMaterialDecoratorCache:
+        _defaultMaterialDecoratorCache[fileName] = acts.root.RootMaterialDecorator(
+            fileName=fileName,
+            level=customLogLevel(minLevel=acts.logging.WARNING),
+        )
+    return _defaultMaterialDecoratorCache[fileName]
 
 
 def getOpenDataDetector(
@@ -97,10 +118,7 @@ def getOpenDataDetector(
             raise RuntimeError(msg)
 
     if materialDecorator is None:
-        materialDecorator = acts.root.RootMaterialDecorator(
-            fileName=str(odd_dir / "data/odd-material-maps.root"),
-            level=customLogLevel(minLevel=acts.logging.WARNING),
-        )
+        materialDecorator = _defaultMaterialDecorator(odd_dir, customLogLevel)
 
     if gen3:
         if misaligned:

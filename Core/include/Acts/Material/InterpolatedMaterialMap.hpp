@@ -126,8 +126,9 @@ struct MaterialMapLookup {
   /// @pre The given @c position must lie within the range of the underlying
   /// map.
   Material material(const Vector3& position) const {
-    return Material(m_grid.atLocalBins(
-        m_grid.localBinsFromLowerLeftEdge(m_transformPos(position))));
+    return Material(
+        m_grid.atLocalBins(m_grid.multiAxis().getLocalBinsFromLowerLeftEdge(
+            m_transformPos(position))));
   }
 
   /// @brief Retrieve interpolated material at given position
@@ -150,15 +151,16 @@ struct MaterialMapLookup {
   /// map.
   MaterialCell getMaterialCell(const Vector3& position) const {
     const auto& gridPosition = m_transformPos(position);
-    std::size_t bin = m_grid.globalBinFromPosition(gridPosition);
-    const auto& indices = m_grid.localBinsFromGlobalBin(bin);
-    const auto& lowerLeft = m_grid.lowerLeftBinEdge(indices);
-    const auto& upperRight = m_grid.upperRightBinEdge(indices);
+    std::size_t bin = m_grid.multiAxis().getGlobalBinFromPoint(gridPosition);
+    const auto& indices = m_grid.multiAxis().getLocalBinsFromGlobalBin(bin);
+    const auto& lowerLeft = m_grid.multiAxis().getLowerLeftBinEdge(indices);
+    const auto& upperRight = m_grid.multiAxis().getUpperRightBinEdge(indices);
 
     // Loop through all corner points
     constexpr std::size_t nCorners = 1 << DIM_POS;
     std::array<Material::ParametersVector, nCorners> neighbors{};
-    const auto& cornerIndices = m_grid.closestPointsIndices(gridPosition);
+    const auto& cornerIndices =
+        m_grid.multiAxis().getClosestPointsIndices(gridPosition);
 
     std::size_t i = 0;
     for (std::size_t index : cornerIndices) {
@@ -173,7 +175,7 @@ struct MaterialMapLookup {
   ///
   /// @return Vector returning number of bins for all map axes
   std::vector<std::size_t> getNBins() const {
-    auto nBinsArray = m_grid.numLocalBins();
+    auto nBinsArray = m_grid.multiAxis().getNBins();
     return std::vector<std::size_t>(nBinsArray.begin(), nBinsArray.end());
   }
 
@@ -181,7 +183,7 @@ struct MaterialMapLookup {
   ///
   /// @return Vector returning the minima of all map axes
   std::vector<double> getMin() const {
-    auto minArray = m_grid.minPosition();
+    auto minArray = m_grid.multiAxis().getMinPoint();
     return std::vector<double>(minArray.begin(), minArray.end());
   }
 
@@ -189,7 +191,7 @@ struct MaterialMapLookup {
   ///
   /// @return Vector returning the maxima of all map axes
   std::vector<double> getMax() const {
-    auto maxArray = m_grid.maxPosition();
+    auto maxArray = m_grid.multiAxis().getMaxPoint();
     return std::vector<double>(maxArray.begin(), maxArray.end());
   }
 
@@ -199,7 +201,7 @@ struct MaterialMapLookup {
   /// @return @c true if position is inside the defined look-up grid,
   ///         otherwise @c false
   bool isInside(const Vector3& position) const {
-    return m_grid.isInside(m_transformPos(position));
+    return m_grid.multiAxis().isInside(m_transformPos(position));
   }
 
   /// @brief Get a const reference on the underlying grid structure

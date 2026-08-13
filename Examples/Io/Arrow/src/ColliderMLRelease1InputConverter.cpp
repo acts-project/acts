@@ -9,10 +9,15 @@
 #include "ActsExamples/Io/Arrow/ColliderMLRelease1InputConverter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
@@ -97,7 +102,6 @@ loadGeoIdMapFromCsv(const std::filesystem::path& path,
                              "' in '" + path.string() + "'");
   };
 
-  const std::size_t iExtra = findCol(srcPrefix + "_extra");
   const std::size_t iVolume = findCol(srcPrefix + "_volume");
   const std::size_t iLayer = findCol(srcPrefix + "_layer");
   const std::size_t iSensitive = findCol(srcPrefix + "_sensitive");
@@ -107,7 +111,6 @@ loadGeoIdMapFromCsv(const std::filesystem::path& path,
   while (reader.read(columns)) {
     auto key =
         Acts::GeometryIdentifier()
-            .withExtra(static_cast<std::uint32_t>(std::stoul(columns[iExtra])))
             .withVolume(
                 static_cast<std::uint32_t>(std::stoul(columns[iVolume])))
             .withLayer(static_cast<std::uint32_t>(std::stoul(columns[iLayer])))
@@ -140,6 +143,20 @@ ColliderMLRelease1InputConverter::particleSchema() {
       arrow::field("pz", arrow::list(arrow::float32()), false),
       arrow::field("vertex_primary", arrow::list(arrow::uint16()), false),
       arrow::field("primary", arrow::list(arrow::boolean()), false),
+  })};
+}
+
+ActsPlugins::ArrowUtil::ArrowSchemaHandle
+ColliderMLRelease1InputConverter::tracksSchema() {
+  return ActsPlugins::ArrowUtil::ArrowSchemaHandle{arrow::schema({
+      arrow::field("d0", arrow::list(arrow::float32()), false),
+      arrow::field("z0", arrow::list(arrow::float32()), false),
+      arrow::field("phi", arrow::list(arrow::float32()), false),
+      arrow::field("theta", arrow::list(arrow::float32()), false),
+      arrow::field("qop", arrow::list(arrow::float32()), false),
+      arrow::field("majority_particle_id", arrow::list(arrow::uint64()), false),
+      arrow::field("hit_ids", arrow::list(arrow::list(arrow::uint32())), false),
+      arrow::field("track_id", arrow::list(arrow::uint16()), false),
   })};
 }
 
@@ -189,6 +206,19 @@ ColliderMLRelease1InputConverter::ColliderMLRelease1InputConverter(
     }
   }
 
+  if (!m_cfg.outputTracks.empty()) {
+    if (m_cfg.inputTracksTable.empty()) {
+      throw std::invalid_argument(
+          "inputTracksTable is required for outputTracks");
+    }
+    if (m_cfg.outputMeasurements.empty()) {
+      throw std::invalid_argument(
+          "outputMeasurements is required for outputTracks (published "
+          "tracks' hit_ids are resolved against the measurements built "
+          "from the hits table)");
+    }
+  }
+
   // ColliderML Release 1 volume_id → (BoundIndex, pitch in mm) pairs.
   // σ = pitch / √12 (binary readout, uniform distribution).
   auto sigmaFromPitch = [](double pitch) { return pitch / std::sqrt(12.0); };
@@ -223,10 +253,12 @@ ColliderMLRelease1InputConverter::ColliderMLRelease1InputConverter(
 
   m_inputParticles.initialize(m_cfg.inputParticlesTable);
   m_inputHits.initialize(m_cfg.inputHitsTable);
+  m_inputTracks.maybeInitialize(m_cfg.inputTracksTable);
 
   m_outputParticles.maybeInitialize(m_cfg.outputParticles);
   m_outputSimHits.maybeInitialize(m_cfg.outputSimHits);
   m_outputMeasurements.maybeInitialize(m_cfg.outputMeasurements);
+  m_outputTracks.maybeInitialize(m_cfg.outputTracks);
   m_outputClusters.maybeInitialize(m_cfg.outputClusters);
   m_outputMeasurementSubset.maybeInitialize(m_cfg.outputMeasurementSubset);
   m_outputMeasSimHitsMap.maybeInitialize(m_cfg.outputMeasSimHitsMap);
@@ -274,10 +306,9 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
   const arrow::Table& hitsTable = *m_inputHits(ctx).table();
 
   // ------------------------------------------------------------------
-  // 0. Build set of particle IDs that have at least one hit (optional).
-  //    The particle_id in the hits table is the row index in the particles
-  //    table. Pre-scanning here lets the particle loop skip unreferenced
-  //    particles without a second pass.
+  // 0. Build set of particle_ids that have at least one hit (optional), so
+  //    the particle loop below can skip unreferenced particles without a
+  //    second pass.
   // ------------------------------------------------------------------
   std::unordered_set<std::uint64_t> particleIdsWithHits;
   if (!m_cfg.keepParticlesWithoutHits) {
@@ -308,8 +339,9 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
       colValues<arrow::UInt16Array>(particleTable, "vertex_primary");
   auto primaryArr = colValues<arrow::BooleanArray>(particleTable, "primary");
 
-  // barcode vector indexed by ColliderML particle row-index
-  std::vector<SimBarcode> barcodes(static_cast<std::size_t>(nParticles));
+  // barcode map keyed by ColliderML particle_id, not row index (particle_ids
+  // are not 0-based consecutive row indices).
+  std::unordered_map<std::uint64_t, SimBarcode> cmlPidToActsBarcode;
 
   SimParticleContainer::sequence_type particleSeq;
   particleSeq.reserve(static_cast<std::size_t>(nParticles));
@@ -322,10 +354,11 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
                         .withVertexPrimary(vp)
                         .withParticle(static_cast<std::uint64_t>(i))
                         .withGeneration(isPrimary ? 0u : 1u);
-    barcodes[static_cast<std::size_t>(i)] = bc;
+    const std::uint64_t pid = pidArr->Value(pOff + i);
+    cmlPidToActsBarcode[pid] = bc;
 
     if (!m_cfg.keepParticlesWithoutHits &&
-        particleIdsWithHits.count(static_cast<std::uint64_t>(i)) == 0) {
+        particleIdsWithHits.count(pid) == 0) {
       continue;
     }
 
@@ -395,18 +428,12 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
     const std::uint8_t cmlVol = volArr->Value(hOff + i);
     const std::uint16_t cmlLay = layerArr->Value(hOff + i);
     const std::uint32_t cmlSurf = surfArr->Value(hOff + i);
-    const auto cmlKey = Acts::GeometryIdentifier()
-                            .withExtra(cmlDet)
-                            .withVolume(cmlVol)
-                            .withLayer(cmlLay)
-                            .withSensitive(cmlSurf);
-
-    const auto lookupKey = m_cfg.geoIdMapPath.empty()
-                               ? Acts::GeometryIdentifier()
-                                     .withVolume(cmlVol)
-                                     .withLayer(cmlLay)
-                                     .withSensitive(cmlSurf)
-                               : cmlKey;
+    // `detector` is not part of the lookup key: (volume, layer, sensitive)
+    // alone already uniquely identifies a sensitive surface.
+    const auto lookupKey = Acts::GeometryIdentifier()
+                               .withVolume(cmlVol)
+                               .withLayer(cmlLay)
+                               .withSensitive(cmlSurf);
     auto geoIt = m_geoIdMap.find(lookupKey);
     if (geoIt == m_geoIdMap.end()) {
       ACTS_ERROR("Hit " << i << " (det=" << +cmlDet << " vol=" << +cmlVol
@@ -417,10 +444,9 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
     const Acts::GeometryIdentifier geoId = geoIt->second;
 
     const std::uint64_t cmlPid = hpidArr->Value(hOff + i);
-    SimBarcode barcode{};
-    if (cmlPid < static_cast<std::uint64_t>(barcodes.size())) {
-      barcode = barcodes[static_cast<std::size_t>(cmlPid)];
-    }
+    auto bcIt = cmlPidToActsBarcode.find(cmlPid);
+    SimBarcode barcode =
+        (bcIt != cmlPidToActsBarcode.end()) ? bcIt->second : SimBarcode{};
 
     const double tx = txArr->Value(hOff + i);
     const double ty = tyArr->Value(hOff + i);
@@ -537,6 +563,104 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
     }
     if (m_outputMeasParticlesMap.isInitialized()) {
       m_outputMeasParticlesMap(ctx, std::move(measParticlesMap));
+    }
+
+    if (m_outputTracks.isInitialized()) {
+      const arrow::Table& tracksTable = *m_inputTracks(ctx).table();
+
+      auto [trkOff, nTracks] = rowBounds(tracksTable, "d0");
+      auto d0Arr = colValues<arrow::FloatArray>(tracksTable, "d0");
+      auto z0Arr = colValues<arrow::FloatArray>(tracksTable, "z0");
+      auto phiArr = colValues<arrow::FloatArray>(tracksTable, "phi");
+      auto thetaArr = colValues<arrow::FloatArray>(tracksTable, "theta");
+      auto qopArr = colValues<arrow::FloatArray>(tracksTable, "qop");
+
+      // hit_ids is list<list<uint32>> (per-event outer list of per-track
+      // inner lists) -- one level deeper than rowBounds()/colValues<>()
+      // handle, so unwrap it directly. Schema validation already guarantees
+      // the column and its nested layout, so no defensive checks here.
+      auto outerHitIds = std::dynamic_pointer_cast<arrow::ListArray>(
+          tracksTable.GetColumnByName("hit_ids")->chunk(0));
+      auto innerHitIds =
+          std::dynamic_pointer_cast<arrow::ListArray>(outerHitIds->values());
+      auto hitIdValues =
+          std::dynamic_pointer_cast<arrow::UInt32Array>(innerHitIds->values());
+      const std::int64_t hitIdsTrkOff = outerHitIds->value_offset(0);
+
+      auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
+      auto trackStateContainer =
+          std::make_shared<Acts::VectorMultiTrajectory>();
+      TrackContainer tracks(trackContainer, trackStateContainer);
+
+      // Shared reference surface for every published track: ColliderML
+      // reports perigee parameters w.r.t. the detector origin.
+      auto perigee = Acts::Surface::makeShared<Acts::PerigeeSurface>(
+          Acts::Vector3::Zero());
+
+      for (std::int64_t j = 0; j < nTracks; ++j) {
+        auto track = tracks.makeTrack();
+        track.setReferenceSurface(perigee);
+        track.parameters()[Acts::eBoundLoc0] =
+            static_cast<double>(d0Arr->Value(trkOff + j));
+        track.parameters()[Acts::eBoundLoc1] =
+            static_cast<double>(z0Arr->Value(trkOff + j));
+        track.parameters()[Acts::eBoundPhi] =
+            static_cast<double>(phiArr->Value(trkOff + j));
+        track.parameters()[Acts::eBoundTheta] =
+            static_cast<double>(thetaArr->Value(trkOff + j));
+        track.parameters()[Acts::eBoundQOverP] =
+            static_cast<double>(qopArr->Value(trkOff + j));
+        track.parameters()[Acts::eBoundTime] = 0.;
+
+        const std::int64_t hitListIdx = hitIdsTrkOff + j;
+        const std::int64_t hitOff = innerHitIds->value_offset(hitListIdx);
+        const std::int64_t nTrackHits = innerHitIds->value_length(hitListIdx);
+
+        for (std::int64_t k = 0; k < nTrackHits; ++k) {
+          const auto hitRowIdx =
+              static_cast<std::int32_t>(hitIdValues->Value(hitOff + k));
+          auto measIt = hitIndexToMeas.find(hitRowIdx);
+          if (measIt == hitIndexToMeas.end()) {
+            ACTS_ERROR("Published track " << j << " hit row " << hitRowIdx
+                                          << " has no corresponding "
+                                             "measurement");
+            return ProcessCode::ABORT;
+          }
+          ConstVariableBoundMeasurementProxy measurement =
+              storedMeasurements.getMeasurement(measIt->second);
+          const Acts::Surface* hitSurface =
+              m_cfg.trackingGeometry->findSurface(measurement.geometryId());
+          if (hitSurface == nullptr) {
+            ACTS_ERROR("Published track " << j << " hit row " << hitRowIdx
+                                          << " geoId "
+                                          << measurement.geometryId()
+                                          << " not found in tracking geometry");
+            return ProcessCode::ABORT;
+          }
+          IndexSourceLink sourceLink(measurement.geometryId(), measIt->second);
+
+          auto trackStateProxy =
+              track.appendTrackState(Acts::TrackStatePropMask::None);
+          trackStateProxy.typeFlags().setIsMeasurement();
+          trackStateProxy.setReferenceSurface(hitSurface->getSharedPtr());
+          trackStateProxy.setUncalibratedSourceLink(
+              Acts::SourceLink(sourceLink));
+        }
+
+        track.nMeasurements() = static_cast<std::uint32_t>(nTrackHits);
+        track.nHoles() = 0;
+        track.nOutliers() = 0;
+      }
+
+      ConstTrackContainer constTracks{
+          std::make_shared<Acts::ConstVectorTrackContainer>(
+              std::move(*trackContainer)),
+          std::make_shared<Acts::ConstVectorMultiTrajectory>(
+              std::move(*trackStateContainer))};
+
+      ACTS_DEBUG("Built " << constTracks.size()
+                          << " tracks from published ColliderML tracks");
+      m_outputTracks(ctx, std::move(constTracks));
     }
   }
 

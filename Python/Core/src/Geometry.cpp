@@ -230,6 +230,8 @@ void addGeometry(py::module_& m) {
             .def("geoIdSurfaceMap", &TrackingGeometry::geoIdSurfaceMap)
             .def("findPortal", &TrackingGeometry::findPortal, py::arg("tag"),
                  py::return_value_policy::reference_internal)
+            .def("findVolumeByName", &TrackingGeometry::findVolumeByName,
+                 py::arg("name"), py::return_value_policy::reference_internal)
             .def("extractMaterialSurfaces",
                  [](TrackingGeometry& self) {
                    MaterialSurfaceSelector selector;

@@ -285,6 +285,17 @@ class SurfaceArrayCreator {
     m_logger = std::move(logger);
   }
 
+  /// Determine the number of bins for a binning direction from the number of
+  /// distinct module positions (i.e. one bin per module). Public so navigation
+  /// policies can size their surface-array grids relative to the module count.
+  /// @param gctx the geometry context
+  /// @param surfaces the surfaces to analyse
+  /// @param aDir the binning direction
+  /// @return the number of distinct module positions along @p aDir
+  std::size_t determineBinCount(const GeometryContext& gctx,
+                                const std::vector<const Surface*>& surfaces,
+                                AxisDirection aDir) const;
+
  private:
   /// configuration object
   Config m_cfg;
@@ -296,12 +307,8 @@ class SurfaceArrayCreator {
       const std::vector<const Surface*>& surfaces,
       const std::function<bool(const Surface*, const Surface*)>& equal) const;
 
-  std::size_t determineBinCount(const GeometryContext& gctx,
-                                const std::vector<const Surface*>& surfaces,
-                                AxisDirection aDir) const;
-
   /// SurfaceArrayCreator internal method
-  /// Creates a variable @c ProtoAxis from a vector of (unsorted) surfaces with
+  /// Creates a variable axis from a vector of (unsorted) surfaces with
   /// PlanarBounds
   /// It loops through the surfaces and finds out the needed information
   /// First the surfaces are sorted in the binning direction and the so called
@@ -319,16 +326,14 @@ class SurfaceArrayCreator {
   /// (currently possible: AxisPhi, AxisR, AxisZ)
   /// @param protoLayer Instance of @c ProtoLayer holding generic layer info
   /// @param transform is the (optional) additional transform applied
-  /// @return Instance of @c ProtoAxis containing determined properties
-  /// @note This only creates the @c ProtoAxis, this needs to be turned
-  ///       into an actual @c Axis object to be used
+  /// @return Type-erased @c IAxis containing the determined properties
   std::unique_ptr<const IAxis> createVariableAxis(
       const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
       AxisBoundaryType aBoundaryType, AxisDirection aDir,
       const ProtoLayer& protoLayer, Transform3& transform) const;
 
   /// SurfaceArrayCreator internal method
-  /// Creates a equidistant @c ProtoAxis when the extrema and the bin number
+  /// Creates a equidistant axis when the extrema and the bin number
   /// are known.
   /// It loops through the surfaces and finds out the needed information
   /// First the surfaces are sorted in the binning direction and the so called
@@ -347,9 +352,7 @@ class SurfaceArrayCreator {
   /// @param protoLayer Instance of @c ProtoLayer holding generic layer info
   /// @param transform is the (optional) additional transform applied
   /// @param nBins Number of bins to use, 0 means determine automatically
-  /// @return Instance of @c ProtoAxis containing determined properties
-  /// @note This only creates the @c ProtoAxis, this needs to be turned
-  ///       into an actual @c Axis object to be used
+  /// @return Type-erased @c IAxis containing the determined properties
   std::unique_ptr<const IAxis> createEquidistantAxis(
       const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
       AxisBoundaryType aBoundaryType, AxisDirection aDir,

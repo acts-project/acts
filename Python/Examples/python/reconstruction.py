@@ -6,27 +6,11 @@ from collections import namedtuple
 import acts
 import acts.examples
 
-# ROOT might not be available
-try:
-    from acts.examples.root import (
-        RootTrackFinderNTupleWriter,
-        RootTrackFinderPerformanceWriter,
-        RootTrackFitterPerformanceWriter,
-        RootTrackParameterWriter,
-        RootTrackStatesWriter,
-        RootTrackSummaryWriter,
-        RootVertexNTupleWriter,
-    )
-
-    ACTS_EXAMPLES_ROOT_AVAILABLE = True
-except ImportError:
-    ACTS_EXAMPLES_ROOT_AVAILABLE = False
-
 u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
     "SeedingAlgorithm",
-    "TruthSmeared TruthEstimated HoughTransform AdaptiveHoughTransform Gbts Hashing GridTriplet OrthogonalTriplet HashingPrototype",
+    "TruthSmeared TruthEstimated HoughTransform AdaptiveHoughTransform Gbts Hashing GridTriplet OrthogonalTriplet HashingPrototype PythonCallable",
 )
 
 TrackSmearingSigmas = namedtuple(
@@ -202,6 +186,7 @@ CkfConfig = namedtuple(
         "maxPixelHoles",
         "maxStripHoles",
         "trimTracks",
+        "recordMaterialStates",
         "useJosephFormulation",
         "constrainToVolumes",
         "endOfWorldVolumes",
@@ -210,6 +195,7 @@ CkfConfig = namedtuple(
         15.0,
         25.0,
         10,
+        None,
         None,
         None,
         None,
@@ -328,6 +314,8 @@ def addSeeding(
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
     prefix: str = "",
+    customSeeder: Optional[callable] = None,
+    customSeederConfig: Optional[dict] = None,
 ) -> None:
     """This function steers the seeding
     Parameters
@@ -381,6 +369,11 @@ def addSeeding(
         logging level to override setting given in `s`
     rnd : RandomNumbers, None
         random number generator. Only used by SeedingAlgorithm.TruthSmeared.
+    customSeeder : callable, None
+        A custom python function that implements the seeding algorithm. Used only when seedingAlgorithm is SeedingAlgorithm.PythonCallable.
+        It must accept s, spacePoints, outputSeeds, trackingGeometry, logLevel, and config as kwargs, and it must return the string key to the generated seeds collection.
+    customSeederConfig : dict, None
+        Configuration dictionary passed directly to the customSeeder function.
     """
 
     logLevel = acts.examples.defaultLogging(s, logLevel)()
@@ -502,6 +495,25 @@ def addSeeding(
                 logLevel,
                 outputSeeds=f"{prefix}seeds",
             )
+        elif seedingAlgorithm == SeedingAlgorithm.PythonCallable:
+            logger.info("Using custom PythonCallable seeding")
+            if customSeeder is None:
+                raise ValueError(
+                    "SeedingAlgorithm.PythonCallable requested customSeeder but it was None"
+                )
+
+            seeds = customSeeder(
+                s=s,
+                spacePoints=spacePoints,
+                outputSeeds=f"{prefix}seeds",
+                trackingGeometry=trackingGeometry,
+                logLevel=logLevel,
+                config=customSeederConfig or {},
+            )
+            if seeds is None:
+                raise RuntimeError(
+                    "customSeeder returned None; it must return the string key for the output seeds collection"
+                )
         else:
             logger.fatal("unknown seedingAlgorithm {}", seedingAlgorithm)
 
@@ -534,12 +546,12 @@ def addSeeding(
 
         tracks = f"{prefix}seed-tracks"
         s.addAlgorithm(
-            acts.examples.ProtoTracksToTracks(
+            acts.examples.SeedsToTracks(
                 level=logLevel,
-                inputProtoTracks=protoTracks,
+                inputSeeds=f"{prefix}estimatedseeds",
                 inputTrackParameters=f"{prefix}estimatedparameters",
-                inputMeasurements=f"{prefix}measurement_subset",
                 outputTracks=tracks,
+                trackingGeometry=trackingGeometry,
             )
         )
 
@@ -1383,21 +1395,24 @@ def addSeedPerformanceWriters(
 ):
     """Writes seeding related performance output"""
     customLogLevel = acts.examples.defaultLogging(sequence, logLevel)
-    assert (
-        ACTS_EXAMPLES_ROOT_AVAILABLE
-    ), "ROOT output requested but ROOT is not available"
+    RootPatternRecognitionPerformanceWriter, RootTrackParameterWriter = (
+        acts.examples._tryImportRoot(
+            "RootPatternRecognitionPerformanceWriter", "RootTrackParameterWriter"
+        )
+    )
     outputDirRoot = Path(outputDirRoot)
     if not outputDirRoot.exists():
         outputDirRoot.mkdir()
 
     sequence.addWriter(
-        RootTrackFinderPerformanceWriter(
+        RootPatternRecognitionPerformanceWriter(
             level=customLogLevel(),
             inputTracks=tracks,
             inputParticles=selectedParticles,
             inputTrackParticleMatching=f"{prefix}seed_particle_matching",
             inputParticleTrackMatching=f"{prefix}particle_seed_matching",
             inputParticleMeasurementsMap="particle_measurements_map",
+            label="seed",
             filePath=str(outputDirRoot / f"performance_{prefix}seeding.root"),
         )
     )
@@ -1792,6 +1807,7 @@ def addCKFTracks(
             maxPixelHoles=ckfConfig.maxPixelHoles,
             maxStripHoles=ckfConfig.maxStripHoles,
             trimTracks=ckfConfig.trimTracks,
+            recordMaterialStates=ckfConfig.recordMaterialStates,
             useJosephFormulation=ckfConfig.useJosephFormulation,
             constrainToVolumeIds=ckfConfig.constrainToVolumes,
             endOfWorldVolumeIds=ckfConfig.endOfWorldVolumes,
@@ -1909,13 +1925,24 @@ def addTrackWriters(
     logLevel: Optional[acts.logging.Level] = None,
     writeCovMat=False,
     writeMatchingDetails: bool = False,
+    label: str = "track",
 ):
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     if outputDirRoot is not None:
-        assert (
-            ACTS_EXAMPLES_ROOT_AVAILABLE
-        ), "ROOT output requested but ROOT is not available"
+        (
+            RootTrackSummaryWriter,
+            RootTrackStatesWriter,
+            RootTrackParameterPerformanceWriter,
+            RootPatternRecognitionPerformanceWriter,
+            RootTrackFinderNTupleWriter,
+        ) = acts.examples._tryImportRoot(
+            "RootTrackSummaryWriter",
+            "RootTrackStatesWriter",
+            "RootTrackParameterPerformanceWriter",
+            "RootPatternRecognitionPerformanceWriter",
+            "RootTrackFinderNTupleWriter",
+        )
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
@@ -1946,23 +1973,24 @@ def addTrackWriters(
             s.addWriter(trackStatesWriter)
 
         if writeFitterPerformance:
-            trackFitterPerformanceWriter = RootTrackFitterPerformanceWriter(
+            trackParameterPerformanceWriter = RootTrackParameterPerformanceWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
                 inputParticles="particles_selected",
                 inputTrackParticleMatching="track_particle_matching",
                 filePath=str(outputDirRoot / f"performance_fitting_{name}.root"),
             )
-            s.addWriter(trackFitterPerformanceWriter)
+            s.addWriter(trackParameterPerformanceWriter)
 
         if writeFinderPerformance:
-            trackFinderPerfWriter = RootTrackFinderPerformanceWriter(
+            trackFinderPerfWriter = RootPatternRecognitionPerformanceWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
                 inputParticles="particles_selected",
                 inputTrackParticleMatching="track_particle_matching",
                 inputParticleTrackMatching="particle_track_matching",
                 inputParticleMeasurementsMap="particle_measurements_map",
+                label=label,
                 filePath=str(outputDirRoot / f"performance_finding_{name}.root"),
                 writeMatchingDetails=writeMatchingDetails,
             )
@@ -2537,9 +2565,7 @@ def addVertexFitting(
         )
 
     if outputDirRoot is not None:
-        assert (
-            ACTS_EXAMPLES_ROOT_AVAILABLE
-        ), "ROOT output requested but ROOT is not available"
+        RootVertexNTupleWriter = acts.examples._tryImportRoot("RootVertexNTupleWriter")
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
@@ -2570,10 +2596,7 @@ def addHoughVertexFinding(
     inputSpacePoints: Optional[str] = "spacepoints",
     outputVertices: Optional[str] = "fittedHoughVertices",
 ) -> None:
-    from acts.examples import (
-        HoughVertexFinderAlgorithm,
-        RootVertexNTupleWriter,
-    )
+    from acts.examples import HoughVertexFinderAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -2589,9 +2612,7 @@ def addHoughVertexFinding(
     inputTruthVertices = "vertices_truth"
 
     if outputDirRoot is not None:
-        assert (
-            ACTS_EXAMPLES_ROOT_AVAILABLE
-        ), "ROOT output requested but ROOT is not available"
+        RootVertexNTupleWriter = acts.examples._tryImportRoot("RootVertexNTupleWriter")
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()

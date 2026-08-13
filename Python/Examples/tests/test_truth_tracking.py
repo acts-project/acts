@@ -611,7 +611,7 @@ def test_measurement_access(tmp_path, generic_detector_config):
 
                 first_key = next(iter(sh_map))[0]
                 assert first_key in sh_map
-                vals = sh_map.values_for(first_key)
+                vals = sh_map.valuesFor(first_key)
                 assert len(vals) > 0
 
                 inv = sh_map.invert()
@@ -729,10 +729,10 @@ def test_measurement_map_creation():
     assert 0 in m
     assert 2 not in m
 
-    vals = m.values_for(0)
+    vals = m.valuesFor(0)
     assert sorted(vals) == [10, 11]
-    assert m.values_for(1) == [20]
-    assert m.values_for(99) == []
+    assert m.valuesFor(1) == [20]
+    assert m.valuesFor(99) == []
 
     pairs = list(m)
     assert len(pairs) == 3
@@ -741,9 +741,9 @@ def test_measurement_map_creation():
     inv = m.invert()
     assert isinstance(inv, SimHitMeasurementsMap)
     assert len(inv) == 3
-    assert inv.values_for(10) == [0]
-    assert inv.values_for(11) == [0]
-    assert inv.values_for(20) == [1]
+    assert inv.valuesFor(10) == [0]
+    assert inv.valuesFor(11) == [0]
+    assert inv.valuesFor(20) == [1]
 
     # MeasurementParticlesMap: meas 0 came from two particles, meas 1 from one
     bc0 = SimBarcode()
@@ -756,7 +756,7 @@ def test_measurement_map_creation():
     mp.insert(1, bc0)
     assert len(mp) == 3
 
-    assert mp.values_for(0) == [bc0, bc1]
+    assert mp.valuesFor(0) == [bc0, bc1]
 
     inv_p = mp.invert()
     assert isinstance(inv_p, ParticleMeasurementsMap)

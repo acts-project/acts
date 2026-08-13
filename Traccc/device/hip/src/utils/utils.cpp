@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022-2025 CERN for the benefit of the ACTS project
+ * (c) 2022-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -25,7 +25,7 @@ unsigned int get_warp_size(int device) {
   return static_cast<unsigned int>(warp_size);
 }
 
-hipStream_t get_stream(const stream& stream) {
+hipStream_t get_stream(const stream_wrapper& stream) {
   return reinterpret_cast<hipStream_t>(stream.hipStream());
 }
 
