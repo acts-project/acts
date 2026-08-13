@@ -424,11 +424,10 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   CHECK_CLOSE_ABS(h0, esState.stepSize.value(), eps);
 }
 
-/// The transport jacobian has to be accumulated as D * jacTransport, not the
-/// other way round.  In a constant field the direction sub-block of the step
-/// jacobians commutes, so getting this wrong only shows up in the q/p column
-/// and only after several steps -- which is why this compares against the
-/// EigenStepper over a long chain of steps rather than checking a single one.
+/// The transport jacobian has to be accumulated as `D * jacTransport`. In a
+/// constant field the direction sub-block commutes, so the wrong order only
+/// shows up in the q/p column after several steps. Hence the comparison
+/// against the EigenStepper over a long chain of steps.
 BOOST_AUTO_TEST_CASE(sympy_stepper_covariance_matches_eigen) {
   auto bField = std::make_shared<ConstantBField>(Vector3(0.3_T, 0, 2_T));
   SympyStepper sympyStepper(bField);
@@ -441,15 +440,15 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_covariance_matches_eigen) {
   eigenOptions.maxStepSize = 100_mm;
   eigenOptions.initialStepSize = 30_mm;
 
+  Covariance cov = Covariance::Identity();
+  cov(eBoundLoc0, eBoundLoc0) = 10_mm;
+  cov(eBoundLoc1, eBoundLoc1) = 10_mm;
+  cov(eBoundQOverP, eBoundQOverP) = 1e-4;
+
   for (int track = 0; track < 4; ++track) {
     const double phi = 0.3 * track;
     const double theta = 0.7 + 0.25 * track;
     const double qop = (track % 2 == 0 ? 1. : -1.) / ((1. + track) * 1_GeV);
-
-    Covariance cov = Covariance::Identity();
-    cov(eBoundLoc0, eBoundLoc0) = 10_mm;
-    cov(eBoundLoc1, eBoundLoc1) = 10_mm;
-    cov(eBoundQOverP, eBoundQOverP) = 1e-4;
 
     auto start = BoundTrackParameters::createCurvilinear(
         Vector4::Zero(), phi, theta, qop, cov, ParticleHypothesis::pion());
@@ -466,16 +465,13 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_covariance_matches_eigen) {
           eigenStepper.step(eigenState, Direction::Forward(), nullptr).ok());
     }
 
-    // note: keep the states alive, the tuples own the parameters
-    const auto sympyBound = sympyStepper.curvilinearState(sympyState, true);
-    const auto eigenBound = eigenStepper.curvilinearState(eigenState, true);
-    const Covariance sympyCov = *std::get<0>(sympyBound).covariance();
-    const Covariance eigenCov = *std::get<0>(eigenBound).covariance();
-    // The off-diagonal tolerance scales with sqrt(var_i * var_j), which is
-    // what makes the small q/p correlations comparable at all.  The two
-    // steppers do genuinely different arithmetic, so what is left is
-    // accumulated round-off: measured 1e-12 over these 150 steps, against
-    // 3e-2 when the transport jacobians are composed in the wrong order.
+    const Covariance sympyCov =
+        *std::get<0>(sympyStepper.curvilinearState(sympyState)).covariance();
+    const Covariance eigenCov =
+        *std::get<0>(eigenStepper.curvilinearState(eigenState)).covariance();
+    // the tolerance scales with sqrt(var_i * var_j) which makes the small q/p
+    // correlations comparable at all. both steppers agree to ~1e-12 here while
+    // the wrong jacobian order deviates by ~1e-2.
     CHECK_CLOSE_COVARIANCE(sympyCov, eigenCov, 1e-9);
   }
 }
