@@ -1,0 +1,66 @@
+{
+    "acts-fatras-synthetic-config": {
+        "format-version": 0
+    },
+    "bFieldZ": 0.0005995849,
+    "generation": {
+        "beamspotSigmaZ": 57.0,
+        "chargedPerUnitRapidity": 5.58,
+        "d0Sigma": 0.0142,
+        "maxRapidity": 4.3,
+        "minPt": 0.02,
+        "minRapidity": -4.3,
+        "pileup": 200,
+        "ptExponent": 5.3,
+        "ptScale": 0.663,
+        "rapidityEdge": 4.9,
+        "rapidityEdgeWidth": 1.3
+    },
+    "particlePdg": 211,
+    "seed": 12345,
+    "simulation": {
+        "material": {
+            "energyLoss": true,
+            "energyLossModel": "mode",
+            "maxCylinderPathLength": 100.0,
+            "maxDiscPathLength": 4.0,
+            "maxEnergyLossFraction": 0.5,
+            "multipleScattering": true,
+            "scale": 1.0
+        },
+        "measurement": {
+            "overlapScale": 1.0,
+            "positionSmearing": 0.008
+        },
+        "propagation": {
+            "hitsPerPrimary": 12.0,
+            "maxTracksPerPrimary": 100.0,
+            "maxTurns": 3.0,
+            "tracksPerPrimary": 2.0
+        },
+        "secondaries": {
+            "decayLength": 60.0,
+            "decayYield": 0.015,
+            "electronRate": 2.744,
+            "maxGenerations": 1,
+            "maxPerCrossing": 20.0,
+            "nuclearRate": 6.41,
+            "sampling": {
+                "electronExponent": 0.155,
+                "electronKt": 0.014,
+                "electronScale": 0.137,
+                "electronSpread": 2.8,
+                "evaporationFraction": 0.3,
+                "evaporationScale": 0.3,
+                "kt": 0.319,
+                "minPt": 0.005,
+                "momentumExponent": 0.429,
+                "momentumScale": 0.448,
+                "momentumSpread": 1.67
+            },
+            "stubClusters": 2.1,
+            "stubRate": 1.8,
+            "stubReach": 4.0
+        }
+    }
+}
