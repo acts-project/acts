@@ -299,6 +299,26 @@ _B2F_LIVE = _B2F.entries("step")
 _B2F_DENSE_LIVE = _B2F.entries("step", "dense")
 
 
+def _b2f_column_name(col):
+    """Name of the staging array holding live column `col` of the jacobian."""
+    return f"new_M{col}"
+
+
+def _by_column(entries):
+    """`entries` grouped by column, as (staging array name, entries) pairs.
+
+    One staging array per column lets each be written back as soon as it is
+    finished, instead of keeping every entry live until the end of the kernel.
+    """
+    columns = {}
+    for entry in entries:
+        columns.setdefault(entry[1], []).append(entry)
+    return [(_b2f_column_name(c), group) for c, group in sorted(columns.items())]
+
+
+_B2F_LIVE_COLUMNS = _by_column(_B2F_LIVE)
+
+
 def b2f_step_update(D, live):
     """Apply a free-to-free step jacobian D to the bound-to-free jacobian M.
 
@@ -436,18 +456,9 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
     dt_dqop = deriv.add("dt_dqop", dtime_dqop(dtds.name))
     new_time = M[3, 4] + dt_dqop.name * M[7, 4]
 
-    deriv.add(
-        "new_M",
-        Matrix.vstack(
-            phi_pos,
-            phi_dir,
-            the_pos,
-            the_dir,
-            qop_pos,
-            Matrix([new_time]),
-            qop_dir,
-        ),
-    )
+    deriv.add(_b2f_column_name(2), Matrix.vstack(phi_pos, phi_dir))
+    deriv.add(_b2f_column_name(3), Matrix.vstack(the_pos, the_dir))
+    deriv.add(_b2f_column_name(4), Matrix.vstack(qop_pos, Matrix([new_time]), qop_dir))
 
     return deriv.name_exprs
 
@@ -602,7 +613,7 @@ def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
             "new_time",
             "new_dir",
             "path_derivatives",
-            "new_M",
+            *[name for name, _ in _B2F_LIVE_COLUMNS],
         ]
     ]
 
@@ -624,8 +635,9 @@ def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
             return "std::array<T, 3> pos2{};"
         if str(var) == "pos3":
             return "std::array<T, 3> pos3{};"
-        if str(var) == "new_M":
-            return f"std::array<T, {len(_B2F_LIVE)}> new_M{{}};"
+        for name, group in _B2F_LIVE_COLUMNS:
+            if str(var) == name:
+                return f"std::array<T, {len(group)}> {name}{{}};"
         return None
 
     def post_expr_hook(var):
@@ -639,11 +651,12 @@ def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
             )
         if str(var) == "new_dir":
             return "if (M.empty()) {\n  return Acts::Result<bool>::success(true);\n}"
-        if str(var) == "new_M":
-            return "\n".join(
-                f"M[{_B2F.flat_index(i, j)}] = new_M[{k}];"
-                for k, (i, j) in enumerate(_B2F_LIVE)
-            )
+        for name, group in _B2F_LIVE_COLUMNS:
+            if str(var) == name:
+                return "\n".join(
+                    f"M[{_B2F.flat_index(i, j)}] = {name}[{k}];"
+                    for k, (i, j) in enumerate(group)
+                )
         return None
 
     code = my_expression_print(
