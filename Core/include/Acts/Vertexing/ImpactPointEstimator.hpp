@@ -98,6 +98,10 @@ class ImpactPointEstimator {
   /// Move constructor for impact point estimator
   ImpactPointEstimator(ImpactPointEstimator&&) = default;
 
+  /// Access the configuration of this estimator
+  /// @return The configuration object
+  const Config& config() const { return m_cfg; }
+
   /// @brief Calculates 3D distance between a track and a vertex
   ///
   /// @param gctx The geometry context
