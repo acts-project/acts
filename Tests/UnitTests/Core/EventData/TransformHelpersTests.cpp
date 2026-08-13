@@ -12,6 +12,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -20,6 +22,7 @@
 #include <algorithm>
 #include <limits>
 #include <numbers>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -188,6 +191,97 @@ BOOST_DATA_TEST_CASE(GlobalToCurvilinearParameters,
     CHECK_CLOSE_OR_SMALL(bv[eBoundTheta], theta, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundQOverP], qOverP, eps, eps);
   }
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(TransformBoundToCartesian)
+
+BOOST_DATA_TEST_CASE(BoundToCartesianFourPositionMomentum,
+                     surfaces * posSymmetric * posSymmetric * ts * phis *
+                         thetas * ps * qsNonZero,
+                     surface, l0, l1, time, phiInput, theta, p, q) {
+  // phi is ill-defined in forward/backward tracks
+  const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
+  const auto qOverP = q / p;
+
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+  Vector2 loc(l0, l1);
+  Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
+  Vector3 pos = surface->localToGlobal(geoCtx, loc, dir);
+
+  BoundVector bv = BoundVector::Zero();
+  bv[eBoundLoc0] = l0;
+  bv[eBoundLoc1] = l1;
+  bv[eBoundTime] = time;
+  bv[eBoundPhi] = phi;
+  bv[eBoundTheta] = theta;
+  bv[eBoundQOverP] = qOverP;
+
+  BoundTrackParameters params(surface, bv, BoundMatrix::Identity(),
+                              ParticleHypothesis::pionLike(std::abs(q)));
+
+  Vector3 momentum;
+  auto [pos4, cov7] =
+      transformBoundToCartesianFourPositionMomentum(geoCtx, params, momentum);
+
+  CHECK_CLOSE_OR_SMALL(pos4.segment<3>(ePos0), pos, eps, eps);
+  CHECK_CLOSE_OR_SMALL(pos4[eTime], time, eps, eps);
+  CHECK_CLOSE_OR_SMALL(momentum, p * dir, eps, eps);
+
+  // the propagated covariance must remain symmetric
+  CHECK_CLOSE_OR_SMALL(cov7, cov7.transpose(), eps, eps);
+}
+
+BOOST_DATA_TEST_CASE(BoundToCartesianCovarianceConsistency,
+                     surfaces * phis * thetasNoForwardBackward * ps *
+                         qsNonZero,
+                     surface, phi, theta, p, q) {
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+  const auto qOverP = q / p;
+  const auto hypothesis = ParticleHypothesis::pionLike(std::abs(q));
+
+  BoundVector bv = BoundVector::Zero();
+  bv[eBoundLoc0] = 0.3;
+  bv[eBoundLoc1] = -0.2;
+  bv[eBoundTime] = 1.0;
+  bv[eBoundPhi] = phi;
+  bv[eBoundTheta] = theta;
+  bv[eBoundQOverP] = qOverP;
+
+  const BoundMatrix boundCov = BoundMatrix::Identity();
+  BoundTrackParameters params(surface, bv, boundCov, hypothesis);
+
+  Vector3 momentum;
+  auto [pos4, cov7] =
+      transformBoundToCartesianFourPositionMomentum(geoCtx, params, momentum);
+
+  // Build a numerical Jacobian d(x,y,z,t,px,py,pz)/d(BoundVector) with
+  // central differences and cross-check the analytic covariance transport.
+  Matrix<7, 6> numJac = Matrix<7, 6>::Zero();
+  for (int i = 0; i < 6; ++i) {
+    const double h = 1e-6 * std::max(1.0, std::abs(bv[i]));
+
+    BoundVector bvPlus = bv;
+    bvPlus[i] += h;
+    BoundVector bvMinus = bv;
+    bvMinus[i] -= h;
+
+    BoundTrackParameters paramsPlus(surface, bvPlus, std::nullopt,
+                                    hypothesis);
+    BoundTrackParameters paramsMinus(surface, bvMinus, std::nullopt,
+                                     hypothesis);
+
+    numJac.block<4, 1>(0, i) =
+        (paramsPlus.fourPosition(geoCtx) - paramsMinus.fourPosition(geoCtx)) /
+        (2 * h);
+    numJac.block<3, 1>(4, i) =
+        (paramsPlus.momentum() - paramsMinus.momentum()) / (2 * h);
+  }
+
+  const SquareMatrix<7> cov7Numerical = numJac * boundCov * numJac.transpose();
+
+  CHECK_CLOSE_COVARIANCE(cov7, cov7Numerical, 1e-6);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
