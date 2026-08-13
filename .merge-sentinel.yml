@@ -15,10 +15,12 @@ rules:
      - Analysis / build_debug
      # - SonarCloud Code Analysis
 
+    # Only list a class of check that actually reports: a required_pattern
+    # matching nothing is not ignored, it is injected as a synthetic *failure*
+    # item, so a stale entry red-gates every pull request.
     required_pattern:
      - "Builds / *"
      - "Checks / *"
-     - "CI Bridge / *"
 
   - branch_filter:
      - "main"

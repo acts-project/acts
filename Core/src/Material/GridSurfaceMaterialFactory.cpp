@@ -8,6 +8,8 @@
 
 #include "Acts/Material/GridSurfaceMaterialFactory.hpp"
 
+#include "Acts/Utilities/Diagnostics.hpp"
+
 namespace Acts {
 
 std::unique_ptr<IGridSurfaceMaterial<MaterialSlab>>
@@ -85,6 +87,10 @@ GridSurfaceMaterialFactory::create(
       std::move(globalToGridLocal), payload);
 }
 
+// Unlike the declarations, the definitions of the deprecated overloads do not
+// carry the deprecation attribute themselves, so they need the suppression
+ACTS_PUSH_IGNORE_DEPRECATED()
+
 std::unique_ptr<IGridSurfaceMaterial<MaterialSlab>>
 GridSurfaceMaterialFactory::create(
     const ProtoAxis& pAxis, GridMaterialAccessor&& materialAccessor,
@@ -159,5 +165,7 @@ GridSurfaceMaterialFactory::create(
       pAxis0.getAxis(), pAxis1.getAxis(), std::move(materialAccessor),
       std::move(boundToGridLocal), std::move(globalToGridLocal), payload);
 }
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace Acts
