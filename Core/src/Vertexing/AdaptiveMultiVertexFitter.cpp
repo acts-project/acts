@@ -30,10 +30,29 @@ AdaptiveMultiVertexFitter::AdaptiveMultiVertexFitter(
   }
 }
 
+VertexScratch& AdaptiveMultiVertexFitter::scratchFor(
+    const VertexFitProblem& problem, Vertex* vtx, Cache& cache) {
+  auto [it, inserted] = cache.vertexScratch.try_emplace(vtx);
+  if (inserted) {
+    // Seed the linearization point and the previous position with the seed
+    // position of the vertex, so that the first iteration measures the
+    // distance to the seed rather than to the origin. A vertex without a
+    // candidate entry keeps the zero-initialised default, matching the
+    // previously default-constructed VertexInfo.
+    if (auto candidateIt = problem.candidates.find(vtx);
+        candidateIt != problem.candidates.end()) {
+      it->second.linPoint = candidateIt->second.seedPosition;
+      it->second.oldPosition = candidateIt->second.seedPosition;
+    }
+  }
+  return it->second;
+}
+
 Result<void> AdaptiveMultiVertexFitter::fit(
-    State& state, const VertexingOptions& vertexingOptions) const {
+    VertexFitProblem& problem, const VertexingOptions& vertexingOptions,
+    Cache& cache) const {
   // Reset annealing tool
-  state.annealingState = AnnealingUtility::State();
+  cache.annealingState = AnnealingUtility::State();
 
   // Boolean indicating whether any of the vertices has moved more than
   // m_cfg.maxRelativeShift during the last iteration. We will keep iterating
@@ -47,42 +66,42 @@ Result<void> AdaptiveMultiVertexFitter::fit(
 
   // Start iterating
   while (nIter < m_cfg.maxIterations &&
-         (!state.annealingState.equilibriumReached || !isSmallShift)) {
-    // Initial loop over all vertices in state.vertexCollection
-    for (auto vtx : state.vertexCollection) {
-      VertexInfo& vtxInfo = state.vtxInfoMap[vtx];
-      vtxInfo.relinearize = false;
+         (!cache.annealingState.equilibriumReached || !isSmallShift)) {
+    // Initial loop over all vertices in problem.vertices
+    for (auto vtx : problem.vertices) {
+      VertexScratch& scratch = scratchFor(problem, vtx, cache);
+      scratch.relinearize = false;
       // Store old position of vertex, i.e. seed position
       // in case of first iteration or position determined
       // in previous iteration afterwards
-      vtxInfo.oldPosition = vtx->fullPosition();
+      scratch.oldPosition = vtx->fullPosition();
 
       // Calculate the x-y-distance between the current vertex position
       // and the linearization point of the tracks. If it is too large,
       // we relinearize the tracks and recalculate their 3D impact
       // parameters.
-      Vector2 xyDiff = vtxInfo.oldPosition.template head<2>() -
-                       vtxInfo.linPoint.template head<2>();
+      Vector2 xyDiff = scratch.oldPosition.template head<2>() -
+                       scratch.linPoint.template head<2>();
       if (xyDiff.norm() > m_cfg.maxDistToLinPoint) {
         // Set flag for relinearization
-        vtxInfo.relinearize = true;
+        scratch.relinearize = true;
         // Recalculate the track impact parameters at the current vertex
         // position
         auto prepareVertexResult =
-            prepareVertexForFit(state, vtx, vertexingOptions);
+            prepareVertexForFit(problem, vtx, vertexingOptions, cache);
         if (!prepareVertexResult.ok()) {
           // Print vertices and associated tracks if logger is in debug mode
           if (logger().doPrint(Logging::DEBUG)) {
-            logDebugData(state, vertexingOptions.geoContext);
+            logDebugData(problem, vertexingOptions.geoContext, cache);
           }
           return prepareVertexResult.error();
         }
       }
 
       // Check if we use the constraint during the vertex fit
-      if (state.vtxInfoMap[vtx].constraint.fullCovariance() !=
+      if (problem.candidates[vtx].constraint.fullCovariance() !=
           SquareMatrix4::Zero()) {
-        const Vertex& constraint = state.vtxInfoMap[vtx].constraint;
+        const Vertex& constraint = problem.candidates[vtx].constraint;
         vtx->setFullPosition(constraint.fullPosition());
         vtx->setFitQuality(constraint.fitQuality());
         vtx->setFullCovariance(constraint.fullCovariance());
@@ -93,50 +112,51 @@ Result<void> AdaptiveMultiVertexFitter::fit(
       // Set vertexCompatibility for all TrackAtVertex objects
       // at the current vertex
       auto setCompatibilitiesResult =
-          setAllVertexCompatibilities(state, vtx, vertexingOptions);
+          setAllVertexCompatibilities(problem, vtx, vertexingOptions, cache);
       if (!setCompatibilitiesResult.ok()) {
         // Print vertices and associated tracks if logger is in debug mode
         if (logger().doPrint(Logging::DEBUG)) {
-          logDebugData(state, vertexingOptions.geoContext);
+          logDebugData(problem, vertexingOptions.geoContext, cache);
         }
         return setCompatibilitiesResult.error();
       }
     }  // End loop over vertex collection
 
     // Recalculate all track weights and update vertices
-    auto setWeightsResult = setWeightsAndUpdate(state, vertexingOptions);
+    auto setWeightsResult =
+        setWeightsAndUpdate(problem, vertexingOptions, cache);
     if (!setWeightsResult.ok()) {
       // Print vertices and associated tracks if logger is in debug mode
       if (logger().doPrint(Logging::DEBUG)) {
-        logDebugData(state, vertexingOptions.geoContext);
+        logDebugData(problem, vertexingOptions.geoContext, cache);
       }
       return setWeightsResult.error();
     }
 
     // Cool the system down, i.e., reduce the temperature parameter. At lower
     // temperatures, outlying tracks are downweighted more.
-    if (!state.annealingState.equilibriumReached) {
-      m_cfg.annealingTool.anneal(state.annealingState);
+    if (!cache.annealingState.equilibriumReached) {
+      m_cfg.annealingTool.anneal(cache.annealingState);
     }
 
-    isSmallShift = checkSmallShift(state);
+    isSmallShift = checkSmallShift(problem, cache);
     ++nIter;
   }
   // Multivertex fit is finished
 
   // Check if smoothing is required
   if (m_cfg.doSmoothing) {
-    doVertexSmoothing(state);
+    doVertexSmoothing(problem);
   }
 
   return {};
 }
 
 Result<void> AdaptiveMultiVertexFitter::addVtxToFit(
-    State& state, const std::vector<Vertex*>& newVertices,
-    const VertexingOptions& vertexingOptions) const {
+    VertexFitProblem& problem, const std::vector<Vertex*>& newVertices,
+    const VertexingOptions& vertexingOptions, Cache& cache) const {
   for (const auto& newVertex : newVertices) {
-    if (state.vtxInfoMap[newVertex].trackLinks.empty()) {
+    if (problem.candidates[newVertex].trackLinks.empty()) {
       ACTS_ERROR(
           "newVertex does not have any associated tracks (i.e., its trackLinks "
           "are empty).");
@@ -157,13 +177,13 @@ Result<void> AdaptiveMultiVertexFitter::addVtxToFit(
     for (auto& lastIterAddedVertex : lastIterAddedVertices) {
       // Loop over all tracks at lastIterAddedVertex
       const std::vector<InputTrack>& trks =
-          state.vtxInfoMap[lastIterAddedVertex].trackLinks;
+          problem.candidates[lastIterAddedVertex].trackLinks;
       for (const auto& trk : trks) {
         // Range of vertices that are associated with trk. The range is
         // represented via its bounds: begin refers to the first iterator of the
         // range; end refers to the iterator after the last iterator of the
         // range.
-        auto [begin, end] = state.trackToVerticesMultiMap.equal_range(trk);
+        auto [begin, end] = problem.trackToVertices.equal_range(trk);
 
         for (auto it = begin; it != end; ++it) {
           // it->first corresponds to trk, it->second to one of its associated
@@ -186,22 +206,23 @@ Result<void> AdaptiveMultiVertexFitter::addVtxToFit(
     currentIterAddedVertices.clear();
   }  // End while loop
 
-  state.vertexCollection = verticesToFit;
+  problem.vertices = verticesToFit;
 
   for (Vertex* newVertexPtr : newVertices) {
     // Save the 3D impact parameters of all tracks associated with newVertex.
-    auto res = prepareVertexForFit(state, newVertexPtr, vertexingOptions);
+    auto res =
+        prepareVertexForFit(problem, newVertexPtr, vertexingOptions, cache);
     if (!res.ok()) {
       // Print vertices and associated tracks if logger is in debug mode
       if (logger().doPrint(Logging::DEBUG)) {
-        logDebugData(state, vertexingOptions.geoContext);
+        logDebugData(problem, vertexingOptions.geoContext, cache);
       }
       return res.error();
     }
   }
 
   // Perform fit on all added vertices
-  auto fitRes = fit(state, vertexingOptions);
+  auto fitRes = fit(problem, vertexingOptions, cache);
   if (!fitRes.ok()) {
     return fitRes.error();
   }
@@ -215,57 +236,60 @@ bool AdaptiveMultiVertexFitter::isAlreadyInList(
 }
 
 Result<void> AdaptiveMultiVertexFitter::prepareVertexForFit(
-    State& state, Vertex* vtx, const VertexingOptions& vertexingOptions) const {
-  // Vertex info object
-  auto& vtxInfo = state.vtxInfoMap[vtx];
+    const VertexFitProblem& problem, Vertex* vtx,
+    const VertexingOptions& vertexingOptions, Cache& cache) const {
   // Vertex seed position
-  const Vector3& seedPos = vtxInfo.seedPosition.template head<3>();
+  const Vector3& seedPos =
+      problem.candidates.at(vtx).seedPosition.template head<3>();
+  VertexScratch& scratch = scratchFor(problem, vtx, cache);
 
   // Loop over all tracks at the vertex
-  for (const auto& trk : vtxInfo.trackLinks) {
+  for (const auto& trk : problem.candidates.at(vtx).trackLinks) {
     auto res = m_cfg.ipEst.estimate3DImpactParameters(
         vertexingOptions.geoContext, vertexingOptions.magFieldContext,
-        m_cfg.extractParameters(trk), seedPos, state.ipState);
+        m_cfg.extractParameters(trk), seedPos, cache.ipState);
     if (!res.ok()) {
       return res.error();
     }
     // Save 3D impact parameters of the track
-    vtxInfo.impactParams3D.emplace(trk, res.value());
+    scratch.impactParams3D.emplace(trk, res.value());
   }
   return {};
 }
 
 Result<void> AdaptiveMultiVertexFitter::setAllVertexCompatibilities(
-    State& state, Vertex* vtx, const VertexingOptions& vertexingOptions) const {
-  VertexInfo& vtxInfo = state.vtxInfoMap[vtx];
+    VertexFitProblem& problem, Vertex* vtx,
+    const VertexingOptions& vertexingOptions, Cache& cache) const {
+  VertexFitCandidate& candidate = problem.candidates[vtx];
+  VertexScratch& scratch = scratchFor(problem, vtx, cache);
 
   // Loop over all tracks that are associated with vtx and estimate their
   // compatibility
-  for (const auto& trk : vtxInfo.trackLinks) {
-    auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
+  for (const auto& trk : candidate.trackLinks) {
+    auto& trkAtVtx = problem.tracksAtVertices.at(std::make_pair(trk, vtx));
     // Recover from cases where linearization point != 0 but
     // more tracks were added later on
-    if (!vtxInfo.impactParams3D.contains(trk)) {
+    if (!scratch.impactParams3D.contains(trk)) {
       auto res = m_cfg.ipEst.estimate3DImpactParameters(
           vertexingOptions.geoContext, vertexingOptions.magFieldContext,
           m_cfg.extractParameters(trk),
-          VectorHelpers::position(vtxInfo.linPoint), state.ipState);
+          VectorHelpers::position(scratch.linPoint), cache.ipState);
       if (!res.ok()) {
         return res.error();
       }
       // Set impactParams3D for current trackAtVertex
-      vtxInfo.impactParams3D.emplace(trk, res.value());
+      scratch.impactParams3D.emplace(trk, res.value());
     }
     // Set compatibility with current vertex
     Result<double> compatibilityResult(0.);
     if (m_cfg.useTime) {
       compatibilityResult = m_cfg.ipEst.getVertexCompatibility(
-          vertexingOptions.geoContext, &(vtxInfo.impactParams3D.at(trk)),
-          vtxInfo.oldPosition);
+          vertexingOptions.geoContext, &(scratch.impactParams3D.at(trk)),
+          scratch.oldPosition);
     } else {
-      Vector3 vertexPosOnly = VectorHelpers::position(vtxInfo.oldPosition);
+      Vector3 vertexPosOnly = VectorHelpers::position(scratch.oldPosition);
       compatibilityResult = m_cfg.ipEst.getVertexCompatibility(
-          vertexingOptions.geoContext, &(vtxInfo.impactParams3D.at(trk)),
+          vertexingOptions.geoContext, &(scratch.impactParams3D.at(trk)),
           vertexPosOnly);
     }
 
@@ -278,34 +302,35 @@ Result<void> AdaptiveMultiVertexFitter::setAllVertexCompatibilities(
 }
 
 Result<void> AdaptiveMultiVertexFitter::setWeightsAndUpdate(
-    State& state, const VertexingOptions& vertexingOptions) const {
-  for (auto vtx : state.vertexCollection) {
-    VertexInfo& vtxInfo = state.vtxInfoMap[vtx];
+    VertexFitProblem& problem, const VertexingOptions& vertexingOptions,
+    Cache& cache) const {
+  for (auto vtx : problem.vertices) {
+    VertexScratch& scratch = scratchFor(problem, vtx, cache);
 
-    if (vtxInfo.relinearize) {
-      vtxInfo.linPoint = vtxInfo.oldPosition;
+    if (scratch.relinearize) {
+      scratch.linPoint = scratch.oldPosition;
     }
 
     const std::shared_ptr<PerigeeSurface> vtxPerigeeSurface =
         Surface::makeShared<PerigeeSurface>(
-            VectorHelpers::position(vtxInfo.linPoint));
+            VectorHelpers::position(scratch.linPoint));
 
-    for (const auto& trk : vtxInfo.trackLinks) {
-      auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
+    for (const auto& trk : problem.candidates[vtx].trackLinks) {
+      auto& trkAtVtx = problem.tracksAtVertices.at(std::make_pair(trk, vtx));
 
       // Set trackWeight for current track
       trkAtVtx.trackWeight = m_cfg.annealingTool.getWeight(
-          state.annealingState, trkAtVtx.vertexCompatibility,
-          collectTrackToVertexCompatibilities(state, trk));
+          cache.annealingState, trkAtVtx.vertexCompatibility,
+          collectTrackToVertexCompatibilities(problem, trk));
 
       if (trkAtVtx.trackWeight > m_cfg.minWeight) {
         // Check if track is already linearized and whether we need to
         // relinearize
-        if (!trkAtVtx.isLinearized || vtxInfo.relinearize) {
+        if (!trkAtVtx.isLinearized || scratch.relinearize) {
           auto result = m_cfg.trackLinearizer(
-              m_cfg.extractParameters(trk), vtxInfo.linPoint[3],
+              m_cfg.extractParameters(trk), scratch.linPoint[3],
               *vtxPerigeeSurface, vertexingOptions.geoContext,
-              vertexingOptions.magFieldContext, state.fieldCache);
+              vertexingOptions.magFieldContext, cache.fieldCache);
           if (!result.ok()) {
             return result.error();
           }
@@ -331,14 +356,14 @@ Result<void> AdaptiveMultiVertexFitter::setWeightsAndUpdate(
 
 std::vector<double>
 AdaptiveMultiVertexFitter::collectTrackToVertexCompatibilities(
-    State& state, const InputTrack& trk) const {
+    const VertexFitProblem& problem, const InputTrack& trk) const {
   // Compatibilities of trk wrt all of its associated vertices
   std::vector<double> trkToVtxCompatibilities;
 
   // Range of vertices that are associated with trk. The range is
   // represented via its bounds: begin refers to the first iterator of the
   // range; end refers to the iterator after the last iterator of the range.
-  auto [begin, end] = state.trackToVerticesMultiMap.equal_range(trk);
+  auto [begin, end] = problem.trackToVertices.equal_range(trk);
   // Allocate space in memory for the vector of compatibilities
   trkToVtxCompatibilities.reserve(std::distance(begin, end));
 
@@ -346,17 +371,19 @@ AdaptiveMultiVertexFitter::collectTrackToVertexCompatibilities(
     // it->first corresponds to trk, it->second to one of its associated
     // vertices
     trkToVtxCompatibilities.push_back(
-        state.tracksAtVerticesMap.at(std::make_pair(trk, it->second))
+        problem.tracksAtVertices.at(std::make_pair(trk, it->second))
             .vertexCompatibility);
   }
 
   return trkToVtxCompatibilities;
 }
 
-bool AdaptiveMultiVertexFitter::checkSmallShift(State& state) const {
-  for (auto* vtx : state.vertexCollection) {
+bool AdaptiveMultiVertexFitter::checkSmallShift(const VertexFitProblem& problem,
+                                                Cache& cache) const {
+  for (auto* vtx : problem.vertices) {
     Vector3 diff =
-        state.vtxInfoMap[vtx].oldPosition.template head<3>() - vtx->position();
+        scratchFor(problem, vtx, cache).oldPosition.template head<3>() -
+        vtx->position();
     const SquareMatrix3& vtxCov = vtx->covariance();
     double relativeShift = diff.dot(vtxCov.inverse() * diff);
     if (relativeShift > m_cfg.maxRelativeShift) {
@@ -366,10 +393,11 @@ bool AdaptiveMultiVertexFitter::checkSmallShift(State& state) const {
   return true;
 }
 
-void AdaptiveMultiVertexFitter::doVertexSmoothing(State& state) const {
-  for (const auto vtx : state.vertexCollection) {
-    for (const auto& trk : state.vtxInfoMap[vtx].trackLinks) {
-      auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
+void AdaptiveMultiVertexFitter::doVertexSmoothing(
+    VertexFitProblem& problem) const {
+  for (const auto vtx : problem.vertices) {
+    for (const auto& trk : problem.candidates[vtx].trackLinks) {
+      auto& trkAtVtx = problem.tracksAtVertices.at(std::make_pair(trk, vtx));
       if (trkAtVtx.trackWeight > m_cfg.minWeight) {
         // Update the new track under the assumption that it originates at the
         // vertex. The second template argument corresponds to the number of
@@ -382,22 +410,22 @@ void AdaptiveMultiVertexFitter::doVertexSmoothing(State& state) const {
   }
 }
 
-void AdaptiveMultiVertexFitter::logDebugData(
-    const State& state, const GeometryContext& geoContext) const {
+void AdaptiveMultiVertexFitter::logDebugData(const VertexFitProblem& problem,
+                                             const GeometryContext& geoContext,
+                                             Cache& cache) const {
   ACTS_DEBUG("Encountered an error when fitting the following "
-             << state.vertexCollection.size() << " vertices:");
-  for (std::size_t vtxInd = 0; vtxInd < state.vertexCollection.size();
-       ++vtxInd) {
-    auto vtx = state.vertexCollection[vtxInd];
+             << problem.vertices.size() << " vertices:");
+  for (std::size_t vtxInd = 0; vtxInd < problem.vertices.size(); ++vtxInd) {
+    auto vtx = problem.vertices[vtxInd];
     ACTS_DEBUG("Position of " << vtxInd << ". vertex seed:\n"
-                              << state.vtxInfoMap.at(vtx).seedPosition);
+                              << problem.candidates.at(vtx).seedPosition);
     ACTS_DEBUG("Position of said vertex after the last fitting step:\n"
-               << state.vtxInfoMap.at(vtx).oldPosition);
+               << scratchFor(problem, vtx, cache).oldPosition);
     ACTS_DEBUG("Associated tracks:");
-    const auto& trks = state.vtxInfoMap.at(vtx).trackLinks;
+    const auto& trks = problem.candidates.at(vtx).trackLinks;
     for (std::size_t trkInd = 0; trkInd < trks.size(); ++trkInd) {
       const auto& trkAtVtx =
-          state.tracksAtVerticesMap.at(std::make_pair(trks[trkInd], vtx));
+          problem.tracksAtVertices.at(std::make_pair(trks[trkInd], vtx));
       const auto& trkParams = m_cfg.extractParameters(trkAtVtx.originalParams);
       ACTS_DEBUG(trkInd << ". track parameters:\n" << trkParams.parameters());
       ACTS_DEBUG(trkInd << ". track covariance matrix:\n"
