@@ -33,13 +33,6 @@ inputs:
   env_file:
     description: 'Where to generate the environment file'
     required: true
-  buildcache_mirror:
-    description: >-
-      OCI URL of the spack buildcache to pull binaries from. Empty means "decide
-      from where this job is running": the CERN pull-through cache on the
-      self-hosted fleet, ghcr.io on GitHub-hosted runners.
-    required: false
-    default: ''
 
 
 runs:
@@ -82,6 +75,20 @@ runs:
       run: |
         brew install ninja ccache
 
+    # Half of what is cached lives at ~/.spack, so an entry is only usable by a
+    # runner with the same HOME. Container jobs get /github/home, ubuntu-latest
+    # /home/runner, macOS /Users/runner -- and actions/cache restores an
+    # out-of-workspace path to where it was saved from, not to the current $HOME.
+    # Sharing one key across them means whichever flavour saves first wins and
+    # every other flavour restores a ~/.spack it cannot see: spack finds no
+    # builtin repo, re-clones it at the branch tip and unshallows, which is
+    # exactly the ~50 s the pin below exists to avoid. Keying on HOME keeps each
+    # flavour on its own entry.
+    - name: Cache scope
+      id: cache-scope
+      shell: bash
+      run: echo "home=$(printf '%s' "$HOME" | tr -c 'A-Za-z0-9' '-')" >> "$GITHUB_OUTPUT"
+
     # Cached in place rather than via a staging directory: `~` and the workspace
     # are separate mounts in a container job, so staging meant copying the whole
     # tree on save and again on restore (~12 s a job) for no gain.
@@ -92,7 +99,7 @@ runs:
         path: |
           spack
           ~/.spack
-        key: spack-r5-${{ inputs.spack_version }}-${{ inputs.spack_repo_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
+        key: spack-r5-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-scope.outputs.home }}-${{ inputs.spack_version }}-${{ inputs.spack_repo_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
 
     - name: Setup Spack from scratch
       if: steps.cache-restore.outputs.cache-hit != 'true'
@@ -132,17 +139,6 @@ runs:
         ENV_FILE: ${{ inputs.env_file }}
         FULL_INSTALL: ${{ inputs.full_install }}
         COMPILER: ${{ inputs.compiler }}
-        # The self-hosted fleet runs at CERN, where registry.cern.ch proxies
-        # ghcr.io — the same proxy these jobs already pull their container image
-        # through. Reading the buildcache from it too is what the GitLab jobs did
-        # before they moved here; the check they used (GITLAB_CI) went dead with
-        # .gitlab-ci.yml, which quietly put the CERN runners back on ghcr.io.
-        #
-        # Resolved here, from the `runner.environment` context, rather than inside
-        # setup.sh: the context is evaluated on the host and is always right,
-        # whereas a container job only gets the variables the runner chooses to
-        # inject. GitHub-hosted runners keep ghcr.io, which is nearest to them.
-        ACTS_SPACK_BUILDCACHE_MIRROR: ${{ inputs.buildcache_mirror || (runner.environment == 'self-hosted' && 'oci://registry.cern.ch/ghcr.io/acts-project/spack-buildcache' || '') }}
       run: |
         args="-e $ENV_FILE"
         if [ "$FULL_INSTALL" == "true" ]; then
