@@ -295,11 +295,17 @@ def _field_contrib(b, what, stage, H, same_as, seed):
 # blocks at pVector[24], [32] and [40].  Within the live columns the q/p row
 # never changes because l' = l in vacuum, and the time row only moves for the
 # q/p column because dt/ds depends on q/p alone.
-_B2F_LIVE = (
-    [(i, 2) for i in (0, 1, 2, 4, 5, 6)]
-    + [(i, 3) for i in (0, 1, 2, 4, 5, 6)]
-    + [(i, 4) for i in (0, 1, 2, 3, 4, 5, 6)]
-)
+# One group per live column. Keeping them separate lets each column be written
+# back as soon as it is finished, so only six or seven values are ever live at
+# once instead of all nineteen -- the same read-modify-write-per-column shape
+# the ATLAS stepper has.
+_B2F_LIVE_COLUMNS = [
+    ("new_Mp", [(i, 2) for i in (0, 1, 2, 4, 5, 6)]),
+    ("new_Mt", [(i, 3) for i in (0, 1, 2, 4, 5, 6)]),
+    ("new_Mq", [(i, 4) for i in (0, 1, 2, 3, 4, 5, 6)]),
+]
+
+_B2F_LIVE = [e for _, g in _B2F_LIVE_COLUMNS for e in g]
 
 # A dense step additionally changes q/p itself, so the q/p row of the q/p
 # column moves too.
@@ -433,18 +439,9 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
     dtdl = b.add("dtdl", dt_dqop(dtds.name))
     new_time = M[3, 4] + dtdl.name * M[7, 4]
 
-    b.add(
-        "new_M",
-        Matrix.vstack(
-            phi_pos,
-            phi_dir,
-            the_pos,
-            the_dir,
-            qop_pos,
-            Matrix([new_time]),
-            qop_dir,
-        ),
-    )
+    b.add("new_Mp", Matrix.vstack(phi_pos, phi_dir))
+    b.add("new_Mt", Matrix.vstack(the_pos, the_dir))
+    b.add("new_Mq", Matrix.vstack(qop_pos, Matrix([new_time]), qop_dir))
 
     return b.name_exprs
 
@@ -594,7 +591,9 @@ def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
             "new_t",
             "new_d",
             "path_derivatives",
-            "new_M",
+            "new_Mp",
+            "new_Mt",
+            "new_Mq",
         ]
     ]
 
@@ -616,8 +615,9 @@ def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
             return "std::array<T, 3> p2;"
         if str(var) == "p3":
             return "std::array<T, 3> p3;"
-        if str(var) == "new_M":
-            return f"std::array<T, {len(_B2F_LIVE)}> new_M;"
+        for name, group in _B2F_LIVE_COLUMNS:
+            if str(var) == name:
+                return f"std::array<T, {len(group)}> {name};"
         return None
 
     def post_expr_hook(var):
@@ -631,10 +631,11 @@ def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
             )
         if str(var) == "new_d":
             return "if (M.empty()) {\n  return Acts::Result<bool>::success(true);\n}"
-        if str(var) == "new_M":
-            return "\n".join(
-                f"M[{i + 8 * j}] = new_M[{k}];" for k, (i, j) in enumerate(_B2F_LIVE)
-            )
+        for name, group in _B2F_LIVE_COLUMNS:
+            if str(var) == name:
+                return "\n".join(
+                    f"M[{i + 8 * j}] = {name}[{k}];" for k, (i, j) in enumerate(group)
+                )
         return None
 
     code = my_expression_print(
