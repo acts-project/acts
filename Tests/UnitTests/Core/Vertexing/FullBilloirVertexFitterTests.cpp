@@ -23,6 +23,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/IVertexFitter.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
@@ -142,6 +143,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   vertexFitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
   vertexFitterCfg.trackLinearizer
       .connect<&HelicalTrackLinearizer::linearizeTrack>(&linearizer);
+  vertexFitterCfg.bField = bField;
   VertexFitter billoirFitter(vertexFitterCfg);
   auto fieldCache = bField->makeCache(magFieldContext);
   // Vertexing options for default tracks
@@ -288,6 +290,39 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
         "Testing FullBilloirVertexFitter with custom tracks (with vertex "
         "constraint).") {
       fit(customBilloirFitter, customInputTracks, customVfOptionsConstr);
+    }
+    BOOST_TEST_CONTEXT(
+        "Testing FullBilloirVertexFitter through the IVertexFitter "
+        "interface.") {
+      const IVertexFitter& iface = billoirFitter;
+      auto ifaceCache = iface.makeCache(magFieldContext);
+
+      // Config::bField is needed only to drive the fitter through the
+      // interface. customBilloirFitter above is constructed without it and is
+      // used successfully via the direct fit() entry point; requesting a cache
+      // from it is what reports the missing field.
+      BOOST_CHECK_THROW(static_cast<const IVertexFitter&>(customBilloirFitter)
+                            .makeCache(magFieldContext),
+                        std::invalid_argument);
+
+      // fitSingle has to agree with the direct one-shot fit
+      auto single = iface.fitSingle(inputTracks, vfOptions, ifaceCache);
+      BOOST_REQUIRE(single.ok());
+      auto direct = billoirFitter.fit(inputTracks, vfOptions, fieldCache);
+      BOOST_REQUIRE(direct.ok());
+      CHECK_CLOSE_ABS(single->fullPosition(), direct->fullPosition(), 1e-9);
+
+      // The problem-based entry point has to produce the same vertex, and
+      // publish the fitted tracks into the problem.
+      Vertex vtx;
+      VertexFitProblem problem;
+      problem.candidates[&vtx].trackLinks = inputTracks;
+      std::vector<Vertex*> newVertices{&vtx};
+      auto added = iface.addVertices(problem, newVertices, vfOptions, ifaceCache);
+      BOOST_REQUIRE(added.ok());
+      CHECK_CLOSE_ABS(vtx.fullPosition(), direct->fullPosition(), 1e-9);
+      BOOST_CHECK_EQUAL(problem.vertices.size(), 1u);
+      BOOST_CHECK_EQUAL(problem.tracksAtVertices.size(), inputTracks.size());
     }
   }
 }
