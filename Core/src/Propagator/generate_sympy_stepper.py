@@ -238,6 +238,11 @@ def _atlas_rk4_stages(b, taylor_norm):
     dtds = b.add("dtds", sym.sqrt(1 + m**2 / p_abs**2))
     b.add("new_t", t + h * dtds.name)
 
+    # B3 is evaluated at p + h*A4, which differs from the step end point by
+    # O(h^3).  Handing it back lets the caller reuse it as the next step's
+    # first field sample and save one lookup per step, as ATLAS does.
+    b.add("new_B", B3)
+
     Sl = b.add("Sl", 2 / h)  # undoes the h/2 scaling of A6 -> k4
     b.add(
         "path_derivatives",
@@ -483,6 +488,8 @@ def rk4_dense_tunedexpr():
         .norm(1),
     )
 
+    new_B = name_expr("new_B", B3)
+
     path_derivatives = name_expr("path_derivatives", sym.zeros(8, 1))
     path_derivatives.expr[0:3, 0] = new_d.name.as_explicit()
     path_derivatives.expr[3, 0] = new_ydot.name[3, 0]
@@ -548,6 +555,7 @@ def rk4_dense_tunedexpr():
         l4,
         k4,
         err,
+        new_B,
         new_y,
         new_ydot,
         new_p,
@@ -573,6 +581,7 @@ def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
             "p2",
             "p3",
             "err",
+            "new_B",
             "new_p",
             "new_t",
             "new_d",
@@ -587,17 +596,12 @@ def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
         "template <typename T, typename GetB>\n"
         "Acts::Result<bool> rk4_vacuum(std::span<const T, 3> p,"
         " std::span<const T, 3> d, const T t, const T h, const T l, const T m,"
-        " const T p_abs, GetB getB, T* err, const T errTol,"
-        " std::span<T, 3> new_p, T* new_t, std::span<T, 3> new_d,"
+        " const T p_abs, std::span<const T, 3> B1, GetB getB, T* err,"
+        " const T errTol, std::span<T, 3> new_p, T* new_t,"
+        " std::span<T, 3> new_d, std::span<T, 3> new_B,"
         " std::span<T, 8> path_derivatives, std::span<T> M) {"
     )
     lines.append(f"  assert(M.empty() || M.size() == {_B2F_COLS * 8});")
-
-    lines.append("  const auto B1res = getB(p);")
-    lines.append(
-        "  if (!B1res.ok()) {\n    return Acts::Result<bool>::failure(B1res.error());\n  }"
-    )
-    lines.append("  const auto B1 = *B1res;")
 
     def pre_expr_hook(var):
         if str(var) == "p2":
@@ -653,6 +657,7 @@ def print_rk4_dense(name_exprs, run_cse=True):
             "p3",
             "l4",
             "err",
+            "new_B",
             "new_p",
             "new_t",
             "new_d",
@@ -668,18 +673,13 @@ def print_rk4_dense(name_exprs, run_cse=True):
         "template <typename T, typename GetB, typename GetG>\n"
         "Acts::Result<bool> rk4_dense(std::span<const T, 3> p,"
         " std::span<const T, 3> d, const T t, const T h, const T l, const T m,"
-        " const T q, const T p_abs, GetB getB, GetG getG, T* err,"
-        " const T errTol, std::span<T, 3> new_p, T* new_t,"
-        " std::span<T, 3> new_d, T* new_l, std::span<T, 8> path_derivatives,"
-        " std::span<T> M) {"
+        " const T q, const T p_abs, std::span<const T, 3> B1, GetB getB,"
+        " GetG getG, T* err, const T errTol, std::span<T, 3> new_p, T* new_t,"
+        " std::span<T, 3> new_d, T* new_l, std::span<T, 3> new_B,"
+        " std::span<T, 8> path_derivatives, std::span<T> M) {"
     )
     lines.append(f"  assert(M.empty() || M.size() == {_B2F_COLS * 8});")
 
-    lines.append("  const auto B1res = getB(p);")
-    lines.append(
-        "  if (!B1res.ok()) {\n    return Acts::Result<bool>::failure(B1res.error());\n  }"
-    )
-    lines.append("  const auto B1 = *B1res;")
     lines.append("  const auto g1 = getG(p, l);")
 
     def pre_expr_hook(var):
