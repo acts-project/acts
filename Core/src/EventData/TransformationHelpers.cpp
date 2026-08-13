@@ -120,13 +120,14 @@ Acts::transformBoundToCartesianFourPositionMomentum(
 
   // d(FreeVector)/d(BoundVector)
   // rows ordered [pos0,pos1,pos2, time, dir0,dir1,dir2, qOverP].
-  const BoundToFreeMatrix jacToFree = params.referenceSurface().boundToFreeJacobian(
-      gctx, pos4.segment<3>(ePos0), dir);
+  const BoundToFreeMatrix jacToFree =
+      params.referenceSurface().boundToFreeJacobian(
+          gctx, pos4.segment<3>(ePos0), dir);
 
   const double p = params.absoluteMomentum();
   const double qOverP = params.qOverP();
   // since p = charge/qOverP
-  const double dpdqop = -p / qOverP;  
+  const double dpdqop = -p / qOverP;
 
   // d(px,py,pz)/d(freeDir0,freeDir1,freeDir2,qOverP)
   Matrix<3, 8> momentumToFree = Matrix<3, 8>::Zero();
@@ -141,8 +142,8 @@ Acts::transformBoundToCartesianFourPositionMomentum(
   // d(x,y,z,t,px,py,pz)/d(BoundVector)
   const Matrix<7, 6> jacToCartesian = freeToCartesian * jacToFree;
 
-  const SquareMatrix<7> cov7 = jacToCartesian * params.covariance().value() *
-                               jacToCartesian.transpose();
+  const SquareMatrix<7> cov7 =
+      jacToCartesian * params.covariance().value() * jacToCartesian.transpose();
 
   return {pos4, cov7};
 }

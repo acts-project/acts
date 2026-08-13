@@ -236,13 +236,12 @@ BOOST_DATA_TEST_CASE(BoundToCartesianFourPositionMomentum,
 
   // the propagated covariance must remain symmetric; the absolute floor
   // scales with the matrix magnitude for the same reason as above.
-  CHECK_CLOSE_OR_SMALL(cov7, cov7.transpose(),
-                       eps, cov7.cwiseAbs().maxCoeff() * eps);
+  CHECK_CLOSE_OR_SMALL(cov7, cov7.transpose(), eps,
+                       cov7.cwiseAbs().maxCoeff() * eps);
 }
 
 BOOST_DATA_TEST_CASE(BoundToCartesianCovarianceConsistency,
-                     surfaces * phis * thetasNoForwardBackward * ps *
-                         qsNonZero,
+                     surfaces * phis * thetasNoForwardBackward * ps * qsNonZero,
                      surface, phi, theta, p, q) {
   auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
   const auto qOverP = q / p;
@@ -274,8 +273,7 @@ BOOST_DATA_TEST_CASE(BoundToCartesianCovarianceConsistency,
     BoundVector bvMinus = bv;
     bvMinus[i] -= h;
 
-    BoundTrackParameters paramsPlus(surface, bvPlus, std::nullopt,
-                                    hypothesis);
+    BoundTrackParameters paramsPlus(surface, bvPlus, std::nullopt, hypothesis);
     BoundTrackParameters paramsMinus(surface, bvMinus, std::nullopt,
                                      hypothesis);
 
@@ -294,8 +292,8 @@ BOOST_DATA_TEST_CASE(BoundToCartesianCovarianceConsistency,
   // normal), which makes a purely relative tolerance ill-defined.
   for (int col = 0; col < 7; ++col) {
     for (int row = col; row < 7; ++row) {
-      const double orderOfMagnitude = std::sqrt(
-          cov7Numerical(row, row) * cov7Numerical(col, col));
+      const double orderOfMagnitude =
+          std::sqrt(cov7Numerical(row, row) * cov7Numerical(col, col));
       const double diff = std::abs(cov7(row, col) - cov7Numerical(row, col));
       BOOST_CHECK_SMALL(diff, std::max(1e-6 * orderOfMagnitude, 1e-9));
     }
