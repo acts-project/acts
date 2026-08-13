@@ -181,12 +181,12 @@
         {
             "name": "github-ci-gnn",
             "displayName": "GitHub-CI Gnn",
+            "description": "GNN build for the gnn_build job. Warnings are errors, as everywhere else in CI.",
             "generator": "Ninja",
             "inherits": "common",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_CXX_FLAGS": "-w",
-                "CMAKE_CUDA_FLAGS": "-w",
+                "CMAKE_COMPILE_WARNING_AS_ERROR": "ON",
                 "CMAKE_CUDA_ARCHITECTURES": "75;86",
                 "TORCH_CUDA_ARCH_LIST": "7.5;8.6",
                 "ACTS_FORCE_ASSERTIONS": "ON",
