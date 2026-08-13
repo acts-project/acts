@@ -26,6 +26,30 @@ def computeProjection(char, vector3):
         print("Not a valid projection")
 
 
+def interpolateCurve(points):
+    """
+    points has to be of the type np.array()[[x1,y1], [x2,y2], ...]
+    """
+    from scipy.interpolate import make_interp_spline
+
+    x = points[:, 0]
+    y = points[:, 1]
+
+    # Parameterize by vertex index
+    t = np.arange(len(points))
+
+    # Cubic spline through all vertices
+    spline_x = make_interp_spline(t, x, k=3)
+    spline_y = make_interp_spline(t, y, k=3)
+
+    # Evaluate densely
+    tt = np.linspace(t[0], t[-1], 500)
+    curve_x = spline_x(tt)
+    curve_y = spline_y(tt)
+
+    return curve_x, curve_y
+
+
 # algorithm to visualize trackk
 class TrackVisualizerAlg(acts.examples.IAlgorithm):
     def __init__(self, name, level, vis):
@@ -41,7 +65,7 @@ class TrackVisualizerAlg(acts.examples.IAlgorithm):
         tracks = self.tracks(context.eventStore)
         for track in tracks:
             acts.EventDataView3D.drawTrack(
-                self._vis, track
+                self._vis, track, context.geoContext
             )  # draw track not a free function
 
         return acts.examples.ProcessCode.SUCCESS
@@ -49,7 +73,9 @@ class TrackVisualizerAlg(acts.examples.IAlgorithm):
 
 class PyVisualization2D(acts.VisualizationBuffer):
 
-    def plot(self, projection, filename, linewidth=None, linestyle=None):
+    def plot(
+        self, projection, filename, interpolate=False, linewidth=None, linestyle=None
+    ):
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
@@ -122,11 +148,28 @@ class PyVisualization2D(acts.VisualizationBuffer):
                 ]
                 for segment in self.segments
             ]
-            line_collection = LineCollection(
-                line_segments, linewidths=width, linestyles=style
-            )
-            line_collection.set_color(self.lineColor / 255)
-            ax.add_collection(line_collection)
+
+            if interpolate == True:
+                line_segments = np.asarray(line_segments)
+                # First point has to be taken out for this because it is in the centre of the beam pipe
+                # And track is otherwise build from outside to inside
+                # line_segments[0,0]
+                points = line_segments[:, 1:]
+                shape = points.shape
+                points = points.reshape(shape[0] * shape[1], -1)
+                print(points)
+                interp_x, interp_y = interpolateCurve(points)
+                ax.plot(
+                    interp_x, interp_y, color=self.lineColor[0] / 255, linewidth=width
+                )
+
+            else:
+                del line_segments[0]
+                line_collection = LineCollection(
+                    line_segments, linewidths=width, linestyles=style
+                )
+                line_collection.set_color(self.lineColor / 255)
+                ax.add_collection(line_collection)
 
         ax.relim()
         ax.autoscale_view()
