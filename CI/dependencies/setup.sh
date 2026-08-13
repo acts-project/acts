@@ -390,6 +390,11 @@ end_section
 
 start_section "Prepare python environment"
 "${view_dir}/bin/python3" -m venv --system-site-packages "$venv_dir"
+# NOTE: pip, not uv, on purpose. The venv is deliberately --system-site-packages
+# so that the packages the spack view already provides (numpy and everything
+# built against it) are reused rather than replaced. pip honours that and skips
+# them; uv ignores system site-packages entirely and installs its own PyPI wheel
+# over the top, which silently swaps out the spack-built stack.
 retry_transient "${venv_dir}/bin/python3" -m pip install pyyaml jinja2
 if [ "${full_install:-false}" == "true" ]; then
   retry_transient "${venv_dir}/bin/python3" -m pip install -r "${SCRIPT_DIR}/../../Python/Examples/tests/requirements.txt"
