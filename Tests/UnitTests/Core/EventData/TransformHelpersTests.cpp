@@ -20,6 +20,7 @@
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <numbers>
 #include <optional>
@@ -281,7 +282,18 @@ BOOST_DATA_TEST_CASE(BoundToCartesianCovarianceConsistency,
 
   const SquareMatrix<7> cov7Numerical = numJac * boundCov * numJac.transpose();
 
-  CHECK_CLOSE_COVARIANCE(cov7, cov7Numerical, 1e-6);
+  // Element-wise comparison akin to CHECK_CLOSE_COVARIANCE, but with an
+  // absolute floor: some surface/direction combinations have a Cartesian
+  // coordinate with exactly zero variance (e.g. along a plane surface's fixed
+  // normal), which makes a purely relative tolerance ill-defined.
+  for (int col = 0; col < 7; ++col) {
+    for (int row = col; row < 7; ++row) {
+      const double orderOfMagnitude = std::sqrt(
+          cov7Numerical(row, row) * cov7Numerical(col, col));
+      const double diff = std::abs(cov7(row, col) - cov7Numerical(row, col));
+      BOOST_CHECK_SMALL(diff, std::max(1e-6 * orderOfMagnitude, 1e-9));
+    }
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
