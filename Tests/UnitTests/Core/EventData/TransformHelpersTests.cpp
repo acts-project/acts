@@ -200,10 +200,12 @@ BOOST_AUTO_TEST_SUITE(TransformBoundToCartesian)
 
 BOOST_DATA_TEST_CASE(BoundToCartesianFourPositionMomentum,
                      surfaces * posSymmetric * posSymmetric * ts * phis *
-                         thetas * ps * qsNonZero,
-                     surface, l0, l1, time, phiInput, theta, p, q) {
-  // phi is ill-defined in forward/backward tracks
-  const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
+                         thetasNoForwardBackward * ps * qsNonZero,
+                     surface, l0, l1, time, phi, theta, p, q) {
+  // Forward/backward tracks (theta = 0, pi) are excluded: phi is ill-defined
+  // there and the bound-to-free direction Jacobian is singular (division by
+  // sin(theta) in sphericalToFreeDirectionJacobian), so
+  // transformBoundToCartesianFourPositionMomentum cannot be evaluated.
   const auto qOverP = q / p;
 
   auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
