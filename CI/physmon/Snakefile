@@ -30,13 +30,16 @@
 # Override the output directory:
 #   snakemake ... --config outdir=/tmp/physmon
 
+import csv
 import json
+import os
 from pathlib import Path
 
 configfile: "CI/physmon/config/physmon.yaml"
 
 OUTDIR             = config.get("outdir", "physmon")
 REFDIR             = "CI/physmon/reference"
+REFMANIFEST        = "CI/physmon/reference.sha256"
 WORKFLOWS_DIR      = "CI/physmon/workflows"
 HISTCMP_CONFIG_DIR = "CI/physmon/config"
 WRAP               = "bash CI/physmon/scripts/wrap.sh"
@@ -53,6 +56,37 @@ WRAP               = "bash CI/physmon/scripts/wrap.sh"
 shell.prefix(
     'set -euo pipefail; '
     'export PYTHONPATH="${{PYTHONPATH:+$PYTHONPATH:}}CI/physmon:Examples/Scripts/Python"; '
+)
+
+
+# ---------------------------------------------------------------------------
+# Reference files. They are not committed: reference.sha256 records the SHA256
+# of each one, and reference.py pulls the blobs from the registry by content
+# hash. Reading the manifest here makes every reference file an ordinary DAG
+# output, so a histcmp that needs one waits for the fetch rule instead of
+# failing on a missing input.
+# ---------------------------------------------------------------------------
+
+def read_reference_manifest(path):
+    """Parse reference.sha256 into {relpath: digest}."""
+    entries = {}
+    for line in Path(path).read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        digest, relpath = line.split(maxsplit=1)
+        entries[relpath.strip()] = digest
+    return entries
+
+
+REFERENCE_FILES = read_reference_manifest(REFMANIFEST)
+
+# ACTS_PHYSMON_NO_FETCH=1 (or --config fetch_references=0) runs against REFDIR as
+# it is on disk. The fetch rule is then not defined at all, so snakemake reports
+# any reference it still needs as a missing input file rather than reaching for
+# the registry. Same escape hatch phys_perf_mon.sh offered.
+FETCH_REFERENCES = bool(
+    int(config.get("fetch_references", 0 if os.environ.get("ACTS_PHYSMON_NO_FETCH") else 1))
 )
 
 # Thread budget for compute-heavy rules. Setting this equal to the whole
@@ -625,6 +659,34 @@ rule plot_hist:
 
 
 # ---------------------------------------------------------------------------
+# Reference fetch. One rule for the whole manifest: reference.py pull is
+# all-or-nothing, and it downloads in parallel and caches by digest, so pulling
+# per file would be slower rather than more granular.
+#
+# Deliberately not run through wrap.sh. Every other rule is wrapped so a failure
+# degrades into a red cell in the summary, but with no references there is
+# nothing to compare against at all, so this one must fail the workflow instead
+# of letting each histcmp run against an empty stand-in.
+# ---------------------------------------------------------------------------
+
+if FETCH_REFERENCES:
+
+    rule fetch_references:
+        input:
+            manifest = REFMANIFEST,
+        output:
+            [f"{REFDIR}/{rel}" for rel in REFERENCE_FILES],
+        params:
+            refdir = REFDIR,
+        log:
+            f"{OUTDIR}/logs/fetch_references.log",
+        shell:
+            "mkdir -p $(dirname {log}) && "
+            "uv run --no-project CI/physmon/reference.py pull "
+            "--manifest {input.manifest} --reference-dir {params.refdir} 2>&1 | tee {log}"
+
+
+# ---------------------------------------------------------------------------
 # histcmp rule.
 # ---------------------------------------------------------------------------
 
@@ -713,13 +775,33 @@ def _comparison_row(comp):
             s["cascade"] = False
         if s["rc"] != 0:
             first_failed = True
+    # Which reference file this comparison covers, and which output would
+    # replace it. reference.py candidate turns a failing comparison into a
+    # manifest entry from these two. A comparison between two monitored outputs
+    # (reference_in: outdir) has no reference and leaves both empty, which is
+    # what phys_perf_mon.sh wrote and what candidate skips on.
+    if comp.get("reference_in") == "outdir":
+        ref_path, monitored_path = "", ""
+    else:
+        ref_path = comp.get("reference", comp["current"])
+        monitored_path = comp["current"]
     return {
-        "title":     comp["title"],
-        "mode":      comp["mode"],
-        "report":    "html/" + _rel_no_root(comp["current"]) + ".html",
-        "info_only": comp["title"].startswith("Comparison"),
-        "steps":     steps,
+        "title":          comp["title"],
+        "mode":           comp["mode"],
+        "report":         "html/" + _rel_no_root(comp["current"]) + ".html",
+        "info_only":      comp["title"].startswith("Comparison"),
+        "steps":          steps,
+        "ref_path":       ref_path,
+        "monitored_path": monitored_path,
     }
+
+
+def _histcmp_rc(row):
+    """The row's histcmp exit code — what candidate keys 'needs replacing' off."""
+    for s in row["steps"]:
+        if s["kind"] == "histcmp":
+            return s["rc"]
+    return -1
 
 
 rule build_results:
@@ -727,19 +809,62 @@ rule build_results:
         _all_witnesses(),
     output:
         results = f"{OUTDIR}/physmon_results.json",
+        # The 5-column histcmp_results.csv phys_perf_mon.sh used to append to,
+        # in that exact format: reference.py candidate reads it, so the reference
+        # publish workflow keeps working against this run without changes.
+        csv     = f"{OUTDIR}/histcmp_results.csv",
     run:
         rows = [_comparison_row(c) for c in COMPARISONS]
         Path(output.results).write_text(json.dumps(rows, indent=2) + "\n")
+        with open(output.csv, "w", newline="") as f:
+            writer = csv.writer(f)
+            for row in rows:
+                writer.writerow([
+                    row["title"],
+                    row["report"],
+                    _histcmp_rc(row),
+                    row["ref_path"],
+                    row["monitored_path"],
+                ])
+
+
+# ---------------------------------------------------------------------------
+# Reference candidate: the manifest that would apply if every failing
+# comparison in this run were accepted, plus the manifest the run actually used.
+# Both ship in the physmon artifact, which is the whole interface to the
+# reference publish workflow: `reference.py update <run>` reads
+# reference-candidate.sha256 and takes the new blobs from data/<ref_path>.
+# ---------------------------------------------------------------------------
+
+rule reference_candidate:
+    input:
+        results  = f"{OUTDIR}/histcmp_results.csv",
+        manifest = REFMANIFEST,
+    output:
+        candidate = f"{OUTDIR}/reference-candidate.sha256",
+        manifest  = f"{OUTDIR}/reference.sha256",
+    params:
+        data_dir = f"{OUTDIR}/data",
+    shell:
+        "cp {input.manifest} {output.manifest} && "
+        "uv run --no-project CI/physmon/reference.py candidate "
+        "--manifest {input.manifest} --results {input.results} "
+        "--data-dir {params.data_dir} --output {output.candidate}"
 
 
 # ---------------------------------------------------------------------------
 # Summary: JSON -> markdown + html. Exits non-zero if any non-info row failed,
 # which is what fails snakemake and surfaces failure to CI.
+#
+# Depends on the candidate manifest so it is written first. The candidate
+# matters precisely when comparisons fail, and this rule failing is what stops
+# the workflow — an independent rule could be left unscheduled.
 # ---------------------------------------------------------------------------
 
 rule summary:
     input:
-        results = f"{OUTDIR}/physmon_results.json",
+        results   = f"{OUTDIR}/physmon_results.json",
+        candidate = f"{OUTDIR}/reference-candidate.sha256",
     output:
         md      = f"{OUTDIR}/summary.md",
         html    = f"{OUTDIR}/summary.html",
