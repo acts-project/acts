@@ -29,6 +29,8 @@
 #include <grid/prefix_sum.h>
 #endif
 
+#include "CudaUnavailable.hpp"
+
 using namespace torch::indexing;
 
 using namespace Acts;
@@ -175,8 +177,7 @@ torch::Tensor ActsPlugins::detail::buildEdgesFRNN(torch::Tensor &embedFeatures,
   return postprocessEdgeTensor(std::move(stackedEdges), true, true,
                                flipDirections);
 #else
-  throw std::runtime_error(
-      "ACTS not compiled with CUDA, cannot run ActsPlugins::buildEdgesFRNN");
+  ActsPlugins::detail::throwNoCudaSupport("run ActsPlugins::buildEdgesFRNN");
 #endif
 }
 

@@ -15,6 +15,8 @@
 #include <cstring>
 #include <span>
 
+#include "CudaUnavailable.hpp"
+
 namespace ActsPlugins {
 
 namespace detail {
@@ -37,8 +39,7 @@ TensorPtr createTensorMemory(std::size_t nbytes,
     return TensorPtr(
         ptr, [stream](void *p) { ACTS_CUDA_CHECK(cudaFreeAsync(p, stream)); });
 #else
-    throw std::runtime_error(
-        "Cannot create CUDA tensor, library was not compiled with CUDA");
+    throwNoCudaSupport("create CUDA tensor");
 #endif
   }
 }
@@ -62,8 +63,7 @@ TensorPtr cloneTensorMemory(const TensorPtr &ptr, std::size_t nbytes,
                                       cudaMemcpyDeviceToHost, *to.stream));
     }
 #else
-    throw std::runtime_error(
-        "Cannot clone CUDA tensor, library was not compiled with CUDA");
+    throwNoCudaSupport("clone CUDA tensor");
 #endif
   }
   return clone;
@@ -88,14 +88,14 @@ Tensor<T> cudaMulPerColumn(const Tensor<T> &src, const Tensor<T> &scales,
 
 }  // namespace detail
 
-void sigmoid(Tensor<float> &tensor, std::optional<cudaStream_t> stream) {
+// `stream` is only read on the CUDA path.
+void sigmoid(Tensor<float> &tensor,
+             [[maybe_unused]] std::optional<cudaStream_t> stream) {
   if (tensor.device().type == Device::Type::eCUDA) {
 #ifdef ACTS_GNN_WITH_CUDA
     return ActsPlugins::detail::cudaSigmoid(tensor, stream.value());
 #else
-    throw std::runtime_error(
-        "Cannot apply sigmoid to CUDA tensor, library was not compiled with "
-        "CUDA");
+    detail::throwNoCudaSupport("apply sigmoid to CUDA tensor");
 #endif
   }
 
@@ -176,9 +176,7 @@ std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
                           cudaMemcpyDeviceToDevice, stream.value()));
     }
 #else
-    throw std::runtime_error(
-        "Cannot apply edge limit to CUDA tensors, library was not compiled "
-        "with CUDA");
+    detail::throwNoCudaSupport("apply edge limit to CUDA tensors");
 #endif
   }
 
@@ -197,9 +195,7 @@ Tensor<bool> scoreMask(const Tensor<float> &scores, float cut,
 #ifdef ACTS_GNN_WITH_CUDA
     return detail::cudaScoreMask(scores, cut, stream.value());
 #else
-    throw std::runtime_error(
-        "Cannot compute score mask on CUDA tensor, library was not compiled "
-        "with CUDA");
+    detail::throwNoCudaSupport("compute score mask on CUDA tensor");
 #endif
   }
 
@@ -220,8 +216,7 @@ Tensor<T> selectRows(const Tensor<T> &tensor, const Tensor<bool> &mask,
 #ifdef ACTS_GNN_WITH_CUDA
     return detail::cudaSelectRows(tensor, mask, execContext);
 #else
-    throw std::runtime_error(
-        "Cannot selectRows on CUDA tensor, library was not compiled with CUDA");
+    detail::throwNoCudaSupport("selectRows on CUDA tensor");
 #endif
   }
 
@@ -250,8 +245,7 @@ Tensor<T> selectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
 #ifdef ACTS_GNN_WITH_CUDA
     return detail::cudaSelectCols(tensor, mask, execContext);
 #else
-    throw std::runtime_error(
-        "Cannot selectCols on CUDA tensor, library was not compiled with CUDA");
+    detail::throwNoCudaSupport("selectCols on CUDA tensor");
 #endif
   }
 
@@ -289,9 +283,7 @@ Tensor<T> mulPerColumn(const Tensor<T> &src, const std::vector<T> &scales,
                                     *execContext.stream));
     return detail::cudaMulPerColumn(src, scalesTensor, execContext);
 #else
-    throw std::runtime_error(
-        "Cannot apply feature scales on CUDA tensor, library was not compiled "
-        "with CUDA");
+    detail::throwNoCudaSupport("apply feature scales on CUDA tensor");
 #endif
   }
 

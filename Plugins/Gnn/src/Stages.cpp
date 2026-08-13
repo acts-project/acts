@@ -11,6 +11,8 @@
 #include <algorithm>
 #include <stdexcept>
 
+#include "CudaUnavailable.hpp"
+
 namespace ActsPlugins {
 
 namespace {
@@ -77,9 +79,7 @@ PipelineTensors removeUnusedNodes(PipelineTensors &&tensors,
     return detail::cudaRemoveUnusedNodes(std::move(tensors), spacePointIds,
                                          execCtx);
 #else
-    throw std::runtime_error(
-        "Cannot removeUnusedNodes on CUDA tensor, library not compiled with "
-        "CUDA");
+    detail::throwNoCudaSupport("removeUnusedNodes on CUDA tensor");
 #endif
   }
 

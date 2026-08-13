@@ -1,5 +1,6 @@
 acts_add_library(
     PluginGnn
+    src/CudaUnavailable.cpp
     src/GnnPipeline.cpp
     src/Stages.cpp
     src/Tensor.cpp
