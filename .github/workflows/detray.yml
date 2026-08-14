@@ -11,6 +11,12 @@ on:
     paths:
       - "Detray/**"
       - ".github/workflows/detray.yml"
+  # merge_group does not support path filters, so this runs on every queue
+  # entry targeting main, not just ones touching Detray/. Only required via
+  # merge-sentinel's "Detray / *" pattern, which is itself path-gated, so a
+  # non-Detray entry running this wastes compute but doesn't block merging.
+  merge_group:
+    types: [checks_requested]
 
 # Cancel existing jobs on new pushes.
 concurrency:
