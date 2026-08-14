@@ -71,9 +71,6 @@ class GbtsLayer final {
     return m_layerDescription;
   }
 
-  const float minEta() const { return m_minEta; }
-  const float etaBin() const { return m_etaBin; }
-
   /// Verify bin compatibility
   /// @param otherLayer Other layer to compare with
   /// @param b1 First bin index
