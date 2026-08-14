@@ -428,7 +428,10 @@ class StraightLineStepper final {
       D.block<3, 3>(0, 4) = SquareMatrix<3>::Identity() * h;
       // Extend the calculation by the time propagation
       // Evaluate dt/dlambda
-      D(3, 7) = h * m * m * state.pars[eFreeQOverP] / dtds;
+      // p = |q| / |q/p|, so d(dt/ds)/d(q/p) carries a 1/q^2 that is
+      // invisible for unit charge. Writing it over p rather than q keeps
+      // the charge out of this expression.
+      D(3, 7) = h * m * m / (p * p * state.pars[eFreeQOverP] * dtds);
       // Set the derivative factor the time
       state.derivative(3) = dtds;
       // Update jacobian and derivative

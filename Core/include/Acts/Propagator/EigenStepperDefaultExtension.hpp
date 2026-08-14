@@ -221,7 +221,11 @@ struct EigenStepperDefaultExtension {
 
     dGdL = h / 6. * (dk1dL + 2. * (dk2dL + dk3dL) + dk4dL);
 
-    D(3, 7) = h * m * m * qop / dtds;
+    // p = |q| / |q/p|, so this carries a 1/q^2 that is invisible for unit
+    // charge; over p the charge stays out of the expression. Not hoisted into
+    // an m/p shared with dt/ds above: same arithmetic, but that spelling
+    // costs ~5% of a step here (see AtlasStepper, where it is the other way).
+    D(3, 7) = h * m * m / (p * p * qop * dtds);
     return true;
   }
 };

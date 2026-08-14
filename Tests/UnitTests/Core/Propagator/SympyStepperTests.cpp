@@ -30,6 +30,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
+#include <array>
 #include <cmath>
 #include <limits>
 #include <memory>
@@ -424,6 +425,46 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   CHECK_CLOSE_ABS(h0, esState.stepSize.value(), eps);
 }
 
+/// ACTS defines p = |q| / |q/p|, so d(time)/d(q/p) carries a 1/q^2 that is
+/// invisible for unit charge. Checked against a central difference of the free
+/// time in zero field, where the error estimate vanishes and every step is
+/// exactly `h` -- the jacobian is defined at fixed path length.
+BOOST_AUTO_TEST_CASE(sympy_stepper_time_qop_derivative) {
+  auto bField = std::make_shared<ConstantBField>(Vector3::Zero());
+  SympyStepper stepper(bField);
+
+  constexpr double h = 100_mm;
+
+  auto stepOnce = [&](double qop, const ParticleHypothesis& particle) {
+    SympyStepper::Options options(tgContext, mfContext);
+    options.maxStepSize = h;
+    options.initialStepSize = h;
+    auto start = BoundTrackParameters::createCurvilinear(
+        Vector4::Zero(), 0.4, 0.9, qop, Covariance::Identity(), particle);
+    SympyStepper::State state = stepper.makeState(options);
+    stepper.initialize(state, start);
+    BOOST_REQUIRE(stepper.step(state, Direction::Forward(), nullptr).ok());
+    BOOST_REQUIRE_EQUAL(state.pathAccumulated, h);
+    return state;
+  };
+
+  // p = |q| / |q/p| is 1 GeV throughout, so only the charge varies and the
+  // unit-charge form is off by exactly q^2.
+  for (const float absQ : {1.f, 2.f, 3.f}) {
+    const ParticleHypothesis particle = ParticleHypothesis::pionLike(absQ);
+    const double qop = absQ / 1_GeV;
+    const double dqop = 1e-6 * qop;
+
+    const double dtdqop =
+        stepOnce(qop, particle).jacTransport(eFreeTime, eFreeQOverP);
+    const double difference = (stepOnce(qop + dqop, particle).pars[eFreeTime] -
+                               stepOnce(qop - dqop, particle).pars[eFreeTime]) /
+                              (2 * dqop);
+
+    CHECK_CLOSE_REL(dtdqop, difference, 1e-8);
+  }
+}
+
 /// The transport jacobian has to be accumulated as `D * jacTransport`. In a
 /// constant field the direction sub-block commutes, so the wrong order only
 /// shows up in the q/p column after several steps. Hence the comparison
@@ -445,13 +486,20 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_covariance_matches_eigen) {
   cov(eBoundLoc1, eBoundLoc1) = 10_mm;
   cov(eBoundQOverP, eBoundQOverP) = 1e-4;
 
+  // The doubly charged hypothesis is not decoration: p = |q| / |q/p|, so the
+  // time row of the transport jacobian carries a 1/q^2 that is invisible as
+  // long as every test particle has unit charge.
+  const std::array particles = {ParticleHypothesis::pion(),
+                                ParticleHypothesis::pionLike(2.f)};
+
   for (int track = 0; track < 4; ++track) {
     const double phi = 0.3 * track;
     const double theta = 0.7 + 0.25 * track;
     const double qop = (track % 2 == 0 ? 1. : -1.) / ((1. + track) * 1_GeV);
+    const ParticleHypothesis& particle = particles.at(track % particles.size());
 
     auto start = BoundTrackParameters::createCurvilinear(
-        Vector4::Zero(), phi, theta, qop, cov, ParticleHypothesis::pion());
+        Vector4::Zero(), phi, theta, qop, cov, particle);
 
     auto sympyState = sympyStepper.makeState(sympyOptions);
     sympyStepper.initialize(sympyState, start);
