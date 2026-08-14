@@ -9,6 +9,7 @@
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 
 #include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
@@ -147,9 +148,15 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
     // points
     for (const auto& measurementIndex : track) {
       auto it = spMap.find(measurementIndex);
-      if (it != spMap.end()) {
-        spacePointsOnTrack.push_back(it->second);
+      if (it == spMap.end()) {
+        continue;
       }
+      // a space point can carry several measurements, e.g. the two sides of a
+      // strip module, and must not enter the seed twice
+      if (Acts::rangeContainsValue(spacePointsOnTrack, it->second)) {
+        continue;
+      }
+      spacePointsOnTrack.push_back(it->second);
     }
     // At least three space points are required
     if (spacePointsOnTrack.size() < 3) {

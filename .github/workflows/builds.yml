@@ -9,6 +9,11 @@ on:
       - 'develop/**'
     paths-ignore:
       - "docs/**"
+  # merge_group does not support branch/path filters, so this runs
+  # unconditionally on every queue entry (unlike the pull_request trigger
+  # above). Required via merge-sentinel's "Builds / *" pattern.
+  merge_group:
+    types: [checks_requested]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
@@ -146,7 +151,7 @@ jobs:
     env:
       # Enforce FPE masking on the RelWithDebInfo (github-ci-fpe) build: source
       # locations resolve, so the test_fpe.py masking tests run instead of being
-      # skipped. Replaces the FPE coverage previously unique to GitLab.
+      # skipped.
       ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 1
       COLLIDERML_DATA_DIR: ${{ github.workspace }}/ci_colliderml
 
@@ -196,9 +201,9 @@ jobs:
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
     needs: [linux_ubuntu]
     env:
-      # Enforce FPE masking on the RelWithDebInfo (github-ci-fpe) build, matching
-      # what GitLab's linux_physmon did. The full reconstruction must stay
-      # FPE-clean (auto-loaded source masks resolve at -g1).
+      # Enforce FPE masking on the RelWithDebInfo (github-ci-fpe) build: the
+      # full reconstruction must stay FPE-clean (auto-loaded source masks
+      # resolve at -g1).
       ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 1
 
     steps:
@@ -375,19 +380,19 @@ jobs:
         run: ctest --test-dir build-downstream --output-on-failure
 
   # ─────────────────────────────────────────────────────────────────────
-  # Decides whether the narrowly scoped GNN jobs below have to run at all: they
-  # each pull a multi-GB torch/CUDA/TensorRT image, and most changes cannot
-  # reach the code they cover.
+  # Gates the narrowly scoped jobs below. They each pull a multi-GB
+  # torch/CUDA/TensorRT image, the GPU ones contend for a pool of a single
+  # node, and most changes cannot reach the code any of them cover.
   #
-  # The list is what the two GNN presets actually compile, plus the build system
-  # and the job's own definition. Those last entries are what make the list
-  # self-defending: the closure can only grow by editing CMakePresets.json,
-  # CMakeLists.txt or cmake/, so the change that grows it always runs these jobs
-  # and can update the list in the same breath.
+  # Each filter is the transitive closure of what its job compiles, not that
+  # job's own sources: a Core change reaches the CUDA muon test too. The
+  # build-system entries are what keep a list honest -- the closure can only
+  # grow by editing CMakePresets.json, CMakeLists.txt or cmake/, so whatever
+  # grows it runs these jobs and can update the list in the same breath.
   #
-  # These are job-level `if:` conditions rather than a `paths-ignore:` on a
-  # separate workflow, so the checks keep reporting under `Builds / *` (as
-  # `skipped`) and merge-sentinel keeps requiring them.
+  # Job-level `if:` rather than `paths-ignore:` on a separate workflow, so the
+  # checks keep reporting under `Builds / *` (as `skipped`) and merge-sentinel
+  # keeps requiring them.
   # ─────────────────────────────────────────────────────────────────────
   changes:
     runs-on: ubuntu-latest
@@ -396,6 +401,7 @@ jobs:
       pull-requests: read
     outputs:
       gnn: ${{ steps.filter.outputs.gnn }}
+      cuda_muon: ${{ steps.filter.outputs.cuda_muon }}
     steps:
       # Pull requests only: there the action reads the file list from the API
       # and needs no checkout. On push the output stays empty and the jobs below
@@ -417,6 +423,34 @@ jobs:
               - 'Tests/CommonHelpers/**'
               - 'Tests/UnitTests/Fatras/**'
               - 'Tests/UnitTests/Plugins/**'
+              # Defines the add_unittest macro the tests are registered with
+              - 'Tests/UnitTests/CMakeLists.txt'
+              # Build system: also the only way the list above can go stale
+              - 'CMakeLists.txt'
+              - 'CMakePresets.json'
+              - 'cmake/**'
+              - 'codegen/**'
+              - 'thirdparty/**'
+              # The jobs themselves and the dependency setup they run
+              - '.github/workflows/builds.yml'
+              - '.github/actions/dependencies/**'
+              - 'CI/dependencies/**'
+            cuda_muon:
+              # ActsUnitTestCudaMuonSpacePoint is the only target built. It
+              # links Acts::TestsCommonHelpers and
+              # ActsExamplesCudaMuonSegmentFitting -> Acts::ExamplesFramework,
+              # which is PUBLIC Acts::Fatras + Acts::PluginFpeMonitoring
+              # (Examples/Framework/CMakeLists.txt:42) -> Core. That is the
+              # whole closure.
+              - 'Core/**'
+              - 'Fatras/**'
+              - 'Plugins/FpeMonitoring/**'
+              - 'Examples/Framework/**'
+              - 'Examples/CudaMuonSegmentFitting/**'
+              - 'Tests/CommonHelpers/**'
+              - 'Tests/UnitTests/Examples/CudaMuonSegmentFitting/**'
+              # Defines the add_unittest macro the test is registered with
+              - 'Tests/UnitTests/CMakeLists.txt'
               # Build system: also the only way the list above can go stale
               - 'CMakeLists.txt'
               - 'CMakePresets.json'
@@ -429,20 +463,16 @@ jobs:
               - 'CI/dependencies/**'
 
   # ─────────────────────────────────────────────────────────────────────
-  # GNN builds, migrated from GitLab CI. `build_gnn` and the `test_gnn_*` jobs
-  # it feeds stay on GitLab until a GPU pool exists.
+  # Compiles the full CUDA GNN stack on an ordinary CPU runner and hands the
+  # build directory to `gnn_gpu`, which is the only job that occupies a GPU
+  # slot. One CUDA build serves both: it is a strict superset of a CPU-only
+  # GNN build, so there is no reason to compile the stack twice.
   #
-  # This job is the CPU-only counterpart of GitLab's `build_gnn`: it exists to
-  # show that the GNN stack configures, compiles and passes its CPU tests
-  # without CUDA. Everything it does not need is switched off in the preset --
-  # `linux_ubuntu` builds the rest of the code base with warnings as errors and
-  # actually runs those tests, so duplicating it here buys nothing.
-  #
-  # Push runs are deliberately unfiltered: they populate the ccache that the
-  # pull request runs restore from, and they give every commit on a long-lived
-  # branch a GNN build even if the filter above has gone stale.
+  # Push runs are deliberately unfiltered: they populate the ccache that pull
+  # request runs restore from, and give every commit on a long-lived branch a
+  # GNN build even if the filter above has gone stale.
   # ─────────────────────────────────────────────────────────────────────
-  gnn_cpu:
+  gnn_build:
     needs: changes
     if: github.event_name != 'pull_request' || needs.changes.outputs.gnn == 'true'
     runs-on: [self-hosted, linux, x64, husk-size-standard]
@@ -482,12 +512,16 @@ jobs:
           restore-keys: |
             ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
+      # The preset pins CMAKE_CUDA_ARCHITECTURES/TORCH_CUDA_ARCH_LIST to 75;86:
+      # 75 is the T4 the tests run on, 86 lets an sm_86 node join the pool. A
+      # missing 75 builds fine here and fails on the GPU with "no kernel image
+      # is available for execution on the device".
       - name: Configure
         run: >
           ccache -z &&
           CI/dependencies/run.sh .env
           cmake -B build -S .
-          --preset=github-ci-gnn-cpu
+          --preset=github-ci-gnn
 
       - name: Build
         run: cmake --build build
@@ -502,15 +536,107 @@ jobs:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
-      # Runs whatever the preset registered rather than a name filter, so a GNN
-      # test added later cannot silently go unrun: with the Core unit tests off
-      # that is the Gnn, Fatras, FpeMonitoring and Json binaries, all fast. The
-      # CUDA-only tests (ConnectedComponentsCuda, JunctionRemoval) are covered
-      # by GitLab's `test_gnn_unittests` on a GPU runner.
+      # The integration test binaries are the bulk of the tree and nothing
+      # downstream runs them; object files are dead weight after linking.
+      - name: Package build
+        run: tar czf build.tar.gz -C build --exclude "*.o" --exclude "bin/ActsIntegrationTest*" .
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: acts-gnn-build
+          path: build.tar.gz
+          retention-days: 1
+
+  # ─────────────────────────────────────────────────────────────────────
+  # The GPU half of the GNN coverage. Unit tests and python tests are steps of
+  # one job rather than two jobs: splitting them would pay for the multi-GB
+  # image pull, the spack environment and the artifact download twice, and with
+  # a single GPU node the second job would queue behind the first rather than
+  # overlap with it. The python step is `!cancelled()`, so a unit-test failure
+  # still does not hide its result.
+  # ─────────────────────────────────────────────────────────────────────
+  gnn_gpu:
+    # A skipped `gnn_build` (filtered-out pull request) skips this job too, so
+    # no separate `if:` is needed -- and adding one would only let the two
+    # conditions drift apart.
+    needs: [gnn_build]
+    runs-on: [self-hosted, linux, x64, gpu-nvidia]
+    permissions:
+      contents: read
+      packages: read
+    container:
+      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
+      # Required. Without it the daemon never applies the nvidia runtime hook,
+      # so the driver bits are not injected: the image carries the CUDA toolkit
+      # but the container gets no device and no nvidia-smi. Confirmed by
+      # removing it, at which point the Check GPU step below failed with
+      # "nvidia-smi: command not found".
+      options: --gpus all
+    env:
+      MODEL_STORAGE: ${{ github.workspace }}/ci_models
+
+    steps:
+      - name: Fix up PATH
+        run: |
+          echo "/usr/local/sbin" >> $GITHUB_PATH
+          echo "/usr/sbin" >> $GITHUB_PATH
+          echo "/sbin" >> $GITHUB_PATH
+
+      # Fails the job early if no device is visible, and puts the driver
+      # version and GPU model in the log -- which is what you want to hand
+      # someone when numerics differ between nodes.
+      - name: Check GPU
+        run: nvidia-smi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: acts-gnn-build
+
+      # Must land back at the absolute path it was built at: CTestTestfile.cmake
+      # carries absolute paths from configure time. What makes that work across
+      # machines is the container -- the workspace is /__w/acts/acts on every
+      # runner.
+      - name: Unpack build
+        run: mkdir build && tar xf build.tar.gz -C build
+
+      # Name filter rather than the whole suite: this is the subset that needs
+      # a device, and GPU time is the scarce resource. The Core/Examples unit
+      # tests in this build are run by `linux_ubuntu` on CPU.
       - name: Unit tests
         run: >
           CI/dependencies/run.sh .env
-          ctest --test-dir build --no-tests=error -j$(nproc)
+          ctest --test-dir build --no-tests=error
+          -R "(Gnn|ConnectedComponentsCuda|JunctionRemoval|Tensor)"
+
+      - name: Download models
+        if: ${{ !cancelled() }}
+        run: CI/dependencies/download_models.sh
+
+      - name: Python tests
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          source .env
+          source build/this_acts_withdeps.sh
+          python3 -m pip install -r Python/Examples/tests/requirements.txt
+          # No real test for the ModuleMap yet; at least assert the CUDA-only
+          # extension is present and importable.
+          python3 -c "from acts.gnn import ModuleMapCuda"
+          # Collection-only pass over the torch tests: catches an import error
+          # in a test module that `-k gpu` would otherwise never touch.
+          pytest -rsfExw -k torch -v --collect-only
+          pytest -rsFExw -k gpu -v
 
   gnn_tensorrt:
     needs: changes
@@ -550,7 +676,7 @@ jobs:
           ccache -z &&
           CI/dependencies/run.sh .env
           cmake -B build -S .
-          --preset=gitlab-ci-tensorrt
+          --preset=github-ci-tensorrt
 
       - name: Build
         run: cmake --build build
@@ -566,11 +692,139 @@ jobs:
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
   # ─────────────────────────────────────────────────────────────────────
-  # LCG builds, migrated from GitLab CI. They ask for the `cvmfs` label on top
-  # of the usual husk selectors: the label means the CVMFS client is mounted on
-  # the slot and the repositories are bound into the job container, not merely
-  # that some LCG toolchain happens to be installed. Without it the job would
-  # start and then fail on a missing /cvmfs.
+  # CUDA muon segment fitting. Only ActsUnitTestCudaMuonSpacePoint is built:
+  # the preset inherits `ci-common` and so turns the whole examples stack on,
+  # but nothing else in it is exercised here and `linux_ubuntu` builds all of
+  # that already.
+  # ─────────────────────────────────────────────────────────────────────
+  cuda_muon_build:
+    needs: changes
+    if: github.event_name != 'pull_request' || needs.changes.outputs.cuda_muon == 'true'
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
+    permissions:
+      contents: read
+      # Authenticated GHCR reads: the spack buildcache is pulled from
+      # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
+      # so reads fall back to the anonymous (heavily rate limited) bucket.
+      packages: read
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_cuda:87
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # `bc` is not in the image and the test needs it.
+      - name: Install bc
+        run: |
+          apt-get update
+          apt-get install -y bc
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Configure
+        run: >
+          ccache -z &&
+          CI/dependencies/run.sh .env
+          cmake -B build -S .
+          --preset=github-ci-cuda-muon
+
+      - name: Build
+        run: cmake --build build --target ActsUnitTestCudaMuonSpacePoint
+
+      - name: ccache stats
+        run: ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always() && github.ref == 'refs/heads/main'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+      - name: Package build
+        run: tar czf build.tar.gz -C build --exclude "*.o" .
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: acts-cuda-muon-build
+          path: build.tar.gz
+          retention-days: 1
+
+  cuda_muon_gpu:
+    # A skipped `cuda_muon_build` (filtered-out pull request) skips this job
+    # too; no separate `if:` is needed, and adding one would only let the two
+    # conditions drift apart.
+    needs: [cuda_muon_build]
+    runs-on: [self-hosted, linux, x64, gpu-nvidia]
+    permissions:
+      contents: read
+      packages: read
+    container:
+      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_cuda:87
+      # Required. Without it the daemon never applies the nvidia runtime hook,
+      # so the driver bits are not injected: the image carries the CUDA toolkit
+      # but the container gets no device and no nvidia-smi. Confirmed by
+      # removing it, at which point the Check GPU step below failed with
+      # "nvidia-smi: command not found".
+      options: --gpus all
+
+    steps:
+      - name: Check GPU
+        run: nvidia-smi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install bc
+        run: |
+          apt-get update
+          apt-get install -y bc
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: acts-cuda-muon-build
+
+      - name: Unpack build
+        run: mkdir build && tar xf build.tar.gz -C build
+
+      # --no-tests=error rather than a silent pass: only one target was built,
+      # so a rename of the test would otherwise turn this job green while
+      # running nothing at all.
+      - name: Unit tests
+        run: >
+          CI/dependencies/run.sh .env
+          ctest --test-dir build --output-on-failure --no-tests=error
+          -R "CudaMuonSpacePoint"
+
+  # ─────────────────────────────────────────────────────────────────────
+  # LCG builds. They ask for the `cvmfs` label on top of the usual husk
+  # selectors: the label means the CVMFS client is mounted on the slot and the
+  # repositories are bound into the job container, not merely that some LCG
+  # toolchain happens to be installed. Without it the job would start and then
+  # fail on a missing /cvmfs.
   # ─────────────────────────────────────────────────────────────────────
   lcg:
     name: lcg_${{ matrix.tag }}

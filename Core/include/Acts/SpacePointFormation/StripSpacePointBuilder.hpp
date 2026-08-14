@@ -33,8 +33,11 @@ struct ClusterPairingOptions final {
 
 /// @brief Collection of cosmic space point options
 struct CosmicOptions final {
-  /// Numerical tolerance for the calculation
+  /// Minimum squared sine of the angle between the two strips. Pairs below this
+  /// are too close to parallel for the closest approach to be well defined.
   double tolerance = 1e-6;
+  /// Tolerance scaling factor on the strip detector element length
+  double stripLengthTolerance = 0.01;
 };
 
 /// @brief Collection of constrained space point options
@@ -66,6 +69,10 @@ Result<double> computeClusterPairDistance(const Vector3& globalCluster1,
                                           const Vector3& globalCluster2,
                                           const ClusterPairingOptions& options);
 
+/// @brief Calculates the space point from the closest approach of two strips
+///
+/// Rejects the pair if the closest approach does not lie on both strips.
+///
 /// @param stripEnds1 The ends of first strip
 /// @param stripEnds2 The ends of second strip
 /// @param options The cosmic options

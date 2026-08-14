@@ -21,7 +21,15 @@ jobs:
     name: SonarCloud
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2404:87
-    if: github.event.workflow_run.conclusion == 'success'
+    # Only pull_request and push-to-main are handled below (PR mode / push
+    # mode). Analysis also runs on merge_group, which matches neither, so
+    # skip the job outright instead of paying for checkout+deps to do nothing.
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      (
+        github.event.workflow_run.event == 'pull_request' ||
+        (github.event.workflow_run.event == 'push' && github.ref == 'refs/heads/main')
+      )
     steps:
       - name: Install APT packages
         run: |
