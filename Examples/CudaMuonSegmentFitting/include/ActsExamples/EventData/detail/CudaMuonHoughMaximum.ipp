@@ -307,7 +307,8 @@ void CudaHoughMaximumBatch<MaximaPerBucket>::prepareAssociationStorageHost() {
       }
       if (totalAssociatedHits > std::numeric_limits<std::uint32_t>::max()) {
         throw std::overflow_error(
-            "Total associated hit count must fit into std::uint32_t and be allocatable");
+            "Total associated hit count must fit into std::uint32_t and be "
+            "allocatable");
       }
       m_hostAssociatedHitOffsets[slot + 1u] =
           static_cast<std::uint32_t>(totalAssociatedHits);
