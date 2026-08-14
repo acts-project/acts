@@ -1539,6 +1539,117 @@ def addTrackParameterPerformanceWriter(
     )
 
 
+def defaultOnSurfaceResPlotToolConfig():
+    """Residual and pull binning for parameters on a sensor surface.
+
+    The local parameters are named `loc0`/`loc1` rather than `d0`/`z0`, which
+    only mean something on a line surface, and the residual axes are widened
+    for a per-sensor estimate.
+    """
+    ResPlotToolConfig = acts.examples._tryImportRoot("ResPlotToolConfig")
+
+    config = ResPlotToolConfig()
+    config.paramNames = ["loc0", "loc1", "phi", "theta", "qop", "t"]
+    binning = config.varBinning
+    del binning["Residual_d0"]
+    del binning["Residual_z0"]
+    binning["Residual_loc0"] = acts.Axis.regular(100, -0.5, 0.5, "r_{loc0} [mm]")
+    binning["Residual_loc1"] = acts.Axis.regular(100, -0.5, 0.5, "r_{loc1} [mm]")
+    binning["Residual_phi"] = acts.Axis.regular(100, -0.1, 0.1, "r_{#phi} [rad]")
+    binning["Residual_theta"] = acts.Axis.regular(100, -0.1, 0.1, "r_{#theta} [rad]")
+    binning["Residual_qop"] = acts.Axis.regular(100, -0.5, 0.5, "r_{q/p} [c/GeV]")
+    binning["Residual_qopt"] = acts.Axis.regular(100, -0.5, 0.5, "r_{q/pT} [c/GeV]")
+    binning["Residual_qopt_rel"] = acts.Axis.regular(100, -0.5, 0.5, "r_{rel q/pT}")
+    config.varBinning = binning
+    return config
+
+
+def addTrackStateParameterPerformanceWriter(
+    sequence: acts.examples.Sequencer,
+    outputDirRoot: Union[Path, str],
+    tracks: str,
+    particles: str,
+    geometrySelection: Optional[list] = None,
+    parameterType=None,
+    resPlotToolConfig=None,
+    trackParticleMatching: Optional[str] = None,
+    outputName: str = "trackstateparams",
+    logLevel: acts.logging.Level = None,
+    prefix: str = "",
+):
+    """Writes residual/pull performance of the track state parameters.
+
+    Every selected measurement state is compared to the simulated hits on its
+    own surface, so nothing is extrapolated and the comparison stays local. Use
+    `addTrackParameterPerformanceWriter` instead to judge a track as a whole.
+
+    Note that `res_loc0`/`res_loc1` then measure the measurement resolution and
+    `res_t` the time convention of the input. Only direction and momentum say
+    something about the parameter estimate itself.
+
+    Parameters
+    ----------
+    geometrySelection : Optional[list]
+        Geometry identifiers, e.g. from `readJsonGeometryList`. If given, only
+        track states in those regions are used, which is how a single layer or
+        volume can be looked at on its own.
+    parameterType : Optional[acts.examples.root.TrackParameterType]
+        Which track state parameters to compare. The best available ones by
+        default, i.e. smoothed, filtered, or predicted.
+    resPlotToolConfig : Optional[acts.examples.root.ResPlotToolConfig]
+        Residual and pull binning. `defaultOnSurfaceResPlotToolConfig` by
+        default, since the `d0`/`z0` defaults do not hold on a sensor.
+    trackParticleMatching : Optional[str]
+        An existing track to particle matching. Matched here if not given.
+    """
+    customLogLevel = acts.examples.defaultLogging(sequence, logLevel)
+    RootTrackParameterPerformanceWriter, TrackParameterSource = (
+        acts.examples._tryImportRoot(
+            "RootTrackParameterPerformanceWriter", "TrackParameterSource"
+        )
+    )
+
+    outputDirRoot = Path(outputDirRoot)
+    if not outputDirRoot.exists():
+        outputDirRoot.mkdir()
+
+    if resPlotToolConfig is None:
+        resPlotToolConfig = defaultOnSurfaceResPlotToolConfig()
+
+    if trackParticleMatching is None:
+        trackParticleMatching = f"{prefix}{outputName}_particle_matching"
+        sequence.addAlgorithm(
+            acts.examples.TrackTruthMatcher(
+                level=customLogLevel(),
+                inputTracks=tracks,
+                inputParticles=particles,
+                inputMeasurementParticlesMap="measurement_particles_map",
+                outputTrackParticleMatching=trackParticleMatching,
+                outputParticleTrackMatching=f"{prefix}particle_{outputName}_matching",
+                matchingRatio=1.0,
+                doubleMatching=False,
+            )
+        )
+
+    sequence.addWriter(
+        RootTrackParameterPerformanceWriter(
+            level=customLogLevel(),
+            inputTracks=tracks,
+            inputParticles=particles,
+            inputTrackParticleMatching=trackParticleMatching,
+            inputSimHits="simhits",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
+            filePath=str(outputDirRoot / f"performance_{prefix}{outputName}.root"),
+            parameterSource=TrackParameterSource.TrackState,
+            resPlotToolConfig=resPlotToolConfig,
+            **acts.examples.defaultKWArgs(
+                parameterType=parameterType,
+                geometrySelection=geometrySelection,
+            ),
+        )
+    )
+
+
 acts.examples.NamedTypeArgs(
     config=SeedFilterMLDBScanConfig,
 )
