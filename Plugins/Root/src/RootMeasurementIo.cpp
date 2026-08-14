@@ -82,7 +82,8 @@ void ActsPlugins::RootMeasurementIo::connectForRead(TTree& measurementTree) {
   measurementTree.SetBranchAddress("event_nr", &m_measurementPayload.eventNr);
   measurementTree.SetBranchAddress("volume_id", &m_measurementPayload.volumeID);
   measurementTree.SetBranchAddress("layer_id", &m_measurementPayload.layerID);
-  measurementTree.SetBranchAddress("surface_id", &m_measurementPayload.surfaceID);
+  measurementTree.SetBranchAddress("surface_id",
+                                   &m_measurementPayload.surfaceID);
   measurementTree.SetBranchAddress("extra_id", &m_measurementPayload.extraID);
 
   for (auto ib : m_cfg.recoIndices) {
@@ -135,8 +136,8 @@ void ActsPlugins::RootMeasurementIo::connectForRead(TTree& measurementTree) {
 
 GeometryIdentifier ActsPlugins::RootMeasurementIo::geometryId() const {
   return GeometryIdentifier()
-      .withVolume(static_cast<GeometryIdentifier::Value>(
-          m_measurementPayload.volumeID))
+      .withVolume(
+          static_cast<GeometryIdentifier::Value>(m_measurementPayload.volumeID))
       .withLayer(
           static_cast<GeometryIdentifier::Value>(m_measurementPayload.layerID))
       .withSensitive(static_cast<GeometryIdentifier::Value>(
@@ -157,8 +158,7 @@ ActsPlugins::RootMeasurementIo::boundMeasurement() const {
       continue;
     }
     values.push_back(static_cast<double>(value));
-    variances.push_back(
-        static_cast<double>(m_measurementPayload.varBound[ib]));
+    variances.push_back(static_cast<double>(m_measurementPayload.varBound[ib]));
     subspaceIndex.push_back(static_cast<unsigned int>(ib));
   }
 

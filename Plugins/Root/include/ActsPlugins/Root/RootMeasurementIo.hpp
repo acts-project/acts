@@ -90,7 +90,9 @@ class RootMeasurementIo {
   /// The cluster size in loc0/loc1 of the currently loaded entry
   ///
   /// @note Only valid after connectForRead() and TTree::GetEntry()
-  std::array<int, 2> clusterSize() const { return m_clusterPayload.clusterSize; }
+  std::array<int, 2> clusterSize() const {
+    return m_clusterPayload.clusterSize;
+  }
 
   /// Convenience function to register identification
   ///
