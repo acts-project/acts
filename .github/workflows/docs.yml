@@ -7,6 +7,9 @@ on:
       - main
       - 'release/**'
       - 'develop/**'
+  # Required directly ("docs") and via merge-sentinel's "Docs / docs" check.
+  merge_group:
+    types: [checks_requested]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
