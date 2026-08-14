@@ -143,7 +143,6 @@ bool GbtsLayer::checkCompatibility(const GbtsLayer& otherLayer,
   const float r1 = m_layerDescription.refCoord;
 
   const float tol = 5.0f;
-
   if (m_layerDescription.type == GbtsLayerType::Barrel &&
       otherLayer.m_layerDescription.type == GbtsLayerType::Barrel) {
     const float minB2 = otherLayer.m_minBinCoord.at(b2);
@@ -151,9 +150,13 @@ bool GbtsLayer::checkCompatibility(const GbtsLayer& otherLayer,
 
     const float r2 = otherLayer.m_layerDescription.refCoord;
 
-    const float A = r2 / (r2 - r1);
-    const float B = r1 / (r2 - r1);
-
+    // TO-DO get actual layer width for same layer links
+    float A = r2 / 8.0f;
+    float B = r1 / 8.0f;
+    if (r1 != r2) {
+      A = r2 / (r2 - r1);
+      B = r1 / (r2 - r1);
+    }
     const float z0Min = z1min * A - maxB2 * B;
     const float z0Max = z1max * A - minB2 * B;
 
@@ -430,7 +433,8 @@ GbtsGeometry::GbtsGeometry(
       auto& binLinks = bl.second;
       auto& outLinks = binLinks.first;
 
-      if (!outLinks.empty()) {
+      if (!outLinks.empty() &&
+          (outLinks[0] != bl.first && outLinks.size() == 1)) {
         continue;
       }
 

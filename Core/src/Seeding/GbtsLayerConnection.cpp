@@ -26,7 +26,6 @@ GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
   std::uint32_t nLinks{};
 
   inStream >> nLinks >> connectionMap.etaBinWidth;
-
   for (std::uint32_t l = 0; l < nLinks; l++) {
     std::uint32_t stage{};
     std::uint32_t lIdx{};
@@ -62,7 +61,6 @@ GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
         continue;
       }
     }
-
     if (const auto it = connectionMap.connectionMap.find(stage);
         it == connectionMap.connectionMap.end()) {
       std::vector<std::unique_ptr<GbtsLayerConnection>> v;
@@ -74,7 +72,6 @@ GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
       it->second.push_back(std::move(pC));  // move into existing vector
     }
   }
-
   // re-arrange the connection stages
 
   std::list<const GbtsLayerConnection*> lConns;
@@ -125,15 +122,16 @@ GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
       zeroLayers.insert(layerCounts.first);
     }
 
-    // remove connections which use zeroLayer as destination
+    // remove connections which use zeroLayer or its self as destination
 
     std::vector<const GbtsLayerConnection*> theStage;
 
     std::list<const GbtsLayerConnection*>::iterator cIt = lConns.begin();
 
     while (cIt != lConns.end()) {
-      if (zeroLayers.find((*cIt)->dst) !=
-          zeroLayers.end()) {  // check if contains
+      if ((*cIt)->dst == (*cIt)->src ||
+          zeroLayers.find((*cIt)->dst) !=
+              zeroLayers.end()) {  // check if contains
         theStage.push_back(*cIt);
         cIt = lConns.erase(cIt);
         continue;
