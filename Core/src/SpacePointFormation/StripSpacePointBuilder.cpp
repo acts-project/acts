@@ -14,6 +14,8 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <cmath>
+
 namespace Acts {
 
 Result<double> StripSpacePointBuilder::computeClusterPairDistance(
@@ -66,22 +68,43 @@ Result<Vector3> StripSpacePointBuilder::computeCosmicSpacePoint(
   // resolving lambda0 from the condition that |x-y| is the shortest distance
   // between two skew lines.
 
+  // Minimising |x - y|^2 over lambda0 and lambda1 gives
+  //   lambda0 * (q.q) - lambda1 * (q.r) = ac.q
+  //   lambda0 * (q.r) - lambda1 * (r.r) = ac.r
+  // with ac = c - a, which resolves to the lambdas below.
+
   const Vector3 firstBtmToTop = stripEnds1.top - stripEnds1.bottom;
   const Vector3 secondBtmToTop = stripEnds2.top - stripEnds2.bottom;
 
   const Vector3 ac = stripEnds2.top - stripEnds1.top;
+  const double qq = firstBtmToTop.dot(firstBtmToTop);
+  const double rr = secondBtmToTop.dot(secondBtmToTop);
   const double qr = firstBtmToTop.dot(secondBtmToTop);
-  const double denom = firstBtmToTop.dot(firstBtmToTop) - qr * qr;
-  // Check for numerical stability
-  if (std::abs(denom) < options.tolerance) {
+  const double acq = ac.dot(firstBtmToTop);
+  const double acr = ac.dot(secondBtmToTop);
+
+  // By Lagrange's identity this is (q.q) * (r.r) * sin^2(angle between the
+  // strips), so the check below is on the opening angle of the two strips and
+  // is independent of their length. It is never negative, and zero for a strip
+  // of zero length.
+  const double denom = qq * rr - qr * qr;
+  if (denom <= options.tolerance * qq * rr) {
     return Result<Vector3>::failure(
         SpacePointFormationError::CosmicToleranceNotMet);
   }
 
-  const double lambda0 =
-      (ac.dot(secondBtmToTop) * qr -
-       ac.dot(firstBtmToTop) * secondBtmToTop.dot(secondBtmToTop)) /
-      denom;
+  const double lambda0 = (acq * rr - acr * qr) / denom;
+  const double lambda1 = (acq * qr - acr * qq) / denom;
+
+  // The crossing has to lie on both strips. This is the stereo matching
+  // condition and the only compatibility test available without a vertex.
+  // `2 * lambda + 1` centres the on-strip range (-1, 0), so the tolerance is a
+  // fraction of the strip length as in the constrained formation.
+  const double limit = 1 + options.stripLengthTolerance;
+  if (std::abs(2 * lambda0 + 1) > limit || std::abs(2 * lambda1 + 1) > limit) {
+    return Result<Vector3>::failure(SpacePointFormationError::OutsideLimits);
+  }
+
   const Vector3 spacePoint = stripEnds1.top + lambda0 * firstBtmToTop;
   return Result<Vector3>::success(spacePoint);
 }
@@ -294,18 +317,18 @@ Vector2 StripSpacePointBuilder::computeVarianceZR(const GeometryContext& gctx,
                                                   const double localCov1,
                                                   const double localCov2,
                                                   const double theta) {
-  const double sinThetaHalf = std::sin(0.5 * theta);
-  const double cosThetaHalf = std::cos(0.5 * theta);
+  // Invert the information matrix of the two measurements, strip1 along (1, 0)
+  // and strip2 along (cos(theta), sin(theta)). Strip2 adds nothing to the
+  // precision direction, it only fixes where along strip1 the crossing sits,
+  // to 1/sin(theta) of a pitch
+  const double sinTheta = std::sin(theta);
+  const double cosTheta = std::cos(theta);
+  const double varAlongStrip =
+      (localCov2 + localCov1 * cosTheta * cosTheta) / (sinTheta * sinTheta);
 
-  // strip1 and strip2 are tilted at +/- theta/2
-  const double var = fastHypot(localCov1, localCov2);
-  const double varX = var / (2 * sinThetaHalf);
-  const double varY = var / (2 * cosThetaHalf);
-
-  // projection to the surface with strip1.
-  const double varX1 = varX * cosThetaHalf + varY * sinThetaHalf;
-  const double varY1 = varY * cosThetaHalf + varX * sinThetaHalf;
-  const SquareMatrix2 localCov = Vector2(varX1, varY1).asDiagonal();
+  // Dropping a correlation of -localCov1 * cot(theta), whose sense an unsigned
+  // theta does not carry
+  const SquareMatrix2 localCov = Vector2(localCov1, varAlongStrip).asDiagonal();
 
   return PixelSpacePointBuilder::computeVarianceZR(gctx, surface1, spacePoint,
                                                    localCov);
