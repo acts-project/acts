@@ -62,7 +62,15 @@ class TrackVisualizerAlg(acts.examples.IAlgorithm):
 
 class PyVisualization2D(acts.VisualizationBuffer):
 
-    def plot(self, projection, filename, linewidth=None, linestyle=None, **kwargs):
+    def plot(
+        self,
+        projection,
+        filename,
+        linewidth=None,
+        linestyle=None,
+        drawHitSensitives=True,
+        **kwargs,
+    ):
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
@@ -183,6 +191,31 @@ class PyVisualization2D(acts.VisualizationBuffer):
             )
             line_collection.set_color(self.lineColor / 255)
             ax.add_collection(line_collection)
+            if drawHitSensitives == True:
+                from matplotlib.path import Path
+
+                hitSensitives = [
+                    surface
+                    for surface in surfaces2D
+                    if any(
+                        Path(surface).contains_point(segment[1])
+                        for segment in line_segments
+                    )
+                ]
+                print(hitSensitives)
+                hit_patches = [Polygon(face, closed=True) for face in hitSensitives]
+                hit_collection = PatchCollection(hit_patches, alpha=0.5)
+                hit_collection.set_facecolor("red")
+                ax.add_collection(hit_collection)
+
+                for n_face, face in enumerate(hitSensitives):
+                    if polyArea(face) < 1e-8:
+                        ax.plot(
+                            [item[0] for item in face],
+                            [item[1] for item in face],
+                            color="red",
+                            lw=1,
+                        )
 
         ax.relim()
         ax.autoscale_view()

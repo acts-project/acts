@@ -57,7 +57,7 @@ def runTruthTrackingKalman(
     from acts.examples.visualization import TrackVisualizerAlg, PyVisualization2D
 
     s = s or acts.examples.Sequencer(
-        events=100, numThreads=-1, logLevel=acts.logging.INFO
+        events=1, numThreads=-1, logLevel=acts.logging.INFO
     )
 
     for d in decorators:
@@ -242,9 +242,8 @@ def runTruthTrackingKalman(
 
         vis.plot(
             projection=projection,
-            filename="truth_tracking_kalman_visualization_phiRange2.png",
-            phi=[0, (3 / 2) * np.pi],
-            z=[0, 500],
+            filename="truth_tracking_kalman_visualization_hitSensitives.png",
+            z=[-1, 510],
         )
 
 
