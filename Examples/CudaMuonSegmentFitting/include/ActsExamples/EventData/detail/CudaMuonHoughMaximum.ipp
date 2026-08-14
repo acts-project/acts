@@ -30,25 +30,12 @@ CudaHoughMaximumBatch<MaximaPerBucket>::CudaHoughMaximumBatch(
   constexpr size_type maxUint32 =
       static_cast<size_type>(std::numeric_limits<std::uint32_t>::max());
 
-  if (m_nBuckets > maxUint32) {
+  if (m_nBuckets > maxUint32 / MaximaPerBucket) {
     throw std::overflow_error(
-        "CudaHoughMaximumBatch nBuckets must fit into std::uint32_t and be "
-        "allocatable");
-  }
-
-  if (m_nBuckets > std::numeric_limits<size_type>::max() / MaximaPerBucket) {
-    throw std::overflow_error(
-        "CudaHoughMaximumBatch total capacity overflows std::size_t and be "
-        "allocatable");
+        "CudaHoughMaximumBatch total capacity must fit into std::uint32_t");
   }
 
   const size_type capacity = totalCapacity();
-
-  if (capacity > maxUint32) {
-    throw std::overflow_error(
-        "CudaHoughMaximumBatch total capacity must fit into std::uint32_t and "
-        "be allocatable");
-  }
 
   m_hostTanBeta.resize(capacity, CoordType{0.0});
   m_hostInterceptY.resize(capacity, CoordType{0.0});
@@ -320,7 +307,7 @@ void CudaHoughMaximumBatch<MaximaPerBucket>::prepareAssociationStorageHost() {
       }
       if (totalAssociatedHits > std::numeric_limits<std::uint32_t>::max()) {
         throw std::overflow_error(
-            "Total associated hit count must fit into std::uint32_t");
+            "Total associated hit count must fit into std::uint32_t and be allocatable");
       }
       m_hostAssociatedHitOffsets[slot + 1u] =
           static_cast<std::uint32_t>(totalAssociatedHits);
