@@ -558,6 +558,12 @@ if(ACTS_BUILD_PLUGIN_GNN)
     else()
         message(STATUS "Build GNN plugin for CPU only")
     endif()
+    # FRNN and ModuleMapGraph are built from vendored upstream sources, which
+    # are not ours to keep warning-clean. A normal variable, so it shadows the
+    # cache entry for the subdirectories added below and is restored before any
+    # ACTS target follows.
+    set(_acts_gnn_warning_as_error "${CMAKE_COMPILE_WARNING_AS_ERROR}")
+    set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)
     if(ACTS_GNN_ENABLE_TORCH)
         find_package(Torch REQUIRED)
         if(ACTS_ENABLE_CUDA)
@@ -571,6 +577,7 @@ if(ACTS_BUILD_PLUGIN_GNN)
             add_subdirectory(thirdparty/ModuleMapGraph)
         endif()
     endif()
+    set(CMAKE_COMPILE_WARNING_AS_ERROR "${_acts_gnn_warning_as_error}")
 endif()
 if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_GNN_ENABLE_ONNX)
     find_package(onnxruntime ${_acts_onnxruntime_version} MODULE REQUIRED)
