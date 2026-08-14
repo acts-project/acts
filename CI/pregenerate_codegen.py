@@ -67,27 +67,13 @@ def generate(key: str, unit: dict, output_dir: Path, uv: str) -> tuple[str, str]
         command += ["--with", str(SOURCE_ROOT / package)]
     command += [str(SOURCE_ROOT / unit["script"]), str(destination)]
 
-    # The generators are pure functions of their inputs, so anything the ambient
-    # environment could contribute is noise at best. Keep only what is needed to
-    # reach a package index through a proxy, matching what the CMake path does.
-    environment = {
-        name: value
-        for name, value in os.environ.items()
-        if name
-        in (
-            "HTTP_PROXY",
-            "HTTPS_PROXY",
-            "ALL_PROXY",
-            "NO_PROXY",
-            "SSL_CERT_FILE",
-            "PATH",
-            "HOME",
-        )
-    }
-
+    # The CMake path scrubs the environment before invoking uv, because a
+    # configure can happen inside an LCG/Spack shell whose PYTHONPATH,
+    # VIRTUAL_ENV etc. would otherwise leak into the generator. This script only
+    # ever runs in CI, which starts from a clean environment to begin with, so
+    # there is nothing to guard against here: just inherit it.
     result = subprocess.run(
         command,
-        env=environment,
         capture_output=True,
         text=True,
     )
