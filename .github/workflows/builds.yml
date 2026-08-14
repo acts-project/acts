@@ -812,7 +812,7 @@ jobs:
         run: >
           CI/dependencies/run.sh .env
           ctest --test-dir build --output-on-failure --no-tests=error
-          -R "CudaMuonSpacePoint"
+          -R "(CudaMuonSpacePoint|CudaMuonHoughMaximum)"
 
   # ─────────────────────────────────────────────────────────────────────
   # LCG builds. They ask for the `cvmfs` label on top of the usual husk
