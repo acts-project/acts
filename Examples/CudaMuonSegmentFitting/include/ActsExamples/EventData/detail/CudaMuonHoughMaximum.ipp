@@ -32,19 +32,22 @@ CudaHoughMaximumBatch<MaximaPerBucket>::CudaHoughMaximumBatch(
 
   if (m_nBuckets > maxUint32) {
     throw std::overflow_error(
-        "CudaHoughMaximumBatch nBuckets must fit into std::uint32_t and be allocatable");
+        "CudaHoughMaximumBatch nBuckets must fit into std::uint32_t and be "
+        "allocatable");
   }
 
   if (m_nBuckets > std::numeric_limits<size_type>::max() / MaximaPerBucket) {
     throw std::overflow_error(
-        "CudaHoughMaximumBatch total capacity overflows std::size_t and be allocatable");
+        "CudaHoughMaximumBatch total capacity overflows std::size_t and be "
+        "allocatable");
   }
 
   const size_type capacity = totalCapacity();
 
   if (capacity > maxUint32) {
     throw std::overflow_error(
-        "CudaHoughMaximumBatch total capacity must fit into std::uint32_t and be allocatable");
+        "CudaHoughMaximumBatch total capacity must fit into std::uint32_t and "
+        "be allocatable");
   }
 
   m_hostTanBeta.resize(capacity, CoordType{0.0});
@@ -263,8 +266,7 @@ void CudaHoughMaximumBatch<MaximaPerBucket>::moveToDevice(
 }
 
 template <std::size_t MaximaPerBucket>
-void CudaHoughMaximumBatch<MaximaPerBucket>::moveToHost(
-    cudaStream_t stream) {
+void CudaHoughMaximumBatch<MaximaPerBucket>::moveToHost(cudaStream_t stream) {
   if (!m_onDevice) {
     return;
   }
@@ -298,8 +300,7 @@ void CudaHoughMaximumBatch<MaximaPerBucket>::copyAssociationMetadataToHost(
 }
 
 template <std::size_t MaximaPerBucket>
-void CudaHoughMaximumBatch<
-    MaximaPerBucket>::prepareAssociationStorageHost() {
+void CudaHoughMaximumBatch<MaximaPerBucket>::prepareAssociationStorageHost() {
   clearAssociationStorage();
   m_hostAssociatedHitOffsets.assign(totalCapacity() + 1u, 0u);
   m_hostAssociatedHitIndices.clear();
@@ -353,8 +354,8 @@ void CudaHoughMaximumBatch<MaximaPerBucket>::allocateAssociationStorage(
     allocateDeviceColumn(m_device.associatedHitIndices,
                          m_hostAssociatedHitIndices.size());
 
-    m_device.totalAssociatedHits = static_cast<std::uint32_t>(
-        m_hostAssociatedHitIndices.size());
+    m_device.totalAssociatedHits =
+        static_cast<std::uint32_t>(m_hostAssociatedHitIndices.size());
 
     m_associationStorageAllocated = true;
     m_associatedHitIndicesOnHost = false;

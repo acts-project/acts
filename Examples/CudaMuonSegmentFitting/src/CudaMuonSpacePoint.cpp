@@ -8,12 +8,12 @@
 
 #include "ActsExamples/EventData/CudaMuonSpacePoint.hpp"
 
+#include "ActsExamples/Utilities/CudaUtilities.hpp"
+
 #include <stdexcept>
 #include <utility>
 
 #include <cuda_runtime.h>
-
-#include "ActsExamples/Utilities/CudaUtilities.hpp"
 
 namespace {
 

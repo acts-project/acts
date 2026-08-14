@@ -40,7 +40,8 @@ namespace ActsExamples {
 class CudaStream {
  public:
   CudaStream() {
-    ACTS_CUDA_CHECK(cudaStreamCreateWithFlags(&m_stream, cudaStreamNonBlocking));
+    ACTS_CUDA_CHECK(
+        cudaStreamCreateWithFlags(&m_stream, cudaStreamNonBlocking));
   }
 
   CudaStream(const CudaStream&) = delete;
