@@ -19,7 +19,7 @@
 namespace traccc::cuda {
 
 namespace {
-void suspend_stream_callback(void* tag) {
+void CUDART_CB suspend_stream_callback(void* tag) {
   tbb::task::resume(*static_cast<tbb::task::suspend_point*>(tag));
 }
 }  // namespace
