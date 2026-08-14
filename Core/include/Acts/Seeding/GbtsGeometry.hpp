@@ -65,6 +65,9 @@ class GbtsLayer final {
   /// @return Vector of bin indices
   const std::vector<std::int32_t>& bins() const { return m_bins; }
 
+  const float etaBin() const { return m_etaBin; }
+  const float minEta() const { return m_minEta; }
+
   /// Get the layer description
   /// @return Reference to the layer description
   const GbtsLayerDescription& layerDescription() const {

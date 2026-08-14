@@ -110,17 +110,18 @@ GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
       }
     }
 
-    // remove connections which use a layer that has no, or only its self as a destination
+    // remove connections which use a layer that has no, or only its self as a
+    // destination
 
     std::vector<const GbtsLayerConnection*> theStage;
 
     std::list<const GbtsLayerConnection*>::iterator cIt = lConns.begin();
 
     while (cIt != lConns.end()) {
-			std::uint32_t nSrc = (*mCounter.find((*cIt)->dst)).second.second;
-			bool onlySelfLink = (*cIt)->dst == (*cIt)->src && nSrc == 1;
-      if(nSrc == 0 || onlySelfLink) {
-				theStage.push_back(*cIt);
+      std::uint32_t nSrc = (*mCounter.find((*cIt)->dst)).second.second;
+      bool onlySelfLink = (*cIt)->dst == (*cIt)->src && nSrc == 1;
+      if (nSrc == 0 || onlySelfLink) {
+        theStage.push_back(*cIt);
         cIt = lConns.erase(cIt);
         continue;
       }
