@@ -57,7 +57,7 @@ def runTruthTrackingKalman(
     from acts.examples.visualization import TrackVisualizerAlg, PyVisualization2D
 
     s = s or acts.examples.Sequencer(
-        events=1, numThreads=-1, logLevel=acts.logging.INFO
+        events=100, numThreads=-1, logLevel=acts.logging.INFO
     )
 
     for d in decorators:
@@ -83,7 +83,7 @@ def runTruthTrackingKalman(
                 num=numParticles, pdg=generatedParticleType, randomizeCharge=True
             ),
             EtaConfig(-3.0, 3.0, uniform=True),
-            MomentumConfig(0.5 * u.GeV, 1.5 * u.GeV, transverse=True),
+            MomentumConfig(1.0 * u.GeV, 100.0 * u.GeV, transverse=True),
             PhiConfig(0.0, 360.0 * u.degree),
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
@@ -242,7 +242,7 @@ def runTruthTrackingKalman(
         vis.plot(
             projection=projection,
             filename="truth_tracking_kalman_visualization.png",
-            interpolate=True,
+            interpolate=False,
         )
 
     return s

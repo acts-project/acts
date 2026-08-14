@@ -65,7 +65,7 @@ class TrackVisualizerAlg(acts.examples.IAlgorithm):
         tracks = self.tracks(context.eventStore)
         for track in tracks:
             acts.EventDataView3D.drawTrack(
-                self._vis, track, context.geoContext
+                self._vis, track
             )  # draw track not a free function
 
         return acts.examples.ProcessCode.SUCCESS
@@ -151,10 +151,7 @@ class PyVisualization2D(acts.VisualizationBuffer):
 
             if interpolate == True:
                 line_segments = np.asarray(line_segments)
-                # First point has to be taken out for this because it is in the centre of the beam pipe
-                # And track is otherwise build from outside to inside
-                # line_segments[0,0]
-                points = line_segments[:, 1:]
+                points = line_segments[:, 0:]
                 shape = points.shape
                 points = points.reshape(shape[0] * shape[1], -1)
                 print(points)
@@ -164,7 +161,6 @@ class PyVisualization2D(acts.VisualizationBuffer):
                 )
 
             else:
-                del line_segments[0]
                 line_collection = LineCollection(
                     line_segments, linewidths=width, linestyles=style
                 )

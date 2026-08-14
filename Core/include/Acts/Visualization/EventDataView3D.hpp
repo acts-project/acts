@@ -321,7 +321,8 @@ struct EventDataView3D {
   /// @param lineconfig The visualization options for the lines to be drawn
   static void drawTrack(IVisualization3D& helper,
                         const AnyConstTrackProxy& track,
-                        const GeometryContext& gctx);
+                        const GeometryContext& gctx =
+                            GeometryContext::dangerouslyDefaultConstruct());
 };
 
 }  // namespace Acts
