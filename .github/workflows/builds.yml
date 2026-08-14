@@ -739,7 +739,7 @@ jobs:
           --preset=github-ci-cuda-muon
 
       - name: Build
-        run: cmake --build build --target ActsUnitTestCudaMuonSpacePoint
+        run: cmake --build build
 
       - name: ccache stats
         run: ccache -s
