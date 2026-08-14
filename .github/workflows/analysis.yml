@@ -11,6 +11,13 @@ on:
       - 'develop/**'
     paths-ignore:
       - "docs/**"
+  # merge_group does not support branch/path filters, so this runs
+  # unconditionally on every queue entry. Only build_debug is required, via
+  # merge-sentinel's "Analysis / build_debug" check; clang_tidy is skipped
+  # below since it isn't required and its incremental diff relies on
+  # github.base_ref, which merge_group runs don't have.
+  merge_group:
+    types: [checks_requested]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
@@ -155,6 +162,9 @@ jobs:
           echo "**🛡️ Code coverage available [here]($link)**" >> $GITHUB_STEP_SUMMARY
 
   clang_tidy:
+    # Not required for merging; skip on merge_group since its incremental
+    # diff below depends on github.base_ref, which only pull_request runs set.
+    if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2404_clang22:87
 
