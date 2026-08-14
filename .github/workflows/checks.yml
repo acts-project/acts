@@ -2,6 +2,11 @@ name: Checks
 
 on:
   push:
+    # The merge queue also pushes to its temp ref, which separately triggers
+    # merge_group below; without this the two runs share a concurrency group
+    # and cancel-in-progress evicts the PR from the queue (#5884 follow-up).
+    branches-ignore:
+      - "gh-readonly-queue/**"
   pull_request:
     branches:
       - main
@@ -13,7 +18,9 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
-  cancel-in-progress: true
+  # Never cancel a merge_group run: it's a required check for a queue entry,
+  # and a cancellation reads as a failure to the queue, ejecting the PR.
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
 permissions:
   contents: read
