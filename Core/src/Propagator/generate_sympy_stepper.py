@@ -774,7 +774,9 @@ def print_rk4_dense(name_exprs, run_cse=True):
             return (
                 "if (*err > errTol) {\n  return Acts::Result<bool>::success(false);\n}"
             )
-        if str(var) == "new_d":
+        if str(var) == "new_l":
+            # after new_l, not after new_d: new_l is the energy loss update
+            # of q/p and belongs to the step, not to the jacobian transport
             return "if (M.empty()) {\n  return Acts::Result<bool>::success(true);\n}"
         if str(var) == "new_M":
             return "\n".join(
