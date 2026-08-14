@@ -14,6 +14,8 @@
 #include "ActsExamples/EventData/CudaMuonSpacePoint.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
 
+#include "ActsExamples/Utilities/CudaUtilities.hpp"
+
 #include <cuda_runtime.h>
 
 using namespace Acts;
@@ -97,6 +99,7 @@ BOOST_AUTO_TEST_CASE(CudaMuonSpacePointDeviceTransfer) {
   }
 
   ActsExamples::CudaMuonSpacePointContainer container{1};
+  ActsExamples::CudaStream stream;
 
   ActsExamples::MuonSpacePoint::MuonId muonId{};
   muonId.setChamber(ActsExamples::MuonSpacePoint::MuonId::StationName::BIS,
@@ -114,7 +117,7 @@ BOOST_AUTO_TEST_CASE(CudaMuonSpacePointDeviceTransfer) {
   container.setCovariance(0, 6.0, 7.0, 8.0);
   container.addBucket(0, 1);
 
-  container.moveToDevice();
+  container.moveToDevice(stream.get());
 
   BOOST_CHECK(container.isOnDevice());
   BOOST_CHECK(container.deviceArrays().localPositionX != nullptr);
@@ -127,7 +130,7 @@ BOOST_AUTO_TEST_CASE(CudaMuonSpacePointDeviceTransfer) {
   container.defineCoordinates(0, Vector3{0.0, 0.0, 0.0}, Vector3{0.0, 1.0, 0.0},
                               Vector3{0.0, 0.0, 1.0});
 
-  container.moveToHost();
+  container.moveToHost(stream.get());
 
   auto spacePoint = container[0];
   const Vector3& position = spacePoint->localPosition();
