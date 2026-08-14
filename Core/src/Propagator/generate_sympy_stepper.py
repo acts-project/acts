@@ -538,23 +538,39 @@ def rk4_dense_tunedexpr():
     path_derivatives.expr[4:7, 0] = k4.name[0:3, 0].as_explicit()
     path_derivatives.expr[7, 0] = new_ydot.name[4, 0]
 
-    dk1dTL = name_expr("dk1dTL", k1.expr.jacobian([t, d, l]))
+    # dt/ds rides along as its own component of the integrated state, but it
+    # is not an independent variable: dtds = sqrt(1 + m^2 l^2 / q^2), so a
+    # derivative with respect to q/p has to pick up the path through it.
+    # Differentiating against [t, d, l] alone drops that term, which is
+    # exactly what made this kernel disagree with the vacuum one on
+    # d(time)/d(q/p).  Differentiate against [t, d, dtds, l] and contract with
+    # a seed that carries d(dtds)/dl into the q/p column instead.
+    #
+    # The system itself confirms the derivative: f gives d(dtds)/ds directly as
+    # g m^2 l^3 / q^3, which is d(dtds)/dl times f's dl/ds.
+    ddtds_dl = m**2 * l / (q**2 * dtds.name)
+    TL = [t, d, dtds.name, l]
+    seed_TL = sym.eye(6)[:, [0, 1, 2, 3, 5]]
+    seed_TL[4, 4] = ddtds_dl
+
+    dk1dTL = name_expr("dk1dTL", k1.expr.jacobian(TL) * seed_TL)
     dk2dTL = name_expr(
-        "dk2dTL", k2.expr.jacobian([t, d, l]) + k2.expr.jacobian(k1.name) * dk1dTL.expr
+        "dk2dTL",
+        k2.expr.jacobian(TL) * seed_TL + k2.expr.jacobian(k1.name) * dk1dTL.expr,
     )
     dk3dTL = name_expr(
         "dk3dTL",
-        k3.expr.jacobian([t, d, l]) + k3.expr.jacobian(k2.name) * dk2dTL.name,
+        k3.expr.jacobian(TL) * seed_TL + k3.expr.jacobian(k2.name) * dk2dTL.name,
     )
     dk4dTL = name_expr(
         "dk4dTL",
-        k4.expr.jacobian([t, d, l]) + k4.expr.jacobian(k3.name) * dk3dTL.name,
+        k4.expr.jacobian(TL) * seed_TL + k4.expr.jacobian(k3.name) * dk3dTL.name,
     )
 
     F = Matrix.vstack(new_p.expr.as_explicit(), Matrix([new_t.expr]))
     dFdTL = name_expr(
         "dFdTL",
-        F.jacobian([t, d, l])
+        F.jacobian(TL) * seed_TL
         + F.jacobian(k1.name) * dk1dTL.expr
         + F.jacobian(k2.name) * dk2dTL.name
         + F.jacobian(k3.name) * dk3dTL.name,
@@ -562,7 +578,7 @@ def rk4_dense_tunedexpr():
     G = Matrix.vstack(new_d_tmp.expr.as_explicit(), Matrix([new_l.expr]))
     dGdTL = name_expr(
         "dGdTL",
-        G.jacobian([t, d, l])
+        G.jacobian(TL) * seed_TL
         + G.jacobian(k1.name) * dk1dTL.expr
         + G.jacobian(k2.name) * dk2dTL.name
         + G.jacobian(k3.name) * dk3dTL.name

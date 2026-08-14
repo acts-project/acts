@@ -566,13 +566,6 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_dense_kernel_matches_vacuum_kernel) {
       const BoundMatrix jacobian = run(track, mode);
       for (std::size_t i = 0; i < eBoundSize; ++i) {
         for (std::size_t j = 0; j < eBoundSize; ++j) {
-          // FIXME d(time)/d(q/p) does not agree between the two kernels, by
-          // tens of percent and already before the q/p column was given its
-          // storage convention.  Every other entry agrees to round-off, so
-          // check those and leave this one to be fixed separately.
-          if (i == eBoundTime && j == eBoundQOverP) {
-            continue;
-          }
           BOOST_CHECK_LE(std::abs(jacobian(i, j) - reference(i, j)),
                          1e-11 * std::max({std::abs(jacobian(i, j)),
                                            std::abs(reference(i, j)), 1e-12}));
