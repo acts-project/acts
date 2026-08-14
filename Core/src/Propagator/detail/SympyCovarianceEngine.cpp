@@ -16,6 +16,30 @@
 
 namespace Acts::detail {
 
+namespace {
+
+/// Transport a bound covariance, picking the cheaper kernel where it applies
+///
+/// d(q/p)/d(q/p) is exactly one unless the track crossed material: the vacuum
+/// step kernel never writes that entry of the bound-to-free jacobian, so it
+/// keeps the value initialisation gave it, bit for bit. The comparison is
+/// therefore structural rather than numerical, and the vacuum path skips the
+/// multiplications the dense one needs.
+///
+/// @param jacobian the full bound-to-bound transport jacobian
+/// @param in the covariance to transport
+/// @param [out] out the transported covariance
+void applyBoundCovarianceTransport(const BoundMatrix& jacobian,
+                                   const BoundMatrix& in, BoundMatrix& out) {
+  if (jacobian(eBoundQOverP, eBoundQOverP) == 1) {
+    transportCovarianceToBoundImpl(in.data(), jacobian.data(), out.data());
+  } else {
+    transportCovarianceToBoundDenseImpl(in.data(), jacobian.data(), out.data());
+  }
+}
+
+}  // namespace
+
 /// Some type defs
 using Jacobian = BoundMatrix;
 using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
@@ -141,9 +165,8 @@ void sympy::transportCovarianceToBound(
     // Apply the actual covariance transport to get covariance of the current
     // bound parameters
     BoundMatrix newBoundCovariance;
-    transportCovarianceToBoundImpl(boundCovariance.data(),
-                                   fullTransportJacobian.data(),
-                                   newBoundCovariance.data());
+    applyBoundCovarianceTransport(fullTransportJacobian, boundCovariance,
+                                  newBoundCovariance);
     boundCovariance = newBoundCovariance;
   }
 
@@ -178,9 +201,8 @@ void sympy::transportCovarianceToCurvilinear(
   // Apply the actual covariance transport to get covariance of the current
   // curvilinear parameters
   BoundMatrix newBoundCovariance;
-  transportCovarianceToBoundImpl(boundCovariance.data(),
-                                 fullTransportJacobian.data(),
-                                 newBoundCovariance.data());
+  applyBoundCovarianceTransport(fullTransportJacobian, boundCovariance,
+                                newBoundCovariance);
   boundCovariance = newBoundCovariance;
 
   if (additionalFreeCovariance) {

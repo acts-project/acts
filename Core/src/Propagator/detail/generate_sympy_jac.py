@@ -124,6 +124,30 @@ def my_full_transport_jacobian_curvilinear_function_print(name_exprs, run_cse=Tr
     return "\n".join(lines)
 
 
+def check_sparsity_covariance_transport_assumes():
+    """Assert the shape `transportCovarianceToBoundImpl` is built around.
+
+    That function masks its jacobian down to a diagonal-only q/p row and an
+    identity time column, and only ever multiplies the rest.  If this one ever
+    produced a jacobian outside that shape the covariance transport would
+    silently drop the difference, so the assumption is checked where it is
+    produced rather than where it is consumed.
+
+    Raises AssertionError if the jacobian reaches outside that shape.
+    """
+    J = sym.expand(full_transport_jacobian_generic()[0].expr)
+    qop, time = 4, 5
+    # q/p depends on nothing but itself -- its own diagonal is free, since
+    # energy loss moves it away from one -- and nothing depends on time.
+    leaks = [(qop, j) for j in range(6) if j != qop and J[qop, j] != 0]
+    leaks += [(i, time) for i in range(6) if J[i, time] != (1 if i == time else 0)]
+    if leaks:
+        raise AssertionError(
+            "bound-to-bound jacobian is not of the shape the covariance "
+            f"transport assumes; live entries outside it: {leaks}"
+        )
+
+
 output.write("""// This file is part of the ACTS project.
 //
 // Copyright (C) 2016 CERN for the benefit of the ACTS project
@@ -139,6 +163,8 @@ output.write("""// This file is part of the ACTS project.
 
 #include <cmath>
 """)
+
+check_sparsity_covariance_transport_assumes()
 
 all_name_exprs = full_transport_jacobian_generic()
 code = my_full_transport_jacobian_generic_function_print(

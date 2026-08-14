@@ -21,26 +21,77 @@ C = MatrixSymbol("C", 6, 6).as_explicit().as_mutable()
 for indices in np.ndindex(C.shape):
     C[indices] = C[tuple(sorted(indices))]
 
-J_full = MatrixSymbol("J_full", 6, 6).as_explicit().as_mutable()
-tmp = sym.eye(6)
-tmp[0:4, 0:5] = J_full[0:4, 0:5]
-tmp[5:6, 0:5] = J_full[5:6, 0:5]
-J_full = tmp
+# The bound-to-bound jacobian's shape, as generate_sympy_jac.py produces it and
+# now asserts: nothing depends on time, and q/p depends on nothing but itself.
+#
+# Its q/p diagonal is one only in vacuum, where the step kernel never writes
+# that entry of the bound-to-free jacobian, so it keeps the value
+# initialisation gave it.  A dense step does write it -- energy loss makes
+# d(q/p out)/d(q/p in) differ from one -- so the two cases get their own
+# transport: the vacuum one folds the diagonal away as a literal, the dense one
+# carries it.
 
 
-def covariance_transport_generic():
-    new_C = name_expr("new_C", J_full * C * J_full.T)
+def bound_to_bound_jacobian(qop_diagonal):
+    """The masked bound-to-bound jacobian.
 
-    return [new_C]
+    @param qop_diagonal keeps d(q/p)/d(q/p) live rather than fixing it to one
+    @return the 6x6 jacobian with everything structurally fixed substituted
+    """
+    J = MatrixSymbol("J_full", 6, 6).as_explicit().as_mutable()
+    tmp = sym.eye(6)
+    tmp[0:4, 0:5] = J[0:4, 0:5]
+    if qop_diagonal:
+        tmp[4, 4] = J[4, 4]
+    tmp[5:6, 0:5] = J[5:6, 0:5]
+    return tmp
 
 
-def my_covariance_transport_generic_function_print(name_exprs, run_cse=True):
+def covariance_transport_generic(qop_diagonal=False):
+    """C -> J C J^T for the bound covariance.
+
+    @param qop_diagonal keeps d(q/p)/d(q/p) live, for a step through material
+    @return the named expressions to print
+    """
+    J = bound_to_bound_jacobian(qop_diagonal)
+    return [name_expr("new_C", J * C * J.T)]
+
+
+def check_vacuum_is_dense_at_unit_diagonal():
+    """Assert the vacuum transport is the dense one with a unit q/p diagonal.
+
+    The two are printed as separate functions so the vacuum path does not carry
+    the extra multiplications, which means nothing otherwise stops them
+    drifting apart.
+
+    Raises AssertionError if they disagree.
+    """
+    dense = covariance_transport_generic(qop_diagonal=True)[0].expr
+    vacuum = covariance_transport_generic(qop_diagonal=False)[0].expr
+    J = MatrixSymbol("J_full", 6, 6).as_explicit()
+    diff = sym.expand(dense.subs({J[4, 4]: 1}) - vacuum)
+    if any(e != 0 for e in diff):
+        bad = [
+            (i, j)
+            for i in range(diff.rows)
+            for j in range(diff.cols)
+            if diff[i, j] != 0
+        ]
+        raise AssertionError(
+            "vacuum covariance transport is not the dense one at "
+            f"d(q/p)/d(q/p) == 1, at {bad}"
+        )
+
+
+def my_covariance_transport_generic_function_print(name_exprs, name, run_cse=True):
     printer = cxx_printer
     outputs = [find_by_name(name_exprs, name)[0] for name in ["new_C"]]
 
     lines = []
 
-    head = "template <typename T> void transportCovarianceToBoundImpl(const T* C, const T* J_full, T* new_C) {"
+    head = (
+        f"template <typename T> void {name}(" "const T* C, const T* J_full, T* new_C) {"
+    )
     lines.append(head)
 
     code = my_expression_print(
@@ -72,12 +123,18 @@ output.write("""// This file is part of the ACTS project.
 #include <cmath>
 """)
 
-all_name_exprs = covariance_transport_generic()
-code = my_covariance_transport_generic_function_print(
-    all_name_exprs,
-    run_cse=True,
-)
-output.write(code + "\n")
+check_vacuum_is_dense_at_unit_diagonal()
+
+for name, qop_diagonal in (
+    ("transportCovarianceToBoundImpl", False),
+    ("transportCovarianceToBoundDenseImpl", True),
+):
+    code = my_covariance_transport_generic_function_print(
+        covariance_transport_generic(qop_diagonal),
+        name,
+        run_cse=True,
+    )
+    output.write(code + "\n")
 
 if output is not sys.stdout:
     output.close()
