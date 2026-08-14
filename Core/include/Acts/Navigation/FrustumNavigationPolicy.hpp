@@ -22,13 +22,20 @@ namespace Acts::Experimental {
 
 class FrustumNavigationPolicy : public INavigationPolicy {
  public:
+  /// Typedef for the 3d bounding box
   using BoundingBox = AxisAlignedBoundingBox<Volume, double, 3>;
+  /// Typedef for the 3d frustum
   using Frustum3 = Frustum<double, 3, 3>;
+
+  /// Configuration for the frustum navigation policy
   struct Config {
     /// The octree depth
     int depth = 3;
   };
+
+  /// Frustum navigation policy state, which holds the frustum
   struct State {
+    /// Stored frustum value, initialized to a default value
     Frustum3 frustum =
         Frustum3(Vector3::Zero(), Vector3::Zero(), std::numbers::pi / 4);
   };
@@ -44,7 +51,6 @@ class FrustumNavigationPolicy : public INavigationPolicy {
 
   /// Update the navigation state
   /// @param gctx The geometry context
-  /// @param args The navigation arguments
   /// @param state The navigation state for this policy
   /// @param stream The navigation stream to update
   /// @param logger The logger
@@ -62,6 +68,7 @@ class FrustumNavigationPolicy : public INavigationPolicy {
   /// @param args The navigation arguments
   /// @param state The navigation state to check
   /// @param logger The logger
+  /// @return True if the state is valid, false otherwise
   bool isValid(const GeometryContext& /*gctx*/, const NavigationArguments& args,
                NavigationPolicyState& state,
                const Logger& logger) const override;
