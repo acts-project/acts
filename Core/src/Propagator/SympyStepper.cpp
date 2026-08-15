@@ -189,6 +189,14 @@ void SympyStepper::transportCovarianceToBound(
 
 Result<double> SympyStepper::step(State& state, Direction propDir,
                                   const IVolumeMaterial* material) const {
+  // Everything about material lives in the other translation unit, including
+  // this branch's body: it would otherwise share a stack frame and a register
+  // allocation with the vacuum path.
+  if (state.options.doDense &&
+      (material != nullptr || !state.materialEffectsAccumulator.isVacuum())) {
+    return detail::sympyDenseStepFull(*this, state, propDir, material);
+  }
+
   double h = state.stepSize.value() * propDir;
 
   const double initialH = h;
@@ -199,11 +207,6 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
   const double qop = qOverP(state);
   const double pabs = absoluteMomentum(state);
   const double m = particleHypothesis(state).mass();
-
-  if (state.options.doDense && material != nullptr &&
-      pabs < state.options.dense.momentumCutOff) {
-    return EigenStepperError::StepInvalid;
-  }
 
   const auto getB = [this, &state](std::span<const double, 3> p) {
     return getField(state, {p[0], p[1], p[2]});
@@ -216,7 +219,10 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
     }
     state.field = *fieldRes;
   }
-  Vector3 lastField = *state.field;
+  // The kernel writes nothing until it has accepted a trial, so its last field
+  // sample can go straight into the state; a local copied over afterwards would
+  // sit on the loop-carried chain.
+  Vector3& lastField = *state.field;
 
   // Read once: the kernel writes through spans that point into `state`, so a
   // later read would be ordered behind all of its stores.
@@ -249,7 +255,6 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
     ++state.statistics.nAttemptedSteps;
 
     // For details about the factor 4 see ATL-SOFT-PUB-2009-001
-    detail::Rk4Status status{};
     std::error_code fieldError;
     const std::span<const double, 3> startPos(pos.data(), 3);
     const std::span<const double, 3> startDir(dir.data(), 3);
@@ -262,18 +267,11 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
         state.covTransport ? std::span<double>(state.jacToGlobal.data(),
                                                state.jacToGlobal.size())
                            : std::span<double>();
-    if (!state.options.doDense || material == nullptr) {
-      status = rk4_vacuum(startPos, startDir, t, h, qop, m, pabs,
-                          std::span<const double, 3>(state.field->data(), 3),
-                          getB, errorEstimate, 4 * stepTolerance, fieldError,
-                          endPos, state.pars[eFreeTime], endDir,
-                          std::span<double, 3>(lastField.data(), 3), derivative,
-                          jac);
-    } else {
-      status =
-          detail::sympyDenseStep(*this, state, *material, h, 4 * stepTolerance,
-                                 errorEstimate, lastField, fieldError, jac);
-    }
+    const detail::Rk4Status status = rk4_vacuum(
+        startPos, startDir, t, h, qop, m, pabs,
+        std::span<const double, 3>(state.field->data(), 3), getB, errorEstimate,
+        4 * stepTolerance, fieldError, endPos, state.pars[eFreeTime], endDir,
+        std::span<double, 3>(lastField.data(), 3), derivative, jac);
     if (status == detail::Rk4Status::FieldError) {
       return fieldError;
     }
@@ -304,9 +302,6 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
     }
   }
 
-  // O(h^3) away from the step end point, close enough to seed the next step
-  state.field = lastField;
-
   state.pathAccumulated += h;
   ++state.nSteps;
   state.nStepTrials += nStepTrials;
@@ -324,20 +319,6 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
   const double initialStepLength = std::abs(initialH);
   if (nextAccuracy < initialStepLength || nextAccuracy > previousAccuracy) {
     state.stepSize.setAccuracy(nextAccuracy);
-  }
-
-  if (state.options.doDense &&
-      (material != nullptr || !state.materialEffectsAccumulator.isVacuum())) {
-    if (state.materialEffectsAccumulator.isVacuum()) {
-      state.materialEffectsAccumulator.initialize(
-          state.options.maxXOverX0Step, particleHypothesis(state), pabs);
-    }
-
-    Material mat =
-        material != nullptr ? material->material(pos) : Material::Vacuum();
-
-    state.materialEffectsAccumulator.accumulate(mat, propDir * h, qop,
-                                                qOverP(state));
   }
 
   return h;

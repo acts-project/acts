@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Propagator/detail/SympyStepperStatus.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <span>
 #include <system_error>
@@ -20,6 +21,24 @@ namespace Acts {
 class IVolumeMaterial;
 
 namespace detail {
+
+/// @brief A whole Runge-Kutta step of a track that is inside material
+///
+/// The whole dense path of `SympyStepper::step` -- momentum cut-off, kernel
+/// branch and material accumulation -- so that none of it shares a stack frame
+/// or a register allocation with the vacuum path.  Only called when
+/// `state.options.doDense` and there is material in play.
+///
+/// @param [in] stepper the stepper, for field access and accessors
+/// @param [in,out] state the stepper state
+/// @param [in] propDir the propagation direction
+/// @param [in] material the volume material, may be null when only the
+///        accumulator still has material to flush
+///
+/// @return the step length taken, or an error
+Result<double> sympyDenseStepFull(const SympyStepper& stepper,
+                                  SympyStepper::State& state, Direction propDir,
+                                  const IVolumeMaterial* material);
 
 /// @brief One Runge-Kutta step through material
 ///
