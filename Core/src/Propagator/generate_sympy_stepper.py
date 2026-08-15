@@ -200,7 +200,7 @@ def rk4_vacuum_fullexpr2():
             J[indices] = D[indices]
     J = ImmutableMatrix(J)
 
-    new_J = name_expr("new_J", J * D)
+    new_J = name_expr("new_J", D * J)
 
     return [p2, p3, err, new_p, new_t, new_d, path_derivatives, new_J]
 
@@ -242,7 +242,7 @@ def rk4_vacuum_fullexpr():
             J[indices] = D[indices]
     J = ImmutableMatrix(J)
 
-    new_J = name_expr("new_J", J * D)
+    new_J = name_expr("new_J", D * J)
 
     return [p2, p3, err, new_p, new_t, new_d, path_derivatives, new_J]
 
@@ -314,7 +314,7 @@ def rk4_vacuum_tunedexpr():
         if D[indices] in [0, 1]:
             J[indices] = D[indices]
     J = ImmutableMatrix(J)
-    new_J = name_expr("new_J", J * D)
+    new_J = name_expr("new_J", D * J)
 
     return [
         k1,
@@ -432,7 +432,7 @@ def rk4_dense_tunedexpr():
         if D[indices] in [0, 1]:
             J[indices] = D[indices]
     J = ImmutableMatrix(J)
-    new_J = name_expr("new_J", J * D)
+    new_J = name_expr("new_J", D * J)
 
     return [
         dtds,
