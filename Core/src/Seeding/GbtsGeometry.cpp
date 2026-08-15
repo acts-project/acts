@@ -56,10 +56,12 @@ GbtsLayer::GbtsLayer(const GbtsLayerDescription& layerDescription,
 
   std::uint32_t binCounter = bin0;
 
-  if (deltaEta < etaBinWidth) {
-    m_nBins = 1;
+  m_nBins = std::lround(deltaEta / etaBinWidth);
+
+  m_etaBin = deltaEta / m_nBins;
+
+  if (m_nBins == 1) {
     m_bins.push_back(binCounter++);
-    m_etaBin = deltaEta;
     if (m_layerDescription.type == GbtsLayerType::Barrel) {
       m_minRadius.push_back(m_layerDescription.refCoord - 2.0f);
       m_maxRadius.push_back(m_layerDescription.refCoord + 2.0f);
@@ -74,62 +76,37 @@ GbtsLayer::GbtsLayer(const GbtsLayerDescription& layerDescription,
       throw std::runtime_error("invalid layer type");
     }
   } else {
-    const auto nB = static_cast<std::uint32_t>(deltaEta / etaBinWidth);
-    m_nBins = nB;
-    if (deltaEta - etaBinWidth * nB > 0.5f * etaBinWidth) {
-      m_nBins++;
-    }
+    float eta = m_minEta + 0.5f * m_etaBin;
 
-    m_etaBin = deltaEta / m_nBins;
-
-    if (m_nBins == 1) {
+    for (std::uint32_t i = 1; i <= m_nBins; ++i) {
       m_bins.push_back(binCounter++);
+
+      float e1 = eta - 0.5f * m_etaBin;
+      float e2 = eta + 0.5f * m_etaBin;
+
       if (m_layerDescription.type == GbtsLayerType::Barrel) {
         m_minRadius.push_back(m_layerDescription.refCoord - 2.0f);
         m_maxRadius.push_back(m_layerDescription.refCoord + 2.0f);
-        m_minBinCoord.push_back(m_layerDescription.minBound);
-        m_maxBinCoord.push_back(m_layerDescription.maxBound);
+        const float z1 = m_layerDescription.refCoord * std::sinh(e1);
+        m_minBinCoord.push_back(z1);
+        const float z2 = m_layerDescription.refCoord * std::sinh(e2);
+        m_maxBinCoord.push_back(z2);
       } else if (m_layerDescription.type == GbtsLayerType::Endcap) {
-        m_minRadius.push_back(m_layerDescription.minBound - 2.0f);
-        m_maxRadius.push_back(m_layerDescription.maxBound + 2.0f);
-        m_minBinCoord.push_back(m_layerDescription.minBound);
-        m_maxBinCoord.push_back(m_layerDescription.maxBound);
+        // for the positive endcap larger eta corresponds to smaller radius
+        if (m_layerDescription.refCoord > 0) {
+          std::swap(e1, e2);
+        }
+        float r = m_layerDescription.refCoord / std::sinh(e1);
+        m_minBinCoord.push_back(r);
+        m_minRadius.push_back(r - 2.0f);
+        r = m_layerDescription.refCoord / std::sinh(e2);
+        m_maxBinCoord.push_back(r);
+        m_maxRadius.push_back(r + 2.0f);
       } else {
         throw std::runtime_error("invalid layer type");
       }
-    } else {
-      float eta = m_minEta + 0.5f * m_etaBin;
 
-      for (std::uint32_t i = 1; i <= m_nBins; ++i) {
-        m_bins.push_back(binCounter++);
-
-        float e1 = eta - 0.5f * m_etaBin;
-        float e2 = eta + 0.5f * m_etaBin;
-
-        if (m_layerDescription.type == GbtsLayerType::Barrel) {
-          m_minRadius.push_back(m_layerDescription.refCoord - 2.0f);
-          m_maxRadius.push_back(m_layerDescription.refCoord + 2.0f);
-          const float z1 = m_layerDescription.refCoord * std::sinh(e1);
-          m_minBinCoord.push_back(z1);
-          const float z2 = m_layerDescription.refCoord * std::sinh(e2);
-          m_maxBinCoord.push_back(z2);
-        } else if (m_layerDescription.type == GbtsLayerType::Endcap) {
-          // for the positive endcap larger eta corresponds to smaller radius
-          if (m_layerDescription.refCoord > 0) {
-            std::swap(e1, e2);
-          }
-          float r = m_layerDescription.refCoord / std::sinh(e1);
-          m_minBinCoord.push_back(r);
-          m_minRadius.push_back(r - 2.0f);
-          r = m_layerDescription.refCoord / std::sinh(e2);
-          m_maxBinCoord.push_back(r);
-          m_maxRadius.push_back(r + 2.0f);
-        } else {
-          throw std::runtime_error("invalid layer type");
-        }
-
-        eta += m_etaBin;
-      }
+      eta += m_etaBin;
     }
   }
 }
