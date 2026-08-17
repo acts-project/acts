@@ -8,9 +8,15 @@
 
 #include "Acts/Utilities/ProtoAxis.hpp"
 
+#include "Acts/Utilities/Diagnostics.hpp"
+
 #include <sstream>
 
 namespace Acts {
+
+// Definitions do not repeat the deprecation attributes of their declarations,
+// so the deprecated types they name are diagnosed here
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 ProtoAxis::ProtoAxis(AxisBoundaryType abType, const std::vector<double>& edges)
     : m_axis(IAxis::createVariable(abType, edges)) {}
@@ -165,5 +171,7 @@ std::ostream& operator<<(std::ostream& os,
   }
   return os;
 }
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace Acts

@@ -43,6 +43,7 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -75,23 +76,31 @@ class MeasurementSelector {
   explicit MeasurementSelector(Acts::MeasurementSelector selector)
       : m_selector(std::move(selector)) {}
 
-  void setSeed(const std::optional<ConstSeedProxy>& seed) { m_seed = seed; }
+  /// Resolve the seed to measurement indices once, so the per candidate check
+  /// does not have to walk space points and unpack source links.
+  void setSeed(const std::optional<ConstSeedProxy>& seed) {
+    m_seedIndices.clear();
+    if (!seed.has_value()) {
+      return;
+    }
+    for (const ConstSpacePointProxy sp : seed->spacePoints()) {
+      for (const Acts::SourceLink& sl : sp.sourceLinks()) {
+        m_seedIndices.push_back(sl.get<IndexSourceLink>().index());
+      }
+    }
+  }
 
   Acts::Result<std::pair<std::vector<Traj::TrackStateProxy>::iterator,
                          std::vector<Traj::TrackStateProxy>::iterator>>
   select(std::vector<Traj::TrackStateProxy>& candidates, bool& isOutlier,
          const Acts::Logger& logger) const {
-    if (m_seed.has_value()) {
-      std::vector<Traj::TrackStateProxy> newCandidates;
-
-      for (const auto& candidate : candidates) {
-        if (isSeedCandidate(candidate)) {
-          newCandidates.push_back(candidate);
-        }
-      }
-
-      if (!newCandidates.empty()) {
-        candidates = std::move(newCandidates);
+    if (!m_seedIndices.empty()) {
+      // the selector sorts by chi2 anyway, so partitioning in place is enough
+      auto rest = std::partition(
+          candidates.begin(), candidates.end(),
+          [this](const auto& candidate) { return isSeedCandidate(candidate); });
+      if (rest != candidates.begin()) {
+        candidates.erase(rest, candidates.end());
       }
     }
 
@@ -101,23 +110,15 @@ class MeasurementSelector {
 
  private:
   Acts::MeasurementSelector m_selector;
-  std::optional<ConstSeedProxy> m_seed;
+  /// measurement indices of the current seed, at most a handful
+  std::vector<Index> m_seedIndices;
 
   bool isSeedCandidate(const Traj::TrackStateProxy& candidate) const {
     assert(candidate.hasUncalibratedSourceLink());
-    assert(m_seed.has_value());
 
-    const Acts::SourceLink& sourceLink = candidate.getUncalibratedSourceLink();
-
-    for (const ConstSpacePointProxy sp : m_seed->spacePoints()) {
-      for (const Acts::SourceLink& sl : sp.sourceLinks()) {
-        if (sourceLink.get<IndexSourceLink>() == sl.get<IndexSourceLink>()) {
-          return true;
-        }
-      }
-    }
-
-    return false;
+    const Index index =
+        candidate.getUncalibratedSourceLink().get<IndexSourceLink>().index();
+    return std::ranges::find(m_seedIndices, index) != m_seedIndices.end();
   }
 };
 
@@ -370,6 +371,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                   firstPropOptions);
 
   firstOptions.targetSurface = m_cfg.reverseSearch ? pSurface.get() : nullptr;
+  firstOptions.recordMaterialStates = m_cfg.recordMaterialStates;
   firstOptions.betheHeitlerApprox =
       std::make_shared<Acts::AtlasBetheHeitlerApprox>(
           Acts::makeDefaultBetheHeitlerApprox());
@@ -379,7 +381,14 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                    secondPropOptions);
   secondOptions.targetSurface = m_cfg.reverseSearch ? nullptr : pSurface.get();
   secondOptions.skipPrePropagationUpdate = true;
+  secondOptions.recordMaterialStates = m_cfg.recordMaterialStates;
   secondOptions.betheHeitlerApprox = firstOptions.betheHeitlerApprox;
+
+  // the brem finder cannot skip material states, so it gets its own options
+  TrackFinderOptions firstBremOptions = firstOptions;
+  firstBremOptions.recordMaterialStates = true;
+  TrackFinderOptions secondBremOptions = secondOptions;
+  secondBremOptions.recordMaterialStates = true;
 
   using Extrapolator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
   using ExtrapolatorOptions = Extrapolator::template Options<
@@ -488,15 +497,18 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     ACTS_VERBOSE("Processing seed " << iSeed << " with initial parameters "
                                     << firstInitialParameters);
 
+    const bool useBrem = m_cfg.findTracksBrem != nullptr &&
+                         firstInitialParameters.particleHypothesis() ==
+                             Acts::ParticleHypothesis::electron();
     const TrackFinderFunction& findTracks =
-        (m_cfg.findTracksBrem == nullptr ||
-         firstInitialParameters.particleHypothesis() !=
-             Acts::ParticleHypothesis::electron())
-            ? *m_cfg.findTracks
-            : *m_cfg.findTracksBrem;
+        useBrem ? *m_cfg.findTracksBrem : *m_cfg.findTracks;
+    const TrackFinderOptions& firstFindOptions =
+        useBrem ? firstBremOptions : firstOptions;
+    const TrackFinderOptions& secondFindOptions =
+        useBrem ? secondBremOptions : secondOptions;
 
     auto firstRootBranch = tracksTemp.makeTrack();
-    auto firstResult = findTracks(firstInitialParameters, firstOptions,
+    auto firstResult = findTracks(firstInitialParameters, firstFindOptions,
                                   tracksTemp, firstRootBranch);
     nSeed++;
 
@@ -565,8 +577,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
           auto secondRootBranch = tracksTemp.makeTrack();
           secondRootBranch.copyFromWithoutStates(trackCandidate);
-          auto secondResult = findTracks(secondInitialParameters, secondOptions,
-                                         tracksTemp, secondRootBranch);
+          auto secondResult =
+              findTracks(secondInitialParameters, secondFindOptions, tracksTemp,
+                         secondRootBranch);
 
           if (!secondResult.ok()) {
             ACTS_WARNING("Second track finding failed for seed "

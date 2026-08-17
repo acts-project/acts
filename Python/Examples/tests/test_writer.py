@@ -35,12 +35,12 @@ from acts.examples.json import (
 
 try:
     from acts.examples import (
-        PythonTrackFinderPerformanceWriter,
-        PythonTrackFitterPerformanceWriter,
+        PythonPatternRecognitionPerformanceWriter,
+        PythonTrackParameterPerformanceWriter,
     )
 except ImportError:
-    PythonTrackFinderPerformanceWriter = None
-    PythonTrackFitterPerformanceWriter = None
+    PythonPatternRecognitionPerformanceWriter = None
+    PythonTrackParameterPerformanceWriter = None
 
 from acts.examples.odd import getOpenDataDetectorDirectory
 
@@ -350,14 +350,14 @@ def test_root_writer_interface(writer_name, conf_const, tmp_path, trk_geo):
 @pytest.mark.parametrize(
     "writer",
     [
-        PythonTrackFinderPerformanceWriter,
-        PythonTrackFitterPerformanceWriter,
+        PythonPatternRecognitionPerformanceWriter,
+        PythonTrackParameterPerformanceWriter,
     ],
 )
 @pytest.mark.root
 @pytest.mark.skipif(
-    PythonTrackFinderPerformanceWriter is None
-    or PythonTrackFitterPerformanceWriter is None,
+    PythonPatternRecognitionPerformanceWriter is None
+    or PythonTrackParameterPerformanceWriter is None,
     reason="Python performance writers not available",
 )
 def test_python_writer_interface(writer, conf_const, tmp_path, trk_geo):
@@ -414,24 +414,24 @@ def test_csv_writer_interface(writer, conf_const, tmp_path, trk_geo):
 @pytest.mark.root
 @pytest.mark.odd
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
-def test_root_material_writer(tmp_path, assert_root_hash):
-    from acts.examples.odd import getOpenDataDetector
+def test_root_material_writer(tmp_path, assert_root_hash, odd_detector):
     from acts.examples.root import RootMaterialWriter
 
-    with getOpenDataDetector() as detector:
-        trackingGeometry = detector.trackingGeometry()
+    detector = odd_detector
 
-        out = tmp_path / "material.root"
+    trackingGeometry = detector.trackingGeometry()
 
-        assert not out.exists()
+    out = tmp_path / "material.root"
 
-        rmw = RootMaterialWriter(level=acts.logging.WARNING, filePath=str(out))
-        assert out.exists()
-        assert out.stat().st_size > 0 and out.stat().st_size < 500
-        rmw.write(trackingGeometry)
+    assert not out.exists()
 
-        assert out.stat().st_size > 1000
-        assert_root_hash(out.name, out)
+    rmw = RootMaterialWriter(level=acts.logging.WARNING, filePath=str(out))
+    assert out.exists()
+    assert out.stat().st_size > 0 and out.stat().st_size < 500
+    rmw.write(trackingGeometry)
+
+    assert out.stat().st_size > 1000
+    assert_root_hash(out.name, out)
 
 
 @pytest.mark.json

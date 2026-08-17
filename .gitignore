@@ -36,7 +36,6 @@ codegen/src/codegen.egg-info/
 !.clang-format
 !.github
 !.gitignore
-!.gitlab-ci.yml
 !.clang-tidy
 !.oclint
 !.devcontainer

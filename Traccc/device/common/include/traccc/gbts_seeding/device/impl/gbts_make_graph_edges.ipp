@@ -24,19 +24,21 @@ namespace traccc::device {
 
 namespace detail {
 
-// Apply the RZ-doublet + curvature/d0 cuts to a candidate edge (node1->node2)
+// Apply the RZ-doublet + curvature cuts to a candidate edge (node1->node2)
 // and, if it passes, append it to the edge list. Single-use helper for
 // gbts_make_graph_edges, kept inline here. Node params are float4 (tau_min,
 // tau_max, r, z).
 TRACCC_HOST_DEVICE inline void gbts_check_edge_candidate(
     const float4 node_params_1, const float4 node_params_2,
     vecmem::device_vector<uint2>& d_edge_nodes,
-    vecmem::device_vector<float4>& d_edge_params,
+    vecmem::device_vector<short4>& d_edge_params,
     vecmem::device_vector<unsigned int>& d_num_outgoing_edges,
     unsigned int& nEdgesCounter, const unsigned int globalIdx2,
     const unsigned int begin_bin1, const unsigned int n1Idx, const float phi1,
     const float phi2, const float deltaPhi,
-    const gbts_make_graph_edges_params& ap, const unsigned int nMaxEdges) {
+    const gbts_make_graph_edges_params& ap,
+    const edge_params_converter edge_params_maker,
+    const unsigned int nMaxEdges) {
   const float tau_min1 = node_params_1.x;
   const float tau_max1 = node_params_1.y;
   const float r1 = node_params_1.z;
@@ -75,24 +77,26 @@ TRACCC_HOST_DEVICE inline void gbts_check_edge_candidate(
     return;
   }
   const float curv = dphi / dr;
-  const float d0_for_max_curv = r1 * r2 * (math::fabs(curv) - ap.max_Kappa);
-  const float d0_max = (ftau < 4.0f) ? ap.low_Kappa_d0 : ap.high_Kappa_d0;
-  if (d0_for_max_curv > d0_max) {
+  const float curv_max = ftau < ap.max_Kappa_change_tau ? ap.max_Kappa_low_tau
+                                                        : ap.max_Kappa_high_tau;
+  if (math::fabs(curv) > curv_max) {
     return;
   }
 
   const unsigned int nEdges =
       vecmem::device_atomic_ref<unsigned int>(nEdgesCounter).fetch_add(1u);
   if (nEdges < nMaxEdges) {
-    const float exp_eta = math::sqrt(1.0f + tau * tau) - tau;
+    const float eta = -1 * math::log(math::sqrt(1.0f + tau * tau) - tau);
     // edge linking order is inside->out
     vecmem::device_atomic_ref<unsigned int>(
         d_num_outgoing_edges[begin_bin1 + n1Idx])
         .fetch_add(1u);
     d_edge_nodes[nEdges] = uint2{globalIdx2, begin_bin1 + n1Idx};
-    d_edge_params[nEdges] =
-        float4{exp_eta, curv, phi2 + curv * r2, phi1 + curv * r1};
-    // edge params: (exp(-eta), curvature, extrapolated phi at node1,
+    bool inflate_matching_cuts = (ap.long_edge_dz < math::fabs(dz)) ||
+                                 (ap.long_edge_dr < math::fabs(dr));
+    d_edge_params[nEdges] = edge_params_maker.make_edge_params(
+        eta, curv, phi2 + curv * r2, phi1 + curv * r1, inflate_matching_cuts);
+    // edge params: (eta, curvature, extrapolated phi at node1,
     //               extrapolated phi at node2)
   }
 }
@@ -115,7 +119,7 @@ TRACCC_HOST_DEVICE inline void gbts_make_graph_edges(
   const vecmem::device_vector<const float4> d_node_params(payload.node_params);
   const vecmem::device_vector<const float> d_node_phi(payload.node_phi);
   vecmem::device_vector<uint2> d_edge_nodes(payload.edge_nodes);
-  vecmem::device_vector<float4> d_edge_params(payload.edge_params);
+  vecmem::device_vector<short4> d_edge_params(payload.edge_params);
   vecmem::device_vector<unsigned int> d_num_outgoing_edges(
       payload.num_outgoing_edges);
 
@@ -211,7 +215,8 @@ TRACCC_HOST_DEVICE inline void gbts_make_graph_edges(
         detail::gbts_check_edge_candidate(
             np1, np2, d_edge_nodes, d_edge_params, d_num_outgoing_edges,
             nEdgesCounter, globalIdx2, begin_bin1, n1Idx, phi1, phi2, deltaPhi,
-            payload.gbts_make_graph_edges_params, payload.nMaxEdges);
+            payload.gbts_make_graph_edges_params, payload.edge_params_maker,
+            payload.nMaxEdges);
       }
     } else {
       for (; n1Idx < num_nodes1; n1Idx++) {
@@ -225,7 +230,8 @@ TRACCC_HOST_DEVICE inline void gbts_make_graph_edges(
         detail::gbts_check_edge_candidate(
             np1, np2, d_edge_nodes, d_edge_params, d_num_outgoing_edges,
             nEdgesCounter, globalIdx2, begin_bin1, n1Idx, phi1, phi2, deltaPhi,
-            payload.gbts_make_graph_edges_params, payload.nMaxEdges);
+            payload.gbts_make_graph_edges_params, payload.edge_params_maker,
+            payload.nMaxEdges);
       }
     }
   }

@@ -16,6 +16,29 @@ def getOpenDataDetectorDirectory():
     return odd_dir
 
 
+_defaultMaterialDecoratorCache = {}
+
+
+def _defaultMaterialDecorator(odd_dir: Path, customLogLevel):
+    """Default ODD material decorator, memoized per material map file.
+
+    Building one costs ~50MB that is not released when the decorator (or the
+    detector it decorated) goes away, so a process that constructs the ODD a
+    few dozen times -- the python test suite -- pays that every time. The
+    decorator is only read from during decoration, so one instance can back
+    any number of detectors.
+    """
+    import acts.root
+
+    fileName = str(odd_dir / "data/odd-material-maps.root")
+    if fileName not in _defaultMaterialDecoratorCache:
+        _defaultMaterialDecoratorCache[fileName] = acts.root.RootMaterialDecorator(
+            fileName=fileName,
+            level=customLogLevel(minLevel=acts.logging.WARNING),
+        )
+    return _defaultMaterialDecoratorCache[fileName]
+
+
 def getOpenDataDetector(
     materialDecorator=None,
     misaligned=False,
@@ -74,12 +97,7 @@ def getOpenDataDetector(
             raise RuntimeError(msg)
 
     if materialDecorator is None:
-        import acts.root
-
-        materialDecorator = acts.root.RootMaterialDecorator(
-            fileName=str(odd_dir / "data/odd-material-maps.root"),
-            level=customLogLevel(minLevel=acts.logging.WARNING),
-        )
+        materialDecorator = _defaultMaterialDecorator(odd_dir, customLogLevel)
 
     if gen3:
         if misaligned:
