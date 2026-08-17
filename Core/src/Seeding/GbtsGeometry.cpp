@@ -128,8 +128,9 @@ bool GbtsLayer::checkCompatibility(const GbtsLayer& otherLayer,
 
     const float r2 = otherLayer.m_layerDescription.refCoord;
 
-    float A = r2 / 8.0f;
-    float B = r1 / 8.0f;
+		// for same layer links use layer width
+    float A = r2 / (2.0f*m_layerDescription.halfRefWidth);
+    float B = r1 / (2.0f*m_layerDescription.halfRefWidth);
     if (r2 != r1) {
       A = r2 / (r2 - r1);
       B = r1 / (r2 - r1);
