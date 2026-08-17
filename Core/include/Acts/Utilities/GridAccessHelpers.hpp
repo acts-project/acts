@@ -15,23 +15,8 @@
 #include <stdexcept>
 #include <utility>
 
-namespace Acts {
+namespace Acts::GridAccessHelpers {
 
-namespace GridAccessHelpers {
-
-/// Unroll the cast loop
-///
-/// @tparam cast_container is the container type of cast objects
-/// @tparam Array is the array type to be filled
-///
-/// @param position is the position of the update call
-/// @param globalCasts is the cast value vector from global to grid position
-/// @param ra is the array to be filled
-template <typename cast_container, typename Array, std::size_t... idx>
-void fillCasts(const Vector3& position, const cast_container& globalCasts,
-               Array& ra, std::index_sequence<idx...> /*indices*/) {
-  ((ra[idx] = VectorHelpers::cast(position, globalCasts[idx])), ...);
-}
 /// Cast into a lookup position
 ///
 /// This method allows to transform a global position into a grid position
@@ -39,7 +24,6 @@ void fillCasts(const Vector3& position, const cast_container& globalCasts,
 /// into a format suitable for the grid.
 ///
 /// @tparam cast_container is the container type of cast objects
-/// @tparam Array is the array type to be filled
 ///
 /// @param position is the position of the update call
 /// @param globalCasts is the cast value vector from global to grid position
@@ -48,11 +32,11 @@ void fillCasts(const Vector3& position, const cast_container& globalCasts,
 template <typename grid_type, typename cast_container>
 typename grid_type::point_t castPosition(const Vector3& position,
                                          const cast_container& globalCasts) {
-  // Fill the grid point from global
-  typename grid_type::point_t casted{};
-  fillCasts(position, globalCasts, casted,
-            std::make_integer_sequence<std::size_t, grid_type::DIM>{});
-  return casted;
+  // Fill the grid point from global, unrolling the cast loop
+  return [&]<std::size_t... idx>(std::index_sequence<idx...> /*indices*/) {
+    return typename grid_type::point_t{
+        VectorHelpers::cast(position, globalCasts[idx])...};
+  }(std::make_integer_sequence<std::size_t, grid_type::DIM>{});
 }
 
 /// Unroll the local position loop
@@ -92,5 +76,4 @@ typename grid_type::point_t accessLocal(const Vector2& lposition,
   return accessed;
 }
 
-}  // namespace GridAccessHelpers
-}  // namespace Acts
+}  // namespace Acts::GridAccessHelpers
