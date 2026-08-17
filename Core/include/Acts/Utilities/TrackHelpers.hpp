@@ -187,10 +187,10 @@ findTrackStateForExtrapolation(
                                              Logging::INFO)) {
   using TrackStateProxy = typename track_proxy_t::ConstTrackStateProxy;
 
-  /// Intersect the reference surface with the trajectory at a track state.
-  /// Returns `std::nullopt` if the state carries no parameters at all and can
-  /// therefore not be started from; an invalid intersection means the state has
-  /// parameters but does not reach the reference surface.
+  // Intersect the reference surface with the trajectory at a track state.
+  // Returns `std::nullopt` if the state carries no parameters at all and can
+  // therefore not be started from; an invalid intersection means the state has
+  // parameters but does not reach the reference surface.
   auto intersect =
       [&](const TrackStateProxy &state) -> std::optional<Intersection3D> {
     if (!state.hasSmoothed() && !state.hasFiltered() && !state.hasPredicted()) {
