@@ -48,8 +48,6 @@ jobs:
       # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
       # so reads fall back to the anonymous (heavily rate limited) bucket.
       packages: read
-    # registry.cern.ch is a pull-through cache for ghcr.io. Husk jobs only —
-    # the ubuntu-latest jobs run outside CERN and gain nothing from it.
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
@@ -491,16 +489,10 @@ jobs:
       # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
       # so reads fall back to the anonymous (heavily rate limited) bucket.
       packages: read
-    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
 
     steps:
       # The image keeps build tooling in the sbin dirs, off a non-login PATH.
-      - name: Fix up PATH
-        run: |
-          echo "/usr/local/sbin" >> $GITHUB_PATH
-          echo "/usr/sbin" >> $GITHUB_PATH
-          echo "/sbin" >> $GITHUB_PATH
-
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -509,6 +501,9 @@ jobs:
         uses: ./.github/actions/dependencies
         with:
           compiler: g++
+          flavor: cuda13
+          # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
+          DEPENDENCY_TAG: v24.0.3
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -594,12 +589,7 @@ jobs:
       contents: read
       packages: read
     container:
-      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
-      # Required. Without it the daemon never applies the nvidia runtime hook,
-      # so the driver bits are not injected: the image carries the CUDA toolkit
-      # but the container gets no device and no nvidia-smi. Confirmed by
-      # removing it, at which point the Check GPU step below failed with
-      # "nvidia-smi: command not found".
+      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
       options: --gpus all
     env:
       MODEL_STORAGE: ${{ github.workspace }}/ci_models
@@ -609,12 +599,6 @@ jobs:
       NVIDIA_TF32_OVERRIDE: "0"
 
     steps:
-      - name: Fix up PATH
-        run: |
-          echo "/usr/local/sbin" >> $GITHUB_PATH
-          echo "/usr/sbin" >> $GITHUB_PATH
-          echo "/sbin" >> $GITHUB_PATH
-
       # Fails the job early if no device is visible, and puts the driver
       # version and GPU model in the log -- which is what you want to hand
       # someone when numerics differ between nodes.
@@ -629,6 +613,9 @@ jobs:
         uses: ./.github/actions/dependencies
         with:
           compiler: g++
+          flavor: cuda13
+          # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
+          DEPENDENCY_TAG: v24.0.3
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -681,7 +668,7 @@ jobs:
       # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
       # so reads fall back to the anonymous (heavily rate limited) bucket.
       packages: read
-    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_tensorrt:87
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -692,6 +679,9 @@ jobs:
         uses: ./.github/actions/dependencies
         with:
           compiler: g++
+          flavor: cuda13
+          # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
+          DEPENDENCY_TAG: v24.0.3
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -740,7 +730,7 @@ jobs:
       # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
       # so reads fall back to the anonymous (heavily rate limited) bucket.
       packages: read
-    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_cuda:87
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -757,6 +747,9 @@ jobs:
         uses: ./.github/actions/dependencies
         with:
           compiler: g++
+          flavor: cuda13
+          # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
+          DEPENDENCY_TAG: v24.0.3
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -808,12 +801,7 @@ jobs:
       contents: read
       packages: read
     container:
-      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_cuda:87
-      # Required. Without it the daemon never applies the nvidia runtime hook,
-      # so the driver bits are not injected: the image carries the CUDA toolkit
-      # but the container gets no device and no nvidia-smi. Confirmed by
-      # removing it, at which point the Check GPU step below failed with
-      # "nvidia-smi: command not found".
+      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
       options: --gpus all
 
     steps:
@@ -833,6 +821,9 @@ jobs:
         uses: ./.github/actions/dependencies
         with:
           compiler: g++
+          flavor: cuda13
+          # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
+          DEPENDENCY_TAG: v24.0.3
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
