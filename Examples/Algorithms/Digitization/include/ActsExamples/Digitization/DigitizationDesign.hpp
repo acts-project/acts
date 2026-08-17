@@ -8,18 +8,18 @@
 
 #pragma once
 
-#include "Acts/Geometry/IDesign.hpp"
+#include "Acts/Geometry/ISensorDesign.hpp"
 #include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 
 #include <string_view>
 
-// A class that implements the IDesign interface for digitization.
+// A class that implements the ISensorDesign interface for digitization.
 // This design can be attached to surfaces in the geometry to indicate that they
 // have an associated digitizer.
 
 namespace ActsExamples {
 
-class DigitizationDesign final : public Acts::IDesign {
+class DigitizationDesign final : public Acts::ISensorDesign {
  public:
   explicit DigitizationDesign(const DigitizationAlgorithm::Digitizer* digitizer)
       : m_digitizer(digitizer) {}

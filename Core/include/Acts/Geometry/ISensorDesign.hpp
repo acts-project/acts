@@ -8,31 +8,21 @@
 
 #pragma once
 
-#include <memory>
 #include <string_view>
 
 namespace Acts {
 
-/// @class IDesign
+/// @class ISensorDesign
 ///
 /// Abstract base class for the physical design description of a detector
 /// element.
 ///
-class IDesign {
+class ISensorDesign {
  public:
-  virtual ~IDesign() = default;
+  virtual ~ISensorDesign() = default;
 
   /// Name identification for logging and debugging
   virtual std::string_view name() const = 0;
-
-  const IDesign* design() const { return m_design.get(); }
-
-  void assignDesign(std::shared_ptr<const IDesign> design) {
-    m_design = std::move(design);
-  }
-
- protected:
-  std::shared_ptr<const IDesign> m_design{nullptr};
 };
 
 }  // namespace Acts

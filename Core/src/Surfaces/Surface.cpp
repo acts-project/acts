@@ -363,10 +363,6 @@ void Surface::assignSurfaceMaterial(
   m_surfaceMaterial = std::move(material);
 }
 
-void Surface::assignDesign(std::shared_ptr<const IDesign> design) {
-  m_surfaceDesign = std::move(design);
-}
-
 Vector2 Surface::transformSurfaceLocalToMaterialLocal(
     const Vector2& surfaceLocal) const {
   Vector2 materialLocal = surfaceLocal;
