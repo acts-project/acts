@@ -54,7 +54,7 @@ class TrackVisualizerAlg(acts.examples.IAlgorithm):
         tracks = self.tracks(context.eventStore)
         for track in tracks:
             acts.EventDataView3D.drawTrack(
-                self._vis, track, context.geoContext
+                self._vis, track
             )  # draw track not a free function
 
         return acts.examples.ProcessCode.SUCCESS
@@ -202,7 +202,6 @@ class PyVisualization2D(acts.VisualizationBuffer):
                         for segment in line_segments
                     )
                 ]
-                print(hitSensitives)
                 hit_patches = [Polygon(face, closed=True) for face in hitSensitives]
                 hit_collection = PatchCollection(hit_patches, alpha=0.5)
                 hit_collection.set_facecolor("red")

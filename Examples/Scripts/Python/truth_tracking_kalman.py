@@ -242,8 +242,8 @@ def runTruthTrackingKalman(
 
         vis.plot(
             projection=projection,
-            filename="truth_tracking_kalman_visualization_hitSensitives.png",
-            z=[-1, 510],
+            filename="truth_tracking_kalman_visualization_hitSensitivesRZ.png",
+            # z=[0, 500],
         )
 
 
@@ -272,6 +272,6 @@ if "__main__" == __name__:
         trackingGeometry=trackingGeometry,
         field=field,
         digiConfigFile=digiConfigFile,
-        projection="xy",
+        projection="zr",
         outputDir=Path.cwd(),
     )
