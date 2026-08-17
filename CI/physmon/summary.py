@@ -7,7 +7,7 @@ Input: physmon_results.json — a list of comparison rows, each with:
       "report": "html/.../foo.html",
       "info_only": false,             # true for "Comparison ..." (gx2f_vs_kf)
       "steps": [
-        {"kind": "upstream"|"generator"|"plot"|"histcmp",
+        {"kind": "upstream"|"producer"|"plot"|"histcmp",
          "name": "trackfitting_kf",   # display label
          "rc": 0,
          "log": "logs/trackfitting_kf.log" | null,
@@ -32,12 +32,12 @@ HERALD_URL = "https://acts-herald.app.cern.ch/view/{repo}/runs/{run_id}/artifact
 IS_CI = "GITHUB_ACTIONS" in os.environ
 
 # Step kinds, in display order.
-STEP_KINDS = ["upstream", "generator", "plot", "histcmp"]
+STEP_KINDS = ["upstream", "producer", "plot", "histcmp"]
 STEP_HEADERS = {
-    "upstream":  "Upstream",
-    "generator": "Generator",
-    "plot":      "Plot",
-    "histcmp":   "Histcmp",
+    "upstream": "Upstream",
+    "producer": "Producer",
+    "plot":     "Plot",
+    "histcmp":  "Histcmp",
 }
 
 
