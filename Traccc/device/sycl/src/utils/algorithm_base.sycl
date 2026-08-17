@@ -14,13 +14,15 @@
 
 namespace traccc::sycl {
 
-algorithm_base::algorithm_base(queue_wrapper& queue)
+algorithm_base::algorithm_base(queue_wrapper& queue,
+                               await_function_type await_func)
     : m_queue(queue),
       m_warp_size(static_cast<unsigned int>(
           details::get_queue(queue)
               .get_device()
               .get_info<::sycl::info::device::sub_group_sizes>()
-              .at(0))) {}
+              .at(0))),
+      m_await_func(std::move(await_func)) {}
 
 queue_wrapper& algorithm_base::queue() const {
   return m_queue.get();
@@ -28,6 +30,10 @@ queue_wrapper& algorithm_base::queue() const {
 
 unsigned int algorithm_base::warp_size() const {
   return m_warp_size;
+}
+
+void algorithm_base::await(vecmem::abstract_event& event) const {
+  m_await_func(event, m_queue.get());
 }
 
 }  // namespace traccc::sycl
