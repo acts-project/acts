@@ -18,6 +18,7 @@ PhysmonSetup = collections.namedtuple(
         "gbtsLayerMap",
         "gbtsConnectionTable",
         "outdir",
+        "threads",
     ],
 )
 
@@ -28,8 +29,13 @@ def makeSetup() -> PhysmonSetup:
 
     parser = argparse.ArgumentParser()
     parser.add_argument("outdir")
+    # -1 keeps the legacy "use all hardware threads" behavior for manual runs;
+    # the Snakefile passes a concrete value matching the rule's thread budget.
+    parser.add_argument("--threads", type=int, default=-1)
 
-    args = parser.parse_args()
+    # parse_known_args so callers can layer their own argparse on top
+    # (e.g. physmon_trackfinding_1muon.py adds a seeding-variant argument)
+    args, _ = parser.parse_known_args()
 
     matDeco = acts.IMaterialDecorator.fromFile(
         odd_dir / "data/odd-material-maps.root", level=acts.logging.INFO
@@ -52,6 +58,7 @@ def makeSetup() -> PhysmonSetup:
         field=field,
         bFieldInZ=bFieldInZ,
         outdir=Path(args.outdir),
+        threads=args.threads,
     )
 
     setup.outdir.mkdir(exist_ok=True)
