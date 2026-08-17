@@ -40,4 +40,34 @@ GridSurfaceMaterialFactory::create(
           axis0, axis1, std::move(materialAccessor), payload));
 }
 
+std::unique_ptr<GridSurfaceMaterial> GridSurfaceMaterialFactory::create(
+    const MultiAxisSpec2D& binning, const Surface& surface,
+    GridMaterialAccessor&& materialAccessor,
+    const std::vector<std::vector<MaterialSlab>>& payload) {
+  return std::make_unique<GridSurfaceMaterial>(create2D<GridMaterialAccessor>(
+      binning, surface, std::move(materialAccessor), payload));
+}
+
+std::unique_ptr<IndexedGridSurfaceMaterial> GridSurfaceMaterialFactory::create(
+    const MultiAxisSpec2D& binning, const Surface& surface,
+    IndexedMaterialAccessor&& materialAccessor,
+    const std::vector<std::vector<IndexedMaterialAccessor::grid_value_type>>&
+        payload) {
+  return std::make_unique<IndexedGridSurfaceMaterial>(
+      create2D<IndexedMaterialAccessor>(binning, surface,
+                                        std::move(materialAccessor), payload));
+}
+
+std::unique_ptr<GloballyIndexedGridSurfaceMaterial>
+GridSurfaceMaterialFactory::create(
+    const MultiAxisSpec2D& binning, const Surface& surface,
+    GloballyIndexedMaterialAccessor&& materialAccessor,
+    const std::vector<
+        std::vector<GloballyIndexedMaterialAccessor::grid_value_type>>&
+        payload) {
+  return std::make_unique<GloballyIndexedGridSurfaceMaterial>(
+      create2D<GloballyIndexedMaterialAccessor>(
+          binning, surface, std::move(materialAccessor), payload));
+}
+
 }  // namespace Acts

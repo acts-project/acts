@@ -12,8 +12,12 @@
 #include "Acts/Material/GridSurfaceMaterialFactory.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/MultiAxisSpec.hpp"
 
 #include <numbers>
 #include <vector>
@@ -69,6 +73,47 @@ BOOST_AUTO_TEST_CASE(GridMaterial2D) {
   BOOST_CHECK_EQUAL(ismXY->materialSlab(l10).material().X0(), 2.);
   BOOST_CHECK_EQUAL(ismXY->materialSlab(l11).material().X0(), 12.);
   BOOST_CHECK_EQUAL(ismXY->materialSlab(l12).material().X0(), 22.);
+}
+
+// This test covers building a grid material by resolving a MultiAxisSpec2D
+// binning against a surface, following the same pattern used for
+// ProtoGridSurfaceMaterial (see BinnedSurfaceMaterialAccumulator). Binning is
+// restricted to z; loc0 (rPhi) is a single-bin dummy axis that should be
+// ignored regardless of its (possibly out-of-range) value.
+BOOST_AUTO_TEST_CASE(GridMaterialFromMultiAxisSpec) {
+  using enum AxisDirection;
+
+  auto cylinder = Surface::makeShared<CylinderSurface>(
+      Transform3::Identity(), std::make_shared<CylinderBounds>(30., 100.));
+
+  MultiAxisSpec2D binning({AxisSpec::DeferredEquidistant(1, AxisRPhi),
+                           AxisSpec::DeferredEquidistant(4, AxisZ)});
+
+  std::vector<std::vector<MaterialSlab>> payload = {
+      {MaterialSlab(Material::fromMolarDensity(1.0, 2.0, 3.0, 4.0, 5.0), 1.0),
+       MaterialSlab(Material::fromMolarDensity(11.0, 12.0, 13.0, 14.0, 15.0),
+                    2.0),
+       MaterialSlab(Material::fromMolarDensity(21.0, 22.0, 23.0, 24.0, 25.0),
+                    3.0),
+       MaterialSlab(Material::fromMolarDensity(31.0, 32.0, 33.0, 34.0, 35.0),
+                    4.0)}};
+
+  auto ism = GridSurfaceMaterialFactory::create(
+      binning, *cylinder, GridMaterialAccessor{}, payload);
+  BOOST_CHECK(ism != nullptr);
+
+  // loc0 (rPhi) is irrelevant - near, far and out-of-range values all land
+  // on the same single dummy bin
+  Vector2 lLow(-90., -75.);
+  Vector2 lMid(1000., -75.);
+  Vector2 lHigh(90., -75.);
+  BOOST_CHECK_EQUAL(ism->materialSlab(lLow).material().X0(), 1.);
+  BOOST_CHECK_EQUAL(ism->materialSlab(lMid).material().X0(), 1.);
+  BOOST_CHECK_EQUAL(ism->materialSlab(lHigh).material().X0(), 1.);
+
+  // loc1 (z) still resolves the real binning
+  Vector2 lZ2(0., 25.);
+  BOOST_CHECK_EQUAL(ism->materialSlab(lZ2).material().X0(), 21.);
 }
 
 // This test covers the locally indexed grid material in 2D, comparing a
