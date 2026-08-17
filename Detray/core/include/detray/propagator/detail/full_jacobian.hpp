@@ -16,6 +16,17 @@
 
 namespace detray::detail {
 
+/// The full Jacobian in its known substructure: 25 of its 36 cells are free.
+/// Every specialisation of @c update_full_jacobian produces this type, so the
+/// frame the Jacobian was assembled for is not visible to the caller.
+///
+/// The substructure taken here is the one that holds whether or not the volume
+/// carries material; the no-material variant is more structured still, and
+/// worth selecting statically for a detector known to have none.
+template <concepts::algebra algebra_t>
+using full_jacobian_matrix =
+    ksm::matrix<ksm::full_jacobian_substructure<true>, dscalar<algebra_t>>;
+
 /// @brief The full Jacobian between two bound track states.
 ///
 /// @c J_full = J_F2B * (D + I) * J_transport * J_B2F, where D is the outer

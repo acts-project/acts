@@ -98,17 +98,17 @@ TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
   /*
    * If we are running the MBF smoother, we need to accumulate the Jacobians
    * between the two sensitives multiplicatively. To this end, we ask the
-   * parameter transporter to multiply the Jacobians into this matrix, which
-   * is set to the multiplicative identity.
+   * parameter transporter to accumulate them, starting from the multiplicative
+   * identity. The updater state holds the accumulator itself, in its known
+   * substructure, so we write it out once after the propagation instead of
+   * reading it back from global memory at every surface.
    */
-  if (cfg.run_smoother == smoother_type::e_mbf) {
+  const bool run_mbf = (cfg.run_smoother == smoother_type::e_mbf);
+
+  if (run_mbf) {
     assert(payload.tmp_jacobian_view.ptr() != nullptr);
 
-    vecmem::device_vector<bound_matrix<default_algebra>> tmp_jacobian(
-        payload.tmp_jacobian_view);
-    tmp_jacobian.at(param_id) =
-        matrix::identity<bound_matrix<default_algebra>>();
-    updater_state.set_full_jacobian(&(tmp_jacobian.at(param_id)));
+    updater_state.enable_full_jacobian();
   }
 
   // Notify the KF and material interaction only at the first propagation
@@ -124,6 +124,16 @@ TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
   propagator.propagate(
       propagation, detray::tie(aborter_state, updater_state, interactor_state,
                                momentum_aborter_state, ckf_aborter_state));
+
+  // Write the accumulated Jacobian out to its storage. Unconditional, like the
+  // identity write it replaces, so that a track that dies during propagation
+  // still leaves the Jacobian it had accumulated up to that point.
+  if (run_mbf) {
+    vecmem::device_vector<bound_matrix<default_algebra>> tmp_jacobian(
+        payload.tmp_jacobian_view);
+    tmp_jacobian.at(param_id) =
+        updater_state.full_jacobian().template to_dense<algebra_t>();
+  }
 
   // If a surface found, add the parameter for the next step
   if (ckf_aborter_state.success) {

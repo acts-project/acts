@@ -21,8 +21,6 @@
 #include "detray/propagator/detail/noise_estimation.hpp"
 #include "detray/propagator/propagation_config.hpp"
 #include "detray/utils/curvilinear_frame.hpp"
-#include "detray/utils/known_substructure_matrix.hpp"
-#include "detray/utils/known_substructure_matrix_types.hpp"
 #include "detray/utils/logging.hpp"
 #include "detray/utils/type_registry.hpp"
 
@@ -52,15 +50,15 @@ struct parameter_updater_state {
   friend struct parameter_transporter<algebra_t>;
   friend struct parameter_setter<algebra_t>;
 
+  /// The accumulated full Jacobian, in its known substructure
+  using full_jacobian_type = detail::full_jacobian_matrix<algebra_t>;
+
   constexpr parameter_updater_state() = default;
 
   /// Start without explicit track parameters
   DETRAY_HOST_DEVICE
-  explicit constexpr parameter_updater_state(
-      const propagation::config& cfg,
-      bound_matrix<algebra_t>* full_jac = nullptr)
-      : m_full_jacobian(full_jac),
-        m_cfg{cfg.navigation.accumulated_error,
+  explicit constexpr parameter_updater_state(const propagation::config& cfg)
+      : m_cfg{cfg.navigation.accumulated_error,
               cfg.navigation.n_scattering_stddev,
               cfg.navigation.estimate_scattering_noise} {}
 
@@ -68,10 +66,8 @@ struct parameter_updater_state {
   DETRAY_HOST_DEVICE
   constexpr parameter_updater_state(
       const propagation::config& cfg,
-      const free_track_parameters<algebra_t>& free_params,
-      bound_matrix<algebra_t>* full_jac = nullptr)
-      : m_full_jacobian(full_jac),
-        m_cfg{cfg.navigation.accumulated_error,
+      const free_track_parameters<algebra_t>& free_params)
+      : m_cfg{cfg.navigation.accumulated_error,
               cfg.navigation.n_scattering_stddev,
               cfg.navigation.estimate_scattering_noise} {
     // Set bound track parameters
@@ -83,10 +79,8 @@ struct parameter_updater_state {
   DETRAY_HOST_DEVICE
   constexpr parameter_updater_state(
       const propagation::config& cfg,
-      const bound_track_parameters<algebra_t>& bound_params,
-      bound_matrix<algebra_t>* full_jac = nullptr)
+      const bound_track_parameters<algebra_t>& bound_params)
       : m_bound_params{bound_params},
-        m_full_jacobian(full_jac),
         m_cfg{cfg.navigation.accumulated_error,
               cfg.navigation.n_scattering_stddev,
               cfg.navigation.estimate_scattering_noise} {}
@@ -152,42 +146,48 @@ struct parameter_updater_state {
 
   /// @returns true if the full Jacobian matrix should be assembled.
   DETRAY_HOST_DEVICE
-  constexpr bool has_full_jacobian() const {
-    return m_full_jacobian != nullptr;
+  constexpr bool has_full_jacobian() const { return m_has_full_jacobian; }
+
+  /// Start accumulating the full Jacobian, from the identity.
+  ///
+  /// The accumulator is held by value rather than through a pointer to its
+  /// final storage, so it is not read back and written out again at every
+  /// surface. Every cell of it is addressed at compile time, so it can stay in
+  /// registers for the whole propagation. Write it out once afterwards, with
+  /// @c full_jacobian.
+  DETRAY_HOST_DEVICE
+  void enable_full_jacobian() {
+    m_full_jacobian = full_jacobian_type::identity();
+    m_has_full_jacobian = true;
   }
 
   /// @returns the current full Jacbian.
   DETRAY_HOST_DEVICE
-  constexpr const bound_matrix<algebra_t>& full_jacobian() const {
+  constexpr const full_jacobian_type& full_jacobian() const {
     assert(has_full_jacobian());
-    return *m_full_jacobian;
+    return m_full_jacobian;
   }
 
   /// Set new full Jacbian.
   DETRAY_HOST_DEVICE
-  constexpr void set_full_jacobian(const bound_matrix<algebra_t>& jac) {
+  constexpr void set_full_jacobian(const full_jacobian_type& jac) {
     assert(has_full_jacobian());
-    *m_full_jacobian = jac;
-  }
-
-  /// Set new full Jacbian.
-  DETRAY_HOST_DEVICE
-  constexpr void set_full_jacobian(bound_matrix<algebra_t>* jac_ptr) {
-    assert(jac_ptr);
-    m_full_jacobian = jac_ptr;
+    m_full_jacobian = jac;
   }
 
  private:
   /// Bound track parameters and covariance
   bound_track_parameters<algebra_t> m_bound_params{};
   /// Full jacobian for up to the current destination surface
-  bound_matrix<algebra_t>* m_full_jacobian{nullptr};
+  full_jacobian_type m_full_jacobian{};
   /// Configuration for the noise estimation
   noise_cfg m_cfg{};
   /// Always update the free track parameters, even if nothing changed
   bool m_always_update{false};
   /// Notify observing actors on initial surface (propagation init)
   bool m_notify_on_initial{true};
+  /// Whether the full Jacobian is accumulated over the propagation
+  bool m_has_full_jacobian{false};
 };
 
 /// Result of the param. transporter: bound track parameters at dest. sf.
@@ -257,11 +257,9 @@ struct parameter_transporter : base_actor {
   using bound_track_parameters_type = bound_track_parameters<algebra_t>;
   // Bound matrix type (bound covariance)
   using bound_matrix_type = bound_matrix<algebra_t>;
-  // The full Jacobian in its known substructure: 25 of its 36 cells are free.
-  // Every specialisation of update_full_jacobian produces this type, so the
-  // frame the Jacobian was assembled for is not visible to the caller.
-  using ksm_full_jacobian_type =
-      ksm::matrix<ksm::full_jacobian_substructure<true>, dscalar<algebra_t>>;
+  // The full Jacobian in its known substructure. Shared with the state, so
+  // that the step Jacobian and the accumulator it holds have the same type.
+  using ksm_full_jacobian_type = detail::full_jacobian_matrix<algebra_t>;
   /// @}
 
   /// Use the parameter updater state
@@ -398,18 +396,11 @@ struct parameter_transporter : base_actor {
           // keeps it over every step. The product skips the structurally zero
           // terms: 225 flops rather than the 396 of a dense 6x6 product.
           //
-          // Only the accumulator has to be converted, because it is owned by
-          // the caller and stored dense. The substructure taken for it is the
-          // one that holds whether or not the volume carries material; the
-          // no-material variant is more structured still, and worth selecting
-          // statically for a detector known to have none.
-          const auto accumulated =
-              ksm_full_jacobian_type::template from_dense<algebra_t>(
-                  updater_state.full_jacobian());
-
-          updater_state.set_full_jacobian(
-              (propagation_step_jacobian * accumulated)
-                  .template to_dense<algebra_t>());
+          // The state holds the accumulator by value, so neither operand has
+          // to be converted here. The caller writes the result out once, after
+          // the propagation.
+          updater_state.set_full_jacobian(propagation_step_jacobian *
+                                          updater_state.full_jacobian());
         }
 
         // Reset transport Jacobian to identity matrix
