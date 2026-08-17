@@ -338,6 +338,9 @@ class GridSurfaceMaterial final : public ISurfaceMaterial {
   }
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
+  /// @deprecated Global (Vector3) lookup is not supported anymore,
+  ///             use materialSlab(const Vector2&) with a prior
+  ///             Surface::globalToLocal() call instead.
   ACTS_PUSH_IGNORE_DEPRECATED()
   [[deprecated(
       "Use materialSlab(const Vector2& lp) with a prior "
@@ -424,6 +427,9 @@ class IndexedGridSurfaceMaterial final : public ISurfaceMaterial {
   }
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
+  /// @deprecated Global (Vector3) lookup is not supported anymore,
+  ///             use materialSlab(const Vector2&) with a prior
+  ///             Surface::globalToLocal() call instead.
   ACTS_PUSH_IGNORE_DEPRECATED()
   [[deprecated(
       "Use materialSlab(const Vector2& lp) with a prior "
@@ -511,6 +517,9 @@ class GloballyIndexedGridSurfaceMaterial final : public ISurfaceMaterial {
   }
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
+  /// @deprecated Global (Vector3) lookup is not supported anymore,
+  ///             use materialSlab(const Vector2&) with a prior
+  ///             Surface::globalToLocal() call instead.
   ACTS_PUSH_IGNORE_DEPRECATED()
   [[deprecated(
       "Use materialSlab(const Vector2& lp) with a prior "
