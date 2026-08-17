@@ -250,7 +250,7 @@ class GridSurfaceMaterialT
       "Global lookup is not supported; use materialSlab(const Vector2& lp) "
       "with a prior Surface::globalToLocal() call "
       "instead")]] const MaterialSlab&
-  materialSlab(const Vector3& /*gp*/) const final {
+  materialSlab([[maybe_unused]] const Vector3& gp) const final {
     throw std::logic_error(
         "GridSurfaceMaterialT: global (Vector3) material lookup is not "
         "supported, use materialSlab(const Vector2&) instead.");
