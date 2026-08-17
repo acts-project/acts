@@ -109,6 +109,27 @@ jobs:
         run: >
           CI/check_unused_files.py
 
+  # The CI tooling's own self-tests, which otherwise have no feedback loop:
+  # broken tooling fails in some other job that already paid for a container
+  # pull. Grouped because they are pure python and run in seconds; separate
+  # steps so a failure names the suite. test_public_api_surface.py stays in
+  # `api_surface` -- it skips its drift check without doxygen on PATH.
+  self_tests:
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14'
+      - name: Dependency lockfile selection
+        run: >
+          CI/dependencies/test_select_lockfile.py
+      - name: Deprecated-docs checker
+        run: >
+          CI/public_api/test_check_deprecated_docs.py
+
   api_surface:
     runs-on: ubuntu-latest
     env:
@@ -131,10 +152,10 @@ jobs:
           mv doxygen-${{ env.DOXYGEN_VERSION }}/bin/doxygen /usr/local/bin/doxygen
           doxygen --version
       - name: Self-test the surface tooling
-        # Guards the classification logic and catches Doxygen output drift.
-        run: |
+        # Here, not in `self_tests`: only this job has doxygen on PATH, and the
+        # drift check skips itself without it.
+        run: >
           CI/public_api/test_public_api_surface.py
-          CI/public_api/test_check_deprecated_docs.py
       - name: Require @deprecated docs on [[deprecated]] declarations
         # Every [[deprecated]] attribute must carry a Doxygen @deprecated command
         # so the deprecation is visible in the published docs, not just at
