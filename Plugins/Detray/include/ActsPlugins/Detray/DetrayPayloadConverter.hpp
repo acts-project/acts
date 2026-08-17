@@ -219,10 +219,10 @@ class DetrayPayloadConverter {
     Acts::TypeDispatcher<Acts::ISurfaceMaterial,
                          std::optional<DetraySurfaceMaterial>(
                              const Acts::Surface& surface)>
-        convertSurfaceMaterial{
-            convertHomogeneousSurfaceMaterial, convertBinnedSurfaceMaterial,
-            convertProtoSurfaceMaterialAxisSpec,
-            convertProtoSurfaceMaterialBinUtility};
+        convertSurfaceMaterial{convertHomogeneousSurfaceMaterial,
+                               convertBinnedSurfaceMaterial,
+                               convertProtoSurfaceMaterialAxisSpec,
+                               convertProtoSurfaceMaterialBinUtility};
   };
 
   /// Convert surface bounds to detray mask payload
