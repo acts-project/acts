@@ -6,8 +6,6 @@
  */
 
 // Library include(s).
-#include <cmath>
-
 #include "../utils/cuda_error_handling.hpp"
 #include "../utils/global_index.hpp"
 #include "../utils/utils.hpp"
@@ -162,8 +160,7 @@ triplet_seeding_algorithm::triplet_seeding_algorithm(
     : device::triplet_seeding_algorithm(finder_config, grid_config,
                                         filter_config, mr, copy,
                                         std::move(logger)),
-      cuda::algorithm_base{str},
-      m_await_func{await_func} {}
+      cuda::algorithm_base{str, std::move(await_func)} {}
 
 void triplet_seeding_algorithm::count_grid_capacities_kernel(
     const count_grid_capacities_kernel_payload& payload) const {
@@ -278,7 +275,4 @@ void triplet_seeding_algorithm::select_seeds_kernel(
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
-void triplet_seeding_algorithm::await(vecmem::abstract_event& event) const {
-  m_await_func(event, stream());
-}
 }  // namespace traccc::cuda

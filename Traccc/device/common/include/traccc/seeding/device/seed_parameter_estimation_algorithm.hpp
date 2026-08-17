@@ -8,6 +8,7 @@
 #pragma once
 
 // Local include(s).
+#include "traccc/device/abstract_awaitable.hpp"
 #include "traccc/device/algorithm_base.hpp"
 
 // Project include(s)
@@ -34,7 +35,8 @@ struct seed_parameter_estimation_algorithm
           const edm::spacepoint_collection::const_view&,
           const edm::seed_collection::const_view&)>,
       public messaging,
-      public algorithm_base {
+      public algorithm_base,
+      public virtual abstract_awaitable {
  public:
   /// Constructor for the seed parameter estimation algorithm
   ///
@@ -93,11 +95,6 @@ struct seed_parameter_estimation_algorithm
   ///
   virtual void estimate_seed_params_kernel(
       const struct estimate_seed_params_kernel_payload& payload) const = 0;
-
-  /// Synchronize an event related to asynchronous operations
-  /// @param event The event to synchronize
-  ///
-  virtual void await(vecmem::abstract_event& event) const = 0;
 
   /// @}
 

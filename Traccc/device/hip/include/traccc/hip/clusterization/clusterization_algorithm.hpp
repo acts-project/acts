@@ -35,6 +35,7 @@ class clusterization_algorithm : public device::clusterization_algorithm,
   /// @param str The HIP stream to perform the operations in
   /// @param config The clustering configuration partition
   /// @param logger The logger instance to use for messaging
+  /// @param await_func The function to use for synchronizing async operations
   ///
   clusterization_algorithm(
       const traccc::memory_resource& mr, const vecmem::copy& copy,
@@ -43,9 +44,6 @@ class clusterization_algorithm : public device::clusterization_algorithm,
       await_function_type await_func = await_sync_event);
 
  private:
-  /// The function used to synchronize events.
-  await_function_type m_await_func;
-
   /// @name Function(s) inherited from the base class
   /// @{
 
@@ -84,11 +82,6 @@ class clusterization_algorithm : public device::clusterization_algorithm,
       edm::silicon_cluster_collection::view& cluster_data,
       const vecmem::data::vector_view<const unsigned int>& permutation_map_view)
       const override;
-
-  /// Synchronize an event related to asynchronous operations
-  /// @param event The event to synchronize
-  ///
-  void await(vecmem::abstract_event& event) const override;
 
   /// @}
 

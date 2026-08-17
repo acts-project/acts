@@ -57,8 +57,7 @@ silicon_pixel_spacepoint_formation_algorithm::
         await_function_type await_func)
     : device::silicon_pixel_spacepoint_formation_algorithm(mr, copy,
                                                            std::move(logger)),
-      cuda::algorithm_base(str),
-      m_await_func(await_func) {}
+      cuda::algorithm_base(str, await_func) {}
 
 void silicon_pixel_spacepoint_formation_algorithm::count_spacepoints_kernel(
     const count_spacepoints_kernel_payload& payload) const {
@@ -101,8 +100,4 @@ void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
   stream().synchronize();
 }
 
-void silicon_pixel_spacepoint_formation_algorithm::await(
-    vecmem::abstract_event& event) const {
-  m_await_func(event, stream());
-}
 }  // namespace traccc::cuda
