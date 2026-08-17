@@ -73,7 +73,7 @@ class RootMeasurementReader final : public IReader {
         Acts::eBoundLoc0, Acts::eBoundLoc1, Acts::eBoundTime};
 
     /// path of the input file
-    std::string filePath;
+    std::filesystem::path filePath;
     /// The tree name
     std::string treeName = "measurements";
   };
