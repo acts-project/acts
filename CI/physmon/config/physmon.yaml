@@ -4,15 +4,15 @@
 # script; the Snakefile holds mechanism, not the catalog. A new chain needs:
 #
 #   1. CI/physmon/workflows/physmon_<slug>.py
-#   2. a `generators:` block here (see below)
-#   3. a six-line `rule generate_<slug>` in the Snakefile, whose directives are
+#   2. a `producers:` block here (see below)
+#   3. a six-line `rule produce_<slug>` in the Snakefile, whose directives are
 #      all derived from this file -- no output paths are written out by hand
 #
 # Three top-level sections:
 #   - trackfinding_base / trackfinding_extras: row templates. Trackfinding
 #     workflows all produce the same pack of comparison files, so they are
-#     described once here and expanded per generator rather than enumerated.
-#   - generators: one block per generator. Drives the rule's outputs, inputs,
+#     described once here and expanded per producer rather than enumerated.
+#   - producers: one block per producer. Drives the rule's outputs, inputs,
 #     thread budget and variants, and (via `trackfinding:`) which comparisons
 #     it contributes.
 #   - comparisons: one entry per histcmp call that is not part of a
@@ -31,13 +31,13 @@
 # ---------------------------------------------------------------------------
 # Trackfinding comparison templates.
 #
-# `kind_fmt` is formatted with the generator's label. `file` is relative to the
-# generator's output directory. A row with a `plot` block compares the
-# histogrammed output and takes `plot.from` as the generator's real output;
-# a row without one compares the generator's output directly.
+# `kind_fmt` is formatted with the producer's label. `file` is relative to the
+# producer's output directory. A row with a `plot` block compares the
+# histogrammed output and takes `plot.from` as the producer's real output;
+# a row without one compares the producer's output directly.
 # ---------------------------------------------------------------------------
 
-# Base pack: present for every trackfinding generator.
+# Base pack: present for every trackfinding producer.
 trackfinding_base:
   - kind_fmt: "Seeding {label}"
     file: performance_seeding.root
@@ -60,8 +60,8 @@ trackfinding_base:
       tree: tracksummary
       config: tracksummary_ckf.yml
 
-# Optional add-on packs, selected per generator via `trackfinding.extras`.
-# `{vertexing_config}` resolves to that generator's `vertexing_config`.
+# Optional add-on packs, selected per producer via `trackfinding.extras`.
+# `{vertexing_config}` resolves to that producer's `vertexing_config`.
 trackfinding_extras:
   ambisolver:
     - kind_fmt: "Ambisolver finding performance | {label}"
@@ -96,7 +96,7 @@ trackfinding_extras:
 
 
 # ---------------------------------------------------------------------------
-# Generators. One block per `rule generate_<slug>`; the key is the slug, which
+# Producers. One block per `rule produce_<slug>`; the key is the slug, which
 # also names the script (workflows/physmon_<slug>.py) and the output directory
 # ({OUTDIR}/data/<slug>).
 #
@@ -104,8 +104,8 @@ trackfinding_extras:
 #   threads: false     single-threaded (Geant4/Pythia8-bound). Default true,
 #                      meaning the rule takes the heavy-job thread budget and
 #                      passes --threads to the script.
-#   inputs:            files from another generator this one consumes. The
-#                      leading path component names the upstream generator,
+#   inputs:            files from another producer this one consumes. The
+#                      leading path component names the upstream producer,
 #                      which is what the summary reports as the upstream step.
 #   extra_outputs:     files the script writes that no comparison consumes.
 #                      Every other output is derived from the comparisons, so
@@ -115,13 +115,13 @@ trackfinding_extras:
 #                      `SeedingAlgorithm` enum member names so the script can
 #                      resolve them with getattr(); outputs land in
 #                      <slug>/<variant>/.
-#   trackfinding:      expand the trackfinding pack for this generator.
+#   trackfinding:      expand the trackfinding pack for this producer.
 #                      `label` (or `label_fmt` with {variant_label} when the
-#                      generator has variants), optional `extras`, and
+#                      producer has variants), optional `extras`, and
 #                      `vertexing_config` if any vertexing extra is used.
 # ---------------------------------------------------------------------------
 
-generators:
+producers:
   simulation:
     threads: false
     extra_outputs: [particles_gun.root]
@@ -238,7 +238,7 @@ comparisons:
     config: trackfitting_gsf.yml
     mode: refit_gsf
 
-  # ---- gx2f vs kf (special: reference is generated, not in reference/) ---
+  # ---- gx2f vs kf (special: reference is produced, not in reference/) ---
   - title: "Comparison - Truth tracking (GX2F vs KF)"
     current: trackfitting_gx2f_vs_kf/performance_trackfitting_gx2f.root
     reference: trackfitting_gx2f_vs_kf/performance_trackfitting_kf.root

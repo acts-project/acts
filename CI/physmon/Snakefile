@@ -1,15 +1,15 @@
 # Snakemake workflow for physmon.
 #
 # Produces the physmon validation artifacts as an explicit DAG so:
-#   - Generation and comparison both run in parallel (--cores N).
-#   - Editing one generator only re-runs that branch.
+#   - Production and comparison both run in parallel (--cores N).
+#   - Editing one producer only re-runs that branch.
 #   - The catalog of jobs lives in config/physmon.yaml, not in shell ifs.
 #
 # This file holds mechanism; config/physmon.yaml holds the catalog. Every
-# generator rule's outputs, inputs, thread budget and command are derived from
+# producer rule's outputs, inputs, thread budget and command are derived from
 # that file, so adding a physmon chain means writing a workflow script, adding
-# a `generators:` block, and pasting the same six-line rule stanza with the new
-# slug -- no output paths are listed by hand. A `generators:` entry with no
+# a `producers:` block, and pasting the same six-line rule stanza with the new
+# slug -- no output paths are listed by hand. A `producers:` entry with no
 # matching rule fails at DAG construction rather than silently doing nothing.
 #
 # Every rule is run through scripts/wrap.sh so it always exits 0 and writes a
@@ -98,41 +98,41 @@ FETCH_REFERENCES = bool(
 
 # Thread budget for compute-heavy rules. Setting this equal to the whole
 # snakemake budget means at most one heavy rule runs at a time but it uses
-# every available core: the generator scripts (via --threads) and histcmp
+# every available core: the producer scripts (via --threads) and histcmp
 # (via --jobs, which fans its per-item comparisons and plot rendering across a
 # ProcessPoolExecutor). Cheap rules (plot/summary) and the three
-# Geant4/Pythia8-bound generators (threads: 1) can fill the gaps in parallel.
+# Geant4/Pythia8-bound producers (threads: 1) can fill the gaps in parallel.
 HEAVY_THREADS = workflow.cores
 
 
 # ---------------------------------------------------------------------------
-# Generator catalog, read from the `generators:` block in the config. Each key
+# Producer catalog, read from the `producers:` block in the config. Each key
 # is a slug that names three things by convention: the rule
-# (generate_<slug>), the script (workflows/physmon_<slug>.py) and the output
+# (produce_<slug>), the script (workflows/physmon_<slug>.py) and the output
 # directory ({OUTDIR}/data/<slug>).
 # ---------------------------------------------------------------------------
 
-GENERATORS = config["generators"]
+PRODUCERS = config["producers"]
 
-# All generator slugs the workflow knows about. Used to enumerate witnesses.
+# All producer slugs the workflow knows about. Used to enumerate witnesses.
 # A slug with no matching rule fails at DAG construction ("no rule to produce"
 # its witness), so this cannot silently drift from the rules below.
-GENERATOR_SLUGS = list(GENERATORS)
+PRODUCER_SLUGS = list(PRODUCERS)
 
-# Generators with a per-variant output subdir layout. Drives witness paths and
-# the comparison -> generator mapping for cascade reporting.
-GENERATOR_VARIANTS = {
+# Producers with a per-variant output subdir layout. Drives witness paths and
+# the comparison -> producer mapping for cascade reporting.
+PRODUCER_VARIANTS = {
     slug: list(spec["variants"])
-    for slug, spec in GENERATORS.items()
+    for slug, spec in PRODUCERS.items()
     if spec.get("variants")
 }
 
-# Generators that consume another generator's output. The upstream slug is the
+# Producers that consume another producer's output. The upstream slug is the
 # leading path component of the input, so the dependency is stated once and
 # feeds both the rule's `input:` and the summary's "upstream" step.
-GENERATOR_UPSTREAM = {
+PRODUCER_UPSTREAM = {
     slug: spec["inputs"][0].split("/")[0]
-    for slug, spec in GENERATORS.items()
+    for slug, spec in PRODUCERS.items()
     if spec.get("inputs")
 }
 
@@ -142,7 +142,7 @@ GENERATOR_UPSTREAM = {
 # workflows all produce the same pack of comparison files
 # (seeding/finding/fitting/tracksummary) with optional ambisolver / ML-solver
 # / vertexing add-ons, so the pack is described once and expanded per
-# generator rather than enumerated per comparison.
+# producer rather than enumerated per comparison.
 # ---------------------------------------------------------------------------
 
 TRACKFINDING_BASE = config["trackfinding_base"]
@@ -175,8 +175,8 @@ def _expand_row(slug, variant, label, row, vertexing_config):
 
 
 def trackfinding_rows(slug):
-    """The template rows a trackfinding generator expands: base pack + extras."""
-    opts = GENERATORS[slug]["trackfinding"]
+    """The template rows a trackfinding producer expands: base pack + extras."""
+    opts = PRODUCERS[slug]["trackfinding"]
     rows = list(TRACKFINDING_BASE)
     for e in opts.get("extras") or []:
         rows += TRACKFINDING_EXTRAS[e]
@@ -184,16 +184,16 @@ def trackfinding_rows(slug):
 
 
 def expand_trackfinding():
-    """Expand every generator carrying a `trackfinding:` block into comparisons.
+    """Expand every producer carrying a `trackfinding:` block into comparisons.
 
-    Per-generator options under `trackfinding:`:
-      - For generators with `variants`: `label_fmt` with a `{variant_label}`
+    Per-producer options under `trackfinding:`:
+      - For producers with `variants`: `label_fmt` with a `{variant_label}`
         placeholder. Otherwise: a plain `label`.
       - `extras`: optional list of keys from TRACKFINDING_EXTRAS.
       - `vertexing_config`: required if any vertexing extra is used.
     """
     comparisons = []
-    for slug, spec in GENERATORS.items():
+    for slug, spec in PRODUCERS.items():
         opts = spec.get("trackfinding")
         if not opts:
             continue
@@ -247,10 +247,10 @@ def html_for(comp):
     return f"{OUTDIR}/html/" + _rel_no_root(comp["current"]) + ".html"
 
 
-def witness_for_generator(slug, variant=None):
+def witness_for_producer(slug, variant=None):
     if variant:
-        return f"{OUTDIR}/witnesses/generator/{slug}/{variant}.json"
-    return f"{OUTDIR}/witnesses/generator/{slug}.json"
+        return f"{OUTDIR}/witnesses/producer/{slug}/{variant}.json"
+    return f"{OUTDIR}/witnesses/producer/{slug}.json"
 
 
 def witness_for_plot(rel_no_root):
@@ -261,22 +261,22 @@ def witness_for_histcmp(rel_no_root):
     return f"{OUTDIR}/witnesses/histcmp/{rel_no_root}.json"
 
 
-def generator_info_for_comp(comp):
-    """Return (slug, variant) — which generator owns this comparison's `current` file.
+def producer_info_for_comp(comp):
+    """Return (slug, variant) — which producer owns this comparison's `current` file.
 
-    Variant is None unless the generator has variants (currently only trackfinding_1muon).
+    Variant is None unless the producer has variants (currently only trackfinding_1muon).
     """
     parts = comp["current"].split("/")
     slug = parts[0]
-    variants = GENERATOR_VARIANTS.get(slug)
+    variants = PRODUCER_VARIANTS.get(slug)
     if variants and len(parts) >= 2 and parts[1] in variants:
         return slug, parts[1]
     return slug, None
 
 
 def upstream_slug_for(slug):
-    """Return the upstream generator slug if this generator has one, else None."""
-    return GENERATOR_UPSTREAM.get(slug)
+    """Return the upstream producer slug if this producer has one, else None."""
+    return PRODUCER_UPSTREAM.get(slug)
 
 
 def comps_for_mode(mode):
@@ -286,25 +286,25 @@ def comps_for_mode(mode):
 
 
 # ---------------------------------------------------------------------------
-# Generator rule directives, derived from the catalog.
+# Producer rule directives, derived from the catalog.
 #
-# Every generator rule's outputs are implied by the comparisons it feeds, so
+# Every producer rule's outputs are implied by the comparisons it feeds, so
 # they are computed here instead of being written out by hand. Two rules:
 #
 #   - A comparison with a `plot` block consumes the raw ntuple named by
-#     `plot.from`; that ntuple is the generator's output and is temp(), since
+#     `plot.from`; that ntuple is the producer's output and is temp(), since
 #     plot_hist turns it into the `_hist.root` that is actually compared.
-#     Without a `plot` block, the compared file *is* the generator's output.
-#   - A comparison whose reference is generated rather than fetched
+#     Without a `plot` block, the compared file *is* the producer's output.
+#   - A comparison whose reference is produced rather than fetched
 #     (reference_in: outdir) also has that reference produced here.
 #
 # Files a script writes that no comparison consumes have to be declared as
 # `extra_outputs` in the config, or snakemake would not know about them.
 # ---------------------------------------------------------------------------
 
-def comps_for_generator(slug, variant=None):
-    """Comparisons whose `current` file this generator (and variant) produces."""
-    return [c for c in COMPARISONS if generator_info_for_comp(c) == (slug, variant)]
+def comps_for_producer(slug, variant=None):
+    """Comparisons whose `current` file this producer (and variant) produces."""
+    return [c for c in COMPARISONS if producer_info_for_comp(c) == (slug, variant)]
 
 
 def _output_key(rel):
@@ -312,8 +312,8 @@ def _output_key(rel):
     return Path(rel).name[: -len(".root")] if rel.endswith(".root") else Path(rel).name
 
 
-def generator_outputs(slug, variant=None, path_variant=None):
-    """The `output:` mapping for a generator rule.
+def producer_outputs(slug, variant=None, path_variant=None):
+    """The `output:` mapping for a producer rule.
 
     `path_variant` overrides the variant used in the emitted paths, so a rule
     covering several variants through a wildcard can select its row set with a
@@ -327,7 +327,7 @@ def generator_outputs(slug, variant=None, path_variant=None):
     concrete = f"{slug}/{variant}/" if variant is not None else f"{slug}/"
 
     outputs = {}
-    for comp in comps_for_generator(slug, variant):
+    for comp in comps_for_producer(slug, variant):
         if "plot" in comp:
             rel = comp["plot"]["from"]
             outputs[_output_key(rel)] = temp(f"{OUTDIR}/data/{prefix}{rel[len(concrete):]}")
@@ -338,37 +338,37 @@ def generator_outputs(slug, variant=None, path_variant=None):
             rel = comp["reference"]
             outputs[_output_key(rel)] = f"{OUTDIR}/data/{prefix}{rel[len(concrete):]}"
 
-    for rel in GENERATORS[slug].get("extra_outputs") or []:
+    for rel in PRODUCERS[slug].get("extra_outputs") or []:
         outputs[_output_key(rel)] = f"{OUTDIR}/data/{prefix}{rel}"
 
     assert "witness" not in outputs, f"{slug}: an output is named 'witness'"
     outputs["witness"] = (
-        f"{OUTDIR}/witnesses/generator/{slug}/{path_variant}.json"
+        f"{OUTDIR}/witnesses/producer/{slug}/{path_variant}.json"
         if path_variant is not None
-        else witness_for_generator(slug)
+        else witness_for_producer(slug)
     )
     return outputs
 
 
-def generator_inputs(slug):
-    return [f"{OUTDIR}/data/{rel}" for rel in GENERATORS[slug].get("inputs") or []]
+def producer_inputs(slug):
+    return [f"{OUTDIR}/data/{rel}" for rel in PRODUCERS[slug].get("inputs") or []]
 
 
-def generator_threads(slug):
-    """Heavy thread budget unless the generator is declared single-threaded."""
-    return HEAVY_THREADS if GENERATORS[slug].get("threads", True) else 1
+def producer_threads(slug):
+    """Heavy thread budget unless the producer is declared single-threaded."""
+    return HEAVY_THREADS if PRODUCERS[slug].get("threads", True) else 1
 
 
-def generator_log(slug, variant=None):
+def producer_log(slug, variant=None):
     stem = f"{slug}_{variant}" if variant is not None else slug
     return f"{OUTDIR}/logs/{stem}.log"
 
 
-def generator_shell(slug, variant=None):
+def producer_shell(slug, variant=None):
     """The wrapped script invocation. Scripts and output dirs follow the slug."""
     outdir = f"{OUTDIR}/data/{slug}"
     cmd = (
-        WRAP + " --witness {output.witness} --step generator --log {log} "
+        WRAP + " --witness {output.witness} --step producer --log {log} "
         "--touches '{output}' -- "
         f"python3 {WORKFLOWS_DIR}/physmon_{slug}.py "
     )
@@ -376,7 +376,7 @@ def generator_shell(slug, variant=None):
         cmd += f"{outdir}/{variant} --variant {variant} "
     else:
         cmd += f"{outdir} "
-    if GENERATORS[slug].get("threads", True):
+    if PRODUCERS[slug].get("threads", True):
         cmd += "--threads {threads}"
     return cmd.rstrip()
 
@@ -411,13 +411,13 @@ def _check_histcmp_witnesses(comps):
 def _all_witnesses():
     """Every witness path the workflow should produce. Used by build_results' input."""
     paths = []
-    for slug in GENERATOR_SLUGS:
-        variants = GENERATOR_VARIANTS.get(slug)
+    for slug in PRODUCER_SLUGS:
+        variants = PRODUCER_VARIANTS.get(slug)
         if variants:
             for v in variants:
-                paths.append(witness_for_generator(slug, v))
+                paths.append(witness_for_producer(slug, v))
         else:
-            paths.append(witness_for_generator(slug))
+            paths.append(witness_for_producer(slug))
     for c in COMPARISONS:
         if "plot" in c:
             paths.append(witness_for_plot(_rel_no_root(c["current"])))
@@ -491,79 +491,79 @@ rule gx2f_vs_kf:
 
 
 # ---------------------------------------------------------------------------
-# Generator rules. One per script, and deliberately still one rule each rather
-# than a loop: `snakemake generate_<slug>` and a grep for the rule name both
+# Producer rules. One per script, and deliberately still one rule each rather
+# than a loop: `snakemake produce_<slug>` and a grep for the rule name both
 # keep working, and the DAG stays readable. Every directive is derived from
 # the catalog, so the body is the same six lines for each and adding a chain
-# means adding a `generators:` block and a script, not a list of output paths.
+# means adding a `producers:` block and a script, not a list of output paths.
 #
-# Outputs that feed plot_hist come back from generator_outputs() wrapped in
+# Outputs that feed plot_hist come back from producer_outputs() wrapped in
 # temp(), so snakemake auto-cleans the large ntuples once they have been
 # consumed (matching the original `rm` in the legacy shell script).
 # ---------------------------------------------------------------------------
 
-rule generate_simulation:
-    input:   generator_inputs("simulation")
-    output:  **generator_outputs("simulation")
-    log:     generator_log("simulation")
-    threads: generator_threads("simulation")
-    shell:   generator_shell("simulation")
+rule produce_simulation:
+    input:   producer_inputs("simulation")
+    output:  **producer_outputs("simulation")
+    log:     producer_log("simulation")
+    threads: producer_threads("simulation")
+    shell:   producer_shell("simulation")
 
 
-rule generate_simulation_gsf:
-    input:   generator_inputs("simulation_gsf")
-    output:  **generator_outputs("simulation_gsf")
-    log:     generator_log("simulation_gsf")
-    threads: generator_threads("simulation_gsf")
-    shell:   generator_shell("simulation_gsf")
+rule produce_simulation_gsf:
+    input:   producer_inputs("simulation_gsf")
+    output:  **producer_outputs("simulation_gsf")
+    log:     producer_log("simulation_gsf")
+    threads: producer_threads("simulation_gsf")
+    shell:   producer_shell("simulation_gsf")
 
 
-rule generate_trackfitting_kf:
-    input:   generator_inputs("trackfitting_kf")
-    output:  **generator_outputs("trackfitting_kf")
-    log:     generator_log("trackfitting_kf")
-    threads: generator_threads("trackfitting_kf")
-    shell:   generator_shell("trackfitting_kf")
+rule produce_trackfitting_kf:
+    input:   producer_inputs("trackfitting_kf")
+    output:  **producer_outputs("trackfitting_kf")
+    log:     producer_log("trackfitting_kf")
+    threads: producer_threads("trackfitting_kf")
+    shell:   producer_shell("trackfitting_kf")
 
 
-rule generate_trackfitting_gsf:
-    input:   generator_inputs("trackfitting_gsf")
-    output:  **generator_outputs("trackfitting_gsf")
-    log:     generator_log("trackfitting_gsf")
-    threads: generator_threads("trackfitting_gsf")
-    shell:   generator_shell("trackfitting_gsf")
+rule produce_trackfitting_gsf:
+    input:   producer_inputs("trackfitting_gsf")
+    output:  **producer_outputs("trackfitting_gsf")
+    log:     producer_log("trackfitting_gsf")
+    threads: producer_threads("trackfitting_gsf")
+    shell:   producer_shell("trackfitting_gsf")
 
 
-rule generate_trackfitting_gx2f:
-    input:   generator_inputs("trackfitting_gx2f")
-    output:  **generator_outputs("trackfitting_gx2f")
-    log:     generator_log("trackfitting_gx2f")
-    threads: generator_threads("trackfitting_gx2f")
-    shell:   generator_shell("trackfitting_gx2f")
+rule produce_trackfitting_gx2f:
+    input:   producer_inputs("trackfitting_gx2f")
+    output:  **producer_outputs("trackfitting_gx2f")
+    log:     producer_log("trackfitting_gx2f")
+    threads: producer_threads("trackfitting_gx2f")
+    shell:   producer_shell("trackfitting_gx2f")
 
 
-rule generate_trackrefitting_kf:
-    input:   generator_inputs("trackrefitting_kf")
-    output:  **generator_outputs("trackrefitting_kf")
-    log:     generator_log("trackrefitting_kf")
-    threads: generator_threads("trackrefitting_kf")
-    shell:   generator_shell("trackrefitting_kf")
+rule produce_trackrefitting_kf:
+    input:   producer_inputs("trackrefitting_kf")
+    output:  **producer_outputs("trackrefitting_kf")
+    log:     producer_log("trackrefitting_kf")
+    threads: producer_threads("trackrefitting_kf")
+    shell:   producer_shell("trackrefitting_kf")
 
 
-rule generate_trackrefitting_gsf:
-    input:   generator_inputs("trackrefitting_gsf")
-    output:  **generator_outputs("trackrefitting_gsf")
-    log:     generator_log("trackrefitting_gsf")
-    threads: generator_threads("trackrefitting_gsf")
-    shell:   generator_shell("trackrefitting_gsf")
+rule produce_trackrefitting_gsf:
+    input:   producer_inputs("trackrefitting_gsf")
+    output:  **producer_outputs("trackrefitting_gsf")
+    log:     producer_log("trackrefitting_gsf")
+    threads: producer_threads("trackrefitting_gsf")
+    shell:   producer_shell("trackrefitting_gsf")
 
 
-rule generate_trackfitting_gx2f_vs_kf:
-    input:   generator_inputs("trackfitting_gx2f_vs_kf")
-    output:  **generator_outputs("trackfitting_gx2f_vs_kf")
-    log:     generator_log("trackfitting_gx2f_vs_kf")
-    threads: generator_threads("trackfitting_gx2f_vs_kf")
-    shell:   generator_shell("trackfitting_gx2f_vs_kf")
+rule produce_trackfitting_gx2f_vs_kf:
+    input:   producer_inputs("trackfitting_gx2f_vs_kf")
+    output:  **producer_outputs("trackfitting_gx2f_vs_kf")
+    log:     producer_log("trackfitting_gx2f_vs_kf")
+    threads: producer_threads("trackfitting_gx2f_vs_kf")
+    shell:   producer_shell("trackfitting_gx2f_vs_kf")
 
 
 # trackfinding_1muon is split into two rules so the output set correctly
@@ -571,45 +571,45 @@ rule generate_trackfitting_gx2f_vs_kf:
 # wildcard rule covers the rest, which all share one row set -- asserted here
 # so a future variant with a different pack cannot silently ride along on
 # SEEDING_VARIANT's outputs.
-SEEDING_VARIANTS = [v for v in GENERATOR_VARIANTS["trackfinding_1muon"] if v != "TruthSmeared"]
+SEEDING_VARIANTS = [v for v in PRODUCER_VARIANTS["trackfinding_1muon"] if v != "TruthSmeared"]
 SEEDING_VARIANT = SEEDING_VARIANTS[0]
 for _v in SEEDING_VARIANTS[1:]:
-    assert set(generator_outputs("trackfinding_1muon", _v, path_variant="{variant}")) == set(
-        generator_outputs("trackfinding_1muon", SEEDING_VARIANT, path_variant="{variant}")
+    assert set(producer_outputs("trackfinding_1muon", _v, path_variant="{variant}")) == set(
+        producer_outputs("trackfinding_1muon", SEEDING_VARIANT, path_variant="{variant}")
     ), f"trackfinding_1muon variant {_v} has a different output set than {SEEDING_VARIANT}"
 
 
-rule generate_trackfinding_1muon_with_seeding:
+rule produce_trackfinding_1muon_with_seeding:
     output:
-        **generator_outputs("trackfinding_1muon", SEEDING_VARIANT, path_variant="{variant}"),
+        **producer_outputs("trackfinding_1muon", SEEDING_VARIANT, path_variant="{variant}"),
     wildcard_constraints:
         variant = "|".join(SEEDING_VARIANTS),
-    log:     generator_log("trackfinding_1muon", "{variant}")
-    threads: generator_threads("trackfinding_1muon")
-    shell:   generator_shell("trackfinding_1muon", "{wildcards.variant}")
+    log:     producer_log("trackfinding_1muon", "{variant}")
+    threads: producer_threads("trackfinding_1muon")
+    shell:   producer_shell("trackfinding_1muon", "{wildcards.variant}")
 
 
-rule generate_trackfinding_1muon_TruthSmeared:
-    output:  **generator_outputs("trackfinding_1muon", "TruthSmeared")
-    log:     generator_log("trackfinding_1muon", "TruthSmeared")
-    threads: generator_threads("trackfinding_1muon")
-    shell:   generator_shell("trackfinding_1muon", "TruthSmeared")
+rule produce_trackfinding_1muon_TruthSmeared:
+    output:  **producer_outputs("trackfinding_1muon", "TruthSmeared")
+    log:     producer_log("trackfinding_1muon", "TruthSmeared")
+    threads: producer_threads("trackfinding_1muon")
+    shell:   producer_shell("trackfinding_1muon", "TruthSmeared")
 
 
-rule generate_trackfinding_4muon_50vertices:
-    input:   generator_inputs("trackfinding_4muon_50vertices")
-    output:  **generator_outputs("trackfinding_4muon_50vertices")
-    log:     generator_log("trackfinding_4muon_50vertices")
-    threads: generator_threads("trackfinding_4muon_50vertices")
-    shell:   generator_shell("trackfinding_4muon_50vertices")
+rule produce_trackfinding_4muon_50vertices:
+    input:   producer_inputs("trackfinding_4muon_50vertices")
+    output:  **producer_outputs("trackfinding_4muon_50vertices")
+    log:     producer_log("trackfinding_4muon_50vertices")
+    threads: producer_threads("trackfinding_4muon_50vertices")
+    shell:   producer_shell("trackfinding_4muon_50vertices")
 
 
-rule generate_trackfinding_ttbar_pu200:
-    input:   generator_inputs("trackfinding_ttbar_pu200")
-    output:  **generator_outputs("trackfinding_ttbar_pu200")
-    log:     generator_log("trackfinding_ttbar_pu200")
-    threads: generator_threads("trackfinding_ttbar_pu200")
-    shell:   generator_shell("trackfinding_ttbar_pu200")
+rule produce_trackfinding_ttbar_pu200:
+    input:   producer_inputs("trackfinding_ttbar_pu200")
+    output:  **producer_outputs("trackfinding_ttbar_pu200")
+    log:     producer_log("trackfinding_ttbar_pu200")
+    threads: producer_threads("trackfinding_ttbar_pu200")
+    shell:   producer_shell("trackfinding_ttbar_pu200")
 
 
 # ---------------------------------------------------------------------------
@@ -739,15 +739,15 @@ def _read_witness(path):
 
 
 def _comparison_row(comp):
-    slug, variant = generator_info_for_comp(comp)
+    slug, variant = producer_info_for_comp(comp)
     steps = []
     upstream = upstream_slug_for(slug)
     if upstream:
-        w = _read_witness(witness_for_generator(upstream))
+        w = _read_witness(witness_for_producer(upstream))
         steps.append({"kind": "upstream", "name": upstream, "rc": w["rc"], "log": w.get("log")})
-    gw = _read_witness(witness_for_generator(slug, variant))
-    gen_label = slug + (f"/{variant}" if variant else "")
-    steps.append({"kind": "generator", "name": gen_label, "rc": gw["rc"], "log": gw.get("log")})
+    prw = _read_witness(witness_for_producer(slug, variant))
+    prod_label = slug + (f"/{variant}" if variant else "")
+    steps.append({"kind": "producer", "name": prod_label, "rc": prw["rc"], "log": prw.get("log")})
     if "plot" in comp:
         pw = _read_witness(witness_for_plot(_rel_no_root(comp["current"])))
         steps.append({"kind": "plot", "name": "plot", "rc": pw["rc"], "log": pw.get("log")})
