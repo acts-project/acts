@@ -10,7 +10,6 @@
 
 #include "Acts/Material/GridSurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <memory>
 #include <vector>
@@ -67,29 +66,6 @@ create2D(
   return ism;
 }
 
-/// Static creation method for the with ProtoAxis objects
-///
-/// @param pAxis0 proto axis in direction 0
-/// @param pAxis1 proto axis in direction 1
-/// @param materialAccessor the material accessor
-/// @param payload the grid payload in 2D (material slab / indices)
-/// the payload has to be column major, i.e. [i0][i1]
-///
-/// @return a unique pointer to the surface material
-/// @deprecated Use create2D(const IAxis&, const IAxis&, ...) instead
-template <typename material_accessor_t>
-[[deprecated("Use create2D(const IAxis&, const IAxis&, ...) instead")]] std::
-    unique_ptr<
-        IGridSurfaceMaterial<typename material_accessor_t::grid_value_type>>
-    create2D(const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
-             material_accessor_t&& materialAccessor,
-             const std::vector<
-                 std::vector<typename material_accessor_t::grid_value_type>>&
-                 payload) {
-  return create2D(pAxis0.getAxis(), pAxis1.getAxis(),
-                  std::forward<material_accessor_t>(materialAccessor), payload);
-}
-
 /// The resolved functions to reduce compile time template bloat
 /// - GridMaterial 2D
 /// @param axis0 the axis in direction 0
@@ -126,45 +102,4 @@ std::unique_ptr<GloballyIndexedGridSurfaceMaterial> create(
         std::vector<GloballyIndexedMaterialAccessor::grid_value_type>>&
         payload);
 
-/// The resolved functions to reduce compile time template bloat
-/// - GridMaterial 2D
-/// @param pAxis0 the proto axis in direction 0
-/// @param pAxis1 the proto axis in direction 1
-/// @param materialAccessor the material accessor
-/// @param payload the grid payload (material slab / indices)
-/// @deprecated Use create(const IAxis&, const IAxis&, ...) instead
-[[deprecated("Use create(const IAxis&, const IAxis&, ...) instead")]] std::
-    unique_ptr<GridSurfaceMaterial>
-    create(const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
-           GridMaterialAccessor&& materialAccessor,
-           const std::vector<std::vector<MaterialSlab>>& payload);
-
-/// The resolved functions to reduce compile time template bloat
-/// - IndexedMaterial 2D
-/// @param pAxis0 the proto axis in direction 0
-/// @param pAxis1 the proto axis in direction 1
-/// @param materialAccessor the material accessor
-/// @param payload the grid payload (material slab / indices)
-/// @deprecated Use create(const IAxis&, const IAxis&, ...) instead
-[[deprecated("Use create(const IAxis&, const IAxis&, ...) instead")]] std::
-    unique_ptr<IndexedGridSurfaceMaterial>
-    create(const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
-           IndexedMaterialAccessor&& materialAccessor,
-           const std::vector<
-               std::vector<IndexedMaterialAccessor::grid_value_type>>& payload);
-
-/// The resolved functions to reduce compile time template bloat
-/// - GloballyIndexedMaterial 2D
-/// @param pAxis0 the proto axis in direction 0
-/// @param pAxis1 the proto axis in direction 1
-/// @param materialAccessor the material accessor
-/// @param payload the grid payload (material slab / indices)
-/// @deprecated Use create(const IAxis&, const IAxis&, ...) instead
-[[deprecated("Use create(const IAxis&, const IAxis&, ...) instead")]] std::
-    unique_ptr<GloballyIndexedGridSurfaceMaterial>
-    create(const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
-           GloballyIndexedMaterialAccessor&& materialAccessor,
-           const std::vector<
-               std::vector<GloballyIndexedMaterialAccessor::grid_value_type>>&
-               payload);
 }  // namespace Acts::GridSurfaceMaterialFactory
