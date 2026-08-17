@@ -15,7 +15,7 @@
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/GridAxisGenerators.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/MultiAxisSpec.hpp"
 
@@ -28,9 +28,9 @@ namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
-// This test covers the grid material with direct storage (non-indexed
-// accessor), built via the factory from two axes.
-BOOST_AUTO_TEST_CASE(GridMaterial2D) {
+// This test covers the grid material with direct storage, built via the
+// factory from two axes.
+BOOST_AUTO_TEST_CASE(GridMaterialDirectFromAxes) {
   std::vector<std::vector<MaterialSlab>> material2x3;
   // This is a material matrix 2 bins in x and 3 bins in y
   std::vector<MaterialSlab> materialRow0;
@@ -54,10 +54,10 @@ BOOST_AUTO_TEST_CASE(GridMaterial2D) {
   auto axisX = IAxis::createEquidistant(AxisBoundaryType::Bound, -1.0, 1.0, 2);
   auto axisY = IAxis::createEquidistant(AxisBoundaryType::Bound, -1.5, 1.5, 3);
 
-  auto ismXY = GridSurfaceMaterialFactory::create(
-      *axisX, *axisY, GridMaterialAccessor{}, material2x3);
+  auto ismXY =
+      GridSurfaceMaterialFactory::createDirect(*axisX, *axisY, material2x3);
 
-  BOOST_CHECK(ismXY != nullptr);
+  BOOST_REQUIRE(ismXY != nullptr);
 
   // Local access test - local lookup is directly (loc0, loc1) onto the axes
   Vector2 l00(-0.5, -1.5);
@@ -73,14 +73,19 @@ BOOST_AUTO_TEST_CASE(GridMaterial2D) {
   BOOST_CHECK_EQUAL(ismXY->materialSlab(l10).material().X0(), 2.);
   BOOST_CHECK_EQUAL(ismXY->materialSlab(l11).material().X0(), 12.);
   BOOST_CHECK_EQUAL(ismXY->materialSlab(l12).material().X0(), 22.);
+
+  // Scale it - direct storage scales every entry
+  ismXY->scale(2.);
+  BOOST_CHECK_EQUAL(ismXY->materialSlab(l00).thickness(), 2.);
+  BOOST_CHECK_EQUAL(ismXY->materialSlab(l12).thickness(), 6.);
 }
 
-// This test covers building a grid material by resolving a MultiAxisSpec2D
-// binning against a surface, following the same pattern used for
-// ProtoGridSurfaceMaterial (see BinnedSurfaceMaterialAccumulator). Binning is
-// restricted to z; loc0 (rPhi) is a single-bin dummy axis that should be
-// ignored regardless of its (possibly out-of-range) value.
-BOOST_AUTO_TEST_CASE(GridMaterialFromMultiAxisSpec) {
+// This test covers building a grid material with direct storage by resolving
+// a MultiAxisSpec2D binning against a surface, following the same pattern
+// used for ProtoGridSurfaceMaterial (see BinnedSurfaceMaterialAccumulator).
+// Binning is restricted to z; loc0 (rPhi) is a single-bin dummy axis that
+// should be ignored regardless of its (possibly out-of-range) value.
+BOOST_AUTO_TEST_CASE(GridMaterialDirectFromMultiAxisSpec) {
   using enum AxisDirection;
 
   auto cylinder = Surface::makeShared<CylinderSurface>(
@@ -98,9 +103,9 @@ BOOST_AUTO_TEST_CASE(GridMaterialFromMultiAxisSpec) {
        MaterialSlab(Material::fromMolarDensity(31.0, 32.0, 33.0, 34.0, 35.0),
                     4.0)}};
 
-  auto ism = GridSurfaceMaterialFactory::create(
-      binning, *cylinder, GridMaterialAccessor{}, payload);
-  BOOST_CHECK(ism != nullptr);
+  auto ism =
+      GridSurfaceMaterialFactory::createDirect(binning, *cylinder, payload);
+  BOOST_REQUIRE(ism != nullptr);
 
   // loc0 (rPhi) is irrelevant - near, far and out-of-range values all land
   // on the same single dummy bin
@@ -116,8 +121,9 @@ BOOST_AUTO_TEST_CASE(GridMaterialFromMultiAxisSpec) {
   BOOST_CHECK_EQUAL(ism->materialSlab(lZ2).material().X0(), 21.);
 }
 
-// This test covers the locally indexed grid material in 2D, comparing a
-// directly constructed engine to one built via the factory.
+// This test covers the locally indexed grid material in 2D: one instance
+// built via the factory from two axes, one built directly from a
+// MultiAxisSpec2D and a hand-filled Indexed storage.
 BOOST_AUTO_TEST_CASE(GridIndexedMaterial2D) {
   std::vector<MaterialSlab> material;
   material.emplace_back(Material::Vacuum(), 1.0);  // vacuum
@@ -128,35 +134,7 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial2D) {
   material.emplace_back(
       Material::fromMolarDensity(21.0, 22.0, 23.0, 24.0, 25.0), 1.0);
 
-  // Test (1) with explicit grid creation
-  std::vector<MaterialSlab> materialT1 = material;
-  using EqBoundEqClosed = GridAxisGenerators::EqBoundEqClosed;
-  using EqEqGrid = EqBoundEqClosed::grid_type<std::size_t>;
-  using Point = EqEqGrid::point_t;
-
   // 2 bins in z, 4 bins in phi
-  EqBoundEqClosed eqeqBound{
-      {-1., 1.}, 2, {-std::numbers::pi, std::numbers::pi}, 4};
-  EqEqGrid eqeqGrid{eqeqBound()};
-
-  eqeqGrid.atPosition(Point{-0.5, -std::numbers::pi * 0.75}) =
-      1u;                                                          // material 1
-  eqeqGrid.atPosition(Point{-0.5, -std::numbers::pi / 4.}) = 1u;   // material 1
-  eqeqGrid.atPosition(Point{-0.5, std::numbers::pi / 4.}) = 0u;    // vacuum
-  eqeqGrid.atPosition(Point{-0.5, std::numbers::pi * 0.75}) = 2u;  // material 2
-
-  eqeqGrid.atPosition(Point{0.5, -std::numbers::pi * 0.75}) = 0u;  // vacuum
-  eqeqGrid.atPosition(Point{0.5, -std::numbers::pi / 4.}) = 3u;    // material 3
-  eqeqGrid.atPosition(Point{0.5, std::numbers::pi / 4.}) = 3u;     // material 3
-  eqeqGrid.atPosition(Point{0.5, std::numbers::pi * 0.75}) = 0u;   // vacuum
-
-  // Create the indexed material grid
-  GridSurfaceMaterialT<EqEqGrid, IndexedMaterialAccessor> ism(
-      std::move(eqeqGrid), IndexedMaterialAccessor{std::move(materialT1)});
-
-  // Test with the factory creation method
-  auto materialT2 = material;
-
   auto axisZ = IAxis::createEquidistant(AxisBoundaryType::Bound, -1.0, 1.0, 2);
   auto axisPhi = IAxis::createEquidistant(
       AxisBoundaryType::Closed, -std::numbers::pi, std::numbers::pi, 4);
@@ -165,9 +143,29 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial2D) {
       std::vector<std::size_t>{1u, 1u, 0u, 2u},
       std::vector<std::size_t>{0u, 3u, 3u, 0u}};
 
-  auto ismFactory = GridSurfaceMaterialFactory::create(
-      *axisZ, *axisPhi, IndexedMaterialAccessor{std::move(materialT2)},
-      indexPayload);
+  // Test (1): built via the factory from two axes
+  auto ismFactory = GridSurfaceMaterialFactory::createIndexed(
+      *axisZ, *axisPhi, material, indexPayload);
+
+  // Test (2): built directly from a MultiAxisSpec2D and a hand-filled
+  // Indexed storage, using the same binning
+  MultiAxisSpec2D binning(
+      {AxisSpec::Equidistant(2, -1.0, 1.0, AxisBoundaryType::Bound),
+       AxisSpec::Equidistant(4, -std::numbers::pi, std::numbers::pi,
+                             AxisBoundaryType::Closed)});
+  auto multiAxis = binning.buildMultiAxis();
+
+  GridSurfaceMaterial::Indexed storage;
+  storage.material = material;
+  storage.indices.resize(multiAxis->getNTotalBins(true), 0u);
+  for (std::size_t i0 = 0; i0 < indexPayload.size(); ++i0) {
+    for (std::size_t i1 = 0; i1 < indexPayload[i0].size(); ++i1) {
+      IMultiAxis2D::LocalBins lbin{i0 + 1, i1 + 1};
+      storage.indices[multiAxis->getGlobalBinFromLocalBins(lbin)] =
+          indexPayload[i0][i1];
+    }
+  }
+  GridSurfaceMaterial ism(std::move(binning), std::move(storage));
 
   // Local access test, both should give material 1
   Vector2 l0(-0.5, -std::numbers::pi * 0.75);
@@ -181,6 +179,10 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial2D) {
   Vector2 l2(-0.5, std::numbers::pi / 4.);
   BOOST_CHECK(ism.materialSlab(l2).material().isVacuum());
   BOOST_CHECK(ismFactory->materialSlab(l2).material().isVacuum());
+
+  // Indexed storage scales the locally owned material vector once
+  ism.scale(2.);
+  BOOST_CHECK_EQUAL(ism.materialSlab(l0).thickness(), 2.);
 }
 
 // This test covers the globally indexed grid material with non-shared
@@ -199,21 +201,14 @@ BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialNonShared) {
   material->emplace_back(
       Material::fromMolarDensity(31.0, 22.0, 23.0, 24.0, 25.0), 4.0);
 
-  using EqBoundEqBound = GridAxisGenerators::EqBoundEqBound;
-  using EqGrid = EqBoundEqBound::grid_type<std::size_t>;
-  using Point = EqGrid::point_t;
+  auto axis0 = IAxis::createEquidistant(AxisBoundaryType::Bound, 0., 5., 5);
+  auto axis1 = IAxis::createEquidistant(AxisBoundaryType::Bound, -1., 1., 1);
 
-  EqBoundEqBound eqBound{{0., 5.}, 5, {-1., 1.}, 1};
-  EqGrid eqGrid{eqBound()};
+  std::vector<std::vector<std::size_t>> indexPayload = {
+      {1u}, {0u}, {2u}, {2u}, {3u}};
 
-  eqGrid.atPosition(Point{0.5, 0.}) = 1u;  // material 1
-  eqGrid.atPosition(Point{1.5, 0.}) = 0u;  // vacuum
-  eqGrid.atPosition(Point{2.5, 0.}) = 2u;  // material 2
-  eqGrid.atPosition(Point{3.5, 0.}) = 2u;  // material 2
-  eqGrid.atPosition(Point{4.5, 0.}) = 3u;  // material 3
-
-  GridSurfaceMaterialT<EqGrid, GloballyIndexedMaterialAccessor> ism(
-      std::move(eqGrid), GloballyIndexedMaterialAccessor{material, false});
+  auto ism = GridSurfaceMaterialFactory::createGloballyIndexed(
+      *axis0, *axis1, material, false, indexPayload);
 
   // Local access test
   Vector2 l0(0.5, 0.);
@@ -222,29 +217,28 @@ BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialNonShared) {
   Vector2 l3(3.5, 0.);
   Vector2 l4(4.5, 0.);
 
-  BOOST_CHECK_EQUAL(ism.materialSlab(l0).material().X0(), 1.);
-  BOOST_CHECK(ism.materialSlab(l1).material().isVacuum());
-  BOOST_CHECK_EQUAL(ism.materialSlab(l2).material().X0(), 11.);
-  BOOST_CHECK_EQUAL(ism.materialSlab(l3).material().X0(), 11.);
-  BOOST_CHECK_EQUAL(ism.materialSlab(l4).material().X0(), 21.);
+  BOOST_CHECK_EQUAL(ism->materialSlab(l0).material().X0(), 1.);
+  BOOST_CHECK(ism->materialSlab(l1).material().isVacuum());
+  BOOST_CHECK_EQUAL(ism->materialSlab(l2).material().X0(), 11.);
+  BOOST_CHECK_EQUAL(ism->materialSlab(l3).material().X0(), 11.);
+  BOOST_CHECK_EQUAL(ism->materialSlab(l4).material().X0(), 21.);
 
-  EqBoundEqBound eqBound1{{0., 5.}, 1, {-1., 1.}, 1};
-  EqGrid eqGrid1{eqBound1()};
+  auto axis0Single =
+      IAxis::createEquidistant(AxisBoundaryType::Bound, 0., 5., 1);
+  std::vector<std::vector<std::size_t>> indexPayload1 = {{4u}};
 
-  eqGrid1.atPosition(Point{2.5, 0.}) = 4u;  // material 4
-
-  GridSurfaceMaterialT<EqGrid, GloballyIndexedMaterialAccessor> ism1(
-      std::move(eqGrid1), GloballyIndexedMaterialAccessor{material, false});
+  auto ism1 = GridSurfaceMaterialFactory::createGloballyIndexed(
+      *axis0Single, *axis1, material, false, indexPayload1);
 
   Vector2 l0g1(2.5, 0.);
-  BOOST_CHECK_EQUAL(ism1.materialSlab(l0g1).material().X0(), 31.);
+  BOOST_CHECK_EQUAL(ism1->materialSlab(l0g1).material().X0(), 31.);
 
   // Scale
-  ism1.scale(2.);
-  BOOST_CHECK_EQUAL(ism1.materialSlab(l0g1).thickness(), 8.);
+  ism1->scale(2.);
+  BOOST_CHECK_EQUAL(ism1->materialSlab(l0g1).thickness(), 8.);
 
   // First one stays unscaled
-  BOOST_CHECK_EQUAL(ism.materialSlab(l0).thickness(), 1.);
+  BOOST_CHECK_EQUAL(ism->materialSlab(l0).thickness(), 1.);
 }
 
 // This test covers the globally indexed grid material with shared material
@@ -255,57 +249,39 @@ BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialShared) {
   material->emplace_back(Material::fromMolarDensity(1.0, 2.0, 3.0, 4.0, 5.0),
                          1.0);
 
-  using EqBoundEqBound = GridAxisGenerators::EqBoundEqBound;
-  using EqGrid = EqBoundEqBound::grid_type<std::size_t>;
-  using Point = EqGrid::point_t;
+  auto axis0 = IAxis::createEquidistant(AxisBoundaryType::Bound, 0., 5., 1);
+  auto axis1 = IAxis::createEquidistant(AxisBoundaryType::Bound, -1., 1., 1);
 
-  EqBoundEqBound eqBound0{{0., 5.}, 1, {-1., 1.}, 1};
-  EqGrid eqGrid0{eqBound0()};
+  std::vector<std::vector<std::size_t>> indexPayload = {{1u}};
 
-  eqGrid0.atPosition(Point{2.5, 0.}) = 1u;  // material 1
-
-  GridSurfaceMaterialT<EqGrid, GloballyIndexedMaterialAccessor> ism0(
-      std::move(eqGrid0), GloballyIndexedMaterialAccessor{material, true});
-
-  EqBoundEqBound eqBound1{{0., 5.}, 1, {-1., 1.}, 1};
-  EqGrid eqGrid1{eqBound1()};
-
-  eqGrid1.atPosition(Point{2.5, 0.}) = 1u;  // material 1
-
-  GridSurfaceMaterialT<EqGrid, GloballyIndexedMaterialAccessor> ism1(
-      std::move(eqGrid1), GloballyIndexedMaterialAccessor{material, true});
+  auto ism0 = GridSurfaceMaterialFactory::createGloballyIndexed(
+      *axis0, *axis1, material, true, indexPayload);
+  auto ism1 = GridSurfaceMaterialFactory::createGloballyIndexed(
+      *axis0, *axis1, material, true, indexPayload);
 
   Vector2 l0(2.5, 0.);
 
   // check grid material 0
-  BOOST_CHECK_EQUAL(ism0.materialSlab(l0).material().X0(), 1.);
-  BOOST_CHECK_EQUAL(ism1.materialSlab(l0).material().X0(), 1.);
+  BOOST_CHECK_EQUAL(ism0->materialSlab(l0).material().X0(), 1.);
+  BOOST_CHECK_EQUAL(ism1->materialSlab(l0).material().X0(), 1.);
 
   // scaling shared material should throw a std::invalid_argument
-  BOOST_CHECK_THROW(ism1.scale(2.), std::invalid_argument);
+  BOOST_CHECK_THROW(ism1->scale(2.), std::invalid_argument);
 }
 
-// This test covers the grid material (non-indexed accessor)
-//
-// In this setup, the material is not indexed, but filled directly
-// into the grid structure.
-BOOST_AUTO_TEST_CASE(GridSurfaceMaterialTests) {
-  using EqBoundEqBound = GridAxisGenerators::EqBoundEqBound;
-  using EqGrid = EqBoundEqBound::grid_type<MaterialSlab>;
-  using Point = EqGrid::point_t;
+// This test covers the grid material with direct storage and scaling
+BOOST_AUTO_TEST_CASE(GridSurfaceMaterialDirectStorageScale) {
+  auto axis0 = IAxis::createEquidistant(AxisBoundaryType::Bound, 0., 5., 5);
+  auto axis1 = IAxis::createEquidistant(AxisBoundaryType::Bound, -1., 1., 1);
 
-  EqBoundEqBound eqBound{{0., 5.}, 5, {-1., 1.}, 1};
-  EqGrid eqGrid{eqBound()};
+  std::vector<std::vector<MaterialSlab>> payload = {
+      {MaterialSlab::Vacuum(0.0)},
+      {MaterialSlab::Vacuum(1.0)},
+      {MaterialSlab::Vacuum(2.0)},
+      {MaterialSlab::Vacuum(3.0)},
+      {MaterialSlab::Vacuum(4.0)}};
 
-  eqGrid.atPosition(Point{0.5, 0.}) = MaterialSlab::Vacuum(0.0);
-  eqGrid.atPosition(Point{1.5, 0.}) = MaterialSlab::Vacuum(1.0);
-  eqGrid.atPosition(Point{2.5, 0.}) = MaterialSlab::Vacuum(2.0);
-  eqGrid.atPosition(Point{3.5, 0.}) = MaterialSlab::Vacuum(3.0);
-  eqGrid.atPosition(Point{4.5, 0.}) = MaterialSlab::Vacuum(4.0);
-
-  GridSurfaceMaterial gsm(
-      std::make_unique<GridSurfaceMaterialT<EqGrid, GridMaterialAccessor>>(
-          std::move(eqGrid), GridMaterialAccessor{}));
+  auto gsm = GridSurfaceMaterialFactory::createDirect(*axis0, *axis1, payload);
 
   // Local access test
   Vector2 l0(0.5, 0.);
@@ -314,117 +290,50 @@ BOOST_AUTO_TEST_CASE(GridSurfaceMaterialTests) {
   Vector2 l3(3.5, 0.);
   Vector2 l4(4.5, 0.);
 
-  BOOST_CHECK_EQUAL(gsm.materialSlab(l0).thickness(), 0.);
-  BOOST_CHECK_EQUAL(gsm.materialSlab(l1).thickness(), 1.);
-  BOOST_CHECK_EQUAL(gsm.materialSlab(l2).thickness(), 2.);
-  BOOST_CHECK_EQUAL(gsm.materialSlab(l3).thickness(), 3.);
-  BOOST_CHECK_EQUAL(gsm.materialSlab(l4).thickness(), 4.);
+  BOOST_CHECK_EQUAL(gsm->materialSlab(l0).thickness(), 0.);
+  BOOST_CHECK_EQUAL(gsm->materialSlab(l1).thickness(), 1.);
+  BOOST_CHECK_EQUAL(gsm->materialSlab(l2).thickness(), 2.);
+  BOOST_CHECK_EQUAL(gsm->materialSlab(l3).thickness(), 3.);
+  BOOST_CHECK_EQUAL(gsm->materialSlab(l4).thickness(), 4.);
 
   // Now scale it - and access again
-  gsm.scale(2.);
+  gsm->scale(2.);
 
-  BOOST_CHECK_EQUAL(gsm.materialSlab(l0).thickness(), 0.);
-  BOOST_CHECK_EQUAL(gsm.materialSlab(l1).thickness(), 2.);
-  BOOST_CHECK_EQUAL(gsm.materialSlab(l2).thickness(), 4.);
-  BOOST_CHECK_EQUAL(gsm.materialSlab(l3).thickness(), 6.);
-  BOOST_CHECK_EQUAL(gsm.materialSlab(l4).thickness(), 8.);
+  BOOST_CHECK_EQUAL(gsm->materialSlab(l0).thickness(), 0.);
+  BOOST_CHECK_EQUAL(gsm->materialSlab(l1).thickness(), 2.);
+  BOOST_CHECK_EQUAL(gsm->materialSlab(l2).thickness(), 4.);
+  BOOST_CHECK_EQUAL(gsm->materialSlab(l3).thickness(), 6.);
+  BOOST_CHECK_EQUAL(gsm->materialSlab(l4).thickness(), 8.);
 }
 
-// This test covers the concrete, non-template IndexedGridSurfaceMaterial
-// wrapper class
-BOOST_AUTO_TEST_CASE(IndexedGridSurfaceMaterialWrapper) {
-  using EqBoundEqBound = GridAxisGenerators::EqBoundEqBound;
-  using EqGrid = EqBoundEqBound::grid_type<std::size_t>;
-  using Point = EqGrid::point_t;
+// This test covers the storage-size validation in the GridSurfaceMaterial
+// constructor: the storage must have exactly one entry (material slab or
+// index) per bin implied by the binning, including under-/overflow bins.
+BOOST_AUTO_TEST_CASE(GridSurfaceMaterialConstructionValidation) {
+  MultiAxisSpec2D binning(
+      {AxisSpec::Equidistant(2, -1.0, 1.0, AxisBoundaryType::Bound),
+       AxisSpec::Equidistant(1, -1., 1., AxisBoundaryType::Bound)});
+  auto multiAxis = binning.buildMultiAxis();
+  std::size_t nBins = multiAxis->getNTotalBins(true);
 
-  std::vector<MaterialSlab> material;
-  material.emplace_back(Material::Vacuum(), 0.0);  // vacuum
-  material.emplace_back(Material::fromMolarDensity(1.0, 2.0, 3.0, 4.0, 5.0),
-                        1.0);
+  // Correctly sized direct storage succeeds
+  GridSurfaceMaterial::Direct direct(nBins);
+  BOOST_CHECK_NO_THROW(GridSurfaceMaterial(
+      MultiAxisSpec2D(binning), GridSurfaceMaterial::Direct(direct)));
 
-  EqBoundEqBound eqBound{{0., 5.}, 5, {-1., 1.}, 1};
-  EqGrid eqGrid{eqBound()};
-  eqGrid.atPosition(Point{0.5, 0.}) = 1u;  // material 1
-  eqGrid.atPosition(Point{1.5, 0.}) = 0u;  // vacuum
+  // Undersized direct storage throws
+  GridSurfaceMaterial::Direct tooSmall(nBins - 1);
+  BOOST_CHECK_THROW(
+      GridSurfaceMaterial(MultiAxisSpec2D(binning), std::move(tooSmall)),
+      std::invalid_argument);
 
-  // Normal access + scale
-  {
-    auto engine =
-        std::make_unique<GridSurfaceMaterialT<EqGrid, IndexedMaterialAccessor>>(
-            EqGrid{eqGrid}, IndexedMaterialAccessor{std::vector(material)});
-
-    IndexedGridSurfaceMaterial igsm(std::move(engine));
-
-    Vector2 l0(0.5, 0.);
-    Vector2 l1(1.5, 0.);
-    BOOST_CHECK_EQUAL(igsm.materialSlab(l0).material().X0(), 1.);
-    BOOST_CHECK(igsm.materialSlab(l1).material().isVacuum());
-
-    igsm.scale(2.);
-    BOOST_CHECK_EQUAL(igsm.materialSlab(l0).thickness(), 2.);
-  }
-
-  // Null pointer throws
-  BOOST_CHECK_THROW(IndexedGridSurfaceMaterial(nullptr), std::invalid_argument);
-
-  // Accessor-type mismatch throws
-  {
-    auto sharedMaterial = std::make_shared<std::vector<MaterialSlab>>(material);
-    auto engine = std::make_unique<
-        GridSurfaceMaterialT<EqGrid, GloballyIndexedMaterialAccessor>>(
-        EqGrid{eqGrid}, GloballyIndexedMaterialAccessor{sharedMaterial, false});
-
-    BOOST_CHECK_THROW(IndexedGridSurfaceMaterial(std::move(engine)),
-                      std::invalid_argument);
-  }
-}
-
-// This test covers the concrete GloballyIndexedGridSurfaceMaterial wrapper
-// class
-BOOST_AUTO_TEST_CASE(GloballyIndexedGridSurfaceMaterialWrapper) {
-  using EqBoundEqBound = GridAxisGenerators::EqBoundEqBound;
-  using EqGrid = EqBoundEqBound::grid_type<std::size_t>;
-  using Point = EqGrid::point_t;
-
-  std::vector<MaterialSlab> material;
-  material.emplace_back(Material::Vacuum(), 0.0);  // vacuum
-  material.emplace_back(Material::fromMolarDensity(1.0, 2.0, 3.0, 4.0, 5.0),
-                        1.0);
-
-  EqBoundEqBound eqBound{{0., 5.}, 5, {-1., 1.}, 1};
-  EqGrid eqGrid{eqBound()};
-  eqGrid.atPosition(Point{0.5, 0.}) = 1u;  // material 1
-  eqGrid.atPosition(Point{1.5, 0.}) = 0u;  // vacuum
-
-  // Normal access + scale
-  {
-    auto sharedMaterial = std::make_shared<std::vector<MaterialSlab>>(material);
-    auto engine = std::make_unique<
-        GridSurfaceMaterialT<EqGrid, GloballyIndexedMaterialAccessor>>(
-        EqGrid{eqGrid}, GloballyIndexedMaterialAccessor{sharedMaterial, false});
-
-    GloballyIndexedGridSurfaceMaterial gigsm(std::move(engine));
-
-    Vector2 l0(0.5, 0.);
-    BOOST_CHECK_EQUAL(gigsm.materialSlab(l0).material().X0(), 1.);
-
-    gigsm.scale(2.);
-    BOOST_CHECK_EQUAL(gigsm.materialSlab(l0).thickness(), 2.);
-  }
-
-  // Null pointer throws
-  BOOST_CHECK_THROW(GloballyIndexedGridSurfaceMaterial(nullptr),
-                    std::invalid_argument);
-
-  // Accessor-type mismatch throws
-  {
-    auto engine =
-        std::make_unique<GridSurfaceMaterialT<EqGrid, IndexedMaterialAccessor>>(
-            EqGrid{eqGrid}, IndexedMaterialAccessor{std::vector(material)});
-
-    BOOST_CHECK_THROW(GloballyIndexedGridSurfaceMaterial(std::move(engine)),
-                      std::invalid_argument);
-  }
+  // Undersized indexed storage throws
+  GridSurfaceMaterial::Indexed indexedTooSmall;
+  indexedTooSmall.indices.resize(nBins - 1, 0u);
+  indexedTooSmall.material = {MaterialSlab::Nothing()};
+  BOOST_CHECK_THROW(
+      GridSurfaceMaterial(MultiAxisSpec2D(binning), std::move(indexedTooSmall)),
+      std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
