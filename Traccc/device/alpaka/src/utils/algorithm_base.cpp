@@ -15,10 +15,11 @@
 
 namespace traccc::alpaka {
 
-algorithm_base::algorithm_base(alpaka::queue& q)
+algorithm_base::algorithm_base(alpaka::queue& q, await_function_type await_func)
     : m_queue(q),
       m_warp_size(static_cast<unsigned int>(::alpaka::getPreferredWarpSize(
-          ::alpaka::getDev(details::get_queue(q))))) {}
+          ::alpaka::getDev(details::get_queue(q))))),
+      m_await_func(std::move(await_func)) {}
 
 alpaka::queue& algorithm_base::queue() const {
   return m_queue.get();
@@ -26,6 +27,10 @@ alpaka::queue& algorithm_base::queue() const {
 
 unsigned int algorithm_base::warp_size() const {
   return m_warp_size;
+}
+
+void algorithm_base::await(vecmem::abstract_event& event) const {
+  m_await_func(event, m_queue.get());
 }
 
 }  // namespace traccc::alpaka

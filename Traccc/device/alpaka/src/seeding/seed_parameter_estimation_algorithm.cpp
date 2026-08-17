@@ -45,8 +45,7 @@ seed_parameter_estimation_algorithm::seed_parameter_estimation_algorithm(
     await_function_type await_func)
     : device::seed_parameter_estimation_algorithm(config, mr, copy,
                                                   std::move(logger)),
-      alpaka::algorithm_base(q),
-      m_await_func(await_func) {}
+      alpaka::algorithm_base(q, std::move(await_func)) {}
 
 void seed_parameter_estimation_algorithm::estimate_seed_params_kernel(
     const struct estimate_seed_params_kernel_payload& payload) const {
@@ -60,11 +59,6 @@ void seed_parameter_estimation_algorithm::estimate_seed_params_kernel(
             payload.measurements, payload.spacepoints, payload.seeds, bfield,
             payload.params);
       });
-}
-
-void seed_parameter_estimation_algorithm::await(
-    vecmem::abstract_event& event) const {
-  m_await_func(event, queue());
 }
 
 }  // namespace traccc::alpaka

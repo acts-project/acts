@@ -41,9 +41,6 @@ class silicon_pixel_spacepoint_formation_algorithm
       await_function_type await_func = await_sync_event);
 
  private:
-  /// The function used to synchronize events.
-  await_function_type m_await_func;
-
   /// @name Function(s) inherited from
   /// @c traccc::device::silicon_pixel_spacepoint_formation_algorithm
   /// @{
@@ -54,11 +51,6 @@ class silicon_pixel_spacepoint_formation_algorithm
   ///
   void form_spacepoints_kernel(
       const form_spacepoints_kernel_payload& payload) const override;
-
-  /// Synchronize event
-  /// @param event The event to synchronize
-  ///
-  void await(vecmem::abstract_event& event) const override;
 
   /// @}
 

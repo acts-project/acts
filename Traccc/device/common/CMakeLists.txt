@@ -13,6 +13,7 @@ traccc_add_library( traccc_device_common device_common
    # General code.
    "include/traccc/device/algorithm_base.hpp"
    "src/device/algorithm_base.cpp"
+   "include/traccc/device/abstract_awaitable.hpp"
    "include/traccc/device/prefix_sum_element.hpp"
    "include/traccc/device/container_h2d_copy_alg.hpp"
    "include/traccc/device/impl/container_h2d_copy_alg.ipp"

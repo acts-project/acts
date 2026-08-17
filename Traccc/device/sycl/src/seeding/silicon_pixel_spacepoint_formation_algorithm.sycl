@@ -27,8 +27,7 @@ silicon_pixel_spacepoint_formation_algorithm::
         await_function_type await_func)
     : device::silicon_pixel_spacepoint_formation_algorithm(mr, copy,
                                                            std::move(logger)),
-      sycl::algorithm_base(queue),
-      m_await_func(await_func) {}
+      sycl::algorithm_base(queue, std::move(await_func)) {}
 
 void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
     const form_spacepoints_kernel_payload& payload) const {
@@ -60,11 +59,6 @@ void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
               });
         });
       });
-}
-
-void silicon_pixel_spacepoint_formation_algorithm::await(
-    vecmem::abstract_event& event) const {
-  m_await_func(event, queue());
 }
 
 }  // namespace traccc::sycl

@@ -8,6 +8,7 @@
 #pragma once
 
 // Local include(s).
+#include "traccc/device/abstract_awaitable.hpp"
 #include "traccc/device/algorithm_base.hpp"
 #include "traccc/device/prefix_sum_element.hpp"
 #include "traccc/edm/device/device_doublet.hpp"
@@ -38,7 +39,8 @@ class triplet_seeding_algorithm
     : public algorithm<edm::seed_collection::buffer(
           const edm::spacepoint_collection::const_view&)>,
       public messaging,
-      public algorithm_base {
+      public algorithm_base,
+      public virtual abstract_awaitable {
  public:
   /// Constructor for the seed finding algorithm
   ///
@@ -298,11 +300,6 @@ class triplet_seeding_algorithm
   ///
   virtual void select_seeds_kernel(
       const select_seeds_kernel_payload& payload) const = 0;
-
-  /// Synchronize an event related to asynchronous operations
-  /// @param event The event to synchronize
-  ///
-  virtual void await(vecmem::abstract_event& event) const = 0;
 
   /// @}
 
