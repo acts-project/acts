@@ -378,13 +378,23 @@ if [ "${full_install:-false}" == "true" ]; then
   checkpoint "Geant4 datasets download complete"
 fi
 geant4_dir=$(spack -e "${env_dir}" location -i geant4)
-# Prepare the folder for G4 data, and symlink it to where G4 will look for it
-mkdir -p "${geant4_dir}/share/Geant4"
-ln -s "${geant4_dir}/share/Geant4/data" "${view_dir}/share/Geant4/data"
+# Prepare the folder for G4 data, and symlink it to where G4 will look for it.
+# `data` itself, not just its parent: geant4.sh does `cd .../share/Geant4/data`
+# and only the full_install path above creates it. Without it the ln below has
+# no existing directory to resolve onto and writes a symlink at the target's own
+# path -- a self-reference that makes every later cd fail with ELOOP.
+mkdir -p "${geant4_dir}/share/Geant4/data"
+[ -e "${view_dir}/share/Geant4/data" ] ||
+  ln -s "${geant4_dir}/share/Geant4/data" "${view_dir}/share/Geant4/data"
 end_section
 
 start_section "Prepare python environment"
 "${view_dir}/bin/python3" -m venv --system-site-packages "$venv_dir"
+# NOTE: pip, not uv, on purpose. The venv is deliberately --system-site-packages
+# so that the packages the spack view already provides (numpy and everything
+# built against it) are reused rather than replaced. pip honours that and skips
+# them; uv ignores system site-packages entirely and installs its own PyPI wheel
+# over the top, which silently swaps out the spack-built stack.
 retry_transient "${venv_dir}/bin/python3" -m pip install pyyaml jinja2
 if [ "${full_install:-false}" == "true" ]; then
   retry_transient "${venv_dir}/bin/python3" -m pip install -r "${SCRIPT_DIR}/../../Python/Examples/tests/requirements.txt"
