@@ -127,10 +127,13 @@ function retry_transient() {
 }
 
 # Parse command line arguments
-while getopts "c:t:d:e:s:fh" opt; do
+while getopts "c:t:d:e:s:F:fh" opt; do
   case ${opt} in
     c )
       compiler=$OPTARG
+      ;;
+    F )
+      flavor=$OPTARG
       ;;
     t )
       tag=$OPTARG
@@ -155,6 +158,7 @@ while getopts "c:t:d:e:s:fh" opt; do
       echo "  -d <destination> Specify install destination (defaults based on CI environment)"
       echo "  -e <env_file>    Specify environment file to output environments to"
       echo "  -s <cxx_std>     C++ standard for lockfile selection (e.g. 20, 23). Defaults to CXXSTD env var or 20."
+      echo "  -F <flavor>      Accelerator flavor (e.g. cuda13, rocm-gfx90a). Defaults to FLAVOR env var or the host stack."
       echo "  -f               Full dependency installation. Includes Geant4 datasets and Python packages."
       echo "  -h               Show this help message"
       exit 0
@@ -214,6 +218,14 @@ fi
 
 if [ -z "${cxx_std:-}" ]; then
   cxx_std="${CXXSTD:-20}"
+fi
+
+# `host` is the plain CPU stack, published with no flavor token: pass nothing.
+if [ -z "${flavor:-}" ]; then
+  flavor="${FLAVOR:-}"
+fi
+if [ "${flavor}" == "host" ]; then
+  flavor=""
 fi
 
 checkpoint "Create environment file $(realpath "$env_file")"
@@ -334,6 +346,10 @@ cmd=(
 
 if [ "${compiler}" != "default" ]; then
     cmd+=("--compiler-binary" "${compiler}")
+fi
+
+if [ -n "${flavor}" ]; then
+    cmd+=("--flavor" "${flavor}")
 fi
 
 "${cmd[@]}"
