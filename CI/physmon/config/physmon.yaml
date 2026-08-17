@@ -1,15 +1,24 @@
 # Job catalog for the Snakemake-based physmon workflow.
 #
-# Three top-level sections:
-#   - comparisons: each entry is one histcmp call. Optionally carries a `plot`
-#     sub-config describing how to derive a `_hist.root` input from a raw ntuple
-#     via Examples/Scripts/generic_plotter.py.
-#   - trackfinding: short per-generator config for trackfinding workflows; the
-#     Snakefile expands each entry into the standard pack of comparisons (see
-#     TRACKFINDING_BASE / TRACKFINDING_EXTRAS in the Snakefile).
+# Adding a physmon chain should mean editing this file and adding a workflow
+# script; the Snakefile holds mechanism, not the catalog. A new chain needs:
 #
-# Generator metadata (variants, upstream deps) lives directly in the Snakefile
-# next to the rule definitions, not here.
+#   1. CI/physmon/workflows/physmon_<slug>.py
+#   2. a `generators:` block here (see below)
+#   3. a six-line `rule generate_<slug>` in the Snakefile, whose directives are
+#      all derived from this file -- no output paths are written out by hand
+#
+# Three top-level sections:
+#   - trackfinding_base / trackfinding_extras: row templates. Trackfinding
+#     workflows all produce the same pack of comparison files, so they are
+#     described once here and expanded per generator rather than enumerated.
+#   - generators: one block per generator. Drives the rule's outputs, inputs,
+#     thread budget and variants, and (via `trackfinding:`) which comparisons
+#     it contributes.
+#   - comparisons: one entry per histcmp call that is not part of a
+#     trackfinding pack. Optionally carries a `plot` sub-config describing how
+#     to derive a `_hist.root` input from a raw ntuple via
+#     Examples/Scripts/generic_plotter.py.
 #
 # Paths are relative:
 #   - current files     -> {OUTDIR}/data/<path>
@@ -17,6 +26,157 @@
 #   - html/plots output -> {OUTDIR}/html/<path>          (.root replaced with .html)
 #
 # `mode` groups comparisons for the Snakefile's per-mode meta-targets.
+
+
+# ---------------------------------------------------------------------------
+# Trackfinding comparison templates.
+#
+# `kind_fmt` is formatted with the generator's label. `file` is relative to the
+# generator's output directory. A row with a `plot` block compares the
+# histogrammed output and takes `plot.from` as the generator's real output;
+# a row without one compares the generator's output directly.
+# ---------------------------------------------------------------------------
+
+# Base pack: present for every trackfinding generator.
+trackfinding_base:
+  - kind_fmt: "Seeding {label}"
+    file: performance_seeding.root
+    config: default.yml
+    # TruthSmeared has no seeding step, so it produces no seeding performance.
+    skip_variants: [TruthSmeared]
+
+  - kind_fmt: "CKF finding performance | {label}"
+    file: performance_finding_ckf.root
+    config: default.yml
+
+  - kind_fmt: "CKF fitting performance | {label}"
+    file: performance_fitting_ckf.root
+    config: default.yml
+
+  - kind_fmt: "CKF track summary | {label}"
+    file: tracksummary_ckf_hist.root
+    plot:
+      from: tracksummary_ckf.root
+      tree: tracksummary
+      config: tracksummary_ckf.yml
+
+# Optional add-on packs, selected per generator via `trackfinding.extras`.
+# `{vertexing_config}` resolves to that generator's `vertexing_config`.
+trackfinding_extras:
+  ambisolver:
+    - kind_fmt: "Ambisolver finding performance | {label}"
+      file: performance_finding_ckf_ambi.root
+
+  ml_solver:
+    - kind_fmt: "ML Ambisolver | {label}"
+      file: performance_finding_ckf_ml_solver.root
+
+  vertexing_ivf:
+    - kind_fmt: "IVF notime | {label}"
+      file: performance_vertexing_ivf_notime_hist.root
+      plot:
+        from: performance_vertexing_ivf_notime.root
+        tree: vertexing
+        config: "{vertexing_config}"
+
+  vertexing_amvf:
+    - kind_fmt: "AMVF gauss notime | {label}"
+      file: performance_vertexing_amvf_gauss_notime_hist.root
+      plot:
+        from: performance_vertexing_amvf_gauss_notime.root
+        tree: vertexing
+        config: "{vertexing_config}"
+
+    - kind_fmt: "AMVF grid time | {label}"
+      file: performance_vertexing_amvf_grid_time_hist.root
+      plot:
+        from: performance_vertexing_amvf_grid_time.root
+        tree: vertexing
+        config: "{vertexing_config}"
+
+
+# ---------------------------------------------------------------------------
+# Generators. One block per `rule generate_<slug>`; the key is the slug, which
+# also names the script (workflows/physmon_<slug>.py) and the output directory
+# ({OUTDIR}/data/<slug>).
+#
+# Keys, all optional:
+#   threads: false     single-threaded (Geant4/Pythia8-bound). Default true,
+#                      meaning the rule takes the heavy-job thread budget and
+#                      passes --threads to the script.
+#   inputs:            files from another generator this one consumes. The
+#                      leading path component names the upstream generator,
+#                      which is what the summary reports as the upstream step.
+#   extra_outputs:     files the script writes that no comparison consumes.
+#                      Every other output is derived from the comparisons, so
+#                      these have to be declared or snakemake would not know
+#                      about them.
+#   variants:          variant -> display label. Variant keys are
+#                      `SeedingAlgorithm` enum member names so the script can
+#                      resolve them with getattr(); outputs land in
+#                      <slug>/<variant>/.
+#   trackfinding:      expand the trackfinding pack for this generator.
+#                      `label` (or `label_fmt` with {variant_label} when the
+#                      generator has variants), optional `extras`, and
+#                      `vertexing_config` if any vertexing extra is used.
+# ---------------------------------------------------------------------------
+
+generators:
+  simulation:
+    threads: false
+    extra_outputs: [particles_gun.root]
+
+  simulation_gsf:
+    threads: false
+    # Consumed by trackfitting_gsf / trackrefitting_gsf, never compared.
+    extra_outputs:
+      - simulation/particles_simulation.root
+      - simulation/hits.root
+
+  trackfitting_kf: {}
+
+  trackfitting_gsf:
+    inputs: [simulation_gsf/simulation/particles_simulation.root]
+
+  trackfitting_gx2f: {}
+
+  trackrefitting_kf: {}
+
+  trackrefitting_gsf:
+    inputs: [simulation_gsf/simulation/particles_simulation.root]
+
+  trackfitting_gx2f_vs_kf: {}
+
+  trackfinding_1muon:
+    variants:
+      TruthSmeared: "truth smeared seeding"
+      TruthEstimated: "truth estimated seeding"
+      GridTriplet: "default seeding"
+      OrthogonalTriplet: "orthogonal seeding"
+    trackfinding:
+      label_fmt: "trackfinding | single muon | {variant_label}"
+
+  trackfinding_4muon_50vertices:
+    extra_outputs: [performance_fitting_ckf_ambi.root]
+    trackfinding:
+      label: "trackfinding | 4 muon x 50 vertices | default seeding"
+      extras: [ambisolver, vertexing_ivf, vertexing_amvf]
+      vertexing_config: vertexing_4muon_50vertices.yml
+
+  trackfinding_ttbar_pu200:
+    threads: false
+    extra_outputs:
+      - performance_fitting_ckf_ambi.root
+      - performance_fitting_ckf_ml_solver.root
+    trackfinding:
+      label: "trackfinding | ttbar with 200 pileup | default seeding"
+      extras: [ambisolver, ml_solver, vertexing_amvf]
+      vertexing_config: vertexing_ttbar_pu200.yml
+
+
+# ---------------------------------------------------------------------------
+# Comparisons that are not part of a trackfinding pack.
+# ---------------------------------------------------------------------------
 
 comparisons:
   # ---- simulation ---------------------------------------------------------
@@ -87,26 +247,3 @@ comparisons:
     label_reference: KF
     label_monitored: GX2F
     mode: gx2f_vs_kf
-
-
-# Trackfinding workflows. Each entry is expanded by the Snakefile into the
-# standard {seeding, finding, fitting, tracksummary} pack of comparisons, plus
-# the listed `extras`. See TRACKFINDING_BASE / TRACKFINDING_EXTRAS in the
-# Snakefile for the exact pack and what each extras key adds.
-#
-# Variant-aware generators (currently just trackfinding_1muon) use `label_fmt`
-# with a `{variant_label}` placeholder; the variant set and labels are defined
-# in TRACKFINDING_1MUON_VARIANTS in the Snakefile.
-trackfinding:
-  trackfinding_1muon:
-    label_fmt: "trackfinding | single muon | {variant_label}"
-
-  trackfinding_4muon_50vertices:
-    label: "trackfinding | 4 muon x 50 vertices | default seeding"
-    extras: [ambisolver, vertexing_ivf, vertexing_amvf]
-    vertexing_config: vertexing_4muon_50vertices.yml
-
-  trackfinding_ttbar_pu200:
-    label: "trackfinding | ttbar with 200 pileup | default seeding"
-    extras: [ambisolver, ml_solver, vertexing_amvf]
-    vertexing_config: vertexing_ttbar_pu200.yml
