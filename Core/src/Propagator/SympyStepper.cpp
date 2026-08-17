@@ -14,11 +14,10 @@
 #include "Acts/Propagator/detail/SympyCovarianceEngine.hpp"
 #include "Acts/Propagator/detail/SympyJacobianEngine.hpp"
 #include "Acts/Propagator/detail/SympyStepperDenseStep.hpp"
+#include "Acts/Propagator/detail/SympyStepperVacuumStepDecl.hpp"
 
 #include <cmath>
 #include <span>
-
-#include "codegen/sympy_stepper_math.hpp"
 
 namespace Acts {
 
@@ -197,137 +196,12 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
     return detail::sympyDenseStepFull(*this, state, propDir, material);
   }
 
-  double h = state.stepSize.value() * propDir;
-
-  const double initialH = h;
-
-  const Vector3 pos = position(state);
-  const Vector3 dir = direction(state);
-  const double t = time(state);
-  const double qop = qOverP(state);
-  const double pabs = absoluteMomentum(state);
-  const double m = particleHypothesis(state).mass();
-
-  const auto getB = [this, &state](std::span<const double, 3> p) {
-    return getField(state, {p[0], p[1], p[2]});
-  };
-
-  if (!state.field.has_value()) {
-    auto fieldRes = getField(state, pos);
-    if (!fieldRes.ok()) {
-      return fieldRes.error();
-    }
-    state.field = *fieldRes;
+  // Specialised on covariance transport, each specialisation in a translation
+  // unit of its own; see SympyStepperVacuumStepDecl.hpp for why.
+  if (state.covTransport) {
+    return detail::sympyVacuumStep<true>(*this, state, propDir);
   }
-  // The kernel writes nothing until it has accepted a trial, so its last field
-  // sample can go straight into the state instead of into a local that is
-  // copied over afterwards.  That copy sat on the loop-carried chain: the field
-  // at the end of one step is the first thing the next one multiplies.
-  Vector3& lastField = *state.field;
-
-  // Read once: the kernel writes through spans that point into `state`, so a
-  // later read would be ordered behind all of its stores.
-  const double stepTolerance = state.options.stepTolerance;
-
-  const auto calcStepSizeScaling = [&](const double errorEstimate_) -> double {
-    // For details about these values see ATL-SOFT-PUB-2009-001
-    constexpr double lower = 0.25;
-    constexpr double upper = 4.0;
-    // This is given by the order of the Runge-Kutta method
-    constexpr double exponent = 0.25;
-
-    double x = stepTolerance / errorEstimate_;
-
-    if constexpr (exponent == 0.25) {
-      // This is 3x faster than std::pow
-      x = std::sqrt(std::sqrt(x));
-    } else {
-      x = std::pow(x, exponent);
-    }
-
-    return std::clamp(x, lower, upper);
-  };
-
-  std::size_t nStepTrials = 0;
-  double errorEstimate = 0.;
-
-  while (true) {
-    ++nStepTrials;
-    ++state.statistics.nAttemptedSteps;
-
-    // For details about the factor 4 see ATL-SOFT-PUB-2009-001
-    bool accepted = false;
-    std::error_code fieldError;
-    const std::span<const double, 3> startPos(pos.data(), 3);
-    const std::span<const double, 3> startDir(dir.data(), 3);
-    const std::span<double, 3> endPos(
-        state.pars.template segment<3>(eFreePos0).data(), 3);
-    const std::span<double, 3> endDir(
-        state.pars.template segment<3>(eFreeDir0).data(), 3);
-    const std::span<double, 8> derivative(state.derivative.data(), 8);
-    const std::span<double> jac =
-        state.covTransport ? std::span<double>(state.jacToGlobal.data(),
-                                               state.jacToGlobal.size())
-                           : std::span<double>();
-    // A status code rather than a `Result<bool>`: a variant returned across
-    // the kernel boundary is read back through the stack on the accepted
-    // path, which is every path that matters.
-    const int status = rk4_vacuum(
-        startPos, startDir, t, h, qop, m, pabs,
-        std::span<const double, 3>(state.field->data(), 3), getB, errorEstimate,
-        4 * stepTolerance, fieldError, endPos, state.pars[eFreeTime], endDir,
-        std::span<double, 3>(lastField.data(), 3), derivative, jac);
-    if (status == 2) {
-      return fieldError;
-    }
-    accepted = status != 0;
-    // Protect against division by zero
-    errorEstimate = std::max(1e-20, errorEstimate);
-
-    if (accepted) {
-      break;
-    }
-
-    ++state.statistics.nRejectedSteps;
-
-    const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
-    h *= stepSizeScaling;
-
-    // If step size becomes too small the particle remains at the initial
-    // place
-    if (std::abs(h) < std::abs(state.options.stepSizeCutOff)) {
-      // Not moving due to too low momentum needs an aborter
-      return EigenStepperError::StepSizeStalled;
-    }
-
-    // If the parameter is off track too much or given stepSize is not
-    // appropriate
-    if (nStepTrials > state.options.maxRungeKuttaStepTrials) {
-      // Too many trials, have to abort
-      return EigenStepperError::StepSizeAdjustmentFailed;
-    }
-  }
-
-  state.pathAccumulated += h;
-  ++state.nSteps;
-  state.nStepTrials += nStepTrials;
-
-  ++state.statistics.nSuccessfulSteps;
-  if (propDir != Direction::fromScalarZeroAsPositive(initialH)) {
-    ++state.statistics.nReverseSteps;
-  }
-  state.statistics.pathLength += h;
-  state.statistics.absolutePathLength += std::abs(h);
-
-  const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
-  const double nextAccuracy = std::abs(h * stepSizeScaling);
-  const double previousAccuracy = std::abs(state.stepSize.accuracy());
-  const double initialStepLength = std::abs(initialH);
-  if (nextAccuracy < initialStepLength || nextAccuracy > previousAccuracy) {
-    state.stepSize.setAccuracy(nextAccuracy);
-  }
-
-  return h;
+  return detail::sympyVacuumStep<false>(*this, state, propDir);
 }
 
 }  // namespace Acts
