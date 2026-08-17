@@ -5,6 +5,13 @@
 #   - Editing one generator only re-runs that branch.
 #   - The catalog of jobs lives in config/physmon.yaml, not in shell ifs.
 #
+# This file holds mechanism; config/physmon.yaml holds the catalog. Every
+# generator rule's outputs, inputs, thread budget and command are derived from
+# that file, so adding a physmon chain means writing a workflow script, adding
+# a `generators:` block, and pasting the same six-line rule stanza with the new
+# slug -- no output paths are listed by hand. A `generators:` entry with no
+# matching rule fails at DAG construction rather than silently doing nothing.
+#
 # Every rule is run through scripts/wrap.sh so it always exits 0 and writes a
 # small JSON witness {"step","rc","log"}. The summary step joins those witnesses
 # against the catalog to produce a multi-column results table and is the single
@@ -99,94 +106,47 @@ HEAVY_THREADS = workflow.cores
 
 
 # ---------------------------------------------------------------------------
-# Generator catalog. Lives in Python (next to the rules that define each
-# generator) rather than in YAML — the rule bodies are the source of truth
-# for what each generator produces; this just declares the relations that
-# the catalog needs (variants for output layout, upstream deps for the DAG).
+# Generator catalog, read from the `generators:` block in the config. Each key
+# is a slug that names three things by convention: the rule
+# (generate_<slug>), the script (workflows/physmon_<slug>.py) and the output
+# directory ({OUTDIR}/data/<slug>).
 # ---------------------------------------------------------------------------
+
+GENERATORS = config["generators"]
 
 # All generator slugs the workflow knows about. Used to enumerate witnesses.
-GENERATOR_SLUGS = [
-    "simulation",
-    "simulation_gsf",
-    "trackfitting_kf",
-    "trackfitting_gsf",
-    "trackfitting_gx2f",
-    "trackrefitting_kf",
-    "trackrefitting_gsf",
-    "trackfinding_1muon",
-    "trackfinding_4muon_50vertices",
-    "trackfinding_ttbar_pu200",
-    "trackfitting_gx2f_vs_kf",
-]
+# A slug with no matching rule fails at DAG construction ("no rule to produce"
+# its witness), so this cannot silently drift from the rules below.
+GENERATOR_SLUGS = list(GENERATORS)
 
-# Variant -> display label for trackfinding_1muon. Variant keys are the
-# `SeedingAlgorithm` enum member names so the script can resolve them via
-# `getattr(SeedingAlgorithm, name)`. Display labels stay human-readable.
-TRACKFINDING_1MUON_VARIANTS = {
-    "TruthSmeared":      "truth smeared seeding",
-    "TruthEstimated":    "truth estimated seeding",
-    "GridTriplet":       "default seeding",
-    "OrthogonalTriplet": "orthogonal seeding",
-}
-
-# Generators that have a per-variant output subdir layout. Drives witness paths
-# and the comparison -> generator mapping for cascade reporting.
+# Generators with a per-variant output subdir layout. Drives witness paths and
+# the comparison -> generator mapping for cascade reporting.
 GENERATOR_VARIANTS = {
-    "trackfinding_1muon": list(TRACKFINDING_1MUON_VARIANTS),
+    slug: list(spec["variants"])
+    for slug, spec in GENERATORS.items()
+    if spec.get("variants")
 }
 
-# Generators that depend on another generator's output. Used by build_results
-# to attach an "upstream" step to each comparison's row.
+# Generators that consume another generator's output. The upstream slug is the
+# leading path component of the input, so the dependency is stated once and
+# feeds both the rule's `input:` and the summary's "upstream" step.
 GENERATOR_UPSTREAM = {
-    "trackfitting_gsf":   "simulation_gsf",
-    "trackrefitting_gsf": "simulation_gsf",
+    slug: spec["inputs"][0].split("/")[0]
+    for slug, spec in GENERATORS.items()
+    if spec.get("inputs")
 }
 
 
 # ---------------------------------------------------------------------------
-# Trackfinding comparison template. The trackfinding workflows produce a
-# common pack of comparison files (seeding/finding/fitting/tracksummary), with
-# optional ambisolver / ML-solver / vertexing add-ons. Rather than enumerate
-# all 31 entries in YAML we expand them here from a short config block.
+# Trackfinding comparison templates, read from the config. The trackfinding
+# workflows all produce the same pack of comparison files
+# (seeding/finding/fitting/tracksummary) with optional ambisolver / ML-solver
+# / vertexing add-ons, so the pack is described once and expanded per
+# generator rather than enumerated per comparison.
 # ---------------------------------------------------------------------------
 
-# Base pack: 4 rows present for every trackfinding workflow.
-TRACKFINDING_BASE = [
-    {"kind_fmt": "Seeding {label}",                   "file": "performance_seeding.root",     "config": "default.yml", "skip_variants": ["TruthSmeared"]},
-    {"kind_fmt": "CKF finding performance | {label}", "file": "performance_finding_ckf.root", "config": "default.yml"},
-    {"kind_fmt": "CKF fitting performance | {label}", "file": "performance_fitting_ckf.root", "config": "default.yml"},
-    {"kind_fmt": "CKF track summary | {label}",       "file": "tracksummary_ckf_hist.root",
-     "plot": {"from": "tracksummary_ckf.root", "tree": "tracksummary", "config": "tracksummary_ckf.yml"}},
-]
-
-# Optional add-on packs, keyed on names the YAML refers to via `extras:`.
-TRACKFINDING_EXTRAS = {
-    "ambisolver": [
-        {"kind_fmt": "Ambisolver finding performance | {label}",
-         "file": "performance_finding_ckf_ambi.root"},
-    ],
-    "ml_solver": [
-        {"kind_fmt": "ML Ambisolver | {label}",
-         "file": "performance_finding_ckf_ml_solver.root"},
-    ],
-    "vertexing_ivf": [
-        {"kind_fmt": "IVF notime | {label}",
-         "file": "performance_vertexing_ivf_notime_hist.root",
-         "plot": {"from": "performance_vertexing_ivf_notime.root", "tree": "vertexing",
-                  "config": "{vertexing_config}"}},
-    ],
-    "vertexing_amvf": [
-        {"kind_fmt": "AMVF gauss notime | {label}",
-         "file": "performance_vertexing_amvf_gauss_notime_hist.root",
-         "plot": {"from": "performance_vertexing_amvf_gauss_notime.root", "tree": "vertexing",
-                  "config": "{vertexing_config}"}},
-        {"kind_fmt": "AMVF grid time | {label}",
-         "file": "performance_vertexing_amvf_grid_time_hist.root",
-         "plot": {"from": "performance_vertexing_amvf_grid_time.root", "tree": "vertexing",
-                  "config": "{vertexing_config}"}},
-    ],
-}
+TRACKFINDING_BASE = config["trackfinding_base"]
+TRACKFINDING_EXTRAS = config["trackfinding_extras"]
 
 
 def _expand_row(slug, variant, label, row, vertexing_config):
@@ -214,27 +174,35 @@ def _expand_row(slug, variant, label, row, vertexing_config):
     return entry
 
 
-def expand_trackfinding(spec):
-    """Expand the YAML `trackfinding:` block into a flat list of comparisons.
+def trackfinding_rows(slug):
+    """The template rows a trackfinding generator expands: base pack + extras."""
+    opts = GENERATORS[slug]["trackfinding"]
+    rows = list(TRACKFINDING_BASE)
+    for e in opts.get("extras") or []:
+        rows += TRACKFINDING_EXTRAS[e]
+    return rows
 
-    `spec` is config["trackfinding"]: a dict {slug -> per-slug options}.
-    Per-slug options:
-      - For generators with variants (trackfinding_1muon): `label_fmt` with
-        a `{variant_label}` placeholder; variants come from the catalog.
-      - Otherwise: a plain `label`.
+
+def expand_trackfinding():
+    """Expand every generator carrying a `trackfinding:` block into comparisons.
+
+    Per-generator options under `trackfinding:`:
+      - For generators with `variants`: `label_fmt` with a `{variant_label}`
+        placeholder. Otherwise: a plain `label`.
       - `extras`: optional list of keys from TRACKFINDING_EXTRAS.
       - `vertexing_config`: required if any vertexing extra is used.
     """
     comparisons = []
-    for slug, opts in spec.items():
-        rows = list(TRACKFINDING_BASE)
-        for e in opts.get("extras") or []:
-            rows += TRACKFINDING_EXTRAS[e]
+    for slug, spec in GENERATORS.items():
+        opts = spec.get("trackfinding")
+        if not opts:
+            continue
+        rows = trackfinding_rows(slug)
         vcfg = opts.get("vertexing_config")
-        if slug in GENERATOR_VARIANTS:
+        variants = spec.get("variants")
+        if variants:
             assert "label_fmt" in opts, f"{slug} has variants, needs label_fmt"
-            variant_labels = TRACKFINDING_1MUON_VARIANTS  # only generator with variants
-            for variant, var_label in variant_labels.items():
+            for variant, var_label in variants.items():
                 label = opts["label_fmt"].format(variant_label=var_label)
                 for row in rows:
                     out = _expand_row(slug, variant, label, row, vcfg)
@@ -253,7 +221,7 @@ def expand_trackfinding(spec):
 # Catalog: the explicit comparisons from YAML plus trackfinding expansions.
 # ---------------------------------------------------------------------------
 
-COMPARISONS = list(config["comparisons"]) + expand_trackfinding(config.get("trackfinding", {}))
+COMPARISONS = list(config["comparisons"]) + expand_trackfinding()
 
 
 # ---------------------------------------------------------------------------
@@ -315,6 +283,102 @@ def comps_for_mode(mode):
     if mode == "all":
         return COMPARISONS
     return [c for c in COMPARISONS if c["mode"] == mode]
+
+
+# ---------------------------------------------------------------------------
+# Generator rule directives, derived from the catalog.
+#
+# Every generator rule's outputs are implied by the comparisons it feeds, so
+# they are computed here instead of being written out by hand. Two rules:
+#
+#   - A comparison with a `plot` block consumes the raw ntuple named by
+#     `plot.from`; that ntuple is the generator's output and is temp(), since
+#     plot_hist turns it into the `_hist.root` that is actually compared.
+#     Without a `plot` block, the compared file *is* the generator's output.
+#   - A comparison whose reference is generated rather than fetched
+#     (reference_in: outdir) also has that reference produced here.
+#
+# Files a script writes that no comparison consumes have to be declared as
+# `extra_outputs` in the config, or snakemake would not know about them.
+# ---------------------------------------------------------------------------
+
+def comps_for_generator(slug, variant=None):
+    """Comparisons whose `current` file this generator (and variant) produces."""
+    return [c for c in COMPARISONS if generator_info_for_comp(c) == (slug, variant)]
+
+
+def _output_key(rel):
+    """A stable, unique keyword-argument name for an output path."""
+    return Path(rel).name[: -len(".root")] if rel.endswith(".root") else Path(rel).name
+
+
+def generator_outputs(slug, variant=None, path_variant=None):
+    """The `output:` mapping for a generator rule.
+
+    `path_variant` overrides the variant used in the emitted paths, so a rule
+    covering several variants through a wildcard can select its row set with a
+    representative variant while still emitting '{variant}' in the paths.
+    """
+    if path_variant is None:
+        path_variant = variant
+    prefix = f"{slug}/{path_variant}/" if path_variant is not None else f"{slug}/"
+    # The comparison's paths already carry the concrete variant; swap in the
+    # wildcard (or nothing) so the emitted path matches the rule.
+    concrete = f"{slug}/{variant}/" if variant is not None else f"{slug}/"
+
+    outputs = {}
+    for comp in comps_for_generator(slug, variant):
+        if "plot" in comp:
+            rel = comp["plot"]["from"]
+            outputs[_output_key(rel)] = temp(f"{OUTDIR}/data/{prefix}{rel[len(concrete):]}")
+        else:
+            rel = comp["current"]
+            outputs[_output_key(rel)] = f"{OUTDIR}/data/{prefix}{rel[len(concrete):]}"
+        if comp.get("reference_in") == "outdir":
+            rel = comp["reference"]
+            outputs[_output_key(rel)] = f"{OUTDIR}/data/{prefix}{rel[len(concrete):]}"
+
+    for rel in GENERATORS[slug].get("extra_outputs") or []:
+        outputs[_output_key(rel)] = f"{OUTDIR}/data/{prefix}{rel}"
+
+    assert "witness" not in outputs, f"{slug}: an output is named 'witness'"
+    outputs["witness"] = (
+        f"{OUTDIR}/witnesses/generator/{slug}/{path_variant}.json"
+        if path_variant is not None
+        else witness_for_generator(slug)
+    )
+    return outputs
+
+
+def generator_inputs(slug):
+    return [f"{OUTDIR}/data/{rel}" for rel in GENERATORS[slug].get("inputs") or []]
+
+
+def generator_threads(slug):
+    """Heavy thread budget unless the generator is declared single-threaded."""
+    return HEAVY_THREADS if GENERATORS[slug].get("threads", True) else 1
+
+
+def generator_log(slug, variant=None):
+    stem = f"{slug}_{variant}" if variant is not None else slug
+    return f"{OUTDIR}/logs/{stem}.log"
+
+
+def generator_shell(slug, variant=None):
+    """The wrapped script invocation. Scripts and output dirs follow the slug."""
+    outdir = f"{OUTDIR}/data/{slug}"
+    cmd = (
+        WRAP + " --witness {output.witness} --step generator --log {log} "
+        "--touches '{output}' -- "
+        f"python3 {WORKFLOWS_DIR}/physmon_{slug}.py "
+    )
+    if variant is not None:
+        cmd += f"{outdir}/{variant} --variant {variant} "
+    else:
+        cmd += f"{outdir} "
+    if GENERATORS[slug].get("threads", True):
+        cmd += "--threads {threads}"
+    return cmd.rstrip()
 
 
 def _check_histcmp_witnesses(comps):
@@ -427,202 +491,125 @@ rule gx2f_vs_kf:
 
 
 # ---------------------------------------------------------------------------
-# Generator rules. One per script. Wrapped so they never fail the DAG; outputs
-# that feed plot_hist are wrapped in temp() so snakemake auto-cleans the large
-# ntuples after they've been consumed (matching the original `rm` in the
-# legacy shell script).
+# Generator rules. One per script, and deliberately still one rule each rather
+# than a loop: `snakemake generate_<slug>` and a grep for the rule name both
+# keep working, and the DAG stays readable. Every directive is derived from
+# the catalog, so the body is the same six lines for each and adding a chain
+# means adding a `generators:` block and a script, not a list of output paths.
+#
+# Outputs that feed plot_hist come back from generator_outputs() wrapped in
+# temp(), so snakemake auto-cleans the large ntuples once they have been
+# consumed (matching the original `rm` in the legacy shell script).
 # ---------------------------------------------------------------------------
 
 rule generate_simulation:
-    output:
-        particles_fatras = temp(f"{OUTDIR}/data/simulation/particles_fatras.root"),
-        particles_geant4 = temp(f"{OUTDIR}/data/simulation/particles_geant4.root"),
-        particles_ttbar  = temp(f"{OUTDIR}/data/simulation/particles_ttbar.root"),
-        vertices_ttbar   = temp(f"{OUTDIR}/data/simulation/vertices_ttbar.root"),
-        particles_gun    = f"{OUTDIR}/data/simulation/particles_gun.root",
-        witness          = witness_for_generator("simulation"),
-    log: f"{OUTDIR}/logs/simulation.log"
-    shell:
-        WRAP + " --witness {output.witness} --step generator --log {log} "
-        "--touches '{output}' -- "
-        "python3 " + WORKFLOWS_DIR + "/physmon_simulation.py "
-        + OUTDIR + "/data/simulation"
+    input:   generator_inputs("simulation")
+    output:  **generator_outputs("simulation")
+    log:     generator_log("simulation")
+    threads: generator_threads("simulation")
+    shell:   generator_shell("simulation")
 
 
 rule generate_simulation_gsf:
-    output:
-        particles = f"{OUTDIR}/data/simulation_gsf/simulation/particles_simulation.root",
-        hits      = f"{OUTDIR}/data/simulation_gsf/simulation/hits.root",
-        witness   = witness_for_generator("simulation_gsf"),
-    log: f"{OUTDIR}/logs/simulation_gsf.log"
-    shell:
-        WRAP + " --witness {output.witness} --step generator --log {log} "
-        "--touches '{output}' -- "
-        "python3 " + WORKFLOWS_DIR + "/physmon_simulation_gsf.py "
-        + OUTDIR + "/data/simulation_gsf"
+    input:   generator_inputs("simulation_gsf")
+    output:  **generator_outputs("simulation_gsf")
+    log:     generator_log("simulation_gsf")
+    threads: generator_threads("simulation_gsf")
+    shell:   generator_shell("simulation_gsf")
 
 
 rule generate_trackfitting_kf:
-    output:
-        perf    = f"{OUTDIR}/data/trackfitting_kf/performance_trackfitting.root",
-        witness = witness_for_generator("trackfitting_kf"),
-    log: f"{OUTDIR}/logs/trackfitting_kf.log"
-    threads: HEAVY_THREADS
-    shell:
-        WRAP + " --witness {output.witness} --step generator --log {log} "
-        "--touches '{output}' -- "
-        "python3 " + WORKFLOWS_DIR + "/physmon_trackfitting_kf.py "
-        + OUTDIR + "/data/trackfitting_kf --threads {threads}"
+    input:   generator_inputs("trackfitting_kf")
+    output:  **generator_outputs("trackfitting_kf")
+    log:     generator_log("trackfitting_kf")
+    threads: generator_threads("trackfitting_kf")
+    shell:   generator_shell("trackfitting_kf")
 
 
 rule generate_trackfitting_gsf:
-    input:
-        f"{OUTDIR}/data/simulation_gsf/simulation/particles_simulation.root",
-    output:
-        perf    = f"{OUTDIR}/data/trackfitting_gsf/performance_trackfitting.root",
-        witness = witness_for_generator("trackfitting_gsf"),
-    log: f"{OUTDIR}/logs/trackfitting_gsf.log"
-    threads: HEAVY_THREADS
-    shell:
-        WRAP + " --witness {output.witness} --step generator --log {log} "
-        "--touches '{output}' -- "
-        "python3 " + WORKFLOWS_DIR + "/physmon_trackfitting_gsf.py "
-        + OUTDIR + "/data/trackfitting_gsf --threads {threads}"
+    input:   generator_inputs("trackfitting_gsf")
+    output:  **generator_outputs("trackfitting_gsf")
+    log:     generator_log("trackfitting_gsf")
+    threads: generator_threads("trackfitting_gsf")
+    shell:   generator_shell("trackfitting_gsf")
 
 
 rule generate_trackfitting_gx2f:
-    output:
-        perf    = f"{OUTDIR}/data/trackfitting_gx2f/performance_trackfitting.root",
-        witness = witness_for_generator("trackfitting_gx2f"),
-    log: f"{OUTDIR}/logs/trackfitting_gx2f.log"
-    threads: HEAVY_THREADS
-    shell:
-        WRAP + " --witness {output.witness} --step generator --log {log} "
-        "--touches '{output}' -- "
-        "python3 " + WORKFLOWS_DIR + "/physmon_trackfitting_gx2f.py "
-        + OUTDIR + "/data/trackfitting_gx2f --threads {threads}"
+    input:   generator_inputs("trackfitting_gx2f")
+    output:  **generator_outputs("trackfitting_gx2f")
+    log:     generator_log("trackfitting_gx2f")
+    threads: generator_threads("trackfitting_gx2f")
+    shell:   generator_shell("trackfitting_gx2f")
 
 
 rule generate_trackrefitting_kf:
-    output:
-        perf    = f"{OUTDIR}/data/trackrefitting_kf/performance_trackrefitting.root",
-        witness = witness_for_generator("trackrefitting_kf"),
-    log: f"{OUTDIR}/logs/trackrefitting_kf.log"
-    threads: HEAVY_THREADS
-    shell:
-        WRAP + " --witness {output.witness} --step generator --log {log} "
-        "--touches '{output}' -- "
-        "python3 " + WORKFLOWS_DIR + "/physmon_trackrefitting_kf.py "
-        + OUTDIR + "/data/trackrefitting_kf --threads {threads}"
+    input:   generator_inputs("trackrefitting_kf")
+    output:  **generator_outputs("trackrefitting_kf")
+    log:     generator_log("trackrefitting_kf")
+    threads: generator_threads("trackrefitting_kf")
+    shell:   generator_shell("trackrefitting_kf")
 
 
 rule generate_trackrefitting_gsf:
-    input:
-        f"{OUTDIR}/data/simulation_gsf/simulation/particles_simulation.root",
-    output:
-        perf    = f"{OUTDIR}/data/trackrefitting_gsf/performance_trackrefitting.root",
-        witness = witness_for_generator("trackrefitting_gsf"),
-    log: f"{OUTDIR}/logs/trackrefitting_gsf.log"
-    threads: HEAVY_THREADS
-    shell:
-        WRAP + " --witness {output.witness} --step generator --log {log} "
-        "--touches '{output}' -- "
-        "python3 " + WORKFLOWS_DIR + "/physmon_trackrefitting_gsf.py "
-        + OUTDIR + "/data/trackrefitting_gsf --threads {threads}"
-
-
-# trackfinding_1muon: split into two rules so the output set correctly
-# reflects that TruthSmeared does NOT produce performance_seeding.root.
-
-rule generate_trackfinding_1muon_with_seeding:
-    output:
-        seeding = f"{OUTDIR}/data/trackfinding_1muon/{{variant}}/performance_seeding.root",
-        finding = f"{OUTDIR}/data/trackfinding_1muon/{{variant}}/performance_finding_ckf.root",
-        fitting = f"{OUTDIR}/data/trackfinding_1muon/{{variant}}/performance_fitting_ckf.root",
-        summary = temp(f"{OUTDIR}/data/trackfinding_1muon/{{variant}}/tracksummary_ckf.root"),
-        witness = f"{OUTDIR}/witnesses/generator/trackfinding_1muon/{{variant}}.json",
-    wildcard_constraints:
-        variant = "|".join(v for v in TRACKFINDING_1MUON_VARIANTS if v != "TruthSmeared"),
-    log: f"{OUTDIR}/logs/trackfinding_1muon_{{variant}}.log"
-    threads: HEAVY_THREADS
-    shell:
-        WRAP + " --witness {output.witness} --step generator --log {log} "
-        "--touches '{output}' -- "
-        "python3 " + WORKFLOWS_DIR + "/physmon_trackfinding_1muon.py "
-        + OUTDIR + "/data/trackfinding_1muon/{wildcards.variant} "
-        "--variant {wildcards.variant} --threads {threads}"
-
-
-rule generate_trackfinding_1muon_TruthSmeared:
-    output:
-        finding = f"{OUTDIR}/data/trackfinding_1muon/TruthSmeared/performance_finding_ckf.root",
-        fitting = f"{OUTDIR}/data/trackfinding_1muon/TruthSmeared/performance_fitting_ckf.root",
-        summary = temp(f"{OUTDIR}/data/trackfinding_1muon/TruthSmeared/tracksummary_ckf.root"),
-        witness = witness_for_generator("trackfinding_1muon", "TruthSmeared"),
-    log: f"{OUTDIR}/logs/trackfinding_1muon_TruthSmeared.log"
-    threads: HEAVY_THREADS
-    shell:
-        WRAP + " --witness {output.witness} --step generator --log {log} "
-        "--touches '{output}' -- "
-        "python3 " + WORKFLOWS_DIR + "/physmon_trackfinding_1muon.py "
-        + OUTDIR + "/data/trackfinding_1muon/TruthSmeared "
-        "--variant TruthSmeared --threads {threads}"
-
-
-rule generate_trackfinding_4muon_50vertices:
-    output:
-        seeding         = f"{OUTDIR}/data/trackfinding_4muon_50vertices/performance_seeding.root",
-        summary         = temp(f"{OUTDIR}/data/trackfinding_4muon_50vertices/tracksummary_ckf.root"),
-        finding         = f"{OUTDIR}/data/trackfinding_4muon_50vertices/performance_finding_ckf.root",
-        fitting         = f"{OUTDIR}/data/trackfinding_4muon_50vertices/performance_fitting_ckf.root",
-        finding_ambi    = f"{OUTDIR}/data/trackfinding_4muon_50vertices/performance_finding_ckf_ambi.root",
-        fitting_ambi    = f"{OUTDIR}/data/trackfinding_4muon_50vertices/performance_fitting_ckf_ambi.root",
-        vtx_ivf         = temp(f"{OUTDIR}/data/trackfinding_4muon_50vertices/performance_vertexing_ivf_notime.root"),
-        vtx_amvf_gauss  = temp(f"{OUTDIR}/data/trackfinding_4muon_50vertices/performance_vertexing_amvf_gauss_notime.root"),
-        vtx_amvf_grid   = temp(f"{OUTDIR}/data/trackfinding_4muon_50vertices/performance_vertexing_amvf_grid_time.root"),
-        witness         = witness_for_generator("trackfinding_4muon_50vertices"),
-    log: f"{OUTDIR}/logs/trackfinding_4muon_50vertices.log"
-    threads: HEAVY_THREADS
-    shell:
-        WRAP + " --witness {output.witness} --step generator --log {log} "
-        "--touches '{output}' -- "
-        "python3 " + WORKFLOWS_DIR + "/physmon_trackfinding_4muon_50vertices.py "
-        + OUTDIR + "/data/trackfinding_4muon_50vertices --threads {threads}"
-
-
-rule generate_trackfinding_ttbar_pu200:
-    output:
-        seeding             = f"{OUTDIR}/data/trackfinding_ttbar_pu200/performance_seeding.root",
-        summary             = temp(f"{OUTDIR}/data/trackfinding_ttbar_pu200/tracksummary_ckf.root"),
-        finding             = f"{OUTDIR}/data/trackfinding_ttbar_pu200/performance_finding_ckf.root",
-        fitting             = f"{OUTDIR}/data/trackfinding_ttbar_pu200/performance_fitting_ckf.root",
-        finding_ambi        = f"{OUTDIR}/data/trackfinding_ttbar_pu200/performance_finding_ckf_ambi.root",
-        fitting_ambi        = f"{OUTDIR}/data/trackfinding_ttbar_pu200/performance_fitting_ckf_ambi.root",
-        finding_ml_solver   = f"{OUTDIR}/data/trackfinding_ttbar_pu200/performance_finding_ckf_ml_solver.root",
-        fitting_ml_solver   = f"{OUTDIR}/data/trackfinding_ttbar_pu200/performance_fitting_ckf_ml_solver.root",
-        vtx_amvf_gauss      = temp(f"{OUTDIR}/data/trackfinding_ttbar_pu200/performance_vertexing_amvf_gauss_notime.root"),
-        vtx_amvf_grid       = temp(f"{OUTDIR}/data/trackfinding_ttbar_pu200/performance_vertexing_amvf_grid_time.root"),
-        witness             = witness_for_generator("trackfinding_ttbar_pu200"),
-    log: f"{OUTDIR}/logs/trackfinding_ttbar_pu200.log"
-    shell:
-        WRAP + " --witness {output.witness} --step generator --log {log} "
-        "--touches '{output}' -- "
-        "python3 " + WORKFLOWS_DIR + "/physmon_trackfinding_ttbar_pu200.py "
-        + OUTDIR + "/data/trackfinding_ttbar_pu200"
+    input:   generator_inputs("trackrefitting_gsf")
+    output:  **generator_outputs("trackrefitting_gsf")
+    log:     generator_log("trackrefitting_gsf")
+    threads: generator_threads("trackrefitting_gsf")
+    shell:   generator_shell("trackrefitting_gsf")
 
 
 rule generate_trackfitting_gx2f_vs_kf:
+    input:   generator_inputs("trackfitting_gx2f_vs_kf")
+    output:  **generator_outputs("trackfitting_gx2f_vs_kf")
+    log:     generator_log("trackfitting_gx2f_vs_kf")
+    threads: generator_threads("trackfitting_gx2f_vs_kf")
+    shell:   generator_shell("trackfitting_gx2f_vs_kf")
+
+
+# trackfinding_1muon is split into two rules so the output set correctly
+# reflects that TruthSmeared does NOT produce performance_seeding.root. The
+# wildcard rule covers the rest, which all share one row set -- asserted here
+# so a future variant with a different pack cannot silently ride along on
+# SEEDING_VARIANT's outputs.
+SEEDING_VARIANTS = [v for v in GENERATOR_VARIANTS["trackfinding_1muon"] if v != "TruthSmeared"]
+SEEDING_VARIANT = SEEDING_VARIANTS[0]
+for _v in SEEDING_VARIANTS[1:]:
+    assert set(generator_outputs("trackfinding_1muon", _v, path_variant="{variant}")) == set(
+        generator_outputs("trackfinding_1muon", SEEDING_VARIANT, path_variant="{variant}")
+    ), f"trackfinding_1muon variant {_v} has a different output set than {SEEDING_VARIANT}"
+
+
+rule generate_trackfinding_1muon_with_seeding:
     output:
-        gx2f    = f"{OUTDIR}/data/trackfitting_gx2f_vs_kf/performance_trackfitting_gx2f.root",
-        kf      = f"{OUTDIR}/data/trackfitting_gx2f_vs_kf/performance_trackfitting_kf.root",
-        witness = witness_for_generator("trackfitting_gx2f_vs_kf"),
-    log: f"{OUTDIR}/logs/trackfitting_gx2f_vs_kf.log"
-    threads: HEAVY_THREADS
-    shell:
-        WRAP + " --witness {output.witness} --step generator --log {log} "
-        "--touches '{output}' -- "
-        "python3 " + WORKFLOWS_DIR + "/physmon_trackfitting_gx2f_vs_kf.py "
-        + OUTDIR + "/data/trackfitting_gx2f_vs_kf --threads {threads}"
+        **generator_outputs("trackfinding_1muon", SEEDING_VARIANT, path_variant="{variant}"),
+    wildcard_constraints:
+        variant = "|".join(SEEDING_VARIANTS),
+    log:     generator_log("trackfinding_1muon", "{variant}")
+    threads: generator_threads("trackfinding_1muon")
+    shell:   generator_shell("trackfinding_1muon", "{wildcards.variant}")
+
+
+rule generate_trackfinding_1muon_TruthSmeared:
+    output:  **generator_outputs("trackfinding_1muon", "TruthSmeared")
+    log:     generator_log("trackfinding_1muon", "TruthSmeared")
+    threads: generator_threads("trackfinding_1muon")
+    shell:   generator_shell("trackfinding_1muon", "TruthSmeared")
+
+
+rule generate_trackfinding_4muon_50vertices:
+    input:   generator_inputs("trackfinding_4muon_50vertices")
+    output:  **generator_outputs("trackfinding_4muon_50vertices")
+    log:     generator_log("trackfinding_4muon_50vertices")
+    threads: generator_threads("trackfinding_4muon_50vertices")
+    shell:   generator_shell("trackfinding_4muon_50vertices")
+
+
+rule generate_trackfinding_ttbar_pu200:
+    input:   generator_inputs("trackfinding_ttbar_pu200")
+    output:  **generator_outputs("trackfinding_ttbar_pu200")
+    log:     generator_log("trackfinding_ttbar_pu200")
+    threads: generator_threads("trackfinding_ttbar_pu200")
+    shell:   generator_shell("trackfinding_ttbar_pu200")
 
 
 # ---------------------------------------------------------------------------
