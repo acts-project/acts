@@ -37,9 +37,7 @@ namespace ActsExamples {
 /// same layering a fitter produces.
 ///
 /// Tracks whose extrapolation fails are dropped, so the output indices differ
-/// from the input and any truth matching has to be redone downstream. A track
-/// that carries no parameters on the state the strategy starts from - every
-/// state of a seed track except the innermost - is dropped as well.
+/// from the input and any truth matching has to be redone downstream.
 class TrackExtrapolationAlgorithm final : public IAlgorithm {
  public:
   struct Config {

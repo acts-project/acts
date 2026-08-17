@@ -30,37 +30,6 @@
 
 namespace ActsExamples {
 
-namespace {
-
-/// Check that the states the strategy starts from carry parameters at all.
-/// `Acts::findTrackStateForExtrapolation` only asserts on that, so a release
-/// build would extrapolate from an uninitialised state instead.
-bool hasParametersForStrategy(const ConstTrackProxy& track,
-                              Acts::TrackExtrapolationStrategy strategy) {
-  auto carriesParameters = [](const ConstTrackStateProxy& state) {
-    return state.hasSmoothed() || state.hasFiltered();
-  };
-
-  if (strategy != Acts::TrackExtrapolationStrategy::last) {
-    auto first = Acts::findFirstMeasurementState(track);
-    if (first.ok() && !carriesParameters(*first)) {
-      return false;
-    }
-  }
-  if (strategy != Acts::TrackExtrapolationStrategy::first) {
-    auto last = Acts::findLastMeasurementState(track);
-    if (last.ok() && !carriesParameters(*last)) {
-      return false;
-    }
-  }
-
-  // A track without measurement states is left to
-  // `Acts::findTrackStateForExtrapolation` to reject
-  return true;
-}
-
-}  // namespace
-
 TrackExtrapolationAlgorithm::TrackExtrapolationAlgorithm(
     Config config, std::unique_ptr<const Acts::Logger> logger)
     : IAlgorithm("TrackExtrapolationAlgorithm", std::move(logger)),
@@ -107,12 +76,6 @@ ProcessCode TrackExtrapolationAlgorithm::execute(
   // off the input track and only the parameters are written to the output one
   auto extrapolate = [&](const ConstTrackProxy& track)
       -> Acts::Result<Acts::BoundTrackParameters> {
-    if (!hasParametersForStrategy(track, m_cfg.strategy)) {
-      ACTS_DEBUG("Track " << track.index() << " has no parameters on the state "
-                          << "the strategy starts from");
-      return Acts::TrackExtrapolationError::CompatibleTrackStateNotFound;
-    }
-
     auto findResult = Acts::findTrackStateForExtrapolation(
         ctx.geoContext, track, *m_cfg.targetSurface, m_cfg.strategy, logger());
     if (!findResult.ok()) {
