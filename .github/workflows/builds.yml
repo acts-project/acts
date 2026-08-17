@@ -2,6 +2,11 @@ name: Builds
 
 on:
   push:
+    # The merge queue also pushes to its temp ref, which separately triggers
+    # merge_group below; without this the two runs share a concurrency group
+    # and cancel-in-progress evicts the PR from the queue (#5884 follow-up).
+    branches-ignore:
+      - "gh-readonly-queue/**"
   pull_request:
     branches:
       - main
@@ -9,10 +14,17 @@ on:
       - 'develop/**'
     paths-ignore:
       - "docs/**"
+  # merge_group does not support branch/path filters, so this runs
+  # unconditionally on every queue entry (unlike the pull_request trigger
+  # above). Required via merge-sentinel's "Builds / *" pattern.
+  merge_group:
+    types: [checks_requested]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
-  cancel-in-progress: true
+  # Never cancel a merge_group run: it's a required check for a queue entry,
+  # and a cancellation reads as a failure to the queue, ejecting the PR.
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
 # ccache is saved from `main` only: a PR-written cache is readable by that PR
 # alone, but still evicts `main`'s entries from the shared 10 GB.
@@ -401,7 +413,7 @@ jobs:
       # Pull requests only: there the action reads the file list from the API
       # and needs no checkout. On push the output stays empty and the jobs below
       # run unconditionally.
-      - uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: filter
         if: github.event_name == 'pull_request'
         with:
@@ -460,8 +472,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────
   # Compiles the full CUDA GNN stack on an ordinary CPU runner and hands the
   # build directory to `gnn_gpu`, which is the only job that occupies a GPU
-  # slot. One CUDA build serves both: it is a strict superset of a CPU-only
-  # GNN build, so there is no reason to compile the stack twice.
+  # slot.
   #
   # Push runs are deliberately unfiltered: they populate the ccache that pull
   # request runs restore from, and give every commit on a long-lived branch a
@@ -507,13 +518,33 @@ jobs:
           restore-keys: |
             ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
+      # Compiles the `#else` arms of `#ifdef ACTS_GNN_WITH_CUDA`, which the
+      # configure below excludes. That definition is on ActsPluginGnn alone, so
+      # every ActsCore object stays valid and only the plugin recompiles;
+      # `--target` holds it there, the definition being PUBLIC. Running first
+      # fails fast and leaves `gnn_gpu` the tree the real configure produced.
+      #
+      # MODULEMAP goes off with CUDA: set_option_if forces ACTS_ENABLE_CUDA
+      # back ON while it is set with the plugin. It guards a `.cu` source and
+      # no C++. Catches errors, not warnings -- the preset compiles with `-w`.
+      - name: Configure without CUDA
+        run: >
+          ccache -z &&
+          CI/dependencies/run.sh .env
+          cmake -B build -S .
+          --preset=github-ci-gnn
+          -DACTS_ENABLE_CUDA=OFF
+          -DACTS_GNN_ENABLE_MODULEMAP=OFF
+
+      - name: Compile the non-CUDA code paths
+        run: cmake --build build --target ActsPluginGnn
+
       # The preset pins CMAKE_CUDA_ARCHITECTURES/TORCH_CUDA_ARCH_LIST to 75;86:
       # 75 is the T4 the tests run on, 86 lets an sm_86 node join the pool. A
       # missing 75 builds fine here and fails on the GPU with "no kernel image
       # is available for execution on the device".
       - name: Configure
         run: >
-          ccache -z &&
           CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci-gnn
