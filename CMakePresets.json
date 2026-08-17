@@ -181,12 +181,12 @@
         {
             "name": "github-ci-gnn",
             "displayName": "GitHub-CI Gnn",
+            "description": "GNN build for the gnn_build job. Warnings are errors, as everywhere else in CI. Only the Plugins/Gnn unit tests are ever run from this build, so the Core and Examples suites and the integration tests are switched off; Tests/UnitTests/CMakeLists.txt adds Plugins unconditionally, so the GNN ones survive. ODD, DD4hep and ROOT stay on because the `-k gpu` python tests need a detector and read back ROOT output.",
             "generator": "Ninja",
             "inherits": "common",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_CXX_FLAGS": "-w",
-                "CMAKE_CUDA_FLAGS": "-w",
+                "CMAKE_COMPILE_WARNING_AS_ERROR": "ON",
                 "CMAKE_CUDA_ARCHITECTURES": "75;86",
                 "TORCH_CUDA_ARCH_LIST": "7.5;8.6",
                 "ACTS_FORCE_ASSERTIONS": "ON",
@@ -200,6 +200,9 @@
                 "ACTS_GNN_ENABLE_ONNX": "ON",
                 "ACTS_ENABLE_CUDA": "ON",
                 "ACTS_GNN_ENABLE_MODULEMAP": "ON",
+                "ACTS_BUILD_INTEGRATIONTESTS": "OFF",
+                "ACTS_BUILD_CORE_UNITTESTS": "OFF",
+                "ACTS_BUILD_EXAMPLES_UNITTESTS": "OFF",
                 "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
                 "ACTS_USE_SYSTEM_PYBIND11": "ON"
             }

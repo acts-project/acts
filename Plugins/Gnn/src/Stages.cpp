@@ -11,6 +11,8 @@
 #include <algorithm>
 #include <stdexcept>
 
+#include "DeviceOps.hpp"
+
 namespace ActsPlugins {
 
 namespace {
@@ -57,14 +59,6 @@ PipelineTensors cpuRemoveUnusedNodes(PipelineTensors &&tensors,
 
 }  // namespace
 
-#ifdef ACTS_GNN_WITH_CUDA
-namespace detail {
-PipelineTensors cudaRemoveUnusedNodes(PipelineTensors &&tensors,
-                                      std::vector<int> &spacePointIds,
-                                      const ExecutionContext &execCtx);
-}  // namespace detail
-#endif
-
 PipelineTensors removeUnusedNodes(PipelineTensors &&tensors,
                                   std::vector<int> &spacePointIds,
                                   const ExecutionContext &execCtx) {
@@ -73,14 +67,8 @@ PipelineTensors removeUnusedNodes(PipelineTensors &&tensors,
   }
 
   if (tensors.nodeFeatures.device().isCuda()) {
-#ifdef ACTS_GNN_WITH_CUDA
     return detail::cudaRemoveUnusedNodes(std::move(tensors), spacePointIds,
                                          execCtx);
-#else
-    throw std::runtime_error(
-        "Cannot removeUnusedNodes on CUDA tensor, library not compiled with "
-        "CUDA");
-#endif
   }
 
   return cpuRemoveUnusedNodes(std::move(tensors), spacePointIds, execCtx);
