@@ -19,14 +19,12 @@
 # fails, the rest of the DAG still runs (on touched-empty stand-in files) and
 # the summary shows the full failure chain.
 #
-# Usage (from repo root, after `source build/this_acts_withdeps.sh`):
+# Usage (from repo root):
 #   snakemake -s CI/physmon/Snakefile --cores N [target]
 #
-# snakemake must be installed against the ACTS Python (see the linux_physmon job:
-# `uv tool install --python "$(command -v python3)"`). Installing it against a
-# different CPython makes the ROOT/dd4hep/podio extension modules that the ACTS
-# environment puts on PYTHONPATH ABI-incompatible with the interpreter, which
-# segfaults the snakemake process itself before any rule runs.
+# No environment setup is needed first: every rule sources CI/physmon/setup.sh,
+# which activates the ACTS build (assumed to be at <repo>/build) for that rule's
+# shell only. snakemake itself can therefore be installed against any Python.
 #
 # Targets:
 #   all              everything + summary  (default; fails non-zero if any comparison failed)
@@ -51,18 +49,16 @@ WORKFLOWS_DIR      = "CI/physmon/workflows"
 HISTCMP_CONFIG_DIR = "CI/physmon/config"
 WRAP               = "bash CI/physmon/scripts/wrap.sh"
 
-# The workflow scripts in workflows/ import helper modules that are not part of
-# the ACTS Python package: physmon_common from CI/physmon, and the
-# truth_tracking_* drivers from Examples/Scripts/Python. Put both on PYTHONPATH
-# for every rule's shell, appended so they cannot shadow ACTS/ROOT. The rules
-# run from the repo root, so the relative paths resolve.
+# Every rule's shell activates the ACTS environment itself through setup.sh
+# (which expects the build directory at <repo>/build) instead of inheriting it
+# from whoever launched snakemake. That is what keeps the ACTS PYTHONPATH out of
+# the snakemake process: the ROOT/dd4hep/podio extension modules on it are
+# ABI-tied to the ACTS interpreter and segfault any other one that imports them.
 #
 # This replaces snakemake's default prefix, so keep its `set -euo pipefail`.
-# Braces are doubled: snakemake runs str.format() over the prefix too, so a
-# literal shell ${...} must be written as ${{...}}.
 shell.prefix(
     'set -euo pipefail; '
-    'export PYTHONPATH="${{PYTHONPATH:+$PYTHONPATH:}}CI/physmon:Examples/Scripts/Python"; '
+    'source CI/physmon/setup.sh; '
 )
 
 
