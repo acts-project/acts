@@ -10,6 +10,7 @@
 // Local include(s).
 #include "traccc/clusterization/device/ccl_kernel_definitions.hpp"
 #include "traccc/clusterization/device/tags.hpp"
+#include "traccc/device/abstract_awaitable.hpp"
 #include "traccc/device/algorithm_base.hpp"
 
 // Project include(s).
@@ -59,7 +60,8 @@ class clusterization_algorithm
           const detector_conditions_description::const_view&,
           clustering_keep_disjoint_set&&)>,
       public messaging,
-      public algorithm_base {
+      public algorithm_base,
+      public virtual abstract_awaitable {
  public:
   /// Configuration type
   using config_type = clustering_config;
@@ -202,11 +204,6 @@ class clusterization_algorithm
       edm::silicon_cluster_collection::view& cluster_data,
       const vecmem::data::vector_view<const unsigned int>& permutation_map_view)
       const = 0;
-
-  /// Synchronize an event related to asynchronous operations
-  /// @param event The event to synchronize
-  ///
-  virtual void await(vecmem::abstract_event& event) const = 0;
 
   /// @}
 

@@ -72,8 +72,7 @@ triplet_seeding_algorithm::triplet_seeding_algorithm(
     : device::triplet_seeding_algorithm(finder_config, grid_config,
                                         filter_config, mr, copy,
                                         std::move(logger)),
-      sycl::algorithm_base{queue},
-      m_await_func(await_func) {}
+      sycl::algorithm_base{queue, std::move(await_func)} {}
 
 void triplet_seeding_algorithm::count_grid_capacities_kernel(
     const count_grid_capacities_kernel_payload& payload) const {
@@ -270,10 +269,6 @@ void triplet_seeding_algorithm::select_seeds_kernel(
                                midBot_tc, triplets, dataPos, seeds);
         });
   });
-}
-
-void triplet_seeding_algorithm::await(vecmem::abstract_event& event) const {
-  m_await_func(event, queue());
 }
 
 }  // namespace traccc::sycl
