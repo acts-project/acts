@@ -39,9 +39,6 @@ struct seed_parameter_estimation_algorithm
       await_function_type await_func = await_sync_event);
 
  private:
-  /// The function used to synchronize events.
-  await_function_type m_await_func;
-
   /// @name Function(s) inherited from
   /// @c traccc::device::seed_parameter_estimation_algorithm
   /// @{
@@ -52,11 +49,6 @@ struct seed_parameter_estimation_algorithm
   ///
   void estimate_seed_params_kernel(
       const struct estimate_seed_params_kernel_payload& payload) const override;
-
-  /// Synchronize an event related to asynchronous operations
-  /// @param event The event to synchronize
-  ///
-  void await(vecmem::abstract_event& event) const override;
 
   /// @}
 
