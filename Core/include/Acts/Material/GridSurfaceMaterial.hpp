@@ -11,13 +11,12 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Utilities/AnyGridView.hpp"
-#include "Acts/Utilities/Diagnostics.hpp"
-#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/IMultiAxis.hpp"
+#include "Acts/Utilities/MultiAxisSpec.hpp"
 
+#include <iosfwd>
 #include <memory>
-#include <ostream>
-#include <stdexcept>
+#include <variant>
 #include <vector>
 
 namespace Acts {
@@ -25,542 +24,116 @@ namespace Acts {
 /// @addtogroup material
 /// @{
 
-/// @brief Base class for material accessors, this is needed
-/// for the I/O of the different grid material types, in the actual
-/// implementation the material accessor is a template parameter.
-struct IGridMaterialAccessor {
-  virtual ~IGridMaterialAccessor() = default;
-};
-
-/// @brief  This is an accessor for cases where the material is directly stored
-/// in the grid, it simply forwards the grid entry in const and non-const way.
-struct GridMaterialAccessor : public IGridMaterialAccessor {
-  /// @brief  Broadcast the type of the material slab
-  using grid_value_type = MaterialSlab;
-  /// @brief  Direct const access to the material slap sorted in the grid
-  /// @tparam grid_type the type of the grid, also defines the point type
-  /// @param grid the grid
-  /// @param point the lookup point (already casted from global, or filled from local)
-  ///
-  /// @return the material slab from the grid bin associated to the lookup point
-  template <typename grid_type>
-  inline const MaterialSlab& slab(
-      grid_type& grid, const typename grid_type::point_t& point) const {
-    return grid.atPosition(point);
-  }
-
-  /// @brief Scale the material (by scaling the thickness)
-  ///
-  /// @param grid the grid (ignored)
-  /// @param scale the amount of the scaling
-  ///
-  /// @note this is not particularly fast
-  template <typename grid_type>
-  void scale(grid_type& grid, double scale) {
-    // Loop through the grid bins, get the indices and scale the material
-    for (std::size_t ib = 0; ib < grid.size(); ++ib) {
-      grid.at(ib).scaleThickness(static_cast<float>(scale));
-    }
-  }
-};
-
-/// @brief  This is an accessor for cases where the material is filled in a vector
-/// and then indexed by the grid
-struct IndexedMaterialAccessor : public IGridMaterialAccessor {
-  /// Broadcast the grid_value_type
-  using grid_value_type = std::size_t;
-
-  /// @brief The internal storage of the material
-  /// @param mmaterial Vector of material slabs to store and access by index
-  explicit IndexedMaterialAccessor(std::vector<MaterialSlab>&& mmaterial)
-      : IGridMaterialAccessor(), material(std::move(mmaterial)) {}
-
-  /// @brief The internal storage of the material
-  std::vector<MaterialSlab> material;
-  /// @brief  Direct const access to the material slap sorted in the grid
-  /// @tparam grid_type the type of the grid, also defines the point type
-  /// @param grid the grid
-  /// @param point the lookup point (already casted from global, or filled from local)
-  ///
-  /// @return the material slab from the grid bin associated to the lookup point
-  template <typename grid_type>
-  inline const MaterialSlab& slab(
-      const grid_type& grid, const typename grid_type::point_t& point) const
-    requires(std::is_same_v<typename grid_type::value_type, grid_value_type>)
-  {
-    std::size_t index = grid.atPosition(point);
-    return material[index];
-  }
-
-  /// @brief Scale the material (by scaling the thickness)
-  ///
-  /// @param scale the amount of the scaling
-  template <typename grid_type>
-  void scale(grid_type& /*grid*/, double scale) {
-    for (auto& m : material) {
-      m.scaleThickness(static_cast<float>(scale));
-    }
-  }
-};
-
-/// @brief  This is an accessor for cases where the material is filled in a global
-/// material vector that is accessed from the different material grids.
-struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
-  /// Constructor with global material vector
-  /// @param gMaterial Shared pointer to global material vector
-  /// @param shared Whether material entries are shared across grid points
-  explicit GloballyIndexedMaterialAccessor(
-      std::shared_ptr<std::vector<MaterialSlab>> gMaterial, bool shared = false)
-      : IGridMaterialAccessor(),
-        globalMaterial(std::move(gMaterial)),
-        sharedEntries(shared) {}
-
-  /// Broadcast the grid_value_type
-  using grid_value_type = std::size_t;
-
-  /// @brief The internal storage of the material
-  std::shared_ptr<std::vector<MaterialSlab>> globalMaterial = nullptr;
-
-  /// Indicate if you have entries bins across different grids, e.g. by
-  /// running a compression/clustering algorithm.
-  ///
-  /// It is the responsibility of the user to set this flag correctly.
-  bool sharedEntries = false;
-
-  /// @brief  Direct const access to the material slap sorted in the grid
-  ///
-  /// @tparam grid_type the type of the grid, also defines the point type
-  ///
-  /// @param grid the grid holding the indices into the global material vector
-  /// @param point the lookup point (already casted from global, or filled from local)
-  ///
-  /// @return the material slab from the grid bin associated to the lookup point
-  template <typename grid_type>
-  inline const MaterialSlab& slab(
-      const grid_type& grid, const typename grid_type::point_t& point) const {
-    auto index = grid.atPosition(point);
-    return (*globalMaterial)[index];
-  }
-
-  /// @brief Scale the material (by scaling the thickness)
-  ///
-  /// @param grid the grid holding the indices into the global material vector
-  /// @param scale the amount of the scaling
-  ///
-  /// @note this will scale only the bins touched by this grid, however,
-  /// if there are shared bins, then it will throw an exception as the
-  /// outcome is unpredictable.
-  ///
-  template <typename grid_type>
-  void scale(grid_type& grid, double scale) {
-    if (sharedEntries) {
-      throw std::invalid_argument(
-          "GloballyIndexedMaterialAccessor: shared entry scaling is not "
-          "supported.");
-    }
-    // Loop through the grid bins, get the indices and scale the material
-    for (std::size_t ib = 0; ib < grid.size(); ++ib) {
-      auto index = grid.at(ib);
-      (*globalMaterial)[index].scaleThickness(static_cast<float>(scale));
-    }
-  }
-};
-
-/// Intermediate interface to the grid surface material given access to the grid
-/// and the material accessor.
-template <typename grid_value_t>
-class IGridSurfaceMaterial : public ISurfaceMaterial {
- public:
-  /// @brief Accessor to the grid interface
-  /// @return Reference to the grid interface
-  virtual const IGrid& grid() const = 0;
-
-  /// @brief Accessor to the material accessor
-  /// @return Reference to the material accessor
-  virtual const IGridMaterialAccessor& materialAccessor() const = 0;
-
-  /// Return the type erased grid view
-  /// @return Type-erased grid view for accessing grid contents
-  virtual AnyGridView<grid_value_t> gridView() = 0;
-
-  /// Return the type erased (const) grid view
-  /// @return Type-erased const grid view for read-only access to grid contents
-  virtual AnyGridConstView<grid_value_t> gridConstView() const = 0;
-};
-
-/// @brief GridSurfaceMaterialT
+/// @brief Concrete, non-template surface material backed by a 2D grid.
 ///
-/// It extends the @c ISurfaceMaterial base class and allows to create
-/// material maps associated to a grid structure
+/// The grid geometry is described by a (fully specified) @c MultiAxisSpec2D,
+/// resolved internally into an @c IMultiAxis2D that maps a local surface
+/// position to a flattened bin index, see @c IMultiAxis. That index then
+/// addresses one of three storage backends:
 ///
-/// @tparam grid_type is the type of the grid used here
-/// @tparam material_accessor_type is the type of the accessor to the material
+/// - @c Direct : a material slab stored directly per bin
+/// - @c Indexed : a per-bin index into a locally owned material vector
+/// - @c GloballyIndexed : a per-bin index into a (possibly shared) globally
+///   owned material vector
 ///
-/// It is templated on the material type and a slab accessor type in order
-/// to allow it to be used in the material recording as well.
+/// All three backends share the same binning/indexing logic, so the local
+/// lookup, scaling and I/O only need to branch on the storage backend, not on
+/// the concrete grid or axis types.
 ///
 /// The grid is always 2D: local (bound) lookup is assumed to already be
 /// expressed in the grid's own 2D coordinate system, i.e. @c lp[0] maps
 /// directly onto axis 0 and @c lp[1] onto axis 1. Only local lookup is
 /// supported - there is no global (Vector3) lookup, since that would require
 /// a global-to-local coordinate transform.
-template <typename grid_t, typename material_accessor_t>
-class GridSurfaceMaterialT
-    : public IGridSurfaceMaterial<
-          typename material_accessor_t::grid_value_type> {
-  static_assert(
-      grid_t::DIM == 2,
-      "GridSurfaceMaterialT requires a 2D grid; local lookup is "
-      "always expressed as (loc0, loc1) directly onto the grid axes.");
-
+class GridSurfaceMaterial final : public ISurfaceMaterial {
  public:
-  /// Broadcast grid type
-  using grid_type = grid_t;
+  /// Material slabs stored directly, one per bin (including under-/overflow)
+  using Direct = std::vector<MaterialSlab>;
 
-  /// Broadcast material accessor type
-  using material_accessor_type = material_accessor_t;
+  /// Per-bin indices into a locally owned material vector
+  struct Indexed {
+    /// One index per bin (including under-/overflow), into @c material
+    std::vector<std::size_t> indices;
+    /// The locally owned material vector, addressed by @c indices
+    std::vector<MaterialSlab> material;
+  };
 
-  /// @brief Constructor for indexed surface material
+  /// Per-bin indices into a (possibly shared) globally owned material vector
+  struct GloballyIndexed {
+    /// One index per bin (including under-/overflow), into @c material
+    std::vector<std::size_t> indices;
+    /// The shared material vector, addressed by @c indices
+    std::shared_ptr<std::vector<MaterialSlab>> material;
+    /// Indicate if entries in @c material are shared with other grids, e.g.
+    /// by running a compression/clustering algorithm.
+    ///
+    /// It is the responsibility of the user to set this flag correctly.
+    /// @c scale() throws if it is set, since scaling shared entries would
+    /// have an unpredictable outcome.
+    bool sharedEntries = false;
+  };
+
+  /// The material storage backend: one of @c Direct, @c Indexed or
+  /// @c GloballyIndexed
+  using Storage = std::variant<Direct, Indexed, GloballyIndexed>;
+
+  /// Construct from a 2D binning spec and a storage backend
   ///
-  /// @param grid the index grid steering the access to the material vector
-  /// @param materialAccessor the material accessor: from grid, from indexed vector
-  GridSurfaceMaterialT(grid_type&& grid,
-                       material_accessor_type&& materialAccessor)
-      : m_grid(std::move(grid)),
-        m_materialAccessor(std::move(materialAccessor)) {}
+  /// @param binning the fully specified 2D multi-axis binning spec
+  /// @param storage the material storage backend
+  /// @param splitFactor pre/post splitting directive
+  /// @param mappingType type of surface mapping associated to the surface
+  /// @throws std::domain_error if @p binning is not fully specified
+  /// @throws std::invalid_argument if the storage size does not match the
+  ///         number of bins implied by @p binning (including under-/overflow)
+  explicit GridSurfaceMaterial(MultiAxisSpec2D binning, Storage storage,
+                               double splitFactor = 1.,
+                               MappingType mappingType = MappingType::Default);
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
-  const MaterialSlab& materialSlab(const Vector2& lp) const final {
-    return m_materialAccessor.slab(m_grid,
-                                   typename grid_type::point_t{lp[0], lp[1]});
-  }
-
-  /// @copydoc ISurfaceMaterial::localAxisDirections() const
-  std::vector<AxisDirection> localAxisDirections() const final { return {}; }
+  const MaterialSlab& materialSlab(const Vector2& lp) const final;
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
   /// @deprecated Global (Vector3) lookup is not supported; use
   ///             materialSlab(const Vector2&) with a prior
   ///             Surface::globalToLocal() call instead.
   [[deprecated(
-      "Global lookup is not supported; use materialSlab(const Vector2& lp) "
-      "with a prior Surface::globalToLocal() call "
-      "instead")]] const MaterialSlab&
-  materialSlab([[maybe_unused]] const Vector3& gp) const final {
-    throw std::logic_error(
-        "GridSurfaceMaterialT: global (Vector3) material lookup is not "
-        "supported, use materialSlab(const Vector2&) instead.");
-  }
-
-  using ISurfaceMaterial::materialSlab;
-
-  /// Scale operator
-  ///
-  /// @param factor is the scale factor applied
-  /// @return Reference to this surface material for method chaining
-  ISurfaceMaterial& scale(double factor) final {
-    m_materialAccessor.scale(m_grid, factor);
-    return (*this);
-  }
-
-  /// Output Method for std::ostream, to be overloaded by child classes
-  /// @param sl Output stream to write to
-  /// @return Reference to the output stream
-  std::ostream& toStream(std::ostream& sl) const final {
-    sl << "GridSurfaceMaterial - material access via accessor.";
-    return sl;
-  }
-
-  /// @brief Accessor to the grid
-  /// @return Reference to the underlying grid
-  const grid_type& grid() const final { return m_grid; }
-
-  // Return a type-erased indexed grid view
-  /// @return Type-erased grid view for accessing grid contents
-  AnyGridView<typename material_accessor_t::grid_value_type> gridView() final {
-    return AnyGridView<typename material_accessor_t::grid_value_type>(m_grid);
-  }
-
-  // Return a type-erased indexed const grid view
-  /// @return Type-erased const grid view for read-only access to grid contents
-  AnyGridConstView<typename material_accessor_t::grid_value_type>
-  gridConstView() const final {
-    return AnyGridConstView<typename material_accessor_t::grid_value_type>(
-        m_grid);
-  }
-
-  /// @brief Accessor to the material accessor
-  /// @return Reference to the material accessor
-  const material_accessor_type& materialAccessor() const final {
-    return m_materialAccessor;
-  }
-
- private:
-  /// @brief The grid
-  grid_type m_grid;
-
-  /// @brief The stored material accessor
-  material_accessor_type m_materialAccessor;
-};
-
-/// @brief Concrete, non-template surface material backed by a grid that
-/// stores material slabs directly.
-///
-/// Wraps a type-erased @c IGridSurfaceMaterial<MaterialSlab> built with a
-/// @c GridMaterialAccessor so that callers do not need to name the concrete
-/// grid/axis types.
-class GridSurfaceMaterial final : public ISurfaceMaterial {
- public:
-  /// Construct from a grid that stores material slabs directly.
-  ///
-  /// @param gridMaterial type-erased grid material implementation
-  /// @param splitFactor pre/post splitting directive
-  /// @param mappingType type of surface mapping associated to the surface
-  /// @throws std::invalid_argument if @p gridMaterial is null
-  explicit GridSurfaceMaterial(
-      std::unique_ptr<IGridSurfaceMaterial<MaterialSlab>> gridMaterial,
-      double splitFactor = 1., MappingType mappingType = MappingType::Default)
-      : ISurfaceMaterial(splitFactor, mappingType),
-        m_gridMaterial(std::move(gridMaterial)) {
-    if (m_gridMaterial == nullptr) {
-      throw std::invalid_argument(
-          "GridSurfaceMaterial: grid material must not be null.");
-    }
-  }
-
-  /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
-  const MaterialSlab& materialSlab(const Vector2& lp) const final {
-    return m_gridMaterial->materialSlab(lp);
-  }
-
-  /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
-  /// @deprecated Global (Vector3) lookup is not supported anymore,
-  ///             use materialSlab(const Vector2&) with a prior
-  ///             Surface::globalToLocal() call instead.
-  [[deprecated(
       "Use materialSlab(const Vector2& lp) with a prior "
       "Surface::globalToLocal() call instead")]] const MaterialSlab&
-  materialSlab(const Vector3& gp) const final {
-    ACTS_PUSH_IGNORE_DEPRECATED()
-    return m_gridMaterial->materialSlab(gp);
-    ACTS_POP_IGNORE_DEPRECATED()
-  }
+  materialSlab(const Vector3& gp) const final;
 
   using ISurfaceMaterial::materialSlab;
 
   /// @copydoc ISurfaceMaterial::localAxisDirections() const
-  std::vector<AxisDirection> localAxisDirections() const final {
-    return m_gridMaterial->localAxisDirections();
-  }
+  std::vector<AxisDirection> localAxisDirections() const final { return {}; }
 
   /// @copydoc ISurfaceMaterial::scale(double)
-  ISurfaceMaterial& scale(double factor) final {
-    m_gridMaterial->scale(factor);
-    return *this;
-  }
+  /// @throws std::invalid_argument if the storage is @c GloballyIndexed with
+  ///         @c sharedEntries set
+  ISurfaceMaterial& scale(double factor) final;
 
   /// @copydoc ISurfaceMaterial::toStream(std::ostream&) const
-  std::ostream& toStream(std::ostream& sl) const final {
-    return m_gridMaterial->toStream(sl);
-  }
+  std::ostream& toStream(std::ostream& sl) const final;
 
-  /// Return the type-erased grid.
-  /// @return Reference to the type-erased grid
-  const IGrid& grid() const { return m_gridMaterial->grid(); }
+  /// Return the 2D multi-axis binning spec
+  /// @return const reference to the binning spec
+  const MultiAxisSpec2D& binning() const { return m_binning; }
 
-  /// Return a type-erased const view of the stored material slabs.
-  /// @return Const view onto the stored grid values
-  AnyGridConstView<MaterialSlab> gridConstView() const {
-    return m_gridMaterial->gridConstView();
-  }
+  /// Return the multi-axis used for local position lookup
+  /// @return const reference to the resolved multi-axis
+  const IMultiAxis2D& multiAxis() const { return *m_multiAxis; }
 
-  /// Return the material accessor.
-  /// @return Reference to the material accessor
-  const IGridMaterialAccessor& materialAccessor() const {
-    return m_gridMaterial->materialAccessor();
-  }
+  /// Return the material storage backend
+  /// @return const reference to the storage variant
+  const Storage& storage() const { return m_storage; }
 
  private:
-  std::unique_ptr<IGridSurfaceMaterial<MaterialSlab>> m_gridMaterial;
-};
-
-/// @brief Concrete, non-template surface material backed by a locally
-/// indexed material grid.
-///
-/// Wraps a type-erased @c IGridSurfaceMaterial<std::size_t> built with an
-/// @c IndexedMaterialAccessor so that callers do not need to name the
-/// concrete grid/axis types.
-class IndexedGridSurfaceMaterial final : public ISurfaceMaterial {
- public:
-  /// Construct from a grid that stores material indices, indexed by a
-  /// per-surface (locally owned) material vector.
-  ///
-  /// @param gridMaterial type-erased indexed grid material implementation
-  /// @param splitFactor pre/post splitting directive
-  /// @param mappingType type of surface mapping associated to the surface
-  /// @throws std::invalid_argument if @p gridMaterial is null or does not use
-  ///         an @c IndexedMaterialAccessor
-  explicit IndexedGridSurfaceMaterial(
-      std::unique_ptr<IGridSurfaceMaterial<std::size_t>> gridMaterial,
-      double splitFactor = 1., MappingType mappingType = MappingType::Default)
-      : ISurfaceMaterial(splitFactor, mappingType),
-        m_gridMaterial(std::move(gridMaterial)) {
-    if (m_gridMaterial == nullptr) {
-      throw std::invalid_argument(
-          "IndexedGridSurfaceMaterial: grid material must not be null.");
-    }
-    if (dynamic_cast<const IndexedMaterialAccessor*>(
-            &m_gridMaterial->materialAccessor()) == nullptr) {
-      throw std::invalid_argument(
-          "IndexedGridSurfaceMaterial: grid material must use an "
-          "IndexedMaterialAccessor.");
-    }
-  }
-
-  /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
-  const MaterialSlab& materialSlab(const Vector2& lp) const final {
-    return m_gridMaterial->materialSlab(lp);
-  }
-
-  /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
-  /// @deprecated Global (Vector3) lookup is not supported anymore,
-  ///             use materialSlab(const Vector2&) with a prior
-  ///             Surface::globalToLocal() call instead.
-  [[deprecated(
-      "Use materialSlab(const Vector2& lp) with a prior "
-      "Surface::globalToLocal() call instead")]] const MaterialSlab&
-  materialSlab(const Vector3& gp) const final {
-    ACTS_PUSH_IGNORE_DEPRECATED()
-    return m_gridMaterial->materialSlab(gp);
-    ACTS_POP_IGNORE_DEPRECATED()
-  }
-
-  using ISurfaceMaterial::materialSlab;
-
-  /// @copydoc ISurfaceMaterial::localAxisDirections() const
-  std::vector<AxisDirection> localAxisDirections() const final {
-    return m_gridMaterial->localAxisDirections();
-  }
-
-  /// @copydoc ISurfaceMaterial::scale(double)
-  ISurfaceMaterial& scale(double factor) final {
-    m_gridMaterial->scale(factor);
-    return *this;
-  }
-
-  /// @copydoc ISurfaceMaterial::toStream(std::ostream&) const
-  std::ostream& toStream(std::ostream& sl) const final {
-    return m_gridMaterial->toStream(sl);
-  }
-
-  /// Return the type-erased grid.
-  /// @return Reference to the type-erased grid
-  const IGrid& grid() const { return m_gridMaterial->grid(); }
-
-  /// Return a type-erased const view of the stored material indices.
-  /// @return Const view onto the stored grid values
-  AnyGridConstView<std::size_t> gridConstView() const {
-    return m_gridMaterial->gridConstView();
-  }
-
-  /// Return the material accessor.
-  /// @return Reference to the material accessor
-  const IGridMaterialAccessor& materialAccessor() const {
-    return m_gridMaterial->materialAccessor();
-  }
-
- private:
-  std::unique_ptr<IGridSurfaceMaterial<std::size_t>> m_gridMaterial;
-};
-
-/// @brief Concrete, non-template surface material backed by a globally
-/// indexed material grid.
-///
-/// Wraps a type-erased @c IGridSurfaceMaterial<std::size_t> built with a
-/// @c GloballyIndexedMaterialAccessor so that callers do not need to name the
-/// concrete grid/axis types.
-class GloballyIndexedGridSurfaceMaterial final : public ISurfaceMaterial {
- public:
-  /// Construct from a grid that stores material indices into a globally
-  /// shared material vector.
-  ///
-  /// @param gridMaterial type-erased indexed grid material implementation
-  /// @param splitFactor pre/post splitting directive
-  /// @param mappingType type of surface mapping associated to the surface
-  /// @throws std::invalid_argument if @p gridMaterial is null or does not use
-  ///         a @c GloballyIndexedMaterialAccessor
-  explicit GloballyIndexedGridSurfaceMaterial(
-      std::unique_ptr<IGridSurfaceMaterial<std::size_t>> gridMaterial,
-      double splitFactor = 1., MappingType mappingType = MappingType::Default)
-      : ISurfaceMaterial(splitFactor, mappingType),
-        m_gridMaterial(std::move(gridMaterial)) {
-    if (m_gridMaterial == nullptr) {
-      throw std::invalid_argument(
-          "GloballyIndexedGridSurfaceMaterial: grid material must not be "
-          "null.");
-    }
-    if (dynamic_cast<const GloballyIndexedMaterialAccessor*>(
-            &m_gridMaterial->materialAccessor()) == nullptr) {
-      throw std::invalid_argument(
-          "GloballyIndexedGridSurfaceMaterial: grid material must use a "
-          "GloballyIndexedMaterialAccessor.");
-    }
-  }
-
-  /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
-  const MaterialSlab& materialSlab(const Vector2& lp) const final {
-    return m_gridMaterial->materialSlab(lp);
-  }
-
-  /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
-  /// @deprecated Global (Vector3) lookup is not supported anymore,
-  ///             use materialSlab(const Vector2&) with a prior
-  ///             Surface::globalToLocal() call instead.
-  [[deprecated(
-      "Use materialSlab(const Vector2& lp) with a prior "
-      "Surface::globalToLocal() call instead")]] const MaterialSlab&
-  materialSlab(const Vector3& gp) const final {
-    ACTS_PUSH_IGNORE_DEPRECATED()
-    return m_gridMaterial->materialSlab(gp);
-    ACTS_POP_IGNORE_DEPRECATED()
-  }
-
-  using ISurfaceMaterial::materialSlab;
-
-  /// @copydoc ISurfaceMaterial::localAxisDirections() const
-  std::vector<AxisDirection> localAxisDirections() const final {
-    return m_gridMaterial->localAxisDirections();
-  }
-
-  /// @copydoc ISurfaceMaterial::scale(double)
-  ISurfaceMaterial& scale(double factor) final {
-    m_gridMaterial->scale(factor);
-    return *this;
-  }
-
-  /// @copydoc ISurfaceMaterial::toStream(std::ostream&) const
-  std::ostream& toStream(std::ostream& sl) const final {
-    return m_gridMaterial->toStream(sl);
-  }
-
-  /// Return the type-erased grid.
-  /// @return Reference to the type-erased grid
-  const IGrid& grid() const { return m_gridMaterial->grid(); }
-
-  /// Return a type-erased const view of the stored material indices.
-  /// @return Const view onto the stored grid values
-  AnyGridConstView<std::size_t> gridConstView() const {
-    return m_gridMaterial->gridConstView();
-  }
-
-  /// Return the material accessor.
-  /// @return Reference to the material accessor
-  const IGridMaterialAccessor& materialAccessor() const {
-    return m_gridMaterial->materialAccessor();
-  }
-
- private:
-  std::unique_ptr<IGridSurfaceMaterial<std::size_t>> m_gridMaterial;
+  /// The 2D multi-axis binning spec
+  MultiAxisSpec2D m_binning;
+  /// The multi-axis built from @c m_binning, doing local position -> index
+  std::unique_ptr<IMultiAxis2D> m_multiAxis;
+  /// The material storage backend
+  Storage m_storage;
 };
 
 /// @}

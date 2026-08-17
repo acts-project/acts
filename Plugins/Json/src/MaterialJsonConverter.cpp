@@ -42,44 +42,82 @@
 
 namespace {
 
-/// @brief Helper function to convert a grid surface material to json
+/// @brief Convert the axes of a resolved multi-axis to json
+nlohmann::json axesToJson(const Acts::IMultiAxis2D& multiAxis) {
+  nlohmann::json jAxes;
+  for (std::size_t i = 0; i < multiAxis.getNAxes(); ++i) {
+    jAxes.push_back(Acts::AxisJsonConverter::toJson(multiAxis.getAxis(i)));
+  }
+  return jAxes;
+}
+
+/// @brief Convert the per-bin payload of a resolved multi-axis to json,
+/// shaped as [localBins, value] entries over the regular (non-overflow) bins
+///
+/// @tparam value_at_t callable, global bin index -> json-convertible value
+template <typename value_at_t>
+nlohmann::json gridDataToJson(const Acts::IMultiAxis2D& multiAxis,
+                              value_at_t&& valueAt) {
+  nlohmann::json jData;
+  Acts::IMultiAxis2D::LocalBins nBins = multiAxis.getNBins();
+  for (std::size_t i0 = 1; i0 <= nBins[0]; ++i0) {
+    for (std::size_t i1 = 1; i1 <= nBins[1]; ++i1) {
+      Acts::IMultiAxis2D::LocalBins lbin{i0, i1};
+      std::size_t bin = multiAxis.getGlobalBinFromLocalBins(lbin);
+      std::array<std::size_t, 2u> jLbin{i0, i1};
+      jData.push_back(nlohmann::json::array({jLbin, valueAt(bin)}));
+    }
+  }
+  return jData;
+}
+
+/// @brief Convert a @c GridSurfaceMaterial to json
 ///
 /// Works generically for all 3 storage backends (direct / locally indexed /
-/// globally indexed) via the type-erased @c IGrid / @c AnyGridConstView
-/// interfaces, so it does not need to enumerate concrete axis type
-/// combinations.
+/// globally indexed) via @c GridSurfaceMaterial::storage(), so it does not
+/// need to enumerate concrete axis type combinations, nor dynamic_cast to a
+/// per-backend wrapper type.
 ///
-/// @tparam value_type the grid payload type (MaterialSlab or std::size_t)
-/// @tparam grid_surface_material_t the concrete wrapper type (GridSurfaceMaterial,
-///         IndexedGridSurfaceMaterial or GloballyIndexedGridSurfaceMaterial)
 /// @param jMaterial the json object to write into
 /// @param gridMaterial the grid surface material to convert
-/// @param accessorType the accessor type tag ("direct", "indexed" or
-///        "globally_indexed")
-template <typename value_type, typename grid_surface_material_t>
 void writeGridSurfaceMaterial(nlohmann::json& jMaterial,
-                              const grid_surface_material_t& gridMaterial,
-                              const std::string& accessorType) {
+                              const Acts::GridSurfaceMaterial& gridMaterial) {
   jMaterial[Acts::jsonKey().typekey] = "grid";
 
+  const Acts::IMultiAxis2D& multiAxis = gridMaterial.multiAxis();
+
+  nlohmann::json jGrid;
+  jGrid["axes"] = axesToJson(multiAxis);
+
   nlohmann::json jMaterialAccessor;
-  jMaterialAccessor["type"] = accessorType;
+  std::visit(
+      [&]<typename T>(const T& storage) {
+        if constexpr (std::is_same_v<T, Acts::GridSurfaceMaterial::Direct>) {
+          jMaterialAccessor["type"] = "direct";
+          jGrid["data"] = gridDataToJson(multiAxis, [&](std::size_t bin) {
+            return nlohmann::json(storage.at(bin));
+          });
+        } else if constexpr (std::is_same_v<
+                                 T, Acts::GridSurfaceMaterial::Indexed>) {
+          jMaterialAccessor["type"] = "indexed";
+          nlohmann::json jMaterialData;
+          for (const auto& msl : storage.material) {
+            jMaterialData.push_back(msl);
+          }
+          jMaterialAccessor["storage_vector"] = jMaterialData;
+          jGrid["data"] = gridDataToJson(multiAxis, [&](std::size_t bin) {
+            return nlohmann::json(storage.indices.at(bin));
+          });
+        } else {
+          jMaterialAccessor["type"] = "globally_indexed";
+          jGrid["data"] = gridDataToJson(multiAxis, [&](std::size_t bin) {
+            return nlohmann::json(storage.indices.at(bin));
+          });
+        }
+      },
+      gridMaterial.storage());
 
-  if constexpr (std::is_same_v<grid_surface_material_t,
-                               Acts::IndexedGridSurfaceMaterial>) {
-    const auto& materialAccessor =
-        dynamic_cast<const Acts::IndexedMaterialAccessor&>(
-            gridMaterial.materialAccessor());
-    nlohmann::json jMaterialData;
-    for (const auto& msl : materialAccessor.material) {
-      jMaterialData.push_back(msl);
-    }
-    jMaterialAccessor["storage_vector"] = jMaterialData;
-  }
-
-  // Write the grid
-  jMaterialAccessor["grid"] = Acts::GridJsonConverter::toJsonAny<value_type>(
-      gridMaterial.grid(), gridMaterial.gridConstView());
+  jMaterialAccessor["grid"] = jGrid;
   jMaterial["accessor"] = jMaterialAccessor;
 }
 
@@ -118,12 +156,12 @@ std::vector<Acts::MaterialSlab> readStorageVector(
   return materialVector;
 }
 
-/// @brief Reconstruct a grid surface material from json
+/// @brief Reconstruct a @c GridSurfaceMaterial from json
 ///
 /// Works generically for arbitrary axis type combinations via the
-/// @c IAxis-visiting @c GridSurfaceMaterialFactory, so it is not limited to a
+/// @c IAxis-based @c GridSurfaceMaterialFactory, so it is not limited to a
 /// hardcoded set of equidistant bound/closed axis combinations. The grid is
-/// always 2D, matching @c GridSurfaceMaterialT's requirement.
+/// always 2D, matching @c GridSurfaceMaterial's requirement.
 ///
 /// @param jMaterial the json object to read from
 /// @return a newly allocated surface material, or nullptr if unsupported
@@ -135,9 +173,9 @@ Acts::ISurfaceMaterial* gridSurfaceMaterialFromJson(nlohmann::json& jMaterial) {
 
   if (accessorType == "globally_indexed") {
     throw std::runtime_error(
-        "MaterialJsonConverter: reading GloballyIndexedGridSurfaceMaterial "
-        "from json is not supported - the shared material vector has no "
-        "source at single-surface json scope.");
+        "MaterialJsonConverter: reading a globally indexed "
+        "GridSurfaceMaterial from json is not supported - the shared "
+        "material vector has no source at single-surface json scope.");
   }
 
   nlohmann::json jGrid = jMaterialAccessor["grid"];
@@ -156,17 +194,15 @@ Acts::ISurfaceMaterial* gridSurfaceMaterialFromJson(nlohmann::json& jMaterial) {
   if (accessorType == "direct") {
     auto payload = readGridPayload2D<Acts::MaterialSlab>(
         jData, axes[0]->getNBins(), axes[1]->getNBins());
-    return Acts::GridSurfaceMaterialFactory::create(
-               *axes[0], *axes[1], Acts::GridMaterialAccessor{}, payload)
+    return Acts::GridSurfaceMaterialFactory::createDirect(*axes[0], *axes[1],
+                                                          payload)
         .release();
   }
   if (accessorType == "indexed") {
     auto payload = readGridPayload2D<std::size_t>(jData, axes[0]->getNBins(),
                                                   axes[1]->getNBins());
-    return Acts::GridSurfaceMaterialFactory::create(
-               *axes[0], *axes[1],
-               Acts::IndexedMaterialAccessor{
-                   readStorageVector(jMaterialAccessor)},
+    return Acts::GridSurfaceMaterialFactory::createIndexed(
+               *axes[0], *axes[1], readStorageVector(jMaterialAccessor),
                payload)
         .release();
   }
@@ -316,32 +352,12 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
     return;
   }
 
-  // Grid-based surface material: direct storage
-  if (auto gsMaterial =
+  // Grid-based surface material: direct, indexed and globally indexed
+  // storage all share the same I/O, branching only on the storage variant
+  if (auto gridMaterial =
           dynamic_cast<const Acts::GridSurfaceMaterial*>(material);
-      gsMaterial != nullptr) {
-    writeGridSurfaceMaterial<Acts::MaterialSlab>(jMaterial, *gsMaterial,
-                                                 "direct");
-    j[Acts::jsonKey().materialkey] = jMaterial;
-    return;
-  }
-
-  // Grid-based surface material: locally indexed storage
-  if (auto igsMaterial =
-          dynamic_cast<const Acts::IndexedGridSurfaceMaterial*>(material);
-      igsMaterial != nullptr) {
-    writeGridSurfaceMaterial<std::size_t>(jMaterial, *igsMaterial, "indexed");
-    j[Acts::jsonKey().materialkey] = jMaterial;
-    return;
-  }
-
-  // Grid-based surface material: globally indexed storage
-  if (auto gigsMaterial =
-          dynamic_cast<const Acts::GloballyIndexedGridSurfaceMaterial*>(
-              material);
-      gigsMaterial != nullptr) {
-    writeGridSurfaceMaterial<std::size_t>(jMaterial, *gigsMaterial,
-                                          "globally_indexed");
+      gridMaterial != nullptr) {
+    writeGridSurfaceMaterial(jMaterial, *gridMaterial);
     j[Acts::jsonKey().materialkey] = jMaterial;
     return;
   }
