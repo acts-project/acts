@@ -166,14 +166,10 @@ struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
   }
 };
 
-/// Base class for the concrete templated grid surface material types.
-/// This allows referning to all template instances as the same base class type.
-class IGridSurfaceMaterialBase : public ISurfaceMaterial {};
-
 /// Intermediate interface to the grid surface material given access to the grid
 /// and the material accessor.
 template <typename grid_value_t>
-class IGridSurfaceMaterial : public IGridSurfaceMaterialBase {
+class IGridSurfaceMaterial : public ISurfaceMaterial {
  public:
   /// @brief Accessor to the grid interface
   /// @return Reference to the grid interface
@@ -341,14 +337,14 @@ class GridSurfaceMaterial final : public ISurfaceMaterial {
   /// @deprecated Global (Vector3) lookup is not supported anymore,
   ///             use materialSlab(const Vector2&) with a prior
   ///             Surface::globalToLocal() call instead.
-  ACTS_PUSH_IGNORE_DEPRECATED()
   [[deprecated(
       "Use materialSlab(const Vector2& lp) with a prior "
       "Surface::globalToLocal() call instead")]] const MaterialSlab&
   materialSlab(const Vector3& gp) const final {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     return m_gridMaterial->materialSlab(gp);
+    ACTS_POP_IGNORE_DEPRECATED()
   }
-  ACTS_POP_IGNORE_DEPRECATED()
 
   using ISurfaceMaterial::materialSlab;
 
@@ -430,14 +426,14 @@ class IndexedGridSurfaceMaterial final : public ISurfaceMaterial {
   /// @deprecated Global (Vector3) lookup is not supported anymore,
   ///             use materialSlab(const Vector2&) with a prior
   ///             Surface::globalToLocal() call instead.
-  ACTS_PUSH_IGNORE_DEPRECATED()
   [[deprecated(
       "Use materialSlab(const Vector2& lp) with a prior "
       "Surface::globalToLocal() call instead")]] const MaterialSlab&
   materialSlab(const Vector3& gp) const final {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     return m_gridMaterial->materialSlab(gp);
+    ACTS_POP_IGNORE_DEPRECATED()
   }
-  ACTS_POP_IGNORE_DEPRECATED()
 
   using ISurfaceMaterial::materialSlab;
 
@@ -520,14 +516,14 @@ class GloballyIndexedGridSurfaceMaterial final : public ISurfaceMaterial {
   /// @deprecated Global (Vector3) lookup is not supported anymore,
   ///             use materialSlab(const Vector2&) with a prior
   ///             Surface::globalToLocal() call instead.
-  ACTS_PUSH_IGNORE_DEPRECATED()
   [[deprecated(
       "Use materialSlab(const Vector2& lp) with a prior "
       "Surface::globalToLocal() call instead")]] const MaterialSlab&
   materialSlab(const Vector3& gp) const final {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     return m_gridMaterial->materialSlab(gp);
+    ACTS_POP_IGNORE_DEPRECATED()
   }
-  ACTS_POP_IGNORE_DEPRECATED()
 
   using ISurfaceMaterial::materialSlab;
 
