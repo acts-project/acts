@@ -8,8 +8,15 @@
 
 // Detray include(s)
 #include "detray/algebra/concepts.hpp"
+#include "detray/core/detector.hpp"
+#include "detray/plugins/svgtools/illustrator.hpp"
 #include "detray/plugins/svgtools/styling/styling.hpp"
 #include "detray/plugins/svgtools/writer.hpp"
+
+// Detray algebra plugin + detector metadata
+#include "algebra/array.hpp"
+#include "detray/definitions/algebra.hpp"
+#include "detray/detectors/default_metadata.hpp"
 
 // Actsvg include(s)
 #include <actsvg/core/defs.hpp>
@@ -31,7 +38,54 @@ namespace py = pybind11;
 
 namespace {
 
+using scalar_t = DETRAY_CUSTOM_SCALARTYPE;
+using algebra_t = detray::array<scalar_t>;
+using detector_t = detray::detector<detray::default_metadata<algebra_t>>;
+using geometry_context_t = detector_t::geometry_context;
 using style_t = detray::svgtools::styling::style;
+using illustrator_t = detray::svgtools::illustrator<detector_t>;
+
+/// Bind the draw methods of the illustrator for @tparam view_t .
+template <typename view_t>
+void bind_draw_methods(py::class_<illustrator_t> &c) {
+  c.def(
+      "drawDetector",
+      [](const illustrator_t &il, const view_t &view,
+         const geometry_context_t &gctx, float r_length, float z_length) {
+        return il.draw_detector(view, gctx, r_length, z_length);
+      },
+      py::arg("view"), py::arg("gctx"), py::arg("rLength") = 1100.f,
+      py::arg("zLength") = 3100.f, "Draw the whole detector");
+
+  c.def(
+      "drawVolumes",
+      [](const illustrator_t &il, const std::vector<detray::dindex> &indices,
+         const view_t &view, const geometry_context_t &gctx) {
+        return il.draw_volumes(indices, view, gctx);
+      },
+      py::arg("indices"), py::arg("view"), py::arg("gctx"),
+      "Draw the volumes with the given indices. Returns their svg together "
+      "with the svgs of their surface grids");
+  c.def(
+      "drawVolumes",
+      [](const illustrator_t &il, const std::vector<std::string> &names,
+         const view_t &view, const geometry_context_t &gctx) {
+        return il.draw_volumes(names, view, gctx);
+      },
+      py::arg("names"), py::arg("view"), py::arg("gctx"),
+      "Draw the volumes with the given names. Returns their svg together with "
+      "the svgs of their surface grids");
+
+  c.def(
+      "drawSurfaces",
+      [](const illustrator_t &il, const std::vector<detray::dindex> &indices,
+         const view_t &view, const geometry_context_t &gctx) {
+        return il.draw_surfaces(indices, view, gctx);
+      },
+      py::arg("indices"), py::arg("view"), py::arg("gctx"),
+      "Draw the surfaces with the given indices. Returns their svg together "
+      "with the svg of their material");
+}
 
 }  // namespace
 
@@ -124,5 +178,41 @@ PYBIND11_MODULE(DetraySvgtoolsPythonBindings, m) {
         "tableauColorblindStyle",
         []() { return detray::svgtools::styling::tableau_colorblind::style; },
         "Style that matches the colors used in the data plotting");
+  }
+
+  // Svg illustrator
+  {
+    auto c =
+        py::class_<illustrator_t>(m, "Illustrator")
+            .def(py::init<const detector_t &, const detray::name_map &,
+                          const style_t &>(),
+                 py::arg("detector"), py::arg("names"), py::arg("style"),
+                 py::keep_alive<1, 2>(), py::keep_alive<1, 3>(),
+                 "Build the svg generator of a detector. The detector and its "
+                 "names are kept alive for as long as the illustrator is used, "
+                 "as it only references them. The style is copied")
+            .def("showInfo", &illustrator_t::show_info,
+                 py::arg("toggle") = true, "Toggle the information boxes")
+            .def("hideEtaLines", &illustrator_t::hide_eta_lines,
+                 py::arg("toggle") = true,
+                 "Toggle the eta lines of the z-r view")
+            .def("hideGrids", &illustrator_t::hide_grids,
+                 py::arg("toggle") = true, "Toggle the surface grids")
+            .def("hideMaterial", &illustrator_t::hide_material,
+                 py::arg("toggle") = true, "Toggle the surface material")
+            .def("hidePortals", &illustrator_t::hide_portals,
+                 py::arg("toggle") = true, "Toggle the portal surfaces")
+            .def("hidePassives", &illustrator_t::hide_passives,
+                 py::arg("toggle") = true, "Toggle the passive surfaces")
+            .def("searchWindow", &illustrator_t::search_window,
+                 py::arg("window"),
+                 "Neighborhood search window for the grid display")
+            .def_property_readonly("detName", &illustrator_t::det_name,
+                                   "Name of the detector");
+
+    bind_draw_methods<actsvg::views::x_y>(c);
+    bind_draw_methods<actsvg::views::z_r>(c);
+    bind_draw_methods<actsvg::views::z_phi>(c);
+    bind_draw_methods<actsvg::views::z_rphi>(c);
   }
 }

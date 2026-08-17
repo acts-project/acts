@@ -23,7 +23,12 @@ pybind11_add_module(DetraySvgtoolsPythonBindings src/Svgtools.cpp)
 
 target_link_libraries(
     DetraySvgtoolsPythonBindings
-    PRIVATE detray::core_array detray::io detray::svgtools vecmem::core
+    PRIVATE
+        detray::core_array
+        detray::io
+        detray::detectors
+        detray::svgtools
+        vecmem::core
 )
 
 # Place the compiled module inside the `detray.svgtools` package.
