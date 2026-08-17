@@ -5,6 +5,8 @@ target_sources(
         MultiStepperError.cpp
         NavigatorError.cpp
         SympyStepper.cpp
+        SympyStepperDenseStepJac.cpp
+        SympyStepperDenseStepNoJac.cpp
         SympyStepperVacuumStepJac.cpp
         SympyStepperVacuumStepNoJac.cpp
         NavigationTarget.cpp
@@ -16,7 +18,6 @@ target_sources(
         detail/JacobianEngine.cpp
         detail/SympyCovarianceEngine.cpp
         detail/SympyJacobianEngine.cpp
-        detail/SympyStepperDenseStep.cpp
 )
 
 include(ActsCodegen)

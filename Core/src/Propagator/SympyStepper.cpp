@@ -21,6 +21,17 @@
 
 namespace Acts {
 
+namespace {
+/// dt/ds from the current q/p.  The vacuum kernel is handed this instead of
+/// forming it, so it has to be refreshed wherever q/p moves.
+double computeDtds(const SympyStepper::State& state) {
+  const double m = state.particleHypothesis.mass();
+  const double p =
+      state.particleHypothesis.extractMomentum(state.pars[eFreeQOverP]);
+  return std::sqrt(1 + m * m / (p * p));
+}
+}  // namespace
+
 SympyStepper::SympyStepper(std::shared_ptr<const MagneticFieldProvider> bField)
     : m_bField(std::move(bField)) {}
 
@@ -56,6 +67,8 @@ void SympyStepper::initialize(State& state, const BoundVector& boundParams,
 
   state.pars = freeParams;
   state.field.reset();
+  // after state.pars, which it reads
+  state.dtds = computeDtds(state);
 
   // Init the jacobian matrix if needed
   state.covTransport = cov.has_value();
@@ -136,6 +149,7 @@ void SympyStepper::update(State& state, const FreeVector& freeParams,
                           const Surface& surface) const {
   state.pars = freeParams;
   state.field.reset();
+  state.dtds = computeDtds(state);
   state.cov = covariance;
   if (state.covTransport) {
     state.jacToGlobal = surface.boundToFreeJacobian(
@@ -157,6 +171,7 @@ void SympyStepper::update(State& state, const Vector3& uposition,
   state.pars.template segment<3>(eFreeDir0) = udirection;
   state.pars[eFreeTime] = time;
   state.pars[eFreeQOverP] = qOverP;
+  state.dtds = computeDtds(state);
   state.field.reset();
 }
 
@@ -193,7 +208,10 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
   // almost everywhere.
   if (state.options.doDense &&
       (material != nullptr || !state.materialEffectsAccumulator.isVacuum())) {
-    return detail::sympyDenseStepFull(*this, state, propDir, material);
+    if (state.covTransport) {
+      return detail::sympyDenseStepFull<true>(*this, state, propDir, material);
+    }
+    return detail::sympyDenseStepFull<false>(*this, state, propDir, material);
   }
 
   // Specialised on covariance transport, each specialisation in a translation

@@ -39,12 +39,5 @@ template <bool WithJac>
 Result<double> sympyVacuumStep(const SympyStepper& stepper,
                                SympyStepper::State& state, Direction propDir);
 
-extern template Result<double> sympyVacuumStep<true>(const SympyStepper&,
-                                                     SympyStepper::State&,
-                                                     Direction);
-extern template Result<double> sympyVacuumStep<false>(const SympyStepper&,
-                                                      SympyStepper::State&,
-                                                      Direction);
-
 }  // namespace detail
 }  // namespace Acts

@@ -840,7 +840,10 @@ INPUT_ASSERTS = [
 
 
 def print_rk4_vacuum_b2f(
-    name_exprs: list[NamedExpr], run_cse: bool = False, mode: str = "combined"
+    name_exprs: list[NamedExpr],
+    run_cse: bool = False,
+    mode: str = "combined",
+    dtds_in: bool = False,
 ) -> str:
     """Print the vacuum kernel.
 
@@ -852,13 +855,19 @@ def print_rk4_vacuum_b2f(
       duplicates code and not work.
     - `combined`: one kernel transporting the jacobian only for a non-empty `M`,
       for the dense translation unit's cold vacuum branch, which does not want
-      two more kernels inlined into it.
+      two more kernels inlined into it.  It forms dt/ds itself, having no cached
+      value at hand.
 
     Do not give `nojac` a CSE pass of its own: sympy picks worse subexpressions
     when it sees fewer uses of them (it drops `B2[i] * l`, shared by two stages),
     which measured 2.9% slower at an equal multiply count.
     """
     printer = cxx_printer
+
+    if dtds_in:
+        # dt/ds is constant along a vacuum step and across a whole propagation:
+        # hand it in instead of forming sqrt(1 + m^2/p^2) every step.
+        name_exprs = [ne for ne in name_exprs if str(ne[0]) != "dtds"]
 
     jac = mode != "nojac"
     output_names = ["pos2", "pos3", "err", "new_B", "new_pos", "new_time", "new_dir"]
@@ -876,6 +885,7 @@ def print_rk4_vacuum_b2f(
         "nojac": "rk4_vacuum_nojac",
     }[mode]
     jac_params = ", std::span<T, 8> path_derivatives, std::span<T> M" if jac else ""
+    dtds_param = ", const T dtds" if dtds_in else ""
     lines.append(
         "template <typename T, typename GetB>\n"
         f"int {fn_name}(std::span<const T, 3> pos,"
@@ -884,7 +894,7 @@ def print_rk4_vacuum_b2f(
         " const T errTol, std::error_code& fieldErr,"
         " std::span<T, 3> new_pos, T& new_time,"
         " std::span<T, 3> new_dir, std::span<T, 3> new_B"
-        f"{jac_params}) {{"
+        f"{dtds_param}{jac_params}) {{"
     )
     lines.extend(INPUT_ASSERTS)
     if jac:
@@ -935,40 +945,47 @@ def print_rk4_vacuum_b2f(
     return "\n".join(lines)
 
 
-def print_rk4_dense(name_exprs: list[NamedExpr], run_cse: bool = True) -> str:
+def print_rk4_dense(
+    name_exprs: list[NamedExpr], run_cse: bool = True, mode: str = "combined"
+) -> str:
+    """Print the dense kernel; `mode` as in print_rk4_vacuum_b2f."""
     printer = cxx_printer
-    outputs = [
-        find_by_name(name_exprs, name)[0]
-        for name in [
-            "pos2",
-            "qop2",
-            "qop3",
-            "pos3",
-            "qop4",
-            "err",
-            "new_B",
-            "new_pos",
-            "new_time",
-            "new_dir",
-            "new_qop",
-            "path_derivatives",
-            "new_M",
-        ]
+    jac = mode != "nojac"
+    output_names = [
+        "pos2",
+        "qop2",
+        "qop3",
+        "pos3",
+        "qop4",
+        "err",
+        "new_B",
+        "new_pos",
+        "new_time",
+        "new_dir",
+        "new_qop",
     ]
+    if jac:
+        output_names += ["path_derivatives", "new_M"]
+    outputs = [find_by_name(name_exprs, name)[0] for name in output_names]
 
     lines = []
 
+    dense_name = {"jac": "rk4_dense_jac", "nojac": "rk4_dense_nojac"}[mode]
+    dense_jac_params = (
+        ", std::span<T, 8> path_derivatives, std::span<T> M" if jac else ""
+    )
     lines.append(
         "template <typename T, typename GetB, typename GetG>\n"
-        "Acts::Result<bool> rk4_dense(std::span<const T, 3> pos,"
+        f"Acts::Result<bool> {dense_name}(std::span<const T, 3> pos,"
         " std::span<const T, 3> dir, const T time, const T h, const T qop, const T mass,"
         " const T charge, const T p_abs, std::span<const T, 3> B1, GetB getB,"
         " GetG getG, T& err, const T errTol, std::span<T, 3> new_pos, T& new_time,"
-        " std::span<T, 3> new_dir, T& new_qop, std::span<T, 3> new_B,"
-        " std::span<T, 8> path_derivatives, std::span<T> M) {"
+        " std::span<T, 3> new_dir, T& new_qop, std::span<T, 3> new_B"
+        f"{dense_jac_params}) {{"
     )
     lines.extend(INPUT_ASSERTS)
-    lines.append(f"  assert(M.empty() || M.size() == {_B2F.size});")
+    if jac:
+        lines.append(f"  assert(M.size() == {_B2F.size});")
 
     lines.append("  const auto dEds1 = getG(pos, qop);")
 
@@ -998,10 +1015,6 @@ def print_rk4_dense(name_exprs: list[NamedExpr], run_cse: bool = True) -> str:
             return (
                 "if (err > errTol) {\n  return Acts::Result<bool>::success(false);\n}"
             )
-        if str(var) == "new_qop":
-            # new_qop carries the energy loss, so it belongs to the step and
-            # has to be written before the jacobian-only part is skipped
-            return "if (M.empty()) {\n  return Acts::Result<bool>::success(true);\n}"
         if str(var) == "new_M":
             return "\n".join(
                 f"M[{_B2F.flat_index(i, j)}] = new_M[{k}];"
@@ -1438,11 +1451,20 @@ def main(argv: list[str]) -> None:
         out.write(HEADER)
         out.write("\n")
         vacuum_exprs = rk4_vacuum_b2f_atlasexpr(taylor_norm=False)
-        for vacuum_mode in ("combined", "jac", "nojac"):
-            out.write(print_rk4_vacuum_b2f(vacuum_exprs, mode=vacuum_mode))
+        # The combined kernel keeps forming dt/ds itself: it only serves the
+        # dense unit's cold vacuum branch, which has no cached value at hand.
+        out.write(print_rk4_vacuum_b2f(vacuum_exprs, mode="combined"))
+        out.write("\n\n")
+        for vacuum_mode in ("jac", "nojac"):
+            out.write(
+                print_rk4_vacuum_b2f(vacuum_exprs, mode=vacuum_mode, dtds_in=True)
+            )
             out.write("\n\n")
-        out.write(print_rk4_dense(rk4_dense_tangentexpr(), run_cse=True))
-        out.write("\n")
+
+        dense_exprs = rk4_dense_tangentexpr()
+        for dense_mode in ("jac", "nojac"):
+            out.write(print_rk4_dense(dense_exprs, run_cse=True, mode=dense_mode))
+            out.write("\n\n")
 
 
 if __name__ == "__main__":

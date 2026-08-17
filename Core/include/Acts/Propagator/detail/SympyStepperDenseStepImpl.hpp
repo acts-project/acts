@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Propagator/detail/SympyStepperDenseStep.hpp"
+#pragma once
 
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
@@ -14,13 +14,91 @@
 #include "Acts/Material/Interactions.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
+#include <span>
 
+// One dense kernel per translation unit, inlined, for the same reason as the
+// vacuum step: two of them in one function share a stack frame and a register
+// allocation.
+#define ACTS_SYMPY_ALWAYS_INLINE_D(name) __attribute__((always_inline)) name
+#define rk4_dense ACTS_SYMPY_ALWAYS_INLINE_D(rk4_dense)
+#define rk4_dense_jac ACTS_SYMPY_ALWAYS_INLINE_D(rk4_dense_jac)
+#define rk4_dense_nojac ACTS_SYMPY_ALWAYS_INLINE_D(rk4_dense_nojac)
 #include "codegen/sympy_stepper_math.hpp"
+#undef rk4_dense
+#undef rk4_dense_jac
+#undef rk4_dense_nojac
 
 namespace Acts::detail {
+template <bool WithJac>
+Result<bool> sympyDenseStep(const SympyStepper& stepper,
+                            SympyStepper::State& state,
+                            const IVolumeMaterial& material, double h,
+                            double errTol, double& errorEstimate,
+                            Vector3& lastField, std::span<double> jac) {
+  const Vector3 pos = stepper.position(state);
+  const Vector3 dir = stepper.direction(state);
+  const double t = stepper.time(state);
+  const double qop = stepper.qOverP(state);
+  const double pabs = stepper.absoluteMomentum(state);
+  const double m = stepper.particleHypothesis(state).mass();
+  const double q = stepper.charge(state);
+  const auto absQ = static_cast<float>(std::abs(q));
+  const PdgParticle absPdg = stepper.particleHypothesis(state).absolutePdg();
 
+  const auto getB = [&](std::span<const double, 3> p) {
+    return stepper.getField(state, {p[0], p[1], p[2]});
+  };
+
+  const auto getG = [&](std::span<const double, 3> p, double l) -> double {
+    if (const double newPabs =
+            stepper.particleHypothesis(state).extractMomentum(l);
+        newPabs < state.options.dense.momentumCutOff) {
+      return 0.;
+    }
+
+    const MaterialSlab slab(material.material({p[0], p[1], p[2]}),
+                            1.0f * UnitConstants::mm);
+    // Unsigned: the step's own sign gives the energy back on a backward step,
+    // matching `PointwiseMaterialInteraction`.
+    if (state.options.dense.meanEnergyLoss) {
+      return computeEnergyLossMean(slab, absPdg, static_cast<float>(m),
+                                   static_cast<float>(l), absQ);
+    }
+    return computeEnergyLossMode(slab, absPdg, static_cast<float>(m),
+                                 static_cast<float>(l), absQ);
+  };
+
+  // The caller already knows whether the jacobian is wanted, so the kernel
+  // does not have to test an empty span on every trial.
+  if constexpr (WithJac) {
+    return rk4_dense_jac(
+        std::span<const double, 3>(pos.data(), 3),
+        std::span<const double, 3>(dir.data(), 3), t, h, qop, m, q, pabs,
+        std::span<const double, 3>(state.field->data(), 3), getB, getG,
+        errorEstimate, errTol,
+        std::span<double, 3>(state.pars.segment<3>(eFreePos0).data(), 3),
+        state.pars[eFreeTime],
+        std::span<double, 3>(state.pars.segment<3>(eFreeDir0).data(), 3),
+        state.pars[eFreeQOverP], std::span<double, 3>(lastField.data(), 3),
+        std::span<double, 8>(state.derivative.data(), 8), jac);
+  } else {
+    return rk4_dense_nojac(
+        std::span<const double, 3>(pos.data(), 3),
+        std::span<const double, 3>(dir.data(), 3), t, h, qop, m, q, pabs,
+        std::span<const double, 3>(state.field->data(), 3), getB, getG,
+        errorEstimate, errTol,
+        std::span<double, 3>(state.pars.segment<3>(eFreePos0).data(), 3),
+        state.pars[eFreeTime],
+        std::span<double, 3>(state.pars.segment<3>(eFreeDir0).data(), 3),
+        state.pars[eFreeQOverP], std::span<double, 3>(lastField.data(), 3));
+  }
+}
+
+template <bool WithJac>
 Result<double> sympyDenseStepFull(const SympyStepper& stepper,
                                   SympyStepper::State& state, Direction propDir,
                                   const IVolumeMaterial* material) {
@@ -123,9 +201,10 @@ Result<double> sympyDenseStepFull(const SympyStepper& stepper,
       }
       accepted = status != 0;
     } else {
-      Result<bool> res = sympyDenseStep(stepper, state, *material, h,
-                                        4 * stepTolerance, errorEstimate,
-                                        lastField, jac);
+      Result<bool> res =
+          sympyDenseStep<WithJac>(stepper, state, *material, h,
+                                  4 * stepTolerance, errorEstimate, lastField,
+                                  jac);
       if (!res.ok()) {
         return res.error();
       }
@@ -156,6 +235,14 @@ Result<double> sympyDenseStepFull(const SympyStepper& stepper,
       // Too many trials, have to abort
       return EigenStepperError::StepSizeAdjustmentFailed;
     }
+  }
+
+  // a dense step is the one place q/p moves, so the vacuum step's dt/ds has to
+  // be brought back in line here
+  {
+    const double mDt = stepper.particleHypothesis(state).mass();
+    const double pDt = stepper.absoluteMomentum(state);
+    state.dtds = std::sqrt(1 + mDt * mDt / (pDt * pDt));
   }
 
   state.pathAccumulated += h;
@@ -193,56 +280,6 @@ Result<double> sympyDenseStepFull(const SympyStepper& stepper,
   }
 
   return h;
-}
-
-Result<bool> sympyDenseStep(const SympyStepper& stepper,
-                            SympyStepper::State& state,
-                            const IVolumeMaterial& material, double h,
-                            double errTol, double& errorEstimate,
-                            Vector3& lastField, std::span<double> jac) {
-  const Vector3 pos = stepper.position(state);
-  const Vector3 dir = stepper.direction(state);
-  const double t = stepper.time(state);
-  const double qop = stepper.qOverP(state);
-  const double pabs = stepper.absoluteMomentum(state);
-  const double m = stepper.particleHypothesis(state).mass();
-  const double q = stepper.charge(state);
-  const auto absQ = static_cast<float>(std::abs(q));
-  const PdgParticle absPdg = stepper.particleHypothesis(state).absolutePdg();
-
-  const auto getB = [&](std::span<const double, 3> p) {
-    return stepper.getField(state, {p[0], p[1], p[2]});
-  };
-
-  const auto getG = [&](std::span<const double, 3> p, double l) -> double {
-    if (const double newPabs =
-            stepper.particleHypothesis(state).extractMomentum(l);
-        newPabs < state.options.dense.momentumCutOff) {
-      return 0.;
-    }
-
-    const MaterialSlab slab(material.material({p[0], p[1], p[2]}),
-                            1.0f * UnitConstants::mm);
-    // Unsigned: the step's own sign gives the energy back on a backward step,
-    // matching `PointwiseMaterialInteraction`.
-    if (state.options.dense.meanEnergyLoss) {
-      return computeEnergyLossMean(slab, absPdg, static_cast<float>(m),
-                                   static_cast<float>(l), absQ);
-    }
-    return computeEnergyLossMode(slab, absPdg, static_cast<float>(m),
-                                 static_cast<float>(l), absQ);
-  };
-
-  return rk4_dense(
-      std::span<const double, 3>(pos.data(), 3),
-      std::span<const double, 3>(dir.data(), 3), t, h, qop, m, q, pabs,
-      std::span<const double, 3>(state.field->data(), 3), getB, getG,
-      errorEstimate, errTol,
-      std::span<double, 3>(state.pars.segment<3>(eFreePos0).data(), 3),
-      state.pars[eFreeTime],
-      std::span<double, 3>(state.pars.segment<3>(eFreeDir0).data(), 3),
-      state.pars[eFreeQOverP], std::span<double, 3>(lastField.data(), 3),
-      std::span<double, 8>(state.derivative.data(), 8), jac);
 }
 
 }  // namespace Acts::detail
