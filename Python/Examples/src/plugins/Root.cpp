@@ -127,6 +127,16 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
           .def_readwrite("paramNames", &ResPlotTool::Config::paramNames)
           .def_readwrite("varBinning", &ResPlotTool::Config::varBinning);
 
+      py::enum_<TrackParameterSource>(root, "TrackParameterSource")
+          .value("Track", TrackParameterSource::Track)
+          .value("TrackState", TrackParameterSource::TrackState);
+
+      py::enum_<TrackParameterType>(root, "TrackParameterType")
+          .value("Predicted", TrackParameterType::Predicted)
+          .value("Filtered", TrackParameterType::Filtered)
+          .value("Smoothed", TrackParameterType::Smoothed)
+          .value("Unbiased", TrackParameterType::Unbiased);
+
       py::class_<TrackQualityPlotTool::Config>(root,
                                                "TrackQualityPlotToolConfig")
           .def(py::init<>())
@@ -170,9 +180,11 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackParameterPerformanceWriter, root,
         "RootTrackParameterPerformanceWriter", inputTracks, inputParticles,
-        inputTrackParticleMatching, filePath, resPlotToolConfig,
-        effPlotToolConfig, trackSummaryPlotToolConfig, fitMinEntries,
-        fitSigmaRange, fitIterations, warningThresholdFitFailureFraction);
+        inputTrackParticleMatching, inputSimHits, inputMeasurementSimHitsMap,
+        filePath, resPlotToolConfig, effPlotToolConfig,
+        trackSummaryPlotToolConfig, parameterSource, parameterType,
+        geometrySelection, fitMinEntries, fitSigmaRange, fitIterations,
+        warningThresholdFitFailureFraction);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackParameterWriter, root, "RootTrackParameterWriter",

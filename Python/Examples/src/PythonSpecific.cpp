@@ -207,15 +207,23 @@ class PythonTrackParameterPerformanceWriter final
     int fitIterations = 3;
   };
 
+  /// Translate the writer configuration into the collector configuration.
+  static TrackParameterPerformanceCollector::Config collectorConfig(
+      const Config& cfg) {
+    TrackParameterPerformanceCollector::Config collectorCfg;
+    collectorCfg.resPlotToolConfig = cfg.resPlotToolConfig;
+    collectorCfg.effPlotToolConfig = cfg.effPlotToolConfig;
+    collectorCfg.trackSummaryPlotToolConfig = cfg.trackSummaryPlotToolConfig;
+    collectorCfg.fitMinEntries = cfg.fitMinEntries;
+    collectorCfg.fitSigmaRange = cfg.fitSigmaRange;
+    collectorCfg.fitIterations = cfg.fitIterations;
+    return collectorCfg;
+  }
+
   PythonTrackParameterPerformanceWriter(Config cfg, Acts::Logging::Level lvl)
       : WriterT(cfg.inputTracks, "PythonTrackParameterPerformanceWriter", lvl),
         m_cfg(std::move(cfg)),
-        m_collector(
-            TrackParameterPerformanceCollector::Config{
-                m_cfg.resPlotToolConfig, m_cfg.effPlotToolConfig,
-                m_cfg.trackSummaryPlotToolConfig, m_cfg.fitMinEntries,
-                m_cfg.fitSigmaRange, m_cfg.fitIterations},
-            logger().clone()) {
+        m_collector(collectorConfig(m_cfg), logger().clone()) {
     if (m_cfg.inputParticles.empty()) {
       throw std::invalid_argument("Missing particles input collection");
     }
