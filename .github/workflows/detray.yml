@@ -131,8 +131,6 @@ jobs:
       uses: ./.github/actions/dependencies
       with:
         compiler: g++
-        # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
-        DEPENDENCY_TAG: v24.0.3
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 
@@ -228,8 +226,6 @@ jobs:
       with:
         compiler: g++
         flavor: ${{ matrix.PLATFORM.FLAVOR }}
-        # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
-        DEPENDENCY_TAG: v24.0.3
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 
@@ -300,8 +296,6 @@ jobs:
       with:
         compiler: g++
         flavor: cuda13
-        # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
-        DEPENDENCY_TAG: v24.0.3
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 
@@ -427,7 +421,6 @@ jobs:
       with:
         compiler: g++
         flavor: cuda13
-        DEPENDENCY_TAG: v24.0.3
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 

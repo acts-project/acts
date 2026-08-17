@@ -466,9 +466,11 @@ def select_lockfile(
         _, lockfile = compiler_matches[compiler]
         return lockfile
 
-    # Fallback: first available. The normal path for the flavors, published at
-    # cxx23 only, so a cxx20 job asking for `cuda13` gets the cxx23 stack --
-    # deliberate; see the `flavor` input in .github/actions/dependencies.
+    # Fallback: first available. Reached whenever a flavor does not publish the
+    # requested standard -- flavors follow the default one (C++20 as of
+    # v24.0.3), so a cxx23 job asking for `cuda13` lands on the cxx20 CUDA
+    # stack. Staying inside the flavor is the point; see the `flavor` input in
+    # .github/actions/dependencies.
     first_comp, (_, lockfile) = next(iter(compiler_matches.items()))
     print(
         f"No lockfile found for compiler '{compiler}' with {cxx} "
