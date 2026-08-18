@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Validation/TrackFitterPerformanceCollector.hpp"
+#include "ActsExamples/Validation/TrackParameterPerformanceCollector.hpp"
 
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
@@ -15,7 +15,7 @@
 
 namespace ActsExamples {
 
-TrackFitterPerformanceCollector::TrackFitterPerformanceCollector(
+TrackParameterPerformanceCollector::TrackParameterPerformanceCollector(
     Config cfg, std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(std::move(cfg)),
       m_logger(std::move(logger)),
@@ -24,7 +24,7 @@ TrackFitterPerformanceCollector::TrackFitterPerformanceCollector(
       m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig,
                              m_logger->level()) {}
 
-void TrackFitterPerformanceCollector::fill(
+void TrackParameterPerformanceCollector::fill(
     const Acts::GeometryContext& geoContext, const ConstTrackContainer& tracks,
     const SimParticleContainer& particles,
     const TrackParticleMatching& trackParticleMatching) {
@@ -107,8 +107,8 @@ void TrackFitterPerformanceCollector::fill(
   }
 }
 
-void TrackFitterPerformanceCollector::logSummary() const {
-  ACTS_INFO("=== Track Fitter Performance Summary ===");
+void TrackParameterPerformanceCollector::logSummary() const {
+  ACTS_INFO("=== Track Parameter Performance Summary ===");
   ACTS_INFO("Total tracks: " << m_stats.nTotalTracks);
   ACTS_INFO("Total matched tracks: " << m_stats.nTotalMatchedTracks);
   ACTS_INFO("Total particles: " << m_stats.nTotalParticles);

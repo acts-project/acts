@@ -327,5 +327,26 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceMaterialAssignment) {
   }
 }
 
+/// A cone whose half sector is pi only up to rounding is still a full cone
+BOOST_AUTO_TEST_CASE(ConeSurfaceFullConeTolerance) {
+  const double alpha = std::numbers::pi / 8.;
+  auto pTransform = Transform3(Translation3{0., 0., 0.});
+
+  // An average phi off the regular vertex grid, so that forcing it in as a
+  // reference vertex would be visible in the vertex count
+  const double avgPhi = 0.1;
+  auto exact = Surface::makeShared<ConeSurface>(
+      pTransform, std::make_shared<const ConeBounds>(alpha, 0., 10.,
+                                                     std::numbers::pi, avgPhi));
+  auto rounded = Surface::makeShared<ConeSurface>(
+      pTransform, std::make_shared<const ConeBounds>(
+                      alpha, 0., 10., std::numbers::pi - 1e-12, avgPhi));
+
+  // Neither forces the average phi in as an extra reference vertex
+  BOOST_CHECK_EQUAL(
+      exact->polyhedronRepresentation(tgContext, 1).vertices.size(),
+      rounded->polyhedronRepresentation(tgContext, 1).vertices.size());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace ActsTests

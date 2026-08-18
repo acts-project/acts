@@ -11,3 +11,8 @@ rules:
     ignore:
       - release.yml
       - update-pip-requirements.yml
+  # The devcontainer CLI is a one-off CI tool: adding a package.json and
+  # lockfile just to install it via `npm ci` is not worth it.
+  adhoc-packages:
+    ignore:
+      - devcontainer-ci.yml
