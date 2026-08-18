@@ -31,6 +31,7 @@
 // System include(s)
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace detray::test {
@@ -80,23 +81,22 @@ class navigation_validation : public test::fixture_base<> {
         typename truth_trace_t::value_type::intersection_type;
 
     // Runge-Kutta stepper
-    using hom_bfield_t = bfield::const_field_t<scalar_t>;
+    using hom_bfield_t = typename bfield::const_field_t<scalar_t>::view_t;
     using bfield_t =
         std::conditional_t<k_use_rays, navigation_validator::empty_bfield,
                            hom_bfield_t>;
     using rk_stepper_t =
-        rk_stepper<typename hom_bfield_t::view_t, algebra_t,
-                   unconstrained_step<scalar_t>, stepper_rk_policy<scalar_t>,
-                   stepping::print_inspector>;
+        rk_stepper<hom_bfield_t, algebra_t, unconstrained_step<scalar_t>,
+                   stepper_rk_policy<scalar_t>, stepping::print_inspector>;
     using line_stepper_t = line_stepper<algebra_t, unconstrained_step<scalar_t>,
                                         stepper_default_policy<scalar_t>,
                                         stepping::print_inspector>;
     using stepper_t =
         std::conditional_t<k_use_rays, line_stepper_t, rk_stepper_t>;
 
-    bfield_t b_field{};
+    std::optional<bfield_t> b_field{};
     if constexpr (!k_use_rays) {
-      b_field = create_const_field<scalar_t>(m_cfg.B_vector());
+      b_field.emplace(create_const_field<scalar_t>(m_cfg.B_vector()));
     }
 
     // Use ray or helix
@@ -147,9 +147,8 @@ class navigation_validation : public test::fixture_base<> {
     detray::io::file_handle debug_file{debug_file_name, io_mode};
 
     // Keep a record of track positions and material along the track
-    dvector<dvector<navigation::detail::candidate_record<intersection_t>>>
-        recorded_traces{};
-    dvector<material_validator::material_record<scalar_t>> mat_records{};
+    std::vector<dvector<intersection_record<detector_t>>> recorded_traces{};
+    dvector<material_validator::track_material<scalar_t>> track_mat_vec{};
     std::vector<std::pair<trajectory_type, std::vector<intersection_t>>>
         missed_intersections{};
 
@@ -163,7 +162,7 @@ class navigation_validation : public test::fixture_base<> {
       // Follow the test trajectory with a track and check, if we find
       // the same volumes and distances along the way
       const auto &start = truth_trace.front();
-      const auto &track = start.track_param;
+      const auto &track = start.track_param();
       assert(!track.is_invalid());
       trajectory_type test_traj = get_parametrized_trajectory(track);
 
@@ -243,7 +242,7 @@ class navigation_validation : public test::fixture_base<> {
       }
 
       recorded_traces.push_back(std::move(obj_tracer.object_trace));
-      mat_records.push_back(mat_record);
+      track_mat_vec.push_back(mat_record);
 
       EXPECT_TRUE(success)
           << "\nDETRAY INFO (HOST): Wrote navigation debugging data in: "
@@ -319,7 +318,7 @@ class navigation_validation : public test::fixture_base<> {
     detector_scanner::write_intersections(truth_intr_path.string(),
                                           truth_traces);
     detector_scanner::write_intersections(intr_path.string(), recorded_traces);
-    material_validator::write_material(mat_path.string(), mat_records);
+    material_validator::write_material(mat_path.string(), track_mat_vec);
 
     DETRAY_INFO_HOST("Wrote distance to boundary of missed intersections in: "
                      << missed_path);

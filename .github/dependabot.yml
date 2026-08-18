@@ -7,6 +7,11 @@ updates:
       day: "sunday"
       time: "01:23"
       timezone: "Europe/Zurich"
+    cooldown:
+      default-days: 7
+    # Don't auto-rebase open PRs when main moves: rebases re-trigger CI and
+    # dismiss stale approvals, which knocks PRs out of the merge queue.
+    rebase-strategy: "disabled"
 
   - package-ecosystem: "pre-commit"
     directory: "/"
@@ -15,3 +20,6 @@ updates:
       day: "sunday"
       time: "01:23"
       timezone: "Europe/Zurich"
+    cooldown:
+      default-days: 7
+    rebase-strategy: "disabled"

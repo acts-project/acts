@@ -10,11 +10,11 @@
 
 #pragma once
 
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Seeding2/GbtsGeometry.hpp"
-#include "Acts/Seeding2/GbtsTrackingFilter.hpp"
-#include "Acts/Seeding2/GraphBasedTrackSeeder.hpp"
+#include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsTrackingFilter.hpp"
+#include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
@@ -95,6 +95,12 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// used to assign LayerIds to the GbtsActsMap
   std::map<std::uint32_t, std::uint32_t> m_layerIdMap{};
 
+  /// used to tell if a layer is a strip or pixel layer
+  std::vector<bool> m_isPixelLayer{};
+
+  /// used to define region of interest
+  std::optional<Acts::Experimental::GbtsRoiDescriptor> m_internalRoi;
+
   /// handle that points to the container of input space points
   ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
                                                          "InputSpacePoints"};
@@ -110,7 +116,7 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
 
   /// make the container that holds space points that have been given
   /// all the variables needed for GBTS algorithm to run
-  Acts::SpacePointContainer2 makeSpContainer(
+  Acts::SpacePointContainer makeSpContainer(
       const SpacePointContainer &spacePoints,
       std::map<ActsIDs, GbtsIDs> map) const;
 

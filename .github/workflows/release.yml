@@ -6,6 +6,9 @@ on:
       - 'releases'
       - 'release/**'
 
+permissions:
+  contents: write
+
 jobs:
   release:
     name: Make release
@@ -14,7 +17,9 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        # persisted credentials are required: CI/release.sh pushes the version
+        # bump commit back to the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 

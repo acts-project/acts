@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Vertexing/HoughVertexFinder.hpp"
 
 #include <cmath>
@@ -19,17 +20,6 @@
 using namespace Acts;
 
 namespace ActsTests {
-
-/// @brief SpacePoint definition to be used for the unit tests. Implements all the relevant methods.
-struct SpacePoint4HVFT {
-  SpacePoint4HVFT(double x, double y, double z) : m_x(x), m_y(y), m_z(z) {}
-  double m_x;
-  double m_y;
-  double m_z;
-  double x() const { return m_x; }
-  double y() const { return m_y; }
-  double z() const { return m_z; }
-};
 
 /// @brief Provides random double number between $from and $to
 /// @param gen random number generator
@@ -55,7 +45,7 @@ BOOST_AUTO_TEST_SUITE(VertexingSuite)
 
 /// @brief Unit test for HoughVertexFinder. Compare the result to the easy-to-calculate expected result
 BOOST_AUTO_TEST_CASE(hough_vertex_finder_small_test) {
-  HoughVertexFinder<SpacePoint4HVFT>::Config houghVtxCfg;
+  HoughVertexFinder::Config houghVtxCfg;
   houghVtxCfg.targetSPs = 1000;
   houghVtxCfg.minAbsEta = 0.3;
   houghVtxCfg.maxAbsEta = 3.0;
@@ -72,7 +62,7 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_small_test) {
   houghVtxCfg.defVtxPosition[1] = 0. * UnitConstants::mm;
   houghVtxCfg.defVtxPosition[2] = 0. * UnitConstants::mm;
 
-  HoughVertexFinder<SpacePoint4HVFT> houghVertexFinder(std::move(houghVtxCfg));
+  HoughVertexFinder houghVertexFinder(std::move(houghVtxCfg));
 
   double vtxX = 0., vtxY = 0., vtxZ = 20.;
 
@@ -82,9 +72,14 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_small_test) {
       {-6., -4., 22.5}, {-12., -8., 25.}, {-18., -12., 27.5},  // track 3
       {-8., 2., 23.5},  {-16., 4., 27.},  {-24., 6., 30.5}};   // track 4
 
-  std::vector<SpacePoint4HVFT> inputSpacePoints;
+  SpacePointContainer inputSpacePoints(
+      SpacePointColumns::X | SpacePointColumns::Y | SpacePointColumns::Z);
+  inputSpacePoints.reserve(positions.size());
   for (auto pos : positions) {
-    inputSpacePoints.emplace_back(pos[0], pos[1], pos[2]);
+    auto sp = inputSpacePoints.createSpacePoint();
+    sp.x() = pos[0];
+    sp.y() = pos[1];
+    sp.z() = pos[2];
   }
 
   auto vtx = houghVertexFinder.find(inputSpacePoints);
@@ -104,7 +99,7 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_small_test) {
 
 /// @brief Unit test for HoughVertexFinder. Generates real-looking sets of the space points, then finds a vertex, and then verifies the reconstructed vertex is actually near the original one
 BOOST_AUTO_TEST_CASE(hough_vertex_finder_full_test) {
-  HoughVertexFinder<SpacePoint4HVFT>::Config houghVtxCfg;
+  HoughVertexFinder::Config houghVtxCfg;
   houghVtxCfg.targetSPs = 1000;
   houghVtxCfg.minAbsEta = 0.3;
   houghVtxCfg.maxAbsEta = 3.0;
@@ -121,7 +116,7 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_full_test) {
   houghVtxCfg.defVtxPosition[1] = 0. * UnitConstants::mm;
   houghVtxCfg.defVtxPosition[2] = 0. * UnitConstants::mm;
 
-  HoughVertexFinder<SpacePoint4HVFT> houghVertexFinder(houghVtxCfg);
+  HoughVertexFinder houghVertexFinder(houghVtxCfg);
 
   std::mt19937 gen(299792458);
 
@@ -132,7 +127,8 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_full_test) {
     double vtxY = getRndDouble(gen, -0.1, 0.1);
     double vtxZ = getRndDouble(gen, -50., 50.);
 
-    std::vector<SpacePoint4HVFT> inputSpacePoints;
+    SpacePointContainer inputSpacePoints(
+        SpacePointColumns::X | SpacePointColumns::Y | SpacePointColumns::Z);
 
     // make straight lines originating from the given vertex
     int nTracks = getRndInt(gen, 200, 1000);
@@ -161,7 +157,10 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_full_test) {
         // how many units from the vertex to the intersection
         double zDist = std::abs((x1 - vtxX) / dirX);
         // use the same amount of units for distance in Z
-        inputSpacePoints.emplace_back(x1, y1, zDist * dirZ + vtxZ);
+        auto sp = inputSpacePoints.createSpacePoint();
+        sp.x() = x1;
+        sp.y() = y1;
+        sp.z() = zDist * dirZ + vtxZ;
       }
     }
 
@@ -182,11 +181,12 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_full_test) {
 
 /// @brief Unit test for HoughVertexFinder. Provides no input space points
 BOOST_AUTO_TEST_CASE(hough_vertex_finder_empty_test) {
-  HoughVertexFinder<SpacePoint4HVFT>::Config houghVtxCfg;
-  HoughVertexFinder<SpacePoint4HVFT> houghVertexFinder(std::move(houghVtxCfg));
+  HoughVertexFinder::Config houghVtxCfg;
+  HoughVertexFinder houghVertexFinder(std::move(houghVtxCfg));
 
   // no input space points
-  std::vector<SpacePoint4HVFT> inputSpacePoints;
+  SpacePointContainer inputSpacePoints(
+      SpacePointColumns::X | SpacePointColumns::Y | SpacePointColumns::Z);
 
   auto vtx = houghVertexFinder.find(inputSpacePoints);
 
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_empty_test) {
 
 /// @brief Unit test for HoughVertexFinder. Does not provides enough space points
 BOOST_AUTO_TEST_CASE(hough_vertex_finder_insufficient_test) {
-  HoughVertexFinder<SpacePoint4HVFT>::Config houghVtxCfg;
+  HoughVertexFinder::Config houghVtxCfg;
   houghVtxCfg.targetSPs = 1000;
   houghVtxCfg.minAbsEta = 0.3;
   houghVtxCfg.maxAbsEta = 3.0;
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_insufficient_test) {
   houghVtxCfg.defVtxPosition[1] = 0. * UnitConstants::mm;
   houghVtxCfg.defVtxPosition[2] = 0. * UnitConstants::mm;
 
-  HoughVertexFinder<SpacePoint4HVFT> houghVertexFinder(std::move(houghVtxCfg));
+  HoughVertexFinder houghVertexFinder(std::move(houghVtxCfg));
 
   // only 2 space points per track provided
   std::vector<std::vector<double>> positions = {
@@ -225,9 +225,14 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_insufficient_test) {
       {0., 5., 19.},    {0., 10., 18.},     // track 2
       {-6., -4., 22.5}, {-12., -8., 25.}};  // track 3
 
-  std::vector<SpacePoint4HVFT> inputSpacePoints;
+  SpacePointContainer inputSpacePoints(
+      SpacePointColumns::X | SpacePointColumns::Y | SpacePointColumns::Z);
+  inputSpacePoints.reserve(positions.size());
   for (auto pos : positions) {
-    inputSpacePoints.emplace_back(pos[0], pos[1], pos[2]);
+    auto sp = inputSpacePoints.createSpacePoint();
+    sp.x() = pos[0];
+    sp.y() = pos[1];
+    sp.z() = pos[2];
   }
 
   auto vtx = houghVertexFinder.find(inputSpacePoints);
@@ -242,7 +247,7 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_insufficient_test) {
 
 /// @brief Unit test for HoughVertexFinder. Misconfigured #1
 BOOST_AUTO_TEST_CASE(hough_vertex_finder_misconfig1_test) {
-  HoughVertexFinder<SpacePoint4HVFT>::Config houghVtxCfg;
+  HoughVertexFinder::Config houghVtxCfg;
   houghVtxCfg.targetSPs = 1000;
   houghVtxCfg.minAbsEta = 0.3;
   houghVtxCfg.maxAbsEta = 3.0;
@@ -259,14 +264,13 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_misconfig1_test) {
   houghVtxCfg.defVtxPosition[1] = 0. * UnitConstants::mm;
   houghVtxCfg.defVtxPosition[2] = 0. * UnitConstants::mm;
 
-  BOOST_CHECK_THROW(HoughVertexFinder<SpacePoint4HVFT> houghVertexFinder(
-                        std::move(houghVtxCfg)),
+  BOOST_CHECK_THROW(HoughVertexFinder houghVertexFinder(std::move(houghVtxCfg)),
                     std::invalid_argument);
 }
 
 /// @brief Unit test for HoughVertexFinder. Misconfigured #2
 BOOST_AUTO_TEST_CASE(hough_vertex_finder_misconfig2_test) {
-  HoughVertexFinder<SpacePoint4HVFT>::Config houghVtxCfg;
+  HoughVertexFinder::Config houghVtxCfg;
   houghVtxCfg.targetSPs = 1000;
   houghVtxCfg.minAbsEta = 0.3;
   houghVtxCfg.maxAbsEta = 3.0;
@@ -284,14 +288,13 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_misconfig2_test) {
   houghVtxCfg.defVtxPosition[1] = 0. * UnitConstants::mm;
   houghVtxCfg.defVtxPosition[2] = 0. * UnitConstants::mm;
 
-  BOOST_CHECK_THROW(HoughVertexFinder<SpacePoint4HVFT> houghVertexFinder(
-                        std::move(houghVtxCfg)),
+  BOOST_CHECK_THROW(HoughVertexFinder houghVertexFinder(std::move(houghVtxCfg)),
                     std::invalid_argument);
 }
 
 /// @brief Unit test for HoughVertexFinder. Misconfigured #3
 BOOST_AUTO_TEST_CASE(hough_vertex_finder_misconfig3_test) {
-  HoughVertexFinder<SpacePoint4HVFT>::Config houghVtxCfg;
+  HoughVertexFinder::Config houghVtxCfg;
   houghVtxCfg.targetSPs = 1000;
   houghVtxCfg.minAbsEta = 0.3;
   houghVtxCfg.maxAbsEta = 3.0;
@@ -310,8 +313,7 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_misconfig3_test) {
   houghVtxCfg.defVtxPosition[1] = 0. * UnitConstants::mm;
   houghVtxCfg.defVtxPosition[2] = 0. * UnitConstants::mm;
 
-  BOOST_CHECK_THROW(HoughVertexFinder<SpacePoint4HVFT> houghVertexFinder(
-                        std::move(houghVtxCfg)),
+  BOOST_CHECK_THROW(HoughVertexFinder houghVertexFinder(std::move(houghVtxCfg)),
                     std::invalid_argument);
 }
 

@@ -381,11 +381,9 @@ class grid_reader {
         "--> binning: " << DETRAY_TYPENAME(types::list<binning_ts...>));
     DETRAY_DEBUG_HOST("--> frame:   " << DETRAY_TYPENAME(local_frame_t));
     DETRAY_DEBUG_HOST("--> bins:    " << DETRAY_TYPENAME(bin_t));
-#if DETRAY_LOG_LVL > 2
-    using single_axes_t =
+    using single_axis_t [[maybe_unused]] =
         types::list<axis::single_axis<bounds_ts, binning_ts>...>;
-#endif
-    DETRAY_DEBUG_HOST("--> axes=" << DETRAY_TYPENAME(single_axes_t));
+    DETRAY_DEBUG_HOST("--> axes=" << DETRAY_TYPENAME(single_axis_t));
 
     using grid_t = grid<algebra_t, axes_t, bin_t, serializer_t>;
 

@@ -128,7 +128,7 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
     // We can have empty tracks which must give empty fit results so the number
     // of entries in input and output containers matches.
     if (protoTrack.empty()) {
-      ACTS_WARNING("Empty proto track " << itrack << " found.");
+      ACTS_DEBUG("Empty proto track " << itrack << " found.");
       continue;
     }
 
@@ -166,9 +166,9 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
         ACTS_VERBOSE("No fitted parameters for track " << itrack);
       }
     } else {
-      ACTS_WARNING("Fit failed for track "
-                   << itrack << " with error: " << result.error() << ", "
-                   << result.error().message());
+      ACTS_DEBUG("Fit failed for track "
+                 << itrack << " with error: " << result.error() << ", "
+                 << result.error().message());
     }
   }
 

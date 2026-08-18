@@ -37,7 +37,7 @@ void addVertexing(py::module& mex) {
       outputVertices, seedFinder, bField, minWeight, doSmoothing, maxIterations,
       useTime, tracksMaxZinterval, initialVariances, doFullSplitting,
       tracksMaxSignificance, maxMergeVertexSignificance, spatialBinExtent,
-      temporalBinExtent, simultaneousSeeds);
+      temporalBinExtent, spatialWindow, temporalWindow, simultaneousSeeds);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(IterativeVertexFinderAlgorithm, mex,
                                 "IterativeVertexFinderAlgorithm",

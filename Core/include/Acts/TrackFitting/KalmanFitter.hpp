@@ -447,7 +447,7 @@ class KalmanFitter {
                         result_type& result) const {
       const bool precedingMeasurementExists = result.measurementStates > 0;
       const bool surfaceIsSensitive = surface.isSensitive();
-      const bool surfaceHasMaterial = surface.surfaceMaterial() != nullptr;
+      const bool surfaceHasMaterial = surface.hasMaterial();
 
       // Try to find the surface in the measurement surfaces
       const auto sourceLinkIt = inputMeasurements.find(&surface);
@@ -460,17 +460,27 @@ class KalmanFitter {
                                            freeToBoundCorrection);
 
         // Update state and stepper with pre material effects
-        detail::performMaterialInteraction(
-            state, stepper, surface,
-            detail::determineMaterialUpdateMode(state, navigator,
-                                                MaterialUpdateMode::PreUpdate),
-            NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
-            logger());
+        const Result<detail::PointwiseMaterialEffects>
+            materialInteractionPreRes = detail::performMaterialInteraction(
+                state, stepper, surface,
+                detail::determineMaterialUpdateMode(
+                    state, navigator, MaterialUpdateMode::PreUpdate),
+                NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
+                logger());
+        if (!materialInteractionPreRes.ok()) {
+          ACTS_DEBUG("Material interaction failed during filter: "
+                     << materialInteractionPreRes.error().message());
+          return materialInteractionPreRes.error();
+        }
 
-        // Create a track state with the desired components
-        TrackStatePropMask mask =
-            TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
-            TrackStatePropMask::Jacobian | TrackStatePropMask::Calibrated;
+        // Create a track state with the desired components. Note that the
+        // filtered parameters are deliberately not allocated here: they are
+        // only added once the Kalman update is about to write them, so that
+        // the calibrator and the outlier finder cannot observe allocated but
+        // uninitialized filtered parameters via `parameters()`.
+        TrackStatePropMask mask = TrackStatePropMask::Predicted |
+                                  TrackStatePropMask::Jacobian |
+                                  TrackStatePropMask::Calibrated;
         typename traj_t::TrackStateProxy trackStateProxy =
             result.fittedStates->makeTrackState(mask, result.lastTrackIndex);
 
@@ -505,7 +515,7 @@ class KalmanFitter {
         // Get and set the type flags
         auto typeFlags = trackStateProxy.typeFlags();
         typeFlags.setHasParameters();
-        if (surface.surfaceMaterial() != nullptr) {
+        if (surface.hasMaterial()) {
           typeFlags.setHasMaterial();
         }
 
@@ -516,6 +526,8 @@ class KalmanFitter {
         // - update the stepping state.
         // Else, just tag it as an outlier
         if (!extensions.outlierFinder(trackStateProxyConst)) {
+          // Allocate the filtered parameters right before they are written
+          trackStateProxy.addComponents(TrackStatePropMask::Filtered);
           // Run Kalman update
           auto updateRes =
               extensions.updater(state.geoContext, trackStateProxy, logger());
@@ -554,12 +566,18 @@ class KalmanFitter {
         }
 
         // Update state and stepper with post material effects
-        detail::performMaterialInteraction(
-            state, stepper, surface,
-            detail::determineMaterialUpdateMode(state, navigator,
-                                                MaterialUpdateMode::PostUpdate),
-            NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
-            logger());
+        const Result<detail::PointwiseMaterialEffects>
+            materialInteractionPostRes = detail::performMaterialInteraction(
+                state, stepper, surface,
+                detail::determineMaterialUpdateMode(
+                    state, navigator, MaterialUpdateMode::PostUpdate),
+                NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
+                logger());
+        if (!materialInteractionPostRes.ok()) {
+          ACTS_DEBUG("Material interaction failed during filter: "
+                     << materialInteractionPostRes.error().message());
+          return materialInteractionPostRes.error();
+        }
         // We count the processed state
         ++result.processedStates;
         // Update the number of holes count only when encountering a
@@ -635,12 +653,18 @@ class KalmanFitter {
         ++result.processedStates;
 
         // Update state and stepper with (possible) material effects
-        detail::performMaterialInteraction(
-            state, stepper, surface,
-            detail::determineMaterialUpdateMode(state, navigator,
-                                                MaterialUpdateMode::FullUpdate),
-            NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
-            logger());
+        const Result<detail::PointwiseMaterialEffects> materialInteractionRes =
+            detail::performMaterialInteraction(
+                state, stepper, surface,
+                detail::determineMaterialUpdateMode(
+                    state, navigator, MaterialUpdateMode::FullUpdate),
+                NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
+                logger());
+        if (!materialInteractionRes.ok()) {
+          ACTS_DEBUG("Material interaction failed during filter: "
+                     << materialInteractionRes.error().message());
+          return materialInteractionRes.error();
+        }
       }
 
       return Result<void>::success();
@@ -813,6 +837,8 @@ class KalmanFitter {
     }
 
     calculateTrackQuantities(track);
+
+    track.linkForward();
 
     return track;
   }

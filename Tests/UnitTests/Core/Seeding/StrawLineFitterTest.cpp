@@ -12,9 +12,7 @@
 #include <format>
 #include <future>
 #include <iostream>
-#include <random>
 #include <ranges>
-#include <span>
 #include <thread>
 
 #include <TFile.h>
@@ -425,4 +423,5 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
 }  // namespace ActsTests

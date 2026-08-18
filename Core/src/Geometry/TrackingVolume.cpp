@@ -497,6 +497,10 @@ void TrackingVolume::setVolumeName(std::string_view volumeName) {
   m_name = volumeName;
 }
 
+bool TrackingVolume::hasMaterial() const {
+  return m_volumeMaterial != nullptr;
+}
+
 const IVolumeMaterial* TrackingVolume::volumeMaterial() const {
   return m_volumeMaterial.get();
 }
@@ -564,6 +568,11 @@ TrackingVolume& TrackingVolume::addVolume(
   volume->setMotherVolume(this);
   m_volumes.push_back(std::move(volume));
   return *m_volumes.back();
+}
+
+std::span<const TrackingVolume::PlacementOwnPtr> TrackingVolume::placements()
+    const {
+  return m_placements;
 }
 
 TrackingVolume::PortalRange TrackingVolume::portals() const {

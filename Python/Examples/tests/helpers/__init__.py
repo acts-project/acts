@@ -105,6 +105,13 @@ with warnings.catch_warnings():
     except ModuleNotFoundError:
         podioEnabled = False
 
+    try:
+        import acts.examples.arrow
+
+        arrowEnabled = True
+    except ModuleNotFoundError:
+        arrowEnabled = False
+
 isCI = os.environ.get("CI") is not None
 
 

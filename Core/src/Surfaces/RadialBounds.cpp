@@ -9,6 +9,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
+#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <iomanip>
@@ -87,13 +88,12 @@ Vector2 RadialBounds::center() const {
 }
 
 std::ostream& RadialBounds::toStream(std::ostream& sl) const {
-  sl << std::setiosflags(std::ios::fixed);
-  sl << std::setprecision(7);
+  detail::OstreamStateGuard guard{sl};
+  sl << std::fixed << std::setprecision(7);
   sl << "Acts::RadialBounds:  (innerRadius, outerRadius, hPhiSector, "
         "averagePhi) = ";
   sl << "(" << get(eMinR) << ", " << get(eMaxR) << ", " << get(eHalfPhiSector)
      << ", " << get(eAveragePhi) << ")";
-  sl << std::setprecision(-1);
   return sl;
 }
 

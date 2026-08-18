@@ -8,6 +8,7 @@
 
 #include "ActsPlugins/Gnn/BoostTrackBuilding.hpp"
 #include "ActsPlugins/Gnn/CudaTrackBuilding.hpp"
+#include "ActsPlugins/Gnn/EdgeLayerConnector.hpp"
 #include "ActsPlugins/Gnn/GnnPipeline.hpp"
 #include "ActsPlugins/Gnn/ModuleMapCuda.hpp"
 #include "ActsPlugins/Gnn/OnnxEdgeClassifier.hpp"
@@ -96,6 +97,11 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGnn, gnn) {
   ACTS_PYTHON_DECLARE_GNN_STAGE(ModuleMapCuda, GraphConstructionBase, gnn,
                                 moduleMapPath, rScale, phiScale, zScale,
                                 etaScale, gpuDevice, gpuBlocks, epsilon);
+
+  ACTS_PYTHON_DECLARE_GNN_STAGE(EdgeLayerConnector, TrackBuildingBase, gnn,
+                                blockSize, maxHitsPerTrack, minHits,
+                                weightsCut);
+
 #endif
 
   {
@@ -129,12 +135,14 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGnn, gnn) {
                      [](std::shared_ptr<GraphConstructionBase> g,
                         std::vector<std::shared_ptr<EdgeClassificationBase>> e,
                         std::shared_ptr<TrackBuildingBase> t,
-                        Logging::Level lvl) {
+                        Logging::Level lvl, bool shrinkNodes) {
                        return std::make_shared<Class>(
-                           g, e, t, getDefaultLogger("MetricLearning", lvl));
+                           g, e, t, getDefaultLogger("MetricLearning", lvl),
+                           shrinkNodes);
                      }),
                  py::arg("graphConstructor"), py::arg("edgeClassifiers"),
-                 py::arg("trackBuilder"), py::arg("level"))
+                 py::arg("trackBuilder"), py::arg("level"),
+                 py::arg("shrinkNodes") = false)
             .def("run", &GnnPipeline::run, py::arg("features"),
                  py::arg("moduleIds"), py::arg("spacepoints"),
                  py::arg("device") = Device::Cuda(0),

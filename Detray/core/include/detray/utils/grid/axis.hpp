@@ -521,6 +521,8 @@ class multi_axis {
     constexpr auto loc_idx{
         types::index_cast<axis_reg, axis_t::bounds_type::label>};
     bin_ranges[loc_idx] = ax.range(p[loc_idx], nhood);
+
+    assert(bin_ranges[loc_idx][0] <= bin_ranges[loc_idx][1]);
   }
 
   /// Data that the axes keep: index ranges in the edges container

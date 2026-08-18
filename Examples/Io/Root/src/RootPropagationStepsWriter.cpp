@@ -174,8 +174,7 @@ ProcessCode RootPropagationStepsWriter::writeT(
       m_extraID.push_back(geoID.extra());
 
       int material = 0;
-      if (step.surface != nullptr &&
-          step.surface->surfaceMaterial() != nullptr) {
+      if (step.surface != nullptr && step.surface->hasMaterial()) {
         material = 1;
       }
       m_material.push_back(material);

@@ -10,16 +10,20 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Alignment.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfacePlacementBase.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/CloneablePtr.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/OstreamFormatter.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
@@ -66,13 +70,14 @@ class Surface : public virtual GeometryObject,
     Plane = 4,
     Straw = 5,
     Curvilinear = 6,
-    Other = 7
+    Point = 7,
+    Other = 8
   };
 
   /// Helper strings for screen output
   static constexpr std::array<std::string_view, Surface::SurfaceType::Other + 1>
-      s_surfaceTypeNames = {"Cone",  "Cylinder", "Disc",        "Perigee",
-                            "Plane", "Straw",    "Curvilinear", "Other"};
+      s_surfaceTypeNames = {"Cone",  "Cylinder",    "Disc",  "Perigee", "Plane",
+                            "Straw", "Curvilinear", "Point", "Other"};
 
   friend std::ostream& operator<<(std::ostream& os, SurfaceType type);
 
@@ -204,6 +209,10 @@ class Surface : public virtual GeometryObject,
   /// @return SurfaceBounds by reference
   virtual const SurfaceBounds& bounds() const = 0;
 
+  /// Local axes of the surface
+  /// @return An array of local axes directions
+  virtual std::array<AxisDirection, 2> localAxes() const = 0;
+
   /// Return the associated surface placement if there is any
   /// @return Pointer to the surface placement, can be nullptr
   const SurfacePlacementBase* surfacePlacement() const;
@@ -222,6 +231,10 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param lay the assignment Layer by reference
   void associateLayer(const Layer& lay);
+
+  /// Check if the surface has an associated material description
+  /// @return True if the surface has an associated material, false otherwise
+  bool hasMaterial() const;
 
   /// Return method for the associated Material to this surface
   /// @return SurfaceMaterial as plain pointer, can be nullptr
@@ -243,16 +256,37 @@ class Surface : public virtual GeometryObject,
   /// this is provided by a shared pointer
   ///
   /// @param material Material description associated to this surface
-  void assignSurfaceMaterial(std::shared_ptr<const ISurfaceMaterial> material);
+  virtual void assignSurfaceMaterial(
+      std::shared_ptr<const ISurfaceMaterial> material);
 
   /// Assign whether the surface is sensitive
   /// @param isSensitive Boolean flag to set sensitivity
   /// @throw logic_error if the surface is associated to a detector element
   void assignIsSensitive(bool isSensitive);
+
   /// Assign the thickness of the surface in the
   ///        orthogonal dimension
   /// @param thick: Thickness parameter to assign (>=0)
   void assignThickness(double thick);
+
+  /// Return method for full material description of the Surface
+  /// - from local coordinate on the surface
+  ///
+  /// @param lp is the local position used for the (eventual) lookup
+  ///
+  /// @return const MaterialSlab
+  virtual const MaterialSlab& materialSlab(const Vector2& lp) const;
+
+  /// Return method for fully scaled material description of the Surface
+  /// - from local coordinate on the surface
+  ///
+  /// @param lp is the local position used for the (eventual) lookup
+  /// @param pDir is the positive direction through the surface
+  /// @param mode is the material update directive
+  ///
+  /// @return MaterialSlab
+  virtual MaterialSlab materialSlab(const Vector2& lp, Direction pDir,
+                                    MaterialUpdateMode mode) const;
 
   /// The geometric onSurface method
   ///
@@ -451,6 +485,7 @@ class Surface : public virtual GeometryObject,
   /// Returns whether the Surface is sensitive
   /// @return True if the surface is sensitive
   bool isSensitive() const;
+
   /// Returns whether the Surface is alignable
   /// @return True if the surface is alignable
   bool isAlignable() const;
@@ -534,9 +569,21 @@ class Surface : public virtual GeometryObject,
   virtual std::ostream& toStreamImpl(const GeometryContext& gctx,
                                      std::ostream& sl) const;
 
+  /// Transform surface local coordinates to material local coordinates
+  /// @param surfaceLocal The local coordinates on the surface
+  /// @return The corresponding local coordinates for material lookup
+  virtual Vector2 transformSurfaceLocalToMaterialLocal(
+      const Vector2& surfaceLocal) const;
+
   /// Transform3 definition that positions
   /// (translation, rotation) the surface in global space
-  CloneablePtr<const Transform3> m_transform{};
+  CloneablePtr<const Transform3> m_transform;
+
+  /// Possibility to attach a material description
+  std::shared_ptr<const ISurfaceMaterial> m_surfaceMaterial;
+
+  /// Whether to swap the local coordinates for material lookup
+  bool m_swapMaterialAxes{false};
 
  private:
   /// Pointer to the a SurfacePlacement
@@ -546,14 +593,12 @@ class Surface : public virtual GeometryObject,
   /// nullptr if not associated
   const Layer* m_associatedLayer{nullptr};
 
-  /// Possibility to attach a material description
-  std::shared_ptr<const ISurfaceMaterial> m_surfaceMaterial;
-
   /// Flag to indicate whether the surface is sensitive
   bool m_isSensitive{false};
 
   /// Thickness of the surface in the normal direction
   double m_thickness{0.};
+
   /// Calculate the derivative of bound track parameters w.r.t.
   /// alignment parameters of its reference surface (i.e. origin in global 3D
   /// Cartesian coordinates and its rotation represented with extrinsic Euler
@@ -574,3 +619,5 @@ class Surface : public virtual GeometryObject,
 };
 
 }  // namespace Acts
+
+ACTS_OSTREAM_FORMATTER(Acts::Surface::SurfaceType);

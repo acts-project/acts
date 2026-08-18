@@ -14,6 +14,13 @@ if(POLICY CMP0135)
     cmake_policy(SET CMP0135 NEW)
 endif()
 
+if(TARGET nlohmann_json::nlohmann_json)
+    message(
+        FATAL_ERROR
+        "Setup of nlohmann JSON requested, but target `nlohmann_json::nlohmann_json` exists!"
+    )
+endif()
+
 # Tell the user what's happening.
 message(STATUS "Building nlohmann_json as part of the detray project")
 

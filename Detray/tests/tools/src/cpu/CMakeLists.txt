@@ -57,22 +57,12 @@ if(DETRAY_BUILD_TESTING)
 endif()
 
 if(DETRAY_BUILD_BENCHMARKS)
-    # Look for openMP, which is used for the CPU propagation benchmark
-    find_package(OpenMP)
-
     # Build the propagation benchmark executable.
     macro(detray_add_propagation_benchmark algebra type)
         detray_add_executable(propagation_${type}_cpu_${algebra}
                             "propagation_${type}.cpp"
                             LINK_LIBRARIES Boost::program_options benchmark::benchmark benchmark::benchmark_main vecmem::core detray::benchmark_cpu detray::core_${algebra} detray::tools detray::detectors
         )
-
-        if(OpenMP_CXX_FOUND)
-            target_link_libraries(
-                detray_propagation_${type}_cpu_${algebra}
-                PRIVATE OpenMP::OpenMP_CXX
-            )
-        endif()
     endmacro()
 
     # Build the array benchmark.

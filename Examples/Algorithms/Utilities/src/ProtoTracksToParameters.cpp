@@ -56,7 +56,7 @@ ProcessCode ProtoTracksToParameters::execute(
   // Note this is a heuristic, since it is not garantueed that each measurement
   // is part of a space point
   std::vector<SpacePointIndex> indexToSpacePoint(2 * sps.size(),
-                                                 kSpacePointIndex2Invalid);
+                                                 kSpacePointIndexInvalid);
   std::vector<GeometryIdentifier> indexToGeoId(2 * sps.size(),
                                                GeometryIdentifier{0});
 
@@ -64,7 +64,7 @@ ProcessCode ProtoTracksToParameters::execute(
     for (const auto &sl : sp.sourceLinks()) {
       const auto &isl = sl.template get<IndexSourceLink>();
       if (isl.index() >= indexToSpacePoint.size()) {
-        indexToSpacePoint.resize(isl.index() + 1, kSpacePointIndex2Invalid);
+        indexToSpacePoint.resize(isl.index() + 1, kSpacePointIndexInvalid);
         indexToGeoId.resize(isl.index() + 1, GeometryIdentifier{0});
       }
       indexToSpacePoint.at(isl.index()) = sp.index();
@@ -121,7 +121,7 @@ ProcessCode ProtoTracksToParameters::execute(
     auto result =
         track | std::views::filter([&](auto i) {
           return i < indexToSpacePoint.size() &&
-                 indexToSpacePoint.at(i) != kSpacePointIndex2Invalid;
+                 indexToSpacePoint.at(i) != kSpacePointIndexInvalid;
         }) |
         std::views::transform([&](auto i) { return indexToSpacePoint.at(i); });
     tmpSps.clear();

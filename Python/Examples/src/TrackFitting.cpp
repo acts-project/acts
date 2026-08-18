@@ -14,6 +14,7 @@
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
+#include "ActsPlugins/Json/BetheHeitlerApproxJsonConverter.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <cstddef>
@@ -100,19 +101,20 @@ void addTrackFitting(py::module& mex) {
 
     py::class_<BetheHeitlerApprox, std::shared_ptr<BetheHeitlerApprox>>(
         mex, "BetheHeitlerApprox");
-    py::class_<AtlasBetheHeitlerApprox, BetheHeitlerApprox,
-               std::shared_ptr<AtlasBetheHeitlerApprox>>(
-        mex, "AtlasBetheHeitlerApprox")
-        .def_static("loadFromFiles", &AtlasBetheHeitlerApprox::loadFromFiles,
-                    "lowParametersPath"_a, "highParametersPath"_a, "lowLimit"_a,
-                    "highLimit"_a, "clampToRange"_a, "noChangeLimit"_a,
-                    "singleGaussianLimit"_a)
-        .def_static(
-            "makeDefault",
-            [](bool clampToRange) {
-              return makeDefaultBetheHeitlerApprox(clampToRange);
-            },
-            "clampToRange"_a);
+    py::class_<PolynomialBetheHeitlerApprox, BetheHeitlerApprox,
+               std::shared_ptr<PolynomialBetheHeitlerApprox>>(
+        mex, "PolynomialBetheHeitlerApprox");
+
+    mex.def(
+        "loadBetheHeitlerApproxFromJson",
+        [](const std::string& filepath, bool clampToRange, double noChangeLimit,
+           double singleGaussianLimit) {
+          return std::make_shared<PolynomialBetheHeitlerApprox>(
+              Acts::loadBetheHeitlerApproxFromJson(
+                  filepath, clampToRange, noChangeLimit, singleGaussianLimit));
+        },
+        "filepath"_a, "clamp_to_range"_a, "no_change_limit"_a,
+        "single_gaussian_limit"_a);
 
     mex.def(
         "makeGsfFitterFunction",

@@ -38,7 +38,7 @@ ProcessCode CsvParticleWriter::writeT(const AlgorithmContext& ctx,
 
   ParticleData data;
   for (const auto& particle : particles) {
-    const auto particleID = particle.particleId().asVector();
+    const auto particleID = particle.particleId().asArray();
     data.particle_id_pv = particleID[0];
     data.particle_id_sv = particleID[1];
     data.particle_id_part = particleID[2];

@@ -14,6 +14,10 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <vector>
+
 namespace Acts {
 
 SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
@@ -56,6 +60,28 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
   if (config.layerType == LayerType::Disc) {
     auto [binsR, binsPhi] = config.bins;
 
+    // Auto-determine bin counts from the module layout, scaled by the
+    // configured bin count factor.
+    if (binsR == 0 || binsPhi == 0) {
+      std::vector<const Surface*> rawSurfaces;
+      rawSurfaces.reserve(surfaces.size());
+      for (const auto& s : surfaces) {
+        rawSurfaces.push_back(s.get());
+      }
+      if (binsR == 0) {
+        binsR = std::max<std::size_t>(
+            1, std::llround(static_cast<double>(sac.determineBinCount(
+                                gctx, rawSurfaces, AxisDirection::AxisR)) *
+                            config.numberOfBinsFactor));
+      }
+      if (binsPhi == 0) {
+        binsPhi = std::max<std::size_t>(
+            1, std::llround(static_cast<double>(sac.determineBinCount(
+                                gctx, rawSurfaces, AxisDirection::AxisPhi)) *
+                            config.numberOfBinsFactor));
+      }
+    }
+
     double layerZ = protoLayer.medium(AxisDirection::AxisZ);
 
     ACTS_VERBOSE("Creating a disk Layer:");
@@ -76,10 +102,32 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
 
     Transform3 layerTransform{Translation3(0, 0, layerZ)};
 
-    m_surfaceArray = sac.surfaceArrayOnDisc(
-        gctx, std::move(surfaces), binsR, binsPhi, protoLayer, layerTransform);
+    m_surfaceArray = std::make_unique<SurfaceArray>(sac.surfaceArrayOnDisc(
+        gctx, std::move(surfaces), binsR, binsPhi, protoLayer, layerTransform));
   } else if (config.layerType == LayerType::Cylinder) {
     auto [binsPhi, binsZ] = config.bins;
+
+    // Auto-determine bin counts from the module layout, scaled by the
+    // configured bin count factor.
+    if (binsPhi == 0 || binsZ == 0) {
+      std::vector<const Surface*> rawSurfaces;
+      rawSurfaces.reserve(surfaces.size());
+      for (const auto& s : surfaces) {
+        rawSurfaces.push_back(s.get());
+      }
+      if (binsPhi == 0) {
+        binsPhi = std::max<std::size_t>(
+            1, std::llround(static_cast<double>(sac.determineBinCount(
+                                gctx, rawSurfaces, AxisDirection::AxisPhi)) *
+                            config.numberOfBinsFactor));
+      }
+      if (binsZ == 0) {
+        binsZ = std::max<std::size_t>(
+            1, std::llround(static_cast<double>(sac.determineBinCount(
+                                gctx, rawSurfaces, AxisDirection::AxisZ)) *
+                            config.numberOfBinsFactor));
+      }
+    }
 
     double layerR = protoLayer.medium(AxisDirection::AxisR);
     double layerZ = protoLayer.medium(AxisDirection::AxisZ);
@@ -106,8 +154,8 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
     Transform3 layerTransform{Translation3(0, 0, layerZ)};
     ACTS_VERBOSE(" - layer z shift    = " << -layerZ);
 
-    m_surfaceArray = sac.surfaceArrayOnCylinder(
-        gctx, std::move(surfaces), binsPhi, binsZ, protoLayer, layerTransform);
+    m_surfaceArray = std::make_unique<SurfaceArray>(sac.surfaceArrayOnCylinder(
+        gctx, std::move(surfaces), binsPhi, binsZ, protoLayer, layerTransform));
   } else if (config.layerType == LayerType::Plane) {
     ACTS_ERROR("Plane layers are not yet supported");
     throw std::invalid_argument("Plane layers are not yet supported");

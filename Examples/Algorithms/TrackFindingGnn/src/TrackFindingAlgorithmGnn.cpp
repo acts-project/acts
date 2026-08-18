@@ -56,7 +56,8 @@ TrackFindingAlgorithmGnn::TrackFindingAlgorithmGnn(
     : IAlgorithm("TrackFindingMLBasedAlgorithm", std::move(logger)),
       m_cfg(std::move(config)),
       m_pipeline(m_cfg.graphConstructor, m_cfg.edgeClassifiers,
-                 m_cfg.trackBuilder, this->logger().clone()) {
+                 m_cfg.trackBuilder, this->logger().clone(),
+                 m_cfg.shrinkNodes) {
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing space point input collection");
   }
@@ -223,7 +224,11 @@ ProcessCode TrackFindingAlgorithmGnn::execute(
     onetrack.reserve(candidate.size());
 
     for (auto i : candidate) {
-      for (const auto& sl : sortedSpacePoints.at(i).sourceLinks()) {
+      // Named, so the proxy outlives the loop: as a temporary it would be
+      // destroyed at the end of the full expression, leaving the range-for
+      // iterating a span whose owner is gone.
+      const auto sp = sortedSpacePoints.at(i);
+      for (const auto& sl : sp.sourceLinks()) {
         onetrack.push_back(sl.template get<IndexSourceLink>().index());
       }
     }

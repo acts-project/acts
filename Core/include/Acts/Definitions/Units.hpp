@@ -78,10 +78,6 @@ namespace Acts {
 /// Converting output values from native units:
 ///
 /// @snippet{trimleft} examples/units.cpp Converting Output Values
-///
-/// @note A helper script is available in
-///   `Core/scripts/print_units_physical_constants.py` to validate some of the
-///   numerical values.
 
 namespace UnitConstants {
 // Length, native unit mm
@@ -143,7 +139,6 @@ constexpr double mrad = 1e-3;
 constexpr double rad = 1.0;
 /// Degree - pi/180 radians
 constexpr double degree = std::numbers::pi / 180. / rad;
-// Energy/mass/momentum, native unit GeV
 /// Gigaelectronvolt - native unit for energy/mass/momentum
 constexpr double GeV = 1.0;
 /// Electronvolt - 1e-9 GeV
@@ -237,7 +232,6 @@ ACTS_DEFINE_UNIT_LITERAL(mol)
 ///
 /// Unit constants are intentionally not listed.
 namespace PhysicalConstants {
-// Speed of light
 /// Speed of light in vacuum - native unit (dimensionless)
 constexpr double c = 1.0;
 /// Reduced Planck constant h/2*pi.

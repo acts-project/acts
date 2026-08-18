@@ -34,11 +34,12 @@ GnnPipeline::GnnPipeline(
     std::shared_ptr<GraphConstructionBase> graphConstructor,
     std::vector<std::shared_ptr<EdgeClassificationBase>> edgeClassifiers,
     std::shared_ptr<TrackBuildingBase> trackBuilder,
-    std::unique_ptr<const Logger> logger)
+    std::unique_ptr<const Logger> logger, bool shrinkNodes)
     : m_logger(std::move(logger)),
       m_graphConstructor(std::move(graphConstructor)),
       m_edgeClassifiers(std::move(edgeClassifiers)),
-      m_trackBuilder(std::move(trackBuilder)) {
+      m_trackBuilder(std::move(trackBuilder)),
+      m_shrinkNodes(shrinkNodes) {
   if (!m_graphConstructor) {
     throw std::invalid_argument("Missing graph construction module");
   }
@@ -84,6 +85,13 @@ std::vector<std::vector<int>> GnnPipeline::run(
     }
 
     for (const auto &edgeClassifier : m_edgeClassifiers) {
+      if (m_shrinkNodes) {
+        const auto nodesBefore = tensors.nodeFeatures.shape()[0];
+        tensors = removeUnusedNodes(std::move(tensors), spacePointIds, ctx);
+        ACTS_DEBUG("Removed unused nodes: " << nodesBefore << " -> "
+                                            << tensors.nodeFeatures.shape()[0]);
+      }
+
       t0 = std::chrono::high_resolution_clock::now();
       ACTS_NVTX_START(edge_classifier);
       tensors = (*edgeClassifier)(std::move(tensors), ctx);

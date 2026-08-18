@@ -82,7 +82,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGnn, gnn) {
       inputSpacePoints, inputClusters, inputTruthGraph, outputProtoTracks,
       outputGraph, graphConstructor, edgeClassifiers, trackBuilder,
       nodeFeatures, featureScales, minMeasurementsPerTrack, geometryIdMap,
-      device);
+      device, shrinkNodes);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       TrackFindingFromProtoTracksAlgorithm, gnn,

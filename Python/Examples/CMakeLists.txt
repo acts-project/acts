@@ -9,6 +9,7 @@ set(py_files
     reconstruction.py
     itk.py
     odd.py
+    dataset.py
     uproot.py
 )
 
@@ -140,7 +141,11 @@ install(
     DESTINATION ${_examples_python_install_dir}
 )
 
-acts_pybind_generate_stubs(acts.examples ActsExamplesPythonBindings ActsPythonBindings)
+acts_pybind_generate_stubs(
+    acts.examples
+    ActsExamplesPythonBindings
+    ActsPythonBindings
+)
 
 set_target_properties(
     ActsExamplesPythonBindings
@@ -190,6 +195,12 @@ add_examples_binding_if(
     LINK_LIBRARIES Acts::ExamplesAlignmentMillePede
     FLAG ACTS_BUILD_PLUGIN_MILLE
     PLUGIN_IMPORT FALSE
+)
+add_examples_binding_if(
+    NAME Arrow
+    LINK_LIBRARIES Acts::ExamplesIoParquet Acts::ExamplesIoArrow
+    FLAG ACTS_BUILD_EXAMPLES_PARQUET
+    PLUGIN_IMPORT TRUE
 )
 add_examples_binding_if(
     NAME DD4hep
@@ -270,7 +281,7 @@ add_examples_binding_if(
 add_examples_binding_if(
     NAME Detray
     LINK_LIBRARIES Acts::PluginCovfie Acts::ExamplesDetray
-    FLAG ACTS_BUILD_PLUGIN_DETRAY
+    FLAG ACTS_BUILD_PLUGIN_TRACCC
     PLUGIN_IMPORT FALSE
 )
 add_examples_binding_if(

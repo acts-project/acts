@@ -72,6 +72,7 @@ struct open {
     max_bin = (max_bin < 0) ? 0 : max_bin;
 
     // The upper range index is exclusive, so go one bin beyond the range
+    assert(min_bin <= max_bin);
     return {min_bin, max_bin + 1};
   }
 
@@ -122,6 +123,7 @@ struct closed {
       return 0;
     } else if (ibin >= bins) {
       // overflow gets mapped onto axis bin #bins - 1
+      assert(bins >= 1);
       return bins - 1;
     } else {
       return ibin;
@@ -145,6 +147,7 @@ struct closed {
     max_bin = (max_bin < 0) ? 0 : max_bin;
 
     // The upper range index is exclusive, so go one bin beyond the range
+    assert(min_bin <= max_bin);
     return {min_bin, max_bin + 1};
   }
 

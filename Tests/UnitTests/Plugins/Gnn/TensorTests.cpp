@@ -142,6 +142,27 @@ void testSelectCols(ExecutionContext execContext) {
                                 expected.begin(), expected.end());
 }
 
+template <typename T>
+void testMulPerColumn(ExecutionContext execContext) {
+  // 3 rows, 4 columns: [[0,1,2,3],[4,5,6,7],[8,9,10,11]]
+  // Multiply each column with some scale {1,2,3,4}
+  std::vector<T> data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+  std::vector<T> scales = {1, 2, 3, 4};
+  auto tensor = createCpuTensor(data, {3, 4});
+  auto tensorTarget = tensor.clone(execContext);
+
+  auto result = mulPerColumn(tensorTarget, scales, execContext);
+  auto resultHost = result.clone({Device::Cpu(), execContext.stream});
+
+  BOOST_CHECK_EQUAL(resultHost.shape()[0], 3u);
+  BOOST_CHECK_EQUAL(resultHost.shape()[1], 4u);
+
+  std::vector<T> expected = {0, 2, 6, 12, 4, 10, 18, 28, 8, 18, 30, 44};
+  BOOST_CHECK_EQUAL_COLLECTIONS(resultHost.data(),
+                                resultHost.data() + resultHost.size(),
+                                expected.begin(), expected.end());
+}
+
 void testEdgeSelectionWithFeatures(
     const std::vector<float>& scores,
     const std::vector<std::int64_t>& edgeIndex,
@@ -290,6 +311,10 @@ BOOST_AUTO_TEST_CASE(tensor_select_cols_cpu) {
   testSelectCols<float>(execContextCpu);
 }
 
+BOOST_AUTO_TEST_CASE(tensor_mul_per_column_cpu) {
+  testMulPerColumn<float>(execContextCpu);
+}
+
 BOOST_AUTO_TEST_CASE(tensor_edge_selection_with_features_cpu) {
   testEdgeSelectionWithFeatures(scores, edgeIndex, edgeFeaturesData,
                                 edgeIndexExpected, edgeFeaturesExpected,
@@ -346,6 +371,10 @@ BOOST_AUTO_TEST_CASE(tensor_select_rows_cuda) {
 
 BOOST_AUTO_TEST_CASE(tensor_select_cols_cuda) {
   testSelectCols<float>(execContextCuda);
+}
+
+BOOST_AUTO_TEST_CASE(tensor_mul_per_column_cuda) {
+  testMulPerColumn<float>(execContextCuda);
 }
 
 BOOST_AUTO_TEST_CASE(tensor_edge_selection_with_features_cuda) {

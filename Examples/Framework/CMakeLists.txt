@@ -19,13 +19,15 @@ acts_add_library(
     src/Utilities/Paths.cpp
     src/Utilities/Options.cpp
     src/Utilities/ParametricParticleGenerator.cpp
+    src/Utilities/StripModulePairing.cpp
     src/Utilities/VertexTruthUtility.cpp
     src/Validation/DuplicationPlotTool.cpp
     src/Validation/EffPlotTool.cpp
     src/Validation/FakePlotTool.cpp
     src/Validation/ResPlotTool.cpp
     src/Validation/TrackClassification.cpp
-    src/Validation/TrackFinderPerformanceCollector.cpp
+    src/Validation/PatternRecognitionPerformanceCollector.cpp
+    src/Validation/TrackParameterPerformanceCollector.cpp
     src/Validation/TrackQualityPlotTool.cpp
     src/Validation/TrackSummaryPlotTool.cpp
     ACTS_INCLUDE_FOLDER include/ActsExamples

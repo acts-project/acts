@@ -15,6 +15,13 @@ if(POLICY CMP0135)
     cmake_policy(SET CMP0135 NEW)
 endif()
 
+if(TARGET actsvg::core)
+    message(
+        FATAL_ERROR
+        "Setup of actsvg requested, but target `actsvg::core` exists!"
+    )
+endif()
+
 # Tell the user what's happening.
 message(STATUS "Building actsvg as part of the Detray project")
 

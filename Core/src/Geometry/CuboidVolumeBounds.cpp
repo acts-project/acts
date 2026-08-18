@@ -14,9 +14,11 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 
 #include <algorithm>
 #include <array>
+#include <iomanip>
 #include <stdexcept>
 #include <utility>
 
@@ -93,8 +95,8 @@ std::vector<Acts::OrientedSurface> Acts::CuboidVolumeBounds::orientedSurfaces(
 }
 
 std::ostream& CuboidVolumeBounds::toStream(std::ostream& os) const {
-  os << std::setiosflags(std::ios::fixed);
-  os << std::setprecision(5);
+  detail::OstreamStateGuard guard{os};
+  os << std::fixed << std::setprecision(5);
   os << "Acts::CuboidVolumeBounds: (halfLengthX, halfLengthY, halfLengthZ) = ";
   os << "(" << get(eHalfLengthX) << ", " << get(eHalfLengthY) << ", "
      << get(eHalfLengthZ) << ")";

@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
@@ -111,8 +112,8 @@ Vector2 DiscTrapezoidBounds::center() const {
 }
 
 std::ostream& DiscTrapezoidBounds::toStream(std::ostream& sl) const {
-  sl << std::setiosflags(std::ios::fixed);
-  sl << std::setprecision(7);
+  detail::OstreamStateGuard guard{sl};
+  sl << std::fixed << std::setprecision(7);
   sl << "Acts::DiscTrapezoidBounds: (innerRadius, outerRadius, "
         "halfLengthXminR, "
         "halfLengthXmaxR, halfLengthY, halfPhiSector, averagePhi, rCenter, "
@@ -121,7 +122,6 @@ std::ostream& DiscTrapezoidBounds::toStream(std::ostream& sl) const {
      << ", " << get(eHalfLengthXmaxR) << ", " << halfLengthY() << ", "
      << halfPhiSector() << ", " << get(eAveragePhi) << ", " << rCenter() << ", "
      << stereo() << ")";
-  sl << std::setprecision(-1);
   return sl;
 }
 

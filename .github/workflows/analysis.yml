@@ -11,28 +11,62 @@ on:
       - 'develop/**'
     paths-ignore:
       - "docs/**"
+  # merge_group does not support branch/path filters, so this runs
+  # unconditionally on every queue entry. Only build_debug is required, via
+  # merge-sentinel's "Analysis / build_debug" check; clang_tidy is skipped
+  # below since it isn't required and its incremental diff relies on
+  # github.base_ref, which merge_group runs don't have.
+  merge_group:
+    types: [checks_requested]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  # Never cancel a merge_group run: it's a required check for a queue entry,
+  # and a cancellation reads as a failure to the queue, ejecting the PR.
+  # (push here is already branches: [main], so it can't collide with the
+  # merge queue's gh-readonly-queue/** temp ref the way the other workflows'
+  # unrestricted push triggers could.)
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
+# ccache is saved from `main` only: a PR-written cache is readable by that PR
+# alone, but still evicts `main`'s entries from the shared 10 GB.
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
-  CCACHE_MAXSIZE: 1.25G
+  # Sized for the github-ci-coverage build, which carries no debug info and
+  # skips Examples plus the vendored Detray/Traccc trees. Watch `ccache -s`:
+  # if the cache runs at ~100% of this it is evicting mid-build and the hit
+  # rate collapses, which is what a too-small ceiling looks like.
+  CCACHE_MAXSIZE: 1G
   CCACHE_KEY_SUFFIX: r2
   ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
 # NOTE this only builds core unittests to reduce the output size. if we
 #      found a way to have Github actions not fail regularly with this job
 #      all unit tests should be reactivated.
+#
+# NOTE the unit tests are what generate coverage for the large header-only
+#      template surface in Core/include, since that code is only instantiated
+#      in test TUs. Tests/ is filtered out of the report itself but must stay
+#      instrumented, or that coverage disappears. See the github-ci-coverage
+#      preset description for what is deliberately left out and why.
+permissions:
+  contents: read
+  # Authenticated GHCR reads: the spack buildcache is pulled from ghcr.io.
+  # Without this scope GITHUB_TOKEN has no packages access, so reads fall back
+  # to the anonymous (heavily rate limited) bucket.
+  packages: read
+
 jobs:
   build_debug:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:85
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
+    # Pull-through cache, as for the husk jobs in builds.yml.
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
     steps:
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
@@ -43,26 +77,32 @@ jobs:
 
       - name: Save PR metadata
         if: github.event_name == 'pull_request'
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+          PR_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          MERGE_SHA: ${{ github.sha }}
         run: |
           # Shallow clone: parent commits aren't available via git,
           # but GitHub provides the SHAs through the event context.
           printf '{"pr_number":"%s","pr_sha":"%s","base_sha":"%s","merge_sha":"%s"}\n' \
-            "${{ github.event.number }}" \
-            "${{ github.event.pull_request.head.sha }}" \
-            "${{ github.event.pull_request.base.sha }}" \
-            "${{ github.sha }}" \
+            "$PR_NUMBER" \
+            "$PR_SHA" \
+            "$BASE_SHA" \
+            "$MERGE_SHA" \
             > PR_metadata.json
           cat PR_metadata.json
 
       - name: Persist PR metadata
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: PR_metadata
           path: PR_metadata.json
 
-      - name: Cache build
-        uses: actions/cache@v5
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
@@ -78,10 +118,19 @@ jobs:
         run: cmake --build build
       - name: ccache stats
         run: ccache -s
+
+      # Before the tests: a failure there shouldn't cost us the objects.
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always() && github.ref == 'refs/heads/main'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
       - name: Unit tests
         run: >
           CI/dependencies/run.sh .env
-          ctest --test-dir build -j$(nproc)
+          ctest --test-dir build -j$(nproc) --label-exclude "slow"
 
       - name: Remove .o files
         run: >
@@ -90,9 +139,9 @@ jobs:
           && du -sh build
       - name: Coverage
         run: |
-          uv run --no-project CI/test_coverage.py build --filter
+          uv run --no-project --no-build CI/test_coverage.py build --filter
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: coverage-build
@@ -100,7 +149,7 @@ jobs:
             build/compile_commands.json
             build/coverage/cov.xml
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         id: artifact-upload-step
         with:
@@ -108,29 +157,38 @@ jobs:
           path: build/coverage/html
 
       - name: Coverage display
+        env:
+          REPOSITORY: ${{ github.repository }}
+          ARTIFACT_ID: ${{ steps.artifact-upload-step.outputs.artifact-id }}
         run: |
-          base_link='https://acts-herald.app.cern.ch/view/${{ github.repository }}/${{ steps.artifact-upload-step.outputs.artifact-id }}'
+          base_link="https://acts-herald.app.cern.ch/view/${REPOSITORY}/${ARTIFACT_ID}"
           link="$base_link/index.html"
           echo "🛡️ Code coverage available at: $link"
           echo "**🛡️ Code coverage available [here]($link)**" >> $GITHUB_STEP_SUMMARY
 
   clang_tidy:
+    # Not required for merging; skip on merge_group since its incremental
+    # diff below depends on github.base_ref, which only pull_request runs set.
+    if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404_clang22:85
+    container: ghcr.io/acts-project/ubuntu2404_clang22:87
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Mark workspace as safe
         run: git config --global --add safe.directory /__w/acts/acts
 
       - name: Fetch base branch
         if: github.event_name == 'pull_request'
-        run: git fetch origin "${{ github.base_ref }}"
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: git fetch origin "$BASE_REF"
 
-      - uses: astral-sh/setup-uv@v7
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Install clang-tidy
         run: |
@@ -151,31 +209,33 @@ jobs:
           ccache -z &&
           CI/dependencies/run.sh .env
           cmake -B build -S .
-          --preset=gitlab-ci-clangtidy
+          --preset=github-ci-clangtidy
 
       - name: Run codegen
         run: cmake --build build --target ActsCodegen
 
       - name: Analyze (PR - changed files only)
         if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: >
-          uv run CI/clang_tidy/run_clang_tidy_pr.py
-          analyze build fixes.yml --base-ref "origin/${{ github.base_ref }}"
+          uv run --no-build CI/clang_tidy/run_clang_tidy_pr.py
+          analyze build fixes.yml --base-ref "origin/$BASE_REF"
 
       - name: Analyze (push - all files)
         if: github.event_name == 'push'
         run: >
-          uv run CI/clang_tidy/run_clang_tidy_pr.py
+          uv run --no-build CI/clang_tidy/run_clang_tidy_pr.py
           analyze build fixes.yml --all
 
       - name: Upload fixes
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: clang-tidy-fixes
           path: fixes.yml
 
       - name: Annotate
         run: >
-          uv run CI/clang_tidy/run_clang_tidy_pr.py
+          uv run --no-build CI/clang_tidy/run_clang_tidy_pr.py
           annotate fixes.yml

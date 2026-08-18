@@ -312,8 +312,7 @@ void updateStepper(propagator_state_t &state, const stepper_t &stepper,
 template <typename propagator_state_t, typename stepper_t>
 void updateStepper(propagator_state_t &state, const stepper_t &stepper,
                    const Surface &surface,
-                   const std::vector<GsfComponent> &componentCache,
-                   const Logger &logger) {
+                   const std::vector<GsfComponent> &componentCache) {
   // Clear components before adding new ones
   stepper.clearComponents(state.stepping);
 
@@ -323,14 +322,8 @@ void updateStepper(propagator_state_t &state, const stepper_t &stepper,
     BoundTrackParameters bound(surface.getSharedPtr(), pars, cov,
                                stepper.particleHypothesis(state.stepping));
 
-    auto res = stepper.addComponent(state.stepping, std::move(bound), weight);
+    auto cmp = stepper.addComponent(state.stepping, std::move(bound), weight);
 
-    if (!res.ok()) {
-      ACTS_ERROR("Error adding component to MultiStepper");
-      continue;
-    }
-
-    auto &cmp = *res;
     auto freeParams = cmp.pars();
     cmp.jacToGlobal() = surface.boundToFreeJacobian(
         state.geoContext, freeParams.template segment<3>(eFreePos0),
@@ -351,56 +344,32 @@ double applyBetheHeitler(
     std::size_t &nInvalidBetheHeitler, double &maxPathXOverX0,
     const Logger &logger);
 
-template <typename traj_t, typename propagator_state_t, typename stepper_t>
-void convoluteComponents(
-    propagator_state_t &state, const stepper_t &stepper,
-    const TemporaryStates<traj_t> &tmpStates,
-    const BetheHeitlerApprox &betheHeitlerApprox,
-    std::vector<BetheHeitlerApprox::Component> &betheHeitlerCache,
-    double weightCutoff, std::vector<GsfComponent> &componentCache,
-    std::size_t &nInvalidBetheHeitler, double &maxPathXOverX0,
-    double &sumPathXOverX0, const Logger &logger) {
-  const GeometryContext &geoContext = state.options.geoContext;
-  const Direction direction = state.options.direction;
-
-  double pathXOverX0 = 0.0;
-  auto cmps = stepper.componentIterable(state.stepping);
-  for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
-    auto proxy = tmpStates.traj.getTrackState(idx);
-    const Surface &surface = proxy.referenceSurface();
-
-    BoundTrackParameters bound(surface.getSharedPtr(), proxy.filtered(),
-                               proxy.filteredCovariance(),
-                               stepper.particleHypothesis(state.stepping));
-
-    pathXOverX0 += applyBetheHeitler(
-        geoContext, surface, direction, bound, tmpStates.weights.at(idx),
-        betheHeitlerApprox, betheHeitlerCache, weightCutoff, componentCache,
-        nInvalidBetheHeitler, maxPathXOverX0, logger);
-  }
-
-  // Store average material seen by the components
-  // Should not be too broadly distributed
-  sumPathXOverX0 += pathXOverX0 / tmpStates.tips.size();
-}
-
 /// Apply the multiple scattering to the state
 template <typename propagator_state_t, typename stepper_t>
-void applyMultipleScattering(propagator_state_t &state,
-                             const stepper_t &stepper, const Surface &surface,
-                             const MaterialUpdateMode &updateMode,
-                             const Logger &logger) {
+Result<void> applyMultipleScattering(propagator_state_t &state,
+                                     const stepper_t &stepper,
+                                     const Surface &surface,
+                                     const MaterialUpdateMode &updateMode,
+                                     const Logger &logger) {
   for (auto cmp : stepper.componentIterable(state.stepping)) {
     auto singleState = cmp.singleState(state);
     const auto &singleStepper = cmp.singleStepper(stepper);
 
-    detail::performMaterialInteraction(singleState, singleStepper, surface,
-                                       updateMode, NoiseUpdateMode::addNoise,
-                                       true, false, logger);
+    const Result<detail::PointwiseMaterialEffects> materialInteractionRes =
+        detail::performMaterialInteraction(
+            singleState, singleStepper, surface, updateMode,
+            NoiseUpdateMode::addNoise, true, false, logger);
+    if (!materialInteractionRes.ok()) {
+      ACTS_DEBUG("Error performing material interaction: "
+                 << materialInteractionRes.error());
+      return materialInteractionRes.error();
+    }
 
     assert(singleState.stepping.cov.array().isFinite().all() &&
            "covariance not finite after multi scattering");
   }
+
+  return Result<void>::success();
 }
 
 }  // namespace Acts::detail::Gsf

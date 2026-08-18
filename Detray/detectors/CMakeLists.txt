@@ -56,7 +56,11 @@ if(NOT "${DETRAY_GENERATE_METADATA}" STREQUAL "")
                 "${CMAKE_BINARY_DIR}/python/setup.sh"
         )
 
-        add_custom_target(${GENERATOR}_generation DEPENDS ${GENERATED_HEADER})
+        add_custom_target(
+            ${GENERATOR}_generation
+            ALL
+            DEPENDS ${GENERATED_HEADER}
+        )
 
         # Set up how clients should find its headers.
         target_include_directories(

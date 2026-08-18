@@ -30,12 +30,6 @@ BOOST_AUTO_TEST_CASE(ChargeHypothesisNeutral) {
   BOOST_CHECK_EQUAL(q.extractCharge(2.54), 0_e);
   BOOST_CHECK_EQUAL(q.extractCharge(-1.98), 0_e);
   BOOST_CHECK_EQUAL(q.extractCharge(-2.23), 0_e);
-  CHECK_CLOSE_REL(q.extractMomentum(1 / 64_GeV), 64_GeV, eps);
-  CHECK_CLOSE_REL(q.extractMomentum(1 / 128_MeV), 128_MeV, eps);
-
-  // negative inputs should not occur for neutral particles
-  // the result is not defined, but we check it anyway
-  CHECK_CLOSE_REL(q.extractMomentum(-1 / 128_MeV), -128_MeV, eps);
 
   BOOST_CHECK(q == ChargeHypothesis(0_e));
   BOOST_CHECK(ChargeHypothesis(0_e) == q);
@@ -92,12 +86,6 @@ BOOST_AUTO_TEST_CASE(AnyChargeNeutral) {
   BOOST_CHECK_EQUAL(p.extractCharge(2.54), 0_e);
   BOOST_CHECK_EQUAL(p.extractCharge(-1.98), 0_e);
   BOOST_CHECK_EQUAL(p.extractCharge(-2.23), 0_e);
-  CHECK_CLOSE_REL(p.extractMomentum(1 / 64_GeV), 64_GeV, eps);
-  CHECK_CLOSE_REL(p.extractMomentum(1 / 128_MeV), 128_MeV, eps);
-
-  // negative inputs should not occur for neutral particles
-  // the result is not defined, but we check it anyway
-  CHECK_CLOSE_REL(p.extractMomentum(-1 / 128_MeV), -128_MeV, eps);
 }
 
 BOOST_AUTO_TEST_CASE(AnyChargeSingle) {

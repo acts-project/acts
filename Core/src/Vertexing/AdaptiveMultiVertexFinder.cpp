@@ -580,37 +580,56 @@ Result<void> AdaptiveMultiVertexFinder::deleteLastVertex(
     Vertex& vtx, std::vector<std::unique_ptr<Vertex>>& allVertices,
     std::vector<Vertex*>& allVerticesPtr, VertexFitterState& fitterState,
     const VertexingOptions& vertexingOptions) const {
-  allVertices.pop_back();
-  allVerticesPtr.pop_back();
+  Vertex* vtxPtr = &vtx;
+
+  auto allVerticesPtrIt = std::ranges::find(allVerticesPtr, vtxPtr);
+  if (allVerticesPtrIt == allVerticesPtr.end()) {
+    ACTS_ERROR("vtx is not part of allVerticesPtr.");
+    return VertexingError::ElementNotFound;
+  }
+
+  auto allVerticesIt = std::ranges::find_if(
+      allVertices, [vtxPtr](const std::unique_ptr<Vertex>& vertex) {
+        return vertex.get() == vtxPtr;
+      });
+  if (allVerticesIt == allVertices.end()) {
+    ACTS_ERROR("vtx is not part of allVertices.");
+    return VertexingError::ElementNotFound;
+  }
 
   // Update fitter state with removed vertex candidate
   fitterState.removeVertexFromMultiMap(vtx);
   // fitterState.vertexCollection contains all vertices that will be fit. When
   // we called addVtxToFit, vtx and all vertices that share tracks with vtx were
   // added to vertexCollection. Now, we want to refit the same set of vertices
-  // excluding vx. Therefore, we remove vtx from vertexCollection.
+  // excluding vtx. Therefore, we remove vtx from vertexCollection.
   auto removeResult = fitterState.removeVertexFromCollection(vtx, logger());
   if (!removeResult.ok()) {
     return removeResult.error();
   }
 
-  for (auto& [key, value] : fitterState.tracksAtVerticesMap) {
-    // Delete all linearized tracks for current (bad) vertex
-    if (key.second == &vtx) {
-      value.isLinearized = false;
+  for (auto it = fitterState.tracksAtVerticesMap.begin();
+       it != fitterState.tracksAtVerticesMap.end();) {
+    // Delete all track state for current (bad) vertex
+    if (it->first.second == vtxPtr) {
+      it = fitterState.tracksAtVerticesMap.erase(it);
+    } else {
+      ++it;
+    }
+  }
+  fitterState.vtxInfoMap.erase(vtxPtr);
+
+  // If no vertices share tracks with vtx we don't need to refit
+  if (!fitterState.vertexCollection.empty()) {
+    // Refit after removing the rejected vertex.
+    auto fitResult = m_cfg.vertexFitter.fit(fitterState, vertexingOptions);
+    if (!fitResult.ok()) {
+      return fitResult.error();
     }
   }
 
-  // If no vertices share tracks with vtx we don't need to refit
-  if (fitterState.vertexCollection.empty()) {
-    return {};
-  }
-
-  // Do the fit with removed vertex
-  auto fitResult = m_cfg.vertexFitter.fit(fitterState, vertexingOptions);
-  if (!fitResult.ok()) {
-    return fitResult.error();
-  }
+  allVerticesPtr.erase(allVerticesPtrIt);
+  allVertices.erase(allVerticesIt);
 
   return {};
 }

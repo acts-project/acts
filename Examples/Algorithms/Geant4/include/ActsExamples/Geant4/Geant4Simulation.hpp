@@ -23,6 +23,7 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
 #include <cstddef>
+#include <limits>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -68,6 +69,11 @@ class Geant4SimulationBase : public IAlgorithm {
 
     /// Optional Geant4 instance overwrite.
     std::shared_ptr<Geant4Handle> geant4Handle;
+
+    /// Cap the largest acceptable step in the propagator
+    /// if inf use Geant4 default (100m)
+    double propagatorLargestAcceptableStep =
+        std::numeric_limits<double>::infinity();  // mm
   };
 
   Geant4SimulationBase(const Config& cfg, const std::string& name,

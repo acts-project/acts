@@ -11,10 +11,8 @@
 #include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <map>
 #include <memory>
 #include <string>
-#include <tuple>
 
 class TTree;
 class TFile;
@@ -121,9 +119,6 @@ class RootMaterialMapIo {
                                  Acts::getDefaultLogger("RootMaterialMapIo",
                                                         Acts::Logging::INFO))
       : m_cfg(cfg), m_logger(std::move(mLogger)) {}
-
-  /// Destructor
-  ~RootMaterialMapIo() = default;
 
   /// Write the detector maps
   /// @param rFile the file to write to

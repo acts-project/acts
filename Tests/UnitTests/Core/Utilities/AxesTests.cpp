@@ -8,7 +8,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 
@@ -653,7 +652,7 @@ BOOST_AUTO_TEST_CASE(Output) {
 
   ss << a;
 
-  BOOST_CHECK_EQUAL(ss.str(), "Axis<Equidistant, Bound>(0, 10, 10)");
+  BOOST_CHECK_EQUAL(ss.str(), "Axis<Equidistant, Bound>(0, 10, 10, Undefined)");
 
   ss.str("");
 
@@ -661,13 +660,13 @@ BOOST_AUTO_TEST_CASE(Output) {
 
   ss << ia;
 
-  BOOST_CHECK_EQUAL(ss.str(), "Axis<Equidistant, Bound>(0, 10, 10)");
+  BOOST_CHECK_EQUAL(ss.str(), "Axis<Equidistant, Bound>(0, 10, 10, Undefined)");
 
   ss.str("");
 
   ss << b;
 
-  BOOST_CHECK_EQUAL(ss.str(), "Axis<Variable, Bound>(0, 10, 11)");
+  BOOST_CHECK_EQUAL(ss.str(), "Axis<Variable, Bound>({0, 10, 11}, Undefined)");
 }
 
 BOOST_AUTO_TEST_CASE(Equality) {

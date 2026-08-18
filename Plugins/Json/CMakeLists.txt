@@ -2,6 +2,7 @@ acts_add_library(
     PluginJson
     src/AlgebraJsonConverter.cpp
     src/ExtentJsonConverter.cpp
+    src/AxisSpecJsonConverter.cpp
     src/GridJsonConverter.cpp
     src/GeometryIdentifierJsonConverter.cpp
     src/IndexGridNavigationJsonConverter.cpp
@@ -19,8 +20,9 @@ acts_add_library(
     src/JsonDetectorElement.cpp
     src/JsonSurfacesReader.cpp
     src/DefinitionsJsonConverter.cpp
-    src/Seeding2ConfigJsonConverter.cpp
+    src/SeedingConfigJsonConverter.cpp
     src/TrackingGeometryJsonConverter.cpp
+    src/BetheHeitlerApproxJsonConverter.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 

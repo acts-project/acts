@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 
@@ -25,7 +26,9 @@ namespace Acts {
 ///
 /// In addition to a simple axis definitions, it holds also a description
 /// of the axis direction.
-class ProtoAxis {
+///
+/// @deprecated Use AxisSpec instead
+class [[deprecated("Use AxisSpec instead")]] ProtoAxis {
  public:
   /// Convenience constructors - for variable binning
   ///
@@ -125,19 +128,17 @@ class ProtoAxis {
 /// @param a the proto axis
 ///
 /// @return an IGrid unique ptr and hence transfers ownership
+/// @deprecated Use makeGrid(const IAxis&) instead
 template <typename payload_t>
-std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a) {
+[[deprecated("Use makeGrid(const IAxis&) instead")]] std::unique_ptr<IGrid>
+makeGrid(const ProtoAxis& a) {
   if (a.isAutorange()) {
     throw std::invalid_argument(
         "ProtoAxis::makeGrid: Auto-range of the proto axis is not (yet) "
         "resolved, call setRange() first.");
   }
 
-  return a.getAxis().visit(
-      [&]<typename AxisTypeA>(const AxisTypeA& axis) -> std::unique_ptr<IGrid> {
-        using GridType = Grid<payload_t, AxisTypeA>;
-        return std::make_unique<GridType>(axis);
-      });
+  return makeGrid<payload_t>(a.getAxis());
 }
 
 /// @brief Helper method to create a 2D grid from a two proto axes
@@ -148,26 +149,25 @@ std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a) {
 /// @param b the second proto axis
 ///
 /// @return an IGrid unique ptr and hence transfers ownership
+/// @deprecated Use makeGrid(const IAxis&, const IAxis&) instead
 template <typename payload_t>
-std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a, const ProtoAxis& b) {
+[[deprecated(
+    "Use makeGrid(const IAxis&, const IAxis&) instead")]] std::unique_ptr<IGrid>
+makeGrid(const ProtoAxis& a, const ProtoAxis& b) {
   if (a.isAutorange() || b.isAutorange()) {
     throw std::invalid_argument(
         "ProtoAxis::makeGrid: Auto-range of the proto axis is not (yet) "
         "resolved, call setRange() first.");
   }
 
-  return a.getAxis().visit([&]<typename AxisTypeA>(const AxisTypeA& axisA)
-                               -> std::unique_ptr<IGrid> {
-    return b.getAxis().visit([&]<typename AxisTypeB>(const AxisTypeB& axisB)
-                                 -> std::unique_ptr<IGrid> {
-      using GridType = Grid<payload_t, AxisTypeA, AxisTypeB>;
-      return std::make_unique<GridType>(axisA, axisB);
-    });
-  });
+  return makeGrid<payload_t>(a.getAxis(), b.getAxis());
 }
 
 /// A Directed proto axis
-struct DirectedProtoAxis : public ProtoAxis {
+///
+/// @deprecated Use AxisSpec with an AxisDirection instead
+struct [[deprecated("Use AxisSpec with an AxisDirection instead")]]
+DirectedProtoAxis : public ProtoAxis {
  public:
   /// Convenience constructors - for variable binning
   ///
@@ -225,17 +225,27 @@ struct DirectedProtoAxis : public ProtoAxis {
   AxisDirection m_direction;
 };
 
+// A deprecated declaration only silences directly named types, not the ones it
+// names as template arguments
+ACTS_PUSH_IGNORE_DEPRECATED()
+
 /// Stream operator for vector of ProtoAxis
 /// @param os Output stream
 /// @param a Vector of ProtoAxis to output
 /// @return Reference to output stream
+/// @deprecated Use AxisSpec instead
+[[deprecated("Use AxisSpec instead")]]
 std::ostream& operator<<(std::ostream& os, const std::vector<ProtoAxis>& a);
 
 /// Stream operator for vector of DirectedProtoAxis
 /// @param os Output stream
 /// @param a Vector of DirectedProtoAxis to output
 /// @return Reference to output stream
+/// @deprecated Use AxisSpec with an AxisDirection instead
+[[deprecated("Use AxisSpec with an AxisDirection instead")]]
 std::ostream& operator<<(std::ostream& os,
                          const std::vector<DirectedProtoAxis>& a);
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace Acts

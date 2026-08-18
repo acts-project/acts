@@ -83,9 +83,8 @@ ProcessCode ProtoTracksToTracks::execute(const AlgorithmContext& ctx) const {
 
       track.setReferenceSurface(trackParams.referenceSurface().getSharedPtr());
       track.parameters() = trackParams.parameters();
-      if (trackParams.covariance().has_value()) {
-        track.covariance() = *trackParams.covariance();
-      }
+      track.covariance() =
+          trackParams.covariance().value_or(Acts::BoundMatrix::Zero());
     }
   }
 

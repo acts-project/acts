@@ -1,9 +1,9 @@
 import sys
 import sympy
 
-from detray_sympy.common import name_expr, cxx_printer_wo_known
+from codegen.sympy_common import name_expr
+from codegen.detray_backend import gen_cxx_code, cxx_printer_wo_known
 from detray_sympy.output import write_out_file
-from detray_sympy.codegen import gen_cxx_code
 import detray_sympy.matrices
 
 

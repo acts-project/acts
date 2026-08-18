@@ -9,12 +9,12 @@
 #include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
 
 #include "Acts/EventData/SpacePointColumns.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Seeding2/GbtsGeometry.hpp"
-#include "Acts/Seeding2/GbtsLayerConnection.hpp"
-#include "Acts/Seeding2/GbtsTrackingFilter.hpp"
+#include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsLayerConnection.hpp"
+#include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 #include <cmath>
@@ -49,6 +49,9 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   const auto layerGeometry =
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
 
+  // as all layers in examples are pixel, we set entire vector to true
+  m_isPixelLayer.resize(layerGeometry.size(), true);
+
   // option that allows for adding custom eta binning (default is at 0.2)
   if (m_cfg.seedFinderConfig.etaBinWidthOverride != 0.0f) {
     layerConnectionMap.etaBinWidth = m_cfg.seedFinderConfig.etaBinWidthOverride;
@@ -58,6 +61,15 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // the algorithm
   auto geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
       layerGeometry, layerConnectionMap);
+
+  // ROI file:Defines what region in detector we are interested in, currently
+  // set to entire detector
+  // for pixel seeding, roi z bounds are used
+
+  m_internalRoi.emplace(0, -4.5, 4.5, 0, -std::numbers::pi, std::numbers::pi, 0,
+                        -150., 150.);
+  m_cfg.seedFinderConfig.maxZ0 = m_internalRoi->zMax();
+  m_cfg.seedFinderConfig.minZ0 = m_internalRoi->zMin();
 
   m_finder = Acts::Experimental::GraphBasedTrackSeeder(
       Acts::Experimental::GraphBasedTrackSeeder::DerivedConfig(
@@ -79,33 +91,26 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   // container due to how space point container works, we need to keep the
   // container and the external columns we added alive this is done by using a
   // tuple of the core container and the two extra columns
-  const Acts::SpacePointContainer2 coreSpacePoints =
+  const Acts::SpacePointContainer coreSpacePoints =
       makeSpContainer(spacePoints, m_actsGbtsMap);
-
-  // used to reserve size of nodes 2D vector in core
-  const std::uint32_t maxLayers = m_layerIdMap.size();
-
-  // ROI file:Defines what region in detector we are interested in, currently
-  // set to entire detector
-  const Acts::Experimental::GbtsRoiDescriptor internalRoi(
-      0, -4.5, 4.5, 0, -std::numbers::pi, std::numbers::pi, 0, -150., 150.);
 
   const Acts::Experimental::GraphBasedTrackSeeder::Options options(
       m_cfg.bFieldInZ);
 
-  Acts::SeedContainer2 seeds;
+  Acts::SeedContainer seeds;
   seeds.assignSpacePointContainer(spacePoints);
 
   // create the seeds
-  m_finder->createSeeds(coreSpacePoints, internalRoi, maxLayers, *m_filter,
-                        options, seeds);
+
+  m_finder->createSeeds(coreSpacePoints, m_internalRoi.value(), m_isPixelLayer,
+                        *m_filter, options, seeds);
 
   seeds.assignSpacePointContainer(spacePoints);
 
   // update seed space point indices to original space point container
   for (auto seed : seeds) {
     for (auto &spIndex : seed.spacePointIndices()) {
-      spIndex = coreSpacePoints.at(spIndex).copyFromIndex();
+      spIndex = coreSpacePoints.at(spIndex).copiedFromIndex();
     }
   }
 
@@ -154,13 +159,13 @@ GraphBasedSeedingAlgorithm::makeActsGbtsMap() const {
   return actsToGbtsMap;
 }
 
-Acts::SpacePointContainer2 GraphBasedSeedingAlgorithm::makeSpContainer(
+Acts::SpacePointContainer GraphBasedSeedingAlgorithm::makeSpContainer(
     const SpacePointContainer &spacePoints,
     std::map<ActsIDs, GbtsIDs> map) const {
-  Acts::SpacePointContainer2 coreSpacePoints(
-      Acts::SpacePointColumns::X | Acts::SpacePointColumns::Y |
-      Acts::SpacePointColumns::Z | Acts::SpacePointColumns::R |
-      Acts::SpacePointColumns::Phi | Acts::SpacePointColumns::CopyFromIndex);
+  Acts::SpacePointContainer coreSpacePoints(
+      Acts::SpacePointColumns::CopiedFromIndex | Acts::SpacePointColumns::X |
+      Acts::SpacePointColumns::Y | Acts::SpacePointColumns::Z |
+      Acts::SpacePointColumns::R | Acts::SpacePointColumns::Phi);
 
   // add new column for layer ID and clusterwidth
   auto layerColomn = coreSpacePoints.createColumn<std::uint32_t>("layerId");
@@ -236,7 +241,7 @@ Acts::SpacePointContainer2 GraphBasedSeedingAlgorithm::makeSpContainer(
     newSp.z() = spacePoint.z();
     newSp.r() = spacePoint.r();
     newSp.phi() = std::atan2(spacePoint.y(), spacePoint.x());
-    newSp.copyFromIndex() = spacePoint.index();
+    newSp.copiedFromIndex() = spacePoint.index();
     newSp.extra(layerColomn) = std::get<2>(find->second);
     // false input as this is not available in examples
     newSp.extra(clusterWidthColomn) = 0;
@@ -428,6 +433,20 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("edgeMaskMinEta: " << cfg1.edgeMaskMinEta);
   ACTS_DEBUG("hitShareThreshold: " << cfg1.hitShareThreshold);
   ACTS_DEBUG("maxEndcapClusterWidth: " << cfg1.maxEndcapClusterWidth);
+  ACTS_DEBUG("validateTriplets: " << cfg1.validateTriplets);
+  ACTS_DEBUG("useAdaptiveCuts: " << cfg1.useAdaptiveCuts);
+  ACTS_DEBUG("addTriplets: " << cfg1.addTriplets);
+  ACTS_DEBUG("tauRatioCorr: " << cfg1.tauRatioCorr);
+  ACTS_DEBUG("maxAbsEtaAddTripelts: " << cfg1.maxAbsEtaAddTripelts);
+  ACTS_DEBUG("d0Max: " << cfg1.d0Max);
+  ACTS_DEBUG("cutDPhiMax: " << cfg1.cutDPhiMax);
+  ACTS_DEBUG("cutDCurvMax: " << cfg1.cutDCurvMax);
+  ACTS_DEBUG("minZ0: " << cfg1.minZ0);
+  ACTS_DEBUG("maxZ0: " << cfg1.maxZ0);
+  ACTS_DEBUG("minDeltaPhi: " << cfg1.minDeltaPhi);
+  ACTS_DEBUG("maxOuterRadius: " << cfg1.maxOuterRadius);
+  ACTS_DEBUG("maxSeedSplitEta: " << cfg1.maxSeedSplitEta);
+  ACTS_DEBUG("maxInvRadDiff: " << cfg1.maxInvRadDiff);
   ACTS_DEBUG("===== GbtsTrackFilter =====");
   const auto &cfg2 = m_cfg.trackingFilterConfig;
   ACTS_DEBUG("sigmaMS: " << cfg2.sigmaMS);

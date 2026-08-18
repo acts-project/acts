@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-
-#include <ostream>
+#include <iosfwd>
+#include <string>
+#include <vector>
 
 namespace Acts {
 
@@ -61,6 +61,18 @@ const std::string& axisDirectionName(AxisDirection aDir);
 /// @return the output stream
 std::ostream& operator<<(std::ostream& os, AxisDirection aDir);
 
+/// Get the name of a vector of binning values as a string
+/// @param manyDir is the vector of binning values
+/// @return the name of the binning value
+std::string axesDirectionName(const std::vector<AxisDirection>& manyDir);
+
+/// Output stream operator for a vector of @c AxisDirection
+/// @param os is the output stream
+/// @param manyDir is the vector of axis directions
+/// @return the output stream
+std::ostream& operator<<(std::ostream& os,
+                         const std::vector<AxisDirection>& manyDir);
+
 /// Enum which determines how the axis handle its outer boundaries
 /// possible values values
 enum class AxisBoundaryType {
@@ -92,21 +104,7 @@ constexpr auto AxisClosed = AxisBoundaryTypeTag<AxisBoundaryType::Closed>{};
 /// @param os Output stream
 /// @param bdt AxisBoundaryType to output
 /// @return Reference to output stream
-inline std::ostream& operator<<(std::ostream& os, AxisBoundaryType bdt) {
-  using enum AxisBoundaryType;
-  switch (bdt) {
-    case Open:
-      os << "Open";
-      break;
-    case Bound:
-      os << "Bound";
-      break;
-    case Closed:
-      os << "Closed";
-      break;
-  }
-  return os;
-}
+std::ostream& operator<<(std::ostream& os, AxisBoundaryType bdt);
 
 /// Enum which determines the binning type of the axis
 enum class AxisType {
@@ -120,17 +118,7 @@ enum class AxisType {
 /// @param os Output stream
 /// @param type AxisType to output
 /// @return Reference to output stream
-inline std::ostream& operator<<(std::ostream& os, AxisType type) {
-  switch (type) {
-    case AxisType::Equidistant:
-      os << "Equidistant";
-      break;
-    case AxisType::Variable:
-      os << "Variable";
-      break;
-  }
-  return os;
-}
+std::ostream& operator<<(std::ostream& os, AxisType type);
 
 /// @brief calculate bin indices from a given binning structure
 ///

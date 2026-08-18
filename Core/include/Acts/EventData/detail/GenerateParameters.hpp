@@ -192,7 +192,7 @@ inline double generateQoverP(generator_t& rng,
   const double q = qChoices[type];
 
   const double p = drawP(rng, theta);
-  const double qOverP = (q != 0) ? q / p : 1 / p;
+  const double qOverP = q / p;
 
   return qOverP;
 }

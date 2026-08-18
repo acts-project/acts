@@ -466,54 +466,52 @@ void addMaterialToGx2fSums(
         "No scattering angles found for material surface.");
   }
 
-  const double sinThetaLoc = std::sin(trackState.smoothed()[eBoundTheta]);
-
   // The position, where we need to insert the values in aMatrix and bVector
   const std::size_t deltaPosition = eBoundSize + 2 * nMaterialsHandled;
 
   const BoundVector& scatteringAngles =
       scatteringMapId->second.scatteringAngles();
 
-  const double invCov = scatteringMapId->second.invCovarianceMaterial();
+  const double invCovTheta = scatteringMapId->second.invCovarianceMaterial();
+  const double sinThetaLoc = std::sin(trackState.smoothed()[eBoundTheta]);
+  const double invCovPhi = invCovTheta * sinThetaLoc * sinThetaLoc;
 
   // Phi contribution
-  extendedSystem.aMatrix()(deltaPosition, deltaPosition) +=
-      invCov * sinThetaLoc * sinThetaLoc;
+  extendedSystem.aMatrix()(deltaPosition, deltaPosition) += invCovPhi;
   extendedSystem.bVector()(deltaPosition, 0) -=
-      invCov * scatteringAngles[eBoundPhi] * sinThetaLoc;
-  extendedSystem.chi2() += invCov * scatteringAngles[eBoundPhi] * sinThetaLoc *
-                           scatteringAngles[eBoundPhi] * sinThetaLoc;
+      invCovPhi * scatteringAngles[eBoundPhi];
+  extendedSystem.chi2() +=
+      invCovPhi * scatteringAngles[eBoundPhi] * scatteringAngles[eBoundPhi];
 
   // Theta Contribution
-  extendedSystem.aMatrix()(deltaPosition + 1, deltaPosition + 1) += invCov;
+  extendedSystem.aMatrix()(deltaPosition + 1, deltaPosition + 1) += invCovTheta;
   extendedSystem.bVector()(deltaPosition + 1, 0) -=
-      invCov * scatteringAngles[eBoundTheta];
-  extendedSystem.chi2() +=
-      invCov * scatteringAngles[eBoundTheta] * scatteringAngles[eBoundTheta];
+      invCovTheta * scatteringAngles[eBoundTheta];
+  extendedSystem.chi2() += invCovTheta * scatteringAngles[eBoundTheta] *
+                           scatteringAngles[eBoundTheta];
 
   ACTS_VERBOSE(
       "Contributions in addMaterialToGx2fSums:\n"
-      << "    invCov:        " << invCov << "\n"
+      << "    invCov:        " << invCovPhi << "\n"
       << "    sinThetaLoc:   " << sinThetaLoc << "\n"
       << "    deltaPosition: " << deltaPosition << "\n"
       << "    Phi:\n"
       << "        scattering angle:     " << scatteringAngles[eBoundPhi] << "\n"
-      << "        aMatrix contribution: " << invCov * sinThetaLoc * sinThetaLoc
-      << "\n"
+      << "        aMatrix contribution: " << invCovPhi << "\n"
       << "        bVector contribution: "
-      << invCov * scatteringAngles[eBoundPhi] * sinThetaLoc << "\n"
+      << invCovPhi * scatteringAngles[eBoundPhi] << "\n"
       << "        chi2sum contribution: "
-      << invCov * scatteringAngles[eBoundPhi] * sinThetaLoc *
-             scatteringAngles[eBoundPhi] * sinThetaLoc
+      << invCovPhi * scatteringAngles[eBoundPhi] * scatteringAngles[eBoundPhi]
       << "\n"
       << "    Theta:\n"
       << "        scattering angle:     " << scatteringAngles[eBoundTheta]
       << "\n"
-      << "        aMatrix contribution: " << invCov << "\n"
+      << "        aMatrix contribution: " << invCovTheta << "\n"
       << "        bVector contribution: "
-      << invCov * scatteringAngles[eBoundTheta] << "\n"
+      << invCovTheta * scatteringAngles[eBoundTheta] << "\n"
       << "        chi2sum contribution: "
-      << invCov * scatteringAngles[eBoundTheta] * scatteringAngles[eBoundTheta]
+      << invCovTheta * scatteringAngles[eBoundTheta] *
+             scatteringAngles[eBoundTheta]
       << "\n");
 
   return;
@@ -840,7 +838,7 @@ class Gx2Fitter {
       ACTS_DEBUG("Surface " << geoId << " detected.");
 
       const bool surfaceIsSensitive = surface->isSensitive();
-      const bool surfaceHasMaterial = (surface->surfaceMaterial() != nullptr);
+      const bool surfaceHasMaterial = surface->hasMaterial();
       // First we figure out, if we would need to look into material surfaces at
       // all. Later, we also check, if the material slab is valid, otherwise we
       // modify this flag to ignore the material completely.
@@ -855,10 +853,18 @@ class Gx2Fitter {
         if (scatteringMapId == scatteringMap->end()) {
           ACTS_DEBUG("    ... create entry in scattering map.");
 
-          const MaterialSlab slab = Acts::detail::evaluateMaterialSlab(
-              state, stepper, *surface,
-              Acts::detail::determineMaterialUpdateMode(
-                  state, navigator, MaterialUpdateMode::FullUpdate));
+          const Result<MaterialSlab> slabResult =
+              Acts::detail::evaluateMaterialSlab(
+                  state, stepper, *surface,
+                  Acts::detail::determineMaterialUpdateMode(
+                      state, navigator, MaterialUpdateMode::FullUpdate));
+          if (!slabResult.ok()) {
+            ACTS_DEBUG("GlobalChiSquareFitter | "
+                       << "Failed to evaluate material slab: "
+                       << slabResult.error());
+            return Result<void>::failure(slabResult.error());
+          }
+          const MaterialSlab& slab = *slabResult;
           const bool slabIsValid = !slab.isVacuum();
 
           double invSigma2 = 0.;
@@ -1655,6 +1661,8 @@ class Gx2Fitter {
     // Set the chi2sum for the track summary manually, since we don't calculate
     // it for each state
     track.chi2() = chi2sum;
+
+    track.linkForward();
 
     // Return the converted Track
     return track;

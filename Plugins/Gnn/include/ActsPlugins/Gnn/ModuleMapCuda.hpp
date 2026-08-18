@@ -35,9 +35,6 @@ class ModuleMapCuda : public GraphConstructionBase {
     /// Pseudorapidity scaling factor
     float etaScale = 1.0;
 
-    /// @deprecated Has no effect and will be removed in a future release.
-    [[deprecated("moreParallel has no effect and will be removed")]]
-    bool moreParallel = true;
     /// CUDA device ID
     int gpuDevice = 0;
     /// Number of GPU blocks
