@@ -15,6 +15,7 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
 
 #include <memory>
 
@@ -27,13 +28,19 @@ void exampleDesignateProtoMaterial(Acts::BlueprintNode& parent) {
   //! [Designate Proto Material]
   parent.addMaterial("PixelMaterial", [&](auto& mat) {
     using enum Acts::AxisDirection;
-    using enum Acts::AxisBoundaryType;
     using enum Acts::CylinderVolumeBounds::Face;
+    using Acts::AxisSpec;
 
-    // Two proto axes per face: the mapping fills these bins in later.
-    mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 20}, {AxisZ, Bound, 20});
-    mat.configureFace(NegativeDisc, {AxisR, Bound, 15}, {AxisPhi, Bound, 25});
-    mat.configureFace(PositiveDisc, {AxisR, Bound, 15}, {AxisPhi, Bound, 25});
+    // Two proto axes per face: the mapping fills these bins in later. The axes
+    // are deferred: only the bin count is fixed here, the range and boundary
+    // type are taken from the portal surface during mapping.
+    mat.configureFace(OuterCylinder,
+                      AxisSpec::DeferredEquidistant(20, AxisRPhi),
+                      AxisSpec::DeferredEquidistant(20, AxisZ));
+    mat.configureFace(NegativeDisc, AxisSpec::DeferredEquidistant(15, AxisR),
+                      AxisSpec::DeferredEquidistant(25, AxisPhi));
+    mat.configureFace(PositiveDisc, AxisSpec::DeferredEquidistant(15, AxisR),
+                      AxisSpec::DeferredEquidistant(25, AxisPhi));
 
     // The material node wraps exactly one child: the volume it applies to.
     mat.addCylinderContainer("Pixel", Acts::AxisDirection::AxisZ,

@@ -223,7 +223,7 @@ every surface you enabled. **On a Gen3 geometry, omit `--matconfig`** — the
 blueprint already designated the surfaces, and the decorator would be ignored
 anyway. The script then reads those surfaces back out:
 
-@snippet{trimleft} examples/test_material.py Extract Material Surfaces
+@snippet{trimleft} examples/test_material_map.py Extract Material Surfaces
 
 and hands the resulting list to @ref Acts::IntersectionMaterialAssigner and
 @ref Acts::BinnedSurfaceMaterialAccumulator. That list is the *only* geometry
@@ -244,10 +244,11 @@ fraction means the material had nowhere to go — see
 
 ## Step 4: use the map
 
-@snippet{trimleft} examples/test_material.py Load Material Map
+@snippet{trimleft} examples/test_material_map.py Load Material Map
 
 Substitute your own detector and the map you just produced. This snippet comes
-from `docs/examples/test_material.py`, which runs as part of the pytest suite.
+from `docs/examples/test_material_map.py`, which runs as part of the pytest
+suite.
 
 `.json`, `.cbor` and `.root` are all accepted. This is exactly how the ODD picks
 up `data/odd-material-maps.root` by default.
