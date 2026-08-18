@@ -146,6 +146,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
                      &AA::Config::inputInitialTrackParameters)
       .def_readwrite("outputAlignmentParameters",
                      &AA::Config::outputAlignmentParameters)
+      .def_readwrite("outputAlignmentFile", &AA::Config::outputAlignmentFile)
+      .def_readwrite("outputAlignmentIndexFile",
+                     &AA::Config::outputAlignmentIndexFile)
       .def_readwrite("trackingGeometry", &AA::Config::trackingGeometry)
       .def_readwrite("alignedDetElements", &AA::Config::alignedDetElements)
       .def_readwrite("chi2ONdfCutOff", &AA::Config::chi2ONdfCutOff)
@@ -172,12 +175,14 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
               unsigned int iter = item.first.cast<unsigned int>();
 
               std::uint8_t mask_value;
-              try {
-                auto mask_enum =
-                    item.second.cast<ActsAlignment::AlignmentMask>();
-                mask_value = static_cast<std::uint8_t>(mask_enum);
-              } catch (...) {
+              if (py::isinstance<ActsAlignment::AlignmentMask>(item.second)) {
+                mask_value = static_cast<std::uint8_t>(
+                    item.second.cast<ActsAlignment::AlignmentMask>());
+              } else if (py::isinstance<py::int_>(item.second)) {
                 mask_value = item.second.cast<std::uint8_t>();
+              } else {
+                throw py::type_error(
+                    "iterationState value must be AlignmentMask or int");
               }
 
               cfg.iterationState[iter] = std::bitset<6>(mask_value);
