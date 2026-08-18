@@ -938,6 +938,9 @@ def addGridTripletSeeding(
     spacePointGridConfigArg: SpacePointGridConfigArg,
     logLevel: acts.logging.Level = None,
     outputSeeds: str = "seeds",
+    inputVertices: str = "",
+    vertexZNSigma: float = 3.0,
+    vertexZMargin: float = 0.0,
 ):
     """adds grid triplet seeding
     For parameters description see addSeeding
@@ -948,6 +951,9 @@ def addGridTripletSeeding(
         level=logLevel,
         inputSpacePoints=spacePoints,
         outputSeeds=outputSeeds,
+        inputVertices=inputVertices,
+        vertexZNSigma=vertexZNSigma,
+        vertexZMargin=vertexZMargin,
         **acts.examples.defaultKWArgs(
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
             minPt=seedFinderConfigArg.minPt,
