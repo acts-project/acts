@@ -56,7 +56,6 @@ jobs:
             docs/old
             Python/Examples/tests
             Examples/Scripts
-            Examples/Scripts/GsfDebugger
           )
           for folder in "${folder_list[@]}"; do
             output_txt="${folder}/requirements.txt"
