@@ -181,9 +181,9 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   const SpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
 
-  // Build the per-event vertex z-windows used to constrain the doublet z-origin.
-  // Lives on the stack for the whole event; the DoubletSeedFinders (below) hold
-  // a delegate pointing at it and are only used within this call.
+  // Build the per-event vertex z-windows used to constrain the doublet
+  // z-origin. Lives on the stack for the whole event; the DoubletSeedFinders
+  // (below) hold a delegate pointing at it and are only used within this call.
   VertexZCuts vertexZCuts;
   if (!m_cfg.inputVertices.empty()) {
     const VertexContainer& vertices = m_inputVertices(ctx);
@@ -199,9 +199,10 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     for (const auto& [lo, hi] : vertexZCuts.windows) {
       oss << " [" << lo << ", " << hi << "]";
     }
-    ACTS_VERBOSE("Vertex-z seeding constraint: read " << vertices.size()
-              << " vertex(es) from '" << m_cfg.inputVertices << "' -> "
-              << vertexZCuts.windows.size() << " z-window(s) [mm]:" << oss.str());
+    ACTS_VERBOSE("Vertex-z seeding constraint: read "
+                 << vertices.size() << " vertex(es) from '"
+                 << m_cfg.inputVertices << "' -> " << vertexZCuts.windows.size()
+                 << " z-window(s) [mm]:" << oss.str());
   }
 
   Acts::CylindricalSpacePointGrid grid(m_gridConfig,
@@ -290,8 +291,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   // otherwise fall back to the (optional) ITk fast-tracking cuts. The top
   // doublet config below is copied from this one, so the delegate is shared.
   if (!m_cfg.inputVertices.empty()) {
-    bottomDoubletFinderConfig.experimentCuts
-        .connect<&VertexZCuts::operator()>(&vertexZCuts);
+    bottomDoubletFinderConfig.experimentCuts.connect<&VertexZCuts::operator()>(
+        &vertexZCuts);
   } else if (m_cfg.useExtraCuts) {
     bottomDoubletFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
@@ -384,8 +385,9 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   // Report how strongly the vertex-z constraint fired this event.
   if (!vertexZCuts.windows.empty()) {
     ACTS_VERBOSE("Vertex-z seeding constraint: rejected "
-              << vertexZCuts.nRejected << " / " << vertexZCuts.nTested
-              << " doublet candidates; " << seeds.size() << " seeds produced");
+                 << vertexZCuts.nRejected << " / " << vertexZCuts.nTested
+                 << " doublet candidates; " << seeds.size()
+                 << " seeds produced");
   }
 
   // update seed space point indices to original space point container
