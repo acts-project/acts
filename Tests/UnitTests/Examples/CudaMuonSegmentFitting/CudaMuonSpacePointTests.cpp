@@ -13,7 +13,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/CudaMuonSpacePoint.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
-#include "ActsExamples/Utilities/CudaUtilities.hpp"
+#include "ActsExamples/Utilities/CudaStream.hpp"
 
 #include <cuda_runtime.h>
 

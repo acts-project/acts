@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#pragma once
+#include "ActsExamples/EventData/CudaMuonHoughMaximum.hpp"
 
-#include "ActsExamples/Utilities/CudaUtilities.hpp"
+#include "CudaUtilities.hpp"
 
 #include <limits>
 #include <stdexcept>
@@ -18,19 +18,23 @@
 
 namespace ActsExamples {
 
-template <std::size_t MaximaPerBucket>
-CudaHoughMaximumBatch<MaximaPerBucket>::CudaHoughMaximumBatch(
-    size_type nBuckets)
-    : m_nBuckets{nBuckets} {
+CudaHoughMaximumBatch::CudaHoughMaximumBatch(size_type nBuckets,
+                                             size_type capacityPerBucket)
+    : m_nBuckets{nBuckets}, m_capacityPerBucket{capacityPerBucket} {
   if (m_nBuckets == 0u) {
     throw std::invalid_argument(
         "CudaHoughMaximumBatch requires non-zero nBuckets");
   }
 
+  if (m_capacityPerBucket == 0u || m_capacityPerBucket > 64u) {
+    throw std::invalid_argument(
+        "CudaHoughMaximumBatch capacityPerBucket must be between 1 and 64");
+  }
+
   constexpr size_type maxUint32 =
       static_cast<size_type>(std::numeric_limits<std::uint32_t>::max());
 
-  if (m_nBuckets > maxUint32 / MaximaPerBucket) {
+  if (m_nBuckets > maxUint32 / m_capacityPerBucket) {
     throw std::overflow_error(
         "CudaHoughMaximumBatch total capacity must fit into std::uint32_t");
   }
@@ -51,10 +55,10 @@ CudaHoughMaximumBatch<MaximaPerBucket>::CudaHoughMaximumBatch(
   m_hostNAssociatedHits.resize(capacity, 0u);
 }
 
-template <std::size_t MaximaPerBucket>
-CudaHoughMaximumBatch<MaximaPerBucket>::CudaHoughMaximumBatch(
+CudaHoughMaximumBatch::CudaHoughMaximumBatch(
     CudaHoughMaximumBatch&& other) noexcept
     : m_nBuckets{std::exchange(other.m_nBuckets, 0u)},
+      m_capacityPerBucket{std::exchange(other.m_capacityPerBucket, 0u)},
       m_hostTanBeta{std::move(other.m_hostTanBeta)},
       m_hostInterceptY{std::move(other.m_hostInterceptY)},
       m_hostHits{std::move(other.m_hostHits)},
@@ -75,9 +79,7 @@ CudaHoughMaximumBatch<MaximaPerBucket>::CudaHoughMaximumBatch(
       m_device{std::exchange(other.m_device, CudaHoughMaximumBatchArrays{})},
       m_onDevice{std::exchange(other.m_onDevice, false)} {}
 
-template <std::size_t MaximaPerBucket>
-CudaHoughMaximumBatch<MaximaPerBucket>&
-CudaHoughMaximumBatch<MaximaPerBucket>::operator=(
+CudaHoughMaximumBatch& CudaHoughMaximumBatch::operator=(
     CudaHoughMaximumBatch&& other) noexcept {
   if (this == &other) {
     return *this;
@@ -86,6 +88,7 @@ CudaHoughMaximumBatch<MaximaPerBucket>::operator=(
   clearDevice();
 
   m_nBuckets = std::exchange(other.m_nBuckets, 0u);
+  m_capacityPerBucket = std::exchange(other.m_capacityPerBucket, 0u);
 
   m_hostTanBeta = std::move(other.m_hostTanBeta);
   m_hostInterceptY = std::move(other.m_hostInterceptY);
@@ -115,14 +118,12 @@ CudaHoughMaximumBatch<MaximaPerBucket>::operator=(
   return *this;
 }
 
-template <std::size_t MaximaPerBucket>
-CudaHoughMaximumBatch<MaximaPerBucket>::~CudaHoughMaximumBatch() noexcept {
+CudaHoughMaximumBatch::~CudaHoughMaximumBatch() noexcept {
   clearDevice();
 }
 
-template <std::size_t MaximaPerBucket>
-typename CudaHoughMaximumBatch<MaximaPerBucket>::size_type
-CudaHoughMaximumBatch<MaximaPerBucket>::nMaxima(size_type bucket) const {
+CudaHoughMaximumBatch::size_type CudaHoughMaximumBatch::nMaxima(
+    size_type bucket) const {
   checkBucket(bucket);
 
   const size_type count = static_cast<size_type>(m_hostNMaxima[bucket]);
@@ -135,60 +136,49 @@ CudaHoughMaximumBatch<MaximaPerBucket>::nMaxima(size_type bucket) const {
   return count;
 }
 
-template <std::size_t MaximaPerBucket>
-CoordType CudaHoughMaximumBatch<MaximaPerBucket>::tanBeta(
+CoordType CudaHoughMaximumBatch::tanBeta(
     size_type bucket, size_type maximum) const {
   checkMaximum(bucket, maximum);
   return m_hostTanBeta[slotIndex(bucket, maximum)];
 }
 
-template <std::size_t MaximaPerBucket>
-CoordType CudaHoughMaximumBatch<MaximaPerBucket>::interceptY(
+CoordType CudaHoughMaximumBatch::interceptY(
     size_type bucket, size_type maximum) const {
   checkMaximum(bucket, maximum);
   return m_hostInterceptY[slotIndex(bucket, maximum)];
 }
 
-template <std::size_t MaximaPerBucket>
-YieldType CudaHoughMaximumBatch<MaximaPerBucket>::nHits(
+YieldType CudaHoughMaximumBatch::nHits(
     size_type bucket, size_type maximum) const {
   checkMaximum(bucket, maximum);
   return m_hostHits[slotIndex(bucket, maximum)];
 }
 
-template <std::size_t MaximaPerBucket>
-YieldType CudaHoughMaximumBatch<MaximaPerBucket>::nLayers(
+YieldType CudaHoughMaximumBatch::nLayers(
     size_type bucket, size_type maximum) const {
   checkMaximum(bucket, maximum);
   return m_hostLayers[slotIndex(bucket, maximum)];
 }
 
-template <std::size_t MaximaPerBucket>
-LayerMask CudaHoughMaximumBatch<MaximaPerBucket>::layerMask(
+LayerMask CudaHoughMaximumBatch::layerMask(
     size_type bucket, size_type maximum) const {
   checkMaximum(bucket, maximum);
   return m_hostLayerMask[slotIndex(bucket, maximum)];
 }
 
-template <std::size_t MaximaPerBucket>
-typename CudaHoughMaximumBatch<MaximaPerBucket>::size_type
-CudaHoughMaximumBatch<MaximaPerBucket>::xBin(size_type bucket,
-                                             size_type maximum) const {
+CudaHoughMaximumBatch::size_type CudaHoughMaximumBatch::xBin(
+    size_type bucket, size_type maximum) const {
   checkMaximum(bucket, maximum);
   return static_cast<size_type>(m_hostXBin[slotIndex(bucket, maximum)]);
 }
 
-template <std::size_t MaximaPerBucket>
-typename CudaHoughMaximumBatch<MaximaPerBucket>::size_type
-CudaHoughMaximumBatch<MaximaPerBucket>::yBin(size_type bucket,
-                                             size_type maximum) const {
+CudaHoughMaximumBatch::size_type CudaHoughMaximumBatch::yBin(
+    size_type bucket, size_type maximum) const {
   checkMaximum(bucket, maximum);
   return static_cast<size_type>(m_hostYBin[slotIndex(bucket, maximum)]);
 }
 
-template <std::size_t MaximaPerBucket>
-typename CudaHoughMaximumBatch<MaximaPerBucket>::size_type
-CudaHoughMaximumBatch<MaximaPerBucket>::nAssociatedHits(
+CudaHoughMaximumBatch::size_type CudaHoughMaximumBatch::nAssociatedHits(
     size_type bucket, size_type maximum) const {
   if (!m_associationMetadataOnHost) {
     throw std::logic_error("Association metadata is not available on the host");
@@ -198,9 +188,7 @@ CudaHoughMaximumBatch<MaximaPerBucket>::nAssociatedHits(
   return m_hostNAssociatedHits[slotIndex(bucket, maximum)];
 }
 
-template <std::size_t MaximaPerBucket>
-std::span<const std::uint32_t>
-CudaHoughMaximumBatch<MaximaPerBucket>::associatedHitIndices(
+std::span<const std::uint32_t> CudaHoughMaximumBatch::associatedHitIndices(
     size_type bucket, size_type maximum) const {
   if (!m_associatedHitIndicesOnHost) {
     throw std::logic_error(
@@ -216,9 +204,7 @@ CudaHoughMaximumBatch<MaximaPerBucket>::associatedHitIndices(
   return {m_hostAssociatedHitIndices.data() + begin, end - begin};
 }
 
-template <std::size_t MaximaPerBucket>
-void CudaHoughMaximumBatch<MaximaPerBucket>::moveToDevice(
-    cudaStream_t /*stream*/) {
+void CudaHoughMaximumBatch::moveToDevice(cudaStream_t /*stream*/) {
   clearDevice();
 
   m_hostAssociatedHitOffsets.clear();
@@ -252,8 +238,7 @@ void CudaHoughMaximumBatch<MaximaPerBucket>::moveToDevice(
   m_onDevice = true;
 }
 
-template <std::size_t MaximaPerBucket>
-void CudaHoughMaximumBatch<MaximaPerBucket>::moveToHost(cudaStream_t stream) {
+void CudaHoughMaximumBatch::moveToHost(cudaStream_t stream) {
   if (!m_onDevice) {
     return;
   }
@@ -272,8 +257,7 @@ void CudaHoughMaximumBatch<MaximaPerBucket>::moveToHost(cudaStream_t stream) {
   m_associationMetadataOnHost = true;
 }
 
-template <std::size_t MaximaPerBucket>
-void CudaHoughMaximumBatch<MaximaPerBucket>::copyAssociationMetadataToHost(
+void CudaHoughMaximumBatch::copyAssociationMetadataToHost(
     cudaStream_t stream) {
   if (!m_onDevice) {
     throw std::logic_error("CudaHoughMaximumBatch is not on the device");
@@ -286,8 +270,7 @@ void CudaHoughMaximumBatch<MaximaPerBucket>::copyAssociationMetadataToHost(
   m_associationMetadataOnHost = true;
 }
 
-template <std::size_t MaximaPerBucket>
-void CudaHoughMaximumBatch<MaximaPerBucket>::prepareAssociationStorageHost() {
+void CudaHoughMaximumBatch::prepareAssociationStorageHost() {
   clearAssociationStorage();
   m_hostAssociatedHitOffsets.assign(totalCapacity() + 1u, 0u);
   m_hostAssociatedHitIndices.clear();
@@ -318,9 +301,7 @@ void CudaHoughMaximumBatch<MaximaPerBucket>::prepareAssociationStorageHost() {
       static_cast<size_type>(totalAssociatedHits));
 }
 
-template <std::size_t MaximaPerBucket>
-void CudaHoughMaximumBatch<MaximaPerBucket>::allocateAssociationStorage(
-    cudaStream_t stream) {
+void CudaHoughMaximumBatch::allocateAssociationStorage(cudaStream_t stream) {
   if (!m_onDevice) {
     throw std::logic_error("CudaHoughMaximumBatch is not on the device");
   }
@@ -355,8 +336,7 @@ void CudaHoughMaximumBatch<MaximaPerBucket>::allocateAssociationStorage(
   }
 }
 
-template <std::size_t MaximaPerBucket>
-void CudaHoughMaximumBatch<MaximaPerBucket>::copyAssociatedHitIndicesToHost(
+void CudaHoughMaximumBatch::copyAssociatedHitIndicesToHost(
     cudaStream_t stream) {
   if (!m_onDevice) {
     throw std::logic_error("CudaHoughMaximumBatch is not on the device");
@@ -373,9 +353,7 @@ void CudaHoughMaximumBatch<MaximaPerBucket>::copyAssociatedHitIndicesToHost(
   m_associatedHitIndicesOnHost = true;
 }
 
-template <std::size_t MaximaPerBucket>
-void CudaHoughMaximumBatch<
-    MaximaPerBucket>::clearAssociationStorage() noexcept {
+void CudaHoughMaximumBatch::clearAssociationStorage() noexcept {
   freeDeviceColumn(m_device.associatedHitOffsets);
   freeDeviceColumn(m_device.associatedHitIndices);
 
@@ -383,8 +361,7 @@ void CudaHoughMaximumBatch<
   m_associationStorageAllocated = false;
 }
 
-template <std::size_t MaximaPerBucket>
-void CudaHoughMaximumBatch<MaximaPerBucket>::clearDevice() noexcept {
+void CudaHoughMaximumBatch::clearDevice() noexcept {
   freeDeviceColumn(m_device.tanBeta);
   freeDeviceColumn(m_device.interceptY);
 
@@ -404,16 +381,13 @@ void CudaHoughMaximumBatch<MaximaPerBucket>::clearDevice() noexcept {
   m_onDevice = false;
 }
 
-template <std::size_t MaximaPerBucket>
-void CudaHoughMaximumBatch<MaximaPerBucket>::checkBucket(
-    size_type bucket) const {
+void CudaHoughMaximumBatch::checkBucket(size_type bucket) const {
   if (bucket >= nBuckets()) {
     throw std::out_of_range("CudaHoughMaximumBatch bucket index out of range");
   }
 }
 
-template <std::size_t MaximaPerBucket>
-void CudaHoughMaximumBatch<MaximaPerBucket>::checkMaximum(
+void CudaHoughMaximumBatch::checkMaximum(
     size_type bucket, size_type maximum) const {
   if (maximum >= nMaxima(bucket)) {
     throw std::out_of_range("CudaHoughMaximumBatch maximum index out of range");

@@ -9,7 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "ActsExamples/EventData/CudaMuonHoughMaximum.hpp"
-#include "ActsExamples/Utilities/CudaUtilities.hpp"
+#include "ActsExamples/Utilities/CudaStream.hpp"
 
 #include <array>
 #include <cstdint>
@@ -22,9 +22,9 @@ namespace ActsTests {
 BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE(CudaMuonHoughMaximumHostConstruction) {
-  using MaximumBatch = ActsExamples::CudaHoughMaximumBatch<2u>;
+  using MaximumBatch = ActsExamples::CudaHoughMaximumBatch;
 
-  MaximumBatch maxima{3u};
+  MaximumBatch maxima{3u, 2u};
 
   BOOST_CHECK_EQUAL(maxima.nBuckets(), 3u);
   BOOST_CHECK_EQUAL(maxima.capacityPerBucket(), 2u);
@@ -41,6 +41,9 @@ BOOST_AUTO_TEST_CASE(CudaMuonHoughMaximumHostConstruction) {
 
   BOOST_CHECK_THROW(maxima.nAssociatedHits(0u, 0u), std::logic_error);
   BOOST_CHECK_THROW(maxima.associatedHitIndices(0u, 0u), std::logic_error);
+
+  BOOST_CHECK_THROW(MaximumBatch(3u, 0u), std::invalid_argument);
+  BOOST_CHECK_THROW(MaximumBatch(3u, 65u), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(CudaMuonHoughMaximumExactAssociationStorage) {
@@ -51,9 +54,9 @@ BOOST_AUTO_TEST_CASE(CudaMuonHoughMaximumExactAssociationStorage) {
     return;
   }
 
-  using MaximumBatch = ActsExamples::CudaHoughMaximumBatch<2u>;
+  using MaximumBatch = ActsExamples::CudaHoughMaximumBatch;
 
-  MaximumBatch maxima{3u};
+  MaximumBatch maxima{3u, 2u};
   ActsExamples::CudaStream stream;
   maxima.moveToDevice(stream.get());
 
@@ -63,6 +66,7 @@ BOOST_AUTO_TEST_CASE(CudaMuonHoughMaximumExactAssociationStorage) {
 
   BOOST_REQUIRE(device.nMaxima != nullptr);
   BOOST_REQUIRE(device.nAssociatedHits != nullptr);
+  BOOST_CHECK_EQUAL(device.capacityPerBucket, 2u);
   BOOST_CHECK(device.associatedHitOffsets == nullptr);
   BOOST_CHECK(device.associatedHitIndices == nullptr);
   BOOST_CHECK_EQUAL(device.totalAssociatedHits, 0u);

@@ -66,25 +66,16 @@ struct CudaHoughMaximumBatchArrays {
   }
 };
 
-/// @brief Owning host/device storage for a fixed number of Hough-maximum slots
-/// per bucket.
+/// @brief Owning host/device storage for Hough-maximum slots per bucket.
 ///
-/// MaximaPerBucket specifies the maximum number of maxima that may be stored
-/// for each bucket. The actual number stored is tracked independently by the
-/// nMaxima counter for each bucket.
-template <std::size_t MaximaPerBucket>
+/// The capacity per bucket specifies the maximum number of maxima that may be
+/// stored for each bucket. The actual number stored is tracked independently
+/// by the nMaxima counter for each bucket.
 class CudaHoughMaximumBatch {
  public:
-  static_assert(MaximaPerBucket > 0,
-                "MaximaPerBucket must be greater than zero");
-
-  static_assert(MaximaPerBucket <= 64,
-                "MaximaPerBucket exceeds the likely supported physics and "
-                "shared-memory limit of 64");
-
   using size_type = std::size_t;
 
-  explicit CudaHoughMaximumBatch(size_type nBuckets);
+  CudaHoughMaximumBatch(size_type nBuckets, size_type capacityPerBucket);
 
   /// Copy creates problem with cuda memory ownership
   CudaHoughMaximumBatch(const CudaHoughMaximumBatch&) = delete;
@@ -95,8 +86,8 @@ class CudaHoughMaximumBatch {
 
   ~CudaHoughMaximumBatch() noexcept;
 
-  static constexpr size_type capacityPerBucket() noexcept {
-    return MaximaPerBucket;
+  size_type capacityPerBucket() const noexcept {
+    return m_capacityPerBucket;
   }
 
   size_type nBuckets() const noexcept { return m_nBuckets; }
@@ -166,6 +157,7 @@ class CudaHoughMaximumBatch {
 
  private:
   size_type m_nBuckets = 0;
+  size_type m_capacityPerBucket = 0;
 
   std::vector<CoordType> m_hostTanBeta{};
   std::vector<CoordType> m_hostInterceptY{};
@@ -216,5 +208,3 @@ class CudaHoughMaximumBatch {
 };
 
 }  // namespace ActsExamples
-
-#include "ActsExamples/EventData/detail/CudaMuonHoughMaximum.ipp"
