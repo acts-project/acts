@@ -90,10 +90,11 @@ class GridSurfaceMaterial final : public ISurfaceMaterial {
   /// @deprecated Global (Vector3) lookup is not supported; use
   ///             materialSlab(const Vector2&) with a prior
   ///             Surface::globalToLocal() call instead.
-  [[deprecated(
-      "Use materialSlab(const Vector2& lp) with a prior "
-      "Surface::globalToLocal() call instead")]] const MaterialSlab&
-  materialSlab(const Vector3& gp) const final;
+  /// @throws std::logic_error always - global lookup is not supported
+  [[deprecated("Use materialSlab(const Vector2& lp) with a prior "
+               "Surface::globalToLocal() call instead"),
+    noreturn]] const MaterialSlab&
+  materialSlab(const Vector3& gp) const override;
 
   using ISurfaceMaterial::materialSlab;
 
@@ -105,17 +106,17 @@ class GridSurfaceMaterial final : public ISurfaceMaterial {
   /// either does not - this lets @c Surface::assignSurfaceMaterial detect
   /// whether the grid's axis order needs swapping to match the surface's
   /// canonical local axes.
-  std::vector<AxisDirection> localAxisDirections() const final;
+  std::vector<AxisDirection> localAxisDirections() const override;
 
   /// @copydoc ISurfaceMaterial::scale(double)
   ///
   /// @note For @c GloballyIndexed storage this scales the entries addressed
   ///       by this grid's indices in place, in the (possibly shared) global
   ///       material vector - entries shared with other grids are scaled too.
-  ISurfaceMaterial& scale(double factor) final;
+  ISurfaceMaterial& scale(double factor) override;
 
   /// @copydoc ISurfaceMaterial::toStream(std::ostream&) const
-  std::ostream& toStream(std::ostream& sl) const final;
+  std::ostream& toStream(std::ostream& sl) const override;
 
   /// Return the 2D multi-axis binning spec
   /// @return const reference to the binning spec
