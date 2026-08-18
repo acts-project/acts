@@ -158,7 +158,8 @@ void addTrackFinding(py::module& mex) {
         findTracksBrem, measurementSelectorCfg, trackSelectorCfg, maxSteps,
         twoWay, reverseSearch, seedDeduplication, stayOnSeed, pixelVolumeIds,
         stripVolumeIds, maxPixelHoles, maxStripHoles, trimTracks,
-        useJosephFormulation, constrainToVolumeIds, endOfWorldVolumeIds);
+        recordMaterialStates, useJosephFormulation, constrainToVolumeIds,
+        endOfWorldVolumeIds);
   }
 }
 

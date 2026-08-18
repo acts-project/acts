@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 
@@ -25,7 +26,9 @@ namespace Acts {
 ///
 /// In addition to a simple axis definitions, it holds also a description
 /// of the axis direction.
-class ProtoAxis {
+///
+/// @deprecated Use AxisSpec instead
+class [[deprecated("Use AxisSpec instead")]] ProtoAxis {
  public:
   /// Convenience constructors - for variable binning
   ///
@@ -125,6 +128,7 @@ class ProtoAxis {
 /// @param a the proto axis
 ///
 /// @return an IGrid unique ptr and hence transfers ownership
+/// @deprecated Use makeGrid(const IAxis&) instead
 template <typename payload_t>
 [[deprecated("Use makeGrid(const IAxis&) instead")]] std::unique_ptr<IGrid>
 makeGrid(const ProtoAxis& a) {
@@ -145,6 +149,7 @@ makeGrid(const ProtoAxis& a) {
 /// @param b the second proto axis
 ///
 /// @return an IGrid unique ptr and hence transfers ownership
+/// @deprecated Use makeGrid(const IAxis&, const IAxis&) instead
 template <typename payload_t>
 [[deprecated(
     "Use makeGrid(const IAxis&, const IAxis&) instead")]] std::unique_ptr<IGrid>
@@ -159,7 +164,10 @@ makeGrid(const ProtoAxis& a, const ProtoAxis& b) {
 }
 
 /// A Directed proto axis
-struct DirectedProtoAxis : public ProtoAxis {
+///
+/// @deprecated Use AxisSpec with an AxisDirection instead
+struct [[deprecated("Use AxisSpec with an AxisDirection instead")]]
+DirectedProtoAxis : public ProtoAxis {
  public:
   /// Convenience constructors - for variable binning
   ///
@@ -217,17 +225,27 @@ struct DirectedProtoAxis : public ProtoAxis {
   AxisDirection m_direction;
 };
 
+// A deprecated declaration only silences directly named types, not the ones it
+// names as template arguments
+ACTS_PUSH_IGNORE_DEPRECATED()
+
 /// Stream operator for vector of ProtoAxis
 /// @param os Output stream
 /// @param a Vector of ProtoAxis to output
 /// @return Reference to output stream
+/// @deprecated Use AxisSpec instead
+[[deprecated("Use AxisSpec instead")]]
 std::ostream& operator<<(std::ostream& os, const std::vector<ProtoAxis>& a);
 
 /// Stream operator for vector of DirectedProtoAxis
 /// @param os Output stream
 /// @param a Vector of DirectedProtoAxis to output
 /// @return Reference to output stream
+/// @deprecated Use AxisSpec with an AxisDirection instead
+[[deprecated("Use AxisSpec with an AxisDirection instead")]]
 std::ostream& operator<<(std::ostream& os,
                          const std::vector<DirectedProtoAxis>& a);
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace Acts

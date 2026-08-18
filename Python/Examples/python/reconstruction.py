@@ -186,6 +186,7 @@ CkfConfig = namedtuple(
         "maxPixelHoles",
         "maxStripHoles",
         "trimTracks",
+        "recordMaterialStates",
         "useJosephFormulation",
         "constrainToVolumes",
         "endOfWorldVolumes",
@@ -194,6 +195,7 @@ CkfConfig = namedtuple(
         15.0,
         25.0,
         10,
+        None,
         None,
         None,
         None,
@@ -544,12 +546,12 @@ def addSeeding(
 
         tracks = f"{prefix}seed-tracks"
         s.addAlgorithm(
-            acts.examples.ProtoTracksToTracks(
+            acts.examples.SeedsToTracks(
                 level=logLevel,
-                inputProtoTracks=protoTracks,
+                inputSeeds=f"{prefix}estimatedseeds",
                 inputTrackParameters=f"{prefix}estimatedparameters",
-                inputMeasurements=f"{prefix}measurement_subset",
                 outputTracks=tracks,
+                trackingGeometry=trackingGeometry,
             )
         )
 
@@ -1393,9 +1395,9 @@ def addSeedPerformanceWriters(
 ):
     """Writes seeding related performance output"""
     customLogLevel = acts.examples.defaultLogging(sequence, logLevel)
-    RootTrackFinderPerformanceWriter, RootTrackParameterWriter = (
+    RootPatternRecognitionPerformanceWriter, RootTrackParameterWriter = (
         acts.examples._tryImportRoot(
-            "RootTrackFinderPerformanceWriter", "RootTrackParameterWriter"
+            "RootPatternRecognitionPerformanceWriter", "RootTrackParameterWriter"
         )
     )
     outputDirRoot = Path(outputDirRoot)
@@ -1403,13 +1405,14 @@ def addSeedPerformanceWriters(
         outputDirRoot.mkdir()
 
     sequence.addWriter(
-        RootTrackFinderPerformanceWriter(
+        RootPatternRecognitionPerformanceWriter(
             level=customLogLevel(),
             inputTracks=tracks,
             inputParticles=selectedParticles,
             inputTrackParticleMatching=f"{prefix}seed_particle_matching",
             inputParticleTrackMatching=f"{prefix}particle_seed_matching",
             inputParticleMeasurementsMap="particle_measurements_map",
+            label="seed",
             filePath=str(outputDirRoot / f"performance_{prefix}seeding.root"),
         )
     )
@@ -1804,6 +1807,7 @@ def addCKFTracks(
             maxPixelHoles=ckfConfig.maxPixelHoles,
             maxStripHoles=ckfConfig.maxStripHoles,
             trimTracks=ckfConfig.trimTracks,
+            recordMaterialStates=ckfConfig.recordMaterialStates,
             useJosephFormulation=ckfConfig.useJosephFormulation,
             constrainToVolumeIds=ckfConfig.constrainToVolumes,
             endOfWorldVolumeIds=ckfConfig.endOfWorldVolumes,
@@ -1921,6 +1925,7 @@ def addTrackWriters(
     logLevel: Optional[acts.logging.Level] = None,
     writeCovMat=False,
     writeMatchingDetails: bool = False,
+    label: str = "track",
 ):
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -1928,14 +1933,14 @@ def addTrackWriters(
         (
             RootTrackSummaryWriter,
             RootTrackStatesWriter,
-            RootTrackFitterPerformanceWriter,
-            RootTrackFinderPerformanceWriter,
+            RootTrackParameterPerformanceWriter,
+            RootPatternRecognitionPerformanceWriter,
             RootTrackFinderNTupleWriter,
         ) = acts.examples._tryImportRoot(
             "RootTrackSummaryWriter",
             "RootTrackStatesWriter",
-            "RootTrackFitterPerformanceWriter",
-            "RootTrackFinderPerformanceWriter",
+            "RootTrackParameterPerformanceWriter",
+            "RootPatternRecognitionPerformanceWriter",
             "RootTrackFinderNTupleWriter",
         )
         outputDirRoot = Path(outputDirRoot)
@@ -1968,23 +1973,24 @@ def addTrackWriters(
             s.addWriter(trackStatesWriter)
 
         if writeFitterPerformance:
-            trackFitterPerformanceWriter = RootTrackFitterPerformanceWriter(
+            trackParameterPerformanceWriter = RootTrackParameterPerformanceWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
                 inputParticles="particles_selected",
                 inputTrackParticleMatching="track_particle_matching",
                 filePath=str(outputDirRoot / f"performance_fitting_{name}.root"),
             )
-            s.addWriter(trackFitterPerformanceWriter)
+            s.addWriter(trackParameterPerformanceWriter)
 
         if writeFinderPerformance:
-            trackFinderPerfWriter = RootTrackFinderPerformanceWriter(
+            trackFinderPerfWriter = RootPatternRecognitionPerformanceWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
                 inputParticles="particles_selected",
                 inputTrackParticleMatching="track_particle_matching",
                 inputParticleTrackMatching="particle_track_matching",
                 inputParticleMeasurementsMap="particle_measurements_map",
+                label=label,
                 filePath=str(outputDirRoot / f"performance_finding_{name}.root"),
                 writeMatchingDetails=writeMatchingDetails,
             )

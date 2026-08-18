@@ -7,6 +7,9 @@
 
 #pragma once
 
+// VecMem include(s).
+#include <vecmem/memory/memory_resource.hpp>
+
 // System include(s).
 #include <string_view>
 
@@ -19,11 +22,13 @@ namespace traccc {
 /// @param description A short description of the application
 /// @param argc The count of command line arguments (from @c main(...))
 /// @param argv The command line arguments (from @c main(...))
+/// @param host_mr An optional pointer to a (pinned) host memory resource
 ///
 /// @return The value to be returned from @c main(...)
 ///
 template <typename FULL_CHAIN_ALG>
-int throughput_st(std::string_view description, int argc, char* argv[]);
+int throughput_st(std::string_view description, int argc, char* argv[],
+                  vecmem::memory_resource* host_mr = nullptr);
 
 }  // namespace traccc
 
