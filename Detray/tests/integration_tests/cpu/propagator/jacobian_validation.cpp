@@ -420,8 +420,9 @@ struct bound_getter : public base_actor {
       actor_state.m_abs_path_length = stepping.abs_path_length();
       actor_state.m_param_destination = res.destination_params();
       actor_state.m_jacobi =
-          actor::parameter_transporter<algebra_t>().get_full_jacobian(
-              propagation, actor_state.m_param_departure);
+          actor::parameter_transporter<algebra_t>()
+              .get_full_jacobian(propagation, actor_state.m_param_departure)
+              .template to_dense<algebra_t>();
 
       // Stop navigation if the destination surface is found
       navigation.exit();

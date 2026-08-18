@@ -319,13 +319,15 @@ inline auto record_propagation(
         DETRAY_DEBUG_HOST(
             "Last bound parameters: " << updater_state.bound_params());
 
-        const bound_matrix<algebra_t> propagation_step_jacobian =
+        // Keep the Jacobian in its substructure: the covariance transport
+        // takes it as it is.
+        const auto propagation_step_jacobian =
             detray::actor::parameter_transporter<algebra_t>{}.get_full_jacobian(
                 *fw_propagation, last_bound);
 
         const bound_matrix<algebra_t> old_cov = last_bound.covariance();
         bound_matrix<algebra_t> &new_cov = last_bound.covariance();
-        detray::detail::transport_covariance_to_bound_impl(
+        detray::detail::transport_covariance_to_bound<algebra_t>(
             old_cov, propagation_step_jacobian, new_cov);
 
         // Get the bound parameters at the destination surface

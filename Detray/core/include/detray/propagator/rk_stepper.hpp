@@ -16,9 +16,9 @@
 #include "detray/material/material.hpp"
 #include "detray/navigation/policies.hpp"
 #include "detray/propagator/base_stepper.hpp"
-#include "detray/propagator/detail/codegen/update_rk_transport_jacobian.hpp"
-#include "detray/propagator/transport_jacobian.hpp"
 #include "detray/tracks/tracks.hpp"
+#include "detray/utils/known_substructure_matrix.hpp"
+#include "detray/utils/known_substructure_matrix_types.hpp"
 
 namespace detray {
 enum class rk_stepper_flags : std::uint32_t {
@@ -62,10 +62,13 @@ class rk_stepper final
   using magnetic_field_type = magnetic_field_t;
   template <std::size_t ROWS, std::size_t COLS>
   using matrix_type = dmatrix<algebra_t, ROWS, COLS>;
-  using transport_jacobian_type = std::conditional_t<
-      uses_gradient,
-      detail::transport_jacobian_matrix_with_gradient<algebra_type>,
-      detail::transport_jacobian_matrix_without_gradient<algebra_type>>;
+  /// The transport Jacobian is stored, and advanced, in its known
+  /// substructure rather than dense: 25 of its 64 cells are free without the
+  /// field gradient, 43 with it. Both the storage and the step product in
+  /// advance_jacobian follow from the substructure alone.
+  using transport_jacobian_type =
+      ksm::matrix<ksm::transport_jacobian_substructure<uses_gradient>,
+                  scalar_type>;
 
   rk_stepper() = default;
 
@@ -912,19 +915,29 @@ class rk_stepper final
 
     const auto old_jacobian = stepping.internal_transport_jacobian();
 
-    if constexpr ((flags_v & static_cast<std::uint32_t>(
-                                 rk_stepper_flags::e_allow_field_gradient)) !=
-                  0u) {
-      detail::update_transport_jacobian_with_gradient_impl(
-          old_jacobian, dFdt, dGdt, dFdr, dGdr, dFdqop, dGdqop, dqopqop,
-          stepping.internal_transport_jacobian());
+    // Assemble the step matrix D in the same substructure the transport
+    // Jacobian carries. Every free cell of that substructure is covered by one
+    // of the copies below, so the cells left untouched are exactly the
+    // structural ones, which need no value.
+    transport_jacobian_type D{};
+
+    ksm::copy_elements_into<0u, 4u>(D, dFdt);
+    ksm::copy_elements_into<4u, 4u>(D, dGdt);
+    ksm::copy_elements_into<0u, 7u>(D, dFdqop);
+    ksm::copy_elements_into<4u, 7u>(D, dGdqop);
+    D.template at<7u, 7u>() = dqopqop;
+
+    if constexpr (uses_gradient) {
+      ksm::copy_elements_into<0u, 0u>(D, dFdr);
+      ksm::copy_elements_into<4u, 0u>(D, dGdr);
     } else {
       assert(!cfg.use_field_gradient);
-
-      detail::update_transport_jacobian_without_gradient_impl(
-          old_jacobian, dFdt, dGdt, dFdqop, dGdqop, dqopqop,
-          stepping.internal_transport_jacobian());
     }
+
+    // The substructure is closed under multiplication, so the accumulated
+    // Jacobian keeps it. The product skips the structurally zero terms: 145
+    // flops without the field gradient and 475 with it, against 960 dense.
+    stepping.internal_transport_jacobian() = D * old_jacobian;
   }
 
   DETRAY_HOST_DEVICE

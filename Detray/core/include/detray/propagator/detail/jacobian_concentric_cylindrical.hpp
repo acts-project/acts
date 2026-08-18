@@ -41,6 +41,19 @@ struct jacobian<concentric_cylindrical2D<algebra_t>> {
   using free_to_bound_jacobian_submatrix_type =
       free_to_bound_jacobian_submatrix<algebra_type>;
 
+  /// @name Structural facts about this frame's Jacobian contributions
+  ///
+  /// The local position does not depend on the track direction, so
+  /// d(pos)/d(angle) is the zero matrix, and the path derivative only picks
+  /// up the position terms.
+  /// @{
+  /// Whether @c get_derivative_dpos_dangle can be non-zero.
+  static constexpr bool has_dpos_dangle = false;
+  /// Whether @c path_derivative sets the direction terms as well as the
+  /// position ones.
+  static constexpr bool path_derivative_has_direction_terms = false;
+  /// @}
+
   DETRAY_HOST_DEVICE static constexpr free_to_path_matrix_type path_derivative(
       const transform3_type & /*trf*/, const point3_type &pos,
       const vector3_type &dir, const vector3_type & /*dtds*/) {

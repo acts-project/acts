@@ -42,6 +42,19 @@ struct jacobian<line2D<algebra_t>> {
       free_to_bound_jacobian_submatrix<algebra_type>;
   /// @}
 
+  /// @name Structural facts about this frame's Jacobian contributions
+  ///
+  /// A wire's local frame is defined relative to the track direction, so
+  /// both d(pos)/d(angle) and the direction terms of the path derivative are
+  /// non-zero.
+  /// @{
+  /// Whether @c get_derivative_dpos_dangle can be non-zero.
+  static constexpr bool has_dpos_dangle = true;
+  /// Whether @c path_derivative sets the direction terms as well as the
+  /// position ones.
+  static constexpr bool path_derivative_has_direction_terms = true;
+  /// @}
+
   DETRAY_HOST_DEVICE
   static constexpr rotation_matrix reference_frame(const transform3_type &trf3,
                                                    const point3_type & /*pos*/,

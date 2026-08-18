@@ -75,9 +75,6 @@ EXCLUDE_FILES = (
     "tex-mml-chtml.js",
     "tgeo_aux.py.in",
     "todo.md",
-    # Detray python tests for auto-generated code
-    "Detray/codegen/detray-sympy/tests/test_assumptions_D.py",
-    "Detray/codegen/detray-sympy/tests/test_matrices.py",
     # Used in traccc
     "Detray/tests/include/detray/test/utils/perigee_stopper.hpp",
     "Detray/tests/include/detray/test/validation/propagation_validation.hpp",
@@ -85,7 +82,6 @@ EXCLUDE_FILES = (
     "Detray/python/detray/detectors/impl/definitions.py",
     "Detray/python/detray/detectors/impl/type_helpers.py",
     # Python uv files
-    "Detray/codegen/detray-sympy/uv.lock",
     "Detray/python/detray/uv.lock",
     # TODO: remove after file is gone
     "Core/include/Acts/Utilities/ProtoAxisHelpers.hpp",

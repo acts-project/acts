@@ -15,8 +15,8 @@
 #include "detray/geometry/tracking_surface.hpp"
 #include "detray/propagator/base_actor.hpp"
 #include "detray/propagator/composite_actor.hpp"
-#include "detray/propagator/detail/codegen/covariance_transport.hpp"
-#include "detray/propagator/detail/codegen/full_jacobian.hpp"
+#include "detray/propagator/detail/covariance_transport.hpp"
+#include "detray/propagator/detail/full_jacobian.hpp"
 #include "detray/propagator/detail/jacobian_engine.hpp"
 #include "detray/propagator/detail/noise_estimation.hpp"
 #include "detray/propagator/propagation_config.hpp"
@@ -50,15 +50,15 @@ struct parameter_updater_state {
   friend struct parameter_transporter<algebra_t>;
   friend struct parameter_setter<algebra_t>;
 
+  /// The accumulated full Jacobian, in its known substructure
+  using full_jacobian_type = detail::full_jacobian_matrix<algebra_t>;
+
   constexpr parameter_updater_state() = default;
 
   /// Start without explicit track parameters
   DETRAY_HOST_DEVICE
-  explicit constexpr parameter_updater_state(
-      const propagation::config& cfg,
-      bound_matrix<algebra_t>* full_jac = nullptr)
-      : m_full_jacobian(full_jac),
-        m_cfg{cfg.navigation.accumulated_error,
+  explicit constexpr parameter_updater_state(const propagation::config& cfg)
+      : m_cfg{cfg.navigation.accumulated_error,
               cfg.navigation.n_scattering_stddev,
               cfg.navigation.estimate_scattering_noise} {}
 
@@ -66,10 +66,8 @@ struct parameter_updater_state {
   DETRAY_HOST_DEVICE
   constexpr parameter_updater_state(
       const propagation::config& cfg,
-      const free_track_parameters<algebra_t>& free_params,
-      bound_matrix<algebra_t>* full_jac = nullptr)
-      : m_full_jacobian(full_jac),
-        m_cfg{cfg.navigation.accumulated_error,
+      const free_track_parameters<algebra_t>& free_params)
+      : m_cfg{cfg.navigation.accumulated_error,
               cfg.navigation.n_scattering_stddev,
               cfg.navigation.estimate_scattering_noise} {
     // Set bound track parameters
@@ -81,10 +79,8 @@ struct parameter_updater_state {
   DETRAY_HOST_DEVICE
   constexpr parameter_updater_state(
       const propagation::config& cfg,
-      const bound_track_parameters<algebra_t>& bound_params,
-      bound_matrix<algebra_t>* full_jac = nullptr)
+      const bound_track_parameters<algebra_t>& bound_params)
       : m_bound_params{bound_params},
-        m_full_jacobian(full_jac),
         m_cfg{cfg.navigation.accumulated_error,
               cfg.navigation.n_scattering_stddev,
               cfg.navigation.estimate_scattering_noise} {}
@@ -150,42 +146,48 @@ struct parameter_updater_state {
 
   /// @returns true if the full Jacobian matrix should be assembled.
   DETRAY_HOST_DEVICE
-  constexpr bool has_full_jacobian() const {
-    return m_full_jacobian != nullptr;
+  constexpr bool has_full_jacobian() const { return m_has_full_jacobian; }
+
+  /// Start accumulating the full Jacobian, from the identity.
+  ///
+  /// The accumulator is held by value rather than through a pointer to its
+  /// final storage, so it is not read back and written out again at every
+  /// surface. Every cell of it is addressed at compile time, so it can stay in
+  /// registers for the whole propagation. Write it out once afterwards, with
+  /// @c full_jacobian.
+  DETRAY_HOST_DEVICE
+  void enable_full_jacobian() {
+    m_full_jacobian = full_jacobian_type::identity();
+    m_has_full_jacobian = true;
   }
 
   /// @returns the current full Jacbian.
   DETRAY_HOST_DEVICE
-  constexpr const bound_matrix<algebra_t>& full_jacobian() const {
+  constexpr const full_jacobian_type& full_jacobian() const {
     assert(has_full_jacobian());
-    return *m_full_jacobian;
+    return m_full_jacobian;
   }
 
   /// Set new full Jacbian.
   DETRAY_HOST_DEVICE
-  constexpr void set_full_jacobian(const bound_matrix<algebra_t>& jac) {
+  constexpr void set_full_jacobian(const full_jacobian_type& jac) {
     assert(has_full_jacobian());
-    *m_full_jacobian = jac;
-  }
-
-  /// Set new full Jacbian.
-  DETRAY_HOST_DEVICE
-  constexpr void set_full_jacobian(bound_matrix<algebra_t>* jac_ptr) {
-    assert(jac_ptr);
-    m_full_jacobian = jac_ptr;
+    m_full_jacobian = jac;
   }
 
  private:
   /// Bound track parameters and covariance
   bound_track_parameters<algebra_t> m_bound_params{};
   /// Full jacobian for up to the current destination surface
-  bound_matrix<algebra_t>* m_full_jacobian{nullptr};
+  full_jacobian_type m_full_jacobian{};
   /// Configuration for the noise estimation
   noise_cfg m_cfg{};
   /// Always update the free track parameters, even if nothing changed
   bool m_always_update{false};
   /// Notify observing actors on initial surface (propagation init)
   bool m_notify_on_initial{true};
+  /// Whether the full Jacobian is accumulated over the propagation
+  bool m_has_full_jacobian{false};
 };
 
 /// Result of the param. transporter: bound track parameters at dest. sf.
@@ -255,6 +257,9 @@ struct parameter_transporter : base_actor {
   using bound_track_parameters_type = bound_track_parameters<algebra_t>;
   // Bound matrix type (bound covariance)
   using bound_matrix_type = bound_matrix<algebra_t>;
+  // The full Jacobian in its known substructure. Shared with the state, so
+  // that the step Jacobian and the accumulator it holds have the same type.
+  using ksm_full_jacobian_type = detail::full_jacobian_matrix<algebra_t>;
   /// @}
 
   /// Use the parameter updater state
@@ -277,6 +282,27 @@ struct parameter_transporter : base_actor {
       return detail::jacobian_engine<algebra_t>::
           template bound_to_free_jacobian_submatrix_dpos_dloc<frame_t>(
               trf3, params.pos(), params.dir());
+    }
+  };
+
+  /// @returns whether this frame can give d(pos)/d(angle) a value. Only the
+  /// line frames do, so for every other surface that block of the
+  /// bound-to-free Jacobian is structurally zero.
+  struct frame_has_dpos_dangle_visitor {
+    template <typename frame_t>
+    DETRAY_HOST_DEVICE constexpr bool operator()(
+        const frame_t& /*frame*/) const {
+      return detail::jacobian<frame_t>::has_dpos_dangle;
+    }
+  };
+
+  /// @returns whether this frame's path derivative sets the direction terms as
+  /// well as the position ones. Again only the line frames.
+  struct frame_path_has_direction_terms_visitor {
+    template <typename frame_t>
+    DETRAY_HOST_DEVICE constexpr bool operator()(
+        const frame_t& /*frame*/) const {
+      return detail::jacobian<frame_t>::path_derivative_has_direction_terms;
     }
   };
 
@@ -359,12 +385,20 @@ struct parameter_transporter : base_actor {
       DETRAY_DEBUG_HOST("Actor: Departure bound param.: " << departure_params);
 
       // Transport the covariance
-      const bound_matrix<algebra_t> propagation_step_jacobian =
+      const ksm_full_jacobian_type propagation_step_jacobian =
           get_full_jacobian(propagation, departure_params);
 
       // Update the full Jacobian, if required
       if (math::fabs(stepping.path_length()) > 0.f) {
         if (updater_state.has_full_jacobian()) {
+          // The step Jacobian already carries its substructure, and the
+          // substructure is closed under multiplication, so the accumulator
+          // keeps it over every step. The product skips the structurally zero
+          // terms: 225 flops rather than the 396 of a dense 6x6 product.
+          //
+          // The state holds the accumulator by value, so neither operand has
+          // to be converted here. The caller writes the result out once, after
+          // the propagation.
           updater_state.set_full_jacobian(propagation_step_jacobian *
                                           updater_state.full_jacobian());
         }
@@ -377,7 +411,7 @@ struct parameter_transporter : base_actor {
       const bound_matrix_type old_cov = departure_params.covariance();
       bound_matrix_type& new_cov = departure_params.covariance();
 
-      detray::detail::transport_covariance_to_bound_impl(
+      detray::detail::transport_covariance_to_bound<algebra_t>(
           old_cov, propagation_step_jacobian, new_cov);
     } else {
       DETRAY_VERBOSE_HOST_DEVICE(
@@ -406,7 +440,7 @@ struct parameter_transporter : base_actor {
 
   /// @returns the full Jacobian between departure and destination surfaces
   template <typename propagator_state_t>
-  DETRAY_HOST_DEVICE constexpr bound_matrix_type get_full_jacobian(
+  DETRAY_HOST_DEVICE constexpr ksm_full_jacobian_type get_full_jacobian(
       propagator_state_t& propagation,
       const bound_track_parameters_type& departure_params) const {
     // Map the surface shapes of the detector down to the common frames
@@ -532,25 +566,36 @@ struct parameter_transporter : base_actor {
     const dmatrix<algebra_t, 2, 3> f2b_dangle_ddir = detail::jacobian_engine<
         algebra_t>::free_to_bound_jacobian_submatrix_dangle_ddir(dest_glob_dir);
 
-    // Finally, we can use our Sympy-generated full Jacobian computation
-    // and return its result.
-    bound_matrix_type full_jacobian;
+    // Finally, assemble the product. Which of the factors' zeros are there
+    // depends on the two surfaces' local frames, and those are only known at
+    // run time -- so select the specialisation here and let each instantiation
+    // carry its zeros in the types. Note that the transport Jacobian needs no
+    // such choice: it brings its own substructure with it, so the field
+    // gradient no longer has to be branched on here.
+    const bool dep_has_dpos_dangle =
+        types::visit<frame_registry_t, frame_has_dpos_dangle_visitor>(
+            dep_sf.shape_id());
+    const bool dest_path_has_direction_terms =
+        types::visit<frame_registry_t, frame_path_has_direction_terms_visitor>(
+            dest_sf.shape_id());
 
-    if constexpr (std::decay_t<propagator_state_t>::stepper_uses_gradient) {
-      detail::update_full_jacobian_with_gradient_impl(
+    const auto assemble = [&](auto dpos_dangle, auto path_direction_terms) {
+      return detail::update_full_jacobian<decltype(dpos_dangle)::value,
+                                          decltype(path_direction_terms)::value,
+                                          algebra_t>(
           stepping.internal_transport_jacobian(), b2f_dpos_dloc,
           b2f_ddir_dangle, b2f_dpos_dangle, path_to_free_derivative,
-          free_to_path_derivative, f2b_dloc_dpos, f2b_dangle_ddir,
-          full_jacobian);
-    } else {
-      detail::update_full_jacobian_without_gradient_impl(
-          stepping.internal_transport_jacobian(), b2f_dpos_dloc,
-          b2f_ddir_dangle, b2f_dpos_dangle, path_to_free_derivative,
-          free_to_path_derivative, f2b_dloc_dpos, f2b_dangle_ddir,
-          full_jacobian);
+          free_to_path_derivative, f2b_dloc_dpos, f2b_dangle_ddir);
+    };
+
+    if (dep_has_dpos_dangle) {
+      return dest_path_has_direction_terms
+                 ? assemble(std::true_type{}, std::true_type{})
+                 : assemble(std::true_type{}, std::false_type{});
     }
-
-    return full_jacobian;
+    return dest_path_has_direction_terms
+               ? assemble(std::false_type{}, std::true_type{})
+               : assemble(std::false_type{}, std::false_type{});
   }
 };
 
