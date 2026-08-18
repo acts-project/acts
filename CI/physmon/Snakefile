@@ -1,0 +1,856 @@
+# Snakemake workflow for physmon.
+#
+# Produces the physmon validation artifacts as an explicit DAG so:
+#   - Production and comparison both run in parallel (--cores N).
+#   - Editing one producer only re-runs that branch.
+#   - The catalog of jobs lives in config/physmon.yaml, not in shell ifs.
+#
+# This file holds mechanism; config/physmon.yaml holds the catalog. Every
+# producer rule's outputs, inputs, thread budget and command are derived from
+# that file, so adding a physmon chain means writing a workflow script, adding
+# a `producers:` block, and pasting the same six-line rule stanza with the new
+# slug -- no output paths are listed by hand. A `producers:` entry with no
+# matching rule fails at DAG construction rather than silently doing nothing.
+#
+# Every rule is run through scripts/wrap.sh so it always exits 0 and writes a
+# small JSON witness {"step","rc","log"}. The summary step joins those witnesses
+# against the catalog to produce a multi-column results table and is the single
+# place that decides overall pass/fail. This means even when an upstream step
+# fails, the rest of the DAG still runs (on touched-empty stand-in files) and
+# the summary shows the full failure chain.
+#
+# Usage (from repo root):
+#   snakemake -s CI/physmon/Snakefile --cores N [target]
+#
+# No environment setup is needed first: every rule sources CI/physmon/setup.sh,
+# which activates the ACTS build (assumed to be at <repo>/build) for that rule's
+# shell only. snakemake itself can therefore be installed against any Python.
+#
+# Targets:
+#   all              everything + summary  (default; fails non-zero if any comparison failed)
+#   simulation, kf, gsf, gx2f, refit_kf, refit_gsf, fullchains, gx2f_vs_kf
+#                    per-mode meta-targets. Each builds only its slice of
+#                    artifacts and fails non-zero if any in-scope comparison failed.
+#
+# Override the output directory:
+#   snakemake ... --config outdir=/tmp/physmon
+
+import csv
+import json
+import os
+from pathlib import Path
+
+configfile: "CI/physmon/config/physmon.yaml"
+
+OUTDIR             = config.get("outdir", "physmon")
+REFDIR             = "CI/physmon/reference"
+REFMANIFEST        = "CI/physmon/reference.sha256"
+WORKFLOWS_DIR      = "CI/physmon/workflows"
+HISTCMP_CONFIG_DIR = "CI/physmon/config"
+WRAP               = "bash CI/physmon/scripts/wrap.sh"
+
+# Every rule's shell activates the ACTS environment itself through setup.sh
+# (which expects the build directory at <repo>/build) instead of inheriting it
+# from whoever launched snakemake. That is what keeps the ACTS PYTHONPATH out of
+# the snakemake process: the ROOT/dd4hep/podio extension modules on it are
+# ABI-tied to the ACTS interpreter and segfault any other one that imports them.
+#
+# This replaces snakemake's default prefix, so keep its `set -euo pipefail`.
+shell.prefix(
+    'set -euo pipefail; '
+    'source CI/physmon/setup.sh; '
+)
+
+
+# ---------------------------------------------------------------------------
+# Reference files. They are not committed: reference.sha256 records the SHA256
+# of each one, and reference.py pulls the blobs from the registry by content
+# hash. Reading the manifest here makes every reference file an ordinary DAG
+# output, so a histcmp that needs one waits for the fetch rule instead of
+# failing on a missing input.
+# ---------------------------------------------------------------------------
+
+def read_reference_manifest(path):
+    """Parse reference.sha256 into {relpath: digest}."""
+    entries = {}
+    for line in Path(path).read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        digest, relpath = line.split(maxsplit=1)
+        entries[relpath.strip()] = digest
+    return entries
+
+
+REFERENCE_FILES = read_reference_manifest(REFMANIFEST)
+
+# ACTS_PHYSMON_NO_FETCH=1 (or --config fetch_references=0) runs against REFDIR as
+# it is on disk. The fetch rule is then not defined at all, so snakemake reports
+# any reference it still needs as a missing input file rather than reaching for
+# the registry. Same escape hatch phys_perf_mon.sh offered.
+FETCH_REFERENCES = bool(
+    int(config.get("fetch_references", 0 if os.environ.get("ACTS_PHYSMON_NO_FETCH") else 1))
+)
+
+# Thread budget for compute-heavy rules. Setting this equal to the whole
+# snakemake budget means at most one heavy rule runs at a time but it uses
+# every available core: the producer scripts (via --threads) and histcmp
+# (via --jobs, which fans its per-item comparisons and plot rendering across a
+# ProcessPoolExecutor). Cheap rules (plot/summary) and the three
+# Geant4/Pythia8-bound producers (threads: 1) can fill the gaps in parallel.
+HEAVY_THREADS = workflow.cores
+
+
+# ---------------------------------------------------------------------------
+# Producer catalog, read from the `producers:` block in the config. Each key
+# is a slug that names three things by convention: the rule
+# (produce_<slug>), the script (workflows/physmon_<slug>.py) and the output
+# directory ({OUTDIR}/data/<slug>).
+# ---------------------------------------------------------------------------
+
+PRODUCERS = config["producers"]
+
+# All producer slugs the workflow knows about. Used to enumerate witnesses.
+# A slug with no matching rule fails at DAG construction ("no rule to produce"
+# its witness), so this cannot silently drift from the rules below.
+PRODUCER_SLUGS = list(PRODUCERS)
+
+# Producers with a per-variant output subdir layout. Drives witness paths and
+# the comparison -> producer mapping for cascade reporting.
+PRODUCER_VARIANTS = {
+    slug: list(spec["variants"])
+    for slug, spec in PRODUCERS.items()
+    if spec.get("variants")
+}
+
+# Producers that consume another producer's output. The upstream slug is the
+# leading path component of the input, so the dependency is stated once and
+# feeds both the rule's `input:` and the summary's "upstream" step.
+PRODUCER_UPSTREAM = {
+    slug: spec["inputs"][0].split("/")[0]
+    for slug, spec in PRODUCERS.items()
+    if spec.get("inputs")
+}
+
+
+# ---------------------------------------------------------------------------
+# Trackfinding comparison templates, read from the config. The trackfinding
+# workflows all produce the same pack of comparison files
+# (seeding/finding/fitting/tracksummary) with optional ambisolver / ML-solver
+# / vertexing add-ons, so the pack is described once and expanded per
+# producer rather than enumerated per comparison.
+# ---------------------------------------------------------------------------
+
+TRACKFINDING_BASE = config["trackfinding_base"]
+TRACKFINDING_EXTRAS = config["trackfinding_extras"]
+
+
+def _expand_row(slug, variant, label, row, vertexing_config):
+    """Expand a single template row into a comparison dict (or None to skip)."""
+    if variant is not None and variant in row.get("skip_variants", []):
+        return None
+    prefix = f"{slug}/{variant}/" if variant is not None else f"{slug}/"
+    entry = {
+        "title":   row["kind_fmt"].format(label=label),
+        "current": prefix + row["file"],
+        "mode":    "fullchains",
+    }
+    if "config" in row:
+        entry["config"] = row["config"]
+    if "plot" in row:
+        plot_cfg = row["plot"]["config"]
+        if plot_cfg == "{vertexing_config}":
+            assert vertexing_config, f"trackfinding row needs vertexing_config: {row}"
+            plot_cfg = vertexing_config
+        entry["plot"] = {
+            "from":   prefix + row["plot"]["from"],
+            "tree":   row["plot"]["tree"],
+            "config": plot_cfg,
+        }
+    return entry
+
+
+def trackfinding_rows(slug):
+    """The template rows a trackfinding producer expands: base pack + extras."""
+    opts = PRODUCERS[slug]["trackfinding"]
+    rows = list(TRACKFINDING_BASE)
+    for e in opts.get("extras") or []:
+        rows += TRACKFINDING_EXTRAS[e]
+    return rows
+
+
+def expand_trackfinding():
+    """Expand every producer carrying a `trackfinding:` block into comparisons.
+
+    Per-producer options under `trackfinding:`:
+      - For producers with `variants`: `label_fmt` with a `{variant_label}`
+        placeholder. Otherwise: a plain `label`.
+      - `extras`: optional list of keys from TRACKFINDING_EXTRAS.
+      - `vertexing_config`: required if any vertexing extra is used.
+    """
+    comparisons = []
+    for slug, spec in PRODUCERS.items():
+        opts = spec.get("trackfinding")
+        if not opts:
+            continue
+        rows = trackfinding_rows(slug)
+        vcfg = opts.get("vertexing_config")
+        variants = spec.get("variants")
+        if variants:
+            assert "label_fmt" in opts, f"{slug} has variants, needs label_fmt"
+            for variant, var_label in variants.items():
+                label = opts["label_fmt"].format(variant_label=var_label)
+                for row in rows:
+                    out = _expand_row(slug, variant, label, row, vcfg)
+                    if out is not None:
+                        comparisons.append(out)
+        else:
+            label = opts["label"]
+            for row in rows:
+                out = _expand_row(slug, None, label, row, vcfg)
+                if out is not None:
+                    comparisons.append(out)
+    return comparisons
+
+
+# ---------------------------------------------------------------------------
+# Catalog: the explicit comparisons from YAML plus trackfinding expansions.
+# ---------------------------------------------------------------------------
+
+COMPARISONS = list(config["comparisons"]) + expand_trackfinding()
+
+
+# ---------------------------------------------------------------------------
+# Catalog indexes
+# ---------------------------------------------------------------------------
+
+PLOTS = {c["current"]: c["plot"] for c in COMPARISONS if "plot" in c}
+COMP_BY_CURRENT = {c["current"]: c for c in COMPARISONS}
+
+
+# ---------------------------------------------------------------------------
+# Path helpers
+# ---------------------------------------------------------------------------
+
+def _rel_no_root(rel):
+    """Strip a trailing '.root' from a path-like string."""
+    assert rel.endswith(".root"), rel
+    return rel[:-len(".root")]
+
+
+def html_for(comp):
+    """{OUTDIR}/html/<current-with-.root-replaced-by-.html>."""
+    return f"{OUTDIR}/html/" + _rel_no_root(comp["current"]) + ".html"
+
+
+def witness_for_producer(slug, variant=None):
+    if variant:
+        return f"{OUTDIR}/witnesses/producer/{slug}/{variant}.json"
+    return f"{OUTDIR}/witnesses/producer/{slug}.json"
+
+
+def witness_for_plot(rel_no_root):
+    return f"{OUTDIR}/witnesses/plot/{rel_no_root}.json"
+
+
+def witness_for_histcmp(rel_no_root):
+    return f"{OUTDIR}/witnesses/histcmp/{rel_no_root}.json"
+
+
+def producer_info_for_comp(comp):
+    """Return (slug, variant) — which producer owns this comparison's `current` file.
+
+    Variant is None unless the producer has variants (currently only trackfinding_1muon).
+    """
+    parts = comp["current"].split("/")
+    slug = parts[0]
+    variants = PRODUCER_VARIANTS.get(slug)
+    if variants and len(parts) >= 2 and parts[1] in variants:
+        return slug, parts[1]
+    return slug, None
+
+
+def upstream_slug_for(slug):
+    """Return the upstream producer slug if this producer has one, else None."""
+    return PRODUCER_UPSTREAM.get(slug)
+
+
+def comps_for_mode(mode):
+    if mode == "all":
+        return COMPARISONS
+    return [c for c in COMPARISONS if c["mode"] == mode]
+
+
+# ---------------------------------------------------------------------------
+# Producer rule directives, derived from the catalog.
+#
+# Every producer rule's outputs are implied by the comparisons it feeds, so
+# they are computed here instead of being written out by hand. Two rules:
+#
+#   - A comparison with a `plot` block consumes the raw ntuple named by
+#     `plot.from`; that ntuple is the producer's output and is temp(), since
+#     plot_hist turns it into the `_hist.root` that is actually compared.
+#     Without a `plot` block, the compared file *is* the producer's output.
+#   - A comparison whose reference is produced rather than fetched
+#     (reference_in: outdir) also has that reference produced here.
+#
+# Files a script writes that no comparison consumes have to be declared as
+# `extra_outputs` in the config, or snakemake would not know about them.
+# ---------------------------------------------------------------------------
+
+def comps_for_producer(slug, variant=None):
+    """Comparisons whose `current` file this producer (and variant) produces."""
+    return [c for c in COMPARISONS if producer_info_for_comp(c) == (slug, variant)]
+
+
+def _output_key(rel):
+    """A stable, unique keyword-argument name for an output path."""
+    return Path(rel).name[: -len(".root")] if rel.endswith(".root") else Path(rel).name
+
+
+def producer_outputs(slug, variant=None, path_variant=None):
+    """The `output:` mapping for a producer rule.
+
+    `path_variant` overrides the variant used in the emitted paths, so a rule
+    covering several variants through a wildcard can select its row set with a
+    representative variant while still emitting '{variant}' in the paths.
+    """
+    if path_variant is None:
+        path_variant = variant
+    prefix = f"{slug}/{path_variant}/" if path_variant is not None else f"{slug}/"
+    # The comparison's paths already carry the concrete variant; swap in the
+    # wildcard (or nothing) so the emitted path matches the rule.
+    concrete = f"{slug}/{variant}/" if variant is not None else f"{slug}/"
+
+    outputs = {}
+    for comp in comps_for_producer(slug, variant):
+        if "plot" in comp:
+            rel = comp["plot"]["from"]
+            outputs[_output_key(rel)] = temp(f"{OUTDIR}/data/{prefix}{rel[len(concrete):]}")
+        else:
+            rel = comp["current"]
+            outputs[_output_key(rel)] = f"{OUTDIR}/data/{prefix}{rel[len(concrete):]}"
+        if comp.get("reference_in") == "outdir":
+            rel = comp["reference"]
+            outputs[_output_key(rel)] = f"{OUTDIR}/data/{prefix}{rel[len(concrete):]}"
+
+    for rel in PRODUCERS[slug].get("extra_outputs") or []:
+        outputs[_output_key(rel)] = f"{OUTDIR}/data/{prefix}{rel}"
+
+    assert "witness" not in outputs, f"{slug}: an output is named 'witness'"
+    outputs["witness"] = (
+        f"{OUTDIR}/witnesses/producer/{slug}/{path_variant}.json"
+        if path_variant is not None
+        else witness_for_producer(slug)
+    )
+    return outputs
+
+
+def producer_inputs(slug):
+    return [f"{OUTDIR}/data/{rel}" for rel in PRODUCERS[slug].get("inputs") or []]
+
+
+def producer_threads(slug):
+    """Heavy thread budget unless the producer is declared single-threaded."""
+    return HEAVY_THREADS if PRODUCERS[slug].get("threads", True) else 1
+
+
+def producer_log(slug, variant=None):
+    stem = f"{slug}_{variant}" if variant is not None else slug
+    return f"{OUTDIR}/logs/{stem}.log"
+
+
+def producer_shell(slug, variant=None):
+    """The wrapped script invocation. Scripts and output dirs follow the slug."""
+    outdir = f"{OUTDIR}/data/{slug}"
+    cmd = (
+        WRAP + " --witness {output.witness} --step producer --log {log} "
+        "--touches '{output}' -- "
+        f"python3 {WORKFLOWS_DIR}/physmon_{slug}.py "
+    )
+    if variant is not None:
+        cmd += f"{outdir}/{variant} --variant {variant} "
+    else:
+        cmd += f"{outdir} "
+    if PRODUCERS[slug].get("threads", True):
+        cmd += "--threads {threads}"
+    return cmd.rstrip()
+
+
+def _check_histcmp_witnesses(comps):
+    """Read histcmp witnesses for `comps`; SystemExit(rc|...) if any non-zero.
+
+    Used by per-mode meta-targets so e.g. `snakemake kf` fails when the KF
+    comparison failed. The richer multi-column summary still requires `all`.
+    """
+    import sys
+    rc = 0
+    failed = []
+    for c in comps:
+        wpath = witness_for_histcmp(_rel_no_root(c["current"]))
+        try:
+            w = json.loads(Path(wpath).read_text())
+        except (OSError, ValueError) as e:
+            print(f"physmon: cannot read witness {wpath}: {e}", file=sys.stderr)
+            rc |= 1
+            continue
+        if w["rc"] != 0:
+            rc |= w["rc"]
+            failed.append((c["title"], w))
+    for title, w in failed:
+        log = w.get("log") or "(no log)"
+        print(f"physmon: comparison failed: {title} (rc={w['rc']}, log={log})", file=sys.stderr)
+    if rc != 0:
+        raise SystemExit(rc)
+
+
+def _all_witnesses():
+    """Every witness path the workflow should produce. Used by build_results' input."""
+    paths = []
+    for slug in PRODUCER_SLUGS:
+        variants = PRODUCER_VARIANTS.get(slug)
+        if variants:
+            for v in variants:
+                paths.append(witness_for_producer(slug, v))
+        else:
+            paths.append(witness_for_producer(slug))
+    for c in COMPARISONS:
+        if "plot" in c:
+            paths.append(witness_for_plot(_rel_no_root(c["current"])))
+        paths.append(witness_for_histcmp(_rel_no_root(c["current"])))
+    return paths
+
+
+# ---------------------------------------------------------------------------
+# Default target — `all`. Triggers full DAG + summary.
+# ---------------------------------------------------------------------------
+
+rule all:
+    input:
+        f"{OUTDIR}/summary.md",
+        f"{OUTDIR}/summary.html",
+    default_target: True
+
+
+# ---------------------------------------------------------------------------
+# Per-mode meta-targets. Pull only their slice of comparisons; check their
+# histcmp witnesses via a small run: gate so partial runs fail correctly.
+# ---------------------------------------------------------------------------
+
+rule simulation:
+    input:
+        [html_for(c) for c in comps_for_mode("simulation")],
+        [witness_for_histcmp(_rel_no_root(c["current"])) for c in comps_for_mode("simulation")],
+    run: _check_histcmp_witnesses(comps_for_mode("simulation"))
+
+rule kf:
+    input:
+        [html_for(c) for c in comps_for_mode("kf")],
+        [witness_for_histcmp(_rel_no_root(c["current"])) for c in comps_for_mode("kf")],
+    run: _check_histcmp_witnesses(comps_for_mode("kf"))
+
+rule gsf:
+    input:
+        [html_for(c) for c in comps_for_mode("gsf")],
+        [witness_for_histcmp(_rel_no_root(c["current"])) for c in comps_for_mode("gsf")],
+    run: _check_histcmp_witnesses(comps_for_mode("gsf"))
+
+rule gx2f:
+    input:
+        [html_for(c) for c in comps_for_mode("gx2f")],
+        [witness_for_histcmp(_rel_no_root(c["current"])) for c in comps_for_mode("gx2f")],
+    run: _check_histcmp_witnesses(comps_for_mode("gx2f"))
+
+rule refit_kf:
+    input:
+        [html_for(c) for c in comps_for_mode("refit_kf")],
+        [witness_for_histcmp(_rel_no_root(c["current"])) for c in comps_for_mode("refit_kf")],
+    run: _check_histcmp_witnesses(comps_for_mode("refit_kf"))
+
+rule refit_gsf:
+    input:
+        [html_for(c) for c in comps_for_mode("refit_gsf")],
+        [witness_for_histcmp(_rel_no_root(c["current"])) for c in comps_for_mode("refit_gsf")],
+    run: _check_histcmp_witnesses(comps_for_mode("refit_gsf"))
+
+rule fullchains:
+    input:
+        [html_for(c) for c in comps_for_mode("fullchains")],
+        [witness_for_histcmp(_rel_no_root(c["current"])) for c in comps_for_mode("fullchains")],
+    run: _check_histcmp_witnesses(comps_for_mode("fullchains"))
+
+rule gx2f_vs_kf:
+    input:
+        [html_for(c) for c in comps_for_mode("gx2f_vs_kf")],
+        [witness_for_histcmp(_rel_no_root(c["current"])) for c in comps_for_mode("gx2f_vs_kf")],
+    run: _check_histcmp_witnesses(comps_for_mode("gx2f_vs_kf"))
+
+
+# ---------------------------------------------------------------------------
+# Producer rules. One per script, and deliberately still one rule each rather
+# than a loop: `snakemake produce_<slug>` and a grep for the rule name both
+# keep working, and the DAG stays readable. Every directive is derived from
+# the catalog, so the body is the same six lines for each and adding a chain
+# means adding a `producers:` block and a script, not a list of output paths.
+#
+# Outputs that feed plot_hist come back from producer_outputs() wrapped in
+# temp(), so snakemake auto-cleans the large ntuples once they have been
+# consumed (matching the original `rm` in the legacy shell script).
+# ---------------------------------------------------------------------------
+
+rule produce_simulation:
+    input:   producer_inputs("simulation")
+    output:  **producer_outputs("simulation")
+    log:     producer_log("simulation")
+    threads: producer_threads("simulation")
+    shell:   producer_shell("simulation")
+
+
+rule produce_simulation_gsf:
+    input:   producer_inputs("simulation_gsf")
+    output:  **producer_outputs("simulation_gsf")
+    log:     producer_log("simulation_gsf")
+    threads: producer_threads("simulation_gsf")
+    shell:   producer_shell("simulation_gsf")
+
+
+rule produce_trackfitting_kf:
+    input:   producer_inputs("trackfitting_kf")
+    output:  **producer_outputs("trackfitting_kf")
+    log:     producer_log("trackfitting_kf")
+    threads: producer_threads("trackfitting_kf")
+    shell:   producer_shell("trackfitting_kf")
+
+
+rule produce_trackfitting_gsf:
+    input:   producer_inputs("trackfitting_gsf")
+    output:  **producer_outputs("trackfitting_gsf")
+    log:     producer_log("trackfitting_gsf")
+    threads: producer_threads("trackfitting_gsf")
+    shell:   producer_shell("trackfitting_gsf")
+
+
+rule produce_trackfitting_gx2f:
+    input:   producer_inputs("trackfitting_gx2f")
+    output:  **producer_outputs("trackfitting_gx2f")
+    log:     producer_log("trackfitting_gx2f")
+    threads: producer_threads("trackfitting_gx2f")
+    shell:   producer_shell("trackfitting_gx2f")
+
+
+rule produce_trackrefitting_kf:
+    input:   producer_inputs("trackrefitting_kf")
+    output:  **producer_outputs("trackrefitting_kf")
+    log:     producer_log("trackrefitting_kf")
+    threads: producer_threads("trackrefitting_kf")
+    shell:   producer_shell("trackrefitting_kf")
+
+
+rule produce_trackrefitting_gsf:
+    input:   producer_inputs("trackrefitting_gsf")
+    output:  **producer_outputs("trackrefitting_gsf")
+    log:     producer_log("trackrefitting_gsf")
+    threads: producer_threads("trackrefitting_gsf")
+    shell:   producer_shell("trackrefitting_gsf")
+
+
+rule produce_trackfitting_gx2f_vs_kf:
+    input:   producer_inputs("trackfitting_gx2f_vs_kf")
+    output:  **producer_outputs("trackfitting_gx2f_vs_kf")
+    log:     producer_log("trackfitting_gx2f_vs_kf")
+    threads: producer_threads("trackfitting_gx2f_vs_kf")
+    shell:   producer_shell("trackfitting_gx2f_vs_kf")
+
+
+# trackfinding_1muon is split into two rules so the output set correctly
+# reflects that TruthSmeared does NOT produce performance_seeding.root. The
+# wildcard rule covers the rest, which all share one row set -- asserted here
+# so a future variant with a different pack cannot silently ride along on
+# SEEDING_VARIANT's outputs.
+SEEDING_VARIANTS = [v for v in PRODUCER_VARIANTS["trackfinding_1muon"] if v != "TruthSmeared"]
+SEEDING_VARIANT = SEEDING_VARIANTS[0]
+for _v in SEEDING_VARIANTS[1:]:
+    assert set(producer_outputs("trackfinding_1muon", _v, path_variant="{variant}")) == set(
+        producer_outputs("trackfinding_1muon", SEEDING_VARIANT, path_variant="{variant}")
+    ), f"trackfinding_1muon variant {_v} has a different output set than {SEEDING_VARIANT}"
+
+
+rule produce_trackfinding_1muon_with_seeding:
+    output:
+        **producer_outputs("trackfinding_1muon", SEEDING_VARIANT, path_variant="{variant}"),
+    wildcard_constraints:
+        variant = "|".join(SEEDING_VARIANTS),
+    log:     producer_log("trackfinding_1muon", "{variant}")
+    threads: producer_threads("trackfinding_1muon")
+    shell:   producer_shell("trackfinding_1muon", "{wildcards.variant}")
+
+
+rule produce_trackfinding_1muon_TruthSmeared:
+    output:  **producer_outputs("trackfinding_1muon", "TruthSmeared")
+    log:     producer_log("trackfinding_1muon", "TruthSmeared")
+    threads: producer_threads("trackfinding_1muon")
+    shell:   producer_shell("trackfinding_1muon", "TruthSmeared")
+
+
+rule produce_trackfinding_4muon_50vertices:
+    input:   producer_inputs("trackfinding_4muon_50vertices")
+    output:  **producer_outputs("trackfinding_4muon_50vertices")
+    log:     producer_log("trackfinding_4muon_50vertices")
+    threads: producer_threads("trackfinding_4muon_50vertices")
+    shell:   producer_shell("trackfinding_4muon_50vertices")
+
+
+rule produce_trackfinding_ttbar_pu200:
+    input:   producer_inputs("trackfinding_ttbar_pu200")
+    output:  **producer_outputs("trackfinding_ttbar_pu200")
+    log:     producer_log("trackfinding_ttbar_pu200")
+    threads: producer_threads("trackfinding_ttbar_pu200")
+    shell:   producer_shell("trackfinding_ttbar_pu200")
+
+
+# ---------------------------------------------------------------------------
+# Plot rule: ntuple ROOT -> histogrammed ROOT via Examples/Scripts/generic_plotter.py.
+# ---------------------------------------------------------------------------
+
+def _plot_input(wildcards):
+    return f"{OUTDIR}/data/" + PLOTS[wildcards.rel + "_hist.root"]["from"]
+
+def _plot_tree(wildcards):
+    return PLOTS[wildcards.rel + "_hist.root"]["tree"]
+
+def _plot_config(wildcards):
+    return f"{HISTCMP_CONFIG_DIR}/" + PLOTS[wildcards.rel + "_hist.root"]["config"]
+
+
+rule plot_hist:
+    input:
+        ntuple = _plot_input,
+    output:
+        hist    = f"{OUTDIR}/data/{{rel}}_hist.root",
+        witness = f"{OUTDIR}/witnesses/plot/{{rel}}_hist.json",
+    params:
+        tree   = _plot_tree,
+        config = _plot_config,
+    log:
+        f"{OUTDIR}/logs/plot_{{rel}}_hist.log",
+    shell:
+        WRAP + " --witness {output.witness} --step plot --log {log} "
+        "--touches '{output}' -- "
+        "python3 Examples/Scripts/generic_plotter.py "
+        "{input.ntuple} {params.tree} {output.hist} "
+        "--silent --config {params.config}"
+
+
+# ---------------------------------------------------------------------------
+# Reference fetch. One rule for the whole manifest: reference.py pull is
+# all-or-nothing, and it downloads in parallel and caches by digest, so pulling
+# per file would be slower rather than more granular.
+#
+# Deliberately not run through wrap.sh. Every other rule is wrapped so a failure
+# degrades into a red cell in the summary, but with no references there is
+# nothing to compare against at all, so this one must fail the workflow instead
+# of letting each histcmp run against an empty stand-in.
+# ---------------------------------------------------------------------------
+
+if FETCH_REFERENCES:
+
+    rule fetch_references:
+        input:
+            manifest = REFMANIFEST,
+        output:
+            [f"{REFDIR}/{rel}" for rel in REFERENCE_FILES],
+        params:
+            refdir = REFDIR,
+        log:
+            f"{OUTDIR}/logs/fetch_references.log",
+        shell:
+            "mkdir -p $(dirname {log}) && "
+            "uv run --no-project CI/physmon/reference.py pull "
+            "--manifest {input.manifest} --reference-dir {params.refdir} 2>&1 | tee {log}"
+
+
+# ---------------------------------------------------------------------------
+# histcmp rule.
+# ---------------------------------------------------------------------------
+
+def _histcmp_current(wildcards):
+    return f"{OUTDIR}/data/" + wildcards.rel + ".root"
+
+def _histcmp_reference(wildcards):
+    rel = wildcards.rel + ".root"
+    comp = COMP_BY_CURRENT[rel]
+    ref_rel = comp.get("reference", rel)
+    if comp.get("reference_in") == "outdir":
+        return f"{OUTDIR}/data/{ref_rel}"
+    return f"{REFDIR}/{ref_rel}"
+
+def _histcmp_params(wildcards):
+    rel = wildcards.rel + ".root"
+    comp = COMP_BY_CURRENT[rel]
+    cfg = comp.get("config")
+    config_flag = f"--config {HISTCMP_CONFIG_DIR}/{cfg}" if cfg else ""
+    return {
+        "title":       comp["title"],
+        "config_flag": config_flag,
+        "label_ref":   comp.get("label_reference", "reference"),
+        "label_mon":   comp.get("label_monitored", "monitored"),
+    }
+
+
+rule histcmp:
+    input:
+        current   = _histcmp_current,
+        reference = _histcmp_reference,
+    output:
+        html    = f"{OUTDIR}/html/{{rel}}.html",
+        witness = f"{OUTDIR}/witnesses/histcmp/{{rel}}.json",
+    params:
+        p = _histcmp_params,
+    threads: HEAVY_THREADS
+    log:
+        f"{OUTDIR}/logs/histcmp_{{rel}}.log",
+    shell:
+        WRAP + " --witness {output.witness} --step histcmp --log {log} "
+        "--touches '{output}' -- "
+        "histcmp {input.current} {input.reference} "
+        "--jobs {threads} "
+        "--label-reference={params.p[label_ref]} "
+        "--label-monitored={params.p[label_mon]} "
+        "--title={params.p[title]:q} "
+        "-o {output.html} "
+        "-p {output.html}_plots "
+        "{params.p[config_flag]}"
+
+
+# ---------------------------------------------------------------------------
+# build_results: join all witnesses against the catalog into a single rich
+# results JSON. The summary rule renders this to md/html.
+# ---------------------------------------------------------------------------
+
+def _read_witness(path):
+    try:
+        return json.loads(Path(path).read_text())
+    except (OSError, ValueError):
+        return {"step": "?", "rc": -1, "log": None}
+
+
+def _comparison_row(comp):
+    slug, variant = producer_info_for_comp(comp)
+    steps = []
+    upstream = upstream_slug_for(slug)
+    if upstream:
+        w = _read_witness(witness_for_producer(upstream))
+        steps.append({"kind": "upstream", "name": upstream, "rc": w["rc"], "log": w.get("log")})
+    prw = _read_witness(witness_for_producer(slug, variant))
+    prod_label = slug + (f"/{variant}" if variant else "")
+    steps.append({"kind": "producer", "name": prod_label, "rc": prw["rc"], "log": prw.get("log")})
+    if "plot" in comp:
+        pw = _read_witness(witness_for_plot(_rel_no_root(comp["current"])))
+        steps.append({"kind": "plot", "name": "plot", "rc": pw["rc"], "log": pw.get("log")})
+    hw = _read_witness(witness_for_histcmp(_rel_no_root(comp["current"])))
+    steps.append({"kind": "histcmp", "name": "histcmp", "rc": hw["rc"], "log": hw.get("log")})
+    # Mark cascade: any step after the first failure inherits the failure.
+    first_failed = False
+    for s in steps:
+        if first_failed and s["rc"] != 0:
+            s["cascade"] = True
+        else:
+            s["cascade"] = False
+        if s["rc"] != 0:
+            first_failed = True
+    # Which reference file this comparison covers, and which output would
+    # replace it. reference.py candidate turns a failing comparison into a
+    # manifest entry from these two. A comparison between two monitored outputs
+    # (reference_in: outdir) has no reference and leaves both empty, which is
+    # what phys_perf_mon.sh wrote and what candidate skips on.
+    if comp.get("reference_in") == "outdir":
+        ref_path, monitored_path = "", ""
+    else:
+        ref_path = comp.get("reference", comp["current"])
+        monitored_path = comp["current"]
+    return {
+        "title":          comp["title"],
+        "mode":           comp["mode"],
+        "report":         "html/" + _rel_no_root(comp["current"]) + ".html",
+        "info_only":      comp["title"].startswith("Comparison"),
+        "steps":          steps,
+        "ref_path":       ref_path,
+        "monitored_path": monitored_path,
+    }
+
+
+def _histcmp_rc(row):
+    """The row's histcmp exit code — what candidate keys 'needs replacing' off."""
+    for s in row["steps"]:
+        if s["kind"] == "histcmp":
+            return s["rc"]
+    return -1
+
+
+rule build_results:
+    input:
+        _all_witnesses(),
+    output:
+        results = f"{OUTDIR}/physmon_results.json",
+        # The 5-column histcmp_results.csv phys_perf_mon.sh used to append to,
+        # in that exact format: reference.py candidate reads it, so the reference
+        # publish workflow keeps working against this run without changes.
+        csv     = f"{OUTDIR}/histcmp_results.csv",
+    run:
+        rows = [_comparison_row(c) for c in COMPARISONS]
+        Path(output.results).write_text(json.dumps(rows, indent=2) + "\n")
+        with open(output.csv, "w", newline="") as f:
+            writer = csv.writer(f)
+            for row in rows:
+                writer.writerow([
+                    row["title"],
+                    row["report"],
+                    _histcmp_rc(row),
+                    row["ref_path"],
+                    row["monitored_path"],
+                ])
+
+
+# ---------------------------------------------------------------------------
+# Reference candidate: the manifest that would apply if every failing
+# comparison in this run were accepted, plus the manifest the run actually used.
+# Both ship in the physmon artifact, which is the whole interface to the
+# reference publish workflow: `reference.py update <run>` reads
+# reference-candidate.sha256 and takes the new blobs from data/<ref_path>.
+# ---------------------------------------------------------------------------
+
+rule reference_candidate:
+    input:
+        results  = f"{OUTDIR}/histcmp_results.csv",
+        manifest = REFMANIFEST,
+    output:
+        candidate = f"{OUTDIR}/reference-candidate.sha256",
+        manifest  = f"{OUTDIR}/reference.sha256",
+    params:
+        data_dir = f"{OUTDIR}/data",
+    shell:
+        "cp {input.manifest} {output.manifest} && "
+        "uv run --no-project CI/physmon/reference.py candidate "
+        "--manifest {input.manifest} --results {input.results} "
+        "--data-dir {params.data_dir} --output {output.candidate}"
+
+
+# ---------------------------------------------------------------------------
+# Summary: JSON -> markdown + html. Exits non-zero if any non-info row failed,
+# which is what fails snakemake and surfaces failure to CI.
+#
+# Depends on the candidate manifest so it is written first. The candidate
+# matters precisely when comparisons fail, and this rule failing is what stops
+# the workflow — an independent rule could be left unscheduled.
+# ---------------------------------------------------------------------------
+
+rule summary:
+    input:
+        results   = f"{OUTDIR}/physmon_results.json",
+        candidate = f"{OUTDIR}/reference-candidate.sha256",
+    output:
+        md      = f"{OUTDIR}/summary.md",
+        html    = f"{OUTDIR}/summary.html",
+    shell:
+        "python3 CI/physmon/summary.py {input.results} "
+        "--md {output.md} --html {output.html}"

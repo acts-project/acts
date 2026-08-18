@@ -1,24 +1,8 @@
 name: Docs
 
 on:
-  push:
-    # The merge queue also pushes to its temp ref, which separately triggers
-    # merge_group below; without this the two runs share a concurrency group
-    # and cancel-in-progress evicts the PR from the queue (#5884 follow-up).
-    branches-ignore:
-      - "gh-readonly-queue/**"
-  pull_request:
-    branches:
-      - main
-      - 'release/**'
-      - 'develop/**'
-  schedule:
-    # Daily external-link sweep at 04:17 UTC (see the external-linkcheck job)
-    - cron: '17 4 * * *'
+  # DISABLED for physmon CI test — manual trigger only. Do not merge.
   workflow_dispatch:
-  # Required directly ("docs") and via merge-sentinel's "Docs / docs" check.
-  merge_group:
-    types: [checks_requested]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}

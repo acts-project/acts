@@ -96,9 +96,10 @@ each other. A reference update is now a one-line change per file, and reviewers
 can see exactly which references a pull request touches instead of a list of
 changed binaries.
 
-`CI/physmon/phys_perf_mon.sh` populates `CI/physmon/reference/` from the manifest
-before running any comparison, so local runs need no extra step. Downloaded blobs
-are cached under `~/.cache/acts/physmon-references` (override with
+The workflow's `fetch_references` rule populates `CI/physmon/reference/` from the
+manifest, so local runs need no extra step: every reference is a normal output in
+the DAG, and a comparison that needs one waits for the fetch. Downloaded blobs are
+cached under `~/.cache/acts/physmon-references` (override with
 `ACTS_PHYSMON_CACHE`), so switching between branches with different references
 does not re-download everything.
 
@@ -109,10 +110,11 @@ $ uv run --no-project CI/physmon/reference.py pull     # populate CI/physmon/ref
 $ uv run --no-project CI/physmon/reference.py verify   # check it against the manifest
 ```
 
-Set `ACTS_PHYSMON_NO_FETCH=1` to stop `phys_perf_mon.sh` from touching the
-reference directory, if you want to point it at files of your own. The manifest
-is in `sha256sum` format, so `sha256sum -c ../reference.sha256` works from inside
-the reference directory too.
+Set `ACTS_PHYSMON_NO_FETCH=1` (or `--config fetch_references=0`) to drop the
+`fetch_references` rule from the workflow, if you want to point it at files of
+your own: the references are then plain inputs that must already be on disk. The
+manifest is in `sha256sum` format, so `sha256sum -c ../reference.sha256` works
+from inside the reference directory too.
 
 ## How do I update the reference files?
 
