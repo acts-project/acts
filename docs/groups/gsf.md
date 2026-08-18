@@ -35,10 +35,10 @@ weight, a bound parameter vector and a bound covariance:
 @snippet{trimleft} GsfComponent.hpp gsf component
 
 > [!note]
-> The GSF is substantially more expensive than the KF and is therefore only run
-> when a track is likely to be an electron — typically to re-fit a silicon track
-> that has been associated with an electromagnetic-calorimeter cluster
-> @cite Huth:2024. The GSF itself is a *fitter* — its measurement sequence is
+> The GSF is substantially more expensive than the KF and is therefore typically
+> only run when a track is likely to be an electron — usually to re-fit a
+> silicon track that has been associated with an electromagnetic-calorimeter
+> cluster @cite Huth:2024. The GSF itself is a *fitter* — its measurement sequence is
 > taken as given — but the same Bethe–Heitler mixture machinery can also run
 > *inside* the CKF during track finding to recover electron tracks; see
 > @ref gsf-ckf-brem.
@@ -69,12 +69,13 @@ which is what @ref Acts::BetheHeitlerApproxSingleCmp evaluates:
 
 @snippet{trimleft} BetheHeitlerApprox.hpp single component moments
 
-A single Gaussian reflects the true, tailed distribution very poorly, so in
-practice a multi-component approximation is used. Because the mixture cannot be
-derived in closed form, its weights, means and variances are pre-fitted
-(minimising either the Kullback–Leibler divergence or the CDF distance to
-@f$f(z)@f$) and stored as polynomials in @f$x/X_0@f$ so they can be interpolated at
-run time. Any approximation is accessed through the abstract interface:
+A single Gaussian reflects the true, tailed distribution very poorly (see
+@ref fig_gsf_bethe_heitler "the figure below"), so in practice a multi-component
+approximation is used. Because the mixture cannot be derived in closed form, its
+weights, means and variances are pre-fitted (minimising either the
+Kullback–Leibler divergence or the CDF distance to @f$f(z)@f$) and stored as
+polynomials in @f$x/X_0@f$ so they can be interpolated at run time. Any
+approximation is accessed through the abstract interface:
 
 @snippet{trimleft} BetheHeitlerApprox.hpp bethe heitler interface
 
@@ -82,6 +83,10 @@ run time. Any approximation is accessed through the abstract interface:
 in @f$z@f$) into a caller-provided span:
 
 @snippet{trimleft} BetheHeitlerApprox.hpp gaussian component
+
+@anchor fig_gsf_bethe_heitler
+
+![The true Bethe--Heitler distribution compared with a Gaussian mixture approximation, with the individual components drawn as thin lines, at a thickness of t = 0.1 (roughly 10 mm of silicon).](track_fitting/gsf_bethe_heitler_approx.svg){width=450px}
 
 The concrete @ref Acts::PolynomialBetheHeitlerApprox implements the polynomial
 form; the default parametrisation shipped in the source
@@ -100,9 +105,8 @@ the backward pass an effective energy *gain* is applied instead.
 ## The algorithm on a surface {#gsf-algorithm}
 
 The GSF actor (`Acts::detail::Gsf::GsfActor`) drives the fit as a propagator
-actor. When
-the multi-stepper reports the state on a surface, the actor executes the
-following, in this order:
+actor. When the multi-stepper reports the state on a surface, the actor executes
+the following, in this order (see also @ref fig_gsf_overview "the figure below"):
 
 1. Transport each component's covariance onto the surface.
 2. If the surface has material, apply **multiple scattering** as `PreUpdate`
@@ -118,7 +122,11 @@ following, in this order:
    @f]
    i.e. components incompatible with the measurement are exponentially
    suppressed. On a passive surface a no-measurement update is done instead
-   (which may flag a hole).
+   (which may flag a hole). Concretely, the weight is multiplied by
+   @f$\sqrt{1/\det R}\,\exp(-\tfrac12\chi^2)@f$, with the smallest
+   @f$\chi^2@f$ over the components factored out for numerical stability and
+   the weights normalised afterwards:
+   @snippet{trimleft} GsfUtils.hpp posterior weights
 4. Apply the **Bethe–Heitler** convolution of @ref gsf-bethe-heitler to every
    component, expanding the mixture.
 5. **Reduce** the mixture back down (see @ref gsf-reduction) and drop components
@@ -133,12 +141,9 @@ following, in this order:
 > reduction (step&nbsp;5) runs only *after* the loss, because the Kalman update
 > cannot increase the component count — only the convolution can.
 
-Concretely, the re-weighting multiplies each component's weight by
-@f$\sqrt{1/\det R}\,\exp(-\tfrac12\chi^2)@f$ (the smallest @f$\chi^2@f$ over the
-components is factored out for numerical stability, and the weights are
-normalised afterwards):
+@anchor fig_gsf_overview
 
-@snippet{trimleft} GsfUtils.hpp posterior weights
+![Simplified overview of the GSF algorithm.](track_fitting/gsf_overview.svg){width=450px}
 
 ## Mixture reduction {#gsf-reduction}
 
@@ -164,11 +169,13 @@ restricted to the @f$q/p@f$ dimension:
 
 @snippet{trimleft} GsfComponentMerging.cpp kl divergence
 
-## Reducing a mixture to one estimate {#gsf-merging}
+## Mixture merging {#gsf-merging}
 
-Several steps — storing an intermediate state, and producing the final fitted
-parameters — need a *single* parameter vector and covariance from a mixture. The
-method is selectable via the @ref Acts::ComponentMergeMethod enum:
+*Mixture merging* (or *component merging*) collapses a mixture into a single
+parameter vector and covariance — as opposed to the mixture *reduction* above,
+which brings a mixture down to a smaller mixture. Several steps need it: storing
+an intermediate state, and producing the final fitted parameters. The method is
+selectable via the @ref Acts::ComponentMergeMethod enum:
 
 @snippet{trimleft} GsfOptions.hpp component merge method
 
