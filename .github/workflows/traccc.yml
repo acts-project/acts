@@ -69,10 +69,15 @@ jobs:
           # tests strictly need: this leg pays for their device code either
           # way, and trimming would drop the toy-detector CKF tests from the
           # GPU run.
+          #
+          # TRACCC_BUILD_ALPAKA rides on top of the native CUDA build instead
+          # of a standalone alpaka-CUDA leg: alpaka's targets are gated on it
+          # alone, so nothing is lost and the baseline is built once. The
+          # flavor's alpaka is built `backend=serial,cuda`.
           - platform:
               name: CUDA
               container: ghcr.io/acts-project/ubuntu2604:90
-              options: --preset cuda-fp32
+              options: --preset cuda-fp32 -DTRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_CUDA_ENABLE=ON
               run_tests: false
               upload_build: true
               enable_cuda: true
@@ -105,14 +110,19 @@ jobs:
           # Compile check: no runner has an AMD GPU, but tests/hip is built.
           # TRACCC_USE_SYSTEM_ROCTHRUST keeps Thrust matched to the flavor's
           # hip; CMAKE_HIP_ARCHITECTURES narrows the gfx list to gfx90a.
+          #
+          # TRACCC_BUILD_ALPAKA is additive as on the CUDA leg above; the
+          # flavor's alpaka is built `backend=serial,hip`. This replaces
+          # #5774's ALPAKA_HIP job, whose alpaka_DISABLE_VENDOR_RNG, hip_std_20
+          # and RelWithDebInfo build carry over (ROCm 7 crashes at O3, #5877).
           - platform:
               name: "HIP"
               container: ghcr.io/acts-project/ubuntu2604:90
-              options: --preset hip-fp32 -DCMAKE_HIP_PLATFORM=amd -DCMAKE_HIP_ARCHITECTURES=gfx90a -DTRACCC_USE_SYSTEM_ROCTHRUST=ON
+              options: --preset hip-fp32 -DCMAKE_HIP_PLATFORM=amd -DCMAKE_HIP_ARCHITECTURES=gfx90a -DTRACCC_USE_SYSTEM_ROCTHRUST=ON -DTRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_HIP_ENABLE=ON -Dalpaka_DISABLE_VENDOR_RNG=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20
               run_tests: false
               enable_cuda: false
               flavor: rocm-gfx90a
-            build: Release
+            build: RelWithDebInfo
           - platform:
               name: "ALPAKA_CPU"
               container: ghcr.io/acts-project/ubuntu2604:90
@@ -121,23 +131,6 @@ jobs:
               enable_cuda: false
               flavor: ""
             build: Release
-          - platform:
-              name: "ALPAKA_CUDA"
-              container: ghcr.io/acts-project/ubuntu2604:90
-              options: --preset alpaka-fp32 -Dalpaka_ACC_GPU_CUDA_ENABLE=ON -DTRACCC_FAIL_ON_WARNINGS=OFF -DTRACCC_BUILD_CUDA_UTILS=ON
-              run_tests: false
-              enable_cuda: true
-              flavor: cuda13
-            build: Release
-          - platform:
-              name: "ALPAKA_HIP"
-              container: ghcr.io/acts-project/ubuntu2404_rocm:90
-              options: --preset alpaka-fp32 -Dalpaka_ACC_GPU_HIP_ENABLE=ON -DCMAKE_PREFIX_PATH=/opt/rocm -Dalpaka_DISABLE_VENDOR_RNG=ON -DTRACCC_USE_ROOT=OFF -DTRACCC_SETUP_ROCTHRUST=ON -DTRACCC_BUILD_HIP=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20 -DDETRAY_BUILD_VALIDATION_TOOLS=ON
-              run_tests: false
-              enable_cuda: false
-              enable_hip: true
-              enable_sycl: false
-            build: RelWithDebInfo #At O3 we get a compiler crash with ROCM 7, see https://github.com/acts-project/acts/issues/5877
     # Use BASH as the shell from the images.
     defaults:
       run:
