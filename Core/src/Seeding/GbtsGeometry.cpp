@@ -128,9 +128,9 @@ bool GbtsLayer::checkCompatibility(const GbtsLayer& otherLayer,
 
     const float r2 = otherLayer.m_layerDescription.refCoord;
 
-		// for same layer links use layer width
-    float A = r2 / (2.0f*m_layerDescription.halfRefWidth);
-    float B = r1 / (2.0f*m_layerDescription.halfRefWidth);
+    // for same layer links use layer width
+    float A = r2 / (2.0f * m_layerDescription.halfRefWidth);
+    float B = r1 / (2.0f * m_layerDescription.halfRefWidth);
     if (r2 != r1) {
       A = r2 / (r2 - r1);
       B = r1 / (r2 - r1);
@@ -179,7 +179,7 @@ bool GbtsLayer::checkCompatibility(const GbtsLayer& otherLayer,
 
   if (m_layerDescription.type == GbtsLayerType::Endcap &&
       otherLayer.m_layerDescription.type == GbtsLayerType::Endcap) {
-    const float z2 = otherLayer.m_layerDescription.refCoord;
+    float z2 = otherLayer.m_layerDescription.refCoord;
     const float z1 = m_layerDescription.refCoord;
     const float r2max = otherLayer.m_maxBinCoord.at(b2);
     const float r2min = otherLayer.m_minBinCoord.at(b2);
@@ -189,7 +189,9 @@ bool GbtsLayer::checkCompatibility(const GbtsLayer& otherLayer,
     if (r1min >= r2max) {
       return false;
     }
-
+    if (z2 == z1) {  // self link
+      z2 = 2.0f * m_layerDescription.halfRefWidth;
+    }
     if (z2 > 0) {  // positive endcap
 
       const float z0Max = z1 - r1min * (z2 - z1) / (r2max - r1min);
