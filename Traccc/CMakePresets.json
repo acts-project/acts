@@ -42,7 +42,8 @@
             "cacheVariables": {
                 "TRACCC_BUILD_CUDA_UTILS": "TRUE",
                 "TRACCC_BUILD_CUDA": "TRUE",
-                "VECMEM_BUILD_CUDA_LIBRARY": "TRUE"
+                "VECMEM_BUILD_CUDA_LIBRARY": "TRUE",
+                "ACTS_ENABLE_CUDA": "TRUE"
             }
         },
         {
@@ -54,7 +55,8 @@
             "cacheVariables": {
                 "TRACCC_BUILD_CUDA_UTILS": "TRUE",
                 "TRACCC_BUILD_CUDA": "TRUE",
-                "VECMEM_BUILD_CUDA_LIBRARY": "TRUE"
+                "VECMEM_BUILD_CUDA_LIBRARY": "TRUE",
+                "ACTS_ENABLE_CUDA": "TRUE"
             }
         },
         {
