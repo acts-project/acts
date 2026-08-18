@@ -24,5 +24,16 @@ set(ACTSVG_BUILD_PYTHON_BINDINGS
 
 set(ACTSVG_BUILD_WEB ON CACHE BOOL "Build the web plugin of ACTSVG")
 
+# ActSVG caches CMAKE_CXX_STANDARD=17. On the next configure, ACTS rejects
+# that value. Remove the cache entry unless it was already set by the caller.
+set(_acts_cxx_standard_was_cached FALSE)
+if(DEFINED CACHE{CMAKE_CXX_STANDARD})
+    set(_acts_cxx_standard_was_cached TRUE)
+endif()
+
 # Now set up its build.
 FetchContent_MakeAvailable(actsvg)
+
+if(NOT _acts_cxx_standard_was_cached)
+    unset(CMAKE_CXX_STANDARD CACHE)
+endif()
