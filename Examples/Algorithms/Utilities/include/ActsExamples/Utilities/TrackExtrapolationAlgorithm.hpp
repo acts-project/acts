@@ -36,8 +36,9 @@ namespace ActsExamples {
 /// input container and keep the parameters on their own surfaces. That is the
 /// same layering a fitter produces.
 ///
-/// Tracks whose extrapolation fails are dropped, so the output indices differ
-/// from the input and any truth matching has to be redone downstream.
+/// Tracks whose extrapolation fails are kept without a reference surface, so
+/// the output indices match the input and any truth matching of the input
+/// stays valid.
 class TrackExtrapolationAlgorithm final : public IAlgorithm {
  public:
   struct Config {
@@ -76,7 +77,7 @@ class TrackExtrapolationAlgorithm final : public IAlgorithm {
   /// @return a process code
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 
-  /// Report how many tracks were dropped over the whole run.
+  /// Report how many tracks could not be extrapolated over the whole run.
   ///
   /// @return a process code
   ProcessCode finalize() override;
