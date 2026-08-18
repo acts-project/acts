@@ -71,9 +71,7 @@ TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
   const bound_track_parameters<> in_par = params.at(param_id);
 
   // Create propagator
-  detray::propagation::config prop_cfg{cfg.propagation};
-  prop_cfg.navigation.estimate_scattering_noise = false;
-  propagator_t propagator(prop_cfg);
+  propagator_t propagator(cfg.propagation);
 
   // Create propagator state
   typename propagator_t::state propagation(in_par, field_data, det);
@@ -88,7 +86,7 @@ TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
   typename detray::actor::pathlimit_aborter<scalar_t>::state aborter_state{};
   // Parameter updater
   typename detray::actor::parameter_updater_state<algebra_t> updater_state{
-      prop_cfg, in_par};
+      cfg.propagation, in_par};
   // CKF-interactor
   traccc::details::ckf_interactor_t::state interactor_state;
   // Momentum aborter

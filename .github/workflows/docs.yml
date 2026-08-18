@@ -2,18 +2,36 @@ name: Docs
 
 on:
   push:
+    # The merge queue also pushes to its temp ref, which separately triggers
+    # merge_group below; without this the two runs share a concurrency group
+    # and cancel-in-progress evicts the PR from the queue (#5884 follow-up).
+    branches-ignore:
+      - "gh-readonly-queue/**"
   pull_request:
     branches:
       - main
       - 'release/**'
       - 'develop/**'
+  schedule:
+    # Daily external-link sweep at 04:17 UTC (see the external-linkcheck job)
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+  # Required directly ("docs") and via merge-sentinel's "Docs / docs" check.
+  merge_group:
+    types: [checks_requested]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  # Never cancel a merge_group run: it's a required check for a queue entry,
+  # and a cancellation reads as a failure to the queue, ejecting the PR.
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
 permissions:
   contents: read
+
+env:
+  LYCHEE_VERSION: "0.24.2"
+  LYCHEE_HASH: "1f4e0ef7f6554a6ed33dd7ac144fb2e1bbed98598e7af973042fc5cd43951c9a"
 
 jobs:
   docs:
@@ -24,7 +42,7 @@ jobs:
       DOXYGEN_HASH: "0ec2e5b2c3cd82b7106d19cb42d8466450730b8cb7a9e85af712be38bf4523a1"
       LINKCHECK_IGNORE_URL: "https://github.com/acts-project/linkcheck-ignore/raw/refs/heads/main/data.json"
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -48,10 +66,21 @@ jobs:
         run: >
           cmake --build build --target docs
 
-      - name: Set up uv
-        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+      - name: Install lychee
+        run: |
+          curl -fsSL "https://github.com/lycheeverse/lychee/releases/download/lychee-v${LYCHEE_VERSION}/lychee-x86_64-unknown-linux-gnu.tar.gz" -o lychee.tar.gz
+          echo "${LYCHEE_HASH}  lychee.tar.gz" | sha256sum -c -
+          tar xf lychee.tar.gz
+          sudo mv lychee-x86_64-unknown-linux-gnu/lychee /usr/local/bin/lychee
+          rm -rf lychee.tar.gz lychee-x86_64-unknown-linux-gnu
+          lychee --version
 
-      - name: Check documentation links
+      - name: Check internal documentation links
+        # Only internal links are checked here so this gate stays fast and
+        # deterministic (offline, no network). External URLs are validated by
+        # the scheduled external-linkcheck job.
+        env:
+          LINKCHECK_CHECK_EXTERN: "0"
         run: |
           docs/check_links.sh
 
@@ -108,3 +137,99 @@ jobs:
           repository: acts-project/acts-project.github.io
           event-type: deploy_docs
           client-payload: ${{ format('{{"source_repo":{0},"run_id":{1},"artifact_id":{2},"ref":{3},"ref_type":{4},"ref_name":{5},"sha":{6}}}', toJson(github.repository), toJson(github.run_id), toJson(steps.artifact-upload-step.outputs.artifact-id), toJson(github.ref), toJson(github.ref_type), toJson(github.ref_name), toJson(github.sha)) }}
+
+  external-linkcheck:
+    # Validate external URLs out of the PR critical path. Runs on a schedule
+    # (and on demand) against the docs built by the `docs` job. lychee retries
+    # failed requests, caches healthy results between runs and accepts timeouts,
+    # so a single slow or briefly-flaky site does not raise a false alarm.
+    # Genuinely broken links are reported as a GitHub issue.
+    needs: docs
+    if: >-
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+      && (github.event_name != 'schedule' || github.repository == 'acts-project/acts')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    env:
+      LINKCHECK_CHECK_EXTERN: "1"
+      LINKCHECK_TIMEOUT: "30"
+      LINKCHECK_MAX_RETRIES: "3"
+      LINKCHECK_RETRY_WAIT: "2"
+      LINKCHECK_MAX_CONCURRENCY: "16"
+      # Slow-but-alive links should not fail the sweep.
+      LINKCHECK_ACCEPT_TIMEOUTS: "1"
+      # Reuse healthy results across runs to reduce external requests.
+      LINKCHECK_CACHE: "1"
+      LINKCHECK_MAX_CACHE_AGE: "1d"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install lychee
+        run: |
+          curl -fsSL "https://github.com/lycheeverse/lychee/releases/download/lychee-v${LYCHEE_VERSION}/lychee-x86_64-unknown-linux-gnu.tar.gz" -o lychee.tar.gz
+          echo "${LYCHEE_HASH}  lychee.tar.gz" | sha256sum -c -
+          tar xf lychee.tar.gz
+          sudo mv lychee-x86_64-unknown-linux-gnu/lychee /usr/local/bin/lychee
+          rm -rf lychee.tar.gz lychee-x86_64-unknown-linux-gnu
+          lychee --version
+
+      - name: Download built documentation
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: acts-docs
+          path: build/docs/html
+
+      - name: Restore lychee cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .lycheecache
+          key: lychee-${{ github.run_id }}
+          restore-keys: lychee-
+
+      - name: Check external documentation links
+        id: linkcheck
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LINKCHECK_FAILURES_OUT: ${{ github.workspace }}/linkcheck-report.md
+        run: docs/check_links.sh
+
+      - name: Report broken links
+        if: failure() && steps.linkcheck.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          LABEL="broken-links"
+          TITLE="Broken documentation links detected"
+
+          {
+            echo "The scheduled documentation link check found broken external link(s)."
+            echo
+            if [[ -s linkcheck-report.md ]]; then
+              cat linkcheck-report.md
+            else
+              echo "(no report captured; see the run log)"
+            fi
+            echo
+            echo "Run: ${RUN_URL}"
+            echo
+            echo "If a link is a false positive (e.g. a site that blocks automated"
+            echo "requests), add it to the ignore list:"
+            echo "https://github.com/acts-project/linkcheck-ignore"
+          } > issue-body.md
+
+          gh label create "$LABEL" --color B60205 --description "Broken links found by the docs link checker" --force || true
+
+          existing="$(gh issue list --state open --label "$LABEL" --json number --jq '.[0].number')"
+          if [[ -n "$existing" ]]; then
+            echo "Updating existing issue #$existing"
+            gh issue comment "$existing" --body-file issue-body.md
+          else
+            echo "Opening new issue"
+            gh issue create --title "$TITLE" --label "$LABEL" --body-file issue-body.md
+          fi

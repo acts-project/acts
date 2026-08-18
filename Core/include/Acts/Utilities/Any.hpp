@@ -190,7 +190,10 @@ class AnyBase : public AnyBaseAll {
 #if defined(_ACTS_ANY_ENABLE_VERBOSE)
   AnyBase() { _ACTS_ANY_VERBOSE("Default construct this=" << this); };
 #else
-  AnyBase() = default;
+  // User-provided (not defaulted) so that a const-qualified AnyBase can still
+  // be default-initialized even though m_data is deliberately left
+  // uninitialized (see its declaration).
+  AnyBase() {}
 #endif
 
   /// Construct from any value type
@@ -440,6 +443,16 @@ class AnyBase : public AnyBaseAll {
   /// @return Pointer to the type info of the stored value, or nullptr if empty
   const std::type_info* typeInfo() const {
     return m_handler != nullptr ? m_handler->typeInfo : nullptr;
+  }
+
+  /// Check whether the stored value is exactly of type @p T.
+  /// @tparam T The type to test for (raw type, no const/ref)
+  /// @return True if a value of type T is stored, false otherwise (incl. empty)
+  template <typename T>
+  bool is() const {
+    static_assert(std::is_same_v<T, std::decay_t<T>>,
+                  "Please pass the raw type, no const or ref");
+    return m_handler != nullptr && m_handler->typeHash == typeHash<T>();
   }
 
   // The base accessors below are member templates on a dummy @c B defaulting to
@@ -816,7 +829,11 @@ class AnyBase : public AnyBaseAll {
 #endif
       );
 
-  alignas(kMaxAlignment) std::array<std::byte, SbSize> m_data{};
+  // Deliberately not value-initialized: the buffer is only ever read through
+  // m_handler, which is set exactly when a value has been constructed in (or
+  // pointed to from) the buffer. Zero-filling it on every default construction
+  // would put a memset on hot paths that create AnyBase objects frequently.
+  alignas(kMaxAlignment) std::array<std::byte, SbSize> m_data;
   const Handler* m_handler{nullptr};
 };
 

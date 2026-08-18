@@ -6,8 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/AnyTrackProxy.hpp"
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
@@ -23,10 +26,11 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-// Prevent stl.h's list_caster-based type_caster<std::vector<T>> from matching
-// ProtoTrackContainer, which would break py::cast<std::unique_ptr<T>> needed
+// Prevent stl.h's list_caster-based type_caster<std::vector<T>> from matching,
+// which would break py::cast<std::unique_ptr<T>> needed
 // by WhiteBoardRegistry. The full specialization takes priority over stl.h's
 // partial specialization regardless of include order.
+PYBIND11_MAKE_OPAQUE(ActsExamples::ClusterContainer)
 PYBIND11_MAKE_OPAQUE(ActsExamples::ProtoTrackContainer)
 // MeasurementSimHitsMap == SimHitMeasurementsMap at the C++ level (both are
 // flat_multimap<std::uint32_t, std::uint32_t>), so only one MAKE_OPAQUE is
@@ -61,7 +65,7 @@ auto bindFlatMultimap(py::module& m, const char* name) {
                         return self.find(key) != self.end();
                       })
                  .def(
-                     "values_for",
+                     "valuesFor",
                      [](const Map& self, const typename Map::key_type& key) {
                        auto [first, last] = self.equal_range(key);
                        std::vector<typename Map::mapped_type> result;
@@ -425,11 +429,35 @@ void addEventData(py::module& mex) {
           mex, "ProtoTrackContainer");
   WhiteBoardRegistry::registerClass(protoTrackContainer);
 
+  py::class_<Cluster>(mex, "Cluster")
+      .def(py::init<>())
+      .def_readwrite("sizeLoc0", &Cluster::sizeLoc0)
+      .def_readwrite("sizeLoc1", &Cluster::sizeLoc1)
+      .def_readwrite("globalPosition", &Cluster::globalPosition)
+      .def_readwrite("localDirection", &Cluster::localDirection)
+      .def_readwrite("lengthDirection", &Cluster::lengthDirection)
+      .def_readwrite("localEta", &Cluster::localEta)
+      .def_readwrite("localPhi", &Cluster::localPhi)
+      .def_readwrite("globalEta", &Cluster::globalEta)
+      .def_readwrite("globalPhi", &Cluster::globalPhi)
+      .def_readwrite("etaAngle", &Cluster::etaAngle)
+      .def_readwrite("phiAngle", &Cluster::phiAngle)
+      .def("sumActivations", &Cluster::sumActivations);
+
+  auto clusterContainer = py::bind_vector<ClusterContainer, py::smart_holder>(
+      mex, "ClusterContainer");
+  WhiteBoardRegistry::registerClass(clusterContainer);
+
   mex.attr("kTrackIndexInvalid") = Acts::kTrackIndexInvalid;
 
   py::class_<IndexSourceLink>(mex, "IndexSourceLink")
-      .def("FromSourceLink",
-           [](Acts::SourceLink const& sl) { return sl.get<IndexSourceLink>(); })
+      .def(py::init<Acts::GeometryIdentifier, Index>(), py::arg("geometryId"),
+           py::arg("index"))
+      .def_static(
+          "fromSourceLink",
+          [](Acts::SourceLink const& sl) { return sl.get<IndexSourceLink>(); })
+      .def("toSourceLink",
+           [](const IndexSourceLink& self) { return Acts::SourceLink(self); })
       .def("index", &IndexSourceLink::index)
       .def("geometryId", &IndexSourceLink::geometryId);
 
@@ -496,6 +524,24 @@ void addEventData(py::module& mex) {
             std::make_shared<Acts::ConstVectorMultiTrajectory>(
                 std::move(self.trackStateContainer()))};
       });
+
+  py::classh<Acts::AnyMutableTrackProxy>(mex, "AnyMutableTrackProxy")
+      .def(py::init<TrackProxy>());
+  py::implicitly_convertible<TrackProxy, Acts::AnyMutableTrackProxy>();
+
+  py::classh<Acts::AnyConstTrackProxy>(mex, "AnyConstTrackProxy")
+      .def(py::init<ConstTrackProxy>());
+  py::implicitly_convertible<ConstTrackProxy, Acts::AnyConstTrackProxy>();
+
+  py::classh<Acts::AnyMutableTrackStateProxy>(mex, "AnyMutableTrackStateProxy")
+      .def(py::init<TrackStateProxy&>());
+  py::implicitly_convertible<TrackStateProxy,
+                             Acts::AnyMutableTrackStateProxy>();
+
+  py::classh<Acts::AnyConstTrackStateProxy>(mex, "AnyConstTrackState")
+      .def(py::init<ConstTrackStateProxy&>());
+  py::implicitly_convertible<ConstTrackStateProxy,
+                             Acts::AnyConstTrackStateProxy>();
 
   // bind measurements
   // The measurement proxy is bound as a ProxyTether (see ProxyTether.hpp). The

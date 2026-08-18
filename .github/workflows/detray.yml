@@ -2,6 +2,11 @@ name: Detray
 
 on:
   push:
+    # The merge queue also pushes to its temp ref, which separately triggers
+    # merge_group below; without this the two runs share a concurrency group
+    # and cancel-in-progress evicts the PR from the queue (#5884 follow-up).
+    branches-ignore:
+      - "gh-readonly-queue/**"
     paths:
       - "Detray/**"
       - ".github/workflows/detray.yml"
@@ -11,14 +16,29 @@ on:
     paths:
       - "Detray/**"
       - ".github/workflows/detray.yml"
+  # merge_group does not support path filters, so this runs on every queue
+  # entry targeting main, not just ones touching Detray/. Only required via
+  # merge-sentinel's "Detray / *" pattern, which is itself path-gated, so a
+  # non-Detray entry running this wastes compute but doesn't block merging.
+  merge_group:
+    types: [checks_requested]
 
 # Cancel existing jobs on new pushes.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  # Never cancel a merge_group run: it's a required check for a queue entry,
+  # and a cancellation reads as a failure to the queue, ejecting the PR.
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
 permissions:
   contents: read
+
+# ccache is saved from `main` only: a PR-written cache is readable by that PR
+# alone, but still evicts `main`'s entries from the shared 10 GB.
+env:
+  CCACHE_DIR: ${{ github.workspace }}/ccache
+  CCACHE_MAXSIZE: 500M
+  CCACHE_KEY_SUFFIX: r1
 
 # All the different build/test jobs.
 jobs:
@@ -43,7 +63,7 @@ jobs:
     # The build/test steps to execute.
     steps:
     # Use a standard checkout of the code.
-    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         persist-credentials: false
     # Run the CMake configuration. Test that the metadata generation runs
@@ -80,7 +100,10 @@ jobs:
     # The system to run on.
     runs-on: ubuntu-latest
     container: ${{ matrix.PLATFORM.CONTAINER }}
-    name: "host-container (${{ matrix.PLATFORM.NAME }}, C++${{ matrix.PLATFORM.CXX_STANDARD }})"
+    # BUILD_TYPE and SCALAR_TYPE are in the name because merge-sentinel
+    # deduplicates result items by normalised name: without them all four legs
+    # collapse into one check and a failing leg is masked by a passing one.
+    name: "host-container (${{ matrix.PLATFORM.NAME }}, C++${{ matrix.PLATFORM.CXX_STANDARD }}, ${{ matrix.BUILD_TYPE }}, ${{ matrix.SCALAR_TYPE }})"
 
     # Use BASH as the shell from the image.
     defaults:
@@ -95,7 +118,7 @@ jobs:
     # The build/test steps to execute.
     steps:
     # Use a standard checkout of the code.
-    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         persist-credentials: false
     # Get the data files for the tests
@@ -130,9 +153,10 @@ jobs:
       run: |
         cd build
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
-        ctest -R detray_unit_test_. -E "._eigen|._fastor|._vc_aos" --output-on-failure
+        ctest -R detray_unit_test_. -E "._eigen|._fastor|._vc_aos" --output-on-failure --no-tests=error
 
-  # Containerised build jobs.
+  # Containerised build jobs. Debug compile checks only -- nothing here is
+  # executed. CUDA has its own build/test pair below.
   device-container:
 
     # The different build modes to test.
@@ -141,10 +165,6 @@ jobs:
         BUILD_TYPE: ["Debug"]
         SCALAR_TYPE: ["float", "double"]
         PLATFORM:
-          - NAME: "CUDA"
-            CXX_STANDARD: "20"
-            CONTAINER: "ghcr.io/acts-project/ubuntu2404_cuda:69"
-            OPTIONS: -DDETRAY_BUILD_CUDA=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON
           - NAME: "HIP-AMD"
             CXX_STANDARD: "20"
             CONTAINER: "ghcr.io/acts-project/ubuntu2404_rocm_oneapi:69"
@@ -153,15 +173,12 @@ jobs:
           #  CXX_STANDARD: "20"
           #  CONTAINER:
           #  OPTIONS: -DCMAKE_HIP_PLATFORM=nvidia -DDETRAY_BUILD_HIP=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_BUILD_BENCHMARKS=OFF
-          - NAME: "SYCL"
-            CXX_STANDARD: "20"
-            CONTAINER: "ghcr.io/acts-project/ubuntu2404_oneapi:69"
-            OPTIONS: -DDETRAY_BUILD_CUDA=OFF -DDETRAY_BUILD_SYCL=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON
 
     # The system to run on.
     runs-on: ubuntu-latest
     container: ${{ matrix.PLATFORM.CONTAINER }}
-    name: "device-container (${{ matrix.PLATFORM.NAME }}, C++${{ matrix.PLATFORM.CXX_STANDARD }})"
+    # SCALAR_TYPE belongs in the name; see the note on `host-container`.
+    name: "device-container (${{ matrix.PLATFORM.NAME }}, C++${{ matrix.PLATFORM.CXX_STANDARD }}, ${{ matrix.SCALAR_TYPE }})"
 
     # Use BASH as the shell from the image.
     defaults:
@@ -171,7 +188,7 @@ jobs:
     # The build/test steps to execute.
     steps:
     # Use a standard checkout of the code.
-    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         persist-credentials: false
     # Run the CMake configuration.
@@ -181,7 +198,6 @@ jobs:
         cmake --preset detray-full-fp32 \
           -DCMAKE_CXX_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
           -DCMAKE_CUDA_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
-          -DCMAKE_SYCL_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
           -DCMAKE_HIP_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
           -DDETRAY_BUILD_HOST=OFF \
           -DDETRAY_FASTOR_PLUGIN=OFF \
@@ -199,7 +215,183 @@ jobs:
       run: |
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
         cmake --build build
+
+  # ─────────────────────────────────────────────────────────────────────
+  # CUDA build on an ordinary CPU runner, handing the build tree to `cuda-test`
+  # below, which is the only job that occupies a GPU slot.
+  #
+  # Release rather than the Debug the compile-check matrix above uses:
+  # CMAKE_CUDA_FLAGS_DEBUG carries `-G`
+  # (Detray/cmake/detray-compiler-options-cuda.cmake:39), which disables device
+  # optimisation entirely -- fine for a compile check, far too slow to execute.
+  # The lean CI preset (host off, no tutorials/benchmarks/CLI tools) keeps this
+  # build down to what the GPU job actually runs.
+  # ─────────────────────────────────────────────────────────────────────
+  cuda:
+    name: "cuda (${{ matrix.SCALAR_TYPE }})"
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
+    permissions:
+      contents: read
+      packages: read
+    # registry.cern.ch is a pull-through cache for ghcr.io, usable because this
+    # job runs inside CERN. Tag 87 rather than the 69 the compile-check jobs
+    # pin: it has to match the tag `cuda-test` runs, and that is the CUDA
+    # runtime known to work against the driver on the GPU nodes.
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_cuda:87
+
+    strategy:
+      # A broken scalar type must not cancel the other: which of the two is
+      # affected is the useful part of the signal.
+      fail-fast: false
+      matrix:
+        SCALAR_TYPE: ["float", "double"]
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+
+    - name: Restore ccache
+      id: ccache-restore
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ env.CCACHE_DIR }}
+        key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.SCALAR_TYPE }}-${{ github.sha }}
+        restore-keys: |
+          ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.SCALAR_TYPE }}-
+
+    # Release, not the preset's RelWithDebInfo: RelWithDebInfo adds
+    # `-lineinfo -src-in-ptx`, which costs compile time and buys nothing that
+    # is read back here.
+    - name: Configure
+      run: |
+        ccache -z
+        cmake --preset detray-github-cuda-ci \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DDETRAY_CUSTOM_SCALARTYPE=${{ matrix.SCALAR_TYPE }} \
+          -S ${GITHUB_WORKSPACE}/Detray \
+          -B build
+
+    - name: Build
+      run: cmake --build build
+
+    - name: ccache stats
+      run: ccache -s
+
+    - name: Save ccache
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      if: always() && github.ref == 'refs/heads/main'
+      with:
+        path: ${{ env.CCACHE_DIR }}
+        key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+    # Finds nothing today: `.ptx` is only kept when a target opts into `--keep`
+    # via `detray_add_cuda_artifact_dir_to_target`
+    # (Detray/cmake/detray-functions.cmake:12), and nothing calls it. So the
+    # empty case reports and exits clean instead of handing the script an empty
+    # argument list; it starts doing real work the moment a target opts in.
+    #
+    # Run through python3 rather than as a command: the script is not marked
+    # executable in the tree, and its shebang points at /bin/python3.
     - name: FP64 Compliance
-      if: "matrix.PLATFORM.NAME == 'CUDA' && matrix.BUILD_TYPE == 'Debug' && matrix.SCALAR_TYPE == 'float'"
+      if: matrix.SCALAR_TYPE == 'float'
       continue-on-error: true
-      run: ${GITHUB_WORKSPACE}/Detray/CI/find_f64_ptx.py --source ${GITHUB_WORKSPACE}/Detray --build build $(find build -name "*.ptx" ! -name "container_cuda_kernel.ptx")
+      run: |
+        mapfile -t ptx < <(find build -name "*.ptx" ! -name "container_cuda_kernel.ptx")
+        if [ ${#ptx[@]} -eq 0 ]; then
+          echo "no PTX emitted by this build, nothing to check"
+          exit 0
+        fi
+        python3 "${GITHUB_WORKSPACE}/Detray/CI/find_f64_ptx.py" \
+          --source "${GITHUB_WORKSPACE}/Detray" --build build "${ptx[@]}"
+
+    # Only float is executed on the GPU; double stays a compile check.
+    - name: Package build
+      if: matrix.SCALAR_TYPE == 'float'
+      run: tar czf build.tar.gz -C build --exclude "*.o" .
+
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      if: matrix.SCALAR_TYPE == 'float'
+      with:
+        name: detray-cuda-build
+        path: build.tar.gz
+        retention-days: 1
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Nothing is compiled here; the job exists purely to spend GPU time on tests.
+  # ─────────────────────────────────────────────────────────────────────
+  cuda-test:
+    needs: [cuda]
+    runs-on: [self-hosted, linux, x64, gpu-nvidia]
+    permissions:
+      contents: read
+      packages: read
+    container:
+      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_cuda:87
+      # Required. Without it the daemon never applies the nvidia runtime hook,
+      # so the driver bits are not injected: the image carries the CUDA toolkit
+      # but the container gets no device and no nvidia-smi. Confirmed by
+      # removing it, at which point the Check GPU step below failed with
+      # "nvidia-smi: command not found".
+      options: --gpus all
+
+    env:
+      DETRAY_DATA_DIRECTORY: ${{ github.workspace }}/Detray/data/
+      DETRAY_BFIELD_FILE: ${{ github.workspace }}/Detray/data/odd-bfield_v0_9_0.cvf
+      # Detray's ci_setup.sh would set this to nproc. Several of these tests
+      # allocate sizeable device buffers, and one T4's 16 GB is the binding
+      # constraint rather than the core count, so they are run serially.
+      CTEST_PARALLEL_LEVEL: 1
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    # Has to land at the absolute path the build was configured at:
+    # `detray_add_unit_test` bakes
+    # `DETRAY_TEST_DATA_DIR=${PROJECT_SOURCE_DIR}/data/` into each test's
+    # environment at configure time. What makes that work across machines is
+    # the container -- the workspace is /__w/acts/acts on every runner.
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+
+    # Fails the job early if no device is visible, and puts the driver
+    # version and GPU model in the log -- which is what you want to hand
+    # someone when numerics differ between nodes.
+    - name: Check GPU
+      run: nvidia-smi
+
+    - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        name: detray-cuda-build
+
+    - name: Unpack build
+      run: mkdir build && tar xf build.tar.gz -C build
+
+    - name: Download data files
+      run: ${GITHUB_WORKSPACE}/Detray/data/detray_data_get_files.sh
+
+    # --no-tests=error because the whole job is a `-R` filter: if an upstream
+    # rename stops the regex matching, ctest's default is to report success on
+    # an empty set and the job goes green having run nothing.
+    - name: Test
+      run: ctest --test-dir build --output-on-failure --no-tests=error -R ".*cuda.*"
+
+    # Some CUDA binaries are not registered with ctest, so run them directly.
+    # A loop rather than `find -exec`: find reports its own exit status, not
+    # the command's, so a failing binary would read as a pass. This runs under
+    # `bash -eo pipefail`, so the first non-zero exit fails the step.
+    - name: Run unregistered CUDA binaries
+      run: |
+        cd build
+        while IFS= read -r -d '' binary; do
+          echo "::group::${binary}"
+          "${binary}"
+          echo "::endgroup::"
+        done < <(find bin -type f -name "*cuda" -not -name "*text*" -print0)

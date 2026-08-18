@@ -122,7 +122,7 @@ class detector_scan : public test::fixture_base<> {
       assert((intersection_trace.size() > 0) && "Invalid intersection trace");
 
       // Retrieve the test trajectory
-      const auto &trck_param = intersection_trace.front().track_param;
+      const auto &trck_param = intersection_trace.front().track_param();
       trajectory_type test_traj = get_parametrized_trajectory(trck_param);
 
       // Run overlaps check on the trace and remove certain

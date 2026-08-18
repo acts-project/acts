@@ -11,13 +11,14 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStateProxyConcept.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -26,6 +27,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <optional>
 #include <utility>
 
 namespace Acts {
@@ -185,15 +187,21 @@ findTrackStateForExtrapolation(
                                              Logging::INFO)) {
   using TrackStateProxy = typename track_proxy_t::ConstTrackStateProxy;
 
-  auto intersect = [&](const TrackStateProxy &state) -> Intersection3D {
-    assert(state.hasSmoothed() || state.hasFiltered());
-
-    FreeVector freeVector;
-    if (state.hasSmoothed()) {
-      freeVector = MultiTrajectoryHelpers::freeSmoothed(geoContext, state);
-    } else {
-      freeVector = MultiTrajectoryHelpers::freeFiltered(geoContext, state);
+  // Intersect the reference surface with the trajectory at a track state.
+  // Returns `std::nullopt` if the state carries no parameters at all and can
+  // therefore not be started from; an invalid intersection means the state has
+  // parameters but does not reach the reference surface.
+  auto intersect =
+      [&](const TrackStateProxy &state) -> std::optional<Intersection3D> {
+    if (!state.hasSmoothed() && !state.hasFiltered() && !state.hasPredicted()) {
+      return std::nullopt;
     }
+
+    // `parameters` picks smoothed over filtered over predicted, which is what
+    // `TrackProxy::createParametersFromState` starts the propagation from. The
+    // distance has to be measured on the same parameters.
+    const FreeVector freeVector = transformBoundToFreeParameters(
+        state.referenceSurface(), geoContext, state.parameters());
 
     return referenceSurface
         .intersect(geoContext, freeVector.template segment<3>(eFreePos0),
@@ -212,15 +220,20 @@ findTrackStateForExtrapolation(
         return first.error();
       }
 
-      Intersection3D intersection = intersect(*first);
-      if (!intersection.isValid()) {
+      std::optional<Intersection3D> intersection = intersect(*first);
+      if (!intersection.has_value()) {
+        ACTS_DEBUG("first track state carries no parameters");
+        return Result<std::pair<TrackStateProxy, double>>::failure(
+            TrackExtrapolationError::CompatibleTrackStateNotFound);
+      }
+      if (!intersection->isValid()) {
         ACTS_DEBUG("no intersection found");
         return Result<std::pair<TrackStateProxy, double>>::failure(
             TrackExtrapolationError::ReferenceSurfaceUnreachable);
       }
 
-      ACTS_VERBOSE("found intersection at " << intersection.pathLength());
-      return std::pair(*first, intersection.pathLength());
+      ACTS_VERBOSE("found intersection at " << intersection->pathLength());
+      return std::pair(*first, intersection->pathLength());
     }
 
     case TrackExtrapolationStrategy::last: {
@@ -232,15 +245,20 @@ findTrackStateForExtrapolation(
         return last.error();
       }
 
-      Intersection3D intersection = intersect(*last);
-      if (!intersection.isValid()) {
+      std::optional<Intersection3D> intersection = intersect(*last);
+      if (!intersection.has_value()) {
+        ACTS_DEBUG("last track state carries no parameters");
+        return Result<std::pair<TrackStateProxy, double>>::failure(
+            TrackExtrapolationError::CompatibleTrackStateNotFound);
+      }
+      if (!intersection->isValid()) {
         ACTS_DEBUG("no intersection found");
         return Result<std::pair<TrackStateProxy, double>>::failure(
             TrackExtrapolationError::ReferenceSurfaceUnreachable);
       }
 
-      ACTS_VERBOSE("found intersection at " << intersection.pathLength());
-      return std::pair(*last, intersection.pathLength());
+      ACTS_VERBOSE("found intersection at " << intersection->pathLength());
+      return std::pair(*last, intersection->pathLength());
     }
 
     case TrackExtrapolationStrategy::firstOrLast: {
@@ -258,8 +276,23 @@ findTrackStateForExtrapolation(
         return last.error();
       }
 
-      Intersection3D intersectionFirst = intersect(*first);
-      Intersection3D intersectionLast = intersect(*last);
+      std::optional<Intersection3D> intersectionFirstOpt = intersect(*first);
+      std::optional<Intersection3D> intersectionLastOpt = intersect(*last);
+
+      if (!intersectionFirstOpt.has_value() &&
+          !intersectionLastOpt.has_value()) {
+        ACTS_DEBUG("neither first nor last track state carries parameters");
+        return Result<std::pair<TrackStateProxy, double>>::failure(
+            TrackExtrapolationError::CompatibleTrackStateNotFound);
+      }
+
+      // an end without parameters cannot be started from, so it loses the
+      // comparison below through the infinite path length of an invalid
+      // intersection
+      Intersection3D intersectionFirst =
+          intersectionFirstOpt.value_or(Intersection3D::Invalid());
+      Intersection3D intersectionLast =
+          intersectionLastOpt.value_or(Intersection3D::Invalid());
 
       double absDistanceFirst = std::abs(intersectionFirst.pathLength());
       double absDistanceLast = std::abs(intersectionLast.pathLength());
@@ -716,35 +749,45 @@ double calculateSmoothedChi2(track_state_proxy_t trackState) {
 /// @tparam track_state_proxy_t the track state proxy type
 /// @param trackState the track state to calculate the unbiased parameters from
 /// @return a pair of the unbiased parameters and their covariance
+/// @deprecated Instantiating this template is very expensive in compiler memory
+///   (it expands the Eigen expression templates over all measurement
+///   dimensions) and it does so in every calling translation unit. Prefer the
+///   non-template overload taking a type-erased @c AnyConstTrackStateProxy,
+///   which is compiled once in the Acts core library:
+///   @code
+///   calculateUnbiasedParametersCovariance(Acts::AnyConstTrackStateProxy{state});
+///   @endcode
 template <TrackStateProxyConcept track_state_proxy_t>
+[[deprecated(
+    "Use calculateUnbiasedParametersCovariance(const AnyConstTrackStateProxy&) "
+    "instead; the templated form instantiates expensive Eigen code in every "
+    "translation unit.")]]
 std::pair<BoundVector, BoundMatrix> calculateUnbiasedParametersCovariance(
     track_state_proxy_t trackState) {
-  if (!trackState.hasSmoothed()) {
-    throw std::invalid_argument("track state has no smoothed parameters");
-  }
-  if (!trackState.hasCalibrated()) {
-    throw std::invalid_argument("track state has no calibrated parameters");
-  }
-
-  return visit_measurement(
-      trackState.calibratedSize(),
-      [&]<std::size_t measdim>(std::integral_constant<std::size_t, measdim>) {
-        FixedBoundSubspaceHelper<measdim> subspaceHelper =
-            trackState.template projectorSubspaceHelper<measdim>();
-
-        // TODO use subspace helper for projection instead
-        auto H = subspaceHelper.projector();
-        auto s = trackState.smoothed();
-        auto C = trackState.smoothedCovariance();
-        auto m = trackState.template calibrated<measdim>();
-        auto V = trackState.template calibratedCovariance<measdim>();
-        auto K =
-            (C * H.transpose() * (H * C * H.transpose() - V).inverse()).eval();
-        BoundVector unbiasedParamsVec = s + K * (m - H * s);
-        BoundMatrix unbiasedParamsCov = C - K * H * C;
-        return std::make_pair(unbiasedParamsVec, unbiasedParamsCov);
-      });
+  // Explicitly select the non-template overload taking a type-erased proxy.
+  // A plain call here would re-resolve to this very template (the wrapped
+  // AnyConstTrackStateProxy satisfies TrackStateProxyConcept and is an exact
+  // by-value match), causing infinite recursion and a self-deprecation error.
+  std::pair<BoundVector, BoundMatrix> (&impl)(const AnyConstTrackStateProxy &) =
+      calculateUnbiasedParametersCovariance;
+  return impl(AnyConstTrackStateProxy{trackState});
 }
+
+/// Calculate the unbiased track parameters and their covariance for a
+/// type-erased track state proxy. See the templated overload above for the
+/// underlying formula.
+///
+/// This is the preferred entry point. It is not a template, so the (very
+/// expensive) Eigen expression templates are instantiated exactly once, in the
+/// Acts core library (TrackHelpersUnbiased.cpp), instead of in every calling
+/// translation unit. Callers holding a concrete track state proxy wrap it:
+/// @code
+/// calculateUnbiasedParametersCovariance(Acts::AnyConstTrackStateProxy{state});
+/// @endcode
+/// @param trackState the (type-erased) track state to calculate from
+/// @return a pair of the unbiased parameters and their covariance
+std::pair<BoundVector, BoundMatrix> calculateUnbiasedParametersCovariance(
+    const AnyConstTrackStateProxy &trackState);
 
 }  // namespace Acts
 

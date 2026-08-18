@@ -11,31 +11,60 @@ on:
       - 'develop/**'
     paths-ignore:
       - "docs/**"
+  # merge_group does not support branch/path filters, so this runs
+  # unconditionally on every queue entry. Only build_debug is required, via
+  # merge-sentinel's "Analysis / build_debug" check; clang_tidy is skipped
+  # below since it isn't required and its incremental diff relies on
+  # github.base_ref, which merge_group runs don't have.
+  merge_group:
+    types: [checks_requested]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  # Never cancel a merge_group run: it's a required check for a queue entry,
+  # and a cancellation reads as a failure to the queue, ejecting the PR.
+  # (push here is already branches: [main], so it can't collide with the
+  # merge queue's gh-readonly-queue/** temp ref the way the other workflows'
+  # unrestricted push triggers could.)
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
+# ccache is saved from `main` only: a PR-written cache is readable by that PR
+# alone, but still evicts `main`'s entries from the shared 10 GB.
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
-  CCACHE_MAXSIZE: 1.25G
+  # Sized for the github-ci-coverage build, which carries no debug info and
+  # skips Examples plus the vendored Detray/Traccc trees. Watch `ccache -s`:
+  # if the cache runs at ~100% of this it is evicting mid-build and the hit
+  # rate collapses, which is what a too-small ceiling looks like.
+  CCACHE_MAXSIZE: 1G
   CCACHE_KEY_SUFFIX: r2
   ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
 # NOTE this only builds core unittests to reduce the output size. if we
 #      found a way to have Github actions not fail regularly with this job
 #      all unit tests should be reactivated.
+#
+# NOTE the unit tests are what generate coverage for the large header-only
+#      template surface in Core/include, since that code is only instantiated
+#      in test TUs. Tests/ is filtered out of the report itself but must stay
+#      instrumented, or that coverage disappears. See the github-ci-coverage
+#      preset description for what is deliberately left out and why.
 permissions:
   contents: read
+  # Authenticated GHCR reads: the spack buildcache is pulled from ghcr.io.
+  # Without this scope GITHUB_TOKEN has no packages access, so reads fall back
+  # to the anonymous (heavily rate limited) bucket.
+  packages: read
 
 jobs:
   build_debug:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:87
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
+    # Pull-through cache, as for the husk jobs in builds.yml.
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
     steps:
 
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -71,8 +100,9 @@ jobs:
           name: PR_metadata
           path: PR_metadata.json
 
-      - name: Cache build
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
@@ -88,6 +118,15 @@ jobs:
         run: cmake --build build
       - name: ccache stats
         run: ccache -s
+
+      # Before the tests: a failure there shouldn't cost us the objects.
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always() && github.ref == 'refs/heads/main'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
       - name: Unit tests
         run: >
           CI/dependencies/run.sh .env
@@ -128,11 +167,14 @@ jobs:
           echo "**🛡️ Code coverage available [here]($link)**" >> $GITHUB_STEP_SUMMARY
 
   clang_tidy:
+    # Not required for merging; skip on merge_group since its incremental
+    # diff below depends on github.base_ref, which only pull_request runs set.
+    if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2404_clang22:87
 
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -146,7 +188,7 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         run: git fetch origin "$BASE_REF"
 
-      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Install clang-tidy
         run: |
@@ -167,7 +209,7 @@ jobs:
           ccache -z &&
           CI/dependencies/run.sh .env
           cmake -B build -S .
-          --preset=gitlab-ci-clangtidy
+          --preset=github-ci-clangtidy
 
       - name: Run codegen
         run: cmake --build build --target ActsCodegen

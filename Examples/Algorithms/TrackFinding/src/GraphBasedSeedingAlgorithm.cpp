@@ -94,9 +94,6 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   const Acts::SpacePointContainer coreSpacePoints =
       makeSpContainer(spacePoints, m_actsGbtsMap);
 
-  // used to reserve size of nodes 2D vector in core
-  const std::uint32_t maxLayers = m_layerIdMap.size();
-
   const Acts::Experimental::GraphBasedTrackSeeder::Options options(
       m_cfg.bFieldInZ);
 
@@ -106,7 +103,7 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   // create the seeds
 
   m_finder->createSeeds(coreSpacePoints, m_internalRoi.value(), m_isPixelLayer,
-                        maxLayers, *m_filter, options, seeds);
+                        *m_filter, options, seeds);
 
   seeds.assignSpacePointContainer(spacePoints);
 

@@ -2,6 +2,11 @@ name: Builds
 
 on:
   push:
+    # The merge queue also pushes to its temp ref, which separately triggers
+    # merge_group below; without this the two runs share a concurrency group
+    # and cancel-in-progress evicts the PR from the queue (#5884 follow-up).
+    branches-ignore:
+      - "gh-readonly-queue/**"
   pull_request:
     branches:
       - main
@@ -9,11 +14,20 @@ on:
       - 'develop/**'
     paths-ignore:
       - "docs/**"
+  # merge_group does not support branch/path filters, so this runs
+  # unconditionally on every queue entry (unlike the pull_request trigger
+  # above). Required via merge-sentinel's "Builds / *" pattern.
+  merge_group:
+    types: [checks_requested]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  # Never cancel a merge_group run: it's a required check for a queue entry,
+  # and a cancellation reads as a failure to the queue, ejecting the PR.
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
+# ccache is saved from `main` only: a PR-written cache is readable by that PR
+# alone, but still evicts `main`'s entries from the shared 10 GB.
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   HOMEBREW_NO_INSTALL_CLEANUP: 1
@@ -24,16 +38,22 @@ env:
 
 jobs:
   linux_ubuntu:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
-    container: ghcr.io/acts-project/ubuntu2404:87
+      # Authenticated GHCR reads: the spack buildcache is pulled from
+      # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
+      # so reads fall back to the anonymous (heavily rate limited) bucket.
+      packages: read
+    # registry.cern.ch is a pull-through cache for ghcr.io. Husk jobs only —
+    # the ubuntu-latest jobs run outside CERN and gain nothing from it.
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           lfs: true
           persist-credentials: false
@@ -75,7 +95,7 @@ jobs:
 
       - name: Save ccache
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: always()
+        if: always() && github.ref == 'refs/heads/main'
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
@@ -126,19 +146,24 @@ jobs:
           ctest --test-dir build-downstream --output-on-failure
 
   linux_examples_test:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
-    container: ghcr.io/acts-project/ubuntu2404:87
+      # Authenticated GHCR reads: the spack buildcache is pulled from
+      # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
+      # so reads fall back to the anonymous (heavily rate limited) bucket.
+      packages: read
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
     needs: [linux_ubuntu]
     env:
       # Enforce FPE masking on the RelWithDebInfo (github-ci-fpe) build: source
       # locations resolve, so the test_fpe.py masking tests run instead of being
-      # skipped. Replaces the FPE coverage previously unique to GitLab.
+      # skipped.
       ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 1
+      COLLIDERML_DATA_DIR: ${{ github.workspace }}/ci_colliderml
 
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           lfs: true
           persist-credentials: false
@@ -157,6 +182,9 @@ jobs:
       - name: Unpack build
         run: mkdir build && tar xf build.tar.gz -C build
 
+      - name: Download ColliderML CI sample
+        run: CI/dependencies/download_colliderml.sh
+
       - name: Python level tests
         shell: bash
         env:
@@ -171,22 +199,28 @@ jobs:
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
-    container: ghcr.io/acts-project/ubuntu2404:87
+      # Reference histograms are pulled from ghcr.io by content hash. Anonymous
+      # GHCR reads are rate limited hard enough to break the job.
+      packages: read
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
     needs: [linux_ubuntu]
     env:
-      # Enforce FPE masking on the RelWithDebInfo (github-ci-fpe) build, matching
-      # what GitLab's linux_physmon did. The full reconstruction must stay
-      # FPE-clean (auto-loaded source masks resolve at -g1).
+      # Enforce FPE masking on the RelWithDebInfo (github-ci-fpe) build: the
+      # full reconstruction must stay FPE-clean (auto-loaded source masks
+      # resolve at -g1).
       ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 1
 
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           lfs: true
           persist-credentials: false
+
+      # Before this job's own apt-get; the upstream archive is slow from CERN.
+      - uses: ./.github/actions/apt_mirror
 
       - run: apt-get update && apt-get install -y time
 
@@ -206,6 +240,8 @@ jobs:
 
       - name: Physics performance checks
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global safe.directory "$GITHUB_WORKSPACE"
           source .env
@@ -255,22 +291,27 @@ jobs:
           git push
 
   linux_ubuntu_extra:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
+      # Authenticated GHCR reads: the spack buildcache is pulled from
+      # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
+      # so reads fall back to the anonymous (heavily rate limited) bucket.
+      packages: read
     strategy:
       matrix:
         include:
           - image: ubuntu2404_clang22
             std: 23
             cxx: clang++-22
-    container: ghcr.io/acts-project/${{ matrix.image }}:86
+    # Templated tag, so CI/bump_versions.py cannot see it; bumped by hand.
+    container: registry.cern.ch/ghcr.io/acts-project/${{ matrix.image }}:86
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           lfs: true
           persist-credentials: false
@@ -310,7 +351,7 @@ jobs:
 
       - name: Save ccache
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: always()
+        if: always() && github.ref == 'refs/heads/main'
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
@@ -345,16 +386,633 @@ jobs:
       - name: Downstream tests
         run: ctest --test-dir build-downstream --output-on-failure
 
+  # ─────────────────────────────────────────────────────────────────────
+  # Gates the narrowly scoped jobs below. They each pull a multi-GB
+  # torch/CUDA/TensorRT image, the GPU ones contend for a pool of a single
+  # node, and most changes cannot reach the code any of them cover.
+  #
+  # Each filter is the transitive closure of what its job compiles, not that
+  # job's own sources: a Core change reaches the CUDA muon test too. The
+  # build-system entries are what keep a list honest -- the closure can only
+  # grow by editing CMakePresets.json, CMakeLists.txt or cmake/, so whatever
+  # grows it runs these jobs and can update the list in the same breath.
+  #
+  # Job-level `if:` rather than `paths-ignore:` on a separate workflow, so the
+  # checks keep reporting under `Builds / *` (as `skipped`) and merge-sentinel
+  # keeps requiring them.
+  # ─────────────────────────────────────────────────────────────────────
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      gnn: ${{ steps.filter.outputs.gnn }}
+      cuda_muon: ${{ steps.filter.outputs.cuda_muon }}
+    steps:
+      # Pull requests only: there the action reads the file list from the API
+      # and needs no checkout. On push the output stays empty and the jobs below
+      # run unconditionally.
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        if: github.event_name == 'pull_request'
+        with:
+          filters: |
+            gnn:
+              # What the presets compile
+              - 'Core/**'
+              - 'Fatras/**'
+              - 'Plugins/Gnn/**'
+              - 'Plugins/Json/**'
+              - 'Plugins/FpeMonitoring/**'
+              - 'Examples/**'
+              - 'Python/**'
+              - 'Tests/CommonHelpers/**'
+              - 'Tests/UnitTests/Fatras/**'
+              - 'Tests/UnitTests/Plugins/**'
+              # Defines the add_unittest macro the tests are registered with
+              - 'Tests/UnitTests/CMakeLists.txt'
+              # Build system: also the only way the list above can go stale
+              - 'CMakeLists.txt'
+              - 'CMakePresets.json'
+              - 'cmake/**'
+              - 'codegen/**'
+              - 'thirdparty/**'
+              # The jobs themselves and the dependency setup they run
+              - '.github/workflows/builds.yml'
+              - '.github/actions/dependencies/**'
+              - 'CI/dependencies/**'
+            cuda_muon:
+              # ActsUnitTestCudaMuonSpacePoint is the only target built. It
+              # links Acts::TestsCommonHelpers and
+              # ActsExamplesCudaMuonSegmentFitting -> Acts::ExamplesFramework,
+              # which is PUBLIC Acts::Fatras + Acts::PluginFpeMonitoring
+              # (Examples/Framework/CMakeLists.txt:42) -> Core. That is the
+              # whole closure.
+              - 'Core/**'
+              - 'Fatras/**'
+              - 'Plugins/FpeMonitoring/**'
+              - 'Examples/Framework/**'
+              - 'Examples/CudaMuonSegmentFitting/**'
+              - 'Tests/CommonHelpers/**'
+              - 'Tests/UnitTests/Examples/CudaMuonSegmentFitting/**'
+              # Defines the add_unittest macro the test is registered with
+              - 'Tests/UnitTests/CMakeLists.txt'
+              # Build system: also the only way the list above can go stale
+              - 'CMakeLists.txt'
+              - 'CMakePresets.json'
+              - 'cmake/**'
+              - 'codegen/**'
+              - 'thirdparty/**'
+              # The jobs themselves and the dependency setup they run
+              - '.github/workflows/builds.yml'
+              - '.github/actions/dependencies/**'
+              - 'CI/dependencies/**'
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Compiles the full CUDA GNN stack on an ordinary CPU runner and hands the
+  # build directory to `gnn_gpu`, which is the only job that occupies a GPU
+  # slot.
+  #
+  # Push runs are deliberately unfiltered: they populate the ccache that pull
+  # request runs restore from, and give every commit on a long-lived branch a
+  # GNN build even if the filter above has gone stale.
+  # ─────────────────────────────────────────────────────────────────────
+  gnn_build:
+    needs: changes
+    if: github.event_name != 'pull_request' || needs.changes.outputs.gnn == 'true'
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
+    permissions:
+      contents: read
+      # Authenticated GHCR reads: the spack buildcache is pulled from
+      # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
+      # so reads fall back to the anonymous (heavily rate limited) bucket.
+      packages: read
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
+
+    steps:
+      # The image keeps build tooling in the sbin dirs, off a non-login PATH.
+      - name: Fix up PATH
+        run: |
+          echo "/usr/local/sbin" >> $GITHUB_PATH
+          echo "/usr/sbin" >> $GITHUB_PATH
+          echo "/sbin" >> $GITHUB_PATH
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      # Compiles the `#else` arms of `#ifdef ACTS_GNN_WITH_CUDA`, which the
+      # configure below excludes. That definition is on ActsPluginGnn alone, so
+      # every ActsCore object stays valid and only the plugin recompiles;
+      # `--target` holds it there, the definition being PUBLIC. Running first
+      # fails fast and leaves `gnn_gpu` the tree the real configure produced.
+      #
+      # MODULEMAP goes off with CUDA: set_option_if forces ACTS_ENABLE_CUDA
+      # back ON while it is set with the plugin. It guards a `.cu` source and
+      # no C++. Catches errors, not warnings -- the preset compiles with `-w`.
+      - name: Configure without CUDA
+        run: >
+          ccache -z &&
+          CI/dependencies/run.sh .env
+          cmake -B build -S .
+          --preset=github-ci-gnn
+          -DACTS_ENABLE_CUDA=OFF
+          -DACTS_GNN_ENABLE_MODULEMAP=OFF
+
+      - name: Compile the non-CUDA code paths
+        run: cmake --build build --target ActsPluginGnn
+
+      # The preset pins CMAKE_CUDA_ARCHITECTURES/TORCH_CUDA_ARCH_LIST to 75;86:
+      # 75 is the T4 the tests run on, 86 lets an sm_86 node join the pool. A
+      # missing 75 builds fine here and fails on the GPU with "no kernel image
+      # is available for execution on the device".
+      - name: Configure
+        run: >
+          CI/dependencies/run.sh .env
+          cmake -B build -S .
+          --preset=github-ci-gnn
+
+      - name: Build
+        run: cmake --build build
+
+      - name: ccache stats
+        run: ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always() && github.ref == 'refs/heads/main'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+      # The integration test binaries are the bulk of the tree and nothing
+      # downstream runs them; object files are dead weight after linking.
+      - name: Package build
+        run: tar czf build.tar.gz -C build --exclude "*.o" --exclude "bin/ActsIntegrationTest*" .
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: acts-gnn-build
+          path: build.tar.gz
+          retention-days: 1
+
+  # ─────────────────────────────────────────────────────────────────────
+  # The GPU half of the GNN coverage. Unit tests and python tests are steps of
+  # one job rather than two jobs: splitting them would pay for the multi-GB
+  # image pull, the spack environment and the artifact download twice, and with
+  # a single GPU node the second job would queue behind the first rather than
+  # overlap with it. The python step is `!cancelled()`, so a unit-test failure
+  # still does not hide its result.
+  # ─────────────────────────────────────────────────────────────────────
+  gnn_gpu:
+    # A skipped `gnn_build` (filtered-out pull request) skips this job too, so
+    # no separate `if:` is needed -- and adding one would only let the two
+    # conditions drift apart.
+    needs: [gnn_build]
+    runs-on: [self-hosted, linux, x64, gpu-nvidia]
+    permissions:
+      contents: read
+      packages: read
+    container:
+      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
+      # Required. Without it the daemon never applies the nvidia runtime hook,
+      # so the driver bits are not injected: the image carries the CUDA toolkit
+      # but the container gets no device and no nvidia-smi. Confirmed by
+      # removing it, at which point the Check GPU step below failed with
+      # "nvidia-smi: command not found".
+      options: --gpus all
+    env:
+      MODEL_STORAGE: ${{ github.workspace }}/ci_models
+
+    steps:
+      - name: Fix up PATH
+        run: |
+          echo "/usr/local/sbin" >> $GITHUB_PATH
+          echo "/usr/sbin" >> $GITHUB_PATH
+          echo "/sbin" >> $GITHUB_PATH
+
+      # Fails the job early if no device is visible, and puts the driver
+      # version and GPU model in the log -- which is what you want to hand
+      # someone when numerics differ between nodes.
+      - name: Check GPU
+        run: nvidia-smi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: acts-gnn-build
+
+      # Must land back at the absolute path it was built at: CTestTestfile.cmake
+      # carries absolute paths from configure time. What makes that work across
+      # machines is the container -- the workspace is /__w/acts/acts on every
+      # runner.
+      - name: Unpack build
+        run: mkdir build && tar xf build.tar.gz -C build
+
+      # Name filter rather than the whole suite: this is the subset that needs
+      # a device, and GPU time is the scarce resource. The Core/Examples unit
+      # tests in this build are run by `linux_ubuntu` on CPU.
+      - name: Unit tests
+        run: >
+          CI/dependencies/run.sh .env
+          ctest --test-dir build --no-tests=error
+          -R "(Gnn|ConnectedComponentsCuda|JunctionRemoval|Tensor)"
+
+      - name: Download models
+        if: ${{ !cancelled() }}
+        run: CI/dependencies/download_models.sh
+
+      - name: Python tests
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          source .env
+          source build/this_acts_withdeps.sh
+          python3 -m pip install -r Python/Examples/tests/requirements.txt
+          # No real test for the ModuleMap yet; at least assert the CUDA-only
+          # extension is present and importable.
+          python3 -c "from acts.gnn import ModuleMapCuda"
+          # Collection-only pass over the torch tests: catches an import error
+          # in a test module that `-k gpu` would otherwise never touch.
+          pytest -rsfExw -k torch -v --collect-only
+          pytest -rsFExw -k gpu -v
+
+  gnn_tensorrt:
+    needs: changes
+    if: github.event_name != 'pull_request' || needs.changes.outputs.gnn == 'true'
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
+    permissions:
+      contents: read
+      # Authenticated GHCR reads: the spack buildcache is pulled from
+      # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
+      # so reads fall back to the anonymous (heavily rate limited) bucket.
+      packages: read
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_tensorrt:87
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Configure
+        run: >
+          ccache -z &&
+          CI/dependencies/run.sh .env
+          cmake -B build -S .
+          --preset=github-ci-tensorrt
+
+      - name: Build
+        run: cmake --build build
+
+      - name: ccache stats
+        run: ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always() && github.ref == 'refs/heads/main'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+  # ─────────────────────────────────────────────────────────────────────
+  # CUDA muon segment fitting. Only ActsUnitTestCudaMuonSpacePoint is built:
+  # the preset inherits `ci-common` and so turns the whole examples stack on,
+  # but nothing else in it is exercised here and `linux_ubuntu` builds all of
+  # that already.
+  # ─────────────────────────────────────────────────────────────────────
+  cuda_muon_build:
+    needs: changes
+    if: github.event_name != 'pull_request' || needs.changes.outputs.cuda_muon == 'true'
+    runs-on: [self-hosted, linux, x64, husk-size-standard]
+    permissions:
+      contents: read
+      # Authenticated GHCR reads: the spack buildcache is pulled from
+      # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
+      # so reads fall back to the anonymous (heavily rate limited) bucket.
+      packages: read
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_cuda:87
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # `bc` is not in the image and the test needs it.
+      - name: Install bc
+        run: |
+          apt-get update
+          apt-get install -y bc
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Configure
+        run: >
+          ccache -z &&
+          CI/dependencies/run.sh .env
+          cmake -B build -S .
+          --preset=github-ci-cuda-muon
+
+      - name: Build
+        run: cmake --build build --target ActsUnitTestCudaMuonSpacePoint
+
+      - name: ccache stats
+        run: ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always() && github.ref == 'refs/heads/main'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+      - name: Package build
+        run: tar czf build.tar.gz -C build --exclude "*.o" .
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: acts-cuda-muon-build
+          path: build.tar.gz
+          retention-days: 1
+
+  cuda_muon_gpu:
+    # A skipped `cuda_muon_build` (filtered-out pull request) skips this job
+    # too; no separate `if:` is needed, and adding one would only let the two
+    # conditions drift apart.
+    needs: [cuda_muon_build]
+    runs-on: [self-hosted, linux, x64, gpu-nvidia]
+    permissions:
+      contents: read
+      packages: read
+    container:
+      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_cuda:87
+      # Required. Without it the daemon never applies the nvidia runtime hook,
+      # so the driver bits are not injected: the image carries the CUDA toolkit
+      # but the container gets no device and no nvidia-smi. Confirmed by
+      # removing it, at which point the Check GPU step below failed with
+      # "nvidia-smi: command not found".
+      options: --gpus all
+
+    steps:
+      - name: Check GPU
+        run: nvidia-smi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install bc
+        run: |
+          apt-get update
+          apt-get install -y bc
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: acts-cuda-muon-build
+
+      - name: Unpack build
+        run: mkdir build && tar xf build.tar.gz -C build
+
+      # --no-tests=error rather than a silent pass: only one target was built,
+      # so a rename of the test would otherwise turn this job green while
+      # running nothing at all.
+      - name: Unit tests
+        run: >
+          CI/dependencies/run.sh .env
+          ctest --test-dir build --output-on-failure --no-tests=error
+          -R "CudaMuonSpacePoint"
+
+  # ─────────────────────────────────────────────────────────────────────
+  # LCG builds. They ask for the `cvmfs` label on top of the usual husk
+  # selectors: the label means the CVMFS client is mounted on the slot and the
+  # repositories are bound into the job container, not merely that some LCG
+  # toolchain happens to be installed. Without it the job would start and then
+  # fail on a missing /cvmfs.
+  # ─────────────────────────────────────────────────────────────────────
+  lcg:
+    name: lcg_${{ matrix.tag }}
+    runs-on: [self-hosted, linux, x64, husk-size-standard, cvmfs]
+    permissions:
+      contents: read
+    # Spelled out rather than built from a matrix field: CI/bump_versions.py only
+    # rewrites tags it can see literally, which is how linux_ubuntu_extra's
+    # templated image drifted a tag behind. Every leg is alma9 today anyway.
+    #
+    # Not sufficient here though: bump_versions.py's pattern is `[a-z0-9_]+`,
+    # which excludes the hyphen, so `alma9-base` never matches. Bump by hand.
+    #
+    # v88 is where expat-devel arrives, which the dev4 leg needs: that view's
+    # Geant4 wants EXPAT >= 2.5.0 and the view neither ships nor exposes it.
+    container: registry.cern.ch/ghcr.io/acts-project/alma9-base:88
+    continue-on-error: ${{ matrix.allow_failure }}
+
+    strategy:
+      # A view that breaks must not cancel the others: knowing *which*
+      # LCG/compiler combinations are affected is the point of the matrix.
+      fail-fast: false
+      matrix:
+        include:
+          - tag: 108_alma9_gcc15
+            platform: el9
+            compiler: gcc15
+            repo: sft.cern.ch
+            view: LCG_108
+            tests: false
+            allow_failure: false
+
+          - tag: 109_alma9_gcc15
+            platform: el9
+            compiler: gcc15
+            repo: sft.cern.ch
+            view: LCG_109
+            tests: true
+            allow_failure: false
+
+          - tag: 109_alma9_clang19
+            platform: el9
+            compiler: clang19
+            repo: sft.cern.ch
+            view: LCG_109
+            tests: true
+            allow_failure: false
+
+          - tag: dev4_alma9_gcc15
+            platform: el9
+            compiler: gcc15
+            repo: sft-nightlies.cern.ch
+            view: dev4/latest
+            tests: false
+            # Nightly views break frequently and are not release-blocking.
+            allow_failure: true
+
+    env:
+      INSTALL_DIR: ${{ github.workspace }}/install
+      ACTS_LOG_FAILURE_THRESHOLD: WARNING
+      # force off even if it is CI mode. Quoted so YAML 1.1 does not fold it
+      # into a boolean before the test helper gets to read the string.
+      ROOT_HASH_CHECKS: "off"
+      LCG_REPO: ${{ matrix.repo }}
+      LCG_VIEW: /cvmfs/${{ matrix.repo }}/lcg/views/${{ matrix.view }}/x86_64-${{ matrix.platform }}-${{ matrix.compiler }}-opt
+
+    steps:
+      # Fail loudly here rather than with an opaque "no such file" out of
+      # setup.sh, so a mount problem is distinguishable from a bad view path.
+      - name: Check CVMFS
+        run: |
+          ls -l /cvmfs/
+          test -d "/cvmfs/${LCG_REPO}/lcg/views" || { echo "${LCG_REPO} not mounted"; exit 1; }
+          test -f "${LCG_VIEW}/setup.sh" || { echo "no such view: ${LCG_VIEW}"; exit 1; }
+
+      # LCG's Geant4 reads its datasets from the geant4.cern.ch repo, which is a
+      # separate mount from the LCG view. Without it every G4-backed test aborts
+      # (SIGABRT) deep into the run; assert it up front so a fleet that forgets
+      # to mount it fails in seconds with a clear message instead. Only the test
+      # legs consume the datasets, so a build-only leg does not need this.
+      - name: Check Geant4 datasets on CVMFS
+        if: matrix.tests
+        run: >
+          test -d /cvmfs/geant4.cern.ch/share/data ||
+          { echo "geant4.cern.ch not mounted: LCG Geant4 datasets unavailable (add it to the cvmfs label)"; exit 1; }
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.tag }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.tag }}-
+
+      - name: Configure
+        run: >
+          source "${LCG_VIEW}/setup.sh" &&
+          ccache -z &&
+          cmake -B build -S .
+          --preset=github-ci-lcg
+          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+
+      - name: Build
+        run: >
+          source "${LCG_VIEW}/setup.sh" &&
+          cmake --build build
+
+      - name: ccache stats
+        run: >
+          source "${LCG_VIEW}/setup.sh" &&
+          ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always() && github.ref == 'refs/heads/main'
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+      - name: Unit tests
+        if: matrix.tests
+        run: >
+          source "${LCG_VIEW}/setup.sh" &&
+          ctest --test-dir build -j$(nproc)
+
+      - name: Install
+        if: matrix.tests
+        # Redirected: the install file list is long and drowns the log.
+        run: >
+          source "${LCG_VIEW}/setup.sh" &&
+          cmake --install build > install.log
+
+      - name: Python level tests
+        if: matrix.tests
+        shell: bash
+        run: |
+          source "${LCG_VIEW}/setup.sh"
+          source build/this_acts_withdeps.sh
+          python3 -m pip install -r Python/Examples/tests/requirements.txt
+          # plotting tests with mplhep fail because an ancient mplhep version in
+          # LCG overrides the mplhep version in our venv
+          pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
+
   macos:
     runs-on: macos-26
     permissions:
       contents: read
+      # Authenticated GHCR reads: the spack buildcache is pulled from
+      # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
+      # so reads fall back to the anonymous (heavily rate limited) bucket.
+      packages: read
     env:
       INSTALL_DIR: ${{ github.workspace }}/install_acts
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           lfs: true
           persist-credentials: false
@@ -398,7 +1056,7 @@ jobs:
 
       - name: Save ccache
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: always()
+        if: always() && github.ref == 'refs/heads/main'
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
@@ -441,12 +1099,12 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: acts
           persist-credentials: false
 
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: eic/EICrecon
           path: EICrecon
@@ -552,74 +1210,128 @@ jobs:
 
       - name: Save ccache
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: always()
+        if: always() && github.ref == 'refs/heads/main'
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
+  # Sources the key4hep nightly view straight out of the job container: the
+  # `cvmfs` label binds the repositories in, so nothing has to mount them.
   external_key4hep-nightlies:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, husk-size-standard, cvmfs]
     permissions:
       contents: read
+    # setup.sh picks the stack flavour from the container's os-release, so the
+    # image decides which nightly is exercised. This is the image run-lcg-view
+    # used before the move to husk, kept deliberately:
+    #
+    #   * the ubuntu24 flavour builds against the container's own gcc, while the
+    #     el9 one takes its toolchain from /cvmfs/sw.hsf.org — a repository the
+    #     `cvmfs` label does not bind in, so an alma9 container cannot configure
+    #     at all until the fleet mounts it;
+    #   * el9 additionally aborts load_geo_MuSIC_v2 with a heap error during
+    #     teardown (see the k4ActsTracking notes below), which ubuntu24 does not.
+    #
+    # ccache and wget come from this image; nothing has to be installed.
+    #
+    # Upstream only publishes `latest`, so this is pinned by digest to keep it
+    # from moving underneath us — it has to be rolled by hand to pick up a new
+    # base image, unlike the tagged acts images bump_versions.py maintains.
+    container: registry.cern.ch/ghcr.io/aidasoft/ubuntu2404@sha256:18af2d37575bd03a4249473991a7576cc2b2b3de3233927350e73db37955c17d
+    env:
+      KEY4HEP_VIEW: /cvmfs/sw-nightlies.hsf.org/key4hep
+      # Each run compiles a fresh checkout, so ctime/mtime always differ.
+      CCACHE_SLOPPINESS: include_file_ctime,include_file_mtime
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      # Keeps a missing mount distinguishable from a broken nightly view.
+      - name: Check CVMFS
+        run: |
+          ls -l /cvmfs/
+          test -f "${KEY4HEP_VIEW}/setup.sh" ||
+            { echo "no key4hep view at ${KEY4HEP_VIEW} (is sw-nightlies.hsf.org in the cvmfs label?)"; exit 1; }
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: acts
           persist-credentials: false
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: key4hep/k4ActsTracking
           path: k4ActsTracking
           persist-credentials: false
-      - name: Setup CVMFS
-        uses: cvmfs-contrib/github-action-cvmfs@10197e000cc0add8e54ac4fb73d3ed44e2de72b4 # v5.5
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
       - name: Build Key4hep dependents
         id: build
-        uses: aidasoft/run-lcg-view@d8db17c61216548c9192889942d46ff2d7c3a3b6 # v6
         continue-on-error: true
-        with:
-          container: ubuntu2404
-          view-path: /cvmfs/sw-nightlies.hsf.org/key4hep
-          ccache-key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}
-          run: |
-            pushd acts
-            ccache -z
-            echo "::group::Configure Acts"
-            cmake -B build -S . -GNinja \
-              -DACTS_BUILD_PLUGIN_DD4HEP=ON \
-              -DACTS_BUILD_PLUGIN_JSON=ON \
-              -DACTS_USE_SYSTEM_NLOHMANN_JSON=ON \
-              -DACTS_BUILD_PLUGIN_ROOT=ON \
-              -DCMAKE_INSTALL_PREFIX=$(pwd)/install \
-              -DCMAKE_CXX_STANDARD=20 \
-              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-            echo "::endgroup::"
-            echo "::group::Build and Install Acts"
-            cmake --build build --target install
-            k4_local_repo
-            echo "::endgroup::"
-            echo "::group::ccache statistics"
-            ccache -s
-            popd
+        shell: bash
+        run: |
+          source "${KEY4HEP_VIEW}/setup.sh"
 
-            pushd k4ActsTracking
-            ccache -z
-            echo "::group::Configure k4ActsTracking"
-            cmake -B build -S . -GNinja \
-              -DCMAKE_CXX_STANDARD=20 \
-              -DCMAKE_INSTALL_PREFIX=$(pwd)/install \
-              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-            echo "::endgroup::"
-            echo "::group::Build k4ActsTracking"
-            cmake --build build
-            echo "::endgroup::"
-            echo "::group::Test k4ActsTracking::"
-            ctest --test-dir build -j$(nproc) --output-on-failure
-            echo "::endgroup::"
-            echo "::group::ccache statistics"
-            ccache -s
-            popd
+          pushd acts
+          ccache -z
+          echo "::group::Configure Acts"
+          cmake -B build -S . -GNinja \
+            -DACTS_BUILD_PLUGIN_DD4HEP=ON \
+            -DACTS_BUILD_PLUGIN_JSON=ON \
+            -DACTS_USE_SYSTEM_NLOHMANN_JSON=ON \
+            -DACTS_BUILD_PLUGIN_ROOT=ON \
+            -DCMAKE_INSTALL_PREFIX="$(pwd)/install" \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          echo "::endgroup::"
+          echo "::group::Build and Install Acts"
+          cmake --build build --target install
+          k4_local_repo
+          echo "::endgroup::"
+          echo "::group::ccache statistics"
+          ccache -s
+          popd
+
+          pushd k4ActsTracking
+          ccache -z
+          echo "::group::Configure k4ActsTracking"
+          cmake -B build -S . -GNinja \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_INSTALL_PREFIX="$(pwd)/install" \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          echo "::endgroup::"
+          # Configure pulls the test geometries and material maps off
+          # key4hep.web.cern.ch, but data/download_files.sh reports "All files
+          # downloaded successfully!" and exits 0 even when every single wget
+          # failed. Without this the check keeps passing on a runner that cannot
+          # reach the host, having quietly skipped the data-driven tests.
+          echo "::group::Check data files"
+          while read -r file _; do
+            case "$file" in ''|\#*) continue;; esac
+            test -f "data/${file}" ||
+              { echo "data/${file} missing: the download from key4hep.web.cern.ch failed"; exit 1; }
+          done <data/file_list.txt
+          echo "::endgroup::"
+          echo "::group::Build k4ActsTracking"
+          cmake --build build
+          echo "::endgroup::"
+          echo "::group::Test k4ActsTracking::"
+          ctest --test-dir build -j"$(nproc)" --output-on-failure
+          echo "::endgroup::"
+          echo "::group::ccache statistics"
+          ccache -s
+          popd
+
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always() && github.ref == 'refs/heads/main'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
       - name: Create comment body
         if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
@@ -645,7 +1357,7 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 

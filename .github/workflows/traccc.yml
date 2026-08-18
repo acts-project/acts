@@ -21,7 +21,7 @@ on:
       - ".github/workflows/traccc.yml"
 
 concurrency:
-  group: ${{ github.head_ref || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -32,6 +32,10 @@ jobs:
     permissions:
       contents: read
     strategy:
+      # A broken leg must not cancel the others: which of them is affected is
+      # the useful part of the signal, and the CUDA-Release leg feeds the
+      # artifact `cuda-test` below consumes.
+      fail-fast: false
       matrix:
         platform:
           - name: CPU
@@ -39,37 +43,59 @@ jobs:
             options: --preset host-fp32
             run_tests: true
             enable_cuda: false
-            enable_sycl: false
-          - name: CPU
+          # Distinct name because merge-sentinel deduplicates result items by
+          # normalised name: two legs called CPU collapse into one check.
+          - name: CPU_FP64
             container: ghcr.io/acts-project/ubuntu2404:87
             options: --preset host-fp64
             run_tests: false
             enable_cuda: false
-            enable_sycl: false
-          - name: CUDA
-            container: ghcr.io/acts-project/ubuntu2404_cuda:87
-            options: --preset cuda-fp32 -DTRACCC_BUILD_TESTING=FALSE
-            run_tests: false
-            enable_cuda: true
-            enable_sycl: false
-          - name: "SYCL Intel"
-            container: ghcr.io/acts-project/ubuntu2404_oneapi:87
-            options: --preset sycl-fp32
-            run_tests: true
-            enable_cuda: false
-            enable_sycl: true
         build:
           - Release
           - Debug
         include:
+          # CUDA fp32 is spelled out per build type rather than riding the
+          # `platform` x `build` cross: the two legs want opposite things from
+          # TRACCC_BUILD_TESTING.
+          #
+          # Release builds the tests and ships the tree to `cuda-test` below,
+          # so the device code it compiles is the device code that runs. The
+          # full five-detector list is kept rather than trimmed to what the
+          # tests strictly need: this leg pays for their device code either
+          # way, and trimming would drop the toy-detector CKF tests from the
+          # GPU run.
           - platform:
               name: CUDA
               container: ghcr.io/acts-project/ubuntu2404_cuda:87
-              options: --preset cuda-fp64
+              options: --preset cuda-fp32
+              run_tests: false
+              upload_build: true
+              enable_cuda: true
+              enable_hip: false
+            build: Release
+          # Debug exists for the FP64 PTX check, which needs the `--keep` that
+          # only lands in CMAKE_CUDA_FLAGS_DEBUG
+          # (Traccc/cmake/traccc-compiler-options-cuda.cmake:34). Tests off:
+          # building them under `-G --keep` is very slow for no added signal.
+          - platform:
+              name: CUDA
+              container: ghcr.io/acts-project/ubuntu2404_cuda:87
+              options: --preset cuda-fp32 -DTRACCC_BUILD_TESTING=FALSE
               run_tests: false
               enable_cuda: true
               enable_hip: false
-              enable_sycl: false
+            build: Debug
+          # Distinct name for the sentinel dedup reason above -- as plain CUDA
+          # this and the fp32 Release leg both render as "CUDA-Release". Tests
+          # off: this is a compile check, no GPU job consumes an fp64 build,
+          # and the preset would otherwise build the whole suite to discard it.
+          - platform:
+              name: CUDA_FP64
+              container: ghcr.io/acts-project/ubuntu2404_cuda:87
+              options: --preset cuda-fp64 -DTRACCC_BUILD_TESTING=FALSE
+              run_tests: false
+              enable_cuda: true
+              enable_hip: false
             build: Release
           - platform:
               name: "ALPAKA_CPU"
@@ -78,7 +104,6 @@ jobs:
               run_tests: true
               enable_cuda: false
               enable_hip: false
-              enable_sycl: false
             build: Release
           - platform:
               name: "ALPAKA_CUDA"
@@ -87,23 +112,13 @@ jobs:
               run_tests: false
               enable_cuda: true
               enable_hip: false
-              enable_sycl: false
-            build: Release
-          - platform:
-              name: "ALPAKA_SYCL"
-              container: ghcr.io/acts-project/ubuntu2404_oneapi:87
-              options: --preset alpaka-fp32 -Dalpaka_ACC_CPU_B_SEQ_T_THREADS_ENABLE=OFF -Dalpaka_ACC_SYCL_ENABLE=ON -Dalpaka_SYCL_ONEAPI_GPU=ON -Dalpaka_SYCL_ONEAPI_GPU_DEVICES=spir64 -DTRACCC_BUILD_SYCL_UTILS=ON
-              run_tests: false
-              enable_cuda: false
-              enable_hip: false
-              enable_sycl: true
             build: Release
     # Use BASH as the shell from the images.
     defaults:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
       - name: Install dependencies
@@ -140,12 +155,12 @@ jobs:
           source ${GITHUB_WORKSPACE}/Traccc/.github/ci_setup.sh ${{ matrix.platform.name }}
           curl -L --retry 5 --retry-delay 10 --output vecmem.tar.gz https://github.com/acts-project/vecmem/archive/refs/tags/v1.25.0.tar.gz
           tar -xzvf vecmem.tar.gz
-          export CXX=${SYCLCXX:-g++}
+          export CXX=g++
           cmake \
             -S vecmem-1.25.0/ \
             -B /vecmem_build/ \
             -DVECMEM_BUILD_CUDA_LIBRARY=${{ matrix.platform.enable_cuda && 'ON' || 'OFF' }} \
-            -DVECMEM_BUILD_SYCL_LIBRARY=${{ matrix.platform.enable_sycl && 'ON' || 'OFF' }} \
+            -DVECMEM_BUILD_SYCL_LIBRARY=OFF \
             -DVECMEM_BUILD_HIP_LIBRARY=${{ matrix.platform.enable_hip && 'ON' || 'OFF' }} \
             -DCMAKE_INSTALL_PREFIX=/vecmem_install/
           cmake --build /vecmem_build/ -- -j $(nproc)
@@ -155,40 +170,21 @@ jobs:
           # backend) cannot locate it. Copy it into the installed cmake dir,
           # which vecmem-config.cmake adds to CMAKE_MODULE_PATH.
           cp vecmem-1.25.0/cmake/FindHIPToolkit.cmake /vecmem_install/lib/cmake/vecmem-*/
-      - name: Build ACTS
-        run: |
-          source ${GITHUB_WORKSPACE}/Traccc/.github/ci_setup.sh ${{ matrix.platform.name }}
-          export CMAKE_PREFIX_PATH=/json_install/:/vecmem_install/:/covfie_install/:${CMAKE_PREFIX_PATH}
-          export CXX=g++
-          cmake \
-            -S ${GITHUB_WORKSPACE} \
-            -B /acts_build/ \
-            -DACTS_BUILD_PLUGIN_JSON=ON \
-            -DACTS_USE_SYSTEM_NLOHMANN_JSON=ON \
-            -DACTS_SETUP_DETRAY=ON \
-            -DACTS_USE_SYSTEM_COVFIE=ON \
-            -DACTS_USE_SYSTEM_VECMEM=ON \
-            -DDETRAY_USE_SYSTEM_GOOGLETEST=ON \
-            -DDETRAY_BUILD_TEST_UTILS=ON \
-            -DCMAKE_INSTALL_PREFIX=/acts_install/ \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DDETRAY_GENERATE_METADATA=itk_metadata \
-            -DDETRAY_SET_LOGGING=NONE \
-            -DDETRAY_BUILD_VALIDATION_TOOLS=ON \
-            -DACTS_ENABLE_CUDA=${{ matrix.platform.enable_cuda && 'ON' || 'OFF' }}
-          cmake --build /acts_build/ -- -j $(nproc)
-          cmake --install /acts_build/
       - name: Configure
         run: |
           source ${GITHUB_WORKSPACE}/Traccc/.github/ci_setup.sh ${{ matrix.platform.name }}
-          export CMAKE_PREFIX_PATH=/json_install/:/vecmem_install/:/covfie_install/:/acts_install/:/opt/rocm/:${CMAKE_PREFIX_PATH}
+          export CMAKE_PREFIX_PATH=/json_install/:/vecmem_install/:/covfie_install/:/opt/rocm/:${CMAKE_PREFIX_PATH}
           cmake \
             -DCMAKE_BUILD_TYPE=${{ matrix.build }} \
             ${{ matrix.platform.options }} \
-            -DTRACCC_USE_SYSTEM_ACTS=ON \
+            -DACTS_USE_SYSTEM_NLOHMANN_JSON=ON \
+            -DACTS_USE_SYSTEM_COVFIE=ON \
+            -DACTS_USE_SYSTEM_VECMEM=ON \
+            -DACTS_ENABLE_CUDA=${{ matrix.platform.enable_cuda && 'ON' || 'OFF' }} \
             -DTRACCC_USE_SYSTEM_VECMEM=ON \
             -DDETRAY_USE_SYSTEM_NLOHMANN=ON \
             -DTRACCC_USE_SYSTEM_COVFIE=ON \
+            -DDETRAY_USE_SYSTEM_GOOGLETEST=ON \
             -DTRACCC_USE_SYSTEM_GOOGLETEST_DEFAULT=ON \
             -DTRACCC_SETUP_GOOGLETEST=ON \
             -DTRACCC_SUPPORTED_DETECTORS="default_detector;odd_detector;telescope_detector;toy_detector;itk_detector" \
@@ -212,3 +208,99 @@ jobs:
         if: "matrix.platform.name == 'CUDA' && matrix.build == 'Debug'"
         continue-on-error: true
         run: ${GITHUB_WORKSPACE}/Traccc/.github/find_f64_ptx.py --source ${GITHUB_WORKSPACE}/Traccc --build build $(find build -name "*.ptx")
+
+      # Two archives, because the pieces live at unrelated roots. The build
+      # tree restores under the workspace (its CTestTestfile.cmake carries
+      # absolute paths from configure time), while nlohmann/covfie/vecmem are
+      # installed to /*_install inside the image and the test binaries reach
+      # them there via RPATH. Shipping those beats rebuilding three
+      # from-source dependencies on the GPU node.
+      #
+      # build/_deps stays: vecmem also arrives via FetchContent and its shared
+      # objects load from there at runtime. `.a` files go, being link-time
+      # only, which matters because this leg builds the whole project.
+      - name: Package build
+        if: matrix.platform.upload_build
+        run: |
+          tar czf build.tar.gz -C build --exclude "*.o" --exclude "*.a" .
+          tar czf installs.tar.gz -C / json_install covfie_install vecmem_install
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: matrix.platform.upload_build
+        with:
+          name: traccc-cuda-build
+          path: |
+            build.tar.gz
+            installs.tar.gz
+          retention-days: 1
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Nothing is compiled here; the job exists purely to spend GPU time on tests.
+  #
+  # `needs: containers` waits on the whole matrix rather than just the leg that
+  # produced the artifact, because a job cannot depend on a single matrix leg.
+  # With one GPU node in the pool that costs nothing real: the job would be
+  # queueing for the node anyway.
+  # ─────────────────────────────────────────────────────────────────────
+  cuda-test:
+    needs: [containers]
+    runs-on: [self-hosted, linux, x64, gpu-nvidia]
+    permissions:
+      contents: read
+      packages: read
+    # registry.cern.ch is a pull-through cache for ghcr.io, usable because this
+    # job runs inside CERN, unlike the ubuntu-latest build legs above.
+    container:
+      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_cuda:87
+      # Required. Without it the daemon never applies the nvidia runtime hook,
+      # so the driver bits are not injected: the image carries the CUDA toolkit
+      # but the container gets no device and no nvidia-smi. Confirmed by
+      # removing it, at which point the Check GPU step below failed with
+      # "nvidia-smi: command not found".
+      options: --gpus all
+
+    env:
+      # ci_setup.sh would set this to nproc. These tests allocate sizeable
+      # device buffers, and one T4's 16 GB is the binding constraint rather
+      # than the core count, so cap it at two at a time.
+      CTEST_PARALLEL_LEVEL: 2
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      # Has to land at the absolute path the build was configured at:
+      # traccc_add_test bakes TRACCC_TEST_DATA_DIR=${PROJECT_SOURCE_DIR}/data
+      # into each test's environment at configure time. What makes that work
+      # across machines is the container -- the workspace is /__w/acts/acts on
+      # every runner.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      # Fails the job early if no device is visible, and puts the driver
+      # version and GPU model in the log -- which is what you want to hand
+      # someone when numerics differ between nodes.
+      - name: Check GPU
+        run: nvidia-smi
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: traccc-cuda-build
+
+      - name: Unpack build
+        run: |
+          mkdir build && tar xf build.tar.gz -C build
+          tar xf installs.tar.gz -C /
+
+      - name: Download data files
+        run: ${GITHUB_WORKSPACE}/Traccc/data/traccc_data_get_files.sh
+
+      # ctest -R is case-sensitive, so the regex spells out both cases: the
+      # lowercase-named GPU tests (grids_cuda.*) are otherwise skipped silently.
+      # --no-tests=error for the same reason: the whole job is a `-R` filter, and
+      # ctest's default is to report success on an empty set, so a regex that
+      # stops matching would leave the job green having run nothing.
+      - name: Test
+        run: ctest --test-dir build --output-on-failure --no-tests=error -R "[Cc][Uu][Dd][Aa]"

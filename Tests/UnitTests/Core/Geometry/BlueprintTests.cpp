@@ -31,6 +31,8 @@
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
@@ -41,13 +43,13 @@
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-using Experimental::Blueprint;
-using Experimental::BlueprintNode;
-using Experimental::BlueprintOptions;
-using Experimental::LayerBlueprintNode;
-using Experimental::MaterialDesignatorBlueprintNode;
-using Experimental::PadBlueprintNode;
-using Experimental::StaticBlueprintNode;
+using Acts::Blueprint;
+using Acts::BlueprintNode;
+using Acts::BlueprintOptions;
+using Acts::LayerBlueprintNode;
+using Acts::MaterialDesignatorBlueprintNode;
+using Acts::PadBlueprintNode;
+using Acts::StaticBlueprintNode;
 
 namespace ActsTests {
 
@@ -630,9 +632,13 @@ BOOST_AUTO_TEST_CASE(MaterialTesting) {
   using enum AxisBoundaryType;
 
   root.addMaterial("Material", [&](auto& mat) {
-    mat.configureFace(NegativeDisc, {AxisR, Bound, 5}, {AxisPhi, Bound, 10});
-    mat.configureFace(PositiveDisc, {AxisR, Bound, 15}, {AxisPhi, Bound, 20});
-    mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 25}, {AxisZ, Bound, 30});
+    mat.configureFace(NegativeDisc, AxisSpec::DeferredEquidistant(5, AxisR),
+                      AxisSpec::DeferredEquidistant(10, AxisPhi));
+    mat.configureFace(PositiveDisc, AxisSpec::DeferredEquidistant(15, AxisR),
+                      AxisSpec::DeferredEquidistant(20, AxisPhi));
+    mat.configureFace(OuterCylinder,
+                      AxisSpec::DeferredEquidistant(25, AxisRPhi),
+                      AxisSpec::DeferredEquidistant(30, AxisZ));
 
     mat.addStaticVolume(std::move(cyl));
   });
@@ -660,10 +666,10 @@ BOOST_AUTO_TEST_CASE(MaterialTesting) {
   const auto& posDiscMat =
       dynamic_cast<const ProtoGridSurfaceMaterial&>(*posDisc);
 
-  BOOST_CHECK_EQUAL(negDiscMat.binning().at(0).getAxis().getNBins(), 5);
-  BOOST_CHECK_EQUAL(negDiscMat.binning().at(1).getAxis().getNBins(), 10);
-  BOOST_CHECK_EQUAL(posDiscMat.binning().at(0).getAxis().getNBins(), 15);
-  BOOST_CHECK_EQUAL(posDiscMat.binning().at(1).getAxis().getNBins(), 20);
+  BOOST_CHECK_EQUAL(negDiscMat.binning().axisSpec(0).nBins(), 5);
+  BOOST_CHECK_EQUAL(negDiscMat.binning().axisSpec(1).nBins(), 10);
+  BOOST_CHECK_EQUAL(posDiscMat.binning().axisSpec(0).nBins(), 15);
+  BOOST_CHECK_EQUAL(posDiscMat.binning().axisSpec(1).nBins(), 20);
 
   // Check outer cylinder material
   const auto* outerCyl = child.portals()
@@ -673,8 +679,8 @@ BOOST_AUTO_TEST_CASE(MaterialTesting) {
   BOOST_REQUIRE_NE(outerCyl, nullptr);
   const auto& outerCylMat =
       dynamic_cast<const ProtoGridSurfaceMaterial&>(*outerCyl);
-  BOOST_CHECK_EQUAL(outerCylMat.binning().at(0).getAxis().getNBins(), 25);
-  BOOST_CHECK_EQUAL(outerCylMat.binning().at(1).getAxis().getNBins(), 30);
+  BOOST_CHECK_EQUAL(outerCylMat.binning().axisSpec(0).nBins(), 25);
+  BOOST_CHECK_EQUAL(outerCylMat.binning().axisSpec(1).nBins(), 30);
 
   // Check that other faces have no material
   for (std::size_t i = 0; i < child.portals().size(); i++) {
@@ -702,7 +708,8 @@ BOOST_AUTO_TEST_CASE(MaterialInvalidAxisDirections) {
                        [&](auto& mat) {
                          mat.configureFace(
                              CylinderVolumeBounds::Face::NegativeDisc,
-                             {AxisZ, Bound, 5}, {AxisPhi, Bound, 10});
+                             AxisSpec::DeferredEquidistant(5, AxisZ),
+                             AxisSpec::DeferredEquidistant(10, AxisPhi));
                        }),
       std::invalid_argument);
 
@@ -711,7 +718,8 @@ BOOST_AUTO_TEST_CASE(MaterialInvalidAxisDirections) {
                        [&](auto& mat) {
                          mat.configureFace(
                              CylinderVolumeBounds::Face::OuterCylinder,
-                             {AxisR, Bound, 5}, {AxisR, Bound, 10});
+                             AxisSpec::DeferredEquidistant(5, AxisR),
+                             AxisSpec::DeferredEquidistant(10, AxisR));
                        }),
       std::invalid_argument);
 
@@ -721,7 +729,8 @@ BOOST_AUTO_TEST_CASE(MaterialInvalidAxisDirections) {
                        [&](auto& mat) {
                          mat.configureFace(
                              CuboidVolumeBounds::Face::NegativeXFace,
-                             {AxisX, Bound, 5}, {AxisZ, Bound, 10});
+                             AxisSpec::DeferredEquidistant(5, AxisX),
+                             AxisSpec::DeferredEquidistant(10, AxisZ));
                        }),
       std::invalid_argument);
 
@@ -730,7 +739,8 @@ BOOST_AUTO_TEST_CASE(MaterialInvalidAxisDirections) {
                        [&](auto& mat) {
                          mat.configureFace(
                              CuboidVolumeBounds::Face::PositiveYFace,
-                             {AxisY, Bound, 5}, {AxisX, Bound, 10});
+                             AxisSpec::DeferredEquidistant(5, AxisY),
+                             AxisSpec::DeferredEquidistant(10, AxisX));
                        }),
       std::invalid_argument);
 
@@ -739,9 +749,46 @@ BOOST_AUTO_TEST_CASE(MaterialInvalidAxisDirections) {
                        [&](auto& mat) {
                          mat.configureFace(
                              CuboidVolumeBounds::Face::NegativeZFace,
-                             {AxisZ, Bound, 5}, {AxisY, Bound, 10});
+                             AxisSpec::DeferredEquidistant(5, AxisZ),
+                             AxisSpec::DeferredEquidistant(10, AxisY));
                        }),
       std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(MaterialAxisValidation) {
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
+  Blueprint root{cfg};
+
+  using enum AxisDirection;
+  using enum AxisBoundaryType;
+  using enum CylinderVolumeBounds::Face;
+
+  // Fully specified axes are rejected: the range comes from the surface
+  BOOST_CHECK_THROW(
+      root.addMaterial("Material",
+                       [&](auto& mat) {
+                         mat.configureFace(
+                             NegativeDisc,
+                             AxisSpec::Equidistant(5, 0., 1., Bound, AxisR),
+                             AxisSpec::DeferredEquidistant(10, AxisPhi));
+                       }),
+      std::invalid_argument);
+
+  // Axes without directions are accepted, the directions follow from the face
+  BOOST_CHECK_NO_THROW(root.addMaterial("Material", [&](auto& mat) {
+    mat.configureFace(NegativeDisc, AxisSpec::DeferredEquidistant(5),
+                      AxisSpec::DeferredEquidistant(10));
+  }));
+
+  // The superseded DirectedProtoAxis interface converts to deferred axes
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  BOOST_CHECK_NO_THROW(root.addMaterial("Material", [&](auto& mat) {
+    mat.configureFace(PositiveDisc, DirectedProtoAxis(AxisR, Bound, 5),
+                      DirectedProtoAxis(AxisPhi, Bound, 0., 1., 10));
+  }));
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 BOOST_AUTO_TEST_CASE(MaterialMixedVolumeTypes) {
@@ -759,9 +806,11 @@ BOOST_AUTO_TEST_CASE(MaterialMixedVolumeTypes) {
           "Material",
           [&](auto& mat) {
             mat.configureFace(CylinderVolumeBounds::Face::NegativeDisc,
-                              {AxisR, Bound, 5}, {AxisPhi, Bound, 10});
+                              AxisSpec::DeferredEquidistant(5, AxisR),
+                              AxisSpec::DeferredEquidistant(10, AxisPhi));
             mat.configureFace(CuboidVolumeBounds::Face::NegativeXFace,
-                              {AxisX, Bound, 5}, {AxisY, Bound, 10});
+                              AxisSpec::DeferredEquidistant(5, AxisX),
+                              AxisSpec::DeferredEquidistant(10, AxisY));
           }),
       std::runtime_error);
 
@@ -771,9 +820,11 @@ BOOST_AUTO_TEST_CASE(MaterialMixedVolumeTypes) {
           "Material",
           [&](auto& mat) {
             mat.configureFace(CuboidVolumeBounds::Face::NegativeXFace,
-                              {AxisX, Bound, 5}, {AxisY, Bound, 10});
+                              AxisSpec::DeferredEquidistant(5, AxisX),
+                              AxisSpec::DeferredEquidistant(10, AxisY));
             mat.configureFace(CylinderVolumeBounds::Face::NegativeDisc,
-                              {AxisR, Bound, 5}, {AxisPhi, Bound, 10});
+                              AxisSpec::DeferredEquidistant(5, AxisR),
+                              AxisSpec::DeferredEquidistant(10, AxisPhi));
           }),
       std::runtime_error);
 }
@@ -798,12 +849,18 @@ BOOST_AUTO_TEST_CASE(MaterialCuboid) {
   auto mat = std::make_shared<MaterialDesignatorBlueprintNode>("Material");
 
   // Configure material for different faces with different binning
-  mat->configureFace(NegativeXFace, {AxisX, Bound, 5}, {AxisY, Bound, 10});
-  mat->configureFace(PositiveXFace, {AxisX, Bound, 15}, {AxisY, Bound, 20});
-  mat->configureFace(NegativeYFace, {AxisX, Bound, 25}, {AxisY, Bound, 30});
-  mat->configureFace(PositiveYFace, {AxisX, Bound, 35}, {AxisY, Bound, 40});
-  mat->configureFace(NegativeZFace, {AxisX, Bound, 45}, {AxisY, Bound, 50});
-  mat->configureFace(PositiveZFace, {AxisX, Bound, 55}, {AxisY, Bound, 60});
+  mat->configureFace(NegativeXFace, AxisSpec::DeferredEquidistant(5, AxisX),
+                     AxisSpec::DeferredEquidistant(10, AxisY));
+  mat->configureFace(PositiveXFace, AxisSpec::DeferredEquidistant(15, AxisX),
+                     AxisSpec::DeferredEquidistant(20, AxisY));
+  mat->configureFace(NegativeYFace, AxisSpec::DeferredEquidistant(25, AxisX),
+                     AxisSpec::DeferredEquidistant(30, AxisY));
+  mat->configureFace(PositiveYFace, AxisSpec::DeferredEquidistant(35, AxisX),
+                     AxisSpec::DeferredEquidistant(40, AxisY));
+  mat->configureFace(NegativeZFace, AxisSpec::DeferredEquidistant(45, AxisX),
+                     AxisSpec::DeferredEquidistant(50, AxisY));
+  mat->configureFace(PositiveZFace, AxisSpec::DeferredEquidistant(55, AxisX),
+                     AxisSpec::DeferredEquidistant(60, AxisY));
 
   mat->addChild(std::make_shared<StaticBlueprintNode>(std::move(cuboid)));
 
@@ -829,39 +886,28 @@ BOOST_AUTO_TEST_CASE(MaterialCuboid) {
     CuboidVolumeBounds::Face face = static_cast<CuboidVolumeBounds::Face>(i);
     switch (face) {
       case NegativeXFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(), 5);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
-                          10);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(0).nBins(), 5);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(1).nBins(), 10);
         break;
       case PositiveXFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(),
-                          15);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
-                          20);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(0).nBins(), 15);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(1).nBins(), 20);
         break;
       case NegativeYFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(),
-                          25);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
-                          30);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(0).nBins(), 25);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(1).nBins(), 30);
         break;
       case PositiveYFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(),
-                          35);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
-                          40);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(0).nBins(), 35);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(1).nBins(), 40);
         break;
       case NegativeZFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(),
-                          45);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
-                          50);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(0).nBins(), 45);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(1).nBins(), 50);
         break;
       case PositiveZFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(),
-                          55);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
-                          60);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(0).nBins(), 55);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().axisSpec(1).nBins(), 60);
         break;
     }
   }
@@ -1241,28 +1287,30 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeCylinder) {
 
   PadBlueprintNode pad("World", cfg.envelope);
 
-  pad.addStaticVolume(std::make_unique<TrackingVolume>(
+  auto child = std::make_unique<TrackingVolume>(
       Transform3::Identity(),
-      std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 30_mm), "child"));
+      std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 30_mm), "child");
+  const TrackingVolume* childVol = child.get();
+  pad.addStaticVolume(std::move(child));
 
   BlueprintOptions options;
-  Volume& childVol = pad.build(options, gctx, *logger);
+  // build() presents the padded volume to the parent
+  auto& world =
+      dynamic_cast<TrackingVolume&>(pad.build(options, gctx, *logger));
 
   // Child bounds are unchanged, padding creates a new volume
   const auto& childCyl =
-      dynamic_cast<const CylinderVolumeBounds&>(childVol.volumeBounds());
+      dynamic_cast<const CylinderVolumeBounds&>(childVol->volumeBounds());
   BOOST_CHECK_EQUAL(childCyl.get(CylinderVolumeBounds::eMinR), 10_mm);
   BOOST_CHECK_EQUAL(childCyl.get(CylinderVolumeBounds::eMaxR), 20_mm);
   BOOST_CHECK_EQUAL(childCyl.get(CylinderVolumeBounds::eHalfLengthZ), 30_mm);
 
-  const TrackingVolume* world = pad.trackingVolume();
-  BOOST_REQUIRE(world != nullptr);
-  BOOST_CHECK_EQUAL(world->volumeName(), "World");
-  BOOST_CHECK_EQUAL(world->volumeBounds().type(),
+  BOOST_CHECK_EQUAL(world.volumeName(), "World");
+  BOOST_CHECK_EQUAL(world.volumeBounds().type(),
                     VolumeBounds::BoundsType::eCylinder);
 
   const auto& worldCyl =
-      dynamic_cast<const CylinderVolumeBounds&>(world->volumeBounds());
+      dynamic_cast<const CylinderVolumeBounds&>(world.volumeBounds());
   BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMinR), 10_mm - 1_mm);
   BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMaxR), 20_mm + 2_mm);
   BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eHalfLengthZ),
@@ -1276,28 +1324,30 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeCuboid) {
   cfg.envelope[AxisDirection::AxisZ] = {7_mm, 7_mm};
 
   PadBlueprintNode pad("World", cfg.envelope);
-  pad.addStaticVolume(std::make_unique<TrackingVolume>(
+  auto child = std::make_unique<TrackingVolume>(
       Transform3::Identity(),
-      std::make_shared<CuboidVolumeBounds>(10_mm, 20_mm, 30_mm), "child"));
+      std::make_shared<CuboidVolumeBounds>(10_mm, 20_mm, 30_mm), "child");
+  const TrackingVolume* childVol = child.get();
+  pad.addStaticVolume(std::move(child));
 
   BlueprintOptions options;
-  Volume& childVol = pad.build(options, gctx, *logger);
+  // build() presents the padded volume to the parent
+  auto& world =
+      dynamic_cast<TrackingVolume&>(pad.build(options, gctx, *logger));
 
   // Child bounds are unchanged, padding creates a new volume
   const auto& childBox =
-      dynamic_cast<const CuboidVolumeBounds&>(childVol.volumeBounds());
+      dynamic_cast<const CuboidVolumeBounds&>(childVol->volumeBounds());
   BOOST_CHECK_EQUAL(childBox.get(CuboidVolumeBounds::eHalfLengthX), 10_mm);
   BOOST_CHECK_EQUAL(childBox.get(CuboidVolumeBounds::eHalfLengthY), 20_mm);
   BOOST_CHECK_EQUAL(childBox.get(CuboidVolumeBounds::eHalfLengthZ), 30_mm);
 
-  const TrackingVolume* world = pad.trackingVolume();
-  BOOST_REQUIRE(world != nullptr);
-  BOOST_CHECK_EQUAL(world->volumeName(), "World");
-  BOOST_CHECK_EQUAL(world->volumeBounds().type(),
+  BOOST_CHECK_EQUAL(world.volumeName(), "World");
+  BOOST_CHECK_EQUAL(world.volumeBounds().type(),
                     VolumeBounds::BoundsType::eCuboid);
 
   const auto& worldBox =
-      dynamic_cast<const CuboidVolumeBounds&>(world->volumeBounds());
+      dynamic_cast<const CuboidVolumeBounds&>(world.volumeBounds());
   BOOST_CHECK_EQUAL(worldBox.get(CuboidVolumeBounds::eHalfLengthX),
                     10_mm + 3_mm);
   BOOST_CHECK_EQUAL(worldBox.get(CuboidVolumeBounds::eHalfLengthY),
@@ -1306,7 +1356,7 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeCuboid) {
                     30_mm + 7_mm);
 
   // 6 faces for a cuboid
-  BOOST_CHECK_EQUAL(world->portals().size(), 0);
+  BOOST_CHECK_EQUAL(world.portals().size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(PadBlueprintNodeRotatedCylinder) {
@@ -1324,24 +1374,23 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeRotatedCylinder) {
       "child"));
 
   BlueprintOptions options;
-  pad.build(options, gctx, *logger);
+  auto& world =
+      dynamic_cast<TrackingVolume&>(pad.build(options, gctx, *logger));
 
-  const TrackingVolume* world = pad.trackingVolume();
-  BOOST_REQUIRE(world != nullptr);
-  BOOST_CHECK_EQUAL(world->volumeName(), "World");
-  BOOST_CHECK_EQUAL(world->volumeBounds().type(),
+  BOOST_CHECK_EQUAL(world.volumeName(), "World");
+  BOOST_CHECK_EQUAL(world.volumeBounds().type(),
                     VolumeBounds::BoundsType::eCylinder);
 
   // Bounds are padded in local frame regardless of orientation
   const auto& worldCyl =
-      dynamic_cast<const CylinderVolumeBounds&>(world->volumeBounds());
+      dynamic_cast<const CylinderVolumeBounds&>(world.volumeBounds());
   BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMinR), 10_mm - 1_mm);
   BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMaxR), 20_mm + 2_mm);
   BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eHalfLengthZ),
                     30_mm + 20_mm);
 
   // Transform is inherited from the child
-  BOOST_CHECK(world->localToGlobalTransform(gctx).isApprox(childTrf));
+  BOOST_CHECK(world.localToGlobalTransform(gctx).isApprox(childTrf));
 }
 
 BOOST_AUTO_TEST_CASE(PadBlueprintNodeNestedInContainer) {

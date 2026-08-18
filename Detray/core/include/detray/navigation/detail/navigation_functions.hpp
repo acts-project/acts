@@ -32,30 +32,22 @@ struct candidate_search {
   ///                 neighbourhood
   /// @param det access to the detector
   /// @param ctx the geometry context
-  /// @param track the track parameters
+  /// @param tangential the tangential to the track direction
   /// @param nav_state state of navigation stream of the track
   /// @param mask_tol min. and max. mask tolerance
   /// @param mask_tol_scalor scale factor with track distance in range of
   ///                        @c mask_tol
   /// @param overstep_tol how far behind the track pos to look for
   /// candidates
-  template <typename track_t, typename detector_t, typename navigation_state_t>
+  template <typename traj_t, typename detector_t, typename navigation_state_t>
   DETRAY_HOST_DEVICE constexpr void operator()(
       const typename detector_t::surface_type &sf_descr, const detector_t &det,
-      const typename detector_t::geometry_context &ctx, const track_t &track,
-      navigation_state_t &nav_state,
+      const typename detector_t::geometry_context &ctx,
+      const traj_t &tangential, navigation_state_t &nav_state,
       const intersection::config &inter_cfg) const {
-    using algebra_t = typename detector_t::algebra_type;
-    using scalar_t = dscalar<algebra_t>;
-
     const auto sf = detray::geometry::surface{det, sf_descr};
 
     DETRAY_DEBUG_HOST("--> Testing surface:\n" << sf);
-
-    // Tangential to the track direction
-    detray::detail::ray<algebra_t> tangential{
-        track.pos(),
-        static_cast<scalar_t>(nav_state.direction()) * track.dir()};
 
     // Perform intersection and add result to the navigation cache via
     // @c nav_state.insert()
@@ -66,11 +58,11 @@ struct candidate_search {
   }
 
   /// Test the volume links
-  template <typename track_t, typename detector_t, typename navigation_state_t>
+  template <typename traj_t, typename detector_t, typename navigation_state_t>
   DETRAY_HOST_DEVICE void operator()(
       const dindex & /*vol_idx*/, const detector_t & /*det*/,
       const typename detector_t::geometry_context & /*ctx*/,
-      const track_t & /*track*/, navigation_state_t & /*nav_state*/,
+      const traj_t & /*tangential*/, navigation_state_t & /*nav_state*/,
       const intersection::config & /*inter_cfg*/) const {
     // Do not search for daughter volumes
   }
@@ -80,29 +72,24 @@ struct candidate_search {
 /// and checks reachability
 ///
 /// @tparam candidate_t type of navigation candidate (intersection result)
-/// @tparam track_t type of track, needs to provide pos() and dir() methods
+/// @tparam traj_t type of trajectory that is intersected with the surface
 /// @tparam detector_t type of the detector
 ///
-/// @param nav_dir the navigation direction (forward/backward)
 /// @param candidate the candidate intersection to be updated
-/// @param track access to the track parameters
+/// @param tangential the tangential to the track direction
 /// @param det access to the detector (geometry)
 /// @param cfg the navigation configuration
 /// @param external_mask_tolerance additional mask tol. given by the caller
 /// @param ctx the geometry context
 ///
 /// @returns @c true if the track can reach this candidate.
-template <typename candidate_t, typename track_t, typename detector_t>
+template <typename candidate_t, typename traj_t, typename detector_t>
 DETRAY_HOST_DEVICE DETRAY_INLINE constexpr bool update_candidate(
-    const navigation::direction nav_dir, candidate_t &candidate,
-    const track_t &track, const detector_t &det,
+    candidate_t &candidate, const traj_t &tangential, const detector_t &det,
     const intersection::config &cfg,
     const typename detector_t::scalar_type external_mask_tolerance,
     const typename detector_t::geometry_context &ctx) {
   DETRAY_VERBOSE_HOST_DEVICE("-> Updating target/candidate surface...");
-
-  using algebra_t = typename detector_t::algebra_type;
-  using scalar_t = dscalar<algebra_t>;
 
   // Invalid intersection result cannot be updated
   if (candidate.surface().identifier().is_invalid()) [[unlikely]] {
@@ -111,15 +98,11 @@ DETRAY_HOST_DEVICE DETRAY_INLINE constexpr bool update_candidate(
 
   const auto sf = detray::geometry::surface{det, candidate.surface()};
 
-  // Tangential to the track direction
-  auto tangential{detray::detail::ray<algebra_t>(
-      track.pos(), static_cast<scalar_t>(nav_dir) * track.dir())};
-
   // Perform intersection and check whether this candidate is reachable by
   // the track
   return sf.template visit_mask<
       detray::detail::intersection_update<ray_intersector>>(
-      std::move(tangential), candidate, det.transform_store(), ctx, cfg,
+      tangential, candidate, det.transform_store(), ctx, cfg,
       external_mask_tolerance);
 }
 
@@ -185,10 +168,19 @@ DETRAY_HOST_DEVICE DETRAY_INLINE constexpr void update_status(
 /// @param cfg the navigation configuration
 /// @param ctx the geometry context
 template <typename track_t, typename navigation_state_t, typename context_t>
-DETRAY_HOST_DEVICE DETRAY_INLINE constexpr void local_navigation(
-    const track_t &track, navigation_state_t &navigation,
-    const navigation::config &cfg, const context_t &ctx,
-    const bool resolve_overstepping = true) {
+DETRAY_HOST_DEVICE
+// Not inlining this function gives NVIDIA GPUs more opportunities to
+// reconverge threads when this (very large) function is called.
+#if defined(__CUDACC__)
+    DETRAY_NO_INLINE
+#else
+    DETRAY_INLINE
+#endif
+    constexpr void local_navigation(const track_t &track,
+                                    navigation_state_t &navigation,
+                                    const navigation::config &cfg,
+                                    const context_t &ctx,
+                                    const bool resolve_overstepping = true) {
   DETRAY_VERBOSE_HOST_DEVICE("-> (Re-)initialize detector volume (idx: %d)",
                              navigation.volume());
 
@@ -210,11 +202,19 @@ DETRAY_HOST_DEVICE DETRAY_INLINE constexpr void local_navigation(
                                     ? cfg.intersection.overstep_tolerance
                                     : -cfg.intersection.path_tolerance;
 
+  using detector_t = typename navigation_state_t::detector_type;
+  using algebra_t = typename detector_t::algebra_type;
+  using scalar_t = dscalar<algebra_t>;
+
+  detray::detail::ray<algebra_t> tangential{
+      track.pos(), static_cast<scalar_t>(navigation.direction()) * track.dir()};
+
   // Search for neighboring surfaces and fill candidates into cache
-  using volume_t = typename std::remove_cvref_t<decltype(det)>::volume_type;
+  using volume_t = typename detector_t::volume_type;
   volume.template visit_neighborhood<volume_t::object_id::e_all,
                                      candidate_search>(
-      track, cfg.search_window, ctx, det, ctx, track, navigation, intr_cfg);
+      track, cfg.search_window, ctx, det, ctx, tangential, navigation,
+      intr_cfg);
 
   // Determine overall state of the navigation after updating the cache
   navigation::update_status(navigation, cfg);

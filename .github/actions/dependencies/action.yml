@@ -30,6 +30,12 @@ inputs:
     description: 'C++ standard for lockfile selection (e.g. 20, 23). Defaults to 20.'
     required: false
     default: '20'
+  # The flavors are published at cxx23 only, so setting this with cxx_std 20
+  # yields a C++23-built stack. Accepted for now; the selection logs it.
+  flavor:
+    description: 'Accelerator flavor for lockfile selection (e.g. cuda13, rocm-gfx90a). Defaults to the plain CPU stack.'
+    required: false
+    default: ''
   env_file:
     description: 'Where to generate the environment file'
     required: true
@@ -38,7 +44,30 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    # First, so every apt-get in this job — including any the caller runs after
+    # this action — benefits, not just the one inside opengl.sh late in setup.sh.
+    - name: Apt mirror
+      uses: ./.github/actions/apt_mirror
+
+    # Spack is a Python program, so every image we can possibly run on already
+    # ships a usable python3 -- and nothing downstream uses the interpreter this
+    # action leaves behind (setup.sh builds a venv from the spack view and puts
+    # it first on PATH, then unsets the variables setup-python exports). So only
+    # pay for setup-python on the images that would otherwise be stuck.
+    - name: Check for a usable Python
+      id: system-python
+      shell: bash
+      run: |
+        if command -v python3 > /dev/null \
+          && python3 -c 'import sys; sys.exit(sys.version_info < (3, 9))'; then
+          echo "found=true" >> "$GITHUB_OUTPUT"
+          python3 --version
+        else
+          echo "found=false" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Setup Python version
+      if: steps.system-python.outputs.found != 'true'
       uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
         python-version: "3.12"
@@ -52,39 +81,58 @@ runs:
       run: |
         brew install ninja ccache
 
+    # Half of what is cached lives at ~/.spack, so an entry is only usable by a
+    # runner with the same HOME. Container jobs get /github/home, ubuntu-latest
+    # /home/runner, macOS /Users/runner -- and actions/cache restores an
+    # out-of-workspace path to where it was saved from, not to the current $HOME.
+    # Sharing one key across them means whichever flavour saves first wins and
+    # every other flavour restores a ~/.spack it cannot see: spack finds no
+    # builtin repo, re-clones it at the branch tip and unshallows, which is
+    # exactly the ~50 s the pin below exists to avoid. Keying on HOME keeps each
+    # flavour on its own entry.
+    - name: Cache scope
+      id: cache-scope
+      shell: bash
+      run: echo "home=$(printf '%s' "$HOME" | tr -c 'A-Za-z0-9' '-')" >> "$GITHUB_OUTPUT"
+
+    # Cached in place rather than via a staging directory: `~` and the workspace
+    # are separate mounts in a container job, so staging meant copying the whole
+    # tree on save and again on restore (~12 s a job) for no gain.
     - name: Restore cache
       id: cache-restore
       uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
-        path: spack_cache
-        key: spack-r4-${{ inputs.spack_version }}-${{ inputs.spack_repo_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
-
-    - name: Extract cached Spack
-      if: steps.cache-restore.outputs.cache-hit == 'true'
-      shell: bash
-      run: |
-        mv spack_cache/spack .
-        mv spack_cache/.spack ~
+        path: |
+          spack
+          ~/.spack
+        key: spack-r5-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-scope.outputs.home }}-${{ inputs.spack_version }}-${{ inputs.spack_repo_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
 
     - name: Setup Spack from scratch
       if: steps.cache-restore.outputs.cache-hit != 'true'
       shell: bash
       env:
         SPACK_VERSION: ${{ inputs.spack_version }}
+        SPACK_REPO_VERSION: ${{ inputs.spack_repo_version }}
       run: |
         CI/dependencies/setup_spack.sh ${PWD}/spack
+        # Pin the builtin package repo *before* anything clones it. Spack clones
+        # it shallow (depth 2) the first time only, and clones the pinned commit
+        # directly when the config already names one, so this lands the cache on
+        # the right commit in ~4 s. The other order -- clone the branch tip (what
+        # `spack list` does), then move to the commit -- makes spack unshallow the
+        # entire repo, and because the cache was built without the pin that is
+        # what every single job was paying, ~50 s each, on a cache *hit*.
+        spack/bin/spack repo update builtin --commit "${SPACK_REPO_VERSION}"
         spack/bin/spack list > /dev/null
         rm -rf spack/.git
-        mkdir spack_cache
-        cp -RP spack spack_cache/
-        cp -RP ~/.spack spack_cache/
 
     - name: Save cache
       if: steps.cache-restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: |
-          spack_cache
+          spack
+          ~/.spack
         key: ${{ steps.cache-restore.outputs.cache-primary-key }}
 
     - name: Install dependencies
@@ -97,6 +145,7 @@ runs:
         ENV_FILE: ${{ inputs.env_file }}
         FULL_INSTALL: ${{ inputs.full_install }}
         COMPILER: ${{ inputs.compiler }}
+        FLAVOR: ${{ inputs.flavor }}
       run: |
         args="-e $ENV_FILE"
         if [ "$FULL_INSTALL" == "true" ]; then
@@ -106,6 +155,10 @@ runs:
         if [ -n "$COMPILER" ]; then
           echo "With compiler"
           args="${args} -c $COMPILER"
+        fi
+        if [ -n "$FLAVOR" ]; then
+          echo "With flavor $FLAVOR"
+          args="${args} -F $FLAVOR"
         fi
 
         CI/dependencies/setup.sh $args

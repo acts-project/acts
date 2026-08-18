@@ -56,6 +56,10 @@ def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
         decorators=decorators,
         events=events,
         outputDir=tmp_path,
+        # Serialising the ODD material map is ~9s and ~640MB of JSON, and it is
+        # already covered by test_writer.py::test_json_material_writer. This
+        # test is about the per-event csv/json/obj outputs.
+        outputMaterialMap=False,
     )
 
     runGeometry(outputSurfacesJson=True, **kwargs)
@@ -84,9 +88,6 @@ def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
             with f.open() as fh:
                 data = json.load(fh)
                 assert data
-        material_file = tmp_path / "geometry-map.json"
-        assert material_file.exists()
-        assert material_file.stat().st_size > 200
 
 
 class CountingVisitor(acts.TrackingGeometryMutableVisitor):
@@ -127,18 +128,17 @@ def test_geometry_visitor(trk_geo):
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.odd
-def test_odd_gen1():
-    with getOpenDataDetector(gen3=False) as detector:
-        trackingGeometry = detector.trackingGeometry()
+def test_odd_gen1(odd_detector):
+    trackingGeometry = odd_detector.trackingGeometry()
 
-        visitor = CountingVisitor()
-        trackingGeometry.apply(visitor)
+    visitor = CountingVisitor()
+    trackingGeometry.apply(visitor)
 
-        assert visitor.num_surfaces == 19264
-        assert visitor.num_layers == 142
-        assert visitor.num_volumes == 32
-        assert visitor.num_portals == 0  # Gen1: will have no portals
-        assert visitor.num_boundary_surfaces == 126  # Gen1: will have boundary surfaces
+    assert visitor.num_surfaces == 19264
+    assert visitor.num_layers == 142
+    assert visitor.num_volumes == 32
+    assert visitor.num_portals == 0  # Gen1: will have no portals
+    assert visitor.num_boundary_surfaces == 126  # Gen1: will have boundary surfaces
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
@@ -182,7 +182,7 @@ def test_odd_gen3(constructionMethod):
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.odd
-def test_odd_gen3_json_roundtrip(tmp_path):
+def test_odd_gen3_json_roundtrip(tmp_path, odd_detector_gen3):
     from geometry import runGeometry
     from acts.json import TrackingGeometryJsonConverter
 
@@ -191,22 +191,22 @@ def test_odd_gen3_json_roundtrip(tmp_path):
 
     gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
 
-    with getOpenDataDetector(gen3=True) as detector:
-        trackingGeometry = detector.trackingGeometry()
+    detector = odd_detector_gen3
+    trackingGeometry = detector.trackingGeometry()
 
-        original = CountingVisitor()
-        trackingGeometry.apply(original)
+    original = CountingVisitor()
+    trackingGeometry.apply(original)
 
-        runGeometry(
-            trackingGeometry=trackingGeometry,
-            decorators=detector.contextDecorators(),
-            outputDir=tmp_path,
-            events=1,
-            outputObj=False,
-            outputCsv=False,
-            outputSurfacesJson=False,
-            serializeGeometryJson=True,
-        )
+    runGeometry(
+        trackingGeometry=trackingGeometry,
+        decorators=detector.contextDecorators(),
+        outputDir=tmp_path,
+        events=1,
+        outputObj=False,
+        outputCsv=False,
+        outputSurfacesJson=False,
+        serializeGeometryJson=True,
+    )
 
     json_path = json_dir / "tracking-geometry.json"
     assert json_path.exists()

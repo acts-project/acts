@@ -1,10 +1,9 @@
 import pytest
 from pathlib import Path
 
-from helpers import dd4hepEnabled
+from helpers import dd4hepEnabled, geant4Enabled
 
 import acts.examples
-from acts.examples.odd import getOpenDataDetector
 
 
 def count_surfaces(geo):
@@ -57,14 +56,47 @@ def test_telescope_geometry():
     assert count_surfaces(trackingGeometry) == n_surfaces
 
 
+@pytest.mark.skipif(not geant4Enabled, reason="Geant4 is not set up")
+@pytest.mark.parametrize("binValue", [0, 1, 2])
+def test_telescope_geant4_geometry(binValue):
+    from acts.examples.geant4 import SensitiveSurfaceMapper
+
+    n_surfaces = 6
+
+    config = acts.examples.TelescopeDetector.Config(
+        bounds=[100, 200],
+        positions=[30 * (i + 1) for i in range(n_surfaces)],
+        stereos=[0] * n_surfaces,
+        offsets=[10, -20],
+        binValue=binValue,
+    )
+    detector = acts.examples.TelescopeDetector(config)
+    trackingGeometry = detector.trackingGeometry()
+    gctx = detector.nominalGeometryContext()
+
+    # every sensitive surface has to be backed by a Geant4 volume in the same place
+    smmConfig = SensitiveSurfaceMapper.Config()
+    smmConfig.materialMappings = ["Silicon"]
+    mapper = SensitiveSurfaceMapper.create(
+        smmConfig, acts.logging.INFO, trackingGeometry
+    )
+
+    state = SensitiveSurfaceMapper.State()
+    mapper.remapSensitiveNames(
+        state, gctx, detector, acts.Transform3(acts.Vector3(0, 0, 0))
+    )
+
+    assert mapper.checkMapping(state, gctx, False, False)
+
+
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
-def test_odd():
-    with getOpenDataDetector() as detector:
-        trackingGeometry = detector.trackingGeometry()
+def test_odd(odd_detector):
+    detector = odd_detector
+    trackingGeometry = detector.trackingGeometry()
 
-        trackingGeometry.visitSurfaces(check_extra_odd)
+    trackingGeometry.visitSurfaces(check_extra_odd)
 
-        assert count_surfaces(trackingGeometry) == 18824
+    assert count_surfaces(trackingGeometry) == 18824
 
 
 import itertools

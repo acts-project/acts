@@ -11,13 +11,25 @@ permissions:
   actions: read
   contents: read
   pull-requests: read
+  # Authenticated GHCR reads: the spack buildcache is pulled from ghcr.io.
+  # Without this scope GITHUB_TOKEN has no packages access, so reads fall back
+  # to the anonymous (heavily rate limited) bucket.
+  packages: read
 
 jobs:
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2404:87
-    if: github.event.workflow_run.conclusion == 'success'
+    # Only pull_request and push-to-main are handled below (PR mode / push
+    # mode). Analysis also runs on merge_group, which matches neither, so
+    # skip the job outright instead of paying for checkout+deps to do nothing.
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      (
+        github.event.workflow_run.event == 'pull_request' ||
+        (github.event.workflow_run.event == 'push' && github.ref == 'refs/heads/main')
+      )
     steps:
       - name: Install APT packages
         run: |
@@ -25,7 +37,7 @@ jobs:
           apt-get install -y unzip
 
       - name: "Checkout repository"
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # To prevent shallow clone
           persist-credentials: false
@@ -162,7 +174,7 @@ jobs:
           git status
 
       - name: Run sonar-scanner (PR mode)
-        uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e # v8.2.0
+        uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
         if: github.event.workflow_run.event == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -178,7 +190,7 @@ jobs:
             --define sonar.pullrequest.base=${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
 
       - name: Run sonar-scanner (push mode)
-        uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e # v8.2.0
+        uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
         if: github.event.workflow_run.event == 'push' && github.ref == 'refs/heads/main'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
