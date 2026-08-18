@@ -63,8 +63,9 @@ std::unique_ptr<GridSurfaceMaterial> createIndexed(
 /// Create a @c GridSurfaceMaterial with locally indexed storage from a
 /// multi-axis spec resolved against a surface
 ///
-/// @param axis0 the axis in direction 0
-/// @param axis1 the axis in direction 1
+/// @param binning the 2D multi-axis binning spec (deferred axes are
+///        resolved against @p surface)
+/// @param surface the surface to resolve the deferred axes against
 /// @param material the locally owned material vector, addressed by @p payload
 /// @param payload the index payload, one index per regular bin, column
 ///        major, i.e. [i0][i1]
