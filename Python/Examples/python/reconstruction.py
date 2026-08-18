@@ -592,6 +592,7 @@ def addSeeding(
                     outputDirRoot,
                     tracks=tracks,
                     particles=selectedParticles,
+                    trackParticleMatching=f"{prefix}seed_particle_matching",
                     trackingGeometry=trackingGeometry,
                     field=field,
                     outputName="seedparams",
@@ -1455,6 +1456,7 @@ def addTrackParameterPerformanceWriter(
     outputDirRoot: Union[Path, str],
     tracks: str,
     particles: str,
+    trackParticleMatching: str,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     targetSurface: Optional[acts.Surface] = None,
@@ -1474,6 +1476,10 @@ def addTrackParameterPerformanceWriter(
 
     Parameters
     ----------
+    trackParticleMatching : str
+        Truth matching of `tracks`, e.g. from `acts.examples.TrackTruthMatcher`.
+        The extrapolation preserves the track indices, so the matching of the
+        input tracks stays valid.
     strategy : Optional[acts.examples.TrackExtrapolationStrategy]
         Which track state to start from, `first` by default. Seed tracks only
         carry parameters on their innermost state, so `firstOrLast` must not be
@@ -1506,22 +1512,6 @@ def addTrackParameterPerformanceWriter(
             trackingGeometry=trackingGeometry,
             magneticField=field,
             strategy=strategy,
-        )
-    )
-
-    # the extrapolation drops the tracks it could not move, which changes the
-    # track indices, so the matching has to be redone
-    trackParticleMatching = f"{prefix}{outputName}_particle_matching"
-    sequence.addAlgorithm(
-        acts.examples.TrackTruthMatcher(
-            level=customLogLevel(),
-            inputTracks=extrapolatedTracks,
-            inputParticles=particles,
-            inputMeasurementParticlesMap="measurement_particles_map",
-            outputTrackParticleMatching=trackParticleMatching,
-            outputParticleTrackMatching=f"{prefix}particle_{outputName}_matching",
-            matchingRatio=1.0,
-            doubleMatching=False,
         )
     )
 
