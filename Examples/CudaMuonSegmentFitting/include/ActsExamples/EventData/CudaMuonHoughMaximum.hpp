@@ -86,9 +86,7 @@ class CudaHoughMaximumBatch {
 
   ~CudaHoughMaximumBatch() noexcept;
 
-  size_type capacityPerBucket() const noexcept {
-    return m_capacityPerBucket;
-  }
+  size_type capacityPerBucket() const noexcept { return m_capacityPerBucket; }
 
   size_type nBuckets() const noexcept { return m_nBuckets; }
 

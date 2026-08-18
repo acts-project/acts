@@ -8,13 +8,13 @@
 
 #include "ActsExamples/EventData/CudaMuonHoughMaximum.hpp"
 
-#include "CudaUtilities.hpp"
-
 #include <limits>
 #include <stdexcept>
 #include <utility>
 
 #include <cuda_runtime_api.h>
+
+#include "CudaUtilities.hpp"
 
 namespace ActsExamples {
 
@@ -136,32 +136,32 @@ CudaHoughMaximumBatch::size_type CudaHoughMaximumBatch::nMaxima(
   return count;
 }
 
-CoordType CudaHoughMaximumBatch::tanBeta(
-    size_type bucket, size_type maximum) const {
+CoordType CudaHoughMaximumBatch::tanBeta(size_type bucket,
+                                         size_type maximum) const {
   checkMaximum(bucket, maximum);
   return m_hostTanBeta[slotIndex(bucket, maximum)];
 }
 
-CoordType CudaHoughMaximumBatch::interceptY(
-    size_type bucket, size_type maximum) const {
+CoordType CudaHoughMaximumBatch::interceptY(size_type bucket,
+                                            size_type maximum) const {
   checkMaximum(bucket, maximum);
   return m_hostInterceptY[slotIndex(bucket, maximum)];
 }
 
-YieldType CudaHoughMaximumBatch::nHits(
-    size_type bucket, size_type maximum) const {
+YieldType CudaHoughMaximumBatch::nHits(size_type bucket,
+                                       size_type maximum) const {
   checkMaximum(bucket, maximum);
   return m_hostHits[slotIndex(bucket, maximum)];
 }
 
-YieldType CudaHoughMaximumBatch::nLayers(
-    size_type bucket, size_type maximum) const {
+YieldType CudaHoughMaximumBatch::nLayers(size_type bucket,
+                                         size_type maximum) const {
   checkMaximum(bucket, maximum);
   return m_hostLayers[slotIndex(bucket, maximum)];
 }
 
-LayerMask CudaHoughMaximumBatch::layerMask(
-    size_type bucket, size_type maximum) const {
+LayerMask CudaHoughMaximumBatch::layerMask(size_type bucket,
+                                           size_type maximum) const {
   checkMaximum(bucket, maximum);
   return m_hostLayerMask[slotIndex(bucket, maximum)];
 }
@@ -257,8 +257,7 @@ void CudaHoughMaximumBatch::moveToHost(cudaStream_t stream) {
   m_associationMetadataOnHost = true;
 }
 
-void CudaHoughMaximumBatch::copyAssociationMetadataToHost(
-    cudaStream_t stream) {
+void CudaHoughMaximumBatch::copyAssociationMetadataToHost(cudaStream_t stream) {
   if (!m_onDevice) {
     throw std::logic_error("CudaHoughMaximumBatch is not on the device");
   }
@@ -387,8 +386,8 @@ void CudaHoughMaximumBatch::checkBucket(size_type bucket) const {
   }
 }
 
-void CudaHoughMaximumBatch::checkMaximum(
-    size_type bucket, size_type maximum) const {
+void CudaHoughMaximumBatch::checkMaximum(size_type bucket,
+                                         size_type maximum) const {
   if (maximum >= nMaxima(bucket)) {
     throw std::out_of_range("CudaHoughMaximumBatch maximum index out of range");
   }
