@@ -587,14 +587,28 @@ def addSeeding(
             )
 
             if trackParameterPerformance:
+                # the estimate sits on the bottom space point's sensor and has
+                # to be moved to a common surface to be comparable to truth.
+                # `first` because only the innermost state carries parameters.
+                extrapolatedTracks = f"{prefix}seed-tracks-perigee"
+                s.addAlgorithm(
+                    acts.examples.TrackExtrapolationAlgorithm(
+                        level=logLevel,
+                        inputTracks=tracks,
+                        outputTracks=extrapolatedTracks,
+                        targetSurface=acts.Surface.createPerigee(acts.Vector3(0, 0, 0)),
+                        trackingGeometry=trackingGeometry,
+                        magneticField=field,
+                        strategy=acts.examples.TrackExtrapolationStrategy.first,
+                    )
+                )
+
                 addTrackParameterPerformanceWriter(
                     s,
                     outputDirRoot,
-                    tracks=tracks,
+                    tracks=extrapolatedTracks,
                     particles=selectedParticles,
                     trackParticleMatching=f"{prefix}seed_particle_matching",
-                    trackingGeometry=trackingGeometry,
-                    field=field,
                     outputName="seedparams",
                     logLevel=logLevel,
                     prefix=prefix,
@@ -1457,33 +1471,24 @@ def addTrackParameterPerformanceWriter(
     tracks: str,
     particles: str,
     trackParticleMatching: str,
-    trackingGeometry: acts.TrackingGeometry,
-    field: acts.MagneticFieldProvider,
-    targetSurface: Optional[acts.Surface] = None,
-    strategy=None,
     resPlotToolConfig=None,
     outputName: str = "trackparams",
     logLevel: acts.logging.Level = None,
     prefix: str = "",
 ):
-    """Writes residual/pull performance of the track parameters at a common surface.
+    """Writes residual/pull performance of the track parameters against truth.
 
-    The tracks are first extrapolated to `targetSurface`, a perigee at the
-    origin by default. That is what makes the comparison meaningful for seed
-    estimates: they sit on the bottom space point's sensor, where expressing
-    the truth particle means intersecting it on a straight line and ignoring
-    the bending in between.
+    The tracks are expected to be truth matched and to carry their parameters
+    on a common surface already, typically a perigee. A seed estimate sits on
+    the bottom space point's sensor and has to be moved there first, see
+    `acts.examples.TrackExtrapolationAlgorithm`; comparing on the sensor
+    instead would mean expressing the truth particle by a straight-line
+    intersection that ignores the bending in between.
 
     Parameters
     ----------
     trackParticleMatching : str
         Truth matching of `tracks`, e.g. from `acts.examples.TrackTruthMatcher`.
-        The extrapolation preserves the track indices, so the matching of the
-        input tracks stays valid.
-    strategy : Optional[acts.examples.TrackExtrapolationStrategy]
-        Which track state to start from, `first` by default. Seed tracks only
-        carry parameters on their innermost state, so `firstOrLast` must not be
-        used on them.
     resPlotToolConfig : Optional[acts.examples.root.ResPlotToolConfig]
         Residual and pull binning. The defaults are cut for fitted tracks, so a
         seed estimate usually needs wider residual axes.
@@ -1497,28 +1502,10 @@ def addTrackParameterPerformanceWriter(
     if not outputDirRoot.exists():
         outputDirRoot.mkdir()
 
-    if targetSurface is None:
-        targetSurface = acts.Surface.createPerigee(acts.Vector3(0, 0, 0))
-    if strategy is None:
-        strategy = acts.examples.TrackExtrapolationStrategy.first
-
-    extrapolatedTracks = f"{prefix}{outputName}-tracks"
-    sequence.addAlgorithm(
-        acts.examples.TrackExtrapolationAlgorithm(
-            level=customLogLevel(),
-            inputTracks=tracks,
-            outputTracks=extrapolatedTracks,
-            targetSurface=targetSurface,
-            trackingGeometry=trackingGeometry,
-            magneticField=field,
-            strategy=strategy,
-        )
-    )
-
     sequence.addWriter(
         RootTrackParameterPerformanceWriter(
             level=customLogLevel(),
-            inputTracks=extrapolatedTracks,
+            inputTracks=tracks,
             inputParticles=particles,
             inputTrackParticleMatching=trackParticleMatching,
             filePath=str(outputDirRoot / f"performance_{prefix}{outputName}.root"),
