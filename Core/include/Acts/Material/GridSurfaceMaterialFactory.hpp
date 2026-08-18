@@ -80,14 +80,12 @@ std::unique_ptr<GridSurfaceMaterial> createIndexed(
 /// @param axis1 the axis in direction 1
 /// @param material the (possibly shared) globally owned material vector,
 ///        addressed by @p payload
-/// @param sharedEntries whether entries of @p material may be shared with
-///        other grids
 /// @param payload the index payload, one index per regular bin, column
 ///        major, i.e. [i0][i1]
 /// @return a unique pointer to the created surface material
 std::unique_ptr<GridSurfaceMaterial> createGloballyIndexed(
     const IAxis& axis0, const IAxis& axis1,
-    std::shared_ptr<std::vector<MaterialSlab>> material, bool sharedEntries,
+    std::shared_ptr<std::vector<MaterialSlab>> material,
     const std::vector<std::vector<std::size_t>>& payload);
 
 /// Create a @c GridSurfaceMaterial with globally indexed storage from a
@@ -97,14 +95,12 @@ std::unique_ptr<GridSurfaceMaterial> createGloballyIndexed(
 /// @param surface the surface to which the material is applied
 /// @param material the (possibly shared) globally owned material vector,
 ///        addressed by @p payload
-/// @param sharedEntries whether entries of @p material may be shared with
-///        other grids
 /// @param payload the index payload, one index per regular bin, column
 ///        major, i.e. [i0][i1]
 /// @return a unique pointer to the created surface material
 std::unique_ptr<GridSurfaceMaterial> createGloballyIndexed(
     const MultiAxisSpec2D& binning, const Surface& surface,
-    std::shared_ptr<std::vector<MaterialSlab>> material, bool sharedEntries,
+    std::shared_ptr<std::vector<MaterialSlab>> material,
     const std::vector<std::vector<std::size_t>>& payload);
 
 }  // namespace Acts::GridSurfaceMaterialFactory

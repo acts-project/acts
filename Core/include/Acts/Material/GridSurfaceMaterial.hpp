@@ -64,13 +64,6 @@ class GridSurfaceMaterial final : public ISurfaceMaterial {
     std::vector<std::size_t> indices;
     /// The shared material vector, addressed by @c indices
     std::shared_ptr<std::vector<MaterialSlab>> material;
-    /// Indicate if entries in @c material are shared with other grids, e.g.
-    /// by running a compression/clustering algorithm.
-    ///
-    /// It is the responsibility of the user to set this flag correctly.
-    /// @c scale() throws if it is set, since scaling shared entries would
-    /// have an unpredictable outcome.
-    bool sharedEntries = false;
   };
 
   /// The material storage backend: one of @c Direct, @c Indexed or
@@ -105,11 +98,20 @@ class GridSurfaceMaterial final : public ISurfaceMaterial {
   using ISurfaceMaterial::materialSlab;
 
   /// @copydoc ISurfaceMaterial::localAxisDirections() const
-  std::vector<AxisDirection> localAxisDirections() const final { return {}; }
+  ///
+  /// Returns the directions of both axes of @c binning() if both carry a
+  /// direction (as is always the case when built by resolving against a
+  /// @c Surface, see @c GridSurfaceMaterialFactory), or an empty vector if
+  /// either does not - this lets @c Surface::assignSurfaceMaterial detect
+  /// whether the grid's axis order needs swapping to match the surface's
+  /// canonical local axes.
+  std::vector<AxisDirection> localAxisDirections() const final;
 
   /// @copydoc ISurfaceMaterial::scale(double)
-  /// @throws std::invalid_argument if the storage is @c GloballyIndexed with
-  ///         @c sharedEntries set
+  ///
+  /// @note For @c GloballyIndexed storage this scales the entries addressed
+  ///       by this grid's indices in place, in the (possibly shared) global
+  ///       material vector - entries shared with other grids are scaled too.
   ISurfaceMaterial& scale(double factor) final;
 
   /// @copydoc ISurfaceMaterial::toStream(std::ostream&) const

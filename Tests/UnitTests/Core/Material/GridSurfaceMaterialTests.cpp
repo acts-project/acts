@@ -121,6 +121,44 @@ BOOST_AUTO_TEST_CASE(GridMaterialDirectFromMultiAxisSpec) {
   BOOST_CHECK_EQUAL(ism->materialSlab(lZ2).material().X0(), 21.);
 }
 
+// This test covers localAxisDirections(): it reflects whatever direction
+// information the binning's axes carry - empty when built from plain,
+// undirected axes, and the canonical (surface) directions when built by
+// resolving a MultiAxisSpec2D against a surface, since resolveMultiAxis
+// always tags the resolved axes with the canonical direction (see
+// Surface::assignSurfaceMaterial, which uses this to detect whether the
+// grid's axis order needs swapping).
+BOOST_AUTO_TEST_CASE(GridMaterialLocalAxisDirections) {
+  using enum AxisDirection;
+
+  auto axisX = IAxis::createEquidistant(AxisBoundaryType::Bound, -1.0, 1.0, 2);
+  auto axisY = IAxis::createEquidistant(AxisBoundaryType::Bound, -1.5, 1.5, 3);
+  std::vector<std::vector<MaterialSlab>> payload2x3 = {
+      {MaterialSlab::Nothing(), MaterialSlab::Nothing(),
+       MaterialSlab::Nothing()},
+      {MaterialSlab::Nothing(), MaterialSlab::Nothing(),
+       MaterialSlab::Nothing()}};
+  auto ismUndirected =
+      GridSurfaceMaterialFactory::createDirect(*axisX, *axisY, payload2x3);
+  BOOST_CHECK(ismUndirected->localAxisDirections().empty());
+
+  auto cylinder = Surface::makeShared<CylinderSurface>(
+      Transform3::Identity(), std::make_shared<CylinderBounds>(30., 100.));
+
+  MultiAxisSpec2D binning({AxisSpec::DeferredEquidistant(1, AxisRPhi),
+                           AxisSpec::DeferredEquidistant(4, AxisZ)});
+  std::vector<std::vector<MaterialSlab>> payload1x4 = {
+      {MaterialSlab::Nothing(), MaterialSlab::Nothing(),
+       MaterialSlab::Nothing(), MaterialSlab::Nothing()}};
+  auto ismDirected =
+      GridSurfaceMaterialFactory::createDirect(binning, *cylinder, payload1x4);
+
+  std::vector<AxisDirection> localDirs = ismDirected->localAxisDirections();
+  BOOST_REQUIRE_EQUAL(localDirs.size(), 2u);
+  BOOST_CHECK_EQUAL(localDirs[0], AxisRPhi);
+  BOOST_CHECK_EQUAL(localDirs[1], AxisZ);
+}
+
 // This test covers the locally indexed grid material in 2D: one instance
 // built via the factory from two axes, one built directly from a
 // MultiAxisSpec2D and a hand-filled Indexed storage.
@@ -208,7 +246,7 @@ BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialNonShared) {
       {1u}, {0u}, {2u}, {2u}, {3u}};
 
   auto ism = GridSurfaceMaterialFactory::createGloballyIndexed(
-      *axis0, *axis1, material, false, indexPayload);
+      *axis0, *axis1, material, indexPayload);
 
   // Local access test
   Vector2 l0(0.5, 0.);
@@ -228,7 +266,7 @@ BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialNonShared) {
   std::vector<std::vector<std::size_t>> indexPayload1 = {{4u}};
 
   auto ism1 = GridSurfaceMaterialFactory::createGloballyIndexed(
-      *axis0Single, *axis1, material, false, indexPayload1);
+      *axis0Single, *axis1, material, indexPayload1);
 
   Vector2 l0g1(2.5, 0.);
   BOOST_CHECK_EQUAL(ism1->materialSlab(l0g1).material().X0(), 31.);
@@ -241,7 +279,9 @@ BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialNonShared) {
   BOOST_CHECK_EQUAL(ism->materialSlab(l0).thickness(), 1.);
 }
 
-// This test covers the globally indexed grid material with shared material
+// This test covers the globally indexed grid material with an index shared
+// between two grids: scaling one grid scales the shared entry for both,
+// since GloballyIndexed carries no ownership/exclusivity guard.
 BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialShared) {
   auto material = std::make_shared<std::vector<MaterialSlab>>();
 
@@ -255,9 +295,9 @@ BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialShared) {
   std::vector<std::vector<std::size_t>> indexPayload = {{1u}};
 
   auto ism0 = GridSurfaceMaterialFactory::createGloballyIndexed(
-      *axis0, *axis1, material, true, indexPayload);
+      *axis0, *axis1, material, indexPayload);
   auto ism1 = GridSurfaceMaterialFactory::createGloballyIndexed(
-      *axis0, *axis1, material, true, indexPayload);
+      *axis0, *axis1, material, indexPayload);
 
   Vector2 l0(2.5, 0.);
 
@@ -265,8 +305,10 @@ BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialShared) {
   BOOST_CHECK_EQUAL(ism0->materialSlab(l0).material().X0(), 1.);
   BOOST_CHECK_EQUAL(ism1->materialSlab(l0).material().X0(), 1.);
 
-  // scaling shared material should throw a std::invalid_argument
-  BOOST_CHECK_THROW(ism1->scale(2.), std::invalid_argument);
+  // scaling through ism1 also scales the shared entry as seen through ism0
+  ism1->scale(2.);
+  BOOST_CHECK_EQUAL(ism0->materialSlab(l0).thickness(), 2.);
+  BOOST_CHECK_EQUAL(ism1->materialSlab(l0).thickness(), 2.);
 }
 
 // This test covers the grid material with direct storage and scaling

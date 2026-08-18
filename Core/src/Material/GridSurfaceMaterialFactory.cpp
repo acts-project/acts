@@ -83,24 +83,23 @@ std::unique_ptr<GridSurfaceMaterial> createIndexed(
 
 std::unique_ptr<GridSurfaceMaterial> createGloballyIndexed(
     const IAxis& axis0, const IAxis& axis1,
-    std::shared_ptr<std::vector<MaterialSlab>> material, bool sharedEntries,
+    std::shared_ptr<std::vector<MaterialSlab>> material,
     const std::vector<std::vector<std::size_t>>& payload) {
   MultiAxisSpec2D binning = multiAxisSpecFromAxes(axis0, axis1);
   auto multiAxis = binning.buildMultiAxis();
   GridSurfaceMaterial::GloballyIndexed storage{
-      flattenPayload2D(*multiAxis, payload), std::move(material),
-      sharedEntries};
+      flattenPayload2D(*multiAxis, payload), std::move(material)};
   return std::make_unique<GridSurfaceMaterial>(std::move(binning),
                                                std::move(storage));
 }
 
 std::unique_ptr<GridSurfaceMaterial> createGloballyIndexed(
     const MultiAxisSpec2D& binning, const Surface& surface,
-    std::shared_ptr<std::vector<MaterialSlab>> material, bool sharedEntries,
+    std::shared_ptr<std::vector<MaterialSlab>> material,
     const std::vector<std::vector<std::size_t>>& payload) {
   auto axes = resolveMultiAxis(binning, surface);
   return createGloballyIndexed(axes->getAxis(0), axes->getAxis(1),
-                               std::move(material), sharedEntries, payload);
+                               std::move(material), payload);
 }
 
 }  // namespace GridSurfaceMaterialFactory

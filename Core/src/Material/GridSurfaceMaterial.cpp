@@ -8,6 +8,7 @@
 
 #include "Acts/Material/GridSurfaceMaterial.hpp"
 
+#include <optional>
 #include <ostream>
 #include <stdexcept>
 #include <type_traits>
@@ -63,6 +64,15 @@ GridSurfaceMaterial::GridSurfaceMaterial(MultiAxisSpec2D binning,
   }
 }
 
+std::vector<AxisDirection> GridSurfaceMaterial::localAxisDirections() const {
+  std::optional<AxisDirection> dir0 = m_binning.axisSpec(0).direction();
+  std::optional<AxisDirection> dir1 = m_binning.axisSpec(1).direction();
+  if (!dir0.has_value() || !dir1.has_value()) {
+    return {};
+  }
+  return {*dir0, *dir1};
+}
+
 const MaterialSlab& GridSurfaceMaterial::materialSlab(const Vector2& lp) const {
   std::size_t bin = m_multiAxis->getGlobalBinFromPoint({lp[0], lp[1]});
   return std::visit(SlabAt{bin}, m_storage);
@@ -88,11 +98,6 @@ ISurfaceMaterial& GridSurfaceMaterial::scale(double factor) {
             msl.scaleThickness(static_cast<float>(factor));
           }
         } else {
-          if (s.sharedEntries) {
-            throw std::invalid_argument(
-                "GridSurfaceMaterial: scaling a globally indexed material "
-                "with shared entries is not supported.");
-          }
           for (std::size_t index : s.indices) {
             (*s.material)[index].scaleThickness(static_cast<float>(factor));
           }
