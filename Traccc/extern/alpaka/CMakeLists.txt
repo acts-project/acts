@@ -13,7 +13,7 @@ message(STATUS "Building Alpaka as part of the TRACCC project")
 
 # Declare where to get Alpaka from.
 set(TRACCC_ALPAKA_SOURCE
-    "URL;https://github.com/alpaka-group/alpaka/archive/refs/tags/2.0.0.tar.gz;URL_MD5;7ed1ad266408cdb51f0f12f9e6712cc9"
+    "URL;https://github.com/alpaka-group/alpaka/archive/refs/tags/2.1.1.tar.gz;URL_MD5;cbfb610731e2d24eb18d7b588d6a35a6"
     CACHE STRING
     "Source for Alpaka, when built as part of this project"
 )
