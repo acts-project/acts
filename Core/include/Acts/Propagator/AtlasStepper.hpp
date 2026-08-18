@@ -1289,6 +1289,7 @@ class AtlasStepper {
     std::size_t nStepTrials = 0;
     while (h != 0.) {
       nStepTrials++;
+      ++state.statistics.nAttemptedSteps;
 
       // PS2 is h/(2*momentum) in EigenStepper
       double S3 = (1. / 3.) * h, S4 = .25 * h, PS2 = Pi * h;
@@ -1371,6 +1372,7 @@ class AtlasStepper {
              std::abs((C1 + C6) - (C3 + C4)));
       EST = std::max(1e-20, EST);
       if (!isErrorTolerable(EST)) {
+        ++state.statistics.nRejectedSteps;
         const double stepSizeScaling = calcStepSizeScaling(EST);
         h *= stepSizeScaling;
         // neutralize the sign of h again
@@ -1511,6 +1513,13 @@ class AtlasStepper {
     state.pathAccumulated += h;
     ++state.nSteps;
     state.nStepTrials += nStepTrials;
+
+    ++state.statistics.nSuccessfulSteps;
+    if (propDir != Direction::fromScalarZeroAsPositive(initialH)) {
+      ++state.statistics.nReverseSteps;
+    }
+    state.statistics.pathLength += h;
+    state.statistics.absolutePathLength += std::abs(h);
 
     const double stepSizeScaling = calcStepSizeScaling(EST);
     const double nextAccuracy = std::abs(h * stepSizeScaling);
