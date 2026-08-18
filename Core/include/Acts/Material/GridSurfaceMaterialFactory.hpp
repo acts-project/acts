@@ -60,8 +60,15 @@ std::unique_ptr<GridSurfaceMaterial> createIndexed(
     const IAxis& axis0, const IAxis& axis1, std::vector<MaterialSlab> material,
     const std::vector<std::vector<std::size_t>>& payload);
 
-/// @copydoc createDirect(const MultiAxisSpec2D&, const Surface&, const std::vector<std::vector<MaterialSlab>>&)
+/// Create a @c GridSurfaceMaterial with locally indexed storage from a
+/// multi-axis spec resolved against a surface
+///
+/// @param axis0 the axis in direction 0
+/// @param axis1 the axis in direction 1
 /// @param material the locally owned material vector, addressed by @p payload
+/// @param payload the index payload, one index per regular bin, column
+///        major, i.e. [i0][i1]
+/// @return a unique pointer to the created surface material
 std::unique_ptr<GridSurfaceMaterial> createIndexed(
     const MultiAxisSpec2D& binning, const Surface& surface,
     std::vector<MaterialSlab> material,
@@ -83,11 +90,18 @@ std::unique_ptr<GridSurfaceMaterial> createGloballyIndexed(
     std::shared_ptr<std::vector<MaterialSlab>> material, bool sharedEntries,
     const std::vector<std::vector<std::size_t>>& payload);
 
-/// @copydoc createDirect(const MultiAxisSpec2D&, const Surface&, const std::vector<std::vector<MaterialSlab>>&)
+/// Create a @c GridSurfaceMaterial with globally indexed storage from a
+/// multi-axis spec resolved against a surface
+///
+/// @param binning the binning specification for the grid
+/// @param surface the surface to which the material is applied
 /// @param material the (possibly shared) globally owned material vector,
 ///        addressed by @p payload
 /// @param sharedEntries whether entries of @p material may be shared with
 ///        other grids
+/// @param payload the index payload, one index per regular bin, column
+///        major, i.e. [i0][i1]
+/// @return a unique pointer to the created surface material
 std::unique_ptr<GridSurfaceMaterial> createGloballyIndexed(
     const MultiAxisSpec2D& binning, const Surface& surface,
     std::shared_ptr<std::vector<MaterialSlab>> material, bool sharedEntries,
