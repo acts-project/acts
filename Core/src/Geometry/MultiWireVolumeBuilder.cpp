@@ -18,7 +18,7 @@
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
 MultiWireVolumeBuilder::MultiWireVolumeBuilder(
     const Config& config, std::unique_ptr<const Logger> logger)
@@ -72,26 +72,34 @@ MultiWireVolumeBuilder::createNavigationPolicyFactory() const {
     throw ::std::invalid_argument(
         "MultiWireStructureBuilder: Invalid binning provided");
   }
-  auto [protoAxisA, expansionA] = m_config.binning.at(0);
-  auto [protoAxisB, expansionB] = m_config.binning.at(1);
+  auto [axisSpecA, expansionA] = m_config.binning.at(0);
+  auto [axisSpecB, expansionB] = m_config.binning.at(1);
 
-  // Create the grid from the axis
-  const auto& iaxisA = protoAxisA.getAxis();
-  const auto& iaxisB = protoAxisB.getAxis();
-  // Binning needs to be equidistant
-  if (iaxisA.getType() != AxisType::Equidistant ||
-      iaxisB.getType() != AxisType::Equidistant) {
+  // Binning needs to be fully specified and equidistant, with a direction
+  if (axisSpecA.isDeferred() || axisSpecB.isDeferred()) {
+    throw std::runtime_error(
+        "MultiWireVolumeBuilder: Binning axes need a fully specified range");
+  }
+  if (!axisSpecA.isEquidistant() || !axisSpecB.isEquidistant()) {
     throw std::runtime_error(
         "MultiWireVolumeBuilder: Binning axes need to be equidistant");
   }
+  if (!axisSpecA.direction().has_value() ||
+      !axisSpecB.direction().has_value()) {
+    throw std::runtime_error(
+        "MultiWireVolumeBuilder: Binning axes need a direction");
+  }
 
+  // Create the grid from the axis
+  const auto& paramsA = axisSpecA.asEquidistant();
+  const auto& paramsB = axisSpecB.asEquidistant();
+
+  // isDeferred() above guarantees the ranges are set
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisA(
-      iaxisA.getBinEdges().front(), iaxisA.getBinEdges().back(),
-      iaxisA.getNBins());
+      *paramsA.min, *paramsA.max, paramsA.nBins);
 
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisB(
-      iaxisB.getBinEdges().front(), iaxisB.getBinEdges().back(),
-      iaxisB.getNBins());
+      *paramsB.min, *paramsB.max, paramsB.nBins);
 
   Grid<std::vector<std::size_t>, decltype(axisA), decltype(axisB)> grid(axisA,
                                                                         axisB);
@@ -101,12 +109,12 @@ MultiWireVolumeBuilder::createNavigationPolicyFactory() const {
   auto indexedGrid =
       placement == nullptr
           ? IndexGrid<decltype(grid)>{std::move(grid),
-                                      {protoAxisA.getAxisDirection(),
-                                       protoAxisB.getAxisDirection()},
+                                      {*axisSpecA.direction(),
+                                       *axisSpecB.direction()},
                                       m_config.transform.inverse()}
           : IndexGrid<decltype(grid)>{
                 std::move(grid),
-                {protoAxisA.getAxisDirection(), protoAxisB.getAxisDirection()},
+                {*axisSpecA.direction(), *axisSpecB.direction()},
                 [placement](const GeometryContext& gctx) -> const Transform3& {
                   return placement->globalToLocalTransform(gctx);
                 }};
@@ -128,4 +136,4 @@ MultiWireVolumeBuilder::createNavigationPolicyFactory() const {
   return factory;
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

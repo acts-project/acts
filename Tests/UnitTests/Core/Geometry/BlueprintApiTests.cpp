@@ -30,8 +30,8 @@
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
@@ -43,9 +43,9 @@
 using namespace Acts;
 using namespace UnitLiterals;
 
-using Experimental::Blueprint;
-using Experimental::LayerBlueprintNode;
-using Experimental::MaterialDesignatorBlueprintNode;
+using Acts::Blueprint;
+using Acts::LayerBlueprintNode;
+using Acts::MaterialDesignatorBlueprintNode;
 
 namespace ActsTests {
 
@@ -129,7 +129,8 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
   std::mt19937 rng{static_cast<unsigned int>(run)};
   std::uniform_real_distribution<> dist{0.01, 0.99};
 
-  const auto* volume = trackingGeometry.lowestTrackingVolume(gctx, position);
+  const auto* volume =
+      trackingGeometry.resolveLowestTrackingVolume(gctx, position).value();
   BOOST_REQUIRE_NE(volume, nullptr);
   ACTS_VERBOSE(volume->volumeName());
 
@@ -280,9 +281,13 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
     using enum CylinderVolumeBounds::Face;
 
     // Configure cylinder faces with proper binning
-    mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 20}, {AxisZ, Bound, 20});
-    mat.configureFace(NegativeDisc, {AxisR, Bound, 15}, {AxisPhi, Bound, 25});
-    mat.configureFace(PositiveDisc, {AxisR, Bound, 15}, {AxisPhi, Bound, 25});
+    mat.configureFace(OuterCylinder,
+                      AxisSpec::DeferredEquidistant(20, AxisRPhi),
+                      AxisSpec::DeferredEquidistant(20, AxisZ));
+    mat.configureFace(NegativeDisc, AxisSpec::DeferredEquidistant(15, AxisR),
+                      AxisSpec::DeferredEquidistant(25, AxisPhi));
+    mat.configureFace(PositiveDisc, AxisSpec::DeferredEquidistant(15, AxisR),
+                      AxisSpec::DeferredEquidistant(25, AxisPhi));
 
     mat.addCylinderContainer("Detector", AxisDirection::AxisR, [&](auto& det) {
       det.addCylinderContainer("Pixel", AxisDirection::AxisZ, [&](auto& cyl) {
@@ -434,12 +439,18 @@ BOOST_AUTO_TEST_CASE(NodeApiTestCuboid) {
     using enum CuboidVolumeBounds::Face;
 
     // Configure valid axis combinations for each face type
-    mat.configureFace(NegativeXFace, {AxisX, Bound, 20}, {AxisY, Bound, 20});
-    mat.configureFace(PositiveXFace, {AxisX, Bound, 20}, {AxisY, Bound, 20});
-    mat.configureFace(NegativeYFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
-    mat.configureFace(PositiveYFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
-    mat.configureFace(NegativeZFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
-    mat.configureFace(PositiveZFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
+    mat.configureFace(NegativeXFace, AxisSpec::DeferredEquidistant(20, AxisX),
+                      AxisSpec::DeferredEquidistant(20, AxisY));
+    mat.configureFace(PositiveXFace, AxisSpec::DeferredEquidistant(20, AxisX),
+                      AxisSpec::DeferredEquidistant(20, AxisY));
+    mat.configureFace(NegativeYFace, AxisSpec::DeferredEquidistant(15, AxisX),
+                      AxisSpec::DeferredEquidistant(25, AxisY));
+    mat.configureFace(PositiveYFace, AxisSpec::DeferredEquidistant(15, AxisX),
+                      AxisSpec::DeferredEquidistant(25, AxisY));
+    mat.configureFace(NegativeZFace, AxisSpec::DeferredEquidistant(15, AxisX),
+                      AxisSpec::DeferredEquidistant(25, AxisY));
+    mat.configureFace(PositiveZFace, AxisSpec::DeferredEquidistant(15, AxisX),
+                      AxisSpec::DeferredEquidistant(25, AxisY));
 
     mat.addStaticVolume(
         base, std::make_shared<CuboidVolumeBounds>(100_mm, 100_mm, 100_mm),
@@ -477,8 +488,9 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalThrows) {
     // First child: a static volume whose OuterCylinder face is given material.
     // This is the face that the parent z-stack will try to merge.
     stack.addMaterial("Material", [&](auto& mat) {
-      mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 20},
-                        {AxisZ, Bound, 20});
+      mat.configureFace(OuterCylinder,
+                        AxisSpec::DeferredEquidistant(20, AxisRPhi),
+                        AxisSpec::DeferredEquidistant(20, AxisZ));
       mat.addStaticVolume(
           base * Translation3{Vector3{0, 0, -200_mm}},
           std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm),
@@ -527,8 +539,9 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalKeepGoing) {
     using enum CylinderVolumeBounds::Face;
 
     stack.addMaterial("Material", [&](auto& mat) {
-      mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 20},
-                        {AxisZ, Bound, 20});
+      mat.configureFace(OuterCylinder,
+                        AxisSpec::DeferredEquidistant(20, AxisRPhi),
+                        AxisSpec::DeferredEquidistant(20, AxisZ));
       mat.addStaticVolume(
           base * Translation3{Vector3{0, 0, -200_mm}},
           std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm),
@@ -541,7 +554,7 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalKeepGoing) {
         "VolumeB");
   });
 
-  Experimental::BlueprintOptions options;
+  BlueprintOptions options;
   options.keepGoingOnMaterialMergeFailure = true;
 
   std::unique_ptr<const TrackingGeometry> trackingGeometry;
@@ -583,8 +596,9 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalKeepGoingSingleChildFalseWarning) {
     using enum CylinderVolumeBounds::Face;
 
     stack.addMaterial("Material", [&](auto& mat) {
-      mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 20},
-                        {AxisZ, Bound, 20});
+      mat.configureFace(OuterCylinder,
+                        AxisSpec::DeferredEquidistant(20, AxisRPhi),
+                        AxisSpec::DeferredEquidistant(20, AxisZ));
       mat.addStaticVolume(
           base, std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm),
           "VolumeA");
@@ -594,7 +608,7 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalKeepGoingSingleChildFalseWarning) {
   // Use strict mode (keepGoingOnMaterialMergeFailure = false by default).
   // The single-child stack must not be mistaken for a real merge, so no
   // exception should be thrown.
-  Experimental::BlueprintOptions options;
+  BlueprintOptions options;
 
   std::unique_ptr<const TrackingGeometry> trackingGeometry;
   BOOST_REQUIRE_NO_THROW(trackingGeometry =
@@ -617,7 +631,7 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalKeepGoingSingleChildFalseWarning) {
 // Tag the fused face between two z-stacked volumes and look the portal back up
 // from the final geometry. The tagged portal is shared by both volumes.
 BOOST_AUTO_TEST_CASE(PortalTagLookup) {
-  using Experimental::PortalDesignatorBlueprintNode;
+  using Acts::PortalDesignatorBlueprintNode;
   Transform3 base{Transform3::Identity()};
 
   Blueprint::Config cfg;
@@ -681,7 +695,7 @@ BOOST_AUTO_TEST_CASE(PortalTagLookup) {
 // Tagging two distinct (non-fused) portals with the same label must be detected
 // as a collision when the geometry is closed.
 BOOST_AUTO_TEST_CASE(PortalTagDuplicateThrows) {
-  using Experimental::PortalDesignatorBlueprintNode;
+  using Acts::PortalDesignatorBlueprintNode;
   Transform3 base{Transform3::Identity()};
 
   Blueprint::Config cfg;
@@ -719,7 +733,7 @@ BOOST_AUTO_TEST_CASE(PortalTagDuplicateThrows) {
 // Same as PortalTagLookup, but for a cuboid x-stack: VolumeA's PositiveXFace is
 // fused with VolumeB's NegativeXFace.
 BOOST_AUTO_TEST_CASE(PortalTagLookupCuboid) {
-  using Experimental::PortalDesignatorBlueprintNode;
+  using Acts::PortalDesignatorBlueprintNode;
   Transform3 base{Transform3::Identity()};
 
   Blueprint::Config cfg;

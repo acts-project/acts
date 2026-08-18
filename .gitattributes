@@ -1,2 +1,5 @@
 *.ipp gitlab-language=c++
 * text=auto eol=lf
+
+# Consider .sycl files as C++.
+*.sycl linguist-language=C++

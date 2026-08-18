@@ -1,7 +1,10 @@
 rules:
-  - required_checks:
-      - Lint PR / Validate PR title
-    required_pattern:
+  # Lint PR / Validate PR title only runs on pull_request_target, never on
+  # merge_group, so it can't be required here: merge-sentinel would sit
+  # pending on every merge-queue entry until the queue's check timeout
+  # evicts it. PR title format is still enforced continuously by that
+  # workflow pre-queue; this only skips re-verifying it at merge time.
+  - required_pattern:
       - "policy-bot: *"
 
   - branch_filter:
@@ -15,10 +18,12 @@ rules:
      - Analysis / build_debug
      # - SonarCloud Code Analysis
 
+    # Only list a class of check that actually reports: a required_pattern
+    # matching nothing is not ignored, it is injected as a synthetic *failure*
+    # item, so a stale entry red-gates every pull request.
     required_pattern:
      - "Builds / *"
      - "Checks / *"
-     - "CI Bridge / *"
 
   - branch_filter:
      - "main"
@@ -32,7 +37,10 @@ rules:
      - "main"
      - "develop/*"
     paths:
+     # Both spellings: the glob engine here is undocumented, so which one is
+     # recursive cannot be assumed.
      - "Detray/*"
+     - "Detray/**/*"
      - ".github/workflows/detray.yml"
     required_pattern:
      - "Detray / *"

@@ -118,13 +118,18 @@
         {
             "name": "github-ci-coverage",
             "displayName": "GitHub-CI Coverage",
+            "description": "Coverage build for the build_debug job. Carries no debug info: gcovr/gcov read .gcno and .gcda, never DWARF, so -g would only inflate the ccache footprint. Set the debug level through CMAKE_CXX_FLAGS_DEBUG rather than CMAKE_CXX_FLAGS, or the per-config flags will silently override it. Examples and the vendored Detray/Traccc trees are not built at all: nothing here executes them, and CI/test_coverage.py filters them out of the report, so instrumenting them only produces .gcno with no matching .gcda, which gcovr then counts as uncovered. Note that ACTS_BUILD_PLUGIN_TRACCC=OFF also drops Plugins/Detray and Plugins/Covfie, whose coverage was previously reported; that loss is accepted deliberately in exchange for the build time and cache savings. The ACTS_BUILD_EXAMPLES_* entries below are NOT redundant with ACTS_BUILD_EXAMPLES=OFF: CMakeLists.txt forces ACTS_BUILD_EXAMPLES back on if any single component flag is set, via a normal variable that shadows the cache entry, so every component ci-common turns on must be listed here or Examples comes back.",
             "inherits": "github-ci",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_CXX_FLAGS": "-Werror --coverage -g -gz -g1",
+                "CMAKE_CXX_FLAGS": "-Werror --coverage",
+                "CMAKE_CXX_FLAGS_DEBUG": "-O0 -g0",
                 "ACTS_BUILD_ODD": "OFF",
                 "ACTS_BUILD_PYTHON_BINDINGS": "OFF",
+                "ACTS_BUILD_EXAMPLES": "OFF",
+                "ACTS_BUILD_PLUGIN_TRACCC": "OFF",
                 "ACTS_BUILD_EXAMPLES_DD4HEP": "OFF",
+                "ACTS_BUILD_EXAMPLES_FASTJET": "OFF",
                 "ACTS_BUILD_EXAMPLES_ROOT": "OFF",
                 "ACTS_BUILD_EXAMPLES_UNITTESTS": "OFF",
                 "ACTS_BUILD_EXAMPLES_EDM4HEP": "OFF",
@@ -137,16 +142,20 @@
             }
         },
         {
-            "name": "gitlab-ci",
-            "displayName": "GitLab-CI",
+            "name": "github-ci-cuda-muon",
+            "displayName": "GitHub-CI CUDA muon segment fitting",
             "inherits": "ci-common",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_CUDA_ARCHITECTURES": "75;86",
+                "ACTS_ENABLE_CUDA": "ON",
+                "ACTS_BUILD_EXAMPLES": "ON",
+                "ACTS_BUILD_EXAMPLES_CUDA_MUON_SEGMENT_FITTING": "ON"
             }
         },
         {
-            "name": "gitlab-ci-clangtidy",
-            "displayName": "GitLab-CI clang-tidy",
+            "name": "github-ci-clangtidy",
+            "displayName": "GitHub-CI clang-tidy",
             "inherits": "ci-common",
             "cacheVariables": {
                 "ACTS_BUILD_ODD": "OFF",
@@ -156,8 +165,8 @@
             }
         },
         {
-            "name": "gitlab-ci-lcg",
-            "displayName": "GitLab-CI LCG",
+            "name": "github-ci-lcg",
+            "displayName": "GitHub-CI LCG",
             "inherits": "ci-common",
             "cacheVariables": {
                 "ACTS_BUILD_PLUGIN_GEOMODEL": "OFF",
@@ -170,16 +179,16 @@
             }
         },
         {
-            "name": "gitlab-ci-gnn",
-            "displayName": "GitLab-CI Gnn",
+            "name": "github-ci-gnn",
+            "displayName": "GitHub-CI Gnn",
+            "description": "GNN build for the gnn_build job. Warnings are errors, as everywhere else in CI. Only the Plugins/Gnn unit tests are ever run from this build, so the Core and Examples suites and the integration tests are switched off; Tests/UnitTests/CMakeLists.txt adds Plugins unconditionally, so the GNN ones survive. ODD, DD4hep and ROOT stay on because the `-k gpu` python tests need a detector and read back ROOT output.",
             "generator": "Ninja",
             "inherits": "common",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_CXX_FLAGS": "-w",
-                "CMAKE_CUDA_FLAGS": "-w",
-                "CMAKE_CUDA_ARCHITECTURES": "86",
-                "TORCH_CUDA_ARCH_LIST": "8.6",
+                "CMAKE_COMPILE_WARNING_AS_ERROR": "ON",
+                "CMAKE_CUDA_ARCHITECTURES": "75;86",
+                "TORCH_CUDA_ARCH_LIST": "7.5;8.6",
                 "ACTS_FORCE_ASSERTIONS": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
                 "ACTS_BUILD_PYTHON_BINDINGS": "ON",
@@ -191,28 +200,33 @@
                 "ACTS_GNN_ENABLE_ONNX": "ON",
                 "ACTS_ENABLE_CUDA": "ON",
                 "ACTS_GNN_ENABLE_MODULEMAP": "ON",
+                "ACTS_BUILD_INTEGRATIONTESTS": "OFF",
+                "ACTS_BUILD_CORE_UNITTESTS": "OFF",
+                "ACTS_BUILD_EXAMPLES_UNITTESTS": "OFF",
                 "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
                 "ACTS_USE_SYSTEM_PYBIND11": "ON"
             }
         },
         {
-            "name": "gitlab-ci-tensorrt",
-            "displayName": "GitLab-CI Tensorrt",
+            "name": "github-ci-tensorrt",
+            "displayName": "GitHub-CI Tensorrt",
             "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_CXX_STANDARD": "20",
+                "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
-                "CMAKE_CUDA_ARCHITECTURES": "86",
-                "TORCH_CUDA_ARCH_LIST": "8.6",
+                "CMAKE_CUDA_ARCHITECTURES": "75;86",
                 "ACTS_BUILD_PLUGIN_FPEMON": "ON",
                 "ACTS_BUILD_PLUGIN_GNN": "ON",
                 "ACTS_GNN_ENABLE_TORCH": "OFF",
                 "ACTS_ENABLE_CUDA": "ON",
                 "ACTS_GNN_ENABLE_TENSORRT": "ON",
                 "ACTS_GNN_ENABLE_MODULEMAP": "OFF",
-                "ACTS_BUILD_EXAMPLES": "ON",
+                "ACTS_BUILD_EXAMPLES": "OFF",
+                "ACTS_BUILD_EXAMPLES_GNN": "OFF",
                 "ACTS_BUILD_PYTHON_BINDINGS": "ON",
-                "ACTS_BUILD_EXAMPLES_GNN": "ON"
+                "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
+                "ACTS_USE_SYSTEM_PYBIND11": "ON"
             }
         },
         {

@@ -133,12 +133,13 @@ option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OF
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
 option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
+option(ACTS_BUILD_CORE_UNITTESTS "Build Core unit tests" ON) # only relevant if ACTS_BUILD_UNITTESTS is ON
 if(ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES)
   set(_default_examples_unit_tests ON)
 else()
   set(_default_examples_unit_tests OFF)
 endif()
-option(ACTS_BUILD_EXAMPLES_UNITTESTS "Build unit tests" ${_default_examples_unit_tests}) # default: ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES
+option(ACTS_BUILD_EXAMPLES_UNITTESTS "Build Examples unit tests" ${_default_examples_unit_tests}) # default: ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES
 option(ACTS_RUN_CLANG_TIDY "Run clang-tidy static analysis" OFF)
 # other options
 option(ACTS_BUILD_DOCS "Build documentation" OFF)
@@ -557,6 +558,12 @@ if(ACTS_BUILD_PLUGIN_GNN)
     else()
         message(STATUS "Build GNN plugin for CPU only")
     endif()
+    # FRNN and ModuleMapGraph are built from vendored upstream sources, which
+    # are not ours to keep warning-clean. A normal variable, so it shadows the
+    # cache entry for the subdirectories added below and is restored before any
+    # ACTS target follows.
+    set(_acts_gnn_warning_as_error "${CMAKE_COMPILE_WARNING_AS_ERROR}")
+    set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)
     if(ACTS_GNN_ENABLE_TORCH)
         find_package(Torch REQUIRED)
         if(ACTS_ENABLE_CUDA)
@@ -570,6 +577,7 @@ if(ACTS_BUILD_PLUGIN_GNN)
             add_subdirectory(thirdparty/ModuleMapGraph)
         endif()
     endif()
+    set(CMAKE_COMPILE_WARNING_AS_ERROR "${_acts_gnn_warning_as_error}")
 endif()
 if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_GNN_ENABLE_ONNX)
     find_package(onnxruntime ${_acts_onnxruntime_version} MODULE REQUIRED)
