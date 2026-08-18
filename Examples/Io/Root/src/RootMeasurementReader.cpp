@@ -25,8 +25,9 @@
 namespace ActsExamples {
 
 RootMeasurementReader::RootMeasurementReader(
-    const RootMeasurementReader::Config& config, Acts::Logging::Level level)
-    : m_cfg(config), m_logger(Acts::getDefaultLogger(name(), level)) {
+    const RootMeasurementReader::Config& config,
+    std::unique_ptr<const Acts::Logger> logger)
+    : m_cfg(config), m_logger(std::move(logger)) {
   if (m_cfg.outputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurement output collection");
   }
@@ -104,6 +105,12 @@ RootMeasurementReader::RootMeasurementReader(
   ACTS_DEBUG("Event range: " << availableEvents().first << " - "
                              << availableEvents().second);
 }
+
+RootMeasurementReader::RootMeasurementReader(
+    const RootMeasurementReader::Config& config, Acts::Logging::Level level)
+    : RootMeasurementReader(config,
+                            Acts::getDefaultLogger("RootMeasurementReader",
+                                                   level)) {}
 
 RootMeasurementReader::~RootMeasurementReader() = default;
 

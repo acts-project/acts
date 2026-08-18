@@ -80,6 +80,13 @@ class RootMeasurementReader final : public IReader {
 
   /// Constructor with
   /// @param config configuration struct
+  /// @param logger the logger to use
+  RootMeasurementReader(const Config& config,
+                        std::unique_ptr<const Acts::Logger> logger);
+
+  /// Convenience constructor building a default logger at @p level.
+  ///
+  /// @param config configuration struct
   /// @param level output logging level
   RootMeasurementReader(const Config& config, Acts::Logging::Level level);
 

@@ -63,6 +63,105 @@ def test_root_particle_reader(tmp_path, conf_const, ptcl_gun):
     assert alg.events_seen == 10
 
 
+@pytest.mark.root
+def test_root_meas_reader(tmp_path, fatras, trk_geo, conf_const):
+    from acts.examples.root import RootMeasurementWriter, RootMeasurementReader
+
+    class CountMeasurements(acts.examples.IAlgorithm):
+        def __init__(self, name, collection, counts):
+            super().__init__(name, acts.logging.WARNING)
+            self._counts = counts
+            self._measurements = acts.examples.ReadDataHandle(
+                self, acts.examples.MeasurementContainer, "InputMeasurements"
+            )
+            self._measurements.initialize(collection)
+
+        def execute(self, context):
+            self._counts[context.eventNumber] = len(
+                self._measurements(context.eventStore)
+            )
+            return acts.examples.ProcessCode.SUCCESS
+
+    # write out some measurements first
+    s = Sequencer(numThreads=1, events=10, logLevel=acts.logging.WARNING)
+    evGen, simAlg, digiAlg = fatras(s)
+
+    out = tmp_path / "meas.root"
+    assert not out.exists()
+
+    s.addWriter(
+        RootMeasurementWriter(
+            level=acts.logging.WARNING,
+            config=RootMeasurementWriter.Config(
+                inputMeasurements=digiAlg.config.outputMeasurements,
+                inputClusters=digiAlg.config.outputClusters,
+                inputSimHits=simAlg.config.outputSimHits,
+                inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
+                filePath=str(out),
+                surfaceByIdentifier=trk_geo.geoIdSurfaceMap(),
+            ),
+        )
+    )
+
+    written_counts = {}
+    s.addAlgorithm(
+        CountMeasurements(
+            "CountWrittenMeasurements",
+            digiAlg.config.outputMeasurements,
+            written_counts,
+        )
+    )
+
+    s.run()
+
+    assert out.exists()
+    assert len(written_counts) == 10
+    assert all(c > 0 for c in written_counts.values())
+
+    # reset sequencer for reading the file back and checking the round trip
+
+    s2 = Sequencer(numThreads=1, logLevel=acts.logging.WARNING)
+
+    s2.addReader(
+        conf_const(
+            RootMeasurementReader,
+            level=acts.logging.WARNING,
+            outputMeasurements="measurements",
+            outputMeasurementSubset="measurement_subset",
+            outputMeasurementParticlesMap="measurement_particles_map",
+            outputParticleMeasurementsMap="particle_measurements_map",
+            outputClusters="clusters",
+            filePath=str(out),
+        )
+    )
+
+    read_counts = {}
+    s2.addAlgorithm(
+        CountMeasurements("CountReadMeasurements", "measurements", read_counts)
+    )
+
+    checkAlgs = [
+        AssertCollectionExistsAlg(k, f"check_alg_{k}", acts.logging.WARNING)
+        for k in (
+            "measurement_subset",
+            "measurement_particles_map",
+            "particle_measurements_map",
+            "clusters",
+        )
+    ]
+    for alg in checkAlgs:
+        s2.addAlgorithm(alg)
+
+    s2.run()
+
+    # the number of measurements read back per event must match what was
+    # written, including the cluster channel data round-tripped through the
+    # vector<T> branches
+    assert read_counts == written_counts
+    for alg in checkAlgs:
+        assert alg.events_seen == 10
+
+
 @pytest.mark.csv
 def test_csv_particle_reader(tmp_path, conf_const, ptcl_gun):
     s = Sequencer(numThreads=1, events=10, logLevel=acts.logging.WARNING)
