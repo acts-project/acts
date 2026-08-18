@@ -15,22 +15,26 @@
 
 namespace Acts {
 
-MaterialSlab::MaterialSlab(const Material& material, float thickness)
+MaterialSlab::MaterialSlab(const Material& material, float thickness,
+                           std::vector<unsigned int> elementZ,
+                           std::vector<float> elementFrac)
     : MaterialSlab(material, thickness, false) {
   if (thickness < 0) {
     throw std::runtime_error("thickness < 0");
   }
+  m_elementZ = std::move(elementZ);
+  m_elementFrac = std::move(elementFrac);
 }
 
 MaterialSlab MaterialSlab::combineLayers(const MaterialSlab& layerA,
                                          const MaterialSlab& layerB) {
-  return detail::combineSlabs(layerA, layerB.material(), layerB.thickness());
+  return detail::combineSlabs(layerA, layerB);
 }
 
 MaterialSlab MaterialSlab::combine(const MaterialSlab& slab1,
                                    const Material& material2,
                                    float thickness2) {
-  return detail::combineSlabs(slab1, material2, thickness2);
+  return detail::combineSlabs(slab1, MaterialSlab(material2, thickness2));
 }
 
 MaterialSlab MaterialSlab::combineLayers(
