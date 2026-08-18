@@ -102,6 +102,17 @@ jobs:
               enable_cuda: true
               flavor: cuda13
             build: Release
+          # Compile check: no runner has an AMD GPU, but tests/hip is built.
+          # TRACCC_USE_SYSTEM_ROCTHRUST keeps Thrust matched to the flavor's
+          # hip; CMAKE_HIP_ARCHITECTURES narrows the gfx list to gfx90a.
+          - platform:
+              name: "HIP"
+              container: ghcr.io/acts-project/ubuntu2604:90
+              options: --preset hip-fp32 -DCMAKE_HIP_PLATFORM=amd -DCMAKE_HIP_ARCHITECTURES=gfx90a -DTRACCC_USE_SYSTEM_ROCTHRUST=ON
+              run_tests: false
+              enable_cuda: false
+              flavor: rocm-gfx90a
+            build: Release
           - platform:
               name: "ALPAKA_CPU"
               container: ghcr.io/acts-project/ubuntu2604:90
@@ -152,6 +163,12 @@ jobs:
       # because traccc only acts on it under TRACCC_SETUP_ALPAKA.
 
       - name: Configure
+        env:
+          # OFF on HIP: traccc needs HIP::hiprt from vecmem's
+          # FindHIPToolkit.cmake, which vecmem <= 1.25.0 ships but does not
+          # install, so a system vecmem fails configure. ACTS follows to avoid
+          # a second copy. TODO: revisit with vecmem 1.26.
+          SYSTEM_VECMEM: ${{ matrix.platform.flavor == 'rocm-gfx90a' && 'OFF' || 'ON' }}
         run: |
           source ${GITHUB_WORKSPACE}/.env
           source ${GITHUB_WORKSPACE}/Traccc/.github/ci_setup.sh ${{ matrix.platform.name }}
@@ -160,9 +177,9 @@ jobs:
             ${{ matrix.platform.options }} \
             -DACTS_USE_SYSTEM_NLOHMANN_JSON=ON \
             -DACTS_USE_SYSTEM_COVFIE=ON \
-            -DACTS_USE_SYSTEM_VECMEM=ON \
+            -DACTS_USE_SYSTEM_VECMEM=${SYSTEM_VECMEM} \
             -DACTS_ENABLE_CUDA=${{ matrix.platform.enable_cuda && 'ON' || 'OFF' }} \
-            -DTRACCC_USE_SYSTEM_VECMEM=ON \
+            -DTRACCC_USE_SYSTEM_VECMEM=${SYSTEM_VECMEM} \
             -DTRACCC_USE_SYSTEM_COVFIE=ON \
             -DTRACCC_USE_SYSTEM_ALPAKA=ON \
             -DDETRAY_USE_SYSTEM_NLOHMANN=ON \
