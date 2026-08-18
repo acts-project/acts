@@ -121,7 +121,7 @@ jobs:
               enable_cuda: false
               enable_hip: true
               enable_sycl: false
-            build: Release
+            build: RelWithDebInfo #At O3 we get a compiler crash with ROCM 7, see https://github.com/acts-project/acts/issues/5877
     # Use BASH as the shell from the images.
     defaults:
       run:
