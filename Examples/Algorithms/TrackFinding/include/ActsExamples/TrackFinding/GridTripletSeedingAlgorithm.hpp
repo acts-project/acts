@@ -231,10 +231,11 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     bool useExtraCuts = false;
 
     /// Optional: reconstructed vertices used to constrain the seed z-origin.
-    /// When set, a doublet is rejected unless its z-origin falls inside at least
-    /// one per-vertex window [z - k*sigma_z - margin, z + k*sigma_z + margin].
-    /// Empty string disables the constraint (default seeding behaviour).
-    /// Especially useful for A-A events, i.e. few vertices with high mult.
+    /// When set, a doublet is rejected unless its z-origin falls inside at
+    /// least one per-vertex window [z - k*sigma_z - margin, z + k*sigma_z +
+    /// margin]. Empty string disables the constraint (default seeding
+    /// behaviour). Especially useful for A-A events, i.e. few vertices with
+    /// high mult.
     std::string inputVertices;
     /// Half-width of each per-vertex z-window, in units of sigma_z.
     double vertexZNSigma = 3.0;
