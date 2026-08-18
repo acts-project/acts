@@ -23,21 +23,13 @@ class DD4hepDetectorElementWithDesign
   // Inherit constructors
   using ActsPlugins::DD4hepDetectorElement::DD4hepDetectorElement;
 
-  /// Access the sensor design attached to this element, can be nullptr
-  const Acts::ISensorDesign* sensorDesign() const { return m_design.get(); }
-
-  /// Attach a design — const because m_design is mutable (setup-time
-  /// annotation)
-  void assignDesign(std::shared_ptr<const Acts::ISensorDesign> design) const {
-    m_design = std::move(design);
+  const Acts::ISensorDesign* sensorDesign() const override {
+    return m_design.get();
   }
 
-  /// Factory function — same signature as DD4hepLayerBuilder::ElementFactory
-  static std::shared_ptr<ActsPlugins::DD4hepDetectorElement> factory(
-      const dd4hep::DetElement& detElement, TGeoAxes axes, double scale,
-      std::shared_ptr<const Acts::ISurfaceMaterial> material) {
-    return std::make_shared<DD4hepDetectorElementWithDesign>(
-        detElement, axes, scale, std::move(material));
+  void assignSensorDesign(
+      std::shared_ptr<const Acts::ISensorDesign> design) const override {
+    m_design = std::move(design);
   }
 
  private:

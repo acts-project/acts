@@ -146,14 +146,19 @@ DigitizationAlgorithm::DigitizationAlgorithm(
 
   m_digitizers = Acts::GeometryHierarchyMap<Digitizer>(digitizerInput);
 
-  // Attach a DigitizationDesign to each surface that has a digitizer
   for (const auto& [geoId, surfacePtr] : m_cfg.surfaceByIdentifier) {
     auto digitizerItr = m_digitizers.find(geoId);
     if (digitizerItr == m_digitizers.end()) {
       continue;
     }
+
+    const auto* placement = surfacePtr->surfacePlacement();
+    if (placement == nullptr) {
+      continue;
+    }
+
     auto design = std::make_shared<DigitizationDesign>(&(*digitizerItr));
-    const_cast<Acts::Surface*>(surfacePtr)->assignDesign(std::move(design));
+    placement->assignSensorDesign(std::move(design));  // virtual dispatch
   }
 }
 
@@ -195,8 +200,6 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
     auto surfaceItr = m_cfg.surfaceByIdentifier.find(moduleGeoId);
 
     if (surfaceItr == m_cfg.surfaceByIdentifier.end()) {
-      // this is either an invalid geometry id or a misconfigured smearer
-      // setup; both cases can not be handled and should be fatal.
       ACTS_ERROR("Could not find surface " << moduleGeoId
                                            << " for configured smearer");
       return ProcessCode::ABORT;
@@ -204,14 +207,24 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     const Acts::Surface* surfacePtr = surfaceItr->second;
 
-    // Associate the digitizer with the surface design.
-    const auto* design =
-        dynamic_cast<const DigitizationDesign*>(surfacePtr->design());
-    if (design == nullptr) {
+    // Get the placement from the surface (nullptr for non-detector surfaces)
+    const auto* placement = surfacePtr->surfacePlacement();
+    if (placement == nullptr) {
+      ACTS_VERBOSE("No placement for module " << moduleGeoId);
+      continue;
+    }
+
+    const auto* sensorDes = placement->sensorDesign();
+    if (sensorDes == nullptr) {
       ACTS_VERBOSE("No digitizer present for module " << moduleGeoId);
       continue;
-    } else {
-      ACTS_VERBOSE("Digitizer found for module " << moduleGeoId);
+    }
+
+    const auto* design = dynamic_cast<const DigitizationDesign*>(sensorDes);
+    if (design == nullptr) {
+      ACTS_VERBOSE("sensorDesign is not a DigitizationDesign for module "
+                   << moduleGeoId);
+      continue;
     }
 
     // Run the digitizer. Iterate over the hits for this surface inside the
