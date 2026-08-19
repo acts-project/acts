@@ -57,7 +57,7 @@ def runTruthTrackingKalman(
     from acts.examples.visualization import TrackVisualizerAlg, PyVisualization2D
 
     s = s or acts.examples.Sequencer(
-        events=100, numThreads=-1, logLevel=acts.logging.INFO
+        events=1, numThreads=-1, logLevel=acts.logging.INFO
     )
 
     for d in decorators:
@@ -240,7 +240,9 @@ def runTruthTrackingKalman(
 
     if pyVis:
         vis.plot(
-            projection=projection, filename="truth_tracking_kalman_visualization.png"
+            projection=projection,
+            filename="truth_tracking_kalman_clusterRZ.png",
+            drawClusterPos=True,
         )
 
     return s
@@ -271,6 +273,6 @@ if "__main__" == __name__:
         trackingGeometry=trackingGeometry,
         field=field,
         digiConfigFile=digiConfigFile,
-        projection="xy",
+        projection="rz",
         outputDir=Path.cwd(),
     )

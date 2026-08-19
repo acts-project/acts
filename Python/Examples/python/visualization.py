@@ -37,20 +37,24 @@ class TrackVisualizerAlg(acts.examples.IAlgorithm):
         )
         self.tracks.initialize("tracks")
 
-    def execute(self, context):
+    def execute(self, context, drawCluster=True):
         tracks = self.tracks(context.eventStore)
         print(f"Event {context.eventNumber}: {len(tracks)} tracks")
         for track in tracks:
             acts.EventDataView3D.drawTrack(
                 self._vis, track, context.geoContext
             )  # draw track not a free function
+            if drawCluster == True:
+                acts.EventDataView3D.drawCluster(self._vis, track, context.geoContext)
 
         return acts.examples.ProcessCode.SUCCESS
 
 
 class PyVisualization2D(acts.VisualizationBuffer):
 
-    def plot(self, projection, filename, linewidth=None, linestyle=None):
+    def plot(
+        self, projection, filename, linewidth=None, linestyle=None, drawClusterPos=False
+    ):
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
@@ -109,7 +113,6 @@ class PyVisualization2D(acts.VisualizationBuffer):
                 )
 
         # Check if there is a track to be drawn
-        print(len(self.segments))
         if len(self.segments) != 0:
             line_segments = [
                 [
@@ -130,6 +133,15 @@ class PyVisualization2D(acts.VisualizationBuffer):
             line_collection.set_color(self.lineColor / 255)
             ax.add_collection(line_collection)
 
+            if drawClusterPos == True:
+                vertices_proj0 = [
+                    computeProjection(proj2D[0], v) for v in self.vertices
+                ]
+                vertices_proj1 = [
+                    computeProjection(proj2D[1], v) for v in self.vertices
+                ]
+
+                ax.plot(vertices_proj0, vertices_proj1, "x", color="blue")
         ax.relim()
         ax.autoscale_view()
         fig.savefig(filename)

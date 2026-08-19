@@ -77,32 +77,125 @@ void Acts::EventDataView3D::drawCovarianceAngular(
   GeometryView3D::drawPolyhedron(helper, coneHedron, coneViewConfig);
 }
 
-void Acts::EventDataView3D::drawTrack(
-    IVisualization3D& helper, const AnyConstTrackProxy& track,
-      const GeometryContext& gctx)
-  { 
-    ///auto track = trackcontainer.getTrack(itrack); /// Need to change this to tacke ConstTrackProxy directly
-    auto tparams = track.parameters();
-    auto tphi = tparams[eBoundPhi];
-    auto ttheta = tparams[eBoundTheta];
-    Vector2 tlocpos{tparams[eBoundLoc0], tparams[eBoundLoc1]};
-    Vector3 tlocdir{std::sin(ttheta)*std::cos(tphi), std::sin(ttheta)*std::sin(tphi), std::cos(ttheta)};
+void Acts::EventDataView3D::drawTrack(IVisualization3D& helper,
+                                      const AnyConstTrackProxy& track,
+                                      const GeometryContext& gctx) {
+  auto tparams = track.parameters();
+  auto tphi = tparams[eBoundPhi];
+  auto ttheta = tparams[eBoundTheta];
+  Vector2 tlocpos{tparams[eBoundLoc0], tparams[eBoundLoc1]};
+  Vector3 tlocdir{std::sin(ttheta) * std::cos(tphi),
+                  std::sin(ttheta) * std::sin(tphi), std::cos(ttheta)};
 
-    auto& rs = track.referenceSurface();
-    auto tglobpos = rs.localToGlobal(gctx, tlocpos, tlocdir);
+  auto& rs = track.referenceSurface();
+  auto tglobpos = rs.localToGlobal(gctx, tlocpos, tlocdir);
 
-    auto previouspos = tglobpos; 
-    
-    for(auto ts : track.trackStatesReversed()){
-      auto params = ts.parameters();
-      auto phi = params[eBoundPhi];
-      auto theta = params[eBoundTheta];
-      Vector2 locpos{params[eBoundLoc0], params[eBoundLoc1]};
-      Vector3 locdir{std::sin(theta)*std::cos(phi), std::sin(theta)*std::sin(phi), std::cos(theta)};
-      auto& s = ts.referenceSurface();
-      auto currentpos = s.localToGlobal(gctx, locpos, locdir);
+  auto previouspos = tglobpos;
 
-      helper.line(previouspos, currentpos);
-      previouspos = currentpos;
+  for (auto ts : track.trackStatesReversed()) {
+    auto params = ts.parameters();
+    auto phi = params[eBoundPhi];
+    auto theta = params[eBoundTheta];
+    Vector2 locpos{params[eBoundLoc0], params[eBoundLoc1]};
+    Vector3 locdir{std::sin(theta) * std::cos(phi),
+                   std::sin(theta) * std::sin(phi), std::cos(theta)};
+    auto& s = ts.referenceSurface();
+    auto currentpos = s.localToGlobal(gctx, locpos, locdir);
+
+    helper.line(previouspos, currentpos);
+    previouspos = currentpos;
+  }
+}
+
+Acts::StripSpacePointBuilder::StripEnds getStripEnds(
+    const Acts::GeometryContext& gctx, const Acts::Surface& surface,
+    const Acts::detail::ConstDynamicMeasurement& measurement, const int idx) {
+  const auto* bounds =
+      dynamic_cast<const Acts::PlanarBounds*>(&surface.bounds());
+  if (bounds == nullptr) {
+    throw std::invalid_argument(
+        "SpacePointMaker: Encountered non-planar surface");
+  }
+  const Acts::RectangleBounds& boundingBox = bounds->boundingBox();
+
+  double negEnd;
+  double posEnd;
+
+  Acts::Vector2 localTop;
+  Acts::Vector2 localBottom;
+
+  Acts::Vector3 globalTop;
+  Acts::Vector3 globalBottom;
+
+  if (idx == Acts::BoundIndices::eBoundLoc0) {
+    const double loc0 = measurement[0];
+    negEnd = boundingBox.get(Acts::RectangleBounds::eMinY);
+    posEnd = boundingBox.get(Acts::RectangleBounds::eMaxY);
+    localTop = {loc0, posEnd};
+    localBottom = {loc0, negEnd};
+  }
+
+  else {
+    const double loc1 = measurement[0];
+    negEnd = boundingBox.get(Acts::RectangleBounds::eMinX);
+    posEnd = boundingBox.get(Acts::RectangleBounds::eMaxX);
+    localTop = {posEnd, loc1};
+    localBottom = {negEnd, loc1};
+  }
+
+  globalTop = surface.localToGlobal(gctx, localTop, Acts::Vector3::Zero());
+  globalBottom =
+      surface.localToGlobal(gctx, localBottom, Acts::Vector3::Zero());
+
+  return Acts::StripSpacePointBuilder::StripEnds{globalTop, globalBottom};
+}
+
+void Acts::EventDataView3D::drawCluster(IVisualization3D& helper,
+                                        const AnyConstTrackProxy& track,
+                                        const GeometryContext& gctx) {
+  for (auto ts : track.trackStatesReversed()) {
+    if (!ts.hasCalibrated()) {
+      continue;
+    }
+    auto meas = ts.effectiveCalibrated();
+    auto& s = ts.referenceSurface();
+    auto indices = ts.projectorSubspaceIndices();
+
+    const auto n = ts.calibratedSize();
+
+    std::optional<double> loc0;
+    std::optional<double> loc1;
+
+    for (std::size_t i = 0; i < n; i++) {
+      if (indices[i] == Acts::BoundIndices::eBoundLoc0) {
+        loc0 = meas[i];
+      }
+
+      else if (indices[i] == Acts::BoundIndices::eBoundLoc1) {
+        loc1 = meas[i];
+      }
+
+      else {
+        continue;
+      }
+    }
+
+    if (n == 1) {
+      auto stripEnds = getStripEnds(gctx, s, meas, indices[0]);
+      auto globalpos = 0.5 * (stripEnds.top + stripEnds.bottom);
+      helper.vertex(globalpos);
+      continue;
+    }
+
+    else if (loc0.has_value() && loc1.has_value()) {
+      Vector2 locpos{*loc0, *loc1};
+      auto globalpos = s.localToGlobal(gctx, locpos, Vector3::Zero());
+      helper.vertex(globalpos);
+    }
+
+    else {
+      throw std::invalid_argument(
+          "Measurement has to contain either loc0 or loc1 or both");
     }
   }
+}
