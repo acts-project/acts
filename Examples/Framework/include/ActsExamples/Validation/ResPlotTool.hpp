@@ -64,7 +64,9 @@ class ResPlotTool {
   /// @param level Message level declaration
   ResPlotTool(const Config& cfg, Acts::Logging::Level lvl);
 
-  /// @param gctx the geometry context
+  /// @param gctx the geometry context. The truth particle is intersected with
+  ///        the perigee surface, which carries no detector element, so either
+  ///        the sim or the reco geometry context gives the same result.
   /// @param truthParticle the truth particle
   /// @param fittedParamters the fitted parameters at perigee surface
   void fill(const Acts::GeometryContext& gctx,

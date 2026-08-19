@@ -193,7 +193,7 @@ ProcessCode RootSpacePointWriter::writeT(
       const auto hitRange1 =
           makeRange(measurementSimHitsMap.equal_range(m_measurementId1));
       const auto [trueLocal1, truePosition1, trueDir1] = averageSimHits(
-          ctx.recoGeoContext, *surface1, simHits, hitRange1, logger());
+          ctx.simGeoContext, *surface1, simHits, hitRange1, logger());
 
       if (sp.sourceLinks().size() == 1) {
         m_fake = false;
@@ -244,15 +244,15 @@ ProcessCode RootSpacePointWriter::writeT(
           const auto hitRange2 =
               makeRange(measurementSimHitsMap.equal_range(m_measurementId2));
           const auto [trueLocal2, truePosition2, trueDir2] = averageSimHits(
-              ctx.recoGeoContext, *surface2, simHits, hitRange2, logger());
+              ctx.simGeoContext, *surface2, simHits, hitRange2, logger());
 
           const Acts::Vector4 closestPoint = closestPointOnLine(
               truePosition1, truePosition2, recoPosition.head<3>());
           const Acts::Vector4 referencePosition =
-              surface1->isOnSurface(ctx.recoGeoContext, truePosition1.head<3>(),
+              surface1->isOnSurface(ctx.simGeoContext, truePosition1.head<3>(),
                                     trueDir1)
                   ? truePosition1
-                  : (surface2->isOnSurface(ctx.recoGeoContext,
+                  : (surface2->isOnSurface(ctx.simGeoContext,
                                            truePosition2.head<3>(), trueDir2)
                          ? truePosition2
                          : closestPoint);

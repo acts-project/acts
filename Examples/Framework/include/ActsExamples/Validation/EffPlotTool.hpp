@@ -71,7 +71,9 @@ class EffPlotTool {
 
   /// @brief fill efficiency plots
   ///
-  /// @param gctx geometry context
+  /// @param gctx geometry context. The truth particle is intersected with the
+  ///        perigee surface, which carries no detector element, so either the
+  ///        sim or the reco geometry context gives the same result.
   /// @param truthParticle the truth Particle
   /// @param deltaR the distance to the closest truth particle
   /// @param status the reconstruction status

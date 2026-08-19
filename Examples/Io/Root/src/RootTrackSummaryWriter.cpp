@@ -382,6 +382,8 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
         t_prodR = std::sqrt(t_vx * t_vx + t_vy * t_vy);
 
         if (pSurface != nullptr) {
+          // The perigee surface carries no detector element, so no alignment
+          // payload applies and the geometry context choice is immaterial.
           Acts::Intersection3D intersection =
               pSurface
                   ->intersect(ctx.recoGeoContext, particle.position(),

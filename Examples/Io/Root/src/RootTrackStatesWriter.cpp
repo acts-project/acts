@@ -311,6 +311,10 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
                                           const ConstTrackContainer& tracks) {
   constexpr float nan = std::numeric_limits<float>::quiet_NaN();
 
+  // Track states and measurements are placed in the geometry reconstruction
+  // assumes; the truth hits below are read in the geometry the detector is
+  // actually built with. Where the two differ, that difference is exactly the
+  // misalignment under study.
   const Acts::GeometryContext& gctx = ctx.recoGeoContext;
   // Read additional input collections
   const auto& particles = m_inputParticles(ctx);
@@ -420,7 +424,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         const auto hitIdx = sl.index();
         const auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
         const auto [truthLocal, truthPos4, truthUnitDir] = averageSimHits(
-            ctx.recoGeoContext, surface, simHits, indices, logger());
+            ctx.simGeoContext, surface, simHits, indices, logger());
 
         // momentum averaging makes even less sense than averaging position and
         // direction. use the first momentum or set q/p to zero

@@ -249,7 +249,7 @@ ProcessCode RootTrackParameterWriter::writeT(
       // Get the sim hits via the measurement to sim hits map
       auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
       auto [truthLocal, truthPos4, truthUnitDir] = averageSimHits(
-          ctx.recoGeoContext, surface, simHits, indices, logger());
+          ctx.simGeoContext, surface, simHits, indices, logger());
 
       // Get the truth track parameter at the first space point
       m_t_loc0 = truthLocal[Acts::ePos0];
