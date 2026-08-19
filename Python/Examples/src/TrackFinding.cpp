@@ -43,7 +43,8 @@ void addTrackFinding(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(SpacePointMaker, mex, "SpacePointMaker",
                                 inputMeasurements, outputSpacePoints,
                                 trackingGeometry, geometrySelection,
-                                stripGeometrySelection);
+                                stripGeometrySelection, stripVertex,
+                                stripLengthTolerance, stripLengthGapTolerance);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       GridTripletSeedingAlgorithm, mex, "GridTripletSeedingAlgorithm",
