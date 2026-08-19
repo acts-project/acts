@@ -311,7 +311,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
                                           const ConstTrackContainer& tracks) {
   constexpr float nan = std::numeric_limits<float>::quiet_NaN();
 
-  const Acts::GeometryContext& gctx = ctx.geoContext;
+  const Acts::GeometryContext& gctx = ctx.recoGeoContext;
   // Read additional input collections
   const auto& particles = m_inputParticles(ctx);
   const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
@@ -419,8 +419,8 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
 
         const auto hitIdx = sl.index();
         const auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
-        const auto [truthLocal, truthPos4, truthUnitDir] =
-            averageSimHits(ctx.geoContext, surface, simHits, indices, logger());
+        const auto [truthLocal, truthPos4, truthUnitDir] = averageSimHits(
+            ctx.recoGeoContext, surface, simHits, indices, logger());
 
         // momentum averaging makes even less sense than averaging position and
         // direction. use the first momentum or set q/p to zero
@@ -484,7 +484,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         const Acts::Vector2 local(meas[Acts::eBoundLoc0],
                                   meas[Acts::eBoundLoc1]);
         const Acts::Vector3 global =
-            surface.localToGlobal(ctx.geoContext, local, truthUnitDir);
+            surface.localToGlobal(ctx.recoGeoContext, local, truthUnitDir);
 
         // fill the measurement info
         m_lx_hit.push_back(Acts::clampValue<float>(local[Acts::ePos0]));

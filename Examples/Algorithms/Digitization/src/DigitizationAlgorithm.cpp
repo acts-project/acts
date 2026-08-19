@@ -228,7 +228,7 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
               const auto& cfg = digitizer.geometric;
               Acts::Vector3 driftDir = cfg.drift(simHit.position(), rng);
               auto channelsRes = m_channelizer.channelize(
-                  simHit, *surfacePtr, ctx.geoContext, driftDir,
+                  simHit, *surfacePtr, ctx.recoGeoContext, driftDir,
                   *cfg.segmentation, cfg.thickness);
               if (!channelsRes.ok() || channelsRes->empty()) {
                 ACTS_DEBUG(
@@ -251,8 +251,8 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
               ACTS_VERBOSE("Configured to smear "
                            << digitizer.smearing.indices.size()
                            << " parameters.");
-              auto res =
-                  digitizer.smearing(rng, simHit, *surfacePtr, ctx.geoContext);
+              auto res = digitizer.smearing(rng, simHit, *surfacePtr,
+                                            ctx.recoGeoContext);
               if (!res.ok()) {
                 ++skippedHits;
                 ACTS_DEBUG("Problem in hit smearing, skip hit ("
@@ -297,7 +297,7 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
                   createMeasurement(measurements, moduleGeoId, dParameters);
 
               dParameters.cluster.globalPosition = measurementGlobalPosition(
-                  dParameters, *surfacePtr, ctx.geoContext);
+                  dParameters, *surfacePtr, ctx.recoGeoContext);
               clusters.emplace_back(std::move(dParameters.cluster));
 
               for (auto simHitIdx : simHitsIdxs) {

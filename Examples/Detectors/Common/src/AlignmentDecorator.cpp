@@ -142,7 +142,9 @@ ProcessCode AlignmentDecorator::decorate(AlgorithmContext& context) {
     ACTS_DEBUG("Decorating AlgorithmContext with alignment store for event "
                << eventNumber);
     AlignmentContext alignmentContext{alignmentStore};
-    context.geoContext = Acts::GeometryContext(alignmentContext);
+    Acts::GeometryContext geoContext{alignmentContext};
+    context.recoGeoContext = geoContext;
+    context.simGeoContext = geoContext;
   } else {
     ACTS_VERBOSE("No alignment store found for event "
                  << eventNumber << ", skipping decoration.");

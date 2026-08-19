@@ -116,11 +116,11 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
     }
 
     TrackFitterFunction::GeneralFitterOptions options{
-        ctx.geoContext,
+        ctx.recoGeoContext,
         ctx.magFieldContext,
         ctx.calibContext,
         perigeeSurface.get(),
-        Acts::PropagatorPlainOptions(ctx.geoContext, ctx.magFieldContext),
+        Acts::PropagatorPlainOptions(ctx.recoGeoContext, ctx.magFieldContext),
         true};
 
     Acts::BoundTrackParameters initialParams(
@@ -162,7 +162,7 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
     std::ranges::reverse(surfSequence);
 
     ACTS_VERBOSE("Initial parameters: "
-                 << initialParams.fourPosition(ctx.geoContext).transpose()
+                 << initialParams.fourPosition(ctx.recoGeoContext).transpose()
                  << " -> " << initialParams.direction().transpose());
 
     ACTS_DEBUG("Invoke direct fitter for track " << itrack);

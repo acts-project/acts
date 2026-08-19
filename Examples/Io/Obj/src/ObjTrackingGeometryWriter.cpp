@@ -48,13 +48,13 @@ void ObjTrackingGeometryWriter::write(const AlgorithmContext& context,
 
   if (gen3) {
     ACTS_VERBOSE(">>Obj: Gen3 geometry detected, using Gen3 visualization");
-    tVolume.visualize(objVis, context.geoContext, m_cfg.volumeView,
+    tVolume.visualize(objVis, context.recoGeoContext, m_cfg.volumeView,
                       m_cfg.portalView, m_cfg.sensitiveView);
     objVis.write(m_cfg.outputDir / "geometry");
   } else {
     ACTS_VERBOSE(">>Obj: Gen1 geometry detected, using Gen1 visualization");
     Acts::GeometryView3D::drawTrackingVolume(
-        objVis, tVolume, context.geoContext, m_cfg.containerView,
+        objVis, tVolume, context.recoGeoContext, m_cfg.containerView,
         m_cfg.volumeView, m_cfg.passiveView, m_cfg.sensitiveView,
         m_cfg.gridView, true, "", std::filesystem::path(m_cfg.outputDir));
   }

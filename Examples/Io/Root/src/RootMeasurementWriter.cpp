@@ -145,10 +145,11 @@ ProcessCode RootMeasurementWriter::writeT(
     auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
     // Use average truth in the case of multiple contributing sim hits
     auto [local, pos4, dir] =
-        averageSimHits(ctx.geoContext, surface, simHits, indices, logger());
+        averageSimHits(ctx.recoGeoContext, surface, simHits, indices, logger());
     Acts::RotationMatrix3 rot =
         surface
-            .referenceFrame(ctx.geoContext, pos4.segment<3>(Acts::ePos0), dir)
+            .referenceFrame(ctx.recoGeoContext, pos4.segment<3>(Acts::ePos0),
+                            dir)
             .inverse();
     std::pair<double, double> angles =
         Acts::VectorHelpers::incidentAngles(dir, rot);

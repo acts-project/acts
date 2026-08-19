@@ -44,9 +44,24 @@ struct AlgorithmContext {
   std::size_t algorithmNumber;  ///< Unique algorithm identifier
   std::size_t eventNumber;      ///< Unique event identifier
   WhiteBoard& eventStore;       ///< Per-event data store
-  Acts::GeometryContext geoContext{
-      Acts::GeometryContext::
-          dangerouslyDefaultConstruct()};  ///< Per-event geometry context
+  /// Per-event geometry as the reconstruction assumes it, i.e. the current
+  /// alignment hypothesis. Anything derived from reconstruction output - track
+  /// states, fitted parameters, space points, measurements as they are placed
+  /// for pattern recognition - has to use this context.
+  Acts::GeometryContext recoGeoContext{
+      Acts::GeometryContext::dangerouslyDefaultConstruct()};
+  /// Per-event geometry as the detector is actually built, i.e. what the
+  /// simulation transports particles through. Anything derived from simulation
+  /// truth - sim hits, truth particle positions on sensitive surfaces - has to
+  /// use this context.
+  ///
+  /// @note This is only distinct from @c recoGeoContext if a context decorator
+  ///       deliberately makes it so; both default to an empty context.
+  /// @note Geant4 cannot be misaligned through this context. The G4 geometry is
+  ///       built once and is not context aware, so per-event transforms never
+  ///       reach G4 transport. Use Fatras for misalignment studies.
+  Acts::GeometryContext simGeoContext{
+      Acts::GeometryContext::dangerouslyDefaultConstruct()};
   Acts::MagneticFieldContext
       magFieldContext;                    ///< Per-event magnetic Field context
   Acts::CalibrationContext calibContext;  ///< Per-event calibration context
