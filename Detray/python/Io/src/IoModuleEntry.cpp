@@ -89,7 +89,7 @@ PYBIND11_MODULE(DetrayIoPythonBindings, m) {
 
   m.def("readDetector", &read_detector, py::arg("memoryResource"),
         py::arg("config"),
-        "Read a detector into the given memory resource as configured by a "
+        "Read a detector using the given memory resource as configured by a "
         "DetectorReaderConfig. The returned detector keeps the memory resource "
         "alive for as long as it is used");
 }
