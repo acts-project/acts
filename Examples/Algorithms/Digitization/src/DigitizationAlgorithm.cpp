@@ -207,24 +207,28 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     const Acts::Surface* surfacePtr = surfaceItr->second;
 
-    // Get the placement from the surface (nullptr for non-detector surfaces)
+    // Try the fast path: design pointer attached to the surface placement.
+    // Works for DD4hepDetectorElementWithDesign; returns nullptr otherwise.
+    const Digitizer* digitizerPtr = nullptr;
     const auto* placement = surfacePtr->surfacePlacement();
-    if (placement == nullptr) {
-      ACTS_VERBOSE("No placement for module " << moduleGeoId);
-      continue;
+    if (placement != nullptr) {
+      if (const auto* sensorDes = placement->sensorDesign()) {
+        if (const auto* design =
+                dynamic_cast<const DigitizationDesign*>(sensorDes)) {
+          digitizerPtr = &design->digitizer();
+        }
+      }
     }
 
-    const auto* sensorDes = placement->sensorDesign();
-    if (sensorDes == nullptr) {
-      ACTS_VERBOSE("No digitizer present for module " << moduleGeoId);
-      continue;
-    }
-
-    const auto* design = dynamic_cast<const DigitizationDesign*>(sensorDes);
-    if (design == nullptr) {
-      ACTS_VERBOSE("sensorDesign is not a DigitizationDesign for module "
-                   << moduleGeoId);
-      continue;
+    // Fallback: geometry-hierarchy map lookup.
+    // Used for the generic detector and any surface without an assigned design.
+    if (digitizerPtr == nullptr) {
+      auto digitizerItr = m_digitizers.find(moduleGeoId);
+      if (digitizerItr == m_digitizers.end()) {
+        ACTS_VERBOSE("No digitizer present for module " << moduleGeoId);
+        continue;
+      }
+      digitizerPtr = &(*digitizerItr);
     }
 
     // Run the digitizer. Iterate over the hits for this surface inside the
@@ -337,7 +341,7 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
             }
           }
         },
-        design->digitizer());
+        *digitizerPtr);
   }
 
   if (skippedHits > 0) {
