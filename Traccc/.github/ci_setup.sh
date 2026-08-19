@@ -30,4 +30,5 @@ fi
 if [[ "${PLATFORM_NAME}" == *"HIP"* ]]; then
   export CC=`which clang`
   export CXX=`which clang++`
+  export LD_LIBRARY_PATH=/opt/rocm/lib:${LD_LIBRARY_PATH}
 fi
