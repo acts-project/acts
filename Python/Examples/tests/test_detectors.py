@@ -199,6 +199,7 @@ def test_tgeo_detector_aligned_element_factory():
     u = acts.UnitConstants
     Volume = TGeoDetector.Config.Volume
     LayerTriplet = TGeoDetector.Config.LayerTriplet
+    equidistant = TGeoDetector.Config.BinningType.equidistant
 
     root_file = (
         Path(__file__).parent.parent.parent.parent / "Tests" / "Data" / "panda.root"
@@ -224,6 +225,11 @@ def test_tgeo_detector_aligned_element_factory():
         zRange=LayerTriplet(central=(-60 * u.mm, 15 * u.mm)),
         splitTolR=LayerTriplet(central=-1.0),
         splitTolZ=LayerTriplet(central=-1.0),
+        # A single entry with count <= 0 requests auto-binning; leaving this
+        # unset defaults to an empty vector, which `TGeoLayerBuilder` then
+        # indexes out of bounds.
+        binning0=LayerTriplet(central=[(0, equidistant)]),
+        binning1=LayerTriplet(central=[(0, equidistant)]),
     )
 
     cfg = TGeoDetector.Config(
