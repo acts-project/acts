@@ -892,7 +892,7 @@ def test_edm4hep_writer_copy(ddsim_input, tmp_path):
                 "HCalBarrelCollection",
                 "ECalBarrelCollection",
                 "MuonBarrelHits",
-                "MuonEndcapHits",              
+                "MuonEndcapHits",
             ]
         ),
     )
