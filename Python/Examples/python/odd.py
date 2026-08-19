@@ -48,7 +48,7 @@ def getOpenDataDetector(
     constructionMethod=None,
     buildTracker=True,
     buildCalorimeter=True,
-    buildMuonSystem=True,
+    buildMuonSystem=False,
 ):
     """This function sets up the open data detector. Requires DD4hep.
     Parameters
