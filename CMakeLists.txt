@@ -57,6 +57,9 @@ endif()
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 set(ACTS_SOURCELINK_SBO_SIZE "" CACHE STRING "Customize the SBO size used by SourceLink")
 option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
+# code generation related options
+set(ACTS_CODEGEN_PREBUILT_DIR "" CACHE PATH "Directory holding pre-generated code; a generated file found there is used verbatim instead of being regenerated. Defaults to prebuilt-codegen/ next to this file when it exists, which is what release source archives ship")
+option(ACTS_CODEGEN_REQUIRE_PREBUILT "Fail the configure step instead of running the code generators when pre-generated code is missing" OFF)
 # external library options
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
