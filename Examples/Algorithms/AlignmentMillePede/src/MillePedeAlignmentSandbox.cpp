@@ -8,7 +8,6 @@
 
 #include "ActsExamples/AlignmentMillePede/MillePedeAlignmentSandbox.hpp"
 
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -117,14 +116,6 @@ ProcessCode MillePedeAlignmentSandbox::execute(
   const auto& measurements = m_inputMeasurements(ctx);
   const auto& tracks = m_inputTracks(ctx);
 
-  // Dirty hack: Overwrite the geometry context to remove knowledge
-  // of injected alignment shift.
-  // Detector will look misaligned and the injected correction can be fitted
-  // out.
-  // TODO: Replace if an appropriate non-hacky tool becomes available.
-  Acts::GeometryContext dummyGeoCtx =
-      Acts::GeometryContext::dangerouslyDefaultConstruct();
-
   // Pile of boilerplate code to get the Kalman fitter for the
   // alignment module ready to go
   IndexSourceLinkSurfaceAccessor slack{*m_trackingGeometry};
@@ -145,8 +136,8 @@ ProcessCode MillePedeAlignmentSandbox::execute(
       .connect<&ActsExamples::IndexSourceLinkSurfaceAccessor::operator()>(
           &slack);
   TrackFitterOptions kfOptions(
-      dummyGeoCtx, ctx.magFieldContext, ctx.calibContext, extensions,
-      Acts::PropagatorPlainOptions(dummyGeoCtx, ctx.magFieldContext),
+      ctx.recoGeoContext, ctx.magFieldContext, ctx.calibContext, extensions,
+      Acts::PropagatorPlainOptions(ctx.recoGeoContext, ctx.magFieldContext),
       m_firstSurf);
 
   // loop over tracks in the event
@@ -179,7 +170,7 @@ ProcessCode MillePedeAlignmentSandbox::execute(
     // alignment class. This will compute the needed
     // residuals and derivatives.
     auto aliStates = m_align->evaluateTrackAlignmentState(
-        dummyGeoCtx, trackSourceLinks, refPar, kfOptions,
+        ctx.recoGeoContext, trackSourceLinks, refPar, kfOptions,
         m_indexedAlignSurfaces,
         ActsAlignment::AlignmentMask::All  // use this to restrict alignment
                                            // degrees of freedom if desired
