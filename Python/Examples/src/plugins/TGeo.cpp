@@ -92,7 +92,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsTGeo, tgeo) {
                        materialDecorator, volumes);
 
     tgeo.def("alignedTGeoDetectorElementFactory",
-            &alignedTGeoDetectorElementFactory);
+             &alignedTGeoDetectorElementFactory);
 
     // `detectorElementFactory` is a std::function taking ROOT types
     // (TGeoNode, TGeoMatrix) that have no pybind11 caster. Exposing it as an
