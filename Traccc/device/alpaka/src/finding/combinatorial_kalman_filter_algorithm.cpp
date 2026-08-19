@@ -235,10 +235,11 @@ combinatorial_kalman_filter_algorithm::combinatorial_kalman_filter_algorithm(
     const config_type& config, const traccc::memory_resource& mr,
     const vecmem::copy& copy, alpaka::queue& q,
     std::unique_ptr<const Logger> logger,
-    std::unique_ptr<traccc::alpaka::kalman_fitting_algorithm> kf_fitter)
+    std::unique_ptr<traccc::alpaka::kalman_fitting_algorithm> kf_fitter,
+    await_function_type await_func)
     : device::combinatorial_kalman_filter_algorithm(
           config, mr, copy, std::move(logger), std::move(kf_fitter)),
-      alpaka::algorithm_base(q) {}
+      alpaka::algorithm_base(q, std::move(await_func)) {}
 
 bool combinatorial_kalman_filter_algorithm::input_is_valid(
     const edm::measurement_collection::const_view&) const {
