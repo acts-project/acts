@@ -296,6 +296,7 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
               auto measurement =
                   createMeasurement(measurements, moduleGeoId, dParameters);
 
+              dParameters.cluster.geometryId = moduleGeoId;
               dParameters.cluster.globalPosition = measurementGlobalPosition(
                   dParameters, *surfacePtr, ctx.geoContext);
               clusters.emplace_back(std::move(dParameters.cluster));
