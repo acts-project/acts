@@ -143,8 +143,12 @@ ProcessCode AlignmentDecorator::decorate(AlgorithmContext& context) {
                << eventNumber);
     AlignmentContext alignmentContext{alignmentStore};
     Acts::GeometryContext geoContext{alignmentContext};
-    context.recoGeoContext = geoContext;
-    context.simGeoContext = geoContext;
+    if (m_cfg.target != Target::eReco) {
+      context.simGeoContext = geoContext;
+    }
+    if (m_cfg.target != Target::eSim) {
+      context.recoGeoContext = geoContext;
+    }
   } else {
     ACTS_VERBOSE("No alignment store found for event "
                  << eventNumber << ", skipping decoration.");
