@@ -71,9 +71,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
   edm::measurement_collection::const_view::size_type n_measurements = 0u;
   if (mr().host) {
     vecmem::async_size size = copy().get_size(measurements_view, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_measurements = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_measurements = size.unsafe_get();
   } else {
     n_measurements = copy().get_size(measurements_view);
   }
@@ -86,9 +86,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
   bound_track_parameters_collection_types::const_view::size_type n_seeds = 0u;
   if (mr().host) {
     vecmem::async_size size = copy().get_size(seeds, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_seeds = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_seeds = size.unsafe_get();
   } else {
     n_seeds = copy().get_size(seeds);
   }
@@ -408,9 +408,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
 
         if (mr().host) {
           vecmem::async_size size = copy().get_size(links_buffer, *(mr().host));
-          // Here we could give control back to the caller, once our
-          // code allows for it. (coroutines...)
-          step_to_link_idx_map[step + 1] = size.get();
+          // Block or suspend execution until the size is available.
+          await(size);
+          step_to_link_idx_map[step + 1] = size.unsafe_get();
         } else {
           step_to_link_idx_map[step + 1] = copy().get_size(links_buffer);
         }
@@ -533,9 +533,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
     unsigned int n_tips_total = 0u;
     if (mr().host) {
       vecmem::async_size size = copy().get_size(tips_buffer, *(mr().host));
-      // Here we could give control back to the caller, once our code
-      // allows for it. (coroutines...)
-      n_tips_total = size.get();
+      // Block or suspend execution until the size is available.
+      await(size);
+      n_tips_total = size.unsafe_get();
     } else {
       n_tips_total = copy().get_size(tips_buffer);
     }
@@ -606,9 +606,8 @@ auto combinatorial_kalman_filter_algorithm::operator()(
 
     vecmem::vector<unsigned int> tips_length_host(mr().host);
     vecmem::copy::event_type ev = copy()(tip_length_buffer, tips_length_host);
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    ev->wait();
+    // Block or suspend execution until the copy is complete.
+    await(*ev);
     // The following is only necessary if filtering was not turned on. Since
     // with filtering on, the buffer is resizable, so the host vector would
     // already have the correct size.
