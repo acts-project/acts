@@ -30,6 +30,12 @@ inputs:
     description: 'C++ standard for lockfile selection (e.g. 20, 23). Defaults to 20.'
     required: false
     default: '20'
+  # The flavors are published at cxx23 only, so setting this with cxx_std 20
+  # yields a C++23-built stack. Accepted for now; the selection logs it.
+  flavor:
+    description: 'Accelerator flavor for lockfile selection (e.g. cuda13, rocm-gfx90a). Defaults to the plain CPU stack.'
+    required: false
+    default: ''
   env_file:
     description: 'Where to generate the environment file'
     required: true
@@ -139,6 +145,7 @@ runs:
         ENV_FILE: ${{ inputs.env_file }}
         FULL_INSTALL: ${{ inputs.full_install }}
         COMPILER: ${{ inputs.compiler }}
+        FLAVOR: ${{ inputs.flavor }}
       run: |
         args="-e $ENV_FILE"
         if [ "$FULL_INSTALL" == "true" ]; then
@@ -148,6 +155,10 @@ runs:
         if [ -n "$COMPILER" ]; then
           echo "With compiler"
           args="${args} -c $COMPILER"
+        fi
+        if [ -n "$FLAVOR" ]; then
+          echo "With flavor $FLAVOR"
+          args="${args} -F $FLAVOR"
         fi
 
         CI/dependencies/setup.sh $args
