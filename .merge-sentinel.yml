@@ -1,7 +1,10 @@
 rules:
-  - required_checks:
-      - Lint PR / Validate PR title
-    required_pattern:
+  # Lint PR / Validate PR title only runs on pull_request_target, never on
+  # merge_group, so it can't be required here: merge-sentinel would sit
+  # pending on every merge-queue entry until the queue's check timeout
+  # evicts it. PR title format is still enforced continuously by that
+  # workflow pre-queue; this only skips re-verifying it at merge time.
+  - required_pattern:
       - "policy-bot: *"
 
   - branch_filter:

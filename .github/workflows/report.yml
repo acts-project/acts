@@ -16,6 +16,9 @@ permissions:
 
 jobs:
   post_comment:
+    # Builds also runs on push and merge_group, neither of which has a PR to
+    # comment on ("Determine PR number" below would fail resolving one).
+    if: github.event.workflow_run.event == 'pull_request'
     runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
