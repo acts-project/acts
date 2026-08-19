@@ -12,8 +12,14 @@
 #include "traccc/definitions/qualifiers.hpp"
 #include "traccc/definitions/track_parametrization.hpp"
 
+// Detray include(s).
+#include <detray/algebra/common/known_substructure_matrix.hpp>
+
 // System include(s).
 #include <array>
+#include <cassert>
+#include <cstddef>
+#include <utility>
 
 namespace traccc {
 
@@ -49,14 +55,6 @@ struct subspace {
   static constexpr axes_type ELEMENT_BITS_MASK = (1 << BITS_PER_INDEX) - 1;
   static_assert(((1 << (BITS_PER_INDEX - 1)) - 1) >= kFullSize);
   static_assert(ELEMENT_BITS_MASK == (SIGN_BIT_MASK | VALUE_BITS_MASK));
-
-  template <size_type ROWS, size_type COLS>
-  using matrix_type = detray::dmatrix<algebra_t, ROWS, COLS>;
-
-  using subspace_vector = matrix_type<kSize, 1u>;
-  using fullspace_vector = matrix_type<kFullSize, 1u>;
-  using projection_matrix = matrix_type<kSize, kFullSize>;
-  using expansion_matrix = matrix_type<kFullSize, kSize>;
 
   static constexpr size_type size = kSize;
   static constexpr size_type fullSize = kFullSize;
@@ -126,38 +124,56 @@ struct subspace {
              static_cast<axes_type>((s ? SIGN_BIT_MASK : 0) << sl);
   }
 
+  /// The substructure of a projection matrix onto @c D rows, where the
+  /// subspace only selects columns with an index below @c MaxIndex.
+  template <size_type D, size_type MaxIndex>
+  using projection_substructure =
+      typename detray::ksm::make_left_columns_substructure<
+          D, kFullSize, MaxIndex>::canonical_type;
+
   /// Projection matrix that maps from the full space into the subspace.
-  template <size_type D>
-  TRACCC_HOST_DEVICE auto projector() const -> matrix_type<D, kFullSize> {
+  ///
+  /// @tparam D the number of rows to project onto
+  /// @tparam MaxIndex the subspace may only select columns with an index
+  ///         below @c MaxIndex, so every column from @c MaxIndex on is a
+  ///         structural zero of the result. The default promises nothing.
+  ///
+  /// @note The result is a known-substructure matrix, which a caller reads
+  /// through compile-time indices. That is what keeps it in registers: the
+  /// column a subspace selects is a runtime value, and writing through it
+  /// forces the whole matrix into memory. Call @c to_dense on the result
+  /// where a dense matrix is what the caller needs.
+  template <size_type D, size_type MaxIndex = kFullSize>
+  TRACCC_HOST_DEVICE auto projector() const
+      -> detray::ksm::matrix<projection_substructure<D, MaxIndex>,
+                             detray::dscalar<algebra_t>> {
     static_assert(D <= kSize,
                   "The dimension of projection should be smaller than "
                   "subspace dimension");
+    static_assert(MaxIndex <= kFullSize,
+                  "A subspace cannot select a column outside the full space");
 
-    auto proj = matrix::zero<matrix_type<D, kFullSize>>();
+    using scalar_t = detray::dscalar<algebra_t>;
 
-    for (size_type i = 0u; i < D; ++i) {
-      if (get_index(i) < kFullSize) {
-        getter::element(proj, i, get_index(i)) = (get_sign(i) ? -1.f : 1.f);
-      }
-    }
+    detray::ksm::matrix<projection_substructure<D, MaxIndex>, scalar_t> proj{};
+
+    // A structured matrix is addressable at compile time only, so the
+    // selected column cannot index the write. Each free column is compared
+    // against it instead.
+    const auto set_element = [this, &proj]<std::size_t I, std::size_t J>() {
+      assert(!get_valid(I) || get_index(I) < MaxIndex);
+
+      proj.template at<I, J>() =
+          (get_index(I) == static_cast<size_type>(J))
+              ? (get_sign(I) ? scalar_t{-1} : scalar_t{1})
+              : scalar_t{0};
+    };
+
+    [&set_element]<std::size_t... Ks>(std::index_sequence<Ks...>) {
+      (set_element.template operator()<Ks / MaxIndex, Ks % MaxIndex>(), ...);
+    }(std::make_index_sequence<static_cast<std::size_t>(D) * MaxIndex>{});
+
     return proj;
-  }
-
-  /// Expansion matrix that maps from the subspace into the full space.
-  template <size_type D>
-  TRACCC_HOST_DEVICE auto expander() const -> matrix_type<kFullSize, D> {
-    static_assert(D <= kSize,
-                  "The dimension of projection should be smaller than "
-                  "subspace dimension");
-
-    auto expn = matrix::zero<matrix_type<kFullSize, D>>();
-
-    for (size_type i = 0u; i < kSize; ++i) {
-      if (get_index(i) < kFullSize) {
-        getter::element(expn, get_index(i), i) = (get_sign(i) ? -1.f : 1.f);
-      }
-    }
-    return expn;
   }
 
  private:
