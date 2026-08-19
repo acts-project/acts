@@ -225,7 +225,7 @@ ProcessCode FatrasSimulation::execute(const AlgorithmContext &ctx) const {
 
   // run the simulation w/ a local random generator
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
-  auto ret = m_sim->simulate(ctx.recoGeoContext, ctx.magFieldContext, rng,
+  auto ret = m_sim->simulate(ctx.simGeoContext, ctx.magFieldContext, rng,
                              particlesInput, particlesInitialUnordered,
                              particlesFinalUnordered, simHitsUnordered);
   // fatal error leads to panic

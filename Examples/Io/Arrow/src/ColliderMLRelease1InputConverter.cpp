@@ -488,7 +488,7 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
                               static_cast<double>(hzArr->Value(hOff + i))};
 
       auto localResult = regSurface->globalToLocal(
-          ctx.recoGeoContext, globalPos, std::numeric_limits<double>::max());
+          ctx.simGeoContext, globalPos, std::numeric_limits<double>::max());
       if (!localResult.ok() ||
           !surface->bounds().inside(localResult.value(),
                                     Acts::BoundaryTolerance::AbsoluteEuclidean(

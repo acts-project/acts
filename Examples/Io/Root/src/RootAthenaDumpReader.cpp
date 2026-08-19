@@ -766,7 +766,7 @@ ProcessCode RootAthenaDumpReader::read(const AlgorithmContext& ctx) {
     }
 
     auto [clusters, measurements, candidateMeasPartMap, imIdxMap] =
-        readMeasurements(candidateParticles, ctx.recoGeoContext);
+        readMeasurements(candidateParticles, ctx.simGeoContext);
     optImIdxMap.emplace(std::move(imIdxMap));
 
     m_outputClusters(ctx, std::move(clusters));
