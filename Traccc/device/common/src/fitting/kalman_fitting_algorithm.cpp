@@ -61,9 +61,9 @@ kalman_fitting_algorithm::output_type kalman_fitting_algorithm::operator()(
   if (mr().host) {
     vecmem::async_sizes sizes =
         copy().get_sizes(input_tracks.tracks, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    auto& temp = sizes.get();
+    // Block or suspend execution until the sizes are available.
+    await(sizes);
+    const auto& temp = sizes.unsafe_get();
     candidate_sizes = {temp.begin(), temp.end()};
   } else {
     candidate_sizes = copy().get_sizes(input_tracks.tracks);
