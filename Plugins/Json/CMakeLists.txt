@@ -2,6 +2,7 @@ acts_add_library(
     PluginJson
     src/AlgebraJsonConverter.cpp
     src/ExtentJsonConverter.cpp
+    src/AxisSpecJsonConverter.cpp
     src/GridJsonConverter.cpp
     src/GeometryIdentifierJsonConverter.cpp
     src/IndexGridNavigationJsonConverter.cpp

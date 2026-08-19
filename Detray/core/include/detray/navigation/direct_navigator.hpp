@@ -22,6 +22,7 @@
 #include "detray/navigation/intersection/ray_intersector.hpp"
 #include "detray/navigation/navigation_config.hpp"
 #include "detray/navigation/navigation_state.hpp"
+#include "detray/tracks/ray.hpp"
 
 namespace detray {
 
@@ -46,7 +47,6 @@ class direct_navigator {
       : public navigation::base_state<state, detector_type, 2u, inspector_type,
                                       intersection_type> {
     friend class direct_navigator;
-    friend struct detail::intersection_update<ray_intersector>;
 
     template <typename state_t>
     friend constexpr void navigation::update_status(state_t &,
@@ -235,11 +235,16 @@ class direct_navigator {
       const intersection::config intr_cfg{
           inf, inf, inf, cfg.intersection.path_tolerance, -inf};
 
+      // Tangential to the track direction
+      const detray::detail::ray<algebra_t> tangential{
+          track.pos(),
+          static_cast<scalar_t>(navigation.direction()) * track.dir()};
+
       // Update the current target. If it cannot be reached, direct
       // navigation is broken
-      if (!navigation::update_candidate(
-              navigation.direction(), navigation.target(), track, det, intr_cfg,
-              navigation.external_tol(), ctx)) {
+      if (!navigation::update_candidate(navigation.target(), tangential, det,
+                                        intr_cfg, navigation.external_tol(),
+                                        ctx)) {
         navigation.abort("Could not reach current target");
         return !is_init;
       }
@@ -263,9 +268,9 @@ class direct_navigator {
 
       // Otherwise, track is on surface: Update the next target
       if (navigation.has_next_external() &&
-          !navigation::update_candidate(
-              navigation.direction(), navigation.target(), track, det, intr_cfg,
-              navigation.external_tol(), ctx)) {
+          !navigation::update_candidate(navigation.target(), tangential, det,
+                                        intr_cfg, navigation.external_tol(),
+                                        ctx)) {
         navigation.abort("Could not find new target after surface was reached");
         return !is_init;
       }
