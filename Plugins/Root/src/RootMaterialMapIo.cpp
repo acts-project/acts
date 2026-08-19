@@ -95,7 +95,13 @@ std::shared_ptr<const GridSurfaceMaterial> buildFromMaterialPayload(
   if (storageKind == GridStorageKind::Direct) {
     return GridSurfaceMaterialFactory::createDirect(axis0, axis1, payload);
   }
-  // Indexed / GloballyIndexed: one unique slab per bin, in bin order
+  // Indexed / GloballyIndexed: one unique slab per bin, in bin order.
+  // This legacy raw-histogram shape carries no material shared across
+  // surfaces, so a requested GloballyIndexed reconstruction has nothing
+  // real to share - falls back to Indexed instead, to avoid fabricating a
+  // private per-surface vector that only pretends to be the (session-wide)
+  // canonical global one and would collide with every other surface's on
+  // write-back.
   std::vector<MaterialSlab> material;
   std::vector<std::vector<std::size_t>> indices(payload.size());
   for (std::size_t i0 = 0; i0 < payload.size(); ++i0) {
@@ -105,14 +111,8 @@ std::shared_ptr<const GridSurfaceMaterial> buildFromMaterialPayload(
       material.push_back(payload[i0][i1]);
     }
   }
-  if (storageKind == GridStorageKind::Indexed) {
-    return GridSurfaceMaterialFactory::createIndexed(
-        axis0, axis1, std::move(material), indices);
-  }
-  auto sharedMaterial =
-      std::make_shared<std::vector<MaterialSlab>>(std::move(material));
-  return GridSurfaceMaterialFactory::createGloballyIndexed(
-      axis0, axis1, sharedMaterial, indices);
+  return GridSurfaceMaterialFactory::createIndexed(
+      axis0, axis1, std::move(material), indices);
 }
 
 /// @brief Build a GridSurfaceMaterial from indices into an already read-in
