@@ -70,7 +70,7 @@ def dt_dqop(dtds):
     """d(t)/d(q/p) over a step of length h.
 
     Equals h m**2 l / (q**2 dtds), with the q**2 folded into p_abs via
-    p_abs = |q| / |l|.  It is 1 for unit charge, hence easy to miss.
+    p_abs = |q| / |l|.
     """
     return h * m**2 / (p_abs**2 * l * dtds)
 

@@ -1409,9 +1409,6 @@ class AtlasStepper {
       double momentum = absoluteMomentum(state);
 
       // Evaluate the time propagation
-      // m/p is reused by d(t)/d(q/p) below. The EigenStepper spells both out
-      // instead; either way is ~4% faster in its own stepper (register
-      // pressure, not arithmetic).
       const double mOverP = mass / momentum;
       double dtds = std::sqrt(1 + mOverP * mOverP);
       state.pVector[3] += h * dtds;
@@ -1421,7 +1418,7 @@ class AtlasStepper {
 
       if (Jac) {
         // d(t)/d(q/p) = h m^2 (q/p) / (q^2 dt/ds), with the q^2 folded into p
-        // via p = |q| / |q/p|. It is 1 for unit charge, hence easy to miss.
+        // via p = |q| / |q/p|.
         double dtdl = h * mOverP * mOverP / (qOverP(state) * dtds);
         state.pVector[43] += dtdl;
 
