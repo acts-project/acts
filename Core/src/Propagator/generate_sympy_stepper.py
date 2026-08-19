@@ -66,6 +66,15 @@ g3 = Symbol("g3", real=True)
 g4 = Symbol("g4", real=True)
 
 
+def dt_dqop(dtds):
+    """d(t)/d(q/p) over a step of length h.
+
+    Equals h m**2 l / (q**2 dtds), with the q**2 folded into p_abs via
+    p_abs = |q| / |l|.  It is 1 for unit charge, hence easy to miss.
+    """
+    return h * m**2 / (p_abs**2 * l * dtds)
+
+
 def rk4_subexpr(f, x, y, ydot, h):
     k1 = name_expr("k1", f(1, x, y, ydot))
     x2 = name_expr("x2", x + h / 2)
@@ -192,10 +201,7 @@ def rk4_vacuum_fullexpr2():
     D = sym.eye(8)
     D[0:3, :] = new_p.expr.jacobian([p, t, d, l])
     D[4:7, :] = new_d_tmp.expr.jacobian([p, t, d, l])
-    # ACTS defines p = |q| / |q/p|, so d(dt/ds)/d(q/p) carries a 1/q^2 that
-    # is invisible for unit charge.  Written over p_abs rather than q it
-    # keeps the charge out of the expression, at the same operation count.
-    D[3, 7] = h * m**2 / (p_abs**2 * l * dtds.expr)
+    D[3, 7] = dt_dqop(dtds.expr)
 
     J = MatrixSymbol("J", 8, 8).as_explicit().as_mutable()
     for indices in np.ndindex(J.shape):
@@ -237,10 +243,7 @@ def rk4_vacuum_fullexpr():
     D = sym.eye(8)
     D[0:3, :] = new_p.expr.jacobian([p, t, d, l])
     D[4:7, :] = new_d_tmp.expr.jacobian([p, t, d, l])
-    # ACTS defines p = |q| / |q/p|, so d(dt/ds)/d(q/p) carries a 1/q^2 that
-    # is invisible for unit charge.  Written over p_abs rather than q it
-    # keeps the charge out of the expression, at the same operation count.
-    D[3, 7] = h * m**2 / (p_abs**2 * l * dtds.expr)
+    D[3, 7] = dt_dqop(dtds.expr)
 
     J = MatrixSymbol("J", 8, 8).as_explicit().as_mutable()
     for indices in np.ndindex(J.shape):
@@ -313,10 +316,7 @@ def rk4_vacuum_tunedexpr():
     D = sym.eye(8)
     D[0:3, 4:8] = dFdTL.name.as_explicit()
     D[4:7, 4:8] = dGdTL.name.as_explicit()
-    # ACTS defines p = |q| / |q/p|, so d(dt/ds)/d(q/p) carries a 1/q^2 that
-    # is invisible for unit charge.  Written over p_abs rather than q it
-    # keeps the charge out of the expression, at the same operation count.
-    D[3, 7] = h * m**2 / (p_abs**2 * l * dtds.name)
+    D[3, 7] = dt_dqop(dtds.name)
 
     J = Matrix(MatrixSymbol("J", 8, 8).as_explicit())
     for indices in np.ndindex(J.shape):

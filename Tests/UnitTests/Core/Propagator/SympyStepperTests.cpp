@@ -425,10 +425,10 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   CHECK_CLOSE_ABS(h0, esState.stepSize.value(), eps);
 }
 
-/// ACTS defines p = |q| / |q/p|, so d(time)/d(q/p) carries a 1/q^2 that is
-/// invisible for unit charge. Checked against a central difference of the free
-/// time in zero field, where the error estimate vanishes and every step is
-/// exactly `h` -- the jacobian is defined at fixed path length.
+/// Checks d(time)/d(q/p) against a central difference of the free time. Zero
+/// field makes every step exactly `h`, so the difference is taken at fixed path
+/// length, as the jacobian assumes. The charge is varied because the derivative
+/// scales with 1/q^2.
 BOOST_AUTO_TEST_CASE(sympy_stepper_time_qop_derivative) {
   auto bField = std::make_shared<ConstantBField>(Vector3::Zero());
   SympyStepper stepper(bField);
@@ -448,8 +448,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_time_qop_derivative) {
     return state;
   };
 
-  // p = |q| / |q/p| is 1 GeV throughout, so only the charge varies and the
-  // unit-charge form is off by exactly q^2.
+  // qop scales with the charge to keep p = |q| / |q/p| at 1 GeV.
   for (const float absQ : {1.f, 2.f, 3.f}) {
     const ParticleHypothesis particle = ParticleHypothesis::pionLike(absQ);
     const double qop = absQ / 1_GeV;
@@ -486,9 +485,8 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_covariance_matches_eigen) {
   cov(eBoundLoc1, eBoundLoc1) = 10_mm;
   cov(eBoundQOverP, eBoundQOverP) = 1e-4;
 
-  // The doubly charged hypothesis is not decoration: p = |q| / |q/p|, so the
-  // time row of the transport jacobian carries a 1/q^2 that is invisible as
-  // long as every test particle has unit charge.
+  // d(time)/d(q/p) scales with 1/q^2, so the charge has to vary for this
+  // comparison to constrain the time row at all.
   const std::array particles = {ParticleHypothesis::pion(),
                                 ParticleHypothesis::pionLike(2.f)};
 
