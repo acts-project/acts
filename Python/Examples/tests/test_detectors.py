@@ -1,4 +1,5 @@
 import pytest
+import warnings
 from pathlib import Path
 
 from helpers import dd4hepEnabled, geant4Enabled, rootEnabled
@@ -237,10 +238,15 @@ def test_tgeo_detector_aligned_element_factory():
     # reports None.
     assert cfg.detectorElementFactory is None
 
-    detector = TGeoDetector(cfg)
-    trackingGeometry = detector.trackingGeometry()
-    assert trackingGeometry is not None
+    # (Re-)building a TGeoManager from a ROOT file can emit routine,
+    # benign ROOT diagnostics (e.g. about registered matrices being
+    # replaced) that are not test failures.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        detector = TGeoDetector(cfg)
+        trackingGeometry = detector.trackingGeometry()
 
+    assert trackingGeometry is not None
     assert count_surfaces(trackingGeometry) == 14
 
 
