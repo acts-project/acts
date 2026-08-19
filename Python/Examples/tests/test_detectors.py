@@ -5,7 +5,6 @@ from helpers import dd4hepEnabled, geant4Enabled
 
 import acts.examples
 
-
 def count_surfaces(geo):
     __tracebackhide__ = True
     nSurfaces = 0
@@ -103,6 +102,7 @@ def test_odd(odd_detector):
 # the tracking geometry, so the count must stay at 18824 as they are staged in.
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
 def test_odd_tracker():
+    from acts.examples.odd import getOpenDataDetector
     with getOpenDataDetector(
         buildTracker=True, buildCalorimeter=False, buildMuonSystem=False
     ) as detector:
@@ -115,6 +115,7 @@ def test_odd_tracker():
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
 def test_odd_tracker_calorimeter():
+    from acts.examples.odd import getOpenDataDetector
     with getOpenDataDetector(
         buildTracker=True, buildCalorimeter=True, buildMuonSystem=False
     ) as detector:
@@ -127,6 +128,7 @@ def test_odd_tracker_calorimeter():
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
 def test_odd_tracker_calorimeter_muon_system():
+    from acts.examples.odd import getOpenDataDetector
     with getOpenDataDetector(
         buildTracker=True, buildCalorimeter=True, buildMuonSystem=True
     ) as detector:
