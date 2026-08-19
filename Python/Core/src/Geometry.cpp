@@ -293,7 +293,8 @@ void addGeometry(py::module_& m) {
         m, "TrackingVolume")
         .def(py::init<const Transform3&, std::shared_ptr<VolumeBounds>,
                       std::string>())
-        .def_property_readonly("volumeName", &TrackingVolume::volumeName);
+        .def_property_readonly("volumeName", &TrackingVolume::volumeName)
+        .def_property_readonly("geometryId", &TrackingVolume::geometryId);
   }
 
   {

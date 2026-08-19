@@ -86,40 +86,22 @@ if(NOT COMMAND acts_code_generation)
     include(${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/ActsCodegen.cmake)
 endif()
 
-set(_detray_codegen_dir ${CMAKE_CURRENT_SOURCE_DIR}/../codegen/detray-sympy)
-set(_acts_codegen_pkg ${CMAKE_CURRENT_SOURCE_DIR}/../../codegen)
-
 detray_add_codegen_header(
     TARGET detray_core
-    CODEGEN_DIR ${_detray_codegen_dir}
-    ACTS_CODEGEN_PKG ${_acts_codegen_pkg}
-    SCRIPT gen_transport_covariance_to_bound_impl.py
-    OUTPUT detray/propagator/detail/codegen/covariance_transport.hpp
+    KEY Detray/core/detray/propagator/detail/codegen/covariance_transport.hpp
 )
 detray_add_codegen_header(
     TARGET detray_core
-    CODEGEN_DIR ${_detray_codegen_dir}
-    ACTS_CODEGEN_PKG ${_acts_codegen_pkg}
-    SCRIPT gen_full_jacobian.py
-    OUTPUT detray/propagator/detail/codegen/full_jacobian.hpp
+    KEY Detray/core/detray/propagator/detail/codegen/full_jacobian.hpp
 )
 detray_add_codegen_header(
     TARGET detray_core
-    CODEGEN_DIR ${_detray_codegen_dir}
-    ACTS_CODEGEN_PKG ${_acts_codegen_pkg}
-    SCRIPT gen_update_rk_transport_jacobian_impl.py
-    OUTPUT detray/propagator/detail/codegen/update_rk_transport_jacobian.hpp
+    KEY Detray/core/detray/propagator/detail/codegen/update_rk_transport_jacobian.hpp
 )
 detray_add_codegen_header(
     TARGET detray_core
-    CODEGEN_DIR ${_detray_codegen_dir}
-    ACTS_CODEGEN_PKG ${_acts_codegen_pkg}
-    SCRIPT gen_transport_jacobian_types.py
-    OUTPUT detray/propagator/detail/codegen/transport_jacobian.hpp
+    KEY Detray/core/detray/propagator/detail/codegen/transport_jacobian.hpp
 )
-
-unset(_detray_codegen_dir)
-unset(_acts_codegen_pkg)
 
 # Set up the libraries that use specific algebra plugins.
 detray_add_library( detray_core_array core_array )
