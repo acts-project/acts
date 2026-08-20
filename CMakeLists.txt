@@ -668,30 +668,41 @@ if(ACTS_SETUP_DETRAY)
 endif()
 
 if(ACTS_BUILD_TRACCC)
-    # HACK: Temporary logic (aka technical debt) to make the traccc
-    # component work. Remove this ASAP.
-    option(TRACCC_USE_ROOT "" FALSE)
-    option(TRACCC_SETUP_ACTS "" FALSE)
-    option(TRACCC_SETUP_VECMEM "" FALSE)
-    option(TRACCC_SETUP_EIGEN3 "" FALSE)
-    option(TRACCC_SETUP_THRUST "" TRUE)
-    option(TRACCC_SETUP_COVFIE "" FALSE)
-    option(TRACCC_SETUP_DETRAY "" FALSE)
-    option(TRACCC_BUILD_CUDA "" ${ACTS_ENABLE_CUDA})
-    option(TRACCC_SETUP_TBB "" FALSE)
-    option(TRACCC_BUILD_IO "" TRUE)
-    option(TRACCC_BUILD_PERFORMANCE "" FALSE)
-    option(TRACCC_BUILD_SIMULATION "" FALSE)
-    option(TRACCC_BUILD_TESTING "" FALSE)
-    option(TRACCC_BUILD_EXAMPLES "" FALSE)
-    option(TRACCC_BUILD_BENCHMARKS "" FALSE)
-
-    find_package(TBB ${_acts_tbb_version} CONFIG)
-    if(NOT TBB_FOUND)
-        set(TRACCC_SETUP_TBB TRUE CACHE BOOL "")
-    else()
-        set(TRACCC_SETUP_TBB FALSE CACHE BOOL "")
-    endif()
+    # Provide a default build configuration for traccc. One which only builds
+    # the main traccc libraries. Without any of the tests, benchmarks or
+    # examples.
+    option(
+        TRACCC_USE_ROOT
+        "Use ROOT if Acts uses ROOT"
+        ${ACTS_BUILD_PLUGIN_ROOT}
+    )
+    option(TRACCC_SETUP_ACTS "Don't let traccc set up Acts" FALSE)
+    option(TRACCC_SETUP_VECMEM "Don't let traccc set up VecMem" FALSE)
+    option(TRACCC_SETUP_EIGEN3 "Don't let traccc set up Eigen" FALSE)
+    option(TRACCC_SETUP_COVFIE "Don't let traccc set up Covfie" FALSE)
+    option(TRACCC_SETUP_TBB "Don't make traccc set up TBB by default" FALSE)
+    option(TRACCC_BUILD_CUDA "Use CUDA if Acts uses CUDA" ${ACTS_ENABLE_CUDA})
+    option(
+        TRACCC_BUILD_PERFORMANCE
+        "Don't build traccc::performance by default"
+        FALSE
+    )
+    option(
+        TRACCC_BUILD_SIMULATION
+        "Don't build traccc::simulation by default"
+        FALSE
+    )
+    option(
+        TRACCC_BUILD_TESTING
+        "Don't build traccc unit tests by default"
+        FALSE
+    )
+    option(TRACCC_BUILD_EXAMPLES "Don't build traccc examples by default" FALSE)
+    option(
+        TRACCC_BUILD_BENCHMARKS
+        "Don't build traccc benchmarks by default"
+        FALSE
+    )
 
     add_subdirectory(Traccc)
 endif()
