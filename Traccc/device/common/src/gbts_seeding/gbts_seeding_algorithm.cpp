@@ -218,6 +218,11 @@ auto gbts_seeding_algorithm::create_edges(
     const unsigned int bin1_begin = eta_bin_views[2 * binPair.first];
     const unsigned int bin1_end = eta_bin_views[2 * binPair.first + 1];
     unsigned int nNodesInBin1 = bin1_end - bin1_begin;
+    unsigned int nNodesInBin2 = eta_bin_views[2 * binPair.second] -
+                                eta_bin_views[2 * binPair.second + 1];
+    if ((nNodesInBin1 == 0) | (nNodesInBin2 == 0)) {
+      continue;
+    }
     if (bin1_begin > bin1_end) {
       nNodesInBin1 = bin1_begin - bin1_end;
     }
@@ -297,7 +302,7 @@ auto gbts_seeding_algorithm::create_edges(
   // 2. Find edges between spacepoint pairs.
   const unsigned int nMaxEdges = cfg.max_edges_factor * nNodes;
   // Packed per-edge parameter buffer ([exp(-eta), curv, phi_z, phi_w]).
-  vecmem::data::vector_buffer<float4> edge_params_buf(nMaxEdges, mr().main);
+  vecmem::data::vector_buffer<short4> edge_params_buf(nMaxEdges, mr().main);
   copy().setup(edge_params_buf)->ignore();
   vecmem::data::vector_buffer<uint2> edge_nodes_buf(nMaxEdges, mr().main);
   copy().setup(edge_nodes_buf)->ignore();
@@ -305,12 +310,19 @@ auto gbts_seeding_algorithm::create_edges(
                                                                    mr().main);
   copy().setup(num_incoming_edges_buf)->ignore();
   copy().memset(num_incoming_edges_buf, 0)->ignore();
+  // setup edge param converter
+  const float max_Kappa =
+      std::max(cfg.gbts_make_graph_edges_params.max_Kappa_low_tau,
+               cfg.gbts_make_graph_edges_params.max_Kappa_high_tau);
+  edge_params_converter edge_param_converter(max_Kappa,
+                                             cfg.gbts_sort_nodes_params.maxTau);
 
   gbts_make_graph_edges_kernel(
       {nUsedBinPairs, nMaxEdges, cfg.n_phi_bins, bin_pair_views_buf,
        bin_pair_dphi_buf, node_params, node_phi,
        cfg.gbts_make_graph_edges_params, d_counters + gbts_counter::nEdges,
-       edge_nodes_buf, edge_params_buf, num_incoming_edges_buf});
+       edge_nodes_buf, edge_params_buf, edge_param_converter,
+       num_incoming_edges_buf});
 
   // Read back the number of edges produced.
   copy()(counters_buf, h_counters)->wait();
@@ -353,7 +365,7 @@ auto gbts_seeding_algorithm::create_edges(
   gbts_match_graph_edges_kernel(
       {nEdges, cfg.max_num_neighbours, cfg.gbts_match_graph_edges_params,
        edge_params_buf, edge_nodes_buf, num_incoming_edges_buf, edge_links_buf,
-       num_neighbours_buf, neighbours_buf, reIndexer_buf,
+       num_neighbours_buf, neighbours_buf, reIndexer_buf, edge_param_converter,
        d_counters + gbts_counter::nConnections});
 
   // 5. Edge re-indexing to keep only edges involved in any connection.

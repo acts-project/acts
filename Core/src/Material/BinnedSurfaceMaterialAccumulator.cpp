@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinAdjustment.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/MultiAxisSpec.hpp"
 
 Acts::BinnedSurfaceMaterialAccumulator::BinnedSurfaceMaterialAccumulator(
     const Config& cfg, std::unique_ptr<const Logger> mlogger)
@@ -54,14 +55,14 @@ Acts::BinnedSurfaceMaterialAccumulator::createState(
     // Second attempt from ProtoGridSurfaceMaterial
     auto psgm = dynamic_cast<const ProtoGridSurfaceMaterial*>(surfaceMaterial);
     if (psgm != nullptr) {
-      BinUtility binUtility(psgm->binning());
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - (proto) binning from ProtoGridSurfaceMaterial is "
-                 << binUtility);
-      // Now adjust to surface type
-      binUtility = adjustBinUtility(binUtility, *surface, gctx);
+                 << psgm->binning());
+      // Resolve the deferred binning against the surface bounds
+      BinUtility binUtility(surface->localToGlobalTransform(gctx));
+      binUtility += BinUtility(*resolveMultiAxis(psgm->binning(), *surface));
       // Screen output for Binned Surface material
-      ACTS_DEBUG("       - adjusted binning is " << binUtility);
+      ACTS_DEBUG("       - resolved binning is " << binUtility);
       state->accumulatedMaterial[geoID] =
           AccumulatedSurfaceMaterial(binUtility);
       // Material accumulation  is created for this

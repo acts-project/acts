@@ -9,6 +9,7 @@ set(py_files
     reconstruction.py
     itk.py
     odd.py
+    dataset.py
     uproot.py
     visualization.py
 )

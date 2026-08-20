@@ -261,8 +261,10 @@ class TryAllNavigator final {
       ACTS_VERBOSE("Starting from position " << toString(position)
                                              << " and direction "
                                              << toString(direction));
-      startVolume = m_cfg.trackingGeometry->lowestTrackingVolume(
-          state.options.geoContext, position);
+      startVolume =
+          m_cfg.trackingGeometry
+              ->resolveLowestTrackingVolume(state.options.geoContext, position)
+              .value();
     }
 
     // Initialize current volume, layer and surface

@@ -1,8 +1,10 @@
+add_unittest(BinnedGroup BinnedGroupTests.cpp)
 add_unittest(EstimateTrackParamsFromSeed EstimateTrackParamsFromSeedTest.cpp)
 add_unittest(HoughTransformTest HoughTransformTest.cpp)
 add_unittest(AdaptiveHoughTransformTest HoughAccumulatorSectionTest.cpp)
 add_unittest(StrawLineResiduals StrawLineResidualTest.cpp)
 add_unittest(SphericalSpacePointGrid SphericalSpacePointGridTests.cpp)
+add_unittest(GbtsSeeding GbtsSeedingTests.cpp)
 add_unittest(SpacePointGridPhiBinning SpacePointGridPhiBinningTests.cpp)
 
 if(ACTS_BUILD_PLUGIN_ROOT)

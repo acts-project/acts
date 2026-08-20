@@ -57,6 +57,9 @@ endif()
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 set(ACTS_SOURCELINK_SBO_SIZE "" CACHE STRING "Customize the SBO size used by SourceLink")
 option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
+# code generation related options
+set(ACTS_CODEGEN_PREBUILT_DIR "" CACHE PATH "Directory holding pre-generated code; a generated file found there is used verbatim instead of being regenerated. Defaults to prebuilt-codegen/ next to this file when it exists, which is what release source archives ship")
+option(ACTS_CODEGEN_REQUIRE_PREBUILT "Fail the configure step instead of running the code generators when pre-generated code is missing" OFF)
 # external library options
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
@@ -133,12 +136,13 @@ option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OF
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
 option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
+option(ACTS_BUILD_CORE_UNITTESTS "Build Core unit tests" ON) # only relevant if ACTS_BUILD_UNITTESTS is ON
 if(ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES)
   set(_default_examples_unit_tests ON)
 else()
   set(_default_examples_unit_tests OFF)
 endif()
-option(ACTS_BUILD_EXAMPLES_UNITTESTS "Build unit tests" ${_default_examples_unit_tests}) # default: ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES
+option(ACTS_BUILD_EXAMPLES_UNITTESTS "Build Examples unit tests" ${_default_examples_unit_tests}) # default: ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES
 option(ACTS_RUN_CLANG_TIDY "Run clang-tidy static analysis" OFF)
 # other options
 option(ACTS_BUILD_DOCS "Build documentation" OFF)
@@ -557,6 +561,12 @@ if(ACTS_BUILD_PLUGIN_GNN)
     else()
         message(STATUS "Build GNN plugin for CPU only")
     endif()
+    # FRNN and ModuleMapGraph are built from vendored upstream sources, which
+    # are not ours to keep warning-clean. A normal variable, so it shadows the
+    # cache entry for the subdirectories added below and is restored before any
+    # ACTS target follows.
+    set(_acts_gnn_warning_as_error "${CMAKE_COMPILE_WARNING_AS_ERROR}")
+    set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)
     if(ACTS_GNN_ENABLE_TORCH)
         find_package(Torch REQUIRED)
         if(ACTS_ENABLE_CUDA)
@@ -570,6 +580,7 @@ if(ACTS_BUILD_PLUGIN_GNN)
             add_subdirectory(thirdparty/ModuleMapGraph)
         endif()
     endif()
+    set(CMAKE_COMPILE_WARNING_AS_ERROR "${_acts_gnn_warning_as_error}")
 endif()
 if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_GNN_ENABLE_ONNX)
     find_package(onnxruntime ${_acts_onnxruntime_version} MODULE REQUIRED)
