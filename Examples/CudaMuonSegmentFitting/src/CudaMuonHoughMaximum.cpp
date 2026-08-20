@@ -31,10 +31,8 @@ CudaHoughMaximumBatch::CudaHoughMaximumBatch(size_type nBuckets,
         "CudaHoughMaximumBatch capacityPerBucket must be between 1 and 64");
   }
 
-  constexpr size_type maxUint32 =
-      static_cast<size_type>(std::numeric_limits<std::uint32_t>::max());
-
-  if (m_nBuckets > maxUint32 / m_capacityPerBucket) {
+  if (m_nBuckets >
+      std::numeric_limits<std::uint32_t>::max() / m_capacityPerBucket) {
     throw std::overflow_error(
         "CudaHoughMaximumBatch total capacity must fit into std::uint32_t");
   }
