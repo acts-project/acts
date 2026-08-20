@@ -127,10 +127,13 @@ function retry_transient() {
 }
 
 # Parse command line arguments
-while getopts "c:t:d:e:s:fh" opt; do
+while getopts "c:t:d:e:s:F:fh" opt; do
   case ${opt} in
     c )
       compiler=$OPTARG
+      ;;
+    F )
+      flavor=$OPTARG
       ;;
     t )
       tag=$OPTARG
@@ -155,6 +158,7 @@ while getopts "c:t:d:e:s:fh" opt; do
       echo "  -d <destination> Specify install destination (defaults based on CI environment)"
       echo "  -e <env_file>    Specify environment file to output environments to"
       echo "  -s <cxx_std>     C++ standard for lockfile selection (e.g. 20, 23). Defaults to CXXSTD env var or 20."
+      echo "  -F <flavor>      Accelerator flavor (e.g. cuda13, rocm-gfx90a). Defaults to FLAVOR env var or the host stack."
       echo "  -f               Full dependency installation. Includes Geant4 datasets and Python packages."
       echo "  -h               Show this help message"
       exit 0
@@ -214,6 +218,14 @@ fi
 
 if [ -z "${cxx_std:-}" ]; then
   cxx_std="${CXXSTD:-20}"
+fi
+
+# `host` is the plain CPU stack, published with no flavor token: pass nothing.
+if [ -z "${flavor:-}" ]; then
+  flavor="${FLAVOR:-}"
+fi
+if [ "${flavor}" == "host" ]; then
+  flavor=""
 fi
 
 checkpoint "Create environment file $(realpath "$env_file")"
@@ -336,6 +348,10 @@ if [ "${compiler}" != "default" ]; then
     cmd+=("--compiler-binary" "${compiler}")
 fi
 
+if [ -n "${flavor}" ]; then
+    cmd+=("--flavor" "${flavor}")
+fi
+
 "${cmd[@]}"
 
 checkpoint "Lock file prepared"
@@ -390,6 +406,11 @@ end_section
 
 start_section "Prepare python environment"
 "${view_dir}/bin/python3" -m venv --system-site-packages "$venv_dir"
+# NOTE: pip, not uv, on purpose. The venv is deliberately --system-site-packages
+# so that the packages the spack view already provides (numpy and everything
+# built against it) are reused rather than replaced. pip honours that and skips
+# them; uv ignores system site-packages entirely and installs its own PyPI wheel
+# over the top, which silently swaps out the spack-built stack.
 retry_transient "${venv_dir}/bin/python3" -m pip install pyyaml jinja2
 if [ "${full_install:-false}" == "true" ]; then
   retry_transient "${venv_dir}/bin/python3" -m pip install -r "${SCRIPT_DIR}/../../Python/Examples/tests/requirements.txt"
