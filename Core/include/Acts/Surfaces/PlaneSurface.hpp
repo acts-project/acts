@@ -40,11 +40,6 @@ class PlaneSurface : public RegularSurface {
   friend class Surface;
 
  protected:
-  /// Copy Constructor
-  ///
-  /// @param other is the source surface for the copy
-  PlaneSurface(const PlaneSurface& other);
-
   /// Copy constructor - with shift
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -73,11 +68,19 @@ class PlaneSurface : public RegularSurface {
                         std::shared_ptr<const PlanarBounds> pbounds = nullptr);
 
  public:
+  /// Copy Constructor
+  ///
+  /// @param other is the source surface for the copy
+  PlaneSurface(const PlaneSurface& other);
+
   /// Assignment operator
   ///
   /// @param other The source PlaneSurface for assignment
   /// @return Reference to this PlaneSurface after assignment
   PlaneSurface& operator=(const PlaneSurface& other);
+
+  /// Destructor
+  ~PlaneSurface() override = default;
 
   // Use overloads from `RegularSurface`
   using RegularSurface::globalToLocal;

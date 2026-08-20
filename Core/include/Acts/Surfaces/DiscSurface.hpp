@@ -97,11 +97,6 @@ class DiscSurface : public RegularSurface {
   explicit DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
                        const SurfacePlacementBase& placement);
 
-  /// Copy Constructor
-  ///
-  /// @param other The source surface for the copy
-  DiscSurface(const DiscSurface& other);
-
   /// Copy constructor - with shift
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -111,11 +106,19 @@ class DiscSurface : public RegularSurface {
               const Transform3& shift);
 
  public:
+  /// Copy Constructor
+  ///
+  /// @param other The source surface for the copy
+  DiscSurface(const DiscSurface& other);
+
   /// Assignment operator
   ///
   /// @param other The source sourface for the assignment
   /// @return Reference to this DiscSurface after assignment
   DiscSurface& operator=(const DiscSurface& other);
+
+  /// Destructor
+  ~DiscSurface() override = default;
 
   /// Return the surface type
   /// @return Surface type identifier

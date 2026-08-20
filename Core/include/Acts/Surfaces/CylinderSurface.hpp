@@ -77,11 +77,6 @@ class CylinderSurface : public RegularSurface {
   CylinderSurface(std::shared_ptr<const CylinderBounds> cbounds,
                   const SurfacePlacementBase& placement);
 
-  /// Copy constructor
-  ///
-  /// @param other is the source cylinder for the copy
-  CylinderSurface(const CylinderSurface& other);
-
   /// Copy constructor - with shift
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -91,11 +86,19 @@ class CylinderSurface : public RegularSurface {
                   const Transform3& shift);
 
  public:
+  /// Copy constructor
+  ///
+  /// @param other is the source cylinder for the copy
+  CylinderSurface(const CylinderSurface& other);
+
   /// Assignment operator
   ///
   /// @param other is the source cylinder for the copy
   /// @return Reference to this CylinderSurface after assignment
   CylinderSurface& operator=(const CylinderSurface& other);
+
+  /// Destructor
+  ~CylinderSurface() override = default;
 
   /// The binning position method - is overloaded for r-type binning
   ///

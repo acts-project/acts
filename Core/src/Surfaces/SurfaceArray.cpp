@@ -159,7 +159,10 @@ struct SingleElementLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   const Surface* surfaceRepresentation() const override { return nullptr; }
 
   void fill(const GeometryContext& /*gctx*/,
-            std::span<const Surface* const> /*surfaces*/) override {}
+            std::span<const Surface* const> /*surfaces*/) override {
+    // no-op: the single-element lookup already holds its one surface,
+    // there is nothing to fill into a grid.
+  }
 
   bool isValidBin(std::size_t bin) const override { return bin == 0; }
 
@@ -612,7 +615,11 @@ SurfaceArray::SurfaceArray(SurfaceArray&& other) noexcept = default;
 
 SurfaceArray& SurfaceArray::operator=(SurfaceArray&& other) noexcept = default;
 
-SurfaceArray::~SurfaceArray() = default;
+// Defined out-of-line (rather than defaulted) so the destructor is declared
+// customized: m_gridLookup is a pimpl-style unique_ptr whose pointee type is
+// only complete here, and the class also has a user-provided move
+// constructor above.
+SurfaceArray::~SurfaceArray() {}
 
 std::span<const Surface* const> SurfaceArray::at(std::size_t bin) const {
   return m_gridLookup->at(bin);

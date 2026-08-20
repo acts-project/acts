@@ -41,11 +41,6 @@ class PerigeeSurface : public LineSurface {
   /// @param transform is the transform for position and tilting
   explicit PerigeeSurface(const Transform3& transform);
 
-  /// Copy constructor
-  ///
-  /// @param other is the source surface to be copied
-  PerigeeSurface(const PerigeeSurface& other);
-
   /// Copy constructor - with shift
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -55,11 +50,19 @@ class PerigeeSurface : public LineSurface {
                  const Transform3& shift);
 
  public:
+  /// Copy constructor
+  ///
+  /// @param other is the source surface to be copied
+  PerigeeSurface(const PerigeeSurface& other);
+
   /// Assignment operator
   ///
   /// @param other is the source surface to be assigned
   /// @return Reference to this surface for assignment chaining
   PerigeeSurface& operator=(const PerigeeSurface& other);
+
+  /// Destructor
+  ~PerigeeSurface() override = default;
 
   /// Return the surface type
   /// @return Surface type identifier for perigee surfaces

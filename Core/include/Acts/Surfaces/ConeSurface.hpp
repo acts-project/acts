@@ -68,11 +68,6 @@ class ConeSurface : public RegularSurface {
   ConeSurface(const Transform3& transform,
               std::shared_ptr<const ConeBounds> cbounds);
 
-  /// Copy constructor
-  ///
-  /// @param other is the source cone surface
-  ConeSurface(const ConeSurface& other);
-
   /// Copy constructor - with shift
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -82,11 +77,19 @@ class ConeSurface : public RegularSurface {
               const Transform3& shift);
 
  public:
+  /// Copy constructor
+  ///
+  /// @param other is the source cone surface
+  ConeSurface(const ConeSurface& other);
+
   /// Assignment operator
   ///
   /// @param other is the source surface for the assignment
   /// @return Reference to this ConeSurface after assignment
   ConeSurface& operator=(const ConeSurface& other);
+
+  /// Destructor
+  ~ConeSurface() override = default;
 
   /// The binning position method - is overloaded for r-type binning
   ///

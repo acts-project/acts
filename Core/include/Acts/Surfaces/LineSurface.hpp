@@ -81,12 +81,15 @@ class LineSurface : public Surface {
   explicit LineSurface(const GeometryContext& gctx, const LineSurface& other,
                        const Transform3& shift);
 
- public:
   /// Assignment operator
   ///
   /// @param other is the source surface dor copying
   /// @return Reference to this LineSurface after assignment
   LineSurface& operator=(const LineSurface& other);
+
+ public:
+  /// Destructor
+  ~LineSurface() override = default;
 
   Vector3 normal(const GeometryContext& gctx, const Vector3& pos,
                  const Vector3& direction) const override;
