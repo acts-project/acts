@@ -47,13 +47,6 @@ if(DETRAY_BUILD_TESTING)
                         LINK_LIBRARIES GTest::gtest GTest::gtest_main
                         Boost::program_options detray::core_array detray::test_cpu detray::tools
     )
-
-    # Build the material validation executable.
-    detray_add_executable(material_validation
-                        "material_validation.cpp"
-                        LINK_LIBRARIES GTest::gtest GTest::gtest_main
-                        Boost::program_options detray::core_array detray::test_cpu detray::tools
-    )
 endif()
 
 if(DETRAY_BUILD_BENCHMARKS)
