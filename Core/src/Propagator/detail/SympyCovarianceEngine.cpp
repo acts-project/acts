@@ -16,6 +16,27 @@
 
 namespace Acts::detail {
 
+namespace {
+
+/// Transport a bound covariance, taking the cheaper vacuum kernel where it
+/// applies. d(q/p)/d(q/p) is left untouched by a vacuum step, so it is exactly
+/// one there and the test is structural rather than numerical.
+///
+/// @param jacobian the full bound-to-bound transport jacobian
+/// @param in the covariance to transport
+/// @param [out] out the transported covariance
+void applyBoundCovarianceTransport(const BoundMatrix& jacobian,
+                                   const BoundMatrix& in, BoundMatrix& out) {
+  if (jacobian(eBoundQOverP, eBoundQOverP) == 1) {
+    transportCovarianceToBoundVacuumImpl(in.data(), jacobian.data(),
+                                         out.data());
+  } else {
+    transportCovarianceToBoundDenseImpl(in.data(), jacobian.data(), out.data());
+  }
+}
+
+}  // namespace
+
 /// Some type defs
 using Jacobian = BoundMatrix;
 using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
@@ -141,9 +162,8 @@ void sympy::transportCovarianceToBound(
     // Apply the actual covariance transport to get covariance of the current
     // bound parameters
     BoundMatrix newBoundCovariance;
-    transportCovarianceToBoundImpl(boundCovariance.data(),
-                                   fullTransportJacobian.data(),
-                                   newBoundCovariance.data());
+    applyBoundCovarianceTransport(fullTransportJacobian, boundCovariance,
+                                  newBoundCovariance);
     boundCovariance = newBoundCovariance;
   }
 
@@ -178,9 +198,8 @@ void sympy::transportCovarianceToCurvilinear(
   // Apply the actual covariance transport to get covariance of the current
   // curvilinear parameters
   BoundMatrix newBoundCovariance;
-  transportCovarianceToBoundImpl(boundCovariance.data(),
-                                 fullTransportJacobian.data(),
-                                 newBoundCovariance.data());
+  applyBoundCovarianceTransport(fullTransportJacobian, boundCovariance,
+                                newBoundCovariance);
   boundCovariance = newBoundCovariance;
 
   if (additionalFreeCovariance) {
