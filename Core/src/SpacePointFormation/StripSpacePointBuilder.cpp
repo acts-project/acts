@@ -202,23 +202,22 @@ Result<void> computeConstrainedFormationState(
 Result<void> recoverConstrainedFormationState(
     FormationState& state, const double stripLengthGapTolerance) {
   const double magFirstBtmToTop = state.firstBtmToTop.norm();
+  const double magSecondBtmToTop = state.secondBtmToTop.norm();
   // Increase the limits. This allows a check if the point is just slightly
-  // outside the SDE
-  const double relaxedLimit =
+  // outside the SDE. The tolerance is a length, so it is expressed in units of
+  // the strip it applies to.
+  const double relaxedLimitFirst =
       state.limit + stripLengthGapTolerance / magFirstBtmToTop;
+  const double relaxedLimitSecond =
+      state.limit + stripLengthGapTolerance / magSecondBtmToTop;
 
   // Check if m is just slightly outside
-  if (std::abs(state.m) > relaxedLimit) {
+  if (std::abs(state.m) > relaxedLimitFirst) {
     return Result<void>::failure(
         SpacePointFormationError::OutsideRelaxedLimits);
   }
-  // Calculate n if not performed previously
-  if (state.n == 0) {
-    state.n = -state.vtxToSecondMid2.dot(state.firstBtmToTopXvtxToFirstMid2) /
-              state.secondBtmToTop.dot(state.firstBtmToTopXvtxToFirstMid2);
-  }
   // Check if n is just slightly outside
-  if (std::abs(state.n) > relaxedLimit) {
+  if (std::abs(state.n) > relaxedLimitSecond) {
     return Result<void>::failure(
         SpacePointFormationError::OutsideRelaxedLimits);
   }
@@ -246,8 +245,9 @@ Result<void> recoverConstrainedFormationState(
   const double secOnFirstScale =
       state.firstBtmToTop.dot(state.secondBtmToTop) / square(magFirstBtmToTop);
 
-  // Check if both overshoots are in the same direction
-  if (state.m > 1 && state.n > 1) {
+  // Overshoot beyond the top end of either strip. Only one has to be outside;
+  // the projection drags the other one along and it is re-checked below.
+  if (state.m > state.limit || state.n > state.limit) {
     // Calculate the overshoots
     const double mOvershoot = state.m - 1;
     // Perform projection
@@ -264,8 +264,8 @@ Result<void> recoverConstrainedFormationState(
     return Result<void>::success();
   }
 
-  // Check if both overshoots are in the same direction
-  if (state.m < -1 && state.n < -1) {
+  // Overshoot beyond the bottom end of either strip
+  if (state.m < -state.limit || state.n < -state.limit) {
     // Calculate the overshoots
     const double mOvershoot = -(state.m + 1);
     // Perform projection
@@ -282,7 +282,7 @@ Result<void> recoverConstrainedFormationState(
     return Result<void>::success();
   }
 
-  // No solution could be found
+  // Unreachable: one of the two branches above covers every way in here
   return Result<void>::failure(SpacePointFormationError::NoSolutionFound);
 }
 
