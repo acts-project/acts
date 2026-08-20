@@ -38,20 +38,20 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
     : m_cfg(config),
       m_geometry(std::move(geometry)),
       m_logger(std::move(logger)) {
-  m_mlLut = parseGbtsMlLookupTable(m_cfg.lutInputFile);
+  m_tauLut = parseTauLookupTable(m_cfg.lutInputFile);
 }
 
 GbtsNodeStorage GraphBasedTrackSeeder::makeNodeStorage(
     const std::vector<bool>& isPixelLayer) const {
   GbtsNodeStorage::Config config;
   config.isPixelLayer = isPixelLayer;
-  config.useMl = m_cfg.useMl;
+  config.useClusterWidthCuts = m_cfg.useClusterWidthCuts;
   config.maxEndcapClusterWidth = m_cfg.maxEndcapClusterWidth;
   config.moduleHalfLengthY = m_cfg.moduleHalfLengthY;
   config.moduleEdgeTolerance = m_cfg.moduleEdgeTolerance;
   config.phiSliceWidth = m_cfg.phiSliceWidth;
 
-  return GbtsNodeStorage(std::move(config), m_geometry, m_mlLut);
+  return GbtsNodeStorage(std::move(config), m_geometry, m_tauLut);
 }
 
 void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer& spacePoints,
@@ -81,7 +81,7 @@ void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
                                         SeedContainer& outputSeeds) const {
   ACTS_DEBUG("Loaded " << nodeStorage.numberOfNodes() << " graph nodes");
 
-  std::vector<GbtsEdge> edgeStorage;
+  std::vector<detail::GbtsEdge> edgeStorage;
 
   std::pair<std::int32_t, std::int32_t> graphStats =
       buildTheGraph(roi, nodeStorage, edgeStorage, options);
@@ -114,30 +114,30 @@ void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
   }
 }
 
-GbtsMlLookupTable GraphBasedTrackSeeder::parseGbtsMlLookupTable(
+detail::GbtsTauLookupTable GraphBasedTrackSeeder::parseTauLookupTable(
     const std::string& lutInputFile) {
-  if (!m_cfg.useMl) {
+  if (!m_cfg.useClusterWidthCuts) {
     return {};
   }
   if (lutInputFile.empty()) {
-    throw std::runtime_error("Cannot find ML predictor LUT file");
+    throw std::runtime_error("Cannot find tau lookup table file");
   }
 
   std::ifstream ifs(std::string(lutInputFile).c_str());
   if (!ifs.is_open()) {
-    throw std::runtime_error("Failed to open LUT file");
+    throw std::runtime_error("Failed to open tau lookup table file");
   }
 
-  GbtsMlLookupTable mlLut;
-  mlLut.reserve(100);
+  detail::GbtsTauLookupTable tauLut;
+  tauLut.reserve(100);
 
-  float clWidth{};
-  float min1{};
-  float max1{};
-  float min2{};
-  float max2{};
-  while (ifs >> clWidth >> min1 >> max1 >> min2 >> max2) {
-    mlLut.push_back({clWidth, min1, max1, min2, max2});
+  // per line: cluster width, bulk tau bounds, near-edge tau bounds. The width
+  // is dropped - rows are located by index, never searched.
+  float clusterWidth{};
+  detail::GbtsTauBounds bounds;
+  while (ifs >> clusterWidth >> bounds.minTau >> bounds.maxTau >>
+         bounds.minTauNearEdge >> bounds.maxTauNearEdge) {
+    tauLut.push_back(bounds);
   }
 
   if (!ifs.eof()) {
@@ -145,12 +145,12 @@ GbtsMlLookupTable GraphBasedTrackSeeder::parseGbtsMlLookupTable(
     throw std::runtime_error("Stopped reading LUT file due to parse error");
   }
 
-  return mlLut;
+  return tauLut;
 }
 
 std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
     const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
-    std::vector<GbtsEdge>& edgeStorage, const Options& options) const {
+    std::vector<detail::GbtsEdge>& edgeStorage, const Options& options) const {
   // used to calculate Z cut on doublets
   const float cutZMinU =
       m_cfg.minZ0 + m_cfg.maxOuterRadius * static_cast<float>(roi.dzdrMin());
@@ -193,13 +193,15 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
   const std::uint32_t zBins = 16;
   const float z0HistoCoeff = zBins / (m_cfg.maxZ0 - m_cfg.minZ0 + 1e-6);
 
-  const GbtsNodeView nodeView = nodeStorage.nodeView();
-  const std::span<const GbtsNodeParams> params = nodeStorage.nodeParams();
-  const std::span<GbtsNodeEdgeInfo> edgeInfo = nodeStorage.nodeEdgeInfo();
+  const detail::GbtsNodeView nodeView = nodeStorage.nodeView();
+  const std::span<const detail::GbtsNodeParams> params =
+      nodeStorage.nodeParams();
+  const std::span<detail::GbtsNodeEdgeInfo> edgeInfo =
+      nodeStorage.nodeEdgeInfo();
 
   // loop over bin groups
   for (const auto& bg : m_geometry->binGroups()) {
-    const GbtsEtaBinInfo& B1 = nodeStorage.etaBin(bg.first);
+    const detail::GbtsEtaBinInfo& B1 = nodeStorage.etaBin(bg.first);
 
     if (B1.empty()) {
       continue;
@@ -222,7 +224,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
     // loop over n2 eta-bins in L2 layers
     for (const auto& b2Idx : bg.second) {
-      const GbtsEtaBinInfo& B2 = nodeStorage.etaBin(b2Idx);
+      const detail::GbtsEtaBinInfo& B2 = nodeStorage.etaBin(b2Idx);
 
       if (B2.empty()) {
         ++winIdx;
@@ -253,7 +255,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
     }
 
     // in GBTSv3 the outer loop goes over n1 nodes in the Layer 1 bin
-    for (GbtsNodeIndex n1Idx = B1.nodes.first; n1Idx < B1.nodes.second;
+    for (SpacePointIndex n1Idx = B1.nodes.first; n1Idx < B1.nodes.second;
          ++n1Idx) {
       // initialization using the top watermark of the edge storage
       edgeInfo[n1Idx].firstEdge = nEdges;
@@ -265,7 +267,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
       std::array<std::uint8_t, 16> z0Histo = {};
 
-      const GbtsNodeParams& n1pars = params[n1Idx];
+      const detail::GbtsNodeParams& n1pars = params[n1Idx];
 
       const float phi1 = n1pars.phi;
       const float r1 = n1pars.r;
@@ -277,7 +279,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
           continue;
         }
 
-        const GbtsEtaBinInfo& B2 = *slw.etaBin;
+        const detail::GbtsEtaBinInfo& B2 = *slw.etaBin;
 
         const std::uint32_t lk2 = B2.layerId;
 
@@ -305,9 +307,9 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
             break;
           }
 
-          const GbtsNodeIndex n2Idx = B2.phiNodes[n2PhiIdx].second;
+          const SpacePointIndex n2Idx = B2.phiNodes[n2PhiIdx].second;
 
-          const GbtsNodeEdgeInfo& n2Info = edgeInfo[n2Idx];
+          const detail::GbtsNodeEdgeInfo& n2Info = edgeInfo[n2Idx];
 
           const std::uint16_t nodeInfo = n2Info.isConnected;
 
@@ -320,7 +322,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
           const std::uint16_t n2NumEdges = n2Info.numEdges;
           const std::uint32_t n2LastEdge = n2FirstEdge + n2NumEdges;
 
-          const GbtsNodeParams& n2pars = params[n2Idx];
+          const detail::GbtsNodeParams& n2pars = params[n2Idx];
 
           const float r2 = n2pars.r;
 
@@ -433,9 +435,9 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
             // looking for neighbours of the new edge
             for (std::uint32_t inEdgeIdx = n2FirstEdge; inEdgeIdx < n2LastEdge;
                  ++inEdgeIdx) {
-              GbtsEdge* pS = &(edgeStorage.at(inEdgeIdx));
+              detail::GbtsEdge* pS = &(edgeStorage.at(inEdgeIdx));
 
-              if (pS->nNei >= kGbtsMaxEdgeNeighbours) {
+              if (pS->nNei >= detail::kGbtsMaxEdgeNeighbours) {
                 continue;
               }
 
@@ -489,7 +491,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
               if (m_cfg.validateTriplets) {
                 // Pixel barrel
                 if (isBarrel1 && isBarrel2 && isBarrel3) {
-                  const std::array<GbtsNodeIndex, 3> candidateTriplet = {
+                  const std::array<SpacePointIndex, 3> candidateTriplet = {
                       n1Idx, n2Idx, pS->n2};
 
                   if (!validateTriplet(nodeView, candidateTriplet, tripletPtMin,
@@ -549,17 +551,18 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 }
 
 std::int32_t GraphBasedTrackSeeder::runCCA(
-    const std::uint32_t nEdges, std::vector<GbtsEdge>& edgeStorage) const {
+    const std::uint32_t nEdges,
+    std::vector<detail::GbtsEdge>& edgeStorage) const {
   constexpr std::uint32_t maxIter = 15;
 
   std::int32_t maxLevel = 0;
 
   std::uint32_t iter = 0;
 
-  std::vector<GbtsEdge*> vOld;
+  std::vector<detail::GbtsEdge*> vOld;
 
   for (std::uint32_t edgeIndex = 0; edgeIndex < nEdges; ++edgeIndex) {
-    GbtsEdge* pS = &(edgeStorage[edgeIndex]);
+    detail::GbtsEdge* pS = &(edgeStorage[edgeIndex]);
     if (pS->nNei == 0) {
       continue;
     }
@@ -569,20 +572,20 @@ std::int32_t GraphBasedTrackSeeder::runCCA(
     vOld.push_back(pS);
   }
 
-  std::vector<GbtsEdge*> vNew;
+  std::vector<detail::GbtsEdge*> vNew;
   vNew.reserve(vOld.size());
 
   // generate proposals
   for (; iter < maxIter; iter++) {
     vNew.clear();
 
-    for (GbtsEdge* pS : vOld) {
+    for (detail::GbtsEdge* pS : vOld) {
       std::int32_t nextLevel = pS->level;
 
       for (std::uint32_t nIdx = 0; nIdx < pS->nNei; ++nIdx) {
         const std::uint32_t nextEdgeIdx = pS->vNei[nIdx];
 
-        GbtsEdge* pN = &(edgeStorage[nextEdgeIdx]);
+        detail::GbtsEdge* pN = &(edgeStorage[nextEdgeIdx]);
 
         if (pS->level == pN->level) {
           nextLevel = pS->level + 1;
@@ -622,10 +625,11 @@ std::int32_t GraphBasedTrackSeeder::runCCA(
 
 void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     std::uint32_t maxLevel, std::uint32_t nEdges,
-    const GbtsNodeStorage& nodeStorage, std::vector<GbtsEdge>& edgeStorage,
+    const GbtsNodeStorage& nodeStorage,
+    std::vector<detail::GbtsEdge>& edgeStorage,
     std::vector<OutputSeedProperties>& vOutputSeeds,
     const GbtsTrackingFilter& filter) const {
-  const GbtsNodeView nodeView = nodeStorage.nodeView();
+  const detail::GbtsNodeView nodeView = nodeStorage.nodeView();
   // a triplet + 1 confirmation
   std::uint8_t minLevel = 3;
 
@@ -638,12 +642,12 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     return;
   }
 
-  std::vector<GbtsEdge*> vChainHeads;
+  std::vector<detail::GbtsEdge*> vChainHeads;
 
   vChainHeads.reserve(nEdges / 2);
 
   for (std::uint32_t edgeIndex = 0; edgeIndex < nEdges; ++edgeIndex) {
-    GbtsEdge* pS = &(edgeStorage.at(edgeIndex));
+    detail::GbtsEdge* pS = &(edgeStorage.at(edgeIndex));
 
     if (m_cfg.lrtMode || !m_cfg.addTriplets) {
       if (pS->level < minLevel) {
@@ -671,7 +675,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
   }
 
   std::ranges::sort(vChainHeads, std::ranges::greater{},
-                    [](const GbtsEdge* e) { return e->level; });
+                    [](const detail::GbtsEdge* e) { return e->level; });
 
   // backtracking
 
@@ -687,12 +691,12 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
   GbtsTrackingFilter::State filterState{};
 
-  for (GbtsEdge* pS : vChainHeads) {
+  for (detail::GbtsEdge* pS : vChainHeads) {
     if (pS->level == -1) {
       continue;
     }
 
-    GbtsEdgeState rs =
+    detail::GbtsEdgeState rs =
         filter.followTrack(filterState, nodeView, edgeStorage, *pS);
 
     if (!rs.initialized) {
@@ -719,7 +723,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
       }
     }
 
-    std::vector<GbtsNodeIndex> vN;
+    std::vector<SpacePointIndex> vN;
 
     for (auto sIt = rs.vs.rbegin(); sIt != rs.vs.rend(); ++sIt) {
       if (seedAbsEta > m_cfg.edgeMaskMinEta) {
@@ -752,7 +756,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     // split the seed by dropping spacepoints
     if (seedSplitFlag != 0) {
       // 2. "drop-outs" and the original seed candidate
-      std::array<std::array<GbtsNodeIndex, 3>, 3> triplets{};
+      std::array<std::array<SpacePointIndex, 3>, 3> triplets{};
 
       // triplet parameter estimate
       std::array<float, 3> invRads{};
@@ -760,12 +764,12 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
       triplets[0] = {vN[0], vN[origSeedSize / 2], vN[origSeedSize - 1]};
 
       // all but the first one
-      const std::vector<GbtsNodeIndex> dropOut1(vN.begin() + 1, vN.end());
+      const std::vector<SpacePointIndex> dropOut1(vN.begin() + 1, vN.end());
 
       triplets[1] = {dropOut1[0], dropOut1[(origSeedSize - 1) / 2],
                      dropOut1[origSeedSize - 2]};
 
-      std::vector<GbtsNodeIndex> dopOut2;
+      std::vector<SpacePointIndex> dopOut2;
 
       dopOut2.reserve(origSeedSize - 1);
 
@@ -818,7 +822,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     ++trackId;
 
     // loop over space points indices
-    for (const GbtsNodeIndex node : seed.nodes) {
+    for (const SpacePointIndex node : seed.nodes) {
       const std::uint32_t hitId = node + 1;
 
       const std::uint32_t tid = h2t[hitId];
@@ -844,7 +848,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     ++trackIdx;
 
-    for (const GbtsNodeIndex node : seed) {
+    for (const SpacePointIndex node : seed) {
       const std::uint32_t hitId = node + 1;
 
       const std::uint32_t tid = h2t[hitId];
@@ -956,14 +960,14 @@ bool GraphBasedTrackSeeder::checkZ0BitMask(const std::uint16_t z0BitMask,
 }
 
 float GraphBasedTrackSeeder::estimateCurvature(
-    const GbtsNodeView& nodeView,
-    const std::array<GbtsNodeIndex, 3>& nodes) const {
+    const detail::GbtsNodeView& nodeView,
+    const std::array<SpacePointIndex, 3>& nodes) const {
   // conformal mapping with the center at the last spacepoint
 
   std::array<float, 2> u{};
   std::array<float, 2> v{};
 
-  const GbtsNodeProxy n0 = nodeView[nodes[2]];
+  const detail::GbtsNodeProxy n0 = nodeView[nodes[2]];
 
   const float x0 = n0.x();
   const float y0 = n0.y();
@@ -975,7 +979,7 @@ float GraphBasedTrackSeeder::estimateCurvature(
   const float sinA = y0 / r0;
 
   for (std::uint32_t k = 0; k < 2; k++) {
-    const GbtsNodeProxy nk = nodeView[nodes[k]];
+    const detail::GbtsNodeProxy nk = nodeView[nodes[k]];
 
     const float dx = nk.x() - x0;
 
@@ -1006,8 +1010,8 @@ float GraphBasedTrackSeeder::estimateCurvature(
 }
 
 bool GraphBasedTrackSeeder::validateTriplet(
-    const GbtsNodeView& nodeView,
-    const std::array<GbtsNodeIndex, 3>& candidateTriplet,
+    const detail::GbtsNodeView& nodeView,
+    const std::array<SpacePointIndex, 3>& candidateTriplet,
     const float tripletMinPt, const float tauRatio, const float tauRatioCut,
     const Options& options) const {
   // conformal mapping with the center at the middle spacepoint
@@ -1015,7 +1019,7 @@ bool GraphBasedTrackSeeder::validateTriplet(
   std::array<float, 2> u{};
   std::array<float, 2> v{};
 
-  const GbtsNodeProxy n0 = nodeView[candidateTriplet[1]];
+  const detail::GbtsNodeProxy n0 = nodeView[candidateTriplet[1]];
 
   const float x0 = n0.x();
   const float y0 = n0.y();
@@ -1029,7 +1033,7 @@ bool GraphBasedTrackSeeder::validateTriplet(
   for (std::uint32_t k = 0; k < 2; k++) {
     const std::uint32_t spIdx = (k == 1) ? 2 : k;
 
-    const GbtsNodeProxy nk = nodeView[candidateTriplet[spIdx]];
+    const detail::GbtsNodeProxy nk = nodeView[candidateTriplet[spIdx]];
 
     const float dx = nk.x() - x0;
 
