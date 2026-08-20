@@ -18,13 +18,9 @@ namespace Acts::detail {
 
 namespace {
 
-/// Transport a bound covariance, picking the cheaper kernel where it applies
-///
-/// d(q/p)/d(q/p) is exactly one unless the track crossed material: the vacuum
-/// step kernel never writes that entry of the bound-to-free jacobian, so it
-/// keeps the value initialisation gave it, bit for bit. The comparison is
-/// therefore structural rather than numerical, and the vacuum path skips the
-/// multiplications the dense one needs.
+/// Transport a bound covariance, taking the cheaper vacuum kernel where it
+/// applies. d(q/p)/d(q/p) is left untouched by a vacuum step, so it is exactly
+/// one there and the test is structural rather than numerical.
 ///
 /// @param jacobian the full bound-to-bound transport jacobian
 /// @param in the covariance to transport
@@ -32,7 +28,8 @@ namespace {
 void applyBoundCovarianceTransport(const BoundMatrix& jacobian,
                                    const BoundMatrix& in, BoundMatrix& out) {
   if (jacobian(eBoundQOverP, eBoundQOverP) == 1) {
-    transportCovarianceToBoundImpl(in.data(), jacobian.data(), out.data());
+    transportCovarianceToBoundVacuumImpl(in.data(), jacobian.data(),
+                                         out.data());
   } else {
     transportCovarianceToBoundDenseImpl(in.data(), jacobian.data(), out.data());
   }

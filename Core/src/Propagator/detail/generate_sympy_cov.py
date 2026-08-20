@@ -21,15 +21,11 @@ C = MatrixSymbol("C", 6, 6).as_explicit().as_mutable()
 for indices in np.ndindex(C.shape):
     C[indices] = C[tuple(sorted(indices))]
 
-# The bound-to-bound jacobian's shape, as generate_sympy_jac.py produces it and
-# now asserts: nothing depends on time, and q/p depends on nothing but itself.
-#
-# Its q/p diagonal is one only in vacuum, where the step kernel never writes
-# that entry of the bound-to-free jacobian, so it keeps the value
-# initialisation gave it.  A dense step does write it -- energy loss makes
-# d(q/p out)/d(q/p in) differ from one -- so the two cases get their own
-# transport: the vacuum one folds the diagonal away as a literal, the dense one
-# carries it.
+# The bound-to-bound jacobian's shape, as generate_sympy_jac.py asserts it:
+# nothing depends on time, and q/p depends on nothing but itself. Its q/p
+# diagonal is one in vacuum but not through material -- energy loss moves it --
+# so each case gets its own transport, and the vacuum one folds the diagonal
+# away as a literal.
 
 
 def bound_to_bound_jacobian(qop_diagonal):
@@ -58,11 +54,9 @@ def covariance_transport_generic(qop_diagonal=False):
 
 
 def check_vacuum_is_dense_at_unit_diagonal():
-    """Assert the vacuum transport is the dense one with a unit q/p diagonal.
+    """Assert the vacuum transport is the dense one at d(q/p)/d(q/p) == 1.
 
-    The two are printed as separate functions so the vacuum path does not carry
-    the extra multiplications, which means nothing otherwise stops them
-    drifting apart.
+    They are printed as two functions, so nothing else keeps them in step.
 
     Raises AssertionError if they disagree.
     """
@@ -90,7 +84,7 @@ def my_covariance_transport_generic_function_print(name_exprs, name, run_cse=Tru
     lines = []
 
     head = (
-        f"template <typename T> void {name}(" "const T* C, const T* J_full, T* new_C) {"
+        f"template <typename T> void {name}(const T* C, const T* J_full, T* new_C) {{"
     )
     lines.append(head)
 
@@ -126,7 +120,7 @@ output.write("""// This file is part of the ACTS project.
 check_vacuum_is_dense_at_unit_diagonal()
 
 for name, qop_diagonal in (
-    ("transportCovarianceToBoundImpl", False),
+    ("transportCovarianceToBoundVacuumImpl", False),
     ("transportCovarianceToBoundDenseImpl", True),
 ):
     code = my_covariance_transport_generic_function_print(
