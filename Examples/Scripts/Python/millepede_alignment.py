@@ -181,9 +181,6 @@ alignDecoConfig.nominalStore = GeoIdAlignmentStore(
     )
 )
 alignDecoConfig.iovGenerators = [((0, 10000000), leShift)]
-# Only simulation and digitization see the shifted layer. Reconstruction and the
-# alignment refit stay on the nominal geometry, so the shift shows up as a
-# residual for the alignment to fit out.
 alignDecoConfig.target = AlignmentDecorator.Target.eSim
 alignDeco = AlignmentDecorator(alignDecoConfig, acts.logging.WARNING)
 contextDecorators = [alignDeco]

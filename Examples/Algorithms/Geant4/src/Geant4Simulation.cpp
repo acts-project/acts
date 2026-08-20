@@ -136,11 +136,8 @@ ProcessCode Geant4SimulationBase::execute(const AlgorithmContext& ctx) const {
   // Register the input particle read handle
   eventStore().inputParticles = &m_inputParticles;
 
-  // Note this does not misalign the Geant4 geometry. The G4 volumes are built
-  // once and are not context aware, so a per-event alignment never reaches G4
-  // transport; the context is only used by the user actions, e.g. to test
-  // whether a particle is inside an Acts volume. Use Fatras to simulate a
-  // detector that is placed differently from what reconstruction assumes.
+  // Only reaches the user actions. The G4 geometry itself is not context aware,
+  // so use Fatras to simulate a misaligned detector.
   eventStore().geoContext = ctx.simGeoContext;
 
   ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");

@@ -118,12 +118,11 @@ def test_alignmentdecorator_sim_reco_split(tmp_path, target):
     """Simulation and reconstruction can run on different module placements.
 
     With target=eBoth the shift is known to reconstruction and residuals stay
-    centred. With target=eSim only simulation sees it, and the shifted layer
-    picks up a bias - which is the whole point of the two geometry contexts.
+    centred. With target=eSim only simulation sees it and the shifted layer picks
+    up a bias.
     """
     pytest.importorskip("uproot")
 
-    import acts
     from acts import UnitConstants as u
     from acts.examples import RandomNumbers, Sequencer, TelescopeDetector
     from acts.examples.alignment import AlignmentDecorator

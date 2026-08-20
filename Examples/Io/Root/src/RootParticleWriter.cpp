@@ -194,8 +194,7 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
     // Start from truth curvilinear parameters (direction, q/p)
     const Acts::Vector3 startDir = particle.direction();  // unit vector
     const auto qOverP = particle.qOverP();                // ACTS units
-    // The perigee surface carries no detector element, so no alignment payload
-    // applies and the choice of geometry context does not change the numbers.
+    // The perigee surface is not aligned, so either context works
     auto intersection =
         pSurface
             ->intersect(ctx.recoGeoContext, particle.position(), startDir,

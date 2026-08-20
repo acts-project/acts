@@ -42,16 +42,11 @@ class AlignmentDecorator : public IContextDecorator {
   /// of the validity interval.
   using IOV = std::array<std::size_t, 2>;
 
-  /// Which geometry context of the AlgorithmContext this decorator writes.
-  ///
-  /// Writing only @c eSim leaves reconstruction on the nominal geometry, which
-  /// is the setup needed to study alignment: the detector is built one way and
-  /// reconstructed as if it were built another. Chain two decorators to give
-  /// simulation and reconstruction two different non-nominal alignments.
+  /// Which geometry context(s) of the AlgorithmContext to decorate.
   enum class Target {
     eSim,   ///< only the simulation geometry
     eReco,  ///< only the reconstruction geometry
-    eBoth,  ///< both, i.e. a detector that is misaligned but perfectly known
+    eBoth,  ///< both, i.e. a misaligned but perfectly known detector
   };
 
   /// Configuration struct

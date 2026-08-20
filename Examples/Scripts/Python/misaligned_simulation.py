@@ -3,13 +3,8 @@
 
 The `AlignmentDecorator` writes its alignment into the simulation geometry context
 only, so Fatras and the digitization see a shifted layer while seeding, the CKF and
-the fit stay on the nominal geometry. The shift then shows up as a bias in the
-track state residuals of that layer, which is what an alignment procedure has to
-recover.
-
-Writing measurements out of a simulation job and reading them back into a separate
-reconstruction job is not necessary for this - both geometries live in the same
-sequence.
+the fit stay on the nominal geometry. The shift shows up as a bias in the track
+state residuals of that layer.
 """
 
 import argparse
@@ -78,8 +73,7 @@ def addMisalignment(
             acts.GeometryContext.dangerouslyDefaultConstruct(), geoId
         )
     )
-    # A single IOV covering the whole run - the point here is the sim/reco split,
-    # not time dependence.
+    # A single IOV covering the whole run, no time dependence
     cfg.iovGenerators = [((0, 10000000), generator)]
 
     decorator = AlignmentDecorator(cfg, logLevel)
@@ -200,9 +194,9 @@ def main():
         choices=["sim", "reco", "both"],
         default="sim",
         help=(
-            "which geometry context sees the shift. 'sim' is the interesting one: "
-            "the detector is built shifted and reconstructed as if it were not. "
-            "'both' means the shift is perfectly known and residuals stay centred."
+            "which geometry context sees the shift. 'sim' and 'reco' put the "
+            "detector and the reconstruction hypothesis out of step, 'both' keeps "
+            "the shift perfectly known and residuals centred."
         ),
     )
     args = parser.parse_args()
@@ -239,8 +233,7 @@ def main():
     print(
         f"\nWrote {args.output / 'trackstates_ckf.root'}. The residual "
         f"res_eLOC0/res_eLOC1 for volume 1 layer {args.layer} carries the "
-        f"{args.shift} mm shift when --target sim, and is centred on zero when "
-        f"--target both."
+        f"{args.shift} mm shift unless --target both."
     )
 
 

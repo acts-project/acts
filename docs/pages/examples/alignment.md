@@ -50,9 +50,16 @@ therefore no alignment payload.
 
 | Target | Effect |
 | --- | --- |
-| `eSim` | Only simulation sees the alignment. Reconstruction stays nominal - this is the alignment study setup. |
-| `eReco` | Only reconstruction sees it. |
+| `eSim` | Only simulation sees the alignment, reconstruction stays nominal. |
+| `eReco` | Only reconstruction sees it, simulation stays on the design geometry. |
 | `eBoth` | Both, i.e. a detector that is misaligned but perfectly known. This is the default. |
+
+Either single-sided target produces the sim/reco mismatch an alignment study
+needs. `eReco` is usually the more convenient one: simulation stays on the design
+geometry, so the truth sample is the same across all distortions and can be
+reused. Reach for `eSim` when the built geometry itself is what varies, for
+example a test beam telescope whose acceptance depends on where the modules
+really sit.
 
 Chain two decorators to give simulation and reconstruction two *different*
 non-nominal alignments, which is what an alignment iteration looks like.
@@ -66,6 +73,9 @@ non-nominal alignments, which is what an alignment iteration looks like.
 - **Navigation is built on the nominal geometry.** Layer arrays, volume
   boundaries and surface binning are constructed once, so misalignments have to
   stay small enough not to break navigation.
+- **A single-sided target degrades pattern recognition.** Seeding and track
+  finding work in `recoGeoContext`, so a shift they do not know about costs
+  efficiency before it ever reaches the fit.
 
 ## Where to look
 
