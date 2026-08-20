@@ -43,7 +43,7 @@ namespace ActsExamples {
 /// memory storage
 ///
 /// @param rawId -> Muon ID as given to MuonSpacePoint
-/// @return Layer number in range of 0..31
+/// @return Layer number in range of 0..15
 __host__ __device__ inline unsigned detLayer(std::uint32_t rawId) noexcept {
   static constexpr std::uint32_t fourBit = 0xFu;
   static constexpr std::uint32_t layerShift = 17u;
@@ -52,6 +52,8 @@ __host__ __device__ inline unsigned detLayer(std::uint32_t rawId) noexcept {
 }
 
 /// Return whether a raw MuonId identifies an MDT measurement.
+/// The bit-field logic follows MuonSpacePoint.cpp; see that file for the full
+/// MuonId encoding.
 __host__ __device__ inline bool muonIdIsMdt(std::uint32_t rawId) noexcept {
   static constexpr std::uint32_t threeBit = 0x7u;
   static constexpr std::uint32_t technologyShift = 5u;
@@ -60,6 +62,8 @@ __host__ __device__ inline bool muonIdIsMdt(std::uint32_t rawId) noexcept {
 }
 
 /// Return whether a raw MuonId measures the precision (Eta) coordinate.
+/// The bit-field logic follows MuonSpacePoint.cpp; see that file for the full
+/// MuonId encoding.
 __host__ __device__ inline bool muonIdMeasuresEta(
     std::uint32_t rawId) noexcept {
   static constexpr std::uint32_t etaFlag = 1u << 14u;
