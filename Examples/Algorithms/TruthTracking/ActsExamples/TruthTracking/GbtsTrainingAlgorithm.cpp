@@ -205,7 +205,7 @@ ProcessCode GbtsTrainingAlgorithm::execute(const AlgorithmContext& ctx) const {
     }
 
     {
-      std::lock_guard<std::mutex> lock(m_gbtsTrainingToolMutex);
+      std::lock_guard<std::mutex> lock(m_gbtsLayerConnectionToolMutex);
       m_layerConnectionTool->addTrack(coords);
     }
   }

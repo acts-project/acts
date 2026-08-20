@@ -111,13 +111,13 @@ Acts::Result<void> createStripSpacePoint(
     const ConstVariableBoundMeasurementProxy& measurement1,
     const ConstVariableBoundMeasurementProxy& measurement2,
     const IndexSourceLink& sourceLink1, const IndexSourceLink& sourceLink2,
+    const Acts::StripSpacePointBuilder::ConstrainedOptions& options,
     SpacePointContainer& spacePoints) {
   const Acts::StripSpacePointBuilder::StripEnds stripEnds1 =
       getStripEnds(gctx, surface1, measurement1);
   const Acts::StripSpacePointBuilder::StripEnds stripEnds2 =
       getStripEnds(gctx, surface2, measurement2);
 
-  const Acts::StripSpacePointBuilder::ConstrainedOptions options{};
   const Acts::Result<Acts::Vector3> spacePoint =
       Acts::StripSpacePointBuilder::computeConstrainedSpacePoint(
           stripEnds1, stripEnds2, options);
@@ -401,6 +401,11 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
       done.insert(mod2);
     }
 
+    Acts::StripSpacePointBuilder::ConstrainedOptions constrainedOptions;
+    constrainedOptions.vertex = m_cfg.stripVertex;
+    constrainedOptions.stripLengthTolerance = m_cfg.stripLengthTolerance;
+    constrainedOptions.stripLengthGapTolerance = m_cfg.stripLengthGapTolerance;
+
     // Loop over the collected source link pairs
     for (const auto& [sourceLink1, sourceLink2] : stripSourceLinkPairs) {
       // In the following, we collect the 3D coordinates of the strip endpoints
@@ -426,7 +431,7 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
 
       Acts::Result<void> spResult = createStripSpacePoint(
           ctx.recoGeoContext, surface1, surface2, measurement1, measurement2,
-          sourceLink1, sourceLink2, spacePoints);
+          sourceLink1, sourceLink2, constrainedOptions, spacePoints);
       if (!spResult.ok()) {
         ACTS_DEBUG("Skipping strip space point: " << spResult.error());
       }

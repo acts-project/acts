@@ -250,52 +250,35 @@ function(detray_add_flag name value)
 endfunction(detray_add_flag)
 
 # Generate a single detray sympy codegen header via acts_code_generation and
-# install it alongside the other detray headers.
+# install it alongside the other detray headers. What is generated and where it
+# ends up is described in the ACTS codegen manifest; only the key is given here.
 #
 # Usage: detray_add_codegen_header(
 #            TARGET detray_core
-#            CODEGEN_DIR ${detray_codegen_dir}
-#            ACTS_CODEGEN_PKG ${acts_codegen_pkg}
-#            SCRIPT gen_full_jacobian.py
-#            OUTPUT detray/propagator/detail/codegen/full_jacobian.hpp
+#            KEY Detray/core/detray/propagator/detail/codegen/full_jacobian.hpp
 #        )
 #
 function(detray_add_codegen_header)
-    set(oneValueArgs
-        TARGET
-        CODEGEN_DIR
-        ACTS_CODEGEN_PKG
-        SCRIPT
-        OUTPUT
-    )
+    set(oneValueArgs TARGET KEY)
     cmake_parse_arguments(ARG "" "${oneValueArgs}" "" ${ARGN})
 
-    if(
-        NOT ARG_TARGET
-        OR NOT ARG_SCRIPT
-        OR NOT ARG_OUTPUT
-        OR NOT ARG_CODEGEN_DIR
-        OR NOT ARG_ACTS_CODEGEN_PKG
-    )
+    if(NOT ARG_TARGET OR NOT ARG_KEY)
         message(
             FATAL_ERROR
-            "detray_add_codegen_header: TARGET, CODEGEN_DIR, ACTS_CODEGEN_PKG, SCRIPT and OUTPUT are required"
+            "detray_add_codegen_header: TARGET and KEY are required"
         )
     endif()
 
     acts_code_generation(
         ADD_TO_TARGET ${ARG_TARGET}
-        PYTHON ${ARG_CODEGEN_DIR}/${ARG_SCRIPT}
-        WITH_REQUIREMENTS ${ARG_ACTS_CODEGEN_PKG}/requirements.txt
-        WITH ${ARG_ACTS_CODEGEN_PKG}
-        ISOLATED
-        OUTPUT ${ARG_OUTPUT}
+        KEY ${ARG_KEY}
         RESULT_INCLUDE_DIR _gen_root
+        RESULT_OUTPUT _output
     )
 
-    get_filename_component(_output_subdir ${ARG_OUTPUT} DIRECTORY)
+    get_filename_component(_output_subdir ${_output} DIRECTORY)
     install(
-        FILES ${_gen_root}/${ARG_OUTPUT}
+        FILES ${_gen_root}/${_output}
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${_output_subdir}
     )
 endfunction(detray_add_codegen_header)

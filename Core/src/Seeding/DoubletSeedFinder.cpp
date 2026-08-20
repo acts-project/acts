@@ -182,6 +182,17 @@ class Impl final : public DoubletSeedFinder {
         const float iDeltaR = std::sqrt(iDeltaR2);
         const float cotTheta = deltaZ * iDeltaR;
 
+        // discard doublets based on experiment specific cuts (also applied
+        // here, in the interactionPointCut == false branch, not only in the
+        // branch below -- otherwise the cut would silently never run when the
+        // IP cut is disabled)
+        if constexpr (experimentCuts) {
+          if (!m_cfg.experimentCuts(middleSp, container[indexO], cotTheta,
+                                    isBottomCandidate)) {
+            continue;
+          }
+        }
+
         const float er =
             calculateError(varianceZO, varianceRO, iDeltaR2, cotTheta);
 

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding/GbtsDataStorage.hpp"
+#include "Acts/Seeding/GbtsNodeStorage.hpp"
 
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
@@ -21,10 +21,10 @@ namespace Acts::Experimental {
 
 GbtsNodeStorage::GbtsNodeStorage(Config config,
                                  std::shared_ptr<const GbtsGeometry> geometry,
-                                 GbtsMlLookupTable mlLut)
+                                 detail::GbtsTauLookupTable tauLut)
     : m_cfg(std::move(config)),
       m_geometry(std::move(geometry)),
-      m_mlLut(std::move(mlLut)),
+      m_tauLut(std::move(tauLut)),
       m_nodes(SpacePointColumns::CopiedFromIndex |
               SpacePointColumns::PackedXYZR) {
   m_etaBins.resize(m_geometry->numBins());
@@ -45,13 +45,13 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
     const SpacePointIndex index, const float x, const float y, const float z,
     const float r, const float phi, const std::uint32_t layerIndex,
     const float clusterWidth, const float localPositionY) {
-  const GbtsLayer& layer = m_geometry->layerByIndex(layerIndex);
+  const detail::GbtsLayer& layer = m_geometry->layerByIndex(layerIndex);
 
   const bool isBarrel = layer.layerDescription().type == GbtsLayerType::Barrel;
 
-  // Pixel endcap nodes with a wide cluster are dropped when the machine
-  // learning features are in use.
-  if (m_cfg.useMl && !isBarrel && clusterWidth > m_cfg.maxEndcapClusterWidth &&
+  // wide pixel endcap clusters are dropped when the width cuts are on
+  if (m_cfg.useClusterWidthCuts && !isBarrel &&
+      clusterWidth > m_cfg.maxEndcapClusterWidth &&
       layerIndex < m_cfg.isPixelLayer.size() &&
       m_cfg.isPixelLayer[layerIndex]) {
     return std::nullopt;
@@ -123,7 +123,7 @@ void GbtsNodeStorage::finalize() {
   nodeOrder.reserve(nNodes);
 
   for (std::uint32_t bin = 0; bin < m_etaBins.size(); ++bin) {
-    GbtsEtaBinInfo& binInfo = m_etaBins[bin];
+    detail::GbtsEtaBinInfo& binInfo = m_etaBins[bin];
 
     binInfo.nodes = {m_nodes.size(), m_nodes.size()};
 
@@ -161,11 +161,11 @@ void GbtsNodeStorage::finalize() {
   // Created now that the container has its final size, so that each column is
   // allocated in a single resize.
   m_paramsColumn.emplace(
-      m_nodes.createColumn<GbtsNodeParams>("gbtsNodeParams"));
+      m_nodes.createColumn<detail::GbtsNodeParams>("gbtsNodeParams"));
   m_edgeInfoColumn.emplace(
-      m_nodes.createColumn<GbtsNodeEdgeInfo>("gbtsNodeEdgeInfo"));
+      m_nodes.createColumn<detail::GbtsNodeEdgeInfo>("gbtsNodeEdgeInfo"));
 
-  std::span<GbtsNodeParams> params = m_paramsColumn->data();
+  std::span<detail::GbtsNodeParams> params = m_paramsColumn->data();
   for (std::uint32_t node = 0; node < nodeOrder.size(); ++node) {
     const StagedNode& staged = m_staged[nodeOrder[node]];
 
@@ -175,8 +175,8 @@ void GbtsNodeStorage::finalize() {
 
     // minTau and maxTau keep their "do not cut" defaults unless the lookup
     // table narrows them
-    if (m_cfg.useMl) {
-      applyMlTauCuts(staged, params[node]);
+    if (m_cfg.useClusterWidthCuts) {
+      applyTauCuts(staged, params[node]);
     }
   }
 
@@ -188,9 +188,9 @@ void GbtsNodeStorage::finalize() {
   m_stagedPerBin.shrink_to_fit();
 }
 
-void GbtsNodeStorage::applyMlTauCuts(const StagedNode& staged,
-                                     GbtsNodeParams& params) const {
-  const GbtsLayer& layer = m_geometry->layerByIndex(staged.layer);
+void GbtsNodeStorage::applyTauCuts(const StagedNode& staged,
+                                   detail::GbtsNodeParams& params) const {
+  const detail::GbtsLayer& layer = m_geometry->layerByIndex(staged.layer);
 
   // skip strips volumes: layers in range [1200X-1400X]
   if (layer.layerDescription().id < 20000) {
@@ -204,11 +204,12 @@ void GbtsNodeStorage::applyMlTauCuts(const StagedNode& staged,
   const auto lutBinIdx =
       static_cast<std::int32_t>(std::floor(20 * staged.clusterWidth)) - 1;
 
-  if (lutBinIdx < 0 || lutBinIdx >= static_cast<std::int32_t>(m_mlLut.size())) {
+  if (lutBinIdx < 0 ||
+      lutBinIdx >= static_cast<std::int32_t>(m_tauLut.size())) {
     return;
   }
 
-  const GbtsMlLookupTable::value_type& lutBin = m_mlLut[lutBinIdx];
+  const detail::GbtsTauBounds& bounds = m_tauLut[lutBinIdx];
 
   // close to the edge the cluster may be shortened, which the lookup table
   // covers with a separate pair of bounds
@@ -216,8 +217,8 @@ void GbtsNodeStorage::applyMlTauCuts(const StagedNode& staged,
       m_cfg.moduleHalfLengthY - std::abs(staged.localPositionY);
   const bool nearEdge = dist2border <= m_cfg.moduleEdgeTolerance;
 
-  params.minTau = nearEdge ? lutBin[3] : lutBin[1];
-  params.maxTau = nearEdge ? lutBin[4] : lutBin[2];
+  params.minTau = nearEdge ? bounds.minTauNearEdge : bounds.minTau;
+  params.maxTau = nearEdge ? bounds.maxTauNearEdge : bounds.maxTau;
 
   if (params.maxTau < 0) {
     // insufficient training data, do not cut on tau
@@ -226,17 +227,17 @@ void GbtsNodeStorage::applyMlTauCuts(const StagedNode& staged,
 }
 
 void GbtsNodeStorage::generatePhiIndexing(const float dphi) {
-  const std::span<const GbtsNodeParams> params = m_paramsColumn->data();
+  const std::span<const detail::GbtsNodeParams> params = m_paramsColumn->data();
 
-  for (GbtsEtaBinInfo& bin : m_etaBins) {
+  for (detail::GbtsEtaBinInfo& bin : m_etaBins) {
     if (bin.empty()) {
       continue;
     }
 
-    const GbtsNodeIndex begin = bin.nodes.first;
-    const GbtsNodeIndex end = bin.nodes.second;
+    const SpacePointIndex begin = bin.nodes.first;
+    const SpacePointIndex end = bin.nodes.second;
 
-    for (GbtsNodeIndex node = begin; node < end; ++node) {
+    for (SpacePointIndex node = begin; node < end; ++node) {
       const float phi = params[node].phi;
       if (phi <= std::numbers::pi_v<float> - dphi) {
         continue;
@@ -244,11 +245,11 @@ void GbtsNodeStorage::generatePhiIndexing(const float dphi) {
       bin.phiNodes.emplace_back(phi - 2 * std::numbers::pi_v<float>, node);
     }
 
-    for (GbtsNodeIndex node = begin; node < end; ++node) {
+    for (SpacePointIndex node = begin; node < end; ++node) {
       bin.phiNodes.emplace_back(params[node].phi, node);
     }
 
-    for (GbtsNodeIndex node = begin; node < end; ++node) {
+    for (SpacePointIndex node = begin; node < end; ++node) {
       const float phi = params[node].phi;
       if (phi >= -std::numbers::pi_v<float> + dphi) {
         break;
