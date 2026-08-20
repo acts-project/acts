@@ -118,7 +118,9 @@ momentum:
 > non-Gaussian, it cannot be modelled adequately by this pointwise Gaussian
 > update; electron fitting should therefore use the
 > @ref Acts::GaussianSumFitter "GSF", which models the Bethe–Heitler
-> distribution as a Gaussian mixture.
+> distribution as a Gaussian mixture (see @ref gsf). The same mixture machinery
+> can optionally be enabled *inside* the CKF for bremsstrahlung recovery during
+> track finding; see @ref gsf-ckf-brem.
 
 **Energy-loss straggling (variance).** The fluctuation of the ionization loss is
 described by the **Landau–Vavilov** distribution. Its full width at half maximum

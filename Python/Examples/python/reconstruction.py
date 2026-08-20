@@ -750,13 +750,28 @@ def addSpacePointsMaking(
     stripGeoSelectionConfigFile: Union[Path, str],
     logLevel: acts.logging.Level = None,
     prefix: str = "",
+    stripVertex: acts.Vector3 = None,
+    stripLengthTolerance: float = None,
+    stripLengthGapTolerance: float = None,
 ):
     """adds space points making
     For parameters description see addSeeding
+
+    stripVertex, stripLengthTolerance and stripLengthGapTolerance configure the
+    strip space point formation; see Acts::StripSpacePointBuilder.
     """
     import acts.examples.json
 
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+    stripOptions = {
+        name: value
+        for name, value in (
+            ("stripVertex", stripVertex),
+            ("stripLengthTolerance", stripLengthTolerance),
+            ("stripLengthGapTolerance", stripLengthGapTolerance),
+        )
+        if value is not None
+    }
     spAlg = acts.examples.SpacePointMaker(
         level=logLevel,
         inputMeasurements=f"{prefix}measurement_subset",
@@ -770,6 +785,7 @@ def addSpacePointsMaking(
             if stripGeoSelectionConfigFile
             else []
         ),
+        **stripOptions,
     )
     sequence.addAlgorithm(spAlg)
     return spAlg.config.outputSpacePoints
@@ -940,6 +956,9 @@ def addGridTripletSeeding(
     spacePointGridConfigArg: SpacePointGridConfigArg,
     logLevel: acts.logging.Level = None,
     outputSeeds: str = "seeds",
+    inputVertices: str = "",
+    vertexZNSigma: float = 3.0,
+    vertexZMargin: float = 0.0,
 ):
     """adds grid triplet seeding
     For parameters description see addSeeding
@@ -950,6 +969,9 @@ def addGridTripletSeeding(
         level=logLevel,
         inputSpacePoints=spacePoints,
         outputSeeds=outputSeeds,
+        inputVertices=inputVertices,
+        vertexZNSigma=vertexZNSigma,
+        vertexZMargin=vertexZMargin,
         **acts.examples.defaultKWArgs(
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
             minPt=seedFinderConfigArg.minPt,
