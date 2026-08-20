@@ -47,7 +47,6 @@ class direct_navigator {
       : public navigation::base_state<state, detector_type, 2u, inspector_type,
                                       intersection_type> {
     friend class direct_navigator;
-    friend struct detail::intersection_update<ray_intersector>;
 
     template <typename state_t>
     friend constexpr void navigation::update_status(state_t &,

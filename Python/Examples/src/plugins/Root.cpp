@@ -31,7 +31,7 @@
 #include "ActsExamples/Io/Root/RootSpacePointPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootSpacePointWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFinderNTupleWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrackFitterPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackParameterPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackSummaryReader.hpp"
@@ -124,6 +124,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
       py::class_<ResPlotTool::Config>(root, "ResPlotToolConfig")
           .def(py::init<>())
+          .def_readwrite("paramNames", &ResPlotTool::Config::paramNames)
           .def_readwrite("varBinning", &ResPlotTool::Config::varBinning);
 
       py::class_<TrackQualityPlotTool::Config>(root,
@@ -167,8 +168,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
                                treeNameTracks, treeNameParticles);
 
     ACTS_PYTHON_DECLARE_WRITER(
-        RootTrackFitterPerformanceWriter, root,
-        "RootTrackFitterPerformanceWriter", inputTracks, inputParticles,
+        RootTrackParameterPerformanceWriter, root,
+        "RootTrackParameterPerformanceWriter", inputTracks, inputParticles,
         inputTrackParticleMatching, filePath, resPlotToolConfig,
         effPlotToolConfig, trackSummaryPlotToolConfig, fitMinEntries,
         fitSigmaRange, fitIterations, warningThresholdFitFailureFraction);

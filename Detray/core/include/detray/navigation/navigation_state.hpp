@@ -155,8 +155,8 @@ class base_state : public detray::ranges::view_interface<
   DETRAY_HOST_DEVICE
   constexpr auto last() const -> const candidate_t & {
     assert(!cache_exhausted());
-    assert(next_index() >= 0);
-    return m_candidates[static_cast<std::size_t>(next_index())];
+    assert(m_last >= 0);
+    return m_candidates[static_cast<std::size_t>(m_last)];
   }
 
   /// @returns the capacity of the internal candidate storage

@@ -11,10 +11,22 @@ on:
       - 'develop/**'
     paths-ignore:
       - "docs/**"
+  # merge_group does not support branch/path filters, so this runs
+  # unconditionally on every queue entry. Only build_debug is required, via
+  # merge-sentinel's "Analysis / build_debug" check; clang_tidy is skipped
+  # below since it isn't required and its incremental diff relies on
+  # github.base_ref, which merge_group runs don't have.
+  merge_group:
+    types: [checks_requested]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
-  cancel-in-progress: true
+  # Never cancel a merge_group run: it's a required check for a queue entry,
+  # and a cancellation reads as a failure to the queue, ejecting the PR.
+  # (push here is already branches: [main], so it can't collide with the
+  # merge queue's gh-readonly-queue/** temp ref the way the other workflows'
+  # unrestricted push triggers could.)
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
 # ccache is saved from `main` only: a PR-written cache is readable by that PR
 # alone, but still evicts `main`'s entries from the shared 10 GB.
@@ -155,6 +167,9 @@ jobs:
           echo "**🛡️ Code coverage available [here]($link)**" >> $GITHUB_STEP_SUMMARY
 
   clang_tidy:
+    # Not required for merging; skip on merge_group since its incremental
+    # diff below depends on github.base_ref, which only pull_request runs set.
+    if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2404_clang22:87
 
@@ -194,7 +209,7 @@ jobs:
           ccache -z &&
           CI/dependencies/run.sh .env
           cmake -B build -S .
-          --preset=gitlab-ci-clangtidy
+          --preset=github-ci-clangtidy
 
       - name: Run codegen
         run: cmake --build build --target ActsCodegen

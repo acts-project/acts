@@ -43,7 +43,8 @@ void addTrackFinding(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(SpacePointMaker, mex, "SpacePointMaker",
                                 inputMeasurements, outputSpacePoints,
                                 trackingGeometry, geometrySelection,
-                                stripGeometrySelection);
+                                stripGeometrySelection, stripVertex,
+                                stripLengthTolerance, stripLengthGapTolerance);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       GridTripletSeedingAlgorithm, mex, "GridTripletSeedingAlgorithm",
@@ -159,7 +160,8 @@ void addTrackFinding(py::module& mex) {
         findTracksBrem, measurementSelectorCfg, trackSelectorCfg, maxSteps,
         twoWay, reverseSearch, seedDeduplication, stayOnSeed, pixelVolumeIds,
         stripVolumeIds, maxPixelHoles, maxStripHoles, trimTracks,
-        useJosephFormulation, constrainToVolumeIds, endOfWorldVolumeIds);
+        recordMaterialStates, useJosephFormulation, constrainToVolumeIds,
+        endOfWorldVolumeIds);
   }
 }
 
