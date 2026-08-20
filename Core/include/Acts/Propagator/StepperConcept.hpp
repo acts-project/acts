@@ -43,7 +43,9 @@ concept CommonStepper = requires {
       {
         s.boundState(t, sf, b, corr)
       } -> std::same_as<Result<typename Stepper::BoundState>>;
-      { s.transportCovarianceToBound(t, sf, corr) } -> std::same_as<void>;
+      {
+        s.transportCovarianceToBound(t, sf, corr)
+      } -> std::same_as<Result<void>>;
     };
 
     requires requires(bool b) {

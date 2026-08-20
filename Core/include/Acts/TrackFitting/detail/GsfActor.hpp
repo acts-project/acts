@@ -224,8 +224,15 @@ struct GsfActor {
     }
 
     for (auto cmp : stepper.componentIterable(state.stepping)) {
-      cmp.singleStepper(stepper).transportCovarianceToBound(cmp.state(),
-                                                            surface);
+      Result<void> transportRes =
+          cmp.singleStepper(stepper).transportCovarianceToBound(cmp.state(),
+                                                                surface);
+      if (!transportRes.ok()) {
+        if (m_cfg.abortOnError) {
+          std::abort();
+        }
+        return transportRes.error();
+      }
     }
 
     if (m_cfg.multipleScattering && haveMaterial) {
