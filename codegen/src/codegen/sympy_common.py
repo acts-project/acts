@@ -79,6 +79,28 @@ class MyCXXCodePrinter(CXX17CodePrinter):
         rows, cols = mat.shape
         return ((i, j) for j in range(cols) for i in range(rows))
 
+    def _as_ordered_terms(self, expr, order=None):
+        # A compiler may only contract a multiply into a neighbouring add
+        # within one expression, and it associates left to right, so a sum
+        # folds into fused multiply-adds only if it does not *start* with a
+        # product.  sympy's canonical order routinely puts one first:
+        #
+        #   -H1[1]*Tp2[2] + H1[2]*Tp2[1] + M[20]   ->  fmul, fmsub, fadd
+        #
+        # while the same sum led by its plain term costs one operation less:
+        #
+        #   M[20] - H1[1]*Tp2[2] + H1[2]*Tp2[1]   ->  fmsub, fmadd
+        #
+        # Hoisting the non-product terms to the front is enough to get the
+        # second form.  It changes the order of floating point additions, so
+        # results move in the last bits -- which is why it is done here, in
+        # the printer, and not by rewriting the expressions themselves.
+        terms = super()._as_ordered_terms(expr, order=order)
+        plain = [t for t in terms if not t.is_Mul]
+        if not plain:
+            return terms
+        return plain + [t for t in terms if t.is_Mul]
+
     def _print_MatrixElement(self, expr):
         return self._element_accessor(self, expr)
 
