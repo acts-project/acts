@@ -61,10 +61,11 @@ struct find_tracks {
 
     device::find_tracks<detector_t>(
         thread_id, barrier, cfg, *det_data, payload,
-        {.shared_num_out_params = shared_num_out_params,
-         .shared_insertion_mutex = shared_insertion_mutex,
-         .shared_candidates = shared_candidates,
-         .shared_candidates_size = shared_candidates_size});
+        device::find_tracks_shared_payload{
+            .shared_num_out_params = shared_num_out_params,
+            .shared_insertion_mutex = shared_insertion_mutex,
+            .shared_candidates = shared_candidates,
+            .shared_candidates_size = shared_candidates_size});
   }
 };
 
