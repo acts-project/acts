@@ -172,8 +172,9 @@ ProcessCode MillePedeAlignmentSandbox::execute(
     trackSourceLinks.clear();
     trackSourceLinks.reserve(track.nTrackStates());
     for (const auto& state : track.trackStates()) {
-      if (state.hasUncalibratedSourceLink())
+      if (state.hasUncalibratedSourceLink()) {
         trackSourceLinks.push_back(state.getUncalibratedSourceLink());
+      }
     }
 
     // get the TrackAlignmentState using the existing
