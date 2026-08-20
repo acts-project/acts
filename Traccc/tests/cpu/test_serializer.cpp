@@ -5,7 +5,7 @@
  * Mozilla Public License Version 2.0
  */
 
-// Project inlcude(s)
+// Project include(s)
 #include "traccc/seeding/grids/axis.hpp"
 #include "traccc/seeding/grids/serializer2.hpp"
 

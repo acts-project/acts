@@ -37,9 +37,9 @@ namespace traccc::device {
 /// @param[in] adjv     Vector of adjacent cells
 /// @param[in] tid      The thread index
 /// @param[in] blckDim  The block size
-/// @param[inout] f     array holding the parent cell ID for the current
+/// @param[in,out] f     array holding the parent cell ID for the current
 ///                     iteration.
-/// @param[inout] gf    array holding grandparent cell ID from the previous
+/// @param[in,out] gf    array holding grandparent cell ID from the previous
 ///                     iteration.
 /// @param[in] barrier  A generic object for block-wide synchronisation
 ///
@@ -53,7 +53,7 @@ TRACCC_HOST_DEVICE void fast_sv_1(const thread_id_t& thread_id,
                                   barrier_t& barrier) {
   /*
    * The algorithm finishes if an iteration leaves the arrays unchanged.
-   * This varible will be set if a change is made, and dictates if another
+   * This variable will be set if a change is made, and dictates if another
    * loop is necessary.
    */
   bool gf_changed;
@@ -288,7 +288,7 @@ TRACCC_HOST_DEVICE inline void ccl_kernel(
     vecmem::data::vector_view<details::fallback_index_t> gf_backup_view,
     vecmem::data::vector_view<unsigned char> adjc_backup_view,
     vecmem::data::vector_view<details::fallback_index_t> adjv_backup_view,
-    vecmem::device_atomic_ref<uint32_t> backup_mutex,
+    vecmem::device_atomic_ref<std::uint32_t> backup_mutex,
     vecmem::data::vector_view<unsigned int> disjoint_set_view,
     vecmem::data::vector_view<unsigned int> cluster_size_view,
     const barrier_t& barrier,
@@ -308,7 +308,7 @@ TRACCC_HOST_DEVICE inline void ccl_kernel(
   vecmem::device_vector<unsigned int> disjoint_set(disjoint_set_view);
   vecmem::device_vector<unsigned int> cluster_size(cluster_size_view);
 
-  mutex<uint32_t> mutex(backup_mutex);
+  mutex<std::uint32_t> mutex(backup_mutex);
   unique_lock lock(mutex, std::defer_lock);
 
   const unsigned int num_cells = cells_device.size();

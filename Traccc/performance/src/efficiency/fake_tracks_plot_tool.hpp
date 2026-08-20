@@ -103,7 +103,7 @@ class fake_tracks_plot_tool {
   /// @param truthParticle the truth Particle
   /// @param nDuplicatedTracks the number of fake tracks
   void fill(fake_tracks_plot_cache& cache, const particle& truth_particle,
-            size_t n_fake_tracks) const {
+            std::size_t n_fake_tracks) const {
     const auto t_phi = vector::phi(truth_particle.momentum);
     const auto t_eta = vector::eta(truth_particle.momentum);
     const auto t_pT = vector::perp(

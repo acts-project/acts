@@ -62,7 +62,7 @@ struct build_tracks_payload {
 ///
 /// @param[in] globalIndex         The index of the current thread
 /// @param[in] cfg                    Track finding config object
-/// @param[inout] payload      The function call payload
+/// @param[in,out] payload      The function call payload
 ///
 TRACCC_HOST_DEVICE inline void build_tracks(
     global_index_t globalIndex, bool run_mbf,
