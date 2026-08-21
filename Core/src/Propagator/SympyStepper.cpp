@@ -157,12 +157,13 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
     return EigenStepperError::StepInvalid;
   }
 
-  const auto getB = [&](std::span<const double, 3> p) -> Result<Vector3> {
+  const auto getB = [this, &state](std::span<const double, 3> p) {
     return getField(state, {p[0], p[1], p[2]});
   };
 
   // Only the cold dense path needs these.
-  const auto getG = [&](std::span<const double, 3> p, double l) -> double {
+  const auto getG = [this, &state, material, m, timeDirection](
+                        std::span<const double, 3> p, double l) -> double {
     const PdgParticle absPdg = particleHypothesis(state).absolutePdg();
     const double absQ = std::abs(charge(state));
     double newPabs = particleHypothesis(state).extractMomentum(l);

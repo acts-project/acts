@@ -158,8 +158,8 @@ Result<void> detail::reinitializeJacobians(
   // Get the local position
   const Vector3 position = freeParameters.segment<3>(eFreePos0);
   const Vector3 direction = freeParameters.segment<3>(eFreeDir0);
-  auto lpResult = surface.globalToLocal(geoContext, position, direction);
-  if (!lpResult.ok()) {
+  if (auto lpResult = surface.globalToLocal(geoContext, position, direction);
+      !lpResult.ok()) {
     return lpResult.error();
   }
   // Reset the jacobian from local to global
