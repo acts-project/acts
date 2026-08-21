@@ -61,7 +61,7 @@ jobs:
   build_debug:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     # Pull-through cache, as for the husk jobs in builds.yml.
-    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
     steps:
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -171,7 +171,7 @@ jobs:
     # diff below depends on github.base_ref, which only pull_request runs set.
     if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404_clang22:87
+    container: ghcr.io/acts-project/ubuntu2604_clang22:90
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
