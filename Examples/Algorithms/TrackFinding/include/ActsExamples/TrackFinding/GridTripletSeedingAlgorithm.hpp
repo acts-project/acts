@@ -16,6 +16,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
+#include "ActsExamples/EventData/Vertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -228,6 +229,18 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     /// Connect custom selections on the space points or to the doublet
     /// compatibility
     bool useExtraCuts = false;
+
+    /// Optional: reconstructed vertices used to constrain the seed z-origin.
+    /// When set, a doublet is rejected unless its z-origin falls inside at
+    /// least one per-vertex window [z - k*sigma_z - margin, z + k*sigma_z +
+    /// margin]. Empty string disables the constraint (default seeding
+    /// behaviour). Especially useful for A-A events, i.e. few vertices with
+    /// high mult.
+    std::string inputVertices;
+    /// Half-width of each per-vertex z-window, in units of sigma_z.
+    double vertexZNSigma = 3.0;
+    /// Extra absolute margin added to each per-vertex z-window [mm].
+    double vertexZMargin = 0.0;
   };
 
   /// Construct the seeding algorithm.
@@ -260,6 +273,7 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
 
   ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
                                                          "InputSpacePoints"};
+  ReadDataHandle<VertexContainer> m_inputVertices{this, "InputVertices"};
   WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
   /// Get the proper radius validity range given a middle space point candidate.

@@ -413,7 +413,7 @@ jobs:
       # Pull requests only: there the action reads the file list from the API
       # and needs no checkout. On push the output stays empty and the jobs below
       # run unconditionally.
-      - uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: filter
         if: github.event_name == 'pull_request'
         with:
@@ -770,7 +770,7 @@ jobs:
           --preset=github-ci-cuda-muon
 
       - name: Build
-        run: cmake --build build --target ActsUnitTestCudaMuonSpacePoint
+        run: cmake --build build --target ActsUnitTestCudaMuonSpacePoint ActsUnitTestCudaMuonHoughMaximum
 
       - name: ccache stats
         run: ccache -s
@@ -843,7 +843,7 @@ jobs:
         run: >
           CI/dependencies/run.sh .env
           ctest --test-dir build --output-on-failure --no-tests=error
-          -R "CudaMuonSpacePoint"
+          -R "(CudaMuonSpacePoint|CudaMuonHoughMaximum)"
 
   # ─────────────────────────────────────────────────────────────────────
   # LCG builds. They ask for the `cvmfs` label on top of the usual husk

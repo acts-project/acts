@@ -109,6 +109,68 @@ jobs:
         run: >
           CI/check_unused_files.py
 
+  # The CI tooling's own self-tests, which otherwise have no feedback loop:
+  # broken tooling fails in some other job that already paid for a container
+  # pull. Grouped because they are pure python and run in seconds; separate
+  # steps so a failure names the suite. test_public_api_surface.py stays in
+  # `api_surface` -- it skips its drift check without doxygen on PATH.
+  self_tests:
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14'
+      - name: Dependency lockfile selection
+        run: >
+          CI/dependencies/test_select_lockfile.py
+      - name: Deprecated-docs checker
+        run: >
+          CI/public_api/test_check_deprecated_docs.py
+
+  codegen_prebuilt:
+    # Pre-generates the code the build would otherwise generate, then checks
+    # that CMake picks all of it up. Needs uv and CMake only: no compiler and
+    # none of the C++ dependencies a real ACTS configure requires, which is what
+    # keeps this cheap enough to run on every pull request. ubuntu-latest rather
+    # than ubuntu-slim only because it ships CMake.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          enable-cache: true
+      - name: Pre-generate code
+        run: >
+          uv run --no-project CI/pregenerate_codegen.py --output prebuilt-codegen
+      - name: Check CMake uses it
+        # ACTS_CODEGEN_REQUIRE_PREBUILT makes any fall back to running a
+        # generator a configure error, so a unit that is missing from the
+        # pre-generated output, or filed under a different key than CMake looks
+        # for, fails here rather than silently downloading uv in a real build.
+        run: |
+          cmake -S CI/codegen_prebuilt_check -B build-codegen-check \
+            -DACTS_CODEGEN_PREBUILT_DIR=$PWD/prebuilt-codegen
+          cmake --build build-codegen-check
+      - name: Check the source archive
+        # Builds the archive the same way the release does and checks it the way
+        # a consumer sees it: unpacked, with nothing pointing at the generated
+        # code, so the directory has to be found on its own next to the
+        # top-level CMakeLists.txt. Otherwise make_source_archive.sh would first
+        # run during a release, where a failure is most expensive.
+        run: |
+          CI/make_source_archive.sh --output acts-ci.tar.gz \
+            --prebuilt prebuilt-codegen --revision HEAD --prefix acts-ci
+          mkdir archive-check
+          tar xzf acts-ci.tar.gz -C archive-check
+          cmake -S archive-check/acts-ci/CI/codegen_prebuilt_check \
+            -B build-archive-check
+          cmake --build build-archive-check
+
   api_surface:
     runs-on: ubuntu-latest
     env:
@@ -131,10 +193,10 @@ jobs:
           mv doxygen-${{ env.DOXYGEN_VERSION }}/bin/doxygen /usr/local/bin/doxygen
           doxygen --version
       - name: Self-test the surface tooling
-        # Guards the classification logic and catches Doxygen output drift.
-        run: |
+        # Here, not in `self_tests`: only this job has doxygen on PATH, and the
+        # drift check skips itself without it.
+        run: >
           CI/public_api/test_public_api_surface.py
-          CI/public_api/test_check_deprecated_docs.py
       - name: Require @deprecated docs on [[deprecated]] declarations
         # Every [[deprecated]] attribute must carry a Doxygen @deprecated command
         # so the deprecation is visible in the published docs, not just at
@@ -151,8 +213,19 @@ jobs:
       - name: Diff public API surface against base
         if: github.event_name == 'pull_request'
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
+          # Base = first parent of the checked-out refs/pull/N/merge, i.e. the
+          # commit GitHub merged into. Not pull_request.base.sha: that only
+          # advances on PR sync, so it drifts behind the merge ref and unrelated
+          # changes on the base branch get attributed to the PR.
+          if git rev-parse --verify --quiet HEAD^2 > /dev/null; then
+            BASE_SHA=$(git rev-parse HEAD^1)
+          else
+            # Not a merge ref: a checkout pinned to the head commit.
+            BASE_SHA=$(git merge-base HEAD "origin/${BASE_REF}")
+          fi
+          echo "Diffing public API surface against ${BASE_SHA}"
           git worktree add --detach /tmp/base-tree "$BASE_SHA"
           # Base measured with THIS ref's Doxyfile/scripts, over the base tree.
           # No --summary here: it would duplicate the surface table.
