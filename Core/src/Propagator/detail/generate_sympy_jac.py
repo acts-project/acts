@@ -25,21 +25,21 @@ surface_path_derivatives = (
 surface_path_derivatives[0, 3] = 0
 surface_path_derivatives[0, 7] = 0
 
-J_bf = MatrixSymbol("J_bf", 8, 6).as_explicit().as_mutable()
+# M is the bound-to-free jacobian already transported to the current point,
+# i.e. what used to be J_t * J_bf.  Its sparsity is everything a sequence of
+# steps can produce from a start surface: loc0 and loc1 stay position only,
+# phi and theta pick up a direction part (and a position part already at the
+# start surface, for a line surface), q/p picks up position, time and
+# direction parts, and the time column stays exactly e_time.
+J_bf = MatrixSymbol("M", 8, 6).as_explicit().as_mutable()
 tmp = sym.zeros(8, 6)
 tmp[0:3, 0:2] = J_bf[0:3, 0:2]
-tmp[0:3, 2:4] = J_bf[0:3, 2:4]
-tmp[4:7, 2:4] = J_bf[4:7, 2:4]  # line surface
+tmp[0:3, 2:5] = J_bf[0:3, 2:5]
+tmp[3, 4] = J_bf[3, 4]
+tmp[4:7, 2:5] = J_bf[4:7, 2:5]
+tmp[7, 4] = J_bf[7, 4]
 tmp[3, 5] = 1
-tmp[7, 4] = 1
 J_bf = tmp
-
-J_t = MatrixSymbol("J_t", 8, 8).as_explicit().as_mutable()
-tmp = sym.eye(8)
-tmp[0:3, 4:8] = J_t[0:3, 4:8]
-tmp[3, 7] = J_t[3, 7]
-tmp[4:7, 4:8] = J_t[4:7, 4:8]
-J_t = tmp
 
 J_fb = MatrixSymbol("J_fb", 6, 8).as_explicit().as_mutable()
 tmp = sym.zeros(6, 8)
@@ -53,10 +53,7 @@ J_fb = tmp
 def full_transport_jacobian_generic():
     J_full = name_expr(
         "J_full",
-        J_fb
-        * (sym.eye(8) + step_path_derivatives * surface_path_derivatives)
-        * J_t
-        * J_bf,
+        J_fb * (sym.eye(8) + step_path_derivatives * surface_path_derivatives) * J_bf,
     )
 
     return [J_full]
@@ -71,10 +68,7 @@ def full_transport_jacobian_curvilinear(direction):
 
     J_full = name_expr(
         "J_full",
-        J_fb
-        * (sym.eye(8) + step_path_derivatives * surface_path_derivatives)
-        * J_t
-        * J_bf,
+        J_fb * (sym.eye(8) + step_path_derivatives * surface_path_derivatives) * J_bf,
     )
 
     return [J_full]
@@ -86,7 +80,7 @@ def my_full_transport_jacobian_generic_function_print(name_exprs, run_cse=True):
 
     lines = []
 
-    head = "template <typename T> void boundToBoundTransportJacobianImpl(const T* J_fb, const T* J_t, const T* J_bf, const T* step_path_derivatives, const T* surface_path_derivatives, T* J_full) {"
+    head = "template <typename T> void boundToBoundTransportJacobianImpl(const T* J_fb, const T* M, const T* step_path_derivatives, const T* surface_path_derivatives, T* J_full) {"
     lines.append(head)
 
     code = my_expression_print(
@@ -108,7 +102,7 @@ def my_full_transport_jacobian_curvilinear_function_print(name_exprs, run_cse=Tr
 
     lines = []
 
-    head = "template <typename T> void boundToCurvilinearTransportJacobianImpl(const T* J_fb, const T* J_t, const T* J_bf, const T* step_path_derivatives, const T* dir, T* J_full) {"
+    head = "template <typename T> void boundToCurvilinearTransportJacobianImpl(const T* J_fb, const T* M, const T* step_path_derivatives, const T* dir, T* J_full) {"
     lines.append(head)
 
     code = my_expression_print(

@@ -146,6 +146,31 @@ void detail::reinitializeJacobians(FreeMatrix& freeTransportJacobian,
                                    const Vector3& direction) {
   // Reset the jacobians
   freeTransportJacobian = FreeMatrix::Identity();
+  reinitializeJacobians(freeToPathDerivatives, boundToFreeJacobian, direction);
+}
+
+Result<void> detail::reinitializeJacobians(
+    const GeometryContext& geoContext, const Surface& surface,
+    FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
+    const FreeVector& freeParameters) {
+  freeToPathDerivatives = FreeVector::Zero();
+
+  // Get the local position
+  const Vector3 position = freeParameters.segment<3>(eFreePos0);
+  const Vector3 direction = freeParameters.segment<3>(eFreeDir0);
+  auto lpResult = surface.globalToLocal(geoContext, position, direction);
+  if (!lpResult.ok()) {
+    return lpResult.error();
+  }
+  // Reset the jacobian from local to global
+  boundToFreeJacobian =
+      surface.boundToFreeJacobian(geoContext, position, direction);
+  return Result<void>::success();
+}
+
+void detail::reinitializeJacobians(FreeVector& freeToPathDerivatives,
+                                   BoundToFreeMatrix& boundToFreeJacobian,
+                                   const Vector3& direction) {
   freeToPathDerivatives = FreeVector::Zero();
   boundToFreeJacobian = CurvilinearSurface(direction).boundToFreeJacobian();
 }
