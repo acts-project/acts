@@ -56,9 +56,14 @@ struct Options {
   /// The phi limit for projections
   std::array<double, 2> phiRange = noLimitPhi;
   /// Configuration of the views
-  bool gridInfo = true;
+  /// @deprecated actsvg 0.4.57 removed the grid sheet display. Kept so the
+  /// option still compiles; convert() throws if it is switched on. No
+  /// [[deprecated]] attribute: on a data member it also fires on every copy
+  /// of Options, which says nothing about whether the option is used.
+  bool gridInfo = false;
   /// Include module information
-  bool moduleInfo = true;
+  /// @deprecated actsvg 0.4.57 removed the module sheet display; see gridInfo.
+  bool moduleInfo = false;
   /// Include projection information
   bool projectionInfo = true;
   /// Label checks
