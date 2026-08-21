@@ -14,6 +14,7 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
+#include "Acts/Propagator/detail/SympyBoundToFreeScaling.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GsfComponent.hpp"
@@ -330,10 +331,15 @@ void updateStepper(propagator_state_t &state, const stepper_t &stepper,
     cmp.jacToGlobal() = surface.boundToFreeJacobian(
         state.geoContext, freeParams.template segment<3>(eFreePos0),
         freeParams.template segment<3>(eFreeDir0));
+    if constexpr (!std::decay_t<decltype(cmp)>::hasFreeTransport) {
+      // see SympyBoundToFreeScaling.hpp
+      detail::sympy::toScaledBoundToFree(cmp.jacToGlobal(),
+                                         freeParams[eFreeQOverP]);
+    }
     cmp.pathAccumulated() = state.stepping.pathAccumulated;
     cmp.jacobian() = BoundMatrix::Identity();
     cmp.derivative() = FreeVector::Zero();
-    cmp.jacTransport() = FreeMatrix::Identity();
+    cmp.resetJacTransport();
   }
 }
 
