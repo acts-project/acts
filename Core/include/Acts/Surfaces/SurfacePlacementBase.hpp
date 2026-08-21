@@ -69,6 +69,10 @@ class SurfacePlacementBase {
   /// @return Pointer to the sensor design or nullptr
   virtual const ISensorDesign* sensorDesign() const { return nullptr; }
 
+  /// @brief Assign a sensor design to this placement element.
+  ///        Default implementation is a no-op; override in subclasses
+  ///        that support design assignment.
+  /// @param design shared pointer to the sensor design to assign
   virtual void assignSensorDesign(
       const std::shared_ptr<const ISensorDesign>& /*design*/) const {}
 };

@@ -22,6 +22,7 @@ class ISensorDesign {
   virtual ~ISensorDesign() = default;
 
   /// Name identification for logging and debugging
+  /// @return string view of the design name
   virtual std::string_view name() const = 0;
 };
 
