@@ -47,14 +47,16 @@ class json_input_converter final : public input_file_converter_interface {
     *file >> in_json;
 
     // Peek at the header to determine the kind of payload is in the file
-    payload.header = in_json["header"];
+    if (payload.header.version.empty()) {
+      payload.header = in_json["header"];
+    }
     const header_payload& header = payload.header;
 
     if (header.tag < io::detail::minimal_io_version) {
       DETRAY_WARN_HOST("File was generated with a different detray version");
     }
 
-    payload.names.set_detector_name(header.detector);
+    payload.detector_name = header.detector;
 
     nlohmann::json& json_payload = in_json["data"];
     if (header.tag == "geometry") {

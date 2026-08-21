@@ -338,6 +338,7 @@ struct detector_payload {
   header_payload header;
 
   /// Required detector component: geometry
+  std::string detector_name{"unknown_detector"};
   geometry_payload_type geometry{};
   /// Optional detector components: volume and surface acceleration structures
   /// and material

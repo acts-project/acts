@@ -207,6 +207,9 @@ class DetrayPayloadConverter {
       /// associated detector element
       DetectorElement
     };
+    /// Name for the detector
+    std::string detectorName{"Detector"};
+
     /// Strategy to use for sensitive surface detection
     SensitiveStrategy sensitiveStrategy = SensitiveStrategy::Identifier;
 

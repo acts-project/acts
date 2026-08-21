@@ -620,8 +620,11 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   BOOST_CHECK_EQUAL(detector.volumes.at(4).name, "L2");
   BOOST_CHECK_EQUAL(detector.volumes.at(5).name, "L3");
 
-  // @HACK: At this time, the conversion introduces a number of dummy material
-  // slabs which should ultimately not be there.
+  // Homogeneous material is sparse: only volumes that actually carry it are
+  // registered, and within them only the surfaces that have it.
+  BOOST_CHECK(!homogeneousMaterial.volumes.empty());
+  BOOST_CHECK_LE(homogeneousMaterial.volumes.size(), detector.volumes.size());
+
   for (const auto& hMat : homogeneousMaterial.volumes) {
     auto volIt =
         std::ranges::find_if(detector.volumes, [&](const auto& volume) {
@@ -650,6 +653,7 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   }
 
   BOOST_CHECK_EQUAL(materialGrids.grids.size(), 2);
+
   BOOST_CHECK_EQUAL(surfaceGrids.grids.size(), 4);
 
   // Empirical binning config from construction

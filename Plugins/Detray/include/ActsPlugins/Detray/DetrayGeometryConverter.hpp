@@ -111,7 +111,7 @@ class DetrayGeometryConverter {
         gctx, *trackingGeometry);
 
     if (!detectorName.empty()) {
-      payloads.names.set_detector_name(detectorName);
+      payloads.detector_name = detectorName;
     }
 
     // ── Build detray detector from payloads ───────────────────────────────

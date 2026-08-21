@@ -207,7 +207,6 @@ GTEST_TEST(io, json_toy_geometry) {
 
   // Read the detector back in
   io::detector_payload payload{};
-  // payload.names.set_detector_name("toy_detector");
   io::json_input_converter{}.to_payload(file_name, payload);
 
   detector_builder<metadata_t> toy_builder;

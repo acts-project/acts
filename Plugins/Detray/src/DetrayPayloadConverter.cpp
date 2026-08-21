@@ -829,12 +829,11 @@ detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
                          << ") has " << homogeneous.surface_mat.size()
                          << " material slabs");
 
+    // Only add if we have homogeneous material
     if (!homogeneous.surface_mat.empty()) {
-      // Only add if we have grids
       if (!dthmPayload.has_value()) {
         dthmPayload.emplace();
       }
-      // Only add if it's not empty (it might be)
       // NOTE: Currently, it'll always be populated by at least the homogeneous
       // NOTE: Volume association is internal to
       // `detray::io::material_volume_payload`
@@ -844,8 +843,8 @@ detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
     ACTS_DEBUG("Volume " << volume.volumeName()
                          << " (detray idx: " << volPayload.index.link
                          << ") has " << grids.size() << " material grids");
+    // Only add if we have grids
     if (!grids.empty()) {
-      // Only add if we have grids
       if (!materialGrids.has_value()) {
         materialGrids.emplace();
       }
@@ -1011,11 +1010,8 @@ detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
     }
   }
 
-  // This needs to happen after swapping so that the indices are correct
-  payloads.names.set_detector_name("Detector");
-  for (const auto& volume : detPayload.volumes) {
-    payloads.names.emplace(volume.index.link + 1, volume.name);
-  }
+  // TODO: Make detector name customizable
+  payloads.detector_name = m_cfg.detectorName;
 
   ACTS_DEBUG("Collected " << detPayload.volumes.size() << " volumes");
 
