@@ -422,8 +422,12 @@ end_section
 
 start_section "Set environment variables"
 set_env PATH "${venv_dir}/bin:${view_dir}/bin/:${PATH}"
-set_env LD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib/root"
-set_env DYLD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib/root"
+# lib64 carries CUDA's own libraries (e.g. cusparse): the view merges
+# packages' lib64/ trees there rather than into lib/, and prebuilt binaries
+# that dlopen them at runtime (rather than being linked with a baked RPATH)
+# need it on the search path too.
+set_env LD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib64:${view_dir}/lib/root"
+set_env DYLD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib64:${view_dir}/lib/root"
 set_env CMAKE_PREFIX_PATH "${venv_dir}:${view_dir}"
 set_env ROOT_SETUP_SCRIPT "${view_dir}/bin/thisroot.sh"
 set_env ROOT_INCLUDE_PATH "${view_dir}/include"
