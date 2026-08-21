@@ -126,19 +126,19 @@ struct SourceLinkAdapterIterator {
   /// Equality comparison operator
   /// @param other Iterator to compare with
   /// @return True if iterators are equal
-  bool operator==(const SourceLinkAdapterIterator& other) const {
-    return m_iterator == other.m_iterator;
-  }
+  bool operator==(const SourceLinkAdapterIterator& other) const = default;
 
   /// Dereference operator
   /// @return Wrapped source link
   Acts::SourceLink operator*() const { return Acts::SourceLink{*m_iterator}; }
 
   /// Difference operator
+  /// @param lhs Iterator to compute difference from
   /// @param other Iterator to compute difference with
   /// @return Distance between iterators
-  auto operator-(const SourceLinkAdapterIterator& other) const {
-    return m_iterator - other.m_iterator;
+  friend auto operator-(const SourceLinkAdapterIterator& lhs,
+                        const SourceLinkAdapterIterator& other) {
+    return lhs.m_iterator - other.m_iterator;
   }
 
   /// Underlying iterator

@@ -13,7 +13,7 @@
 
 #include <array>
 #include <cstddef>
-#include <iomanip>
+#include <format>
 #include <ostream>
 
 namespace Acts {
@@ -77,10 +77,6 @@ void printParametersCovariance(std::ostream& os, const names_container_t& names,
                                const Eigen::MatrixBase<covariance_t>& cov) {
   EIGEN_STATIC_ASSERT_VECTOR_ONLY(parameters_t);
 
-  // save stream formatting state
-  auto flags = os.flags();
-  auto precision = os.precision();
-
   // compute the standard deviations
   auto stddev = cov.diagonal().cwiseSqrt().eval();
 
@@ -90,27 +86,15 @@ void printParametersCovariance(std::ostream& os, const names_container_t& names,
     if (0 < i) {
       os << '\n';
     }
-    // show name
-    os << std::setw(kNamesMaxSize) << std::left << names[nameIndices[i]];
-    // show value
-    os << " ";
-    os << std::defaultfloat << std::setprecision(4);
-    os << std::setw(10) << std::right << params[i];
-    // show standard deviation
-    os << " +- ";
-    os << std::setw(10) << std::left << stddev[i];
+    // show name, value, and standard deviation
+    os << std::format("{:<{}} {:>10.4} +- {:<10.4} ", names[nameIndices[i]],
+                      kNamesMaxSize, params[i], stddev[i]);
     // show lower-triangular part of the correlation matrix
-    os << " ";
-    os << std::fixed << std::setprecision(3);
     for (Eigen::Index j = 0; j <= i; ++j) {
       auto corr = cov(i, j) / (stddev[i] * stddev[j]);
-      os << " " << std::setw(6) << std::right << corr;
+      os << std::format(" {:>6.3f}", corr);
     }
   }
-
-  // restore previous stream formatting state
-  os.flags(flags);
-  os.precision(precision);
 }
 
 /// Print parameters only.
@@ -136,27 +120,16 @@ void printParameters(std::ostream& os, const names_container_t& names,
                      const Eigen::MatrixBase<parameters_t>& params) {
   EIGEN_STATIC_ASSERT_VECTOR_ONLY(parameters_t);
 
-  // save stream formatting state
-  auto flags = os.flags();
-  auto precision = os.precision();
-
   for (Eigen::Index i = 0; i < params.size(); ++i) {
     // no newline after the last line. e.g. the log macros automatically add a
     // newline and having a finishing newline would lead to empty lines.
     if (0 < i) {
       os << '\n';
     }
-    // show name
-    os << std::setw(kNamesMaxSize) << std::left << names[nameIndices[i]];
-    // show value
-    os << " ";
-    os << std::defaultfloat << std::setprecision(4);
-    os << std::setw(10) << std::right << params[i];
+    // show name and value
+    os << std::format("{:<{}} {:>10.4}", names[nameIndices[i]], kNamesMaxSize,
+                      params[i]);
   }
-
-  // restore previous stream formatting state
-  os.flags(flags);
-  os.precision(precision);
 }
 
 using ParametersMap = Eigen::Map<const DynamicVector>;

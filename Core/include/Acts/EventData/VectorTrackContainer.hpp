@@ -224,7 +224,6 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   /// @param other Const container to copy from
   explicit VectorTrackContainer(const ConstVectorTrackContainer& other);
 
- public:
   // BEGIN INTERFACE
   /// @cond
 
@@ -308,8 +307,6 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
 static_assert(TrackContainerBackend<VectorTrackContainer>,
               "VectorTrackContainer does not fulfill TrackContainerBackend");
 
-class ConstVectorTrackContainer;
-
 template <>
 struct IsReadOnlyTrackContainer<ConstVectorTrackContainer> : std::true_type {};
 
@@ -338,7 +335,6 @@ class ConstVectorTrackContainer final
     assert(checkConsistency());
   }
 
- public:
   // BEGIN INTERFACE
 
   /// Get a component from a track

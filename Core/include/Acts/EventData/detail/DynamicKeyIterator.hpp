@@ -40,9 +40,7 @@ class DynamicKeyIterator {
     return copy;
   }
 
-  bool operator==(const DynamicKeyIterator& other) const {
-    return m_it == other.m_it;
-  }
+  bool operator==(const DynamicKeyIterator& other) const = default;
 
   value_type operator*() const { return m_it->first; }
 

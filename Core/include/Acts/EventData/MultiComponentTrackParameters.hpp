@@ -66,7 +66,7 @@ class MultiComponentBoundTrackParameters {
   static MultiComponentBoundTrackParameters createCurvilinear(
       const GeometryContext& geoCtx,
       const std::vector<ConstructionTuple>& curvi,
-      ParticleHypothesis particleHypothesis) {
+      const ParticleHypothesis& particleHypothesis) {
     // Construct and average surface
     Vector3 avgPos = Vector3::Zero();
     Vector3 avgDir = Vector3::Zero();
@@ -112,9 +112,9 @@ class MultiComponentBoundTrackParameters {
   /// @param surface Reference surface the parameters are defined on
   /// @param hasCovariance Flag indicating if covariance matrices will be provided for the
   /// @param particleHypothesis Particle hypothesis for the parameters
-  MultiComponentBoundTrackParameters(std::shared_ptr<const Surface> surface,
-                                     bool hasCovariance,
-                                     ParticleHypothesis particleHypothesis)
+  MultiComponentBoundTrackParameters(
+      std::shared_ptr<const Surface> surface, bool hasCovariance,
+      const ParticleHypothesis& particleHypothesis)
       : m_surface(std::move(surface)),
         m_particleHypothesis(particleHypothesis),
         m_hasCovariance(hasCovariance) {}
@@ -124,10 +124,10 @@ class MultiComponentBoundTrackParameters {
   /// @param params Bound parameters vector
   /// @param cov Bound parameters covariance matrix
   /// @param particleHypothesis Particle hypothesis for these parameters
-  MultiComponentBoundTrackParameters(std::shared_ptr<const Surface> surface,
-                                     const BoundVector& params,
-                                     std::optional<BoundMatrix> cov,
-                                     ParticleHypothesis particleHypothesis)
+  MultiComponentBoundTrackParameters(
+      std::shared_ptr<const Surface> surface, const BoundVector& params,
+      std::optional<BoundMatrix> cov,
+      const ParticleHypothesis& particleHypothesis)
       : m_surface(std::move(surface)),
         m_particleHypothesis(particleHypothesis) {
     m_weights.push_back(1.);
@@ -144,10 +144,9 @@ class MultiComponentBoundTrackParameters {
   /// @param proj Projector to use for the parameters
   /// @param particleHypothesis Particle hypothesis for the parameters
   template <std::ranges::range component_range_t, typename projector_t>
-  MultiComponentBoundTrackParameters(std::shared_ptr<const Surface> surface,
-                                     const component_range_t& cmps,
-                                     const projector_t& proj,
-                                     ParticleHypothesis particleHypothesis)
+  MultiComponentBoundTrackParameters(
+      std::shared_ptr<const Surface> surface, const component_range_t& cmps,
+      const projector_t& proj, const ParticleHypothesis& particleHypothesis)
     requires detail::ComponentRangeAndProjectorWithoutCovarianceConcept<
                  component_range_t, projector_t>
       : m_surface(std::move(surface)),
@@ -171,10 +170,9 @@ class MultiComponentBoundTrackParameters {
   /// @param proj Projector to use for the parameters
   /// @param particleHypothesis Particle hypothesis for the parameters
   template <std::ranges::range component_range_t, typename projector_t>
-  MultiComponentBoundTrackParameters(std::shared_ptr<const Surface> surface,
-                                     const component_range_t& cmps,
-                                     const projector_t& proj,
-                                     ParticleHypothesis particleHypothesis)
+  MultiComponentBoundTrackParameters(
+      std::shared_ptr<const Surface> surface, const component_range_t& cmps,
+      const projector_t& proj, const ParticleHypothesis& particleHypothesis)
     requires detail::ComponentRangeAndProjectorWithCovarianceConcept<
                  component_range_t, projector_t>
       : m_surface(std::move(surface)),

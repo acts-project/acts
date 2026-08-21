@@ -291,20 +291,17 @@ class MultiTrajectory {
 
     while (true) {
       auto ts = getTrackState(iendpoint);
+      bool proceed = true;
       if constexpr (std::is_same_v<std::invoke_result_t<F, TrackStateProxy>,
                                    bool>) {
-        bool proceed = callable(ts);
-        // this point has no parent and ends the trajectory, or a break was
-        // requested
-        if (!proceed || !ts.hasPrevious()) {
-          break;
-        }
+        proceed = callable(ts);
       } else {
         callable(ts);
-        // this point has no parent and ends the trajectory
-        if (!ts.hasPrevious()) {
-          break;
-        }
+      }
+      // this point has no parent and ends the trajectory, or a break was
+      // requested
+      if (!proceed || !ts.hasPrevious()) {
+        break;
       }
       iendpoint = ts.previous();
     }

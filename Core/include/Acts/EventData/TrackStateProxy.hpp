@@ -535,12 +535,14 @@ class TrackStateProxy
       }
 
       if (ACTS_CHECK_BIT(src, PM::Calibrated)) {
-        visit_measurement(other.calibratedSize(), [&](auto N) {
-          constexpr int measdim = decltype(N)::value;
-          allocateCalibrated(
-              other.template calibrated<measdim>().eval(),
-              other.template calibratedCovariance<measdim>().eval());
-        });
+        visit_measurement(
+            other.calibratedSize(),
+            [&]<std::size_t measdim>(
+                std::integral_constant<std::size_t, measdim>) {
+              allocateCalibrated(
+                  other.template calibrated<measdim>().eval(),
+                  other.template calibratedCovariance<measdim>().eval());
+            });
 
         setProjectorSubspaceIndices(other.projectorSubspaceIndices());
       }
@@ -580,12 +582,14 @@ class TrackStateProxy
       // may be not yet allocated
       if (ACTS_CHECK_BIT(mask, PM::Calibrated) &&
           other.template has<detail_tsp::kCalibratedKey>()) {
-        visit_measurement(other.calibratedSize(), [&](auto N) {
-          constexpr int measdim = decltype(N)::value;
-          allocateCalibrated(
-              other.template calibrated<measdim>().eval(),
-              other.template calibratedCovariance<measdim>().eval());
-        });
+        visit_measurement(
+            other.calibratedSize(),
+            [&]<std::size_t measdim>(
+                std::integral_constant<std::size_t, measdim>) {
+              allocateCalibrated(
+                  other.template calibrated<measdim>().eval(),
+                  other.template calibratedCovariance<measdim>().eval());
+            });
 
         setProjectorSubspaceIndices(other.projectorSubspaceIndices());
       }

@@ -381,22 +381,22 @@ class TrackStateProxyCommon {
   ///       during fitting the mask grows as the track state is filled.
   /// @return Bit mask of available properties.
   TrackStatePropMask getMask() const {
-    using PM = TrackStatePropMask;
-    PM mask = PM::None;
+    using enum TrackStatePropMask;
+    TrackStatePropMask mask = None;
     if (hasPredicted()) {
-      mask |= PM::Predicted;
+      mask |= Predicted;
     }
     if (hasFiltered()) {
-      mask |= PM::Filtered;
+      mask |= Filtered;
     }
     if (hasSmoothed()) {
-      mask |= PM::Smoothed;
+      mask |= Smoothed;
     }
     if (hasJacobian()) {
-      mask |= PM::Jacobian;
+      mask |= Jacobian;
     }
     if (hasCalibrated()) {
-      mask |= PM::Calibrated;
+      mask |= Calibrated;
     }
     return mask;
   }
@@ -526,8 +526,7 @@ class TrackStateProxyCommon {
              Eigen::PlainObjectBase<val_t>::RowsAtCompileTime <=
                  static_cast<std::underlying_type_t<BoundIndices>>(eBoundSize))
   {
-    constexpr std::size_t measdim =
-        static_cast<std::size_t>(val_t::RowsAtCompileTime);
+    constexpr auto measdim = static_cast<std::size_t>(val_t::RowsAtCompileTime);
     derived().allocateCalibrated(measdim);
     calibrated<measdim>() = val;
     calibratedCovariance<measdim>() = cov;

@@ -76,9 +76,7 @@ class SeedProxy {
   SeedProxy &operator=(SeedProxy<false> &&other) noexcept
     requires ReadOnly
   {
-    m_container = &other.container();
-    m_index = other.index();
-    return *this;
+    return *this = other;
   }
 
   /// Returns a const proxy of the seed.
@@ -276,17 +274,20 @@ class SeedProxy {
 
     friend constexpr SpacePointIterator operator+(SpacePointIterator it,
                                                   difference_type n) noexcept {
-      return it += n;
+      it += n;
+      return it;
     }
 
     friend constexpr SpacePointIterator operator+(
         difference_type n, SpacePointIterator it) noexcept {
-      return it += n;
+      it += n;
+      return it;
     }
 
     friend constexpr SpacePointIterator operator-(SpacePointIterator it,
                                                   difference_type n) noexcept {
-      return it -= n;
+      it -= n;
+      return it;
     }
 
     friend constexpr difference_type operator-(

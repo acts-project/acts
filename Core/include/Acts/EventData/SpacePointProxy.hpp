@@ -84,9 +84,7 @@ class SpacePointProxy {
   SpacePointProxy &operator=(SpacePointProxy<false> &&other) noexcept
     requires ReadOnly
   {
-    m_container = &other.container();
-    m_index = other.index();
-    return *this;
+    return *this = other;
   }
 
   /// Returns a const proxy of the space point.

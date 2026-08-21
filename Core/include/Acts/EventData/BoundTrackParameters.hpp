@@ -58,7 +58,8 @@ class BoundTrackParameters {
   static Result<BoundTrackParameters> create(
       const GeometryContext& geoCtx, std::shared_ptr<const Surface> surface,
       const Vector4& pos4, const Vector3& dir, double qOverP,
-      std::optional<BoundMatrix> cov, ParticleHypothesis particleHypothesis,
+      std::optional<BoundMatrix> cov,
+      const ParticleHypothesis& particleHypothesis,
       double tolerance = s_onSurfaceTolerance) {
     Result<BoundVector> bound =
         transformFreeToBoundParameters(pos4.segment<3>(ePos0), pos4[eTime], dir,
@@ -82,7 +83,8 @@ class BoundTrackParameters {
   /// @return Curvilinear bound track parameters
   static BoundTrackParameters createCurvilinear(
       const Vector4& pos4, const Vector3& dir, double qOverP,
-      std::optional<BoundMatrix> cov, ParticleHypothesis particleHypothesis) {
+      std::optional<BoundMatrix> cov,
+      const ParticleHypothesis& particleHypothesis) {
     return BoundTrackParameters(
         CurvilinearSurface(pos4.segment<3>(ePos0), dir).surface(),
         transformFreeToCurvilinearParameters(pos4[eTime], dir, qOverP),
@@ -100,7 +102,8 @@ class BoundTrackParameters {
   /// @return Curvilinear bound track parameters
   static BoundTrackParameters createCurvilinear(
       const Vector4& pos4, double phi, double theta, double qOverP,
-      std::optional<BoundMatrix> cov, ParticleHypothesis particleHypothesis) {
+      std::optional<BoundMatrix> cov,
+      const ParticleHypothesis& particleHypothesis) {
     return BoundTrackParameters(
         CurvilinearSurface(pos4.segment<3>(ePos0),
                            makeDirectionFromPhiTheta(phi, theta))
@@ -124,7 +127,7 @@ class BoundTrackParameters {
   BoundTrackParameters(std::shared_ptr<const Surface> surface,
                        const BoundVector& params,
                        std::optional<BoundMatrix> cov,
-                       ParticleHypothesis particleHypothesis)
+                       const ParticleHypothesis& particleHypothesis)
       : m_params(params),
         m_cov(std::move(cov)),
         m_surface(std::move(surface)),

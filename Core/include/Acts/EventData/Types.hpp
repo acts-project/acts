@@ -39,10 +39,6 @@ using SubspaceIndices = std::array<SubspaceIndex, measdim>;
 /// Type alias for bound parameter subspace indices
 using BoundSubspaceIndices = SubspaceIndices<eBoundSize>;
 
-// template <std::size_t measdim>
-/// @brief type alias for indices of bound track parameters subspace
-/// @details used to specify which components of the bound track parameters are being referenced
-// using BoundSubspaceIndices = std::array<std::size_t, eBoundSize>;
 static constexpr BoundSubspaceIndices kBoundSubspaceIndicesInvalid = {
     eBoundSize, eBoundSize, eBoundSize, eBoundSize, eBoundSize, eBoundSize};
 

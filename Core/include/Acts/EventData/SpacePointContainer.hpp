@@ -20,12 +20,14 @@
 #include "Acts/Utilities/detail/ContainerSubset.hpp"
 
 #include <cassert>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <optional>
 #include <ranges>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
@@ -589,11 +591,24 @@ class SpacePointContainer {
   template <typename T>
   using ColumnHolder = detail::sp::ColumnHolder<T>;
 
+  /// Transparent hasher allowing heterogeneous lookup (e.g. by
+  /// std::string_view) in the string-keyed column maps below without
+  /// constructing a temporary std::string.
+  struct TransparentStringHash {
+    using is_transparent = void;
+    std::size_t operator()(std::string_view sv) const noexcept {
+      return std::hash<std::string_view>{}(sv);
+    }
+  };
+
   std::uint32_t m_size{0};
 
-  std::unordered_map<std::string, ColumnHolderBase *> m_allColumns;
+  std::unordered_map<std::string, ColumnHolderBase *, TransparentStringHash,
+                     std::equal_to<>>
+      m_allColumns;
   SpacePointColumns m_knownColumns{SpacePointColumns::None};
-  std::unordered_map<std::string, std::unique_ptr<ColumnHolderBase>>
+  std::unordered_map<std::string, std::unique_ptr<ColumnHolderBase>,
+                     TransparentStringHash, std::equal_to<>>
       m_dynamicColumns;
 
   std::vector<SourceLink> m_sourceLinks;

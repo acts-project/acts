@@ -142,8 +142,8 @@ void SpacePointContainer::moveColumns(SpacePointContainer &other) noexcept {
 void SpacePointContainer::reserve(std::uint32_t size,
                                   float averageSourceLinks) noexcept {
   if (hasColumns(SpacePointColumns::SourceLinks)) {
-    m_sourceLinks.reserve(
-        static_cast<std::uint32_t>(size * averageSourceLinks));
+    m_sourceLinks.reserve(static_cast<std::uint32_t>(static_cast<float>(size) *
+                                                     averageSourceLinks));
   }
 
   for (const auto &[name, column] : m_allColumns) {

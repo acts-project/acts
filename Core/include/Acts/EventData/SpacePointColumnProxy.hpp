@@ -59,7 +59,9 @@ class SpacePointColumnProxy {
 
   /// Returns the number of entries in the space point column.
   /// @return The size of the space point column.
-  std::uint32_t size() const noexcept { return column().size(); }
+  std::uint32_t size() const noexcept {
+    return static_cast<std::uint32_t>(column().size());
+  }
 
   /// Returns a const proxy of the space point column.
   /// @return A const proxy of the space point column.

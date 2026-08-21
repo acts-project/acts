@@ -96,6 +96,9 @@ void MultiComponentBoundTrackParameters::pushComponent(
     const double weight, const ParametersVector& params,
     const std::optional<CovarianceMatrix>& cov) {
   if (hasCovariance() != cov.has_value()) {
+    throw std::logic_error(
+        "Mismatch between MultiComponentBoundTrackParameters covariance "
+        "state and the provided covariance");
   }
 
   m_weights.push_back(weight);

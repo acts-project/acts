@@ -60,13 +60,13 @@ VectorTrackContainer::IndexType VectorTrackContainer::addTrack_impl() {
   m_nSharedHits.emplace_back();
 
   // dynamic columns
-  for (auto& [key, vec] : m_dynamic) {
+  for (const auto& [key, vec] : m_dynamic) {
     vec->add();
   }
 
   assert(checkConsistency());
 
-  return m_tipIndex.size() - 1;
+  return static_cast<IndexType>(m_tipIndex.size() - 1);
 }
 
 void VectorTrackContainer::removeTrack_impl(IndexType itrack) {
@@ -95,7 +95,7 @@ void VectorTrackContainer::removeTrack_impl(IndexType itrack) {
   erase(m_nOutliers);
   erase(m_nSharedHits);
 
-  for (auto& [key, vec] : m_dynamic) {
+  for (const auto& [key, vec] : m_dynamic) {
     vec->erase(itrack);
   }
 }
@@ -139,7 +139,7 @@ void VectorTrackContainer::reserve(IndexType size) {
   m_nOutliers.reserve(size);
   m_nSharedHits.reserve(size);
 
-  for (auto& [key, vec] : m_dynamic) {
+  for (const auto& [key, vec] : m_dynamic) {
     vec->reserve(size);
   }
 }
@@ -162,7 +162,7 @@ void VectorTrackContainer::clear() {
   m_nOutliers.clear();
   m_nSharedHits.clear();
 
-  for (auto& [key, vec] : m_dynamic) {
+  for (const auto& [key, vec] : m_dynamic) {
     vec->clear();
   }
 }

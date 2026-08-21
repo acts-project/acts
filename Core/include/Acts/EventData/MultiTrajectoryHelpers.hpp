@@ -118,8 +118,7 @@ VolumeTrajectoryStateContainer trajectoryState(
     auto& trajState = trajStateContainer[volume];
     trajState.nStates++;
     trajState.NDF += state.calibratedSize();
-    auto typeFlags = state.typeFlags();
-    if (typeFlags.isHole()) {
+    if (auto typeFlags = state.typeFlags(); typeFlags.isHole()) {
       trajState.nHoles++;
     } else if (typeFlags.isOutlier()) {
       trajState.nOutliers++;

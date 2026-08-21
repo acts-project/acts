@@ -25,11 +25,11 @@ namespace Acts {
 auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
                                                IndexType iprevious)
     -> IndexType {
-  using PropMask = TrackStatePropMask;
+  using enum TrackStatePropMask;
 
   m_index.emplace_back();
   IndexData& p = m_index.back();
-  IndexType index = static_cast<IndexType>(m_index.size() - 1);
+  auto index = static_cast<IndexType>(m_index.size() - 1);
   m_previous.emplace_back(iprevious);
   m_next.emplace_back(kInvalid);
 
@@ -40,19 +40,19 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
 
   assert(m_params.size() == m_cov.size());
 
-  if (ACTS_CHECK_BIT(mask, PropMask::Predicted)) {
+  if (ACTS_CHECK_BIT(mask, Predicted)) {
     m_params.emplace_back();
     m_cov.emplace_back();
     p.ipredicted = static_cast<IndexType>(m_params.size() - 1);
   }
 
-  if (ACTS_CHECK_BIT(mask, PropMask::Filtered)) {
+  if (ACTS_CHECK_BIT(mask, Filtered)) {
     m_params.emplace_back();
     m_cov.emplace_back();
     p.ifiltered = static_cast<IndexType>(m_params.size() - 1);
   }
 
-  if (ACTS_CHECK_BIT(mask, PropMask::Smoothed)) {
+  if (ACTS_CHECK_BIT(mask, Smoothed)) {
     m_params.emplace_back();
     m_cov.emplace_back();
     p.ismoothed = static_cast<IndexType>(m_params.size() - 1);
@@ -60,7 +60,7 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
 
   assert(m_params.size() == m_cov.size());
 
-  if (ACTS_CHECK_BIT(mask, PropMask::Jacobian)) {
+  if (ACTS_CHECK_BIT(mask, Jacobian)) {
     m_jac.emplace_back();
     p.ijacobian = static_cast<IndexType>(m_jac.size() - 1);
   }
@@ -71,7 +71,7 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
   m_measOffset.push_back(kInvalid);
   m_measCovOffset.push_back(kInvalid);
 
-  if (ACTS_CHECK_BIT(mask, PropMask::Calibrated)) {
+  if (ACTS_CHECK_BIT(mask, Calibrated)) {
     m_sourceLinks.emplace_back(std::nullopt);
     p.iCalibratedSourceLink = static_cast<IndexType>(m_sourceLinks.size() - 1);
 
@@ -141,27 +141,26 @@ void VectorMultiTrajectory::addTrackStateComponents_impl(
 void VectorMultiTrajectory::shareFrom_impl(IndexType iself, IndexType iother,
                                            TrackStatePropMask shareSource,
                                            TrackStatePropMask shareTarget) {
-  // auto other = getTrackState(iother);
   IndexData& self = m_index[iself];
   const IndexData& other = m_index[iother];
 
   assert(ACTS_CHECK_BIT(getTrackState(iother).getMask(), shareSource) &&
          "Source has incompatible allocation");
 
-  using PM = TrackStatePropMask;
+  using enum TrackStatePropMask;
 
   IndexType sourceIndex{kInvalid};
   switch (shareSource) {
-    case PM::Predicted:
+    case Predicted:
       sourceIndex = other.ipredicted;
       break;
-    case PM::Filtered:
+    case Filtered:
       sourceIndex = other.ifiltered;
       break;
-    case PM::Smoothed:
+    case Smoothed:
       sourceIndex = other.ismoothed;
       break;
-    case PM::Jacobian:
+    case Jacobian:
       sourceIndex = other.ijacobian;
       break;
     default:
@@ -171,20 +170,20 @@ void VectorMultiTrajectory::shareFrom_impl(IndexType iself, IndexType iother,
   assert(sourceIndex != kInvalid);
 
   switch (shareTarget) {
-    case PM::Predicted:
-      assert(shareSource != PM::Jacobian);
+    case Predicted:
+      assert(shareSource != Jacobian);
       self.ipredicted = sourceIndex;
       break;
-    case PM::Filtered:
-      assert(shareSource != PM::Jacobian);
+    case Filtered:
+      assert(shareSource != Jacobian);
       self.ifiltered = sourceIndex;
       break;
-    case PM::Smoothed:
-      assert(shareSource != PM::Jacobian);
+    case Smoothed:
+      assert(shareSource != Jacobian);
       self.ismoothed = sourceIndex;
       break;
-    case PM::Jacobian:
-      assert(shareSource == PM::Jacobian);
+    case Jacobian:
+      assert(shareSource == Jacobian);
       self.ijacobian = sourceIndex;
       break;
     default:
@@ -194,22 +193,22 @@ void VectorMultiTrajectory::shareFrom_impl(IndexType iself, IndexType iother,
 
 void VectorMultiTrajectory::unset_impl(TrackStatePropMask target,
                                        IndexType istate) {
-  using PM = TrackStatePropMask;
+  using enum TrackStatePropMask;
 
   switch (target) {
-    case PM::Predicted:
+    case Predicted:
       m_index[istate].ipredicted = kInvalid;
       break;
-    case PM::Filtered:
+    case Filtered:
       m_index[istate].ifiltered = kInvalid;
       break;
-    case PM::Smoothed:
+    case Smoothed:
       m_index[istate].ismoothed = kInvalid;
       break;
-    case PM::Jacobian:
+    case Jacobian:
       m_index[istate].ijacobian = kInvalid;
       break;
-    case PM::Calibrated:
+    case Calibrated:
       m_measOffset[istate] = kInvalid;
       m_measCovOffset[istate] = kInvalid;
       m_index[istate].measdim = kInvalid;
@@ -248,12 +247,15 @@ void detail_vmt::VectorMultiTrajectoryBase::Statistics::toStream(
   const auto& column_axis = axis::get<cat>(h.axis(0));
   const auto& type_axis = axis::get<axis::category<>>(h.axis(1));
 
-  auto p = [&](const auto& key, const auto v, std::string_view suffix = "") {
-    if constexpr (std::is_same_v<std::decay_t<decltype(v)>, double>) {
-      os << std::format("{:>20}: {:8.2f}{}", key, v / n, suffix) << std::endl;
-    } else {
-      os << std::format("{:>20}: {:8.2f}{}", key, static_cast<double>(v) / n,
+  auto p = [&]<typename T>(const auto& key, const T v,
+                           std::string_view suffix = "") {
+    if constexpr (std::is_same_v<std::decay_t<T>, double>) {
+      os << std::format("{:>20}: {:8.2f}{}", key, v / static_cast<double>(n),
                         suffix)
+         << std::endl;
+    } else {
+      os << std::format("{:>20}: {:8.2f}{}", key,
+                        static_cast<double>(v) / static_cast<double>(n), suffix)
          << std::endl;
     }
   };
