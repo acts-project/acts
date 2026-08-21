@@ -282,12 +282,20 @@ class TrackingGeometry {
   const std::unordered_map<GeometryIdentifier, const Surface*>&
   geoIdSurfaceMap() const;
 
-  /// Visualize a tracking geometry including substructure
-  /// @param helper The visualization helper that implement the output
-  /// @param gctx The geometry context
   /// @param viewConfig Global view config
   /// @param portalViewConfig View config for portals
   /// @param sensitiveViewConfig View configuration for sensitive surfaces
+  /// @deprecated Use the ViewConfigFunc overload instead
+  [[deprecated("Use the ViewConfigFunc overload instead")]]
+  void visualize(IVisualization3D& helper, const GeometryContext& gctx,
+                 const ViewConfig& viewConfig,
+                 const ViewConfig& portalViewConfig,
+                 const ViewConfig& sensitiveViewConfig) const;
+
+  /// Visualize a tracking geometry including substructure
+  /// @param helper The visualization helper that implement the output
+  /// @param gctx The geometry context
+  /// @param func Function determining the ViewConfig for each GeometryObject
   void visualize(IVisualization3D& helper, const GeometryContext& gctx,
                  const ViewConfigFunc& func = defaultGeometryColoring) const;
 
