@@ -52,7 +52,7 @@ class input_converter_interface {
   virtual ~input_converter_interface() = default;
 
   /// Reads the respective detector component from an input data source.
-  virtual void to_payload(const std::any, detector_payload&) = 0;
+  virtual void add_to_payload(const std::any&, detector_payload&) = 0;
 };
 
 /// @brief Abstract base class for detray detector component file readers
@@ -65,15 +65,15 @@ class input_file_converter_interface : public input_converter_interface {
   std::string_view file_extension() const { return m_file_extension; }
 
   /// Reads the respective detector component from file.
-  virtual void from_file(io::file_handle&, detector_payload&) = 0;
+  virtual void add_from_file(io::file_handle&, detector_payload&) = 0;
 
   /// Reads the respective detector component from file.
-  void to_payload(const std::any input_data,
-                  detector_payload& payload) override {
+  void add_to_payload(const std::any& input_data,
+                      detector_payload& payload) override {
     const std::string file_name = get_file_name(input_data);
     io::file_handle file{file_name, std::ios_base::in | std::ios_base::binary};
 
-    from_file(file, payload);
+    add_from_file(file, payload);
   };
 
  private:
@@ -88,7 +88,7 @@ class input_file_converter_interface : public input_converter_interface {
           "Unknown input data type in "
           << m_file_extension
           << " file converter! Should be 'std::string' (file name)");
-      throw std::bad_any_cast(e);
+      throw;
     }
 
     return file_name;
