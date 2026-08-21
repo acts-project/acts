@@ -8,4 +8,5 @@ target_sources(
         CylinderNavigationPolicy.cpp
         MultiLayerNavigationPolicy.cpp
         MultiNavigationPolicy.cpp
+        FrustumNavigationPolicy.cpp
 )
