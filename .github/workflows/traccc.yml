@@ -42,7 +42,7 @@ jobs:
       matrix:
         platform:
           - name: CPU
-            container: ghcr.io/acts-project/ubuntu2604:90
+            container: ghcr.io/acts-project/ubuntu2604:91
             options: --preset host-fp32
             run_tests: true
             enable_cuda: false
@@ -50,7 +50,7 @@ jobs:
           # Distinct name because merge-sentinel deduplicates result items by
           # normalised name: two legs called CPU collapse into one check.
           - name: CPU_FP64
-            container: ghcr.io/acts-project/ubuntu2604:90
+            container: ghcr.io/acts-project/ubuntu2604:91
             options: --preset host-fp64
             run_tests: false
             enable_cuda: false
@@ -71,7 +71,7 @@ jobs:
           # GPU run.
           - platform:
               name: CUDA
-              container: ghcr.io/acts-project/ubuntu2604:90
+              container: ghcr.io/acts-project/ubuntu2604:91
               options: --preset cuda-fp32
               run_tests: false
               upload_build: true
@@ -84,7 +84,7 @@ jobs:
           # building them under `-G --keep` is very slow for no added signal.
           - platform:
               name: CUDA
-              container: ghcr.io/acts-project/ubuntu2604:90
+              container: ghcr.io/acts-project/ubuntu2604:91
               options: --preset cuda-fp32 -DTRACCC_BUILD_TESTING=FALSE
               run_tests: false
               enable_cuda: true
@@ -96,7 +96,7 @@ jobs:
           # and the preset would otherwise build the whole suite to discard it.
           - platform:
               name: CUDA_FP64
-              container: ghcr.io/acts-project/ubuntu2604:90
+              container: ghcr.io/acts-project/ubuntu2604:91
               options: --preset cuda-fp64 -DTRACCC_BUILD_TESTING=FALSE
               run_tests: false
               enable_cuda: true
@@ -104,7 +104,7 @@ jobs:
             build: Release
           - platform:
               name: "ALPAKA_CPU"
-              container: ghcr.io/acts-project/ubuntu2604:90
+              container: ghcr.io/acts-project/ubuntu2604:91
               options: --preset alpaka-fp32
               run_tests: true
               enable_cuda: false
@@ -112,7 +112,7 @@ jobs:
             build: Release
           - platform:
               name: "ALPAKA_CUDA"
-              container: ghcr.io/acts-project/ubuntu2604:90
+              container: ghcr.io/acts-project/ubuntu2604:91
               options: --preset alpaka-fp32 -Dalpaka_ACC_GPU_CUDA_ENABLE=ON -DTRACCC_FAIL_ON_WARNINGS=OFF -DTRACCC_BUILD_CUDA_UTILS=ON
               run_tests: false
               enable_cuda: true
@@ -223,7 +223,7 @@ jobs:
       contents: read
       packages: read
     container:
-      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
+      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:91
       options: --gpus all
 
     env:
