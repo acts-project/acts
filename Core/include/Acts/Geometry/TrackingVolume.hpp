@@ -530,9 +530,7 @@ class TrackingVolume : public Volume {
   /// @param portalViewConfig View configuration for portals
   /// @param sensitiveViewConfig View configuration for sensitive surfaces
   void visualize(IVisualization3D& helper, const GeometryContext& gctx,
-                 const ViewConfig& viewConfig,
-                 const ViewConfig& portalViewConfig,
-                 const ViewConfig& sensitiveViewConfig) const;
+                 const ViewConfigFunc& func = viewConfigFactory()) const;
 
   /// @cond
   using Volume::visualize;
