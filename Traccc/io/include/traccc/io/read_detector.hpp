@@ -28,10 +28,12 @@ namespace traccc::io {
 /// @param geometry_file The file containing the geometry description
 /// @param material_file The file containing the material description
 /// @param grid_file The file containing the detector grid description
+/// @param do_consistency_check run check on detector after building
 ///
 void read_detector(host_detector& detector, vecmem::memory_resource& mr,
-                   const std::string_view& geometry_file,
-                   const std::string_view& material_file = "",
-                   const std::string_view& grid_file = "");
+                   const std::string_view geometry_file,
+                   const std::string_view material_file = "",
+                   const std::string_view grid_file = "",
+                   const bool do_consistency_check = true);
 
 }  // namespace traccc::io

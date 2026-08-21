@@ -12,6 +12,7 @@
 #include "traccc/fitting/kalman_filter/kalman_actor.hpp"
 #include "traccc/geometry/host_detector.hpp"
 #include "traccc/io/data_format.hpp"
+#include "traccc/io/detector.hpp"
 #include "traccc/io/utils.hpp"
 #include "traccc/utils/event_data.hpp"
 #include "traccc/utils/fill_track_container.hpp"
@@ -28,9 +29,6 @@
 
 // Performance include(s).
 #include "traccc/performance/kalman_filter_comparison.hpp"
-
-// Detray include(s)
-#include <detray/io/frontend/detector_reader.hpp>
 
 // VecMem include(s).
 #include <vecmem/memory/host_memory_resource.hpp>
