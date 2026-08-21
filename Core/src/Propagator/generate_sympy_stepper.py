@@ -9,7 +9,9 @@ from sympy.codegen.ast import Assignment
 from codegen.sympy_common import (
     make_vector,
     NamedExpr,
+    Derivation,
     StructuredMatrix,
+    explicit,
     name_expr,
     find_by_name,
     my_subs,
@@ -134,49 +136,7 @@ def rk4_subexpr(f, x, y, ydot, h):
     )
 
 
-def _ex(x):
-    """Explicit matrix view of a MatrixSymbol (or pass through)."""
-    return x.as_explicit() if hasattr(x, "as_explicit") else x
-
-
-class _Builder:
-    """Collects named expressions and can resolve them back to closed form.
-
-    The closed form is only needed for the self checks: the ATLAS recursion
-    below reuses a handful of already computed quantities as derivative terms,
-    and every one of those shortcuts is verified against what the plain chain
-    rule produces before it is allowed into the generated code.
-    """
-
-    def __init__(self):
-        self.name_exprs = []
-        self._by_name = {}
-
-    def add(self, name, expr):
-        if isinstance(expr, Matrix):
-            expr = ImmutableMatrix(expr)
-        ne = name_expr(name, expr)
-        self.name_exprs.append(ne)
-        self._by_name[ne.name] = ne.expr
-        return ne
-
-    def resolve(self, expr):
-        subs = list(self._by_name.items())
-        for _ in range(64):
-            new = expr.subs(subs)
-            if new == expr:
-                return sym.expand(new)
-            expr = new
-        raise RuntimeError("named expressions did not resolve")
-
-    def check_same(self, what, expr_a, expr_b):
-        diff = sym.simplify(sym.expand(self.resolve(expr_a) - self.resolve(expr_b)))
-        if any(e != 0 for e in diff):
-            raise AssertionError(f"{what}: shortcut does not match chain rule\n{diff}")
-
-
-# tangent seed for the direction: [ dd/dd | l * dd/dl ] = [ I | 0 ]
-class _Stages:
+class AtlasStages:
     """The named quantities of one ATLAS-form RK4 step."""
 
     def __init__(self, **kwargs):
@@ -197,28 +157,37 @@ def _atlas_rk4_stages(b, taylor_norm):
     S4 = b.add("S4", h / 4)
 
     H0 = b.add("H0", hl2.name * B1)
-    A0 = b.add("A0", d.cross(_ex(H0.name)))  # h/2 * k1
-    A2 = b.add("A2", _ex(A0.name) + d)  # d + h/2 * k1
-    A1 = b.add("A1", _ex(A2.name) + d)  # 2d + h/2 * k1
-    b.add("p2", p + S4.name * _ex(A1.name))
+    A0 = b.add("A0", d.cross(explicit(H0.name)))  # h/2 * k1
+    A2 = b.add("A2", explicit(A0.name) + d)  # d + h/2 * k1
+    A1 = b.add("A1", explicit(A2.name) + d)  # 2d + h/2 * k1
+    b.add("p2", p + S4.name * explicit(A1.name))
 
     H1 = b.add("H1", hl2.name * B2)
-    A3 = b.add("A3", d + _ex(A2.name).cross(_ex(H1.name)))  # d + h/2 * k2
-    A4 = b.add("A4", d + _ex(A3.name).cross(_ex(H1.name)))  # d + h/2 * k3
-    A5 = b.add("A5", 2 * _ex(A4.name) - d)  # d + h * k3
-    b.add("p3", p + h * _ex(A4.name))
+    A3 = b.add("A3", d + explicit(A2.name).cross(explicit(H1.name)))  # d + h/2 * k2
+    A4 = b.add("A4", d + explicit(A3.name).cross(explicit(H1.name)))  # d + h/2 * k3
+    A5 = b.add("A5", 2 * explicit(A4.name) - d)  # d + h * k3
+    b.add("p3", p + h * explicit(A4.name))
 
     H2 = b.add("H2", hl2.name * B3)
-    A6 = b.add("A6", _ex(A5.name).cross(_ex(H2.name)))  # h/2 * k4
+    A6 = b.add("A6", explicit(A5.name).cross(explicit(H2.name)))  # h/2 * k4
 
     # (A1+A6)-(A3+A4) is h/2 * (k1-k2-k3+k4), hence the leading 2*|h|.
-    err_vec = (_ex(A1.name) + _ex(A6.name)) - (_ex(A3.name) + _ex(A4.name))
+    err_vec = (explicit(A1.name) + explicit(A6.name)) - (
+        explicit(A3.name) + explicit(A4.name)
+    )
     b.add("err", 2 * sym.Abs(h) * err_vec.norm(1))
 
-    b.add("new_p", p + S3.name * (_ex(A2.name) + _ex(A3.name) + _ex(A4.name)))
+    b.add(
+        "new_p",
+        p + S3.name * (explicit(A2.name) + explicit(A3.name) + explicit(A4.name)),
+    )
 
     # An = 3 * (d + h/6*(k1 + 2k2 + 2k3 + k4)), the unnormalised new direction.
-    An = b.add("An", 2 * _ex(A3.name) + (_ex(A0.name) + _ex(A5.name) + _ex(A6.name)))
+    An = b.add(
+        "An",
+        2 * explicit(A3.name)
+        + (explicit(A0.name) + explicit(A5.name) + explicit(A6.name)),
+    )
 
     if taylor_norm:
         # ATLAS replaces 1/|An| by its Taylor expansion around |An| = 3, which
@@ -228,10 +197,10 @@ def _atlas_rk4_stages(b, taylor_norm):
             "Dfac",
             sym.Rational(1, 3) - sym.Rational(1, 648) * Dv.name * (12 - Dv.name),
         )
-        new_d = b.add("new_d", Dfac.name * _ex(An.name))
+        new_d = b.add("new_d", Dfac.name * explicit(An.name))
     else:
-        inv_norm = b.add("inv_norm", 1 / _ex(An.name).norm())
-        new_d = b.add("new_d", inv_norm.name * _ex(An.name))
+        inv_norm = b.add("inv_norm", 1 / explicit(An.name).norm())
+        new_d = b.add("new_d", inv_norm.name * explicit(An.name))
 
     dtds = b.add("dtds", sym.sqrt(1 + m**2 / p_abs**2))
     b.add("new_t", t + h * dtds.name)
@@ -240,14 +209,14 @@ def _atlas_rk4_stages(b, taylor_norm):
     b.add(
         "path_derivatives",
         Matrix.vstack(
-            _ex(new_d.name),
+            explicit(new_d.name),
             Matrix([dtds.name]),
-            Sl.name * _ex(A6.name),
+            Sl.name * explicit(A6.name),
             Matrix([0]),
         ),
     )
 
-    return _Stages(
+    return AtlasStages(
         S3=S3,
         H0=H0,
         H1=H1,
@@ -276,12 +245,8 @@ def _field_contrib(b, what, stage, H, same_as, seed):
     return Matrix.hstack(contrib[:, 0 : seed.cols - 1], same_as)
 
 
-# The bound-to-free jacobian M, stored column major: "hold" is never written,
-# "step" is written by every step and "dense" only by a dense step.
-#
-# loc0, loc1 and time cannot move: the first two have no direction and no q/p
-# component, and the time column is exactly e_time.  l' = l pins the q/p row
-# outside matter, and dt/ds pins the time row to the q/p column.
+# The bound-to-free jacobian M, stored column major.  "hold" is never written,
+# "step" is written by every step, "dense" only by a dense step.
 # fmt: off
 _B2F = StructuredMatrix("M", [
     #  loc0    loc1    phi     theta   qop      time
@@ -326,7 +291,7 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
     parametrisation has two direction degrees of freedom, a free-to-free D
     needs three) and the 8x8 composition.
     """
-    b = _Builder()
+    b = Derivation()
     st = _atlas_rk4_stages(b, taylor_norm)
     H0, H1, H2 = st.H0, st.H1, st.H2
     A0, A3, A4, A6 = st.A0, st.A3, st.A4, st.A6
@@ -360,35 +325,52 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
             pos_fac, dir_fac = S3.name, sym.Rational(1, 3)
         else:
             vl = M[7, c]
-            seed = _ex(b.add(f"u{tag}", l * col(c, (4, 5, 6))).name)
+            seed = explicit(b.add(f"u{tag}", l * col(c, (4, 5, 6))).name)
             fields = [
                 _field_contrib(
-                    b, f"{tag}0", A0, H0, _ex(A0.name) * vl, _ex(H0.name) * vl
+                    b, f"{tag}0", A0, H0, explicit(A0.name) * vl, explicit(H0.name) * vl
                 ),
                 _field_contrib(
-                    b, f"{tag}3", A3, H1, (_ex(A3.name) - d) * vl, _ex(H1.name) * vl
+                    b,
+                    f"{tag}3",
+                    A3,
+                    H1,
+                    (explicit(A3.name) - d) * vl,
+                    explicit(H1.name) * vl,
                 ),
                 _field_contrib(
-                    b, f"{tag}4", A4, H1, (_ex(A4.name) - d) * vl, _ex(H1.name) * vl
+                    b,
+                    f"{tag}4",
+                    A4,
+                    H1,
+                    (explicit(A4.name) - d) * vl,
+                    explicit(H1.name) * vl,
                 ),
                 _field_contrib(
-                    b, f"{tag}6", A6, H2, _ex(A6.name) * vl, _ex(H2.name) * vl
+                    b, f"{tag}6", A6, H2, explicit(A6.name) * vl, explicit(H2.name) * vl
                 ),
             ]
             pos_fac, dir_fac = scale[0], scale[1]
 
         v0 = tangent(f"{tag}0", A0, [(d, seed)], fields[0])
-        v2 = b.add(f"{tag}2", _ex(v0.name) + seed)
-        v3 = tangent(f"{tag}3", A3, [(d, seed), (st.A2.name, _ex(v2.name))], fields[1])
-        v4 = tangent(f"{tag}4", A4, [(d, seed), (A3.name, _ex(v3.name))], fields[2])
-        v5 = b.add(f"{tag}5", 2 * _ex(v4.name) - seed)
-        v6 = tangent(f"{tag}6", A6, [(st.A5.name, _ex(v5.name))], fields[3])
+        v2 = b.add(f"{tag}2", explicit(v0.name) + seed)
+        v3 = tangent(
+            f"{tag}3", A3, [(d, seed), (st.A2.name, explicit(v2.name))], fields[1]
+        )
+        v4 = tangent(
+            f"{tag}4", A4, [(d, seed), (A3.name, explicit(v3.name))], fields[2]
+        )
+        v5 = b.add(f"{tag}5", 2 * explicit(v4.name) - seed)
+        v6 = tangent(f"{tag}6", A6, [(st.A5.name, explicit(v5.name))], fields[3])
 
         new_pos = col(c, (0, 1, 2)) + pos_fac * (
-            _ex(v2.name) + _ex(v3.name) + _ex(v4.name)
+            explicit(v2.name) + explicit(v3.name) + explicit(v4.name)
         )
         new_dir = dir_fac * (
-            _ex(v0.name) + 2 * _ex(v3.name) + _ex(v5.name) + _ex(v6.name)
+            explicit(v0.name)
+            + 2 * explicit(v3.name)
+            + explicit(v5.name)
+            + explicit(v6.name)
         )
         return new_pos, new_dir
 

@@ -24,6 +24,46 @@ def make_matrix(name, rows, cols, **kwargs):
     )
 
 
+def explicit(x):
+    """Explicit matrix view of a MatrixSymbol (or pass through)."""
+    return x.as_explicit() if hasattr(x, "as_explicit") else x
+
+
+class Derivation:
+    """An ordered sequence of named intermediate expressions.
+
+    `check_same` resolves a name back to closed form, so a hand derived
+    shortcut can be checked against the plain chain rule before it reaches
+    generated code.
+    """
+
+    def __init__(self):
+        self.name_exprs = []
+        self._by_name = {}
+
+    def add(self, name, expr):
+        if isinstance(expr, Matrix):
+            expr = ImmutableMatrix(expr)
+        ne = name_expr(name, expr)
+        self.name_exprs.append(ne)
+        self._by_name[ne.name] = ne.expr
+        return ne
+
+    def resolve(self, expr):
+        subs = list(self._by_name.items())
+        for _ in range(64):
+            new = expr.subs(subs)
+            if new == expr:
+                return sym.expand(new)
+            expr = new
+        raise RuntimeError("named expressions did not resolve")
+
+    def check_same(self, what, expr_a, expr_b):
+        diff = sym.simplify(sym.expand(self.resolve(expr_a) - self.resolve(expr_b)))
+        if any(e != 0 for e in diff):
+            raise AssertionError(f"{what}: shortcut does not match chain rule\n{diff}")
+
+
 class StructuredMatrix:
     """A symbolic matrix declared as a grid of entry classes.
 
