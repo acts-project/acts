@@ -8,6 +8,8 @@
 
 import argparse
 
+from utils import units
+
 # ------------------------------------------------------------------------------
 # Options parsing
 # ------------------------------------------------------------------------------
@@ -91,3 +93,32 @@ def uniform_track_generator_options():
     )
 
     return parser
+
+
+""" Fill a uniform track generator config from the parsed arguments """
+
+
+def fill_track_generator_config(args, config):
+
+    if args.phi_steps is not None:
+        config.phiSteps = args.phi_steps
+    if args.eta_steps is not None:
+        config.etaSteps = args.eta_steps
+    if args.random_seed is not None:
+        config.seed = args.random_seed
+    if args.randomize_charge is not None:
+        config.randomizeCharge = args.randomize_charge
+
+    if args.eta_range is not None:
+        config.etaRange = (args.eta_range[0], args.eta_range[1])
+
+    if args.pT_range is not None and args.p_range is not None:
+        raise ValueError(
+            "Transverse and total momentum cannot be specified at the same time"
+        )
+    if args.pT_range is not None:
+        config.pT(args.pT_range[0] * units.GeV)
+    elif args.p_range is not None:
+        config.pTot(args.p_range[0] * units.GeV)
+
+    return config

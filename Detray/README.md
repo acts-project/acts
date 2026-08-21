@@ -118,9 +118,9 @@ Note: The `search_window` option defines the size of lookup area of the grid acc
 
 ### Material Validation
 
-This tool checks whether the navigator picks up the material correctly by comparing the material found during a ray scan with the material collected during navigation by a specialized actor:
+This tool checks whether the navigator picks up the material correctly by comparing the material found during a ray scan with the material collected during navigation by a specialized actor. It requires the python bindings (`-DDETRAY_BUILD_PYTHON_BINDINGS=ON`) to be built and set up via `detray-build/python/setup.sh`:
 ```shell
-detray-build/bin/detray_material_validation \
+python3 detray/tests/tools/python/material_validation.py \
     --geometry_file ./toy_detector/toy_detector_geometry.json \
     --material_file ./toy_detector/toy_detector_homogeneous_material.json \
     --phi_steps 100 --eta_steps 100 --eta_range -4 4

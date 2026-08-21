@@ -60,3 +60,22 @@ def parse_detector_io_options(args, logging):
     if args.material_file and not os.path.isfile(args.material_file):
         logging.error(f"Detector material file does not exist! ({args.material_file})")
         sys.exit(1)
+
+
+""" Fill a detector reader config from the parsed commandline options """
+
+
+def fill_reader_config(args, config):
+
+    if not args.geometry_file:
+        raise ValueError("Please specify a geometry input file!")
+
+    config.addFile(args.geometry_file)
+
+    if args.material_file:
+        config.addFile(args.material_file)
+
+    if args.grid_file:
+        config.addFile(args.grid_file)
+
+    return config

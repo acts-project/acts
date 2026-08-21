@@ -179,6 +179,7 @@ void computePosteriorWeights(const traj_t &mt,
                                       }))
           .chi2();
 
+  //! [posterior weights]
   // Loop over the tips and compute new weights
   for (auto tip : tips) {
     const auto state = mt.getTrackState(tip);
@@ -202,6 +203,7 @@ void computePosteriorWeights(const traj_t &mt,
 
     weights.at(tip) *= factor;
   }
+  //! [posterior weights]
 }
 
 /// Enumeration type to allow templating on the state we want to project on with

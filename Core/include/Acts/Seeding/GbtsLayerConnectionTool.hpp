@@ -20,8 +20,7 @@
 
 namespace Acts::Experimental {
 
-/// Layer connection training tool for
-/// creating layer map for GBTS
+/// Builds the GBTS layer connection table from observed track hits.
 class GbtsLayerConnectionTool {
  public:
   /// Struct to hold r and z bounds for a given detector layer
@@ -100,8 +99,7 @@ class GbtsLayerConnectionTool {
   using LayerIdPairMap =
       std::unordered_map<LayerIdPair, std::uint32_t, LayerIdPairHash>;
 
-  /// Constructor for layer connection training tool
-  /// @param config The training tool config
+  /// @param config Tool configuration
   /// @param logger The Acts logger
   explicit GbtsLayerConnectionTool(
       const Config& config,

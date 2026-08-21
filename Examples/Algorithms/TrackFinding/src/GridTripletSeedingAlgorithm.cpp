@@ -21,7 +21,10 @@
 #include <cmath>
 #include <csignal>
 #include <cstddef>
+#include <sstream>
 #include <stdexcept>
+#include <utility>
+#include <vector>
 
 namespace ActsExamples {
 
@@ -58,6 +61,41 @@ static inline bool itkFastTrackingSPselect(const ConstSpacePointProxy& sp) {
   return true;
 }
 
+/// Stateful experiment-cut functor that rejects a doublet whose z-origin does
+/// not fall inside any of the provided per-event z-windows (built from the
+/// reconstructed vertices). Bound to the DoubletSeedFinder's `experimentCuts`
+/// delegate for the duration of one event. An empty window list keeps every
+/// doublet (no constraint).
+struct VertexZCuts {
+  std::vector<std::pair<float, float>> windows;  // [zmin, zmax] in mm
+  // per-event diagnostics (mutable: operator() is const, called during finding)
+  mutable std::size_t nTested{0};
+  mutable std::size_t nRejected{0};
+
+  bool operator()(const Acts::ConstSpacePointProxy& middle,
+                  const Acts::ConstSpacePointProxy& /*other*/, float cotTheta,
+                  bool /*isBottomCandidate*/) const {
+    if (windows.empty()) {
+      return true;
+    }
+    ++nTested;
+    // z-origin of the doublet extrapolated to the beam line. NOTE: the core
+    // seeding SpacePointContainer fills the packed zr column (z = zr[0],
+    // r = zr[1]), not the separate z()/r() columns -- calling middle.z()/r()
+    // here reads unallocated data and segfaults.
+    const float zM = middle.zr()[0];
+    const float rM = middle.zr()[1];
+    const float zOrigin = zM - rM * cotTheta;
+    for (const auto& [lo, hi] : windows) {
+      if (zOrigin >= lo && zOrigin <= hi) {
+        return true;
+      }
+    }
+    ++nRejected;
+    return false;  // outside every window -> reject
+  }
+};
+
 }  // namespace
 
 GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
@@ -65,6 +103,16 @@ GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
     : IAlgorithm("GridTripletSeedingAlgorithm", std::move(logger)), m_cfg(cfg) {
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
+  if (!m_cfg.inputVertices.empty()) {
+    m_inputVertices.initialize(m_cfg.inputVertices);
+    // Note: the ctor parameter is named `logger`, which shadows the logger()
+    // method the ACTS_* macros use, so log via this->logger() explicitly.
+    ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
+                         "Vertex-z seeding constraint ENABLED: vertices='"
+                             << m_cfg.inputVertices
+                             << "', nSigma=" << m_cfg.vertexZNSigma
+                             << ", margin=" << m_cfg.vertexZMargin << " mm");
+  }
 
   // check that the bins required in the custom bin looping
   // are contained in the bins defined by the total number of edges
@@ -132,6 +180,30 @@ GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
 ProcessCode GridTripletSeedingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   const SpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
+
+  // Build the per-event vertex z-windows used to constrain the doublet
+  // z-origin. Lives on the stack for the whole event; the DoubletSeedFinders
+  // (below) hold a delegate pointing at it and are only used within this call.
+  VertexZCuts vertexZCuts;
+  if (!m_cfg.inputVertices.empty()) {
+    const VertexContainer& vertices = m_inputVertices(ctx);
+    vertexZCuts.windows.reserve(vertices.size());
+    for (const auto& v : vertices) {
+      const double z = v.position().z();
+      const double sigmaZ = std::sqrt(v.covariance()(2, 2));
+      const double half = m_cfg.vertexZNSigma * sigmaZ + m_cfg.vertexZMargin;
+      vertexZCuts.windows.emplace_back(static_cast<float>(z - half),
+                                       static_cast<float>(z + half));
+    }
+    std::ostringstream oss;
+    for (const auto& [lo, hi] : vertexZCuts.windows) {
+      oss << " [" << lo << ", " << hi << "]";
+    }
+    ACTS_VERBOSE("Vertex-z seeding constraint: read "
+                 << vertices.size() << " vertex(es) from '"
+                 << m_cfg.inputVertices << "' -> " << vertexZCuts.windows.size()
+                 << " z-window(s) [mm]:" << oss.str());
+  }
 
   Acts::CylindricalSpacePointGrid grid(m_gridConfig,
                                        logger().cloneWithSuffix("Grid"));
@@ -215,7 +287,13 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   bottomDoubletFinderConfig.cotThetaMax = m_cfg.cotThetaMax;
   bottomDoubletFinderConfig.minPt = m_cfg.minPt;
   bottomDoubletFinderConfig.helixCutTolerance = m_cfg.helixCutTolerance;
-  if (m_cfg.useExtraCuts) {
+  // Vertex-z constraint takes the single experimentCuts slot when enabled;
+  // otherwise fall back to the (optional) ITk fast-tracking cuts. The top
+  // doublet config below is copied from this one, so the delegate is shared.
+  if (!m_cfg.inputVertices.empty()) {
+    bottomDoubletFinderConfig.experimentCuts.connect<&VertexZCuts::operator()>(
+        &vertexZCuts);
+  } else if (m_cfg.useExtraCuts) {
     bottomDoubletFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
   auto bottomDoubletFinder =
@@ -303,6 +381,14 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePoints.size() << " space points");
+
+  // Report how strongly the vertex-z constraint fired this event.
+  if (!vertexZCuts.windows.empty()) {
+    ACTS_VERBOSE("Vertex-z seeding constraint: rejected "
+                 << vertexZCuts.nRejected << " / " << vertexZCuts.nTested
+                 << " doublet candidates; " << seeds.size()
+                 << " seeds produced");
+  }
 
   // update seed space point indices to original space point container
   for (auto seed : seeds) {
