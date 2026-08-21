@@ -299,7 +299,8 @@ SeederSetup makeSeeder(const ToyDetector& detector) {
           Experimental::GraphBasedTrackSeeder::DerivedConfig(config), geometry,
           getDefaultLogger("GbtsTest", Logging::Level::WARNING)),
       .filter = Experimental::GbtsTrackingFilter(
-          Experimental::GbtsTrackingFilter::Config{}, geometry),
+          Experimental::GbtsTrackingFilter::Config{}, geometry,
+          getDefaultLogger("GbtsTest", Logging::Level::WARNING)),
       .roi = Experimental::GbtsRoiDescriptor(-4.5, 4.5, -kBarrelHalfZ,
                                              kBarrelHalfZ),
       .options = Experimental::GraphBasedTrackSeeder::Options(2_T),

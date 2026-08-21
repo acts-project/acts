@@ -12,7 +12,8 @@
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
+#include <memory>
+#include <utility>
 
 namespace Acts::Experimental::detail {
 
@@ -68,8 +69,9 @@ void detail::GbtsEdgeState::initialize(const detail::GbtsEdge& pS,
 namespace Acts::Experimental {
 
 GbtsTrackingFilter::GbtsTrackingFilter(
-    const Config& config, const std::shared_ptr<const GbtsGeometry>& geometry)
-    : m_cfg(config), m_geometry(geometry) {}
+    const Config& config, const std::shared_ptr<const GbtsGeometry>& geometry,
+    std::unique_ptr<const Logger> logger)
+    : m_cfg(config), m_geometry(geometry), m_logger(std::move(logger)) {}
 
 detail::GbtsEdgeState GbtsTrackingFilter::followTrack(
     State& state, const detail::GbtsNodeView& nodeView,
@@ -185,11 +187,11 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
                                 const detail::GbtsEdge& pS,
                                 detail::GbtsEdgeState& ts) const {
   if (ts.cx[2][2] < 0 || ts.cx[1][1] < 0 || ts.cx[0][0] < 0) {
-    std::cout << "Negative cov_x" << std::endl;
+    ACTS_WARNING("Negative cov_x");
   }
 
   if (ts.cy[1][1] < 0 || ts.cy[0][0] < 0) {
-    std::cout << "Negative cov_y" << std::endl;
+    ACTS_WARNING("Negative cov_y");
   }
 
   // add ms.
