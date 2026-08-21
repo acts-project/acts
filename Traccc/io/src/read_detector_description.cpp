@@ -126,7 +126,7 @@ void read_json_dd(traccc::detector_design_description::host& det_desc,
   vecmem::host_memory_resource mr;
 
   //
-  // TODO: Remove and reuse existing detector (for compiletime and runtime
+  // TODO: Remove and reuse existing detector (for compile time and runtime
   // performance)
   //
   // Set up the detector reader configuration for the optional components
@@ -137,7 +137,7 @@ void read_json_dd(traccc::detector_design_description::host& det_desc,
 
   // TODO: Implement detector visitor!
   traccc::host_detector detector;
-  std::string_view det_name{payload.names.get_detector_name()};
+  std::string_view det_name{payload.detector_name};
   if (det_name == "Cylindrical detector from DD4hep blueprint") {
     auto det =
         detray::io::read_detector<traccc::odd_detector::host>(mr, cfg, payload);
