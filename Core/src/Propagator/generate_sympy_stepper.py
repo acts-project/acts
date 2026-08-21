@@ -536,8 +536,8 @@ def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
         "template <typename T, typename GetB>\n"
         "Acts::Result<bool> rk4_vacuum(std::span<const T, 3> p,"
         " std::span<const T, 3> d, const T t, const T h, const T l, const T m,"
-        " const T p_abs, GetB getB, T* err, const T errTol,"
-        " std::span<T, 3> new_p, T* new_t, std::span<T, 3> new_d,"
+        " const T p_abs, GetB getB, T& err, const T errTol,"
+        " std::span<T, 3> new_p, T& new_t, std::span<T, 3> new_d,"
         " std::span<T, 8> path_derivatives, std::span<T> M) {"
     )
     lines.append(f"  assert(M.empty() || M.size() == {_B2F.size});")
@@ -564,7 +564,7 @@ def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
             return "const auto B3res = getB(std::span<const T, 3>(p3));\n  if (!B3res.ok()) {\n    return Acts::Result<bool>::failure(B3res.error());\n  }\n  const auto B3 = *B3res;"
         if str(var) == "err":
             return (
-                "if (*err > errTol) {\n  return Acts::Result<bool>::success(false);\n}"
+                "if (err > errTol) {\n  return Acts::Result<bool>::success(false);\n}"
             )
         if str(var) == "new_d":
             return "if (M.empty()) {\n  return Acts::Result<bool>::success(true);\n}"
@@ -582,6 +582,7 @@ def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
         run_cse=run_cse,
         pre_expr_hook=pre_expr_hook,
         post_expr_hook=post_expr_hook,
+        scalar_outputs_by_pointer=False,
     )
     lines.extend([f"  {l}" for l in code.split("\n")])
 
@@ -618,9 +619,9 @@ def print_rk4_dense(name_exprs, run_cse=True):
         "template <typename T, typename GetB, typename GetG>\n"
         "Acts::Result<bool> rk4_dense(std::span<const T, 3> p,"
         " std::span<const T, 3> d, const T t, const T h, const T l, const T m,"
-        " const T q, const T p_abs, GetB getB, GetG getG, T* err,"
-        " const T errTol, std::span<T, 3> new_p, T* new_t,"
-        " std::span<T, 3> new_d, T* new_l, std::span<T, 8> path_derivatives,"
+        " const T q, const T p_abs, GetB getB, GetG getG, T& err,"
+        " const T errTol, std::span<T, 3> new_p, T& new_t,"
+        " std::span<T, 3> new_d, T& new_l, std::span<T, 8> path_derivatives,"
         " std::span<T> M) {"
     )
     lines.append(f"  assert(M.empty() || M.size() == {_B2F.size});")
@@ -637,12 +638,8 @@ def print_rk4_dense(name_exprs, run_cse=True):
             return "std::array<T, 3> p2{};"
         if str(var) == "p3":
             return "std::array<T, 3> p3{};"
-        if str(var) == "l2":
-            return "T l2[1];"
-        if str(var) == "l3":
-            return "T l3[1];"
-        if str(var) == "l4":
-            return "T l4[1];"
+        if str(var) in ("l2", "l3", "l4"):
+            return f"T {var}{{}};"
         if str(var) == "new_M":
             return f"std::array<T, {len(_B2F_DENSE_LIVE)}> new_M{{}};"
         return None
@@ -653,14 +650,14 @@ def print_rk4_dense(name_exprs, run_cse=True):
         if str(var) == "p3":
             return "const auto B3res = getB(std::span<const T, 3>(p3));\n  if (!B3res.ok()) {\n    return Acts::Result<bool>::failure(B3res.error());\n  }\n  const auto B3 = *B3res;"
         if str(var) == "l2":
-            return "const auto g2 = getG(std::span<const T, 3>(p2), *l2);"
+            return "const auto g2 = getG(std::span<const T, 3>(p2), l2);"
         if str(var) == "l3":
-            return "const auto g3 = getG(std::span<const T, 3>(p2), *l3);"
+            return "const auto g3 = getG(std::span<const T, 3>(p2), l3);"
         if str(var) == "l4":
-            return "const auto g4 = getG(std::span<const T, 3>(p3), *l4);"
+            return "const auto g4 = getG(std::span<const T, 3>(p3), l4);"
         if str(var) == "err":
             return (
-                "if (*err > errTol) {\n  return Acts::Result<bool>::success(false);\n}"
+                "if (err > errTol) {\n  return Acts::Result<bool>::success(false);\n}"
             )
         if str(var) == "new_d":
             return "if (M.empty()) {\n  return Acts::Result<bool>::success(true);\n}"
@@ -678,6 +675,7 @@ def print_rk4_dense(name_exprs, run_cse=True):
         run_cse=run_cse,
         pre_expr_hook=pre_expr_hook,
         post_expr_hook=post_expr_hook,
+        scalar_outputs_by_pointer=False,
     )
     lines.extend([f"  {l}" for l in code.split("\n")])
 

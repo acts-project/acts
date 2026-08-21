@@ -372,7 +372,13 @@ def my_cse(name_exprs, inflate_deflate=True, simplify=True):
 
 
 def my_expression_print(
-    printer, name_exprs, outputs, run_cse=True, pre_expr_hook=None, post_expr_hook=None
+    printer,
+    name_exprs,
+    outputs,
+    run_cse=True,
+    pre_expr_hook=None,
+    post_expr_hook=None,
+    scalar_outputs_by_pointer=True,
 ):
     if run_cse:
         name_exprs = my_cse(name_exprs, inflate_deflate=True)
@@ -396,8 +402,10 @@ def my_expression_print(
         else:
             if hasattr(expr, "shape"):
                 lines.extend(code.split("\n"))
-            else:
+            elif scalar_outputs_by_pointer:
                 lines.append("*" + code)
+            else:
+                lines.append(code)
 
         if post_expr_hook is not None:
             code = post_expr_hook(var)

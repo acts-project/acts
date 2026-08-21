@@ -226,15 +226,14 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
                            : std::span<double>();
     if (!state.options.doDense || material == nullptr) {
       res = rk4_vacuum(startPos, startDir, t, h, qop, m, pabs, getB,
-                       &errorEstimate, 4 * state.options.stepTolerance, endPos,
-                       state.pars.template segment<1>(eFreeTime).data(), endDir,
-                       derivative, jac);
+                       errorEstimate, 4 * state.options.stepTolerance, endPos,
+                       state.pars[eFreeTime], endDir, derivative, jac);
     } else {
-      res = rk4_dense(
-          startPos, startDir, t, h, qop, m, charge(state), pabs, getB, getG,
-          &errorEstimate, 4 * state.options.stepTolerance, endPos,
-          state.pars.template segment<1>(eFreeTime).data(), endDir,
-          state.pars.template segment<1>(eFreeQOverP).data(), derivative, jac);
+      res =
+          rk4_dense(startPos, startDir, t, h, qop, m, charge(state), pabs, getB,
+                    getG, errorEstimate, 4 * state.options.stepTolerance,
+                    endPos, state.pars[eFreeTime], endDir,
+                    state.pars[eFreeQOverP], derivative, jac);
     }
     if (!res.ok()) {
       return res.error();
