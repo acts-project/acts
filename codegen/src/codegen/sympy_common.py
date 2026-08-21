@@ -27,10 +27,9 @@ def make_matrix(name, rows, cols, **kwargs):
 class StructuredMatrix:
     """A symbolic matrix declared as a grid of entry classes.
 
-    Each spec entry is either a number, which becomes a structural constant, or
-    a string, which names the class the entry belongs to and becomes a symbol.
-    The index sets the classes define are read back off the grid rather than
-    restated, so the structure of a matrix is written down exactly once.
+    A number is a structural constant, a string names the entry's class and
+    becomes a symbol.  The index sets the classes define are read back off the
+    grid rather than restated.
     """
 
     def __init__(self, name, spec):

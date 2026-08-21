@@ -276,14 +276,12 @@ def _field_contrib(b, what, stage, H, same_as, seed):
     return Matrix.hstack(contrib[:, 0 : seed.cols - 1], same_as)
 
 
-# The bound-to-free jacobian M, stored column major.  "hold" is an entry no
-# step writes, "step" one every step writes and "dense" one only a dense step
-# writes; 0 and 1 are the structural constants.
+# The bound-to-free jacobian M, stored column major: "hold" is never written,
+# "step" is written by every step and "dense" only by a dense step.
 #
 # loc0, loc1 and time cannot move: the first two have no direction and no q/p
-# component, and the time column is exactly e_time.  In the live columns
-# l' = l pins the q/p row, and dt/ds pins the time row to the q/p column.  A
-# dense step also changes q/p, so the q/p row of that column moves too.
+# component, and the time column is exactly e_time.  l' = l pins the q/p row
+# outside matter, and dt/ds pins the time row to the q/p column.
 # fmt: off
 _B2F = StructuredMatrix("M", [
     #  loc0    loc1    phi     theta   qop      time
