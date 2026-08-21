@@ -70,6 +70,6 @@ class SurfacePlacementBase {
   virtual const ISensorDesign* sensorDesign() const { return nullptr; }
 
   virtual void assignSensorDesign(
-      const std::shared_ptr<const ISensorDesign> /*design*/) const {}
+      const std::shared_ptr<const ISensorDesign>& /*design*/) const {}
 };
 }  // namespace Acts

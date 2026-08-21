@@ -28,8 +28,8 @@ class DD4hepDetectorElementWithDesign
   }
 
   void assignSensorDesign(
-      const std::shared_ptr<const Acts::ISensorDesign> design) const override {
-    m_design = std::move(design);
+      const std::shared_ptr<const Acts::ISensorDesign>& design) const override {
+    m_design = design;
   }
 
  private:
