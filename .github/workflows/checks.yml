@@ -213,8 +213,19 @@ jobs:
       - name: Diff public API surface against base
         if: github.event_name == 'pull_request'
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
+          # Base = first parent of the checked-out refs/pull/N/merge, i.e. the
+          # commit GitHub merged into. Not pull_request.base.sha: that only
+          # advances on PR sync, so it drifts behind the merge ref and unrelated
+          # changes on the base branch get attributed to the PR.
+          if git rev-parse --verify --quiet HEAD^2 > /dev/null; then
+            BASE_SHA=$(git rev-parse HEAD^1)
+          else
+            # Not a merge ref: a checkout pinned to the head commit.
+            BASE_SHA=$(git merge-base HEAD "origin/${BASE_REF}")
+          fi
+          echo "Diffing public API surface against ${BASE_SHA}"
           git worktree add --detach /tmp/base-tree "$BASE_SHA"
           # Base measured with THIS ref's Doxyfile/scripts, over the base tree.
           # No --summary here: it would duplicate the surface table.
