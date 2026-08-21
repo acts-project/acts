@@ -216,15 +216,12 @@ def _atlas_rk4_stages(b, taylor_norm):
 
     b.add("new_p", p + S3.name * (_ex(A2.name) + _ex(A3.name) + _ex(A4.name)))
 
-    # An = 3 * (d + h/6*(k1 + 2k2 + 2k3 + k4)), three times the unnormalised
-    # new direction.
+    # An = 3 * (d + h/6*(k1 + 2k2 + 2k3 + k4)), the unnormalised new direction.
     An = b.add("An", 2 * _ex(A3.name) + (_ex(A0.name) + _ex(A5.name) + _ex(A6.name)))
 
     if taylor_norm:
-        # ATLAS replaces 1/|An| by its second order Taylor expansion around
-        # |An| = 3, which needs neither a square root nor a division.  RK4
-        # keeps |An| within ~1e-7 of 3, so the O(u^3) truncation error is far
-        # below double precision.
+        # ATLAS replaces 1/|An| by its Taylor expansion around |An| = 3, which
+        # RK4 stays within ~1e-7 of, so the truncation error is below rounding.
         Dv = b.add("Dv", (An.name[0] ** 2 + An.name[1] ** 2) + (An.name[2] ** 2 - 9))
         Dfac = b.add(
             "Dfac",
@@ -283,30 +280,23 @@ def _field_contrib(b, what, stage, H, same_as, seed):
 # rows    (pos0, pos1, pos2, time, dir0, dir1, dir2, qop)
 # columns (loc0, loc1, phi, theta, qop, time).
 #
-# loc0 and loc1 have no direction and no q/p component, and the time column is
-# exactly e_time, so those three columns cannot move: with zero direction and
-# zero q/p perturbation the step leaves the position rows alone as well.  That
-# is the same reduction the ATLAS stepper makes when it propagates only the
-# blocks at pVector[24], [32] and [40].  Within the live columns the q/p row
-# never changes because l' = l in vacuum, and the time row only moves for the
-# q/p column because dt/ds depends on q/p alone.
+# loc0, loc1 and time cannot move: the first two have no direction and no q/p
+# component, and the time column is exactly e_time.  In the live columns
+# l' = l pins the q/p row, and dt/ds pins the time row to the q/p column.
 _B2F_LIVE = (
     [(i, 2) for i in (0, 1, 2, 4, 5, 6)]
     + [(i, 3) for i in (0, 1, 2, 4, 5, 6)]
     + [(i, 4) for i in (0, 1, 2, 3, 4, 5, 6)]
 )
 
-# A dense step additionally changes q/p itself, so the q/p row of the q/p
-# column moves too.
+# A dense step also changes q/p, so the q/p row of that column moves too.
 _B2F_DENSE_LIVE = (
     [(i, 2) for i in (0, 1, 2, 4, 5, 6)]
     + [(i, 3) for i in (0, 1, 2, 4, 5, 6)]
     + [(i, 4) for i in (0, 1, 2, 3, 4, 5, 6, 7)]
 )
 
-# Rows that are structurally zero on input, for the columns that are live at
-# all: neither a phi nor a theta perturbation changes the time or the q/p
-# coordinate, in vacuum or in matter.
+# Rows structurally zero on input: phi and theta do not change time or q/p.
 _B2F_ZERO_ROWS = {2: (3, 7), 3: (3, 7)}
 
 # bound parameter count -- M is 8 x _B2F_COLS, stored column major
@@ -524,11 +514,8 @@ def rk4_dense_tunedexpr():
     D[0:4, 3:8] = dFdTL.name.as_explicit()
     D[4:8, 3:8] = dGdTL.name.as_explicit()
 
-    # Unlike the vacuum kernel this one does build D, because energy loss
-    # couples time and q/p into every stage and folding that into the RK
-    # recursion buys little on a path that is not hot.  It still applies D to
-    # the bound-to-free jacobian directly rather than to an 8x8 transport,
-    # which is also what removes the composition-order question entirely.
+    # Unlike the vacuum kernel this one builds D, because energy loss couples
+    # time and q/p into every stage.  D still applies to M, not to an 8x8.
     new_M = name_expr("new_M", b2f_step_update(D, _B2F_DENSE_LIVE))
 
     return [
@@ -762,16 +749,8 @@ output.write("""
 
 output.write("\n\n")
 
-# Against the free-to-free kernel this replaces (clang 17, -O2, arm64, timing
-# SympyStepper::step with chained steps): ~3-5% faster with covariance
-# transport, ~3-5% slower without.  The vacuum path is latency bound on the
-# serial chain between the three field lookups, so pre-scaling the field adds
-# one multiply to exactly that chain, which is what the no-covariance case pays.
-#
-# Two knobs measured and left off: taylor_norm=True, ATLAS' sqrt-free direction
-# normalisation, trades a sqrt and a division for more multiplications at the
-# same speed; run_cse=True is within noise and obscures the correspondence to
-# the ATLAS code.
+# taylor_norm and run_cse are off: neither is faster, and both obscure the
+# correspondence to the ATLAS code.
 all_name_exprs = rk4_vacuum_b2f_atlasexpr(taylor_norm=False)
 
 code = print_rk4_vacuum_b2f(all_name_exprs)

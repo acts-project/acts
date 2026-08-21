@@ -35,8 +35,7 @@ namespace Acts::detail::sympy {
 /// @param [in] surface Target surface
 /// @param [in] freeParameters Free, nominal parametrisation
 /// @param [in] boundToFreeJacobian Jacobian from the bound parameters at the
-///        start surface to the free parameters here, transported along the
-///        trajectory
+///        start surface to the free parameters here
 /// @param [in] freeToPathDerivatives Path length derivatives for free parameters
 /// @param [out] fullTransportJacobian A 6x6 transport jacobian from bound to bound
 ///
@@ -62,8 +61,7 @@ void boundToBoundTransportJacobian(const GeometryContext& geoContext,
 ///
 /// @param [in] direction Normalised direction vector
 /// @param [in] boundToFreeJacobian Jacobian from the bound parameters at the
-///        start surface to the free parameters here, transported along the
-///        trajectory
+///        start surface to the free parameters here
 /// @param [in] freeToPathDerivatives Path length derivatives for free parameters
 /// @param [out] fullTransportJacobian A 6x6 transport jacobian from curilinear to bound
 ///

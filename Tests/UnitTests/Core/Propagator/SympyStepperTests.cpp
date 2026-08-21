@@ -450,9 +450,8 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_time_qop_derivative) {
     const double qop = absQ / 1_GeV;
     const double dqop = 1e-6 * qop;
 
-    // The start is curvilinear, so the q/p column of the bound-to-free
-    // jacobian begins as e_qop: after one step its time row is d(t)/d(q/p)
-    // itself.
+    // The start is curvilinear, so the q/p column begins as e_qop and after
+    // one step its time row is d(t)/d(q/p).
     const double dtdqop =
         stepOnce(qop, particle).jacToGlobal(eFreeTime, eBoundQOverP);
     const double difference = (stepOnce(qop + dqop, particle).pars[eFreeTime] -

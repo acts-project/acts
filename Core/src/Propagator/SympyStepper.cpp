@@ -161,7 +161,7 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
     return getField(state, {p[0], p[1], p[2]});
   };
 
-  // Only the dense path needs these, and it is the cold one.
+  // Only the cold dense path needs these.
   const auto getG = [&](std::span<const double, 3> p, double l) -> double {
     const PdgParticle absPdg = particleHypothesis(state).absolutePdg();
     const double absQ = std::abs(charge(state));

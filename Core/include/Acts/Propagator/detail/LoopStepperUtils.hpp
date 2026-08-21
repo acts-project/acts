@@ -48,9 +48,8 @@ struct LoopComponentProxyBase {
 
   explicit LoopComponentProxyBase(component_t& c) : cmp(c) {}
 
-  /// Whether the stepper keeps a separate free-to-free transport jacobian.
-  /// Steppers that instead transport the bound-to-free jacobian itself (see
-  /// SympyStepper) do not, and need a different covariance engine entry point.
+  /// Whether the stepper keeps a free-to-free transport jacobian.  Those that
+  /// do not need a different covariance engine.
   static constexpr bool hasFreeTransport =
       requires(component_t& c) { c.state.jacTransport; };
 
@@ -125,9 +124,8 @@ struct LoopComponentProxy
   auto& pars() { return cmp.state.pars; }
   auto& derivative() { return cmp.state.derivative; }
 
-  /// Reset the accumulated transport, whatever its representation.  Steppers
-  /// that transport the bound-to-free jacobian directly have no separate
-  /// free-to-free jacobian to reset; theirs is set by the caller instead.
+  /// Reset the accumulated transport.  Without a free-to-free jacobian there
+  /// is nothing to reset.
   void resetJacTransport() {
     if constexpr (Base::hasFreeTransport) {
       cmp.state.jacTransport = FreeMatrix::Identity();

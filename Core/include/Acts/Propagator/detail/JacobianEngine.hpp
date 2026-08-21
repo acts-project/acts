@@ -209,10 +209,8 @@ void reinitializeJacobians(FreeMatrix& freeTransportJacobian,
                            BoundToFreeMatrix& boundToFreeJacobian,
                            const Vector3& direction);
 
-/// @brief Overloads for steppers that transport the bound-to-free jacobian
-///        itself and therefore have no separate free-to-free transport to
-///        reset.  @p boundToFreeJacobian is set to the jacobian at the given
-///        surface, which is exactly the identity of the fused representation.
+/// @brief Overload for steppers that transport the bound-to-free jacobian
+///        itself and so have no free-to-free transport to reset.
 ///
 /// @param [in] geoContext The geometry context
 /// @param [in] surface The reference surface of the local parametrisation

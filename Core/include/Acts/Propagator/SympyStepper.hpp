@@ -95,11 +95,8 @@ class SympyStepper final {
     /// The full jacobian of the transport entire transport
     Jacobian jacobian = Jacobian::Identity();
 
-    /// Jacobian from the bound parameters at the last reference surface to
-    /// the free parameters here.  Unlike the Eigen stepper this is transported
-    /// along with the track rather than kept next to a separate free-to-free
-    /// transport jacobian, which is what lets a step update three columns
-    /// instead of composing two matrices.
+    /// Bound-to-free jacobian from the last reference surface, transported
+    /// along with the track.
     BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
 
     /// The propagation derivative

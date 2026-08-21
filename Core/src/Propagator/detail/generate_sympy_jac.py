@@ -25,12 +25,9 @@ surface_path_derivatives = (
 surface_path_derivatives[0, 3] = 0
 surface_path_derivatives[0, 7] = 0
 
-# M is the bound-to-free jacobian already transported to the current point,
-# i.e. what used to be J_t * J_bf.  Its sparsity is everything a sequence of
-# steps can produce from a start surface: loc0 and loc1 stay position only,
-# phi and theta pick up a direction part (and a position part already at the
-# start surface, for a line surface), q/p picks up position, time and
-# direction parts, and the time column stays exactly e_time.
+# M is the bound-to-free jacobian transported to the current point.  loc0 and
+# loc1 stay position only, phi and theta pick up a direction part (position too
+# on a line surface), q/p picks up all three, and time stays exactly e_time.
 J_bf = MatrixSymbol("M", 8, 6).as_explicit().as_mutable()
 tmp = sym.zeros(8, 6)
 tmp[0:3, 0:2] = J_bf[0:3, 0:2]
