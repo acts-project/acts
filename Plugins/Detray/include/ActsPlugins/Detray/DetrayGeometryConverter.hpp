@@ -42,20 +42,6 @@ class DetrayGeometryConverter {
     /// payload conversion (e.g. the beampipe volume, sensitive surface
     /// strategy or the navigation/material dispatchers).
     std::shared_ptr<const DetrayPayloadConverter> payloadConverter;
-
-    /// Whether to convert material information from ACTS to detray
-    bool convertMaterial = true;
-
-    /// Whether to convert surface grid information from ACTS to detray
-    bool convertSurfaceGrids = true;
-
-    /// Whether identical surface material is shared between detray surfaces
-    /// instead of being copied for every surface. ACTS portals are split into
-    /// one detray portal surface per attached volume, which otherwise each
-    /// get their own copy of the portal material.
-    /// @note This only affects the built detector, the payloads keep one
-    ///       material entry per surface.
-    bool deduplicateMaterial = true;
   };
 
   /// @brief Combined result of a geometry conversion
@@ -119,7 +105,7 @@ class DetrayGeometryConverter {
         gctx, *trackingGeometry);
 
     if (!detectorName.empty()) {
-      payloads.names.set_detector_name(detectorName);
+      payloads.detector_name = detectorName;
     }
 
     // ── Build detray detector from payloads ───────────────────────────────
