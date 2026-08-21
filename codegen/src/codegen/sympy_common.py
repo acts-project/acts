@@ -395,7 +395,7 @@ def my_expression_print(
         code = printer.doprint(Assignment(var, expr))
         if var not in outputs:
             if hasattr(expr, "shape"):
-                lines.append(f"T {var}[{np.prod(expr.shape)}];")
+                lines.append(f"std::array<T, {np.prod(expr.shape)}> {var}{{}};")
                 lines.extend(code.split("\n"))
             else:
                 lines.append("const auto " + code)
