@@ -12,7 +12,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 
 #include <array>
-#include <tuple>
+#include <cstdint>
 #include <vector>
 
 class TTree;
@@ -25,17 +25,13 @@ namespace ActsPlugins {
 /// @addtogroup root_plugin
 /// @{
 
-/// @brief Helper class to manage the I/O of measurements and associated clusters
-/// to and from ROOT files.
+/// @brief Helper class to manage the I/O of measurements to and from ROOT files.
 class RootMeasurementIo {
  public:
   /// Configuration struct for measurement I/O
   struct Config {
     /// Indicate the reconstruction indices to be stored
     std::vector<Acts::BoundIndices>& recoIndices;
-
-    /// Indicate the cluster indices to be stored
-    std::vector<Acts::BoundIndices>& clusterIndices;
   };
 
   /// Constructor from configuration struct
@@ -51,8 +47,10 @@ class RootMeasurementIo {
   /// Convenience function to register identification
   ///
   /// @param evnt The event number
+  /// @param measurementId The index of the measurement within the event
   /// @param geoId The geometry identifier of the measurement
-  void fillIdentification(int evnt, const Acts::GeometryIdentifier& geoId);
+  void fillIdentification(int evnt, std::uint64_t measurementId,
+                          const Acts::GeometryIdentifier& geoId);
 
   /// Convenience function to register the truth parameters
   ///
@@ -74,17 +72,6 @@ class RootMeasurementIo {
                             const std::vector<double>& variances,
                             const std::vector<unsigned int>& subspaceIndex);
 
-  /// Fill global information of the cluster/measurement
-  ///
-  /// @param pos The global position of the cluster
-  void fillGlobalPosition(const Acts::Vector3& pos);
-
-  /// Convenience function to fill the cluster information
-  ///  - abstracted to be used in different contexts
-  ///
-  /// @param channels The channel information
-  void fillCluster(const std::vector<std::tuple<int, int, float>>& channels);
-
   /// Clear the payload
   void clear();
 
@@ -99,6 +86,7 @@ class RootMeasurementIo {
   struct MeasurementPayload {
     // Identification parameters
     int eventNr = 0;
+    std::uint64_t measurementID = 0;
     int volumeID = 0;
     int layerID = 0;
     int surfaceID = 0;
@@ -107,10 +95,6 @@ class RootMeasurementIo {
     // Reconstructed information
     std::array<float, Acts::eBoundSize> recBound = {};
     std::array<float, Acts::eBoundSize> varBound = {};
-
-    float recGx = 0.;
-    float recGy = 0.;
-    float recGz = 0.;
 
     // Truth parameters
     std::array<float, Acts::eBoundSize> trueBound = {};
@@ -125,16 +109,7 @@ class RootMeasurementIo {
     std::array<float, Acts::eBoundSize> pull = {};
   };
 
-  struct ClusterPayload {
-    // Cluster information
-    int nch = 0;
-    std::array<int, 2> clusterSize = {0, 0};
-    std::array<std::vector<int>, 2> chId;
-    std::vector<float> chValue = {};
-  };
-
   MeasurementPayload m_measurementPayload;
-  ClusterPayload m_clusterPayload;
 };
 /// @}
 }  // namespace ActsPlugins
