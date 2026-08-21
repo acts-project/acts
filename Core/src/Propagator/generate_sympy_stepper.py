@@ -3,12 +3,13 @@ import sys
 import numpy as np
 
 import sympy as sym
-from sympy import Symbol, Matrix, ImmutableMatrix, MatrixSymbol
+from sympy import Symbol, Matrix, ImmutableMatrix
 from sympy.codegen.ast import Assignment
 
 from codegen.sympy_common import (
     make_vector,
     NamedExpr,
+    StructuredMatrix,
     name_expr,
     find_by_name,
     my_subs,
@@ -275,48 +276,43 @@ def _field_contrib(b, what, stage, H, same_as, seed):
     return Matrix.hstack(contrib[:, 0 : seed.cols - 1], same_as)
 
 
-# Entries of the bound-to-free jacobian that a vacuum step can change, as
-# (free row, bound column) with the ACTS orderings
-# rows    (pos0, pos1, pos2, time, dir0, dir1, dir2, qop)
-# columns (loc0, loc1, phi, theta, qop, time).
+# The bound-to-free jacobian M, stored column major.  "hold" is an entry no
+# step writes, "step" one every step writes and "dense" one only a dense step
+# writes; 0 and 1 are the structural constants.
 #
 # loc0, loc1 and time cannot move: the first two have no direction and no q/p
 # component, and the time column is exactly e_time.  In the live columns
-# l' = l pins the q/p row, and dt/ds pins the time row to the q/p column.
-_B2F_LIVE = (
-    [(i, 2) for i in (0, 1, 2, 4, 5, 6)]
-    + [(i, 3) for i in (0, 1, 2, 4, 5, 6)]
-    + [(i, 4) for i in (0, 1, 2, 3, 4, 5, 6)]
-)
+# l' = l pins the q/p row, and dt/ds pins the time row to the q/p column.  A
+# dense step also changes q/p, so the q/p row of that column moves too.
+# fmt: off
+_B2F = StructuredMatrix("M", [
+    #  loc0    loc1    phi     theta   qop      time
+    ["hold", "hold", "step", "step", "step",     0],  # pos0
+    ["hold", "hold", "step", "step", "step",     0],  # pos1
+    ["hold", "hold", "step", "step", "step",     0],  # pos2
+    [     0,      0,      0,      0, "step",     1],  # time
+    [     0,      0, "step", "step", "step",     0],  # dir0
+    [     0,      0, "step", "step", "step",     0],  # dir1
+    [     0,      0, "step", "step", "step",     0],  # dir2
+    [     0,      0,      0,      0, "dense",    0],  # qop
+])
+# fmt: on
 
-# A dense step also changes q/p, so the q/p row of that column moves too.
-_B2F_DENSE_LIVE = (
-    [(i, 2) for i in (0, 1, 2, 4, 5, 6)]
-    + [(i, 3) for i in (0, 1, 2, 4, 5, 6)]
-    + [(i, 4) for i in (0, 1, 2, 3, 4, 5, 6, 7)]
-)
-
-# Rows structurally zero on input: phi and theta do not change time or q/p.
-_B2F_ZERO_ROWS = {2: (3, 7), 3: (3, 7)}
-
-# bound parameter count -- M is 8 x _B2F_COLS, stored column major
-_B2F_COLS = 6
+_B2F_LIVE = _B2F.entries("step")
+_B2F_DENSE_LIVE = _B2F.entries("step", "dense")
 
 
 def b2f_step_update(D, live):
     """Apply a free-to-free step jacobian D to the bound-to-free jacobian M.
 
-    Only the live columns are touched, and the structurally zero rows are
-    dropped from the input so the products stay sparse.  This is the generic
-    fallback; the vacuum kernel instead folds the same operation into the RK
-    recursion, which is cheaper still because it never builds D.
+    Only the live columns are touched, and the structural zeros of _B2F keep
+    the products sparse.  This is the generic fallback; the vacuum kernel
+    instead folds the same operation into the RK recursion, which is cheaper
+    still because it never builds D.
     """
-    M = MatrixSymbol("M", 8, 6)
     out = []
     for c in sorted({col for _, col in live}):
-        zero = _B2F_ZERO_ROWS.get(c, ())
-        v = Matrix([[0 if i in zero else M[i, c]] for i in range(8)])
-        new_v = D * v
+        new_v = D * _B2F.matrix[:, c]
         out.extend([new_v[i, 0]] for i, col in live if col == c)
     return Matrix(out)
 
@@ -338,7 +334,7 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
     A0, A3, A4, A6 = st.A0, st.A3, st.A4, st.A6
     S3, dtds = st.S3, st.dtds
 
-    M = MatrixSymbol("M", 8, 6)
+    M = _B2F.matrix
 
     def col(c, rows):
         return Matrix([[M[i, c]] for i in rows])
@@ -578,7 +574,7 @@ def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
         " std::span<T, 3> new_p, T* new_t, std::span<T, 3> new_d,"
         " std::span<T, 8> path_derivatives, std::span<T> M) {"
     )
-    lines.append(f"  assert(M.empty() || M.size() == {_B2F_COLS * 8});")
+    lines.append(f"  assert(M.empty() || M.size() == {_B2F.size});")
 
     lines.append("  const auto B1res = getB(p);")
     lines.append(
@@ -608,7 +604,8 @@ def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
             return "if (M.empty()) {\n  return Acts::Result<bool>::success(true);\n}"
         if str(var) == "new_M":
             return "\n".join(
-                f"M[{i + 8 * j}] = new_M[{k}];" for k, (i, j) in enumerate(_B2F_LIVE)
+                f"M[{_B2F.flat_index(i, j)}] = new_M[{k}];"
+                for k, (i, j) in enumerate(_B2F_LIVE)
             )
         return None
 
@@ -660,7 +657,7 @@ def print_rk4_dense(name_exprs, run_cse=True):
         " std::span<T, 3> new_d, T* new_l, std::span<T, 8> path_derivatives,"
         " std::span<T> M) {"
     )
-    lines.append(f"  assert(M.empty() || M.size() == {_B2F_COLS * 8});")
+    lines.append(f"  assert(M.empty() || M.size() == {_B2F.size});")
 
     lines.append("  const auto B1res = getB(p);")
     lines.append(
@@ -703,7 +700,7 @@ def print_rk4_dense(name_exprs, run_cse=True):
             return "if (M.empty()) {\n  return Acts::Result<bool>::success(true);\n}"
         if str(var) == "new_M":
             return "\n".join(
-                f"M[{i + 8 * j}] = new_M[{k}];"
+                f"M[{_B2F.flat_index(i, j)}] = new_M[{k}];"
                 for k, (i, j) in enumerate(_B2F_DENSE_LIVE)
             )
         return None

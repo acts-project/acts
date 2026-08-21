@@ -24,6 +24,50 @@ def make_matrix(name, rows, cols, **kwargs):
     )
 
 
+class StructuredMatrix:
+    """A symbolic matrix declared as a grid of entry classes.
+
+    Each spec entry is either a number, which becomes a structural constant, or
+    a string, which names the class the entry belongs to and becomes a symbol.
+    The index sets the classes define are read back off the grid rather than
+    restated, so the structure of a matrix is written down exactly once.
+    """
+
+    def __init__(self, name, spec):
+        cols = {len(row) for row in spec}
+        if len(cols) != 1:
+            raise ValueError(f"{name}: rows of unequal length")
+
+        self.rows = len(spec)
+        self.cols = cols.pop()
+        self.size = self.rows * self.cols
+        self._spec = [list(row) for row in spec]
+
+        symbols = MatrixSymbol(name, self.rows, self.cols)
+        self.matrix = Matrix(
+            [
+                [
+                    symbols[i, j] if isinstance(entry, str) else entry
+                    for j, entry in enumerate(row)
+                ]
+                for i, row in enumerate(self._spec)
+            ]
+        )
+
+    def entries(self, *classes):
+        """(row, column) of every entry in `classes`, in storage order."""
+        return [
+            (i, j)
+            for j in range(self.cols)
+            for i in range(self.rows)
+            if self._spec[i][j] in classes
+        ]
+
+    def flat_index(self, row, col):
+        """Index of an entry in the column major storage."""
+        return row + self.rows * col
+
+
 def name_expr(name, expr):
     if hasattr(expr, "shape"):
         s = sym.MatrixSymbol(name, *expr.shape)
