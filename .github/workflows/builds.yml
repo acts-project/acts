@@ -547,8 +547,17 @@ jobs:
           cmake -B build -S .
           --preset=github-ci-gnn
 
+      # TEST: libtorch_cuda.so's own RPATH points into a pip layout that does
+      # not exist in the spack install tree, so resolving its transitive CUDA
+      # lib deps (e.g. cusparse) falls back to LD_LIBRARY_PATH -- which only
+      # .env sets. The pybind11-stubgen step below imports acts.gnn, which
+      # loads that chain, and failed with "libcusparse.so.12: cannot open
+      # shared object file" without this.
       - name: Build
-        run: cmake --build build
+        shell: bash
+        run: |
+          source ${GITHUB_WORKSPACE}/.env
+          cmake --build build
 
       - name: ccache stats
         run: ccache -s
