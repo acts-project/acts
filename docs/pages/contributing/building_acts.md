@@ -231,6 +231,40 @@ source files or documentation.
 
 [doxygen]: https://doxygen.nl/
 
+# Documenting a code generator {#codegen-notebooks}
+
+Parts of ACTS are C++ headers derived symbolically with sympy and printed at
+build time (see @ref source-package for the mechanics). What such a generator
+does is rarely obvious from its source, so there is a way to write one that
+documents itself.
+
+A generator can be written in [jupytext](https://jupytext.readthedocs.io/)'s
+`percent` format: ordinary Python with `# %%` cell markers, which the build runs
+as a script and a notebook viewer (JupyterLab, or VS Code with the jupytext
+extension) opens as a notebook. Prose, the symbolic expressions and the
+generated code then live in one file that cannot drift out of date, because it
+is the file the build runs.
+
+`Core/src/Propagator/detail/generate_sympy_jac.py` is written this way; the
+result is @ref codegen_sympy_jac. Such a notebook has to work in both roles, so
+it takes the output path from `argv[1]` as any generator does, and detects the
+notebook case (`"ipykernel" in sys.modules`) to show its results instead of
+writing them.
+
+Registering one with the documentation is a line in `docs/CMakeLists.txt`:
+
+```cmake
+acts_render_notebook(
+    SOURCE ${PROJECT_SOURCE_DIR}/path/to/generator.py
+    PAGE_ID some_page_id
+)
+```
+
+The docs build then executes it with `docs/render_notebook.py` and turns the
+result into a doxygen page labelled `some_page_id`, so other pages can point at
+it with `@ref`. Note that the notebook is executed, so anything it prints or
+leaves as a cell's last expression ends up on the page.
+
 # Build options {#build-options}
 
 CMake options can be set by adding `-D<OPTION>=<VALUE>` to the configuration
