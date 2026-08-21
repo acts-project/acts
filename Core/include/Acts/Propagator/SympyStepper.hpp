@@ -95,14 +95,21 @@ class SympyStepper final {
     /// The full jacobian of the transport entire transport
     Jacobian jacobian = Jacobian::Identity();
 
-    /// Jacobian from local to the global frame
+    /// Jacobian from the bound parameters at the last reference surface to
+    /// the free parameters here.  Unlike the Eigen stepper this is transported
+    /// along with the track rather than kept next to a separate free-to-free
+    /// transport jacobian, which is what lets a step update three columns
+    /// instead of composing two matrices.
     BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
-
-    /// Pure transport jacobian part from runge kutta integration
-    FreeMatrix jacTransport = FreeMatrix::Identity();
 
     /// The propagation derivative
     FreeVector derivative = FreeVector::Zero();
+
+    /// Magnetic field at the current position, carried over from the last
+    /// step's final sample so that a step needs two field lookups instead of
+    /// three.  Invalidated whenever the position is set from outside.
+    Vector3 field = Vector3::Zero();
+    bool fieldIsValid = false;
 
     /// Accumulated path length state
     double pathAccumulated = 0.;

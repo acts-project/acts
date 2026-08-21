@@ -5,6 +5,7 @@ target_sources(
         MultiStepperError.cpp
         NavigatorError.cpp
         SympyStepper.cpp
+        SympyStepperDenseStep.cpp
         NavigationTarget.cpp
         PropagatorError.cpp
         StraightLineStepper.cpp
