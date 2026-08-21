@@ -91,6 +91,7 @@ GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
         mCounter;  // layerKey, nDst, nSrc
 
     for (const auto& conn : lConns) {
+			//std::cout << conn->dst << " " << conn->src << std::endl;
       auto entryIt = mCounter.find(conn->dst);
       if (entryIt != mCounter.end()) {
         (*entryIt).second.first++;
@@ -120,6 +121,7 @@ GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
     while (cIt != lConns.end()) {
       std::uint32_t nSrc = (*mCounter.find((*cIt)->dst)).second.second;
       bool onlySelfLink = (*cIt)->dst == (*cIt)->src && nSrc == 1;
+			if(onlySelfLink) std::cout << "YHW" << std::endl;
       if (nSrc == 0 || onlySelfLink) {
         theStage.push_back(*cIt);
         cIt = lConns.erase(cIt);
