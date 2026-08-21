@@ -25,7 +25,7 @@ if len(sys.argv) > 1:
 
 
 # q/p
-l = Symbol("l", real=True)
+qop = Symbol("qop", real=True)
 
 # step length
 h = Symbol("h", real=True)
@@ -34,25 +34,25 @@ h = Symbol("h", real=True)
 s = Symbol("s", real=True)
 
 # position
-p = make_vector("p", 3, real=True)
+position = make_vector("pos", 3, real=True)
 
 # direction
-d = make_vector("d", 3, real=True)
+direction = make_vector("dir", 3, real=True)
 
 # time
-t = Symbol("t", real=True)
+time = Symbol("time", real=True)
 
 # mass
-m = Symbol("m", real=True, positive=True)
+mass = Symbol("mass", real=True, positive=True)
 
 # absolute momentum
 p_abs = Symbol("p_abs", real=True, positive=True)
 
-# energy loss per distance
-g = Symbol("g", real=True)
+# energy loss per distance, dE/ds
+dEds = Symbol("dEds", real=True)
 
 # charge
-q = Symbol("q", real=True)
+charge = Symbol("charge", real=True)
 
 # magnetic field
 B = make_vector("B", 3, real=True)
@@ -62,182 +62,216 @@ B1 = make_vector("B1", 3, real=True)
 B2 = make_vector("B2", 3, real=True)
 B3 = make_vector("B3", 3, real=True)
 
-# specific energy loss per distance values
-g1 = Symbol("g1", real=True)
-g2 = Symbol("g2", real=True)
-g3 = Symbol("g3", real=True)
-g4 = Symbol("g4", real=True)
+# energy loss per distance at each of the four stages
+dEds1 = Symbol("dEds1", real=True)
+dEds2 = Symbol("dEds2", real=True)
+dEds3 = Symbol("dEds3", real=True)
+dEds4 = Symbol("dEds4", real=True)
 
 
-def dt_dqop(dtds):
-    """d(t)/d(q/p) over a step of length h.
+def dtime_dqop(dtds):
+    """d(time)/d(q/p) over a step of length h.
 
-    h m**2 l / (q**2 dtds), with the q**2 folded into p_abs = |q| / |l|.
+    h mass^2 qop / (charge^2 dtds), with the charge^2 folded into
+    p_abs = |charge| / |qop|.
     """
-    return h * m**2 / (p_abs**2 * l * dtds)
+    return h * mass**2 / (p_abs**2 * qop * dtds)
 
 
-def rk4_subexpr(f, x, y, ydot, h):
-    k1 = name_expr("k1", f(1, x, y, ydot))
+def rk4_subexpr(eom, x, y, ydot, h):
+    k1 = name_expr("k1", eom(1, x, y, ydot))
     x2 = name_expr("x2", x + h / 2)
     y2 = name_expr("y2", y + h / 2 * ydot + h**2 / 8 * k1.name)
     ydot2 = name_expr("ydot2", ydot + h / 2 * k1.name)
 
-    k2 = name_expr("k2", f(2, x2.expr, y2.expr.as_explicit(), ydot2.expr.as_explicit()))
+    k2 = name_expr(
+        "k2", eom(2, x2.expr, y2.expr.as_explicit(), ydot2.expr.as_explicit())
+    )
     ydot3 = name_expr("ydot3", ydot + h / 2 * k2.name)
 
-    k3 = name_expr("k3", f(3, x2.expr, y2.expr.as_explicit(), ydot3.expr.as_explicit()))
+    k3 = name_expr(
+        "k3", eom(3, x2.expr, y2.expr.as_explicit(), ydot3.expr.as_explicit())
+    )
     x3 = name_expr("x3", x + h)
     y3 = name_expr("y3", y + h * ydot + h**2 / 2 * k3.name)
     ydot4 = name_expr("ydot4", ydot + h * k3.name)
 
-    k4 = name_expr("k4", f(4, x3.expr, y3.expr.as_explicit(), ydot4.expr.as_explicit()))
+    k4 = name_expr(
+        "k4", eom(4, x3.expr, y3.expr.as_explicit(), ydot4.expr.as_explicit())
+    )
 
     new_y = name_expr("new_y", y + h * ydot + h**2 / 6 * (k1.name + k2.name + k3.name))
     new_ydot = name_expr(
         "new_ydot", ydot + h / 6 * (k1.name + 2 * (k2.name + k3.name) + k4.name)
     )
 
-    dk1dyydot = name_expr("dk1dyydot", k1.expr.jacobian([y, ydot]))
-    dk2dyydot = name_expr(
-        "dk2dyydot",
-        k2.expr.jacobian([y, ydot]) + k2.expr.jacobian(k1.name) * dk1dyydot.name,
+    dk1_dstate = name_expr("dk1_dstate", k1.expr.jacobian([y, ydot]))
+    dk2_dstate = name_expr(
+        "dk2_dstate",
+        k2.expr.jacobian([y, ydot]) + k2.expr.jacobian(k1.name) * dk1_dstate.name,
     )
-    dk3dyydot = name_expr(
-        "dk3dyydot",
-        k3.expr.jacobian([y, ydot]) + k3.expr.jacobian(k2.name) * dk2dyydot.name,
+    dk3_dstate = name_expr(
+        "dk3_dstate",
+        k3.expr.jacobian([y, ydot]) + k3.expr.jacobian(k2.name) * dk2_dstate.name,
     )
-    dk4dyydot = name_expr(
-        "dk4dyydot",
-        k4.expr.jacobian([y, ydot]) + k4.expr.jacobian(k3.name) * dk3dyydot.name,
+    dk4_dstate = name_expr(
+        "dk4_dstate",
+        k4.expr.jacobian([y, ydot]) + k4.expr.jacobian(k3.name) * dk3_dstate.name,
     )
 
-    dydyydot = name_expr(
-        "dydyydot",
+    dy_dstate = name_expr(
+        "dy_dstate",
         new_y.expr.as_explicit().jacobian([y, ydot])
-        + new_y.expr.as_explicit().jacobian(k1.name) * dk1dyydot.name
-        + new_y.expr.as_explicit().jacobian(k2.name) * dk2dyydot.name
-        + new_y.expr.as_explicit().jacobian(k3.name) * dk3dyydot.name,
+        + new_y.expr.as_explicit().jacobian(k1.name) * dk1_dstate.name
+        + new_y.expr.as_explicit().jacobian(k2.name) * dk2_dstate.name
+        + new_y.expr.as_explicit().jacobian(k3.name) * dk3_dstate.name,
     )
-    dydotdyydot = name_expr(
-        "dydotdyydot",
+    dydot_dstate = name_expr(
+        "dydot_dstate",
         new_ydot.expr.as_explicit().jacobian([y, ydot])
-        + new_ydot.expr.as_explicit().jacobian(k1.name) * dk1dyydot.name
-        + new_ydot.expr.as_explicit().jacobian(k2.name) * dk2dyydot.name
-        + new_ydot.expr.as_explicit().jacobian(k3.name) * dk3dyydot.name
-        + new_ydot.expr.as_explicit().jacobian(k4.name) * dk4dyydot.name,
+        + new_ydot.expr.as_explicit().jacobian(k1.name) * dk1_dstate.name
+        + new_ydot.expr.as_explicit().jacobian(k2.name) * dk2_dstate.name
+        + new_ydot.expr.as_explicit().jacobian(k3.name) * dk3_dstate.name
+        + new_ydot.expr.as_explicit().jacobian(k4.name) * dk4_dstate.name,
     )
 
     return (
         ((new_y, new_ydot), (k1, k2, k3, k4)),
-        ((dydyydot, dydotdyydot), (dk1dyydot, dk2dyydot, dk3dyydot, dk4dyydot)),
+        ((dy_dstate, dydot_dstate), (dk1_dstate, dk2_dstate, dk3_dstate, dk4_dstate)),
         (x2, y2, ydot2, ydot3, x3, y3, ydot4),
     )
 
 
 class AtlasStages:
-    """The named quantities of one ATLAS-form RK4 step."""
+    """The named quantities of one ATLAS-form RK4 step.
+
+    `bend1..3` are the half-step bend vectors, `kick1`/`kick4` the first and
+    last stage slopes (already scaled by h/2) and `dir2`/`dir3`/`dir4`/
+    `dir_end` the direction estimates the intermediate stages are taken at.
+    """
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
 
-def _atlas_rk4_stages(b, taylor_norm):
+def _atlas_rk4_stages(deriv, taylor_norm):
     """Build the value path of an ATLAS-form RK4 vacuum step.
 
-    ATLAS carries the half-step scaled field H = (h*l/2) * B rather than the
-    plain slopes k_i, so every stage slope comes out as (h/2)*k_i directly and
-    nothing is rescaled by h or l again.
+    ATLAS carries a half-step bend vector, bend_i = (h*qop/2) * B_i, rather
+    than the plain slopes k_i.  Every stage slope then comes out as (h/2)*k_i
+    directly, as a bare cross product, and neither h nor qop appears again
+    anywhere in the recursion.
+
+    The stage names say which stage a quantity belongs to.  ATLAS' own names
+    are positional; `docs/groups/sympy_codegen.md` maps the two onto each
+    other (bend1..3 are H0..H2, and kick1/dir2/dir_half_sum/dir3/dir4/
+    dir_end/kick4 are A0..A6).
     """
-    # (h*l/2) is ATLAS' PS2.
-    hl2 = b.add("hl2", h * l / 2)
-    S3 = b.add("S3", h / 3)
-    S4 = b.add("S4", h / 4)
+    # ATLAS calls this PS2.
+    half_h_qop = deriv.add("half_h_qop", h * qop / 2)
+    h_third = deriv.add("h_third", h / 3)
+    h_quarter = deriv.add("h_quarter", h / 4)
 
-    H0 = b.add("H0", hl2.name * B1)
-    A0 = b.add("A0", d.cross(explicit(H0.name)))  # h/2 * k1
-    A2 = b.add("A2", explicit(A0.name) + d)  # d + h/2 * k1
-    A1 = b.add("A1", explicit(A2.name) + d)  # 2d + h/2 * k1
-    b.add("p2", p + S4.name * explicit(A1.name))
+    bend1 = deriv.add("bend1", half_h_qop.name * B1)
+    kick1 = deriv.add("kick1", direction.cross(explicit(bend1.name)))  # h/2 * k1
+    dir2 = deriv.add("dir2", explicit(kick1.name) + direction)  # dir + h/2 * k1
+    dir_half_sum = deriv.add(
+        "dir_half_sum", explicit(dir2.name) + direction
+    )  # 2*dir + h/2 * k1
+    deriv.add("pos2", position + h_quarter.name * explicit(dir_half_sum.name))
 
-    H1 = b.add("H1", hl2.name * B2)
-    A3 = b.add("A3", d + explicit(A2.name).cross(explicit(H1.name)))  # d + h/2 * k2
-    A4 = b.add("A4", d + explicit(A3.name).cross(explicit(H1.name)))  # d + h/2 * k3
-    A5 = b.add("A5", 2 * explicit(A4.name) - d)  # d + h * k3
-    b.add("p3", p + h * explicit(A4.name))
+    bend2 = deriv.add("bend2", half_h_qop.name * B2)
+    dir3 = deriv.add(
+        "dir3", direction + explicit(dir2.name).cross(explicit(bend2.name))
+    )  # dir + h/2 * k2
+    dir4 = deriv.add(
+        "dir4", direction + explicit(dir3.name).cross(explicit(bend2.name))
+    )  # dir + h/2 * k3
+    dir_end = deriv.add("dir_end", 2 * explicit(dir4.name) - direction)  # dir + h * k3
+    deriv.add("pos3", position + h * explicit(dir4.name))
 
-    H2 = b.add("H2", hl2.name * B3)
-    A6 = b.add("A6", explicit(A5.name).cross(explicit(H2.name)))  # h/2 * k4
+    bend3 = deriv.add("bend3", half_h_qop.name * B3)
+    kick4 = deriv.add(
+        "kick4", explicit(dir_end.name).cross(explicit(bend3.name))
+    )  # h/2 * k4
 
-    # (A1+A6)-(A3+A4) is h/2 * (k1-k2-k3+k4), hence the leading 2*|h|.
-    err_vec = (explicit(A1.name) + explicit(A6.name)) - (
-        explicit(A3.name) + explicit(A4.name)
+    # (dir_half_sum+kick4)-(dir3+dir4) is h/2 * (k1-k2-k3+k4), hence the leading 2*|h|.
+    err_vec = (explicit(dir_half_sum.name) + explicit(kick4.name)) - (
+        explicit(dir3.name) + explicit(dir4.name)
     )
-    b.add("err", 2 * sym.Abs(h) * err_vec.norm(1))
+    deriv.add("err", 2 * sym.Abs(h) * err_vec.norm(1))
 
-    b.add(
-        "new_p",
-        p + S3.name * (explicit(A2.name) + explicit(A3.name) + explicit(A4.name)),
+    deriv.add(
+        "new_pos",
+        position
+        + h_third.name
+        * (explicit(dir2.name) + explicit(dir3.name) + explicit(dir4.name)),
     )
 
-    # An = 3 * (d + h/6*(k1 + 2k2 + 2k3 + k4)), the unnormalised new direction.
-    An = b.add(
-        "An",
-        2 * explicit(A3.name)
-        + (explicit(A0.name) + explicit(A5.name) + explicit(A6.name)),
+    # new_dir_x3 = 3 * (dir + h/6*(k1 + 2k2 + 2k3 + k4)), the unnormalised new direction.
+    new_dir_x3 = deriv.add(
+        "new_dir_x3",
+        2 * explicit(dir3.name)
+        + (explicit(kick1.name) + explicit(dir_end.name) + explicit(kick4.name)),
     )
 
     if taylor_norm:
-        # ATLAS replaces 1/|An| by its Taylor expansion around |An| = 3, which
+        # ATLAS replaces 1/|new_dir_x3| by its Taylor expansion around |new_dir_x3| = 3, which
         # RK4 stays within ~1e-7 of, so the truncation error is below rounding.
-        Dv = b.add("Dv", (An.name[0] ** 2 + An.name[1] ** 2) + (An.name[2] ** 2 - 9))
-        Dfac = b.add(
-            "Dfac",
-            sym.Rational(1, 3) - sym.Rational(1, 648) * Dv.name * (12 - Dv.name),
+        norm_dev = deriv.add(
+            "norm_dev",
+            (new_dir_x3.name[0] ** 2 + new_dir_x3.name[1] ** 2)
+            + (new_dir_x3.name[2] ** 2 - 9),
         )
-        new_d = b.add("new_d", Dfac.name * explicit(An.name))
+        norm_fac = deriv.add(
+            "norm_fac",
+            sym.Rational(1, 3)
+            - sym.Rational(1, 648) * norm_dev.name * (12 - norm_dev.name),
+        )
+        new_dir = deriv.add("new_dir", norm_fac.name * explicit(new_dir_x3.name))
     else:
-        inv_norm = b.add("inv_norm", 1 / explicit(An.name).norm())
-        new_d = b.add("new_d", inv_norm.name * explicit(An.name))
+        inv_norm = deriv.add("inv_norm", 1 / explicit(new_dir_x3.name).norm())
+        new_dir = deriv.add("new_dir", inv_norm.name * explicit(new_dir_x3.name))
 
-    dtds = b.add("dtds", sym.sqrt(1 + m**2 / p_abs**2))
-    b.add("new_t", t + h * dtds.name)
+    dtds = deriv.add("dtds", sym.sqrt(1 + mass**2 / p_abs**2))
+    deriv.add("new_time", time + h * dtds.name)
 
-    Sl = b.add("Sl", 2 / h)  # undoes the h/2 scaling of A6 -> k4
-    b.add(
+    two_over_h = deriv.add("two_over_h", 2 / h)  # undoes the h/2 scaling of kick4 -> k4
+    deriv.add(
         "path_derivatives",
         Matrix.vstack(
-            explicit(new_d.name),
+            explicit(new_dir.name),
             Matrix([dtds.name]),
-            Sl.name * explicit(A6.name),
+            two_over_h.name * explicit(kick4.name),
             Matrix([0]),
         ),
     )
 
     return AtlasStages(
-        S3=S3,
-        H0=H0,
-        H1=H1,
-        H2=H2,
-        A0=A0,
-        A2=A2,
-        A3=A3,
-        A4=A4,
-        A5=A5,
-        A6=A6,
+        h_third=h_third,
+        bend1=bend1,
+        bend2=bend2,
+        bend3=bend3,
+        kick1=kick1,
+        dir2=dir2,
+        dir3=dir3,
+        dir4=dir4,
+        dir_end=dir_end,
+        kick4=kick4,
         dtds=dtds,
     )
 
 
-def _field_contrib(b, what, stage, H, same_as, seed):
-    """The term a tangent picks up from H's own dependence on l.
+def _field_contrib(deriv, what, stage, bend, same_as, seed):
+    """The term a tangent picks up from the bend vector's dependence on q/p.
 
-    H is linear in l, so `l * dH/dl == H`, making this the H-linear part of
-    the stage, which is already named.  `same_as` encodes that identity and is
-    checked against the plain chain rule before use.
+    A bend vector is linear in q/p, so `qop * d(bend)/d(qop) == bend`, making
+    this the bend-linear part of the stage, which is already named.  `same_as`
+    encodes that identity and is checked against the plain chain rule before
+    use.
     """
-    contrib = stage.expr.jacobian(H.name) * seed
-    b.check_same(what, contrib[:, seed.cols - 1], same_as)
+    contrib = stage.expr.jacobian(bend.name) * seed
+    deriv.check_same(what, contrib[:, seed.cols - 1], same_as)
     return Matrix.hstack(contrib[:, 0 : seed.cols - 1], same_as)
 
 
@@ -246,13 +280,13 @@ def _field_contrib(b, what, stage, H, same_as, seed):
 # fmt: off
 _B2F = StructuredMatrix("M", [
     #  loc0    loc1    phi     theta   qop      time
-    ["hold", "hold", "step", "step", "step",     0],  # pos0
-    ["hold", "hold", "step", "step", "step",     0],  # pos1
-    ["hold", "hold", "step", "step", "step",     0],  # pos2
+    ["hold", "hold", "step", "step", "step",     0],  # pos[0]
+    ["hold", "hold", "step", "step", "step",     0],  # pos[1]
+    ["hold", "hold", "step", "step", "step",     0],  # pos[2]
     [     0,      0,      0,      0, "step",     1],  # time
-    [     0,      0, "step", "step", "step",     0],  # dir0
-    [     0,      0, "step", "step", "step",     0],  # dir1
-    [     0,      0, "step", "step", "step",     0],  # dir2
+    [     0,      0, "step", "step", "step",     0],  # dir[0]
+    [     0,      0, "step", "step", "step",     0],  # dir[1]
+    [     0,      0, "step", "step", "step",     0],  # dir[2]
     [     0,      0,      0,      0, "dense",    0],  # qop
 ])
 # fmt: on
@@ -282,11 +316,11 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
     RK recursion as the track state, which is why the code below mirrors the
     value path line for line.
     """
-    b = Derivation()
-    st = _atlas_rk4_stages(b, taylor_norm)
-    H0, H1, H2 = st.H0, st.H1, st.H2
-    A0, A3, A4, A6 = st.A0, st.A3, st.A4, st.A6
-    S3, dtds = st.S3, st.dtds
+    deriv = Derivation()
+    st = _atlas_rk4_stages(deriv, taylor_norm)
+    bend1, bend2, bend3 = st.bend1, st.bend2, st.bend3
+    kick1, dir3, dir4, kick4 = st.kick1, st.dir3, st.dir4, st.kick4
+    h_third, dtds = st.h_third, st.dtds
 
     M = _B2F.matrix
 
@@ -294,85 +328,107 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
         return Matrix([[M[i, c]] for i in rows])
 
     def tangent(name, stage, contribs, field=None):
-        T = sym.zeros(3, 1) if field is None else field
-        for var, Tvar in contribs:
-            T = T + stage.expr.jacobian(var) * Tvar
-        return b.add(name, T)
+        acc = sym.zeros(3, 1) if field is None else field
+        for var, tangent_of_var in contribs:
+            acc = acc + stage.expr.jacobian(var) * tangent_of_var
+        return deriv.add(name, acc)
 
     def propagate(tag, c, scale):
         """Push column `c` of M through the step.
 
         `scale` is None for a column with no q/p component.  The q/p column
-        carries its direction part scaled by l, ATLAS' pVector[40] convention.
+        carries its direction part scaled by q/p, ATLAS' pVector[40]
+        convention.
         """
         if scale is None:
             seed = col(c, (4, 5, 6))
             fields = [None] * 4
-            pos_fac, dir_fac = S3.name, sym.Rational(1, 3)
+            pos_fac, dir_fac = h_third.name, sym.Rational(1, 3)
         else:
-            vl = M[7, c]
-            seed = explicit(b.add(f"u{tag}", l * col(c, (4, 5, 6))).name)
+            seed_qop_row = M[7, c]
+            seed = explicit(deriv.add(f"{tag}_seed", qop * col(c, (4, 5, 6))).name)
             fields = [
                 _field_contrib(
-                    b, f"{tag}0", A0, H0, explicit(A0.name) * vl, explicit(H0.name) * vl
+                    deriv,
+                    f"{tag}_kick1",
+                    kick1,
+                    bend1,
+                    explicit(kick1.name) * seed_qop_row,
+                    explicit(bend1.name) * seed_qop_row,
                 ),
                 _field_contrib(
-                    b,
-                    f"{tag}3",
-                    A3,
-                    H1,
-                    (explicit(A3.name) - d) * vl,
-                    explicit(H1.name) * vl,
+                    deriv,
+                    f"{tag}_dir3",
+                    dir3,
+                    bend2,
+                    (explicit(dir3.name) - direction) * seed_qop_row,
+                    explicit(bend2.name) * seed_qop_row,
                 ),
                 _field_contrib(
-                    b,
-                    f"{tag}4",
-                    A4,
-                    H1,
-                    (explicit(A4.name) - d) * vl,
-                    explicit(H1.name) * vl,
+                    deriv,
+                    f"{tag}_dir4",
+                    dir4,
+                    bend2,
+                    (explicit(dir4.name) - direction) * seed_qop_row,
+                    explicit(bend2.name) * seed_qop_row,
                 ),
                 _field_contrib(
-                    b, f"{tag}6", A6, H2, explicit(A6.name) * vl, explicit(H2.name) * vl
+                    deriv,
+                    f"{tag}_kick4",
+                    kick4,
+                    bend3,
+                    explicit(kick4.name) * seed_qop_row,
+                    explicit(bend3.name) * seed_qop_row,
                 ),
             ]
             pos_fac, dir_fac = scale[0], scale[1]
 
-        v0 = tangent(f"{tag}0", A0, [(d, seed)], fields[0])
-        v2 = b.add(f"{tag}2", explicit(v0.name) + seed)
-        v3 = tangent(
-            f"{tag}3", A3, [(d, seed), (st.A2.name, explicit(v2.name))], fields[1]
+        tan_kick1 = tangent(f"{tag}_kick1", kick1, [(direction, seed)], fields[0])
+        tan_dir2 = deriv.add(f"{tag}_dir2", explicit(tan_kick1.name) + seed)
+        tan_dir3 = tangent(
+            f"{tag}_dir3",
+            dir3,
+            [(direction, seed), (st.dir2.name, explicit(tan_dir2.name))],
+            fields[1],
         )
-        v4 = tangent(
-            f"{tag}4", A4, [(d, seed), (A3.name, explicit(v3.name))], fields[2]
+        tan_dir4 = tangent(
+            f"{tag}_dir4",
+            dir4,
+            [(direction, seed), (dir3.name, explicit(tan_dir3.name))],
+            fields[2],
         )
-        v5 = b.add(f"{tag}5", 2 * explicit(v4.name) - seed)
-        v6 = tangent(f"{tag}6", A6, [(st.A5.name, explicit(v5.name))], fields[3])
+        tan_dir_end = deriv.add(f"{tag}_dir_end", 2 * explicit(tan_dir4.name) - seed)
+        tan_kick4 = tangent(
+            f"{tag}_kick4",
+            kick4,
+            [(st.dir_end.name, explicit(tan_dir_end.name))],
+            fields[3],
+        )
 
         new_pos = col(c, (0, 1, 2)) + pos_fac * (
-            explicit(v2.name) + explicit(v3.name) + explicit(v4.name)
+            explicit(tan_dir2.name) + explicit(tan_dir3.name) + explicit(tan_dir4.name)
         )
         new_dir = dir_fac * (
-            explicit(v0.name)
-            + 2 * explicit(v3.name)
-            + explicit(v5.name)
-            + explicit(v6.name)
+            explicit(tan_kick1.name)
+            + 2 * explicit(tan_dir3.name)
+            + explicit(tan_dir_end.name)
+            + explicit(tan_kick4.name)
         )
         return new_pos, new_dir
 
-    inv_l = b.add("inv_l", 1 / l)
-    S3_l = b.add("S3_l", S3.name * inv_l.name)
-    third_l = b.add("third_l", inv_l.name / 3)
+    inv_qop = deriv.add("inv_qop", 1 / qop)
+    qop_pos_weight = deriv.add("qop_pos_weight", h_third.name * inv_qop.name)
+    qop_dir_weight = deriv.add("qop_dir_weight", inv_qop.name / 3)
 
-    phi_pos, phi_dir = propagate("Tp", 2, None)
-    the_pos, the_dir = propagate("Tt", 3, None)
-    qop_pos, qop_dir = propagate("Tq", 4, (S3_l.name, third_l.name))
+    phi_pos, phi_dir = propagate("dphi", 2, None)
+    the_pos, the_dir = propagate("dtheta", 3, None)
+    qop_pos, qop_dir = propagate("dqop", 4, (qop_pos_weight.name, qop_dir_weight.name))
 
     # dt/ds depends on q/p only
-    dtdl = b.add("dtdl", dt_dqop(dtds.name))
-    new_time = M[3, 4] + dtdl.name * M[7, 4]
+    dt_dqop = deriv.add("dt_dqop", dtime_dqop(dtds.name))
+    new_time = M[3, 4] + dt_dqop.name * M[7, 4]
 
-    b.add(
+    deriv.add(
         "new_M",
         Matrix.vstack(
             phi_pos,
@@ -385,48 +441,50 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
         ),
     )
 
-    return b.name_exprs
+    return deriv.name_exprs
 
 
 def rk4_dense_tunedexpr():
-    def f(i, x, y, ydot):
+    def eom(i, x, y, ydot):
         B = [B1, B2, B2, B3][i - 1]
-        g = [g1, g2, g3, g4][i - 1]
+        dEds = [dEds1, dEds2, dEds3, dEds4][i - 1]
 
-        d = ydot[0:3, 0]
+        direction = ydot[0:3, 0]
         dtds = ydot[3, 0]
-        l = ydot[4, 0]
+        qop = ydot[4, 0]
         return Matrix.vstack(
-            d.cross(l * B),
-            Matrix([g * m**2 * l**3 / q**3]),
-            Matrix([dtds * l**2 * g / q]),
+            direction.cross(qop * B),
+            Matrix([dEds * mass**2 * qop**3 / charge**3]),
+            Matrix([dtds * qop**2 * dEds / charge]),
         )
 
-    big_l = Symbol("big_l", real=True)
-    dtds = name_expr("dtds", sym.sqrt(1 + m**2 / p_abs**2))
+    qop_integral = Symbol("qop_integral", real=True)
+    dtds = name_expr("dtds", sym.sqrt(1 + mass**2 / p_abs**2))
 
     (
         ((new_y, new_ydot), (k1, k2, k3, k4)),
-        ((dydyydot, dydotdyydot), (dk1dyydot, dk2dyydot, dk3dyydot, dk4dyydot)),
+        ((dy_dstate, dydot_dstate), (dk1_dstate, dk2_dstate, dk3_dstate, dk4_dstate)),
         (x2, y2, ydot2, ydot3, x3, y3, ydot4),
     ) = rk4_subexpr(
-        f,
+        eom,
         s,
-        Matrix.vstack(p, Matrix([t, big_l])),
-        Matrix.vstack(d, Matrix([dtds.name, l])),
+        Matrix.vstack(position, Matrix([time, qop_integral])),
+        Matrix.vstack(direction, Matrix([dtds.name, qop])),
         h,
     )
 
-    p2 = name_expr("p2", y2.expr[0:3, 0])
-    l2 = name_expr("l2", ydot2.expr[4, 0])
-    p3 = name_expr("p3", y3.expr[0:3, 0])
-    l3 = name_expr("l3", ydot3.expr[4, 0])
-    l4 = name_expr("l4", ydot4.expr[4, 0])
-    new_p = name_expr("new_p", new_y.expr[0:3, 0])
-    new_t = name_expr("new_t", new_y.expr[3, 0])
-    new_d_tmp = name_expr("new_d_tmp", new_ydot.expr[0:3, 0])
-    new_d = name_expr("new_d", new_d_tmp.name / new_d_tmp.name.as_explicit().norm())
-    new_l = name_expr("new_l", new_ydot.expr[4, 0])
+    pos2 = name_expr("pos2", y2.expr[0:3, 0])
+    qop2 = name_expr("qop2", ydot2.expr[4, 0])
+    pos3 = name_expr("pos3", y3.expr[0:3, 0])
+    qop3 = name_expr("qop3", ydot3.expr[4, 0])
+    qop4 = name_expr("qop4", ydot4.expr[4, 0])
+    new_pos = name_expr("new_pos", new_y.expr[0:3, 0])
+    new_time = name_expr("new_time", new_y.expr[3, 0])
+    new_dir_unnorm = name_expr("new_dir_unnorm", new_ydot.expr[0:3, 0])
+    new_dir = name_expr(
+        "new_dir", new_dir_unnorm.name / new_dir_unnorm.name.as_explicit().norm()
+    )
+    new_qop = name_expr("new_qop", new_ydot.expr[4, 0])
     err = name_expr(
         "err",
         h**2
@@ -436,45 +494,51 @@ def rk4_dense_tunedexpr():
     )
 
     path_derivatives = name_expr("path_derivatives", sym.zeros(8, 1))
-    path_derivatives.expr[0:3, 0] = new_d.name.as_explicit()
+    path_derivatives.expr[0:3, 0] = new_dir.name.as_explicit()
     path_derivatives.expr[3, 0] = new_ydot.name[3, 0]
     path_derivatives.expr[4:7, 0] = k4.name[0:3, 0].as_explicit()
     path_derivatives.expr[7, 0] = new_ydot.name[4, 0]
 
-    dk1dTL = name_expr("dk1dTL", k1.expr.jacobian([t, d, l]))
-    dk2dTL = name_expr(
-        "dk2dTL", k2.expr.jacobian([t, d, l]) + k2.expr.jacobian(k1.name) * dk1dTL.expr
+    dk1_dfree = name_expr("dk1_dfree", k1.expr.jacobian([time, direction, qop]))
+    dk2_dfree = name_expr(
+        "dk2_dfree",
+        k2.expr.jacobian([time, direction, qop])
+        + k2.expr.jacobian(k1.name) * dk1_dfree.expr,
     )
-    dk3dTL = name_expr(
-        "dk3dTL",
-        k3.expr.jacobian([t, d, l]) + k3.expr.jacobian(k2.name) * dk2dTL.name,
+    dk3_dfree = name_expr(
+        "dk3_dfree",
+        k3.expr.jacobian([time, direction, qop])
+        + k3.expr.jacobian(k2.name) * dk2_dfree.name,
     )
-    dk4dTL = name_expr(
-        "dk4dTL",
-        k4.expr.jacobian([t, d, l]) + k4.expr.jacobian(k3.name) * dk3dTL.name,
+    dk4_dfree = name_expr(
+        "dk4_dfree",
+        k4.expr.jacobian([time, direction, qop])
+        + k4.expr.jacobian(k3.name) * dk3_dfree.name,
     )
 
-    F = Matrix.vstack(new_p.expr.as_explicit(), Matrix([new_t.expr]))
-    dFdTL = name_expr(
-        "dFdTL",
-        F.jacobian([t, d, l])
-        + F.jacobian(k1.name) * dk1dTL.expr
-        + F.jacobian(k2.name) * dk2dTL.name
-        + F.jacobian(k3.name) * dk3dTL.name,
+    new_y_rows = Matrix.vstack(new_pos.expr.as_explicit(), Matrix([new_time.expr]))
+    dy_dfree = name_expr(
+        "dy_dfree",
+        new_y_rows.jacobian([time, direction, qop])
+        + new_y_rows.jacobian(k1.name) * dk1_dfree.expr
+        + new_y_rows.jacobian(k2.name) * dk2_dfree.name
+        + new_y_rows.jacobian(k3.name) * dk3_dfree.name,
     )
-    G = Matrix.vstack(new_d_tmp.expr.as_explicit(), Matrix([new_l.expr]))
-    dGdTL = name_expr(
-        "dGdTL",
-        G.jacobian([t, d, l])
-        + G.jacobian(k1.name) * dk1dTL.expr
-        + G.jacobian(k2.name) * dk2dTL.name
-        + G.jacobian(k3.name) * dk3dTL.name
-        + G.jacobian(k4.name) * dk4dTL.name,
+    new_ydot_rows = Matrix.vstack(
+        new_dir_unnorm.expr.as_explicit(), Matrix([new_qop.expr])
+    )
+    dydot_dfree = name_expr(
+        "dydot_dfree",
+        new_ydot_rows.jacobian([time, direction, qop])
+        + new_ydot_rows.jacobian(k1.name) * dk1_dfree.expr
+        + new_ydot_rows.jacobian(k2.name) * dk2_dfree.name
+        + new_ydot_rows.jacobian(k3.name) * dk3_dfree.name
+        + new_ydot_rows.jacobian(k4.name) * dk4_dfree.name,
     )
 
     D = sym.eye(8)
-    D[0:4, 3:8] = dFdTL.name.as_explicit()
-    D[4:8, 3:8] = dGdTL.name.as_explicit()
+    D[0:4, 3:8] = dy_dfree.name.as_explicit()
+    D[4:8, 3:8] = dydot_dfree.name.as_explicit()
 
     # Unlike the vacuum kernel this one builds D, because energy loss couples
     # time and q/p into every stage.  D still applies to M, not to an 8x8.
@@ -486,30 +550,30 @@ def rk4_dense_tunedexpr():
         y2,
         ydot2,
         ydot3,
-        p2,
-        l2,
+        pos2,
+        qop2,
         k2,
-        l3,
+        qop3,
         k3,
         y3,
         ydot4,
-        p3,
-        l4,
+        pos3,
+        qop4,
         k4,
         err,
         new_y,
         new_ydot,
-        new_p,
-        new_t,
-        new_d_tmp,
-        new_d,
-        new_l,
+        new_pos,
+        new_time,
+        new_dir_unnorm,
+        new_dir,
+        new_qop,
         path_derivatives,
-        dk2dTL,
-        dk3dTL,
-        dk4dTL,
-        dFdTL,
-        dGdTL,
+        dk2_dfree,
+        dk3_dfree,
+        dk4_dfree,
+        dy_dfree,
+        dydot_dfree,
         new_M,
     ]
 
@@ -519,12 +583,12 @@ def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
     outputs = [
         find_by_name(name_exprs, name)[0]
         for name in [
-            "p2",
-            "p3",
+            "pos2",
+            "pos3",
             "err",
-            "new_p",
-            "new_t",
-            "new_d",
+            "new_pos",
+            "new_time",
+            "new_dir",
             "path_derivatives",
             "new_M",
         ]
@@ -534,39 +598,39 @@ def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
 
     lines.append(
         "template <typename T, typename GetB>\n"
-        "Acts::Result<bool> rk4_vacuum(std::span<const T, 3> p,"
-        " std::span<const T, 3> d, const T t, const T h, const T l, const T m,"
+        "Acts::Result<bool> rk4_vacuum(std::span<const T, 3> pos,"
+        " std::span<const T, 3> dir, const T time, const T h, const T qop, const T mass,"
         " const T p_abs, GetB getB, T& err, const T errTol,"
-        " std::span<T, 3> new_p, T& new_t, std::span<T, 3> new_d,"
+        " std::span<T, 3> new_pos, T& new_time, std::span<T, 3> new_dir,"
         " std::span<T, 8> path_derivatives, std::span<T> M) {"
     )
     lines.append(f"  assert(M.empty() || M.size() == {_B2F.size});")
 
-    lines.append("  const auto B1res = getB(p);")
+    lines.append("  const auto B1res = getB(pos);")
     lines.append(
         "  if (!B1res.ok()) {\n    return Acts::Result<bool>::failure(B1res.error());\n  }"
     )
     lines.append("  const auto B1 = *B1res;")
 
     def pre_expr_hook(var):
-        if str(var) == "p2":
-            return "std::array<T, 3> p2{};"
-        if str(var) == "p3":
-            return "std::array<T, 3> p3{};"
+        if str(var) == "pos2":
+            return "std::array<T, 3> pos2{};"
+        if str(var) == "pos3":
+            return "std::array<T, 3> pos3{};"
         if str(var) == "new_M":
             return f"std::array<T, {len(_B2F_LIVE)}> new_M{{}};"
         return None
 
     def post_expr_hook(var):
-        if str(var) == "p2":
-            return "const auto B2res = getB(std::span<const T, 3>(p2));\n  if (!B2res.ok()) {\n    return Acts::Result<bool>::failure(B2res.error());\n  }\n  const auto B2 = *B2res;"
-        if str(var) == "p3":
-            return "const auto B3res = getB(std::span<const T, 3>(p3));\n  if (!B3res.ok()) {\n    return Acts::Result<bool>::failure(B3res.error());\n  }\n  const auto B3 = *B3res;"
+        if str(var) == "pos2":
+            return "const auto B2res = getB(std::span<const T, 3>(pos2));\n  if (!B2res.ok()) {\n    return Acts::Result<bool>::failure(B2res.error());\n  }\n  const auto B2 = *B2res;"
+        if str(var) == "pos3":
+            return "const auto B3res = getB(std::span<const T, 3>(pos3));\n  if (!B3res.ok()) {\n    return Acts::Result<bool>::failure(B3res.error());\n  }\n  const auto B3 = *B3res;"
         if str(var) == "err":
             return (
                 "if (err > errTol) {\n  return Acts::Result<bool>::success(false);\n}"
             )
-        if str(var) == "new_d":
+        if str(var) == "new_dir":
             return "if (M.empty()) {\n  return Acts::Result<bool>::success(true);\n}"
         if str(var) == "new_M":
             return "\n".join(
@@ -584,7 +648,7 @@ def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
         post_expr_hook=post_expr_hook,
         scalar_outputs_by_pointer=False,
     )
-    lines.extend([f"  {l}" for l in code.split("\n")])
+    lines.extend([f"  {line}" for line in code.split("\n")])
 
     lines.append("  return Acts::Result<bool>::success(true);")
 
@@ -598,16 +662,16 @@ def print_rk4_dense(name_exprs, run_cse=True):
     outputs = [
         find_by_name(name_exprs, name)[0]
         for name in [
-            "p2",
-            "l2",
-            "l3",
-            "p3",
-            "l4",
+            "pos2",
+            "qop2",
+            "qop3",
+            "pos3",
+            "qop4",
             "err",
-            "new_p",
-            "new_t",
-            "new_d",
-            "new_l",
+            "new_pos",
+            "new_time",
+            "new_dir",
+            "new_qop",
             "path_derivatives",
             "new_M",
         ]
@@ -617,49 +681,49 @@ def print_rk4_dense(name_exprs, run_cse=True):
 
     lines.append(
         "template <typename T, typename GetB, typename GetG>\n"
-        "Acts::Result<bool> rk4_dense(std::span<const T, 3> p,"
-        " std::span<const T, 3> d, const T t, const T h, const T l, const T m,"
-        " const T q, const T p_abs, GetB getB, GetG getG, T& err,"
-        " const T errTol, std::span<T, 3> new_p, T& new_t,"
-        " std::span<T, 3> new_d, T& new_l, std::span<T, 8> path_derivatives,"
+        "Acts::Result<bool> rk4_dense(std::span<const T, 3> pos,"
+        " std::span<const T, 3> dir, const T time, const T h, const T qop, const T mass,"
+        " const T charge, const T p_abs, GetB getB, GetG getG, T& err,"
+        " const T errTol, std::span<T, 3> new_pos, T& new_time,"
+        " std::span<T, 3> new_dir, T& new_qop, std::span<T, 8> path_derivatives,"
         " std::span<T> M) {"
     )
     lines.append(f"  assert(M.empty() || M.size() == {_B2F.size});")
 
-    lines.append("  const auto B1res = getB(p);")
+    lines.append("  const auto B1res = getB(pos);")
     lines.append(
         "  if (!B1res.ok()) {\n    return Acts::Result<bool>::failure(B1res.error());\n  }"
     )
     lines.append("  const auto B1 = *B1res;")
-    lines.append("  const auto g1 = getG(p, l);")
+    lines.append("  const auto dEds1 = getG(pos, qop);")
 
     def pre_expr_hook(var):
-        if str(var) == "p2":
-            return "std::array<T, 3> p2{};"
-        if str(var) == "p3":
-            return "std::array<T, 3> p3{};"
-        if str(var) in ("l2", "l3", "l4"):
+        if str(var) == "pos2":
+            return "std::array<T, 3> pos2{};"
+        if str(var) == "pos3":
+            return "std::array<T, 3> pos3{};"
+        if str(var) in ("qop2", "qop3", "qop4"):
             return f"T {var}{{}};"
         if str(var) == "new_M":
             return f"std::array<T, {len(_B2F_DENSE_LIVE)}> new_M{{}};"
         return None
 
     def post_expr_hook(var):
-        if str(var) == "p2":
-            return "const auto B2res = getB(std::span<const T, 3>(p2));\n  if (!B2res.ok()) {\n    return Acts::Result<bool>::failure(B2res.error());\n  }\n  const auto B2 = *B2res;"
-        if str(var) == "p3":
-            return "const auto B3res = getB(std::span<const T, 3>(p3));\n  if (!B3res.ok()) {\n    return Acts::Result<bool>::failure(B3res.error());\n  }\n  const auto B3 = *B3res;"
-        if str(var) == "l2":
-            return "const auto g2 = getG(std::span<const T, 3>(p2), l2);"
-        if str(var) == "l3":
-            return "const auto g3 = getG(std::span<const T, 3>(p2), l3);"
-        if str(var) == "l4":
-            return "const auto g4 = getG(std::span<const T, 3>(p3), l4);"
+        if str(var) == "pos2":
+            return "const auto B2res = getB(std::span<const T, 3>(pos2));\n  if (!B2res.ok()) {\n    return Acts::Result<bool>::failure(B2res.error());\n  }\n  const auto B2 = *B2res;"
+        if str(var) == "pos3":
+            return "const auto B3res = getB(std::span<const T, 3>(pos3));\n  if (!B3res.ok()) {\n    return Acts::Result<bool>::failure(B3res.error());\n  }\n  const auto B3 = *B3res;"
+        if str(var) == "qop2":
+            return "const auto dEds2 = getG(std::span<const T, 3>(pos2), qop2);"
+        if str(var) == "qop3":
+            return "const auto dEds3 = getG(std::span<const T, 3>(pos2), qop3);"
+        if str(var) == "qop4":
+            return "const auto dEds4 = getG(std::span<const T, 3>(pos3), qop4);"
         if str(var) == "err":
             return (
                 "if (err > errTol) {\n  return Acts::Result<bool>::success(false);\n}"
             )
-        if str(var) == "new_d":
+        if str(var) == "new_dir":
             return "if (M.empty()) {\n  return Acts::Result<bool>::success(true);\n}"
         if str(var) == "new_M":
             return "\n".join(
@@ -677,7 +741,7 @@ def print_rk4_dense(name_exprs, run_cse=True):
         post_expr_hook=post_expr_hook,
         scalar_outputs_by_pointer=False,
     )
-    lines.extend([f"  {l}" for l in code.split("\n")])
+    lines.extend([f"  {line}" for line in code.split("\n")])
 
     lines.append("  return Acts::Result<bool>::success(true);")
 
