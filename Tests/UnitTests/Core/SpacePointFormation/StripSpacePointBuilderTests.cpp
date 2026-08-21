@@ -76,8 +76,10 @@ Vector2 varianceZR(const bool precisionAlongZ, const double theta) {
 
   auto surface = precisionAlongZ ? makePlane(position, z, rPhi)
                                  : makePlane(position, rPhi, z);
-  return StripSpacePointBuilder::computeVarianceZR(gctx, *surface, position,
-                                                   var1, var2, theta);
+  return StripSpacePointBuilder::computeCovarianceZR(
+             surface->referenceFrame(gctx, position, Vector3::Zero()), position,
+             var1, var2, theta)
+      .diagonal();
 }
 
 // orthogonal strips and the ITk strip stereo angle
@@ -425,6 +427,45 @@ BOOST_AUTO_TEST_CASE(ConstrainedRecoveryStillChecksLimits) {
                                                            options);
   BOOST_CHECK(!sp.ok());
   BOOST_CHECK_EQUAL(sp.error(), SpacePointFormationError::OutsideLimits);
+}
+
+/// The cache overload has to give exactly the same answer
+BOOST_AUTO_TEST_CASE(CacheOverloadMatchesStripEndsOverload) {
+  StripSpacePointBuilder::ConstrainedOptions options;
+  options.stripLengthTolerance = 0.01;
+  options.stripLengthGapTolerance = 2.;
+
+  const StripSpacePointBuilder::StripEnds first = innerStrip(30);
+  const StripSpacePointBuilder::ConstrainedStripCache cache1 =
+      StripSpacePointBuilder::makeConstrainedStripCache(first, options);
+
+  // a scan that crosses both the regular and the relaxed limit on either side
+  for (const double m : {-2.0, -1.2, -1.02, -0.5, 0.0, 0.5, 1.02, 1.2, 2.0}) {
+    for (const double n : {-1.5, -1.05, -0.2, 0.4, 1.05, 1.5}) {
+      const StripSpacePointBuilder::StripEnds second =
+          outerStripFor(m, n, 30, 30);
+      const StripSpacePointBuilder::ConstrainedStripCache cache2 =
+          StripSpacePointBuilder::makeConstrainedStripCache(second, options);
+
+      const Result<Vector3> fromEnds =
+          StripSpacePointBuilder::computeConstrainedSpacePoint(first, second,
+                                                               options);
+      const Result<Vector3> fromCache =
+          StripSpacePointBuilder::computeConstrainedSpacePoint(cache1, cache2,
+                                                               options);
+
+      BOOST_TEST_CONTEXT("m = " << m << ", n = " << n) {
+        BOOST_REQUIRE_EQUAL(fromEnds.ok(), fromCache.ok());
+        if (fromEnds.ok()) {
+          CHECK_CLOSE_ABS(fromEnds->x(), fromCache->x(), 1e-9);
+          CHECK_CLOSE_ABS(fromEnds->y(), fromCache->y(), 1e-9);
+          CHECK_CLOSE_ABS(fromEnds->z(), fromCache->z(), 1e-9);
+        } else {
+          BOOST_CHECK_EQUAL(fromEnds.error(), fromCache.error());
+        }
+      }
+    }
+  }
 }
 
 /// Strip2 adds nothing along the precision direction of strip1, which keeps
