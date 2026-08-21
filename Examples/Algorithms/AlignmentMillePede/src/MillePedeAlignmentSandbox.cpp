@@ -172,12 +172,15 @@ ProcessCode MillePedeAlignmentSandbox::execute(
     trackSourceLinks.clear();
     trackSourceLinks.reserve(track.nTrackStates());
     for (const auto& state : track.trackStates()) {
-      trackSourceLinks.push_back(state.getUncalibratedSourceLink());
+      if (state.hasUncalibratedSourceLink()) {
+        trackSourceLinks.push_back(state.getUncalibratedSourceLink());
+      }
     }
 
     // get the TrackAlignmentState using the existing
     // alignment class. This will compute the needed
     // residuals and derivatives.
+    kfOptions.referenceSurface = &refPar.referenceSurface();
     auto aliStates = m_align->evaluateTrackAlignmentState(
         dummyGeoCtx, trackSourceLinks, refPar, kfOptions,
         m_indexedAlignSurfaces,
