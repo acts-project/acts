@@ -9,7 +9,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Material/GridSurfaceMaterial.hpp"
-#include "Acts/Material/GridSurfaceMaterialFactory.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/MergedMaterialMarker.hpp"
@@ -51,8 +50,8 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial2DTests) {
       std::vector<std::size_t>{0u, 3u, 3u, 0u}};
 
   // Create the indexed material grid
-  auto ism = GridSurfaceMaterialFactory::createIndexed(*axisZ, *axisPhi,
-                                                       material, indexPayload);
+  auto ism = GridSurfaceMaterial::createIndexed(*axisZ, *axisPhi, material,
+                                                indexPayload);
 
   nlohmann::json jMaterial = ism.get();
 
@@ -116,8 +115,7 @@ BOOST_AUTO_TEST_CASE(GridSurfaceMaterialDirectStorageRoundTrip) {
   auto axisX = IAxis::createEquidistant(AxisBoundaryType::Bound, 0.0, 2.0, 2);
   auto axisY = IAxis::createEquidistant(AxisBoundaryType::Bound, 0.0, 2.0, 2);
 
-  auto gsm =
-      GridSurfaceMaterialFactory::createDirect(*axisX, *axisY, material2x2);
+  auto gsm = GridSurfaceMaterial::createDirect(*axisX, *axisY, material2x2);
   BOOST_REQUIRE(gsm != nullptr);
 
   nlohmann::json jMaterial = gsm.get();

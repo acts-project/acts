@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/GridSurfaceMaterial.hpp"
-#include "Acts/Material/GridSurfaceMaterialFactory.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
@@ -158,10 +157,10 @@ std::vector<Acts::MaterialSlab> readStorageVector(
 
 /// @brief Reconstruct a @c GridSurfaceMaterial from json
 ///
-/// Works generically for arbitrary axis type combinations via the
-/// @c IAxis-based @c GridSurfaceMaterialFactory, so it is not limited to a
-/// hardcoded set of equidistant bound/closed axis combinations. The grid is
-/// always 2D, matching @c GridSurfaceMaterial's requirement.
+/// Works generically for arbitrary axis type combinations via
+/// @c GridSurfaceMaterial's @c IAxis-based factory methods, so it is not
+/// limited to a hardcoded set of equidistant bound/closed axis combinations.
+/// The grid is always 2D, matching @c GridSurfaceMaterial's requirement.
 ///
 /// @param jMaterial the json object to read from
 /// @return a newly allocated surface material, or nullptr if unsupported
@@ -194,14 +193,13 @@ Acts::ISurfaceMaterial* gridSurfaceMaterialFromJson(nlohmann::json& jMaterial) {
   if (accessorType == "direct") {
     auto payload = readGridPayload2D<Acts::MaterialSlab>(
         jData, axes[0]->getNBins(), axes[1]->getNBins());
-    return Acts::GridSurfaceMaterialFactory::createDirect(*axes[0], *axes[1],
-                                                          payload)
+    return Acts::GridSurfaceMaterial::createDirect(*axes[0], *axes[1], payload)
         .release();
   }
   if (accessorType == "indexed") {
     auto payload = readGridPayload2D<std::size_t>(jData, axes[0]->getNBins(),
                                                   axes[1]->getNBins());
-    return Acts::GridSurfaceMaterialFactory::createIndexed(
+    return Acts::GridSurfaceMaterial::createIndexed(
                *axes[0], *axes[1], readStorageVector(jMaterialAccessor),
                payload)
         .release();

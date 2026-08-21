@@ -9,7 +9,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Material/GridSurfaceMaterial.hpp"
-#include "Acts/Material/GridSurfaceMaterialFactory.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -54,8 +53,7 @@ BOOST_AUTO_TEST_CASE(GridMaterialDirectFromAxes) {
   auto axisX = IAxis::createEquidistant(AxisBoundaryType::Bound, -1.0, 1.0, 2);
   auto axisY = IAxis::createEquidistant(AxisBoundaryType::Bound, -1.5, 1.5, 3);
 
-  auto ismXY =
-      GridSurfaceMaterialFactory::createDirect(*axisX, *axisY, material2x3);
+  auto ismXY = GridSurfaceMaterial::createDirect(*axisX, *axisY, material2x3);
 
   BOOST_REQUIRE(ismXY != nullptr);
 
@@ -103,8 +101,7 @@ BOOST_AUTO_TEST_CASE(GridMaterialDirectFromMultiAxisSpec) {
        MaterialSlab(Material::fromMolarDensity(31.0, 32.0, 33.0, 34.0, 35.0),
                     4.0)}};
 
-  auto ism =
-      GridSurfaceMaterialFactory::createDirect(binning, *cylinder, payload);
+  auto ism = GridSurfaceMaterial::createDirect(binning, *cylinder, payload);
   BOOST_REQUIRE(ism != nullptr);
 
   // loc0 (rPhi) is irrelevant - near, far and out-of-range values all land
@@ -139,7 +136,7 @@ BOOST_AUTO_TEST_CASE(GridMaterialLocalAxisDirections) {
       {MaterialSlab::Nothing(), MaterialSlab::Nothing(),
        MaterialSlab::Nothing()}};
   auto ismUndirected =
-      GridSurfaceMaterialFactory::createDirect(*axisX, *axisY, payload2x3);
+      GridSurfaceMaterial::createDirect(*axisX, *axisY, payload2x3);
   BOOST_CHECK(ismUndirected->localAxisDirections().empty());
 
   auto cylinder = Surface::makeShared<CylinderSurface>(
@@ -151,7 +148,7 @@ BOOST_AUTO_TEST_CASE(GridMaterialLocalAxisDirections) {
       {MaterialSlab::Nothing(), MaterialSlab::Nothing(),
        MaterialSlab::Nothing(), MaterialSlab::Nothing()}};
   auto ismDirected =
-      GridSurfaceMaterialFactory::createDirect(binning, *cylinder, payload1x4);
+      GridSurfaceMaterial::createDirect(binning, *cylinder, payload1x4);
 
   std::vector<AxisDirection> localDirs = ismDirected->localAxisDirections();
   BOOST_REQUIRE_EQUAL(localDirs.size(), 2u);
@@ -182,8 +179,8 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial2D) {
       std::vector<std::size_t>{0u, 3u, 3u, 0u}};
 
   // Test (1): built via the factory from two axes
-  auto ismFactory = GridSurfaceMaterialFactory::createIndexed(
-      *axisZ, *axisPhi, material, indexPayload);
+  auto ismFactory = GridSurfaceMaterial::createIndexed(*axisZ, *axisPhi,
+                                                       material, indexPayload);
 
   // Test (2): built directly from a MultiAxisSpec2D and a hand-filled
   // Indexed storage, using the same binning
@@ -245,8 +242,8 @@ BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialNonShared) {
   std::vector<std::vector<std::size_t>> indexPayload = {
       {1u}, {0u}, {2u}, {2u}, {3u}};
 
-  auto ism = GridSurfaceMaterialFactory::createGloballyIndexed(
-      *axis0, *axis1, material, indexPayload);
+  auto ism = GridSurfaceMaterial::createGloballyIndexed(*axis0, *axis1,
+                                                        material, indexPayload);
 
   // Local access test
   Vector2 l0(0.5, 0.);
@@ -265,7 +262,7 @@ BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialNonShared) {
       IAxis::createEquidistant(AxisBoundaryType::Bound, 0., 5., 1);
   std::vector<std::vector<std::size_t>> indexPayload1 = {{4u}};
 
-  auto ism1 = GridSurfaceMaterialFactory::createGloballyIndexed(
+  auto ism1 = GridSurfaceMaterial::createGloballyIndexed(
       *axis0Single, *axis1, material, indexPayload1);
 
   Vector2 l0g1(2.5, 0.);
@@ -294,9 +291,9 @@ BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialShared) {
 
   std::vector<std::vector<std::size_t>> indexPayload = {{1u}};
 
-  auto ism0 = GridSurfaceMaterialFactory::createGloballyIndexed(
+  auto ism0 = GridSurfaceMaterial::createGloballyIndexed(
       *axis0, *axis1, material, indexPayload);
-  auto ism1 = GridSurfaceMaterialFactory::createGloballyIndexed(
+  auto ism1 = GridSurfaceMaterial::createGloballyIndexed(
       *axis0, *axis1, material, indexPayload);
 
   Vector2 l0(2.5, 0.);
@@ -323,7 +320,7 @@ BOOST_AUTO_TEST_CASE(GridSurfaceMaterialDirectStorageScale) {
       {MaterialSlab::Vacuum(3.0)},
       {MaterialSlab::Vacuum(4.0)}};
 
-  auto gsm = GridSurfaceMaterialFactory::createDirect(*axis0, *axis1, payload);
+  auto gsm = GridSurfaceMaterial::createDirect(*axis0, *axis1, payload);
 
   // Local access test
   Vector2 l0(0.5, 0.);
