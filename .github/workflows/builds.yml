@@ -489,7 +489,7 @@ jobs:
       # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
       # so reads fall back to the anonymous (heavily rate limited) bucket.
       packages: read
-    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:91
 
     steps:
       # The image keeps build tooling in the sbin dirs, off a non-login PATH.
@@ -598,7 +598,7 @@ jobs:
       contents: read
       packages: read
     container:
-      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
+      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:91
       options: --gpus all
     env:
       MODEL_STORAGE: ${{ github.workspace }}/ci_models
@@ -677,7 +677,7 @@ jobs:
       # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
       # so reads fall back to the anonymous (heavily rate limited) bucket.
       packages: read
-    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:91
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -739,7 +739,7 @@ jobs:
       # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
       # so reads fall back to the anonymous (heavily rate limited) bucket.
       packages: read
-    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:91
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -810,7 +810,7 @@ jobs:
       contents: read
       packages: read
     container:
-      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
+      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:91
       options: --gpus all
 
     steps:

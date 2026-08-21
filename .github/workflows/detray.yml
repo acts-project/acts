@@ -99,7 +99,7 @@ jobs:
         PLATFORM:
           - NAME: "HOST"
             CXX_STANDARD: "20"
-            CONTAINER: "ghcr.io/acts-project/ubuntu2604:90"
+            CONTAINER: "ghcr.io/acts-project/ubuntu2604:91"
             OPTIONS: -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_FASTOR_PLUGIN=OFF -DDETRAY_SMATRIX_PLUGIN=OFF -DDETRAY_VC_AOS_PLUGIN=OFF -DDETRAY_VC_SOA_PLUGIN=OFF -DDETRAY_USE_SYSTEM_EIGEN3=ON -DDETRAY_USE_SYSTEM_VECMEM=ON -DDETRAY_USE_SYSTEM_COVFIE=ON -DDETRAY_USE_SYSTEM_GOOGLETEST=ON -DDETRAY_USE_SYSTEM_NLOHMANN=ON
 
     # The system to run on.
@@ -193,7 +193,7 @@ jobs:
         PLATFORM:
           - NAME: "HIP-AMD"
             CXX_STANDARD: "20"
-            CONTAINER: "ghcr.io/acts-project/ubuntu2604:90"
+            CONTAINER: "ghcr.io/acts-project/ubuntu2604:91"
             FLAVOR: "rocm-gfx90a"
             # vecmem stays in-tree: HIP::hiprt comes from vecmem's
             # FindHIPToolkit.cmake, which vecmem <= 1.25.0 ships but does not
@@ -284,7 +284,7 @@ jobs:
     permissions:
       contents: read
       packages: read
-    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:91
 
     strategy:
       # A broken scalar type must not cancel the other: which of the two is
@@ -398,7 +398,7 @@ jobs:
       contents: read
       packages: read
     container:
-      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
+      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:91
       options: --gpus all
 
     env:
