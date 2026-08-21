@@ -10,9 +10,18 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Seeding/detail/CircleFit.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
+#include <cassert>
 #include <cmath>
+#include <limits>
+#include <numbers>
+#include <span>
+#include <string>
+#include <vector>
+
+#include <Eigen/Eigenvalues>
 
 namespace Acts {
 
@@ -25,9 +34,19 @@ Transform3 estimationFrameLocalToGlobal(const Vector3& sp0, const Vector3& sp1,
   // from the bottom to middle space point. Hence, the projection of the middle
   // space point on the transverse plane will be located at the x axis of the
   // new frame.
+  //
+  // A vanishing field falls back to global z, a reference along the field to
+  // any orthogonal y.
   const Vector3 relVec = sp1 - sp0;
-  const Vector3 newZAxis = bField.normalized();
-  const Vector3 newYAxis = newZAxis.cross(relVec).normalized();
+  const double bMag = bField.norm();
+  const Vector3 newZAxis = (bMag > std::numeric_limits<double>::epsilon())
+                               ? Vector3(bField / bMag)
+                               : Vector3(Vector3::UnitZ());
+  Vector3 newYAxis = newZAxis.cross(relVec);
+  if (newYAxis.norm() < std::numeric_limits<double>::epsilon()) {
+    newYAxis = newZAxis.unitOrthogonal();
+  }
+  newYAxis.normalize();
   const Vector3 newXAxis = newYAxis.cross(newZAxis);
   RotationMatrix3 rotation;
   rotation.col(0) = newXAxis;
@@ -209,4 +228,180 @@ Acts::BoundMatrix Acts::estimateTrackParamCovariance(
   }
 
   return result;
+}
+
+namespace {
+
+class TrackParamsEstimationErrorCategory : public std::error_category {
+ public:
+  const char* name() const noexcept final {
+    return "TrackParamsEstimationError";
+  }
+
+  std::string message(int c) const final {
+    using Acts::TrackParamsEstimationError;
+
+    switch (static_cast<TrackParamsEstimationError>(c)) {
+      case TrackParamsEstimationError::NotEnoughSpacePoints:
+        return "At least three space points are required";
+      case TrackParamsEstimationError::DegenerateFit:
+        return "The space point configuration leads to a degenerate fit";
+      default:
+        return "unknown";
+    }
+  }
+};
+
+}  // namespace
+
+std::error_code Acts::make_error_code(Acts::TrackParamsEstimationError e) {
+  static TrackParamsEstimationErrorCategory c;
+  return {static_cast<int>(e), c};
+}
+
+Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
+    std::span<const Vector3> spacePoints, const Vector3& bField, double t0,
+    std::size_t geometricRefineIterations, std::span<const double> weights) {
+  if (spacePoints.size() < 3) {
+    return Result<FreeVector>::failure(
+        TrackParamsEstimationError::NotEnoughSpacePoints);
+  }
+  assert((weights.empty() || weights.size() == spacePoints.size()) &&
+         "weights must be empty or match the space points");
+
+  const auto w = [&](std::size_t i) {
+    return weights.empty() ? 1. : weights[i];
+  };
+
+  const Vector3& reference = spacePoints.front();
+
+  // Estimation frame: field along local +z, fixed by the first two points.
+  const Transform3 transform =
+      estimationFrameLocalToGlobal(reference, spacePoints[1], bField);
+  const Transform3 toLocal = transform.inverse();
+  std::vector<Vector3> local;
+  local.reserve(spacePoints.size());
+  for (const Vector3& sp : spacePoints) {
+    local.push_back(toLocal * sp);
+  }
+
+  FreeVector params = FreeVector::Zero();
+  params.segment<3>(eFreePos0) = reference;
+  params[eFreeTime] = t0;
+
+  const double bMag = bField.norm();
+
+  detail::CircleFit circle = detail::fitCircleTaubin(local, weights);
+  if (circle.valid && geometricRefineIterations > 0) {
+    detail::refineCircleGeometric(circle, local, geometricRefineIterations,
+                                  weights);
+  }
+
+  if (!circle.valid) {
+    // Straight-line limit: the direction is the principal axis, q/p stays zero.
+    double sumW = 0.;
+    Vector3 mean = Vector3::Zero();
+    for (std::size_t i = 0; i < local.size(); ++i) {
+      sumW += w(i);
+      mean += w(i) * local[i];
+    }
+    if (!(sumW > 0.)) {
+      return Result<FreeVector>::failure(
+          TrackParamsEstimationError::DegenerateFit);
+    }
+    mean /= sumW;
+    SquareMatrix3 cov = SquareMatrix3::Zero();
+    for (std::size_t i = 0; i < local.size(); ++i) {
+      const Vector3 d = local[i] - mean;
+      cov += w(i) * d * d.transpose();
+    }
+    Eigen::SelfAdjointEigenSolver<SquareMatrix3> solver(cov);
+    // A non-positive largest eigenvalue means the points coincide.
+    if (solver.info() != Eigen::Success || (solver.eigenvalues()[2] <= 0)) {
+      return Result<FreeVector>::failure(
+          TrackParamsEstimationError::DegenerateFit);
+    }
+    Vector3 localDir = solver.eigenvectors().col(2);
+    if (localDir.dot(local.back() - local.front()) < 0.) {
+      localDir = -localDir;
+    }
+    localDir.normalize();
+    params.segment<3>(eFreeDir0) = transform.linear() * localDir;
+    return Result<FreeVector>::success(params);
+  }
+
+  const Vector2 center = circle.center;
+  const double radius = circle.radius;
+
+  const Vector2 refXy = local.front().head<2>();
+  const Vector2 secondXy = local[1].head<2>();
+
+  // Tangent: the radial vector rotated by +90 degrees, oriented along travel.
+  const Vector2 radial = refXy - center;
+  Vector2 tangent(-radial.y(), radial.x());
+  const double rotSense = (tangent.dot(secondXy - refXy) >= 0.) ? 1. : -1.;
+  tangent = (rotSense * tangent).normalized();
+
+  // q v x B points to the center; with B along local +z, v x B = (v_y, -v_x).
+  const double toCenterProj = tangent.y() * (center.x() - refXy.x()) -
+                              tangent.x() * (center.y() - refXy.y());
+  const double qSign = (toCenterProj >= 0.) ? 1. : -1.;
+
+  // z is linear in the arc length s = radius * turning angle. Consecutive
+  // points are assumed less than half a turn apart.
+  const double phiRef =
+      std::atan2(refXy.y() - center.y(), refXy.x() - center.x());
+  double phiPrev = phiRef;
+  double sumW = 0., sumS = 0., sumZ = 0., sumSS = 0., sumSZ = 0.;
+  for (std::size_t i = 0; i < local.size(); ++i) {
+    const Vector3& p = local[i];
+    double phi = std::atan2(p.y() - center.y(), p.x() - center.x());
+    while (phi - phiPrev > std::numbers::pi) {
+      phi -= 2. * std::numbers::pi;
+    }
+    while (phi - phiPrev < -std::numbers::pi) {
+      phi += 2. * std::numbers::pi;
+    }
+    phiPrev = phi;
+    const double wi = w(i);
+    const double s = rotSense * radius * (phi - phiRef);
+    const double z = p.z();
+    sumW += wi;
+    sumS += wi * s;
+    sumZ += wi * z;
+    sumSS += wi * s * s;
+    sumSZ += wi * s * z;
+  }
+  const double denom = sumW * sumSS - sumS * sumS;
+  const double lambda =
+      (std::abs(denom) > std::numeric_limits<double>::epsilon())
+          ? (sumW * sumSZ - sumS * sumZ) / denom
+          : 0.;
+
+  // s is the transverse arc length, so the local direction is (t_x, t_y,
+  // lambda).
+  Vector3 localDir(tangent.x(), tangent.y(), lambda);
+  localDir.normalize();
+  params.segment<3>(eFreeDir0) = transform.linear() * localDir;
+
+  // p_T = |B| * R, so q/p_T = qSign / (R * |B|). Without a field q/p stays
+  // zero.
+  if (bMag > std::numeric_limits<double>::epsilon()) {
+    const double qOverPt = qSign / (radius * bMag);
+    params[eFreeQOverP] = qOverPt / fastHypot(1., lambda);
+  }
+
+  return Result<FreeVector>::success(params);
+}
+
+Acts::Result<Acts::BoundVector> Acts::estimateTrackParamsFromSpacePoints(
+    const GeometryContext& gctx, const Surface& surface,
+    std::span<const Vector3> spacePoints, const Vector3& bField, double t0,
+    std::size_t geometricRefineIterations, std::span<const double> weights) {
+  Result<FreeVector> freeParams = estimateTrackParamsFromSpacePoints(
+      spacePoints, bField, t0, geometricRefineIterations, weights);
+  if (!freeParams.ok()) {
+    return Result<BoundVector>::failure(freeParams.error());
+  }
+  return transformFreeToBoundParameters(*freeParams, surface, gctx);
 }
