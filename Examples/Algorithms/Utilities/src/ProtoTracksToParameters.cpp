@@ -142,16 +142,17 @@ ProcessCode ProtoTracksToParameters::execute(
                     (sps.at(tmpSps.back()).z() - sps.at(tmpSps.front()).z());
     const float t = sps.at(tmpSps.front()).r() - m * sps.at(tmpSps.front()).z();
     const float vertexZ = -t / m;
-    const std::size_t s = tmpSps.size();
+
+    const std::vector<SpacePointIndex> selected =
+        selectSeedSpacePoints(sps, tmpSps, m_cfg.spacePointSelection);
+    if (selected.size() < 3) {
+      ACTS_DEBUG("Cannot seed because no space point selection could be made");
+      skippedTracks++;
+      continue;
+    }
 
     auto seed = seeds.createSeed();
-    if (m_cfg.buildTightSeeds) {
-      seed.assignSpacePointIndices(
-          std::array{tmpSps.at(0), tmpSps.at(1), tmpSps.at(2)});
-    } else {
-      seed.assignSpacePointIndices(
-          std::array{tmpSps.at(0), tmpSps.at(s / 2), tmpSps.at(s - 1)});
-    }
+    seed.assignSpacePointIndices(selected);
     seed.vertexZ() = vertexZ;
 
     // Compute parameters
