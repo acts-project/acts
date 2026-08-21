@@ -97,8 +97,8 @@ auto triplet_seeding_algorithm::operator()(
   // it. (The latter is needed for the next few steps.)
   details::spacepoint_grid_types::buffer grid_buffer(
       m_data->m_axes.first, m_data->m_axes.second,
-      std::vector<std::size_t>(grid_capacities_host.begin(),
-                               grid_capacities_host.end()),
+      std::vector<unsigned int>(grid_capacities_host.begin(),
+                                grid_capacities_host.end()),
       mr().main, mr().host, vecmem::data::buffer_type::resizable);
   copy().setup(grid_buffer._buffer)->ignore();
   vecmem::data::vector_buffer<prefix_sum_element_t> grid_prefix_sum_buffer(
