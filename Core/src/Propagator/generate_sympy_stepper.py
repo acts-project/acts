@@ -601,11 +601,11 @@ def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
 
     def pre_expr_hook(var):
         if str(var) == "p2":
-            return "std::array<T, 3> p2;"
+            return "std::array<T, 3> p2{};"
         if str(var) == "p3":
-            return "std::array<T, 3> p3;"
+            return "std::array<T, 3> p3{};"
         if str(var) == "new_M":
-            return f"std::array<T, {len(_B2F_LIVE)}> new_M;"
+            return f"std::array<T, {len(_B2F_LIVE)}> new_M{{}};"
         return None
 
     def post_expr_hook(var):
@@ -684,9 +684,9 @@ def print_rk4_dense(name_exprs, run_cse=True):
 
     def pre_expr_hook(var):
         if str(var) == "p2":
-            return "std::array<T, 3> p2;"
+            return "std::array<T, 3> p2{};"
         if str(var) == "p3":
-            return "std::array<T, 3> p3;"
+            return "std::array<T, 3> p3{};"
         if str(var) == "l2":
             return "T l2[1];"
         if str(var) == "l3":
@@ -694,7 +694,7 @@ def print_rk4_dense(name_exprs, run_cse=True):
         if str(var) == "l4":
             return "T l4[1];"
         if str(var) == "new_M":
-            return f"std::array<T, {len(_B2F_DENSE_LIVE)}> new_M;"
+            return f"std::array<T, {len(_B2F_DENSE_LIVE)}> new_M{{}};"
         return None
 
     def post_expr_hook(var):
