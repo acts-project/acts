@@ -110,16 +110,21 @@ ProcessCode TrackExtrapolationAlgorithm::execute(
   std::size_t nFailed = 0;
 
   for (const auto& track : inputTracks) {
+    // one output track per input track, so the indices stay the same and any
+    // truth matching of the input remains valid
+    auto destination = extrapolated.makeTrack();
+    destination.copyFromShallow(track);
+
     const auto result = extrapolate(track);
     if (!result.ok()) {
       ACTS_DEBUG("Extrapolation of track " << track.index() << " failed with "
                                            << result.error());
+      // no parameters on the target surface
+      destination.setReferenceSurface(nullptr);
       ++nFailed;
       continue;
     }
 
-    auto destination = extrapolated.makeTrack();
-    destination.copyFromShallow(track);
     destination.setReferenceSurface(m_cfg.targetSurface);
     destination.parameters() = result->parameters();
     destination.covariance() = result->covariance().value();
@@ -129,8 +134,8 @@ ProcessCode TrackExtrapolationAlgorithm::execute(
   m_nFailedTracks += nFailed;
 
   if (nFailed > 0) {
-    ACTS_DEBUG("Dropped " << nFailed << " of " << inputTracks.size()
-                          << " tracks that could not be extrapolated");
+    ACTS_DEBUG(nFailed << " tracks could not be extrapolated and are left "
+                          "without a reference surface");
   }
 
   ConstTrackContainer outputTracks{
@@ -138,7 +143,8 @@ ProcessCode TrackExtrapolationAlgorithm::execute(
           std::move(*trackBackend)),
       inputTracks.trackStateContainerHolder()};
 
-  ACTS_DEBUG("Extrapolated " << outputTracks.size() << " tracks");
+  ACTS_DEBUG("Extrapolated " << (outputTracks.size() - nFailed) << " of "
+                             << outputTracks.size() << " tracks");
 
   m_outputTracks(ctx, std::move(outputTracks));
 
@@ -148,10 +154,10 @@ ProcessCode TrackExtrapolationAlgorithm::execute(
 ProcessCode TrackExtrapolationAlgorithm::finalize() {
   ACTS_INFO("TrackExtrapolationAlgorithm statistics:");
   ACTS_INFO("- total tracks: " << m_nTotalTracks);
-  ACTS_INFO("- dropped tracks: " << m_nFailedTracks);
+  ACTS_INFO("- failed tracks: " << m_nFailedTracks);
   if (m_nTotalTracks > 0) {
-    ACTS_INFO("- drop ratio: " << static_cast<double>(m_nFailedTracks) /
-                                      m_nTotalTracks);
+    ACTS_INFO("- failure ratio: " << static_cast<double>(m_nFailedTracks) /
+                                         m_nTotalTracks);
   }
 
   return ProcessCode::SUCCESS;
