@@ -1,5 +1,5 @@
 @defgroup gbts Graph-Based Track Seeding
-@ingroup pattern_recog
+@ingroup seeding
 @brief Seeding by building and filtering a graph of hit doublets
 
 > [!tip]
@@ -83,9 +83,9 @@ index, cluster width and local @f$y@f$ position.
 `insert` assigns the node to an eta bin via
 `GbtsLayer::getEtaBin` and buffers it.
 `finalize` then sorts each bin by @f$\phi@f$ and materialises the nodes into a
-space point container **ordered by (eta bin, @f$\phi@f$)**, so that every eta bin
-is one contiguous range of node indices. A node index is therefore all that the
-rest of the algorithm needs to pass around.
+space point container ordered by eta bin and then by @f$\phi@f$, so that every
+eta bin is **one contiguous range of node indices**. A node index is therefore
+all that the rest of the algorithm needs to pass around.
 
 The per-node data the graph builder reads lives in dynamic columns on that same
 container. It is deliberately packed rather than split into one array per field,
@@ -93,8 +93,8 @@ because the innermost loop reads all of it together:
 
 @snippet{trimleft} include/Acts/Seeding/detail/GbtsGraphTypes.hpp gbts node params
 
-@f$\tau = \cot\theta@f$. The infinite defaults mean "do not cut on @f$\tau@f$";
-only the optional machine-learning lookup table narrows them (see
+@f$\tau = \cot\theta@f$. The infinite defaults disable the @f$\tau@f$ cut
+entirely; only the optional machine-learning lookup table narrows them (see
 @ref gbts-ml). Alongside it sits the bookkeeping the graph builder writes:
 
 @snippet{trimleft} include/Acts/Seeding/detail/GbtsGraphTypes.hpp gbts node edge info
@@ -108,7 +108,7 @@ wrap-around, so the window never has to handle wrapping:
 ## Building the graph {#gbts-graph}
 
 The builder walks the bin groups from @ref gbts-geometry. For each inner bin it
-prepares one **sliding window in @f$\phi@f$** per connected outer bin, whose
+prepares one **sliding window** in @f$\phi@f$ per connected outer bin, whose
 half-width grows with the radial separation of the two bins — the further apart
 they are, the more a low-@f$p_T@f$ track can bend between them. It then loops
 over the inner nodes, and for each one scans only the outer nodes inside the
@@ -145,9 +145,10 @@ difference must all agree within tolerance. For pixel-barrel triplets an optiona
 circle through the three points and cuts on @f$d_0@f$ and @f$p_T@f$.
 
 Each edge stores up to `kGbtsMaxEdgeNeighbours` (6) such neighbours. Every
-inner node also accumulates a 16-bit **@f$z_0@f$ histogram bitmask** of its confirmed edges;
-on the innermost layer that mask is reused to reject candidates whose @f$z_0@f$
-falls in an empty bin, and nodes with no connections at all are skipped outright.
+inner node also accumulates a 16-bit @f$z_0@f$ **histogram bitmask** of its
+confirmed edges; on the innermost layer that mask is reused to reject candidates
+whose @f$z_0@f$ falls in an empty bin, and nodes with no connections at all are
+skipped outright.
 
 ## Connected component analysis {#gbts-cca}
 
