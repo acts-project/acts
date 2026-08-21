@@ -234,25 +234,21 @@ std::error_code make_error_code(Acts::TrackParamsEstimationError e);
 /// A vanishing curvature degenerates to a line and only the direction is
 /// estimated. Without a field q/p stays zero.
 ///
-/// Weights are relative (e.g. inverse-variance) factors: the transverse ones on
-/// the circle fit, the longitudinal ones on the R-Z line fit. An empty span
-/// means uniform, a non-empty one must match `spacePoints` in size.
+/// Weights are relative (e.g. inverse-variance) factors on every fit stage. An
+/// empty span means uniform, a non-empty one must match `spacePoints` in size.
 ///
 /// @param spacePoints the ordered global space point positions
 /// @param bField the homogeneous magnetic field vector
 /// @param t0 the time assigned to the reference point (eFreeTime)
 /// @param geometricRefineIterations number of Gauss-Newton refinement
 ///        iterations on top of the algebraic circle fit (0 disables it)
-/// @param weightsTransverse optional per-point weights for the transverse
-///        circle fit (empty span = uniform)
-/// @param weightsLongitudinal optional per-point weights for the longitudinal
-///        R-Z line fit (empty span = uniform)
+/// @param weights optional per-point weights for all fit stages
+///        (empty span = uniform)
 /// @return the free parameters at the reference point, or an error
 Result<FreeVector> estimateTrackParamsFromSpacePoints(
     std::span<const Vector3> spacePoints, const Vector3& bField, double t0 = 0.,
     std::size_t geometricRefineIterations = 0,
-    std::span<const double> weightsTransverse = {},
-    std::span<const double> weightsLongitudinal = {});
+    std::span<const double> weights = {});
 
 /// Estimate bound track parameters from an ordered set of N >= 3 space points.
 ///
@@ -266,17 +262,14 @@ Result<FreeVector> estimateTrackParamsFromSpacePoints(
 /// @param t0 the time assigned to the reference point (eBoundTime)
 /// @param geometricRefineIterations number of Gauss-Newton refinement
 ///        iterations on top of the algebraic circle fit (0 disables it)
-/// @param weightsTransverse optional per-point weights for the transverse
-///        circle fit (empty span = uniform)
-/// @param weightsLongitudinal optional per-point weights for the longitudinal
-///        R-Z line fit (empty span = uniform)
+/// @param weights optional per-point weights for all fit stages
+///        (empty span = uniform)
 /// @return the bound parameters at the surface, or an error
 Result<BoundVector> estimateTrackParamsFromSpacePoints(
     const GeometryContext& gctx, const Surface& surface,
     std::span<const Vector3> spacePoints, const Vector3& bField, double t0 = 0.,
     std::size_t geometricRefineIterations = 0,
-    std::span<const double> weightsTransverse = {},
-    std::span<const double> weightsLongitudinal = {});
+    std::span<const double> weights = {});
 
 /// @}
 
