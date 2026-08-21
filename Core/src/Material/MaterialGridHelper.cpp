@@ -136,13 +136,13 @@ Acts::Grid2D Acts::createGrid2D(
   bool isCartesian = false;
   bool isCylindrical = false;
 
-  for (std::size_t b = 0; b < bu.size(); b++) {
-    if (bu[b].binvalue == Acts::AxisDirection::AxisX ||
-        bu[b].binvalue == Acts::AxisDirection::AxisY) {
+  for (const auto& bd : bu) {
+    if (bd.binvalue == Acts::AxisDirection::AxisX ||
+        bd.binvalue == Acts::AxisDirection::AxisY) {
       isCartesian = true;
     }
-    if (bu[b].binvalue == Acts::AxisDirection::AxisR ||
-        bu[b].binvalue == Acts::AxisDirection::AxisPhi) {
+    if (bd.binvalue == Acts::AxisDirection::AxisR ||
+        bd.binvalue == Acts::AxisDirection::AxisPhi) {
       isCylindrical = true;
     }
   }
@@ -176,13 +176,13 @@ Acts::Grid3D Acts::createGrid3D(
   bool isCartesian = false;
   bool isCylindrical = false;
 
-  for (std::size_t b = 0; b < bu.size(); b++) {
-    if (bu[b].binvalue == Acts::AxisDirection::AxisX ||
-        bu[b].binvalue == Acts::AxisDirection::AxisY) {
+  for (const auto& bd : bu) {
+    if (bd.binvalue == Acts::AxisDirection::AxisX ||
+        bd.binvalue == Acts::AxisDirection::AxisY) {
       isCartesian = true;
     }
-    if (bu[b].binvalue == Acts::AxisDirection::AxisR ||
-        bu[b].binvalue == Acts::AxisDirection::AxisPhi) {
+    if (bd.binvalue == Acts::AxisDirection::AxisR ||
+        bd.binvalue == Acts::AxisDirection::AxisPhi) {
       isCylindrical = true;
     }
   }

@@ -13,6 +13,7 @@
 #include "Acts/Vertexing/VertexingError.hpp"
 
 #include <algorithm>
+#include <map>
 
 namespace Acts {
 
@@ -608,15 +609,10 @@ Result<void> AdaptiveMultiVertexFinder::deleteLastVertex(
     return removeResult.error();
   }
 
-  for (auto it = fitterState.tracksAtVerticesMap.begin();
-       it != fitterState.tracksAtVerticesMap.end();) {
-    // Delete all track state for current (bad) vertex
-    if (it->first.second == vtxPtr) {
-      it = fitterState.tracksAtVerticesMap.erase(it);
-    } else {
-      ++it;
-    }
-  }
+  // Delete all track state for current (bad) vertex
+  std::erase_if(fitterState.tracksAtVerticesMap, [vtxPtr](const auto& entry) {
+    return entry.first.second == vtxPtr;
+  });
   fitterState.vtxInfoMap.erase(vtxPtr);
 
   // If no vertices share tracks with vtx we don't need to refit

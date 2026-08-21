@@ -439,7 +439,7 @@ GbtsGeometry::GbtsGeometry(
     }
 
     // order exit bins (important for graph building)
-    std::sort(exitBins.begin(), exitBins.end());
+    std::ranges::sort(exitBins);
 
     // 2b. add a new stage: vector of bin1
 

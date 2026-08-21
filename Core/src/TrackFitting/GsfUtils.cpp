@@ -14,6 +14,7 @@
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <span>
@@ -48,18 +49,15 @@ void detail::Gsf::removeLowWeightComponents(std::vector<GsfComponent> &cmps,
 
   normalizeWeights(cmps, proj);
 
-  auto newEnd = std::remove_if(cmps.begin(), cmps.end(), [&](auto &cmp) {
-    return proj(cmp) < weightCutoff;
-  });
+  auto removed = std::ranges::remove_if(
+      cmps, [&](auto &cmp) { return proj(cmp) < weightCutoff; });
 
   // In case we would remove all components, keep only the largest
-  if (std::distance(cmps.begin(), newEnd) == 0) {
-    cmps = {*std::max_element(cmps.begin(), cmps.end(), [&](auto &a, auto &b) {
-      return proj(a) < proj(b);
-    })};
+  if (removed.begin() == cmps.begin()) {
+    cmps = {*std::ranges::max_element(cmps, {}, proj)};
     cmps.front().weight = 1.0;
   } else {
-    cmps.erase(newEnd, cmps.end());
+    cmps.erase(removed.begin(), removed.end());
     normalizeWeights(cmps, proj);
   }
 }
