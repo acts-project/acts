@@ -72,8 +72,7 @@ g4 = Symbol("g4", real=True)
 def dt_dqop(dtds):
     """d(t)/d(q/p) over a step of length h.
 
-    Equals h m**2 l / (q**2 dtds), with the q**2 folded into p_abs via
-    p_abs = |q| / |l|.
+    h m**2 l / (q**2 dtds), with the q**2 folded into p_abs = |q| / |l|.
     """
     return h * m**2 / (p_abs**2 * l * dtds)
 
@@ -146,10 +145,9 @@ class AtlasStages:
 def _atlas_rk4_stages(b, taylor_norm):
     """Build the value path of an ATLAS-form RK4 vacuum step.
 
-    ATLAS never evaluates the plain slopes k_i.  It carries the half-step
-    scaled field H = (h*l/2) * B, so every stage slope comes out as (h/2)*k_i
-    directly and no further scaling by h or l appears anywhere in the
-    recursion.
+    ATLAS carries the half-step scaled field H = (h*l/2) * B rather than the
+    plain slopes k_i, so every stage slope comes out as (h/2)*k_i directly and
+    nothing is rescaled by h or l again.
     """
     # (h*l/2) is ATLAS' PS2.
     hl2 = b.add("hl2", h * l / 2)
@@ -234,11 +232,9 @@ def _atlas_rk4_stages(b, taylor_norm):
 def _field_contrib(b, what, stage, H, same_as, seed):
     """The term a tangent picks up from H's own dependence on l.
 
-    H is linear in l, so `l * dH/dl == H` exactly; with the tangent's l part
-    scaled by l, this term is the H-linear part of the stage, which is already
-    available as a named quantity.  `same_as` encodes that identity and is
-    verified against the plain chain rule before use -- it is what keeps the
-    recursion free of any extra cross product.
+    H is linear in l, so `l * dH/dl == H`, making this the H-linear part of
+    the stage, which is already named.  `same_as` encodes that identity and is
+    checked against the plain chain rule before use.
     """
     contrib = stage.expr.jacobian(H.name) * seed
     b.check_same(what, contrib[:, seed.cols - 1], same_as)
@@ -269,9 +265,8 @@ def b2f_step_update(D, live):
     """Apply a free-to-free step jacobian D to the bound-to-free jacobian M.
 
     Only the live columns are touched, and the structural zeros of _B2F keep
-    the products sparse.  This is the generic fallback; the vacuum kernel
-    instead folds the same operation into the RK recursion, which is cheaper
-    still because it never builds D.
+    the products sparse.  The vacuum kernel folds this into the RK recursion
+    instead, and never builds D at all.
     """
     out = []
     for c in sorted({col for _, col in live}):
@@ -283,13 +278,9 @@ def b2f_step_update(D, live):
 def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
     """ATLAS-form RK4 vacuum step transporting the bound-to-free jacobian.
 
-    The free-to-free step jacobian D is never built.  Instead the columns of
-    the bound-to-free jacobian M are pushed through the very same RK recursion
-    as the track state itself -- which is why the code below mirrors the value
-    path line for line, exactly as ATLAS' d2A/d3A/d4A block mirrors its A0..A6
-    block.  That removes both the fourth tangent direction (a bound
-    parametrisation has two direction degrees of freedom, a free-to-free D
-    needs three) and the 8x8 composition.
+    The step jacobian D is never built: the columns of M go through the same
+    RK recursion as the track state, which is why the code below mirrors the
+    value path line for line.
     """
     b = Derivation()
     st = _atlas_rk4_stages(b, taylor_norm)
@@ -311,13 +302,8 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
     def propagate(tag, c, scale):
         """Push column `c` of M through the step.
 
-        `scale` is None for a column with no q/p component, which then needs
-        neither the field terms nor any rescaling.  For the q/p column the
-        direction part is carried multiplied by l -- exactly ATLAS' convention
-        for its pVector[40] block -- so that the term each stage picks up from
-        H's own l dependence is the stage itself rather than a fresh cross
-        product.  Unlike ATLAS we read the q/p row instead of assuming it is 1,
-        because a preceding dense step changes it.
+        `scale` is None for a column with no q/p component.  The q/p column
+        carries its direction part scaled by l, ATLAS' pVector[40] convention.
         """
         if scale is None:
             seed = col(c, (4, 5, 6))
@@ -382,7 +368,7 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
     the_pos, the_dir = propagate("Tt", 3, None)
     qop_pos, qop_dir = propagate("Tq", 4, (S3_l.name, third_l.name))
 
-    # dt/ds depends on q/p only, so the time row moves for the q/p column alone.
+    # dt/ds depends on q/p only
     dtdl = b.add("dtdl", dt_dqop(dtds.name))
     new_time = M[3, 4] + dtdl.name * M[7, 4]
 
