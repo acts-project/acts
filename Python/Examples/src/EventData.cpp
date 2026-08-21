@@ -542,6 +542,7 @@ void addEventData(py::module& mex) {
       .def(py::init<ConstTrackStateProxy&>());
   py::implicitly_convertible<ConstTrackStateProxy,
                              Acts::AnyConstTrackStateProxy>();
+
   // bind measurements
   // The measurement proxy is bound as a ProxyTether (see ProxyTether.hpp). The
   // type-erased alive-check lets both MeasurementContainer and
