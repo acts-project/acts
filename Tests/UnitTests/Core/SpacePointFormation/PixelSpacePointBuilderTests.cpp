@@ -45,6 +45,12 @@ std::shared_ptr<PlaneSurface> makePlane(const Vector3& center,
       transform, std::make_shared<RectangleBounds>(50_mm, 50_mm));
 }
 
+/// The reference frame of a plane, which does not depend on the position or
+/// direction handed to it
+RotationMatrix3 referenceFrame(const PlaneSurface& surface) {
+  return surface.referenceFrame(gctx, Vector3::Zero(), Vector3::Zero());
+}
+
 SquareMatrix2 localCov() {
   SquareMatrix2 cov = SquareMatrix2::Zero();
   cov(0, 0) = sigmaLoc0 * sigmaLoc0;
@@ -85,8 +91,9 @@ BOOST_AUTO_TEST_CASE(BarrelModule) {
   const Vector3 z = Vector3::UnitZ();
 
   auto surface = makePlane(position, rPhi, z);
-  const Vector2 varZR = PixelSpacePointBuilder::computeVarianceZR(
-      gctx, *surface, position, localCov());
+  const Vector2 varZR = PixelSpacePointBuilder::computeCovarianceZR(
+                            referenceFrame(*surface), position, localCov())
+                            .diagonal();
 
   BOOST_CHECK_CLOSE(varZR[0], sigmaLoc1 * sigmaLoc1, 1e-6);
   BOOST_CHECK_SMALL(varZR[1], 1e-12);
@@ -102,8 +109,9 @@ BOOST_AUTO_TEST_CASE(EndcapModule) {
   const Vector3 rPhi(-std::sin(phi), std::cos(phi), 0);
 
   auto surface = makePlane(position, radial, rPhi);
-  const Vector2 varZR = PixelSpacePointBuilder::computeVarianceZR(
-      gctx, *surface, position, localCov());
+  const Vector2 varZR = PixelSpacePointBuilder::computeCovarianceZR(
+                            referenceFrame(*surface), position, localCov())
+                            .diagonal();
 
   BOOST_CHECK_SMALL(varZR[0], 1e-12);
   BOOST_CHECK_CLOSE(varZR[1], sigmaLoc0 * sigmaLoc0, 1e-6);
@@ -127,8 +135,9 @@ BOOST_AUTO_TEST_CASE(InclinedModuleAgainstNumericJacobian) {
 
   auto surface = makePlane(position, loc0, loc1);
   const SquareMatrix2 cov = localCov();
-  const Vector2 varZR =
-      PixelSpacePointBuilder::computeVarianceZR(gctx, *surface, position, cov);
+  const Vector2 varZR = PixelSpacePointBuilder::computeCovarianceZR(
+                            referenceFrame(*surface), position, cov)
+                            .diagonal();
   const Vector2 expected = numericVarianceZR(*surface, position, cov);
 
   BOOST_CHECK_CLOSE(varZR[0], expected[0], 1e-3);
