@@ -222,7 +222,7 @@ struct MultiStepperTester {
     // Test the result & compare with the input/test for reasonable members
     auto const_iterable = multiStepper.constComponentIterable(state);
     for (const auto cmp : const_iterable) {
-      if constexpr (std::decay_t<decltype(cmp)>::hasFreeTransport) {
+      if constexpr (requires { cmp.state().jacTransport; }) {
         BOOST_CHECK_EQUAL(cmp.state().jacTransport, FreeMatrix::Identity());
       }
       BOOST_CHECK_EQUAL(cmp.derivative(), FreeVector::Zero());
@@ -303,7 +303,7 @@ struct MultiStepperTester {
       for (const auto cmp : multi_stepper.constComponentIterable(multi_state)) {
         BOOST_CHECK_EQUAL(cmp.pars(), single_state.pars);
         BOOST_CHECK_EQUAL(cmp.cov(), single_state.cov);
-        if constexpr (std::decay_t<decltype(cmp)>::hasFreeTransport) {
+        if constexpr (requires { cmp.state().jacTransport; }) {
           BOOST_CHECK_EQUAL(cmp.state().jacTransport,
                             single_state.jacTransport);
         }
@@ -591,13 +591,13 @@ struct MultiStepperTester {
       auto cmp_1 = *cmp_iterable.begin();
       auto cmp_2 = *(++cmp_iterable.begin());
 
-      auto bound_state_1 =
-          cmp_1.boundState(*right_surface, true, FreeToBoundCorrection(false));
+      auto bound_state_1 = single_stepper.boundState(
+          cmp_1.state(), *right_surface, true, FreeToBoundCorrection(false));
       BOOST_REQUIRE(bound_state_1.ok());
       BOOST_CHECK(*single_bound_state == *bound_state_1);
 
-      auto bound_state_2 =
-          cmp_2.boundState(*right_surface, true, FreeToBoundCorrection(false));
+      auto bound_state_2 = single_stepper.boundState(
+          cmp_2.state(), *right_surface, true, FreeToBoundCorrection(false));
       BOOST_CHECK(bound_state_2.ok());
     }
   }

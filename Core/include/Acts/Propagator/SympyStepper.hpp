@@ -373,6 +373,12 @@ class SympyStepper final {
   void update(State& state, const Vector3& uposition, const Vector3& udirection,
               double qOverP, double time) const;
 
+  /// Reset the transport accumulated since the last reference surface.  This
+  /// stepper transports `jacToGlobal` in place, so setting that is the reset.
+  ///
+  /// @param [in,out] state State of the stepper
+  void resetTransportJacobian(State& /*state*/) const {}
+
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,
   /// or direction of the state
