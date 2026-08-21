@@ -326,14 +326,8 @@ void updateStepper(propagator_state_t &state, const stepper_t &stepper,
 
     auto cmp = stepper.addComponent(state.stepping, std::move(bound), weight);
 
-    auto freeParams = cmp.pars();
-    cmp.jacToGlobal() = surface.boundToFreeJacobian(
-        state.geoContext, freeParams.template segment<3>(eFreePos0),
-        freeParams.template segment<3>(eFreeDir0));
+    // the component starts here, but on the trajectory the multi state is on
     cmp.pathAccumulated() = state.stepping.pathAccumulated;
-    cmp.jacobian() = BoundMatrix::Identity();
-    cmp.derivative() = FreeVector::Zero();
-    cmp.jacTransport() = FreeMatrix::Identity();
   }
 }
 

@@ -153,7 +153,6 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_state_test) {
 
   // Test the result & compare with the input/test for reasonable members
   BOOST_CHECK_EQUAL(esState.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
   BOOST_CHECK(!esState.covTransport);
   BOOST_CHECK_EQUAL(esState.cov, Covariance::Zero());
@@ -257,13 +256,13 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   es.transportCovarianceToCurvilinear(esState);
   BOOST_CHECK_NE(esState.cov, cov);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
 
   // Perform a step without and with covariance transport
   esState.cov = cov;
 
   esState.covTransport = false;
+  const BoundToFreeMatrix jacToGlobalBefore = esState.jacToGlobal;
   es.step(esState, navDir, nullptr).value();
   CHECK_CLOSE_COVARIANCE(esState.cov, cov, eps);
   BOOST_CHECK_NE(es.position(esState).norm(), newPos.norm());
@@ -271,7 +270,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   BOOST_CHECK_EQUAL(es.charge(esState), charge);
   BOOST_CHECK_LT(es.time(esState), newTime);
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
-  BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
+  BOOST_CHECK_EQUAL(esState.jacToGlobal, jacToGlobalBefore);
 
   esState.covTransport = true;
   es.step(esState, navDir, nullptr).value();
@@ -281,7 +280,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   BOOST_CHECK_EQUAL(es.charge(esState), charge);
   BOOST_CHECK_LT(es.time(esState), newTime);
   BOOST_CHECK_NE(esState.derivative, FreeVector::Zero());
-  BOOST_CHECK_NE(esState.jacTransport, FreeMatrix::Identity());
+  BOOST_CHECK_NE(esState.jacToGlobal, jacToGlobalBefore);
 
   /// Test the state reset
   // Construct the parameters
@@ -307,7 +306,6 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
     copy.cov = state.cov;
     copy.jacobian = state.jacobian;
     copy.jacToGlobal = state.jacToGlobal;
-    copy.jacTransport = state.jacTransport;
     copy.derivative = state.derivative;
     copy.pathAccumulated = state.pathAccumulated;
     copy.stepSize = state.stepSize;
@@ -328,7 +326,6 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   // Test all components
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, esState.jacToGlobal);
-  BOOST_CHECK_EQUAL(esStateCopy.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
   BOOST_CHECK(esStateCopy.covTransport);
   BOOST_CHECK_EQUAL(esStateCopy.cov, cov2);
@@ -402,7 +399,6 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   es.transportCovarianceToBound(esState, *plane);
   BOOST_CHECK_NE(esState.cov, cov);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
 
   // Update in context of a surface
@@ -454,8 +450,10 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_time_qop_derivative) {
     const double qop = absQ / 1_GeV;
     const double dqop = 1e-6 * qop;
 
+    // The start is curvilinear, so the q/p column begins as e_qop and after
+    // one step its time row is d(t)/d(q/p).
     const double dtdqop =
-        stepOnce(qop, particle).jacTransport(eFreeTime, eFreeQOverP);
+        stepOnce(qop, particle).jacToGlobal(eFreeTime, eBoundQOverP);
     const double difference = (stepOnce(qop + dqop, particle).pars[eFreeTime] -
                                stepOnce(qop - dqop, particle).pars[eFreeTime]) /
                               (2 * dqop);
