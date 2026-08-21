@@ -207,6 +207,15 @@ class DetrayPayloadConverter {
       /// associated detector element
       DetectorElement
     };
+    /// Name for the detector
+    std::string detectorName{"Detector"};
+
+    /// Whether to convert material information from ACTS to detray
+    bool convertMaterial = true;
+
+    /// Whether to convert surface grid information from ACTS to detray
+    bool convertSurfaceGrids = true;
+
     /// Strategy to use for sensitive surface detection
     SensitiveStrategy sensitiveStrategy = SensitiveStrategy::Identifier;
 

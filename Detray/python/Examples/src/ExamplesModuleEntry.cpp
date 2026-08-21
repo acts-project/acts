@@ -54,6 +54,7 @@ void generate_toy_detector(unsigned int barrel_layers,
   detray::io::detector_writer_config writer_cfg{};
   writer_cfg.format(detray::io::format::json).replace_files(false);
   writer_cfg.path(output_dir);
+  writer_cfg.source("detray native");
 
   detray::io::write_detector(det, names, writer_cfg);
 }

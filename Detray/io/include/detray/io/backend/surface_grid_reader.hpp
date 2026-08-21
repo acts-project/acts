@@ -43,7 +43,7 @@ class surface_grid_reader
   /// Same constructors for this class as for base_type
   using base_type::base_type;
 
-  /// @returns the tag of the reader: "homogeneous_material"
+  /// @returns the tag of the reader: "surface_grids"
   std::string_view tag() const override { return s_tag; }
 
   /// Convert the detector grids @param grids_data from their IO

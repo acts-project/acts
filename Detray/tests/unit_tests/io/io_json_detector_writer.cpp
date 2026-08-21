@@ -70,7 +70,7 @@ GTEST_TEST(io, json_telescope_geometry_writer) {
       host_mr, tel_cfg.positions(positions));
 
   io::json_converter<detector_t, io::geometry_writer> geo_writer;
-  geo_writer.write(det, names);
+  geo_writer.write(det, names, "detray unit test");
 }
 
 /// Test the writing of the toy detector material to json
@@ -84,7 +84,7 @@ GTEST_TEST(io, json_telescope_material_writer) {
       host_mr, tel_cfg.positions(positions));
 
   io::json_converter<detector_t, io::homogeneous_material_writer> mat_writer;
-  mat_writer.write(det, names);
+  mat_writer.write(det, names, "detray unit test");
 }
 
 /// Test the writing of the toy detector grids to json
@@ -98,7 +98,7 @@ GTEST_TEST(io, json_toy_material_maps_writer) {
   auto [det, names] = build_toy_detector<test_algebra>(host_mr, toy_cfg);
 
   io::json_converter<detector_t, io::material_map_writer> map_writer;
-  map_writer.write(det, names,
+  map_writer.write(det, names, "detray unit test",
                    std::ios::out | std::ios::binary | std::ios::trunc);
 }
 
@@ -111,7 +111,7 @@ GTEST_TEST(io, json_toy_grid_writer) {
   auto [det, names] = build_toy_detector<test_algebra>(host_mr);
 
   io::json_converter<detector_t, io::surface_grid_writer> grid_writer;
-  grid_writer.write(det, names,
+  grid_writer.write(det, names, "detray unit test",
                     std::ios::out | std::ios::binary | std::ios::trunc);
 }
 
@@ -123,8 +123,10 @@ GTEST_TEST(io, json_toy_detector_writer) {
   toy_cfg.use_material_maps(true);
   const auto [det, names] = build_toy_detector<test_algebra>(host_mr, toy_cfg);
 
-  auto writer_cfg =
-      io::detector_writer_config{}.format(io::format::json).replace_files(true);
+  auto writer_cfg = io::detector_writer_config{}
+                        .format(io::format::json)
+                        .source("detray unit test")
+                        .replace_files(true);
   io::write_detector(det, names, writer_cfg);
 }
 
@@ -135,7 +137,9 @@ GTEST_TEST(io, json_wire_chamber_writer) {
   wire_chamber_config<scalar> wire_cfg{};
   auto [det, names] = build_wire_chamber<test_algebra>(host_mr, wire_cfg);
 
-  auto writer_cfg =
-      io::detector_writer_config{}.format(io::format::json).replace_files(true);
+  auto writer_cfg = io::detector_writer_config{}
+                        .format(io::format::json)
+                        .source("detray unit test")
+                        .replace_files(true);
   io::write_detector(det, names, writer_cfg);
 }

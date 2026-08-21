@@ -300,23 +300,42 @@ struct detector_geometry_payload {
   std::optional<grid_payload<std::size_t, io::accel_id>> volume_grid;
 };
 
-/// @brief a payload for common and extra information in file IO
-struct header_payload {
+/// @brief a payload for common information in file IO
+struct common_header_payload {
   /// Detray version number
   std::string version{};
+  /// Date of file creation
+  std::string date{};
+  /// Detector metadata type
+  std::string metadata{};
+  /// Detector source (e.g. version tag of experiments original geometry)
+  std::string source{};
+};
+
+/// @brief a payload for common information and a content tag
+struct tagged_header_payload : public common_header_payload {
   /// Detector name
   std::string detector{};
   /// Type of data the file contains (e.g. geometry vs material_maps)
   std::string tag{};
-  /// Date of file creation
-  std::string date{};
+};
+
+/// @brief a payload for common and extra information in file IO
+struct header_payload : public common_header_payload {
+  /// Assign the common information from @param ch
+  void operator=(const common_header_payload& ch) {
+    this->version = ch.version;
+    this->date = ch.date;
+    this->metadata = ch.metadata;
+    this->source = ch.source;
+  }
   /// Optional detector components: volume and surface acceleration structures
   /// and material
-  std::optional<geometry_header_payload> geometry;
-  std::optional<grid_header_payload> volume_grids;
-  std::optional<grid_header_payload> surface_grids;
-  std::optional<homogeneous_material_header_payload> homogeneous_material;
-  std::optional<grid_header_payload> material_maps;
+  std::optional<geometry_header_payload> geometry{};
+  std::optional<grid_header_payload> volume_grids{};
+  std::optional<grid_header_payload> surface_grids{};
+  std::optional<homogeneous_material_header_payload> homogeneous_material{};
+  std::optional<grid_header_payload> material_maps{};
 };
 
 /// Detector intermediate data representation
@@ -335,19 +354,20 @@ struct detector_payload {
   /// @}
 
   /// Metadata about the contained payloads
-  header_payload header;
+  header_payload header{};
+
+  /// Name of the detector (might be different from metadata name type)
+  std::string detector_name{"unknown_detector"};
 
   /// Required detector component: geometry
   geometry_payload_type geometry{};
+
   /// Optional detector components: volume and surface acceleration structures
   /// and material
-  std::optional<volume_grids_payload_type> volume_grids;
-  std::optional<surface_grids_payload_type> surface_grids;
-  std::optional<homogeneous_material_payload_type> homogeneous_material;
-  std::optional<material_maps_payload_type> material_maps;
-
-  /// Contains the detector and volume names mapped to volume indices
-  detray::name_map names{};
+  std::optional<volume_grids_payload_type> volume_grids{};
+  std::optional<surface_grids_payload_type> surface_grids{};
+  std::optional<homogeneous_material_payload_type> homogeneous_material{};
+  std::optional<material_maps_payload_type> material_maps{};
 };
 
 }  // namespace detray::io

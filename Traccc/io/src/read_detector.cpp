@@ -23,7 +23,7 @@ template <typename detector_t>
 void read_detector(traccc::host_detector& detector, vecmem::memory_resource& mr,
                    detray::io::detector_payload& payload,
                    const detray::io::detector_reader_config& cfg) {
-  // Geometry is payload already filled
+  // Geometry payload is already filled
   assert(!payload.geometry.volumes.empty());
 
   // Read the detector.
@@ -38,24 +38,27 @@ void read_detector(traccc::host_detector& detector, vecmem::memory_resource& mr,
 namespace traccc::io {
 
 void read_detector(host_detector& detector, vecmem::memory_resource& mr,
-                   std::string_view geometry_file,
-                   std::string_view material_file, std::string_view grid_file,
-                   const bool do_consistency_check = true) {
+                   const std::string_view geometry_file,
+                   const std::string_view material_file,
+                   const std::string_view grid_file,
+                   const bool do_consistency_check) {
   detray::io::detector_payload payload{};
   detray::io::convert_json_to_payload(
       payload, {traccc::io::get_absolute_path(geometry_file),
                 traccc::io::get_absolute_path(material_file),
                 traccc::io::get_absolute_path(grid_file)});
 
-  // Set up the detector reader configuration for the optional components
+  // Build the detector (of a specific type) from payload
   detray::io::detector_reader_config cfg;
   cfg.do_check(do_consistency_check);
 
-  // TODO: Update this
-  std::string_view det_name{payload.names.get_detector_name()};
-  if (det_name == "Cylindrical detector from DD4hep blueprint") {
+  // TODO: Update this and remove detector name
+  std::string_view det_name{payload.detector_name};
+  std::string_view metadata{payload.header.metadata};
+  if (metadata == "odd_metadata" ||
+      det_name == "Cylindrical detector from DD4hep blueprint") {
     ::read_detector<odd_detector>(detector, mr, payload, cfg);
-  } else if (det_name == "detray_detector") {
+  } else if (metadata == "itk_metadata" || det_name == "detray_detector") {
     ::read_detector<itk_detector>(detector, mr, payload, cfg);
   } else {
     // TODO: Warning here

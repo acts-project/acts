@@ -47,10 +47,26 @@ class homogeneous_material_reader final : public reader_interface<detector_t> {
   /// @returns the tag of the reader: "homogeneous_material"
   std::string_view tag() const override { return s_tag; }
 
-  /// Convert the detector material int @param det_data from its IO payload
+  /// Read the detector material in @param det_data from its IO payload
   void from_payload(detector_builder<typename detector_t::metadata,
                                      volume_builder>& det_builder,
                     const detector_payload& det_data) const override {
+    if constexpr (detray::concepts::has_material_slabs<detector_t> ||
+                  detray::concepts::has_material_rods<detector_t>) {
+      from_payload_impl(det_builder, det_data);
+    } else {
+      throw std::invalid_argument(
+          "Detector type does not support homogeneous material");
+    }
+  }
+
+  /// Implementation of the detector material conversion
+  static void from_payload_impl(detector_builder<typename detector_t::metadata,
+                                                 volume_builder>& det_builder,
+                                const detector_payload& det_data)
+    requires(detray::concepts::has_material_slabs<detector_t> ||
+             detray::concepts::has_material_rods<detector_t>)
+  {
     DETRAY_VERBOSE_HOST("Reading payload object...");
 
     using scalar_t = dscalar<typename detector_t::algebra_type>;

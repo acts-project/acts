@@ -92,6 +92,7 @@ auto test_detector_json_io(
     vecmem::host_memory_resource& host_mr) {
   auto writer_cfg = io::detector_writer_config{}
                         .format(io::format::json)
+                        .source("detray integration test")
                         .replace_files(true)
                         .write_grids(true)
                         .write_material(true);
@@ -202,18 +203,19 @@ GTEST_TEST(io, json_toy_geometry) {
 
   // Write the detector
   io::json_converter<detector_t, io::geometry_writer> geo_writer;
-  auto file_name = geo_writer.write(
-      toy_det, names, std::ios::out | std::ios::binary | std::ios::trunc);
+  auto file_name =
+      geo_writer.write(toy_det, names, "detray integration test",
+                       std::ios::out | std::ios::binary | std::ios::trunc);
 
   // Read the detector back in
   io::detector_payload payload{};
-  // payload.names.set_detector_name("toy_detector");
-  io::json_input_converter{}.to_payload(file_name, payload);
+  io::json_input_converter{}.add_to_payload(file_name, payload);
 
   detector_builder<metadata_t> toy_builder;
   io::geometry_reader<detector_t>{}.from_payload(toy_builder, payload);
 
-  auto det = toy_builder.build(host_mr, payload.names);
+  names.clear_names();
+  auto det = toy_builder.build(host_mr, names);
 
   // @TODO: Will only work again after IO can perform data deduplication
   // EXPECT_TRUE(toy_detector_test(det, volume_name_map));
@@ -223,8 +225,8 @@ GTEST_TEST(io, json_toy_geometry) {
   detector_builder<default_metadata_t> comp_builder;
   io::geometry_reader<detector<default_metadata_t>>{}.from_payload(comp_builder,
                                                                    payload);
-  payload.names.clear_names();
-  auto comp_det = comp_builder.build(host_mr, payload.names);
+  names.clear_names();
+  auto comp_det = comp_builder.build(host_mr, names);
 
   using mask_id = detector<default_metadata_t>::masks::id;
   const auto& masks = comp_det.mask_store();

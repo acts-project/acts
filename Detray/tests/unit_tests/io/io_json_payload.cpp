@@ -19,21 +19,25 @@
 
 /// This tests the json io for the general file header information
 GTEST_TEST(io, json_header_payload) {
-  detray::io::header_payload h;
+  detray::io::tagged_header_payload h;
   h.version = "v0.0.1";
+  h.date = "01.01.2023";
+  h.metadata = "test_metatata";
+  h.source = "detray unit test";
   h.detector = "test_detector";
   h.tag = "test_detector_component";
-  h.date = "01.01.2023";
 
   nlohmann::ordered_json j;
-  j["header"] = h;
+  j["header"]["common"] = h;
 
-  detray::io::header_payload ph = j["header"];
+  detray::io::tagged_header_payload ph = j["header"];
 
   EXPECT_EQ(h.version, ph.version);
+  EXPECT_EQ(h.date, ph.date);
+  EXPECT_EQ(h.metadata, ph.metadata);
+  EXPECT_EQ(h.source, ph.source);
   EXPECT_EQ(h.detector, ph.detector);
   EXPECT_EQ(h.tag, ph.tag);
-  EXPECT_EQ(h.date, ph.date);
 }
 
 /// This tests the json io for a single index link

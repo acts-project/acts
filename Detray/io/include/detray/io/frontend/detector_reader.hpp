@@ -135,10 +135,17 @@ auto read_detector(vecmem::memory_resource& resc,
                    detray::io::detector_payload& payload) noexcept(false) {
   // Convert the input file data and add it to the detector payload object
   if constexpr (sizeof...(input_converter_ts) > 0) {
+    // File list may be empty, in this case this call will do nothing
     detray::io::convert_to_payload<input_converter_ts...>(payload, cfg.files());
   } else {
-    // No converters required
-    assert(cfg.files().empty());
+    // No converters present: Input files cannot be handled
+    if (!cfg.files().empty()) {
+      const std::string err_msg{
+          "No converters compiled into the read_detector function: Cannot "
+          "handle file inputs!"};
+      DETRAY_FATAL_HOST(err_msg);
+      throw std::invalid_argument(err_msg);
+    }
   }
 
   // Collect all input data about the detector in the detector builder
@@ -152,16 +159,17 @@ auto read_detector(vecmem::memory_resource& resc,
   detector_components.read(det_builder, payload);
 
   // Build and return the detector
-  auto det = det_builder.build(resc, payload.names);
+  typename detector_t::name_map names{};
+  auto det = det_builder.build(resc, names);
 
   if (cfg.do_check()) {
     // This will throw an exception in case of inconsistencies
-    detray::detail::check_consistency(det, cfg.verbose_check(), payload.names);
+    detray::detail::check_consistency(det, cfg.verbose_check(), names);
   }
 
-  DETRAY_DEBUG_HOST("\n" << detray::utils::print_detector(det, payload.names));
+  DETRAY_DEBUG_HOST("\n" << detray::utils::print_detector(det, names));
 
-  return std::make_pair(std::move(det), std::move(payload.names));
+  return std::make_pair(std::move(det), std::move(names));
 }
 
 /// @brief Read the detector completely from input files.

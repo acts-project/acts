@@ -32,6 +32,7 @@ int main() {
   //     - replace the files if called multiple times
   auto writer_cfg = detray::io::detector_writer_config{}
                         .format(detray::io::format::json)
+                        .source("detray tutorial")
                         .replace_files(true);
 
   std::clog << writer_cfg << std::endl;

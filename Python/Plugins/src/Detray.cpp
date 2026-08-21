@@ -50,10 +50,11 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
            })
       .def("writeToJson",
            [](DetrayDetectorODD& self, const DetrayDetectorODD::name_map& names,
-              const std::string& fname) {
+              const std::string& source, const std::string& fname) {
              auto cfg = detray::io::detector_writer_config{}
                             .format(detray::io::format::json)
                             .path(fname)
+                            .source(source)
                             .replace_files(true);
              detray::io::write_detector(self, names, cfg);
            });
@@ -78,6 +79,10 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
           .def(py::init<>())
           .def_readwrite("sensitiveStrategy",
                          &DetrayPayloadConverter::Config::sensitiveStrategy)
+          .def_readwrite("convertMaterial",
+                         &DetrayPayloadConverter::Config::convertMaterial)
+          .def_readwrite("convertSurfaceGrids",
+                         &DetrayPayloadConverter::Config::convertSurfaceGrids)
           .def_property(
               "beampipeVolume",
               [](const DetrayPayloadConverter::Config& cfg) {
@@ -113,11 +118,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
   py::class_<DetrayGeometryConverter::Config>(geometryConverter, "Config")
       .def(py::init<>())
       .def_readwrite("payloadConverter",
-                     &DetrayGeometryConverter::Config::payloadConverter)
-      .def_readwrite("convertMaterial",
-                     &DetrayGeometryConverter::Config::convertMaterial)
-      .def_readwrite("convertSurfaceGrids",
-                     &DetrayGeometryConverter::Config::convertSurfaceGrids);
+                     &DetrayGeometryConverter::Config::payloadConverter);
 
   using DetrayGeometryODD =
       DetrayGeometryConverter::DetrayGeometry<DetrayMetaDataODD>;

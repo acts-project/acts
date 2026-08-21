@@ -41,20 +41,23 @@ class json_input_converter final : public input_file_converter_interface {
 
   /// Reads json detector data from @param file and adds it to a detector
   /// @param payload object
-  void from_file(io::file_handle& file, detector_payload& payload) override {
+  void add_from_file(io::file_handle& file,
+                     detector_payload& payload) override {
     // Reads the data from file and returns the corresponding io payloads
     nlohmann::json in_json;
     *file >> in_json;
 
     // Peek at the header to determine the kind of payload is in the file
-    payload.header = in_json["header"];
-    const header_payload& header = payload.header;
+    const tagged_header_payload header = in_json["header"];
+    // If not already done, add common header information to detector payload
+    if (payload.header.version.empty()) {
+      payload.detector_name = header.detector;
+      payload.header = header;
+    }
 
     if (header.tag < io::detail::minimal_io_version) {
       DETRAY_WARN_HOST("File was generated with a different detray version");
     }
-
-    payload.names.set_detector_name(header.detector);
 
     nlohmann::json& json_payload = in_json["data"];
     if (header.tag == "geometry") {
@@ -99,6 +102,7 @@ class json_converter<detector_t, backend_t> final
   /// Writes the geometry to file with a given name
   std::string write(const detector_t& det,
                     const typename detector_t::name_map& names,
+                    const std::string& source,
                     const std::ios_base::openmode mode = std::ios::out |
                                                          std::ios::binary,
                     const std::filesystem::path& file_path = {"./"}) override {
@@ -120,8 +124,8 @@ class json_converter<detector_t, backend_t> final
     nlohmann::ordered_json out_json;
     out_json["header"] = io_backend::to_header_payload(det);
     out_json["header"]["common"] =
-        io::detail::basic_converter::to_header_payload(
-            det_name, std::string(io_backend::tag));
+        io::detail::basic_converter::to_header_payload<detector_t>(
+            det_name, std::string(io_backend::tag), source);
 
     // Write the detector data into the json stream by using the
     // conversion functions defined in "detray/io/json/json_io.hpp"

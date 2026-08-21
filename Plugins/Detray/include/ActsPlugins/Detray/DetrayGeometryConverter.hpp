@@ -42,12 +42,6 @@ class DetrayGeometryConverter {
     /// payload conversion (e.g. the beampipe volume, sensitive surface
     /// strategy or the navigation/material dispatchers).
     std::shared_ptr<const DetrayPayloadConverter> payloadConverter;
-
-    /// Whether to convert material information from ACTS to detray
-    bool convertMaterial = true;
-
-    /// Whether to convert surface grid information from ACTS to detray
-    bool convertSurfaceGrids = true;
   };
 
   /// @brief Combined result of a geometry conversion
@@ -111,12 +105,12 @@ class DetrayGeometryConverter {
         gctx, *trackingGeometry);
 
     if (!detectorName.empty()) {
-      payloads.names.set_detector_name(detectorName);
+      payloads.detector_name = detectorName;
     }
 
     // ── Build detray detector from payloads ───────────────────────────────
     auto readerCfg = detray::io::detector_reader_config{}.do_check(true);
-    const auto [detector, names] =
+    auto [detector, names] =
         detray::io::read_detector<detector_t>(mr, readerCfg, payloads);
 
     DetrayGeometry<metadata_t> result{};
