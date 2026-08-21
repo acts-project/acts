@@ -16,13 +16,11 @@
 #include <memory>
 #include <string>
 
-#include <detray/builders/detector_builder.hpp>
-#include <detray/detectors/default_metadata.hpp>
 #include <detray/detectors/odd_metadata.hpp>
-#include <detray/io/frontend/detector_reader.hpp>
 #include <detray/io/frontend/detector_reader_config.hpp>
 #include <detray/io/frontend/detector_writer.hpp>
 #include <detray/io/frontend/detector_writer_config.hpp>
+#include <detray/io/json/detector_reader.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <vecmem/memory/host_memory_resource.hpp>
@@ -63,11 +61,10 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
   detray.def(
       "readODD",
       [](vecmem::memory_resource& mr, const std::vector<std::string>& files) {
-        auto cfg = detray::io::detector_reader_config{}.do_check(false);
-        for (const auto& f : files) {
-          cfg.add_file(f);
-        }
-        return detray::io::read_detector<DetrayDetectorODD>(mr, cfg);
+        detray::io::detector_reader_config cfg{};
+        cfg.do_check(false).add_files(files);
+
+        return detray::io::read_detector_json<DetrayDetectorODD>(mr, cfg);
       },
       "mr"_a, "files"_a);
 

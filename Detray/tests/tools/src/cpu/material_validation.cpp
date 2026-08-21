@@ -13,7 +13,7 @@
 #include "detray/definitions/units.hpp"
 
 // Detray IO include(s)
-#include "detray/io/frontend/detector_reader.hpp"
+#include "detray/io/json/detector_reader.hpp"
 
 // Detray test include(s)
 #include "detray/options/detector_io_options.hpp"
@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
   vecmem::host_memory_resource host_mr;
 
   const auto [det, names] =
-      detray::io::read_detector<detector_t>(host_mr, reader_cfg);
+      detray::io::read_detector_json<detector_t>(host_mr, reader_cfg);
 
   auto white_board = std::make_shared<test::whiteboard>();
   detector_t::geometry_context ctx{};

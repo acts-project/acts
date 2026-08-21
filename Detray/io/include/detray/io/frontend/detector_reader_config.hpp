@@ -9,6 +9,7 @@
 #pragma once
 
 // System include(s)
+#include <initializer_list>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -33,8 +34,36 @@ struct detector_reader_config {
 
   /// Setters
   /// @{
-  detector_reader_config& add_file(const std::string& file_name) {
-    m_files.push_back(file_name);
+  detector_reader_config& add_file(std::string_view file_name) {
+    m_files.push_back(std::string{file_name});
+    return *this;
+  }
+  detector_reader_config& add_files(
+      const std::vector<std::string>& file_names) {
+    m_files.reserve(m_files.size() + file_names.size());
+    m_files.insert(std::end(m_files), std::begin(file_names),
+                   std::end(file_names));
+    return *this;
+  }
+  detector_reader_config& add_files(
+      const std::vector<std::string_view>& file_names) {
+    m_files.reserve(m_files.size() + file_names.size());
+    m_files.insert(std::end(m_files), std::begin(file_names),
+                   std::end(file_names));
+    return *this;
+  }
+  detector_reader_config& add_files(std::vector<std::string>&& file_names) {
+    m_files.reserve(m_files.size() + file_names.size());
+    m_files.insert(std::end(m_files),
+                   std::make_move_iterator(std::begin(file_names)),
+                   std::make_move_iterator(std::end(file_names)));
+    return *this;
+  }
+  detector_reader_config& add_files(
+      std::initializer_list<std::string> file_names) {
+    m_files.reserve(m_files.size() + file_names.size());
+    m_files.insert(std::end(m_files), std::begin(file_names),
+                   std::end(file_names));
     return *this;
   }
   detector_reader_config& do_check(const bool check) {

@@ -76,19 +76,14 @@ int main(int argc, char* argv[]) {
 
   // Set up the detector reader configuration.
   detray::io::detector_reader_config reader_cfg;
-  reader_cfg.add_file(
-      traccc::io::get_absolute_path(detector_opts.detector_file));
-  if (!detector_opts.material_file.empty()) {
-    reader_cfg.add_file(
-        traccc::io::get_absolute_path(detector_opts.material_file));
-  }
-  if (!detector_opts.grid_file.empty()) {
-    reader_cfg.add_file(traccc::io::get_absolute_path(detector_opts.grid_file));
-  }
+  reader_cfg.add_files(
+      traccc::io::get_absolute_path(detector_opts.detector_file),
+      traccc::io::get_absolute_path(detector_opts.material_file),
+      traccc::io::get_absolute_path(detector_opts.grid_file));
 
   // Read the detector.
   auto [io_det, names] =
-      detray::io::read_detector<detector_t>(host_mr, reader_cfg);
+      detray::io::read_detector_json<detector_t>(host_mr, reader_cfg);
 
   traccc::host_detector host_det{};
   host_det.template set<traccc::detector_traits<typename detector_t::metadata>>(

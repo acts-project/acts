@@ -64,14 +64,13 @@ TEST_P(CkfToyDetectorTests, Run) {
   // Read back detector file
   const std::string path = name + "/";
   detray::io::detector_reader_config reader_cfg{};
-  reader_cfg.add_file(path + "toy_detector_geometry.json")
-      .add_file(path + "toy_detector_surface_grids.json")
-      .add_file(path + "toy_detector_homogeneous_material.json")
-      .do_check(true);
+  reader_cfg.add_files(path + "toy_detector_geometry.json",
+                       path + "toy_detector_surface_grids.json",
+                       path + "toy_detector_homogeneous_material.json");
 
   auto [io_det, names] =
-      detray::io::read_detector<traccc::default_detector::host>(host_mr,
-                                                                reader_cfg);
+      detray::io::read_detector_json<traccc::default_detector::host>(
+          host_mr, reader_cfg);
   traccc::host_detector detector{};
   detector.template set<
       traccc::detector_traits<traccc::default_detector::host::metadata>>(

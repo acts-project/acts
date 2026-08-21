@@ -21,7 +21,7 @@ namespace traccc::io {
 /// Construct a "default" / ODD detector geometry from a set of input files
 ///
 /// It is mostly just a wrapper around Detray's more generic
-/// @c detray::io::read_detector code.
+/// @c detray::io::read_detector_json code.
 ///
 /// @param detector The detector object to be set up
 /// @param mr The memory resource to be used by the detector object
