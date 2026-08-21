@@ -10,6 +10,10 @@ on:
       - 'releases'
       - 'release/**'
       - 'gh-readonly-queue/**'
+    # Tag pushes drive the versioned deploy in "Repository Dispatch" below,
+    # and a branch filter alone would suppress them.
+    tags:
+      - 'v*'
   pull_request:
     branches:
       - main
