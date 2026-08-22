@@ -62,16 +62,22 @@ jobs:
             input_in="${folder}/requirements.in"
             input_toml="${folder}/pyproject.toml"
 
-            rm "$output_txt"
-
             if [[ -f "$input_toml" ]]; then
-              uv pip compile --universal --python-version "$PYTHON_VERSION" "$input_toml" -o "$output_txt"
+              input="$input_toml"
             elif [[ -f "$input_in" ]]; then
-              uv pip compile --universal --python-version "$PYTHON_VERSION" "$input_in" -o "$output_txt"
+              input="$input_in"
             else
-              echo "No requirements.in or pyproject.toml in $folder."
+              echo "::error::No requirements.in or pyproject.toml in $folder."
+              exit 1
             fi
 
+            # Drop the old lockfile only once we know we can regenerate it, so a
+            # folder listed without an input file fails loudly instead of losing
+            # its requirements.txt. Removing it first also forces a fresh
+            # resolution rather than uv preferring the currently pinned versions.
+            rm -f "$output_txt"
+
+            uv pip compile --universal --python-version "$PYTHON_VERSION" "$input" -o "$output_txt"
           done
 
       - name: Detect changes
