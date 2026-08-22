@@ -8,10 +8,25 @@
 // Local include(s).
 #include "traccc/examples/sycl/full_chain_algorithm.hpp"
 
+#include "traccc/examples/sycl/tbb_await.hpp"
+
 // Project include(s).
 #include "traccc/sycl/utils/make_magnetic_field.hpp"
 
 namespace traccc::sycl {
+
+namespace {
+await_function_type get_await_function(await_strategy await_mode) {
+  switch (await_mode) {
+    case await_strategy::sync_event:
+      return await_sync_event;
+    case await_strategy::callback:
+      return tbb_await_callback;
+    default:
+      throw std::invalid_argument("Unknown await strategy");
+  }
+}
+}  // namespace
 namespace details {
 
 struct full_chain_algorithm_data {
@@ -36,7 +51,8 @@ full_chain_algorithm::full_chain_algorithm(
     const detector_design_description::host& det_descr,
     const detector_conditions_description::host& det_cond,
     const magnetic_field& field, host_detector* detector,
-    std::unique_ptr<const traccc::Logger> log, bool useGBTS)
+    std::unique_ptr<const traccc::Logger> log, bool useGBTS,
+    await_strategy await_mode)
     : messaging(log->clone()),
       m_data(std::make_unique<details::full_chain_algorithm_data>()),
       m_host_mr(host_mr),
@@ -45,6 +61,7 @@ full_chain_algorithm::full_chain_algorithm(
       m_device_mr{m_data->m_queue},
       m_cached_device_mr{m_device_mr},
       m_copy{m_data->m_queue},
+      m_await_function{get_await_function(await_mode)},
       m_field_vec{0.f, 0.f, finder_config.bFieldInZ},
       m_field{sycl::make_magnetic_field(field, m_data->m_queue_wrapper)},
       m_det_descr(det_descr),
@@ -76,21 +93,24 @@ full_chain_algorithm::full_chain_algorithm(
                        m_copy,
                        m_data->m_queue_wrapper,
                        clustering_config,
-                       log->clone("ClusteringAlg")},
+                       log->clone("ClusteringAlg"),
+                       m_await_function},
       m_measurement_sorting({m_cached_device_mr, &m_cached_pinned_host_mr},
                             m_copy, m_data->m_queue_wrapper,
                             log->clone("MeasSortingAlg")),
       m_spacepoint_formation{{m_cached_device_mr, &m_cached_pinned_host_mr},
                              m_copy,
                              m_data->m_queue_wrapper,
-                             log->clone("SpFormationAlg")},
+                             log->clone("SpFormationAlg"),
+                             m_await_function},
       m_seeding{finder_config,
                 grid_config,
                 filter_config,
                 {m_cached_device_mr, &m_cached_pinned_host_mr},
                 m_copy,
                 m_data->m_queue_wrapper,
-                log->clone("SeedingAlg")},
+                log->clone("SeedingAlg"),
+                m_await_function},
       m_gbts_seeding{gbts_config,
                      {m_cached_device_mr, &m_cached_pinned_host_mr},
                      m_copy,
@@ -101,7 +121,8 @@ full_chain_algorithm::full_chain_algorithm(
           {m_cached_device_mr, &m_cached_pinned_host_mr},
           m_copy,
           m_data->m_queue_wrapper,
-          log->clone("TrackParEstAlg")},
+          log->clone("TrackParEstAlg"),
+          m_await_function},
       m_finding{finding_config,
                 {m_cached_device_mr, &m_cached_pinned_host_mr},
                 m_copy,
@@ -143,6 +164,7 @@ full_chain_algorithm::full_chain_algorithm(const full_chain_algorithm& parent)
       m_device_mr{m_data->m_queue},
       m_cached_device_mr{m_device_mr},
       m_copy{m_data->m_queue},
+      m_await_function{parent.m_await_function},
       m_field_vec{parent.m_field_vec},
       m_field{parent.m_field},
       m_det_descr(parent.m_det_descr),
@@ -174,21 +196,24 @@ full_chain_algorithm::full_chain_algorithm(const full_chain_algorithm& parent)
                        m_copy,
                        m_data->m_queue_wrapper,
                        parent.m_clustering_config,
-                       parent.logger().clone("ClusteringAlg")},
+                       parent.logger().clone("ClusteringAlg"),
+                       m_await_function},
       m_measurement_sorting({m_cached_device_mr, &m_cached_pinned_host_mr},
                             m_copy, m_data->m_queue_wrapper,
                             parent.logger().clone("MeasSortingAlg")),
       m_spacepoint_formation{{m_cached_device_mr, &m_cached_pinned_host_mr},
                              m_copy,
                              m_data->m_queue_wrapper,
-                             parent.logger().clone("SpFormationAlg")},
+                             parent.logger().clone("SpFormationAlg"),
+                             m_await_function},
       m_seeding{parent.m_finder_config,
                 parent.m_grid_config,
                 parent.m_filter_config,
                 {m_cached_device_mr, &m_cached_pinned_host_mr},
                 m_copy,
                 m_data->m_queue_wrapper,
-                parent.logger().clone("SeedingAlg")},
+                parent.logger().clone("SeedingAlg"),
+                m_await_function},
       m_gbts_seeding{parent.m_gbts_config,
                      {m_cached_device_mr, &m_cached_pinned_host_mr},
                      m_copy,
@@ -199,7 +224,8 @@ full_chain_algorithm::full_chain_algorithm(const full_chain_algorithm& parent)
           {m_cached_device_mr, &m_cached_pinned_host_mr},
           m_copy,
           m_data->m_queue_wrapper,
-          parent.logger().clone("TrackParEstAlg")},
+          parent.logger().clone("TrackParEstAlg"),
+          m_await_function},
       m_finding{parent.m_finding_config,
                 {m_cached_device_mr, &m_cached_pinned_host_mr},
                 m_copy,

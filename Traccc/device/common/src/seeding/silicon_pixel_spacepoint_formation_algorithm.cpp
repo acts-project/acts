@@ -24,9 +24,9 @@ auto silicon_pixel_spacepoint_formation_algorithm::operator()(
   edm::measurement_collection::const_view::size_type n_measurements = 0u;
   if (mr().host) {
     vecmem::async_size size = copy().get_size(measurements, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_measurements = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_measurements = size.unsafe_get();
   } else {
     n_measurements = copy().get_size(measurements);
   }

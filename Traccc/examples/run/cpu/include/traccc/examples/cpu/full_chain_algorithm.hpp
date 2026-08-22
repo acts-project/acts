@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022-2025 CERN for the benefit of the ACTS project
+ * (c) 2022-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -35,6 +35,9 @@
 // System include(s).
 #include <functional>
 #include <memory>
+
+// Local include(s).
+#include "traccc/examples/await_strategy.hpp"
 
 namespace traccc {
 
@@ -82,7 +85,8 @@ class full_chain_algorithm
       const detector_design_description::host& det_descr,
       const detector_conditions_description::host& det_cond,
       const magnetic_field& field, const host_detector* detector,
-      std::unique_ptr<const traccc::Logger> logger, const bool useGBTS = false);
+      std::unique_ptr<const traccc::Logger> logger, const bool useGBTS = false,
+      await_strategy = await_strategy::sync_event);
 
   /// Reconstruct track parameters in the entire detector
   ///

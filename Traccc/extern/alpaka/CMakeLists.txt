@@ -1,6 +1,6 @@
 # TRACCC library, part of the ACTS project (R&D line)
 #
-# (c) 2022-2025 CERN for the benefit of the ACTS project
+# (c) 2022-2026 CERN for the benefit of the ACTS project
 #
 # Mozilla Public License Version 2.0
 
@@ -19,7 +19,7 @@ set(TRACCC_ALPAKA_SOURCE
 )
 
 set(TRACCC_ALPAKA_PATCH
-    ""
+    "PATCH_COMMAND;patch;-p1;-i;${CMAKE_CURRENT_SOURCE_DIR}/alpaka-2.0.0-sycl-enqueue-forward.patch"
     CACHE STRING
     "Patch(es) for alpaka, when built as part of this project"
 )
