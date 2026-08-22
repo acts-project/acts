@@ -14,6 +14,7 @@
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepDetectorElementWithDesign.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsPlugins/DD4hep/DD4hepFieldAdapter.hpp"
@@ -123,9 +124,13 @@ class DD4hepDetector final : public DD4hepDetectorBase {
     std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
         std::make_shared<const Acts::GeometryIdentifierHook>();
 
-    /// Detector element factory
+    // /// Detector element factory
+    // ActsPlugins::DD4hepLayerBuilder::ElementFactory detectorElementFactory =
+    //     ActsPlugins::DD4hepLayerBuilder::defaultDetectorElementFactory;
+
+    /// Detector element factory with design
     ActsPlugins::DD4hepLayerBuilder::ElementFactory detectorElementFactory =
-        ActsPlugins::DD4hepLayerBuilder::defaultDetectorElementFactory;
+        defaultDetectorElementFactoryWithDesign;
   };
 
   /// Constructor
