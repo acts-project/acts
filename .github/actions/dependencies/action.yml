@@ -33,7 +33,7 @@ inputs:
   # The flavors are published at cxx23 only, so setting this with cxx_std 20
   # yields a C++23-built stack. Accepted for now; the selection logs it.
   flavor:
-    description: 'Accelerator flavor for lockfile selection (e.g. cuda13, rocm-gfx90a). Defaults to the plain CPU stack.'
+    description: 'Accelerator flavor for lockfile selection (e.g. cuda13, rocm7). Defaults to the plain CPU stack.'
     required: false
     default: ''
   env_file:
