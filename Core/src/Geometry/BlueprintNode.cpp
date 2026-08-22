@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
+#include "Acts/Geometry/OffAxisBlueprintNode.hpp"
 #include "Acts/Geometry/PortalDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
@@ -112,6 +113,17 @@ StaticBlueprintNode& BlueprintNode::addStaticVolume(
   return addStaticVolume(std::make_unique<TrackingVolume>(
                              transform, std::move(volumeBounds), volumeName),
                          callback);
+}
+
+OffAxisBlueprintNode& BlueprintNode::addOffAxisContainer(
+    const std::string& name, const Transform3& axisTransform,
+    const std::function<void(OffAxisBlueprintNode& offAxis)>& callback) {
+  auto offAxis = std::make_shared<OffAxisBlueprintNode>(name, axisTransform);
+  addChild(offAxis);
+  if (callback) {
+    callback(*offAxis);
+  }
+  return *offAxis;
 }
 
 CylinderContainerBlueprintNode& BlueprintNode::addCylinderContainer(
