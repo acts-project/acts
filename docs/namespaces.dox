@@ -2,6 +2,11 @@
 
 /// @namespace ActsFatras The ACTS Fatras fast simulation plugin
 
+/// @namespace ActsFatras::Synthetic
+/// @brief Synthetic space point event generation on a simplified detector
+/// description, for seeding studies that need a busy event rather than a
+/// faithful simulation.
+
 /// @namespace ActsPlugins The ACTS plugins namespace: All plugins go here.
 
 /// @namespace ActsAlignment The ACTS Alignment module
