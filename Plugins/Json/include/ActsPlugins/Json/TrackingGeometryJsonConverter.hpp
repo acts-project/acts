@@ -244,6 +244,22 @@ class TrackingGeometryJsonConverter {
       const GeometryContext& gctx, const std::filesystem::path& jsonPath,
       const Options& options = Options::defaultOptions()) const;
 
+  /// Reconstruct a tracking geometry from an in-memory JSON payload.
+  ///
+  /// @param gctx geometry context
+  /// @param encoded Reference to the encoded JSON object
+  /// @param options options for the conversion
+  ///
+  /// @return pointer to deserialized geometry
+  ///
+  /// @deprecated Renamed to @ref fromJson, which now takes the payload.
+  [[deprecated("renamed to fromJson(), which now takes an in-memory payload")]]
+  std::shared_ptr<TrackingGeometry> fromJsonPayload(
+      const GeometryContext& gctx, const nlohmann::json& encoded,
+      const Options& options = Options::defaultOptions()) const {
+    return fromJson(gctx, encoded, options);
+  }
+
   /// Convert a tracking volume hierarchy to JSON.
   ///
   /// @param gctx geometry context
