@@ -16,10 +16,12 @@
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <numbers>
+#include <utility>
 
 namespace Acts {
 
 class Surface;
+class BoundTrackParameters;
 
 /// Reflect bound track parameters.
 ///
@@ -114,5 +116,20 @@ BoundVector transformFreeToCurvilinearParameters(double time,
 ///       coordinates are zero by construction.
 BoundVector transformFreeToCurvilinearParameters(double time, double phi,
                                                  double theta, double qOverP);
+
+/// Convert bound track parameters to a Cartesian four-position (x, y, z, t)
+/// and momentum along with the corresponding 7x7
+/// (position, time, momentum) covariance matrix, with rows/columns ordered
+/// [x, y, z, t, px, py, pz].
+///
+/// @param gctx Geometry context for the local-to-global transformation
+/// @param params Bound track parameters
+/// @param [out] momentum Global Cartesian momentum three-vector
+/// @return Global Cartesian four-position and the (position, time, momentum)
+///         covariance
+std::pair<Vector4, SquareMatrix<7>>
+transformBoundToCartesianFourPositionMomentum(
+    const GeometryContext& gctx, const BoundTrackParameters& params,
+    Vector3& momentum);
 
 }  // namespace Acts
