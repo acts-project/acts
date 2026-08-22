@@ -67,6 +67,11 @@ class TrackingGeometryJsonConverter {
 
     /// Whether to write surface material information during serialization
     bool writeMaterial{true};
+
+    /// zstd compression level used when writing to a compressed file.
+    /// Ignored for uncompressed output. Higher levels trade write time for
+    /// size; decompression speed is unaffected.
+    int compressionLevel{9};
   };
 
   /// Generic lookup from object pointer identity to serialized object ID.
@@ -179,28 +184,81 @@ class TrackingGeometryJsonConverter {
       const GeometryContext& gctx, const TrackingGeometry& geometry,
       const Options& options = Options::defaultOptions()) const;
 
-  /// Reconstruct a tracking geometry from a JSON file on
-  /// stored on disk
-  ///
-  /// @param gctx geometry context
-  /// @param jsonPath The path to the JSON file on disk
-  /// @param options options for the conversion
-  ///
-  /// @return pointer to deserialized geometry
-  std::shared_ptr<TrackingGeometry> fromJson(
-      const GeometryContext& gctx, const std::filesystem::path& jsonPath,
-      const Options& options = Options::defaultOptions()) const;
-
-  /// Reconstruct a tracking geometry from a deserialized JSON file
+  /// Reconstruct a tracking geometry from an in-memory JSON payload.
   ///
   /// @param gctx geometry context
   /// @param encoded Reference to the encoded JSON object
   /// @param options options for the conversion
   ///
   /// @return pointer to deserialized geometry
-  std::shared_ptr<TrackingGeometry> fromJsonPayload(
+  std::shared_ptr<TrackingGeometry> fromJson(
       const GeometryContext& gctx, const nlohmann::json& encoded,
       const Options& options = Options::defaultOptions()) const;
+
+  /// Write a tracking geometry to a file.
+  ///
+  /// The file name selects the format, so a file never misrepresents its own
+  /// contents: `.json` and `.cbor` are stored verbatim, `.json.zst` and
+  /// `.cbor.zst` are zstd compressed. A `.json.zst` file stays readable with
+  /// the usual shell tooling, e.g. `zless` or `zstdcat | jq`.
+  ///
+  /// @param gctx geometry context
+  /// @param geometry tracking geometry to write
+  /// @param path destination file, whose extension selects the format
+  /// @param options options for the conversion
+  ///
+  /// @throw std::invalid_argument if the format cannot be deduced from @p path
+  void toFile(const GeometryContext& gctx, const TrackingGeometry& geometry,
+              const std::filesystem::path& path,
+              const Options& options = Options::defaultOptions()) const;
+
+  /// Reconstruct a tracking geometry from a file.
+  ///
+  /// Encoding and compression are detected from the file contents rather than
+  /// its name, so any format written by @ref toFile is accepted without the
+  /// caller having to declare which one it is.
+  ///
+  /// @param gctx geometry context
+  /// @param path the file to read
+  /// @param options options for the conversion
+  ///
+  /// @return pointer to deserialized geometry
+  std::shared_ptr<TrackingGeometry> fromFile(
+      const GeometryContext& gctx, const std::filesystem::path& path,
+      const Options& options = Options::defaultOptions()) const;
+
+  /// Reconstruct a tracking geometry from a JSON file stored on disk.
+  ///
+  /// @param gctx geometry context
+  /// @param jsonPath The path to the JSON file on disk
+  /// @param options options for the conversion
+  ///
+  /// @return pointer to deserialized geometry
+  ///
+  /// @deprecated Use @ref fromFile instead. `fromJson` now takes an in-memory
+  ///             payload, matching every other converter in this plugin.
+  [[deprecated(
+      "use fromFile() to read from a path; fromJson() now takes an "
+      "in-memory nlohmann::json")]]
+  std::shared_ptr<TrackingGeometry> fromJson(
+      const GeometryContext& gctx, const std::filesystem::path& jsonPath,
+      const Options& options = Options::defaultOptions()) const;
+
+  /// Reconstruct a tracking geometry from an in-memory JSON payload.
+  ///
+  /// @param gctx geometry context
+  /// @param encoded Reference to the encoded JSON object
+  /// @param options options for the conversion
+  ///
+  /// @return pointer to deserialized geometry
+  ///
+  /// @deprecated Renamed to @ref fromJson, which now takes the payload.
+  [[deprecated("renamed to fromJson(), which now takes an in-memory payload")]]
+  std::shared_ptr<TrackingGeometry> fromJsonPayload(
+      const GeometryContext& gctx, const nlohmann::json& encoded,
+      const Options& options = Options::defaultOptions()) const {
+    return fromJson(gctx, encoded, options);
+  }
 
   /// Convert a tracking volume hierarchy to JSON.
   ///
