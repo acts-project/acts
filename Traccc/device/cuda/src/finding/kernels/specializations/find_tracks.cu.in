@@ -15,6 +15,6 @@ namespace traccc::cuda {
 template void find_tracks<traccc::@DETECTOR_NAME@ ::device>(
     const dim3& grid_size, const dim3& block_size, std::size_t shared_mem_size,
     const cudaStream_t& stream, const finding_config&,
-    const traccc::@DETECTOR_NAME@ ::device::const_view_type&,
+    const traccc::@DETECTOR_NAME@ ::device*,
     const device::find_tracks_payload&);
 }  // namespace traccc::cuda

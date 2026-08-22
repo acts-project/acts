@@ -89,7 +89,7 @@ struct propagate_to_next_surface_payload {
 template <typename propagator_t, typename bfield_t>
 TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
     global_index_t globalIndex, const finding_config& cfg,
-    const typename propagator_t::detector_type::const_view_type& det_data,
+    const typename propagator_t::detector_type* const det_data_ptr,
     const bfield_t& field_data,
     const propagate_to_next_surface_payload& payload);
 
