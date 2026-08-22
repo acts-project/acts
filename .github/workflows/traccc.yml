@@ -118,15 +118,10 @@ jobs:
               enable_cuda: true
               flavor: cuda13
             build: Release
-          - platform:
-              name: "ALPAKA_HIP"
-              container: ghcr.io/acts-project/ubuntu2404_rocm:90
-              options: --preset alpaka-fp32 -Dalpaka_ACC_GPU_HIP_ENABLE=ON -DCMAKE_PREFIX_PATH=/opt/rocm -Dalpaka_DISABLE_VENDOR_RNG=ON -DTRACCC_USE_ROOT=OFF -DTRACCC_SETUP_ROCTHRUST=ON -DTRACCC_BUILD_HIP=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20 -DDETRAY_BUILD_VALIDATION_TOOLS=ON
-              run_tests: false
-              enable_cuda: false
-              enable_hip: true
-              enable_sycl: false
-            build: RelWithDebInfo #At O3 we get a compiler crash with ROCM 7, see https://github.com/acts-project/acts/issues/5877
+          # ALPAKA_HIP is dropped here: it's still on the pre-spack
+          # ubuntu2404_rocm image (no `flavor`, so it never gets a dependency
+          # install this PR would touch), and the HIP alpaka migration lands
+          # in a later PR in this stack.
     # Use BASH as the shell from the images.
     defaults:
       run:
@@ -161,6 +156,7 @@ jobs:
             -DACTS_USE_SYSTEM_NLOHMANN_JSON=ON \
             -DACTS_USE_SYSTEM_COVFIE=ON \
             -DACTS_USE_SYSTEM_VECMEM=ON \
+            -DACTS_USE_SYSTEM_EIGEN3=ON \
             -DACTS_ENABLE_CUDA=${{ matrix.platform.enable_cuda && 'ON' || 'OFF' }} \
             -DTRACCC_USE_SYSTEM_VECMEM=ON \
             -DTRACCC_USE_SYSTEM_COVFIE=ON \
