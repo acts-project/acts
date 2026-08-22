@@ -16,12 +16,13 @@
 #include <semaphore>
 #include <vector>
 
-namespace nvinfer1 {
-class IRuntime;
-class ICudaEngine;
-class ILogger;
-class IExecutionContext;
-}  // namespace nvinfer1
+// TensorRT >=10 declares ILogger as a versioned type alias (`using ILogger =
+// class nvinfer1::v_1_0::ILogger;`) rather than a plain class, so hand-rolling
+// `class ILogger;` here conflicts with it once a .cpp includes the real
+// NvInfer.h. NvInferRuntimeBase.h is where that alias (and IRuntime,
+// ICudaEngine, IExecutionContext) is declared, but it static_asserts against
+// being included directly -- NvInferRuntime.h is the sanctioned entry point.
+#include <NvInferRuntime.h>
 
 namespace ActsPlugins {
 /// @addtogroup gnn_plugin
