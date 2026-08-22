@@ -146,6 +146,24 @@ class ProfileHistogram {
         m_sampleRange(sampleRange),
         m_hist(boost::histogram::make_profile(axes.begin(), axes.end())) {}
 
+  /// Copy constructor
+  /// @param other The other profile histogram to copy from
+  ProfileHistogram(const ProfileHistogram& other) = default;
+
+  /// Move constructor
+  /// @param other The other profile histogram to move from
+  ProfileHistogram(ProfileHistogram&& other) noexcept = default;
+
+  /// Copy assignment operator
+  /// @param other The other profile histogram to copy from
+  /// @return The copied profile histogram
+  ProfileHistogram& operator=(const ProfileHistogram& other) = default;
+
+  /// Move assignment operator
+  /// @param other The other profile histogram to move from
+  /// @return The moved profile histogram
+  ProfileHistogram& operator=(ProfileHistogram&& other) noexcept = default;
+
   /// Fill profile with values and sample
   ///
   /// @param values Bin coordinate values (one per axis)
@@ -213,6 +231,24 @@ class Efficiency {
         m_title(std::move(title)),
         m_accepted(boost::histogram::make_histogram(axes.begin(), axes.end())),
         m_total(boost::histogram::make_histogram(axes.begin(), axes.end())) {}
+
+  /// Copy constructor
+  /// @param other The other efficiency histogram to copy from
+  Efficiency(const Efficiency& other) = default;
+
+  /// Move constructor
+  /// @param other The other efficiency histogram to move from
+  Efficiency(Efficiency&& other) noexcept = default;
+
+  /// Copy assignment operator
+  /// @param other The other efficiency histogram to copy from
+  /// @return The copied efficiency histogram
+  Efficiency& operator=(const Efficiency& other) = default;
+
+  /// Move assignment operator
+  /// @param other The other efficiency histogram to move from
+  /// @return The moved efficiency histogram
+  Efficiency& operator=(Efficiency&& other) noexcept = default;
 
   /// Fill efficiency histogram
   ///

@@ -46,24 +46,22 @@ class DirectNavigator {
     /// Constructor from geometry context
     /// @param gctx The geometry context
     explicit Options(const GeometryContext& gctx)
-        : NavigatorPlainOptions(gctx) {}
-
-    /// The surface tolerance
-    double surfaceTolerance = s_onSurfaceTolerance;
-
-    // TODO https://github.com/acts-project/acts/issues/2738
-    /// Distance limit to discard intersections "behind us"
-    /// @note this is only necessary because some surfaces have more than one
-    ///       intersection
-    double nearLimit = -100 * UnitConstants::um;
-
-    /// The far limit to resolve surfaces
-    double farLimit = std::numeric_limits<double>::max();
+        : NavigatorPlainOptions(gctx) {
+      // TODO https://github.com/acts-project/acts/issues/2738
+      // The direct navigator uses a relaxed near limit to discard
+      // intersections "behind us". This is only necessary because some
+      // surfaces have more than one intersection.
+      nearLimit = -100 * UnitConstants::um;
+    }
 
     /// Set the plain navigator options
     /// @param options The plain navigator options to copy
     void setPlainOptions(const NavigatorPlainOptions& options) {
+      // Preserve the direct-navigator-specific near limit, which differs from
+      // the plain default.
+      const double keepNearLimit = nearLimit;
       static_cast<NavigatorPlainOptions&>(*this) = options;
+      nearLimit = keepNearLimit;
     }
   };
 
