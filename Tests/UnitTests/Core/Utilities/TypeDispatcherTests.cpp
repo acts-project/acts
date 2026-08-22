@@ -217,6 +217,34 @@ BOOST_AUTO_TEST_CASE(ImprovedErrorMessages) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(DefaultFallThroughHandler) {
+  TypeDispatcher<BaseClass, std::string()> dispatcher;
+  dispatcher.registerFunction(processErrorTest);  // DerivedA -> "A"
+
+  DerivedC objC;
+
+  // By default an unregistered type throws (historical behavior preserved).
+  BOOST_CHECK_THROW(dispatcher(objC), std::runtime_error);
+
+  // Registering a fall-through handler makes it degrade gracefully instead.
+  auto& ref = dispatcher.registerDefault(
+      [](const BaseClass& obj) -> std::string {
+        return "fallback:" + obj.getType();
+      });
+  BOOST_CHECK_EQUAL(&ref, &dispatcher);  // chaining returns *this
+
+  BOOST_CHECK_EQUAL(dispatcher(objC), "fallback:DerivedC");
+
+  // Registered types still take precedence over the default handler.
+  DerivedA objA;
+  BOOST_CHECK_EQUAL(dispatcher(objA), "A");
+
+  // A null default handler is rejected.
+  BOOST_CHECK_THROW(
+      dispatcher.registerDefault(decltype(dispatcher)::function_type{}),
+      std::invalid_argument);
+}
+
 BOOST_AUTO_TEST_CASE(InheritanceTreeHandling) {
   // Test objects at different levels of the hierarchy
   DerivedA objA;      // Level 1: inherits from BaseClass
