@@ -112,13 +112,23 @@ void addTrackFinding(py::module& mex) {
                                 nBinsTanTheta, nBinsY0, nBinsTanPhi, nBinsX0,
                                 dumpVisualization, visualizationFunction);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      TrackParamsEstimationAlgorithm, mex, "TrackParamsEstimationAlgorithm",
-      inputSeeds, inputProtoTracks, inputParticleHypotheses,
-      outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
-      magneticField, bFieldMin, initialSigmas, initialSigmaQoverPt,
-      initialSigmaPtRel, initialVarInflation, noTimeVarInflation,
-      particleHypothesis);
+  {
+    using Alg = TrackParamsEstimationAlgorithm;
+
+    auto [alg, c] = declareAlgorithm<Alg, IAlgorithm>(
+        mex, "TrackParamsEstimationAlgorithm");
+
+    alg.def_static("inverseRadiusPowerWeight", &Alg::inverseRadiusPowerWeight,
+                   py::arg("exponent"));
+
+    ACTS_PYTHON_STRUCT(c, inputSeeds, inputProtoTracks, inputParticleHypotheses,
+                       outputTrackParameters, outputSeeds, outputProtoTracks,
+                       trackingGeometry, magneticField, bFieldMin,
+                       spacePointSelection, geometricRefineIterations,
+                       spacePointWeight, initialSigmas, initialSigmaQoverPt,
+                       initialSigmaPtRel, initialVarInflation,
+                       noTimeVarInflation, particleHypothesis);
+  }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       TrackParamsLookupEstimation, mex, "TrackParamsLookupEstimation",
