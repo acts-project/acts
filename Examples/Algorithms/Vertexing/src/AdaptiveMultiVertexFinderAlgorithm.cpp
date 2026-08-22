@@ -272,7 +272,7 @@ ProcessCode AdaptiveMultiVertexFinderAlgorithm::execute(
   }
 
   // Default vertexing options, this is where e.g. a constraint could be set
-  Options finderOpts(ctx.geoContext, ctx.magFieldContext);
+  Options finderOpts(ctx.recoGeoContext, ctx.magFieldContext);
 
   VertexContainer vertices;
 
