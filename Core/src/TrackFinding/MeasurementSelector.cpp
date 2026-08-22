@@ -16,12 +16,15 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <numbers>
 #include <span>
 #include <stdexcept>
 
 namespace Acts {
+
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 MeasurementSelector::MeasurementSelector()
     : MeasurementSelector({{GeometryIdentifier(), MeasurementSelectorCuts{}}}) {
@@ -144,5 +147,7 @@ Result<MeasurementSelector::Cuts> MeasurementSelector::getCuts(
   }
   return getCutsByTheta(*cuts, theta);
 }
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace Acts

@@ -9,10 +9,11 @@
 #include "ActsExamples/TrackFindingGnn/TrackFindingFromProtoTracksAlgorithm.hpp"
 
 #include "Acts/EventData/ProxyAccessor.hpp"
-#include "Acts/TrackFinding/TrackStateCreator.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/MeasurementCalibration.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/TrackFinding/TrackStateCreator.hpp"
 
 #include <algorithm>
 #include <ranges>
@@ -26,33 +27,42 @@ namespace {
 
 using namespace ActsExamples;
 
-struct ProtoTrackSourceLinkAccessor
-    : GeometryIdMultisetAccessor<IndexSourceLink> {
-  using BaseIterator = GeometryIdMultisetAccessor<IndexSourceLink>::Iterator;
-  using Iterator = SourceLinkAdapterIterator<BaseIterator>;
+/// Creates track states from the measurements of the current proto track,
+/// falling back to all measurements on surfaces the proto track does not
+/// touch.
+class ProtoTrackStateCreator final
+    : public ActsExamples::TrackStateCreatorBase<ProtoTrackStateCreator> {
+ public:
+  using Container = GeometryIdMultiset<IndexSourceLink>;
 
   std::unique_ptr<const Logger> loggerPtr;
+  const MeasurementContainer* measurements = nullptr;
   Container protoTrackSourceLinks;
 
-  // get the range of elements with requested geoId
-  std::pair<Iterator, Iterator> range(const Surface& surface) const {
+  auto measurementRange(const State& state) const {
     const auto& logger = *loggerPtr;
 
-    if (protoTrackSourceLinks.contains(surface.geometryId())) {
+    if (protoTrackSourceLinks.contains(state.surface->geometryId())) {
       auto [begin, end] =
-          protoTrackSourceLinks.equal_range(surface.geometryId());
+          protoTrackSourceLinks.equal_range(state.surface->geometryId());
       ACTS_VERBOSE("Select " << std::distance(begin, end)
                              << " source-links from proto track on "
-                             << surface.geometryId());
-      return {Iterator{begin}, Iterator{end}};
+                             << state.surface->geometryId());
+      return std::ranges::subrange(begin, end);
     }
 
-    assert(container != nullptr);
-    auto [begin, end] = container->equal_range(surface.geometryId());
+    assert(measurements != nullptr);
+    auto [begin, end] =
+        measurements->orderedIndices().equal_range(state.surface->geometryId());
     ACTS_VERBOSE("Select " << std::distance(begin, end)
                            << " source-links from collection on "
-                           << surface.geometryId());
-    return {Iterator{begin}, Iterator{end}};
+                           << state.surface->geometryId());
+    return std::ranges::subrange(begin, end);
+  }
+
+  ConstVariableBoundMeasurementProxy calibrate(
+      const State& /*state*/, const IndexSourceLink& measurement) const {
+    return measurements->getMeasurement(measurement.index());
   }
 };
 
@@ -87,33 +97,19 @@ ProcessCode TrackFindingFromProtoTracksAlgorithm::execute(
   PropagatorPlainOptions pOptions(ctx.geoContext, ctx.magFieldContext);
   pOptions.maxSteps = 10000;
 
-  PassThroughCalibrator pcalibrator;
-  MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
   GainMatrixUpdater kfUpdater;
   GainMatrixSmoother kfSmoother;
-  MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
 
-  // The source link accessor
-  ProtoTrackSourceLinkAccessor sourceLinkAccessor;
-  sourceLinkAccessor.loggerPtr = logger().clone("SourceLinkAccessor");
-  sourceLinkAccessor.container = &measurements.orderedIndices();
-
-  using TrackStateCreatorType =
-      TrackStateCreator<IndexSourceLinkAccessor::Iterator, TrackContainer>;
-  TrackStateCreatorType trackStateCreator;
-  trackStateCreator.sourceLinkAccessor
-      .template connect<&ProtoTrackSourceLinkAccessor::range>(
-          &sourceLinkAccessor);
-  trackStateCreator.calibrator
-      .connect<&MeasurementCalibratorAdapter::calibrate>(&calibrator);
-  trackStateCreator.measurementSelector.connect<&MeasurementSelector::select<
-      typename TrackContainer::TrackStateContainerBackend>>(&measSel);
+  ProtoTrackStateCreator trackStateCreator;
+  trackStateCreator.loggerPtr = logger().clone("TrackStateCreator");
+  trackStateCreator.measurements = &measurements;
+  trackStateCreator.cuts = m_cfg.trackStateSelection;
 
   CombinatorialKalmanFilterExtensions<TrackContainer> extensions;
   extensions.updater.connect<&GainMatrixUpdater::operator()<
       typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
-  extensions.createTrackStates
-      .template connect<&TrackStateCreatorType ::createTrackStates>(
+  extensions.trackStateCreator
+      .template connect<&ProtoTrackStateCreator::createTrackStates>(
           &trackStateCreator);
 
   // Set the CombinatorialKalmanFilter options
@@ -140,13 +136,13 @@ ProcessCode TrackFindingFromProtoTracksAlgorithm::execute(
   nTracksPerSeeds.reserve(initialParameters.size());
 
   for (auto i = 0ul; i < initialParameters.size(); ++i) {
-    sourceLinkAccessor.protoTrackSourceLinks.clear();
+    trackStateCreator.protoTrackSourceLinks.clear();
 
     // Fill the source links via their indices from the container
     for (const auto hitIndex : protoTracks.at(i)) {
       if (auto it = measurements.orderedIndices().nth(hitIndex);
           it != measurements.orderedIndices().end()) {
-        sourceLinkAccessor.protoTrackSourceLinks.insert(*it);
+        trackStateCreator.protoTrackSourceLinks.insert(*it);
       } else {
         ACTS_FATAL("Proto track " << i << " contains invalid hit index"
                                   << hitIndex);
