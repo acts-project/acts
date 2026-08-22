@@ -1438,6 +1438,234 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeNestedInContainer) {
                     padCyl.get(CylinderVolumeBounds::eHalfLengthZ) + 5_mm);
 }
 
+BOOST_AUTO_TEST_CASE(PadBlueprintNodeReferenceAxisBounds) {
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
+
+  // Reference axis is the global z-axis; the child sits 50mm off it in x.
+  PadBlueprintNode pad("World", cfg.envelope);
+  pad.setReferenceAxis(Transform3::Identity());
+
+  const double offsetX = 50_mm;
+  auto child = std::make_unique<TrackingVolume>(
+      Transform3::Identity() * Translation3{Vector3{offsetX, 0, 0}},
+      std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 30_mm), "child");
+  const TrackingVolume* childVol = child.get();
+  pad.addStaticVolume(std::move(child));
+
+  BlueprintOptions options;
+  auto& world =
+      dynamic_cast<TrackingVolume&>(pad.build(options, gctx, *logger));
+
+  // The child keeps its off-axis placement.
+  BOOST_CHECK_CLOSE(childVol->center(gctx)[eX], offsetX, 1e-9);
+
+  BOOST_CHECK_EQUAL(world.volumeName(), "World");
+  BOOST_CHECK_EQUAL(world.volumeBounds().type(),
+                    VolumeBounds::BoundsType::eCylinder);
+
+  // The envelope is recentered onto the reference axis ...
+  BOOST_CHECK_SMALL(world.center(gctx)[eX], 1e-9);
+  BOOST_CHECK_SMALL(world.center(gctx)[eY], 1e-9);
+
+  // ... and grown radially so the displaced child stays enclosed:
+  //   minR = max(0, max(minR - offset, offset - maxR) - rInner)
+  //        = max(0, max(10 - 50, 50 - 20) - 1) = 29
+  //   maxR = maxR + offset + rOuter = 20 + 50 + 2 = 72
+  const auto& worldCyl =
+      dynamic_cast<const CylinderVolumeBounds&>(world.volumeBounds());
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMinR), 29_mm);
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMaxR), 72_mm);
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eHalfLengthZ),
+                    30_mm + 20_mm);
+}
+
+BOOST_AUTO_TEST_CASE(PadBlueprintNodeReferenceAxisRejectsCuboid) {
+  // The rejection path logs at ERROR before throwing; allow that under the
+  // compile-time log failure threshold used in CI.
+  Logging::ScopedFailureThreshold threshold{Logging::Level::FATAL};
+
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisX] = {1_mm, 1_mm};
+  cfg.envelope[AxisDirection::AxisY] = {1_mm, 1_mm};
+  cfg.envelope[AxisDirection::AxisZ] = {1_mm, 1_mm};
+
+  PadBlueprintNode pad("World", cfg.envelope);
+  pad.setReferenceAxis(Transform3::Identity());
+  pad.addStaticVolume(std::make_unique<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CuboidVolumeBounds>(10_mm, 20_mm, 30_mm), "child"));
+
+  BlueprintOptions options;
+  BOOST_CHECK_THROW(pad.build(options, gctx, *logger), std::logic_error);
+}
+
+BOOST_AUTO_TEST_CASE(PadBlueprintNodeReferenceAxisInCylinderHierarchy) {
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {2_mm, 20_mm};
+  auto root = std::make_unique<Blueprint>(cfg);
+
+  std::vector<std::unique_ptr<SurfacePlacementBase>> elements;
+  std::vector<std::shared_ptr<Surface>> b0SensitiveSurfaces;
+
+  // A displaced (off-beamline) cylindrical layer with a ring of sensitive
+  // modules, modelling e.g. an EIC/ePIC B0 tracker station.
+  auto makeB0Layer = [&](std::size_t layer) -> std::unique_ptr<TrackingVolume> {
+    const double offsetX = -160_mm;
+    const double z = 6250_mm + layer * 100_mm;
+    auto layerVolume = std::make_unique<TrackingVolume>(
+        Transform3::Identity() * Translation3{Vector3{offsetX, 0., z}},
+        std::make_shared<CylinderVolumeBounds>(35_mm, 150_mm, 20_mm),
+        "B0Layer" + std::to_string(layer));
+
+    const std::size_t nModules = 6;
+    const double moduleR = 90_mm;
+    const auto moduleBounds = std::make_shared<RectangleBounds>(8_mm, 15_mm);
+    for (std::size_t i = 0; i < nModules; ++i) {
+      const double phi = 2. * std::numbers::pi * static_cast<double>(i) /
+                         static_cast<double>(nModules);
+      Transform3 moduleTransform = Transform3::Identity() *
+                                   Translation3{Vector3{offsetX, 0., z}} *
+                                   AngleAxis3{phi, Vector3::UnitZ()} *
+                                   Translation3{Vector3::UnitX() * moduleR} *
+                                   AngleAxis3{90_degree, Vector3::UnitY()} *
+                                   AngleAxis3{90_degree, Vector3::UnitZ()};
+
+      auto& element =
+          elements.emplace_back(std::make_unique<DetectorElementStub>(
+              moduleTransform, moduleBounds, 0.));
+      element->surface().assignSurfacePlacement(*element);
+      auto surface = element->surface().getSharedPtr();
+      layerVolume->addSurface(surface);
+      b0SensitiveSurfaces.push_back(std::move(surface));
+    }
+
+    return layerVolume;
+  };
+
+  root->addCylinderContainer("Detector", AxisDirection::AxisZ, [&](auto& det) {
+    det.addStaticVolume(
+        Transform3::Identity(),
+        std::make_shared<CylinderVolumeBounds>(20_mm, 400_mm, 1000_mm),
+        "MainTracker");
+
+    // The pad node wraps the displaced B0 subtree into an axis-aligned envelope
+    // so the co-axial Detector stack accepts it.
+    ExtentEnvelope padEnvelope = ExtentEnvelope::Zero();
+    padEnvelope[AxisDirection::AxisZ] = {2_mm, 2_mm};
+    padEnvelope[AxisDirection::AxisR] = {2_mm, 2_mm};
+    auto pad = std::make_shared<PadBlueprintNode>("B0Envelope", padEnvelope);
+    pad->setReferenceAxis(Transform3::Identity());
+    pad->addCylinderContainer("B0", AxisDirection::AxisZ, [&](auto& b0) {
+      b0.addStaticVolume(makeB0Layer(0));
+      b0.addStaticVolume(makeB0Layer(1));
+    });
+    det.addChild(pad);
+  });
+
+  auto trackingGeometry = root->construct({}, gctx, *logger);
+  BOOST_REQUIRE(trackingGeometry != nullptr);
+  BOOST_CHECK(trackingGeometry->geometryVersion() ==
+              TrackingGeometry::GeometryVersion::Gen3);
+
+  // The wrapper envelope is on-axis ...
+  const auto* envelope = trackingGeometry->findVolumeByName("B0Envelope");
+  BOOST_REQUIRE(envelope != nullptr);
+  BOOST_CHECK_SMALL(envelope->center(gctx)[eX], 1e-9);
+  BOOST_CHECK_SMALL(envelope->center(gctx)[eY], 1e-9);
+
+  // ... while the child layers keep their displaced placement.
+  const auto* b0Layer0 = trackingGeometry->findVolumeByName("B0Layer0");
+  BOOST_REQUIRE(b0Layer0 != nullptr);
+  BOOST_CHECK_CLOSE(b0Layer0->center(gctx)[eX], -160_mm, 1e-8);
+
+  // Every sensitive surface inside the off-axis subtree remains reachable
+  // through the constructed geometry.
+  std::size_t found = 0;
+  for (const auto& surface : b0SensitiveSurfaces) {
+    const auto id = surface->geometryId();
+    BOOST_CHECK_NE(id.sensitive(), 0u);
+    BOOST_REQUIRE(trackingGeometry->findSurface(id) != nullptr);
+    found++;
+  }
+  BOOST_CHECK_EQUAL(found, b0SensitiveSurfaces.size());
+}
+
+BOOST_AUTO_TEST_CASE(PadBlueprintNodeCenteredRejectsAsymmetricZ) {
+  // The default Centered mode cannot represent an asymmetric envelope in a
+  // symmetric direction, so it must throw rather than silently shifting.
+  // The rejection path logs at ERROR before throwing.
+  Logging::ScopedFailureThreshold threshold{Logging::Level::FATAL};
+
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {10_mm, 40_mm};
+  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
+
+  PadBlueprintNode pad("World", cfg.envelope);
+  pad.addStaticVolume(std::make_unique<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 30_mm), "child"));
+
+  BlueprintOptions options;
+  BOOST_CHECK_THROW(pad.build(options, gctx, *logger), std::logic_error);
+}
+
+BOOST_AUTO_TEST_CASE(PadBlueprintNodeFitBoundsCylinder) {
+  // FitBounds allows an asymmetric z envelope; the enclosure shifts to the
+  // midpoint of the expanded extent instead of throwing.
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {10_mm, 40_mm};
+  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
+
+  PadBlueprintNode pad("World", cfg.envelope);
+  pad.setCentering(PadBlueprintNode::Centering::FitBounds);
+  pad.addStaticVolume(std::make_unique<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 30_mm), "child"));
+
+  BlueprintOptions options;
+  auto& world =
+      dynamic_cast<TrackingVolume&>(pad.build(options, gctx, *logger));
+
+  const auto& worldCyl =
+      dynamic_cast<const CylinderVolumeBounds&>(world.volumeBounds());
+  // halfZ = 30 + (10 + 40) / 2 = 55; center shifts by (40 - 10) / 2 = 15
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eHalfLengthZ), 55_mm);
+  BOOST_CHECK_CLOSE(world.center(gctx)[eZ], 15_mm, 1e-9);
+  // r is asymmetric even when Centered, so it is unchanged here
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMinR), 9_mm);
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMaxR), 22_mm);
+}
+
+BOOST_AUTO_TEST_CASE(PadBlueprintNodeFitBoundsCuboid) {
+  // FitBounds shifts a cuboid per axis by half the envelope asymmetry.
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisX] = {2_mm, 6_mm};
+  cfg.envelope[AxisDirection::AxisY] = {3_mm, 3_mm};
+  cfg.envelope[AxisDirection::AxisZ] = {0_mm, 0_mm};
+
+  PadBlueprintNode pad("World", cfg.envelope);
+  pad.setCentering(PadBlueprintNode::Centering::FitBounds);
+  pad.addStaticVolume(std::make_unique<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CuboidVolumeBounds>(10_mm, 20_mm, 30_mm), "child"));
+
+  BlueprintOptions options;
+  auto& world =
+      dynamic_cast<TrackingVolume&>(pad.build(options, gctx, *logger));
+
+  const auto& worldBox =
+      dynamic_cast<const CuboidVolumeBounds&>(world.volumeBounds());
+  BOOST_CHECK_EQUAL(worldBox.get(CuboidVolumeBounds::eHalfLengthX), 14_mm);
+  BOOST_CHECK_EQUAL(worldBox.get(CuboidVolumeBounds::eHalfLengthY), 23_mm);
+  BOOST_CHECK_EQUAL(worldBox.get(CuboidVolumeBounds::eHalfLengthZ), 30_mm);
+  BOOST_CHECK_CLOSE(world.center(gctx)[eX], 2_mm, 1e-9);
+  BOOST_CHECK_SMALL(world.center(gctx)[eY], 1e-9);
+  BOOST_CHECK_SMALL(world.center(gctx)[eZ], 1e-9);
+}
+
 BOOST_AUTO_TEST_SUITE_END();
 
 }  // namespace ActsTests
