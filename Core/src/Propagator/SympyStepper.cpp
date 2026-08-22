@@ -14,6 +14,7 @@
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/detail/SympyCovarianceEngine.hpp"
 #include "Acts/Propagator/detail/SympyJacobianEngine.hpp"
+#include "Acts/Propagator/detail/SympyStepperDenseStep.hpp"
 
 #include <cmath>
 #include <span>
@@ -56,6 +57,7 @@ void SympyStepper::initialize(State& state, const BoundVector& boundParams,
   state.statistics = StepperStatistics();
 
   state.pars = freeParams;
+  state.fieldIsValid = false;
 
   // Init the jacobian matrix if needed
   state.covTransport = cov.has_value();
@@ -108,6 +110,7 @@ void SympyStepper::update(State& state, const FreeVector& freeParams,
                           const Covariance& covariance,
                           const Surface& surface) const {
   state.pars = freeParams;
+  state.fieldIsValid = false;
   state.cov = covariance;
   state.jacToGlobal = surface.boundToFreeJacobian(
       state.options.geoContext, freeParams.template segment<3>(eFreePos0),
@@ -121,6 +124,7 @@ void SympyStepper::update(State& state, const Vector3& uposition,
   state.pars.template segment<3>(eFreeDir0) = udirection;
   state.pars[eFreeTime] = time;
   state.pars[eFreeQOverP] = qOverP;
+  state.fieldIsValid = false;
 }
 
 void SympyStepper::transportCovarianceToCurvilinear(State& state) const {
@@ -161,30 +165,25 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
     return getField(state, {p[0], p[1], p[2]});
   };
 
-  // Only the cold dense path needs these.
-  const auto getG = [this, &state, material, m, timeDirection](
-                        std::span<const double, 3> p, double l) -> double {
-    const PdgParticle absPdg = particleHypothesis(state).absolutePdg();
-    const double absQ = std::abs(charge(state));
-    double newPabs = particleHypothesis(state).extractMomentum(l);
-    if (newPabs < state.options.dense.momentumCutOff) {
-      return 0.;
+  if (!state.fieldIsValid) {
+    auto fieldRes = getField(state, pos);
+    if (!fieldRes.ok()) {
+      return fieldRes.error();
     }
+    state.field = *fieldRes;
+    state.fieldIsValid = true;
+  }
+  Vector3 lastField = state.field;
 
-    if (state.options.dense.meanEnergyLoss) {
-      return timeDirection *
-             computeEnergyLossMean(
-                 MaterialSlab(material->material({p[0], p[1], p[2]}),
-                              1.0f * UnitConstants::mm),
-                 absPdg, m, l, absQ);
-    } else {
-      return timeDirection *
-             computeEnergyLossMode(
-                 MaterialSlab(material->material({p[0], p[1], p[2]}),
-                              1.0f * UnitConstants::mm),
-                 absPdg, m, l, absQ);
-    }
-  };
+  // `state.options.stepTolerance` is read once per trial to form the error
+  // bound, and again afterwards to scale the step size for the next one. The
+  // second read has to be ordered behind every store the kernel makes through
+  // its output spans, because those point into `state` and the compiler cannot
+  // prove they miss `state.options`. That puts the divide and the two square
+  // roots of the feedback -- the longest dependency chain in the step, and one
+  // that closes into the next step -- after the jacobian transport instead of
+  // alongside it. Reading it once up front removes that ordering edge.
+  const double stepTolerance = state.options.stepTolerance;
 
   const auto calcStepSizeScaling = [&](const double errorEstimate_) -> double {
     // For details about these values see ATL-SOFT-PUB-2009-001
@@ -193,7 +192,7 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
     // This is given by the order of the Runge-Kutta method
     constexpr double exponent = 0.25;
 
-    double x = state.options.stepTolerance / errorEstimate_;
+    double x = stepTolerance / errorEstimate_;
 
     if constexpr (exponent == 0.25) {
       // This is 3x faster than std::pow
@@ -226,15 +225,15 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
                                                state.jacToGlobal.size())
                            : std::span<double>();
     if (!state.options.doDense || material == nullptr) {
-      res = rk4_vacuum(startPos, startDir, t, h, qop, m, pabs, getB,
-                       errorEstimate, 4 * state.options.stepTolerance, endPos,
-                       state.pars[eFreeTime], endDir, derivative, jac);
+      res = rk4_vacuum(
+          startPos, startDir, t, h, qop, m, pabs,
+          std::span<const double, 3>(state.field.data(), 3), getB,
+          errorEstimate, 4 * stepTolerance, endPos, state.pars[eFreeTime],
+          endDir, std::span<double, 3>(lastField.data(), 3), derivative, jac);
     } else {
-      res =
-          rk4_dense(startPos, startDir, t, h, qop, m, charge(state), pabs, getB,
-                    getG, errorEstimate, 4 * state.options.stepTolerance,
-                    endPos, state.pars[eFreeTime], endDir,
-                    state.pars[eFreeQOverP], derivative, jac);
+      res = detail::sympyDenseStep(*this, state, *material, timeDirection, h,
+                                   4 * stepTolerance, errorEstimate, lastField,
+                                   jac);
     }
     if (!res.ok()) {
       return res.error();
@@ -265,6 +264,10 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
       return EigenStepperError::StepSizeAdjustmentFailed;
     }
   }
+
+  // the last field sample of an accepted step is O(h^3) away from the step
+  // end point, close enough to seed the next step with
+  state.field = lastField;
 
   state.pathAccumulated += h;
   ++state.nSteps;
