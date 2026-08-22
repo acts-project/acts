@@ -30,6 +30,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -241,7 +242,11 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAssignment) {
   auto assignedDisc =
       Surface::makeShared<DiscSurface>(Transform3::Identity(), 2.2, 4.4, 0.07);
 
+  // TODO: surface copy-assignment is deprecated; switch to a makeShared copy
+  // when it is removed (SonarCloud cpp:S3624).
+  ACTS_PUSH_IGNORE_DEPRECATED()
   BOOST_CHECK_NO_THROW(*assignedDisc = *discSurfaceObject);
+  ACTS_POP_IGNORE_DEPRECATED()
   BOOST_CHECK((*assignedDisc) == (*discSurfaceObject));
 }
 

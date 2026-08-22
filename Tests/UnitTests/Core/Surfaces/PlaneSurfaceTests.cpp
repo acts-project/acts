@@ -31,6 +31,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -232,7 +233,11 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceEqualityOperators) {
   /// Test assignment
   auto assignedPlaneSurface =
       Surface::makeShared<PlaneSurface>(Transform3::Identity(), nullptr);
+  // TODO: surface copy-assignment is deprecated; switch to a makeShared copy
+  // when it is removed (SonarCloud cpp:S3624).
+  ACTS_PUSH_IGNORE_DEPRECATED()
   *assignedPlaneSurface = *planeSurfaceObject;
+  ACTS_POP_IGNORE_DEPRECATED()
 
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedPlaneSurface == *planeSurfaceObject);
