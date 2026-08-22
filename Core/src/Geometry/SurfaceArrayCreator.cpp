@@ -216,8 +216,8 @@ SurfaceArray SurfaceArrayCreator::surfaceArrayOnDisc(
       return matcher(gctx, AxisPhi, a, b);
     };
 
-    std::transform(
-        phiModules.begin(), phiModules.end(), std::back_inserter(nPhiModules),
+    std::ranges::transform(
+        phiModules, std::back_inserter(nPhiModules),
         [&equal,
          this](const std::vector<const Surface*>& surfaces_) -> std::size_t {
           return this->findKeySurfaces(surfaces_, equal).size();
@@ -229,8 +229,7 @@ SurfaceArray SurfaceArrayCreator::surfaceArrayOnDisc(
     // but the rotation is done considering all bins.
     // This might be resolved through bin completion, but not sure.
     // @TODO: check in extrapolation
-    const std::size_t nBinsPhi =
-        *std::min_element(nPhiModules.begin(), nPhiModules.end());
+    const std::size_t nBinsPhi = *std::ranges::min_element(nPhiModules);
     pAxisPhi =
         createEquidistantAxis(gctx, surfacesRaw, AxisBoundaryType::Closed,
                               AxisPhi, protoLayer, fullTransform, nBinsPhi);
@@ -411,11 +410,9 @@ std::unique_ptr<const IAxis> SurfaceArrayCreator::createVariableAxis(
 
   std::vector<double> binEdges;
   if (aDir == AxisPhi) {
-    std::stable_sort(keys.begin(), keys.end(),
-                     [&gctx](const Surface* a, const Surface* b) {
-                       return (phi(a->referencePosition(gctx, AxisPhi)) <
-                               phi(b->referencePosition(gctx, AxisPhi)));
-                     });
+    std::ranges::stable_sort(keys, {}, [&gctx](const Surface* s) {
+      return phi(s->referencePosition(gctx, AxisPhi));
+    });
 
     const double maxPhi =
         0.5 * (phi(keys.at(0)->referencePosition(gctx, AxisPhi)) +
