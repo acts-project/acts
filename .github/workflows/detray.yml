@@ -132,7 +132,7 @@ jobs:
       with:
         compiler: g++
         # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
-        DEPENDENCY_TAG: v24.0.3
+        DEPENDENCY_TAG: v24.0.5
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 
@@ -188,7 +188,7 @@ jobs:
           - NAME: "HIP-AMD"
             CXX_STANDARD: "20"
             CONTAINER: "ghcr.io/acts-project/ubuntu2604:91"
-            FLAVOR: "rocm-gfx90a"
+            FLAVOR: "rocm7"
             # vecmem stays in-tree: HIP::hiprt comes from vecmem's
             # FindHIPToolkit.cmake, which vecmem <= 1.25.0 ships but does not
             # install. TODO: take it from the flavor once the deps carry 1.26.
@@ -229,7 +229,7 @@ jobs:
         compiler: g++
         flavor: ${{ matrix.PLATFORM.FLAVOR }}
         # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
-        DEPENDENCY_TAG: v24.0.3
+        DEPENDENCY_TAG: v24.0.5
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 
@@ -301,7 +301,7 @@ jobs:
         compiler: g++
         flavor: cuda13
         # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
-        DEPENDENCY_TAG: v24.0.3
+        DEPENDENCY_TAG: v24.0.5
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 
@@ -427,7 +427,7 @@ jobs:
       with:
         compiler: g++
         flavor: cuda13
-        DEPENDENCY_TAG: v24.0.3
+        DEPENDENCY_TAG: v24.0.5
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 
