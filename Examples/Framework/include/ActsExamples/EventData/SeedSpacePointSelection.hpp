@@ -10,8 +10,9 @@
 
 #include "ActsExamples/EventData/SpacePoint.hpp"
 
+#include <array>
+#include <optional>
 #include <span>
-#include <vector>
 
 namespace ActsExamples {
 
@@ -26,15 +27,16 @@ enum class SeedSpacePointSelection {
   SpreadTriplet,
 };
 
-/// Pick the space points that seed a candidate track. The triplet selections go
-/// by layer, not by space point.
+/// Pick the three space points that seed a candidate track. The triplet
+/// selections go by layer, not by space point.
 ///
 /// @param spacePoints is the event space point container
 /// @param candidates are the candidate space points, in track order
 ///        (innermost first); they are not sorted internally
 /// @param selection picks which of them are used
-/// @return the selected space points, empty if the selection cannot be made
-std::vector<SpacePointIndex> selectSeedSpacePoints(
+/// @return the three selected space points, or nothing if the selection cannot
+///         be made
+std::optional<std::array<SpacePointIndex, 3>> selectSeedSpacePoints(
     const SpacePointContainer& spacePoints,
     std::span<const SpacePointIndex> candidates,
     SeedSpacePointSelection selection);
