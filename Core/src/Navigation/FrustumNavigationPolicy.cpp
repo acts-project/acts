@@ -61,10 +61,10 @@ void FrustumNavigationPolicy::initializeCandidates(
               } else {
                 stream.addPortalCandidate(portal);
               }
-            } else
-              ACTS_DEBUG("unable to resolve portal volume");
-          } else
-            stream.addPortalCandidate(portal);
+            } else {
+              ACTS_DEBUG("unable to resolve portal volume"); }
+          } else {
+            stream.addPortalCandidate(portal);}
         }
         topBoxCopy = topBoxCopy->getSkip();
       } else {
