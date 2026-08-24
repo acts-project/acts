@@ -51,6 +51,9 @@ jobs:
 
     # The different build modes to test.
     strategy:
+      # A broken platform must not cancel the other: which of the two is
+      # affected is the useful part of the signal.
+      fail-fast: false
       matrix:
         BUILD_TYPE: ["Debug"]
         PLATFORM:
@@ -93,6 +96,9 @@ jobs:
 
     # The different build modes to test.
     strategy:
+      # A broken scalar type or build mode must not cancel the others: which of
+      # the legs is affected is the useful part of the signal.
+      fail-fast: false
       matrix:
         BUILD_TYPE: ["Release", "Debug"]
         SCALAR_TYPE: ["float", "double"]
@@ -187,6 +193,9 @@ jobs:
 
     # The different build modes to test.
     strategy:
+      # A broken scalar type must not cancel the other: which of the two is
+      # affected is the useful part of the signal.
+      fail-fast: false
       matrix:
         BUILD_TYPE: ["Debug"]
         SCALAR_TYPE: ["float", "double"]
