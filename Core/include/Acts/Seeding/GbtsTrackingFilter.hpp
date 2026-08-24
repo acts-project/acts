@@ -9,59 +9,21 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Seeding/GbtsDataStorage.hpp"
-#include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsLayerDescription.hpp"
+#include "Acts/Seeding/detail/GbtsFilterTypes.hpp"
 
+#include <cstdint>
+#include <memory>
 #include <vector>
 
 namespace Acts::Experimental {
 
-/// Per-edge tracking state used by the GBTS filter.
-struct GbtsEdgeState final {
- public:
-  GbtsEdgeState() = default;
-
-  /// Constructor with initialization flag
-  /// @param f Initialization flag
-  explicit GbtsEdgeState(bool f) : initialized(f) {}
-
-  /// Initialize from edge
-  /// @param pS Edge to initialize from
-  void initialize(const GbtsEdge& pS);
-
-  /// Initialization flag
-  bool initialized{false};
-
-  /// Score for comparison
-  float j{};
-
-  /// Vector of edges in the track
-  std::vector<GbtsEdge*> vs;
-
-  /// State vector X
-  std::array<float, 3> x{};
-  /// State vector Y
-  std::array<float, 2> y{};
-  /// Covariance matrix for X
-  std::array<std::array<float, 3>, 3> cx{};
-  /// Covariance matrix for Y
-  std::array<std::array<float, 2>, 2> cy{};
-  /// Reference x coordinate
-  float refX{};
-  /// Reference y coordinate
-  float refY{};
-  /// Cosine of rotation angle
-  float c{};
-  /// Sine of rotation angle
-  float s{};
-};
+class GbtsGeometry;
+class GraphBasedTrackSeeder;
 
 /// Tracking filter operating on the GBTS edge graph.
 class GbtsTrackingFilter final {
  public:
-  /// Maximum number of edge states
-  static constexpr std::uint32_t GbtsMaxEdgeState = 2500;
-
   /// Configuration for the tracking filter.
   struct Config {
     /// Multiple scattering sigma (for 900 MeV track at eta=0).
@@ -93,33 +55,28 @@ class GbtsTrackingFilter final {
     float maxZ0 = 170.0 * Acts::UnitConstants::mm;
   };
 
-  /// State for the tracking filter, containing edge states and a global
-  /// counter.
-  struct State {
-    /// State vector
-    std::vector<GbtsEdgeState*> stateVec;
-
-    /// State storage array
-    std::array<GbtsEdgeState, GbtsMaxEdgeState> stateStore{};
-
-    /// Global state counter
-    std::uint32_t globalStateCounter{0};
-  };
-
   /// @param config Configuration for seed finder
   /// @param geometry GBTS geometry for layer information
   GbtsTrackingFilter(const Config& config,
                      const std::shared_ptr<const GbtsGeometry>& geometry);
 
+ private:
+  // Only the seeder walks the edge graph.
+  friend class GraphBasedTrackSeeder;
+
+  using State = detail::GbtsFilterState;
+
   /// Follow track starting from edge
   /// @param state Tracking filter state
+  /// @param nodeView View of the node positions and layers
   /// @param sb Edge storage
   /// @param pS Starting edge
   /// @return Final edge state after following the track
-  GbtsEdgeState followTrack(State& state, std::vector<GbtsEdge>& sb,
-                            GbtsEdge& pS) const;
+  detail::GbtsEdgeState followTrack(State& state,
+                                    const detail::GbtsNodeView& nodeView,
+                                    std::vector<detail::GbtsEdge>& sb,
+                                    detail::GbtsEdge& pS) const;
 
- private:
   /// Configuration for the tracking filter.
   Config m_cfg{};
 
@@ -128,17 +85,21 @@ class GbtsTrackingFilter final {
 
   /// Propagate edge state
   /// @param state Tracking filter state
+  /// @param nodeView View of the node positions and layers
   /// @param sb Edge storage
   /// @param pS Edge to propagate from
   /// @param ts Edge state to update
-  void propagate(State& state, std::vector<GbtsEdge>& sb, GbtsEdge& pS,
-                 GbtsEdgeState& ts) const;
+  void propagate(State& state, const detail::GbtsNodeView& nodeView,
+                 std::vector<detail::GbtsEdge>& sb, detail::GbtsEdge& pS,
+                 detail::GbtsEdgeState& ts) const;
 
   /// Update edge state with edge
+  /// @param nodeView View of the node positions and layers
   /// @param pS Edge to update with
   /// @param ts Edge state to update
   /// @return Success flag
-  bool update(const GbtsEdge& pS, GbtsEdgeState& ts) const;
+  bool update(const detail::GbtsNodeView& nodeView, const detail::GbtsEdge& pS,
+              detail::GbtsEdgeState& ts) const;
 
   /// Get layer type from layer index
   /// @param layerIndex Layer index

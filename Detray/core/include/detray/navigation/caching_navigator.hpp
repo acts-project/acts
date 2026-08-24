@@ -77,13 +77,10 @@ class caching_navigator
     friend class caching_navigator;
     friend class navigator_base<caching_navigator>;
 
-    // Allow the filling/updating of candidates
+    // Allow the filling of candidates
     friend struct detail::intersection_initialize<ray_intersector>;
-    friend struct detail::intersection_update<ray_intersector>;
 
     // Navigation utility functions that need to modify the state
-    friend struct navigation::candidate_search;
-
     template <typename state_t>
     friend constexpr void navigation::update_status(state_t &,
                                                     const navigation::config &);
@@ -98,10 +95,6 @@ class caching_navigator
                                                     const navigation::config &,
                                                     const ctx_t &);
 
-    template <typename track_t, typename state_t, typename ctx_t>
-    friend constexpr void navigation::init_loose_cfg(const track_t &, state_t &,
-                                                     navigation::config,
-                                                     const ctx_t &);
     using base_type =
         navigation::base_state<state, detector_type, k_cache_capacity,
                                inspector_type, intersection_type>;

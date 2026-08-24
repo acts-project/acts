@@ -19,7 +19,6 @@ void sympy::boundToBoundTransportJacobian(
     const GeometryContext& geoContext, const Surface& surface,
     const FreeVector& freeParameters,
     const BoundToFreeMatrix& boundToFreeJacobian,
-    const FreeMatrix& freeTransportJacobian,
     FreeToBoundMatrix& freeToBoundJacobian,
     const FreeVector& freeToPathDerivatives,
     BoundMatrix& fullTransportJacobian) {
@@ -36,17 +35,16 @@ void sympy::boundToBoundTransportJacobian(
   // Calculate the full jacobian from the local/bound parameters at the start
   // surface to local/bound parameters at the final surface
   // @note jac(locA->locB) = jac(gloB->locB)*(1+
-  // pathCorrectionFactor(gloB))*jacTransport(gloA->gloB) *jac(locA->gloA)
+  // pathCorrectionFactor(gloB))*jac(locA->gloB)
 
   boundToBoundTransportJacobianImpl(
-      freeToBoundJacobian.data(), freeTransportJacobian.data(),
-      boundToFreeJacobian.data(), freeToPathDerivatives.data(),
-      freeToPath.data(), fullTransportJacobian.data());
+      freeToBoundJacobian.data(), boundToFreeJacobian.data(),
+      freeToPathDerivatives.data(), freeToPath.data(),
+      fullTransportJacobian.data());
 }
 
 void sympy::boundToCurvilinearTransportJacobian(
     const Vector3& direction, const BoundToFreeMatrix& boundToFreeJacobian,
-    const FreeMatrix& freeTransportJacobian,
     FreeToBoundMatrix& freeToBoundJacobian,
     const FreeVector& freeToPathDerivatives,
     BoundMatrix& fullTransportJacobian) {
@@ -56,12 +54,12 @@ void sympy::boundToCurvilinearTransportJacobian(
   // Calculate the full jocobian from the local parameters at the start surface
   // to curvilinear parameters
   // @note jac(locA->locB) = jac(gloB->locB)*(1+
-  // pathCorrectionFactor(gloB))*jacTransport(gloA->gloB) *jac(locA->gloA)
+  // pathCorrectionFactor(gloB))*jac(locA->gloB)
 
   boundToCurvilinearTransportJacobianImpl(
-      freeToBoundJacobian.data(), freeTransportJacobian.data(),
-      boundToFreeJacobian.data(), freeToPathDerivatives.data(),
-      direction.data(), fullTransportJacobian.data());
+      freeToBoundJacobian.data(), boundToFreeJacobian.data(),
+      freeToPathDerivatives.data(), direction.data(),
+      fullTransportJacobian.data());
 }
 
 }  // namespace Acts::detail

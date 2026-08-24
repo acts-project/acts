@@ -8,10 +8,13 @@
 
 #include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MultiAxisSpec.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
 #include <cmath>
@@ -22,6 +25,7 @@
 
 #include <boost/histogram.hpp>
 #include <pybind11/numpy.h>
+#include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -247,6 +251,43 @@ void addUtilities(py::module_& m) {
   }
 
   {
+    // Axis specs producing IAxis objects
+    py::class_<AxisSpec>(m, "AxisSpec")
+        .def_static("Equidistant", &AxisSpec::Equidistant, "nBins"_a,
+                    "min"_a = std::nullopt, "max"_a = std::nullopt,
+                    "boundaryType"_a = std::nullopt,
+                    "direction"_a = std::nullopt)
+        .def_static("Variable", &AxisSpec::Variable, "edges"_a,
+                    "boundaryType"_a = std::nullopt,
+                    "direction"_a = std::nullopt)
+        .def_static("DeferredEquidistant", &AxisSpec::DeferredEquidistant,
+                    "nBins"_a, "direction"_a = std::nullopt)
+        .def_static("DeferredVariable", &AxisSpec::DeferredVariable,
+                    "normalizedEdges"_a, "boundaryType"_a = std::nullopt,
+                    "direction"_a = std::nullopt)
+        .def("withDirection", &AxisSpec::withDirection, "direction"_a)
+        .def("toDeferred", &AxisSpec::toDeferred)
+        .def_property_readonly("deferred", &AxisSpec::isDeferred)
+        .def_property_readonly("direction", &AxisSpec::direction)
+        .def_property_readonly("nBins", &AxisSpec::nBins)
+        .def_property_readonly("boundaryType", &AxisSpec::boundaryType)
+        .def(py::self == py::self)
+        .def("__repr__", &AxisSpec::toString);
+
+    py::class_<MultiAxisSpec>(m, "MultiAxisSpec")
+        .def(py::init<std::vector<AxisSpec>>(), "axisSpecs"_a)
+        .def("__len__", &MultiAxisSpec::size)
+        .def("__getitem__",
+             [](const MultiAxisSpec& self, std::size_t i) -> const AxisSpec& {
+               return self.axisSpec(i);
+             })
+        .def_property_readonly("deferred", &MultiAxisSpec::isDeferred)
+        .def(py::self == py::self)
+        .def("__repr__", &MultiAxisSpec::toString);
+  }
+
+  {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     // Be able to construct a proto binning
     py::class_<ProtoAxis>(m, "ProtoAxis")
         .def(py::init<AxisBoundaryType, const std::vector<double>&>(),
@@ -264,6 +305,7 @@ void addUtilities(py::module_& m) {
              "bValue"_a, "bType"_a, "minE"_a, "maxE"_a, "nbins"_a)
         .def(py::init<AxisDirection, AxisBoundaryType, std::size_t>(),
              "bValue"_a, "bType"_a, "nbins"_a);
+    ACTS_POP_IGNORE_DEPRECATED()
   }
 
   {

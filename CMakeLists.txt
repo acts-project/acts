@@ -57,6 +57,9 @@ endif()
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 set(ACTS_SOURCELINK_SBO_SIZE "" CACHE STRING "Customize the SBO size used by SourceLink")
 option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
+# code generation related options
+set(ACTS_CODEGEN_PREBUILT_DIR "" CACHE PATH "Directory holding pre-generated code; a generated file found there is used verbatim instead of being regenerated. Defaults to prebuilt-codegen/ next to this file when it exists, which is what release source archives ship")
+option(ACTS_CODEGEN_REQUIRE_PREBUILT "Fail the configure step instead of running the code generators when pre-generated code is missing" OFF)
 # external library options
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
@@ -308,7 +311,7 @@ endif()
 # minimal dependency versions. they are defined here in a single place so
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
-set(_acts_actsvg_version 0.4.56)
+set(_acts_actsvg_version 0.4.57)
 set(_acts_boost_version 1.78.0)
 set(_acts_dd4hep_version 1.26)
 set(_acts_geant4_version 11.1.3)
@@ -331,7 +334,7 @@ set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 3.0.1)
 set(_acts_traccc_version 1.4.0)
 set(_acts_covfie_version 0.15.2)
-set(_acts_vecmem_version 1.25.0)
+set(_acts_vecmem_version 1.27.0)
 set(_acts_annoy_version 1.17.3)
 set(_acts_fastjet_version 3.4.1)
 set(_acts_arrow_version 21.0.0)
@@ -558,6 +561,12 @@ if(ACTS_BUILD_PLUGIN_GNN)
     else()
         message(STATUS "Build GNN plugin for CPU only")
     endif()
+    # FRNN and ModuleMapGraph are built from vendored upstream sources, which
+    # are not ours to keep warning-clean. A normal variable, so it shadows the
+    # cache entry for the subdirectories added below and is restored before any
+    # ACTS target follows.
+    set(_acts_gnn_warning_as_error "${CMAKE_COMPILE_WARNING_AS_ERROR}")
+    set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)
     if(ACTS_GNN_ENABLE_TORCH)
         find_package(Torch REQUIRED)
         if(ACTS_ENABLE_CUDA)
@@ -571,6 +580,7 @@ if(ACTS_BUILD_PLUGIN_GNN)
             add_subdirectory(thirdparty/ModuleMapGraph)
         endif()
     endif()
+    set(CMAKE_COMPILE_WARNING_AS_ERROR "${_acts_gnn_warning_as_error}")
 endif()
 if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_GNN_ENABLE_ONNX)
     find_package(onnxruntime ${_acts_onnxruntime_version} MODULE REQUIRED)

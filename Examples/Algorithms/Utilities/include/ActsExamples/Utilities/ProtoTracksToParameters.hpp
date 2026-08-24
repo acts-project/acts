@@ -12,6 +12,7 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Seed.hpp"
+#include "ActsExamples/EventData/SeedSpacePointSelection.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -43,9 +44,11 @@ class ProtoTracksToParameters final : public IAlgorithm {
     /// The output parameters
     std::string outputParameters = "parameters";
 
-    /// Whether to make tight seeds (closest 3 hits to beampipe) or large
-    /// seeds (evenly spread across the proto track)
-    bool buildTightSeeds = false;
+    /// Which space points of the proto track make up the seed. `SpreadTriplet`
+    /// spreads them across the track, `InnermostTriplet` keeps the three
+    /// closest to the beam pipe.
+    SeedSpacePointSelection spacePointSelection =
+        SeedSpacePointSelection::SpreadTriplet;
 
     /// The tracking geometry
     std::shared_ptr<const Acts::TrackingGeometry> geometry;

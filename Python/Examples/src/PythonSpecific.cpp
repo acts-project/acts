@@ -18,7 +18,7 @@
 #include "ActsExamples/Validation/EffPlotTool.hpp"
 #include "ActsExamples/Validation/PatternRecognitionPerformanceCollector.hpp"
 #include "ActsExamples/Validation/ResPlotTool.hpp"
-#include "ActsExamples/Validation/TrackFitterPerformanceCollector.hpp"
+#include "ActsExamples/Validation/TrackParameterPerformanceCollector.hpp"
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -184,20 +184,20 @@ class PythonPatternRecognitionPerformanceWriter final
 
 }  // namespace
 
-/// A ROOT-free writer that collects track-fitter performance histograms and
+/// A ROOT-free writer that collects track-parameter performance histograms and
 /// exposes them to Python via histograms() after s.run().
-class PythonTrackFitterPerformanceWriter final
+class PythonTrackParameterPerformanceWriter final
     : public WriterT<ConstTrackContainer> {
  public:
   struct Config {
-    /// Input (fitted) tracks collection.
+    /// Input tracks collection.
     std::string inputTracks;
     /// Input particles collection.
     std::string inputParticles;
     /// Input track-particle matching.
     std::string inputTrackParticleMatching;
     /// Output filename (optional).
-    std::string filePath = "performance_track_fitter.root";
+    std::string filePath = "performance_track_parameters.root";
     /// Plot tool configurations.
     ResPlotTool::Config resPlotToolConfig;
     EffPlotTool::Config effPlotToolConfig;
@@ -212,11 +212,11 @@ class PythonTrackFitterPerformanceWriter final
     double warningThresholdFitFailureFraction = 0.55;
   };
 
-  PythonTrackFitterPerformanceWriter(Config cfg, Acts::Logging::Level lvl)
-      : WriterT(cfg.inputTracks, "PythonTrackFitterPerformanceWriter", lvl),
+  PythonTrackParameterPerformanceWriter(Config cfg, Acts::Logging::Level lvl)
+      : WriterT(cfg.inputTracks, "PythonTrackParameterPerformanceWriter", lvl),
         m_cfg(std::move(cfg)),
         m_collector(
-            TrackFitterPerformanceCollector::Config{
+            TrackParameterPerformanceCollector::Config{
                 m_cfg.resPlotToolConfig, m_cfg.effPlotToolConfig,
                 m_cfg.trackSummaryPlotToolConfig, m_cfg.fitFunction,
                 m_cfg.fitMinEntries, m_cfg.fitSigmaRange, m_cfg.fitIterations,
@@ -325,7 +325,7 @@ class PythonTrackFitterPerformanceWriter final
 
   Config m_cfg;
   std::mutex m_writeMutex;
-  TrackFitterPerformanceCollector m_collector;
+  TrackParameterPerformanceCollector m_collector;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
@@ -356,11 +356,11 @@ void addPythonSpecific(py::module_& mex) {
   }
 
   {
-    using Writer = PythonTrackFitterPerformanceWriter;
+    using Writer = PythonTrackParameterPerformanceWriter;
     using Config = Writer::Config;
 
     auto w = py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
-                 mex, "PythonTrackFitterPerformanceWriter")
+                 mex, "PythonTrackParameterPerformanceWriter")
                  .def(py::init<const Config&, Acts::Logging::Level>(),
                       py::arg("config"), py::arg("level"))
                  .def_property_readonly("config", &Writer::config)
