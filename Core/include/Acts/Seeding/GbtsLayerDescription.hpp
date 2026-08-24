@@ -23,6 +23,8 @@ struct GbtsLayerDescription final {
   GbtsLayerType type{};
   /// Reference coordinate (z for barrel, r for endcap).
   float refCoord{};
+  /// Half width in reference direction
+  float halfRefWidth = {};
   /// Minimum boundary coordinate.
   float minBound{};
   /// Maximum boundary coordinate.

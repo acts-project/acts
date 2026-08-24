@@ -322,7 +322,7 @@ GbtsGeometry::GbtsGeometry(
   // calculating bin tables in the connector...
   // calculate bin pairs for graph edge building
 
-  std::vector<const GbtsLayer*> binLayerMap;
+  std::vector<const detail::GbtsLayer*> binLayerMap;
   binLayerMap.resize(m_nEtaBins);
   std::int32_t lastBin1 = -1;
   for (const auto& [layer, vConn] : layerConnections.connectionMap) {

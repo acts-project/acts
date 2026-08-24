@@ -26,6 +26,7 @@ GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
   std::uint32_t nLinks{};
 
   inStream >> nLinks >> connectionMap.etaBinWidth;
+
   for (std::uint32_t l = 0; l < nLinks; l++) {
     std::uint32_t stage{};
     std::uint32_t lIdx{};
@@ -61,6 +62,7 @@ GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
         continue;
       }
     }
+
     if (const auto it = connectionMap.connectionMap.find(stage);
         it == connectionMap.connectionMap.end()) {
       std::vector<std::unique_ptr<GbtsLayerConnection>> v;
@@ -72,6 +74,7 @@ GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
       it->second.push_back(std::move(pC));  // move into existing vector
     }
   }
+
   // re-arrange the connection stages
 
   std::list<const GbtsLayerConnection*> lConns;
