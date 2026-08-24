@@ -13,6 +13,7 @@
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Frustum.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 
 #include <numbers>
 
@@ -104,8 +105,8 @@ class FrustumNavigationPolicy : public INavigationPolicy {
   // The top-level bounding box with the octree
   BoundingBox* m_topBox;
 
-  // associated volume name
-  std::string m_name;
+  // associated volume id
+  GeometryIdentifier m_id;
 };
 
 static_assert(NavigationPolicyConcept<FrustumNavigationPolicy>);

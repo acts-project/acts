@@ -16,7 +16,7 @@ FrustumNavigationPolicy::FrustumNavigationPolicy(const GeometryContext& gctx,
                                                  const Config& config) {
   ACTS_DEBUG("Constructing FrustumNavigationPolicy for volume "
              << volume.volumeName());
-  m_name = volume.volumeName();
+  m_id = volume.geometryId();
   std::vector<BoundingBox*> prims;
   m_boxes.push_back(std::make_unique<BoundingBox>(volume.boundingBox(gctx)));
   prims.push_back(m_boxes.back().get());
@@ -34,7 +34,7 @@ void FrustumNavigationPolicy::initializeCandidates(
     NavigationPolicyState& state, AppendOnlyNavigationStream& stream,
     const Logger& logger) const {
   ACTS_DEBUG("FrustumNavigationPolicy Candidates initialization for volume "
-             << m_name);
+             << m_id);
   auto& s = state.as<State>();
   ACTS_DEBUG("Frustum origin " << s.frustum.origin() << ", frustum dir "
                                << s.frustum.dir());
@@ -50,8 +50,7 @@ void FrustumNavigationPolicy::initializeCandidates(
 	  //To avoid including unnecessary portals, skip any portals from the top-level volume to its child volumes
 	  //If we want these, they will be added when the intersection reaches the child volume
 	  //Only add portals from the top-level volume to volumes it doesn't contain
-          if (tvol->volumeName().compare(m_name) ==
-              0) {
+          if (tvol->geometryId() == m_id) {
             Acts::Result<const TrackingVolume*> pvolr =
                 portal.resolveVolume(gctx, s.frustum.origin(), s.frustum.dir());
             if (pvolr.ok()) {
@@ -88,7 +87,7 @@ bool FrustumNavigationPolicy::isValid(const GeometryContext&,
   auto& s = state.as<State>();
   const Vector3 difference = args.position - s.frustum.origin();
   const auto& normals = s.frustum.normals();
-  auto it_start = std::next(normals, 1);
+  auto it_start = normals.at(1);
   const bool outside = std::any_of(
       it_start, normals.end(),
       [&difference](const auto& normal) { return difference.dot(normal) < 0; });
@@ -106,7 +105,7 @@ void FrustumNavigationPolicy::createState(
     NavigationPolicyStateManager& stateManager, const Logger& logger) const {
   ACTS_DEBUG("create FrustumNavigationPolicy state");
   auto& s = stateManager.pushState<State>();
-  s.frustum = Frustum3(args.position, args.direction, std::numbers::pi / 2);
+  s.frustum = Frustum3(args.position, args.direction, std::numbers::pi / 4);
 }
 
 void FrustumNavigationPolicy::popState(
