@@ -282,6 +282,8 @@ class TrackingGeometry {
   const std::unordered_map<GeometryIdentifier, const Surface*>&
   geoIdSurfaceMap() const;
 
+  /// @param helper The visualization helper that implement the output
+  /// @param gctx The geometry context
   /// @param viewConfig Global view config
   /// @param portalViewConfig View config for portals
   /// @param sensitiveViewConfig View configuration for sensitive surfaces
