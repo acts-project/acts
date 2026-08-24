@@ -225,7 +225,7 @@ std::error_code make_error_code(Acts::TrackParamsEstimationError e);
 
 /// Estimate free track parameters from an ordered set of N >= 3 space points.
 ///
-/// Least-squares generalization of @ref estimateTrackParamsFromSeed: a Taubin
+/// Least-squares generalization of @ref estimateTrackParamsFromSeed. A Taubin
 /// circle fit transverse to the field, optionally refined geometrically, and a
 /// linear fit of the field coordinate against the transverse arc length. Points
 /// are taken in track order and are not sorted; the parameters are expressed at

@@ -352,7 +352,11 @@ Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
   const double phiRef =
       std::atan2(refXy.y() - center.y(), refXy.x() - center.x());
   double phiPrev = phiRef;
-  double sumW = 0., sumS = 0., sumZ = 0., sumSS = 0., sumSZ = 0.;
+  double sumW = 0.;
+  double sumS = 0.;
+  double sumZ = 0.;
+  double sumSS = 0.;
+  double sumSZ = 0.;
   for (std::size_t i = 0; i < local.size(); ++i) {
     const Vector3& p = local[i];
     double phi = std::atan2(p.y() - center.y(), p.x() - center.x());

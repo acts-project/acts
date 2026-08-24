@@ -72,7 +72,13 @@ inline CircleFit fitCircleTaubin(std::span<const Vector3> points,
   meanY *= invW;
 
   // Centroid-relative weighted moments, z = x^2 + y^2.
-  double mxx = 0., myy = 0., mxy = 0., mxz = 0., myz = 0., mzz = 0., mz = 0.;
+  double mxx = 0.;
+  double myy = 0.;
+  double mxy = 0.;
+  double mxz = 0.;
+  double myz = 0.;
+  double mzz = 0.;
+  double mz = 0.;
   for (std::size_t i = 0; i < n; ++i) {
     const double w = weightAt(i);
     const double x = points[i].x() - meanX;
@@ -131,8 +137,8 @@ inline CircleFit fitCircleTaubin(std::span<const Vector3> points,
   const double radius = std::sqrt(r2);
 
   // A radius far beyond the point spread sqrt(mz) is a line.
-  constexpr double maxRadiusToSpread = 1e6;
-  if (radius > maxRadiusToSpread * std::sqrt(mz)) {
+  if (constexpr double maxRadiusToSpread = 1e6;
+      radius > maxRadiusToSpread * std::sqrt(mz)) {
     return result;
   }
 
@@ -184,7 +190,8 @@ inline void refineCircleGeometric(CircleFit& fit,
     }
     const Vector3 delta = jtj.ldlt().solve(-jtr);
     if (!delta.allFinite()) {
-      break;
+      // singular normal equations, keep the fit as it is
+      return;
     }
     fit.center.x() += delta.x();
     fit.center.y() += delta.y();
