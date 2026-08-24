@@ -10,6 +10,7 @@
 #include "../utils/magnetic_field_types.hpp"
 #include "./kernels/build_tracks.cuh"
 #include "./kernels/condense_tracks.cuh"
+#include "./kernels/create_device_detector.cuh"
 #include "./kernels/fill_finding_duplicate_removal_sort_keys.cuh"
 #include "./kernels/fill_finding_propagation_sort_keys.cuh"
 #include "./kernels/find_tracks.cuh"
@@ -33,6 +34,10 @@
 #include <thrust/execution_policy.h>
 #include <thrust/scan.h>
 #include <thrust/sort.h>
+
+// System include(s).
+#include <type_traits>
+#include <utility>
 
 namespace traccc::cuda {
 
@@ -248,7 +253,8 @@ void combinatorial_kalman_filter_algorithm::sort_param_ids_by_keys(
 
 void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
     unsigned int n_threads, const finding_config& config,
-    const detector_buffer& detector, const magnetic_field& field,
+    const detector_buffer& detector, const move_only_any& device_detector,
+    const magnetic_field& field,
     const device::propagate_to_next_surface_payload& payload) const {
   // Establish the kernel launch parameters.
   const unsigned int deviceThreads = warp_size() * 4;
@@ -260,14 +266,19 @@ void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
                                          cuda::bfield_type_list<scalar>>(
       detector, field,
       [&]<typename detector_traits_t, typename bfield_view_t>(
-          const typename detector_traits_t::view& det,
+          const typename detector_traits_t::view&,
           const bfield_view_t& bfield) {
+        const vecmem::data::vector_buffer<typename detector_traits_t::device>&
+            device_detector_buffer =
+                device_detector.as<vecmem::data::vector_buffer<
+                    typename detector_traits_t::device>>();
+
         propagate_to_next_surface<
             traccc::details::ckf_propagator_t<
                 typename detector_traits_t::device, bfield_view_t>,
             bfield_view_t>(deviceBlocks, deviceThreads, 0u,
-                           details::get_stream(stream()), config, det, bfield,
-                           payload);
+                           details::get_stream(stream()), config,
+                           device_detector_buffer.ptr(), bfield, payload);
       });
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
@@ -331,6 +342,30 @@ void combinatorial_kalman_filter_algorithm::build_tracks_kernel(
                           details::get_stream(stream())>>>(run_mbf_smoother,
                                                            calib_cfg, payload);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+}
+
+move_only_any combinatorial_kalman_filter_algorithm::create_device_detector(
+    const detector_buffer& det) const {
+  return detector_buffer_visitor<
+      detector_type_list>(det, [&]<typename detector_traits_t>(
+                                   const typename detector_traits_t::view&
+                                       det_view) {
+    static_assert(
+        std::is_trivially_destructible_v<typename detector_traits_t::device>,
+        "the detector is placement-constructed and never destroyed, so it "
+        "must not need a destructor");
+
+    vecmem::data::vector_buffer<typename detector_traits_t::device>
+        device_detector_buffer(1, mr().main);
+    traccc::cuda::create_device_detector<typename detector_traits_t::device>(
+        details::get_stream(stream()), det_view, device_detector_buffer.ptr());
+    TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+    return move_only_any{std::move(device_detector_buffer)};
+  });
+}
+
+void combinatorial_kalman_filter_algorithm::synchronize() const {
+  stream().synchronize();
 }
 
 }  // namespace traccc::cuda
