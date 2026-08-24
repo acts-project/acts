@@ -92,10 +92,9 @@ bool FrustumNavigationPolicy::isValid(const GeometryContext &,
   const auto &normals = s.frustum.normals();
   auto it_start = normals.begin();
   ++it_start;
-  const bool outside =
-      std::any_of(it_start, normals.end(), [&difference](const auto &normal) {
-        return difference.dot(normal) < 0;
-      });
+  const bool outside = std::any_of(
+      it_start, normals.end(),
+      [&difference](const auto &normal) { return difference.dot(normal) < 0; });
   if (outside) {
     ACTS_DEBUG("FrustumNavigationPolicy: outside frustum");
     return false;
@@ -118,4 +117,4 @@ void FrustumNavigationPolicy::popState(
   ACTS_DEBUG("remove FrustumNavigationPolicy state");
   stateManager.popState();
 }
-} // namespace Acts::Experimental
+}  // namespace Acts::Experimental
