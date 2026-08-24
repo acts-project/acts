@@ -427,14 +427,17 @@ GbtsGeometry::GbtsGeometry(
           // add bl.first as exit bin if not outLinks or is (potentially) part
           // of a link circle (A->B->..->A)
           if (binRadii.at(bl.first).first < 0.0f) {
+            // not a self link
             linkCircle = false;
             break;
           }
           if (binRadii.at(bl.first).first <= binRadii.at(bin2).second) {
+            // only one viable intra-layer link direction
             linkCircle = false;
             break;
           }
           if (binRadii.at(bl.first).second >= binRadii.at(bin2).first) {
+            // only one viable intra-layer link direction
             linkCircle = false;
             break;
           }
