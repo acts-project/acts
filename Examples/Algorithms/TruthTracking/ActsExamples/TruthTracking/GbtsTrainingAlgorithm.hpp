@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Seeding/GbtsTrainingTool.hpp"
+#include "Acts/Seeding/GbtsLayerConnectionTool.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -83,7 +83,7 @@ class GbtsTrainingAlgorithm final : public IAlgorithm {
   ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
       this, "MeasurementSimHitsMap"};
   /// mutex used for thread safety
-  mutable std::mutex m_gbtsTrainingToolMutex;
+  mutable std::mutex m_gbtsLayerConnectionToolMutex;
   /// layer connection tool from core
   mutable std::optional<Acts::Experimental::GbtsLayerConnectionTool>
       m_layerConnectionTool;

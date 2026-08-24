@@ -45,7 +45,9 @@ set(ACTS_GENERATE_PYTHON_STUBS ${DETRAY_GENERATE_PYTHON_STUBS})
 
 if(DETRAY_BUILD_PYTHON_BINDINGS)
     add_subdirectory(Core)
+    add_subdirectory(Io)
     add_subdirectory(Examples)
+    add_subdirectory(Tests)
 endif()
 
 # Install the generated stub files alongside the package.
