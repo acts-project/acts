@@ -68,9 +68,6 @@ class GbtsLayer final {
   float etaBin() const { return m_etaBin; }
   float minEta() const { return m_minEta; }
 
-  const std::vector<float>& minRadius() const { return m_minRadius; }
-  const std::vector<float>& maxRadius() const { return m_maxRadius; }
-
   /// Get the layer description
   /// @return Reference to the layer description
   const GbtsLayerDescription& layerDescription() const {

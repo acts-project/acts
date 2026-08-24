@@ -322,9 +322,9 @@ GbtsGeometry::GbtsGeometry(
   // calculating bin tables in the connector...
   // calculate bin pairs for graph edge building
 
+  std::vector<const GbtsLayer*> binLayerMap;
+  binLayerMap.resize(m_nEtaBins);
   std::int32_t lastBin1 = -1;
-  std::vector<std::pair<float, float>> binRadii(m_nEtaBins,
-                                                std::make_pair(-1.0f, -1.0f));
   for (const auto& [layer, vConn] : layerConnections.connectionMap) {
     for (const auto& connection : vConn) {
       const std::uint32_t src = connection->src;  // n2 : the new connectors
@@ -357,12 +357,10 @@ GbtsGeometry::GbtsGeometry(
 
           const std::int32_t bin1Idx = pL1->bins().at(b1);
           const std::int32_t bin2Idx = pL2->bins().at(b2);
-          if (src == dst) {
-            binRadii.at(bin1Idx) = std::pair<float, float>(
-                pL1->maxRadius()[b1], pL1->minRadius()[b1]);
-            binRadii.at(bin2Idx) = std::pair<float, float>(
-                pL2->maxRadius()[b2], pL2->minRadius()[b2]);
-          }
+
+          binLayerMap[bin1Idx] = pL1;
+          binLayerMap[bin2Idx] = pL2;
+
           if (bin1Idx != lastBin1) {
             // adding a new group
             m_binGroups.emplace_back(bin1Idx,
@@ -415,32 +413,24 @@ GbtsGeometry::GbtsGeometry(
   while (!binMap.empty()) {
     exitBins.clear();
 
-    // 2a. find all bins with zero outgoing links or if part of a link circle
+    // 2a. find all bins with zero outgoing links or if
+    // remaining links form an intra-layer link circle
 
     for (const auto& bl : binMap) {
       auto& binLinks = bl.second;
       auto& outLinks = binLinks.first;
-
       if (!outLinks.empty()) {
         bool linkCircle = true;
         for (auto bin2 : outLinks) {
-          // add bl.first as exit bin if not outLinks or is (potentially) part
-          // of a link circle (A->B->..->A)
-          if (binRadii.at(bl.first).first < 0.0f) {
-            // not a self link
+          if (binLayerMap[bl.first] != binLayerMap[bin2]) {
             linkCircle = false;
             break;
           }
-          if (binRadii.at(bl.first).first <= binRadii.at(bin2).second) {
-            // only one viable intra-layer link direction
-            linkCircle = false;
-            break;
-          }
-          if (binRadii.at(bl.first).second >= binRadii.at(bin2).first) {
-            // only one viable intra-layer link direction
-            linkCircle = false;
-            break;
-          }
+          // in the barrel, potential for 1->2->1, we want both links
+          // in the endcap only 1->1 since bins are separated in radius
+          linkCircle = bl.first == bin2 ||
+                       binLayerMap[bl.first]->layerDescription().type ==
+                           GbtsLayerType::Barrel;
         }
         if (!linkCircle)
           continue;
