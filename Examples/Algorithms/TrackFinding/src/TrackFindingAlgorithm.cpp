@@ -30,8 +30,6 @@
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
-#include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/HashCombine.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -51,19 +49,6 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
-
-// Specialize std::hash for SeedIdentifier
-// This is required to use SeedIdentifier as a key in an `std::unordered_map`.
-template <class T, std::size_t N>
-struct std::hash<std::array<T, N>> {
-  std::size_t operator()(const std::array<T, N>& array) const {
-    std::size_t result = 0;
-    for (auto&& element : array) {
-      result = Acts::hashMixAndCombine(result, element);
-    }
-    return result;
-  }
-};
 
 namespace ActsExamples {
 
@@ -122,56 +107,80 @@ class MeasurementSelector {
   }
 };
 
-/// Source link indices of the bottom, middle, top measurements.
+/// Flags the seeds whose measurements are a subset of an already found track.
+///
 /// In case of strip seeds only the first source link of the pair is used.
-using SeedIdentifier = std::array<Index, 3>;
+class SeedCoverage {
+ public:
+  /// Index the seeds by their measurements.
+  ///
+  /// @param seeds The seeds to index.
+  void index(const SeedContainer& seeds) {
+    m_seedSize.assign(seeds.size(), 0);
+    m_covered.assign(seeds.size(), false);
+    m_counts.assign(seeds.size(), 0);
 
-/// Build a seed identifier from a seed.
-///
-/// @param seed The seed to build the identifier from.
-/// @return The seed identifier.
-SeedIdentifier makeSeedIdentifier(const ConstSeedProxy& seed) {
-  SeedIdentifier result;
-
-  for (const auto& [i, spIndex] : Acts::enumerate(seed.spacePointIndices())) {
-    const ConstSpacePointProxy sp =
-        seed.container().spacePointContainer().at(spIndex);
-    const Acts::SourceLink& firstSourceLink = sp.sourceLinks().front();
-    result.at(i) = firstSourceLink.get<IndexSourceLink>().index();
-  }
-
-  return result;
-}
-
-/// Visit all possible seed identifiers of a track.
-///
-/// @param track The track to visit the seed identifiers of.
-/// @param visitor The visitor to call for each seed identifier.
-template <typename Visitor>
-void visitSeedIdentifiers(const TrackProxy& track, Visitor visitor) {
-  // first we collect the source link indices of the track states
-  std::vector<Index> sourceLinkIndices;
-  sourceLinkIndices.reserve(track.nMeasurements());
-  for (const auto& trackState : track.trackStatesReversed()) {
-    if (!trackState.hasUncalibratedSourceLink()) {
-      continue;
-    }
-    const Acts::SourceLink& sourceLink = trackState.getUncalibratedSourceLink();
-    sourceLinkIndices.push_back(sourceLink.get<IndexSourceLink>().index());
-  }
-
-  // then we iterate over all possible triplets and form seed identifiers
-  for (std::size_t i = 0; i < sourceLinkIndices.size(); ++i) {
-    for (std::size_t j = i + 1; j < sourceLinkIndices.size(); ++j) {
-      for (std::size_t k = j + 1; k < sourceLinkIndices.size(); ++k) {
-        // Putting them into reverse order (k, j, i) to compensate for the
-        // `trackStatesReversed` above.
-        visitor({sourceLinkIndices.at(k), sourceLinkIndices.at(j),
-                 sourceLinkIndices.at(i)});
+    for (std::size_t iSeed = 0; iSeed < seeds.size(); ++iSeed) {
+      const ConstSeedProxy seed = seeds.at(iSeed);
+      for (const SpacePointIndex spIndex : seed.spacePointIndices()) {
+        const ConstSpacePointProxy sp = seeds.spacePointContainer().at(spIndex);
+        if (sp.sourceLinks().empty()) {
+          continue;
+        }
+        const Index measurement =
+            sp.sourceLinks().front().get<IndexSourceLink>().index();
+        m_measurementToSeeds[measurement].push_back(iSeed);
+        ++m_seedSize[iSeed];
       }
     }
   }
-}
+
+  /// Flag every seed whose measurements the track covers.
+  ///
+  /// @param track The track that was found.
+  void addCoverageFrom(const TrackProxy& track) {
+    for (const auto& trackState : track.trackStatesReversed()) {
+      if (!trackState.hasUncalibratedSourceLink()) {
+        continue;
+      }
+      const Index measurement =
+          trackState.getUncalibratedSourceLink().get<IndexSourceLink>().index();
+      const auto it = m_measurementToSeeds.find(measurement);
+      if (it == m_measurementToSeeds.end()) {
+        continue;
+      }
+      for (const std::size_t iSeed : it->second) {
+        if (m_counts[iSeed] == 0) {
+          m_touched.push_back(iSeed);
+        }
+        ++m_counts[iSeed];
+        if (m_counts[iSeed] >= m_seedSize[iSeed]) {
+          m_covered[iSeed] = true;
+        }
+      }
+    }
+
+    for (const std::size_t iSeed : m_touched) {
+      m_counts[iSeed] = 0;
+    }
+    m_touched.clear();
+  }
+
+  /// Whether a previously found track covers the seed.
+  ///
+  /// @param iSeed The index of the seed.
+  /// @return True if the seed is covered.
+  bool isCovered(std::size_t iSeed) const { return m_covered.at(iSeed); }
+
+ private:
+  std::unordered_map<Index, std::vector<std::size_t>> m_measurementToSeeds;
+  std::vector<std::uint32_t> m_seedSize;
+  std::vector<bool> m_covered;
+
+  /// per track scratch, reset through `m_touched`
+  std::vector<std::uint32_t> m_counts;
+  std::vector<std::size_t> m_touched;
+};
 
 class BranchStopper {
  public:
@@ -429,7 +438,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   unsigned int nSeed = 0;
 
   // A map indicating whether a seed has been discovered already
-  std::unordered_map<SeedIdentifier, bool> discoveredSeeds;
+  SeedCoverage seedCoverage;
 
   auto addTrack = [&](const TrackProxy& track) {
     ++m_nFoundTracks;
@@ -445,12 +454,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     }
 
     // flag seeds which are covered by the track
-    visitSeedIdentifiers(track, [&](const SeedIdentifier& seedIdentifier) {
-      if (auto it = discoveredSeeds.find(seedIdentifier);
-          it != discoveredSeeds.end()) {
-        it->second = true;
-      }
-    });
+    seedCoverage.addCoverageFrom(track);
 
     ++m_nSelectedTracks;
 
@@ -461,10 +465,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   if (seeds != nullptr && m_cfg.seedDeduplication) {
     // Index the seeds for deduplication
-    for (const auto& seed : *seeds) {
-      SeedIdentifier seedIdentifier = makeSeedIdentifier(seed);
-      discoveredSeeds.emplace(seedIdentifier, false);
-    }
+    seedCoverage.index(*seeds);
   }
 
   for (std::size_t iSeed = 0; iSeed < initialParameters.size(); ++iSeed) {
@@ -474,10 +475,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       const ConstSeedProxy seed = seeds->at(iSeed);
 
       if (m_cfg.seedDeduplication) {
-        SeedIdentifier seedIdentifier = makeSeedIdentifier(seed);
-        // check if the seed has been discovered already
-        if (auto it = discoveredSeeds.find(seedIdentifier);
-            it != discoveredSeeds.end() && it->second) {
+        // check if an already found track covers the seed
+        if (seedCoverage.isCovered(iSeed)) {
           m_nDeduplicatedSeeds++;
           ACTS_VERBOSE("Skipping seed " << iSeed << " due to deduplication.");
           continue;

@@ -16,6 +16,7 @@
 #include "Acts/Propagator/detail/SympyJacobianEngine.hpp"
 
 #include <cmath>
+#include <span>
 
 #include "codegen/sympy_stepper_math.hpp"
 
@@ -65,7 +66,6 @@ void SympyStepper::initialize(State& state, const BoundVector& boundParams,
         state.options.geoContext, freeParams.segment<3>(eFreePos0),
         freeParams.segment<3>(eFreeDir0));
     state.jacobian = BoundMatrix::Identity();
-    state.jacTransport = FreeMatrix::Identity();
     state.derivative = FreeVector::Zero();
   }
 }
@@ -80,10 +80,9 @@ SympyStepper::boundState(
   state.materialEffectsAccumulator.reset();
   return detail::sympy::boundState(
       state.options.geoContext, surface, state.cov, state.jacobian,
-      state.jacTransport, state.derivative, state.jacToGlobal,
-      additionalFreeCovariance, state.pars, state.particleHypothesis,
-      state.covTransport && transportCov, state.pathAccumulated,
-      freeToBoundCorrection);
+      state.derivative, state.jacToGlobal, additionalFreeCovariance, state.pars,
+      state.particleHypothesis, state.covTransport && transportCov,
+      state.pathAccumulated, freeToBoundCorrection);
 }
 
 bool SympyStepper::prepareCurvilinearState(State& state) const {
@@ -99,10 +98,9 @@ SympyStepper::curvilinearState(State& state, bool transportCov) const {
           direction(state));
   state.materialEffectsAccumulator.reset();
   return detail::sympy::curvilinearState(
-      state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, additionalFreeCovariance, state.pars,
-      state.particleHypothesis, state.covTransport && transportCov,
-      state.pathAccumulated);
+      state.cov, state.jacobian, state.derivative, state.jacToGlobal,
+      additionalFreeCovariance, state.pars, state.particleHypothesis,
+      state.covTransport && transportCov, state.pathAccumulated);
 }
 
 void SympyStepper::update(State& state, const FreeVector& freeParams,
@@ -127,9 +125,8 @@ void SympyStepper::update(State& state, const Vector3& uposition,
 
 void SympyStepper::transportCovarianceToCurvilinear(State& state) const {
   detail::sympy::transportCovarianceToCurvilinear(
-      state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, std::nullopt,
-      state.pars.template segment<3>(eFreeDir0));
+      state.cov, state.jacobian, state.derivative, state.jacToGlobal,
+      std::nullopt, state.pars.template segment<3>(eFreeDir0));
 }
 
 void SympyStepper::transportCovarianceToBound(
@@ -137,8 +134,8 @@ void SympyStepper::transportCovarianceToBound(
     const FreeToBoundCorrection& freeToBoundCorrection) const {
   detail::sympy::transportCovarianceToBound(
       state.options.geoContext, surface, state.cov, state.jacobian,
-      state.jacTransport, state.derivative, state.jacToGlobal, std::nullopt,
-      state.pars, freeToBoundCorrection);
+      state.derivative, state.jacToGlobal, std::nullopt, state.pars,
+      freeToBoundCorrection);
 }
 
 Result<double> SympyStepper::step(State& state, Direction propDir,
@@ -154,20 +151,21 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
   const double qop = qOverP(state);
   const double pabs = absoluteMomentum(state);
   const double m = particleHypothesis(state).mass();
-  const PdgParticle absPdg = particleHypothesis(state).absolutePdg();
-  const double q = charge(state);
-  const double absQ = std::abs(q);
 
   if (state.options.doDense && material != nullptr &&
       pabs < state.options.dense.momentumCutOff) {
     return EigenStepperError::StepInvalid;
   }
 
-  const auto getB = [&](const double* p) -> Result<Vector3> {
+  const auto getB = [this, &state](std::span<const double, 3> p) {
     return getField(state, {p[0], p[1], p[2]});
   };
 
-  const auto getG = [&](const double* p, double l) -> double {
+  // Only the cold dense path needs these.
+  const auto getG = [this, &state, material, m, timeDirection](
+                        std::span<const double, 3> p, double l) -> double {
+    const PdgParticle absPdg = particleHypothesis(state).absolutePdg();
+    const double absQ = std::abs(charge(state));
     double newPabs = particleHypothesis(state).extractMomentum(l);
     if (newPabs < state.options.dense.momentumCutOff) {
       return 0.;
@@ -216,24 +214,27 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
 
     // For details about the factor 4 see ATL-SOFT-PUB-2009-001
     Result<bool> res = Result<bool>::success(false);
+    const std::span<const double, 3> startPos(pos.data(), 3);
+    const std::span<const double, 3> startDir(dir.data(), 3);
+    const std::span<double, 3> endPos(
+        state.pars.template segment<3>(eFreePos0).data(), 3);
+    const std::span<double, 3> endDir(
+        state.pars.template segment<3>(eFreeDir0).data(), 3);
+    const std::span<double, 8> derivative(state.derivative.data(), 8);
+    const std::span<double> jac =
+        state.covTransport ? std::span<double>(state.jacToGlobal.data(),
+                                               state.jacToGlobal.size())
+                           : std::span<double>();
     if (!state.options.doDense || material == nullptr) {
-      res =
-          rk4_vacuum(pos.data(), dir.data(), t, h, qop, m, pabs, getB,
-                     &errorEstimate, 4 * state.options.stepTolerance,
-                     state.pars.template segment<3>(eFreePos0).data(),
-                     state.pars.template segment<1>(eFreeTime).data(),
-                     state.pars.template segment<3>(eFreeDir0).data(),
-                     state.derivative.data(),
-                     state.covTransport ? state.jacTransport.data() : nullptr);
+      res = rk4_vacuum(startPos, startDir, t, h, qop, m, pabs, getB,
+                       errorEstimate, 4 * state.options.stepTolerance, endPos,
+                       state.pars[eFreeTime], endDir, derivative, jac);
     } else {
-      res = rk4_dense(pos.data(), dir.data(), t, h, qop, m, q, pabs, getB, getG,
-                      &errorEstimate, 4 * state.options.stepTolerance,
-                      state.pars.template segment<3>(eFreePos0).data(),
-                      state.pars.template segment<1>(eFreeTime).data(),
-                      state.pars.template segment<3>(eFreeDir0).data(),
-                      state.pars.template segment<1>(eFreeQOverP).data(),
-                      state.derivative.data(),
-                      state.covTransport ? state.jacTransport.data() : nullptr);
+      res =
+          rk4_dense(startPos, startDir, t, h, qop, m, charge(state), pabs, getB,
+                    getG, errorEstimate, 4 * state.options.stepTolerance,
+                    endPos, state.pars[eFreeTime], endDir,
+                    state.pars[eFreeQOverP], derivative, jac);
     }
     if (!res.ok()) {
       return res.error();
