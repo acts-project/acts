@@ -87,7 +87,8 @@ bool FrustumNavigationPolicy::isValid(const GeometryContext&,
   auto& s = state.as<State>();
   const Vector3 difference = args.position - s.frustum.origin();
   const auto& normals = s.frustum.normals();
-  auto it_start = normals.at(1);
+  auto it_start = normals.begin();
+  ++it_start;
   const bool outside = std::any_of(
       it_start, normals.end(),
       [&difference](const auto& normal) { return difference.dot(normal) < 0; });
