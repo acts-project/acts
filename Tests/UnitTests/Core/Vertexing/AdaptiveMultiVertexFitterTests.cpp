@@ -21,6 +21,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AnnealingUtility.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AMVFInfo.hpp"
@@ -736,6 +737,184 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   }
   CHECK_CLOSE_ABS(vtx2FQ.first, expVtx2chi2, 0.001);
   CHECK_CLOSE_ABS(vtx2FQ.second, expVtx2ndf, 0.001);
+}
+
+/// @brief Unit test comparing the deprecated State based interface against the
+/// VertexFitProblem/Cache interface it forwards to
+///
+/// Fits the same three vertices twice, once through each interface, and
+/// requires the fitted vertices and the fit bookkeeping to agree exactly.
+BOOST_AUTO_TEST_CASE(deprecated_state_interface) {
+  int mySeed = 31415;
+  std::mt19937 gen(mySeed);
+
+  auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 1_T});
+  EigenStepper<> stepper(bField);
+  auto propagator = std::make_shared<Propagator>(stepper);
+
+  VertexingOptions vertexingOptions(geoContext, magFieldContext);
+
+  ImpactPointEstimator::Config ip3dEstCfg(bField, propagator);
+  ImpactPointEstimator ip3dEst(ip3dEstCfg);
+
+  Linearizer::Config ltConfig;
+  ltConfig.bField = bField;
+  ltConfig.propagator = propagator;
+  Linearizer linearizer(ltConfig);
+
+  AdaptiveMultiVertexFitter::Config fitterCfg(ip3dEst);
+  fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
+  fitterCfg.doSmoothing = true;
+  fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
+
+  AdaptiveMultiVertexFitter fitter(std::move(fitterCfg));
+
+  std::vector<Vector3> vtxPosVec{Vector3(-0.15_mm, -0.1_mm, -1.5_mm),
+                                 Vector3(-0.1_mm, -0.15_mm, -3._mm),
+                                 Vector3(0.2_mm, 0.2_mm, 10._mm)};
+
+  double resD0 = resIPDist(gen);
+  double resZ0 = resIPDist(gen);
+  double resPh = resAngDist(gen);
+  double resTh = resAngDist(gen);
+  double resQp = resQoPDist(gen);
+
+  const unsigned int nTracksPerVtx = 4;
+  std::vector<BoundTrackParameters> allTracks;
+  for (unsigned int iTrack = 0; iTrack < nTracksPerVtx * vtxPosVec.size();
+       iTrack++) {
+    double q = std::copysign(1., qDist(gen));
+
+    Covariance covMat;
+    covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
+        0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
+        0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
+
+    BoundVector paramVec;
+    paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
+        q / pTDist(gen), 0.;
+
+    std::shared_ptr<PerigeeSurface> perigeeSurface =
+        Surface::makeShared<PerigeeSurface>(
+            vtxPosVec[static_cast<int>(iTrack / nTracksPerVtx)]);
+
+    allTracks.emplace_back(perigeeSurface, paramVec, std::move(covMat),
+                           ParticleHypothesis::pion());
+  }
+
+  // Seed vertices, one independent set per interface under test
+  auto makeSeeds = [&]() {
+    std::vector<Vertex> vtxList;
+    for (const auto& vtxPos : vtxPosVec) {
+      Vertex vtx(vtxPos);
+      vtx.setFullCovariance(SquareMatrix4::Identity());
+      vtxList.push_back(vtx);
+    }
+    return vtxList;
+  };
+
+  std::vector<Vertex> vtxListNew = makeSeeds();
+  std::vector<Vertex> vtxListOld = makeSeeds();
+
+  // Track-to-vertex assignment, identical for both interfaces: track 0 is
+  // shared between the first two vertices
+  auto vertexOfTrack = [&](unsigned int iTrack) {
+    return static_cast<std::size_t>(iTrack / nTracksPerVtx);
+  };
+
+  VertexFitProblem problem;
+  AdaptiveMultiVertexFitter::Cache cache(*bField, magFieldContext);
+
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  AdaptiveMultiVertexFitter::State state(*bField, magFieldContext);
+
+  for (unsigned int iTrack = 0; iTrack < allTracks.size(); iTrack++) {
+    InputTrack inputTrack{&allTracks[iTrack]};
+
+    std::vector<std::size_t> vtxIndices{vertexOfTrack(iTrack)};
+    if (iTrack == 0) {
+      vtxIndices.push_back(1);
+    }
+
+    for (std::size_t vtxIdx : vtxIndices) {
+      Vertex* vtxNew = &vtxListNew.at(vtxIdx);
+      problem.candidates[vtxNew].trackLinks.push_back(inputTrack);
+      problem.tracksAtVertices.emplace(
+          std::make_pair(inputTrack, vtxNew),
+          TrackAtVertex(1., allTracks[iTrack], inputTrack));
+
+      Vertex* vtxOld = &vtxListOld.at(vtxIdx);
+      state.vtxInfoMap[vtxOld].trackLinks.push_back(inputTrack);
+      state.tracksAtVerticesMap.emplace(
+          std::make_pair(inputTrack, vtxOld),
+          TrackAtVertex(1., allTracks[iTrack], inputTrack));
+    }
+  }
+
+  for (std::size_t vtxIdx = 0; vtxIdx < vtxPosVec.size(); vtxIdx++) {
+    problem.addVertexToMultiMap(vtxListNew.at(vtxIdx));
+    state.addVertexToMultiMap(vtxListOld.at(vtxIdx));
+  }
+
+  // Fit the first vertex, which drags in the second one via the shared track,
+  // then the third one on its own
+  for (std::size_t vtxIdx : {0u, 2u}) {
+    std::vector<Vertex*> newVerticesNew = {&vtxListNew.at(vtxIdx)};
+    BOOST_CHECK(
+        fitter.addVtxToFit(problem, newVerticesNew, vertexingOptions, cache)
+            .ok());
+
+    std::vector<Vertex*> newVerticesOld = {&vtxListOld.at(vtxIdx)};
+    BOOST_CHECK(
+        fitter.addVtxToFit(state, newVerticesOld, vertexingOptions).ok());
+  }
+
+  // The fitted vertices have to agree, and so has the fit bookkeeping the
+  // caller reads back off the state
+  for (std::size_t vtxIdx = 0; vtxIdx < vtxPosVec.size(); vtxIdx++) {
+    const Vertex& vtxNew = vtxListNew.at(vtxIdx);
+    const Vertex& vtxOld = vtxListOld.at(vtxIdx);
+
+    BOOST_CHECK_EQUAL(vtxNew.fullPosition(), vtxOld.fullPosition());
+    BOOST_CHECK_EQUAL(vtxNew.fullCovariance(), vtxOld.fullCovariance());
+    BOOST_CHECK_EQUAL(vtxNew.fitQuality().first, vtxOld.fitQuality().first);
+    BOOST_CHECK_EQUAL(vtxNew.tracks().size(), vtxOld.tracks().size());
+
+    const VertexFitCandidate& candidate =
+        problem.candidates.at(&vtxListNew.at(vtxIdx));
+    const VertexInfo& info = state.vtxInfoMap.at(&vtxListOld.at(vtxIdx));
+
+    BOOST_CHECK_EQUAL(candidate.seedPosition, info.seedPosition);
+    BOOST_CHECK_EQUAL(candidate.trackLinks.size(), info.trackLinks.size());
+    BOOST_CHECK_EQUAL(candidate.constraint.fullPosition(),
+                      info.constraint.fullPosition());
+
+    // The scratch data the fit leaves behind is written back into the state
+    const VertexScratch& scratch =
+        cache.vertexScratch.at(&vtxListNew.at(vtxIdx));
+    BOOST_CHECK_EQUAL(scratch.linPoint, info.linPoint);
+    BOOST_CHECK_EQUAL(scratch.oldPosition, info.oldPosition);
+    BOOST_CHECK_EQUAL(scratch.relinearize, info.relinearize);
+    BOOST_CHECK_EQUAL(scratch.impactParams3D.size(),
+                      info.impactParams3D.size());
+
+    for (const auto& trk : candidate.trackLinks) {
+      const TrackAtVertex& trkAtVtxNew = problem.tracksAtVertices.at(
+          std::make_pair(trk, &vtxListNew.at(vtxIdx)));
+      const TrackAtVertex& trkAtVtxOld = state.tracksAtVerticesMap.at(
+          std::make_pair(trk, &vtxListOld.at(vtxIdx)));
+      BOOST_CHECK_EQUAL(trkAtVtxNew.trackWeight, trkAtVtxOld.trackWeight);
+      BOOST_CHECK_EQUAL(trkAtVtxNew.vertexCompatibility,
+                        trkAtVtxOld.vertexCompatibility);
+      BOOST_CHECK_EQUAL(trkAtVtxNew.chi2Track, trkAtVtxOld.chi2Track);
+    }
+  }
+
+  // The vertex collection is handed back as well
+  BOOST_CHECK_EQUAL(problem.vertices.size(), state.vertexCollection.size());
+  BOOST_CHECK_EQUAL(problem.trackToVertices.size(),
+                    state.trackToVerticesMultiMap.size());
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 BOOST_AUTO_TEST_SUITE_END()

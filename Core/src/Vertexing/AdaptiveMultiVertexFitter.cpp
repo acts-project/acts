@@ -436,4 +436,93 @@ void AdaptiveMultiVertexFitter::logDebugData(const VertexFitProblem& problem,
   }
 }
 
+void AdaptiveMultiVertexFitter::decomposeState(State& state,
+                                               VertexFitProblem& problem,
+                                               Cache& cache) {
+  problem.vertices = std::move(state.vertexCollection);
+  problem.trackToVertices = std::move(state.trackToVerticesMultiMap);
+  problem.tracksAtVertices = std::move(state.tracksAtVerticesMap);
+
+  cache.annealingState = state.annealingState;
+
+  for (auto& [vtx, info] : state.vtxInfoMap) {
+    VertexFitCandidate candidate;
+    candidate.constraint = std::move(info.constraint);
+    candidate.seedPosition = info.seedPosition;
+    candidate.trackLinks = std::move(info.trackLinks);
+    problem.candidates.emplace(vtx, std::move(candidate));
+
+    VertexScratch scratch;
+    scratch.linPoint = info.linPoint;
+    scratch.oldPosition = info.oldPosition;
+    scratch.relinearize = info.relinearize;
+    // swap rather than move-assign: the mapped type is const, so the map is
+    // not assignable
+    scratch.impactParams3D.swap(info.impactParams3D);
+    cache.vertexScratch.emplace(vtx, std::move(scratch));
+  }
+
+  state.vtxInfoMap.clear();
+}
+
+void AdaptiveMultiVertexFitter::recomposeState(State& state,
+                                               VertexFitProblem& problem,
+                                               Cache& cache) {
+  state.vertexCollection = std::move(problem.vertices);
+  state.trackToVerticesMultiMap = std::move(problem.trackToVertices);
+  state.tracksAtVerticesMap = std::move(problem.tracksAtVertices);
+
+  state.annealingState = cache.annealingState;
+  state.ipState = std::move(cache.ipState);
+  state.fieldCache = std::move(cache.fieldCache);
+
+  state.vtxInfoMap.clear();
+  for (auto& [vtx, candidate] : problem.candidates) {
+    VertexInfo info;
+    info.constraint = std::move(candidate.constraint);
+    info.seedPosition = candidate.seedPosition;
+    info.trackLinks = std::move(candidate.trackLinks);
+
+    // A vertex the fit never touched has no scratch entry yet. The old state
+    // seeded those fields from the seed position at construction, which is
+    // what scratchFor would do on first access.
+    info.linPoint = candidate.seedPosition;
+    info.oldPosition = candidate.seedPosition;
+    if (auto it = cache.vertexScratch.find(vtx);
+        it != cache.vertexScratch.end()) {
+      info.linPoint = it->second.linPoint;
+      info.oldPosition = it->second.oldPosition;
+      info.relinearize = it->second.relinearize;
+      info.impactParams3D.swap(it->second.impactParams3D);
+    }
+
+    state.vtxInfoMap.emplace(vtx, std::move(info));
+  }
+}
+
+Result<void> AdaptiveMultiVertexFitter::addVtxToFit(
+    State& state, const std::vector<Vertex*>& newVertices,
+    const VertexingOptions& vertexingOptions) const {
+  VertexFitProblem problem;
+  Cache cache(std::move(state.ipState), std::move(state.fieldCache));
+  decomposeState(state, problem, cache);
+
+  auto res = addVtxToFit(problem, newVertices, vertexingOptions, cache);
+
+  recomposeState(state, problem, cache);
+  return res;
+}
+
+Result<void> AdaptiveMultiVertexFitter::fit(
+    State& state, const VertexingOptions& vertexingOptions) const {
+  VertexFitProblem problem;
+  Cache cache(std::move(state.ipState), std::move(state.fieldCache));
+  decomposeState(state, problem, cache);
+
+  auto res = fit(problem, vertexingOptions, cache);
+
+  recomposeState(state, problem, cache);
+  return res;
+}
+
 }  // namespace Acts
