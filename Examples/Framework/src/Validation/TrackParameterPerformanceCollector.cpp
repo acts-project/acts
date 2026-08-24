@@ -122,7 +122,7 @@ void TrackParameterPerformanceCollector::logSummary() const {
 }
 
 template <std::size_t Dim>
-void TrackFitterPerformanceCollector::addFittedProfiles(
+void TrackParameterPerformanceCollector::addFittedProfiles(
     const std::map<std::string, Acts::Experimental::Histogram<Dim>>& histMap,
     const std::string& meanPrefix, const std::string& widthPrefix,
     std::vector<Acts::Experimental::Histogram<Dim - 1>>& out) const {
@@ -147,8 +147,8 @@ void TrackFitterPerformanceCollector::addFittedProfiles(
   }
 }
 
-TrackFitterPerformanceCollector::FittedProfiles
-TrackFitterPerformanceCollector::fitProfiles() const {
+TrackParameterPerformanceCollector::FittedProfiles
+TrackParameterPerformanceCollector::fitProfiles() const {
   FittedProfiles profiles;
 
   if (!m_cfg.fitFunction) {

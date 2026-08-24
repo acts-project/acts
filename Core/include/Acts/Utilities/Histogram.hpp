@@ -52,9 +52,7 @@ using BoostProfileHist = decltype(boost::histogram::make_profile(
 /// and a variance. An unweighted @c fill() accumulates the count into both,
 /// giving the usual @f$ \sqrt{N} @f$ error; @c setBin() can instead write an
 /// arbitrary value/error pair, e.g. the result of a Gaussian fit.
-using BoostHist = decltype(boost::histogram::make_histogram_with(
-    boost::histogram::dense_storage<
-        boost::histogram::accumulators::weighted_sum<double>>(),
+using BoostHist = decltype(boost::histogram::make_weighted_histogram(
     std::declval<std::vector<AxisVariant>>()));
 
 /// @brief Multi-dimensional histogram wrapper using boost::histogram for data collection
@@ -81,9 +79,7 @@ class Histogram {
             const std::array<AxisVariant, Dim>& axes)
       : m_name(std::move(name)),
         m_title(std::move(title)),
-        m_hist(boost::histogram::make_histogram_with(
-            boost::histogram::dense_storage<
-                boost::histogram::accumulators::weighted_sum<double>>(),
+        m_hist(boost::histogram::make_weighted_histogram(
             std::vector<AxisVariant>(axes.begin(), axes.end()))) {}
 
   /// Copy constructor
@@ -289,13 +285,9 @@ class Efficiency {
              const std::array<AxisVariant, Dim>& axes)
       : m_name(std::move(name)),
         m_title(std::move(title)),
-        m_accepted(boost::histogram::make_histogram_with(
-            boost::histogram::dense_storage<
-                boost::histogram::accumulators::weighted_sum<double>>(),
+        m_accepted(boost::histogram::make_weighted_histogram(
             std::vector<AxisVariant>(axes.begin(), axes.end()))),
-        m_total(boost::histogram::make_histogram_with(
-            boost::histogram::dense_storage<
-                boost::histogram::accumulators::weighted_sum<double>>(),
+        m_total(boost::histogram::make_weighted_histogram(
             std::vector<AxisVariant>(axes.begin(), axes.end()))) {}
 
   /// Fill efficiency histogram

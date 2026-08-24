@@ -9,23 +9,35 @@
 #pragma once
 
 #include "Acts/Utilities/Histogram.hpp"
-#include "Acts/Utilities/HistogramFit.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
+#include <functional>
 #include <optional>
 #include <string>
+#include <tuple>
+#include <utility>
 
 namespace ActsExamples {
 
-/// @c Acts::Experimental::HistogramFitResult, re-exported for convenience
-using HistogramFitResult = Acts::Experimental::HistogramFitResult;
+/// @brief Outcome of a Gaussian fit to a 1D histogram: `(mean, sigma,
+///        meanError, sigmaError)`
+///
+/// A plain @c std::tuple rather than a named struct so that a Python fit
+/// backend can return an ordinary 4-tuple and have it convert automatically
+/// via `pybind11/stl.h`, with no dedicated binding required.
+using HistogramFitResult = std::tuple<double, double, double, double>;
 
-/// @c Acts::Experimental::HistogramFitRange, re-exported for convenience
-using HistogramFitRange = Acts::Experimental::HistogramFitRange;
+/// @brief Fit range `[xMin, xMax]`, closed, selected by bin centre
+using HistogramFitRange = std::pair<double, double>;
 
-/// @c Acts::Experimental::HistogramFitFunction, re-exported for convenience
-using HistogramFitFunction = Acts::Experimental::HistogramFitFunction;
+/// A single Gaussian fit to a 1D histogram, optionally restricted to a range
+///
+/// Any backend -- @c ActsExamples::gaussianHistogramFit, a callable
+/// `ActsPlugins::RootHistogramFit`, or a Python callable -- can be adapted to
+/// this signature.
+using HistogramFitFunction = std::function<std::optional<HistogramFitResult>(
+    const Acts::Experimental::Histogram1&, std::optional<HistogramFitRange>)>;
 
 /// @brief Mean and width profiles extracted from a histogram of dimension
 ///        @c Dim + 1

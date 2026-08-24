@@ -9,17 +9,17 @@
 #pragma once
 
 #include "Acts/Utilities/Histogram.hpp"
-#include "Acts/Utilities/HistogramFit.hpp"
 
 #include <optional>
 #include <string>
+#include <tuple>
 #include <utility>
 
 namespace ActsPlugins {
 
 /// Fit a Gaussian to a histogram via ROOT's `TH1::Fit`
 ///
-/// `operator()`'s signature matches `Acts::Experimental::HistogramFitFunction`
+/// `operator()`'s signature matches `ActsExamples::HistogramFitFunction`
 /// exactly, so a `RootHistogramFit` instance can be used directly as one with
 /// no adapter.
 class RootHistogramFit {
@@ -37,10 +37,10 @@ class RootHistogramFit {
     std::string fitOptions = "SQ0";
   };
 
-  /// @c Acts::Experimental::HistogramFitResult, re-exported for convenience
-  using Result = Acts::Experimental::HistogramFitResult;
-  /// @c Acts::Experimental::HistogramFitRange, re-exported for convenience
-  using Range = Acts::Experimental::HistogramFitRange;
+  /// Outcome of the fit: `(mean, sigma, meanError, sigmaError)`
+  using Result = std::tuple<double, double, double, double>;
+  /// Fit range `[xMin, xMax]`, closed, selected by bin centre
+  using Range = std::pair<double, double>;
 
   RootHistogramFit() = default;
 
