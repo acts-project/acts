@@ -21,9 +21,17 @@ from options import (
     parse_common_options,
     parse_detector_io_options,
     parse_plotting_options,
+    fill_reader_config,
+    fill_track_generator_config,
+    fill_propagation_config,
 )
 from utils import read_detector_name
 from utils import add_track_generator_args, add_propagation_args, add_detector_io_args
+
+# detray python bindings
+import detray.core
+import detray.io
+import detray.tests
 
 # python includes
 import argparse
@@ -31,6 +39,27 @@ import json
 import os
 import subprocess
 import sys
+
+
+def run_cpu_material_validation(args, datadir):
+    # Read the detector
+    reader_cfg = fill_reader_config(args, detray.io.DetectorReaderConfig())
+    det, names = detray.io.readDetector(detray.core.HostMemoryResource(), reader_cfg)
+
+    # Configure material scan
+    scan_cfg = detray.tests.MaterialScanConfig()
+    fill_track_generator_config(args, scan_cfg.trackGenerator)
+    scan_cfg.trackGenerator.uniformEta = True
+    scan_cfg.overlapsTol = args.overlaps_tol
+    scan_cfg.materialFile = os.path.join(datadir, "material_scan")
+
+    # Configure material validation
+    val_cfg = detray.tests.MaterialValidationConfig()
+    fill_propagation_config(args, val_cfg.propagation)
+    val_cfg.relativeError = args.material_tol / 100.0
+    val_cfg.materialFile = os.path.join(datadir, "navigation_material_trace")
+
+    detray.tests.runMaterialValidation(det, names, scan_cfg, val_cfg)
 
 
 def __main__():
@@ -67,7 +96,7 @@ def __main__():
     parser.add_argument(
         "--material_tol",
         "-mt",
-        help=("Tolerance for material comparisons [%]"),
+        help=("Tolerance for material comparisons [%%]"),
         default=1,
         type=float,
     )
@@ -102,16 +131,21 @@ def __main__():
 
     # Check bin path
     bindir = args.bindir.strip("/")
-    cpu_validation = bindir + "/detray_material_validation"
     cuda_validation = bindir + "/detray_material_validation_cuda"
-
-    if not os.path.isdir(bindir) or not os.path.isfile(cpu_validation):
-        logging.error(f"Material validation binaries were not found! ({args.bindir})")
-        sys.exit(1)
 
     # -----------------------------------------------------------------------run
 
-    # Pass on the options for the validation tools
+    if not args.material_file:
+        logging.error(
+            "Detector material is required! Please add it using the '--material_file' option"
+        )
+        sys.exit(1)
+
+    # Run the host validation and produce the truth data
+    logging.debug("Running CPU material validation")
+    run_cpu_material_validation(args, datadir)
+
+    # Pass on the options for the CUDA validation tool
     args_list = [
         "--data_dir",
         datadir,
@@ -127,16 +161,6 @@ def __main__():
     add_propagation_args(args_list, args)
 
     logging.debug(args_list)
-
-    if "--material_file" not in args_list:
-        logging.error(
-            "Detector material is required! Please add it using the '--material_file' option"
-        )
-        sys.exit(1)
-
-    # Run the host validation and produce the truth data
-    logging.debug("Running CPU material validation")
-    subprocess.run([cpu_validation] + args_list)
 
     # Run the device validation (if it has been built)
     if args.cuda and os.path.isfile(cuda_validation):

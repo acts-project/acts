@@ -20,6 +20,7 @@ namespace Acts {
 
 /// @brief Interface for the material mapping that seeks the possible
 /// assignment candidates for the material interactiosn
+/// @ingroup material_mapping
 class IAssignmentFinder {
  public:
   /// Virtual destructor

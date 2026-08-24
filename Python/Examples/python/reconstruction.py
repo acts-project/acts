@@ -587,13 +587,28 @@ def addSeeding(
             )
 
             if trackParameterPerformance:
+                # the estimate sits on the bottom space point's sensor and has
+                # to be moved to a common surface to be comparable to truth.
+                # `first` because only the innermost state carries parameters.
+                extrapolatedTracks = f"{prefix}seed-tracks-perigee"
+                s.addAlgorithm(
+                    acts.examples.TrackExtrapolationAlgorithm(
+                        level=logLevel,
+                        inputTracks=tracks,
+                        outputTracks=extrapolatedTracks,
+                        targetSurface=acts.Surface.createPerigee(acts.Vector3(0, 0, 0)),
+                        trackingGeometry=trackingGeometry,
+                        magneticField=field,
+                        strategy=acts.examples.TrackExtrapolationStrategy.first,
+                    )
+                )
+
                 addTrackParameterPerformanceWriter(
                     s,
                     outputDirRoot,
-                    tracks=tracks,
+                    tracks=extrapolatedTracks,
                     particles=selectedParticles,
-                    trackingGeometry=trackingGeometry,
-                    field=field,
+                    trackParticleMatching=f"{prefix}seed_particle_matching",
                     outputName="seedparams",
                     logLevel=logLevel,
                     prefix=prefix,
@@ -768,13 +783,28 @@ def addSpacePointsMaking(
     stripGeoSelectionConfigFile: Union[Path, str],
     logLevel: acts.logging.Level = None,
     prefix: str = "",
+    stripVertex: acts.Vector3 = None,
+    stripLengthTolerance: float = None,
+    stripLengthGapTolerance: float = None,
 ):
     """adds space points making
     For parameters description see addSeeding
+
+    stripVertex, stripLengthTolerance and stripLengthGapTolerance configure the
+    strip space point formation; see Acts::StripSpacePointBuilder.
     """
     import acts.examples.json
 
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+    stripOptions = {
+        name: value
+        for name, value in (
+            ("stripVertex", stripVertex),
+            ("stripLengthTolerance", stripLengthTolerance),
+            ("stripLengthGapTolerance", stripLengthGapTolerance),
+        )
+        if value is not None
+    }
     spAlg = acts.examples.SpacePointMaker(
         level=logLevel,
         inputMeasurements=f"{prefix}measurement_subset",
@@ -788,6 +818,7 @@ def addSpacePointsMaking(
             if stripGeoSelectionConfigFile
             else []
         ),
+        **stripOptions,
     )
     sequence.addAlgorithm(spAlg)
     return spAlg.config.outputSpacePoints
@@ -958,6 +989,9 @@ def addGridTripletSeeding(
     spacePointGridConfigArg: SpacePointGridConfigArg,
     logLevel: acts.logging.Level = None,
     outputSeeds: str = "seeds",
+    inputVertices: str = "",
+    vertexZNSigma: float = 3.0,
+    vertexZMargin: float = 0.0,
 ):
     """adds grid triplet seeding
     For parameters description see addSeeding
@@ -968,6 +1002,9 @@ def addGridTripletSeeding(
         level=logLevel,
         inputSpacePoints=spacePoints,
         outputSeeds=outputSeeds,
+        inputVertices=inputVertices,
+        vertexZNSigma=vertexZNSigma,
+        vertexZMargin=vertexZMargin,
         **acts.examples.defaultKWArgs(
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
             minPt=seedFinderConfigArg.minPt,
@@ -1455,29 +1492,25 @@ def addTrackParameterPerformanceWriter(
     outputDirRoot: Union[Path, str],
     tracks: str,
     particles: str,
-    trackingGeometry: acts.TrackingGeometry,
-    field: acts.MagneticFieldProvider,
-    targetSurface: Optional[acts.Surface] = None,
-    strategy=None,
+    trackParticleMatching: str,
     resPlotToolConfig=None,
     outputName: str = "trackparams",
     logLevel: acts.logging.Level = None,
     prefix: str = "",
 ):
-    """Writes residual/pull performance of the track parameters at a common surface.
+    """Writes residual/pull performance of the track parameters against truth.
 
-    The tracks are first extrapolated to `targetSurface`, a perigee at the
-    origin by default. That is what makes the comparison meaningful for seed
-    estimates: they sit on the bottom space point's sensor, where expressing
-    the truth particle means intersecting it on a straight line and ignoring
-    the bending in between.
+    The tracks are expected to be truth matched and to carry their parameters
+    on a common surface already, typically a perigee. A seed estimate sits on
+    the bottom space point's sensor and has to be moved there first, see
+    `acts.examples.TrackExtrapolationAlgorithm`; comparing on the sensor
+    instead would mean expressing the truth particle by a straight-line
+    intersection that ignores the bending in between.
 
     Parameters
     ----------
-    strategy : Optional[acts.examples.TrackExtrapolationStrategy]
-        Which track state to start from, `first` by default. Seed tracks only
-        carry parameters on their innermost state, so `firstOrLast` must not be
-        used on them.
+    trackParticleMatching : str
+        Truth matching of `tracks`, e.g. from `acts.examples.TrackTruthMatcher`.
     resPlotToolConfig : Optional[acts.examples.root.ResPlotToolConfig]
         Residual and pull binning. The defaults are cut for fitted tracks, so a
         seed estimate usually needs wider residual axes.
@@ -1491,44 +1524,10 @@ def addTrackParameterPerformanceWriter(
     if not outputDirRoot.exists():
         outputDirRoot.mkdir()
 
-    if targetSurface is None:
-        targetSurface = acts.Surface.createPerigee(acts.Vector3(0, 0, 0))
-    if strategy is None:
-        strategy = acts.examples.TrackExtrapolationStrategy.first
-
-    extrapolatedTracks = f"{prefix}{outputName}-tracks"
-    sequence.addAlgorithm(
-        acts.examples.TrackExtrapolationAlgorithm(
-            level=customLogLevel(),
-            inputTracks=tracks,
-            outputTracks=extrapolatedTracks,
-            targetSurface=targetSurface,
-            trackingGeometry=trackingGeometry,
-            magneticField=field,
-            strategy=strategy,
-        )
-    )
-
-    # the extrapolation drops the tracks it could not move, which changes the
-    # track indices, so the matching has to be redone
-    trackParticleMatching = f"{prefix}{outputName}_particle_matching"
-    sequence.addAlgorithm(
-        acts.examples.TrackTruthMatcher(
-            level=customLogLevel(),
-            inputTracks=extrapolatedTracks,
-            inputParticles=particles,
-            inputMeasurementParticlesMap="measurement_particles_map",
-            outputTrackParticleMatching=trackParticleMatching,
-            outputParticleTrackMatching=f"{prefix}particle_{outputName}_matching",
-            matchingRatio=1.0,
-            doubleMatching=False,
-        )
-    )
-
     sequence.addWriter(
         RootTrackParameterPerformanceWriter(
             level=customLogLevel(),
-            inputTracks=extrapolatedTracks,
+            inputTracks=tracks,
             inputParticles=particles,
             inputTrackParticleMatching=trackParticleMatching,
             filePath=str(outputDirRoot / f"performance_{prefix}{outputName}.root"),

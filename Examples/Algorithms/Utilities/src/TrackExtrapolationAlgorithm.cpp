@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Utilities/TrackExtrapolationAlgorithm.hpp"
 
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -20,6 +22,7 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <memory>
 #include <stdexcept>
@@ -65,53 +68,97 @@ ProcessCode TrackExtrapolationAlgorithm::execute(
                       logger().cloneWithSuffix("Navigator")),
       logger().cloneWithSuffix("Propagator"));
 
-  const Options options(ctx.geoContext, ctx.magFieldContext);
+  Options options(ctx.geoContext, ctx.magFieldContext);
+  options.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
+  options.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
 
+  // `Acts::extrapolateTrackToReferenceSurface` split up, so the states are read
+  // off the input track and only the parameters are written to the output one
+  auto extrapolate = [&](const ConstTrackProxy& track)
+      -> Acts::Result<Acts::BoundTrackParameters> {
+    auto findResult = Acts::findTrackStateForExtrapolation(
+        ctx.geoContext, track, *m_cfg.targetSurface, m_cfg.strategy, logger());
+    if (!findResult.ok()) {
+      return findResult.error();
+    }
+    const auto& [trackState, distance] = *findResult;
+
+    Options trackOptions = options;
+    trackOptions.direction =
+        Acts::Direction::fromScalarZeroAsPositive(distance);
+
+    auto propagateResult =
+        propagator.propagate<Options, Acts::ForcedSurfaceReached>(
+            track.createParametersFromState(trackState), *m_cfg.targetSurface,
+            trackOptions);
+    if (!propagateResult.ok()) {
+      return propagateResult.error();
+    }
+
+    return propagateResult->endParameters.value();
+  };
+
+  // The tip and stem indices point into the input state backend, which the
+  // output container takes over below. The empty backend here is only because
+  // `Acts::TrackContainer` cannot pair a mutable track backend with a
+  // read-only state one.
   auto trackBackend = std::make_shared<Acts::VectorTrackContainer>();
-  auto stateBackend = std::make_shared<Acts::VectorMultiTrajectory>();
-  TrackContainer extrapolated{trackBackend, stateBackend};
+  TrackContainer extrapolated{trackBackend,
+                              std::make_shared<Acts::VectorMultiTrajectory>()};
   extrapolated.ensureDynamicColumns(inputTracks);
 
   std::size_t nFailed = 0;
 
   for (const auto& track : inputTracks) {
+    // one output track per input track, so the indices stay the same and any
+    // truth matching of the input remains valid
     auto destination = extrapolated.makeTrack();
-    destination.copyFromWithoutStates(track);
+    destination.copyFromShallow(track);
 
-    // `TrackProxy::copyFrom` would copy the states with a hardcoded
-    // `TrackStatePropMask::All`, which throws on the states of a seed track
-    // that hold no parameters at all
-    for (const auto& source : track.trackStatesReversed()) {
-      auto state = destination.appendTrackState(source.getMask());
-      state.copyFrom(source, source.getMask(), true);
-    }
-    destination.reverseTrackStates();
-
-    const auto result = Acts::extrapolateTrackToReferenceSurface(
-        destination, *m_cfg.targetSurface, propagator, options, m_cfg.strategy,
-        logger());
+    const auto result = extrapolate(track);
     if (!result.ok()) {
       ACTS_DEBUG("Extrapolation of track " << track.index() << " failed with "
                                            << result.error());
+      // no parameters on the target surface
+      destination.setReferenceSurface(nullptr);
       ++nFailed;
-      extrapolated.removeTrack(destination.index());
+      continue;
     }
+
+    destination.setReferenceSurface(m_cfg.targetSurface);
+    destination.parameters() = result->parameters();
+    destination.covariance() = result->covariance().value();
   }
 
+  m_nTotalTracks += inputTracks.size();
+  m_nFailedTracks += nFailed;
+
   if (nFailed > 0) {
-    ACTS_DEBUG("Dropped " << nFailed << " of " << inputTracks.size()
-                          << " tracks that could not be extrapolated");
+    ACTS_DEBUG(nFailed << " tracks could not be extrapolated and are left "
+                          "without a reference surface");
   }
 
   ConstTrackContainer outputTracks{
       std::make_shared<Acts::ConstVectorTrackContainer>(
           std::move(*trackBackend)),
-      std::make_shared<Acts::ConstVectorMultiTrajectory>(
-          std::move(*stateBackend))};
+      inputTracks.trackStateContainerHolder()};
 
-  ACTS_DEBUG("Extrapolated " << outputTracks.size() << " tracks");
+  ACTS_DEBUG("Extrapolated " << (outputTracks.size() - nFailed) << " of "
+                             << outputTracks.size() << " tracks");
 
   m_outputTracks(ctx, std::move(outputTracks));
+
+  return ProcessCode::SUCCESS;
+}
+
+ProcessCode TrackExtrapolationAlgorithm::finalize() {
+  ACTS_INFO("TrackExtrapolationAlgorithm statistics:");
+  ACTS_INFO("- total tracks: " << m_nTotalTracks);
+  ACTS_INFO("- failed tracks: " << m_nFailedTracks);
+  if (m_nTotalTracks > 0) {
+    ACTS_INFO("- failure ratio: " << static_cast<double>(m_nFailedTracks) /
+                                         m_nTotalTracks);
+  }
 
   return ProcessCode::SUCCESS;
 }

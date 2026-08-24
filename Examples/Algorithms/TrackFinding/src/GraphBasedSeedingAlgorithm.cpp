@@ -60,14 +60,13 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // initialise the object that holds all the geometry information needed for
   // the algorithm
   auto geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
-      layerGeometry, layerConnectionMap);
+      layerGeometry, layerConnectionMap, this->logger());
 
   // ROI file:Defines what region in detector we are interested in, currently
   // set to entire detector
   // for pixel seeding, roi z bounds are used
 
-  m_internalRoi.emplace(0, -4.5, 4.5, 0, -std::numbers::pi, std::numbers::pi, 0,
-                        -150., 150.);
+  m_internalRoi.emplace(-4.5, 4.5, -150., 150.);
   m_cfg.seedFinderConfig.maxZ0 = m_internalRoi->zMax();
   m_cfg.seedFinderConfig.minZ0 = m_internalRoi->zMin();
 
@@ -76,8 +75,9 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
           m_cfg.seedFinderConfig),
       geometry, this->logger().cloneWithSuffix("GbtsFinder"));
 
-  m_filter = Acts::Experimental::GbtsTrackingFilter(m_cfg.trackingFilterConfig,
-                                                    geometry);
+  m_filter = Acts::Experimental::GbtsTrackingFilter(
+      m_cfg.trackingFilterConfig, geometry,
+      this->logger().cloneWithSuffix("GbtsFilter"));
 
   printConfig();
 }
@@ -418,7 +418,7 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("connectorInputFile: " << cfg1.connectorInputFile);
   ACTS_DEBUG("lutInputFile: " << cfg1.lutInputFile);
   ACTS_DEBUG("lrtMode: " << cfg1.lrtMode);
-  ACTS_DEBUG("useMl: " << cfg1.useMl);
+  ACTS_DEBUG("useClusterWidthCuts: " << cfg1.useClusterWidthCuts);
   ACTS_DEBUG("matchBeforeCreate: " << cfg1.matchBeforeCreate);
   ACTS_DEBUG("useOldTunings: " << cfg1.useOldTunings);
   ACTS_DEBUG("tauRatioCut: " << cfg1.tauRatioCut);

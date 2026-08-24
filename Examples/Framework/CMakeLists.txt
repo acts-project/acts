@@ -8,6 +8,7 @@ acts_add_library(
     src/EventData/MeasurementCalibration.cpp
     src/EventData/SimParticle.cpp
     src/EventData/Jets.cpp
+    src/EventData/SeedSpacePointSelection.cpp
     src/Framework/IAlgorithm.cpp
     src/Framework/SequenceElement.cpp
     src/Framework/WhiteBoard.cpp

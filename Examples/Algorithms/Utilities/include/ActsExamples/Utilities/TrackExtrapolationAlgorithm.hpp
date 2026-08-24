@@ -15,8 +15,11 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <atomic>
+#include <cstdint>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace Acts {
 class MagneticFieldProvider;
@@ -29,12 +32,13 @@ namespace ActsExamples {
 /// Move the track parameters of a track container onto a common surface,
 /// typically a perigee.
 ///
-/// The track states are carried over unchanged, so they keep the parameters on
-/// their own surfaces; only the track-level parameters are moved. That is the
+/// Only the track-level parameters are moved; the states are shared with the
+/// input container and keep the parameters on their own surfaces. That is the
 /// same layering a fitter produces.
 ///
-/// Tracks whose extrapolation fails are dropped, so the output indices differ
-/// from the input and any truth matching has to be redone downstream.
+/// Tracks whose extrapolation fails are kept without a reference surface, so
+/// the output indices match the input and any truth matching of the input
+/// stays valid.
 class TrackExtrapolationAlgorithm final : public IAlgorithm {
  public:
   struct Config {
@@ -53,6 +57,11 @@ class TrackExtrapolationAlgorithm final : public IAlgorithm {
     /// Which track state to start the extrapolation from.
     Acts::TrackExtrapolationStrategy strategy =
         Acts::TrackExtrapolationStrategy::firstOrLast;
+
+    /// The volume ids to constrain the extrapolation to.
+    std::vector<std::uint32_t> constrainToVolumeIds;
+    /// The volume ids to stop the extrapolation at.
+    std::vector<std::uint32_t> endOfWorldVolumeIds;
   };
 
   /// Construct the algorithm.
@@ -68,12 +77,20 @@ class TrackExtrapolationAlgorithm final : public IAlgorithm {
   /// @return a process code
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 
+  /// Report how many tracks could not be extrapolated over the whole run.
+  ///
+  /// @return a process code
+  ProcessCode finalize() override;
+
   /// Get readonly access to the config parameters
   /// @return the configuration
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
+
+  mutable std::atomic<std::size_t> m_nTotalTracks{0};
+  mutable std::atomic<std::size_t> m_nFailedTracks{0};
 
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};

@@ -56,10 +56,10 @@ void addUtilities(py::module& mex) {
       .value("last", Acts::TrackExtrapolationStrategy::last)
       .value("firstOrLast", Acts::TrackExtrapolationStrategy::firstOrLast);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(TrackExtrapolationAlgorithm, mex,
-                                "TrackExtrapolationAlgorithm", inputTracks,
-                                outputTracks, targetSurface, trackingGeometry,
-                                magneticField, strategy);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      TrackExtrapolationAlgorithm, mex, "TrackExtrapolationAlgorithm",
+      inputTracks, outputTracks, targetSurface, trackingGeometry, magneticField,
+      strategy, constrainToVolumeIds, endOfWorldVolumeIds);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       MeasurementMapSelector, mex, "MeasurementMapSelector", inputMeasurements,
@@ -73,7 +73,7 @@ void addUtilities(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ProtoTracksToParameters, mex, "ProtoTracksToParameters", inputProtoTracks,
       inputSpacePoints, outputSeeds, outputParameters, outputProtoTracks,
-      geometry, magneticField, buildTightSeeds);
+      geometry, magneticField, spacePointSelection);
 }
 
 }  // namespace ActsPython
