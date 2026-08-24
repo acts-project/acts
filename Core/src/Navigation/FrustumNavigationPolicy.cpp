@@ -86,7 +86,7 @@ bool FrustumNavigationPolicy::isValid(const GeometryContext&,
                                       const Logger& logger) const {
   // Check if we leave the frustum, reset candidates if so
   auto& s = state.as<State>();
-  const auto& difference = args.position - s.frustum.origin();
+  const Vector3 difference = args.position - s.frustum.origin();
   const auto& normals = s.frustum.normals();
   auto it_start = std::next(normals, 1);
   const bool outside = std::any_of(
