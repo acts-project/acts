@@ -1,4 +1,4 @@
-// This file is part of the ACTS project
+// This file is part of the ACTS project.
 //
 // Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
@@ -29,7 +29,8 @@ class DWalkTrackBuilding final : public TrackBuildingBase {
   struct Config {
     /// Minimal score for the best incoming/outgoing edge in the DP max-add cut
     float thMin = 0.1;
-    /// Score above which all incoming/outgoing edges are kept in the DP max-add cut
+    /// Score above which all incoming/outgoing edges are kept in the DP max-add
+    /// cut
     float thAdd = 0.6;
     /// Minimum number of hits required to keep a track candidate
     std::size_t minCandidateSize = 3;
