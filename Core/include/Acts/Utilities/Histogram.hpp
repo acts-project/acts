@@ -24,6 +24,8 @@
 
 namespace Acts::Experimental {
 
+namespace acc = boost::histogram::accumulators;
+
 /// Variable-width histogram axis with string metadata
 using BoostVariableAxis = boost::histogram::axis::variable<double, std::string>;
 /// Regular-width histogram axis with string metadata
@@ -42,29 +44,22 @@ using AxisVariant =
     boost::histogram::axis::variant<BoostVariableAxis, BoostRegularAxis,
                                     BoostLogAxis>;
 
-/// @brief Underlying Boost type for ProfileHistogram
-using BoostProfileHist = decltype(boost::histogram::make_profile(
-    std::declval<std::vector<AxisVariant>>()));
-
 /// @brief Underlying Boost type for @c Histogram
 ///
-/// Uses a weighted-sum accumulator so that every bin carries both a content
-/// and a variance. An unweighted @c fill() accumulates the count into both,
-/// giving the usual @f$ \sqrt{N} @f$ error; @c setBin() can instead write an
-/// arbitrary value/error pair, e.g. the result of a Gaussian fit.
+/// Weighted-sum accumulator, so every bin carries a content and a variance.
 using BoostHist = decltype(boost::histogram::make_weighted_histogram(
+    std::declval<std::vector<AxisVariant>>()));
+
+/// @brief Underlying Boost type for ProfileHistogram
+using BoostProfileHist = decltype(boost::histogram::make_profile(
     std::declval<std::vector<AxisVariant>>()));
 
 /// @brief Multi-dimensional histogram wrapper using boost::histogram for data collection
 ///
 /// This class wraps boost::histogram to provide a ROOT-independent histogram
-/// implementation with compile-time dimensionality. Every bin carries both a
-/// content and an error: @c fill() accumulates the usual @f$ \sqrt{N} @f$
-/// error, while @c setBin() can write an arbitrary value/error pair -- for
-/// example the mean and width extracted from a Gaussian fit to each slice of
-/// a residual histogram. This makes @c Histogram the ROOT-independent
-/// equivalent of both a @c TH1 filled through @c Fill() and one populated
-/// through @c SetBinContent / @c SetBinError.
+/// implementation with compile-time dimensionality. Every bin carries a
+/// content and an error: @c fill() gives the usual @f$ \sqrt{N} @f$ error,
+/// while @c setBin() can write an arbitrary value/error pair, e.g. from a fit.
 ///
 /// @tparam Dim Number of dimensions
 template <std::size_t Dim>
@@ -118,8 +113,7 @@ class Histogram {
   void setBinContent(const std::array<int, Dim>& indices, double content) {
     std::apply(
         [&](auto... i) {
-          m_hist.at(i...) =
-              boost::histogram::accumulators::weighted_sum<double>(content);
+          m_hist.at(i...) = acc::weighted_sum<double>(content);
         },
         indices);
   }
@@ -135,9 +129,7 @@ class Histogram {
               double error) {
     std::apply(
         [&](auto... i) {
-          m_hist.at(i...) =
-              boost::histogram::accumulators::weighted_sum<double>(
-                  content, error * error);
+          m_hist.at(i...) = acc::weighted_sum<double>(content, error * error);
         },
         indices);
   }

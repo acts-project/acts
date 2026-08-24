@@ -320,10 +320,8 @@ BOOST_AUTO_TEST_CASE(SliceLastAxis_2D) {
 }
 
 BOOST_AUTO_TEST_CASE(SliceLastAxis_2D_IsNotAProjection) {
-  // A slice must see one column only. Guard against an implementation that
-  // accidentally sums over the sliced axis, which is what a naive
-  // reduce()+project() does because slice() defaults to folding out-of-range
-  // content into the flow bins.
+  // A slice must see one column only, not sum over the sliced axis (which a
+  // naive reduce()+project() would do).
   auto xAxis = AxisVariant(BoostRegularAxis(3, 0.0, 3.0, "x"));
   auto yAxis = AxisVariant(BoostRegularAxis(2, 0.0, 2.0, "y"));
   Histogram2 hist("noproj", "No projection", {xAxis, yAxis});

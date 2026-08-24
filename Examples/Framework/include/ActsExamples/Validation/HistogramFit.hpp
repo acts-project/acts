@@ -23,9 +23,8 @@ namespace ActsExamples {
 /// @brief Outcome of a Gaussian fit to a 1D histogram: `(mean, sigma,
 ///        meanError, sigmaError)`
 ///
-/// A plain @c std::tuple rather than a named struct so that a Python fit
-/// backend can return an ordinary 4-tuple and have it convert automatically
-/// via `pybind11/stl.h`, with no dedicated binding required.
+/// A plain @c std::tuple, not a named struct, so a Python fit backend can
+/// return an ordinary 4-tuple via `pybind11/stl.h` with no dedicated binding.
 using HistogramFitResult = std::tuple<double, double, double, double>;
 
 /// @brief Fit range `[xMin, xMax]`, closed, selected by bin centre
@@ -33,9 +32,8 @@ using HistogramFitRange = std::pair<double, double>;
 
 /// A single Gaussian fit to a 1D histogram, optionally restricted to a range
 ///
-/// Any backend -- @c ActsExamples::gaussianHistogramFit, a callable
-/// `ActsPlugins::RootHistogramFit`, or a Python callable -- can be adapted to
-/// this signature.
+/// Any backend, e.g. `ActsPlugins::RootHistogramFit` or a Python callable,
+/// can be adapted to this signature.
 using HistogramFitFunction = std::function<std::optional<HistogramFitResult>(
     const Acts::Experimental::Histogram1&, std::optional<HistogramFitRange>)>;
 
@@ -60,9 +58,8 @@ using MeanWidthProfiles2 = MeanWidthProfiles<2>;
 
 /// Fit a Gaussian repeatedly, narrowing the fit range around the peak
 ///
-/// The first fit is unrestricted. Each subsequent fit is restricted to
-/// @f$ m \pm \mathrm{sigmaRange} \cdot s @f$ using the previous iteration's
-/// parameters. The returned uncertainties come from the final iteration.
+/// Each fit after the first is restricted to
+/// @f$ m \pm \mathrm{sigmaRange} \cdot s @f$ from the previous iteration.
 ///
 /// @param fitFn The single-range fit function to iterate
 /// @param hist The histogram to fit
@@ -78,10 +75,9 @@ std::optional<HistogramFitResult> iterativeFit(
 
 /// Fit a Gaussian to every slice of a histogram along its last axis
 ///
-/// For each bin of the outer axes (every axis but the last), the distribution
-/// along the last axis is fitted with @c iterativeFit and the resulting mean
-/// and sigma are stored, with their uncertainties, in the corresponding
-/// output bin.
+/// For each bin of the outer axes, the distribution along the last axis is
+/// fitted with @c iterativeFit and the resulting mean/sigma (with
+/// uncertainties) are stored in the corresponding output bin.
 ///
 /// @param fitFn The single-range fit function to use for every slice
 /// @param hist The histogram to profile

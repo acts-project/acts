@@ -1,15 +1,9 @@
 """Equivalence test for two Gaussian resolution-fit backends: ROOT's
 `TH1::Fit` (via `ActsPlugins::RootHistogramFit`) and a scipy `curve_fit`
-callable. A Python `IAlgorithm` writes a fixed set of synthetic
-tracks/particles/measurement-particle-map straight to the whiteboard -- no
-detector, no digitization -- with the fitted d0 residual drawn from an
-engineered distribution (uniform, pure Gaussian, Gaussian with outliers). The
-real `TrackTruthMatcher` algorithm then computes the track-particle matching
-from that input, exactly as it would in a full reconstruction chain, rather
-than a test fabricating the matching decision itself. Two
-`PythonTrackParameterPerformanceWriter`s attached to the same whiteboard keys,
-differing only in `fitFunction`, then see bit-identical histograms and only
-the fit itself can differ.
+callable. A synthetic `IAlgorithm` writes tracks/particles/hits straight to
+the whiteboard; the real `TrackTruthMatcher` then derives the matching, and
+two `PythonTrackParameterPerformanceWriter`s differing only in `fitFunction`
+see bit-identical histograms so only the fit itself can differ.
 """
 
 import numpy as np
@@ -59,20 +53,10 @@ def _gaussian_jac(x, amplitude, mean, sigma):
 def _scipy_gaussian_fit(hist, rng):
     """A ROOT-free Python fit backend using scipy.optimize.curve_fit.
 
-    Matches `ActsExamples::HistogramFitFunction`'s signature. Drops empty bins
-    rather than weighting them at sigma=1, mirroring ROOT's "SQ0" -- zero-content
-    bins get zero error and are dropped from the least-squares sum.
-
-    Performance: an analytic Jacobian plus a bounded maxfev/ftol/xtol
-    (devscripts/bench_scipy_fit.py, replayed against ~20700 fit calls
-    recorded from a real reconstruction run) cuts fitProfiles() time by
-    ~11x versus MINPACK's defaults (forward-difference Jacobian, maxfev capped
-    at 10000) -- and *reduces* the success/failure mismatch rate against the
-    ROOT backend rather than degrading it: MINPACK's default ftol/xtol
-    (1.49e-8) is far tighter than needed for a quantity only ever compared at
-    rtol=1e-3, and on sparse/near-degenerate slices the untuned defaults were
-    burning thousands of evaluations chasing that tolerance instead of
-    converging or failing cleanly.
+    Matches `ActsExamples::HistogramFitFunction`'s signature. Drops empty
+    bins rather than weighting them at sigma=1, mirroring ROOT's "SQ0". The
+    analytic Jacobian plus a bounded maxfev/ftol/xtol keeps fitProfiles()
+    fast versus MINPACK's defaults.
     """
     from scipy.optimize import curve_fit
 
@@ -129,18 +113,12 @@ def _scipy_gaussian_fit(hist, rng):
 class _SyntheticTrackAlgorithm(acts.examples.IAlgorithm):
     """Writes `nTracks` synthetic tracks/particles/measurement-particle-map
     entries to the whiteboard every event: truth d0 = 0, fitted d0 = a
-    residual drawn from `sampler` (a callable `rng -> float`). All other
-    track parameters are fixed so every track lands in the same (eta, phi,
-    pT) bin.
+    residual drawn from `sampler` (a callable `rng -> float`).
 
-    Deliberately does NOT write a TrackParticleMatching itself -- that would
-    let the test assert the very match/fake/duplicate decision the real
-    TrackTruthMatcher algorithm is responsible for making. Instead this
-    writes one measurement-like source link per track plus a
-    MeasurementParticlesMap entry tying it to the track's truth particle, and
-    the real TrackTruthMatcher (run as a normal sequencer algorithm, see
-    `_run_backends`) derives the matching from that, the same way it would
-    from real digitized hits.
+    Deliberately does NOT write a TrackParticleMatching itself; instead it
+    writes one source link per track plus a MeasurementParticlesMap entry, so
+    the real TrackTruthMatcher (see `_run_backends`) derives the matching
+    itself, as it would from real digitized hits.
     """
 
     def __init__(self, sampler, nTracks, seed):
@@ -168,10 +146,7 @@ class _SyntheticTrackAlgorithm(acts.examples.IAlgorithm):
         measurementParticlesMap = acts.examples.MeasurementParticlesMap()
 
         surface = acts.Surface.createPerigee(acts.Vector3(0, 0, 0))
-        # BoundMatrix has no Python setter beyond Zero()/Identity() -- Identity
-        # makes pull == residual exactly (ResPlotTool divides by sqrt(cov_ii)),
-        # which is enough for the resmean/reswidth comparison this test cares
-        # about.
+        # Identity covariance makes pull == residual (enough for this test).
         cov = acts.BoundMatrix.Identity()
         geoId = acts.GeometryIdentifier()
 
@@ -179,19 +154,13 @@ class _SyntheticTrackAlgorithm(acts.examples.IAlgorithm):
             barcode = acts.examples.SimBarcode()
             barcode.particle = i
             particle = acts.examples.SimParticle(barcode, acts.PdgParticle.eMuon)
-            # Transverse direction (theta = pi/2, eta = 0), matching the track
-            # parameters below. A particle travelling along the perigee
-            # surface's own axis would give a degenerate (parallel)
-            # intersection, and ResPlotTool could not compute a truth
-            # perigee parameter from it.
+            # Transverse direction, matching the track parameters below --
+            # avoids a degenerate intersection with the perigee surface.
             particle.direction = acts.Vector3(1, 0, 0)
             particle.absoluteMomentum = 1.0 * u.GeV
             particles.insert(particle)
 
-            # One measurement index per track, exclusively attributed to that
-            # track's own truth particle -- TrackTruthMatcher's majority-hit
-            # logic (1 of 1 hit, both reco- and truth-side) then always
-            # yields a clean Matched classification.
+            # One measurement per track, own truth particle -> always Matched.
             hitIndex = i
             measurementParticlesMap.insert(hitIndex, barcode)
 
@@ -270,10 +239,8 @@ def _run_backends(sampler, nTracks, seed):
 
 
 def _fitted_bins(histograms, key, backend):
-    """`(rootVals, otherVals, both)` for `key`, restricted with a boolean mask
-    to bins where both ROOT and `backend` succeeded (an unfitted
-    Histogram bin is default-constructed at error == 0, which a genuine
-    fitted width never is).
+    """`(rootVals, otherVals, both)` for `key`, restricted to bins where both
+    ROOT and `backend` succeeded (an unfitted bin has error == 0).
     """
     root = histograms["root"].get(key)
     other = histograms[backend].get(key)
@@ -303,24 +270,14 @@ def _assert_backend_agrees(histograms, key, backend, rtol, atol):
     )
 
 
-# reswidth tolerances are tight for the two Gaussian-shaped scenarios
-# (observed agreement is ~1e-5 to ~1e-6 relative; 1e-3 leaves ample margin
-# against run-to-run float noise without masking a real regression). resmean
-# additionally gets a small absolute floor: it is a residual mean genuinely
-# close to zero, so its relative diff is dominated by near-zero-denominator
-# bins and is not a meaningful check on its own.
+# Observed agreement is ~1e-5 to 1e-6 relative; 1e-3 leaves ample margin.
+# resmean also gets an absolute floor since it's close to zero.
 _RTOL = 1e-3
 _MEAN_ATOL = 1e-3
 
-# "uniform" has no reswidth/resmean tolerance at all: fitting a Gaussian to a
-# flat-top distribution has no unique best fit, so MINUIT/curve_fit
-# legitimately settle at different points on a much flatter chi-square
-# surface. Confirmed empirically that the disagreement is highly sample- and
-# seed-dependent -- from a few percent up to several hundred percent for the
-# exact same generative distribution -- so no fixed numeric tolerance would
-# be both meaningful and stable. "uniform" is therefore a pure
-# existence/sanity check: every backend must still produce a finite,
-# positive-sigma fit, just not one that has to agree with the others.
+# "uniform" has no reswidth/resmean tolerance: a Gaussian fit to a flat-top
+# distribution has no unique best fit, so backends legitimately disagree by
+# up to several hundred percent. It's a pure existence/sanity check instead.
 _SCENARIOS = {
     "uniform": lambda rng: rng.uniform(-0.05, 0.05),
     "gaussian": lambda rng: rng.normal(0.0, 0.02),

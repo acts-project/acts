@@ -26,14 +26,9 @@ class RootHistogramFit {
  public:
   /// Configuration for @c RootHistogramFit
   struct Config {
-    /// `TH1::Fit` option string, applied to both @c fit overloads. Must keep
-    /// `"S"` (return a `TFitResult`, which the implementation reads) and
-    /// `"0"` (do not draw); `"Q"` is strongly recommended to suppress ROOT's
-    /// fit printout. The ranged overload adds `"R"` itself.
-    ///
-    /// Defaults to `"SQ0"`, ROOT's least-squares fit -- the counterpart of
-    /// `ActsExamples::gaussianHistogramFit`. Use `"LSQ0"` for the likelihood
-    /// fit instead.
+    /// `TH1::Fit` option string. Must keep `"S"` (return a `TFitResult`) and
+    /// `"0"` (do not draw); the ranged fit adds `"R"` itself. Defaults to
+    /// ROOT's least-squares fit; use `"LSQ0"` for the likelihood fit instead.
     std::string fitOptions = "SQ0";
   };
 

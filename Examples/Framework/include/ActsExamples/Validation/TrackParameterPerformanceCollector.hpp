@@ -31,9 +31,7 @@ namespace ActsExamples {
 ///
 /// Collects residual/pull histograms, efficiency plots, and track summary
 /// information for track fitting performance evaluation. The Gaussian fit
-/// backend is supplied by the caller via @c Config::fitFunction, so this
-/// collector is agnostic to whether it runs ROOT's `TH1::Fit`, a Python
-/// callable, or some other implementation.
+/// backend is supplied by the caller via @c Config::fitFunction.
 ///
 /// @note The caller must ensure exclusive access (e.g. hold a mutex) when
 ///       calling fill(). This class applies no locking of its own.
@@ -44,10 +42,8 @@ class TrackParameterPerformanceCollector {
     EffPlotTool::Config effPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
 
-    /// The Gaussian fit backend used by @c fitProfiles, e.g.
-    /// @c ActsPlugins::RootHistogramFit or a Python callable. Defaults to an
-    /// empty function; if left unset, @c fitProfiles logs a warning and
-    /// returns no profiles instead of fitting.
+    /// The Gaussian fit backend used by @c fitProfiles. If unset,
+    /// @c fitProfiles logs a warning and returns no profiles.
     HistogramFitFunction fitFunction;
 
     /// Minimum number of entries in a bin for it to be included in the
@@ -99,9 +95,8 @@ class TrackParameterPerformanceCollector {
 
   /// Mean/width profiles fitted from every residual and pull histogram.
   ///
-  /// @c profiles1 holds the outputs of the 2D (vs. eta, vs. pT) inputs;
-  /// @c profiles2 the 3D (vs. eta-phi, vs. eta-pT) ones. Each profile carries
-  /// its own name, e.g. `"resmean_d0_vs_eta"` / `"reswidth_d0_vs_eta"`.
+  /// @c profiles1 holds the 2D (vs. eta, vs. pT) outputs; @c profiles2 the
+  /// 3D (vs. eta-phi, vs. eta-pT) ones.
   struct FittedProfiles {
     std::vector<Acts::Experimental::Histogram1> profiles1;
     std::vector<Acts::Experimental::Histogram2> profiles2;
@@ -109,10 +104,8 @@ class TrackParameterPerformanceCollector {
 
   /// Fit every residual/pull profile histogram with @c Config::fitFunction.
   ///
-  /// Emits a warning via the internal logger for any input histogram whose
-  /// fit failure fraction reaches @c Config::warningThresholdFitFailureFraction.
-  /// If @c Config::fitFunction is unset, logs a warning and returns no
-  /// profiles instead.
+  /// Warns if a histogram's fit failure fraction reaches
+  /// @c Config::warningThresholdFitFailureFraction.
   FittedProfiles fitProfiles() const;
 
  private:

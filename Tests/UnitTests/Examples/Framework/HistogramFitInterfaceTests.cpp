@@ -8,10 +8,7 @@
 
 // Exercises the backend-agnostic fit interface (HistogramFitFunction,
 // iterativeFit, extractMeanWidthProfiles) with ActsPlugins::RootHistogramFit
-// as a concrete backend -- the only fit backend available in this checkout.
-// A second backend (e.g. a Python callable, or a future C++ implementation)
-// can be plugged in through the same HistogramFitFunction signature without
-// any of this code changing.
+// as a concrete backend.
 
 #include <boost/test/unit_test.hpp>
 
@@ -67,10 +64,8 @@ BOOST_AUTO_TEST_CASE(IterativeFit_RecoversKnownParameters) {
   BOOST_CHECK_GT(sigmaError, 0.0);
 }
 
-// ActsPlugins::RootHistogramFit is otherwise uncalled from generic Examples
-// code, so this is the test proving that the generic profile extraction
-// really works with a HistogramFitFunction plugged in from outside Examples,
-// not just with a fit function Examples defines itself.
+// Proves extractMeanWidthProfiles works with a fit backend from outside
+// Examples, not just one Examples defines itself.
 BOOST_AUTO_TEST_CASE(ExtractMeanWidthProfiles_WorksWithRootFitter) {
   const int nEtaBins = 3;
   auto etaAxis = AxisVariant(BoostRegularAxis(nEtaBins, 0.0, 3.0, "eta"));
