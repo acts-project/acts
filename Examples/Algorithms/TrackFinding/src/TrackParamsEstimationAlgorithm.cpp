@@ -20,6 +20,7 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
+#include <array>
 #include <cstddef>
 #include <optional>
 #include <ostream>
@@ -98,9 +99,6 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
 
   const SpacePointContainer& spacePoints = seeds.spacePointContainer();
 
-  // reused across seeds by the space point selection
-  std::vector<SpacePointIndex> candidates;
-
   // Loop over all found seeds to estimate track parameters
   for (std::size_t iseed = 0; iseed < seeds.size(); ++iseed) {
     const auto& seed = seeds[iseed];
@@ -109,21 +107,18 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
       continue;
     }
 
-    candidates.clear();
-    for (const ConstSpacePointProxy& sp : seed.spacePoints()) {
-      candidates.push_back(sp.index());
-    }
-    const std::vector<SpacePointIndex> selected = selectSeedSpacePoints(
-        spacePoints, candidates, m_cfg.spacePointSelection);
-    if (selected.size() < 3) {
+    const std::optional<std::array<SpacePointIndex, 3>> selected =
+        selectSeedSpacePoints(spacePoints, seed.spacePointIndices(),
+                              m_cfg.spacePointSelection);
+    if (!selected.has_value()) {
       ACTS_DEBUG("Seed " << iseed << " has no space point selection, skip");
       continue;
     }
 
     // Get the bottom space point and its reference surface
-    const ConstSpacePointProxy bottomSp = spacePoints.at(selected[0]);
-    const ConstSpacePointProxy middleSp = spacePoints.at(selected[1]);
-    const ConstSpacePointProxy topSp = spacePoints.at(selected[2]);
+    const ConstSpacePointProxy bottomSp = spacePoints.at((*selected)[0]);
+    const ConstSpacePointProxy middleSp = spacePoints.at((*selected)[1]);
+    const ConstSpacePointProxy topSp = spacePoints.at((*selected)[2]);
     if (bottomSp.sourceLinks().empty()) {
       ACTS_WARNING("Missing source link in the space point");
       continue;

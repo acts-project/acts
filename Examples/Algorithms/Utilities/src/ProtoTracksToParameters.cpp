@@ -14,6 +14,8 @@
 #include "ActsExamples/EventData/SpacePoint.hpp"
 
 #include <algorithm>
+#include <array>
+#include <optional>
 #include <tuple>
 
 using namespace Acts;
@@ -143,16 +145,16 @@ ProcessCode ProtoTracksToParameters::execute(
     const float t = sps.at(tmpSps.front()).r() - m * sps.at(tmpSps.front()).z();
     const float vertexZ = -t / m;
 
-    const std::vector<SpacePointIndex> selected =
+    const std::optional<std::array<SpacePointIndex, 3>> selected =
         selectSeedSpacePoints(sps, tmpSps, m_cfg.spacePointSelection);
-    if (selected.size() < 3) {
+    if (!selected.has_value()) {
       ACTS_DEBUG("Cannot seed because no space point selection could be made");
       skippedTracks++;
       continue;
     }
 
     auto seed = seeds.createSeed();
-    seed.assignSpacePointIndices(selected);
+    seed.assignSpacePointIndices(*selected);
     seed.vertexZ() = vertexZ;
 
     // Compute parameters

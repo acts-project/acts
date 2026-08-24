@@ -138,7 +138,7 @@ class SeedCoverage {
   /// Flag every seed whose measurements the track covers.
   ///
   /// @param track The track that was found.
-  void cover(const TrackProxy& track) {
+  void addCoverageFrom(const TrackProxy& track) {
     for (const auto& trackState : track.trackStatesReversed()) {
       if (!trackState.hasUncalibratedSourceLink()) {
         continue;
@@ -454,7 +454,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     }
 
     // flag seeds which are covered by the track
-    seedCoverage.cover(track);
+    seedCoverage.addCoverageFrom(track);
 
     ++m_nSelectedTracks;
 

@@ -11,6 +11,9 @@ include(FetchContent)
 # Tell the user what's happening.
 message(STATUS "Building rocThrust as part of the TRACCC project")
 
+# Disregard the global C++ flags, to avoid any unhelpful warnings.
+set(CMAKE_CXX_FLAGS)
+
 # Declare where to get rocThrust from.
 set(TRACCC_ROCTHRUST_SOURCE
     "URL;https://github.com/ROCm/rocThrust/archive/refs/tags/rocm-7.2.0.tar.gz;URL_MD5;b42d1a13a2a517cde49f0b2974c8013b"

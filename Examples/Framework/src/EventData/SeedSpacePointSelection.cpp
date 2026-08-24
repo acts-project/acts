@@ -13,20 +13,26 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 #include <array>
-#include <cmath>
 #include <cstddef>
+#include <optional>
+#include <span>
+#include <vector>
 
 namespace ActsExamples {
 
 namespace {
 
-/// The first space point of each layer, in the given order.
+/// The first space point of each layer, in the given order, at most @p limit
+/// of them.
 std::vector<SpacePointIndex> onePerLayer(
     const SpacePointContainer& spacePoints,
-    std::span<const SpacePointIndex> candidates) {
+    std::span<const SpacePointIndex> candidates, std::size_t limit) {
   std::vector<SpacePointIndex> perLayer;
   std::vector<Acts::GeometryIdentifier> layers;
   for (const SpacePointIndex index : candidates) {
+    if (perLayer.size() == limit) {
+      break;
+    }
     const ConstSpacePointProxy sp = spacePoints.at(index);
     if (sp.sourceLinks().empty()) {
       continue;
@@ -45,36 +51,37 @@ std::vector<SpacePointIndex> onePerLayer(
 
 }  // namespace
 
-std::vector<SpacePointIndex> selectSeedSpacePoints(
+std::optional<std::array<SpacePointIndex, 3>> selectSeedSpacePoints(
     const SpacePointContainer& spacePoints,
     std::span<const SpacePointIndex> candidates,
     SeedSpacePointSelection selection) {
   if (candidates.size() < 3) {
-    return {};
+    return std::nullopt;
   }
 
   switch (selection) {
     case SeedSpacePointSelection::FirstThree:
-      return {candidates.begin(), candidates.begin() + 3};
+      return std::array{candidates[0], candidates[1], candidates[2]};
     case SeedSpacePointSelection::InnermostTriplet: {
       const std::vector<SpacePointIndex> perLayer =
-          onePerLayer(spacePoints, candidates);
+          onePerLayer(spacePoints, candidates, 3);
       if (perLayer.size() < 3) {
-        return {};
+        return std::nullopt;
       }
-      return {perLayer.begin(), perLayer.begin() + 3};
+      return std::array{perLayer[0], perLayer[1], perLayer[2]};
     }
     case SeedSpacePointSelection::SpreadTriplet: {
       const std::vector<SpacePointIndex> perLayer =
-          onePerLayer(spacePoints, candidates);
+          onePerLayer(spacePoints, candidates, candidates.size());
       if (perLayer.size() < 3) {
-        return {};
+        return std::nullopt;
       }
-      return {perLayer.front(), perLayer[perLayer.size() / 2], perLayer.back()};
+      return std::array{perLayer.front(), perLayer[perLayer.size() / 2],
+                        perLayer.back()};
     }
   }
 
-  return {};
+  return std::nullopt;
 }
 
 }  // namespace ActsExamples
