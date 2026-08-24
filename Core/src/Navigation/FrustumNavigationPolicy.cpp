@@ -47,8 +47,11 @@ void FrustumNavigationPolicy::initializeCandidates(
         ACTS_DEBUG("get portals from volume " << tvol->volumeName());
         const auto& portals = tvol->portals();
         for (const auto& portal : portals) {
+	  //To avoid including unnecessary portals, skip any portals from the top-level volume to its child volumes
+	  //If we want these, they will be added when the intersection reaches the child volume
+	  //Only add portals from the top-level volume to volumes it doesn't contain
           if (tvol->volumeName().compare(m_name) ==
-              0) {  // only check for top-level volume
+              0) {
             Acts::Result<const TrackingVolume*> pvolr =
                 portal.resolveVolume(gctx, s.frustum.origin(), s.frustum.dir());
             if (pvolr.ok()) {

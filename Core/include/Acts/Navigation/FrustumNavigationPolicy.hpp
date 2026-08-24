@@ -18,7 +18,16 @@
 
 namespace Acts::Experimental {
 
-/// A navigation policy that uses frustum-octree intersections to find portals
+/// A navigation policy that uses frustum-octree intersections to find portals.
+/// The frustum is a cone that points in the direction of the particle's travel.
+/// It is set at the start of navigation, and only updated if the particle leaves it.
+/// The octree is built from the first-level child volumes inside the top-level volume.
+/// Each level of the tree splits each piece of the previous level into eight equal pieces.
+/// The number of levels is the configurable depth parameter.
+/// Each child volume is assigned to the piece of the whole that contains it on each level.
+/// Navigation candidates are found by intersecting the frustum with the octree.
+/// On each level, the frustum only checks for intersections with pieces that descend from previously intersected pieces.
+/// This allows for a rapid determination of candidates in geometries with many volumes.
 
 class FrustumNavigationPolicy : public INavigationPolicy {
  public:
@@ -29,7 +38,7 @@ class FrustumNavigationPolicy : public INavigationPolicy {
 
   /// Configuration for the frustum navigation policy
   struct Config {
-    /// The octree depth
+    /// The number of layers in the octree
     int depth = 3;
   };
 
@@ -43,8 +52,8 @@ class FrustumNavigationPolicy : public INavigationPolicy {
   /// Main constructor, which takes the top-level volume and builds the octree
   /// @param gctx The geometrycontext object
   /// @param volume The tracking volume used to build the octree
-  /// @param config The configuration of the Navigation Policy
   /// @param logger A logging instance
+  /// @param config The configuration of the Navigation Policy
   explicit FrustumNavigationPolicy(const GeometryContext& gctx,
                                    const TrackingVolume& volume,
                                    const Logger& logger, const Config& config);
