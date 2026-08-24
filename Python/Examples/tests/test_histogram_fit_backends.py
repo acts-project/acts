@@ -1,9 +1,9 @@
 """Equivalence test for two Gaussian resolution-fit backends: ROOT's
-`TH1::Fit` (via `ActsPlugins::RootHistogramFit`) and a scipy `curve_fit`
-callable. A synthetic `IAlgorithm` writes tracks/particles/hits straight to
-the whiteboard; the real `TrackTruthMatcher` then derives the matching, and
-two `PythonTrackParameterPerformanceWriter`s differing only in `fitFunction`
-see bit-identical histograms so only the fit itself can differ.
+`TH1::Fit` (via `ActsPlugins::RootHistogramFit`) and `acts.examples.scipy`'s
+`curve_fit`-based one. A synthetic `IAlgorithm` writes tracks/particles/hits
+straight to the whiteboard; the real `TrackTruthMatcher` then derives the
+matching, and two `PythonTrackParameterPerformanceWriter`s differing only in
+`fitFunction` see bit-identical histograms so only the fit itself can differ.
 """
 
 import numpy as np
@@ -22,92 +22,22 @@ try:
 except ImportError:
     acts_root = None
 
+try:
+    import acts.examples.scipy as acts_scipy
+except ImportError:
+    acts_scipy = None
+
 u = acts.UnitConstants
 
 pytestmark = [
     pytest.mark.root,
     pytest.mark.skipif(
-        PythonTrackParameterPerformanceWriter is None or acts_root is None,
-        reason="Python/ROOT performance writers not available",
+        PythonTrackParameterPerformanceWriter is None
+        or acts_root is None
+        or acts_scipy is None,
+        reason="Python/ROOT/scipy performance writers not available",
     ),
 ]
-
-
-def _gaussian(x, amplitude, mean, sigma):
-    return amplitude * np.exp(-0.5 * ((x - mean) / sigma) ** 2)
-
-
-def _gaussian_jac(x, amplitude, mean, sigma):
-    """Analytic Jacobian of `_gaussian` w.r.t. (amplitude, mean, sigma).
-
-    Routes curve_fit's underlying MINPACK call through `_lmder` (exact
-    derivatives) instead of `_lmdif` (forward-difference approximation).
-    """
-    z = (x - mean) / sigma
-    g = np.exp(-0.5 * z * z)
-    return np.stack(
-        [g, amplitude * g * z / sigma, amplitude * g * z * z / sigma], axis=-1
-    )
-
-
-def _scipy_gaussian_fit(hist, rng):
-    """A ROOT-free Python fit backend using scipy.optimize.curve_fit.
-
-    Matches `ActsExamples::HistogramFitFunction`'s signature. Drops empty
-    bins rather than weighting them at sigma=1, mirroring ROOT's "SQ0". The
-    analytic Jacobian plus a bounded maxfev/ftol/xtol keeps fitProfiles()
-    fast versus MINPACK's defaults.
-    """
-    from scipy.optimize import curve_fit
-
-    values = hist.histogram.values()
-    edges = np.asarray(hist.histogram.axis(0).edges)
-    centres = 0.5 * (edges[:-1] + edges[1:])
-
-    if rng is not None:
-        xMin, xMax = rng
-        mask = (centres >= xMin) & (centres <= xMax)
-        centres = centres[mask]
-        values = values[mask]
-
-    if np.count_nonzero(values) < 3 or values.sum() <= 0:
-        return None
-
-    mean0 = np.average(centres, weights=np.clip(values, 0, None))
-    sigma0 = max(
-        np.sqrt(np.average((centres - mean0) ** 2, weights=np.clip(values, 0, None))),
-        1e-6,
-    )
-    amplitude0 = values.max()
-
-    keep = values > 0
-    fitCentres = centres[keep]
-    fitValues = values[keep]
-    errors = np.sqrt(fitValues)
-
-    try:
-        with np.errstate(all="ignore"):
-            popt, pcov = curve_fit(
-                _gaussian,
-                fitCentres,
-                fitValues,
-                p0=[amplitude0, mean0, sigma0],
-                sigma=errors,
-                absolute_sigma=True,
-                jac=_gaussian_jac,
-                maxfev=200,
-                ftol=1e-6,
-                xtol=1e-6,
-            )
-    except RuntimeError:
-        return None
-
-    if not np.all(np.isfinite(pcov)):
-        return None
-
-    meanError = float(np.sqrt(pcov[1, 1]))
-    sigmaError = float(np.sqrt(pcov[2, 2]))
-    return (float(popt[1]), abs(float(popt[2])), meanError, sigmaError)
 
 
 class _SyntheticTrackAlgorithm(acts.examples.IAlgorithm):
@@ -219,7 +149,7 @@ def _run_backends(sampler, nTracks, seed):
     writers = {}
     for backend, fitFn in [
         ("root", acts_root.makeRootHistogramFitFunction()),
-        ("scipy", _scipy_gaussian_fit),
+        ("scipy", acts_scipy.makeScipyHistogramFitFunction()),
     ]:
         cfg = acts.examples.PythonTrackParameterPerformanceWriter.Config(
             inputTracks="tracks",
@@ -294,8 +224,6 @@ _SEEDS = {"uniform": 1, "gaussian": 2, "gaussian_with_outliers": 3}
 
 @pytest.mark.parametrize("scenario", list(_SCENARIOS.keys()))
 def test_fit_backends_agree(scenario):
-    pytest.importorskip("scipy")
-
     histograms = _run_backends(
         _SCENARIOS[scenario], nTracks=5000, seed=_SEEDS[scenario]
     )
