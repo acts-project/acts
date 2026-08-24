@@ -30,7 +30,7 @@ class FrustumNavigationPolicy : public INavigationPolicy {
   /// Configuration for the frustum navigation policy
   struct Config {
     /// The octree depth
-    int depth = 3;
+    std::size_t depth = 3;
   };
 
   /// Frustum navigation policy state, which holds the frustum
