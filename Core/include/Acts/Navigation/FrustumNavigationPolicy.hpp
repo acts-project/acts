@@ -8,12 +8,12 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Frustum.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 
 #include <numbers>
 
@@ -21,14 +21,16 @@ namespace Acts::Experimental {
 
 /// A navigation policy that uses frustum-octree intersections to find portals.
 /// The frustum is a cone that points in the direction of the particle's travel.
-/// It is set at the start of navigation, and only updated if the particle leaves it.
-/// The octree is built from the first-level child volumes inside the top-level volume.
-/// Each level of the tree splits each piece of the previous level into eight equal pieces.
-/// The number of levels is the configurable depth parameter.
-/// Each child volume is assigned to the piece of the whole that contains it on each level.
-/// Navigation candidates are found by intersecting the frustum with the octree.
-/// On each level, the frustum only checks for intersections with pieces that descend from previously intersected pieces.
-/// This allows for a rapid determination of candidates in geometries with many volumes.
+/// It is set at the start of navigation, and only updated if the particle
+/// leaves it. The octree is built from the first-level child volumes inside the
+/// top-level volume. Each level of the tree splits each piece of the previous
+/// level into eight equal pieces. The number of levels is the configurable
+/// depth parameter. Each child volume is assigned to the piece of the whole
+/// that contains it on each level. Navigation candidates are found by
+/// intersecting the frustum with the octree. On each level, the frustum only
+/// checks for intersections with pieces that descend from previously
+/// intersected pieces. This allows for a rapid determination of candidates in
+/// geometries with many volumes.
 
 class FrustumNavigationPolicy : public INavigationPolicy {
  public:
