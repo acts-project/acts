@@ -60,7 +60,7 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // initialise the object that holds all the geometry information needed for
   // the algorithm
   auto geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
-      layerGeometry, layerConnectionMap);
+      layerGeometry, layerConnectionMap, this->logger());
 
   // ROI file:Defines what region in detector we are interested in, currently
   // set to entire detector
@@ -75,8 +75,9 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
           m_cfg.seedFinderConfig),
       geometry, this->logger().cloneWithSuffix("GbtsFinder"));
 
-  m_filter = Acts::Experimental::GbtsTrackingFilter(m_cfg.trackingFilterConfig,
-                                                    geometry);
+  m_filter = Acts::Experimental::GbtsTrackingFilter(
+      m_cfg.trackingFilterConfig, geometry,
+      this->logger().cloneWithSuffix("GbtsFilter"));
 
   printConfig();
 }
