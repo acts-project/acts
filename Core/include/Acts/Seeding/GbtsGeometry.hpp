@@ -11,6 +11,7 @@
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/detail/GbtsLayer.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <cstdint>
 #include <map>
@@ -28,8 +29,10 @@ class GbtsGeometry final {
   /// Constructor
   /// @param layerDescriptions Layer descriptions for the layers
   /// @param layerConnections Layer connections map
+  /// @param logger Logging instance, only used during construction
   GbtsGeometry(const std::vector<GbtsLayerDescription>& layerDescriptions,
-               const GbtsLayerConnectionMap& layerConnections);
+               const GbtsLayerConnectionMap& layerConnections,
+               const Logger& logger = getDummyLogger());
 
  private:
   // The layer binning is shared only with the classes that build the graph.
