@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
 
 #include <map>
 
@@ -43,6 +44,48 @@ struct VertexScratch {
 
   /// Flag indicating if associated tracks need relinearization
   bool relinearize = true;
+
+  /// Map of 3D impact parameters for each associated track
+  std::map<InputTrack, const BoundTrackParameters> impactParams3D;
+};
+
+/// @brief Helper struct for storing vertex related information
+///
+/// @deprecated Superseded by @c VertexFitCandidate, which describes the vertex
+/// to be fitted, and @c VertexScratch, which holds the fitter's per-vertex
+/// scratch data. This type merges the two and is kept only so that code
+/// written against the pre-split @c AdaptiveMultiVertexFitter::State keeps
+/// compiling; it is no longer used by the fitter itself.
+struct VertexInfo {
+  VertexInfo() = default;
+
+  /// Construct VertexInfo with constraint and position.
+  /// @param constr Vertex constraint for the fitting procedure
+  /// @param pos Initial position for linearization, old position, and seed
+  VertexInfo(const Acts::Vertex& constr, const Acts::Vector4& pos)
+      : constraint(constr),
+        linPoint(pos),
+        oldPosition(pos),
+        seedPosition(pos) {}
+
+  /// Vertex constraint for fitting procedure
+  Acts::Vertex constraint;
+
+  /// Point where all associated tracks are linearized
+  Acts::Vector4 linPoint{Acts::Vector4::Zero()};
+
+  /// Vertex position from the last iteration of the fit
+  Acts::Vector4 oldPosition{Acts::Vector4::Zero()};
+
+  /// The seed position (i.e., the first estimate for the vertex position as
+  /// obtained by the vertex seed finder)
+  Acts::Vector4 seedPosition{Acts::Vector4::Zero()};
+
+  /// Flag indicating if associated tracks need relinearization
+  bool relinearize = true;
+
+  /// Vector of all tracks that are currently assigned to vertex
+  std::vector<InputTrack> trackLinks;
 
   /// Map of 3D impact parameters for each associated track
   std::map<InputTrack, const BoundTrackParameters> impactParams3D;
