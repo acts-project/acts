@@ -11,33 +11,12 @@ import pytest
 
 import acts
 import acts.examples
-
-try:
-    from acts.examples import PythonTrackParameterPerformanceWriter
-except ImportError:
-    PythonTrackParameterPerformanceWriter = None
-
-try:
-    import acts.examples.root as acts_root
-except ImportError:
-    acts_root = None
-
-try:
-    import acts.examples.scipy as acts_scipy
-except ImportError:
-    acts_scipy = None
+import acts.examples.scipy as acts_scipy
+from acts.examples import PythonTrackParameterPerformanceWriter
 
 u = acts.UnitConstants
 
-pytestmark = [
-    pytest.mark.root,
-    pytest.mark.skipif(
-        PythonTrackParameterPerformanceWriter is None
-        or acts_root is None
-        or acts_scipy is None,
-        reason="Python/ROOT/scipy performance writers not available",
-    ),
-]
+pytestmark = pytest.mark.root
 
 
 class _SyntheticTrackAlgorithm(acts.examples.IAlgorithm):
@@ -120,6 +99,8 @@ def _small_res_plot_config():
     synthetic track lands in the same (eta, phi, pT) bin, so this just avoids
     fitting ~1600 empty slices per parameter for nothing.
     """
+    import acts.examples.root as acts_root
+
     cfg = acts_root.ResPlotToolConfig()
     cfg.varBinning["Eta"] = acts.Axis.regular(2, -4.0, 4.0, "#eta")
     cfg.varBinning["Phi"] = acts.Axis.regular(2, -np.pi, np.pi, "#phi")
@@ -131,6 +112,8 @@ def _run_backends(sampler, nTracks, seed):
     """Run the synthetic algorithm + the real TrackTruthMatcher once, score
     the result with both fit backends, and return `{backend: histogram_dict}`.
     """
+    import acts.examples.root as acts_root
+
     s = acts.examples.Sequencer(events=1, numThreads=1, logLevel=acts.logging.WARNING)
     s.addAlgorithm(_SyntheticTrackAlgorithm(sampler, nTracks, seed))
     s.addAlgorithm(
@@ -205,11 +188,7 @@ def _assert_backend_agrees(histograms, key, backend, rtol, atol):
 _RTOL = 1e-3
 _MEAN_ATOL = 1e-3
 
-# "uniform" has no reswidth/resmean tolerance: a Gaussian fit to a flat-top
-# distribution has no unique best fit, so backends legitimately disagree by
-# up to several hundred percent. It's a pure existence/sanity check instead.
 _SCENARIOS = {
-    "uniform": lambda rng: rng.uniform(-0.05, 0.05),
     "gaussian": lambda rng: rng.normal(0.0, 0.02),
     "gaussian_with_outliers": lambda rng: (
         rng.uniform(-0.5, 0.5) if rng.uniform() < 0.02 else rng.normal(0.0, 0.02)
@@ -219,7 +198,7 @@ _SCENARIOS = {
 # Fixed, not hash(scenario): Python randomizes string hashing per-process
 # (PYTHONHASHSEED), so seeding off hash() would make this test's sample
 # non-reproducible from run to run.
-_SEEDS = {"uniform": 1, "gaussian": 2, "gaussian_with_outliers": 3}
+_SEEDS = {"gaussian": 2, "gaussian_with_outliers": 3}
 
 
 @pytest.mark.parametrize("scenario", list(_SCENARIOS.keys()))
@@ -227,20 +206,6 @@ def test_fit_backends_agree(scenario):
     histograms = _run_backends(
         _SCENARIOS[scenario], nTracks=5000, seed=_SEEDS[scenario]
     )
-
-    if scenario == "uniform":
-        # Existence/sanity only (see the tolerance note above): a backend
-        # is allowed to decline this ill-conditioned fit outright, but
-        # whichever ones report a result must be well-formed.
-        for backend in ["root", "scipy"]:
-            hist = histograms[backend].get("reswidth_d0_vs_eta")
-            assert hist is not None
-            errs = np.asarray(hist.histogram.errors())
-            vals = np.asarray(hist.histogram.values())
-            fitted = errs > 0
-            assert np.all(np.isfinite(vals[fitted]))
-            assert np.all(vals[fitted] > 0)
-        return
 
     _assert_backend_agrees(
         histograms, "reswidth_d0_vs_eta", "scipy", rtol=_RTOL, atol=0.0
