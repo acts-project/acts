@@ -204,10 +204,11 @@ jobs:
             CXX_STANDARD: "20"
             CONTAINER: "ghcr.io/acts-project/ubuntu2604:91"
             FLAVOR: "rocm7"
-            # vecmem stays in-tree: HIP::hiprt comes from vecmem's
-            # FindHIPToolkit.cmake, which vecmem <= 1.25.0 ships but does not
-            # install. TODO: take it from the flavor once the deps carry 1.26.
-            OPTIONS: -DCMAKE_HIP_PLATFORM=amd -DDETRAY_BUILD_HIP=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_BUILD_BENCHMARKS=OFF -DDETRAY_BUILD_INTEGRATIONTESTS=OFF -DDETRAY_USE_SYSTEM_EIGEN3=ON -DDETRAY_USE_SYSTEM_COVFIE=ON -DDETRAY_USE_SYSTEM_GOOGLETEST=ON -DDETRAY_USE_SYSTEM_NLOHMANN=ON
+            # vecmem comes from the flavor like everything else: HIP::hiprt is
+            # found through vecmem's FindHIPToolkit.cmake, which 1.26.0 added to
+            # the installed language helpers and vecmem-config puts on
+            # CMAKE_MODULE_PATH. The pinned tag carries 1.27.0.
+            OPTIONS: -DCMAKE_HIP_PLATFORM=amd -DDETRAY_BUILD_HIP=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_BUILD_BENCHMARKS=OFF -DDETRAY_BUILD_INTEGRATIONTESTS=OFF -DDETRAY_USE_SYSTEM_EIGEN3=ON -DDETRAY_USE_SYSTEM_VECMEM=ON -DDETRAY_USE_SYSTEM_COVFIE=ON -DDETRAY_USE_SYSTEM_GOOGLETEST=ON -DDETRAY_USE_SYSTEM_NLOHMANN=ON
           #- NAME: "HIP-NVIDIA"
           #  CXX_STANDARD: "20"
           #  CONTAINER:
