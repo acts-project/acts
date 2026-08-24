@@ -15,6 +15,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Seed.hpp"
+#include "ActsExamples/EventData/SeedSpacePointSelection.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -62,6 +63,11 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
 
     /// The minimum magnetic field to trigger the track parameters estimation
     double bFieldMin = 0.1 * Acts::UnitConstants::T;
+
+    /// Which space points of the seed feed the estimate. Seeds for which the
+    /// selection cannot be made are skipped.
+    SeedSpacePointSelection spacePointSelection =
+        SeedSpacePointSelection::FirstThree;
 
     /// Initial sigmas for the track parameters.
     std::array<double, 6> initialSigmas = {

@@ -24,6 +24,89 @@ def make_matrix(name, rows, cols, **kwargs):
     )
 
 
+def explicit(x):
+    """Explicit matrix view of a MatrixSymbol (or pass through)."""
+    return x.as_explicit() if hasattr(x, "as_explicit") else x
+
+
+class Derivation:
+    """An ordered sequence of named intermediate expressions.
+
+    `check_same` resolves a name back to closed form, so a hand derived
+    shortcut can be checked against the plain chain rule before it reaches
+    generated code.
+    """
+
+    def __init__(self):
+        self.name_exprs = []
+        self._by_name = {}
+
+    def add(self, name, expr):
+        if isinstance(expr, Matrix):
+            expr = ImmutableMatrix(expr)
+        ne = name_expr(name, expr)
+        self.name_exprs.append(ne)
+        self._by_name[ne.name] = ne.expr
+        return ne
+
+    def resolve(self, expr):
+        subs = list(self._by_name.items())
+        for _ in range(64):
+            new = expr.subs(subs)
+            if new == expr:
+                return sym.expand(new)
+            expr = new
+        raise RuntimeError("named expressions did not resolve")
+
+    def check_same(self, what, expr_a, expr_b):
+        diff = sym.simplify(sym.expand(self.resolve(expr_a) - self.resolve(expr_b)))
+        if any(e != 0 for e in diff):
+            raise AssertionError(f"{what}: shortcut does not match chain rule\n{diff}")
+
+
+class StructuredMatrix:
+    """A symbolic matrix declared as a grid of entry classes.
+
+    A number is a structural constant, a string names the entry's class and
+    becomes a symbol.  The index sets the classes define are read back off the
+    grid rather than restated.
+    """
+
+    def __init__(self, name, spec):
+        cols = {len(row) for row in spec}
+        if len(cols) != 1:
+            raise ValueError(f"{name}: rows of unequal length")
+
+        self.rows = len(spec)
+        self.cols = cols.pop()
+        self.size = self.rows * self.cols
+        self._spec = [list(row) for row in spec]
+
+        symbols = MatrixSymbol(name, self.rows, self.cols)
+        self.matrix = Matrix(
+            [
+                [
+                    symbols[i, j] if isinstance(entry, str) else entry
+                    for j, entry in enumerate(row)
+                ]
+                for i, row in enumerate(self._spec)
+            ]
+        )
+
+    def entries(self, *classes):
+        """(row, column) of every entry in `classes`, in storage order."""
+        return [
+            (i, j)
+            for j in range(self.cols)
+            for i in range(self.rows)
+            if self._spec[i][j] in classes
+        ]
+
+    def flat_index(self, row, col):
+        """Index of an entry in the column major storage."""
+        return row + self.rows * col
+
+
 def name_expr(name, expr):
     if hasattr(expr, "shape"):
         s = sym.MatrixSymbol(name, *expr.shape)
@@ -289,7 +372,13 @@ def my_cse(name_exprs, inflate_deflate=True, simplify=True):
 
 
 def my_expression_print(
-    printer, name_exprs, outputs, run_cse=True, pre_expr_hook=None, post_expr_hook=None
+    printer,
+    name_exprs,
+    outputs,
+    run_cse=True,
+    pre_expr_hook=None,
+    post_expr_hook=None,
+    scalar_outputs_by_pointer=True,
 ):
     if run_cse:
         name_exprs = my_cse(name_exprs, inflate_deflate=True)
@@ -306,15 +395,17 @@ def my_expression_print(
         code = printer.doprint(Assignment(var, expr))
         if var not in outputs:
             if hasattr(expr, "shape"):
-                lines.append(f"T {var}[{np.prod(expr.shape)}];")
+                lines.append(f"std::array<T, {np.prod(expr.shape)}> {var}{{}};")
                 lines.extend(code.split("\n"))
             else:
                 lines.append("const auto " + code)
         else:
             if hasattr(expr, "shape"):
                 lines.extend(code.split("\n"))
-            else:
+            elif scalar_outputs_by_pointer:
                 lines.append("*" + code)
+            else:
+                lines.append(code)
 
         if post_expr_hook is not None:
             code = post_expr_hook(var)
