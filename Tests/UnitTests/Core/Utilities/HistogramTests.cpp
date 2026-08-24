@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE(SliceLastAxis_2D) {
   }
 
   for (int i = 0; i < 3; ++i) {
-    const Histogram1 slice = sliceLastAxis(hist, i);
+    const Histogram1 slice = hist.sliceLastAxis(i);
 
     // The slice spans the last axis and inherits its binning and metadata
     BOOST_CHECK_EQUAL(slice.histogram().axis(0).size(), 4);
@@ -333,11 +333,11 @@ BOOST_AUTO_TEST_CASE(SliceLastAxis_2D_IsNotAProjection) {
   hist.fill({-5.0, 0.5});
   hist.fill({99.0, 0.5});
 
-  const Histogram1 slice0 = sliceLastAxis(hist, 0);
+  const Histogram1 slice0 = hist.sliceLastAxis(0);
   BOOST_CHECK_CLOSE(slice0.binContent({0}), 1.0, 1e-10);
   BOOST_CHECK_EQUAL(slice0.binContent({1}), 0.0);
 
-  const Histogram1 slice2 = sliceLastAxis(hist, 2);
+  const Histogram1 slice2 = hist.sliceLastAxis(2);
   BOOST_CHECK_EQUAL(slice2.binContent({0}), 0.0);
   BOOST_CHECK_CLOSE(slice2.binContent({1}), 100.0, 1e-10);
 }
@@ -362,7 +362,7 @@ BOOST_AUTO_TEST_CASE(SliceLastAxis_3D) {
 
   for (int i = 0; i < 2; ++i) {
     for (int j = 0; j < 3; ++j) {
-      const Histogram1 slice = sliceLastAxis(hist, i, j);
+      const Histogram1 slice = hist.sliceLastAxis(i, j);
       BOOST_CHECK_EQUAL(slice.histogram().axis(0).size(), 4);
       BOOST_CHECK_EQUAL(slice.histogram().axis(0).metadata(), "res");
       for (int k = 0; k < 4; ++k) {
@@ -447,7 +447,7 @@ BOOST_AUTO_TEST_CASE(SliceLastAxis_PropagatesErrors) {
   hist.setBin({0, 1}, 2.0, 0.2);
   hist.setBin({0, 2}, 3.0, 0.3);
 
-  const Histogram1 slice = sliceLastAxis(hist, 0);
+  const Histogram1 slice = hist.sliceLastAxis(0);
   BOOST_CHECK_CLOSE(slice.binContent({0}), 1.0, 1e-10);
   BOOST_CHECK_CLOSE(slice.binError({0}), 0.1, 1e-10);
   BOOST_CHECK_CLOSE(slice.binContent({1}), 2.0, 1e-10);

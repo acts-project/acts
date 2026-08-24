@@ -131,9 +131,8 @@ MeanWidthProfiles<Dim - 1> extractMeanWidthProfiles(
   int fitFailures = 0;
   for (int flat = 0; flat < totalOuterBins; ++flat) {
     const std::array<int, OuterDim> outerBins = unravel(flat);
-    const Acts::Experimental::Histogram1 slice =
-        Acts::Experimental::detail::sliceLastAxis<Dim>(hist, outerBins);
-    if (Acts::Experimental::totalContent(slice) < minEntriesForFit) {
+    const Acts::Experimental::Histogram1 slice = hist.sliceLastAxis(outerBins);
+    if (slice.totalContent() < minEntriesForFit) {
       // Too few entries: skipped, does not count as a fit failure
       continue;
     }

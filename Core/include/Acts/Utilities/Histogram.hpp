@@ -24,8 +24,6 @@
 
 namespace Acts::Experimental {
 
-namespace acc = boost::histogram::accumulators;
-
 /// Variable-width histogram axis with string metadata
 using BoostVariableAxis = boost::histogram::axis::variable<double, std::string>;
 /// Regular-width histogram axis with string metadata
@@ -113,7 +111,8 @@ class Histogram {
   void setBinContent(const std::array<int, Dim>& indices, double content) {
     std::apply(
         [&](auto... i) {
-          m_hist.at(i...) = acc::weighted_sum<double>(content);
+          m_hist.at(i...) =
+              boost::histogram::accumulators::weighted_sum<double>(content);
         },
         indices);
   }
@@ -129,7 +128,9 @@ class Histogram {
               double error) {
     std::apply(
         [&](auto... i) {
-          m_hist.at(i...) = acc::weighted_sum<double>(content, error * error);
+          m_hist.at(i...) =
+              boost::histogram::accumulators::weighted_sum<double>(
+                  content, error * error);
         },
         indices);
   }
@@ -170,6 +171,73 @@ class Histogram {
   /// Direct access to boost::histogram (for converters and tests)
   /// @return The underlying boost histogram
   const BoostHist& histogram() const { return m_hist; }
+
+  /// Extract the distribution along the last axis at a fixed bin of the
+  /// other axes
+  ///
+  /// Equivalent to ROOT's `TH2::ProjectionY(name, xBin + 1, xBin + 1)` for a
+  /// 2D histogram, or `TH3::ProjectionZ(name, xBin + 1, xBin + 1, yBin + 1,
+  /// yBin + 1)` for a 3D one.
+  ///
+  /// @param outerBins Zero-based bin index for every axis but the last, in
+  ///                  axis order
+  /// @return A 1D histogram over the last axis
+  /// @remark Every entry of @p outerBins must be in range for its axis
+  Histogram<1> sliceLastAxis(const std::array<int, Dim - 1>& outerBins) const {
+    const auto& lastAxis = m_hist.axis(Dim - 1);
+
+    assert(std::ranges::all_of(std::views::iota(std::size_t{0}, Dim - 1),
+                               [&](std::size_t d) {
+                                 return outerBins[d] >= 0 &&
+                                        outerBins[d] < m_hist.axis(d).size();
+                               }) &&
+           "outer bin index out of range");
+
+    std::string sliceName = m_name + "_slice";
+    for (const int bin : outerBins) {
+      sliceName += "_" + std::to_string(bin);
+    }
+
+    std::array<AxisVariant, 1> axes = {lastAxis};
+    Histogram<1> slice(std::move(sliceName), m_title, axes);
+
+    for (int k = 0; k < lastAxis.size(); ++k) {
+      std::array<int, Dim> indices{};
+      std::ranges::copy(outerBins, indices.begin());
+      indices[Dim - 1] = k;
+      slice.setBin({k}, binContent(indices), binError(indices));
+    }
+
+    return slice;
+  }
+
+  /// Extract the distribution along the last axis at a fixed bin of the
+  /// other axes, given as individual bin indices rather than an array
+  ///
+  /// @param outerBins Zero-based bin index for every axis but the last, in
+  ///                  axis order
+  /// @return A 1D histogram over the last axis
+  /// @remark Every entry of @p outerBins must be in range for its axis
+  template <std::integral... Ints>
+    requires(sizeof...(Ints) + 1 == Dim)
+  Histogram<1> sliceLastAxis(Ints... outerBins) const {
+    return sliceLastAxis(
+        std::array<int, Dim - 1>{static_cast<int>(outerBins)...});
+  }
+
+  /// Total content of the histogram's in-range bins
+  ///
+  /// The ROOT-independent equivalent of `TH1::GetEntries()` on a filled
+  /// histogram.
+  ///
+  /// @return The sum of all in-range bin contents
+  double totalContent() const {
+    double total = 0;
+    for (auto&& bin : boost::histogram::indexed(m_hist)) {
+      total += (*bin).value();
+    }
+    return total;
+  }
 
  private:
   std::string m_name;
@@ -345,78 +413,6 @@ Histogram1 projectionX(const Histogram2& hist2d);
 /// @note Unlike ROOT's `TH2::ProjectionY`, the sum runs over the under- and
 ///       overflow bins of the X axis as well.
 Histogram1 projectionY(const Histogram2& hist2d);
-
-namespace detail {
-
-/// Core of @c sliceLastAxis, taking the outer bin indices as an array rather
-/// than a parameter pack so it can also be called from generic code that
-/// already has them packed (see @c extractMeanWidthProfiles)
-template <std::size_t Dim>
-Histogram1 sliceLastAxis(const Histogram<Dim>& hist,
-                         const std::array<int, Dim - 1>& outerBins) {
-  const auto& lastAxis = hist.histogram().axis(Dim - 1);
-
-  assert(std::ranges::all_of(std::views::iota(std::size_t{0}, Dim - 1),
-                             [&](std::size_t d) {
-                               return outerBins[d] >= 0 &&
-                                      outerBins[d] <
-                                          hist.histogram().axis(d).size();
-                             }) &&
-         "outer bin index out of range");
-
-  std::string sliceName = hist.name() + "_slice";
-  for (const int bin : outerBins) {
-    sliceName += "_" + std::to_string(bin);
-  }
-
-  std::array<AxisVariant, 1> axes = {lastAxis};
-  Histogram1 slice(std::move(sliceName), hist.title(), axes);
-
-  for (int k = 0; k < lastAxis.size(); ++k) {
-    std::array<int, Dim> indices{};
-    std::ranges::copy(outerBins, indices.begin());
-    indices[Dim - 1] = k;
-    slice.setBin({k}, hist.binContent(indices), hist.binError(indices));
-  }
-
-  return slice;
-}
-
-}  // namespace detail
-
-/// Extract the distribution along the last axis at fixed bins of the others
-///
-/// Equivalent to ROOT's `TH2::ProjectionY(name, xBin + 1, xBin + 1)` for a 2D
-/// histogram, or `TH3::ProjectionZ(name, xBin + 1, xBin + 1, yBin + 1, yBin +
-/// 1)` for a 3D one.
-///
-/// @param hist The histogram to slice
-/// @param outerBins Zero-based bin index for every axis but the last, in
-///                  axis order
-/// @return A 1D histogram over the last axis
-/// @remark Every entry of @p outerBins must be in range for its axis
-template <std::size_t Dim, std::integral... Ints>
-  requires(sizeof...(Ints) + 1 == Dim)
-Histogram1 sliceLastAxis(const Histogram<Dim>& hist, Ints... outerBins) {
-  return detail::sliceLastAxis<Dim>(
-      hist, std::array<int, Dim - 1>{static_cast<int>(outerBins)...});
-}
-
-/// Total content of a histogram's in-range bins
-///
-/// The ROOT-independent equivalent of `TH1::GetEntries()` on a filled
-/// histogram.
-///
-/// @param hist The histogram to sum
-/// @return The sum of all in-range bin contents
-template <std::size_t Dim>
-double totalContent(const Histogram<Dim>& hist) {
-  double total = 0;
-  for (auto&& bin : boost::histogram::indexed(hist.histogram())) {
-    total += (*bin).value();
-  }
-  return total;
-}
 
 /// Extract bin edges from an AxisVariant
 ///
