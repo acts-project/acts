@@ -8,6 +8,12 @@ name: Traccc
 
 on:
   push:
+    # The release branches (keep in sync with release.yml) and the merge
+    # queue's temp ref carry a tree that has already been built.
+    branches-ignore:
+      - 'releases'
+      - 'release/**'
+      - 'gh-readonly-queue/**'
     paths:
       - "Traccc/**"
       - "Detray/**"
