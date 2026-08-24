@@ -179,7 +179,7 @@ bool GbtsLayer::checkCompatibility(const GbtsLayer& otherLayer,
 
   if (m_layerDescription.type == GbtsLayerType::Endcap &&
       otherLayer.m_layerDescription.type == GbtsLayerType::Endcap) {
-    float z2 = otherLayer.m_layerDescription.refCoord;
+    const float z2 = otherLayer.m_layerDescription.refCoord;
     const float z1 = m_layerDescription.refCoord;
     const float r2max = otherLayer.m_maxBinCoord.at(b2);
     const float r2min = otherLayer.m_minBinCoord.at(b2);
