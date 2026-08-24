@@ -11,13 +11,17 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SeedContainer.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
-#include "Acts/Seeding/GbtsDataStorage.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsLayerDescription.hpp"
+#include "Acts/Seeding/GbtsNodeStorage.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
+#include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <array>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <string>
 #include <utility>
@@ -30,7 +34,6 @@ class GraphBasedTrackSeeder {
  public:
   /// Configuration struct for the GBTS seeding algorithm.
   struct Config {
-    // GbtsSeedingAlgorithm options
     /// Enable beam spot correction.
     bool beamSpotCorrection = false;
 
@@ -42,11 +45,10 @@ class GraphBasedTrackSeeder {
     /// Look-up table input file path.
     std::string lutInputFile;
 
-    // SeedFinderGbts option
     /// Enable Large Radius Tracking mode.
     bool lrtMode = false;
-    /// Use machine learning features (e.g., cluster width).
-    bool useMl = false;
+    /// Enable the cluster width cuts: wide endcap rejection and tau narrowing.
+    bool useClusterWidthCuts = false;
     /// Match seeds before creating them.
     bool matchBeforeCreate = false;
     /// Use legacy tuning parameters.
@@ -87,6 +89,9 @@ class GraphBasedTrackSeeder {
     std::uint32_t nMaxEdges = 2000000;
     /// Minimum delta radius between layers.
     float minDeltaRadius = 2.0 * Acts::UnitConstants::mm;
+    /// Largest |cot(theta)| accepted for a doublet. The default corresponds to
+    /// |eta| of about 4.3, beyond the acceptance of any current tracker.
+    float maxAbsTau = 36.0f;
     /// Maximum d0 impact parameter when validating edge connection triplet
     float d0Max = 3.0 * UnitConstants::mm;
     /// Maximum difference in allowed tangent between candidate edge connection
@@ -113,9 +118,15 @@ class GraphBasedTrackSeeder {
     float maxSeedSplitEta = 0.6;
     /// Max allowed curvature for seed self consistency check.
     float maxInvRadDiff = 0.7e-2 / UnitConstants::m;
-    // GbtsDataStorage options
+    // GbtsNodeStorage options
     /// Maximum endcap cluster width.
     float maxEndcapClusterWidth = 0.35 * Acts::UnitConstants::mm;
+    /// Half-length in local y of a pixel module, against which the distance of
+    /// a cluster to the module edge is measured.
+    float moduleHalfLengthY = 10.0 * Acts::UnitConstants::mm;
+    /// Distance to the module edge below which a cluster may be shortened,
+    /// which switches to the tau lookup table's near-edge bounds.
+    float moduleEdgeTolerance = 0.3 * Acts::UnitConstants::mm;
   };
 
   /// Derived configuration struct that contains calculated parameters based on
@@ -144,26 +155,71 @@ class GraphBasedTrackSeeder {
     double ptCoeff{};
   };
 
+  /// @param config Configuration for the seed finder
+  /// @param geometry GBTS geometry
+  /// @param logger Logging instance
+  GraphBasedTrackSeeder(const DerivedConfig& config,
+                        std::shared_ptr<GbtsGeometry> geometry,
+                        std::unique_ptr<const Acts::Logger> logger =
+                            Acts::getDefaultLogger("Finder",
+                                                   Acts::Logging::Level::INFO));
+
+  /// Create an empty node storage matching this seeder's configuration.
+  ///
+  /// Fill it through GbtsNodeStorage::insert, then call
+  /// GbtsNodeStorage::finalize before handing it to createSeeds.
+  /// @param isPixelLayer Information on if a layer is pixel or strip
+  /// @return An empty node storage
+  GbtsNodeStorage makeNodeStorage(const std::vector<bool>& isPixelLayer) const;
+
+  /// Create seeds from an ACTS space point container in a region of interest.
+  ///
+  /// Convenience wrapper that builds and finalizes the node storage itself. The
+  /// container must carry the `layerId`, `clusterWidth` and `localPositionY`
+  /// columns.
+  /// @param spacePoints Space point container
+  /// @param roi Region of interest descriptor
+  /// @param isPixelLayer Information on if a layer is pixel or strip
+  /// @param filter Tracking filter to be applied
+  /// @param options Event based options such as magnetic field strength
+  /// @param outputSeeds Container with generated seeds
+  void createSeeds(const SpacePointContainer& spacePoints,
+                   const GbtsRoiDescriptor& roi,
+                   const std::vector<bool>& isPixelLayer,
+                   const GbtsTrackingFilter& filter, const Options& options,
+                   SeedContainer& outputSeeds) const;
+
+  /// Create seeds from a finalized node storage in a region of interest.
+  /// @param nodeStorage Finalized graph node storage
+  /// @param roi Region of interest descriptor
+  /// @param filter Tracking filter to be applied
+  /// @param options Event based options such as magnetic field strength
+  /// @param outputSeeds Container with generated seeds
+  void createSeeds(GbtsNodeStorage& nodeStorage, const GbtsRoiDescriptor& roi,
+                   const GbtsTrackingFilter& filter, const Options& options,
+                   SeedContainer& outputSeeds) const;
+
+ private:
   /// candidate seed metadata produced by the GBTS algorithm.
   struct SeedCandidateProperties {
     /// @param quality Seed quality score
     /// @param clone Clone flag
-    /// @param sps Vector of pointers to actual space points
+    /// @param sps Vector of graph node indices
     /// @param splitFlag used to flag if seed needs to be split in two
     SeedCandidateProperties(float quality, std::int32_t clone,
-                            std::vector<const GbtsNode*> sps,
+                            std::vector<SpacePointIndex> sps,
                             std::uint32_t splitFlag)
         : seedQuality(quality),
           isClone(clone),
-          spacePoints(std::move(sps)),
+          nodes(std::move(sps)),
           forSeedSplitting(splitFlag) {}
 
     /// Seed quality score.
     float seedQuality{};
     /// Clone flag.
     std::int32_t isClone{};
-    /// Space point indices.
-    std::vector<const GbtsNode*> spacePoints;
+    /// Graph node indices.
+    std::vector<SpacePointIndex> nodes;
     /// Flag for seed splitting.
     std::uint32_t forSeedSplitting{};
   };
@@ -187,71 +243,25 @@ class GraphBasedTrackSeeder {
     std::uint32_t firstIt{};
     /// window half-width;
     float deltaPhi{};
-    /// active or not
-    bool hasNodes{};
-    /// associated eta bin
-    const GbtsEtaBin* bin{};
+    /// associated eta bin, null while the window is inactive
+    const detail::GbtsEtaBinInfo* etaBin{};
   };
-
-  /// @param config Configuration for the seed finder
-  /// @param geometry GBTS geometry
-  /// @param logger Logging instance
-  GraphBasedTrackSeeder(const DerivedConfig& config,
-                        std::shared_ptr<GbtsGeometry> geometry,
-                        std::unique_ptr<const Acts::Logger> logger =
-                            Acts::getDefaultLogger("Finder",
-                                                   Acts::Logging::Level::INFO));
-
-  /// Create seeds from space points in a region of interest.
-  /// @param spacePoints Space point container
-  /// @param roi Region of interest descriptor
-  /// @param isPixelLayer Information on if a layer is pixel or strip
-  /// @param maxLayers Maximum number of layers
-  /// @param filter Tracking filter to be applied
-  /// @param options Event based options such as magnetic field strength
-  /// @param outputSeeds Container with generated seeds
-  void createSeeds(const SpacePointContainer& spacePoints,
-                   const GbtsRoiDescriptor& roi,
-                   const std::vector<bool>& isPixelLayer,
-                   std::uint32_t maxLayers, const GbtsTrackingFilter& filter,
-                   const Options& options, SeedContainer& outputSeeds) const;
-
-  /// Create graph nodes from space points.
-  /// @param spacePoints Space point container
-  /// @param maxLayers Maximum number of layers
-  /// @return Vector of node vectors organized by layer
-  std::vector<std::vector<GbtsNode>> createNodes(
-      const SpacePointContainer& spacePoints, std::uint32_t maxLayers) const;
-
-  /// Create seeds from space points in a region of interest.
-  /// @param nodesPerLayer Vector of node vectors organized by layer
-  /// @param isPixelLayer Information on if a layer is pixel or strip
-  /// @param roi Region of interest descriptor
-  /// @param filter Tracking filter to be applied
-  /// @param options Event based options such as magnetic field strength
-  /// @param outputSeeds Container with generated seeds
-  void createSeeds(const std::vector<std::vector<GbtsNode>>& nodesPerLayer,
-                   const std::vector<bool>& isPixelLayer,
-                   const GbtsRoiDescriptor& roi,
-                   const GbtsTrackingFilter& filter, const Options& options,
-                   SeedContainer& outputSeeds) const;
-
- private:
   DerivedConfig m_cfg;
 
   std::shared_ptr<const GbtsGeometry> m_geometry;
 
-  GbtsMlLookupTable m_mlLut;
+  detail::GbtsTauLookupTable m_tauLut;
 
   std::unique_ptr<const Acts::Logger> m_logger =
       Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
 
   const Acts::Logger& logger() const { return *m_logger; }
 
-  /// Parse machine learning lookup table from file.
+  /// Parse the tau lookup table from file.
   /// @param lutInputFile Path to the lookup table input file
-  /// @return Parsed machine learning lookup table
-  GbtsMlLookupTable parseGbtsMlLookupTable(const std::string& lutInputFile);
+  /// @return Parsed tau lookup table
+  detail::GbtsTauLookupTable parseTauLookupTable(
+      const std::string& lutInputFile);
 
   /// Build doublet graph from nodes.
   /// @param roi Region of interest descriptor
@@ -261,25 +271,25 @@ class GraphBasedTrackSeeder {
   /// @return Pair of edge count and maximum level
   std::pair<std::int32_t, std::int32_t> buildTheGraph(
       const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
-      std::vector<GbtsEdge>& edgeStorage, const Options& options) const;
+      std::vector<detail::GbtsEdge>& edgeStorage, const Options& options) const;
 
   /// Run connected component analysis on the graph.
   /// @param nEdges Number of edges in the graph
   /// @param edgeStorage Storage containing graph edges
   /// @return Number of connected components found
   std::int32_t runCCA(std::uint32_t nEdges,
-                      std::vector<GbtsEdge>& edgeStorage) const;
+                      std::vector<detail::GbtsEdge>& edgeStorage) const;
 
   /// Extract seed candidates from the graph.
   /// @param maxLevel Maximum level in the graph
   /// @param nEdges Number of edges
-  /// @param nHits Number of hits
+  /// @param nodeStorage Storage containing the graph nodes
   /// @param edgeStorage Storage containing edges
   /// @param vOutputSeeds Output vector for seed candidates
   /// @param filter Tracking filter to be applied
   void extractSeedsFromTheGraph(std::uint32_t maxLevel, std::uint32_t nEdges,
-                                std::int32_t nHits,
-                                std::vector<GbtsEdge>& edgeStorage,
+                                const GbtsNodeStorage& nodeStorage,
+                                std::vector<detail::GbtsEdge>& edgeStorage,
                                 std::vector<OutputSeedProperties>& vOutputSeeds,
                                 const GbtsTrackingFilter& filter) const;
 
@@ -293,9 +303,23 @@ class GraphBasedTrackSeeder {
   bool checkZ0BitMask(std::uint16_t z0BitMask, float z0, float minZ0,
                       float z0HistoCoeff) const;
 
-  float estimateCurvature(const std::array<const GbtsNode*, 3>& nodes) const;
+  /// Estimate the inverse radius of the circle through three nodes.
+  /// @param nodeView View of the node positions and layers
+  /// @param nodes The three graph nodes, innermost first
+  /// @return The estimated inverse radius
+  float estimateCurvature(const detail::GbtsNodeView& nodeView,
+                          const std::array<SpacePointIndex, 3>& nodes) const;
 
-  bool validateTriplet(const std::array<const GbtsNode*, 3> candidateTriplet,
+  /// Check a triplet against the pT and d0 cuts.
+  /// @param nodeView View of the node positions and layers
+  /// @param candidateTriplet The three graph nodes
+  /// @param tripletMinPt Minimum transverse momentum
+  /// @param tauRatio Tau ratio of the triplet
+  /// @param tauRatioCut Tau ratio cut threshold
+  /// @param options Event based options such as magnetic field strength
+  /// @return Whether the triplet is accepted
+  bool validateTriplet(const detail::GbtsNodeView& nodeView,
+                       const std::array<SpacePointIndex, 3>& candidateTriplet,
                        float tripletMinPt, float tauRatio, float tauRatioCut,
                        const Options& options) const;
 };

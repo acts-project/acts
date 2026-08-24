@@ -27,7 +27,7 @@ acts_add_library(
     src/detail/NuclearInteractionParametrisation.cpp
     src/RootPatternRecognitionPerformanceWriter.cpp
     src/RootTrackFinderNTupleWriter.cpp
-    src/RootTrackFitterPerformanceWriter.cpp
+    src/RootTrackParameterPerformanceWriter.cpp
     src/RootVertexNTupleWriter.cpp
     src/RootMuonSpacePointWriter.cpp
     src/RootMuonSpacePointReader.cpp

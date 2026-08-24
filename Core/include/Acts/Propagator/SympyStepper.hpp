@@ -95,11 +95,9 @@ class SympyStepper final {
     /// The full jacobian of the transport entire transport
     Jacobian jacobian = Jacobian::Identity();
 
-    /// Jacobian from local to the global frame
+    /// Bound-to-free jacobian from the last reference surface, transported
+    /// along with the track.
     BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
-
-    /// Pure transport jacobian part from runge kutta integration
-    FreeMatrix jacTransport = FreeMatrix::Identity();
 
     /// The propagation derivative
     FreeVector derivative = FreeVector::Zero();
