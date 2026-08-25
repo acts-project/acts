@@ -19,7 +19,7 @@ namespace traccc {
 // layers in layerInfo) minPt in MeV
 bool gbts_seedfinder_config::setLinkingScheme(
     Acts::Experimental::GbtsGeometry* gbtsGeo,
-		std::vector<std::pair<uint64_t, short>> detrayGeoIDBinning,
+    std::vector<std::pair<uint64_t, short>> detrayGeoIDBinning,
     const float minPt = 900.0f,
     std::unique_ptr<const traccc::Logger> callers_logger =
         getDummyLogger().clone()) {
@@ -31,29 +31,32 @@ bool gbts_seedfinder_config::setLinkingScheme(
       binTables.push_back(std::make_pair(binPairs.first, bin2));
     }
   }
-	
-	// convert save and convert layer info to SoA
-	layerInfo.reserve(gbtsGeo->numLayers());
-	for (unsigned int index = 0; index < gbtsGeo->numLayers(); ++index) {
-			const Acts::Experimental::detail::GbtsLayer layer =
-					gbtsGeo->layerByIndex(index);
-			// pixel barrel=0 pixel endcap=1 pixel inc. barrel=2 strip=3
-			int vol_id =
-					(layer.layerDescription().id - (layer.layerDescription().id % 1000)) / 1000;
-			int is_inc_barrel = (vol_id == 97) | (vol_id == 95) | (vol_id == 93) |
-													(vol_id == 77) | (vol_id == 75) | (vol_id == 73);
-			char type = (layer.layerDescription().type != Acts::Experimental::GbtsLayerType::Barrel) + is_inc_barrel;
-			if (layer.layerDescription().id <= 20000) {
-					type = 3;
-			}
-			// eta prediction cut occors for type=0 and cluster width cut for type=1
-			layerInfo.addLayer(type, layer.bins()[0], layer.numOfBins(),
-												 layer.minEta(), layer.etaBin());
-	}
+
+  // convert save and convert layer info to SoA
+  layerInfo.reserve(gbtsGeo->numLayers());
+  for (unsigned int index = 0; index < gbtsGeo->numLayers(); ++index) {
+    const Acts::Experimental::detail::GbtsLayer layer =
+        gbtsGeo->layerByIndex(index);
+    // pixel barrel=0 pixel endcap=1 pixel inc. barrel=2 strip=3
+    int vol_id =
+        (layer.layerDescription().id - (layer.layerDescription().id % 1000)) /
+        1000;
+    int is_inc_barrel = (vol_id == 97) | (vol_id == 95) | (vol_id == 93) |
+                        (vol_id == 77) | (vol_id == 75) | (vol_id == 73);
+    char type = (layer.layerDescription().type !=
+                 Acts::Experimental::GbtsLayerType::Barrel) +
+                is_inc_barrel;
+    if (layer.layerDescription().id <= 20000) {
+      type = 3;
+    }
+    // eta prediction cut occors for type=0 and cluster width cut for type=1
+    layerInfo.addLayer(type, layer.bins()[0], layer.numOfBins(), layer.minEta(),
+                       layer.etaBin());
+  }
 
   for (std::pair<unsigned int, unsigned int> lI : layerInfo.info)
     n_eta_bins = std::max(n_eta_bins, lI.first + lI.second);
-	TRACCC_INFO(n_eta_bins << "  " << gbtsGeo->numBins());
+  TRACCC_INFO(n_eta_bins << "  " << gbtsGeo->numBins());
 
   // bin by volume
   std::ranges::sort(detrayGeoIDBinning, [](const std::pair<uint64_t, short> a,

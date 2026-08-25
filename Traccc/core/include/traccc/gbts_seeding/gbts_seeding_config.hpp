@@ -12,14 +12,14 @@
 #include <memory>
 
 // Project include(s).
-#include "traccc/definitions/common.hpp"
-#include "traccc/definitions/primitives.hpp"
-#include "traccc/definitions/qualifiers.hpp"
-#include "traccc/utils/messaging.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/detail/GbtsLayer.hpp"
 
+#include "traccc/definitions/common.hpp"
+#include "traccc/definitions/primitives.hpp"
+#include "traccc/definitions/qualifiers.hpp"
+#include "traccc/utils/messaging.hpp"
 
 // Detray include(s).
 #include <detray/geometry/identifier.hpp>
@@ -248,7 +248,7 @@ struct gbts_count_spacepoints_by_layer_params {
 struct gbts_seedfinder_config {
   bool setLinkingScheme(
       Acts::Experimental::GbtsGeometry* gbtsGeo,
-			std::vector<std::pair<uint64_t, int16_t>> detrayGeoIDBinning,
+      std::vector<std::pair<uint64_t, int16_t>> detrayGeoIDBinning,
       const float minPt, std::unique_ptr<const traccc::Logger> logger);
 
   // layer linking and geometry

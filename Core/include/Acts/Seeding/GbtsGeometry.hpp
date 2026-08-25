@@ -18,7 +18,7 @@
 #include <vector>
 
 namespace traccc {
-	struct gbts_seedfinder_config;
+struct gbts_seedfinder_config;
 }
 
 namespace Acts::Experimental {
@@ -44,7 +44,7 @@ class GbtsGeometry final {
   friend class GbtsNodeStorage;
   friend class GbtsTrackingFilter;
   friend class GraphBasedTrackSeeder;
-	friend struct traccc::gbts_seedfinder_config;
+  friend struct traccc::gbts_seedfinder_config;
 
   /// Get number of eta bins
   /// @return Number of eta bins
@@ -56,8 +56,8 @@ class GbtsGeometry final {
   binGroups() const {
     return m_binGroups;
   }
-  
-	/// Get number of layers
+
+  /// Get number of layers
   /// @return Number of layers
   std::size_t numLayers() const { return m_layers.size(); }
 
