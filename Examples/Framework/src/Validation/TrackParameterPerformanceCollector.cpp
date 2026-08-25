@@ -48,6 +48,9 @@ void TrackParameterPerformanceCollector::fill(
     const TrackParticleMatching& trackParticleMatching,
     const SimHitContainer* simHits,
     const MeasurementSimHitsMap* measurementSimHitsMap) {
+  // with the track-state source the comparison happens per measurement state
+  // on the surface that state sits on, so the track itself needs no reference
+  // surface, but the simulated hits behind the measurements are required
   const bool fromTrackStates =
       m_cfg.parameterSource == TrackParameterSource::TrackState;
   if (fromTrackStates &&
@@ -197,7 +200,9 @@ void TrackParameterPerformanceCollector::logSummary() const {
   ACTS_INFO("Total matched particles: " << m_stats.nTotalMatchedParticles);
 
   if (m_cfg.parameterSource == TrackParameterSource::TrackState) {
-    // expected to be large for tracks that carry the estimate on one state
+    // a state counts here when it does not carry the requested parameters at
+    // all, which is not a failure per se: an input that stores its estimate on
+    // a single state, e.g. seeding output, skips every other state of a track
     ACTS_INFO("Skipped states without the requested parameters: "
               << m_stats.nMissingStateParameters);
     ACTS_INFO(

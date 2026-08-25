@@ -67,7 +67,8 @@ std::optional<Acts::BoundTrackParameters> truthParametersOnSurface(
 ///
 /// @param state The track state to extract the parameters from
 /// @param parameterType Which parameters; if not set, the best available ones
-///        (smoothed, filtered, or predicted)
+///        (smoothed, filtered, or predicted). `Unbiased` is never picked
+///        implicitly and has to be requested
 /// @param hypothesis The particle hypothesis for the parameters
 /// @return The parameters with covariance, or nullopt without a reference
 ///         surface or matching parameters

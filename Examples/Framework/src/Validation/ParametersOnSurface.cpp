@@ -38,8 +38,10 @@ ActsExamples::truthParametersOnSurface(
   const auto [truthLocal, truthPos4, truthUnitDir] =
       averageSimHits(gctx, surface, simHits, indices, logger);
 
-  // averaging the momentum makes even less sense than position and direction,
-  // so take the first one. the indices are known to be valid.
+  // position, direction, and time are averaged over the hits above. the
+  // momentum is not: an average over hits of different particles is not the
+  // momentum of any of them. take the first hit instead, which exists because
+  // the range was checked to be non-empty.
   const auto simHitIdx0 = indices.begin()->second;
   const auto& simHit0 = *simHits.nth(simHitIdx0);
   const auto momentum = simHit0.momentum4Before().segment<3>(Acts::eMom0);
@@ -74,7 +76,9 @@ std::optional<Acts::BoundTrackParameters> ActsExamples::recoParametersOnSurface(
           !state.hasPredicted()) {
         return std::nullopt;
       }
-      // best available parameters, i.e. smoothed, filtered, or predicted
+      // the choice is the proxy's: `parameters()` returns smoothed, else
+      // filtered, else predicted. `Unbiased` is not among them and has to be
+      // requested explicitly.
       return std::pair(state.parameters(), state.covariance());
     }
     if (parameterType == Predicted && state.hasPredicted()) {
