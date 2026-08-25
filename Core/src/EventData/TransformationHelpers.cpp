@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -110,40 +109,3 @@ Acts::BoundVector Acts::transformFreeToCurvilinearParameters(
   return bp;
 }
 
-std::pair<Acts::Vector4, Acts::SquareMatrix<7>>
-Acts::transformBoundToCartesianFourPositionMomentum(
-    const GeometryContext& gctx, const BoundTrackParameters& params,
-    Vector3& momentum) {
-  const Vector4 pos4 = params.fourPosition(gctx);
-  const Vector3 dir = params.direction();
-  momentum = params.momentum();
-
-  // d(FreeVector)/d(BoundVector)
-  // rows ordered [pos0,pos1,pos2, time, dir0,dir1,dir2, qOverP].
-  const BoundToFreeMatrix jacToFree =
-      params.referenceSurface().boundToFreeJacobian(
-          gctx, pos4.segment<3>(ePos0), dir);
-
-  const double p = params.absoluteMomentum();
-  const double qOverP = params.qOverP();
-  // since p = charge/qOverP
-  const double dpdqop = -p / qOverP;
-
-  // d(px,py,pz)/d(freeDir0,freeDir1,freeDir2,qOverP)
-  Matrix<3, 8> momentumToFree = Matrix<3, 8>::Zero();
-  momentumToFree.block<3, 3>(0, eFreeDir0) = p * SquareMatrix3::Identity();
-  momentumToFree.block<3, 1>(0, eFreeQOverP) = dpdqop * dir;
-
-  // d(x,y,z,t,px,py,pz)/d(FreeVector)
-  Matrix<7, 8> freeToCartesian = Matrix<7, 8>::Zero();
-  freeToCartesian.block<4, 4>(0, 0) = SquareMatrix<4>::Identity();
-  freeToCartesian.block<3, 8>(4, 0) = momentumToFree;
-
-  // d(x,y,z,t,px,py,pz)/d(BoundVector)
-  const Matrix<7, 6> jacToCartesian = freeToCartesian * jacToFree;
-
-  const SquareMatrix<7> cov7 =
-      jacToCartesian * params.covariance().value() * jacToCartesian.transpose();
-
-  return {pos4, cov7};
-}
