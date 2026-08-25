@@ -25,8 +25,8 @@ constexpr double eps = 1e-6;
 // d(p_x, p_y, p_z) / d(phi, theta, qOverP) evaluated by central finite
 // differences of the explicit spherical-to-Cartesian momentum map.
 Matrix<3, 3> numericSphericalToFreeMomentumJacobian(double phi, double theta,
-                                                     double qOverP,
-                                                     double charge) {
+                                                    double qOverP,
+                                                    double charge) {
   auto momentum = [&](double phi_, double theta_, double qOverP_) {
     return (charge / qOverP_) * makeDirectionFromPhiTheta(phi_, theta_);
   };
@@ -82,8 +82,10 @@ BOOST_AUTO_TEST_CASE(FreeToSphericalMomentumJacobianIsInverse) {
   const Matrix<3, 3> inverse =
       freeToSphericalMomentumJacobian(momentumVector, charge);
 
-  CHECK_CLOSE_ABS(inverse * forward, Matrix<3, 3>::Identity(), eps);
-  CHECK_CLOSE_ABS(forward * inverse, Matrix<3, 3>::Identity(), eps);
+  const Matrix<3, 3> identity = Matrix<3, 3>::Identity();
+
+  CHECK_CLOSE_ABS(inverse * forward, identity, eps);
+  CHECK_CLOSE_ABS(forward * inverse, identity, eps);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
