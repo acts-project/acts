@@ -108,4 +108,3 @@ Acts::BoundVector Acts::transformFreeToCurvilinearParameters(
   bp[eBoundQOverP] = qOverP;
   return bp;
 }
-
