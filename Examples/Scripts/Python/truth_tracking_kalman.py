@@ -14,7 +14,7 @@ def runTruthTrackingKalman(
     field: acts.MagneticFieldProvider,
     digiConfigFile: Path,
     outputDir: Path,
-    pyVis=True,
+    pyVis=False,
     inputParticlePath: Optional[Path] = None,
     inputHitsPath: Optional[Path] = None,
     decorators=[],
@@ -240,7 +240,8 @@ def runTruthTrackingKalman(
 
     if pyVis:
         vis.plot(
-            projection=projection, filename="truth_tracking_kalman_visualization.png"
+            projection=pyVisProjection,
+            filename="truth_tracking_kalman_visualization.png",
         )
 
     return s
@@ -271,6 +272,6 @@ if "__main__" == __name__:
         trackingGeometry=trackingGeometry,
         field=field,
         digiConfigFile=digiConfigFile,
-        projection="xy",
+        pyVisProjection="xy",
         outputDir=Path.cwd(),
     )
