@@ -318,7 +318,8 @@ void addFramework(py::module& mex) {
                              })
       .def_readonly("threadId", &AlgorithmContext::threadId)
       .def_readonly("magFieldContext", &AlgorithmContext::magFieldContext)
-      .def_readonly("geoContext", &AlgorithmContext::geoContext)
+      .def_readonly("recoGeoContext", &AlgorithmContext::recoGeoContext)
+      .def_readonly("simGeoContext", &AlgorithmContext::simGeoContext)
       .def_readonly("calibContext", &AlgorithmContext::calibContext)
       .def_readwrite("fpeMonitor", &AlgorithmContext::fpeMonitor);
 

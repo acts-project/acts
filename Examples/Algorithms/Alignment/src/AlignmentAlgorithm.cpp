@@ -108,8 +108,8 @@ ProcessCode AlignmentAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   // Set the KalmanFitter options
   TrackFitterOptions kfOptions(
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, extensions,
-      Acts::PropagatorPlainOptions(ctx.geoContext, ctx.magFieldContext),
+      ctx.recoGeoContext, ctx.magFieldContext, ctx.calibContext, extensions,
+      Acts::PropagatorPlainOptions(ctx.recoGeoContext, ctx.magFieldContext),
       &(*pSurface));
 
   // Set the alignment options
