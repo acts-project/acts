@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -22,8 +23,7 @@ namespace ActsExamples {
 
 /// Tools to make hists to show residual, i.e. smoothed_parameter -
 /// truth_parameter, and pull, i.e. (smoothed_parameter -
-/// truth_parameter)/smoothed_paramter_error, of track parameters at perigee
-/// surface
+/// truth_parameter)/smoothed_paramter_error, of bound track parameters
 class ResPlotTool {
  public:
   using AxisVariant = Acts::Experimental::AxisVariant;
@@ -71,6 +71,13 @@ class ResPlotTool {
             const SimParticleState& truthParticle,
             const Acts::BoundTrackParameters& fittedParamters);
 
+  /// Fill from truth parameters on the same surface as the fitted ones.
+  ///
+  /// @param truthParameters the truth bound parameters
+  /// @param fittedParameters the fitted parameters
+  void fill(const Acts::BoundTrackParameters& truthParameters,
+            const Acts::BoundTrackParameters& fittedParameters);
+
   const std::map<std::string, Histogram1>& res() const { return m_res; }
   const std::map<std::string, Histogram2>& resVsEta() const {
     return m_resVsEta;
@@ -97,6 +104,16 @@ class ResPlotTool {
   }
 
  private:
+  /// Truth quantities the histograms are binned in. Each `fill` overload
+  /// derives them from its own truth source to avoid lossy conversions.
+  struct TruthBinning {
+    double eta;
+    double phi;
+    double pt;
+    double charge;
+    double absCharge;
+  };
+
   Config m_cfg;
 
   std::unique_ptr<const Acts::Logger> m_logger;
@@ -122,6 +139,10 @@ class ResPlotTool {
   std::map<std::string, Histogram3> m_pullVsEtaPhi;
   /// Pull vs eta-pT scatter plot
   std::map<std::string, Histogram3> m_pullVsEtaPt;
+
+  void fill(const Acts::BoundVector& truthVector,
+            const TruthBinning& truthBinning,
+            const Acts::BoundTrackParameters& fittedParameters);
 
   void fillResidual(const std::string& paramName, double residual,
                     double truthEta, double truthPhi, double truthPt);

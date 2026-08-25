@@ -45,8 +45,6 @@
 #include "ActsPlugins/Root/RootHistogramFit.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
-#include <filesystem>
-
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -136,9 +134,11 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackParameterPerformanceWriter, root,
         "RootTrackParameterPerformanceWriter", inputTracks, inputParticles,
-        inputTrackParticleMatching, filePath, resPlotToolConfig,
-        effPlotToolConfig, trackSummaryPlotToolConfig, fitMinEntries,
-        fitSigmaRange, fitIterations, warningThresholdFitFailureFraction);
+        inputTrackParticleMatching, inputSimHits, inputMeasurementSimHitsMap,
+        filePath, resPlotToolConfig, effPlotToolConfig,
+        trackSummaryPlotToolConfig, parameterSource, parameterType,
+        geometrySelection, fitMinEntries, fitSigmaRange, fitIterations,
+        warningThresholdFitFailureFraction);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackParameterWriter, root, "RootTrackParameterWriter",

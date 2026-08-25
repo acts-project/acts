@@ -21,6 +21,7 @@
 #include "ActsExamples/Validation/EffPlotTool.hpp"
 #include "ActsExamples/Validation/FakePlotTool.hpp"
 #include "ActsExamples/Validation/ResPlotTool.hpp"
+#include "ActsExamples/Validation/TrackParameterPerformanceCollector.hpp"
 #include "ActsExamples/Validation/TrackQualityPlotTool.hpp"
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
@@ -507,6 +508,16 @@ void addFramework(py::module& mex) {
         .def(py::init<>())
         .def_readwrite("paramNames", &ResPlotTool::Config::paramNames)
         .def_readwrite("varBinning", &ResPlotTool::Config::varBinning);
+
+    py::enum_<TrackParameterSource>(mex, "TrackParameterSource")
+        .value("Track", TrackParameterSource::Track)
+        .value("TrackState", TrackParameterSource::TrackState);
+
+    py::enum_<TrackParameterType>(mex, "TrackParameterType")
+        .value("Predicted", TrackParameterType::Predicted)
+        .value("Filtered", TrackParameterType::Filtered)
+        .value("Smoothed", TrackParameterType::Smoothed)
+        .value("Unbiased", TrackParameterType::Unbiased);
 
     py::class_<TrackQualityPlotTool::Config>(mex, "TrackQualityPlotToolConfig")
         .def(py::init<>())

@@ -28,18 +28,35 @@ using ActsPlugins::toRoot;
 
 namespace ActsExamples {
 
+namespace {
+
+/// Translate the writer configuration into the collector configuration.
+TrackParameterPerformanceCollector::Config collectorConfig(
+    const RootTrackParameterPerformanceWriter::Config& cfg) {
+  TrackParameterPerformanceCollector::Config collectorCfg;
+  collectorCfg.resPlotToolConfig = cfg.resPlotToolConfig;
+  collectorCfg.effPlotToolConfig = cfg.effPlotToolConfig;
+  collectorCfg.trackSummaryPlotToolConfig = cfg.trackSummaryPlotToolConfig;
+  collectorCfg.parameterSource = cfg.parameterSource;
+  collectorCfg.parameterType = cfg.parameterType;
+  collectorCfg.geometrySelection = cfg.geometrySelection;
+  collectorCfg.fitFunction = ActsPlugins::RootHistogramFit();
+  collectorCfg.fitMinEntries = cfg.fitMinEntries;
+  collectorCfg.fitSigmaRange = cfg.fitSigmaRange;
+  collectorCfg.fitIterations = cfg.fitIterations;
+  collectorCfg.warningThresholdFitFailureFraction =
+      cfg.warningThresholdFitFailureFraction;
+  return collectorCfg;
+}
+
+}  // namespace
+
 RootTrackParameterPerformanceWriter::RootTrackParameterPerformanceWriter(
     RootTrackParameterPerformanceWriter::Config config,
     Acts::Logging::Level level)
     : WriterT(config.inputTracks, "RootTrackParameterPerformanceWriter", level),
       m_cfg(std::move(config)),
-      m_collector(
-          TrackParameterPerformanceCollector::Config{
-              m_cfg.resPlotToolConfig, m_cfg.effPlotToolConfig,
-              m_cfg.trackSummaryPlotToolConfig, ActsPlugins::RootHistogramFit(),
-              m_cfg.fitMinEntries, m_cfg.fitSigmaRange, m_cfg.fitIterations,
-              m_cfg.warningThresholdFitFailureFraction},
-          logger().clone()) {
+      m_collector(collectorConfig(m_cfg), logger().clone()) {
   // trajectories collection name is already checked by base ctor
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
@@ -53,6 +70,18 @@ RootTrackParameterPerformanceWriter::RootTrackParameterPerformanceWriter(
 
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
+
+  if (m_cfg.parameterSource == TrackParameterSource::TrackState) {
+    if (m_cfg.inputSimHits.empty()) {
+      throw std::invalid_argument("Missing simulated hits input collection");
+    }
+    if (m_cfg.inputMeasurementSimHitsMap.empty()) {
+      throw std::invalid_argument("Missing measurement to simulated hits map");
+    }
+
+    m_inputSimHits.initialize(m_cfg.inputSimHits);
+    m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
+  }
 
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
@@ -158,11 +187,18 @@ ProcessCode RootTrackParameterPerformanceWriter::writeT(
   const auto& particles = m_inputParticles(ctx);
   const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
 
+  const SimHitContainer* simHits = nullptr;
+  const MeasurementSimHitsMap* measurementSimHitsMap = nullptr;
+  if (m_cfg.parameterSource == TrackParameterSource::TrackState) {
+    simHits = &m_inputSimHits(ctx);
+    measurementSimHitsMap = &m_inputMeasurementSimHitsMap(ctx);
+  }
+
   // Exclusive access to the histograms while filling
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
-  m_collector.fill(ctx.recoGeoContext, tracks, particles,
-                   trackParticleMatching);
+  m_collector.fill(ctx.recoGeoContext, tracks, particles, trackParticleMatching,
+                   simHits, measurementSimHitsMap);
 
   return ProcessCode::SUCCESS;
 }
