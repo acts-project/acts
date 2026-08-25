@@ -114,7 +114,13 @@ void Gx2fMaterialProperties::contributionToGx2fSums(
                  << "       currently estimated loss: " << m_lostEnergy << "\n"
                  << "  --> chi2 contribution: "
                  << Acts::square((m_lostEnergy - m_eloss.lostEnergy()) /
-                                 m_eloss.lostSigma()));
+                                 m_eloss.lostSigma()) << "\n"
+                 << "  --> aMatrix contribution: "
+                 << Acts::square(1./m_eloss.lostSigma()) << "\n"
+                 << "  --> bVector contribution: "
+                 << Acts::square(1./m_eloss.lostSigma()) *
+                        (m_lostEnergy - m_eloss.lostEnergy()))
+                        ;
   }
 }
 
