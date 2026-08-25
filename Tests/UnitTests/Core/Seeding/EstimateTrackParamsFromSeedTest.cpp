@@ -194,6 +194,32 @@ BOOST_AUTO_TEST_CASE(trackparm_estimate_aligined) {
   BOOST_CHECK_EQUAL(params[eFreeQOverP], 0);
 }
 
+BOOST_AUTO_TEST_CASE(trackparm_estimate_degenerate) {
+  const Vector3 bField{0, 0, 2_T};
+
+  // bottom and middle share a transverse position, so the estimation frame has
+  // no x axis
+  {
+    const Vector3 sp0{10, 0, 0};
+    const Vector3 sp1{10, 0, 100};
+    const Vector3 sp2{10, 0, 200};
+
+    BOOST_CHECK(
+        !estimateTrackParamsFromSeed(sp0, 0, sp1, sp2, bField).allFinite());
+  }
+
+  // middle and top share a transverse position, so the conformal mapping maps
+  // them onto each other
+  {
+    const Vector3 sp0{10, 0, 0};
+    const Vector3 sp1{20, 5, 0};
+    const Vector3 sp2{20, 5, 50};
+
+    BOOST_CHECK(
+        !estimateTrackParamsFromSeed(sp0, 0, sp1, sp2, bField).allFinite());
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

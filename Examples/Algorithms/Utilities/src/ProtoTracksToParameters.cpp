@@ -146,7 +146,8 @@ ProcessCode ProtoTracksToParameters::execute(
     const float vertexZ = -t / m;
 
     const std::optional<std::array<SpacePointIndex, 3>> selected =
-        selectSeedSpacePoints(sps, tmpSps, m_cfg.spacePointSelection);
+        selectSeedSpacePoints(sps, tmpSps, m_cfg.spacePointSelection,
+                              m_cfg.minTransverseDistance);
     if (!selected.has_value()) {
       ACTS_DEBUG("Cannot seed because no space point selection could be made");
       skippedTracks++;
@@ -198,6 +199,14 @@ ProcessCode ProtoTracksToParameters::execute(
     if (!boundParams.ok()) {
       ACTS_WARNING("Failed to estimate track parameters from seed: "
                    << boundParams.error().message());
+      continue;
+    }
+    // Degenerate space points, e.g. a bottom and a middle space point at the
+    // same transverse position, make the estimate not a number rather than
+    // merely wrong
+    if (!boundParams->allFinite()) {
+      ACTS_WARNING(
+          "Track parameter estimate is not a number, skip this proto track");
       continue;
     }
 
