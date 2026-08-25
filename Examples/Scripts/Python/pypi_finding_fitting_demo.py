@@ -200,10 +200,13 @@ def runPypiFindingFittingDemo(
     s.addWriter(perfWriterFinder)
 
     # Add track fitter performance writer
+    import acts.examples.scipy as acts_scipy
+
     cfg_fitter = acts.examples.PythonTrackParameterPerformanceWriter.Config()
     cfg_fitter.inputTracks = "fitted_tracks"
     cfg_fitter.inputParticles = "particles"
     cfg_fitter.inputTrackParticleMatching = "track_particle_matching"
+    cfg_fitter.fitFunction = acts_scipy.makeScipyHistogramFitFunction()
     perfWriterFitter = acts.examples.PythonTrackParameterPerformanceWriter(
         cfg_fitter, acts.logging.INFO
     )
