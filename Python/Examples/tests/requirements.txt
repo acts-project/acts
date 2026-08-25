@@ -68,6 +68,7 @@ numpy==2.2.6 ; python_full_version < '3.11'
     #   matplotlib
     #   mplhep
     #   pyhepmc
+    #   scipy
     #   uhi
     #   uproot
 numpy==2.4.6 ; python_full_version >= '3.11'
@@ -82,6 +83,7 @@ numpy==2.4.6 ; python_full_version >= '3.11'
     #   matplotlib
     #   mplhep
     #   pyhepmc
+    #   scipy
     #   uhi
     #   uproot
 packaging==26.2
@@ -123,6 +125,12 @@ pytest-xdist==3.8.0
 python-dateutil==2.9.0.post0
     # via matplotlib
 pyyaml==6.0.3
+    # via -r Python/Examples/tests/requirements.in
+scipy==1.15.3 ; python_full_version < '3.11'
+    # via -r Python/Examples/tests/requirements.in
+scipy==1.17.1 ; python_full_version == '3.11.*'
+    # via -r Python/Examples/tests/requirements.in
+scipy==1.18.1 ; python_full_version >= '3.12'
     # via -r Python/Examples/tests/requirements.in
 six==1.17.0
     # via python-dateutil
