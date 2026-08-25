@@ -11,12 +11,14 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
+#include "ActsExamples/Validation/HistogramFit.hpp"
 #include "ActsExamples/Validation/ParametersOnSurface.hpp"
 #include "ActsExamples/Validation/ResPlotTool.hpp"
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
@@ -43,7 +45,8 @@ enum class TrackParameterSource {
 /// I/O.
 ///
 /// Collects residual/pull histograms, efficiency plots, and track summary
-/// information for track fitting performance evaluation.
+/// information for track fitting performance evaluation. The Gaussian fit
+/// backend is supplied by the caller via @c Config::fitFunction.
 ///
 /// With `parameterSource = Track` the track parameters at the track reference
 /// surface are compared to the truth particle. With `TrackState` every
@@ -68,6 +71,10 @@ class TrackParameterPerformanceCollector {
     /// `TrackState` source only.
     std::vector<Acts::GeometryIdentifier> geometrySelection;
 
+    /// The Gaussian fit backend used by @c fitProfiles. If unset,
+    /// @c fitProfiles logs a warning and returns no profiles.
+    HistogramFitFunction fitFunction;
+
     /// Minimum number of entries in a bin for it to be included in the
     /// mean/width fit.
     int fitMinEntries = 10;
@@ -75,6 +82,9 @@ class TrackParameterPerformanceCollector {
     double fitSigmaRange = 3.0;
     /// The maximum number of iterations for the iterative Gaussian fit
     int fitIterations = 3;
+    /// Threshold for warning about fit failure fraction in profile
+    /// extraction.
+    double warningThresholdFitFailureFraction = 0.55;
   };
 
   TrackParameterPerformanceCollector(
@@ -126,6 +136,21 @@ class TrackParameterPerformanceCollector {
   }
   /// @}
 
+  /// Mean/width profiles fitted from every residual and pull histogram.
+  ///
+  /// @c profiles1 holds the 2D (vs. eta, vs. pT) outputs; @c profiles2 the
+  /// 3D (vs. eta-phi, vs. eta-pT) ones.
+  struct FittedProfiles {
+    std::vector<Acts::Experimental::Histogram1> profiles1;
+    std::vector<Acts::Experimental::Histogram2> profiles2;
+  };
+
+  /// Fit every residual/pull profile histogram with @c Config::fitFunction.
+  ///
+  /// Warns if a histogram's fit failure fraction reaches
+  /// @c Config::warningThresholdFitFailureFraction.
+  FittedProfiles fitProfiles() const;
+
  private:
   const Acts::Logger& logger() const { return *m_logger; }
 
@@ -136,6 +161,14 @@ class TrackParameterPerformanceCollector {
                        const SimParticle& particle,
                        const SimHitContainer& simHits,
                        const MeasurementSimHitsMap& measurementSimHitsMap);
+
+  /// Fit every histogram in @p histMap and append the resulting mean/width
+  /// profiles to @p out, warning on excessive fit failures.
+  template <std::size_t Dim>
+  void addFittedProfiles(
+      const std::map<std::string, Acts::Experimental::Histogram<Dim>>& histMap,
+      const std::string& meanPrefix, const std::string& widthPrefix,
+      std::vector<Acts::Experimental::Histogram<Dim - 1>>& out) const;
 
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;

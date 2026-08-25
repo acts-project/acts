@@ -41,6 +41,8 @@
 #include "ActsExamples/Io/Root/RootVertexWriter.hpp"
 #include "ActsExamples/Root/MuonVisualization.hpp"
 #include "ActsExamples/Root/ScalingCalibrator.hpp"
+#include "ActsExamples/Validation/HistogramFit.hpp"
+#include "ActsPlugins/Root/RootHistogramFit.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <filesystem>
@@ -366,5 +368,17 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
         "sensitive to content changes, and (by default) invariant under "
         "reordering of tree entries. Not byte-compatible with the Python "
         "hash_root helper.");
+  }
+
+  // Track parameter performance fit backend
+  {
+    root.def(
+        "makeRootHistogramFitFunction",
+        [](const std::string& fitOptions)
+            -> ActsExamples::HistogramFitFunction {
+          return ActsPlugins::RootHistogramFit{
+              ActsPlugins::RootHistogramFit::Config{fitOptions}};
+        },
+        py::arg("fitOptions") = "SQ0");
   }
 }

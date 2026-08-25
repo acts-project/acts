@@ -26,6 +26,7 @@
 #include <stdexcept>
 #include <string>
 
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -201,10 +202,14 @@ class PythonTrackParameterPerformanceWriter final
     ResPlotTool::Config resPlotToolConfig;
     EffPlotTool::Config effPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
+    /// The Gaussian fit backend, a Python callable with the matching
+    /// signature. Required: there is no sensible default.
+    HistogramFitFunction fitFunction;
     /// Fit parameters.
     int fitMinEntries = 10;
     double fitSigmaRange = 3.0;
     int fitIterations = 3;
+    double warningThresholdFitFailureFraction = 0.55;
   };
 
   /// Translate the writer configuration into the collector configuration.
@@ -214,9 +219,12 @@ class PythonTrackParameterPerformanceWriter final
     collectorCfg.resPlotToolConfig = cfg.resPlotToolConfig;
     collectorCfg.effPlotToolConfig = cfg.effPlotToolConfig;
     collectorCfg.trackSummaryPlotToolConfig = cfg.trackSummaryPlotToolConfig;
+    collectorCfg.fitFunction = cfg.fitFunction;
     collectorCfg.fitMinEntries = cfg.fitMinEntries;
     collectorCfg.fitSigmaRange = cfg.fitSigmaRange;
     collectorCfg.fitIterations = cfg.fitIterations;
+    collectorCfg.warningThresholdFitFailureFraction =
+        cfg.warningThresholdFitFailureFraction;
     return collectorCfg;
   }
 
@@ -300,6 +308,17 @@ class PythonTrackParameterPerformanceWriter final
       d[py::str(name)] = py::cast(prof, py::return_value_policy::copy);
     }
 
+    // Fitted mean/width profiles
+    const auto fittedProfiles = coll.fitProfiles();
+    for (const auto& profile : fittedProfiles.profiles1) {
+      d[py::str(profile.name())] =
+          py::cast(profile, py::return_value_policy::copy);
+    }
+    for (const auto& profile : fittedProfiles.profiles2) {
+      d[py::str(profile.name())] =
+          py::cast(profile, py::return_value_policy::copy);
+    }
+
     return d;
   }
 
@@ -361,7 +380,8 @@ void addPythonSpecific(py::module_& mex) {
     ACTS_PYTHON_STRUCT(c, inputTracks, inputParticles,
                        inputTrackParticleMatching, filePath, resPlotToolConfig,
                        effPlotToolConfig, trackSummaryPlotToolConfig,
-                       fitMinEntries, fitSigmaRange, fitIterations);
+                       fitFunction, fitMinEntries, fitSigmaRange, fitIterations,
+                       warningThresholdFitFailureFraction);
   }
 }
 
