@@ -1,13 +1,13 @@
 repos:
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: 'v22.1.8'
+    rev: f4d7745e17a28aad7eed2f4874ca8d1568c11c4c # v22.1.8
     hooks:
       - id: clang-format
         types_or: [file]
         files: \.(cpp|hpp|ipp|cu|cuh|hip|sycl)$
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c # v6.0.0
     hooks:
     - id: trailing-whitespace
       exclude: \.(diff|patch)$
@@ -20,18 +20,18 @@ repos:
 
   # Using this mirror lets us use mypyc-compiled black, which is about 2x faster
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 26.5.1
+    rev: 4160603246a6b365d4a2af661c6d71b0a0f50478 # 26.5.1
     hooks:
     - id: black-jupyter
 
   - repo: https://github.com/BlankSpruce/gersemi-pre-commit
-    rev: 0.27.7
+    rev: e98930bdc210d3387007f9252d8c1694ea7e410f # 0.27.7
     hooks:
     - id: gersemi
       args: ["-i", "--no-warn-about-unknown-commands"]
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.3
+    rev: 57b21406f092110c18776e39b0bda50d37c945c8 #v2.4.3
     hooks:
     - id: codespell
       args: [
@@ -121,6 +121,6 @@ repos:
       pass_filenames: false
 
   - repo: https://github.com/woodruffw/zizmor-pre-commit
-    rev: v1.29.0   # check latest
+    rev: 451b56af716f9f0d0c2b816503a3fd0cf8b036fa # v1.29.0
     hooks:
       - id: zizmor
