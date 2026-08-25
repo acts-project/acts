@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Alignment.hpp"
 
 #include <tuple>
 
@@ -32,5 +33,23 @@ using RotationToAxes =
 RotationToAxes rotationToLocalAxesDerivative(
     const RotationMatrix3& compositeRotation,
     const RotationMatrix3& relRotation = RotationMatrix3::Identity());
+
+/// @brief Map path-length derivatives w.r.t. a global center shift to
+/// derivatives w.r.t. local translations along local x/y/z.
+///
+/// @param alignToPath The alignment path derivative matrix to update
+/// @param alignToPathWrtGlobalCenter Path derivative w.r.t. global center shift
+/// @param rotation Local-to-global rotation of the surface
+inline void setAlignToPathLocalCenterDerivative(
+    AlignmentToPathMatrix& alignToPath,
+    const Vector3& alignToPathWrtGlobalCenter,
+    const RotationMatrix3& rotation) {
+  alignToPath[eAlignmentCenter0] =
+      alignToPathWrtGlobalCenter.dot(rotation.col(0));
+  alignToPath[eAlignmentCenter1] =
+      alignToPathWrtGlobalCenter.dot(rotation.col(1));
+  alignToPath[eAlignmentCenter2] =
+      alignToPathWrtGlobalCenter.dot(rotation.col(2));
+}
 
 }  // namespace Acts::detail

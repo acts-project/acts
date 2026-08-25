@@ -45,6 +45,8 @@ CsvMeasurementReader::CsvMeasurementReader(const Config& config,
   m_outputClusters.maybeInitialize(m_cfg.outputClusters);
   m_outputMeasurementParticlesMap.maybeInitialize(
       m_cfg.outputMeasurementParticlesMap);
+  m_outputParticleMeasurementsMap.maybeInitialize(
+      m_cfg.outputParticleMeasurementsMap);
   m_inputHits.maybeInitialize(m_cfg.inputSimHits);
 
   // Check if event ranges match (should also catch missing files)
@@ -269,6 +271,10 @@ ProcessCode CsvMeasurementReader::read(const AlgorithmContext& ctx) {
     for (const auto& [measIdx, hitIdx] : measurementSimHitsMap) {
       const auto& hit = hits.nth(hitIdx);
       outputMap.emplace(measIdx, hit->particleId());
+    }
+
+    if (m_outputParticleMeasurementsMap.isInitialized()) {
+      m_outputParticleMeasurementsMap(ctx, invertIndexMultimap(outputMap));
     }
 
     m_outputMeasurementParticlesMap(ctx, std::move(outputMap));

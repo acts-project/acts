@@ -18,6 +18,7 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <memory>
+#include <mutex>
 #include <vector>
 
 namespace Acts {
@@ -84,7 +85,8 @@ class AlignmentAlgorithm final : public IAlgorithm {
   /// contains shared_ptr anyway.
   static std::shared_ptr<AlignmentFunction> makeAlignmentFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+      Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
   struct Config {
     /// Input measurements collection.
@@ -95,6 +97,14 @@ class AlignmentAlgorithm final : public IAlgorithm {
     std::string inputInitialTrackParameters;
     /// Output aligned parameters collection.
     std::string outputAlignmentParameters;
+    /// Optional path for Millepede-style 6-column alignment result text
+    /// (label, value, 0, difference, error, 99). Empty disables writing.
+    std::string outputAlignmentFile;
+    /// Optional path for surfaceIndex with GeoID index-map text. Empty
+    /// disables.
+    std::string outputAlignmentIndexFile;
+    /// Tracking geometry for surface access
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Type erased fitter function.
     std::shared_ptr<AlignmentFunction> align;
     /// The aligned transform updater
@@ -122,12 +132,25 @@ class AlignmentAlgorithm final : public IAlgorithm {
       Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Framework execute method of the alignment algorithm
+  /// Collects track data from each event
   ///
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algorithm flow
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 
+  /// Framework finalize method
+  /// Performs the actual alignment using all collected tracks
+  ///
+  /// @return a process code to steer the algorithm flow
+  ProcessCode finalize() override;
+
  private:
+  /// Write Millepede-style result text and optional index map from alignment
+  /// output.
+  void writeAlignmentTextFiles(
+      const ActsAlignment::AlignmentResult& alignOutput,
+      const std::vector<Acts::Transform3>& startTransforms) const;
+
   Config m_cfg;
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
@@ -138,6 +161,26 @@ class AlignmentAlgorithm final : public IAlgorithm {
                                                          "InputProtoTracks"};
   WriteDataHandle<AlignmentParameters> m_outputAlignmentParameters{
       this, "OutputAlignmentParameters"};
+
+  // Cross-event track collection for a single alignment pass in finalize().
+  // Raw source links / initial parameters / measurements are stored (not
+  // TrackAlignmentState) so ActsAlignment::Alignment can re-run a full Kalman
+  // fit at each iteration against the updated geometry.
+  //
+  // Contexts are taken from the first collected event because finalize() has
+  // no per-event AlgorithmContext. This assumes a single IOV / shared
+  // alignment store, and constant B-field and calibration across events.
+  // Event-dependent contexts would require a different design.
+  //
+  // Protected by m_collectionMutex so Sequencer can run with numThreads != 1
+  // (execute() is called concurrently).
+  mutable std::mutex m_collectionMutex;
+  mutable std::vector<std::vector<IndexSourceLink>> m_collectedSourceLinks;
+  mutable TrackParametersContainer m_collectedInitialParameters;
+  mutable std::shared_ptr<MeasurementContainer> m_collectedMeasurements;
+  mutable Acts::GeometryContext m_savedGeoContext;
+  mutable Acts::MagneticFieldContext m_savedMagFieldContext;
+  mutable Acts::CalibrationContext m_savedCalibContext;
 };
 
 }  // namespace ActsExamples
