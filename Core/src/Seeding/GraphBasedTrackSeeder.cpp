@@ -25,13 +25,6 @@ namespace Acts::Experimental {
 
 GraphBasedTrackSeeder::DerivedConfig::DerivedConfig(const Config& config)
     : Config(config) {
-  // buildTheGraph pre-computes the loosest tau ratio threshold it can apply,
-  // which assumes the correction only ever widens the cut.
-  if (config.tauRatioCorr < 0) {
-    throw std::invalid_argument(
-        "GraphBasedTrackSeeder: tauRatioCorr must not be negative");
-  }
-
   phiSliceWidth = 2 * std::numbers::pi_v<float> / config.nMaxPhiSlice;
 }
 
@@ -46,6 +39,13 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
     : m_cfg(config),
       m_geometry(std::move(geometry)),
       m_logger(std::move(logger)) {
+  // buildTheGraph pre-computes the loosest tau ratio threshold it can apply,
+  // which assumes the correction only ever widens the cut.
+  if (m_cfg.tauRatioCorr < 0) {
+    throw std::invalid_argument(
+        "GraphBasedTrackSeeder: tauRatioCorr must not be negative");
+  }
+
   m_tauLut = parseTauLookupTable(m_cfg.lutInputFile);
 }
 
