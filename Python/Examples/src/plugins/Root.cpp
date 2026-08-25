@@ -106,42 +106,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
   // Output
   {
-    {
-      py::class_<EffPlotTool::Config>(root, "EffPlotToolConfig")
-          .def(py::init<>())
-          .def_readwrite("varBinning", &EffPlotTool::Config::varBinning)
-          .def_readwrite("minTruthPt", &EffPlotTool::Config::minTruthPt);
-
-      py::class_<FakePlotTool::Config>(root, "FakePlotToolConfig")
-          .def(py::init<>())
-          .def_readwrite("varBinning", &FakePlotTool::Config::varBinning)
-          .def_readwrite("recoVarBinning",
-                         &FakePlotTool::Config::recoVarBinning);
-
-      py::class_<DuplicationPlotTool::Config>(root, "DuplicationPlotToolConfig")
-          .def(py::init<>())
-          .def_readwrite("varBinning", &DuplicationPlotTool::Config::varBinning)
-          .def_readwrite("recoVarBinning",
-                         &DuplicationPlotTool::Config::recoVarBinning);
-
-      py::class_<ResPlotTool::Config>(root, "ResPlotToolConfig")
-          .def(py::init<>())
-          .def_readwrite("paramNames", &ResPlotTool::Config::paramNames)
-          .def_readwrite("varBinning", &ResPlotTool::Config::varBinning);
-
-      py::class_<TrackQualityPlotTool::Config>(root,
-                                               "TrackQualityPlotToolConfig")
-          .def(py::init<>())
-          .def_readwrite("varBinning",
-                         &TrackQualityPlotTool::Config::varBinning);
-
-      py::class_<TrackSummaryPlotTool::Config>(root,
-                                               "TrackSummaryPlotToolConfig")
-          .def(py::init<>())
-          .def_readwrite("varBinning",
-                         &TrackSummaryPlotTool::Config::varBinning);
-    }
-
     // ROOT WRITERS
     ACTS_PYTHON_DECLARE_WRITER(RootPropagationStepsWriter, root,
                                "RootPropagationStepsWriter", collection,

@@ -17,6 +17,12 @@
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Validation/DuplicationPlotTool.hpp"
+#include "ActsExamples/Validation/EffPlotTool.hpp"
+#include "ActsExamples/Validation/FakePlotTool.hpp"
+#include "ActsExamples/Validation/ResPlotTool.hpp"
+#include "ActsExamples/Validation/TrackQualityPlotTool.hpp"
+#include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 #include "ActsPython/Utilities/WhiteBoardRegistry.hpp"
 
@@ -476,6 +482,38 @@ void addFramework(py::module& mex) {
     py::class_<RandomNumbers::Config>(randomNumbers, "Config")
         .def(py::init<>())
         .def_readwrite("seed", &RandomNumbers::Config::seed);
+  }
+
+  // Validation tool configs
+  {
+    py::class_<EffPlotTool::Config>(mex, "EffPlotToolConfig")
+        .def(py::init<>())
+        .def_readwrite("varBinning", &EffPlotTool::Config::varBinning)
+        .def_readwrite("minTruthPt", &EffPlotTool::Config::minTruthPt);
+
+    py::class_<FakePlotTool::Config>(mex, "FakePlotToolConfig")
+        .def(py::init<>())
+        .def_readwrite("varBinning", &FakePlotTool::Config::varBinning)
+        .def_readwrite("recoVarBinning", &FakePlotTool::Config::recoVarBinning);
+
+    py::class_<DuplicationPlotTool::Config>(mex, "DuplicationPlotToolConfig")
+        .def(py::init<>())
+        .def_readwrite("varBinning", &DuplicationPlotTool::Config::varBinning)
+        .def_readwrite("recoVarBinning",
+                       &DuplicationPlotTool::Config::recoVarBinning);
+
+    py::class_<ResPlotTool::Config>(mex, "ResPlotToolConfig")
+        .def(py::init<>())
+        .def_readwrite("paramNames", &ResPlotTool::Config::paramNames)
+        .def_readwrite("varBinning", &ResPlotTool::Config::varBinning);
+
+    py::class_<TrackQualityPlotTool::Config>(mex, "TrackQualityPlotToolConfig")
+        .def(py::init<>())
+        .def_readwrite("varBinning", &TrackQualityPlotTool::Config::varBinning);
+
+    py::class_<TrackSummaryPlotTool::Config>(mex, "TrackSummaryPlotToolConfig")
+        .def(py::init<>())
+        .def_readwrite("varBinning", &TrackSummaryPlotTool::Config::varBinning);
   }
 }
 
