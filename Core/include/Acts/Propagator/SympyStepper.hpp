@@ -102,6 +102,10 @@ class SympyStepper final {
     /// The propagation derivative
     FreeVector derivative = FreeVector::Zero();
 
+    /// Magnetic field at the current position, reused as the next step's
+    /// first sample. Reset whenever the parameters are set from outside.
+    std::optional<Vector3> field;
+
     /// Accumulated path length state
     double pathAccumulated = 0.;
 

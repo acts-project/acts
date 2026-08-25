@@ -236,6 +236,10 @@ def _atlas_rk4_stages(deriv, taylor_norm):
     dtds = deriv.add("dtds", sym.sqrt(1 + mass**2 / p_abs**2))
     deriv.add("new_time", time + h * dtds.name)
 
+    # B3 sits O(h^3) from the step end point, so the caller can hand it back as
+    # the next step's first sample and save one lookup.
+    deriv.add("new_B", B3)
+
     two_over_h = deriv.add("two_over_h", 2 / h)  # undoes the h/2 scaling of kick4 -> k4
     deriv.add(
         "path_derivatives",
@@ -295,6 +299,26 @@ _B2F_LIVE = _B2F.entries("step")
 _B2F_DENSE_LIVE = _B2F.entries("step", "dense")
 
 
+def _b2f_column_name(col):
+    """Name of the staging array holding live column `col` of the jacobian."""
+    return f"new_M{col}"
+
+
+def _by_column(entries):
+    """`entries` grouped by column, as (staging array name, entries) pairs.
+
+    One staging array per column lets each be written back as soon as it is
+    finished, instead of keeping every entry live until the end of the kernel.
+    """
+    columns = {}
+    for entry in entries:
+        columns.setdefault(entry[1], []).append(entry)
+    return [(_b2f_column_name(c), group) for c, group in sorted(columns.items())]
+
+
+_B2F_LIVE_COLUMNS = _by_column(_B2F_LIVE)
+
+
 def b2f_step_update(D, live):
     """Apply a free-to-free step jacobian D to the bound-to-free jacobian M.
 
@@ -343,7 +367,7 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
         if scale is None:
             seed = col(c, (4, 5, 6))
             fields = [None] * 4
-            pos_fac, dir_fac = h_third.name, sym.Rational(1, 3)
+            pos_fac, dir_fac = h_third.name, third.name
         else:
             seed_qop_row = M[7, c]
             seed = explicit(deriv.add(f"{tag}_seed", qop * col(c, (4, 5, 6))).name)
@@ -416,6 +440,10 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
         )
         return new_pos, new_dir
 
+    # Must be a Symbol, not a Number: sympy distributes a Number over an Add,
+    # which emits one multiplication per term instead of one per component.
+    third = deriv.add("third", sym.Rational(1, 3))
+
     inv_qop = deriv.add("inv_qop", 1 / qop)
     qop_pos_weight = deriv.add("qop_pos_weight", h_third.name * inv_qop.name)
     qop_dir_weight = deriv.add("qop_dir_weight", inv_qop.name / 3)
@@ -428,18 +456,9 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
     dt_dqop = deriv.add("dt_dqop", dtime_dqop(dtds.name))
     new_time = M[3, 4] + dt_dqop.name * M[7, 4]
 
-    deriv.add(
-        "new_M",
-        Matrix.vstack(
-            phi_pos,
-            phi_dir,
-            the_pos,
-            the_dir,
-            qop_pos,
-            Matrix([new_time]),
-            qop_dir,
-        ),
-    )
+    deriv.add(_b2f_column_name(2), Matrix.vstack(phi_pos, phi_dir))
+    deriv.add(_b2f_column_name(3), Matrix.vstack(the_pos, the_dir))
+    deriv.add(_b2f_column_name(4), Matrix.vstack(qop_pos, Matrix([new_time]), qop_dir))
 
     return deriv.name_exprs
 
@@ -492,6 +511,8 @@ def rk4_dense_tunedexpr():
         .as_explicit()
         .norm(1),
     )
+
+    new_B = name_expr("new_B", B3)
 
     path_derivatives = name_expr("path_derivatives", sym.zeros(8, 1))
     path_derivatives.expr[0:3, 0] = new_dir.name.as_explicit()
@@ -561,6 +582,7 @@ def rk4_dense_tunedexpr():
         qop4,
         k4,
         err,
+        new_B,
         new_y,
         new_ydot,
         new_pos,
@@ -586,11 +608,12 @@ def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
             "pos2",
             "pos3",
             "err",
+            "new_B",
             "new_pos",
             "new_time",
             "new_dir",
             "path_derivatives",
-            "new_M",
+            *[name for name, _ in _B2F_LIVE_COLUMNS],
         ]
     ]
 
@@ -600,25 +623,21 @@ def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
         "template <typename T, typename GetB>\n"
         "Acts::Result<bool> rk4_vacuum(std::span<const T, 3> pos,"
         " std::span<const T, 3> dir, const T time, const T h, const T qop, const T mass,"
-        " const T p_abs, GetB getB, T& err, const T errTol,"
-        " std::span<T, 3> new_pos, T& new_time, std::span<T, 3> new_dir,"
+        " const T p_abs, std::span<const T, 3> B1, GetB getB, T& err,"
+        " const T errTol, std::span<T, 3> new_pos, T& new_time,"
+        " std::span<T, 3> new_dir, std::span<T, 3> new_B,"
         " std::span<T, 8> path_derivatives, std::span<T> M) {"
     )
     lines.append(f"  assert(M.empty() || M.size() == {_B2F.size});")
-
-    lines.append("  const auto B1res = getB(pos);")
-    lines.append(
-        "  if (!B1res.ok()) {\n    return Acts::Result<bool>::failure(B1res.error());\n  }"
-    )
-    lines.append("  const auto B1 = *B1res;")
 
     def pre_expr_hook(var):
         if str(var) == "pos2":
             return "std::array<T, 3> pos2{};"
         if str(var) == "pos3":
             return "std::array<T, 3> pos3{};"
-        if str(var) == "new_M":
-            return f"std::array<T, {len(_B2F_LIVE)}> new_M{{}};"
+        for name, group in _B2F_LIVE_COLUMNS:
+            if str(var) == name:
+                return f"std::array<T, {len(group)}> {name}{{}};"
         return None
 
     def post_expr_hook(var):
@@ -632,11 +651,12 @@ def print_rk4_vacuum_b2f(name_exprs, run_cse=False):
             )
         if str(var) == "new_dir":
             return "if (M.empty()) {\n  return Acts::Result<bool>::success(true);\n}"
-        if str(var) == "new_M":
-            return "\n".join(
-                f"M[{_B2F.flat_index(i, j)}] = new_M[{k}];"
-                for k, (i, j) in enumerate(_B2F_LIVE)
-            )
+        for name, group in _B2F_LIVE_COLUMNS:
+            if str(var) == name:
+                return "\n".join(
+                    f"M[{_B2F.flat_index(i, j)}] = {name}[{k}];"
+                    for k, (i, j) in enumerate(group)
+                )
         return None
 
     code = my_expression_print(
@@ -668,6 +688,7 @@ def print_rk4_dense(name_exprs, run_cse=True):
             "pos3",
             "qop4",
             "err",
+            "new_B",
             "new_pos",
             "new_time",
             "new_dir",
@@ -683,18 +704,13 @@ def print_rk4_dense(name_exprs, run_cse=True):
         "template <typename T, typename GetB, typename GetG>\n"
         "Acts::Result<bool> rk4_dense(std::span<const T, 3> pos,"
         " std::span<const T, 3> dir, const T time, const T h, const T qop, const T mass,"
-        " const T charge, const T p_abs, GetB getB, GetG getG, T& err,"
-        " const T errTol, std::span<T, 3> new_pos, T& new_time,"
-        " std::span<T, 3> new_dir, T& new_qop, std::span<T, 8> path_derivatives,"
-        " std::span<T> M) {"
+        " const T charge, const T p_abs, std::span<const T, 3> B1, GetB getB,"
+        " GetG getG, T& err, const T errTol, std::span<T, 3> new_pos, T& new_time,"
+        " std::span<T, 3> new_dir, T& new_qop, std::span<T, 3> new_B,"
+        " std::span<T, 8> path_derivatives, std::span<T> M) {"
     )
     lines.append(f"  assert(M.empty() || M.size() == {_B2F.size});")
 
-    lines.append("  const auto B1res = getB(pos);")
-    lines.append(
-        "  if (!B1res.ok()) {\n    return Acts::Result<bool>::failure(B1res.error());\n  }"
-    )
-    lines.append("  const auto B1 = *B1res;")
     lines.append("  const auto dEds1 = getG(pos, qop);")
 
     def pre_expr_hook(var):

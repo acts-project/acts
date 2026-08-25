@@ -16,3 +16,8 @@ rules:
   adhoc-packages:
     ignore:
       - devcontainer-ci.yml
+  # The lychee cache is only written by `external-linkcheck`, which never runs
+  # on the tag pushes that publish docs.
+  cache-poisoning:
+    ignore:
+      - docs.yml
