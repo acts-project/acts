@@ -17,6 +17,10 @@
 #include <map>
 #include <vector>
 
+namespace traccc {
+	struct gbts_seedfinder_config;
+}
+
 namespace Acts::Experimental {
 
 class GbtsNodeStorage;
@@ -36,9 +40,11 @@ class GbtsGeometry final {
 
  private:
   // The layer binning is shared only with the classes that build the graph.
+  // Or reuse this for config setup
   friend class GbtsNodeStorage;
   friend class GbtsTrackingFilter;
   friend class GraphBasedTrackSeeder;
+	friend struct traccc::gbts_seedfinder_config;
 
   /// Get number of eta bins
   /// @return Number of eta bins
@@ -50,6 +56,10 @@ class GbtsGeometry final {
   binGroups() const {
     return m_binGroups;
   }
+  
+	/// Get number of layers
+  /// @return Number of layers
+  std::size_t numLayers() const { return m_layers.size(); }
 
   /// Get layer by ID
   /// @param id Layer ID

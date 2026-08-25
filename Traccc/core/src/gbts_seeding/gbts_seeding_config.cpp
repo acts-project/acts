@@ -18,26 +18,42 @@ namespace traccc {
 // GeoIDBinning pair is detray geo ID and bin index (corrisponding to the
 // layers in layerInfo) minPt in MeV
 bool gbts_seedfinder_config::setLinkingScheme(
-    const std::vector<std::pair<unsigned int, std::vector<unsigned int>>>&
-        input_binTables,
-    const device::gbts_layerInfo input_layerInfo,
-    std::vector<std::pair<uint64_t, short>>& detrayGeoIDBinning,
+    Acts::Experimental::GbtsGeometry* gbtsGeo,
+		std::vector<std::pair<uint64_t, short>> detrayGeoIDBinning,
     const float minPt = 900.0f,
     std::unique_ptr<const traccc::Logger> callers_logger =
         getDummyLogger().clone()) {
   TRACCC_LOCAL_LOGGER(std::move(callers_logger));
-  // copy layer-eta binning infomation
-  layerInfo = input_layerInfo;
   // unroll binTables
   for (std::pair<unsigned int, std::vector<unsigned int>> binPairs :
-       input_binTables) {
+       gbtsGeo->binGroups()) {
     for (unsigned int bin2 : binPairs.second) {
       binTables.push_back(std::make_pair(binPairs.first, bin2));
     }
   }
+	
+	// convert save and convert layer info to SoA
+	layerInfo.reserve(gbtsGeo->numLayers());
+	for (unsigned int index = 0; index < gbtsGeo->numLayers(); ++index) {
+			const Acts::Experimental::detail::GbtsLayer layer =
+					gbtsGeo->layerByIndex(index);
+			// pixel barrel=0 pixel endcap=1 pixel inc. barrel=2 strip=3
+			int vol_id =
+					(layer.layerDescription().id - (layer.layerDescription().id % 1000)) / 1000;
+			int is_inc_barrel = (vol_id == 97) | (vol_id == 95) | (vol_id == 93) |
+													(vol_id == 77) | (vol_id == 75) | (vol_id == 73);
+			char type = (layer.layerDescription().type != Acts::Experimental::GbtsLayerType::Barrel) + is_inc_barrel;
+			if (layer.layerDescription().id <= 20000) {
+					type = 3;
+			}
+			// eta prediction cut occors for type=0 and cluster width cut for type=1
+			layerInfo.addLayer(type, layer.bins()[0], layer.numOfBins(),
+												 layer.minEta(), layer.etaBin());
+	}
 
   for (std::pair<unsigned int, unsigned int> lI : layerInfo.info)
     n_eta_bins = std::max(n_eta_bins, lI.first + lI.second);
+	TRACCC_INFO(n_eta_bins << "  " << gbtsGeo->numBins());
 
   // bin by volume
   std::ranges::sort(detrayGeoIDBinning, [](const std::pair<uint64_t, short> a,

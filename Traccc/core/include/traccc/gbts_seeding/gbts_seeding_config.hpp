@@ -16,6 +16,10 @@
 #include "traccc/definitions/primitives.hpp"
 #include "traccc/definitions/qualifiers.hpp"
 #include "traccc/utils/messaging.hpp"
+#include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsLayerDescription.hpp"
+#include "Acts/Seeding/detail/GbtsLayer.hpp"
+
 
 // Detray include(s).
 #include <detray/geometry/identifier.hpp>
@@ -243,10 +247,8 @@ struct gbts_count_spacepoints_by_layer_params {
 // Main configuration struct for the GBTS seeding algorithm.
 struct gbts_seedfinder_config {
   bool setLinkingScheme(
-      const std::vector<std::pair<unsigned int, std::vector<unsigned int>>>&
-          binTables,
-      const device::gbts_layerInfo layerInfo,
-      std::vector<std::pair<uint64_t, int16_t>>& detrayGeoIDBinning,
+      Acts::Experimental::GbtsGeometry* gbtsGeo,
+			std::vector<std::pair<uint64_t, int16_t>> detrayGeoIDBinning,
       const float minPt, std::unique_ptr<const traccc::Logger> logger);
 
   // layer linking and geometry
