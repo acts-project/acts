@@ -376,6 +376,8 @@ def test_python_writer_interface(writer, conf_const, tmp_path, trk_geo):
             kw[k] = "collection"
         if k == "surfaceByIdentifier":
             kw[k] = trk_geo.geoIdSurfaceMap()
+        if k == "fitFunction":
+            kw[k] = lambda hist, rng: None
 
     assert conf_const(writer, **kw)
 
