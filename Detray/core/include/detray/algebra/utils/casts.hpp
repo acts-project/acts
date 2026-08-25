@@ -119,9 +119,7 @@ DETRAY_HOST_DEVICE constexpr decltype(auto) cast_to(const transform_t& trf) {
   if constexpr (std::same_as<new_trf3_t, transform_t>) {
     return trf;
   } else {
-    return new_trf3_t{
-        ::detray::algebra::cast_to<scalar_t>(trf.matrix()),
-        ::detray::algebra::cast_to<scalar_t>(trf.matrix_inverse())};
+    return new_trf3_t{::detray::algebra::cast_to<scalar_t>(trf.matrix())};
   }
 }
 
