@@ -8,28 +8,17 @@
 // Local include(s).
 #include "traccc/examples/alpaka/tbb_await.hpp"
 
-// System include(s).
-#include <exception>
-
 // TBB include(s).
 #include <tbb/task.h>
 
 namespace traccc::alpaka {
 
 void tbb_await_callback(vecmem::abstract_event& /*event*/, const queue& queue) {
-  auto suspend_point =
-      tbb::task::suspend_point{};  // suspension point address must remain valid
-  // when resumption callback is called
-  tbb::task::suspend([&queue, &suspend_point](auto tag) {
-    suspend_point = tag;
-    try {
-      queue.enqueue_callback(
-          [&suspend_point]() { tbb::task::resume(suspend_point); });
-    } catch (const std::exception& e) {
-      // resume immediately in case of an error to avoid deadlock
-      tbb::task::resume(suspend_point);
-      throw;
-    }
+  tbb::task::suspend([&queue](auto suspend_point) {
+    queue.enqueue_callback(
+        [suspend_point]() { tbb::task::resume(suspend_point); });
+    // Exceptions thrown by a function passed to tbb::task::suspend occur
+    // before the actual suspension, so the exception does not cause a deadlock.
   });
 }
 }  // namespace traccc::alpaka
