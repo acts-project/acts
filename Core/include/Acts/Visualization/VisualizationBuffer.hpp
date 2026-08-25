@@ -37,8 +37,6 @@ class VisualizationBuffer : public IVisualization3D {
   using LineType = std::pair<std::size_t, std::size_t>;
 
   /// Constructor
-  /// @param prec The output precision with std::setprecision
-  /// @param scale An (optional) scaling for the writing out
   explicit VisualizationBuffer(unsigned int /*prec*/, double /*scale*/) {}
 
   /// @copydoc Acts::IVisualization3D::vertex()
@@ -54,29 +52,29 @@ class VisualizationBuffer : public IVisualization3D {
   void line(const Vector3& a, const Vector3& b, const double lineThickness,
             Color color = s_defaultColor);
 
-  /// @copydoc Acts::IVisualization3D::face()
+  /// This implementation does not support face
   void face(const std::vector<Vector3>& /*vtxs*/, Color /*color*/) override {
     throw std::logic_error("face() is not supported for this type");
   }
 
-  /// @copydoc Acts::IVisualization3D::faces()
+  /// @param vtxs The vertices that make up the faceS
+  /// @param color The color of the face
   void faces(const std::vector<Vector3>& vtxs,
              const std::vector<FaceType>& /*faces*/,
              Color color = s_defaultColor) override;
 
-  /// @copydoc Acts::IVisualization3D::write(const std::filesystem::path&) const
+  /// @note This implementation does not support write
   void write(const std::filesystem::path& /*path*/) const override {
     throw std::logic_error("write() is not supported for this type");
   }
 
-  /// @copydoc Acts::IVisualization3D::write(std::ostream&) const
+  /// @note This implementation does not support write
   void write(std::ostream& /*os*/) const override {
     throw std::logic_error("write() is not supported for this type");
   }
 
   /// Write the object and the material file
-  /// @param os the output stream for the object
-  /// @param mos the output stream for the auxiliary material file
+  /// @note Not supported in this implementation
   void write(std::ostream& /*os*/, std::ostream& /*mos*/) const {
     throw std::logic_error("write() is not supported for this type");
   }
@@ -84,8 +82,7 @@ class VisualizationBuffer : public IVisualization3D {
   ///  @copydoc Acts::IVisualization3D::clear()
   void clear() override {}
 
-  /// Start a new object context with a name
-  /// @param name The name of the object
+  /// @note Start a new object context with a name
   void object(const std::string& /*name*/) override {}
 
   /// @return vector of 3D vertices
