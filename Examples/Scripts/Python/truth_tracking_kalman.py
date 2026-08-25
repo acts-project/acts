@@ -22,7 +22,7 @@ def runTruthTrackingKalman(
     reverseFilteringMomThreshold=0 * u.GeV,
     reverseFilteringCovarianceScaling=100.0,
     numParticles=1,
-    projection="rz",
+    pyVisProjection="rz",
     linkForward: bool = False,
     useJosephFormulation: bool = False,
     s: acts.examples.Sequencer = None,
