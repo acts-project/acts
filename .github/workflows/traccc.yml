@@ -92,7 +92,7 @@ jobs:
           - platform:
               name: CUDA
               container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset cuda-fp32 -DTRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_CUDA_ENABLE=ON
+              options: --preset cuda-fp32-ci -DTRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_CUDA_ENABLE=ON
               run_tests: false
               upload_build: true
               flavor: cuda13
@@ -104,7 +104,7 @@ jobs:
           - platform:
               name: CUDA
               container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset cuda-fp32 -DTRACCC_BUILD_TESTING=FALSE
+              options: --preset cuda-fp32-ci -DTRACCC_BUILD_TESTING=FALSE
               run_tests: false
               flavor: cuda13
             build: Debug
@@ -115,7 +115,7 @@ jobs:
           - platform:
               name: CUDA_FP64
               container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset cuda-fp64 -DTRACCC_BUILD_TESTING=FALSE
+              options: --preset cuda-fp64-ci -DTRACCC_BUILD_TESTING=FALSE
               run_tests: false
               flavor: cuda13
             build: Release
@@ -130,7 +130,7 @@ jobs:
           - platform:
               name: "HIP"
               container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset hip-fp32 -DCMAKE_HIP_PLATFORM=amd -DCMAKE_HIP_ARCHITECTURES=gfx90a -DTRACCC_USE_SYSTEM_ROCTHRUST=ON -DTRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_HIP_ENABLE=ON -Dalpaka_DISABLE_VENDOR_RNG=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20
+              options: --preset hip-fp32-ci -DCMAKE_HIP_PLATFORM=amd -DCMAKE_HIP_ARCHITECTURES=gfx90a -DTRACCC_USE_SYSTEM_ROCTHRUST=ON -DTRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_HIP_ENABLE=ON -Dalpaka_DISABLE_VENDOR_RNG=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20
               run_tests: false
               flavor: rocm7
             build: RelWithDebInfo
@@ -141,7 +141,7 @@ jobs:
           - platform:
               name: "HIP"
               container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset hip-fp32 -DCMAKE_HIP_PLATFORM=amd -DCMAKE_HIP_ARCHITECTURES=gfx90a -DTRACCC_USE_SYSTEM_ROCTHRUST=ON -DTRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_HIP_ENABLE=ON -Dalpaka_DISABLE_VENDOR_RNG=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20
+              options: --preset hip-fp32-ci -DCMAKE_HIP_PLATFORM=amd -DCMAKE_HIP_ARCHITECTURES=gfx90a -DTRACCC_USE_SYSTEM_ROCTHRUST=ON -DTRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_HIP_ENABLE=ON -Dalpaka_DISABLE_VENDOR_RNG=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20
               run_tests: false
               flavor: rocm7
             build: Release
