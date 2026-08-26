@@ -441,7 +441,16 @@ set_env PATH "${venv_dir}/bin:${view_dir}/bin/:${PATH}"
 # need it on the search path too.
 set_env LD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib64:${view_dir}/lib/root"
 set_env DYLD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib64:${view_dir}/lib/root"
-set_env CMAKE_PREFIX_PATH "${venv_dir}:${view_dir}"
+# CCCL's CMake configs (Thrust, CUB, libcudacxx) sit under
+# targets/<arch>-linux/lib/cmake, which CMake does not search below a prefix,
+# so find_package(Thrust) misses them. The glob is a no-op without a flavor.
+cmake_prefix_path="${venv_dir}:${view_dir}"
+for cuda_cmake_dir in "${view_dir}"/targets/*/lib/cmake; do
+  if [ -d "${cuda_cmake_dir}" ]; then
+    cmake_prefix_path="${cmake_prefix_path}:${cuda_cmake_dir}"
+  fi
+done
+set_env CMAKE_PREFIX_PATH "${cmake_prefix_path}"
 set_env ROOT_SETUP_SCRIPT "${view_dir}/bin/thisroot.sh"
 set_env ROOT_INCLUDE_PATH "${view_dir}/include"
 # cleanup setup-python mess
