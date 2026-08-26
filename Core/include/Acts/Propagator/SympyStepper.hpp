@@ -77,12 +77,8 @@ class SympyStepper final {
     State(const Options& optionsIn, MagneticFieldProvider::Cache fieldCacheIn)
         : options(optionsIn), fieldCache(std::move(fieldCacheIn)) {}
 
-    // Declaration order is deliberate: everything a single step touches comes
-    // first, in one contiguous run of cache lines, and everything only a
-    // surface crossing touches comes last.  `cov` and `jacobian` are 288 bytes
-    // each and are not read or written by `step()`, so leaving them in the
-    // middle pushed 576 bytes -- nine cache lines -- between `pars` and
-    // `jacToGlobal`.
+    // Declaration order matters: members used by `step()` are kept in one
+    // contiguous run of cache lines, the rest come last.
 
     /// Configuration options for the stepper
     Options options;
@@ -130,7 +126,7 @@ class SympyStepper final {
     /// See step() code for details.
     MagneticFieldProvider::Cache fieldCache;
 
-    // --- below here: only touched when transporting to a surface ---
+    // Only used when transporting to a surface:
 
     /// Covariance matrix for error propagation
     Covariance cov = Covariance::Zero();
