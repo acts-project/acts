@@ -27,7 +27,7 @@ constexpr double eps = 1e-6;
 Matrix<3, 3> numericSphericalToFreeMomentumJacobian(double phi, double theta,
                                                     double qOverP,
                                                     double charge) {
-  auto momentum = [&](double phi_, double theta_, double qOverP_) {
+  auto momentum = [&](double phi_, double theta_, double qOverP_) -> Vector3 {
     return (charge / qOverP_) * makeDirectionFromPhiTheta(phi_, theta_);
   };
 
