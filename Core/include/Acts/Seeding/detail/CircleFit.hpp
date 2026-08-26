@@ -14,38 +14,36 @@
 #include <cmath>
 #include <cstddef>
 #include <limits>
+#include <optional>
 #include <span>
 
 #include <Eigen/Eigenvalues>
 
 namespace Acts::detail {
 
-/// Result of a circle fit in a plane.
+/// A circle in a plane, as fitted to a set of points.
 struct CircleFit {
   /// Circle center.
   Vector2 center = Vector2::Zero();
   /// Circle radius.
   double radius = 0.;
-  /// False in the straight-line limit, i.e. (near-)collinear input.
-  bool valid = false;
 };
 
 /// Algebraic circle fit (Taubin) over the transverse `(x, y)` projection.
 ///
 /// Fits `A(x^2+y^2) + B*x + C*y + D = 0` with `A` free to reach zero, so
-/// near-collinear input degrades to a line, reported as `valid = false`,
+/// near-collinear input degrades to a line, reported as `std::nullopt`,
 /// instead of becoming ill-conditioned. Weights are relative factors on the
 /// residuals; an empty span means uniform.
 ///
 /// @param points the points whose transverse projection is fitted
 /// @param weights optional per-point weights (empty span = uniform)
-/// @return the fitted circle (with `valid = false` if effectively straight)
-inline CircleFit fitCircleTaubin(std::span<const Vector3> points,
-                                 std::span<const double> weights = {}) {
-  CircleFit result;
+/// @return the fitted circle, or `std::nullopt` if no finite circle is defined
+inline std::optional<CircleFit> fitCircleTaubin(
+    std::span<const Vector3> points, std::span<const double> weights = {}) {
   const std::size_t n = points.size();
   if (n < 3) {
-    return result;
+    return std::nullopt;
   }
   assert((weights.empty() || weights.size() == n) &&
          "weights must be empty or match the number of points");
@@ -65,7 +63,7 @@ inline CircleFit fitCircleTaubin(std::span<const Vector3> points,
     meanY += w * points[i].y();
   }
   if (!(sumW > 0.)) {
-    return result;
+    return std::nullopt;
   }
   const double invW = 1. / sumW;
   meanX *= invW;
@@ -101,7 +99,7 @@ inline CircleFit fitCircleTaubin(std::span<const Vector3> points,
   mz *= invW;
   if (!(mz > 0.)) {
     // All points coincide.
-    return result;
+    return std::nullopt;
   }
 
   // Taubin eigenproblem `M a = lambda N a` for a = (A, B, C), with D = -A*mz.
@@ -116,7 +114,7 @@ inline CircleFit fitCircleTaubin(std::span<const Vector3> points,
 
   Eigen::GeneralizedSelfAdjointEigenSolver<SquareMatrix3> solver(m, nMat);
   if (solver.info() != Eigen::Success) {
-    return result;
+    return std::nullopt;
   }
   // Ascending eigenvalues, so the first eigenvector minimizes the Taubin cost.
   const Vector3 a = solver.eigenvectors().col(0);
@@ -125,46 +123,40 @@ inline CircleFit fitCircleTaubin(std::span<const Vector3> points,
   const double coeffC = a(2);
   if (coeffA == 0.) {
     // Perfectly straight: no finite circle.
-    return result;
+    return std::nullopt;
   }
 
   const double coeffD = -coeffA * mz;
   const double r2 = (coeffB * coeffB + coeffC * coeffC - 4. * coeffA * coeffD) /
                     (4. * coeffA * coeffA);
   if (!std::isfinite(r2) || r2 <= 0.) {
-    return result;
+    return std::nullopt;
   }
   const double radius = std::sqrt(r2);
 
   // A radius far beyond the point spread sqrt(mz) is a line.
   if (constexpr double maxRadiusToSpread = 1e6;
       radius > maxRadiusToSpread * std::sqrt(mz)) {
-    return result;
+    return std::nullopt;
   }
 
   const Vector2 centerRel(-coeffB / (2. * coeffA), -coeffC / (2. * coeffA));
-  result.center = centerRel + Vector2(meanX, meanY);
-  result.radius = radius;
-  result.valid = std::isfinite(result.radius) && result.radius > 0.;
-  return result;
+  return CircleFit{centerRel + Vector2(meanX, meanY), radius};
 }
 
 /// Refine a circle fit by minimizing the radial residuals
 /// `sum_i (|p_i - center| - R)^2` with Gauss-Newton steps, on the transverse
-/// `(x, y)` projection. An invalid fit is left untouched. Weights as in
-/// @ref fitCircleTaubin.
+/// `(x, y)` projection. Weights as in @ref fitCircleTaubin.
 ///
-/// @param fit the circle fit to refine in place
+/// @param fit the circle fit to refine, e.g. from @ref fitCircleTaubin
 /// @param points the points whose transverse projection is fitted
 /// @param iterations the maximum number of Gauss-Newton iterations
 /// @param weights optional per-point weights (empty span = uniform)
-inline void refineCircleGeometric(CircleFit& fit,
-                                  std::span<const Vector3> points,
-                                  const std::size_t iterations,
-                                  std::span<const double> weights = {}) {
-  if (!fit.valid) {
-    return;
-  }
+/// @return the refined circle, or `std::nullopt` if a step drives the radius
+///         non-positive, i.e. the refinement collapses the circle
+inline std::optional<CircleFit> refineCircleGeometric(
+    CircleFit fit, std::span<const Vector3> points,
+    const std::size_t iterations, std::span<const double> weights = {}) {
   assert((weights.empty() || weights.size() == points.size()) &&
          "weights must be empty or match the number of points");
 
@@ -190,20 +182,20 @@ inline void refineCircleGeometric(CircleFit& fit,
     }
     const Vector3 delta = jtj.ldlt().solve(-jtr);
     if (!delta.allFinite()) {
-      // singular normal equations, keep the fit as it is
-      return;
+      // Singular normal equations: keep the fit as it is.
+      break;
     }
     fit.center.x() += delta.x();
     fit.center.y() += delta.y();
     fit.radius += delta.z();
     if (!(fit.radius > 0.)) {
-      fit.valid = false;
-      return;
+      return std::nullopt;
     }
     if (delta.norm() < 1e-9) {
       break;
     }
   }
+  return fit;
 }
 
 }  // namespace Acts::detail

@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE(spacepoint_estimator_degenerate) {
   BOOST_CHECK(result.error() == TrackParamsEstimationError::DegenerateFit);
 }
 
-// The Taubin fit recovers a known circle and reports collinear input invalid.
+// The Taubin fit recovers a known circle and rejects collinear input.
 BOOST_AUTO_TEST_CASE(taubin_circle_fit) {
   const Vector2 center(3.5, -2.0);
   const double radius = 12.0;
@@ -388,17 +388,17 @@ BOOST_AUTO_TEST_CASE(taubin_circle_fit) {
     points.emplace_back(xy.x(), xy.y(), 0.);
   }
   const auto circle = Acts::detail::fitCircleTaubin(points);
-  BOOST_CHECK(circle.valid);
-  CHECK_CLOSE_ABS(circle.center.x(), center.x(), 1e-6);
-  CHECK_CLOSE_ABS(circle.center.y(), center.y(), 1e-6);
-  CHECK_CLOSE_ABS(circle.radius, radius, 1e-6);
+  BOOST_REQUIRE(circle.has_value());
+  CHECK_CLOSE_ABS(circle->center.x(), center.x(), 1e-6);
+  CHECK_CLOSE_ABS(circle->center.y(), center.y(), 1e-6);
+  CHECK_CLOSE_ABS(circle->radius, radius, 1e-6);
 
   // Collinear points do not define a finite circle.
   std::vector<Vector3> line;
   for (int i = 0; i < 5; ++i) {
     line.emplace_back(2.0 * i, 1.0 + 6.0 * i, 0.);
   }
-  BOOST_CHECK(!Acts::detail::fitCircleTaubin(line).valid);
+  BOOST_CHECK(!Acts::detail::fitCircleTaubin(line).has_value());
 }
 
 // A near-zero weight on a displaced point recovers the true circle.
@@ -421,14 +421,14 @@ BOOST_AUTO_TEST_CASE(taubin_circle_fit_weighted) {
   weights.back() = 1e-6;
 
   const auto unweighted = Acts::detail::fitCircleTaubin(points);
-  BOOST_CHECK(unweighted.valid);
-  BOOST_CHECK(std::abs(unweighted.radius - radius) > 0.1);
+  BOOST_REQUIRE(unweighted.has_value());
+  BOOST_CHECK(std::abs(unweighted->radius - radius) > 0.1);
 
   const auto weighted = Acts::detail::fitCircleTaubin(points, weights);
-  BOOST_CHECK(weighted.valid);
-  CHECK_CLOSE_ABS(weighted.center.x(), center.x(), 1e-3);
-  CHECK_CLOSE_ABS(weighted.center.y(), center.y(), 1e-3);
-  CHECK_CLOSE_ABS(weighted.radius, radius, 1e-3);
+  BOOST_REQUIRE(weighted.has_value());
+  CHECK_CLOSE_ABS(weighted->center.x(), center.x(), 1e-3);
+  CHECK_CLOSE_ABS(weighted->center.y(), center.y(), 1e-3);
+  CHECK_CLOSE_ABS(weighted->radius, radius, 1e-3);
 }
 
 // The same through the estimator: a helix with one point displaced in z, where

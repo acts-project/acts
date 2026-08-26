@@ -17,6 +17,7 @@
 #include <cmath>
 #include <limits>
 #include <numbers>
+#include <optional>
 #include <span>
 #include <string>
 #include <vector>
@@ -291,13 +292,14 @@ Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
 
   const double bMag = bField.norm();
 
-  detail::CircleFit circle = detail::fitCircleTaubin(local, weights);
-  if (circle.valid && geometricRefineIterations > 0) {
-    detail::refineCircleGeometric(circle, local, geometricRefineIterations,
-                                  weights);
+  std::optional<detail::CircleFit> circle =
+      detail::fitCircleTaubin(local, weights);
+  if (circle.has_value() && geometricRefineIterations > 0) {
+    circle = detail::refineCircleGeometric(*circle, local,
+                                           geometricRefineIterations, weights);
   }
 
-  if (!circle.valid) {
+  if (!circle.has_value()) {
     // Straight-line limit: the direction is the principal axis, q/p stays zero.
     double sumW = 0.;
     Vector3 mean = Vector3::Zero();
@@ -330,8 +332,8 @@ Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
     return Result<FreeVector>::success(params);
   }
 
-  const Vector2 center = circle.center;
-  const double radius = circle.radius;
+  const Vector2 center = circle->center;
+  const double radius = circle->radius;
 
   const Vector2 refXy = local.front().head<2>();
   const Vector2 secondXy = local[1].head<2>();
