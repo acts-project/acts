@@ -103,7 +103,10 @@ void bindIndexMultimapPair(py::module& m, const char* forwardName,
 
 /// Bind the bit-flag accessors shared by TrackStateType/ConstTrackStateTypeMap/
 /// MutableTrackStateTypeMap. Getters are always available; setters only exist
-/// when `!Map::IsReadOnly`.
+/// when `!Map::IsReadOnly`. isMeasurement mirrors the C++ API: it's a
+/// computed flag with only a no-argument setIsMeasurement() (no inverse), so
+/// it stays a read-only property with setIsMeasurement() as a plain method,
+/// rather than inventing bool semantics for it.
 template <typename Map>
 void addTrackStateTypeFlags(py::class_<Map>& cls) {
   cls.def_property_readonly("hasMaterial", &Map::hasMaterial)
@@ -117,14 +120,7 @@ void addTrackStateTypeFlags(py::class_<Map>& cls) {
   if constexpr (!Map::IsReadOnly) {
     cls.def_property("hasMeasurement", &Map::hasMeasurement,
                      &Map::setHasMeasurement)
-        .def_property("isMeasurement", &Map::isMeasurement,
-                      [](Map& self, bool value) {
-                        if (value) {
-                          self.setIsMeasurement();
-                        } else if (self.isMeasurement()) {
-                          self.setHasMeasurement(false);
-                        }
-                      })
+        .def("setIsMeasurement", &Map::setIsMeasurement)
         .def_property("isOutlier", &Map::isOutlier, &Map::setIsOutlier)
         .def_property("isHole", &Map::isHole, &Map::setIsHole)
         .def_property("isSharedHit", &Map::isSharedHit, &Map::setIsSharedHit);

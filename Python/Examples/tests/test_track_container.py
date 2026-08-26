@@ -28,7 +28,7 @@ def _fill_track(track):
     track.nDoF = 5
 
     state = track.appendTrackState(ae.TrackStatePropMask.All)
-    state.typeFlags.isMeasurement = True
+    state.typeFlags.setIsMeasurement()
     state.referenceSurface = surface
     state.uncalibratedSourceLink = ae.IndexSourceLink(geo_id, 0).toSourceLink()
     state.predicted = acts.BoundVector(0.1, 0.2, 0.3, 1.4, 0.01, 0.0)
