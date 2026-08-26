@@ -240,7 +240,7 @@ The main knobs on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrac
 | `lrtMode` | all | Large Radius Tracking: strip layers instead of pixel, looser cuts, shorter minimum chain |
 
 @ref Acts::Experimental::GbtsTrackingFilter "GbtsTrackingFilter::Config"
-separately controls the chain-following filter of @ref gbts-extraction:
+separately controls the chain-following filter of @ref gbts-extraction "seed extraction":
 
 | Option | Effect |
 | --- | --- |
