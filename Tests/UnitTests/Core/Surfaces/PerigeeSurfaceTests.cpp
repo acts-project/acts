@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 
 #include <iomanip>
 #include <memory>
@@ -111,7 +112,11 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   BOOST_CHECK(*perigeeSurfaceObject == *perigeeSurfaceObject2);
 
   /// Test assignment
+  // TODO: surface copy-assignment is deprecated; switch to a makeShared copy
+  // when it is removed (SonarCloud cpp:S3624).
+  ACTS_PUSH_IGNORE_DEPRECATED()
   *assignedPerigeeSurface = *perigeeSurfaceObject;
+  ACTS_POP_IGNORE_DEPRECATED()
 
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedPerigeeSurface == *perigeeSurfaceObject);

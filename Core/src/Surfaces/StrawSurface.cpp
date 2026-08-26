@@ -13,12 +13,22 @@
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 
 #include <numbers>
 #include <utility>
 #include <vector>
 
 namespace Acts {
+
+StrawSurface& StrawSurface::operator=(const StrawSurface& other) {
+  if (this != &other) {
+    ACTS_PUSH_IGNORE_DEPRECATED()
+    LineSurface::operator=(other);
+    ACTS_POP_IGNORE_DEPRECATED()
+  }
+  return *this;
+}
 
 Polyhedron StrawSurface::polyhedronRepresentation(
     const GeometryContext& gctx, unsigned int quarterSegments) const {
