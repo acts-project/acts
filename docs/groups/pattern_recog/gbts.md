@@ -4,26 +4,24 @@
 
 > [!tip]
 > This page documents @ref Acts::Experimental::GraphBasedTrackSeeder "GBTS" as
-> implemented in ACTS today. For the classical triplet-based approach that most
-> of ACTS uses, see @ref seeding. GBTS is an alternative seeding strategy, not a
-> layer on top of it — the two are independent entry points producing the same
-> @ref Acts::SeedContainer.
+> implemented in ACTS today. GBTS is an alternative to the classical
+> triplet-based @ref seeding, not a layer on top of it — the two are independent
+> entry points producing the same @ref Acts::SeedContainer.
 
 ## Why a graph?
 
 Classical ACTS seeding (@ref seeding) enumerates *triplets* of space points from
 a binned grid and cuts on the helix they describe. The combinatorics of that
-enumeration grow steeply with occupancy, and every triplet is evaluated in
-isolation — a hit that is part of a long, clean chain of compatible doublets is
-treated no differently from one that is not.
+enumeration grow steeply with occupancy, and every triplet is judged in
+isolation.
 
-**Graph-Based Track Seeding** takes the opposite order. It first builds a
-*graph*: nodes are space points, and a directed edge joins two space points on
-connected detector layers whenever the pair passes a set of cheap two-point
-cuts. Only afterwards does it look for structure in that graph — long chains of
-mutually compatible edges — and turn the best chains into seeds. The expensive
-per-candidate work is therefore done once per *edge*, not once per triplet, and
-the chain length itself becomes a quality signal.
+GBTS inverts the order. It first builds a *graph*: nodes are space points, and a
+directed edge joins two space points on connected detector layers whenever the
+pair passes a set of cheap two-point cuts. Only then does it look for structure
+in that graph — long chains of mutually compatible edges — and turn the best
+chains into seeds. The expensive per-candidate work is therefore done once per
+*edge* rather than once per triplet, and the chain length itself becomes a
+quality signal.
 
 The workflow has four stages, each documented below:
 
@@ -37,9 +35,9 @@ The workflow has four stages, each documented below:
 
 ## Geometry and layer connections {#gbts-geometry}
 
-GBTS does not use the ACTS tracking geometry directly. It works on its own
-lightweight description: a flat list of `GbtsLayer` logical layers, each
-subdivided into **eta bins**.
+GBTS does not use the ACTS tracking geometry. It works on its own lightweight
+description: a flat list of `GbtsLayer` logical layers, each subdivided into
+**eta bins**.
 
 @ref Acts::Experimental::GbtsLayerDescription gives a layer its ID, its type
 (barrel or endcap) and its extent. For a barrel layer `refCoord` is the radius
@@ -47,17 +45,15 @@ and the bounds are in @f$z@f$; for an endcap it is the other way round. The laye
 ID encodes the subdetector: `id / 10000 == 8` marks a pixel barrel layer, and IDs
 in the `12000`–`14000` range mark strip volumes.
 
-Which layer pairs may be joined by an edge at all is *not* hard-coded. It comes
-from a **connector file** parsed by
-@ref Acts::Experimental::GbtsLayerConnectionMap::fromStream, listing source
+Which layer pairs may be joined by an edge comes from a **connector file** parsed
+by @ref Acts::Experimental::GbtsLayerConnectionMap::fromStream, listing source
 (outer) and destination (inner) layer pairs. @ref Acts::Experimental::GbtsGeometry
-combines the layer descriptions with that connection map and precomputes, for
-every pair of connected layers, which *eta bin* pairs are geometrically
-compatible with the allowed @f$z_0@f$ range. The result is a **bin group** list,
-one inner bin together with all outer bins it may connect to, kept internal to
-the geometry and handed to the graph builder as its iteration schedule. It is
-ordered so that outer bins are processed before the inner bins that depend on
-them.
+combines the layer descriptions with that map and precomputes, for every pair of
+connected layers, which *eta bin* pairs are geometrically compatible with the
+allowed @f$z_0@f$ range. The result is a **bin group** list — one inner bin
+together with all outer bins it may connect to — which is kept internal to the
+geometry and serves as the graph builder's iteration schedule, ordered so that
+outer bins are processed before the inner bins that depend on them.
 
 > [!note]
 > The connection table is trained offline rather than written by hand.
@@ -68,28 +64,26 @@ them.
 ## Graph nodes {#gbts-nodes}
 
 @ref Acts::Experimental::GbtsNodeStorage holds the graph nodes. Space points are
-fed in one at a time through `insert`, which deliberately takes **plain scalars**
-rather than an ACTS container:
+fed in one at a time through `insert`, which takes **plain scalars** rather than
+an ACTS container:
 
 @snippet{trimleft} include/Acts/Seeding/GbtsNodeStorage.hpp gbts insert
 
-This is the same pattern as @ref Acts::CylindricalSpacePointGrid — an experiment
-can fill the storage straight from its own space point EDM without first copying
-everything into an @ref Acts::SpacePointContainer. Overloads exist for callers
+As with @ref Acts::CylindricalSpacePointGrid, an experiment can therefore fill
+the storage straight from its own space point EDM. Overloads exist for callers
 that already have @f$r@f$ and @f$\phi@f$, and for an
 @ref Acts::ConstSpacePointProxy together with the columns carrying the layer
 index, cluster width and local @f$y@f$ position.
 
-`insert` assigns the node to an eta bin via
-`GbtsLayer::getEtaBin` and buffers it.
-`finalize` then sorts each bin by @f$\phi@f$ and materialises the nodes into a
-space point container ordered by eta bin and then by @f$\phi@f$, so that every
+`insert` assigns the node to an eta bin via `GbtsLayer::getEtaBin` and buffers
+it. `finalize` then sorts each bin by @f$\phi@f$ and materialises the nodes into
+a space point container ordered by eta bin and then by @f$\phi@f$, so that every
 eta bin is **one contiguous range of node indices**. A node index is therefore
 all that the rest of the algorithm needs to pass around.
 
 The per-node data the graph builder reads lives in dynamic columns on that same
-container. It is deliberately packed rather than split into one array per field,
-because the innermost loop reads all of it together:
+container. It is packed rather than split into one array per field, because the
+innermost loop reads all of it together:
 
 @snippet{trimleft} include/Acts/Seeding/detail/GbtsGraphTypes.hpp gbts node params
 
@@ -135,20 +129,28 @@ The three fit parameters `p` are @f$\{\exp(-\eta),\ \kappa,\ \phi_1 + \kappa
 r_1\}@f$.
 
 Because the inner node's edges are written contiguously, the edges *incoming* to
-a node form a contiguous range, recorded in that node's
-`GbtsNodeEdgeInfo`. Immediately after creating an edge
-@f$(n_1, n_2)@f$, the builder scans the edges incoming to @f$n_2@f$ — that is,
-edges @f$(n_2, n_3)@f$ — and links the two whenever the implied triplet is
-consistent: the @f$\tau@f$ ratio, the @f$\phi@f$ continuation and the curvature
-difference must all agree within tolerance. For pixel-barrel triplets an optional
-@ref Acts::Experimental::GraphBasedTrackSeeder "validateTriplets" step also fits a
-circle through the three points and cuts on @f$d_0@f$ and @f$p_T@f$.
+a node form a contiguous range, recorded in that node's `GbtsNodeEdgeInfo`.
+Immediately after creating an edge @f$(n_1, n_2)@f$, the builder scans the edges
+incoming to @f$n_2@f$ — that is, edges @f$(n_2, n_3)@f$ — and links the two
+whenever the implied triplet is consistent: the @f$\tau@f$ ratio, the @f$\phi@f$
+continuation and the curvature difference must all agree within tolerance. For
+pixel-barrel triplets an optional
+@ref Acts::Experimental::GraphBasedTrackSeeder "validateTriplets" step also fits
+a circle through the three points and cuts on @f$d_0@f$ and @f$p_T@f$. Each
+edge stores up to `kGbtsMaxEdgeNeighbours` (6) such neighbours.
 
-Each edge stores up to `kGbtsMaxEdgeNeighbours` (6) such neighbours. Every
-inner node also accumulates a 16-bit @f$z_0@f$ **histogram bitmask** of its
-confirmed edges; on the innermost layer that mask is reused to reject candidates
-whose @f$z_0@f$ falls in an empty bin, and nodes with no connections at all are
-skipped outright.
+Two further cuts apply on the innermost pixel barrel layers, where the
+combinatorics are worst:
+
+- `matchBeforeCreate` (off by default) demands the @f$\tau@f$ half of the
+  triplet test *before* the edge exists: @f$n_2@f$ must already carry an
+  incoming edge whose @f$\tau@f$ agrees with the candidate's within
+  `tauRatioPrecut`. A node with two or fewer incoming edges passes
+  unconditionally, there being too little evidence to reject it.
+- Every inner node accumulates a 16-bit @f$z_0@f$ **histogram bitmask** of its
+  confirmed edges. On the innermost layer that mask rejects candidates whose
+  @f$z_0@f$ falls in an empty bin, and nodes with no connections at all are
+  skipped outright.
 
 ## Connected component analysis {#gbts-cca}
 
@@ -171,11 +173,15 @@ back through the graph by @ref Acts::Experimental::GbtsTrackingFilter.
 The filter is a small Kalman filter over the chain. It carries a state of two
 independent parts — a quadratic in the bending plane and a linear @f$z@f$ versus
 @f$r@f$ model — and at each step extrapolates to the next node, forms a
-@f$\chi^2@f$ residual and rejects the branch if either component exceeds its
-threshold. Where an edge has several neighbours the filter *branches*, recursing
-into each; the surviving branch with the best accumulated score wins. The score
-rewards each accepted hit and penalises its @f$\chi^2@f$, so the filter prefers
-long chains that are also clean.
+@f$\chi^2@f$ residual for each part and rejects the branch if either exceeds its
+threshold (`maxDChi2X`, `maxDChi2Y`).
+
+Every accepted hit adds a fixed reward `addHit` to the branch score, minus its
+two @f$\chi^2@f$ increments weighted by `weightX` and `weightY`. The score
+therefore counts the hits on the chain, discounted by how badly they fit the
+circle and the @f$z@f$ versus @f$r@f$ line. Where an edge has several
+neighbours the filter *branches*, recursing into each; the branch with the best
+accumulated score wins.
 
 The result is a set of seed candidates. These are reduced in two passes:
 
@@ -194,11 +200,8 @@ node indices translated back to the caller's own space point indices.
 
 When `useClusterWidthCuts` is enabled, GBTS narrows the per-node @f$\tau@f$
 window using a pre-trained lookup table indexed by **pixel cluster width**. The
-physical basis is that the cluster a track leaves in a pixel module grows with
-the track's
-incidence angle, so the cluster width alone constrains @f$\cot\theta@f$ before any
-pairing is attempted — which removes candidate pairs earlier and more cheaply
-than a two-point cut can.
+cluster a track leaves in a pixel module grows with the incidence angle, so the
+width alone constrains @f$\cot\theta@f$ before any pairing is attempted.
 
 The table carries two sets of bounds per width bin: one for clusters comfortably
 inside the module, and one for clusters within `moduleEdgeTolerance` of the module
@@ -228,7 +231,7 @@ The main knobs on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrac
 | `useAdaptiveCuts`, `tauRatioCorr` | @ref gbts-graph | widen the @f$\tau@f$ tolerance when a layer is skipped |
 | `validateTriplets`, `d0Max` | @ref gbts-graph | circle fit on pixel-barrel triplets |
 | `nMaxEdges` | @ref gbts-graph | hard cap on the edge array (2M by default); exceeding it costs efficiency |
-| `matchBeforeCreate` | @ref gbts-graph | require an existing compatible incoming edge before creating one |
+| `matchBeforeCreate`, `tauRatioPrecut` | @ref gbts-graph | require a compatible incoming edge before creating one |
 | `hitShareThreshold` | @ref gbts-extraction | fraction of shared hits above which a candidate is a clone |
 | `maxSeedSplitEta`, `maxInvRadDiff` | @ref gbts-extraction | seed splitting |
 | `addTriplets`, `maxAbsEtaAddTripelts` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
@@ -236,9 +239,16 @@ The main knobs on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrac
 | `maxEndcapClusterWidth`, `moduleHalfLengthY`, `moduleEdgeTolerance` | @ref gbts-ml | cluster-width acceptance and module-edge handling |
 | `lrtMode` | all | Large Radius Tracking: strip layers instead of pixel, looser cuts, shorter minimum chain |
 
-@ref Acts::Experimental::GbtsTrackingFilter "GbtsTrackingFilter::Config" separately
-controls the Kalman filter — measurement resolutions, per-step @f$\chi^2@f$
-ceilings and the per-hit score reward.
+@ref Acts::Experimental::GbtsTrackingFilter "GbtsTrackingFilter::Config"
+separately controls the chain-following filter of @ref gbts-extraction:
+
+| Option | Effect |
+| --- | --- |
+| `sigmaX`, `sigmaY` | measurement resolution in the bending plane and along @f$z@f$ |
+| `maxDChi2X`, `maxDChi2Y` | per-step @f$\chi^2@f$ ceilings; a branch exceeding either is dropped |
+| `addHit`, `weightX`, `weightY` | the reward and the two @f$\chi^2@f$ weights in the branch score |
+| `sigmaMS`, `radLen` | multiple-scattering inflation added before each extrapolation |
+| `maxCurvature`, `maxZ0` | track-level bounds checked after each update |
 
 ## Implementation pointers {#gbts-implementation}
 
