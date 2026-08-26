@@ -12,10 +12,20 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsPlugins/Mille/MillePedeResultReader.hpp"
 #include "ActsPlugins/Mille/MillePedeSolver.hpp"
+#include "ActsPlugins/Mille/MillePedeSteering.hpp"
 
 namespace ActsExamples {
 
 ProcessCode MillePedeSolverAlgorithm::finalize() {
+  ACTS_INFO("=== Generating alignment steering file for Millepede-II ===");
+  ActsPlugins::ActsToMille::MillePedeSteering steer(logger().level());
+  auto confPath = steer.generateSteeringFile(m_cfg.solverConfig.steeringFile,
+                                             m_cfg.steeringConfig);
+  if (confPath.empty()) {
+    ACTS_ERROR(
+        "Failed to generate the steering file, aborting alignment attempt");
+    return ProcessCode::ABORT;
+  }
   ACTS_INFO("=== Proceeding to run Millepede-II alignment fit ===");
 
   ActsPlugins::ActsToMille::MillePedeSolver solver(logger().level());
