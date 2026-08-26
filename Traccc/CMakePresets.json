@@ -93,12 +93,13 @@
         },
         {
             "name": "hip-fp32-ci",
-            "displayName": "HIP FP32, vecmem from the environment",
+            "displayName": "HIP FP32, dependencies from the environment",
             "inherits": [
                 "hip-fp32"
             ],
             "cacheVariables": {
-                "VECMEM_BUILD_HIP_LIBRARY": null
+                "VECMEM_BUILD_HIP_LIBRARY": null,
+                "TRACCC_SETUP_THRUST": "FALSE"
             }
         },
         {
