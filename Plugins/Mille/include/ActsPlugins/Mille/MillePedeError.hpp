@@ -16,11 +16,12 @@ namespace ActsPlugins {
 /// Error codes for Millepede run
 /// @ingroup errors
 enum class MillePedeError {
-  InstallationNotFound = 1,  // no valid install found
-  SteeringNotFound = 2,      // steering file not found
-  SolverCrash = 3,           // solver crashed
-  InvalidSolution = 4,       // solver finished but the solution is invalid
-  SolutionNotReadable = 5,   // solution file could not be read
+  InstallationNotFound = 1,   // no valid install found
+  SteeringNotFound = 2,       // steering file not found
+  SolverCrash = 3,            // solver crashed
+  InvalidSolution = 4,        // solver finished but the solution is invalid
+  SolutionNotReadable = 5,    // solution file could not be read
+  UnableToWriteSteering = 6,  // failed to generate steering file
 };
 
 /// @cond
