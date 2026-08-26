@@ -382,16 +382,17 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
         t_prodR = std::sqrt(t_vx * t_vx + t_vy * t_vy);
 
         if (pSurface != nullptr) {
+          // The perigee surface is not aligned, so either context works
           Acts::Intersection3D intersection =
               pSurface
-                  ->intersect(ctx.geoContext, particle.position(),
+                  ->intersect(ctx.recoGeoContext, particle.position(),
                               particle.direction(),
                               Acts::BoundaryTolerance::Infinite())
                   .closest();
           auto position = intersection.position();
 
           // get the truth perigee parameter
-          auto lpResult = pSurface->globalToLocal(ctx.geoContext, position,
+          auto lpResult = pSurface->globalToLocal(ctx.recoGeoContext, position,
                                                   particle.direction());
           if (lpResult.ok()) {
             t_d0 = lpResult.value()[Acts::BoundIndices::eBoundLoc0];

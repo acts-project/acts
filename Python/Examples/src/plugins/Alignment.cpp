@@ -32,10 +32,15 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
             .def("decorate", &AlignmentDecorator::decorate)
             .def("name", &AlignmentDecorator::name);
 
+    py::enum_<AlignmentDecorator::Target>(ad, "Target")
+        .value("eSim", AlignmentDecorator::Target::eSim)
+        .value("eReco", AlignmentDecorator::Target::eReco)
+        .value("eBoth", AlignmentDecorator::Target::eBoth);
+
     auto c =
         py::class_<AlignmentDecorator::Config>(ad, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT(c, iovStores, nominalStore, garbageCollection,
+    ACTS_PYTHON_STRUCT(c, target, iovStores, nominalStore, garbageCollection,
                        gcInterval, iovGenerators);
   }
 
