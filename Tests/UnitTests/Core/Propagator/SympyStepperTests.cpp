@@ -555,6 +555,36 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_dense_energy_loss_without_covariance) {
   CHECK_CLOSE_REL(run(false), run(true), 1e-12);
 }
 
+/// Backward propagation gives the energy back, following the convention of
+/// `PointwiseMaterialInteraction`.
+BOOST_AUTO_TEST_CASE(sympy_stepper_dense_energy_loss_reverses) {
+  auto bField = std::make_shared<ConstantBField>(Vector3(0, 0, 2_T));
+  SympyStepper stepper(bField);
+  const HomogeneousVolumeMaterial silicon(makeSilicon());
+
+  const double qop0 = 1. / 1_GeV;
+  SympyStepper::Options options(tgContext, mfContext);
+  options.maxStepSize = 20_mm;
+  options.initialStepSize = 20_mm;
+  options.doDense = true;
+
+  auto state = stepper.makeState(options);
+  stepper.initialize(
+      state, BoundTrackParameters::createCurvilinear(
+                 Vector4::Zero(), 0.4, 0.7, qop0, Covariance::Identity(),
+                 ParticleHypothesis::pion()));
+  for (int i = 0; i < 10; ++i) {
+    BOOST_REQUIRE(stepper.step(state, Direction::Forward(), &silicon).ok());
+  }
+  BOOST_CHECK_GT(stepper.qOverP(state), qop0);
+  for (int i = 0; i < 10; ++i) {
+    BOOST_REQUIRE(stepper.step(state, Direction::Backward(), &silicon).ok());
+  }
+  CHECK_SMALL(state.pathAccumulated, 1e-9);
+  // the residual is RK truncation error; the sign bug would be percents
+  CHECK_CLOSE_REL(stepper.qOverP(state), qop0, 1e-7);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests
