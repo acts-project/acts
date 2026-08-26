@@ -48,12 +48,13 @@
         },
         {
             "name": "cuda-fp32-ci",
-            "displayName": "CUDA FP32, vecmem from the environment",
+            "displayName": "CUDA FP32, dependencies from the environment",
             "inherits": [
                 "cuda-fp32"
             ],
             "cacheVariables": {
-                "VECMEM_BUILD_CUDA_LIBRARY": null
+                "VECMEM_BUILD_CUDA_LIBRARY": null,
+                "TRACCC_USE_SYSTEM_THRUST": "TRUE"
             }
         },
         {
@@ -71,12 +72,13 @@
         },
         {
             "name": "cuda-fp64-ci",
-            "displayName": "CUDA FP64, vecmem from the environment",
+            "displayName": "CUDA FP64, dependencies from the environment",
             "inherits": [
                 "cuda-fp64"
             ],
             "cacheVariables": {
-                "VECMEM_BUILD_CUDA_LIBRARY": null
+                "VECMEM_BUILD_CUDA_LIBRARY": null,
+                "TRACCC_USE_SYSTEM_THRUST": "TRUE"
             }
         },
         {
