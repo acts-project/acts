@@ -232,7 +232,7 @@ ProcessCode RootSpacePointPerformanceWriter::writeT(
             makeRange(measurementSimHitsMap.equal_range(measurementIndex1));
         // Use average truth in the case of multiple contributing sim hits
         const auto [local1, position1, dir1] = averageSimHits(
-            ctx.geoContext, *surface1, simHits, hitRange1, logger());
+            ctx.simGeoContext, *surface1, simHits, hitRange1, logger());
 
         const double z = position1.z();
         const double r = Acts::VectorHelpers::perp(position1);

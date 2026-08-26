@@ -16,6 +16,7 @@
 
 #include <cmath>
 #include <format>
+#include <stdexcept>
 
 namespace ActsExamples {
 
@@ -24,10 +25,25 @@ static constexpr double nan = std::numeric_limits<double>::quiet_NaN();
 ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
                          Acts::Logging::Level lvl)
     : m_cfg(cfg), m_logger(Acts::getDefaultLogger("ResPlotTool", lvl)) {
-  const auto& etaAxis = m_cfg.varBinning.at("Eta");
-  const auto& phiAxis = m_cfg.varBinning.at("Phi");
-  const auto& ptAxis = m_cfg.varBinning.at("Pt");
-  const auto& pullAxis = m_cfg.varBinning.at("Pull");
+  // `varBinning.at` would only report the key type, not the missing key
+  const auto binning = [this](const std::string& key) -> const AxisVariant& {
+    const auto it = m_cfg.varBinning.find(key);
+    if (it == m_cfg.varBinning.end()) {
+      throw std::invalid_argument("ResPlotTool: missing binning for '" + key +
+                                  "'");
+    }
+    return it->second;
+  };
+
+  const auto& etaAxis = binning("Eta");
+  const auto& phiAxis = binning("Phi");
+  const auto& ptAxis = binning("Pt");
+  const auto& pullAxis = binning("Pull");
+
+  if (m_cfg.paramNames.size() != Acts::eBoundSize) {
+    throw std::invalid_argument(
+        "ResPlotTool: expected one name per bound parameter");
+  }
 
   ACTS_DEBUG("Initialize the histograms for residual and pull plots");
 
@@ -36,8 +52,7 @@ ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
   allParamNames.push_back(m_cfg.relQoverPtName);
 
   for (const std::string& parName : allParamNames) {
-    const std::string parResidual = "Residual_" + parName;
-    const auto& residualAxis = m_cfg.varBinning.at(parResidual);
+    const auto& residualAxis = binning("Residual_" + parName);
 
     // residual distributions
     m_res.emplace(parName, Acts::Experimental::Histogram1(
@@ -116,11 +131,6 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
 
   using enum Acts::BoundIndices;
 
-  // get the fitted parameter (at perigee surface) and its error
-  const Acts::BoundVector& trackParameters = fittedParamters.parameters();
-  const Acts::BoundMatrix& trackCovariance =
-      fittedParamters.covariance().value_or(Acts::BoundMatrix::Zero());
-
   // get the perigee surface
   const Acts::Surface& pSurface = fittedParamters.referenceSurface();
 
@@ -145,16 +155,56 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
   truthParameters[eBoundQOverP] = truthParticle.qOverP();
   truthParameters[eBoundTime] = truthParticle.time();
 
-  // get the truth eta and pT
-  const double truthEta = eta(truthParticle.direction());
-  const double truthPhi = phi(truthParticle.direction());
-  const double truthPt = truthParticle.transverseMomentum();
+  // bin on the particle, not the bound parameters, which would round-trip the
+  // direction through phi/theta
+  fill(truthParameters,
+       TruthBinning{eta(truthParticle.direction()),
+                    phi(truthParticle.direction()),
+                    truthParticle.transverseMomentum(), truthParticle.charge(),
+                    truthParticle.absoluteCharge()},
+       fittedParamters);
+}
+
+void ResPlotTool::fill(const Acts::BoundTrackParameters& truthParameters,
+                       const Acts::BoundTrackParameters& fittedParameters) {
+  using Acts::VectorHelpers::eta;
+  using Acts::VectorHelpers::phi;
+
+  if (truthParameters.referenceSurface() !=
+      fittedParameters.referenceSurface()) {
+    throw std::invalid_argument(
+        "ResPlotTool: truth and fitted parameters are expressed on different "
+        "reference surfaces");
+  }
+
+  const double truthCharge = truthParameters.charge();
+  fill(truthParameters.parameters(),
+       TruthBinning{eta(truthParameters.direction()),
+                    phi(truthParameters.direction()),
+                    truthParameters.transverseMomentum(), truthCharge,
+                    std::abs(truthCharge)},
+       fittedParameters);
+}
+
+void ResPlotTool::fill(const Acts::BoundVector& truthVector,
+                       const TruthBinning& truthBinning,
+                       const Acts::BoundTrackParameters& fittedParameters) {
+  using enum Acts::BoundIndices;
+
+  const double truthEta = truthBinning.eta;
+  const double truthPhi = truthBinning.phi;
+  const double truthPt = truthBinning.pt;
+
+  // get the fitted parameter and its error
+  const Acts::BoundVector& trackParameters = fittedParameters.parameters();
+  const Acts::BoundMatrix& trackCovariance =
+      fittedParameters.covariance().value_or(Acts::BoundMatrix::Zero());
 
   // fill the histograms for residual and pull
   for (unsigned int paramId = 0; paramId < Acts::eBoundSize; paramId++) {
     const std::string& parName = m_cfg.paramNames.at(paramId);
 
-    const double residual = trackParameters[paramId] - truthParameters[paramId];
+    const double residual = trackParameters[paramId] - truthVector[paramId];
     fillResidual(parName, residual, truthEta, truthPhi, truthPt);
 
     const double var = trackCovariance(paramId, paramId);
@@ -165,8 +215,8 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
 
   // `reco(q/pT)` and `true(pT/q) * reco(q/pT)` residual and pull
   {
-    const double truthQoverPt = truthParticle.charge() / truthPt;
-    const double truthPtOverAbsQ = truthPt / truthParticle.absoluteCharge();
+    const double truthQoverPt = truthBinning.charge / truthPt;
+    const double truthPtOverAbsQ = truthPt / truthBinning.absCharge;
     const double recoQoverPt =
         trackParameters[eBoundQOverP] / std::sin(trackParameters[eBoundTheta]);
     const double residualQoverPt = recoQoverPt - truthQoverPt;
