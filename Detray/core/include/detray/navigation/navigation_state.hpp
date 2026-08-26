@@ -69,9 +69,7 @@ struct void_inspector {
 /// @tparam intersection_t result of an intersection operation
 template <typename derived_t, typename detector_t, std::size_t k_cache_capacity,
           typename inspector_t, typename intersection_t>
-class base_state : public detray::ranges::view_interface<
-                       base_state<derived_t, detector_t, k_cache_capacity,
-                                  inspector_t, intersection_t>> {
+class base_state {
   /// Need at least two slots for the caching to work
   static_assert(k_cache_capacity >= 2u,
                 "Navigation cache needs to have a capacity larger than 1");
@@ -124,42 +122,6 @@ class base_state : public detray::ranges::view_interface<
   DETRAY_HOST_DEVICE
   constexpr auto detector() const -> const detector_t & {
     return (*m_detector);
-  }
-
-  /// @return start position of the valid candidate range - const
-  DETRAY_HOST_DEVICE
-  constexpr auto begin() const -> candidate_const_itr_t {
-    candidate_const_itr_t itr = m_candidates.cbegin();
-    const dist_t idx{next_index()};
-    detray::ranges::advance(itr,
-                            (is_on_surface() && (idx >= 1)) ? idx - 1 : idx);
-    return itr;
-  }
-
-  DETRAY_HOST_DEVICE
-  constexpr auto cbegin() const -> candidate_const_itr_t {
-    return std::as_const(*this).begin();
-  }
-
-  /// @return sentinel of the valid candidate range.
-  DETRAY_HOST_DEVICE
-  constexpr auto end() const -> candidate_const_itr_t {
-    candidate_const_itr_t itr = m_candidates.cbegin();
-    detray::ranges::advance(itr, m_last + 1);
-    return itr;
-  }
-
-  DETRAY_HOST_DEVICE
-  constexpr auto cend() const -> candidate_const_itr_t {
-    return std::as_const(*this).end();
-  }
-
-  /// @returns last valid candidate (by position in the cache) - const
-  DETRAY_HOST_DEVICE
-  constexpr auto last() const -> const candidate_t & {
-    assert(!cache_exhausted());
-    assert(m_last >= 0);
-    return m_candidates[static_cast<std::size_t>(m_last)];
   }
 
   /// @returns the capacity of the internal candidate storage
@@ -285,12 +247,6 @@ class base_state : public detray::ranges::view_interface<
     m_volume_index = static_cast<nav_link_t>(v);
   }
 
-  /// @returns currently cached candidates - const
-  DETRAY_HOST_DEVICE
-  constexpr auto candidates() const -> const candidate_cache_t & {
-    return m_candidates;
-  }
-
   /// @returns number of currently cached (reachable) candidates - const
   DETRAY_HOST_DEVICE
   constexpr auto n_candidates() const -> dindex {
@@ -306,17 +262,17 @@ class base_state : public detray::ranges::view_interface<
 
   /// @returns current/previous object that was reached - const
   DETRAY_HOST_DEVICE
-  constexpr auto current() const -> const candidate_t & {
+  constexpr auto current() const -> const candidate_t {
     assert(cast_impl().is_on_surface());
     assert(m_next > 0);
-    return m_candidates[static_cast<std::size_t>(m_next - 1)];
+    return this->candidate_at(m_next - 1);
   }
 
   /// @returns next object that we want to reach (current target) - const
   DETRAY_HOST_DEVICE
-  constexpr auto target() const -> const candidate_t & {
+  constexpr auto target() const -> const candidate_t {
     assert(m_next >= 0);
-    return m_candidates[static_cast<std::size_t>(m_next)];
+    return this->candidate_at(m_next);
   }
 
   /// @returns identifier of the detector surface the navigator is on
@@ -455,48 +411,57 @@ class base_state : public detray::ranges::view_interface<
   DETRAY_HOST_DEVICE
   constexpr auto &inspector() { return m_inspector; }
 
+  template <typename callable_t>
+  DETRAY_HOST_DEVICE constexpr void for_each_valid(callable_t &&f) const {
+    for (std::size_t i = this->valid_begin(); i < this->valid_end(); ++i) {
+      f(this->candidate_at(i));
+    }
+  }
+
  protected:
-  /// @return start position of valid candidate range.
   DETRAY_HOST_DEVICE
-  constexpr auto begin() -> candidate_itr_t {
-    candidate_itr_t itr = m_candidates.begin();
-    const dist_t idx{cast_impl().next_index()};
-    detray::ranges::advance(
-        itr, (cast_impl().is_on_surface() && (idx >= 1)) ? idx - 1 : idx);
-    return itr;
+  constexpr std::size_t valid_begin() const {
+    const dist_t idx{next_index()};
+    return (is_on_surface() && (idx >= 1)) ? idx - 1 : idx;
   }
 
-  /// @return sentinel of the valid candidate range.
   DETRAY_HOST_DEVICE
-  constexpr auto end() -> candidate_itr_t {
-    candidate_itr_t itr = m_candidates.begin();
-    detray::ranges::advance(itr, m_last + 1);
-    return itr;
-  }
-
-  /// @returns last valid candidate (by position in the cache)
-  DETRAY_HOST_DEVICE
-  constexpr auto last() -> candidate_t & {
-    assert(static_cast<std::size_t>(m_last) < m_candidates.size());
-    return m_candidates[static_cast<std::size_t>(m_last)];
-  }
+  constexpr std::size_t valid_end() const { return m_last + 1; }
 
   /// Set the next surface that we want to reach (update target)
   DETRAY_HOST_DEVICE
-  constexpr void set_next(candidate_const_itr_t new_next) {
-    const auto new_idx{
-        detray::ranges::distance(m_candidates.cbegin(), new_next)};
-    cast_impl().next_index(static_cast<dist_t>(new_idx));
+  constexpr void set_next_to_begin() {
+    cast_impl().next_index(static_cast<dist_t>(valid_begin()));
     assert(cast_impl().next_index() <= m_last + 1);
   }
 
-  /// Updates the position of the last valid candidate
+  /// Helper to evict all unreachable/invalid candidates from the cache:
   DETRAY_HOST_DEVICE
-  constexpr void set_last(candidate_const_itr_t new_last) {
-    const auto new_idx{
-        detray::ranges::distance(m_candidates.cbegin(), new_last) - 1};
-    last_index(static_cast<dist_t>(new_idx));
+  constexpr void evict_invalid() {
+    // Depends on previous invalidation of unreachable candidates!
+    auto not_reachable = [](const intersection_t &candidate) {
+      return candidate.path() == std::numeric_limits<scalar_t>::max();
+    };
+
+    std::size_t i = 0;
+
+    for (; i < k_cache_capacity; ++i) {
+      if (not_reachable(this->candidate_at(i))) {
+        break;
+      }
+    }
+
+    last_index(static_cast<dist_t>(i) - 1);
     assert(m_last < static_cast<dist_t>(k_cache_capacity));
+  }
+
+  template <typename callable_t>
+  DETRAY_HOST_DEVICE constexpr void for_each_valid(callable_t &&f) {
+    for (std::size_t i = this->valid_begin(); i < this->valid_end(); ++i) {
+      auto cand = this->candidate_at(i);
+      f(cand);
+      this->set_candidate_at(i, cand);
+    }
   }
 
   /// @returns the index to the target surface
@@ -531,23 +496,38 @@ class base_state : public detray::ranges::view_interface<
     assert(cast_impl().next_index() <= cast_impl().last_index() + 1);
   }
 
-  /// @returns currently cached candidates
   DETRAY_HOST_DEVICE
-  constexpr auto candidates() -> candidate_cache_t & { return m_candidates; }
+  constexpr void set_current(const candidate_t &c) {
+    assert(m_next >= 1);
+    m_candidates[m_next - 1] = c;
+  };
+
+  DETRAY_HOST_DEVICE
+  constexpr void set_target(const candidate_t &c) { m_candidates[m_next] = c; };
+
+  DETRAY_HOST_DEVICE
+  constexpr void set_candidate_at(std::size_t i, const candidate_t &c) {
+    m_candidates[i] = c;
+  };
 
   /// @returns current/previous object that was reached
   DETRAY_HOST_DEVICE
-  constexpr auto current() -> candidate_t & {
+  constexpr auto current() -> const candidate_t {
     assert(cast_impl().is_on_surface());
     assert(m_next > 0);
-    return m_candidates[static_cast<std::size_t>(m_next - 1)];
+    return this->candidate_at(m_next - 1);
   }
 
   /// @returns next object that we want to reach (current target)
   DETRAY_HOST_DEVICE
-  constexpr auto target() -> candidate_t & {
-    assert(static_cast<std::size_t>(m_next) < m_candidates.size());
-    return m_candidates[static_cast<std::size_t>(m_next)];
+  constexpr auto target() -> const candidate_t {
+    assert(static_cast<std::size_t>(m_next) < k_cache_capacity);
+    return this->candidate_at(m_next);
+  }
+
+  DETRAY_HOST_DEVICE
+  constexpr auto candidate_at(std::size_t i) const -> const candidate_t {
+    return m_candidates[i];
   }
 
   /// Set the status to @param s
@@ -569,7 +549,9 @@ class base_state : public detray::ranges::view_interface<
   constexpr void clear_cache() {
     // Mark all data in the cache as unreachable
     for (std::size_t i = 0u; i < k_cache_capacity; ++i) {
-      m_candidates[i].set_path(std::numeric_limits<scalar_t>::max());
+      auto cand = this->candidate_at(i);
+      cand.set_path(std::numeric_limits<scalar_t>::max());
+      this->set_candidate_at(i, cand);
     }
     m_next = 0;
     m_last = -1;
