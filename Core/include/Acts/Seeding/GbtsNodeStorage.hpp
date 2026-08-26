@@ -41,6 +41,7 @@ class GbtsNodeStorage final {
   GbtsNodeStorage& operator=(GbtsNodeStorage&&) = delete;
   ~GbtsNodeStorage() = default;
 
+  //! [gbts insert]
   /// Insert a space point, deriving r and phi from the global position.
   /// @param index Index of the space point in the caller's own collection
   /// @param x Global x coordinate
@@ -54,6 +55,7 @@ class GbtsNodeStorage final {
                                       float z, std::uint32_t layerIndex,
                                       float clusterWidth = 0.f,
                                       float localPositionY = 0.f);
+  //! [gbts insert]
 
   /// Insert a space point for callers that already have r and phi.
   /// @param index Index of the space point in the caller's own collection
