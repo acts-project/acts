@@ -223,7 +223,7 @@ combinatorial_kalman_filter(
           std::tuple<candidate_link, bound_track_parameters<algebra_type>>>
           best_links;
 
-      const bool is_line = detail::is_line(sf);
+      const bool is_line = traccc::detail::is_line(sf);
 
       // Iterate over the measurements
       TRACCC_VERBOSE_HOST("No. measurements: " << (up - lo));
@@ -502,8 +502,8 @@ combinatorial_kalman_filter(
       // Create propagator state
       typename traccc::details::ckf_propagator_t<detector_t, bfield_t>::state
           propagation(param, field, det);
-      propagation.set_particle(
-          detail::correct_particle_hypothesis(config.ptc_hypothesis, param));
+      propagation.set_particle(traccc::detail::correct_particle_hypothesis(
+          config.ptc_hypothesis, param));
 
       propagation.stepping()
           .template set_constraint<detray::step::constraint::e_accuracy>(
