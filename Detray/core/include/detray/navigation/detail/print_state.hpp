@@ -70,13 +70,11 @@ DETRAY_HOST inline std::string print_state(const state_type &state) {
   }
 
   // Next surface
-  if (!state.candidates().empty()) {
-    debug_stream << std::setw(cw) << "next object:";
-    if (state.n_candidates() == 0u) {
-      debug_stream << "exhausted" << std::endl;
-    } else {
-      debug_stream << state.next_surface().identifier() << std::endl;
-    }
+  debug_stream << std::setw(cw) << "next object:";
+  if (state.n_candidates() == 0u) {
+    debug_stream << "exhausted" << std::endl;
+  } else {
+    debug_stream << state.next_surface().identifier() << std::endl;
   }
 
   // Distance to next
@@ -133,7 +131,7 @@ DETRAY_HOST inline std::string print_candidates(const state_type &state,
 
   debug_stream << "Surface candidates: " << std::endl;
 
-  for (const auto &sf_cand : state) {
+  state.for_each_valid([&](const auto &sf_cand) {
     debug_stream << std::left << std::setw(6) << "-> " << sf_cand;
 
     assert(!sf_cand.surface().identifier().is_invalid());
@@ -152,7 +150,7 @@ DETRAY_HOST inline std::string print_candidates(const state_type &state,
     } else {
       debug_stream << std::endl;
     }
-  }
+  });
 
   return debug_stream.str();
 }
