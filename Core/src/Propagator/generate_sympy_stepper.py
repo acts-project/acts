@@ -739,7 +739,9 @@ def print_rk4_dense(name_exprs, run_cse=True):
             return (
                 "if (err > errTol) {\n  return Acts::Result<bool>::success(false);\n}"
             )
-        if str(var) == "new_dir":
+        if str(var) == "new_qop":
+            # new_qop carries the energy loss, so it belongs to the step and
+            # has to be written before the jacobian-only part is skipped
             return "if (M.empty()) {\n  return Acts::Result<bool>::success(true);\n}"
         if str(var) == "new_M":
             return "\n".join(
