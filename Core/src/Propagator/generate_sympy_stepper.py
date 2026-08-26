@@ -520,27 +520,33 @@ def rk4_dense_tunedexpr():
     path_derivatives.expr[4:7, 0] = k4.name[0:3, 0].as_explicit()
     path_derivatives.expr[7, 0] = new_ydot.name[4, 0]
 
-    dk1_dfree = name_expr("dk1_dfree", k1.expr.jacobian([time, direction, qop]))
+    # dtds = sqrt(1 + mass^2 qop^2 / charge^2) is a state component but not an
+    # independent variable: it is a function of qop. Differentiating that
+    # relation gives d(dtds)/d(qop) = mass^2 qop / (charge^2 dtds), which
+    # tan_free feeds into the qop column so the chain rule picks it up.
+    ddtds_dqop = mass**2 * qop / (charge**2 * dtds.name)
+    free = [time, direction, dtds.name, qop]
+    tan_free = sym.eye(6)[:, [0, 1, 2, 3, 5]]
+    tan_free[4, 4] = ddtds_dqop
+
+    dk1_dfree = name_expr("dk1_dfree", k1.expr.jacobian(free) * tan_free)
     dk2_dfree = name_expr(
         "dk2_dfree",
-        k2.expr.jacobian([time, direction, qop])
-        + k2.expr.jacobian(k1.name) * dk1_dfree.expr,
+        k2.expr.jacobian(free) * tan_free + k2.expr.jacobian(k1.name) * dk1_dfree.expr,
     )
     dk3_dfree = name_expr(
         "dk3_dfree",
-        k3.expr.jacobian([time, direction, qop])
-        + k3.expr.jacobian(k2.name) * dk2_dfree.name,
+        k3.expr.jacobian(free) * tan_free + k3.expr.jacobian(k2.name) * dk2_dfree.name,
     )
     dk4_dfree = name_expr(
         "dk4_dfree",
-        k4.expr.jacobian([time, direction, qop])
-        + k4.expr.jacobian(k3.name) * dk3_dfree.name,
+        k4.expr.jacobian(free) * tan_free + k4.expr.jacobian(k3.name) * dk3_dfree.name,
     )
 
     new_y_rows = Matrix.vstack(new_pos.expr.as_explicit(), Matrix([new_time.expr]))
     dy_dfree = name_expr(
         "dy_dfree",
-        new_y_rows.jacobian([time, direction, qop])
+        new_y_rows.jacobian(free) * tan_free
         + new_y_rows.jacobian(k1.name) * dk1_dfree.expr
         + new_y_rows.jacobian(k2.name) * dk2_dfree.name
         + new_y_rows.jacobian(k3.name) * dk3_dfree.name,
@@ -550,7 +556,7 @@ def rk4_dense_tunedexpr():
     )
     dydot_dfree = name_expr(
         "dydot_dfree",
-        new_ydot_rows.jacobian([time, direction, qop])
+        new_ydot_rows.jacobian(free) * tan_free
         + new_ydot_rows.jacobian(k1.name) * dk1_dfree.expr
         + new_ydot_rows.jacobian(k2.name) * dk2_dfree.name
         + new_ydot_rows.jacobian(k3.name) * dk3_dfree.name
