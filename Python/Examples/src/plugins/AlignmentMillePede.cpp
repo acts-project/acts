@@ -31,5 +31,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignmentMillePede, m) {
                                 fixModules, outFile);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(MillePedeSolverAlgorithm, m,
-                                "MillePedeSolverAlgorithm", solverConfig);
+                                "MillePedeSolverAlgorithm", solverConfig,
+                                steeringConfig);
 }
