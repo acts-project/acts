@@ -337,6 +337,63 @@ BOOST_AUTO_TEST_CASE(spacepoint_estimator_large_arc) {
   runWith(0);
 }
 
+// The reference point can be any space point: the fitted helix is the same and
+// only the point it is evaluated at moves.
+BOOST_AUTO_TEST_CASE(spacepoint_estimator_reference_index) {
+  const double bMag = 2._T;
+  const Vector3 bField(0, 0, bMag);
+  const double radius = 300.;  // mm
+  const double theta = 70._degree;
+  const double lambda = 1. / std::tan(theta);  // dz/ds
+  const double alpha0 = 0.3;
+  const double dAlpha = 40._degree;  // 6 points -> 200 degrees
+  const std::size_t nsp = 6;
+
+  std::vector<Vector3> spacePoints;
+  for (std::size_t i = 0; i < nsp; ++i) {
+    const double a = alpha0 + i * dAlpha;
+    const double s = radius * (a - alpha0);
+    spacePoints.emplace_back(radius * std::cos(a), radius * std::sin(a),
+                             100. + lambda * s);
+  }
+
+  const auto atFirst = estimateTrackParamsFromSpacePoints(spacePoints, bField);
+  BOOST_REQUIRE(atFirst.ok());
+
+  for (std::size_t ref = 0; ref < nsp; ++ref) {
+    BOOST_TEST_CONTEXT("referenceIndex = " << ref) {
+      auto result = estimateTrackParamsFromSpacePoints(spacePoints, bField, 0.,
+                                                       0, {}, ref);
+      BOOST_REQUIRE(result.ok());
+      const FreeVector& fp = *result;
+
+      // The parameters sit on the chosen space point.
+      for (int i = 0; i < 3; ++i) {
+        CHECK_CLOSE_ABS(fp[eFreePos0 + i], spacePoints[ref][i], 1e-6);
+      }
+
+      // Tangent of the truth helix there: transverse (-sin a, cos a), z slope
+      // lambda.
+      const double a = alpha0 + ref * dAlpha;
+      Vector3 dir(-std::sin(a), std::cos(a), lambda);
+      dir.normalize();
+      for (int i = 0; i < 3; ++i) {
+        CHECK_CLOSE_ABS(fp[eFreeDir0 + i], dir[i], 1e-6);
+      }
+
+      // The helix itself does not depend on the reference, so charge and
+      // momentum are identical to the estimate at the first point.
+      BOOST_CHECK_EQUAL(fp[eFreeQOverP], (*atFirst)[eFreeQOverP]);
+    }
+  }
+
+  // The default is the first space point.
+  const auto atZero =
+      estimateTrackParamsFromSpacePoints(spacePoints, bField, 0., 0, {}, 0);
+  BOOST_REQUIRE(atZero.ok());
+  BOOST_CHECK_EQUAL(*atZero, *atFirst);
+}
+
 // Zero field: a straight-line fit with vanishing q/p.
 BOOST_AUTO_TEST_CASE(spacepoint_estimator_zero_field) {
   const Vector3 bField = Vector3::Zero();

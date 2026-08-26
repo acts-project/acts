@@ -262,23 +262,28 @@ std::error_code Acts::make_error_code(Acts::TrackParamsEstimationError e) {
 
 Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
     std::span<const Vector3> spacePoints, const Vector3& bField, double t0,
-    std::size_t geometricRefineIterations, std::span<const double> weights) {
+    std::size_t geometricRefineIterations, std::span<const double> weights,
+    std::size_t referenceIndex) {
   if (spacePoints.size() < 3) {
     return Result<FreeVector>::failure(
         TrackParamsEstimationError::NotEnoughSpacePoints);
   }
   assert((weights.empty() || weights.size() == spacePoints.size()) &&
          "weights must be empty or match the space points");
+  assert(referenceIndex < spacePoints.size() &&
+         "reference index must point into the space points");
 
   const auto w = [&](std::size_t i) {
     return weights.empty() ? 1. : weights[i];
   };
 
-  const Vector3& reference = spacePoints.front();
+  const Vector3& reference = spacePoints[referenceIndex];
 
-  // Estimation frame: field along local +z, fixed by the first two points.
+  // Estimation frame: field along local +z, fixed by the first two points. It
+  // is anchored to the seed rather than to the reference point, so that the
+  // fitted helix does not depend on where the parameters are reported.
   const Transform3 transform =
-      estimationFrameLocalToGlobal(reference, spacePoints[1], bField);
+      estimationFrameLocalToGlobal(spacePoints.front(), spacePoints[1], bField);
   const Transform3 toLocal = transform.inverse();
   std::vector<Vector3> local;
   local.reserve(spacePoints.size());
@@ -335,14 +340,22 @@ Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
   const Vector2 center = circle->center;
   const double radius = circle->radius;
 
-  const Vector2 refXy = local.front().head<2>();
-  const Vector2 secondXy = local[1].head<2>();
+  const Vector2 firstXy = local.front().head<2>();
+  const Vector2 refXy = local[referenceIndex].head<2>();
 
-  // Tangent: the radial vector rotated by +90 degrees, oriented along travel.
+  // Sense of travel around the circle, +1 for counterclockwise. Taken from the
+  // first two points so that it does not depend on the reference point, which
+  // may be the last one and so have no successor.
+  const Vector2 firstRadial = firstXy - center;
+  const Vector2 firstCcwTangent(-firstRadial.y(), firstRadial.x());
+  const double rotSense =
+      (firstCcwTangent.dot(local[1].head<2>() - firstXy) >= 0.) ? 1. : -1.;
+
+  // Tangent at the reference: its radial vector rotated by +90 degrees,
+  // oriented along travel.
   const Vector2 radial = refXy - center;
-  Vector2 tangent(-radial.y(), radial.x());
-  const double rotSense = (tangent.dot(secondXy - refXy) >= 0.) ? 1. : -1.;
-  tangent = (rotSense * tangent).normalized();
+  const Vector2 tangent =
+      (rotSense * Vector2(-radial.y(), radial.x())).normalized();
 
   // q v x B points to the center; with B along local +z, v x B = (v_y, -v_x).
   const double toCenterProj = tangent.y() * (center.x() - refXy.x()) -
@@ -350,10 +363,12 @@ Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
   const double qSign = (toCenterProj >= 0.) ? 1. : -1.;
 
   // z is linear in the arc length s = radius * turning angle. Consecutive
-  // points are assumed less than half a turn apart.
-  const double phiRef =
-      std::atan2(refXy.y() - center.y(), refXy.x() - center.x());
-  double phiPrev = phiRef;
+  // points are assumed less than half a turn apart. The slope is invariant
+  // under a shift of s, so s is measured from the first point rather than from
+  // the reference, which keeps the unwrapping sequential for any reference.
+  const double phiFirst =
+      std::atan2(firstXy.y() - center.y(), firstXy.x() - center.x());
+  double phiPrev = phiFirst;
   double sumW = 0.;
   double sumS = 0.;
   double sumZ = 0.;
@@ -370,7 +385,7 @@ Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
     }
     phiPrev = phi;
     const double wi = w(i);
-    const double s = rotSense * radius * (phi - phiRef);
+    const double s = rotSense * radius * (phi - phiFirst);
     const double z = p.z();
     sumW += wi;
     sumS += wi * s;
@@ -403,9 +418,11 @@ Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
 Acts::Result<Acts::BoundVector> Acts::estimateTrackParamsFromSpacePoints(
     const GeometryContext& gctx, const Surface& surface,
     std::span<const Vector3> spacePoints, const Vector3& bField, double t0,
-    std::size_t geometricRefineIterations, std::span<const double> weights) {
+    std::size_t geometricRefineIterations, std::span<const double> weights,
+    std::size_t referenceIndex) {
   Result<FreeVector> freeParams = estimateTrackParamsFromSpacePoints(
-      spacePoints, bField, t0, geometricRefineIterations, weights);
+      spacePoints, bField, t0, geometricRefineIterations, weights,
+      referenceIndex);
   if (!freeParams.ok()) {
     return Result<BoundVector>::failure(freeParams.error());
   }

@@ -228,8 +228,14 @@ std::error_code make_error_code(Acts::TrackParamsEstimationError e);
 /// Least-squares generalization of @ref estimateTrackParamsFromSeed. A Taubin
 /// circle fit transverse to the field, optionally refined geometrically, and a
 /// linear fit of the field coordinate against the transverse arc length. Points
-/// are taken in track order and are not sorted; the parameters are expressed at
-/// the first one.
+/// are taken in track order and are not sorted.
+///
+/// The parameters are expressed at `spacePoints[referenceIndex]`, by default
+/// the first one. The fit itself does not depend on that choice: every point
+/// contributes to the same helix, and the reference only selects where it is
+/// evaluated. Reporting at a point deeper in the detector lets a downstream
+/// track finder start where the hit density, and with it the combinatorics, is
+/// lower, at the cost of a longer extrapolation back to the beam line.
 ///
 /// A vanishing curvature degenerates to a line and only the direction is
 /// estimated. Without a field q/p stays zero.
@@ -244,16 +250,18 @@ std::error_code make_error_code(Acts::TrackParamsEstimationError e);
 ///        iterations on top of the algebraic circle fit (0 disables it)
 /// @param weights optional per-point weights for all fit stages
 ///        (empty span = uniform)
+/// @param referenceIndex index of the space point the parameters are expressed
+///        at; must be a valid index into `spacePoints`
 /// @return the free parameters at the reference point, or an error
 Result<FreeVector> estimateTrackParamsFromSpacePoints(
     std::span<const Vector3> spacePoints, const Vector3& bField, double t0 = 0.,
     std::size_t geometricRefineIterations = 0,
-    std::span<const double> weights = {});
+    std::span<const double> weights = {}, std::size_t referenceIndex = 0);
 
 /// Estimate bound track parameters from an ordered set of N >= 3 space points.
 ///
-/// As @ref estimateTrackParamsFromSpacePoints, expressed at the surface of the
-/// first space point.
+/// As @ref estimateTrackParamsFromSpacePoints, expressed on the surface of
+/// `spacePoints[referenceIndex]`.
 ///
 /// @param gctx the geometry context
 /// @param surface the surface of the reference space point
@@ -264,12 +272,14 @@ Result<FreeVector> estimateTrackParamsFromSpacePoints(
 ///        iterations on top of the algebraic circle fit (0 disables it)
 /// @param weights optional per-point weights for all fit stages
 ///        (empty span = uniform)
+/// @param referenceIndex index of the space point the parameters are expressed
+///        at; `surface` must be the surface of that space point
 /// @return the bound parameters at the surface, or an error
 Result<BoundVector> estimateTrackParamsFromSpacePoints(
     const GeometryContext& gctx, const Surface& surface,
     std::span<const Vector3> spacePoints, const Vector3& bField, double t0 = 0.,
     std::size_t geometricRefineIterations = 0,
-    std::span<const double> weights = {});
+    std::span<const double> weights = {}, std::size_t referenceIndex = 0);
 
 /// @}
 
