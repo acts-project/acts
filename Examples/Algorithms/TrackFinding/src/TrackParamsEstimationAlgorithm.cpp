@@ -153,7 +153,7 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     // Estimate the track parameters from seed
     Acts::Result<Acts::BoundVector> boundParams =
         Acts::estimateTrackParamsFromSeed(
-            ctx.geoContext, *bottomSurface, bottomSpVec,
+            ctx.recoGeoContext, *bottomSurface, bottomSpVec,
             std::isnan(bottomSp.time()) ? 0.0 : bottomSp.time(), middleSpVec,
             topSpVec, field);
     if (!boundParams.ok()) {

@@ -28,7 +28,7 @@ ProcessCode SvgTrackingGeometryWriter::write(
   m_writeMutex.lock();
 
   auto geometrySheets = ActsPlugins::Svg::TrackingGeometryConverter::convert(
-      context.geoContext, tGeometry, m_cfg.converterOptions);
+      context.recoGeoContext, tGeometry, m_cfg.converterOptions);
 
   // Write them out
   for (const auto& sheet : geometrySheets) {

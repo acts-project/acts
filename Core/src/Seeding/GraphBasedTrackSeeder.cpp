@@ -17,6 +17,7 @@
 #include <fstream>
 #include <memory>
 #include <numbers>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -38,6 +39,13 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
     : m_cfg(config),
       m_geometry(std::move(geometry)),
       m_logger(std::move(logger)) {
+  // buildTheGraph pre-computes the loosest tau ratio threshold it can apply,
+  // which assumes the correction only ever widens the cut.
+  if (m_cfg.tauRatioCorr < 0) {
+    throw std::invalid_argument(
+        "GraphBasedTrackSeeder: tauRatioCorr must not be negative");
+  }
+
   m_tauLut = parseTauLookupTable(m_cfg.lutInputFile);
 }
 
@@ -178,6 +186,10 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
   const float dPhiCoeff = m_cfg.lrtMode ? 1.0f * maxCurv : 0.68f * maxCurv;
 
+  // the loosest tau ratio threshold the triplet matching can apply
+  const float maxTauRatioCut =
+      m_cfg.tauRatioCut + (m_cfg.useAdaptiveCuts ? m_cfg.tauRatioCorr : 0.0f);
+
   // the default sliding window along phi
   const float deltaPhi0 = 0.5f * m_cfg.phiSliceWidth;
 
@@ -199,6 +211,9 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
   const std::span<detail::GbtsNodeEdgeInfo> edgeInfo =
       nodeStorage.nodeEdgeInfo();
 
+  // reused across bin groups so that the windows are allocated once
+  std::vector<SlidingWindow> phiSlidingWindow;
+
   // loop over bin groups
   for (const auto& bg : m_geometry->binGroups()) {
     const detail::GbtsEtaBinInfo& B1 = nodeStorage.etaBin(bg.first);
@@ -213,21 +228,15 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
     const bool isBarrel1 = (layerId1 / 10000) == 8;
 
-    // prepare a sliding window for each bin2 in the group
+    // prepare a sliding window for each non-empty bin2 in the group
 
-    std::vector<SlidingWindow> phiSlidingWindow;
-
-    // initialization using default ctor
-    phiSlidingWindow.resize(bg.second.size());
-
-    std::uint32_t winIdx = 0;
+    phiSlidingWindow.clear();
 
     // loop over n2 eta-bins in L2 layers
     for (const auto& b2Idx : bg.second) {
       const detail::GbtsEtaBinInfo& B2 = nodeStorage.etaBin(b2Idx);
 
       if (B2.empty()) {
-        ++winIdx;
         continue;
       }
 
@@ -249,9 +258,11 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
         }
       }
 
-      phiSlidingWindow[winIdx].etaBin = &B2;
-      phiSlidingWindow[winIdx].deltaPhi = deltaPhi;
-      ++winIdx;
+      SlidingWindow& window = phiSlidingWindow.emplace_back();
+      window.phiNodes = B2.phiNodes.data();
+      window.numPhiNodes = static_cast<std::uint32_t>(B2.phiNodes.size());
+      window.deltaPhi = deltaPhi;
+      window.layerId = B2.layerId;
     }
 
     // in GBTSv3 the outer loop goes over n1 nodes in the Layer 1 bin
@@ -275,13 +286,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
       // the intermediate loop over sliding windows
       for (auto& slw : phiSlidingWindow) {
-        if (slw.etaBin == nullptr) {
-          continue;
-        }
-
-        const detail::GbtsEtaBinInfo& B2 = *slw.etaBin;
-
-        const std::uint32_t lk2 = B2.layerId;
+        const std::uint32_t lk2 = slw.layerId;
 
         const bool isBarrel2 = (lk2 / 10000) == 8;
 
@@ -293,9 +298,9 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
         const float maxPhi = phi1 + deltaPhi;
 
         // the inner loop over n2 nodes using sliding window
-        for (std::uint32_t n2PhiIdx = slw.firstIt;
-             n2PhiIdx < B2.phiNodes.size(); ++n2PhiIdx) {
-          const float phi2 = B2.phiNodes[n2PhiIdx].first;
+        for (std::uint32_t n2PhiIdx = slw.firstIt; n2PhiIdx < slw.numPhiNodes;
+             ++n2PhiIdx) {
+          const float phi2 = slw.phiNodes[n2PhiIdx].first;
 
           if (phi2 < minPhi) {
             // update the window position
@@ -307,7 +312,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
             break;
           }
 
-          const SpacePointIndex n2Idx = B2.phiNodes[n2PhiIdx].second;
+          const SpacePointIndex n2Idx = slw.phiNodes[n2PhiIdx].second;
 
           const detail::GbtsNodeEdgeInfo& n2Info = edgeInfo[n2Idx];
 
@@ -388,7 +393,11 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
             }
           }
 
-          const float expEta = fastHypot(1, tau) - tau;
+          const float hypotTau = fastHypot(1, tau);
+          const float expEta = hypotTau - tau;
+          // 1 / expEta, since (hypotTau - tau) * (hypotTau + tau) == 1. The
+          // sum is also the better conditioned form for large tau.
+          const float invExpEta = hypotTau + tau;
 
           // match edge candidate against edges incoming to n2
           if (m_cfg.matchBeforeCreate &&
@@ -397,11 +406,11 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
             bool isGood = n2NumEdges <= 2;
 
             if (!isGood) {
-              const float uat1 = 1.0f / expEta;
+              const float uat1 = invExpEta;
 
               for (std::uint32_t n2InIdx = n2FirstEdge; n2InIdx < n2LastEdge;
                    ++n2InIdx) {
-                const float tau2 = edgeStorage.at(n2InIdx).p[0];
+                const float tau2 = edgeStorage[n2InIdx].p[0];
                 const float tauRatio = tau2 * uat1 - 1.0f;
 
                 if (std::abs(tauRatio) > m_cfg.tauRatioPrecut) {  // bad match
@@ -428,14 +437,21 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
             const std::uint32_t outEdgeIdx = nEdges;
 
-            const float uat2 = 1.f / expEta;
+            const float uat2 = invExpEta;
             const float phi2u = phi2 + dPhi2;
             const float curv2 = curv;
 
             // looking for neighbours of the new edge
             for (std::uint32_t inEdgeIdx = n2FirstEdge; inEdgeIdx < n2LastEdge;
                  ++inEdgeIdx) {
-              detail::GbtsEdge* pS = &(edgeStorage.at(inEdgeIdx));
+              detail::GbtsEdge* pS = &edgeStorage[inEdgeIdx];
+
+              const float absTauRatio = std::abs(pS->p[0] * uat2 - 1.0f);
+
+              // rejects most candidates before the layer bookkeeping below
+              if (absTauRatio > maxTauRatioCut) {
+                continue;
+              }
 
               if (pS->nNei >= detail::kGbtsMaxEdgeNeighbours) {
                 continue;
@@ -445,7 +461,6 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
               const bool isBarrel3 = (lk3 / 10000) == 8;
 
-              const float absTauRatio = std::abs(pS->p[0] * uat2 - 1.0f);
               float addTauRatioCorr = 0;
 
               if (m_cfg.useAdaptiveCuts) {
@@ -647,7 +662,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
   vChainHeads.reserve(nEdges / 2);
 
   for (std::uint32_t edgeIndex = 0; edgeIndex < nEdges; ++edgeIndex) {
-    detail::GbtsEdge* pS = &(edgeStorage.at(edgeIndex));
+    detail::GbtsEdge* pS = &edgeStorage[edgeIndex];
 
     if (m_cfg.lrtMode || !m_cfg.addTriplets) {
       if (pS->level < minLevel) {

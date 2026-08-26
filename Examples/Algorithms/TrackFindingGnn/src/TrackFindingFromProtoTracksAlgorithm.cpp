@@ -84,7 +84,7 @@ ProcessCode TrackFindingFromProtoTracksAlgorithm::execute(
   // Construct a perigee surface as the target surface
   auto pSurface = Surface::makeShared<PerigeeSurface>(Vector3{0., 0., 0.});
 
-  PropagatorPlainOptions pOptions(ctx.geoContext, ctx.magFieldContext);
+  PropagatorPlainOptions pOptions(ctx.recoGeoContext, ctx.magFieldContext);
   pOptions.maxSteps = 10000;
 
   PassThroughCalibrator pcalibrator;
@@ -118,7 +118,7 @@ ProcessCode TrackFindingFromProtoTracksAlgorithm::execute(
 
   // Set the CombinatorialKalmanFilter options
   TrackFindingAlgorithm::TrackFinderOptions options(
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, extensions,
+      ctx.recoGeoContext, ctx.magFieldContext, ctx.calibContext, extensions,
       pOptions, &(*pSurface));
 
   // Perform the track finding for all initial parameters
