@@ -2,6 +2,7 @@ target_sources(
     ActsCore
     PRIVATE
         EstimateTrackParamsFromSeed.cpp
+        TrackParamsEstimationError.cpp
         CompSpacePointAuxiliaries.cpp
         CompositeSpacePointLineFitter.cpp
         FastStrawLineFitter.cpp
