@@ -77,8 +77,8 @@ inline Matrix<2, 3> freeToSphericalDirectionJacobian(const Vector3& direction) {
 /// @return The Jacobian d(p_x, p_y, p_z) / d(phi, theta, qOverP)
 ///
 inline Matrix<3, 3> sphericalToFreeMomentumJacobian(const Vector3& direction,
-                                                     double qOverP,
-                                                     double momentum) {
+                                                    double qOverP,
+                                                    double momentum) {
   Matrix<3, 3> jacobian;
   jacobian.leftCols<2>() =
       momentum * sphericalToFreeDirectionJacobian(direction);
@@ -96,7 +96,7 @@ inline Matrix<3, 3> sphericalToFreeMomentumJacobian(const Vector3& direction,
 /// @return The Jacobian d(phi, theta, qOverP) / d(p_x, p_y, p_z)
 ///
 inline Matrix<3, 3> freeToSphericalMomentumJacobian(const Vector3& momentum,
-                                                     double charge) {
+                                                    double charge) {
   double p = momentum.norm();
   Vector3 direction = momentum / p;
   double qOverP = charge / p;
