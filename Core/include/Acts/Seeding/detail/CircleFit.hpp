@@ -26,7 +26,7 @@ struct CircleFit {
   /// Circle center.
   Vector2 center = Vector2::Zero();
   /// Circle radius.
-  double radius = 0.;
+  double radius = 0;
 };
 
 /// Algebraic circle fit (Taubin) over the transverse `(x, y)` projection.
@@ -49,34 +49,34 @@ inline std::optional<CircleFit> fitCircleTaubin(
          "weights must be empty or match the number of points");
 
   const auto weightAt = [&](std::size_t i) {
-    return weights.empty() ? 1. : weights[i];
+    return weights.empty() ? 1 : weights[i];
   };
 
   // Weighted centroid of the transverse projection.
-  double sumW = 0.;
-  double meanX = 0.;
-  double meanY = 0.;
+  double sumW = 0;
+  double meanX = 0;
+  double meanY = 0;
   for (std::size_t i = 0; i < n; ++i) {
     const double w = weightAt(i);
     sumW += w;
     meanX += w * points[i].x();
     meanY += w * points[i].y();
   }
-  if (!(sumW > 0.)) {
+  if (sumW <= 0) {
     return std::nullopt;
   }
-  const double invW = 1. / sumW;
+  const double invW = 1 / sumW;
   meanX *= invW;
   meanY *= invW;
 
   // Centroid-relative weighted moments, z = x^2 + y^2.
-  double mxx = 0.;
-  double myy = 0.;
-  double mxy = 0.;
-  double mxz = 0.;
-  double myz = 0.;
-  double mzz = 0.;
-  double mz = 0.;
+  double mxx = 0;
+  double myy = 0;
+  double mxy = 0;
+  double mxz = 0;
+  double myz = 0;
+  double mzz = 0;
+  double mz = 0;
   for (std::size_t i = 0; i < n; ++i) {
     const double w = weightAt(i);
     const double x = points[i].x() - meanX;
@@ -97,7 +97,7 @@ inline std::optional<CircleFit> fitCircleTaubin(
   myz *= invW;
   mzz *= invW;
   mz *= invW;
-  if (!(mz > 0.)) {
+  if (mz <= 0) {
     // All points coincide.
     return std::nullopt;
   }
@@ -108,9 +108,9 @@ inline std::optional<CircleFit> fitCircleTaubin(
       mxz, mxx, mxy,             //
       myz, mxy, myy;
   SquareMatrix3 nMat = SquareMatrix3::Zero();
-  nMat(0, 0) = 4. * mz;
-  nMat(1, 1) = 1.;
-  nMat(2, 2) = 1.;
+  nMat(0, 0) = 4 * mz;
+  nMat(1, 1) = 1;
+  nMat(2, 2) = 1;
 
   Eigen::GeneralizedSelfAdjointEigenSolver<SquareMatrix3> solver(m, nMat);
   if (solver.info() != Eigen::Success) {
@@ -121,15 +121,15 @@ inline std::optional<CircleFit> fitCircleTaubin(
   const double coeffA = a(0);
   const double coeffB = a(1);
   const double coeffC = a(2);
-  if (coeffA == 0.) {
+  if (coeffA == 0) {
     // Perfectly straight: no finite circle.
     return std::nullopt;
   }
 
   const double coeffD = -coeffA * mz;
-  const double r2 = (coeffB * coeffB + coeffC * coeffC - 4. * coeffA * coeffD) /
-                    (4. * coeffA * coeffA);
-  if (!std::isfinite(r2) || r2 <= 0.) {
+  const double r2 = (coeffB * coeffB + coeffC * coeffC - 4 * coeffA * coeffD) /
+                    (4 * coeffA * coeffA);
+  if (!std::isfinite(r2) || r2 <= 0) {
     return std::nullopt;
   }
   const double radius = std::sqrt(r2);
@@ -140,7 +140,7 @@ inline std::optional<CircleFit> fitCircleTaubin(
     return std::nullopt;
   }
 
-  const Vector2 centerRel(-coeffB / (2. * coeffA), -coeffC / (2. * coeffA));
+  const Vector2 centerRel(-coeffB / (2 * coeffA), -coeffC / (2 * coeffA));
   return CircleFit{centerRel + Vector2(meanX, meanY), radius};
 }
 
@@ -161,7 +161,7 @@ inline std::optional<CircleFit> refineCircleGeometric(
          "weights must be empty or match the number of points");
 
   const auto weightAt = [&](std::size_t i) {
-    return weights.empty() ? 1. : weights[i];
+    return weights.empty() ? 1 : weights[i];
   };
 
   for (std::size_t it = 0; it < iterations; ++it) {
@@ -176,7 +176,7 @@ inline std::optional<CircleFit> refineCircleGeometric(
       const double w = weightAt(i);
       const double residual = dist - fit.radius;
       // Jacobian of the residual w.r.t. (cx, cy, R).
-      const Vector3 j(-d.x() / dist, -d.y() / dist, -1.);
+      const Vector3 j(-d.x() / dist, -d.y() / dist, -1);
       jtj += w * j * j.transpose();
       jtr += w * j * residual;
     }
@@ -188,7 +188,7 @@ inline std::optional<CircleFit> refineCircleGeometric(
     fit.center.x() += delta.x();
     fit.center.y() += delta.y();
     fit.radius += delta.z();
-    if (!(fit.radius > 0.)) {
+    if (fit.radius <= 0) {
       return std::nullopt;
     }
     if (delta.norm() < 1e-9) {

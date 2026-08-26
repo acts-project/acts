@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Seeding/TrackParamsEstimationError.hpp"
 #include "Acts/Seeding/detail/CircleFit.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
@@ -19,7 +20,6 @@
 #include <numbers>
 #include <optional>
 #include <span>
-#include <string>
 #include <vector>
 
 #include <Eigen/Eigenvalues>
@@ -231,35 +231,6 @@ Acts::BoundMatrix Acts::estimateTrackParamCovariance(
   return result;
 }
 
-namespace {
-
-class TrackParamsEstimationErrorCategory : public std::error_category {
- public:
-  const char* name() const noexcept final {
-    return "TrackParamsEstimationError";
-  }
-
-  std::string message(int c) const final {
-    using Acts::TrackParamsEstimationError;
-
-    switch (static_cast<TrackParamsEstimationError>(c)) {
-      case TrackParamsEstimationError::NotEnoughSpacePoints:
-        return "At least three space points are required";
-      case TrackParamsEstimationError::DegenerateFit:
-        return "The space point configuration leads to a degenerate fit";
-      default:
-        return "unknown";
-    }
-  }
-};
-
-}  // namespace
-
-std::error_code Acts::make_error_code(Acts::TrackParamsEstimationError e) {
-  static TrackParamsEstimationErrorCategory c;
-  return {static_cast<int>(e), c};
-}
-
 Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
     std::span<const Vector3> spacePoints, const Vector3& bField, double t0,
     std::size_t geometricRefineIterations, std::span<const double> weights,
@@ -274,7 +245,7 @@ Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
          "reference index must point into the space points");
 
   const auto w = [&](std::size_t i) {
-    return weights.empty() ? 1. : weights[i];
+    return weights.empty() ? 1 : weights[i];
   };
 
   const Vector3& reference = spacePoints[referenceIndex];
@@ -306,13 +277,13 @@ Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
 
   if (!circle.has_value()) {
     // Straight-line limit: the direction is the principal axis, q/p stays zero.
-    double sumW = 0.;
+    double sumW = 0;
     Vector3 mean = Vector3::Zero();
     for (std::size_t i = 0; i < local.size(); ++i) {
       sumW += w(i);
       mean += w(i) * local[i];
     }
-    if (!(sumW > 0.)) {
+    if (sumW <= 0) {
       return Result<FreeVector>::failure(
           TrackParamsEstimationError::DegenerateFit);
     }
@@ -329,7 +300,7 @@ Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
           TrackParamsEstimationError::DegenerateFit);
     }
     Vector3 localDir = solver.eigenvectors().col(2);
-    if (localDir.dot(local.back() - local.front()) < 0.) {
+    if (localDir.dot(local.back() - local.front()) < 0) {
       localDir = -localDir;
     }
     localDir.normalize();
@@ -349,7 +320,7 @@ Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
   const Vector2 firstRadial = firstXy - center;
   const Vector2 firstCcwTangent(-firstRadial.y(), firstRadial.x());
   const double rotSense =
-      (firstCcwTangent.dot(local[1].head<2>() - firstXy) >= 0.) ? 1. : -1.;
+      (firstCcwTangent.dot(local[1].head<2>() - firstXy) >= 0) ? 1 : -1;
 
   // Tangent at the reference: its radial vector rotated by +90 degrees,
   // oriented along travel.
@@ -360,7 +331,7 @@ Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
   // q v x B points to the center; with B along local +z, v x B = (v_y, -v_x).
   const double toCenterProj = tangent.y() * (center.x() - refXy.x()) -
                               tangent.x() * (center.y() - refXy.y());
-  const double qSign = (toCenterProj >= 0.) ? 1. : -1.;
+  const double qSign = (toCenterProj >= 0) ? 1 : -1;
 
   // z is linear in the arc length s = radius * turning angle. Consecutive
   // points are assumed less than half a turn apart. The slope is invariant
@@ -369,19 +340,19 @@ Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
   const double phiFirst =
       std::atan2(firstXy.y() - center.y(), firstXy.x() - center.x());
   double phiPrev = phiFirst;
-  double sumW = 0.;
-  double sumS = 0.;
-  double sumZ = 0.;
-  double sumSS = 0.;
-  double sumSZ = 0.;
+  double sumW = 0;
+  double sumS = 0;
+  double sumZ = 0;
+  double sumSS = 0;
+  double sumSZ = 0;
   for (std::size_t i = 0; i < local.size(); ++i) {
     const Vector3& p = local[i];
     double phi = std::atan2(p.y() - center.y(), p.x() - center.x());
     while (phi - phiPrev > std::numbers::pi) {
-      phi -= 2. * std::numbers::pi;
+      phi -= 2 * std::numbers::pi;
     }
     while (phi - phiPrev < -std::numbers::pi) {
-      phi += 2. * std::numbers::pi;
+      phi += 2 * std::numbers::pi;
     }
     phiPrev = phi;
     const double wi = w(i);
@@ -397,7 +368,7 @@ Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
   const double lambda =
       (std::abs(denom) > std::numeric_limits<double>::epsilon())
           ? (sumW * sumSZ - sumS * sumZ) / denom
-          : 0.;
+          : 0;
 
   // s is the transverse arc length, so the local direction is (t_x, t_y,
   // lambda).
@@ -409,22 +380,8 @@ Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
   // zero.
   if (bMag > std::numeric_limits<double>::epsilon()) {
     const double qOverPt = qSign / (radius * bMag);
-    params[eFreeQOverP] = qOverPt / fastHypot(1., lambda);
+    params[eFreeQOverP] = qOverPt / fastHypot(1, lambda);
   }
 
   return Result<FreeVector>::success(params);
-}
-
-Acts::Result<Acts::BoundVector> Acts::estimateTrackParamsFromSpacePoints(
-    const GeometryContext& gctx, const Surface& surface,
-    std::span<const Vector3> spacePoints, const Vector3& bField, double t0,
-    std::size_t geometricRefineIterations, std::span<const double> weights,
-    std::size_t referenceIndex) {
-  Result<FreeVector> freeParams = estimateTrackParamsFromSpacePoints(
-      spacePoints, bField, t0, geometricRefineIterations, weights,
-      referenceIndex);
-  if (!freeParams.ok()) {
-    return Result<BoundVector>::failure(freeParams.error());
-  }
-  return transformFreeToBoundParameters(*freeParams, surface, gctx);
 }

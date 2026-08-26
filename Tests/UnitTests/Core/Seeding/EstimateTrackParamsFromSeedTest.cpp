@@ -23,6 +23,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
+#include "Acts/Seeding/TrackParamsEstimationError.hpp"
 #include "Acts/Seeding/detail/CircleFit.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -255,9 +256,12 @@ BOOST_AUTO_TEST_CASE(spacepoint_estimator_vs_truth) {
 
           const auto& expBoundParams = measurements.truthParameters[0];
 
-          auto boundResult = estimateTrackParamsFromSpacePoints(
-              geoCtx, *bottomSurface, spacePoints, bField, 0.);
-          BOOST_CHECK(boundResult.ok());
+          auto freeResult =
+              estimateTrackParamsFromSpacePoints(spacePoints, bField);
+          BOOST_REQUIRE(freeResult.ok());
+          auto boundResult = transformFreeToBoundParameters(
+              *freeResult, *bottomSurface, geoCtx);
+          BOOST_REQUIRE(boundResult.ok());
           const auto& estBoundParams = boundResult.value();
 
           CHECK_CLOSE_ABS(estBoundParams[eBoundLoc0],
@@ -274,7 +278,7 @@ BOOST_AUTO_TEST_CASE(spacepoint_estimator_vs_truth) {
           // At N=3 both estimators must agree, which pins the sign and
           // momentum conventions.
           auto free3 = estimateTrackParamsFromSpacePoints(
-              std::span<const Vector3>(spacePoints).first(3), bField, 0.);
+              std::span<const Vector3>(spacePoints).first(3), bField, 0);
           BOOST_CHECK(free3.ok());
           const FreeVector ref = estimateTrackParamsFromSeed(
               spacePoints[0], 0, spacePoints[1], spacePoints[2], bField);
@@ -293,9 +297,9 @@ BOOST_AUTO_TEST_CASE(spacepoint_estimator_vs_truth) {
 BOOST_AUTO_TEST_CASE(spacepoint_estimator_large_arc) {
   const double bMag = 2._T;
   const Vector3 bField(0, 0, bMag);
-  const double radius = 300.;  // mm
+  const double radius = 300;  // mm
   const double theta = 70._degree;
-  const double lambda = 1. / std::tan(theta);  // dz/ds
+  const double lambda = 1 / std::tan(theta);  // dz/ds
   const double alpha0 = 0.3;
   const double dAlpha = 40._degree;  // 6 points -> 200 degrees
   const std::size_t nsp = 6;
@@ -306,12 +310,12 @@ BOOST_AUTO_TEST_CASE(spacepoint_estimator_large_arc) {
       const double a = alpha0 + i * dAlpha;
       const double s = radius * (a - alpha0);
       spacePoints.emplace_back(radius * std::cos(a), radius * std::sin(a),
-                               100. + lambda * s);
+                               100 + lambda * s);
     }
     const Vector3 first = spacePoints.front();
 
     auto result =
-        estimateTrackParamsFromSpacePoints(spacePoints, bField, 0., refineIter);
+        estimateTrackParamsFromSpacePoints(spacePoints, bField, 0, refineIter);
     BOOST_CHECK(result.ok());
     const FreeVector& fp = *result;
     BOOST_CHECK(!fp.hasNaN());
@@ -342,9 +346,9 @@ BOOST_AUTO_TEST_CASE(spacepoint_estimator_large_arc) {
 BOOST_AUTO_TEST_CASE(spacepoint_estimator_reference_index) {
   const double bMag = 2._T;
   const Vector3 bField(0, 0, bMag);
-  const double radius = 300.;  // mm
+  const double radius = 300;  // mm
   const double theta = 70._degree;
-  const double lambda = 1. / std::tan(theta);  // dz/ds
+  const double lambda = 1 / std::tan(theta);  // dz/ds
   const double alpha0 = 0.3;
   const double dAlpha = 40._degree;  // 6 points -> 200 degrees
   const std::size_t nsp = 6;
@@ -354,7 +358,7 @@ BOOST_AUTO_TEST_CASE(spacepoint_estimator_reference_index) {
     const double a = alpha0 + i * dAlpha;
     const double s = radius * (a - alpha0);
     spacePoints.emplace_back(radius * std::cos(a), radius * std::sin(a),
-                             100. + lambda * s);
+                             100 + lambda * s);
   }
 
   const auto atFirst = estimateTrackParamsFromSpacePoints(spacePoints, bField);
@@ -362,7 +366,7 @@ BOOST_AUTO_TEST_CASE(spacepoint_estimator_reference_index) {
 
   for (std::size_t ref = 0; ref < nsp; ++ref) {
     BOOST_TEST_CONTEXT("referenceIndex = " << ref) {
-      auto result = estimateTrackParamsFromSpacePoints(spacePoints, bField, 0.,
+      auto result = estimateTrackParamsFromSpacePoints(spacePoints, bField, 0,
                                                        0, {}, ref);
       BOOST_REQUIRE(result.ok());
       const FreeVector& fp = *result;
@@ -389,7 +393,7 @@ BOOST_AUTO_TEST_CASE(spacepoint_estimator_reference_index) {
 
   // The default is the first space point.
   const auto atZero =
-      estimateTrackParamsFromSpacePoints(spacePoints, bField, 0., 0, {}, 0);
+      estimateTrackParamsFromSpacePoints(spacePoints, bField, 0, 0, {}, 0);
   BOOST_REQUIRE(atZero.ok());
   BOOST_CHECK_EQUAL(*atZero, *atFirst);
 }
@@ -401,13 +405,13 @@ BOOST_AUTO_TEST_CASE(spacepoint_estimator_zero_field) {
   const Vector3 p0(10, -5, 7);
   std::vector<Vector3> spacePoints;
   for (int i = 0; i < 5; ++i) {
-    spacePoints.push_back(p0 + i * 20. * dir);
+    spacePoints.push_back(p0 + i * 20 * dir);
   }
 
-  auto result = estimateTrackParamsFromSpacePoints(spacePoints, bField, 0.);
+  auto result = estimateTrackParamsFromSpacePoints(spacePoints, bField, 0);
   BOOST_CHECK(result.ok());
   const FreeVector& fp = *result;
-  BOOST_CHECK_EQUAL(fp[eFreeQOverP], 0.);
+  BOOST_CHECK_EQUAL(fp[eFreeQOverP], 0);
   for (int i = 0; i < 3; ++i) {
     CHECK_CLOSE_ABS(fp[eFreeDir0 + i], dir[i], 1e-9);
     CHECK_CLOSE_ABS(fp[eFreePos0 + i], p0[i], 1e-9);
@@ -418,7 +422,7 @@ BOOST_AUTO_TEST_CASE(spacepoint_estimator_zero_field) {
 BOOST_AUTO_TEST_CASE(spacepoint_estimator_not_enough_points) {
   const std::array<Vector3, 2> spacePoints{Vector3(1, 0, 0), Vector3(2, 0, 0)};
   auto result =
-      estimateTrackParamsFromSpacePoints(spacePoints, Vector3(0, 0, 2._T), 0.);
+      estimateTrackParamsFromSpacePoints(spacePoints, Vector3(0, 0, 2._T), 0);
   BOOST_CHECK(!result.ok());
   BOOST_CHECK(result.error() ==
               TrackParamsEstimationError::NotEnoughSpacePoints);
@@ -429,20 +433,20 @@ BOOST_AUTO_TEST_CASE(spacepoint_estimator_degenerate) {
   const std::array<Vector3, 4> spacePoints{Vector3(3, 4, 5), Vector3(3, 4, 5),
                                            Vector3(3, 4, 5), Vector3(3, 4, 5)};
   auto result =
-      estimateTrackParamsFromSpacePoints(spacePoints, Vector3(0, 0, 2._T), 0.);
+      estimateTrackParamsFromSpacePoints(spacePoints, Vector3(0, 0, 2._T), 0);
   BOOST_CHECK(!result.ok());
   BOOST_CHECK(result.error() == TrackParamsEstimationError::DegenerateFit);
 }
 
 // The Taubin fit recovers a known circle and rejects collinear input.
 BOOST_AUTO_TEST_CASE(taubin_circle_fit) {
-  const Vector2 center(3.5, -2.0);
-  const double radius = 12.0;
+  const Vector2 center(3.5, -2);
+  const double radius = 12;
   std::vector<Vector3> points;
   for (int i = 0; i < 7; ++i) {
     const double a = 0.2 + i * 0.35;
     const Vector2 xy = center + radius * Vector2(std::cos(a), std::sin(a));
-    points.emplace_back(xy.x(), xy.y(), 0.);
+    points.emplace_back(xy.x(), xy.y(), 0);
   }
   const auto circle = Acts::detail::fitCircleTaubin(points);
   BOOST_REQUIRE(circle.has_value());
@@ -453,28 +457,28 @@ BOOST_AUTO_TEST_CASE(taubin_circle_fit) {
   // Collinear points do not define a finite circle.
   std::vector<Vector3> line;
   for (int i = 0; i < 5; ++i) {
-    line.emplace_back(2.0 * i, 1.0 + 6.0 * i, 0.);
+    line.emplace_back(2 * i, 1 + 6 * i, 0);
   }
   BOOST_CHECK(!Acts::detail::fitCircleTaubin(line).has_value());
 }
 
 // A near-zero weight on a displaced point recovers the true circle.
 BOOST_AUTO_TEST_CASE(taubin_circle_fit_weighted) {
-  const Vector2 center(3.5, -2.0);
-  const double radius = 12.0;
+  const Vector2 center(3.5, -2);
+  const double radius = 12;
   std::vector<Vector3> points;
   std::vector<double> weights;
   for (int i = 0; i < 7; ++i) {
     const double a = 0.2 + i * 0.35;
     const Vector2 xy = center + radius * Vector2(std::cos(a), std::sin(a));
-    points.emplace_back(xy.x(), xy.y(), 0.);
-    weights.push_back(1.);
+    points.emplace_back(xy.x(), xy.y(), 0);
+    weights.push_back(1);
   }
   // Displace the last point radially outward and give it a tiny weight.
   const double aOut = 0.2 + 6 * 0.35;
   const Vector2 xyOut =
-      center + (radius + 5.0) * Vector2(std::cos(aOut), std::sin(aOut));
-  points.back() = Vector3(xyOut.x(), xyOut.y(), 0.);
+      center + (radius + 5) * Vector2(std::cos(aOut), std::sin(aOut));
+  points.back() = Vector3(xyOut.x(), xyOut.y(), 0);
   weights.back() = 1e-6;
 
   const auto unweighted = Acts::detail::fitCircleTaubin(points);
@@ -493,9 +497,9 @@ BOOST_AUTO_TEST_CASE(taubin_circle_fit_weighted) {
 BOOST_AUTO_TEST_CASE(spacepoint_estimator_weighted) {
   const double bMag = 2._T;
   const Vector3 bField(0, 0, bMag);
-  const double radius = 300.;  // mm
+  const double radius = 300;  // mm
   const double theta = 70._degree;
-  const double lambda = 1. / std::tan(theta);  // dz/ds
+  const double lambda = 1 / std::tan(theta);  // dz/ds
   const double alpha0 = 0.3;
   const double dAlpha = 40._degree;
   const std::size_t nsp = 6;
@@ -505,20 +509,20 @@ BOOST_AUTO_TEST_CASE(spacepoint_estimator_weighted) {
     const double a = alpha0 + i * dAlpha;
     const double s = radius * (a - alpha0);
     spacePoints.emplace_back(radius * std::cos(a), radius * std::sin(a),
-                             100. + lambda * s);
+                             100 + lambda * s);
   }
   // Displace one point in z only (transverse position untouched, so the circle
   // fit stays on the true circle) and down-weight it.
-  spacePoints[3].z() += 50.;
-  std::vector<double> weights(nsp, 1.);
+  spacePoints[3].z() += 50;
+  std::vector<double> weights(nsp, 1);
   weights[3] = 1e-6;
 
   const std::span<const Vector3> sp(spacePoints);
 
-  auto biased = estimateTrackParamsFromSpacePoints(sp, bField, 0., 0);
+  auto biased = estimateTrackParamsFromSpacePoints(sp, bField, 0, 0);
   BOOST_CHECK(biased.ok());
   auto corrected =
-      estimateTrackParamsFromSpacePoints(sp, bField, 0., 0, weights);
+      estimateTrackParamsFromSpacePoints(sp, bField, 0, 0, weights);
   BOOST_CHECK(corrected.ok());
 
   Vector3 dir(-std::sin(alpha0), std::cos(alpha0), lambda);
@@ -526,7 +530,7 @@ BOOST_AUTO_TEST_CASE(spacepoint_estimator_weighted) {
 
   // The weighted fit recovers the true direction; the unweighted one is pulled
   // off by the displaced point.
-  double biasedErr = 0., correctedErr = 0.;
+  double biasedErr = 0, correctedErr = 0;
   for (int i = 0; i < 3; ++i) {
     biasedErr += std::abs((*biased)[eFreeDir0 + i] - dir[i]);
     correctedErr += std::abs((*corrected)[eFreeDir0 + i] - dir[i]);

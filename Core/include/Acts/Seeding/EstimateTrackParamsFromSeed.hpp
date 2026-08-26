@@ -13,6 +13,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Seeding/TrackParamsEstimationError.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Zip.hpp"
@@ -22,8 +23,6 @@
 #include <optional>
 #include <span>
 #include <stdexcept>
-#include <system_error>
-#include <type_traits>
 
 namespace Acts {
 
@@ -208,21 +207,6 @@ BoundMatrix estimateTrackParamCovariance(
     const EstimateTrackParamCovarianceConfig& config, const BoundVector& params,
     bool hasTime);
 
-/// Error codes for the multi-space-point track parameter estimation
-/// @ingroup errors
-enum class TrackParamsEstimationError {
-  // ensure all values are non-zero
-  /// Fewer than three space points were provided
-  NotEnoughSpacePoints = 1,
-  /// The fit is degenerate (e.g. all space points coincide)
-  DegenerateFit,
-};
-
-/// Create error code from @ref TrackParamsEstimationError
-/// @param e The error code enum value
-/// @return Standard error code
-std::error_code make_error_code(Acts::TrackParamsEstimationError e);
-
 /// Estimate free track parameters from an ordered set of N >= 3 space points.
 ///
 /// Least-squares generalization of @ref estimateTrackParamsFromSeed. A Taubin
@@ -254,39 +238,10 @@ std::error_code make_error_code(Acts::TrackParamsEstimationError e);
 ///        at; must be a valid index into `spacePoints`
 /// @return the free parameters at the reference point, or an error
 Result<FreeVector> estimateTrackParamsFromSpacePoints(
-    std::span<const Vector3> spacePoints, const Vector3& bField, double t0 = 0.,
-    std::size_t geometricRefineIterations = 0,
-    std::span<const double> weights = {}, std::size_t referenceIndex = 0);
-
-/// Estimate bound track parameters from an ordered set of N >= 3 space points.
-///
-/// As @ref estimateTrackParamsFromSpacePoints, expressed on the surface of
-/// `spacePoints[referenceIndex]`.
-///
-/// @param gctx the geometry context
-/// @param surface the surface of the reference space point
-/// @param spacePoints the ordered global space point positions
-/// @param bField the homogeneous magnetic field vector
-/// @param t0 the time assigned to the reference point (eBoundTime)
-/// @param geometricRefineIterations number of Gauss-Newton refinement
-///        iterations on top of the algebraic circle fit (0 disables it)
-/// @param weights optional per-point weights for all fit stages
-///        (empty span = uniform)
-/// @param referenceIndex index of the space point the parameters are expressed
-///        at; `surface` must be the surface of that space point
-/// @return the bound parameters at the surface, or an error
-Result<BoundVector> estimateTrackParamsFromSpacePoints(
-    const GeometryContext& gctx, const Surface& surface,
-    std::span<const Vector3> spacePoints, const Vector3& bField, double t0 = 0.,
+    std::span<const Vector3> spacePoints, const Vector3& bField, double t0 = 0,
     std::size_t geometricRefineIterations = 0,
     std::span<const double> weights = {}, std::size_t referenceIndex = 0);
 
 /// @}
 
 }  // namespace Acts
-
-namespace std {
-// register with STL
-template <>
-struct is_error_code_enum<Acts::TrackParamsEstimationError> : std::true_type {};
-}  // namespace std
