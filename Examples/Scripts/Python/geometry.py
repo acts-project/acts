@@ -64,19 +64,13 @@ def runGeometry(
         # every further event would only overwrite the same file.
         if outputObj and ievt == 0:
             vis = acts.ObjVisualization3D()
-            trackingGeometry.visualize(
-                vis,
-                context.recoGeoContext,
-                portalViewConfig=acts.ViewConfig(visible=False),
-                sensitiveViewConfig=acts.ViewConfig(visible=True),
-                viewConfig=acts.ViewConfig(visible=False),
-            )
+            trackingGeometry.visualize(vis, context.recoGeoContext)
             vis.write(outputDir / "obj" / "geometry.obj")
         if outputPy:
             from acts.examples.visualization import PyVisualization2D
 
             vis = PyVisualization2D()
-            trackingGeometry.visualize(vis, context.geoContext)
+            trackingGeometry.visualize(vis, context.recoGeoContext)
 
             vis.plot(projection=pyVisProjection, filename="geometry.png")
 
