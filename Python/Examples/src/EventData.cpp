@@ -618,7 +618,8 @@ void addEventData(py::module& mex) {
                [](const ConstTrackContainer& self) {
                  return TrackContainer{
                      std::make_shared<Acts::VectorTrackContainer>(
-                         self.container()),
+                         Acts::VectorTrackContainer::getMutableCopy(
+                             self.container())),
                      std::make_shared<Acts::VectorMultiTrajectory>(
                          Acts::VectorMultiTrajectory::getMutableCopy(
                              self.trackStateContainer()))};
@@ -706,15 +707,16 @@ void addEventData(py::module& mex) {
         return TrackContainer{std::make_shared<Acts::VectorTrackContainer>(),
                               std::make_shared<Acts::VectorMultiTrajectory>()};
       }))
-      .def(
-          py::init([](const ConstTrackContainer& other) {
-            return TrackContainer{
-                std::make_shared<Acts::VectorTrackContainer>(other.container()),
-                std::make_shared<Acts::VectorMultiTrajectory>(
-                    Acts::VectorMultiTrajectory::getMutableCopy(
-                        other.trackStateContainer()))};
-          }),
-          py::arg("other"))
+      .def(py::init([](const ConstTrackContainer& other) {
+             return TrackContainer{
+                 std::make_shared<Acts::VectorTrackContainer>(
+                     Acts::VectorTrackContainer::getMutableCopy(
+                         other.container())),
+                 std::make_shared<Acts::VectorMultiTrajectory>(
+                     Acts::VectorMultiTrajectory::getMutableCopy(
+                         other.trackStateContainer()))};
+           }),
+           py::arg("other"))
       .def("__len__", &TrackContainer::size)
       .def(
           "__iter__",
