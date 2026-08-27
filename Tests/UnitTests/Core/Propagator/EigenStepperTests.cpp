@@ -780,7 +780,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Collect boundaries
   std::vector<Surface const*> surs;
   std::vector<std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>>
-      boundaries = det->lowestTrackingVolume(tgContext, {0.5_m, 0., 0.})
+      boundaries = det->resolveLowestTrackingVolume(tgContext, {0.5_m, 0., 0.})
+                       .value()
                        ->boundarySurfaces();
   for (auto& b : boundaries) {
     if (b->surfaceRepresentation().center(tgContext).x() == 1_m) {
@@ -788,16 +789,18 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
       break;
     }
   }
-  boundaries =
-      det->lowestTrackingVolume(tgContext, {1.5_m, 0., 0.})->boundarySurfaces();
+  boundaries = det->resolveLowestTrackingVolume(tgContext, {1.5_m, 0., 0.})
+                   .value()
+                   ->boundarySurfaces();
   for (auto& b : boundaries) {
     if (b->surfaceRepresentation().center(tgContext).x() == 2_m) {
       surs.push_back(&(b->surfaceRepresentation()));
       break;
     }
   }
-  boundaries =
-      det->lowestTrackingVolume(tgContext, {2.5_m, 0., 0.})->boundarySurfaces();
+  boundaries = det->resolveLowestTrackingVolume(tgContext, {2.5_m, 0., 0.})
+                   .value()
+                   ->boundarySurfaces();
   for (auto& b : boundaries) {
     if (b->surfaceRepresentation().center(tgContext).x() == 3_m) {
       surs.push_back(&(b->surfaceRepresentation()));

@@ -570,6 +570,11 @@ TrackingVolume& TrackingVolume::addVolume(
   return *m_volumes.back();
 }
 
+std::span<const TrackingVolume::PlacementOwnPtr> TrackingVolume::placements()
+    const {
+  return m_placements;
+}
+
 TrackingVolume::PortalRange TrackingVolume::portals() const {
   return PortalRange{m_portals};
 }
@@ -598,6 +603,22 @@ void TrackingVolume::addSurface(std::shared_ptr<Surface> surface) {
     throw std::invalid_argument("Surface is nullptr");
   }
   m_surfaces.push_back(std::move(surface));
+}
+
+void TrackingVolume::visualize(IVisualization3D& helper,
+                               const GeometryContext& gctx,
+                               const ViewConfig& viewConfig,
+                               const ViewConfig& portalViewConfig,
+                               const ViewConfig& sensitiveViewConfig) const {
+  visualize(helper, gctx, [&](const GeometryObject& geoObj) {
+    if (geoObj.geometryId().boundary() != 0) {
+      return portalViewConfig;
+    }
+    if (geoObj.geometryId().sensitive() != 0) {
+      return sensitiveViewConfig;
+    }
+    return viewConfig;
+  });
 }
 
 void TrackingVolume::visualize(IVisualization3D& helper,

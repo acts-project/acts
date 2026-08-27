@@ -31,7 +31,7 @@ ProcessCode EDM4hepTrackOutputConverter::execute(
 
   for (const auto& from : tracks) {
     auto to = trackCollection.create();
-    ActsPlugins::EDM4hepUtil::writeTrack(context.geoContext, from, to,
+    ActsPlugins::EDM4hepUtil::writeTrack(context.recoGeoContext, from, to,
                                          m_cfg.Bz);
   }
 

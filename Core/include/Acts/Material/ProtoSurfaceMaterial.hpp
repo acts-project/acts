@@ -12,7 +12,7 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
+#include "Acts/Utilities/MultiAxisSpec.hpp"
 
 #include <iosfwd>
 #include <vector>
@@ -98,6 +98,8 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   /// global coordinates
   ///
   /// @return will return dummy material
+  /// @deprecated Use materialSlab(const Vector2&) with a prior
+  ///             Surface::globalToLocal() call instead.
   [[deprecated(
       "Use materialSlab(const Vector2& lp) with a prior "
       "Surface::globalToLocal() call instead")]] const MaterialSlab&
@@ -129,11 +131,11 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
 /// A surface material implementation that uses BinUtility for binning
 using ProtoSurfaceMaterial = ProtoSurfaceMaterialT<Acts::BinUtility>;
 
-/// @brief Type alias for a prototype surface material using a grid of ProtoAxis
-/// A surface material implementation that uses a vector of ProtoAxis for
-/// grid-based binning
-using ProtoGridSurfaceMaterial =
-    ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>;
+/// @brief Type alias for a prototype surface material using a multi-axis
+/// binning description
+/// A surface material implementation that carries a MultiAxisSpec2D whose
+/// deferred axes are resolved against the surface during material mapping
+using ProtoGridSurfaceMaterial = ProtoSurfaceMaterialT<MultiAxisSpec2D>;
 
 /// @}
 

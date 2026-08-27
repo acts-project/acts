@@ -94,7 +94,7 @@ bool gbts_seedfinder_config::setLinkingScheme(
                        static_cast<unsigned int>(geoIDLayerPair.second)));
   }
   // make volume by layer map
-  volumeToLayerMap.resize(largest_volume_index + 1);
+  volumeToLayerMap.reserve(largest_volume_index + 1);
   for (unsigned int i = 0; i < largest_volume_index + 1; ++i)
     volumeToLayerMap.push_back(SHRT_MAX);
   for (std::pair<short, unsigned int> vLpair : volumeToLayerMap_unordered)
@@ -105,7 +105,9 @@ bool gbts_seedfinder_config::setLinkingScheme(
   gbts_dphi_window_params.dphi_coeff *= ptScale;
   gbts_dphi_window_params.min_delta_phi_low_dr *= ptScale;
   gbts_dphi_window_params.dphi_coeff_low_dr *= ptScale;
-  gbts_make_graph_edges_params.max_Kappa *= ptScale;
+  gbts_make_graph_edges_params.max_Kappa_low_tau *= ptScale;
+  gbts_make_graph_edges_params.max_Kappa_high_tau *= ptScale;
+  gbts_fit_segments_params.inv_max_curvature /= ptScale;
 
   // contianers sizes
   nLayers = static_cast<unsigned int>(layerInfo.type.size());

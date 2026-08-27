@@ -35,7 +35,7 @@ struct GeometryView3D {
   /// @param viewConfig The drawing configuration
   static void drawPolyhedron(IVisualization3D& helper,
                              const Polyhedron& polyhedron,
-                             const ViewConfig& viewConfig);
+                             const ViewConfig& viewConfig = s_viewVolume);
 
   /// Helper method to draw Surface objects
   ///

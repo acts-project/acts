@@ -35,7 +35,7 @@ jobs:
         run: echo "version=$(CI/supported_python_versions.py --floor)" >> $GITHUB_OUTPUT
 
       - name: Set up Python
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ steps.floor.outputs.version }}
 
@@ -62,16 +62,22 @@ jobs:
             input_in="${folder}/requirements.in"
             input_toml="${folder}/pyproject.toml"
 
-            rm "$output_txt"
-
             if [[ -f "$input_toml" ]]; then
-              uv pip compile --universal --python-version "$PYTHON_VERSION" "$input_toml" -o "$output_txt"
+              input="$input_toml"
             elif [[ -f "$input_in" ]]; then
-              uv pip compile --universal --python-version "$PYTHON_VERSION" "$input_in" -o "$output_txt"
+              input="$input_in"
             else
-              echo "No requirements.in or pyproject.toml in $folder."
+              echo "::error::No requirements.in or pyproject.toml in $folder."
+              exit 1
             fi
 
+            # Drop the old lockfile only once we know we can regenerate it, so a
+            # folder listed without an input file fails loudly instead of losing
+            # its requirements.txt. Removing it first also forces a fresh
+            # resolution rather than uv preferring the currently pinned versions.
+            rm -f "$output_txt"
+
+            uv pip compile --universal --python-version "$PYTHON_VERSION" "$input" -o "$output_txt"
           done
 
       - name: Detect changes

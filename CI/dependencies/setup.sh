@@ -22,11 +22,118 @@ function end_section() {
     fi
 }
 
+# Signatures in a command's output that indicate a *transient* failure (network
+# / registry hiccup) that a retry can plausibly fix. Anything that does not
+# match one of these is treated as a genuine failure and is NOT retried, so we
+# don't burn CI time looping on an error a retry cannot resolve (compile error,
+# disk full, bad spec, ...).
+#
+# NOTE on "no binary available": spack does *not* surface a throttled/failed
+# GHCR fetch as a network error. Under `--use-buildcache only` it swallows the
+# fetch failure and reports the spec as simply having no binary, which is by far
+# the most common transient failure we see. So those signatures are treated as
+# transient and retried. The cost of being wrong is bounded (a genuinely missing
+# binary just burns the retry budget before failing), whereas not retrying turns
+# every GHCR hiccup into a red build.
+TRANSIENT_ERROR_PATTERNS=(
+  # spack buildcache misses caused by upstream fetch/rate-limit failures
+  "No binary for"
+  "no binary available"
+  "NoBinaryFoundError"
+  "cannot install.*cache-only"
+  "Failed to install.*due to.*FetchError"
+  "Failed to fetch"
+  "fetch failed"
+  "FetchError"
+  "curl.*(error|failed|timed out|Could not resolve)"
+  "Connection reset"
+  "Connection refused"
+  "Connection timed out"
+  "Could not resolve host"
+  "Temporary failure in name resolution"
+  "Network is unreachable"
+  "Read timed out"
+  "read timeout"
+  "timed out"
+  "[Tt]imeout"
+  "TLS handshake"
+  "EOF occurred"
+  "Server disconnected"
+  "Remote end closed connection"
+  "toomanyrequests"
+  "Too Many Requests"
+  "rate limit"
+  "HTTP Error 429"
+  "HTTP Error 5[0-9][0-9]"
+  "50[0-9] (Internal Server Error|Bad Gateway|Service Unavailable|Gateway Time-out)"
+  "unable to access.*github.com"
+  "RPC failed"
+  "early EOF"
+)
+
+# Run "$@", streaming its combined output while also capturing it. On failure,
+# retry with exponential backoff *only* when the captured output matches a known
+# transient-error signature; otherwise return the command's exit status
+# immediately. Output is streamed live (via tee) so long-running commands don't
+# trip CI "no output" watchdogs.
+#
+# Backoff is 20s, 40s, 80s, 160s, 320s (+/- jitter) by default: ~10 min of total
+# wait across 6 attempts. GHCR rate-limit windows outlast a short backoff, so a
+# tight schedule just burns all attempts inside the same bad window and still
+# fails. Jitter keeps the many parallel CI jobs from retrying in lockstep and
+# re-triggering the limit together.
+function retry_transient() {
+  local max_attempts=${DEP_RETRY_MAX_ATTEMPTS:-6}
+  local delay=${DEP_RETRY_BASE_DELAY:-20}
+  local attempt=1
+  local log status pat matched jitter sleep_for
+  log=$(mktemp)
+  while true; do
+    echo "attempt ${attempt}/${max_attempts}: $*"
+    status=0
+    # pipefail (set above) makes PIPESTATUS[0] the command's own exit status.
+    "$@" 2>&1 | tee "${log}" || status=${PIPESTATUS[0]}
+    if [ "${status}" -eq 0 ]; then
+      rm -f "${log}"
+      return 0
+    fi
+
+    matched=""
+    for pat in "${TRANSIENT_ERROR_PATTERNS[@]}"; do
+      if grep -qiE -- "${pat}" "${log}"; then
+        matched="${pat}"
+        break
+      fi
+    done
+    rm -f "${log}"
+
+    if [ -z "${matched}" ]; then
+      echo "Command failed (exit ${status}) with no transient-error signature; not retrying"
+      return "${status}"
+    fi
+    if [ "${attempt}" -ge "${max_attempts}" ]; then
+      echo "Command still failing after ${max_attempts} attempts (last transient signature: '${matched}')"
+      return "${status}"
+    fi
+    # +/-25% jitter so parallel jobs don't retry in lockstep.
+    jitter=$(( (RANDOM % (delay / 2 + 1)) - delay / 4 ))
+    sleep_for=$(( delay + jitter ))
+    [ "${sleep_for}" -lt 1 ] && sleep_for=1
+    echo "Transient failure detected (matched '${matched}'); retrying in ${sleep_for}s"
+    sleep "${sleep_for}"
+    attempt=$((attempt + 1))
+    delay=$((delay * 2))
+  done
+}
+
 # Parse command line arguments
-while getopts "c:t:d:e:s:fh" opt; do
+while getopts "c:t:d:e:s:F:fh" opt; do
   case ${opt} in
     c )
       compiler=$OPTARG
+      ;;
+    F )
+      flavor=$OPTARG
       ;;
     t )
       tag=$OPTARG
@@ -51,6 +158,7 @@ while getopts "c:t:d:e:s:fh" opt; do
       echo "  -d <destination> Specify install destination (defaults based on CI environment)"
       echo "  -e <env_file>    Specify environment file to output environments to"
       echo "  -s <cxx_std>     C++ standard for lockfile selection (e.g. 20, 23). Defaults to CXXSTD env var or 20."
+      echo "  -F <flavor>      Accelerator flavor (e.g. cuda13, rocm-gfx90a). Defaults to FLAVOR env var or the host stack."
       echo "  -f               Full dependency installation. Includes Geant4 datasets and Python packages."
       echo "  -h               Show this help message"
       exit 0
@@ -112,6 +220,14 @@ if [ -z "${cxx_std:-}" ]; then
   cxx_std="${CXXSTD:-20}"
 fi
 
+# `host` is the plain CPU stack, published with no flavor token: pass nothing.
+if [ -z "${flavor:-}" ]; then
+  flavor="${FLAVOR:-}"
+fi
+if [ "${flavor}" == "host" ]; then
+  flavor=""
+fi
+
 checkpoint "Create environment file $(realpath "$env_file")"
 echo "" > "$env_file"
 export env_file
@@ -153,7 +269,7 @@ _spack_repo_directory="$(realpath "$(spack location --repo builtin)/../../../")"
 echo "Ensure builtin repo is synced to commit ${_spack_repo_version}"
 
 git config --global --add safe.directory "${_spack_repo_directory}"
-spack repo update builtin --commit "${_spack_repo_version}"
+retry_transient spack repo update builtin --commit "${_spack_repo_version}"
 checkpoint "Spack repository updated"
 
 end_section
@@ -199,10 +315,10 @@ if [ -n "${CI:-}" ]; then
   start_section "Add ACTS package repository"
   if ! spack repo list | grep -q "acts"; then
     echo "Adding ACTS package repository from ci-dependencies"
-    spack repo add https://github.com/acts-project/ci-dependencies.git --path spack_repo/acts
+    retry_transient spack repo add https://github.com/acts-project/ci-dependencies.git --path spack_repo/acts
   fi
   echo "Updating ACTS package repository to tag ${tag}"
-  spack repo update acts --tag "${tag}"
+  retry_transient spack repo update acts --tag "${tag}"
   end_section
 
   start_section "Locate OpenGL"
@@ -232,6 +348,10 @@ if [ "${compiler}" != "default" ]; then
     cmd+=("--compiler-binary" "${compiler}")
 fi
 
+if [ -n "${flavor}" ]; then
+    cmd+=("--flavor" "${flavor}")
+fi
+
 "${cmd[@]}"
 
 checkpoint "Lock file prepared"
@@ -250,26 +370,13 @@ checkpoint "Spack find complete"
 end_section
 
 start_section "Install spack packages"
-# Retry to absorb transient GHCR fetch failures (which spack reports as
-# "no binary available"). Install is idempotent: already-installed specs
-# are skipped on subsequent attempts, so this is cheap.
-max_attempts=4
-attempt=1
-delay=10
-while true; do
-  echo "spack install attempt ${attempt}/${max_attempts}"
-  if spack -e "${env_dir}" install --fail-fast --use-buildcache only --concurrent-packages 10; then
-    break
-  fi
-  if [ "${attempt}" -ge "${max_attempts}" ]; then
-    echo "spack install failed after ${max_attempts} attempts"
-    exit 1
-  fi
-  echo "spack install failed; retrying in ${delay}s"
-  sleep "${delay}"
-  attempt=$((attempt + 1))
-  delay=$((delay * 2))
-done
+# Retry to absorb transient GHCR fetch failures (rate limits, network hiccups)
+# when pulling binaries from the buildcache. These usually surface as spack
+# reporting "no binary available" rather than as a network error, so that
+# signature is retried too (see TRANSIENT_ERROR_PATTERNS). Install is
+# idempotent: already-installed specs are skipped on subsequent attempts, so
+# each retry only re-attempts what is still missing and is therefore cheap.
+retry_transient spack -e "${env_dir}" install --fail-fast --use-buildcache only --concurrent-packages 10
 checkpoint "Spack install complete"
 end_section
 
@@ -287,18 +394,28 @@ if [ "${full_install:-false}" == "true" ]; then
   checkpoint "Geant4 datasets download complete"
 fi
 geant4_dir=$(spack -e "${env_dir}" location -i geant4)
-# Prepare the folder for G4 data, and symlink it to where G4 will look for it
-mkdir -p "${geant4_dir}/share/Geant4"
-ln -s "${geant4_dir}/share/Geant4/data" "${view_dir}/share/Geant4/data"
+# Prepare the folder for G4 data, and symlink it to where G4 will look for it.
+# `data` itself, not just its parent: geant4.sh does `cd .../share/Geant4/data`
+# and only the full_install path above creates it. Without it the ln below has
+# no existing directory to resolve onto and writes a symlink at the target's own
+# path -- a self-reference that makes every later cd fail with ELOOP.
+mkdir -p "${geant4_dir}/share/Geant4/data"
+[ -e "${view_dir}/share/Geant4/data" ] ||
+  ln -s "${geant4_dir}/share/Geant4/data" "${view_dir}/share/Geant4/data"
 end_section
 
 start_section "Prepare python environment"
 "${view_dir}/bin/python3" -m venv --system-site-packages "$venv_dir"
-"${venv_dir}/bin/python3" -m pip install pyyaml jinja2
+# NOTE: pip, not uv, on purpose. The venv is deliberately --system-site-packages
+# so that the packages the spack view already provides (numpy and everything
+# built against it) are reused rather than replaced. pip honours that and skips
+# them; uv ignores system site-packages entirely and installs its own PyPI wheel
+# over the top, which silently swaps out the spack-built stack.
+retry_transient "${venv_dir}/bin/python3" -m pip install pyyaml jinja2
 if [ "${full_install:-false}" == "true" ]; then
-  "${venv_dir}/bin/python3" -m pip install -r "${SCRIPT_DIR}/../../Python/Examples/tests/requirements.txt"
-  "${venv_dir}/bin/python3" -m pip install histcmp==0.10.0 matplotlib
-  "${venv_dir}/bin/python3" -m pip install pytest-md-report
+  retry_transient "${venv_dir}/bin/python3" -m pip install -r "${SCRIPT_DIR}/../../Python/Examples/tests/requirements.txt"
+  retry_transient "${venv_dir}/bin/python3" -m pip install histcmp==0.10.0 matplotlib
+  retry_transient "${venv_dir}/bin/python3" -m pip install pytest-md-report
 fi
 checkpoint "Python environment prepared"
 end_section
