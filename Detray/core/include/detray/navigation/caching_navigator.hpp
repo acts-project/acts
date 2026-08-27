@@ -78,7 +78,9 @@ class caching_navigator
     friend class navigator_base<caching_navigator>;
 
     // Allow the filling of candidates
-    friend struct detail::intersection_initialize<ray_intersector>;
+    template <typename nav_state_t>
+    friend void detail::insert_sorted(const typename nav_state_t::value_type &,
+                                      nav_state_t &);
 
     // Navigation utility functions that need to modify the state
     template <typename state_t>

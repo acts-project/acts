@@ -85,11 +85,9 @@ void BM_INTERSECT_ALL(benchmark::State &state) {
     for (const auto track : trk_generator) {
       // Loop over all surfaces in detector
       for (const sf_desc_t &sf_desc : d.surfaces()) {
-        const auto sf = geometry::surface{d, sf_desc};
-        sf.template visit_mask<
-            detail::intersection_initialize<ray_intersector>>(
-            intersections, detail::ray(track), sf_desc, transforms, geo_context,
-            intr_cfg, external_mask_tol);
+        detail::intersection_initialize<ray_intersector>(
+            d.mask_store(), sf_desc.mask(), intersections, detail::ray(track),
+            sf_desc, transforms, geo_context, intr_cfg, external_mask_tol);
 
         ++n_surfaces;
       }
