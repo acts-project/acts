@@ -311,6 +311,7 @@ def addSeeding(
     selectedParticles: str = "particles_selected",
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
+    trackParameterPerformance: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
     prefix: str = "",
@@ -365,6 +366,10 @@ def addSeeding(
         selected particles name in the WhiteBoard
     outputDirRoot : Path|str, path, None
         the output folder for ROOT output, None triggers no output
+    trackParameterPerformance : bool, False
+        additionally write residual/pull performance of the seed-estimated
+        track parameters at the perigee, see
+        `addTrackParameterPerformanceWriter`
     logLevel : acts.logging.Level, None
         logging level to override setting given in `s`
     rnd : RandomNumbers, None
@@ -580,6 +585,34 @@ def addSeeding(
                 logLevel,
                 prefix=prefix,
             )
+
+            if trackParameterPerformance:
+                # the estimate sits on the bottom space point's sensor and has
+                # to be moved to a common surface to be comparable to truth.
+                # `first` because only the innermost state carries parameters.
+                extrapolatedTracks = f"{prefix}seed-tracks-perigee"
+                s.addAlgorithm(
+                    acts.examples.TrackExtrapolationAlgorithm(
+                        level=logLevel,
+                        inputTracks=tracks,
+                        outputTracks=extrapolatedTracks,
+                        targetSurface=acts.Surface.createPerigee(acts.Vector3(0, 0, 0)),
+                        trackingGeometry=trackingGeometry,
+                        magneticField=field,
+                        strategy=acts.examples.TrackExtrapolationStrategy.first,
+                    )
+                )
+
+                addTrackParameterPerformanceWriter(
+                    s,
+                    outputDirRoot,
+                    tracks=extrapolatedTracks,
+                    particles=selectedParticles,
+                    trackParticleMatching=f"{prefix}seed_particle_matching",
+                    outputName="seedparams",
+                    logLevel=logLevel,
+                    prefix=prefix,
+                )
 
         if outputDirCsv is not None:
             outputDirCsv = Path(outputDirCsv)
@@ -956,6 +989,9 @@ def addGridTripletSeeding(
     spacePointGridConfigArg: SpacePointGridConfigArg,
     logLevel: acts.logging.Level = None,
     outputSeeds: str = "seeds",
+    inputVertices: str = "",
+    vertexZNSigma: float = 3.0,
+    vertexZMargin: float = 0.0,
 ):
     """adds grid triplet seeding
     For parameters description see addSeeding
@@ -966,6 +1002,9 @@ def addGridTripletSeeding(
         level=logLevel,
         inputSpacePoints=spacePoints,
         outputSeeds=outputSeeds,
+        inputVertices=inputVertices,
+        vertexZNSigma=vertexZNSigma,
+        vertexZMargin=vertexZMargin,
         **acts.examples.defaultKWArgs(
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
             minPt=seedFinderConfigArg.minPt,
@@ -1444,6 +1483,57 @@ def addSeedPerformanceWriters(
             inputMeasurementSimHitsMap="measurement_simhits_map",
             filePath=str(outputDirRoot / f"{prefix}estimatedparams.root"),
             treeName="estimatedparams",
+        )
+    )
+
+
+def addTrackParameterPerformanceWriter(
+    sequence: acts.examples.Sequencer,
+    outputDirRoot: Union[Path, str],
+    tracks: str,
+    particles: str,
+    trackParticleMatching: str,
+    resPlotToolConfig=None,
+    outputName: str = "trackparams",
+    logLevel: acts.logging.Level = None,
+    prefix: str = "",
+):
+    """Writes residual/pull performance of the track parameters against truth.
+
+    The tracks are expected to be truth matched and to carry their parameters
+    on a common surface already, typically a perigee. A seed estimate sits on
+    the bottom space point's sensor and has to be moved there first, see
+    `acts.examples.TrackExtrapolationAlgorithm`; comparing on the sensor
+    instead would mean expressing the truth particle by a straight-line
+    intersection that ignores the bending in between.
+
+    Parameters
+    ----------
+    trackParticleMatching : str
+        Truth matching of `tracks`, e.g. from `acts.examples.TrackTruthMatcher`.
+    resPlotToolConfig : Optional[acts.examples.root.ResPlotToolConfig]
+        Residual and pull binning. The defaults are cut for fitted tracks, so a
+        seed estimate usually needs wider residual axes.
+    """
+    customLogLevel = acts.examples.defaultLogging(sequence, logLevel)
+    RootTrackParameterPerformanceWriter = acts.examples._tryImportRoot(
+        "RootTrackParameterPerformanceWriter"
+    )
+
+    outputDirRoot = Path(outputDirRoot)
+    if not outputDirRoot.exists():
+        outputDirRoot.mkdir()
+
+    sequence.addWriter(
+        RootTrackParameterPerformanceWriter(
+            level=customLogLevel(),
+            inputTracks=tracks,
+            inputParticles=particles,
+            inputTrackParticleMatching=trackParticleMatching,
+            filePath=str(outputDirRoot / f"performance_{prefix}{outputName}.root"),
+            **acts.examples.defaultKWArgs(
+                resPlotToolConfig=resPlotToolConfig,
+            ),
         )
     )
 

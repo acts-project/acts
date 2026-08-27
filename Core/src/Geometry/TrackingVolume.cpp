@@ -607,6 +607,22 @@ void TrackingVolume::addSurface(std::shared_ptr<Surface> surface) {
 
 void TrackingVolume::visualize(IVisualization3D& helper,
                                const GeometryContext& gctx,
+                               const ViewConfig& viewConfig,
+                               const ViewConfig& portalViewConfig,
+                               const ViewConfig& sensitiveViewConfig) const {
+  visualize(helper, gctx, [&](const GeometryObject& geoObj) {
+    if (geoObj.geometryId().boundary() != 0) {
+      return portalViewConfig;
+    }
+    if (geoObj.geometryId().sensitive() != 0) {
+      return sensitiveViewConfig;
+    }
+    return viewConfig;
+  });
+}
+
+void TrackingVolume::visualize(IVisualization3D& helper,
+                               const GeometryContext& gctx,
                                const ViewConfigFunc& viewConfigFactory) const {
   helper.object(volumeName());
   {

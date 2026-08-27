@@ -38,7 +38,8 @@ void VisualizationBuffer::line(const Vector3& a, const Vector3& b,
 
 /// @copydoc Acts::IVisualization3D::faces()
 void VisualizationBuffer::faces(const std::vector<Vector3>& vtxs,
-                                const std::vector<FaceType>&, Color color) {
+                                const std::vector<FaceType>& /*faces*/,
+                                Color color) {
   m_facecolors.push_back(color);
   std::vector<Vector3> surface;
   for (const auto& v : vtxs) {

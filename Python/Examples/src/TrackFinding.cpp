@@ -61,7 +61,8 @@ void addTrackFinding(py::module& mex) {
       zOriginWeightFactor, maxSeedsPerSpM, compatSeedLimit, seedWeightIncrement,
       numSeedIncrement, seedConfirmation, centralSeedConfirmationRange,
       forwardSeedConfirmationRange, maxSeedsPerSpMConf,
-      maxQualitySeedsPerSpMConf, useDeltaRinsteadOfTopRadius, useExtraCuts);
+      maxQualitySeedsPerSpMConf, useDeltaRinsteadOfTopRadius, useExtraCuts,
+      inputVertices, vertexZNSigma, vertexZMargin);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       OrthogonalTripletSeedingAlgorithm, mex,
@@ -115,9 +116,9 @@ void addTrackFinding(py::module& mex) {
       TrackParamsEstimationAlgorithm, mex, "TrackParamsEstimationAlgorithm",
       inputSeeds, inputProtoTracks, inputParticleHypotheses,
       outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
-      magneticField, bFieldMin, initialSigmas, initialSigmaQoverPt,
-      initialSigmaPtRel, initialVarInflation, noTimeVarInflation,
-      particleHypothesis);
+      magneticField, bFieldMin, spacePointSelection, initialSigmas,
+      initialSigmaQoverPt, initialSigmaPtRel, initialVarInflation,
+      noTimeVarInflation, particleHypothesis);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       TrackParamsLookupEstimation, mex, "TrackParamsLookupEstimation",

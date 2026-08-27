@@ -2,11 +2,14 @@ name: Builds
 
 on:
   push:
-    # The merge queue also pushes to its temp ref, which separately triggers
-    # merge_group below; without this the two runs share a concurrency group
-    # and cancel-in-progress evicts the PR from the queue (#5884 follow-up).
+    # The release branches (keep in sync with release.yml) carry a tree the
+    # merge queue has already built. The queue's own temp ref triggers
+    # merge_group below; a push run there shares its concurrency group and
+    # evicts the PR from the queue.
     branches-ignore:
-      - "gh-readonly-queue/**"
+      - 'releases'
+      - 'release/**'
+      - 'gh-readonly-queue/**'
   pull_request:
     branches:
       - main
@@ -770,7 +773,7 @@ jobs:
           --preset=github-ci-cuda-muon
 
       - name: Build
-        run: cmake --build build --target ActsUnitTestCudaMuonSpacePoint
+        run: cmake --build build --target ActsUnitTestCudaMuonSpacePoint ActsUnitTestCudaMuonHoughMaximum
 
       - name: ccache stats
         run: ccache -s
@@ -843,7 +846,7 @@ jobs:
         run: >
           CI/dependencies/run.sh .env
           ctest --test-dir build --output-on-failure --no-tests=error
-          -R "CudaMuonSpacePoint"
+          -R "(CudaMuonSpacePoint|CudaMuonHoughMaximum)"
 
   # ─────────────────────────────────────────────────────────────────────
   # LCG builds. They ask for the `cvmfs` label on top of the usual husk

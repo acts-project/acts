@@ -34,18 +34,17 @@ namespace Acts::detail::sympy {
 /// @param [in] geoContext The geometry Context
 /// @param [in] surface Target surface
 /// @param [in] freeParameters Free, nominal parametrisation
-/// @param [in] boundToFreeJacobian Jacobian from bound to free at start
-/// @param [in] freeTransportJacobian Transport jacobian free to free
+/// @param [in] boundToFreeJacobian Jacobian from the bound parameters at the
+///        start surface to the free parameters here
 /// @param [in] freeToPathDerivatives Path length derivatives for free parameters
 /// @param [out] fullTransportJacobian A 6x6 transport jacobian from bound to bound
 ///
 /// @note jac(locA->locB) = jac(gloB->locB)*(1+
-///       pathCorrectionFactor(gloB))*jacTransport(gloA->gloB) *jac(locA->gloA)
+///       pathCorrectionFactor(gloB))*jac(locA->gloB)
 void boundToBoundTransportJacobian(const GeometryContext& geoContext,
                                    const Surface& surface,
                                    const FreeVector& freeParameters,
                                    const BoundToFreeMatrix& boundToFreeJacobian,
-                                   const FreeMatrix& freeTransportJacobian,
                                    FreeToBoundMatrix& freeToBoundJacobian,
                                    const FreeVector& freeToPathDerivatives,
                                    BoundMatrix& fullTransportJacobian);
@@ -61,8 +60,8 @@ void boundToBoundTransportJacobian(const GeometryContext& geoContext,
 /// This is an approximated approach to treat the (assumed) small change.
 ///
 /// @param [in] direction Normalised direction vector
-/// @param [in] boundToFreeJacobian Jacobian from bound to free at start
-/// @param [in] freeTransportJacobian Transport jacobian free to free
+/// @param [in] boundToFreeJacobian Jacobian from the bound parameters at the
+///        start surface to the free parameters here
 /// @param [in] freeToPathDerivatives Path length derivatives for free parameters
 /// @param [out] fullTransportJacobian A 6x6 transport jacobian from curilinear to bound
 ///
@@ -71,7 +70,6 @@ void boundToBoundTransportJacobian(const GeometryContext& geoContext,
 /// position is known and the calculation can be simplified
 void boundToCurvilinearTransportJacobian(
     const Vector3& direction, const BoundToFreeMatrix& boundToFreeJacobian,
-    const FreeMatrix& freeTransportJacobian,
     FreeToBoundMatrix& freeToBoundJacobian,
     const FreeVector& freeToPathDerivatives,
     BoundMatrix& fullTransportJacobian);

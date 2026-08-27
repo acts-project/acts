@@ -57,6 +57,10 @@ class PyVisualization2D(acts.VisualizationBuffer):
     ):
         import matplotlib.pyplot as plt
 
+        # Reduce font size and complexity to avoid raster overflow
+        plt.rcParams["font.size"] = 8
+        plt.rcParams["figure.figsize"] = (12, 10)
+
         fig, ax = plt.subplots()
 
         if linewidth == None:
@@ -113,6 +117,7 @@ class PyVisualization2D(acts.VisualizationBuffer):
                 )
 
         # Check if there is a track to be drawn
+        print(len(self.segments))
         if len(self.segments) != 0:
             line_segments = [
                 [

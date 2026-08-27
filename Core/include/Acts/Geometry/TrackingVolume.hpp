@@ -523,14 +523,25 @@ class TrackingVolume : public Volume {
   /// @return Reference to the glue volumes descriptor
   GlueVolumesDescriptor& glueVolumesDescriptor();
 
-  /// Produces a 3D visualization of this tracking volume
-  /// @param helper The visualization helper describing the output format
+  /// @param helper The visualization helper that implement the output
   /// @param gctx The geometry context
   /// @param viewConfig The view configuration
   /// @param portalViewConfig View configuration for portals
   /// @param sensitiveViewConfig View configuration for sensitive surfaces
+  /// @deprecated Use the ViewConfigFunc overload instead
+  [[deprecated("Use the ViewConfigFunc overload instead")]]
   void visualize(IVisualization3D& helper, const GeometryContext& gctx,
-                 const ViewConfigFunc& func = defaultGeometryColoring) const;
+                 const ViewConfig& viewConfig,
+                 const ViewConfig& portalViewConfig,
+                 const ViewConfig& sensitiveViewConfig) const;
+
+  /// Produces a 3D visualization of this tracking volume
+  /// @param helper The visualization helper describing the output format
+  /// @param gctx The geometry context
+  /// @param viewConfigFactory Function determining the ViewConfig for each GeometryObject
+  void visualize(
+      IVisualization3D& helper, const GeometryContext& gctx,
+      const ViewConfigFunc& viewConfigFactory = defaultGeometryColoring) const;
 
   /// @cond
   using Volume::visualize;

@@ -14,6 +14,7 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SeedSpacePointSelection.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsPython/Utilities/ProxyTether.hpp"
@@ -694,6 +695,11 @@ void addEventData(py::module& mex) {
 
   bindIndexMultimapPair<SimBarcode>(mex, "MeasurementParticlesMap",
                                     "ParticleMeasurementsMap");
+
+  py::enum_<SeedSpacePointSelection>(mex, "SeedSpacePointSelection")
+      .value("FirstThree", SeedSpacePointSelection::FirstThree)
+      .value("InnermostTriplet", SeedSpacePointSelection::InnermostTriplet)
+      .value("SpreadTriplet", SeedSpacePointSelection::SpreadTriplet);
 }
 
 }  // namespace ActsPython

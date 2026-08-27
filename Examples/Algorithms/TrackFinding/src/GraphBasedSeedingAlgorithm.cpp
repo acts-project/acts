@@ -8,7 +8,6 @@
 
 #include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
 
-#include "Acts/EventData/SpacePointColumns.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -60,14 +59,13 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // initialise the object that holds all the geometry information needed for
   // the algorithm
   auto geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
-      layerGeometry, layerConnectionMap);
+      layerGeometry, layerConnectionMap, this->logger());
 
   // ROI file:Defines what region in detector we are interested in, currently
   // set to entire detector
   // for pixel seeding, roi z bounds are used
 
-  m_internalRoi.emplace(0, -4.5, 4.5, 0, -std::numbers::pi, std::numbers::pi, 0,
-                        -150., 150.);
+  m_internalRoi.emplace(-4.5, 4.5, -150., 150.);
   m_cfg.seedFinderConfig.maxZ0 = m_internalRoi->zMax();
   m_cfg.seedFinderConfig.minZ0 = m_internalRoi->zMin();
 
@@ -76,8 +74,9 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
           m_cfg.seedFinderConfig),
       geometry, this->logger().cloneWithSuffix("GbtsFinder"));
 
-  m_filter = Acts::Experimental::GbtsTrackingFilter(m_cfg.trackingFilterConfig,
-                                                    geometry);
+  m_filter = Acts::Experimental::GbtsTrackingFilter(
+      m_cfg.trackingFilterConfig, geometry,
+      this->logger().cloneWithSuffix("GbtsFilter"));
 
   printConfig();
 }
@@ -87,32 +86,42 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   // initialise input space points from handle and define new container
   const SpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
 
-  // take space points, add variables needed for GBTS and add them to new
-  // container due to how space point container works, we need to keep the
-  // container and the external columns we added alive this is done by using a
-  // tuple of the core container and the two extra columns
-  const Acts::SpacePointContainer coreSpacePoints =
-      makeSpContainer(spacePoints, m_actsGbtsMap);
-
   const Acts::Experimental::GraphBasedTrackSeeder::Options options(
       m_cfg.bFieldInZ);
+
+  // The node storage is filled straight from the input space points. It takes
+  // plain scalars, so no intermediate space point container is needed and the
+  // seeds come back indexed into the input container directly.
+  Acts::Experimental::GbtsNodeStorage nodeStorage =
+      m_finder->makeNodeStorage(m_isPixelLayer);
+
+  std::uint32_t nUnmapped = 0;
+
+  for (const auto &spacePoint : spacePoints) {
+    const std::optional<std::uint32_t> layerIndex = gbtsLayerIndex(spacePoint);
+    if (!layerIndex.has_value()) {
+      ++nUnmapped;
+      continue;
+    }
+
+    // Cluster width and local position are not available in the examples
+    // framework, so the machine learning features stay switched off.
+    nodeStorage.insert(spacePoint.index(), spacePoint.x(), spacePoint.y(),
+                       spacePoint.z(), *layerIndex);
+  }
+
+  nodeStorage.finalize();
+
+  ACTS_VERBOSE("Loaded " << nodeStorage.numberOfNodes() << " graph nodes, "
+                         << nUnmapped << " space points not in the GBTS map");
 
   Acts::SeedContainer seeds;
   seeds.assignSpacePointContainer(spacePoints);
 
   // create the seeds
 
-  m_finder->createSeeds(coreSpacePoints, m_internalRoi.value(), m_isPixelLayer,
-                        *m_filter, options, seeds);
-
-  seeds.assignSpacePointContainer(spacePoints);
-
-  // update seed space point indices to original space point container
-  for (auto seed : seeds) {
-    for (auto &spIndex : seed.spacePointIndices()) {
-      spIndex = coreSpacePoints.at(spIndex).copiedFromIndex();
-    }
-  }
+  m_finder->createSeeds(nodeStorage, m_internalRoi.value(), *m_filter, options,
+                        seeds);
 
   m_outputSeeds(ctx, std::move(seeds));
 
@@ -159,98 +168,56 @@ GraphBasedSeedingAlgorithm::makeActsGbtsMap() const {
   return actsToGbtsMap;
 }
 
-Acts::SpacePointContainer GraphBasedSeedingAlgorithm::makeSpContainer(
-    const SpacePointContainer &spacePoints,
-    std::map<ActsIDs, GbtsIDs> map) const {
-  Acts::SpacePointContainer coreSpacePoints(
-      Acts::SpacePointColumns::CopiedFromIndex | Acts::SpacePointColumns::X |
-      Acts::SpacePointColumns::Y | Acts::SpacePointColumns::Z |
-      Acts::SpacePointColumns::R | Acts::SpacePointColumns::Phi);
+std::optional<std::uint32_t> GraphBasedSeedingAlgorithm::gbtsLayerIndex(
+    const ConstSpacePointProxy &spacePoint) const {
+  const auto &sourceLink = spacePoint.sourceLinks();
 
-  // add new column for layer ID and clusterwidth
-  auto layerColomn = coreSpacePoints.createColumn<std::uint32_t>("layerId");
-  auto clusterWidthColomn = coreSpacePoints.createColumn<float>("clusterWidth");
-  auto localPositionColomn =
-      coreSpacePoints.createColumn<float>("localPositionY");
-  coreSpacePoints.reserve(spacePoints.size());
-
-  // for loop filling space point container and assigning layer ID's using the
-  // map, also assigning cluster width and local position (currently false input
-  // as not in examples but will be added in future)
-  for (const auto &spacePoint : spacePoints) {
-    // Gbts space point vector
-    // loop over space points, call on map
-    const auto &sourceLink = spacePoint.sourceLinks();
-
-    // warning if source link empty
-    if (sourceLink.empty()) {
-      // warning in officaial acts format
-      ACTS_WARNING("warning source link vector is empty");
-      continue;
-    }
-
-    const auto &indexSourceLink = sourceLink.front().get<IndexSourceLink>();
-
-    std::uint32_t actsVolId = indexSourceLink.geometryId().volume();
-    std::uint32_t actsLayId = indexSourceLink.geometryId().layer();
-    std::uint32_t actsModId = indexSourceLink.geometryId().sensitive();
-
-    // dont want strips or HGTD
-    if (actsVolId == 2 || actsVolId == 22 || actsVolId == 23 ||
-        actsVolId == 24) {
-      continue;
-    }
-
-    // Search for vol, lay and module=0, if doesn't esist (end) then search
-    // for full thing vol*100+lay as first number in pair then 0 or mod id
-    auto actsJointId = actsVolId * 100 + actsLayId;
-
-    // here the key needs to be pair of(vol*100+lay, 0)
-    ActsIDs key{static_cast<std::uint64_t>(actsJointId), 0};
-    auto find = map.find(key);
-
-    // if end then make new key of (vol*100+lay, modid)
-    if (find == map.end()) {
-      key = ActsIDs{static_cast<std::uint64_t>(actsJointId),
-                    static_cast<std::uint64_t>(actsModId)};  // mod ID
-      find = map.find(key);
-    }
-
-    // warning if key not in map
-    if (find == map.end()) {
-      ACTS_WARNING("Key not found in Gbts map for volume id: "
-                   << actsVolId << " and layer id: " << actsLayId);
-      continue;
-    }
-
-    // now should be pixel with Gbts ID:
-    // new map the item is a pair so want first from it
-    std::uint32_t gbtsId = std::get<0>(find->second);
-
-    if (gbtsId == 0) {
-      ACTS_WARNING("No assigned Gbts ID for key for volume id: "
-                   << actsVolId << " and layer id: " << actsLayId);
-    }
-
-    // access IDs from map
-
-    auto newSp = coreSpacePoints.createSpacePoint();
-
-    newSp.x() = spacePoint.x();
-    newSp.y() = spacePoint.y();
-    newSp.z() = spacePoint.z();
-    newSp.r() = spacePoint.r();
-    newSp.phi() = std::atan2(spacePoint.y(), spacePoint.x());
-    newSp.copiedFromIndex() = spacePoint.index();
-    newSp.extra(layerColomn) = std::get<2>(find->second);
-    // false input as this is not available in examples
-    newSp.extra(clusterWidthColomn) = 0;
-    newSp.extra(localPositionColomn) = 0;
+  if (sourceLink.empty()) {
+    ACTS_WARNING("warning source link vector is empty");
+    return std::nullopt;
   }
 
-  ACTS_VERBOSE("space point collection successfully assigned layerId's");
+  const auto &indexSourceLink = sourceLink.front().get<IndexSourceLink>();
 
-  return coreSpacePoints;
+  const std::uint32_t actsVolId = indexSourceLink.geometryId().volume();
+  const std::uint32_t actsLayId = indexSourceLink.geometryId().layer();
+  const std::uint32_t actsModId = indexSourceLink.geometryId().sensitive();
+
+  // dont want strips or HGTD
+  if (actsVolId == 2 || actsVolId == 22 || actsVolId == 23 || actsVolId == 24) {
+    return std::nullopt;
+  }
+
+  // Search for vol, lay and module=0, if doesn't esist (end) then search
+  // for full thing vol*100+lay as first number in pair then 0 or mod id
+  const auto actsJointId = actsVolId * 100 + actsLayId;
+
+  // here the key needs to be pair of(vol*100+lay, 0)
+  ActsIDs key{static_cast<std::uint64_t>(actsJointId), 0};
+  auto find = m_actsGbtsMap.find(key);
+
+  // if end then make new key of (vol*100+lay, modid)
+  if (find == m_actsGbtsMap.end()) {
+    key = ActsIDs{static_cast<std::uint64_t>(actsJointId),
+                  static_cast<std::uint64_t>(actsModId)};  // mod ID
+    find = m_actsGbtsMap.find(key);
+  }
+
+  // warning if key not in map
+  if (find == m_actsGbtsMap.end()) {
+    ACTS_WARNING("Key not found in Gbts map for volume id: "
+                 << actsVolId << " and layer id: " << actsLayId);
+    return std::nullopt;
+  }
+
+  // now should be pixel with Gbts ID:
+  // new map the item is a pair so want first from it
+  if (std::get<0>(find->second) == 0) {
+    ACTS_WARNING("No assigned Gbts ID for key for volume id: "
+                 << actsVolId << " and layer id: " << actsLayId);
+  }
+
+  return std::get<2>(find->second);
 }
 
 std::vector<Acts::Experimental::GbtsLayerDescription>
@@ -418,7 +385,7 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("connectorInputFile: " << cfg1.connectorInputFile);
   ACTS_DEBUG("lutInputFile: " << cfg1.lutInputFile);
   ACTS_DEBUG("lrtMode: " << cfg1.lrtMode);
-  ACTS_DEBUG("useMl: " << cfg1.useMl);
+  ACTS_DEBUG("useClusterWidthCuts: " << cfg1.useClusterWidthCuts);
   ACTS_DEBUG("matchBeforeCreate: " << cfg1.matchBeforeCreate);
   ACTS_DEBUG("useOldTunings: " << cfg1.useOldTunings);
   ACTS_DEBUG("tauRatioCut: " << cfg1.tauRatioCut);

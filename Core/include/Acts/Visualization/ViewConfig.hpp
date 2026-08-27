@@ -169,8 +169,8 @@ static const ViewConfig s_viewLine = {.color = {0, 0, 220}};
 /// GeometryObjects
 using ViewConfigFunc = std::function<ViewConfig(const GeometryObject&)>;
 
-/// Default ViewConfigFactory which colors sensitive surfaces green and
-/// boundaries orange
-ViewConfig defaultGeometryColoring(const GeometryObject&);
+/// Default ViewConfigFunc
+/// @return ViewConifg which colors sensitive surfaces green and boundaries orange
+ViewConfig defaultGeometryColoring(const GeometryObject& /*geoObj*/);
 
 }  // namespace Acts

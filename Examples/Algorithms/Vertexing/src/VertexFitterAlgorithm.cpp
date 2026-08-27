@@ -58,7 +58,7 @@ ProcessCode VertexFitterAlgorithm::execute(const AlgorithmContext& ctx) const {
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig, logger().cloneWithSuffix("HelLin"));
 
-  PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext);
+  PropagatorOptions propagatorOpts(ctx.recoGeoContext, ctx.magFieldContext);
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
   vertexFitterCfg.extractParameters
@@ -102,7 +102,7 @@ ProcessCode VertexFitterAlgorithm::execute(const AlgorithmContext& ctx) const {
     }
 
     if (!m_cfg.doConstrainedFit) {
-      VertexFitterOptions vfOptions(ctx.geoContext, ctx.magFieldContext);
+      VertexFitterOptions vfOptions(ctx.recoGeoContext, ctx.magFieldContext);
 
       auto fitRes = vertexFitter.fit(inputTracks, vfOptions, fieldCache);
       if (fitRes.ok()) {
@@ -118,8 +118,8 @@ ProcessCode VertexFitterAlgorithm::execute(const AlgorithmContext& ctx) const {
       theConstraint.setFullPosition(m_cfg.constraintPos);
 
       // Vertex fitter options
-      VertexFitterOptions vfOptionsConstr(ctx.geoContext, ctx.magFieldContext,
-                                          theConstraint);
+      VertexFitterOptions vfOptionsConstr(ctx.recoGeoContext,
+                                          ctx.magFieldContext, theConstraint);
 
       auto fitRes = vertexFitter.fit(inputTracks, vfOptionsConstr, fieldCache);
       if (fitRes.ok()) {
