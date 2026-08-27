@@ -162,7 +162,7 @@ the quantity is. The correspondence, for anyone reading the two side by side:
 | `new_dir_x3` | — | @f$3\times@f$ the unnormalised new direction |
 | `h_third`, `h_quarter`, `two_over_h` | `S3`, `S4`, `Sl` | @f$h/3@f$, @f$h/4@f$, @f$2/h@f$ |
 | `dphi_*`, `dtheta_*`, `dqop_*` | `d2A*`, `d3A*`, `d4A*` | the tangent of the correspondingly named stage, one set per live column |
-| `dqop_seed` | — | the @f$q/p@f$ column's direction part, scaled by @f$\lambda@f$ |
+| `dqop_tan_in` | — | the @f$q/p@f$ column's incoming tangent, its direction part scaled by @f$\lambda@f$ |
 | `M` | `pVector[8..55]` | bound-to-free Jacobian, column major |
 | `dEds`, `dEds1..4` | — | energy loss per unit path, per stage (@ref Acts::AtlasStepper has no material) |
 

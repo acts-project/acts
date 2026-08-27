@@ -145,7 +145,6 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
   double h = state.stepSize.value() * propDir;
 
   const double initialH = h;
-  const Direction timeDirection = Direction::fromScalarZeroAsPositive(h);
 
   const Vector3 pos = position(state);
   const Vector3 dir = direction(state);
@@ -222,9 +221,9 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
           errorEstimate, 4 * stepTolerance, endPos, state.pars[eFreeTime],
           endDir, std::span<double, 3>(lastField.data(), 3), derivative, jac);
     } else {
-      res = detail::sympyDenseStep(*this, state, *material, timeDirection, h,
-                                   4 * stepTolerance, errorEstimate, lastField,
-                                   jac);
+      res =
+          detail::sympyDenseStep(*this, state, *material, h, 4 * stepTolerance,
+                                 errorEstimate, lastField, jac);
     }
     if (!res.ok()) {
       return res.error();

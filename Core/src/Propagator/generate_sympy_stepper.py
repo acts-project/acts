@@ -266,7 +266,7 @@ def _atlas_rk4_stages(deriv, taylor_norm):
     )
 
 
-def _field_contrib(deriv, what, stage, bend, same_as, seed):
+def _field_contrib(deriv, what, stage, bend, same_as, tan_in):
     """The term a tangent picks up from the bend vector's dependence on q/p.
 
     A bend vector is linear in q/p, so `qop * d(bend)/d(qop) == bend`, making
@@ -274,9 +274,9 @@ def _field_contrib(deriv, what, stage, bend, same_as, seed):
     encodes that identity and is checked against the plain chain rule before
     use.
     """
-    contrib = stage.expr.jacobian(bend.name) * seed
-    deriv.check_same(what, contrib[:, seed.cols - 1], same_as)
-    return Matrix.hstack(contrib[:, 0 : seed.cols - 1], same_as)
+    contrib = stage.expr.jacobian(bend.name) * tan_in
+    deriv.check_same(what, contrib[:, tan_in.cols - 1], same_as)
+    return Matrix.hstack(contrib[:, 0 : tan_in.cols - 1], same_as)
 
 
 # The bound-to-free jacobian M, stored column major.  "hold" is never written,
@@ -365,63 +365,63 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
         convention.
         """
         if scale is None:
-            seed = col(c, (4, 5, 6))
+            tan_in = col(c, (4, 5, 6))
             fields = [None] * 4
             pos_fac, dir_fac = h_third.name, third.name
         else:
-            seed_qop_row = M[7, c]
-            seed = explicit(deriv.add(f"{tag}_seed", qop * col(c, (4, 5, 6))).name)
+            tan_in_qop = M[7, c]
+            tan_in = explicit(deriv.add(f"{tag}_tan_in", qop * col(c, (4, 5, 6))).name)
             fields = [
                 _field_contrib(
                     deriv,
                     f"{tag}_kick1",
                     kick1,
                     bend1,
-                    explicit(kick1.name) * seed_qop_row,
-                    explicit(bend1.name) * seed_qop_row,
+                    explicit(kick1.name) * tan_in_qop,
+                    explicit(bend1.name) * tan_in_qop,
                 ),
                 _field_contrib(
                     deriv,
                     f"{tag}_dir3",
                     dir3,
                     bend2,
-                    (explicit(dir3.name) - direction) * seed_qop_row,
-                    explicit(bend2.name) * seed_qop_row,
+                    (explicit(dir3.name) - direction) * tan_in_qop,
+                    explicit(bend2.name) * tan_in_qop,
                 ),
                 _field_contrib(
                     deriv,
                     f"{tag}_dir4",
                     dir4,
                     bend2,
-                    (explicit(dir4.name) - direction) * seed_qop_row,
-                    explicit(bend2.name) * seed_qop_row,
+                    (explicit(dir4.name) - direction) * tan_in_qop,
+                    explicit(bend2.name) * tan_in_qop,
                 ),
                 _field_contrib(
                     deriv,
                     f"{tag}_kick4",
                     kick4,
                     bend3,
-                    explicit(kick4.name) * seed_qop_row,
-                    explicit(bend3.name) * seed_qop_row,
+                    explicit(kick4.name) * tan_in_qop,
+                    explicit(bend3.name) * tan_in_qop,
                 ),
             ]
             pos_fac, dir_fac = scale[0], scale[1]
 
-        tan_kick1 = tangent(f"{tag}_kick1", kick1, [(direction, seed)], fields[0])
-        tan_dir2 = deriv.add(f"{tag}_dir2", explicit(tan_kick1.name) + seed)
+        tan_kick1 = tangent(f"{tag}_kick1", kick1, [(direction, tan_in)], fields[0])
+        tan_dir2 = deriv.add(f"{tag}_dir2", explicit(tan_kick1.name) + tan_in)
         tan_dir3 = tangent(
             f"{tag}_dir3",
             dir3,
-            [(direction, seed), (st.dir2.name, explicit(tan_dir2.name))],
+            [(direction, tan_in), (st.dir2.name, explicit(tan_dir2.name))],
             fields[1],
         )
         tan_dir4 = tangent(
             f"{tag}_dir4",
             dir4,
-            [(direction, seed), (dir3.name, explicit(tan_dir3.name))],
+            [(direction, tan_in), (dir3.name, explicit(tan_dir3.name))],
             fields[2],
         )
-        tan_dir_end = deriv.add(f"{tag}_dir_end", 2 * explicit(tan_dir4.name) - seed)
+        tan_dir_end = deriv.add(f"{tag}_dir_end", 2 * explicit(tan_dir4.name) - tan_in)
         tan_kick4 = tangent(
             f"{tag}_kick4",
             kick4,
@@ -745,7 +745,9 @@ def print_rk4_dense(name_exprs, run_cse=True):
             return (
                 "if (err > errTol) {\n  return Acts::Result<bool>::success(false);\n}"
             )
-        if str(var) == "new_dir":
+        if str(var) == "new_qop":
+            # new_qop carries the energy loss, so it belongs to the step and
+            # has to be written before the jacobian-only part is skipped
             return "if (M.empty()) {\n  return Acts::Result<bool>::success(true);\n}"
         if str(var) == "new_M":
             return "\n".join(

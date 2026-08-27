@@ -18,6 +18,7 @@ EXCLUDE_PATHS = (
     "Detray/tests/tools",
     "Detray/python/Io/tests",
     "Detray/python/Tests/tests",
+    "Detray/python/Plugins/tests",
     # TODO: Remove the traccc part.
     "Traccc",
     "git",

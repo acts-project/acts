@@ -94,11 +94,11 @@ Given a detray detector (and optionally also a grid and a material) json file, a
 ```shell
 detray-build/bin/detray_generate_toy_detector --write_material --write_grids
 ```
-All of the validation tools presented in the following can also be run as part of a corresponding [python script](https://github.com/acts-project/acts/tree/main/Detray/tests/tools/python) which takes the same arguments and will automatically create plots from the collected data. However, this requires Python 3, pandas, SciPy and NumPy, as well as Matplotlib to be available.
+All of the validation tools presented in the following can also be run as part of a corresponding [python script](https://github.com/acts-project/acts/tree/main/Detray/tests/tools/python) which takes the same arguments and will automatically create plots from the collected data. However, creating the plots requires Python 3, pandas, SciPy and NumPy, as well as Matplotlib to be available.
 
-The detector geometry can be visualized in SVG format with the following command:
+The detector geometry can be visualized in SVG format with the following command, which requires the python bindings (`-DDETRAY_BUILD_PYTHON_BINDINGS=ON -DDETRAY_BUILD_UNITTESTS=ON`) to be built and set up via `detray-build/python/setup.sh`:
 ```shell
-detray-build/bin/detray_detector_display \
+python3 detray/tests/tools/python/detector_display.py \
    --geometry_file  ./toy_detector/toy_detector_geometry.json
 ```
 The tool can also display single volumes or surfaces, as well as the navigation grids and material maps (the corresponding json files need to loaded in this case). For an overview of all available options for the command-line tools add `--help`.
