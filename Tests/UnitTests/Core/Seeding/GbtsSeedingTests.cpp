@@ -692,15 +692,14 @@ BOOST_AUTO_TEST_CASE(SeedsFromDenseForwardTracks) {
   checkOneSeedPerTrack(seeds, spacePoints, tracks);
 }
 
-// A walk along the strip throws off the tau every doublet through the point
-// reads. A millimetre already breaks the linking stage, which the tracking
-// filter alone would still tolerate. The linking stage gives up between 0.25
-// and 0.3 mm and the resolved end stops recovering past 4 mm, so a millimetre
-// is clear of both ends by a factor of three.
+// The walk throws off the tau of every doublet through the point, and the
+// linking stage rejects on it long before the tracking filter does. 3 mm is
+// clear of both ends: the triplet tau ratio gives up past 1.9 mm, the filter's
+// chi2 against the nominal positions past 4.4 mm.
 BOOST_AUTO_TEST_CASE(StripLayersNeedTheirPairResolved) {
   const ToyDetector detector = barrelDetector();
   const std::vector<Track> tracks = makeSparseTracks();
-  constexpr float kWalk = 1.f;
+  constexpr float kWalk = 3.f;
   constexpr std::size_t kFirstStripLayer = 2;
 
   std::vector<bool> isPixelLayer(detector.layers.size(), true);
@@ -712,8 +711,8 @@ BOOST_AUTO_TEST_CASE(StripLayersNeedTheirPairResolved) {
   const auto seed = [&](const float walk, const bool calibrate) {
     const SpacePointContainer spacePoints =
         makeStripSpacePoints(detector, tracks, kFirstStripLayer, walk);
-    // an empty graph is the point of the unresolved case, so the warning that
-    // says so is not one here
+    // a graph with no connections is the point of the unresolved case, so the
+    // warning that says so is not one here
     const SeederSetup setup = makeSeeder(detector, calibrate, /*quiet=*/true);
     SeedContainer seeds;
     seeds.assignSpacePointContainer(spacePoints);
