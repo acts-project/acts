@@ -158,11 +158,11 @@ def _atlas_rk4_stages(deriv, taylor_norm):
     """Build the value path of an ATLAS-form RK4 vacuum step.
 
     ATLAS carries a half-step bend vector, bend_i = (h*qop/2) * B_i, rather
-    than the plain slopes k_i. Every stage slope then comes out as (h/2)*k_i
+    than the plain slopes k_i.  Every stage slope then comes out as (h/2)*k_i
     directly, as a bare cross product, and neither h nor qop appears again
     anywhere in the recursion.
 
-    The stage names say which stage a quantity belongs to. ATLAS' own names
+    The stage names say which stage a quantity belongs to.  ATLAS' own names
     are positional; `docs/groups/sympy_codegen.md` maps the two onto each
     other (bend1..3 are H0..H2, and kick1/dir2/dir_half_sum/dir3/dir4/
     dir_end/kick4 are A0..A6).
@@ -270,7 +270,7 @@ def _field_contrib(deriv, what, stage, bend, same_as, tan_in):
     """The term a tangent picks up from the bend vector's dependence on q/p.
 
     A bend vector is linear in q/p, so `d(bend)/dlog|qop| == bend`, making this
-    the bend-linear part of the stage, which is already named. `same_as`
+    the bend-linear part of the stage, which is already named.  `same_as`
     encodes that identity and is checked against the plain chain rule before
     use.
     """
@@ -279,7 +279,7 @@ def _field_contrib(deriv, what, stage, bend, same_as, tan_in):
     return Matrix.hstack(contrib[:, 0 : tan_in.cols - 1], same_as)
 
 
-# The bound-to-free jacobian M, stored column major. "hold" is never written,
+# The bound-to-free jacobian M, stored column major.  "hold" is never written,
 # "step" is written by every step, "dense" only by a dense step.
 # fmt: off
 _B2F = StructuredMatrix("M", [
@@ -322,10 +322,12 @@ _B2F_LIVE_COLUMNS = _by_column(_B2F_LIVE)
 # starting q/p:
 #
 #     M[i, 4] = dFree_i/dlog|qop| = qop * (dFree_i/dqop_0) / (dqop/dqop_0)
-#     M[7, 4] = dqop/dqop_0, stored plain -- it converts between the two
+#     M[7, 4] = dqop/dqop_0, kept plain -- it converts between the two
 #
-# Exact, and the reason `_field_contrib` gets a bend vector back. A vacuum step
-# preserves it for free; rk4_dense moves q/p and restores it explicitly.
+# The plain row makes the conversion exact, and in this form each field term
+# reduces to a stage's bend-linear part (see _field_contrib). qop and M[7, 4]
+# are constant across a vacuum step, which therefore preserves the form;
+# rk4_dense changes q/p and converts around its M update.
 _B2F_QOP_COLUMN = 4
 
 
@@ -333,19 +335,20 @@ def b2f_step_update(D, live, qop_in=None, qop_out=None):
     """Apply a free-to-free step jacobian D to the bound-to-free jacobian M.
 
     Only the live columns are touched, and the structural zeros of _B2F keep
-    the products sparse. The vacuum kernel folds this into the RK recursion
+    the products sparse.  The vacuum kernel folds this into the RK recursion
     instead, and never builds D at all.
 
     A step that changes q/p changes what the q/p column differentiates by (see
     _B2F_QOP_COLUMN); qop_in and qop_out convert it to the plain column and
-    back. None treats every column as plain.
+    back. Without them every column is treated as plain.
     """
+    assert (qop_in is None) == (qop_out is None)
     out = []
     for c in sorted({col for _, col in live}):
         v = _B2F.matrix[:, c]
         scaled = c == _B2F_QOP_COLUMN and qop_in is not None
         if scaled:
-            # plain[i] = stored[i] * row / qop_in, the row being stored plain
+            # plain[i] = scaled[i] * row / qop_in, the row itself being plain
             f = v[7, 0] / qop_in
             v = Matrix([[v[i, 0] * f] if i < 7 else [v[i, 0]] for i in range(8)])
         new_v = D * v
@@ -387,9 +390,8 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
 
         `with_field` is False for a column with no q/p component, which picks
         up nothing from the bend vectors' own q/p dependence. The q/p column is
-        read in its stored form (see _B2F_QOP_COLUMN), where that dependence
-        contributes each bend vector unchanged and the term is the stage
-        itself.
+        read in its scaled form (see _B2F_QOP_COLUMN), where each field term is
+        the stage's bend-linear part, already computed by the value path.
         """
         tan_in = col(c, (4, 5, 6))
         pos_fac, dir_fac = h_third.name, third.name

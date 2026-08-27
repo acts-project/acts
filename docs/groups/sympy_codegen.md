@@ -139,24 +139,26 @@ parameters @f$b_j@f$ **at the start surface**,
 | @f$\vec T@f$ *(3 rows)* | · | · | step | step | step | · |
 | @f$\lambda@f$ | · | · | · | · | dense | · |
 
-`·` is a structural zero, `hold` an entry no step writes, `step` one every step
-writes, `dense` one only a dense step writes. The generator declares the
-sparsity in this one table and reads its index sets back off it.
+`·` is a structural zero, `1` a constant one, `hold` an entry no step writes,
+`step` one every step writes, `dense` one only a dense step writes. The
+generator declares the sparsity in this one table and reads its index sets back
+off it.
 
 ### The @f$q/p@f$ column
 
-Three columns move; @f$\lambda@f$ costs the most. The table says why twice:
+Two structural facts single the @f$\lambda@f$ column out:
 
-- **Down the column.** @f$\lambda@f$ reaches the recursion only through the bend
-  vector @f$\vec H = (h\lambda/2)\,\vec B@f$, so this is the only column with a
-  term from the field's own @f$\lambda@f$ dependence.
-- **Along the row.** Nothing but @f$\lambda_0@f$ can change @f$\lambda@f$, so
+- @f$\lambda@f$ reaches the recursion only through the bend vector
+  @f$\vec H = (h\lambda/2)\,\vec B@f$, so this is the only column with a term
+  from the field's own @f$\lambda@f$ dependence.
+- Nothing but @f$\lambda_0@f$ can change @f$\lambda@f$, so
   @f$M_{\lambda\lambda}@f$ alone is the whole chain rule between
   @f$\partial/\partial\lambda_0@f$ and @f$\partial/\partial\lambda@f$.
 
-The row licenses a change of variable: store the column differentiated by
-@f$\log|\lambda|@f$ of the *current* @f$\lambda@f$, leaving
-@f$M_{\lambda\lambda}@f$ itself plain so the change stays reversible.
+The second fact permits a change of variable: the column is stored
+differentiated by @f$\log|\lambda|@f$ of the *current* @f$\lambda@f$, with
+@f$M_{\lambda\lambda}@f$ itself kept plain so the conversion is exact in both
+directions.
 
 @f[
   M_{i\lambda} \;\equiv\; \frac{\partial x_i}{\partial \log|\lambda|}
@@ -165,30 +167,26 @@ The row licenses a change of variable: store the column differentiated by
     \qquad i < 7 .
 @f]
 
-The division moves the variable to @f$\lambda@f$, the factor carries it on to
-@f$\log|\lambda|@f$; both exact. @f$\vec H@f$ is homogeneous of degree one in
-@f$\lambda@f$ and @f$\lambda\,\partial/\partial\lambda@f$ reads that degree off,
+The division changes the variable to @f$\lambda@f$, the factor to
+@f$\log|\lambda|@f$. @f$\vec H@f$ is homogeneous of degree one in @f$\lambda@f$,
 so @f$\partial\vec H/\partial\log|\lambda| = \vec H@f$: each stage's field term
-is *the bend vector the value path already computed*, with a coefficient of one
-— no fresh cross product, no load of @f$M_{\lambda\lambda}@f$ to weight it by.
-It is the one identity in the recursion that does not come out of
-differentiating, so the generator forms the chain-rule product as well and
-checks the two agree (`Derivation.check_same`).
+is its bend-linear part, a quantity the value recursion already names, rather
+than a fresh cross product weighted by @f$M_{\lambda\lambda}@f$. This identity
+is the one step of the recursion that is not a plain application of the chain
+rule, so the generator forms the chain-rule product as well and checks the two
+agree (`Derivation.check_same`).
 
-Converting per step would cost what it saves, and is not needed: @f$\lambda@f$
-and @f$M_{\lambda\lambda}@f$ are constant across a vacuum step, so the recursion
-carries the stored form into itself. It is the form the stepper *state* holds,
-not a kernel internal, so `detail::sympy::toScaledBoundToFree` and its inverse
-sit at the surfaces where the covariance engine wants the plain Jacobian.
-`rk4_dense` moves @f$\lambda@f$ and converts both ways explicitly. The
-convention is singular at @f$\lambda = 0@f$, where the plain column already is.
+No per-step conversion is needed: @f$\lambda@f$ and @f$M_{\lambda\lambda}@f$ are
+constant across a vacuum step, so the recursion carries the scaled form into
+itself. The scaled form is what the stepper *state* holds, not a kernel
+internal; `detail::sympy::toScaledBoundToFree` and its inverse convert at the
+boundaries where the covariance engine wants the plain Jacobian. `rk4_dense`
+moves @f$\lambda@f$ and converts both ways explicitly. The convention is
+singular at @f$\lambda = 0@f$, where the plain column already is.
 
-Nineteen multiplications and a division per step fall away: thirteen from the
-field terms no longer loading @f$M_{\lambda\lambda}@f$, six plus the division
-from the @f$\lambda@f$ scaling no longer being rebuilt. ATLAS' `pVector[40]` is
-the same idea carrying the @f$\lambda@f$ factor alone: having no dense material
-it may take @f$M_{\lambda\lambda} = 1@f$ throughout, and so never loads it
-either.
+ATLAS' `pVector[40]` block is the @f$M_{\lambda\lambda} = 1@f$ case of the same
+convention: with no dense material the row stays one, and the block stays
+permanently scaled by @f$\lambda@f$.
 
 ## Naming
 

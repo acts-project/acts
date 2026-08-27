@@ -85,9 +85,9 @@ SympyStepper::boundState(
             direction(state));
   }
   state.materialEffectsAccumulator.reset();
-  // The engine both reads the jacobian and reinitializes it for the new
-  // surface, so hand it the plain one and scale whatever comes back. It leaves
-  // the jacobian alone unless it transports.
+  // The engine reads the jacobian and reinitializes it for the new surface, so
+  // convert to plain before the call and back to scaled after. Without
+  // transport the engine does not touch the jacobian.
   if (transport) {
     detail::sympy::fromScaledBoundToFree(state.jacToGlobal, qOverP(state));
   }
