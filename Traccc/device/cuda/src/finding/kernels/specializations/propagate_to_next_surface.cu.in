@@ -24,7 +24,7 @@ using propagator_t = traccc::details::ckf_propagator_t<@DETECTOR_NAME@::device, 
 template void propagate_to_next_surface<propagator_t, bfield_t>(
     const dim3& grid_size, const dim3& block_size, std::size_t shared_mem_size,
     const cudaStream_t& stream, const finding_config&,
-    const @DETECTOR_NAME@::device::const_view_type&,
+    const @DETECTOR_NAME@::device*,
     const bfield_t&,
     const device::propagate_to_next_surface_payload&);
 

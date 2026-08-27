@@ -68,7 +68,7 @@ ProcessCode PropagationAlgorithm::execute(
     PropagationOutput& propagationOutput = propagationResult.value();
 
     // Position / momentum for the output writing
-    Acts::Vector3 position = parameters.position(context.geoContext);
+    Acts::Vector3 position = parameters.position(context.recoGeoContext);
     Acts::Vector3 direction = parameters.direction();
 
     // Record the propagator steps

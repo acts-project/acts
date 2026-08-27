@@ -66,7 +66,7 @@ def runGeometry(
             vis = acts.ObjVisualization3D()
             trackingGeometry.visualize(
                 vis,
-                context.geoContext,
+                context.recoGeoContext,
                 portalViewConfig=acts.ViewConfig(visible=False),
                 sensitiveViewConfig=acts.ViewConfig(visible=True),
                 viewConfig=acts.ViewConfig(visible=False),
@@ -100,7 +100,7 @@ def runGeometry(
                     processBoundaries=True,
                     processVolumes=True,
                     processNonMaterial=True,
-                    context=context.geoContext,
+                    context=context.recoGeoContext,
                 )
 
                 jmw = JsonMaterialWriter(
@@ -114,7 +114,7 @@ def runGeometry(
 
         if serializeGeometryJson:
             converter = TrackingGeometryJsonConverter(level=acts.logging.INFO)
-            jsonStr = converter.toJson(context.geoContext, trackingGeometry)
+            jsonStr = converter.toJson(context.recoGeoContext, trackingGeometry)
             outPath = outputDir / "json" / "tracking-geometry.json"
             outPath.write_text(jsonStr)
 

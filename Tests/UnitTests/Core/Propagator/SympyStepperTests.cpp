@@ -20,6 +20,9 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
+#include "Acts/Material/IVolumeMaterial.hpp"
+#include "Acts/Material/Material.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
@@ -29,6 +32,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <array>
 #include <cmath>
@@ -517,6 +521,106 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_covariance_matches_eigen) {
     // correlations comparable at all. both steppers agree to ~1e-12 here while
     // the wrong jacobian order deviates by ~1e-2.
     CHECK_CLOSE_COVARIANCE(sympyCov, eigenCov, 1e-9);
+  }
+}
+
+/// A dense step applies the energy loss with and without covariance transport.
+BOOST_AUTO_TEST_CASE(sympy_stepper_dense_energy_loss_without_covariance) {
+  auto bField = std::make_shared<ConstantBField>(Vector3(0, 0, 2_T));
+  SympyStepper stepper(bField);
+  const HomogeneousVolumeMaterial silicon(makeSilicon());
+
+  const double qop0 = 1. / 1_GeV;
+  auto run = [&](bool withCovariance) {
+    SympyStepper::Options options(tgContext, mfContext);
+    options.maxStepSize = 20_mm;
+    options.initialStepSize = 20_mm;
+    options.doDense = true;
+
+    std::optional<Covariance> cov;
+    if (withCovariance) {
+      cov = Covariance::Identity();
+    }
+    auto state = stepper.makeState(options);
+    stepper.initialize(state, BoundTrackParameters::createCurvilinear(
+                                  Vector4::Zero(), 0.4, 0.7, qop0, cov,
+                                  ParticleHypothesis::pion()));
+    for (int i = 0; i < 10; ++i) {
+      BOOST_REQUIRE(stepper.step(state, Direction::Forward(), &silicon).ok());
+    }
+    return stepper.qOverP(state);
+  };
+
+  // 200 mm of silicon is a few percent of a 1 GeV pion's momentum
+  BOOST_CHECK_GT(run(false), qop0);
+  CHECK_CLOSE_REL(run(false), run(true), 1e-12);
+}
+
+/// Backward propagation gives the energy back, following the convention of
+/// `PointwiseMaterialInteraction`.
+BOOST_AUTO_TEST_CASE(sympy_stepper_dense_energy_loss_reverses) {
+  auto bField = std::make_shared<ConstantBField>(Vector3(0, 0, 2_T));
+  SympyStepper stepper(bField);
+  const HomogeneousVolumeMaterial silicon(makeSilicon());
+
+  const double qop0 = 1. / 1_GeV;
+  SympyStepper::Options options(tgContext, mfContext);
+  options.maxStepSize = 20_mm;
+  options.initialStepSize = 20_mm;
+  options.doDense = true;
+
+  auto state = stepper.makeState(options);
+  stepper.initialize(
+      state, BoundTrackParameters::createCurvilinear(
+                 Vector4::Zero(), 0.4, 0.7, qop0, Covariance::Identity(),
+                 ParticleHypothesis::pion()));
+  for (int i = 0; i < 10; ++i) {
+    BOOST_REQUIRE(stepper.step(state, Direction::Forward(), &silicon).ok());
+  }
+  BOOST_CHECK_GT(stepper.qOverP(state), qop0);
+  for (int i = 0; i < 10; ++i) {
+    BOOST_REQUIRE(stepper.step(state, Direction::Backward(), &silicon).ok());
+  }
+  CHECK_SMALL(state.pathAccumulated, 1e-9);
+  // the residual is RK truncation error; the sign bug would be percents
+  CHECK_CLOSE_REL(stepper.qOverP(state), qop0, 1e-7);
+}
+
+/// The dense and the vacuum kernel transport the jacobian independently.
+/// Driving the dense kernel with vacuum material makes the two comparable.
+BOOST_AUTO_TEST_CASE(sympy_stepper_dense_kernel_matches_vacuum_kernel) {
+  auto bField = std::make_shared<ConstantBField>(Vector3(0.3_T, 0, 2_T));
+  SympyStepper stepper(bField);
+  const HomogeneousVolumeMaterial vacuum(Material::Vacuum());
+
+  // mode 0 is the vacuum kernel, 1 the dense kernel, 2 alternates
+  auto run = [&](int track, int mode) {
+    SympyStepper::Options options(tgContext, mfContext);
+    options.maxStepSize = 20_mm;
+    options.initialStepSize = 20_mm;
+    options.doDense = mode != 0;
+
+    Covariance cov = Covariance::Identity();
+    cov(eBoundQOverP, eBoundQOverP) = 1e-4;
+    auto state = stepper.makeState(options);
+    stepper.initialize(
+        state, BoundTrackParameters::createCurvilinear(
+                   Vector4::Zero(), 0.4 + 0.6 * track, 0.7 + 0.35 * track,
+                   (track % 2 == 0 ? 1. : -1.) / ((1. + track) * 1_GeV), cov,
+                   ParticleHypothesis::pion()));
+    for (int i = 0; i < 60; ++i) {
+      const IVolumeMaterial* material =
+          (mode == 1 || (mode == 2 && i % 2 == 0)) ? &vacuum : nullptr;
+      BOOST_REQUIRE(stepper.step(state, Direction::Forward(), material).ok());
+    }
+    return std::get<1>(stepper.curvilinearState(state, true));
+  };
+
+  for (int track = 0; track < 4; ++track) {
+    const BoundMatrix reference = run(track, 0);
+    for (int mode : {1, 2}) {
+      CHECK_CLOSE_OR_SMALL(run(track, mode), reference, 1e-11, 1e-12);
+    }
   }
 }
 

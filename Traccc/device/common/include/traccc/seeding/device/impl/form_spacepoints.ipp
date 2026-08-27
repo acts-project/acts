@@ -38,7 +38,7 @@ TRACCC_HOST_DEVICE inline void form_spacepoints(
   const edm::measurement meas = measurements.at(globalIndex);
 
   // Fill the spacepoint using the common function.
-  if (details::is_valid_measurement(meas)) {
+  if (traccc::details::is_valid_measurement(meas)) {
     const edm::spacepoint_collection::device::size_type i =
         spacepoints.push_back_default();
     edm::spacepoint sp = spacepoints.at(i);
