@@ -2,6 +2,7 @@ target_sources(
     ActsCore
     PRIVATE
         EstimateTrackParamsFromSeed.cpp
+        TrackParamsEstimationError.cpp
         CompSpacePointAuxiliaries.cpp
         CompositeSpacePointLineFitter.cpp
         FastStrawLineFitter.cpp
@@ -16,12 +17,12 @@ target_sources(
         DoubletSeedFinder.cpp
         TripletSeedFinder.cpp
         TripletSeeder.cpp
-        GbtsDataStorage.cpp
+        GbtsNodeStorage.cpp
         GbtsGeometry.cpp
         GbtsTrackingFilter.cpp
         GraphBasedTrackSeeder.cpp
         GbtsLayerConnection.cpp
         GbtsRoiDescriptor.cpp
-        GbtsTrainingTool.cpp
+        GbtsLayerConnectionTool.cpp
         HoughAccumulatorSection.cpp
 )

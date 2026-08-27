@@ -32,12 +32,10 @@ namespace ActsPython {
 
 py::array_t<int> colorsToNumpy(std::span<const Color> colors,
                                const py::object& base) {
-  std::vector<py::std::size_t> shape{
-      static_cast<py::std::size_t>(colors.size()), 3};
+  std::vector<std::size_t> shape{static_cast<std::size_t>(colors.size()), 3};
 
-  std::vector<py::std::size_t> strides{
-      static_cast<py::std::size_t>(sizeof(Color)),
-      static_cast<py::std::size_t>(sizeof(int))};
+  std::vector<std::size_t> strides{static_cast<std::size_t>(sizeof(Color)),
+                                   static_cast<std::size_t>(sizeof(int))};
 
   return py::array_t<int>(shape, strides, colors.data()->rgb.data(), base);
 }
@@ -101,13 +99,13 @@ void addVisualization(py::module& m) {
                              &VisualizationBuffer::lineThickness);
 
   py::class_<EventDataView3D>(m, "EventDataView3D")
-      .def_static("drawTrack", [](IVisualization3D& helper,
-                                  const AnyConstTrackProxy& track) {
-        EventDataView3D::drawTrack(
-            helper, track, GeometryContext::dangerouslyDefaultConstruct());
-      });
+      .def_static("drawTrack",
+                  [](IVisualization3D& helper, const AnyConstTrackProxy& track,
+                     const GeometryContext& gctx) {
+                    EventDataView3D::drawTrack(helper, track, gctx);
+                  });
 
   py::class_<GeometryObject>(m, "GeometryObject");
-  m.def("viewConfigFactory", &viewConfigFactory);
+  m.def("default_geometry_coloring", &defaultGeometryColoring);
 }
 }  // namespace ActsPython

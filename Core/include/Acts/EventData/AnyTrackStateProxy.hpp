@@ -727,6 +727,15 @@ class AnyTrackStateProxy
     mutableHandler()->unset(mutableContainerPtr(), m_index, target);
   }
 
+  /// Add additional components to the track state.
+  /// @param mask Property mask describing which components to allocate.
+  void addComponents(TrackStatePropMask mask)
+    requires(!ReadOnly)
+  {
+    mutableHandler()->addTrackStateComponents(mutableContainerPtr(), m_index,
+                                              mask);
+  }
+
  protected:
   /// Access const parameters at specific index
   /// @param parIndex Parameter index

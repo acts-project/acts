@@ -7,6 +7,8 @@ from acts.examples.odd import getOpenDataDetector
 import json
 
 from helpers import dd4hepEnabled
+
+
 @pytest.mark.parametrize(
     "detectorFactory,aligned,nobj",
     [
@@ -33,7 +35,6 @@ from helpers import dd4hepEnabled
         "odd",
     ],
 )
-
 @pytest.mark.slow
 def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
     detector = detectorFactory()
@@ -198,16 +199,16 @@ def test_odd_gen3_json_roundtrip(tmp_path, odd_detector_gen3):
     trackingGeometry.apply(original)
 
     runGeometry(
-            trackingGeometry=trackingGeometry,
-            decorators=detector.contextDecorators(),
-            outputDir=tmp_path,
-            events=1,
-            outputObj=False,
-            outputPy=False,
-            outputCsv=False,
-            outputSurfacesJson=False,
-            serializeGeometryJson=True,
-        )
+        trackingGeometry=trackingGeometry,
+        decorators=detector.contextDecorators(),
+        outputDir=tmp_path,
+        events=1,
+        outputObj=False,
+        outputPy=False,
+        outputCsv=False,
+        outputSurfacesJson=False,
+        serializeGeometryJson=True,
+    )
 
     json_path = json_dir / "tracking-geometry.json"
     assert json_path.exists()
@@ -263,6 +264,7 @@ def test_odd_gen3_json_roundtrip(tmp_path, odd_detector_gen3):
         orig["pathLength"], rebuilt_data["pathLength"], rtol=1e-5
     )
 
+
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.odd
 def test_geometry_python_visualization(tmp_path, odd_detector_gen3):
@@ -275,13 +277,14 @@ def test_geometry_python_visualization(tmp_path, odd_detector_gen3):
     runGeometry(
         trackingGeometry=trackingGeometry,
         decorators=detector.contextDecorators(),
-        outputDir= tmp_path,
+        outputDir=tmp_path,
         events=1,
-        projection='xy',
+        pyVisProjection="xy",
         outputPy=True,
         outputCsv=False,
         outputSurfacesJson=False,
-        serializeGeometryJson=False,)
+        serializeGeometryJson=False,
+    )
 
     ax = plt.gca()
     assert any(isinstance(c, PatchCollection) for c in ax.collections)

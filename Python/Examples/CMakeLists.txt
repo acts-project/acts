@@ -9,8 +9,10 @@ set(py_files
     reconstruction.py
     itk.py
     odd.py
+    dataset.py
     uproot.py
     visualization.py
+    scipy.py
 )
 
 # Macro to add example bindings conditionally

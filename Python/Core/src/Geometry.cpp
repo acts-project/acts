@@ -241,8 +241,18 @@ void addGeometry(py::module_& m) {
                  })
             .def_property_readonly("highestTrackingVolume",
                                    &TrackingGeometry::highestTrackingVolumePtr)
-            .def("visualize", &TrackingGeometry::visualize, py::arg("helper"),
-                 py::arg("gctx"), py::arg("func") = viewConfigFactory());
+            .def(
+                "visualize",
+                [](const TrackingGeometry& self, IVisualization3D& helper,
+                   const GeometryContext& gctx, py::object func) {
+                  if (func.is_none()) {
+                    self.visualize(helper, gctx, defaultGeometryColoring);
+                  } else {
+                    self.visualize(helper, gctx, func.cast<ViewConfigFunc>());
+                  }
+                },
+                py::arg("helper"), py::arg("gctx"),
+                py::arg("func") = py::none());
 
     using apply_ptr_t =
         void (TrackingGeometry::*)(TrackingGeometryMutableVisitor&);
@@ -292,7 +302,8 @@ void addGeometry(py::module_& m) {
         m, "TrackingVolume")
         .def(py::init<const Transform3&, std::shared_ptr<VolumeBounds>,
                       std::string>())
-        .def_property_readonly("volumeName", &TrackingVolume::volumeName);
+        .def_property_readonly("volumeName", &TrackingVolume::volumeName)
+        .def_property_readonly("geometryId", &TrackingVolume::geometryId);
   }
 
   {

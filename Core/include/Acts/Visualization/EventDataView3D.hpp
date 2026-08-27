@@ -316,13 +316,10 @@ struct EventDataView3D {
   ///
   /// @param helper [in, out] The visualization helper
   /// @param track The track to be drawn
-  /// @param itrack the track index in the container
   /// @param gctx The geometry context for which it is drawn
-  /// @param lineconfig The visualization options for the lines to be drawn
   static void drawTrack(IVisualization3D& helper,
                         const AnyConstTrackProxy& track,
-                        const GeometryContext& gctx =
-                            GeometryContext::dangerouslyDefaultConstruct());
+                        const GeometryContext& gctx);
 };
 
 }  // namespace Acts
