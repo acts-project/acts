@@ -72,7 +72,7 @@ def runGeometry(
             vis = PyVisualization2D()
             trackingGeometry.visualize(vis, context.recoGeoContext)
 
-            vis.plot(projection=pyVisProjection, filename="geometry.png")
+            vis.plot(projection=pyVisProjection, filename="geometry.pdf")
 
         if outputSurfacesJson:
             # if not os.path.isdir(outputDir / "json"):
