@@ -72,7 +72,7 @@ def runMaterialMapping(
 
     stepper = StraightLineStepper()
 
-    mmAlgCfg = MaterialMapping.Config(context.geoContext, context.magFieldContext)
+    mmAlgCfg = MaterialMapping.Config(context.recoGeoContext, context.magFieldContext)
     mmAlgCfg.trackingGeometry = trackingGeometry
     mmAlgCfg.inputMaterialTracks = "material_tracks"
 
@@ -94,7 +94,7 @@ def runMaterialMapping(
         processRepresenting=True,
         processBoundaries=True,
         processVolumes=True,
-        context=context.geoContext,
+        context=context.recoGeoContext,
     )
 
     jmw = JsonMaterialWriter(
