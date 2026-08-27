@@ -31,7 +31,7 @@ TRACCC_HOST_DEVICE
 inline void populate_grid(
     global_index_t globalIndex, const seedfinder_config& config,
     const edm::spacepoint_collection::const_view& spacepoints,
-    details::spacepoint_grid_types::view grid,
+    traccc::details::spacepoint_grid_types::view grid,
     vecmem::data::vector_view<prefix_sum_element_t> grid_prefix_sum);
 
 }  // namespace traccc::device

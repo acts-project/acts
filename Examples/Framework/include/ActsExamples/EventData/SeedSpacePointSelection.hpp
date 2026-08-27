@@ -28,17 +28,24 @@ enum class SeedSpacePointSelection {
 };
 
 /// Pick the three space points that seed a candidate track. The triplet
-/// selections go by layer, not by space point.
+/// selections go by layer, not by space point, and skip candidates closer than
+/// @p minTransverseDistance to any already picked one. The distance is
+/// transverse rather than radial because that is what keeps the track parameter
+/// estimation well defined.
 ///
 /// @param spacePoints is the event space point container
 /// @param candidates are the candidate space points, in track order
 ///        (innermost first); they are not sorted internally
 /// @param selection picks which of them are used
+/// @param minTransverseDistance is the minimum transverse distance between the
+///        selected space points. It does not apply to
+///        @c SeedSpacePointSelection::FirstThree, which takes the candidates as
+///        given.
 /// @return the three selected space points, or nothing if the selection cannot
 ///         be made
 std::optional<std::array<SpacePointIndex, 3>> selectSeedSpacePoints(
     const SpacePointContainer& spacePoints,
     std::span<const SpacePointIndex> candidates,
-    SeedSpacePointSelection selection);
+    SeedSpacePointSelection selection, double minTransverseDistance);
 
 }  // namespace ActsExamples
