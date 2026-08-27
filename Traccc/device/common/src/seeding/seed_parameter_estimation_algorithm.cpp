@@ -51,7 +51,7 @@ auto seed_parameter_estimation_algorithm::operator()(
 
   // Set up the output buffer.
   bound_track_parameters_collection_types::buffer result(n_seeds, mr().main);
-  copy().setup(result)->ignore();
+  copy().setup(vecmem::ignore_event, result);
 
   // Launch the seed parameter estimation kernel.
   estimate_seed_params_kernel({n_seeds, m_data->m_config, bfield, measurements,
