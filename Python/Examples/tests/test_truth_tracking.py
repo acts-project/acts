@@ -94,7 +94,7 @@ def test_python_track_access(generic_detector_config, tmp_path):
             field=field,
             digiConfigFile=generic_detector_config.digiConfigFile,
             outputDir=tmp_path,
-            pyVis=False,
+            pyVis=None,
             numParticles=100,
             s=seq,
         )
