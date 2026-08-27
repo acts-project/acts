@@ -15,6 +15,7 @@
 #include <array>
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <utility>
 
 namespace Acts::Experimental::detail {
@@ -282,7 +283,7 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
   float sigmaX = m_cfg.sigmaX;
   float sigmaY = m_cfg.sigmaY;
   if (const auto* strip = nodeView.strip(n1.index()); strip != nullptr) {
-    constexpr float invSqrt3 = 0.5773503f;
+    constexpr float invSqrt3 = std::numbers::inv_sqrt3_v<float>;
     const std::array<float, 3>& half = strip->outerHalfVector;
     // the walk is along the strip, so project its reach onto the fit's axes
     const float alongX = -half[0] * ts.s + half[1] * ts.c;
@@ -301,9 +302,9 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
     throw std::runtime_error("invalid layer type");
   }
 
-  const float Dx = 1.0 / (Cx[0][0] + sigmaX * sigmaX);
+  const float Dx = 1.0f / (Cx[0][0] + sigmaX * sigmaX);
 
-  const float Dy = 1.0 / (Cy[0][0] + sigma_rz);
+  const float Dy = 1.0f / (Cy[0][0] + sigma_rz);
 
   const float dchi2_x = resid_x * resid_x * Dx;
   const float dchi2_y = resid_y * resid_y * Dy;

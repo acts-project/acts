@@ -79,9 +79,8 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
   }
 
   m_stagedPerBin.at(bin).push_back(static_cast<std::uint32_t>(m_staged.size()));
-  m_staged.push_back(
-      StagedNode{index, x, y, z, r, phi, clusterWidth, localPositionY,
-                 static_cast<std::uint16_t>(layerIndex), stripIndex});
+  m_staged.emplace_back(index, x, y, z, r, phi, clusterWidth, localPositionY,
+                        static_cast<std::uint16_t>(layerIndex), stripIndex);
 
   return bin;
 }
