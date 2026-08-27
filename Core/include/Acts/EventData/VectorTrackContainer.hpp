@@ -222,7 +222,18 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
 
   /// Construct from const container
   /// @param other Const container to copy from
+  // TODO: This constructor is public API and can't be made private without
+  // an API break, unlike VectorMultiTrajectory's equivalent constructor.
+  // Consider deprecating it in favor of getMutableCopy below.
   explicit VectorTrackContainer(const ConstVectorTrackContainer& other);
+
+  /// Create a mutable container by deep-copying a const container. This is an
+  /// expensive operation, spelled out explicitly here so that it cannot
+  /// happen by accident, e.g. via an implicit conversion.
+  /// @param other Const container to copy from
+  /// @return Newly constructed mutable container
+  static VectorTrackContainer getMutableCopy(
+      const ConstVectorTrackContainer& other);
 
  public:
   // BEGIN INTERFACE
@@ -375,6 +386,11 @@ inline VectorTrackContainer::VectorTrackContainer(
     const ConstVectorTrackContainer& other)
     : VectorTrackContainerBase{other} {
   assert(checkConsistency());
+}
+
+inline VectorTrackContainer VectorTrackContainer::getMutableCopy(
+    const ConstVectorTrackContainer& other) {
+  return VectorTrackContainer{other};
 }
 
 }  // namespace Acts

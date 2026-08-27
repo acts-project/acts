@@ -620,7 +620,8 @@ void addEventData(py::module& mex) {
                      std::make_shared<Acts::VectorTrackContainer>(
                          self.container()),
                      std::make_shared<Acts::VectorMultiTrajectory>(
-                         self.trackStateContainer())};
+                         Acts::VectorMultiTrajectory::getMutableCopy(
+                             self.trackStateContainer()))};
                })
 
           // Zero-copy numpy array views of the underlying SoA columns.
@@ -710,7 +711,8 @@ void addEventData(py::module& mex) {
             return TrackContainer{
                 std::make_shared<Acts::VectorTrackContainer>(other.container()),
                 std::make_shared<Acts::VectorMultiTrajectory>(
-                    other.trackStateContainer())};
+                    Acts::VectorMultiTrajectory::getMutableCopy(
+                        other.trackStateContainer()))};
           }),
           py::arg("other"))
       .def("__len__", &TrackContainer::size)
